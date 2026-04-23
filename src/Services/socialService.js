@@ -4,6 +4,8 @@ const PROFILES_TABLE = "profiles";
 const USER_FOLLOWS_TABLE = "user_follows";
 const SOCIAL_SETUP_MESSAGE =
   "User search and follows are not set up in Supabase yet. Run docs/supabase-social-search.sql in the Supabase SQL editor first.";
+export const PROFILE_DISPLAY_NAME_MAX_LENGTH = 40;
+export const PROFILE_BIO_MAX_LENGTH = 160;
 
 function slugifyUsername(value) {
   return (value ?? "")
@@ -72,6 +74,13 @@ function buildSearchFilter(query) {
   return query.replace(/[,%()]/g, " ").trim();
 }
 
+function normalizeProfileValues({ displayName, bio }) {
+  return {
+    displayName: (displayName ?? "").trim(),
+    bio: (bio ?? "").trim(),
+  };
+}
+
 export async function ensureOwnProfile(user) {
   if (!user?.id) {
     throw new Error("You need to be signed in to load social data.");
@@ -124,6 +133,68 @@ export async function ensureOwnProfile(user) {
   }
 
   return mapProfileRow(insertedProfile);
+}
+
+export async function updateOwnProfile({ user, displayName, bio }) {
+  if (!user?.id) {
+    throw new Error("You need to be signed in to update your profile.");
+  }
+
+  const normalizedProfile = normalizeProfileValues({ displayName, bio });
+
+  if (!normalizedProfile.displayName) {
+    throw new Error("Display name cannot be empty.");
+  }
+
+  if (
+    normalizedProfile.displayName.length > PROFILE_DISPLAY_NAME_MAX_LENGTH
+  ) {
+    throw new Error(
+      `Display name must stay within ${PROFILE_DISPLAY_NAME_MAX_LENGTH} characters.`
+    );
+  }
+
+  if (normalizedProfile.bio.length > PROFILE_BIO_MAX_LENGTH) {
+    throw new Error(
+      `Bio must stay within ${PROFILE_BIO_MAX_LENGTH} characters.`
+    );
+  }
+
+  await ensureOwnProfile(user);
+
+  const { data: updatedProfile, error: updateError } = await supabase
+    .from(PROFILES_TABLE)
+    .update({
+      display_name: normalizedProfile.displayName,
+      bio: normalizedProfile.bio,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", user.id)
+    .select("id, username, display_name, bio, created_at")
+    .single();
+
+  if (updateError) {
+    throw normalizeSocialError(updateError);
+  }
+
+  const existingMetadata = user.user_metadata ?? {};
+  if (existingMetadata.display_name !== normalizedProfile.displayName) {
+    const { error: metadataError } = await supabase.auth.updateUser({
+      data: {
+        ...existingMetadata,
+        display_name: normalizedProfile.displayName,
+      },
+    });
+
+    if (metadataError) {
+      console.warn(
+        "Updated profile row but failed to mirror display_name to auth metadata:",
+        metadataError
+      );
+    }
+  }
+
+  return mapProfileRow(updatedProfile);
 }
 
 export async function searchUsers({ query, currentUserId, limit = 20 }) {
