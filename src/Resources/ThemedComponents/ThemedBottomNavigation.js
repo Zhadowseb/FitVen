@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Colors } from "../GlobalStyling/colors";
 import Home from "../Icons/UI-icons/Home";
 import Male from "../Icons/UI-icons/Male";
+import Search from "../Icons/UI-icons/Search";
 
 function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
   const colorScheme = useColorScheme();
@@ -16,7 +17,8 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
   const insets = useSafeAreaInsets();
 
   const isProfileActive = currentRouteName === "ProfilePage";
-  const isHomeActive = !isProfileActive;
+  const isSearchActive = currentRouteName === "SearchPage";
+  const isHomeActive = !isProfileActive && !isSearchActive;
   const activeColor =
     theme.iconColorFocused ?? theme.primary ?? theme.title ?? theme.text;
   const inactiveColor = theme.iconColor ?? theme.quietText ?? theme.text;
@@ -43,6 +45,14 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     navigationRef.navigate("ProfilePage");
   };
 
+  const handleSearchPress = () => {
+    if (!navigationRef?.isReady?.() || isSearchActive) {
+      return;
+    }
+
+    navigationRef.navigate("SearchPage");
+  };
+
   return (
     <View
       style={[
@@ -63,6 +73,18 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
           width={28}
           height={28}
           color={isHomeActive ? activeColor : inactiveColor}
+        />
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        activeOpacity={0.82}
+        onPress={handleSearchPress}
+        style={styles.tab}
+      >
+        <Search
+          width={27}
+          height={27}
+          color={isSearchActive ? activeColor : inactiveColor}
         />
       </TouchableOpacity>
 

@@ -13,12 +13,19 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
 });
 
-export async function registerWithEmail({ email, password }) {
+export async function registerWithEmail({ email, password, username }) {
   const normalizedEmail = email.trim().toLowerCase();
+  const normalizedUsername = username?.trim().toLowerCase();
 
   const { data, error } = await supabase.auth.signUp({
     email: normalizedEmail,
     password,
+    options: {
+      data: {
+        username: normalizedUsername,
+        display_name: normalizedUsername,
+      },
+    },
   });
 
   if (error) {

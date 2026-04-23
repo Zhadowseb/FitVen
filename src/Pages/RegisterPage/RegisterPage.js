@@ -18,6 +18,7 @@ import {
 export default function RegisterPage() {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [retypePassword, setRetypePassword] = useState("");
@@ -29,9 +30,14 @@ export default function RegisterPage() {
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const cardSurface = theme.cardBackground ?? theme.background;
   const cardBorder = theme.cardBorder ?? theme.iconColor ?? theme.text;
+  const normalizedUsername = username.trim().toLowerCase();
+  const usernameInvalid =
+    normalizedUsername.length > 0 &&
+    !/^[a-z0-9_]{3,20}$/.test(normalizedUsername);
   const passwordsMismatch =
     retypePassword.length > 0 && password !== retypePassword;
   const isFormIncomplete =
+    username.trim().length === 0 ||
     email.trim().length === 0 ||
     password.length === 0 ||
     retypePassword.length === 0;
@@ -46,10 +52,19 @@ export default function RegisterPage() {
   const handleRegister = async () => {
     const normalizedEmail = email.trim().toLowerCase();
 
-    if (!normalizedEmail || !password || !retypePassword) {
+    if (!normalizedUsername || !normalizedEmail || !password || !retypePassword) {
       setSubmitState({
         status: "error",
-        message: "Fill out email and both password fields first.",
+        message: "Fill out username, email and both password fields first.",
+      });
+      return;
+    }
+
+    if (!/^[a-z0-9_]{3,20}$/.test(normalizedUsername)) {
+      setSubmitState({
+        status: "error",
+        message:
+          "Username must be 3-20 characters and use only lowercase letters, numbers or underscores.",
       });
       return;
     }
@@ -79,6 +94,7 @@ export default function RegisterPage() {
       const result = await registerWithEmail({
         email: normalizedEmail,
         password,
+        username: normalizedUsername,
       });
 
       const needsEmailConfirmation = !result.session;
@@ -90,6 +106,7 @@ export default function RegisterPage() {
           : "Account created. You can now sign in.",
       });
 
+      setUsername("");
       setEmail(normalizedEmail);
       setPassword("");
       setRetypePassword("");
@@ -155,6 +172,25 @@ export default function RegisterPage() {
 
             <View style={styles.formSection}>
               <ThemedText style={styles.inputLabel} setColor={quietText}>
+                Username
+              </ThemedText>
+              <ThemedTextInput
+                value={username}
+                onChangeText={setUsername}
+                placeholder="your_name"
+                autoCapitalize="none"
+                autoCorrect={false}
+                error={
+                  usernameInvalid
+                    ? "Use 3-20 lowercase letters, numbers or underscores."
+                    : undefined
+                }
+                style={styles.inputWrapper}
+              />
+            </View>
+
+            <View style={styles.formSection}>
+              <ThemedText style={styles.inputLabel} setColor={quietText}>
                 Email
               </ThemedText>
               <ThemedTextInput
@@ -214,6 +250,7 @@ export default function RegisterPage() {
               disabled={
                 submitState.status === "loading" ||
                 isFormIncomplete ||
+                usernameInvalid ||
                 passwordsMismatch ||
                 passwordTooShort
               }

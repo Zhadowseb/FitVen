@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.1] - Unreleased
+### Changed
+- Added a dedicated people search flow in the bottom navigation, including user search plus follow and unfollow actions backed by Supabase profiles and follow relationships.
+
+---
 ## [0.9.0] - 2026-04-24
 ### Changed
 - Replaced the HomePage top header with a global bottom navigation bar for authenticated screens, adding persistent Home and Profile actions across the app.
