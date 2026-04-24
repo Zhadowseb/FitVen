@@ -60,12 +60,8 @@ export default StyleSheet.create({
   cardBody: {
     lineHeight: 20,
   },
-  identityPanel: {
+  identityList: {
     marginTop: 16,
-    borderWidth: 1,
-    borderRadius: 18,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
     gap: 14,
   },
   identityGroup: {

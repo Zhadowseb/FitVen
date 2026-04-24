@@ -37,7 +37,6 @@ export default function ProfilePage() {
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const cardSurface = theme.cardBackground ?? theme.background;
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor;
-  const panelSurface = theme.uiBackground ?? cardSurface;
   const profileStatusColor =
     profileFeedback.status === "success"
       ? theme.secondaryDark ?? theme.secondary ?? titleColor
@@ -238,25 +237,17 @@ export default function ProfilePage() {
               How others see you
             </ThemedTitle>
             <ThemedText style={styles.cardBody} setColor={quietText}>
-              Your display name and bio show up in people search. Username stays
-              fixed for now.
+              Your display name and bio show up in people search. Your username
+              tag stays fixed once the account is created.
             </ThemedText>
 
-            <View
-              style={[
-                styles.identityPanel,
-                {
-                  backgroundColor: panelSurface,
-                  borderColor: cardBorder,
-                },
-              ]}
-            >
+            <View style={styles.identityList}>
               <View style={styles.identityGroup}>
                 <ThemedText style={styles.identityLabel} setColor={quietText}>
                   Username
                 </ThemedText>
                 <ThemedText style={styles.identityValue} setColor={titleColor}>
-                  {profile?.username ? `@${profile.username}` : "@..."}
+                  {profile?.username ?? "...#...."}
                 </ThemedText>
               </View>
 

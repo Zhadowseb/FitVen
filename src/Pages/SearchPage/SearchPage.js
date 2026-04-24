@@ -139,7 +139,7 @@ const SearchPage = () => {
     query.trim().length > 0 ? "No users matched." : "No other users yet.";
   const emptyStateBody =
     query.trim().length > 0
-      ? "Try a different username or display name."
+      ? "Try a different username, tag or display name."
       : "When more people join FitVen, they will show up here.";
 
   return (
@@ -176,14 +176,14 @@ const SearchPage = () => {
           <ThemedTextInput
             value={query}
             onChangeText={setQuery}
-            placeholder="Search usernames or display names"
+            placeholder="Search username tags or display names"
             autoCapitalize="none"
             autoCorrect={false}
             style={styles.searchInputWrapper}
           />
 
           <ThemedText style={styles.searchHint} setColor={quietText}>
-            People search is live first. More search types can be added here later.
+            Search by username base, full tag or display name.
           </ThemedText>
         </View>
 
@@ -238,7 +238,7 @@ const SearchPage = () => {
                       style={styles.resultUsername}
                       setColor={secondaryDark}
                     >
-                      @{profile.username}
+                      {profile.username}
                     </ThemedText>
                   </View>
 

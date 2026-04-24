@@ -1,4 +1,13 @@
 import { supabase } from "../Database/supaBaseClient";
+import {
+  buildFullUsername,
+  formatUsernameCode,
+  normalizeUsernameBaseInput,
+  slugifyUsernameBase,
+  splitFullUsername,
+  USERNAME_CODE_LENGTH,
+  USERNAME_BASE_PATTERN,
+} from "../Utils/socialUsername";
 
 const PROFILES_TABLE = "profiles";
 const USER_FOLLOWS_TABLE = "user_follows";
@@ -6,29 +15,19 @@ const SOCIAL_SETUP_MESSAGE =
   "User search and follows are not set up in Supabase yet. Run docs/supabase-social-search.sql in the Supabase SQL editor first.";
 export const PROFILE_DISPLAY_NAME_MAX_LENGTH = 40;
 export const PROFILE_BIO_MAX_LENGTH = 160;
+const USERNAME_INSERT_RETRY_LIMIT = 3;
 
-function slugifyUsername(value) {
-  return (value ?? "")
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9_]+/g, "_")
-    .replace(/^_+|_+$/g, "")
-    .slice(0, 20);
-}
-
-function createFallbackUsername(user) {
-  const preferredUsername = slugifyUsername(
-    user?.user_metadata?.username ??
+function createFallbackUsernameBase(user) {
+  return slugifyUsernameBase(
+    user?.user_metadata?.username_base ??
+      user?.user_metadata?.username ??
       user?.user_metadata?.display_name ??
       user?.email?.split("@")[0] ??
       "user"
   );
-  const suffix = (user?.id ?? "user").replace(/-/g, "").slice(-6);
-  const base = (preferredUsername || "user").slice(0, Math.max(3, 20 - suffix.length - 1));
-  return `${base}_${suffix}`.slice(0, 20);
 }
 
-function createFallbackDisplayName(user, username) {
+function createFallbackDisplayName(user, usernameBase) {
   const metadataDisplayName = user?.user_metadata?.display_name?.trim();
   if (metadataDisplayName) {
     return metadataDisplayName;
@@ -39,13 +38,22 @@ function createFallbackDisplayName(user, username) {
     return emailName;
   }
 
-  return username;
+  return usernameBase;
 }
 
 function mapProfileRow(row, followingIdSet = new Set()) {
+  const parsedUsername = splitFullUsername(row.username);
+  const usernameBase =
+    row.username_base ?? parsedUsername?.usernameBase ?? "";
+  const usernameCode =
+    row.username_code ?? parsedUsername?.usernameCode ?? "";
+
   return {
     id: row.id,
-    username: row.username,
+    username:
+      row.username ?? buildFullUsername(usernameBase, usernameCode),
+    usernameBase,
+    usernameCode,
     displayName: row.display_name,
     bio: row.bio ?? "",
     createdAt: row.created_at ?? null,
@@ -57,8 +65,11 @@ function isMissingSocialSchemaError(error) {
   const message = `${error?.message ?? ""} ${error?.details ?? ""}`.toLowerCase();
   return (
     error?.code === "42P01" ||
+    error?.code === "42703" ||
     (message.includes("profiles") && message.includes("does not exist")) ||
-    (message.includes("user_follows") && message.includes("does not exist"))
+    (message.includes("user_follows") && message.includes("does not exist")) ||
+    (message.includes("username_base") && message.includes("does not exist")) ||
+    (message.includes("username_code") && message.includes("does not exist"))
   );
 }
 
@@ -71,7 +82,7 @@ function normalizeSocialError(error) {
 }
 
 function buildSearchFilter(query) {
-  return query.replace(/[,%()]/g, " ").trim();
+  return query.replace(/[,%()]/g, " ").replace(/^@+/, "").trim();
 }
 
 function normalizeProfileValues({ displayName, bio }) {
@@ -81,6 +92,46 @@ function normalizeProfileValues({ displayName, bio }) {
   };
 }
 
+async function findAvailableUsernameCode(usernameBase) {
+  const normalizedUsernameBase = normalizeUsernameBaseInput(usernameBase);
+
+  if (!USERNAME_BASE_PATTERN.test(normalizedUsernameBase)) {
+    throw new Error("Username base is invalid.");
+  }
+
+  const { data: existingRows, error } = await supabase
+    .from(PROFILES_TABLE)
+    .select("username_code")
+    .eq("username_base", normalizedUsernameBase)
+    .limit(10000);
+
+  if (error) {
+    throw normalizeSocialError(error);
+  }
+
+  const takenCodes = new Set(
+    (existingRows ?? [])
+      .map((row) => row.username_code)
+      .filter((value) => typeof value === "string")
+      .map((value) => formatUsernameCode(value))
+  );
+  const randomStart = Math.floor(Math.random() * 10 ** USERNAME_CODE_LENGTH);
+
+  for (let offset = 0; offset < 10 ** USERNAME_CODE_LENGTH; offset += 1) {
+    const candidateNumber =
+      (randomStart + offset) % 10 ** USERNAME_CODE_LENGTH;
+    const candidateCode = formatUsernameCode(candidateNumber);
+
+    if (!takenCodes.has(candidateCode)) {
+      return candidateCode;
+    }
+  }
+
+  throw new Error(
+    `Username base "${normalizedUsernameBase}" has no remaining 4-digit tags.`
+  );
+}
+
 export async function ensureOwnProfile(user) {
   if (!user?.id) {
     throw new Error("You need to be signed in to load social data.");
@@ -88,7 +139,9 @@ export async function ensureOwnProfile(user) {
 
   const { data: existingProfile, error: fetchError } = await supabase
     .from(PROFILES_TABLE)
-    .select("id, username, display_name, bio, created_at")
+    .select(
+      "id, username, username_base, username_code, display_name, bio, created_at"
+    )
     .eq("id", user.id)
     .maybeSingle();
 
@@ -100,39 +153,58 @@ export async function ensureOwnProfile(user) {
     return mapProfileRow(existingProfile);
   }
 
-  const username = createFallbackUsername(user);
-  const displayName = createFallbackDisplayName(user, username);
+  const usernameBase = createFallbackUsernameBase(user);
+  const displayName = createFallbackDisplayName(user, usernameBase);
+  for (
+    let attemptIndex = 0;
+    attemptIndex < USERNAME_INSERT_RETRY_LIMIT;
+    attemptIndex += 1
+  ) {
+    const usernameCode = await findAvailableUsernameCode(usernameBase);
+    const username = buildFullUsername(usernameBase, usernameCode);
+    const { data: insertedProfile, error: insertError } = await supabase
+      .from(PROFILES_TABLE)
+      .insert({
+        id: user.id,
+        username,
+        username_base: usernameBase,
+        username_code: usernameCode,
+        display_name: displayName,
+        bio: "",
+      })
+      .select(
+        "id, username, username_base, username_code, display_name, bio, created_at"
+      )
+      .single();
 
-  const { data: insertedProfile, error: insertError } = await supabase
-    .from(PROFILES_TABLE)
-    .insert({
-      id: user.id,
-      username,
-      display_name: displayName,
-      bio: "",
-    })
-    .select("id, username, display_name, bio, created_at")
-    .single();
-
-  if (insertError) {
-    if (insertError.code === "23505") {
-      const { data: refetchedProfile, error: refetchError } = await supabase
-        .from(PROFILES_TABLE)
-        .select("id, username, display_name, bio, created_at")
-        .eq("id", user.id)
-        .single();
-
-      if (refetchError) {
-        throw normalizeSocialError(refetchError);
-      }
-
-      return mapProfileRow(refetchedProfile);
+    if (!insertError) {
+      return mapProfileRow(insertedProfile);
     }
 
-    throw normalizeSocialError(insertError);
+    if (insertError.code !== "23505") {
+      throw normalizeSocialError(insertError);
+    }
+
+    const { data: refetchedProfile, error: refetchError } = await supabase
+      .from(PROFILES_TABLE)
+      .select(
+        "id, username, username_base, username_code, display_name, bio, created_at"
+      )
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (refetchError) {
+      throw normalizeSocialError(refetchError);
+    }
+
+    if (refetchedProfile) {
+      return mapProfileRow(refetchedProfile);
+    }
   }
 
-  return mapProfileRow(insertedProfile);
+  throw new Error(
+    "Could not reserve a username tag right now. Please try again."
+  );
 }
 
 export async function updateOwnProfile({ user, displayName, bio }) {
@@ -170,7 +242,9 @@ export async function updateOwnProfile({ user, displayName, bio }) {
       updated_at: new Date().toISOString(),
     })
     .eq("id", user.id)
-    .select("id, username, display_name, bio, created_at")
+    .select(
+      "id, username, username_base, username_code, display_name, bio, created_at"
+    )
     .single();
 
   if (updateError) {
@@ -205,14 +279,16 @@ export async function searchUsers({ query, currentUserId, limit = 20 }) {
   const normalizedQuery = buildSearchFilter(query ?? "");
   let profilesQuery = supabase
     .from(PROFILES_TABLE)
-    .select("id, username, display_name, bio, created_at")
+    .select(
+      "id, username, username_base, username_code, display_name, bio, created_at"
+    )
     .neq("id", currentUserId)
     .order("display_name", { ascending: true })
     .limit(limit);
 
   if (normalizedQuery.length > 0) {
     profilesQuery = profilesQuery.or(
-      `username.ilike.%${normalizedQuery}%,display_name.ilike.%${normalizedQuery}%`
+      `username.ilike.%${normalizedQuery}%,username_base.ilike.%${normalizedQuery}%,display_name.ilike.%${normalizedQuery}%`
     );
   }
 

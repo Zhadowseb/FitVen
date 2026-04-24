@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.9.2-minor-profile-edit-fields.1",
+  "version": "0.9.3-minor-username-discriminator-system.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",

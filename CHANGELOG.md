@@ -1,13 +1,18 @@
 # Changelog
 
-## [0.9.1] - Unreleased
+## [0.9.3] - Unreleased
 ### Changed
-- Added a dedicated people search flow in the bottom navigation, including user search plus follow and unfollow actions backed by Supabase profiles and follow relationships.
+- Reworked social usernames to use an immutable `username_base#1234` format, including signup, profile display, search, and Supabase profile bootstrap logic.
 
 ---
 ## [0.9.2] - Unreleased
 ### Changed
 - Added editable profile fields for `display_name` and `bio`, so users can update how they appear in people search directly from the profile page.
+
+---
+## [0.9.1] - Unreleased
+### Changed
+- Added a dedicated people search flow in the bottom navigation, including user search plus follow and unfollow actions backed by Supabase profiles and follow relationships.
 
 ---
 ## [0.9.0] - 2026-04-24
