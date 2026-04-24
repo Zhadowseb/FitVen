@@ -1,5 +1,6 @@
-import { View, useColorScheme } from "react-native";
-import { useEffect, useState } from "react";
+import { Pressable, ScrollView, View, useColorScheme } from "react-native";
+import { useCallback, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 
 import styles from "./ProfilePageStyle";
 import { Colors } from "../../Resources/GlobalStyling/colors";
@@ -11,6 +12,7 @@ import {
   ThemedCard,
   ThemedHeader,
   ThemedKeyboardProtection,
+  ThemedModal,
   ThemedText,
   ThemedTextInput,
   ThemedTitle,
@@ -25,6 +27,15 @@ export default function ProfilePage() {
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [followCounts, setFollowCounts] = useState({
+    followers: 0,
+    following: 0,
+  });
+  const [isLoadingFollowCounts, setIsLoadingFollowCounts] = useState(true);
+  const [activeRelationshipType, setActiveRelationshipType] = useState(null);
+  const [relationshipProfiles, setRelationshipProfiles] = useState([]);
+  const [isLoadingRelationships, setIsLoadingRelationships] = useState(false);
+  const [relationshipError, setRelationshipError] = useState("");
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [profileFeedback, setProfileFeedback] = useState({
     status: "idle",
@@ -37,6 +48,7 @@ export default function ProfilePage() {
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const cardSurface = theme.cardBackground ?? theme.background;
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor;
+  const panelSurface = theme.uiBackground ?? theme.background;
   const profileStatusColor =
     profileFeedback.status === "success"
       ? theme.secondaryDark ?? theme.secondary ?? titleColor
@@ -52,67 +64,86 @@ export default function ProfilePage() {
     ? normalizedDisplayName !== profile.displayName ||
       normalizedBio !== (profile.bio ?? "")
     : false;
+  const relationshipTitle =
+    activeRelationshipType === "following" ? "Following" : "Followers";
 
-  useEffect(() => {
-    let isCancelled = false;
+  useFocusEffect(
+    useCallback(() => {
+      let isCancelled = false;
 
-    const loadProfile = async () => {
-      if (!user?.id) {
-        setProfile(null);
-        setDisplayName("");
-        setBio("");
-        setIsLoadingProfile(false);
-        setProfileFeedback({
-          status: "error",
-          message: "Sign in to view your profile.",
-        });
-        return;
-      }
-
-      setIsLoadingProfile(true);
-      setProfileFeedback({
-        status: "idle",
-        message: "",
-      });
-
-      try {
-        const nextProfile = await socialService.ensureOwnProfile(user);
-
-        if (isCancelled) {
-          return;
-        }
-
-        setProfile(nextProfile);
-        setDisplayName(nextProfile.displayName);
-        setBio(nextProfile.bio ?? "");
-      } catch (error) {
-        if (isCancelled) {
-          return;
-        }
-
-        setProfile(null);
-        setDisplayName("");
-        setBio("");
-        setProfileFeedback({
-          status: "error",
-          message:
-            error instanceof Error
-              ? error.message
-              : "Could not load your profile.",
-        });
-      } finally {
-        if (!isCancelled) {
+      const loadProfile = async () => {
+        if (!user?.id) {
+          setProfile(null);
+          setDisplayName("");
+          setBio("");
+          setFollowCounts({
+            followers: 0,
+            following: 0,
+          });
           setIsLoadingProfile(false);
+          setIsLoadingFollowCounts(false);
+          setProfileFeedback({
+            status: "error",
+            message: "Sign in to view your profile.",
+          });
+          return;
         }
-      }
-    };
 
-    loadProfile();
+        setIsLoadingProfile(true);
+        setIsLoadingFollowCounts(true);
+        setProfileFeedback({
+          status: "idle",
+          message: "",
+        });
 
-    return () => {
-      isCancelled = true;
-    };
-  }, [user?.id]);
+        try {
+          const nextProfile = await socialService.ensureOwnProfile(user);
+          const nextFollowCounts = await socialService.getFollowCounts({
+            userId: user.id,
+          });
+
+          if (isCancelled) {
+            return;
+          }
+
+          setProfile(nextProfile);
+          setDisplayName(nextProfile.displayName);
+          setBio(nextProfile.bio ?? "");
+          setFollowCounts(nextFollowCounts);
+        } catch (error) {
+          if (isCancelled) {
+            return;
+          }
+
+          setProfile(null);
+          setDisplayName("");
+          setBio("");
+          setFollowCounts({
+            followers: 0,
+            following: 0,
+          });
+          setProfileFeedback({
+            status: "error",
+            message:
+              error instanceof Error
+                ? error.message
+                : "Could not load your profile.",
+          });
+        } finally {
+          if (!isCancelled) {
+            setIsLoadingProfile(false);
+            setIsLoadingFollowCounts(false);
+          }
+        }
+      };
+
+      loadProfile();
+
+      return () => {
+        isCancelled = true;
+      };
+    }, [user?.id])
+  );
 
   const clearProfileFeedback = () => {
     if (profileFeedback.message) {
@@ -120,6 +151,47 @@ export default function ProfilePage() {
         status: "idle",
         message: "",
       });
+    }
+  };
+
+  const closeRelationshipModal = () => {
+    setActiveRelationshipType(null);
+    setRelationshipProfiles([]);
+    setRelationshipError("");
+    setIsLoadingRelationships(false);
+  };
+
+  const handleOpenRelationshipModal = async (relationshipType) => {
+    if (!user?.id) {
+      return;
+    }
+
+    setActiveRelationshipType(relationshipType);
+    setRelationshipProfiles([]);
+    setRelationshipError("");
+    setIsLoadingRelationships(true);
+
+    try {
+      const nextRelationshipProfiles =
+        relationshipType === "following"
+          ? await socialService.getFollowing({
+              userId: user.id,
+              currentUserId: user.id,
+            })
+          : await socialService.getFollowers({
+              userId: user.id,
+              currentUserId: user.id,
+            });
+
+      setRelationshipProfiles(nextRelationshipProfiles);
+    } catch (error) {
+      setRelationshipError(
+        error instanceof Error
+          ? error.message
+          : `Could not load ${relationshipType}.`
+      );
+    } finally {
+      setIsLoadingRelationships(false);
     }
   };
 
@@ -217,6 +289,76 @@ export default function ProfilePage() {
           scroll
           contentContainerStyle={styles.scrollContent}
         >
+          <View style={styles.relationshipSummaryRow}>
+            <Pressable
+              onPress={() => handleOpenRelationshipModal("followers")}
+              disabled={isLoadingProfile}
+              style={({ pressed }) => [
+                styles.relationshipSummaryCard,
+                {
+                  backgroundColor: panelSurface,
+                  borderColor: cardBorder,
+                },
+                pressed && !isLoadingProfile
+                  ? styles.relationshipSummaryCardPressed
+                  : null,
+              ]}
+            >
+              <ThemedText
+                style={styles.relationshipSummaryValue}
+                setColor={titleColor}
+              >
+                {isLoadingFollowCounts ? "..." : followCounts.followers}
+              </ThemedText>
+              <ThemedText
+                style={styles.relationshipSummaryLabel}
+                setColor={quietText}
+              >
+                Followers
+              </ThemedText>
+              <ThemedText
+                style={styles.relationshipSummaryHint}
+                setColor={quietText}
+              >
+                Tap to view
+              </ThemedText>
+            </Pressable>
+
+            <Pressable
+              onPress={() => handleOpenRelationshipModal("following")}
+              disabled={isLoadingProfile}
+              style={({ pressed }) => [
+                styles.relationshipSummaryCard,
+                {
+                  backgroundColor: panelSurface,
+                  borderColor: cardBorder,
+                },
+                pressed && !isLoadingProfile
+                  ? styles.relationshipSummaryCardPressed
+                  : null,
+              ]}
+            >
+              <ThemedText
+                style={styles.relationshipSummaryValue}
+                setColor={titleColor}
+              >
+                {isLoadingFollowCounts ? "..." : followCounts.following}
+              </ThemedText>
+              <ThemedText
+                style={styles.relationshipSummaryLabel}
+                setColor={quietText}
+              >
+                Following
+              </ThemedText>
+              <ThemedText
+                style={styles.relationshipSummaryHint}
+                setColor={quietText}
+              >
+                Tap to view
+              </ThemedText>
+            </Pressable>
+          </View>
+
           <ThemedCard
             style={[
               styles.profileCard,
@@ -417,6 +559,80 @@ export default function ProfilePage() {
           </ThemedCard>
         </ThemedKeyboardProtection>
       </View>
+
+      <ThemedModal
+        visible={Boolean(activeRelationshipType)}
+        onClose={closeRelationshipModal}
+        title={`${relationshipTitle} (${activeRelationshipType === "following"
+          ? followCounts.following
+          : followCounts.followers})`}
+        style={[
+          styles.relationshipModal,
+          {
+            backgroundColor: cardSurface,
+          },
+        ]}
+        contentStyle={styles.relationshipModalContent}
+      >
+        {isLoadingRelationships ? (
+          <ThemedText style={styles.relationshipStateText} setColor={quietText}>
+            Loading {relationshipTitle.toLowerCase()}...
+          </ThemedText>
+        ) : relationshipError ? (
+          <ThemedText
+            style={styles.relationshipStateText}
+            setColor={theme.danger}
+          >
+            {relationshipError}
+          </ThemedText>
+        ) : relationshipProfiles.length ? (
+          <ScrollView
+            style={styles.relationshipList}
+            contentContainerStyle={styles.relationshipListContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {relationshipProfiles.map((relationshipProfile) => (
+              <View
+                key={relationshipProfile.id}
+                style={[
+                  styles.relationshipRow,
+                  {
+                    borderBottomColor: cardBorder,
+                  },
+                ]}
+              >
+                <ThemedText
+                  style={styles.relationshipDisplayName}
+                  setColor={titleColor}
+                >
+                  {relationshipProfile.displayName}
+                </ThemedText>
+                <ThemedText
+                  style={styles.relationshipUsername}
+                  setColor={quietText}
+                >
+                  {relationshipProfile.username}
+                </ThemedText>
+              </View>
+            ))}
+          </ScrollView>
+        ) : (
+          <ThemedText style={styles.relationshipStateText} setColor={quietText}>
+            {activeRelationshipType === "following"
+              ? "You are not following anyone yet."
+              : "No one is following you yet."}
+          </ThemedText>
+        )}
+
+        <ThemedButton
+          title="Close"
+          variant="secondary"
+          onPress={closeRelationshipModal}
+          fullWidth
+          height={44}
+          style={styles.relationshipCloseButton}
+        />
+      </ThemedModal>
     </ThemedView>
   );
 }

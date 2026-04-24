@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.4] - Unreleased
+### Changed
+- Added followers and following summary blocks on the profile page, including tappable lists that show which users follow you and which users you follow.
+
+---
 ## [0.9.3] - Unreleased
 ### Changed
 - Reworked social usernames to use an immutable `username_base#1234` format, including signup, profile display, search, and Supabase profile bootstrap logic.

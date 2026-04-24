@@ -92,6 +92,55 @@ function normalizeProfileValues({ displayName, bio }) {
   };
 }
 
+async function fetchFollowingIdSet({ currentUserId, profileIds }) {
+  if (!currentUserId || !profileIds.length) {
+    return new Set();
+  }
+
+  const { data: followRows, error } = await supabase
+    .from(USER_FOLLOWS_TABLE)
+    .select("following_id")
+    .eq("follower_id", currentUserId)
+    .in("following_id", profileIds);
+
+  if (error) {
+    throw normalizeSocialError(error);
+  }
+
+  return new Set((followRows ?? []).map((row) => row.following_id));
+}
+
+async function fetchProfilesByIds({ profileIds, currentUserId }) {
+  if (!profileIds.length) {
+    return [];
+  }
+
+  const uniqueProfileIds = [...new Set(profileIds)];
+  const { data: profiles, error: profileError } = await supabase
+    .from(PROFILES_TABLE)
+    .select(
+      "id, username, username_base, username_code, display_name, bio, created_at"
+    )
+    .in("id", uniqueProfileIds);
+
+  if (profileError) {
+    throw normalizeSocialError(profileError);
+  }
+
+  const followingIdSet = await fetchFollowingIdSet({
+    currentUserId,
+    profileIds: uniqueProfileIds,
+  });
+  const profilesById = new Map(
+    (profiles ?? []).map((profile) => [profile.id, profile])
+  );
+
+  return uniqueProfileIds
+    .map((profileId) => profilesById.get(profileId))
+    .filter(Boolean)
+    .map((profile) => mapProfileRow(profile, followingIdSet));
+}
+
 async function findAvailableUsernameCode(usernameBase) {
   const normalizedUsernameBase = normalizeUsernameBaseInput(usernameBase);
 
@@ -302,22 +351,97 @@ export async function searchUsers({ query, currentUserId, limit = 20 }) {
     return [];
   }
 
-  const profileIds = profiles.map((profile) => profile.id);
-  const { data: followRows, error: followError } = await supabase
-    .from(USER_FOLLOWS_TABLE)
-    .select("following_id")
-    .eq("follower_id", currentUserId)
-    .in("following_id", profileIds);
-
-  if (followError) {
-    throw normalizeSocialError(followError);
-  }
-
-  const followingIdSet = new Set(
-    (followRows ?? []).map((row) => row.following_id)
-  );
+  const followingIdSet = await fetchFollowingIdSet({
+    currentUserId,
+    profileIds: profiles.map((profile) => profile.id),
+  });
 
   return profiles.map((row) => mapProfileRow(row, followingIdSet));
+}
+
+export async function getFollowCounts({ userId }) {
+  if (!userId) {
+    throw new Error("Missing user information for follow counts.");
+  }
+
+  const [
+    { count: followersCount, error: followersError },
+    { count: followingCount, error: followingError },
+  ] = await Promise.all([
+    supabase
+      .from(USER_FOLLOWS_TABLE)
+      .select("*", { count: "exact", head: true })
+      .eq("following_id", userId),
+    supabase
+      .from(USER_FOLLOWS_TABLE)
+      .select("*", { count: "exact", head: true })
+      .eq("follower_id", userId),
+  ]);
+
+  if (followersError) {
+    throw normalizeSocialError(followersError);
+  }
+
+  if (followingError) {
+    throw normalizeSocialError(followingError);
+  }
+
+  return {
+    followers: followersCount ?? 0,
+    following: followingCount ?? 0,
+  };
+}
+
+export async function getFollowers({
+  userId,
+  currentUserId,
+  limit = 50,
+}) {
+  if (!userId) {
+    throw new Error("Missing user information for followers.");
+  }
+
+  const { data: followRows, error } = await supabase
+    .from(USER_FOLLOWS_TABLE)
+    .select("follower_id, created_at")
+    .eq("following_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    throw normalizeSocialError(error);
+  }
+
+  return fetchProfilesByIds({
+    profileIds: (followRows ?? []).map((row) => row.follower_id),
+    currentUserId,
+  });
+}
+
+export async function getFollowing({
+  userId,
+  currentUserId,
+  limit = 50,
+}) {
+  if (!userId) {
+    throw new Error("Missing user information for following.");
+  }
+
+  const { data: followRows, error } = await supabase
+    .from(USER_FOLLOWS_TABLE)
+    .select("following_id, created_at")
+    .eq("follower_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    throw normalizeSocialError(error);
+  }
+
+  return fetchProfilesByIds({
+    profileIds: (followRows ?? []).map((row) => row.following_id),
+    currentUserId,
+  });
 }
 
 export async function followUser({ userId, targetUserId }) {

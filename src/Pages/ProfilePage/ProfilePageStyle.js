@@ -78,6 +78,38 @@ export default StyleSheet.create({
     fontWeight: "700",
     lineHeight: 20,
   },
+  relationshipSummaryRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 18,
+    marginBottom: 6,
+  },
+  relationshipSummaryCard: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    gap: 4,
+  },
+  relationshipSummaryCardPressed: {
+    opacity: 0.88,
+  },
+  relationshipSummaryValue: {
+    fontSize: 22,
+    fontWeight: "800",
+    lineHeight: 26,
+  },
+  relationshipSummaryLabel: {
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+  },
+  relationshipSummaryHint: {
+    fontSize: 12,
+    lineHeight: 18,
+  },
   formSection: {
     marginTop: 18,
   },
@@ -132,6 +164,39 @@ export default StyleSheet.create({
   },
   logoutButton: {
     marginTop: 0,
+  },
+  relationshipModal: {
+    maxHeight: 520,
+  },
+  relationshipModalContent: {
+    minHeight: 0,
+  },
+  relationshipList: {
+    maxHeight: 320,
+  },
+  relationshipListContent: {
+    paddingBottom: 4,
+  },
+  relationshipRow: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    gap: 4,
+  },
+  relationshipDisplayName: {
+    fontSize: 15,
+    fontWeight: "700",
+    lineHeight: 20,
+  },
+  relationshipUsername: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  relationshipStateText: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  relationshipCloseButton: {
+    marginTop: 8,
   },
   errorText: {
     marginTop: 12,
