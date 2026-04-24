@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.9.4-minor-profile-followers-following.1",
+  "version": "0.9.5-minor-home-friends-activity.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",

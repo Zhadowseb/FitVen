@@ -7,9 +7,11 @@ import { useSQLiteContext } from "expo-sqlite";
 import styles from './HomePageStyle';
 import { Colors } from '../../Resources/GlobalStyling/colors';
 import FeedbackModal from './Components/FeedbackModal/FeedbackModal';
+import FriendsActivity from './Components/FriendsActivity/FriendsActivity';
 import TodayProgramsShortcut from './Components/TodayProgramsShortcut/TodayProgramsShortcut';
 import {
   programService,
+  socialService,
   weightliftingService,
 } from "../../Services";
 
@@ -28,6 +30,12 @@ export default function App() {
     completedProgramCount: 0,
     exerciseCount: 0,
   });
+  const [circlePreview, setCirclePreview] = useState({
+    currentUser: null,
+    people: [],
+  });
+  const [isLoadingCirclePreview, setIsLoadingCirclePreview] = useState(false);
+  const [circlePreviewError, setCirclePreviewError] = useState("");
   const navigation = useNavigation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -65,10 +73,45 @@ export default function App() {
     }
   }, [db]);
 
+  const loadCirclePreview = useCallback(async () => {
+    if (!user?.id) {
+      setCirclePreview({
+        currentUser: null,
+        people: [],
+      });
+      setCirclePreviewError("");
+      setIsLoadingCirclePreview(false);
+      return;
+    }
+
+    setIsLoadingCirclePreview(true);
+    setCirclePreviewError("");
+
+    try {
+      const nextCirclePreview = await socialService.getCirclePreview({
+        user,
+        limit: 12,
+      });
+
+      setCirclePreview(nextCirclePreview);
+    } catch (error) {
+      setCirclePreview({
+        currentUser: null,
+        people: [],
+      });
+      setCirclePreviewError(
+        error instanceof Error ? error.message : "Could not load your circle."
+      );
+    } finally {
+      setIsLoadingCirclePreview(false);
+    }
+  }, [user]);
+
   useFocusEffect(
     useCallback(() => {
       loadQuickAccessStats();
-    }, [loadQuickAccessStats])
+      loadCirclePreview();
+    }, [loadCirclePreview, loadQuickAccessStats])
   );
 
   const quickAccessCards = [
@@ -113,6 +156,15 @@ export default function App() {
         showsVerticalScrollIndicator={false}
       >
         <TodayProgramsShortcut />
+
+        <FriendsActivity
+          currentUser={circlePreview.currentUser}
+          people={circlePreview.people}
+          isLoading={isLoadingCirclePreview}
+          errorMessage={circlePreviewError}
+          onSeeAll={() => navigation.navigate("SearchPage")}
+          onOpenProfile={() => navigation.navigate("ProfilePage")}
+        />
 
         <View style={styles.quickAccessSection}>
           <View style={styles.quickAccessGrid}>

@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.5] - Unreleased
+### Changed
+- Added a HomePage social circle strip inspired by the shared `FriendsActivity` reference, using static full rings and generic user icons instead of rotating avatar images or segmented activity rings.
+
+---
 ## [0.9.4] - Unreleased
 ### Changed
 - Added followers and following summary blocks on the profile page, including tappable lists that show which users follow you and which users you follow.

@@ -444,6 +444,56 @@ export async function getFollowing({
   });
 }
 
+export async function getCirclePreview({ user, limit = 12 }) {
+  if (!user?.id) {
+    throw new Error("You need to be signed in to load your circle.");
+  }
+
+  const currentUserProfile = await ensureOwnProfile(user);
+  const [followingProfiles, followerProfiles] = await Promise.all([
+    getFollowing({
+      userId: user.id,
+      currentUserId: user.id,
+      limit,
+    }),
+    getFollowers({
+      userId: user.id,
+      currentUserId: user.id,
+      limit,
+    }),
+  ]);
+  const peopleById = new Map();
+
+  followingProfiles.forEach((profile) => {
+    peopleById.set(profile.id, {
+      ...profile,
+      relationshipType: "following",
+    });
+  });
+
+  followerProfiles.forEach((profile) => {
+    const existingProfile = peopleById.get(profile.id);
+
+    if (existingProfile) {
+      peopleById.set(profile.id, {
+        ...existingProfile,
+        relationshipType: "mutual",
+      });
+      return;
+    }
+
+    peopleById.set(profile.id, {
+      ...profile,
+      relationshipType: "follower",
+    });
+  });
+
+  return {
+    currentUser: currentUserProfile,
+    people: [...peopleById.values()].slice(0, limit),
+  };
+}
+
 export async function followUser({ userId, targetUserId }) {
   if (!userId || !targetUserId) {
     throw new Error("Missing user information for follow.");

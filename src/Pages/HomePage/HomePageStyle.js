@@ -11,8 +11,12 @@ export default StyleSheet.create({
   contentContainer: {
     paddingBottom: 28,
   },
+  socialSectionSpacer: {
+    marginTop: 8,
+  },
   quickAccessSection: {
     marginHorizontal: 18,
+    marginTop: 12,
     marginBottom: 0,
   },
   quickAccessGrid: {
