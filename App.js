@@ -24,6 +24,7 @@ import SearchPage from "./src/Pages/SearchPage/SearchPage";
 import WeekPage from './src/Pages/WeekPage/WeekPage';
 import WorkoutPage from './src/Pages/WorkoutPage/WorkoutPage';
 import SetPage from './src/Pages/SetPage/SetPage';
+import ExerciseCatalogPage from "./src/Pages/ExerciseCatalogPage/ExerciseCatalogPage";
 import ExerciseLibraryPage from "./src/Pages/ExerciseLibraryPage/ExerciseLibraryPage";
 
 import { Colors } from './src/Resources/GlobalStyling/colors';
@@ -154,6 +155,7 @@ function RootNavigator() {
                 <Stack.Screen name="WeekPage" component={WeekPage} options={{headerShown: false}} />
                 <Stack.Screen name="WorkoutPage" component={WorkoutPage} options={{headerShown: false}} />
                 <Stack.Screen name="SetPage" component={SetPage} />
+                <Stack.Screen name="ExerciseCatalogPage" component={ExerciseCatalogPage} options={{ headerShown: false }} />
                 <Stack.Screen name="ExerciseLibraryPage" component={ExerciseLibraryPage} options={{ headerShown: false }} />
               </>
             ) : (

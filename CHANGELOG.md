@@ -3,7 +3,7 @@
 ## [0.9.10] - Unreleased
 ### Added
 - Added a Library tab to the bottom navigation that opens the exercise library with a dedicated Library icon.
-- Moved the Programs and Exercise Library quick-access cards from the Home page to the Library page, with the exercise catalog nested under the Exercise Library card.
+- Moved the Programs and Exercise Library quick-access cards from the Home page to the Library page, with the Exercise Library card opening a dedicated Catalog screen.
 
 ---
 ## [0.9.9] - Unreleased

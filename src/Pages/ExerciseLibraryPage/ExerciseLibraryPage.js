@@ -5,7 +5,6 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
 
 import styles from "./ExerciseLibraryPageStyle";
-import ExerciseLibraryList from "./Components/ExerciseLibraryList/ExerciseLibraryList";
 import { Colors } from "../../Resources/GlobalStyling/colors";
 import { programService, weightliftingService } from "../../Services";
 import {
@@ -20,7 +19,6 @@ const ExerciseLibraryPage = () => {
   const navigation = useNavigation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
-  const [refreshKey, set_refreshKey] = useState(0);
   const [quickAccessStats, setQuickAccessStats] = useState({
     programCount: 0,
     completedProgramCount: 0,
@@ -34,10 +32,6 @@ const ExerciseLibraryPage = () => {
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const titleColor = theme.title ?? theme.text;
   const cardTextColor = theme.cardBackground ?? theme.textInverted ?? "#1b1918";
-
-  const refresh = () => {
-    set_refreshKey((prev) => prev + 1);
-  };
 
   const loadQuickAccessStats = useCallback(async () => {
     try {
@@ -65,7 +59,6 @@ const ExerciseLibraryPage = () => {
 
   useFocusEffect(
     useCallback(() => {
-      refresh();
       loadQuickAccessStats();
     }, [loadQuickAccessStats])
   );
@@ -93,11 +86,12 @@ const ExerciseLibraryPage = () => {
       description:
         "Browse your exercise library, filter by muscle groups, explore what each movement trains, and create or manage your own exercises.",
       accent: secondaryColor,
+      onPress: () => navigation.navigate("ExerciseCatalogPage"),
       metrics: [
         { label: "Exercises", value: quickAccessStats.exerciseCount },
         { label: "Custom exercises", value: 0 },
       ],
-      footer: "You're here",
+      footer: "Open catalog",
     },
   ];
 
@@ -226,16 +220,6 @@ const ExerciseLibraryPage = () => {
                     />
                   </View>
 
-                  {card.key === "exercise-library" && (
-                    <View
-                      style={[
-                        styles.quickAccessEmbeddedCatalog,
-                        { borderColor: cardBorder },
-                      ]}
-                    >
-                      <ExerciseLibraryList refreshKey={refreshKey} embedded />
-                    </View>
-                  )}
                 </CardWrapper>
               );
             })}

@@ -12,7 +12,7 @@ import {
   ThemedTitle,
 } from "../../../../Resources/ThemedComponents";
 
-const ExerciseLibraryList = ({ refreshKey, embedded = false }) => {
+const ExerciseLibraryList = ({ refreshKey }) => {
   const db = useSQLiteContext();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -67,14 +67,12 @@ const ExerciseLibraryList = ({ refreshKey, embedded = false }) => {
     set_detailsVisible(true);
   };
 
-  const Container = embedded ? View : ThemedCard;
-
   return (
-    <Container
+    <ThemedCard
       style={[
-        embedded ? styles.embeddedCard : styles.card,
+        styles.card,
         {
-          backgroundColor: embedded ? "transparent" : cardSurface,
+          backgroundColor: cardSurface,
           borderColor: cardBorder,
         },
       ]}
@@ -208,7 +206,7 @@ const ExerciseLibraryList = ({ refreshKey, embedded = false }) => {
           set_selectedExerciseName("");
         }}
       />
-    </Container>
+    </ThemedCard>
   );
 };
 
