@@ -88,7 +88,7 @@ const ExerciseLibraryPage = () => {
     },
     {
       key: "exercise-library",
-      eyebrow: "LIBRARY",
+      eyebrow: "EXERCISE LIBRARY",
       title: "Browse your catalog",
       description:
         "Browse your exercise library, filter by muscle groups, explore what each movement trains, and create or manage your own exercises.",
@@ -225,13 +225,22 @@ const ExerciseLibraryPage = () => {
                       ]}
                     />
                   </View>
+
+                  {card.key === "exercise-library" && (
+                    <View
+                      style={[
+                        styles.quickAccessEmbeddedCatalog,
+                        { borderColor: cardBorder },
+                      ]}
+                    >
+                      <ExerciseLibraryList refreshKey={refreshKey} embedded />
+                    </View>
+                  )}
                 </CardWrapper>
               );
             })}
           </View>
         </View>
-
-        <ExerciseLibraryList refreshKey={refreshKey} />
       </ScrollView>
 
       <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />

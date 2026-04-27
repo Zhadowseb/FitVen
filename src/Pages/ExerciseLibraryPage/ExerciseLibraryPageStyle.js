@@ -109,4 +109,9 @@ export default StyleSheet.create({
     height: 8,
     borderRadius: 999,
   },
+  quickAccessEmbeddedCatalog: {
+    marginTop: 18,
+    paddingTop: 18,
+    borderTopWidth: 1,
+  },
 });

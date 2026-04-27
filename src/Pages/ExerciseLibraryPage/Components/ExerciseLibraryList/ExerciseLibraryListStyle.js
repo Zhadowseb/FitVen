@@ -16,6 +16,13 @@ export default StyleSheet.create({
     borderWidth: 1,
     borderRadius: 24,
   },
+  embeddedCard: {
+    marginHorizontal: 0,
+    marginVertical: 0,
+    paddingHorizontal: 0,
+    paddingVertical: 0,
+    borderWidth: 0,
+  },
   header: {
     flexDirection: "row",
     alignItems: "flex-start",
