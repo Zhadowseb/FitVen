@@ -1,10 +1,10 @@
 import * as React from "react";
-import Svg, { Path } from "react-native-svg";
 import { useColorScheme } from "react-native";
+import Svg, { Path } from "react-native-svg";
 
 import { Colors } from "../../GlobalStyling/colors";
 
-function Library({ width = 24, height = 24, color, thickness = 1.8 }) {
+function Library({ width = 24, height = 24, color, thickness = 1.5, ...props }) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const iconColor = color ?? theme.iconColor;
@@ -19,14 +19,10 @@ function Library({ width = 24, height = 24, color, thickness = 1.8 }) {
       fill="none"
       stroke={iconColor}
       strokeWidth={thickness}
-      strokeLinecap="round"
-      strokeLinejoin="round"
+      strokeLinecap="square"
+      {...props}
     >
-      <Path d="M5.5 4.5h10.75A2.25 2.25 0 0 1 18.5 6.75V20H7.25A2.75 2.75 0 0 1 4.5 17.25V5.5a1 1 0 0 1 1-1Z" />
-      <Path d="M7.25 16.5H18.5" />
-      <Path d="M7.25 16.5a1.75 1.75 0 0 0 0 3.5" />
-      <Path d="M8 8h7" />
-      <Path d="M8 11h5" />
+      <Path d="M16.263 10.5H7.737c-2.581 0-3.872 0-4.466.853-.593.852-.152 2.073.73 4.514l1.084 3c.46 1.273.69 1.91 1.204 2.271.513.362 1.186.362 2.532.362h6.358c1.346 0 2.019 0 2.532-.362.514-.362.744-.998 1.204-2.271l1.084-3c.882-2.441 1.323-3.662.73-4.514-.594-.853-1.885-.853-4.466-.853zM19 8c0-.466 0-.699-.076-.883a1 1 0 00-.541-.54c-.184-.077-.417-.077-.883-.077h-11c-.466 0-.699 0-.883.076a1 1 0 00-.54.541C5 7.301 5 7.534 5 8M16.5 4c0-.466 0-.699-.076-.883a1 1 0 00-.541-.54C15.699 2.5 15.466 2.5 15 2.5H9c-.466 0-.699 0-.883.076a1 1 0 00-.54.541C7.5 3.301 7.5 3.534 7.5 4" />
     </Svg>
   );
 }
