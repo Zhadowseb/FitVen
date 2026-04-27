@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.9.9] - Unreleased
+### Changed
+- Redesigned the strength workout timer card with a compact status/header layout, linear set progress, and custom start, pause, continue, and finish actions.
+- Refreshed strength exercise cards with Home-style top progress bars, set dividers, cleaner icon controls, and card-colored toolbar actions.
+- Reworked collapsed exercise set summaries so matching sets are grouped with the repeat count outside the reps/weight badge and the expand control sits in its own side button.
+- Updated the expanded strength set table with themed surfaces, tighter headers, focused edit pills, rest/reps/weight cell styling, and an inline add-set row.
+- Reduced workout bottom safe-area spacing so strength and run workout screens no longer leave an empty black bar above the bottom navigation.
+
+---
 ## [0.9.8] - Unreleased
 ### Changed
 - Added drag-and-drop reordering for strength workout exercises with persisted local and cloud ordering.

@@ -20,6 +20,7 @@ import Cross from "../../../../../../../../../Resources/Icons/UI-icons/Cross";
 import Delete from "../../../../../../../../../Resources/Icons/UI-icons/Delete";
 import Note from "../../../../../../../../../Resources/Icons/UI-icons/Note";
 import Amrap from "../../../../../../../../../Resources/Icons/UI-icons/Amrap";
+import Plus from "../../../../../../../../../Resources/Icons/UI-icons/Plus";
 import { weightliftingService as weightliftingRepository } from "../../../../../../../../../Services";
 
 const SetList = ({
@@ -28,9 +29,26 @@ const SetList = ({
   visibleColumns,
   onToggleSet,
   updateUI,
+  onAddSet,
 }) => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const isDark = colorScheme === "dark";
+  const tableSurface = isDark ? "rgba(16, 17, 24, 0.58)" : "#f5f4fa";
+  const tableBorder = isDark
+    ? "rgba(255, 255, 255, 0.07)"
+    : "rgba(32, 30, 43, 0.12)";
+  const cellSurface = isDark
+    ? "rgba(24, 25, 34, 0.9)"
+    : "rgba(255, 255, 255, 0.86)";
+  const cellBorder = isDark
+    ? "rgba(255, 255, 255, 0.045)"
+    : "rgba(32, 30, 43, 0.08)";
+  const setChipBackground = isDark
+    ? "rgba(247, 116, 46, 0.17)"
+    : "rgba(247, 116, 46, 0.14)";
+  const setChipTextColor = theme.primary ?? theme.text;
+  const addSetColor = theme.iconColor ?? theme.quietText ?? theme.text;
 
   const db = useSQLiteContext();
   const [localSets, setLocalSets] = useState(sets);
@@ -40,14 +58,14 @@ const SetList = ({
   const [selectedSetNote, setSelectedSetNote] = useState("");
   const [noteModalVisible, setNoteModalVisible] = useState(false);
   const [noteModalText, setNoteModalText] = useState("");
+  const [activeEditableCell, setActiveEditableCell] = useState(null);
 
   useEffect(() => {
     setLocalSets(sets);
   }, [sets]);
 
-  if (!localSets || localSets.length === 0) {
-    return null;
-  }
+  const displayedSets = localSets ?? [];
+  const hasSets = displayedSets.length > 0;
 
   const columnConfig = [
     { key: "note", style: styles.note, flexValue: 1 },
@@ -251,6 +269,36 @@ const SetList = ({
     setSetOptionsVisible(false);
   };
 
+  const renderEditableValue = ({ cellKey, onFocus, onBlur, ...props }) => {
+    const isActive = activeEditableCell === cellKey;
+
+    return (
+      <View
+        style={[
+          styles.valuePill,
+          {
+            backgroundColor: isActive ? cellSurface : "transparent",
+            borderColor: isActive ? cellBorder : "transparent",
+          },
+        ]}
+      >
+        <ThemedEditableCell
+          {...props}
+          onFocus={(event) => {
+            setActiveEditableCell(cellKey);
+            onFocus?.(event);
+          }}
+          onBlur={() => {
+            setActiveEditableCell((currentCell) =>
+              currentCell === cellKey ? null : currentCell
+            );
+            onBlur?.();
+          }}
+        />
+      </View>
+    );
+  };
+
   const renderCellContent = (key, set) => {
     switch (key) {
       case "note":
@@ -267,38 +315,30 @@ const SetList = ({
         ) : null;
 
       case "rest":
-        return (
-          <ThemedEditableCell
-            value={set.pause?.toString() ?? ""}
-            displayFormatter={formatPauseDisplay}
-            suffixFormatter={getPauseSuffix}
-            onCommit={(value) => updateField("pause", value, set.sets_id)}
-          />
-        );
+        return renderEditableValue({
+          cellKey: `${set.sets_id}:rest`,
+          value: set.pause?.toString() ?? "",
+          displayFormatter: formatPauseDisplay,
+          suffixFormatter: getPauseSuffix,
+          onCommit: (value) => updateField("pause", value, set.sets_id),
+        });
 
       case "set":
         return (
           <TouchableOpacity
-            style={{
-              justifyContent: "center",
-              alignItems: "center",
-              width: "100%",
-              height: "100%",
-              borderTopWidth: 2,
-              borderLeftWidth: 2,
-              borderBottomWidth: 3,
-              borderRightWidth: 3,
-              backgroundColor: "rgb(32, 30, 29)",
-              borderTopColor: "rgb(106, 100, 98)",
-              borderLeftColor: "rgb(106, 100, 98)",
-              borderBottomColor: "rgb(8, 7, 7)",
-              borderRightColor: "rgb(8, 7, 7)",
-            }}
+            activeOpacity={0.82}
+            style={[
+              styles.set_chip,
+              {
+                backgroundColor: setChipBackground,
+                borderColor: cellBorder,
+              },
+            ]}
             onPress={() => handleOpenSetOptions(set)}
           >
             <ThemedText
               style={styles.set_chip_text}
-              setColor={theme.primary ?? theme.text}
+              setColor={setChipTextColor}
             >
               {set.set_number}
             </ThemedText>
@@ -306,40 +346,36 @@ const SetList = ({
         );
 
       case "reps":
-        return (
-          <ThemedEditableCell
-            value={set.reps?.toString() ?? ""}
-            suffix={set.amrap === 1 ? "AMRAP" : ""}
-            showSuffixWhenEmpty={set.amrap === 1}
-            onCommit={(value) => updateField("reps", value, set.sets_id)}
-          />
-        );
+        return renderEditableValue({
+          cellKey: `${set.sets_id}:reps`,
+          value: set.reps?.toString() ?? "",
+          suffix: set.amrap === 1 ? "AMRAP" : "",
+          showSuffixWhenEmpty: set.amrap === 1,
+          onCommit: (value) => updateField("reps", value, set.sets_id),
+        });
 
       case "rpe":
-        return (
-          <ThemedEditableCell
-            value={set.rpe?.toString() ?? ""}
-            onCommit={(value) => updateField("rpe", value, set.sets_id)}
-          />
-        );
+        return renderEditableValue({
+          cellKey: `${set.sets_id}:rpe`,
+          value: set.rpe?.toString() ?? "",
+          onCommit: (value) => updateField("rpe", value, set.sets_id),
+        });
 
       case "rm_percentage":
-        return (
-          <ThemedEditableCell
-            value={set.rm_percentage?.toString() ?? ""}
-            suffix="%"
-            onCommit={(value) => updateRmPercentage(value, set.sets_id)}
-          />
-        );
+        return renderEditableValue({
+          cellKey: `${set.sets_id}:rm_percentage`,
+          value: set.rm_percentage?.toString() ?? "",
+          suffix: "%",
+          onCommit: (value) => updateRmPercentage(value, set.sets_id),
+        });
 
       case "weight":
-        return (
-          <ThemedEditableCell
-            value={set.weight?.toString() ?? ""}
-            suffix="kg"
-            onCommit={(value) => updateWeight(value, set.sets_id)}
-          />
-        );
+        return renderEditableValue({
+          cellKey: `${set.sets_id}:weight`,
+          value: set.weight?.toString() ?? "",
+          suffix: "kg",
+          onCommit: (value) => updateWeight(value, set.sets_id),
+        });
 
       case "done":
         return (
@@ -358,18 +394,51 @@ const SetList = ({
     }
   };
 
+  const renderAddSetCell = (key) => {
+    if (key === "set") {
+      return (
+        <TouchableOpacity
+          activeOpacity={0.72}
+          style={styles.addSetIconCell}
+          onPress={onAddSet}
+        >
+          <Plus width={18} height={18} color={addSetColor} />
+        </TouchableOpacity>
+      );
+    }
+
+    return null;
+  };
+
   return (
     <>
-      <ThemedCard style={styles.wrapper}>
-        <Title visibleColumns={visibleColumns} />
+      <ThemedCard
+        style={[
+          styles.wrapper,
+          {
+            backgroundColor: tableSurface,
+            borderColor: tableBorder,
+          },
+        ]}
+      >
+        {hasSets && <Title visibleColumns={visibleColumns} />}
 
-        {localSets.map((set, rowIndex) => {
+        {displayedSets.map((set, rowIndex) => {
           const renderedColumns = getRenderedColumns(set);
 
           return (
-            <View key={set.sets_id} style={styles.container}>
+            <View
+              key={set.sets_id}
+              style={[
+                styles.container,
+                styles.setRow,
+                {
+                  borderBottomColor: tableBorder,
+                },
+                rowIndex === displayedSets.length - 1 && styles.lastGrid,
+              ]}
+            >
               {renderedColumns.map((col, colIndex) => {
-                const isFirst = colIndex === 0;
                 const isLast = colIndex === renderedColumns.length - 1;
 
                 return (
@@ -380,9 +449,10 @@ const SetList = ({
                       styles.padding,
                       col.style,
                       col.mergedStyle,
-                      isFirst && { borderLeftWidth: 0 },
+                      {
+                        borderColor: tableBorder,
+                      },
                       isLast && { borderRightWidth: 0 },
-                      rowIndex === localSets.length - 1 && styles.lastGrid,
                     ]}
                   >
                     {renderCellContent(col.key, set)}
@@ -392,6 +462,38 @@ const SetList = ({
             </View>
           );
         })}
+
+        <View
+          style={[
+            styles.container,
+            styles.setRow,
+            styles.addSetRow,
+            {
+              borderColor: tableBorder,
+            },
+          ]}
+        >
+          {activeColumns.map((col, colIndex) => {
+            const isLast = colIndex === activeColumns.length - 1;
+
+            return (
+              <View
+                key={`add-set-${col.key}`}
+                style={[
+                  styles.editable_cell,
+                  styles.padding,
+                  col.style,
+                  {
+                    borderColor: tableBorder,
+                  },
+                  isLast && { borderRightWidth: 0 },
+                ]}
+              >
+                {renderAddSetCell(col.key)}
+              </View>
+            );
+          })}
+        </View>
       </ThemedCard>
 
       <ThemedBottomSheet

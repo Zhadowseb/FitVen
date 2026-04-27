@@ -4,6 +4,7 @@ export default StyleSheet.create({
   heroShell: {
     width: "95%",
     alignSelf: "center",
+    marginTop: 2,
     marginBottom: 12,
   },
 
@@ -11,136 +12,170 @@ export default StyleSheet.create({
     width: "100%",
     marginHorizontal: 0,
     marginVertical: 0,
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingVertical: 16,
-    borderRadius: 30,
+    borderRadius: 18,
     borderWidth: 1,
     overflow: "hidden",
+    position: "relative",
   },
 
-  heroAccentPrimary: {
-    position: "absolute",
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    top: -84,
-    right: -44,
-    opacity: 0.16,
-  },
-
-  heroAccentSecondary: {
-    position: "absolute",
-    width: 126,
-    height: 126,
-    borderRadius: 63,
-    bottom: -54,
-    left: -28,
-    opacity: 0.08,
-  },
-
-  heroContentRow: {
+  heroTopRow: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "flex-start",
+    marginBottom: 0,
   },
 
-  heroInfoColumn: {
-    flex: 1,
-    paddingRight: 12,
-  },
-
-  heroStatusRow: {
+  heroStatusInline: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
   },
 
-  heroStatusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+  heroStatusDot: {
+    width: 10,
+    height: 10,
     borderRadius: 999,
-    borderWidth: 1,
+    marginRight: 9,
   },
 
-  heroStatusBadgeText: {
+  heroStatusText: {
     fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 0.8,
+    fontWeight: "700",
+    letterSpacing: 2.4,
     textTransform: "uppercase",
+  },
+
+  heroStartedBlock: {
+    position: "absolute",
+    right: 0,
+    alignItems: "flex-end",
+  },
+
+  heroStartedLabel: {
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 2,
+    textTransform: "uppercase",
+    marginBottom: 6,
+  },
+
+  heroStartedValue: {
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "800",
+    fontVariant: ["tabular-nums"],
+  },
+
+  heroTimerValue: {
+    fontSize: 48,
+    lineHeight: 54,
+    fontWeight: "800",
+    fontVariant: ["tabular-nums"],
   },
 
   heroTimerLabel: {
     fontSize: 11,
     fontWeight: "700",
-    letterSpacing: 0.9,
+    letterSpacing: 2.4,
     textTransform: "uppercase",
-    marginBottom: 4,
+    marginTop: 4,
   },
 
-  heroTimerValue: {
-    fontSize: 36,
-    lineHeight: 40,
+  heroSetsRow: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    alignItems: "center",
+    marginTop: 0,
+    marginBottom: 9,
+  },
+
+  heroSetsLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 2.4,
+    textTransform: "uppercase",
+    marginLeft: 8,
+  },
+
+  heroSetsCount: {
+    flexDirection: "row",
+    alignItems: "baseline",
+  },
+
+  heroSetsCountDone: {
+    fontSize: 18,
     fontWeight: "800",
-    letterSpacing: 0.5,
     fontVariant: ["tabular-nums"],
   },
 
-  heroTimerHint: {
-    marginTop: 4,
-    fontSize: 12,
-    lineHeight: 17,
-  },
-
-  heroMetaRow: {
-    flexDirection: "row",
-    marginTop: 14,
-  },
-
-  heroMetaCard: {
-    flex: 1,
-    borderRadius: 18,
-    borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-
-  heroMetaLabel: {
-    fontSize: 10,
+  heroSetsCountTotal: {
+    fontSize: 14,
     fontWeight: "700",
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
-    marginBottom: 6,
+    fontVariant: ["tabular-nums"],
   },
 
-  heroMetaValue: {
-    fontSize: 12,
-    lineHeight: 17,
-    fontWeight: "700",
+  heroProgressTrack: {
+    width: "100%",
+    height: 7,
+    borderRadius: 999,
+    overflow: "hidden",
   },
 
-  heroProgressColumn: {
-    width: 152,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingTop: 4,
+  heroProgressFill: {
+    height: "100%",
+    minWidth: 0,
+    borderRadius: 999,
   },
 
   heroActionsRow: {
     flexDirection: "row",
-    marginTop: 16,
-  },
-
-  heroActionSlot: {
-    flex: 1,
-  },
-
-  heroActionSlotSpaced: {
-    marginRight: 8,
+    marginTop: 20,
+    gap: 12,
   },
 
   heroActionButton: {
-    width: "100%",
-    height: 46,
-    borderRadius: 18,
+    flex: 1,
+    flexBasis: 0,
+    minHeight: 52,
+    borderRadius: 13,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  heroActionPrimary: {},
+
+  heroActionSecondary: {},
+
+  heroPlayIcon: {
+    width: 0,
+    height: 0,
+    borderTopWidth: 8,
+    borderBottomWidth: 8,
+    borderLeftWidth: 12,
+    borderTopColor: "transparent",
+    borderBottomColor: "transparent",
+    marginRight: 12,
+  },
+
+  heroPauseIcon: {
+    width: 14,
+    height: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginRight: 12,
+  },
+
+  heroPauseBar: {
+    width: 4,
+    height: 16,
+    borderRadius: 2,
+  },
+
+  heroActionText: {
+    fontSize: 15,
+    fontWeight: "800",
   },
 
   toolbar: {

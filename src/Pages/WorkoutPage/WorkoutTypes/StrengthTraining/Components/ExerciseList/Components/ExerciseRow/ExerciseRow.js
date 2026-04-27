@@ -6,13 +6,10 @@ import { useSQLiteContext } from "expo-sqlite";
 import { Colors } from "../../../../../../../../Resources/GlobalStyling/colors";
 import styles from "./ExerciseRowStyle";
 import SetList from "./SetList/SetList";
-import { formatExerciseSetSummary } from "../../Utils/checkUniformSets";
 
 import Cogwheel from "../../../../../../../../Resources/Icons/UI-icons/Cogwheel";
 import Note from "../../../../../../../../Resources/Icons/UI-icons/Note";
 import Expand from "../../../../../../../../Resources/Icons/UI-icons/Expand";
-import PlusCircled from "../../../../../../../../Resources/Icons/UI-icons/PlusCircled";
-import Colapse from "../../../../../../../../Resources/Icons/UI-icons/Colapse";
 import ArrowUpAndDown from "../../../../../../../../Resources/Icons/UI-icons/ArrowUpAndDown";
 
 import {
@@ -133,19 +130,95 @@ const ExerciseRow = ({
   const isDone = Number(exercise.done) === 1;
   const hasSets = exercise.sets.length > 0;
   const hasNote = exerciseNote.trim().length > 0;
+  const trackerSetCount = Math.max(
+    Number(exercise.setCount) || 0,
+    exercise.sets.length
+  );
+  const completedSetCount = exercise.sets.filter(
+    (set) => Number(set.done) === 1
+  ).length;
 
   const primaryColor = theme.primary ?? theme.iconColor ?? theme.text;
   const secondaryColor = theme.secondary ?? primaryColor;
   const cardBorder = theme.cardBorder ?? theme.iconColor ?? theme.text;
   const cardSurface = theme.cardBackground ?? theme.background;
   const innerSurface = theme.uiBackground ?? cardSurface;
+  const setListSurface =
+    colorScheme === "dark" ? "rgba(16, 17, 24, 0.58)" : "#f5f4fa";
+  const summaryChipSurface =
+    colorScheme === "dark"
+      ? "rgba(210, 83, 15, 0.10)"
+      : "rgba(247, 116, 46, 0.12)";
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const titleColor = theme.title ?? theme.text;
+  const exerciseCardBackground = isDone
+    ? "rgba(96, 218, 172, 0.1)"
+    : cardSurface;
+  const setProgressTrackColor =
+    colorScheme === "dark" ? "rgba(255, 255, 255, 0.08)" : "rgba(32, 30, 43, 0.1)";
+  const setProgressPercent =
+    trackerSetCount > 0
+      ? Math.min(100, (completedSetCount / trackerSetCount) * 100)
+      : 0;
+  const setProgressDividers =
+    trackerSetCount > 1
+      ? Array.from(
+          { length: trackerSetCount - 1 },
+          (_, index) => ((index + 1) / trackerSetCount) * 100
+        )
+      : [];
 
-  const exerciseSummary = formatExerciseSetSummary(
-    exercise.sets,
-    exercise.setCount
-  );
+  const formatSummaryValue = (value) => {
+    if (value === null || value === undefined || value === "") {
+      return "-";
+    }
+
+    const numericValue = Number(value);
+
+    return Number.isFinite(numericValue) ? numericValue.toString() : "-";
+  };
+
+  const collapsedSetSummaryItems = (() => {
+    const summaryItems = [];
+    const itemsBySignature = new Map();
+
+    for (const set of exercise.sets) {
+      const repsValue = Number(set.reps);
+      const weightValue = Number(set.weight);
+      const normalizedReps = Number.isFinite(repsValue) ? repsValue : null;
+      const normalizedWeight = Number.isFinite(weightValue) ? weightValue : null;
+      const isAmrap = Number(set.amrap) === 1;
+      const signature = [
+        normalizedReps ?? "-",
+        normalizedWeight ?? "-",
+        isAmrap ? "amrap" : "standard",
+      ].join(":");
+
+      const existingItem = itemsBySignature.get(signature);
+
+      if (existingItem) {
+        existingItem.count += 1;
+        continue;
+      }
+
+      const nextItem = {
+        signature,
+        count: 1,
+        reps: normalizedReps,
+        weight: normalizedWeight,
+        isAmrap,
+      };
+
+      itemsBySignature.set(signature, nextItem);
+      summaryItems.push(nextItem);
+    }
+
+    return summaryItems;
+  })();
+
+  const summaryHeadline = hasSets
+    ? `${trackerSetCount} ${trackerSetCount === 1 ? "SET" : "SETS"}`
+    : "No sets added yet";
 
   return (
     <>
@@ -153,11 +226,44 @@ const ExerciseRow = ({
         style={[
           styles.exerciseCard,
           {
-            backgroundColor: isDone ? "rgba(96, 218, 172, 0.1)" : cardSurface,
+            backgroundColor: exerciseCardBackground,
             borderColor: isDone ? secondaryColor : cardBorder,
           },
         ]}
       >
+        {trackerSetCount > 0 && (
+          <View
+            pointerEvents="none"
+            style={[
+              styles.setProgressTrack,
+              { backgroundColor: setProgressTrackColor },
+            ]}
+          >
+            <View
+              style={[
+                styles.setProgressFill,
+                {
+                  width: `${setProgressPercent}%`,
+                  backgroundColor: secondaryColor,
+                },
+              ]}
+            />
+
+            {setProgressDividers.map((dividerOffset) => (
+              <View
+                key={dividerOffset}
+                style={[
+                  styles.setProgressDivider,
+                  {
+                    left: `${dividerOffset}%`,
+                    backgroundColor: exerciseCardBackground,
+                  },
+                ]}
+              />
+            ))}
+          </View>
+        )}
+
         <View style={styles.headerRow}>
           <TouchableOpacity
             activeOpacity={0.88}
@@ -165,13 +271,7 @@ const ExerciseRow = ({
             style={styles.headerMain}
           >
             <View
-              style={[
-                styles.checkboxShell,
-                {
-                  backgroundColor: isDone ? secondaryColor : innerSurface,
-                  borderColor: isDone ? secondaryColor : cardBorder,
-                },
-              ]}
+              style={styles.checkboxShell}
             >
               <ThemedBouncyCheckbox
                 value={isDone}
@@ -198,9 +298,7 @@ const ExerciseRow = ({
                 style={styles.exerciseMeta}
                 setColor={quietText}
               >
-                {hasSets
-                  ? `${exercise.setCount} ${exercise.setCount === 1 ? "set" : "sets"} planned`
-                  : "No sets added yet"}
+                {summaryHeadline}
               </ThemedText>
             </View>
           </TouchableOpacity>
@@ -209,13 +307,7 @@ const ExerciseRow = ({
             {hasNote && (
               <TouchableOpacity
                 activeOpacity={0.88}
-                style={[
-                  styles.actionButton,
-                  {
-                    backgroundColor: innerSurface,
-                    borderColor: cardBorder,
-                  },
-                ]}
+                style={styles.actionButton}
                 onPress={() => setNoteModalVisible(true)}
               >
                 <Note width={18} height={18} color={primaryColor} />
@@ -224,50 +316,12 @@ const ExerciseRow = ({
 
             <TouchableOpacity
               activeOpacity={0.88}
-              style={[
-                styles.actionButton,
-                {
-                  backgroundColor: innerSurface,
-                  borderColor: cardBorder,
-                },
-              ]}
-              onPress={addSet}
-            >
-              <PlusCircled width={18} height={18} color={primaryColor} />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              activeOpacity={0.88}
-              style={[
-                styles.actionButton,
-                {
-                  backgroundColor: innerSurface,
-                  borderColor: cardBorder,
-                },
-              ]}
+              style={styles.actionButton}
               onPress={() => {
                 setPanelModalVisible(true);
               }}
             >
               <Cogwheel width={18} height={18} color={primaryColor} />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              activeOpacity={0.88}
-              style={[
-                styles.actionButton,
-                {
-                  backgroundColor: innerSurface,
-                  borderColor: cardBorder,
-                },
-              ]}
-              onPress={onToggleExpanded}
-            >
-              {isExpanded ? (
-                <Colapse width={18} height={18} color={primaryColor} />
-              ) : (
-                <Expand width={18} height={18} color={primaryColor} />
-              )}
             </TouchableOpacity>
 
             {onDragStart && (
@@ -276,10 +330,6 @@ const ExerciseRow = ({
                 style={[
                   styles.actionButton,
                   styles.dragHandle,
-                  {
-                    backgroundColor: innerSurface,
-                    borderColor: cardBorder,
-                  },
                   isDragging && styles.dragHandleActive,
                 ]}
               >
@@ -294,31 +344,88 @@ const ExerciseRow = ({
         </View>
 
         {!isExpanded && (
-          <TouchableOpacity
-            activeOpacity={0.88}
-            onPress={onToggleExpanded}
-            style={[
-              styles.summaryRow,
-              {
-                backgroundColor: innerSurface,
-                borderColor: cardBorder,
-              },
-            ]}
-          >
+          <View style={styles.summaryCollapsedRow}>
+            <TouchableOpacity
+              activeOpacity={0.88}
+              onPress={onToggleExpanded}
+              style={[
+                styles.summaryRow,
+                {
+                  backgroundColor: setListSurface,
+                  borderColor: cardBorder,
+                },
+              ]}
+            >
+            <View
+              style={[
+                styles.summaryAccent,
+                { backgroundColor: primaryColor },
+              ]}
+            />
+
             <View style={styles.summaryTextBlock}>
-              <ThemedText
-                size={12}
-                style={styles.summaryValue}
-                setColor={hasSets ? undefined : quietText}
-              >
-                {exerciseSummary}
-              </ThemedText>
+              {collapsedSetSummaryItems.length > 0 && (
+                <View style={styles.summaryChipRow}>
+                  {collapsedSetSummaryItems.map((item) => {
+                    return (
+                      <View
+                        key={item.signature}
+                        style={[
+                          styles.summaryChipGroup,
+                          {
+                            borderColor: cardBorder,
+                          },
+                        ]}
+                      >
+                        {item.count > 1 && (
+                          <ThemedText
+                            size={10}
+                            style={styles.summaryRepeatCount}
+                            setColor={titleColor}
+                          >
+                            {item.count} ×
+                          </ThemedText>
+                        )}
+
+                        <View
+                          style={[
+                            styles.summaryChip,
+                            {
+                              backgroundColor: summaryChipSurface,
+                            },
+                          ]}
+                        >
+                          <ThemedText
+                            size={10}
+                            style={styles.summaryChipText}
+                            setColor={titleColor}
+                          >
+                            {`${formatSummaryValue(item.reps)} × ${formatSummaryValue(item.weight)}${item.weight !== null ? "kg" : ""}`}
+                          </ThemedText>
+                        </View>
+                      </View>
+                    );
+                  })}
+                </View>
+              )}
             </View>
 
-            <View style={styles.summaryIcon}>
-              <Expand width={18} height={18} />
-            </View>
-          </TouchableOpacity>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.88}
+              onPress={onToggleExpanded}
+              style={[
+                styles.summaryExpandButton,
+                {
+                  backgroundColor: setListSurface,
+                  borderColor: cardBorder,
+                },
+              ]}
+            >
+              <Expand width={18} height={18} color={primaryColor} />
+            </TouchableOpacity>
+          </View>
         )}
 
         {isExpanded && (
@@ -330,6 +437,7 @@ const ExerciseRow = ({
               onToggleSet={onToggleSet}
               updateWeight={updateWeight}
               updateUI={updateUI}
+              onAddSet={addSet}
             />
           </View>
         )}

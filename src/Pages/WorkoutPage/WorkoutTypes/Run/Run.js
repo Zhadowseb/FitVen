@@ -731,7 +731,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
   ];
 
   return (
-    <ThemedView style={{ flex: 1 }}>
+    <ThemedView safe={false} style={{ flex: 1 }}>
       <ThemedKeyboardProtection scroll>
         <View style={styles.heroShell}>
           <ThemedCard

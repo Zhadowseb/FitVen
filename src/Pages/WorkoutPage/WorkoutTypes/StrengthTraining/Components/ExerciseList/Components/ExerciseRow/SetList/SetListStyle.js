@@ -4,30 +4,45 @@ export default StyleSheet.create({
 
     container: {
         flexDirection: "row",
-        flex: 1,
+        width: "100%",
     },
 
     wrapper: {
         marginHorizontal: 0,
         marginVertical: 0,
-        paddingHorizontal: 4,
-        paddingVertical: 4,
-        borderRadius: 18,
+        paddingHorizontal: 8,
+        paddingTop: 6,
+        paddingBottom: 0,
+        borderRadius: 16,
+        borderBottomLeftRadius: 24,
+        borderBottomRightRadius: 24,
+        borderWidth: 1,
+        overflow: "hidden",
+    },
+
+    titleRow: {
+        minHeight: 30,
+        borderBottomWidth: 1,
+    },
+
+    setRow: {
+        minHeight: 48,
+        borderBottomWidth: 1,
     },
 
     padding: {
-        paddingBottom: 5,
-        paddingTop: 5,
+        paddingHorizontal: 3,
     },
     note: {
-        flex: 1,
-        minWidth: 28,
+        flex: 9,
+        minWidth: 0,
     },
     pause: {
         flex: 20,
     },
     set:    {
-        flex: 8,            
+        flex: 6,
+        maxWidth: 34,
         paddingTop: 0,
         paddingBottom: 0,
         borderLeftWidth: 0,
@@ -37,7 +52,7 @@ export default StyleSheet.create({
     weight: {flex: 20},
     rpe:    {flex: 9},
     rm_percentage: {flex: 14},
-    done:   {flex: 14, maxWidth: 40},  
+    done:   {flex: 10, maxWidth: 33},
 
     override: {
         borderLeftWidth: 0,
@@ -47,9 +62,16 @@ export default StyleSheet.create({
         alignItems: "center",
     },
 
+    titleCell: {
+        justifyContent: "center",
+        alignItems: "center",
+        paddingHorizontal: 2,
+    },
+
     titleText: {
-        fontWeight: "bold",
-        fontSize: 10,
+        fontWeight: "800",
+        fontSize: 9,
+        letterSpacing: 0.8,
     },
 
 
@@ -79,14 +101,20 @@ export default StyleSheet.create({
     },
 
     editable_cell: {
-        borderLeftWidth: 0.2,
         justifyContent: "center",
         alignItems: "center",
-        borderColor: "#4b4b4bff",
-        borderBottomWidth: 0.2,
     },
     lastGrid: {
         borderBottomWidth: 0,
+    },
+    valuePill: {
+        width: "94%",
+        height: 30,
+        borderRadius: 9,
+        borderWidth: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        overflow: "hidden",
     },
 
     bottomsheet_title: {
@@ -112,10 +140,32 @@ export default StyleSheet.create({
     note_button: {
         justifyContent: "center",
         alignItems: "center",
+        width: 30,
+        height: 30,
+        borderRadius: 9,
+    },
+    set_chip: {
+        width: 28,
+        height: 30,
+        borderRadius: 9,
+        borderWidth: 1,
+        justifyContent: "center",
+        alignItems: "center",
     },
     set_chip_text: {
-        fontWeight: "700",
-        letterSpacing: 0.2,
+        fontWeight: "800",
+        fontSize: 13,
+    },
+    addSetRow: {
+        borderTopWidth: 1,
+        borderBottomWidth: 1,
+        minHeight: 36,
+    },
+    addSetIconCell: {
+        width: 28,
+        height: 30,
+        justifyContent: "center",
+        alignItems: "center",
     },
     note_input: {
         minHeight: 100,

@@ -60,7 +60,7 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
         {
           backgroundColor: barBackground,
           borderTopColor: barBorder,
-          paddingBottom: Math.max(insets.bottom, 8),
+          paddingBottom: insets.bottom,
         },
       ]}
     >
@@ -110,12 +110,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderTopWidth: 1,
-    paddingTop: 4,
+    paddingTop: 2,
     paddingHorizontal: 20,
   },
   tab: {
     flex: 1,
-    minHeight: 38,
+    minHeight: 32,
     alignItems: "center",
     justifyContent: "center",
   },
