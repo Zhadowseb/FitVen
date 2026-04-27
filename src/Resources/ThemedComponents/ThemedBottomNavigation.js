@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Colors } from "../GlobalStyling/colors";
 import Home from "../Icons/UI-icons/Home";
+import Library from "../Icons/UI-icons/Library";
 import Male from "../Icons/UI-icons/Male";
 import Search from "../Icons/UI-icons/Search";
 
@@ -18,7 +19,8 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
 
   const isProfileActive = currentRouteName === "ProfilePage";
   const isSearchActive = currentRouteName === "SearchPage";
-  const isHomeActive = !isProfileActive && !isSearchActive;
+  const isLibraryActive = currentRouteName === "ExerciseLibraryPage";
+  const isHomeActive = !isProfileActive && !isSearchActive && !isLibraryActive;
   const activeColor =
     theme.iconColorFocused ?? theme.primary ?? theme.title ?? theme.text;
   const inactiveColor = theme.iconColor ?? theme.quietText ?? theme.text;
@@ -53,6 +55,14 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     navigationRef.navigate("SearchPage");
   };
 
+  const handleLibraryPress = () => {
+    if (!navigationRef?.isReady?.() || isLibraryActive) {
+      return;
+    }
+
+    navigationRef.navigate("ExerciseLibraryPage");
+  };
+
   return (
     <View
       style={[
@@ -85,6 +95,18 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
           width={27}
           height={27}
           color={isSearchActive ? activeColor : inactiveColor}
+        />
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        activeOpacity={0.82}
+        onPress={handleLibraryPress}
+        style={styles.tab}
+      >
+        <Library
+          width={27}
+          height={27}
+          color={isLibraryActive ? activeColor : inactiveColor}
         />
       </TouchableOpacity>
 

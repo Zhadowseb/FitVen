@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.10] - Unreleased
+### Added
+- Added a Library tab to the bottom navigation that opens the exercise library with a dedicated Library icon.
+
+---
 ## [0.9.9] - Unreleased
 ### Changed
 - Redesigned the strength workout timer card with a compact status/header layout, linear set progress, and custom start, pause, continue, and finish actions.
