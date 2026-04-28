@@ -6,6 +6,27 @@ export default StyleSheet.create({
     paddingBottom: 28,
   },
 
+  listHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 2,
+    paddingTop: 4,
+    paddingBottom: 14,
+  },
+
+  listHeaderLabel: {
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 4,
+    textTransform: "uppercase",
+  },
+
+  listHeaderCount: {
+    fontSize: 13,
+    fontWeight: "700",
+  },
+
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
@@ -19,159 +40,136 @@ export default StyleSheet.create({
     marginBottom: 14,
     padding: 0,
     borderWidth: 1,
-    borderRadius: 28,
+    borderRadius: 20,
     overflow: "hidden",
   },
 
   cardAccent: {
     position: "absolute",
     top: 0,
+    bottom: 0,
     left: 0,
-    right: 0,
-    height: 4,
+    width: 4,
   },
 
   touchable: {
-    paddingHorizontal: 18,
-    paddingTop: 20,
-    paddingBottom: 0,
-    gap: 16,
+    paddingLeft: 22,
+    paddingRight: 18,
+    paddingTop: 18,
+    paddingBottom: 18,
   },
 
-  titleSection: {
-    flex: 1,
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
   },
 
-  eyebrow: {
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 1,
+  statusDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    marginRight: 10,
+  },
+
+  statusLabel: {
+    fontSize: 11,
+    fontWeight: "900",
+    letterSpacing: 2,
     textTransform: "uppercase",
-    marginBottom: 4,
   },
 
   title: {
-    lineHeight: 28,
-    marginBottom: 6,
+    fontSize: 18,
+    lineHeight: 24,
+    marginBottom: 8,
   },
 
-  subtitle: {
-    fontSize: 13,
-    lineHeight: 19,
-  },
-
-  heroPanel: {
-    borderWidth: 1,
-    borderRadius: 22,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    gap: 14,
-  },
-
-  heroHeader: {
+  metaRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: 12,
+    alignItems: "center",
+    flexWrap: "wrap",
+    marginBottom: 16,
   },
 
-  statusSection: {
-    alignItems: "flex-end",
-    paddingTop: 2,
+  metaText: {
+    fontSize: 14,
+    lineHeight: 20,
   },
 
-  statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 999,
-  },
-
-  statusText: {
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 0.4,
-    textTransform: "uppercase",
-  },
-
-  heroSummary: {
+  metaNumber: {
     fontSize: 14,
     lineHeight: 20,
     fontWeight: "700",
   },
 
-  heroTimelineRow: {
+  metaSeparator: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginHorizontal: 8,
+  },
+
+  progressSection: {
+    marginBottom: 16,
+  },
+
+  progressMetaRow: {
     flexDirection: "row",
-    gap: 10,
-  },
-
-  timelineCard: {
-    flex: 1,
-    borderWidth: 1,
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    gap: 4,
-  },
-
-  metaGrid: {
-    flexDirection: "row",
-    gap: 10,
-  },
-
-  metaCard: {
-    flex: 1,
-    minHeight: 104,
-    borderWidth: 1,
-    borderRadius: 18,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    justifyContent: "center",
     alignItems: "center",
-  },
-
-  label: {
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
+    justifyContent: "space-between",
     marginBottom: 8,
-    textAlign: "center",
   },
 
-  value: {
-    fontSize: 24,
-    fontWeight: "800",
-    lineHeight: 30,
-    textAlign: "center",
-  },
-
-  dateGroup: {
-    gap: 2,
-  },
-
-  dateLabel: {
-    fontSize: 11,
-    fontWeight: "700",
-    lineHeight: 14,
-  },
-
-  dateValue: {
+  progressText: {
     fontSize: 13,
-    fontWeight: "700",
-    lineHeight: 17,
+    lineHeight: 18,
   },
 
-  footerRow: {
-    marginTop: -8,
+  progressNumber: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "800",
+  },
+
+  progressPercent: {
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: "900",
+  },
+
+  progressTrack: {
+    height: 5,
+    borderRadius: 999,
+    overflow: "hidden",
+  },
+
+  progressFill: {
+    height: "100%",
+    borderRadius: 999,
+  },
+
+  summaryRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "flex-start",
+    marginBottom: 18,
   },
 
-  footerCopy: {
+  summaryDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 10,
+  },
+
+  summaryText: {
+    flex: 1,
     fontSize: 13,
-    fontWeight: "700",
-    letterSpacing: 0.3,
+    lineHeight: 18,
+  },
+
+  dateRange: {
+    fontSize: 13,
+    lineHeight: 18,
   },
 
   emptyCard: {
@@ -181,7 +179,7 @@ export default StyleSheet.create({
     paddingTop: 30,
     paddingBottom: 26,
     borderWidth: 1,
-    borderRadius: 26,
+    borderRadius: 20,
     overflow: "hidden",
   },
 

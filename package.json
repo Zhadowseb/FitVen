@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.9.11-fix-week-indicator-today-workout-badge.1",
+  "version": "0.9.12-minor-program-card-redesign.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",

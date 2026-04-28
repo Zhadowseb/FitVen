@@ -18,10 +18,62 @@ import {
   ThemedText,
   ThemedTitle,
 } from "../../../../Resources/ThemedComponents";
-import {
-  getAverageSessionsPerWeek,
-  getProgramEndDate,
-} from "../../../../Utils/programUtils";
+import { getProgramEndDate } from "../../../../Utils/programUtils";
+import { parseCustomDate } from "../../../../Utils/dateUtils";
+
+const MONTH_LABELS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+function formatProgramDateLabel(value, { includeYear = false } = {}) {
+  if (!value) {
+    return "";
+  }
+
+  const date = parseCustomDate(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = MONTH_LABELS[date.getMonth()] ?? "";
+  const year = date.getFullYear();
+
+  return `${day} ${month}${includeYear ? ` ${year}` : ""}`.trim();
+}
+
+function getProgramDateRange(startDate, endDate) {
+  if (!startDate && !endDate) {
+    return "";
+  }
+
+  const start = parseCustomDate(startDate);
+  const end = parseCustomDate(endDate);
+  const showStartYear =
+    Number.isNaN(start.getTime()) ||
+    Number.isNaN(end.getTime()) ||
+    start.getFullYear() !== end.getFullYear();
+
+  return `${formatProgramDateLabel(startDate, {
+    includeYear: showStartYear,
+  })} -> ${formatProgramDateLabel(endDate, { includeYear: true })}`;
+}
+
+function pluralizeCount(count, singular, plural = `${singular}s`) {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
 
 const ProgramList = ({ refreshKey, onCreateProgram }) => {
   const navigation = useNavigation();
@@ -34,11 +86,8 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
   const hasHandledInitialFocusRef = useRef(false);
 
   const cardSurface = theme.cardBackground ?? theme.background;
-  const panelSurface = theme.uiBackground ?? "rgba(127, 127, 127, 0.12)";
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const titleColor = theme.title ?? theme.text;
-  const footerText = theme.cardBackground ?? theme.textInverted ?? "#1b1918";
-  const metricLabelColor = theme.primary ?? theme.ACTIVE ?? "#f7742e";
   const cardBorderFallback =
     theme.cardBorder ?? theme.border ?? theme.iconColor ?? theme.text;
 
@@ -52,10 +101,6 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
         rows.map((program) => ({
           ...program,
           end_date: getProgramEndDate(program.start_date, program.day_count),
-          avg_sessions_per_week: getAverageSessionsPerWeek(
-            program.workout_count,
-            program.week_count
-          ),
         }))
       );
     } catch (error) {
@@ -85,25 +130,22 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
     switch (status) {
       case "ACTIVE":
         return {
-          label: "Active",
+          label: "ACTIVE",
           color: theme.ACTIVE ?? theme.primary ?? "#f7742e",
-          backgroundColor: theme.primaryLight ?? "rgba(247, 116, 46, 0.16)",
           summary: "Currently in progress",
         };
       case "COMPLETE":
         return {
-          label: "Completed",
+          label: "COMPLETED",
           color: theme.COMPLETE ?? theme.secondary ?? "#60daac",
-          backgroundColor: theme.secondaryLight ?? "rgba(96, 218, 172, 0.16)",
           summary: "Finished and ready to review",
         };
       case "NOT_STARTED":
       default:
         return {
-          label: "Not started",
+          label: "DRAFT",
           color: theme.NOT_STARTED ?? theme.iconColor ?? "#9E9E9E",
-          backgroundColor: theme.uiBackground ?? "rgba(127, 127, 127, 0.16)",
-          summary: null,
+          summary: "Not started yet",
         };
     }
   };
@@ -118,14 +160,26 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
 
   return (
     <ScrollView contentContainerStyle={styles.listContainer}>
+      <View style={styles.listHeader}>
+        <ThemedText style={styles.listHeaderLabel} setColor={quietText}>
+          YOUR PROGRAMS
+        </ThemedText>
+        <ThemedText style={styles.listHeaderCount} setColor={quietText}>
+          {programs.length}
+        </ThemedText>
+      </View>
+
       {programs.map((item) => {
         const statusPresentation = getStatusPresentation(item.status);
         const cardBorder = cardBorderFallback ?? statusPresentation.color;
-        const programSummary = `${item.mesocycle_count} ${
-          item.mesocycle_count === 1 ? "block" : "blocks"
-        } - ${item.workout_count} ${
-          item.workout_count === 1 ? "workout" : "workouts"
-        }`;
+        const totalWorkouts = Number(item.workout_count) || 0;
+        const completedWorkouts = Number(item.completed_workout_count) || 0;
+        const progressPercent =
+          totalWorkouts > 0
+            ? Math.min(100, Math.round((completedWorkouts / totalWorkouts) * 100))
+            : 0;
+        const showProgress = item.status === "ACTIVE" && totalWorkouts > 0;
+        const dateRange = getProgramDateRange(item.start_date, item.end_date);
 
         return (
           <ThemedCard
@@ -156,159 +210,112 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
                 })
               }
             >
-              <ThemedText
-                style={styles.eyebrow}
-                setColor={statusPresentation.color}
-              >
-                Program
-              </ThemedText>
-
-              <View
-                style={[
-                  styles.heroPanel,
-                  {
-                    backgroundColor: statusPresentation.backgroundColor,
-                    borderColor: statusPresentation.color,
-                  },
-                ]}
-              >
-                <View style={styles.heroHeader}>
-                  <View style={styles.titleSection}>
-                    <ThemedTitle type="h3" style={styles.title}>
-                      {item.program_name || "Untitled program"}
-                    </ThemedTitle>
-
-                    <ThemedText style={styles.subtitle} setColor={quietText}>
-                      {programSummary}
-                    </ThemedText>
-                  </View>
-
-                  <View style={styles.statusSection}>
-                    <View
-                      style={[
-                        styles.statusBadge,
-                        { backgroundColor: cardSurface },
-                      ]}
-                    >
-                      <ThemedText
-                        style={styles.statusText}
-                        setColor={statusPresentation.color}
-                      >
-                        {statusPresentation.label}
-                      </ThemedText>
-                    </View>
-                  </View>
-                </View>
-
-                {statusPresentation.summary ? (
-                  <ThemedText style={styles.heroSummary} setColor={titleColor}>
-                    {statusPresentation.summary}
-                  </ThemedText>
-                ) : null}
-
-                <View style={styles.heroTimelineRow}>
-                  <View
-                    style={[
-                      styles.timelineCard,
-                      {
-                        backgroundColor: cardSurface,
-                        borderColor: cardBorder,
-                      },
-                    ]}
-                  >
-                    <ThemedText style={styles.dateLabel} setColor={quietText}>
-                      Start date
-                    </ThemedText>
-                    <ThemedText
-                      style={styles.dateValue}
-                      setColor={titleColor}
-                      numberOfLines={1}
-                    >
-                      {item.start_date}
-                    </ThemedText>
-                  </View>
-
-                  <View
-                    style={[
-                      styles.timelineCard,
-                      {
-                        backgroundColor: cardSurface,
-                        borderColor: cardBorder,
-                      },
-                    ]}
-                  >
-                    <ThemedText style={styles.dateLabel} setColor={quietText}>
-                      End date
-                    </ThemedText>
-                    <ThemedText
-                      style={styles.dateValue}
-                      setColor={titleColor}
-                      numberOfLines={1}
-                    >
-                      {item.end_date}
-                    </ThemedText>
-                  </View>
-                </View>
-              </View>
-
-              <View style={styles.metaGrid}>
+              <View style={styles.statusRow}>
                 <View
                   style={[
-                    styles.metaCard,
-                    {
-                      backgroundColor: panelSurface,
-                      borderColor: cardBorder,
-                    },
+                    styles.statusDot,
+                    { backgroundColor: statusPresentation.color },
                   ]}
+                />
+                <ThemedText
+                  style={styles.statusLabel}
+                  setColor={statusPresentation.color}
                 >
-                  <ThemedText style={styles.label} setColor={metricLabelColor}>
-                    Blocks
-                  </ThemedText>
-                  <ThemedText style={styles.value} setColor={titleColor}>
-                    {item.mesocycle_count}
-                  </ThemedText>
-                </View>
-
-                <View
-                  style={[
-                    styles.metaCard,
-                    {
-                      backgroundColor: panelSurface,
-                      borderColor: cardBorder,
-                    },
-                  ]}
-                >
-                  <ThemedText style={styles.label} setColor={metricLabelColor}>
-                    Weeks
-                  </ThemedText>
-                  <ThemedText style={styles.value} setColor={titleColor}>
-                    {item.week_count}
-                  </ThemedText>
-                </View>
-
-                <View
-                  style={[
-                    styles.metaCard,
-                    {
-                      backgroundColor: panelSurface,
-                      borderColor: cardBorder,
-                    },
-                  ]}
-                >
-                  <ThemedText style={styles.label} setColor={metricLabelColor}>
-                    Workouts
-                  </ThemedText>
-                  <ThemedText style={styles.value} setColor={titleColor}>
-                    {item.workout_count}
-                  </ThemedText>
-                </View>
-              </View>
-
-              <View style={styles.footerRow}>
-                <ThemedText style={styles.footerCopy} setColor={footerText}>
-                  Open program overview
+                  {statusPresentation.label}
                 </ThemedText>
               </View>
+
+              <ThemedTitle
+                type="h3"
+                style={styles.title}
+                numberOfLines={1}
+              >
+                {item.program_name || "Untitled program"}
+              </ThemedTitle>
+
+              <View style={styles.metaRow}>
+                <ThemedText style={styles.metaText} setColor={quietText}>
+                  <ThemedText style={styles.metaNumber} setColor={titleColor}>
+                    {item.mesocycle_count}
+                  </ThemedText>{" "}
+                  {item.mesocycle_count === 1 ? "block" : "blocks"}
+                </ThemedText>
+                <ThemedText style={styles.metaSeparator} setColor={quietText}>
+                  -
+                </ThemedText>
+                <ThemedText style={styles.metaText} setColor={quietText}>
+                  <ThemedText style={styles.metaNumber} setColor={titleColor}>
+                    {item.week_count}
+                  </ThemedText>{" "}
+                  {item.week_count === 1 ? "week" : "weeks"}
+                </ThemedText>
+                <ThemedText style={styles.metaSeparator} setColor={quietText}>
+                  -
+                </ThemedText>
+                <ThemedText style={styles.metaText} setColor={quietText}>
+                  <ThemedText style={styles.metaNumber} setColor={titleColor}>
+                    {totalWorkouts}
+                  </ThemedText>{" "}
+                  {totalWorkouts === 1 ? "workout" : "workouts"}
+                </ThemedText>
+              </View>
+
+              {showProgress ? (
+                <View style={styles.progressSection}>
+                  <View style={styles.progressMetaRow}>
+                    <ThemedText style={styles.progressText} setColor={quietText}>
+                      <ThemedText
+                        style={styles.progressNumber}
+                        setColor={titleColor}
+                      >
+                        {completedWorkouts}
+                      </ThemedText>{" "}
+                      / {pluralizeCount(totalWorkouts, "workout")}
+                    </ThemedText>
+                    <ThemedText
+                      style={styles.progressPercent}
+                      setColor={statusPresentation.color}
+                    >
+                      {progressPercent}%
+                    </ThemedText>
+                  </View>
+
+                  <View
+                    style={[
+                      styles.progressTrack,
+                      { backgroundColor: theme.uiBackground ?? "#2f2b3d" },
+                    ]}
+                  >
+                    <View
+                      style={[
+                        styles.progressFill,
+                        {
+                          width: `${progressPercent}%`,
+                          backgroundColor: statusPresentation.color,
+                        },
+                      ]}
+                    />
+                  </View>
+                </View>
+              ) : statusPresentation.summary ? (
+                <View style={styles.summaryRow}>
+                  <View
+                    style={[
+                      styles.summaryDot,
+                      { backgroundColor: statusPresentation.color },
+                    ]}
+                  />
+                  <ThemedText style={styles.summaryText} setColor={quietText}>
+                    {statusPresentation.summary}
+                  </ThemedText>
+                </View>
+              ) : null}
+
+              {dateRange ? (
+                <ThemedText style={styles.dateRange} setColor={quietText}>
+                  {dateRange}
+                </ThemedText>
+              ) : null}
             </TouchableOpacity>
           </ThemedCard>
         );

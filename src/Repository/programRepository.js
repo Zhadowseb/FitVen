@@ -687,7 +687,8 @@ export async function getProgramsOverview(db) {
         COALESCE(mesocycles.mesocycle_count, 0) AS mesocycle_count,
         COALESCE(microcycles.week_count, 0) AS week_count,
         COALESCE(days.day_count, 0) AS day_count,
-        COALESCE(workouts.workout_count, 0) AS workout_count
+        COALESCE(workouts.workout_count, 0) AS workout_count,
+        COALESCE(workouts.completed_workout_count, 0) AS completed_workout_count
      FROM Program p
      LEFT JOIN (
         SELECT
@@ -717,7 +718,8 @@ export async function getProgramsOverview(db) {
      LEFT JOIN (
         SELECT
           d.program_id,
-          COUNT(w.workout_id) AS workout_count
+          COUNT(w.workout_id) AS workout_count,
+          SUM(CASE WHEN w.done = 1 THEN 1 ELSE 0 END) AS completed_workout_count
         FROM Day d
         LEFT JOIN Workout_Type_Instance w
           ON w.day_id = d.day_id

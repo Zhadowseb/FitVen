@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.12] - Unreleased
+### Changed
+- Redesigned program cards with compact status, progress, summary metrics and date range styling.
+
+---
 ## [0.9.11] - Unreleased
 ### Fixed
 - Fixed today's WeekIndicator workout badges so they use the same rounded-card shape and icon size as workout badges on other days.
