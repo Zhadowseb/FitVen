@@ -53,6 +53,15 @@ export async function getWorkoutTimerState(db, workoutId) {
   return workoutRepository.getWorkoutTimerState(db, workoutId);
 }
 
+export async function updateWorkoutLabel(db, { workoutId, label }) {
+  await workoutRepository.updateWorkoutLabel(db, {
+    workoutId,
+    label,
+  });
+
+  syncWorkoutTypeInstancesInBackground(db);
+}
+
 export async function persistWorkoutTimerState(
   db,
   { workoutId, timerStart, elapsedTime }

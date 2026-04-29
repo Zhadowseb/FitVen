@@ -13,7 +13,7 @@ import { useColorScheme } from "react-native";
 import { Colors } from "../../../../Resources/GlobalStyling/colors";
 
 import pageStyles from "../../WorkoutPageStyle";
-import styles from "./StrengthTrainingStyle";
+import styles from "./ResistanceStyle.js";
 import {
   ThemedCard,
   ThemedBottomSheet,
@@ -36,7 +36,12 @@ import Checkmark from "../../../../Resources/Icons/UI-icons/Checkmark";
 import ArrowDoubleDown from "../../../../Resources/Icons/UI-icons/ArrowDoubleDown";
 import ArrowDoubleUp from "../../../../Resources/Icons/UI-icons/ArrowDoubleUp";
 
-const StrengthTraining = ({workout_id, date, restartRequestKey}) =>  {
+const Resistance = ({
+  workout_id,
+  date,
+  workoutInstanceLabel,
+  restartRequestKey,
+}) =>  {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
 
@@ -323,6 +328,8 @@ const StrengthTraining = ({workout_id, date, restartRequestKey}) =>  {
     original_start_time !== null
       ? formatWorkoutStart(original_start_time)
       : "Not started yet";
+  const workoutInstanceLabelText =
+    workoutInstanceLabel?.trim?.() ?? workoutInstanceLabel;
   const primaryActionTitle = isRunning
     ? "Pause"
     : original_start_time !== null
@@ -385,16 +392,27 @@ const StrengthTraining = ({workout_id, date, restartRequestKey}) =>  {
             </ThemedText>
 
             <View style={styles.heroSetsRow}>
-              <View style={styles.heroSetsCount}>
-                <ThemedText style={styles.heroSetsCountDone} setColor={primaryColor}>
-                  {resolvedDoneSets}
+              {!!workoutInstanceLabelText && (
+                <ThemedText
+                  style={styles.heroWorkoutInstanceLabel}
+                  setColor={primaryColor}
+                  numberOfLines={1}
+                >
+                  {workoutInstanceLabelText}
                 </ThemedText>
-                <ThemedText style={styles.heroSetsCountTotal} setColor={quietText}>
-                  / {resolvedTotalSets}
-                </ThemedText>
-                <ThemedText style={styles.heroSetsLabel} setColor={quietText}>
-                  Sets
-                </ThemedText>
+              )}
+              <View style={styles.heroSetsBlock}>
+                <View style={styles.heroSetsCount}>
+                  <ThemedText style={styles.heroSetsCountDone} setColor={primaryColor}>
+                    {resolvedDoneSets}
+                  </ThemedText>
+                  <ThemedText style={styles.heroSetsCountTotal} setColor={quietText}>
+                    / {resolvedTotalSets}
+                  </ThemedText>
+                  <ThemedText style={styles.heroSetsLabel} setColor={quietText}>
+                    Sets
+                  </ThemedText>
+                </View>
               </View>
             </View>
 
@@ -579,4 +597,4 @@ const StrengthTraining = ({workout_id, date, restartRequestKey}) =>  {
   );
 }
 
-export default StrengthTraining;
+export default Resistance;

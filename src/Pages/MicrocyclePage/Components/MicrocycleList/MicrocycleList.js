@@ -344,8 +344,9 @@ const MicrocycleList = ({
         date: selectedDay.date,
         dayId: dayRow.day_id,
         workoutType: labelId.id,
-        label: labelId.id,
+        label: null,
       });
+      const workoutLabel = labelId.displayName ?? labelId.id;
 
       setLabelModalVisible(false);
       setDayOptionsVisible(false);
@@ -356,7 +357,7 @@ const MicrocycleList = ({
         day: selectedDay.day,
         date: selectedDay.date,
         workout_id: workoutResult.lastInsertRowId,
-        workout_label: labelId.id,
+        workout_label: workoutLabel,
         workout_type: labelId.id,
       });
     } catch (error) {

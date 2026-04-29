@@ -67,6 +67,15 @@ export default StyleSheet.create({
     fontVariant: ["tabular-nums"],
   },
 
+  heroWorkoutInstanceLabel: {
+    flex: 1,
+    maxWidth: "58%",
+    paddingRight: 12,
+    fontSize: 15,
+    lineHeight: 17,
+    fontWeight: "800",
+  },
+
   heroTimerValue: {
     fontSize: 48,
     lineHeight: 54,
@@ -84,10 +93,14 @@ export default StyleSheet.create({
 
   heroSetsRow: {
     flexDirection: "row",
-    justifyContent: "flex-end",
-    alignItems: "center",
+    justifyContent: "space-between",
+    alignItems: "baseline",
     marginTop: 0,
     marginBottom: 9,
+  },
+
+  heroSetsBlock: {
+    alignItems: "flex-end",
   },
 
   heroSetsLabel: {

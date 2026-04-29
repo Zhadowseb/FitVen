@@ -1,18 +1,92 @@
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { ScrollView, StyleSheet, TouchableOpacity, View, useColorScheme } from "react-native";
-import { SELECTABLE_WORKOUT_ICONS } from "../Icons/WorkoutLabels/index";
+import { useSQLiteContext } from "expo-sqlite";
+import {
+    SELECTABLE_WORKOUT_ICONS,
+    getWorkoutIconConfig,
+} from "../Icons/WorkoutLabels/index";
 import { Colors } from "../GlobalStyling/colors";
+import { programService } from "../../Services";
 
 
 import {ThemedButton, ThemedText, ThemedWorkoutModal} 
   from "../ThemedComponents";
 
 export default function AddWorkoutModal({ visible, onClose, onSubmit }) {
+    const db = useSQLiteContext();
     const colorScheme = useColorScheme();
     const theme = Colors[colorScheme] ?? Colors.light;
+    const [workoutTypes, setWorkoutTypes] = useState(null);
+
+    useEffect(() => {
+        let isMounted = true;
+
+        if (!visible) {
+            return () => {
+                isMounted = false;
+            };
+        }
+
+        const loadWorkoutTypes = async () => {
+            try {
+                const localWorkoutTypes =
+                    await programService.getSelectableWorkoutTypes(db);
+
+                if (isMounted) {
+                    setWorkoutTypes(localWorkoutTypes);
+                }
+
+                const refreshedWorkoutTypes =
+                    await programService.refreshSelectableWorkoutTypes(db);
+
+                if (isMounted) {
+                    setWorkoutTypes(refreshedWorkoutTypes);
+                }
+            } catch (error) {
+                console.warn("Failed to load workout types:", error);
+            }
+        };
+
+        loadWorkoutTypes();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [db, visible]);
+
+    const workoutOptions = useMemo(() => {
+        const fallbackWorkoutTypes = SELECTABLE_WORKOUT_ICONS.map(({ id }) => ({
+            name: id,
+            display_name: id,
+        }));
+        const sourceWorkoutTypes =
+            workoutTypes !== null ? workoutTypes : fallbackWorkoutTypes;
+        const fallbackIconConfig = getWorkoutIconConfig("Resistance");
+
+        return sourceWorkoutTypes
+            .map((workoutType) => {
+                const id = workoutType.name ?? workoutType.id;
+
+                if (!id) {
+                    return null;
+                }
+
+                const displayName =
+                    workoutType.display_name ?? workoutType.displayName ?? id;
+                const iconConfig =
+                    getWorkoutIconConfig(id) ?? fallbackIconConfig;
+
+                return {
+                    id,
+                    displayName,
+                    Icon: iconConfig?.Icon,
+                };
+            })
+            .filter((workoutType) => workoutType?.Icon);
+    }, [workoutTypes]);
     
-    const handleSubmit = (id) => {
-        onSubmit({ id });
+    const handleSubmit = (workoutType) => {
+        onSubmit(workoutType);
         onClose();
     };
 
@@ -26,11 +100,11 @@ export default function AddWorkoutModal({ visible, onClose, onSubmit }) {
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.list}>
-                {SELECTABLE_WORKOUT_ICONS.map(({ id, Icon }) => (
+                {workoutOptions.map(({ id, displayName, Icon }) => (
                     <TouchableOpacity
                         key={id}
                         style={styles.option}
-                        onPress={() => handleSubmit(id)}>
+                        onPress={() => handleSubmit({ id, displayName })}>
 
                         <View
                             style={[
@@ -50,7 +124,7 @@ export default function AddWorkoutModal({ visible, onClose, onSubmit }) {
                             />
                         </View>
 
-                        <ThemedText style={styles.label}>{id}</ThemedText>
+                        <ThemedText style={styles.label}>{displayName}</ThemedText>
                     </TouchableOpacity>
                 ))}
             </ScrollView>

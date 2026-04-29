@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.9.12-minor-program-card-redesign.1",
+  "version": "0.9.13-minor-workout-type-cloud-catalog.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",

@@ -9,7 +9,7 @@ import {
 import { useSQLiteContext } from "expo-sqlite";
 import { useNavigation } from "@react-navigation/native";
 
-import styles from "./ExerciseListStyle";
+import styles from "./ExerciseListStyle.js";
 import { weightliftingService as weightliftingRepository } from "../../../../../../Services";
 
 import ExerciseRow from "./Components/ExerciseRow/ExerciseRow"

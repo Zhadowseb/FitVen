@@ -358,19 +358,20 @@ const Day = ( {day, program_id, microcycle_id} ) => {
             onSubmit={async (labelId) => {
 
                 set_labelModal_visible(false);
+                const workoutLabel = labelId.displayName ?? labelId.id;
 
                 const workout_id = await programRepository.createWorkoutForDay(db, {
                     date,
                     dayId: day_id,
                     workoutType: labelId.id,
-                    label: labelId.id,
+                    label: null,
                 });
 
                 navigation.navigate("WorkoutPage", {
                     program_id,
                     date,
                     workout_id: workout_id.lastInsertRowId,
-                    workout_label: labelId.id,
+                    workout_label: workoutLabel,
                     workout_type: labelId.id,
                 });
             }}

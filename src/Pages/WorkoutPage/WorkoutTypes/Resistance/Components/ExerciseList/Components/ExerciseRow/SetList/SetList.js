@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSQLiteContext } from "expo-sqlite";
 import { Colors } from "../../../../../../../../../Resources/GlobalStyling/colors";
 
-import styles from "./SetListStyle";
+import styles from "./SetListStyle.js";
 import Title from "./Title";
 
 import {

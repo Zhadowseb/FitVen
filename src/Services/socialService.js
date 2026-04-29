@@ -24,9 +24,11 @@ const AVATAR_BUCKET = "avatars";
 const PROFILE_SELECT_FIELDS =
   "id, username, username_base, username_code, display_name, bio, avatar_path, created_at, updated_at";
 const WORKOUT_ACTIVITY_SELECT_FIELDS =
-  "id, user_id, workout_type, date, label, done, is_active, timer_start, elapsed_time, deleted_at";
+  "id, user_id, workout_type, date, label, done, is_active, timer_start, elapsed_time, deleted_at, workout_catalog:workout_type!workout_type_instance_workout_type_fkey(display_name)";
 const SOCIAL_SETUP_MESSAGE =
   "User search and follows are not set up in Supabase yet. Run docs/supabase-social-search.sql in the Supabase SQL editor first.";
+const WORKOUT_TYPE_SETUP_MESSAGE =
+  "Workout types are not set up in Supabase yet. Run docs/supabase-workout-types.sql in the Supabase SQL editor first.";
 const SOCIAL_AVATAR_SETUP_MESSAGE =
   "Profile photos are not set up in Supabase yet. Make sure the avatars bucket exists and rerun the updated docs/supabase-social-search.sql script first.";
 export const PROFILE_DISPLAY_NAME_MAX_LENGTH = 40;
@@ -195,6 +197,20 @@ function createRestActivityPreview() {
   };
 }
 
+function getCloudWorkoutDisplayLabel(workout) {
+  const workoutType = workout?.workout_type?.trim?.() ?? workout?.workout_type;
+  const label = workout?.label?.trim?.() ?? workout?.label;
+  const displayName =
+    workout?.workout_catalog?.display_name?.trim?.() ??
+    workout?.workout_catalog?.display_name;
+
+  if (label && label !== workoutType) {
+    return label;
+  }
+
+  return displayName || label || workoutType || null;
+}
+
 function buildCloudActivityPreview(workouts) {
   if (!workouts.length) {
     return createRestActivityPreview();
@@ -207,7 +223,7 @@ function buildCloudActivityPreview(workouts) {
       activityState: "live",
       activityDetail: formatCloudWorkoutElapsedDetail(liveWorkout),
       workoutType: liveWorkout.workout_type ?? null,
-      workoutLabel: liveWorkout.label ?? liveWorkout.workout_type ?? null,
+      workoutLabel: getCloudWorkoutDisplayLabel(liveWorkout),
     };
   }
 
@@ -225,8 +241,7 @@ function buildCloudActivityPreview(workouts) {
           ? `${plannedWorkouts.length} planned`
           : "Planned",
       workoutType: nextPlannedWorkout.workout_type ?? null,
-      workoutLabel:
-        nextPlannedWorkout.label ?? nextPlannedWorkout.workout_type ?? null,
+      workoutLabel: getCloudWorkoutDisplayLabel(nextPlannedWorkout),
     };
   }
 
@@ -237,8 +252,7 @@ function buildCloudActivityPreview(workouts) {
     activityDetail:
       workouts.length > 1 ? `${workouts.length} done` : "Done today",
     workoutType: completedWorkout?.workout_type ?? null,
-    workoutLabel:
-      completedWorkout?.label ?? completedWorkout?.workout_type ?? null,
+    workoutLabel: getCloudWorkoutDisplayLabel(completedWorkout),
   };
 }
 
@@ -300,6 +314,16 @@ function normalizeSocialError(error) {
   }
 
   const message = `${error?.message ?? ""} ${error?.details ?? ""}`.toLowerCase();
+  if (
+    message.includes("workout_type") &&
+    (message.includes("does not exist") ||
+      message.includes("relationship") ||
+      message.includes("schema cache") ||
+      message.includes("foreign key"))
+  ) {
+    return new Error(WORKOUT_TYPE_SETUP_MESSAGE);
+  }
+
   if (
     message.includes("bucket") &&
     message.includes("avatars") &&

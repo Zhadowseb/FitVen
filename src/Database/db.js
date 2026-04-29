@@ -9,12 +9,19 @@ import { SQLITE_UUID_SQL } from "../Utils/syncUtils";
 import { withTransaction } from "./transaction";
 
 const DEFAULT_WORKOUT_TYPES = [
-  ["Resistance", "Resistance"],
-  ["Upperbody", "Upperbody"],
-  ["Legs", "Legs"],
-  ["StrengthTraining", "StrengthTraining"],
-  ["Run", "Run"],
+  ["Resistance", "Resistance", 1],
+  ["Upperbody", "Upperbody", 0],
+  ["Legs", "Legs", 0],
+  ["StrengthTraining", "StrengthTraining", 0],
+  ["Run", "Run", 1],
 ];
+
+const DEFAULT_ACTIVE_WORKOUT_TYPES = DEFAULT_WORKOUT_TYPES
+  .filter(([, , isActive]) => isActive === 1)
+  .map(([name]) => name);
+const DEFAULT_ACTIVE_WORKOUT_TYPES_SQL = DEFAULT_ACTIVE_WORKOUT_TYPES.map(
+  (name) => `'${name.replace(/'/g, "''")}'`
+).join(", ");
 
 function quoteIdentifier(identifier) {
   return `"${String(identifier).replace(/"/g, '""')}"`;
@@ -587,8 +594,9 @@ async function restoreLocalWorkoutTypeCatalogSchema(db) {
   const hasId = hasColumn(workoutTypeColumns, "id");
   const hasName = hasColumn(workoutTypeColumns, "name");
   const hasDisplayName = hasColumn(workoutTypeColumns, "display_name");
+  const hasIsActive = hasColumn(workoutTypeColumns, "is_active");
 
-  if (hasLegacyId && hasName && hasDisplayName) {
+  if (hasLegacyId && hasName && hasDisplayName && hasIsActive) {
     return;
   }
 
@@ -597,13 +605,15 @@ async function restoreLocalWorkoutTypeCatalogSchema(db) {
       CREATE TABLE IF NOT EXISTS Workout_Type_next (
         workout_type_id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL UNIQUE,
-        display_name TEXT
+        display_name TEXT,
+        is_active INTEGER NOT NULL DEFAULT 0
       );
 
       INSERT OR IGNORE INTO Workout_Type_next (
         workout_type_id,
         name,
-        display_name
+        display_name,
+        is_active
       )
       SELECT
         ${
@@ -618,6 +628,11 @@ async function restoreLocalWorkoutTypeCatalogSchema(db) {
           hasDisplayName
             ? "COALESCE(display_name, name)"
             : "name"
+        },
+        ${
+          hasIsActive
+            ? "COALESCE(is_active, 0)"
+            : `CASE WHEN name IN (${DEFAULT_ACTIVE_WORKOUT_TYPES_SQL}) THEN 1 ELSE 0 END`
         }
       FROM Workout_Type
       WHERE TRIM(COALESCE(name, '')) <> '';
@@ -628,21 +643,45 @@ async function restoreLocalWorkoutTypeCatalogSchema(db) {
   });
 }
 
+async function activateDefaultWorkoutTypes(db) {
+  const metadataKey = "workout_type_active_defaults_v1";
+  const alreadyApplied = await getAppMetadataValue(db, metadataKey);
+
+  if (alreadyApplied === "done") {
+    return;
+  }
+
+  await withTransaction(db, async () => {
+    for (const workoutTypeName of DEFAULT_ACTIVE_WORKOUT_TYPES) {
+      await db.runAsync(
+        `UPDATE Workout_Type
+         SET is_active = 1
+         WHERE name = ?;`,
+        [workoutTypeName]
+      );
+    }
+
+    await setAppMetadataValue(db, metadataKey, "done");
+  });
+}
+
 async function initializeWorkoutTypes(db) {
-  for (const [name, displayName] of DEFAULT_WORKOUT_TYPES) {
+  for (const [name, displayName, isActive] of DEFAULT_WORKOUT_TYPES) {
     await db.runAsync(
-      `INSERT OR IGNORE INTO Workout_Type (name, display_name)
-       VALUES (?, ?);`,
-      [name, displayName]
+      `INSERT OR IGNORE INTO Workout_Type (name, display_name, is_active)
+       VALUES (?, ?, ?);`,
+      [name, displayName, isActive]
     );
   }
 
   await db.execAsync(`
-    INSERT OR IGNORE INTO Workout_Type (name, display_name)
-    SELECT DISTINCT workout_type, workout_type
+    INSERT OR IGNORE INTO Workout_Type (name, display_name, is_active)
+    SELECT DISTINCT workout_type, workout_type, 0
     FROM Workout_Type_Instance
     WHERE TRIM(COALESCE(workout_type, '')) <> '';
   `);
+
+  await activateDefaultWorkoutTypes(db);
 }
 
 async function repairWorkoutTrackingState(db) {
@@ -678,7 +717,7 @@ async function repairWorkoutTrackingState(db) {
   }
 }
 
-async function repairStrengthTrainingState(db) {
+async function repairResistanceTrainingState(db) {
   await db.execAsync(`
     UPDATE Exercise_Instance
     SET visible_columns = NULL
@@ -1110,6 +1149,7 @@ export async function initializeDatabase(db) {
   await restoreLocalWorkoutTypeCatalogSchema(db);
   await ensureTableColumns(db, "Workout_Type", [
     ["display_name", "TEXT"],
+    ["is_active", "INTEGER NOT NULL DEFAULT 0"],
   ]);
   await migrateWorkoutTypeInstanceDeleteQueueSchema(db);
   await ensureTableColumns(db, "Workout_Type_Instance_Sync_Delete", [
@@ -1219,7 +1259,7 @@ export async function initializeDatabase(db) {
   `);
 
   await repairWorkoutTrackingState(db);
-  await repairStrengthTrainingState(db);
+  await repairResistanceTrainingState(db);
   await repairExerciseOrders(db);
   await repairRunSetState(db);
   await repairProgramDateFormats(db);

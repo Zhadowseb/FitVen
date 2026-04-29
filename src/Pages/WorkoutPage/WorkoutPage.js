@@ -8,8 +8,11 @@ import { Colors } from "../../Resources/GlobalStyling/colors";
 import styles from "./WorkoutPageStyle";
 import {
   ThemedBottomSheet,
+  ThemedButton,
   ThemedHeader,
+  ThemedModal,
   ThemedText,
+  ThemedTextInput,
   ThemedTitle,
   ThemedView,
 } from "../../Resources/ThemedComponents";
@@ -17,10 +20,11 @@ import ThreeDots from "../../Resources/Icons/UI-icons/ThreeDots";
 import Delete from "../../Resources/Icons/UI-icons/Delete";
 import Copy from "../../Resources/Icons/UI-icons/Copy";
 import Reload from "../../Resources/Icons/UI-icons/Reload";
+import Name from "../../Resources/Icons/UI-icons/Name";
 import { programService, workoutService } from "../../Services";
 
 import Run from "./WorkoutTypes/Run/Run";
-import StrengthTraining from "./WorkoutTypes/StrengthTraining/StrengthTraining";
+import Resistance from "./WorkoutTypes/Resistance/Resistance";
 
 const WorkoutPage = ({ route }) => {
   const db = useSQLiteContext();
@@ -39,6 +43,9 @@ const WorkoutPage = ({ route }) => {
 
   const [optionsBottomsheetVisible, setOptionsBottomsheetVisible] = useState(false);
   const [datePickerVisible, setDatePickerVisible] = useState(false);
+  const [labelModalVisible, setLabelModalVisible] = useState(false);
+  const [nextWorkoutLabel, setNextWorkoutLabel] = useState("");
+  const [isSavingLabel, setIsSavingLabel] = useState(false);
   const [newDate, setNewDate] = useState(new Date());
   const [metadata, setMetadata] = useState(null);
   const [restartRequestKey, setRestartRequestKey] = useState(0);
@@ -69,6 +76,7 @@ const WorkoutPage = ({ route }) => {
     metadata?.workout_type ?? initialWorkoutType ?? initialWorkoutLabel ?? null;
   const workoutLabel =
     metadata?.workout_label ?? initialWorkoutLabel ?? workoutType ?? "Workout";
+  const workoutInstanceLabel = metadata?.workout_instance_label ?? null;
   const workoutDay = metadata?.day ?? initialDay ?? "";
   const workoutDate = metadata?.date ?? initialDate ?? "";
   const programId = metadata?.program_id ?? initialProgramId;
@@ -81,6 +89,40 @@ const WorkoutPage = ({ route }) => {
     workoutType === "Legs" ||
     workoutType === "StrengthTraining";
   const supportsTimerRestart = isRunWorkout || isStrengthWorkout;
+
+  const openLabelModal = () => {
+    setNextWorkoutLabel(workoutInstanceLabel ?? "");
+    setOptionsBottomsheetVisible(false);
+    setLabelModalVisible(true);
+  };
+
+  const saveWorkoutLabel = async () => {
+    if (isSavingLabel) {
+      return;
+    }
+
+    const normalizedLabel = nextWorkoutLabel.trim();
+    const nextLabel = normalizedLabel.length > 0 ? normalizedLabel : null;
+
+    try {
+      setIsSavingLabel(true);
+      await workoutService.updateWorkoutLabel(db, {
+        workoutId: workout_id,
+        label: nextLabel,
+      });
+
+      const nextMetadata = await workoutService.getWorkoutPageMetadata(
+        db,
+        workout_id
+      );
+      setMetadata(nextMetadata);
+      setLabelModalVisible(false);
+    } catch (error) {
+      console.error("Failed to update workout label:", error);
+    } finally {
+      setIsSavingLabel(false);
+    }
+  };
 
   const deleteWorkout = async () => {
     try {
@@ -161,9 +203,10 @@ const WorkoutPage = ({ route }) => {
       )}
 
       {isStrengthWorkout && (
-        <StrengthTraining
+        <Resistance
           workout_id={workout_id}
           date={workoutDate}
+          workoutInstanceLabel={workoutInstanceLabel}
           restartRequestKey={restartRequestKey}
         />
       )}
@@ -178,9 +221,17 @@ const WorkoutPage = ({ route }) => {
         </View>
 
         <View style={styles.bottomsheetBody}>
+          <TouchableOpacity
+            style={[styles.option, { paddingTop: 0 }]}
+            onPress={openLabelModal}
+          >
+            <Name width={24} height={24} color={theme.iconColor} />
+            <ThemedText style={styles.optionText}>Change name</ThemedText>
+          </TouchableOpacity>
+
           {supportsTimerRestart && (
             <TouchableOpacity
-              style={[styles.option, { paddingTop: 0 }]}
+              style={styles.option}
               onPress={() => {
                 setOptionsBottomsheetVisible(false);
                 setRestartRequestKey(Date.now());
@@ -236,6 +287,37 @@ const WorkoutPage = ({ route }) => {
           }}
         />
       )}
+
+      <ThemedModal
+        visible={labelModalVisible}
+        title="Workout name"
+        onClose={() => setLabelModalVisible(false)}
+      >
+        <ThemedTextInput
+          value={nextWorkoutLabel}
+          onChangeText={setNextWorkoutLabel}
+          placeholder="Workout label"
+          autoFocus
+          maxLength={40}
+          returnKeyType="done"
+          onSubmitEditing={saveWorkoutLabel}
+        />
+
+        <View style={styles.modalActions}>
+          <ThemedButton
+            title="Cancel"
+            variant="danger"
+            onPress={() => setLabelModalVisible(false)}
+            style={styles.modalAction}
+          />
+          <ThemedButton
+            title={isSavingLabel ? "Saving..." : "Save"}
+            onPress={saveWorkoutLabel}
+            disabled={isSavingLabel}
+            style={styles.modalAction}
+          />
+        </View>
+      </ThemedModal>
     </ThemedView>
   );
 };

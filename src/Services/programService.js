@@ -48,6 +48,8 @@ const MICROCYCLE_CLOUD_SYNC_SELECT =
 const DAY_CLOUD_TABLE = "Day";
 const DAY_CLOUD_SYNC_SELECT =
   "id, user_id, local_day_id, sync_id, sync_version, deleted_at, cloud_microcycle_id, weekday, date, done";
+const WORKOUT_TYPE_CLOUD_TABLE = "workout_type";
+const WORKOUT_TYPE_CLOUD_SELECT = "type, display_name, is_active";
 const WORKOUT_TYPE_INSTANCE_CLOUD_TABLE = "workout_type_instance";
 const WORKOUT_TYPE_INSTANCE_CLOUD_SYNC_SELECT =
   "id, user_id, local_workout_type_instance_id, sync_id, sync_version, deleted_at, cloud_day_id, workout_type, date, label, done, is_active, original_start_time, timer_start, elapsed_time";
@@ -841,6 +843,20 @@ function normalizeWorkoutLabel(value) {
   return normalizeOptionalText(value);
 }
 
+function normalizeWorkoutTypeCatalogRow(row) {
+  const name = normalizeWorkoutType(row?.type);
+
+  if (!name) {
+    return null;
+  }
+
+  return {
+    name,
+    displayName: normalizeWorkoutLabel(row?.display_name) ?? name,
+    isActive: normalizeBooleanFlag(row?.is_active),
+  };
+}
+
 function normalizeWorkoutDate(value) {
   return normalizeLocalDateString(value);
 }
@@ -1189,6 +1205,51 @@ async function getAuthenticatedUserId() {
   }
 
   return data.session?.user?.id ?? null;
+}
+
+export async function getSelectableWorkoutTypes(db) {
+  return programRepository.getSelectableWorkoutTypes(db);
+}
+
+export async function syncWorkoutTypesWithCloud(db) {
+  const userId = await getAuthenticatedUserId();
+
+  if (!userId) {
+    return getSelectableWorkoutTypes(db);
+  }
+
+  const { data, error } = await supabase
+    .from(WORKOUT_TYPE_CLOUD_TABLE)
+    .select(WORKOUT_TYPE_CLOUD_SELECT)
+    .order("is_active", { ascending: false })
+    .order("type", { ascending: true });
+
+  if (error) {
+    throw error;
+  }
+
+  const workoutTypes = (data ?? [])
+    .map(normalizeWorkoutTypeCatalogRow)
+    .filter(Boolean);
+
+  await withTransaction(db, async () => {
+    await programRepository.markAllWorkoutTypesInactive(db);
+
+    for (const workoutType of workoutTypes) {
+      await programRepository.upsertWorkoutType(db, workoutType);
+    }
+  });
+
+  return getSelectableWorkoutTypes(db);
+}
+
+export async function refreshSelectableWorkoutTypes(db) {
+  try {
+    return await syncWorkoutTypesWithCloud(db);
+  } catch (error) {
+    console.warn("Workout type catalog cloud sync failed:", error);
+    return getSelectableWorkoutTypes(db);
+  }
 }
 
 async function processQueuedProgramDeletes(db, userId) {
@@ -5051,9 +5112,10 @@ export async function deleteProgram(db, programId) {
 
 export async function createMesocycle(
   db,
-  { programId, startDate, weeks, focus }
+  { programId, startDate, weeks = 0, focus }
 ) {
   const mesocycleId = await withTransaction(db, async () => {
+    const weekTotal = Math.max(0, Number(weeks) || 0);
     const mesocycleCount = await programRepository.countMesocyclesByProgram(
       db,
       programId
@@ -5066,7 +5128,7 @@ export async function createMesocycle(
     const mesocycleResult = await programRepository.insertMesocycle(db, {
       programId,
       mesocycleNumber: (mesocycleCount?.count ?? 0) + 1,
-      weeks,
+      weeks: weekTotal,
       focus,
     });
     const mesocycleNumber = (mesocycleCount?.count ?? 0) + 1;
@@ -5096,7 +5158,7 @@ export async function createMesocycle(
       });
     }
 
-    for (let week = 1; week <= weeks; week += 1) {
+    for (let week = 1; week <= weekTotal; week += 1) {
       const microcycleResult = await programRepository.insertMicrocycle(db, {
         mesocycleId: mesocycleResult.lastInsertRowId,
         microcycleNumber: week,
@@ -5123,6 +5185,7 @@ export async function createMesocycle(
     return mesocycleResult.lastInsertRowId;
   });
 
+  syncMesocyclesInBackground(db);
   syncMicrocyclesInBackground(db);
   syncDaysInBackground(db);
   return mesocycleId;
@@ -5134,6 +5197,54 @@ export async function getMesocyclesByProgram(db, programId) {
 
 export async function getMesocycleWorkoutCountsByProgram(db, programId) {
   return programRepository.getMesocycleWorkoutCountsByProgram(db, programId);
+}
+
+export async function getProgramStats(db, programId) {
+  const [overview, weekRows] = await Promise.all([
+    programRepository.getProgramOverviewStats(db, programId),
+    programRepository.getProgramWeekCompletionStats(db, programId),
+  ]);
+  const totalWorkouts = Number(overview?.total_workouts) || 0;
+  const completedWorkouts = Number(overview?.completed_workouts) || 0;
+  const today = parseCustomDate(formatDate(new Date()));
+  let streakWeeks = 0;
+
+  const activeWeekRows = weekRows.filter((week) => {
+    if (!week.period_start) {
+      return false;
+    }
+
+    const weekStart = parseCustomDate(week.period_start);
+    return !Number.isNaN(weekStart.getTime()) && weekStart <= today;
+  });
+
+  for (let index = activeWeekRows.length - 1; index >= 0; index -= 1) {
+    const week = activeWeekRows[index];
+    const weekWorkoutCount = Number(week.total_workouts) || 0;
+    const weekCompletedWorkoutCount = Number(week.completed_workouts) || 0;
+    const maintainsStreak =
+      weekWorkoutCount === 0 || weekCompletedWorkoutCount >= weekWorkoutCount;
+
+    if (!maintainsStreak) {
+      break;
+    }
+
+    streakWeeks += 1;
+  }
+
+  return {
+    totalVolume: Math.round(Number(overview?.total_volume) || 0),
+    avgSessionMinutes: Math.round(
+      (Number(overview?.avg_session_seconds) || 0) / 60
+    ),
+    completionPercent:
+      totalWorkouts > 0
+        ? Math.round((completedWorkouts / totalWorkouts) * 100)
+        : 0,
+    completedWorkouts,
+    totalWorkouts,
+    streakWeeks,
+  };
 }
 
 export async function updateMesocycleFocus(db, { mesocycleId, focus }) {
@@ -5148,10 +5259,38 @@ export async function addWeekToMesocycle(db, { mesocycleId, programId }) {
       mesocycleId
     );
     const lastWeek = weeks[weeks.length - 1];
-    const lastDay = await programRepository.getLastSundayByMicrocycle(
-      db,
-      lastWeek.microcycle_id
-    );
+    const lastDay = lastWeek
+      ? await programRepository.getLastSundayByMicrocycle(
+          db,
+          lastWeek.microcycle_id
+        )
+      : null;
+    const mesocycleMetadata =
+      !lastDay?.date
+        ? await programRepository.getMesocycleMetadata(db, {
+            mesocycleId,
+            programId,
+          })
+        : null;
+    const programMetadata =
+      !lastDay?.date
+        ? await programRepository.getProgramMetadata(db, programId)
+        : null;
+    const weeksBefore =
+      !lastDay?.date && mesocycleMetadata
+        ? await getWeeksBeforeMesocycle(db, {
+            programId,
+            mesocycleNumber: mesocycleMetadata.mesocycle_number,
+          })
+        : 0;
+
+    if (!lastDay?.date && !mesocycleMetadata) {
+      throw new Error("Block not found for new week.");
+    }
+
+    if (!lastDay?.date && !programMetadata?.start_date) {
+      throw new Error("Program start date not found for new block week.");
+    }
 
     const microcycleResult = await programRepository.insertMicrocycle(db, {
       mesocycleId,
@@ -5159,8 +5298,15 @@ export async function addWeekToMesocycle(db, { mesocycleId, programId }) {
     });
 
     for (let dayIndex = 0; dayIndex < WEEK_DAYS.length; dayIndex += 1) {
-      const date = parseCustomDate(lastDay.date);
-      date.setDate(date.getDate() + dayIndex + 1);
+      const date = parseCustomDate(lastDay?.date ?? programMetadata?.start_date);
+
+      if (!lastDay?.date) {
+        date.setDate(
+          date.getDate() + (weeksBefore + weeks.length) * 7 + dayIndex
+        );
+      } else {
+        date.setDate(date.getDate() + dayIndex + 1);
+      }
 
       await programRepository.insertDay(db, {
         microcycleId: microcycleResult.lastInsertRowId,
@@ -5175,6 +5321,7 @@ export async function addWeekToMesocycle(db, { mesocycleId, programId }) {
     return microcycleResult.lastInsertRowId;
   });
 
+  syncMesocyclesInBackground(db);
   syncMicrocyclesInBackground(db);
   syncDaysInBackground(db);
   return insertedMicrocycleId;

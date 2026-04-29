@@ -51,4 +51,12 @@ export default StyleSheet.create({
     fontWeight: 600,
     fontSize: 16,
   },
+  modalActions: {
+    flexDirection: "row",
+    gap: 10,
+    justifyContent: "flex-end",
+  },
+  modalAction: {
+    flex: 1,
+  },
 });

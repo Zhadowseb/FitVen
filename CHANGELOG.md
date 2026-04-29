@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.9.13] - Unreleased
+### Changed
+- Added a Supabase `workout_type` catalog script with `type`, `display_name`, `is_active`, RLS, and a foreign key from `workout_type_instance.workout_type`.
+- Synced active workout types from the cloud catalog into the local picker so visible workout options and display names can be controlled online.
+- Added the workout type display name under the resistance workout header start status.
+- Renamed the strength workout screen and icon files to `Resistance`.
+- Added workout label editing from the workout header options menu.
+- Reworked the Home page today shortcut into a compact start-card that opens the next workout directly.
+
+---
 ## [0.9.12] - Unreleased
 ### Changed
 - Redesigned program cards with compact status, progress, summary metrics and date range styling.

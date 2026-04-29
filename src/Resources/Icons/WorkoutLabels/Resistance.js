@@ -3,7 +3,7 @@ import Svg, { Path } from "react-native-svg"
 import {useColorScheme} from "react-native"
 import { Colors } from "../../GlobalStyling/colors"
 
-function StrengthTraining({width, height, color}) {
+function Resistance({width, height, color}) {
   const colorScheme = useColorScheme()
   const theme = Colors[colorScheme] ?? Colors.light
 
@@ -25,4 +25,4 @@ function StrengthTraining({width, height, color}) {
   )
 }
 
-export default StrengthTraining
+export default Resistance

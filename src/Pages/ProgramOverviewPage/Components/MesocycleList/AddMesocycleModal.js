@@ -17,27 +17,18 @@ const styles = StyleSheet.create({
 
 export default function AddMesocycleModal({ visible, onClose, onSubmit }) {
   const [focus, setFocus] = useState("");
-  const [weeks, setWeeks] = useState("");
 
   const handleSubmit = () => {
-    onSubmit({ focus, weeks: Number(weeks) });
+    onSubmit({ focus });
     setFocus("");
-    setWeeks("");
   };
 
   return (
-    <ThemedModal visible={visible} title="Add Mesocycle">
+    <ThemedModal visible={visible} title="Add block">
       <ThemedTextInput
         placeholder="Focus (e.g. Hypertrophy)"
         value={focus}
         onChangeText={setFocus}
-      />
-
-      <ThemedTextInput
-        placeholder="Weeks"
-        keyboardType="numeric"
-        value={weeks}
-        onChangeText={setWeeks}
       />
 
       <View style={styles.row}>

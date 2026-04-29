@@ -229,6 +229,7 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
               onPress={() =>
                 navigation.navigate("ProgramOverviewPage", {
                   program_id: item.program_id,
+                  program_name: item.program_name,
                   start_date: item.start_date,
                 })
               }

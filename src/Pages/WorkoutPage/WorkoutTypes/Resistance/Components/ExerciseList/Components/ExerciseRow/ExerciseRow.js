@@ -4,7 +4,7 @@ import { useColorScheme } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
 
 import { Colors } from "../../../../../../../../Resources/GlobalStyling/colors";
-import styles from "./ExerciseRowStyle";
+import styles from "./ExerciseRowStyle.js";
 import SetList from "./SetList/SetList";
 
 import Cogwheel from "../../../../../../../../Resources/Icons/UI-icons/Cogwheel";

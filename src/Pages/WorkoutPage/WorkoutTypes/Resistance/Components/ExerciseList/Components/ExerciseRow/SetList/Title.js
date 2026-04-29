@@ -6,7 +6,7 @@ import Checkmark from "../../../../../../../../../Resources/Icons/UI-icons/Check
 import {ThemedText}
   from "../../../../../../../../../Resources/ThemedComponents";
 
-import styles from "./SetListStyle";
+import styles from "./SetListStyle.js";
 
 const Title = ({visibleColumns}) => {
 

@@ -35,7 +35,7 @@ export default StyleSheet.create({
     mesocycle_container: {
         padding: 0,
         minHeight: 50,
-        marginBottom: 12,
+        marginBottom: 4,
     },
     pr_scroll: {
         marginBottom: 12,
@@ -145,6 +145,61 @@ export default StyleSheet.create({
     },
     pr_header_value: {
         textAlign: "right",
+    },
+    stats_section: {
+        marginBottom: 18,
+    },
+    stats_section_label: {
+        fontSize: 12,
+        lineHeight: 16,
+        fontWeight: "800",
+        letterSpacing: 3,
+        textTransform: "uppercase",
+        marginBottom: 12,
+    },
+    stats_grid: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+    },
+    stats_card: {
+        width: "48.5%",
+        minHeight: 120,
+        borderWidth: 1,
+        borderRadius: 14,
+        paddingHorizontal: 16,
+        paddingVertical: 16,
+    },
+    stats_card_left: {
+        marginRight: "3%",
+    },
+    stats_card_second_row: {
+        marginTop: 10,
+    },
+    stats_card_header: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: 16,
+    },
+    stats_card_label: {
+        flex: 1,
+        minWidth: 0,
+        fontSize: 11,
+        lineHeight: 14,
+        fontWeight: "800",
+        letterSpacing: 1.8,
+        textTransform: "uppercase",
+        marginLeft: 7,
+    },
+    stats_card_value: {
+        fontSize: 24,
+        lineHeight: 29,
+        fontWeight: "800",
+        marginBottom: 4,
+    },
+    stats_card_detail: {
+        fontSize: 13,
+        lineHeight: 17,
+        fontWeight: "600",
     },
     delete_button_container: {
         minHeight: 50,

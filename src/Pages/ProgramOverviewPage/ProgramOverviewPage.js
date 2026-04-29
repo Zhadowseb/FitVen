@@ -1,6 +1,6 @@
 import { View, ScrollView, TouchableOpacity } from 'react-native';
 import { useSQLiteContext } from "expo-sqlite";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
@@ -20,6 +20,9 @@ import MesocycleList from "./Components/MesocycleList/MesocycleList";
 import ThreeDots from "../../Resources/Icons/UI-icons/ThreeDots"
 import Cogwheel from "../../Resources/Icons/UI-icons/Cogwheel";
 import Checkmark from "../../Resources/Icons/UI-icons/Checkmark";
+import Fire from "../../Resources/Icons/UI-icons/Fire";
+import TradeUp from "../../Resources/Icons/UI-icons/TradeUp";
+import Info from "../../Resources/Icons/UI-icons/Info";
 
 import { ThemedTitle, 
         ThemedCard, 
@@ -34,6 +37,23 @@ import { ThemedTitle,
 import Delete from '../../Resources/Icons/UI-icons/Delete';
 import { formatDate, parseCustomDate } from '../../Utils/dateUtils';
 
+const emptyProgramStats = {
+    totalVolume: 0,
+    avgSessionMinutes: 0,
+    completionPercent: 0,
+    completedWorkouts: 0,
+    totalWorkouts: 0,
+    streakWeeks: 0,
+};
+
+function formatStatNumber(value) {
+    const numberValue = Number(value) || 0;
+
+    return Math.round(numberValue)
+        .toString()
+        .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
 const ProgramOverviewPage = ( {route} ) => {
     const db = useSQLiteContext();
     const navigation = useNavigation();
@@ -43,15 +63,17 @@ const ProgramOverviewPage = ( {route} ) => {
 
     const program_id = route.params.program_id;
     const start_date = route.params.start_date;
+    const initialProgramName = route.params.program_name ?? "";
 
     const [addEstimatedSet_visible, set_AddEstimatedSet_visible] = useState(false);
     const [refreshKey, set_refreshKey] = useState(0);
     const [status, set_status] = useState("NOT_STARTED");
-    const [program_name, set_program_name] = useState("");
+    const [program_name, set_program_name] = useState(initialProgramName);
     const [end_date, set_end_date] = useState("");
     const [programExercises, set_programExercises] = useState([]);
     const [visibleProgramBestExercises, set_visibleProgramBestExercises] = useState({});
     const [programExerciseBests, set_programExerciseBests] = useState([]);
+    const [programStats, setProgramStats] = useState(emptyProgramStats);
 
     const [OptionsBottomsheet_visible, set_OptionsBottomsheet_visible] = useState(false);
     const [prSettingsBottomsheet_visible, set_prSettingsBottomsheet_visible] = useState(false);
@@ -70,6 +92,7 @@ const ProgramOverviewPage = ( {route} ) => {
                 await Promise.all([
                     getStatus(),
                     getName(),
+                    loadProgramStats(),
                     loadProgramBestExerciseOptions(),
                     loadProgramExerciseBests(),
                 ]);
@@ -143,6 +166,24 @@ const ProgramOverviewPage = ( {route} ) => {
             console.error(error);
         }
     }
+
+    const loadProgramStats = async () => {
+        try {
+            const nextStats = await programService.getProgramStats(db, program_id);
+            setProgramStats(nextStats);
+        } catch (error) {
+            console.error(error);
+            setProgramStats(emptyProgramStats);
+        }
+    }
+
+    useEffect(() => {
+        if (refreshKey === 0) {
+            return;
+        }
+
+        loadProgramStats();
+    }, [refreshKey]);
 
     const deleteProgram = async () => {
         try {
@@ -229,6 +270,8 @@ const ProgramOverviewPage = ( {route} ) => {
         (colorScheme === "dark"
             ? "rgba(212, 212, 212, 0.72)"
             : "rgba(32, 30, 43, 0.66)");
+    const quietText = theme.iconColor ?? settingsLabelColor;
+    const titleColor = theme.title ?? theme.text ?? "#fff";
     const settingsOutlineColor =
         theme.cardBorder ??
         (colorScheme === "dark"
@@ -275,6 +318,40 @@ const ProgramOverviewPage = ( {route} ) => {
     const currentStatusOption =
         statusOptions.find((option) => option.value === status) ?? statusOptions[0];
     const headerTitle = (program_name ?? "").trim() || "Program";
+    const statsCardBackground =
+        colorScheme === "dark"
+            ? "#171a21"
+            : settingsPanelBackground;
+    const statsCards = [
+        {
+            label: "Total volume",
+            value: formatStatNumber(programStats.totalVolume),
+            detail: "kg lifted",
+            Icon: TradeUp,
+            color: theme.primary ?? "#f7742e",
+        },
+        {
+            label: "Avg session",
+            value: String(programStats.avgSessionMinutes),
+            detail: "min per workout",
+            Icon: Info,
+            color: quietText,
+        },
+        {
+            label: "Completion",
+            value: `${programStats.completionPercent}%`,
+            detail: `${programStats.completedWorkouts} of ${programStats.totalWorkouts}`,
+            Icon: Checkmark,
+            color: quietText,
+        },
+        {
+            label: "Streak",
+            value: String(programStats.streakWeeks),
+            detail: `${programStats.streakWeeks === 1 ? "week" : "weeks"} active`,
+            Icon: Fire,
+            color: theme.primary ?? "#f7742e",
+        },
+    ];
 
   return (
     <>
@@ -310,8 +387,64 @@ const ProgramOverviewPage = ( {route} ) => {
             nestedScrollEnabled
             contentContainerStyle={{ paddingBottom: insets.bottom + 15}}>
 
+            <View style={styles.stats_section}>
+                <ThemedText
+                    style={styles.stats_section_label}
+                    setColor={quietText}>
+                    Stats
+                </ThemedText>
+
+                <View style={styles.stats_grid}>
+                    {statsCards.map((stat, index) => {
+                        const Icon = stat.Icon;
+
+                        return (
+                            <View
+                                key={stat.label}
+                                style={[
+                                    styles.stats_card,
+                                    index % 2 === 0 && styles.stats_card_left,
+                                    index > 1 && styles.stats_card_second_row,
+                                    {
+                                        backgroundColor: statsCardBackground,
+                                        borderColor: settingsOutlineColor,
+                                    },
+                                ]}>
+                                <View style={styles.stats_card_header}>
+                                    <Icon
+                                        width={14}
+                                        height={14}
+                                        color={stat.color}
+                                        stroke={stat.color}
+                                        thickness={1.7}
+                                    />
+                                    <ThemedText
+                                        style={styles.stats_card_label}
+                                        setColor={quietText}
+                                        numberOfLines={1}>
+                                        {stat.label}
+                                    </ThemedText>
+                                </View>
+
+                                <ThemedText
+                                    style={styles.stats_card_value}
+                                    setColor={titleColor}
+                                    numberOfLines={1}>
+                                    {stat.value}
+                                </ThemedText>
+                                <ThemedText
+                                    style={styles.stats_card_detail}
+                                    setColor={quietText}
+                                    numberOfLines={1}>
+                                    {stat.detail}
+                                </ThemedText>
+                            </View>
+                        );
+                    })}
+                </View>
+            </View>
+
             {/* Mesocycle list */}
-            <ThemedTitle type="h2"> Blocks </ThemedTitle>
             <ThemedView style={styles.mesocycle_container}>
                     <MesocycleList 
                         program_id = {program_id}

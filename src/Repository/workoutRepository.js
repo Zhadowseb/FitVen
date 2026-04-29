@@ -4,6 +4,15 @@ import {
   normalizeStoredTimestampSeconds,
 } from "../Utils/timeUtils";
 
+function workoutDisplayLabelSql(workoutAlias = "w", workoutTypeAlias = "wt") {
+  return `COALESCE(
+    NULLIF(${workoutAlias}.label, ${workoutAlias}.workout_type),
+    NULLIF(${workoutTypeAlias}.display_name, ''),
+    ${workoutAlias}.label,
+    ${workoutAlias}.workout_type
+  )`;
+}
+
 export async function getWorkoutHierarchyIds(db, workoutId) {
   return db.getFirstAsync(
     `SELECT
@@ -25,8 +34,10 @@ export async function getWorkoutPageMetadata(db, workoutId) {
         d.Weekday AS day,
         w.date,
         w.workout_type,
-        COALESCE(w.label, w.workout_type) AS workout_label
+        w.label AS workout_instance_label,
+        ${workoutDisplayLabelSql("w", "wt")} AS workout_label
      FROM Workout_Type_Instance w
+     LEFT JOIN Workout_Type wt ON wt.name = w.workout_type
      JOIN Day d ON d.day_id = w.day_id
      WHERE w.workout_id = ?;`,
     [workoutId]
@@ -56,6 +67,20 @@ export async function getWorkoutTimerState(db, workoutId) {
      FROM Workout_Type_Instance
      WHERE workout_id = ?;`,
     [workoutId]
+  );
+}
+
+export async function updateWorkoutLabel(db, { workoutId, label }) {
+  const syncVersion = createNextSyncVersion();
+  await db.runAsync(
+    `UPDATE Workout_Type_Instance
+     SET label = ?,
+         sync_id = COALESCE(sync_id, ${SQLITE_UUID_SQL}),
+         sync_version = ?,
+         deleted_at = NULL,
+         needs_sync = 1
+     WHERE workout_id = ?;`,
+    [label, syncVersion, workoutId]
   );
 }
 

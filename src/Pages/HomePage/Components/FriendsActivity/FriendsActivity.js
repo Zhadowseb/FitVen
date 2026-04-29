@@ -20,7 +20,7 @@ function getActivityMeta(theme, activityState, workoutType) {
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const plannedColor = "#5f91ff";
   const workoutIconConfig = workoutType ? getWorkoutIconConfig(workoutType) : null;
-  const defaultLiveIconConfig = getWorkoutIconConfig("StrengthTraining");
+  const defaultLiveIconConfig = getWorkoutIconConfig("Resistance");
 
   switch (activityState) {
     case "live":

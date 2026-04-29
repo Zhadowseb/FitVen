@@ -16,6 +16,15 @@ function sqliteParams(values) {
   return values.map(normalizeSqliteParam);
 }
 
+function workoutDisplayLabelSql(workoutAlias = "w", workoutTypeAlias = "wt") {
+  return `COALESCE(
+    NULLIF(${workoutAlias}.label, ${workoutAlias}.workout_type),
+    NULLIF(${workoutTypeAlias}.display_name, ''),
+    ${workoutAlias}.label,
+    ${workoutAlias}.workout_type
+  )`;
+}
+
 export async function createProgram(db, { programName, startDate, status }) {
   const syncVersion = createNextSyncVersion();
   await db.runAsync(
@@ -837,17 +846,18 @@ export async function getDayByProgramAndDate(db, { programId, date }) {
 export async function getWorkoutsByDayId(db, dayId) {
   return db.getAllAsync(
     `SELECT
-        workout_id,
-        workout_type,
-        COALESCE(label, workout_type) AS label,
-        done,
-        day_id,
-        is_active,
-        original_start_time,
-        timer_start,
-        elapsed_time
-     FROM Workout_Type_Instance
-     WHERE day_id = ?;`,
+        w.workout_id,
+        w.workout_type,
+        ${workoutDisplayLabelSql("w", "wt")} AS label,
+        w.done,
+        w.day_id,
+        w.is_active,
+        w.original_start_time,
+        w.timer_start,
+        w.elapsed_time
+     FROM Workout_Type_Instance w
+     LEFT JOIN Workout_Type wt ON wt.name = w.workout_type
+     WHERE w.day_id = ?;`,
     [dayId]
   );
 }
@@ -857,9 +867,10 @@ export async function getWorkoutOptions(db, programId) {
     `SELECT
         w.workout_id,
         w.workout_type,
-        COALESCE(w.label, w.workout_type) AS label,
+        ${workoutDisplayLabelSql("w", "wt")} AS label,
         w.date
      FROM Workout_Type_Instance w
+     LEFT JOIN Workout_Type wt ON wt.name = w.workout_type
      JOIN Day d ON d.day_id = w.day_id
      WHERE d.program_id = ?
      ORDER BY w.date;`,
@@ -1094,20 +1105,81 @@ export async function getMesocyclesByProgram(db, programId) {
   return db.getAllAsync(
     `SELECT mesocycle_id, mesocycle_number, weeks, focus, done
      FROM Mesocycle
-     WHERE program_id = ?;`,
+     WHERE program_id = ?
+     ORDER BY mesocycle_number ASC;`,
     [programId]
   );
 }
 
 export async function getMesocycleWorkoutCountsByProgram(db, programId) {
   return db.getAllAsync(
-    `SELECT m.mesocycle_id, COUNT(w.workout_id) AS workout_count
+    `SELECT
+        m.mesocycle_id,
+        COUNT(w.workout_id) AS workout_count,
+        COALESCE(SUM(CASE WHEN w.done = 1 THEN 1 ELSE 0 END), 0) AS completed_workout_count
      FROM Mesocycle m
      LEFT JOIN Microcycle mc ON mc.mesocycle_id = m.mesocycle_id
      LEFT JOIN Day d ON d.microcycle_id = mc.microcycle_id
      LEFT JOIN Workout_Type_Instance w ON w.day_id = d.day_id
      WHERE m.program_id = ?
-     GROUP BY m.mesocycle_id;`,
+     GROUP BY m.mesocycle_id
+     ORDER BY m.mesocycle_number ASC;`,
+    [programId]
+  );
+}
+
+export async function getProgramOverviewStats(db, programId) {
+  return db.getFirstAsync(
+    `SELECT
+        COUNT(w.workout_id) AS total_workouts,
+        COALESCE(SUM(CASE WHEN w.done = 1 THEN 1 ELSE 0 END), 0) AS completed_workouts,
+        COALESCE(AVG(CASE
+          WHEN w.done = 1 AND COALESCE(w.elapsed_time, 0) > 0
+          THEN w.elapsed_time
+          ELSE NULL
+        END), 0) AS avg_session_seconds,
+        COALESCE((
+          SELECT SUM(COALESCE(s.weight, 0) * COALESCE(s.reps, 0))
+          FROM "Set" s
+          JOIN Exercise_Instance e
+            ON e.exercise_instance_id = s.exercise_instance_id
+          JOIN Workout_Type_Instance sw
+            ON sw.workout_id = e.workout_type_instance_id
+          JOIN Day sd
+            ON sd.day_id = sw.day_id
+          WHERE sd.program_id = ?
+            AND s.done = 1
+            AND s.weight IS NOT NULL
+            AND s.reps IS NOT NULL
+        ), 0) AS total_volume
+     FROM Day d
+     LEFT JOIN Workout_Type_Instance w
+       ON w.day_id = d.day_id
+     WHERE d.program_id = ?;`,
+    [programId, programId]
+  );
+}
+
+export async function getProgramWeekCompletionStats(db, programId) {
+  return db.getAllAsync(
+    `SELECT
+        mc.microcycle_id,
+        m.mesocycle_number,
+        mc.microcycle_number,
+        MIN(d.date) AS period_start,
+        MAX(d.date) AS period_end,
+        COUNT(w.workout_id) AS total_workouts,
+        COALESCE(SUM(CASE WHEN w.done = 1 THEN 1 ELSE 0 END), 0) AS completed_workouts
+     FROM Microcycle mc
+     JOIN Mesocycle m
+       ON m.mesocycle_id = mc.mesocycle_id
+     LEFT JOIN Day d
+       ON d.microcycle_id = mc.microcycle_id
+     LEFT JOIN Workout_Type_Instance w
+       ON w.day_id = d.day_id
+     WHERE m.program_id = ?
+     GROUP BY mc.microcycle_id
+     ORDER BY m.mesocycle_number ASC, mc.microcycle_number ASC;`,
     [programId]
   );
 }
@@ -1347,10 +1419,43 @@ export async function getDayByMicrocycleAndDate(
 
 export async function getWorkoutLabelsByDay(db, dayId) {
   return db.getAllAsync(
-    `SELECT COALESCE(label, workout_type) AS label
-     FROM Workout_Type_Instance
-     WHERE day_id = ?;`,
+    `SELECT ${workoutDisplayLabelSql("w", "wt")} AS label
+     FROM Workout_Type_Instance w
+     LEFT JOIN Workout_Type wt ON wt.name = w.workout_type
+     WHERE w.day_id = ?;`,
     [dayId]
+  );
+}
+
+export async function getSelectableWorkoutTypes(db) {
+  return db.getAllAsync(
+    `SELECT
+        workout_type_id,
+        name,
+        COALESCE(NULLIF(display_name, ''), name) AS display_name,
+        COALESCE(is_active, 0) AS is_active
+     FROM Workout_Type
+     WHERE COALESCE(is_active, 0) = 1
+     ORDER BY workout_type_id ASC, name ASC;`
+  );
+}
+
+export async function markAllWorkoutTypesInactive(db) {
+  await db.runAsync(`
+    UPDATE Workout_Type
+    SET is_active = 0;
+  `);
+}
+
+export async function upsertWorkoutType(db, { name, displayName, isActive }) {
+  await db.runAsync(
+    `INSERT INTO Workout_Type (name, display_name, is_active)
+     VALUES (?, ?, ?)
+     ON CONFLICT(name)
+     DO UPDATE SET
+       display_name = excluded.display_name,
+       is_active = excluded.is_active;`,
+    [name, displayName, isActive ? 1 : 0]
   );
 }
 
@@ -1563,24 +1668,25 @@ export async function getDaySyncMetadata(db, dayId) {
 export async function getWorkoutsByDay(db, dayId) {
   return db.getAllAsync(
     `SELECT
-        workout_id,
-        cloud_workout_type_instance_id,
-        remote_local_workout_type_instance_id,
-        sync_id,
-        sync_version,
-        deleted_at,
-        day_id,
-        workout_type,
-        date,
-        COALESCE(label, workout_type) AS label,
-        done,
-        is_active,
-        original_start_time,
-        timer_start,
-        elapsed_time,
-        needs_sync
-     FROM Workout_Type_Instance
-     WHERE day_id = ?;`,
+        w.workout_id,
+        w.cloud_workout_type_instance_id,
+        w.remote_local_workout_type_instance_id,
+        w.sync_id,
+        w.sync_version,
+        w.deleted_at,
+        w.day_id,
+        w.workout_type,
+        w.date,
+        ${workoutDisplayLabelSql("w", "wt")} AS label,
+        w.done,
+        w.is_active,
+        w.original_start_time,
+        w.timer_start,
+        w.elapsed_time,
+        w.needs_sync
+     FROM Workout_Type_Instance w
+     LEFT JOIN Workout_Type wt ON wt.name = w.workout_type
+     WHERE w.day_id = ?;`,
     [dayId]
   );
 }
@@ -2000,7 +2106,7 @@ export async function copyWorkoutIntoDay(
        ?,
        ?,
        COALESCE(workout_type, label),
-       COALESCE(label, workout_type),
+       NULLIF(label, workout_type),
        1,
        ${SQLITE_UUID_SQL},
        ?

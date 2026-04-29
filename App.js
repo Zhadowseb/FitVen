@@ -43,6 +43,7 @@ import { locationService } from "./src/Services";
 import { AuthProvider, useAuth } from './src/Contexts/AuthContext';
 import ExerciseLibrarySync from "./src/Sync/ExerciseLibrarySync";
 import SetSync from "./src/Sync/SetSync";
+import WorkoutTypeCatalogSync from "./src/Sync/WorkoutTypeCatalogSync";
 
 import * as SQLite from 'expo-sqlite';
 
@@ -219,6 +220,7 @@ function UserScopedDatabaseApp() {
       key={databaseName}
       databaseName={databaseName}
       onInit={handleInitializeDatabase}>
+      <WorkoutTypeCatalogSync />
       <ExerciseLibrarySync />
       <SetSync />
       <RootNavigator />

@@ -1,10 +1,9 @@
-import { useEffect, useState } from "react";
-import { ScrollView, TouchableOpacity, View, useColorScheme } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { TouchableOpacity, View, useColorScheme } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
 import { useNavigation } from "@react-navigation/native";
 
 import { Colors } from "../../../../Resources/GlobalStyling/colors";
-import { getWorkoutIconConfig } from "../../../../Resources/Icons/WorkoutLabels";
 import { getTodaysDate } from "../../../../Utils/dateUtils";
 import { programService } from "../../../../Services";
 import styles from "./TodayShortcutStyle";
@@ -14,18 +13,46 @@ import {
   ThemedTitle,
 } from "../../../../Resources/ThemedComponents";
 
-const TodayShortcut = ({
+function getWorkoutType(workout) {
+  return workout?.workout_type ?? workout?.label ?? null;
+}
+
+function getWorkoutTypeLabel(workout) {
+  const workoutType = getWorkoutType(workout);
+
+  if (workoutType === "StrengthTraining") {
+    return "Resistance";
+  }
+
+  return workoutType ?? "Workout";
+}
+
+function getWorkoutTitle({ workout, workoutCount, allWorkoutsDone }) {
+  if (!workout) {
+    return "Rest day";
+  }
+
+  if (workoutCount > 1) {
+    return allWorkoutsDone
+      ? "Today's training is done"
+      : workout.label ?? "Next workout";
+  }
+
+  return workout.label ?? getWorkoutTypeLabel(workout);
+}
+
+export default function TodayShortcut({
   program_id,
   headerEyebrow = null,
   headerTitle = "Today",
-}) => {
+}) {
   const db = useSQLiteContext();
   const navigation = useNavigation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
 
-  const [day, set_day] = useState(null);
-  const [workouts, set_workouts] = useState([]);
+  const [day, setDay] = useState(null);
+  const [workouts, setWorkouts] = useState([]);
 
   const date = getTodaysDate();
 
@@ -37,13 +64,13 @@ const TodayShortcut = ({
       });
 
       if (!snapshot) {
-        set_day(null);
-        set_workouts([]);
+        setDay(null);
+        setWorkouts([]);
         return;
       }
 
-      set_day(snapshot.day);
-      set_workouts(snapshot.workouts);
+      setDay(snapshot.day);
+      setWorkouts(snapshot.workouts);
     } catch (error) {
       console.error(error);
     }
@@ -60,8 +87,19 @@ const TodayShortcut = ({
     return unsubscribe;
   }, [navigation, db, program_id, date]);
 
-  const getWorkoutType = (workout) =>
-    workout?.workout_type ?? workout?.label ?? null;
+  const workoutCount = workouts.length;
+  const completedWorkoutCount = workouts.filter(
+    (workout) => Number(workout.done) === 1
+  ).length;
+  const hasWorkouts = workoutCount > 0;
+  const allWorkoutsDone = hasWorkouts && completedWorkoutCount === workoutCount;
+  const targetWorkout = useMemo(
+    () =>
+      workouts.find((workout) => Number(workout.done) !== 1) ??
+      workouts[0] ??
+      null,
+    [workouts]
+  );
 
   const openWorkout = (workout) => {
     if (!workout) {
@@ -78,123 +116,47 @@ const TodayShortcut = ({
     });
   };
 
-  const handleShortcutPress = () => {
-    if (workoutCount === 1) {
-      openWorkout(workouts[0]);
-    }
-  };
-
-  const workoutCount = workouts.length;
-  const completedWorkoutCount = workouts.filter((workout) => workout.done === 1).length;
-  const hasWorkouts = workoutCount > 0;
-  const isMultiWorkout = workoutCount > 1;
-  const allWorkoutsDone = hasWorkouts && completedWorkoutCount === workoutCount;
-  const isCompletedMultiWorkout = isMultiWorkout && allWorkoutsDone;
-  const isCompletedSingleWorkout =
-    workoutCount === 1 && Number(workouts[0]?.done) === 1;
-  const isRestDay = Boolean(day) && !hasWorkouts;
-  const sectionDateLabel = day?.Weekday ? `${day.Weekday} - ${date}` : date;
-  const remainingWorkoutCount = Math.max(workoutCount - completedWorkoutCount, 0);
-  const shouldUseDateAsHeaderTitle = Boolean(headerEyebrow) && headerTitle === "Today";
-  const resolvedHeaderTitle = shouldUseDateAsHeaderTitle ? sectionDateLabel : headerTitle;
-  const showDateBadge = !shouldUseDateAsHeaderTitle;
-
-  let headline = "No session today";
-  let description = "Nothing is mapped to today's date in this program.";
-  let actionLabel = null;
-  let footerCopy = null;
-
-  if (hasWorkouts && allWorkoutsDone) {
-    headline = isCompletedSingleWorkout ? "Workout complete" : "Today's training is done";
-    description =
-      workoutCount === 1
-        ? null
-        : "All planned workouts are complete. Tap to reopen one of them.";
-    actionLabel = null;
-  } else if (hasWorkouts && workoutCount === 1) {
-    headline = null;
-    description = null;
-    actionLabel = null;
-  } else if (hasWorkouts) {
-    headline = `${remainingWorkoutCount || workoutCount} of ${workoutCount} workouts left`;
-    description = "Tap to choose which workout you want to open.";
-    actionLabel = null;
-    footerCopy = "Tap anywhere on the card to choose a workout.";
-  } else if (day) {
-    headline = "Rest day";
-    description = null;
-    footerCopy = null;
-  }
-
-  const accentColor = !hasWorkouts
-    ? theme.cardBorder ?? theme.border ?? theme.iconColor ?? theme.text
-    : allWorkoutsDone
-      ? theme.secondary ?? "#60daac"
-      : theme.primary ?? "#f7742e";
-  const cardBackground = theme.cardBackground ?? theme.background;
-  const cardBorder = theme.cardBorder ?? theme.border ?? accentColor;
-  const accentSoft = !hasWorkouts
-    ? theme.uiBackground ?? "rgba(255, 255, 255, 0.06)"
-    : allWorkoutsDone
-      ? theme.secondaryLight ?? "rgba(96, 218, 172, 0.18)"
-      : theme.primaryLight ?? "rgba(247, 116, 46, 0.18)";
-  const panelBackground = theme.uiBackground ?? accentSoft;
-  const chipBackground =
-    colorScheme === "dark"
-      ? "rgba(255, 255, 255, 0.06)"
-      : "rgba(255, 255, 255, 0.78)";
-  const labelColor =
-    theme.quietText ??
-    (colorScheme === "dark"
-      ? "rgba(212, 212, 212, 0.72)"
-      : "rgba(32, 30, 43, 0.66)");
-  const headlineColor = theme.title ?? theme.text ?? "#201e2b";
-  const supportiveColor = labelColor;
-  const ctaBackground = allWorkoutsDone
+  const accentColor = allWorkoutsDone
     ? theme.secondary ?? "#60daac"
-    : theme.primary ?? "#f7742e";
-  const ctaTextColor = theme.cardBackground ?? theme.textInverted ?? "#1b1918";
-  const dateBadgeBackground = accentSoft;
-  const dateBadgeTextColor = accentColor;
-  const previewScrollThreshold = 4;
-  const visibleWorkoutPreviews = workouts.map((workout) => ({
-    ...workout,
-    previewItems: workout.previewItems ?? [],
-    isPreviewScrollable:
-      (workout.previewItems?.length ?? 0) > previewScrollThreshold,
-  }));
-  const totalExerciseCount = workouts.reduce(
-    (total, workout) => total + (workout.previewItems?.length ?? 0),
-    0
-  );
-  const planSummaryLabel =
-    isMultiWorkout
-      ? `${workoutCount} ${workoutCount === 1 ? "WORKOUT" : "WORKOUTS"} - ${
-          totalExerciseCount > 0
-            ? `${totalExerciseCount} ${
-                totalExerciseCount === 1 ? "EXERCISE" : "EXERCISES"
-              }`
-            : "EXERCISES"
-        }`
-      : totalExerciseCount > 0
-        ? `${totalExerciseCount} ${
-            totalExerciseCount === 1 ? "EXERCISE" : "EXERCISES"
-          } TODAY`
-        : "EXERCISES TODAY";
-  const singleWorkout = workoutCount === 1 ? workouts[0] : null;
-  const workoutIconConfig = singleWorkout
-    ? getWorkoutIconConfig(getWorkoutType(singleWorkout))
-    : null;
-  const HeroWorkoutIcon = workoutIconConfig?.Icon ?? null;
-  const useCompactSingleWorkoutHeader =
-    Boolean(singleWorkout) && !headline && !description;
+    : hasWorkouts
+      ? theme.primary ?? "#f7742e"
+      : theme.cardBorder ?? theme.border ?? theme.iconColor ?? theme.text;
+  const cardBackground =
+    colorScheme === "dark"
+      ? "#17171f"
+      : theme.cardBackground ?? theme.background;
+  const cardBorder =
+    colorScheme === "dark"
+      ? "rgba(255, 255, 255, 0.08)"
+      : theme.cardBorder ?? theme.border ?? accentColor;
+  const quietText = theme.iconColor ?? theme.quietText ?? theme.text;
+  const titleColor = theme.title ?? theme.text ?? "#ffffff";
+  const playButtonTextColor = theme.textInverted ?? "#201e2b";
+  const workoutTypeLabel = getWorkoutTypeLabel(targetWorkout);
+  const exerciseCount = targetWorkout?.previewItems?.length ?? 0;
+  const title = getWorkoutTitle({
+    workout: targetWorkout,
+    workoutCount,
+    allWorkoutsDone,
+  });
+  const weekdayLabel = day?.Weekday?.toUpperCase?.() ?? "TODAY";
+  const eyebrowPrefix = headerEyebrow ?? "TODAY";
+  const eyebrowDetail =
+    headerEyebrow && headerTitle !== "Today"
+      ? headerTitle
+      : `${weekdayLabel} ${date}`;
+  const detailLabel =
+    hasWorkouts && exerciseCount > 0
+      ? `${exerciseCount} ${exerciseCount === 1 ? "exercise" : "exercises"}`
+      : hasWorkouts
+        ? "Ready"
+        : "No workout";
+  const canOpenWorkout = Boolean(targetWorkout);
 
   return (
     <ThemedCard
       style={[
-        styles.shortcut_card,
-        isCompletedSingleWorkout && styles.shortcut_card_complete,
-        isRestDay && styles.shortcut_card_empty,
+        styles.shortcutCard,
         {
           backgroundColor: cardBackground,
           borderColor: cardBorder,
@@ -203,554 +165,98 @@ const TodayShortcut = ({
     >
       <View
         pointerEvents="none"
-        style={[styles.card_accent, { backgroundColor: accentColor }]}
+        style={[styles.topAccent, { backgroundColor: accentColor }]}
       />
 
-      <View
+      <TouchableOpacity
+        activeOpacity={0.9}
+        disabled={!canOpenWorkout}
+        onPress={() => openWorkout(targetWorkout)}
         style={[
-          styles.touchable,
-          isMultiWorkout && styles.touchable_multi,
-          isCompletedSingleWorkout && styles.touchable_complete,
-          isRestDay && styles.touchable_empty,
+          styles.cardButton,
+          !canOpenWorkout && styles.cardButtonDisabled,
         ]}
       >
-        <View style={styles.card_header}>
-          <View style={styles.card_header_copy}>
-            {headerEyebrow ? (
-              <ThemedText
-                style={styles.card_eyebrow}
-                setColor={accentColor}
-              >
-                {headerEyebrow}
-              </ThemedText>
-            ) : null}
-
-            {resolvedHeaderTitle ? (
-              <ThemedTitle type="h3" style={styles.card_title}>
-                {resolvedHeaderTitle}
-              </ThemedTitle>
-            ) : null}
-          </View>
-
-          {useCompactSingleWorkoutHeader && HeroWorkoutIcon ? (
-            <View
-              style={[
-                styles.header_workout_badge,
-                {
-                  backgroundColor: panelBackground,
-                  borderColor: chipBackground,
-                },
-              ]}
-            >
-              <HeroWorkoutIcon
-                width={22}
-                height={22}
-                color={theme.primary}
-                fill={theme.primary}
-                primaryColor={theme.primary}
-                backgroundColor="transparent"
-              />
-            </View>
-          ) : null}
-
-          {!useCompactSingleWorkoutHeader && showDateBadge && (
-            <View
-              style={[
-                styles.date_badge,
-                { backgroundColor: dateBadgeBackground },
-              ]}
-            >
-              <ThemedText
-                size={10}
-                style={styles.date_badge_text}
-                setColor={dateBadgeTextColor}
-              >
-                {sectionDateLabel}
-              </ThemedText>
-            </View>
-          )}
+        <View
+          style={[
+            styles.playButton,
+            {
+              backgroundColor: hasWorkouts ? accentColor : cardBorder,
+              shadowColor: accentColor,
+            },
+          ]}
+        >
+          <View
+            style={[
+              styles.playTriangle,
+              { borderLeftColor: playButtonTextColor },
+            ]}
+          />
         </View>
 
-        {useCompactSingleWorkoutHeader ? (
-          <View style={styles.compact_meta_group}>
+        <View style={styles.mainContent}>
+          <View style={styles.eyebrowRow}>
             <ThemedText
-              size={11}
-              style={styles.top_meta_summary}
-              setColor={supportiveColor}
+              style={styles.eyebrow}
+              setColor={hasWorkouts ? accentColor : quietText}
+              numberOfLines={1}
             >
-              {planSummaryLabel}
+              {eyebrowPrefix}
             </ThemedText>
+            <ThemedText
+              style={styles.eyebrowDetail}
+              setColor={quietText}
+              numberOfLines={1}
+            >
+              · {eyebrowDetail}
+            </ThemedText>
+          </View>
 
-            {singleWorkout?.label ? (
-              <View
-                style={[
-                  styles.compact_workout_chip,
-                  {
-                    backgroundColor: accentSoft,
-                    borderColor: chipBackground,
-                  },
-                ]}
-              >
+          <ThemedTitle
+            type="h3"
+            style={[styles.title, { color: titleColor }]}
+            numberOfLines={1}
+          >
+            {title}
+          </ThemedTitle>
+
+          <View style={styles.metaRow}>
+            {hasWorkouts ? (
+              <>
                 <ThemedText
-                  size={10}
-                  style={styles.compact_workout_chip_text}
+                  style={styles.metaType}
                   setColor={accentColor}
                   numberOfLines={1}
                 >
-                  {singleWorkout.label}
+                  {workoutTypeLabel}
                 </ThemedText>
-              </View>
-            ) : null}
-          </View>
-        ) : null}
-
-          {(headline || description) && !isMultiWorkout && (
-            isCompletedSingleWorkout ? (
-              <TouchableOpacity
-                disabled={!hasWorkouts}
-                activeOpacity={0.92}
-                onPress={handleShortcutPress}
-              >
-                <View style={styles.complete_summary_row}>
-                  <View
-                    style={[
-                      styles.summary_panel,
-                      styles.summary_panel_complete,
-                      {
-                        backgroundColor: panelBackground,
-                        borderColor: chipBackground,
-                      },
-                    ]}
-                  >
-                    {headline && (
-                      <ThemedTitle
-                        type="h3"
-                        style={[
-                          styles.hero_title,
-                          styles.hero_title_complete,
-                          { color: headlineColor },
-                        ]}
-                      >
-                        {headline}
-                      </ThemedTitle>
-                    )}
-                    {description && (
-                      <ThemedText
-                        style={styles.hero_description}
-                        setColor={supportiveColor}
-                      >
-                        {description}
-                      </ThemedText>
-                    )}
-                  </View>
-
-                  <View
-                    style={[
-                      styles.hero_workout_badge,
-                      styles.complete_workout_badge,
-                      {
-                        backgroundColor: panelBackground,
-                        borderColor: chipBackground,
-                      },
-                    ]}
-                  >
-                    {HeroWorkoutIcon && (
-                      <HeroWorkoutIcon
-                        width={24}
-                        height={24}
-                        color={headlineColor}
-                        fill={headlineColor}
-                        primaryColor={headlineColor}
-                        backgroundColor="transparent"
-                      />
-                    )}
-
-                    <ThemedText
-                      size={10}
-                      style={styles.hero_workout_label}
-                      setColor={supportiveColor}
-                      numberOfLines={1}
-                    >
-                      {singleWorkout.label}
-                    </ThemedText>
-                  </View>
-                </View>
-              </TouchableOpacity>
+                <View
+                  style={[
+                    styles.metaDot,
+                    { backgroundColor: quietText },
+                  ]}
+                />
+                <ThemedText
+                  style={styles.metaText}
+                  setColor={quietText}
+                  numberOfLines={1}
+                >
+                  {detailLabel}
+                </ThemedText>
+              </>
             ) : (
-              <TouchableOpacity
-                disabled={!hasWorkouts}
-                activeOpacity={0.92}
-                onPress={handleShortcutPress}
+              <ThemedText
+                style={styles.metaText}
+                setColor={quietText}
+                numberOfLines={1}
               >
-                <View
-                  style={[
-                    styles.summary_panel,
-                    {
-                      backgroundColor: panelBackground,
-                      borderColor: chipBackground,
-                    },
-                  ]}
-                >
-                  {headline && (
-                    <ThemedTitle
-                      type="h3"
-                      style={[
-                        styles.hero_title,
-                        isRestDay && styles.hero_title_empty,
-                        { color: headlineColor },
-                      ]}
-                    >
-                      {headline}
-                    </ThemedTitle>
-                  )}
-                  {description && (
-                    <ThemedText
-                      style={styles.hero_description}
-                      setColor={supportiveColor}
-                    >
-                      {description}
-                    </ThemedText>
-                  )}
-                </View>
-              </TouchableOpacity>
-            )
-          )}
-
-          {hasWorkouts && !isCompletedSingleWorkout && (
-            <View
-              style={[
-                styles.plan_section,
-                useCompactSingleWorkoutHeader && styles.plan_section_compact,
-              ]}
-            >
-              {isCompletedMultiWorkout && (
-                <View
-                  style={[
-                    styles.plan_complete_banner,
-                    {
-                      backgroundColor: panelBackground,
-                      borderColor: chipBackground,
-                    },
-                  ]}
-                >
-                  <ThemedTitle
-                    type="h3"
-                    style={[
-                      styles.plan_complete_banner_title,
-                      { color: headlineColor },
-                    ]}
-                  >
-                    Workouts complete
-                  </ThemedTitle>
-                </View>
-              )}
-
-              {!isCompletedMultiWorkout && (!useCompactSingleWorkoutHeader || actionLabel) && (
-                <View
-                  style={[
-                    styles.plan_header,
-                    isMultiWorkout && !actionLabel && styles.plan_header_centered,
-                  ]}
-                >
-                  {!useCompactSingleWorkoutHeader && (
-                    <ThemedText
-                      size={11}
-                      style={[
-                        styles.plan_section_label,
-                        isMultiWorkout && !actionLabel && styles.plan_section_label_centered,
-                      ]}
-                      setColor={supportiveColor}
-                    >
-                      {planSummaryLabel}
-                    </ThemedText>
-                  )}
-
-                  {actionLabel && (
-                    <TouchableOpacity
-                      activeOpacity={0.92}
-                      onPress={handleShortcutPress}
-                    >
-                      <View
-                        style={[
-                          styles.plan_action_chip,
-                          { backgroundColor: ctaBackground },
-                        ]}
-                      >
-                        <ThemedText size={11} setColor={ctaTextColor} style={styles.plan_action_text}>
-                          {actionLabel}
-                        </ThemedText>
-                      </View>
-                    </TouchableOpacity>
-                  )}
-                </View>
-              )}
-
-              {visibleWorkoutPreviews.map((workout) => {
-                const workoutHeaderIconConfig = getWorkoutIconConfig(
-                  getWorkoutType(workout)
-                );
-                const WorkoutHeaderIcon = workoutHeaderIconConfig?.Icon ?? null;
-
-                return (
-                <View key={workout.workout_id}>
-                  {singleWorkout && !useCompactSingleWorkoutHeader && (
-                    <TouchableOpacity
-                      activeOpacity={0.92}
-                      onPress={handleShortcutPress}
-                    >
-                      <View style={styles.joined_header}>
-                      {useCompactSingleWorkoutHeader && (
-                        <View style={styles.joined_header_copy}>
-                          {showDateBadge ? (
-                            <View
-                              style={[
-                                styles.date_badge,
-                                { backgroundColor: dateBadgeBackground },
-                              ]}
-                            >
-                              <ThemedText
-                                size={10}
-                                style={styles.date_badge_text}
-                                setColor={dateBadgeTextColor}
-                              >
-                                {sectionDateLabel}
-                              </ThemedText>
-                            </View>
-                          ) : null}
-
-                          <ThemedText
-                            size={11}
-                            style={styles.top_meta_summary}
-                            setColor={supportiveColor}
-                          >
-                            {planSummaryLabel}
-                          </ThemedText>
-                        </View>
-                      )}
-
-                      <View style={styles.hero_workout_badge_slot}>
-                        <View
-                          style={[
-                            styles.hero_workout_badge_underlay,
-                            { backgroundColor: cardBackground },
-                          ]}
-                        />
-
-                        <View
-                          style={[
-                            styles.hero_workout_badge,
-                            styles.hero_workout_badge_joined,
-                            {
-                              backgroundColor: panelBackground,
-                              borderColor: chipBackground,
-                            },
-                          ]}
-                        >
-                          {HeroWorkoutIcon && (
-                            <HeroWorkoutIcon
-                              width={24}
-                              height={24}
-                              color={headlineColor}
-                              fill={headlineColor}
-                              primaryColor={headlineColor}
-                              backgroundColor="transparent"
-                            />
-                          )}
-
-                          <ThemedText
-                            size={10}
-                            style={styles.hero_workout_label}
-                            setColor={supportiveColor}
-                            numberOfLines={1}
-                          >
-                            {singleWorkout.label}
-                          </ThemedText>
-                        </View>
-                      </View>
-                    </View>
-                    </TouchableOpacity>
-                  )}
-
-                  <View
-                    style={[
-                      styles.plan_card,
-                      isCompletedMultiWorkout && styles.plan_card_compact,
-                      singleWorkout &&
-                        !useCompactSingleWorkoutHeader &&
-                        styles.plan_card_joined,
-                      {
-                        backgroundColor: panelBackground,
-                        borderColor: chipBackground,
-                      },
-                    ]}
-                  >
-                  {workoutCount > 1 && (
-                    <View
-                      style={[
-                        styles.plan_card_header,
-                        isCompletedMultiWorkout && styles.plan_card_header_compact,
-                      ]}
-                    >
-                      <View style={styles.plan_card_title_row}>
-                        {WorkoutHeaderIcon && (
-                          <View
-                            style={[
-                              styles.plan_card_title_icon_wrap,
-                              { backgroundColor: cardBackground },
-                            ]}
-                          >
-                            <WorkoutHeaderIcon
-                              width={14}
-                              height={14}
-                              color={headlineColor}
-                              fill={headlineColor}
-                              primaryColor={headlineColor}
-                              backgroundColor="transparent"
-                            />
-                          </View>
-                        )}
-
-                        <ThemedText
-                          size={13}
-                          style={styles.plan_card_title}
-                          setColor={headlineColor}
-                          numberOfLines={1}
-                        >
-                          {workout.label}
-                        </ThemedText>
-                      </View>
-
-                      <TouchableOpacity
-                        activeOpacity={0.92}
-                        onPress={() => openWorkout(workout)}
-                      >
-                        <View
-                          style={[
-                            styles.plan_status_chip,
-                            {
-                              backgroundColor:
-                                Number(workout.done) === 1
-                                  ? theme.secondary ?? "#60daac"
-                                  : theme.primary ?? "#f7742e",
-                            },
-                          ]}
-                        >
-                          <ThemedText
-                            size={10}
-                            style={styles.plan_status_text}
-                            setColor={ctaTextColor}
-                          >
-                            {Number(workout.done) === 1 ? "Done (Open)" : "Open"}
-                          </ThemedText>
-                        </View>
-                      </TouchableOpacity>
-                    </View>
-                  )}
-
-                  {!isCompletedMultiWorkout && workout.previewItems.length > 0 ? (
-                    <>
-                      <ScrollView
-                        style={[
-                          styles.plan_item_list,
-                          workout.isPreviewScrollable && styles.plan_item_list_scroll,
-                        ]}
-                        contentContainerStyle={styles.plan_item_list_content}
-                        showsVerticalScrollIndicator={false}
-                        nestedScrollEnabled
-                        scrollEnabled={workout.isPreviewScrollable}
-                      >
-                        {workout.previewItems.map((item, index) => (
-                        <View
-                          key={`${workout.workout_id}-${item.label}-${index}`}
-                          style={[
-                            styles.plan_item_row,
-                            index === workout.previewItems.length - 1 &&
-                              styles.plan_item_row_last,
-                            { backgroundColor: theme.cardBackground },
-                          ]}
-                        >
-                          <View style={styles.plan_item_left}>
-                            <View
-                              style={[
-                                styles.plan_item_dot,
-                                {
-                                  backgroundColor:
-                                    (item.done ?? Number(workout.done) === 1)
-                                      ? theme.secondary ?? "#60daac"
-                                      : cardBorder,
-                                },
-                              ]}
-                            />
-
-                            <ThemedText
-                              size={12}
-                              style={styles.plan_item_title}
-                              setColor={headlineColor}
-                              numberOfLines={1}
-                            >
-                              {item.label}
-                            </ThemedText>
-                          </View>
-
-                          {item.detail ? (
-                            <ThemedText
-                              size={10}
-                              style={[
-                                styles.plan_item_meta,
-                                {
-                                  backgroundColor:
-                                    theme.primaryLight,
-                                },
-                              ]}
-                              setColor={theme.cardBackground}
-                            >
-                              {item.detail}
-                            </ThemedText>
-                          ) : null}
-                        </View>
-                        ))}
-                      </ScrollView>
-
-                      {workout.isPreviewScrollable && (
-                        <View style={styles.plan_scroll_handle_row}>
-                          <View
-                            style={[
-                              styles.plan_scroll_handle,
-                              { backgroundColor: "#888" },
-                            ]}
-                          />
-                        </View>
-                      )}
-                    </>
-                  ) : !isCompletedMultiWorkout ? (
-                    <ThemedText
-                      size={12}
-                      style={styles.plan_empty_text}
-                      setColor={supportiveColor}
-                    >
-                      No exercises added yet.
-                    </ThemedText>
-                  ) : null}
-                </View>
-                </View>
-              )})}
-            </View>
-          )}
-
-          {footerCopy && !isMultiWorkout && (
-            <View
-              style={[
-                styles.footer_row,
-              ]}
-            >
-              <ThemedText size={12} setColor={labelColor} style={styles.footer_copy}>
-                {footerCopy}
+                {detailLabel}
               </ThemedText>
-            </View>
-          )}
-      </View>
+            )}
+          </View>
+        </View>
+
+      </TouchableOpacity>
     </ThemedCard>
   );
-};
-
-export default TodayShortcut;
+}
