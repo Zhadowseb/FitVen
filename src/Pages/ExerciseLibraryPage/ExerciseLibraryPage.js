@@ -8,7 +8,6 @@ import styles from "./ExerciseLibraryPageStyle";
 import { Colors } from "../../Resources/GlobalStyling/colors";
 import { programService, weightliftingService } from "../../Services";
 import {
-  ThemedHeader,
   ThemedText,
   ThemedTitle,
   ThemedView,
@@ -23,6 +22,8 @@ const ExerciseLibraryPage = () => {
     programCount: 0,
     completedProgramCount: 0,
     exerciseCount: 0,
+    recordExerciseCount: 0,
+    recordSlotCount: 0,
   });
   const primaryColor = theme.primary ?? "#f7742e";
   const secondaryColor = theme.secondary ?? "#60daac";
@@ -35,9 +36,10 @@ const ExerciseLibraryPage = () => {
 
   const loadQuickAccessStats = useCallback(async () => {
     try {
-      const [programs, exerciseRows] = await Promise.all([
+      const [programs, exerciseRows, personalRecordRows] = await Promise.all([
         programService.getProgramsOverview(db),
         weightliftingService.getExerciseStorage(db),
+        weightliftingService.getPersonalRecordExerciseSummaries(db),
       ]);
 
       setQuickAccessStats({
@@ -46,6 +48,11 @@ const ExerciseLibraryPage = () => {
           (program) => program.status === "COMPLETE"
         ).length,
         exerciseCount: exerciseRows.length,
+        recordExerciseCount: personalRecordRows.length,
+        recordSlotCount: personalRecordRows.reduce(
+          (total, exercise) => total + exercise.completedRecordCount,
+          0
+        ),
       });
     } catch (error) {
       console.error(error);
@@ -53,6 +60,8 @@ const ExerciseLibraryPage = () => {
         programCount: 0,
         completedProgramCount: 0,
         exerciseCount: 0,
+        recordExerciseCount: 0,
+        recordSlotCount: 0,
       });
     }
   }, [db]);
@@ -93,32 +102,24 @@ const ExerciseLibraryPage = () => {
       ],
       footer: "Open catalog",
     },
+    {
+      key: "personal-records",
+      eyebrow: "PERSONAL RECORDS",
+      title: "Track your best lifts",
+      description:
+        "Review your strongest completed sets across exercises, with rep records from 1 to 10.",
+      accent: primaryColor,
+      onPress: () => navigation.navigate("PersonalRecordsPage"),
+      metrics: [
+        { label: "Exercises", value: quickAccessStats.recordExerciseCount },
+        { label: "Records", value: quickAccessStats.recordSlotCount },
+      ],
+      footer: "Open records",
+    },
   ];
 
   return (
     <ThemedView safe={["top", "left", "right"]} style={styles.container}>
-      <ThemedHeader>
-        <View style={styles.pageHeaderTitleGroup}>
-          <ThemedText
-            size={10}
-            style={[
-              styles.pageHeaderTitleEyebrow,
-              { color: quietText },
-            ]}
-          >
-            FitVen
-          </ThemedText>
-
-          <ThemedTitle
-            type="h3"
-            style={styles.pageHeaderTitleMain}
-            numberOfLines={1}
-          >
-            Exercise Library
-          </ThemedTitle>
-        </View>
-      </ThemedHeader>
-
       <ScrollView
         style={styles.content}
         contentContainerStyle={styles.scrollContent}

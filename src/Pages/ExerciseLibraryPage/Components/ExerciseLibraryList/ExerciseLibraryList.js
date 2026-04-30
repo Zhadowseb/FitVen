@@ -1,4 +1,11 @@
-import { Pressable, ScrollView, View, useColorScheme } from "react-native";
+import {
+  Pressable,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  View,
+  useColorScheme,
+} from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
 import { useState, useEffect } from "react";
 
@@ -6,11 +13,23 @@ import styles from "./ExerciseLibraryListStyle";
 import { weightliftingService as weightliftingRepository } from "../../../../Services";
 import ExerciseMuscleModal from "../ExerciseMuscleModal/ExerciseMuscleModal";
 import { Colors } from "../../../../Resources/GlobalStyling/colors";
+import Filter from "../../../../Resources/Icons/UI-icons/Filter";
+import Library from "../../../../Resources/Icons/UI-icons/Library";
+import Search from "../../../../Resources/Icons/UI-icons/Search";
 import {
   ThemedCard,
   ThemedText,
   ThemedTitle,
 } from "../../../../Resources/ThemedComponents";
+
+const GROUP_FILTERS = [
+  { key: "all", label: "All" },
+  { key: "push", label: "Push" },
+  { key: "pull", label: "Pull" },
+  { key: "legs", label: "Legs" },
+  { key: "core", label: "Core" },
+  { key: "mobility", label: "Mobility" },
+];
 
 const ExerciseLibraryList = ({ refreshKey }) => {
   const db = useSQLiteContext();
@@ -19,36 +38,42 @@ const ExerciseLibraryList = ({ refreshKey }) => {
   const [exercises, set_exercises] = useState([]);
   const [selectedExerciseName, set_selectedExerciseName] = useState("");
   const [detailsVisible, set_detailsVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedGroupKey, setSelectedGroupKey] = useState("all");
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
+  const titleColor = theme.title ?? theme.text;
+  const primaryColor = theme.primary ?? "#f7742e";
+  const secondaryColor = theme.secondary ?? "#60daac";
   const cardSurface =
     theme.cardBackground ?? theme.navBackground ?? theme.background;
   const cardBorder = theme.cardBorder ?? theme.iconColor ?? theme.text;
-  const rowSurface = theme.uiBackground ?? theme.navBackground ?? theme.background;
-  const rowBorder = theme.cardBorder ?? theme.iconColor ?? theme.text;
+  const inputSurface = theme.background ?? cardSurface;
+  const activeFilterText = theme.cardBackground ?? theme.textInverted ?? "#1b1918";
   const badgeSurface =
-    theme.primaryLight ??
+    theme.uiBackground ??
     (colorScheme === "dark"
-      ? "rgba(247, 116, 46, 0.18)"
-      : "rgba(247, 116, 46, 0.12)");
-  const indexSurface = theme.primary ?? badgeSurface;
-  const indexTextColor =
-    theme.cardBackground ?? theme.background ?? theme.text;
-  const primaryBadgeSurface =
-    theme.secondaryLight ??
-    (colorScheme === "dark"
-      ? "rgba(96, 218, 172, 0.18)"
-      : "rgba(96, 218, 172, 0.14)");
-  const secondaryBadgeSurface =
-    theme.primaryLight ??
-    (colorScheme === "dark"
-      ? "rgba(247, 116, 46, 0.16)"
-      : "rgba(247, 116, 46, 0.12)");
-  const primaryBadgeText =
-    theme.secondaryDark ?? theme.secondary ?? theme.text;
-  const secondaryBadgeText = theme.primaryDark ?? theme.primary ?? theme.text;
-  const countLabel =
-    exercises.length === 1 ? "1 exercise" : `${exercises.length} exercises`;
+      ? "rgba(47, 43, 61, 0.8)"
+      : "rgba(214, 213, 225, 0.8)");
+  const primaryBadgeSurface = "rgba(96, 218, 172, 0.2)";
+  const secondaryBadgeSurface = "rgba(247, 116, 46, 0.18)";
+  const primaryBadgeText = secondaryColor;
+  const secondaryBadgeText = primaryColor;
+  const normalizedSearchQuery = searchQuery.trim().toLocaleLowerCase();
+  const filteredExercises = exercises.filter((exercise) => {
+    const exerciseName = exercise.exercise_name ?? "";
+    const nickname = exercise.nickname ?? "";
+    const matchesSearch =
+      normalizedSearchQuery === "" ||
+      exerciseName.toLocaleLowerCase().includes(normalizedSearchQuery) ||
+      nickname.toLocaleLowerCase().includes(normalizedSearchQuery);
+    const groupKeys = Array.isArray(exercise.group_keys)
+      ? exercise.group_keys
+      : [];
+    const matchesGroup =
+      selectedGroupKey === "all" || groupKeys.includes(selectedGroupKey);
 
+    return matchesSearch && matchesGroup;
+  });
   const loadExerciseStorage = async () => {
     try {
       const rows = await weightliftingRepository.getExerciseLibraryEntries(db);
@@ -67,6 +92,11 @@ const ExerciseLibraryList = ({ refreshKey }) => {
     set_detailsVisible(true);
   };
 
+  const resetFilters = () => {
+    setSearchQuery("");
+    setSelectedGroupKey("all");
+  };
+
   return (
     <ThemedCard
       style={[
@@ -78,13 +108,23 @@ const ExerciseLibraryList = ({ refreshKey }) => {
       ]}
     >
       <View style={styles.header}>
+        <View style={[styles.headerIcon, { backgroundColor: secondaryBadgeSurface }]}>
+          <Library width={22} height={22} color={primaryColor} />
+        </View>
+
         <View style={styles.headerCopy}>
-          <ThemedText size={12} style={styles.eyebrow} setColor={quietText}>
-            Catalog
+          <ThemedText size={11} style={styles.eyebrow} setColor={primaryColor}>
+            Exercise Library
           </ThemedText>
-          <ThemedTitle type="h3" style={styles.title}>
-            Available exercise names
+          <ThemedTitle
+            type="h3"
+            style={[styles.title, { color: titleColor }]}
+          >
+            Catalog
           </ThemedTitle>
+          <ThemedText style={styles.description} setColor={quietText}>
+            Synced from the shared cloud database whenever the app opens.
+          </ThemedText>
         </View>
 
         <View
@@ -96,16 +136,14 @@ const ExerciseLibraryList = ({ refreshKey }) => {
             },
           ]}
         >
-          <ThemedText style={styles.countBadgeText}>
-            {countLabel}
+          <ThemedText style={styles.countBadgeText} setColor={titleColor}>
+            <ThemedText style={styles.countBadgeNumber} setColor={primaryColor}>
+              {filteredExercises.length}
+            </ThemedText>{" "}
+            exercises
           </ThemedText>
         </View>
       </View>
-
-      <ThemedText style={styles.description} setColor={quietText}>
-        This library is synced from the shared cloud database whenever the app
-        opens.
-      </ThemedText>
 
       <View
         style={[
@@ -113,6 +151,86 @@ const ExerciseLibraryList = ({ refreshKey }) => {
           { backgroundColor: theme.border ?? cardBorder },
         ]}
       />
+
+      <View style={styles.searchRow}>
+        <View
+          style={[
+            styles.searchBox,
+            {
+              backgroundColor: inputSurface,
+              borderColor: cardBorder,
+            },
+          ]}
+        >
+          <Search width={18} height={18} color={quietText} />
+          <TextInput
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Search exercises..."
+            placeholderTextColor={quietText}
+            style={[styles.searchInput, { color: titleColor }]}
+            autoCorrect={false}
+          />
+        </View>
+
+        <TouchableOpacity
+          activeOpacity={0.86}
+          onPress={resetFilters}
+          style={[
+            styles.filterButton,
+            {
+              backgroundColor: inputSurface,
+              borderColor: cardBorder,
+            },
+          ]}
+        >
+          <Filter width={20} height={20} color={quietText} />
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.filterScroll}
+        contentContainerStyle={styles.filterContent}
+      >
+        {GROUP_FILTERS.map((filter) => {
+          const isSelected = selectedGroupKey === filter.key;
+
+          return (
+            <Pressable
+              key={filter.key}
+              onPress={() => setSelectedGroupKey(filter.key)}
+              style={[
+                styles.groupFilter,
+                {
+                  backgroundColor: isSelected ? primaryColor : badgeSurface,
+                  borderColor: isSelected ? primaryColor : cardBorder,
+                },
+              ]}
+            >
+              <ThemedText
+                style={styles.groupFilterText}
+                setColor={isSelected ? activeFilterText : quietText}
+              >
+                {filter.label}
+              </ThemedText>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+
+      <View style={styles.tableHeader}>
+        <ThemedText style={styles.tableHeaderIndex} setColor={quietText}>
+          #
+        </ThemedText>
+        <ThemedText style={styles.tableHeaderExercise} setColor={quietText}>
+          Exercise
+        </ThemedText>
+        <ThemedText style={styles.tableHeaderMuscles} setColor={quietText}>
+          Muscles
+        </ThemedText>
+      </View>
 
       {exercises.length === 0 ? (
         <View style={styles.emptyState}>
@@ -123,6 +241,15 @@ const ExerciseLibraryList = ({ refreshKey }) => {
             No exercise names were found in the shared cloud library yet.
           </ThemedText>
         </View>
+      ) : filteredExercises.length === 0 ? (
+        <View style={styles.emptyState}>
+          <ThemedTitle type="h3" style={styles.emptyTitle}>
+            No matches
+          </ThemedTitle>
+          <ThemedText style={styles.emptyBody} setColor={quietText}>
+            Try another search or reset the active filter.
+          </ThemedText>
+        </View>
       ) : (
         <ScrollView
           style={styles.listScroll}
@@ -130,71 +257,77 @@ const ExerciseLibraryList = ({ refreshKey }) => {
           showsVerticalScrollIndicator={false}
           nestedScrollEnabled
         >
-          {exercises.map((exercise, index) => (
+          {filteredExercises.map((exercise, index) => {
+            const primaryCount = exercise.primary_muscle_group_count ?? 0;
+            const secondaryCount = exercise.secondary_muscle_group_count ?? 0;
+            const equipmentLabel =
+              typeof exercise.nickname === "string" && exercise.nickname.trim()
+                ? exercise.nickname.trim().toLocaleUpperCase()
+                : "EXERCISE";
+            const groupLabel =
+              exercise.primary_group_name?.toLocaleUpperCase?.() ??
+              "UNGROUPED";
+
+            return (
             <Pressable
               key={exercise.exercise_name}
               onPress={() => handleOpenExerciseDetails(exercise.exercise_name)}
               style={[
                 styles.exerciseRow,
-                index === exercises.length - 1 && styles.exerciseRowLast,
-                {
-                  backgroundColor: rowSurface,
-                  borderColor: rowBorder,
-                },
+                index === filteredExercises.length - 1 && styles.exerciseRowLast,
+                { borderColor: cardBorder },
               ]}
               android_ripple={{ color: badgeSurface }}
             >
-              <View
-                style={[
-                  styles.exerciseIndex,
-                  { backgroundColor: indexSurface },
-                ]}
-              >
-                <ThemedText
-                  style={styles.exerciseIndexText}
-                  setColor={indexTextColor}
-                >
-                  {index + 1}
-                </ThemedText>
-              </View>
+              <ThemedText style={styles.exerciseIndexText} setColor={quietText}>
+                {String(index + 1).padStart(2, "0")}
+              </ThemedText>
 
               <View style={styles.exerciseBody}>
-                <ThemedText style={styles.exerciseName}>
+                <ThemedText style={styles.exerciseName} setColor={titleColor}>
                   {exercise.exercise_name}
                 </ThemedText>
+                <ThemedText style={styles.exerciseMetaText} setColor={quietText}>
+                  {equipmentLabel} - {groupLabel}
+                </ThemedText>
+              </View>
 
-                <View style={styles.exerciseMetaRow}>
-                  <View
-                    style={[
-                      styles.exerciseMetaBadge,
-                      { backgroundColor: primaryBadgeSurface },
-                    ]}
+              <View style={styles.muscleSummary}>
+                <View
+                  style={[
+                    styles.muscleBadge,
+                    { backgroundColor: primaryBadgeSurface },
+                  ]}
+                >
+                  <ThemedText
+                    style={styles.muscleBadgeText}
+                    setColor={primaryBadgeText}
                   >
-                    <ThemedText
-                      style={styles.exerciseMetaBadgeText}
-                      setColor={primaryBadgeText}
-                    >
-                      {exercise.primary_muscle_group_count ?? 0} primary
-                    </ThemedText>
-                  </View>
-
-                  <View
-                    style={[
-                      styles.exerciseMetaBadge,
-                      { backgroundColor: secondaryBadgeSurface },
-                    ]}
-                  >
-                    <ThemedText
-                      style={styles.exerciseMetaBadgeText}
-                      setColor={secondaryBadgeText}
-                    >
-                      {exercise.secondary_muscle_group_count ?? 0} secondary
-                    </ThemedText>
-                  </View>
+                    {primaryCount} P
+                  </ThemedText>
                 </View>
+
+                <View
+                  style={[
+                    styles.muscleBadge,
+                    { backgroundColor: secondaryBadgeSurface },
+                  ]}
+                >
+                  <ThemedText
+                    style={styles.muscleBadgeText}
+                    setColor={secondaryBadgeText}
+                  >
+                    {secondaryCount} S
+                  </ThemedText>
+                </View>
+
+                <ThemedText style={styles.rowChevron} setColor={quietText}>
+                  &gt;
+                </ThemedText>
               </View>
             </Pressable>
-          ))}
+          );
+          })}
         </ScrollView>
       )}
 

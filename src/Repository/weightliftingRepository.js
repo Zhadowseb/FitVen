@@ -67,6 +67,62 @@ export async function getExerciseStorage(db) {
   );
 }
 
+export async function getCompletedStrengthSetsForPersonalRecords(
+  db,
+  { exerciseName = null } = {}
+) {
+  const params = [];
+  const exerciseFilter =
+    exerciseName === null || exerciseName === undefined
+      ? ""
+      : "AND e.exercise_name = ?";
+
+  if (exerciseFilter) {
+    params.push(exerciseName);
+  }
+
+  return db.getAllAsync(
+    `SELECT
+        s.sets_id,
+        s.weight,
+        s.reps,
+        s.personal_record,
+        e.exercise_name,
+        w.workout_id,
+        w.label AS workout_label,
+        d.date AS performed_date,
+        CASE
+          WHEN d.date LIKE '__.__.____'
+          THEN substr(d.date, 7, 4) || '-' || substr(d.date, 4, 2) || '-' || substr(d.date, 1, 2)
+          ELSE d.date
+        END AS performed_date_sort,
+        p.program_name
+     FROM "Set" s
+     JOIN Exercise_Instance e ON e.exercise_instance_id = s.exercise_instance_id
+     JOIN Workout_Type_Instance w ON w.workout_id = e.workout_type_instance_id
+     JOIN Day d ON d.day_id = w.day_id
+     LEFT JOIN Program p ON p.program_id = d.program_id
+     WHERE s.done = 1
+       AND COALESCE(s.failed, 0) = 0
+       AND s.weight IS NOT NULL
+       AND s.reps IS NOT NULL
+       AND CAST(s.weight AS REAL) > 0
+       AND CAST(s.reps AS INTEGER) > 0
+       AND COALESCE(s.deleted_at, '') = ''
+       AND COALESCE(e.deleted_at, '') = ''
+       AND COALESCE(w.deleted_at, '') = ''
+       AND COALESCE(d.deleted_at, '') = ''
+       ${exerciseFilter}
+     ORDER BY
+       e.exercise_name COLLATE NOCASE ASC,
+       CAST(s.reps AS INTEGER) ASC,
+       CAST(s.weight AS REAL) DESC,
+       performed_date_sort DESC,
+       s.sets_id DESC;`,
+    params
+  );
+}
+
 export async function createExerciseStorage(db, exerciseName) {
   await db.runAsync(
     `INSERT INTO Exercise (name, nickname)

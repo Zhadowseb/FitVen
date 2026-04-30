@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.10.0] - Unreleased
+### Changed
+- Removed the header from the Library bottom-tab page.
+- Added a Personal Records card and rep-record view under Library.
+- Added a Personal Records toggle for hiding empty rep ranges.
+- Updated the Personal Records exercise list to show the latest PR date.
+- Redesigned the exercise catalog with search, group filters, and table-style rows.
+- Added Supabase SQL for muscle group metadata used by exercise catalog filters.
+
+---
 ## [0.9.14] - Unreleased
 ### Changed
 - Refined the microcycle weekday indicator with a raised TODAY badge and month text labels.

@@ -19,7 +19,11 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
 
   const isProfileActive = currentRouteName === "ProfilePage";
   const isSearchActive = currentRouteName === "SearchPage";
-  const isLibraryActive = currentRouteName === "ExerciseLibraryPage";
+  const isLibraryActive = [
+    "ExerciseLibraryPage",
+    "ExerciseCatalogPage",
+    "PersonalRecordsPage",
+  ].includes(currentRouteName);
   const isHomeActive = !isProfileActive && !isSearchActive && !isLibraryActive;
   const activeColor =
     theme.iconColorFocused ?? theme.primary ?? theme.title ?? theme.text;

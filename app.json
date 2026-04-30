@@ -2,7 +2,7 @@
   "expo": {
     "name": "FitVen",
     "slug": "programapp",
-    "version": "0.9.14-minor-week-indicator-design.1",
+    "version": "0.10.0-major-personal-records.1",
     "orientation": "portrait",
     "icon": "./assets/icon_v1.0.png",
     "userInterfaceStyle": "dark",

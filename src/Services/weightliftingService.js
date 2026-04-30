@@ -49,6 +49,8 @@ const EXERCISE_LIBRARY_NAME_COLUMN = "name";
 const EXERCISE_LIBRARY_ID_COLUMN = "id";
 const MUSCLE_ACTIVATION_TABLE = "Muscle_Activation";
 const MUSCLE_TABLE = "Muscle";
+const MUSCLE_GROUP_TABLE = "muscle_group";
+const MUSCLE_GROUP_ASSIGNMENT_TABLE = "muscle_group_assignment";
 const PRIMARY_ACTIVATION_LEVEL = "primary";
 const SECONDARY_ACTIVATION_LEVEL = "secondary";
 const EXERCISE_INSTANCE_CLOUD_TABLE = "exercise_instance";
@@ -120,6 +122,339 @@ function normalizeBooleanFlag(value) {
   }
 
   return false;
+}
+
+const PERSONAL_RECORD_REPS = Array.from({ length: 10 }, (_, index) => index + 1);
+const PERSONAL_RECORD_MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+function formatPersonalRecordNumber(value) {
+  const numericValue = Number(value);
+
+  if (!Number.isFinite(numericValue)) {
+    return "--";
+  }
+
+  return Number.isInteger(numericValue)
+    ? String(numericValue)
+    : numericValue.toFixed(1);
+}
+
+function calculatePersonalRecordOneRepMax(weight, reps) {
+  const denominator = 1.0278 - 0.0278 * reps;
+
+  if (denominator <= 0) {
+    return null;
+  }
+
+  return weight / denominator;
+}
+
+function parsePersonalRecordSortDate(value) {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmedValue = value.trim();
+  const match = trimmedValue.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+
+  if (!match) {
+    return null;
+  }
+
+  const [, year, month, day] = match;
+  const parsedDate = new Date(Number(year), Number(month) - 1, Number(day));
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return null;
+  }
+
+  parsedDate.setHours(0, 0, 0, 0);
+  return parsedDate;
+}
+
+function comparePersonalRecordDate(left, right) {
+  const leftDate = left?.performed_date_sort ?? "";
+  const rightDate = right?.performed_date_sort ?? "";
+
+  if (leftDate === rightDate) {
+    return Number(left?.sets_id ?? 0) - Number(right?.sets_id ?? 0);
+  }
+
+  return leftDate.localeCompare(rightDate);
+}
+
+function formatPersonalRecordDate(value) {
+  if (typeof value !== "string") {
+    return "--";
+  }
+
+  const match = value.trim().match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+
+  if (!match) {
+    return value;
+  }
+
+  const [, day, month, year] = match;
+  const monthLabel = PERSONAL_RECORD_MONTHS[Number(month) - 1] ?? month;
+
+  return `${day} ${monthLabel} '${year.slice(-2)}`;
+}
+
+function formatPersonalRecordRelativeDate(sortDateValue) {
+  const date = parsePersonalRecordSortDate(sortDateValue);
+
+  if (!date) {
+    return null;
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const days = Math.max(
+    0,
+    Math.floor((today.getTime() - date.getTime()) / (1000 * 60 * 60 * 24))
+  );
+
+  if (days === 0) {
+    return "today";
+  }
+
+  if (days < 30) {
+    return `${days}d ago`;
+  }
+
+  if (days < 365) {
+    const months = Math.max(1, Math.floor(days / 30));
+    return `${months}mo ago`;
+  }
+
+  const years = Math.max(1, Math.floor(days / 365));
+  return `${years}y ago`;
+}
+
+function normalizePersonalRecordSet(row) {
+  const weight = normalizeOptionalNumber(row?.weight);
+  const reps = normalizeOptionalInteger(row?.reps);
+
+  return {
+    sets_id: row?.sets_id,
+    exercise_name: row?.exercise_name,
+    weight,
+    reps,
+    personal_record: normalizeBooleanFlag(row?.personal_record),
+    performed_date: row?.performed_date ?? null,
+    performed_date_sort: row?.performed_date_sort ?? null,
+    workout_id: row?.workout_id ?? null,
+    workout_label: row?.workout_label ?? null,
+    program_name: row?.program_name ?? null,
+  };
+}
+
+function isBetterPersonalRecordSet(candidate, currentBest) {
+  if (!currentBest) {
+    return true;
+  }
+
+  if (candidate.weight !== currentBest.weight) {
+    return candidate.weight > currentBest.weight;
+  }
+
+  return comparePersonalRecordDate(candidate, currentBest) > 0;
+}
+
+function getPersonalRecordPreviousBestWeight(sets, record) {
+  let previousBest = null;
+
+  for (const set of sets) {
+    if (
+      set.sets_id === record.sets_id ||
+      set.reps !== record.reps ||
+      comparePersonalRecordDate(set, record) >= 0
+    ) {
+      continue;
+    }
+
+    if (previousBest === null || set.weight > previousBest) {
+      previousBest = set.weight;
+    }
+  }
+
+  return previousBest;
+}
+
+function getIsRecentPersonalRecord(record) {
+  const date = parsePersonalRecordSortDate(record?.performed_date_sort);
+
+  if (!date) {
+    return false;
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const days = Math.floor(
+    (today.getTime() - date.getTime()) / (1000 * 60 * 60 * 24)
+  );
+
+  return days >= 0 && days <= 14;
+}
+
+function buildPersonalRecordExerciseDetail(exerciseName, rows) {
+  const sets = rows
+    .map(normalizePersonalRecordSet)
+    .filter(
+      (set) =>
+        set.exercise_name &&
+        Number.isFinite(set.weight) &&
+        Number.isFinite(set.reps) &&
+        set.reps > 0
+    );
+
+  const setsForRecords = sets.filter(
+    (set) => set.reps >= 1 && set.reps <= PERSONAL_RECORD_REPS.length
+  );
+  const recordsByRep = {};
+  let bestEstimatedOneRepMax = null;
+  let heaviestWeight = null;
+  let latestSet = null;
+
+  for (const set of sets) {
+    if (heaviestWeight === null || set.weight > heaviestWeight) {
+      heaviestWeight = set.weight;
+    }
+
+    if (!latestSet || comparePersonalRecordDate(set, latestSet) > 0) {
+      latestSet = set;
+    }
+
+    const estimatedOneRepMax =
+      set.reps <= PERSONAL_RECORD_REPS.length
+        ? calculatePersonalRecordOneRepMax(set.weight, set.reps)
+        : null;
+
+    if (
+      estimatedOneRepMax !== null &&
+      (bestEstimatedOneRepMax === null ||
+        estimatedOneRepMax > bestEstimatedOneRepMax)
+    ) {
+      bestEstimatedOneRepMax = estimatedOneRepMax;
+    }
+  }
+
+  for (const set of setsForRecords) {
+    const currentBest = recordsByRep[set.reps];
+
+    if (isBetterPersonalRecordSet(set, currentBest)) {
+      recordsByRep[set.reps] = set;
+    }
+  }
+
+  const maxRecordWeight = Math.max(
+    ...Object.values(recordsByRep).map((record) => Number(record.weight) || 0),
+    0
+  );
+  const latestRecord = Object.values(recordsByRep).reduce(
+    (latest, record) =>
+      !latest || comparePersonalRecordDate(record, latest) > 0
+        ? record
+        : latest,
+    null
+  );
+  const rowsByRep = PERSONAL_RECORD_REPS.map((reps) => {
+    const record = recordsByRep[reps] ?? null;
+
+    if (!record) {
+      return {
+        reps,
+        hasRecord: false,
+        weight: null,
+        weightDisplay: "--",
+        progressPercent: 0,
+        performedDate: null,
+        dateDisplay: "--",
+        relativeDateLabel: null,
+        isNew: false,
+        gainDisplay: null,
+      };
+    }
+
+    const previousBestWeight = getPersonalRecordPreviousBestWeight(
+      setsForRecords,
+      record
+    );
+    const gain =
+      previousBestWeight !== null ? record.weight - previousBestWeight : null;
+
+    return {
+      reps,
+      hasRecord: true,
+      setId: record.sets_id,
+      weight: record.weight,
+      weightDisplay: formatPersonalRecordNumber(record.weight),
+      progressPercent:
+        maxRecordWeight > 0
+          ? Math.max(8, Math.round((record.weight / maxRecordWeight) * 100))
+          : 0,
+      performedDate: record.performed_date,
+      dateDisplay: formatPersonalRecordDate(record.performed_date),
+      relativeDateLabel: formatPersonalRecordRelativeDate(
+        record.performed_date_sort
+      ),
+      isNew: record.personal_record || getIsRecentPersonalRecord(record),
+      gainDisplay:
+        gain !== null && gain > 0
+          ? `+${formatPersonalRecordNumber(gain)}`
+          : null,
+    };
+  });
+  const completedRecordCount = rowsByRep.filter((row) => row.hasRecord).length;
+  const roundedOneRepMax =
+    bestEstimatedOneRepMax === null
+      ? null
+      : Math.round(bestEstimatedOneRepMax * 2) / 2;
+
+  return {
+    exerciseName,
+    rows: rowsByRep,
+    setCount: sets.length,
+    completedRecordCount,
+    recordSlotCount: PERSONAL_RECORD_REPS.length,
+    e1rm: roundedOneRepMax,
+    e1rmDisplay:
+      roundedOneRepMax === null
+        ? "--"
+        : `${formatPersonalRecordNumber(roundedOneRepMax)} kg`,
+    heaviestWeight,
+    heaviestWeightDisplay:
+      heaviestWeight === null
+        ? "--"
+        : `${formatPersonalRecordNumber(heaviestWeight)} kg`,
+    latestDateDisplay: latestSet
+      ? formatPersonalRecordDate(latestSet.performed_date)
+      : "--",
+    latestRelativeDateLabel: latestSet
+      ? formatPersonalRecordRelativeDate(latestSet.performed_date_sort)
+      : null,
+    latestRecordDateDisplay: latestRecord
+      ? formatPersonalRecordDate(latestRecord.performed_date)
+      : "--",
+    latestRecordRelativeDateLabel: latestRecord
+      ? formatPersonalRecordRelativeDate(latestRecord.performed_date_sort)
+      : null,
+  };
 }
 
 function normalizeExerciseOrder(value, fallbackValue = 0) {
@@ -278,12 +613,20 @@ function buildExerciseActivationCounts(exercises, activations) {
     }
   }
 
-  return normalizeExerciseCatalogEntries(
-    exercises.map((exercise) => {
+  return exercises
+    .map((exercise) => {
+      const rawName = exercise?.name ?? exercise?.exercise_name;
+      const name = typeof rawName === "string" ? rawName.trim() : "";
+
+      if (!name) {
+        return null;
+      }
+
       const counts = activationMap.get(exercise.id);
 
       return {
-        name: exercise.name,
+        id: exercise.id,
+        name,
         nickname:
           typeof exercise.nickname === "string" && exercise.nickname.trim() !== ""
             ? exercise.nickname.trim()
@@ -292,13 +635,165 @@ function buildExerciseActivationCounts(exercises, activations) {
         secondary_muscle_group_count: counts?.secondary.size ?? 0,
       };
     })
-  );
+    .filter(Boolean)
+    .sort((left, right) =>
+      left.name.localeCompare(right.name, undefined, {
+        sensitivity: "base",
+      })
+    );
 }
 
 function normalizeActivationLevel(activationLevel) {
   return typeof activationLevel === "string"
     ? activationLevel.trim().toLocaleLowerCase()
     : "";
+}
+
+function normalizeMuscleGroupKey(value) {
+  return typeof value === "string"
+    ? value.trim().toLocaleLowerCase().replace(/[^a-z0-9]+/g, "-")
+    : "";
+}
+
+function buildExerciseGroupMetadata({
+  groupRows,
+  groupAssignmentRows,
+  activationRows,
+}) {
+  const groupsById = new Map();
+  const musclesToGroups = new Map();
+  const exerciseBuckets = new Map();
+
+  for (const group of groupRows ?? []) {
+    const groupKey = normalizeMuscleGroupKey(group?.group_key);
+    const groupName =
+      typeof group?.name === "string" && group.name.trim() !== ""
+        ? group.name.trim()
+        : groupKey;
+
+    if (!group?.id || !groupKey || !groupName) {
+      continue;
+    }
+
+    groupsById.set(group.id, {
+      id: group.id,
+      key: groupKey,
+      name: groupName,
+      displayOrder: Number(group.display_order) || 0,
+    });
+  }
+
+  for (const row of groupAssignmentRows ?? []) {
+    const group = groupsById.get(row?.muscle_group_id);
+
+    if (!group || !row?.muscle_id) {
+      continue;
+    }
+
+    const existingGroups = musclesToGroups.get(row.muscle_id) ?? [];
+    existingGroups.push(group);
+    musclesToGroups.set(row.muscle_id, existingGroups);
+  }
+
+  for (const activation of activationRows ?? []) {
+    const exerciseId = activation?.exercise_id;
+    const muscleGroups = musclesToGroups.get(activation?.muscle_id) ?? [];
+
+    if (!exerciseId || muscleGroups.length === 0) {
+      continue;
+    }
+
+    const activationLevel = normalizeActivationLevel(activation.activation_level);
+    const activationPercent = Number(activation.activation_percent) || 0;
+    const activationWeight =
+      activationLevel === PRIMARY_ACTIVATION_LEVEL ? 2 : 1;
+    const score = Math.max(1, activationPercent) * activationWeight;
+    const exerciseBucket = exerciseBuckets.get(exerciseId) ?? new Map();
+
+    for (const group of muscleGroups) {
+      const groupBucket = exerciseBucket.get(group.key) ?? {
+        ...group,
+        score: 0,
+      };
+
+      groupBucket.score += score;
+      exerciseBucket.set(group.key, groupBucket);
+    }
+
+    exerciseBuckets.set(exerciseId, exerciseBucket);
+  }
+
+  const exerciseGroupMap = new Map();
+
+  for (const [exerciseId, bucket] of exerciseBuckets.entries()) {
+    const groups = [...bucket.values()].sort((left, right) => {
+      if (right.score !== left.score) {
+        return right.score - left.score;
+      }
+
+      if (left.displayOrder !== right.displayOrder) {
+        return left.displayOrder - right.displayOrder;
+      }
+
+      return left.name.localeCompare(right.name);
+    });
+
+    exerciseGroupMap.set(exerciseId, {
+      primary_group_key: groups[0]?.key ?? null,
+      primary_group_name: groups[0]?.name ?? null,
+      group_keys: groups.map((group) => group.key),
+      group_names: groups.map((group) => group.name),
+    });
+  }
+
+  return {
+    exerciseGroupMap,
+  };
+}
+
+async function getExerciseGroupMetadata({ exerciseIds, activationRows }) {
+  if (exerciseIds.length === 0) {
+    return { exerciseGroupMap: new Map() };
+  }
+
+  try {
+    const { data: groupRows, error: groupError } = await supabase
+      .from(MUSCLE_GROUP_TABLE)
+      .select("id, group_key, name, display_order, is_active")
+      .eq("is_active", true)
+      .order("display_order", { ascending: true })
+      .order("name", { ascending: true });
+
+    if (groupError) {
+      throw groupError;
+    }
+
+    const groupIds = (groupRows ?? [])
+      .map((group) => group?.id)
+      .filter((id) => id !== null && id !== undefined);
+
+    if (groupIds.length === 0) {
+      return { exerciseGroupMap: new Map() };
+    }
+
+    const { data: groupAssignmentRows, error: groupAssignmentError } =
+      await supabase
+        .from(MUSCLE_GROUP_ASSIGNMENT_TABLE)
+        .select("muscle_group_id, muscle_id")
+        .in("muscle_group_id", groupIds);
+
+    if (groupAssignmentError) {
+      throw groupAssignmentError;
+    }
+
+    return buildExerciseGroupMetadata({
+      groupRows,
+      groupAssignmentRows,
+      activationRows,
+    });
+  } catch (_error) {
+    return { exerciseGroupMap: new Map() };
+  }
 }
 
 async function getDefaultMesocycleProgressionWeight(
@@ -502,10 +997,14 @@ async function getSelectedProgramBestExerciseNames(db, programId) {
 
 function mapExerciseCatalogForDisplay(entries) {
   return entries.map((entry) => ({
-    exercise_name: entry.name,
-    nickname: entry.nickname,
+    exercise_name: entry.name ?? entry.exercise_name,
+    nickname: entry.nickname ?? null,
     primary_muscle_group_count: Number(entry.primary_muscle_group_count) || 0,
     secondary_muscle_group_count: Number(entry.secondary_muscle_group_count) || 0,
+    primary_group_key: entry.primary_group_key ?? null,
+    primary_group_name: entry.primary_group_name ?? null,
+    group_keys: Array.isArray(entry.group_keys) ? entry.group_keys : [],
+    group_names: Array.isArray(entry.group_names) ? entry.group_names : [],
   }));
 }
 
@@ -515,6 +1014,55 @@ export async function getExerciseStorage(db) {
 
 export async function createExerciseStorage(db, exerciseName) {
   await weightliftingRepository.createExerciseStorage(db, exerciseName);
+}
+
+export async function getPersonalRecordExerciseSummaries(db) {
+  const rows =
+    await weightliftingRepository.getCompletedStrengthSetsForPersonalRecords(db);
+  const rowsByExercise = new Map();
+
+  for (const row of rows) {
+    const exerciseName =
+      typeof row?.exercise_name === "string" ? row.exercise_name.trim() : "";
+
+    if (!exerciseName) {
+      continue;
+    }
+
+    const exerciseRows = rowsByExercise.get(exerciseName) ?? [];
+    exerciseRows.push(row);
+    rowsByExercise.set(exerciseName, exerciseRows);
+  }
+
+  return [...rowsByExercise.entries()]
+    .map(([exerciseName, exerciseRows]) =>
+      buildPersonalRecordExerciseDetail(exerciseName, exerciseRows)
+    )
+    .sort((left, right) =>
+      left.exerciseName.localeCompare(right.exerciseName, undefined, {
+        sensitivity: "base",
+      })
+    );
+}
+
+export async function getPersonalRecordExerciseDetail(db, exerciseName) {
+  const normalizedExerciseName =
+    typeof exerciseName === "string" ? exerciseName.trim() : "";
+
+  if (!normalizedExerciseName) {
+    return null;
+  }
+
+  const rows =
+    await weightliftingRepository.getCompletedStrengthSetsForPersonalRecords(db, {
+      exerciseName: normalizedExerciseName,
+    });
+
+  if (rows.length === 0) {
+    return null;
+  }
+
+  return buildPersonalRecordExerciseDetail(normalizedExerciseName, rows);
 }
 
 export async function getExerciseLibraryEntries(db) {
@@ -559,26 +1107,33 @@ export async function getExerciseLibraryEntries(db) {
       activationRows = data ?? [];
     }
 
+    const groupMetadata = await getExerciseGroupMetadata({
+      exerciseIds,
+      activationRows,
+    });
     const cloudExercisesWithCounts = buildExerciseActivationCounts(
       exerciseRows ?? [],
       activationRows
     );
     const cloudExerciseMap = new Map(
-      cloudExercisesWithCounts.map((exercise) => [
-        exercise.name.toLocaleLowerCase(),
-        exercise,
-      ])
+      cloudExercisesWithCounts.map((exercise) => {
+        const groupData =
+          groupMetadata.exerciseGroupMap.get(exercise.id) ?? {};
+
+        return [
+          exercise.name.toLocaleLowerCase(),
+          {
+            ...exercise,
+            ...groupData,
+          },
+        ];
+      })
     );
 
     return mapExerciseCatalogForDisplay(
       localExercises.map((exercise) => ({
         ...exercise,
-        primary_muscle_group_count:
-          cloudExerciseMap.get(exercise.name.toLocaleLowerCase())
-            ?.primary_muscle_group_count ?? 0,
-        secondary_muscle_group_count:
-          cloudExerciseMap.get(exercise.name.toLocaleLowerCase())
-            ?.secondary_muscle_group_count ?? 0,
+        ...(cloudExerciseMap.get(exercise.name.toLocaleLowerCase()) ?? {}),
       }))
     );
   } catch (_error) {

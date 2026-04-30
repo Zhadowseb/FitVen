@@ -12,20 +12,6 @@ export default StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 16,
   },
-  pageHeaderTitleGroup: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  pageHeaderTitleEyebrow: {
-    fontWeight: "800",
-    letterSpacing: 1,
-    textTransform: "uppercase",
-    marginBottom: 2,
-  },
-  pageHeaderTitleMain: {
-    textAlign: "center",
-    lineHeight: 26,
-  },
   quickAccessSection: {
     marginBottom: 18,
   },
@@ -53,7 +39,6 @@ export default StyleSheet.create({
   quickAccessCardEyebrow: {
     fontSize: 10,
     fontWeight: "800",
-    letterSpacing: 1,
     textTransform: "uppercase",
     marginBottom: 4,
   },
@@ -87,7 +72,6 @@ export default StyleSheet.create({
   quickAccessMetricLabel: {
     fontSize: 10,
     fontWeight: "700",
-    letterSpacing: 0.2,
     lineHeight: 12,
     textTransform: "uppercase",
     marginTop: 4,
@@ -102,7 +86,6 @@ export default StyleSheet.create({
   quickAccessFooterText: {
     fontSize: 13,
     fontWeight: "700",
-    letterSpacing: 0.3,
   },
   quickAccessFooterAccent: {
     width: 28,
