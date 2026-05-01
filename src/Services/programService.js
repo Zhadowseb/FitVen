@@ -5021,6 +5021,40 @@ export async function getTodayProgramSnapshots(db, { date }) {
   return snapshots.filter(Boolean);
 }
 
+export async function getWorkoutCalendarWorkouts(
+  db,
+  { startIsoDate, endIsoDate }
+) {
+  const normalizedStartDate = normalizeIsoDateString(startIsoDate);
+  const normalizedEndDate = normalizeIsoDateString(endIsoDate);
+
+  if (!normalizedStartDate || !normalizedEndDate) {
+    return [];
+  }
+
+  return programRepository.getWorkoutsBetweenDates(db, {
+    startIsoDate: normalizedStartDate,
+    endIsoDate: normalizedEndDate,
+  });
+}
+
+export async function getWorkoutCalendarProgramDays(
+  db,
+  { startIsoDate, endIsoDate }
+) {
+  const normalizedStartDate = normalizeIsoDateString(startIsoDate);
+  const normalizedEndDate = normalizeIsoDateString(endIsoDate);
+
+  if (!normalizedStartDate || !normalizedEndDate) {
+    return [];
+  }
+
+  return programRepository.getProgramDaysBetweenDates(db, {
+    startIsoDate: normalizedStartDate,
+    endIsoDate: normalizedEndDate,
+  });
+}
+
 export async function getProgramExerciseBests(db, programId) {
   const sets = await programRepository.getCompletedStrengthSetsByProgram(
     db,

@@ -25,6 +25,16 @@ function workoutDisplayLabelSql(workoutAlias = "w", workoutTypeAlias = "wt") {
   )`;
 }
 
+function localDateToIsoSql(dateExpression) {
+  return `CASE
+    WHEN ${dateExpression} LIKE '__.__.____'
+    THEN substr(${dateExpression}, 7, 4) || '-' ||
+         substr(${dateExpression}, 4, 2) || '-' ||
+         substr(${dateExpression}, 1, 2)
+    ELSE ${dateExpression}
+  END`;
+}
+
 export async function createProgram(db, { programName, startDate, status }) {
   const syncVersion = createNextSyncVersion();
   await db.runAsync(
@@ -875,6 +885,58 @@ export async function getWorkoutOptions(db, programId) {
      WHERE d.program_id = ?
      ORDER BY w.date;`,
     [programId]
+  );
+}
+
+export async function getWorkoutsBetweenDates(db, { startIsoDate, endIsoDate }) {
+  const workoutIsoDateSql = localDateToIsoSql("w.date");
+
+  return db.getAllAsync(
+    `SELECT
+        w.workout_id,
+        w.workout_type,
+        ${workoutDisplayLabelSql("w", "wt")} AS label,
+        w.date,
+        ${workoutIsoDateSql} AS date_iso,
+        w.done,
+        w.day_id,
+        w.is_active,
+        d.Weekday AS weekday,
+        d.program_id,
+        p.program_name
+     FROM Workout_Type_Instance w
+     JOIN Day d ON d.day_id = w.day_id
+     JOIN Program p ON p.program_id = d.program_id
+     LEFT JOIN Workout_Type wt ON wt.name = w.workout_type
+     WHERE w.deleted_at IS NULL
+       AND d.deleted_at IS NULL
+       AND p.deleted_at IS NULL
+       AND date(${workoutIsoDateSql}) BETWEEN date(?) AND date(?)
+      ORDER BY date_iso ASC, p.program_name COLLATE NOCASE ASC, w.workout_id ASC;`,
+    [startIsoDate, endIsoDate]
+  );
+}
+
+export async function getProgramDaysBetweenDates(db, { startIsoDate, endIsoDate }) {
+  const dayIsoDateSql = localDateToIsoSql("d.date");
+
+  return db.getAllAsync(
+    `SELECT
+        d.date,
+        ${dayIsoDateSql} AS date_iso,
+        COUNT(DISTINCT d.program_id) AS program_count
+     FROM Day d
+     JOIN Program p ON p.program_id = d.program_id
+     JOIN Microcycle mc ON mc.microcycle_id = d.microcycle_id
+     JOIN Mesocycle m ON m.mesocycle_id = mc.mesocycle_id
+     WHERE d.deleted_at IS NULL
+       AND p.deleted_at IS NULL
+       AND mc.deleted_at IS NULL
+       AND m.deleted_at IS NULL
+       AND date(${dayIsoDateSql}) BETWEEN date(?) AND date(?)
+     GROUP BY d.date, date_iso
+     ORDER BY date_iso ASC;`,
+    [startIsoDate, endIsoDate]
   );
 }
 

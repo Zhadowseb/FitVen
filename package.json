@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.10.0-major-personal-records.1",
+  "version": "0.11.0-major-workout-calendar.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",

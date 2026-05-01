@@ -14,6 +14,38 @@ export default StyleSheet.create({
   socialSectionSpacer: {
     marginTop: 8,
   },
+  calendarShortcut: {
+    marginTop: 12,
+    marginHorizontal: 18,
+    borderWidth: 1,
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  calendarShortcutIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  calendarShortcutBody: {
+    flex: 1,
+  },
+  calendarShortcutEyebrow: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "800",
+    letterSpacing: 1,
+    textTransform: "uppercase",
+    marginBottom: 2,
+  },
+  calendarShortcutTitle: {
+    lineHeight: 26,
+  },
   feedbackPortal: {
     marginTop: 12,
     marginHorizontal: 18,

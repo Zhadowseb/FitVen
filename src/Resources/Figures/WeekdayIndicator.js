@@ -37,6 +37,7 @@ const WeekdayIndicator = ({
   overdue = false,
   icon: Icon,
   iconLabel,
+  programActive = false,
   workoutCards = [],
   onWorkoutPress,
   onDayLongPress,
@@ -123,6 +124,16 @@ const WeekdayIndicator = ({
           },
         ]}
       >
+        {programActive && (
+          <View
+            pointerEvents="none"
+            style={[
+              styles.programDot,
+              { backgroundColor: theme.primary ?? "#f7742e" },
+            ]}
+          />
+        )}
+
         <Text
           style={[
             styles.weekdayLabel,
@@ -289,6 +300,14 @@ const styles = StyleSheet.create({
   weekdayLabelActive: {
     fontSize: 9,
     letterSpacing: 0,
+  },
+  programDot: {
+    position: "absolute",
+    top: 5,
+    right: 2,
+    width: 7,
+    height: 7,
+    borderRadius: 4,
   },
   todayBadgeSlot: {
     position: "absolute",

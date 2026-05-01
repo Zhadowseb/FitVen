@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.11.0] - Unreleased
+### Changed
+- Added a workout calendar test entry from Home with open-ended month paging, program-day dots, and workouts from all programs.
+
+---
 ## [0.10.0] - Unreleased
 ### Changed
 - Removed the header from the Library bottom-tab page.

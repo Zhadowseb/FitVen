@@ -9,6 +9,7 @@ import { Colors } from '../../Resources/GlobalStyling/colors';
 import FeedbackModal from './Components/FeedbackModal/FeedbackModal';
 import FriendsActivity from './Components/FriendsActivity/FriendsActivity';
 import TodayProgramsShortcut from './Components/TodayProgramsShortcut/TodayProgramsShortcut';
+import Calender from "../../Resources/Icons/UI-icons/Calender";
 import {
   programService,
   socialService,
@@ -117,6 +118,39 @@ export default function App() {
         showsVerticalScrollIndicator={false}
       >
         <TodayProgramsShortcut />
+
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={() => navigation.navigate("WorkoutCalendarPage")}
+          style={[
+            styles.calendarShortcut,
+            {
+              backgroundColor: cardSurface,
+              borderColor: cardBorder,
+            },
+          ]}
+        >
+          <View
+            style={[
+              styles.calendarShortcutIcon,
+              { backgroundColor: theme.primaryLight ?? "rgba(247, 116, 46, 0.16)" },
+            ]}
+          >
+            <Calender width={24} height={24} color={primaryColor} thickness={1.8} />
+          </View>
+
+          <View style={styles.calendarShortcutBody}>
+            <ThemedText style={styles.calendarShortcutEyebrow} setColor={primaryColor}>
+              CALENDAR
+            </ThemedText>
+            <ThemedTitle
+              type="h3"
+              style={[styles.calendarShortcutTitle, { color: titleColor }]}
+            >
+              Workout Calendar
+            </ThemedTitle>
+          </View>
+        </TouchableOpacity>
 
         <FriendsActivity
           currentUser={circlePreview.currentUser}
