@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.12.1] - Unreleased
+### Changed
+- Added text labels under the bottom navigation buttons.
+
+---
 ## [0.12.0] - Unreleased
 ### Changed
 - Added a large bottom-navigation plus button for creating quick workouts on today's date.

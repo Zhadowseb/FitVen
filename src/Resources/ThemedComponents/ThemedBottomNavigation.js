@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   Alert,
   StyleSheet,
+  Text,
   TouchableOpacity,
   View,
   useColorScheme,
@@ -140,6 +141,14 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
             height={28}
             color={isHomeActive ? activeColor : inactiveColor}
           />
+          <Text
+            style={[
+              styles.tabLabel,
+              { color: isHomeActive ? activeColor : inactiveColor },
+            ]}
+          >
+            HOME
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -152,6 +161,14 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
             height={27}
             color={isSearchActive ? activeColor : inactiveColor}
           />
+          <Text
+            style={[
+              styles.tabLabel,
+              { color: isSearchActive ? activeColor : inactiveColor },
+            ]}
+          >
+            SEARCH
+          </Text>
         </TouchableOpacity>
 
         <View style={styles.plusSlot}>
@@ -189,6 +206,14 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
             height={27}
             color={isLibraryActive ? activeColor : inactiveColor}
           />
+          <Text
+            style={[
+              styles.tabLabel,
+              { color: isLibraryActive ? activeColor : inactiveColor },
+            ]}
+          >
+            LIBRARY
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -201,6 +226,14 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
             height={27}
             color={isProfileActive ? activeColor : inactiveColor}
           />
+          <Text
+            style={[
+              styles.tabLabel,
+              { color: isProfileActive ? activeColor : inactiveColor },
+            ]}
+          >
+            PROFILE
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -222,17 +255,24 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     paddingTop: 8,
     paddingHorizontal: 16,
-    minHeight: 58,
+    minHeight: 66,
   },
   tab: {
     flex: 1,
-    minHeight: 40,
+    minHeight: 48,
     alignItems: "center",
     justifyContent: "center",
+    gap: 2,
+  },
+  tabLabel: {
+    fontSize: 10,
+    lineHeight: 12,
+    fontWeight: "800",
+    letterSpacing: 0,
   },
   plusSlot: {
     flex: 1,
-    minHeight: 40,
+    minHeight: 48,
     alignItems: "center",
     justifyContent: "center",
   },
