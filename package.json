@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.11.1-minor-calendar-program-day-modal.1",
+  "version": "0.12.0-major-bottom-plus-workout.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",

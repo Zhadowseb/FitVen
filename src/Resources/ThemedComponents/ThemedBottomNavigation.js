@@ -1,21 +1,31 @@
+import { useState } from "react";
 import {
+  Alert,
   StyleSheet,
   TouchableOpacity,
   View,
   useColorScheme,
 } from "react-native";
+import { useSQLiteContext } from "expo-sqlite";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Colors } from "../GlobalStyling/colors";
+import AddWorkoutModal from "../Components/AddWorkoutModal";
 import Home from "../Icons/UI-icons/Home";
 import Library from "../Icons/UI-icons/Library";
 import Male from "../Icons/UI-icons/Male";
+import Plus from "../Icons/UI-icons/Plus";
 import Search from "../Icons/UI-icons/Search";
+import { programService } from "../../Services";
 
 function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
+  const db = useSQLiteContext();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const insets = useSafeAreaInsets();
+  const [quickWorkoutModalVisible, setQuickWorkoutModalVisible] =
+    useState(false);
+  const [isCreatingQuickWorkout, setIsCreatingQuickWorkout] = useState(false);
 
   const isProfileActive = currentRouteName === "ProfilePage";
   const isSearchActive = currentRouteName === "SearchPage";
@@ -31,6 +41,8 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
   const barBackground =
     theme.cardBackground ?? theme.navBackground ?? theme.background;
   const barBorder = theme.border ?? theme.cardBorder ?? theme.iconColor;
+  const plusBackground = theme.primary ?? "#f7742e";
+  const plusIconColor = theme.textInverted ?? theme.cardBackground ?? "#10131a";
 
   const handleHomePress = () => {
     if (!navigationRef?.isReady?.()) {
@@ -67,65 +79,137 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     navigationRef.navigate("ExerciseLibraryPage");
   };
 
+  const handleQuickWorkoutPress = () => {
+    if (isCreatingQuickWorkout) {
+      return;
+    }
+
+    setQuickWorkoutModalVisible(true);
+  };
+
+  const handleCreateQuickWorkout = async (workoutType) => {
+    if (!navigationRef?.isReady?.() || isCreatingQuickWorkout) {
+      return;
+    }
+
+    setIsCreatingQuickWorkout(true);
+
+    try {
+      const workoutLabel = workoutType.displayName ?? workoutType.id;
+      const workout = await programService.createQuickWorkout(db, {
+        date: new Date(),
+        workoutType: workoutType.id,
+        label: null,
+      });
+
+      navigationRef.navigate("WorkoutPage", {
+        program_id: workout.program_id,
+        day: workout.day,
+        date: workout.date,
+        workout_id: workout.workout_id,
+        workout_label: workoutLabel,
+        workout_type: workoutType.id,
+      });
+    } catch (error) {
+      console.error("Failed to create quick workout:", error);
+      Alert.alert("Could not create workout", "Please try again.");
+    } finally {
+      setIsCreatingQuickWorkout(false);
+    }
+  };
+
   return (
-    <View
-      style={[
-        styles.container,
-        {
-          backgroundColor: barBackground,
-          borderTopColor: barBorder,
-          paddingBottom: insets.bottom,
-        },
-      ]}
-    >
-      <TouchableOpacity
-        activeOpacity={0.82}
-        onPress={handleHomePress}
-        style={styles.tab}
+    <>
+      <View
+        style={[
+          styles.container,
+          {
+            backgroundColor: barBackground,
+            borderTopColor: barBorder,
+            paddingBottom: insets.bottom,
+          },
+        ]}
       >
-        <Home
-          width={28}
-          height={28}
-          color={isHomeActive ? activeColor : inactiveColor}
-        />
-      </TouchableOpacity>
+        <TouchableOpacity
+          activeOpacity={0.82}
+          onPress={handleHomePress}
+          style={styles.tab}
+        >
+          <Home
+            width={28}
+            height={28}
+            color={isHomeActive ? activeColor : inactiveColor}
+          />
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        activeOpacity={0.82}
-        onPress={handleSearchPress}
-        style={styles.tab}
-      >
-        <Search
-          width={27}
-          height={27}
-          color={isSearchActive ? activeColor : inactiveColor}
-        />
-      </TouchableOpacity>
+        <TouchableOpacity
+          activeOpacity={0.82}
+          onPress={handleSearchPress}
+          style={styles.tab}
+        >
+          <Search
+            width={27}
+            height={27}
+            color={isSearchActive ? activeColor : inactiveColor}
+          />
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        activeOpacity={0.82}
-        onPress={handleLibraryPress}
-        style={styles.tab}
-      >
-        <Library
-          width={27}
-          height={27}
-          color={isLibraryActive ? activeColor : inactiveColor}
-        />
-      </TouchableOpacity>
+        <View style={styles.plusSlot}>
+          <TouchableOpacity
+            activeOpacity={0.86}
+            accessibilityLabel="Create workout"
+            accessibilityRole="button"
+            disabled={isCreatingQuickWorkout}
+            onPress={handleQuickWorkoutPress}
+            style={[
+              styles.plusButton,
+              {
+                backgroundColor: plusBackground,
+                borderColor: barBackground,
+                opacity: isCreatingQuickWorkout ? 0.72 : 1,
+              },
+            ]}
+          >
+            <Plus
+              width={34}
+              height={34}
+              color={plusIconColor}
+              thickness={2.2}
+            />
+          </TouchableOpacity>
+        </View>
 
-      <TouchableOpacity
-        activeOpacity={0.82}
-        onPress={handleProfilePress}
-        style={styles.tab}
-      >
-        <Male
-          width={27}
-          height={27}
-          color={isProfileActive ? activeColor : inactiveColor}
-        />
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity
+          activeOpacity={0.82}
+          onPress={handleLibraryPress}
+          style={styles.tab}
+        >
+          <Library
+            width={27}
+            height={27}
+            color={isLibraryActive ? activeColor : inactiveColor}
+          />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          activeOpacity={0.82}
+          onPress={handleProfilePress}
+          style={styles.tab}
+        >
+          <Male
+            width={27}
+            height={27}
+            color={isProfileActive ? activeColor : inactiveColor}
+          />
+        </TouchableOpacity>
+      </View>
+
+      <AddWorkoutModal
+        visible={quickWorkoutModalVisible}
+        onClose={() => setQuickWorkoutModalVisible(false)}
+        onSubmit={handleCreateQuickWorkout}
+      />
+    </>
   );
 }
 
@@ -136,13 +220,34 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderTopWidth: 1,
-    paddingTop: 2,
-    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingHorizontal: 16,
+    minHeight: 58,
   },
   tab: {
     flex: 1,
-    minHeight: 32,
+    minHeight: 40,
     alignItems: "center",
     justifyContent: "center",
+  },
+  plusSlot: {
+    flex: 1,
+    minHeight: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  plusButton: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    borderWidth: 4,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: -34,
+    shadowColor: "#f7742e",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.36,
+    shadowRadius: 18,
+    elevation: 12,
   },
 });

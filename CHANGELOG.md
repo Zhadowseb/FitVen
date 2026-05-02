@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.12.0] - Unreleased
+### Changed
+- Added a large bottom-navigation plus button for creating quick workouts on today's date.
+- Added a Quick Workouts program container so quick workouts get real Day rows with dates.
+
+---
 ## [0.11.1] - Unreleased
 ### Changed
 - Added a workout calendar program-day modal with navigation to Program Overview.

@@ -37,7 +37,7 @@ function localDateToIsoSql(dateExpression) {
 
 export async function createProgram(db, { programName, startDate, status }) {
   const syncVersion = createNextSyncVersion();
-  await db.runAsync(
+  return db.runAsync(
     `INSERT INTO Program (
       program_name,
       start_date,
@@ -47,6 +47,27 @@ export async function createProgram(db, { programName, startDate, status }) {
     )
      VALUES (?, ?, ?, ${SQLITE_UUID_SQL}, ?);`,
     [programName, startDate, status, syncVersion]
+  );
+}
+
+export async function getAppMetadataValue(db, metadataKey) {
+  const row = await db.getFirstAsync(
+    `SELECT metadata_value
+     FROM App_Metadata
+     WHERE metadata_key = ?;`,
+    [metadataKey]
+  );
+
+  return row?.metadata_value ?? null;
+}
+
+export async function setAppMetadataValue(db, metadataKey, metadataValue) {
+  return db.runAsync(
+    `INSERT INTO App_Metadata (metadata_key, metadata_value)
+     VALUES (?, ?)
+     ON CONFLICT(metadata_key)
+     DO UPDATE SET metadata_value = excluded.metadata_value;`,
+    [metadataKey, metadataValue]
   );
 }
 
@@ -817,6 +838,29 @@ export async function updateProgramStatus(db, { programId, status }) {
          needs_sync = 1
      WHERE program_id = ?;`,
     [status, syncVersion, programId]
+  );
+}
+
+export async function getQuickWorkoutContainerByProgramId(db, programId) {
+  return db.getFirstAsync(
+    `SELECT
+        p.program_id,
+        p.program_name,
+        p.start_date,
+        m.mesocycle_id,
+        mc.microcycle_id
+     FROM Program p
+     JOIN Mesocycle m
+       ON m.program_id = p.program_id
+      AND m.deleted_at IS NULL
+     JOIN Microcycle mc
+       ON mc.mesocycle_id = m.mesocycle_id
+      AND mc.deleted_at IS NULL
+     WHERE p.program_id = ?
+       AND p.deleted_at IS NULL
+     ORDER BY m.mesocycle_number ASC, mc.microcycle_number ASC
+     LIMIT 1;`,
+    [programId]
   );
 }
 

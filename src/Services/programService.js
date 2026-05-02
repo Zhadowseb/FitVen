@@ -35,6 +35,8 @@ const WEEK_DAYS = [
   "Saturday",
   "Sunday",
 ];
+const QUICK_WORKOUT_PROGRAM_NAME = "Quick Workouts";
+const QUICK_WORKOUT_PROGRAM_METADATA_KEY = "quick_workout_program_id_v1";
 const PROGRAM_CLOUD_TABLE = "Program";
 const PROGRAM_STATUS_VALUES = new Set(["COMPLETE", "ACTIVE", "NOT_STARTED"]);
 const PROGRAM_CLOUD_SYNC_SELECT =
@@ -72,6 +74,62 @@ const EXERCISE_VISIBLE_COLUMN_KEYS = [
 
 function formatDisplayNumber(value) {
   return Number.isInteger(value) ? `${value}` : value.toFixed(1);
+}
+
+function getWeekdayLabel(date) {
+  return WEEK_DAYS[(date.getDay() + 6) % 7] ?? WEEK_DAYS[0];
+}
+
+async function getQuickWorkoutContainer(db, startDate) {
+  const savedProgramId = Number(
+    await programRepository.getAppMetadataValue(
+      db,
+      QUICK_WORKOUT_PROGRAM_METADATA_KEY
+    )
+  );
+
+  if (Number.isInteger(savedProgramId) && savedProgramId > 0) {
+    const savedContainer =
+      await programRepository.getQuickWorkoutContainerByProgramId(
+        db,
+        savedProgramId
+      );
+
+    if (savedContainer) {
+      return savedContainer;
+    }
+  }
+
+  const programResult = await programRepository.createProgram(db, {
+    programName: QUICK_WORKOUT_PROGRAM_NAME,
+    startDate,
+    status: "ACTIVE",
+  });
+  const programId = programResult.lastInsertRowId;
+  const mesocycleResult = await programRepository.insertMesocycle(db, {
+    programId,
+    mesocycleNumber: 1,
+    weeks: 0,
+    focus: QUICK_WORKOUT_PROGRAM_NAME,
+  });
+  const microcycleResult = await programRepository.insertMicrocycle(db, {
+    mesocycleId: mesocycleResult.lastInsertRowId,
+    microcycleNumber: 1,
+  });
+
+  await programRepository.setAppMetadataValue(
+    db,
+    QUICK_WORKOUT_PROGRAM_METADATA_KEY,
+    String(programId)
+  );
+
+  return {
+    program_id: programId,
+    program_name: QUICK_WORKOUT_PROGRAM_NAME,
+    start_date: startDate,
+    mesocycle_id: mesocycleResult.lastInsertRowId,
+    microcycle_id: microcycleResult.lastInsertRowId,
+  };
 }
 
 function isWorkoutLive(workout) {
@@ -5647,6 +5705,67 @@ export async function createWorkoutForDay(
 
   syncWorkoutTypeInstancesInBackground(db);
   return workout;
+}
+
+export async function createQuickWorkout(
+  db,
+  { date = new Date(), workoutType, label }
+) {
+  const workoutDate = date instanceof Date ? date : parseCustomDate(date);
+  const normalizedDate = formatDate(workoutDate);
+  const weekday = getWeekdayLabel(workoutDate);
+
+  const createdWorkout = await withTransaction(db, async () => {
+    const container = await getQuickWorkoutContainer(db, normalizedDate);
+    const existingDay = await programRepository.getDayByDate(db, {
+      programId: container.program_id,
+      date: normalizedDate,
+    });
+    let dayId = existingDay?.day_id ?? null;
+
+    if (!dayId) {
+      const dayResult = await programRepository.insertDay(db, {
+        microcycleId: container.microcycle_id,
+        programId: container.program_id,
+        weekday,
+        date: normalizedDate,
+      });
+
+      dayId = dayResult.lastInsertRowId;
+    }
+
+    const workoutResult = await programRepository.createWorkout(db, {
+      date: normalizedDate,
+      dayId,
+      workoutType,
+      label,
+    });
+
+    const hierarchy = await workoutRepository.getDayHierarchyIds(db, dayId);
+    await workoutService.refreshWorkoutHierarchyCompletionByIds(db, {
+      dayId: hierarchy?.day_id,
+      microcycleId: hierarchy?.microcycle_id,
+      mesocycleId: hierarchy?.mesocycle_id,
+    });
+
+    return {
+      workout_id: workoutResult.lastInsertRowId,
+      workout_type: workoutType,
+      workout_label: label ?? workoutType,
+      date: normalizedDate,
+      day: weekday,
+      program_id: container.program_id,
+      program_name: container.program_name,
+    };
+  });
+
+  syncProgramsInBackground(db);
+  syncMesocyclesInBackground(db);
+  syncMicrocyclesInBackground(db);
+  syncDaysInBackground(db);
+  syncWorkoutTypeInstancesInBackground(db);
+
+  return createdWorkout;
 }
 
 export async function copyWorkoutToDate(

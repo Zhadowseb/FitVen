@@ -9,8 +9,9 @@ import { Colors } from "../GlobalStyling/colors";
 import { programService } from "../../Services";
 
 
-import {ThemedButton, ThemedText, ThemedWorkoutModal} 
-  from "../ThemedComponents";
+import ThemedButton from "../ThemedComponents/ThemedButton";
+import ThemedText from "../ThemedComponents/ThemedText";
+import ThemedWorkoutModal from "../ThemedComponents/ThemedWorkoutModal";
 
 export default function AddWorkoutModal({ visible, onClose, onSubmit }) {
     const db = useSQLiteContext();
