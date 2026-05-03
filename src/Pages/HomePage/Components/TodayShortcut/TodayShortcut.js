@@ -121,10 +121,7 @@ export default function TodayShortcut({
     : hasWorkouts
       ? theme.primary ?? "#f7742e"
       : theme.cardBorder ?? theme.border ?? theme.iconColor ?? theme.text;
-  const cardBackground =
-    colorScheme === "dark"
-      ? "#17171f"
-      : theme.cardBackground ?? theme.background;
+  const cardBackground = theme.cardBackground ?? theme.background;
   const cardBorder =
     colorScheme === "dark"
       ? "rgba(255, 255, 255, 0.08)"
