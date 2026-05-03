@@ -24,6 +24,7 @@ export const Colors = {
         cardBorder: "#383838ff",
         navBackground: "#201e2b",
         uiBackground: "#2f2b3d",
+        libraryMetricBackground: "rgba(26, 32, 45, 0.92)",
 
         iconColor: "#9591a5",
         iconColorFocused: "#fff",
@@ -36,6 +37,7 @@ export const Colors = {
         navBackground: "#e8e7ef",
         iconColor: "#686477",
         iconColorFocused: "#201e2b",
-        uiBackground: "#d6d5e1",       
+        uiBackground: "#d6d5e1",
+        libraryMetricBackground: "rgba(26, 32, 45, 0.92)",
     }
 }

@@ -21,7 +21,7 @@ export async function getWorkoutHierarchyIds(db, workoutId) {
         mc.mesocycle_id
      FROM Workout_Type_Instance w
      JOIN Day d ON d.day_id = w.day_id
-     JOIN Microcycle mc ON mc.microcycle_id = d.microcycle_id
+     LEFT JOIN Microcycle mc ON mc.microcycle_id = d.microcycle_id
      WHERE w.workout_id = ?;`,
     [workoutId]
   );
@@ -51,7 +51,7 @@ export async function getDayHierarchyIds(db, dayId) {
         d.microcycle_id,
         mc.mesocycle_id
      FROM Day d
-     JOIN Microcycle mc ON mc.microcycle_id = d.microcycle_id
+     LEFT JOIN Microcycle mc ON mc.microcycle_id = d.microcycle_id
      WHERE d.day_id = ?;`,
     [dayId]
   );

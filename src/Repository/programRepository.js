@@ -841,29 +841,6 @@ export async function updateProgramStatus(db, { programId, status }) {
   );
 }
 
-export async function getQuickWorkoutContainerByProgramId(db, programId) {
-  return db.getFirstAsync(
-    `SELECT
-        p.program_id,
-        p.program_name,
-        p.start_date,
-        m.mesocycle_id,
-        mc.microcycle_id
-     FROM Program p
-     JOIN Mesocycle m
-       ON m.program_id = p.program_id
-      AND m.deleted_at IS NULL
-     JOIN Microcycle mc
-       ON mc.mesocycle_id = m.mesocycle_id
-      AND mc.deleted_at IS NULL
-     WHERE p.program_id = ?
-       AND p.deleted_at IS NULL
-     ORDER BY m.mesocycle_number ASC, mc.microcycle_number ASC
-     LIMIT 1;`,
-    [programId]
-  );
-}
-
 export async function updateProgramName(db, { programId, programName }) {
   const syncVersion = createNextSyncVersion();
   await db.runAsync(
@@ -894,6 +871,18 @@ export async function getDayByProgramAndDate(db, { programId, date }) {
      WHERE program_id = ?
        AND date = ?;`,
     [programId, date]
+  );
+}
+
+export async function getStandaloneDayByDate(db, { date }) {
+  return db.getFirstAsync(
+    `SELECT day_id, Weekday
+     FROM Day
+     WHERE program_id IS NULL
+       AND microcycle_id IS NULL
+       AND date = ?
+       AND deleted_at IS NULL;`,
+    [date]
   );
 }
 
@@ -950,13 +939,13 @@ export async function getWorkoutsBetweenDates(db, { startIsoDate, endIsoDate }) 
         p.program_name
      FROM Workout_Type_Instance w
      JOIN Day d ON d.day_id = w.day_id
-     JOIN Program p ON p.program_id = d.program_id
+     LEFT JOIN Program p ON p.program_id = d.program_id
      LEFT JOIN Workout_Type wt ON wt.name = w.workout_type
      WHERE w.deleted_at IS NULL
        AND d.deleted_at IS NULL
-       AND p.deleted_at IS NULL
+       AND (p.program_id IS NULL OR p.deleted_at IS NULL)
        AND date(${workoutIsoDateSql}) BETWEEN date(?) AND date(?)
-      ORDER BY date_iso ASC, p.program_name COLLATE NOCASE ASC, w.workout_id ASC;`,
+      ORDER BY date_iso ASC, COALESCE(p.program_name, '') COLLATE NOCASE ASC, w.workout_id ASC;`,
     [startIsoDate, endIsoDate]
   );
 }

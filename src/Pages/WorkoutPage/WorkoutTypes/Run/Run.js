@@ -3,22 +3,20 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { useSQLiteContext } from "expo-sqlite";
 import { useFocusEffect } from "@react-navigation/native";
 import { useColorScheme } from "react-native";
+import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
 
 import RunSetList from "./RunSetList";
-import RunLocationDebugModal from "./RunLocationDebugModal";
 import PlusCircled from "../../../../Resources/Icons/UI-icons/PlusCircled";
 import { Colors } from "../../../../Resources/GlobalStyling/colors";
 import {
   ThemedCard,
   ThemedView,
   ThemedText,
-  ThemedButton,
   ThemedKeyboardProtection,
 } from "../../../../Resources/ThemedComponents";
 import styles from "./RunStyle";
 
 import {
-  formatTime,
   formatWorkoutStart,
   getCurrentStoredTimestampSeconds,
   normalizeElapsedDurationSeconds,
@@ -75,18 +73,60 @@ const formatPaceDisplay = (paceMinutes) => {
   return `${minutes}'${String(seconds).padStart(2, "0")}`;
 };
 
-const createEmptyTrackedDebugReport = () => ({
-  summary: {
-    totalCallbacks: 0,
-    acceptedCount: 0,
-    rejectedCount: 0,
-    accuracyRejections: 0,
-    shortDistanceRejections: 0,
-    tooFastRejections: 0,
-    invalidTimeRejections: 0,
-  },
-  rows: [],
-});
+const formatRunClock = (totalSeconds) => {
+  const safeTotalSeconds = normalizeElapsedDurationSeconds(totalSeconds, 0);
+  const hours = Math.floor(safeTotalSeconds / 3600);
+  const minutes = Math.floor((safeTotalSeconds % 3600) / 60);
+  const seconds = safeTotalSeconds % 60;
+  const paddedMinutes = String(minutes).padStart(2, "0");
+  const paddedSeconds = String(seconds).padStart(2, "0");
+
+  if (hours > 0) {
+    return `${hours}:${paddedMinutes}:${paddedSeconds}`;
+  }
+
+  return `${paddedMinutes}:${paddedSeconds}`;
+};
+
+const getRunTrackingStartMessage = (error) => {
+  const message = String(error?.message ?? "");
+
+  if (message.includes("Precise location permission")) {
+    return "FitVen needs Precise/Fine location permission to track run distance accurately. Enable precise location for FitVen and try again.";
+  }
+
+  if (message.includes("Background location permission")) {
+    return "FitVen needs background location permission so distance continues tracking while the app is not in front.";
+  }
+
+  return "Check that location is allowed and turned on, then try again.";
+};
+
+const HeroGlow = ({
+  style,
+  color,
+  gradientId,
+  centerOpacity,
+  middleOpacity,
+}) => (
+  <Svg
+    pointerEvents="none"
+    style={style}
+    viewBox="0 0 100 100"
+    preserveAspectRatio="none"
+  >
+    <Defs>
+      <RadialGradient id={gradientId} cx="50%" cy="50%" r="50%">
+        <Stop offset="0%" stopColor={color} stopOpacity={centerOpacity} />
+        <Stop offset="34%" stopColor={color} stopOpacity={middleOpacity} />
+        <Stop offset="68%" stopColor={color} stopOpacity={middleOpacity * 0.46} />
+        <Stop offset="90%" stopColor={color} stopOpacity={middleOpacity * 0.12} />
+        <Stop offset="100%" stopColor={color} stopOpacity={0} />
+      </RadialGradient>
+    </Defs>
+    <Rect width="100" height="100" fill={`url(#${gradientId})`} />
+  </Svg>
+);
 
 const Run = ({ workout_id, restartRequestKey }) => {
   const colorScheme = useColorScheme();
@@ -112,10 +152,6 @@ const Run = ({ workout_id, restartRequestKey }) => {
   const [timerTick, set_timerTick] = useState(() =>
     getCurrentStoredTimestampSeconds()
   );
-  const [trackedDebugReport, set_trackedDebugReport] = useState(() =>
-    createEmptyTrackedDebugReport()
-  );
-  const [debugModalVisible, set_debugModalVisible] = useState(false);
 
   const [activeSet, set_activeSet] = useState(null);
   const [activeSet_remainingTime, set_activeSet_remainingTime] = useState(0);
@@ -127,7 +163,6 @@ const Run = ({ workout_id, restartRequestKey }) => {
   const workoutStateLoadRequestRef = useRef(0);
   const activeSetCalculationInFlightRef = useRef(false);
   const trackedSummaryLoadingRef = useRef(false);
-  const trackedDebugLoadingRef = useRef(false);
 
   const normalizeTimerStartValue = (value) =>
     normalizeStoredTimestampSeconds(value);
@@ -197,24 +232,6 @@ const Run = ({ workout_id, restartRequestKey }) => {
       console.error("Failed to load tracked run summary:", error);
     } finally {
       trackedSummaryLoadingRef.current = false;
-    }
-  }, [db, workout_id]);
-
-  const loadTrackedRunDebugReport = useCallback(async () => {
-    if (trackedDebugLoadingRef.current) {
-      return;
-    }
-
-    trackedDebugLoadingRef.current = true;
-
-    try {
-      const report = await locationService.getTrackedRunDebugReport(db, workout_id);
-      set_trackedDebugReport(report ?? createEmptyTrackedDebugReport());
-    } catch (error) {
-      console.error("Failed to load tracked run debug report:", error);
-      set_trackedDebugReport(createEmptyTrackedDebugReport());
-    } finally {
-      trackedDebugLoadingRef.current = false;
     }
   }, [db, workout_id]);
 
@@ -348,8 +365,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
     }
 
     await loadTrackedRunSummary();
-    await loadTrackedRunDebugReport();
-  }, [db, workout_id, calculateActiveSet, loadTrackedRunSummary, loadTrackedRunDebugReport]);
+  }, [db, workout_id, calculateActiveSet, loadTrackedRunSummary]);
 
   useFocusEffect(
     useCallback(() => {
@@ -407,21 +423,16 @@ const Run = ({ workout_id, restartRequestKey }) => {
   }, [loadTrackedRunSummary, updateCount]);
 
   useEffect(() => {
-    loadTrackedRunDebugReport();
-  }, [loadTrackedRunDebugReport, updateCount]);
-
-  useEffect(() => {
     if (!isRunning) {
       return;
     }
 
     const interval = setInterval(() => {
       loadTrackedRunSummary();
-      loadTrackedRunDebugReport();
     }, 2000);
 
     return () => clearInterval(interval);
-  }, [isRunning, loadTrackedRunSummary, loadTrackedRunDebugReport]);
+  }, [isRunning, loadTrackedRunSummary]);
 
   const updateElapsed = async () => {
     const newElapsed = normalizeElapsedDurationSeconds(
@@ -497,12 +508,11 @@ const Run = ({ workout_id, restartRequestKey }) => {
       set_isRunning(true);
       set_timer_start(start_time);
       await loadTrackedRunSummary();
-      await loadTrackedRunDebugReport();
     } catch (error) {
       console.error("Failed to start run tracking:", error);
       Alert.alert(
         "Location tracking could not start",
-        "Check that location is allowed and turned on, then try again."
+        getRunTrackingStartMessage(error)
       );
     } finally {
       set_isControlBusy(false);
@@ -527,7 +537,6 @@ const Run = ({ workout_id, restartRequestKey }) => {
       set_elapsed_time(newElapsed);
       await calculateActiveSet(newElapsed);
       await loadTrackedRunSummary();
-      await loadTrackedRunDebugReport();
     } catch (error) {
       console.error("Failed to pause run:", error);
       Alert.alert(
@@ -564,7 +573,6 @@ const Run = ({ workout_id, restartRequestKey }) => {
       });
 
       await loadTrackedRunSummary();
-      await loadTrackedRunDebugReport();
     } catch (error) {
       console.error("Failed to finish run:", error);
       Alert.alert(
@@ -595,8 +603,6 @@ const Run = ({ workout_id, restartRequestKey }) => {
       set_isRunning(false);
       set_isDone(false);
       set_totalDistance(0);
-      set_trackedDebugReport(createEmptyTrackedDebugReport());
-      set_debugModalVisible(false);
       clearActiveSegment();
       triggerReload();
     } catch (error) {
@@ -646,38 +652,25 @@ const Run = ({ workout_id, restartRequestKey }) => {
       ? formatWorkoutStart(original_start_time)
       : "Not started yet";
 
-  const formattedTotalDistance = `${Number(totalDistance.toFixed(2)).toString()} km`;
+  const formattedTotalDistance = Number(totalDistance.toFixed(2)).toFixed(2);
   const avgPaceDisplay = formatPaceDisplay(avgPaceMinutes);
-  const debugSummary =
-    trackedDebugReport?.summary ?? createEmptyTrackedDebugReport().summary;
-  const shouldShowDebugCard =
-    original_start_time !== null || debugSummary.totalCallbacks > 0;
-  const debugReasonBadges = [
-    {
-      label: "Accuracy",
-      value: debugSummary.accuracyRejections,
-      backgroundColor: theme.primaryLight ?? "rgba(247, 116, 46, 0.12)",
-      textColor: theme.primaryDark ?? theme.primary ?? titleColor,
-    },
-    {
-      label: "Too short",
-      value: debugSummary.shortDistanceRejections,
-      backgroundColor: theme.uiBackground ?? innerSurface,
-      textColor: titleColor,
-    },
-    {
-      label: "Too fast",
-      value: debugSummary.tooFastRejections,
-      backgroundColor: theme.uiBackground ?? innerSurface,
-      textColor: titleColor,
-    },
-    {
-      label: "Bad time",
-      value: debugSummary.invalidTimeRejections,
-      backgroundColor: theme.uiBackground ?? innerSurface,
-      textColor: titleColor,
-    },
-  ];
+  const elapsedDisplay = formatRunClock(currentElapsed);
+  const runStateLabel = isDone
+    ? "DONE"
+    : isRunning
+      ? "LIVE"
+      : original_start_time !== null
+        ? "PAUSED"
+        : "READY";
+  const shouldShowFinishRunPill =
+    original_start_time !== null && !isRunning && !isDone;
+  const primaryActionLabel = isRunning
+    ? "Pause"
+    : original_start_time !== null
+      ? "Continue run"
+      : "Start run";
+  const canUsePrimaryAction = !isDone && !isControlBusy;
+  const handlePrimaryAction = isRunning ? pauseWorkout : startWorkout;
 
   const activeSegmentMeta = activeSetDetails
     ? [
@@ -738,9 +731,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
             style={[
               styles.heroCard,
               {
-                backgroundColor: isDone
-                  ? "rgba(96, 218, 172, 0.08)"
-                  : cardSurface,
+                backgroundColor: cardSurface,
                 borderColor: isDone
                   ? secondaryColor
                   : isRunning
@@ -749,281 +740,168 @@ const Run = ({ workout_id, restartRequestKey }) => {
               },
             ]}
           >
-            <View
-              pointerEvents="none"
-              style={[
-                styles.heroAccentPrimary,
-                { backgroundColor: isDone ? secondaryColor : primaryColor },
-              ]}
+            <HeroGlow
+              style={styles.heroAccentPrimary}
+              color={isDone ? secondaryColor : primaryColor}
+              gradientId="runHeroPrimaryGlow"
+              centerOpacity={0.28}
+              middleOpacity={0.15}
             />
-            <View
-              pointerEvents="none"
-              style={[
-                styles.heroAccentSecondary,
-                { backgroundColor: secondaryColor },
-              ]}
+            <HeroGlow
+              style={styles.heroAccentSecondary}
+              color={secondaryColor}
+              gradientId="runHeroSecondaryGlow"
+              centerOpacity={0.23}
+              middleOpacity={0.12}
             />
 
-            <View style={styles.heroContentRow}>
-              <View style={styles.heroInfoColumn}>
-                <View style={styles.heroTimerBlock}>
-                  <ThemedText style={styles.heroTimerLabel} setColor={quietText}>
-                    Elapsed time
-                  </ThemedText>
-                  <ThemedText style={styles.heroTimerValue} setColor={titleColor}>
-                    {formatTime(currentElapsed)}
-                  </ThemedText>
-                </View>
-
+            <View style={styles.heroHeaderRow}>
+              <View style={styles.heroStatusCluster}>
                 <View
                   style={[
-                    styles.heroMetaCard,
-                    {
-                      backgroundColor: innerSurface,
-                      borderColor: cardBorder,
-                    },
+                    styles.heroStatusDot,
+                    { backgroundColor: isRunning ? primaryColor : quietText },
                   ]}
-                >
-                  <ThemedText style={styles.heroMetaLabel} setColor={quietText}>
-                    Started
-                  </ThemedText>
-                  <ThemedText style={styles.heroMetaValue} setColor={titleColor}>
-                    {startedDisplay}
-                  </ThemedText>
-                </View>
+                />
+                <ThemedText style={styles.heroStatusText} setColor={quietText}>
+                  {runStateLabel}
+                </ThemedText>
               </View>
 
-              <View style={styles.heroLiveColumn}>
-                <View
+              {shouldShowFinishRunPill ? (
+                <TouchableOpacity
+                  activeOpacity={0.78}
+                  disabled={isControlBusy}
+                  onPress={endWorkout}
                   style={[
-                    styles.heroLiveCard,
-                    {
-                      backgroundColor: innerSurface,
-                      borderColor: isRunning ? primaryColor : cardBorder,
-                    },
-                  ]}
-                >
-                  <ThemedText style={styles.heroLiveLabel} setColor={quietText}>
-                    Total Distance
-                  </ThemedText>
-                  <ThemedText style={styles.heroLiveValue} setColor={titleColor}>
-                    {formattedTotalDistance}
-                  </ThemedText>
-                </View>
-
-                <View
-                  style={[
-                    styles.heroLiveSubCard,
+                    styles.heroTopPill,
                     {
                       backgroundColor: innerSurface,
                       borderColor: cardBorder,
                     },
                   ]}
                 >
-                  <ThemedText style={styles.heroLiveLabel} setColor={quietText}>
-                    Avg Pace
+                  <ThemedText style={styles.heroTopPillIcon} setColor={quietText}>
+                    oo
                   </ThemedText>
-                  <ThemedText style={styles.heroLiveSubValue} setColor={titleColor}>
-                    {avgPaceDisplay}
+                  <ThemedText style={styles.heroTopPillText} setColor={quietText}>
+                    FINISH RUN
+                  </ThemedText>
+                </TouchableOpacity>
+              ) : null}
+            </View>
+
+            <View style={styles.heroMetricGrid}>
+              <View
+                style={[
+                  styles.heroMetricCard,
+                  {
+                    backgroundColor: innerSurface,
+                    borderColor: cardBorder,
+                  },
+                ]}
+              >
+                <ThemedText style={styles.heroMetricLabel} setColor={quietText}>
+                  TIME
+                </ThemedText>
+                <ThemedText style={styles.heroMetricValue} setColor={titleColor}>
+                  {elapsedDisplay}
+                </ThemedText>
+              </View>
+
+              <View
+                style={[
+                  styles.heroMetricCard,
+                  {
+                    backgroundColor: innerSurface,
+                    borderColor: cardBorder,
+                  },
+                ]}
+              >
+                <ThemedText style={styles.heroMetricLabel} setColor={quietText}>
+                  DISTANCE
+                </ThemedText>
+                <View style={styles.heroDistanceRow}>
+                  <ThemedText style={styles.heroMetricValue} setColor={titleColor}>
+                    {formattedTotalDistance}
+                  </ThemedText>
+                  <ThemedText style={styles.heroMetricUnit} setColor={quietText}>
+                    KM
                   </ThemedText>
                 </View>
               </View>
             </View>
 
-            {!isDone && (
-              <View style={styles.heroActionsRow}>
-                {!isRunning && (
-                  <View
-                    style={[
-                      styles.heroActionSlot,
-                      original_start_time !== null && styles.heroActionSlotSpaced,
-                    ]}
-                  >
-                    <ThemedButton
-                      title={original_start_time !== null ? "Continue" : "Start"}
-                      onPress={startWorkout}
-                      variant="primary"
-                      disabled={isDone || isRunning || isControlBusy}
-                      style={styles.heroActionButton}
-                    />
-                  </View>
-                )}
-
-                {!isRunning && original_start_time !== null && (
-                  <View style={styles.heroActionSlot}>
-                    <ThemedButton
-                      title="Finish Run"
-                      onPress={endWorkout}
-                      variant="secondary"
-                      disabled={original_start_time === null || isDone || isControlBusy}
-                      style={styles.heroActionButton}
-                    />
-                  </View>
-                )}
-
-                {isRunning && (
-                  <View style={styles.heroActionSlot}>
-                    <ThemedButton
-                      title="Pause"
-                      onPress={pauseWorkout}
-                      variant="primary"
-                      disabled={!isRunning || isDone || isControlBusy}
-                      style={styles.heroActionButton}
-                    />
-                  </View>
-                )}
+            <View style={styles.heroSmallMetricRow}>
+              <View
+                style={[
+                  styles.heroSmallMetricCard,
+                  { backgroundColor: innerSurface, borderColor: cardBorder },
+                ]}
+              >
+                <ThemedText style={styles.heroSmallMetricLabel} setColor={quietText}>
+                  PACE
+                </ThemedText>
+                <View style={styles.heroInlineValueRow}>
+                  <ThemedText style={styles.heroSmallMetricValue} setColor={titleColor}>
+                    {avgPaceDisplay}
+                  </ThemedText>
+                  <ThemedText style={styles.heroSmallMetricUnit} setColor={quietText}>
+                    /KM
+                  </ThemedText>
+                </View>
               </View>
+
+              <View
+                style={[
+                  styles.heroSmallMetricCard,
+                  { backgroundColor: innerSurface, borderColor: cardBorder },
+                ]}
+              >
+                <ThemedText style={styles.heroSmallMetricLabel} setColor={quietText}>
+                  STARTED
+                </ThemedText>
+                <ThemedText style={styles.heroStartedValue} setColor={titleColor}>
+                  {startedDisplay}
+                </ThemedText>
+              </View>
+            </View>
+
+            {!isDone && (
+              <TouchableOpacity
+                activeOpacity={0.86}
+                disabled={!canUsePrimaryAction}
+                onPress={handlePrimaryAction}
+                style={[
+                  styles.heroPrimaryButton,
+                  {
+                    backgroundColor: primaryColor,
+                    opacity: canUsePrimaryAction ? 1 : 0.58,
+                  },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.heroPlayIcon,
+                    isRunning && styles.heroPauseIcon,
+                    isRunning
+                      ? {
+                          backgroundColor: invertedText,
+                          borderLeftColor: invertedText,
+                        }
+                      : { borderLeftColor: invertedText },
+                  ]}
+                />
+                <ThemedText
+                  style={styles.heroPrimaryButtonText}
+                  setColor={invertedText}
+                >
+                  {primaryActionLabel}
+                </ThemedText>
+              </TouchableOpacity>
             )}
           </ThemedCard>
         </View>
-
-        {shouldShowDebugCard && (
-          <View style={styles.debugShell}>
-            <ThemedCard
-              style={[
-                styles.debugCard,
-                {
-                  backgroundColor: cardSurface,
-                  borderColor:
-                    debugSummary.rejectedCount > 0 ? primaryColor : cardBorder,
-                },
-              ]}
-            >
-              <View style={styles.debugHeaderRow}>
-                <View style={styles.debugHeaderCopy}>
-                  <ThemedText style={styles.debugEyebrow} setColor={quietText}>
-                    GPS Debug
-                  </ThemedText>
-                  <ThemedText style={styles.debugTitle} setColor={titleColor}>
-                    Location callbacks
-                  </ThemedText>
-                </View>
-
-                <View
-                  style={[
-                    styles.debugStatusBadge,
-                    {
-                      backgroundColor: isRunning
-                        ? theme.secondaryLight ?? "rgba(96, 218, 172, 0.16)"
-                        : innerSurface,
-                      borderColor: isRunning ? secondaryColor : cardBorder,
-                    },
-                  ]}
-                >
-                  <ThemedText
-                    style={styles.debugStatusText}
-                    setColor={
-                      isRunning
-                        ? theme.secondaryDark ?? secondaryColor
-                        : quietText
-                    }
-                  >
-                    {isRunning ? "Live" : "Stored"}
-                  </ThemedText>
-                </View>
-              </View>
-
-              <ThemedText style={styles.debugSubtitle} setColor={quietText}>
-                {debugSummary.totalCallbacks > 0
-                  ? "Every GPS callback is logged here, even when distance is rejected."
-                  : "Start the run and this panel will show whether GPS callbacks arrive at all."}
-              </ThemedText>
-
-              <View style={styles.debugStatsRow}>
-                <View
-                  style={[
-                    styles.debugStatCard,
-                    {
-                      backgroundColor: innerSurface,
-                      borderColor: cardBorder,
-                    },
-                  ]}
-                >
-                  <ThemedText style={styles.debugStatLabel} setColor={quietText}>
-                    Raw callbacks
-                  </ThemedText>
-                  <ThemedText style={styles.debugStatValue} setColor={titleColor}>
-                    {debugSummary.totalCallbacks}
-                  </ThemedText>
-                </View>
-
-                <View
-                  style={[
-                    styles.debugStatCard,
-                    {
-                      backgroundColor: innerSurface,
-                      borderColor: secondaryColor,
-                    },
-                  ]}
-                >
-                  <ThemedText style={styles.debugStatLabel} setColor={quietText}>
-                    Accepted
-                  </ThemedText>
-                  <ThemedText
-                    style={styles.debugStatValue}
-                    setColor={theme.secondaryDark ?? secondaryColor}
-                  >
-                    {debugSummary.acceptedCount}
-                  </ThemedText>
-                </View>
-
-                <View
-                  style={[
-                    styles.debugStatCard,
-                    {
-                      backgroundColor: innerSurface,
-                      borderColor:
-                        debugSummary.rejectedCount > 0 ? primaryColor : cardBorder,
-                    },
-                  ]}
-                >
-                  <ThemedText style={styles.debugStatLabel} setColor={quietText}>
-                    Rejected
-                  </ThemedText>
-                  <ThemedText
-                    style={styles.debugStatValue}
-                    setColor={
-                      debugSummary.rejectedCount > 0 ? primaryColor : titleColor
-                    }
-                  >
-                    {debugSummary.rejectedCount}
-                  </ThemedText>
-                </View>
-              </View>
-
-              <View style={styles.debugReasonRow}>
-                {debugReasonBadges.map((item) => (
-                  <View
-                    key={item.label}
-                    style={[
-                      styles.debugReasonBadge,
-                      {
-                        backgroundColor: item.backgroundColor,
-                        borderColor: cardBorder,
-                      },
-                    ]}
-                  >
-                    <ThemedText
-                      style={styles.debugReasonText}
-                      setColor={item.textColor}
-                    >
-                      {item.label}: {item.value}
-                    </ThemedText>
-                  </View>
-                ))}
-              </View>
-
-              <View style={styles.debugButtonRow}>
-                <ThemedButton
-                  title="Open GPS Debug"
-                  variant="secondary"
-                  onPress={() => set_debugModalVisible(true)}
-                  style={styles.debugButton}
-                />
-              </View>
-            </ThemedCard>
-          </View>
-        )}
 
         {sectionConfigs.map((section) => (
           <View key={section.type} style={styles.sectionShell}>
@@ -1104,12 +982,6 @@ const Run = ({ workout_id, restartRequestKey }) => {
         ))}
       </ThemedKeyboardProtection>
 
-      <RunLocationDebugModal
-        visible={debugModalVisible}
-        onClose={() => set_debugModalVisible(false)}
-        report={trackedDebugReport}
-        hasWorkoutStarted={original_start_time !== null}
-      />
     </ThemedView>
   );
 };

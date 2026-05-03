@@ -153,9 +153,9 @@ async function copyTableRows(sourceDb, targetDb, tableName) {
          mc.microcycle_number,
          m.mesocycle_number
        FROM Day d
-       JOIN Microcycle mc ON mc.microcycle_id = d.microcycle_id
-       JOIN Mesocycle m ON m.mesocycle_id = mc.mesocycle_id
-       JOIN Program p ON p.program_id = d.program_id
+       LEFT JOIN Microcycle mc ON mc.microcycle_id = d.microcycle_id
+       LEFT JOIN Mesocycle m ON m.mesocycle_id = mc.mesocycle_id
+       LEFT JOIN Program p ON p.program_id = d.program_id
        ORDER BY d.day_id ASC;`
     );
     const mesocycleRows = await sourceDb.getAllAsync(

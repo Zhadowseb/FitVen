@@ -4,328 +4,216 @@ export default StyleSheet.create({
   heroShell: {
     width: "95%",
     alignSelf: "center",
-    marginBottom: 12,
+    marginBottom: 14,
   },
 
   heroCard: {
     width: "100%",
     marginHorizontal: 0,
     marginVertical: 0,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderRadius: 30,
+    paddingHorizontal: 26,
+    paddingVertical: 26,
+    borderRadius: 28,
     borderWidth: 1,
     overflow: "hidden",
   },
 
   heroAccentPrimary: {
     position: "absolute",
-    width: 188,
-    height: 188,
-    borderRadius: 94,
-    top: -88,
-    right: -50,
-    opacity: 0.16,
+    width: 410,
+    height: 380,
+    top: -204,
+    right: -170,
   },
 
   heroAccentSecondary: {
     position: "absolute",
-    width: 132,
-    height: 132,
-    borderRadius: 66,
-    bottom: -56,
-    left: -26,
-    opacity: 0.08,
+    width: 390,
+    height: 350,
+    bottom: -180,
+    left: -168,
   },
 
-  heroContentRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-  },
-
-  heroInfoColumn: {
-    flex: 1,
-    paddingRight: 14,
-  },
-
-  heroTimerBlock: {
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 78,
-  },
-
-  heroStatusRow: {
+  heroHeaderRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
+    justifyContent: "space-between",
+    marginBottom: 28,
   },
 
-  heroStatusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+  heroStatusCluster: {
+    flexDirection: "row",
+    alignItems: "center",
+    minHeight: 30,
+  },
+
+  heroStatusDot: {
+    width: 11,
+    height: 11,
+    borderRadius: 6,
+    marginRight: 10,
+    opacity: 0.78,
+  },
+
+  heroStatusText: {
+    fontSize: 12,
+    lineHeight: 15,
+    fontWeight: "800",
+    letterSpacing: 4,
+  },
+
+  heroTopPill: {
+    height: 30,
     borderRadius: 999,
     borderWidth: 1,
+    paddingHorizontal: 13,
+    flexDirection: "row",
+    alignItems: "center",
   },
 
-  heroStatusBadgeText: {
-    fontSize: 11,
+  heroTopPillIcon: {
+    fontSize: 12,
     fontWeight: "800",
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
+    marginRight: 7,
   },
 
-  heroTimerLabel: {
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 0.9,
-    textTransform: "uppercase",
-    marginBottom: 4,
-    textAlign: "center",
-  },
-
-  heroTimerValue: {
-    fontSize: 40,
-    lineHeight: 44,
+  heroTopPillText: {
+    fontSize: 10,
     fontWeight: "800",
-    letterSpacing: 0.5,
-    fontVariant: ["tabular-nums"],
-    textAlign: "center",
+    letterSpacing: 2.4,
   },
 
-  heroMetaCard: {
-    marginTop: 11,
+  heroMetricGrid: {
+    flexDirection: "row",
+    gap: 14,
+    marginBottom: 22,
+  },
+
+  heroMetricCard: {
+    flex: 1,
+    minHeight: 110,
     borderRadius: 18,
     borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    minHeight: 78,
-    alignItems: "center",
+    paddingHorizontal: 18,
+    paddingVertical: 24,
     justifyContent: "center",
   },
 
-  heroMetaLabel: {
+  heroMetricLabel: {
     fontSize: 10,
-    fontWeight: "700",
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
-    marginBottom: 6,
-    textAlign: "center",
-  },
-
-  heroMetaValue: {
-    fontSize: 12,
-    lineHeight: 17,
-    fontWeight: "700",
-    textAlign: "center",
-  },
-
-  heroLiveColumn: {
-    width: 150,
-    alignItems: "stretch",
-    justifyContent: "center",
-  },
-
-  heroLiveCard: {
-    borderRadius: 24,
-    borderWidth: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    minHeight: 78,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  heroLiveSubCard: {
-    marginTop: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    minHeight: 78,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  heroLiveLabel: {
-    fontSize: 10,
+    lineHeight: 13,
     fontWeight: "800",
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
+    letterSpacing: 3.4,
+    marginBottom: 14,
   },
 
-  heroLiveTitle: {
-    marginTop: 4,
-    fontSize: 18,
-    lineHeight: 22,
-    fontWeight: "800",
-    textAlign: "center",
-  },
-
-  heroLiveValue: {
-    marginTop: 8,
-    fontSize: 24,
-    lineHeight: 28,
-    fontWeight: "800",
-    textAlign: "center",
+  heroMetricValue: {
+    fontSize: 39,
+    lineHeight: 43,
+    fontWeight: "900",
     fontVariant: ["tabular-nums"],
   },
 
-  heroLiveMeta: {
-    marginTop: 6,
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: "600",
-    textAlign: "center",
+  heroDistanceRow: {
+    flexDirection: "row",
+    alignItems: "flex-end",
   },
 
-  heroLiveSubValue: {
-    marginTop: 6,
+  heroMetricUnit: {
+    marginLeft: 8,
+    marginBottom: 5,
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 2,
+  },
+
+  heroSmallMetricRow: {
+    flexDirection: "row",
+    gap: 9,
+    marginBottom: 24,
+  },
+
+  heroSmallMetricCard: {
+    flex: 1,
+    minHeight: 82,
+    borderRadius: 13,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    justifyContent: "center",
+  },
+
+  heroSmallMetricLabel: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "800",
+    letterSpacing: 2.7,
+    marginBottom: 13,
+  },
+
+  heroSmallMetricValue: {
     fontSize: 20,
     lineHeight: 24,
-    fontWeight: "800",
-    textAlign: "center",
+    fontWeight: "900",
     fontVariant: ["tabular-nums"],
   },
 
-  heroActionsRow: {
-    flexDirection: "row",
-    marginTop: 16,
-  },
-
-  heroActionSlot: {
-    flex: 1,
-  },
-
-  heroActionSlotSpaced: {
-    marginRight: 8,
-  },
-
-  heroActionButton: {
-    width: "100%",
-    height: 46,
-    borderRadius: 18,
-  },
-
-  debugShell: {
-    width: "95%",
-    alignSelf: "center",
-    marginBottom: 12,
-  },
-
-  debugCard: {
-    width: "100%",
-    marginHorizontal: 0,
-    marginVertical: 0,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    borderRadius: 24,
-    borderWidth: 1,
-  },
-
-  debugHeaderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-
-  debugHeaderCopy: {
-    flex: 1,
-    paddingRight: 10,
-  },
-
-  debugEyebrow: {
+  heroSmallMetricUnit: {
+    marginLeft: 5,
+    marginBottom: 2,
     fontSize: 10,
     fontWeight: "800",
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
-    marginBottom: 4,
+    letterSpacing: 1.4,
   },
 
-  debugTitle: {
-    fontSize: 22,
-    lineHeight: 26,
-    fontWeight: "800",
+  heroInlineValueRow: {
+    flexDirection: "row",
+    alignItems: "flex-end",
   },
 
-  debugStatusBadge: {
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-  },
-
-  debugStatusText: {
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 0.7,
-    textTransform: "uppercase",
-  },
-
-  debugSubtitle: {
-    fontSize: 12,
+  heroStartedValue: {
+    fontSize: 14,
     lineHeight: 18,
-    marginBottom: 12,
+    fontWeight: "800",
   },
 
-  debugStatsRow: {
-    flexDirection: "row",
-    gap: 8,
-  },
-
-  debugStatCard: {
-    flex: 1,
-    borderWidth: 1,
+  heroPrimaryButton: {
+    height: 62,
     borderRadius: 18,
-    paddingHorizontal: 10,
-    paddingVertical: 12,
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: "#ff7a2b",
+    shadowOffset: { width: 0, height: 18 },
+    shadowOpacity: 0.28,
+    shadowRadius: 18,
+    elevation: 8,
   },
 
-  debugStatLabel: {
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 0.7,
-    textTransform: "uppercase",
-    textAlign: "center",
+  heroPlayIcon: {
+    width: 0,
+    height: 0,
+    borderTopWidth: 8,
+    borderBottomWidth: 8,
+    borderLeftWidth: 13,
+    borderTopColor: "transparent",
+    borderBottomColor: "transparent",
+    marginRight: 14,
   },
 
-  debugStatValue: {
-    marginTop: 6,
-    fontSize: 24,
-    lineHeight: 28,
-    fontWeight: "800",
-    textAlign: "center",
-    fontVariant: ["tabular-nums"],
+  heroPauseIcon: {
+    width: 12,
+    height: 15,
+    borderTopWidth: 0,
+    borderBottomWidth: 0,
+    borderLeftWidth: 0,
+    borderRadius: 2,
   },
 
-  debugReasonRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginTop: 12,
-  },
-
-  debugReasonBadge: {
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-  },
-
-  debugReasonText: {
-    fontSize: 11,
-    fontWeight: "700",
-  },
-
-  debugButtonRow: {
-    marginTop: 14,
-    alignItems: "center",
-  },
-
-  debugButton: {
-    minWidth: 180,
-    borderRadius: 16,
+  heroPrimaryButtonText: {
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: "900",
   },
 
   sectionShell: {

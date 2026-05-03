@@ -35,8 +35,6 @@ const WEEK_DAYS = [
   "Saturday",
   "Sunday",
 ];
-const QUICK_WORKOUT_PROGRAM_NAME = "Quick Workouts";
-const QUICK_WORKOUT_PROGRAM_METADATA_KEY = "quick_workout_program_id_v1";
 const PROGRAM_CLOUD_TABLE = "Program";
 const PROGRAM_STATUS_VALUES = new Set(["COMPLETE", "ACTIVE", "NOT_STARTED"]);
 const PROGRAM_CLOUD_SYNC_SELECT =
@@ -78,58 +76,6 @@ function formatDisplayNumber(value) {
 
 function getWeekdayLabel(date) {
   return WEEK_DAYS[(date.getDay() + 6) % 7] ?? WEEK_DAYS[0];
-}
-
-async function getQuickWorkoutContainer(db, startDate) {
-  const savedProgramId = Number(
-    await programRepository.getAppMetadataValue(
-      db,
-      QUICK_WORKOUT_PROGRAM_METADATA_KEY
-    )
-  );
-
-  if (Number.isInteger(savedProgramId) && savedProgramId > 0) {
-    const savedContainer =
-      await programRepository.getQuickWorkoutContainerByProgramId(
-        db,
-        savedProgramId
-      );
-
-    if (savedContainer) {
-      return savedContainer;
-    }
-  }
-
-  const programResult = await programRepository.createProgram(db, {
-    programName: QUICK_WORKOUT_PROGRAM_NAME,
-    startDate,
-    status: "ACTIVE",
-  });
-  const programId = programResult.lastInsertRowId;
-  const mesocycleResult = await programRepository.insertMesocycle(db, {
-    programId,
-    mesocycleNumber: 1,
-    weeks: 0,
-    focus: QUICK_WORKOUT_PROGRAM_NAME,
-  });
-  const microcycleResult = await programRepository.insertMicrocycle(db, {
-    mesocycleId: mesocycleResult.lastInsertRowId,
-    microcycleNumber: 1,
-  });
-
-  await programRepository.setAppMetadataValue(
-    db,
-    QUICK_WORKOUT_PROGRAM_METADATA_KEY,
-    String(programId)
-  );
-
-  return {
-    program_id: programId,
-    program_name: QUICK_WORKOUT_PROGRAM_NAME,
-    start_date: startDate,
-    mesocycle_id: mesocycleResult.lastInsertRowId,
-    microcycle_id: microcycleResult.lastInsertRowId,
-  };
 }
 
 function isWorkoutLive(workout) {
@@ -877,6 +823,12 @@ function getDayIdentityKey(microcycleId, weekday) {
   }
 
   return `${normalizedMicrocycleId}:${normalizedWeekday.toLowerCase()}`;
+}
+
+function getStandaloneDayIdentityKey(date) {
+  const normalizedDate = normalizeDayDate(date);
+
+  return normalizedDate ? `standalone:${normalizedDate}` : null;
 }
 
 function parseCloudWorkoutTypeInstanceId(value) {
@@ -2493,14 +2445,20 @@ async function uploadDirtyDays(
       continue;
     }
 
-    const parentMicrocycle = localMicrocyclesById.get(localDay.microcycle_id);
-    const parentMicrocycleCloudId = await ensureMicrocycleCloudIdentity(
-      db,
-      userId,
-      parentMicrocycle
+    const parentMicrocycleId = normalizeOptionalInteger(
+      localDay.microcycle_id,
+      null
     );
+    const parentMicrocycle =
+      parentMicrocycleId !== null
+        ? localMicrocyclesById.get(parentMicrocycleId)
+        : null;
+    const parentMicrocycleCloudId =
+      parentMicrocycleId !== null
+        ? await ensureMicrocycleCloudIdentity(db, userId, parentMicrocycle)
+        : null;
 
-    if (parentMicrocycleCloudId === null) {
+    if (parentMicrocycleId !== null && parentMicrocycleCloudId === null) {
       requiresMicrocycleRepair = true;
       continue;
     }
@@ -2512,8 +2470,8 @@ async function uploadDirtyDays(
         programId: localDay.program_id,
         programStartDate: localProgramsById.get(localDay.program_id)?.start_date,
         mesocycleNumber:
-          localMesocyclesById.get(parentMicrocycle.mesocycle_id)?.mesocycle_number,
-        microcycleNumber: parentMicrocycle.microcycle_number,
+          localMesocyclesById.get(parentMicrocycle?.mesocycle_id)?.mesocycle_number,
+        microcycleNumber: parentMicrocycle?.microcycle_number,
         weekday: localDay.weekday ?? localDay.Weekday,
       }));
 
@@ -2620,10 +2578,13 @@ async function reconcileDaysFromCloud(db, userId) {
     const cloudDayId = parseCloudDayId(localDay.cloud_day_id);
     const syncId = normalizeSyncId(localDay.sync_id);
     const remoteLocalDayId = resolveDayCloudLocalId(localDay);
-    const identityKey = getDayIdentityKey(
-      localDay.microcycle_id,
-      localDay.weekday ?? localDay.Weekday
-    );
+    const identityKey =
+      normalizeOptionalInteger(localDay.microcycle_id, null) === null
+        ? getStandaloneDayIdentityKey(localDay.date)
+        : getDayIdentityKey(
+            localDay.microcycle_id,
+            localDay.weekday ?? localDay.Weekday
+          );
 
     if (cloudDayId !== null) {
       localDaysByCloudId.set(cloudDayId, localDay);
@@ -2655,8 +2616,13 @@ async function reconcileDaysFromCloud(db, userId) {
         cloudDay.cloud_microcycle_id,
         null
       );
-      const parentMicrocycle = localMicrocyclesByCloudId.get(cloudMicrocycleId);
-      const parentMesocycle = localMesocyclesById.get(parentMicrocycle?.mesocycle_id);
+      const isStandaloneCloudDay = cloudMicrocycleId === null;
+      const parentMicrocycle = isStandaloneCloudDay
+        ? null
+        : localMicrocyclesByCloudId.get(cloudMicrocycleId);
+      const parentMesocycle = isStandaloneCloudDay
+        ? null
+        : localMesocyclesById.get(parentMicrocycle?.mesocycle_id);
       const comparableCloudDay = getComparableDaySnapshot(cloudDay);
       const parentProgram = localProgramsById.get(parentMesocycle?.program_id);
       const resolvedCloudDayDate =
@@ -2672,19 +2638,19 @@ async function reconcileDaysFromCloud(db, userId) {
         ...comparableCloudDay,
         date: resolvedCloudDayDate,
       };
-      const identityKey = getDayIdentityKey(
-        parentMicrocycle?.microcycle_id,
-        normalizedCloudDay.weekday
-      );
+      const identityKey = isStandaloneCloudDay
+        ? getStandaloneDayIdentityKey(normalizedCloudDay.date)
+        : getDayIdentityKey(
+            parentMicrocycle?.microcycle_id,
+            normalizedCloudDay.weekday
+          );
 
       if (
         cloudDayId === null ||
         localDayId === null ||
-        cloudMicrocycleId === null ||
-        !parentMicrocycle ||
-        !parentMesocycle ||
         !normalizedCloudDay.weekday ||
-        !normalizedCloudDay.date
+        !normalizedCloudDay.date ||
+        (!isStandaloneCloudDay && (!parentMicrocycle || !parentMesocycle))
       ) {
         continue;
       }
@@ -2717,8 +2683,8 @@ async function reconcileDaysFromCloud(db, userId) {
           syncId: cloudSyncId,
           syncVersion: normalizeSyncVersion(cloudDay.sync_version, 0),
           deletedAt: normalizeDeletedAt(cloudDay.deleted_at),
-          microcycleId: parentMicrocycle.microcycle_id,
-          programId: parentMesocycle.program_id,
+          microcycleId: parentMicrocycle?.microcycle_id ?? null,
+          programId: parentMesocycle?.program_id ?? null,
           weekday: normalizedCloudDay.weekday,
           date: normalizedCloudDay.date,
           done: normalizedCloudDay.done,
@@ -2731,8 +2697,8 @@ async function reconcileDaysFromCloud(db, userId) {
           sync_id: cloudSyncId,
           sync_version: normalizeSyncVersion(cloudDay.sync_version, 0),
           deleted_at: normalizeDeletedAt(cloudDay.deleted_at),
-          microcycle_id: parentMicrocycle.microcycle_id,
-          program_id: parentMesocycle.program_id,
+          microcycle_id: parentMicrocycle?.microcycle_id ?? null,
+          program_id: parentMesocycle?.program_id ?? null,
           weekday: normalizedCloudDay.weekday,
           date: normalizedCloudDay.date,
           done: normalizedCloudDay.done ? 1 : 0,
@@ -2754,9 +2720,9 @@ async function reconcileDaysFromCloud(db, userId) {
 
       const comparableLocalDay = getComparableDaySnapshot({
         ...localDay,
-        cloud_microcycle_id: parseCloudMicrocycleId(
-          parentMicrocycle.cloud_microcycle_id
-        ),
+        cloud_microcycle_id: isStandaloneCloudDay
+          ? null
+          : parseCloudMicrocycleId(parentMicrocycle.cloud_microcycle_id),
       });
 
       if (Number(localDay.needs_sync) === 1) {
@@ -2768,8 +2734,8 @@ async function reconcileDaysFromCloud(db, userId) {
             syncId: cloudSyncId,
             syncVersion: normalizeSyncVersion(cloudDay.sync_version, 0),
             deletedAt: normalizeDeletedAt(cloudDay.deleted_at),
-            microcycleId: parentMicrocycle.microcycle_id,
-            programId: parentMesocycle.program_id,
+            microcycleId: parentMicrocycle?.microcycle_id ?? null,
+            programId: parentMesocycle?.program_id ?? null,
             weekday: normalizedCloudDay.weekday,
             date: normalizedCloudDay.date,
             done: normalizedCloudDay.done,
@@ -2830,8 +2796,8 @@ async function reconcileDaysFromCloud(db, userId) {
         syncId: cloudSyncId,
         syncVersion: normalizeSyncVersion(cloudDay.sync_version, 0),
         deletedAt: normalizeDeletedAt(cloudDay.deleted_at),
-        microcycleId: parentMicrocycle.microcycle_id,
-        programId: parentMesocycle.program_id,
+        microcycleId: parentMicrocycle?.microcycle_id ?? null,
+        programId: parentMesocycle?.program_id ?? null,
         weekday: normalizedCloudDay.weekday,
         date: normalizedCloudDay.date,
         done: normalizedCloudDay.done,
@@ -2844,8 +2810,8 @@ async function reconcileDaysFromCloud(db, userId) {
         sync_id: cloudSyncId,
         sync_version: normalizeSyncVersion(cloudDay.sync_version, 0),
         deleted_at: normalizeDeletedAt(cloudDay.deleted_at),
-        microcycle_id: parentMicrocycle.microcycle_id,
-        program_id: parentMesocycle.program_id,
+        microcycle_id: parentMicrocycle?.microcycle_id ?? null,
+        program_id: parentMesocycle?.program_id ?? null,
         weekday: normalizedCloudDay.weekday,
         date: normalizedCloudDay.date,
         done: normalizedCloudDay.done ? 1 : 0,
@@ -5716,17 +5682,15 @@ export async function createQuickWorkout(
   const weekday = getWeekdayLabel(workoutDate);
 
   const createdWorkout = await withTransaction(db, async () => {
-    const container = await getQuickWorkoutContainer(db, normalizedDate);
-    const existingDay = await programRepository.getDayByDate(db, {
-      programId: container.program_id,
+    const existingDay = await programRepository.getStandaloneDayByDate(db, {
       date: normalizedDate,
     });
     let dayId = existingDay?.day_id ?? null;
 
     if (!dayId) {
       const dayResult = await programRepository.insertDay(db, {
-        microcycleId: container.microcycle_id,
-        programId: container.program_id,
+        microcycleId: null,
+        programId: null,
         weekday,
         date: normalizedDate,
       });
@@ -5754,14 +5718,11 @@ export async function createQuickWorkout(
       workout_label: label ?? workoutType,
       date: normalizedDate,
       day: weekday,
-      program_id: container.program_id,
-      program_name: container.program_name,
+      program_id: null,
+      program_name: null,
     };
   });
 
-  syncProgramsInBackground(db);
-  syncMesocyclesInBackground(db);
-  syncMicrocyclesInBackground(db);
   syncDaysInBackground(db);
   syncWorkoutTypeInstancesInBackground(db);
 

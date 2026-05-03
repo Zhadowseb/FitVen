@@ -455,6 +455,181 @@ async function migrateMicrocycleProgramIdRemoval(db) {
   });
 }
 
+async function migrateDayOptionalProgramHierarchy(db) {
+  const dayColumns = await getTableColumns(db, "Day");
+
+  if (!dayColumns.length) {
+    return;
+  }
+
+  const microcycleColumn = dayColumns.find(
+    (column) => column.name === "microcycle_id"
+  );
+  const programColumn = dayColumns.find((column) => column.name === "program_id");
+  const microcycleIsRequired = Number(microcycleColumn?.notnull ?? 0) === 1;
+  const programIsRequired = Number(programColumn?.notnull ?? 0) === 1;
+
+  if (!microcycleIsRequired && !programIsRequired) {
+    return;
+  }
+
+  const hasCloudDayId = hasColumn(dayColumns, "cloud_day_id");
+  const hasRemoteLocalDayId = hasColumn(dayColumns, "remote_local_day_id");
+  const hasSyncId = hasColumn(dayColumns, "sync_id");
+  const hasSyncVersion = hasColumn(dayColumns, "sync_version");
+  const hasDeletedAt = hasColumn(dayColumns, "deleted_at");
+  const hasDone = hasColumn(dayColumns, "done");
+  const hasNeedsSync = hasColumn(dayColumns, "needs_sync");
+
+  await withTransaction(db, async () => {
+    await db.execAsync(`
+      DROP TABLE IF EXISTS Day_next;
+
+      CREATE TABLE Day_next (
+        day_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        cloud_day_id INTEGER,
+        remote_local_day_id INTEGER,
+        sync_id TEXT,
+        sync_version INTEGER NOT NULL DEFAULT 0,
+        deleted_at TEXT,
+        microcycle_id INTEGER,
+        program_id INTEGER,
+        Weekday TEXT NOT NULL,
+        date TEXT NOT NULL,
+        done INTEGER NOT NULL DEFAULT 0,
+        needs_sync INTEGER NOT NULL DEFAULT 1
+      );
+
+      INSERT INTO Day_next (
+        day_id,
+        cloud_day_id,
+        remote_local_day_id,
+        sync_id,
+        sync_version,
+        deleted_at,
+        microcycle_id,
+        program_id,
+        Weekday,
+        date,
+        done,
+        needs_sync
+      )
+      SELECT
+        day_id,
+        ${hasCloudDayId ? "cloud_day_id" : "NULL"},
+        ${hasRemoteLocalDayId ? "remote_local_day_id" : "NULL"},
+        ${hasSyncId ? "sync_id" : "NULL"},
+        ${hasSyncVersion ? "COALESCE(sync_version, 0)" : "0"},
+        ${hasDeletedAt ? "deleted_at" : "NULL"},
+        microcycle_id,
+        program_id,
+        Weekday,
+        date,
+        ${hasDone ? "COALESCE(done, 0)" : "0"},
+        ${hasNeedsSync ? "COALESCE(needs_sync, 1)" : "1"}
+      FROM Day;
+
+      DROP TABLE Day;
+      ALTER TABLE Day_next RENAME TO Day;
+    `);
+  });
+}
+
+async function migrateLegacyQuickWorkoutProgram(db) {
+  const legacyProgramRows = await db.getAllAsync(
+    `SELECT program_id
+     FROM Program
+     WHERE program_name = 'Quick Workouts';`
+  );
+
+  if (!legacyProgramRows.length) {
+    return;
+  }
+
+  await withTransaction(db, async () => {
+    await db.execAsync(`
+      INSERT OR IGNORE INTO Microcycle_Sync_Delete (
+        cloud_microcycle_id,
+        sync_id,
+        sync_version,
+        deleted_at
+      )
+      SELECT
+        mc.cloud_microcycle_id,
+        mc.sync_id,
+        COALESCE(mc.sync_version, 0) + 1,
+        datetime('now')
+      FROM Microcycle mc
+      JOIN Mesocycle m ON m.mesocycle_id = mc.mesocycle_id
+      JOIN Program p ON p.program_id = m.program_id
+      WHERE p.program_name = 'Quick Workouts'
+        AND (mc.cloud_microcycle_id IS NOT NULL OR mc.sync_id IS NOT NULL);
+
+      INSERT OR IGNORE INTO Mesocycle_Sync_Delete (
+        cloud_mesocycle_id,
+        sync_id,
+        sync_version,
+        deleted_at
+      )
+      SELECT
+        m.cloud_mesocycle_id,
+        m.sync_id,
+        COALESCE(m.sync_version, 0) + 1,
+        datetime('now')
+      FROM Mesocycle m
+      JOIN Program p ON p.program_id = m.program_id
+      WHERE p.program_name = 'Quick Workouts'
+        AND (m.cloud_mesocycle_id IS NOT NULL OR m.sync_id IS NOT NULL);
+
+      INSERT OR IGNORE INTO Program_Sync_Delete (
+        cloud_program_id,
+        sync_id,
+        sync_version,
+        deleted_at
+      )
+      SELECT
+        p.cloud_program_id,
+        p.sync_id,
+        COALESCE(p.sync_version, 0) + 1,
+        datetime('now')
+      FROM Program p
+      WHERE p.program_name = 'Quick Workouts'
+        AND (p.cloud_program_id IS NOT NULL OR p.sync_id IS NOT NULL);
+
+      UPDATE Day
+      SET microcycle_id = NULL,
+          program_id = NULL,
+          needs_sync = 1
+      WHERE program_id IN (
+        SELECT program_id
+        FROM Program
+        WHERE program_name = 'Quick Workouts'
+      );
+
+      DELETE FROM Microcycle
+      WHERE mesocycle_id IN (
+        SELECT m.mesocycle_id
+        FROM Mesocycle m
+        JOIN Program p ON p.program_id = m.program_id
+        WHERE p.program_name = 'Quick Workouts'
+      );
+
+      DELETE FROM Mesocycle
+      WHERE program_id IN (
+        SELECT program_id
+        FROM Program
+        WHERE program_name = 'Quick Workouts'
+      );
+
+      DELETE FROM Program
+      WHERE program_name = 'Quick Workouts';
+
+      DELETE FROM App_Metadata
+      WHERE metadata_key = 'quick_workout_program_id_v1';
+    `);
+  });
+}
+
 async function migrateProgramRemoteLocalIdRemoval(db) {
   const programColumns = await getTableColumns(db, "Program");
 
@@ -1124,6 +1299,8 @@ export async function initializeDatabase(db) {
     ["done", "INTEGER NOT NULL DEFAULT 0"],
     ["needs_sync", "INTEGER NOT NULL DEFAULT 1"],
   ]);
+  await migrateDayOptionalProgramHierarchy(db);
+  await migrateLegacyQuickWorkoutProgram(db);
 
   await db.execAsync(`
     UPDATE Day

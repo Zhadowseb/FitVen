@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.12.2] - Unreleased
+### Changed
+- Redesigned the Library Programs card with the generated program hero artwork and compact metric tiles.
+
+---
 ## [0.12.1] - Unreleased
 ### Changed
 - Added text labels under the bottom navigation buttons.

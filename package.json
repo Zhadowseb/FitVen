@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.12.1-minor-bottom-nav-labels.1",
+  "version": "0.12.2-minor-program-card-hero.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",
