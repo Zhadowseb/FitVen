@@ -75,10 +75,12 @@ export async function getProgramsForCloudSync(db) {
   return db.getAllAsync(
     `SELECT
         program_id,
+        cloud_id,
         cloud_program_id,
         remote_local_program_id,
         sync_id,
         sync_version,
+        last_updated,
         deleted_at,
         program_name,
         start_date,
@@ -231,7 +233,8 @@ export async function updateProgramCloudIdentity(
 export async function markProgramForCloudResync(db, { programId }) {
   await db.runAsync(
     `UPDATE Program
-     SET cloud_program_id = NULL,
+     SET cloud_id = NULL,
+         cloud_program_id = NULL,
          needs_sync = 1
      WHERE program_id = ?;`,
     [programId]
@@ -242,10 +245,12 @@ export async function getProgramSyncMetadata(db, programId) {
   return db.getFirstAsync(
     `SELECT
         program_id,
+        cloud_id,
         cloud_program_id,
         remote_local_program_id,
         sync_id,
         sync_version,
+        last_updated,
         deleted_at,
         needs_sync
      FROM Program
@@ -258,10 +263,12 @@ export async function getMesocyclesForCloudSync(db) {
   return db.getAllAsync(
     `SELECT
         mesocycle_id,
+        cloud_id,
         cloud_mesocycle_id,
         remote_local_mesocycle_id,
         sync_id,
         sync_version,
+        last_updated,
         deleted_at,
         program_id,
         mesocycle_number,
@@ -431,7 +438,8 @@ export async function updateMesocycleCloudIdentity(
 export async function markMesocycleForCloudResync(db, { mesocycleId }) {
   await db.runAsync(
     `UPDATE Mesocycle
-     SET cloud_mesocycle_id = NULL,
+     SET cloud_id = NULL,
+         cloud_mesocycle_id = NULL,
          needs_sync = 1
      WHERE mesocycle_id = ?;`,
     [mesocycleId]
@@ -442,10 +450,12 @@ export async function getMesocycleSyncMetadata(db, mesocycleId) {
   return db.getFirstAsync(
     `SELECT
         mesocycle_id,
+        cloud_id,
         cloud_mesocycle_id,
         remote_local_mesocycle_id,
         sync_id,
         sync_version,
+        last_updated,
         deleted_at,
         needs_sync
      FROM Mesocycle
@@ -458,9 +468,11 @@ export async function getMicrocyclesForCloudSync(db) {
   return db.getAllAsync(
     `SELECT
         microcycle_id,
+        cloud_id,
         cloud_microcycle_id,
         sync_id,
         sync_version,
+        last_updated,
         deleted_at,
         mesocycle_id,
         microcycle_number,
@@ -587,7 +599,8 @@ export async function updateMicrocycleCloudIdentity(
 export async function markMicrocycleForCloudResync(db, { microcycleId }) {
   await db.runAsync(
     `UPDATE Microcycle
-     SET cloud_microcycle_id = NULL,
+     SET cloud_id = NULL,
+         cloud_microcycle_id = NULL,
          needs_sync = 1
      WHERE microcycle_id = ?;`,
     [microcycleId]
@@ -598,9 +611,11 @@ export async function getMicrocycleSyncMetadata(db, microcycleId) {
   return db.getFirstAsync(
     `SELECT
         microcycle_id,
+        cloud_id,
         cloud_microcycle_id,
         sync_id,
         sync_version,
+        last_updated,
         deleted_at,
         needs_sync
      FROM Microcycle
@@ -1587,10 +1602,12 @@ export async function getDaysForCloudSync(db) {
   return db.getAllAsync(
     `SELECT
         day_id,
+        cloud_id,
         cloud_day_id,
         remote_local_day_id,
         sync_id,
         sync_version,
+        last_updated,
         deleted_at,
         microcycle_id,
         program_id,
@@ -1743,7 +1760,8 @@ export async function updateDayCloudIdentity(
 export async function markDayForCloudResync(db, { dayId }) {
   await db.runAsync(
     `UPDATE Day
-     SET cloud_day_id = NULL,
+     SET cloud_id = NULL,
+         cloud_day_id = NULL,
          needs_sync = 1
      WHERE day_id = ?;`,
     [dayId]
@@ -1754,10 +1772,12 @@ export async function getDaySyncMetadata(db, dayId) {
   return db.getFirstAsync(
     `SELECT
         day_id,
+        cloud_id,
         cloud_day_id,
         remote_local_day_id,
         sync_id,
         sync_version,
+        last_updated,
         deleted_at,
         needs_sync
      FROM Day
@@ -1796,10 +1816,12 @@ export async function getWorkoutsForCloudSync(db) {
   return db.getAllAsync(
     `SELECT
         workout_id,
+        cloud_id,
         cloud_workout_type_instance_id,
         remote_local_workout_type_instance_id,
         sync_id,
         sync_version,
+        last_updated,
         deleted_at,
         day_id,
         workout_type,
@@ -2002,7 +2024,8 @@ export async function updateWorkoutCloudIdentity(
 export async function markWorkoutForCloudResync(db, { workoutId }) {
   await db.runAsync(
     `UPDATE Workout_Type_Instance
-     SET cloud_workout_type_instance_id = NULL,
+     SET cloud_id = NULL,
+         cloud_workout_type_instance_id = NULL,
          needs_sync = 1
      WHERE workout_id = ?;`,
     [workoutId]
@@ -2013,10 +2036,12 @@ export async function getWorkoutSyncMetadata(db, workoutId) {
   return db.getFirstAsync(
     `SELECT
         workout_id,
+        cloud_id,
         cloud_workout_type_instance_id,
         remote_local_workout_type_instance_id,
         sync_id,
         sync_version,
+        last_updated,
         deleted_at,
         needs_sync
      FROM Workout_Type_Instance

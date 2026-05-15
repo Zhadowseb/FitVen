@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   NavigationContainer,
   DefaultTheme,
@@ -59,7 +59,9 @@ TaskManager.defineTask(locationService.RUN_LOCATION_TASK, async ({ data, error }
 
   try {
     const databaseName = getActiveDatabaseName();
-    db = await SQLite.openDatabaseAsync(databaseName);
+    db = await SQLite.openDatabaseAsync(databaseName, {
+      useNewConnection: true,
+    });
 
     if (!initializedTaskDatabaseNames.has(databaseName)) {
       await initializeDatabase(db);
@@ -187,7 +189,8 @@ function UserScopedDatabaseApp() {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const { user, isAuthLoading } = useAuth();
-  const databaseName = getDatabaseNameForUserId(user?.id ?? null);
+  const userId = user?.id ?? null;
+  const databaseName = getDatabaseNameForUserId(userId);
 
   useEffect(() => {
     if (isAuthLoading) {
@@ -196,6 +199,18 @@ function UserScopedDatabaseApp() {
 
     setActiveDatabaseName(databaseName);
   }, [databaseName, isAuthLoading]);
+
+  const handleInitializeDatabase = useCallback(async (db) => {
+    await initializeDatabase(db);
+
+    if (userId) {
+      await migrateLegacySharedDatabaseToUserDatabase({
+        userId,
+        targetDatabaseName: databaseName,
+        targetDb: db,
+      });
+    }
+  }, [databaseName, userId]);
 
   if (isAuthLoading) {
     return (
@@ -206,18 +221,6 @@ function UserScopedDatabaseApp() {
       </ThemedView>
     );
   }
-
-  const handleInitializeDatabase = async (db) => {
-    await initializeDatabase(db);
-
-    if (user?.id) {
-      await migrateLegacySharedDatabaseToUserDatabase({
-        userId: user.id,
-        targetDatabaseName: databaseName,
-        targetDb: db,
-      });
-    }
-  };
 
   return (
     <SQLiteProvider

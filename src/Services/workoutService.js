@@ -2,13 +2,35 @@ import { workoutRepository } from "../Repository";
 import { withTransaction } from "./shared";
 import { startBackgroundSync } from "./syncScheduler";
 
+let dirtyWorkoutHierarchyPushScheduled = false;
+let dirtyWorkoutHierarchyPushNeedsRerun = false;
+
+function pushDirtyWorkoutHierarchyInBackground(db) {
+  if (dirtyWorkoutHierarchyPushScheduled) {
+    dirtyWorkoutHierarchyPushNeedsRerun = true;
+    return;
+  }
+
+  dirtyWorkoutHierarchyPushScheduled = true;
+  startBackgroundSync(
+    async () => {
+      try {
+        do {
+          dirtyWorkoutHierarchyPushNeedsRerun = false;
+          const programServiceModule = await import("./programService");
+          await programServiceModule.pushDirtyStrengthHierarchyWithCloud(db);
+        } while (dirtyWorkoutHierarchyPushNeedsRerun);
+      } finally {
+        dirtyWorkoutHierarchyPushScheduled = false;
+      }
+    },
+    "Workout hierarchy cloud push failed:"
+  );
+}
+
 async function syncWorkoutTypeInstancesInBackground(db) {
   try {
-    const programServiceModule = await import("./programService");
-    startBackgroundSync(
-      () => programServiceModule.syncWorkoutTypeInstancesWithCloud(db),
-      "Workout type instance cloud sync failed:"
-    );
+    pushDirtyWorkoutHierarchyInBackground(db);
   } catch (error) {
     console.error("Failed to start workout type instance cloud sync:", error);
   }

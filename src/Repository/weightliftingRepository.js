@@ -494,10 +494,12 @@ export async function getExercisesForCloudSync(db) {
   return db.getAllAsync(
     `SELECT
         exercise_instance_id,
+        cloud_id,
         cloud_exercise_instance_id,
         remote_local_exercise_instance_id,
         sync_id,
         sync_version,
+        last_updated,
         deleted_at,
         workout_type_instance_id,
         exercise_name,
@@ -758,7 +760,8 @@ export async function updateExerciseCloudIdentity(
 export async function markExerciseForCloudResync(db, { exerciseId }) {
   await db.runAsync(
     `UPDATE Exercise_Instance
-     SET cloud_exercise_instance_id = NULL,
+     SET cloud_id = NULL,
+         cloud_exercise_instance_id = NULL,
          needs_sync = 1
      WHERE exercise_instance_id = ?;`,
     [exerciseId]
@@ -769,10 +772,12 @@ export async function getExerciseSyncMetadata(db, exerciseId) {
   return db.getFirstAsync(
     `SELECT
         exercise_instance_id,
+        cloud_id,
         cloud_exercise_instance_id,
         remote_local_exercise_instance_id,
         sync_id,
         sync_version,
+        last_updated,
         deleted_at,
         needs_sync
      FROM Exercise_Instance
@@ -927,10 +932,12 @@ export async function getSetsForCloudSync(db) {
   return db.getAllAsync(
     `SELECT
         sets_id,
+        cloud_id,
         cloud_set_id,
         remote_local_set_id,
         sync_id,
         sync_version,
+        last_updated,
         deleted_at,
         set_number,
         exercise_instance_id,
@@ -1154,7 +1161,8 @@ export async function updateSetCloudIdentity(
 export async function markSetForCloudResync(db, { setId }) {
   await db.runAsync(
     `UPDATE "Set"
-     SET cloud_set_id = NULL,
+     SET cloud_id = NULL,
+         cloud_set_id = NULL,
          needs_sync = 1
      WHERE sets_id = ?;`,
     [setId]
@@ -1165,10 +1173,12 @@ export async function getSetSyncMetadata(db, setId) {
   return db.getFirstAsync(
     `SELECT
         sets_id,
+        cloud_id,
         cloud_set_id,
         remote_local_set_id,
         sync_id,
         sync_version,
+        last_updated,
         deleted_at,
         needs_sync
      FROM "Set"

@@ -7,6 +7,7 @@ import {
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useSQLiteContext } from "expo-sqlite";
 import { useFocusEffect } from "@react-navigation/native";
+import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
 
 import ExerciseList from "./Components/ExerciseList/ExerciseList";
 import { useColorScheme } from "react-native";
@@ -35,6 +36,30 @@ import Filter from "../../../../Resources/Icons/UI-icons/Filter";
 import Checkmark from "../../../../Resources/Icons/UI-icons/Checkmark";
 import ArrowDoubleDown from "../../../../Resources/Icons/UI-icons/ArrowDoubleDown";
 import ArrowDoubleUp from "../../../../Resources/Icons/UI-icons/ArrowDoubleUp";
+
+const HeroGlow = ({
+  style,
+  color,
+  gradientId,
+  centerOpacity,
+  middleOpacity,
+}) => (
+  <Svg
+    pointerEvents="none"
+    style={style}
+    viewBox="0 0 100 100"
+    preserveAspectRatio="none"
+  >
+    <Defs>
+      <RadialGradient id={gradientId} cx="50%" cy="50%" r="50%">
+        <Stop offset="0%" stopColor={color} stopOpacity={centerOpacity} />
+        <Stop offset="48%" stopColor={color} stopOpacity={middleOpacity} />
+        <Stop offset="100%" stopColor={color} stopOpacity="0" />
+      </RadialGradient>
+    </Defs>
+    <Rect width="100" height="100" fill={`url(#${gradientId})`} />
+  </Svg>
+);
 
 const Resistance = ({
   workout_id,
@@ -140,25 +165,6 @@ const Resistance = ({
       }
       void reload();
 
-      void (async () => {
-        try {
-          await weightliftingService.hydrateStrengthWorkoutDataForWorkout(
-            db,
-            workout_id
-          );
-        } catch (error) {
-          console.warn("Failed to hydrate workout strength data from cloud:", error);
-          return;
-        }
-
-        if (!isActive) {
-          return;
-        }
-
-        await reload();
-        set_refreshing((prev) => prev + 1);
-      })();
-
       return () => {
         isActive = false;
       };
@@ -215,16 +221,18 @@ const Resistance = ({
           elapsed_time + computeCurrentElapsed(),
           0
       );
-      
+
+      elapsedTimeRef.current = newElapsed;
+      timerStartRef.current = null;
+      set_timer_start(null);
+      set_elapsed_time(newElapsed);
+
       await workoutService.persistWorkoutTimerState(db, {
           workoutId: workout_id,
           timerStart: null,
           elapsedTime: newElapsed,
       });
 
-      elapsedTimeRef.current = newElapsed;
-      timerStartRef.current = null;
-      set_elapsed_time(newElapsed);
       return newElapsed;
   };
 
@@ -255,25 +263,42 @@ const Resistance = ({
   };
 
   const pauseWorkout = async () => {
-      const newElapsed = await updateElapsed();
       set_isRunning(false);
+      const newElapsed = await updateElapsed();
       set_timer_start(null);
       set_elapsed_time(newElapsed);
       Vibration.vibrate([0, 100, 100, 100]);
   };
 
   const endWorkout = async () => {
-    const finalElapsed = timer_start ? await updateElapsed() : elapsed_time;
+    const finalElapsed = normalizeElapsedDurationSeconds(
+      elapsed_time + (timer_start ? computeCurrentElapsed() : 0),
+      0
+    );
 
+    elapsedTimeRef.current = finalElapsed;
+    timerStartRef.current = null;
     set_isRunning(false);
     set_isDone(true);
     set_timer_start(null);
     set_elapsed_time(finalElapsed);
-    
-    await workoutService.setWorkoutDone(db, {
-      workoutId: workout_id,
-      done: true,
-    });
+
+    try {
+      await workoutService.persistWorkoutTimerState(db, {
+        workoutId: workout_id,
+        timerStart: null,
+        elapsedTime: finalElapsed,
+      });
+
+      await workoutService.setWorkoutDone(db, {
+        workoutId: workout_id,
+        done: true,
+      });
+
+      refresh();
+    } catch (error) {
+      console.error("Failed to finish workout:", error);
+    }
   };
 
   const restartWorkout = async () => {
@@ -357,6 +382,21 @@ const Resistance = ({
               },
             ]}
           >
+            <HeroGlow
+              style={styles.heroAccentPrimary}
+              color={isDone ? secondaryColor : primaryColor}
+              gradientId="resistanceHeroPrimaryGlow"
+              centerOpacity={0.26}
+              middleOpacity={0.13}
+            />
+            <HeroGlow
+              style={styles.heroAccentSecondary}
+              color={secondaryColor}
+              gradientId="resistanceHeroSecondaryGlow"
+              centerOpacity={0.21}
+              middleOpacity={0.1}
+            />
+
             <View style={styles.heroTopRow}>
               <View style={styles.heroStatusInline}>
                 <View

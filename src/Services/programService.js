@@ -25,6 +25,7 @@ import {
   normalizeSyncId,
   normalizeSyncVersion,
 } from "../Utils/syncUtils";
+import { getStableSyncDeviceId } from "../Utils/deviceIdentity";
 
 const WEEK_DAYS = [
   "Monday",
@@ -38,27 +39,54 @@ const WEEK_DAYS = [
 const PROGRAM_CLOUD_TABLE = "Program";
 const PROGRAM_STATUS_VALUES = new Set(["COMPLETE", "ACTIVE", "NOT_STARTED"]);
 const PROGRAM_CLOUD_SYNC_SELECT =
-  "id, user_id, local_program_id, sync_id, sync_version, deleted_at, program_name, start_date, status";
+  "id, user_id, local_program_id, sync_id, sync_version, deleted_at, last_updated, is_deleting, delete_requested_at, local_watchers, program_name, start_date, status";
 const MESOCYCLE_CLOUD_TABLE = "Mesocycle";
 const MESOCYCLE_CLOUD_SYNC_SELECT =
-  "id, user_id, local_mesocycle_id, sync_id, sync_version, deleted_at, cloud_program_id, mesocycle_number, weeks, focus, done";
+  "id, user_id, local_mesocycle_id, sync_id, sync_version, deleted_at, last_updated, is_deleting, delete_requested_at, local_watchers, cloud_program_id, mesocycle_number, weeks, focus, done";
 const MICROCYCLE_CLOUD_TABLE = "Microcycle";
 const MICROCYCLE_CLOUD_SYNC_SELECT =
-  "id, user_id, local_microcycle_id, sync_id, sync_version, deleted_at, cloud_mesocycle_id, microcycle_number, focus, done";
+  "id, user_id, local_microcycle_id, sync_id, sync_version, deleted_at, last_updated, is_deleting, delete_requested_at, local_watchers, cloud_mesocycle_id, microcycle_number, focus, done";
 const DAY_CLOUD_TABLE = "Day";
 const DAY_CLOUD_SYNC_SELECT =
-  "id, user_id, local_day_id, sync_id, sync_version, deleted_at, cloud_microcycle_id, weekday, date, done";
+  "id, user_id, local_day_id, sync_id, sync_version, deleted_at, last_updated, is_deleting, delete_requested_at, local_watchers, cloud_microcycle_id, weekday, date, done";
 const WORKOUT_TYPE_CLOUD_TABLE = "workout_type";
 const WORKOUT_TYPE_CLOUD_SELECT = "type, display_name, is_active";
 const WORKOUT_TYPE_INSTANCE_CLOUD_TABLE = "workout_type_instance";
 const WORKOUT_TYPE_INSTANCE_CLOUD_SYNC_SELECT =
-  "id, user_id, local_workout_type_instance_id, sync_id, sync_version, deleted_at, cloud_day_id, workout_type, date, label, done, is_active, original_start_time, timer_start, elapsed_time";
+  "id, user_id, local_workout_type_instance_id, sync_id, sync_version, deleted_at, last_updated, is_deleting, delete_requested_at, local_watchers, cloud_day_id, workout_type, date, label, done, is_active, original_start_time, timer_start, elapsed_time";
 const EXERCISE_INSTANCE_CLOUD_TABLE = "exercise_instance";
 const EXERCISE_INSTANCE_CLOUD_SYNC_SELECT =
-  "id, user_id, local_exercise_instance_id, sync_id, sync_version, deleted_at, cloud_workout_type_instance_id, exercise_name, exercise_order, sets, visible_columns, note, done";
+  "id, user_id, local_exercise_instance_id, sync_id, sync_version, deleted_at, last_updated, is_deleting, delete_requested_at, local_watchers, cloud_workout_type_instance_id, exercise_name, exercise_order, sets, visible_columns, note, done";
 const SET_CLOUD_TABLE = "set";
 const SET_CLOUD_SYNC_SELECT =
-  "id, user_id, local_set_id, sync_id, sync_version, deleted_at, cloud_exercise_instance_id, set_number, personal_record, pause, rpe, weight, rm_percentage, reps, done, failed, amrap, note";
+  "id, user_id, local_set_id, sync_id, sync_version, deleted_at, last_updated, is_deleting, delete_requested_at, local_watchers, cloud_exercise_instance_id, set_number, personal_record, pause, rpe, weight, rm_percentage, reps, done, failed, amrap, note";
+const SYNC_WATCHERS_CLOUD_TABLE = "sync_local_watchers";
+const CLOUD_CHILD_RELATIONSHIPS = {
+  [PROGRAM_CLOUD_TABLE]: {
+    tableName: MESOCYCLE_CLOUD_TABLE,
+    foreignKey: "cloud_program_id",
+  },
+  [MESOCYCLE_CLOUD_TABLE]: {
+    tableName: MICROCYCLE_CLOUD_TABLE,
+    foreignKey: "cloud_mesocycle_id",
+  },
+  [MICROCYCLE_CLOUD_TABLE]: {
+    tableName: DAY_CLOUD_TABLE,
+    foreignKey: "cloud_microcycle_id",
+  },
+  [DAY_CLOUD_TABLE]: {
+    tableName: WORKOUT_TYPE_INSTANCE_CLOUD_TABLE,
+    foreignKey: "cloud_day_id",
+  },
+  [WORKOUT_TYPE_INSTANCE_CLOUD_TABLE]: {
+    tableName: EXERCISE_INSTANCE_CLOUD_TABLE,
+    foreignKey: "cloud_workout_type_instance_id",
+  },
+  [EXERCISE_INSTANCE_CLOUD_TABLE]: {
+    tableName: SET_CLOUD_TABLE,
+    foreignKey: "cloud_exercise_instance_id",
+  },
+};
 const EXERCISE_VISIBLE_COLUMN_KEYS = [
   "note",
   "rest",
@@ -156,13 +184,26 @@ function areComparableProgramsEqual(leftProgram, rightProgram) {
   );
 }
 
+function getCloudSyncMetadataPayload(entity) {
+  const deletedAt = normalizeDeletedAt(entity?.deleted_at);
+
+  return {
+    sync_id: normalizeSyncId(entity?.sync_id),
+    sync_version: normalizeSyncVersion(entity?.sync_version, 0),
+    deleted_at: deletedAt,
+    last_updated: normalizeLastUpdatedForCloud(entity),
+    is_deleting: normalizeBooleanFlag(entity?.is_deleting) || deletedAt !== null,
+    delete_requested_at:
+      normalizeOptionalText(entity?.delete_requested_at) ??
+      (deletedAt !== null ? deletedAt : null),
+  };
+}
+
 function buildCloudProgramPayload(localProgram, userId) {
   return {
     user_id: userId,
     local_program_id: resolveProgramCloudLocalId(localProgram),
-    sync_id: normalizeSyncId(localProgram?.sync_id),
-    sync_version: normalizeSyncVersion(localProgram?.sync_version, 0),
-    deleted_at: normalizeDeletedAt(localProgram?.deleted_at),
+    ...getCloudSyncMetadataPayload(localProgram),
     program_name: normalizeProgramName(localProgram.program_name),
     start_date: normalizeProgramStartDateForCloud(localProgram.start_date),
     status: normalizeProgramStatus(localProgram.status),
@@ -192,6 +233,13 @@ function normalizeOptionalInteger(value, fallbackValue = 0) {
   return Number.isFinite(numericValue) ? Math.trunc(numericValue) : fallbackValue;
 }
 
+function resolveSideBySideCloudId(entity, legacyCloudIdColumn) {
+  return normalizeOptionalInteger(
+    entity?.cloud_id ?? entity?.[legacyCloudIdColumn],
+    null
+  );
+}
+
 function normalizeBooleanFlag(value) {
   if (typeof value === "boolean") {
     return value;
@@ -209,21 +257,90 @@ function normalizeBooleanFlag(value) {
   return false;
 }
 
+function normalizeLastUpdatedMs(value, fallbackSyncVersion = null) {
+  if (value === null || value === undefined || value === "") {
+    const fallbackVersion = normalizeSyncVersion(fallbackSyncVersion, 0);
+    return fallbackVersion > 0 ? fallbackVersion * 1000 : null;
+  }
+
+  if (typeof value === "number") {
+    if (!Number.isFinite(value) || value <= 0) {
+      return normalizeLastUpdatedMs(null, fallbackSyncVersion);
+    }
+
+    return value >= 100000000000
+      ? Math.trunc(value)
+      : Math.trunc(value * 1000);
+  }
+
+  const numericValue = Number(value);
+
+  if (Number.isFinite(numericValue) && numericValue > 0) {
+    return normalizeLastUpdatedMs(numericValue, fallbackSyncVersion);
+  }
+
+  const parsedTime = Date.parse(value);
+  return Number.isFinite(parsedTime)
+    ? parsedTime
+    : normalizeLastUpdatedMs(null, fallbackSyncVersion);
+}
+
+function normalizeLastUpdatedForCloud(entity) {
+  const lastUpdatedMs = normalizeLastUpdatedMs(
+    entity?.last_updated,
+    entity?.sync_version
+  );
+
+  if (lastUpdatedMs === null) {
+    return new Date().toISOString();
+  }
+
+  return new Date(lastUpdatedMs).toISOString();
+}
+
 function getEntitySyncState(entity) {
   return {
     sync_id: normalizeSyncId(entity?.sync_id),
     sync_version: normalizeSyncVersion(entity?.sync_version, 0),
     deleted_at: normalizeDeletedAt(entity?.deleted_at),
+    last_updated_ms: normalizeLastUpdatedMs(
+      entity?.last_updated,
+      entity?.sync_version
+    ),
+    is_deleting: normalizeBooleanFlag(entity?.is_deleting),
   };
 }
 
 function isCloudSnapshotDeleted(entity) {
-  return getEntitySyncState(entity).deleted_at !== null;
+  const syncState = getEntitySyncState(entity);
+  return syncState.is_deleting || syncState.deleted_at !== null;
+}
+
+function resolveCloudDeleteRequestedAt(entity) {
+  return (
+    normalizeOptionalText(entity?.delete_requested_at) ??
+    normalizeDeletedAt(entity?.deleted_at) ??
+    normalizeOptionalText(entity?.last_updated) ??
+    new Date().toISOString()
+  );
 }
 
 function compareEntitySyncVersions(localEntity, cloudEntity) {
-  const localSyncVersion = getEntitySyncState(localEntity).sync_version;
-  const cloudSyncVersion = getEntitySyncState(cloudEntity).sync_version;
+  const localSyncState = getEntitySyncState(localEntity);
+  const cloudSyncState = getEntitySyncState(cloudEntity);
+  const localLastUpdated = localSyncState.last_updated_ms;
+  const cloudLastUpdated = cloudSyncState.last_updated_ms;
+
+  if (localLastUpdated !== null && cloudLastUpdated !== null) {
+    if (localLastUpdated === cloudLastUpdated) {
+      return 0;
+    }
+
+    return localLastUpdated > cloudLastUpdated ? 1 : -1;
+  }
+
+  const localSyncVersion = localSyncState.sync_version;
+  const cloudSyncVersion = cloudSyncState.sync_version;
 
   if (localSyncVersion === cloudSyncVersion) {
     return 0;
@@ -314,7 +431,9 @@ function resolveDayCloudLocalId(day) {
 async function ensureProgramCloudIdentity(db, userId, localProgram) {
   const remoteLocalProgramId = resolveProgramCloudLocalId(localProgram);
   const syncId = normalizeSyncId(localProgram?.sync_id);
-  const currentCloudProgramId = parseCloudProgramId(localProgram?.cloud_program_id);
+  const currentCloudProgramId = parseCloudProgramId(
+    resolveSideBySideCloudId(localProgram, "cloud_program_id")
+  );
 
   if (!localProgram) {
     return null;
@@ -360,7 +479,7 @@ async function ensureProgramCloudIdentity(db, userId, localProgram) {
   }
 
   if (
-    parseCloudProgramId(localProgram.cloud_program_id) !== null ||
+    resolveSideBySideCloudId(localProgram, "cloud_program_id") !== null ||
     Number(localProgram.needs_sync) !== 1
   ) {
     await programRepository.markProgramForCloudResync(db, {
@@ -375,7 +494,7 @@ async function ensureMesocycleCloudIdentity(db, userId, localMesocycle) {
   const remoteLocalMesocycleId = resolveMesocycleCloudLocalId(localMesocycle);
   const syncId = normalizeSyncId(localMesocycle?.sync_id);
   const currentCloudMesocycleId = parseCloudMesocycleId(
-    localMesocycle?.cloud_mesocycle_id
+    resolveSideBySideCloudId(localMesocycle, "cloud_mesocycle_id")
   );
 
   if (!localMesocycle) {
@@ -423,7 +542,7 @@ async function ensureMesocycleCloudIdentity(db, userId, localMesocycle) {
   }
 
   if (
-    parseCloudMesocycleId(localMesocycle.cloud_mesocycle_id) !== null ||
+    resolveSideBySideCloudId(localMesocycle, "cloud_mesocycle_id") !== null ||
     Number(localMesocycle.needs_sync) !== 1
   ) {
     await programRepository.markMesocycleForCloudResync(db, {
@@ -441,7 +560,7 @@ async function ensureMicrocycleCloudIdentity(db, userId, localMicrocycle) {
   );
   const syncId = normalizeSyncId(localMicrocycle?.sync_id);
   const currentCloudMicrocycleId = parseCloudMicrocycleId(
-    localMicrocycle?.cloud_microcycle_id
+    resolveSideBySideCloudId(localMicrocycle, "cloud_microcycle_id")
   );
 
   if (!localMicrocycle) {
@@ -482,7 +601,7 @@ async function ensureMicrocycleCloudIdentity(db, userId, localMicrocycle) {
   }
 
   if (
-    parseCloudMicrocycleId(localMicrocycle.cloud_microcycle_id) !== null ||
+    resolveSideBySideCloudId(localMicrocycle, "cloud_microcycle_id") !== null ||
     Number(localMicrocycle.needs_sync) !== 1
   ) {
     await programRepository.markMicrocycleForCloudResync(db, {
@@ -496,7 +615,9 @@ async function ensureMicrocycleCloudIdentity(db, userId, localMicrocycle) {
 async function ensureDayCloudIdentity(db, userId, localDay) {
   const remoteLocalDayId = resolveDayCloudLocalId(localDay);
   const syncId = normalizeSyncId(localDay?.sync_id);
-  const currentCloudDayId = parseCloudDayId(localDay?.cloud_day_id);
+  const currentCloudDayId = parseCloudDayId(
+    resolveSideBySideCloudId(localDay, "cloud_day_id")
+  );
 
   if (!localDay) {
     return null;
@@ -542,7 +663,7 @@ async function ensureDayCloudIdentity(db, userId, localDay) {
   }
 
   if (
-    parseCloudDayId(localDay.cloud_day_id) !== null ||
+    resolveSideBySideCloudId(localDay, "cloud_day_id") !== null ||
     Number(localDay.needs_sync) !== 1
   ) {
     await programRepository.markDayForCloudResync(db, {
@@ -558,7 +679,10 @@ async function ensureWorkoutTypeInstanceCloudIdentity(db, userId, localWorkout) 
     resolveWorkoutTypeInstanceCloudLocalId(localWorkout);
   const syncId = normalizeSyncId(localWorkout?.sync_id);
   const currentCloudWorkoutTypeInstanceId = parseCloudWorkoutTypeInstanceId(
-    localWorkout?.cloud_workout_type_instance_id
+    resolveSideBySideCloudId(
+      localWorkout,
+      "cloud_workout_type_instance_id"
+    )
   );
 
   if (!localWorkout) {
@@ -613,7 +737,10 @@ async function ensureWorkoutTypeInstanceCloudIdentity(db, userId, localWorkout) 
 
   if (
     parseCloudWorkoutTypeInstanceId(
-      localWorkout.cloud_workout_type_instance_id
+      resolveSideBySideCloudId(
+        localWorkout,
+        "cloud_workout_type_instance_id"
+      )
     ) !== null ||
     Number(localWorkout.needs_sync) !== 1
   ) {
@@ -630,7 +757,7 @@ async function ensureExerciseInstanceCloudIdentity(db, userId, localExercise) {
     resolveExerciseInstanceCloudLocalId(localExercise);
   const syncId = normalizeSyncId(localExercise?.sync_id);
   const currentCloudExerciseInstanceId = parseCloudExerciseInstanceId(
-    localExercise?.cloud_exercise_instance_id
+    resolveSideBySideCloudId(localExercise, "cloud_exercise_instance_id")
   );
 
   if (!localExercise) {
@@ -678,7 +805,7 @@ async function ensureExerciseInstanceCloudIdentity(db, userId, localExercise) {
   }
 
   if (
-    parseCloudExerciseInstanceId(localExercise.cloud_exercise_instance_id) !==
+    resolveSideBySideCloudId(localExercise, "cloud_exercise_instance_id") !==
       null ||
     Number(localExercise.needs_sync) !== 1
   ) {
@@ -720,9 +847,7 @@ function buildCloudMesocyclePayload(localMesocycle, userId, cloudProgramId) {
   return {
     user_id: userId,
     local_mesocycle_id: resolveMesocycleCloudLocalId(localMesocycle),
-    sync_id: normalizeSyncId(localMesocycle?.sync_id),
-    sync_version: normalizeSyncVersion(localMesocycle?.sync_version, 0),
-    deleted_at: normalizeDeletedAt(localMesocycle?.deleted_at),
+    ...getCloudSyncMetadataPayload(localMesocycle),
     cloud_program_id: cloudProgramId,
     mesocycle_number: normalizeOptionalInteger(localMesocycle.mesocycle_number, 0),
     weeks: normalizeOptionalInteger(localMesocycle.weeks, 0),
@@ -762,9 +887,7 @@ function buildCloudMicrocyclePayload(localMicrocycle, userId, cloudMesocycleId) 
   return {
     user_id: userId,
     local_microcycle_id: localMicrocycle.microcycle_id,
-    sync_id: normalizeSyncId(localMicrocycle?.sync_id),
-    sync_version: normalizeSyncVersion(localMicrocycle?.sync_version, 0),
-    deleted_at: normalizeDeletedAt(localMicrocycle?.deleted_at),
+    ...getCloudSyncMetadataPayload(localMicrocycle),
     cloud_mesocycle_id: cloudMesocycleId,
     microcycle_number: normalizeOptionalInteger(
       localMicrocycle.microcycle_number,
@@ -804,9 +927,7 @@ function buildCloudDayPayload(localDay, userId, cloudMicrocycleId) {
   return {
     user_id: userId,
     local_day_id: resolveDayCloudLocalId(localDay),
-    sync_id: normalizeSyncId(localDay?.sync_id),
-    sync_version: normalizeSyncVersion(localDay?.sync_version, 0),
-    deleted_at: normalizeDeletedAt(localDay?.deleted_at),
+    ...getCloudSyncMetadataPayload(localDay),
     cloud_microcycle_id: cloudMicrocycleId,
     weekday: normalizeWeekday(localDay.weekday ?? localDay.Weekday),
     date: normalizeDayDateForCloud(localDay.date),
@@ -993,9 +1114,7 @@ function buildCloudWorkoutTypeInstancePayload(localWorkout, userId, cloudDayId) 
     user_id: userId,
     local_workout_type_instance_id:
       resolveWorkoutTypeInstanceCloudLocalId(localWorkout),
-    sync_id: normalizeSyncId(localWorkout?.sync_id),
-    sync_version: normalizeSyncVersion(localWorkout?.sync_version, 0),
-    deleted_at: normalizeDeletedAt(localWorkout?.deleted_at),
+    ...getCloudSyncMetadataPayload(localWorkout),
     cloud_day_id: cloudDayId,
     workout_type: normalizeWorkoutType(localWorkout.workout_type),
     date: normalizeWorkoutDateForCloud(localWorkout.date),
@@ -1116,9 +1235,7 @@ function buildCloudExerciseInstancePayload(
     user_id: userId,
     local_exercise_instance_id:
       resolveExerciseInstanceCloudLocalId(localExercise),
-    sync_id: normalizeSyncId(localExercise?.sync_id),
-    sync_version: normalizeSyncVersion(localExercise?.sync_version, 0),
-    deleted_at: normalizeDeletedAt(localExercise?.deleted_at),
+    ...getCloudSyncMetadataPayload(localExercise),
     cloud_workout_type_instance_id: cloudWorkoutTypeInstanceId,
     exercise_name: normalizeExerciseName(localExercise.exercise_name),
     exercise_order: normalizeExerciseOrder(localExercise.exercise_order),
@@ -1189,9 +1306,7 @@ function buildCloudSetPayload(localSet, userId, cloudExerciseInstanceId) {
   return {
     user_id: userId,
     local_set_id: resolveSetCloudLocalId(localSet),
-    sync_id: normalizeSyncId(localSet?.sync_id),
-    sync_version: normalizeSyncVersion(localSet?.sync_version, 0),
-    deleted_at: normalizeDeletedAt(localSet?.deleted_at),
+    ...getCloudSyncMetadataPayload(localSet),
     cloud_exercise_instance_id: cloudExerciseInstanceId,
     set_number: normalizeOptionalInteger(localSet.set_number, null),
     personal_record: normalizeBooleanFlag(localSet.personal_record),
@@ -1215,6 +1330,238 @@ async function getAuthenticatedUserId() {
   }
 
   return data.session?.user?.id ?? null;
+}
+
+async function claimCloudWatcher({ userId, tableName, cloudId, cloudRecord }) {
+  const resolvedCloudId = normalizeOptionalInteger(cloudId, null);
+
+  if (
+    !userId ||
+    !tableName ||
+    resolvedCloudId === null ||
+    isCloudSnapshotDeleted(cloudRecord)
+  ) {
+    return;
+  }
+
+  const deviceId = await getStableSyncDeviceId();
+  const { error } = await supabase
+    .from(SYNC_WATCHERS_CLOUD_TABLE)
+    .upsert(
+      {
+        user_id: userId,
+        entity_table: tableName,
+        entity_id: resolvedCloudId,
+        device_id: deviceId,
+        last_seen_at: new Date().toISOString(),
+      },
+      {
+        onConflict: "user_id,entity_table,entity_id,device_id",
+      }
+    );
+
+  if (error) {
+    throw error;
+  }
+}
+
+async function claimCloudWatchers({ userId, tableName, cloudRecords }) {
+  const claimableRecords = (cloudRecords ?? []).filter(
+    (record) =>
+      normalizeOptionalInteger(record?.id, null) !== null &&
+      !isCloudSnapshotDeleted(record)
+  );
+
+  if (!claimableRecords.length) {
+    return;
+  }
+
+  const deviceId = await getStableSyncDeviceId();
+  const now = new Date().toISOString();
+  const { error } = await supabase
+    .from(SYNC_WATCHERS_CLOUD_TABLE)
+    .upsert(
+      claimableRecords.map((record) => ({
+        user_id: userId,
+        entity_table: tableName,
+        entity_id: normalizeOptionalInteger(record.id, null),
+        device_id: deviceId,
+        last_seen_at: now,
+      })),
+      {
+        onConflict: "user_id,entity_table,entity_id,device_id",
+      }
+    );
+
+  if (error) {
+    throw error;
+  }
+}
+
+async function hasCloudChildren({ tableName, userId, cloudId }) {
+  const childRelationship = CLOUD_CHILD_RELATIONSHIPS[tableName];
+
+  if (!childRelationship) {
+    return false;
+  }
+
+  const { count, error } = await supabase
+    .from(childRelationship.tableName)
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq(childRelationship.foreignKey, cloudId);
+
+  if (error) {
+    throw error;
+  }
+
+  return Number(count ?? 0) > 0;
+}
+
+async function hardDeleteCloudRecordIfReady({ tableName, userId, cloudId }) {
+  const resolvedCloudId = normalizeOptionalInteger(cloudId, null);
+
+  if (!userId || !tableName || resolvedCloudId === null) {
+    return false;
+  }
+
+  const { data: record, error } = await supabase
+    .from(tableName)
+    .select("id, user_id, is_deleting, local_watchers")
+    .eq("id", resolvedCloudId)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  if (
+    !record ||
+    !normalizeBooleanFlag(record.is_deleting) ||
+    normalizeOptionalInteger(record.local_watchers, 0) > 0 ||
+    (await hasCloudChildren({ tableName, userId, cloudId: resolvedCloudId }))
+  ) {
+    return false;
+  }
+
+  const { error: deleteError } = await supabase
+    .from(tableName)
+    .delete()
+    .eq("id", resolvedCloudId)
+    .eq("user_id", userId)
+    .eq("is_deleting", true)
+    .eq("local_watchers", 0);
+
+  if (deleteError) {
+    throw deleteError;
+  }
+
+  return true;
+}
+
+async function markCloudDescendantsDeleting({
+  tableName,
+  userId,
+  cloudId,
+  deleteRequestedAt,
+}) {
+  const resolvedCloudId = normalizeOptionalInteger(cloudId, null);
+  const childRelationship = CLOUD_CHILD_RELATIONSHIPS[tableName];
+
+  if (!userId || resolvedCloudId === null || !childRelationship) {
+    return;
+  }
+
+  const { data: childRows, error } = await supabase
+    .from(childRelationship.tableName)
+    .select("id")
+    .eq("user_id", userId)
+    .eq(childRelationship.foreignKey, resolvedCloudId);
+
+  if (error) {
+    throw error;
+  }
+
+  for (const childRow of childRows ?? []) {
+    const childCloudId = normalizeOptionalInteger(childRow?.id, null);
+
+    if (childCloudId === null) {
+      continue;
+    }
+
+    const { error: updateError } = await supabase
+      .from(childRelationship.tableName)
+      .update({
+        deleted_at: deleteRequestedAt,
+        last_updated: deleteRequestedAt,
+        is_deleting: true,
+        delete_requested_at: deleteRequestedAt,
+      })
+      .eq("id", childCloudId)
+      .eq("user_id", userId);
+
+    if (updateError) {
+      throw updateError;
+    }
+
+    await markCloudDescendantsDeleting({
+      tableName: childRelationship.tableName,
+      userId,
+      cloudId: childCloudId,
+      deleteRequestedAt,
+    });
+    await ackCloudWatcher({
+      userId,
+      tableName: childRelationship.tableName,
+      cloudId: childCloudId,
+    });
+  }
+}
+
+async function ackCloudDeletionCascade({
+  userId,
+  tableName,
+  cloudId,
+  deleteRequestedAt,
+}) {
+  const resolvedDeleteRequestedAt =
+    normalizeOptionalText(deleteRequestedAt) ?? new Date().toISOString();
+
+  await markCloudDescendantsDeleting({
+    tableName,
+    userId,
+    cloudId,
+    deleteRequestedAt: resolvedDeleteRequestedAt,
+  });
+  await ackCloudWatcher({ userId, tableName, cloudId });
+}
+
+async function ackCloudWatcher({ userId, tableName, cloudId }) {
+  const resolvedCloudId = normalizeOptionalInteger(cloudId, null);
+
+  if (!userId || !tableName || resolvedCloudId === null) {
+    return;
+  }
+
+  const deviceId = await getStableSyncDeviceId();
+  const { error } = await supabase
+    .from(SYNC_WATCHERS_CLOUD_TABLE)
+    .delete()
+    .eq("user_id", userId)
+    .eq("entity_table", tableName)
+    .eq("entity_id", resolvedCloudId)
+    .eq("device_id", deviceId);
+
+  if (error) {
+    throw error;
+  }
+
+  await hardDeleteCloudRecordIfReady({
+    tableName,
+    userId,
+    cloudId: resolvedCloudId,
+  });
 }
 
 export async function getSelectableWorkoutTypes(db) {
@@ -1251,6 +1598,55 @@ export async function syncWorkoutTypesWithCloud(db) {
   });
 
   return getSelectableWorkoutTypes(db);
+}
+
+async function pushDirtyProgramHierarchyWithCloudInternal(db) {
+  const userId = await getAuthenticatedUserId();
+
+  if (!userId) {
+    return {
+      changed: false,
+      deletedCount: 0,
+      downloadedCount: 0,
+      uploadedCount: 0,
+    };
+  }
+
+  let deletedCount = 0;
+  deletedCount += await processQueuedProgramDeletes(db, userId);
+  deletedCount += await processQueuedMesocycleDeletes(db, userId);
+  deletedCount += await processQueuedMicrocycleDeletes(db, userId);
+  deletedCount += await processQueuedWorkoutTypeInstanceDeletes(db, userId);
+  deletedCount += await processQueuedExerciseInstanceDeletes(db, userId);
+  deletedCount += await processQueuedSetDeletes(db, userId);
+
+  let uploadedCount = 0;
+  uploadedCount += await uploadDirtyPrograms(db, userId);
+  uploadedCount += await uploadDirtyMesocycles(db, userId, {
+    allowParentRepair: false,
+  });
+  uploadedCount += await uploadDirtyMicrocycles(db, userId, {
+    allowParentRepair: false,
+  });
+  uploadedCount += await uploadDirtyDays(db, userId, {
+    allowParentRepair: false,
+  });
+  uploadedCount += await uploadDirtyWorkoutTypeInstances(db, userId, {
+    allowParentRepair: false,
+  });
+  uploadedCount += await uploadDirtyExerciseInstances(db, userId, {
+    allowParentRepair: false,
+  });
+  uploadedCount += await uploadDirtySets(db, userId, {
+    allowParentRepair: false,
+  });
+
+  return {
+    changed: deletedCount > 0 || uploadedCount > 0,
+    deletedCount,
+    downloadedCount: 0,
+    uploadedCount,
+  };
 }
 
 export async function refreshSelectableWorkoutTypes(db) {
@@ -1308,7 +1704,9 @@ async function uploadDirtyPrograms(db, userId) {
       userId,
       localEntity: localProgram,
       payload,
-      cloudId: parseCloudProgramId(localProgram.cloud_program_id),
+      cloudId: parseCloudProgramId(
+        resolveSideBySideCloudId(localProgram, "cloud_program_id")
+      ),
       syncId: normalizeSyncId(localProgram.sync_id),
       legacyLocalId: payload.local_program_id,
       legacyLocalIdColumn: "local_program_id",
@@ -1353,13 +1751,21 @@ async function reconcileProgramsFromCloud(db, userId) {
     throw error;
   }
 
+  await claimCloudWatchers({
+    userId,
+    tableName: PROGRAM_CLOUD_TABLE,
+    cloudRecords: cloudPrograms,
+  });
+
   const localPrograms = await programRepository.getProgramsForCloudSync(db);
   const localProgramsByCloudId = new Map();
   const localProgramsBySyncId = new Map();
   const localProgramsByRemoteLocalId = new Map();
 
   for (const localProgram of localPrograms) {
-    const cloudProgramId = parseCloudProgramId(localProgram.cloud_program_id);
+    const cloudProgramId = parseCloudProgramId(
+      resolveSideBySideCloudId(localProgram, "cloud_program_id")
+    );
     const syncId = normalizeSyncId(localProgram.sync_id);
     const remoteLocalProgramId = resolveProgramCloudLocalId(localProgram);
 
@@ -1377,6 +1783,7 @@ async function reconcileProgramsFromCloud(db, userId) {
   }
 
   let downloadedCount = 0;
+  const pendingDeletionAcks = [];
 
   await withTransaction(db, async () => {
     for (const cloudProgram of cloudPrograms ?? []) {
@@ -1399,6 +1806,13 @@ async function reconcileProgramsFromCloud(db, userId) {
         null;
 
       if (isCloudSnapshotDeleted(cloudProgram)) {
+        pendingDeletionAcks.push({
+          userId,
+          tableName: PROGRAM_CLOUD_TABLE,
+          cloudId: cloudProgramId,
+          deleteRequestedAt: resolveCloudDeleteRequestedAt(cloudProgram),
+        });
+
         if (localProgram) {
           if (
             shouldKeepLocalEntityForCloudTombstone(localProgram, cloudProgram)
@@ -1488,7 +1902,7 @@ async function reconcileProgramsFromCloud(db, userId) {
 
       if (areComparableProgramsEqual(localProgram, comparableCloudProgram)) {
         if (
-          !localProgram.cloud_program_id ||
+          resolveSideBySideCloudId(localProgram, "cloud_program_id") === null ||
           resolveProgramCloudLocalId(localProgram) !==
             comparableCloudProgram.local_program_id ||
           normalizeSyncId(localProgram.sync_id) !== cloudSyncId ||
@@ -1544,6 +1958,10 @@ async function reconcileProgramsFromCloud(db, userId) {
       downloadedCount += 1;
     }
   });
+
+  for (const deletionAck of pendingDeletionAcks) {
+    await ackCloudDeletionCascade(deletionAck);
+  }
 
   return downloadedCount;
 }
@@ -1652,7 +2070,9 @@ async function uploadDirtyMesocycles(
       userId,
       localEntity: localMesocycle,
       payload,
-      cloudId: parseCloudMesocycleId(localMesocycle.cloud_mesocycle_id),
+      cloudId: parseCloudMesocycleId(
+        resolveSideBySideCloudId(localMesocycle, "cloud_mesocycle_id")
+      ),
       syncId: normalizeSyncId(localMesocycle.sync_id),
       legacyLocalId: payload.local_mesocycle_id,
       legacyLocalIdColumn: "local_mesocycle_id",
@@ -1706,6 +2126,12 @@ async function reconcileMesocyclesFromCloud(db, userId) {
     throw error;
   }
 
+  await claimCloudWatchers({
+    userId,
+    tableName: MESOCYCLE_CLOUD_TABLE,
+    cloudRecords: cloudMesocycles,
+  });
+
   const [localMesocycles, localPrograms] = await Promise.all([
     programRepository.getMesocyclesForCloudSync(db),
     programRepository.getProgramsForCloudSync(db),
@@ -1720,7 +2146,9 @@ async function reconcileMesocyclesFromCloud(db, userId) {
   const localProgramsByCloudId = new Map();
 
   for (const localProgram of localPrograms) {
-    const cloudProgramId = parseCloudProgramId(localProgram.cloud_program_id);
+    const cloudProgramId = parseCloudProgramId(
+      resolveSideBySideCloudId(localProgram, "cloud_program_id")
+    );
 
     if (cloudProgramId !== null) {
       localProgramsByCloudId.set(cloudProgramId, localProgram);
@@ -1729,7 +2157,7 @@ async function reconcileMesocyclesFromCloud(db, userId) {
 
   for (const localMesocycle of localMesocycles) {
     const cloudMesocycleId = parseCloudMesocycleId(
-      localMesocycle.cloud_mesocycle_id
+      resolveSideBySideCloudId(localMesocycle, "cloud_mesocycle_id")
     );
     const syncId = normalizeSyncId(localMesocycle.sync_id);
     const remoteLocalMesocycleId = resolveMesocycleCloudLocalId(localMesocycle);
@@ -1750,6 +2178,7 @@ async function reconcileMesocyclesFromCloud(db, userId) {
   }
 
   let downloadedCount = 0;
+  const pendingDeletionAcks = [];
 
   await withTransaction(db, async () => {
     for (const cloudMesocycle of cloudMesocycles ?? []) {
@@ -1785,6 +2214,13 @@ async function reconcileMesocyclesFromCloud(db, userId) {
         null;
 
       if (isCloudSnapshotDeleted(cloudMesocycle)) {
+        pendingDeletionAcks.push({
+          userId,
+          tableName: MESOCYCLE_CLOUD_TABLE,
+          cloudId: cloudMesocycleId,
+          deleteRequestedAt: resolveCloudDeleteRequestedAt(cloudMesocycle),
+        });
+
         if (localMesocycle) {
           if (
             shouldKeepLocalEntityForCloudTombstone(
@@ -1845,7 +2281,10 @@ async function reconcileMesocyclesFromCloud(db, userId) {
       const comparableLocalMesocycle = getComparableMesocycleSnapshot({
         ...localMesocycle,
         cloud_program_id: parseCloudProgramId(
-          localProgramsById.get(localMesocycle.program_id)?.cloud_program_id
+          resolveSideBySideCloudId(
+            localProgramsById.get(localMesocycle.program_id),
+            "cloud_program_id"
+          )
         ),
       });
 
@@ -1880,7 +2319,7 @@ async function reconcileMesocyclesFromCloud(db, userId) {
             deletedAt: normalizeDeletedAt(cloudMesocycle.deleted_at),
           });
         } else if (
-          !localMesocycle.cloud_mesocycle_id ||
+          resolveSideBySideCloudId(localMesocycle, "cloud_mesocycle_id") === null ||
           resolveMesocycleCloudLocalId(localMesocycle) !== localMesocycleId ||
           normalizeSyncId(localMesocycle.sync_id) !== cloudSyncId
         ) {
@@ -1904,7 +2343,7 @@ async function reconcileMesocyclesFromCloud(db, userId) {
         )
       ) {
         if (
-          !localMesocycle.cloud_mesocycle_id ||
+          resolveSideBySideCloudId(localMesocycle, "cloud_mesocycle_id") === null ||
           resolveMesocycleCloudLocalId(localMesocycle) !== localMesocycleId ||
           normalizeSyncId(localMesocycle.sync_id) !== cloudSyncId ||
           normalizeSyncVersion(localMesocycle.sync_version, 0) !==
@@ -1962,6 +2401,10 @@ async function reconcileMesocyclesFromCloud(db, userId) {
       downloadedCount += 1;
     }
   });
+
+  for (const deletionAck of pendingDeletionAcks) {
+    await ackCloudDeletionCascade(deletionAck);
+  }
 
   return downloadedCount;
 }
@@ -2063,7 +2506,9 @@ async function uploadDirtyMicrocycles(
       userId,
       localEntity: localMicrocycle,
       payload,
-      cloudId: parseCloudMicrocycleId(localMicrocycle.cloud_microcycle_id),
+      cloudId: parseCloudMicrocycleId(
+        resolveSideBySideCloudId(localMicrocycle, "cloud_microcycle_id")
+      ),
       syncId: normalizeSyncId(localMicrocycle.sync_id),
       legacyLocalId: payload.local_microcycle_id,
       legacyLocalIdColumn: "local_microcycle_id",
@@ -2112,6 +2557,12 @@ async function reconcileMicrocyclesFromCloud(db, userId) {
     throw error;
   }
 
+  await claimCloudWatchers({
+    userId,
+    tableName: MICROCYCLE_CLOUD_TABLE,
+    cloudRecords: cloudMicrocycles,
+  });
+
   const [localMicrocycles, localMesocycles, localPrograms] = await Promise.all([
     programRepository.getMicrocyclesForCloudSync(db),
     programRepository.getMesocyclesForCloudSync(db),
@@ -2130,7 +2581,7 @@ async function reconcileMicrocyclesFromCloud(db, userId) {
 
   for (const localMesocycle of localMesocycles) {
     const cloudMesocycleId = parseCloudMesocycleId(
-      localMesocycle.cloud_mesocycle_id
+      resolveSideBySideCloudId(localMesocycle, "cloud_mesocycle_id")
     );
 
     if (cloudMesocycleId !== null) {
@@ -2140,7 +2591,7 @@ async function reconcileMicrocyclesFromCloud(db, userId) {
 
   for (const localMicrocycle of localMicrocycles) {
     const cloudMicrocycleId = parseCloudMicrocycleId(
-      localMicrocycle.cloud_microcycle_id
+      resolveSideBySideCloudId(localMicrocycle, "cloud_microcycle_id")
     );
     const syncId = normalizeSyncId(localMicrocycle.sync_id);
 
@@ -2156,6 +2607,7 @@ async function reconcileMicrocyclesFromCloud(db, userId) {
   }
 
   let downloadedCount = 0;
+  const pendingDeletionAcks = [];
 
   await withTransaction(db, async () => {
     for (const cloudMicrocycle of cloudMicrocycles ?? []) {
@@ -2192,6 +2644,13 @@ async function reconcileMicrocyclesFromCloud(db, userId) {
         null;
 
       if (isCloudSnapshotDeleted(cloudMicrocycle)) {
+        pendingDeletionAcks.push({
+          userId,
+          tableName: MICROCYCLE_CLOUD_TABLE,
+          cloudId: cloudMicrocycleId,
+          deleteRequestedAt: resolveCloudDeleteRequestedAt(cloudMicrocycle),
+        });
+
         if (localMicrocycle) {
           if (
             shouldKeepLocalEntityForCloudTombstone(
@@ -2263,7 +2722,7 @@ async function reconcileMicrocyclesFromCloud(db, userId) {
       const comparableLocalMicrocycle = getComparableMicrocycleSnapshot({
         ...localMicrocycle,
         cloud_mesocycle_id: parseCloudMesocycleId(
-          parentMesocycle.cloud_mesocycle_id
+          resolveSideBySideCloudId(parentMesocycle, "cloud_mesocycle_id")
         ),
       });
 
@@ -2295,7 +2754,7 @@ async function reconcileMicrocyclesFromCloud(db, userId) {
             deletedAt: normalizeDeletedAt(cloudMicrocycle.deleted_at),
           });
         } else if (
-          !localMicrocycle.cloud_microcycle_id ||
+          resolveSideBySideCloudId(localMicrocycle, "cloud_microcycle_id") === null ||
           normalizeSyncId(localMicrocycle.sync_id) !== cloudSyncId
         ) {
           await programRepository.updateMicrocycleCloudIdentity(db, {
@@ -2317,7 +2776,7 @@ async function reconcileMicrocyclesFromCloud(db, userId) {
         )
       ) {
         if (
-          !localMicrocycle.cloud_microcycle_id ||
+          resolveSideBySideCloudId(localMicrocycle, "cloud_microcycle_id") === null ||
           normalizeSyncId(localMicrocycle.sync_id) !== cloudSyncId ||
           normalizeSyncVersion(localMicrocycle.sync_version, 0) !==
             normalizeSyncVersion(cloudMicrocycle.sync_version, 0) ||
@@ -2371,6 +2830,10 @@ async function reconcileMicrocyclesFromCloud(db, userId) {
       downloadedCount += 1;
     }
   });
+
+  for (const deletionAck of pendingDeletionAcks) {
+    await ackCloudDeletionCascade(deletionAck);
+  }
 
   return downloadedCount;
 }
@@ -2492,7 +2955,9 @@ async function uploadDirtyDays(
         ...payload,
         date: resolvedPayloadDate,
       },
-      cloudId: parseCloudDayId(localDay.cloud_day_id),
+      cloudId: parseCloudDayId(
+        resolveSideBySideCloudId(localDay, "cloud_day_id")
+      ),
       syncId: normalizeSyncId(localDay.sync_id),
       legacyLocalId: payload.local_day_id,
       legacyLocalIdColumn: "local_day_id",
@@ -2545,6 +3010,12 @@ async function reconcileDaysFromCloud(db, userId) {
     throw error;
   }
 
+  await claimCloudWatchers({
+    userId,
+    tableName: DAY_CLOUD_TABLE,
+    cloudRecords: cloudDays,
+  });
+
   const [localPrograms, localDays, localMicrocycles, localMesocycles] = await Promise.all([
     programRepository.getProgramsForCloudSync(db),
     programRepository.getDaysForCloudSync(db),
@@ -2566,7 +3037,7 @@ async function reconcileDaysFromCloud(db, userId) {
 
   for (const localMicrocycle of localMicrocycles) {
     const cloudMicrocycleId = parseCloudMicrocycleId(
-      localMicrocycle.cloud_microcycle_id
+      resolveSideBySideCloudId(localMicrocycle, "cloud_microcycle_id")
     );
 
     if (cloudMicrocycleId !== null) {
@@ -2575,7 +3046,9 @@ async function reconcileDaysFromCloud(db, userId) {
   }
 
   for (const localDay of localDays) {
-    const cloudDayId = parseCloudDayId(localDay.cloud_day_id);
+    const cloudDayId = parseCloudDayId(
+      resolveSideBySideCloudId(localDay, "cloud_day_id")
+    );
     const syncId = normalizeSyncId(localDay.sync_id);
     const remoteLocalDayId = resolveDayCloudLocalId(localDay);
     const identityKey =
@@ -2606,6 +3079,7 @@ async function reconcileDaysFromCloud(db, userId) {
   }
 
   let downloadedCount = 0;
+  const pendingDeletionAcks = [];
 
   await withTransaction(db, async () => {
     for (const cloudDay of cloudDays ?? []) {
@@ -2664,6 +3138,13 @@ async function reconcileDaysFromCloud(db, userId) {
         null;
 
       if (isCloudSnapshotDeleted(cloudDay)) {
+        pendingDeletionAcks.push({
+          userId,
+          tableName: DAY_CLOUD_TABLE,
+          cloudId: cloudDayId,
+          deleteRequestedAt: resolveCloudDeleteRequestedAt(cloudDay),
+        });
+
         if (localDay) {
           if (shouldKeepLocalEntityForCloudTombstone(localDay, cloudDay)) {
             continue;
@@ -2722,7 +3203,9 @@ async function reconcileDaysFromCloud(db, userId) {
         ...localDay,
         cloud_microcycle_id: isStandaloneCloudDay
           ? null
-          : parseCloudMicrocycleId(parentMicrocycle.cloud_microcycle_id),
+          : parseCloudMicrocycleId(
+              resolveSideBySideCloudId(parentMicrocycle, "cloud_microcycle_id")
+            ),
       });
 
       if (Number(localDay.needs_sync) === 1) {
@@ -2751,7 +3234,7 @@ async function reconcileDaysFromCloud(db, userId) {
             deletedAt: normalizeDeletedAt(cloudDay.deleted_at),
           });
         } else if (
-          !localDay.cloud_day_id ||
+          resolveSideBySideCloudId(localDay, "cloud_day_id") === null ||
           resolveDayCloudLocalId(localDay) !== localDayId ||
           normalizeSyncId(localDay.sync_id) !== cloudSyncId
         ) {
@@ -2769,7 +3252,7 @@ async function reconcileDaysFromCloud(db, userId) {
 
       if (areComparableDaysEqual(comparableLocalDay, normalizedCloudDay)) {
         if (
-          !localDay.cloud_day_id ||
+          resolveSideBySideCloudId(localDay, "cloud_day_id") === null ||
           resolveDayCloudLocalId(localDay) !== localDayId ||
           normalizeSyncId(localDay.sync_id) !== cloudSyncId ||
           normalizeSyncVersion(localDay.sync_version, 0) !==
@@ -2830,6 +3313,10 @@ async function reconcileDaysFromCloud(db, userId) {
       downloadedCount += 1;
     }
   });
+
+  for (const deletionAck of pendingDeletionAcks) {
+    await ackCloudDeletionCascade(deletionAck);
+  }
 
   return downloadedCount;
 }
@@ -2945,7 +3432,10 @@ async function uploadDirtyWorkoutTypeInstances(
       localEntity: localWorkout,
       payload,
       cloudId: parseCloudWorkoutTypeInstanceId(
-        localWorkout.cloud_workout_type_instance_id
+        resolveSideBySideCloudId(
+          localWorkout,
+          "cloud_workout_type_instance_id"
+        )
       ),
       syncId: normalizeSyncId(localWorkout.sync_id),
       legacyLocalId: payload.local_workout_type_instance_id,
@@ -3001,6 +3491,12 @@ async function reconcileWorkoutTypeInstancesFromCloud(db, userId) {
     throw error;
   }
 
+  await claimCloudWatchers({
+    userId,
+    tableName: WORKOUT_TYPE_INSTANCE_CLOUD_TABLE,
+    cloudRecords: cloudWorkouts,
+  });
+
   const [localWorkouts, localDays] = await Promise.all([
     programRepository.getWorkoutsForCloudSync(db),
     programRepository.getDaysForCloudSync(db),
@@ -3024,7 +3520,9 @@ async function reconcileWorkoutTypeInstancesFromCloud(db, userId) {
   );
 
   for (const localDay of localDays) {
-    const cloudDayId = parseCloudDayId(localDay.cloud_day_id);
+    const cloudDayId = parseCloudDayId(
+      resolveSideBySideCloudId(localDay, "cloud_day_id")
+    );
 
     if (cloudDayId !== null) {
       localDaysByCloudId.set(cloudDayId, localDay);
@@ -3033,7 +3531,10 @@ async function reconcileWorkoutTypeInstancesFromCloud(db, userId) {
 
   for (const localWorkout of localWorkouts) {
     const cloudWorkoutTypeInstanceId = parseCloudWorkoutTypeInstanceId(
-      localWorkout.cloud_workout_type_instance_id
+      resolveSideBySideCloudId(
+        localWorkout,
+        "cloud_workout_type_instance_id"
+      )
     );
     const syncId = normalizeSyncId(localWorkout.sync_id);
     const remoteLocalWorkoutTypeInstanceId =
@@ -3058,6 +3559,7 @@ async function reconcileWorkoutTypeInstancesFromCloud(db, userId) {
   }
 
   let downloadedCount = 0;
+  const pendingDeletionAcks = [];
 
   await withTransaction(db, async () => {
     for (const cloudWorkout of cloudWorkouts ?? []) {
@@ -3096,6 +3598,13 @@ async function reconcileWorkoutTypeInstancesFromCloud(db, userId) {
         null;
 
       if (isCloudSnapshotDeleted(cloudWorkout)) {
+        pendingDeletionAcks.push({
+          userId,
+          tableName: WORKOUT_TYPE_INSTANCE_CLOUD_TABLE,
+          cloudId: cloudWorkoutTypeInstanceId,
+          deleteRequestedAt: resolveCloudDeleteRequestedAt(cloudWorkout),
+        });
+
         if (localWorkout) {
           if (
             shouldKeepLocalEntityForCloudTombstone(localWorkout, cloudWorkout)
@@ -3164,7 +3673,9 @@ async function reconcileWorkoutTypeInstancesFromCloud(db, userId) {
 
       const comparableLocalWorkout = getComparableWorkoutTypeInstanceSnapshot({
         ...localWorkout,
-        cloud_day_id: parseCloudDayId(parentDay.cloud_day_id),
+        cloud_day_id: parseCloudDayId(
+          resolveSideBySideCloudId(parentDay, "cloud_day_id")
+        ),
       });
 
       if (Number(localWorkout.needs_sync) === 1) {
@@ -3208,7 +3719,10 @@ async function reconcileWorkoutTypeInstancesFromCloud(db, userId) {
             deletedAt: normalizeDeletedAt(cloudWorkout.deleted_at),
           });
         } else if (
-          !localWorkout.cloud_workout_type_instance_id ||
+          resolveSideBySideCloudId(
+            localWorkout,
+            "cloud_workout_type_instance_id"
+          ) === null ||
           resolveWorkoutTypeInstanceCloudLocalId(localWorkout) !==
             localWorkoutTypeInstanceId ||
           normalizeSyncId(localWorkout.sync_id) !== cloudSyncId
@@ -3232,7 +3746,10 @@ async function reconcileWorkoutTypeInstancesFromCloud(db, userId) {
         )
       ) {
         if (
-          !localWorkout.cloud_workout_type_instance_id ||
+          resolveSideBySideCloudId(
+            localWorkout,
+            "cloud_workout_type_instance_id"
+          ) === null ||
           resolveWorkoutTypeInstanceCloudLocalId(localWorkout) !==
             localWorkoutTypeInstanceId ||
           normalizeSyncId(localWorkout.sync_id) !== cloudSyncId ||
@@ -3301,6 +3818,10 @@ async function reconcileWorkoutTypeInstancesFromCloud(db, userId) {
       downloadedCount += 1;
     }
   });
+
+  for (const deletionAck of pendingDeletionAcks) {
+    await ackCloudDeletionCascade(deletionAck);
+  }
 
   return downloadedCount;
 }
@@ -3435,7 +3956,7 @@ async function uploadDirtyExerciseInstances(
       localEntity: localExercise,
       payload,
       cloudId: parseCloudExerciseInstanceId(
-        localExercise.cloud_exercise_instance_id
+        resolveSideBySideCloudId(localExercise, "cloud_exercise_instance_id")
       ),
       syncId: normalizeSyncId(localExercise.sync_id),
       legacyLocalId: payload.local_exercise_instance_id,
@@ -3494,6 +4015,12 @@ async function reconcileExerciseInstancesFromCloud(db, userId) {
     throw error;
   }
 
+  await claimCloudWatchers({
+    userId,
+    tableName: EXERCISE_INSTANCE_CLOUD_TABLE,
+    cloudRecords: cloudExercises,
+  });
+
   const [localExercises, localWorkouts] = await Promise.all([
     weightliftingRepository.getExercisesForCloudSync(db),
     programRepository.getWorkoutsForCloudSync(db),
@@ -3518,7 +4045,10 @@ async function reconcileExerciseInstancesFromCloud(db, userId) {
 
   for (const localWorkout of localWorkouts) {
     const cloudWorkoutTypeInstanceId = parseCloudWorkoutTypeInstanceId(
-      localWorkout.cloud_workout_type_instance_id
+      resolveSideBySideCloudId(
+        localWorkout,
+        "cloud_workout_type_instance_id"
+      )
     );
 
     if (cloudWorkoutTypeInstanceId !== null) {
@@ -3528,7 +4058,7 @@ async function reconcileExerciseInstancesFromCloud(db, userId) {
 
   for (const localExercise of localExercises) {
     const cloudExerciseInstanceId = parseCloudExerciseInstanceId(
-      localExercise.cloud_exercise_instance_id
+      resolveSideBySideCloudId(localExercise, "cloud_exercise_instance_id")
     );
     const syncId = normalizeSyncId(localExercise.sync_id);
     const remoteLocalExerciseInstanceId =
@@ -3556,6 +4086,7 @@ async function reconcileExerciseInstancesFromCloud(db, userId) {
   }
 
   let downloadedCount = 0;
+  const pendingDeletionAcks = [];
 
   await withTransaction(db, async () => {
     for (const cloudExercise of cloudExercises ?? []) {
@@ -3596,6 +4127,13 @@ async function reconcileExerciseInstancesFromCloud(db, userId) {
         null;
 
       if (isCloudSnapshotDeleted(cloudExercise)) {
+        pendingDeletionAcks.push({
+          userId,
+          tableName: EXERCISE_INSTANCE_CLOUD_TABLE,
+          cloudId: cloudExerciseInstanceId,
+          deleteRequestedAt: resolveCloudDeleteRequestedAt(cloudExercise),
+        });
+
         if (localExercise) {
           if (
             shouldKeepLocalEntityForCloudTombstone(
@@ -3679,7 +4217,10 @@ async function reconcileExerciseInstancesFromCloud(db, userId) {
       const comparableLocalExercise = getComparableExerciseInstanceSnapshot({
         ...localExercise,
         cloud_workout_type_instance_id: parseCloudWorkoutTypeInstanceId(
-          parentWorkout.cloud_workout_type_instance_id
+          resolveSideBySideCloudId(
+            parentWorkout,
+            "cloud_workout_type_instance_id"
+          )
         ),
       });
 
@@ -3715,7 +4256,10 @@ async function reconcileExerciseInstancesFromCloud(db, userId) {
         )
       ) {
         if (
-          !localExercise.cloud_exercise_instance_id ||
+          resolveSideBySideCloudId(
+            localExercise,
+            "cloud_exercise_instance_id"
+          ) === null ||
           resolveExerciseInstanceCloudLocalId(localExercise) !==
             localExerciseInstanceId ||
           normalizeSyncId(localExercise.sync_id) !== cloudSyncId ||
@@ -3794,6 +4338,10 @@ async function reconcileExerciseInstancesFromCloud(db, userId) {
       downloadedCount += 1;
     }
   });
+
+  for (const deletionAck of pendingDeletionAcks) {
+    await ackCloudDeletionCascade(deletionAck);
+  }
 
   return downloadedCount;
 }
@@ -3953,7 +4501,9 @@ async function uploadDirtySets(
       userId,
       localEntity: localSet,
       payload,
-      cloudId: parseCloudSetId(localSet.cloud_set_id),
+      cloudId: parseCloudSetId(
+        resolveSideBySideCloudId(localSet, "cloud_set_id")
+      ),
       syncId: normalizeSyncId(localSet.sync_id),
       legacyLocalId: payload.local_set_id,
       legacyLocalIdColumn: "local_set_id",
@@ -4005,6 +4555,12 @@ async function reconcileSetsFromCloud(db, userId) {
     throw error;
   }
 
+  await claimCloudWatchers({
+    userId,
+    tableName: SET_CLOUD_TABLE,
+    cloudRecords: cloudSets,
+  });
+
   const [localSets, localExercises] = await Promise.all([
     weightliftingRepository.getSetsForCloudSync(db),
     weightliftingRepository.getExercisesForCloudSync(db),
@@ -4025,7 +4581,7 @@ async function reconcileSetsFromCloud(db, userId) {
 
   for (const localExercise of localExercises) {
     const cloudExerciseInstanceId = parseCloudExerciseInstanceId(
-      localExercise.cloud_exercise_instance_id
+      resolveSideBySideCloudId(localExercise, "cloud_exercise_instance_id")
     );
 
     if (cloudExerciseInstanceId !== null) {
@@ -4034,7 +4590,9 @@ async function reconcileSetsFromCloud(db, userId) {
   }
 
   for (const localSet of localSets) {
-    const cloudSetId = parseCloudSetId(localSet.cloud_set_id);
+    const cloudSetId = parseCloudSetId(
+      resolveSideBySideCloudId(localSet, "cloud_set_id")
+    );
     const syncId = normalizeSyncId(localSet.sync_id);
     const remoteLocalSetId = resolveSetCloudLocalId(localSet);
 
@@ -4054,6 +4612,7 @@ async function reconcileSetsFromCloud(db, userId) {
   }
 
   let downloadedCount = 0;
+  const pendingDeletionAcks = [];
 
   await withTransaction(db, async () => {
     for (const cloudSet of cloudSets ?? []) {
@@ -4087,6 +4646,13 @@ async function reconcileSetsFromCloud(db, userId) {
         null;
 
       if (isCloudSnapshotDeleted(cloudSet)) {
+        pendingDeletionAcks.push({
+          userId,
+          tableName: SET_CLOUD_TABLE,
+          cloudId: cloudSetId,
+          deleteRequestedAt: resolveCloudDeleteRequestedAt(cloudSet),
+        });
+
         if (localSet) {
           if (shouldKeepLocalEntityForCloudTombstone(localSet, cloudSet)) {
             continue;
@@ -4145,7 +4711,10 @@ async function reconcileSetsFromCloud(db, userId) {
       const comparableLocalSet = getComparableSetSnapshot({
         ...localSet,
         cloud_exercise_instance_id: parseCloudExerciseInstanceId(
-          parentExercise.cloud_exercise_instance_id
+          resolveSideBySideCloudId(
+            parentExercise,
+            "cloud_exercise_instance_id"
+          )
         ),
       });
 
@@ -4182,7 +4751,7 @@ async function reconcileSetsFromCloud(db, userId) {
             deletedAt: normalizeDeletedAt(cloudSet.deleted_at),
           });
         } else if (
-          !localSet.cloud_set_id ||
+          resolveSideBySideCloudId(localSet, "cloud_set_id") === null ||
           resolveSetCloudLocalId(localSet) !== localSetId ||
           normalizeSyncId(localSet.sync_id) !== cloudSyncId
         ) {
@@ -4200,7 +4769,7 @@ async function reconcileSetsFromCloud(db, userId) {
 
       if (areComparableSetsEqual(comparableLocalSet, comparableCloudSet)) {
         if (
-          !localSet.cloud_set_id ||
+          resolveSideBySideCloudId(localSet, "cloud_set_id") === null ||
           resolveSetCloudLocalId(localSet) !== localSetId ||
           normalizeSyncId(localSet.sync_id) !== cloudSyncId ||
           normalizeSyncVersion(localSet.sync_version, 0) !==
@@ -4262,6 +4831,10 @@ async function reconcileSetsFromCloud(db, userId) {
       downloadedCount += 1;
     }
   });
+
+  for (const deletionAck of pendingDeletionAcks) {
+    await ackCloudDeletionCascade(deletionAck);
+  }
 
   return downloadedCount;
 }
@@ -4628,6 +5201,10 @@ export async function syncSetsWithCloud(db) {
   return syncSetsWithCloudInternal(db);
 }
 
+export async function pushDirtyStrengthHierarchyWithCloud(db) {
+  return pushDirtyProgramHierarchyWithCloudInternal(db);
+}
+
 export async function createProgram(db, { programName, startDate, status }) {
   await programRepository.createProgram(db, { programName, startDate, status });
   syncProgramsInBackground(db);
@@ -4873,6 +5450,13 @@ async function syncDirtyLocalRowToCloud({
     existingCloudRecord &&
     compareEntitySyncVersions(localEntity, existingCloudRecord) < 0
   ) {
+    await claimCloudWatcher({
+      userId,
+      tableName,
+      cloudId: existingCloudRecord.id,
+      cloudRecord: existingCloudRecord,
+    });
+
     return {
       uploaded: false,
       cloudWins: true,
@@ -4896,6 +5480,13 @@ async function syncDirtyLocalRowToCloud({
     }
 
     if (data) {
+      await claimCloudWatcher({
+        userId,
+        tableName,
+        cloudId: data.id,
+        cloudRecord: data,
+      });
+
       return {
         uploaded: true,
         cloudWins: false,
@@ -4913,6 +5504,13 @@ async function syncDirtyLocalRowToCloud({
   if (error) {
     throw error;
   }
+
+  await claimCloudWatcher({
+    userId,
+    tableName,
+    cloudId: data.id,
+    cloudRecord: data,
+  });
 
   return {
     uploaded: true,
@@ -4948,8 +5546,16 @@ async function applyQueuedCloudDelete({
 
   const existingSyncState = getEntitySyncState(existingCloudRecord);
   const queuedSyncVersion = normalizeSyncVersion(syncVersion, 0);
+  const deleteRequestedAt =
+    normalizeDeletedAt(deletedAt) ?? new Date().toISOString();
 
-  if (existingSyncState.deleted_at) {
+  if (existingSyncState.is_deleting || existingSyncState.deleted_at) {
+    await ackCloudDeletionCascade({
+      userId,
+      tableName,
+      cloudId: existingCloudRecord.id,
+      deleteRequestedAt: resolveCloudDeleteRequestedAt(existingCloudRecord),
+    });
     return false;
   }
 
@@ -4962,7 +5568,10 @@ async function applyQueuedCloudDelete({
     .update({
       sync_id: syncId ?? existingSyncState.sync_id,
       sync_version: queuedSyncVersion,
-      deleted_at: deletedAt,
+      deleted_at: deleteRequestedAt,
+      last_updated: deleteRequestedAt,
+      is_deleting: true,
+      delete_requested_at: deleteRequestedAt,
     })
     .eq("id", existingCloudRecord.id)
     .eq("user_id", userId);
@@ -4970,6 +5579,13 @@ async function applyQueuedCloudDelete({
   if (error) {
     throw error;
   }
+
+  await ackCloudDeletionCascade({
+    userId,
+    tableName,
+    cloudId: existingCloudRecord.id,
+    deleteRequestedAt,
+  });
 
   return true;
 }
@@ -5133,9 +5749,14 @@ export async function deleteProgram(db, programId) {
       programId
     );
 
-    if (syncMetadata?.cloud_program_id) {
+    const cloudProgramId = resolveSideBySideCloudId(
+      syncMetadata,
+      "cloud_program_id"
+    );
+
+    if (cloudProgramId !== null) {
       await programRepository.queueProgramDeleteSync(db, {
-        cloudProgramId: syncMetadata.cloud_program_id,
+        cloudProgramId,
         syncId: normalizeSyncId(syncMetadata?.sync_id),
         syncVersion: createNextSyncVersion(syncMetadata?.sync_version),
         deletedAt: new Date().toISOString(),
@@ -5392,9 +6013,14 @@ export async function deleteMesocycle(db, mesocycleId) {
       mesocycleId
     );
 
-    if (syncMetadata?.cloud_mesocycle_id) {
+    const cloudMesocycleId = resolveSideBySideCloudId(
+      syncMetadata,
+      "cloud_mesocycle_id"
+    );
+
+    if (cloudMesocycleId !== null) {
       await programRepository.queueMesocycleDeleteSync(db, {
-        cloudMesocycleId: syncMetadata.cloud_mesocycle_id,
+        cloudMesocycleId,
         syncId: normalizeSyncId(syncMetadata?.sync_id),
         syncVersion: createNextSyncVersion(syncMetadata?.sync_version),
         deletedAt: new Date().toISOString(),
@@ -5578,9 +6204,14 @@ export async function deleteMicrocycle(db, microcycleId) {
     const metadata = await programRepository.getMicrocycleMetadata(db, microcycleId);
     mesocycleId = metadata?.mesocycle_id ?? null;
 
-    if (syncMetadata?.cloud_microcycle_id) {
+    const cloudMicrocycleId = resolveSideBySideCloudId(
+      syncMetadata,
+      "cloud_microcycle_id"
+    );
+
+    if (cloudMicrocycleId !== null) {
       await programRepository.queueMicrocycleDeleteSync(db, {
-        cloudMicrocycleId: syncMetadata.cloud_microcycle_id,
+        cloudMicrocycleId,
         syncId: normalizeSyncId(syncMetadata?.sync_id),
         syncVersion: createNextSyncVersion(syncMetadata?.sync_version),
         deletedAt: new Date().toISOString(),
@@ -5790,13 +6421,17 @@ export async function deleteWorkout(db, workoutId) {
       resolveWorkoutTypeInstanceCloudLocalId(syncMetadata) ??
       normalizeOptionalInteger(workoutId, null);
 
+    const cloudWorkoutTypeInstanceId = resolveSideBySideCloudId(
+      syncMetadata,
+      "cloud_workout_type_instance_id"
+    );
+
     if (
-      syncMetadata?.cloud_workout_type_instance_id ||
+      cloudWorkoutTypeInstanceId !== null ||
       remoteLocalWorkoutTypeInstanceId !== null
     ) {
       await programRepository.queueWorkoutTypeInstanceDeleteSync(db, {
-        cloudWorkoutTypeInstanceId:
-          syncMetadata?.cloud_workout_type_instance_id ?? null,
+        cloudWorkoutTypeInstanceId,
         remoteLocalWorkoutTypeInstanceId,
         syncId: normalizeSyncId(syncMetadata?.sync_id),
         syncVersion: createNextSyncVersion(syncMetadata?.sync_version),

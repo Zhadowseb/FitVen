@@ -8,6 +8,8 @@ export const weightliftingSchemaSql = `
 
   CREATE TABLE IF NOT EXISTS Exercise_Instance (
       exercise_instance_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      cloud_id INTEGER,
+      last_updated INTEGER NOT NULL DEFAULT 0,
       cloud_exercise_instance_id INTEGER,
       remote_local_exercise_instance_id INTEGER,
       sync_id TEXT,
@@ -34,6 +36,8 @@ export const weightliftingSchemaSql = `
 
   CREATE TABLE IF NOT EXISTS "Set" (
       sets_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      cloud_id INTEGER,
+      last_updated INTEGER NOT NULL DEFAULT 0,
       cloud_set_id INTEGER,
       remote_local_set_id INTEGER,
       sync_id TEXT,

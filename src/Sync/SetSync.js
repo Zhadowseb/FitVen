@@ -31,10 +31,12 @@ export default function SetSync() {
     isSyncingRef.current = true;
 
     try {
-      await enqueueSync(() => programService.syncSetsWithCloud(db));
+      await enqueueSync(() =>
+        programService.pushDirtyStrengthHierarchyWithCloud(db)
+      );
       retryCountRef.current = 0;
     } catch (error) {
-      console.warn("Set cloud sync failed:", error);
+      console.warn("Set cloud push failed:", error);
 
       if (isRetryableSyncError(error) && retryCountRef.current < 3) {
         retryCountRef.current += 1;

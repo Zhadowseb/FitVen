@@ -9,28 +9,38 @@ import { withTransaction } from "./shared";
 import { createNextSyncVersion, normalizeSyncId } from "../Utils/syncUtils";
 import { enqueueSync, startBackgroundSync } from "./syncScheduler";
 
-async function syncExerciseInstancesInBackground(db) {
-  try {
-    const programServiceModule = await import("./programService");
-    startBackgroundSync(
-      () => programServiceModule.syncExerciseInstancesWithCloud(db),
-      "Exercise instance cloud sync failed:"
-    );
-  } catch (error) {
-    console.error("Failed to start exercise instance cloud sync:", error);
+let dirtyStrengthHierarchyPushScheduled = false;
+let dirtyStrengthHierarchyPushNeedsRerun = false;
+
+function pushDirtyStrengthHierarchyInBackground(db) {
+  if (dirtyStrengthHierarchyPushScheduled) {
+    dirtyStrengthHierarchyPushNeedsRerun = true;
+    return;
   }
+
+  dirtyStrengthHierarchyPushScheduled = true;
+  startBackgroundSync(
+    async () => {
+      try {
+        do {
+          dirtyStrengthHierarchyPushNeedsRerun = false;
+          const programServiceModule = await import("./programService");
+          await programServiceModule.pushDirtyStrengthHierarchyWithCloud(db);
+        } while (dirtyStrengthHierarchyPushNeedsRerun);
+      } finally {
+        dirtyStrengthHierarchyPushScheduled = false;
+      }
+    },
+    "Strength hierarchy cloud push failed:"
+  );
 }
 
-async function syncSetsInBackground(db) {
-  try {
-    const programServiceModule = await import("./programService");
-    startBackgroundSync(
-      () => programServiceModule.syncSetsWithCloud(db),
-      "Set cloud sync failed:"
-    );
-  } catch (error) {
-    console.error("Failed to start set cloud sync:", error);
-  }
+function syncExerciseInstancesInBackground(db) {
+  pushDirtyStrengthHierarchyInBackground(db);
+}
+
+function syncSetsInBackground(db) {
+  pushDirtyStrengthHierarchyInBackground(db);
 }
 
 export const DEFAULT_VISIBLE_COLUMNS = {
@@ -55,10 +65,10 @@ const PRIMARY_ACTIVATION_LEVEL = "primary";
 const SECONDARY_ACTIVATION_LEVEL = "secondary";
 const EXERCISE_INSTANCE_CLOUD_TABLE = "exercise_instance";
 const EXERCISE_INSTANCE_CLOUD_SELECT =
-  "id, local_exercise_instance_id, sync_id, sync_version, deleted_at, cloud_workout_type_instance_id, exercise_name, exercise_order, sets, visible_columns, note, done";
+  "id, local_exercise_instance_id, sync_id, sync_version, deleted_at, last_updated, is_deleting, delete_requested_at, local_watchers, cloud_workout_type_instance_id, exercise_name, exercise_order, sets, visible_columns, note, done";
 const SET_CLOUD_TABLE = "set";
 const SET_CLOUD_SELECT =
-  "id, local_set_id, sync_id, sync_version, deleted_at, cloud_exercise_instance_id, set_number, personal_record, pause, rpe, weight, rm_percentage, reps, done, failed, amrap, note";
+  "id, local_set_id, sync_id, sync_version, deleted_at, last_updated, is_deleting, delete_requested_at, local_watchers, cloud_exercise_instance_id, set_number, personal_record, pause, rpe, weight, rm_percentage, reps, done, failed, amrap, note";
 
 function normalizeOptionalNumber(value) {
   if (value === "" || value === null || value === undefined) {
@@ -122,6 +132,20 @@ function normalizeBooleanFlag(value) {
   }
 
   return false;
+}
+
+function resolveSideBySideCloudId(entity, legacyCloudIdColumn) {
+  return normalizeOptionalInteger(
+    entity?.cloud_id ?? entity?.[legacyCloudIdColumn],
+    null
+  );
+}
+
+function isCloudSnapshotDeleting(entity) {
+  return (
+    normalizeBooleanFlag(entity?.is_deleting) ||
+    normalizeOptionalText(entity?.deleted_at) !== null
+  );
 }
 
 const PERSONAL_RECORD_REPS = Array.from({ length: 10 }, (_, index) => index + 1);
@@ -1621,7 +1645,10 @@ async function hydrateWorkoutStrengthDataFromCloud(db, workoutId) {
     weightliftingRepository.getExercisesForCloudSync(db),
   ]);
   const cloudWorkoutTypeInstanceId = normalizeOptionalInteger(
-    workoutSyncMetadata?.cloud_workout_type_instance_id,
+    resolveSideBySideCloudId(
+      workoutSyncMetadata,
+      "cloud_workout_type_instance_id"
+    ),
     null
   );
 
@@ -1650,7 +1677,7 @@ async function hydrateWorkoutStrengthDataFromCloud(db, workoutId) {
 
   for (const exercise of localExercisesForWorkout) {
     const cloudExerciseInstanceId = normalizeOptionalInteger(
-      exercise.cloud_exercise_instance_id,
+      resolveSideBySideCloudId(exercise, "cloud_exercise_instance_id"),
       null
     );
     const remoteLocalExerciseInstanceId = normalizeOptionalInteger(
@@ -1693,7 +1720,7 @@ async function hydrateWorkoutStrengthDataFromCloud(db, workoutId) {
         localExercisesByLocalId.get(remoteLocalExerciseInstanceId) ??
         null;
 
-      if (normalizeOptionalText(cloudExercise?.deleted_at)) {
+      if (isCloudSnapshotDeleting(cloudExercise)) {
         if (!localExercise) {
           continue;
         }
@@ -1777,7 +1804,7 @@ async function hydrateWorkoutStrengthDataFromCloud(db, workoutId) {
 
   for (const exercise of refreshedExercises) {
     const cloudExerciseInstanceId = normalizeOptionalInteger(
-      exercise.cloud_exercise_instance_id,
+      resolveSideBySideCloudId(exercise, "cloud_exercise_instance_id"),
       null
     );
 
@@ -1812,7 +1839,10 @@ async function hydrateWorkoutStrengthDataFromCloud(db, workoutId) {
   const localSetsByLocalId = new Map();
 
   for (const localSet of localSets) {
-    const cloudSetId = normalizeOptionalInteger(localSet.cloud_set_id, null);
+    const cloudSetId = normalizeOptionalInteger(
+      resolveSideBySideCloudId(localSet, "cloud_set_id"),
+      null
+    );
     const remoteLocalSetId = normalizeOptionalInteger(
       localSet.remote_local_set_id,
       null
@@ -1857,7 +1887,7 @@ async function hydrateWorkoutStrengthDataFromCloud(db, workoutId) {
         localSetsByLocalId.get(remoteLocalSetId) ??
         null;
 
-      if (normalizeOptionalText(cloudSet?.deleted_at)) {
+      if (isCloudSnapshotDeleting(cloudSet)) {
         if (!localSet) {
           continue;
         }
@@ -2115,13 +2145,14 @@ export async function deleteExercise(db, exerciseId) {
       null;
     const deleteSyncVersion = createNextSyncVersion(syncMetadata?.sync_version);
 
-    if (
-      syncMetadata?.cloud_exercise_instance_id ||
-      remoteLocalExerciseInstanceId !== null
-    ) {
+    const cloudExerciseInstanceId = resolveSideBySideCloudId(
+      syncMetadata,
+      "cloud_exercise_instance_id"
+    );
+
+    if (cloudExerciseInstanceId !== null || remoteLocalExerciseInstanceId !== null) {
       await weightliftingRepository.queueExerciseInstanceDeleteSync(db, {
-        cloudExerciseInstanceId:
-          syncMetadata?.cloud_exercise_instance_id ?? null,
+        cloudExerciseInstanceId,
         remoteLocalExerciseInstanceId,
         syncId: normalizeSyncId(syncMetadata?.sync_id),
         syncVersion: deleteSyncVersion,
@@ -2233,9 +2264,11 @@ export async function deleteSet(db, setId) {
       null;
     const deleteSyncVersion = createNextSyncVersion(syncMetadata?.sync_version);
 
-    if (syncMetadata?.cloud_set_id || remoteLocalSetId !== null) {
+    const cloudSetId = resolveSideBySideCloudId(syncMetadata, "cloud_set_id");
+
+    if (cloudSetId !== null || remoteLocalSetId !== null) {
       await weightliftingRepository.queueSetDeleteSync(db, {
-        cloudSetId: syncMetadata?.cloud_set_id ?? null,
+        cloudSetId,
         remoteLocalSetId,
         syncId: normalizeSyncId(syncMetadata?.sync_id),
         syncVersion: deleteSyncVersion,

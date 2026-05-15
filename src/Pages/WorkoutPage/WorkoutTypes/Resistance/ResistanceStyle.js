@@ -20,6 +20,22 @@ export default StyleSheet.create({
     position: "relative",
   },
 
+  heroAccentPrimary: {
+    position: "absolute",
+    width: 260,
+    height: 220,
+    top: -116,
+    right: -96,
+  },
+
+  heroAccentSecondary: {
+    position: "absolute",
+    width: 250,
+    height: 210,
+    bottom: -110,
+    left: -104,
+  },
+
   heroTopRow: {
     flexDirection: "row",
     justifyContent: "space-between",

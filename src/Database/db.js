@@ -76,6 +76,116 @@ async function backfillSyncStateColumns(db, tableName) {
   `);
 }
 
+function syncVersionToLastUpdatedSql(syncVersionExpression) {
+  return `CASE
+    WHEN ${syncVersionExpression} IS NULL OR ${syncVersionExpression} <= 0
+    THEN CAST(strftime('%s', 'now') AS INTEGER)
+    WHEN ${syncVersionExpression} >= 100000000000
+    THEN CAST(${syncVersionExpression} / 1000 AS INTEGER)
+    ELSE CAST(${syncVersionExpression} AS INTEGER)
+  END`;
+}
+
+async function backfillSideBySideSyncMetadata(
+  db,
+  tableName,
+  legacyCloudIdColumn
+) {
+  await db.execAsync(`
+    UPDATE ${quoteIdentifier(tableName)}
+    SET cloud_id = COALESCE(cloud_id, ${quoteIdentifier(legacyCloudIdColumn)}),
+        last_updated = CASE
+          WHEN last_updated IS NULL OR last_updated <= 0
+          THEN ${syncVersionToLastUpdatedSql("sync_version")}
+          ELSE last_updated
+        END;
+  `);
+}
+
+async function createSideBySideSyncMetadataTriggers(
+  db,
+  tableName,
+  primaryKeyColumn,
+  legacyCloudIdColumn
+) {
+  const tableIdentifier = quoteIdentifier(tableName);
+  const primaryKeyIdentifier = quoteIdentifier(primaryKeyColumn);
+  const legacyCloudIdIdentifier = quoteIdentifier(legacyCloudIdColumn);
+  const insertTriggerName = quoteIdentifier(`${tableName}_sync_metadata_ai`);
+  const updateTriggerName = quoteIdentifier(`${tableName}_sync_metadata_au`);
+  const lastUpdatedExpression = syncVersionToLastUpdatedSql("NEW.sync_version");
+
+  await db.execAsync(`
+    CREATE TRIGGER IF NOT EXISTS ${insertTriggerName}
+    AFTER INSERT ON ${tableIdentifier}
+    BEGIN
+      UPDATE ${tableIdentifier}
+      SET cloud_id = COALESCE(NEW.cloud_id, NEW.${legacyCloudIdIdentifier}, cloud_id),
+          last_updated = CASE
+            WHEN NEW.last_updated IS NULL OR NEW.last_updated <= 0
+            THEN ${lastUpdatedExpression}
+            ELSE NEW.last_updated
+          END
+      WHERE ${primaryKeyIdentifier} = NEW.${primaryKeyIdentifier}
+        AND (
+          cloud_id IS NOT COALESCE(NEW.cloud_id, NEW.${legacyCloudIdIdentifier}, cloud_id)
+          OR last_updated IS NOT CASE
+            WHEN NEW.last_updated IS NULL OR NEW.last_updated <= 0
+            THEN ${lastUpdatedExpression}
+            ELSE NEW.last_updated
+          END
+        );
+    END;
+
+    CREATE TRIGGER IF NOT EXISTS ${updateTriggerName}
+    AFTER UPDATE OF sync_version, ${legacyCloudIdIdentifier} ON ${tableIdentifier}
+    BEGIN
+      UPDATE ${tableIdentifier}
+      SET cloud_id = COALESCE(NEW.cloud_id, NEW.${legacyCloudIdIdentifier}, cloud_id),
+          last_updated = ${lastUpdatedExpression}
+      WHERE ${primaryKeyIdentifier} = NEW.${primaryKeyIdentifier}
+        AND (
+          cloud_id IS NOT COALESCE(NEW.cloud_id, NEW.${legacyCloudIdIdentifier}, cloud_id)
+          OR last_updated IS NOT ${lastUpdatedExpression}
+        );
+    END;
+  `);
+}
+
+async function initializeSideBySideSyncMetadata(db) {
+  const syncTables = [
+    ["Program", "program_id", "cloud_program_id"],
+    ["Mesocycle", "mesocycle_id", "cloud_mesocycle_id"],
+    ["Microcycle", "microcycle_id", "cloud_microcycle_id"],
+    ["Day", "day_id", "cloud_day_id"],
+    [
+      "Workout_Type_Instance",
+      "workout_id",
+      "cloud_workout_type_instance_id",
+    ],
+    [
+      "Exercise_Instance",
+      "exercise_instance_id",
+      "cloud_exercise_instance_id",
+    ],
+    ["Set", "sets_id", "cloud_set_id"],
+  ];
+
+  for (const [tableName, primaryKeyColumn, legacyCloudIdColumn] of syncTables) {
+    await ensureTableColumns(db, tableName, [
+      ["cloud_id", "INTEGER"],
+      ["last_updated", "INTEGER NOT NULL DEFAULT 0"],
+    ]);
+    await backfillSideBySideSyncMetadata(db, tableName, legacyCloudIdColumn);
+    await createSideBySideSyncMetadataTriggers(
+      db,
+      tableName,
+      primaryKeyColumn,
+      legacyCloudIdColumn
+    );
+  }
+}
+
 function isExerciseCatalogTable(columns) {
   return (
     (hasColumn(columns, "exercise_name") || hasColumn(columns, "name")) &&
@@ -1415,6 +1525,7 @@ export async function initializeDatabase(db) {
   await backfillSyncStateColumns(db, "Workout_Type_Instance");
   await backfillSyncStateColumns(db, "Exercise_Instance");
   await backfillSyncStateColumns(db, "Set");
+  await initializeSideBySideSyncMetadata(db);
 
   await ensureTableColumns(db, "Run", [
     ["type", "TEXT NOT NULL DEFAULT 'WORKING_SET'"],

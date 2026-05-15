@@ -7,6 +7,8 @@ export const programSchemaSql = `
 
   CREATE TABLE IF NOT EXISTS Program (
     program_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    cloud_id INTEGER,
+    last_updated INTEGER NOT NULL DEFAULT 0,
     cloud_program_id INTEGER,
     remote_local_program_id INTEGER,
     sync_id TEXT,
@@ -40,6 +42,8 @@ export const programSchemaSql = `
 
   CREATE TABLE IF NOT EXISTS Mesocycle(
       mesocycle_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      cloud_id INTEGER,
+      last_updated INTEGER NOT NULL DEFAULT 0,
       cloud_mesocycle_id INTEGER,
       remote_local_mesocycle_id INTEGER,
       sync_id TEXT,
@@ -63,6 +67,8 @@ export const programSchemaSql = `
 
   CREATE TABLE IF NOT EXISTS Microcycle(
       microcycle_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      cloud_id INTEGER,
+      last_updated INTEGER NOT NULL DEFAULT 0,
       cloud_microcycle_id INTEGER,
       sync_id TEXT,
       sync_version INTEGER NOT NULL DEFAULT 0,
@@ -84,6 +90,8 @@ export const programSchemaSql = `
 
   CREATE TABLE IF NOT EXISTS Day (
       day_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      cloud_id INTEGER,
+      last_updated INTEGER NOT NULL DEFAULT 0,
       cloud_day_id INTEGER,
       remote_local_day_id INTEGER,
       sync_id TEXT,
@@ -106,6 +114,8 @@ export const programSchemaSql = `
 
   CREATE TABLE IF NOT EXISTS Workout_Type_Instance (
       workout_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      cloud_id INTEGER,
+      last_updated INTEGER NOT NULL DEFAULT 0,
       cloud_workout_type_instance_id INTEGER,
       remote_local_workout_type_instance_id INTEGER,
       sync_id TEXT,
@@ -132,5 +142,19 @@ export const programSchemaSql = `
     sync_id TEXT,
     sync_version INTEGER NOT NULL DEFAULT 0,
     deleted_at TEXT
+  );
+
+  CREATE TABLE IF NOT EXISTS Sync_Outbox (
+    sync_outbox_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    entity_table TEXT NOT NULL,
+    entity_local_id INTEGER,
+    entity_cloud_id INTEGER,
+    operation TEXT NOT NULL CHECK (operation IN ('create', 'update', 'delete')),
+    payload_json TEXT,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'failed')),
+    attempts INTEGER NOT NULL DEFAULT 0,
+    last_error TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
 `;

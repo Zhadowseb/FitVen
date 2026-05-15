@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.14.0] - Unreleased
+### Changed
+- Added soft Run-style glow accents to the Resistance workout timer header.
+- Added side-by-side local/cloud sync metadata and Supabase watcher migration support.
+
+---
 ## [0.13.0] - Unreleased
 ### Changed
 - Added estimated one-rep-max progression graphs to Personal Records exercise detail views.

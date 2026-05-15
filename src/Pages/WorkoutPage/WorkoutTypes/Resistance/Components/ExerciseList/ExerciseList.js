@@ -38,6 +38,7 @@ const ExerciseList = ({
   const dragTargetIndexRef = useRef(null);
   const dragOffsetYValueRef = useRef(0);
   const dragOffsetY = useRef(new Animated.Value(0)).current;
+  const loadRequestIdRef = useRef(0);
   const draggingExerciseId = dragState?.exerciseId ?? null;
 
   const visibleExercises = useMemo(
@@ -72,35 +73,114 @@ const ExerciseList = ({
     });
   };
 
-  const loadExercises = async () => {
+  const applyLoadedExercises = useCallback((nextExercises) => {
+    setExercises(nextExercises);
+    setExpandedExercises((prev) => {
+      const nextExpandedExercises = {};
+
+      for (const exercise of nextExercises) {
+        nextExpandedExercises[exercise.exercise_id] =
+          prev[exercise.exercise_id] ?? false;
+      }
+
+      return nextExpandedExercises;
+    });
+  }, []);
+
+  const shouldRequestHydration = useCallback((nextExercises) => {
+    if (nextExercises.length === 0) {
+      return true;
+    }
+
+    return nextExercises.some((exercise) => {
+      const expectedSetCount = Number(exercise.plannedSetCount) || 0;
+      const actualSetCount = Number(exercise.setCount) || 0;
+      return expectedSetCount > 0 && actualSetCount === 0;
+    });
+  }, []);
+
+  const loadExercises = useCallback(async () => {
+    const requestId = loadRequestIdRef.current + 1;
+    loadRequestIdRef.current = requestId;
+
     try {
       setLoading(true);
 
-      const exercises = await weightliftingRepository.getWorkoutExercises(
+      const localExercises = await weightliftingRepository.getWorkoutExercises(
+        db,
+        workout_id,
+        { ensureHydrated: false }
+      );
+
+      if (loadRequestIdRef.current !== requestId) {
+        return;
+      }
+
+      applyLoadedExercises(localExercises);
+
+      if (!shouldRequestHydration(localExercises)) {
+        return;
+      }
+
+      const hydratedExercises = await weightliftingRepository.getWorkoutExercises(
         db,
         workout_id,
         { ensureHydrated: true }
       );
-      setExercises(exercises);
-      setExpandedExercises((prev) => {
-        const nextExpandedExercises = {};
 
-        for (const exercise of exercises) {
-          nextExpandedExercises[exercise.exercise_id] =
-            prev[exercise.exercise_id] ?? false;
-        }
+      if (loadRequestIdRef.current !== requestId) {
+        return;
+      }
 
-        return nextExpandedExercises;
-      });
+      applyLoadedExercises(hydratedExercises);
 
     } catch (error) {
       console.error("Error loading exercises", error);
     } finally {
-      setLoading(false);
+      if (loadRequestIdRef.current === requestId) {
+        setLoading(false);
+      }
     }
+  }, [applyLoadedExercises, db, shouldRequestHydration, workout_id]);
+
+  const applySetDoneOptimistic = (setsId, done) => {
+    const doneValue = done ? 1 : 0;
+
+    setExercises((prevExercises) =>
+      prevExercises.map((exercise) => {
+        let didUpdateSet = false;
+        const nextSets = (exercise.sets ?? []).map((set) => {
+          if (Number(set.sets_id) !== Number(setsId)) {
+            return set;
+          }
+
+          didUpdateSet = true;
+          return {
+            ...set,
+            done: doneValue,
+          };
+        });
+
+        if (!didUpdateSet) {
+          return exercise;
+        }
+
+        return {
+          ...exercise,
+          sets: nextSets,
+          done:
+            nextSets.length > 0 &&
+            nextSets.every((set) => Number(set.done) === 1)
+              ? 1
+              : 0,
+        };
+      })
+    );
   };
 
   const updateSetDone = async (sets_id, done) => {
+    applySetDoneOptimistic(sets_id, done);
+
     try {
       await weightliftingRepository.updateStrengthSetDone(db, {
         workoutId: workout_id,
@@ -114,18 +194,14 @@ const ExerciseList = ({
 
     } catch (error) {
       console.error("updateSetDone failed:", error);
-      throw error;
+      loadExercises();
     }
   };
 
 
   useEffect(() => {
     loadExercises();
-  }, [refreshing, workout_id]);
-
-  useEffect(() => {
-    loadExercises();
-  }, []);
+  }, [loadExercises, refreshing]);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener("focus", () => {
@@ -133,7 +209,7 @@ const ExerciseList = ({
     });
 
     return unsubscribe;
-  }, [navigation]);
+  }, [loadExercises, navigation]);
 
   useEffect(() => {
     if (!expansionAction?.type) {
