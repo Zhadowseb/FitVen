@@ -1,4 +1,4 @@
-# FitApp
+# FitVen
 
 FitApp is an Expo / React Native training app for planning and tracking workouts with a local SQLite database on the device.
 
