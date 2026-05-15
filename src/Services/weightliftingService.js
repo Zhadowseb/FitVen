@@ -2230,9 +2230,12 @@ export async function updateExerciseNote(db, { exerciseId, note }) {
   syncExerciseInstancesInBackground(db);
 }
 
-export async function updateStrengthSetDone(db, { workoutId, setId, done }) {
+export async function updateStrengthSetDone(
+  db,
+  { workoutId, setId, done, failed = 0 }
+) {
   await withTransaction(db, async () => {
-    await weightliftingRepository.updateSetDone(db, { setId, done });
+    await weightliftingRepository.updateSetDone(db, { setId, done, failed });
     await weightliftingRepository.updateExerciseDoneBySet(db, setId);
     await weightliftingRepository.updateWorkoutDoneFromExercises(db, workoutId);
     await workoutService.refreshWorkoutHierarchyCompletion(db, workoutId);

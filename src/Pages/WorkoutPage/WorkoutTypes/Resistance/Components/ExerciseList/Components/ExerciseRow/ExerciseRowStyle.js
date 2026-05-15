@@ -34,7 +34,10 @@ export default StyleSheet.create({
     overflow: "hidden",
   },
 
-  setProgressFill: {
+  setProgressSegment: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
     height: "100%",
   },
 

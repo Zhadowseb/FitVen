@@ -143,8 +143,24 @@ const ExerciseList = ({
     }
   }, [applyLoadedExercises, db, shouldRequestHydration, workout_id]);
 
-  const applySetDoneOptimistic = (setsId, done) => {
-    const doneValue = done ? 1 : 0;
+  const normalizeSetCompletion = (completion) => {
+    if (typeof completion === "object" && completion !== null) {
+      const doneValue = completion.done ? 1 : 0;
+
+      return {
+        done: doneValue,
+        failed: doneValue === 1 && completion.failed ? 1 : 0,
+      };
+    }
+
+    return {
+      done: completion ? 1 : 0,
+      failed: 0,
+    };
+  };
+
+  const applySetCompletionOptimistic = (setsId, completion) => {
+    const { done, failed } = normalizeSetCompletion(completion);
 
     setExercises((prevExercises) =>
       prevExercises.map((exercise) => {
@@ -157,7 +173,8 @@ const ExerciseList = ({
           didUpdateSet = true;
           return {
             ...set,
-            done: doneValue,
+            done,
+            failed,
           };
         });
 
@@ -178,14 +195,17 @@ const ExerciseList = ({
     );
   };
 
-  const updateSetDone = async (sets_id, done) => {
-    applySetDoneOptimistic(sets_id, done);
+  const updateSetDone = async (sets_id, completion) => {
+    const { done, failed } = normalizeSetCompletion(completion);
+
+    applySetCompletionOptimistic(sets_id, { done, failed });
 
     try {
       await weightliftingRepository.updateStrengthSetDone(db, {
         workoutId: workout_id,
         setId: sets_id,
         done,
+        failed,
       });
 
       //Reloades ui

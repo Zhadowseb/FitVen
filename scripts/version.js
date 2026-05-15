@@ -282,10 +282,11 @@ function buildVersioningSummary({ mode, branchName, targetVersion, changelogMode
   const appJson = readJson(appJsonPath);
   const nextPackageJson = structuredClone(packageJson);
   const nextAppJson = structuredClone(appJson);
+  const targetAppVersion = getAppStoreVersion(targetVersion);
 
   nextPackageJson.version = targetVersion;
   nextAppJson.expo = nextAppJson.expo || {};
-  nextAppJson.expo.version = targetVersion;
+  nextAppJson.expo.version = targetAppVersion;
 
   let nextBuildNumber = null;
 
@@ -310,6 +311,7 @@ function buildVersioningSummary({ mode, branchName, targetVersion, changelogMode
     mode,
     branchName,
     targetVersion,
+    targetAppVersion,
     changelogMode,
     nextBuildNumber,
     packageJson,
@@ -345,6 +347,9 @@ function printSummary(summary, dryRun) {
     console.log(`${prefix}Branch: ${summary.branchName}`);
   }
   console.log(`${prefix}Version: ${summary.targetVersion}`);
+  if (summary.targetAppVersion !== summary.targetVersion) {
+    console.log(`${prefix}Expo app version: ${summary.targetAppVersion}`);
+  }
 
   if (summary.mode === "release" && summary.nextBuildNumber !== null) {
     console.log(`${prefix}Android versionCode / iOS buildNumber: ${summary.nextBuildNumber}`);
@@ -369,7 +374,8 @@ function printStatus(currentOptions) {
   const appJson = readJson(appJsonPath);
   const packageVersion = packageJson.version;
   const appVersion = appJson?.expo?.version || "(missing)";
-  const versionsAligned = packageVersion === appVersion;
+  const expectedAppVersionFromPackage = getAppStoreVersion(packageVersion);
+  const versionsAligned = appVersion === expectedAppVersionFromPackage;
   const changelogContent = fs.existsSync(changelogPath)
     ? fs.readFileSync(changelogPath, "utf8")
     : "";
@@ -387,7 +393,8 @@ function printStatus(currentOptions) {
   console.log(`Branch: ${branchName || "(unknown)"}`);
   console.log(`package.json version: ${packageVersion}`);
   console.log(`app.json version: ${appVersion}`);
-  console.log(`Versions aligned: ${versionsAligned ? "yes" : "no"}`);
+  console.log(`Expected app.json version: ${expectedAppVersionFromPackage}`);
+  console.log(`App Store version aligned: ${versionsAligned ? "yes" : "no"}`);
   console.log(
     `CHANGELOG.md has current version section: ${hasCurrentVersionSection ? "yes" : "no"}`
   );
@@ -531,6 +538,10 @@ function normalizeStableVersion(version) {
   }
 
   return `${Number(match[1])}.${Number(match[2])}.${Number(match[3])}`;
+}
+
+function getAppStoreVersion(version) {
+  return normalizeStableVersion(version);
 }
 
 function bumpStableVersion(version, bumpType) {

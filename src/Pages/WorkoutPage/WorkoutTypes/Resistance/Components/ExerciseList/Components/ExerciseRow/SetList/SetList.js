@@ -16,7 +16,6 @@ import {
   ThemedText,
   ThemedTextInput,
 } from "../../../../../../../../../Resources/ThemedComponents";
-import Cross from "../../../../../../../../../Resources/Icons/UI-icons/Cross";
 import Delete from "../../../../../../../../../Resources/Icons/UI-icons/Delete";
 import Note from "../../../../../../../../../Resources/Icons/UI-icons/Note";
 import Amrap from "../../../../../../../../../Resources/Icons/UI-icons/Amrap";
@@ -66,6 +65,21 @@ const SetList = ({
 
   const displayedSets = localSets ?? [];
   const hasSets = displayedSets.length > 0;
+
+  const getNextSetCompletion = (set) => {
+    const isDone = Number(set.done) === 1;
+    const isFailed = Number(set.failed) === 1;
+
+    if (!isDone && !isFailed) {
+      return { done: 1, failed: 0 };
+    }
+
+    if (isDone && !isFailed) {
+      return { done: 1, failed: 1 };
+    }
+
+    return { done: 0, failed: 0 };
+  };
 
   const columnConfig = [
     { key: "note", style: styles.note, flexValue: 1 },
@@ -380,12 +394,12 @@ const SetList = ({
       case "done":
         return (
           <ThemedBouncyCheckbox
-            value={set.done === 1}
-            onChange={(checked) => onToggleSet(set.sets_id, checked)}
+            value={Number(set.done) === 1 || Number(set.failed) === 1}
+            onChange={() => onToggleSet(set.sets_id, getNextSetCompletion(set))}
             size={18}
             edgeSize={2}
             checkmarkColor={theme.cardBackground}
-            fillColor={set.failed === 1 && theme.danger}
+            fillColor={Number(set.failed) === 1 ? theme.danger : undefined}
           />
         );
 
@@ -557,30 +571,6 @@ const SetList = ({
           >
             <Delete width={24} height={24} />
             <ThemedText style={styles.option_text}>Delete set</ThemedText>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.option}
-            onPress={async () => {
-              if (!selectedSet) {
-                return;
-              }
-
-              await persistSelectedSetNote();
-              await updateField(
-                "failed",
-                selectedSet.failed === 1 ? 0 : 1,
-                selectedSet.sets_id
-              );
-              setSetOptionsVisible(false);
-            }}
-          >
-            <Cross width={24} height={24} />
-            <ThemedText style={styles.option_text}>
-              {selectedSet?.failed === 1
-                ? "Remove failed mark"
-                : "Mark set as failed"}
-            </ThemedText>
           </TouchableOpacity>
         </View>
       </ThemedBottomSheet>

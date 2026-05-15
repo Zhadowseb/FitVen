@@ -1370,17 +1370,21 @@ export async function updateExerciseOrder(
   );
 }
 
-export async function updateSetDone(db, { setId, done }) {
+export async function updateSetDone(db, { setId, done, failed = 0 }) {
   const syncVersion = createNextSyncVersion();
+  const doneValue = done ? 1 : 0;
+  const failedValue = doneValue === 1 && failed ? 1 : 0;
+
   await db.runAsync(
     `UPDATE "Set"
      SET done = ?,
+         failed = ?,
          sync_id = COALESCE(sync_id, ${SQLITE_UUID_SQL}),
          sync_version = ?,
          deleted_at = NULL,
          needs_sync = 1
      WHERE sets_id = ?;`,
-    [done ? 1 : 0, syncVersion, setId]
+    [doneValue, failedValue, syncVersion, setId]
   );
 }
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.14.1] - Unreleased
+### Changed
+- Changed resistance set completion so tapping Done cycles through done, failed, and clear states.
+- Colored failed resistance set progress blocks red in exercise headers.
+
+---
 ## [0.14.0] - Unreleased
 ### Changed
 - Added soft Run-style glow accents to the Resistance workout timer header.

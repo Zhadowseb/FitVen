@@ -134,12 +134,9 @@ const ExerciseRow = ({
     Number(exercise.setCount) || 0,
     exercise.sets.length
   );
-  const completedSetCount = exercise.sets.filter(
-    (set) => Number(set.done) === 1
-  ).length;
-
   const primaryColor = theme.primary ?? theme.iconColor ?? theme.text;
   const secondaryColor = theme.secondary ?? primaryColor;
+  const dangerColor = theme.danger ?? "#d94141";
   const cardBorder = theme.cardBorder ?? theme.iconColor ?? theme.text;
   const cardSurface = theme.cardBackground ?? theme.background;
   const innerSurface = theme.uiBackground ?? cardSurface;
@@ -156,10 +153,22 @@ const ExerciseRow = ({
     : cardSurface;
   const setProgressTrackColor =
     colorScheme === "dark" ? "rgba(255, 255, 255, 0.08)" : "rgba(32, 30, 43, 0.1)";
-  const setProgressPercent =
+  const setProgressSegments =
     trackerSetCount > 0
-      ? Math.min(100, (completedSetCount / trackerSetCount) * 100)
-      : 0;
+      ? Array.from({ length: trackerSetCount }, (_, index) => {
+          const set = exercise.sets[index];
+          const isSetDone = Number(set?.done) === 1;
+          const isSetFailed = Number(set?.failed) === 1;
+
+          return {
+            index,
+            isFilled: isSetDone || isSetFailed,
+            isFailed: isSetFailed,
+            left: (index / trackerSetCount) * 100,
+            width: 100 / trackerSetCount,
+          };
+        })
+      : [];
   const setProgressDividers =
     trackerSetCount > 1
       ? Array.from(
@@ -239,15 +248,23 @@ const ExerciseRow = ({
               { backgroundColor: setProgressTrackColor },
             ]}
           >
-            <View
-              style={[
-                styles.setProgressFill,
-                {
-                  width: `${setProgressPercent}%`,
-                  backgroundColor: secondaryColor,
-                },
-              ]}
-            />
+            {setProgressSegments.map((segment) =>
+              segment.isFilled ? (
+                <View
+                  key={segment.index}
+                  style={[
+                    styles.setProgressSegment,
+                    {
+                      left: `${segment.left}%`,
+                      width: `${segment.width}%`,
+                      backgroundColor: segment.isFailed
+                        ? dangerColor
+                        : secondaryColor,
+                    },
+                  ]}
+                />
+              ) : null
+            )}
 
             {setProgressDividers.map((dividerOffset) => (
               <View

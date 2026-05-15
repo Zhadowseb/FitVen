@@ -22,7 +22,7 @@ const ThemedBouncyCheckbox = ({
     <BouncyCheckbox
       size={size}
       isChecked={value}
-      disableBuiltInState
+      useBuiltInState={false}
       disableText
       fillColor={fillColor ? fillColor : theme.secondary}
       unFillColor={theme.cardBackground}
@@ -47,7 +47,7 @@ const ThemedBouncyCheckbox = ({
           />
         ) : null
       }
-      onPress={(checked) => onChange?.(checked)}
+      onPress={() => onChange?.(!value)}
       {...props}
     />
   );
