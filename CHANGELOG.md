@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.14.2] - Unreleased
+### Changed
+- Redesigned program list cards with status badges, circular progress, completion marks, and workout type badges.
+
+---
 ## [0.14.1] - Unreleased
 ### Changed
 - Changed resistance set completion so tapping Done cycles through done, failed, and clear states.

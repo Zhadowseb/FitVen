@@ -3,7 +3,7 @@ import Svg, { G, Path } from "react-native-svg"
 import {useColorScheme} from "react-native"
 import { Colors } from "../../GlobalStyling/colors"
 
-function SvgComponent({width, height}) {
+function SvgComponent({width, height, color}) {
 
   const colorScheme = useColorScheme()
   const theme = Colors[colorScheme] ?? Colors.light
@@ -18,7 +18,7 @@ function SvgComponent({width, height}) {
       stroke="#000"
       strokeWidth={0.00016}
     >
-      <G fill={theme.primary}>
+      <G fill={color ? color : theme.primary}>
         <Path d="M8 12a2 2 0 110 4 2 2 0 010-4zM8 6a2 2 0 110 4 2 2 0 010-4zM10 2a2 2 0 10-4 0 2 2 0 004 0z" />
       </G>
     </Svg>

@@ -2,7 +2,7 @@ import { StyleSheet } from "react-native";
 
 export default StyleSheet.create({
   listContainer: {
-    paddingHorizontal: 18,
+    paddingHorizontal: 10,
     paddingBottom: 28,
   },
 
@@ -37,156 +37,156 @@ export default StyleSheet.create({
   card: {
     marginHorizontal: 0,
     marginVertical: 0,
-    marginBottom: 14,
+    marginBottom: 10,
     padding: 0,
     borderWidth: 1,
-    borderRadius: 20,
+    borderRadius: 18,
     overflow: "hidden",
-  },
-
-  cardAccent: {
-    position: "absolute",
-    top: 0,
-    bottom: 0,
-    left: 0,
-    width: 4,
   },
 
   touchable: {
-    paddingLeft: 22,
+    minHeight: 184,
+    paddingLeft: 18,
     paddingRight: 18,
     paddingTop: 18,
-    paddingBottom: 18,
+    paddingBottom: 16,
+    justifyContent: "space-between",
   },
 
-  statusRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-
-  statusDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    marginRight: 10,
-  },
-
-  statusLabel: {
-    fontSize: 11,
-    fontWeight: "900",
-    letterSpacing: 2,
-    textTransform: "uppercase",
-  },
-
-  title: {
-    fontSize: 18,
-    lineHeight: 24,
-    marginBottom: 8,
-  },
-
-  metaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "wrap",
-    marginBottom: 16,
-  },
-
-  metaText: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
-
-  metaNumber: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: "700",
-  },
-
-  metaSeparator: {
-    fontSize: 14,
-    lineHeight: 20,
-    marginHorizontal: 8,
-  },
-
-  progressSection: {
-    marginBottom: 16,
-  },
-
-  progressMetaRow: {
+  cardTopRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 8,
+    minHeight: 30,
   },
 
-  progressText: {
-    fontSize: 13,
-    lineHeight: 18,
-  },
-
-  progressNumber: {
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: "800",
-  },
-
-  progressPercent: {
-    fontSize: 12,
-    lineHeight: 18,
-    fontWeight: "900",
-  },
-
-  progressTrack: {
-    height: 5,
+  statusBadge: {
+    minHeight: 28,
+    borderWidth: 1,
     borderRadius: 999,
-    overflow: "hidden",
-  },
-
-  progressFill: {
-    height: "100%",
-    borderRadius: 999,
-  },
-
-  summaryRow: {
+    paddingHorizontal: 11,
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 18,
   },
 
-  summaryDot: {
-    width: 8,
-    height: 8,
+  statusDot: {
+    width: 6,
+    height: 6,
     borderRadius: 4,
-    marginRight: 10,
+    marginRight: 8,
   },
 
-  summaryText: {
+  statusLabel: {
+    fontSize: 10,
+    fontWeight: "900",
+    textTransform: "uppercase",
+  },
+
+  workoutTypeRow: {
     flex: 1,
-    fontSize: 13,
-    lineHeight: 18,
+    minWidth: 0,
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    alignItems: "center",
+    marginLeft: 10,
   },
 
-  dateRow: {
+  workoutTypeBadge: {
+    minHeight: 28,
+    maxWidth: 104,
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: 9,
+    marginLeft: 6,
     flexDirection: "row",
     alignItems: "center",
-    flexWrap: "wrap",
+  },
+
+  workoutTypeText: {
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: "800",
+    marginLeft: 4,
+  },
+
+  cardMenuIcon: {
+    width: 20,
+    height: 28,
+    justifyContent: "center",
+    alignItems: "flex-end",
+    marginLeft: 6,
+  },
+
+  cardBodyRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 20,
+  },
+
+  programInfo: {
+    flex: 1,
+    minWidth: 0,
+    paddingRight: 16,
+  },
+
+  title: {
+    fontSize: 20,
+    lineHeight: 25,
+    marginBottom: 4,
   },
 
   dateRange: {
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 12,
+    lineHeight: 17,
   },
 
-  dateSeparator: {
-    fontSize: 13,
-    lineHeight: 18,
-    marginHorizontal: 8,
+  statusAction: {
+    width: 72,
+    height: 72,
+    justifyContent: "center",
+    alignItems: "center",
   },
 
-  durationText: {
-    fontSize: 13,
-    lineHeight: 18,
+  completedCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowOpacity: 0.45,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 7 },
+    elevation: 5,
+  },
+
+  metaPillRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    marginTop: 18,
+  },
+
+  metaPill: {
+    minHeight: 28,
+    borderRadius: 8,
+    borderWidth: 1,
+    paddingHorizontal: 9,
+    marginRight: 6,
+    marginBottom: 5,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  metaText: {
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: "700",
+  },
+
+  metaNumber: {
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: "800",
   },
 
   emptyCard: {

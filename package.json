@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.14.1-minor-failed-set-done-cycle.1",
+  "version": "0.14.2-minor-program-card-layout-refresh.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",
