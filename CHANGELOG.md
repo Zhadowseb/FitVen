@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.14.5] - Unreleased
+### Changed
+- Removed the one-time saved-program import action from the profile page.
+
+---
 ## [0.14.4] - Unreleased
 ### Changed
 - Simplified collapsed resistance set previews by removing the outer frame and moving repeat counts into corner badges.

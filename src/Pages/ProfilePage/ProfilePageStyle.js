@@ -189,14 +189,6 @@ export default StyleSheet.create({
   logoutButton: {
     marginTop: 0,
   },
-  importButton: {
-    marginTop: 0,
-  },
-  importMetaText: {
-    marginTop: 10,
-    fontSize: 12,
-    lineHeight: 17,
-  },
   relationshipModal: {
     maxHeight: 520,
   },

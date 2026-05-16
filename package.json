@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.14.4-minor-collapsed-setlist-badges.1",
+  "version": "0.14.5-fix-remove-profile-one-time-import.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",
