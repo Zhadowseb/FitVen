@@ -1,11 +1,16 @@
 import { StyleSheet } from "react-native";
 
 export default StyleSheet.create({
+  exerciseCardFrame: {
+    marginBottom: 8,
+    marginHorizontal: 6,
+    overflow: "visible",
+    position: "relative",
+  },
+
   exerciseCard: {
     borderWidth: 1,
     borderRadius: 24,
-    marginBottom: 8,
-    marginHorizontal: 6,
     paddingHorizontal: 12,
     paddingVertical: 12,
     overflow: "hidden",
@@ -21,6 +26,7 @@ export default StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
+    paddingLeft: 0,
     paddingRight: 10,
   },
 
@@ -72,10 +78,10 @@ export default StyleSheet.create({
   },
 
   exerciseMeta: {
-    lineHeight: 16,
+    lineHeight: 13,
     textTransform: "uppercase",
     fontWeight: "600",
-    marginTop: 2,
+    marginTop: 1,
   },
 
   actionsRow: {
@@ -91,8 +97,19 @@ export default StyleSheet.create({
     marginLeft: 6,
   },
 
-  dragHandle: {
-    marginLeft: 6,
+  settingsActionButton: {
+    marginLeft: 1,
+  },
+
+  floatingDragHandle: {
+    position: "absolute",
+    top: -0,
+    right: -4,
+    zIndex: 3,
+    width: 26,
+    height: 26,
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   dragHandleActive: {
@@ -222,6 +239,7 @@ export default StyleSheet.create({
     right: -5,
     minWidth: 15,
     height: 15,
+    borderWidth: 1,
     borderRadius: 999,
     paddingHorizontal: 3,
     justifyContent: "center",
@@ -254,25 +272,17 @@ export default StyleSheet.create({
 
   summaryCollapsedRow: {
     marginTop: 12,
-    flexDirection: "row",
-    alignItems: "stretch",
-  },
-
-  summaryRow: {
-    flex: 1,
-    borderWidth: 1,
-    borderRadius: 16,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    marginBottom: -4,
     flexDirection: "row",
     alignItems: "center",
   },
 
-  summaryAccent: {
-    width: 4,
-    alignSelf: "stretch",
-    borderRadius: 999,
-    marginRight: 10,
+  summaryRow: {
+    flex: 1,
+    paddingHorizontal: 0,
+    paddingVertical: 2,
+    flexDirection: "row",
+    alignItems: "center",
   },
 
   summaryTextBlock: {
@@ -284,34 +294,38 @@ export default StyleSheet.create({
   summaryChipRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    marginTop: 6,
-  },
-
-  summaryChipGroup: {
-    flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 0,
-    paddingVertical: 0,
-    marginRight: 6,
-    marginBottom: 6,
-  },
-
-  summaryRepeatCount: {
-    fontWeight: "700",
-    marginLeft: 8,
-    marginRight: 6,
-    letterSpacing: 0.2,
+    gap: 6,
   },
 
   summaryChip: {
-    minHeight: 28,
-    borderRadius: 10,
+    minHeight: 26,
+    borderWidth: 1,
+    borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 4,
+    flexDirection: "row",
     justifyContent: "center",
-    alignSelf: "flex-start",
+    alignItems: "center",
+    position: "relative",
+  },
+
+  summaryRepeatBadge: {
+    position: "absolute",
+    top: -7,
+    right: -5,
+    minWidth: 15,
+    height: 15,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 3,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  summaryRepeatBadgeText: {
+    fontWeight: "900",
+    lineHeight: 10,
   },
 
   summaryChipText: {
@@ -320,10 +334,9 @@ export default StyleSheet.create({
   },
 
   summaryExpandButton: {
-    width: 30,
-    marginLeft: 5,
-    borderRadius: 12,
-    borderWidth: 1,
+    width: 24,
+    height: 28,
+    marginLeft: 4,
     justifyContent: "center",
     alignItems: "center",
   },

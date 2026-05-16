@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.14.4] - Unreleased
+### Changed
+- Simplified collapsed resistance set previews by removing the outer frame and moving repeat counts into corner badges.
+
+---
 ## [0.14.3] - Unreleased
 ### Changed
 - Added an expandable previous-set history panel behind the replay-history icon on resistance exercise cards.

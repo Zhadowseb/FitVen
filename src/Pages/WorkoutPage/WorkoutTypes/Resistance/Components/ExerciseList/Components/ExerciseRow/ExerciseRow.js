@@ -16,7 +16,7 @@ import Cogwheel from "../../../../../../../../Resources/Icons/UI-icons/Cogwheel"
 import ReplayHistory from "../../../../../../../../Resources/Icons/UI-icons/ReplayHistory";
 import Note from "../../../../../../../../Resources/Icons/UI-icons/Note";
 import Expand from "../../../../../../../../Resources/Icons/UI-icons/Expand";
-import ArrowUpAndDown from "../../../../../../../../Resources/Icons/UI-icons/ArrowUpAndDown";
+import Reorder from "../../../../../../../../Resources/Icons/UI-icons/Reorder";
 
 import {
   ThemedBouncyCheckbox,
@@ -202,13 +202,13 @@ const ExerciseRow = ({
   const innerSurface = theme.uiBackground ?? cardSurface;
   const setListSurface =
     colorScheme === "dark" ? "rgba(16, 17, 24, 0.58)" : "#f5f4fa";
-  const summaryChipSurface =
-    colorScheme === "dark"
-      ? "rgba(210, 83, 15, 0.10)"
-      : "rgba(247, 116, 46, 0.12)";
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const titleColor = theme.title ?? theme.text;
   const replayIconColor = theme.primary ?? "#f7742eff";
+  const repeatBadgeBackground =
+    colorScheme === "dark" ? "rgba(247, 116, 46, 0.24)" : "rgba(247, 116, 46, 0.14)";
+  const repeatBadgeBorder =
+    colorScheme === "dark" ? "rgba(247, 116, 46, 0.36)" : "rgba(247, 116, 46, 0.24)";
   const historyPanelSurface =
     colorScheme === "dark" ? "rgba(13, 15, 22, 0.78)" : "rgba(255, 255, 255, 0.72)";
   const historyChipSurface =
@@ -403,13 +403,16 @@ const ExerciseRow = ({
                 <View
                   style={[
                     styles.historySetChipCount,
-                    { backgroundColor: replayIconColor },
+                    {
+                      backgroundColor: repeatBadgeBackground,
+                      borderColor: repeatBadgeBorder,
+                    },
                   ]}
                 >
                   <ThemedText
                     size={8}
                     style={styles.historySetChipCountText}
-                    setColor={cardSurface}
+                    setColor={replayIconColor}
                   >
                     {set.count}
                   </ThemedText>
@@ -424,15 +427,28 @@ const ExerciseRow = ({
 
   return (
     <>
-      <View
-        style={[
-          styles.exerciseCard,
-          {
-            backgroundColor: exerciseCardBackground,
-            borderColor: isDone ? secondaryColor : cardBorder,
-          },
-        ]}
-      >
+      <View style={styles.exerciseCardFrame}>
+        {onDragStart && (
+          <View
+            {...dragPanResponder.panHandlers}
+            style={[
+              styles.floatingDragHandle,
+              isDragging && styles.dragHandleActive,
+            ]}
+          >
+            <Reorder width={18} height={18} stroke={quietText} />
+          </View>
+        )}
+
+        <View
+          style={[
+            styles.exerciseCard,
+            {
+              backgroundColor: exerciseCardBackground,
+              borderColor: isDone ? secondaryColor : cardBorder,
+            },
+          ]}
+        >
         {trackerSetCount > 0 && (
           <View
             pointerEvents="none"
@@ -504,7 +520,7 @@ const ExerciseRow = ({
               </ThemedTitle>
 
               <ThemedText
-                size={11}
+                size={10}
                 style={styles.exerciseMeta}
                 setColor={quietText}
               >
@@ -536,7 +552,7 @@ const ExerciseRow = ({
 
             <TouchableOpacity
               activeOpacity={0.88}
-              style={styles.actionButton}
+              style={[styles.actionButton, styles.settingsActionButton]}
               onPress={() => {
                 setPanelModalVisible(true);
               }}
@@ -544,22 +560,6 @@ const ExerciseRow = ({
               <Cogwheel width={18} height={18} color={primaryColor} />
             </TouchableOpacity>
 
-            {onDragStart && (
-              <View
-                {...dragPanResponder.panHandlers}
-                style={[
-                  styles.actionButton,
-                  styles.dragHandle,
-                  isDragging && styles.dragHandleActive,
-                ]}
-              >
-                <ArrowUpAndDown
-                  width={18}
-                  height={18}
-                  stroke={primaryColor}
-                />
-              </View>
-            )}
           </View>
         </View>
 
@@ -640,53 +640,43 @@ const ExerciseRow = ({
             <TouchableOpacity
               activeOpacity={0.88}
               onPress={onToggleExpanded}
-              style={[
-                styles.summaryRow,
-                {
-                  backgroundColor: setListSurface,
-                  borderColor: cardBorder,
-                },
-              ]}
+              style={styles.summaryRow}
             >
-            <View
-              style={[
-                styles.summaryAccent,
-                { backgroundColor: primaryColor },
-              ]}
-            />
-
-            <View style={styles.summaryTextBlock}>
-              {collapsedSetSummaryItems.length > 0 && (
-                <View style={styles.summaryChipRow}>
-                  {collapsedSetSummaryItems.map((item) => {
-                    return (
-                      <View
-                        key={item.signature}
-                        style={[
-                          styles.summaryChipGroup,
-                          {
-                            borderColor: cardBorder,
-                          },
-                        ]}
-                      >
-                        {item.count > 1 && (
-                          <ThemedText
-                            size={10}
-                            style={styles.summaryRepeatCount}
-                            setColor={titleColor}
-                          >
-                            {item.count} ×
-                          </ThemedText>
-                        )}
-
+              <View style={styles.summaryTextBlock}>
+                {collapsedSetSummaryItems.length > 0 && (
+                  <View style={styles.summaryChipRow}>
+                    {collapsedSetSummaryItems.map((item) => {
+                      return (
                         <View
+                          key={item.signature}
                           style={[
                             styles.summaryChip,
                             {
-                              backgroundColor: summaryChipSurface,
+                              backgroundColor: historyPanelSurface,
+                              borderColor: historyChipBorder,
                             },
                           ]}
                         >
+                          {item.count > 1 && (
+                            <View
+                              style={[
+                                styles.summaryRepeatBadge,
+                                {
+                                  backgroundColor: repeatBadgeBackground,
+                                  borderColor: repeatBadgeBorder,
+                                },
+                              ]}
+                            >
+                              <ThemedText
+                                size={8}
+                                style={styles.summaryRepeatBadgeText}
+                                setColor={replayIconColor}
+                              >
+                                {item.count}
+                              </ThemedText>
+                            </View>
+                          )}
+
                           <ThemedText
                             size={10}
                             style={styles.summaryChipText}
@@ -695,13 +685,11 @@ const ExerciseRow = ({
                             {`${formatSummaryValue(item.reps)} × ${formatSummaryValue(item.weight)}${item.weight !== null ? " kg" : ""}`}
                           </ThemedText>
                         </View>
-                      </View>
-                    );
-                  })}
-                </View>
-              )}
-            </View>
-
+                      );
+                    })}
+                  </View>
+                )}
+              </View>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -710,8 +698,7 @@ const ExerciseRow = ({
               style={[
                 styles.summaryExpandButton,
                 {
-                  backgroundColor: setListSurface,
-                  borderColor: cardBorder,
+                  backgroundColor: "transparent",
                 },
               ]}
             >
@@ -733,6 +720,7 @@ const ExerciseRow = ({
             />
           </View>
         )}
+      </View>
       </View>
 
       <PanelSettingsModal
