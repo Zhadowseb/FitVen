@@ -1,0 +1,210 @@
+import { StyleSheet } from "react-native";
+
+export default StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  content: {
+    paddingHorizontal: 18,
+    paddingTop: 18,
+    paddingBottom: 104,
+    gap: 14,
+  },
+  sectionHeader: {
+    gap: 3,
+  },
+  sectionEyebrow: {
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: "800",
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
+  },
+  sectionTitle: {
+    fontSize: 22,
+    lineHeight: 28,
+    fontWeight: "800",
+  },
+  registerButton: {
+    width: "100%",
+  },
+  dateRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  dateField: {
+    flex: 1,
+  },
+  fieldLabel: {
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: "800",
+    letterSpacing: 0.8,
+    marginBottom: 7,
+    textTransform: "uppercase",
+  },
+  datePickerField: {
+    minHeight: 46,
+    borderWidth: 1,
+    borderRadius: 12,
+    justifyContent: "center",
+    paddingHorizontal: 14,
+  },
+  datePickerText: {
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: "800",
+  },
+  clearEndDateButton: {
+    alignSelf: "flex-start",
+    marginTop: 7,
+  },
+  clearEndDateText: {
+    fontSize: 12,
+    lineHeight: 15,
+    fontWeight: "700",
+  },
+  dateErrorText: {
+    marginTop: 6,
+    fontSize: 12,
+    lineHeight: 15,
+    fontWeight: "700",
+  },
+  noteInput: {
+    minHeight: 98,
+    borderRadius: 12,
+    fontSize: 14,
+    lineHeight: 20,
+    paddingTop: 12,
+  },
+  historyItem: {
+    borderWidth: 1,
+    borderRadius: 16,
+    minHeight: 84,
+    overflow: "hidden",
+    position: "relative",
+  },
+  historyTopRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+  },
+  historyDetails: {
+    flex: 1,
+    minHeight: 84,
+    paddingLeft: 14,
+    paddingRight: 102,
+    paddingVertical: 13,
+    justifyContent: "center",
+  },
+  historyDate: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "800",
+    marginBottom: 5,
+  },
+  historyNote: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  historyTypeImageFrame: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    width: 88,
+    borderLeftWidth: 1,
+    overflow: "hidden",
+  },
+  historyTypeImage: {
+    width: "100%",
+    height: "100%",
+  },
+  emptyHistory: {
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 16,
+  },
+  emptyHistoryText: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  registerModal: {
+    width: "92%",
+    maxHeight: "86%",
+    borderWidth: 1,
+    borderRadius: 18,
+  },
+  registerModalContent: {
+    gap: 14,
+  },
+  registerModalScroll: {
+    gap: 14,
+    paddingBottom: 2,
+  },
+  sicknessTypeGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  sicknessTypeOption: {
+    flexBasis: "48%",
+    minHeight: 132,
+    alignItems: "center",
+    gap: 8,
+  },
+  sicknessTypeImageCard: {
+    width: "100%",
+    aspectRatio: 1.22,
+    borderWidth: 1,
+    borderRadius: 14,
+    overflow: "hidden",
+  },
+  sicknessTypeImage: {
+    width: "100%",
+    height: "100%",
+  },
+  sicknessTypeLabel: {
+    minHeight: 32,
+    fontSize: 12,
+    lineHeight: 15,
+    fontWeight: "800",
+    textAlign: "center",
+  },
+  registerModalButtons: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  deleteButton: {
+    minHeight: 44,
+    borderWidth: 1,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 12,
+  },
+  deleteButtonText: {
+    fontSize: 13,
+    lineHeight: 16,
+    fontWeight: "800",
+    textAlign: "center",
+  },
+  registerModalButton: {
+    flex: 1,
+    minHeight: 46,
+    borderWidth: 1,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 12,
+  },
+  registerModalButtonText: {
+    fontSize: 13,
+    lineHeight: 16,
+    fontWeight: "800",
+    textAlign: "center",
+  },
+});

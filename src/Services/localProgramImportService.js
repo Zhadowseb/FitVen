@@ -346,8 +346,9 @@ export async function importZhadowsebProgramsOnce(db, user) {
           Weekday,
           date,
           done,
+          is_sick,
           needs_sync
-        ) VALUES (NULL, NULL, ?, ?, NULL, ?, ?, ?, ?, ?, 1);`,
+        ) VALUES (NULL, NULL, ?, ?, NULL, ?, ?, ?, ?, ?, ?, 1);`,
         [
           createLocalUuid(),
           createNextSyncVersion(),
@@ -364,6 +365,7 @@ export async function importZhadowsebProgramsOnce(db, user) {
           day.weekday,
           normalizeProgramDate(day.date),
           toBooleanInt(day.done),
+          toBooleanInt(day.is_sick),
         ]
       );
 

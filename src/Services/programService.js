@@ -48,7 +48,7 @@ const MICROCYCLE_CLOUD_SYNC_SELECT =
   "id, user_id, local_microcycle_id, sync_id, sync_version, deleted_at, last_updated, is_deleting, delete_requested_at, local_watchers, cloud_mesocycle_id, microcycle_number, focus, done";
 const DAY_CLOUD_TABLE = "Day";
 const DAY_CLOUD_SYNC_SELECT =
-  "id, user_id, local_day_id, sync_id, sync_version, deleted_at, last_updated, is_deleting, delete_requested_at, local_watchers, cloud_microcycle_id, weekday, date, done";
+  "id, user_id, local_day_id, sync_id, sync_version, deleted_at, last_updated, is_deleting, delete_requested_at, local_watchers, cloud_microcycle_id, weekday, date, done, is_sick";
 const WORKOUT_TYPE_CLOUD_TABLE = "workout_type";
 const WORKOUT_TYPE_CLOUD_SELECT = "type, display_name, is_active";
 const WORKOUT_TYPE_INSTANCE_CLOUD_TABLE = "workout_type_instance";
@@ -908,6 +908,7 @@ function getComparableDaySnapshot(day) {
     weekday: normalizeWeekday(day?.weekday ?? day?.Weekday),
     date: normalizeDayDate(day?.date),
     done: normalizeBooleanFlag(day?.done),
+    is_sick: normalizeBooleanFlag(day?.is_sick),
   };
 }
 
@@ -919,7 +920,8 @@ function areComparableDaysEqual(leftDay, rightDay) {
     leftSnapshot.cloud_microcycle_id === rightSnapshot.cloud_microcycle_id &&
     leftSnapshot.weekday === rightSnapshot.weekday &&
     leftSnapshot.date === rightSnapshot.date &&
-    leftSnapshot.done === rightSnapshot.done
+    leftSnapshot.done === rightSnapshot.done &&
+    leftSnapshot.is_sick === rightSnapshot.is_sick
   );
 }
 
@@ -932,6 +934,7 @@ function buildCloudDayPayload(localDay, userId, cloudMicrocycleId) {
     weekday: normalizeWeekday(localDay.weekday ?? localDay.Weekday),
     date: normalizeDayDateForCloud(localDay.date),
     done: normalizeBooleanFlag(localDay.done),
+    is_sick: normalizeBooleanFlag(localDay.is_sick),
   };
 }
 
@@ -3169,6 +3172,7 @@ async function reconcileDaysFromCloud(db, userId) {
           weekday: normalizedCloudDay.weekday,
           date: normalizedCloudDay.date,
           done: normalizedCloudDay.done,
+          isSick: normalizedCloudDay.is_sick,
         });
 
         const createdDay = {
@@ -3183,6 +3187,7 @@ async function reconcileDaysFromCloud(db, userId) {
           weekday: normalizedCloudDay.weekday,
           date: normalizedCloudDay.date,
           done: normalizedCloudDay.done ? 1 : 0,
+          is_sick: normalizedCloudDay.is_sick ? 1 : 0,
           needs_sync: 0,
         };
 
@@ -3222,6 +3227,7 @@ async function reconcileDaysFromCloud(db, userId) {
             weekday: normalizedCloudDay.weekday,
             date: normalizedCloudDay.date,
             done: normalizedCloudDay.done,
+            isSick: normalizedCloudDay.is_sick,
           });
           downloadedCount += 1;
         } else if (areComparableDaysEqual(comparableLocalDay, normalizedCloudDay)) {
@@ -3284,6 +3290,7 @@ async function reconcileDaysFromCloud(db, userId) {
         weekday: normalizedCloudDay.weekday,
         date: normalizedCloudDay.date,
         done: normalizedCloudDay.done,
+        isSick: normalizedCloudDay.is_sick,
       });
 
       const updatedDay = {
@@ -3298,6 +3305,7 @@ async function reconcileDaysFromCloud(db, userId) {
         weekday: normalizedCloudDay.weekday,
         date: normalizedCloudDay.date,
         done: normalizedCloudDay.done ? 1 : 0,
+        is_sick: normalizedCloudDay.is_sick ? 1 : 0,
         needs_sync: 0,
       };
 
@@ -6272,6 +6280,393 @@ export async function getDayDetails(db, { microcycleId, weekday }) {
     workoutExercises,
     workoutsDone: day.done === 1,
   };
+}
+
+async function persistSicknessPeriodForDay(
+  db,
+  {
+    date,
+    previousDate = null,
+    continuesPrevious = false,
+    sicknessType = null,
+    note = null,
+  }
+) {
+  if (!date) {
+    return;
+  }
+
+  if (!continuesPrevious && previousDate) {
+    const previousPeriod =
+      await programRepository.getSicknessPeriodCoveringDate(db, {
+        date: previousDate,
+      });
+    const previousPeriodEndDate =
+      previousPeriod?.end_date ?? previousPeriod?.start_date ?? null;
+    const previousPeriodAlreadyCoversDate =
+      !previousPeriod?.end_date ||
+      (previousPeriodEndDate &&
+        parseCustomDate(previousPeriodEndDate) >= parseCustomDate(date));
+
+    if (previousPeriod?.sickness_id && previousPeriodAlreadyCoversDate) {
+      await programRepository.trimSicknessPeriodEndDate(db, {
+        sicknessId: previousPeriod.sickness_id,
+        endDate: previousDate,
+      });
+    }
+  }
+
+  if (continuesPrevious && previousDate) {
+    let previousPeriod =
+      await programRepository.getSicknessPeriodEndingOnDate(db, {
+        date: previousDate,
+      });
+
+    if (!previousPeriod?.sickness_id) {
+      previousPeriod =
+        await programRepository.getSicknessPeriodCoveringDate(db, {
+          date: previousDate,
+        });
+    }
+
+    if (previousPeriod?.sickness_id) {
+      if (
+        !previousPeriod.end_date ||
+        parseCustomDate(previousPeriod.end_date) >= parseCustomDate(date)
+      ) {
+        return;
+      }
+
+      await programRepository.extendSicknessPeriod(db, {
+        sicknessId: previousPeriod.sickness_id,
+        endDate: date,
+      });
+      return;
+    }
+
+    await programRepository.createSicknessPeriod(db, {
+      startDate: previousDate,
+      endDate: date,
+    });
+    return;
+  }
+
+  const existingPeriod =
+    await programRepository.getSicknessPeriodStartingOnDate(db, { date });
+
+  if (existingPeriod?.sickness_id) {
+    return;
+  }
+
+  await programRepository.createSicknessPeriod(db, {
+    startDate: date,
+    endDate: date,
+    sicknessType,
+    note,
+  });
+}
+
+export async function markDaySick(
+  db,
+  {
+    dayId,
+    isSick,
+    date = null,
+    previousDate = null,
+    continuesPrevious = false,
+    sicknessType = null,
+    note = null,
+  }
+) {
+  if (!dayId) {
+    return;
+  }
+
+  await withTransaction(db, async () => {
+    await programRepository.updateDaySick(db, { dayId, isSick });
+
+    if (isSick) {
+      await persistSicknessPeriodForDay(db, {
+        date,
+        previousDate,
+        continuesPrevious,
+        sicknessType,
+        note,
+      });
+    } else {
+      await removeDateFromSicknessPeriods(db, { date });
+    }
+  });
+
+  syncDaysInBackground(db);
+}
+
+function getNextLocalDate(date) {
+  const nextDate = parseCustomDate(date);
+  nextDate.setDate(nextDate.getDate() + 1);
+  return formatDate(nextDate);
+}
+
+function getPreviousLocalDate(date) {
+  const previousDate = parseCustomDate(date);
+  previousDate.setDate(previousDate.getDate() - 1);
+  return formatDate(previousDate);
+}
+
+function compareLocalDates(leftDate, rightDate) {
+  return parseCustomDate(leftDate) - parseCustomDate(rightDate);
+}
+
+function getSicknessPeriodRebuildRange(periods) {
+  let startDate = null;
+  let endDate = null;
+  let hasOpenEnd = false;
+
+  for (const period of periods) {
+    if (!period?.start_date) {
+      continue;
+    }
+
+    if (!startDate || compareLocalDates(period.start_date, startDate) < 0) {
+      startDate = period.start_date;
+    }
+
+    if (!period.end_date) {
+      hasOpenEnd = true;
+      continue;
+    }
+
+    if (!endDate || compareLocalDates(period.end_date, endDate) > 0) {
+      endDate = period.end_date;
+    }
+  }
+
+  if (!startDate) {
+    return null;
+  }
+
+  return {
+    startDate,
+    endDate: hasOpenEnd ? null : endDate ?? startDate,
+  };
+}
+
+async function rebuildDaySicknessFlags(db, { previousPeriods = [] } = {}) {
+  const activePeriods = await programRepository.getSicknessPeriods(db);
+  const rebuildRange = getSicknessPeriodRebuildRange([
+    ...previousPeriods,
+    ...activePeriods,
+  ]);
+
+  if (!rebuildRange) {
+    return;
+  }
+
+  await programRepository.updateDaysSickBetweenDates(db, {
+    startDate: rebuildRange.startDate,
+    endDate: rebuildRange.endDate,
+    isSick: false,
+  });
+
+  for (const period of activePeriods) {
+    await programRepository.updateDaysSickBetweenDates(db, {
+      startDate: period.start_date,
+      endDate: period.end_date,
+      isSick: true,
+    });
+  }
+}
+
+async function removeDateFromSicknessPeriods(db, { date }) {
+  if (!date) {
+    return;
+  }
+
+  const sicknessPeriods =
+    await programRepository.getSicknessPeriodsCoveringDate(db, { date });
+
+  for (const period of sicknessPeriods) {
+    const startsOnDate = compareLocalDates(period.start_date, date) === 0;
+    const endsOnDate = period.end_date
+      ? compareLocalDates(period.end_date, date) === 0
+      : false;
+    const singleDayPeriod =
+      startsOnDate &&
+      (endsOnDate || (!period.end_date && period.start_date === date));
+
+    if (singleDayPeriod) {
+      await programRepository.markSicknessPeriodDeleted(db, {
+        sicknessId: period.sickness_id,
+        deletedAt: new Date().toISOString(),
+      });
+      continue;
+    }
+
+    if (startsOnDate) {
+      await programRepository.updateSicknessPeriodStartDate(db, {
+        sicknessId: period.sickness_id,
+        startDate: getNextLocalDate(date),
+      });
+      continue;
+    }
+
+    if (endsOnDate) {
+      await programRepository.trimSicknessPeriodEndDate(db, {
+        sicknessId: period.sickness_id,
+        endDate: getPreviousLocalDate(date),
+      });
+      continue;
+    }
+
+    await programRepository.trimSicknessPeriodEndDate(db, {
+      sicknessId: period.sickness_id,
+      endDate: getPreviousLocalDate(date),
+    });
+    await programRepository.createSicknessPeriod(db, {
+      startDate: getNextLocalDate(date),
+      endDate: period.end_date,
+      sicknessType: period.sickness_type,
+      note: period.note,
+    });
+  }
+}
+
+async function trimOverlappingSicknessPeriods(db) {
+  const sicknessPeriods = await programRepository.getSicknessPeriods(db);
+  const sortedPeriods = [...sicknessPeriods].sort((leftPeriod, rightPeriod) => {
+    const dateComparison = compareLocalDates(
+      leftPeriod.start_date,
+      rightPeriod.start_date
+    );
+
+    if (dateComparison !== 0) {
+      return dateComparison;
+    }
+
+    return leftPeriod.sickness_id - rightPeriod.sickness_id;
+  });
+
+  for (const period of sortedPeriods) {
+    const overlappingNextPeriod = sortedPeriods.find((candidatePeriod) => {
+      if (candidatePeriod.sickness_id === period.sickness_id) {
+        return false;
+      }
+
+      if (compareLocalDates(candidatePeriod.start_date, period.start_date) <= 0) {
+        return false;
+      }
+
+      return (
+        !period.end_date ||
+        compareLocalDates(candidatePeriod.start_date, period.end_date) <= 0
+      );
+    });
+
+    if (!overlappingNextPeriod) {
+      continue;
+    }
+
+    await programRepository.trimSicknessPeriodEndDate(db, {
+      sicknessId: period.sickness_id,
+      endDate: getPreviousLocalDate(overlappingNextPeriod.start_date),
+    });
+  }
+}
+
+export async function createSicknessPeriod(
+  db,
+  { startDate, endDate = null, sicknessType = null, note = null }
+) {
+  const sicknessPeriod = await withTransaction(db, async () => {
+    const createdSicknessPeriod = await programRepository.createSicknessPeriod(db, {
+      startDate,
+      endDate,
+      sicknessType,
+      note,
+    });
+
+    await programRepository.updateDaysSickBetweenDates(db, {
+      startDate,
+      endDate,
+      isSick: true,
+    });
+
+    return createdSicknessPeriod;
+  });
+
+  syncDaysInBackground(db);
+  return sicknessPeriod;
+}
+
+export async function updateSicknessPeriod(
+  db,
+  { sicknessId, startDate, endDate = null, sicknessType = null, note = null }
+) {
+  let didUpdate = false;
+
+  await withTransaction(db, async () => {
+    const previousPeriods = await programRepository.getSicknessPeriods(db);
+    const previousPeriod = previousPeriods.find(
+      (period) => Number(period.sickness_id) === Number(sicknessId)
+    );
+
+    if (!previousPeriod?.sickness_id) {
+      return;
+    }
+
+    await programRepository.updateSicknessPeriod(db, {
+      sicknessId,
+      startDate,
+      endDate,
+      sicknessType,
+      note,
+    });
+    await trimOverlappingSicknessPeriods(db);
+    await rebuildDaySicknessFlags(db, {
+      previousPeriods,
+    });
+    didUpdate = true;
+  });
+
+  if (didUpdate) {
+    syncDaysInBackground(db);
+  }
+}
+
+export async function deleteSicknessPeriod(db, { sicknessId }) {
+  let didDelete = false;
+
+  await withTransaction(db, async () => {
+    const previousPeriods = await programRepository.getSicknessPeriods(db);
+    const previousPeriod = previousPeriods.find(
+      (period) => Number(period.sickness_id) === Number(sicknessId)
+    );
+
+    if (!previousPeriod?.sickness_id) {
+      return;
+    }
+
+    await programRepository.markSicknessPeriodDeleted(db, {
+      sicknessId,
+      deletedAt: new Date().toISOString(),
+    });
+    await rebuildDaySicknessFlags(db, {
+      previousPeriods,
+    });
+    didDelete = true;
+  });
+
+  if (didDelete) {
+    syncDaysInBackground(db);
+  }
+}
+
+export async function getSicknessPeriods(db) {
+  await withTransaction(db, async () => {
+    await trimOverlappingSicknessPeriods(db);
+  });
+
+  return programRepository.getSicknessPeriods(db);
 }
 
 export async function getDayByDate(db, { programId, date }) {

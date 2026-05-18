@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useColorScheme } from "react-native";
+import Svg, { Path, Polygon } from "react-native-svg";
 
 import { Colors } from "../GlobalStyling/colors";
 
@@ -34,7 +35,9 @@ const WeekdayIndicator = ({
   dateLabel,
   active,
   completed,
+  isSick = false,
   overdue = false,
+  sickOverdue = false,
   icon: Icon,
   iconLabel,
   programActive = false,
@@ -68,30 +71,48 @@ const WeekdayIndicator = ({
     theme.record ?? Colors.dark.record ?? theme.secondary ?? titleColor;
   const recordBorder = theme.recordDark ?? Colors.dark.recordDark ?? recordColor;
   const dangerColor = theme.danger ?? Colors.dark.danger ?? "#ba0000ff";
+  const sickColor = theme.planned ?? Colors.dark.planned ?? "#ffdd00";
+  const sickBorderColor = theme.plannedDark ?? Colors.dark.plannedDark ?? sickColor;
+  const sickSurface =
+    colorScheme === "dark" ? "rgba(255, 221, 0, 0.13)" : "rgba(255, 221, 0, 0.28)";
   const activeText = theme.primary ?? titleColor;
   const completedText = theme.secondary ?? titleColor;
   const todayBadgeText = theme.textInverted ?? theme.cardBackground ?? "#141414";
-  const badgeBackgroundColor = active
+  const statusBadgeLabel = active ? "TODAY" : isSick ? "SICK" : null;
+  const statusBadgeColor = active ? activeBorder : isSick ? sickColor : activeBorder;
+  const statusBadgeTextColor =
+    active ? todayBadgeText : theme.textInverted ?? "#141414";
+  const badgeBackgroundColor = isSick
+    ? sickSurface
+    : active
     ? activeSurface
     : completed
       ? completedSurface
       : surfaceColor;
-  const badgeBorderColor = active
+  const badgeBorderColor = isSick
+    ? sickColor
+    : active
     ? activeBorder
     : completed
       ? completedBorder
       : cardBorder;
-  const badgeLabelColor = active
+  const badgeLabelColor = isSick
+    ? sickColor
+    : active
     ? activeText
     : completed
       ? completedText
       : quietText;
-  const badgeDateColor = active
+  const badgeDateColor = isSick
+    ? titleColor
+    : active
     ? titleColor
     : completed
       ? titleColor
       : titleColor;
-  const weekdayTextColor = completed
+  const weekdayTextColor = isSick
+    ? sickColor
+    : completed
     ? completedText
     : active
       ? activeText
@@ -99,19 +120,19 @@ const WeekdayIndicator = ({
 
   return (
     <View style={styles.container}>
-      {active && (
+      {!!statusBadgeLabel && (
         <View pointerEvents="none" style={styles.todayBadgeSlot}>
           <View
             style={[
               styles.todayBadge,
               {
-                backgroundColor: activeBorder,
+                backgroundColor: statusBadgeColor,
                 borderColor: theme.cardBackground ?? theme.background,
               },
             ]}
           >
-            <Text style={[styles.todayBadgeText, { color: todayBadgeText }]}>
-              TODAY
+            <Text style={[styles.todayBadgeText, { color: statusBadgeTextColor }]}>
+              {statusBadgeLabel}
             </Text>
           </View>
         </View>
@@ -127,7 +148,8 @@ const WeekdayIndicator = ({
           {
             backgroundColor: badgeBackgroundColor,
             borderColor: badgeBorderColor,
-            borderWidth: active ? 2 : 1,
+            borderWidth: active || isSick ? 2 : 1,
+            borderStyle: isSick ? "dashed" : "solid",
           },
         ]}
       >
@@ -172,20 +194,40 @@ const WeekdayIndicator = ({
             const WorkoutIcon = workoutCard.icon;
             const isPersonalRecordWorkout =
               workoutCard.completed && Boolean(workoutCard.hasPersonalRecord);
-            const workoutSurfaceColor = workoutCard.overdue
+            const completedWorkoutSurfaceColor = isPersonalRecordWorkout
+              ? recordColor
+              : theme.secondary;
+            const completedWorkoutBorderColor = isPersonalRecordWorkout
+              ? recordBorder
+              : theme.secondaryDark;
+            const isSickCompletedWorkout =
+              workoutCard.completed && Boolean(workoutCard.sickCompleted);
+            const workoutSurfaceColor = isSickCompletedWorkout
+              ? sickColor
+              : workoutCard.sickOverdue
+              ? sickColor
+              : workoutCard.overdue
               ? dangerColor
               : isPersonalRecordWorkout
                 ? recordColor
               : workoutCard.completed
                 ? theme.secondary
                 : theme.primary;
-            const workoutBorderColor = workoutCard.overdue
+            const workoutBorderColor = isSickCompletedWorkout
+              ? sickBorderColor
+              : workoutCard.sickOverdue
+              ? sickBorderColor
+              : workoutCard.overdue
               ? dangerColor
               : isPersonalRecordWorkout
-                ? recordBorder
+                ? completedWorkoutBorderColor
               : workoutCard.completed
-                ? theme.secondaryDark
+                ? completedWorkoutBorderColor
                 : theme.primaryDark;
+            const workoutBorderStyle =
+              workoutCard.sickOverdue || isSickCompletedWorkout
+                ? "dashed"
+                : "solid";
 
             return (
               <TouchableOpacity
@@ -200,32 +242,70 @@ const WeekdayIndicator = ({
                   index < workoutCards.length - 1 && styles.workoutCardSpacing,
                   {
                     backgroundColor: workoutSurfaceColor,
+                    borderWidth: isSickCompletedWorkout ? 0 : 3,
                     borderColor: workoutBorderColor,
+                    borderStyle: workoutBorderStyle,
                   },
                 ]}
               >
-                {WorkoutIcon && (
-                  <WorkoutIcon
-                    width={28}
-                    height={28}
-                    color={theme.cardBackground}
-                    fill={theme.cardBackground}
-                    primaryColor={theme.cardBackground}
-                    backgroundColor="transparent"
-                  />
+                {isSickCompletedWorkout && (
+                  <Svg
+                    pointerEvents="none"
+                    style={styles.splitWorkoutBackground}
+                    viewBox="0 0 40 40"
+                  >
+                    <Polygon
+                      points="0,0 40,0 0,40"
+                      fill={sickColor}
+                    />
+                    <Polygon
+                      points="40,0 40,40 0,40"
+                      fill={completedWorkoutSurfaceColor}
+                    />
+                    <Path
+                      d="M2 38 V14 A12 12 0 0 1 14 2 H38"
+                      fill="none"
+                      stroke={sickBorderColor}
+                      strokeDasharray="4 9"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={4}
+                    />
+                    <Path
+                      d="M38 2 V26 A12 12 0 0 1 26 38 H2"
+                      fill="none"
+                      stroke={completedWorkoutBorderColor}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={4}
+                    />
+                  </Svg>
                 )}
 
-                {!WorkoutIcon && workoutCard.iconLabel && (
-                  <Text
-                    style={[
-                      styles.iconLabel,
-                      styles.iconLabelOnly,
-                      { color: theme.cardBackground },
-                    ]}
-                  >
-                    {workoutCard.iconLabel}
-                  </Text>
-                )}
+                <View pointerEvents="none" style={styles.workoutContent}>
+                  {WorkoutIcon && (
+                    <WorkoutIcon
+                      width={28}
+                      height={28}
+                      color={theme.cardBackground}
+                      fill={theme.cardBackground}
+                      primaryColor={theme.cardBackground}
+                      backgroundColor="transparent"
+                    />
+                  )}
+
+                  {!WorkoutIcon && workoutCard.iconLabel && (
+                    <Text
+                      style={[
+                        styles.iconLabel,
+                        styles.iconLabelOnly,
+                        { color: theme.cardBackground },
+                      ]}
+                    >
+                      {workoutCard.iconLabel}
+                    </Text>
+                  )}
+                </View>
               </TouchableOpacity>
             );
           })}
@@ -237,20 +317,25 @@ const WeekdayIndicator = ({
           style={[
             styles.circle,
             {
-              backgroundColor: overdue
+              backgroundColor: sickOverdue
+                ? sickColor
+                : overdue
                 ? dangerColor
                 : completed && hasPersonalRecord
                   ? recordColor
                 : completed
                   ? theme.secondary
                   : theme.primary,
-              borderColor: overdue
+              borderColor: sickOverdue
+                ? sickBorderColor
+                : overdue
                 ? dangerColor
                 : completed && hasPersonalRecord
                   ? recordBorder
                 : completed
                   ? theme.secondaryDark
                   : theme.primaryDark,
+              borderStyle: sickOverdue ? "dashed" : "solid",
             },
           ]}
         >
@@ -375,6 +460,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 3,
     marginBottom: 10,
+    overflow: "hidden",
+    position: "relative",
+  },
+  splitWorkoutBackground: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 0,
+  },
+  workoutContent: {
+    width: "100%",
+    height: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1,
   },
   workoutCards: {
     alignItems: "center",

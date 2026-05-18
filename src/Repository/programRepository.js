@@ -1,4 +1,5 @@
 import { createNextSyncVersion, SQLITE_UUID_SQL } from "../Utils/syncUtils";
+import { normalizeIsoDateString } from "../Utils/dateUtils";
 
 function normalizeSqliteParam(value) {
   if (value === undefined) {
@@ -33,6 +34,10 @@ function localDateToIsoSql(dateExpression) {
          substr(${dateExpression}, 1, 2)
     ELSE ${dateExpression}
   END`;
+}
+
+function localDateToIsoValue(value) {
+  return normalizeIsoDateString(value) ?? value;
 }
 
 function workoutHasPersonalRecordSql(workoutAlias = "w") {
@@ -991,6 +996,7 @@ export async function getProgramDaysBetweenDates(db, { startIsoDate, endIsoDate 
         d.day_id,
         d.date,
         ${dayIsoDateSql} AS date_iso,
+        d.is_sick,
         d.Weekday AS weekday,
         d.program_id,
         p.program_name,
@@ -1543,7 +1549,7 @@ export async function getDayByMicrocycleAndDate(
   { microcycleId, date }
 ) {
   return db.getFirstAsync(
-    `SELECT day_id
+    `SELECT day_id, is_sick
      FROM Day
      WHERE microcycle_id = ?
        AND date = ?;`,
@@ -1609,7 +1615,7 @@ export async function getAllMicrocyclesByProgram(db, programId) {
 
 export async function getDaysByMicrocycle(db, microcycleId) {
   return db.getAllAsync(
-    `SELECT day_id, Weekday, date
+    `SELECT day_id, Weekday, date, is_sick
      FROM Day
      WHERE microcycle_id = ?;`,
     [microcycleId]
@@ -1632,6 +1638,7 @@ export async function getDaysForCloudSync(db) {
         Weekday AS weekday,
         date,
         done,
+        is_sick,
         needs_sync
      FROM Day
      ORDER BY day_id ASC;`
@@ -1651,6 +1658,7 @@ export async function createDayFromCloud(
     weekday,
     date,
     done,
+    isSick = false,
   }
 ) {
   return db.runAsync(
@@ -1665,8 +1673,9 @@ export async function createDayFromCloud(
       Weekday,
       date,
       done,
+      is_sick,
       needs_sync
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0);`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0);`,
     [
       cloudDayId,
       remoteLocalDayId,
@@ -1678,6 +1687,7 @@ export async function createDayFromCloud(
       weekday,
       date,
       done ? 1 : 0,
+      isSick ? 1 : 0,
     ]
   );
 }
@@ -1696,6 +1706,7 @@ export async function updateDayFromCloud(
     weekday,
     date,
     done,
+    isSick = false,
   }
 ) {
   await db.runAsync(
@@ -1710,6 +1721,7 @@ export async function updateDayFromCloud(
          Weekday = ?,
          date = ?,
          done = ?,
+         is_sick = ?,
          needs_sync = 0
      WHERE day_id = ?;`,
     [
@@ -1723,6 +1735,7 @@ export async function updateDayFromCloud(
       weekday,
       date,
       done ? 1 : 0,
+      isSick ? 1 : 0,
       dayId,
     ]
   );
@@ -1783,6 +1796,246 @@ export async function markDayForCloudResync(db, { dayId }) {
          needs_sync = 1
      WHERE day_id = ?;`,
     [dayId]
+  );
+}
+
+export async function updateDaySick(db, { dayId, isSick }) {
+  const syncVersion = createNextSyncVersion();
+  await db.runAsync(
+    `UPDATE Day
+     SET is_sick = ?,
+         sync_id = COALESCE(sync_id, ${SQLITE_UUID_SQL}),
+         sync_version = ?,
+         deleted_at = NULL,
+         needs_sync = 1
+     WHERE day_id = ?;`,
+    [isSick ? 1 : 0, syncVersion, dayId]
+  );
+}
+
+export async function updateDaysSickBetweenDates(
+  db,
+  { startDate, endDate = startDate, isSick }
+) {
+  const syncVersion = createNextSyncVersion();
+  const startIsoDate = localDateToIsoValue(startDate);
+  const endIsoDate = endDate ? localDateToIsoValue(endDate) : null;
+
+  await db.runAsync(
+    `UPDATE Day
+     SET is_sick = ?,
+         sync_id = COALESCE(sync_id, ${SQLITE_UUID_SQL}),
+         sync_version = ?,
+         deleted_at = NULL,
+         needs_sync = 1
+     WHERE COALESCE(deleted_at, '') = ''
+       AND date(${localDateToIsoSql('"date"')}) >= date(?)
+       AND (? IS NULL OR date(${localDateToIsoSql('"date"')}) <= date(?));`,
+    [isSick ? 1 : 0, syncVersion, startIsoDate, endIsoDate, endIsoDate]
+  );
+}
+
+export async function getSicknessPeriodEndingOnDate(db, { date }) {
+  return db.getFirstAsync(
+    `SELECT
+        sickness_id,
+        start_date,
+        end_date,
+        sickness_type,
+        note
+     FROM Sickness
+     WHERE COALESCE(deleted_at, '') = ''
+       AND (
+         end_date = ?
+         OR (end_date IS NULL AND start_date = ?)
+       )
+     ORDER BY sickness_id DESC
+     LIMIT 1;`,
+    [date, date]
+  );
+}
+
+export async function getSicknessPeriodStartingOnDate(db, { date }) {
+  return db.getFirstAsync(
+    `SELECT
+        sickness_id,
+        start_date,
+        end_date,
+        sickness_type,
+        note
+     FROM Sickness
+     WHERE COALESCE(deleted_at, '') = ''
+       AND start_date = ?
+     ORDER BY sickness_id DESC
+     LIMIT 1;`,
+    [date]
+  );
+}
+
+export async function createSicknessPeriod(
+  db,
+  { startDate, endDate = null, sicknessType = null, note = null }
+) {
+  const syncVersion = createNextSyncVersion();
+  return db.runAsync(
+    `INSERT INTO Sickness (
+       start_date,
+       end_date,
+       sickness_type,
+       note,
+       needs_sync,
+       sync_id,
+       sync_version,
+       deleted_at
+     ) VALUES (?, ?, ?, ?, 1, ${SQLITE_UUID_SQL}, ?, NULL);`,
+    sqliteParams([startDate, endDate, sicknessType, note, syncVersion])
+  );
+}
+
+export async function updateSicknessPeriod(
+  db,
+  { sicknessId, startDate, endDate = null, sicknessType = null, note = null }
+) {
+  const syncVersion = createNextSyncVersion();
+  await db.runAsync(
+    `UPDATE Sickness
+     SET start_date = ?,
+         end_date = ?,
+         sickness_type = ?,
+         note = ?,
+         sync_id = COALESCE(sync_id, ${SQLITE_UUID_SQL}),
+         sync_version = ?,
+         deleted_at = NULL,
+         needs_sync = 1
+     WHERE sickness_id = ?;`,
+    sqliteParams([
+      startDate,
+      endDate,
+      sicknessType,
+      note,
+      syncVersion,
+      sicknessId,
+    ])
+  );
+}
+
+export async function extendSicknessPeriod(db, { sicknessId, endDate }) {
+  const syncVersion = createNextSyncVersion();
+  await db.runAsync(
+    `UPDATE Sickness
+     SET end_date = ?,
+         sync_id = COALESCE(sync_id, ${SQLITE_UUID_SQL}),
+         sync_version = ?,
+         deleted_at = NULL,
+         needs_sync = 1
+     WHERE sickness_id = ?;`,
+    [endDate, syncVersion, sicknessId]
+  );
+}
+
+export async function trimSicknessPeriodEndDate(db, { sicknessId, endDate }) {
+  const syncVersion = createNextSyncVersion();
+  await db.runAsync(
+    `UPDATE Sickness
+     SET end_date = ?,
+         sync_id = COALESCE(sync_id, ${SQLITE_UUID_SQL}),
+         sync_version = ?,
+         deleted_at = NULL,
+         needs_sync = 1
+     WHERE sickness_id = ?;`,
+    [endDate, syncVersion, sicknessId]
+  );
+}
+
+export async function updateSicknessPeriodStartDate(db, { sicknessId, startDate }) {
+  const syncVersion = createNextSyncVersion();
+  await db.runAsync(
+    `UPDATE Sickness
+     SET start_date = ?,
+         sync_id = COALESCE(sync_id, ${SQLITE_UUID_SQL}),
+         sync_version = ?,
+         deleted_at = NULL,
+         needs_sync = 1
+     WHERE sickness_id = ?;`,
+    [startDate, syncVersion, sicknessId]
+  );
+}
+
+export async function markSicknessPeriodDeleted(
+  db,
+  { sicknessId, deletedAt }
+) {
+  const syncVersion = createNextSyncVersion();
+  await db.runAsync(
+    `UPDATE Sickness
+     SET deleted_at = ?,
+         sync_id = COALESCE(sync_id, ${SQLITE_UUID_SQL}),
+         sync_version = ?,
+         needs_sync = 1
+     WHERE sickness_id = ?;`,
+    [deletedAt, syncVersion, sicknessId]
+  );
+}
+
+export async function getSicknessPeriodCoveringDate(db, { date }) {
+  const isoDate = localDateToIsoValue(date);
+
+  return db.getFirstAsync(
+    `SELECT
+        sickness_id,
+        start_date,
+        end_date,
+        sickness_type,
+        note
+     FROM Sickness
+     WHERE COALESCE(deleted_at, '') = ''
+       AND ${localDateToIsoSql("start_date")} <= ?
+       AND (
+         end_date IS NULL
+         OR ${localDateToIsoSql("end_date")} >= ?
+       )
+     ORDER BY ${localDateToIsoSql("start_date")} DESC,
+              sickness_id DESC
+     LIMIT 1;`,
+    [isoDate, isoDate]
+  );
+}
+
+export async function getSicknessPeriodsCoveringDate(db, { date }) {
+  const isoDate = localDateToIsoValue(date);
+
+  return db.getAllAsync(
+    `SELECT
+        sickness_id,
+        start_date,
+        end_date,
+        sickness_type,
+        note
+     FROM Sickness
+     WHERE COALESCE(deleted_at, '') = ''
+       AND ${localDateToIsoSql("start_date")} <= ?
+       AND (
+         end_date IS NULL
+         OR ${localDateToIsoSql("end_date")} >= ?
+       )
+     ORDER BY ${localDateToIsoSql("start_date")} ASC,
+              sickness_id ASC;`,
+    [isoDate, isoDate]
+  );
+}
+
+export async function getSicknessPeriods(db) {
+  return db.getAllAsync(
+    `SELECT
+        sickness_id,
+        start_date,
+        end_date,
+        sickness_type,
+        note
+     FROM Sickness
+     WHERE COALESCE(deleted_at, '') = ''
+     ORDER BY ${localDateToIsoSql("start_date")} DESC,
+              sickness_id DESC;`
   );
 }
 
@@ -2203,7 +2456,7 @@ export async function getDayByWeekdayAndMicrocycle(
   { weekday, microcycleId }
 ) {
   return db.getFirstAsync(
-    `SELECT day_id, date, done
+    `SELECT day_id, date, done, is_sick
      FROM Day
      WHERE Weekday = ?
        AND microcycle_id = ?;`,
@@ -2262,7 +2515,7 @@ export async function copyWorkoutIntoDay(
 
 export async function getDayByDate(db, { programId, date }) {
   return db.getFirstAsync(
-    `SELECT day_id
+    `SELECT day_id, is_sick
      FROM Day
      WHERE date = ?
        AND program_id = ?;`,

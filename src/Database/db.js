@@ -158,6 +158,7 @@ async function initializeSideBySideSyncMetadata(db) {
     ["Mesocycle", "mesocycle_id", "cloud_mesocycle_id"],
     ["Microcycle", "microcycle_id", "cloud_microcycle_id"],
     ["Day", "day_id", "cloud_day_id"],
+    ["Sickness", "sickness_id", "cloud_sickness_id"],
     [
       "Workout_Type_Instance",
       "workout_id",
@@ -589,6 +590,7 @@ async function migrateDayOptionalProgramHierarchy(db) {
   const hasSyncVersion = hasColumn(dayColumns, "sync_version");
   const hasDeletedAt = hasColumn(dayColumns, "deleted_at");
   const hasDone = hasColumn(dayColumns, "done");
+  const hasIsSick = hasColumn(dayColumns, "is_sick");
   const hasNeedsSync = hasColumn(dayColumns, "needs_sync");
 
   await withTransaction(db, async () => {
@@ -607,6 +609,7 @@ async function migrateDayOptionalProgramHierarchy(db) {
         Weekday TEXT NOT NULL,
         date TEXT NOT NULL,
         done INTEGER NOT NULL DEFAULT 0,
+        is_sick INTEGER NOT NULL DEFAULT 0,
         needs_sync INTEGER NOT NULL DEFAULT 1
       );
 
@@ -622,6 +625,7 @@ async function migrateDayOptionalProgramHierarchy(db) {
         Weekday,
         date,
         done,
+        is_sick,
         needs_sync
       )
       SELECT
@@ -636,6 +640,7 @@ async function migrateDayOptionalProgramHierarchy(db) {
         Weekday,
         date,
         ${hasDone ? "COALESCE(done, 0)" : "0"},
+        ${hasIsSick ? "COALESCE(is_sick, 0)" : "0"},
         ${hasNeedsSync ? "COALESCE(needs_sync, 1)" : "1"}
       FROM Day;
 
@@ -1407,6 +1412,7 @@ export async function initializeDatabase(db) {
     ["sync_version", "INTEGER NOT NULL DEFAULT 0"],
     ["deleted_at", "TEXT"],
     ["done", "INTEGER NOT NULL DEFAULT 0"],
+    ["is_sick", "INTEGER NOT NULL DEFAULT 0"],
     ["needs_sync", "INTEGER NOT NULL DEFAULT 1"],
   ]);
   await migrateDayOptionalProgramHierarchy(db);
@@ -1417,6 +1423,19 @@ export async function initializeDatabase(db) {
     SET remote_local_day_id = COALESCE(remote_local_day_id, day_id)
     WHERE remote_local_day_id IS NULL;
   `);
+
+  await ensureTableColumns(db, "Sickness", [
+    ["cloud_id", "INTEGER"],
+    ["last_updated", "INTEGER NOT NULL DEFAULT 0"],
+    ["cloud_sickness_id", "INTEGER"],
+    ["sync_id", "TEXT"],
+    ["sync_version", "INTEGER NOT NULL DEFAULT 0"],
+    ["deleted_at", "TEXT"],
+    ["end_date", "TEXT"],
+    ["sickness_type", "TEXT"],
+    ["note", "TEXT"],
+    ["needs_sync", "INTEGER NOT NULL DEFAULT 1"],
+  ]);
 
   await ensureTableColumns(db, "Workout_Type_Instance", [
     ["cloud_workout_type_instance_id", "INTEGER"],
@@ -1522,6 +1541,7 @@ export async function initializeDatabase(db) {
   await backfillSyncStateColumns(db, "Mesocycle");
   await backfillSyncStateColumns(db, "Microcycle");
   await backfillSyncStateColumns(db, "Day");
+  await backfillSyncStateColumns(db, "Sickness");
   await backfillSyncStateColumns(db, "Workout_Type_Instance");
   await backfillSyncStateColumns(db, "Exercise_Instance");
   await backfillSyncStateColumns(db, "Set");

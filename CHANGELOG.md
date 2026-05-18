@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.14.9] - Unreleased
+### Changed
+- Added day-level sickness marking from the week indicator context menu.
+- Added the Sickness table foundation for dated sickness periods.
+- Added a continuation prompt when marking sickness after an already sick day.
+- Routed the home Sickness log shortcut to a dedicated Sickness screen.
+- Added a draft Sickness screen layout for new entries and sickness history.
+- Connected the Sickness screen history to local Sickness records.
+- Fixed new sickness periods so choosing not to continue from yesterday does not leave overlapping history ranges.
+- Added sickness type and note capture when marking a new sick day.
+- Updated sick-day clearing so Sickness history removes, trims, or splits affected periods.
+- Moved Sickness page registration into a modal opened from a Register new sickness button.
+- Changed Sickness page registration dates to use a native calendar picker.
+- Synced registered sickness periods into program days and Workout Calendar sick markers.
+- Added edit and delete actions for Sickness history records.
+
+---
 ## [0.14.8] - Unreleased
 ### Changed
 - Describe pending changes here.

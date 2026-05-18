@@ -13,6 +13,8 @@ export const Colors = {
         recordDark: "rgb(2, 49, 111)",
         danger: "#ba0000ff",
         planned: "rgb(255, 221, 0)",
+        plannedLight: "rgb(255, 238, 130)",
+        plannedDark: "rgb(201, 174, 0)",
 
         NOT_STARTED: "#9E9E9E",
         ACTIVE: "#f7742eff",

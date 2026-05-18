@@ -102,6 +102,22 @@ export const programSchemaSql = `
       Weekday TEXT NOT NULL,
       date TEXT NOT NULL,
       done INTEGER NOT NULL DEFAULT 0,
+      is_sick INTEGER NOT NULL DEFAULT 0,
+      needs_sync INTEGER NOT NULL DEFAULT 1
+  );
+
+  CREATE TABLE IF NOT EXISTS Sickness (
+      sickness_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      cloud_id INTEGER,
+      last_updated INTEGER NOT NULL DEFAULT 0,
+      cloud_sickness_id INTEGER,
+      sync_id TEXT,
+      sync_version INTEGER NOT NULL DEFAULT 0,
+      deleted_at TEXT,
+      start_date TEXT NOT NULL,
+      end_date TEXT,
+      sickness_type TEXT,
+      note TEXT,
       needs_sync INTEGER NOT NULL DEFAULT 1
   );
 

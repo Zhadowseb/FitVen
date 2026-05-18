@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import {
   FlatList,
+  Image,
   Modal,
   Pressable,
+  ScrollView,
   TouchableOpacity,
   View,
   useWindowDimensions,
@@ -15,6 +17,7 @@ import Svg, { Path } from "react-native-svg";
 import { Colors } from "../../../../Resources/GlobalStyling/colors";
 import ThreeDots from "../../../../Resources/Icons/UI-icons/ThreeDots"
 import Copy from "../../../../Resources/Icons/UI-icons/Copy";
+import Thermostat from "../../../../Resources/Icons/UI-icons/Thermostat";
 import CalenderPastePicker from "../../../../Resources/Components/CalenderPastePicker/CalenderPasteModal";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback } from "react";
@@ -29,13 +32,19 @@ import { programService as programRepository } from "../../../../Services";
 import { ThemedCard, 
         ThemedText, 
         ThemedBottomSheet,
+        ThemedModal,
         ThemedPicker,
+        ThemedTextInput,
         ThemedTitle } from "../../../../Resources/ThemedComponents";
 import { formatDate, parseCustomDate } from "../../../../Utils/dateUtils";
 import Delete from "../../../../Resources/Icons/UI-icons/Delete";
+import {
+  DEFAULT_SICKNESS_TYPE,
+  SICKNESS_TYPES,
+} from "../../../../Resources/Images/sicknessTypes";
 
 const DAY_CONTEXT_MENU_WIDTH = 266;
-const DAY_CONTEXT_MENU_HEIGHT = 260;
+const DAY_CONTEXT_MENU_HEIGHT = 330;
 const DAY_CONTEXT_MENU_MARGIN = 18;
 
 const MenuAddIcon = ({ color }) => (
@@ -113,6 +122,15 @@ const MicrocycleList = ({
   const colorScheme = useColorScheme();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const sickColor = theme.planned ?? Colors.dark.planned ?? "#ffdd00";
+  const sickBorderColor =
+    theme.plannedDark ?? Colors.dark.plannedDark ?? sickColor;
+  const modalBorderColor =
+    theme.cardBorder ?? theme.border ?? theme.iconColor ?? theme.text;
+  const modalTitleColor = theme.title ?? theme.text;
+  const modalQuietColor = theme.quietText ?? theme.iconColor ?? theme.text;
+  const modalInvertedColor =
+    theme.textInverted ?? theme.cardBackground ?? "#0E0F12";
   const db = useSQLiteContext();
   const navigation = useNavigation();
 
@@ -135,6 +153,13 @@ const MicrocycleList = ({
     left: DAY_CONTEXT_MENU_MARGIN,
     top: 120,
   });
+  const [pendingSickDay, setPendingSickDay] = useState(null);
+  const [sickContinuationVisible, setSickContinuationVisible] = useState(false);
+  const [sicknessDetailsVisible, setSicknessDetailsVisible] = useState(false);
+  const [sicknessDraftDay, setSicknessDraftDay] = useState(null);
+  const [selectedSicknessType, setSelectedSicknessType] =
+    useState(DEFAULT_SICKNESS_TYPE);
+  const [sicknessNote, setSicknessNote] = useState("");
   const [labelModalVisible, setLabelModalVisible] = useState(false);
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [newDate, setNewDate] = useState(new Date());
@@ -146,6 +171,10 @@ const MicrocycleList = ({
   const isWorkoutCompleted = (workout) =>
     workout.done === 1 || workout.done === true;
 
+  const isDaySick = (day) =>
+    day?.is_sick === true ||
+    day?.is_sick === "true" ||
+    Number(day?.is_sick) === 1;
 
   const loadMicrocycles = async () => {
     try {
@@ -192,6 +221,7 @@ const MicrocycleList = ({
         dayDate.setHours(0, 0, 0, 0);
         const isPastDay = dayDate < todayDate;
         const workouts = dayRow?.workouts ?? [];
+        const sick = isDaySick(dayRow);
         const completed =
           workouts.length > 0 &&
           workouts.every((workout) => isWorkoutCompleted(workout));
@@ -207,7 +237,9 @@ const MicrocycleList = ({
             iconLabel: found?.short ?? workout.label ?? workoutType,
             completed: workoutCompleted,
             hasPersonalRecord: Number(workout.has_personal_record) === 1,
-            overdue: isPastDay && !workoutCompleted,
+            sickCompleted: sick && workoutCompleted,
+            overdue: isPastDay && !workoutCompleted && !sick,
+            sickOverdue: isPastDay && !workoutCompleted && sick,
             workout,
           };
         });
@@ -225,6 +257,7 @@ const MicrocycleList = ({
           dateLabel: date.slice(0, 5),
           active: date === today,
           completed,
+          isSick: sick,
           icon,
           iconLabel,
           workoutCards,
@@ -355,6 +388,7 @@ const MicrocycleList = ({
         dateLabel: formattedDate.slice(0, 5),
         active: formattedDate === today,
         completed: false,
+        isSick: false,
 
         // simpelt default – kan udvides senere
         icon: null,
@@ -458,6 +492,227 @@ const MicrocycleList = ({
     setPickWorkoutModalVisible(true);
   };
 
+  const getPreviousDateLabel = (date) => {
+    if (!date) {
+      return null;
+    }
+
+    const previousDate = parseCustomDate(date);
+
+    if (Number.isNaN(previousDate.getTime())) {
+      return null;
+    }
+
+    previousDate.setDate(previousDate.getDate() - 1);
+    return formatDate(previousDate);
+  };
+
+  const findLoadedDayByDate = (date) => {
+    for (const days of Object.values(weekSummaries)) {
+      if (!Array.isArray(days)) {
+        continue;
+      }
+
+      const foundDay = days.find((day) => day.date === date);
+
+      if (foundDay) {
+        return foundDay;
+      }
+    }
+
+    return null;
+  };
+
+  const getPreviousSickDate = async (day) => {
+    const previousDate = getPreviousDateLabel(day?.date);
+
+    if (!previousDate) {
+      return null;
+    }
+
+    const loadedPreviousDay = findLoadedDayByDate(previousDate);
+
+    if (loadedPreviousDay) {
+      return loadedPreviousDay.isSick ? previousDate : null;
+    }
+
+    if (!program_id) {
+      return null;
+    }
+
+    const previousDayRow = await programRepository.getDayByDate(db, {
+      programId: program_id,
+      date: previousDate,
+    });
+
+    return isDaySick(previousDayRow) ? previousDate : null;
+  };
+
+  const applyDaySickness = async (
+    day,
+    nextIsSick,
+    {
+      continuesPrevious = false,
+      sicknessType = null,
+      note = null,
+    } = {}
+  ) => {
+    if (!day) {
+      return;
+    }
+
+    try {
+      const dayRow =
+        day.dayId
+          ? { day_id: day.dayId }
+          : await programRepository.getDayByMicrocycleAndDate(db, {
+              microcycleId: day.microcycleId,
+              date: day.date,
+            });
+
+      if (!dayRow?.day_id) {
+        setDayOptionsVisible(false);
+        return;
+      }
+
+      await programRepository.markDaySick(db, {
+        dayId: dayRow.day_id,
+        isSick: nextIsSick,
+        date: day.date,
+        previousDate: day.previousSickDate ?? null,
+        continuesPrevious,
+        sicknessType,
+        note,
+      });
+
+      const todayDate = new Date();
+      todayDate.setHours(0, 0, 0, 0);
+
+      setWeekSummaries((current) => {
+        const currentDays = current[day.microcycleId];
+
+        if (!currentDays) {
+          return current;
+        }
+
+        return {
+          ...current,
+          [day.microcycleId]: currentDays.map((summaryDay) =>
+            summaryDay.date === day.date
+              ? (() => {
+                  const dayDate = parseCustomDate(summaryDay.date);
+                  dayDate.setHours(0, 0, 0, 0);
+                  const isPastDay = dayDate < todayDate;
+
+                  return {
+                    ...summaryDay,
+                    dayId: summaryDay.dayId ?? dayRow.day_id,
+                    isSick: nextIsSick,
+                    workoutCards: (summaryDay.workoutCards ?? []).map(
+                      (workoutCard) => ({
+                        ...workoutCard,
+                        sickCompleted: nextIsSick && workoutCard.completed,
+                        overdue:
+                          !nextIsSick && isPastDay && !workoutCard.completed,
+                        sickOverdue:
+                          nextIsSick && isPastDay && !workoutCard.completed,
+                      })
+                    ),
+                  };
+                })()
+              : summaryDay
+          ),
+        };
+      });
+
+      setSelectedDay(null);
+      setPendingSickDay(null);
+      setSickContinuationVisible(false);
+      setSicknessDetailsVisible(false);
+      setSicknessDraftDay(null);
+      setSelectedSicknessType(DEFAULT_SICKNESS_TYPE);
+      setSicknessNote("");
+      setDayOptionsVisible(false);
+      updateui?.();
+    } catch (error) {
+      console.error("Failed to mark day sick:", error);
+    }
+  };
+
+  const openSicknessDetailsModal = (day) => {
+    setSicknessDraftDay(day);
+    setSelectedSicknessType(DEFAULT_SICKNESS_TYPE);
+    setSicknessNote("");
+    setDayOptionsVisible(false);
+    setSickContinuationVisible(false);
+    setSicknessDetailsVisible(true);
+  };
+
+  const markSelectedDaySick = async () => {
+    if (!selectedDay) {
+      return;
+    }
+
+    const nextIsSick = !selectedDay.isSick;
+
+    if (!nextIsSick) {
+      await applyDaySickness(selectedDay, false);
+      return;
+    }
+
+    try {
+      const previousSickDate = await getPreviousSickDate(selectedDay);
+
+      if (previousSickDate) {
+        setPendingSickDay({
+          ...selectedDay,
+          previousSickDate,
+        });
+        setDayOptionsVisible(false);
+        setSickContinuationVisible(true);
+        return;
+      }
+    } catch (error) {
+      console.error("Failed to check previous sick day:", error);
+    }
+
+    openSicknessDetailsModal(selectedDay);
+  };
+
+  const closeSickContinuationPrompt = () => {
+    setSickContinuationVisible(false);
+    setPendingSickDay(null);
+    setSelectedDay(null);
+  };
+
+  const submitSickContinuationChoice = async (continuesPrevious) => {
+    if (!continuesPrevious) {
+      openSicknessDetailsModal(pendingSickDay);
+      return;
+    }
+
+    await applyDaySickness(pendingSickDay, true, {
+      continuesPrevious: true,
+    });
+  };
+
+  const closeSicknessDetailsModal = () => {
+    setSicknessDetailsVisible(false);
+    setSicknessDraftDay(null);
+    setSicknessNote("");
+    setSelectedSicknessType(DEFAULT_SICKNESS_TYPE);
+    setPendingSickDay(null);
+    setSelectedDay(null);
+  };
+
+  const submitSicknessDetails = async () => {
+    await applyDaySickness(sicknessDraftDay, true, {
+      continuesPrevious: false,
+      sicknessType: selectedSicknessType,
+      note: sicknessNote.trim() || null,
+    });
+  };
+
   const createWorkoutForDay = async (labelId) => {
     if (!selectedDay) {
       return;
@@ -546,11 +801,53 @@ const MicrocycleList = ({
 
     const counts =
       workoutCounts[item.microcycle_id] ?? { total: 0, done: 0 };
+    const days = weekSummaries[item.microcycle_id] ?? buildWeekdayIndicators(item);
+    const sickDayCount = days.filter((day) => day.isSick).length;
     const isWeekComplete = counts.total > 0 && counts.done === counts.total;
+    const isWeekSick = sickDayCount >= 4;
+    const hasWeekRecord = days.some((day) =>
+      (day.workoutCards ?? []).some(
+        (workoutCard) =>
+          workoutCard.completed && Boolean(workoutCard.hasPersonalRecord)
+      )
+    );
+    const primaryColor = theme.primary ?? Colors.dark.primary ?? "#f7742e";
+    const primaryBorderColor =
+      theme.primaryDark ?? Colors.dark.primaryDark ?? primaryColor;
+    const secondaryColor = theme.secondary ?? Colors.dark.secondary ?? "#60daac";
+    const secondaryBorderColor =
+      theme.secondaryDark ?? Colors.dark.secondaryDark ?? secondaryColor;
+    const recordColor = theme.record ?? Colors.dark.record ?? secondaryColor;
+    const recordBorderColor =
+      theme.recordDark ?? Colors.dark.recordDark ?? recordColor;
+    const sickBorderColor =
+      theme.plannedDark ?? Colors.dark.plannedDark ?? sickColor;
     const cardBorder = theme.cardBorder ?? theme.iconColor;
+    const weekCardBorderColor = isWeekSick
+      ? sickBorderColor
+      : hasWeekRecord
+        ? recordBorderColor
+      : isWeekComplete
+        ? secondaryColor
+        : cardBorder;
+    const weekNumberBackgroundColor = isWeekSick
+      ? sickColor
+      : hasWeekRecord
+        ? recordColor
+      : isWeekComplete
+        ? secondaryColor
+        : primaryColor;
+    const weekNumberBorderColor = isWeekSick
+      ? sickBorderColor
+      : hasWeekRecord
+        ? recordBorderColor
+      : isWeekComplete
+        ? secondaryBorderColor
+        : primaryBorderColor;
     const titleColor = theme.title ?? theme.text;
-    const badgeTextColor =
-      theme.textInverted ?? theme.cardBackground ?? "#0E0F12";
+    const badgeTextColor = hasWeekRecord && !isWeekSick
+      ? theme.title ?? "#ffffff"
+      : theme.textInverted ?? theme.cardBackground ?? "#0E0F12";
 
     return (
       <ThemedCard
@@ -558,7 +855,8 @@ const MicrocycleList = ({
           styles.card,
           {
             borderWidth: 1,
-            borderColor: isWeekComplete ? theme.secondary : cardBorder,
+            borderColor: weekCardBorderColor,
+            borderStyle: isWeekSick ? "dashed" : "solid",
           },
         ]}
       >
@@ -568,7 +866,12 @@ const MicrocycleList = ({
               <View
                 style={[
                   styles.weekNumberBadge,
-                  { backgroundColor: theme.primary ?? "#f7742e" },
+                  {
+                    backgroundColor: weekNumberBackgroundColor,
+                    borderColor: weekNumberBorderColor,
+                    borderStyle: isWeekSick ? "dashed" : "solid",
+                    borderWidth: 2,
+                  },
                 ]}
               >
                 <ThemedText
@@ -606,7 +909,7 @@ const MicrocycleList = ({
 
         <View style={styles.weekdaysShell}>
           <View style={styles.weekdaysRow}>
-            {(weekSummaries[item.microcycle_id] ?? buildWeekdayIndicators(item)).map((day) => (
+            {days.map((day) => (
               <View
                 key={`${item.microcycle_id}-${day.day}`}
                 style={styles.weekdayTouchable}
@@ -616,6 +919,7 @@ const MicrocycleList = ({
                   dateLabel={day.dateLabel}
                   active={day.active}
                   completed={day.completed}
+                  isSick={day.isSick}
                   icon={day.icon}
                   iconLabel={day.iconLabel}
                   workoutCards={day.workoutCards}
@@ -818,6 +1122,14 @@ const MicrocycleList = ({
               textColor={theme.primary ?? "#f7742e"}
             />
 
+            <DayContextMenuAction
+              Icon={Thermostat}
+              iconColor={sickColor}
+              label={selectedDay?.isSick ? "Clear sick day" : "Mark as sick"}
+              onPress={markSelectedDaySick}
+              textColor={sickColor}
+            />
+
             {!!selectedDay?.workouts?.length && (
               <DayContextMenuAction
                 Icon={MenuCopyIcon}
@@ -841,6 +1153,187 @@ const MicrocycleList = ({
         </View>
       </View>
     </Modal>
+
+    <ThemedModal
+      visible={sickContinuationVisible}
+      onClose={closeSickContinuationPrompt}
+      title="Continue sickness?"
+      style={[
+        styles.sickContinuationModal,
+        {
+          borderColor: sickBorderColor,
+        },
+      ]}
+      contentStyle={styles.sickContinuationContent}
+    >
+      <ThemedText
+        style={styles.sickContinuationText}
+        setColor={modalQuietColor}
+      >
+        {pendingSickDay?.previousSickDate
+          ? `${pendingSickDay.previousSickDate} is already marked as sick. Should ${pendingSickDay.date} belong to the same sickness period?`
+          : "The previous day is already marked as sick. Should this day belong to the same sickness period?"}
+      </ThemedText>
+
+      <View style={styles.sickContinuationButtonRow}>
+        <TouchableOpacity
+          activeOpacity={0.82}
+          onPress={() => submitSickContinuationChoice(false)}
+          style={[
+            styles.sickContinuationButton,
+            {
+              borderColor: modalBorderColor,
+            },
+          ]}
+        >
+          <ThemedText
+            style={styles.sickContinuationButtonText}
+            setColor={modalTitleColor}
+          >
+            No, new sickness
+          </ThemedText>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          activeOpacity={0.82}
+          onPress={() => submitSickContinuationChoice(true)}
+          style={[
+            styles.sickContinuationButton,
+            styles.sickContinuationPrimaryButton,
+            {
+              backgroundColor: sickColor,
+              borderColor: sickBorderColor,
+            },
+          ]}
+        >
+          <ThemedText
+            style={styles.sickContinuationButtonText}
+            setColor={modalInvertedColor}
+          >
+            Yes, continue
+          </ThemedText>
+        </TouchableOpacity>
+      </View>
+    </ThemedModal>
+
+    <ThemedModal
+      visible={sicknessDetailsVisible}
+      onClose={closeSicknessDetailsModal}
+      title="Log sickness"
+      style={[
+        styles.sicknessDetailsModal,
+        {
+          borderColor: sickBorderColor,
+        },
+      ]}
+      contentStyle={styles.sicknessDetailsContent}
+    >
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.sicknessDetailsScroll}
+      >
+        <ThemedText
+          style={styles.sicknessDetailsDate}
+          setColor={modalQuietColor}
+        >
+          {sicknessDraftDay?.date ?? ""}
+        </ThemedText>
+
+        <View style={styles.sicknessTypeGrid}>
+          {SICKNESS_TYPES.map((type) => {
+            const selected = selectedSicknessType === type.label;
+
+            return (
+              <TouchableOpacity
+                key={type.label}
+                activeOpacity={0.84}
+                onPress={() => setSelectedSicknessType(type.label)}
+                style={styles.sicknessTypeOption}
+              >
+                <View
+                  style={[
+                    styles.sicknessTypeImageCard,
+                    {
+                      borderColor: selected ? sickBorderColor : modalBorderColor,
+                    },
+                  ]}
+                >
+                  <Image
+                    source={type.image}
+                    style={styles.sicknessTypeImage}
+                    resizeMode="cover"
+                  />
+                </View>
+                <ThemedText
+                  style={styles.sicknessTypeLabel}
+                  setColor={selected ? sickColor : modalTitleColor}
+                  numberOfLines={2}
+                >
+                  {type.label}
+                </ThemedText>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        <View>
+          <ThemedText
+            style={styles.sicknessNoteLabel}
+            setColor={modalQuietColor}
+          >
+            Note
+          </ThemedText>
+          <ThemedTextInput
+            value={sicknessNote}
+            onChangeText={setSicknessNote}
+            placeholder="What are you dealing with?"
+            multiline
+            textAlignVertical="top"
+            inputStyle={styles.sicknessNoteInput}
+          />
+        </View>
+      </ScrollView>
+
+      <View style={styles.sicknessDetailsButtonRow}>
+        <TouchableOpacity
+          activeOpacity={0.82}
+          onPress={closeSicknessDetailsModal}
+          style={[
+            styles.sickContinuationButton,
+            {
+              borderColor: modalBorderColor,
+            },
+          ]}
+        >
+          <ThemedText
+            style={styles.sickContinuationButtonText}
+            setColor={modalTitleColor}
+          >
+            Cancel
+          </ThemedText>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          activeOpacity={0.82}
+          onPress={submitSicknessDetails}
+          style={[
+            styles.sickContinuationButton,
+            styles.sickContinuationPrimaryButton,
+            {
+              backgroundColor: sickColor,
+              borderColor: sickBorderColor,
+            },
+          ]}
+        >
+          <ThemedText
+            style={styles.sickContinuationButtonText}
+            setColor={modalInvertedColor}
+          >
+            Save
+          </ThemedText>
+        </TouchableOpacity>
+      </View>
+    </ThemedModal>
 
     <AddWorkoutModal
       visible={labelModalVisible}

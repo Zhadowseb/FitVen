@@ -23,6 +23,7 @@ const LEGACY_COPY_TABLE_ORDER = [
   "Microcycle",
   "Microcycle_Sync_Delete",
   "Day",
+  "Sickness",
   "Workout_Type",
   "Workout_Type_Instance",
   "Workout_Type_Instance_Sync_Delete",
@@ -43,6 +44,7 @@ const USER_DATA_TABLES = [
   "Mesocycle",
   "Microcycle",
   "Day",
+  "Sickness",
   "Workout_Type_Instance",
   "Exercise_Instance",
   "Set",
@@ -218,6 +220,9 @@ async function copyTableRows(sourceDb, targetDb, tableName) {
       const values = sourceColumnNames.map((columnName) =>
         columnName === "date"
           ? resolvedDate
+          : columnName === "is_sick" &&
+              !Object.prototype.hasOwnProperty.call(row, columnName)
+            ? 0
           : Object.prototype.hasOwnProperty.call(row, columnName)
             ? row[columnName]
             : null

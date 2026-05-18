@@ -22,6 +22,7 @@ import {
   ThemedModal,
   ThemedView,
 } from "../../Resources/ThemedComponents";
+import { parseCustomDate } from "../../Utils/dateUtils";
 
 const ADJACENT_MONTH_COUNT = 1;
 const INITIAL_VISIBLE_MONTH_OFFSET = 0;
@@ -66,6 +67,11 @@ function formatIsoDate(date) {
   return `${date.getFullYear()}-${padDatePart(date.getMonth() + 1)}-${padDatePart(
     date.getDate()
   )}`;
+}
+
+function parseIsoDateLocal(isoDate) {
+  const [year, month, day] = String(isoDate).split("-").map(Number);
+  return new Date(year, month - 1, day);
 }
 
 function getMonthKey(date) {
@@ -146,6 +152,14 @@ function getWorkoutIconLabel(workout) {
   return String(label).slice(0, 2).toUpperCase();
 }
 
+function isProgramDaySick(programDay) {
+  return (
+    programDay?.is_sick === true ||
+    programDay?.is_sick === "true" ||
+    Number(programDay?.is_sick) === 1
+  );
+}
+
 const WorkoutCalendarPage = () => {
   const db = useSQLiteContext();
   const navigation = useNavigation();
@@ -163,6 +177,7 @@ const WorkoutCalendarPage = () => {
   const todayIsoDate = useMemo(() => formatIsoDate(today), [today]);
   const [workouts, setWorkouts] = useState([]);
   const [programDays, setProgramDays] = useState([]);
+  const [sicknessPeriods, setSicknessPeriods] = useState([]);
   const [selectedProgramDate, setSelectedProgramDate] = useState(null);
   const [monthOffsetRange, setMonthOffsetRange] = useState(
     () => getMonthOffsetRange(INITIAL_VISIBLE_MONTH_OFFSET)
@@ -244,6 +259,50 @@ const WorkoutCalendarPage = () => {
     () => new Set(programsByDate.keys()),
     [programsByDate]
   );
+  const sickDates = useMemo(() => {
+    const nextSickDates = new Set();
+
+    if (!calendarRange.startIsoDate || !calendarRange.endIsoDate) {
+      return nextSickDates;
+    }
+
+    const calendarStartDate = startOfDay(
+      parseIsoDateLocal(calendarRange.startIsoDate)
+    );
+    const calendarEndDate = startOfDay(
+      parseIsoDateLocal(calendarRange.endIsoDate)
+    );
+
+    for (const sicknessPeriod of sicknessPeriods) {
+      if (!sicknessPeriod?.start_date) {
+        continue;
+      }
+
+      let cursor = startOfDay(parseCustomDate(sicknessPeriod.start_date));
+      let sicknessEndDate = sicknessPeriod.end_date
+        ? startOfDay(parseCustomDate(sicknessPeriod.end_date))
+        : calendarEndDate;
+
+      if (sicknessEndDate < calendarStartDate || cursor > calendarEndDate) {
+        continue;
+      }
+
+      if (cursor < calendarStartDate) {
+        cursor = calendarStartDate;
+      }
+
+      if (sicknessEndDate > calendarEndDate) {
+        sicknessEndDate = calendarEndDate;
+      }
+
+      while (cursor <= sicknessEndDate) {
+        nextSickDates.add(formatLocalDate(cursor));
+        cursor = addDays(cursor, 1);
+      }
+    }
+
+    return nextSickDates;
+  }, [calendarRange.endIsoDate, calendarRange.startIsoDate, sicknessPeriods]);
   const visibleMonth = monthPages[visibleMonthIndex] ?? monthPages[0];
   const visibleMonthKey = visibleMonth ? getMonthKey(visibleMonth.monthDate) : "";
   const visibleMonthWorkouts = workouts.filter((workout) =>
@@ -317,12 +376,15 @@ const WorkoutCalendarPage = () => {
           endIsoDate: calendarRange.endIsoDate,
         }),
       ]);
+      const sicknessRows = await programService.getSicknessPeriods(db);
 
       setWorkouts(workoutRows);
       setProgramDays(programDayRows);
+      setSicknessPeriods(sicknessRows);
     } catch (error) {
       setWorkouts([]);
       setProgramDays([]);
+      setSicknessPeriods([]);
       setErrorMessage(
         error instanceof Error ? error.message : "Could not load workouts."
       );
@@ -519,17 +581,23 @@ const WorkoutCalendarPage = () => {
                 <View key={`${monthPage.key}-${weekIndex}`} style={styles.weekRow}>
                   {week.map((day) => {
                     const dayWorkouts = workoutsByDate.get(day.dateLabel) ?? [];
+                    const dayProgramRows = programsByDate.get(day.dateLabel) ?? [];
                     const dayHasProgram = programDates.has(day.dateLabel);
+                    const dayIsSick =
+                      sickDates.has(day.dateLabel) ||
+                      dayProgramRows.some(isProgramDaySick);
                     const dayHasWorkouts = dayWorkouts.length > 0;
                     const dayCompleted =
                       dayHasWorkouts &&
                       dayWorkouts.every((workout) => Number(workout.done) === 1);
                     const dayOverdue =
+                      !dayIsSick &&
                       day.isoDate < todayIsoDate &&
                       dayWorkouts.some((workout) => Number(workout.done) !== 1);
                     const workoutCards = dayWorkouts.map((workout) => {
                       const iconConfig = getWorkoutIconConfig(getWorkoutType(workout));
                       const isCompleted = Number(workout.done) === 1;
+                      const isPastWorkout = day.isoDate < todayIsoDate;
 
                       return {
                         key: workout.workout_id,
@@ -538,7 +606,9 @@ const WorkoutCalendarPage = () => {
                         iconLabel: iconConfig?.short ?? getWorkoutIconLabel(workout),
                         completed: isCompleted,
                         hasPersonalRecord: Number(workout.has_personal_record) === 1,
-                        overdue: day.isoDate < todayIsoDate && !isCompleted,
+                        sickCompleted: dayIsSick && isCompleted,
+                        overdue: !dayIsSick && isPastWorkout && !isCompleted,
+                        sickOverdue: dayIsSick && isPastWorkout && !isCompleted,
                       };
                     });
 
@@ -555,6 +625,7 @@ const WorkoutCalendarPage = () => {
                           dateLabel={day.dateLabel}
                           active={day.dateLabel === todayLabel}
                           completed={dayCompleted}
+                          isSick={dayIsSick}
                           overdue={dayOverdue}
                           programActive={dayHasProgram}
                           workoutCards={workoutCards}
