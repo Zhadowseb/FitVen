@@ -2185,8 +2185,8 @@ async function loadWorkoutExercisesFromLocal(db, workoutId) {
       sets: exerciseSets,
       setCount: exerciseSets.length,
       visibleColumns: resolveVisibleColumns(
-        exercise.visible_columns,
         preference?.visible_columns,
+        exercise.visible_columns,
         exercise.default_visible_columns
       ),
     };
