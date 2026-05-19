@@ -40,6 +40,7 @@ const ExerciseLibraryList = ({ refreshKey }) => {
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const titleColor = theme.title ?? theme.text;
   const primaryColor = theme.primary ?? "#f7742e";
+  const secondaryColor = theme.secondary ?? "#60daac";
   const cardSurface =
     theme.cardBackground ?? theme.navBackground ?? theme.background;
   const cardBorder = theme.cardBorder ?? theme.iconColor ?? theme.text;
@@ -50,7 +51,10 @@ const ExerciseLibraryList = ({ refreshKey }) => {
     (colorScheme === "dark"
       ? "rgba(47, 43, 61, 0.8)"
       : "rgba(214, 213, 225, 0.8)");
+  const primaryBadgeSurface = "rgba(96, 218, 172, 0.2)";
   const secondaryBadgeSurface = "rgba(247, 116, 46, 0.18)";
+  const primaryBadgeText = secondaryColor;
+  const secondaryBadgeText = primaryColor;
   const normalizedSearchQuery = searchQuery.trim().toLocaleLowerCase();
   const filteredExercises = exercises.filter((exercise) => {
     const exerciseName = exercise.exercise_name ?? "";
@@ -243,13 +247,8 @@ const ExerciseLibraryList = ({ refreshKey }) => {
           nestedScrollEnabled
         >
           {filteredExercises.map((exercise, index) => {
-            const equipmentLabel =
-              typeof exercise.nickname === "string" && exercise.nickname.trim()
-                ? exercise.nickname.trim().toLocaleUpperCase()
-                : "EXERCISE";
-            const groupLabel =
-              exercise.primary_group_name?.toLocaleUpperCase?.() ??
-              "UNGROUPED";
+            const primaryCount = exercise.primary_muscle_count ?? 0;
+            const secondaryCount = exercise.secondary_muscle_count ?? 0;
 
             return (
               <View
@@ -275,12 +274,36 @@ const ExerciseLibraryList = ({ refreshKey }) => {
                   >
                     {exercise.exercise_name}
                   </ThemedText>
-                  <ThemedText
-                    style={styles.exerciseMetaText}
-                    setColor={quietText}
-                  >
-                    {equipmentLabel} - {groupLabel}
-                  </ThemedText>
+
+                  <View style={styles.muscleBadgeRow}>
+                    <View
+                      style={[
+                        styles.muscleBadge,
+                        { backgroundColor: primaryBadgeSurface },
+                      ]}
+                    >
+                      <ThemedText
+                        style={styles.muscleBadgeText}
+                        setColor={primaryBadgeText}
+                      >
+                        {primaryCount} primary
+                      </ThemedText>
+                    </View>
+
+                    <View
+                      style={[
+                        styles.muscleBadge,
+                        { backgroundColor: secondaryBadgeSurface },
+                      ]}
+                    >
+                      <ThemedText
+                        style={styles.muscleBadgeText}
+                        setColor={secondaryBadgeText}
+                      >
+                        {secondaryCount} secondary
+                      </ThemedText>
+                    </View>
+                  </View>
                 </View>
               </View>
             );

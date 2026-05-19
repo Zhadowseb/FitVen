@@ -177,11 +177,23 @@ export default StyleSheet.create({
     fontWeight: "800",
     lineHeight: 19,
   },
-  exerciseMetaText: {
-    fontSize: 11,
-    fontWeight: "700",
-    lineHeight: 14,
-    marginTop: 2,
+  muscleBadgeRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    marginTop: 5,
+  },
+  muscleBadge: {
+    minHeight: 18,
+    borderRadius: 999,
+    paddingHorizontal: 7,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  muscleBadgeText: {
+    fontSize: 10,
+    fontWeight: "900",
+    lineHeight: 12,
     textTransform: "uppercase",
   },
   emptyState: {

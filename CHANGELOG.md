@@ -3,6 +3,7 @@
 ## [0.14.12] - Unreleased
 ### Changed
 - Remove exercise catalog muscle activation percentages and the related detail modal.
+- Show primary and secondary muscle count badges in the exercise catalog.
 
 ---
 ## [0.14.11] - Unreleased

@@ -67,6 +67,8 @@ const LOCAL_EXERCISE_COLUMN_PREFERENCE_USER_ID = "__local__";
 const MUSCLE_ACTIVATION_TABLE = "Muscle_Activation";
 const MUSCLE_GROUP_TABLE = "muscle_group";
 const MUSCLE_GROUP_ASSIGNMENT_TABLE = "muscle_group_assignment";
+const PRIMARY_ACTIVATION_LEVEL = "primary";
+const SECONDARY_ACTIVATION_LEVEL = "secondary";
 const EXERCISE_INSTANCE_CLOUD_TABLE = "exercise_instance";
 const EXERCISE_INSTANCE_CLOUD_SELECT =
   "id, local_exercise_instance_id, sync_id, sync_version, deleted_at, last_updated, is_deleting, delete_requested_at, local_watchers, cloud_workout_type_instance_id, exercise_name, exercise_order, sets, visible_columns, note, done";
@@ -1022,6 +1024,52 @@ function areExerciseCatalogEntriesEqual(left, right) {
   return true;
 }
 
+function normalizeActivationLevel(activationLevel) {
+  return typeof activationLevel === "string"
+    ? activationLevel.trim().toLocaleLowerCase()
+    : "";
+}
+
+function buildExerciseMuscleRoleCounts(activationRows) {
+  const exerciseBuckets = new Map();
+
+  for (const activation of activationRows ?? []) {
+    const exerciseId = activation?.exercise_id;
+    const muscleId = activation?.muscle_id;
+
+    if (!exerciseId || !muscleId) {
+      continue;
+    }
+
+    const activationLevel = normalizeActivationLevel(activation.activation_level);
+    const bucket = exerciseBuckets.get(exerciseId) ?? {
+      primary: new Set(),
+      secondary: new Set(),
+    };
+
+    if (activationLevel === PRIMARY_ACTIVATION_LEVEL) {
+      bucket.primary.add(muscleId);
+    }
+
+    if (activationLevel === SECONDARY_ACTIVATION_LEVEL) {
+      bucket.secondary.add(muscleId);
+    }
+
+    exerciseBuckets.set(exerciseId, bucket);
+  }
+
+  const countMap = new Map();
+
+  for (const [exerciseId, bucket] of exerciseBuckets.entries()) {
+    countMap.set(exerciseId, {
+      primary_muscle_count: bucket.primary.size,
+      secondary_muscle_count: bucket.secondary.size,
+    });
+  }
+
+  return countMap;
+}
+
 function normalizeMuscleGroupKey(value) {
   return typeof value === "string"
     ? value.trim().toLocaleLowerCase().replace(/[^a-z0-9]+/g, "-")
@@ -1369,6 +1417,8 @@ function mapExerciseCatalogForDisplay(entries) {
     exercise_name: entry.name ?? entry.exercise_name,
     nickname: entry.nickname ?? null,
     default_visible_columns: entry.default_visible_columns ?? null,
+    primary_muscle_count: Number(entry.primary_muscle_count) || 0,
+    secondary_muscle_count: Number(entry.secondary_muscle_count) || 0,
     primary_group_key: entry.primary_group_key ?? null,
     primary_group_name: entry.primary_group_name ?? null,
     group_keys: Array.isArray(entry.group_keys) ? entry.group_keys : [],
@@ -1490,7 +1540,7 @@ export async function getExerciseLibraryEntries(db) {
     if (exerciseIds.length > 0) {
       const { data, error } = await supabase
         .from(MUSCLE_ACTIVATION_TABLE)
-        .select("exercise_id, muscle_id")
+        .select("exercise_id, muscle_id, activation_level")
         .in("exercise_id", exerciseIds);
 
       if (error) {
@@ -1504,6 +1554,7 @@ export async function getExerciseLibraryEntries(db) {
       exerciseIds,
       activationRows,
     });
+    const roleCountMap = buildExerciseMuscleRoleCounts(activationRows);
     const cloudExerciseMap = new Map(
       (exerciseRows ?? []).map((exercise) => {
         const rawName = exercise?.[EXERCISE_LIBRARY_NAME_COLUMN];
@@ -1515,6 +1566,7 @@ export async function getExerciseLibraryEntries(db) {
             : null;
         const groupData =
           groupMetadata.exerciseGroupMap.get(exercise.id) ?? {};
+        const roleCountData = roleCountMap.get(exercise.id) ?? {};
 
         return [
           name.toLocaleLowerCase(),
@@ -1530,6 +1582,7 @@ export async function getExerciseLibraryEntries(db) {
               exercise?.default_visible_columns
             ),
             ...groupData,
+            ...roleCountData,
           },
         ];
       }).filter(([name]) => name)
