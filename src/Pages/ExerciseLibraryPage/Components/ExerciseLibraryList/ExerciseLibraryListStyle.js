@@ -1,6 +1,8 @@
 import { StyleSheet } from "react-native";
 
 const EXERCISE_ROW_HEIGHT = 62;
+const EXERCISE_PREVIEW_GAP = 14;
+const EXERCISE_PREVIEW_WIDTH = Math.round(EXERCISE_ROW_HEIGHT * (503 / 647));
 const VISIBLE_EXERCISE_COUNT = 10;
 const LIST_VIEWPORT_HEIGHT = EXERCISE_ROW_HEIGHT * VISIBLE_EXERCISE_COUNT;
 
@@ -132,7 +134,7 @@ export default StyleSheet.create({
     paddingVertical: 10,
   },
   tableHeaderPreview: {
-    width: 48,
+    width: EXERCISE_PREVIEW_WIDTH + EXERCISE_PREVIEW_GAP,
   },
   tableHeaderExercise: {
     flex: 1,
@@ -153,23 +155,25 @@ export default StyleSheet.create({
     minHeight: EXERCISE_ROW_HEIGHT,
     borderTopWidth: 1,
     paddingHorizontal: 18,
-    paddingVertical: 10,
+    paddingVertical: 0,
     overflow: "hidden",
   },
   exerciseRowLast: {
     borderBottomWidth: 0,
   },
   exercisePreviewBodyMap: {
-    width: 34,
-    maxWidth: 34,
+    width: EXERCISE_PREVIEW_WIDTH,
+    maxWidth: EXERCISE_PREVIEW_WIDTH,
+    height: EXERCISE_ROW_HEIGHT,
     alignSelf: "center",
-    marginRight: 14,
+    marginRight: EXERCISE_PREVIEW_GAP,
   },
   exerciseBody: {
     flex: 1,
     minWidth: 0,
     justifyContent: "center",
     paddingRight: 8,
+    paddingVertical: 10,
   },
   exerciseName: {
     fontSize: 15,
