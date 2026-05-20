@@ -268,6 +268,8 @@ const ExerciseLibraryList = ({ refreshKey }) => {
                   <ThemedText
                     style={styles.exerciseName}
                     setColor={titleColor}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
                   >
                     {exercise.exercise_name}
                   </ThemedText>
@@ -282,6 +284,8 @@ const ExerciseLibraryList = ({ refreshKey }) => {
                       <ThemedText
                         style={styles.muscleBadgeText}
                         setColor={primaryBadgeText}
+                        numberOfLines={1}
+                        ellipsizeMode="clip"
                       >
                         {primaryCount} primary
                       </ThemedText>
@@ -296,6 +300,8 @@ const ExerciseLibraryList = ({ refreshKey }) => {
                       <ThemedText
                         style={styles.muscleBadgeText}
                         setColor={secondaryBadgeText}
+                        numberOfLines={1}
+                        ellipsizeMode="clip"
                       >
                         {secondaryCount} secondary
                       </ThemedText>

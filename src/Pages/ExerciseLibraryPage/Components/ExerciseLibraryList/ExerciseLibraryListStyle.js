@@ -173,12 +173,12 @@ export default StyleSheet.create({
     minWidth: 0,
     justifyContent: "center",
     paddingRight: 8,
-    paddingVertical: 9,
+    paddingVertical: 8,
   },
   exerciseName: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: "800",
-    lineHeight: 20,
+    lineHeight: 22,
   },
   muscleBadgeRow: {
     flexDirection: "row",
@@ -192,12 +192,14 @@ export default StyleSheet.create({
     paddingHorizontal: 7,
     alignItems: "center",
     justifyContent: "center",
+    flexShrink: 0,
   },
   muscleBadgeText: {
     fontSize: 10,
     fontWeight: "900",
     lineHeight: 12,
     textTransform: "uppercase",
+    flexShrink: 0,
   },
   emptyState: {
     flex: 1,
