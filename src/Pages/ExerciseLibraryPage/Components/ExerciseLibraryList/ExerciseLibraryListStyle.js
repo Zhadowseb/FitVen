@@ -182,7 +182,7 @@ export default StyleSheet.create({
   },
   muscleBadgeRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
+    flexWrap: "nowrap",
     gap: 6,
     marginTop: 5,
   },
@@ -194,11 +194,18 @@ export default StyleSheet.create({
     justifyContent: "center",
     flexShrink: 0,
   },
+  primaryMuscleBadge: {
+    minWidth: 64,
+  },
+  secondaryMuscleBadge: {
+    minWidth: 82,
+  },
   muscleBadgeText: {
     fontSize: 10,
     fontWeight: "900",
     lineHeight: 12,
-    textTransform: "uppercase",
+    includeFontPadding: false,
+    textAlign: "center",
     flexShrink: 0,
   },
   emptyState: {

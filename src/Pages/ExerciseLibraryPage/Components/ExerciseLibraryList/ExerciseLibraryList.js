@@ -31,6 +31,8 @@ const GROUP_FILTERS = [
   { key: "mobility", label: "Mobility" },
 ];
 
+const formatMuscleBadgeLabel = (count, label) => `${count}\u00A0${label}`;
+
 const ExerciseLibraryList = ({ refreshKey }) => {
   const db = useSQLiteContext();
   const colorScheme = useColorScheme();
@@ -278,6 +280,7 @@ const ExerciseLibraryList = ({ refreshKey }) => {
                     <View
                       style={[
                         styles.muscleBadge,
+                        styles.primaryMuscleBadge,
                         { backgroundColor: primaryBadgeSurface },
                       ]}
                     >
@@ -287,13 +290,14 @@ const ExerciseLibraryList = ({ refreshKey }) => {
                         numberOfLines={1}
                         ellipsizeMode="clip"
                       >
-                        {primaryCount} primary
+                        {formatMuscleBadgeLabel(primaryCount, "PRIMARY")}
                       </ThemedText>
                     </View>
 
                     <View
                       style={[
                         styles.muscleBadge,
+                        styles.secondaryMuscleBadge,
                         { backgroundColor: secondaryBadgeSurface },
                       ]}
                     >
@@ -303,7 +307,7 @@ const ExerciseLibraryList = ({ refreshKey }) => {
                         numberOfLines={1}
                         ellipsizeMode="clip"
                       >
-                        {secondaryCount} secondary
+                        {formatMuscleBadgeLabel(secondaryCount, "SECONDARY")}
                       </ThemedText>
                     </View>
                   </View>
