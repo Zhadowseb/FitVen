@@ -7,7 +7,7 @@ import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
 
 import styles from './HomePageStyle';
 import { Colors } from '../../Resources/GlobalStyling/colors';
-import BodyMapPreview from './Components/BodyMapPreview/BodyMapPreview';
+import BodyMapPreview from '../../Resources/Components/BodyMapPreview/BodyMapPreview';
 import FeedbackModal from './Components/FeedbackModal/FeedbackModal';
 import FriendsActivity from './Components/FriendsActivity/FriendsActivity';
 import HomeImageShortcutCard from './Components/HomeImageShortcutCard/HomeImageShortcutCard';

@@ -12,6 +12,7 @@ import { useState, useEffect } from "react";
 import styles from "./ExerciseLibraryListStyle";
 import { weightliftingService as weightliftingRepository } from "../../../../Services";
 import { Colors } from "../../../../Resources/GlobalStyling/colors";
+import BodyMapPreview from "../../../../Resources/Components/BodyMapPreview/BodyMapPreview";
 import Filter from "../../../../Resources/Icons/UI-icons/Filter";
 import Library from "../../../../Resources/Icons/UI-icons/Library";
 import Search from "../../../../Resources/Icons/UI-icons/Search";
@@ -213,9 +214,7 @@ const ExerciseLibraryList = ({ refreshKey }) => {
       </ScrollView>
 
       <View style={styles.tableHeader}>
-        <ThemedText style={styles.tableHeaderIndex} setColor={quietText}>
-          #
-        </ThemedText>
+        <View style={styles.tableHeaderPreview} />
         <ThemedText style={styles.tableHeaderExercise} setColor={quietText}>
           Exercise
         </ThemedText>
@@ -260,12 +259,17 @@ const ExerciseLibraryList = ({ refreshKey }) => {
                   { borderColor: cardBorder },
                 ]}
               >
-                <ThemedText
-                  style={styles.exerciseIndexText}
-                  setColor={quietText}
+                <View
+                  style={[
+                    styles.exercisePreviewBadge,
+                    {
+                      backgroundColor: badgeSurface,
+                      borderColor: cardBorder,
+                    },
+                  ]}
                 >
-                  {String(index + 1).padStart(2, "0")}
-                </ThemedText>
+                  <BodyMapPreview style={styles.exercisePreviewBodyMap} />
+                </View>
 
                 <View style={styles.exerciseBody}>
                   <ThemedText

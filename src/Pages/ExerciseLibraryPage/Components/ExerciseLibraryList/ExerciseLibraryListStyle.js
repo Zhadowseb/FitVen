@@ -131,11 +131,8 @@ export default StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 10,
   },
-  tableHeaderIndex: {
-    width: 44,
-    fontSize: 11,
-    fontWeight: "800",
-    textTransform: "uppercase",
+  tableHeaderPreview: {
+    width: 48,
   },
   tableHeaderExercise: {
     flex: 1,
@@ -161,10 +158,20 @@ export default StyleSheet.create({
   exerciseRowLast: {
     borderBottomWidth: 0,
   },
-  exerciseIndexText: {
-    width: 44,
-    fontSize: 13,
-    fontWeight: "800",
+  exercisePreviewBadge: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+    marginRight: 10,
+  },
+  exercisePreviewBodyMap: {
+    width: 15,
+    maxWidth: 15,
+    alignSelf: "center",
   },
   exerciseBody: {
     flex: 1,

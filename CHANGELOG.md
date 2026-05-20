@@ -3,6 +3,7 @@
 ## [0.14.13] - Unreleased
 ### Changed
 - Add a Home screen body map preview test with a pec highlight toggle.
+- Replace exercise catalog row numbers with body map preview badges.
 
 ---
 ## [0.14.12] - Unreleased

@@ -4,7 +4,7 @@ import { LocalSvg } from "react-native-svg/css";
 
 import styles from "./BodyMapPreviewStyle";
 
-const frontBodySvg = require("../../../../Resources/Images/BodyMap/Front_body.svg");
+const frontBodySvg = require("../../Images/BodyMap/Front_body.svg");
 
 const BODY_VIEW_BOX = "0 0 503 1294";
 const PEC_PATHS = [
@@ -21,12 +21,13 @@ const PEC_PATHS = [
 export default function BodyMapPreview({
   pecsHighlighted,
   highlightColor = "#60DAAC",
+  style,
 }) {
   const pecFill = pecsHighlighted ? highlightColor : "transparent";
   const pecOpacity = pecsHighlighted ? 0.72 : 0;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, style]}>
       <LocalSvg
         asset={frontBodySvg}
         width="100%"
