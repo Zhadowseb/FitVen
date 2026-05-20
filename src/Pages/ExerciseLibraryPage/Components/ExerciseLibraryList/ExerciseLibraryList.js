@@ -259,20 +259,10 @@ const ExerciseLibraryList = ({ refreshKey }) => {
                   { borderColor: cardBorder },
                 ]}
               >
-                <View
-                  style={[
-                    styles.exercisePreviewBadge,
-                    {
-                      backgroundColor: badgeSurface,
-                      borderColor: cardBorder,
-                    },
-                  ]}
-                >
-                  <BodyMapPreview
-                    crop="upper"
-                    style={styles.exercisePreviewBodyMap}
-                  />
-                </View>
+                <BodyMapPreview
+                  crop="upper"
+                  style={styles.exercisePreviewBodyMap}
+                />
 
                 <View style={styles.exerciseBody}>
                   <ThemedText

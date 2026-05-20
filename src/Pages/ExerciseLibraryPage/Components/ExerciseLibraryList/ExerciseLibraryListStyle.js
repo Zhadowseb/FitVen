@@ -154,24 +154,16 @@ export default StyleSheet.create({
     borderTopWidth: 1,
     paddingHorizontal: 18,
     paddingVertical: 10,
+    overflow: "hidden",
   },
   exerciseRowLast: {
     borderBottomWidth: 0,
   },
-  exercisePreviewBadge: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-    marginRight: 10,
-  },
   exercisePreviewBodyMap: {
-    width: 15,
-    maxWidth: 15,
+    width: 34,
+    maxWidth: 34,
     alignSelf: "center",
+    marginRight: 14,
   },
   exerciseBody: {
     flex: 1,
