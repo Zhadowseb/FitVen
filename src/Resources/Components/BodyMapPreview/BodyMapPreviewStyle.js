@@ -7,5 +7,16 @@ export default StyleSheet.create({
     aspectRatio: 503 / 1294,
     alignSelf: "center",
     position: "relative",
+    overflow: "hidden",
+  },
+  upperCropContainer: {
+    aspectRatio: 503 / 647,
+  },
+  upperCropSvgFrame: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: "200%",
   },
 });

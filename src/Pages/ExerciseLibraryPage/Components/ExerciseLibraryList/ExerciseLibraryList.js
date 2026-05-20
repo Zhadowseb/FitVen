@@ -268,7 +268,10 @@ const ExerciseLibraryList = ({ refreshKey }) => {
                     },
                   ]}
                 >
-                  <BodyMapPreview style={styles.exercisePreviewBodyMap} />
+                  <BodyMapPreview
+                    crop="upper"
+                    style={styles.exercisePreviewBodyMap}
+                  />
                 </View>
 
                 <View style={styles.exerciseBody}>

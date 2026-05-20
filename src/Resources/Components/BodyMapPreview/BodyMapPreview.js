@@ -19,27 +19,38 @@ const PEC_PATHS = [
 ];
 
 export default function BodyMapPreview({
+  crop = "full",
   pecsHighlighted,
   highlightColor = "#60DAAC",
   style,
 }) {
   const pecFill = pecsHighlighted ? highlightColor : "transparent";
   const pecOpacity = pecsHighlighted ? 0.72 : 0;
+  const isUpperCrop = crop === "upper";
+  const svgFrameStyle = isUpperCrop
+    ? styles.upperCropSvgFrame
+    : StyleSheet.absoluteFill;
 
   return (
-    <View style={[styles.container, style]}>
+    <View
+      style={[
+        styles.container,
+        isUpperCrop && styles.upperCropContainer,
+        style,
+      ]}
+    >
       <LocalSvg
         asset={frontBodySvg}
         width="100%"
         height="100%"
-        style={StyleSheet.absoluteFill}
+        style={svgFrameStyle}
       />
 
       <Svg
         pointerEvents="none"
         viewBox={BODY_VIEW_BOX}
         preserveAspectRatio="xMidYMid meet"
-        style={StyleSheet.absoluteFill}
+        style={svgFrameStyle}
       >
         {PEC_PATHS.map((path) => (
           <Path
