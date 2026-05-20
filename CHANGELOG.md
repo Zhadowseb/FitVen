@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.14.13] - Unreleased
+### Changed
+- Add a Home screen body map preview test with a pec highlight toggle.
+
+---
 ## [0.14.12] - Unreleased
 ### Changed
 - Remove exercise catalog muscle activation percentages and the related detail modal.

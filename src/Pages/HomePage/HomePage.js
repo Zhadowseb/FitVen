@@ -7,6 +7,7 @@ import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
 
 import styles from './HomePageStyle';
 import { Colors } from '../../Resources/GlobalStyling/colors';
+import BodyMapPreview from './Components/BodyMapPreview/BodyMapPreview';
 import FeedbackModal from './Components/FeedbackModal/FeedbackModal';
 import FriendsActivity from './Components/FriendsActivity/FriendsActivity';
 import HomeImageShortcutCard from './Components/HomeImageShortcutCard/HomeImageShortcutCard';
@@ -58,6 +59,7 @@ export default function App() {
   const db = useSQLiteContext();
   const todayDate = getTodaysDate();
   const [feedbackModalVisible, setFeedbackModalVisible] = useState(false);
+  const [pecsHighlighted, setPecsHighlighted] = useState(false);
   const [circlePreview, setCirclePreview] = useState({
     currentUser: null,
     people: [],
@@ -249,6 +251,59 @@ export default function App() {
             ))}
           </View>
         </TouchableOpacity>
+
+        <View
+          style={[
+            styles.bodyMapTestCard,
+            {
+              backgroundColor: cardSurface,
+              borderColor: cardBorder,
+            },
+          ]}
+        >
+          <View style={styles.bodyMapTestHeader}>
+            <View style={styles.bodyMapTestCopy}>
+              <ThemedText
+                style={styles.bodyMapTestEyebrow}
+                setColor={secondaryColor}
+              >
+                BODY MAP TEST
+              </ThemedText>
+              <ThemedTitle
+                type="h3"
+                style={[styles.bodyMapTestTitle, { color: titleColor }]}
+              >
+                Front body preview
+              </ThemedTitle>
+            </View>
+
+            <TouchableOpacity
+              activeOpacity={0.86}
+              onPress={() => setPecsHighlighted((currentValue) => !currentValue)}
+              style={[
+                styles.bodyMapToggle,
+                {
+                  backgroundColor: pecsHighlighted
+                    ? secondaryColor
+                    : innerSurface,
+                  borderColor: pecsHighlighted ? secondaryColor : cardBorder,
+                },
+              ]}
+            >
+              <ThemedText
+                style={styles.bodyMapToggleText}
+                setColor={pecsHighlighted ? cardSurface : quietText}
+              >
+                {pecsHighlighted ? "Pecs on" : "Pecs off"}
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
+
+          <BodyMapPreview
+            pecsHighlighted={pecsHighlighted}
+            highlightColor={secondaryColor}
+          />
+        </View>
       </ScrollView>
 
       <FeedbackModal
