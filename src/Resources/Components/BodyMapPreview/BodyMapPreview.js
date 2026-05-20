@@ -30,6 +30,7 @@ export default function BodyMapPreview({
   const svgFrameStyle = isUpperCrop
     ? styles.upperCropSvgFrame
     : StyleSheet.absoluteFill;
+  const svgFrameHeight = isUpperCrop ? "200%" : "100%";
 
   return (
     <View
@@ -42,11 +43,13 @@ export default function BodyMapPreview({
       <LocalSvg
         asset={frontBodySvg}
         width="100%"
-        height="100%"
+        height={svgFrameHeight}
         style={svgFrameStyle}
       />
 
       <Svg
+        width="100%"
+        height={svgFrameHeight}
         pointerEvents="none"
         viewBox={BODY_VIEW_BOX}
         preserveAspectRatio="xMidYMid meet"
