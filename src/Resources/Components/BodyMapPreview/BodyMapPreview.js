@@ -1,4 +1,4 @@
-import { Image, StyleSheet, View } from "react-native";
+import { Image, View } from "react-native";
 import { LocalSvg } from "react-native-svg/css";
 
 import styles from "./BodyMapPreviewStyle";
@@ -15,8 +15,8 @@ export default function BodyMapPreview({
 }) {
   const isUpperCrop = crop === "upper";
   const frameStyle = isUpperCrop
-    ? styles.upperCropSvgFrame
-    : StyleSheet.absoluteFill;
+    ? styles.upperCropFrame
+    : styles.fullFrame;
   const frameHeight = isUpperCrop ? "200%" : "100%";
 
   return (
@@ -29,7 +29,7 @@ export default function BodyMapPreview({
     >
       <Image
         source={frontBodyImage}
-        resizeMode="contain"
+        resizeMode="stretch"
         style={frameStyle}
       />
       {masksHighlighted ? (
