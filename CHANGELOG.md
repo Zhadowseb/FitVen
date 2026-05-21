@@ -7,6 +7,7 @@
 - Show exercise catalog body maps without circular frames.
 - Load the front body map preview from a compressed PNG asset.
 - Add Supabase setup SQL for body map muscle-region mappings.
+- Highlight mapped primary and secondary muscles on exercise catalog body maps.
 
 ---
 ## [0.14.12] - Unreleased

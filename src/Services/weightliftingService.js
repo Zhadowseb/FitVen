@@ -67,6 +67,9 @@ const LOCAL_EXERCISE_COLUMN_PREFERENCE_USER_ID = "__local__";
 const MUSCLE_ACTIVATION_TABLE = "Muscle_Activation";
 const MUSCLE_GROUP_TABLE = "muscle_group";
 const MUSCLE_GROUP_ASSIGNMENT_TABLE = "muscle_group_assignment";
+const BODY_MAP_REGION_TABLE = "body_map_region";
+const MUSCLE_BODY_MAP_REGION_TABLE = "muscle_body_map_region";
+const FRONT_BODY_MAP_VIEW = "front";
 const PRIMARY_ACTIVATION_LEVEL = "primary";
 const SECONDARY_ACTIVATION_LEVEL = "secondary";
 const EXERCISE_INSTANCE_CLOUD_TABLE = "exercise_instance";
@@ -1212,6 +1215,191 @@ async function getExerciseGroupMetadata({ exerciseIds, activationRows }) {
   }
 }
 
+function normalizeBodyMapRegionKey(value) {
+  return typeof value === "string"
+    ? value.trim().toLocaleLowerCase().replace(/[^a-z0-9]+/g, "_")
+    : "";
+}
+
+function normalizeBodyMapView(value) {
+  const normalizedView =
+    typeof value === "string" ? value.trim().toLocaleLowerCase() : "";
+
+  return normalizedView === "front" || normalizedView === "back"
+    ? normalizedView
+    : "";
+}
+
+function sortBodyMapRegions(left, right) {
+  if (left.bodyView !== right.bodyView) {
+    return left.bodyView === FRONT_BODY_MAP_VIEW ? -1 : 1;
+  }
+
+  return left.name.localeCompare(right.name);
+}
+
+function buildExerciseBodyMapRegionMetadata({
+  regionRows,
+  regionAssignmentRows,
+  activationRows,
+}) {
+  const regionsById = new Map();
+  const musclesToRegions = new Map();
+  const exerciseBuckets = new Map();
+
+  for (const region of regionRows ?? []) {
+    const regionKey = normalizeBodyMapRegionKey(region?.region_key);
+    const bodyView = normalizeBodyMapView(region?.body_view);
+    const name =
+      typeof region?.name === "string" && region.name.trim() !== ""
+        ? region.name.trim()
+        : regionKey;
+
+    if (!region?.id || !regionKey || !bodyView || !name) {
+      continue;
+    }
+
+    regionsById.set(region.id, {
+      id: region.id,
+      key: regionKey,
+      bodyView,
+      name,
+    });
+  }
+
+  for (const row of regionAssignmentRows ?? []) {
+    const region = regionsById.get(row?.body_map_region_id);
+
+    if (!region || !row?.muscle_id) {
+      continue;
+    }
+
+    const existingRegions = musclesToRegions.get(row.muscle_id) ?? [];
+    existingRegions.push(region);
+    musclesToRegions.set(row.muscle_id, existingRegions);
+  }
+
+  for (const activation of activationRows ?? []) {
+    const exerciseId = activation?.exercise_id;
+    const muscleRegions = musclesToRegions.get(activation?.muscle_id) ?? [];
+
+    if (!exerciseId || muscleRegions.length === 0) {
+      continue;
+    }
+
+    const activationLevel = normalizeActivationLevel(
+      activation.activation_level
+    );
+    const bucket = exerciseBuckets.get(exerciseId) ?? {
+      primary: new Map(),
+      secondary: new Map(),
+    };
+
+    for (const region of muscleRegions) {
+      const mapKey = `${region.bodyView}:${region.key}`;
+
+      if (activationLevel === PRIMARY_ACTIVATION_LEVEL) {
+        bucket.primary.set(mapKey, region);
+      }
+
+      if (activationLevel === SECONDARY_ACTIVATION_LEVEL) {
+        bucket.secondary.set(mapKey, region);
+      }
+    }
+
+    exerciseBuckets.set(exerciseId, bucket);
+  }
+
+  const exerciseBodyMapRegionMap = new Map();
+
+  for (const [exerciseId, bucket] of exerciseBuckets.entries()) {
+    const primaryRegionKeySet = new Set(bucket.primary.keys());
+    const primaryRegions = [...bucket.primary.values()].sort(
+      sortBodyMapRegions
+    );
+    const secondaryRegions = [...bucket.secondary.entries()]
+      .filter(([regionKey]) => !primaryRegionKeySet.has(regionKey))
+      .map(([, region]) => region)
+      .sort(sortBodyMapRegions);
+    const primaryFrontRegions = primaryRegions.filter(
+      (region) => region.bodyView === FRONT_BODY_MAP_VIEW
+    );
+    const secondaryFrontRegions = secondaryRegions.filter(
+      (region) => region.bodyView === FRONT_BODY_MAP_VIEW
+    );
+
+    exerciseBodyMapRegionMap.set(exerciseId, {
+      primary_body_map_region_keys: primaryFrontRegions.map(
+        (region) => region.key
+      ),
+      secondary_body_map_region_keys: secondaryFrontRegions.map(
+        (region) => region.key
+      ),
+      primary_body_map_regions: primaryRegions,
+      secondary_body_map_regions: secondaryRegions,
+    });
+  }
+
+  return {
+    exerciseBodyMapRegionMap,
+  };
+}
+
+async function getExerciseBodyMapRegionMetadata({
+  exerciseIds,
+  activationRows,
+}) {
+  if (exerciseIds.length === 0) {
+    return { exerciseBodyMapRegionMap: new Map() };
+  }
+
+  try {
+    const { data: regionRows, error: regionError } = await supabase
+      .from(BODY_MAP_REGION_TABLE)
+      .select("id, region_key, body_view, name")
+      .order("body_view", { ascending: true })
+      .order("name", { ascending: true });
+
+    if (regionError) {
+      throw regionError;
+    }
+
+    const regionIds = (regionRows ?? [])
+      .map((region) => region?.id)
+      .filter((id) => id !== null && id !== undefined);
+    const muscleIds = [
+      ...new Set(
+        (activationRows ?? [])
+          .map((activation) => activation?.muscle_id)
+          .filter((id) => id !== null && id !== undefined)
+      ),
+    ];
+
+    if (regionIds.length === 0 || muscleIds.length === 0) {
+      return { exerciseBodyMapRegionMap: new Map() };
+    }
+
+    const { data: regionAssignmentRows, error: regionAssignmentError } =
+      await supabase
+        .from(MUSCLE_BODY_MAP_REGION_TABLE)
+        .select("muscle_id, body_map_region_id")
+        .in("body_map_region_id", regionIds)
+        .in("muscle_id", muscleIds);
+
+    if (regionAssignmentError) {
+      throw regionAssignmentError;
+    }
+
+    return buildExerciseBodyMapRegionMetadata({
+      regionRows,
+      regionAssignmentRows,
+      activationRows,
+    });
+  } catch (_error) {
+    return { exerciseBodyMapRegionMap: new Map() };
+  }
+}
+
 async function getDefaultMesocycleProgressionWeight(
   db,
   { programId, mesocycleNumber, exerciseName }
@@ -1423,6 +1611,16 @@ function mapExerciseCatalogForDisplay(entries) {
     primary_group_name: entry.primary_group_name ?? null,
     group_keys: Array.isArray(entry.group_keys) ? entry.group_keys : [],
     group_names: Array.isArray(entry.group_names) ? entry.group_names : [],
+    primary_body_map_region_keys: Array.isArray(
+      entry.primary_body_map_region_keys
+    )
+      ? entry.primary_body_map_region_keys
+      : [],
+    secondary_body_map_region_keys: Array.isArray(
+      entry.secondary_body_map_region_keys
+    )
+      ? entry.secondary_body_map_region_keys
+      : [],
   }));
 }
 
@@ -1550,10 +1748,16 @@ export async function getExerciseLibraryEntries(db) {
       activationRows = data ?? [];
     }
 
-    const groupMetadata = await getExerciseGroupMetadata({
-      exerciseIds,
-      activationRows,
-    });
+    const [groupMetadata, bodyMapRegionMetadata] = await Promise.all([
+      getExerciseGroupMetadata({
+        exerciseIds,
+        activationRows,
+      }),
+      getExerciseBodyMapRegionMetadata({
+        exerciseIds,
+        activationRows,
+      }),
+    ]);
     const roleCountMap = buildExerciseMuscleRoleCounts(activationRows);
     const cloudExerciseMap = new Map(
       (exerciseRows ?? []).map((exercise) => {
@@ -1566,6 +1770,9 @@ export async function getExerciseLibraryEntries(db) {
             : null;
         const groupData =
           groupMetadata.exerciseGroupMap.get(exercise.id) ?? {};
+        const bodyMapRegionData =
+          bodyMapRegionMetadata.exerciseBodyMapRegionMap.get(exercise.id) ??
+          {};
         const roleCountData = roleCountMap.get(exercise.id) ?? {};
 
         return [
@@ -1582,6 +1789,7 @@ export async function getExerciseLibraryEntries(db) {
               exercise?.default_visible_columns
             ),
             ...groupData,
+            ...bodyMapRegionData,
             ...roleCountData,
           },
         ];

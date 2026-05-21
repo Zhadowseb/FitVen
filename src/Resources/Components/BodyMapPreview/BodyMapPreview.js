@@ -1,6 +1,7 @@
 import { Image, View } from "react-native";
 import { LocalSvg } from "react-native-svg/css";
 
+import FrontBodyMapRegionOverlay from "./FrontBodyMapRegionOverlay";
 import styles from "./BodyMapPreviewStyle";
 
 const frontBodyImage = require("../../BodyMap/Front/Front_body_compressed.png");
@@ -11,6 +12,8 @@ const frontMuscleMasksSvg = require(
 export default function BodyMapPreview({
   crop = "full",
   masksHighlighted = false,
+  primaryRegionKeys = [],
+  secondaryRegionKeys = [],
   style,
 }) {
   const isUpperCrop = crop === "upper";
@@ -30,6 +33,12 @@ export default function BodyMapPreview({
       <Image
         source={frontBodyImage}
         resizeMode="stretch"
+        style={frameStyle}
+      />
+      <FrontBodyMapRegionOverlay
+        height={frameHeight}
+        primaryRegionKeys={primaryRegionKeys}
+        secondaryRegionKeys={secondaryRegionKeys}
         style={frameStyle}
       />
       {masksHighlighted ? (
