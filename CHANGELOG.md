@@ -6,6 +6,7 @@
 - Replace exercise catalog row numbers with body map preview badges.
 - Show exercise catalog body maps without circular frames.
 - Load the front body map preview from a compressed PNG asset.
+- Add Supabase setup SQL for body map muscle-region mappings.
 
 ---
 ## [0.14.12] - Unreleased
