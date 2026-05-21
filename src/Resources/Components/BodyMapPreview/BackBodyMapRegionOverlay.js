@@ -87,29 +87,29 @@ const BACK_REGION_ASSETS = {
   infraspinatus: [
     {
       asset: infraspinatusLeftAsset,
-      x: 285,
+      x: 152,
       y: 273,
       width: 52,
       height: 81,
     },
     {
       asset: infraspinatusRightAsset,
-      x: 151,
+      x: 285,
       y: 273,
       width: 53,
       height: 82,
     },
   ],
   lats: [
-    { asset: leftLatAsset, x: 267, y: 342, width: 96, height: 167 },
-    { asset: rightLatAsset, x: 126, y: 337, width: 96, height: 172 },
+    { asset: leftLatAsset, x: 126, y: 342, width: 96, height: 167 },
+    { asset: rightLatAsset, x: 267, y: 337, width: 96, height: 172 },
   ],
   lower_back: [
     { asset: lowerBackAsset, x: 185, y: 394, width: 119, height: 234 },
   ],
   rear_delts: [
-    { asset: rearDeltLeftAsset, x: 309, y: 224, width: 86, height: 78 },
-    { asset: rearDeltRightAsset, x: 94, y: 224, width: 86, height: 80 },
+    { asset: rearDeltLeftAsset, x: 94, y: 224, width: 86, height: 78 },
+    { asset: rearDeltRightAsset, x: 309, y: 224, width: 86, height: 80 },
   ],
   side_delts: [
     { asset: sideDeltAsset, x: 70, y: 224, width: 348, height: 102 },
@@ -118,14 +118,14 @@ const BACK_REGION_ASSETS = {
     { asset: teresMajorAsset, x: 122, y: 313, width: 244, height: 38 },
   ],
   teres_minor: [
-    { asset: teresMinorLeftAsset, x: 310, y: 305, width: 20, height: 18 },
-    { asset: teresMinorRightAsset, x: 158, y: 306, width: 24, height: 16 },
+    { asset: teresMinorLeftAsset, x: 159, y: 305, width: 20, height: 18 },
+    { asset: teresMinorRightAsset, x: 307, y: 306, width: 24, height: 16 },
   ],
   triceps: [
-    { asset: innerTricepLeftAsset, x: 386, y: 335, width: 46, height: 152 },
-    { asset: innerTricepRightAsset, x: 58, y: 335, width: 45, height: 148 },
-    { asset: outsideTricepLeftAsset, x: 345, y: 326, width: 47, height: 96 },
-    { asset: outsideTricepRightAsset, x: 98, y: 326, width: 49, height: 130 },
+    { asset: innerTricepLeftAsset, x: 57, y: 335, width: 46, height: 152 },
+    { asset: innerTricepRightAsset, x: 386, y: 335, width: 45, height: 148 },
+    { asset: outsideTricepLeftAsset, x: 97, y: 326, width: 47, height: 96 },
+    { asset: outsideTricepRightAsset, x: 342, y: 326, width: 49, height: 130 },
   ],
   upper_traps: [
     { asset: upperTrapsAsset, x: 136, y: 181, width: 217, height: 102 },

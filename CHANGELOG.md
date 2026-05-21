@@ -11,6 +11,7 @@
 - Seed body map region mappings for the current shared muscle catalog.
 - Show front or back body map previews per exercise catalog row.
 - Render mapped back-view body map muscle overlays.
+- Correct left and right muscle mask placement for back-view overlays.
 
 ---
 ## [0.14.12] - Unreleased
