@@ -1275,6 +1275,12 @@ function chooseBodyMapView({ primaryRegions, secondaryRegions }) {
   return totalBack > totalFront ? BACK_BODY_MAP_VIEW : FRONT_BODY_MAP_VIEW;
 }
 
+function getBodyMapRegionKeysForView(regions, bodyView) {
+  return (regions ?? [])
+    .filter((region) => region.bodyView === bodyView)
+    .map((region) => region.key);
+}
+
 function buildExerciseBodyMapRegionMetadata({
   regionRows,
   regionAssignmentRows,
@@ -1362,21 +1368,37 @@ function buildExerciseBodyMapRegionMetadata({
       primaryRegions,
       secondaryRegions,
     });
-    const selectedPrimaryRegions = primaryRegions.filter(
-      (region) => region.bodyView === bodyMapView
+    const primaryFrontRegionKeys = getBodyMapRegionKeysForView(
+      primaryRegions,
+      FRONT_BODY_MAP_VIEW
     );
-    const selectedSecondaryRegions = secondaryRegions.filter(
-      (region) => region.bodyView === bodyMapView
+    const primaryBackRegionKeys = getBodyMapRegionKeysForView(
+      primaryRegions,
+      BACK_BODY_MAP_VIEW
+    );
+    const secondaryFrontRegionKeys = getBodyMapRegionKeysForView(
+      secondaryRegions,
+      FRONT_BODY_MAP_VIEW
+    );
+    const secondaryBackRegionKeys = getBodyMapRegionKeysForView(
+      secondaryRegions,
+      BACK_BODY_MAP_VIEW
     );
 
     exerciseBodyMapRegionMap.set(exerciseId, {
       body_map_view: bodyMapView,
-      primary_body_map_region_keys: selectedPrimaryRegions.map(
-        (region) => region.key
-      ),
-      secondary_body_map_region_keys: selectedSecondaryRegions.map(
-        (region) => region.key
-      ),
+      primary_body_map_region_keys:
+        bodyMapView === BACK_BODY_MAP_VIEW
+          ? primaryBackRegionKeys
+          : primaryFrontRegionKeys,
+      secondary_body_map_region_keys:
+        bodyMapView === BACK_BODY_MAP_VIEW
+          ? secondaryBackRegionKeys
+          : secondaryFrontRegionKeys,
+      primary_front_body_map_region_keys: primaryFrontRegionKeys,
+      secondary_front_body_map_region_keys: secondaryFrontRegionKeys,
+      primary_back_body_map_region_keys: primaryBackRegionKeys,
+      secondary_back_body_map_region_keys: secondaryBackRegionKeys,
       primary_body_map_regions: primaryRegions,
       secondary_body_map_regions: secondaryRegions,
     });
@@ -1664,6 +1686,26 @@ function mapExerciseCatalogForDisplay(entries) {
       entry.secondary_body_map_region_keys
     )
       ? entry.secondary_body_map_region_keys
+      : [],
+    primary_front_body_map_region_keys: Array.isArray(
+      entry.primary_front_body_map_region_keys
+    )
+      ? entry.primary_front_body_map_region_keys
+      : [],
+    secondary_front_body_map_region_keys: Array.isArray(
+      entry.secondary_front_body_map_region_keys
+    )
+      ? entry.secondary_front_body_map_region_keys
+      : [],
+    primary_back_body_map_region_keys: Array.isArray(
+      entry.primary_back_body_map_region_keys
+    )
+      ? entry.primary_back_body_map_region_keys
+      : [],
+    secondary_back_body_map_region_keys: Array.isArray(
+      entry.secondary_back_body_map_region_keys
+    )
+      ? entry.secondary_back_body_map_region_keys
       : [],
   }));
 }

@@ -208,6 +208,42 @@ export default StyleSheet.create({
     textAlign: "center",
     flexShrink: 0,
   },
+  exerciseBodyMapModal: {
+    width: "94%",
+    maxHeight: "92%",
+    paddingHorizontal: 18,
+  },
+  exerciseBodyMapModalBody: {
+    flexGrow: 0,
+    gap: 14,
+  },
+  exerciseBodyMapModalBadges: {
+    justifyContent: "center",
+    marginTop: 0,
+  },
+  exerciseBodyMapModalFigures: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "center",
+    gap: 16,
+    minWidth: 0,
+  },
+  exerciseBodyMapModalFigure: {
+    flex: 1,
+    minWidth: 0,
+    alignItems: "center",
+  },
+  exerciseBodyMapModalFigureLabel: {
+    fontSize: 11,
+    fontWeight: "800",
+    lineHeight: 14,
+    marginBottom: 8,
+    textTransform: "uppercase",
+  },
+  exerciseBodyMapModalPreview: {
+    width: "100%",
+    maxWidth: 138,
+  },
   emptyState: {
     flex: 1,
     alignItems: "center",

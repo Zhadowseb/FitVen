@@ -12,6 +12,7 @@
 - Show front or back body map previews per exercise catalog row.
 - Render mapped back-view body map muscle overlays.
 - Correct left and right muscle mask placement for back-view overlays.
+- Open exercise catalog body maps in a full front and back detail modal.
 
 ---
 ## [0.14.12] - Unreleased

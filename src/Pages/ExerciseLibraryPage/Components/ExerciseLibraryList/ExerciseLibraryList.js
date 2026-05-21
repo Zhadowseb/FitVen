@@ -18,6 +18,7 @@ import Library from "../../../../Resources/Icons/UI-icons/Library";
 import Search from "../../../../Resources/Icons/UI-icons/Search";
 import {
   ThemedCard,
+  ThemedModal,
   ThemedText,
   ThemedTitle,
 } from "../../../../Resources/ThemedComponents";
@@ -33,6 +34,52 @@ const GROUP_FILTERS = [
 
 const formatMuscleBadgeLabel = (count, label) => `${count}\u00A0${label}`;
 
+const ExerciseMuscleBadges = ({
+  primaryBadgeSurface,
+  primaryBadgeText,
+  primaryCount,
+  secondaryBadgeSurface,
+  secondaryBadgeText,
+  secondaryCount,
+  style,
+}) => (
+  <View style={[styles.muscleBadgeRow, style]}>
+    <View
+      style={[
+        styles.muscleBadge,
+        styles.primaryMuscleBadge,
+        { backgroundColor: primaryBadgeSurface },
+      ]}
+    >
+      <ThemedText
+        style={styles.muscleBadgeText}
+        setColor={primaryBadgeText}
+        numberOfLines={1}
+        ellipsizeMode="clip"
+      >
+        {formatMuscleBadgeLabel(primaryCount, "PRIMARY")}
+      </ThemedText>
+    </View>
+
+    <View
+      style={[
+        styles.muscleBadge,
+        styles.secondaryMuscleBadge,
+        { backgroundColor: secondaryBadgeSurface },
+      ]}
+    >
+      <ThemedText
+        style={styles.muscleBadgeText}
+        setColor={secondaryBadgeText}
+        numberOfLines={1}
+        ellipsizeMode="clip"
+      >
+        {formatMuscleBadgeLabel(secondaryCount, "SECONDARY")}
+      </ThemedText>
+    </View>
+  </View>
+);
+
 const ExerciseLibraryList = ({ refreshKey }) => {
   const db = useSQLiteContext();
   const colorScheme = useColorScheme();
@@ -40,6 +87,7 @@ const ExerciseLibraryList = ({ refreshKey }) => {
   const [exercises, set_exercises] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGroupKey, setSelectedGroupKey] = useState("all");
+  const [selectedExercise, setSelectedExercise] = useState(null);
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const titleColor = theme.title ?? theme.text;
   const primaryColor = theme.primary ?? "#f7742e";
@@ -93,15 +141,16 @@ const ExerciseLibraryList = ({ refreshKey }) => {
   };
 
   return (
-    <ThemedCard
-      style={[
-        styles.card,
-        {
-          backgroundColor: cardSurface,
-          borderColor: cardBorder,
-        },
-      ]}
-    >
+    <>
+      <ThemedCard
+        style={[
+          styles.card,
+          {
+            backgroundColor: cardSurface,
+            borderColor: cardBorder,
+          },
+        ]}
+      >
       <View style={styles.header}>
         <View style={[styles.headerIcon, { backgroundColor: secondaryBadgeSurface }]}>
           <Library width={22} height={22} color={primaryColor} />
@@ -252,8 +301,11 @@ const ExerciseLibraryList = ({ refreshKey }) => {
             const secondaryCount = exercise.secondary_muscle_count ?? 0;
 
             return (
-              <View
+              <Pressable
                 key={exercise.exercise_name}
+                accessibilityRole="button"
+                accessibilityLabel={`Show ${exercise.exercise_name} muscles`}
+                onPress={() => setSelectedExercise(exercise)}
                 style={[
                   styles.exerciseRow,
                   index === filteredExercises.length - 1 &&
@@ -279,48 +331,84 @@ const ExerciseLibraryList = ({ refreshKey }) => {
                     {exercise.exercise_name}
                   </ThemedText>
 
-                  <View style={styles.muscleBadgeRow}>
-                    <View
-                      style={[
-                        styles.muscleBadge,
-                        styles.primaryMuscleBadge,
-                        { backgroundColor: primaryBadgeSurface },
-                      ]}
-                    >
-                      <ThemedText
-                        style={styles.muscleBadgeText}
-                        setColor={primaryBadgeText}
-                        numberOfLines={1}
-                        ellipsizeMode="clip"
-                      >
-                        {formatMuscleBadgeLabel(primaryCount, "PRIMARY")}
-                      </ThemedText>
-                    </View>
-
-                    <View
-                      style={[
-                        styles.muscleBadge,
-                        styles.secondaryMuscleBadge,
-                        { backgroundColor: secondaryBadgeSurface },
-                      ]}
-                    >
-                      <ThemedText
-                        style={styles.muscleBadgeText}
-                        setColor={secondaryBadgeText}
-                        numberOfLines={1}
-                        ellipsizeMode="clip"
-                      >
-                        {formatMuscleBadgeLabel(secondaryCount, "SECONDARY")}
-                      </ThemedText>
-                    </View>
-                  </View>
+                  <ExerciseMuscleBadges
+                    primaryBadgeSurface={primaryBadgeSurface}
+                    primaryBadgeText={primaryBadgeText}
+                    primaryCount={primaryCount}
+                    secondaryBadgeSurface={secondaryBadgeSurface}
+                    secondaryBadgeText={secondaryBadgeText}
+                    secondaryCount={secondaryCount}
+                  />
                 </View>
-              </View>
+              </Pressable>
             );
           })}
         </ScrollView>
       )}
-    </ThemedCard>
+      </ThemedCard>
+
+      <ThemedModal
+        visible={Boolean(selectedExercise)}
+        onClose={() => setSelectedExercise(null)}
+        title={selectedExercise?.exercise_name}
+        style={styles.exerciseBodyMapModal}
+        contentStyle={styles.exerciseBodyMapModalBody}
+      >
+        {selectedExercise ? (
+          <>
+            <ExerciseMuscleBadges
+              primaryBadgeSurface={primaryBadgeSurface}
+              primaryBadgeText={primaryBadgeText}
+              primaryCount={selectedExercise.primary_muscle_count ?? 0}
+              secondaryBadgeSurface={secondaryBadgeSurface}
+              secondaryBadgeText={secondaryBadgeText}
+              secondaryCount={selectedExercise.secondary_muscle_count ?? 0}
+              style={styles.exerciseBodyMapModalBadges}
+            />
+
+            <View style={styles.exerciseBodyMapModalFigures}>
+              <View style={styles.exerciseBodyMapModalFigure}>
+                <ThemedText
+                  style={styles.exerciseBodyMapModalFigureLabel}
+                  setColor={quietText}
+                >
+                  Front
+                </ThemedText>
+                <BodyMapPreview
+                  bodyView="front"
+                  primaryRegionKeys={
+                    selectedExercise.primary_front_body_map_region_keys
+                  }
+                  secondaryRegionKeys={
+                    selectedExercise.secondary_front_body_map_region_keys
+                  }
+                  style={styles.exerciseBodyMapModalPreview}
+                />
+              </View>
+
+              <View style={styles.exerciseBodyMapModalFigure}>
+                <ThemedText
+                  style={styles.exerciseBodyMapModalFigureLabel}
+                  setColor={quietText}
+                >
+                  Back
+                </ThemedText>
+                <BodyMapPreview
+                  bodyView="back"
+                  primaryRegionKeys={
+                    selectedExercise.primary_back_body_map_region_keys
+                  }
+                  secondaryRegionKeys={
+                    selectedExercise.secondary_back_body_map_region_keys
+                  }
+                  style={styles.exerciseBodyMapModalPreview}
+                />
+              </View>
+            </View>
+          </>
+        ) : null}
+      </ThemedModal>
+    </>
   );
 };
 
