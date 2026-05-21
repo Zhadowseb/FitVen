@@ -5,6 +5,7 @@
 - Add a Home screen body map preview test with a lightweight front muscle mask toggle.
 - Replace exercise catalog row numbers with body map preview badges.
 - Show exercise catalog body maps without circular frames.
+- Load the front body map preview from a compressed PNG asset.
 
 ---
 ## [0.14.12] - Unreleased
