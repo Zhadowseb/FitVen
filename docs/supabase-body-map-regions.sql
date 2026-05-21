@@ -229,27 +229,46 @@ for select
 to authenticated
 using (true);
 
--- Optional mapping seed template:
--- Add rows here once the exact public."Muscle".name values are confirmed.
---
--- with seed_mappings(muscle_name, body_view, region_key) as (
---   values
---     ('Pectoralis Major', 'front', 'pecs'),
---     ('Anterior Deltoid', 'front', 'front_delts'),
---     ('Lateral Deltoid', 'front', 'side_delts'),
---     ('Lateral Deltoid', 'back', 'side_delts'),
---     ('Triceps', 'back', 'triceps')
--- )
--- insert into public.muscle_body_map_region (muscle_id, body_map_region_id)
--- select
---   "Muscle".id,
---   body_map_region.id
--- from seed_mappings
--- join public."Muscle"
---   on lower("Muscle".name) = lower(seed_mappings.muscle_name)
--- join public.body_map_region
---   on body_map_region.body_view = seed_mappings.body_view
---  and body_map_region.region_key = seed_mappings.region_key
--- on conflict (muscle_id, body_map_region_id) do nothing;
+-- Default mappings for the current public."Muscle" catalog.
+-- Unmapped for now because no matching body-map region exists yet:
+-- Serratus Anterior, Tibialis Anterior, Rhomboideus.
+with seed_mappings(muscle_name, body_view, region_key) as (
+  values
+    ('Pectoralis Major', 'front', 'pecs'),
+    ('Pectoralis Minor', 'front', 'pecs'),
+    ('Front Deltoid', 'front', 'front_delts'),
+    ('Lateral Deltoid', 'front', 'side_delts'),
+    ('Lateral Deltoid', 'back', 'side_delts'),
+    ('Rear Deltoid', 'back', 'rear_delts'),
+    ('Biceps Brachii', 'front', 'biceps'),
+    ('Rectus Abdominis', 'front', 'abs'),
+    ('Abdominal External Oblique', 'front', 'obliques'),
+    ('Rectus Femoris', 'front', 'quads'),
+    ('Vastus Lateralis', 'front', 'quads'),
+    ('Vastus Medialis', 'front', 'quads'),
+    ('Soleus', 'back', 'calves'),
+    ('Gastrocnemius', 'back', 'calves'),
+    ('Biceps Femoris', 'back', 'hamstrings'),
+    ('Semitendinosus', 'back', 'hamstrings'),
+    ('Semimembranosus', 'back', 'hamstrings'),
+    ('Gluteus Maximus', 'back', 'glutes'),
+    ('Gluteus Medius', 'back', 'glutes'),
+    ('Latissimus Dorsi', 'back', 'lats'),
+    ('Erector Spinae', 'back', 'lower_back'),
+    ('Trapezius', 'front', 'upper_traps'),
+    ('Trapezius', 'back', 'upper_traps'),
+    ('Triceps Brachii', 'back', 'triceps')
+)
+insert into public.muscle_body_map_region (muscle_id, body_map_region_id)
+select
+  "Muscle".id,
+  body_map_region.id
+from seed_mappings
+join public."Muscle"
+  on lower(btrim("Muscle".name)) = lower(btrim(seed_mappings.muscle_name))
+join public.body_map_region
+  on body_map_region.body_view = seed_mappings.body_view
+ and body_map_region.region_key = seed_mappings.region_key
+on conflict (muscle_id, body_map_region_id) do nothing;
 
 commit;
