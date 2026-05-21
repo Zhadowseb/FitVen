@@ -262,6 +262,7 @@ const ExerciseLibraryList = ({ refreshKey }) => {
                 ]}
               >
                 <BodyMapPreview
+                  bodyView={exercise.body_map_view}
                   crop="upper"
                   primaryRegionKeys={exercise.primary_body_map_region_keys}
                   secondaryRegionKeys={exercise.secondary_body_map_region_keys}

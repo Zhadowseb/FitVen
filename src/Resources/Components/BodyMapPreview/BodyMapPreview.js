@@ -4,44 +4,52 @@ import { LocalSvg } from "react-native-svg/css";
 import FrontBodyMapRegionOverlay from "./FrontBodyMapRegionOverlay";
 import styles from "./BodyMapPreviewStyle";
 
+const backBodyImage = require("../../BodyMap/Back/Back_body_compressed.png");
 const frontBodyImage = require("../../BodyMap/Front/Front_body_compressed.png");
 const frontMuscleMasksSvg = require(
   "../../BodyMap/Front/Muscle_masks/Front_muscle_masks.svg"
 );
 
 export default function BodyMapPreview({
+  bodyView = "front",
   crop = "full",
   masksHighlighted = false,
   primaryRegionKeys = [],
   secondaryRegionKeys = [],
   style,
 }) {
+  const isBackView = bodyView === "back";
   const isUpperCrop = crop === "upper";
   const frameStyle = isUpperCrop
     ? styles.upperCropFrame
     : styles.fullFrame;
   const frameHeight = isUpperCrop ? "200%" : "100%";
+  const bodyImage = isBackView ? backBodyImage : frontBodyImage;
 
   return (
     <View
       style={[
         styles.container,
+        isBackView && styles.backContainer,
         isUpperCrop && styles.upperCropContainer,
+        isBackView && isUpperCrop && styles.backUpperCropContainer,
         style,
       ]}
     >
       <Image
-        source={frontBodyImage}
+        source={bodyImage}
         resizeMode="stretch"
         style={frameStyle}
       />
-      <FrontBodyMapRegionOverlay
-        height={frameHeight}
-        primaryRegionKeys={primaryRegionKeys}
-        secondaryRegionKeys={secondaryRegionKeys}
-        style={frameStyle}
-      />
-      {masksHighlighted ? (
+      {!isBackView ? (
+        <FrontBodyMapRegionOverlay
+          height={frameHeight}
+          primaryRegionKeys={primaryRegionKeys}
+          secondaryRegionKeys={secondaryRegionKeys}
+          style={frameStyle}
+        />
+      ) : null}
+      {!isBackView && masksHighlighted ? (
         <LocalSvg
           asset={frontMuscleMasksSvg}
           width="100%"

@@ -16,8 +16,14 @@ export default StyleSheet.create({
     position: "relative",
     overflow: "hidden",
   },
+  backContainer: {
+    aspectRatio: 489 / 1263,
+  },
   upperCropContainer: {
     aspectRatio: 503 / 647,
+  },
+  backUpperCropContainer: {
+    aspectRatio: 489 / 631.5,
   },
   upperCropFrame: {
     position: "absolute",
