@@ -59,6 +59,7 @@ export default function App() {
   const db = useSQLiteContext();
   const todayDate = getTodaysDate();
   const [feedbackModalVisible, setFeedbackModalVisible] = useState(false);
+  const [bodyMasksHighlighted, setBodyMasksHighlighted] = useState(false);
   const [circlePreview, setCirclePreview] = useState({
     currentUser: null,
     people: [],
@@ -275,9 +276,34 @@ export default function App() {
                 Front body preview
               </ThemedTitle>
             </View>
+
+            <TouchableOpacity
+              activeOpacity={0.86}
+              onPress={() =>
+                setBodyMasksHighlighted((currentValue) => !currentValue)
+              }
+              style={[
+                styles.bodyMapToggle,
+                {
+                  backgroundColor: bodyMasksHighlighted
+                    ? secondaryColor
+                    : innerSurface,
+                  borderColor: bodyMasksHighlighted
+                    ? secondaryColor
+                    : cardBorder,
+                },
+              ]}
+            >
+              <ThemedText
+                style={styles.bodyMapToggleText}
+                setColor={bodyMasksHighlighted ? cardSurface : quietText}
+              >
+                {bodyMasksHighlighted ? "Masks on" : "Masks off"}
+              </ThemedText>
+            </TouchableOpacity>
           </View>
 
-          <BodyMapPreview />
+          <BodyMapPreview masksHighlighted={bodyMasksHighlighted} />
         </View>
       </ScrollView>
 

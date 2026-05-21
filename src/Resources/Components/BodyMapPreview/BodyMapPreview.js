@@ -4,9 +4,13 @@ import { LocalSvg } from "react-native-svg/css";
 import styles from "./BodyMapPreviewStyle";
 
 const frontBodySvg = require("../../BodyMap/Front/Front_body.svg");
+const frontMuscleMasksSvg = require(
+  "../../BodyMap/Front/Muscle_masks/Front_muscle_masks.svg"
+);
 
 export default function BodyMapPreview({
   crop = "full",
+  masksHighlighted = false,
   style,
 }) {
   const isUpperCrop = crop === "upper";
@@ -29,6 +33,14 @@ export default function BodyMapPreview({
         height={svgFrameHeight}
         style={svgFrameStyle}
       />
+      {masksHighlighted ? (
+        <LocalSvg
+          asset={frontMuscleMasksSvg}
+          width="100%"
+          height={svgFrameHeight}
+          style={svgFrameStyle}
+        />
+      ) : null}
     </View>
   );
 }
