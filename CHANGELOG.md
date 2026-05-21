@@ -10,6 +10,7 @@
 - Highlight mapped primary and secondary muscles on exercise catalog body maps.
 - Seed body map region mappings for the current shared muscle catalog.
 - Show front or back body map previews per exercise catalog row.
+- Render mapped back-view body map muscle overlays.
 
 ---
 ## [0.14.12] - Unreleased

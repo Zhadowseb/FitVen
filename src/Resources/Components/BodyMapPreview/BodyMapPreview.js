@@ -1,6 +1,7 @@
 import { Image, View } from "react-native";
 import { LocalSvg } from "react-native-svg/css";
 
+import BackBodyMapRegionOverlay from "./BackBodyMapRegionOverlay";
 import FrontBodyMapRegionOverlay from "./FrontBodyMapRegionOverlay";
 import styles from "./BodyMapPreviewStyle";
 
@@ -48,7 +49,13 @@ export default function BodyMapPreview({
           secondaryRegionKeys={secondaryRegionKeys}
           style={frameStyle}
         />
-      ) : null}
+      ) : (
+        <BackBodyMapRegionOverlay
+          primaryRegionKeys={primaryRegionKeys}
+          secondaryRegionKeys={secondaryRegionKeys}
+          style={frameStyle}
+        />
+      )}
       {!isBackView && masksHighlighted ? (
         <LocalSvg
           asset={frontMuscleMasksSvg}
