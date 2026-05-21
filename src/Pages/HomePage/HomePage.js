@@ -59,7 +59,7 @@ export default function App() {
   const db = useSQLiteContext();
   const todayDate = getTodaysDate();
   const [feedbackModalVisible, setFeedbackModalVisible] = useState(false);
-  const [pecsHighlighted, setPecsHighlighted] = useState(false);
+  const [bodyMasksHighlighted, setBodyMasksHighlighted] = useState(false);
   const [circlePreview, setCirclePreview] = useState({
     currentUser: null,
     people: [],
@@ -279,29 +279,32 @@ export default function App() {
 
             <TouchableOpacity
               activeOpacity={0.86}
-              onPress={() => setPecsHighlighted((currentValue) => !currentValue)}
+              onPress={() =>
+                setBodyMasksHighlighted((currentValue) => !currentValue)
+              }
               style={[
                 styles.bodyMapToggle,
                 {
-                  backgroundColor: pecsHighlighted
+                  backgroundColor: bodyMasksHighlighted
                     ? secondaryColor
                     : innerSurface,
-                  borderColor: pecsHighlighted ? secondaryColor : cardBorder,
+                  borderColor: bodyMasksHighlighted
+                    ? secondaryColor
+                    : cardBorder,
                 },
               ]}
             >
               <ThemedText
                 style={styles.bodyMapToggleText}
-                setColor={pecsHighlighted ? cardSurface : quietText}
+                setColor={bodyMasksHighlighted ? cardSurface : quietText}
               >
-                {pecsHighlighted ? "Pecs on" : "Pecs off"}
+                {bodyMasksHighlighted ? "Masks on" : "Masks off"}
               </ThemedText>
             </TouchableOpacity>
           </View>
 
           <BodyMapPreview
-            pecsHighlighted={pecsHighlighted}
-            highlightColor={secondaryColor}
+            masksHighlighted={bodyMasksHighlighted}
           />
         </View>
       </ScrollView>

@@ -2,7 +2,7 @@
 
 ## [0.14.13] - Unreleased
 ### Changed
-- Add a Home screen body map preview test with a pec highlight toggle.
+- Add a Home screen body map preview test with a front muscle mask toggle.
 - Replace exercise catalog row numbers with body map preview badges.
 - Show exercise catalog body maps without circular frames.
 
