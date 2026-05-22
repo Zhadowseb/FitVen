@@ -51,6 +51,7 @@ export default function BodyMapPreview({
         />
       ) : (
         <BackBodyMapRegionOverlay
+          height={frameHeight}
           primaryRegionKeys={primaryRegionKeys}
           secondaryRegionKeys={secondaryRegionKeys}
           style={frameStyle}
