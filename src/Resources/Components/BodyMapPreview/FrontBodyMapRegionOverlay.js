@@ -121,6 +121,7 @@ export default function FrontBodyMapRegionOverlay({
 
   return (
     <Svg
+      preserveAspectRatio="none"
       pointerEvents="none"
       viewBox="0 0 503 1294"
       width={width}

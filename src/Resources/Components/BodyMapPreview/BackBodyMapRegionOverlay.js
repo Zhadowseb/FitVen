@@ -184,6 +184,7 @@ function renderRegionAssets(regionKeys, { layer, opacity }) {
         <LocalSvg
           asset={placement.asset}
           height="100%"
+          preserveAspectRatio="none"
           style={styles.regionMask}
           width="100%"
         />

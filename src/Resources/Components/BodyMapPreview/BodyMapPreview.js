@@ -61,6 +61,7 @@ export default function BodyMapPreview({
           asset={frontMuscleMasksSvg}
           width="100%"
           height={frameHeight}
+          preserveAspectRatio="none"
           style={frameStyle}
         />
       ) : null}
