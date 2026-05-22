@@ -15,6 +15,7 @@
 - Open exercise catalog body maps in a full front and back detail modal.
 - Keep cropped back muscle masks aligned in full body map previews.
 - Stretch body map mask overlays with the same preview frame as the body image.
+- Shift back body map muscle masks up to match the back preview baseline.
 
 ---
 ## [0.14.12] - Unreleased

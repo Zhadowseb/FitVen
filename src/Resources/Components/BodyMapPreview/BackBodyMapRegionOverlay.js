@@ -5,6 +5,7 @@ import styles from "./BackBodyMapRegionOverlayStyle";
 
 const BODY_WIDTH = 489;
 const BODY_HEIGHT = 1263;
+const BACK_MASK_VERTICAL_OFFSET = -10;
 
 const adductorLeftAsset = require(
   "../../BodyMap/Back/Muscle_masks/Adductors/back_adductor_magnus_left_leg.svg"
@@ -176,7 +177,10 @@ function renderRegionAssets(regionKeys, { layer, opacity }) {
             left: toPercent(placement.x, BODY_WIDTH),
             height: toPercent(placement.height, BODY_HEIGHT),
             opacity,
-            top: toPercent(placement.y, BODY_HEIGHT),
+            top: toPercent(
+              placement.y + BACK_MASK_VERTICAL_OFFSET,
+              BODY_HEIGHT
+            ),
             width: toPercent(placement.width, BODY_WIDTH),
           },
         ]}
