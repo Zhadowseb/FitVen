@@ -168,20 +168,26 @@ function getUniqueRegionKeys(regionKeys) {
 function renderRegionAssets(regionKeys, { layer, opacity }) {
   return regionKeys.flatMap((regionKey) =>
     BACK_REGION_ASSETS[regionKey].map((placement, index) => (
-      <LocalSvg
-        asset={placement.asset}
-        height={toPercent(placement.height, BODY_HEIGHT)}
+      <View
         key={`${layer}-${regionKey}-${index}`}
         style={[
-          styles.regionMask,
+          styles.regionMaskFrame,
           {
             left: toPercent(placement.x, BODY_WIDTH),
+            height: toPercent(placement.height, BODY_HEIGHT),
             opacity,
             top: toPercent(placement.y, BODY_HEIGHT),
+            width: toPercent(placement.width, BODY_WIDTH),
           },
         ]}
-        width={toPercent(placement.width, BODY_WIDTH)}
-      />
+      >
+        <LocalSvg
+          asset={placement.asset}
+          height="100%"
+          style={styles.regionMask}
+          width="100%"
+        />
+      </View>
     ))
   );
 }

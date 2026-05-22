@@ -8,7 +8,11 @@ export default StyleSheet.create({
     width: "100%",
     height: "100%",
   },
-  regionMask: {
+  regionMaskFrame: {
     position: "absolute",
+  },
+  regionMask: {
+    height: "100%",
+    width: "100%",
   },
 });
