@@ -42,43 +42,49 @@ const ExerciseMuscleBadges = ({
   secondaryBadgeText,
   secondaryCount,
   style,
-}) => (
-  <View style={[styles.muscleBadgeRow, style]}>
-    <View
-      style={[
-        styles.muscleBadge,
-        styles.primaryMuscleBadge,
-        { backgroundColor: primaryBadgeSurface },
-      ]}
-    >
-      <ThemedText
-        style={styles.muscleBadgeText}
-        setColor={primaryBadgeText}
-        numberOfLines={1}
-        ellipsizeMode="clip"
-      >
-        {formatMuscleBadgeLabel(primaryCount, "PRIMARY")}
-      </ThemedText>
-    </View>
+}) => {
+  const shouldShowSecondaryBadge = Number(secondaryCount) > 0;
 
-    <View
-      style={[
-        styles.muscleBadge,
-        styles.secondaryMuscleBadge,
-        { backgroundColor: secondaryBadgeSurface },
-      ]}
-    >
-      <ThemedText
-        style={styles.muscleBadgeText}
-        setColor={secondaryBadgeText}
-        numberOfLines={1}
-        ellipsizeMode="clip"
+  return (
+    <View style={[styles.muscleBadgeRow, style]}>
+      <View
+        style={[
+          styles.muscleBadge,
+          styles.primaryMuscleBadge,
+          { backgroundColor: primaryBadgeSurface },
+        ]}
       >
-        {formatMuscleBadgeLabel(secondaryCount, "SECONDARY")}
-      </ThemedText>
+        <ThemedText
+          style={styles.muscleBadgeText}
+          setColor={primaryBadgeText}
+          numberOfLines={1}
+          ellipsizeMode="clip"
+        >
+          {formatMuscleBadgeLabel(primaryCount, "PRIMARY")}
+        </ThemedText>
+      </View>
+
+      {shouldShowSecondaryBadge && (
+        <View
+          style={[
+            styles.muscleBadge,
+            styles.secondaryMuscleBadge,
+            { backgroundColor: secondaryBadgeSurface },
+          ]}
+        >
+          <ThemedText
+            style={styles.muscleBadgeText}
+            setColor={secondaryBadgeText}
+            numberOfLines={1}
+            ellipsizeMode="clip"
+          >
+            {formatMuscleBadgeLabel(secondaryCount, "SECONDARY")}
+          </ThemedText>
+        </View>
+      )}
     </View>
-  </View>
-);
+  );
+};
 
 const ExerciseLibraryList = ({ refreshKey }) => {
   const db = useSQLiteContext();
@@ -315,7 +321,7 @@ const ExerciseLibraryList = ({ refreshKey }) => {
               >
                 <BodyMapPreview
                   bodyView={exercise.body_map_view}
-                  crop="upper"
+                  crop={exercise.body_map_section}
                   primaryRegionKeys={exercise.primary_body_map_region_keys}
                   secondaryRegionKeys={exercise.secondary_body_map_region_keys}
                   style={styles.exercisePreviewBodyMap}

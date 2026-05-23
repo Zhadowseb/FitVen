@@ -21,10 +21,14 @@ export default function BodyMapPreview({
 }) {
   const isBackView = bodyView === "back";
   const isUpperCrop = crop === "upper";
-  const frameStyle = isUpperCrop
-    ? styles.upperCropFrame
-    : styles.fullFrame;
-  const frameHeight = isUpperCrop ? "200%" : "100%";
+  const isLowerCrop = crop === "lower";
+  const isCropped = isUpperCrop || isLowerCrop;
+  const frameStyle = isLowerCrop
+    ? styles.lowerCropFrame
+    : isUpperCrop
+      ? styles.upperCropFrame
+      : styles.fullFrame;
+  const frameHeight = isCropped ? "200%" : "100%";
   const bodyImage = isBackView ? backBodyImage : frontBodyImage;
 
   return (
@@ -32,8 +36,8 @@ export default function BodyMapPreview({
       style={[
         styles.container,
         isBackView && styles.backContainer,
-        isUpperCrop && styles.upperCropContainer,
-        isBackView && isUpperCrop && styles.backUpperCropContainer,
+        isCropped && styles.upperCropContainer,
+        isBackView && isCropped && styles.backUpperCropContainer,
         style,
       ]}
     >

@@ -71,6 +71,8 @@ const BODY_MAP_REGION_TABLE = "body_map_region";
 const MUSCLE_BODY_MAP_REGION_TABLE = "muscle_body_map_region";
 const FRONT_BODY_MAP_VIEW = "front";
 const BACK_BODY_MAP_VIEW = "back";
+const UPPER_BODY_MAP_SECTION = "upper";
+const LOWER_BODY_MAP_SECTION = "lower";
 const PRIMARY_ACTIVATION_LEVEL = "primary";
 const SECONDARY_ACTIVATION_LEVEL = "secondary";
 const EXERCISE_INSTANCE_CLOUD_TABLE = "exercise_instance";
@@ -1232,9 +1234,23 @@ function normalizeBodyMapView(value) {
   return isSupportedView ? normalizedView : "";
 }
 
+function normalizeBodyMapSection(value) {
+  const normalizedSection =
+    typeof value === "string" ? value.trim().toLocaleLowerCase() : "";
+  const isSupportedSection =
+    normalizedSection === UPPER_BODY_MAP_SECTION ||
+    normalizedSection === LOWER_BODY_MAP_SECTION;
+
+  return isSupportedSection ? normalizedSection : "";
+}
+
 function sortBodyMapRegions(left, right) {
   if (left.bodyView !== right.bodyView) {
     return left.bodyView === FRONT_BODY_MAP_VIEW ? -1 : 1;
+  }
+
+  if (left.bodySection !== right.bodySection) {
+    return left.bodySection === UPPER_BODY_MAP_SECTION ? -1 : 1;
   }
 
   return left.name.localeCompare(right.name);
@@ -1275,6 +1291,43 @@ function chooseBodyMapView({ primaryRegions, secondaryRegions }) {
   return totalBack > totalFront ? BACK_BODY_MAP_VIEW : FRONT_BODY_MAP_VIEW;
 }
 
+function countBodyMapSections(regions) {
+  return (regions ?? []).reduce(
+    (counts, region) => {
+      if (region?.bodySection === UPPER_BODY_MAP_SECTION) {
+        counts.upper += 1;
+      }
+
+      if (region?.bodySection === LOWER_BODY_MAP_SECTION) {
+        counts.lower += 1;
+      }
+
+      return counts;
+    },
+    { upper: 0, lower: 0 }
+  );
+}
+
+function chooseBodyMapSection({ primaryRegions, secondaryRegions }) {
+  const primaryCounts = countBodyMapSections(primaryRegions);
+
+  if (primaryCounts.lower > primaryCounts.upper) {
+    return LOWER_BODY_MAP_SECTION;
+  }
+
+  if (primaryCounts.upper > primaryCounts.lower) {
+    return UPPER_BODY_MAP_SECTION;
+  }
+
+  const secondaryCounts = countBodyMapSections(secondaryRegions);
+  const totalLower = primaryCounts.lower + secondaryCounts.lower;
+  const totalUpper = primaryCounts.upper + secondaryCounts.upper;
+
+  return totalLower > totalUpper
+    ? LOWER_BODY_MAP_SECTION
+    : UPPER_BODY_MAP_SECTION;
+}
+
 function getBodyMapRegionKeysForView(regions, bodyView) {
   return (regions ?? [])
     .filter((region) => region.bodyView === bodyView)
@@ -1293,6 +1346,8 @@ function buildExerciseBodyMapRegionMetadata({
   for (const region of regionRows ?? []) {
     const regionKey = normalizeBodyMapRegionKey(region?.region_key);
     const bodyView = normalizeBodyMapView(region?.body_view);
+    const bodySection =
+      normalizeBodyMapSection(region?.body_section) || UPPER_BODY_MAP_SECTION;
     const name =
       typeof region?.name === "string" && region.name.trim() !== ""
         ? region.name.trim()
@@ -1306,6 +1361,7 @@ function buildExerciseBodyMapRegionMetadata({
       id: region.id,
       key: regionKey,
       bodyView,
+      bodySection,
       name,
     });
   }
@@ -1368,6 +1424,16 @@ function buildExerciseBodyMapRegionMetadata({
       primaryRegions,
       secondaryRegions,
     });
+    const primaryPreviewRegions = primaryRegions.filter(
+      (region) => region.bodyView === bodyMapView
+    );
+    const secondaryPreviewRegions = secondaryRegions.filter(
+      (region) => region.bodyView === bodyMapView
+    );
+    const bodyMapSection = chooseBodyMapSection({
+      primaryRegions: primaryPreviewRegions,
+      secondaryRegions: secondaryPreviewRegions,
+    });
     const primaryFrontRegionKeys = getBodyMapRegionKeysForView(
       primaryRegions,
       FRONT_BODY_MAP_VIEW
@@ -1387,6 +1453,7 @@ function buildExerciseBodyMapRegionMetadata({
 
     exerciseBodyMapRegionMap.set(exerciseId, {
       body_map_view: bodyMapView,
+      body_map_section: bodyMapSection,
       primary_body_map_region_keys:
         bodyMapView === BACK_BODY_MAP_VIEW
           ? primaryBackRegionKeys
@@ -1418,11 +1485,22 @@ async function getExerciseBodyMapRegionMetadata({
   }
 
   try {
-    const { data: regionRows, error: regionError } = await supabase
+    let { data: regionRows, error: regionError } = await supabase
       .from(BODY_MAP_REGION_TABLE)
-      .select("id, region_key, body_view, name")
+      .select("id, region_key, body_view, body_section, name")
       .order("body_view", { ascending: true })
       .order("name", { ascending: true });
+
+    if (regionError) {
+      const fallbackResult = await supabase
+        .from(BODY_MAP_REGION_TABLE)
+        .select("id, region_key, body_view, name")
+        .order("body_view", { ascending: true })
+        .order("name", { ascending: true });
+
+      regionRows = fallbackResult.data;
+      regionError = fallbackResult.error;
+    }
 
     if (regionError) {
       throw regionError;
@@ -1677,6 +1755,9 @@ function mapExerciseCatalogForDisplay(entries) {
     group_names: Array.isArray(entry.group_names) ? entry.group_names : [],
     body_map_view:
       normalizeBodyMapView(entry.body_map_view) || FRONT_BODY_MAP_VIEW,
+    body_map_section:
+      normalizeBodyMapSection(entry.body_map_section) ||
+      UPPER_BODY_MAP_SECTION,
     primary_body_map_region_keys: Array.isArray(
       entry.primary_body_map_region_keys
     )

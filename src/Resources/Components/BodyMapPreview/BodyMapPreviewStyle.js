@@ -32,4 +32,11 @@ export default StyleSheet.create({
     width: "100%",
     height: "200%",
   },
+  lowerCropFrame: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    width: "100%",
+    height: "200%",
+  },
 });

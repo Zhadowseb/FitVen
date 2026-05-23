@@ -16,6 +16,10 @@
 - Keep cropped back muscle masks aligned in full body map previews.
 - Stretch body map mask overlays with the same preview frame as the body image.
 - Render back body map mask regions in the same full-frame coordinate system as the body preview.
+- Align back body map overlays from the combined full-mask export paths.
+- Hide secondary muscle badges when an exercise has no secondary muscles.
+- Add upper/lower body section metadata to body map regions.
+- Crop exercise catalog body map previews to upper or lower body from region metadata.
 
 ---
 ## [0.14.12] - Unreleased
