@@ -4,8 +4,6 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useNavigation } from "@react-navigation/native";
 
 import { Colors } from "../../../../Resources/GlobalStyling/colors";
-import Checkmark from "../../../../Resources/Icons/UI-icons/Checkmark";
-import { getWorkoutIconConfig } from "../../../../Resources/Icons/WorkoutLabels";
 import { getTodaysDate } from "../../../../Utils/dateUtils";
 import { programService } from "../../../../Services";
 import styles from "./TodayShortcutStyle";
@@ -41,24 +39,6 @@ function getWorkoutTitle({ workout, workoutCount, allWorkoutsDone }) {
   }
 
   return workout.label ?? getWorkoutTypeLabel(workout);
-}
-
-function getProgressLabel({
-  hasWorkouts,
-  previewDoneCount,
-  previewItems,
-  completedWorkoutCount,
-  workoutCount,
-}) {
-  if (!hasWorkouts) {
-    return "No workout today";
-  }
-
-  if (previewItems.length > 0) {
-    return `${previewDoneCount}/${previewItems.length} exercises done`;
-  }
-
-  return `${completedWorkoutCount}/${workoutCount} workouts done`;
 }
 
 export default function TodayShortcut({
@@ -146,34 +126,11 @@ export default function TodayShortcut({
     colorScheme === "dark"
       ? "rgba(255, 255, 255, 0.08)"
       : theme.cardBorder ?? theme.border ?? accentColor;
-  const innerSurface = theme.uiBackground ?? cardBackground;
   const quietText = theme.iconColor ?? theme.quietText ?? theme.text;
   const titleColor = theme.title ?? theme.text ?? "#ffffff";
   const playButtonTextColor = theme.textInverted ?? "#201e2b";
-  const progressTrackColor =
-    colorScheme === "dark"
-      ? "rgba(255, 255, 255, 0.1)"
-      : "rgba(32, 30, 43, 0.12)";
   const workoutTypeLabel = getWorkoutTypeLabel(targetWorkout);
-  const workoutIconConfig = getWorkoutIconConfig(getWorkoutType(targetWorkout));
-  const WorkoutIcon = workoutIconConfig?.Icon ?? null;
-  const previewItems = Array.isArray(targetWorkout?.previewItems)
-    ? targetWorkout.previewItems
-    : [];
-  const visiblePreviewItems = previewItems.slice(0, 2);
-  const hiddenPreviewCount = Math.max(
-    previewItems.length - visiblePreviewItems.length,
-    0
-  );
-  const previewDoneCount = previewItems.filter((item) => item.done).length;
-  const progressTotal = previewItems.length > 0 ? previewItems.length : workoutCount;
-  const progressDone = previewItems.length > 0
-    ? previewDoneCount
-    : completedWorkoutCount;
-  const progressPercent =
-    progressTotal > 0
-      ? Math.min(100, Math.round((progressDone / progressTotal) * 100))
-      : 0;
+  const exerciseCount = targetWorkout?.previewItems?.length ?? 0;
   const title = getWorkoutTitle({
     workout: targetWorkout,
     workoutCount,
@@ -186,34 +143,11 @@ export default function TodayShortcut({
       ? headerTitle
       : `${weekdayLabel} ${date}`;
   const detailLabel =
-    hasWorkouts && previewItems.length > 0
-      ? `${previewItems.length} ${previewItems.length === 1 ? "exercise" : "exercises"}`
+    hasWorkouts && exerciseCount > 0
+      ? `${exerciseCount} ${exerciseCount === 1 ? "exercise" : "exercises"}`
       : hasWorkouts
         ? "Ready"
         : "No workout";
-  const statusLabel = !hasWorkouts
-    ? "Rest"
-    : allWorkoutsDone
-      ? "Done"
-      : workoutCount > 1
-        ? `${completedWorkoutCount}/${workoutCount} workouts`
-        : previewItems.length > 0
-          ? `${previewDoneCount}/${previewItems.length} done`
-          : "Planned";
-  const progressLabel = getProgressLabel({
-    hasWorkouts,
-    previewDoneCount,
-    previewItems,
-    completedWorkoutCount,
-    workoutCount,
-  });
-  const actionLabel = !hasWorkouts
-    ? "Rest day"
-    : allWorkoutsDone
-      ? "Review workout"
-      : completedWorkoutCount > 0 || previewDoneCount > 0
-        ? "Continue"
-        : "Start workout";
   const canOpenWorkout = Boolean(targetWorkout);
 
   return (
@@ -240,7 +174,24 @@ export default function TodayShortcut({
           !canOpenWorkout && styles.cardButtonDisabled,
         ]}
       >
-        <View style={styles.headerRow}>
+        <View
+          style={[
+            styles.playButton,
+            {
+              backgroundColor: hasWorkouts ? accentColor : cardBorder,
+              shadowColor: accentColor,
+            },
+          ]}
+        >
+          <View
+            style={[
+              styles.playTriangle,
+              { borderLeftColor: playButtonTextColor },
+            ]}
+          />
+        </View>
+
+        <View style={styles.mainContent}>
           <View style={styles.eyebrowRow}>
             <ThemedText
               style={styles.eyebrow}
@@ -254,96 +205,34 @@ export default function TodayShortcut({
               setColor={quietText}
               numberOfLines={1}
             >
-              - {eyebrowDetail}
+              · {eyebrowDetail}
             </ThemedText>
           </View>
 
-          <View
-            style={[
-              styles.statusPill,
-              {
-                backgroundColor: innerSurface,
-                borderColor: cardBorder,
-              },
-            ]}
+          <ThemedTitle
+            type="h3"
+            style={[styles.title, { color: titleColor }]}
+            numberOfLines={1}
           >
-            <ThemedText
-              style={styles.statusPillText}
-              setColor={allWorkoutsDone ? theme.secondary ?? accentColor : accentColor}
-              numberOfLines={1}
-            >
-              {statusLabel}
-            </ThemedText>
-          </View>
-        </View>
+            {title}
+          </ThemedTitle>
 
-        <View style={styles.heroRow}>
-          <View
-            style={[
-              styles.playButton,
-              {
-                backgroundColor: hasWorkouts ? accentColor : cardBorder,
-                shadowColor: accentColor,
-              },
-            ]}
-          >
-            {allWorkoutsDone ? (
-              <Checkmark
-                width={34}
-                height={34}
-                color={playButtonTextColor}
-                thickness={2.6}
-              />
-            ) : WorkoutIcon ? (
-              <WorkoutIcon
-                width={34}
-                height={34}
-                color={playButtonTextColor}
-              />
-            ) : (
-              <View
-                style={[
-                  styles.playTriangle,
-                  { borderLeftColor: playButtonTextColor },
-                ]}
-              />
-            )}
-          </View>
-
-          <View style={styles.mainContent}>
-            <ThemedTitle
-              type="h3"
-              style={[styles.title, { color: titleColor }]}
-              numberOfLines={2}
-            >
-              {title}
-            </ThemedTitle>
-
-            <View style={styles.metaRow}>
-              {hasWorkouts ? (
-                <>
-                  <ThemedText
-                    style={styles.metaType}
-                    setColor={accentColor}
-                    numberOfLines={1}
-                  >
-                    {workoutTypeLabel}
-                  </ThemedText>
-                  <View
-                    style={[
-                      styles.metaDot,
-                      { backgroundColor: quietText },
-                    ]}
-                  />
-                  <ThemedText
-                    style={styles.metaText}
-                    setColor={quietText}
-                    numberOfLines={1}
-                  >
-                    {detailLabel}
-                  </ThemedText>
-                </>
-              ) : (
+          <View style={styles.metaRow}>
+            {hasWorkouts ? (
+              <>
+                <ThemedText
+                  style={styles.metaType}
+                  setColor={accentColor}
+                  numberOfLines={1}
+                >
+                  {workoutTypeLabel}
+                </ThemedText>
+                <View
+                  style={[
+                    styles.metaDot,
+                    { backgroundColor: quietText },
+                  ]}
+                />
                 <ThemedText
                   style={styles.metaText}
                   setColor={quietText}
@@ -351,104 +240,19 @@ export default function TodayShortcut({
                 >
                   {detailLabel}
                 </ThemedText>
-              )}
-            </View>
-          </View>
-        </View>
-
-        {visiblePreviewItems.length > 0 && (
-          <View style={styles.previewList}>
-            {visiblePreviewItems.map((item, index) => (
-              <View
-                key={`${item.label ?? "preview"}-${index}`}
-                style={[
-                  styles.previewItem,
-                  {
-                    backgroundColor: innerSurface,
-                    borderColor: cardBorder,
-                  },
-                ]}
+              </>
+            ) : (
+              <ThemedText
+                style={styles.metaText}
+                setColor={quietText}
+                numberOfLines={1}
               >
-                <View
-                  style={[
-                    styles.previewDot,
-                    {
-                      backgroundColor: item.done
-                        ? theme.secondary ?? accentColor
-                        : accentColor,
-                      opacity: item.done ? 1 : 0.72,
-                    },
-                  ]}
-                />
-                <ThemedText
-                  style={styles.previewLabel}
-                  setColor={titleColor}
-                  numberOfLines={1}
-                >
-                  {item.label}
-                </ThemedText>
-                <ThemedText
-                  style={styles.previewDetail}
-                  setColor={quietText}
-                  numberOfLines={1}
-                >
-                  {item.detail}
-                </ThemedText>
-              </View>
-            ))}
-
-            {hiddenPreviewCount > 0 && (
-              <View
-                style={[
-                  styles.previewMore,
-                  {
-                    backgroundColor: innerSurface,
-                    borderColor: cardBorder,
-                  },
-                ]}
-              >
-                <ThemedText
-                  style={styles.previewMoreText}
-                  setColor={quietText}
-                  numberOfLines={1}
-                >
-                  +{hiddenPreviewCount}
-                </ThemedText>
-              </View>
+                {detailLabel}
+              </ThemedText>
             )}
           </View>
-        )}
-
-        <View style={styles.progressFooter}>
-          <View style={[styles.progressTrack, { backgroundColor: progressTrackColor }]}>
-            <View
-              style={[
-                styles.progressFill,
-                {
-                  backgroundColor: accentColor,
-                  width: `${progressPercent}%`,
-                },
-              ]}
-            />
-          </View>
-
-          <View style={styles.footerTextRow}>
-            <ThemedText
-              style={styles.progressLabel}
-              setColor={quietText}
-              numberOfLines={1}
-            >
-              {progressLabel}
-            </ThemedText>
-            <ThemedText
-              style={styles.actionLabel}
-              setColor={hasWorkouts ? accentColor : quietText}
-              numberOfLines={1}
-            >
-              {actionLabel}
-            </ThemedText>
-          </View>
         </View>
+
       </TouchableOpacity>
     </ThemedCard>
   );

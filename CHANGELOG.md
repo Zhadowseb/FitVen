@@ -2,7 +2,7 @@
 
 ## [0.14.14] - Unreleased
 ### Changed
-- Refreshed Home screen program cards with workout icons, status chips, progress bars, and exercise previews.
+- Refreshed ProgramPage program cards with a stronger status rail, progress panel, date badge, and metric tiles.
 
 ---
 ## [0.14.13] - Unreleased

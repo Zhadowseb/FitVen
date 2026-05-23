@@ -15,7 +15,7 @@ import { Colors } from "../../../../Resources/GlobalStyling/colors";
 import CircularProgress from "../../../../Resources/Components/CircularProgression";
 import Checkmark from "../../../../Resources/Icons/UI-icons/Checkmark";
 import Calender from "../../../../Resources/Icons/UI-icons/Calender";
-import ThreeDots from "../../../../Resources/Icons/UI-icons/ThreeDots";
+import TailArrowUpRight from "../../../../Resources/Icons/UI-icons/TailArrowUpRight";
 import { getWorkoutIconConfig } from "../../../../Resources/Icons/WorkoutLabels";
 import {
   ThemedCard,
@@ -257,6 +257,14 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
               },
             ]}
           >
+            <View
+              pointerEvents="none"
+              style={[
+                styles.cardAccentRail,
+                { backgroundColor: statusPresentation.color },
+              ]}
+            />
+
             <TouchableOpacity
               activeOpacity={0.92}
               style={styles.touchable}
@@ -287,68 +295,34 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
                   <ThemedText
                     style={styles.statusLabel}
                     setColor={statusPresentation.color}
+                    numberOfLines={1}
                   >
                     {statusPresentation.label}
                   </ThemedText>
                 </View>
 
-                <View style={styles.workoutTypeRow}>
-                  {visibleWorkoutTypes.map((workoutType) => {
-                    const workoutIcon = getWorkoutIconConfig(workoutType);
-                    const WorkoutIcon = workoutIcon?.Icon;
-
-                    return (
-                      <View
-                        key={workoutType}
-                        style={[
-                          styles.workoutTypeBadge,
-                          {
-                            backgroundColor: mutedChipSurface,
-                            borderColor: cardBorderFallback,
-                          },
-                        ]}
-                      >
-                        {WorkoutIcon ? (
-                          <WorkoutIcon
-                            width={13}
-                            height={13}
-                            color={quietText}
-                            primaryColor={quietText}
-                          />
-                        ) : null}
-                        <ThemedText
-                          style={styles.workoutTypeText}
-                          setColor={quietText}
-                          numberOfLines={1}
-                        >
-                          {getWorkoutTypeLabel(workoutType)}
-                        </ThemedText>
-                      </View>
-                    );
-                  })}
-
-                  {hiddenWorkoutTypeCount > 0 ? (
-                    <View
-                      style={[
-                        styles.workoutTypeBadge,
-                        {
-                          backgroundColor: mutedChipSurface,
-                          borderColor: cardBorderFallback,
-                        },
-                      ]}
-                    >
-                      <ThemedText
-                        style={styles.workoutTypeText}
-                        setColor={quietText}
-                      >
-                        +{hiddenWorkoutTypeCount}
-                      </ThemedText>
-                    </View>
-                  ) : null}
-
-                  <View style={styles.cardMenuIcon}>
-                    <ThreeDots width={14} height={14} color={quietText} />
-                  </View>
+                <View
+                  style={[
+                    styles.openBadge,
+                    {
+                      backgroundColor: mutedChipSurface,
+                      borderColor: cardBorderFallback,
+                    },
+                  ]}
+                >
+                  <ThemedText
+                    style={styles.openBadgeText}
+                    setColor={titleColor}
+                    numberOfLines={1}
+                  >
+                    Open
+                  </ThemedText>
+                  <TailArrowUpRight
+                    width={14}
+                    height={14}
+                    stroke={statusPresentation.color}
+                    color={statusPresentation.color}
+                  />
                 </View>
               </View>
 
@@ -363,13 +337,92 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
                   </ThemedTitle>
 
                   {dateRange ? (
-                    <ThemedText style={styles.dateRange} setColor={quietText}>
-                      {dateRange}
-                    </ThemedText>
+                    <View
+                      style={[
+                        styles.dateBadge,
+                        {
+                          backgroundColor: mutedChipSurface,
+                          borderColor: cardBorderFallback,
+                        },
+                      ]}
+                    >
+                      <Calender width={12} height={12} color={quietText} />
+                      <ThemedText
+                        style={styles.dateRange}
+                        setColor={quietText}
+                        numberOfLines={1}
+                      >
+                        {dateRange}
+                      </ThemedText>
+                    </View>
                   ) : null}
+
+                  <View style={styles.workoutTypeRow}>
+                    {visibleWorkoutTypes.map((workoutType) => {
+                      const workoutIcon = getWorkoutIconConfig(workoutType);
+                      const WorkoutIcon = workoutIcon?.Icon;
+
+                      return (
+                        <View
+                          key={workoutType}
+                          style={[
+                            styles.workoutTypeBadge,
+                            {
+                              backgroundColor: mutedChipSurface,
+                              borderColor: cardBorderFallback,
+                            },
+                          ]}
+                        >
+                          {WorkoutIcon ? (
+                            <WorkoutIcon
+                              width={13}
+                              height={13}
+                              color={quietText}
+                              primaryColor={quietText}
+                            />
+                          ) : null}
+                          <ThemedText
+                            style={styles.workoutTypeText}
+                            setColor={quietText}
+                            numberOfLines={1}
+                          >
+                            {getWorkoutTypeLabel(workoutType)}
+                          </ThemedText>
+                        </View>
+                      );
+                    })}
+
+                    {hiddenWorkoutTypeCount > 0 ? (
+                      <View
+                        style={[
+                          styles.workoutTypeBadge,
+                          {
+                            backgroundColor: mutedChipSurface,
+                            borderColor: cardBorderFallback,
+                          },
+                        ]}
+                      >
+                        <ThemedText
+                          style={styles.workoutTypeText}
+                          setColor={quietText}
+                          numberOfLines={1}
+                        >
+                          +{hiddenWorkoutTypeCount}
+                        </ThemedText>
+                      </View>
+                    ) : null}
+                  </View>
                 </View>
 
-                <View style={styles.statusAction}>
+                <View
+                  style={[
+                    styles.statusAction,
+                    {
+                      backgroundColor: mutedChipSurface,
+                      borderColor: cardBorderFallback,
+                    },
+                  ]}
+                >
                   {isCompleted ? (
                     <View
                       style={[
@@ -400,59 +453,73 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
                       centerColor={statusPresentation.cardBackground}
                     />
                   )}
+
+                  <ThemedText
+                    style={styles.progressCaption}
+                    setColor={quietText}
+                    numberOfLines={1}
+                  >
+                    Progress
+                  </ThemedText>
+                  <ThemedText
+                    style={styles.progressDetail}
+                    setColor={titleColor}
+                    numberOfLines={1}
+                  >
+                    {completedWorkouts}/{totalWorkouts}
+                  </ThemedText>
                 </View>
               </View>
 
-              <View style={styles.metaPillRow}>
+              <View style={styles.metricGrid}>
                 <View
                   style={[
-                    styles.metaPill,
+                    styles.metricTile,
                     {
                       backgroundColor: mutedChipSurface,
                       borderColor: cardBorderFallback,
                     },
                   ]}
                 >
-                  <ThemedText style={styles.metaText} setColor={quietText}>
-                    <ThemedText style={styles.metaNumber} setColor={titleColor}>
-                      {item.mesocycle_count}
-                    </ThemedText>{" "}
-                    {item.mesocycle_count === 1 ? "block" : "blocks"}
+                  <ThemedText style={styles.metricValue} setColor={titleColor}>
+                    {item.mesocycle_count}
+                  </ThemedText>
+                  <ThemedText style={styles.metricLabel} setColor={quietText}>
+                    {item.mesocycle_count === 1 ? "Block" : "Blocks"}
                   </ThemedText>
                 </View>
 
                 <View
                   style={[
-                    styles.metaPill,
+                    styles.metricTile,
                     {
                       backgroundColor: mutedChipSurface,
                       borderColor: cardBorderFallback,
                     },
                   ]}
                 >
-                  <Calender width={12} height={12} color={quietText} />
-                  <ThemedText style={styles.metaText} setColor={quietText}>
-                    <ThemedText style={styles.metaNumber} setColor={titleColor}>
-                      {item.week_count}
-                    </ThemedText>{" "}
-                    {item.week_count === 1 ? "wk" : "wks"}
+                  <ThemedText style={styles.metricValue} setColor={titleColor}>
+                    {item.week_count}
+                  </ThemedText>
+                  <ThemedText style={styles.metricLabel} setColor={quietText}>
+                    {item.week_count === 1 ? "Week" : "Weeks"}
                   </ThemedText>
                 </View>
 
                 <View
                   style={[
-                    styles.metaPill,
+                    styles.metricTile,
                     {
                       backgroundColor: mutedChipSurface,
                       borderColor: cardBorderFallback,
                     },
                   ]}
                 >
-                  <ThemedText style={styles.metaText} setColor={quietText}>
-                    <ThemedText style={styles.metaNumber} setColor={titleColor}>
-                      {totalWorkouts}
-                    </ThemedText>{" "}
-                    {totalWorkouts === 1 ? "workout" : "workouts"}
+                  <ThemedText style={styles.metricValue} setColor={titleColor}>
+                    {totalWorkouts}
+                  </ThemedText>
+                  <ThemedText style={styles.metricLabel} setColor={quietText}>
+                    {totalWorkouts === 1 ? "Workout" : "Workouts"}
                   </ThemedText>
                 </View>
               </View>
