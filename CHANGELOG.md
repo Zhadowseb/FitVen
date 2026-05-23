@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.14.14] - Unreleased
+### Changed
+- Refreshed Home screen program cards with workout icons, status chips, progress bars, and exercise previews.
+
+---
 ## [0.14.13] - Unreleased
 ### Changed
 - Add a Home screen body map preview test with a lightweight front muscle mask toggle.
