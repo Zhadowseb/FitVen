@@ -18,9 +18,9 @@ const summaryStats = [
 ];
 
 const topSets = [
-  { exercise: "Bench Press", result: "100 kg x 3" },
-  { exercise: "Incline DB", result: "32 kg x 8" },
-  { exercise: "Cable Fly", result: "24 kg x 12" },
+  { set: 1, exercise: "Bench Press", weight: "100 kg", reps: "3" },
+  { set: 2, exercise: "Incline DB", weight: "32 kg", reps: "8" },
+  { set: 3, exercise: "Cable Fly", weight: "24 kg", reps: "12" },
 ];
 
 export default function WorkoutSummaryCard() {
@@ -40,6 +40,20 @@ export default function WorkoutSummaryCard() {
   const prGreen = theme.secondary ?? "#60daac";
   const prCalloutSurface =
     colorScheme === "dark" ? "rgba(255, 255, 255, 0.05)" : "#ffffff";
+  const topSetTableSurface =
+    colorScheme === "dark" ? "rgba(16, 17, 24, 0.58)" : "#f5f4fa";
+  const topSetTableBorder =
+    colorScheme === "dark"
+      ? "rgba(255, 255, 255, 0.07)"
+      : "rgba(32, 30, 43, 0.12)";
+  const topSetCellSurface =
+    colorScheme === "dark" ? "rgba(24, 25, 34, 0.9)" : "rgba(255, 255, 255, 0.86)";
+  const topSetCellBorder =
+    colorScheme === "dark"
+      ? "rgba(255, 255, 255, 0.045)"
+      : "rgba(32, 30, 43, 0.08)";
+  const topSetChipBackground =
+    colorScheme === "dark" ? "rgba(247, 116, 46, 0.17)" : "rgba(247, 116, 46, 0.14)";
   const footerColor = colorScheme === "dark" ? "#7f90ad" : theme.iconColor;
 
   return (
@@ -119,28 +133,104 @@ export default function WorkoutSummaryCard() {
         style={[
           styles.topSetsPanel,
           {
-            backgroundColor: insetSurface,
-            borderColor: softBorder,
+            backgroundColor: topSetTableSurface,
+            borderColor: topSetTableBorder,
           },
         ]}
       >
-        <View style={styles.topSetsHeaderRow}>
-          <ThemedText style={styles.topSetsHeaderText} setColor={mutedText}>
-            Top sets
-          </ThemedText>
-          <ThemedText style={styles.topSetsCount} setColor={mutedText}>
-            3 lifts
-          </ThemedText>
+        <View
+          style={[
+            styles.topSetTableHeader,
+            { borderBottomColor: topSetTableBorder },
+          ]}
+        >
+          <View style={[styles.topSetSetCell, styles.topSetHeaderCell]}>
+            <ThemedText style={styles.topSetHeaderText} setColor={mutedText}>
+              #
+            </ThemedText>
+          </View>
+          <View style={[styles.topSetExerciseCell, styles.topSetHeaderCell]}>
+            <ThemedText style={styles.topSetHeaderText} setColor={mutedText}>
+              Exercise
+            </ThemedText>
+          </View>
+          <View style={[styles.topSetMetricCell, styles.topSetHeaderCell]}>
+            <ThemedText style={styles.topSetHeaderText} setColor={mutedText}>
+              Weight
+            </ThemedText>
+          </View>
+          <View style={[styles.topSetMetricCell, styles.topSetHeaderCell]}>
+            <ThemedText style={styles.topSetHeaderText} setColor={mutedText}>
+              Reps
+            </ThemedText>
+          </View>
         </View>
 
-        {topSets.map((record) => (
-          <View key={record.exercise} style={styles.topSetRow}>
-            <ThemedText style={styles.topSetExercise} setColor={titleColor}>
-              {record.exercise}
-            </ThemedText>
-            <ThemedText style={styles.topSetResult} setColor={mutedText}>
-              {record.result}
-            </ThemedText>
+        {topSets.map((record, rowIndex) => (
+          <View
+            key={record.exercise}
+            style={[
+              styles.topSetTableRow,
+              {
+                borderBottomColor: topSetTableBorder,
+              },
+              rowIndex === topSets.length - 1 && styles.topSetLastRow,
+            ]}
+          >
+            <View style={[styles.topSetSetCell, styles.topSetCell]}>
+              <View
+                style={[
+                  styles.topSetChip,
+                  {
+                    backgroundColor: topSetChipBackground,
+                    borderColor: topSetCellBorder,
+                  },
+                ]}
+              >
+                <ThemedText style={styles.topSetChipText} setColor={accent}>
+                  {record.set}
+                </ThemedText>
+              </View>
+            </View>
+            <View style={[styles.topSetExerciseCell, styles.topSetCell]}>
+              <ThemedText
+                style={styles.topSetExerciseText}
+                setColor={titleColor}
+                numberOfLines={1}
+              >
+                {record.exercise}
+              </ThemedText>
+            </View>
+            <View style={[styles.topSetMetricCell, styles.topSetCell]}>
+              <View
+                style={[
+                  styles.topSetValuePill,
+                  {
+                    backgroundColor: topSetCellSurface,
+                    borderColor: topSetCellBorder,
+                  },
+                ]}
+              >
+                <ThemedText style={styles.topSetValueText} setColor={titleColor}>
+                  {record.weight}
+                </ThemedText>
+              </View>
+            </View>
+            <View style={[styles.topSetMetricCell, styles.topSetCell]}>
+              <View
+                style={[
+                  styles.topSetValuePill,
+                  {
+                    backgroundColor: topSetCellSurface,
+                    borderColor: topSetCellBorder,
+                  },
+                ]}
+              >
+                <ThemedText style={styles.topSetValueText} setColor={titleColor}>
+                  {record.reps}
+                </ThemedText>
+              </View>
+            </View>
           </View>
         ))}
       </View>
