@@ -136,7 +136,13 @@ export default function WorkoutSummaryCard() {
             { borderBottomColor: topSetTableBorder },
           ]}
         >
-          <View style={[styles.topSetExerciseCell, styles.topSetHeaderCell]}>
+          <View
+            style={[
+              styles.topSetExerciseCell,
+              styles.topSetHeaderCell,
+              styles.topSetExerciseHeaderCell,
+            ]}
+          >
             <ThemedText style={styles.topSetHeaderText} setColor={mutedText}>
               Exercise
             </ThemedText>

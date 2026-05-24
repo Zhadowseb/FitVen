@@ -127,6 +127,10 @@ export default StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 3,
   },
+  topSetExerciseHeaderCell: {
+    alignItems: "flex-start",
+    paddingLeft: 8,
+  },
   topSetHeaderText: {
     fontSize: 9,
     fontWeight: "800",
