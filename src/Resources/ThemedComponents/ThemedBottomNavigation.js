@@ -167,7 +167,7 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
               { color: isLibraryActive ? activeColor : inactiveColor },
             ]}
           >
-            LIBRARY
+            TRAIN
           </Text>
         </TouchableOpacity>
 

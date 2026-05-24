@@ -3,7 +3,7 @@
 ## [0.15.0] - Unreleased
 ### Changed
 - Rename the bottom navigation search tab to Social and move it after the create button.
-- Move the library tab into the former search tab position.
+- Move the training tab into the former search tab position and label it Train.
 
 ---
 ## [0.14.15] - Unreleased
