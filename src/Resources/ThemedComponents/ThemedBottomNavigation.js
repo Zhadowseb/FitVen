@@ -16,7 +16,7 @@ import Home from "../Icons/UI-icons/Home";
 import Library from "../Icons/UI-icons/Library";
 import Male from "../Icons/UI-icons/Male";
 import Plus from "../Icons/UI-icons/Plus";
-import Search from "../Icons/UI-icons/Search";
+import Social from "../Icons/UI-icons/Social";
 import { programService } from "../../Services";
 
 function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
@@ -29,13 +29,13 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
   const [isCreatingQuickWorkout, setIsCreatingQuickWorkout] = useState(false);
 
   const isProfileActive = currentRouteName === "ProfilePage";
-  const isSearchActive = currentRouteName === "SearchPage";
+  const isSocialActive = currentRouteName === "SearchPage";
   const isLibraryActive = [
     "ExerciseLibraryPage",
     "ExerciseCatalogPage",
     "PersonalRecordsPage",
   ].includes(currentRouteName);
-  const isHomeActive = !isProfileActive && !isSearchActive && !isLibraryActive;
+  const isHomeActive = !isProfileActive && !isSocialActive && !isLibraryActive;
   const activeColor =
     theme.iconColorFocused ?? theme.primary ?? theme.title ?? theme.text;
   const inactiveColor = theme.iconColor ?? theme.quietText ?? theme.text;
@@ -64,8 +64,8 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     navigationRef.navigate("ProfilePage");
   };
 
-  const handleSearchPress = () => {
-    if (!navigationRef?.isReady?.() || isSearchActive) {
+  const handleSocialPress = () => {
+    if (!navigationRef?.isReady?.() || isSocialActive) {
       return;
     }
 
@@ -153,21 +153,21 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
 
         <TouchableOpacity
           activeOpacity={0.82}
-          onPress={handleSearchPress}
+          onPress={handleLibraryPress}
           style={styles.tab}
         >
-          <Search
+          <Library
             width={27}
             height={27}
-            color={isSearchActive ? activeColor : inactiveColor}
+            color={isLibraryActive ? activeColor : inactiveColor}
           />
           <Text
             style={[
               styles.tabLabel,
-              { color: isSearchActive ? activeColor : inactiveColor },
+              { color: isLibraryActive ? activeColor : inactiveColor },
             ]}
           >
-            SEARCH
+            LIBRARY
           </Text>
         </TouchableOpacity>
 
@@ -198,21 +198,21 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
 
         <TouchableOpacity
           activeOpacity={0.82}
-          onPress={handleLibraryPress}
+          onPress={handleSocialPress}
           style={styles.tab}
         >
-          <Library
+          <Social
             width={27}
             height={27}
-            color={isLibraryActive ? activeColor : inactiveColor}
+            color={isSocialActive ? activeColor : inactiveColor}
           />
           <Text
             style={[
               styles.tabLabel,
-              { color: isLibraryActive ? activeColor : inactiveColor },
+              { color: isSocialActive ? activeColor : inactiveColor },
             ]}
           >
-            LIBRARY
+            SOCIAL
           </Text>
         </TouchableOpacity>
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.15.0] - Unreleased
+### Changed
+- Rename the bottom navigation search tab to Social and move it after the create button.
+- Move the library tab into the former search tab position.
+
+---
 ## [0.14.15] - Unreleased
 ### Changed
 - Move workout calendar weekday labels into a shared header row and simplify each day card to the date number.
