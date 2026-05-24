@@ -106,6 +106,23 @@ export default StyleSheet.create({
     flex: 1,
     paddingHorizontal: 8,
   },
+  weekdayHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingTop: 2,
+    paddingBottom: 4,
+  },
+  weekdayHeaderCell: {
+    width: "14.2857%",
+    alignItems: "center",
+  },
+  weekdayHeaderText: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "800",
+    letterSpacing: 0,
+    textTransform: "uppercase",
+  },
   calendarGrid: {
     width: "100%",
   },

@@ -46,13 +46,16 @@ const WeekdayIndicator = ({
   onWorkoutPress,
   onDayPress,
   onDayLongPress,
+  showWeekdayLabel = true,
+  showMonthLabel = true,
 }) => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const hasWorkoutCards = workoutCards.length > 0;
   const hasWorkout = hasWorkoutCards || Boolean(Icon || iconLabel);
   const [dayNumber, monthNumber] = (dateLabel ?? "").split(".");
-  const monthLabel = monthNumber ? getMonthLabel(monthNumber) : null;
+  const monthLabel =
+    showMonthLabel && monthNumber ? getMonthLabel(monthNumber) : null;
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const titleColor = theme.title ?? theme.text;
   const surfaceColor = theme.uiBackground ?? theme.cardBackground ?? theme.background;
@@ -143,6 +146,7 @@ const WeekdayIndicator = ({
         onPress={onDayPress}
         onLongPress={onDayLongPress}
         accessibilityRole={onDayPress ? "button" : undefined}
+        accessibilityLabel={[label, dateLabel].filter(Boolean).join(" ")}
         style={[
           styles.headerBadge,
           {
@@ -163,15 +167,17 @@ const WeekdayIndicator = ({
           />
         )}
 
-        <Text
-          style={[
-            styles.weekdayLabel,
-            active && styles.weekdayLabelActive,
-            { color: weekdayTextColor },
-          ]}
-        >
-          {label}
-        </Text>
+        {showWeekdayLabel && Boolean(label) && (
+          <Text
+            style={[
+              styles.weekdayLabel,
+              active && styles.weekdayLabelActive,
+              { color: weekdayTextColor },
+            ]}
+          >
+            {label}
+          </Text>
+        )}
 
         {!!dateLabel && (
           <View style={styles.dateStack}>

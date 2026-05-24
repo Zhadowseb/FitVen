@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.14.15] - Unreleased
+### Changed
+- Move workout calendar weekday labels into a shared header row and simplify each day card to the date number.
+
+---
 ## [0.14.14] - Unreleased
 ### Changed
 - Describe pending changes here.

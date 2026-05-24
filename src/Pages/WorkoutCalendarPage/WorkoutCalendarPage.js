@@ -576,6 +576,22 @@ const WorkoutCalendarPage = () => {
             key={monthPage.key}
             style={[styles.monthPage, { width: pageWidth }]}
           >
+            <View style={styles.weekdayHeaderRow} pointerEvents="none">
+              {WEEKDAY_LABELS.map((weekdayLabel) => (
+                <View
+                  key={`${monthPage.key}-${weekdayLabel}`}
+                  style={styles.weekdayHeaderCell}
+                >
+                  <ThemedText
+                    style={styles.weekdayHeaderText}
+                    setColor={quietText}
+                  >
+                    {weekdayLabel}
+                  </ThemedText>
+                </View>
+              ))}
+            </View>
+
             <View style={styles.calendarGrid}>
               {monthPage.weeks.map((week, weekIndex) => (
                 <View key={`${monthPage.key}-${weekIndex}`} style={styles.weekRow}>
@@ -628,6 +644,8 @@ const WorkoutCalendarPage = () => {
                           isSick={dayIsSick}
                           overdue={dayOverdue}
                           programActive={dayHasProgram}
+                          showWeekdayLabel={false}
+                          showMonthLabel={false}
                           workoutCards={workoutCards}
                           onWorkoutPress={openWorkout}
                           onDayPress={
