@@ -3,6 +3,7 @@
 ## [0.14.15] - Unreleased
 ### Changed
 - Move workout calendar weekday labels into a shared header row and simplify each day card to the date number.
+- Compact workout calendar day cards and workout markers so dense weeks fit better.
 
 ---
 ## [0.14.14] - Unreleased

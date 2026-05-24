@@ -644,6 +644,7 @@ const WorkoutCalendarPage = () => {
                           isSick={dayIsSick}
                           overdue={dayOverdue}
                           programActive={dayHasProgram}
+                          compact
                           showWeekdayLabel={false}
                           showMonthLabel={false}
                           workoutCards={workoutCards}

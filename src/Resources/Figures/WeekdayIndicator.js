@@ -46,11 +46,13 @@ const WeekdayIndicator = ({
   onWorkoutPress,
   onDayPress,
   onDayLongPress,
+  compact = false,
   showWeekdayLabel = true,
   showMonthLabel = true,
 }) => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const workoutIconSize = compact ? 22 : 28;
   const hasWorkoutCards = workoutCards.length > 0;
   const hasWorkout = hasWorkoutCards || Boolean(Icon || iconLabel);
   const [dayNumber, monthNumber] = (dateLabel ?? "").split(".");
@@ -122,12 +124,19 @@ const WeekdayIndicator = ({
       : quietText;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, compact && styles.containerCompact]}>
       {!!statusBadgeLabel && (
-        <View pointerEvents="none" style={styles.todayBadgeSlot}>
+        <View
+          pointerEvents="none"
+          style={[
+            styles.todayBadgeSlot,
+            compact && styles.todayBadgeSlotCompact,
+          ]}
+        >
           <View
             style={[
               styles.todayBadge,
+              compact && styles.todayBadgeCompact,
               {
                 backgroundColor: statusBadgeColor,
                 borderColor: theme.cardBackground ?? theme.background,
@@ -149,6 +158,7 @@ const WeekdayIndicator = ({
         accessibilityLabel={[label, dateLabel].filter(Boolean).join(" ")}
         style={[
           styles.headerBadge,
+          compact && styles.headerBadgeCompact,
           {
             backgroundColor: badgeBackgroundColor,
             borderColor: badgeBorderColor,
@@ -162,6 +172,7 @@ const WeekdayIndicator = ({
             pointerEvents="none"
             style={[
               styles.programDot,
+              compact && styles.programDotCompact,
               { backgroundColor: theme.primary ?? "#f7742e" },
             ]}
           />
@@ -180,8 +191,14 @@ const WeekdayIndicator = ({
         )}
 
         {!!dateLabel && (
-          <View style={styles.dateStack}>
-            <Text style={[styles.dateNumber, { color: badgeDateColor }]}>
+          <View style={[styles.dateStack, compact && styles.dateStackCompact]}>
+            <Text
+              style={[
+                styles.dateNumber,
+                compact && styles.dateNumberCompact,
+                { color: badgeDateColor },
+              ]}
+            >
               {dayNumber ?? dateLabel}
             </Text>
 
@@ -245,10 +262,14 @@ const WeekdayIndicator = ({
                 style={[
                   styles.circle,
                   styles.multiWorkoutCard,
+                  compact && styles.circleCompact,
                   index < workoutCards.length - 1 && styles.workoutCardSpacing,
+                  index < workoutCards.length - 1 &&
+                    compact &&
+                    styles.workoutCardSpacingCompact,
                   {
                     backgroundColor: workoutSurfaceColor,
-                    borderWidth: isSickCompletedWorkout ? 0 : 3,
+                    borderWidth: isSickCompletedWorkout ? 0 : compact ? 2 : 3,
                     borderColor: workoutBorderColor,
                     borderStyle: workoutBorderStyle,
                   },
@@ -291,8 +312,8 @@ const WeekdayIndicator = ({
                 <View pointerEvents="none" style={styles.workoutContent}>
                   {WorkoutIcon && (
                     <WorkoutIcon
-                      width={28}
-                      height={28}
+                      width={workoutIconSize}
+                      height={workoutIconSize}
                       color={theme.cardBackground}
                       fill={theme.cardBackground}
                       primaryColor={theme.cardBackground}
@@ -322,6 +343,7 @@ const WeekdayIndicator = ({
         <View
           style={[
             styles.circle,
+            compact && styles.circleCompact,
             {
               backgroundColor: sickOverdue
                 ? sickColor
@@ -347,8 +369,8 @@ const WeekdayIndicator = ({
         >
           {Icon && (
             <Icon
-              width={28}
-              height={28}
+              width={workoutIconSize}
+              height={workoutIconSize}
               color={theme.cardBackground}
               fill={theme.cardBackground}
               primaryColor={theme.cardBackground}
@@ -383,6 +405,9 @@ const styles = StyleSheet.create({
     position: "relative",
     width: "100%",
   },
+  containerCompact: {
+    paddingTop: 4,
+  },
   headerBadge: {
     width: "92%",
     maxWidth: 58,
@@ -397,6 +422,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 7,
     position: "relative",
+  },
+  headerBadgeCompact: {
+    width: "78%",
+    maxWidth: 44,
+    minWidth: 34,
+    minHeight: 38,
+    paddingHorizontal: 2,
+    paddingTop: 3,
+    paddingBottom: 3,
+    borderRadius: 12,
+    marginBottom: 4,
   },
   weekdayLabel: {
     fontSize: 9,
@@ -417,6 +453,13 @@ const styles = StyleSheet.create({
     height: 7,
     borderRadius: 4,
   },
+  programDotCompact: {
+    top: 4,
+    right: 3,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
   todayBadgeSlot: {
     position: "absolute",
     top: 0,
@@ -424,6 +467,9 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: "center",
     zIndex: 3,
+  },
+  todayBadgeSlotCompact: {
+    top: 0,
   },
   todayBadge: {
     width: "80%",
@@ -434,6 +480,11 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: 1,
     alignItems: "center",
+  },
+  todayBadgeCompact: {
+    width: "70%",
+    maxWidth: 42,
+    minWidth: 34,
   },
   todayBadgeText: {
     fontSize: 8,
@@ -446,10 +497,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: 1,
   },
+  dateStackCompact: {
+    marginTop: 0,
+  },
   dateNumber: {
     fontSize: 19,
     fontWeight: "800",
     lineHeight: 21,
+  },
+  dateNumberCompact: {
+    fontSize: 17,
+    lineHeight: 19,
   },
   dateMonth: {
     fontSize: 9,
@@ -468,6 +526,12 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     overflow: "hidden",
     position: "relative",
+  },
+  circleCompact: {
+    width: 34,
+    height: 34,
+    borderRadius: 12,
+    marginBottom: 6,
   },
   splitWorkoutBackground: {
     ...StyleSheet.absoluteFillObject,
@@ -488,6 +552,9 @@ const styles = StyleSheet.create({
   },
   workoutCardSpacing: {
     marginBottom: 4,
+  },
+  workoutCardSpacingCompact: {
+    marginBottom: 3,
   },
   iconLabel: {
     fontSize: 8,

@@ -110,7 +110,7 @@ export default StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingTop: 2,
-    paddingBottom: 4,
+    paddingBottom: 2,
   },
   weekdayHeaderCell: {
     width: "14.2857%",
@@ -129,7 +129,7 @@ export default StyleSheet.create({
   weekRow: {
     flexDirection: "row",
     alignItems: "flex-start",
-    marginBottom: 5,
+    marginBottom: 3,
   },
   daySlot: {
     width: "14.2857%",
