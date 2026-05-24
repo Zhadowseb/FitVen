@@ -9,7 +9,7 @@ export default StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 16,
     paddingBottom: 18,
   },
   pageHeaderTitleGroup: {
@@ -25,6 +25,71 @@ export default StyleSheet.create({
   pageHeaderTitleMain: {
     textAlign: "center",
     lineHeight: 26,
+  },
+  storiesSection: {
+    marginBottom: 14,
+  },
+  sectionHeaderRow: {
+    marginBottom: 2,
+  },
+  sectionTitle: {
+    padding: 0,
+    fontSize: 22,
+    lineHeight: 28,
+  },
+  storiesRail: {
+    marginHorizontal: -20,
+  },
+  findFriendsCard: {
+    height: 168,
+    borderWidth: 1,
+    borderRadius: 24,
+    overflow: "hidden",
+    marginBottom: 18,
+  },
+  findFriendsImage: {
+    flex: 1,
+    justifyContent: "space-between",
+    paddingHorizontal: 14,
+    paddingTop: 14,
+    paddingBottom: 15,
+  },
+  findFriendsImageRadius: {
+    borderRadius: 24,
+  },
+  findFriendsScrim: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(6, 8, 12, 0.42)",
+  },
+  findFriendsActionRow: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+  },
+  findFriendsActionIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(14, 15, 18, 0.52)",
+    borderColor: "rgba(255, 255, 255, 0.24)",
+  },
+  findFriendsCopy: {
+    alignItems: "flex-start",
+  },
+  findFriendsEyebrow: {
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 1,
+    textTransform: "uppercase",
+    marginBottom: 4,
+  },
+  findFriendsTitle: {
+    padding: 0,
+    color: "#ffffff",
+    fontSize: 24,
+    lineHeight: 29,
   },
   searchSection: {
     marginBottom: 14,

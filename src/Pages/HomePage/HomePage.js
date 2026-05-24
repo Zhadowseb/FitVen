@@ -5,8 +5,8 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useSQLiteContext } from "expo-sqlite";
 
 import styles from './HomePageStyle';
-import FriendsActivity from './Components/FriendsActivity/FriendsActivity';
 import TodayProgramsShortcut from './Components/TodayProgramsShortcut/TodayProgramsShortcut';
+import FriendsActivity from "../../Resources/Components/FriendsActivity/FriendsActivity";
 import {
   programService,
   socialService,

@@ -1,17 +1,23 @@
 import { StatusBar } from "expo-status-bar";
 import {
   ActivityIndicator,
+  ImageBackground,
   ScrollView,
+  TouchableOpacity,
   View,
   useColorScheme,
 } from "react-native";
-import { useCallback, useEffect, useState } from "react";
-import { useFocusEffect } from "@react-navigation/native";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { useSQLiteContext } from "expo-sqlite";
 
 import styles from "./SearchPageStyle";
+import FriendsActivity from "../../Resources/Components/FriendsActivity/FriendsActivity";
 import { Colors } from "../../Resources/GlobalStyling/colors";
+import TailArrowUpRight from "../../Resources/Icons/UI-icons/TailArrowUpRight";
 import { useAuth } from "../../Contexts/AuthContext";
-import { socialService } from "../../Services";
+import { programService, socialService } from "../../Services";
+import { getTodaysDate } from "../../Utils/dateUtils";
 import {
   ThemedButton,
   ThemedCard,
@@ -23,26 +29,86 @@ import {
   UserAvatar,
 } from "../../Resources/ThemedComponents";
 
+const searchPeopleImage = require("../../Resources/Images/DarkVersion/Search_people.png");
+
 const SearchPage = () => {
+  const db = useSQLiteContext();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const navigation = useNavigation();
   const { user } = useAuth();
+  const todayDate = getTodaysDate();
+  const scrollViewRef = useRef(null);
+  const searchSectionYRef = useRef(0);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const [busyUserId, setBusyUserId] = useState(null);
+  const [circlePreview, setCirclePreview] = useState({
+    currentUser: null,
+    people: [],
+  });
+  const [circlePreviewError, setCirclePreviewError] = useState("");
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const titleColor = theme.title ?? theme.text;
   const cardSurface = theme.cardBackground ?? theme.background;
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor;
   const secondaryDark = theme.secondaryDark ?? theme.secondary ?? titleColor;
 
+  const loadCirclePreview = useCallback(async () => {
+    if (!user?.id) {
+      setCirclePreview({
+        currentUser: null,
+        people: [],
+      });
+      setCirclePreviewError("");
+      return;
+    }
+
+    setCirclePreviewError("");
+
+    try {
+      const [nextCirclePreview, todayActivitySummary] = await Promise.all([
+        socialService.getCirclePreview({
+          user,
+          limit: 12,
+          date: todayDate,
+        }),
+        programService.getTodayActivitySummary(db, {
+          date: todayDate,
+        }),
+      ]);
+
+      setCirclePreview({
+        ...nextCirclePreview,
+        currentUser: nextCirclePreview.currentUser
+          ? {
+              ...nextCirclePreview.currentUser,
+              activityState: todayActivitySummary.activityState,
+              activityDetail: todayActivitySummary.detail,
+              workoutType: todayActivitySummary.workoutType,
+              workoutLabel: todayActivitySummary.workoutLabel,
+            }
+          : null,
+      });
+    } catch (error) {
+      setCirclePreview({
+        currentUser: null,
+        people: [],
+      });
+      setCirclePreviewError(
+        error instanceof Error ? error.message : "Could not load your stories."
+      );
+    }
+  }, [db, todayDate, user]);
+
   useFocusEffect(
     useCallback(() => {
       setRefreshKey((currentValue) => currentValue + 1);
-    }, [])
+      loadCirclePreview();
+    }, [loadCirclePreview])
   );
 
   useEffect(() => {
@@ -136,6 +202,13 @@ const SearchPage = () => {
     }
   };
 
+  const handleOpenFriendSearch = () => {
+    scrollViewRef.current?.scrollTo({
+      y: Math.max(searchSectionYRef.current - 14, 0),
+      animated: true,
+    });
+  };
+
   const emptyStateTitle =
     query.trim().length > 0 ? "No users matched." : "No other users yet.";
   const emptyStateBody =
@@ -162,18 +235,83 @@ const SearchPage = () => {
             style={styles.pageHeaderTitleMain}
             numberOfLines={1}
           >
-            Search
+            Social
           </ThemedTitle>
         </View>
       </ThemedHeader>
 
       <ScrollView
+        ref={scrollViewRef}
         style={styles.content}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.searchSection}>
+        <View style={styles.storiesSection}>
+          <View style={styles.sectionHeaderRow}>
+            <ThemedTitle type="h3" style={styles.sectionTitle}>
+              Stories
+            </ThemedTitle>
+          </View>
+
+          <View style={styles.storiesRail}>
+            <FriendsActivity
+              currentUser={circlePreview.currentUser}
+              people={circlePreview.people}
+              errorMessage={circlePreviewError}
+              onSeeAll={handleOpenFriendSearch}
+              onOpenProfile={() => navigation.navigate("ProfilePage")}
+            />
+          </View>
+        </View>
+
+        <TouchableOpacity
+          activeOpacity={0.92}
+          accessibilityRole="button"
+          accessibilityLabel="Search for friends"
+          onPress={handleOpenFriendSearch}
+          style={[styles.findFriendsCard, { borderColor: cardBorder }]}
+        >
+          <ImageBackground
+            source={searchPeopleImage}
+            resizeMode="cover"
+            style={styles.findFriendsImage}
+            imageStyle={styles.findFriendsImageRadius}
+          >
+            <View style={styles.findFriendsScrim} />
+
+            <View style={styles.findFriendsActionRow}>
+              <View style={styles.findFriendsActionIcon}>
+                <TailArrowUpRight
+                  width={15}
+                  height={15}
+                  stroke="#ffffff"
+                  color="#ffffff"
+                />
+              </View>
+            </View>
+
+            <View style={styles.findFriendsCopy}>
+              <ThemedText style={styles.findFriendsEyebrow} setColor="#ffffff">
+                Discover
+              </ThemedText>
+              <ThemedTitle
+                type="h3"
+                style={styles.findFriendsTitle}
+                numberOfLines={2}
+              >
+                Find Friends
+              </ThemedTitle>
+            </View>
+          </ImageBackground>
+        </TouchableOpacity>
+
+        <View
+          style={styles.searchSection}
+          onLayout={(event) => {
+            searchSectionYRef.current = event.nativeEvent.layout.y;
+          }}
+        >
           <ThemedTextInput
             value={query}
             onChangeText={setQuery}

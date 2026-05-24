@@ -1,15 +1,15 @@
 import { ScrollView, TouchableOpacity, View, useColorScheme } from "react-native";
 
 import styles from "./FriendsActivityStyle";
-import { Colors } from "../../../../Resources/GlobalStyling/colors";
-import Calender from "../../../../Resources/Icons/UI-icons/Calender";
-import Checkmark from "../../../../Resources/Icons/UI-icons/Checkmark";
-import Male from "../../../../Resources/Icons/UI-icons/Male";
-import { getWorkoutIconConfig } from "../../../../Resources/Icons/WorkoutLabels";
+import { Colors } from "../../GlobalStyling/colors";
+import Calender from "../../Icons/UI-icons/Calender";
+import Checkmark from "../../Icons/UI-icons/Checkmark";
+import Male from "../../Icons/UI-icons/Male";
+import { getWorkoutIconConfig } from "../../Icons/WorkoutLabels";
 import {
   ThemedText,
   UserAvatar,
-} from "../../../../Resources/ThemedComponents";
+} from "../../ThemedComponents";
 
 function getActivityMeta(theme, activityState, workoutType) {
   const primary = theme.primary ?? "#f7742e";

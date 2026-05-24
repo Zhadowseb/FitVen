@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.15.3] - Unreleased
+### Changed
+- Add stories and a friend-search image card to the top of Social.
+
+---
 ## [0.15.2] - Unreleased
 ### Changed
 - Move Sickness Log and Workout Calendar shortcuts from Home to the top of Train.

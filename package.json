@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.15.2-minor-train-health-shortcuts.1",
+  "version": "0.15.3-minor-social-stories-search-card.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",
