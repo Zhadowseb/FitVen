@@ -4,6 +4,7 @@
 ### Changed
 - Rename the bottom navigation search tab to Social and move it after the create button.
 - Move the training tab into the former search tab position and label it Train.
+- Use the upward graph icon for the Train tab.
 
 ---
 ## [0.14.15] - Unreleased

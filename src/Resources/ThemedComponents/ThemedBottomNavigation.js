@@ -13,10 +13,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Colors } from "../GlobalStyling/colors";
 import AddWorkoutModal from "../Components/AddWorkoutModal";
 import Home from "../Icons/UI-icons/Home";
-import Library from "../Icons/UI-icons/Library";
 import Male from "../Icons/UI-icons/Male";
 import Plus from "../Icons/UI-icons/Plus";
 import Social from "../Icons/UI-icons/Social";
+import UpwardGraf from "../Icons/UI-icons/UpwardGraf";
 import { programService } from "../../Services";
 
 function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
@@ -156,7 +156,7 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
           onPress={handleLibraryPress}
           style={styles.tab}
         >
-          <Library
+          <UpwardGraf
             width={27}
             height={27}
             color={isLibraryActive ? activeColor : inactiveColor}
