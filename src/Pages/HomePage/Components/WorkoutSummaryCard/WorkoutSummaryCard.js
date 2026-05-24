@@ -2,7 +2,6 @@ import { View, useColorScheme } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 
 import styles from "./WorkoutSummaryCardStyle";
-import Fire from "../../../../Resources/Icons/UI-icons/Fire";
 import ThreeDots from "../../../../Resources/Icons/UI-icons/ThreeDots";
 import { Colors } from "../../../../Resources/GlobalStyling/colors";
 import {
@@ -75,13 +74,6 @@ export default function WorkoutSummaryCard() {
         </View>
 
         <ThreeDots width={18} height={18} color={quietText} />
-      </View>
-
-      <View style={styles.categoryRow}>
-        <Fire width={15} height={15} stroke={accent} color={accent} />
-        <ThemedText style={styles.categoryLabel} setColor={accent}>
-          Strength
-        </ThemedText>
       </View>
 
       <ThemedTitle type="h3" style={[styles.title, { color: titleColor }]}>
