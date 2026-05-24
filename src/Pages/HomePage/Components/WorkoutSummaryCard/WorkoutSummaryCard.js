@@ -28,7 +28,7 @@ export default function WorkoutSummaryCard() {
   const quietText = theme.iconColor ?? "#8795ad";
   const mutedText = "#8392b0";
   const titleColor = theme.title ?? "#ffffff";
-  const surface = colorScheme === "dark" ? "#151922" : "#f3f2f8";
+  const surface = theme.cardBackground ?? theme.background;
   const insetSurface = colorScheme === "dark" ? "#181d27" : "#ffffff";
   const softBorder =
     colorScheme === "dark"
