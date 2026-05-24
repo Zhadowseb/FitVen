@@ -16,9 +16,10 @@ const summaryStats = [
   { label: "Exercises", value: "5" },
 ];
 
-const personalRecords = [
+const topSets = [
   { exercise: "Bench Press", result: "100 kg x 3" },
   { exercise: "Incline DB", result: "32 kg x 8" },
+  { exercise: "Cable Fly", result: "24 kg x 12" },
 ];
 
 export default function WorkoutSummaryCard() {
@@ -34,8 +35,10 @@ export default function WorkoutSummaryCard() {
     colorScheme === "dark"
       ? "rgba(132, 145, 166, 0.16)"
       : "rgba(40, 37, 58, 0.14)";
-  const accentBorder =
-    colorScheme === "dark" ? "rgba(247, 116, 46, 0.42)" : "rgba(247, 116, 46, 0.55)";
+  const prYellow = colorScheme === "dark" ? "#ffd21f" : "#d99b00";
+  const prGreen = theme.secondary ?? "#60daac";
+  const prCalloutSurface =
+    colorScheme === "dark" ? "rgba(255, 255, 255, 0.05)" : "#ffffff";
   const footerColor = colorScheme === "dark" ? "#7f90ad" : theme.iconColor;
 
   return (
@@ -113,33 +116,69 @@ export default function WorkoutSummaryCard() {
 
       <View
         style={[
-          styles.prPanel,
+          styles.topSetsPanel,
           {
-            borderColor: accentBorder,
-            backgroundColor:
-              colorScheme === "dark"
-                ? "rgba(247, 116, 46, 0.06)"
-                : "rgba(247, 116, 46, 0.1)",
+            backgroundColor: insetSurface,
+            borderColor: softBorder,
           },
         ]}
       >
-        <View style={styles.prHeaderRow}>
-          <Feather name="award" size={15} color={accent} />
-          <ThemedText style={styles.prHeaderText} setColor={accent}>
-            2 new PRs
+        <View style={styles.topSetsHeaderRow}>
+          <ThemedText style={styles.topSetsHeaderText} setColor={mutedText}>
+            Top sets
+          </ThemedText>
+          <ThemedText style={styles.topSetsCount} setColor={mutedText}>
+            3 lifts
           </ThemedText>
         </View>
 
-        {personalRecords.map((record) => (
-          <View key={record.exercise} style={styles.prRow}>
-            <ThemedText style={styles.prExercise} setColor={titleColor}>
+        {topSets.map((record) => (
+          <View key={record.exercise} style={styles.topSetRow}>
+            <ThemedText style={styles.topSetExercise} setColor={titleColor}>
               {record.exercise}
             </ThemedText>
-            <ThemedText style={styles.prResult} setColor={accent}>
+            <ThemedText style={styles.topSetResult} setColor={mutedText}>
               {record.result}
             </ThemedText>
           </View>
         ))}
+      </View>
+
+      <View
+        style={[
+          styles.prCallout,
+          {
+            backgroundColor: prCalloutSurface,
+            borderColor: softBorder,
+          },
+        ]}
+      >
+        <View style={[styles.prBadge, { borderColor: prYellow }]}>
+          <Feather name="award" size={17} color={prYellow} />
+          <ThemedText style={styles.prBadgeText} setColor={prYellow}>
+            PR
+          </ThemedText>
+        </View>
+
+        <View style={styles.prCalloutCopy}>
+          <ThemedText style={styles.prCalloutTitle} setColor={titleColor}>
+            Mads Jensen&apos;s strongest Bench Press in 2026!
+          </ThemedText>
+
+          <View style={[styles.prDeltaPill, { backgroundColor: prGreen }]}>
+            <Feather
+              name="arrow-up-right"
+              size={12}
+              color={theme.textInverted ?? "#0E0F12"}
+            />
+            <ThemedText
+              style={styles.prDeltaText}
+              setColor={theme.textInverted ?? "#0E0F12"}
+            >
+              +5 kg
+            </ThemedText>
+          </View>
+        </View>
       </View>
 
       <View style={[styles.footerRow, { borderTopColor: softBorder }]}>

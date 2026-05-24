@@ -3,6 +3,7 @@
 ## [0.15.4] - Unreleased
 ### Changed
 - Add a static workout summary preview card to Home.
+- Split workout summary top sets and personal record highlights into separate sections.
 
 ---
 ## [0.15.3] - Unreleased
