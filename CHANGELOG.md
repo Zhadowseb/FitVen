@@ -6,6 +6,7 @@
 - Split workout summary top sets and personal record highlights into separate sections.
 - Restyle workout summary top sets to match the workout set list table.
 - Simplify workout summary top set columns and place reps before weight.
+- Hide unfinished comment and share actions from the workout summary preview.
 
 ---
 ## [0.15.3] - Unreleased

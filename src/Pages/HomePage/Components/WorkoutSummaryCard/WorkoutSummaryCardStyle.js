@@ -241,7 +241,4 @@ export default StyleSheet.create({
     fontWeight: "700",
     lineHeight: 18,
   },
-  footerSpacer: {
-    flex: 1,
-  },
 });

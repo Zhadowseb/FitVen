@@ -241,17 +241,6 @@ export default function WorkoutSummaryCard() {
             12
           </ThemedText>
         </View>
-
-        <View style={styles.footerAction}>
-          <Feather name="message-circle" size={19} color={footerColor} />
-          <ThemedText style={styles.footerText} setColor={footerColor}>
-            3
-          </ThemedText>
-        </View>
-
-        <View style={styles.footerSpacer} />
-
-        <Feather name="share-2" size={19} color={footerColor} />
       </View>
     </View>
   );
