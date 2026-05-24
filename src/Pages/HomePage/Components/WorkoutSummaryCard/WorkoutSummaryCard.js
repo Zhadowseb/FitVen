@@ -121,31 +121,6 @@ export default function WorkoutSummaryCard() {
 
       <View
         style={[
-          styles.volumePanel,
-          {
-            backgroundColor: insetSurface,
-            borderColor: softBorder,
-          },
-        ]}
-      >
-        <View style={styles.panelLabelRow}>
-          <Fire width={15} height={15} stroke={accent} color={accent} />
-          <ThemedText style={styles.panelLabel} setColor={mutedText}>
-            Volume
-          </ThemedText>
-        </View>
-        <View style={styles.volumeValueRow}>
-          <ThemedText style={styles.volumeValue} setColor={titleColor}>
-            7,420
-          </ThemedText>
-          <ThemedText style={styles.volumeUnit} setColor={mutedText}>
-            kg
-          </ThemedText>
-        </View>
-      </View>
-
-      <View
-        style={[
           styles.prPanel,
           {
             borderColor: accentBorder,
