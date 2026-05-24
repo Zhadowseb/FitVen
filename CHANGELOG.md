@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.15.1] - Unreleased
+### Changed
+- Move the Send Feedback card from Home to the top of Profile.
+
+---
 ## [0.15.0] - Unreleased
 ### Changed
 - Rename the bottom navigation search tab to Social and move it after the create button.

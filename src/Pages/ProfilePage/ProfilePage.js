@@ -1,13 +1,22 @@
-import { Pressable, ScrollView, View, useColorScheme } from "react-native";
+import {
+  Pressable,
+  ScrollView,
+  TouchableOpacity,
+  View,
+  useColorScheme,
+} from "react-native";
 import { useCallback, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
+import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
 
 import styles from "./ProfilePageStyle";
 import { Colors } from "../../Resources/GlobalStyling/colors";
 import { logout } from "../../Database/supaBaseClient";
 import { useAuth } from "../../Contexts/AuthContext";
 import { socialService } from "../../Services";
+import FeedbackModal from "../../Resources/Components/FeedbackModal/FeedbackModal";
+import TailArrowUpRight from "../../Resources/Icons/UI-icons/TailArrowUpRight";
 import {
   ThemedButton,
   ThemedCard,
@@ -20,6 +29,32 @@ import {
   ThemedView,
   UserAvatar,
 } from "../../Resources/ThemedComponents";
+
+const FeedbackGlow = ({
+  style,
+  color,
+  gradientId,
+  centerOpacity,
+  middleOpacity,
+}) => (
+  <Svg
+    pointerEvents="none"
+    style={style}
+    viewBox="0 0 100 100"
+    preserveAspectRatio="none"
+  >
+    <Defs>
+      <RadialGradient id={gradientId} cx="50%" cy="50%" r="50%">
+        <Stop offset="0%" stopColor={color} stopOpacity={centerOpacity} />
+        <Stop offset="34%" stopColor={color} stopOpacity={middleOpacity} />
+        <Stop offset="68%" stopColor={color} stopOpacity={middleOpacity * 0.46} />
+        <Stop offset="90%" stopColor={color} stopOpacity={middleOpacity * 0.12} />
+        <Stop offset="100%" stopColor={color} stopOpacity={0} />
+      </RadialGradient>
+    </Defs>
+    <Rect width="100" height="100" fill={`url(#${gradientId})`} />
+  </Svg>
+);
 
 export default function ProfilePage() {
   const colorScheme = useColorScheme();
@@ -38,6 +73,7 @@ export default function ProfilePage() {
   const [relationshipProfiles, setRelationshipProfiles] = useState([]);
   const [isLoadingRelationships, setIsLoadingRelationships] = useState(false);
   const [relationshipError, setRelationshipError] = useState("");
+  const [feedbackModalVisible, setFeedbackModalVisible] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [profileFeedback, setProfileFeedback] = useState({
@@ -52,6 +88,8 @@ export default function ProfilePage() {
   const cardSurface = theme.cardBackground ?? theme.background;
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor;
   const panelSurface = theme.uiBackground ?? theme.background;
+  const primaryColor = theme.primary ?? "#f7742e";
+  const secondaryColor = theme.secondary ?? "#60daac";
   const profileStatusColor =
     profileFeedback.status === "success"
       ? theme.secondaryDark ?? theme.secondary ?? titleColor
@@ -362,6 +400,103 @@ export default function ProfilePage() {
           scroll
           contentContainerStyle={styles.scrollContent}
         >
+          <TouchableOpacity
+            activeOpacity={0.92}
+            onPress={() => setFeedbackModalVisible(true)}
+            style={[
+              styles.feedbackPortal,
+              {
+                backgroundColor: cardSurface,
+                borderColor: cardBorder,
+              },
+            ]}
+          >
+            <FeedbackGlow
+              style={styles.feedbackPortalGlowPrimary}
+              color={primaryColor}
+              gradientId="profileFeedbackPrimaryGlow"
+              centerOpacity={0.28}
+              middleOpacity={0.15}
+            />
+            <FeedbackGlow
+              style={styles.feedbackPortalGlowSecondary}
+              color={secondaryColor}
+              gradientId="profileFeedbackSecondaryGlow"
+              centerOpacity={0.23}
+              middleOpacity={0.12}
+            />
+
+            <View style={styles.feedbackPortalHeader}>
+              <View style={styles.feedbackPortalStatusCluster}>
+                <View
+                  style={[
+                    styles.feedbackPortalStatusDot,
+                    { backgroundColor: secondaryColor },
+                  ]}
+                />
+                <ThemedText
+                  style={styles.feedbackPortalEyebrow}
+                  setColor={quietText}
+                >
+                  FEEDBACK
+                </ThemedText>
+              </View>
+
+              <View
+                style={[
+                  styles.feedbackPortalActionIcon,
+                  {
+                    backgroundColor: panelSurface,
+                    borderColor: cardBorder,
+                  },
+                ]}
+              >
+                <TailArrowUpRight
+                  width={18}
+                  height={18}
+                  stroke={primaryColor}
+                  color={primaryColor}
+                />
+              </View>
+            </View>
+
+            <ThemedTitle
+              type="h3"
+              style={[styles.feedbackPortalTitle, { color: titleColor }]}
+            >
+              Send Feedback
+            </ThemedTitle>
+
+            <ThemedText
+              style={styles.feedbackPortalDescription}
+              setColor={quietText}
+            >
+              Report bugs, odd behavior, ideas or something you're missing.
+            </ThemedText>
+
+            <View style={styles.feedbackPortalChipRow}>
+              {["Bugs", "Ideas", "Missing"].map((label) => (
+                <View
+                  key={label}
+                  style={[
+                    styles.feedbackPortalChip,
+                    {
+                      backgroundColor: panelSurface,
+                      borderColor: cardBorder,
+                    },
+                  ]}
+                >
+                  <ThemedText
+                    style={styles.feedbackPortalChipText}
+                    setColor={quietText}
+                  >
+                    {label}
+                  </ThemedText>
+                </View>
+              ))}
+            </View>
+          </TouchableOpacity>
+
           <View style={styles.relationshipSummaryRow}>
             <Pressable
               onPress={() => handleOpenRelationshipModal("followers")}
@@ -673,6 +808,12 @@ export default function ProfilePage() {
           </ThemedCard>
         </ThemedKeyboardProtection>
       </View>
+
+      <FeedbackModal
+        visible={feedbackModalVisible}
+        onClose={() => setFeedbackModalVisible(false)}
+        userId={user?.id ?? null}
+      />
 
       <ThemedModal
         visible={Boolean(activeRelationshipType)}

@@ -2,14 +2,14 @@ import { View, useColorScheme } from "react-native";
 import { useEffect, useMemo, useState } from "react";
 
 import styles from "./FeedbackModalStyle";
-import { Colors } from "../../../../Resources/GlobalStyling/colors";
+import { Colors } from "../../GlobalStyling/colors";
 import {
   ThemedButton,
   ThemedModal,
   ThemedText,
   ThemedTextInput,
-} from "../../../../Resources/ThemedComponents";
-import { feedbackService } from "../../../../Services";
+} from "../../ThemedComponents";
+import { feedbackService } from "../../../Services";
 
 const MAX_FEEDBACK_LENGTH = 1000;
 
@@ -120,7 +120,10 @@ export default function FeedbackModal({ visible, onClose, userId }) {
             },
           ]}
         >
-          <ThemedText style={styles.feedbackBannerText} setColor={theme.danger ?? "#ba0000"}>
+          <ThemedText
+            style={styles.feedbackBannerText}
+            setColor={theme.danger ?? "#ba0000"}
+          >
             {errorMessage}
           </ThemedText>
         </View>
