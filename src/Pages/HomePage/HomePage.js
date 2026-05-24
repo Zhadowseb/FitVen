@@ -6,6 +6,7 @@ import { useSQLiteContext } from "expo-sqlite";
 
 import styles from './HomePageStyle';
 import TodayProgramsShortcut from './Components/TodayProgramsShortcut/TodayProgramsShortcut';
+import WorkoutSummaryCard from './Components/WorkoutSummaryCard/WorkoutSummaryCard';
 import FriendsActivity from "../../Resources/Components/FriendsActivity/FriendsActivity";
 import {
   programService,
@@ -90,6 +91,8 @@ export default function App() {
         showsVerticalScrollIndicator={false}
       >
         <TodayProgramsShortcut />
+
+        <WorkoutSummaryCard />
 
         <FriendsActivity
           currentUser={circlePreview.currentUser}

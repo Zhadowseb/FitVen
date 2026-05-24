@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.15.4] - Unreleased
+### Changed
+- Add a static workout summary preview card to Home.
+
+---
 ## [0.15.3] - Unreleased
 ### Changed
 - Add stories and a friend-search image card to the top of Social.
