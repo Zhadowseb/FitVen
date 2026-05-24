@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.15.2] - Unreleased
+### Changed
+- Move Sickness Log and Workout Calendar shortcuts from Home to the top of Train.
+
+---
 ## [0.15.1] - Unreleased
 ### Changed
 - Move the Send Feedback card from Home to the top of Profile.

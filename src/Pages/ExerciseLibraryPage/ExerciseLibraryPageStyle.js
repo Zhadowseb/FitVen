@@ -12,6 +12,11 @@ export default StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 16,
   },
+  trainShortcutRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 18,
+  },
   quickAccessSection: {
     marginBottom: 18,
   },

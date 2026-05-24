@@ -14,10 +14,4 @@ export default StyleSheet.create({
   socialSectionSpacer: {
     marginTop: 8,
   },
-  homeShortcutRow: {
-    marginHorizontal: 18,
-    flexDirection: "row",
-    gap: 12,
-    marginBottom: 12,
-  },
 });

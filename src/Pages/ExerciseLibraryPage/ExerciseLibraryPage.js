@@ -12,6 +12,8 @@ import { useSQLiteContext } from "expo-sqlite";
 
 import styles from "./ExerciseLibraryPageStyle";
 import { Colors } from "../../Resources/GlobalStyling/colors";
+import HomeImageShortcutCard from "../../Resources/Components/HomeImageShortcutCard/HomeImageShortcutCard";
+import SicknessLogCard from "../../Resources/Components/SicknessLogCard/SicknessLogCard";
 import TailArrowUpRight from "../../Resources/Icons/UI-icons/TailArrowUpRight";
 import { programService, weightliftingService } from "../../Services";
 import {
@@ -23,6 +25,7 @@ import {
 const programsHeroImage = require("../../../assets/programs-hero.jpg");
 const exerciseLibraryHeroImage = require("../../../assets/exercise-library-hero.jpg");
 const personalRecordsHeroImage = require("../../../assets/personal-records-hero.jpg");
+const workoutCalendarDarkImage = require("../../Resources/Images/DarkVersion/workout calender dark.png");
 const programsHeroFadeStops = [
   0,
   0.03,
@@ -157,6 +160,17 @@ const ExerciseLibraryPage = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        <View style={styles.trainShortcutRow}>
+          <SicknessLogCard />
+
+          <HomeImageShortcutCard
+            accessibilityLabel="Open workout calendar"
+            imageSource={workoutCalendarDarkImage}
+            onPress={() => navigation.navigate("WorkoutCalendarPage")}
+            title="Workout Calendar"
+          />
+        </View>
+
         <View style={styles.quickAccessSection}>
           <View style={styles.quickAccessGrid}>
             {quickAccessCards.map((card) => {

@@ -1,8 +1,8 @@
 import { ImageBackground, TouchableOpacity, View, useColorScheme } from "react-native";
 
-import { Colors } from "../../../../Resources/GlobalStyling/colors";
-import TailArrowUpRight from "../../../../Resources/Icons/UI-icons/TailArrowUpRight";
-import { ThemedTitle } from "../../../../Resources/ThemedComponents";
+import { Colors } from "../../GlobalStyling/colors";
+import TailArrowUpRight from "../../Icons/UI-icons/TailArrowUpRight";
+import { ThemedTitle } from "../../ThemedComponents";
 import styles from "./HomeImageShortcutCardStyle";
 
 const HomeImageShortcutCard = ({

@@ -1,13 +1,11 @@
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { ScrollView } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useSQLiteContext } from "expo-sqlite";
 
 import styles from './HomePageStyle';
 import FriendsActivity from './Components/FriendsActivity/FriendsActivity';
-import HomeImageShortcutCard from './Components/HomeImageShortcutCard/HomeImageShortcutCard';
-import SicknessLogCard from './Components/SicknessLogCard/SicknessLogCard';
 import TodayProgramsShortcut from './Components/TodayProgramsShortcut/TodayProgramsShortcut';
 import {
   programService,
@@ -19,8 +17,6 @@ import {
   ThemedView,
 } from "../../Resources/ThemedComponents";
 import { useAuth } from '../../Contexts/AuthContext';
-
-const workoutCalendarDarkImage = require("../../Resources/Images/DarkVersion/workout calender dark.png");
 
 export default function App() {
   const db = useSQLiteContext();
@@ -102,17 +98,6 @@ export default function App() {
           onSeeAll={() => navigation.navigate("SearchPage")}
           onOpenProfile={() => navigation.navigate("ProfilePage")}
         />
-
-        <View style={styles.homeShortcutRow}>
-          <SicknessLogCard />
-
-          <HomeImageShortcutCard
-            accessibilityLabel="Open workout calendar"
-            imageSource={workoutCalendarDarkImage}
-            onPress={() => navigation.navigate("WorkoutCalendarPage")}
-            title="Workout Calendar"
-          />
-        </View>
       </ScrollView>
 
       <StatusBar style="auto" />
