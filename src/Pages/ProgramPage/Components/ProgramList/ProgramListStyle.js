@@ -37,27 +37,19 @@ export default StyleSheet.create({
   card: {
     marginHorizontal: 0,
     marginVertical: 0,
-    marginBottom: 12,
+    marginBottom: 10,
     padding: 0,
     borderWidth: 1,
-    borderRadius: 22,
+    borderRadius: 18,
     overflow: "hidden",
   },
 
-  cardAccentRail: {
-    position: "absolute",
-    top: 0,
-    bottom: 0,
-    left: 0,
-    width: 5,
-  },
-
   touchable: {
-    minHeight: 218,
-    paddingLeft: 22,
+    minHeight: 184,
+    paddingLeft: 18,
     paddingRight: 18,
     paddingTop: 18,
-    paddingBottom: 18,
+    paddingBottom: 16,
     justifyContent: "space-between",
   },
 
@@ -70,7 +62,6 @@ export default StyleSheet.create({
 
   statusBadge: {
     minHeight: 28,
-    maxWidth: 132,
     borderWidth: 1,
     borderRadius: 999,
     paddingHorizontal: 11,
@@ -92,12 +83,12 @@ export default StyleSheet.create({
   },
 
   workoutTypeRow: {
+    flex: 1,
     minWidth: 0,
     flexDirection: "row",
+    justifyContent: "flex-end",
     alignItems: "center",
-    flexWrap: "wrap",
-    gap: 6,
-    marginTop: 12,
+    marginLeft: 10,
   },
 
   workoutTypeBadge: {
@@ -106,6 +97,7 @@ export default StyleSheet.create({
     borderRadius: 999,
     borderWidth: 1,
     paddingHorizontal: 9,
+    marginLeft: 6,
     flexDirection: "row",
     alignItems: "center",
   },
@@ -117,70 +109,42 @@ export default StyleSheet.create({
     marginLeft: 4,
   },
 
-  openBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    minWidth: 72,
+  cardMenuIcon: {
+    width: 20,
     height: 28,
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 9,
-    gap: 5,
-  },
-
-  openBadgeText: {
-    fontSize: 10,
-    lineHeight: 13,
-    fontWeight: "900",
-    textTransform: "uppercase",
+    justifyContent: "center",
+    alignItems: "flex-end",
+    marginLeft: 6,
   },
 
   cardBodyRow: {
     flexDirection: "row",
-    alignItems: "stretch",
-    marginTop: 18,
+    alignItems: "center",
+    marginTop: 20,
   },
 
   programInfo: {
     flex: 1,
     minWidth: 0,
-    paddingRight: 14,
-    justifyContent: "center",
+    paddingRight: 16,
   },
 
   title: {
-    fontSize: 22,
-    lineHeight: 27,
-    marginBottom: 8,
-  },
-
-  dateBadge: {
-    alignSelf: "flex-start",
-    maxWidth: "100%",
-    minHeight: 28,
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 9,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 7,
+    fontSize: 20,
+    lineHeight: 25,
+    marginBottom: 4,
   },
 
   dateRange: {
     fontSize: 12,
     lineHeight: 17,
-    fontWeight: "700",
   },
 
   statusAction: {
-    width: 94,
-    minHeight: 112,
-    borderWidth: 1,
-    borderRadius: 18,
+    width: 72,
+    height: 72,
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: 10,
   },
 
   completedCircle: {
@@ -195,52 +159,34 @@ export default StyleSheet.create({
     elevation: 5,
   },
 
-  progressCaption: {
-    marginTop: 6,
-    fontSize: 9,
-    lineHeight: 12,
-    fontWeight: "900",
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
-  },
-
-  progressDetail: {
-    marginTop: 1,
-    fontSize: 11,
-    lineHeight: 14,
-    fontWeight: "900",
-  },
-
-  metricGrid: {
+  metaPillRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    flexWrap: "wrap",
     marginTop: 18,
   },
 
-  metricTile: {
-    flex: 1,
-    minWidth: 0,
-    minHeight: 58,
-    borderRadius: 14,
+  metaPill: {
+    minHeight: 28,
+    borderRadius: 8,
     borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 9,
-    justifyContent: "center",
+    paddingHorizontal: 9,
+    marginRight: 6,
+    marginBottom: 5,
+    flexDirection: "row",
+    alignItems: "center",
   },
 
-  metricValue: {
-    fontSize: 17,
-    lineHeight: 20,
-    fontWeight: "900",
-  },
-
-  metricLabel: {
-    marginTop: 2,
+  metaText: {
     fontSize: 11,
-    lineHeight: 14,
+    lineHeight: 16,
+    fontWeight: "700",
+  },
+
+  metaNumber: {
+    fontSize: 11,
+    lineHeight: 16,
     fontWeight: "800",
-    textTransform: "uppercase",
   },
 
   emptyCard: {

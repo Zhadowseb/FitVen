@@ -2,7 +2,7 @@
 
 ## [0.14.14] - Unreleased
 ### Changed
-- Refreshed ProgramPage program cards with a stronger status rail, progress panel, date badge, and metric tiles.
+- Describe pending changes here.
 
 ---
 ## [0.14.13] - Unreleased
