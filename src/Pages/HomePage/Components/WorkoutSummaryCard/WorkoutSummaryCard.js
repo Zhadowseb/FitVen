@@ -2,6 +2,7 @@ import { View, useColorScheme } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 
 import styles from "./WorkoutSummaryCardStyle";
+import PrIcon from "../../../../Resources/Icons/UI-icons/PR";
 import ThreeDots from "../../../../Resources/Icons/UI-icons/ThreeDots";
 import { Colors } from "../../../../Resources/GlobalStyling/colors";
 import {
@@ -154,7 +155,7 @@ export default function WorkoutSummaryCard() {
         ]}
       >
         <View style={[styles.prBadge, { borderColor: prYellow }]}>
-          <Feather name="award" size={17} color={prYellow} />
+          <PrIcon width={20} height={20} stroke={prYellow} color={prYellow} />
           <ThemedText style={styles.prBadgeText} setColor={prYellow}>
             PR
           </ThemedText>
