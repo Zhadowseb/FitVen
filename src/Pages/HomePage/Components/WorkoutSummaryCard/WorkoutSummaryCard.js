@@ -121,6 +121,10 @@ export default function WorkoutSummaryCard() {
         ))}
       </View>
 
+      <ThemedText style={styles.topSetsTitle} setColor={mutedText}>
+        Top sets
+      </ThemedText>
+
       <View
         style={[
           styles.topSetsPanel,
