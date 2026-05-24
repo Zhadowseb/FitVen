@@ -5,6 +5,7 @@
 - Add a static workout summary preview card to Home.
 - Split workout summary top sets and personal record highlights into separate sections.
 - Restyle workout summary top sets to match the workout set list table.
+- Simplify workout summary top set columns and place reps before weight.
 
 ---
 ## [0.15.3] - Unreleased

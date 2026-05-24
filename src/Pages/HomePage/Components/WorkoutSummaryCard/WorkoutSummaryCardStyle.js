@@ -139,30 +139,13 @@ export default StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 3,
   },
-  topSetSetCell: {
-    flex: 7,
-    maxWidth: 36,
-  },
   topSetExerciseCell: {
-    flex: 25,
+    flex: 30,
     minWidth: 0,
   },
   topSetMetricCell: {
-    flex: 17,
+    flex: 14,
     minWidth: 0,
-  },
-  topSetChip: {
-    width: 28,
-    height: 30,
-    borderRadius: 9,
-    borderWidth: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  topSetChipText: {
-    fontSize: 13,
-    fontWeight: "800",
-    lineHeight: 16,
   },
   topSetExerciseText: {
     alignSelf: "stretch",
@@ -170,15 +153,6 @@ export default StyleSheet.create({
     fontWeight: "800",
     lineHeight: 18,
     paddingLeft: 5,
-  },
-  topSetValuePill: {
-    width: "94%",
-    height: 30,
-    borderRadius: 9,
-    borderWidth: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    overflow: "hidden",
   },
   topSetValueText: {
     fontSize: 13,
