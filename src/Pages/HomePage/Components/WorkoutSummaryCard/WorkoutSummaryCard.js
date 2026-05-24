@@ -163,7 +163,7 @@ export default function WorkoutSummaryCard() {
 
         <View style={styles.prCalloutCopy}>
           <ThemedText style={styles.prCalloutTitle} setColor={titleColor}>
-            Mads Jensen&apos;s strongest Bench Press in 2026!
+            Mads Jensen achieved a new Bench Press record!
           </ThemedText>
 
           <View style={[styles.prDeltaPill, { backgroundColor: prGreen }]}>
