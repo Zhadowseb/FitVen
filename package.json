@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.15.5-minor-social-header-follow-stats.1",
+  "version": "0.15.6-minor-instagram-style-social-people-list.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",

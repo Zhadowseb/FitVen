@@ -155,45 +155,33 @@ export default StyleSheet.create({
     fontSize: 13,
   },
   resultsList: {
-    gap: 12,
-  },
-  resultCard: {
-    marginHorizontal: 0,
-    marginVertical: 0,
-    borderWidth: 1,
-    borderRadius: 24,
-    paddingHorizontal: 18,
-    paddingVertical: 16,
-  },
-  resultTopRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 12,
-  },
-  resultAvatar: {
     marginTop: 2,
   },
   resultCopy: {
     flex: 1,
+    gap: 2,
+    minWidth: 0,
+  },
+  resultRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    borderBottomWidth: 1,
+    paddingVertical: 12,
   },
   resultDisplayName: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: "700",
-    lineHeight: 24,
-    marginBottom: 2,
+    lineHeight: 20,
   },
   resultUsername: {
     fontSize: 13,
-    fontWeight: "700",
     lineHeight: 18,
-  },
-  resultBio: {
-    fontSize: 14,
-    lineHeight: 21,
-    marginTop: 12,
   },
   followButton: {
     marginTop: 0,
+    paddingHorizontal: 10,
+    flexShrink: 0,
   },
   emptyStateCard: {
     marginHorizontal: 0,
@@ -233,7 +221,8 @@ export default StyleSheet.create({
   },
   relationshipCopy: {
     flex: 1,
-    gap: 4,
+    gap: 2,
+    minWidth: 0,
   },
   relationshipDisplayName: {
     fontSize: 15,

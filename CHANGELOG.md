@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.15.6] - Unreleased
+### Changed
+- Replace Social people search cards with compact Instagram-style list rows.
+- Remove bio text from Social people search results.
+- Prevent the Social follow button label from wrapping when showing Following.
+
+---
 ## [0.15.5] - Unreleased
 ### Changed
 - Move follower and following counts from Profile to the Social header.

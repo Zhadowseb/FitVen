@@ -470,64 +470,57 @@ const SearchPage = () => {
         ) : results.length > 0 ? (
           <View style={styles.resultsList}>
             {results.map((profile) => (
-              <ThemedCard
+              <View
                 key={profile.id}
                 style={[
-                  styles.resultCard,
+                  styles.resultRow,
                   {
-                    backgroundColor: cardSurface,
                     borderColor: cardBorder,
                   },
                 ]}
               >
-                <View style={styles.resultTopRow}>
-                  <UserAvatar
-                    uri={profile.avatarUrl}
-                    size={56}
-                    iconSize={28}
-                    iconColor={theme.primary ?? titleColor}
-                    backgroundColor={theme.uiBackground ?? theme.background}
-                    borderColor={cardBorder}
-                    borderWidth={1}
-                    style={styles.resultAvatar}
-                  />
+                <UserAvatar
+                  uri={profile.avatarUrl}
+                  size={48}
+                  iconSize={24}
+                  iconColor={theme.primary ?? titleColor}
+                  backgroundColor={theme.uiBackground ?? theme.background}
+                  borderColor={cardBorder}
+                  borderWidth={1}
+                />
 
-                  <View style={styles.resultCopy}>
-                    <ThemedText
-                      style={styles.resultDisplayName}
-                      setColor={titleColor}
-                    >
-                      {profile.displayName}
-                    </ThemedText>
-                    <ThemedText
-                      style={styles.resultUsername}
-                      setColor={secondaryDark}
-                    >
-                      {profile.username}
-                    </ThemedText>
-                  </View>
-
-                  <ThemedButton
-                    title={
-                      busyUserId === profile.id
-                        ? "Saving..."
-                        : profile.isFollowing
-                          ? "Following"
-                          : "Follow"
-                    }
-                    onPress={() => handleToggleFollow(profile)}
-                    width={108}
-                    height={40}
-                    variant={profile.isFollowing ? "secondary" : "primary"}
-                    disabled={busyUserId === profile.id}
-                    style={styles.followButton}
-                  />
+                <View style={styles.resultCopy}>
+                  <ThemedText
+                    style={styles.resultDisplayName}
+                    setColor={titleColor}
+                  >
+                    {profile.displayName}
+                  </ThemedText>
+                  <ThemedText
+                    style={styles.resultUsername}
+                    setColor={secondaryDark}
+                  >
+                    {profile.username}
+                  </ThemedText>
                 </View>
 
-                <ThemedText style={styles.resultBio} setColor={quietText}>
-                  {profile.bio || "No bio yet."}
-                </ThemedText>
-              </ThemedCard>
+                <ThemedButton
+                  title={
+                    busyUserId === profile.id
+                      ? "Saving..."
+                      : profile.isFollowing
+                        ? "Following"
+                        : "Follow"
+                  }
+                  onPress={() => handleToggleFollow(profile)}
+                  width={112}
+                  height={36}
+                  textSize={13}
+                  variant={profile.isFollowing ? "secondary" : "primary"}
+                  disabled={busyUserId === profile.id}
+                  style={styles.followButton}
+                />
+              </View>
             ))}
           </View>
         ) : (
