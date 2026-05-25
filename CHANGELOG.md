@@ -3,10 +3,15 @@
 ## [0.15.4] - Unreleased
 ### Changed
 - Add a static workout summary preview card to Home.
-- Split workout summary top sets and personal record highlights into separate sections.
+- Show workout summary PR indicators inline with top set exercise names.
 - Restyle workout summary top sets to match the workout set list table.
 - Simplify workout summary top set columns and place reps before weight.
 - Hide unfinished comment and share actions from the workout summary preview.
+- Add Supabase setup SQL for workout summary social posts and likes.
+- Create workout summary posts automatically after completed Resistance workouts.
+- Load real workout summary feed cards on Home with like toggles.
+- Soft-delete workout summary posts when completed workouts are reset.
+- Keep Home workout summary feed cards below Today and friend stories.
 
 ---
 ## [0.15.3] - Unreleased

@@ -10,6 +10,7 @@ import WorkoutSummaryCard from './Components/WorkoutSummaryCard/WorkoutSummaryCa
 import FriendsActivity from "../../Resources/Components/FriendsActivity/FriendsActivity";
 import {
   programService,
+  socialPostService,
   socialService,
 } from "../../Services";
 import { getTodaysDate } from "../../Utils/dateUtils";
@@ -27,6 +28,8 @@ export default function App() {
     people: [],
   });
   const [circlePreviewError, setCirclePreviewError] = useState("");
+  const [workoutSummaryPosts, setWorkoutSummaryPosts] = useState([]);
+  const [updatingLikePostId, setUpdatingLikePostId] = useState(null);
   const navigation = useNavigation();
   const { user } = useAuth();
 
@@ -77,10 +80,69 @@ export default function App() {
     }
   }, [db, todayDate, user]);
 
+  const loadWorkoutSummaryFeed = useCallback(async () => {
+    if (!user?.id) {
+      setWorkoutSummaryPosts([]);
+      return;
+    }
+
+    try {
+      const posts = await socialPostService.getWorkoutSummaryFeed({
+        user,
+        limit: 3,
+      });
+
+      setWorkoutSummaryPosts(posts);
+    } catch (error) {
+      console.error("Could not load workout summary feed:", error);
+      setWorkoutSummaryPosts([]);
+    }
+  }, [user]);
+
+  const handleToggleWorkoutPostLike = useCallback(
+    async (post) => {
+      if (!user?.id || !post?.id || updatingLikePostId) {
+        return;
+      }
+
+      const shouldLike = !post.isLiked;
+      setUpdatingLikePostId(post.id);
+      setWorkoutSummaryPosts((currentPosts) =>
+        currentPosts.map((currentPost) =>
+          currentPost.id === post.id
+            ? {
+                ...currentPost,
+                isLiked: shouldLike,
+                likeCount: Math.max(
+                  0,
+                  Number(currentPost.likeCount) + (shouldLike ? 1 : -1)
+                ),
+              }
+            : currentPost
+        )
+      );
+
+      try {
+        await socialPostService.toggleWorkoutSummaryPostLike({
+          user,
+          postId: post.id,
+          shouldLike,
+        });
+      } catch (error) {
+        console.error("Could not update workout summary like:", error);
+        await loadWorkoutSummaryFeed();
+      } finally {
+        setUpdatingLikePostId(null);
+      }
+    },
+    [loadWorkoutSummaryFeed, updatingLikePostId, user]
+  );
+
   useFocusEffect(
     useCallback(() => {
       loadCirclePreview();
-    }, [loadCirclePreview])
+      loadWorkoutSummaryFeed();
+    }, [loadCirclePreview, loadWorkoutSummaryFeed])
   );
 
   return (
@@ -92,8 +154,6 @@ export default function App() {
       >
         <TodayProgramsShortcut />
 
-        <WorkoutSummaryCard />
-
         <FriendsActivity
           currentUser={circlePreview.currentUser}
           people={circlePreview.people}
@@ -101,6 +161,15 @@ export default function App() {
           onSeeAll={() => navigation.navigate("SearchPage")}
           onOpenProfile={() => navigation.navigate("ProfilePage")}
         />
+
+        {workoutSummaryPosts.map((post) => (
+          <WorkoutSummaryCard
+            key={post.id}
+            post={post}
+            onToggleLike={handleToggleWorkoutPostLike}
+            isLikeBusy={updatingLikePostId === post.id}
+          />
+        ))}
       </ScrollView>
 
       <StatusBar style="auto" />

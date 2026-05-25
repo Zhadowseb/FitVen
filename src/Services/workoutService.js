@@ -28,6 +28,42 @@ function pushDirtyWorkoutHierarchyInBackground(db) {
   );
 }
 
+function createCompletedWorkoutPostInBackground(db, workoutId) {
+  startBackgroundSync(
+    async () => {
+      const programServiceModule = await import("./programService");
+      await programServiceModule.pushDirtyStrengthHierarchyWithCloud(db);
+
+      const socialPostServiceModule = await import("./socialPostService");
+      const result =
+        await socialPostServiceModule.createWorkoutSummaryPostForCompletedWorkout(
+          db,
+          { workoutId }
+        );
+
+      if (result?.skipped) {
+        console.info(
+          "Workout summary post skipped:",
+          result.reason ?? "unknown"
+        );
+      }
+    },
+    "Workout summary social post failed:"
+  );
+}
+
+function deleteCompletedWorkoutPostInBackground(db, workoutId) {
+  startBackgroundSync(
+    async () => {
+      const socialPostServiceModule = await import("./socialPostService");
+      await socialPostServiceModule.deleteWorkoutSummaryPostForWorkout(db, {
+        workoutId,
+      });
+    },
+    "Workout summary social post cleanup failed:"
+  );
+}
+
 async function syncWorkoutTypeInstancesInBackground(db) {
   try {
     pushDirtyWorkoutHierarchyInBackground(db);
@@ -151,6 +187,12 @@ export async function setWorkoutDone(db, { workoutId, done }) {
   });
 
   syncWorkoutTypeInstancesInBackground(db);
+
+  if (done) {
+    createCompletedWorkoutPostInBackground(db, workoutId);
+  } else {
+    deleteCompletedWorkoutPostInBackground(db, workoutId);
+  }
 }
 
 export async function resetWorkoutState(db, workoutId) {
@@ -160,4 +202,5 @@ export async function resetWorkoutState(db, workoutId) {
   });
 
   syncWorkoutTypeInstancesInBackground(db);
+  deleteCompletedWorkoutPostInBackground(db, workoutId);
 }

@@ -1,4 +1,4 @@
-import { View, useColorScheme } from "react-native";
+import { TouchableOpacity, View, useColorScheme } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 
 import styles from "./WorkoutSummaryCardStyle";
@@ -11,21 +11,113 @@ import {
   UserAvatar,
 } from "../../../../Resources/ThemedComponents";
 
-const summaryStats = [
-  { label: "Duration", value: "52", unit: "min" },
-  { label: "Sets", value: "18" },
-  { label: "Exercises", value: "5" },
-];
+function formatTimeAgo(value) {
+  const timestamp = value ? new Date(value).getTime() : NaN;
 
-const topSets = [
-  { exercise: "Bench Press", weight: "100 kg", reps: "3" },
-  { exercise: "Incline DB", weight: "32 kg", reps: "8" },
-  { exercise: "Cable Fly", weight: "24 kg", reps: "12" },
-];
+  if (!Number.isFinite(timestamp)) {
+    return "Just now";
+  }
 
-export default function WorkoutSummaryCard() {
+  const elapsedSeconds = Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
+
+  if (elapsedSeconds < 60) {
+    return "Just now";
+  }
+
+  const elapsedMinutes = Math.floor(elapsedSeconds / 60);
+
+  if (elapsedMinutes < 60) {
+    return `${elapsedMinutes}m ago`;
+  }
+
+  const elapsedHours = Math.floor(elapsedMinutes / 60);
+
+  if (elapsedHours < 24) {
+    return `${elapsedHours}h ago`;
+  }
+
+  const elapsedDays = Math.floor(elapsedHours / 24);
+
+  if (elapsedDays < 7) {
+    return `${elapsedDays}d ago`;
+  }
+
+  return new Date(timestamp).toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "short",
+  });
+}
+
+function formatDurationMinutes(durationSeconds) {
+  const numericValue = Number(durationSeconds);
+
+  if (!Number.isFinite(numericValue) || numericValue <= 0) {
+    return "0";
+  }
+
+  return `${Math.max(1, Math.round(numericValue / 60))}`;
+}
+
+function resolveSummaryStats(payload) {
+  return [
+    {
+      label: "Duration",
+      value: formatDurationMinutes(payload?.durationSeconds),
+      unit: "min",
+    },
+    { label: "Sets", value: `${Number(payload?.setsCount) || 0}` },
+    { label: "Exercises", value: `${Number(payload?.exerciseCount) || 0}` },
+  ];
+}
+
+function normalizeTopSet(record) {
+  return {
+    exercise:
+      record?.exerciseName ?? record?.exercise_name ?? record?.exercise ?? "",
+    weight:
+      record?.weightDisplay ??
+      (record?.weight ? `${record.weight} ${record.unit ?? "kg"}` : ""),
+    reps: `${record?.reps ?? ""}`,
+    personalRecord: Boolean(record?.personalRecord ?? record?.personal_record),
+  };
+}
+
+function getPersonalRecordExerciseNames(records) {
+  if (!Array.isArray(records)) {
+    return new Set();
+  }
+
+  return new Set(
+    records
+      .map((record) => record?.exerciseName ?? record?.exercise_name)
+      .filter(Boolean)
+  );
+}
+
+export default function WorkoutSummaryCard({
+  post,
+  onToggleLike,
+  isLikeBusy = false,
+}) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const payload = post?.payload ?? {};
+  const summaryStats = resolveSummaryStats(payload);
+  const personalRecordExerciseNames = getPersonalRecordExerciseNames(
+    payload.personalRecords
+  );
+  const topSets = Array.isArray(payload.topSets)
+    ? payload.topSets
+        .map(normalizeTopSet)
+        .filter((record) => record.exercise)
+        .map((record) => ({
+          ...record,
+          personalRecord:
+            record.personalRecord || personalRecordExerciseNames.has(record.exercise),
+        }))
+    : [];
+  const authorName = post?.author?.displayName ?? "FitVen athlete";
+  const createdAtLabel = formatTimeAgo(post?.createdAt);
   const accent = theme.primary ?? "#f7742e";
   const quietText = theme.iconColor ?? "#8795ad";
   const mutedText = "#8392b0";
@@ -37,9 +129,6 @@ export default function WorkoutSummaryCard() {
       ? "rgba(132, 145, 166, 0.16)"
       : "rgba(40, 37, 58, 0.14)";
   const prYellow = colorScheme === "dark" ? "#ffd21f" : "#d99b00";
-  const prGreen = theme.secondary ?? "#60daac";
-  const prCalloutSurface =
-    colorScheme === "dark" ? "rgba(255, 255, 255, 0.05)" : "#ffffff";
   const topSetTableSurface =
     colorScheme === "dark" ? "rgba(16, 17, 24, 0.58)" : "#f5f4fa";
   const topSetTableBorder =
@@ -47,6 +136,11 @@ export default function WorkoutSummaryCard() {
       ? "rgba(255, 255, 255, 0.07)"
       : "rgba(32, 30, 43, 0.12)";
   const footerColor = colorScheme === "dark" ? "#7f90ad" : theme.iconColor;
+  const likeColor = post?.isLiked ? accent : footerColor;
+
+  if (!post) {
+    return null;
+  }
 
   return (
     <View
@@ -60,6 +154,7 @@ export default function WorkoutSummaryCard() {
     >
       <View style={styles.headerRow}>
         <UserAvatar
+          uri={post.author?.avatarUrl}
           size={50}
           iconSize={25}
           iconColor={accent}
@@ -70,15 +165,15 @@ export default function WorkoutSummaryCard() {
 
         <View style={styles.headerCopy}>
           <ThemedText style={styles.authorName} setColor={titleColor}>
-            Mads Jensen
+            {authorName}
           </ThemedText>
           <View style={styles.metaRow}>
             <ThemedText style={styles.metaText} setColor={mutedText}>
-              2h ago
+              {createdAtLabel}
             </ThemedText>
             <View style={[styles.metaDot, { backgroundColor: mutedText }]} />
             <ThemedText style={styles.workoutType} setColor={accent}>
-              Resistance
+              {post.workoutType}
             </ThemedText>
           </View>
         </View>
@@ -87,13 +182,14 @@ export default function WorkoutSummaryCard() {
       </View>
 
       <ThemedTitle type="h3" style={[styles.title, { color: titleColor }]}>
-        Push A - Chest focus
+        {post.title}
       </ThemedTitle>
 
-      <ThemedText style={styles.description} setColor={mutedText}>
-        Solid session today. Felt strong on bench, finally hit a clean triple at
-        100.
-      </ThemedText>
+      {post.body ? (
+        <ThemedText style={styles.description} setColor={mutedText}>
+          {post.body}
+        </ThemedText>
+      ) : null}
 
       <View style={[styles.statsPanel, { borderColor: softBorder }]}>
         {summaryStats.map((stat, index) => (
@@ -121,126 +217,108 @@ export default function WorkoutSummaryCard() {
         ))}
       </View>
 
-      <ThemedText style={styles.topSetsTitle} setColor={mutedText}>
-        Top sets
-      </ThemedText>
+      {topSets.length > 0 ? (
+        <>
+          <ThemedText style={styles.topSetsTitle} setColor={mutedText}>
+            Top sets
+          </ThemedText>
 
-      <View
-        style={[
-          styles.topSetsPanel,
-          {
-            backgroundColor: topSetTableSurface,
-            borderColor: topSetTableBorder,
-          },
-        ]}
-      >
-        <View
-          style={[
-            styles.topSetTableHeader,
-            { borderBottomColor: topSetTableBorder },
-          ]}
-        >
           <View
             style={[
-              styles.topSetExerciseCell,
-              styles.topSetHeaderCell,
-              styles.topSetExerciseHeaderCell,
-            ]}
-          >
-            <ThemedText style={styles.topSetHeaderText} setColor={mutedText}>
-              Exercise
-            </ThemedText>
-          </View>
-          <View style={[styles.topSetMetricCell, styles.topSetHeaderCell]}>
-            <ThemedText style={styles.topSetHeaderText} setColor={mutedText}>
-              Reps
-            </ThemedText>
-          </View>
-          <View style={[styles.topSetMetricCell, styles.topSetHeaderCell]}>
-            <ThemedText style={styles.topSetHeaderText} setColor={mutedText}>
-              Weight
-            </ThemedText>
-          </View>
-        </View>
-
-        {topSets.map((record, rowIndex) => (
-          <View
-            key={record.exercise}
-            style={[
-              styles.topSetTableRow,
+              styles.topSetsPanel,
               {
-                borderBottomColor: topSetTableBorder,
+                backgroundColor: topSetTableSurface,
+                borderColor: topSetTableBorder,
               },
-              rowIndex === topSets.length - 1 && styles.topSetLastRow,
             ]}
           >
-            <View style={[styles.topSetExerciseCell, styles.topSetCell]}>
-              <ThemedText
-                style={styles.topSetExerciseText}
-                setColor={titleColor}
-                numberOfLines={1}
-              >
-                {record.exercise}
-              </ThemedText>
-            </View>
-            <View style={[styles.topSetMetricCell, styles.topSetCell]}>
-              <ThemedText style={styles.topSetValueText} setColor={titleColor}>
-                {record.reps}
-              </ThemedText>
-            </View>
-            <View style={[styles.topSetMetricCell, styles.topSetCell]}>
-              <ThemedText style={styles.topSetValueText} setColor={titleColor}>
-                {record.weight}
-              </ThemedText>
-            </View>
-          </View>
-        ))}
-      </View>
-
-      <View
-        style={[
-          styles.prCallout,
-          {
-            backgroundColor: prCalloutSurface,
-            borderColor: softBorder,
-          },
-        ]}
-      >
-        <View style={[styles.prBadge, { borderColor: prYellow }]}>
-          <PrIcon width={20} height={20} stroke={prYellow} color={prYellow} />
-          <ThemedText style={styles.prBadgeText} setColor={prYellow}>
-            PR
-          </ThemedText>
-        </View>
-
-        <View style={styles.prCalloutCopy}>
-          <ThemedText style={styles.prCalloutTitle} setColor={titleColor}>
-            Mads Jensen achieved a new Bench Press record!
-          </ThemedText>
-
-          <View style={[styles.prDeltaPill, { backgroundColor: prGreen }]}>
-            <Feather
-              name="arrow-up-right"
-              size={12}
-              color={theme.textInverted ?? "#0E0F12"}
-            />
-            <ThemedText
-              style={styles.prDeltaText}
-              setColor={theme.textInverted ?? "#0E0F12"}
+            <View
+              style={[
+                styles.topSetTableHeader,
+                { borderBottomColor: topSetTableBorder },
+              ]}
             >
-              +5 kg
-            </ThemedText>
+              <View
+                style={[
+                  styles.topSetExerciseCell,
+                  styles.topSetHeaderCell,
+                  styles.topSetExerciseHeaderCell,
+                ]}
+              >
+                <ThemedText style={styles.topSetHeaderText} setColor={mutedText}>
+                  Exercise
+                </ThemedText>
+              </View>
+              <View style={[styles.topSetMetricCell, styles.topSetHeaderCell]}>
+                <ThemedText style={styles.topSetHeaderText} setColor={mutedText}>
+                  Reps
+                </ThemedText>
+              </View>
+              <View style={[styles.topSetMetricCell, styles.topSetHeaderCell]}>
+                <ThemedText style={styles.topSetHeaderText} setColor={mutedText}>
+                  Weight
+                </ThemedText>
+              </View>
+            </View>
+
+            {topSets.map((record, rowIndex) => (
+              <View
+                key={`${record.exercise}-${rowIndex}`}
+                style={[
+                  styles.topSetTableRow,
+                  {
+                    borderBottomColor: topSetTableBorder,
+                  },
+                  rowIndex === topSets.length - 1 && styles.topSetLastRow,
+                ]}
+              >
+                <View style={[styles.topSetExerciseCell, styles.topSetCell]}>
+                  <View style={styles.topSetExerciseContent}>
+                    <ThemedText
+                      style={styles.topSetExerciseText}
+                      setColor={titleColor}
+                      numberOfLines={1}
+                    >
+                      {record.exercise}
+                    </ThemedText>
+                    {record.personalRecord ? (
+                      <PrIcon
+                        width={16}
+                        height={16}
+                        stroke={prYellow}
+                        color={prYellow}
+                      />
+                    ) : null}
+                  </View>
+                </View>
+                <View style={[styles.topSetMetricCell, styles.topSetCell]}>
+                  <ThemedText style={styles.topSetValueText} setColor={titleColor}>
+                    {record.reps}
+                  </ThemedText>
+                </View>
+                <View style={[styles.topSetMetricCell, styles.topSetCell]}>
+                  <ThemedText style={styles.topSetValueText} setColor={titleColor}>
+                    {record.weight}
+                  </ThemedText>
+                </View>
+              </View>
+            ))}
           </View>
-        </View>
-      </View>
+        </>
+      ) : null}
 
       <View style={[styles.footerRow, { borderTopColor: softBorder }]}>
-        <View style={styles.footerAction}>
-          <Feather name="heart" size={19} color={footerColor} />
-          <ThemedText style={styles.footerText} setColor={footerColor}>
-            12
+        <TouchableOpacity
+          style={styles.footerAction}
+          activeOpacity={0.75}
+          disabled={isLikeBusy}
+          onPress={() => onToggleLike?.(post)}
+        >
+          <Feather name="heart" size={19} color={likeColor} />
+          <ThemedText style={styles.footerText} setColor={likeColor}>
+            {post.likeCount ?? 0}
           </ThemedText>
-        </View>
+        </TouchableOpacity>
       </View>
     </View>
   );
