@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.15.5] - Unreleased
+### Changed
+- Move follower and following counts from Profile to the Social header.
+- Add compact Social header relationship stats that open the follower/following lists.
+
+---
 ## [0.15.4] - Unreleased
 ### Changed
 - Add a static workout summary preview card to Home.

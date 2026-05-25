@@ -26,6 +26,32 @@ export default StyleSheet.create({
     textAlign: "center",
     lineHeight: 26,
   },
+  headerRelationshipStats: {
+    width: 132,
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    alignItems: "center",
+    gap: 12,
+  },
+  headerRelationshipStat: {
+    minWidth: 52,
+    alignItems: "center",
+    paddingVertical: 4,
+  },
+  headerRelationshipStatPressed: {
+    opacity: 0.68,
+  },
+  headerRelationshipValue: {
+    fontSize: 13,
+    fontWeight: "800",
+    lineHeight: 15,
+  },
+  headerRelationshipLabel: {
+    fontSize: 9,
+    fontWeight: "700",
+    lineHeight: 11,
+    marginTop: 1,
+  },
   storiesSection: {
     marginBottom: 14,
   },
@@ -185,5 +211,44 @@ export default StyleSheet.create({
   emptyStateBody: {
     fontSize: 14,
     lineHeight: 21,
+  },
+  relationshipModal: {
+    maxHeight: 520,
+  },
+  relationshipModalContent: {
+    minHeight: 0,
+  },
+  relationshipList: {
+    maxHeight: 320,
+  },
+  relationshipListContent: {
+    paddingBottom: 4,
+  },
+  relationshipRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
+  relationshipCopy: {
+    flex: 1,
+    gap: 4,
+  },
+  relationshipDisplayName: {
+    fontSize: 15,
+    fontWeight: "700",
+    lineHeight: 20,
+  },
+  relationshipUsername: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  relationshipStateText: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  relationshipCloseButton: {
+    marginTop: 8,
   },
 });

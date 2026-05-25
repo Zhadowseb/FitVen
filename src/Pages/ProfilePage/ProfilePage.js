@@ -1,6 +1,5 @@
 import {
   Pressable,
-  ScrollView,
   TouchableOpacity,
   View,
   useColorScheme,
@@ -22,7 +21,6 @@ import {
   ThemedCard,
   ThemedHeader,
   ThemedKeyboardProtection,
-  ThemedModal,
   ThemedText,
   ThemedTextInput,
   ThemedTitle,
@@ -64,15 +62,6 @@ export default function ProfilePage() {
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
-  const [followCounts, setFollowCounts] = useState({
-    followers: 0,
-    following: 0,
-  });
-  const [isLoadingFollowCounts, setIsLoadingFollowCounts] = useState(true);
-  const [activeRelationshipType, setActiveRelationshipType] = useState(null);
-  const [relationshipProfiles, setRelationshipProfiles] = useState([]);
-  const [isLoadingRelationships, setIsLoadingRelationships] = useState(false);
-  const [relationshipError, setRelationshipError] = useState("");
   const [feedbackModalVisible, setFeedbackModalVisible] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
@@ -105,8 +94,6 @@ export default function ProfilePage() {
     ? normalizedDisplayName !== profile.displayName ||
       normalizedBio !== (profile.bio ?? "")
     : false;
-  const relationshipTitle =
-    activeRelationshipType === "following" ? "Following" : "Followers";
   const avatarButtonLabel = isUploadingAvatar
     ? "Uploading..."
     : profile?.avatarUrl
@@ -122,12 +109,7 @@ export default function ProfilePage() {
           setProfile(null);
           setDisplayName("");
           setBio("");
-          setFollowCounts({
-            followers: 0,
-            following: 0,
-          });
           setIsLoadingProfile(false);
-          setIsLoadingFollowCounts(false);
           setProfileFeedback({
             status: "error",
             message: "Sign in to view your profile.",
@@ -136,7 +118,6 @@ export default function ProfilePage() {
         }
 
         setIsLoadingProfile(true);
-        setIsLoadingFollowCounts(true);
         setProfileFeedback({
           status: "idle",
           message: "",
@@ -144,9 +125,6 @@ export default function ProfilePage() {
 
         try {
           const nextProfile = await socialService.ensureOwnProfile(user);
-          const nextFollowCounts = await socialService.getFollowCounts({
-            userId: user.id,
-          });
 
           if (isCancelled) {
             return;
@@ -155,7 +133,6 @@ export default function ProfilePage() {
           setProfile(nextProfile);
           setDisplayName(nextProfile.displayName);
           setBio(nextProfile.bio ?? "");
-          setFollowCounts(nextFollowCounts);
         } catch (error) {
           if (isCancelled) {
             return;
@@ -164,10 +141,6 @@ export default function ProfilePage() {
           setProfile(null);
           setDisplayName("");
           setBio("");
-          setFollowCounts({
-            followers: 0,
-            following: 0,
-          });
           setProfileFeedback({
             status: "error",
             message:
@@ -178,7 +151,6 @@ export default function ProfilePage() {
         } finally {
           if (!isCancelled) {
             setIsLoadingProfile(false);
-            setIsLoadingFollowCounts(false);
           }
         }
       };
@@ -197,47 +169,6 @@ export default function ProfilePage() {
         status: "idle",
         message: "",
       });
-    }
-  };
-
-  const closeRelationshipModal = () => {
-    setActiveRelationshipType(null);
-    setRelationshipProfiles([]);
-    setRelationshipError("");
-    setIsLoadingRelationships(false);
-  };
-
-  const handleOpenRelationshipModal = async (relationshipType) => {
-    if (!user?.id) {
-      return;
-    }
-
-    setActiveRelationshipType(relationshipType);
-    setRelationshipProfiles([]);
-    setRelationshipError("");
-    setIsLoadingRelationships(true);
-
-    try {
-      const nextRelationshipProfiles =
-        relationshipType === "following"
-          ? await socialService.getFollowing({
-              userId: user.id,
-              currentUserId: user.id,
-            })
-          : await socialService.getFollowers({
-              userId: user.id,
-              currentUserId: user.id,
-            });
-
-      setRelationshipProfiles(nextRelationshipProfiles);
-    } catch (error) {
-      setRelationshipError(
-        error instanceof Error
-          ? error.message
-          : `Could not load ${relationshipType}.`
-      );
-    } finally {
-      setIsLoadingRelationships(false);
     }
   };
 
@@ -497,76 +428,6 @@ export default function ProfilePage() {
             </View>
           </TouchableOpacity>
 
-          <View style={styles.relationshipSummaryRow}>
-            <Pressable
-              onPress={() => handleOpenRelationshipModal("followers")}
-              disabled={isLoadingProfile}
-              style={({ pressed }) => [
-                styles.relationshipSummaryCard,
-                {
-                  backgroundColor: panelSurface,
-                  borderColor: cardBorder,
-                },
-                pressed && !isLoadingProfile
-                  ? styles.relationshipSummaryCardPressed
-                  : null,
-              ]}
-            >
-              <ThemedText
-                style={styles.relationshipSummaryValue}
-                setColor={titleColor}
-              >
-                {isLoadingFollowCounts ? "..." : followCounts.followers}
-              </ThemedText>
-              <ThemedText
-                style={styles.relationshipSummaryLabel}
-                setColor={quietText}
-              >
-                Followers
-              </ThemedText>
-              <ThemedText
-                style={styles.relationshipSummaryHint}
-                setColor={quietText}
-              >
-                Tap to view
-              </ThemedText>
-            </Pressable>
-
-            <Pressable
-              onPress={() => handleOpenRelationshipModal("following")}
-              disabled={isLoadingProfile}
-              style={({ pressed }) => [
-                styles.relationshipSummaryCard,
-                {
-                  backgroundColor: panelSurface,
-                  borderColor: cardBorder,
-                },
-                pressed && !isLoadingProfile
-                  ? styles.relationshipSummaryCardPressed
-                  : null,
-              ]}
-            >
-              <ThemedText
-                style={styles.relationshipSummaryValue}
-                setColor={titleColor}
-              >
-                {isLoadingFollowCounts ? "..." : followCounts.following}
-              </ThemedText>
-              <ThemedText
-                style={styles.relationshipSummaryLabel}
-                setColor={quietText}
-              >
-                Following
-              </ThemedText>
-              <ThemedText
-                style={styles.relationshipSummaryHint}
-                setColor={quietText}
-              >
-                Tap to view
-              </ThemedText>
-            </Pressable>
-          </View>
-
           <ThemedCard
             style={[
               styles.profileCard,
@@ -814,91 +675,6 @@ export default function ProfilePage() {
         onClose={() => setFeedbackModalVisible(false)}
         userId={user?.id ?? null}
       />
-
-      <ThemedModal
-        visible={Boolean(activeRelationshipType)}
-        onClose={closeRelationshipModal}
-        title={`${relationshipTitle} (${activeRelationshipType === "following"
-          ? followCounts.following
-          : followCounts.followers})`}
-        style={[
-          styles.relationshipModal,
-          {
-            backgroundColor: cardSurface,
-          },
-        ]}
-        contentStyle={styles.relationshipModalContent}
-      >
-        {isLoadingRelationships ? (
-          <ThemedText style={styles.relationshipStateText} setColor={quietText}>
-            Loading {relationshipTitle.toLowerCase()}...
-          </ThemedText>
-        ) : relationshipError ? (
-          <ThemedText
-            style={styles.relationshipStateText}
-            setColor={theme.danger}
-          >
-            {relationshipError}
-          </ThemedText>
-        ) : relationshipProfiles.length ? (
-          <ScrollView
-            style={styles.relationshipList}
-            contentContainerStyle={styles.relationshipListContent}
-            showsVerticalScrollIndicator={false}
-          >
-            {relationshipProfiles.map((relationshipProfile) => (
-              <View
-                key={relationshipProfile.id}
-                style={[
-                  styles.relationshipRow,
-                  {
-                    borderBottomColor: cardBorder,
-                  },
-                ]}
-              >
-                <UserAvatar
-                  uri={relationshipProfile.avatarUrl}
-                  size={48}
-                  iconSize={24}
-                  iconColor={theme.primary ?? titleColor}
-                  backgroundColor={panelSurface}
-                  borderColor={cardBorder}
-                  borderWidth={1}
-                />
-                <View style={styles.relationshipCopy}>
-                  <ThemedText
-                    style={styles.relationshipDisplayName}
-                    setColor={titleColor}
-                  >
-                    {relationshipProfile.displayName}
-                  </ThemedText>
-                  <ThemedText
-                    style={styles.relationshipUsername}
-                    setColor={quietText}
-                  >
-                    {relationshipProfile.username}
-                  </ThemedText>
-                </View>
-              </View>
-            ))}
-          </ScrollView>
-        ) : (
-          <ThemedText style={styles.relationshipStateText} setColor={quietText}>
-            {activeRelationshipType === "following"
-              ? "You are not following anyone yet."
-              : "No one is following you yet."}
-          </ThemedText>
-        )}
-
-        <ThemedButton
-          title="Close"
-          variant="secondary"
-          onPress={closeRelationshipModal}
-          fullWidth
-          height={44}
-          style={styles.relationshipCloseButton}
-        />
-      </ThemedModal>
     </ThemedView>
   );
 }
