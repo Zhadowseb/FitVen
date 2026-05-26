@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.15.7] - Unreleased
+### Changed
+- Move the Profile feedback card below Public profile and above Account logout.
+
+---
 ## [0.15.6] - Unreleased
 ### Changed
 - Replace Social people search cards with compact Instagram-style list rows.

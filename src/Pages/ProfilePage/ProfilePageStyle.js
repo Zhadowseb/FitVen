@@ -61,7 +61,8 @@ export default StyleSheet.create({
     lineHeight: 20,
   },
   feedbackPortal: {
-    marginBottom: 16,
+    marginTop: 16,
+    marginBottom: 0,
     borderWidth: 1,
     borderRadius: 24,
     paddingHorizontal: 20,

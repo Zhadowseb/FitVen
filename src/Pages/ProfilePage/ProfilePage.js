@@ -331,103 +331,6 @@ export default function ProfilePage() {
           scroll
           contentContainerStyle={styles.scrollContent}
         >
-          <TouchableOpacity
-            activeOpacity={0.92}
-            onPress={() => setFeedbackModalVisible(true)}
-            style={[
-              styles.feedbackPortal,
-              {
-                backgroundColor: cardSurface,
-                borderColor: cardBorder,
-              },
-            ]}
-          >
-            <FeedbackGlow
-              style={styles.feedbackPortalGlowPrimary}
-              color={primaryColor}
-              gradientId="profileFeedbackPrimaryGlow"
-              centerOpacity={0.28}
-              middleOpacity={0.15}
-            />
-            <FeedbackGlow
-              style={styles.feedbackPortalGlowSecondary}
-              color={secondaryColor}
-              gradientId="profileFeedbackSecondaryGlow"
-              centerOpacity={0.23}
-              middleOpacity={0.12}
-            />
-
-            <View style={styles.feedbackPortalHeader}>
-              <View style={styles.feedbackPortalStatusCluster}>
-                <View
-                  style={[
-                    styles.feedbackPortalStatusDot,
-                    { backgroundColor: secondaryColor },
-                  ]}
-                />
-                <ThemedText
-                  style={styles.feedbackPortalEyebrow}
-                  setColor={quietText}
-                >
-                  FEEDBACK
-                </ThemedText>
-              </View>
-
-              <View
-                style={[
-                  styles.feedbackPortalActionIcon,
-                  {
-                    backgroundColor: panelSurface,
-                    borderColor: cardBorder,
-                  },
-                ]}
-              >
-                <TailArrowUpRight
-                  width={18}
-                  height={18}
-                  stroke={primaryColor}
-                  color={primaryColor}
-                />
-              </View>
-            </View>
-
-            <ThemedTitle
-              type="h3"
-              style={[styles.feedbackPortalTitle, { color: titleColor }]}
-            >
-              Send Feedback
-            </ThemedTitle>
-
-            <ThemedText
-              style={styles.feedbackPortalDescription}
-              setColor={quietText}
-            >
-              Report bugs, odd behavior, ideas or something you're missing.
-            </ThemedText>
-
-            <View style={styles.feedbackPortalChipRow}>
-              {["Bugs", "Ideas", "Missing"].map((label) => (
-                <View
-                  key={label}
-                  style={[
-                    styles.feedbackPortalChip,
-                    {
-                      backgroundColor: panelSurface,
-                      borderColor: cardBorder,
-                    },
-                  ]}
-                >
-                  <ThemedText
-                    style={styles.feedbackPortalChipText}
-                    setColor={quietText}
-                  >
-                    {label}
-                  </ThemedText>
-                </View>
-              ))}
-            </View>
-          </TouchableOpacity>
-
           <ThemedCard
             style={[
               styles.profileCard,
@@ -623,6 +526,103 @@ export default function ProfilePage() {
               />
             </View>
           </ThemedCard>
+
+          <TouchableOpacity
+            activeOpacity={0.92}
+            onPress={() => setFeedbackModalVisible(true)}
+            style={[
+              styles.feedbackPortal,
+              {
+                backgroundColor: cardSurface,
+                borderColor: cardBorder,
+              },
+            ]}
+          >
+            <FeedbackGlow
+              style={styles.feedbackPortalGlowPrimary}
+              color={primaryColor}
+              gradientId="profileFeedbackPrimaryGlow"
+              centerOpacity={0.28}
+              middleOpacity={0.15}
+            />
+            <FeedbackGlow
+              style={styles.feedbackPortalGlowSecondary}
+              color={secondaryColor}
+              gradientId="profileFeedbackSecondaryGlow"
+              centerOpacity={0.23}
+              middleOpacity={0.12}
+            />
+
+            <View style={styles.feedbackPortalHeader}>
+              <View style={styles.feedbackPortalStatusCluster}>
+                <View
+                  style={[
+                    styles.feedbackPortalStatusDot,
+                    { backgroundColor: secondaryColor },
+                  ]}
+                />
+                <ThemedText
+                  style={styles.feedbackPortalEyebrow}
+                  setColor={quietText}
+                >
+                  FEEDBACK
+                </ThemedText>
+              </View>
+
+              <View
+                style={[
+                  styles.feedbackPortalActionIcon,
+                  {
+                    backgroundColor: panelSurface,
+                    borderColor: cardBorder,
+                  },
+                ]}
+              >
+                <TailArrowUpRight
+                  width={18}
+                  height={18}
+                  stroke={primaryColor}
+                  color={primaryColor}
+                />
+              </View>
+            </View>
+
+            <ThemedTitle
+              type="h3"
+              style={[styles.feedbackPortalTitle, { color: titleColor }]}
+            >
+              Send Feedback
+            </ThemedTitle>
+
+            <ThemedText
+              style={styles.feedbackPortalDescription}
+              setColor={quietText}
+            >
+              Report bugs, odd behavior, ideas or something you're missing.
+            </ThemedText>
+
+            <View style={styles.feedbackPortalChipRow}>
+              {["Bugs", "Ideas", "Missing"].map((label) => (
+                <View
+                  key={label}
+                  style={[
+                    styles.feedbackPortalChip,
+                    {
+                      backgroundColor: panelSurface,
+                      borderColor: cardBorder,
+                    },
+                  ]}
+                >
+                  <ThemedText
+                    style={styles.feedbackPortalChipText}
+                    setColor={quietText}
+                  >
+                    {label}
+                  </ThemedText>
+                </View>
+              ))}
+            </View>
+          </TouchableOpacity>
 
           <ThemedCard
             style={[
