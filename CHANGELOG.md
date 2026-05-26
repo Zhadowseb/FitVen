@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.15.8] - Unreleased
+### Fixed
+- Retry and backfill missing workout summary social posts for completed Resistance workouts.
+- Include top sets from every completed exercise in workout summary posts.
+
+---
 ## [0.15.7] - Unreleased
 ### Changed
 - Move the Profile feedback card below Public profile and above Account logout.

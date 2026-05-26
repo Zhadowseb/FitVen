@@ -4,6 +4,7 @@ import { startBackgroundSync } from "./syncScheduler";
 
 let dirtyWorkoutHierarchyPushScheduled = false;
 let dirtyWorkoutHierarchyPushNeedsRerun = false;
+let workoutSummaryPostBackfillScheduled = false;
 
 function pushDirtyWorkoutHierarchyInBackground(db) {
   if (dirtyWorkoutHierarchyPushScheduled) {
@@ -28,26 +29,67 @@ function pushDirtyWorkoutHierarchyInBackground(db) {
   );
 }
 
-function createCompletedWorkoutPostInBackground(db, workoutId) {
+async function createCompletedWorkoutPost(
+  db,
+  workoutId,
+  { repairCloudIdentity = false } = {}
+) {
+  const programServiceModule = await import("./programService");
+
+  if (repairCloudIdentity) {
+    await programServiceModule.syncWorkoutTypeInstancesWithCloud(db);
+  } else {
+    await programServiceModule.pushDirtyStrengthHierarchyWithCloud(db);
+  }
+
+  const socialPostServiceModule = await import("./socialPostService");
+  let result =
+    await socialPostServiceModule.createWorkoutSummaryPostForCompletedWorkout(
+      db,
+      { workoutId }
+    );
+
+  if (result?.skipped && result.reason === "missing_cloud_workout_id") {
+    await programServiceModule.syncWorkoutTypeInstancesWithCloud(db);
+    result =
+      await socialPostServiceModule.createWorkoutSummaryPostForCompletedWorkout(
+        db,
+        { workoutId }
+      );
+  }
+
+  return result;
+}
+
+async function createCompletedWorkoutPostBestEffort(
+  db,
+  workoutId,
+  options = {}
+) {
+  try {
+    const result = await createCompletedWorkoutPost(db, workoutId, options);
+
+    if (result?.skipped) {
+      console.info(
+        "Workout summary post skipped:",
+        result.reason ?? "unknown"
+      );
+    }
+
+    return result;
+  } catch (error) {
+    console.error("Workout summary social post failed:", error);
+    return { skipped: true, reason: "error" };
+  }
+}
+
+function createCompletedWorkoutPostInBackground(
+  db,
+  workoutId,
+  options = {}
+) {
   startBackgroundSync(
-    async () => {
-      const programServiceModule = await import("./programService");
-      await programServiceModule.pushDirtyStrengthHierarchyWithCloud(db);
-
-      const socialPostServiceModule = await import("./socialPostService");
-      const result =
-        await socialPostServiceModule.createWorkoutSummaryPostForCompletedWorkout(
-          db,
-          { workoutId }
-        );
-
-      if (result?.skipped) {
-        console.info(
-          "Workout summary post skipped:",
-          result.reason ?? "unknown"
-        );
-      }
-    },
+    () => createCompletedWorkoutPostBestEffort(db, workoutId, options),
     "Workout summary social post failed:"
   );
 }
@@ -186,13 +228,59 @@ export async function setWorkoutDone(db, { workoutId, done }) {
     await refreshWorkoutHierarchyCompletion(db, workoutId);
   });
 
-  syncWorkoutTypeInstancesInBackground(db);
-
   if (done) {
-    createCompletedWorkoutPostInBackground(db, workoutId);
+    const result = await createCompletedWorkoutPostBestEffort(db, workoutId, {
+      repairCloudIdentity: true,
+    });
+
+    if (result?.skipped) {
+      createCompletedWorkoutPostInBackground(db, workoutId, {
+        repairCloudIdentity: true,
+      });
+    }
   } else {
+    syncWorkoutTypeInstancesInBackground(db);
     deleteCompletedWorkoutPostInBackground(db, workoutId);
   }
+}
+
+export function backfillCompletedWorkoutSummaryPostsInBackground(
+  db,
+  { limit = 8 } = {}
+) {
+  if (workoutSummaryPostBackfillScheduled) {
+    return;
+  }
+
+  workoutSummaryPostBackfillScheduled = true;
+  startBackgroundSync(
+    async () => {
+      try {
+        const socialPostServiceModule = await import("./socialPostService");
+        const workoutIds =
+          await socialPostServiceModule.getCompletedWorkoutSummaryPostCandidateIds(
+            db,
+            { limit }
+          );
+
+        if (!workoutIds.length) {
+          return;
+        }
+
+        const programServiceModule = await import("./programService");
+        await programServiceModule.syncWorkoutTypeInstancesWithCloud(db);
+
+        for (const candidateWorkoutId of workoutIds) {
+          await createCompletedWorkoutPostBestEffort(db, candidateWorkoutId, {
+            repairCloudIdentity: false,
+          });
+        }
+      } finally {
+        workoutSummaryPostBackfillScheduled = false;
+      }
+    },
+    "Workout summary social post backfill failed:"
+  );
 }
 
 export async function resetWorkoutState(db, workoutId) {

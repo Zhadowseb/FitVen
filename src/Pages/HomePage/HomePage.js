@@ -12,6 +12,7 @@ import {
   programService,
   socialPostService,
   socialService,
+  workoutService,
 } from "../../Services";
 import { getTodaysDate } from "../../Utils/dateUtils";
 
@@ -140,9 +141,15 @@ export default function App() {
 
   useFocusEffect(
     useCallback(() => {
+      if (user?.id) {
+        workoutService.backfillCompletedWorkoutSummaryPostsInBackground(db, {
+          limit: 8,
+        });
+      }
+
       loadCirclePreview();
       loadWorkoutSummaryFeed();
-    }, [loadCirclePreview, loadWorkoutSummaryFeed])
+    }, [db, loadCirclePreview, loadWorkoutSummaryFeed, user])
   );
 
   return (

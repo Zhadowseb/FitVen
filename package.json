@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.15.7-minor-profile-feedback-placement.1",
+  "version": "0.15.8-fix-workout-summary-post-retry.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",

@@ -6,6 +6,7 @@ const SOCIAL_POST_TABLE = "social_post";
 const SOCIAL_POST_LIKE_TABLE = "social_post_like";
 const AVATAR_BUCKET = "avatars";
 const WORKOUT_SUMMARY_POST_TYPE = "workout_summary";
+const WORKOUT_SUMMARY_CANDIDATE_LIMIT = 8;
 const SOCIAL_POST_SETUP_MESSAGE =
   "Workout summary posts are not set up in Supabase yet. Run docs/supabase-social-posts.sql in the Supabase SQL editor first.";
 const SOCIAL_POST_SELECT_FIELDS = `
@@ -204,7 +205,15 @@ async function getWorkoutDoneSetCount(db, workoutId) {
   return normalizeInteger(row?.done_set_count, 0);
 }
 
-async function getWorkoutTopSets(db, workoutId, limit = 3) {
+async function getWorkoutTopSets(db, workoutId, limit = null) {
+  const normalizedLimit =
+    limit === null || limit === undefined
+      ? null
+      : Math.max(1, normalizeInteger(limit, 1));
+  const limitClause = normalizedLimit === null ? "" : "LIMIT ?";
+  const params = normalizedLimit === null
+    ? [workoutId]
+    : [workoutId, normalizedLimit];
   const rows = await db.getAllAsync(
     `WITH completed_sets AS (
        SELECT
@@ -245,8 +254,8 @@ async function getWorkoutTopSets(db, workoutId, limit = 3) {
      FROM completed_sets
      WHERE set_rank = 1
      ORDER BY exercise_order ASC, exercise_instance_id ASC
-     LIMIT ?;`,
-    [workoutId, limit]
+     ${limitClause};`,
+    params
   );
 
   return (rows ?? []).map((row) => {
@@ -330,6 +339,84 @@ async function buildWorkoutSummaryPayload(db, workoutSource) {
   };
 }
 
+async function getExistingWorkoutSummaryPost({
+  userId,
+  cloudWorkoutTypeInstanceId,
+}) {
+  const { data, error } = await supabase
+    .from(SOCIAL_POST_TABLE)
+    .select(SOCIAL_POST_SELECT_FIELDS)
+    .eq("author_id", userId)
+    .eq("post_type", WORKOUT_SUMMARY_POST_TYPE)
+    .eq("source_workout_type_instance_id", cloudWorkoutTypeInstanceId)
+    .maybeSingle();
+
+  if (error) {
+    throw normalizeSocialPostError(error);
+  }
+
+  return data ?? null;
+}
+
+function getPayloadTopSetCount(payload) {
+  return Array.isArray(payload?.topSets) ? payload.topSets.length : 0;
+}
+
+function shouldKeepExistingWorkoutSummaryPost(existingPost, nextPayload) {
+  if (!existingPost || existingPost.deleted_at) {
+    return false;
+  }
+
+  const existingPayload =
+    existingPost.payload &&
+    typeof existingPost.payload === "object" &&
+    !Array.isArray(existingPost.payload)
+      ? existingPost.payload
+      : {};
+  const existingExerciseCount = normalizeInteger(
+    existingPayload.exerciseCount,
+    0
+  );
+  const nextExerciseCount = normalizeInteger(nextPayload?.exerciseCount, 0);
+
+  if (
+    existingExerciseCount > 0 &&
+    nextExerciseCount > 0 &&
+    existingExerciseCount !== nextExerciseCount
+  ) {
+    return true;
+  }
+
+  return (
+    getPayloadTopSetCount(existingPayload) >=
+    getPayloadTopSetCount(nextPayload)
+  );
+}
+
+export async function getCompletedWorkoutSummaryPostCandidateIds(
+  db,
+  { limit = WORKOUT_SUMMARY_CANDIDATE_LIMIT } = {}
+) {
+  const normalizedLimit = Math.max(1, normalizeInteger(limit, 1));
+  const rows = await db.getAllAsync(
+    `SELECT w.workout_id
+     FROM Workout_Type_Instance w
+     WHERE w.done = 1
+       AND w.workout_type = 'Resistance'
+       AND COALESCE(w.deleted_at, '') = ''
+     ORDER BY
+       COALESCE(w.sync_version, 0) DESC,
+       COALESCE(w.original_start_time, 0) DESC,
+       w.workout_id DESC
+     LIMIT ?;`,
+    [normalizedLimit]
+  );
+
+  return (rows ?? [])
+    .map((row) => normalizeInteger(row?.workout_id, 0))
+    .filter((workoutId) => workoutId > 0);
+}
+
 export async function createWorkoutSummaryPostForCompletedWorkout(
   db,
   { workoutId }
@@ -360,8 +447,17 @@ export async function createWorkoutSummaryPostForCompletedWorkout(
   }
 
   await ensureOwnProfile(user);
-
   const payload = await buildWorkoutSummaryPayload(db, workoutSource);
+
+  const existingPost = await getExistingWorkoutSummaryPost({
+    userId: user.id,
+    cloudWorkoutTypeInstanceId,
+  });
+
+  if (shouldKeepExistingWorkoutSummaryPost(existingPost, payload)) {
+    return mapSocialPostRow(existingPost);
+  }
+
   const now = new Date().toISOString();
   const { data, error } = await supabase
     .from(SOCIAL_POST_TABLE)
