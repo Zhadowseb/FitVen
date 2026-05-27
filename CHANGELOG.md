@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.15.11] - Unreleased
+### Changed
+- Stop automatically backfilling social posts for every completed workout; workout summaries are only generated from Finish or manual Repost.
+- Sort circle stories by activity state: live workouts first, then planned, done, and inactive profiles.
+
+### Fixed
+- Pause the Resistance timer when the final set is marked done.
+- Add a Repost summary action to the Workout page options for manually regenerating a finished Resistance workout summary.
+- Refresh existing workout summary posts when a manual repost has an equally complete or richer payload.
+
+---
 ## [0.15.10] - Unreleased
 ### Changed
 - Load Home workout summary posts with paginated infinite scrolling instead of a fixed three-post limit.

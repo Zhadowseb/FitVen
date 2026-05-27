@@ -197,6 +197,31 @@ function createRestActivityPreview() {
   };
 }
 
+const ACTIVITY_PREVIEW_SORT_PRIORITY = {
+  live: 0,
+  planned: 1,
+  done: 2,
+  rest: 3,
+};
+
+function getActivityPreviewSortPriority(profile) {
+  return ACTIVITY_PREVIEW_SORT_PRIORITY[profile?.activityState] ?? 3;
+}
+
+function sortCirclePreviewPeople(people) {
+  return [...people].sort((left, right) => {
+    const priorityDelta =
+      getActivityPreviewSortPriority(left) -
+      getActivityPreviewSortPriority(right);
+
+    if (priorityDelta !== 0) {
+      return priorityDelta;
+    }
+
+    return 0;
+  });
+}
+
 function getCloudWorkoutDisplayLabel(workout) {
   const workoutType = workout?.workout_type?.trim?.() ?? workout?.workout_type;
   const label = workout?.label?.trim?.() ?? workout?.label;
@@ -763,14 +788,15 @@ export async function getCirclePreview({ user, limit = 12, date = null }) {
     date,
   });
 
+  const people = followingProfiles.map((profile) => ({
+    ...profile,
+    relationshipType: "following",
+    ...(activityPreviewByUserId.get(profile.id) ?? createRestActivityPreview()),
+  }));
+
   return {
     currentUser: currentUserProfile,
-    people: followingProfiles.map((profile) => ({
-      ...profile,
-      relationshipType: "following",
-      ...(activityPreviewByUserId.get(profile.id) ??
-        createRestActivityPreview()),
-    })),
+    people: sortCirclePreviewPeople(people),
   };
 }
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { View, TouchableOpacity, useColorScheme } from "react-native";
+import { Alert, View, TouchableOpacity, useColorScheme } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
@@ -21,6 +21,7 @@ import Delete from "../../Resources/Icons/UI-icons/Delete";
 import Copy from "../../Resources/Icons/UI-icons/Copy";
 import Reload from "../../Resources/Icons/UI-icons/Reload";
 import Name from "../../Resources/Icons/UI-icons/Name";
+import Social from "../../Resources/Icons/UI-icons/Social";
 import { programService, workoutService } from "../../Services";
 
 import Run from "./WorkoutTypes/Run/Run";
@@ -49,6 +50,7 @@ const WorkoutPage = ({ route }) => {
   const [newDate, setNewDate] = useState(new Date());
   const [metadata, setMetadata] = useState(null);
   const [restartRequestKey, setRestartRequestKey] = useState(0);
+  const [isRepostingWorkoutPost, setIsRepostingWorkoutPost] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -89,6 +91,7 @@ const WorkoutPage = ({ route }) => {
     workoutType === "Legs" ||
     workoutType === "StrengthTraining";
   const supportsTimerRestart = isRunWorkout || isStrengthWorkout;
+  const canRepostWorkoutSummary = workoutType === "Resistance";
 
   const openLabelModal = () => {
     setNextWorkoutLabel(workoutInstanceLabel ?? "");
@@ -152,6 +155,31 @@ const WorkoutPage = ({ route }) => {
       }
     } catch (error) {
       console.error("Copy workout failed:", error);
+    }
+  };
+
+  const repostWorkoutSummary = async () => {
+    if (isRepostingWorkoutPost) {
+      return;
+    }
+
+    setOptionsBottomsheetVisible(false);
+    setIsRepostingWorkoutPost(true);
+
+    try {
+      await workoutService.repostWorkoutSummaryPost(db, {
+        workoutId: workout_id,
+      });
+      Alert.alert("Summary reposted", "The workout summary has been regenerated.");
+    } catch (error) {
+      Alert.alert(
+        "Could not repost summary",
+        error instanceof Error
+          ? error.message
+          : "The workout summary could not be regenerated."
+      );
+    } finally {
+      setIsRepostingWorkoutPost(false);
     }
   };
 
@@ -241,6 +269,22 @@ const WorkoutPage = ({ route }) => {
               <ThemedText style={styles.optionText}>Restart Workout</ThemedText>
             </TouchableOpacity>
           )}
+
+          <TouchableOpacity
+            style={[
+              styles.option,
+              !canRepostWorkoutSummary || isRepostingWorkoutPost
+                ? { opacity: 0.45 }
+                : null,
+            ]}
+            onPress={repostWorkoutSummary}
+            disabled={!canRepostWorkoutSummary || isRepostingWorkoutPost}
+          >
+            <Social width={24} height={24} color={theme.iconColor} />
+            <ThemedText style={styles.optionText}>
+              {isRepostingWorkoutPost ? "Reposting summary..." : "Repost summary"}
+            </ThemedText>
+          </TouchableOpacity>
 
           <TouchableOpacity
             style={[

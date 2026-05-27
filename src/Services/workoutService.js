@@ -4,7 +4,6 @@ import { startBackgroundSync } from "./syncScheduler";
 
 let dirtyWorkoutHierarchyPushScheduled = false;
 let dirtyWorkoutHierarchyPushNeedsRerun = false;
-let workoutSummaryPostBackfillScheduled = false;
 
 function pushDirtyWorkoutHierarchyInBackground(db) {
   if (dirtyWorkoutHierarchyPushScheduled) {
@@ -81,29 +80,6 @@ async function createCompletedWorkoutPostBestEffort(
     console.error("Workout summary social post failed:", error);
     return { skipped: true, reason: "error" };
   }
-}
-
-function createCompletedWorkoutPostInBackground(
-  db,
-  workoutId,
-  options = {}
-) {
-  startBackgroundSync(
-    () => createCompletedWorkoutPostBestEffort(db, workoutId, options),
-    "Workout summary social post failed:"
-  );
-}
-
-function deleteCompletedWorkoutPostInBackground(db, workoutId) {
-  startBackgroundSync(
-    async () => {
-      const socialPostServiceModule = await import("./socialPostService");
-      await socialPostServiceModule.deleteWorkoutSummaryPostForWorkout(db, {
-        workoutId,
-      });
-    },
-    "Workout summary social post cleanup failed:"
-  );
 }
 
 async function syncWorkoutTypeInstancesInBackground(db) {
@@ -228,59 +204,49 @@ export async function setWorkoutDone(db, { workoutId, done }) {
     await refreshWorkoutHierarchyCompletion(db, workoutId);
   });
 
-  if (done) {
-    const result = await createCompletedWorkoutPostBestEffort(db, workoutId, {
-      repairCloudIdentity: true,
-    });
-
-    if (result?.skipped) {
-      createCompletedWorkoutPostInBackground(db, workoutId, {
-        repairCloudIdentity: true,
-      });
-    }
-  } else {
-    syncWorkoutTypeInstancesInBackground(db);
-    deleteCompletedWorkoutPostInBackground(db, workoutId);
-  }
+  await syncWorkoutSummaryPostForCompletionState(db, { workoutId, done });
 }
 
-export function backfillCompletedWorkoutSummaryPostsInBackground(
-  db,
-  { limit = 8 } = {}
-) {
-  if (workoutSummaryPostBackfillScheduled) {
-    return;
+const WORKOUT_SUMMARY_REPOST_SKIP_MESSAGES = {
+  signed_out: "You need to be signed in to repost a workout summary.",
+  not_completed: "Finish the workout before reposting its summary.",
+  unsupported_workout_type:
+    "Workout summaries can only be posted for Resistance workouts right now.",
+  missing_cloud_workout_id:
+    "This workout has not synced to Supabase yet. Try again in a moment.",
+  error: "Could not repost the workout summary.",
+};
+
+function getWorkoutSummaryRepostErrorMessage(result) {
+  return (
+    WORKOUT_SUMMARY_REPOST_SKIP_MESSAGES[result?.reason] ??
+    "Could not repost the workout summary."
+  );
+}
+
+export async function repostWorkoutSummaryPost(db, { workoutId }) {
+  const result = await createCompletedWorkoutPost(db, workoutId, {
+    repairCloudIdentity: true,
+  });
+
+  if (result?.skipped) {
+    throw new Error(getWorkoutSummaryRepostErrorMessage(result));
   }
 
-  workoutSummaryPostBackfillScheduled = true;
-  startBackgroundSync(
-    async () => {
-      try {
-        const socialPostServiceModule = await import("./socialPostService");
-        const workoutIds =
-          await socialPostServiceModule.getCompletedWorkoutSummaryPostCandidateIds(
-            db,
-            { limit }
-          );
+  return result;
+}
 
-        if (!workoutIds.length) {
-          return;
-        }
-
-        const programServiceModule = await import("./programService");
-        await programServiceModule.syncWorkoutTypeInstancesWithCloud(db);
-
-        for (const candidateWorkoutId of workoutIds) {
-          await createCompletedWorkoutPostBestEffort(db, candidateWorkoutId, {
-            repairCloudIdentity: false,
-          });
-        }
-      } finally {
-        workoutSummaryPostBackfillScheduled = false;
-      }
-    },
-    "Workout summary social post backfill failed:"
-  );
+export async function syncWorkoutSummaryPostForCompletionState(
+  db,
+  { workoutId, done }
+) {
+  if (done) {
+    await createCompletedWorkoutPostBestEffort(db, workoutId, {
+      repairCloudIdentity: true,
+    });
+  } else {
+    syncWorkoutTypeInstancesInBackground(db);
+  }
 }
 
 export async function resetWorkoutState(db, workoutId) {
@@ -290,5 +256,4 @@ export async function resetWorkoutState(db, workoutId) {
   });
 
   syncWorkoutTypeInstancesInBackground(db);
-  deleteCompletedWorkoutPostInBackground(db, workoutId);
 }

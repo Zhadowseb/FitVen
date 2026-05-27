@@ -6,7 +6,6 @@ const SOCIAL_POST_TABLE = "social_post";
 const SOCIAL_POST_LIKE_TABLE = "social_post_like";
 const AVATAR_BUCKET = "avatars";
 const WORKOUT_SUMMARY_POST_TYPE = "workout_summary";
-const WORKOUT_SUMMARY_CANDIDATE_LIMIT = 8;
 const SOCIAL_POST_SETUP_MESSAGE =
   "Workout summary posts are not set up in Supabase yet. Run docs/supabase-social-posts.sql in the Supabase SQL editor first.";
 const SOCIAL_POST_SELECT_FIELDS = `
@@ -382,39 +381,15 @@ function shouldKeepExistingWorkoutSummaryPost(existingPost, nextPayload) {
   if (
     existingExerciseCount > 0 &&
     nextExerciseCount > 0 &&
-    existingExerciseCount !== nextExerciseCount
+    existingExerciseCount > nextExerciseCount
   ) {
     return true;
   }
 
   return (
-    getPayloadTopSetCount(existingPayload) >=
+    getPayloadTopSetCount(existingPayload) >
     getPayloadTopSetCount(nextPayload)
   );
-}
-
-export async function getCompletedWorkoutSummaryPostCandidateIds(
-  db,
-  { limit = WORKOUT_SUMMARY_CANDIDATE_LIMIT } = {}
-) {
-  const normalizedLimit = Math.max(1, normalizeInteger(limit, 1));
-  const rows = await db.getAllAsync(
-    `SELECT w.workout_id
-     FROM Workout_Type_Instance w
-     WHERE w.done = 1
-       AND w.workout_type = 'Resistance'
-       AND COALESCE(w.deleted_at, '') = ''
-     ORDER BY
-       COALESCE(w.sync_version, 0) DESC,
-       COALESCE(w.original_start_time, 0) DESC,
-       w.workout_id DESC
-     LIMIT ?;`,
-    [normalizedLimit]
-  );
-
-  return (rows ?? [])
-    .map((row) => normalizeInteger(row?.workout_id, 0))
-    .filter((workoutId) => workoutId > 0);
 }
 
 export async function createWorkoutSummaryPostForCompletedWorkout(

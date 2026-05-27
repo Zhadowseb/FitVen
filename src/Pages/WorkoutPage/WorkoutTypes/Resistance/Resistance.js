@@ -89,6 +89,7 @@ const Resistance = ({
   const [isRunning, set_isRunning] = useState(false);
   const timerStartRef = useRef(null);
   const elapsedTimeRef = useRef(0);
+  const wasAllSetsDoneRef = useRef(false);
 
   const normalizeTimerStartValue = (value) =>
     normalizeStoredTimestampSeconds(value);
@@ -361,6 +362,26 @@ const Resistance = ({
       ? "Continue"
       : "Start";
   const primaryActionHandler = isRunning ? pauseWorkout : startWorkout;
+
+  useEffect(() => {
+    const allSetsDone =
+      resolvedTotalSets > 0 && resolvedDoneSets >= resolvedTotalSets;
+
+    if (!allSetsDone) {
+      wasAllSetsDoneRef.current = false;
+      return;
+    }
+
+    if (wasAllSetsDoneRef.current) {
+      return;
+    }
+
+    wasAllSetsDoneRef.current = true;
+
+    if (isRunning && !isDone) {
+      void pauseWorkout();
+    }
+  }, [isDone, isRunning, resolvedDoneSets, resolvedTotalSets, pauseWorkout]);
 
   return (
     <ThemedView safe={false} style={{ flex: 1 }}>

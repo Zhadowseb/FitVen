@@ -3051,10 +3051,6 @@ export async function deleteExercise(db, exerciseId) {
 
     if (exercise?.workout_id) {
       await resequenceWorkoutExerciseOrder(db, exercise.workout_id);
-      await weightliftingRepository.updateWorkoutDoneFromExercises(
-        db,
-        exercise.workout_id
-      );
       await workoutService.refreshWorkoutHierarchyCompletion(
         db,
         exercise.workout_id
@@ -3082,10 +3078,6 @@ export async function addSetToExercise(db, exerciseId) {
     await weightliftingRepository.updateExerciseDoneFromSets(db, exerciseId);
 
     if (exercise?.workout_id) {
-      await weightliftingRepository.updateWorkoutDoneFromExercises(
-        db,
-        exercise.workout_id
-      );
       await workoutService.refreshWorkoutHierarchyCompletion(
         db,
         exercise.workout_id
@@ -3140,7 +3132,6 @@ export async function updateStrengthSetDone(
     await weightliftingRepository.updateSetDone(db, { setId, done, failed });
     personalRecordSetIds = await refreshPersonalRecordsForSet(db, setId);
     await weightliftingRepository.updateExerciseDoneBySet(db, setId);
-    await weightliftingRepository.updateWorkoutDoneFromExercises(db, workoutId);
     await workoutService.refreshWorkoutHierarchyCompletion(db, workoutId);
   });
 
@@ -3202,10 +3193,6 @@ export async function deleteSet(db, setId) {
 
     await weightliftingRepository.updateExerciseSetCount(db, set.exercise_instance_id);
     await weightliftingRepository.updateExerciseDoneFromSets(db, set.exercise_instance_id);
-    await weightliftingRepository.updateWorkoutDoneFromExercises(
-      db,
-      set.workout_id
-    );
     await workoutService.refreshWorkoutHierarchyCompletion(db, set.workout_id);
   });
 
@@ -3395,10 +3382,6 @@ export async function saveExerciseSets(db, { exerciseId, sets }) {
     await weightliftingRepository.updateExerciseDoneFromSets(db, exerciseId);
 
     if (exercise?.workout_id) {
-      await weightliftingRepository.updateWorkoutDoneFromExercises(
-        db,
-        exercise.workout_id
-      );
       await workoutService.refreshWorkoutHierarchyCompletion(
         db,
         exercise.workout_id
@@ -3420,10 +3403,6 @@ export async function updateExerciseDone(db, { exerciseId, done }) {
     await weightliftingRepository.updateExerciseDone(db, { exerciseId, done });
 
     if (exercise?.workout_id) {
-      await weightliftingRepository.updateWorkoutDoneFromExercises(
-        db,
-        exercise.workout_id
-      );
       await workoutService.refreshWorkoutHierarchyCompletion(
         db,
         exercise.workout_id
