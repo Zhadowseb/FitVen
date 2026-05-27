@@ -14,7 +14,6 @@ import { weightliftingService as weightliftingRepository } from "../../../../../
 
 import ExerciseRow from "./Components/ExerciseRow/ExerciseRow"
 import PlusCircled from "../../../../../../Resources/Icons/UI-icons/PlusCircled";
-import PickExerciseModal from "./Components/PickExerciseModal";
 
 const ExerciseList = ({
   workout_id,
@@ -28,8 +27,6 @@ const ExerciseList = ({
   const [expandedExercises, setExpandedExercises] = useState({});
   const [loading, setLoading] = useState(false);
   const [dragState, setDragState] = useState(null);
-
-  const [pickExerciseModal_visible, set_pickExerciseModal_visible] = useState(false);
 
   const db = useSQLiteContext();
   const navigation = useNavigation();
@@ -588,20 +585,17 @@ const ExerciseList = ({
 
       <TouchableOpacity
         onPress={ () => {
-          set_pickExerciseModal_visible(true);
+          navigation.navigate("ExerciseCatalogPage", {
+            workoutPicker: {
+              workoutId: workout_id,
+            },
+          });
         }}>
         <PlusCircled
           width={30}
           height={30} />
       </TouchableOpacity>
     </View>
-
-    <PickExerciseModal
-      visible={pickExerciseModal_visible}
-      workout_id={workout_id}
-      onClose={() => set_pickExerciseModal_visible(false)}
-      onSubmit={loadExercises}
-    />
     </>
   );
 };

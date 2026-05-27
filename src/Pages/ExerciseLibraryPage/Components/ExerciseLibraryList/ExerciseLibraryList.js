@@ -32,6 +32,54 @@ const GROUP_FILTERS = [
   { key: "mobility", label: "Mobility" },
 ];
 
+const MUSCLE_FILTERS = [
+  { key: "all", label: "All muscles", regionKeys: [] },
+  { key: "chest", label: "Chest", regionKeys: ["pecs"] },
+  {
+    key: "shoulders",
+    label: "Shoulders",
+    regionKeys: ["front_delts", "side_delts", "rear_delts"],
+  },
+  { key: "lats", label: "Lats", regionKeys: ["lats"] },
+  { key: "traps", label: "Traps", regionKeys: ["upper_traps"] },
+  { key: "biceps", label: "Biceps", regionKeys: ["biceps"] },
+  { key: "triceps", label: "Triceps", regionKeys: ["triceps"] },
+  { key: "forearms", label: "Forearms", regionKeys: ["forearms"] },
+  { key: "abs", label: "Abs", regionKeys: ["abs"] },
+  { key: "obliques", label: "Obliques", regionKeys: ["obliques"] },
+  { key: "glutes", label: "Glutes", regionKeys: ["glutes"] },
+  { key: "quads", label: "Quads", regionKeys: ["quads"] },
+  { key: "hamstrings", label: "Hamstrings", regionKeys: ["hamstrings"] },
+  { key: "calves", label: "Calves", regionKeys: ["calves"] },
+  { key: "adductors", label: "Adductors", regionKeys: ["adductors"] },
+  { key: "lower-back", label: "Lower back", regionKeys: ["lower_back"] },
+];
+
+const EXERCISE_REGION_KEY_FIELDS = [
+  "primary_body_map_region_keys",
+  "secondary_body_map_region_keys",
+  "primary_front_body_map_region_keys",
+  "secondary_front_body_map_region_keys",
+  "primary_back_body_map_region_keys",
+  "secondary_back_body_map_region_keys",
+];
+
+const getExerciseRegionKeySet = (exercise) => {
+  const regionKeys = new Set();
+
+  for (const field of EXERCISE_REGION_KEY_FIELDS) {
+    const values = Array.isArray(exercise?.[field]) ? exercise[field] : [];
+
+    for (const value of values) {
+      if (typeof value === "string" && value.trim() !== "") {
+        regionKeys.add(value.trim().toLocaleLowerCase());
+      }
+    }
+  }
+
+  return regionKeys;
+};
+
 const formatMuscleBadgeLabel = (count, label) => `${count}\u00A0${label}`;
 
 const ExerciseMuscleBadges = ({
@@ -86,13 +134,19 @@ const ExerciseMuscleBadges = ({
   );
 };
 
-const ExerciseLibraryList = ({ refreshKey }) => {
+const ExerciseLibraryList = ({
+  refreshKey,
+  mode = "catalog",
+  onSelectExercise,
+  selectingExerciseName = null,
+}) => {
   const db = useSQLiteContext();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const [exercises, set_exercises] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGroupKey, setSelectedGroupKey] = useState("all");
+  const [selectedMuscleKeys, setSelectedMuscleKeys] = useState(["all"]);
   const [selectedExercise, setSelectedExercise] = useState(null);
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const titleColor = theme.title ?? theme.text;
@@ -113,6 +167,12 @@ const ExerciseLibraryList = ({ refreshKey }) => {
   const primaryBadgeText = secondaryColor;
   const secondaryBadgeText = primaryColor;
   const normalizedSearchQuery = searchQuery.trim().toLocaleLowerCase();
+  const isAllMusclesSelected = selectedMuscleKeys.includes("all");
+  const selectedMuscleFilters = isAllMusclesSelected
+    ? [MUSCLE_FILTERS[0]]
+    : MUSCLE_FILTERS.filter((filter) =>
+        selectedMuscleKeys.includes(filter.key)
+      );
   const filteredExercises = exercises.filter((exercise) => {
     const exerciseName = exercise.exercise_name ?? "";
     const nickname = exercise.nickname ?? "";
@@ -125,9 +185,17 @@ const ExerciseLibraryList = ({ refreshKey }) => {
       : [];
     const matchesGroup =
       selectedGroupKey === "all" || groupKeys.includes(selectedGroupKey);
+    const regionKeySet = getExerciseRegionKeySet(exercise);
+    const matchesMuscle =
+      isAllMusclesSelected ||
+      selectedMuscleFilters.some((filter) =>
+        filter.regionKeys.some((regionKey) => regionKeySet.has(regionKey))
+      );
 
-    return matchesSearch && matchesGroup;
+    return matchesSearch && matchesGroup && matchesMuscle;
   });
+  const isWorkoutPicker = mode === "workout-picker";
+  const isSelectionBusy = Boolean(selectingExerciseName);
   const loadExerciseStorage = async () => {
     try {
       const rows = await weightliftingRepository.getExerciseLibraryEntries(db);
@@ -144,6 +212,23 @@ const ExerciseLibraryList = ({ refreshKey }) => {
   const resetFilters = () => {
     setSearchQuery("");
     setSelectedGroupKey("all");
+    setSelectedMuscleKeys(["all"]);
+  };
+
+  const handleMuscleFilterPress = (filterKey) => {
+    if (filterKey === "all") {
+      setSelectedMuscleKeys(["all"]);
+      return;
+    }
+
+    setSelectedMuscleKeys((currentKeys) => {
+      const activeKeys = currentKeys.filter((key) => key !== "all");
+      const nextKeys = activeKeys.includes(filterKey)
+        ? activeKeys.filter((key) => key !== filterKey)
+        : [...activeKeys, filterKey];
+
+      return nextKeys.length > 0 ? nextKeys : ["all"];
+    });
   };
 
   return (
@@ -164,16 +249,18 @@ const ExerciseLibraryList = ({ refreshKey }) => {
 
         <View style={styles.headerCopy}>
           <ThemedText size={11} style={styles.eyebrow} setColor={primaryColor}>
-            Exercise Library
+            {isWorkoutPicker ? "Add Exercise" : "Exercise Library"}
           </ThemedText>
           <ThemedTitle
             type="h3"
             style={[styles.title, { color: titleColor }]}
           >
-            Catalog
+            {isWorkoutPicker ? "Choose Exercise" : "Catalog"}
           </ThemedTitle>
           <ThemedText style={styles.description} setColor={quietText}>
-            Synced from the shared cloud database whenever the app opens.
+            {isWorkoutPicker
+              ? "Workout exercise"
+              : "Synced from the shared cloud database whenever the app opens."}
           </ThemedText>
         </View>
 
@@ -241,7 +328,7 @@ const ExerciseLibraryList = ({ refreshKey }) => {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        style={styles.filterScroll}
+        style={[styles.filterScroll, styles.trainingFilterScroll]}
         contentContainerStyle={styles.filterContent}
       >
         {GROUP_FILTERS.map((filter) => {
@@ -256,6 +343,38 @@ const ExerciseLibraryList = ({ refreshKey }) => {
                 {
                   backgroundColor: isSelected ? primaryColor : badgeSurface,
                   borderColor: isSelected ? primaryColor : cardBorder,
+                },
+              ]}
+            >
+              <ThemedText
+                style={styles.groupFilterText}
+                setColor={isSelected ? activeFilterText : quietText}
+              >
+                {filter.label}
+              </ThemedText>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={[styles.filterScroll, styles.muscleFilterScroll]}
+        contentContainerStyle={styles.filterContent}
+      >
+        {MUSCLE_FILTERS.map((filter) => {
+          const isSelected = selectedMuscleKeys.includes(filter.key);
+
+          return (
+            <Pressable
+              key={filter.key}
+              onPress={() => handleMuscleFilterPress(filter.key)}
+              style={[
+                styles.groupFilter,
+                {
+                  backgroundColor: isSelected ? secondaryColor : badgeSurface,
+                  borderColor: isSelected ? secondaryColor : cardBorder,
                 },
               ]}
             >
@@ -310,12 +429,26 @@ const ExerciseLibraryList = ({ refreshKey }) => {
               <Pressable
                 key={exercise.exercise_name}
                 accessibilityRole="button"
-                accessibilityLabel={`Show ${exercise.exercise_name} muscles`}
-                onPress={() => setSelectedExercise(exercise)}
+                accessibilityLabel={
+                  isWorkoutPicker
+                    ? `Add ${exercise.exercise_name} to workout`
+                    : `Show ${exercise.exercise_name} muscles`
+                }
+                disabled={isSelectionBusy}
+                onPress={() => {
+                  if (isWorkoutPicker) {
+                    onSelectExercise?.(exercise);
+                    return;
+                  }
+
+                  setSelectedExercise(exercise);
+                }}
                 style={[
                   styles.exerciseRow,
                   index === filteredExercises.length - 1 &&
                     styles.exerciseRowLast,
+                  selectingExerciseName === exercise.exercise_name &&
+                    styles.exerciseRowSelected,
                   { borderColor: cardBorder },
                 ]}
               >

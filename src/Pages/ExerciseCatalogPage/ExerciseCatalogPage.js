@@ -1,15 +1,28 @@
 import { StatusBar } from "expo-status-bar";
-import { ScrollView, useColorScheme } from "react-native";
+import { Alert, ScrollView, useColorScheme } from "react-native";
 import { useCallback, useState } from "react";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { useSQLiteContext } from "expo-sqlite";
 
 import ExerciseLibraryList from "../ExerciseLibraryPage/Components/ExerciseLibraryList/ExerciseLibraryList";
 import styles from "./ExerciseCatalogPageStyle";
-import { ThemedView } from "../../Resources/ThemedComponents";
+import {
+  ThemedHeader,
+  ThemedTitle,
+  ThemedView,
+} from "../../Resources/ThemedComponents";
+import { weightliftingService } from "../../Services";
 
-const ExerciseCatalogPage = () => {
+const ExerciseCatalogPage = ({ route }) => {
+  const db = useSQLiteContext();
+  const navigation = useNavigation();
   const colorScheme = useColorScheme();
   const [refreshKey, setRefreshKey] = useState(0);
+  const [selectingExerciseName, setSelectingExerciseName] = useState(null);
+  const workoutPicker = route?.params?.workoutPicker ?? null;
+  const workoutPickerId = Number(workoutPicker?.workoutId);
+  const isWorkoutPicker =
+    Number.isFinite(workoutPickerId) && workoutPickerId > 0;
 
   useFocusEffect(
     useCallback(() => {
@@ -17,14 +30,57 @@ const ExerciseCatalogPage = () => {
     }, [])
   );
 
+  const handleSelectExercise = useCallback(
+    async (exercise) => {
+      if (!isWorkoutPicker || selectingExerciseName) {
+        return;
+      }
+
+      const exerciseName = exercise?.exercise_name;
+
+      if (!exerciseName) {
+        return;
+      }
+
+      try {
+        setSelectingExerciseName(exerciseName);
+        await weightliftingService.addExerciseToWorkout(db, {
+          workoutId: workoutPickerId,
+          exerciseName,
+        });
+        navigation.goBack();
+      } catch (error) {
+        console.error("Failed to add exercise to workout:", error);
+        Alert.alert(
+          "Exercise could not be added",
+          "Please try again from the exercise catalog."
+        );
+      } finally {
+        setSelectingExerciseName(null);
+      }
+    },
+    [db, isWorkoutPicker, navigation, selectingExerciseName, workoutPickerId]
+  );
+
   return (
     <ThemedView safe={["top", "left", "right"]} style={styles.container}>
+      {isWorkoutPicker && (
+        <ThemedHeader>
+          <ThemedTitle type="h3">Add exercise</ThemedTitle>
+        </ThemedHeader>
+      )}
+
       <ScrollView
         style={styles.content}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <ExerciseLibraryList refreshKey={refreshKey} />
+        <ExerciseLibraryList
+          refreshKey={refreshKey}
+          mode={isWorkoutPicker ? "workout-picker" : "catalog"}
+          onSelectExercise={isWorkoutPicker ? handleSelectExercise : undefined}
+          selectingExerciseName={selectingExerciseName}
+        />
       </ScrollView>
 
       <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />

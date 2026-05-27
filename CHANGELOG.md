@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.15.9] - Unreleased
+### Changed
+- Use the exercise catalog as the add-exercise picker inside Resistance workouts, with training-group and multi-select muscle-region filters.
+
+---
 ## [0.15.8] - Unreleased
 ### Fixed
 - Retry and backfill missing workout summary social posts for completed Resistance workouts.

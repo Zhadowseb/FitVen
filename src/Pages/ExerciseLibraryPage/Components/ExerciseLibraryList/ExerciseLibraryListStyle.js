@@ -107,6 +107,11 @@ export default StyleSheet.create({
   },
   filterScroll: {
     flexGrow: 0,
+  },
+  trainingFilterScroll: {
+    paddingBottom: 12,
+  },
+  muscleFilterScroll: {
     paddingBottom: 12,
   },
   filterContent: {
@@ -160,6 +165,9 @@ export default StyleSheet.create({
   },
   exerciseRowLast: {
     borderBottomWidth: 0,
+  },
+  exerciseRowSelected: {
+    opacity: 0.58,
   },
   exercisePreviewBodyMap: {
     width: EXERCISE_PREVIEW_WIDTH,
