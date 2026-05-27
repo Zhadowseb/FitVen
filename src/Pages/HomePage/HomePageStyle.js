@@ -11,6 +11,11 @@ export default StyleSheet.create({
   contentContainer: {
     paddingBottom: 28,
   },
+  feedFooter: {
+    paddingVertical: 18,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   socialSectionSpacer: {
     marginTop: 8,
   },

@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.15.10] - Unreleased
+### Changed
+- Load Home workout summary posts with paginated infinite scrolling instead of a fixed three-post limit.
+
+---
 ## [0.15.9] - Unreleased
 ### Changed
 - Use the exercise catalog as the add-exercise picker inside Resistance workouts, with training-group and multi-select muscle-region filters.

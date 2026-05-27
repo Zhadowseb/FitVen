@@ -523,12 +523,14 @@ export async function deleteWorkoutSummaryPostForWorkout(db, { workoutId }) {
   return { skipped: false };
 }
 
-export async function getWorkoutSummaryFeed({ user, limit = 10 }) {
+export async function getWorkoutSummaryFeed({ user, limit = 10, offset = 0 }) {
   if (!user?.id) {
     return [];
   }
 
   await ensureOwnProfile(user);
+  const normalizedLimit = Math.max(1, normalizeInteger(limit, 10));
+  const normalizedOffset = Math.max(0, normalizeInteger(offset, 0));
 
   const { data: posts, error: postsError } = await supabase
     .from(SOCIAL_POST_TABLE)
@@ -537,7 +539,7 @@ export async function getWorkoutSummaryFeed({ user, limit = 10 }) {
     .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .order("id", { ascending: false })
-    .limit(limit);
+    .range(normalizedOffset, normalizedOffset + normalizedLimit - 1);
 
   if (postsError) {
     throw normalizeSocialPostError(postsError);

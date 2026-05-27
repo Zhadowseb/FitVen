@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useState } from 'react';
-import { ScrollView } from 'react-native';
+import { useCallback, useRef, useState } from 'react';
+import { ActivityIndicator, FlatList, View } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useSQLiteContext } from "expo-sqlite";
 
@@ -21,6 +21,8 @@ import {
 } from "../../Resources/ThemedComponents";
 import { useAuth } from '../../Contexts/AuthContext';
 
+const WORKOUT_SUMMARY_FEED_PAGE_SIZE = 6;
+
 export default function App() {
   const db = useSQLiteContext();
   const todayDate = getTodaysDate();
@@ -30,7 +32,12 @@ export default function App() {
   });
   const [circlePreviewError, setCirclePreviewError] = useState("");
   const [workoutSummaryPosts, setWorkoutSummaryPosts] = useState([]);
+  const [workoutSummaryLoadingMore, setWorkoutSummaryLoadingMore] =
+    useState(false);
   const [updatingLikePostId, setUpdatingLikePostId] = useState(null);
+  const workoutSummaryFeedOffsetRef = useRef(0);
+  const workoutSummaryFeedHasMoreRef = useRef(true);
+  const workoutSummaryFeedLoadingRef = useRef(false);
   const navigation = useNavigation();
   const { user } = useAuth();
 
@@ -81,24 +88,69 @@ export default function App() {
     }
   }, [db, todayDate, user]);
 
-  const loadWorkoutSummaryFeed = useCallback(async () => {
+  const resetWorkoutSummaryFeed = useCallback(() => {
+    workoutSummaryFeedOffsetRef.current = 0;
+    workoutSummaryFeedHasMoreRef.current = true;
+    workoutSummaryFeedLoadingRef.current = false;
+    setWorkoutSummaryPosts([]);
+    setWorkoutSummaryLoadingMore(false);
+  }, []);
+
+  const loadWorkoutSummaryFeed = useCallback(async ({ reset = false } = {}) => {
     if (!user?.id) {
-      setWorkoutSummaryPosts([]);
+      resetWorkoutSummaryFeed();
       return;
     }
+
+    if (workoutSummaryFeedLoadingRef.current) {
+      return;
+    }
+
+    if (!reset && !workoutSummaryFeedHasMoreRef.current) {
+      return;
+    }
+
+    const offset = reset ? 0 : workoutSummaryFeedOffsetRef.current;
+    workoutSummaryFeedLoadingRef.current = true;
+    setWorkoutSummaryLoadingMore(!reset);
 
     try {
       const posts = await socialPostService.getWorkoutSummaryFeed({
         user,
-        limit: 3,
+        limit: WORKOUT_SUMMARY_FEED_PAGE_SIZE,
+        offset,
+      });
+      const hasMore = posts.length === WORKOUT_SUMMARY_FEED_PAGE_SIZE;
+
+      setWorkoutSummaryPosts((currentPosts) => {
+        if (reset) {
+          return posts;
+        }
+
+        const existingPostIds = new Set(
+          currentPosts.map((currentPost) => currentPost.id)
+        );
+        const nextPosts = posts.filter(
+          (post) => !existingPostIds.has(post.id)
+        );
+
+        return [...currentPosts, ...nextPosts];
       });
 
-      setWorkoutSummaryPosts(posts);
+      workoutSummaryFeedOffsetRef.current = offset + posts.length;
+      workoutSummaryFeedHasMoreRef.current = hasMore;
     } catch (error) {
       console.error("Could not load workout summary feed:", error);
-      setWorkoutSummaryPosts([]);
+      if (reset) {
+        workoutSummaryFeedOffsetRef.current = 0;
+        workoutSummaryFeedHasMoreRef.current = false;
+        setWorkoutSummaryPosts([]);
+      }
+    } finally {
+      workoutSummaryFeedLoadingRef.current = false;
+      setWorkoutSummaryLoadingMore(false);
     }
-  }, [user]);
+  }, [resetWorkoutSummaryFeed, user]);
 
   const handleToggleWorkoutPostLike = useCallback(
     async (post) => {
@@ -131,7 +183,7 @@ export default function App() {
         });
       } catch (error) {
         console.error("Could not update workout summary like:", error);
-        await loadWorkoutSummaryFeed();
+        await loadWorkoutSummaryFeed({ reset: true });
       } finally {
         setUpdatingLikePostId(null);
       }
@@ -148,17 +200,17 @@ export default function App() {
       }
 
       loadCirclePreview();
-      loadWorkoutSummaryFeed();
+      loadWorkoutSummaryFeed({ reset: true });
     }, [db, loadCirclePreview, loadWorkoutSummaryFeed, user])
   );
 
-  return (
-    <ThemedView safe={["top", "left", "right"]} style={styles.container}>
-      <ScrollView
-        style={styles.content}
-        contentContainerStyle={styles.contentContainer}
-        showsVerticalScrollIndicator={false}
-      >
+  const handleLoadMoreWorkoutSummaryFeed = useCallback(() => {
+    loadWorkoutSummaryFeed();
+  }, [loadWorkoutSummaryFeed]);
+
+  const renderHomeHeader = useCallback(
+    () => (
+      <>
         <TodayProgramsShortcut />
 
         <FriendsActivity
@@ -168,16 +220,48 @@ export default function App() {
           onSeeAll={() => navigation.navigate("SearchPage")}
           onOpenProfile={() => navigation.navigate("ProfilePage")}
         />
+      </>
+    ),
+    [circlePreview, circlePreviewError, navigation]
+  );
 
-        {workoutSummaryPosts.map((post) => (
-          <WorkoutSummaryCard
-            key={post.id}
-            post={post}
-            onToggleLike={handleToggleWorkoutPostLike}
-            isLikeBusy={updatingLikePostId === post.id}
-          />
-        ))}
-      </ScrollView>
+  const renderWorkoutSummaryPost = useCallback(
+    ({ item: post }) => (
+      <WorkoutSummaryCard
+        post={post}
+        onToggleLike={handleToggleWorkoutPostLike}
+        isLikeBusy={updatingLikePostId === post.id}
+      />
+    ),
+    [handleToggleWorkoutPostLike, updatingLikePostId]
+  );
+
+  const renderWorkoutSummaryFooter = useCallback(() => {
+    if (!workoutSummaryLoadingMore) {
+      return null;
+    }
+
+    return (
+      <View style={styles.feedFooter}>
+        <ActivityIndicator />
+      </View>
+    );
+  }, [workoutSummaryLoadingMore]);
+
+  return (
+    <ThemedView safe={["top", "left", "right"]} style={styles.container}>
+      <FlatList
+        style={styles.content}
+        contentContainerStyle={styles.contentContainer}
+        data={workoutSummaryPosts}
+        keyExtractor={(post) => String(post.id)}
+        renderItem={renderWorkoutSummaryPost}
+        ListHeaderComponent={renderHomeHeader}
+        ListFooterComponent={renderWorkoutSummaryFooter}
+        onEndReached={handleLoadMoreWorkoutSummaryFeed}
+        onEndReachedThreshold={0.45}
+        showsVerticalScrollIndicator={false}
+      />
 
       <StatusBar style="auto" />
     </ThemedView>
