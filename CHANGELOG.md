@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.15.15] - Unreleased
+### Changed
+- Add a delete action for workout summary social posts without deleting the workout.
+
+---
 ## [0.15.14] - Unreleased
 ### Changed
 - Add a first Profile settings section with Exercises and Social posts actions.

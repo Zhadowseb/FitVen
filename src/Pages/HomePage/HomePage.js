@@ -2,6 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   TouchableOpacity,
   View,
@@ -15,6 +16,7 @@ import TodayProgramsShortcut from './Components/TodayProgramsShortcut/TodayProgr
 import WorkoutSummaryCard from './Components/WorkoutSummaryCard/WorkoutSummaryCard';
 import FriendsActivity from "../../Resources/Components/FriendsActivity/FriendsActivity";
 import { Colors } from "../../Resources/GlobalStyling/colors";
+import Delete from "../../Resources/Icons/UI-icons/Delete";
 import EditSocialPost from "../../Resources/Icons/UI-icons/EditSocialPost";
 import {
   programService,
@@ -59,6 +61,7 @@ export default function App() {
   const [updatingLikePostId, setUpdatingLikePostId] = useState(null);
   const [selectedWorkoutSummaryPost, setSelectedWorkoutSummaryPost] =
     useState(null);
+  const [deletingPostId, setDeletingPostId] = useState(null);
   const workoutSummaryFeedOffsetRef = useRef(0);
   const workoutSummaryFeedHasMoreRef = useRef(true);
   const workoutSummaryFeedLoadingRef = useRef(false);
@@ -244,6 +247,65 @@ export default function App() {
     });
   }, [navigation, selectedWorkoutSummaryPost]);
 
+  const deleteWorkoutSummaryPost = useCallback(
+    async (post) => {
+      if (!user?.id || !post?.id || deletingPostId) {
+        return;
+      }
+
+      setDeletingPostId(post.id);
+
+      try {
+        await socialPostService.deleteWorkoutSummaryPost({
+          user,
+          postId: post.id,
+        });
+        setWorkoutSummaryPosts((currentPosts) =>
+          currentPosts.filter((currentPost) => currentPost.id !== post.id)
+        );
+        setSelectedWorkoutSummaryPost(null);
+      } catch (error) {
+        Alert.alert(
+          "Could not delete post",
+          error instanceof Error
+            ? error.message
+            : "The post could not be deleted."
+        );
+      } finally {
+        setDeletingPostId(null);
+      }
+    },
+    [deletingPostId, user]
+  );
+
+  const handleDeleteWorkoutSummaryPost = useCallback(() => {
+    if (!selectedWorkoutSummaryPost?.id || deletingPostId) {
+      return;
+    }
+
+    const post = selectedWorkoutSummaryPost;
+
+    Alert.alert(
+      "Delete post?",
+      "This only deletes the social post. The workout stays saved.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete post",
+          style: "destructive",
+          onPress: () => deleteWorkoutSummaryPost(post),
+        },
+      ]
+    );
+  }, [
+    deleteWorkoutSummaryPost,
+    deletingPostId,
+    selectedWorkoutSummaryPost,
+  ]);
+
   const renderHomeHeader = useCallback(
     () => (
       <>
@@ -325,6 +387,27 @@ export default function App() {
               stroke={theme.iconColor}
             />
             <ThemedText style={styles.postOptionText}>Edit post</ThemedText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.postOption}
+            activeOpacity={0.75}
+            disabled={deletingPostId === selectedWorkoutSummaryPost?.id}
+            onPress={handleDeleteWorkoutSummaryPost}
+          >
+            <Delete
+              width={22}
+              height={22}
+              color={theme.danger ?? theme.iconColor}
+            />
+            <ThemedText
+              style={styles.postOptionText}
+              setColor={theme.danger ?? theme.text}
+            >
+              {deletingPostId === selectedWorkoutSummaryPost?.id
+                ? "Deleting..."
+                : "Delete post"}
+            </ThemedText>
           </TouchableOpacity>
         </View>
       </ThemedBottomSheet>

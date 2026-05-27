@@ -3,10 +3,11 @@ import Svg, { Path } from "react-native-svg"
 import {useColorScheme} from "react-native"
 import { Colors } from "../../GlobalStyling/colors"
 
-function Delete({width, height}) {
+function Delete({width, height, color}) {
 
   const colorScheme = useColorScheme()
   const theme = Colors[colorScheme] ?? Colors.light
+  const iconColor = color ?? theme.iconColor
 
   return (
     <Svg
@@ -16,7 +17,7 @@ function Delete({width, height}) {
       height={height}
       color="currentColor"
       fill="none"
-      stroke={theme.iconColor}
+      stroke={iconColor}
       strokeWidth={1.5}
       strokeLinecap="round"
     >

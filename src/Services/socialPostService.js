@@ -609,6 +609,27 @@ export async function updateWorkoutSummaryPostNote({ user, postId, note }) {
   return mapSocialPostRow(data);
 }
 
+export async function deleteWorkoutSummaryPost({ user, postId }) {
+  if (!user?.id || !postId) {
+    throw new Error("You need to be signed in to delete workout posts.");
+  }
+
+  await ensureOwnProfile(user);
+
+  const { error } = await supabase
+    .from(SOCIAL_POST_TABLE)
+    .delete()
+    .eq("id", postId)
+    .eq("author_id", user.id)
+    .eq("post_type", WORKOUT_SUMMARY_POST_TYPE);
+
+  if (error) {
+    throw normalizeSocialPostError(error);
+  }
+
+  return { deleted: true };
+}
+
 export async function toggleWorkoutSummaryPostLike({ user, postId, shouldLike }) {
   if (!user?.id || !postId) {
     throw new Error("You need to be signed in to like workout posts.");
