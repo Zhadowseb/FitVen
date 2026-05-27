@@ -120,22 +120,6 @@ const ExerciseLibraryPage = () => {
       footer: "Open programs",
     },
     {
-      key: "exercise-library",
-      variant: "exerciseLibraryHero",
-      eyebrow: "EXERCISE LIBRARY",
-      title: "Browse your catalog",
-      description:
-        "Search the shared catalog, filter by broad training groups, and create your own exercises.",
-      accent: secondaryColor,
-      actionBorder: "rgba(96, 218, 172, 0.28)",
-      onPress: () => navigation.navigate("ExerciseCatalogPage"),
-      metrics: [
-        { label: "Exercises", value: quickAccessStats.exerciseCount },
-        { label: "Custom", value: 0 },
-      ],
-      footer: "Open catalog",
-    },
-    {
       key: "personal-records",
       variant: "personalRecordsHero",
       eyebrow: "PERSONAL RECORDS",
@@ -150,6 +134,22 @@ const ExerciseLibraryPage = () => {
         { label: "Records", value: quickAccessStats.recordSlotCount },
       ],
       footer: "Open records",
+    },
+    {
+      key: "exercise-library",
+      variant: "exerciseLibraryHero",
+      eyebrow: "EXERCISE LIBRARY",
+      title: "Browse your catalog",
+      description:
+        "Search the shared catalog, filter by broad training groups, and create your own exercises.",
+      accent: secondaryColor,
+      actionBorder: "rgba(96, 218, 172, 0.28)",
+      onPress: () => navigation.navigate("ExerciseCatalogPage"),
+      metrics: [
+        { label: "Exercises", value: quickAccessStats.exerciseCount },
+        { label: "Custom", value: 0 },
+      ],
+      footer: "Open catalog",
     },
   ];
 

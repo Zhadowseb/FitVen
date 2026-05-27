@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.15.12] - Unreleased
+### Changed
+- Show Personal Records before Exercise Library on the Train page.
+
+---
 ## [0.15.11] - Unreleased
 ### Changed
 - Stop automatically backfilling social posts for every completed workout; workout summaries are only generated from Finish or manual Repost.
