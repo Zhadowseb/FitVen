@@ -97,6 +97,7 @@ function getPersonalRecordExerciseNames(records) {
 export default function WorkoutSummaryCard({
   post,
   onToggleLike,
+  onOpenOptions,
   isLikeBusy = false,
 }) {
   const colorScheme = useColorScheme();
@@ -118,6 +119,12 @@ export default function WorkoutSummaryCard({
     : [];
   const authorName = post?.author?.displayName ?? "FitVen athlete";
   const createdAtLabel = formatTimeAgo(post?.createdAt);
+  const postTitle = String(post?.title ?? "").trim();
+  const workoutType = String(post?.workoutType ?? "").trim();
+  const note = String(post?.body ?? "").trim();
+  const showTitle =
+    postTitle.length > 0 &&
+    postTitle.toLowerCase() !== workoutType.toLowerCase();
   const accent = theme.primary ?? "#f7742e";
   const quietText = theme.iconColor ?? "#8795ad";
   const mutedText = "#8392b0";
@@ -171,23 +178,36 @@ export default function WorkoutSummaryCard({
             <ThemedText style={styles.metaText} setColor={mutedText}>
               {createdAtLabel}
             </ThemedText>
-            <View style={[styles.metaDot, { backgroundColor: mutedText }]} />
-            <ThemedText style={styles.workoutType} setColor={accent}>
-              {post.workoutType}
-            </ThemedText>
           </View>
         </View>
 
-        <ThreeDots width={18} height={18} color={quietText} />
+        {onOpenOptions ? (
+          <TouchableOpacity
+            style={styles.optionsButton}
+            activeOpacity={0.75}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            onPress={() => onOpenOptions(post)}
+          >
+            <ThreeDots width={18} height={18} color={quietText} />
+          </TouchableOpacity>
+        ) : null}
       </View>
 
-      <ThemedTitle type="h3" style={[styles.title, { color: titleColor }]}>
-        {post.title}
-      </ThemedTitle>
+      {showTitle ? (
+        <ThemedTitle type="h3" style={[styles.title, { color: titleColor }]}>
+          {postTitle}
+        </ThemedTitle>
+      ) : null}
 
-      {post.body ? (
-        <ThemedText style={styles.description} setColor={mutedText}>
-          {post.body}
+      {note ? (
+        <ThemedText
+          style={[
+            styles.description,
+            !showTitle ? styles.descriptionWithoutTitle : null,
+          ]}
+          setColor={mutedText}
+        >
+          {note}
         </ThemedText>
       ) : null}
 

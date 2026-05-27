@@ -35,16 +35,11 @@ export default StyleSheet.create({
     fontSize: 12,
     lineHeight: 17,
   },
-  metaDot: {
-    width: 3,
-    height: 3,
-    borderRadius: 1.5,
-    opacity: 0.8,
-  },
-  workoutType: {
-    fontSize: 12,
-    fontWeight: "800",
-    lineHeight: 17,
+  optionsButton: {
+    width: 32,
+    height: 32,
+    alignItems: "center",
+    justifyContent: "center",
   },
   title: {
     padding: 0,
@@ -58,6 +53,9 @@ export default StyleSheet.create({
     marginTop: 5,
     fontSize: 14,
     lineHeight: 22,
+  },
+  descriptionWithoutTitle: {
+    marginTop: 16,
   },
   statsPanel: {
     flexDirection: "row",

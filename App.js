@@ -29,6 +29,7 @@ import ExerciseLibraryPage from "./src/Pages/ExerciseLibraryPage/ExerciseLibrary
 import PersonalRecordsPage from "./src/Pages/PersonalRecordsPage/PersonalRecordsPage";
 import WorkoutCalendarPage from "./src/Pages/WorkoutCalendarPage/WorkoutCalendarPage";
 import SicknessPage from "./src/Pages/SicknessPage/SicknessPage";
+import SocialPostEditPage from "./src/Pages/SocialPostEditPage/SocialPostEditPage";
 
 import { Colors } from './src/Resources/GlobalStyling/colors';
 import {
@@ -165,6 +166,7 @@ function RootNavigator() {
                 <Stack.Screen name="ExerciseLibraryPage" component={ExerciseLibraryPage} options={{ headerShown: false }} />
                 <Stack.Screen name="PersonalRecordsPage" component={PersonalRecordsPage} options={{ headerShown: false }} />
                 <Stack.Screen name="WorkoutCalendarPage" component={WorkoutCalendarPage} options={{ headerShown: false }} />
+                <Stack.Screen name="SocialPostEditPage" component={SocialPostEditPage} options={{ headerShown: false }} />
                 <Stack.Screen
                   name="SicknessPage"
                   component={SicknessPage}

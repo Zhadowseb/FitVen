@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.15.13] - Unreleased
+### Changed
+- Add a dedicated edit screen for workout summary social post notes.
+- Hide generic workout-type fallback text from workout summary cards when no note is set.
+
+---
 ## [0.15.12] - Unreleased
 ### Changed
 - Show Personal Records before Exercise Library on the Train page.

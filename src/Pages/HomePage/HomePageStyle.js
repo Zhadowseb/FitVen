@@ -19,4 +19,24 @@ export default StyleSheet.create({
   socialSectionSpacer: {
     marginTop: 8,
   },
+  postOptionsTitle: {
+    alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: "#2e2e2e",
+    paddingBottom: 18,
+  },
+  postOptionsTitleText: {
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  postOptionsBody: {
+    paddingVertical: 18,
+  },
+  postOption: {
+    paddingVertical: 12,
+  },
+  postOptionText: {
+    fontSize: 16,
+    fontWeight: "700",
+  },
 });

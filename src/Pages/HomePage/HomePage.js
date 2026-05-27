@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, View } from 'react-native';
+import { ActivityIndicator, FlatList, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useSQLiteContext } from "expo-sqlite";
 
@@ -16,11 +16,24 @@ import {
 import { getTodaysDate } from "../../Utils/dateUtils";
 
 import { 
+  ThemedBottomSheet,
+  ThemedText,
   ThemedView,
 } from "../../Resources/ThemedComponents";
 import { useAuth } from '../../Contexts/AuthContext';
 
 const WORKOUT_SUMMARY_FEED_PAGE_SIZE = 6;
+
+function getWorkoutSummaryDisplayTitle(post) {
+  const title = String(post?.title ?? "").trim();
+  const workoutType = String(post?.workoutType ?? "").trim();
+
+  if (!title || title.toLowerCase() === workoutType.toLowerCase()) {
+    return "Workout summary";
+  }
+
+  return title;
+}
 
 export default function App() {
   const db = useSQLiteContext();
@@ -34,6 +47,8 @@ export default function App() {
   const [workoutSummaryLoadingMore, setWorkoutSummaryLoadingMore] =
     useState(false);
   const [updatingLikePostId, setUpdatingLikePostId] = useState(null);
+  const [selectedWorkoutSummaryPost, setSelectedWorkoutSummaryPost] =
+    useState(null);
   const workoutSummaryFeedOffsetRef = useRef(0);
   const workoutSummaryFeedHasMoreRef = useRef(true);
   const workoutSummaryFeedLoadingRef = useRef(false);
@@ -201,6 +216,24 @@ export default function App() {
     loadWorkoutSummaryFeed();
   }, [loadWorkoutSummaryFeed]);
 
+  const handleOpenWorkoutSummaryOptions = useCallback((post) => {
+    setSelectedWorkoutSummaryPost(post);
+  }, []);
+
+  const handleEditWorkoutSummaryPost = useCallback(() => {
+    if (!selectedWorkoutSummaryPost?.id) {
+      return;
+    }
+
+    const post = selectedWorkoutSummaryPost;
+    setSelectedWorkoutSummaryPost(null);
+    navigation.navigate("SocialPostEditPage", {
+      postId: post.id,
+      initialNote: post.body ?? "",
+      postTitle: getWorkoutSummaryDisplayTitle(post),
+    });
+  }, [navigation, selectedWorkoutSummaryPost]);
+
   const renderHomeHeader = useCallback(
     () => (
       <>
@@ -223,10 +256,13 @@ export default function App() {
       <WorkoutSummaryCard
         post={post}
         onToggleLike={handleToggleWorkoutPostLike}
+        onOpenOptions={
+          post.author?.id === user?.id ? handleOpenWorkoutSummaryOptions : undefined
+        }
         isLikeBusy={updatingLikePostId === post.id}
       />
     ),
-    [handleToggleWorkoutPostLike, updatingLikePostId]
+    [handleOpenWorkoutSummaryOptions, handleToggleWorkoutPostLike, updatingLikePostId, user]
   );
 
   const renderWorkoutSummaryFooter = useCallback(() => {
@@ -255,6 +291,27 @@ export default function App() {
         onEndReachedThreshold={0.45}
         showsVerticalScrollIndicator={false}
       />
+
+      <ThemedBottomSheet
+        visible={!!selectedWorkoutSummaryPost}
+        onClose={() => setSelectedWorkoutSummaryPost(null)}
+      >
+        <View style={styles.postOptionsTitle}>
+          <ThemedText style={styles.postOptionsTitleText}>
+            {getWorkoutSummaryDisplayTitle(selectedWorkoutSummaryPost)}
+          </ThemedText>
+        </View>
+
+        <View style={styles.postOptionsBody}>
+          <TouchableOpacity
+            style={styles.postOption}
+            activeOpacity={0.75}
+            onPress={handleEditWorkoutSummaryPost}
+          >
+            <ThemedText style={styles.postOptionText}>Edit post</ThemedText>
+          </TouchableOpacity>
+        </View>
+      </ThemedBottomSheet>
 
       <StatusBar style="auto" />
     </ThemedView>

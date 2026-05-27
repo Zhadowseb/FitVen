@@ -137,6 +137,10 @@ function mapSocialPostRow(row, likesByPostId = new Map(), likedPostIds = new Set
   };
 }
 
+function normalizePostNote(note) {
+  return String(note ?? "").trim();
+}
+
 async function getAuthenticatedUser() {
   const { data, error } = await supabase.auth.getUser();
 
@@ -434,6 +438,8 @@ export async function createWorkoutSummaryPostForCompletedWorkout(
   }
 
   const now = new Date().toISOString();
+  const existingBody =
+    existingPost && !existingPost.deleted_at ? existingPost.body ?? "" : "";
   const { data, error } = await supabase
     .from(SOCIAL_POST_TABLE)
     .upsert(
@@ -443,7 +449,7 @@ export async function createWorkoutSummaryPostForCompletedWorkout(
         source_workout_type_instance_id: cloudWorkoutTypeInstanceId,
         workout_type: workoutSource.workout_type,
         title: workoutSource.workout_label ?? workoutSource.workout_type,
-        body: "",
+        body: existingBody,
         payload,
         completed_at: now,
         updated_at: now,
@@ -551,6 +557,56 @@ export async function getWorkoutSummaryFeed({ user, limit = 10, offset = 0 }) {
   });
 
   return posts.map((post) => mapSocialPostRow(post, likesByPostId, likedPostIds));
+}
+
+export async function getWorkoutSummaryPostById({ user, postId }) {
+  if (!user?.id || !postId) {
+    throw new Error("You need to be signed in to edit workout posts.");
+  }
+
+  await ensureOwnProfile(user);
+
+  const { data, error } = await supabase
+    .from(SOCIAL_POST_TABLE)
+    .select(SOCIAL_POST_SELECT_FIELDS)
+    .eq("id", postId)
+    .eq("author_id", user.id)
+    .eq("post_type", WORKOUT_SUMMARY_POST_TYPE)
+    .is("deleted_at", null)
+    .single();
+
+  if (error) {
+    throw normalizeSocialPostError(error);
+  }
+
+  return mapSocialPostRow(data);
+}
+
+export async function updateWorkoutSummaryPostNote({ user, postId, note }) {
+  if (!user?.id || !postId) {
+    throw new Error("You need to be signed in to edit workout posts.");
+  }
+
+  await ensureOwnProfile(user);
+
+  const { data, error } = await supabase
+    .from(SOCIAL_POST_TABLE)
+    .update({
+      body: normalizePostNote(note),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", postId)
+    .eq("author_id", user.id)
+    .eq("post_type", WORKOUT_SUMMARY_POST_TYPE)
+    .is("deleted_at", null)
+    .select(SOCIAL_POST_SELECT_FIELDS)
+    .single();
+
+  if (error) {
+    throw normalizeSocialPostError(error);
+  }
+
+  return mapSocialPostRow(data);
 }
 
 export async function toggleWorkoutSummaryPostLike({ user, postId, shouldLike }) {
