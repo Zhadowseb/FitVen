@@ -1,6 +1,12 @@
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  FlatList,
+  TouchableOpacity,
+  View,
+  useColorScheme,
+} from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useSQLiteContext } from "expo-sqlite";
 
@@ -8,6 +14,8 @@ import styles from './HomePageStyle';
 import TodayProgramsShortcut from './Components/TodayProgramsShortcut/TodayProgramsShortcut';
 import WorkoutSummaryCard from './Components/WorkoutSummaryCard/WorkoutSummaryCard';
 import FriendsActivity from "../../Resources/Components/FriendsActivity/FriendsActivity";
+import { Colors } from "../../Resources/GlobalStyling/colors";
+import EditSocialPost from "../../Resources/Icons/UI-icons/EditSocialPost";
 import {
   programService,
   socialPostService,
@@ -37,6 +45,8 @@ function getWorkoutSummaryDisplayTitle(post) {
 
 export default function App() {
   const db = useSQLiteContext();
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme] ?? Colors.light;
   const todayDate = getTodaysDate();
   const [circlePreview, setCirclePreview] = useState({
     currentUser: null,
@@ -308,6 +318,12 @@ export default function App() {
             activeOpacity={0.75}
             onPress={handleEditWorkoutSummaryPost}
           >
+            <EditSocialPost
+              width={22}
+              height={22}
+              color={theme.iconColor}
+              stroke={theme.iconColor}
+            />
             <ThemedText style={styles.postOptionText}>Edit post</ThemedText>
           </TouchableOpacity>
         </View>

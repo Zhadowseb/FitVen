@@ -1,4 +1,5 @@
 import {
+  Alert,
   Pressable,
   TouchableOpacity,
   View,
@@ -15,6 +16,8 @@ import { logout } from "../../Database/supaBaseClient";
 import { useAuth } from "../../Contexts/AuthContext";
 import { socialService } from "../../Services";
 import FeedbackModal from "../../Resources/Components/FeedbackModal/FeedbackModal";
+import Library from "../../Resources/Icons/UI-icons/Library";
+import Social from "../../Resources/Icons/UI-icons/Social";
 import TailArrowUpRight from "../../Resources/Icons/UI-icons/TailArrowUpRight";
 import {
   ThemedButton,
@@ -302,6 +305,10 @@ export default function ProfilePage() {
     }
   };
 
+  const openSettingsDraft = (sectionName) => {
+    Alert.alert(sectionName, "Settings for this section will be added here.");
+  };
+
   return (
     <ThemedView safe={["top", "left", "right"]} style={styles.container}>
       <ThemedHeader>
@@ -524,6 +531,85 @@ export default function ProfilePage() {
                 }
                 style={styles.primaryButton}
               />
+            </View>
+          </ThemedCard>
+
+          <ThemedCard
+            style={[
+              styles.settingsCard,
+              {
+                backgroundColor: cardSurface,
+                borderColor: cardBorder,
+              },
+            ]}
+          >
+            <ThemedText
+              size={12}
+              style={styles.cardEyebrow}
+              setColor={headerEyebrowColor}
+            >
+              Settings
+            </ThemedText>
+            <ThemedTitle type="h3" style={styles.cardTitle}>
+              Personal settings
+            </ThemedTitle>
+
+            <View style={styles.settingsList}>
+              <TouchableOpacity
+                activeOpacity={0.82}
+                onPress={() => openSettingsDraft("Exercises")}
+                style={[
+                  styles.settingsButton,
+                  {
+                    backgroundColor: panelSurface,
+                    borderColor: cardBorder,
+                  },
+                ]}
+              >
+                <View style={styles.settingsButtonContent}>
+                  <Library width={22} height={22} color={primaryColor} />
+                  <ThemedText
+                    style={styles.settingsButtonText}
+                    setColor={titleColor}
+                  >
+                    Exercises
+                  </ThemedText>
+                </View>
+                <TailArrowUpRight
+                  width={18}
+                  height={18}
+                  stroke={quietText}
+                  color={quietText}
+                />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                activeOpacity={0.82}
+                onPress={() => openSettingsDraft("Social posts")}
+                style={[
+                  styles.settingsButton,
+                  {
+                    backgroundColor: panelSurface,
+                    borderColor: cardBorder,
+                  },
+                ]}
+              >
+                <View style={styles.settingsButtonContent}>
+                  <Social width={22} height={22} color={primaryColor} />
+                  <ThemedText
+                    style={styles.settingsButtonText}
+                    setColor={titleColor}
+                  >
+                    Social posts
+                  </ThemedText>
+                </View>
+                <TailArrowUpRight
+                  width={18}
+                  height={18}
+                  stroke={quietText}
+                  color={quietText}
+                />
+              </TouchableOpacity>
             </View>
           </ThemedCard>
 

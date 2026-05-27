@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.15.14] - Unreleased
+### Changed
+- Add a first Profile settings section with Exercises and Social posts actions.
+- Show the EditSocialPost icon on the workout summary edit action.
+
+---
 ## [0.15.13] - Unreleased
 ### Changed
 - Add a dedicated edit screen for workout summary social post notes.

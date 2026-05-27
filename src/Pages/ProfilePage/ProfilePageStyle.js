@@ -43,6 +43,15 @@ export default StyleSheet.create({
     borderWidth: 1,
     borderRadius: 24,
   },
+  settingsCard: {
+    marginHorizontal: 0,
+    marginTop: 16,
+    marginBottom: 0,
+    paddingHorizontal: 18,
+    paddingVertical: 18,
+    borderWidth: 1,
+    borderRadius: 24,
+  },
   cardEyebrow: {
     fontWeight: "800",
     letterSpacing: 0.8,
@@ -141,6 +150,31 @@ export default StyleSheet.create({
     fontSize: 11,
     lineHeight: 14,
     fontWeight: "800",
+  },
+  settingsList: {
+    gap: 10,
+    marginTop: 10,
+  },
+  settingsButton: {
+    minHeight: 56,
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  settingsButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    minWidth: 0,
+  },
+  settingsButtonText: {
+    fontSize: 15,
+    fontWeight: "800",
+    lineHeight: 20,
   },
   avatarSection: {
     marginTop: 18,
