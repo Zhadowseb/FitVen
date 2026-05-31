@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.15.16] - Unreleased
+### Changed
+- Add a Social posts settings page from the Profile settings section.
+- Add social post mode choices for full info, summary only, or automatic posting off.
+- Add Supabase SQL for hiding specific exercises from generated social posts.
+- Add exercise visibility settings under Social posts for hiding specific exercises from future social posts.
+- Add social post audience visibility settings for everyone, followed profiles, or only the author.
+- Show workout type beside the workout summary post timestamp again.
+
+---
 ## [0.15.15] - Unreleased
 ### Changed
 - Add a delete action for workout summary social posts without deleting the workout.

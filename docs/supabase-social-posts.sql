@@ -14,6 +14,7 @@ create table if not exists public.social_post (
   author_id uuid not null,
   post_type text not null default 'workout_summary',
   source_workout_type_instance_id bigint not null,
+  visibility text not null default 'following',
   workout_type text not null,
   title text not null,
   body text not null default '',
@@ -37,6 +38,8 @@ create table if not exists public.social_post (
     unique (author_id, post_type, source_workout_type_instance_id),
   constraint social_post_type_valid
     check (post_type in ('workout_summary')),
+  constraint social_post_visibility_valid
+    check (visibility in ('everyone', 'following', 'private')),
   constraint social_post_workout_type_not_blank
     check (btrim(workout_type) <> ''),
   constraint social_post_title_not_blank
@@ -53,6 +56,9 @@ alter table public.social_post
 
 alter table public.social_post
   add column if not exists source_workout_type_instance_id bigint;
+
+alter table public.social_post
+  add column if not exists visibility text;
 
 alter table public.social_post
   add column if not exists workout_type text;
@@ -82,6 +88,9 @@ alter table public.social_post
   alter column post_type set default 'workout_summary';
 
 alter table public.social_post
+  alter column visibility set default 'following';
+
+alter table public.social_post
   alter column body set default '';
 
 alter table public.social_post
@@ -99,6 +108,11 @@ alter table public.social_post
 update public.social_post
 set
   post_type = coalesce(nullif(btrim(post_type), ''), 'workout_summary'),
+  visibility = case
+    when btrim(coalesce(visibility, '')) in ('everyone', 'following', 'private')
+      then btrim(visibility)
+    else 'following'
+  end,
   workout_type = nullif(btrim(workout_type), ''),
   title = nullif(btrim(title), ''),
   body = coalesce(body, ''),
@@ -115,6 +129,9 @@ alter table public.social_post
 
 alter table public.social_post
   alter column source_workout_type_instance_id set not null;
+
+alter table public.social_post
+  alter column visibility set not null;
 
 alter table public.social_post
   alter column workout_type set not null;
@@ -198,6 +215,17 @@ begin
     alter table public.social_post
       add constraint social_post_workout_type_not_blank
       check (btrim(workout_type) <> '');
+  end if;
+
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'social_post_visibility_valid'
+      and conrelid = 'public.social_post'::regclass
+  ) then
+    alter table public.social_post
+      add constraint social_post_visibility_valid
+      check (visibility in ('everyone', 'following', 'private'));
   end if;
 
   if not exists (
@@ -314,6 +342,10 @@ create index if not exists social_post_feed_created_idx
   on public.social_post (created_at desc, id desc)
   where deleted_at is null;
 
+create index if not exists social_post_visibility_created_idx
+  on public.social_post (visibility, created_at desc, id desc)
+  where deleted_at is null;
+
 create index if not exists social_post_workout_source_idx
   on public.social_post (source_workout_type_instance_id);
 
@@ -329,7 +361,10 @@ grant select, insert, delete on public.social_post_like to authenticated;
 drop policy if exists "Social posts are viewable by owners and followers"
   on public.social_post;
 
-create policy "Social posts are viewable by owners and followers"
+drop policy if exists "Social posts are viewable by owners and allowed audience"
+  on public.social_post;
+
+create policy "Social posts are viewable by owners and allowed audience"
 on public.social_post
 for select
 to authenticated
@@ -339,11 +374,17 @@ using (
     author_id = (select auth.uid())
     or (
       deleted_at is null
-      and exists (
-        select 1
-        from public.user_follows follow
-        where follow.follower_id = (select auth.uid())
-          and follow.following_id = public.social_post.author_id
+      and (
+        visibility = 'everyone'
+        or (
+          visibility = 'following'
+          and exists (
+            select 1
+            from public.user_follows follow
+            where follow.follower_id = public.social_post.author_id
+              and follow.following_id = (select auth.uid())
+          )
+        )
       )
     )
   )
@@ -409,11 +450,15 @@ using (
       and post.deleted_at is null
       and (
         post.author_id = (select auth.uid())
-        or exists (
-          select 1
-          from public.user_follows follow
-          where follow.follower_id = (select auth.uid())
-            and follow.following_id = post.author_id
+        or post.visibility = 'everyone'
+        or (
+          post.visibility = 'following'
+          and exists (
+            select 1
+            from public.user_follows follow
+            where follow.follower_id = post.author_id
+              and follow.following_id = (select auth.uid())
+          )
         )
       )
   )
@@ -435,11 +480,15 @@ with check (
       and post.deleted_at is null
       and (
         post.author_id = (select auth.uid())
-        or exists (
-          select 1
-          from public.user_follows follow
-          where follow.follower_id = (select auth.uid())
-            and follow.following_id = post.author_id
+        or post.visibility = 'everyone'
+        or (
+          post.visibility = 'following'
+          and exists (
+            select 1
+            from public.user_follows follow
+            where follow.follower_id = post.author_id
+              and follow.following_id = (select auth.uid())
+          )
         )
       )
   )
@@ -462,10 +511,11 @@ commit;
 --   "durationSeconds": 3120,
 --   "setsCount": 18,
 --   "exerciseCount": 5,
+--   "exerciseVisibilitySignature": "0:0",
 --   "topSets": [
---     { "exerciseName": "Bench Press", "reps": 3, "weight": 100, "unit": "kg" }
+--     { "exerciseId": 1, "exerciseName": "Bench Press", "reps": 3, "weight": 100, "unit": "kg" }
 --   ],
 --   "personalRecords": [
---     { "exerciseName": "Bench Press", "recordType": "weight", "value": 100, "unit": "kg" }
+--     { "exerciseId": 1, "exerciseName": "Bench Press", "recordType": "weight", "value": 100, "unit": "kg" }
 --   ]
 -- }

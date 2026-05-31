@@ -35,6 +35,17 @@ export default StyleSheet.create({
     fontSize: 12,
     lineHeight: 17,
   },
+  metaDot: {
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    opacity: 0.8,
+  },
+  workoutType: {
+    fontSize: 12,
+    fontWeight: "800",
+    lineHeight: 17,
+  },
   optionsButton: {
     width: 32,
     height: 32,

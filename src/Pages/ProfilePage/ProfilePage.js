@@ -6,7 +6,7 @@ import {
   useColorScheme,
 } from "react-native";
 import { useCallback, useState } from "react";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
 import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
 
@@ -58,6 +58,7 @@ const FeedbackGlow = ({
 );
 
 export default function ProfilePage() {
+  const navigation = useNavigation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const { user } = useAuth();
@@ -585,7 +586,7 @@ export default function ProfilePage() {
 
               <TouchableOpacity
                 activeOpacity={0.82}
-                onPress={() => openSettingsDraft("Social posts")}
+                onPress={() => navigation.navigate("SocialPostSettingsPage")}
                 style={[
                   styles.settingsButton,
                   {

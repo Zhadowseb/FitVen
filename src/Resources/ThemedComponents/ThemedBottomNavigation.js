@@ -28,7 +28,11 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     useState(false);
   const [isCreatingQuickWorkout, setIsCreatingQuickWorkout] = useState(false);
 
-  const isProfileActive = currentRouteName === "ProfilePage";
+  const isProfileActive = [
+    "ProfilePage",
+    "SocialPostSettingsPage",
+    "ExerciseSocialPostSettingsPage",
+  ].includes(currentRouteName);
   const isSocialActive = currentRouteName === "SearchPage";
   const isLibraryActive = [
     "ExerciseLibraryPage",

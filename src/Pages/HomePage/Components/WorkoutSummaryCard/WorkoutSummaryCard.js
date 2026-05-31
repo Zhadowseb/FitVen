@@ -178,6 +178,14 @@ export default function WorkoutSummaryCard({
             <ThemedText style={styles.metaText} setColor={mutedText}>
               {createdAtLabel}
             </ThemedText>
+            {workoutType ? (
+              <>
+                <View style={[styles.metaDot, { backgroundColor: mutedText }]} />
+                <ThemedText style={styles.workoutType} setColor={accent}>
+                  {workoutType}
+                </ThemedText>
+              </>
+            ) : null}
           </View>
         </View>
 

@@ -31,7 +31,7 @@ function pushDirtyWorkoutHierarchyInBackground(db) {
 async function createCompletedWorkoutPost(
   db,
   workoutId,
-  { repairCloudIdentity = false } = {}
+  { repairCloudIdentity = false, source = "automatic" } = {}
 ) {
   const programServiceModule = await import("./programService");
 
@@ -45,7 +45,7 @@ async function createCompletedWorkoutPost(
   let result =
     await socialPostServiceModule.createWorkoutSummaryPostForCompletedWorkout(
       db,
-      { workoutId }
+      { workoutId, source }
     );
 
   if (result?.skipped && result.reason === "missing_cloud_workout_id") {
@@ -53,7 +53,7 @@ async function createCompletedWorkoutPost(
     result =
       await socialPostServiceModule.createWorkoutSummaryPostForCompletedWorkout(
         db,
-        { workoutId }
+        { workoutId, source }
       );
   }
 
@@ -227,6 +227,7 @@ function getWorkoutSummaryRepostErrorMessage(result) {
 export async function repostWorkoutSummaryPost(db, { workoutId }) {
   const result = await createCompletedWorkoutPost(db, workoutId, {
     repairCloudIdentity: true,
+    source: "manual",
   });
 
   if (result?.skipped) {
