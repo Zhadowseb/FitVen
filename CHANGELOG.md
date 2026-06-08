@@ -3,6 +3,9 @@
 ## [0.16.3] - Unreleased
 ### Changed
 - Let users long-press dates in the Workout Calendar to add or delete workouts.
+- Replace the bottom-navigation plus menu with a start-workout sheet.
+- Show today's planned workout, usual workouts, and recent workouts in the start-workout sheet.
+- Let users start fresh Resistance and Run workouts from the start-workout sheet.
 
 ---
 ## [0.16.2] - Unreleased

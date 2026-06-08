@@ -5669,6 +5669,147 @@ export async function getTodayProgramSnapshots(db, { date }) {
   return snapshots.filter(Boolean);
 }
 
+export async function getRecentWorkouts(
+  db,
+  { date = formatDate(new Date()), limit = 2 } = {}
+) {
+  const localDate = normalizeLocalDateString(date) ?? formatDate(new Date());
+  const maxIsoDate =
+    normalizeIsoDateString(localDate) ??
+    normalizeIsoDateString(formatDate(new Date()));
+  const workouts = await programRepository.getRecentWorkouts(db, {
+    maxIsoDate,
+    limit,
+  });
+
+  return Promise.all(workouts.map((workout) => buildWorkoutPreview(db, workout)));
+}
+
+function normalizeUsualExerciseName(exerciseName) {
+  return String(exerciseName ?? "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLocaleLowerCase();
+}
+
+function buildWorkoutTypeLabel(workoutType) {
+  if (workoutType === "StrengthTraining") {
+    return "Resistance";
+  }
+
+  return workoutType ?? "Workout";
+}
+
+function compareUsualWorkoutGroups(left, right, todayWeekday) {
+  const leftMatchesToday = left.weekdays.has(todayWeekday) ? 1 : 0;
+  const rightMatchesToday = right.weekdays.has(todayWeekday) ? 1 : 0;
+
+  if (leftMatchesToday !== rightMatchesToday) {
+    return rightMatchesToday - leftMatchesToday;
+  }
+
+  if (left.occurrenceCount !== right.occurrenceCount) {
+    return right.occurrenceCount - left.occurrenceCount;
+  }
+
+  return right.latestWorkout.date_iso.localeCompare(left.latestWorkout.date_iso);
+}
+
+export async function getUsualWorkouts(
+  db,
+  {
+    date = formatDate(new Date()),
+    limit = 2,
+    historyLimit = 120,
+    minOccurrences = 2,
+  } = {}
+) {
+  const localDate = normalizeLocalDateString(date) ?? formatDate(new Date());
+  const maxIsoDate =
+    normalizeIsoDateString(localDate) ??
+    normalizeIsoDateString(formatDate(new Date()));
+  const todayWeekday = getWeekdayLabel(parseCustomDate(localDate));
+  const rows = await programRepository.getCompletedWorkoutExerciseHistory(db, {
+    maxIsoDate,
+    limit: historyLimit,
+  });
+  const workoutsById = new Map();
+
+  for (const row of rows) {
+    if (!workoutsById.has(row.workout_id)) {
+      workoutsById.set(row.workout_id, {
+        workout_id: row.workout_id,
+        workout_type: row.workout_type,
+        label: row.label,
+        date: row.date,
+        date_iso: row.date_iso,
+        weekday: row.weekday,
+        program_id: row.program_id,
+        program_name: row.program_name,
+        exerciseNames: new Map(),
+      });
+    }
+
+    const workout = workoutsById.get(row.workout_id);
+    const normalizedExerciseName = normalizeUsualExerciseName(row.exercise_name);
+
+    if (normalizedExerciseName) {
+      workout.exerciseNames.set(
+        normalizedExerciseName,
+        String(row.exercise_name).trim()
+      );
+    }
+  }
+
+  const groups = new Map();
+
+  for (const workout of workoutsById.values()) {
+    const exerciseSignature = [...workout.exerciseNames.keys()].sort();
+
+    if (exerciseSignature.length === 0) {
+      continue;
+    }
+
+    const signatureKey = `${workout.workout_type}::${exerciseSignature.join("|")}`;
+
+    if (!groups.has(signatureKey)) {
+      groups.set(signatureKey, {
+        id: signatureKey,
+        workoutType: workout.workout_type,
+        title: workout.label ?? buildWorkoutTypeLabel(workout.workout_type),
+        exerciseCount: exerciseSignature.length,
+        occurrenceCount: 0,
+        latestWorkout: workout,
+        weekdays: new Set(),
+      });
+    }
+
+    const group = groups.get(signatureKey);
+    group.occurrenceCount += 1;
+    group.weekdays.add(workout.weekday);
+
+    if (workout.date_iso > group.latestWorkout.date_iso) {
+      group.latestWorkout = workout;
+      group.title = workout.label ?? buildWorkoutTypeLabel(workout.workout_type);
+    }
+  }
+
+  return [...groups.values()]
+    .filter((group) => group.occurrenceCount >= minOccurrences)
+    .sort((left, right) => compareUsualWorkoutGroups(left, right, todayWeekday))
+    .slice(0, limit)
+    .map((group) => ({
+      id: group.id,
+      title: group.title,
+      workout_type: group.workoutType,
+      exerciseCount: group.exerciseCount,
+      occurrenceCount: group.occurrenceCount,
+      latestDate: group.latestWorkout.date,
+      latestDateIso: group.latestWorkout.date_iso,
+      suggested: group.weekdays.has(todayWeekday),
+    }));
+}
+
 export async function getWorkoutCalendarWorkouts(
   db,
   { startIsoDate, endIsoDate }

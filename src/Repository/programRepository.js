@@ -988,6 +988,91 @@ export async function getWorkoutsBetweenDates(db, { startIsoDate, endIsoDate }) 
   );
 }
 
+export async function getRecentWorkouts(db, { maxIsoDate, limit = 2 }) {
+  const workoutIsoDateSql = localDateToIsoSql("w.date");
+  const normalizedLimit = Math.max(1, Math.trunc(Number(limit) || 2));
+
+  return db.getAllAsync(
+    `SELECT
+        w.workout_id,
+        w.workout_type,
+        ${workoutDisplayLabelSql("w", "wt")} AS label,
+        w.date,
+        ${workoutIsoDateSql} AS date_iso,
+        w.done,
+        w.day_id,
+        w.is_active,
+        d.Weekday AS weekday,
+        d.program_id,
+        p.program_name,
+        ${workoutHasPersonalRecordSql("w")} AS has_personal_record
+     FROM Workout_Type_Instance w
+     JOIN Day d ON d.day_id = w.day_id
+     LEFT JOIN Program p ON p.program_id = d.program_id
+     LEFT JOIN Workout_Type wt ON wt.name = w.workout_type
+     WHERE w.deleted_at IS NULL
+       AND d.deleted_at IS NULL
+       AND (p.program_id IS NULL OR p.deleted_at IS NULL)
+       AND COALESCE(w.done, 0) = 1
+       AND date(${workoutIsoDateSql}) <= date(?)
+     ORDER BY date_iso DESC, w.workout_id DESC
+     LIMIT ?;`,
+    [maxIsoDate, normalizedLimit]
+  );
+}
+
+export async function getCompletedWorkoutExerciseHistory(
+  db,
+  { maxIsoDate, limit = 120 }
+) {
+  const workoutIsoDateSql = localDateToIsoSql("w.date");
+  const normalizedLimit = Math.max(1, Math.trunc(Number(limit) || 120));
+
+  return db.getAllAsync(
+    `WITH recent_workouts AS (
+       SELECT
+          w.workout_id,
+          w.workout_type,
+          ${workoutDisplayLabelSql("w", "wt")} AS label,
+          w.date,
+          ${workoutIsoDateSql} AS date_iso,
+          w.done,
+          w.day_id,
+          w.is_active,
+          d.Weekday AS weekday,
+          d.program_id,
+          p.program_name,
+          ${workoutHasPersonalRecordSql("w")} AS has_personal_record
+       FROM Workout_Type_Instance w
+       JOIN Day d ON d.day_id = w.day_id
+       LEFT JOIN Program p ON p.program_id = d.program_id
+       LEFT JOIN Workout_Type wt ON wt.name = w.workout_type
+       WHERE w.deleted_at IS NULL
+         AND d.deleted_at IS NULL
+         AND (p.program_id IS NULL OR p.deleted_at IS NULL)
+         AND COALESCE(w.done, 0) = 1
+         AND date(${workoutIsoDateSql}) <= date(?)
+       ORDER BY date_iso DESC, w.workout_id DESC
+       LIMIT ?
+     )
+     SELECT
+        rw.*,
+        e.exercise_name,
+        e.exercise_order
+     FROM recent_workouts rw
+     JOIN Exercise_Instance e
+       ON e.workout_type_instance_id = rw.workout_id
+     WHERE COALESCE(e.deleted_at, '') = ''
+       AND TRIM(COALESCE(e.exercise_name, '')) <> ''
+     ORDER BY
+       rw.date_iso DESC,
+       rw.workout_id DESC,
+       e.exercise_order ASC,
+       e.exercise_instance_id ASC;`,
+    [maxIsoDate, normalizedLimit]
+  );
+}
+
 export async function getProgramDaysBetweenDates(db, { startIsoDate, endIsoDate }) {
   const dayIsoDateSql = localDateToIsoSql("d.date");
 

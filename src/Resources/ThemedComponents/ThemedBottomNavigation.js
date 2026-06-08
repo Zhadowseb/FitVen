@@ -11,13 +11,38 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Colors } from "../GlobalStyling/colors";
-import AddWorkoutModal from "../Components/AddWorkoutModal";
+import StartWorkoutSheet from "../Components/StartWorkoutSheet";
 import Home from "../Icons/UI-icons/Home";
 import Male from "../Icons/UI-icons/Male";
 import Plus from "../Icons/UI-icons/Plus";
 import Social from "../Icons/UI-icons/Social";
 import UpwardGraf from "../Icons/UI-icons/UpwardGraf";
 import { programService } from "../../Services";
+import { getTodaysDate } from "../../Utils/dateUtils";
+
+function getWorkoutType(workout) {
+  return workout?.workout_type ?? workout?.label ?? null;
+}
+
+function getPlannedTodayShortcut(programSnapshots, date) {
+  for (const snapshot of programSnapshots) {
+    const workout = snapshot.workouts.find(
+      (snapshotWorkout) => Number(snapshotWorkout.done) !== 1
+    );
+
+    if (workout) {
+      return {
+        date,
+        day: snapshot.day,
+        programId: snapshot.program?.program_id ?? null,
+        programName: snapshot.program?.program_name ?? "Program",
+        workout,
+      };
+    }
+  }
+
+  return null;
+}
 
 function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
   const db = useSQLiteContext();
@@ -27,6 +52,11 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
   const [quickWorkoutModalVisible, setQuickWorkoutModalVisible] =
     useState(false);
   const [isCreatingQuickWorkout, setIsCreatingQuickWorkout] = useState(false);
+  const [plannedTodayShortcut, setPlannedTodayShortcut] = useState(null);
+  const [usualWorkouts, setUsualWorkouts] = useState([]);
+  const [isLoadingUsualWorkouts, setIsLoadingUsualWorkouts] = useState(false);
+  const [recentWorkouts, setRecentWorkouts] = useState([]);
+  const [isLoadingRecentWorkouts, setIsLoadingRecentWorkouts] = useState(false);
 
   const isProfileActive = [
     "ProfilePage",
@@ -84,12 +114,75 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     navigationRef.navigate("ExerciseLibraryPage");
   };
 
+  const loadPlannedTodayShortcut = async () => {
+    const todayDate = getTodaysDate();
+
+    try {
+      const programSnapshots = await programService.getTodayProgramSnapshots(
+        db,
+        { date: todayDate }
+      );
+
+      setPlannedTodayShortcut(
+        getPlannedTodayShortcut(programSnapshots, todayDate)
+      );
+    } catch (error) {
+      console.error("Failed to load today's planned workout:", error);
+      setPlannedTodayShortcut(null);
+    }
+  };
+
+  const loadRecentWorkouts = async () => {
+    const todayDate = getTodaysDate();
+
+    try {
+      setIsLoadingRecentWorkouts(true);
+      const workouts = await programService.getRecentWorkouts(db, {
+        date: todayDate,
+        limit: 2,
+      });
+
+      setRecentWorkouts(workouts);
+    } catch (error) {
+      console.error("Failed to load recent workouts:", error);
+      setRecentWorkouts([]);
+    } finally {
+      setIsLoadingRecentWorkouts(false);
+    }
+  };
+
+  const loadUsualWorkouts = async () => {
+    const todayDate = getTodaysDate();
+
+    try {
+      setIsLoadingUsualWorkouts(true);
+      const workouts = await programService.getUsualWorkouts(db, {
+        date: todayDate,
+        limit: 2,
+        minOccurrences: 2,
+      });
+
+      setUsualWorkouts(workouts);
+    } catch (error) {
+      console.error("Failed to load usual workouts:", error);
+      setUsualWorkouts([]);
+    } finally {
+      setIsLoadingUsualWorkouts(false);
+    }
+  };
+
   const handleQuickWorkoutPress = () => {
     if (isCreatingQuickWorkout) {
       return;
     }
 
+    setPlannedTodayShortcut(null);
+    setUsualWorkouts([]);
+    setRecentWorkouts([]);
     setQuickWorkoutModalVisible(true);
+    loadPlannedTodayShortcut();
+    loadUsualWorkouts();
+    loadRecentWorkouts();
   };
 
   const handleCreateQuickWorkout = async (workoutType) => {
@@ -98,6 +191,7 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     }
 
     setIsCreatingQuickWorkout(true);
+    setQuickWorkoutModalVisible(false);
 
     try {
       const workoutLabel = workoutType.displayName ?? workoutType.id;
@@ -121,6 +215,42 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     } finally {
       setIsCreatingQuickWorkout(false);
     }
+  };
+
+  const handleOpenPlannedWorkout = () => {
+    const plannedWorkout = plannedTodayShortcut?.workout;
+
+    if (!navigationRef?.isReady?.() || !plannedWorkout) {
+      return;
+    }
+
+    setQuickWorkoutModalVisible(false);
+
+    navigationRef.navigate("WorkoutPage", {
+      workout_id: plannedWorkout.workout_id,
+      workout_label: plannedWorkout.label,
+      workout_type: getWorkoutType(plannedWorkout),
+      day: plannedTodayShortcut.day?.Weekday,
+      date: plannedTodayShortcut.date,
+      program_id: plannedTodayShortcut.programId,
+    });
+  };
+
+  const handleOpenRecentWorkout = (workout) => {
+    if (!navigationRef?.isReady?.() || !workout) {
+      return;
+    }
+
+    setQuickWorkoutModalVisible(false);
+
+    navigationRef.navigate("WorkoutPage", {
+      workout_id: workout.workout_id,
+      workout_label: workout.label,
+      workout_type: getWorkoutType(workout),
+      day: workout.weekday,
+      date: workout.date,
+      program_id: workout.program_id,
+    });
   };
 
   return (
@@ -241,10 +371,18 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
         </TouchableOpacity>
       </View>
 
-      <AddWorkoutModal
+      <StartWorkoutSheet
         visible={quickWorkoutModalVisible}
         onClose={() => setQuickWorkoutModalVisible(false)}
-        onSubmit={handleCreateQuickWorkout}
+        onStartFresh={handleCreateQuickWorkout}
+        onOpenPlannedWorkout={handleOpenPlannedWorkout}
+        plannedTodayShortcut={plannedTodayShortcut}
+        usualWorkouts={usualWorkouts}
+        isLoadingUsualWorkouts={isLoadingUsualWorkouts}
+        recentWorkouts={recentWorkouts}
+        isLoadingRecentWorkouts={isLoadingRecentWorkouts}
+        onOpenRecentWorkout={handleOpenRecentWorkout}
+        isStartingWorkout={isCreatingQuickWorkout}
       />
     </>
   );
