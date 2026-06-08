@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.16.3] - Unreleased
+### Changed
+- Let users long-press dates in the Workout Calendar to add or delete workouts.
+
+---
 ## [0.16.2] - Unreleased
 ### Changed
 - Let users create custom exercises from the Exercise Catalog by naming them and selecting their targeted muscle groups.

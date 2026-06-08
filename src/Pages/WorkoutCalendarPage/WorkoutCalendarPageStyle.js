@@ -155,6 +155,105 @@ export default StyleSheet.create({
     lineHeight: 18,
     fontWeight: "700",
   },
+  dayContextOverlay: {
+    flex: 1,
+  },
+  dayContextBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.04)",
+  },
+  dayContextMenu: {
+    position: "absolute",
+    width: 266,
+    borderRadius: 10,
+    borderWidth: 1,
+    paddingTop: 16,
+    paddingBottom: 10,
+    shadowColor: "#000000",
+    shadowOffset: {
+      width: 0,
+      height: 12,
+    },
+    shadowOpacity: 0.24,
+    shadowRadius: 18,
+    elevation: 8,
+  },
+  dayContextHeader: {
+    paddingHorizontal: 18,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+  },
+  dayContextMeta: {
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: "800",
+    letterSpacing: 1.1,
+    textTransform: "uppercase",
+  },
+  dayContextTitle: {
+    marginTop: 6,
+    fontSize: 20,
+    lineHeight: 25,
+    fontWeight: "800",
+  },
+  dayContextBody: {
+    paddingTop: 8,
+  },
+  dayContextAction: {
+    minHeight: 54,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+    gap: 14,
+  },
+  dayContextActionIcon: {
+    width: 26,
+    alignItems: "center",
+  },
+  dayContextActionText: {
+    flex: 1,
+    fontSize: 17,
+    lineHeight: 22,
+    fontWeight: "800",
+  },
+  programTargetModal: {
+    maxHeight: "70%",
+  },
+  programTargetModalBody: {
+    gap: 10,
+  },
+  programTargetDate: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "700",
+    textAlign: "center",
+    marginTop: -4,
+  },
+  programTargetList: {
+    flexShrink: 1,
+  },
+  programTargetListContent: {
+    gap: 8,
+    paddingBottom: 4,
+  },
+  programTargetOption: {
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  programTargetName: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "800",
+  },
+  programTargetMeta: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "700",
+    marginTop: 2,
+  },
   programDayModal: {
     maxHeight: "78%",
   },

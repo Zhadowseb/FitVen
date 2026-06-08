@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
+  Modal,
+  Pressable,
   ScrollView,
   TouchableOpacity,
   View,
@@ -14,8 +17,12 @@ import styles from "./WorkoutCalendarPageStyle";
 import { programService } from "../../Services";
 import { Colors } from "../../Resources/GlobalStyling/colors";
 import ArrowLeft from "../../Resources/Icons/UI-icons/ArrowLeft";
+import Delete from "../../Resources/Icons/UI-icons/Delete";
+import PlusCircled from "../../Resources/Icons/UI-icons/PlusCircled";
 import { getWorkoutIconConfig } from "../../Resources/Icons/WorkoutLabels";
 import WeekdayIndicator from "../../Resources/Figures/WeekdayIndicator";
+import AddWorkoutModal from "../../Resources/Components/AddWorkoutModal";
+import PickWorkoutModal from "../WeekPage/Components/Day/Components/PickWorkoutModal/PickWorkoutModal";
 import {
   ThemedText,
   ThemedTitle,
@@ -42,6 +49,27 @@ const MONTH_LABELS = [
   "December",
 ];
 const WEEKDAY_LABELS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
+const DAY_CONTEXT_MENU_WIDTH = 266;
+const DAY_CONTEXT_MENU_HEIGHT = 210;
+const DAY_CONTEXT_MENU_MARGIN = 18;
+
+const DayContextMenuAction = ({
+  children,
+  icon,
+  onPress,
+  textColor,
+}) => (
+  <TouchableOpacity
+    activeOpacity={0.78}
+    onPress={onPress}
+    style={styles.dayContextAction}
+  >
+    <View style={styles.dayContextActionIcon}>{icon}</View>
+    <ThemedText style={styles.dayContextActionText} setColor={textColor}>
+      {children}
+    </ThemedText>
+  </TouchableOpacity>
+);
 
 function padDatePart(value) {
   return String(value).padStart(2, "0");
@@ -170,7 +198,7 @@ const WorkoutCalendarPage = () => {
   const hasSyncedCalendarRef = useRef(false);
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const pageWidth = Math.max(width, 1);
   const today = useMemo(() => startOfDay(new Date()), []);
   const todayLabel = useMemo(() => formatLocalDate(today), [today]);
@@ -179,6 +207,17 @@ const WorkoutCalendarPage = () => {
   const [programDays, setProgramDays] = useState([]);
   const [sicknessPeriods, setSicknessPeriods] = useState([]);
   const [selectedProgramDate, setSelectedProgramDate] = useState(null);
+  const [selectedCalendarDay, setSelectedCalendarDay] = useState(null);
+  const [selectedWorkoutTarget, setSelectedWorkoutTarget] = useState(null);
+  const [dayOptionsVisible, setDayOptionsVisible] = useState(false);
+  const [dayOptionsPosition, setDayOptionsPosition] = useState({
+    left: DAY_CONTEXT_MENU_MARGIN,
+    top: 120,
+  });
+  const [addWorkoutModalVisible, setAddWorkoutModalVisible] = useState(false);
+  const [programTargetModalVisible, setProgramTargetModalVisible] =
+    useState(false);
+  const [pickWorkoutModalVisible, setPickWorkoutModalVisible] = useState(false);
   const [monthOffsetRange, setMonthOffsetRange] = useState(
     () => getMonthOffsetRange(INITIAL_VISIBLE_MONTH_OFFSET)
   );
@@ -462,6 +501,136 @@ const WorkoutCalendarPage = () => {
     });
   };
 
+  const closeDayOptions = () => {
+    setDayOptionsVisible(false);
+  };
+
+  const handleDayLongPress = (day, event) => {
+    const pageX = event?.nativeEvent?.pageX ?? width / 2;
+    const pageY = event?.nativeEvent?.pageY ?? 160;
+    const maxLeft = Math.max(
+      DAY_CONTEXT_MENU_MARGIN,
+      width - DAY_CONTEXT_MENU_WIDTH - DAY_CONTEXT_MENU_MARGIN
+    );
+    const maxTop = Math.max(
+      DAY_CONTEXT_MENU_MARGIN,
+      height - DAY_CONTEXT_MENU_HEIGHT - DAY_CONTEXT_MENU_MARGIN
+    );
+
+    setSelectedCalendarDay({
+      ...day,
+      programDays: programsByDate.get(day.dateLabel) ?? [],
+      workouts: workoutsByDate.get(day.dateLabel) ?? [],
+    });
+    setDayOptionsPosition({
+      left: Math.min(Math.max(DAY_CONTEXT_MENU_MARGIN, pageX - 42), maxLeft),
+      top: Math.min(Math.max(DAY_CONTEXT_MENU_MARGIN, pageY - 48), maxTop),
+    });
+    setDayOptionsVisible(true);
+  };
+
+  const beginAddWorkout = () => {
+    const programDayRows = selectedCalendarDay?.programDays ?? [];
+
+    closeDayOptions();
+
+    if (programDayRows.length > 1) {
+      setProgramTargetModalVisible(true);
+      return;
+    }
+
+    setSelectedWorkoutTarget(programDayRows[0] ?? null);
+    setAddWorkoutModalVisible(true);
+  };
+
+  const chooseProgramTarget = (programDay) => {
+    setSelectedWorkoutTarget(programDay);
+    setProgramTargetModalVisible(false);
+    setAddWorkoutModalVisible(true);
+  };
+
+  const createWorkoutForSelectedDay = async (workoutType) => {
+    if (!selectedCalendarDay) {
+      return;
+    }
+
+    const workoutLabel = workoutType.displayName ?? workoutType.id;
+
+    try {
+      let workout;
+
+      if (selectedWorkoutTarget?.day_id) {
+        const workoutResult = await programService.createWorkoutForDay(db, {
+          date: selectedCalendarDay.dateLabel,
+          dayId: selectedWorkoutTarget.day_id,
+          workoutType: workoutType.id,
+          label: null,
+        });
+
+        workout = {
+          workout_id: workoutResult.lastInsertRowId,
+          workout_type: workoutType.id,
+          workout_label: workoutLabel,
+          date: selectedCalendarDay.dateLabel,
+          day: selectedWorkoutTarget.weekday ?? selectedCalendarDay.label,
+          program_id: selectedWorkoutTarget.program_id,
+        };
+      } else {
+        workout = await programService.createQuickWorkout(db, {
+          date: selectedCalendarDay.dateLabel,
+          workoutType: workoutType.id,
+          label: null,
+        });
+      }
+
+      setAddWorkoutModalVisible(false);
+      setSelectedWorkoutTarget(null);
+      setSelectedCalendarDay(null);
+      await loadCalendarWorkouts();
+
+      navigation.navigate("WorkoutPage", {
+        program_id: workout.program_id,
+        day: workout.day,
+        date: workout.date,
+        workout_id: workout.workout_id,
+        workout_label: workoutLabel,
+        workout_type: workoutType.id,
+      });
+    } catch (error) {
+      console.error("Failed to create workout from calendar:", error);
+      Alert.alert("Could not create workout", "Please try again.");
+    }
+  };
+
+  const deleteWorkoutFromCalendar = async (workout) => {
+    if (!workout?.workout_id) {
+      return;
+    }
+
+    try {
+      await programService.deleteWorkout(db, workout.workout_id);
+      setPickWorkoutModalVisible(false);
+      setDayOptionsVisible(false);
+      setSelectedCalendarDay(null);
+      await loadCalendarWorkouts();
+    } catch (error) {
+      console.error("Failed to delete workout from calendar:", error);
+      Alert.alert("Could not delete workout", "Please try again.");
+    }
+  };
+
+  const beginDeleteWorkout = () => {
+    const dayWorkouts = selectedCalendarDay?.workouts ?? [];
+
+    if (dayWorkouts.length === 1) {
+      deleteWorkoutFromCalendar(dayWorkouts[0]);
+      return;
+    }
+
+    closeDayOptions();
+    setPickWorkoutModalVisible(true);
+  };
+
   return (
     <ThemedView safe={["top", "left", "right"]} style={styles.container}>
       <View style={styles.header}>
@@ -649,6 +818,9 @@ const WorkoutCalendarPage = () => {
                           showMonthLabel={false}
                           workoutCards={workoutCards}
                           onWorkoutPress={openWorkout}
+                          onDayLongPress={(event) =>
+                            handleDayLongPress(day, event)
+                          }
                           onDayPress={
                             dayHasProgram
                               ? () => openProgramDayModal(day)
@@ -678,6 +850,140 @@ const WorkoutCalendarPage = () => {
           </View>
         ))}
       </ScrollView>
+
+      <Modal
+        visible={dayOptionsVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={closeDayOptions}
+      >
+        <View style={styles.dayContextOverlay}>
+          <Pressable
+            style={styles.dayContextBackdrop}
+            onPress={closeDayOptions}
+          />
+
+          <View
+            style={[
+              styles.dayContextMenu,
+              {
+                left: dayOptionsPosition.left,
+                top: dayOptionsPosition.top,
+                backgroundColor:
+                  colorScheme === "dark"
+                    ? "#151922"
+                    : theme.cardBackground ?? theme.background,
+                borderColor: cardBorder,
+              },
+            ]}
+          >
+            <View
+              style={[
+                styles.dayContextHeader,
+                { borderBottomColor: cardBorder },
+              ]}
+            >
+              <ThemedText style={styles.dayContextMeta} setColor={quietText}>
+                {selectedCalendarDay?.dateLabel ?? ""}
+              </ThemedText>
+              <ThemedText style={styles.dayContextTitle} setColor={titleColor}>
+                {selectedCalendarDay?.label ?? "Day options"}
+              </ThemedText>
+            </View>
+
+            <View style={styles.dayContextBody}>
+              <DayContextMenuAction
+                icon={
+                  <PlusCircled
+                    width={22}
+                    height={22}
+                    color={primaryColor}
+                  />
+                }
+                onPress={beginAddWorkout}
+                textColor={primaryColor}
+              >
+                Add new workout
+              </DayContextMenuAction>
+
+              {!!selectedCalendarDay?.workouts?.length && (
+                <DayContextMenuAction
+                  icon={
+                    <Delete
+                      width={22}
+                      height={22}
+                      color={theme.danger ?? Colors.dark.danger}
+                    />
+                  }
+                  onPress={beginDeleteWorkout}
+                  textColor={theme.danger ?? Colors.dark.danger}
+                >
+                  Delete workout
+                </DayContextMenuAction>
+              )}
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <ThemedModal
+        visible={programTargetModalVisible}
+        onClose={() => setProgramTargetModalVisible(false)}
+        title="Choose program"
+        style={styles.programTargetModal}
+        contentStyle={styles.programTargetModalBody}
+      >
+        <ThemedText style={styles.programTargetDate} setColor={quietText}>
+          Add workout on {selectedCalendarDay?.dateLabel ?? ""}
+        </ThemedText>
+        <ScrollView
+          style={styles.programTargetList}
+          contentContainerStyle={styles.programTargetListContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {(selectedCalendarDay?.programDays ?? []).map((programDay) => (
+            <TouchableOpacity
+              key={`${programDay.program_id}-${programDay.day_id}`}
+              activeOpacity={0.82}
+              onPress={() => chooseProgramTarget(programDay)}
+              style={[
+                styles.programTargetOption,
+                {
+                  backgroundColor: modalCardSurface,
+                  borderColor: cardBorder,
+                },
+              ]}
+            >
+              <ThemedText
+                style={styles.programTargetName}
+                setColor={titleColor}
+              >
+                {programDay.program_name}
+              </ThemedText>
+              <ThemedText style={styles.programTargetMeta} setColor={quietText}>
+                Mesocycle {programDay.mesocycle_number} - Week{" "}
+                {programDay.microcycle_number}
+              </ThemedText>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </ThemedModal>
+
+      <PickWorkoutModal
+        workouts={selectedCalendarDay?.workouts ?? []}
+        visible={pickWorkoutModalVisible}
+        onClose={() => setPickWorkoutModalVisible(false)}
+        onSubmit={deleteWorkoutFromCalendar}
+      />
+
+      <AddWorkoutModal
+        visible={addWorkoutModalVisible}
+        onClose={() => {
+          setAddWorkoutModalVisible(false);
+          setSelectedWorkoutTarget(null);
+        }}
+        onSubmit={createWorkoutForSelectedDay}
+      />
 
       <ThemedModal
         visible={Boolean(selectedProgramDate)}
