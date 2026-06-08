@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.16.3-minor-workout-calendar-long-press.1",
+  "version": "0.16.3",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",

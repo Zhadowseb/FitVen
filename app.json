@@ -25,10 +25,10 @@
         "NSLocationAlwaysAndWhenInUseUsageDescription": "We use your location to track workout distance even when the app is in background.",
         "ITSAppUsesNonExemptEncryption": false
       },
-      "buildNumber": "12"
+      "buildNumber": "14"
     },
     "android": {
-      "versionCode": 11,
+      "versionCode": 14,
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon_v1.0.png",
         "backgroundColor": "#ffffff"

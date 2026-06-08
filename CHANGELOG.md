@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.16.3] - Unreleased
+## [0.16.3] - 2026-06-09
 ### Changed
 - Let users long-press dates in the Workout Calendar to add or delete workouts.
 - Replace the bottom-navigation plus menu with a start-workout sheet.
@@ -8,7 +8,7 @@
 - Let users start fresh Resistance and Run workouts from the start-workout sheet.
 
 ---
-## [0.16.2] - Unreleased
+## [0.16.2] - Released with 0.16.3
 ### Changed
 - Let users create custom exercises from the Exercise Catalog by naming them and selecting their targeted muscle groups.
 - Label official catalog exercises and user-created custom exercises with color-coded badges.
@@ -16,18 +16,18 @@
 - Explain the difference between primary and secondary muscles in the Exercise Catalog.
 
 ---
-## [0.16.1] - Unreleased
+## [0.16.1] - Released with 0.16.3
 ### Changed
 - Show a Workout Calendar shortcut beside the compact Today card when no workouts are scheduled.
 
 ---
-## [0.16.0] - Unreleased
+## [0.16.0] - Released with 0.16.3
 ### Changed
 - Redesign the Run workout screen with a compact tracker card, warmup/cooldown cards, and an interval table.
 - Improve run distance accuracy across GPS noise, background tracking, pauses, and resumes.
 
 ---
-## [0.15.16] - Unreleased
+## [0.15.16] - Released with 0.16.3
 ### Changed
 - Add a Social posts settings page from the Profile settings section.
 - Add social post mode choices for full info, summary only, or automatic posting off.
@@ -37,29 +37,29 @@
 - Show workout type beside the workout summary post timestamp again.
 
 ---
-## [0.15.15] - Unreleased
+## [0.15.15] - Released with 0.16.3
 ### Changed
 - Add a delete action for workout summary social posts without deleting the workout.
 
 ---
-## [0.15.14] - Unreleased
+## [0.15.14] - Released with 0.16.3
 ### Changed
 - Add a first Profile settings section with Exercises and Social posts actions.
 - Show the EditSocialPost icon on the workout summary edit action.
 
 ---
-## [0.15.13] - Unreleased
+## [0.15.13] - Released with 0.16.3
 ### Changed
 - Add a dedicated edit screen for workout summary social post notes.
 - Hide generic workout-type fallback text from workout summary cards when no note is set.
 
 ---
-## [0.15.12] - Unreleased
+## [0.15.12] - Released with 0.16.3
 ### Changed
 - Show Personal Records before Exercise Library on the Train page.
 
 ---
-## [0.15.11] - Unreleased
+## [0.15.11] - Released with 0.16.3
 ### Changed
 - Stop automatically backfilling social posts for every completed workout; workout summaries are only generated from Finish or manual Repost.
 - Sort circle stories by activity state: live workouts first, then planned, done, and inactive profiles.
@@ -70,41 +70,41 @@
 - Refresh existing workout summary posts when a manual repost has an equally complete or richer payload.
 
 ---
-## [0.15.10] - Unreleased
+## [0.15.10] - Released with 0.16.3
 ### Changed
 - Load Home workout summary posts with paginated infinite scrolling instead of a fixed three-post limit.
 
 ---
-## [0.15.9] - Unreleased
+## [0.15.9] - Released with 0.16.3
 ### Changed
 - Use the exercise catalog as the add-exercise picker inside Resistance workouts, with training-group and multi-select muscle-region filters.
 
 ---
-## [0.15.8] - Unreleased
+## [0.15.8] - Released with 0.16.3
 ### Fixed
 - Retry and backfill missing workout summary social posts for completed Resistance workouts.
 - Include top sets from every completed exercise in workout summary posts.
 
 ---
-## [0.15.7] - Unreleased
+## [0.15.7] - Released with 0.16.3
 ### Changed
 - Move the Profile feedback card below Public profile and above Account logout.
 
 ---
-## [0.15.6] - Unreleased
+## [0.15.6] - Released with 0.16.3
 ### Changed
 - Replace Social people search cards with compact Instagram-style list rows.
 - Remove bio text from Social people search results.
 - Prevent the Social follow button label from wrapping when showing Following.
 
 ---
-## [0.15.5] - Unreleased
+## [0.15.5] - Released with 0.16.3
 ### Changed
 - Move follower and following counts from Profile to the Social header.
 - Add compact Social header relationship stats that open the follower/following lists.
 
 ---
-## [0.15.4] - Unreleased
+## [0.15.4] - Released with 0.16.3
 ### Changed
 - Add a static workout summary preview card to Home.
 - Show workout summary PR indicators inline with top set exercise names.
@@ -118,40 +118,40 @@
 - Keep Home workout summary feed cards below Today and friend stories.
 
 ---
-## [0.15.3] - Unreleased
+## [0.15.3] - Released with 0.16.3
 ### Changed
 - Add stories and a friend-search image card to the top of Social.
 
 ---
-## [0.15.2] - Unreleased
+## [0.15.2] - Released with 0.16.3
 ### Changed
 - Move Sickness Log and Workout Calendar shortcuts from Home to the top of Train.
 
 ---
-## [0.15.1] - Unreleased
+## [0.15.1] - Released with 0.16.3
 ### Changed
 - Move the Send Feedback card from Home to the top of Profile.
 
 ---
-## [0.15.0] - Unreleased
+## [0.15.0] - Released with 0.16.3
 ### Changed
 - Rename the bottom navigation search tab to Social and move it after the create button.
 - Move the training tab into the former search tab position and label it Train.
 - Use the upward graph icon for the Train tab.
 
 ---
-## [0.14.15] - Unreleased
+## [0.14.15] - Released with 0.16.3
 ### Changed
 - Move workout calendar weekday labels into a shared header row and simplify each day card to the date number.
 - Compact workout calendar day cards and workout markers so dense weeks fit better.
 
 ---
-## [0.14.14] - Unreleased
+## [0.14.14] - Released with 0.16.3
 ### Changed
 - Describe pending changes here.
 
 ---
-## [0.14.13] - Unreleased
+## [0.14.13] - Released with 0.16.3
 ### Changed
 - Add a Home screen body map preview test with a lightweight front muscle mask toggle.
 - Replace exercise catalog row numbers with body map preview badges.
@@ -173,23 +173,23 @@
 - Crop exercise catalog body map previews to upper or lower body from region metadata.
 
 ---
-## [0.14.12] - Unreleased
+## [0.14.12] - Released with 0.16.3
 ### Changed
 - Remove exercise catalog muscle activation percentages and the related detail modal.
 - Show primary and secondary muscle count badges in the exercise catalog.
 
 ---
-## [0.14.11] - Unreleased
+## [0.14.11] - Released with 0.16.3
 ### Changed
 - Reorder workout exercises by long-pressing the exercise card instead of using the corner handle.
 
 ---
-## [0.14.10] - Unreleased
+## [0.14.10] - Released with 0.16.3
 ### Changed
 - Describe pending changes here.
 
 ---
-## [0.14.9] - Unreleased
+## [0.14.9] - Released with 0.16.3
 ### Changed
 - Added day-level sickness marking from the week indicator context menu.
 - Added the Sickness table foundation for dated sickness periods.
@@ -206,92 +206,92 @@
 - Added edit and delete actions for Sickness history records.
 
 ---
-## [0.14.8] - Unreleased
+## [0.14.8] - Released with 0.16.3
 ### Changed
 - Describe pending changes here.
 
 ---
-## [0.14.7] - Unreleased
+## [0.14.7] - Released with 0.16.3
 ### Changed
 - Added a home-screen sickness log card draft using the sickness dark artwork.
 
 ---
-## [0.14.6] - Unreleased
+## [0.14.6] - Released with 0.16.3
 ### Changed
 - Added record-color highlighting for PR sets, exercises, and completed workout indicators.
 
 ---
-## [0.14.5] - Unreleased
+## [0.14.5] - Released with 0.16.3
 ### Changed
 - Removed the one-time saved-program import action from the profile page.
 
 ---
-## [0.14.4] - Unreleased
+## [0.14.4] - Released with 0.16.3
 ### Changed
 - Simplified collapsed resistance set previews by removing the outer frame and moving repeat counts into corner badges.
 
 ---
-## [0.14.3] - Unreleased
+## [0.14.3] - Released with 0.16.3
 ### Changed
 - Added an expandable previous-set history panel behind the replay-history icon on resistance exercise cards.
 
 ---
-## [0.14.2] - Unreleased
+## [0.14.2] - Released with 0.16.3
 ### Changed
 - Redesigned program list cards with status badges, circular progress, completion marks, and workout type badges.
 
 ---
-## [0.14.1] - Unreleased
+## [0.14.1] - Released with 0.16.3
 ### Changed
 - Changed resistance set completion so tapping Done cycles through done, failed, and clear states.
 - Colored failed resistance set progress blocks red in exercise headers.
 
 ---
-## [0.14.0] - Unreleased
+## [0.14.0] - Released with 0.16.3
 ### Changed
 - Added soft Run-style glow accents to the Resistance workout timer header.
 - Added side-by-side local/cloud sync metadata and Supabase watcher migration support.
 
 ---
-## [0.13.0] - Unreleased
+## [0.13.0] - Released with 0.16.3
 ### Changed
 - Added estimated one-rep-max progression graphs to Personal Records exercise detail views.
 - Added a one-time local program import button for the zhadowseb account.
 
 ---
-## [0.12.3] - Unreleased
+## [0.12.3] - Released with 0.16.3
 ### Changed
 - Describe pending changes here.
 
 ---
-## [0.12.2] - Unreleased
+## [0.12.2] - Released with 0.16.3
 ### Changed
 - Redesigned the Library Programs card with the generated program hero artwork and compact metric tiles.
 
 ---
-## [0.12.1] - Unreleased
+## [0.12.1] - Released with 0.16.3
 ### Changed
 - Added text labels under the bottom navigation buttons.
 
 ---
-## [0.12.0] - Unreleased
+## [0.12.0] - Released with 0.16.3
 ### Changed
 - Added a large bottom-navigation plus button for creating quick workouts on today's date.
 - Added a Quick Workouts program container so quick workouts get real Day rows with dates.
 
 ---
-## [0.11.1] - Unreleased
+## [0.11.1] - Released with 0.16.3
 ### Changed
 - Added a workout calendar program-day modal with navigation to Program Overview.
 - Limited workout calendar loading to the visible month plus adjacent months.
 
 ---
-## [0.11.0] - Unreleased
+## [0.11.0] - Released with 0.16.3
 ### Changed
 - Added a workout calendar test entry from Home with open-ended month paging, program-day dots, and workouts from all programs.
 
 ---
-## [0.10.0] - Unreleased
+## [0.10.0] - Released with 0.16.3
 ### Changed
 - Removed the header from the Library bottom-tab page.
 - Added a Personal Records card and rep-record view under Library.
@@ -301,7 +301,7 @@
 - Added Supabase SQL for muscle group metadata used by exercise catalog filters.
 
 ---
-## [0.9.14] - Unreleased
+## [0.9.14] - Released with 0.16.3
 ### Changed
 - Refined the microcycle weekday indicator with a raised TODAY badge and month text labels.
 
