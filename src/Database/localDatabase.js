@@ -1,4 +1,5 @@
 import * as SQLite from "expo-sqlite";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { initializeDatabase } from "./db";
 import { withTransaction } from "./transaction";
@@ -289,15 +290,34 @@ export function getDatabaseNameForUserId(userId) {
   return `${USER_DATABASE_PREFIX}-${sanitizeUserIdForDatabaseName(userId)}.db`;
 }
 
-export function getActiveDatabaseName() {
-  return (
-    getStoredValue(ACTIVE_DATABASE_NAME_STORAGE_KEY) ??
-    ANONYMOUS_DATABASE_NAME
-  );
+export async function getActiveDatabaseName() {
+  try {
+    return (
+      (await AsyncStorage.getItem(ACTIVE_DATABASE_NAME_STORAGE_KEY)) ??
+      getStoredValue(ACTIVE_DATABASE_NAME_STORAGE_KEY) ??
+      ANONYMOUS_DATABASE_NAME
+    );
+  } catch {
+    return (
+      getStoredValue(ACTIVE_DATABASE_NAME_STORAGE_KEY) ??
+      ANONYMOUS_DATABASE_NAME
+    );
+  }
 }
 
-export function setActiveDatabaseName(databaseName) {
+export async function setActiveDatabaseName(databaseName) {
   setStoredValue(ACTIVE_DATABASE_NAME_STORAGE_KEY, databaseName);
+
+  try {
+    if (databaseName) {
+      await AsyncStorage.setItem(ACTIVE_DATABASE_NAME_STORAGE_KEY, databaseName);
+      return;
+    }
+
+    await AsyncStorage.removeItem(ACTIVE_DATABASE_NAME_STORAGE_KEY);
+  } catch {
+    // The browser storage fallback above keeps web usable if native storage fails.
+  }
 }
 
 export async function migrateLegacySharedDatabaseToUserDatabase({

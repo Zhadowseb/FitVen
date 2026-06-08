@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.15.16-minor-social-post-settings-page.1",
+  "version": "0.16.0-major-run-workout-redesign.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",
@@ -14,6 +14,7 @@
     "version:branch": "node scripts/version.js branch",
     "version:status": "node scripts/version.js status",
     "version:sync": "node scripts/version.js sync",
+    "test:location": "node scripts/test-location-distance.js",
     "release:prepare": "node scripts/version.js release",
     "release:android": "node scripts/release-android.js",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",

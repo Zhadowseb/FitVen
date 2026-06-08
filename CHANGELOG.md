@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.16.0] - Unreleased
+### Changed
+- Redesign the Run workout screen with a compact tracker card, warmup/cooldown cards, and an interval table.
+- Improve run distance accuracy across GPS noise, background tracking, pauses, and resumes.
+
+---
 ## [0.15.16] - Unreleased
 ### Changed
 - Add a Social posts settings page from the Profile settings section.

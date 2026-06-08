@@ -3,11 +3,12 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { useSQLiteContext } from "expo-sqlite";
 import { useFocusEffect } from "@react-navigation/native";
 import { useColorScheme } from "react-native";
-import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
 
 import RunSetList from "./RunSetList";
-import PlusCircled from "../../../../Resources/Icons/UI-icons/PlusCircled";
 import { Colors } from "../../../../Resources/GlobalStyling/colors";
+import Distance from "../../../../Resources/Icons/UI-icons/Distance";
+import Speed from "../../../../Resources/Icons/UI-icons/Speed";
+import Time from "../../../../Resources/Icons/UI-icons/Time";
 import {
   ThemedCard,
   ThemedView,
@@ -17,7 +18,6 @@ import {
 import styles from "./RunStyle";
 
 import {
-  formatWorkoutStart,
   getCurrentStoredTimestampSeconds,
   normalizeElapsedDurationSeconds,
   normalizeStoredTimestampSeconds,
@@ -27,12 +27,6 @@ import {
   runningService as runningRepository,
   workoutService as workoutRepository,
 } from "../../../../Services";
-
-const TYPE_LABELS = {
-  WARMUP: "Warmup",
-  WORKING_SET: "Run block",
-  COOLDOWN: "Cooldown",
-};
 
 const parsePaceToMinutes = (value) => {
   if (value === null || value === undefined || value === "") {
@@ -102,32 +96,6 @@ const getRunTrackingStartMessage = (error) => {
   return "Check that location is allowed and turned on, then try again.";
 };
 
-const HeroGlow = ({
-  style,
-  color,
-  gradientId,
-  centerOpacity,
-  middleOpacity,
-}) => (
-  <Svg
-    pointerEvents="none"
-    style={style}
-    viewBox="0 0 100 100"
-    preserveAspectRatio="none"
-  >
-    <Defs>
-      <RadialGradient id={gradientId} cx="50%" cy="50%" r="50%">
-        <Stop offset="0%" stopColor={color} stopOpacity={centerOpacity} />
-        <Stop offset="34%" stopColor={color} stopOpacity={middleOpacity} />
-        <Stop offset="68%" stopColor={color} stopOpacity={middleOpacity * 0.46} />
-        <Stop offset="90%" stopColor={color} stopOpacity={middleOpacity * 0.12} />
-        <Stop offset="100%" stopColor={color} stopOpacity={0} />
-      </RadialGradient>
-    </Defs>
-    <Rect width="100" height="100" fill={`url(#${gradientId})`} />
-  </Svg>
-);
-
 const Run = ({ workout_id, restartRequestKey }) => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -137,10 +105,6 @@ const Run = ({ workout_id, restartRequestKey }) => {
   const triggerReload = () => {
     set_updateCount((prev) => prev + 1);
   };
-
-  const [warmupEmpty, set_WarmupEmpty] = useState(true);
-  const [workingEmpty, set_WorkingEmpty] = useState(true);
-  const [cooldownEmpty, set_CooldownEmpty] = useState(true);
 
   const [original_start_time, set_original_start_time] = useState(null);
   const [timer_start, set_timer_start] = useState(null);
@@ -155,7 +119,6 @@ const Run = ({ workout_id, restartRequestKey }) => {
 
   const [activeSet, set_activeSet] = useState(null);
   const [activeSet_remainingTime, set_activeSet_remainingTime] = useState(0);
-  const [activeSetDetails, set_activeSetDetails] = useState(null);
 
   const previousActiveSetRef = useRef(null);
   const timerStartRef = useRef(null);
@@ -205,7 +168,6 @@ const Run = ({ workout_id, restartRequestKey }) => {
     previousActiveSetRef.current = null;
     set_activeSet(null);
     set_activeSet_remainingTime(0);
-    set_activeSetDetails(null);
   };
 
   const getCurrentElapsedSeconds = useCallback(() => {
@@ -282,7 +244,6 @@ const Run = ({ workout_id, restartRequestKey }) => {
         }
 
         set_activeSet(newActiveSet);
-        set_activeSetDetails(sets[i]);
         set_activeSet_remainingTime(Math.max(0, setDuration - remainingElapsed));
         return;
       }
@@ -638,7 +599,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
   };
 
   const primaryColor = theme.primary ?? theme.iconColor ?? theme.text;
-  const secondaryColor = theme.secondary ?? primaryColor;
+  const screenBackground = theme.background ?? "#0E0F12";
   const cardSurface = theme.cardBackground ?? theme.background;
   const innerSurface = theme.uiBackground ?? cardSurface;
   const cardBorder = theme.cardBorder ?? theme.iconColor ?? theme.text;
@@ -647,21 +608,9 @@ const Run = ({ workout_id, restartRequestKey }) => {
   const invertedText = theme.textInverted ?? theme.background ?? "#0E0F12";
   const avgPaceMinutes =
     totalDistance > 0 ? currentElapsed / 60 / totalDistance : null;
-  const startedDisplay =
-    original_start_time !== null
-      ? formatWorkoutStart(original_start_time)
-      : "Not started yet";
-
   const formattedTotalDistance = Number(totalDistance.toFixed(2)).toFixed(2);
   const avgPaceDisplay = formatPaceDisplay(avgPaceMinutes);
   const elapsedDisplay = formatRunClock(currentElapsed);
-  const runStateLabel = isDone
-    ? "DONE"
-    : isRunning
-      ? "LIVE"
-      : original_start_time !== null
-        ? "PAUSED"
-        : "READY";
   const shouldShowFinishRunPill =
     original_start_time !== null && !isRunning && !isDone;
   const primaryActionLabel = isRunning
@@ -671,317 +620,214 @@ const Run = ({ workout_id, restartRequestKey }) => {
       : "Start run";
   const canUsePrimaryAction = !isDone && !isControlBusy;
   const handlePrimaryAction = isRunning ? pauseWorkout : startWorkout;
-
-  const activeSegmentMeta = activeSetDetails
-    ? [
-        activeSetDetails.is_pause
-          ? "Recovery block"
-          : `Set ${activeSetDetails.set_number}`,
-        activeSetDetails.distance ? `${activeSetDetails.distance} km` : null,
-        activeSetDetails.time ? `${activeSetDetails.time} min` : null,
-      ]
-        .filter(Boolean)
-        .join(" | ")
-    : isDone
-      ? "All planned run blocks finished"
-      : original_start_time === null
-        ? "Build your run below and start when ready"
-        : "Current block is waiting to resume";
+  const metricCards = [
+    {
+      label: "TIME",
+      Icon: Time,
+      value: elapsedDisplay,
+      unit: null,
+    },
+    {
+      label: "DIST",
+      Icon: Distance,
+      value: formattedTotalDistance,
+      unit: "km",
+    },
+    {
+      label: "PACE",
+      Icon: Speed,
+      value: avgPaceDisplay,
+      unit: "/km",
+    },
+    {
+      label: "HR",
+      value: "--",
+      unit: "bpm",
+    },
+  ];
 
   const sectionConfigs = [
     {
       type: "WARMUP",
+      variant: "segment",
       title: "Warmup",
-      badge: "Warmup",
-      accent: quietText,
-      badgeBackground: innerSurface,
-      badgeTextColor: titleColor,
-      emptySetter: set_WarmupEmpty,
-      isEmpty: warmupEmpty,
+      eyebrow: "WARMUP",
+      emptySummary: "Add warmup",
     },
     {
       type: "WORKING_SET",
-      title: "Working Sets",
-      badge: "Main Work",
-      accent: primaryColor,
-      badgeBackground: theme.primaryLight ?? innerSurface,
-      badgeTextColor: invertedText,
-      titleColor: primaryColor,
-      emptySetter: set_WorkingEmpty,
-      isEmpty: workingEmpty,
+      variant: "intervals",
+      title: "Intervals",
+      eyebrow: "INTERVALS",
+      emptySummary: "Add intervals to build this run",
     },
     {
       type: "COOLDOWN",
+      variant: "segment",
       title: "Cooldown",
-      badge: "Cooldown",
-      accent: quietText,
-      badgeBackground: innerSurface,
-      badgeTextColor: titleColor,
-      titleColor: titleColor,
-      emptySetter: set_CooldownEmpty,
-      isEmpty: cooldownEmpty,
+      eyebrow: "COOLDOWN",
+      emptySummary: "Add cooldown",
     },
   ];
 
   return (
-    <ThemedView safe={false} style={{ flex: 1 }}>
-      <ThemedKeyboardProtection scroll>
-        <View style={styles.heroShell}>
+    <ThemedView
+      safe={false}
+      style={[styles.screen, { backgroundColor: screenBackground }]}
+    >
+      <ThemedKeyboardProtection
+        scroll
+        contentContainerStyle={styles.scrollContent}
+        scrollViewProps={{ showsVerticalScrollIndicator: false }}
+      >
+        <View style={styles.runLayout}>
           <ThemedCard
             style={[
               styles.heroCard,
               {
                 backgroundColor: cardSurface,
-                borderColor: isDone
-                  ? secondaryColor
-                  : isRunning
-                    ? primaryColor
-                    : cardBorder,
+                borderColor: isRunning ? primaryColor : cardBorder,
               },
             ]}
           >
-            <HeroGlow
-              style={styles.heroAccentPrimary}
-              color={isDone ? secondaryColor : primaryColor}
-              gradientId="runHeroPrimaryGlow"
-              centerOpacity={0.28}
-              middleOpacity={0.15}
-            />
-            <HeroGlow
-              style={styles.heroAccentSecondary}
-              color={secondaryColor}
-              gradientId="runHeroSecondaryGlow"
-              centerOpacity={0.23}
-              middleOpacity={0.12}
-            />
-
-            <View style={styles.heroHeaderRow}>
-              <View style={styles.heroStatusCluster}>
+            <View style={styles.heroMetricsRow}>
+              {metricCards.map((metric, index) => (
                 <View
-                  style={[
-                    styles.heroStatusDot,
-                    { backgroundColor: isRunning ? primaryColor : quietText },
-                  ]}
-                />
-                <ThemedText style={styles.heroStatusText} setColor={quietText}>
-                  {runStateLabel}
-                </ThemedText>
-              </View>
-
-              {shouldShowFinishRunPill ? (
-                <TouchableOpacity
-                  activeOpacity={0.78}
-                  disabled={isControlBusy}
-                  onPress={endWorkout}
-                  style={[
-                    styles.heroTopPill,
-                    {
-                      backgroundColor: innerSurface,
-                      borderColor: cardBorder,
-                    },
-                  ]}
+                  key={metric.label}
+                  style={styles.heroMetricGroup}
                 >
-                  <ThemedText style={styles.heroTopPillIcon} setColor={quietText}>
-                    oo
-                  </ThemedText>
-                  <ThemedText style={styles.heroTopPillText} setColor={quietText}>
-                    FINISH RUN
-                  </ThemedText>
-                </TouchableOpacity>
-              ) : null}
-            </View>
+                  <View style={styles.heroMetricCard}>
+                    <View style={styles.heroMetricHeader}>
+                      {metric.Icon ? (
+                        <metric.Icon
+                          width={20}
+                          height={20}
+                          stroke={primaryColor}
+                          color={primaryColor}
+                        />
+                      ) : (
+                        <ThemedText
+                          style={styles.heroMetricLabel}
+                          setColor={primaryColor}
+                        >
+                          {metric.label}
+                        </ThemedText>
+                      )}
+                    </View>
+                    <ThemedText
+                      style={styles.heroMetricValue}
+                      setColor={titleColor}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.72}
+                    >
+                      {metric.value}
+                    </ThemedText>
+                    <ThemedText style={styles.heroMetricUnit} setColor={quietText}>
+                      {metric.unit ?? " "}
+                    </ThemedText>
+                  </View>
 
-            <View style={styles.heroMetricGrid}>
-              <View
-                style={[
-                  styles.heroMetricCard,
-                  {
-                    backgroundColor: innerSurface,
-                    borderColor: cardBorder,
-                  },
-                ]}
-              >
-                <ThemedText style={styles.heroMetricLabel} setColor={quietText}>
-                  TIME
-                </ThemedText>
-                <ThemedText style={styles.heroMetricValue} setColor={titleColor}>
-                  {elapsedDisplay}
-                </ThemedText>
-              </View>
-
-              <View
-                style={[
-                  styles.heroMetricCard,
-                  {
-                    backgroundColor: innerSurface,
-                    borderColor: cardBorder,
-                  },
-                ]}
-              >
-                <ThemedText style={styles.heroMetricLabel} setColor={quietText}>
-                  DISTANCE
-                </ThemedText>
-                <View style={styles.heroDistanceRow}>
-                  <ThemedText style={styles.heroMetricValue} setColor={titleColor}>
-                    {formattedTotalDistance}
-                  </ThemedText>
-                  <ThemedText style={styles.heroMetricUnit} setColor={quietText}>
-                    KM
-                  </ThemedText>
+                  {index < metricCards.length - 1 && (
+                    <View
+                      style={[
+                        styles.heroMetricDivider,
+                        { backgroundColor: cardBorder },
+                      ]}
+                    />
+                  )}
                 </View>
-              </View>
-            </View>
-
-            <View style={styles.heroSmallMetricRow}>
-              <View
-                style={[
-                  styles.heroSmallMetricCard,
-                  { backgroundColor: innerSurface, borderColor: cardBorder },
-                ]}
-              >
-                <ThemedText style={styles.heroSmallMetricLabel} setColor={quietText}>
-                  PACE
-                </ThemedText>
-                <View style={styles.heroInlineValueRow}>
-                  <ThemedText style={styles.heroSmallMetricValue} setColor={titleColor}>
-                    {avgPaceDisplay}
-                  </ThemedText>
-                  <ThemedText style={styles.heroSmallMetricUnit} setColor={quietText}>
-                    /KM
-                  </ThemedText>
-                </View>
-              </View>
-
-              <View
-                style={[
-                  styles.heroSmallMetricCard,
-                  { backgroundColor: innerSurface, borderColor: cardBorder },
-                ]}
-              >
-                <ThemedText style={styles.heroSmallMetricLabel} setColor={quietText}>
-                  STARTED
-                </ThemedText>
-                <ThemedText style={styles.heroStartedValue} setColor={titleColor}>
-                  {startedDisplay}
-                </ThemedText>
-              </View>
+              ))}
             </View>
 
             {!isDone && (
-              <TouchableOpacity
-                activeOpacity={0.86}
-                disabled={!canUsePrimaryAction}
-                onPress={handlePrimaryAction}
-                style={[
-                  styles.heroPrimaryButton,
-                  {
-                    backgroundColor: primaryColor,
-                    opacity: canUsePrimaryAction ? 1 : 0.58,
-                  },
-                ]}
-              >
-                <View
+              <View style={styles.heroActionRow}>
+                <TouchableOpacity
+                  activeOpacity={0.86}
+                  disabled={!canUsePrimaryAction}
+                  onPress={handlePrimaryAction}
                   style={[
-                    styles.heroPlayIcon,
-                    isRunning && styles.heroPauseIcon,
-                    isRunning
-                      ? {
-                          backgroundColor: invertedText,
-                          borderLeftColor: invertedText,
-                        }
-                      : { borderLeftColor: invertedText },
+                    styles.heroPrimaryButton,
+                    {
+                      backgroundColor: primaryColor,
+                      opacity: canUsePrimaryAction ? 1 : 0.58,
+                    },
                   ]}
-                />
-                <ThemedText
-                  style={styles.heroPrimaryButtonText}
-                  setColor={invertedText}
                 >
-                  {primaryActionLabel}
-                </ThemedText>
-              </TouchableOpacity>
-            )}
-          </ThemedCard>
-        </View>
+                  {isRunning ? (
+                    <View style={styles.heroPauseSymbol}>
+                      <View
+                        style={[
+                          styles.heroPauseBar,
+                          { backgroundColor: invertedText },
+                        ]}
+                      />
+                      <View
+                        style={[
+                          styles.heroPauseBar,
+                          { backgroundColor: invertedText },
+                        ]}
+                      />
+                    </View>
+                  ) : (
+                    <View
+                      style={[
+                        styles.heroPlayIcon,
+                        { borderLeftColor: invertedText },
+                      ]}
+                    />
+                  )}
+                  <ThemedText
+                    style={styles.heroPrimaryButtonText}
+                    setColor={invertedText}
+                  >
+                    {primaryActionLabel}
+                  </ThemedText>
+                </TouchableOpacity>
 
-        {sectionConfigs.map((section) => (
-          <View key={section.type} style={styles.sectionShell}>
-            <ThemedCard
-              style={[
-                styles.sectionCard,
-                {
-                  backgroundColor: cardSurface,
-                  borderColor:
-                    section.isEmpty || section.type === "COOLDOWN"
-                      ? cardBorder
-                      : section.accent,
-                },
-              ]}
-            >
-              <View style={styles.sectionHeader}>
-                <View style={styles.sectionTitleBlock}>
-                  <View
+                {shouldShowFinishRunPill ? (
+                  <TouchableOpacity
+                    activeOpacity={0.78}
+                    disabled={isControlBusy}
+                    onPress={endWorkout}
                     style={[
-                      styles.sectionBadge,
+                      styles.heroSecondaryButton,
                       {
-                        backgroundColor: section.badgeBackground,
-                        borderColor:
-                          section.isEmpty || section.type === "COOLDOWN"
-                            ? cardBorder
-                            : section.accent,
+                        backgroundColor: innerSurface,
+                        borderColor: cardBorder,
                       },
                     ]}
                   >
                     <ThemedText
-                      style={styles.sectionBadgeText}
-                      setColor={section.badgeTextColor}
+                      style={styles.heroSecondaryButtonText}
+                      setColor={quietText}
                     >
-                      {section.badge}
+                      FINISH
                     </ThemedText>
-                  </View>
-                  <ThemedText
-                    style={styles.sectionTitle}
-                    setColor={
-                      section.isEmpty
-                        ? quietText
-                        : section.titleColor ?? titleColor
-                    }
-                  >
-                    {section.title}
-                  </ThemedText>
-                </View>
-
-                <TouchableOpacity
-                  style={[
-                    styles.sectionAddButton,
-                    {
-                      backgroundColor: innerSurface,
-                      borderColor:
-                        section.isEmpty || section.type === "COOLDOWN"
-                          ? cardBorder
-                          : section.accent,
-                      opacity: section.isEmpty ? 0.7 : 1,
-                    },
-                  ]}
-                  onPress={() => addSet(section.type)}
-                >
-                  <PlusCircled width={20} height={20} color={section.accent} />
-                </TouchableOpacity>
+                  </TouchableOpacity>
+                ) : null}
               </View>
+            )}
+          </ThemedCard>
 
-              <RunSetList
-                reloadKey={updateCount}
-                triggerReload={triggerReload}
-                empty={section.emptySetter}
-                workout_id={workout_id}
-                type={section.type}
-                activeSet={activeSet}
-                activeSet_remainingTime={activeSet_remainingTime}
-              />
-            </ThemedCard>
-          </View>
-        ))}
+          {sectionConfigs.map((section) => (
+            <RunSetList
+              key={section.type}
+              reloadKey={updateCount}
+              triggerReload={triggerReload}
+              workout_id={workout_id}
+              type={section.type}
+              variant={section.variant}
+              sectionTitle={section.title}
+              sectionEyebrow={section.eyebrow}
+              emptySummary={section.emptySummary}
+              onAddSet={() => addSet(section.type)}
+              activeSet={activeSet}
+              activeSet_remainingTime={activeSet_remainingTime}
+            />
+          ))}
+        </View>
       </ThemedKeyboardProtection>
-
     </ThemedView>
   );
 };

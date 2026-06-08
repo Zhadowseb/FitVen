@@ -3,7 +3,7 @@ export async function getLocationLogsByWorkout(db, workoutId) {
     `SELECT *
      FROM LocationLog
      WHERE workout_id = ?
-     ORDER BY timestamp ASC;`,
+     ORDER BY timestamp ASC, id ASC;`,
     [workoutId]
   );
 }
@@ -29,10 +29,24 @@ export async function getLatestLocationLogByWorkout(db, workoutId) {
     `SELECT *
      FROM LocationLog
      WHERE workout_id = ?
-     ORDER BY timestamp DESC
+     ORDER BY timestamp DESC, id DESC
      LIMIT 1;`,
     [workoutId]
   );
+}
+
+export async function createLocationTrackingBreak(
+  db,
+  { workoutId, timestamp = Date.now() }
+) {
+  // Null coordinates separate independently tracked start/resume sessions.
+  await createLocationLog(db, {
+    workoutId,
+    latitude: null,
+    longitude: null,
+    accuracy: null,
+    timestamp,
+  });
 }
 
 export async function deleteLocationLogsByWorkout(db, workoutId) {

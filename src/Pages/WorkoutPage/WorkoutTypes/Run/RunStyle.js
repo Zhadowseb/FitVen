@@ -1,190 +1,111 @@
 import { StyleSheet } from "react-native";
 
 export default StyleSheet.create({
-  heroShell: {
-    width: "95%",
+  screen: {
+    flex: 1,
+  },
+
+  scrollContent: {
+    paddingBottom: 18,
+  },
+
+  runLayout: {
+    width: "92%",
+    maxWidth: 520,
     alignSelf: "center",
-    marginBottom: 14,
+    paddingTop: 12,
   },
 
   heroCard: {
     width: "100%",
     marginHorizontal: 0,
-    marginVertical: 0,
-    paddingHorizontal: 26,
-    paddingVertical: 26,
+    marginTop: 0,
+    marginBottom: 14,
+    paddingHorizontal: 22,
+    paddingTop: 20,
+    paddingBottom: 22,
     borderRadius: 28,
     borderWidth: 1,
-    overflow: "hidden",
   },
 
-  heroAccentPrimary: {
-    position: "absolute",
-    width: 410,
-    height: 380,
-    top: -204,
-    right: -170,
-  },
-
-  heroAccentSecondary: {
-    position: "absolute",
-    width: 390,
-    height: 350,
-    bottom: -180,
-    left: -168,
-  },
-
-  heroHeaderRow: {
+  heroMetricsRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 28,
-  },
-
-  heroStatusCluster: {
-    flexDirection: "row",
-    alignItems: "center",
-    minHeight: 30,
-  },
-
-  heroStatusDot: {
-    width: 11,
-    height: 11,
-    borderRadius: 6,
-    marginRight: 10,
-    opacity: 0.78,
-  },
-
-  heroStatusText: {
-    fontSize: 12,
-    lineHeight: 15,
-    fontWeight: "800",
-    letterSpacing: 4,
-  },
-
-  heroTopPill: {
-    height: 30,
-    borderRadius: 999,
-    borderWidth: 1,
-    paddingHorizontal: 13,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  heroTopPillIcon: {
-    fontSize: 12,
-    fontWeight: "800",
-    marginRight: 7,
-  },
-
-  heroTopPillText: {
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 2.4,
-  },
-
-  heroMetricGrid: {
-    flexDirection: "row",
-    gap: 14,
     marginBottom: 22,
+  },
+
+  heroMetricGroup: {
+    flex: 1,
+    minWidth: 0,
+    height: 76,
+    flexDirection: "row",
+    alignItems: "center",
   },
 
   heroMetricCard: {
     flex: 1,
-    minHeight: 110,
-    borderRadius: 18,
-    borderWidth: 1,
-    paddingHorizontal: 18,
-    paddingVertical: 24,
+    minWidth: 0,
+    height: "100%",
+    paddingHorizontal: 6,
+    alignItems: "center",
     justifyContent: "center",
+  },
+
+  heroMetricHeader: {
+    width: "100%",
+    height: 20,
+    marginBottom: 11,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  heroMetricDivider: {
+    width: 1,
+    height: 54,
+    opacity: 0.7,
   },
 
   heroMetricLabel: {
     fontSize: 10,
-    lineHeight: 13,
+    lineHeight: 12,
     fontWeight: "800",
-    letterSpacing: 3.4,
-    marginBottom: 14,
+    letterSpacing: 2.2,
+    textAlign: "center",
   },
 
   heroMetricValue: {
-    fontSize: 39,
-    lineHeight: 43,
+    width: "100%",
+    fontSize: 18,
+    lineHeight: 22,
     fontWeight: "900",
+    textAlign: "center",
     fontVariant: ["tabular-nums"],
-  },
-
-  heroDistanceRow: {
-    flexDirection: "row",
-    alignItems: "flex-end",
   },
 
   heroMetricUnit: {
-    marginLeft: 8,
-    marginBottom: 5,
-    fontSize: 12,
-    fontWeight: "800",
-    letterSpacing: 2,
+    marginTop: 2,
+    height: 11,
+    fontSize: 9,
+    lineHeight: 11,
+    fontWeight: "700",
+    textAlign: "center",
   },
 
-  heroSmallMetricRow: {
+  heroActionRow: {
     flexDirection: "row",
-    gap: 9,
-    marginBottom: 24,
-  },
-
-  heroSmallMetricCard: {
-    flex: 1,
-    minHeight: 82,
-    borderRadius: 13,
-    borderWidth: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 13,
-    justifyContent: "center",
-  },
-
-  heroSmallMetricLabel: {
-    fontSize: 10,
-    lineHeight: 13,
-    fontWeight: "800",
-    letterSpacing: 2.7,
-    marginBottom: 13,
-  },
-
-  heroSmallMetricValue: {
-    fontSize: 20,
-    lineHeight: 24,
-    fontWeight: "900",
-    fontVariant: ["tabular-nums"],
-  },
-
-  heroSmallMetricUnit: {
-    marginLeft: 5,
-    marginBottom: 2,
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 1.4,
-  },
-
-  heroInlineValueRow: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-  },
-
-  heroStartedValue: {
-    fontSize: 14,
-    lineHeight: 18,
-    fontWeight: "800",
+    alignItems: "center",
+    gap: 10,
   },
 
   heroPrimaryButton: {
-    height: 62,
-    borderRadius: 18,
+    flex: 1,
+    minHeight: 66,
+    borderRadius: 22,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#ff7a2b",
-    shadowOffset: { width: 0, height: 18 },
+    shadowOffset: { width: 0, height: 14 },
     shadowOpacity: 0.28,
     shadowRadius: 18,
     elevation: 8,
@@ -198,268 +119,319 @@ export default StyleSheet.create({
     borderLeftWidth: 13,
     borderTopColor: "transparent",
     borderBottomColor: "transparent",
-    marginRight: 14,
+    marginRight: 13,
   },
 
-  heroPauseIcon: {
-    width: 12,
-    height: 15,
-    borderTopWidth: 0,
-    borderBottomWidth: 0,
-    borderLeftWidth: 0,
+  heroPauseSymbol: {
+    width: 14,
+    height: 17,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginRight: 13,
+  },
+
+  heroPauseBar: {
+    width: 5,
+    height: "100%",
     borderRadius: 2,
   },
 
   heroPrimaryButtonText: {
-    fontSize: 16,
-    lineHeight: 20,
+    fontSize: 17,
+    lineHeight: 21,
     fontWeight: "900",
   },
 
-  sectionShell: {
-    width: "95%",
-    alignSelf: "center",
-    marginBottom: 12,
+  heroSecondaryButton: {
+    width: 72,
+    minHeight: 54,
+    borderRadius: 18,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
 
-  sectionCard: {
+  heroSecondaryButtonText: {
+    fontSize: 10,
+    lineHeight: 12,
+    fontWeight: "900",
+    letterSpacing: 1.5,
+  },
+
+  sectionShell: {
     width: "100%",
+    marginBottom: 14,
+  },
+
+  segmentCard: {
+    width: "100%",
+    minHeight: 68,
     marginHorizontal: 0,
     marginVertical: 0,
-    paddingHorizontal: 8,
+    paddingHorizontal: 18,
     paddingVertical: 12,
-    borderRadius: 26,
+    borderRadius: 22,
     borderWidth: 1,
-  },
-
-  sectionHeader: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10,
   },
 
-  sectionTitleBlock: {
+  segmentMain: {
     flex: 1,
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
   },
 
-  sectionBadge: {
-    alignSelf: "flex-start",
-    borderRadius: 999,
+  segmentIconFrame: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    marginBottom: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 14,
   },
 
-  sectionBadgeText: {
+  segmentTextBlock: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  segmentEyebrow: {
     fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
+    lineHeight: 12,
+    fontWeight: "900",
+    letterSpacing: 3,
+    marginBottom: 5,
   },
 
-  sectionTitle: {
-    fontSize: 24,
-    lineHeight: 28,
-    fontWeight: "800",
+  segmentSummaryText: {
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: "700",
   },
 
-  sectionAddButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
+  segmentActionButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
     marginLeft: 12,
   },
 
-  tableShell: {
-    borderRadius: 20,
+  intervalsCard: {
+    width: "100%",
+    marginHorizontal: 0,
+    marginVertical: 0,
+    paddingHorizontal: 22,
+    paddingTop: 23,
+    paddingBottom: 18,
+    borderRadius: 28,
     borderWidth: 1,
-    paddingHorizontal: 2,
-    paddingTop: 6,
-    paddingBottom: 2,
+  },
+
+  intervalsHeader: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+
+  intervalsTitleBlock: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  intervalsEyebrow: {
+    fontSize: 10,
+    lineHeight: 12,
+    fontWeight: "900",
+    letterSpacing: 3.4,
+    marginBottom: 7,
+  },
+
+  intervalsTitle: {
+    fontSize: 30,
+    lineHeight: 35,
+    fontWeight: "900",
+  },
+
+  intervalsSetCount: {
+    marginBottom: 4,
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: "700",
+    fontVariant: ["tabular-nums"],
+  },
+
+  intervalsSummary: {
+    marginTop: 15,
+    marginBottom: 18,
+    fontSize: 12,
+    lineHeight: 15,
+    fontWeight: "600",
+  },
+
+  runTableShell: {
+    width: "auto",
+    marginHorizontal: -22,
+    marginBottom: -18,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+    borderWidth: 1,
     overflow: "visible",
   },
 
   emptyState: {
-    borderRadius: 18,
-    borderWidth: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 16,
+    minHeight: 58,
     alignItems: "center",
     justifyContent: "center",
+    borderBottomWidth: 1,
   },
 
   emptyStateText: {
     fontSize: 12,
+    lineHeight: 16,
     fontWeight: "700",
   },
 
-  headerRow: {
+  runTableHeaderRow: {
+    minHeight: 30,
     flexDirection: "row",
-    borderBottomWidth: 1,
-    paddingBottom: 10,
-    marginBottom: 4,
-  },
-
-  grid: {
-    width: "100%",
-    flexDirection: "row",
-    justifyContent: "center",
     alignItems: "center",
+    borderBottomWidth: 1,
+    paddingHorizontal: 8,
   },
 
-  sharedGrid: {
-    borderColor: "#4b4b4bff",
-    borderBottomWidth: 0.2,
+  runTableHeaderCell: {
+    minHeight: 30,
+    alignItems: "center",
+    justifyContent: "center",
   },
 
-  lastGrid: {
+  runTableHeaderLabel: {
+    fontSize: 9,
+    lineHeight: 11,
+    fontWeight: "800",
+    letterSpacing: 0.8,
+    textAlign: "center",
+  },
+
+  runTableHeaderUnit: {
+    fontSize: 7,
+    lineHeight: 8,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+
+  runTableRow: {
+    minHeight: 48,
+    flexDirection: "row",
+    alignItems: "center",
+    borderBottomWidth: 1,
+    borderLeftWidth: 1,
+    borderLeftColor: "transparent",
+    borderRightWidth: 1,
+    borderRightColor: "transparent",
+    paddingHorizontal: 8,
+  },
+
+  runTableRowActive: {
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+  },
+
+  lastRunTableRow: {
     borderBottomWidth: 0,
   },
 
-  title: {
-    borderRightWidth: 0,
+  runTableCell: {
+    minHeight: 48,
     alignItems: "center",
     justifyContent: "center",
+    paddingHorizontal: 2,
   },
 
-  set: {
+  runSetColumn: {
+    width: "15%",
+  },
+
+  runDistanceColumn: {
+    width: "18%",
+  },
+
+  runPaceColumn: {
+    width: "19%",
+  },
+
+  runTimeColumn: {
+    width: "18%",
+  },
+
+  runZoneColumn: {
     width: "20%",
-    borderRightWidth: 0.2,
   },
 
-  distance: {
-    width: "20%",
-    borderRightWidth: 0.2,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  pace: {
-    width: "20%",
-    borderRightWidth: 0.2,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  time: {
-    width: "20%",
-    borderRightWidth: 0.2,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  zone: {
-    width: "20%",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  headerCellLabel: {
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
-    textAlign: "center",
-  },
-
-  headerCellUnit: {
-    marginTop: 1,
-    fontSize: 9,
-    fontWeight: "600",
-    textAlign: "center",
-  },
-
-  timeRunning: {
-    borderWidth: 0.6,
-    borderColor: "#f0ff21",
-    borderRadius: 5,
-  },
-
-  set_number_button: {
-    justifyContent: "center",
-    alignItems: "center",
-    width: 24,
-    height: 24,
-    borderTopWidth: 2,
-    borderLeftWidth: 2,
-    borderBottomWidth: 3,
-    borderRightWidth: 3,
-    backgroundColor: "rgb(32, 30, 29)",
-    borderTopColor: "rgb(106, 100, 98)",
-    borderLeftColor: "rgb(106, 100, 98)",
-    borderBottomColor: "rgb(8, 7, 7)",
-    borderRightColor: "rgb(8, 7, 7)",
-  },
-
-  set_number_button_text: {
-    fontWeight: "700",
-    letterSpacing: 0.2,
-  },
-
-  setCellButton: {
-    flex: 1,
-    width: "100%",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 6,
+  runDoneColumn: {
+    width: "10%",
   },
 
   setNumberBadge: {
-    minWidth: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 28,
+    height: 30,
+    borderRadius: 9,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 8,
   },
 
   setNumberText: {
-    fontWeight: "800",
-  },
-
-  pausePill: {
-    borderRadius: 999,
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-
-  pauseText: {
-    fontSize: 11,
-    fontWeight: "700",
-  },
-
-  activeTimePill: {
-    minWidth: 74,
-    borderRadius: 14,
-    borderWidth: 1,
-    paddingHorizontal: 8,
-    paddingVertical: 7,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  activeTimeText: {
+    fontSize: 13,
+    lineHeight: 16,
     fontWeight: "800",
     fontVariant: ["tabular-nums"],
   },
 
-  zoneButton: {
-    width: "100%",
+  pauseIconBadge: {
+    width: 28,
+    height: 30,
+    borderRadius: 9,
+    borderWidth: 1,
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 6,
+    gap: 3,
+  },
+
+  pauseBar: {
+    width: 4,
+    height: 12,
+    borderRadius: 2,
+  },
+
+  activeTimeText: {
+    fontSize: 15,
+    lineHeight: 18,
+    fontWeight: "900",
+    textAlign: "center",
+    fontVariant: ["tabular-nums"],
+  },
+
+  zoneAnchor: {
+    position: "relative",
+    width: "100%",
+    alignItems: "center",
   },
 
   zonePill: {
-    minWidth: 34,
-    height: 28,
-    borderRadius: 14,
+    minWidth: 36,
+    height: 30,
+    borderRadius: 9,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
@@ -467,57 +439,189 @@ export default StyleSheet.create({
   },
 
   zoneText: {
+    fontSize: 12,
+    lineHeight: 15,
     fontWeight: "800",
   },
 
-  bottomsheet_title: {
-    flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: "#2e2e2eff",
-    paddingBottom: 30,
+  zoneDropdownOverlay: {
+    flex: 1,
   },
 
-  togglepauseorworking: {
+  zoneDropdownBackdrop: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+  },
+
+  zoneDropdownContainer: {
+    position: "absolute",
+    width: 238,
+    height: 40,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    elevation: 12,
+    zIndex: 50,
+  },
+
+  zoneDropdownOption: {
+    flex: 1,
+    minWidth: 0,
+    height: 30,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  zoneDropdownClear: {
+    borderWidth: 1,
+  },
+
+  zoneDropdownText: {
+    fontSize: 13,
+    lineHeight: 16,
+    fontWeight: "900",
+  },
+
+  doneButton: {
+    width: "100%",
+    minHeight: 48,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  doneCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     borderWidth: 2,
-    borderRadius: 15,
-    padding: 5,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  tableAddRow: {
+    minHeight: 36,
+    alignItems: "center",
+    justifyContent: "center",
+    borderTopWidth: 1,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+  },
+
+  valuePill: {
+    width: "94%",
+    height: 30,
+    borderRadius: 9,
+    borderWidth: 1,
     justifyContent: "center",
     alignItems: "center",
-    width: 120,
+    overflow: "hidden",
   },
 
-  bottomsheet_body: {
-    justifyContent: "center",
-    padding: 20,
-    paddingLeft: 0,
-  },
-
-  option: {
+  bottomsheetHeader: {
     flexDirection: "row",
-    paddingTop: 20,
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderBottomWidth: 1,
+    borderBottomColor: "#2e2e2eff",
+    paddingBottom: 18,
+    marginBottom: 18,
   },
 
-  option_text: {
-    paddingLeft: 10,
-    fontWeight: "600",
-    fontSize: 16,
+  bottomsheetEyebrow: {
+    fontSize: 10,
+    lineHeight: 12,
+    fontWeight: "900",
+    letterSpacing: 3,
+    marginBottom: 5,
   },
 
-  zone_dropdown_container: {
-    position: "absolute",
-    left: 0,
-    right: 0,
+  bottomsheetSetTitle: {
+    fontSize: 22,
+    lineHeight: 27,
+    fontWeight: "900",
+  },
+
+  bottomsheetEditGrid: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 16,
+  },
+
+  bottomsheetField: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  bottomsheetFieldLabel: {
+    marginBottom: 7,
+    fontSize: 10,
+    lineHeight: 12,
+    fontWeight: "900",
+    letterSpacing: 2.1,
+  },
+
+  bottomsheetEditCell: {
+    height: 44,
+    borderRadius: 14,
     borderWidth: 1,
-    borderRadius: 8,
-    elevation: 6,
-    zIndex: 10,
+    alignItems: "center",
+    justifyContent: "center",
   },
 
-  zone_dropdown_container_down: {
-    top: 28,
+  zoneChipRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 18,
   },
 
-  zone_dropdown_container_up: {
-    bottom: 28,
+  zoneChip: {
+    minHeight: 34,
+    borderRadius: 17,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 12,
+  },
+
+  zoneChipText: {
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: "900",
+    letterSpacing: 1.2,
+  },
+
+  bottomsheetActionRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+
+  bottomsheetAction: {
+    minHeight: 46,
+    borderRadius: 15,
+    borderWidth: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 15,
+    gap: 8,
+  },
+
+  bottomsheetActionDanger: {
+    backgroundColor: "transparent",
+  },
+
+  bottomsheetActionText: {
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: "800",
   },
 });

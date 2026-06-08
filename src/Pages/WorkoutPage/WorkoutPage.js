@@ -218,7 +218,14 @@ const WorkoutPage = ({ route }) => {
           {!!workoutSubtitle && (
             <ThemedText
               size={10}
-              style={[styles.pageHeaderTitleMeta, { color: headerEyebrowColor }]}
+              style={[
+                styles.pageHeaderTitleMeta,
+                isRunWorkout && [
+                  styles.pageHeaderTitleMetaPill,
+                  { backgroundColor: theme.cardBackground ?? theme.uiBackground },
+                ],
+                { color: headerEyebrowColor },
+              ]}
             >
               {workoutSubtitle}
             </ThemedText>

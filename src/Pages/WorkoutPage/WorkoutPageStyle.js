@@ -22,6 +22,14 @@ export default StyleSheet.create({
     textAlign: "center",
   },
 
+  pageHeaderTitleMetaPill: {
+    marginTop: 3,
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+    borderRadius: 999,
+    overflow: "hidden",
+  },
+
   bottomsheetTitle: {
     borderBottomWidth: 1,
     borderBottomColor: "#2e2e2eff",

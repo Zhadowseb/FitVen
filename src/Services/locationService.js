@@ -2,44 +2,14 @@ import * as Location from "expo-location";
 import { Platform } from "react-native";
 
 import { locationRepository, workoutRepository } from "../Repository";
-import { calculateDistance } from "../Utils/locationUtils";
+import {
+  calculateTrackedDistanceSummary,
+  isSameLocationPoint,
+  normalizeLocationPoint,
+} from "../Utils/locationUtils";
 import { withTransaction } from "./shared";
 
 export const RUN_LOCATION_TASK = "background-location-task";
-
-const MAX_USABLE_ACCURACY_METERS = 75;
-const MIN_SEGMENT_DISTANCE_METERS = 2;
-const MAX_SEGMENT_SPEED_METERS_PER_SECOND = 8.5;
-const SAME_POINT_COORDINATE_EPSILON = 0.0000001;
-
-function normalizeLocationPoint(point) {
-  const latitude = Number(point?.latitude);
-  const longitude = Number(point?.longitude);
-  const accuracy = Number(point?.accuracy);
-  const timestamp = Number(point?.timestamp);
-
-  if (
-    !Number.isFinite(latitude) ||
-    !Number.isFinite(longitude) ||
-    latitude < -90 ||
-    latitude > 90 ||
-    longitude < -180 ||
-    longitude > 180
-  ) {
-    return null;
-  }
-
-  if (!Number.isFinite(timestamp)) {
-    return null;
-  }
-
-  return {
-    latitude,
-    longitude,
-    accuracy: Number.isFinite(accuracy) ? accuracy : null,
-    timestamp,
-  };
-}
 
 function normalizeExpoLocationObject(location) {
   return normalizeLocationPoint({
@@ -50,82 +20,11 @@ function normalizeExpoLocationObject(location) {
   });
 }
 
-function hasUsableAccuracy(point) {
-  return (
-    point?.accuracy === null ||
-    point?.accuracy <= MAX_USABLE_ACCURACY_METERS
-  );
-}
-
-function isUsableDistancePoint(point) {
-  return Boolean(normalizeLocationPoint(point)) && hasUsableAccuracy(point);
-}
-
-function isSameLocationPoint(left, right) {
-  if (!left || !right) {
-    return false;
-  }
-
-  return (
-    left.timestamp === right.timestamp &&
-    Math.abs(left.latitude - right.latitude) <= SAME_POINT_COORDINATE_EPSILON &&
-    Math.abs(left.longitude - right.longitude) <= SAME_POINT_COORDINATE_EPSILON
-  );
-}
-
-function getSegmentMetrics(previousPoint, nextPoint) {
-  const distanceMeters = calculateDistance(
-    previousPoint.latitude,
-    previousPoint.longitude,
-    nextPoint.latitude,
-    nextPoint.longitude
-  );
-  const timeDiffSeconds = (nextPoint.timestamp - previousPoint.timestamp) / 1000;
-  const speedMetersPerSecond =
-    Number.isFinite(distanceMeters) &&
-    Number.isFinite(timeDiffSeconds) &&
-    timeDiffSeconds > 0
-      ? distanceMeters / timeDiffSeconds
-      : null;
-
-  return {
-    distanceMeters,
-    timeDiffSeconds,
-    speedMetersPerSecond,
-  };
-}
-
-function shouldIncludeSegment(previousPoint, nextPoint) {
-  if (!previousPoint || !nextPoint || !hasUsableAccuracy(nextPoint)) {
-    return false;
-  }
-
-  const { distanceMeters, timeDiffSeconds, speedMetersPerSecond } =
-    getSegmentMetrics(previousPoint, nextPoint);
-
-  if (!Number.isFinite(timeDiffSeconds) || timeDiffSeconds <= 0) {
-    return false;
-  }
-
-  if (!Number.isFinite(distanceMeters) || distanceMeters < MIN_SEGMENT_DISTANCE_METERS) {
-    return false;
-  }
-
-  if (
-    Number.isFinite(speedMetersPerSecond) &&
-    speedMetersPerSecond > MAX_SEGMENT_SPEED_METERS_PER_SECOND
-  ) {
-    return false;
-  }
-
-  return true;
-}
-
 function getLocationTrackingOptions() {
   return {
     accuracy: Location.Accuracy.BestForNavigation,
     timeInterval: 1000,
-    distanceInterval: 1,
+    distanceInterval: 3,
     mayShowUserSettingsDialog: true,
     deferredUpdatesDistance: 0,
     deferredUpdatesInterval: 0,
@@ -227,49 +126,8 @@ export async function getLocationLogsByWorkout(db, workoutId) {
 }
 
 export async function getTrackedRunSummary(db, workoutId) {
-  const logs = (await locationRepository.getLocationLogsByWorkout(db, workoutId))
-    .map(normalizeLocationPoint)
-    .filter(Boolean)
-    .sort((left, right) => left.timestamp - right.timestamp);
-  let totalDistanceMeters = 0;
-  let previousAcceptedPoint = null;
-  let usablePointCount = 0;
-
-  for (const log of logs) {
-    const currentPoint = log;
-
-    if (!isUsableDistancePoint(currentPoint)) {
-      continue;
-    }
-
-    usablePointCount += 1;
-
-    if (!previousAcceptedPoint) {
-      previousAcceptedPoint = currentPoint;
-      continue;
-    }
-
-    if (isSameLocationPoint(previousAcceptedPoint, currentPoint)) {
-      continue;
-    }
-
-    if (shouldIncludeSegment(previousAcceptedPoint, currentPoint)) {
-      const { distanceMeters } = getSegmentMetrics(
-        previousAcceptedPoint,
-        currentPoint
-      );
-
-      totalDistanceMeters += distanceMeters;
-      previousAcceptedPoint = currentPoint;
-    }
-  }
-
-  return {
-    totalDistanceMeters,
-    totalDistanceKm: totalDistanceMeters / 1000,
-    pointCount: logs.length,
-    usablePointCount,
-  };
+  const logs = await locationRepository.getLocationLogsByWorkout(db, workoutId);
+  return calculateTrackedDistanceSummary(logs);
 }
 
 export async function recordTrackedLocations(db, locations) {
@@ -318,6 +176,7 @@ export async function startRunTracking(db, workoutId, { resetLogs = false } = {}
     await clearTrackedRunData(db, workoutId);
   }
 
+  await locationRepository.createLocationTrackingBreak(db, { workoutId });
   await setActiveWorkout(db, workoutId);
 
   const hasStarted = await Location.hasStartedLocationUpdatesAsync(RUN_LOCATION_TASK);
@@ -339,6 +198,7 @@ export async function ensureRunTracking(db, workoutId) {
   const hasStarted = await Location.hasStartedLocationUpdatesAsync(RUN_LOCATION_TASK);
 
   if (!hasStarted) {
+    await locationRepository.createLocationTrackingBreak(db, { workoutId });
     await Location.startLocationUpdatesAsync(
       RUN_LOCATION_TASK,
       getLocationTrackingOptions()

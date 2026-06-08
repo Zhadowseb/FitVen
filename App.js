@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
   NavigationContainer,
   DefaultTheme,
@@ -62,7 +62,7 @@ TaskManager.defineTask(locationService.RUN_LOCATION_TASK, async ({ data, error }
   let db = null;
 
   try {
-    const databaseName = getActiveDatabaseName();
+    const databaseName = await getActiveDatabaseName();
     db = await SQLite.openDatabaseAsync(databaseName, {
       useNewConnection: true,
     });
@@ -204,15 +204,8 @@ function UserScopedDatabaseApp() {
   const userId = user?.id ?? null;
   const databaseName = getDatabaseNameForUserId(userId);
 
-  useEffect(() => {
-    if (isAuthLoading) {
-      return;
-    }
-
-    setActiveDatabaseName(databaseName);
-  }, [databaseName, isAuthLoading]);
-
   const handleInitializeDatabase = useCallback(async (db) => {
+    await setActiveDatabaseName(databaseName);
     await initializeDatabase(db);
 
     if (userId) {
