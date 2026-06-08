@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.16.0-major-run-workout-redesign.1",
+  "version": "0.16.1-minor-home-empty-today-calendar-shortcut.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",

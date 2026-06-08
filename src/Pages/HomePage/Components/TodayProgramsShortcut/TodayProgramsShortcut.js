@@ -1,17 +1,21 @@
 import { ActivityIndicator, View, useColorScheme } from "react-native";
 import { useCallback, useState } from "react";
 import { useSQLiteContext } from "expo-sqlite";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 
 import { programService } from "../../../../Services";
+import HomeImageShortcutCard from "../../../../Resources/Components/HomeImageShortcutCard/HomeImageShortcutCard";
 import { Colors } from "../../../../Resources/GlobalStyling/colors";
 import { ThemedText, ThemedTitle } from "../../../../Resources/ThemedComponents";
 import { getTodaysDate } from "../../../../Utils/dateUtils";
 import TodayShortcut from "../TodayShortcut/TodayShortcut";
 import styles from "./TodayProgramsShortcutStyle";
 
+const workoutCalendarImage = require("../../../../Resources/Images/DarkVersion/workout calender dark.png");
+
 const TodayProgramsShortcut = () => {
   const db = useSQLiteContext();
+  const navigation = useNavigation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const [programSnapshots, setProgramSnapshots] = useState([]);
@@ -78,36 +82,49 @@ const TodayProgramsShortcut = () => {
           </View>
         </View>
       ) : programSnapshots.length === 0 ? (
-        <View
-          style={[
-            styles.stateCard,
-            {
-              backgroundColor: theme.cardBackground ?? theme.background,
-              borderColor: theme.cardBorder ?? theme.border ?? theme.primary,
-            },
-          ]}
-        >
+        <View style={styles.emptyShortcutRow}>
           <View
-            pointerEvents="none"
             style={[
-              styles.stateAccent,
+              styles.stateCard,
+              styles.emptyTodayCard,
               {
-                backgroundColor:
-                  theme.cardBorder ?? theme.border ?? theme.iconColor ?? theme.text,
+                backgroundColor: theme.cardBackground ?? theme.background,
+                borderColor: theme.cardBorder ?? theme.border ?? theme.primary,
               },
             ]}
-          />
-
-          <ThemedText
-            style={styles.stateEyebrow}
-            setColor={theme.primary ?? "#f7742e"}
           >
-            TODAY
-          </ThemedText>
-          <ThemedTitle type="h3">Today</ThemedTitle>
-          <ThemedText style={styles.emptyCopy} setColor={quietText}>
-            No workouts are scheduled today.
-          </ThemedText>
+            <View
+              pointerEvents="none"
+              style={[
+                styles.stateAccent,
+                {
+                  backgroundColor:
+                    theme.cardBorder ??
+                    theme.border ??
+                    theme.iconColor ??
+                    theme.text,
+                },
+              ]}
+            />
+
+            <ThemedText
+              style={styles.stateEyebrow}
+              setColor={theme.primary ?? "#f7742e"}
+            >
+              TODAY
+            </ThemedText>
+            <ThemedTitle type="h3">Today</ThemedTitle>
+            <ThemedText style={styles.emptyCopy} setColor={quietText}>
+              No workouts scheduled.
+            </ThemedText>
+          </View>
+
+          <HomeImageShortcutCard
+            accessibilityLabel="Open workout calendar"
+            imageSource={workoutCalendarImage}
+            onPress={() => navigation.navigate("WorkoutCalendarPage")}
+            title="Workout calendar"
+          />
         </View>
       ) : (
         programSnapshots.map((programSnapshot) => (

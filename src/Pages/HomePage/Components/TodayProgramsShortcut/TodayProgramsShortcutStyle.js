@@ -14,6 +14,17 @@ export default StyleSheet.create({
     paddingBottom: 18,
     overflow: "hidden",
   },
+  emptyShortcutRow: {
+    minHeight: 168,
+    flexDirection: "row",
+    alignItems: "stretch",
+    gap: 12,
+  },
+  emptyTodayCard: {
+    flex: 1,
+    minWidth: 0,
+    justifyContent: "flex-end",
+  },
   stateAccent: {
     position: "absolute",
     top: 0,

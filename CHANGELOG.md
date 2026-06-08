@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.16.1] - Unreleased
+### Changed
+- Show a Workout Calendar shortcut beside the compact Today card when no workouts are scheduled.
+
+---
 ## [0.16.0] - Unreleased
 ### Changed
 - Redesign the Run workout screen with a compact tracker card, warmup/cooldown cards, and an interval table.
