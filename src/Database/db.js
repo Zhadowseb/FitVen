@@ -1531,6 +1531,9 @@ export async function initializeDatabase(db) {
     ["cloud_exercise_id", "INTEGER"],
     ["nickname", "TEXT"],
     ["default_visible_columns", "TEXT"],
+    ["official", "INTEGER NOT NULL DEFAULT 0"],
+    ["is_custom", "INTEGER NOT NULL DEFAULT 0"],
+    ["custom_muscle_group_keys", "TEXT"],
   ]);
   await db.execAsync(`
     CREATE UNIQUE INDEX IF NOT EXISTS exercise_cloud_exercise_id_idx

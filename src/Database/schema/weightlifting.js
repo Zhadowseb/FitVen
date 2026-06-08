@@ -5,7 +5,10 @@ export const weightliftingSchemaSql = `
       cloud_exercise_id INTEGER UNIQUE,
       name TEXT NOT NULL UNIQUE,
       nickname TEXT,
-      default_visible_columns TEXT
+      default_visible_columns TEXT,
+      official INTEGER NOT NULL DEFAULT 0,
+      is_custom INTEGER NOT NULL DEFAULT 0,
+      custom_muscle_group_keys TEXT
   );
 
   CREATE TABLE IF NOT EXISTS Exercise_Column_Preference (

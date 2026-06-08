@@ -63,7 +63,10 @@ export async function getExerciseStorage(db) {
         cloud_exercise_id,
         name AS exercise_name,
         nickname,
-        default_visible_columns
+        default_visible_columns,
+        official,
+        is_custom,
+        custom_muscle_group_keys
      FROM Exercise
      ORDER BY name COLLATE NOCASE ASC;`
   );
@@ -75,7 +78,10 @@ export async function getExerciseCatalogEntryByName(db, exerciseName) {
         cloud_exercise_id,
         name AS exercise_name,
         nickname,
-        default_visible_columns
+        default_visible_columns,
+        official,
+        is_custom,
+        custom_muscle_group_keys
      FROM Exercise
      WHERE name = ? COLLATE NOCASE
      LIMIT 1;`,
@@ -231,25 +237,47 @@ export async function createExerciseStorage(db, exerciseName) {
   );
 }
 
+export async function createCustomExerciseStorage(
+  db,
+  { exerciseName, muscleGroupKeys }
+) {
+  await db.runAsync(
+    `INSERT INTO Exercise (
+       name,
+       nickname,
+       default_visible_columns,
+       official,
+       is_custom,
+       custom_muscle_group_keys
+     )
+     VALUES (?, NULL, NULL, 0, 1, ?);`,
+    [exerciseName, JSON.stringify(muscleGroupKeys)]
+  );
+
+  return getExerciseCatalogEntryByName(db, exerciseName);
+}
+
 export async function replaceExerciseCatalog(db, exercises) {
   await withTransaction(db, async () => {
-    await db.runAsync(`DELETE FROM Exercise;`);
+    await db.runAsync(`DELETE FROM Exercise WHERE COALESCE(is_custom, 0) = 0;`);
 
     if (exercises.length > 0) {
-      const placeholders = exercises.map(() => "(?, ?, ?, ?)").join(", ");
+      const placeholders = exercises.map(() => "(?, ?, ?, ?, ?)").join(", ");
       const values = exercises.flatMap((exercise) => [
         exercise.cloud_exercise_id ?? null,
         exercise.name ?? exercise.exercise_name,
         exercise.nickname ?? null,
         exercise.default_visible_columns ?? null,
+        exercise.official ? 1 : 0,
       ]);
 
       await db.runAsync(
-        `INSERT INTO Exercise (
+        `INSERT OR IGNORE INTO Exercise (
           cloud_exercise_id,
           name,
           nickname,
-          default_visible_columns
+          default_visible_columns,
+          official
         ) VALUES ${placeholders};`,
         values
       );

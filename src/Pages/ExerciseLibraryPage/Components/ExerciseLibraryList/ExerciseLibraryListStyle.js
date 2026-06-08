@@ -108,11 +108,30 @@ export default StyleSheet.create({
   filterScroll: {
     flexGrow: 0,
   },
-  trainingFilterScroll: {
-    paddingBottom: 12,
+  filterSections: {
+    gap: 13,
+    paddingBottom: 14,
   },
-  muscleFilterScroll: {
-    paddingBottom: 12,
+  filterSection: {
+    gap: 7,
+  },
+  filterSectionHeading: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    paddingHorizontal: 14,
+  },
+  filterSectionAccent: {
+    width: 14,
+    height: 2,
+    borderRadius: 999,
+  },
+  filterSectionLabel: {
+    fontSize: 10,
+    fontWeight: "900",
+    lineHeight: 13,
+    letterSpacing: 0.7,
+    textTransform: "uppercase",
   },
   filterContent: {
     paddingHorizontal: 14,
@@ -131,6 +150,32 @@ export default StyleSheet.create({
     fontWeight: "800",
     lineHeight: 14,
     textTransform: "uppercase",
+  },
+  muscleRoleLegend: {
+    marginHorizontal: 14,
+    marginBottom: 6,
+    gap: 8,
+  },
+  muscleRoleLegendItem: {
+    borderLeftWidth: 3,
+    paddingLeft: 9,
+    paddingVertical: 1,
+    gap: 1,
+  },
+  muscleRoleLegendText: {
+    fontSize: 10,
+    lineHeight: 14,
+  },
+  muscleRoleLegendLabel: {
+    fontSize: 10,
+    fontWeight: "900",
+    lineHeight: 13,
+    textTransform: "uppercase",
+  },
+  customExerciseAction: {
+    paddingHorizontal: 14,
+    paddingTop: 6,
+    paddingBottom: 8,
   },
   tableHeader: {
     flexDirection: "row",
@@ -159,7 +204,8 @@ export default StyleSheet.create({
     alignItems: "center",
     minHeight: EXERCISE_ROW_HEIGHT,
     borderTopWidth: 1,
-    paddingHorizontal: 18,
+    paddingLeft: 18,
+    paddingRight: 8,
     paddingVertical: 0,
     overflow: "hidden",
   },
@@ -180,21 +226,24 @@ export default StyleSheet.create({
     flex: 1,
     minWidth: 0,
     justifyContent: "center",
-    paddingRight: 8,
+    paddingRight: 0,
     paddingVertical: 8,
   },
-  exerciseName: {
-    fontSize: 20,
-    fontWeight: "800",
-    lineHeight: 22,
-  },
-  muscleBadgeRow: {
+  exerciseTitleRow: {
     flexDirection: "row",
-    flexWrap: "nowrap",
-    gap: 6,
-    marginTop: 5,
+    alignItems: "center",
+    justifyContent: "space-between",
+    minWidth: 0,
   },
-  muscleBadge: {
+  exerciseName: {
+    flex: 1,
+    flexShrink: 1,
+    marginRight: 6,
+    fontSize: 18,
+    fontWeight: "800",
+    lineHeight: 20,
+  },
+  exerciseStatusBadge: {
     minHeight: 18,
     borderRadius: 999,
     paddingHorizontal: 7,
@@ -202,16 +251,37 @@ export default StyleSheet.create({
     justifyContent: "center",
     flexShrink: 0,
   },
+  exerciseStatusBadgeText: {
+    fontSize: 9,
+    fontWeight: "900",
+    lineHeight: 11,
+    includeFontPadding: false,
+    textTransform: "uppercase",
+  },
+  muscleBadgeRow: {
+    flexDirection: "row",
+    flexWrap: "nowrap",
+    gap: 5,
+    marginTop: 4,
+  },
+  muscleBadge: {
+    minHeight: 16,
+    borderRadius: 999,
+    paddingHorizontal: 6,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
   primaryMuscleBadge: {
-    minWidth: 64,
+    minWidth: 58,
   },
   secondaryMuscleBadge: {
-    minWidth: 82,
+    minWidth: 74,
   },
   muscleBadgeText: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: "900",
-    lineHeight: 12,
+    lineHeight: 11,
     includeFontPadding: false,
     textAlign: "center",
     flexShrink: 0,

@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.16.2] - Unreleased
+### Changed
+- Let users create custom exercises from the Exercise Catalog by naming them and selecting their targeted muscle groups.
+- Label official catalog exercises and user-created custom exercises with color-coded badges.
+- Automatically reactivate All muscles when the final muscle filter is deselected.
+- Explain the difference between primary and secondary muscles in the Exercise Catalog.
+
+---
 ## [0.16.1] - Unreleased
 ### Changed
 - Show a Workout Calendar shortcut beside the compact Today card when no workouts are scheduled.

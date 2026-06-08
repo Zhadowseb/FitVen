@@ -17,6 +17,11 @@ import Filter from "../../../../Resources/Icons/UI-icons/Filter";
 import Library from "../../../../Resources/Icons/UI-icons/Library";
 import Search from "../../../../Resources/Icons/UI-icons/Search";
 import {
+  EXERCISE_MUSCLE_FILTERS,
+  toggleExerciseMuscleFilterKey,
+} from "../../../../Utils/exerciseMuscleGroups";
+import {
+  ThemedButton,
   ThemedCard,
   ThemedModal,
   ThemedText,
@@ -32,28 +37,7 @@ const GROUP_FILTERS = [
   { key: "mobility", label: "Mobility" },
 ];
 
-const MUSCLE_FILTERS = [
-  { key: "all", label: "All muscles", regionKeys: [] },
-  { key: "chest", label: "Chest", regionKeys: ["pecs"] },
-  {
-    key: "shoulders",
-    label: "Shoulders",
-    regionKeys: ["front_delts", "side_delts", "rear_delts"],
-  },
-  { key: "lats", label: "Lats", regionKeys: ["lats"] },
-  { key: "traps", label: "Traps", regionKeys: ["upper_traps"] },
-  { key: "biceps", label: "Biceps", regionKeys: ["biceps"] },
-  { key: "triceps", label: "Triceps", regionKeys: ["triceps"] },
-  { key: "forearms", label: "Forearms", regionKeys: ["forearms"] },
-  { key: "abs", label: "Abs", regionKeys: ["abs"] },
-  { key: "obliques", label: "Obliques", regionKeys: ["obliques"] },
-  { key: "glutes", label: "Glutes", regionKeys: ["glutes"] },
-  { key: "quads", label: "Quads", regionKeys: ["quads"] },
-  { key: "hamstrings", label: "Hamstrings", regionKeys: ["hamstrings"] },
-  { key: "calves", label: "Calves", regionKeys: ["calves"] },
-  { key: "adductors", label: "Adductors", regionKeys: ["adductors"] },
-  { key: "lower-back", label: "Lower back", regionKeys: ["lower_back"] },
-];
+const MUSCLE_FILTERS = EXERCISE_MUSCLE_FILTERS;
 
 const EXERCISE_REGION_KEY_FIELDS = [
   "primary_body_map_region_keys",
@@ -138,6 +122,7 @@ const ExerciseLibraryList = ({
   refreshKey,
   mode = "catalog",
   onSelectExercise,
+  onAddCustomExercise,
   selectingExerciseName = null,
 }) => {
   const db = useSQLiteContext();
@@ -164,6 +149,8 @@ const ExerciseLibraryList = ({
       : "rgba(214, 213, 225, 0.8)");
   const primaryBadgeSurface = "rgba(96, 218, 172, 0.2)";
   const secondaryBadgeSurface = "rgba(247, 116, 46, 0.18)";
+  const primaryFilterSurface = "rgba(247, 116, 46, 0.12)";
+  const secondaryFilterSurface = "rgba(96, 218, 172, 0.12)";
   const primaryBadgeText = secondaryColor;
   const secondaryBadgeText = primaryColor;
   const normalizedSearchQuery = searchQuery.trim().toLocaleLowerCase();
@@ -216,19 +203,9 @@ const ExerciseLibraryList = ({
   };
 
   const handleMuscleFilterPress = (filterKey) => {
-    if (filterKey === "all") {
-      setSelectedMuscleKeys(["all"]);
-      return;
-    }
-
-    setSelectedMuscleKeys((currentKeys) => {
-      const activeKeys = currentKeys.filter((key) => key !== "all");
-      const nextKeys = activeKeys.includes(filterKey)
-        ? activeKeys.filter((key) => key !== filterKey)
-        : [...activeKeys, filterKey];
-
-      return nextKeys.length > 0 ? nextKeys : ["all"];
-    });
+    setSelectedMuscleKeys((currentKeys) =>
+      toggleExerciseMuscleFilterKey(currentKeys, filterKey)
+    );
   };
 
   return (
@@ -257,11 +234,11 @@ const ExerciseLibraryList = ({
           >
             {isWorkoutPicker ? "Choose Exercise" : "Catalog"}
           </ThemedTitle>
-          <ThemedText style={styles.description} setColor={quietText}>
-            {isWorkoutPicker
-              ? "Workout exercise"
-              : "Synced from the shared cloud database whenever the app opens."}
-          </ThemedText>
+          {isWorkoutPicker ? (
+            <ThemedText style={styles.description} setColor={quietText}>
+              Workout exercise
+            </ThemedText>
+          ) : null}
         </View>
 
         <View
@@ -325,69 +302,147 @@ const ExerciseLibraryList = ({
         </TouchableOpacity>
       </View>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={[styles.filterScroll, styles.trainingFilterScroll]}
-        contentContainerStyle={styles.filterContent}
-      >
-        {GROUP_FILTERS.map((filter) => {
-          const isSelected = selectedGroupKey === filter.key;
-
-          return (
-            <Pressable
-              key={filter.key}
-              onPress={() => setSelectedGroupKey(filter.key)}
+      <View style={styles.filterSections}>
+        <View style={styles.filterSection}>
+          <View style={styles.filterSectionHeading}>
+            <View
               style={[
-                styles.groupFilter,
-                {
-                  backgroundColor: isSelected ? primaryColor : badgeSurface,
-                  borderColor: isSelected ? primaryColor : cardBorder,
-                },
+                styles.filterSectionAccent,
+                { backgroundColor: primaryColor },
               ]}
-            >
-              <ThemedText
-                style={styles.groupFilterText}
-                setColor={isSelected ? activeFilterText : quietText}
-              >
-                {filter.label}
-              </ThemedText>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
+            />
+            <ThemedText style={styles.filterSectionLabel} setColor={quietText}>
+              Training focus
+            </ThemedText>
+          </View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.filterScroll}
+            contentContainerStyle={styles.filterContent}
+          >
+            {GROUP_FILTERS.map((filter) => {
+              const isSelected = selectedGroupKey === filter.key;
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={[styles.filterScroll, styles.muscleFilterScroll]}
-        contentContainerStyle={styles.filterContent}
-      >
-        {MUSCLE_FILTERS.map((filter) => {
-          const isSelected = selectedMuscleKeys.includes(filter.key);
+              return (
+                <Pressable
+                  key={filter.key}
+                  onPress={() => setSelectedGroupKey(filter.key)}
+                  style={[
+                    styles.groupFilter,
+                    {
+                      backgroundColor: isSelected
+                        ? primaryFilterSurface
+                        : "transparent",
+                      borderColor: isSelected ? primaryColor : cardBorder,
+                    },
+                  ]}
+                >
+                  <ThemedText
+                    style={styles.groupFilterText}
+                    setColor={isSelected ? primaryColor : quietText}
+                  >
+                    {filter.label}
+                  </ThemedText>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
 
-          return (
-            <Pressable
-              key={filter.key}
-              onPress={() => handleMuscleFilterPress(filter.key)}
+        <View style={styles.filterSection}>
+          <View style={styles.filterSectionHeading}>
+            <View
               style={[
-                styles.groupFilter,
-                {
-                  backgroundColor: isSelected ? secondaryColor : badgeSurface,
-                  borderColor: isSelected ? secondaryColor : cardBorder,
-                },
+                styles.filterSectionAccent,
+                { backgroundColor: secondaryColor },
               ]}
-            >
-              <ThemedText
-                style={styles.groupFilterText}
-                setColor={isSelected ? activeFilterText : quietText}
-              >
-                {filter.label}
-              </ThemedText>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
+            />
+            <ThemedText style={styles.filterSectionLabel} setColor={quietText}>
+              Muscles
+            </ThemedText>
+          </View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.filterScroll}
+            contentContainerStyle={styles.filterContent}
+          >
+            {MUSCLE_FILTERS.map((filter) => {
+              const isSelected = selectedMuscleKeys.includes(filter.key);
+
+              return (
+                <Pressable
+                  key={filter.key}
+                  onPress={() => handleMuscleFilterPress(filter.key)}
+                  style={[
+                    styles.groupFilter,
+                    {
+                      backgroundColor: isSelected
+                        ? secondaryFilterSurface
+                        : "transparent",
+                      borderColor: isSelected ? secondaryColor : cardBorder,
+                    },
+                  ]}
+                >
+                  <ThemedText
+                    style={styles.groupFilterText}
+                    setColor={isSelected ? secondaryColor : quietText}
+                  >
+                    {filter.label}
+                  </ThemedText>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
+      </View>
+
+      <View style={styles.muscleRoleLegend}>
+        <View
+          style={[
+            styles.muscleRoleLegendItem,
+            { borderLeftColor: primaryBadgeText },
+          ]}
+        >
+          <ThemedText
+            style={styles.muscleRoleLegendLabel}
+            setColor={primaryBadgeText}
+          >
+            Primary
+          </ThemedText>
+          <ThemedText style={styles.muscleRoleLegendText} setColor={quietText}>
+            Main working muscles, expected to fatigue or fail first.
+          </ThemedText>
+        </View>
+        <View
+          style={[
+            styles.muscleRoleLegendItem,
+            { borderLeftColor: secondaryBadgeText },
+          ]}
+        >
+          <ThemedText
+            style={styles.muscleRoleLegendLabel}
+            setColor={secondaryBadgeText}
+          >
+            Secondary
+          </ThemedText>
+          <ThemedText style={styles.muscleRoleLegendText} setColor={quietText}>
+            Support muscles used during the exercise, but not intended to be
+            the limiting point.
+          </ThemedText>
+        </View>
+      </View>
+
+      {onAddCustomExercise ? (
+        <View style={styles.customExerciseAction}>
+          <ThemedButton
+            title="Add custom exercise"
+            fullWidth
+            onPress={onAddCustomExercise}
+          />
+        </View>
+      ) : null}
 
       <View style={styles.tableHeader}>
         <View style={styles.tableHeaderPreview} />
@@ -461,14 +516,36 @@ const ExerciseLibraryList = ({
                 />
 
                 <View style={styles.exerciseBody}>
-                  <ThemedText
-                    style={styles.exerciseName}
-                    setColor={titleColor}
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                  >
-                    {exercise.exercise_name}
-                  </ThemedText>
+                  <View style={styles.exerciseTitleRow}>
+                    <ThemedText
+                      style={styles.exerciseName}
+                      setColor={titleColor}
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                    >
+                      {exercise.exercise_name}
+                    </ThemedText>
+
+                    {exercise.is_custom || exercise.official ? (
+                      <View
+                        style={[
+                          styles.exerciseStatusBadge,
+                          {
+                            backgroundColor: exercise.is_custom
+                              ? primaryColor
+                              : secondaryColor,
+                          },
+                        ]}
+                      >
+                        <ThemedText
+                          style={styles.exerciseStatusBadgeText}
+                          setColor={activeFilterText}
+                        >
+                          {exercise.is_custom ? "Custom" : "Official"}
+                        </ThemedText>
+                      </View>
+                    ) : null}
+                  </View>
 
                   <ExerciseMuscleBadges
                     primaryBadgeSurface={primaryBadgeSurface}

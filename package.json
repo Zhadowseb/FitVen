@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.16.1-minor-home-empty-today-calendar-shortcut.1",
+  "version": "0.16.2-minor-custom-exercises.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",
@@ -14,6 +14,7 @@
     "version:branch": "node scripts/version.js branch",
     "version:status": "node scripts/version.js status",
     "version:sync": "node scripts/version.js sync",
+    "test:custom-exercise": "node scripts/test-custom-exercise-muscles.js",
     "test:location": "node scripts/test-location-distance.js",
     "release:prepare": "node scripts/version.js release",
     "release:android": "node scripts/release-android.js",

@@ -8,6 +8,10 @@ import * as workoutService from "./workoutService";
 import { withTransaction } from "./shared";
 import { createNextSyncVersion, normalizeSyncId } from "../Utils/syncUtils";
 import { enqueueSync, startBackgroundSync } from "./syncScheduler";
+import {
+  buildCustomExerciseMuscleMetadata,
+  normalizeExerciseMuscleGroupKeys,
+} from "../Utils/exerciseMuscleGroups";
 
 let dirtyStrengthHierarchyPushScheduled = false;
 let dirtyStrengthHierarchyPushNeedsRerun = false;
@@ -58,7 +62,7 @@ const EXERCISE_LIBRARY_TABLE = "Exercise";
 const EXERCISE_LIBRARY_NAME_COLUMN = "name";
 const EXERCISE_LIBRARY_ID_COLUMN = "id";
 const EXERCISE_LIBRARY_SELECT =
-  `${EXERCISE_LIBRARY_ID_COLUMN}, ${EXERCISE_LIBRARY_NAME_COLUMN}, nickname, default_visible_columns`;
+  `${EXERCISE_LIBRARY_ID_COLUMN}, ${EXERCISE_LIBRARY_NAME_COLUMN}, nickname, default_visible_columns, official`;
 const EXERCISE_COLUMN_PREFERENCE_CLOUD_TABLE =
   "exercise_column_preferences";
 const EXERCISE_COLUMN_PREFERENCE_CLOUD_SELECT =
@@ -990,6 +994,14 @@ function normalizeExerciseCatalogEntries(entries) {
     const defaultVisibleColumns = serializeVisibleColumns(
       entry?.default_visible_columns
     );
+    const isOfficial =
+      entry?.official === true ||
+      Number(entry?.official) === 1 ||
+      String(entry?.official).trim().toLocaleLowerCase() === "true";
+    const isCustom = Number(entry?.is_custom) === 1;
+    const customMuscleGroupKeys = normalizeExerciseMuscleGroupKeys(
+      entry?.custom_muscle_group_keys
+    );
 
     if (!normalizedName) {
       continue;
@@ -1000,6 +1012,9 @@ function normalizeExerciseCatalogEntries(entries) {
       name: normalizedName,
       nickname: normalizedNickname,
       default_visible_columns: defaultVisibleColumns,
+      official: isOfficial,
+      is_custom: isCustom,
+      custom_muscle_group_keys: customMuscleGroupKeys,
     });
   }
 
@@ -1020,6 +1035,7 @@ function areExerciseCatalogEntriesEqual(left, right) {
       left[index].cloud_exercise_id !== right[index].cloud_exercise_id ||
       left[index].name !== right[index].name ||
       left[index].nickname !== right[index].nickname ||
+      left[index].official !== right[index].official ||
       left[index].default_visible_columns !==
         right[index].default_visible_columns
     ) {
@@ -1747,6 +1763,11 @@ function mapExerciseCatalogForDisplay(entries) {
     exercise_name: entry.name ?? entry.exercise_name,
     nickname: entry.nickname ?? null,
     default_visible_columns: entry.default_visible_columns ?? null,
+    official: Boolean(entry.official),
+    is_custom: Boolean(entry.is_custom),
+    custom_muscle_group_keys: normalizeExerciseMuscleGroupKeys(
+      entry.custom_muscle_group_keys
+    ),
     primary_muscle_count: Number(entry.primary_muscle_count) || 0,
     secondary_muscle_count: Number(entry.secondary_muscle_count) || 0,
     primary_group_key: entry.primary_group_key ?? null,
@@ -1797,6 +1818,50 @@ export async function getExerciseStorage(db) {
 
 export async function createExerciseStorage(db, exerciseName) {
   await weightliftingRepository.createExerciseStorage(db, exerciseName);
+}
+
+export async function createCustomExercise(
+  db,
+  { exerciseName, muscleGroupKeys }
+) {
+  const normalizedExerciseName =
+    typeof exerciseName === "string" ? exerciseName.trim() : "";
+  const normalizedMuscleGroupKeys =
+    normalizeExerciseMuscleGroupKeys(muscleGroupKeys);
+
+  if (normalizedExerciseName.length < 2) {
+    throw new Error("Exercise name must contain at least 2 characters.");
+  }
+
+  if (normalizedExerciseName.length > 80) {
+    throw new Error("Exercise name cannot contain more than 80 characters.");
+  }
+
+  if (normalizedMuscleGroupKeys.length === 0) {
+    throw new Error("Select at least one muscle group.");
+  }
+
+  const existingExercise =
+    await weightliftingRepository.getExerciseCatalogEntryByName(
+      db,
+      normalizedExerciseName
+    );
+
+  if (existingExercise) {
+    throw new Error("An exercise with this name already exists.");
+  }
+
+  const exercise = await weightliftingRepository.createCustomExerciseStorage(db, {
+    exerciseName: normalizedExerciseName,
+    muscleGroupKeys: normalizedMuscleGroupKeys,
+  });
+
+  return mapExerciseCatalogForDisplay([
+    {
+      ...exercise,
+      ...buildCustomExerciseMuscleMetadata(normalizedMuscleGroupKeys),
+    },
+  ])[0];
 }
 
 export async function getPersonalRecordExerciseSummaries(db) {
@@ -1878,23 +1943,40 @@ export async function getExerciseHistory(
 export async function getExerciseLibraryEntries(db) {
   const localExerciseRows = await weightliftingRepository.getExerciseStorage(db);
   const localExercises = normalizeExerciseCatalogEntries(localExerciseRows);
+  const sharedExercises = localExercises.filter((exercise) => !exercise.is_custom);
+  const exercisesWithCustomMetadata = localExercises.map((exercise) =>
+    exercise.is_custom
+      ? {
+          ...exercise,
+          ...buildCustomExerciseMuscleMetadata(
+            exercise.custom_muscle_group_keys
+          ),
+        }
+      : exercise
+  );
 
   if (localExercises.length === 0) {
     return [];
   }
 
   try {
-    const { data: exerciseRows, error: exerciseError } = await supabase
-      .from(EXERCISE_LIBRARY_TABLE)
-      .select(EXERCISE_LIBRARY_SELECT)
-      .in(
-        EXERCISE_LIBRARY_NAME_COLUMN,
-        localExercises.map((exercise) => exercise.name)
-      )
-      .order(EXERCISE_LIBRARY_NAME_COLUMN, { ascending: true });
+    let exerciseRows = [];
 
-    if (exerciseError) {
-      throw exerciseError;
+    if (sharedExercises.length > 0) {
+      const { data, error } = await supabase
+        .from(EXERCISE_LIBRARY_TABLE)
+        .select(EXERCISE_LIBRARY_SELECT)
+        .in(
+          EXERCISE_LIBRARY_NAME_COLUMN,
+          sharedExercises.map((exercise) => exercise.name)
+        )
+        .order(EXERCISE_LIBRARY_NAME_COLUMN, { ascending: true });
+
+      if (error) {
+        throw error;
+      }
+
+      exerciseRows = data ?? [];
     }
 
     const exerciseIds = (exerciseRows ?? [])
@@ -1964,13 +2046,13 @@ export async function getExerciseLibraryEntries(db) {
     );
 
     return mapExerciseCatalogForDisplay(
-      localExercises.map((exercise) => ({
+      exercisesWithCustomMetadata.map((exercise) => ({
         ...exercise,
         ...(cloudExerciseMap.get(exercise.name.toLocaleLowerCase()) ?? {}),
       }))
     );
   } catch (_error) {
-    return mapExerciseCatalogForDisplay(localExercises);
+    return mapExerciseCatalogForDisplay(exercisesWithCustomMetadata);
   }
 }
 
@@ -1986,7 +2068,9 @@ export async function syncExerciseLibraryFromCloud(db) {
 
   const cloudExercises = normalizeExerciseCatalogEntries(exerciseRows ?? []);
   const localExerciseRows = await weightliftingRepository.getExerciseStorage(db);
-  const localExercises = normalizeExerciseCatalogEntries(localExerciseRows);
+  const localExercises = normalizeExerciseCatalogEntries(localExerciseRows).filter(
+    (exercise) => !exercise.is_custom
+  );
   let catalogChanged = false;
 
   if (!areExerciseCatalogEntriesEqual(localExercises, cloudExercises)) {

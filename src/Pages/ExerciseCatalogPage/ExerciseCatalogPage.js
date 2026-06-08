@@ -5,6 +5,7 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
 
 import ExerciseLibraryList from "../ExerciseLibraryPage/Components/ExerciseLibraryList/ExerciseLibraryList";
+import CustomExerciseModal from "./Components/CustomExerciseModal/CustomExerciseModal";
 import styles from "./ExerciseCatalogPageStyle";
 import {
   ThemedHeader,
@@ -19,6 +20,8 @@ const ExerciseCatalogPage = ({ route }) => {
   const colorScheme = useColorScheme();
   const [refreshKey, setRefreshKey] = useState(0);
   const [selectingExerciseName, setSelectingExerciseName] = useState(null);
+  const [isCustomExerciseModalVisible, setIsCustomExerciseModalVisible] =
+    useState(false);
   const workoutPicker = route?.params?.workoutPicker ?? null;
   const workoutPickerId = Number(workoutPicker?.workoutId);
   const isWorkoutPicker =
@@ -62,6 +65,22 @@ const ExerciseCatalogPage = ({ route }) => {
     [db, isWorkoutPicker, navigation, selectingExerciseName, workoutPickerId]
   );
 
+  const handleCreateCustomExercise = useCallback(
+    async ({ exerciseName, muscleGroupKeys }) => {
+      const exercise = await weightliftingService.createCustomExercise(db, {
+        exerciseName,
+        muscleGroupKeys,
+      });
+
+      setRefreshKey((currentKey) => currentKey + 1);
+
+      if (isWorkoutPicker) {
+        await handleSelectExercise(exercise);
+      }
+    },
+    [db, handleSelectExercise, isWorkoutPicker]
+  );
+
   return (
     <ThemedView safe={["top", "left", "right"]} style={styles.container}>
       {isWorkoutPicker && (
@@ -79,9 +98,16 @@ const ExerciseCatalogPage = ({ route }) => {
           refreshKey={refreshKey}
           mode={isWorkoutPicker ? "workout-picker" : "catalog"}
           onSelectExercise={isWorkoutPicker ? handleSelectExercise : undefined}
+          onAddCustomExercise={() => setIsCustomExerciseModalVisible(true)}
           selectingExerciseName={selectingExerciseName}
         />
       </ScrollView>
+
+      <CustomExerciseModal
+        visible={isCustomExerciseModalVisible}
+        onClose={() => setIsCustomExerciseModalVisible(false)}
+        onCreate={handleCreateCustomExercise}
+      />
 
       <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
     </ThemedView>
