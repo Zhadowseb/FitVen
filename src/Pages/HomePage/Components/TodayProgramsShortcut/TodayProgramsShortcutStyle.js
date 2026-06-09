@@ -77,27 +77,6 @@ export default StyleSheet.create({
     fontWeight: "800",
     textAlign: "center",
   },
-  emptyActionRow: {
-    flexDirection: "row",
-    gap: 7,
-    marginTop: 6,
-  },
-  secondaryActionButton: {
-    flex: 1,
-    minWidth: 0,
-    minHeight: 28,
-    borderRadius: 9,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 4,
-  },
-  secondaryActionText: {
-    fontSize: 9,
-    lineHeight: 12,
-    fontWeight: "700",
-    textAlign: "center",
-  },
   programSection: {
     marginBottom: 0,
   },

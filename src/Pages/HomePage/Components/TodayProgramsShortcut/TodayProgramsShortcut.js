@@ -148,52 +148,6 @@ const TodayProgramsShortcut = () => {
                 Quick Start
               </ThemedText>
             </TouchableOpacity>
-
-            <View style={styles.emptyActionRow}>
-              <TouchableOpacity
-                activeOpacity={0.82}
-                accessibilityLabel="Open templates"
-                accessibilityRole="button"
-                onPress={() => navigation.navigate("ProgramPage")}
-                style={[
-                  styles.secondaryActionButton,
-                  {
-                    backgroundColor: theme.uiBackground ?? theme.background,
-                    borderColor: theme.cardBorder ?? theme.border,
-                  },
-                ]}
-              >
-                <ThemedText
-                  style={styles.secondaryActionText}
-                  setColor={theme.text ?? theme.title}
-                  numberOfLines={1}
-                >
-                  Templates
-                </ThemedText>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                activeOpacity={0.82}
-                accessibilityLabel="Open workout calendar"
-                accessibilityRole="button"
-                onPress={() => navigation.navigate("WorkoutCalendarPage")}
-                style={[
-                  styles.secondaryActionButton,
-                  {
-                    backgroundColor: theme.uiBackground ?? theme.background,
-                    borderColor: theme.cardBorder ?? theme.border,
-                  },
-                ]}
-              >
-                <ThemedText
-                  style={styles.secondaryActionText}
-                  setColor={theme.text ?? theme.title}
-                  numberOfLines={1}
-                >
-                  Plan
-                </ThemedText>
-              </TouchableOpacity>
-            </View>
           </View>
 
           <HomeImageShortcutCard
