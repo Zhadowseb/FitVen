@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Alert,
   StyleSheet,
@@ -19,6 +19,7 @@ import Social from "../Icons/UI-icons/Social";
 import UpwardGraf from "../Icons/UI-icons/UpwardGraf";
 import { programService } from "../../Services";
 import { getTodaysDate } from "../../Utils/dateUtils";
+import { subscribeQuickWorkoutMenu } from "../../Utils/quickWorkoutMenuEvents";
 
 function getWorkoutType(workout) {
   return workout?.workout_type ?? workout?.label ?? null;
@@ -117,7 +118,7 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     navigationRef.navigate("ExerciseLibraryPage");
   };
 
-  const loadPlannedTodayShortcut = async () => {
+  const loadPlannedTodayShortcut = useCallback(async () => {
     const todayDate = getTodaysDate();
 
     try {
@@ -133,9 +134,9 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
       console.error("Failed to load today's planned workout:", error);
       setPlannedTodayShortcut(null);
     }
-  };
+  }, [db]);
 
-  const loadRecentWorkouts = async () => {
+  const loadRecentWorkouts = useCallback(async () => {
     const todayDate = getTodaysDate();
 
     try {
@@ -152,9 +153,9 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     } finally {
       setIsLoadingRecentWorkouts(false);
     }
-  };
+  }, [db]);
 
-  const loadUsualWorkouts = async () => {
+  const loadUsualWorkouts = useCallback(async () => {
     const todayDate = getTodaysDate();
 
     try {
@@ -172,9 +173,9 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     } finally {
       setIsLoadingUsualWorkouts(false);
     }
-  };
+  }, [db]);
 
-  const handleQuickWorkoutPress = () => {
+  const handleQuickWorkoutPress = useCallback(() => {
     if (isCreatingQuickWorkout) {
       return;
     }
@@ -186,7 +187,16 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     loadPlannedTodayShortcut();
     loadUsualWorkouts();
     loadRecentWorkouts();
-  };
+  }, [
+    isCreatingQuickWorkout,
+    loadPlannedTodayShortcut,
+    loadRecentWorkouts,
+    loadUsualWorkouts,
+  ]);
+
+  useEffect(() => {
+    return subscribeQuickWorkoutMenu(handleQuickWorkoutPress);
+  }, [handleQuickWorkoutPress]);
 
   const handleCreateQuickWorkout = async (workoutType) => {
     if (!navigationRef?.isReady?.() || isCreatingQuickWorkout) {

@@ -8,7 +8,7 @@ export default StyleSheet.create({
   },
   stateCard: {
     borderWidth: 1,
-    borderRadius: 26,
+    borderRadius: 24,
     paddingHorizontal: 18,
     paddingTop: 20,
     paddingBottom: 18,
@@ -23,7 +23,10 @@ export default StyleSheet.create({
   emptyTodayCard: {
     flex: 1,
     minWidth: 0,
-    justifyContent: "flex-end",
+    justifyContent: "flex-start",
+    paddingHorizontal: 12,
+    paddingTop: 14,
+    paddingBottom: 10,
   },
   stateAccent: {
     position: "absolute",
@@ -35,9 +38,10 @@ export default StyleSheet.create({
   stateEyebrow: {
     fontWeight: "800",
     fontSize: 10,
-    letterSpacing: 1,
+    lineHeight: 12,
+    letterSpacing: 0,
     textTransform: "uppercase",
-    marginBottom: 4,
+    marginBottom: 3,
   },
   loadingState: {
     minHeight: 120,
@@ -49,13 +53,50 @@ export default StyleSheet.create({
     marginTop: 10,
     textAlign: "center",
   },
-  emptyState: {
-    minHeight: 110,
-    justifyContent: "center",
+  emptyTitle: {
+    padding: 0,
+    fontSize: 15,
+    lineHeight: 18,
   },
   emptyCopy: {
-    marginTop: 10,
-    lineHeight: 20,
+    marginTop: 2,
+    fontSize: 10,
+    lineHeight: 13,
+  },
+  quickStartButton: {
+    minHeight: 32,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 6,
+    paddingHorizontal: 8,
+  },
+  quickStartButtonText: {
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: "800",
+    textAlign: "center",
+  },
+  emptyActionRow: {
+    flexDirection: "row",
+    gap: 7,
+    marginTop: 6,
+  },
+  secondaryActionButton: {
+    flex: 1,
+    minWidth: 0,
+    minHeight: 28,
+    borderRadius: 9,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 4,
+  },
+  secondaryActionText: {
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: "700",
+    textAlign: "center",
   },
   programSection: {
     marginBottom: 0,

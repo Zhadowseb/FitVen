@@ -1,4 +1,9 @@
-import { ActivityIndicator, View, useColorScheme } from "react-native";
+import {
+  ActivityIndicator,
+  TouchableOpacity,
+  View,
+  useColorScheme,
+} from "react-native";
 import { useCallback, useState } from "react";
 import { useSQLiteContext } from "expo-sqlite";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
@@ -8,6 +13,7 @@ import HomeImageShortcutCard from "../../../../Resources/Components/HomeImageSho
 import { Colors } from "../../../../Resources/GlobalStyling/colors";
 import { ThemedText, ThemedTitle } from "../../../../Resources/ThemedComponents";
 import { getTodaysDate } from "../../../../Utils/dateUtils";
+import { requestOpenQuickWorkoutMenu } from "../../../../Utils/quickWorkoutMenuEvents";
 import TodayShortcut from "../TodayShortcut/TodayShortcut";
 import styles from "./TodayProgramsShortcutStyle";
 
@@ -97,13 +103,7 @@ const TodayProgramsShortcut = () => {
               pointerEvents="none"
               style={[
                 styles.stateAccent,
-                {
-                  backgroundColor:
-                    theme.cardBorder ??
-                    theme.border ??
-                    theme.iconColor ??
-                    theme.text,
-                },
+                { backgroundColor: theme.primary ?? "#f7742e" },
               ]}
             />
 
@@ -113,10 +113,87 @@ const TodayProgramsShortcut = () => {
             >
               TODAY
             </ThemedText>
-            <ThemedTitle type="h3">Today</ThemedTitle>
-            <ThemedText style={styles.emptyCopy} setColor={quietText}>
-              No workouts scheduled.
+            <ThemedTitle
+              type="h3"
+              style={styles.emptyTitle}
+              numberOfLines={2}
+            >
+              Ready to train?
+            </ThemedTitle>
+            <ThemedText
+              style={styles.emptyCopy}
+              setColor={quietText}
+              numberOfLines={2}
+            >
+              No workout planned today.
             </ThemedText>
+
+            <TouchableOpacity
+              activeOpacity={0.86}
+              accessibilityLabel="Quick start workout"
+              accessibilityRole="button"
+              onPress={requestOpenQuickWorkoutMenu}
+              style={[
+                styles.quickStartButton,
+                { backgroundColor: theme.primary ?? "#f7742e" },
+              ]}
+            >
+              <ThemedText
+                style={styles.quickStartButtonText}
+                setColor={
+                  theme.textInverted ?? theme.cardBackground ?? "#1b1918"
+                }
+                numberOfLines={1}
+              >
+                Quick Start
+              </ThemedText>
+            </TouchableOpacity>
+
+            <View style={styles.emptyActionRow}>
+              <TouchableOpacity
+                activeOpacity={0.82}
+                accessibilityLabel="Open templates"
+                accessibilityRole="button"
+                onPress={() => navigation.navigate("ProgramPage")}
+                style={[
+                  styles.secondaryActionButton,
+                  {
+                    backgroundColor: theme.uiBackground ?? theme.background,
+                    borderColor: theme.cardBorder ?? theme.border,
+                  },
+                ]}
+              >
+                <ThemedText
+                  style={styles.secondaryActionText}
+                  setColor={theme.text ?? theme.title}
+                  numberOfLines={1}
+                >
+                  Templates
+                </ThemedText>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                activeOpacity={0.82}
+                accessibilityLabel="Open workout calendar"
+                accessibilityRole="button"
+                onPress={() => navigation.navigate("WorkoutCalendarPage")}
+                style={[
+                  styles.secondaryActionButton,
+                  {
+                    backgroundColor: theme.uiBackground ?? theme.background,
+                    borderColor: theme.cardBorder ?? theme.border,
+                  },
+                ]}
+              >
+                <ThemedText
+                  style={styles.secondaryActionText}
+                  setColor={theme.text ?? theme.title}
+                  numberOfLines={1}
+                >
+                  Plan
+                </ThemedText>
+              </TouchableOpacity>
+            </View>
           </View>
 
           <HomeImageShortcutCard

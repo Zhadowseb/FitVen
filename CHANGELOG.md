@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.17.4] - Unreleased
+### Changed
+- Replace the empty home workout state with a ready-to-train card and Quick Start action.
+
+---
 ## [0.17.3] - Unreleased
 ### Changed
 - Show a ring loader while home social circle data is loading.
