@@ -63,7 +63,9 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     "SocialPostSettingsPage",
     "ExerciseSocialPostSettingsPage",
   ].includes(currentRouteName);
-  const isSocialActive = currentRouteName === "SearchPage";
+  const isSocialActive = ["SearchPage", "SocialUserListPage"].includes(
+    currentRouteName
+  );
   const isLibraryActive = [
     "ExerciseLibraryPage",
     "ExerciseCatalogPage",

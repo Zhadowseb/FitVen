@@ -21,6 +21,7 @@ import ProgramPage from './src/Pages/ProgramPage/ProgramPage';
 import ProgramOverviewPage from './src/Pages/ProgramOverviewPage/ProgramOverviewPage';
 import MicrocyclePage from './src/Pages/MicrocyclePage/MicrocyclePage';
 import SearchPage from "./src/Pages/SearchPage/SearchPage";
+import SocialUserListPage from "./src/Pages/SocialUserListPage/SocialUserListPage";
 import WeekPage from './src/Pages/WeekPage/WeekPage';
 import WorkoutPage from './src/Pages/WorkoutPage/WorkoutPage';
 import SetPage from './src/Pages/SetPage/SetPage';
@@ -159,6 +160,7 @@ function RootNavigator() {
               <>
                 <Stack.Screen name="HomePage" component={HomePage} options={{ headerShown: false }} />
                 <Stack.Screen name="SearchPage" component={SearchPage} options={{ headerShown: false }} />
+                <Stack.Screen name="SocialUserListPage" component={SocialUserListPage} options={{ headerShown: false }} />
                 <Stack.Screen name="ProfilePage" component={ProfilePage} options={{ headerShown: false }} />
                 <Stack.Screen name="ProgramPage" component={ProgramPage} options={{headerShown: false}} />
                 <Stack.Screen name="ProgramOverviewPage" component={ProgramOverviewPage} options={{headerShown: false}} />

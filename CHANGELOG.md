@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.17.1] - Unreleased
+### Changed
+- Move social user search to its own page opened from the Find Friends card.
+
+---
 ## [0.17.0] - Unreleased
 ### Changed
 - Add Expo notification dependencies and push token registration scaffolding.

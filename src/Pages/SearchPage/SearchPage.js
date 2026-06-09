@@ -1,6 +1,5 @@
 import { StatusBar } from "expo-status-bar";
 import {
-  ActivityIndicator,
   ImageBackground,
   Pressable,
   ScrollView,
@@ -8,7 +7,7 @@ import {
   View,
   useColorScheme,
 } from "react-native";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
 
@@ -21,11 +20,9 @@ import { programService, socialService } from "../../Services";
 import { getTodaysDate } from "../../Utils/dateUtils";
 import {
   ThemedButton,
-  ThemedCard,
   ThemedHeader,
   ThemedModal,
   ThemedText,
-  ThemedTextInput,
   ThemedTitle,
   ThemedView,
   UserAvatar,
@@ -40,14 +37,6 @@ const SearchPage = () => {
   const navigation = useNavigation();
   const { user } = useAuth();
   const todayDate = getTodaysDate();
-  const scrollViewRef = useRef(null);
-  const searchSectionYRef = useRef(0);
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState([]);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [refreshKey, setRefreshKey] = useState(0);
-  const [busyUserId, setBusyUserId] = useState(null);
   const [circlePreview, setCirclePreview] = useState({
     currentUser: null,
     people: [],
@@ -66,7 +55,6 @@ const SearchPage = () => {
   const titleColor = theme.title ?? theme.text;
   const cardSurface = theme.cardBackground ?? theme.background;
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor;
-  const secondaryDark = theme.secondaryDark ?? theme.secondary ?? titleColor;
   const relationshipTitle =
     activeRelationshipType === "following" ? "Following" : "Followers";
 
@@ -136,114 +124,12 @@ const SearchPage = () => {
 
   useFocusEffect(
     useCallback(() => {
-      setRefreshKey((currentValue) => currentValue + 1);
       loadCirclePreview();
     }, [loadCirclePreview])
   );
 
-  useEffect(() => {
-    if (!user?.id) {
-      setIsLoading(false);
-      setResults([]);
-      setErrorMessage("Sign in to search for other users.");
-      return;
-    }
-
-    let isCancelled = false;
-    const timeoutId = setTimeout(async () => {
-      setIsLoading(true);
-      setErrorMessage("");
-
-      try {
-        await socialService.ensureOwnProfile(user);
-        const nextResults = await socialService.searchUsers({
-          query,
-          currentUserId: user.id,
-        });
-
-        if (!isCancelled) {
-          setResults(nextResults);
-        }
-      } catch (error) {
-        if (!isCancelled) {
-          setResults([]);
-          setErrorMessage(
-            error instanceof Error
-              ? error.message
-              : "Could not load user search right now."
-          );
-        }
-      } finally {
-        if (!isCancelled) {
-          setIsLoading(false);
-        }
-      }
-    }, 220);
-
-    return () => {
-      isCancelled = true;
-      clearTimeout(timeoutId);
-    };
-  }, [query, refreshKey, user]);
-
-  const handleToggleFollow = async (profile) => {
-    if (!user?.id || busyUserId) {
-      return;
-    }
-
-    const wasFollowing = profile.isFollowing;
-    setBusyUserId(profile.id);
-    setErrorMessage("");
-    setResults((currentResults) =>
-      currentResults.map((currentProfile) =>
-        currentProfile.id === profile.id
-          ? { ...currentProfile, isFollowing: !wasFollowing }
-          : currentProfile
-      )
-    );
-
-    try {
-      if (wasFollowing) {
-        await socialService.unfollowUser({
-          userId: user.id,
-          targetUserId: profile.id,
-        });
-      } else {
-        await socialService.followUser({
-          userId: user.id,
-          targetUserId: profile.id,
-        });
-      }
-      setFollowCounts((currentCounts) => ({
-        ...currentCounts,
-        following: Math.max(
-          0,
-          currentCounts.following + (wasFollowing ? -1 : 1)
-        ),
-      }));
-    } catch (error) {
-      setResults((currentResults) =>
-        currentResults.map((currentProfile) =>
-          currentProfile.id === profile.id
-            ? { ...currentProfile, isFollowing: wasFollowing }
-            : currentProfile
-        )
-      );
-      setErrorMessage(
-        error instanceof Error
-          ? error.message
-          : "Could not update follow status."
-      );
-    } finally {
-      setBusyUserId(null);
-    }
-  };
-
-  const handleOpenFriendSearch = () => {
-    scrollViewRef.current?.scrollTo({
-      y: Math.max(searchSectionYRef.current - 14, 0),
-      animated: true,
-    });
+  const handleOpenUserList = () => {
+    navigation.navigate("SocialUserListPage");
   };
 
   const closeRelationshipModal = () => {
@@ -307,13 +193,6 @@ const SearchPage = () => {
     </Pressable>
   );
 
-  const emptyStateTitle =
-    query.trim().length > 0 ? "No users matched." : "No other users yet.";
-  const emptyStateBody =
-    query.trim().length > 0
-      ? "Try a different username, tag or display name."
-      : "When more people join FitVen, they will show up here.";
-
   return (
     <ThemedView safe={["top", "left", "right"]} style={styles.container}>
       <ThemedHeader
@@ -356,7 +235,6 @@ const SearchPage = () => {
       </ThemedHeader>
 
       <ScrollView
-        ref={scrollViewRef}
         style={styles.content}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -374,7 +252,7 @@ const SearchPage = () => {
               currentUser={circlePreview.currentUser}
               people={circlePreview.people}
               errorMessage={circlePreviewError}
-              onSeeAll={handleOpenFriendSearch}
+              onSeeAll={handleOpenUserList}
               onOpenProfile={() => navigation.navigate("ProfilePage")}
             />
           </View>
@@ -384,7 +262,7 @@ const SearchPage = () => {
           activeOpacity={0.92}
           accessibilityRole="button"
           accessibilityLabel="Search for friends"
-          onPress={handleOpenFriendSearch}
+          onPress={handleOpenUserList}
           style={[styles.findFriendsCard, { borderColor: cardBorder }]}
         >
           <ImageBackground
@@ -420,127 +298,6 @@ const SearchPage = () => {
             </View>
           </ImageBackground>
         </TouchableOpacity>
-
-        <View
-          style={styles.searchSection}
-          onLayout={(event) => {
-            searchSectionYRef.current = event.nativeEvent.layout.y;
-          }}
-        >
-          <ThemedTextInput
-            value={query}
-            onChangeText={setQuery}
-            placeholder="Search username tags or display names"
-            autoCapitalize="none"
-            autoCorrect={false}
-            style={styles.searchInputWrapper}
-          />
-
-          <ThemedText style={styles.searchHint} setColor={quietText}>
-            Search by username base, full tag or display name.
-          </ThemedText>
-        </View>
-
-        {errorMessage ? (
-          <ThemedCard
-            style={[
-              styles.noticeCard,
-              {
-                backgroundColor: cardSurface,
-                borderColor: theme.danger ?? cardBorder,
-              },
-            ]}
-          >
-            <ThemedText style={styles.noticeTitle} setColor={titleColor}>
-              Search unavailable
-            </ThemedText>
-            <ThemedText style={styles.noticeBody} setColor={quietText}>
-              {errorMessage}
-            </ThemedText>
-          </ThemedCard>
-        ) : null}
-
-        {isLoading ? (
-          <View style={styles.loadingState}>
-            <ActivityIndicator color={theme.primary ?? theme.iconColor} />
-            <ThemedText style={styles.loadingLabel} setColor={quietText}>
-              Loading people...
-            </ThemedText>
-          </View>
-        ) : results.length > 0 ? (
-          <View style={styles.resultsList}>
-            {results.map((profile) => (
-              <View
-                key={profile.id}
-                style={[
-                  styles.resultRow,
-                  {
-                    borderColor: cardBorder,
-                  },
-                ]}
-              >
-                <UserAvatar
-                  uri={profile.avatarUrl}
-                  size={48}
-                  iconSize={24}
-                  iconColor={theme.primary ?? titleColor}
-                  backgroundColor={theme.uiBackground ?? theme.background}
-                  borderColor={cardBorder}
-                  borderWidth={1}
-                />
-
-                <View style={styles.resultCopy}>
-                  <ThemedText
-                    style={styles.resultDisplayName}
-                    setColor={titleColor}
-                  >
-                    {profile.displayName}
-                  </ThemedText>
-                  <ThemedText
-                    style={styles.resultUsername}
-                    setColor={secondaryDark}
-                  >
-                    {profile.username}
-                  </ThemedText>
-                </View>
-
-                <ThemedButton
-                  title={
-                    busyUserId === profile.id
-                      ? "Saving..."
-                      : profile.isFollowing
-                        ? "Following"
-                        : "Follow"
-                  }
-                  onPress={() => handleToggleFollow(profile)}
-                  width={112}
-                  height={36}
-                  textSize={13}
-                  variant={profile.isFollowing ? "secondary" : "primary"}
-                  disabled={busyUserId === profile.id}
-                  style={styles.followButton}
-                />
-              </View>
-            ))}
-          </View>
-        ) : (
-          <ThemedCard
-            style={[
-              styles.emptyStateCard,
-              {
-                backgroundColor: cardSurface,
-                borderColor: cardBorder,
-              },
-            ]}
-          >
-            <ThemedText style={styles.emptyStateTitle} setColor={titleColor}>
-              {emptyStateTitle}
-            </ThemedText>
-            <ThemedText style={styles.emptyStateBody} setColor={quietText}>
-              {emptyStateBody}
-            </ThemedText>
-          </ThemedCard>
-        )}
       </ScrollView>
 
       <ThemedModal
