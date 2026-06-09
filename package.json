@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.17.2-minor-notification-settings.1",
+  "version": "0.17.3-minor-home-friends-loading-ring.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",

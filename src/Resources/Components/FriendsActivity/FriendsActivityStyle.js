@@ -94,6 +94,16 @@ export default StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
   },
+  loadingSlot: {
+    minHeight: 116,
+    width: 172,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ringLoadingShell: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
   noticeCard: {
     marginHorizontal: 18,
     borderWidth: 1,

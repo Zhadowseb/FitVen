@@ -54,6 +54,7 @@ export default function App() {
     currentUser: null,
     people: [],
   });
+  const [isLoadingCirclePreview, setIsLoadingCirclePreview] = useState(true);
   const [circlePreviewError, setCirclePreviewError] = useState("");
   const [workoutSummaryPosts, setWorkoutSummaryPosts] = useState([]);
   const [workoutSummaryLoadingMore, setWorkoutSummaryLoadingMore] =
@@ -74,10 +75,12 @@ export default function App() {
         currentUser: null,
         people: [],
       });
+      setIsLoadingCirclePreview(false);
       setCirclePreviewError("");
       return;
     }
 
+    setIsLoadingCirclePreview(true);
     setCirclePreviewError("");
 
     try {
@@ -112,6 +115,8 @@ export default function App() {
       setCirclePreviewError(
         error instanceof Error ? error.message : "Could not load your circle."
       );
+    } finally {
+      setIsLoadingCirclePreview(false);
     }
   }, [db, todayDate, user]);
 
@@ -315,12 +320,13 @@ export default function App() {
           currentUser={circlePreview.currentUser}
           people={circlePreview.people}
           errorMessage={circlePreviewError}
+          isLoading={isLoadingCirclePreview}
           onSeeAll={() => navigation.navigate("SearchPage")}
           onOpenProfile={() => navigation.navigate("ProfilePage")}
         />
       </>
     ),
-    [circlePreview, circlePreviewError, navigation]
+    [circlePreview, circlePreviewError, isLoadingCirclePreview, navigation]
   );
 
   const renderWorkoutSummaryPost = useCallback(

@@ -1,4 +1,13 @@
-import { ScrollView, TouchableOpacity, View, useColorScheme } from "react-native";
+import {
+  Animated,
+  Easing,
+  ScrollView,
+  TouchableOpacity,
+  View,
+  useColorScheme,
+} from "react-native";
+import { useEffect, useRef } from "react";
+import Svg, { Circle } from "react-native-svg";
 
 import styles from "./FriendsActivityStyle";
 import { Colors } from "../../GlobalStyling/colors";
@@ -10,6 +19,95 @@ import {
   ThemedText,
   UserAvatar,
 } from "../../ThemedComponents";
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
+function RingLoading({ color, mutedColor, size = 52 }) {
+  const firstProgress = useRef(new Animated.Value(0)).current;
+  const secondProgress = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const createLoop = (progress, delay) =>
+      Animated.loop(
+        Animated.sequence([
+          Animated.delay(delay),
+          Animated.timing(progress, {
+            toValue: 1,
+            duration: 1800,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: false,
+          }),
+          Animated.timing(progress, {
+            toValue: 0,
+            duration: 0,
+            useNativeDriver: false,
+          }),
+        ])
+      );
+    const firstLoop = createLoop(firstProgress, 0);
+    const secondLoop = createLoop(secondProgress, 900);
+
+    firstLoop.start();
+    secondLoop.start();
+
+    return () => {
+      firstLoop.stop();
+      secondLoop.stop();
+    };
+  }, [firstProgress, secondProgress]);
+
+  const maxRadius = 20;
+  const firstRadius = firstProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, maxRadius],
+  });
+  const firstOpacity = firstProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.9, 0],
+  });
+  const secondRadius = secondProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, maxRadius],
+  });
+  const secondOpacity = secondProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.9, 0],
+  });
+
+  return (
+    <View style={[styles.ringLoadingShell, { width: size, height: size }]}>
+      <Svg width={size} height={size} viewBox="0 0 44 44">
+        <Circle
+          cx="22"
+          cy="22"
+          r="20"
+          stroke={mutedColor}
+          strokeWidth="2"
+          fill="none"
+          opacity={0.24}
+        />
+        <AnimatedCircle
+          cx="22"
+          cy="22"
+          r={firstRadius}
+          stroke={color}
+          strokeWidth="2"
+          fill="none"
+          opacity={firstOpacity}
+        />
+        <AnimatedCircle
+          cx="22"
+          cy="22"
+          r={secondRadius}
+          stroke={color}
+          strokeWidth="2"
+          fill="none"
+          opacity={secondOpacity}
+        />
+      </Svg>
+    </View>
+  );
+}
 
 function getActivityMeta(theme, activityState, workoutType) {
   const primary = theme.primary ?? "#f7742e";
@@ -197,6 +295,7 @@ export default function FriendsActivity({
   currentUser,
   people,
   errorMessage,
+  isLoading = false,
   onSeeAll,
   onOpenProfile,
 }) {
@@ -271,7 +370,15 @@ export default function FriendsActivity({
             ]}
           />
 
-          {people.length ? (
+          {isLoading ? (
+            <View style={styles.loadingSlot}>
+              <RingLoading
+                color={theme.primary ?? iconColor}
+                mutedColor={cardBorder}
+                size={58}
+              />
+            </View>
+          ) : people.length ? (
             people.map((person) => {
               const meta = getCircleMeta(theme, person);
               const subtitle =

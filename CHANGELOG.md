@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.17.3] - Unreleased
+### Changed
+- Show a ring loader while home social circle data is loading.
+
+---
 ## [0.17.2] - Unreleased
 ### Changed
 - Add workout-start notification preferences with custom followed-user selection.
