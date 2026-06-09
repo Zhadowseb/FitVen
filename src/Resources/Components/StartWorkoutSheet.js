@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Modal,
   Pressable,
@@ -12,6 +12,8 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Colors } from "../GlobalStyling/colors";
+import ArrowDoubleDown from "../Icons/UI-icons/ArrowDoubleDown";
+import ArrowDoubleUp from "../Icons/UI-icons/ArrowDoubleUp";
 import ReplayHistory from "../Icons/UI-icons/ReplayHistory";
 import Resistance from "../Icons/WorkoutLabels/Resistance";
 import Run from "../Icons/WorkoutLabels/Run";
@@ -115,9 +117,9 @@ function getWorkoutTitle(workout) {
   return workout?.label ?? getWorkoutTypeLabel(workout);
 }
 
-function getWorkoutDetail(shortcut) {
-  const workout = shortcut?.workout;
-  const programName = shortcut?.programName ?? "Program";
+function getWorkoutDetail(plannedWorkout) {
+  const workout = plannedWorkout?.workout;
+  const programName = plannedWorkout?.programName ?? "Workout calendar";
   const exerciseCount = workout?.previewItems?.length ?? 0;
 
   if (exerciseCount > 0) {
@@ -302,7 +304,15 @@ function SectionHeader({
 }
 
 function PlannedTodaySection({ shortcut, onOpen, palette, styles }) {
-  const workout = shortcut?.workout;
+  const [showChoices, setShowChoices] = useState(false);
+  const plannedWorkouts = shortcut?.workouts ?? [];
+  const primaryWorkout = plannedWorkouts[0] ?? null;
+  const workout = primaryWorkout?.workout;
+  const hasMultipleWorkouts = plannedWorkouts.length > 1;
+
+  useEffect(() => {
+    setShowChoices(false);
+  }, [shortcut]);
 
   if (!workout) {
     return null;
@@ -311,12 +321,21 @@ function PlannedTodaySection({ shortcut, onOpen, palette, styles }) {
   return (
     <View style={styles.plannedTodaySection}>
       <Text style={styles.plannedTodayPrompt}>
-        You have something planned in a program. Do you want to open the workout?
+        {hasMultipleWorkouts
+          ? "You have multiple workouts planned today."
+          : "You have a workout planned today."}
       </Text>
 
       <TouchableOpacity
         activeOpacity={0.86}
-        onPress={onOpen}
+        onPress={() => {
+          if (hasMultipleWorkouts) {
+            setShowChoices((currentValue) => !currentValue);
+            return;
+          }
+
+          onOpen(primaryWorkout);
+        }}
         style={styles.todayShortcutCard}
       >
         <IconTile
@@ -329,14 +348,52 @@ function PlannedTodaySection({ shortcut, onOpen, palette, styles }) {
         <View style={styles.todayShortcutCopy}>
           <Text style={styles.todayShortcutLabel}>TODAY</Text>
           <Text style={styles.cardTitle} numberOfLines={1}>
-            {getWorkoutTitle(workout)}
+            {hasMultipleWorkouts
+              ? `${plannedWorkouts.length} workouts planned`
+              : getWorkoutTitle(workout)}
           </Text>
           <Text style={styles.cardDetails} numberOfLines={1}>
-            {getWorkoutDetail(shortcut)}
+            {hasMultipleWorkouts
+              ? `${plannedWorkouts.length} ready`
+              : getWorkoutDetail(primaryWorkout)}
           </Text>
         </View>
-        <Text style={styles.chevron}>{">"}</Text>
+        <View style={styles.expandIcon}>
+          {showChoices ? (
+            <ArrowDoubleUp width={20} height={20} color={palette.muted} />
+          ) : (
+            <ArrowDoubleDown width={20} height={20} color={palette.muted} />
+          )}
+        </View>
       </TouchableOpacity>
+
+      {showChoices ? (
+        <View style={styles.todayChoiceList}>
+          {plannedWorkouts.map((plannedWorkout) => (
+            <TouchableOpacity
+              key={`${plannedWorkout.programId ?? "standalone"}-${plannedWorkout.workout.workout_id}`}
+              activeOpacity={0.84}
+              onPress={() => onOpen(plannedWorkout)}
+              style={styles.todayChoiceRow}
+            >
+              <IconTile
+                type={getWorkoutIconType(plannedWorkout.workout)}
+                palette={palette}
+                styles={styles}
+              />
+              <View style={styles.recentCopy}>
+                <Text style={styles.cardTitle} numberOfLines={1}>
+                  {getWorkoutTitle(plannedWorkout.workout)}
+                </Text>
+                <Text style={styles.cardDetails} numberOfLines={1}>
+                  {getWorkoutDetail(plannedWorkout)}
+                </Text>
+              </View>
+              <Text style={styles.chevron}>{">"}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -418,12 +475,13 @@ function UsualWorkoutSection({ isLoading, workouts, palette, styles }) {
   );
 }
 
-function RecentWorkoutRow({ workout, onPress, palette, styles }) {
+function RecentWorkoutRow({ workout, disabled, onPress, palette, styles }) {
   return (
     <TouchableOpacity
       activeOpacity={0.84}
+      disabled={disabled}
       onPress={() => onPress(workout)}
-      style={styles.recentRow}
+      style={[styles.recentRow, disabled ? styles.disabledCard : null]}
     >
       <IconTile
         type={getWorkoutIconType(workout)}
@@ -450,8 +508,9 @@ function RecentWorkoutRow({ workout, onPress, palette, styles }) {
 
 function RecentWorkoutSection({
   isLoading,
+  isStartingWorkout,
   workouts,
-  onOpenWorkout,
+  onCopyWorkout,
   palette,
   styles,
 }) {
@@ -473,7 +532,8 @@ function RecentWorkoutSection({
             <RecentWorkoutRow
               key={workout.workout_id}
               workout={workout}
-              onPress={onOpenWorkout}
+              disabled={isStartingWorkout}
+              onPress={onCopyWorkout}
               palette={palette}
               styles={styles}
             />
@@ -520,7 +580,7 @@ export default function StartWorkoutSheet({
   isLoadingUsualWorkouts = false,
   recentWorkouts = [],
   isLoadingRecentWorkouts = false,
-  onOpenRecentWorkout = noop,
+  onCopyRecentWorkout = noop,
   isStartingWorkout = false,
 }) {
   const colorScheme = useColorScheme();
@@ -586,8 +646,9 @@ export default function StartWorkoutSheet({
 
             <RecentWorkoutSection
               isLoading={isLoadingRecentWorkouts}
+              isStartingWorkout={isStartingWorkout}
               workouts={recentWorkouts}
-              onOpenWorkout={onOpenRecentWorkout}
+              onCopyWorkout={onCopyRecentWorkout}
               palette={palette}
               styles={styles}
             />
@@ -715,6 +776,20 @@ function createStyles(palette) {
     fontWeight: "900",
     letterSpacing: 2,
   },
+  todayChoiceList: {
+    gap: 8,
+  },
+  todayChoiceRow: {
+    minHeight: 70,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: palette.cardBorder,
+    backgroundColor: palette.card,
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
   cardTitle: {
     color: palette.title,
     fontSize: 16,
@@ -734,6 +809,13 @@ function createStyles(palette) {
     fontSize: 26,
     lineHeight: 28,
     fontWeight: "300",
+  },
+  expandIcon: {
+    width: 24,
+    height: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
   },
   section: {
     gap: 12,

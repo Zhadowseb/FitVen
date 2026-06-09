@@ -4984,7 +4984,10 @@ function formatProgramBestDisplay({ weight, reps, estimatedOneRepMax }) {
   };
 }
 
-async function cloneWorkoutContents(db, { sourceWorkoutId, targetWorkoutId }) {
+async function cloneWorkoutContents(
+  db,
+  { sourceWorkoutId, targetWorkoutId, resetPersonalRecords = false }
+) {
   const exercises = await weightliftingRepository.getExercisesByWorkoutId(
     db,
     sourceWorkoutId
@@ -5010,7 +5013,7 @@ async function cloneWorkoutContents(db, { sourceWorkoutId, targetWorkoutId }) {
       await weightliftingRepository.createSet(db, {
         setNumber: set.set_number,
         exerciseId: exerciseResult.lastInsertRowId,
-        personalRecord: set.personal_record,
+        personalRecord: resetPersonalRecords ? 0 : set.personal_record,
         pause: set.pause,
         rpe: set.rpe,
         weight: set.weight,
@@ -6984,6 +6987,133 @@ export async function copyWorkoutToDate(
   }
 
   return copiedWorkoutId;
+}
+
+export async function copyWorkoutToStandaloneDate(
+  db,
+  { workoutId, date = new Date() }
+) {
+  const normalizedDate =
+    date instanceof Date ? formatDate(date) : normalizeLocalDateString(date);
+
+  if (!normalizedDate) {
+    throw new Error("A valid workout date is required.");
+  }
+
+  const workoutDate = parseCustomDate(normalizedDate);
+  const weekday = getWeekdayLabel(workoutDate);
+  const sourceMetadata = await workoutRepository.getWorkoutPageMetadata(
+    db,
+    workoutId
+  );
+
+  if (!sourceMetadata) {
+    throw new Error("The recent workout could not be found.");
+  }
+
+  if (sourceMetadata.workout_type !== "Run") {
+    const localExercises =
+      await weightliftingRepository.getExercisesByWorkoutId(db, workoutId);
+    const localSetCountRow =
+      await weightliftingRepository.getTotalPlannedSetsByWorkout(db, workoutId);
+    const localSetCount = Number(localSetCountRow?.count) || 0;
+    const plannedSetCount = localExercises.reduce(
+      (total, exercise) => total + (Number(exercise.sets) || 0),
+      0
+    );
+    const weightliftingServiceModule = await import("./weightliftingService");
+
+    try {
+      await weightliftingServiceModule.hydrateStrengthWorkoutDataForWorkout(
+        db,
+        workoutId,
+        { forceTargetedHydration: true }
+      );
+    } catch (error) {
+      if (localSetCount < plannedSetCount) {
+        throw error;
+      }
+
+      console.warn(
+        "Could not refresh recent workout sets before copying; using complete local data:",
+        error
+      );
+    }
+  }
+
+  const sourceSetCountRow =
+    await weightliftingRepository.getTotalPlannedSetsByWorkout(db, workoutId);
+  const sourceSetCount = Number(sourceSetCountRow?.count) || 0;
+
+  const copiedWorkout = await withTransaction(db, async () => {
+    const existingDay = await programRepository.getStandaloneDayByDate(db, {
+      date: normalizedDate,
+    });
+    let dayId = existingDay?.day_id ?? null;
+
+    if (!dayId) {
+      const dayResult = await programRepository.insertDay(db, {
+        microcycleId: null,
+        programId: null,
+        weekday,
+        date: normalizedDate,
+      });
+
+      dayId = dayResult.lastInsertRowId;
+    }
+
+    const workoutResult = await programRepository.copyWorkoutIntoDay(db, {
+      date: normalizedDate,
+      dayId,
+      workoutId,
+    });
+
+    if (!workoutResult.changes) {
+      throw new Error("The recent workout could not be copied.");
+    }
+
+    await cloneWorkoutContents(db, {
+      sourceWorkoutId: workoutId,
+      targetWorkoutId: workoutResult.lastInsertRowId,
+      resetPersonalRecords: true,
+    });
+    const copiedSetCountRow =
+      await weightliftingRepository.getTotalPlannedSetsByWorkout(
+        db,
+        workoutResult.lastInsertRowId
+      );
+    const copiedSetCount = Number(copiedSetCountRow?.count) || 0;
+
+    if (copiedSetCount !== sourceSetCount) {
+      throw new Error("The recent workout sets could not be copied completely.");
+    }
+
+    const hierarchy = await workoutRepository.getDayHierarchyIds(db, dayId);
+    await workoutService.refreshWorkoutHierarchyCompletionByIds(db, {
+      dayId: hierarchy?.day_id,
+      microcycleId: hierarchy?.microcycle_id,
+      mesocycleId: hierarchy?.mesocycle_id,
+    });
+
+    return {
+      workout_id: workoutResult.lastInsertRowId,
+      workout_type: sourceMetadata.workout_type,
+      workout_label: sourceMetadata.workout_label,
+      date: normalizedDate,
+      day: weekday,
+      program_id: null,
+      program_name: null,
+    };
+  });
+
+  if (copiedWorkout) {
+    syncDaysInBackground(db);
+    syncWorkoutTypeInstancesInBackground(db);
+    syncExerciseInstancesInBackground(db);
+    syncSetsInBackground(db);
+  }
+
+  return copiedWorkout;
 }
 
 export async function deleteWorkout(db, workoutId) {

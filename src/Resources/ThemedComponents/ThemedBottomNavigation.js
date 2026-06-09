@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   StyleSheet,
@@ -26,23 +26,19 @@ function getWorkoutType(workout) {
 }
 
 function getPlannedTodayShortcut(todaySnapshots, date) {
-  for (const snapshot of todaySnapshots) {
-    const workout = snapshot.workouts.find(
-      (snapshotWorkout) => Number(snapshotWorkout.done) !== 1
-    );
-
-    if (workout) {
-      return {
+  const workouts = todaySnapshots.flatMap((snapshot) =>
+    snapshot.workouts
+      .filter((workout) => Number(workout.done) !== 1)
+      .map((workout) => ({
         date,
         day: snapshot.day,
         programId: snapshot.program?.program_id ?? null,
-        programName: snapshot.program?.program_name ?? "Program",
+        programName: snapshot.program?.program_name ?? "Workout calendar",
         workout,
-      };
-    }
-  }
+      }))
+  );
 
-  return null;
+  return workouts.length > 0 ? { date, workouts } : null;
 }
 
 function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
@@ -58,6 +54,7 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
   const [isLoadingUsualWorkouts, setIsLoadingUsualWorkouts] = useState(false);
   const [recentWorkouts, setRecentWorkouts] = useState([]);
   const [isLoadingRecentWorkouts, setIsLoadingRecentWorkouts] = useState(false);
+  const quickWorkoutDateRef = useRef(getTodaysDate());
 
   const isProfileActive = [
     "ProfilePage",
@@ -118,9 +115,7 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     navigationRef.navigate("ExerciseLibraryPage");
   };
 
-  const loadPlannedTodayShortcut = useCallback(async () => {
-    const todayDate = getTodaysDate();
-
+  const loadPlannedTodayShortcut = useCallback(async (todayDate) => {
     try {
       const todaySnapshots = await programService.getTodayWorkoutSnapshots(
         db,
@@ -136,9 +131,7 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     }
   }, [db]);
 
-  const loadRecentWorkouts = useCallback(async () => {
-    const todayDate = getTodaysDate();
-
+  const loadRecentWorkouts = useCallback(async (todayDate) => {
     try {
       setIsLoadingRecentWorkouts(true);
       const workouts = await programService.getRecentWorkouts(db, {
@@ -155,9 +148,7 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     }
   }, [db]);
 
-  const loadUsualWorkouts = useCallback(async () => {
-    const todayDate = getTodaysDate();
-
+  const loadUsualWorkouts = useCallback(async (todayDate) => {
     try {
       setIsLoadingUsualWorkouts(true);
       const workouts = await programService.getUsualWorkouts(db, {
@@ -180,13 +171,15 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
       return;
     }
 
+    const quickWorkoutDate = getTodaysDate();
+    quickWorkoutDateRef.current = quickWorkoutDate;
     setPlannedTodayShortcut(null);
     setUsualWorkouts([]);
     setRecentWorkouts([]);
     setQuickWorkoutModalVisible(true);
-    loadPlannedTodayShortcut();
-    loadUsualWorkouts();
-    loadRecentWorkouts();
+    loadPlannedTodayShortcut(quickWorkoutDate);
+    loadUsualWorkouts(quickWorkoutDate);
+    loadRecentWorkouts(quickWorkoutDate);
   }, [
     isCreatingQuickWorkout,
     loadPlannedTodayShortcut,
@@ -209,7 +202,7 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     try {
       const workoutLabel = workoutType.displayName ?? workoutType.id;
       const workout = await programService.createQuickWorkout(db, {
-        date: new Date(),
+        date: quickWorkoutDateRef.current,
         workoutType: workoutType.id,
         label: null,
       });
@@ -230,8 +223,10 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     }
   };
 
-  const handleOpenPlannedWorkout = () => {
-    const plannedWorkout = plannedTodayShortcut?.workout;
+  const handleOpenPlannedWorkout = (plannedSelection) => {
+    const selectedWorkout =
+      plannedSelection ?? plannedTodayShortcut?.workouts?.[0] ?? null;
+    const plannedWorkout = selectedWorkout?.workout;
 
     if (!navigationRef?.isReady?.() || !plannedWorkout) {
       return;
@@ -243,27 +238,50 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
       workout_id: plannedWorkout.workout_id,
       workout_label: plannedWorkout.label,
       workout_type: getWorkoutType(plannedWorkout),
-      day: plannedTodayShortcut.day?.Weekday,
-      date: plannedTodayShortcut.date,
-      program_id: plannedTodayShortcut.programId,
+      day: selectedWorkout.day?.Weekday,
+      date: selectedWorkout.date,
+      program_id: selectedWorkout.programId,
     });
   };
 
-  const handleOpenRecentWorkout = (workout) => {
-    if (!navigationRef?.isReady?.() || !workout) {
+  const handleCopyRecentWorkout = async (workout) => {
+    if (!navigationRef?.isReady?.() || !workout || isCreatingQuickWorkout) {
       return;
     }
 
+    setIsCreatingQuickWorkout(true);
     setQuickWorkoutModalVisible(false);
 
-    navigationRef.navigate("WorkoutPage", {
-      workout_id: workout.workout_id,
-      workout_label: workout.label,
-      workout_type: getWorkoutType(workout),
-      day: workout.weekday,
-      date: workout.date,
-      program_id: workout.program_id,
-    });
+    try {
+      const copiedWorkout = await programService.copyWorkoutToStandaloneDate(
+        db,
+        {
+          workoutId: workout.workout_id,
+          date: quickWorkoutDateRef.current,
+        }
+      );
+
+      if (!copiedWorkout) {
+        throw new Error("The recent workout could not be copied.");
+      }
+
+      navigationRef.navigate("WorkoutPage", {
+        workout_id: copiedWorkout.workout_id,
+        workout_label: copiedWorkout.workout_label,
+        workout_type: copiedWorkout.workout_type,
+        day: copiedWorkout.day,
+        date: copiedWorkout.date,
+        program_id: copiedWorkout.program_id,
+      });
+    } catch (error) {
+      console.error("Failed to copy recent workout:", error);
+      Alert.alert(
+        "Could not copy workout",
+        error instanceof Error ? error.message : "Please try again."
+      );
+    } finally {
+      setIsCreatingQuickWorkout(false);
+    }
   };
 
   return (
@@ -394,7 +412,7 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
         isLoadingUsualWorkouts={isLoadingUsualWorkouts}
         recentWorkouts={recentWorkouts}
         isLoadingRecentWorkouts={isLoadingRecentWorkouts}
-        onOpenRecentWorkout={handleOpenRecentWorkout}
+        onCopyRecentWorkout={handleCopyRecentWorkout}
         isStartingWorkout={isCreatingQuickWorkout}
       />
     </>

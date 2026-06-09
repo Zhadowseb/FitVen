@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.17.5-fix-social-post-settings-english.1",
+  "version": "0.17.6-fix-recent-workout-fresh-copy.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",

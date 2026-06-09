@@ -6,6 +6,8 @@ import { useNavigation } from "@react-navigation/native";
 import { Colors } from "../../../../Resources/GlobalStyling/colors";
 import { getTodaysDate } from "../../../../Utils/dateUtils";
 import { programService } from "../../../../Services";
+import ArrowDoubleDown from "../../../../Resources/Icons/UI-icons/ArrowDoubleDown";
+import ArrowDoubleUp from "../../../../Resources/Icons/UI-icons/ArrowDoubleUp";
 import styles from "./TodayShortcutStyle";
 import {
   ThemedCard,
@@ -54,6 +56,7 @@ export default function TodayShortcut({
 
   const [day, setDay] = useState(snapshot?.day ?? null);
   const [workouts, setWorkouts] = useState(snapshot?.workouts ?? []);
+  const [showWorkoutChoices, setShowWorkoutChoices] = useState(false);
 
   const date = getTodaysDate();
 
@@ -100,6 +103,7 @@ export default function TodayShortcut({
   ).length;
   const hasWorkouts = workoutCount > 0;
   const allWorkoutsDone = hasWorkouts && completedWorkoutCount === workoutCount;
+  const remainingWorkoutCount = workoutCount - completedWorkoutCount;
   const targetWorkout = useMemo(
     () =>
       workouts.find((workout) => Number(workout.done) !== 1) ??
@@ -150,12 +154,26 @@ export default function TodayShortcut({
       ? headerTitle
       : `${weekdayLabel} ${date}`;
   const detailLabel =
-    hasWorkouts && exerciseCount > 0
+    workoutCount > 1
+      ? allWorkoutsDone
+        ? `${workoutCount} completed`
+        : `${remainingWorkoutCount} remaining`
+      : hasWorkouts && exerciseCount > 0
       ? `${exerciseCount} ${exerciseCount === 1 ? "exercise" : "exercises"}`
       : hasWorkouts
         ? "Ready"
         : "No workout";
   const canOpenWorkout = Boolean(targetWorkout);
+  const displayTitle =
+    workoutCount > 1 ? `${workoutCount} workouts today` : title;
+  const displayWorkoutType =
+    workoutCount > 1 ? "Training" : workoutTypeLabel;
+
+  useEffect(() => {
+    if (workoutCount <= 1) {
+      setShowWorkoutChoices(false);
+    }
+  }, [workoutCount]);
 
   return (
     <ThemedCard
@@ -175,7 +193,14 @@ export default function TodayShortcut({
       <TouchableOpacity
         activeOpacity={0.9}
         disabled={!canOpenWorkout}
-        onPress={() => openWorkout(targetWorkout)}
+        onPress={() => {
+          if (workoutCount > 1) {
+            setShowWorkoutChoices((currentValue) => !currentValue);
+            return;
+          }
+
+          openWorkout(targetWorkout);
+        }}
         style={[
           styles.cardButton,
           !canOpenWorkout && styles.cardButtonDisabled,
@@ -221,7 +246,7 @@ export default function TodayShortcut({
             style={[styles.title, { color: titleColor }]}
             numberOfLines={1}
           >
-            {title}
+            {displayTitle}
           </ThemedTitle>
 
           <View style={styles.metaRow}>
@@ -232,7 +257,7 @@ export default function TodayShortcut({
                   setColor={accentColor}
                   numberOfLines={1}
                 >
-                  {workoutTypeLabel}
+                  {displayWorkoutType}
                 </ThemedText>
                 <View
                   style={[
@@ -260,7 +285,60 @@ export default function TodayShortcut({
           </View>
         </View>
 
+        {workoutCount > 1 ? (
+          <View style={styles.expandIcon}>
+            {showWorkoutChoices ? (
+              <ArrowDoubleUp width={20} height={20} color={quietText} />
+            ) : (
+              <ArrowDoubleDown width={20} height={20} color={quietText} />
+            )}
+          </View>
+        ) : null}
       </TouchableOpacity>
+
+      {showWorkoutChoices ? (
+        <View style={[styles.workoutChoices, { borderTopColor: cardBorder }]}>
+          {workouts.map((workout) => {
+            const workoutDone = Number(workout.done) === 1;
+
+            return (
+              <TouchableOpacity
+                key={workout.workout_id}
+                activeOpacity={0.86}
+                onPress={() => openWorkout(workout)}
+                style={[styles.workoutChoice, { borderColor: cardBorder }]}
+              >
+                <View style={styles.workoutChoiceCopy}>
+                  <ThemedText
+                    style={styles.workoutChoiceTitle}
+                    setColor={titleColor}
+                    numberOfLines={1}
+                  >
+                    {workout.label ?? getWorkoutTypeLabel(workout)}
+                  </ThemedText>
+                  <ThemedText
+                    style={styles.workoutChoiceDetail}
+                    setColor={quietText}
+                    numberOfLines={1}
+                  >
+                    {getWorkoutTypeLabel(workout)}
+                  </ThemedText>
+                </View>
+                <ThemedText
+                  style={styles.workoutChoiceStatus}
+                  setColor={
+                    workoutDone
+                      ? theme.secondary ?? "#60daac"
+                      : theme.primary ?? "#f7742e"
+                  }
+                >
+                  {workoutDone ? "DONE" : "OPEN"}
+                </ThemedText>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      ) : null}
     </ThemedCard>
   );
 }

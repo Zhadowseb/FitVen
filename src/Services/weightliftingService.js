@@ -2905,10 +2905,17 @@ export async function syncStrengthWorkoutDataFromCloud(db) {
   return enqueueSync(() => programServiceModule.syncSetsWithCloud(db));
 }
 
-export async function hydrateStrengthWorkoutDataForWorkout(db, workoutId) {
+export async function hydrateStrengthWorkoutDataForWorkout(
+  db,
+  workoutId,
+  { forceTargetedHydration = false } = {}
+) {
   let exercises = await loadWorkoutExercisesFromLocal(db, workoutId);
 
-  if (!shouldHydrateWorkoutExerciseData(exercises)) {
+  if (
+    !forceTargetedHydration &&
+    !shouldHydrateWorkoutExerciseData(exercises)
+  ) {
     return exercises;
   }
 
