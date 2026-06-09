@@ -23,17 +23,17 @@ export default StyleSheet.create({
   emptyTodayCard: {
     flex: 1,
     minWidth: 0,
-    justifyContent: "flex-start",
+    justifyContent: "space-between",
     paddingHorizontal: 12,
-    paddingTop: 14,
+    paddingTop: 18,
     paddingBottom: 10,
   },
   stateAccent: {
     position: "absolute",
     top: 0,
     left: 0,
-    bottom: 0,
-    width: 4,
+    right: 0,
+    height: 4,
   },
   stateEyebrow: {
     fontWeight: "800",
@@ -42,6 +42,9 @@ export default StyleSheet.create({
     letterSpacing: 0,
     textTransform: "uppercase",
     marginBottom: 3,
+  },
+  emptyEyebrow: {
+    textAlign: "center",
   },
   loadingState: {
     minHeight: 120,
@@ -53,22 +56,27 @@ export default StyleSheet.create({
     marginTop: 10,
     textAlign: "center",
   },
+  emptyContent: {
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 3,
+  },
   emptyTitle: {
     padding: 0,
     fontSize: 15,
     lineHeight: 18,
+    textAlign: "center",
   },
   emptyCopy: {
-    marginTop: 2,
     fontSize: 10,
     lineHeight: 13,
+    textAlign: "center",
   },
   quickStartButton: {
     minHeight: 32,
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 6,
     paddingHorizontal: 8,
   },
   quickStartButtonText: {

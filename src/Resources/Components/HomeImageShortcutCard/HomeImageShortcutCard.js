@@ -50,10 +50,12 @@ const HomeImageShortcutCard = ({
         <View
           pointerEvents="none"
           style={[
-            styles.sideAccent,
+            styles.accent,
             accentSide === "right"
-              ? styles.sideAccentRight
-              : styles.sideAccentLeft,
+              ? styles.accentRight
+              : accentSide === "left"
+                ? styles.accentLeft
+                : styles.accentTop,
             { backgroundColor: accentColor },
           ]}
         />

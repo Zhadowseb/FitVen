@@ -48,16 +48,25 @@ export default StyleSheet.create({
     fontSize: 22,
     lineHeight: 26,
   },
-  sideAccent: {
+  accent: {
     position: "absolute",
+  },
+  accentTop: {
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 4,
+  },
+  accentLeft: {
     top: 0,
     bottom: 0,
+    left: 0,
     width: 4,
   },
-  sideAccentLeft: {
-    left: 0,
-  },
-  sideAccentRight: {
+  accentRight: {
+    top: 0,
     right: 0,
+    bottom: 0,
+    width: 4,
   },
 });

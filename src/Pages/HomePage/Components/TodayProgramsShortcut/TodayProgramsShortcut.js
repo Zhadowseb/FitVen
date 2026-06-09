@@ -108,25 +108,28 @@ const TodayProgramsShortcut = () => {
             />
 
             <ThemedText
-              style={styles.stateEyebrow}
+              style={[styles.stateEyebrow, styles.emptyEyebrow]}
               setColor={theme.primary ?? "#f7742e"}
             >
               TODAY
             </ThemedText>
-            <ThemedTitle
-              type="h3"
-              style={styles.emptyTitle}
-              numberOfLines={2}
-            >
-              Ready to train?
-            </ThemedTitle>
-            <ThemedText
-              style={styles.emptyCopy}
-              setColor={quietText}
-              numberOfLines={2}
-            >
-              No workout planned today.
-            </ThemedText>
+
+            <View style={styles.emptyContent}>
+              <ThemedTitle
+                type="h3"
+                style={styles.emptyTitle}
+                numberOfLines={2}
+              >
+                Ready to train?
+              </ThemedTitle>
+              <ThemedText
+                style={styles.emptyCopy}
+                setColor={quietText}
+                numberOfLines={2}
+              >
+                No workout planned today.
+              </ThemedText>
+            </View>
 
             <TouchableOpacity
               activeOpacity={0.86}
@@ -152,7 +155,7 @@ const TodayProgramsShortcut = () => {
 
           <HomeImageShortcutCard
             accentColor={theme.primary ?? "#f7742e"}
-            accentSide="right"
+            accentSide="top"
             accessibilityLabel="Open workout calendar"
             imageSource={workoutCalendarImage}
             onPress={() => navigation.navigate("WorkoutCalendarPage")}
