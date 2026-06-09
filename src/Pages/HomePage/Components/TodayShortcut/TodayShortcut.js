@@ -43,6 +43,7 @@ function getWorkoutTitle({ workout, workoutCount, allWorkoutsDone }) {
 
 export default function TodayShortcut({
   program_id,
+  snapshot = null,
   headerEyebrow = null,
   headerTitle = "Today",
 }) {
@@ -51,26 +52,32 @@ export default function TodayShortcut({
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
 
-  const [day, setDay] = useState(null);
-  const [workouts, setWorkouts] = useState([]);
+  const [day, setDay] = useState(snapshot?.day ?? null);
+  const [workouts, setWorkouts] = useState(snapshot?.workouts ?? []);
 
   const date = getTodaysDate();
 
   const getToday = async () => {
     try {
-      const snapshot = await programService.getTodayProgramSnapshot(db, {
+      if (snapshot) {
+        setDay(snapshot.day ?? null);
+        setWorkouts(snapshot.workouts ?? []);
+        return;
+      }
+
+      const nextSnapshot = await programService.getTodayProgramSnapshot(db, {
         programId: program_id,
         date,
       });
 
-      if (!snapshot) {
+      if (!nextSnapshot) {
         setDay(null);
         setWorkouts([]);
         return;
       }
 
-      setDay(snapshot.day);
-      setWorkouts(snapshot.workouts);
+      setDay(nextSnapshot.day);
+      setWorkouts(nextSnapshot.workouts);
     } catch (error) {
       console.error(error);
     }
@@ -78,14 +85,14 @@ export default function TodayShortcut({
 
   useEffect(() => {
     getToday();
-  }, [db, program_id, date]);
+  }, [db, program_id, date, snapshot]);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener("focus", () => {
       getToday();
     });
     return unsubscribe;
-  }, [navigation, db, program_id, date]);
+  }, [navigation, db, program_id, date, snapshot]);
 
   const workoutCount = workouts.length;
   const completedWorkoutCount = workouts.filter(

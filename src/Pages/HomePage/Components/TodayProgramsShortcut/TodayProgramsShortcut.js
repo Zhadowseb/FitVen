@@ -24,7 +24,7 @@ const TodayProgramsShortcut = () => {
   const navigation = useNavigation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
-  const [programSnapshots, setProgramSnapshots] = useState([]);
+  const [todaySnapshots, setTodaySnapshots] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const date = getTodaysDate();
@@ -32,13 +32,13 @@ const TodayProgramsShortcut = () => {
   const loadToday = useCallback(async () => {
     try {
       setLoading(true);
-      const snapshots = await programService.getTodayProgramSnapshots(db, {
+      const snapshots = await programService.getTodayWorkoutSnapshots(db, {
         date,
       });
-      setProgramSnapshots(snapshots);
+      setTodaySnapshots(snapshots);
     } catch (error) {
       console.error(error);
-      setProgramSnapshots([]);
+      setTodaySnapshots([]);
     } finally {
       setLoading(false);
     }
@@ -51,7 +51,7 @@ const TodayProgramsShortcut = () => {
   );
 
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
-  const hasMultiplePrograms = programSnapshots.length > 1;
+  const hasMultipleSnapshots = todaySnapshots.length > 1;
 
   return (
     <View style={styles.container}>
@@ -87,7 +87,7 @@ const TodayProgramsShortcut = () => {
             </ThemedText>
           </View>
         </View>
-      ) : programSnapshots.length === 0 ? (
+      ) : todaySnapshots.length === 0 ? (
         <View style={styles.emptyShortcutRow}>
           <View
             style={[
@@ -107,21 +107,24 @@ const TodayProgramsShortcut = () => {
               ]}
             />
 
-            <ThemedText
-              style={[styles.stateEyebrow, styles.emptyEyebrow]}
-              setColor={theme.secondary ?? theme.primary ?? "#60daac"}
-            >
-              TODAY
-            </ThemedText>
-
             <View style={styles.emptyContent}>
               <ThemedTitle
                 type="h3"
-                style={styles.emptyTitle}
+                style={[
+                  styles.emptyTitle,
+                  { color: theme.secondary ?? theme.primary ?? "#60daac" },
+                ]}
                 numberOfLines={2}
               >
                 Ready to train?
               </ThemedTitle>
+              <ThemedText
+                style={styles.emptyDate}
+                setColor="#ffffff"
+                numberOfLines={1}
+              >
+                {date}
+              </ThemedText>
               <ThemedText
                 style={styles.emptyCopy}
                 setColor={quietText}
@@ -163,14 +166,22 @@ const TodayProgramsShortcut = () => {
           />
         </View>
       ) : (
-        programSnapshots.map((programSnapshot) => (
-          <View key={programSnapshot.program.program_id} style={styles.programSection}>
+        todaySnapshots.map((todaySnapshot, index) => (
+          <View
+            key={
+              todaySnapshot.program?.program_id != null
+                ? `program-${todaySnapshot.program.program_id}`
+                : `standalone-${todaySnapshot.day?.day_id ?? index}`
+            }
+            style={styles.programSection}
+          >
             <TodayShortcut
-              program_id={programSnapshot.program.program_id}
+              program_id={todaySnapshot.program?.program_id ?? null}
+              snapshot={todaySnapshot}
               headerEyebrow="TODAY"
               headerTitle={
-                hasMultiplePrograms
-                  ? programSnapshot.program.program_name || "Untitled program"
+                hasMultipleSnapshots
+                  ? todaySnapshot.program?.program_name || "Workout calendar"
                   : "Today"
               }
             />

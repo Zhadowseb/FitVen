@@ -25,8 +25,8 @@ function getWorkoutType(workout) {
   return workout?.workout_type ?? workout?.label ?? null;
 }
 
-function getPlannedTodayShortcut(programSnapshots, date) {
-  for (const snapshot of programSnapshots) {
+function getPlannedTodayShortcut(todaySnapshots, date) {
+  for (const snapshot of todaySnapshots) {
     const workout = snapshot.workouts.find(
       (snapshotWorkout) => Number(snapshotWorkout.done) !== 1
     );
@@ -122,13 +122,13 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     const todayDate = getTodaysDate();
 
     try {
-      const programSnapshots = await programService.getTodayProgramSnapshots(
+      const todaySnapshots = await programService.getTodayWorkoutSnapshots(
         db,
         { date: todayDate }
       );
 
       setPlannedTodayShortcut(
-        getPlannedTodayShortcut(programSnapshots, todayDate)
+        getPlannedTodayShortcut(todaySnapshots, todayDate)
       );
     } catch (error) {
       console.error("Failed to load today's planned workout:", error);

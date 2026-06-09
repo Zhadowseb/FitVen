@@ -107,9 +107,11 @@ function getWeekdayLabel(date) {
 }
 
 function isWorkoutLive(workout) {
+  const timerStartSeconds = normalizeStoredTimestampSeconds(workout?.timer_start);
+
   return (
     Number(workout?.done) !== 1 &&
-    (Number(workout?.is_active) === 1 || workout?.timer_start !== null)
+    (Number(workout?.is_active) === 1 || timerStartSeconds !== null)
   );
 }
 
@@ -5314,8 +5316,8 @@ export async function getTodayProgramSnapshot(db, { programId, date }) {
 }
 
 export async function getTodayActivitySummary(db, { date }) {
-  const programSnapshots = await getTodayProgramSnapshots(db, { date });
-  const todaysWorkouts = programSnapshots.flatMap((snapshot) => snapshot.workouts);
+  const todaySnapshots = await getTodayWorkoutSnapshots(db, { date });
+  const todaysWorkouts = todaySnapshots.flatMap((snapshot) => snapshot.workouts);
 
   if (!todaysWorkouts.length) {
     return {
@@ -5667,6 +5669,47 @@ export async function getTodayProgramSnapshots(db, { date }) {
   );
 
   return snapshots.filter(Boolean);
+}
+
+export async function getTodayWorkoutSnapshots(db, { date }) {
+  const programSnapshots = await getTodayProgramSnapshots(db, { date });
+  const normalizedLocalDate = normalizeLocalDateString(date);
+  const normalizedIsoDate = normalizeIsoDateString(date);
+
+  if (!normalizedLocalDate || !normalizedIsoDate) {
+    return programSnapshots;
+  }
+
+  const calendarWorkouts = await programRepository.getWorkoutsBetweenDates(db, {
+    startIsoDate: normalizedIsoDate,
+    endIsoDate: normalizedIsoDate,
+  });
+  const standaloneWorkouts = calendarWorkouts.filter(
+    (workout) => workout.program_id == null
+  );
+
+  if (standaloneWorkouts.length === 0) {
+    return programSnapshots;
+  }
+
+  const workoutsWithPreview = await Promise.all(
+    standaloneWorkouts.map((workout) => buildWorkoutPreview(db, workout))
+  );
+  const standaloneDay = {
+    day_id: standaloneWorkouts[0]?.day_id ?? null,
+    date: normalizedLocalDate,
+    Weekday: standaloneWorkouts[0]?.weekday ?? null,
+    program_id: null,
+  };
+
+  return [
+    ...programSnapshots,
+    {
+      day: standaloneDay,
+      workouts: workoutsWithPreview,
+      program: null,
+    },
+  ];
 }
 
 export async function getRecentWorkouts(

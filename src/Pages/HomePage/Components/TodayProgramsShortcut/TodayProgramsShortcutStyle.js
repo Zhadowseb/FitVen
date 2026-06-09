@@ -43,7 +43,10 @@ export default StyleSheet.create({
     textTransform: "uppercase",
     marginBottom: 3,
   },
-  emptyEyebrow: {
+  emptyDate: {
+    fontSize: 8,
+    lineHeight: 12,
+    fontWeight: "800",
     textAlign: "center",
   },
   loadingState: {
@@ -63,25 +66,25 @@ export default StyleSheet.create({
   },
   emptyTitle: {
     padding: 0,
-    fontSize: 15,
-    lineHeight: 18,
+    fontSize: 30,
+    lineHeight: 23,
     textAlign: "center",
   },
   emptyCopy: {
-    fontSize: 10,
-    lineHeight: 13,
+    fontSize: 11,
+    lineHeight: 14,
     textAlign: "center",
   },
   quickStartButton: {
-    minHeight: 32,
+    minHeight: 36,
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 8,
   },
   quickStartButtonText: {
-    fontSize: 11,
-    lineHeight: 14,
+    fontSize: 13,
+    lineHeight: 16,
     fontWeight: "800",
     textAlign: "center",
   },
