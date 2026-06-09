@@ -6,6 +6,8 @@ import { ThemedTitle } from "../../ThemedComponents";
 import styles from "./HomeImageShortcutCardStyle";
 
 const HomeImageShortcutCard = ({
+  accentColor = null,
+  accentSide = null,
   accessibilityLabel,
   imageSource,
   onPress,
@@ -43,6 +45,19 @@ const HomeImageShortcutCard = ({
           </ThemedTitle>
         </View>
       </ImageBackground>
+
+      {accentColor ? (
+        <View
+          pointerEvents="none"
+          style={[
+            styles.sideAccent,
+            accentSide === "right"
+              ? styles.sideAccentRight
+              : styles.sideAccentLeft,
+            { backgroundColor: accentColor },
+          ]}
+        />
+      ) : null}
     </TouchableOpacity>
   );
 };

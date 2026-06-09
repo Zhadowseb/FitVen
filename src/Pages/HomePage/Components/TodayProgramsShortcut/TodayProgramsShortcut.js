@@ -151,6 +151,8 @@ const TodayProgramsShortcut = () => {
           </View>
 
           <HomeImageShortcutCard
+            accentColor={theme.primary ?? "#f7742e"}
+            accentSide="right"
             accessibilityLabel="Open workout calendar"
             imageSource={workoutCalendarImage}
             onPress={() => navigation.navigate("WorkoutCalendarPage")}

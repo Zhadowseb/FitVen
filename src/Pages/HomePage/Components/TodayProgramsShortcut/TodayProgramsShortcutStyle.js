@@ -32,8 +32,8 @@ export default StyleSheet.create({
     position: "absolute",
     top: 0,
     left: 0,
-    right: 0,
-    height: 4,
+    bottom: 0,
+    width: 4,
   },
   stateEyebrow: {
     fontWeight: "800",

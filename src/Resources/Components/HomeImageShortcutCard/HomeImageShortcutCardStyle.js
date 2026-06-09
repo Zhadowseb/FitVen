@@ -7,6 +7,7 @@ export default StyleSheet.create({
     borderWidth: 1,
     borderRadius: 24,
     overflow: "hidden",
+    position: "relative",
   },
   image: {
     flex: 1,
@@ -46,5 +47,17 @@ export default StyleSheet.create({
     color: "#ffffff",
     fontSize: 22,
     lineHeight: 26,
+  },
+  sideAccent: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    width: 4,
+  },
+  sideAccentLeft: {
+    left: 0,
+  },
+  sideAccentRight: {
+    right: 0,
   },
 });
