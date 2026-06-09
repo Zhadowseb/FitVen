@@ -109,7 +109,7 @@ const TodayProgramsShortcut = () => {
 
             <ThemedText
               style={[styles.stateEyebrow, styles.emptyEyebrow]}
-              setColor={theme.primary ?? "#f7742e"}
+              setColor={theme.secondary ?? theme.primary ?? "#60daac"}
             >
               TODAY
             </ThemedText>
