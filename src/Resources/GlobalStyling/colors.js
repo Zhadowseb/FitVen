@@ -8,6 +8,7 @@ export const Colors = {
         secondary: "#60daacff",
         secondaryLight: "rgb(178, 214, 200)",
         secondaryDark: "rgb(24, 160, 108)",
+        third: "#b8b07a",
         record: "rgb(3, 111, 252)",
         recordLight: "rgb(51, 139, 255)",
         recordDark: "rgb(2, 49, 111)",

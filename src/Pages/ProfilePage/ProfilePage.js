@@ -84,6 +84,8 @@ export default function ProfilePage() {
   const panelSurface = theme.uiBackground ?? theme.background;
   const primaryColor = theme.primary ?? "#f7742e";
   const secondaryColor = theme.secondary ?? "#60daac";
+  const thirdColor = theme.third ?? panelSurface;
+  const thirdTextColor = theme.textInverted ?? theme.background ?? "#201e2b";
   const profileStatusColor =
     profileFeedback.status === "success"
       ? theme.secondaryDark ?? theme.secondary ?? titleColor
@@ -446,6 +448,11 @@ export default function ProfilePage() {
                 maxLength={socialService.PROFILE_DISPLAY_NAME_MAX_LENGTH}
                 error={!isLoadingProfile ? displayNameError : undefined}
                 style={styles.inputWrapper}
+                inputStyle={{
+                  backgroundColor: thirdColor,
+                  color: thirdTextColor,
+                }}
+                placeholderTextColor={thirdTextColor}
               />
               <View style={styles.metaRow}>
                 <ThemedText style={styles.metaText} setColor={quietText}>
@@ -476,7 +483,14 @@ export default function ProfilePage() {
                 multiline
                 textAlignVertical="top"
                 style={styles.inputWrapper}
-                inputStyle={styles.bioInput}
+                inputStyle={[
+                  styles.bioInput,
+                  {
+                    backgroundColor: thirdColor,
+                    color: thirdTextColor,
+                  },
+                ]}
+                placeholderTextColor={thirdTextColor}
               />
               <View style={styles.metaRow}>
                 <ThemedText style={styles.metaText} setColor={quietText}>
@@ -563,16 +577,16 @@ export default function ProfilePage() {
                 style={[
                   styles.settingsButton,
                   {
-                    backgroundColor: panelSurface,
+                    backgroundColor: thirdColor,
                     borderColor: cardBorder,
                   },
                 ]}
               >
                 <View style={styles.settingsButtonContent}>
-                  <Library width={22} height={22} color={primaryColor} />
+                  <Library width={22} height={22} color={thirdTextColor} />
                   <ThemedText
                     style={styles.settingsButtonText}
-                    setColor={titleColor}
+                    setColor={thirdTextColor}
                   >
                     Exercises
                   </ThemedText>
@@ -580,8 +594,8 @@ export default function ProfilePage() {
                 <TailArrowUpRight
                   width={18}
                   height={18}
-                  stroke={quietText}
-                  color={quietText}
+                  stroke={thirdTextColor}
+                  color={thirdTextColor}
                 />
               </TouchableOpacity>
 
@@ -591,16 +605,16 @@ export default function ProfilePage() {
                 style={[
                   styles.settingsButton,
                   {
-                    backgroundColor: panelSurface,
+                    backgroundColor: thirdColor,
                     borderColor: cardBorder,
                   },
                 ]}
               >
                 <View style={styles.settingsButtonContent}>
-                  <Bell width={22} height={22} color={primaryColor} />
+                  <Bell width={22} height={22} color={thirdTextColor} />
                   <ThemedText
                     style={styles.settingsButtonText}
-                    setColor={titleColor}
+                    setColor={thirdTextColor}
                   >
                     Notifications
                   </ThemedText>
@@ -608,8 +622,8 @@ export default function ProfilePage() {
                 <TailArrowUpRight
                   width={18}
                   height={18}
-                  stroke={quietText}
-                  color={quietText}
+                  stroke={thirdTextColor}
+                  color={thirdTextColor}
                 />
               </TouchableOpacity>
 
@@ -619,16 +633,16 @@ export default function ProfilePage() {
                 style={[
                   styles.settingsButton,
                   {
-                    backgroundColor: panelSurface,
+                    backgroundColor: thirdColor,
                     borderColor: cardBorder,
                   },
                 ]}
               >
                 <View style={styles.settingsButtonContent}>
-                  <Social width={22} height={22} color={primaryColor} />
+                  <Social width={22} height={22} color={thirdTextColor} />
                   <ThemedText
                     style={styles.settingsButtonText}
-                    setColor={titleColor}
+                    setColor={thirdTextColor}
                   >
                     Social posts
                   </ThemedText>
@@ -636,8 +650,8 @@ export default function ProfilePage() {
                 <TailArrowUpRight
                   width={18}
                   height={18}
-                  stroke={quietText}
-                  color={quietText}
+                  stroke={thirdTextColor}
+                  color={thirdTextColor}
                 />
               </TouchableOpacity>
             </View>
