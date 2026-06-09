@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.17.2] - Unreleased
+### Changed
+- Add workout-start notification preferences with custom followed-user selection.
+
+---
 ## [0.17.1] - Unreleased
 ### Changed
 - Move social user search to its own page opened from the Find Friends card.

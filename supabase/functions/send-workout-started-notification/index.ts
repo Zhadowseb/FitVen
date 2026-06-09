@@ -34,6 +34,15 @@ type PushTokenRow = {
   expo_push_token: string;
 };
 
+type NotificationPreferenceRow = {
+  user_id: string;
+  workout_start_mode: string;
+};
+
+type WorkoutStartNotificationSourceRow = {
+  user_id: string;
+};
+
 type NotificationEventRow = {
   id: string;
 };
@@ -56,6 +65,12 @@ type ExpoPushResponse = {
 const jsonHeaders = {
   "Content-Type": "application/json",
 };
+
+const WORKOUT_START_NOTIFICATION_MODES = {
+  NONE: "none",
+  FOLLOWING: "following",
+  CUSTOM: "custom",
+} as const;
 
 function jsonResponse(body: JsonRecord, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -392,13 +407,80 @@ Deno.serve(async (req) => {
     }
 
     const [
+      { data: preferences, error: preferencesError },
+      { data: customSources, error: customSourcesError },
+    ] = await Promise.all([
+      supabase
+        .from("notification_preferences")
+        .select("user_id, workout_start_mode")
+        .in("user_id", recipientIds),
+      supabase
+        .from("workout_start_notification_sources")
+        .select("user_id")
+        .in("user_id", recipientIds)
+        .eq("source_user_id", actorId),
+    ]);
+
+    if (preferencesError) {
+      throw preferencesError;
+    }
+
+    if (customSourcesError) {
+      throw customSourcesError;
+    }
+
+    const workoutStartModeByUserId = new Map(
+      ((preferences ?? []) as NotificationPreferenceRow[]).map((preference) => [
+        preference.user_id,
+        preference.workout_start_mode,
+      ])
+    );
+    const customRecipientIds = new Set(
+      ((customSources ?? []) as WorkoutStartNotificationSourceRow[]).map(
+        (source) => source.user_id
+      )
+    );
+    const filteredRecipientIds = recipientIds.filter((recipientId) => {
+      const mode =
+        workoutStartModeByUserId.get(recipientId) ??
+        WORKOUT_START_NOTIFICATION_MODES.FOLLOWING;
+
+      if (mode === WORKOUT_START_NOTIFICATION_MODES.NONE) {
+        return false;
+      }
+
+      if (mode === WORKOUT_START_NOTIFICATION_MODES.CUSTOM) {
+        return customRecipientIds.has(recipientId);
+      }
+
+      return true;
+    });
+
+    if (!filteredRecipientIds.length) {
+      await supabase
+        .from("notification_events")
+        .update({
+          status: "skipped",
+          recipient_count: 0,
+          sent_at: new Date().toISOString(),
+        })
+        .eq("id", event.id);
+
+      return jsonResponse({
+        skipped: true,
+        reason: "filtered_by_preferences",
+        eventKey,
+      });
+    }
+
+    const [
       { data: pushTokens, error: tokensError },
       { data: actorTokens, error: actorTokensError },
     ] = await Promise.all([
       supabase
         .from("push_tokens")
         .select("id, user_id, expo_push_token")
-        .in("user_id", recipientIds)
+        .in("user_id", filteredRecipientIds)
         .eq("enabled", true),
       supabase
         .from("push_tokens")

@@ -60,6 +60,7 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
 
   const isProfileActive = [
     "ProfilePage",
+    "NotificationSettingsPage",
     "SocialPostSettingsPage",
     "ExerciseSocialPostSettingsPage",
   ].includes(currentRouteName);

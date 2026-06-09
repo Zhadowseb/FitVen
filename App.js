@@ -30,6 +30,7 @@ import ExerciseLibraryPage from "./src/Pages/ExerciseLibraryPage/ExerciseLibrary
 import PersonalRecordsPage from "./src/Pages/PersonalRecordsPage/PersonalRecordsPage";
 import WorkoutCalendarPage from "./src/Pages/WorkoutCalendarPage/WorkoutCalendarPage";
 import SicknessPage from "./src/Pages/SicknessPage/SicknessPage";
+import NotificationSettingsPage from "./src/Pages/NotificationSettingsPage/NotificationSettingsPage";
 import SocialPostEditPage from "./src/Pages/SocialPostEditPage/SocialPostEditPage";
 import SocialPostSettingsPage from "./src/Pages/SocialPostSettingsPage/SocialPostSettingsPage";
 import ExerciseSocialPostSettingsPage from "./src/Pages/ExerciseSocialPostSettingsPage/ExerciseSocialPostSettingsPage";
@@ -172,6 +173,7 @@ function RootNavigator() {
                 <Stack.Screen name="ExerciseLibraryPage" component={ExerciseLibraryPage} options={{ headerShown: false }} />
                 <Stack.Screen name="PersonalRecordsPage" component={PersonalRecordsPage} options={{ headerShown: false }} />
                 <Stack.Screen name="WorkoutCalendarPage" component={WorkoutCalendarPage} options={{ headerShown: false }} />
+                <Stack.Screen name="NotificationSettingsPage" component={NotificationSettingsPage} options={{ headerShown: false }} />
                 <Stack.Screen name="SocialPostEditPage" component={SocialPostEditPage} options={{ headerShown: false }} />
                 <Stack.Screen name="SocialPostSettingsPage" component={SocialPostSettingsPage} options={{ headerShown: false }} />
                 <Stack.Screen name="ExerciseSocialPostSettingsPage" component={ExerciseSocialPostSettingsPage} options={{ headerShown: false }} />

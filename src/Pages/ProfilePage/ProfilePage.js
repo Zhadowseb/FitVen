@@ -15,6 +15,7 @@ import { Colors } from "../../Resources/GlobalStyling/colors";
 import { logout } from "../../Database/supaBaseClient";
 import { useAuth } from "../../Contexts/AuthContext";
 import { socialService } from "../../Services";
+import Bell from "../../Resources/Icons/UI-icons/Bell";
 import FeedbackModal from "../../Resources/Components/FeedbackModal/FeedbackModal";
 import Library from "../../Resources/Icons/UI-icons/Library";
 import Social from "../../Resources/Icons/UI-icons/Social";
@@ -574,6 +575,34 @@ export default function ProfilePage() {
                     setColor={titleColor}
                   >
                     Exercises
+                  </ThemedText>
+                </View>
+                <TailArrowUpRight
+                  width={18}
+                  height={18}
+                  stroke={quietText}
+                  color={quietText}
+                />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                activeOpacity={0.82}
+                onPress={() => navigation.navigate("NotificationSettingsPage")}
+                style={[
+                  styles.settingsButton,
+                  {
+                    backgroundColor: panelSurface,
+                    borderColor: cardBorder,
+                  },
+                ]}
+              >
+                <View style={styles.settingsButtonContent}>
+                  <Bell width={22} height={22} color={primaryColor} />
+                  <ThemedText
+                    style={styles.settingsButtonText}
+                    setColor={titleColor}
+                  >
+                    Notifications
                   </ThemedText>
                 </View>
                 <TailArrowUpRight
