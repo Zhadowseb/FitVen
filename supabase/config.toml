@@ -1,0 +1,2 @@
+[functions.send-workout-started-notification]
+verify_jwt = false

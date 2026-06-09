@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.17.0] - Unreleased
+### Changed
+- Add Expo notification dependencies and push token registration scaffolding.
+- Add Supabase SQL for storing authenticated users' Expo push tokens.
+- Add a workout-start Edge Function for sending Expo push notifications to followers.
+- Show the workout type in workout-start notification copy and configure a FitVen Android notification icon.
+- Configure the Android Firebase services file used for Expo push token registration.
+- Retry push-token registration when the app becomes active and update registrations when the device push token rotates.
+- Prevent workout owners from receiving their own workout-start notifications.
+- Sync workout timer starts immediately so workout-start notifications are triggered without waiting for the next app resume.
+
+---
 ## [0.16.3] - 2026-06-09
 ### Changed
 - Let users long-press dates in the Workout Calendar to add or delete workouts.

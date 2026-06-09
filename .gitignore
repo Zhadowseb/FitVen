@@ -17,6 +17,15 @@ ios/build/
 
 .env
 
+# Firebase/EAS private credentials
+*-firebase-adminsdk-*.json
+firebase-service-account*.json
+google-service-account*.json
+service-account*.json
+
+# Supabase CLI local project metadata
+supabase/.temp/
+
 # Native
 .kotlin/
 *.orig.*

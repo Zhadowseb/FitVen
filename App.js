@@ -48,8 +48,10 @@ import {
 import { locationService } from "./src/Services";
 import { AuthProvider, useAuth } from './src/Contexts/AuthContext';
 import ExerciseLibrarySync from "./src/Sync/ExerciseLibrarySync";
+import PushNotificationRegistrationSync from "./src/Sync/PushNotificationRegistrationSync";
 import SetSync from "./src/Sync/SetSync";
 import WorkoutTypeCatalogSync from "./src/Sync/WorkoutTypeCatalogSync";
+import WorkoutTypeInstanceSync from "./src/Sync/WorkoutTypeInstanceSync";
 
 import * as SQLite from 'expo-sqlite';
 
@@ -235,6 +237,8 @@ function UserScopedDatabaseApp() {
       <WorkoutTypeCatalogSync />
       <ExerciseLibrarySync />
       <SetSync />
+      <WorkoutTypeInstanceSync />
+      <PushNotificationRegistrationSync />
       <RootNavigator />
     </SQLiteProvider>
   );

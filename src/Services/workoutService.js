@@ -147,6 +147,8 @@ export async function persistWorkoutTimerState(
     timerStart,
     elapsedTime,
   });
+
+  syncWorkoutTypeInstancesInBackground(db);
 }
 
 export async function updateWorkoutElapsedTime(
@@ -171,6 +173,8 @@ export async function setWorkoutOriginalStartTime(
     workoutId,
     startTime,
   });
+
+  syncWorkoutTypeInstancesInBackground(db);
 }
 
 export async function getWorkoutStartTimestamp(db, workoutId) {

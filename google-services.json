@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "285532805115",
+    "project_id": "fitven-60d66",
+    "storage_bucket": "fitven-60d66.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:285532805115:android:536ba0a9546a73aaeedd5e",
+        "android_client_info": {
+          "package_name": "com.anonymous.programapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBzhic_QC-cV-3qKnqR1a87D8D8jMX4xI4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:285532805115:android:477189598f6f02f6eedd5e",
+        "android_client_info": {
+          "package_name": "com.anonymous.programapp.dev"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBzhic_QC-cV-3qKnqR1a87D8D8jMX4xI4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
