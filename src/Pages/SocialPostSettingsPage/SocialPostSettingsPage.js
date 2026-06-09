@@ -45,18 +45,18 @@ const POST_MODE_OPTIONS = [
 const POST_VISIBILITY_OPTIONS = [
   {
     value: socialPostService.WORKOUT_SUMMARY_POST_VISIBILITIES.EVERYONE,
-    title: "Alle",
-    body: "Alle brugere kan se dine workout summary posts.",
+    title: "Everyone",
+    body: "Everyone can see your workout summary posts.",
   },
   {
     value: socialPostService.WORKOUT_SUMMARY_POST_VISIBILITIES.FOLLOWING,
-    title: "Dem jeg følger",
-    body: "Kun profiler du følger kan se dine workout summary posts.",
+    title: "People I follow",
+    body: "Only profiles you follow can see your workout summary posts.",
   },
   {
     value: socialPostService.WORKOUT_SUMMARY_POST_VISIBILITIES.PRIVATE,
-    title: "Kun mig",
-    body: "Kun du kan se dine workout summary posts.",
+    title: "Only me",
+    body: "Only you can see your workout summary posts.",
   },
 ];
 

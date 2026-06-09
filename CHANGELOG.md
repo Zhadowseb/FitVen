@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.17.5] - Unreleased
+### Changed
+- Describe pending changes here.
+
+---
 ## [0.17.4] - Unreleased
 ### Changed
 - Replace the empty home workout state with a ready-to-train card and Quick Start action.
