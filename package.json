@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.17.12-minor-program-cover-cards.1",
+  "version": "0.17.13-fix-run-background-location-tracking.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",

@@ -13,7 +13,10 @@ run().catch((error) => {
 async function run() {
   const source = fs.readFileSync(locationUtilsPath, "utf8");
   const moduleUrl = `data:text/javascript;base64,${Buffer.from(source).toString("base64")}`;
-  const { calculateTrackedDistanceSummary } = await import(moduleUrl);
+  const {
+    DEFAULT_RUN_DISTANCE_FILTER,
+    calculateTrackedDistanceSummary,
+  } = await import(moduleUrl);
 
   verifyStraightRun(calculateTrackedDistanceSummary);
   verifySmallStepsAccumulate(calculateTrackedDistanceSummary);
@@ -22,7 +25,12 @@ async function run() {
   verifyStationarySamplesKeepSpeedWindowFresh(calculateTrackedDistanceSummary);
   verifyPoorAccuracyDoesNotAddDistance(calculateTrackedDistanceSummary);
   verifyPauseMovementIsIgnored(calculateTrackedDistanceSummary);
-  verifyLongTrackingGapStartsFresh(calculateTrackedDistanceSummary);
+  verifyBatchedBackgroundLocationsAreCounted(calculateTrackedDistanceSummary);
+  verifyBatchedBackgroundJumpIsRejected(calculateTrackedDistanceSummary);
+  verifyVeryLongTrackingGapStartsFresh(
+    calculateTrackedDistanceSummary,
+    DEFAULT_RUN_DISTANCE_FILTER
+  );
 
   console.log("Location distance regression checks passed.");
 }
@@ -142,11 +150,41 @@ function verifyPauseMovementIsIgnored(calculateTrackedDistanceSummary) {
   assert.strictEqual(summary.trackingBreakCount, 1);
 }
 
-function verifyLongTrackingGapStartsFresh(calculateTrackedDistanceSummary) {
+function verifyBatchedBackgroundLocationsAreCounted(
+  calculateTrackedDistanceSummary
+) {
   const summary = calculateTrackedDistanceSummary([
     point(0, 0),
-    point(100, 20),
-    point(105, 21),
+    point(90, 30),
+    point(180, 60),
+    point(270, 90),
+  ]);
+
+  assertDistance(summary, 270);
+  assert.strictEqual(summary.acceptedSegmentCount, 3);
+  assert.strictEqual(summary.reanchorCount, 0);
+}
+
+function verifyBatchedBackgroundJumpIsRejected(calculateTrackedDistanceSummary) {
+  const summary = calculateTrackedDistanceSummary([
+    point(0, 0),
+    point(300, 30),
+    point(305, 31),
+  ]);
+
+  assertDistance(summary, 5);
+  assert.strictEqual(summary.reanchorCount, 1);
+}
+
+function verifyVeryLongTrackingGapStartsFresh(
+  calculateTrackedDistanceSummary,
+  distanceFilter
+) {
+  const gapSeconds = distanceFilter.maxSegmentGapSeconds + 1;
+  const summary = calculateTrackedDistanceSummary([
+    point(0, 0),
+    point(100, gapSeconds),
+    point(105, gapSeconds + 1),
   ]);
 
   assertDistance(summary, 5);

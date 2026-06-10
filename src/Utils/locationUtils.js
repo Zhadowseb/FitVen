@@ -6,7 +6,7 @@ export const DEFAULT_RUN_DISTANCE_FILTER = Object.freeze({
   maxAccuracyDistanceFloorMeters: 10,
   accuracyDistanceFloorMultiplier: 0.5,
   maxSegmentSpeedMetersPerSecond: 8.5,
-  maxSegmentGapSeconds: 10,
+  maxSegmentGapSeconds: 120,
   samePointCoordinateEpsilon: 0.0000001,
 });
 

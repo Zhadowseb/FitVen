@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.17.13] - Unreleased
+### Fixed
+- Keep valid run distance segments when locked phones deliver background locations less frequently.
+
+---
 ## [0.17.12] - Unreleased
 ### Changed
 - Redesign program cards as image-backed covers with workout-type badges, schedule details, and progress.
