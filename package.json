@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.17.10-minor-notification-history.1",
+  "version": "0.17.11-minor-bottom-navigation-order.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",

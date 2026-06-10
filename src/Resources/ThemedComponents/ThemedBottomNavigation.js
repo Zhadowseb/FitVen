@@ -458,41 +458,41 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
       >
         <TouchableOpacity
           activeOpacity={0.82}
-          onPress={handleHomePress}
+          onPress={handleProfilePress}
           style={styles.tab}
         >
-          <Home
-            width={28}
-            height={28}
-            color={isHomeActive ? activeColor : inactiveColor}
+          <Male
+            width={27}
+            height={27}
+            color={isProfileActive ? activeColor : inactiveColor}
           />
           <Text
             style={[
               styles.tabLabel,
-              { color: isHomeActive ? activeColor : inactiveColor },
+              { color: isProfileActive ? activeColor : inactiveColor },
             ]}
           >
-            HOME
+            PROFILE
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           activeOpacity={0.82}
-          onPress={handleLibraryPress}
+          onPress={handleSocialPress}
           style={styles.tab}
         >
-          <UpwardGraf
+          <Social
             width={27}
             height={27}
-            color={isLibraryActive ? activeColor : inactiveColor}
+            color={isSocialActive ? activeColor : inactiveColor}
           />
           <Text
             style={[
               styles.tabLabel,
-              { color: isLibraryActive ? activeColor : inactiveColor },
+              { color: isSocialActive ? activeColor : inactiveColor },
             ]}
           >
-            TRAIN
+            SOCIAL
           </Text>
         </TouchableOpacity>
 
@@ -537,41 +537,41 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
 
         <TouchableOpacity
           activeOpacity={0.82}
-          onPress={handleSocialPress}
+          onPress={handleLibraryPress}
           style={styles.tab}
         >
-          <Social
+          <UpwardGraf
             width={27}
             height={27}
-            color={isSocialActive ? activeColor : inactiveColor}
+            color={isLibraryActive ? activeColor : inactiveColor}
           />
           <Text
             style={[
               styles.tabLabel,
-              { color: isSocialActive ? activeColor : inactiveColor },
+              { color: isLibraryActive ? activeColor : inactiveColor },
             ]}
           >
-            SOCIAL
+            TRAIN
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           activeOpacity={0.82}
-          onPress={handleProfilePress}
+          onPress={handleHomePress}
           style={styles.tab}
         >
-          <Male
-            width={27}
-            height={27}
-            color={isProfileActive ? activeColor : inactiveColor}
+          <Home
+            width={28}
+            height={28}
+            color={isHomeActive ? activeColor : inactiveColor}
           />
           <Text
             style={[
               styles.tabLabel,
-              { color: isProfileActive ? activeColor : inactiveColor },
+              { color: isHomeActive ? activeColor : inactiveColor },
             ]}
           >
-            PROFILE
+            HOME
           </Text>
         </TouchableOpacity>
       </View>

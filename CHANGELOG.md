@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.17.11] - Unreleased
+### Changed
+- Reorder the bottom navigation to place Home on the right beside Train.
+
+---
 ## [0.17.10] - 2026-06-10
 ### Changed
 - Open a durable notification history from the Home bell and store workout-start activity even when push delivery is unavailable.
