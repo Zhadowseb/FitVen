@@ -21,7 +21,6 @@ import Delete from "../../Resources/Icons/UI-icons/Delete";
 import PlusCircled from "../../Resources/Icons/UI-icons/PlusCircled";
 import { getWorkoutIconConfig } from "../../Resources/Icons/WorkoutLabels";
 import WeekdayIndicator from "../../Resources/Figures/WeekdayIndicator";
-import AddWorkoutModal from "../../Resources/Components/AddWorkoutModal";
 import PickWorkoutModal from "../WeekPage/Components/Day/Components/PickWorkoutModal/PickWorkoutModal";
 import {
   ThemedText,
@@ -30,6 +29,7 @@ import {
   ThemedView,
 } from "../../Resources/ThemedComponents";
 import { parseCustomDate } from "../../Utils/dateUtils";
+import { requestOpenQuickWorkoutMenu } from "../../Utils/quickWorkoutMenuEvents";
 
 const ADJACENT_MONTH_COUNT = 1;
 const INITIAL_VISIBLE_MONTH_OFFSET = 0;
@@ -208,13 +208,11 @@ const WorkoutCalendarPage = () => {
   const [sicknessPeriods, setSicknessPeriods] = useState([]);
   const [selectedProgramDate, setSelectedProgramDate] = useState(null);
   const [selectedCalendarDay, setSelectedCalendarDay] = useState(null);
-  const [selectedWorkoutTarget, setSelectedWorkoutTarget] = useState(null);
   const [dayOptionsVisible, setDayOptionsVisible] = useState(false);
   const [dayOptionsPosition, setDayOptionsPosition] = useState({
     left: DAY_CONTEXT_MENU_MARGIN,
     top: 120,
   });
-  const [addWorkoutModalVisible, setAddWorkoutModalVisible] = useState(false);
   const [programTargetModalVisible, setProgramTargetModalVisible] =
     useState(false);
   const [pickWorkoutModalVisible, setPickWorkoutModalVisible] = useState(false);
@@ -539,67 +537,27 @@ const WorkoutCalendarPage = () => {
       return;
     }
 
-    setSelectedWorkoutTarget(programDayRows[0] ?? null);
-    setAddWorkoutModalVisible(true);
+    openAddWorkoutMenu(programDayRows[0] ?? null);
   };
 
   const chooseProgramTarget = (programDay) => {
-    setSelectedWorkoutTarget(programDay);
     setProgramTargetModalVisible(false);
-    setAddWorkoutModalVisible(true);
+    openAddWorkoutMenu(programDay);
   };
 
-  const createWorkoutForSelectedDay = async (workoutType) => {
+  const openAddWorkoutMenu = (programDay = null) => {
     if (!selectedCalendarDay) {
       return;
     }
 
-    const workoutLabel = workoutType.displayName ?? workoutType.id;
-
-    try {
-      let workout;
-
-      if (selectedWorkoutTarget?.day_id) {
-        const workoutResult = await programService.createWorkoutForDay(db, {
-          date: selectedCalendarDay.dateLabel,
-          dayId: selectedWorkoutTarget.day_id,
-          workoutType: workoutType.id,
-          label: null,
-        });
-
-        workout = {
-          workout_id: workoutResult.lastInsertRowId,
-          workout_type: workoutType.id,
-          workout_label: workoutLabel,
-          date: selectedCalendarDay.dateLabel,
-          day: selectedWorkoutTarget.weekday ?? selectedCalendarDay.label,
-          program_id: selectedWorkoutTarget.program_id,
-        };
-      } else {
-        workout = await programService.createQuickWorkout(db, {
-          date: selectedCalendarDay.dateLabel,
-          workoutType: workoutType.id,
-          label: null,
-        });
-      }
-
-      setAddWorkoutModalVisible(false);
-      setSelectedWorkoutTarget(null);
-      setSelectedCalendarDay(null);
-      await loadCalendarWorkouts();
-
-      navigation.navigate("WorkoutPage", {
-        program_id: workout.program_id,
-        day: workout.day,
-        date: workout.date,
-        workout_id: workout.workout_id,
-        workout_label: workoutLabel,
-        workout_type: workoutType.id,
-      });
-    } catch (error) {
-      console.error("Failed to create workout from calendar:", error);
-      Alert.alert("Could not create workout", "Please try again.");
-    }
+    requestOpenQuickWorkoutMenu({
+      date: selectedCalendarDay.dateLabel,
+      day: programDay?.weekday ?? selectedCalendarDay.label,
+      dayId: programDay?.day_id ?? null,
+      programId: programDay?.program_id ?? null,
+      programName: programDay?.program_name ?? null,
+    });
+    setSelectedCalendarDay(null);
   };
 
   const deleteWorkoutFromCalendar = async (workout) => {
@@ -974,15 +932,6 @@ const WorkoutCalendarPage = () => {
         visible={pickWorkoutModalVisible}
         onClose={() => setPickWorkoutModalVisible(false)}
         onSubmit={deleteWorkoutFromCalendar}
-      />
-
-      <AddWorkoutModal
-        visible={addWorkoutModalVisible}
-        onClose={() => {
-          setAddWorkoutModalVisible(false);
-          setSelectedWorkoutTarget(null);
-        }}
-        onSubmit={createWorkoutForSelectedDay}
       />
 
       <ThemedModal

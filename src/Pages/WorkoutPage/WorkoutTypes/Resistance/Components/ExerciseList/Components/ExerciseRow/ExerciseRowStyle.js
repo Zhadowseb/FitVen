@@ -310,6 +310,31 @@ export default StyleSheet.create({
     alignItems: "center",
   },
 
+  firstSetActionSlot: {
+    flex: 1,
+    minWidth: 0,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingLeft: 26,
+  },
+
+  firstSetButton: {
+    minHeight: 30,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 10,
+  },
+
+  firstSetButtonDisabled: {
+    opacity: 0.6,
+  },
+
+  firstSetButtonText: {
+    fontWeight: "800",
+  },
+
   summaryTextBlock: {
     flex: 1,
     minWidth: 0,

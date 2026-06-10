@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.17.9] - Unreleased
+### Changed
+- Redesigned the empty workout card and replaced legacy add-workout modals with the shared workout starter.
+- Add a one-tap first-set action to collapsed Resistance exercises with no sets.
+
+---
 ## [0.17.8] - Unreleased
 ### Changed
 - Refined collapsed and expanded resistance exercise cards, set summaries, and exercise actions.
@@ -7,17 +13,18 @@
 ---
 ## [0.17.7] - Unreleased
 ### Changed
-- Describe pending changes here.
+- Apply the third accent color to Profile inputs and settings actions.
 
 ---
 ## [0.17.6] - Unreleased
 ### Changed
-- Describe pending changes here.
+- Let users choose between multiple workouts planned for today from Home and the workout starter.
+- Copy recent workouts into a fresh standalone workout with complete exercises and sets.
 
 ---
 ## [0.17.5] - Unreleased
 ### Changed
-- Describe pending changes here.
+- Use English labels and descriptions for workout summary post visibility settings.
 
 ---
 ## [0.17.4] - Unreleased

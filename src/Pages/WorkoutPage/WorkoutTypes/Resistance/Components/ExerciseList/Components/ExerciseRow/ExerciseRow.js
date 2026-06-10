@@ -14,6 +14,7 @@ import SetList from "./SetList/SetList";
 
 import Note from "../../../../../../../../Resources/Icons/UI-icons/Note";
 import Expand from "../../../../../../../../Resources/Icons/UI-icons/Expand";
+import Plus from "../../../../../../../../Resources/Icons/UI-icons/Plus";
 import ReplayHistory from "../../../../../../../../Resources/Icons/UI-icons/ReplayHistory";
 
 import {
@@ -52,7 +53,9 @@ const ExerciseRow = ({
   const [exerciseHistory, setExerciseHistory] = useState(null);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyLoadError, setHistoryLoadError] = useState(false);
+  const [addingSet, setAddingSet] = useState(false);
   const [wrappedConnectorIndexes, setWrappedConnectorIndexes] = useState([]);
+  const addingSetRef = useRef(false);
   const summarySetLayoutsRef = useRef({});
   const dragActiveRef = useRef(false);
   const dragStartPageYRef = useRef(null);
@@ -265,11 +268,20 @@ const ExerciseRow = ({
   };
 
   const addSet = async () => {
+    if (addingSetRef.current) {
+      return;
+    }
+
     try {
+      addingSetRef.current = true;
+      setAddingSet(true);
       await weightliftingRepository.addSetToExercise(db, exercise.exercise_id);
-      updateUI?.();
+      await updateUI?.();
     } catch (error) {
       console.error(error);
+    } finally {
+      addingSetRef.current = false;
+      setAddingSet(false);
     }
   };
 
@@ -344,6 +356,7 @@ const ExerciseRow = ({
   const setListSurface =
     colorScheme === "dark" ? "rgba(16, 17, 24, 0.58)" : "#f5f4fa";
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
+  const addSetColor = theme.iconColor ?? quietText;
   const titleColor = theme.title ?? theme.text;
   const replayIconColor = theme.primary ?? "#f7742eff";
   const recordColor = theme.record ?? Colors.dark.record ?? primaryColor;
@@ -835,13 +848,45 @@ const ExerciseRow = ({
 
         {!isExpanded && (
           <View style={styles.summaryCollapsedRow}>
-            <TouchableOpacity
-              activeOpacity={0.88}
-              onPress={() => handleCardPress(onToggleExpanded)}
-              style={styles.summaryRow}
-            >
-              <View style={styles.summaryTextBlock}>
-                {collapsedSetSummaryItems.length > 0 && (
+            {collapsedSetSummaryItems.length === 0 ? (
+              <View
+                onTouchStart={stopCardDragPropagation}
+                style={styles.firstSetActionSlot}
+              >
+                <TouchableOpacity
+                  activeOpacity={0.72}
+                  accessibilityRole="button"
+                  accessibilityLabel="Add first set"
+                  disabled={addingSet}
+                  onPress={addSet}
+                  style={[
+                    styles.firstSetButton,
+                    addingSet && styles.firstSetButtonDisabled,
+                  ]}
+                >
+                  {addingSet ? (
+                    <ActivityIndicator size="small" color={addSetColor} />
+                  ) : (
+                    <>
+                      <Plus width={17} height={17} color={addSetColor} />
+                      <ThemedText
+                        size={11}
+                        style={styles.firstSetButtonText}
+                        setColor={addSetColor}
+                      >
+                        Add first set
+                      </ThemedText>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity
+                activeOpacity={0.88}
+                onPress={() => handleCardPress(onToggleExpanded)}
+                style={styles.summaryRow}
+              >
+                <View style={styles.summaryTextBlock}>
                   <View style={styles.summaryChipRow}>
                     {collapsedSetSummaryItems.map((item, index) => {
                       return (
@@ -904,9 +949,9 @@ const ExerciseRow = ({
                       );
                     })}
                   </View>
-                )}
-              </View>
-            </TouchableOpacity>
+                </View>
+              </TouchableOpacity>
+            )}
 
             <TouchableOpacity
               activeOpacity={0.88}

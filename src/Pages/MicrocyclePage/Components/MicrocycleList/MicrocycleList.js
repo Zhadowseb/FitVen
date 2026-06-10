@@ -24,7 +24,6 @@ import { useCallback } from "react";
 import WeekdayIndicator from "../../../../Resources/Figures/WeekdayIndicator";
 import { getWorkoutIconConfig } from "../../../../Resources/Icons/WorkoutLabels";
 import PickWorkoutModal from "../../../WeekPage/Components/Day/Components/PickWorkoutModal/PickWorkoutModal";
-import AddWorkoutModal from "../../../../Resources/Components/AddWorkoutModal";
 
 import styles from "./MicrocycleListStyle";
 import { programService as programRepository } from "../../../../Services";
@@ -37,6 +36,7 @@ import { ThemedCard,
         ThemedTextInput,
         ThemedTitle } from "../../../../Resources/ThemedComponents";
 import { formatDate, parseCustomDate } from "../../../../Utils/dateUtils";
+import { requestOpenQuickWorkoutMenu } from "../../../../Utils/quickWorkoutMenuEvents";
 import Delete from "../../../../Resources/Icons/UI-icons/Delete";
 import {
   DEFAULT_SICKNESS_TYPE,
@@ -160,7 +160,6 @@ const MicrocycleList = ({
   const [selectedSicknessType, setSelectedSicknessType] =
     useState(DEFAULT_SICKNESS_TYPE);
   const [sicknessNote, setSicknessNote] = useState("");
-  const [labelModalVisible, setLabelModalVisible] = useState(false);
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [newDate, setNewDate] = useState(new Date());
   const PICK_MODE = {
@@ -452,8 +451,19 @@ const MicrocycleList = ({
   };
 
   const addWorkoutToSelectedDay = () => {
+    if (!selectedDay) {
+      return;
+    }
+
     setDayOptionsVisible(false);
-    setLabelModalVisible(true);
+
+    requestOpenQuickWorkoutMenu({
+      date: selectedDay.date,
+      day: selectedDay.day,
+      dayId: selectedDay.dayId,
+      programId: program_id,
+    });
+    setSelectedDay(null);
   };
 
   const copySelectedDayWorkout = () => {
@@ -711,49 +721,6 @@ const MicrocycleList = ({
       sicknessType: selectedSicknessType,
       note: sicknessNote.trim() || null,
     });
-  };
-
-  const createWorkoutForDay = async (labelId) => {
-    if (!selectedDay) {
-      return;
-    }
-
-    try {
-      const dayRow =
-        selectedDay.dayId
-          ? { day_id: selectedDay.dayId }
-          : await programRepository.getDayByMicrocycleAndDate(db, {
-              microcycleId: selectedDay.microcycleId,
-              date: selectedDay.date,
-            });
-
-      if (!dayRow?.day_id) {
-        return;
-      }
-
-      const workoutResult = await programRepository.createWorkoutForDay(db, {
-        date: selectedDay.date,
-        dayId: dayRow.day_id,
-        workoutType: labelId.id,
-        label: null,
-      });
-      const workoutLabel = labelId.displayName ?? labelId.id;
-
-      setLabelModalVisible(false);
-      setDayOptionsVisible(false);
-      updateui();
-
-      navigation.navigate("WorkoutPage", {
-        program_id: program_id,
-        day: selectedDay.day,
-        date: selectedDay.date,
-        workout_id: workoutResult.lastInsertRowId,
-        workout_label: workoutLabel,
-        workout_type: labelId.id,
-      });
-    } catch (error) {
-      console.error("Failed to create workout:", error);
-    }
   };
 
   const deleteWorkout = async (workoutId) => {
@@ -1334,16 +1301,6 @@ const MicrocycleList = ({
         </TouchableOpacity>
       </View>
     </ThemedModal>
-
-    <AddWorkoutModal
-      visible={labelModalVisible}
-      onClose={() => {
-        setLabelModalVisible(false);
-      }}
-      onSubmit={async (labelId) => {
-        await createWorkoutForDay(labelId);
-      }}
-    />
 
     {datePickerVisible && (
       <DateTimePicker

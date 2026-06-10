@@ -1,8 +1,8 @@
 const quickWorkoutMenuListeners = new Set();
 
-export function requestOpenQuickWorkoutMenu() {
+export function requestOpenQuickWorkoutMenu(target = null) {
   quickWorkoutMenuListeners.forEach((listener) => {
-    listener();
+    listener(target);
   });
 }
 

@@ -17,6 +17,7 @@ import ArrowDoubleUp from "../Icons/UI-icons/ArrowDoubleUp";
 import ReplayHistory from "../Icons/UI-icons/ReplayHistory";
 import Resistance from "../Icons/WorkoutLabels/Resistance";
 import Run from "../Icons/WorkoutLabels/Run";
+import { getTodaysDate } from "../../Utils/dateUtils";
 
 const noop = () => {};
 
@@ -303,7 +304,7 @@ function SectionHeader({
   );
 }
 
-function PlannedTodaySection({ shortcut, onOpen, palette, styles }) {
+function PlannedTodaySection({ isToday, shortcut, onOpen, palette, styles }) {
   const [showChoices, setShowChoices] = useState(false);
   const plannedWorkouts = shortcut?.workouts ?? [];
   const primaryWorkout = plannedWorkouts[0] ?? null;
@@ -322,8 +323,8 @@ function PlannedTodaySection({ shortcut, onOpen, palette, styles }) {
     <View style={styles.plannedTodaySection}>
       <Text style={styles.plannedTodayPrompt}>
         {hasMultipleWorkouts
-          ? "You have multiple workouts planned today."
-          : "You have a workout planned today."}
+          ? `You have multiple workouts planned ${isToday ? "today" : "on this day"}.`
+          : `You have a workout planned ${isToday ? "today" : "on this day"}.`}
       </Text>
 
       <TouchableOpacity
@@ -346,7 +347,9 @@ function PlannedTodaySection({ shortcut, onOpen, palette, styles }) {
           active
         />
         <View style={styles.todayShortcutCopy}>
-          <Text style={styles.todayShortcutLabel}>TODAY</Text>
+          <Text style={styles.todayShortcutLabel}>
+            {isToday ? "TODAY" : "PLANNED"}
+          </Text>
           <Text style={styles.cardTitle} numberOfLines={1}>
             {hasMultipleWorkouts
               ? `${plannedWorkouts.length} workouts planned`
@@ -582,12 +585,15 @@ export default function StartWorkoutSheet({
   isLoadingRecentWorkouts = false,
   onCopyRecentWorkout = noop,
   isStartingWorkout = false,
+  targetDate = null,
 }) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const insets = useSafeAreaInsets();
   const palette = useMemo(() => createSheetPalette(theme), [theme]);
   const styles = useMemo(() => createStyles(palette), [palette]);
+  const isToday = !targetDate || targetDate === getTodaysDate();
+  const targetDateLabel = targetDate?.slice(0, 5);
 
   return (
     <Modal
@@ -625,12 +631,17 @@ export default function StartWorkoutSheet({
           >
             <View style={styles.header}>
               <Text style={styles.eyebrow}>START A WORKOUT</Text>
-              <Text style={styles.title}>What are you doing today?</Text>
+              <Text style={styles.title}>
+                {isToday
+                  ? "What are you doing today?"
+                  : `What are you doing on ${targetDateLabel}?`}
+              </Text>
             </View>
 
             {plannedTodayShortcut ? (
               <PlannedTodaySection
                 shortcut={plannedTodayShortcut}
+                isToday={isToday}
                 onOpen={onOpenPlannedWorkout}
                 palette={palette}
                 styles={styles}

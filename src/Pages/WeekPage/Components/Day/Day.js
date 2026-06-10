@@ -9,7 +9,6 @@ import { useColorScheme } from "react-native";
 import { Colors } from "../../../../Resources/GlobalStyling/colors";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import PickWorkoutModal from './Components/PickWorkoutModal/PickWorkoutModal';
-import AddWorkoutModal from "../../../../Resources/Components/AddWorkoutModal";
 
 import styles from './DayStyle';
 import { getWorkoutIconConfig } from '../../../../Resources/Icons/WorkoutLabels/index';
@@ -26,6 +25,7 @@ import { ThemedCard,
         ThemedBottomSheet, 
         ThemedBouncyCheckbox } from "../../../../Resources/ThemedComponents";
 import { formatDate } from '../../../../Utils/dateUtils';
+import { requestOpenQuickWorkoutMenu } from "../../../../Utils/quickWorkoutMenuEvents";
 import { programService as programRepository } from "../../../../Services";
 
 const Day = ( {day, program_id, microcycle_id} ) => {
@@ -66,7 +66,6 @@ const Day = ( {day, program_id, microcycle_id} ) => {
     const [pickWorkoutModal_visible, set_pickWorkoutModal_visible] = useState(false);
     const [datePicker_visible, set_datePicker_visible] = useState(false);
     const [OptionsBottomsheet_visible, set_OptionsBottomsheet_visible] = useState(false);
-    const [labelModal_visible, set_labelModal_visible] = useState(false);
     
     const hasWorkouts = workouts.length > 0;
     
@@ -303,7 +302,12 @@ const Day = ( {day, program_id, microcycle_id} ) => {
                     style={[styles.option, {paddingTop: 0}]}
                     onPress={async () => {
                         set_OptionsBottomsheet_visible(false);
-                        set_labelModal_visible(true);
+                        requestOpenQuickWorkoutMenu({
+                            date,
+                            day,
+                            dayId: day_id,
+                            programId: program_id,
+                        });
 
                     }}>
                     <PlusCircled
@@ -351,31 +355,6 @@ const Day = ( {day, program_id, microcycle_id} ) => {
             </View>
 
         </ThemedBottomSheet>
-
-        <AddWorkoutModal
-            visible={labelModal_visible}
-            onClose={() => set_labelModal_visible(false)}
-            onSubmit={async (labelId) => {
-
-                set_labelModal_visible(false);
-                const workoutLabel = labelId.displayName ?? labelId.id;
-
-                const workout_id = await programRepository.createWorkoutForDay(db, {
-                    date,
-                    dayId: day_id,
-                    workoutType: labelId.id,
-                    label: null,
-                });
-
-                navigation.navigate("WorkoutPage", {
-                    program_id,
-                    date,
-                    workout_id: workout_id.lastInsertRowId,
-                    workout_label: workoutLabel,
-                    workout_type: labelId.id,
-                });
-            }}
-        />
 
         <PickWorkoutModal 
             workouts={workouts}
