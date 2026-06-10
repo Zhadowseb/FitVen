@@ -19,6 +19,7 @@ export default function UserAvatar({
   const [imageFailed, setImageFailed] = useState(false);
   const resolvedBackgroundColor =
     backgroundColor ??
+    theme.fields ??
     theme.uiBackground ??
     theme.cardBackground ??
     theme.background;

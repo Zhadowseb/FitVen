@@ -8,9 +8,29 @@ const PUSH_TOKENS_TABLE = "push_tokens";
 const NOTIFICATION_PREFERENCES_TABLE = "notification_preferences";
 const WORKOUT_START_NOTIFICATION_SOURCES_TABLE =
   "workout_start_notification_sources";
+const NOTIFICATION_INBOX_TABLE = "notification_inbox";
+const AVATAR_BUCKET = "avatars";
 const ACTIVITY_NOTIFICATION_CHANNEL_ID = "activity";
 const NOTIFICATION_SETUP_MESSAGE =
   "Push notifications are not set up in Supabase yet. Run docs/supabase-push-notifications.sql in the Supabase SQL editor first.";
+const NOTIFICATION_HISTORY_SETUP_MESSAGE =
+  "Notification history is not set up in Supabase yet. Run docs/supabase-notification-history.sql in the Supabase SQL editor first.";
+const NOTIFICATION_HISTORY_SELECT_FIELDS = `
+  id,
+  event_type,
+  title,
+  body,
+  data,
+  read_at,
+  created_at,
+  actor:profiles!notification_inbox_actor_id_fkey(
+    id,
+    username,
+    display_name,
+    avatar_path,
+    updated_at
+  )
+`;
 
 export const WORKOUT_START_NOTIFICATION_MODES = {
   NONE: "none",
@@ -71,11 +91,57 @@ function isPushTokenSetupError(error) {
 }
 
 function normalizeNotificationError(error) {
+  const message = String(error?.message ?? error ?? "").toLowerCase();
+
+  if (message.includes(NOTIFICATION_INBOX_TABLE)) {
+    return new Error(NOTIFICATION_HISTORY_SETUP_MESSAGE);
+  }
+
   if (isPushTokenSetupError(error)) {
     return new Error(NOTIFICATION_SETUP_MESSAGE);
   }
 
   return error;
+}
+
+function buildAvatarPublicUrl(avatarPath, updatedAt) {
+  if (!avatarPath) {
+    return null;
+  }
+
+  const { data } = supabase.storage.from(AVATAR_BUCKET).getPublicUrl(avatarPath);
+  const publicUrl = data?.publicUrl;
+
+  return publicUrl && updatedAt
+    ? `${publicUrl}?t=${encodeURIComponent(updatedAt)}`
+    : publicUrl ?? null;
+}
+
+function mapNotificationHistoryRow(row) {
+  const actor = Array.isArray(row?.actor) ? row.actor[0] : row?.actor;
+  const data =
+    row?.data && typeof row.data === "object" && !Array.isArray(row.data)
+      ? row.data
+      : {};
+
+  return {
+    id: row.id,
+    eventType: row.event_type,
+    title: row.title,
+    body: row.body,
+    data,
+    readAt: row.read_at ?? null,
+    createdAt: row.created_at ?? null,
+    actor: actor
+      ? {
+          id: actor.id,
+          username: actor.username ?? null,
+          displayName:
+            actor.display_name ?? actor.username ?? "FitVen athlete",
+          avatarUrl: buildAvatarPublicUrl(actor.avatar_path, actor.updated_at),
+        }
+      : null,
+  };
 }
 
 async function ensureAndroidNotificationChannel() {
@@ -210,6 +276,14 @@ export function addPushTokenListener(listener) {
   }
 
   return Notifications.addPushTokenListener(listener);
+}
+
+export function addNotificationReceivedListener(listener) {
+  if (Platform.OS === "web") {
+    return null;
+  }
+
+  return Notifications.addNotificationReceivedListener(listener);
 }
 
 export async function registerPushTokenForUser({
@@ -373,4 +447,58 @@ export async function setWorkoutStartNotificationSources({
   }
 
   return getPushNotificationSettings({ user });
+}
+
+export async function getNotificationHistory({ user, limit = 50 } = {}) {
+  if (!user?.id) {
+    throw new Error("You need to be signed in to load notifications.");
+  }
+
+  const normalizedLimit = Math.min(Math.max(Math.trunc(Number(limit)) || 50, 1), 100);
+  const { data, error } = await supabase
+    .from(NOTIFICATION_INBOX_TABLE)
+    .select(NOTIFICATION_HISTORY_SELECT_FIELDS)
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(normalizedLimit);
+
+  if (error) {
+    throw normalizeNotificationError(error);
+  }
+
+  return (data ?? []).map(mapNotificationHistoryRow);
+}
+
+export async function getUnreadNotificationCount({ user } = {}) {
+  if (!user?.id) {
+    return 0;
+  }
+
+  const { count, error } = await supabase
+    .from(NOTIFICATION_INBOX_TABLE)
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .is("read_at", null);
+
+  if (error) {
+    throw normalizeNotificationError(error);
+  }
+
+  return count ?? 0;
+}
+
+export async function markAllNotificationHistoryRead({ user } = {}) {
+  if (!user?.id) {
+    return;
+  }
+
+  const { error } = await supabase
+    .from(NOTIFICATION_INBOX_TABLE)
+    .update({ read_at: new Date().toISOString() })
+    .eq("user_id", user.id)
+    .is("read_at", null);
+
+  if (error) {
+    throw normalizeNotificationError(error);
+  }
 }

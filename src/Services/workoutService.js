@@ -129,6 +129,10 @@ export async function getWorkoutTimerState(db, workoutId) {
   return workoutRepository.getWorkoutTimerState(db, workoutId);
 }
 
+export async function getActiveWorkoutTimer(db) {
+  return workoutRepository.getActiveWorkoutTimer(db);
+}
+
 export async function updateWorkoutLabel(db, { workoutId, label }) {
   await workoutRepository.updateWorkoutLabel(db, {
     workoutId,

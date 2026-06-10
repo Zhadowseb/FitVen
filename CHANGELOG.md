@@ -1,53 +1,60 @@
 # Changelog
 
-## [0.17.9] - Unreleased
+## [0.17.10] - 2026-06-10
+### Changed
+- Open a durable notification history from the Home bell and store workout-start activity even when push delivery is unavailable.
+- Reflect a currently running workout timer in the global center navigation button and reopen that workout when pressed.
+- Use the shared fields theme color for Profile fields, actions, empty profile pictures, and expanded notification settings.
+
+---
+## [0.17.9] - Released with 0.17.10
 ### Changed
 - Redesigned the empty workout card and replaced legacy add-workout modals with the shared workout starter.
 - Add a one-tap first-set action to collapsed Resistance exercises with no sets.
 
 ---
-## [0.17.8] - Unreleased
+## [0.17.8] - Released with 0.17.10
 ### Changed
 - Refined collapsed and expanded resistance exercise cards, set summaries, and exercise actions.
 
 ---
-## [0.17.7] - Unreleased
+## [0.17.7] - Released with 0.17.10
 ### Changed
 - Apply the third accent color to Profile inputs and settings actions.
 
 ---
-## [0.17.6] - Unreleased
+## [0.17.6] - Released with 0.17.10
 ### Changed
 - Let users choose between multiple workouts planned for today from Home and the workout starter.
 - Copy recent workouts into a fresh standalone workout with complete exercises and sets.
 
 ---
-## [0.17.5] - Unreleased
+## [0.17.5] - Released with 0.17.10
 ### Changed
 - Use English labels and descriptions for workout summary post visibility settings.
 
 ---
-## [0.17.4] - Unreleased
+## [0.17.4] - Released with 0.17.10
 ### Changed
 - Replace the empty home workout state with a ready-to-train card and Quick Start action.
 
 ---
-## [0.17.3] - Unreleased
+## [0.17.3] - Released with 0.17.10
 ### Changed
 - Show a ring loader while home social circle data is loading.
 
 ---
-## [0.17.2] - Unreleased
+## [0.17.2] - Released with 0.17.10
 ### Changed
 - Add workout-start notification preferences with custom followed-user selection.
 
 ---
-## [0.17.1] - Unreleased
+## [0.17.1] - Released with 0.17.10
 ### Changed
 - Move social user search to its own page opened from the Find Friends card.
 
 ---
-## [0.17.0] - Unreleased
+## [0.17.0] - Released with 0.17.10
 ### Changed
 - Add Expo notification dependencies and push token registration scaffolding.
 - Add Supabase SQL for storing authenticated users' Expo push tokens.

@@ -36,6 +36,22 @@ export default StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  notificationBadge: {
+    position: "absolute",
+    top: -4,
+    right: -4,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    paddingHorizontal: 4,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  notificationBadgeText: {
+    fontSize: 9,
+    lineHeight: 11,
+    fontWeight: "900",
+  },
   emptyTodayCard: {
     borderRadius: 30,
     paddingHorizontal: 22,
@@ -168,13 +184,6 @@ export default StyleSheet.create({
     fontSize: 16,
     lineHeight: 19,
     fontWeight: "800",
-  },
-  nextWorkoutIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    alignItems: "center",
-    justifyContent: "center",
   },
   calendarButton: {
     minHeight: 50,

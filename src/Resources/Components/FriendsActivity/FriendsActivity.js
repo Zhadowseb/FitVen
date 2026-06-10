@@ -306,7 +306,10 @@ export default function FriendsActivity({
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor;
   const cardSurface = theme.cardBackground ?? theme.background;
   const avatarBackgroundColor =
-    theme.uiBackground ?? theme.inputBackground ?? "rgba(255,255,255,0.08)";
+    theme.fields ??
+    theme.uiBackground ??
+    theme.inputBackground ??
+    "rgba(255,255,255,0.08)";
   const iconColor = theme.primary ?? theme.text;
   const currentUserMeta = getActivityMeta(
     theme,

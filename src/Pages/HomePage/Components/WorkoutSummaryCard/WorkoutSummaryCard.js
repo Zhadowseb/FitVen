@@ -165,7 +165,7 @@ export default function WorkoutSummaryCard({
           size={50}
           iconSize={25}
           iconColor={accent}
-          backgroundColor={insetSurface}
+          backgroundColor={theme.fields ?? insetSurface}
           borderColor={accent}
           borderWidth={2}
         />

@@ -227,7 +227,9 @@ const SocialUserListPage = () => {
                   size={48}
                   iconSize={24}
                   iconColor={theme.primary ?? titleColor}
-                  backgroundColor={theme.uiBackground ?? theme.background}
+                  backgroundColor={
+                    theme.fields ?? theme.uiBackground ?? theme.background
+                  }
                   borderColor={cardBorder}
                   borderWidth={1}
                 />

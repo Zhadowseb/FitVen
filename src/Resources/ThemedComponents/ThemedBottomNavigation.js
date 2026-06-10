@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
+  AppState,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -17,12 +18,18 @@ import Male from "../Icons/UI-icons/Male";
 import Plus from "../Icons/UI-icons/Plus";
 import Social from "../Icons/UI-icons/Social";
 import UpwardGraf from "../Icons/UI-icons/UpwardGraf";
-import { programService } from "../../Services";
+import { programService, workoutService } from "../../Services";
 import {
   getTodaysDate,
   normalizeLocalDateString,
   parseCustomDate,
 } from "../../Utils/dateUtils";
+import {
+  formatTime,
+  getCurrentStoredTimestampSeconds,
+  normalizeElapsedDurationSeconds,
+  normalizeStoredTimestampSeconds,
+} from "../../Utils/timeUtils";
 import { subscribeQuickWorkoutMenu } from "../../Utils/quickWorkoutMenuEvents";
 
 function getWorkoutType(workout) {
@@ -58,8 +65,11 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
   const [isLoadingUsualWorkouts, setIsLoadingUsualWorkouts] = useState(false);
   const [recentWorkouts, setRecentWorkouts] = useState([]);
   const [isLoadingRecentWorkouts, setIsLoadingRecentWorkouts] = useState(false);
+  const [activeWorkoutTimer, setActiveWorkoutTimer] = useState(null);
+  const [timerTick, setTimerTick] = useState(getCurrentStoredTimestampSeconds());
   const quickWorkoutDateRef = useRef(getTodaysDate());
   const quickWorkoutTargetRef = useRef(null);
+  const activeWorkoutLoadRef = useRef(false);
 
   const isProfileActive = [
     "ProfilePage",
@@ -84,6 +94,16 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
   const barBorder = theme.border ?? theme.cardBorder ?? theme.iconColor;
   const plusBackground = theme.primary ?? "#f7742e";
   const plusIconColor = theme.textInverted ?? theme.cardBackground ?? "#10131a";
+  const activeWorkoutElapsed = activeWorkoutTimer
+    ? normalizeElapsedDurationSeconds(activeWorkoutTimer.elapsed_time, 0) +
+      Math.max(
+        0,
+        normalizeStoredTimestampSeconds(activeWorkoutTimer.timer_start) === null
+          ? 0
+          : timerTick -
+              normalizeStoredTimestampSeconds(activeWorkoutTimer.timer_start)
+      )
+    : 0;
 
   const handleHomePress = () => {
     if (!navigationRef?.isReady?.()) {
@@ -118,6 +138,24 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     }
 
     navigationRef.navigate("ExerciseLibraryPage");
+  };
+
+  const handleCenterButtonPress = () => {
+    if (activeWorkoutTimer && navigationRef?.isReady?.()) {
+      navigationRef.navigate("WorkoutPage", {
+        workout_id: activeWorkoutTimer.workout_id,
+        workout_label:
+          activeWorkoutTimer.label ?? activeWorkoutTimer.workout_type,
+        workout_type:
+          activeWorkoutTimer.workout_type ?? activeWorkoutTimer.label,
+        day: activeWorkoutTimer.day,
+        date: activeWorkoutTimer.date,
+        program_id: activeWorkoutTimer.program_id,
+      });
+      return;
+    }
+
+    handleQuickWorkoutPress();
   };
 
   const loadPlannedShortcut = useCallback(async (workoutDate) => {
@@ -205,6 +243,47 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
   useEffect(() => {
     return subscribeQuickWorkoutMenu(handleQuickWorkoutPress);
   }, [handleQuickWorkoutPress]);
+
+  const loadActiveWorkoutTimer = useCallback(async () => {
+    if (activeWorkoutLoadRef.current) {
+      return;
+    }
+
+    activeWorkoutLoadRef.current = true;
+
+    try {
+      const workout = await workoutService.getActiveWorkoutTimer(db);
+      setActiveWorkoutTimer(workout ?? null);
+      setTimerTick(getCurrentStoredTimestampSeconds());
+    } catch (error) {
+      console.error("Failed to load active workout timer:", error);
+      setActiveWorkoutTimer(null);
+    } finally {
+      activeWorkoutLoadRef.current = false;
+    }
+  }, [db]);
+
+  useEffect(() => {
+    loadActiveWorkoutTimer();
+
+    const interval = setInterval(() => {
+      setTimerTick(getCurrentStoredTimestampSeconds());
+      loadActiveWorkoutTimer();
+    }, 1000);
+    const appStateSubscription = AppState.addEventListener(
+      "change",
+      (nextAppState) => {
+        if (nextAppState === "active") {
+          loadActiveWorkoutTimer();
+        }
+      }
+    );
+
+    return () => {
+      clearInterval(interval);
+      appStateSubscription.remove();
+    };
+  }, [loadActiveWorkoutTimer]);
 
   const resolveQuickWorkoutTarget = async () => {
     const target = quickWorkoutTargetRef.current;
@@ -420,10 +499,14 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
         <View style={styles.plusSlot}>
           <TouchableOpacity
             activeOpacity={0.86}
-            accessibilityLabel="Create workout"
+            accessibilityLabel={
+              activeWorkoutTimer
+                ? `Active workout timer ${formatTime(activeWorkoutElapsed)}`
+                : "Create workout"
+            }
             accessibilityRole="button"
             disabled={isCreatingQuickWorkout}
-            onPress={() => handleQuickWorkoutPress()}
+            onPress={handleCenterButtonPress}
             style={[
               styles.plusButton,
               {
@@ -433,12 +516,22 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
               },
             ]}
           >
-            <Plus
-              width={34}
-              height={34}
-              color={plusIconColor}
-              thickness={2.2}
-            />
+            {activeWorkoutTimer ? (
+              <Text
+                adjustsFontSizeToFit
+                numberOfLines={1}
+                style={[styles.activeTimerText, { color: plusIconColor }]}
+              >
+                {formatTime(activeWorkoutElapsed)}
+              </Text>
+            ) : (
+              <Plus
+                width={34}
+                height={34}
+                color={plusIconColor}
+                thickness={2.2}
+              />
+            )}
           </TouchableOpacity>
         </View>
 
@@ -544,5 +637,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.36,
     shadowRadius: 18,
     elevation: 12,
+  },
+  activeTimerText: {
+    maxWidth: 58,
+    fontSize: 17,
+    lineHeight: 21,
+    fontWeight: "900",
+    fontVariant: ["tabular-nums"],
+    textAlign: "center",
   },
 });

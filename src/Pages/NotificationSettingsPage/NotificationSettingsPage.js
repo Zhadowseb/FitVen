@@ -88,10 +88,7 @@ export default function NotificationSettingsPage() {
   const titleColor = theme.title ?? theme.text;
   const quietText = theme.iconColor ?? theme.quietText ?? theme.text;
   const cardSurface = theme.cardBackground ?? theme.background;
-  const customPanelSurface =
-    colorScheme === "dark"
-      ? "rgba(247, 116, 46, 0.06)"
-      : "rgba(247, 116, 46, 0.08)";
+  const customPanelSurface = theme.fields ?? cardSurface;
   const pageSurface = theme.background;
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor;
   const primaryColor = theme.primary ?? "#f7742e";
@@ -389,7 +386,7 @@ export default function NotificationSettingsPage() {
                           style={[
                             styles.initialsAvatar,
                             {
-                              backgroundColor: cardSurface,
+                              backgroundColor: theme.fields ?? cardSurface,
                               borderColor: cardBorder,
                             },
                           ]}

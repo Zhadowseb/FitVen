@@ -4,12 +4,13 @@ import {
   View,
   useColorScheme,
 } from "react-native";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSQLiteContext } from "expo-sqlite";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import Feather from "@expo/vector-icons/Feather";
 
-import { programService } from "../../../../Services";
+import { useAuth } from "../../../../Contexts/AuthContext";
+import { notificationService, programService } from "../../../../Services";
 import { Colors } from "../../../../Resources/GlobalStyling/colors";
 import Bell from "../../../../Resources/Icons/UI-icons/Bell";
 import Calender from "../../../../Resources/Icons/UI-icons/Calender";
@@ -50,8 +51,10 @@ const TodayProgramsShortcut = () => {
   const navigation = useNavigation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const { user } = useAuth();
   const [todaySnapshots, setTodaySnapshots] = useState([]);
   const [nextWorkout, setNextWorkout] = useState(null);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const [loading, setLoading] = useState(false);
 
   const date = getTodaysDate();
@@ -62,21 +65,26 @@ const TodayProgramsShortcut = () => {
       const todayDate = parseCustomDate(date);
       const tomorrow = addDays(todayDate, 1);
       const rangeEnd = addDays(todayDate, 180);
-      const [snapshotsResult, upcomingWorkoutsResult] = await Promise.allSettled([
-        programService.getTodayWorkoutSnapshots(db, { date }),
-        programService.getWorkoutCalendarWorkouts(db, {
-          startIsoDate: normalizeIsoDateString(formatDate(tomorrow)),
-          endIsoDate: normalizeIsoDateString(formatDate(rangeEnd)),
-        }),
-      ]);
+      const [snapshotsResult, upcomingWorkoutsResult, unreadCountResult] =
+        await Promise.allSettled([
+          programService.getTodayWorkoutSnapshots(db, { date }),
+          programService.getWorkoutCalendarWorkouts(db, {
+            startIsoDate: normalizeIsoDateString(formatDate(tomorrow)),
+            endIsoDate: normalizeIsoDateString(formatDate(rangeEnd)),
+          }),
+          notificationService.getUnreadNotificationCount({ user }),
+        ]);
       const snapshots =
         snapshotsResult.status === "fulfilled" ? snapshotsResult.value : [];
       const upcomingWorkouts =
         upcomingWorkoutsResult.status === "fulfilled"
           ? upcomingWorkoutsResult.value
           : [];
+      const unreadCount =
+        unreadCountResult.status === "fulfilled" ? unreadCountResult.value : 0;
 
       setTodaySnapshots(snapshots);
+      setUnreadNotificationCount(unreadCount);
       setNextWorkout(
         upcomingWorkouts.find((workout) => Number(workout.done) !== 1) ?? null
       );
@@ -95,16 +103,30 @@ const TodayProgramsShortcut = () => {
       console.error(error);
       setTodaySnapshots([]);
       setNextWorkout(null);
+      setUnreadNotificationCount(0);
     } finally {
       setLoading(false);
     }
-  }, [db, date]);
+  }, [db, date, user]);
 
   useFocusEffect(
     useCallback(() => {
       loadToday();
     }, [loadToday])
   );
+
+  useEffect(() => {
+    const subscription = notificationService.addNotificationReceivedListener(
+      () => {
+        notificationService
+          .getUnreadNotificationCount({ user })
+          .then(setUnreadNotificationCount)
+          .catch(() => setUnreadNotificationCount(0));
+      }
+    );
+
+    return () => subscription?.remove?.();
+  }, [user]);
 
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const hasMultipleSnapshots = todaySnapshots.length > 1;
@@ -151,9 +173,9 @@ const TodayProgramsShortcut = () => {
 
         <TouchableOpacity
           activeOpacity={0.82}
-          accessibilityLabel="Open notification settings"
+          accessibilityLabel="Open notifications"
           accessibilityRole="button"
-          onPress={() => navigation.navigate("NotificationSettingsPage")}
+          onPress={() => navigation.navigate("NotificationHistoryPage")}
           style={[
             styles.notificationButton,
             {
@@ -168,6 +190,21 @@ const TodayProgramsShortcut = () => {
             color={theme.title ?? theme.iconColor}
             thickness={1.8}
           />
+          {unreadNotificationCount > 0 ? (
+            <View
+              style={[
+                styles.notificationBadge,
+                { backgroundColor: theme.secondary ?? "#60daac" },
+              ]}
+            >
+              <ThemedText
+                style={styles.notificationBadgeText}
+                setColor={theme.textInverted ?? "#1b1918"}
+              >
+                {unreadNotificationCount > 9 ? "9+" : unreadNotificationCount}
+              </ThemedText>
+            </View>
+          ) : null}
         </TouchableOpacity>
       </View>
 
@@ -362,18 +399,7 @@ const TodayProgramsShortcut = () => {
                 </ThemedTitle>
               </View>
 
-              <View
-                style={[
-                  styles.nextWorkoutIcon,
-                  { backgroundColor: theme.uiBackground ?? cardBorder },
-                ]}
-              >
-                <Feather
-                  name="arrow-right"
-                  size={22}
-                  color={theme.title ?? theme.text}
-                />
-              </View>
+              <Feather name="arrow-right" size={22} color={quietText} />
             </TouchableOpacity>
 
             <TouchableOpacity

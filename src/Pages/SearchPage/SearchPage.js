@@ -252,6 +252,7 @@ const SearchPage = () => {
               currentUser={circlePreview.currentUser}
               people={circlePreview.people}
               errorMessage={circlePreviewError}
+              isLoading={isLoadingFollowCounts}
               onSeeAll={handleOpenUserList}
               onOpenProfile={() => navigation.navigate("ProfilePage")}
             />
@@ -346,7 +347,9 @@ const SearchPage = () => {
                   size={44}
                   iconSize={22}
                   iconColor={theme.primary ?? titleColor}
-                  backgroundColor={theme.uiBackground ?? theme.background}
+                  backgroundColor={
+                    theme.fields ?? theme.uiBackground ?? theme.background
+                  }
                   borderColor={cardBorder}
                   borderWidth={1}
                 />

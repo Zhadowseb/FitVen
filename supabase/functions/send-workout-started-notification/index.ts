@@ -473,6 +473,45 @@ Deno.serve(async (req) => {
       });
     }
 
+    const actorName = getDisplayName(actorProfile);
+    const workoutLabel = getWorkoutLabel(workout);
+    const message = {
+      title: getWorkoutNotificationTitle(workoutLabel),
+      body: getWorkoutNotificationBody(actorName, workoutLabel),
+      sound: "default",
+      priority: "high",
+      ttl: 3600,
+      channelId: ACTIVITY_CHANNEL_ID,
+      data: {
+        type: "workout_started",
+        actorId,
+        workoutId: String(workoutId),
+        workoutType: workout.workout_type ?? null,
+        workoutLabel,
+      },
+    };
+    const { error: inboxError } = await supabase
+      .from("notification_inbox")
+      .upsert(
+        filteredRecipientIds.map((recipientId) => ({
+          user_id: recipientId,
+          actor_id: actorId,
+          event_id: event.id,
+          event_type: "workout_started",
+          title: message.title,
+          body: message.body,
+          data: message.data,
+        })),
+        {
+          onConflict: "user_id,event_id",
+          ignoreDuplicates: true,
+        }
+      );
+
+    if (inboxError) {
+      throw inboxError;
+    }
+
     const [
       { data: pushTokens, error: tokensError },
       { data: actorTokens, error: actorTokensError },
@@ -520,36 +559,20 @@ Deno.serve(async (req) => {
       await supabase
         .from("notification_events")
         .update({
-          status: "skipped",
-          recipient_count: 0,
+          status: "sent",
+          recipient_count: filteredRecipientIds.length,
           sent_at: new Date().toISOString(),
         })
         .eq("id", event.id);
 
       return jsonResponse({
-        skipped: true,
+        sent: true,
         reason: "no_push_tokens",
         eventKey,
+        inboxRecipientCount: filteredRecipientIds.length,
+        pushRecipientCount: 0,
       });
     }
-
-    const actorName = getDisplayName(actorProfile);
-    const workoutLabel = getWorkoutLabel(workout);
-    const message = {
-      title: getWorkoutNotificationTitle(workoutLabel),
-      body: getWorkoutNotificationBody(actorName, workoutLabel),
-      sound: "default",
-      priority: "high",
-      ttl: 3600,
-      channelId: ACTIVITY_CHANNEL_ID,
-      data: {
-        type: "workout_started",
-        actorId,
-        workoutId: String(workoutId),
-        workoutType: workout.workout_type ?? null,
-        workoutLabel,
-      },
-    };
 
     const { responses, invalidTokenIds } = await sendExpoPushes(
       tokens,
@@ -570,7 +593,7 @@ Deno.serve(async (req) => {
       .from("notification_events")
       .update({
         status: "sent",
-        recipient_count: tokens.length,
+        recipient_count: filteredRecipientIds.length,
         expo_response: responses as unknown as JsonRecord,
         sent_at: new Date().toISOString(),
       })
@@ -579,7 +602,8 @@ Deno.serve(async (req) => {
     return jsonResponse({
       sent: true,
       eventKey,
-      recipientCount: tokens.length,
+      inboxRecipientCount: filteredRecipientIds.length,
+      pushRecipientCount: tokens.length,
       invalidTokenCount: invalidTokenIds.length,
     });
   } catch (error) {

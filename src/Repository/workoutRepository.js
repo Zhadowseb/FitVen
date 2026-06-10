@@ -70,6 +70,29 @@ export async function getWorkoutTimerState(db, workoutId) {
   );
 }
 
+export async function getActiveWorkoutTimer(db) {
+  return db.getFirstAsync(
+    `SELECT
+        w.workout_id,
+        w.workout_type,
+        w.label,
+        w.date,
+        w.original_start_time,
+        w.timer_start,
+        w.elapsed_time,
+        d.program_id,
+        d.Weekday AS day
+     FROM Workout_Type_Instance w
+     LEFT JOIN Day d ON d.day_id = w.day_id
+     WHERE w.done = 0
+       AND w.is_active = 1
+       AND w.timer_start IS NOT NULL
+       AND w.deleted_at IS NULL
+     ORDER BY w.timer_start DESC, w.workout_id DESC
+     LIMIT 1;`
+  );
+}
+
 export async function updateWorkoutLabel(db, { workoutId, label }) {
   const syncVersion = createNextSyncVersion();
   await db.runAsync(
@@ -179,12 +202,19 @@ export async function persistWorkoutTimerState(
     `UPDATE Workout_Type_Instance
      SET timer_start = ?,
          elapsed_time = ?,
+         is_active = ?,
          sync_id = COALESCE(sync_id, ${SQLITE_UUID_SQL}),
          sync_version = ?,
          deleted_at = NULL,
          needs_sync = 1
      WHERE workout_id = ?;`,
-    [normalizedTimerStart, normalizedElapsedTime, syncVersion, workoutId]
+    [
+      normalizedTimerStart,
+      normalizedElapsedTime,
+      normalizedTimerStart === null ? 0 : 1,
+      syncVersion,
+      workoutId,
+    ]
   );
 }
 

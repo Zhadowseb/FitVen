@@ -23,6 +23,13 @@ const workoutNotificationFunctionPath = path.join(
   "index.ts"
 );
 const appPath = path.join(rootDir, "App.js");
+const notificationHistoryPagePath = path.join(
+  rootDir,
+  "src",
+  "Pages",
+  "NotificationHistoryPage",
+  "NotificationHistoryPage.js"
+);
 const workoutServicePath = path.join(
   rootDir,
   "src",
@@ -37,6 +44,10 @@ const workoutNotificationFunctionSource = fs.readFileSync(
   "utf8"
 );
 const appSource = fs.readFileSync(appPath, "utf8");
+const notificationHistoryPageSource = fs.readFileSync(
+  notificationHistoryPagePath,
+  "utf8"
+);
 const workoutServiceSource = fs.readFileSync(workoutServicePath, "utf8");
 
 assert.match(serviceSource, /Notifications\.addPushTokenListener\(listener\)/);
@@ -65,7 +76,23 @@ assert.match(
   workoutNotificationFunctionSource,
   /payload\.type === "INSERT" \|\| payload\.type === "UPDATE"/
 );
+assert.match(
+  workoutNotificationFunctionSource,
+  /\.from\("notification_inbox"\)[\s\S]*\.from\("push_tokens"\)/
+);
 assert.match(appSource, /<WorkoutTypeInstanceSync \/>/);
+assert.match(
+  appSource,
+  /<Stack\.Screen name="NotificationHistoryPage" component=\{NotificationHistoryPage\}/
+);
+assert.match(
+  notificationHistoryPageSource,
+  /notificationService\.getNotificationHistory/
+);
+assert.match(
+  notificationHistoryPageSource,
+  /notificationService[\s\S]*\.markAllNotificationHistoryRead/
+);
 assert.match(
   workoutServiceSource,
   /export async function persistWorkoutTimerState[\s\S]*workoutRepository\.persistWorkoutTimerState[\s\S]*syncWorkoutTypeInstancesInBackground\(db\)/

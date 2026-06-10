@@ -84,8 +84,7 @@ export default function ProfilePage() {
   const panelSurface = theme.uiBackground ?? theme.background;
   const primaryColor = theme.primary ?? "#f7742e";
   const secondaryColor = theme.secondary ?? "#60daac";
-  const thirdColor = theme.third ?? panelSurface;
-  const thirdTextColor = theme.textInverted ?? theme.background ?? "#201e2b";
+  const fieldsColor = theme.fields ?? panelSurface;
   const profileStatusColor =
     profileFeedback.status === "success"
       ? theme.secondaryDark ?? theme.secondary ?? titleColor
@@ -372,7 +371,7 @@ export default function ProfilePage() {
                 size={104}
                 iconSize={42}
                 iconColor={theme.primary ?? titleColor}
-                backgroundColor={panelSurface}
+                backgroundColor={fieldsColor}
                 borderColor={cardBorder}
                 borderWidth={1}
               />
@@ -383,7 +382,7 @@ export default function ProfilePage() {
                 style={({ pressed }) => [
                   styles.avatarButton,
                   {
-                    backgroundColor: panelSurface,
+                    backgroundColor: fieldsColor,
                     borderColor: cardBorder,
                   },
                   pressed && !isLoadingProfile && !isUploadingAvatar
@@ -449,10 +448,10 @@ export default function ProfilePage() {
                 error={!isLoadingProfile ? displayNameError : undefined}
                 style={styles.inputWrapper}
                 inputStyle={{
-                  backgroundColor: thirdColor,
-                  color: thirdTextColor,
+                  backgroundColor: fieldsColor,
+                  color: titleColor,
                 }}
-                placeholderTextColor={thirdTextColor}
+                placeholderTextColor={quietText}
               />
               <View style={styles.metaRow}>
                 <ThemedText style={styles.metaText} setColor={quietText}>
@@ -486,11 +485,11 @@ export default function ProfilePage() {
                 inputStyle={[
                   styles.bioInput,
                   {
-                    backgroundColor: thirdColor,
-                    color: thirdTextColor,
+                    backgroundColor: fieldsColor,
+                    color: titleColor,
                   },
                 ]}
-                placeholderTextColor={thirdTextColor}
+                placeholderTextColor={quietText}
               />
               <View style={styles.metaRow}>
                 <ThemedText style={styles.metaText} setColor={quietText}>
@@ -577,16 +576,16 @@ export default function ProfilePage() {
                 style={[
                   styles.settingsButton,
                   {
-                    backgroundColor: thirdColor,
+                    backgroundColor: fieldsColor,
                     borderColor: cardBorder,
                   },
                 ]}
               >
                 <View style={styles.settingsButtonContent}>
-                  <Library width={22} height={22} color={thirdTextColor} />
+                  <Library width={22} height={22} color={titleColor} />
                   <ThemedText
                     style={styles.settingsButtonText}
-                    setColor={thirdTextColor}
+                    setColor={titleColor}
                   >
                     Exercises
                   </ThemedText>
@@ -594,8 +593,8 @@ export default function ProfilePage() {
                 <TailArrowUpRight
                   width={18}
                   height={18}
-                  stroke={thirdTextColor}
-                  color={thirdTextColor}
+                  stroke={titleColor}
+                  color={titleColor}
                 />
               </TouchableOpacity>
 
@@ -605,16 +604,16 @@ export default function ProfilePage() {
                 style={[
                   styles.settingsButton,
                   {
-                    backgroundColor: thirdColor,
+                    backgroundColor: fieldsColor,
                     borderColor: cardBorder,
                   },
                 ]}
               >
                 <View style={styles.settingsButtonContent}>
-                  <Bell width={22} height={22} color={thirdTextColor} />
+                  <Bell width={22} height={22} color={titleColor} />
                   <ThemedText
                     style={styles.settingsButtonText}
-                    setColor={thirdTextColor}
+                    setColor={titleColor}
                   >
                     Notifications
                   </ThemedText>
@@ -622,8 +621,8 @@ export default function ProfilePage() {
                 <TailArrowUpRight
                   width={18}
                   height={18}
-                  stroke={thirdTextColor}
-                  color={thirdTextColor}
+                  stroke={titleColor}
+                  color={titleColor}
                 />
               </TouchableOpacity>
 
@@ -633,16 +632,16 @@ export default function ProfilePage() {
                 style={[
                   styles.settingsButton,
                   {
-                    backgroundColor: thirdColor,
+                    backgroundColor: fieldsColor,
                     borderColor: cardBorder,
                   },
                 ]}
               >
                 <View style={styles.settingsButtonContent}>
-                  <Social width={22} height={22} color={thirdTextColor} />
+                  <Social width={22} height={22} color={titleColor} />
                   <ThemedText
                     style={styles.settingsButtonText}
-                    setColor={thirdTextColor}
+                    setColor={titleColor}
                   >
                     Social posts
                   </ThemedText>
@@ -650,8 +649,8 @@ export default function ProfilePage() {
                 <TailArrowUpRight
                   width={18}
                   height={18}
-                  stroke={thirdTextColor}
-                  color={thirdTextColor}
+                  stroke={titleColor}
+                  color={titleColor}
                 />
               </TouchableOpacity>
             </View>
