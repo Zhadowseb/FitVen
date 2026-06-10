@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.17.7-minor-profile-third-accent.1",
+  "version": "0.17.8-minor-expanded-exercise-design.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",

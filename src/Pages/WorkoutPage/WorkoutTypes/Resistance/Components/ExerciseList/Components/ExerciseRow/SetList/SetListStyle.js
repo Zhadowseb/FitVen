@@ -10,6 +10,7 @@ export default StyleSheet.create({
     wrapper: {
         marginHorizontal: 0,
         marginVertical: 0,
+        width: "100%",
         paddingHorizontal: 8,
         paddingTop: 6,
         paddingBottom: 0,
@@ -164,6 +165,11 @@ export default StyleSheet.create({
     addSetIconCell: {
         width: 28,
         height: 30,
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    addSetActions: {
+        flexDirection: "row",
         justifyContent: "center",
         alignItems: "center",
     },

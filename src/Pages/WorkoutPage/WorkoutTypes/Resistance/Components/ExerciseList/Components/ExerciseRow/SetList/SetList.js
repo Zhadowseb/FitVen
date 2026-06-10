@@ -20,7 +20,63 @@ import Delete from "../../../../../../../../../Resources/Icons/UI-icons/Delete";
 import Note from "../../../../../../../../../Resources/Icons/UI-icons/Note";
 import Amrap from "../../../../../../../../../Resources/Icons/UI-icons/Amrap";
 import Plus from "../../../../../../../../../Resources/Icons/UI-icons/Plus";
+import Cogwheel from "../../../../../../../../../Resources/Icons/UI-icons/Cogwheel";
+import ReplayHistory from "../../../../../../../../../Resources/Icons/UI-icons/ReplayHistory";
 import { weightliftingService as weightliftingRepository } from "../../../../../../../../../Services";
+
+const SET_LIST_COLUMN_KEYS = [
+  "note",
+  "rest",
+  "set",
+  "reps",
+  "rpe",
+  "rm_percentage",
+  "weight",
+  "done",
+];
+const SET_LIST_DEFAULT_VISIBLE_COLUMNS = SET_LIST_COLUMN_KEYS.reduce(
+  (columns, key) => ({
+    ...columns,
+    [key]: true,
+  }),
+  {}
+);
+
+const resolveSetListVisibleColumns = (visibleColumns) => {
+  let parsedColumns = visibleColumns;
+
+  if (typeof parsedColumns === "string") {
+    try {
+      parsedColumns = JSON.parse(parsedColumns);
+    } catch {
+      parsedColumns = null;
+    }
+  }
+
+  const defaultColumns =
+    weightliftingRepository.DEFAULT_VISIBLE_COLUMNS ??
+    SET_LIST_DEFAULT_VISIBLE_COLUMNS;
+
+  if (
+    !parsedColumns ||
+    typeof parsedColumns !== "object" ||
+    Array.isArray(parsedColumns)
+  ) {
+    return defaultColumns;
+  }
+
+  const normalizedColumns = SET_LIST_COLUMN_KEYS.reduce(
+    (columns, key) => ({
+      ...columns,
+      [key]: Boolean(parsedColumns[key]),
+    }),
+    {}
+  );
+
+  return Object.values(normalizedColumns).some(Boolean)
+    ? normalizedColumns
+    : defaultColumns;
+};
 
 const SetList = ({
   sets,
@@ -29,6 +85,8 @@ const SetList = ({
   onToggleSet,
   updateUI,
   onAddSet,
+  onToggleHistory,
+  onOpenSettings,
   recordColor,
   recordLightColor,
   recordDarkColor,
@@ -69,9 +127,11 @@ const SetList = ({
   const personalRecordControlText =
     recordControlTextColor ?? personalRecordSurface;
   const addSetColor = theme.iconColor ?? theme.quietText ?? theme.text;
+  const exerciseActionColor = theme.primary ?? addSetColor;
 
   const db = useSQLiteContext();
   const [localSets, setLocalSets] = useState(sets);
+  const resolvedVisibleColumns = resolveSetListVisibleColumns(visibleColumns);
 
   const [setOptionsVisible, setSetOptionsVisible] = useState(false);
   const [selectedSet, set_selectedSet] = useState(null);
@@ -143,10 +203,27 @@ const SetList = ({
     { key: "done", style: styles.done, flexValue: 14 },
   ];
 
-  const activeColumns = columnConfig.filter((col) => visibleColumns[col.key]);
+  const selectedColumns = columnConfig.filter(
+    (col) => resolvedVisibleColumns[col.key]
+  );
+  const activeColumns =
+    selectedColumns.length > 0 ? selectedColumns : columnConfig;
+  const renderedVisibleColumns = activeColumns.reduce(
+    (columns, column) => ({
+      ...columns,
+      [column.key]: true,
+    }),
+    {}
+  );
+  const historyColumnKey = renderedVisibleColumns.note
+    ? "note"
+    : activeColumns[0]?.key;
+  const settingsColumnKey = renderedVisibleColumns.done
+    ? "done"
+    : activeColumns[activeColumns.length - 1]?.key;
 
   const getRenderedColumns = (set) => {
-    if (set.amrap !== 1 || !visibleColumns.reps) {
+    if (set.amrap !== 1 || !renderedVisibleColumns.reps) {
       return activeColumns;
     }
 
@@ -163,7 +240,7 @@ const SetList = ({
           mergedStyle: {
             flex:
               column.flexValue +
-              (visibleColumns.rpe ? 9 : 0),
+              (renderedVisibleColumns.rpe ? 9 : 0),
           },
         });
         continue;
@@ -483,9 +560,27 @@ const SetList = ({
   };
 
   const renderAddSetCell = (key) => {
-    if (key === "set") {
-      return (
+    const actions = [];
+
+    if (key === historyColumnKey) {
+      actions.push(
         <TouchableOpacity
+          key="history"
+          activeOpacity={0.72}
+          accessibilityRole="button"
+          accessibilityLabel="Toggle exercise history summary"
+          style={styles.addSetIconCell}
+          onPress={onToggleHistory}
+        >
+          <ReplayHistory width={17} height={17} color={exerciseActionColor} />
+        </TouchableOpacity>
+      );
+    }
+
+    if (key === "set") {
+      actions.push(
+        <TouchableOpacity
+          key="add-set"
           activeOpacity={0.72}
           style={styles.addSetIconCell}
           onPress={onAddSet}
@@ -495,12 +590,30 @@ const SetList = ({
       );
     }
 
-    return null;
+    if (key === settingsColumnKey) {
+      actions.push(
+        <TouchableOpacity
+          key="settings"
+          activeOpacity={0.72}
+          accessibilityRole="button"
+          accessibilityLabel="Open exercise settings"
+          style={styles.addSetIconCell}
+          onPress={onOpenSettings}
+        >
+          <Cogwheel width={17} height={17} color={exerciseActionColor} />
+        </TouchableOpacity>
+      );
+    }
+
+    return actions.length > 0 ? (
+      <View style={styles.addSetActions}>{actions}</View>
+    ) : null;
   };
 
   return (
     <>
       <ThemedCard
+        collapsable={false}
         style={[
           styles.wrapper,
           {
@@ -509,7 +622,7 @@ const SetList = ({
           },
         ]}
       >
-        {hasSets && <Title visibleColumns={visibleColumns} />}
+        {hasSets && <Title visibleColumns={renderedVisibleColumns} />}
 
         {displayedSets.map((set, rowIndex) => {
           const renderedColumns = getRenderedColumns(set);

@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.17.8] - Unreleased
+### Changed
+- Refined collapsed and expanded resistance exercise cards, set summaries, and exercise actions.
+
+---
 ## [0.17.7] - Unreleased
 ### Changed
 - Describe pending changes here.

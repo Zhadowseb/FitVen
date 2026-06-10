@@ -17,9 +17,19 @@ export default StyleSheet.create({
     position: "relative",
   },
 
+  exerciseCardExpanded: {
+    overflow: "visible",
+  },
+
   headerRow: {
     flexDirection: "row",
     alignItems: "flex-start",
+  },
+
+  headerRowExpanded: {
+    minHeight: 32,
+    position: "relative",
+    zIndex: 2,
   },
 
   headerMain: {
@@ -30,13 +40,29 @@ export default StyleSheet.create({
     paddingRight: 10,
   },
 
+  headerMainExpanded: {
+    paddingLeft: 38,
+    paddingRight: 0,
+  },
+
+  setProgressClip: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 24,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    zIndex: 1,
+    overflow: "hidden",
+  },
+
   setProgressTrack: {
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     height: 4,
-    zIndex: 1,
     overflow: "hidden",
   },
 
@@ -73,20 +99,31 @@ export default StyleSheet.create({
     paddingRight: 8,
   },
 
+  titleBlockExpanded: {
+    alignItems: "center",
+    paddingRight: 0,
+  },
+
   exerciseTitle: {
+    fontSize: 19,
+    lineHeight: 25,
     marginBottom: 0,
   },
 
-  exerciseMeta: {
-    lineHeight: 13,
-    textTransform: "uppercase",
-    fontWeight: "600",
-    marginTop: 1,
+  exerciseTitleExpanded: {
+    width: "100%",
+    textAlign: "center",
   },
 
   actionsRow: {
     flexDirection: "row",
     alignItems: "center",
+  },
+
+  actionsRowExpanded: {
+    width: 38,
+    minHeight: 32,
+    justifyContent: "center",
   },
 
   actionButton: {
@@ -97,8 +134,9 @@ export default StyleSheet.create({
     marginLeft: 6,
   },
 
-  settingsActionButton: {
-    marginLeft: 1,
+  exerciseSetCount: {
+    marginLeft: 8,
+    fontWeight: "900",
   },
 
   historySection: {
@@ -256,14 +294,16 @@ export default StyleSheet.create({
   },
 
   summaryCollapsedRow: {
-    marginTop: 12,
+    marginTop: 8,
     marginBottom: -4,
     flexDirection: "row",
     alignItems: "center",
+    width: "100%",
   },
 
   summaryRow: {
     flex: 1,
+    minWidth: 0,
     paddingHorizontal: 0,
     paddingVertical: 2,
     flexDirection: "row",
@@ -272,56 +312,74 @@ export default StyleSheet.create({
 
   summaryTextBlock: {
     flex: 1,
-    paddingRight: 10,
+    minWidth: 0,
+    paddingRight: 2,
     justifyContent: "center",
   },
 
   summaryChipRow: {
+    width: "100%",
+    minWidth: 0,
+    flexShrink: 1,
     flexDirection: "row",
     flexWrap: "wrap",
     alignItems: "center",
-    gap: 6,
+    rowGap: 8,
+  },
+
+  summarySetItem: {
+    flexDirection: "row",
+    alignItems: "center",
   },
 
   summaryChip: {
-    minHeight: 26,
+    minHeight: 0,
     borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    borderRadius: 999,
+    paddingHorizontal: 4,
+    paddingVertical: 3,
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
+  },
+
+  summarySetConnector: {
+    width: 14,
+    height: 1,
     position: "relative",
   },
 
-  summaryRepeatBadge: {
+  summarySetConnectorArrow: {
     position: "absolute",
-    top: -7,
-    right: -5,
-    minWidth: 15,
-    height: 15,
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 3,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  summaryRepeatBadgeText: {
-    fontWeight: "900",
-    lineHeight: 10,
+    top: -3,
+    right: -1,
+    width: 0,
+    height: 0,
+    borderTopWidth: 3,
+    borderBottomWidth: 3,
+    borderLeftWidth: 5,
+    borderTopColor: "transparent",
+    borderBottomColor: "transparent",
   },
 
   summaryChipText: {
     fontWeight: "700",
-    letterSpacing: 0.2,
+  },
+
+  summaryWeightText: {
+    fontWeight: "800",
+  },
+
+  summaryUnitText: {
+    marginLeft: 3,
+    fontWeight: "600",
   },
 
   summaryExpandButton: {
     width: 24,
     height: 28,
-    marginLeft: 4,
+    flexShrink: 0,
+    marginLeft: 2,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -330,5 +388,8 @@ export default StyleSheet.create({
     marginTop: 10,
     marginHorizontal: -12,
     marginBottom: -12,
+    overflow: "visible",
+    position: "relative",
+    zIndex: 1,
   },
 });
