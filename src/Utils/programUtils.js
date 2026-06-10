@@ -5,8 +5,9 @@ export function getProgramEndDate (startDate, dayCount) {
     return "";
   }
 
+  const totalDays = Math.max(0, Math.trunc(Number(dayCount) || 0));
   const endDate = parseCustomDate(startDate);
-  endDate.setDate(endDate.getDate() + dayCount);
+  endDate.setDate(endDate.getDate() + Math.max(totalDays - 1, 0));
   return formatDate(endDate);
 };
 

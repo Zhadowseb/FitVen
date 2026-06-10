@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.17.12] - Unreleased
+### Changed
+- Redesign program cards as image-backed covers with workout-type badges, schedule details, and progress.
+- Use the Resistance Training cover image for programs containing resistance workouts.
+- Use the Run cover image for running programs and split mixed-program covers into equal vertical sections.
+- Add a soft white edge glow and deep drop shadow to program covers.
+- Color completed program-card borders and glows with secondary, highlight cards active on today's date with primary, and stamp completed covers.
+- Stamp active program covers and use the default workout-type image when a program has no workouts.
+- Calculate program-card progress and completion solely from elapsed calendar days, independent of completed workouts.
+
+---
 ## [0.17.11] - Unreleased
 ### Changed
 - Reorder the bottom navigation to place Home on the right beside Train.

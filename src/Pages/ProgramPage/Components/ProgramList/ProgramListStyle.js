@@ -34,22 +34,73 @@ export default StyleSheet.create({
     paddingTop: 40,
   },
 
+  cardDropShadow: {
+    marginBottom: 22,
+    borderRadius: 20,
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 0.48,
+    shadowRadius: 20,
+    elevation: 14,
+  },
+
+  cardGlow: {
+    borderRadius: 20,
+    padding: 2,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.62,
+    shadowRadius: 14,
+    elevation: 6,
+  },
+
   card: {
     marginHorizontal: 0,
     marginVertical: 0,
-    marginBottom: 10,
     padding: 0,
     borderWidth: 1,
-    borderRadius: 18,
+    borderRadius: 20,
     overflow: "hidden",
   },
 
   touchable: {
-    minHeight: 184,
-    paddingLeft: 18,
-    paddingRight: 18,
-    paddingTop: 18,
-    paddingBottom: 16,
+    minHeight: 236,
+    position: "relative",
+  },
+
+  coverImage: {
+    minHeight: 236,
+    overflow: "hidden",
+  },
+
+  coverImageLayer: {
+    ...StyleSheet.absoluteFillObject,
+    flexDirection: "row",
+  },
+
+  coverImageSegment: {
+    flex: 1,
+    height: "100%",
+  },
+
+  coverImageSegmentDivider: {
+    borderLeftWidth: 1,
+    borderLeftColor: "rgba(255, 255, 255, 0.16)",
+  },
+
+  coverScrim: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(4, 6, 9, 0.46)",
+  },
+
+  coverTone: {
+    ...StyleSheet.absoluteFillObject,
+  },
+
+  coverContent: {
+    minHeight: 236,
+    paddingLeft: 19,
+    paddingRight: 14,
+    paddingTop: 14,
+    paddingBottom: 14,
     justifyContent: "space-between",
   },
 
@@ -60,97 +111,107 @@ export default StyleSheet.create({
     minHeight: 30,
   },
 
-  statusBadge: {
-    minHeight: 28,
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 11,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 4,
-    marginRight: 8,
-  },
-
-  statusLabel: {
-    fontSize: 10,
-    fontWeight: "900",
-    textTransform: "uppercase",
-  },
-
   workoutTypeRow: {
     flex: 1,
     minWidth: 0,
     flexDirection: "row",
-    justifyContent: "flex-end",
     alignItems: "center",
-    marginLeft: 10,
+    gap: 6,
+    marginRight: 10,
   },
 
   workoutTypeBadge: {
     minHeight: 28,
-    maxWidth: 104,
-    borderRadius: 999,
+    maxWidth: 118,
     borderWidth: 1,
-    paddingHorizontal: 9,
-    marginLeft: 6,
+    borderRadius: 999,
+    paddingHorizontal: 10,
     flexDirection: "row",
     alignItems: "center",
+    gap: 5,
   },
 
   workoutTypeText: {
+    flexShrink: 1,
     fontSize: 10,
     lineHeight: 14,
-    fontWeight: "800",
-    marginLeft: 4,
+    fontWeight: "900",
   },
 
   cardMenuIcon: {
-    width: 20,
-    height: 28,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: "center",
-    alignItems: "flex-end",
-    marginLeft: 6,
-  },
-
-  cardBodyRow: {
-    flexDirection: "row",
     alignItems: "center",
-    marginTop: 20,
+    backgroundColor: "rgba(5, 7, 10, 0.66)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.12)",
   },
 
-  programInfo: {
-    flex: 1,
+  statusStamp: {
+    position: "absolute",
+    top: 64,
+    right: 18,
+    borderWidth: 2,
+    borderRadius: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    transform: [{ rotate: "7deg" }],
+    shadowOpacity: 0.46,
+    shadowRadius: 9,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 5,
+  },
+
+  statusStampText: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "900",
+    letterSpacing: 2,
+  },
+
+  coverDetails: {
     minWidth: 0,
-    paddingRight: 16,
   },
 
   title: {
-    fontSize: 20,
-    lineHeight: 25,
-    marginBottom: 4,
+    color: "#ffffff",
+    fontSize: 25,
+    lineHeight: 29,
+    fontWeight: "900",
+    marginTop: 4,
+    marginBottom: 10,
   },
 
   dateRange: {
-    fontSize: 12,
-    lineHeight: 17,
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: "800",
+    letterSpacing: 1.8,
+    textTransform: "uppercase",
+  },
+
+  coverFooter: {
+    minHeight: 54,
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+    gap: 8,
   },
 
   statusAction: {
-    width: 72,
-    height: 72,
+    width: 54,
+    height: 54,
     justifyContent: "center",
     alignItems: "center",
+    flexShrink: 0,
   },
 
   completedCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     justifyContent: "center",
     alignItems: "center",
     shadowOpacity: 0.45,
@@ -160,33 +221,42 @@ export default StyleSheet.create({
   },
 
   metaPillRow: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     flexWrap: "wrap",
-    marginTop: 18,
   },
 
   metaPill: {
-    minHeight: 28,
-    borderRadius: 8,
+    minHeight: 24,
+    borderRadius: 6,
     borderWidth: 1,
-    paddingHorizontal: 9,
-    marginRight: 6,
-    marginBottom: 5,
+    paddingHorizontal: 7,
+    marginRight: 5,
+    marginTop: 5,
     flexDirection: "row",
     alignItems: "center",
+    gap: 4,
   },
 
   metaText: {
-    fontSize: 11,
-    lineHeight: 16,
+    fontSize: 10,
+    lineHeight: 14,
     fontWeight: "700",
   },
 
   metaNumber: {
-    fontSize: 11,
-    lineHeight: 16,
-    fontWeight: "800",
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: "900",
+  },
+
+  coverSpine: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    width: 5,
   },
 
   emptyCard: {

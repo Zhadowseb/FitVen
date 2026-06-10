@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  ImageBackground,
   ScrollView,
   TouchableOpacity,
   View,
@@ -41,6 +42,22 @@ const MONTH_LABELS = [
   "Dec",
 ];
 
+const PROGRAM_COVER_IMAGES = [
+  require("../../../../../assets/programs-hero.jpg"),
+  require("../../../../../assets/exercise-library-hero.jpg"),
+  require("../../../../../assets/personal-records-hero.jpg"),
+];
+const DEFAULT_PROGRAM_COVER = require("../../../../Resources/Images/WorkoutTypes/Default/download.jpg");
+const RESISTANCE_PROGRAM_COVER = require("../../../../Resources/Images/WorkoutTypes/ResistanceTraining/52c5c0a6-e32a-48a8-a731-95ca73deeabd.png");
+const RUN_PROGRAM_COVER = require("../../../../Resources/Images/WorkoutTypes/Run/program-cover-run.jpg");
+const RESISTANCE_WORKOUT_TYPES = new Set([
+  "Resistance",
+  "StrengthTraining",
+  "Upperbody",
+  "Legs",
+]);
+const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+
 function formatProgramDateLabel(value, { includeYear = false } = {}) {
   if (!value) {
     return "";
@@ -76,6 +93,10 @@ function getProgramDateRange(startDate, endDate) {
   })} - ${formatProgramDateLabel(endDate, { includeYear: true })}`;
 }
 
+function normalizeWorkoutType(type) {
+  return RESISTANCE_WORKOUT_TYPES.has(type) ? "Resistance" : type;
+}
+
 function parseWorkoutTypes(value) {
   if (!value) {
     return [];
@@ -85,7 +106,7 @@ function parseWorkoutTypes(value) {
 
   return String(value)
     .split(",")
-    .map((type) => type.trim())
+    .map((type) => normalizeWorkoutType(type.trim()))
     .filter((type) => {
       if (!type || seenTypes.has(type)) {
         return false;
@@ -96,12 +117,68 @@ function parseWorkoutTypes(value) {
     });
 }
 
-function getWorkoutTypeLabel(type) {
-  if (type === "Resistance" || type === "StrengthTraining") {
-    return "Resistance";
+function getProgramCoverImages(workoutTypes, programIndex) {
+  if (!workoutTypes.length) {
+    return [DEFAULT_PROGRAM_COVER];
   }
 
-  return type || "Workout";
+  return workoutTypes.map((workoutType, workoutTypeIndex) => {
+    if (workoutType === "Resistance") {
+      return RESISTANCE_PROGRAM_COVER;
+    }
+
+    if (workoutType === "Run") {
+      return RUN_PROGRAM_COVER;
+    }
+
+    return PROGRAM_COVER_IMAGES[
+      (programIndex + workoutTypeIndex) % PROGRAM_COVER_IMAGES.length
+    ];
+  });
+}
+
+function getLocalDateIndex(date) {
+  return Math.floor(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) /
+      MILLISECONDS_PER_DAY
+  );
+}
+
+function getProgramDateProgress(date, startDate, dayCount) {
+  const totalDays = Math.max(0, Math.trunc(Number(dayCount) || 0));
+
+  if (!startDate || totalDays === 0) {
+    return {
+      completedDays: 0,
+      isActive: false,
+      isCompleted: false,
+      progressPercent: 0,
+      totalDays,
+    };
+  }
+
+  const start = parseCustomDate(startDate);
+
+  if (Number.isNaN(start.getTime())) {
+    return {
+      completedDays: 0,
+      isActive: false,
+      isCompleted: false,
+      progressPercent: 0,
+      totalDays,
+    };
+  }
+
+  const elapsedDays = getLocalDateIndex(date) - getLocalDateIndex(start);
+  const completedDays = Math.min(totalDays, Math.max(0, elapsedDays));
+
+  return {
+    completedDays,
+    isActive: elapsedDays >= 0 && elapsedDays < totalDays,
+    isCompleted: elapsedDays >= totalDays,
+    progressPercent: Math.round((completedDays / totalDays) * 100),
+    totalDays,
+  };
 }
 
 function withColorAlpha(color, alpha) {
@@ -143,10 +220,11 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
     theme.cardBorder ?? theme.border ?? theme.iconColor ?? theme.text;
   const cardShell =
     colorScheme === "dark" ? "#0E0F12" : theme.background ?? "#e0dfe8";
-  const mutedChipSurface =
-    colorScheme === "dark" ? "rgba(26, 32, 45, 0.92)" : "rgba(246, 246, 250, 0.96)";
-  const mutedTrack =
-    colorScheme === "dark" ? "#242936" : theme.uiBackground ?? "#d6d5e1";
+  const coverTitleColor = "#ffffff";
+  const coverQuietText = "rgba(255, 255, 255, 0.72)";
+  const coverChipSurface = "rgba(5, 7, 10, 0.72)";
+  const coverBorder = "rgba(255, 255, 255, 0.16)";
+  const mutedTrack = "rgba(255, 255, 255, 0.2)";
 
   const loadPrograms = useCallback(async () => {
     try {
@@ -183,32 +261,28 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
     }, [loadPrograms])
   );
 
-  const getStatusPresentation = (status) => {
-    switch (status) {
-      case "ACTIVE":
-        return {
-          label: "ACTIVE",
-          color: theme.ACTIVE ?? theme.primary ?? "#f7742e",
-          cardBackground: cardSurface,
-          borderColor: theme.ACTIVE ?? theme.primary ?? "#f7742e",
-        };
-      case "COMPLETE":
-        return {
-          label: "COMPLETED",
-          color: theme.COMPLETE ?? theme.secondary ?? "#60daac",
-          cardBackground:
-            colorScheme === "dark" ? "rgba(10, 54, 43, 0.58)" : "#ecfff7",
-          borderColor: theme.COMPLETE ?? theme.secondary ?? "#60daac",
-        };
-      case "NOT_STARTED":
-      default:
-        return {
-          label: "DRAFT",
-          color: theme.NOT_STARTED ?? theme.iconColor ?? "#9E9E9E",
-          cardBackground: cardSurface,
-          borderColor: cardBorderFallback,
-        };
+  const getStatusPresentation = (dateProgress) => {
+    if (dateProgress.isCompleted) {
+      return {
+        color: theme.COMPLETE ?? theme.secondary ?? "#60daac",
+        isActive: false,
+        toneOpacity: 0.2,
+      };
     }
+
+    if (dateProgress.isActive) {
+      return {
+        color: theme.ACTIVE ?? theme.primary ?? "#f7742e",
+        isActive: true,
+        toneOpacity: 0.14,
+      };
+    }
+
+    return {
+      color: theme.NOT_STARTED ?? theme.iconColor ?? "#9E9E9E",
+      isActive: false,
+      toneOpacity: 0.06,
+    };
   };
 
   if (loading) {
@@ -230,234 +304,335 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
         </ThemedText>
       </View>
 
-      {programs.map((item) => {
-        const statusPresentation = getStatusPresentation(item.status);
-        const cardBorder =
-          statusPresentation.borderColor ?? cardBorderFallback ?? statusPresentation.color;
+      {programs.map((item, index) => {
         const totalWorkouts = Number(item.workout_count) || 0;
         const completedWorkouts = Number(item.completed_workout_count) || 0;
-        const progressPercent =
-          totalWorkouts > 0
-            ? Math.min(100, Math.round((completedWorkouts / totalWorkouts) * 100))
-            : 0;
+        const dateProgress = getProgramDateProgress(
+          new Date(),
+          item.start_date,
+          item.day_count
+        );
+        const isCompleted = dateProgress.isCompleted;
+        const statusPresentation = getStatusPresentation(dateProgress);
+        const progressPercent = dateProgress.progressPercent;
         const dateRange = getProgramDateRange(item.start_date, item.end_date);
         const workoutTypes = parseWorkoutTypes(item.workout_types);
         const visibleWorkoutTypes = workoutTypes.slice(0, 2);
         const hiddenWorkoutTypeCount = Math.max(workoutTypes.length - 2, 0);
-        const isCompleted = item.status === "COMPLETE";
+        const coverImages = getProgramCoverImages(workoutTypes, index);
 
         return (
-          <ThemedCard
+          <View
             key={item.program_id}
             style={[
-              styles.card,
-              {
-                backgroundColor: statusPresentation.cardBackground,
-                borderColor: cardBorder,
-              },
+              styles.cardDropShadow,
+              { shadowColor: statusPresentation.color },
             ]}
           >
-            <TouchableOpacity
-              activeOpacity={0.92}
-              style={styles.touchable}
-              onPress={() =>
-                navigation.navigate("ProgramOverviewPage", {
-                  program_id: item.program_id,
-                  program_name: item.program_name,
-                  start_date: item.start_date,
-                })
-              }
+            <View
+              style={[
+                styles.cardGlow,
+                {
+                  backgroundColor: withColorAlpha(
+                    statusPresentation.color,
+                    0.28
+                  ),
+                  shadowColor: statusPresentation.color,
+                },
+              ]}
             >
-              <View style={styles.cardTopRow}>
-                <View
-                  style={[
-                    styles.statusBadge,
-                    {
-                      backgroundColor: withColorAlpha(statusPresentation.color, 0.12),
-                      borderColor: withColorAlpha(statusPresentation.color, 0.42),
-                    },
-                  ]}
+              <ThemedCard
+                style={[
+                  styles.card,
+                  {
+                    backgroundColor: cardShell,
+                    borderColor: withColorAlpha(
+                      statusPresentation.color,
+                      0.88
+                    ),
+                  },
+                ]}
+              >
+                <TouchableOpacity
+                  activeOpacity={0.92}
+                  style={styles.touchable}
+                  onPress={() =>
+                    navigation.navigate("ProgramOverviewPage", {
+                      program_id: item.program_id,
+                      program_name: item.program_name,
+                      start_date: item.start_date,
+                    })
+                  }
                 >
-                  <View
-                    style={[
-                      styles.statusDot,
-                      { backgroundColor: statusPresentation.color },
-                    ]}
-                  />
-                  <ThemedText
-                    style={styles.statusLabel}
-                    setColor={statusPresentation.color}
-                  >
-                    {statusPresentation.label}
-                  </ThemedText>
-                </View>
+                  <View style={styles.coverImage}>
+                    <View pointerEvents="none" style={styles.coverImageLayer}>
+                      {coverImages.map((coverImage, coverIndex) => (
+                        <ImageBackground
+                          key={`cover-${coverIndex}`}
+                          source={coverImage}
+                          resizeMode="cover"
+                          style={[
+                            styles.coverImageSegment,
+                            coverIndex > 0
+                              ? styles.coverImageSegmentDivider
+                              : null,
+                          ]}
+                        />
+                      ))}
+                    </View>
 
-                <View style={styles.workoutTypeRow}>
-                  {visibleWorkoutTypes.map((workoutType) => {
-                    const workoutIcon = getWorkoutIconConfig(workoutType);
-                    const WorkoutIcon = workoutIcon?.Icon;
+                    <View style={styles.coverScrim} />
+                    <View
+                      style={[
+                        styles.coverTone,
+                        {
+                          backgroundColor: withColorAlpha(
+                            statusPresentation.color,
+                            statusPresentation.toneOpacity
+                          ),
+                        },
+                      ]}
+                    />
 
-                    return (
+                    <View style={styles.coverContent}>
+                      <View style={styles.cardTopRow}>
+                        <View style={styles.workoutTypeRow}>
+                          {visibleWorkoutTypes.map((workoutType) => {
+                            const workoutIcon =
+                              getWorkoutIconConfig(workoutType);
+                            const WorkoutIcon = workoutIcon?.Icon;
+
+                            return (
+                              <View
+                                key={workoutType}
+                                style={[
+                                  styles.workoutTypeBadge,
+                                  {
+                                    backgroundColor: coverChipSurface,
+                                    borderColor: coverBorder,
+                                  },
+                                ]}
+                              >
+                                {WorkoutIcon ? (
+                                  <WorkoutIcon
+                                    width={13}
+                                    height={13}
+                                    color={coverTitleColor}
+                                    primaryColor={coverTitleColor}
+                                  />
+                                ) : null}
+                                <ThemedText
+                                  style={styles.workoutTypeText}
+                                  setColor={coverTitleColor}
+                                  numberOfLines={1}
+                                >
+                                  {workoutType}
+                                </ThemedText>
+                              </View>
+                            );
+                          })}
+
+                          {hiddenWorkoutTypeCount > 0 ? (
+                            <View
+                              style={[
+                                styles.workoutTypeBadge,
+                                {
+                                  backgroundColor: coverChipSurface,
+                                  borderColor: coverBorder,
+                                },
+                              ]}
+                            >
+                              <ThemedText
+                                style={styles.workoutTypeText}
+                                setColor={coverTitleColor}
+                              >
+                                +{hiddenWorkoutTypeCount}
+                              </ThemedText>
+                            </View>
+                          ) : null}
+                        </View>
+
+                        <View style={styles.cardMenuIcon}>
+                          <ThreeDots
+                            width={15}
+                            height={15}
+                            color={coverTitleColor}
+                          />
+                        </View>
+                      </View>
+
+                      <View style={styles.coverDetails}>
+                        {dateRange ? (
+                          <ThemedText
+                            style={styles.dateRange}
+                            setColor={coverQuietText}
+                            numberOfLines={1}
+                          >
+                            {dateRange}
+                          </ThemedText>
+                        ) : null}
+
+                        <ThemedTitle
+                          type="h3"
+                          style={styles.title}
+                          numberOfLines={2}
+                        >
+                          {item.program_name || "Untitled program"}
+                        </ThemedTitle>
+
+                        <View style={styles.coverFooter}>
+                          <View style={styles.metaPillRow}>
+                            <View
+                              style={[
+                                styles.metaPill,
+                                {
+                                  backgroundColor: coverChipSurface,
+                                  borderColor: coverBorder,
+                                },
+                              ]}
+                            >
+                              <ThemedText
+                                style={styles.metaText}
+                                setColor={coverQuietText}
+                              >
+                                <ThemedText
+                                  style={styles.metaNumber}
+                                  setColor={coverTitleColor}
+                                >
+                                  {item.mesocycle_count}
+                                </ThemedText>{" "}
+                                {item.mesocycle_count === 1
+                                  ? "block"
+                                  : "blocks"}
+                              </ThemedText>
+                            </View>
+
+                            <View
+                              style={[
+                                styles.metaPill,
+                                {
+                                  backgroundColor: coverChipSurface,
+                                  borderColor: coverBorder,
+                                },
+                              ]}
+                            >
+                              <Calender
+                                width={11}
+                                height={11}
+                                color={coverQuietText}
+                              />
+                              <ThemedText
+                                style={styles.metaText}
+                                setColor={coverQuietText}
+                              >
+                                <ThemedText
+                                  style={styles.metaNumber}
+                                  setColor={coverTitleColor}
+                                >
+                                  {item.week_count}
+                                </ThemedText>{" "}
+                                {item.week_count === 1 ? "week" : "weeks"}
+                              </ThemedText>
+                            </View>
+
+                            <View
+                              style={[
+                                styles.metaPill,
+                                {
+                                  backgroundColor: coverChipSurface,
+                                  borderColor: coverBorder,
+                                },
+                              ]}
+                            >
+                              <ThemedText
+                                style={styles.metaText}
+                                setColor={coverQuietText}
+                              >
+                                <ThemedText
+                                  style={styles.metaNumber}
+                                  setColor={coverTitleColor}
+                                >
+                                  {completedWorkouts}
+                                </ThemedText>
+                                {" / "}
+                                {totalWorkouts}{" "}
+                                {totalWorkouts === 1 ? "workout" : "workouts"}
+                              </ThemedText>
+                            </View>
+                          </View>
+
+                          <View style={styles.statusAction}>
+                            {isCompleted ? (
+                              <View
+                                style={[
+                                  styles.completedCircle,
+                                  {
+                                    backgroundColor: statusPresentation.color,
+                                    shadowColor: statusPresentation.color,
+                                  },
+                                ]}
+                              >
+                                <Checkmark
+                                  width={28}
+                                  height={28}
+                                  color={cardShell}
+                                  thickness={3}
+                                />
+                              </View>
+                            ) : (
+                              <CircularProgress
+                                size={52}
+                                strokeWidth={4}
+                                text={String(progressPercent)}
+                                caption="%"
+                                textSize={14}
+                                progressPercent={progressPercent}
+                                bgColor={mutedTrack}
+                                pgColor={statusPresentation.color}
+                                centerColor="rgba(5, 7, 10, 0.88)"
+                              />
+                            )}
+                          </View>
+                        </View>
+                      </View>
+                    </View>
+
+                    {isCompleted || statusPresentation.isActive ? (
                       <View
-                        key={workoutType}
+                        pointerEvents="none"
                         style={[
-                          styles.workoutTypeBadge,
+                          styles.statusStamp,
                           {
-                            backgroundColor: mutedChipSurface,
-                            borderColor: cardBorderFallback,
+                            backgroundColor: withColorAlpha(
+                              statusPresentation.color,
+                              0.12
+                            ),
+                            borderColor: statusPresentation.color,
+                            shadowColor: statusPresentation.color,
                           },
                         ]}
                       >
-                        {WorkoutIcon ? (
-                          <WorkoutIcon
-                            width={13}
-                            height={13}
-                            color={quietText}
-                            primaryColor={quietText}
-                          />
-                        ) : null}
                         <ThemedText
-                          style={styles.workoutTypeText}
-                          setColor={quietText}
-                          numberOfLines={1}
+                          style={styles.statusStampText}
+                          setColor={statusPresentation.color}
                         >
-                          {getWorkoutTypeLabel(workoutType)}
+                          {isCompleted ? "COMPLETE" : "ACTIVE"}
                         </ThemedText>
                       </View>
-                    );
-                  })}
-
-                  {hiddenWorkoutTypeCount > 0 ? (
-                    <View
-                      style={[
-                        styles.workoutTypeBadge,
-                        {
-                          backgroundColor: mutedChipSurface,
-                          borderColor: cardBorderFallback,
-                        },
-                      ]}
-                    >
-                      <ThemedText
-                        style={styles.workoutTypeText}
-                        setColor={quietText}
-                      >
-                        +{hiddenWorkoutTypeCount}
-                      </ThemedText>
-                    </View>
-                  ) : null}
-
-                  <View style={styles.cardMenuIcon}>
-                    <ThreeDots width={14} height={14} color={quietText} />
+                    ) : null}
                   </View>
-                </View>
-              </View>
 
-              <View style={styles.cardBodyRow}>
-                <View style={styles.programInfo}>
-                  <ThemedTitle
-                    type="h3"
-                    style={styles.title}
-                    numberOfLines={2}
-                  >
-                    {item.program_name || "Untitled program"}
-                  </ThemedTitle>
-
-                  {dateRange ? (
-                    <ThemedText style={styles.dateRange} setColor={quietText}>
-                      {dateRange}
-                    </ThemedText>
-                  ) : null}
-                </View>
-
-                <View style={styles.statusAction}>
-                  {isCompleted ? (
-                    <View
-                      style={[
-                        styles.completedCircle,
-                        {
-                          backgroundColor: statusPresentation.color,
-                          shadowColor: statusPresentation.color,
-                        },
-                      ]}
-                    >
-                      <Checkmark
-                        width={34}
-                        height={34}
-                        color={cardShell}
-                        thickness={3}
-                      />
-                    </View>
-                  ) : (
-                    <CircularProgress
-                      size={64}
-                      strokeWidth={5}
-                      text={String(progressPercent)}
-                      caption="%"
-                      textSize={17}
-                      progressPercent={progressPercent}
-                      bgColor={mutedTrack}
-                      pgColor={statusPresentation.color}
-                      centerColor={statusPresentation.cardBackground}
-                    />
-                  )}
-                </View>
-              </View>
-
-              <View style={styles.metaPillRow}>
-                <View
-                  style={[
-                    styles.metaPill,
-                    {
-                      backgroundColor: mutedChipSurface,
-                      borderColor: cardBorderFallback,
-                    },
-                  ]}
-                >
-                  <ThemedText style={styles.metaText} setColor={quietText}>
-                    <ThemedText style={styles.metaNumber} setColor={titleColor}>
-                      {item.mesocycle_count}
-                    </ThemedText>{" "}
-                    {item.mesocycle_count === 1 ? "block" : "blocks"}
-                  </ThemedText>
-                </View>
-
-                <View
-                  style={[
-                    styles.metaPill,
-                    {
-                      backgroundColor: mutedChipSurface,
-                      borderColor: cardBorderFallback,
-                    },
-                  ]}
-                >
-                  <Calender width={12} height={12} color={quietText} />
-                  <ThemedText style={styles.metaText} setColor={quietText}>
-                    <ThemedText style={styles.metaNumber} setColor={titleColor}>
-                      {item.week_count}
-                    </ThemedText>{" "}
-                    {item.week_count === 1 ? "wk" : "wks"}
-                  </ThemedText>
-                </View>
-
-                <View
-                  style={[
-                    styles.metaPill,
-                    {
-                      backgroundColor: mutedChipSurface,
-                      borderColor: cardBorderFallback,
-                    },
-                  ]}
-                >
-                  <ThemedText style={styles.metaText} setColor={quietText}>
-                    <ThemedText style={styles.metaNumber} setColor={titleColor}>
-                      {totalWorkouts}
-                    </ThemedText>{" "}
-                    {totalWorkouts === 1 ? "workout" : "workouts"}
-                  </ThemedText>
-                </View>
-              </View>
-            </TouchableOpacity>
-          </ThemedCard>
+                  <View
+                    pointerEvents="none"
+                    style={[
+                      styles.coverSpine,
+                      { backgroundColor: statusPresentation.color },
+                    ]}
+                  />
+                </TouchableOpacity>
+              </ThemedCard>
+            </View>
+          </View>
         );
       })}
 
