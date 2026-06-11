@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.17.14] - Unreleased
+### Fixed
+- Highlight incomplete workout totals on completed program cards.
+
+---
 ## [0.17.13] - Unreleased
 ### Fixed
 - Keep valid run distance segments when locked phones deliver background locations less frequently.

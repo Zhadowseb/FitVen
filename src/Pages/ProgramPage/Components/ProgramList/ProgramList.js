@@ -225,6 +225,7 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
   const coverChipSurface = "rgba(5, 7, 10, 0.72)";
   const coverBorder = "rgba(255, 255, 255, 0.16)";
   const mutedTrack = "rgba(255, 255, 255, 0.2)";
+  const dangerColor = theme.danger ?? Colors.dark.danger ?? "#ba0000";
 
   const loadPrograms = useCallback(async () => {
     try {
@@ -313,6 +314,8 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
           item.day_count
         );
         const isCompleted = dateProgress.isCompleted;
+        const hasMissingCompletedWorkouts =
+          isCompleted && completedWorkouts < totalWorkouts;
         const statusPresentation = getStatusPresentation(dateProgress);
         const progressPercent = dateProgress.progressPercent;
         const dateRange = getProgramDateRange(item.start_date, item.end_date);
@@ -540,7 +543,9 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
                                 styles.metaPill,
                                 {
                                   backgroundColor: coverChipSurface,
-                                  borderColor: coverBorder,
+                                  borderColor: hasMissingCompletedWorkouts
+                                    ? dangerColor
+                                    : coverBorder,
                                 },
                               ]}
                             >
@@ -550,7 +555,11 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
                               >
                                 <ThemedText
                                   style={styles.metaNumber}
-                                  setColor={coverTitleColor}
+                                  setColor={
+                                    hasMissingCompletedWorkouts
+                                      ? dangerColor
+                                      : coverTitleColor
+                                  }
                                 >
                                   {completedWorkouts}
                                 </ThemedText>
