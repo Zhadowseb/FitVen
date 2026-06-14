@@ -172,9 +172,6 @@ export default StyleSheet.create({
     stats_card_left: {
         marginRight: "3%",
     },
-    stats_card_second_row: {
-        marginTop: 10,
-    },
     stats_card_header: {
         flexDirection: "row",
         alignItems: "center",
@@ -232,23 +229,6 @@ export default StyleSheet.create({
         marginLeft: "auto",
         marginRight: 8,
     },
-    page_header_title_group: {
-        alignItems: "center",
-        justifyContent: "center",
-        minWidth: 0,
-    },
-    page_header_title_eyebrow: {
-        fontWeight: "700",
-        letterSpacing: 1,
-        textTransform: "uppercase",
-        marginBottom: 2,
-    },
-    page_header_title_main: {
-        padding: 0,
-        textAlign: "center",
-        maxWidth: 220,
-    },
-
     settings_card: {
         padding: 18,
     },

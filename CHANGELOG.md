@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.17.15] - Unreleased
+### Changed
+- Redesign the program overview header and streamline its stats.
+- Create programs as drafts or start them immediately, with draft scheduling
+  available from the overview header for both past and future weeks.
+- Link the Today shortcut directly to the active program overview.
+- Add a Train shortcut and manual estimated 1RM calculator using the existing
+  Brzycki formula.
+- Base program progress on completed workouts instead of elapsed calendar time.
+- Match the Today workout shortcut border to its workout status color.
+- Emphasize the Today schedule divider with the primary color.
+- Use the primary color for the Home notification bell.
+
+---
 ## [0.17.14] - Unreleased
 ### Fixed
 - Highlight incomplete workout totals on completed program cards.

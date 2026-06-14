@@ -322,7 +322,13 @@ function getProgressPercent(item) {
   );
 }
 
-const MesocycleList = ({ program_id, start_date, refreshKey, refresh }) => {
+const MesocycleList = ({
+  program_id,
+  start_date,
+  program_status,
+  refreshKey,
+  refresh,
+}) => {
   const db = useSQLiteContext();
   const navigation = useNavigation();
 
@@ -469,7 +475,10 @@ const MesocycleList = ({ program_id, start_date, refreshKey, refresh }) => {
     );
   }
 
-  const activeIndex = mesocycles.findIndex((cycle) => Number(cycle.done) !== 1);
+  const isDraft = program_status === "NOT_STARTED";
+  const activeIndex = isDraft
+    ? -1
+    : mesocycles.findIndex((cycle) => Number(cycle.done) !== 1);
 
   return (
     <>
@@ -484,11 +493,15 @@ const MesocycleList = ({ program_id, start_date, refreshKey, refresh }) => {
         </View>
 
         {mesocycles.map((item, index) => {
-          const status = getBlockStatus(item, index, activeIndex);
+          const status = isDraft
+            ? "upcoming"
+            : getBlockStatus(item, index, activeIndex);
           const presentation = statusConfig[status];
-          const completedWorkoutCount = getCompletedWorkoutCount(item);
+          const completedWorkoutCount = isDraft
+            ? 0
+            : getCompletedWorkoutCount(item);
           const workoutCount = Number(item.workout_count) || 0;
-          const progressPercent = getProgressPercent(item);
+          const progressPercent = isDraft ? 0 : getProgressPercent(item);
           const title = item.focus || `Block ${item.mesocycle_number}`;
           const subtitle = item.focus ? presentation.subtitle : "No focus set";
 
@@ -684,7 +697,7 @@ const MesocycleList = ({ program_id, start_date, refreshKey, refresh }) => {
                     </View>
                   </View>
 
-                  {item.period_end ? (
+                  {!isDraft && item.period_end ? (
                     <View style={styles.dateRow}>
                       <View style={styles.dateIconWrap}>
                         <Calender

@@ -181,7 +181,7 @@ export default function TodayShortcut({
         styles.shortcutCard,
         {
           backgroundColor: cardBackground,
-          borderColor: cardBorder,
+          borderColor: hasWorkouts ? accentColor : cardBorder,
         },
       ]}
     >

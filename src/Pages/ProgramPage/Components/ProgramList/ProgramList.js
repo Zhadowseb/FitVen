@@ -56,7 +56,6 @@ const RESISTANCE_WORKOUT_TYPES = new Set([
   "Upperbody",
   "Legs",
 ]);
-const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
 function formatProgramDateLabel(value, { includeYear = false } = {}) {
   if (!value) {
@@ -135,50 +134,6 @@ function getProgramCoverImages(workoutTypes, programIndex) {
       (programIndex + workoutTypeIndex) % PROGRAM_COVER_IMAGES.length
     ];
   });
-}
-
-function getLocalDateIndex(date) {
-  return Math.floor(
-    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) /
-      MILLISECONDS_PER_DAY
-  );
-}
-
-function getProgramDateProgress(date, startDate, dayCount) {
-  const totalDays = Math.max(0, Math.trunc(Number(dayCount) || 0));
-
-  if (!startDate || totalDays === 0) {
-    return {
-      completedDays: 0,
-      isActive: false,
-      isCompleted: false,
-      progressPercent: 0,
-      totalDays,
-    };
-  }
-
-  const start = parseCustomDate(startDate);
-
-  if (Number.isNaN(start.getTime())) {
-    return {
-      completedDays: 0,
-      isActive: false,
-      isCompleted: false,
-      progressPercent: 0,
-      totalDays,
-    };
-  }
-
-  const elapsedDays = getLocalDateIndex(date) - getLocalDateIndex(start);
-  const completedDays = Math.min(totalDays, Math.max(0, elapsedDays));
-
-  return {
-    completedDays,
-    isActive: elapsedDays >= 0 && elapsedDays < totalDays,
-    isCompleted: elapsedDays >= totalDays,
-    progressPercent: Math.round((completedDays / totalDays) * 100),
-    totalDays,
-  };
 }
 
 function withColorAlpha(color, alpha) {
@@ -262,28 +217,27 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
     }, [loadPrograms])
   );
 
-  const getStatusPresentation = (dateProgress) => {
-    if (dateProgress.isCompleted) {
-      return {
-        color: theme.COMPLETE ?? theme.secondary ?? "#60daac",
-        isActive: false,
-        toneOpacity: 0.2,
-      };
+  const getStatusPresentation = (programStatus) => {
+    switch (programStatus) {
+      case "COMPLETE":
+        return {
+          color: theme.COMPLETE ?? theme.secondary ?? "#60daac",
+          isActive: false,
+          toneOpacity: 0.2,
+        };
+      case "ACTIVE":
+        return {
+          color: theme.ACTIVE ?? theme.primary ?? "#f7742e",
+          isActive: true,
+          toneOpacity: 0.14,
+        };
+      default:
+        return {
+          color: theme.NOT_STARTED ?? theme.iconColor ?? "#9E9E9E",
+          isActive: false,
+          toneOpacity: 0.06,
+        };
     }
-
-    if (dateProgress.isActive) {
-      return {
-        color: theme.ACTIVE ?? theme.primary ?? "#f7742e",
-        isActive: true,
-        toneOpacity: 0.14,
-      };
-    }
-
-    return {
-      color: theme.NOT_STARTED ?? theme.iconColor ?? "#9E9E9E",
-      isActive: false,
-      toneOpacity: 0.06,
-    };
   };
 
   if (loading) {
@@ -308,17 +262,21 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
       {programs.map((item, index) => {
         const totalWorkouts = Number(item.workout_count) || 0;
         const completedWorkouts = Number(item.completed_workout_count) || 0;
-        const dateProgress = getProgramDateProgress(
-          new Date(),
-          item.start_date,
-          item.day_count
-        );
-        const isCompleted = dateProgress.isCompleted;
+        const isDraft = item.status === "NOT_STARTED";
+        const isCompleted = item.status === "COMPLETE";
         const hasMissingCompletedWorkouts =
           isCompleted && completedWorkouts < totalWorkouts;
-        const statusPresentation = getStatusPresentation(dateProgress);
-        const progressPercent = dateProgress.progressPercent;
-        const dateRange = getProgramDateRange(item.start_date, item.end_date);
+        const statusPresentation = getStatusPresentation(item.status);
+        const progressPercent =
+          !isDraft && totalWorkouts > 0
+            ? Math.min(
+                100,
+                Math.round((completedWorkouts / totalWorkouts) * 100)
+              )
+            : 0;
+        const dateRange = isDraft
+          ? "Draft"
+          : getProgramDateRange(item.start_date, item.end_date);
         const workoutTypes = parseWorkoutTypes(item.workout_types);
         const visibleWorkoutTypes = workoutTypes.slice(0, 2);
         const hiddenWorkoutTypeCount = Math.max(workoutTypes.length - 2, 0);

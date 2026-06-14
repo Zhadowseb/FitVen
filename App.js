@@ -35,6 +35,7 @@ import NotificationSettingsPage from "./src/Pages/NotificationSettingsPage/Notif
 import SocialPostEditPage from "./src/Pages/SocialPostEditPage/SocialPostEditPage";
 import SocialPostSettingsPage from "./src/Pages/SocialPostSettingsPage/SocialPostSettingsPage";
 import ExerciseSocialPostSettingsPage from "./src/Pages/ExerciseSocialPostSettingsPage/ExerciseSocialPostSettingsPage";
+import OneRepMaxCalculatorPage from "./src/Pages/OneRepMaxCalculatorPage/OneRepMaxCalculatorPage";
 
 import { Colors } from './src/Resources/GlobalStyling/colors';
 import {
@@ -179,6 +180,7 @@ function RootNavigator() {
                 <Stack.Screen name="SocialPostEditPage" component={SocialPostEditPage} options={{ headerShown: false }} />
                 <Stack.Screen name="SocialPostSettingsPage" component={SocialPostSettingsPage} options={{ headerShown: false }} />
                 <Stack.Screen name="ExerciseSocialPostSettingsPage" component={ExerciseSocialPostSettingsPage} options={{ headerShown: false }} />
+                <Stack.Screen name="OneRepMaxCalculatorPage" component={OneRepMaxCalculatorPage} options={{ headerShown: false }} />
                 <Stack.Screen
                   name="SicknessPage"
                   component={SicknessPage}

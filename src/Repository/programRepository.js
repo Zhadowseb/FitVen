@@ -806,6 +806,19 @@ export async function getProgramsOverview(db) {
   );
 }
 
+export async function getActiveProgram(db) {
+  const startIsoDateSql = localDateToIsoSql("start_date");
+
+  return db.getFirstAsync(
+    `SELECT program_id, program_name, start_date
+     FROM Program
+     WHERE status = 'ACTIVE'
+       AND deleted_at IS NULL
+     ORDER BY date(${startIsoDateSql}) DESC, program_id DESC
+     LIMIT 1;`
+  );
+}
+
 export async function getProgramStatus(db, programId) {
   return db.getFirstAsync(
     `SELECT status
@@ -877,6 +890,24 @@ export async function updateProgramStatus(db, { programId, status }) {
   );
 }
 
+export async function updateProgramStartAndStatus(
+  db,
+  { programId, startDate, status }
+) {
+  const syncVersion = createNextSyncVersion();
+  await db.runAsync(
+    `UPDATE Program
+     SET start_date = ?,
+         status = ?,
+         sync_id = COALESCE(sync_id, ${SQLITE_UUID_SQL}),
+         sync_version = ?,
+         deleted_at = NULL,
+         needs_sync = 1
+     WHERE program_id = ?;`,
+    [startDate, status, syncVersion, programId]
+  );
+}
+
 export async function updateProgramName(db, { programId, programName }) {
   const syncVersion = createNextSyncVersion();
   await db.runAsync(
@@ -897,6 +928,52 @@ export async function getProgramDayCount(db, programId) {
      FROM Day
      WHERE program_id = ?;`,
     [programId]
+  );
+}
+
+export async function getProgramDaysForScheduleShift(db, programId) {
+  return db.getAllAsync(
+    `SELECT day_id, date
+     FROM Day
+     WHERE program_id = ?
+     ORDER BY date ASC, day_id ASC;`,
+    [programId]
+  );
+}
+
+export async function updateProgramDayDate(db, { dayId, date }) {
+  const syncVersion = createNextSyncVersion();
+  await db.runAsync(
+    `UPDATE Day
+     SET date = ?,
+         sync_id = COALESCE(sync_id, ${SQLITE_UUID_SQL}),
+         sync_version = ?,
+         deleted_at = NULL,
+         needs_sync = 1
+     WHERE day_id = ?;`,
+    [date, syncVersion, dayId]
+  );
+}
+
+export async function alignProgramWorkoutDates(db, programId) {
+  const syncVersion = createNextSyncVersion();
+  await db.runAsync(
+    `UPDATE Workout_Type_Instance
+     SET date = (
+           SELECT d.date
+           FROM Day d
+           WHERE d.day_id = Workout_Type_Instance.day_id
+         ),
+         sync_id = COALESCE(sync_id, ${SQLITE_UUID_SQL}),
+         sync_version = ?,
+         deleted_at = NULL,
+         needs_sync = 1
+     WHERE day_id IN (
+       SELECT day_id
+       FROM Day
+       WHERE program_id = ?
+     );`,
+    [syncVersion, programId]
   );
 }
 
@@ -984,7 +1061,12 @@ export async function getWorkoutsBetweenDates(db, { startIsoDate, endIsoDate }) 
      LEFT JOIN Workout_Type wt ON wt.name = w.workout_type
      WHERE w.deleted_at IS NULL
        AND d.deleted_at IS NULL
-       AND (p.program_id IS NULL OR p.deleted_at IS NULL)
+       AND (
+         p.program_id IS NULL OR (
+           p.deleted_at IS NULL
+           AND p.status != 'NOT_STARTED'
+         )
+       )
        AND date(${workoutIsoDateSql}) BETWEEN date(?) AND date(?)
       ORDER BY date_iso ASC, COALESCE(p.program_name, '') COLLATE NOCASE ASC, w.workout_id ASC;`,
     [startIsoDate, endIsoDate]
@@ -1098,6 +1180,7 @@ export async function getProgramDaysBetweenDates(db, { startIsoDate, endIsoDate 
      JOIN Mesocycle m ON m.mesocycle_id = mc.mesocycle_id
      WHERE d.deleted_at IS NULL
        AND p.deleted_at IS NULL
+       AND p.status != 'NOT_STARTED'
        AND mc.deleted_at IS NULL
        AND m.deleted_at IS NULL
        AND date(${dayIsoDateSql}) BETWEEN date(?) AND date(?)
@@ -2643,7 +2726,7 @@ export async function getMesocycleMetadata(
 
 export async function getProgramMetadata(db, programId) {
   return db.getFirstAsync(
-    `SELECT start_date
+    `SELECT start_date, status
      FROM Program
      WHERE program_id = ?;`,
     [programId]

@@ -26,6 +26,7 @@ import {
   normalizeSyncVersion,
 } from "../Utils/syncUtils";
 import { getStableSyncDeviceId } from "../Utils/deviceIdentity";
+import { calculateBrzyckiOneRepMax } from "../Utils/oneRepMaxUtils";
 
 const WEEK_DAYS = [
   "Monday",
@@ -4954,16 +4955,6 @@ async function ensureDefaultDaysForMicrocycle(
   }
 }
 
-function calculateBrzyckiOneRepMax(weight, reps) {
-  const denominator = 1.0278 - 0.0278 * reps;
-
-  if (denominator <= 0) {
-    return null;
-  }
-
-  return weight / denominator;
-}
-
 function formatProgramBestDisplay({ weight, reps, estimatedOneRepMax }) {
   const setText = `${reps} x ${formatDisplayNumber(weight)} kg`;
 
@@ -5227,6 +5218,10 @@ export async function getProgramsOverview(db) {
   return programRepository.getProgramsOverview(db);
 }
 
+export async function getActiveProgram(db) {
+  return programRepository.getActiveProgram(db);
+}
+
 export async function getProgramStatus(db, programId) {
   return programRepository.getProgramStatus(db, programId);
 }
@@ -5283,6 +5278,83 @@ export async function updateProgramStatus(db, { programId, status }) {
   syncProgramsInBackground(db);
 }
 
+export async function startProgram(db, { programId, startDate }) {
+  const normalizedStartDate = normalizeLocalDateString(startDate);
+
+  if (!normalizedStartDate) {
+    throw new Error("A valid program start date is required.");
+  }
+
+  await withTransaction(db, async () => {
+    const programMetadata = await programRepository.getProgramMetadata(
+      db,
+      programId
+    );
+    const previousStartDate = normalizeLocalDateString(
+      programMetadata?.start_date
+    );
+
+    if (normalizeProgramStatus(programMetadata?.status) !== "NOT_STARTED") {
+      throw new Error("Only draft programs can be started.");
+    }
+
+    if (!previousStartDate) {
+      throw new Error("The program does not have a valid draft start date.");
+    }
+
+    const previousStart = parseCustomDate(previousStartDate);
+    const nextStart = parseCustomDate(normalizedStartDate);
+    if (nextStart.getDay() !== 1) {
+      throw new Error("Programs must start on a Monday.");
+    }
+
+    const dayOffset = Math.round(
+      (Date.UTC(
+        nextStart.getFullYear(),
+        nextStart.getMonth(),
+        nextStart.getDate()
+      ) -
+        Date.UTC(
+          previousStart.getFullYear(),
+          previousStart.getMonth(),
+          previousStart.getDate()
+        )) /
+        (24 * 60 * 60 * 1000)
+    );
+
+    await programRepository.updateProgramStartAndStatus(db, {
+      programId,
+      startDate: normalizedStartDate,
+      status: "ACTIVE",
+    });
+
+    if (dayOffset === 0) {
+      return;
+    }
+
+    const days = await programRepository.getProgramDaysForScheduleShift(
+      db,
+      programId
+    );
+
+    for (const day of days) {
+      const shiftedDate = parseCustomDate(day.date);
+      shiftedDate.setDate(shiftedDate.getDate() + dayOffset);
+
+      await programRepository.updateProgramDayDate(db, {
+        dayId: day.day_id,
+        date: formatDate(shiftedDate),
+      });
+    }
+
+    await programRepository.alignProgramWorkoutDates(db, programId);
+  });
+
+  syncProgramsInBackground(db);
+  syncDaysInBackground(db);
+  syncWorkoutTypeInstancesInBackground(db);
+}
+
 export async function updateProgramName(db, { programId, programName }) {
   await programRepository.updateProgramName(db, { programId, programName });
   syncProgramsInBackground(db);
@@ -5293,6 +5365,12 @@ export async function getProgramDayCount(db, programId) {
 }
 
 export async function getTodayProgramSnapshot(db, { programId, date }) {
+  const programStatus = await programRepository.getProgramStatus(db, programId);
+
+  if (normalizeProgramStatus(programStatus?.status) === "NOT_STARTED") {
+    return null;
+  }
+
   const day = await programRepository.getDayByProgramAndDate(db, {
     programId,
     date,
@@ -5652,7 +5730,9 @@ async function deleteLocalDayHierarchy(db, dayId) {
 }
 
 export async function getTodayProgramSnapshots(db, { date }) {
-  const programs = await programRepository.getProgramsOverview(db);
+  const programs = (await programRepository.getProgramsOverview(db)).filter(
+    (program) => normalizeProgramStatus(program.status) !== "NOT_STARTED"
+  );
   const snapshots = await Promise.all(
     programs.map(async (program) => {
       const snapshot = await getTodayProgramSnapshot(db, {

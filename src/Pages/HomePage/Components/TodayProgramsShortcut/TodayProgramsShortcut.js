@@ -54,6 +54,7 @@ const TodayProgramsShortcut = () => {
   const { user } = useAuth();
   const [todaySnapshots, setTodaySnapshots] = useState([]);
   const [nextWorkout, setNextWorkout] = useState(null);
+  const [activeProgram, setActiveProgram] = useState(null);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const [loading, setLoading] = useState(false);
 
@@ -65,13 +66,19 @@ const TodayProgramsShortcut = () => {
       const todayDate = parseCustomDate(date);
       const tomorrow = addDays(todayDate, 1);
       const rangeEnd = addDays(todayDate, 180);
-      const [snapshotsResult, upcomingWorkoutsResult, unreadCountResult] =
+      const [
+        snapshotsResult,
+        upcomingWorkoutsResult,
+        activeProgramResult,
+        unreadCountResult,
+      ] =
         await Promise.allSettled([
           programService.getTodayWorkoutSnapshots(db, { date }),
           programService.getWorkoutCalendarWorkouts(db, {
             startIsoDate: normalizeIsoDateString(formatDate(tomorrow)),
             endIsoDate: normalizeIsoDateString(formatDate(rangeEnd)),
           }),
+          programService.getActiveProgram(db),
           notificationService.getUnreadNotificationCount({ user }),
         ]);
       const snapshots =
@@ -80,10 +87,15 @@ const TodayProgramsShortcut = () => {
         upcomingWorkoutsResult.status === "fulfilled"
           ? upcomingWorkoutsResult.value
           : [];
+      const nextActiveProgram =
+        activeProgramResult.status === "fulfilled"
+          ? activeProgramResult.value
+          : null;
       const unreadCount =
         unreadCountResult.status === "fulfilled" ? unreadCountResult.value : 0;
 
       setTodaySnapshots(snapshots);
+      setActiveProgram(nextActiveProgram);
       setUnreadNotificationCount(unreadCount);
       setNextWorkout(
         upcomingWorkouts.find((workout) => Number(workout.done) !== 1) ?? null
@@ -99,10 +111,18 @@ const TodayProgramsShortcut = () => {
           upcomingWorkoutsResult.reason
         );
       }
+
+      if (activeProgramResult.status === "rejected") {
+        console.warn(
+          "Could not load the active program shortcut:",
+          activeProgramResult.reason
+        );
+      }
     } catch (error) {
       console.error(error);
       setTodaySnapshots([]);
       setNextWorkout(null);
+      setActiveProgram(null);
       setUnreadNotificationCount(0);
     } finally {
       setLoading(false);
@@ -161,6 +181,19 @@ const TodayProgramsShortcut = () => {
     });
   };
 
+  const openProgramShortcut = () => {
+    if (!activeProgram) {
+      navigation.navigate("WorkoutCalendarPage");
+      return;
+    }
+
+    navigation.navigate("ProgramOverviewPage", {
+      program_id: activeProgram.program_id,
+      program_name: activeProgram.program_name,
+      start_date: activeProgram.start_date,
+    });
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.emptyHeader}>
@@ -187,7 +220,7 @@ const TodayProgramsShortcut = () => {
           <Bell
             width={25}
             height={25}
-            color={theme.title ?? theme.iconColor}
+            color={primaryColor}
             thickness={1.8}
           />
           {unreadNotificationCount > 0 ? (
@@ -317,19 +350,19 @@ const TodayProgramsShortcut = () => {
 
             <View style={styles.scheduleDivider}>
               <View
-                style={[styles.scheduleLine, { backgroundColor: cardBorder }]}
+                style={[styles.scheduleLine, { backgroundColor: primaryColor }]}
               />
               <Calender
                 width={18}
                 height={18}
-                color={quietText}
+                color={primaryColor}
                 thickness={1.8}
               />
-              <ThemedText style={styles.scheduleText} setColor={quietText}>
+              <ThemedText style={styles.scheduleText} setColor={primaryColor}>
                 Schedule
               </ThemedText>
               <View
-                style={[styles.scheduleLine, { backgroundColor: cardBorder }]}
+                style={[styles.scheduleLine, { backgroundColor: primaryColor }]}
               />
             </View>
 
@@ -404,9 +437,13 @@ const TodayProgramsShortcut = () => {
 
             <TouchableOpacity
               activeOpacity={0.82}
-              accessibilityLabel="Open workout calendar"
+              accessibilityLabel={
+                activeProgram
+                  ? `Open active program ${activeProgram.program_name}`
+                  : "Open workout calendar"
+              }
               accessibilityRole="button"
-              onPress={() => navigation.navigate("WorkoutCalendarPage")}
+              onPress={openProgramShortcut}
               style={[
                 styles.calendarButton,
                 {
@@ -415,14 +452,20 @@ const TodayProgramsShortcut = () => {
                 },
               ]}
             >
-              <Calender
-                width={22}
-                height={22}
-                color={primaryColor}
-                thickness={1.8}
-              />
+              {activeProgram ? (
+                <Feather name="layers" size={22} color={primaryColor} />
+              ) : (
+                <Calender
+                  width={22}
+                  height={22}
+                  color={primaryColor}
+                  thickness={1.8}
+                />
+              )}
               <ThemedText style={styles.calendarButtonText} numberOfLines={1}>
-                View workout calendar
+                {activeProgram
+                  ? "View active program"
+                  : "View workout calendar"}
               </ThemedText>
               <Feather name="arrow-right" size={22} color={quietText} />
             </TouchableOpacity>

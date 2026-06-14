@@ -12,6 +12,7 @@ import {
   buildCustomExerciseMuscleMetadata,
   normalizeExerciseMuscleGroupKeys,
 } from "../Utils/exerciseMuscleGroups";
+import { calculateBrzyckiOneRepMax } from "../Utils/oneRepMaxUtils";
 
 let dirtyStrengthHierarchyPushScheduled = false;
 let dirtyStrengthHierarchyPushNeedsRerun = false;
@@ -192,16 +193,6 @@ function formatPersonalRecordNumber(value) {
     : numericValue.toFixed(1);
 }
 
-function calculatePersonalRecordOneRepMax(weight, reps) {
-  const denominator = 1.0278 - 0.0278 * reps;
-
-  if (denominator <= 0) {
-    return null;
-  }
-
-  return weight / denominator;
-}
-
 function parsePersonalRecordSortDate(value) {
   if (typeof value !== "string") {
     return null;
@@ -376,7 +367,7 @@ function buildPersonalRecordOneRepMaxTrend(sets) {
   const bestSetByWorkout = new Map();
 
   for (const set of sets) {
-    const estimatedOneRepMax = calculatePersonalRecordOneRepMax(
+    const estimatedOneRepMax = calculateBrzyckiOneRepMax(
       set.weight,
       set.reps
     );
@@ -513,7 +504,7 @@ function buildPersonalRecordExerciseDetail(
 
     const estimatedOneRepMax =
       set.reps <= PERSONAL_RECORD_REPS.length
-        ? calculatePersonalRecordOneRepMax(set.weight, set.reps)
+        ? calculateBrzyckiOneRepMax(set.weight, set.reps)
         : null;
 
     if (
