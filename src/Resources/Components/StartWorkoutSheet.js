@@ -283,6 +283,8 @@ function MiniClock({ styles }) {
 function SectionHeader({
   title,
   action,
+  actionDisabled = false,
+  onActionPress = noop,
   palette,
   styles,
   showRotationIcon = false,
@@ -296,7 +298,13 @@ function SectionHeader({
         <Text style={styles.sectionTitle}>{title}</Text>
       </View>
       {action ? (
-        <TouchableOpacity activeOpacity={0.75} onPress={noop}>
+        <TouchableOpacity
+          activeOpacity={0.75}
+          accessibilityRole="button"
+          disabled={actionDisabled}
+          onPress={onActionPress}
+          style={actionDisabled ? styles.disabledAction : null}
+        >
           <Text style={styles.sectionAction}>{action}</Text>
         </TouchableOpacity>
       ) : null}
@@ -511,17 +519,58 @@ function RecentWorkoutRow({ workout, disabled, onPress, palette, styles }) {
 
 function RecentWorkoutSection({
   isLoading,
+  isExpanded,
+  isLoadingMore,
   isStartingWorkout,
   workouts,
+  canShowAll,
+  onLoadMore,
+  onToggleExpanded,
   onCopyWorkout,
   palette,
   styles,
 }) {
+  const action = isExpanded ? "Show less" : canShowAll ? "See all" : null;
+  const workoutRows = (
+    <>
+      {workouts.map((workout) => (
+        <RecentWorkoutRow
+          key={workout.workout_id}
+          workout={workout}
+          disabled={isStartingWorkout}
+          onPress={onCopyWorkout}
+          palette={palette}
+          styles={styles}
+        />
+      ))}
+      {isLoadingMore ? (
+        <View style={styles.recentStateRow}>
+          <Text style={styles.recentStateText}>Loading more workouts...</Text>
+        </View>
+      ) : null}
+    </>
+  );
+  const handleListScroll = ({ nativeEvent }) => {
+    if (!isExpanded || isLoadingMore) {
+      return;
+    }
+
+    const { contentOffset, contentSize, layoutMeasurement } = nativeEvent;
+    const distanceFromBottom =
+      contentSize.height - (contentOffset.y + layoutMeasurement.height);
+
+    if (distanceFromBottom <= 96) {
+      onLoadMore();
+    }
+  };
+
   return (
     <View style={styles.section}>
       <SectionHeader
         title="RECENT"
-        action="See all"
+        action={action}
+        actionDisabled={isLoading || isLoadingMore}
+        onActionPress={onToggleExpanded}
         palette={palette}
         styles={styles}
       />
@@ -530,18 +579,20 @@ function RecentWorkoutSection({
           <Text style={styles.recentStateText}>Loading recent workouts...</Text>
         </View>
       ) : workouts.length > 0 ? (
-        <View style={styles.listStack}>
-          {workouts.map((workout) => (
-            <RecentWorkoutRow
-              key={workout.workout_id}
-              workout={workout}
-              disabled={isStartingWorkout}
-              onPress={onCopyWorkout}
-              palette={palette}
-              styles={styles}
-            />
-          ))}
-        </View>
+        isExpanded ? (
+          <ScrollView
+            nestedScrollEnabled
+            showsVerticalScrollIndicator
+            onScroll={handleListScroll}
+            scrollEventThrottle={16}
+            style={styles.expandedRecentList}
+            contentContainerStyle={styles.listStack}
+          >
+            {workoutRows}
+          </ScrollView>
+        ) : (
+          <View style={styles.listStack}>{workoutRows}</View>
+        )
       ) : (
         <View style={styles.recentStateRow}>
           <Text style={styles.recentStateText}>No recent workouts yet.</Text>
@@ -583,6 +634,11 @@ export default function StartWorkoutSheet({
   isLoadingUsualWorkouts = false,
   recentWorkouts = [],
   isLoadingRecentWorkouts = false,
+  isRecentWorkoutsExpanded = false,
+  isLoadingMoreRecentWorkouts = false,
+  canShowAllRecentWorkouts = false,
+  onLoadMoreRecentWorkouts = noop,
+  onToggleRecentWorkouts = noop,
   onCopyRecentWorkout = noop,
   isStartingWorkout = false,
   targetDate = null,
@@ -657,8 +713,13 @@ export default function StartWorkoutSheet({
 
             <RecentWorkoutSection
               isLoading={isLoadingRecentWorkouts}
+              isExpanded={isRecentWorkoutsExpanded}
+              isLoadingMore={isLoadingMoreRecentWorkouts}
               isStartingWorkout={isStartingWorkout}
               workouts={recentWorkouts}
+              canShowAll={canShowAllRecentWorkouts}
+              onLoadMore={onLoadMoreRecentWorkouts}
+              onToggleExpanded={onToggleRecentWorkouts}
               onCopyWorkout={onCopyRecentWorkout}
               palette={palette}
               styles={styles}
@@ -855,6 +916,9 @@ function createStyles(palette) {
     lineHeight: 16,
     fontWeight: "900",
   },
+  disabledAction: {
+    opacity: 0.56,
+  },
   usualGrid: {
     flexDirection: "row",
     gap: 10,
@@ -946,6 +1010,9 @@ function createStyles(palette) {
   },
   listStack: {
     gap: 10,
+  },
+  expandedRecentList: {
+    maxHeight: 430,
   },
   recentRow: {
     minHeight: 74,

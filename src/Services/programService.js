@@ -5797,7 +5797,7 @@ export async function getTodayWorkoutSnapshots(db, { date }) {
 
 export async function getRecentWorkouts(
   db,
-  { date = formatDate(new Date()), limit = 2 } = {}
+  { date = formatDate(new Date()), limit = 2, offset = 0 } = {}
 ) {
   const localDate = normalizeLocalDateString(date) ?? formatDate(new Date());
   const maxIsoDate =
@@ -5806,6 +5806,7 @@ export async function getRecentWorkouts(
   const workouts = await programRepository.getRecentWorkouts(db, {
     maxIsoDate,
     limit,
+    offset,
   });
 
   return Promise.all(workouts.map((workout) => buildWorkoutPreview(db, workout)));

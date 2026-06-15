@@ -32,6 +32,9 @@ import {
 } from "../../Utils/timeUtils";
 import { subscribeQuickWorkoutMenu } from "../../Utils/quickWorkoutMenuEvents";
 
+const RECENT_WORKOUT_PREVIEW_LIMIT = 2;
+const RECENT_WORKOUT_PAGE_SIZE = 10;
+
 function getWorkoutType(workout) {
   return workout?.workout_type ?? workout?.label ?? null;
 }
@@ -65,11 +68,18 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
   const [isLoadingUsualWorkouts, setIsLoadingUsualWorkouts] = useState(false);
   const [recentWorkouts, setRecentWorkouts] = useState([]);
   const [isLoadingRecentWorkouts, setIsLoadingRecentWorkouts] = useState(false);
+  const [isRecentWorkoutsExpanded, setIsRecentWorkoutsExpanded] =
+    useState(false);
+  const [hasMoreRecentWorkouts, setHasMoreRecentWorkouts] = useState(false);
+  const [isLoadingMoreRecentWorkouts, setIsLoadingMoreRecentWorkouts] =
+    useState(false);
   const [activeWorkoutTimer, setActiveWorkoutTimer] = useState(null);
   const [timerTick, setTimerTick] = useState(getCurrentStoredTimestampSeconds());
   const quickWorkoutDateRef = useRef(getTodaysDate());
   const quickWorkoutTargetRef = useRef(null);
   const activeWorkoutLoadRef = useRef(false);
+  const recentWorkoutLoadRequestRef = useRef(0);
+  const recentWorkoutAppendLoadRef = useRef(false);
 
   const isProfileActive = [
     "ProfilePage",
@@ -174,22 +184,73 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     }
   }, [db]);
 
-  const loadRecentWorkouts = useCallback(async (todayDate) => {
-    try {
-      setIsLoadingRecentWorkouts(true);
-      const workouts = await programService.getRecentWorkouts(db, {
-        date: todayDate,
-        limit: 2,
-      });
+  const loadRecentWorkouts = useCallback(
+    async (
+      todayDate,
+      {
+        append = false,
+        limit = RECENT_WORKOUT_PREVIEW_LIMIT,
+        offset = 0,
+      } = {}
+    ) => {
+      if (append && recentWorkoutAppendLoadRef.current) {
+        return;
+      }
 
-      setRecentWorkouts(workouts);
-    } catch (error) {
-      console.error("Failed to load recent workouts:", error);
-      setRecentWorkouts([]);
-    } finally {
-      setIsLoadingRecentWorkouts(false);
-    }
-  }, [db]);
+      const requestId = recentWorkoutLoadRequestRef.current + 1;
+      recentWorkoutLoadRequestRef.current = requestId;
+
+      try {
+        if (append) {
+          recentWorkoutAppendLoadRef.current = true;
+          setIsLoadingMoreRecentWorkouts(true);
+        } else {
+          recentWorkoutAppendLoadRef.current = false;
+          setIsLoadingMoreRecentWorkouts(false);
+          setIsLoadingRecentWorkouts(true);
+        }
+
+        const workouts = await programService.getRecentWorkouts(db, {
+          date: todayDate,
+          limit: limit + 1,
+          offset,
+        });
+        const visibleWorkouts = workouts.slice(0, limit);
+
+        if (recentWorkoutLoadRequestRef.current !== requestId) {
+          return;
+        }
+
+        setHasMoreRecentWorkouts(workouts.length > limit);
+        setRecentWorkouts((currentWorkouts) =>
+          append ? [...currentWorkouts, ...visibleWorkouts] : visibleWorkouts
+        );
+      } catch (error) {
+        if (recentWorkoutLoadRequestRef.current !== requestId) {
+          return;
+        }
+
+        console.error("Failed to load recent workouts:", error);
+        setHasMoreRecentWorkouts(false);
+
+        if (!append) {
+          setRecentWorkouts([]);
+        }
+      } finally {
+        if (recentWorkoutLoadRequestRef.current !== requestId) {
+          return;
+        }
+
+        if (append) {
+          recentWorkoutAppendLoadRef.current = false;
+          setIsLoadingMoreRecentWorkouts(false);
+        } else {
+          setIsLoadingRecentWorkouts(false);
+        }
+      }
+    },
+    [db]
+  );
 
   const loadUsualWorkouts = useCallback(async (todayDate) => {
     try {
@@ -229,6 +290,9 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     setPlannedTodayShortcut(null);
     setUsualWorkouts([]);
     setRecentWorkouts([]);
+    setIsRecentWorkoutsExpanded(false);
+    setHasMoreRecentWorkouts(false);
+    setIsLoadingMoreRecentWorkouts(false);
     setQuickWorkoutModalVisible(true);
     loadPlannedShortcut(quickWorkoutDate);
     loadUsualWorkouts(quickWorkoutDate);
@@ -238,6 +302,54 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     loadPlannedShortcut,
     loadRecentWorkouts,
     loadUsualWorkouts,
+  ]);
+
+  const handleToggleRecentWorkouts = useCallback(() => {
+    if (isLoadingRecentWorkouts || isLoadingMoreRecentWorkouts) {
+      return;
+    }
+
+    const quickWorkoutDate = quickWorkoutDateRef.current;
+
+    if (isRecentWorkoutsExpanded) {
+      setIsRecentWorkoutsExpanded(false);
+      loadRecentWorkouts(quickWorkoutDate);
+      return;
+    }
+
+    setIsRecentWorkoutsExpanded(true);
+    loadRecentWorkouts(quickWorkoutDate, {
+      limit: RECENT_WORKOUT_PAGE_SIZE,
+    });
+  }, [
+    isLoadingMoreRecentWorkouts,
+    isLoadingRecentWorkouts,
+    isRecentWorkoutsExpanded,
+    loadRecentWorkouts,
+  ]);
+
+  const handleLoadMoreRecentWorkouts = useCallback(() => {
+    if (
+      !isRecentWorkoutsExpanded ||
+      isLoadingRecentWorkouts ||
+      isLoadingMoreRecentWorkouts ||
+      !hasMoreRecentWorkouts
+    ) {
+      return;
+    }
+
+    loadRecentWorkouts(quickWorkoutDateRef.current, {
+      append: true,
+      limit: RECENT_WORKOUT_PAGE_SIZE,
+      offset: recentWorkouts.length,
+    });
+  }, [
+    hasMoreRecentWorkouts,
+    isLoadingMoreRecentWorkouts,
+    isLoadingRecentWorkouts,
+    isRecentWorkoutsExpanded,
+    loadRecentWorkouts,
+    recentWorkouts.length,
   ]);
 
   useEffect(() => {
@@ -586,6 +698,13 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
         isLoadingUsualWorkouts={isLoadingUsualWorkouts}
         recentWorkouts={recentWorkouts}
         isLoadingRecentWorkouts={isLoadingRecentWorkouts}
+        isRecentWorkoutsExpanded={isRecentWorkoutsExpanded}
+        isLoadingMoreRecentWorkouts={isLoadingMoreRecentWorkouts}
+        canShowAllRecentWorkouts={
+          isRecentWorkoutsExpanded || hasMoreRecentWorkouts
+        }
+        onLoadMoreRecentWorkouts={handleLoadMoreRecentWorkouts}
+        onToggleRecentWorkouts={handleToggleRecentWorkouts}
         onCopyRecentWorkout={handleCopyRecentWorkout}
         isStartingWorkout={isCreatingQuickWorkout}
         targetDate={quickWorkoutDateRef.current}

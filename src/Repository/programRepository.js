@@ -1073,9 +1073,13 @@ export async function getWorkoutsBetweenDates(db, { startIsoDate, endIsoDate }) 
   );
 }
 
-export async function getRecentWorkouts(db, { maxIsoDate, limit = 2 }) {
+export async function getRecentWorkouts(
+  db,
+  { maxIsoDate, limit = 2, offset = 0 }
+) {
   const workoutIsoDateSql = localDateToIsoSql("w.date");
   const normalizedLimit = Math.max(1, Math.trunc(Number(limit) || 2));
+  const normalizedOffset = Math.max(0, Math.trunc(Number(offset) || 0));
 
   return db.getAllAsync(
     `SELECT
@@ -1101,8 +1105,8 @@ export async function getRecentWorkouts(db, { maxIsoDate, limit = 2 }) {
        AND COALESCE(w.done, 0) = 1
        AND date(${workoutIsoDateSql}) <= date(?)
      ORDER BY date_iso DESC, w.workout_id DESC
-     LIMIT ?;`,
-    [maxIsoDate, normalizedLimit]
+     LIMIT ? OFFSET ?;`,
+    [maxIsoDate, normalizedLimit, normalizedOffset]
   );
 }
 

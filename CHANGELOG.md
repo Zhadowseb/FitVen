@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.17.16] - Unreleased
+### Changed
+- Add paginated "See all" loading for recent workouts in the quick start sheet.
+
+---
 ## [0.17.15] - Unreleased
 ### Changed
 - Redesign the program overview header and streamline its stats.
