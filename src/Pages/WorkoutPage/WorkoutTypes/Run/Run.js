@@ -599,9 +599,10 @@ const Run = ({ workout_id, restartRequestKey }) => {
   };
 
   const primaryColor = theme.primary ?? theme.iconColor ?? theme.text;
+  const secondaryColor = theme.secondary ?? Colors.dark.secondary;
+  const secondaryDark = theme.secondaryDark ?? secondaryColor;
   const screenBackground = theme.background ?? "#0E0F12";
   const cardSurface = theme.cardBackground ?? theme.background;
-  const innerSurface = theme.uiBackground ?? cardSurface;
   const cardBorder = theme.cardBorder ?? theme.iconColor ?? theme.text;
   const titleColor = theme.title ?? theme.text;
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
@@ -793,14 +794,15 @@ const Run = ({ workout_id, restartRequestKey }) => {
                     style={[
                       styles.heroSecondaryButton,
                       {
-                        backgroundColor: innerSurface,
-                        borderColor: cardBorder,
+                        backgroundColor: secondaryColor,
+                        borderColor: secondaryDark,
+                        opacity: isControlBusy ? 0.58 : 1,
                       },
                     ]}
                   >
                     <ThemedText
                       style={styles.heroSecondaryButtonText}
-                      setColor={quietText}
+                      setColor={invertedText}
                     >
                       FINISH
                     </ThemedText>

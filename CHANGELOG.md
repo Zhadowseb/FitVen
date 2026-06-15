@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.17.19] - Unreleased
+### Changed
+- Use the secondary color treatment for the paused run finish button.
+
+---
 ## [0.17.18] - Unreleased
 ### Fixed
 - Keep block week counts in sync when deleting a week so later added weeks use the next correct date.

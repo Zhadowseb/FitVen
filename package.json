@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.17.18-fix-microcycle-delete-week-count.1",
+  "version": "0.17.19-minor-run-finish-button-secondary.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",
