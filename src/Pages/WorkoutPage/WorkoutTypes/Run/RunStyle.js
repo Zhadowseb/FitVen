@@ -143,9 +143,9 @@ export default StyleSheet.create({
   },
 
   heroSecondaryButton: {
-    flex: 1,
+    width: 72,
     minHeight: 66,
-    borderRadius: 22,
+    borderRadius: 18,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
