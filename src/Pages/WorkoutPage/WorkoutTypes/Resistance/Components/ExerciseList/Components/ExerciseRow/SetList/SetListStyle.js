@@ -18,6 +18,7 @@ export default StyleSheet.create({
         borderBottomLeftRadius: 24,
         borderBottomRightRadius: 24,
         borderWidth: 1,
+        position: "relative",
         overflow: "hidden",
     },
 
@@ -29,9 +30,7 @@ export default StyleSheet.create({
     setRow: {
         minHeight: 48,
         borderBottomWidth: 1,
-    },
-    setRowBeforeRest: {
-        borderBottomWidth: 0,
+        position: "relative",
     },
 
     padding: {
@@ -120,22 +119,16 @@ export default StyleSheet.create({
         alignItems: "center",
         overflow: "hidden",
     },
-    restDividerRow: {
-        minHeight: 30,
-        marginVertical: -1,
-        zIndex: 2,
-    },
-    restDividerCell: {
-        minHeight: 30,
-        justifyContent: "center",
-        alignItems: "center",
-        position: "relative",
-    },
-    restDividerLine: {
+    restDividerOverlayRow: {
         position: "absolute",
         left: 0,
         right: 0,
-        height: 1,
+        zIndex: 4,
+    },
+    restDividerOverlayCell: {
+        height: "100%",
+        justifyContent: "center",
+        alignItems: "center",
     },
     restDividerBubble: {
         width: 64,

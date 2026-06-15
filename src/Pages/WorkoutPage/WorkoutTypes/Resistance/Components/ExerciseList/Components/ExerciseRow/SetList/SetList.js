@@ -1,6 +1,6 @@
 import { TouchableOpacity, View } from "react-native";
 import { useColorScheme } from "react-native";
-import { Fragment, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSQLiteContext } from "expo-sqlite";
 import { Colors } from "../../../../../../../../../Resources/GlobalStyling/colors";
 
@@ -42,6 +42,7 @@ const SET_LIST_DEFAULT_VISIBLE_COLUMNS = SET_LIST_COLUMN_KEYS.reduce(
 );
 const REST_UNIT_MINUTES = "minutes";
 const REST_UNIT_SECONDS = "seconds";
+const REST_DIVIDER_BUBBLE_SIZE = 32;
 
 const resolveSetListVisibleColumns = (visibleColumns) => {
   let parsedColumns = visibleColumns;
@@ -147,6 +148,7 @@ const SetList = ({
   const [activeEditableCell, setActiveEditableCell] = useState(null);
   const [restUnit, setRestUnit] = useState(REST_UNIT_SECONDS);
   const [restUnitModalVisible, setRestUnitModalVisible] = useState(false);
+  const [setRowLayouts, setSetRowLayouts] = useState({});
 
   useEffect(() => {
     setLocalSets(sets);
@@ -603,58 +605,92 @@ const SetList = ({
     ) : null;
   };
 
-  const renderRestDivider = (set, renderedColumns) => (
-    <View style={[styles.container, styles.restDividerRow]}>
-      {renderedColumns.map((col, colIndex) => {
-        const isLast = colIndex === renderedColumns.length - 1;
+  const handleSetRowLayout = (setId, event) => {
+    const { y, height } = event.nativeEvent.layout;
 
-        return (
-          <View
-            key={`${set.sets_id}:rest-divider:${col.key}`}
-            style={[
-              styles.restDividerCell,
-              styles.padding,
-              col.style,
-              col.mergedStyle,
-              {
-                borderColor: tableBorder,
-              },
-              isLast && { borderRightWidth: 0 },
-            ]}
-          >
+    setSetRowLayouts((prev) => {
+      const current = prev[setId];
+
+      if (
+        current &&
+        Math.abs(current.y - y) < 0.5 &&
+        Math.abs(current.height - height) < 0.5
+      ) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        [setId]: { y, height },
+      };
+    });
+  };
+
+  const renderRestDivider = (set, renderedColumns) => {
+    const rowLayout = setRowLayouts[set.sets_id];
+
+    if (!rowLayout) {
+      return null;
+    }
+
+    return (
+      <View
+        key={`${set.sets_id}:rest-divider`}
+        pointerEvents="box-none"
+        style={[
+          styles.container,
+          styles.restDividerOverlayRow,
+          {
+            height: REST_DIVIDER_BUBBLE_SIZE,
+            top: rowLayout.y + rowLayout.height - REST_DIVIDER_BUBBLE_SIZE / 2,
+          },
+        ]}
+      >
+        {renderedColumns.map((col, colIndex) => {
+          const isLast = colIndex === renderedColumns.length - 1;
+
+          return (
             <View
-              pointerEvents="none"
+              pointerEvents="box-none"
+              key={`${set.sets_id}:rest-divider:${col.key}`}
               style={[
-                styles.restDividerLine,
-                { backgroundColor: tableBorder },
+                styles.restDividerOverlayCell,
+                styles.padding,
+                col.style,
+                col.mergedStyle,
+                isLast && { borderRightWidth: 0 },
               ]}
-            />
-
-            {col.key === "rest" ? (
-              <View
-                style={[
-                  styles.restDividerBubble,
-                  {
-                    backgroundColor: cellSurface,
-                    borderColor: tableBorder,
-                  },
-                ]}
-              >
-                {renderEditableValue({
-                  cellKey: `${set.sets_id}:rest-divider`,
-                  containerStyle: styles.restDividerValuePill,
-                  value: formatRestUnitValue(set.pause),
-                  suffixFormatter: getPauseSuffix,
-                  onCommit: (value) =>
-                    updateField("pause", getStoredPauseValue(value), set.sets_id),
-                })}
-              </View>
-            ) : null}
-          </View>
-        );
-      })}
-    </View>
-  );
+            >
+              {col.key === "rest" ? (
+                <View
+                  style={[
+                    styles.restDividerBubble,
+                    {
+                      backgroundColor: cellSurface,
+                      borderColor: tableBorder,
+                    },
+                  ]}
+                >
+                  {renderEditableValue({
+                    cellKey: `${set.sets_id}:rest-divider`,
+                    containerStyle: styles.restDividerValuePill,
+                    value: formatRestUnitValue(set.pause),
+                    suffixFormatter: getPauseSuffix,
+                    onCommit: (value) =>
+                      updateField(
+                        "pause",
+                        getStoredPauseValue(value),
+                        set.sets_id
+                      ),
+                  })}
+                </View>
+              ) : null}
+            </View>
+          );
+        })}
+      </View>
+    );
+  };
 
   return (
     <>
@@ -677,48 +713,42 @@ const SetList = ({
 
         {displayedSets.map((set, rowIndex) => {
           const renderedColumns = getRenderedColumns(set);
-          const shouldRenderRestDivider =
-            showRestBetweenSets && rowIndex < displayedSets.length - 1;
 
           return (
-            <Fragment key={set.sets_id}>
-              <View
-                style={[
-                  styles.container,
-                  styles.setRow,
-                  shouldRenderRestDivider && styles.setRowBeforeRest,
-                  {
-                    borderBottomColor: tableBorder,
-                  },
-                  rowIndex === displayedSets.length - 1 && styles.lastGrid,
-                ]}
-              >
-                {renderedColumns.map((col, colIndex) => {
-                  const isLast = colIndex === renderedColumns.length - 1;
+            <View
+              key={set.sets_id}
+              onLayout={(event) => handleSetRowLayout(set.sets_id, event)}
+              style={[
+                styles.container,
+                styles.setRow,
+                {
+                  borderBottomColor: tableBorder,
+                },
+                rowIndex === displayedSets.length - 1 && styles.lastGrid,
+              ]}
+            >
+              {renderedColumns.map((col, colIndex) => {
+                const isLast = colIndex === renderedColumns.length - 1;
 
-                  return (
-                    <View
-                      key={col.key}
-                      style={[
-                        styles.editable_cell,
-                        styles.padding,
-                        col.style,
-                        col.mergedStyle,
-                        {
-                          borderColor: tableBorder,
-                        },
-                        isLast && { borderRightWidth: 0 },
-                      ]}
-                    >
-                      {renderCellContent(col.key, set)}
-                    </View>
-                  );
-                })}
-              </View>
-
-              {shouldRenderRestDivider &&
-                renderRestDivider(set, renderedColumns)}
-            </Fragment>
+                return (
+                  <View
+                    key={col.key}
+                    style={[
+                      styles.editable_cell,
+                      styles.padding,
+                      col.style,
+                      col.mergedStyle,
+                      {
+                        borderColor: tableBorder,
+                      },
+                      isLast && { borderRightWidth: 0 },
+                    ]}
+                  >
+                    {renderCellContent(col.key, set)}
+                  </View>
+                );
+              })}
+            </View>
           );
         })}
 
@@ -753,6 +783,15 @@ const SetList = ({
             );
           })}
         </View>
+
+        {displayedSets.map((set, rowIndex) => {
+          const shouldRenderRestDivider =
+            showRestBetweenSets && rowIndex < displayedSets.length - 1;
+
+          return shouldRenderRestDivider
+            ? renderRestDivider(set, getRenderedColumns(set))
+            : null;
+        })}
       </ThemedCard>
 
       <ThemedBottomSheet
