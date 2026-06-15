@@ -123,10 +123,13 @@ export default StyleSheet.create({
     restDividerRow: {
         minHeight: 30,
         marginVertical: -1,
-        alignItems: "center",
-        justifyContent: "center",
-        position: "relative",
         zIndex: 2,
+    },
+    restDividerCell: {
+        minHeight: 30,
+        justifyContent: "center",
+        alignItems: "center",
+        position: "relative",
     },
     restDividerLine: {
         position: "absolute",
@@ -135,30 +138,18 @@ export default StyleSheet.create({
         height: 1,
     },
     restDividerBubble: {
-        minWidth: 88,
+        width: 64,
         height: 32,
         borderRadius: 999,
         borderWidth: 1,
-        paddingHorizontal: 7,
+        paddingHorizontal: 5,
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
     },
-    restDividerLabelButton: {
-        height: "100%",
-        justifyContent: "center",
-        paddingRight: 5,
-        marginRight: 3,
-    },
-    restDividerLabelText: {
-        fontSize: 8,
-        lineHeight: 10,
-        fontWeight: "900",
-        letterSpacing: 0.6,
-    },
     restDividerValuePill: {
-        width: 48,
-        height: 28,
+        width: "100%",
+        height: "100%",
         borderRadius: 999,
     },
 

@@ -210,13 +210,12 @@ const SetList = ({
     { key: "weight", style: styles.weight, flexValue: 20 },
     { key: "done", style: styles.done, flexValue: 14 },
   ];
-  const tableColumnConfig = columnConfig.filter((col) => col.key !== "rest");
 
-  const selectedColumns = tableColumnConfig.filter(
+  const selectedColumns = columnConfig.filter(
     (col) => resolvedVisibleColumns[col.key]
   );
   const activeColumns =
-    selectedColumns.length > 0 ? selectedColumns : tableColumnConfig;
+    selectedColumns.length > 0 ? selectedColumns : columnConfig;
   const renderedVisibleColumns = activeColumns.reduce(
     (columns, column) => ({
       ...columns,
@@ -474,6 +473,9 @@ const SetList = ({
           </TouchableOpacity>
         ) : null;
 
+      case "rest":
+        return null;
+
       case "set": {
         const isPersonalRecord = isPersonalRecordSet(set);
 
@@ -601,49 +603,56 @@ const SetList = ({
     ) : null;
   };
 
-  const renderRestDivider = (set) => (
-    <View style={styles.restDividerRow}>
-      <View
-        pointerEvents="none"
-        style={[
-          styles.restDividerLine,
-          { backgroundColor: tableBorder },
-        ]}
-      />
+  const renderRestDivider = (set, renderedColumns) => (
+    <View style={[styles.container, styles.restDividerRow]}>
+      {renderedColumns.map((col, colIndex) => {
+        const isLast = colIndex === renderedColumns.length - 1;
 
-      <View
-        style={[
-          styles.restDividerBubble,
-          {
-            backgroundColor: cellSurface,
-            borderColor: secondaryColor,
-          },
-        ]}
-      >
-        <TouchableOpacity
-          activeOpacity={0.72}
-          accessibilityRole="button"
-          accessibilityLabel="Choose rest input unit"
-          style={styles.restDividerLabelButton}
-          onPress={() => setRestUnitModalVisible(true)}
-        >
-          <ThemedText
-            style={styles.restDividerLabelText}
-            setColor={secondaryColor}
+        return (
+          <View
+            key={`${set.sets_id}:rest-divider:${col.key}`}
+            style={[
+              styles.restDividerCell,
+              styles.padding,
+              col.style,
+              col.mergedStyle,
+              {
+                borderColor: tableBorder,
+              },
+              isLast && { borderRightWidth: 0 },
+            ]}
           >
-            REST
-          </ThemedText>
-        </TouchableOpacity>
+            <View
+              pointerEvents="none"
+              style={[
+                styles.restDividerLine,
+                { backgroundColor: tableBorder },
+              ]}
+            />
 
-        {renderEditableValue({
-          cellKey: `${set.sets_id}:rest-divider`,
-          containerStyle: styles.restDividerValuePill,
-          value: formatRestUnitValue(set.pause),
-          suffixFormatter: getPauseSuffix,
-          onCommit: (value) =>
-            updateField("pause", getStoredPauseValue(value), set.sets_id),
-        })}
-      </View>
+            {col.key === "rest" ? (
+              <View
+                style={[
+                  styles.restDividerBubble,
+                  {
+                    backgroundColor: cellSurface,
+                    borderColor: secondaryColor,
+                  },
+                ]}
+              >
+                {renderEditableValue({
+                  cellKey: `${set.sets_id}:rest-divider`,
+                  containerStyle: styles.restDividerValuePill,
+                  value: formatRestUnitValue(set.pause),
+                  suffixFormatter: getPauseSuffix,
+                  onCommit: (value) =>
+                    updateField("pause", getStoredPauseValue(value), set.sets_id),
+                })}
+              </View>
+            ) : null}
+          </View>
+        );
+      })}
     </View>
   );
 
@@ -662,6 +671,7 @@ const SetList = ({
         {hasSets && (
           <Title
             visibleColumns={renderedVisibleColumns}
+            onRestTitlePress={() => setRestUnitModalVisible(true)}
           />
         )}
 
@@ -706,7 +716,8 @@ const SetList = ({
                 })}
               </View>
 
-              {shouldRenderRestDivider && renderRestDivider(set)}
+              {shouldRenderRestDivider &&
+                renderRestDivider(set, renderedColumns)}
             </Fragment>
           );
         })}

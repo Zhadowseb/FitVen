@@ -2,7 +2,7 @@
 
 ## [0.17.22] - Unreleased
 ### Changed
-- Move set rest into an editable divider pill between sets, tied to the previous set and hidden after the last set.
+- Move set rest into an editable divider pill inside the existing Rest column, tied to the previous set and hidden after the last set.
 
 ---
 ## [0.17.21] - Unreleased
