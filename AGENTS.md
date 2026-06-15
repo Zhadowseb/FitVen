@@ -26,6 +26,8 @@ Keep the root guide short and place domain-specific rules in closer `AGENTS.md` 
 - Before starting a new unit of work, check whether the current branch and uncommitted changes belong to the previous task.
 - If the user appears satisfied with the current work and then asks for something new, suggest committing the finished work before starting the next change.
 - Before switching to a new work branch, make sure the finished branch is committed and pushed if its state should stay visible on GitHub.
+- After every successful commit on a work branch, push the branch immediately. Use the existing upstream when present; otherwise use `git push -u origin <branch>`.
+- The repo's `.githooks/post-commit` hook automates commit pushes in configured clones. If the hook is unavailable, push manually after committing.
 - If the current branch name no longer matches the requested work, suggest creating a new branch before editing files.
 - When suggesting a branch, propose a concrete branch name instead of asking an open-ended question.
 

@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.17.16-minor-quick-start-recent-see-all.1",
+  "version": "0.17.17-minor-auto-push-after-commit.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",
@@ -14,6 +14,8 @@
     "version:branch": "node scripts/version.js branch",
     "version:status": "node scripts/version.js status",
     "version:sync": "node scripts/version.js sync",
+    "branch:auto-push": "node scripts/git-post-commit-auto-push.js",
+    "branch:hooks:install": "git config core.hooksPath .githooks",
     "test:custom-exercise": "node scripts/test-custom-exercise-muscles.js",
     "test:location": "node scripts/test-location-distance.js",
     "test:notifications": "node scripts/test-notification-registration.js",

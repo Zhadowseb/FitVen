@@ -44,6 +44,8 @@ npm run version:branch
 npm run version:branch -- patch
 npm run version:branch -- --base-ref master
 npm run version:branch -- minor/example dry-run
+npm run branch:hooks:install
+npm run branch:auto-push -- --dry-run
 npm run release:prepare -- 0.4.0 dry-run
 npm run release:android -- 0.4.0
 npm run version:sync -- 0.4.0 skip-changelog
@@ -92,14 +94,26 @@ npm run version:sync -- 0.4.0 skip-changelog
 - Starts `eas build -p android --profile production`
 - Optionally runs `expo prebuild` first when called with `--prebuild`
 
+`npm run branch:hooks:install`
+
+- Points Git at the repo's committed `.githooks` directory.
+- Enables the `post-commit` hook that pushes work branches after successful commits.
+
+`npm run branch:auto-push`
+
+- Pushes the current work branch to its upstream.
+- If the branch has no upstream yet, runs `git push -u origin <branch>`.
+- Skips `master`, `main`, and detached HEAD.
+
 ## Recommended Workflow
 
 1. Create a branch with a meaningful prefix like `major/...`, `minor/...`, `fix/...`, or `release/x.y.z`.
 2. Run `npm run version:auto` immediately after branching.
 3. Use `npm run version:status` whenever you want to verify the current state.
 4. Do the work.
-5. Replace the placeholder text in `CHANGELOG.md` before shipping.
-6. For a stable release branch, run `npm run release:prepare -- x.y.z` or `npm run release:android -- x.y.z`.
+5. Commit normally. In clones with `npm run branch:hooks:install` applied, the commit hook pushes the branch automatically.
+6. Replace the placeholder text in `CHANGELOG.md` before shipping.
+7. For a stable release branch, run `npm run release:prepare -- x.y.z` or `npm run release:android -- x.y.z`.
 
 ## Starting The Next Version Line
 
@@ -118,3 +132,4 @@ After that first reset, later stacked branches can continue normally from that n
 - If you ask for code changes while the repo is on `master` or `main`, Codex should first propose a branch name and wait before editing.
 - When you move on to a new request after being satisfied with the previous one, Codex should suggest committing the finished work before starting the next task.
 - When Codex creates or switches to a work branch, it should run `npm run version:auto` so you do not have to think about versioning manually.
+- After Codex commits on a work branch, it should push immediately. The post-commit hook handles this when installed; otherwise Codex should run `git push` or `git push -u origin <branch>` manually.

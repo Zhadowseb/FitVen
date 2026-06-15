@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.17.17] - Unreleased
+### Changed
+- Add an auto-push post-commit hook for work branches and document the commit-to-cloud workflow.
+
+---
 ## [0.17.16] - Unreleased
 ### Changed
 - Add paginated "See all" loading for recent workouts in the quick start sheet.
