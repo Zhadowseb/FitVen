@@ -636,7 +636,7 @@ const SetList = ({
                   styles.restDividerBubble,
                   {
                     backgroundColor: cellSurface,
-                    borderColor: secondaryColor,
+                    borderColor: tableBorder,
                   },
                 ]}
               >
