@@ -180,6 +180,33 @@ export default StyleSheet.create({
     note_section: {
         paddingBottom: 12,
     },
+    restUnitModal: {
+        width: "82%",
+        maxWidth: 340,
+    },
+    restUnitModalContent: {
+        flexGrow: 0,
+    },
+    restUnitToggle: {
+        height: 44,
+        borderRadius: 12,
+        borderWidth: 1,
+        padding: 4,
+        flexDirection: "row",
+        overflow: "hidden",
+    },
+    restUnitOption: {
+        flex: 1,
+        minWidth: 0,
+        borderRadius: 9,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    restUnitOptionText: {
+        fontSize: 13,
+        lineHeight: 16,
+        fontWeight: "800",
+    },
 
 
 });

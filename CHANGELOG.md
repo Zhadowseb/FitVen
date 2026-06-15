@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.17.20] - Unreleased
+### Changed
+- Add a rest title unit picker for switching set rest entry between minutes and seconds.
+
+---
 ## [0.17.19] - Unreleased
 ### Changed
 - Use the secondary color treatment for the paused run finish button and match its height to the continue button.

@@ -41,6 +41,8 @@ const SET_LIST_DEFAULT_VISIBLE_COLUMNS = SET_LIST_COLUMN_KEYS.reduce(
   }),
   {}
 );
+const REST_UNIT_MINUTES = "minutes";
+const REST_UNIT_SECONDS = "seconds";
 
 const resolveSetListVisibleColumns = (visibleColumns) => {
   let parsedColumns = visibleColumns;
@@ -128,6 +130,12 @@ const SetList = ({
     recordControlTextColor ?? personalRecordSurface;
   const addSetColor = theme.iconColor ?? theme.quietText ?? theme.text;
   const exerciseActionColor = theme.primary ?? addSetColor;
+  const secondaryColor = theme.secondary ?? Colors.dark.secondary;
+  const selectedRestUnitTextColor =
+    theme.textInverted ?? theme.cardBackground ?? "#0E0F12";
+  const restUnitBorderColor =
+    theme.cardBorder ?? theme.iconColor ?? "rgba(255, 255, 255, 0.12)";
+  const restUnitInactiveSurface = theme.uiBackground ?? cellSurface;
 
   const db = useSQLiteContext();
   const [localSets, setLocalSets] = useState(sets);
@@ -139,6 +147,8 @@ const SetList = ({
   const [noteModalVisible, setNoteModalVisible] = useState(false);
   const [noteModalText, setNoteModalText] = useState("");
   const [activeEditableCell, setActiveEditableCell] = useState(null);
+  const [restUnit, setRestUnit] = useState(REST_UNIT_SECONDS);
+  const [restUnitModalVisible, setRestUnitModalVisible] = useState(false);
 
   useEffect(() => {
     setLocalSets(sets);
@@ -257,39 +267,39 @@ const SetList = ({
       return null;
     }
 
-    const parsedValue = Number(value);
+    const parsedValue = Number(String(value).replace(",", "."));
 
     return Number.isFinite(parsedValue) ? parsedValue : null;
   };
 
-  const formatPauseDisplay = (value) => {
+  const formatRestUnitValue = (value) => {
     const pauseValue = parsePauseValue(value);
 
     if (pauseValue === null) {
       return "";
     }
 
-    if (pauseValue < 120) {
-      return pauseValue.toString();
+    const unitValue =
+      restUnit === REST_UNIT_MINUTES ? pauseValue / 60 : pauseValue;
+
+    if (Number.isInteger(unitValue)) {
+      return unitValue.toString();
     }
 
-    const minutes = pauseValue / 60;
-
-    if (Number.isInteger(minutes)) {
-      return minutes.toString();
-    }
-
-    return Number(minutes.toFixed(2)).toString();
+    return Number(unitValue.toFixed(2)).toString();
   };
 
-  const getPauseSuffix = (value) => {
+  const getPauseSuffix = () =>
+    restUnit === REST_UNIT_MINUTES ? "min" : "sec";
+
+  const getStoredPauseValue = (value) => {
     const pauseValue = parsePauseValue(value);
 
     if (pauseValue === null) {
       return "";
     }
 
-    return pauseValue < 120 ? "sec" : "min";
+    return restUnit === REST_UNIT_MINUTES ? pauseValue * 60 : pauseValue;
   };
 
   const deleteSet = async (setId) => {
@@ -462,10 +472,10 @@ const SetList = ({
       case "rest":
         return renderEditableValue({
           cellKey: `${set.sets_id}:rest`,
-          value: set.pause?.toString() ?? "",
-          displayFormatter: formatPauseDisplay,
+          value: formatRestUnitValue(set.pause),
           suffixFormatter: getPauseSuffix,
-          onCommit: (value) => updateField("pause", value, set.sets_id),
+          onCommit: (value) =>
+            updateField("pause", getStoredPauseValue(value), set.sets_id),
         });
 
       case "set": {
@@ -622,7 +632,12 @@ const SetList = ({
           },
         ]}
       >
-        {hasSets && <Title visibleColumns={renderedVisibleColumns} />}
+        {hasSets && (
+          <Title
+            visibleColumns={renderedVisibleColumns}
+            onRestTitlePress={() => setRestUnitModalVisible(true)}
+          />
+        )}
 
         {displayedSets.map((set, rowIndex) => {
           const renderedColumns = getRenderedColumns(set);
@@ -768,6 +783,55 @@ const SetList = ({
         title="Note"
       >
         <ThemedText>{noteModalText}</ThemedText>
+      </ThemedModal>
+
+      <ThemedModal
+        visible={restUnitModalVisible}
+        onClose={() => setRestUnitModalVisible(false)}
+        title="Rest unit"
+        style={styles.restUnitModal}
+        contentStyle={styles.restUnitModalContent}
+      >
+        <View
+          style={[
+            styles.restUnitToggle,
+            {
+              backgroundColor: restUnitInactiveSurface,
+              borderColor: restUnitBorderColor,
+            },
+          ]}
+        >
+          {[
+            { unit: REST_UNIT_MINUTES, label: "Minutes" },
+            { unit: REST_UNIT_SECONDS, label: "Seconds" },
+          ].map((option) => {
+            const selected = restUnit === option.unit;
+
+            return (
+              <TouchableOpacity
+                key={option.unit}
+                activeOpacity={0.82}
+                style={[
+                  styles.restUnitOption,
+                  selected && { backgroundColor: secondaryColor },
+                ]}
+                onPress={() => {
+                  setRestUnit(option.unit);
+                  setRestUnitModalVisible(false);
+                }}
+              >
+                <ThemedText
+                  style={styles.restUnitOptionText}
+                  setColor={
+                    selected ? selectedRestUnitTextColor : theme.text
+                  }
+                >
+                  {option.label}
+                </ThemedText>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
       </ThemedModal>
     </>
   );

@@ -1,4 +1,4 @@
-import { View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 import { useColorScheme } from "react-native";
 import { Colors } from "../../../../../../../../../Resources/GlobalStyling/colors";
 import Checkmark from "../../../../../../../../../Resources/Icons/UI-icons/Checkmark";
@@ -8,7 +8,7 @@ import {ThemedText}
 
 import styles from "./SetListStyle.js";
 
-const Title = ({visibleColumns}) => {
+const Title = ({ visibleColumns, onRestTitlePress }) => {
 
     const colorScheme = useColorScheme();
     const theme = Colors[colorScheme] ?? Colors.light;
@@ -30,9 +30,15 @@ const Title = ({visibleColumns}) => {
         )}
 
         {visibleColumns.rest && (
-            <View style={[styles.pause, styles.titleCell, titleCellStyle]}>
+            <TouchableOpacity
+              activeOpacity={0.72}
+              accessibilityRole="button"
+              accessibilityLabel="Choose rest input unit"
+              style={[styles.pause, styles.titleCell, titleCellStyle]}
+              onPress={onRestTitlePress}
+            >
             <ThemedText style={[styles.titleText, {color: headerTextColor}]}>REST</ThemedText>
-            </View>
+            </TouchableOpacity>
         )}
 
         {visibleColumns.set && (
