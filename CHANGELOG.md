@@ -2,7 +2,7 @@
 
 ## [0.17.19] - Unreleased
 ### Changed
-- Use the secondary color treatment for the paused run finish button.
+- Use the secondary color treatment for the paused run finish button and match its size to the continue button.
 
 ---
 ## [0.17.18] - Unreleased
