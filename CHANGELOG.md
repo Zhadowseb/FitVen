@@ -3,6 +3,7 @@
 ## [0.17.22] - Unreleased
 ### Changed
 - Move set rest into an editable overlay pill inside the existing Rest column, tied to the previous set and hidden after the last set without adding spacing between sets.
+- Default rest editing to minutes.
 
 ---
 ## [0.17.21] - Unreleased

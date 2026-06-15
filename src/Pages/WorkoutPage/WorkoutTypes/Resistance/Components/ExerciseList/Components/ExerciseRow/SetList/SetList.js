@@ -146,7 +146,7 @@ const SetList = ({
   const [noteModalVisible, setNoteModalVisible] = useState(false);
   const [noteModalText, setNoteModalText] = useState("");
   const [activeEditableCell, setActiveEditableCell] = useState(null);
-  const [restUnit, setRestUnit] = useState(REST_UNIT_SECONDS);
+  const [restUnit, setRestUnit] = useState(REST_UNIT_MINUTES);
   const [restUnitModalVisible, setRestUnitModalVisible] = useState(false);
   const [setRowLayouts, setSetRowLayouts] = useState({});
 
