@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.17.21-minor-exercise-history-expanded-action.1",
+  "version": "0.17.22-minor-rest-between-sets.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",

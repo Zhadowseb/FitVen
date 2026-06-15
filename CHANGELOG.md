@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.17.22] - Unreleased
+### Changed
+- Move set rest into an editable divider pill between sets, tied to the previous set and hidden after the last set.
+
+---
 ## [0.17.21] - Unreleased
 ### Changed
 - Move the expanded exercise history action back to the top-right of the exercise card.

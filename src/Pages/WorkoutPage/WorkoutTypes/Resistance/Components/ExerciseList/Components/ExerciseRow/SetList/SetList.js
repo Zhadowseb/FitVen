@@ -1,6 +1,6 @@
 import { TouchableOpacity, View } from "react-native";
 import { useColorScheme } from "react-native";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useSQLiteContext } from "expo-sqlite";
 import { Colors } from "../../../../../../../../../Resources/GlobalStyling/colors";
 
@@ -210,12 +210,13 @@ const SetList = ({
     { key: "weight", style: styles.weight, flexValue: 20 },
     { key: "done", style: styles.done, flexValue: 14 },
   ];
+  const tableColumnConfig = columnConfig.filter((col) => col.key !== "rest");
 
-  const selectedColumns = columnConfig.filter(
+  const selectedColumns = tableColumnConfig.filter(
     (col) => resolvedVisibleColumns[col.key]
   );
   const activeColumns =
-    selectedColumns.length > 0 ? selectedColumns : columnConfig;
+    selectedColumns.length > 0 ? selectedColumns : tableColumnConfig;
   const renderedVisibleColumns = activeColumns.reduce(
     (columns, column) => ({
       ...columns,
@@ -223,6 +224,8 @@ const SetList = ({
     }),
     {}
   );
+  const showRestBetweenSets =
+    Boolean(resolvedVisibleColumns.rest) && displayedSets.length > 1;
   const settingsColumnKey = renderedVisibleColumns.done
     ? "done"
     : activeColumns[activeColumns.length - 1]?.key;
@@ -419,13 +422,20 @@ const SetList = ({
     setSetOptionsVisible(false);
   };
 
-  const renderEditableValue = ({ cellKey, onFocus, onBlur, ...props }) => {
+  const renderEditableValue = ({
+    cellKey,
+    containerStyle,
+    onFocus,
+    onBlur,
+    ...props
+  }) => {
     const isActive = activeEditableCell === cellKey;
 
     return (
       <View
         style={[
           styles.valuePill,
+          containerStyle,
           {
             backgroundColor: isActive ? cellSurface : "transparent",
             borderColor: isActive ? cellBorder : "transparent",
@@ -463,15 +473,6 @@ const SetList = ({
             <Note width={18} height={18} />
           </TouchableOpacity>
         ) : null;
-
-      case "rest":
-        return renderEditableValue({
-          cellKey: `${set.sets_id}:rest`,
-          value: formatRestUnitValue(set.pause),
-          suffixFormatter: getPauseSuffix,
-          onCommit: (value) =>
-            updateField("pause", getStoredPauseValue(value), set.sets_id),
-        });
 
       case "set": {
         const isPersonalRecord = isPersonalRecordSet(set);
@@ -600,6 +601,52 @@ const SetList = ({
     ) : null;
   };
 
+  const renderRestDivider = (set) => (
+    <View style={styles.restDividerRow}>
+      <View
+        pointerEvents="none"
+        style={[
+          styles.restDividerLine,
+          { backgroundColor: tableBorder },
+        ]}
+      />
+
+      <View
+        style={[
+          styles.restDividerBubble,
+          {
+            backgroundColor: cellSurface,
+            borderColor: secondaryColor,
+          },
+        ]}
+      >
+        <TouchableOpacity
+          activeOpacity={0.72}
+          accessibilityRole="button"
+          accessibilityLabel="Choose rest input unit"
+          style={styles.restDividerLabelButton}
+          onPress={() => setRestUnitModalVisible(true)}
+        >
+          <ThemedText
+            style={styles.restDividerLabelText}
+            setColor={secondaryColor}
+          >
+            REST
+          </ThemedText>
+        </TouchableOpacity>
+
+        {renderEditableValue({
+          cellKey: `${set.sets_id}:rest-divider`,
+          containerStyle: styles.restDividerValuePill,
+          value: formatRestUnitValue(set.pause),
+          suffixFormatter: getPauseSuffix,
+          onCommit: (value) =>
+            updateField("pause", getStoredPauseValue(value), set.sets_id),
+        })}
+      </View>
+    </View>
+  );
+
   return (
     <>
       <ThemedCard
@@ -615,47 +662,52 @@ const SetList = ({
         {hasSets && (
           <Title
             visibleColumns={renderedVisibleColumns}
-            onRestTitlePress={() => setRestUnitModalVisible(true)}
           />
         )}
 
         {displayedSets.map((set, rowIndex) => {
           const renderedColumns = getRenderedColumns(set);
+          const shouldRenderRestDivider =
+            showRestBetweenSets && rowIndex < displayedSets.length - 1;
 
           return (
-            <View
-              key={set.sets_id}
-              style={[
-                styles.container,
-                styles.setRow,
-                {
-                  borderBottomColor: tableBorder,
-                },
-                rowIndex === displayedSets.length - 1 && styles.lastGrid,
-              ]}
-            >
-              {renderedColumns.map((col, colIndex) => {
-                const isLast = colIndex === renderedColumns.length - 1;
+            <Fragment key={set.sets_id}>
+              <View
+                style={[
+                  styles.container,
+                  styles.setRow,
+                  shouldRenderRestDivider && styles.setRowBeforeRest,
+                  {
+                    borderBottomColor: tableBorder,
+                  },
+                  rowIndex === displayedSets.length - 1 && styles.lastGrid,
+                ]}
+              >
+                {renderedColumns.map((col, colIndex) => {
+                  const isLast = colIndex === renderedColumns.length - 1;
 
-                return (
-                  <View
-                    key={col.key}
-                    style={[
-                      styles.editable_cell,
-                      styles.padding,
-                      col.style,
-                      col.mergedStyle,
-                      {
-                        borderColor: tableBorder,
-                      },
-                      isLast && { borderRightWidth: 0 },
-                    ]}
-                  >
-                    {renderCellContent(col.key, set)}
-                  </View>
-                );
-              })}
-            </View>
+                  return (
+                    <View
+                      key={col.key}
+                      style={[
+                        styles.editable_cell,
+                        styles.padding,
+                        col.style,
+                        col.mergedStyle,
+                        {
+                          borderColor: tableBorder,
+                        },
+                        isLast && { borderRightWidth: 0 },
+                      ]}
+                    >
+                      {renderCellContent(col.key, set)}
+                    </View>
+                  );
+                })}
+              </View>
+
+              {shouldRenderRestDivider && renderRestDivider(set)}
+            </Fragment>
           );
         })}
 

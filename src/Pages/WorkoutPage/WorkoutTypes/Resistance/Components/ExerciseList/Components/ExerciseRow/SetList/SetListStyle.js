@@ -30,6 +30,9 @@ export default StyleSheet.create({
         minHeight: 48,
         borderBottomWidth: 1,
     },
+    setRowBeforeRest: {
+        borderBottomWidth: 0,
+    },
 
     padding: {
         paddingHorizontal: 3,
@@ -116,6 +119,47 @@ export default StyleSheet.create({
         justifyContent: "center",
         alignItems: "center",
         overflow: "hidden",
+    },
+    restDividerRow: {
+        minHeight: 30,
+        marginVertical: -1,
+        alignItems: "center",
+        justifyContent: "center",
+        position: "relative",
+        zIndex: 2,
+    },
+    restDividerLine: {
+        position: "absolute",
+        left: 0,
+        right: 0,
+        height: 1,
+    },
+    restDividerBubble: {
+        minWidth: 88,
+        height: 32,
+        borderRadius: 999,
+        borderWidth: 1,
+        paddingHorizontal: 7,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    restDividerLabelButton: {
+        height: "100%",
+        justifyContent: "center",
+        paddingRight: 5,
+        marginRight: 3,
+    },
+    restDividerLabelText: {
+        fontSize: 8,
+        lineHeight: 10,
+        fontWeight: "900",
+        letterSpacing: 0.6,
+    },
+    restDividerValuePill: {
+        width: 48,
+        height: 28,
+        borderRadius: 999,
     },
 
     bottomsheet_title: {
