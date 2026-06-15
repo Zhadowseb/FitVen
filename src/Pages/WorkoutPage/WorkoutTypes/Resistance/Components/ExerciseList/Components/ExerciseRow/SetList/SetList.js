@@ -21,7 +21,6 @@ import Note from "../../../../../../../../../Resources/Icons/UI-icons/Note";
 import Amrap from "../../../../../../../../../Resources/Icons/UI-icons/Amrap";
 import Plus from "../../../../../../../../../Resources/Icons/UI-icons/Plus";
 import Cogwheel from "../../../../../../../../../Resources/Icons/UI-icons/Cogwheel";
-import ReplayHistory from "../../../../../../../../../Resources/Icons/UI-icons/ReplayHistory";
 import { weightliftingService as weightliftingRepository } from "../../../../../../../../../Services";
 
 const SET_LIST_COLUMN_KEYS = [
@@ -87,7 +86,6 @@ const SetList = ({
   onToggleSet,
   updateUI,
   onAddSet,
-  onToggleHistory,
   onOpenSettings,
   recordColor,
   recordLightColor,
@@ -225,9 +223,6 @@ const SetList = ({
     }),
     {}
   );
-  const historyColumnKey = renderedVisibleColumns.note
-    ? "note"
-    : activeColumns[0]?.key;
   const settingsColumnKey = renderedVisibleColumns.done
     ? "done"
     : activeColumns[activeColumns.length - 1]?.key;
@@ -571,21 +566,6 @@ const SetList = ({
 
   const renderAddSetCell = (key) => {
     const actions = [];
-
-    if (key === historyColumnKey) {
-      actions.push(
-        <TouchableOpacity
-          key="history"
-          activeOpacity={0.72}
-          accessibilityRole="button"
-          accessibilityLabel="Toggle exercise history summary"
-          style={styles.addSetIconCell}
-          onPress={onToggleHistory}
-        >
-          <ReplayHistory width={17} height={17} color={exerciseActionColor} />
-        </TouchableOpacity>
-      );
-    }
 
     if (key === "set") {
       actions.push(

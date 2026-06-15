@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.17.21] - Unreleased
+### Changed
+- Move the expanded exercise history action back to the top-right of the exercise card.
+
+---
 ## [0.17.20] - Unreleased
 ### Changed
 - Add a rest title unit picker for switching set rest entry between minutes and seconds.

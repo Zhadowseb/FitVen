@@ -761,6 +761,18 @@ const ExerciseRow = ({
               </TouchableOpacity>
             )}
 
+            {isExpanded && (
+              <TouchableOpacity
+                activeOpacity={0.88}
+                accessibilityRole="button"
+                accessibilityLabel="Toggle exercise history summary"
+                style={styles.actionButton}
+                onPress={toggleExerciseHistory}
+              >
+                <ReplayHistory width={18} height={18} color={replayIconColor} />
+              </TouchableOpacity>
+            )}
+
             {!isExpanded && (
               <ThemedText
                 size={11}
@@ -982,7 +994,6 @@ const ExerciseRow = ({
               updateWeight={updateWeight}
               updateUI={updateUI}
               onAddSet={addSet}
-              onToggleHistory={toggleExerciseHistory}
               onOpenSettings={() => setPanelModalVisible(true)}
               recordColor={recordColor}
               recordLightColor={recordLightColor}

@@ -41,7 +41,7 @@ export default StyleSheet.create({
   },
 
   headerMainExpanded: {
-    paddingLeft: 38,
+    paddingLeft: 76,
     paddingRight: 0,
   },
 
@@ -121,9 +121,9 @@ export default StyleSheet.create({
   },
 
   actionsRowExpanded: {
-    width: 38,
+    width: 76,
     minHeight: 32,
-    justifyContent: "center",
+    justifyContent: "flex-end",
   },
 
   actionButton: {
