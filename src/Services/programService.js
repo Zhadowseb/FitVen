@@ -6502,9 +6502,12 @@ export async function deleteMicrocycle(db, microcycleId) {
     await programRepository.deleteMicrocycleById(db, microcycleId);
 
     if (mesocycleId) {
+      await programRepository.syncMesocycleWeeksFromMicrocycles(db, mesocycleId);
       await workoutRepository.updateMesocycleDoneFromMicrocycles(db, mesocycleId);
     }
   });
+
+  syncMesocyclesInBackground(db);
 
   try {
     await syncMicrocyclesWithCloud(db);

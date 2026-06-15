@@ -1532,7 +1532,8 @@ export async function getMicrocyclesByMesocycleForInsert(db, mesocycleId) {
   return db.getAllAsync(
     `SELECT microcycle_id, microcycle_number
      FROM Microcycle
-     WHERE mesocycle_id = ?;`,
+     WHERE mesocycle_id = ?
+     ORDER BY microcycle_number ASC, microcycle_id ASC;`,
     [mesocycleId]
   );
 }
@@ -1558,6 +1559,24 @@ export async function incrementMesocycleWeeks(db, mesocycleId) {
          needs_sync = 1
      WHERE mesocycle_id = ?;`,
     [syncVersion, mesocycleId]
+  );
+}
+
+export async function syncMesocycleWeeksFromMicrocycles(db, mesocycleId) {
+  const syncVersion = createNextSyncVersion();
+  await db.runAsync(
+    `UPDATE Mesocycle
+     SET weeks = (
+           SELECT COUNT(*)
+           FROM Microcycle
+           WHERE mesocycle_id = ?
+         ),
+         sync_id = COALESCE(sync_id, ${SQLITE_UUID_SQL}),
+         sync_version = ?,
+         deleted_at = NULL,
+         needs_sync = 1
+     WHERE mesocycle_id = ?;`,
+    [mesocycleId, syncVersion, mesocycleId]
   );
 }
 

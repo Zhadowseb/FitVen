@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.17.18] - Unreleased
+### Fixed
+- Keep block week counts in sync when deleting a week so later added weeks use the next correct date.
+
+---
 ## [0.17.17] - Unreleased
 ### Changed
 - Add an auto-push post-commit hook for work branches and document the commit-to-cloud workflow.
