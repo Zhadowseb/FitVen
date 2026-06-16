@@ -22,6 +22,8 @@ const ExerciseList = ({
   showCompletedExercises = false,
   expansionAction,
   onReorderDragChange,
+  onRestTimerStart,
+  onRestTimerCancel,
 }) => {
   const [exercises, setExercises] = useState([]);
   const [expandedExercises, setExpandedExercises] = useState({});
@@ -156,6 +158,48 @@ const ExerciseList = ({
     };
   };
 
+  const normalizeRestDurationSeconds = (value) => {
+    const durationSeconds = Math.round(Number(value));
+
+    return Number.isFinite(durationSeconds) && durationSeconds > 0
+      ? durationSeconds
+      : 0;
+  };
+
+  const getSetRestTimerPayload = (setsId, sourceSet = null) => {
+    for (const exercise of exercises) {
+      const sets = exercise.sets ?? [];
+      const setIndex = sets.findIndex(
+        (set) => Number(set.sets_id) === Number(setsId)
+      );
+
+      if (setIndex < 0 || setIndex >= sets.length - 1) {
+        continue;
+      }
+
+      const storedSet = sets[setIndex];
+      const sourcePause =
+        sourceSet && Object.prototype.hasOwnProperty.call(sourceSet, "pause")
+          ? sourceSet.pause
+          : storedSet.pause;
+      const restSeconds = normalizeRestDurationSeconds(sourcePause);
+
+      if (restSeconds <= 0) {
+        return null;
+      }
+
+      return {
+        setId: storedSet.sets_id,
+        exerciseId: exercise.exercise_id,
+        exerciseName: exercise.exercise_name,
+        setNumber: storedSet.set_number,
+        durationSeconds: restSeconds,
+      };
+    }
+
+    return null;
+  };
+
   const applySetCompletionOptimistic = (setsId, completion) => {
     const { done, failed } = normalizeSetCompletion(completion);
 
@@ -230,10 +274,20 @@ const ExerciseList = ({
     );
   };
 
-  const updateSetDone = async (sets_id, completion) => {
+  const updateSetDone = async (sets_id, completion, sourceSet = null) => {
     const { done, failed } = normalizeSetCompletion(completion);
+    const restTimerPayload =
+      done === 1 && failed !== 1
+        ? getSetRestTimerPayload(sets_id, sourceSet)
+        : null;
 
     applySetCompletionOptimistic(sets_id, { done, failed });
+
+    if (restTimerPayload) {
+      onRestTimerStart?.(restTimerPayload);
+    } else if (done !== 1 || failed === 1) {
+      onRestTimerCancel?.(sets_id);
+    }
 
     try {
       const result = await weightliftingRepository.updateStrengthSetDone(db, {
@@ -254,6 +308,9 @@ const ExerciseList = ({
 
     } catch (error) {
       console.error("updateSetDone failed:", error);
+      if (restTimerPayload) {
+        onRestTimerCancel?.(sets_id);
+      }
       loadExercises();
     }
   };

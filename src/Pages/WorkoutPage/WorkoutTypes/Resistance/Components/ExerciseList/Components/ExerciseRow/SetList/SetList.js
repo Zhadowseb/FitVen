@@ -547,7 +547,9 @@ const SetList = ({
         return (
           <ThemedBouncyCheckbox
             value={Number(set.done) === 1 || Number(set.failed) === 1}
-            onChange={() => onToggleSet(set.sets_id, getNextSetCompletion(set))}
+            onChange={() =>
+              onToggleSet(set.sets_id, getNextSetCompletion(set), set)
+            }
             size={18}
             edgeSize={2}
             checkmarkColor={

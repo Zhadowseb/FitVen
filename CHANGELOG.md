@@ -4,6 +4,7 @@
 ### Changed
 - Move set rest into an editable overlay pill inside the existing Rest column, tied to the previous set and hidden after the last set without adding spacing between sets.
 - Default rest editing to minutes.
+- Start a rest countdown from the completed set's rest value while the workout is running, and show it in the workout timer and active workout menu circle.
 
 ---
 ## [0.17.21] - Unreleased

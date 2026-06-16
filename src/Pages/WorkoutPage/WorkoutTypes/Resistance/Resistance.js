@@ -29,6 +29,11 @@ import {
   normalizeElapsedDurationSeconds,
   normalizeStoredTimestampSeconds,
 } from "../../../../Utils/timeUtils";
+import {
+  clearActiveRestTimer,
+  startActiveRestTimer,
+  subscribeRestTimer,
+} from "../../../../Utils/restTimerEvents";
 import { weightliftingService, workoutService } from "../../../../Services";
 
 //Icons:
@@ -87,6 +92,10 @@ const Resistance = ({
   const [elapsed_time, set_elapsed_time] = useState(0);
   const [isDone, set_isDone] = useState(false);
   const [isRunning, set_isRunning] = useState(false);
+  const [activeRestTimer, setActiveRestTimer] = useState(null);
+  const [restTimerTick, setRestTimerTick] = useState(
+    getCurrentStoredTimestampSeconds()
+  );
   const timerStartRef = useRef(null);
   const elapsedTimeRef = useRef(0);
   const wasAllSetsDoneRef = useRef(false);
@@ -105,6 +114,35 @@ const Resistance = ({
   useEffect(() => {
     elapsedTimeRef.current = elapsed_time;
   }, [elapsed_time]);
+
+  useEffect(() => {
+    return subscribeRestTimer((timer) => {
+      setActiveRestTimer(
+        Number(timer?.workoutId) === Number(workout_id) ? timer : null
+      );
+      setRestTimerTick(getCurrentStoredTimestampSeconds());
+    });
+  }, [workout_id]);
+
+  useEffect(() => {
+    if (!activeRestTimer) {
+      return;
+    }
+
+    const updateRestTimerTick = () => {
+      const now = getCurrentStoredTimestampSeconds();
+      setRestTimerTick(now);
+
+      if (activeRestTimer.endsAt <= now) {
+        clearActiveRestTimer(activeRestTimer.id);
+      }
+    };
+
+    updateRestTimerTick();
+    const interval = setInterval(updateRestTimerTick, 1000);
+
+    return () => clearInterval(interval);
+  }, [activeRestTimer]);
 
   const persistCurrentTimerState = useCallback(async () => {
     await workoutService.persistWorkoutTimerState(db, {
@@ -263,7 +301,38 @@ const Resistance = ({
     Vibration.vibrate(500);
   };
 
+  const handleRestTimerStart = useCallback((timer) => {
+    if (!isRunning || isDone) {
+      return;
+    }
+
+    const startedAt = getCurrentStoredTimestampSeconds();
+
+    startActiveRestTimer({
+      ...timer,
+      workoutId: workout_id,
+      startedAt,
+      navigationTarget: {
+        workout_id,
+        workout_label: workoutInstanceLabel ?? "Resistance",
+        workout_type: "Resistance",
+        date,
+      },
+    });
+
+    setRestTimerTick(startedAt);
+  }, [date, isDone, isRunning, workoutInstanceLabel, workout_id]);
+
+  const handleRestTimerCancel = useCallback((setId) => {
+    if (Number(activeRestTimer?.setId) === Number(setId)) {
+      clearActiveRestTimer(activeRestTimer.id);
+    }
+  }, [activeRestTimer]);
+
   const pauseWorkout = async () => {
+      if (activeRestTimer) {
+        clearActiveRestTimer(activeRestTimer.id);
+      }
       set_isRunning(false);
       const newElapsed = await updateElapsed();
       set_timer_start(null);
@@ -279,6 +348,9 @@ const Resistance = ({
 
     elapsedTimeRef.current = finalElapsed;
     timerStartRef.current = null;
+    if (activeRestTimer) {
+      clearActiveRestTimer(activeRestTimer.id);
+    }
     set_isRunning(false);
     set_isDone(true);
     set_timer_start(null);
@@ -304,6 +376,9 @@ const Resistance = ({
 
   const restartWorkout = async () => {
     await workoutService.resetWorkoutState(db, workout_id);
+    if (activeRestTimer) {
+      clearActiveRestTimer(activeRestTimer.id);
+    }
     set_original_start_time(null);
     set_timer_start(null);
     set_elapsed_time(0);
@@ -335,6 +410,14 @@ const Resistance = ({
     elapsed_time + computeCurrentElapsed(),
     0
   );
+  const restTimerRemaining = activeRestTimer
+    ? Math.max(0, activeRestTimer.endsAt - restTimerTick)
+    : 0;
+  const isRestTimerActive = restTimerRemaining > 0;
+  const displayedTimerValue = isRestTimerActive
+    ? restTimerRemaining
+    : currentElapsed;
+  const timerDisplayLabel = isRestTimerActive ? "Rest time" : "Elapsed time";
   const resolvedTotalSets = Math.max(Number(totalSets) || 0, 0);
   const resolvedDoneSets = Math.max(Number(doneSets) || 0, 0);
   const progressPercent =
@@ -344,12 +427,15 @@ const Resistance = ({
 
   const statusLabel = isDone
     ? "Complete"
-    : isRunning
+    : isRestTimerActive
+      ? "Rest"
+      : isRunning
       ? "In progress"
       : original_start_time !== null
         ? "Paused"
         : "Ready";
-  const statusTone = isDone ? secondaryColor : primaryColor;
+  const statusTone =
+    isDone || isRestTimerActive ? secondaryColor : primaryColor;
   const startedDisplay =
     original_start_time !== null
       ? formatWorkoutStart(original_start_time)
@@ -445,11 +531,29 @@ const Resistance = ({
               </View>
             </View>
 
-            <ThemedText style={styles.heroTimerValue} setColor={titleColor}>
-              {formatTime(currentElapsed)}
-            </ThemedText>
+            <View style={styles.heroTimerBlock}>
+              {isRestTimerActive && (
+                <View pointerEvents="none" style={styles.heroRestPauseSymbol}>
+                  <View
+                    style={[
+                      styles.heroRestPauseBar,
+                      { backgroundColor: secondaryColor },
+                    ]}
+                  />
+                  <View
+                    style={[
+                      styles.heroRestPauseBar,
+                      { backgroundColor: secondaryColor },
+                    ]}
+                  />
+                </View>
+              )}
+              <ThemedText style={styles.heroTimerValue} setColor={titleColor}>
+                {formatTime(displayedTimerValue)}
+              </ThemedText>
+            </View>
             <ThemedText style={styles.heroTimerLabel} setColor={quietText}>
-              Elapsed time
+              {timerDisplayLabel}
             </ThemedText>
 
             <View style={styles.heroSetsRow}>
@@ -622,6 +726,8 @@ const Resistance = ({
             showCompletedExercises={showCompletedExercises}
             expansionAction={expansionAction}
             onReorderDragChange={setIsReorderingExercises}
+            onRestTimerStart={handleRestTimerStart}
+            onRestTimerCancel={handleRestTimerCancel}
           />
         </View>
 

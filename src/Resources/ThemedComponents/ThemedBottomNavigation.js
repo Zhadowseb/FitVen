@@ -31,6 +31,11 @@ import {
   normalizeStoredTimestampSeconds,
 } from "../../Utils/timeUtils";
 import { subscribeQuickWorkoutMenu } from "../../Utils/quickWorkoutMenuEvents";
+import {
+  clearActiveRestTimer,
+  getActiveRestTimer,
+  subscribeRestTimer,
+} from "../../Utils/restTimerEvents";
 
 const RECENT_WORKOUT_PREVIEW_LIMIT = 2;
 const RECENT_WORKOUT_PAGE_SIZE = 10;
@@ -74,6 +79,9 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
   const [isLoadingMoreRecentWorkouts, setIsLoadingMoreRecentWorkouts] =
     useState(false);
   const [activeWorkoutTimer, setActiveWorkoutTimer] = useState(null);
+  const [activeRestTimer, setActiveRestTimer] = useState(() =>
+    getActiveRestTimer()
+  );
   const [timerTick, setTimerTick] = useState(getCurrentStoredTimestampSeconds());
   const quickWorkoutDateRef = useRef(getTodaysDate());
   const quickWorkoutTargetRef = useRef(null);
@@ -114,6 +122,14 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
               normalizeStoredTimestampSeconds(activeWorkoutTimer.timer_start)
       )
     : 0;
+  const restTimerRemaining = activeRestTimer
+    ? Math.max(0, activeRestTimer.endsAt - timerTick)
+    : 0;
+  const isRestTimerActive = restTimerRemaining > 0;
+  const centerTimerValue = isRestTimerActive
+    ? restTimerRemaining
+    : activeWorkoutElapsed;
+  const shouldShowCenterTimer = Boolean(activeWorkoutTimer) || isRestTimerActive;
 
   const handleHomePress = () => {
     if (!navigationRef?.isReady?.()) {
@@ -162,6 +178,15 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
         date: activeWorkoutTimer.date,
         program_id: activeWorkoutTimer.program_id,
       });
+      return;
+    }
+
+    if (
+      isRestTimerActive &&
+      activeRestTimer?.navigationTarget &&
+      navigationRef?.isReady?.()
+    ) {
+      navigationRef.navigate("WorkoutPage", activeRestTimer.navigationTarget);
       return;
     }
 
@@ -356,6 +381,10 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     return subscribeQuickWorkoutMenu(handleQuickWorkoutPress);
   }, [handleQuickWorkoutPress]);
 
+  useEffect(() => {
+    return subscribeRestTimer(setActiveRestTimer);
+  }, []);
+
   const loadActiveWorkoutTimer = useCallback(async () => {
     if (activeWorkoutLoadRef.current) {
       return;
@@ -396,6 +425,12 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
       appStateSubscription.remove();
     };
   }, [loadActiveWorkoutTimer]);
+
+  useEffect(() => {
+    if (activeRestTimer && activeRestTimer.endsAt <= timerTick) {
+      clearActiveRestTimer(activeRestTimer.id);
+    }
+  }, [activeRestTimer, timerTick]);
 
   const resolveQuickWorkoutTarget = async () => {
     const target = quickWorkoutTargetRef.current;
@@ -612,8 +647,10 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
           <TouchableOpacity
             activeOpacity={0.86}
             accessibilityLabel={
-              activeWorkoutTimer
-                ? `Active workout timer ${formatTime(activeWorkoutElapsed)}`
+              shouldShowCenterTimer
+                ? isRestTimerActive
+                  ? `Active rest timer ${formatTime(centerTimerValue)}`
+                  : `Active workout timer ${formatTime(centerTimerValue)}`
                 : "Create workout"
             }
             accessibilityRole="button"
@@ -622,20 +659,40 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
             style={[
               styles.plusButton,
               {
-                backgroundColor: plusBackground,
+                backgroundColor: isRestTimerActive
+                  ? theme.secondary ?? plusBackground
+                  : plusBackground,
                 borderColor: barBackground,
                 opacity: isCreatingQuickWorkout ? 0.72 : 1,
               },
             ]}
           >
-            {activeWorkoutTimer ? (
-              <Text
-                adjustsFontSizeToFit
-                numberOfLines={1}
-                style={[styles.activeTimerText, { color: plusIconColor }]}
-              >
-                {formatTime(activeWorkoutElapsed)}
-              </Text>
+            {shouldShowCenterTimer ? (
+              <>
+                {isRestTimerActive && (
+                  <View pointerEvents="none" style={styles.restPauseBackground}>
+                    <View
+                      style={[
+                        styles.restPauseBackgroundBar,
+                        { backgroundColor: plusIconColor },
+                      ]}
+                    />
+                    <View
+                      style={[
+                        styles.restPauseBackgroundBar,
+                        { backgroundColor: plusIconColor },
+                      ]}
+                    />
+                  </View>
+                )}
+                <Text
+                  adjustsFontSizeToFit
+                  numberOfLines={1}
+                  style={[styles.activeTimerText, { color: plusIconColor }]}
+                >
+                  {formatTime(centerTimerValue)}
+                </Text>
+              </>
             ) : (
               <Plus
                 width={34}
@@ -756,6 +813,23 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.36,
     shadowRadius: 18,
     elevation: 12,
+    overflow: "hidden",
+  },
+  restPauseBackground: {
+    position: "absolute",
+    top: 15,
+    left: 0,
+    right: 0,
+    height: 42,
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 6,
+    opacity: 0.18,
+  },
+  restPauseBackgroundBar: {
+    width: 12,
+    height: 42,
+    borderRadius: 7,
   },
   activeTimerText: {
     maxWidth: 58,
@@ -764,5 +838,6 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     fontVariant: ["tabular-nums"],
     textAlign: "center",
+    zIndex: 1,
   },
 });
