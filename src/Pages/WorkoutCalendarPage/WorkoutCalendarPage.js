@@ -194,6 +194,22 @@ function isProgramDaySick(programDay) {
   );
 }
 
+function getProgramDayLocation(programDay) {
+  const locationParts = [
+    programDay?.mesocycle_number
+      ? `Mesocycle ${programDay.mesocycle_number}`
+      : null,
+    programDay?.microcycle_number ? `Week ${programDay.microcycle_number}` : null,
+    [programDay?.weekday, programDay?.date].filter(Boolean).join(" "),
+  ].filter(Boolean);
+
+  return locationParts.length ? locationParts.join(" - ") : "Program day";
+}
+
+function getProgramCopyLocation(programDay) {
+  return `Add to ${getProgramDayLocation(programDay)}`;
+}
+
 const WorkoutCalendarPage = () => {
   const db = useSQLiteContext();
   const navigation = useNavigation();
@@ -241,7 +257,7 @@ const WorkoutCalendarPage = () => {
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor ?? theme.text;
   const primaryColor = theme.primary ?? "#f7742e";
   const secondaryColor = theme.secondary ?? "#60daac";
-  const modalCardSurface = theme.uiBackground ?? theme.background;
+  const modalCardSurface = theme.fields ?? theme.cardBackground ?? theme.background;
   const actionTextColor = theme.textInverted ?? theme.cardBackground ?? "#141414";
   const rawVisibleMonthIndex = visibleMonthOffset - monthOffsetRange.start;
   const monthPages = useMemo(
@@ -1128,8 +1144,7 @@ const WorkoutCalendarPage = () => {
                 {programDay.program_name}
               </ThemedText>
               <ThemedText style={styles.programTargetMeta} setColor={quietText}>
-                Mesocycle {programDay.mesocycle_number} - Week{" "}
-                {programDay.microcycle_number}
+                {getProgramCopyLocation(programDay)}
               </ThemedText>
             </TouchableOpacity>
           ))}
@@ -1145,8 +1160,8 @@ const WorkoutCalendarPage = () => {
       >
         <ThemedText style={styles.programTargetDate} setColor={quietText}>
           {pendingCopyTarget?.dateLabel
-            ? `There is a program on ${pendingCopyTarget.dateLabel}.`
-            : "There is a program on this date."}
+            ? `There is a program on ${pendingCopyTarget.dateLabel}. Add this workout to the program or keep it as a single workout?`
+            : "There is a program on this date. Add this workout to the program or keep it as a single workout?"}
         </ThemedText>
         <ScrollView
           style={styles.programTargetList}
@@ -1175,8 +1190,7 @@ const WorkoutCalendarPage = () => {
                 {programDay.program_name ?? "Program"}
               </ThemedText>
               <ThemedText style={styles.programTargetMeta} setColor={quietText}>
-                Mesocycle {programDay.mesocycle_number} - Week{" "}
-                {programDay.microcycle_number}
+                {getProgramCopyLocation(programDay)}
               </ThemedText>
             </TouchableOpacity>
           ))}
@@ -1200,10 +1214,10 @@ const WorkoutCalendarPage = () => {
             ]}
           >
             <ThemedText style={styles.programTargetName} setColor={titleColor}>
-              Calendar only
+              Single workout
             </ThemedText>
             <ThemedText style={styles.programTargetMeta} setColor={quietText}>
-              Show it in Workout Calendar without adding it to a program.
+              Keep it standing on its own in Workout Calendar.
             </ThemedText>
           </TouchableOpacity>
         </ScrollView>
@@ -1267,8 +1281,7 @@ const WorkoutCalendarPage = () => {
                     {programDay.program_name}
                   </ThemedText>
                   <ThemedText style={styles.programDayMeta} setColor={quietText}>
-                    Mesocycle {programDay.mesocycle_number} - Week{" "}
-                    {programDay.microcycle_number}
+                    {getProgramDayLocation(programDay)}
                   </ThemedText>
                 </View>
               </View>

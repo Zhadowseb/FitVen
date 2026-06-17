@@ -28,11 +28,24 @@ import { formatDate } from "../../Utils/dateUtils";
 import Run from "./WorkoutTypes/Run/Run";
 import Resistance from "./WorkoutTypes/Resistance/Resistance";
 
+function getProgramCopyLocation(target) {
+  const locationParts = [
+    target?.mesocycle_number ? `Mesocycle ${target.mesocycle_number}` : null,
+    target?.microcycle_number ? `Week ${target.microcycle_number}` : null,
+    [target?.weekday, target?.date].filter(Boolean).join(" "),
+  ].filter(Boolean);
+
+  return locationParts.length
+    ? `Add to ${locationParts.join(" - ")}`
+    : "Add to this program day";
+}
+
 const WorkoutPage = ({ route }) => {
   const db = useSQLiteContext();
   const navigation = useNavigation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const fieldSurface = theme.fields ?? theme.cardBackground ?? theme.background;
 
   const {
     workout_id,
@@ -414,8 +427,8 @@ const WorkoutPage = ({ route }) => {
       >
         <ThemedText style={styles.copyTargetDescription}>
           {pendingCopyTarget?.dateLabel
-            ? `There is a program on ${pendingCopyTarget.dateLabel}. Add this workout to the program or keep it calendar-only?`
-            : "There is a program on this date. Add this workout to the program or keep it calendar-only?"}
+            ? `There is a program on ${pendingCopyTarget.dateLabel}. Add this workout to the program or keep it as a single workout?`
+            : "There is a program on this date. Add this workout to the program or keep it as a single workout?"}
         </ThemedText>
 
         <View style={styles.copyTargetList}>
@@ -430,8 +443,7 @@ const WorkoutPage = ({ route }) => {
               style={[
                 styles.copyTargetOption,
                 {
-                  backgroundColor:
-                    theme.uiBackground ?? theme.cardBackground ?? theme.background,
+                  backgroundColor: fieldSurface,
                   borderColor: theme.cardBorder ?? theme.iconColor,
                   opacity: isCopyingWorkout ? 0.62 : 1,
                 },
@@ -444,8 +456,7 @@ const WorkoutPage = ({ route }) => {
                 style={styles.copyTargetMeta}
                 setColor={theme.quietText ?? theme.iconColor}
               >
-                Mesocycle {target.mesocycle_number} - Week{" "}
-                {target.microcycle_number}
+                {getProgramCopyLocation(target)}
               </ThemedText>
             </TouchableOpacity>
           ))}
@@ -457,19 +468,20 @@ const WorkoutPage = ({ route }) => {
             style={[
               styles.copyTargetOption,
               {
+                backgroundColor: fieldSurface,
                 borderColor: theme.cardBorder ?? theme.iconColor,
                 opacity: isCopyingWorkout ? 0.62 : 1,
               },
             ]}
           >
             <ThemedText style={styles.copyTargetTitle}>
-              Calendar only
+              Single workout
             </ThemedText>
             <ThemedText
               style={styles.copyTargetMeta}
               setColor={theme.quietText ?? theme.iconColor}
             >
-              Show it in Workout Calendar without adding it to a program.
+              Keep it standing on its own in Workout Calendar.
             </ThemedText>
           </TouchableOpacity>
         </View>
