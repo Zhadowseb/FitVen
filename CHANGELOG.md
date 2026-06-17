@@ -3,6 +3,7 @@
 ## [0.17.25] - Unreleased
 ### Changed
 - Speed up Workout Calendar by loading the visible month from local data before cloud sync and prefetching adjacent months afterward.
+- Keep Workout Calendar swipe paging to one month at a time while recentering the pager.
 - Add calendar database indexes for workout, day, sickness, exercise, and set lookups.
 
 ---

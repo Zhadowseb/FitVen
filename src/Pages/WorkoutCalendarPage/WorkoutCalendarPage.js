@@ -210,6 +210,8 @@ const WorkoutCalendarPage = () => {
   const calendarMountedRef = useRef(false);
   const calendarLoadRequestRef = useRef(0);
   const loadCalendarWorkoutsRef = useRef(null);
+  const monthPagerRecenteringRef = useRef(false);
+  const monthPagerRecenteringTimeoutRef = useRef(null);
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const { width, height } = useWindowDimensions();
@@ -384,6 +386,7 @@ const WorkoutCalendarPage = () => {
 
     return () => {
       calendarMountedRef.current = false;
+      clearTimeout(monthPagerRecenteringTimeoutRef.current);
     };
   }, []);
 
@@ -544,6 +547,8 @@ const WorkoutCalendarPage = () => {
   const showMonthOffset = useCallback(
     (nextMonthOffset) => {
       pendingScrollModeRef.current = "instant";
+      monthPagerRecenteringRef.current = false;
+      clearTimeout(monthPagerRecenteringTimeoutRef.current);
       visibleMonthOffsetRef.current = nextMonthOffset;
       setVisibleMonthOffset(nextMonthOffset);
       setMonthOffsetRange(getMonthOffsetRange(nextMonthOffset));
@@ -559,11 +564,36 @@ const WorkoutCalendarPage = () => {
       Math.max(nextIndex, 0),
       monthPages.length - 1
     );
-    const nextMonthOffset = monthOffsetRange.start + clampedIndex;
-    pendingScrollModeRef.current = "instant";
+    const monthDelta = clampedIndex - visibleMonthIndex;
+
+    if (monthPagerRecenteringRef.current) {
+      if (monthDelta === 0) {
+        monthPagerRecenteringRef.current = false;
+        clearTimeout(monthPagerRecenteringTimeoutRef.current);
+      }
+
+      return;
+    }
+
+    if (monthDelta === 0) {
+      return;
+    }
+
+    const nextMonthOffset = visibleMonthOffsetRef.current + monthDelta;
+    monthPagerRecenteringRef.current = true;
+    pendingScrollModeRef.current = null;
     visibleMonthOffsetRef.current = nextMonthOffset;
+    monthPagerRef.current?.scrollTo({
+      x: INITIAL_VISIBLE_MONTH_INDEX * pageWidth,
+      y: 0,
+      animated: false,
+    });
     setVisibleMonthOffset(nextMonthOffset);
     setMonthOffsetRange(getMonthOffsetRange(nextMonthOffset));
+    clearTimeout(monthPagerRecenteringTimeoutRef.current);
+    monthPagerRecenteringTimeoutRef.current = setTimeout(() => {
+      monthPagerRecenteringRef.current = false;
+    }, 160);
   };
 
   const openWorkout = (workout) => {
