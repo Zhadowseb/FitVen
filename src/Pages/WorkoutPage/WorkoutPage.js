@@ -23,6 +23,7 @@ import Reload from "../../Resources/Icons/UI-icons/Reload";
 import Name from "../../Resources/Icons/UI-icons/Name";
 import Social from "../../Resources/Icons/UI-icons/Social";
 import { programService, workoutService } from "../../Services";
+import { formatDate } from "../../Utils/dateUtils";
 
 import Run from "./WorkoutTypes/Run/Run";
 import Resistance from "./WorkoutTypes/Resistance/Resistance";
@@ -51,6 +52,8 @@ const WorkoutPage = ({ route }) => {
   const [metadata, setMetadata] = useState(null);
   const [restartRequestKey, setRestartRequestKey] = useState(0);
   const [isRepostingWorkoutPost, setIsRepostingWorkoutPost] = useState(false);
+  const [isCopyingWorkout, setIsCopyingWorkout] = useState(false);
+  const [pendingCopyTarget, setPendingCopyTarget] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -137,24 +140,89 @@ const WorkoutPage = ({ route }) => {
     }
   };
 
-  const copyWorkoutToDate = async (selectedDate) => {
-    if (!programId) {
-      console.error("Missing program_id for workout copy.");
+  const closeCopyTargetModal = () => {
+    if (isCopyingWorkout) {
       return;
     }
 
+    setPendingCopyTarget(null);
+  };
+
+  const copyWorkoutToProgramTarget = async (target, selectedDate) => {
+    if (!target?.day_id || isCopyingWorkout) {
+      return;
+    }
+
+    setIsCopyingWorkout(true);
     try {
-      const copiedWorkoutId = await programService.copyWorkoutToDate(db, {
+      const copiedWorkoutId = await programService.copyWorkoutToProgramDay(db, {
         workoutId: workout_id,
-        programId,
-        date: selectedDate,
+        dayId: target.day_id,
+        date: target.date ?? selectedDate,
       });
 
       if (!copiedWorkoutId) {
         console.warn("No day found for date");
       }
+
+      setPendingCopyTarget(null);
     } catch (error) {
       console.error("Copy workout failed:", error);
+      Alert.alert("Could not copy workout", "Please try again.");
+    } finally {
+      setIsCopyingWorkout(false);
+    }
+  };
+
+  const copyWorkoutToCalendarOnly = async (selectedDate) => {
+    if (isCopyingWorkout) {
+      return;
+    }
+
+    setIsCopyingWorkout(true);
+    try {
+      await programService.copyWorkoutToStandaloneDate(db, {
+        workoutId: workout_id,
+        date: selectedDate,
+      });
+      setPendingCopyTarget(null);
+    } catch (error) {
+      console.error("Copy standalone workout failed:", error);
+      Alert.alert("Could not copy workout", "Please try again.");
+    } finally {
+      setIsCopyingWorkout(false);
+    }
+  };
+
+  const copyWorkoutToDate = async (selectedDate) => {
+    try {
+      const programTargets = await programService.getWorkoutCopyProgramTargets(db, {
+        date: selectedDate,
+      });
+
+      if (programTargets.length === 0) {
+        await copyWorkoutToCalendarOnly(selectedDate);
+        return;
+      }
+
+      if (programId) {
+        const preferredProgramTarget =
+          programTargets.find(
+            (target) => Number(target.program_id) === Number(programId)
+          ) ?? programTargets[0];
+
+        await copyWorkoutToProgramTarget(preferredProgramTarget, selectedDate);
+        return;
+      }
+
+      setPendingCopyTarget({
+        date: selectedDate,
+        dateLabel: formatDate(selectedDate),
+        programTargets,
+      });
+    } catch (error) {
+      console.error("Copy workout target lookup failed:", error);
+      Alert.alert("Could not copy workout", "Please try again.");
     }
   };
 
@@ -338,6 +406,74 @@ const WorkoutPage = ({ route }) => {
           }}
         />
       )}
+
+      <ThemedModal
+        visible={Boolean(pendingCopyTarget)}
+        title="Copy to program?"
+        onClose={closeCopyTargetModal}
+      >
+        <ThemedText style={styles.copyTargetDescription}>
+          {pendingCopyTarget?.dateLabel
+            ? `There is a program on ${pendingCopyTarget.dateLabel}. Add this workout to the program or keep it calendar-only?`
+            : "There is a program on this date. Add this workout to the program or keep it calendar-only?"}
+        </ThemedText>
+
+        <View style={styles.copyTargetList}>
+          {(pendingCopyTarget?.programTargets ?? []).map((target) => (
+            <TouchableOpacity
+              key={`${target.program_id}-${target.day_id}`}
+              activeOpacity={0.82}
+              disabled={isCopyingWorkout}
+              onPress={() =>
+                copyWorkoutToProgramTarget(target, pendingCopyTarget.date)
+              }
+              style={[
+                styles.copyTargetOption,
+                {
+                  backgroundColor:
+                    theme.uiBackground ?? theme.cardBackground ?? theme.background,
+                  borderColor: theme.cardBorder ?? theme.iconColor,
+                  opacity: isCopyingWorkout ? 0.62 : 1,
+                },
+              ]}
+            >
+              <ThemedText style={styles.copyTargetTitle}>
+                {target.program_name ?? "Program"}
+              </ThemedText>
+              <ThemedText
+                style={styles.copyTargetMeta}
+                setColor={theme.quietText ?? theme.iconColor}
+              >
+                Mesocycle {target.mesocycle_number} - Week{" "}
+                {target.microcycle_number}
+              </ThemedText>
+            </TouchableOpacity>
+          ))}
+
+          <TouchableOpacity
+            activeOpacity={0.82}
+            disabled={isCopyingWorkout}
+            onPress={() => copyWorkoutToCalendarOnly(pendingCopyTarget.date)}
+            style={[
+              styles.copyTargetOption,
+              {
+                borderColor: theme.cardBorder ?? theme.iconColor,
+                opacity: isCopyingWorkout ? 0.62 : 1,
+              },
+            ]}
+          >
+            <ThemedText style={styles.copyTargetTitle}>
+              Calendar only
+            </ThemedText>
+            <ThemedText
+              style={styles.copyTargetMeta}
+              setColor={theme.quietText ?? theme.iconColor}
+            >
+              Show it in Workout Calendar without adding it to a program.
+            </ThemedText>
+          </TouchableOpacity>
+        </View>
+      </ThemedModal>
 
       <ThemedModal
         visible={labelModalVisible}

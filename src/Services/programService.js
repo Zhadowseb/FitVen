@@ -6944,6 +6944,20 @@ export async function getDayByDate(db, { programId, date }) {
   return programRepository.getDayByDate(db, { programId, date });
 }
 
+export async function getWorkoutCopyProgramTargets(db, { date }) {
+  const normalizedDate =
+    date instanceof Date ? formatDate(date) : normalizeLocalDateString(date);
+  const normalizedIsoDate = normalizeIsoDateString(normalizedDate);
+
+  if (!normalizedIsoDate) {
+    return [];
+  }
+
+  return programRepository.getActiveProgramDaysByIsoDate(db, {
+    isoDate: normalizedIsoDate,
+  });
+}
+
 export async function createWorkoutForDay(
   db,
   { date, dayId, workoutType, label }
@@ -7026,23 +7040,22 @@ export async function createQuickWorkout(
   return createdWorkout;
 }
 
-export async function copyWorkoutToDate(
-  db,
-  { workoutId, programId, date }
-) {
-  const copiedWorkoutId = await withTransaction(db, async () => {
-    const targetDay = await programRepository.getDayByDate(db, {
-      programId,
-      date: formatDate(date),
-    });
+export async function copyWorkoutToProgramDay(db, { workoutId, dayId, date }) {
+  const normalizedDate =
+    date instanceof Date ? formatDate(date) : normalizeLocalDateString(date);
 
-    if (!targetDay?.day_id) {
+  if (!normalizedDate) {
+    throw new Error("A valid workout date is required.");
+  }
+
+  const copiedWorkoutId = await withTransaction(db, async () => {
+    if (!dayId) {
       return null;
     }
 
     const workoutResult = await programRepository.copyWorkoutIntoDay(db, {
-      date: formatDate(date),
-      dayId: targetDay.day_id,
+      date: normalizedDate,
+      dayId,
       workoutId,
     });
 
@@ -7051,10 +7064,7 @@ export async function copyWorkoutToDate(
       targetWorkoutId: workoutResult.lastInsertRowId,
     });
 
-    const hierarchy = await workoutRepository.getDayHierarchyIds(
-      db,
-      targetDay.day_id
-    );
+    const hierarchy = await workoutRepository.getDayHierarchyIds(db, dayId);
     await workoutService.refreshWorkoutHierarchyCompletionByIds(db, {
       dayId: hierarchy?.day_id,
       microcycleId: hierarchy?.microcycle_id,
@@ -7071,6 +7081,63 @@ export async function copyWorkoutToDate(
   }
 
   return copiedWorkoutId;
+}
+
+export async function copyWorkoutToDate(
+  db,
+  { workoutId, programId, date }
+) {
+  const normalizedDate =
+    date instanceof Date ? formatDate(date) : normalizeLocalDateString(date);
+
+  if (!normalizedDate) {
+    throw new Error("A valid workout date is required.");
+  }
+
+  if (!programId) {
+    return null;
+  }
+
+  const targetDay = await programRepository.getDayByDate(db, {
+    programId,
+    date: normalizedDate,
+  });
+
+  if (!targetDay?.day_id) {
+    return null;
+  }
+
+  return copyWorkoutToProgramDay(db, {
+    workoutId,
+    dayId: targetDay.day_id,
+    date: normalizedDate,
+  });
+}
+
+export async function copyProgramWorkoutToDate(
+  db,
+  { workoutId, programId, date }
+) {
+  const programTargets = await getWorkoutCopyProgramTargets(db, { date });
+  const preferredProgramTarget =
+    programTargets.find(
+      (target) => Number(target.program_id) === Number(programId)
+    ) ?? programTargets[0];
+
+  if (preferredProgramTarget?.day_id) {
+    return copyWorkoutToProgramDay(db, {
+      workoutId,
+      dayId: preferredProgramTarget.day_id,
+      date: preferredProgramTarget.date ?? date,
+    });
+  }
+
+  const copiedWorkout = await copyWorkoutToStandaloneDate(db, {
+    workoutId,
+    date,
+  });
+
+  return copiedWorkout?.workout_id ?? null;
 }
 
 export async function copyWorkoutToStandaloneDate(

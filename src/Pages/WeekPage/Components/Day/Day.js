@@ -107,7 +107,7 @@ const Day = ( {day, program_id, microcycle_id} ) => {
 
     const copyWorkoutToDate = async (workoutId, date) => {
         try{
-            const copiedWorkoutId = await programRepository.copyWorkoutToDate(db, {
+            const copiedWorkoutId = await programRepository.copyProgramWorkoutToDate(db, {
                 workoutId,
                 programId: program_id,
                 date,

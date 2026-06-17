@@ -1193,6 +1193,36 @@ export async function getProgramDaysBetweenDates(db, { startIsoDate, endIsoDate 
   );
 }
 
+export async function getActiveProgramDaysByIsoDate(db, { isoDate }) {
+  const dayIsoDateSql = localDateToIsoSql("d.date");
+
+  return db.getAllAsync(
+    `SELECT
+        d.day_id,
+        d.date,
+        ${dayIsoDateSql} AS date_iso,
+        d.Weekday AS weekday,
+        d.program_id,
+        p.program_name,
+        p.start_date,
+        p.status,
+        mc.microcycle_number,
+        m.mesocycle_number
+     FROM Day d
+     JOIN Program p ON p.program_id = d.program_id
+     JOIN Microcycle mc ON mc.microcycle_id = d.microcycle_id
+     JOIN Mesocycle m ON m.mesocycle_id = mc.mesocycle_id
+     WHERE d.deleted_at IS NULL
+       AND p.deleted_at IS NULL
+       AND p.status != 'NOT_STARTED'
+       AND mc.deleted_at IS NULL
+       AND m.deleted_at IS NULL
+       AND date(${dayIsoDateSql}) = date(?)
+     ORDER BY p.program_name COLLATE NOCASE ASC, d.day_id ASC;`,
+    [isoDate]
+  );
+}
+
 export async function getSetDoneStatesByDayId(db, dayId) {
   return db.getAllAsync(
     `SELECT s.done
