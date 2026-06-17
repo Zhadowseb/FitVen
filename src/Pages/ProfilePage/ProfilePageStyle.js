@@ -43,6 +43,15 @@ export default StyleSheet.create({
     borderWidth: 1,
     borderRadius: 24,
   },
+  aboutCard: {
+    marginHorizontal: 0,
+    marginTop: 16,
+    marginBottom: 0,
+    paddingHorizontal: 18,
+    paddingVertical: 18,
+    borderWidth: 1,
+    borderRadius: 24,
+  },
   settingsCard: {
     marginHorizontal: 0,
     marginTop: 16,
@@ -175,6 +184,36 @@ export default StyleSheet.create({
     fontSize: 15,
     fontWeight: "800",
     lineHeight: 20,
+  },
+  aboutList: {
+    marginTop: 6,
+  },
+  aboutRow: {
+    minHeight: 42,
+    paddingVertical: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 16,
+  },
+  aboutRowDivider: {
+    borderBottomWidth: 1,
+  },
+  aboutLabel: {
+    flexShrink: 0,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "800",
+    letterSpacing: 0.6,
+    textTransform: "uppercase",
+  },
+  aboutValue: {
+    flex: 1,
+    minWidth: 0,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "700",
+    textAlign: "right",
   },
   avatarSection: {
     marginTop: 18,

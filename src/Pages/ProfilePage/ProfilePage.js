@@ -1,5 +1,6 @@
 import {
   Alert,
+  Platform,
   Pressable,
   TouchableOpacity,
   View,
@@ -7,9 +8,12 @@ import {
 } from "react-native";
 import { useCallback, useState } from "react";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import * as Application from "expo-application";
+import Constants from "expo-constants";
 import * as ImagePicker from "expo-image-picker";
 import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
 
+import appConfig from "../../../app.json";
 import styles from "./ProfilePageStyle";
 import { Colors } from "../../Resources/GlobalStyling/colors";
 import { logout } from "../../Database/supaBaseClient";
@@ -58,6 +62,52 @@ const FeedbackGlow = ({
   </Svg>
 );
 
+function getNormalizedString(value) {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  const normalizedValue = String(value).trim();
+
+  return normalizedValue.length > 0 ? normalizedValue : null;
+}
+
+function getConfiguredBuildVersion() {
+  if (Platform.OS === "ios") {
+    return getNormalizedString(appConfig?.expo?.ios?.buildNumber);
+  }
+
+  if (Platform.OS === "android") {
+    return getNormalizedString(appConfig?.expo?.android?.versionCode);
+  }
+
+  return null;
+}
+
+function getPlatformLabel() {
+  const platformName = Platform.OS === "ios"
+    ? "iOS"
+    : Platform.OS === "android"
+      ? "Android"
+      : Platform.OS;
+  const platformVersion = getNormalizedString(Platform.Version);
+
+  return platformVersion ? `${platformName} ${platformVersion}` : platformName;
+}
+
+function getRuntimeLabel() {
+  const executionEnvironment = getNormalizedString(
+    Constants?.executionEnvironment
+  );
+  const appOwnership = getNormalizedString(Constants?.appOwnership);
+
+  if (executionEnvironment && appOwnership) {
+    return `${executionEnvironment} / ${appOwnership}`;
+  }
+
+  return executionEnvironment ?? appOwnership ?? "Unknown";
+}
+
 export default function ProfilePage() {
   const navigation = useNavigation();
   const colorScheme = useColorScheme();
@@ -105,6 +155,37 @@ export default function ProfilePage() {
     : profile?.avatarUrl
       ? "Change photo"
       : "Upload photo";
+  const aboutRows = [
+    {
+      label: "App",
+      value:
+        getNormalizedString(Application.applicationName) ??
+        getNormalizedString(appConfig?.expo?.name) ??
+        "FitVen",
+    },
+    {
+      label: "Version",
+      value:
+        getNormalizedString(Application.nativeApplicationVersion) ??
+        getNormalizedString(appConfig?.expo?.version) ??
+        "Unknown",
+    },
+    {
+      label: "Build",
+      value:
+        getNormalizedString(Application.nativeBuildVersion) ??
+        getConfiguredBuildVersion() ??
+        "Unknown",
+    },
+    {
+      label: "Runtime",
+      value: getRuntimeLabel(),
+    },
+    {
+      label: "Platform",
+      value: getPlatformLabel(),
+    },
+  ];
 
   useFocusEffect(
     useCallback(() => {
@@ -794,6 +875,56 @@ export default function ProfilePage() {
                   {logoutError}
                 </ThemedText>
               ) : null}
+            </View>
+          </ThemedCard>
+
+          <ThemedCard
+            style={[
+              styles.aboutCard,
+              {
+                backgroundColor: cardSurface,
+                borderColor: cardBorder,
+              },
+            ]}
+          >
+            <ThemedText
+              size={12}
+              style={styles.cardEyebrow}
+              setColor={headerEyebrowColor}
+            >
+              About
+            </ThemedText>
+            <ThemedTitle type="h3" style={styles.cardTitle}>
+              App information
+            </ThemedTitle>
+
+            <View style={styles.aboutList}>
+              {aboutRows.map((row, index) => {
+                const isLastRow = index === aboutRows.length - 1;
+
+                return (
+                  <View
+                    key={row.label}
+                    style={[
+                      styles.aboutRow,
+                      !isLastRow && styles.aboutRowDivider,
+                      !isLastRow && { borderBottomColor: cardBorder },
+                    ]}
+                  >
+                    <ThemedText style={styles.aboutLabel} setColor={quietText}>
+                      {row.label}
+                    </ThemedText>
+
+                    <ThemedText
+                      style={styles.aboutValue}
+                      setColor={titleColor}
+                      numberOfLines={2}
+                    >
+                      {row.value}
+                    </ThemedText>
+                  </View>
+                );
+              })}
             </View>
           </ThemedCard>
         </ThemedKeyboardProtection>

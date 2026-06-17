@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.17.24] - Unreleased
+### Changed
+- Add an About section at the bottom of Profile with app version, build, runtime, and platform details.
+
+---
 ## [0.17.23] - Unreleased
 ### Changed
 - Add program export/import using FitApp program JSON files, including program structure, workouts, exercises, sets, run rows, estimated 1RMs, and program display settings.
