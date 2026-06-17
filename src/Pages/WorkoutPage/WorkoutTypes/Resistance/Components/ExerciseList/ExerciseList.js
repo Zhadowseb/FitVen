@@ -173,7 +173,7 @@ const ExerciseList = ({
         (set) => Number(set.sets_id) === Number(setsId)
       );
 
-      if (setIndex < 0 || setIndex >= sets.length - 1) {
+      if (setIndex < 0) {
         continue;
       }
 

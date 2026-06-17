@@ -225,8 +225,8 @@ const SetList = ({
     }),
     {}
   );
-  const showRestBetweenSets =
-    Boolean(resolvedVisibleColumns.rest) && displayedSets.length > 1;
+  const showRestForSets =
+    Boolean(resolvedVisibleColumns.rest) && displayedSets.length > 0;
   const settingsColumnKey = renderedVisibleColumns.done
     ? "done"
     : activeColumns[activeColumns.length - 1]?.key;
@@ -786,14 +786,10 @@ const SetList = ({
           })}
         </View>
 
-        {displayedSets.map((set, rowIndex) => {
-          const shouldRenderRestDivider =
-            showRestBetweenSets && rowIndex < displayedSets.length - 1;
-
-          return shouldRenderRestDivider
-            ? renderRestDivider(set, getRenderedColumns(set))
-            : null;
-        })}
+        {showRestForSets &&
+          displayedSets.map((set) =>
+            renderRestDivider(set, getRenderedColumns(set))
+          )}
       </ThemedCard>
 
       <ThemedBottomSheet
