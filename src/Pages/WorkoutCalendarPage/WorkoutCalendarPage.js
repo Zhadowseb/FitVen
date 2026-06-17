@@ -10,6 +10,7 @@ import {
   useColorScheme,
   useWindowDimensions,
 } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
 
@@ -17,6 +18,7 @@ import styles from "./WorkoutCalendarPageStyle";
 import { programService } from "../../Services";
 import { Colors } from "../../Resources/GlobalStyling/colors";
 import ArrowLeft from "../../Resources/Icons/UI-icons/ArrowLeft";
+import Copy from "../../Resources/Icons/UI-icons/Copy";
 import Delete from "../../Resources/Icons/UI-icons/Delete";
 import PlusCircled from "../../Resources/Icons/UI-icons/PlusCircled";
 import { getWorkoutIconConfig } from "../../Resources/Icons/WorkoutLabels";
@@ -50,8 +52,12 @@ const MONTH_LABELS = [
 ];
 const WEEKDAY_LABELS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 const DAY_CONTEXT_MENU_WIDTH = 266;
-const DAY_CONTEXT_MENU_HEIGHT = 210;
+const DAY_CONTEXT_MENU_HEIGHT = 274;
 const DAY_CONTEXT_MENU_MARGIN = 18;
+const WORKOUT_PICK_MODE = {
+  COPY: "copy",
+  DELETE: "delete",
+};
 
 const DayContextMenuAction = ({
   children,
@@ -216,6 +222,10 @@ const WorkoutCalendarPage = () => {
   const [programTargetModalVisible, setProgramTargetModalVisible] =
     useState(false);
   const [pickWorkoutModalVisible, setPickWorkoutModalVisible] = useState(false);
+  const [workoutPickMode, setWorkoutPickMode] = useState(null);
+  const [copyDatePickerVisible, setCopyDatePickerVisible] = useState(false);
+  const [copySourceWorkout, setCopySourceWorkout] = useState(null);
+  const [pendingCopyTarget, setPendingCopyTarget] = useState(null);
   const [monthOffsetRange, setMonthOffsetRange] = useState(
     () => getMonthOffsetRange(INITIAL_VISIBLE_MONTH_OFFSET)
   );
@@ -223,6 +233,7 @@ const WorkoutCalendarPage = () => {
     INITIAL_VISIBLE_MONTH_OFFSET
   );
   const [isLoading, setIsLoading] = useState(false);
+  const [isCopyingWorkout, setIsCopyingWorkout] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const titleColor = theme.title ?? theme.text;
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
@@ -357,6 +368,16 @@ const WorkoutCalendarPage = () => {
       : selectedProgramDate
         ? `Programs on ${selectedProgramDate}`
         : "Programs";
+  const copyDatePickerValue = useMemo(() => {
+    const fallbackDate = new Date();
+
+    if (!copySourceWorkout?.date) {
+      return fallbackDate;
+    }
+
+    const parsedDate = parseCustomDate(copySourceWorkout.date);
+    return Number.isNaN(parsedDate.getTime()) ? fallbackDate : parsedDate;
+  }, [copySourceWorkout?.date]);
 
   useEffect(() => {
     visibleMonthOffsetRef.current = visibleMonthOffset;
@@ -568,6 +589,7 @@ const WorkoutCalendarPage = () => {
     try {
       await programService.deleteWorkout(db, workout.workout_id);
       setPickWorkoutModalVisible(false);
+      setWorkoutPickMode(null);
       setDayOptionsVisible(false);
       setSelectedCalendarDay(null);
       await loadCalendarWorkouts();
@@ -575,6 +597,163 @@ const WorkoutCalendarPage = () => {
       console.error("Failed to delete workout from calendar:", error);
       Alert.alert("Could not delete workout", "Please try again.");
     }
+  };
+
+  const completeWorkoutCopy = async () => {
+    setPendingCopyTarget(null);
+    setCopySourceWorkout(null);
+    setSelectedCalendarDay(null);
+    setDayOptionsVisible(false);
+    setPickWorkoutModalVisible(false);
+    setWorkoutPickMode(null);
+    await loadCalendarWorkouts();
+  };
+
+  const copyWorkoutToProgramTarget = async (target) => {
+    const workout = pendingCopyTarget?.workout;
+
+    if (!target?.day_id || !workout?.workout_id || isCopyingWorkout) {
+      return;
+    }
+
+    setIsCopyingWorkout(true);
+
+    try {
+      const copiedWorkoutId = await programService.copyWorkoutToProgramDay(db, {
+        workoutId: workout.workout_id,
+        dayId: target.day_id,
+        date: target.date ?? pendingCopyTarget.date,
+      });
+
+      if (!copiedWorkoutId) {
+        throw new Error("The workout could not be copied.");
+      }
+
+      await completeWorkoutCopy();
+    } catch (error) {
+      console.error("Failed to copy workout to program day:", error);
+      Alert.alert("Could not copy workout", "Please try again.");
+    } finally {
+      setIsCopyingWorkout(false);
+    }
+  };
+
+  const copyWorkoutToCalendarOnly = async (workout, selectedDate) => {
+    if (!workout?.workout_id || isCopyingWorkout) {
+      return;
+    }
+
+    setIsCopyingWorkout(true);
+
+    try {
+      await programService.copyWorkoutToStandaloneDate(db, {
+        workoutId: workout.workout_id,
+        date: selectedDate,
+      });
+      await completeWorkoutCopy();
+    } catch (error) {
+      console.error("Failed to copy workout to calendar:", error);
+      Alert.alert("Could not copy workout", "Please try again.");
+    } finally {
+      setIsCopyingWorkout(false);
+    }
+  };
+
+  const copyProgramWorkoutToDate = async (workout, selectedDate) => {
+    if (!workout?.workout_id || isCopyingWorkout) {
+      return;
+    }
+
+    setIsCopyingWorkout(true);
+
+    try {
+      const copiedWorkoutId = await programService.copyProgramWorkoutToDate(db, {
+        workoutId: workout.workout_id,
+        programId: workout.program_id,
+        date: selectedDate,
+      });
+
+      if (!copiedWorkoutId) {
+        throw new Error("The workout could not be copied.");
+      }
+
+      await completeWorkoutCopy();
+    } catch (error) {
+      console.error("Failed to copy program workout from calendar:", error);
+      Alert.alert("Could not copy workout", "Please try again.");
+    } finally {
+      setIsCopyingWorkout(false);
+    }
+  };
+
+  const copyWorkoutToDate = async (workout, selectedDate) => {
+    if (!workout?.workout_id) {
+      return;
+    }
+
+    if (workout.program_id) {
+      await copyProgramWorkoutToDate(workout, selectedDate);
+      return;
+    }
+
+    try {
+      const programTargets = await programService.getWorkoutCopyProgramTargets(db, {
+        date: selectedDate,
+      });
+
+      if (programTargets.length === 0) {
+        await copyWorkoutToCalendarOnly(workout, selectedDate);
+        return;
+      }
+
+      setPendingCopyTarget({
+        workout,
+        date: selectedDate,
+        dateLabel: formatLocalDate(selectedDate),
+        programTargets,
+      });
+      setCopySourceWorkout(null);
+    } catch (error) {
+      console.error("Failed to resolve workout copy target:", error);
+      Alert.alert("Could not copy workout", "Please try again.");
+    }
+  };
+
+  const closeCopyTargetModal = () => {
+    if (isCopyingWorkout) {
+      return;
+    }
+
+    setPendingCopyTarget(null);
+  };
+
+  const startWorkoutCopy = (workout) => {
+    if (!workout?.workout_id) {
+      return;
+    }
+
+    closeDayOptions();
+    setCopySourceWorkout(workout);
+    setPickWorkoutModalVisible(false);
+    setWorkoutPickMode(null);
+    setCopyDatePickerVisible(true);
+  };
+
+  const beginCopyWorkout = () => {
+    const dayWorkouts = selectedCalendarDay?.workouts ?? [];
+
+    if (dayWorkouts.length === 0) {
+      return;
+    }
+
+    if (dayWorkouts.length === 1) {
+      startWorkoutCopy(dayWorkouts[0]);
+      return;
+    }
+
+    closeDayOptions();
+    setWorkoutPickMode(WORKOUT_PICK_MODE.COPY);
+    setPickWorkoutModalVisible(true);
   };
 
   const beginDeleteWorkout = () => {
@@ -586,6 +765,7 @@ const WorkoutCalendarPage = () => {
     }
 
     closeDayOptions();
+    setWorkoutPickMode(WORKOUT_PICK_MODE.DELETE);
     setPickWorkoutModalVisible(true);
   };
 
@@ -866,6 +1046,16 @@ const WorkoutCalendarPage = () => {
 
               {!!selectedCalendarDay?.workouts?.length && (
                 <DayContextMenuAction
+                  icon={<Copy width={22} height={22} />}
+                  onPress={beginCopyWorkout}
+                  textColor={secondaryColor}
+                >
+                  Copy workout
+                </DayContextMenuAction>
+              )}
+
+              {!!selectedCalendarDay?.workouts?.length && (
+                <DayContextMenuAction
                   icon={
                     <Delete
                       width={22}
@@ -883,6 +1073,25 @@ const WorkoutCalendarPage = () => {
           </View>
         </View>
       </Modal>
+
+      {copyDatePickerVisible && (
+        <DateTimePicker
+          value={copyDatePickerValue}
+          mode="date"
+          display="default"
+          onChange={async (event, selectedDate) => {
+            const sourceWorkout = copySourceWorkout;
+            setCopyDatePickerVisible(false);
+
+            if (event.type !== "set" || !selectedDate || !sourceWorkout) {
+              setCopySourceWorkout(null);
+              return;
+            }
+
+            await copyWorkoutToDate(sourceWorkout, selectedDate);
+          }}
+        />
+      )}
 
       <ThemedModal
         visible={programTargetModalVisible}
@@ -927,11 +1136,94 @@ const WorkoutCalendarPage = () => {
         </ScrollView>
       </ThemedModal>
 
+      <ThemedModal
+        visible={Boolean(pendingCopyTarget)}
+        onClose={closeCopyTargetModal}
+        title="Copy to program?"
+        style={styles.programTargetModal}
+        contentStyle={styles.programTargetModalBody}
+      >
+        <ThemedText style={styles.programTargetDate} setColor={quietText}>
+          {pendingCopyTarget?.dateLabel
+            ? `There is a program on ${pendingCopyTarget.dateLabel}.`
+            : "There is a program on this date."}
+        </ThemedText>
+        <ScrollView
+          style={styles.programTargetList}
+          contentContainerStyle={styles.programTargetListContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {(pendingCopyTarget?.programTargets ?? []).map((programDay) => (
+            <TouchableOpacity
+              key={`${programDay.program_id}-${programDay.day_id}`}
+              activeOpacity={0.82}
+              disabled={isCopyingWorkout}
+              onPress={() => copyWorkoutToProgramTarget(programDay)}
+              style={[
+                styles.programTargetOption,
+                {
+                  backgroundColor: modalCardSurface,
+                  borderColor: cardBorder,
+                  opacity: isCopyingWorkout ? 0.62 : 1,
+                },
+              ]}
+            >
+              <ThemedText
+                style={styles.programTargetName}
+                setColor={titleColor}
+              >
+                {programDay.program_name ?? "Program"}
+              </ThemedText>
+              <ThemedText style={styles.programTargetMeta} setColor={quietText}>
+                Mesocycle {programDay.mesocycle_number} - Week{" "}
+                {programDay.microcycle_number}
+              </ThemedText>
+            </TouchableOpacity>
+          ))}
+
+          <TouchableOpacity
+            activeOpacity={0.82}
+            disabled={isCopyingWorkout}
+            onPress={() =>
+              copyWorkoutToCalendarOnly(
+                pendingCopyTarget?.workout,
+                pendingCopyTarget?.date
+              )
+            }
+            style={[
+              styles.programTargetOption,
+              {
+                backgroundColor: modalCardSurface,
+                borderColor: cardBorder,
+                opacity: isCopyingWorkout ? 0.62 : 1,
+              },
+            ]}
+          >
+            <ThemedText style={styles.programTargetName} setColor={titleColor}>
+              Calendar only
+            </ThemedText>
+            <ThemedText style={styles.programTargetMeta} setColor={quietText}>
+              Show it in Workout Calendar without adding it to a program.
+            </ThemedText>
+          </TouchableOpacity>
+        </ScrollView>
+      </ThemedModal>
+
       <PickWorkoutModal
         workouts={selectedCalendarDay?.workouts ?? []}
         visible={pickWorkoutModalVisible}
-        onClose={() => setPickWorkoutModalVisible(false)}
-        onSubmit={deleteWorkoutFromCalendar}
+        onClose={() => {
+          setPickWorkoutModalVisible(false);
+          setWorkoutPickMode(null);
+        }}
+        onSubmit={(workout) => {
+          if (workoutPickMode === WORKOUT_PICK_MODE.COPY) {
+            startWorkoutCopy(workout);
+            return;
+          }
+
+          deleteWorkoutFromCalendar(workout);
+        }}
       />
 
       <ThemedModal
