@@ -4,6 +4,7 @@
 ### Changed
 - Move set rest into an editable overlay pill inside the existing Rest column, tied to the previous set without adding spacing between sets.
 - Default rest editing to minutes.
+- Add a Rest modal mirror option so editing one rest value can update every set's rest value in the exercise.
 - Start a rest countdown from the completed set's rest value, including the final set, while the workout is running, and show it in the workout timer and active workout menu circle.
 
 ---

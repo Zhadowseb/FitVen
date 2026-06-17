@@ -215,6 +215,16 @@ export default StyleSheet.create({
     restUnitModalContent: {
         flexGrow: 0,
     },
+    restSettingsSection: {
+        gap: 8,
+    },
+    restSettingsLabel: {
+        fontSize: 10,
+        lineHeight: 12,
+        fontWeight: "800",
+        textTransform: "uppercase",
+        letterSpacing: 1.4,
+    },
     restUnitToggle: {
         height: 44,
         borderRadius: 12,
@@ -234,6 +244,47 @@ export default StyleSheet.create({
         fontSize: 13,
         lineHeight: 16,
         fontWeight: "800",
+    },
+    restMirrorButton: {
+        minHeight: 58,
+        borderRadius: 12,
+        borderWidth: 1,
+        paddingHorizontal: 12,
+        paddingVertical: 9,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+    },
+    restMirrorTextGroup: {
+        flex: 1,
+        minWidth: 0,
+        paddingRight: 12,
+    },
+    restMirrorTitle: {
+        fontSize: 14,
+        lineHeight: 17,
+        fontWeight: "800",
+    },
+    restMirrorDescription: {
+        marginTop: 3,
+        fontSize: 11,
+        lineHeight: 14,
+        fontWeight: "600",
+    },
+    restMirrorSwitch: {
+        width: 42,
+        height: 24,
+        borderRadius: 999,
+        padding: 3,
+        justifyContent: "center",
+    },
+    restMirrorSwitchThumb: {
+        width: 18,
+        height: 18,
+        borderRadius: 999,
+    },
+    restMirrorSwitchThumbActive: {
+        alignSelf: "flex-end",
     },
 
 

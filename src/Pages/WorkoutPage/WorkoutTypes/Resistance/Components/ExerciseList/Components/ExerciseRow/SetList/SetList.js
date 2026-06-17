@@ -147,6 +147,7 @@ const SetList = ({
   const [noteModalText, setNoteModalText] = useState("");
   const [activeEditableCell, setActiveEditableCell] = useState(null);
   const [restUnit, setRestUnit] = useState(REST_UNIT_MINUTES);
+  const [mirrorRestValues, setMirrorRestValues] = useState(false);
   const [restUnitModalVisible, setRestUnitModalVisible] = useState(false);
   const [setRowLayouts, setSetRowLayouts] = useState({});
 
@@ -329,6 +330,38 @@ const SetList = ({
     });
 
     applyPersonalRecordSetIds(result?.personalRecordSetIds);
+    updateUI();
+  };
+
+  const updateRestPause = async (value, setId) => {
+    if (!mirrorRestValues) {
+      await updateField("pause", value, setId);
+      return;
+    }
+
+    const nextValue = value === "" ? null : Number(value);
+    const mirroredSetIds = displayedSets
+      .map((set) => set.sets_id)
+      .filter((id) => id !== null && id !== undefined);
+
+    setLocalSets((prev) =>
+      prev.map((set) => ({ ...set, pause: nextValue }))
+    );
+
+    set_selectedSet((prev) =>
+      prev ? { ...prev, pause: nextValue } : prev
+    );
+
+    await Promise.all(
+      mirroredSetIds.map((mirroredSetId) =>
+        weightliftingRepository.updateSetField(db, {
+          field: "pause",
+          value: nextValue,
+          setId: mirroredSetId,
+        })
+      )
+    );
+
     updateUI();
   };
 
@@ -679,11 +712,7 @@ const SetList = ({
                     value: formatRestUnitValue(set.pause),
                     suffixFormatter: getPauseSuffix,
                     onCommit: (value) =>
-                      updateField(
-                        "pause",
-                        getStoredPauseValue(value),
-                        set.sets_id
-                      ),
+                      updateRestPause(getStoredPauseValue(value), set.sets_id),
                   })}
                 </View>
               ) : null}
@@ -868,49 +897,107 @@ const SetList = ({
       <ThemedModal
         visible={restUnitModalVisible}
         onClose={() => setRestUnitModalVisible(false)}
-        title="Rest unit"
+        title="Rest"
         style={styles.restUnitModal}
         contentStyle={styles.restUnitModalContent}
       >
-        <View
-          style={[
-            styles.restUnitToggle,
-            {
-              backgroundColor: restUnitInactiveSurface,
-              borderColor: restUnitBorderColor,
-            },
-          ]}
-        >
-          {[
-            { unit: REST_UNIT_MINUTES, label: "Minutes" },
-            { unit: REST_UNIT_SECONDS, label: "Seconds" },
-          ].map((option) => {
-            const selected = restUnit === option.unit;
+        <View style={styles.restSettingsSection}>
+          <ThemedText
+            style={styles.restSettingsLabel}
+            setColor={theme.quietText}
+          >
+            Unit
+          </ThemedText>
 
-            return (
-              <TouchableOpacity
-                key={option.unit}
-                activeOpacity={0.82}
-                style={[
-                  styles.restUnitOption,
-                  selected && { backgroundColor: secondaryColor },
-                ]}
-                onPress={() => {
-                  setRestUnit(option.unit);
-                  setRestUnitModalVisible(false);
-                }}
-              >
-                <ThemedText
-                  style={styles.restUnitOptionText}
-                  setColor={
-                    selected ? selectedRestUnitTextColor : theme.text
-                  }
+          <View
+            style={[
+              styles.restUnitToggle,
+              {
+                backgroundColor: restUnitInactiveSurface,
+                borderColor: restUnitBorderColor,
+              },
+            ]}
+          >
+            {[
+              { unit: REST_UNIT_MINUTES, label: "Minutes" },
+              { unit: REST_UNIT_SECONDS, label: "Seconds" },
+            ].map((option) => {
+              const selected = restUnit === option.unit;
+
+              return (
+                <TouchableOpacity
+                  key={option.unit}
+                  activeOpacity={0.82}
+                  style={[
+                    styles.restUnitOption,
+                    selected && { backgroundColor: secondaryColor },
+                  ]}
+                  onPress={() => {
+                    setRestUnit(option.unit);
+                  }}
                 >
-                  {option.label}
-                </ThemedText>
-              </TouchableOpacity>
-            );
-          })}
+                  <ThemedText
+                    style={styles.restUnitOptionText}
+                    setColor={selected ? selectedRestUnitTextColor : theme.text}
+                  >
+                    {option.label}
+                  </ThemedText>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        <View style={styles.restSettingsSection}>
+          <ThemedText
+            style={styles.restSettingsLabel}
+            setColor={theme.quietText}
+          >
+            Apply
+          </ThemedText>
+
+          <TouchableOpacity
+            activeOpacity={0.82}
+            style={[
+              styles.restMirrorButton,
+              {
+                backgroundColor: restUnitInactiveSurface,
+                borderColor: restUnitBorderColor,
+              },
+            ]}
+            onPress={() => setMirrorRestValues((prev) => !prev)}
+          >
+            <View style={styles.restMirrorTextGroup}>
+              <ThemedText style={styles.restMirrorTitle}>
+                Mirror rest fields
+              </ThemedText>
+              <ThemedText
+                style={styles.restMirrorDescription}
+                setColor={theme.quietText}
+              >
+                New rest edits update every set
+              </ThemedText>
+            </View>
+
+            <View
+              style={[
+                styles.restMirrorSwitch,
+                {
+                  backgroundColor: mirrorRestValues
+                    ? secondaryColor
+                    : restUnitBorderColor,
+                },
+              ]}
+            >
+              <View
+                style={[
+                  styles.restMirrorSwitchThumb,
+                  mirrorRestValues && styles.restMirrorSwitchThumbActive,
+                  { backgroundColor: selectedRestUnitTextColor },
+                ]}
+              />
+            </View>
+          </TouchableOpacity>
         </View>
       </ThemedModal>
     </>
