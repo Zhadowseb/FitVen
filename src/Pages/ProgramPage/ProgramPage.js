@@ -1,11 +1,12 @@
-import { View, TouchableOpacity } from 'react-native';
+import { Alert, View, TouchableOpacity, useColorScheme } from 'react-native';
 import { useState } from "react";
 import { useSQLiteContext } from "expo-sqlite";
 
 import ProgramList from './Components/ProgramList/ProgramList';
 import AddProgram from './Components/AddProgram/AddProgram';
 import { formatDate } from '../../Utils/dateUtils';
-import { programService } from "../../Services";
+import { programService, programTransferService } from "../../Services";
+import { Colors } from "../../Resources/GlobalStyling/colors";
 import ThreeDots from "../../Resources/Icons/UI-icons/ThreeDots";
 import PlusCircled from "../../Resources/Icons/UI-icons/PlusCircled";
 
@@ -22,10 +23,17 @@ import styles from './ProgramPageStyle';
 
 export default function App() {
   const db = useSQLiteContext();
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme] ?? Colors.light;
+  const importButtonSurface =
+    theme.fields ?? theme.uiBackground ?? theme.cardBackground ?? "transparent";
+  const importButtonBorder =
+    theme.cardBorder ?? theme.border ?? theme.iconColor ?? "transparent";
 
   const [addProgram_Visible, set_addProgram_Visible] = useState(false);
   const [refreshKey, set_refreshKey] = useState(0);
   const [optionsBottomSheetVisible, setOptionsBottomSheetVisible] = useState(false);
+  const [isImportingProgram, setIsImportingProgram] = useState(false);
 
   const refresh = () => {
       set_refreshKey(prev => prev + 1);
@@ -47,15 +55,70 @@ export default function App() {
     }
   };
 
+  const handleImportProgram = async () => {
+    if (isImportingProgram) {
+      return;
+    }
+
+    try {
+      setIsImportingProgram(true);
+      const result = await programTransferService.importProgramFromFilePicker(db);
+
+      if (result.canceled) {
+        return;
+      }
+
+      refresh();
+      programService.pushDirtyStrengthHierarchyWithCloud(db).catch((error) => {
+        console.warn("Program import cloud sync failed:", error);
+      });
+
+      Alert.alert(
+        "Program imported",
+        `${result.programName} has been added to your programs.`
+      );
+    } catch (error) {
+      console.error("Program import failed:", error);
+      Alert.alert(
+        "Import failed",
+        error?.message ?? "The program file could not be imported."
+      );
+    } finally {
+      setIsImportingProgram(false);
+    }
+  };
+
   return (
     <>
     <ThemedView safe={["top", "left", "right"]}>
 
       <ThemedHeader
+        leftWidth={124}
+        rightWidth={124}
         right={
-          <TouchableOpacity onPress={() => setOptionsBottomSheetVisible(true)}>
-            <ThreeDots width={20} height={20} />
-          </TouchableOpacity>
+          <View style={styles.header_actions}>
+            <TouchableOpacity
+              style={[
+                styles.header_import_button,
+                {
+                  backgroundColor: importButtonSurface,
+                  borderColor: importButtonBorder,
+                },
+                isImportingProgram && styles.header_import_button_disabled,
+              ]}
+              disabled={isImportingProgram}
+              onPress={handleImportProgram}>
+              <ThemedText
+                style={styles.header_import_text}
+                setColor={theme.title ?? theme.text}>
+                Import
+              </ThemedText>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => setOptionsBottomSheetVisible(true)}>
+              <ThreeDots width={20} height={20} />
+            </TouchableOpacity>
+          </View>
         }>
         <ThemedText size={18}>Programs</ThemedText>
       </ThemedHeader>

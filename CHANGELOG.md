@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.17.23] - Unreleased
+### Changed
+- Add program export/import using FitApp program JSON files, including program structure, workouts, exercises, sets, run rows, estimated 1RMs, and program display settings.
+
+---
 ## [0.17.22] - Unreleased
 ### Changed
 - Move set rest into an editable overlay pill inside the existing Rest column, tied to the previous set without adding spacing between sets.

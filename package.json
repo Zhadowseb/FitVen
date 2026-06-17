@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.17.22-minor-rest-between-sets.1",
+  "version": "0.17.23-minor-program-export-import.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",
@@ -38,9 +38,12 @@
     "expo-checkbox": "~5.0.8",
     "expo-constants": "~18.0.13",
     "expo-dev-client": "~6.0.20",
+    "expo-document-picker": "~14.0.8",
+    "expo-file-system": "~19.0.23",
     "expo-image-picker": "~17.0.10",
     "expo-location": "~19.0.8",
     "expo-notifications": "~0.32.17",
+    "expo-sharing": "~14.0.8",
     "expo-sqlite": "^16.0.9",
     "expo-status-bar": "~3.0.8",
     "expo-task-manager": "~14.0.9",

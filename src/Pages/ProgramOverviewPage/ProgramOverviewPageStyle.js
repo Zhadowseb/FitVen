@@ -311,6 +311,34 @@ export default StyleSheet.create({
         paddingVertical: 14,
         justifyContent: "center",
     },
+    settings_export_tile: {
+        minHeight: 64,
+        borderWidth: 1,
+        borderRadius: 24,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        flexDirection: "row",
+        alignItems: "center",
+    },
+    settings_export_icon: {
+        width: 34,
+        height: 34,
+        borderRadius: 17,
+        alignItems: "center",
+        justifyContent: "center",
+        marginRight: 12,
+    },
+    settings_export_content: {
+        flex: 1,
+        minWidth: 0,
+    },
+    settings_export_title: {
+        fontWeight: "700",
+    },
+    settings_export_description: {
+        marginTop: 3,
+        lineHeight: 16,
+    },
 
     //BottomSheet Styling:
 

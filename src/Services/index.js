@@ -3,6 +3,7 @@ export * as feedbackService from "./feedbackService";
 export * as localProgramImportService from "./localProgramImportService";
 export * as notificationService from "./notificationService";
 export * as programService from "./programService";
+export * as programTransferService from "./programTransferService";
 export * as runningService from "./runningService";
 export * as socialPostService from "./socialPostService";
 export * as socialService from "./socialService";

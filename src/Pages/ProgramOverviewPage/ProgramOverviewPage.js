@@ -1,4 +1,4 @@
-import { View, ScrollView, TouchableOpacity } from 'react-native';
+import { Alert, View, ScrollView, TouchableOpacity } from 'react-native';
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
@@ -11,6 +11,7 @@ import { Colors } from "../../Resources/GlobalStyling/colors";
 import styles from './ProgramOverviewPageStyle';
 import {
   programService,
+  programTransferService,
   weightliftingService,
 } from "../../Services";
 import Rm_List from './Components/rm_list/rm_list';
@@ -24,6 +25,7 @@ import Cogwheel from "../../Resources/Icons/UI-icons/Cogwheel";
 import Checkmark from "../../Resources/Icons/UI-icons/Checkmark";
 import TradeUp from "../../Resources/Icons/UI-icons/TradeUp";
 import Info from "../../Resources/Icons/UI-icons/Info";
+import Copy from "../../Resources/Icons/UI-icons/Copy";
 
 import { ThemedTitle, 
         ThemedCard, 
@@ -143,6 +145,7 @@ const ProgramOverviewPage = ( {route} ) => {
     const [isDeletingProgram, set_IsDeletingProgram] = useState(false);
     const [startProgramModal_visible, setStartProgramModalVisible] = useState(false);
     const [isStartingProgram, setIsStartingProgram] = useState(false);
+    const [isExportingProgram, setIsExportingProgram] = useState(false);
 
     const refresh = () => {
         set_refreshKey(prev => prev + 1);
@@ -263,6 +266,35 @@ const ProgramOverviewPage = ( {route} ) => {
         set_DeleteConfirmModal_visible(false);
         set_OptionsBottomsheet_visible(false);
         navigation.replace("ProgramPage");
+    };
+
+    const exportProgram = async () => {
+        if (isExportingProgram) {
+            return;
+        }
+
+        try {
+            setIsExportingProgram(true);
+            const result = await programTransferService.exportProgramToFile(
+                db,
+                program_id
+            );
+
+            Alert.alert(
+                "Program exported",
+                result.shared
+                    ? `${result.programName} is ready to share.`
+                    : `${result.fileName} was created on this device.`
+            );
+        } catch (error) {
+            console.error("Program export failed:", error);
+            Alert.alert(
+                "Export failed",
+                error?.message ?? "The program file could not be created."
+            );
+        } finally {
+            setIsExportingProgram(false);
+        }
     };
 
     const changeStatus = async (new_status) => {
@@ -843,7 +875,7 @@ const ProgramOverviewPage = ( {route} ) => {
                     </View>
                 </View>
 
-                <View style={styles.settings_section_last}>
+                <View style={styles.settings_section}>
                     <View style={styles.settings_section_header}>
                         <ThemedText
                             size={11}
@@ -881,6 +913,59 @@ const ProgramOverviewPage = ( {route} ) => {
                             }}
                         />
                     </View>
+                </View>
+
+                <View style={styles.settings_section_last}>
+                    <View style={styles.settings_section_header}>
+                        <ThemedText
+                            size={11}
+                            style={[
+                                styles.settings_section_eyebrow,
+                                { color: settingsLabelColor },
+                            ]}>
+                            Export
+                        </ThemedText>
+                    </View>
+
+                    <TouchableOpacity
+                        style={[
+                            styles.settings_export_tile,
+                            {
+                                backgroundColor: settingsPanelBackground,
+                                borderColor: isExportingProgram
+                                    ? theme.primary ?? Colors.dark.primary
+                                    : settingsOutlineColor,
+                                opacity: isExportingProgram ? 0.68 : 1,
+                            },
+                        ]}
+                        disabled={isExportingProgram}
+                        onPress={exportProgram}>
+                        <View
+                            style={[
+                                styles.settings_export_icon,
+                                { backgroundColor: accentSoft },
+                            ]}>
+                            <Copy width={18} height={18} />
+                        </View>
+
+                        <View style={styles.settings_export_content}>
+                            <ThemedText
+                                size={16}
+                                style={styles.settings_export_title}
+                                setColor={theme.title}>
+                                {isExportingProgram
+                                    ? "Exporting..."
+                                    : "Export program"}
+                            </ThemedText>
+
+                            <ThemedText
+                                size={12}
+                                style={styles.settings_export_description}
+                                setColor={settingsLabelColor}>
+                                FitApp program file
+                            </ThemedText>
+                        </View>
+                    </TouchableOpacity>
                 </View>
             </ThemedCard>
 
