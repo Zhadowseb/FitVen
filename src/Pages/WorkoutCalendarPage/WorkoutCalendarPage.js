@@ -197,7 +197,7 @@ function isProgramDaySick(programDay) {
 function getProgramDayLocation(programDay) {
   const locationParts = [
     programDay?.mesocycle_number
-      ? `Mesocycle ${programDay.mesocycle_number}`
+      ? `Block ${programDay.mesocycle_number}`
       : null,
     programDay?.microcycle_number ? `Week ${programDay.microcycle_number}` : null,
     [programDay?.weekday, programDay?.date].filter(Boolean).join(" "),
@@ -1141,10 +1141,10 @@ const WorkoutCalendarPage = () => {
                 style={styles.programTargetName}
                 setColor={titleColor}
               >
-                {programDay.program_name}
+                {getProgramCopyLocation(programDay)}
               </ThemedText>
               <ThemedText style={styles.programTargetMeta} setColor={quietText}>
-                {getProgramCopyLocation(programDay)}
+                {programDay.program_name ?? "Program"}
               </ThemedText>
             </TouchableOpacity>
           ))}
@@ -1187,10 +1187,10 @@ const WorkoutCalendarPage = () => {
                 style={styles.programTargetName}
                 setColor={titleColor}
               >
-                {programDay.program_name ?? "Program"}
+                {getProgramCopyLocation(programDay)}
               </ThemedText>
               <ThemedText style={styles.programTargetMeta} setColor={quietText}>
-                {getProgramCopyLocation(programDay)}
+                {programDay.program_name ?? "Program"}
               </ThemedText>
             </TouchableOpacity>
           ))}

@@ -4,7 +4,7 @@
 ### Changed
 - Ask before adding a standalone workout copy to a program day, while program workout copies automatically use a matching program day or fall back to the workout calendar.
 - Add workout copy actions to the Workout Calendar day menu.
-- Use field surfaces and clearer program placement text in workout copy prompts, with standalone copies labeled as single workouts.
+- Use field surfaces and focused Block/Week placement text in workout copy prompts, with standalone copies labeled as single workouts.
 
 ---
 ## [0.17.27] - Unreleased

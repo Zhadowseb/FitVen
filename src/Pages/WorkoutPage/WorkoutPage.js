@@ -30,7 +30,7 @@ import Resistance from "./WorkoutTypes/Resistance/Resistance";
 
 function getProgramCopyLocation(target) {
   const locationParts = [
-    target?.mesocycle_number ? `Mesocycle ${target.mesocycle_number}` : null,
+    target?.mesocycle_number ? `Block ${target.mesocycle_number}` : null,
     target?.microcycle_number ? `Week ${target.microcycle_number}` : null,
     [target?.weekday, target?.date].filter(Boolean).join(" "),
   ].filter(Boolean);
@@ -449,14 +449,17 @@ const WorkoutPage = ({ route }) => {
                 },
               ]}
             >
-              <ThemedText style={styles.copyTargetTitle}>
-                {target.program_name ?? "Program"}
+              <ThemedText
+                style={styles.copyTargetTitle}
+                setColor={theme.title ?? theme.text}
+              >
+                {getProgramCopyLocation(target)}
               </ThemedText>
               <ThemedText
                 style={styles.copyTargetMeta}
                 setColor={theme.quietText ?? theme.iconColor}
               >
-                {getProgramCopyLocation(target)}
+                {target.program_name ?? "Program"}
               </ThemedText>
             </TouchableOpacity>
           ))}
@@ -474,7 +477,10 @@ const WorkoutPage = ({ route }) => {
               },
             ]}
           >
-            <ThemedText style={styles.copyTargetTitle}>
+            <ThemedText
+              style={styles.copyTargetTitle}
+              setColor={theme.title ?? theme.text}
+            >
               Single workout
             </ThemedText>
             <ThemedText

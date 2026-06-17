@@ -74,8 +74,8 @@ export default StyleSheet.create({
     paddingVertical: 12,
   },
   copyTargetTitle: {
-    fontSize: 15,
-    lineHeight: 19,
+    fontSize: 16,
+    lineHeight: 21,
     fontWeight: "800",
   },
   copyTargetMeta: {

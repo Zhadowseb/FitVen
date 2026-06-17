@@ -244,8 +244,8 @@ export default StyleSheet.create({
     paddingVertical: 12,
   },
   programTargetName: {
-    fontSize: 15,
-    lineHeight: 20,
+    fontSize: 16,
+    lineHeight: 21,
     fontWeight: "800",
   },
   programTargetMeta: {
