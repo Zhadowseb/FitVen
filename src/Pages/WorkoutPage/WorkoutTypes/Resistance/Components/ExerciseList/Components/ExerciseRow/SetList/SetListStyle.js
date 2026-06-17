@@ -145,6 +145,17 @@ export default StyleSheet.create({
         height: "100%",
         borderRadius: 999,
     },
+    restCountdownPill: {
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    restCountdownText: {
+        fontSize: 12,
+        lineHeight: 15,
+        fontWeight: "900",
+        fontVariant: ["tabular-nums"],
+        textAlign: "center",
+    },
 
     bottomsheet_title: {
         borderBottomWidth: 1,

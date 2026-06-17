@@ -99,22 +99,6 @@ export default StyleSheet.create({
     position: "relative",
   },
 
-  heroRestPauseSymbol: {
-    position: "absolute",
-    left: 3,
-    top: 3,
-    height: 48,
-    flexDirection: "row",
-    gap: 8,
-    opacity: 0.16,
-  },
-
-  heroRestPauseBar: {
-    width: 15,
-    height: 48,
-    borderRadius: 8,
-  },
-
   heroTimerValue: {
     fontSize: 48,
     lineHeight: 54,

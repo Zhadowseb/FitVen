@@ -93,9 +93,6 @@ const Resistance = ({
   const [isDone, set_isDone] = useState(false);
   const [isRunning, set_isRunning] = useState(false);
   const [activeRestTimer, setActiveRestTimer] = useState(null);
-  const [restTimerTick, setRestTimerTick] = useState(
-    getCurrentStoredTimestampSeconds()
-  );
   const timerStartRef = useRef(null);
   const elapsedTimeRef = useRef(0);
   const wasAllSetsDoneRef = useRef(false);
@@ -120,29 +117,8 @@ const Resistance = ({
       setActiveRestTimer(
         Number(timer?.workoutId) === Number(workout_id) ? timer : null
       );
-      setRestTimerTick(getCurrentStoredTimestampSeconds());
     });
   }, [workout_id]);
-
-  useEffect(() => {
-    if (!activeRestTimer) {
-      return;
-    }
-
-    const updateRestTimerTick = () => {
-      const now = getCurrentStoredTimestampSeconds();
-      setRestTimerTick(now);
-
-      if (activeRestTimer.endsAt <= now) {
-        clearActiveRestTimer(activeRestTimer.id);
-      }
-    };
-
-    updateRestTimerTick();
-    const interval = setInterval(updateRestTimerTick, 1000);
-
-    return () => clearInterval(interval);
-  }, [activeRestTimer]);
 
   const persistCurrentTimerState = useCallback(async () => {
     await workoutService.persistWorkoutTimerState(db, {
@@ -319,8 +295,6 @@ const Resistance = ({
         date,
       },
     });
-
-    setRestTimerTick(startedAt);
   }, [date, isDone, isRunning, workoutInstanceLabel, workout_id]);
 
   const handleRestTimerCancel = useCallback((setId) => {
@@ -410,14 +384,6 @@ const Resistance = ({
     elapsed_time + computeCurrentElapsed(),
     0
   );
-  const restTimerRemaining = activeRestTimer
-    ? Math.max(0, activeRestTimer.endsAt - restTimerTick)
-    : 0;
-  const isRestTimerActive = restTimerRemaining > 0;
-  const displayedTimerValue = isRestTimerActive
-    ? restTimerRemaining
-    : currentElapsed;
-  const timerDisplayLabel = isRestTimerActive ? "Rest time" : "Elapsed time";
   const resolvedTotalSets = Math.max(Number(totalSets) || 0, 0);
   const resolvedDoneSets = Math.max(Number(doneSets) || 0, 0);
   const progressPercent =
@@ -427,15 +393,12 @@ const Resistance = ({
 
   const statusLabel = isDone
     ? "Complete"
-    : isRestTimerActive
-      ? "Rest"
-      : isRunning
+    : isRunning
       ? "In progress"
       : original_start_time !== null
         ? "Paused"
         : "Ready";
-  const statusTone =
-    isDone || isRestTimerActive ? secondaryColor : primaryColor;
+  const statusTone = isDone ? secondaryColor : primaryColor;
   const startedDisplay =
     original_start_time !== null
       ? formatWorkoutStart(original_start_time)
@@ -532,28 +495,12 @@ const Resistance = ({
             </View>
 
             <View style={styles.heroTimerBlock}>
-              {isRestTimerActive && (
-                <View pointerEvents="none" style={styles.heroRestPauseSymbol}>
-                  <View
-                    style={[
-                      styles.heroRestPauseBar,
-                      { backgroundColor: secondaryColor },
-                    ]}
-                  />
-                  <View
-                    style={[
-                      styles.heroRestPauseBar,
-                      { backgroundColor: secondaryColor },
-                    ]}
-                  />
-                </View>
-              )}
               <ThemedText style={styles.heroTimerValue} setColor={titleColor}>
-                {formatTime(displayedTimerValue)}
+                {formatTime(currentElapsed)}
               </ThemedText>
             </View>
             <ThemedText style={styles.heroTimerLabel} setColor={quietText}>
-              {timerDisplayLabel}
+              Elapsed time
             </ThemedText>
 
             <View style={styles.heroSetsRow}>

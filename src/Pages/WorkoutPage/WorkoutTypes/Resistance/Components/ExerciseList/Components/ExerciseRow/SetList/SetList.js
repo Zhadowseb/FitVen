@@ -1,8 +1,16 @@
 import { TouchableOpacity, View } from "react-native";
 import { useColorScheme } from "react-native";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSQLiteContext } from "expo-sqlite";
 import { Colors } from "../../../../../../../../../Resources/GlobalStyling/colors";
+import {
+  formatTime,
+  getCurrentStoredTimestampSeconds,
+} from "../../../../../../../../../Utils/timeUtils";
+import {
+  clearActiveRestTimer,
+  subscribeRestTimer,
+} from "../../../../../../../../../Utils/restTimerEvents";
 
 import styles from "./SetListStyle.js";
 import Title from "./Title";
@@ -110,7 +118,8 @@ const SetList = ({
   const setChipBackground = isDark
     ? "rgba(247, 116, 46, 0.17)"
     : "rgba(247, 116, 46, 0.14)";
-  const setChipTextColor = theme.primary ?? theme.text;
+  const primaryColor = theme.primary ?? theme.text;
+  const setChipTextColor = primaryColor;
   const personalRecordColor =
     recordColor ?? theme.record ?? Colors.dark.record ?? setChipTextColor;
   const personalRecordSurface =
@@ -150,10 +159,65 @@ const SetList = ({
   const [mirrorRestValues, setMirrorRestValues] = useState(false);
   const [restUnitModalVisible, setRestUnitModalVisible] = useState(false);
   const [setRowLayouts, setSetRowLayouts] = useState({});
+  const [activeRestTimer, setActiveRestTimer] = useState(null);
+  const [completedRestTimer, setCompletedRestTimer] = useState(null);
+  const [restTimerTick, setRestTimerTick] = useState(
+    getCurrentStoredTimestampSeconds()
+  );
+  const activeRestTimerRef = useRef(null);
 
   useEffect(() => {
     setLocalSets(sets);
   }, [sets]);
+
+  useEffect(() => {
+    return subscribeRestTimer((timer) => {
+      const now = getCurrentStoredTimestampSeconds();
+      const previousTimer = activeRestTimerRef.current;
+
+      if (timer) {
+        activeRestTimerRef.current = timer;
+        setActiveRestTimer(timer);
+        setRestTimerTick(now);
+        setCompletedRestTimer((currentTimer) =>
+          Number(currentTimer?.setId) === Number(timer.setId)
+            ? null
+            : currentTimer
+        );
+
+        return;
+      }
+
+      if (previousTimer && previousTimer.endsAt <= now) {
+        setCompletedRestTimer(previousTimer);
+      }
+
+      activeRestTimerRef.current = null;
+      setActiveRestTimer(null);
+      setRestTimerTick(now);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!activeRestTimer) {
+      return;
+    }
+
+    const updateRestTimerTick = () => {
+      const now = getCurrentStoredTimestampSeconds();
+      setRestTimerTick(now);
+
+      if (activeRestTimer.endsAt <= now) {
+        setCompletedRestTimer(activeRestTimer);
+        clearActiveRestTimer(activeRestTimer.id);
+      }
+    };
+
+    updateRestTimerTick();
+    const interval = setInterval(updateRestTimerTick, 1000);
+
+    return () => clearInterval(interval);
+  }, [activeRestTimer]);
 
   const displayedSets = localSets ?? [];
   const hasSets = displayedSets.length > 0;
@@ -661,6 +725,20 @@ const SetList = ({
     });
   };
 
+  const getRestTimerState = (setId) => {
+    const isActive = Number(activeRestTimer?.setId) === Number(setId);
+    const isComplete =
+      !isActive && Number(completedRestTimer?.setId) === Number(setId);
+
+    return {
+      isActive,
+      isComplete,
+      remainingSeconds: isActive
+        ? Math.max(0, activeRestTimer.endsAt - restTimerTick)
+        : 0,
+    };
+  };
+
   const renderRestDivider = (set, renderedColumns) => {
     const rowLayout = setRowLayouts[set.sets_id];
 
@@ -683,6 +761,12 @@ const SetList = ({
       >
         {renderedColumns.map((col, colIndex) => {
           const isLast = colIndex === renderedColumns.length - 1;
+          const restTimerState = getRestTimerState(set.sets_id);
+          const restBorderColor = restTimerState.isActive
+            ? primaryColor
+            : restTimerState.isComplete
+              ? secondaryColor
+              : tableBorder;
 
           return (
             <View
@@ -702,18 +786,34 @@ const SetList = ({
                     styles.restDividerBubble,
                     {
                       backgroundColor: cellSurface,
-                      borderColor: tableBorder,
+                      borderColor: restBorderColor,
                     },
                   ]}
                 >
-                  {renderEditableValue({
-                    cellKey: `${set.sets_id}:rest-divider`,
-                    containerStyle: styles.restDividerValuePill,
-                    value: formatRestUnitValue(set.pause),
-                    suffixFormatter: getPauseSuffix,
-                    onCommit: (value) =>
-                      updateRestPause(getStoredPauseValue(value), set.sets_id),
-                  })}
+                  {restTimerState.isActive ? (
+                    <View
+                      style={[
+                        styles.restDividerValuePill,
+                        styles.restCountdownPill,
+                      ]}
+                    >
+                      <ThemedText
+                        style={styles.restCountdownText}
+                        setColor={setChipTextColor}
+                      >
+                        {formatTime(restTimerState.remainingSeconds)}
+                      </ThemedText>
+                    </View>
+                  ) : (
+                    renderEditableValue({
+                      cellKey: `${set.sets_id}:rest-divider`,
+                      containerStyle: styles.restDividerValuePill,
+                      value: formatRestUnitValue(set.pause),
+                      suffixFormatter: getPauseSuffix,
+                      onCommit: (value) =>
+                        updateRestPause(getStoredPauseValue(value), set.sets_id),
+                    })
+                  )}
                 </View>
               ) : null}
             </View>

@@ -6,7 +6,7 @@
 - Default rest editing to minutes.
 - Add a Rest modal mirror option so editing one rest value can update every set's rest value in the exercise.
 - Use the field surface color for Rest modal setting backgrounds.
-- Start a rest countdown from the completed set's rest value, including the final set, while the workout is running, and show it in the workout timer and active workout menu circle.
+- Start a rest countdown from the completed set's rest value, including the final set, while the workout is running, and show it in the rest field and active workout menu circle; the rest field border turns primary while counting down and secondary when complete.
 
 ---
 ## [0.17.21] - Unreleased
