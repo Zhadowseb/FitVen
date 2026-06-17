@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.17.26] - Unreleased
+### Changed
+- Add a drawn-tab style indicator around the Rest set header to show it can be tapped.
+
+---
 ## [0.17.25] - Unreleased
 ### Changed
 - Simplify the Profile About section to show only the FitVen app name and configured app version.

@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.17.25-fix-profile-about-version-display.1",
+  "version": "0.17.26-minor-rest-title-click-indicator.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",

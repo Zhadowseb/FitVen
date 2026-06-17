@@ -70,11 +70,33 @@ export default StyleSheet.create({
         alignItems: "center",
         paddingHorizontal: 2,
     },
+    restTitleCell: {
+        position: "relative",
+        overflow: "visible",
+    },
+    restTitleAffordance: {
+        position: "absolute",
+        bottom: -1,
+        width: "74%",
+        minWidth: 54,
+        maxWidth: 78,
+        height: 27,
+        borderTopWidth: 2,
+        borderLeftWidth: 2,
+        borderRightWidth: 2,
+        borderBottomWidth: 0,
+        borderTopLeftRadius: 13,
+        borderTopRightRadius: 13,
+        opacity: 0.95,
+    },
 
     titleText: {
         fontWeight: "800",
         fontSize: 9,
         letterSpacing: 0.8,
+    },
+    restTitleText: {
+        zIndex: 1,
     },
 
 

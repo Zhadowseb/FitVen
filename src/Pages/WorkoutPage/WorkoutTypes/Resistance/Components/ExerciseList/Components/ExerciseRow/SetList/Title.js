@@ -34,10 +34,30 @@ const Title = ({ visibleColumns, onRestTitlePress }) => {
               activeOpacity={0.72}
               accessibilityRole="button"
               accessibilityLabel="Choose rest input unit"
-              style={[styles.pause, styles.titleCell, titleCellStyle]}
+              style={[
+                styles.pause,
+                styles.titleCell,
+                styles.restTitleCell,
+                titleCellStyle,
+              ]}
               onPress={onRestTitlePress}
             >
-            <ThemedText style={[styles.titleText, {color: headerTextColor}]}>REST</ThemedText>
+            <View
+              pointerEvents="none"
+              style={[
+                styles.restTitleAffordance,
+                { borderColor: dividerColor },
+              ]}
+            />
+            <ThemedText
+              style={[
+                styles.titleText,
+                styles.restTitleText,
+                { color: headerTextColor },
+              ]}
+            >
+              REST
+            </ThemedText>
             </TouchableOpacity>
         )}
 
