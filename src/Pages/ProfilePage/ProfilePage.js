@@ -1,6 +1,5 @@
 import {
   Alert,
-  Platform,
   Pressable,
   TouchableOpacity,
   View,
@@ -8,8 +7,6 @@ import {
 } from "react-native";
 import { useCallback, useState } from "react";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import * as Application from "expo-application";
-import Constants from "expo-constants";
 import * as ImagePicker from "expo-image-picker";
 import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
 
@@ -72,42 +69,6 @@ function getNormalizedString(value) {
   return normalizedValue.length > 0 ? normalizedValue : null;
 }
 
-function getConfiguredBuildVersion() {
-  if (Platform.OS === "ios") {
-    return getNormalizedString(appConfig?.expo?.ios?.buildNumber);
-  }
-
-  if (Platform.OS === "android") {
-    return getNormalizedString(appConfig?.expo?.android?.versionCode);
-  }
-
-  return null;
-}
-
-function getPlatformLabel() {
-  const platformName = Platform.OS === "ios"
-    ? "iOS"
-    : Platform.OS === "android"
-      ? "Android"
-      : Platform.OS;
-  const platformVersion = getNormalizedString(Platform.Version);
-
-  return platformVersion ? `${platformName} ${platformVersion}` : platformName;
-}
-
-function getRuntimeLabel() {
-  const executionEnvironment = getNormalizedString(
-    Constants?.executionEnvironment
-  );
-  const appOwnership = getNormalizedString(Constants?.appOwnership);
-
-  if (executionEnvironment && appOwnership) {
-    return `${executionEnvironment} / ${appOwnership}`;
-  }
-
-  return executionEnvironment ?? appOwnership ?? "Unknown";
-}
-
 export default function ProfilePage() {
   const navigation = useNavigation();
   const colorScheme = useColorScheme();
@@ -158,32 +119,11 @@ export default function ProfilePage() {
   const aboutRows = [
     {
       label: "App",
-      value:
-        getNormalizedString(Application.applicationName) ??
-        getNormalizedString(appConfig?.expo?.name) ??
-        "FitVen",
+      value: getNormalizedString(appConfig?.expo?.name) ?? "FitVen",
     },
     {
       label: "Version",
-      value:
-        getNormalizedString(Application.nativeApplicationVersion) ??
-        getNormalizedString(appConfig?.expo?.version) ??
-        "Unknown",
-    },
-    {
-      label: "Build",
-      value:
-        getNormalizedString(Application.nativeBuildVersion) ??
-        getConfiguredBuildVersion() ??
-        "Unknown",
-    },
-    {
-      label: "Runtime",
-      value: getRuntimeLabel(),
-    },
-    {
-      label: "Platform",
-      value: getPlatformLabel(),
+      value: getNormalizedString(appConfig?.expo?.version) ?? "Unknown",
     },
   ];
 

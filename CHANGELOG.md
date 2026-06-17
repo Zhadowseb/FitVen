@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.17.25] - Unreleased
+### Changed
+- Simplify the Profile About section to show only the FitVen app name and configured app version.
+
+---
 ## [0.17.24] - Unreleased
 ### Changed
 - Add an About section at the bottom of Profile with app version, build, runtime, and platform details.
