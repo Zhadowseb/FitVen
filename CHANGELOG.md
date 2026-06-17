@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.17.25] - Unreleased
+### Changed
+- Speed up Workout Calendar by loading the visible month from local data before cloud sync and prefetching adjacent months afterward.
+- Add calendar database indexes for workout, day, sickness, exercise, and set lookups.
+
+---
 ## [0.17.24] - Unreleased
 ### Changed
 - Add an About section at the bottom of Profile with app version, build, runtime, and platform details.

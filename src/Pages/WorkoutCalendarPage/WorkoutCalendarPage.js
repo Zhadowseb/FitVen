@@ -162,6 +162,17 @@ function getMonthOffsetRange(monthOffset) {
   };
 }
 
+function hasCalendarRange(range) {
+  return Boolean(range?.startIsoDate && range?.endIsoDate);
+}
+
+function isSameCalendarRange(leftRange, rightRange) {
+  return (
+    leftRange?.startIsoDate === rightRange?.startIsoDate &&
+    leftRange?.endIsoDate === rightRange?.endIsoDate
+  );
+}
+
 function getWorkoutType(workout) {
   return workout?.workout_type ?? workout?.label ?? "Resistance";
 }
@@ -196,6 +207,9 @@ const WorkoutCalendarPage = () => {
   const pendingScrollModeRef = useRef("instant");
   const previousPageWidthRef = useRef(null);
   const hasSyncedCalendarRef = useRef(false);
+  const calendarMountedRef = useRef(false);
+  const calendarLoadRequestRef = useRef(0);
+  const loadCalendarWorkoutsRef = useRef(null);
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const { width, height } = useWindowDimensions();
@@ -341,6 +355,13 @@ const WorkoutCalendarPage = () => {
     return nextSickDates;
   }, [calendarRange.endIsoDate, calendarRange.startIsoDate, sicknessPeriods]);
   const visibleMonth = monthPages[visibleMonthIndex] ?? monthPages[0];
+  const visibleMonthRange = useMemo(
+    () => ({
+      startIsoDate: visibleMonth?.startIsoDate,
+      endIsoDate: visibleMonth?.endIsoDate,
+    }),
+    [visibleMonth?.endIsoDate, visibleMonth?.startIsoDate]
+  );
   const visibleMonthKey = visibleMonth ? getMonthKey(visibleMonth.monthDate) : "";
   const visibleMonthWorkouts = workouts.filter((workout) =>
     String(workout?.date_iso ?? "").startsWith(visibleMonthKey)
@@ -357,6 +378,14 @@ const WorkoutCalendarPage = () => {
       : selectedProgramDate
         ? `Programs on ${selectedProgramDate}`
         : "Programs";
+
+  useEffect(() => {
+    calendarMountedRef.current = true;
+
+    return () => {
+      calendarMountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     visibleMonthOffsetRef.current = visibleMonthOffset;
@@ -384,57 +413,133 @@ const WorkoutCalendarPage = () => {
     visibleMonthIndex,
   ]);
 
+  const loadCalendarRows = useCallback(
+    async (range) => {
+      if (!hasCalendarRange(range)) {
+        return {
+          workoutRows: [],
+          programDayRows: [],
+          sicknessRows: [],
+        };
+      }
+
+      const [workoutRows, programDayRows, sicknessRows] = await Promise.all([
+        programService.getWorkoutCalendarWorkouts(db, {
+          startIsoDate: range.startIsoDate,
+          endIsoDate: range.endIsoDate,
+        }),
+        programService.getWorkoutCalendarProgramDays(db, {
+          startIsoDate: range.startIsoDate,
+          endIsoDate: range.endIsoDate,
+        }),
+        programService.getSicknessPeriods(db),
+      ]);
+
+      return { workoutRows, programDayRows, sicknessRows };
+    },
+    [db]
+  );
+
   const loadCalendarWorkouts = useCallback(async () => {
-    if (!calendarRange.startIsoDate || !calendarRange.endIsoDate) {
+    if (!hasCalendarRange(visibleMonthRange)) {
       return;
     }
+
+    const requestId = calendarLoadRequestRef.current + 1;
+    calendarLoadRequestRef.current = requestId;
+    const isCurrentRequest = () =>
+      calendarMountedRef.current && calendarLoadRequestRef.current === requestId;
 
     setIsLoading(true);
     setErrorMessage("");
 
     try {
-      if (!hasSyncedCalendarRef.current) {
-        hasSyncedCalendarRef.current = true;
+      const visibleRows = await loadCalendarRows(visibleMonthRange);
 
-        try {
-          await programService.syncWorkoutTypeInstancesWithCloud(db);
-        } catch (syncError) {
-          console.warn("Could not refresh workouts before loading calendar:", syncError);
-        }
+      if (!isCurrentRequest()) {
+        return;
       }
 
-      const [workoutRows, programDayRows] = await Promise.all([
-        programService.getWorkoutCalendarWorkouts(db, {
-          startIsoDate: calendarRange.startIsoDate,
-          endIsoDate: calendarRange.endIsoDate,
-        }),
-        programService.getWorkoutCalendarProgramDays(db, {
-          startIsoDate: calendarRange.startIsoDate,
-          endIsoDate: calendarRange.endIsoDate,
-        }),
-      ]);
-      const sicknessRows = await programService.getSicknessPeriods(db);
-
-      setWorkouts(workoutRows);
-      setProgramDays(programDayRows);
-      setSicknessPeriods(sicknessRows);
+      setWorkouts(visibleRows.workoutRows);
+      setProgramDays(visibleRows.programDayRows);
+      setSicknessPeriods(visibleRows.sicknessRows);
+      setIsLoading(false);
     } catch (error) {
+      if (!isCurrentRequest()) {
+        return;
+      }
+
       setWorkouts([]);
       setProgramDays([]);
       setSicknessPeriods([]);
       setErrorMessage(
         error instanceof Error ? error.message : "Could not load workouts."
       );
-    } finally {
       setIsLoading(false);
+      return;
     }
-  }, [calendarRange.endIsoDate, calendarRange.startIsoDate, db]);
+
+    if (
+      !hasCalendarRange(calendarRange) ||
+      isSameCalendarRange(calendarRange, visibleMonthRange)
+    ) {
+      return;
+    }
+
+    try {
+      const prefetchedRows = await loadCalendarRows(calendarRange);
+
+      if (!isCurrentRequest()) {
+        return;
+      }
+
+      setWorkouts(prefetchedRows.workoutRows);
+      setProgramDays(prefetchedRows.programDayRows);
+      setSicknessPeriods(prefetchedRows.sicknessRows);
+    } catch (prefetchError) {
+      console.warn("Could not prefetch adjacent calendar months:", prefetchError);
+    }
+  }, [
+    calendarRange.endIsoDate,
+    calendarRange.startIsoDate,
+    loadCalendarRows,
+    visibleMonthRange,
+  ]);
+
+  useEffect(() => {
+    loadCalendarWorkoutsRef.current = loadCalendarWorkouts;
+  }, [loadCalendarWorkouts]);
 
   useFocusEffect(
     useCallback(() => {
       loadCalendarWorkouts();
     }, [loadCalendarWorkouts])
   );
+
+  useEffect(() => {
+    if (hasSyncedCalendarRef.current) {
+      return undefined;
+    }
+
+    hasSyncedCalendarRef.current = true;
+
+    const syncTimer = setTimeout(() => {
+      programService
+        .syncWorkoutTypeInstancesWithCloud(db)
+        .then(() => {
+          if (!calendarMountedRef.current) {
+            return;
+          }
+
+          loadCalendarWorkoutsRef.current?.();
+        })
+        .catch((syncError) => {
+          console.warn("Could not refresh workouts for calendar:", syncError);
+        });
+    }, 0);
+
+    return () => clearTimeout(syncTimer);
+  }, [db]);
 
   const showMonthOffset = useCallback(
     (nextMonthOffset) => {
