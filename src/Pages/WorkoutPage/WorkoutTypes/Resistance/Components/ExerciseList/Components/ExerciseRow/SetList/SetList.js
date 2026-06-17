@@ -134,7 +134,7 @@ const SetList = ({
     theme.textInverted ?? theme.cardBackground ?? "#0E0F12";
   const restUnitBorderColor =
     theme.cardBorder ?? theme.iconColor ?? "rgba(255, 255, 255, 0.12)";
-  const restUnitInactiveSurface = theme.uiBackground ?? cellSurface;
+  const restSettingsFieldSurface = theme.fields ?? cellSurface;
 
   const db = useSQLiteContext();
   const [localSets, setLocalSets] = useState(sets);
@@ -913,7 +913,7 @@ const SetList = ({
             style={[
               styles.restUnitToggle,
               {
-                backgroundColor: restUnitInactiveSurface,
+                backgroundColor: restSettingsFieldSurface,
                 borderColor: restUnitBorderColor,
               },
             ]}
@@ -961,7 +961,7 @@ const SetList = ({
             style={[
               styles.restMirrorButton,
               {
-                backgroundColor: restUnitInactiveSurface,
+                backgroundColor: restSettingsFieldSurface,
                 borderColor: restUnitBorderColor,
               },
             ]}
