@@ -194,6 +194,13 @@ const TodayProgramsShortcut = () => {
     });
   };
 
+  const openNotificationHistory = () => {
+    navigation.navigate("NotificationHistoryPage", {
+      markNotificationsRead: true,
+      notificationHistoryOpenId: Date.now(),
+    });
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.emptyHeader}>
@@ -208,7 +215,7 @@ const TodayProgramsShortcut = () => {
           activeOpacity={0.82}
           accessibilityLabel="Open notifications"
           accessibilityRole="button"
-          onPress={() => navigation.navigate("NotificationHistoryPage")}
+          onPress={openNotificationHistory}
           style={[
             styles.notificationButton,
             {

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   NavigationContainer,
   DefaultTheme,
@@ -49,7 +49,7 @@ import {
   migrateLegacySharedDatabaseToUserDatabase,
   setActiveDatabaseName,
 } from "./src/Database/localDatabase";
-import { locationService } from "./src/Services";
+import { locationService, notificationService } from "./src/Services";
 import { AuthProvider, useAuth } from './src/Contexts/AuthContext';
 import ExerciseLibrarySync from "./src/Sync/ExerciseLibrarySync";
 import PushNotificationRegistrationSync from "./src/Sync/PushNotificationRegistrationSync";
@@ -93,11 +93,35 @@ TaskManager.defineTask(locationService.RUN_LOCATION_TASK, async ({ data, error }
 
 const Stack = createNativeStackNavigator();
 const navigationRef = createNavigationContainerRef();
+const NOTIFICATION_HISTORY_ROUTE = "NotificationHistoryPage";
+
+function getNotificationResponseKey(response) {
+  const notification = response?.notification;
+  const request = notification?.request;
+  const contentData = request?.content?.data;
+  const dataId =
+    contentData?.notificationId ??
+    contentData?.notification_id ??
+    contentData?.eventId ??
+    contentData?.event_id ??
+    contentData?.id;
+
+  return [
+    request?.identifier,
+    response?.actionIdentifier,
+    dataId,
+    notification?.date,
+  ]
+    .filter((value) => value !== null && value !== undefined && value !== "")
+    .join(":");
+}
 
 function RootNavigator() {
   const colorScheme = useColorScheme()
   const theme = Colors[colorScheme] ?? Colors.light
   const { isAuthenticated, isAuthLoading } = useAuth();
+  const handledNotificationResponsesRef = useRef(new Set());
+  const notificationResponseRetryRef = useRef(null);
   const [currentRouteName, setCurrentRouteName] = useState(null);
 
   const navTheme =
@@ -123,6 +147,77 @@ function RootNavigator() {
           },
         };
 
+  const syncCurrentRoute = () => {
+    const nextRouteName = navigationRef.getCurrentRoute()?.name ?? null;
+    setCurrentRouteName(nextRouteName);
+  };
+
+  const openNotificationHistoryFromResponse = useCallback((response) => {
+    if (!response) {
+      return;
+    }
+
+    const responseKey = getNotificationResponseKey(response);
+
+    if (
+      responseKey &&
+      handledNotificationResponsesRef.current.has(responseKey)
+    ) {
+      return;
+    }
+
+    const navigateToHistory = () => {
+      if (!navigationRef.isReady()) {
+        return false;
+      }
+
+      navigationRef.navigate(NOTIFICATION_HISTORY_ROUTE, {
+        markNotificationsRead: false,
+        openedFromNotification: true,
+        notificationHistoryOpenId: Date.now(),
+      });
+      notificationService.clearLastNotificationResponse();
+      return true;
+    };
+
+    if (responseKey) {
+      handledNotificationResponsesRef.current.add(responseKey);
+    }
+
+    if (navigateToHistory()) {
+      return;
+    }
+
+    clearTimeout(notificationResponseRetryRef.current);
+    notificationResponseRetryRef.current = setTimeout(navigateToHistory, 250);
+  }, []);
+
+  useEffect(() => {
+    if (isAuthLoading || !isAuthenticated) {
+      return undefined;
+    }
+
+    const lastResponse = notificationService.getLastNotificationResponse();
+
+    if (lastResponse) {
+      openNotificationHistoryFromResponse(lastResponse);
+    }
+
+    const subscription =
+      notificationService.addNotificationResponseReceivedListener(
+        openNotificationHistoryFromResponse
+      );
+
+    return () => {
+      subscription?.remove?.();
+      clearTimeout(notificationResponseRetryRef.current);
+    };
+  }, [
+    isAuthenticated,
+    isAuthLoading,
+    openNotificationHistoryFromResponse,
+  ]);
+
   if (isAuthLoading) {
     return (
       <ThemedView style={{ alignItems: "center", justifyContent: "center" }}>
@@ -132,11 +227,6 @@ function RootNavigator() {
       </ThemedView>
     );
   }
-
-  const syncCurrentRoute = () => {
-    const nextRouteName = navigationRef.getCurrentRoute()?.name ?? null;
-    setCurrentRouteName(nextRouteName);
-  };
   
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>

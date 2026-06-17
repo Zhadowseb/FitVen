@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.17.27] - Unreleased
+### Changed
+- Open notification history when a push notification is tapped.
+- Keep notification history unread until the user opens it from the Home bell.
+
+---
 ## [0.17.26] - Unreleased
 ### Changed
 - Add a drawn-tab style indicator around the Rest set header to show it can be tapped.

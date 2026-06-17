@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -6,7 +6,7 @@ import {
   View,
   useColorScheme,
 } from "react-native";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 
 import styles from "./NotificationHistoryPageStyle";
 import { useAuth } from "../../Contexts/AuthContext";
@@ -61,9 +61,11 @@ function formatTimeAgo(value) {
 
 export default function NotificationHistoryPage() {
   const navigation = useNavigation();
+  const route = useRoute();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const { user } = useAuth();
+  const lastHandledReadRequestRef = useRef(null);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -75,6 +77,10 @@ export default function NotificationHistoryPage() {
   const cardSurface = theme.cardBackground ?? theme.background;
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor;
   const avatarSurface = theme.fields ?? theme.uiBackground ?? cardSurface;
+  const markReadRequestId =
+    route.params?.markNotificationsRead === true
+      ? route.params?.notificationHistoryOpenId ?? "bell"
+      : null;
 
   const loadNotifications = useCallback(
     async ({ showLoader = false } = {}) => {
@@ -98,11 +104,28 @@ export default function NotificationHistoryPage() {
 
         setNotifications(history);
 
-        notificationService
-          .markAllNotificationHistoryRead({ user })
-          .catch((error) =>
-            console.warn("Could not mark notifications as read:", error)
-          );
+        if (
+          markReadRequestId &&
+          lastHandledReadRequestRef.current !== markReadRequestId
+        ) {
+          lastHandledReadRequestRef.current = markReadRequestId;
+          const readAt = new Date().toISOString();
+
+          notificationService
+            .markAllNotificationHistoryRead({ user })
+            .then(() => {
+              setNotifications((currentNotifications) =>
+                currentNotifications.map((notification) =>
+                  notification.readAt
+                    ? notification
+                    : { ...notification, readAt }
+                )
+              );
+            })
+            .catch((error) =>
+              console.warn("Could not mark notifications as read:", error)
+            );
+        }
       } catch (error) {
         setNotifications([]);
         setErrorMessage(
@@ -115,7 +138,7 @@ export default function NotificationHistoryPage() {
         setRefreshing(false);
       }
     },
-    [user]
+    [markReadRequestId, user]
   );
 
   useFocusEffect(

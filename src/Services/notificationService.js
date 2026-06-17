@@ -286,6 +286,38 @@ export function addNotificationReceivedListener(listener) {
   return Notifications.addNotificationReceivedListener(listener);
 }
 
+export function addNotificationResponseReceivedListener(listener) {
+  if (Platform.OS === "web") {
+    return null;
+  }
+
+  return Notifications.addNotificationResponseReceivedListener(listener);
+}
+
+export function getLastNotificationResponse() {
+  if (Platform.OS === "web") {
+    return null;
+  }
+
+  try {
+    return Notifications.getLastNotificationResponse();
+  } catch {
+    return null;
+  }
+}
+
+export function clearLastNotificationResponse() {
+  if (Platform.OS === "web") {
+    return;
+  }
+
+  try {
+    Notifications.clearLastNotificationResponse?.();
+  } catch {
+    // Ignore unsupported native notification response cleanup.
+  }
+}
+
 export async function registerPushTokenForUser({
   user,
   devicePushToken = null,
