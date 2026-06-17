@@ -59,31 +59,6 @@ export default StyleSheet.create({
     fontWeight: 600,
     fontSize: 16,
   },
-  copyTargetDescription: {
-    fontSize: 13,
-    lineHeight: 19,
-    marginBottom: 12,
-  },
-  copyTargetList: {
-    gap: 8,
-  },
-  copyTargetOption: {
-    borderWidth: 1,
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  copyTargetTitle: {
-    fontSize: 16,
-    lineHeight: 21,
-    fontWeight: "800",
-  },
-  copyTargetMeta: {
-    marginTop: 3,
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: "700",
-  },
   modalActions: {
     flexDirection: "row",
     gap: 10,

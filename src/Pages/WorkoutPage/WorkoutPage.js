@@ -22,30 +22,18 @@ import Copy from "../../Resources/Icons/UI-icons/Copy";
 import Reload from "../../Resources/Icons/UI-icons/Reload";
 import Name from "../../Resources/Icons/UI-icons/Name";
 import Social from "../../Resources/Icons/UI-icons/Social";
+import WorkoutCopyTargetModal from "../../Resources/Components/WorkoutCopyTargetModal";
 import { programService, workoutService } from "../../Services";
 import { formatDate } from "../../Utils/dateUtils";
 
 import Run from "./WorkoutTypes/Run/Run";
 import Resistance from "./WorkoutTypes/Resistance/Resistance";
 
-function getProgramCopyLocation(target) {
-  const locationParts = [
-    target?.mesocycle_number ? `Block ${target.mesocycle_number}` : null,
-    target?.microcycle_number ? `Week ${target.microcycle_number}` : null,
-    [target?.weekday, target?.date].filter(Boolean).join(" "),
-  ].filter(Boolean);
-
-  return locationParts.length
-    ? `Add to ${locationParts.join(" - ")}`
-    : "Add to this program day";
-}
-
 const WorkoutPage = ({ route }) => {
   const db = useSQLiteContext();
   const navigation = useNavigation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
-  const fieldSurface = theme.fields ?? theme.cardBackground ?? theme.background;
 
   const {
     workout_id,
@@ -420,78 +408,19 @@ const WorkoutPage = ({ route }) => {
         />
       )}
 
-      <ThemedModal
+      <WorkoutCopyTargetModal
         visible={Boolean(pendingCopyTarget)}
-        title="Copy to program?"
         onClose={closeCopyTargetModal}
-      >
-        <ThemedText style={styles.copyTargetDescription}>
-          {pendingCopyTarget?.dateLabel
-            ? `There is a program on ${pendingCopyTarget.dateLabel}. Add this workout to the program or keep it as a single workout?`
-            : "There is a program on this date. Add this workout to the program or keep it as a single workout?"}
-        </ThemedText>
-
-        <View style={styles.copyTargetList}>
-          {(pendingCopyTarget?.programTargets ?? []).map((target) => (
-            <TouchableOpacity
-              key={`${target.program_id}-${target.day_id}`}
-              activeOpacity={0.82}
-              disabled={isCopyingWorkout}
-              onPress={() =>
-                copyWorkoutToProgramTarget(target, pendingCopyTarget.date)
-              }
-              style={[
-                styles.copyTargetOption,
-                {
-                  backgroundColor: fieldSurface,
-                  borderColor: theme.cardBorder ?? theme.iconColor,
-                  opacity: isCopyingWorkout ? 0.62 : 1,
-                },
-              ]}
-            >
-              <ThemedText
-                style={styles.copyTargetTitle}
-                setColor={theme.title ?? theme.text}
-              >
-                {getProgramCopyLocation(target)}
-              </ThemedText>
-              <ThemedText
-                style={styles.copyTargetMeta}
-                setColor={theme.quietText ?? theme.iconColor}
-              >
-                {target.program_name ?? "Program"}
-              </ThemedText>
-            </TouchableOpacity>
-          ))}
-
-          <TouchableOpacity
-            activeOpacity={0.82}
-            disabled={isCopyingWorkout}
-            onPress={() => copyWorkoutToCalendarOnly(pendingCopyTarget.date)}
-            style={[
-              styles.copyTargetOption,
-              {
-                backgroundColor: fieldSurface,
-                borderColor: theme.cardBorder ?? theme.iconColor,
-                opacity: isCopyingWorkout ? 0.62 : 1,
-              },
-            ]}
-          >
-            <ThemedText
-              style={styles.copyTargetTitle}
-              setColor={theme.title ?? theme.text}
-            >
-              Single workout
-            </ThemedText>
-            <ThemedText
-              style={styles.copyTargetMeta}
-              setColor={theme.quietText ?? theme.iconColor}
-            >
-              Keep it standing on its own in Workout Calendar.
-            </ThemedText>
-          </TouchableOpacity>
-        </View>
-      </ThemedModal>
+        dateLabel={pendingCopyTarget?.dateLabel}
+        programTargets={pendingCopyTarget?.programTargets ?? []}
+        isSubmitting={isCopyingWorkout}
+        onConfirmProgramTarget={(target) =>
+          copyWorkoutToProgramTarget(target, pendingCopyTarget?.date)
+        }
+        onConfirmSingleWorkout={() =>
+          copyWorkoutToCalendarOnly(pendingCopyTarget?.date)
+        }
+      />
 
       <ThemedModal
         visible={labelModalVisible}

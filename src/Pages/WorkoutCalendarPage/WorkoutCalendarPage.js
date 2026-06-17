@@ -17,6 +17,7 @@ import { useSQLiteContext } from "expo-sqlite";
 import styles from "./WorkoutCalendarPageStyle";
 import { programService } from "../../Services";
 import { Colors } from "../../Resources/GlobalStyling/colors";
+import WorkoutCopyTargetModal from "../../Resources/Components/WorkoutCopyTargetModal";
 import ArrowLeft from "../../Resources/Icons/UI-icons/ArrowLeft";
 import Copy from "../../Resources/Icons/UI-icons/Copy";
 import Delete from "../../Resources/Icons/UI-icons/Delete";
@@ -1151,77 +1152,20 @@ const WorkoutCalendarPage = () => {
         </ScrollView>
       </ThemedModal>
 
-      <ThemedModal
+      <WorkoutCopyTargetModal
         visible={Boolean(pendingCopyTarget)}
         onClose={closeCopyTargetModal}
-        title="Copy to program?"
-        style={styles.programTargetModal}
-        contentStyle={styles.programTargetModalBody}
-      >
-        <ThemedText style={styles.programTargetDate} setColor={quietText}>
-          {pendingCopyTarget?.dateLabel
-            ? `There is a program on ${pendingCopyTarget.dateLabel}. Add this workout to the program or keep it as a single workout?`
-            : "There is a program on this date. Add this workout to the program or keep it as a single workout?"}
-        </ThemedText>
-        <ScrollView
-          style={styles.programTargetList}
-          contentContainerStyle={styles.programTargetListContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {(pendingCopyTarget?.programTargets ?? []).map((programDay) => (
-            <TouchableOpacity
-              key={`${programDay.program_id}-${programDay.day_id}`}
-              activeOpacity={0.82}
-              disabled={isCopyingWorkout}
-              onPress={() => copyWorkoutToProgramTarget(programDay)}
-              style={[
-                styles.programTargetOption,
-                {
-                  backgroundColor: modalCardSurface,
-                  borderColor: cardBorder,
-                  opacity: isCopyingWorkout ? 0.62 : 1,
-                },
-              ]}
-            >
-              <ThemedText
-                style={styles.programTargetName}
-                setColor={titleColor}
-              >
-                {getProgramCopyLocation(programDay)}
-              </ThemedText>
-              <ThemedText style={styles.programTargetMeta} setColor={quietText}>
-                {programDay.program_name ?? "Program"}
-              </ThemedText>
-            </TouchableOpacity>
-          ))}
-
-          <TouchableOpacity
-            activeOpacity={0.82}
-            disabled={isCopyingWorkout}
-            onPress={() =>
-              copyWorkoutToCalendarOnly(
-                pendingCopyTarget?.workout,
-                pendingCopyTarget?.date
-              )
-            }
-            style={[
-              styles.programTargetOption,
-              {
-                backgroundColor: modalCardSurface,
-                borderColor: cardBorder,
-                opacity: isCopyingWorkout ? 0.62 : 1,
-              },
-            ]}
-          >
-            <ThemedText style={styles.programTargetName} setColor={titleColor}>
-              Single workout
-            </ThemedText>
-            <ThemedText style={styles.programTargetMeta} setColor={quietText}>
-              Keep it standing on its own in Workout Calendar.
-            </ThemedText>
-          </TouchableOpacity>
-        </ScrollView>
-      </ThemedModal>
+        dateLabel={pendingCopyTarget?.dateLabel}
+        programTargets={pendingCopyTarget?.programTargets ?? []}
+        isSubmitting={isCopyingWorkout}
+        onConfirmProgramTarget={copyWorkoutToProgramTarget}
+        onConfirmSingleWorkout={() =>
+          copyWorkoutToCalendarOnly(
+            pendingCopyTarget?.workout,
+            pendingCopyTarget?.date
+          )
+        }
+      />
 
       <PickWorkoutModal
         workouts={selectedCalendarDay?.workouts ?? []}
