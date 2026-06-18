@@ -40,6 +40,7 @@ const ExerciseRow = ({
   onDragStart,
   onDragMove,
   onDragEnd,
+  onWorkoutMetadataChange,
 }) => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -261,7 +262,8 @@ const ExerciseRow = ({
   const deleteExercise = async (exerciseId) => {
     try {
       await weightliftingRepository.deleteExercise(db, exerciseId);
-      updateUI?.();
+      await updateUI?.();
+      await onWorkoutMetadataChange?.();
     } catch (error) {
       console.error(error);
     }
@@ -277,6 +279,7 @@ const ExerciseRow = ({
       setAddingSet(true);
       await weightliftingRepository.addSetToExercise(db, exercise.exercise_id);
       await updateUI?.();
+      await onWorkoutMetadataChange?.();
     } catch (error) {
       console.error(error);
     } finally {
@@ -995,6 +998,7 @@ const ExerciseRow = ({
               updateUI={updateUI}
               onAddSet={addSet}
               onOpenSettings={() => setPanelModalVisible(true)}
+              onWorkoutMetadataChange={onWorkoutMetadataChange}
               recordColor={recordColor}
               recordLightColor={recordLightColor}
               recordDarkColor={recordDarkColor}

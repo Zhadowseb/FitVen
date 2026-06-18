@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.17.33] - Unreleased
+### Changed
+- Auto-classify resistance workout labels from exercise muscle metadata and set volume.
+
+---
 ## [0.17.32] - Unreleased
 ### Changed
 - Describe pending changes here.

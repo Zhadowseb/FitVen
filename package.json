@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.17.32-fix-week-copy-target-picker.1",
+  "version": "0.17.33-minor-auto-workout-classification.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",

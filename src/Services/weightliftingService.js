@@ -12,6 +12,10 @@ import {
   buildCustomExerciseMuscleMetadata,
   normalizeExerciseMuscleGroupKeys,
 } from "../Utils/exerciseMuscleGroups";
+import {
+  classifyWorkoutFromMuscleGroups,
+  isWorkoutLabelAutoAssignable,
+} from "../Utils/workoutClassification";
 import { calculateBrzyckiOneRepMax } from "../Utils/oneRepMaxUtils";
 
 let dirtyStrengthHierarchyPushScheduled = false;
@@ -86,6 +90,12 @@ const EXERCISE_INSTANCE_CLOUD_SELECT =
 const SET_CLOUD_TABLE = "set";
 const SET_CLOUD_SELECT =
   "id, local_set_id, sync_id, sync_version, deleted_at, last_updated, is_deleting, delete_requested_at, local_watchers, cloud_exercise_instance_id, set_number, personal_record, pause, rpe, weight, rm_percentage, reps, done, failed, amrap, note";
+const CLASSIFIABLE_WORKOUT_TYPES = new Set([
+  "Resistance",
+  "StrengthTraining",
+  "Upperbody",
+  "Legs",
+]);
 
 function normalizeOptionalNumber(value) {
   if (value === "" || value === null || value === undefined) {
@@ -871,6 +881,335 @@ function normalizeRequiredId(value, label) {
   }
 
   return Math.trunc(numericValue);
+}
+
+function getClassificationSetCount(exercise) {
+  const plannedSetCount = Math.trunc(Number(exercise?.planned_set_count));
+
+  if (Number.isFinite(plannedSetCount) && plannedSetCount > 0) {
+    return plannedSetCount;
+  }
+
+  const actualSetCount = Math.trunc(Number(exercise?.actual_set_count));
+
+  if (Number.isFinite(actualSetCount) && actualSetCount > 0) {
+    return actualSetCount;
+  }
+
+  return 1;
+}
+
+function normalizeClassificationNameKey(value) {
+  return typeof value === "string" ? value.trim().toLocaleLowerCase() : "";
+}
+
+function isCustomClassificationExercise(exercise) {
+  return normalizeBooleanFlag(exercise?.is_custom);
+}
+
+function isClassifiableWorkoutType(workoutType) {
+  return CLASSIFIABLE_WORKOUT_TYPES.has(workoutType);
+}
+
+async function resolveOfficialClassificationExerciseIds(exercises) {
+  const idsByExerciseInstanceId = new Map();
+  const missingNames = [];
+  const missingNameSet = new Set();
+
+  for (const exercise of exercises ?? []) {
+    if (isCustomClassificationExercise(exercise)) {
+      continue;
+    }
+
+    const exerciseInstanceId = normalizeOptionalInteger(
+      exercise?.exercise_instance_id,
+      null
+    );
+    const cloudExerciseId = normalizeOptionalInteger(
+      exercise?.cloud_exercise_id,
+      null
+    );
+
+    if (exerciseInstanceId === null) {
+      continue;
+    }
+
+    if (cloudExerciseId !== null) {
+      idsByExerciseInstanceId.set(exerciseInstanceId, cloudExerciseId);
+      continue;
+    }
+
+    const exerciseName =
+      typeof exercise?.exercise_name === "string"
+        ? exercise.exercise_name.trim()
+        : "";
+    const nameKey = normalizeClassificationNameKey(exerciseName);
+
+    if (!nameKey || missingNameSet.has(nameKey)) {
+      continue;
+    }
+
+    missingNameSet.add(nameKey);
+    missingNames.push(exerciseName);
+  }
+
+  if (missingNames.length === 0) {
+    return idsByExerciseInstanceId;
+  }
+
+  const { data, error } = await supabase
+    .from(EXERCISE_LIBRARY_TABLE)
+    .select(`${EXERCISE_LIBRARY_ID_COLUMN}, ${EXERCISE_LIBRARY_NAME_COLUMN}`)
+    .in(EXERCISE_LIBRARY_NAME_COLUMN, missingNames);
+
+  if (error) {
+    throw error;
+  }
+
+  const idsByName = new Map(
+    (data ?? [])
+      .map((row) => {
+        const nameKey = normalizeClassificationNameKey(
+          row?.[EXERCISE_LIBRARY_NAME_COLUMN]
+        );
+        const id = normalizeOptionalInteger(
+          row?.[EXERCISE_LIBRARY_ID_COLUMN],
+          null
+        );
+
+        return nameKey && id !== null ? [nameKey, id] : null;
+      })
+      .filter(Boolean)
+  );
+
+  for (const exercise of exercises ?? []) {
+    const exerciseInstanceId = normalizeOptionalInteger(
+      exercise?.exercise_instance_id,
+      null
+    );
+
+    if (
+      exerciseInstanceId === null ||
+      idsByExerciseInstanceId.has(exerciseInstanceId)
+    ) {
+      continue;
+    }
+
+    const exerciseId = idsByName.get(
+      normalizeClassificationNameKey(exercise?.exercise_name)
+    );
+
+    if (exerciseId !== undefined) {
+      idsByExerciseInstanceId.set(exerciseInstanceId, exerciseId);
+    }
+  }
+
+  return idsByExerciseInstanceId;
+}
+
+function buildClassificationGroupSignals({
+  groupRows,
+  groupAssignmentRows,
+  activationRows,
+}) {
+  const activeGroupsById = new Map();
+  const groupKeysByMuscleId = new Map();
+  const signalsByExerciseId = new Map();
+
+  for (const group of groupRows ?? []) {
+    const groupId = group?.id;
+    const groupKey = normalizeMuscleGroupKey(group?.group_key);
+
+    if (groupId === null || groupId === undefined || !groupKey) {
+      continue;
+    }
+
+    activeGroupsById.set(groupId, groupKey);
+  }
+
+  for (const assignment of groupAssignmentRows ?? []) {
+    const groupKey = activeGroupsById.get(assignment?.muscle_group_id);
+    const muscleId = assignment?.muscle_id;
+
+    if (!groupKey || muscleId === null || muscleId === undefined) {
+      continue;
+    }
+
+    const keys = groupKeysByMuscleId.get(muscleId) ?? new Set();
+    keys.add(groupKey);
+    groupKeysByMuscleId.set(muscleId, keys);
+  }
+
+  for (const activation of activationRows ?? []) {
+    const exerciseId = activation?.exercise_id;
+    const muscleId = activation?.muscle_id;
+    const groupKeys = groupKeysByMuscleId.get(muscleId);
+
+    if (
+      exerciseId === null ||
+      exerciseId === undefined ||
+      !groupKeys ||
+      groupKeys.size === 0
+    ) {
+      continue;
+    }
+
+    const activationLevel = normalizeActivationLevel(
+      activation?.activation_level
+    );
+    const bucket = signalsByExerciseId.get(exerciseId) ?? {
+      primaryGroupKeys: new Set(),
+      secondaryGroupKeys: new Set(),
+    };
+
+    for (const groupKey of groupKeys) {
+      if (activationLevel === PRIMARY_ACTIVATION_LEVEL) {
+        bucket.primaryGroupKeys.add(groupKey);
+        bucket.secondaryGroupKeys.delete(groupKey);
+      } else if (
+        activationLevel === SECONDARY_ACTIVATION_LEVEL &&
+        !bucket.primaryGroupKeys.has(groupKey)
+      ) {
+        bucket.secondaryGroupKeys.add(groupKey);
+      }
+    }
+
+    signalsByExerciseId.set(exerciseId, bucket);
+  }
+
+  return new Map(
+    [...signalsByExerciseId.entries()].map(([exerciseId, signals]) => [
+      exerciseId,
+      {
+        primaryGroupKeys: [...signals.primaryGroupKeys],
+        secondaryGroupKeys: [...signals.secondaryGroupKeys],
+      },
+    ])
+  );
+}
+
+async function getOfficialClassificationGroupSignals(exercises) {
+  const idsByExerciseInstanceId =
+    await resolveOfficialClassificationExerciseIds(exercises);
+  const cloudExerciseIds = [...new Set(idsByExerciseInstanceId.values())];
+
+  if (cloudExerciseIds.length === 0) {
+    return new Map();
+  }
+
+  const { data: activationRows, error: activationError } = await supabase
+    .from(MUSCLE_ACTIVATION_TABLE)
+    .select("exercise_id, muscle_id, activation_level")
+    .in("exercise_id", cloudExerciseIds);
+
+  if (activationError) {
+    throw activationError;
+  }
+
+  if ((activationRows ?? []).length === 0) {
+    return new Map();
+  }
+
+  const { data: groupRows, error: groupError } = await supabase
+    .from(MUSCLE_GROUP_TABLE)
+    .select("id, group_key, is_active")
+    .eq("is_active", true);
+
+  if (groupError) {
+    throw groupError;
+  }
+
+  const groupIds = (groupRows ?? [])
+    .map((group) => group?.id)
+    .filter((id) => id !== null && id !== undefined);
+
+  if (groupIds.length === 0) {
+    return new Map();
+  }
+
+  const { data: groupAssignmentRows, error: groupAssignmentError } =
+    await supabase
+      .from(MUSCLE_GROUP_ASSIGNMENT_TABLE)
+      .select("muscle_group_id, muscle_id")
+      .in("muscle_group_id", groupIds);
+
+  if (groupAssignmentError) {
+    throw groupAssignmentError;
+  }
+
+  const signalsByCloudExerciseId = buildClassificationGroupSignals({
+    groupRows,
+    groupAssignmentRows,
+    activationRows,
+  });
+  const signalsByExerciseInstanceId = new Map();
+
+  for (const [exerciseInstanceId, cloudExerciseId] of idsByExerciseInstanceId) {
+    const signals = signalsByCloudExerciseId.get(cloudExerciseId);
+
+    if (signals) {
+      signalsByExerciseInstanceId.set(exerciseInstanceId, signals);
+    }
+  }
+
+  return signalsByExerciseInstanceId;
+}
+
+function buildClassificationInput(exercises, officialSignalsByExerciseId) {
+  const classificationExercises = [];
+
+  for (const exercise of exercises ?? []) {
+    const exerciseInstanceId = normalizeOptionalInteger(
+      exercise?.exercise_instance_id,
+      null
+    );
+    const plannedSetCount = getClassificationSetCount(exercise);
+
+    if (isCustomClassificationExercise(exercise)) {
+      const primaryGroupKeys = normalizeExerciseMuscleGroupKeys(
+        exercise?.custom_muscle_group_keys
+      );
+
+      if (primaryGroupKeys.length > 0) {
+        classificationExercises.push({
+          exerciseName: exercise?.exercise_name,
+          plannedSetCount,
+          primaryGroupKeys,
+          secondaryGroupKeys: [],
+        });
+      }
+
+      continue;
+    }
+
+    const officialSignals = officialSignalsByExerciseId.get(exerciseInstanceId);
+
+    if (!officialSignals) {
+      continue;
+    }
+
+    classificationExercises.push({
+      exerciseName: exercise?.exercise_name,
+      plannedSetCount,
+      primaryGroupKeys: officialSignals.primaryGroupKeys,
+      secondaryGroupKeys: officialSignals.secondaryGroupKeys,
+    });
+  }
+
+  return classificationExercises;
+}
+
+async function reclassifyWorkoutLabelBestEffort(db, workoutId) {
+  try {
+    return await reclassifyWorkoutLabel(db, workoutId);
+  } catch (error) {
+    console.warn("Workout classification failed:", error);
+    return {
+      changed: false,
+      label: null,
+      skippedReason: "error",
+    };
+  }
 }
 
 function parseVisibleColumns(value) {
@@ -2970,7 +3309,107 @@ export async function getWorkoutExercises(
     }
   }
 
+  if (ensureHydrated) {
+    await reclassifyWorkoutLabelBestEffort(db, workoutId);
+  }
+
   return exercises;
+}
+
+export async function reclassifyWorkoutLabel(db, workoutId, options = {}) {
+  const resolvedWorkoutId = normalizeRequiredId(workoutId, "workoutId");
+  const metadata = await workoutService.getWorkoutPageMetadata(
+    db,
+    resolvedWorkoutId
+  );
+
+  if (!metadata) {
+    return {
+      changed: false,
+      label: null,
+      skippedReason: "missing_workout",
+    };
+  }
+
+  if (!isClassifiableWorkoutType(metadata.workout_type)) {
+    return {
+      changed: false,
+      label: metadata.workout_instance_label ?? null,
+      skippedReason: "unsupported_workout_type",
+    };
+  }
+
+  if (
+    !options.force &&
+    !isWorkoutLabelAutoAssignable({
+      label: metadata.workout_instance_label,
+      workoutType: metadata.workout_type,
+    })
+  ) {
+    return {
+      changed: false,
+      label: metadata.workout_instance_label ?? null,
+      skippedReason: "manual_label",
+    };
+  }
+
+  const exercises = await weightliftingRepository.getWorkoutClassificationExercises(
+    db,
+    resolvedWorkoutId
+  );
+
+  if (exercises.length === 0) {
+    return {
+      changed: false,
+      label: metadata.workout_instance_label ?? null,
+      skippedReason: "missing_exercises",
+    };
+  }
+
+  let officialSignalsByExerciseId = new Map();
+
+  try {
+    officialSignalsByExerciseId =
+      await getOfficialClassificationGroupSignals(exercises);
+  } catch (error) {
+    console.warn("Unable to load official exercise classification metadata:", error);
+  }
+
+  const classificationInput = buildClassificationInput(
+    exercises,
+    officialSignalsByExerciseId
+  );
+  const classification = classifyWorkoutFromMuscleGroups(classificationInput);
+  const nextLabel = classification.label;
+
+  if (!nextLabel) {
+    return {
+      changed: false,
+      label: metadata.workout_instance_label ?? null,
+      skippedReason: classification.skippedReason ?? "missing_metadata",
+    };
+  }
+
+  if (
+    normalizeClassificationNameKey(metadata.workout_instance_label) ===
+    normalizeClassificationNameKey(nextLabel)
+  ) {
+    return {
+      changed: false,
+      label: nextLabel,
+      skippedReason: "unchanged",
+    };
+  }
+
+  await workoutService.updateWorkoutLabel(db, {
+    workoutId: resolvedWorkoutId,
+    label: nextLabel,
+  });
+
+  return {
+    changed: true,
+    label: nextLabel,
+  };
 }
 
 export async function addExerciseToWorkout(db, { workoutId, exerciseName }) {
@@ -3005,6 +3444,7 @@ export async function addExerciseToWorkout(db, { workoutId, exerciseName }) {
     await workoutService.refreshWorkoutHierarchyCompletion(db, workoutId);
   });
 
+  await reclassifyWorkoutLabelBestEffort(db, workoutId);
   syncExerciseInstancesInBackground(db);
 }
 
@@ -3097,6 +3537,8 @@ export async function reorderWorkoutExercises(db, { workoutId, exerciseIds }) {
 }
 
 export async function deleteExercise(db, exerciseId) {
+  let workoutId = null;
+
   await withTransaction(db, async () => {
     const exercise = await weightliftingRepository.getWorkoutIdByExercise(
       db,
@@ -3132,6 +3574,7 @@ export async function deleteExercise(db, exerciseId) {
     await weightliftingRepository.deleteExerciseById(db, exerciseId);
 
     if (exercise?.workout_id) {
+      workoutId = exercise.workout_id;
       await resequenceWorkoutExerciseOrder(db, exercise.workout_id);
       await workoutService.refreshWorkoutHierarchyCompletion(
         db,
@@ -3140,10 +3583,16 @@ export async function deleteExercise(db, exerciseId) {
     }
   });
 
+  if (workoutId) {
+    await reclassifyWorkoutLabelBestEffort(db, workoutId);
+  }
+
   syncExerciseInstancesInBackground(db);
 }
 
 export async function addSetToExercise(db, exerciseId) {
+  let workoutId = null;
+
   await withTransaction(db, async () => {
     const exercise = await weightliftingRepository.getWorkoutIdByExercise(
       db,
@@ -3160,12 +3609,17 @@ export async function addSetToExercise(db, exerciseId) {
     await weightliftingRepository.updateExerciseDoneFromSets(db, exerciseId);
 
     if (exercise?.workout_id) {
+      workoutId = exercise.workout_id;
       await workoutService.refreshWorkoutHierarchyCompletion(
         db,
         exercise.workout_id
       );
     }
   });
+
+  if (workoutId) {
+    await reclassifyWorkoutLabelBestEffort(db, workoutId);
+  }
 
   syncExerciseInstancesInBackground(db);
   syncSetsInBackground(db);
@@ -3224,6 +3678,8 @@ export async function updateStrengthSetDone(
 }
 
 export async function deleteSet(db, setId) {
+  let workoutId = null;
+
   await withTransaction(db, async () => {
     const set = await weightliftingRepository.getExerciseAndWorkoutBySetId(
       db,
@@ -3234,6 +3690,7 @@ export async function deleteSet(db, setId) {
       return;
     }
 
+    workoutId = set.workout_id;
     const syncMetadata = await weightliftingRepository.getSetSyncMetadata(
       db,
       setId
@@ -3277,6 +3734,10 @@ export async function deleteSet(db, setId) {
     await weightliftingRepository.updateExerciseDoneFromSets(db, set.exercise_instance_id);
     await workoutService.refreshWorkoutHierarchyCompletion(db, set.workout_id);
   });
+
+  if (workoutId) {
+    await reclassifyWorkoutLabelBestEffort(db, workoutId);
+  }
 
   syncExerciseInstancesInBackground(db);
   syncSetsInBackground(db);
@@ -3417,7 +3878,15 @@ export async function getExerciseSetCount(db, exerciseId) {
 }
 
 export async function initializeExerciseSets(db, { exerciseId, count }) {
+  let workoutId = null;
+
   await withTransaction(db, async () => {
+    const exercise = await weightliftingRepository.getWorkoutIdByExercise(
+      db,
+      exerciseId
+    );
+    workoutId = exercise?.workout_id ?? null;
+
     for (let index = 1; index <= count; index += 1) {
       await weightliftingRepository.createSet(db, {
         setNumber: index,
@@ -3428,11 +3897,17 @@ export async function initializeExerciseSets(db, { exerciseId, count }) {
     await weightliftingRepository.updateExerciseSetCount(db, exerciseId);
   });
 
+  if (workoutId) {
+    await reclassifyWorkoutLabelBestEffort(db, workoutId);
+  }
+
   syncExerciseInstancesInBackground(db);
   syncSetsInBackground(db);
 }
 
 export async function saveExerciseSets(db, { exerciseId, sets }) {
+  let workoutId = null;
+
   await withTransaction(db, async () => {
     const exercise = await weightliftingRepository.getWorkoutIdByExercise(
       db,
@@ -3464,12 +3939,17 @@ export async function saveExerciseSets(db, { exerciseId, sets }) {
     await weightliftingRepository.updateExerciseDoneFromSets(db, exerciseId);
 
     if (exercise?.workout_id) {
+      workoutId = exercise.workout_id;
       await workoutService.refreshWorkoutHierarchyCompletion(
         db,
         exercise.workout_id
       );
     }
   });
+
+  if (workoutId) {
+    await reclassifyWorkoutLabelBestEffort(db, workoutId);
+  }
 
   syncExerciseInstancesInBackground(db);
   syncSetsInBackground(db);

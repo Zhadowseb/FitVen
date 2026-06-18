@@ -71,6 +71,7 @@ const Resistance = ({
   date,
   workoutInstanceLabel,
   restartRequestKey,
+  onWorkoutMetadataChange,
 }) =>  {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -683,6 +684,7 @@ const Resistance = ({
             onReorderDragChange={setIsReorderingExercises}
             onRestTimerStart={handleRestTimerStart}
             onRestTimerCancel={handleRestTimerCancel}
+            onWorkoutMetadataChange={onWorkoutMetadataChange}
           />
         </View>
 

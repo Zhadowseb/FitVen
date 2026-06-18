@@ -682,6 +682,40 @@ export async function getExercisesByWorkout(db, workoutId) {
   );
 }
 
+export async function getWorkoutClassificationExercises(db, workoutId) {
+  await ensureExerciseOrderColumn(db);
+
+  return db.getAllAsync(
+    `SELECT
+        ei.exercise_instance_id,
+        ei.exercise_name,
+        ei.sets AS planned_set_count,
+        COUNT(s.sets_id) AS actual_set_count,
+        e.cloud_exercise_id,
+        e.official,
+        e.is_custom,
+        e.custom_muscle_group_keys
+     FROM Exercise_Instance ei
+     LEFT JOIN "Set" s
+       ON s.exercise_instance_id = ei.exercise_instance_id
+      AND s.deleted_at IS NULL
+     LEFT JOIN Exercise e
+       ON e.name = ei.exercise_name COLLATE NOCASE
+     WHERE ei.workout_type_instance_id = ?
+       AND ei.deleted_at IS NULL
+     GROUP BY
+        ei.exercise_instance_id,
+        ei.exercise_name,
+        ei.sets,
+        e.cloud_exercise_id,
+        e.official,
+        e.is_custom,
+        e.custom_muscle_group_keys
+     ORDER BY ei.exercise_order ASC, ei.exercise_instance_id ASC;`,
+    [workoutId]
+  );
+}
+
 export async function getProgramExerciseNames(db, programId) {
   return db.getAllAsync(
     `SELECT DISTINCT e.exercise_name

@@ -24,6 +24,7 @@ const ExerciseList = ({
   onReorderDragChange,
   onRestTimerStart,
   onRestTimerCancel,
+  onWorkoutMetadataChange,
 }) => {
   const [exercises, setExercises] = useState([]);
   const [expandedExercises, setExpandedExercises] = useState({});
@@ -132,6 +133,7 @@ const ExerciseList = ({
       }
 
       applyLoadedExercises(hydratedExercises);
+      await onWorkoutMetadataChange?.();
 
     } catch (error) {
       console.error("Error loading exercises", error);
@@ -140,7 +142,13 @@ const ExerciseList = ({
         setLoading(false);
       }
     }
-  }, [applyLoadedExercises, db, shouldRequestHydration, workout_id]);
+  }, [
+    applyLoadedExercises,
+    db,
+    onWorkoutMetadataChange,
+    shouldRequestHydration,
+    workout_id,
+  ]);
 
   const normalizeSetCompletion = (completion) => {
     if (typeof completion === "object" && completion !== null) {
@@ -628,6 +636,7 @@ const ExerciseList = ({
         onDragStart={() => handleDragStart(item.exercise_id)}
         onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
+        onWorkoutMetadataChange={onWorkoutMetadataChange}
       />
     </Animated.View>
   );

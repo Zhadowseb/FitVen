@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Alert, View, TouchableOpacity, useColorScheme } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
 import { Colors } from "../../Resources/GlobalStyling/colors";
 
@@ -56,27 +56,25 @@ const WorkoutPage = ({ route }) => {
   const [isCopyingWorkout, setIsCopyingWorkout] = useState(false);
   const [pendingCopyTarget, setPendingCopyTarget] = useState(null);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadMetadata = async () => {
-      try {
-        const nextMetadata = await workoutService.getWorkoutPageMetadata(db, workout_id);
-
-        if (!cancelled) {
-          setMetadata(nextMetadata);
-        }
-      } catch (error) {
-        console.error("Failed to load workout metadata:", error);
-      }
-    };
-
-    loadMetadata();
-
-    return () => {
-      cancelled = true;
-    };
+  const loadMetadata = useCallback(async () => {
+    try {
+      const nextMetadata = await workoutService.getWorkoutPageMetadata(
+        db,
+        workout_id
+      );
+      setMetadata(nextMetadata);
+      return nextMetadata;
+    } catch (error) {
+      console.error("Failed to load workout metadata:", error);
+      return null;
+    }
   }, [db, workout_id]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadMetadata();
+    }, [loadMetadata])
+  );
 
   const workoutType =
     metadata?.workout_type ?? initialWorkoutType ?? initialWorkoutLabel ?? null;
@@ -312,6 +310,7 @@ const WorkoutPage = ({ route }) => {
           date={workoutDate}
           workoutInstanceLabel={workoutInstanceLabel}
           restartRequestKey={restartRequestKey}
+          onWorkoutMetadataChange={loadMetadata}
         />
       )}
 

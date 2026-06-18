@@ -101,6 +101,7 @@ const SetList = ({
   recordDarkColor,
   recordControlFillColor,
   recordControlTextColor,
+  onWorkoutMetadataChange,
 }) => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -368,7 +369,8 @@ const SetList = ({
 
   const deleteSet = async (setId) => {
     await weightliftingRepository.deleteSet(db, setId);
-    updateUI();
+    await updateUI?.();
+    await onWorkoutMetadataChange?.();
   };
 
   const updateField = async (field, value, setId) => {
