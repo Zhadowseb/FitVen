@@ -7,7 +7,13 @@ import Workout from "./Workout";
 
 import { ThemedPicker, ThemedText } from "../../ThemedComponents";
 
-const CalenderPastePicker = ({ program_id, visible, close, version }) => {
+const CalenderPastePicker = ({
+  program_id,
+  visible,
+  close,
+  version,
+  source_microcycle_id,
+}) => {
   return (
     <>
       {version === "mesocycle" && (
@@ -23,6 +29,7 @@ const CalenderPastePicker = ({ program_id, visible, close, version }) => {
           program_id={program_id}
           visible={visible}
           close={close}
+          source_microcycle_id={source_microcycle_id}
         />
       )}
 

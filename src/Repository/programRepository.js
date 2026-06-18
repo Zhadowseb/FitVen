@@ -1696,7 +1696,11 @@ export async function deleteMesocycleById(db, mesocycleId) {
 
 export async function getMesocycleOptions(db, programId) {
   return db.getAllAsync(
-    `SELECT mesocycle_id, mesocycle_number
+    `SELECT
+        mesocycle_id,
+        mesocycle_number,
+        weeks,
+        focus
      FROM Mesocycle
      WHERE program_id = ?
      ORDER BY mesocycle_number;`,
@@ -1828,11 +1832,31 @@ export async function getAllMicrocyclesByProgram(db, programId) {
     `SELECT
         mc.microcycle_id,
         mc.microcycle_number,
-        mc.mesocycle_id
+        mc.mesocycle_id,
+        (
+          SELECT d.date
+          FROM Day d
+          WHERE d.microcycle_id = mc.microcycle_id
+          ORDER BY d.day_id ASC
+          LIMIT 1
+        ) AS period_start,
+        (
+          SELECT d.date
+          FROM Day d
+          WHERE d.microcycle_id = mc.microcycle_id
+          ORDER BY d.day_id DESC
+          LIMIT 1
+        ) AS period_end,
+        (
+          SELECT COUNT(*)
+          FROM Workout_Type_Instance w
+          JOIN Day d ON d.day_id = w.day_id
+          WHERE d.microcycle_id = mc.microcycle_id
+        ) AS workout_count
      FROM Microcycle mc
      JOIN Mesocycle m ON m.mesocycle_id = mc.mesocycle_id
      WHERE m.program_id = ?
-     ORDER BY mc.microcycle_number;`,
+     ORDER BY m.mesocycle_number, mc.microcycle_number;`,
     [programId]
   );
 }

@@ -999,12 +999,19 @@ const MicrocycleList = ({
       <CalenderPastePicker 
         program_id={program_id}
         visible={showCalendarPicker}
-        close={ (returned) => {
+        close={ async (returned) => {
           set_ShowCalendarPicker(false);
-          copyWeek(selectedWeek.microcycle_id, returned.microcycle_id);
+
+          if (!returned?.microcycle_id) {
+            return;
+          }
+
+          await copyWeek(selectedWeek.microcycle_id, returned.microcycle_id);
           updateui();
         }} 
-        version="microcycle"/>
+        version="microcycle"
+        source_microcycle_id={selectedWeek?.microcycle_id}
+      />
     )}
 
     <PickWorkoutModal
