@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.17.30] - Unreleased
+### Changed
+- Describe pending changes here.
+
+---
 ## [0.17.29] - Unreleased
 ### Changed
 - Describe pending changes here.

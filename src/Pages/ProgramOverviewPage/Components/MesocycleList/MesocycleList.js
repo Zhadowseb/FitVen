@@ -284,6 +284,55 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 17,
   },
+  addWeekTouchable: {
+    marginTop: 2,
+  },
+  addWeekCard: {
+    minHeight: 74,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderRadius: 16,
+    padding: 0,
+    overflow: "hidden",
+  },
+  addWeekCardContent: {
+    minHeight: 74,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  addWeekIconBadge: {
+    width: 38,
+    height: 38,
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    marginRight: 12,
+  },
+  addWeekCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+  addWeekEyebrow: {
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: "800",
+    letterSpacing: 1.5,
+    textTransform: "uppercase",
+    marginBottom: 4,
+  },
+  addWeekTitle: {
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: "800",
+  },
+  addWeekSubtitle: {
+    marginTop: 2,
+    fontSize: 12,
+    lineHeight: 16,
+  },
 });
 
 function getCompletedWorkoutCount(item) {
@@ -338,6 +387,7 @@ const MesocycleList = ({
   const [mesocycles, setMesocycles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const [addingWeekMesocycleId, setAddingWeekMesocycleId] = useState(null);
 
   const accentColor = theme.primary ?? "#f7742e";
   const successColor = theme.secondary ?? "#60daac";
@@ -463,6 +513,31 @@ const MesocycleList = ({
     setModalVisible(false);
   };
 
+  const handleAddWeek = async (mesocycleId) => {
+    if (!mesocycleId || addingWeekMesocycleId) {
+      return;
+    }
+
+    try {
+      setAddingWeekMesocycleId(mesocycleId);
+
+      await programService.addWeekToMesocycle(db, {
+        mesocycleId,
+        programId: program_id,
+      });
+
+      if (refresh) {
+        refresh();
+      } else {
+        await loadMesocycles();
+      }
+    } catch (error) {
+      console.error("Error adding week to block", error);
+    } finally {
+      setAddingWeekMesocycleId(null);
+    }
+  };
+
   useEffect(() => {
     loadMesocycles();
   }, [refreshKey]);
@@ -504,6 +579,9 @@ const MesocycleList = ({
           const progressPercent = isDraft ? 0 : getProgressPercent(item);
           const title = item.focus || `Block ${item.mesocycle_number}`;
           const subtitle = item.focus ? presentation.subtitle : "No focus set";
+          const hasWeeks = Number(item.weeks) > 0;
+          const isAddingWeek =
+            Number(addingWeekMesocycleId) === Number(item.mesocycle_id);
 
           return (
             <TouchableOpacity
@@ -697,36 +775,103 @@ const MesocycleList = ({
                     </View>
                   </View>
 
-                  {!isDraft && item.period_end ? (
-                    <View style={styles.dateRow}>
-                      <View style={styles.dateIconWrap}>
-                        <Calender
-                          width={14}
-                          height={14}
-                          color={quietText}
-                          thickness={1.7}
-                        />
+                  {hasWeeks ? (
+                    item.period_end ? (
+                      <View style={styles.dateRow}>
+                        <View style={styles.dateIconWrap}>
+                          <Calender
+                            width={14}
+                            height={14}
+                            color={quietText}
+                            thickness={1.7}
+                          />
+                        </View>
+                        <ThemedText style={styles.dateText} setColor={quietText}>
+                          {item.period_start}
+                        </ThemedText>
+                        <ThemedText
+                          style={styles.dateSeparator}
+                          setColor={quietText}
+                        >
+                          -
+                        </ThemedText>
+                        <ThemedText style={styles.dateText} setColor={quietText}>
+                          {item.period_end}
+                        </ThemedText>
+                        <View style={styles.dateIconBalance} />
                       </View>
-                      <ThemedText style={styles.dateText} setColor={quietText}>
-                        {item.period_start}
-                      </ThemedText>
-                      <ThemedText
-                        style={styles.dateSeparator}
-                        setColor={quietText}
-                      >
-                        -
-                      </ThemedText>
-                      <ThemedText style={styles.dateText} setColor={quietText}>
-                        {item.period_end}
-                      </ThemedText>
-                      <View style={styles.dateIconBalance} />
-                    </View>
+                    ) : null
                   ) : (
-                    <View style={styles.dateRow}>
-                      <ThemedText style={styles.dateText} setColor={quietText}>
-                        No weeks added yet
-                      </ThemedText>
-                    </View>
+                    <TouchableOpacity
+                      activeOpacity={0.86}
+                      disabled={isAddingWeek}
+                      onPress={(event) => {
+                        event?.stopPropagation?.();
+                        handleAddWeek(item.mesocycle_id);
+                      }}
+                      style={[
+                        styles.addWeekTouchable,
+                        { opacity: isAddingWeek ? 0.62 : 1 },
+                      ]}
+                    >
+                      <View
+                        style={[
+                          styles.addWeekCard,
+                          {
+                            backgroundColor: addSurface,
+                            borderColor: cardBorder,
+                          },
+                        ]}
+                      >
+                        <View style={styles.addWeekCardContent}>
+                          <View
+                            style={[
+                              styles.addWeekIconBadge,
+                              {
+                                backgroundColor: tileBackground,
+                                borderColor: accentColor,
+                              },
+                            ]}
+                          >
+                            {isAddingWeek ? (
+                              <ActivityIndicator
+                                size="small"
+                                color={accentColor}
+                              />
+                            ) : (
+                              <PlusCircled
+                                width={21}
+                                height={21}
+                                color={accentColor}
+                              />
+                            )}
+                          </View>
+
+                          <View style={styles.addWeekCopy}>
+                            <ThemedText
+                              style={styles.addWeekEyebrow}
+                              setColor={accentColor}
+                            >
+                              New week
+                            </ThemedText>
+                            <ThemedText
+                              style={styles.addWeekTitle}
+                              setColor={titleColor}
+                              numberOfLines={1}
+                            >
+                              Add week
+                            </ThemedText>
+                            <ThemedText
+                              style={styles.addWeekSubtitle}
+                              setColor={quietText}
+                              numberOfLines={1}
+                            >
+                              Create the first week in this block.
+                            </ThemedText>
+                          </View>
+                        </View>
+                      </View>
+                    </TouchableOpacity>
                   )}
                 </View>
               </ThemedCard>
