@@ -411,7 +411,7 @@ const Microcycle = ({
                         styles.weekCard,
                         {
                           backgroundColor: fieldSurface,
-                          borderColor: isCurrent ? secondaryColor : cardBorder,
+                          borderColor: isCurrent ? primaryColor : cardBorder,
                           opacity: isCurrent ? 0.72 : 1,
                         },
                       ]}
@@ -419,7 +419,7 @@ const Microcycle = ({
                       <View
                         style={[
                           styles.weekBadge,
-                          { borderColor: isCurrent ? secondaryColor : titleColor },
+                          { borderColor: isCurrent ? primaryColor : titleColor },
                         ]}
                       >
                         <ThemedText style={styles.weekBadgeLabel} setColor={mutedText}>
@@ -440,20 +440,20 @@ const Microcycle = ({
                             <View
                               style={[
                                 styles.statusPill,
-                                { backgroundColor: secondarySoft },
+                                { backgroundColor: primarySoft },
                               ]}
                             >
                               <Checkmark
                                 width={11}
                                 height={11}
-                                color={secondaryColor}
+                                color={primaryColor}
                                 thickness={2.3}
                               />
                               <ThemedText
                                 style={styles.statusText}
-                                setColor={secondaryColor}
+                                setColor={primaryColor}
                               >
-                                CURRENT
+                                COPIED
                               </ThemedText>
                             </View>
                           ) : hasWorkouts ? (
