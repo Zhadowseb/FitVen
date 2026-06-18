@@ -460,6 +460,13 @@ const Run = ({ workout_id, restartRequestKey }) => {
         throw trackingError;
       }
 
+      if (isFreshStart) {
+        workoutRepository.notifyWorkoutStartedInBackground(db, {
+          workoutId: workout_id,
+          startedAt: start_time,
+        });
+      }
+
       Vibration.vibrate(500);
       if (isFreshStart) {
         set_original_start_time(start_time);

@@ -70,6 +70,27 @@ export async function getWorkoutTimerState(db, workoutId) {
   );
 }
 
+export async function getWorkoutStartNotificationDetails(db, workoutId) {
+  return db.getFirstAsync(
+    `SELECT
+        workout_id,
+        cloud_id,
+        cloud_workout_type_instance_id,
+        sync_id,
+        workout_type,
+        label,
+        date,
+        done,
+        is_active,
+        original_start_time,
+        timer_start,
+        elapsed_time
+     FROM Workout_Type_Instance
+     WHERE workout_id = ?;`,
+    [workoutId]
+  );
+}
+
 export async function getActiveWorkoutTimer(db) {
   return db.getFirstAsync(
     `SELECT

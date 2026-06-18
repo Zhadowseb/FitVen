@@ -15,7 +15,7 @@ import styles from "./ProfilePageStyle";
 import { Colors } from "../../Resources/GlobalStyling/colors";
 import { logout } from "../../Database/supaBaseClient";
 import { useAuth } from "../../Contexts/AuthContext";
-import { socialService } from "../../Services";
+import { notificationService, socialService } from "../../Services";
 import Bell from "../../Resources/Icons/UI-icons/Bell";
 import FeedbackModal from "../../Resources/Components/FeedbackModal/FeedbackModal";
 import Library from "../../Resources/Icons/UI-icons/Library";
@@ -319,6 +319,12 @@ export default function ProfilePage() {
     setIsLoggingOut(true);
 
     try {
+      try {
+        await notificationService.disableCurrentPushTokenForUser({ user });
+      } catch (cleanupError) {
+        console.warn("Push token logout cleanup failed:", cleanupError);
+      }
+
       await logout();
     } catch (error) {
       setLogoutError(

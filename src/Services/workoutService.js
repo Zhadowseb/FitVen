@@ -1,4 +1,5 @@
 import { workoutRepository } from "../Repository";
+import * as notificationService from "./notificationService";
 import { withTransaction } from "./shared";
 import { startBackgroundSync } from "./syncScheduler";
 
@@ -88,6 +89,38 @@ async function syncWorkoutTypeInstancesInBackground(db) {
   } catch (error) {
     console.error("Failed to start workout type instance cloud sync:", error);
   }
+}
+
+export function notifyWorkoutStartedInBackground(
+  db,
+  { workoutId, startedAt } = {}
+) {
+  if (!workoutId) {
+    return;
+  }
+
+  void (async () => {
+    try {
+      const workout =
+        await workoutRepository.getWorkoutStartNotificationDetails(
+          db,
+          workoutId
+        );
+      const result = await notificationService.notifyWorkoutStarted({
+        workout,
+        startedAt,
+      });
+
+      if (result?.skipped) {
+        console.info(
+          "Workout start notification skipped:",
+          result.reason ?? "unknown"
+        );
+      }
+    } catch (error) {
+      console.warn("Workout start notification failed:", error);
+    }
+  })();
 }
 
 export async function refreshWorkoutHierarchyCompletionByIds(

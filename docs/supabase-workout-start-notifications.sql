@@ -4,7 +4,8 @@
 --   docs/supabase-push-notifications.sql
 --
 -- The Edge Function uses this table to prevent repeated pushes for the same
--- workout if a webhook retries or the same workout is paused and started again.
+-- workout if the app sends the immediate start event, a webhook retries, or
+-- the same workout is paused and started again.
 
 begin;
 
@@ -254,6 +255,12 @@ commit;
 -- every INSERT and UPDATE on workout_type_instance. INSERT is required when a
 -- workout is first synced to Supabase after its timer has already started.
 --
+-- The app also invokes this same function directly when a workout starts. That
+-- direct request is authenticated with the user's Supabase session, while the
+-- database webhook continues to authenticate with x-fitven-webhook-secret. Both
+-- paths dedupe through notification_events using the workout sync_id when it is
+-- present, so the later normal sync should not send a second push.
+--
 -- Manual SQL test after the webhook is active:
 --
 -- 1. Confirm the receiving account has a token:
@@ -270,9 +277,13 @@ commit;
 --      limit 10;
 --
 -- 3. Reset and start one workout. Delete the event row only when deliberately
---    retesting the same workout id:
+--    retesting the same workout. If the workout has a sync_id, the event key is
+--    workout_started:<sync_id>; otherwise it falls back to the workout id:
 --      delete from public.notification_events
---      where event_key = 'workout_started:<workout-id>';
+--      where event_key in (
+--        'workout_started:<sync-id>',
+--        'workout_started:<workout-id>'
+--      );
 --
 --      update public.workout_type_instance
 --      set done = false,

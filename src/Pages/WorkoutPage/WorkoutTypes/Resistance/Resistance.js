@@ -256,8 +256,9 @@ const Resistance = ({
 
     //Miliseconds since 1. januar 1970 at 00:00:00 UTC
     const start_time = getCurrentStoredTimestampSeconds();
+    const isFreshStart = row.original_start_time === null;
 
-    if(row.original_start_time === null){
+    if(isFreshStart){
         set_original_start_time(start_time);
         await workoutService.setWorkoutOriginalStartTime(db, {
             workoutId: workout_id,
@@ -270,6 +271,13 @@ const Resistance = ({
       timerStart: start_time,
       elapsedTime: elapsed_time,
     });
+
+    if (isFreshStart) {
+      workoutService.notifyWorkoutStartedInBackground(db, {
+        workoutId: workout_id,
+        startedAt: start_time,
+      });
+    }
 
     timerStartRef.current = start_time;
     set_isRunning(true);

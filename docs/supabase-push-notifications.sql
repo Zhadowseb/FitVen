@@ -152,6 +152,28 @@ end $$;
 create unique index if not exists push_tokens_user_token_idx
   on public.push_tokens (user_id, expo_push_token);
 
+with duplicate_enabled_tokens as (
+  select
+    ctid,
+    row_number() over (
+      partition by expo_push_token
+      order by last_seen_at desc, updated_at desc, created_at desc, ctid desc
+    ) as duplicate_rank
+  from public.push_tokens
+  where enabled = true
+)
+update public.push_tokens push_token
+set
+  enabled = false,
+  updated_at = timezone('utc', now())
+from duplicate_enabled_tokens
+where push_token.ctid = duplicate_enabled_tokens.ctid
+  and duplicate_enabled_tokens.duplicate_rank > 1;
+
+create unique index if not exists push_tokens_enabled_token_unique_idx
+  on public.push_tokens (expo_push_token)
+  where enabled = true;
+
 create index if not exists push_tokens_user_enabled_idx
   on public.push_tokens (user_id, enabled, last_seen_at desc);
 
@@ -502,3 +524,12 @@ to authenticated
 using ((select auth.uid()) = user_id);
 
 commit;
+
+-- Edge Function setup:
+--
+-- 1. Deploy the function used by the app for token ownership:
+--      supabase functions deploy manage-push-token
+--
+-- 2. Existing signed-in users do not need to log out. The app registers the
+--    device token again on launch/foreground, and the function disables older
+--    owners of the same Expo token server-side.

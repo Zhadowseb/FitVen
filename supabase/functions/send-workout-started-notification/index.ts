@@ -9,6 +9,8 @@ type JsonRecord = Record<string, unknown>;
 
 type WorkoutRecord = {
   id?: number | string | null;
+  sync_id?: string | null;
+  local_workout_type_instance_id?: number | string | null;
   user_id?: string | null;
   workout_type?: string | null;
   label?: string | null;
@@ -20,12 +22,15 @@ type WorkoutRecord = {
 };
 
 type DatabaseWebhookPayload = {
+  source?: string;
   type?: string;
   table?: string;
   schema?: string;
   record?: WorkoutRecord | null;
   old_record?: WorkoutRecord | null;
   force?: boolean;
+  started_at?: number | string | null;
+  actor_expo_push_token?: string | null;
 };
 
 type PushTokenRow = {
@@ -46,6 +51,16 @@ type WorkoutStartNotificationSourceRow = {
 type NotificationEventRow = {
   id: string;
 };
+
+type RequestAuth =
+  | {
+      kind: "webhook";
+      userId?: never;
+    }
+  | {
+      kind: "user";
+      userId: string;
+    };
 
 type ExpoTicket = {
   status?: "ok" | "error";
@@ -97,6 +112,14 @@ function hasValue(value: unknown) {
   return value !== null && value !== undefined && String(value).trim() !== "";
 }
 
+function normalizeText(value: unknown) {
+  if (!hasValue(value)) {
+    return null;
+  }
+
+  return String(value).trim();
+}
+
 function isWorkoutLive(workout: WorkoutRecord | null | undefined) {
   if (!workout) {
     return false;
@@ -137,6 +160,26 @@ function getWorkoutLabel(workout: WorkoutRecord) {
   }
 
   return workoutType || "Workout";
+}
+
+function getWorkoutEventKey(workout: WorkoutRecord) {
+  const syncId = normalizeText(workout.sync_id);
+
+  if (syncId) {
+    return `workout_started:${syncId}`;
+  }
+
+  const workoutId = normalizeText(workout.id);
+
+  return workoutId ? `workout_started:${workoutId}` : null;
+}
+
+function getWorkoutSourceId(workout: WorkoutRecord) {
+  return (
+    normalizeText(workout.id) ??
+    normalizeText(workout.sync_id) ??
+    normalizeText(workout.local_workout_type_instance_id)
+  );
 }
 
 function lowerFirst(value: string) {
@@ -234,14 +277,82 @@ function getInvalidTokenIds(tokens: PushTokenRow[], tickets: ExpoTicket[]) {
 }
 
 function validateWebhookSecret(req: Request) {
-  const expectedSecret = requireEnv("FITVEN_NOTIFICATION_WEBHOOK_SECRET");
+  const expectedSecret = Deno.env.get("FITVEN_NOTIFICATION_WEBHOOK_SECRET");
   const receivedSecret = req.headers.get(WEBHOOK_SECRET_HEADER);
 
-  if (!receivedSecret || receivedSecret !== expectedSecret) {
-    return false;
+  return Boolean(expectedSecret && receivedSecret === expectedSecret);
+}
+
+function getBearerToken(req: Request) {
+  const authorization = req.headers.get("Authorization") ?? "";
+  const match = authorization.match(/^Bearer\s+(.+)$/i);
+
+  return match?.[1]?.trim() || null;
+}
+
+async function authenticateRequest(
+  req: Request,
+  supabase: ReturnType<typeof createClient>
+): Promise<RequestAuth | null> {
+  if (validateWebhookSecret(req)) {
+    return { kind: "webhook" };
   }
 
-  return true;
+  const token = getBearerToken(req);
+
+  if (!token) {
+    return null;
+  }
+
+  const { data, error } = await supabase.auth.getUser(token);
+  const userId = data?.user?.id;
+
+  if (error || !userId) {
+    return null;
+  }
+
+  return { kind: "user", userId };
+}
+
+function normalizeClientPayload(
+  payload: DatabaseWebhookPayload,
+  userId: string
+): DatabaseWebhookPayload {
+  const record = payload.record ?? {};
+  const timerStart =
+    record.timer_start ?? payload.started_at ?? new Date().toISOString();
+
+  return {
+    ...payload,
+    source: "client",
+    type: payload.type ?? "CLIENT_WORKOUT_START",
+    schema: payload.schema ?? "public",
+    table: payload.table ?? "workout_type_instance",
+    force: true,
+    old_record: null,
+    record: {
+      ...record,
+      user_id: userId,
+      done: false,
+      is_active: true,
+      is_deleting: false,
+      deleted_at: null,
+      timer_start: timerStart,
+    },
+  };
+}
+
+function getEventPayload(payload: DatabaseWebhookPayload): JsonRecord {
+  const { actor_expo_push_token: actorExpoPushToken, ...safePayload } = payload;
+
+  if (!actorExpoPushToken) {
+    return safePayload as JsonRecord;
+  }
+
+  return {
+    ...safePayload,
+    actor_expo_push_token_present: true,
+  } as JsonRecord;
 }
 
 async function sendExpoPushes(tokens: PushTokenRow[], message: JsonRecord) {
@@ -292,10 +403,6 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "Method not allowed" }, 405);
   }
 
-  if (!validateWebhookSecret(req)) {
-    return jsonResponse({ error: "Unauthorized" }, 401);
-  }
-
   const supabaseUrl = requireEnv("SUPABASE_URL");
   const serviceRoleKey = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
   const supabase = createClient(supabaseUrl, serviceRoleKey, {
@@ -305,12 +412,22 @@ Deno.serve(async (req) => {
     },
   });
 
+  const requestAuth = await authenticateRequest(req, supabase);
+
+  if (!requestAuth) {
+    return jsonResponse({ error: "Unauthorized" }, 401);
+  }
+
   let payload: DatabaseWebhookPayload;
 
   try {
     payload = (await req.json()) as DatabaseWebhookPayload;
   } catch {
     return jsonResponse({ error: "Invalid JSON payload" }, 400);
+  }
+
+  if (requestAuth.kind === "user") {
+    payload = normalizeClientPayload(payload, requestAuth.userId);
   }
 
   if (!isWorkoutStartedPayload(payload)) {
@@ -322,9 +439,10 @@ Deno.serve(async (req) => {
 
   const workout = payload.record;
   const actorId = workout?.user_id;
-  const workoutId = workout?.id;
+  const workoutId = workout ? getWorkoutSourceId(workout) : null;
+  const eventKey = workout ? getWorkoutEventKey(workout) : null;
 
-  if (!workout || !actorId || !workoutId) {
+  if (!workout || !actorId || !workoutId || !eventKey) {
     return jsonResponse(
       {
         skipped: true,
@@ -334,7 +452,6 @@ Deno.serve(async (req) => {
     );
   }
 
-  const eventKey = `workout_started:${workoutId}`;
   const { data: event, error: eventError } = await supabase
     .from("notification_events")
     .insert({
@@ -344,7 +461,7 @@ Deno.serve(async (req) => {
       source_table: "workout_type_instance",
       source_id: String(workoutId),
       status: "processing",
-      payload: payload as JsonRecord,
+      payload: getEventPayload(payload),
     })
     .select("id")
     .single<NotificationEventRow>();
@@ -486,6 +603,8 @@ Deno.serve(async (req) => {
         type: "workout_started",
         actorId,
         workoutId: String(workoutId),
+        workoutSyncId: workout.sync_id ?? null,
+        localWorkoutId: workout.local_workout_type_instance_id ?? null,
         workoutType: workout.workout_type ?? null,
         workoutLabel,
       },
@@ -541,6 +660,12 @@ Deno.serve(async (req) => {
       ((actorTokens ?? []) as PushTokenRow[])
         .map((token) => token.expo_push_token)
     );
+    const directActorPushToken = normalizeText(payload.actor_expo_push_token);
+
+    if (directActorPushToken) {
+      actorPushTokens.add(directActorPushToken);
+    }
+
     const addedRecipientTokens = new Set<string>();
     const tokens = registeredTokens.filter((token) => {
       if (

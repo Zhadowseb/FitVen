@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.17.29] - Unreleased
+### Changed
+- Describe pending changes here.
+
+---
 ## [0.17.28] - Unreleased
 ### Changed
 - Ask before adding a standalone workout copy to a program day, while program workout copies automatically use a matching program day or fall back to the workout calendar.

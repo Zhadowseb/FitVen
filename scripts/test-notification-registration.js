@@ -22,6 +22,13 @@ const workoutNotificationFunctionPath = path.join(
   "send-workout-started-notification",
   "index.ts"
 );
+const managePushTokenFunctionPath = path.join(
+  rootDir,
+  "supabase",
+  "functions",
+  "manage-push-token",
+  "index.ts"
+);
 const appPath = path.join(rootDir, "App.js");
 const notificationHistoryPagePath = path.join(
   rootDir,
@@ -43,6 +50,10 @@ const workoutNotificationFunctionSource = fs.readFileSync(
   workoutNotificationFunctionPath,
   "utf8"
 );
+const managePushTokenFunctionSource = fs.readFileSync(
+  managePushTokenFunctionPath,
+  "utf8"
+);
 const appSource = fs.readFileSync(appPath, "utf8");
 const notificationHistoryPageSource = fs.readFileSync(
   notificationHistoryPagePath,
@@ -51,6 +62,12 @@ const notificationHistoryPageSource = fs.readFileSync(
 const workoutServiceSource = fs.readFileSync(workoutServicePath, "utf8");
 
 assert.match(serviceSource, /Notifications\.addPushTokenListener\(listener\)/);
+assert.match(serviceSource, /MANAGE_PUSH_TOKEN_FUNCTION = "manage-push-token"/);
+assert.match(serviceSource, /supabase\.functions\.invoke\(\s*MANAGE_PUSH_TOKEN_FUNCTION/);
+assert.match(
+  serviceSource,
+  /supabase\.functions\.invoke\(\s*SEND_WORKOUT_STARTED_NOTIFICATION_FUNCTION/
+);
 assert.match(
   serviceSource,
   /\.\.\.\(devicePushToken \? \{ devicePushToken \} : \{\}\)/
@@ -78,7 +95,35 @@ assert.match(
 );
 assert.match(
   workoutNotificationFunctionSource,
+  /function getWorkoutEventKey[\s\S]*workout\.sync_id/
+);
+assert.match(
+  workoutNotificationFunctionSource,
+  /authenticateRequest[\s\S]*supabase\.auth\.getUser\(token\)/
+);
+assert.match(
+  workoutNotificationFunctionSource,
+  /normalizeClientPayload[\s\S]*user_id: userId/
+);
+assert.match(
+  workoutNotificationFunctionSource,
+  /actor_expo_push_token_present/
+);
+assert.match(
+  workoutNotificationFunctionSource,
   /\.from\("notification_inbox"\)[\s\S]*\.from\("push_tokens"\)/
+);
+assert.match(
+  managePushTokenFunctionSource,
+  /\.neq\("user_id", userId\)[\s\S]*\.eq\("enabled", true\)/
+);
+assert.match(
+  managePushTokenFunctionSource,
+  /onConflict: "user_id,expo_push_token"/
+);
+assert.match(
+  managePushTokenFunctionSource,
+  /action === "disable"[\s\S]*\.eq\("user_id", userId\)/
 );
 assert.match(appSource, /<WorkoutTypeInstanceSync \/>/);
 assert.match(
@@ -100,6 +145,10 @@ assert.match(
 assert.match(
   workoutServiceSource,
   /export async function setWorkoutOriginalStartTime[\s\S]*workoutRepository\.setWorkoutOriginalStartTime[\s\S]*syncWorkoutTypeInstancesInBackground\(db\)/
+);
+assert.match(
+  workoutServiceSource,
+  /export function notifyWorkoutStartedInBackground[\s\S]*notificationService\.notifyWorkoutStarted/
 );
 
 console.log("Notification registration and recipient checks passed.");

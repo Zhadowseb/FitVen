@@ -11,6 +11,9 @@ const WORKOUT_START_NOTIFICATION_SOURCES_TABLE =
 const NOTIFICATION_INBOX_TABLE = "notification_inbox";
 const AVATAR_BUCKET = "avatars";
 const ACTIVITY_NOTIFICATION_CHANNEL_ID = "activity";
+const MANAGE_PUSH_TOKEN_FUNCTION = "manage-push-token";
+const SEND_WORKOUT_STARTED_NOTIFICATION_FUNCTION =
+  "send-workout-started-notification";
 const NOTIFICATION_SETUP_MESSAGE =
   "Push notifications are not set up in Supabase yet. Run docs/supabase-push-notifications.sql in the Supabase SQL editor first.";
 const NOTIFICATION_HISTORY_SETUP_MESSAGE =
@@ -104,6 +107,30 @@ function normalizeNotificationError(error) {
   return error;
 }
 
+function normalizeOptionalText(value) {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  const normalized = String(value).trim();
+  return normalized || null;
+}
+
+function normalizeFunctionError(error, functionName) {
+  const message = String(error?.message ?? error ?? "");
+
+  if (
+    message.toLowerCase().includes("function") &&
+    message.toLowerCase().includes("not found")
+  ) {
+    return new Error(
+      `Supabase Edge Function "${functionName}" is not deployed yet.`
+    );
+  }
+
+  return error;
+}
+
 function buildAvatarPublicUrl(avatarPath, updatedAt) {
   if (!avatarPath) {
     return null;
@@ -191,6 +218,34 @@ async function getExpoPushToken(devicePushToken = null) {
   });
 
   return tokenResult.data;
+}
+
+async function getExpoPushTokenIfPermissionGranted() {
+  if (Platform.OS === "web") {
+    return null;
+  }
+
+  try {
+    const permission = await getNotificationPermission();
+
+    if (!isPermissionGranted(permission)) {
+      return null;
+    }
+
+    return await getExpoPushToken();
+  } catch {
+    return null;
+  }
+}
+
+async function hasActiveSupabaseSession() {
+  const { data, error } = await supabase.auth.getSession();
+
+  if (error) {
+    throw error;
+  }
+
+  return Boolean(data?.session?.access_token);
 }
 
 async function fetchUserPushTokens(userId) {
@@ -339,32 +394,127 @@ export async function registerPushTokenForUser({
   }
 
   const expoPushToken = await getExpoPushToken(devicePushToken);
-  const now = new Date().toISOString();
-  const { data, error } = await supabase
-    .from(PUSH_TOKENS_TABLE)
-    .upsert(
-      {
-        user_id: user.id,
-        expo_push_token: expoPushToken,
+  const { data, error } = await supabase.functions.invoke(
+    MANAGE_PUSH_TOKEN_FUNCTION,
+    {
+      body: {
+        action: "register",
+        expoPushToken,
         platform: Platform.OS,
-        enabled: true,
-        last_seen_at: now,
-        updated_at: now,
       },
-      { onConflict: "user_id,expo_push_token" }
-    )
-    .select("id, expo_push_token")
-    .single();
+    }
+  );
 
   if (error) {
-    throw normalizeNotificationError(error);
+    throw normalizeFunctionError(error, MANAGE_PUSH_TOKEN_FUNCTION);
   }
 
   return {
     skipped: false,
-    tokenId: data?.id ?? null,
-    expoPushToken: data?.expo_push_token ?? expoPushToken,
+    tokenId: data?.tokenId ?? null,
+    expoPushToken: data?.expoPushToken ?? expoPushToken,
   };
+}
+
+export async function disableCurrentPushTokenForUser({ user } = {}) {
+  if (!user?.id) {
+    return { skipped: true, reason: "signed_out" };
+  }
+
+  if (Platform.OS === "web") {
+    return { skipped: true, reason: "unsupported_platform" };
+  }
+
+  const permission = await getNotificationPermission();
+
+  if (!isPermissionGranted(permission)) {
+    return { skipped: true, reason: "permission_denied" };
+  }
+
+  const expoPushToken = await getExpoPushToken();
+  const { data, error } = await supabase.functions.invoke(
+    MANAGE_PUSH_TOKEN_FUNCTION,
+    {
+      body: {
+        action: "disable",
+        expoPushToken,
+      },
+    }
+  );
+
+  if (error) {
+    throw normalizeFunctionError(error, MANAGE_PUSH_TOKEN_FUNCTION);
+  }
+
+  return {
+    skipped: false,
+    expoPushToken: data?.expoPushToken ?? expoPushToken,
+  };
+}
+
+export async function notifyWorkoutStarted({ workout, startedAt } = {}) {
+  if (!workout) {
+    return { skipped: true, reason: "missing_workout" };
+  }
+
+  const hasSession = await hasActiveSupabaseSession();
+
+  if (!hasSession) {
+    return { skipped: true, reason: "signed_out" };
+  }
+
+  const syncId = normalizeOptionalText(workout.sync_id);
+  const cloudWorkoutId =
+    workout.cloud_workout_type_instance_id ?? workout.cloud_id ?? null;
+  const localWorkoutId =
+    workout.workout_id ??
+    workout.local_workout_type_instance_id ??
+    workout.id ??
+    null;
+  const workoutIdentity = syncId ?? cloudWorkoutId ?? localWorkoutId;
+
+  if (!workoutIdentity) {
+    return { skipped: true, reason: "missing_workout_identity" };
+  }
+
+  const record = {
+    id: cloudWorkoutId ?? workoutIdentity,
+    sync_id: syncId,
+    local_workout_type_instance_id: localWorkoutId,
+    workout_type: workout.workout_type ?? null,
+    label: workout.label ?? null,
+    date: workout.date ?? null,
+    done: false,
+    is_active: true,
+    is_deleting: false,
+    deleted_at: null,
+    original_start_time: workout.original_start_time ?? startedAt ?? null,
+    timer_start: workout.timer_start ?? startedAt ?? null,
+    elapsed_time: workout.elapsed_time ?? null,
+  };
+  const actorExpoPushToken = await getExpoPushTokenIfPermissionGranted();
+
+  const { data, error } = await supabase.functions.invoke(
+    SEND_WORKOUT_STARTED_NOTIFICATION_FUNCTION,
+    {
+      body: {
+        source: "client",
+        force: true,
+        record,
+        started_at: startedAt ?? null,
+        actor_expo_push_token: actorExpoPushToken,
+      },
+    }
+  );
+
+  if (error) {
+    throw normalizeFunctionError(
+      error,
+      SEND_WORKOUT_STARTED_NOTIFICATION_FUNCTION
+    );
+  }
+
+  return data ?? { sent: false };
 }
 
 export async function getPushNotificationSettings({ user } = {}) {
