@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.17.30-minor-program-block-add-week-cta.1",
+  "version": "0.17.31-minor-program-import-menu.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",

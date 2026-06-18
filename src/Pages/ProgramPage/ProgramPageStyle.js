@@ -5,22 +5,13 @@ export default StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    gap: 12,
   },
-  header_import_button: {
-    minHeight: 32,
-    borderRadius: 16,
-    borderWidth: 1,
-    paddingHorizontal: 12,
+  header_menu_button: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  header_import_button_disabled: {
-    opacity: 0.5,
-  },
-  header_import_text: {
-    fontSize: 13,
-    fontWeight: '700',
   },
   container: {
     borderWidth: 1,
@@ -43,6 +34,9 @@ export default StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     paddingVertical: 10,
+  },
+  option_disabled: {
+    opacity: 0.56,
   },
   option_text: {
     fontSize: 16,
