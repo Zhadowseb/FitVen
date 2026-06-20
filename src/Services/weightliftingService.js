@@ -1352,10 +1352,14 @@ function getExerciseMuscleLoadSignals(exercise, officialSignalsByExerciseId) {
     exercise?.exercise_instance_id,
     null
   );
+  const fallbackSignals = getFallbackMuscleLoadSignals(
+    exercise?.exercise_name
+  );
 
   return (
+    fallbackSignals ??
     officialSignalsByExerciseId.get(exerciseInstanceId) ??
-    getFallbackMuscleLoadSignals(exercise?.exercise_name)
+    null
   );
 }
 
