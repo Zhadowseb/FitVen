@@ -96,6 +96,32 @@ const CLASSIFIABLE_WORKOUT_TYPES = new Set([
   "Upperbody",
   "Legs",
 ]);
+const MUSCLE_LOAD_GROUPS = [
+  { key: "chest", label: "Chest" },
+  { key: "shoulder", label: "Shoulder" },
+  { key: "back", label: "Back" },
+  { key: "arms", label: "Arms" },
+  { key: "legs", label: "Legs" },
+  { key: "core", label: "Core" },
+];
+const MUSCLE_LOAD_CATEGORY_BY_GROUP_KEY = {
+  chest: "chest",
+  shoulders: "shoulder",
+  lats: "back",
+  traps: "back",
+  biceps: "arms",
+  triceps: "arms",
+  forearms: "arms",
+  glutes: "legs",
+  quads: "legs",
+  hamstrings: "legs",
+  calves: "legs",
+  adductors: "legs",
+  abs: "core",
+  obliques: "core",
+  "lower-back": "core",
+  lower_back: "core",
+};
 
 function normalizeOptionalNumber(value) {
   if (value === "" || value === null || value === undefined) {
@@ -1197,6 +1223,146 @@ function buildClassificationInput(exercises, officialSignalsByExerciseId) {
   }
 
   return classificationExercises;
+}
+
+function createMuscleLoadTotals() {
+  return MUSCLE_LOAD_GROUPS.reduce(
+    (totals, group) => ({
+      ...totals,
+      [group.key]: 0,
+    }),
+    {}
+  );
+}
+
+function getMuscleLoadCategoryKeys(groupKeys) {
+  const categoryKeys = new Set();
+
+  for (const groupKey of groupKeys ?? []) {
+    const categoryKey =
+      MUSCLE_LOAD_CATEGORY_BY_GROUP_KEY[normalizeMuscleGroupKey(groupKey)];
+
+    if (categoryKey) {
+      categoryKeys.add(categoryKey);
+    }
+  }
+
+  return categoryKeys;
+}
+
+function getExerciseMuscleLoadSignals(exercise, officialSignalsByExerciseId) {
+  if (isCustomClassificationExercise(exercise)) {
+    return {
+      primaryGroupKeys: normalizeExerciseMuscleGroupKeys(
+        exercise?.custom_muscle_group_keys
+      ),
+      secondaryGroupKeys: [],
+    };
+  }
+
+  const exerciseInstanceId = normalizeOptionalInteger(
+    exercise?.exercise_instance_id,
+    null
+  );
+
+  return officialSignalsByExerciseId.get(exerciseInstanceId) ?? null;
+}
+
+function addMuscleLoadScore(totals, categoryKeys, points, setCount) {
+  for (const categoryKey of categoryKeys) {
+    totals[categoryKey] += points * setCount;
+  }
+}
+
+function formatMuscleLoadValue(value) {
+  const numericValue = Number(value);
+
+  if (!Number.isFinite(numericValue)) {
+    return "0";
+  }
+
+  const roundedValue = Math.round(numericValue * 10) / 10;
+
+  return Number.isInteger(roundedValue)
+    ? String(roundedValue)
+    : roundedValue.toFixed(1);
+}
+
+function buildProgramWeeklyMuscleLoadSummary({
+  exercises,
+  weekCount,
+  officialSignalsByExerciseId,
+}) {
+  const totals = createMuscleLoadTotals();
+  const normalizedWeekCount = Math.max(0, Math.trunc(Number(weekCount)) || 0);
+  const averageDivisor = Math.max(1, normalizedWeekCount);
+  let scoredExerciseCount = 0;
+
+  for (const exercise of exercises ?? []) {
+    const signals = getExerciseMuscleLoadSignals(
+      exercise,
+      officialSignalsByExerciseId
+    );
+
+    if (!signals) {
+      continue;
+    }
+
+    const primaryCategoryKeys = getMuscleLoadCategoryKeys(
+      signals.primaryGroupKeys
+    );
+    const secondaryCategoryKeys = getMuscleLoadCategoryKeys(
+      signals.secondaryGroupKeys
+    );
+
+    for (const categoryKey of primaryCategoryKeys) {
+      secondaryCategoryKeys.delete(categoryKey);
+    }
+
+    if (primaryCategoryKeys.size === 0 && secondaryCategoryKeys.size === 0) {
+      continue;
+    }
+
+    const setCount = getClassificationSetCount(exercise);
+
+    addMuscleLoadScore(
+      totals,
+      primaryCategoryKeys,
+      PRIMARY_MUSCLE_WEIGHT,
+      setCount
+    );
+    addMuscleLoadScore(
+      totals,
+      secondaryCategoryKeys,
+      SECONDARY_MUSCLE_WEIGHT,
+      setCount
+    );
+    scoredExerciseCount += 1;
+  }
+
+  const points = MUSCLE_LOAD_GROUPS.map((group) => {
+    const totalScore = totals[group.key] ?? 0;
+    const averageScore = totalScore / averageDivisor;
+
+    return {
+      key: group.key,
+      label: group.label,
+      totalScore,
+      averageScore,
+      value: averageScore,
+      valueDisplay: formatMuscleLoadValue(averageScore),
+    };
+  });
+  const maxValue = Math.max(...points.map((point) => point.value), 0);
+
+  return {
+    points,
+    weekCount: normalizedWeekCount,
+    exerciseCount: exercises?.length ?? 0,
+    scoredExerciseCount,
+    hasData: scoredExerciseCount > 0 && maxValue > 0,
+    maxValue,
+  };
 }
 
 async function reclassifyWorkoutLabelBestEffort(db, workoutId) {
@@ -2598,6 +2764,34 @@ export async function getStrengthWorkoutSummary(db, workoutId) {
 
 export async function getProgramExerciseNames(db, programId) {
   return weightliftingRepository.getProgramExerciseNames(db, programId);
+}
+
+export async function getProgramWeeklyMuscleLoad(db, programId) {
+  const resolvedProgramId = normalizeRequiredId(programId, "programId");
+  const [exercises, weekCountRow] = await Promise.all([
+    weightliftingRepository.getProgramMuscleLoadExercises(
+      db,
+      resolvedProgramId
+    ),
+    weightliftingRepository.getProgramMuscleLoadWeekCount(
+      db,
+      resolvedProgramId
+    ),
+  ]);
+  let officialSignalsByExerciseId = new Map();
+
+  try {
+    officialSignalsByExerciseId =
+      await getOfficialClassificationGroupSignals(exercises);
+  } catch (error) {
+    console.warn("Unable to load official muscle load metadata:", error);
+  }
+
+  return buildProgramWeeklyMuscleLoadSummary({
+    exercises,
+    weekCount: weekCountRow?.week_count ?? 0,
+    officialSignalsByExerciseId,
+  });
 }
 
 async function getAuthenticatedUserId() {

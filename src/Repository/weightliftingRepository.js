@@ -716,6 +716,73 @@ export async function getWorkoutClassificationExercises(db, workoutId) {
   );
 }
 
+export async function getProgramMuscleLoadExercises(db, programId) {
+  await ensureExerciseOrderColumn(db);
+
+  return db.getAllAsync(
+    `SELECT
+        mc.microcycle_id,
+        ei.exercise_instance_id,
+        ei.exercise_name,
+        ei.sets AS planned_set_count,
+        COUNT(s.sets_id) AS actual_set_count,
+        e.cloud_exercise_id,
+        e.official,
+        e.is_custom,
+        e.custom_muscle_group_keys
+     FROM Exercise_Instance ei
+     JOIN Workout_Type_Instance w
+       ON w.workout_id = ei.workout_type_instance_id
+     JOIN Day d
+       ON d.day_id = w.day_id
+     JOIN Microcycle mc
+       ON mc.microcycle_id = d.microcycle_id
+     JOIN Mesocycle m
+       ON m.mesocycle_id = mc.mesocycle_id
+     LEFT JOIN "Set" s
+       ON s.exercise_instance_id = ei.exercise_instance_id
+      AND COALESCE(s.deleted_at, '') = ''
+     LEFT JOIN Exercise e
+       ON e.name = ei.exercise_name COLLATE NOCASE
+     WHERE m.program_id = ?
+       AND COALESCE(ei.deleted_at, '') = ''
+       AND COALESCE(w.deleted_at, '') = ''
+       AND COALESCE(d.deleted_at, '') = ''
+       AND COALESCE(mc.deleted_at, '') = ''
+       AND COALESCE(m.deleted_at, '') = ''
+     GROUP BY
+        mc.microcycle_id,
+        ei.exercise_instance_id,
+        ei.exercise_name,
+        ei.sets,
+        e.cloud_exercise_id,
+        e.official,
+        e.is_custom,
+        e.custom_muscle_group_keys
+     ORDER BY
+        m.mesocycle_number ASC,
+        mc.microcycle_number ASC,
+        d.day_id ASC,
+        w.workout_id ASC,
+        ei.exercise_order ASC,
+        ei.exercise_instance_id ASC;`,
+    [programId]
+  );
+}
+
+export async function getProgramMuscleLoadWeekCount(db, programId) {
+  return db.getFirstAsync(
+    `SELECT COUNT(DISTINCT mc.microcycle_id) AS week_count
+     FROM Microcycle mc
+     JOIN Mesocycle m
+       ON m.mesocycle_id = mc.mesocycle_id
+     WHERE m.program_id = ?
+       AND COALESCE(mc.deleted_at, '') = ''
+       AND COALESCE(m.deleted_at, '') = '';`,
+    [programId]
+  );
+}
+
 export async function getProgramExerciseNames(db, programId) {
   return db.getAllAsync(
     `SELECT DISTINCT e.exercise_name

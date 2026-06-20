@@ -5218,6 +5218,10 @@ export async function getProgramsOverview(db) {
   return programRepository.getProgramsOverview(db);
 }
 
+export async function getProgramOptions(db) {
+  return programRepository.getProgramOptions(db);
+}
+
 export async function getActiveProgram(db) {
   return programRepository.getActiveProgram(db);
 }

@@ -16,7 +16,7 @@ import Svg, {
   Stop,
   Text as SvgText,
 } from "react-native-svg";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
 
@@ -26,11 +26,12 @@ import Calender from "../../Resources/Icons/UI-icons/Calender";
 import TradeUp from "../../Resources/Icons/UI-icons/TradeUp";
 import {
   ThemedHeader,
+  ThemedPicker,
   ThemedText,
   ThemedTitle,
   ThemedView,
 } from "../../Resources/ThemedComponents";
-import { weightliftingService } from "../../Services";
+import { programService, weightliftingService } from "../../Services";
 
 const TREND_CHART_WIDTH = 320;
 const TREND_CHART_HEIGHT = 190;
@@ -40,6 +41,14 @@ const TREND_CHART_PADDING = {
   bottom: 34,
   left: 44,
 };
+const MUSCLE_RADAR_CHART_WIDTH = 320;
+const MUSCLE_RADAR_CHART_HEIGHT = 270;
+const MUSCLE_RADAR_CENTER = {
+  x: 160,
+  y: 132,
+};
+const MUSCLE_RADAR_RADIUS = 82;
+const MUSCLE_RADAR_GRID_STEPS = [0.25, 0.5, 0.75, 1];
 
 function formatTrendAxisValue(value) {
   const numericValue = Number(value);
@@ -53,6 +62,58 @@ function formatTrendAxisValue(value) {
   return Number.isInteger(roundedValue)
     ? String(roundedValue)
     : roundedValue.toFixed(1);
+}
+
+function getMuscleRadarPoint(index, pointCount, radius) {
+  const angle = -Math.PI / 2 + (index / pointCount) * Math.PI * 2;
+
+  return {
+    x: MUSCLE_RADAR_CENTER.x + Math.cos(angle) * radius,
+    y: MUSCLE_RADAR_CENTER.y + Math.sin(angle) * radius,
+  };
+}
+
+function buildMuscleRadarPath(pointCount, radius) {
+  if (pointCount <= 0) {
+    return "";
+  }
+
+  return Array.from({ length: pointCount }, (_, index) => {
+    const point = getMuscleRadarPoint(index, pointCount, radius);
+
+    return `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`;
+  }).join(" ") + " Z";
+}
+
+function buildMuscleLoadRadarPath(points = [], maxValue = 0) {
+  if (points.length === 0 || maxValue <= 0) {
+    return "";
+  }
+
+  return points
+    .map((point, index) => {
+      const ratio = Math.max(0, Number(point?.value) || 0) / maxValue;
+      const radarPoint = getMuscleRadarPoint(
+        index,
+        points.length,
+        MUSCLE_RADAR_RADIUS * Math.min(1, ratio)
+      );
+
+      return `${index === 0 ? "M" : "L"} ${radarPoint.x} ${radarPoint.y}`;
+    })
+    .join(" ") + " Z";
+}
+
+function getRadarLabelAnchor(x) {
+  if (x < MUSCLE_RADAR_CENTER.x - 12) {
+    return "end";
+  }
+
+  if (x > MUSCLE_RADAR_CENTER.x + 12) {
+    return "start";
+  }
+
+  return "middle";
 }
 
 function buildTrendChartGeometry(points = []) {
@@ -152,11 +213,28 @@ const PersonalRecordsPage = () => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const [summaries, setSummaries] = useState([]);
+  const [muscleLoadPrograms, setMuscleLoadPrograms] = useState([]);
+  const [selectedProgramId, setSelectedProgramId] = useState(null);
+  const selectedProgramIdRef = useRef(null);
+  const [muscleLoad, setMuscleLoad] = useState(null);
+  const [muscleLoadLoading, setMuscleLoadLoading] = useState(false);
   const [selectedExerciseName, setSelectedExerciseName] = useState(null);
   const [selectedDetail, setSelectedDetail] = useState(null);
   const [loading, setLoading] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
   const [hideEmptyRepRanges, setHideEmptyRepRanges] = useState(false);
+  const muscleLoadProgramItems = useMemo(
+    () =>
+      muscleLoadPrograms.map((program) => ({
+        label:
+          typeof program?.program_name === "string" &&
+          program.program_name.trim() !== ""
+            ? program.program_name.trim()
+            : `Program ${program.program_id}`,
+        value: program.program_id,
+      })),
+    [muscleLoadPrograms]
+  );
 
   const primaryColor = theme.primary ?? "#f7742e";
   const secondaryColor = theme.secondary ?? "#60daac";
@@ -170,6 +248,11 @@ const PersonalRecordsPage = () => {
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const titleColor = theme.title ?? theme.text;
   const invertedText = theme.cardBackground ?? theme.textInverted ?? "#1b1918";
+
+  const updateSelectedProgramId = useCallback((programId) => {
+    selectedProgramIdRef.current = programId;
+    setSelectedProgramId(programId);
+  }, []);
 
   const loadSummaries = useCallback(async () => {
     try {
@@ -195,6 +278,57 @@ const PersonalRecordsPage = () => {
     }
   }, [db, selectedExerciseName]);
 
+  const loadMuscleLoadData = useCallback(
+    async (programId) => {
+      if (!programId) {
+        setMuscleLoad(null);
+        setMuscleLoadLoading(false);
+        return;
+      }
+
+      try {
+        setMuscleLoadLoading(true);
+        const nextMuscleLoad =
+          await weightliftingService.getProgramWeeklyMuscleLoad(db, programId);
+
+        setMuscleLoad(nextMuscleLoad);
+      } catch (error) {
+        console.error("Failed to load program muscle load:", error);
+        setMuscleLoad(null);
+      } finally {
+        setMuscleLoadLoading(false);
+      }
+    },
+    [db]
+  );
+
+  const loadMuscleLoadPrograms = useCallback(async () => {
+    try {
+      const nextPrograms = (await programService.getProgramOptions(db)).filter(
+        (program) => Number.isFinite(Number(program?.program_id))
+      );
+      const selectedProgram =
+        nextPrograms.find(
+          (program) =>
+            Number(program.program_id) ===
+            Number(selectedProgramIdRef.current)
+        ) ??
+        nextPrograms[0] ??
+        null;
+      const nextSelectedProgramId = selectedProgram?.program_id ?? null;
+
+      setMuscleLoadPrograms(nextPrograms);
+      updateSelectedProgramId(nextSelectedProgramId);
+      await loadMuscleLoadData(nextSelectedProgramId);
+    } catch (error) {
+      console.error("Failed to load program muscle load programs:", error);
+      setMuscleLoadPrograms([]);
+      updateSelectedProgramId(null);
+      setMuscleLoad(null);
+      setMuscleLoadLoading(false);
+    }
+  }, [db, loadMuscleLoadData, updateSelectedProgramId]);
+
   const openExerciseDetail = async (exerciseName) => {
     try {
       setDetailLoading(true);
@@ -219,11 +353,253 @@ const PersonalRecordsPage = () => {
     setSelectedDetail(null);
   };
 
+  const handleChangeMuscleLoadProgram = useCallback(
+    (programId) => {
+      updateSelectedProgramId(programId);
+      loadMuscleLoadData(programId);
+    },
+    [loadMuscleLoadData, updateSelectedProgramId]
+  );
+
   useFocusEffect(
     useCallback(() => {
       loadSummaries();
-    }, [loadSummaries])
+      loadMuscleLoadPrograms();
+    }, [loadMuscleLoadPrograms, loadSummaries])
   );
+
+  const renderMuscleLoadCard = () => {
+    const points = muscleLoad?.points ?? [];
+    const hasPrograms = muscleLoadProgramItems.length > 0;
+    const hasMuscleLoadData = !!muscleLoad?.hasData;
+    const maxValue = Math.max(1, Number(muscleLoad?.maxValue) || 0);
+    const radarPath = buildMuscleLoadRadarPath(points, maxValue);
+
+    return (
+      <View
+        style={[
+          styles.muscleLoadCard,
+          {
+            backgroundColor: cardSurface,
+            borderColor: cardBorder,
+          },
+        ]}
+      >
+        <View style={styles.muscleLoadHeader}>
+          <View style={styles.muscleLoadHeaderText}>
+            <ThemedText style={styles.muscleLoadEyebrow} setColor={primaryColor}>
+              PERSONAL RECORDS
+            </ThemedText>
+            <ThemedText style={styles.muscleLoadTitle} setColor={titleColor}>
+              Weekly muscle load
+            </ThemedText>
+          </View>
+
+          {hasPrograms && (
+            <ThemedPicker
+              value={selectedProgramId}
+              items={muscleLoadProgramItems}
+              onChange={handleChangeMuscleLoadProgram}
+              placeholder="Program"
+              title="Pick program"
+              style={styles.muscleLoadPicker}
+            />
+          )}
+        </View>
+
+        <View
+          style={[
+            styles.muscleLoadChartFrame,
+            {
+              backgroundColor: panelSurface,
+              borderColor: cardBorder,
+            },
+          ]}
+        >
+          {muscleLoadLoading ? (
+            <View style={styles.muscleLoadEmptyState}>
+              <ActivityIndicator color={primaryColor} />
+            </View>
+          ) : hasPrograms && hasMuscleLoadData ? (
+            <Svg
+              width="100%"
+              height={MUSCLE_RADAR_CHART_HEIGHT}
+              viewBox={`0 0 ${MUSCLE_RADAR_CHART_WIDTH} ${MUSCLE_RADAR_CHART_HEIGHT}`}
+            >
+              <Defs>
+                <LinearGradient
+                  id="personalRecordMuscleLoadFill"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
+                  <Stop offset="0" stopColor={primaryColor} stopOpacity="0.42" />
+                  <Stop offset="1" stopColor={primaryColor} stopOpacity="0.12" />
+                </LinearGradient>
+              </Defs>
+
+              {MUSCLE_RADAR_GRID_STEPS.map((step) => (
+                <Path
+                  key={`grid-${step}`}
+                  d={buildMuscleRadarPath(
+                    points.length,
+                    MUSCLE_RADAR_RADIUS * step
+                  )}
+                  fill="none"
+                  stroke={quietText}
+                  strokeOpacity={step === 1 ? 0.28 : 0.14}
+                  strokeWidth={1}
+                />
+              ))}
+
+              {points.map((point, index) => {
+                const axisPoint = getMuscleRadarPoint(
+                  index,
+                  points.length,
+                  MUSCLE_RADAR_RADIUS
+                );
+
+                return (
+                  <Line
+                    key={`axis-${point.key}`}
+                    x1={MUSCLE_RADAR_CENTER.x}
+                    y1={MUSCLE_RADAR_CENTER.y}
+                    x2={axisPoint.x}
+                    y2={axisPoint.y}
+                    stroke={quietText}
+                    strokeOpacity={0.14}
+                    strokeWidth={1}
+                  />
+                );
+              })}
+
+              {!!radarPath && (
+                <Path
+                  d={radarPath}
+                  fill="url(#personalRecordMuscleLoadFill)"
+                  stroke={primaryColor}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={3}
+                />
+              )}
+
+              {points.map((point, index) => {
+                const ratio = Math.max(0, Number(point.value) || 0) / maxValue;
+                const radarPoint = getMuscleRadarPoint(
+                  index,
+                  points.length,
+                  MUSCLE_RADAR_RADIUS * Math.min(1, ratio)
+                );
+                const labelPoint = getMuscleRadarPoint(
+                  index,
+                  points.length,
+                  MUSCLE_RADAR_RADIUS + 28
+                );
+                const textAnchor = getRadarLabelAnchor(labelPoint.x);
+
+                return (
+                  <G key={point.key}>
+                    <Circle
+                      cx={radarPoint.x}
+                      cy={radarPoint.y}
+                      r={3.8}
+                      fill={secondaryColor}
+                      stroke={panelSurface}
+                      strokeWidth={2}
+                    />
+                    <SvgText
+                      x={labelPoint.x}
+                      y={labelPoint.y}
+                      fill={titleColor}
+                      fontSize="10"
+                      fontWeight="900"
+                      textAnchor={textAnchor}
+                    >
+                      {point.label}
+                    </SvgText>
+                    <SvgText
+                      x={labelPoint.x}
+                      y={labelPoint.y + 13}
+                      fill={quietText}
+                      fontSize="9"
+                      fontWeight="800"
+                      textAnchor={textAnchor}
+                    >
+                      {point.valueDisplay}
+                    </SvgText>
+                  </G>
+                );
+              })}
+            </Svg>
+          ) : (
+            <View style={styles.muscleLoadEmptyState}>
+              <ThemedText style={styles.muscleLoadEmptyTitle} setColor={titleColor}>
+                No muscle load yet
+              </ThemedText>
+              <ThemedText style={styles.muscleLoadEmptyText} setColor={quietText}>
+                Program strength sets will appear here.
+              </ThemedText>
+            </View>
+          )}
+        </View>
+
+        <View style={styles.muscleLoadMetaRow}>
+          <View
+            style={[
+              styles.muscleLoadMetaItem,
+              {
+                backgroundColor: panelSurface,
+                borderColor: cardBorder,
+              },
+            ]}
+          >
+            <ThemedText style={styles.muscleLoadMetaValue} setColor={titleColor}>
+              {muscleLoad?.weekCount ?? 0}
+            </ThemedText>
+            <ThemedText style={styles.muscleLoadMetaLabel} setColor={quietText}>
+              weeks
+            </ThemedText>
+          </View>
+
+          <View
+            style={[
+              styles.muscleLoadMetaItem,
+              {
+                backgroundColor: panelSurface,
+                borderColor: cardBorder,
+              },
+            ]}
+          >
+            <ThemedText style={styles.muscleLoadMetaValue} setColor={titleColor}>
+              {muscleLoad?.scoredExerciseCount ?? 0}
+            </ThemedText>
+            <ThemedText style={styles.muscleLoadMetaLabel} setColor={quietText}>
+              exercises
+            </ThemedText>
+          </View>
+
+          <View
+            style={[
+              styles.muscleLoadMetaItem,
+              {
+                backgroundColor: panelSurface,
+                borderColor: cardBorder,
+              },
+            ]}
+          >
+            <ThemedText style={styles.muscleLoadMetaValue} setColor={titleColor}>
+              {hasMuscleLoadData ? "2:1" : "--"}
+            </ThemedText>
+            <ThemedText style={styles.muscleLoadMetaLabel} setColor={quietText}>
+              points
+            </ThemedText>
+          </View>
+        </View>
+      </View>
+    );
+  };
 
   const renderExerciseList = () => (
     <View style={styles.exerciseList}>
@@ -835,6 +1211,7 @@ const PersonalRecordsPage = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {!selectedExerciseName && renderMuscleLoadCard()}
         {selectedExerciseName ? renderRecordDetail() : renderExerciseList()}
       </ScrollView>
 

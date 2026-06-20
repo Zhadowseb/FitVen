@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.17.35] - Unreleased
+### Changed
+- Add a weekly muscle load radar to Personal Records with program selection.
+
+---
 ## [0.17.34] - Unreleased
 ### Changed
 - Ask for confirmation before deleting strength sets, strength exercises, run sets, estimated 1RMs, calendar workouts, and before restarting workouts.

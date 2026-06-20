@@ -806,6 +806,21 @@ export async function getProgramsOverview(db) {
   );
 }
 
+export async function getProgramOptions(db) {
+  const startIsoDateSql = localDateToIsoSql("p.start_date");
+
+  return db.getAllAsync(
+    `SELECT
+        p.program_id,
+        p.program_name,
+        p.start_date,
+        p.status
+     FROM Program p
+     WHERE COALESCE(p.deleted_at, '') = ''
+     ORDER BY date(${startIsoDateSql}) DESC, p.program_id DESC;`
+  );
+}
+
 export async function getActiveProgram(db) {
   const startIsoDateSql = localDateToIsoSql("start_date");
 
