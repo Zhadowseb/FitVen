@@ -157,6 +157,36 @@ function buildTrendChartGeometry(points = []) {
   };
 }
 
+function buildSmoothLinePath(points = []) {
+  if (points.length === 0) {
+    return "";
+  }
+
+  if (points.length === 1) {
+    return `M ${points[0].x} ${points[0].y}`;
+  }
+
+  const smoothing = 0.18;
+  let path = `M ${points[0].x} ${points[0].y}`;
+
+  for (let index = 1; index < points.length; index += 1) {
+    const previousPreviousPoint = points[index - 2] ?? points[index - 1];
+    const previousPoint = points[index - 1];
+    const point = points[index];
+    const nextPoint = points[index + 1] ?? point;
+    const cp1x =
+      previousPoint.x + (point.x - previousPreviousPoint.x) * smoothing;
+    const cp1y =
+      previousPoint.y + (point.y - previousPreviousPoint.y) * smoothing;
+    const cp2x = point.x - (nextPoint.x - previousPoint.x) * smoothing;
+    const cp2y = point.y - (nextPoint.y - previousPoint.y) * smoothing;
+
+    path += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${point.x} ${point.y}`;
+  }
+
+  return path;
+}
+
 function buildMuscleLoadChartGeometry(points = []) {
   const validPoints = points.filter((point) =>
     Number.isFinite(Number(point?.value))
@@ -201,6 +231,7 @@ function buildMuscleLoadChartGeometry(points = []) {
   const path = chartPoints
     .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`)
     .join(" ");
+  const smoothPath = buildSmoothLinePath(chartPoints);
   const gridLines = MUSCLE_LOAD_GRID_STEPS.map((offset) => {
     const y = MUSCLE_LOAD_CHART_PADDING.top + plotHeight * offset;
     const value = maxValue - valueRange * offset;
@@ -215,8 +246,10 @@ function buildMuscleLoadChartGeometry(points = []) {
   return {
     chartPoints,
     path,
+    smoothPath,
     gridLines,
     baselineY: MUSCLE_LOAD_CHART_PADDING.top + plotHeight,
+    topY: MUSCLE_LOAD_CHART_PADDING.top,
   };
 }
 
@@ -422,8 +455,7 @@ const PersonalRecordsPage = () => {
           style={[
             styles.muscleLoadChartFrame,
             {
-              backgroundColor: panelSurface,
-              borderColor: cardBorder,
+              backgroundColor: cardSurface,
             },
           ]}
         >
@@ -437,6 +469,20 @@ const PersonalRecordsPage = () => {
               height={MUSCLE_LOAD_CHART_HEIGHT}
               viewBox={`0 0 ${MUSCLE_LOAD_CHART_WIDTH} ${MUSCLE_LOAD_CHART_HEIGHT}`}
             >
+              {chartGeometry.chartPoints.map((point) => (
+                <Line
+                  key={`vertical-grid-${point.key}`}
+                  x1={point.x}
+                  y1={chartGeometry.topY}
+                  x2={point.x}
+                  y2={chartGeometry.baselineY}
+                  stroke={quietText}
+                  strokeDasharray="3 3"
+                  strokeOpacity={0.08}
+                  strokeWidth={1}
+                />
+              ))}
+
               {chartGeometry.gridLines.map((line, index) => (
                 <G key={`grid-${index}`}>
                   <Line
@@ -464,12 +510,12 @@ const PersonalRecordsPage = () => {
 
               {chartGeometry.chartPoints.length > 1 && (
                 <Path
-                  d={chartGeometry.path}
+                  d={chartGeometry.smoothPath || chartGeometry.path}
                   fill="none"
                   stroke={primaryColor}
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth={3}
+                  strokeWidth={2.4}
                 />
               )}
 
@@ -480,7 +526,7 @@ const PersonalRecordsPage = () => {
                     cy={point.y}
                     r={point.isHighest ? 4.8 : 3.6}
                     fill={point.isHighest ? secondaryColor : primaryColor}
-                    stroke={panelSurface}
+                    stroke={cardSurface}
                     strokeWidth={2}
                   />
                   <SvgText
@@ -492,16 +538,6 @@ const PersonalRecordsPage = () => {
                     textAnchor="middle"
                   >
                     {point.label}
-                  </SvgText>
-                  <SvgText
-                    x={point.x}
-                    y={Math.max(12, point.y - 10)}
-                    fill={point.isHighest ? secondaryColor : titleColor}
-                    fontSize="9"
-                    fontWeight="900"
-                    textAnchor="middle"
-                  >
-                    {point.valueDisplay}
                   </SvgText>
                 </G>
               ))}

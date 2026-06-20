@@ -122,6 +122,64 @@ const MUSCLE_LOAD_CATEGORY_BY_GROUP_KEY = {
   "lower-back": "core",
   lower_back: "core",
 };
+const MUSCLE_LOAD_FALLBACK_RULES = [
+  {
+    patterns: ["lower back", "back extension", "hyperextension"],
+    primaryGroupKeys: ["lower-back"],
+    secondaryGroupKeys: [],
+  },
+  {
+    patterns: ["bench", "chest", "fly", "flies", "pec", "dumbbell press"],
+    primaryGroupKeys: ["chest"],
+    secondaryGroupKeys: ["shoulders", "triceps"],
+  },
+  {
+    patterns: ["shoulder", "overhead press", "military press"],
+    primaryGroupKeys: ["shoulders"],
+    secondaryGroupKeys: ["triceps"],
+  },
+  {
+    patterns: ["row", "pulldown", "pull up", "chin up", "lat"],
+    primaryGroupKeys: ["lats", "traps"],
+    secondaryGroupKeys: ["biceps"],
+  },
+  {
+    patterns: ["deadlift"],
+    primaryGroupKeys: ["glutes", "hamstrings"],
+    secondaryGroupKeys: ["lower-back", "traps"],
+  },
+  {
+    patterns: [
+      "squat",
+      "leg",
+      "lunge",
+      "quad",
+      "hamstring",
+      "calf",
+      "calves",
+      "glute",
+      "hip adduction",
+      "hip abduction",
+    ],
+    primaryGroupKeys: ["quads", "glutes", "hamstrings"],
+    secondaryGroupKeys: [],
+  },
+  {
+    patterns: ["tricep", "pushdown", "skullcrusher", "skull crusher", "dip"],
+    primaryGroupKeys: ["triceps"],
+    secondaryGroupKeys: ["chest", "shoulders"],
+  },
+  {
+    patterns: ["bicep", "curl"],
+    primaryGroupKeys: ["biceps"],
+    secondaryGroupKeys: ["forearms"],
+  },
+  {
+    patterns: ["abs", "ab", "crunch", "sit up", "plank", "core", "oblique"],
+    primaryGroupKeys: ["abs", "obliques"],
+    secondaryGroupKeys: [],
+  },
+];
 
 function normalizeOptionalNumber(value) {
   if (value === "" || value === null || value === undefined) {
@@ -1250,6 +1308,34 @@ function getMuscleLoadCategoryKeys(groupKeys) {
   return categoryKeys;
 }
 
+function normalizeMuscleLoadExerciseName(value) {
+  return typeof value === "string"
+    ? value.trim().toLocaleLowerCase().replace(/[^a-z0-9]+/g, " ")
+    : "";
+}
+
+function getFallbackMuscleLoadSignals(exerciseName) {
+  const normalizedName = normalizeMuscleLoadExerciseName(exerciseName);
+
+  if (!normalizedName) {
+    return null;
+  }
+
+  const searchableName = ` ${normalizedName} `;
+  const fallbackRule = MUSCLE_LOAD_FALLBACK_RULES.find((rule) =>
+    rule.patterns.some((pattern) => searchableName.includes(` ${pattern} `))
+  );
+
+  if (!fallbackRule) {
+    return null;
+  }
+
+  return {
+    primaryGroupKeys: fallbackRule.primaryGroupKeys,
+    secondaryGroupKeys: fallbackRule.secondaryGroupKeys,
+  };
+}
+
 function getExerciseMuscleLoadSignals(exercise, officialSignalsByExerciseId) {
   if (isCustomClassificationExercise(exercise)) {
     return {
@@ -1265,7 +1351,10 @@ function getExerciseMuscleLoadSignals(exercise, officialSignalsByExerciseId) {
     null
   );
 
-  return officialSignalsByExerciseId.get(exerciseInstanceId) ?? null;
+  return (
+    officialSignalsByExerciseId.get(exerciseInstanceId) ??
+    getFallbackMuscleLoadSignals(exercise?.exercise_name)
+  );
 }
 
 function addMuscleLoadScore(totals, categoryKeys, points, setCount) {

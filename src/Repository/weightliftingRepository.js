@@ -721,7 +721,7 @@ export async function getProgramMuscleLoadExercises(db, programId) {
 
   return db.getAllAsync(
     `SELECT
-        mc.microcycle_id,
+        COALESCE(mc.microcycle_id, d.day_id) AS muscle_load_week_id,
         ei.exercise_instance_id,
         ei.exercise_name,
         ei.sets AS planned_set_count,
@@ -735,23 +735,23 @@ export async function getProgramMuscleLoadExercises(db, programId) {
        ON w.workout_id = ei.workout_type_instance_id
      JOIN Day d
        ON d.day_id = w.day_id
-     JOIN Microcycle mc
+     LEFT JOIN Microcycle mc
        ON mc.microcycle_id = d.microcycle_id
-     JOIN Mesocycle m
+     LEFT JOIN Mesocycle m
        ON m.mesocycle_id = mc.mesocycle_id
      LEFT JOIN "Set" s
        ON s.exercise_instance_id = ei.exercise_instance_id
       AND COALESCE(s.deleted_at, '') = ''
      LEFT JOIN Exercise e
        ON e.name = ei.exercise_name COLLATE NOCASE
-     WHERE m.program_id = ?
+     WHERE d.program_id = ?
        AND COALESCE(ei.deleted_at, '') = ''
        AND COALESCE(w.deleted_at, '') = ''
        AND COALESCE(d.deleted_at, '') = ''
        AND COALESCE(mc.deleted_at, '') = ''
        AND COALESCE(m.deleted_at, '') = ''
      GROUP BY
-        mc.microcycle_id,
+        COALESCE(mc.microcycle_id, d.day_id),
         ei.exercise_instance_id,
         ei.exercise_name,
         ei.sets,
@@ -760,8 +760,8 @@ export async function getProgramMuscleLoadExercises(db, programId) {
         e.is_custom,
         e.custom_muscle_group_keys
      ORDER BY
-        m.mesocycle_number ASC,
-        mc.microcycle_number ASC,
+        COALESCE(m.mesocycle_number, 0) ASC,
+        COALESCE(mc.microcycle_number, 0) ASC,
         d.day_id ASC,
         w.workout_id ASC,
         ei.exercise_order ASC,
@@ -772,11 +772,19 @@ export async function getProgramMuscleLoadExercises(db, programId) {
 
 export async function getProgramMuscleLoadWeekCount(db, programId) {
   return db.getFirstAsync(
-    `SELECT COUNT(DISTINCT mc.microcycle_id) AS week_count
-     FROM Microcycle mc
-     JOIN Mesocycle m
+    `SELECT
+        CASE
+          WHEN COUNT(DISTINCT mc.microcycle_id) > 0
+          THEN COUNT(DISTINCT mc.microcycle_id)
+          ELSE (COUNT(DISTINCT d.day_id) + 6) / 7
+        END AS week_count
+     FROM Day d
+     LEFT JOIN Microcycle mc
+       ON mc.microcycle_id = d.microcycle_id
+     LEFT JOIN Mesocycle m
        ON m.mesocycle_id = mc.mesocycle_id
-     WHERE m.program_id = ?
+     WHERE d.program_id = ?
+       AND COALESCE(d.deleted_at, '') = ''
        AND COALESCE(mc.deleted_at, '') = ''
        AND COALESCE(m.deleted_at, '') = '';`,
     [programId]

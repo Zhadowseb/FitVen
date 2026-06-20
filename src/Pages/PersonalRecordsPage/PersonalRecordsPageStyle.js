@@ -63,8 +63,7 @@ export default StyleSheet.create({
   },
   muscleLoadChartFrame: {
     minHeight: 250,
-    borderWidth: 1,
-    borderRadius: 16,
+    borderRadius: 12,
     overflow: "hidden",
     marginTop: 14,
     alignItems: "center",
