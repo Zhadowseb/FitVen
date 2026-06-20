@@ -20,6 +20,16 @@ Keep the root guide short and place domain-specific rules in closer `AGENTS.md` 
 - If the user asks for code changes while on `master` or `main`, stop first and propose a branch name before making changes.
 - Review local changes before switching branches or rewriting Git history.
 
+## GitHub Issue Fixes
+
+- When the user asks the agent to review GitHub issues and solve them, only inspect, evaluate, or implement code for issues labeled `codex-fix` or `codex-fix-human-input`.
+- For issues labeled `codex-fix`, proceed with the fix without asking for confirmation first.
+- For issues labeled `codex-fix-human-input`, always ask before implementing and describe the intended implementation.
+- Do not inspect, evaluate, or act on issues with other labels unless the user explicitly asks for those issues.
+- After implementing an issue fix, add a GitHub issue comment describing what changed before adding any completion label.
+- After commenting, add the `codex-fixed` label to show the user that the issue is ready for review and can be closed manually from GitHub.
+- Do not close GitHub issues automatically unless the user explicitly asks for that.
+
 ## Branch And Commit Discipline
 
 - Treat a new feature, fix, refactor, or unrelated request as a new unit of work.

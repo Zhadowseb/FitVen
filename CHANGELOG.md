@@ -3,26 +3,30 @@
 ## [0.17.33] - Unreleased
 ### Changed
 - Auto-classify resistance workout labels from exercise muscle metadata and set volume.
+- Speed up Workout Calendar by loading the visible month from local data before cloud sync and prefetching adjacent months afterward.
+- Keep Workout Calendar swipe paging to one month at a time while recentering the pager.
+- Add calendar database indexes for workout, day, sickness, exercise, and set lookups.
+- Replace the registration username placeholder with a neutral example.
 
 ---
 ## [0.17.32] - Unreleased
 ### Changed
-- Describe pending changes here.
+- Redesign the week copy target picker with focused block, week, and day selection, and mark copied weeks with the primary label.
 
 ---
 ## [0.17.31] - Unreleased
 ### Changed
-- Describe pending changes here.
+- Move program import into the Program options menu and remove the standalone import action from the page body.
 
 ---
 ## [0.17.30] - Unreleased
 ### Changed
-- Describe pending changes here.
+- Add a block-level week call to action for adding new program weeks from the Program Overview flow.
 
 ---
 ## [0.17.29] - Unreleased
 ### Changed
-- Describe pending changes here.
+- Send workout-start notifications immediately when workouts start and manage push-token ownership through the `manage-push-token` Edge Function.
 
 ---
 ## [0.17.28] - Unreleased

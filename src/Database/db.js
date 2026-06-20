@@ -27,6 +27,51 @@ function quoteIdentifier(identifier) {
   return `"${String(identifier).replace(/"/g, '""')}"`;
 }
 
+function localDateToIsoSql(dateExpression) {
+  return `CASE
+    WHEN ${dateExpression} LIKE '__.__.____'
+    THEN substr(${dateExpression}, 7, 4) || '-' ||
+         substr(${dateExpression}, 4, 2) || '-' ||
+         substr(${dateExpression}, 1, 2)
+    ELSE ${dateExpression}
+  END`;
+}
+
+async function ensureCalendarPerformanceIndexes(db) {
+  const workoutDateSql = `date(${localDateToIsoSql('"date"')})`;
+  const dayDateSql = `date(${localDateToIsoSql('"date"')})`;
+  const sicknessStartDateSql = localDateToIsoSql("start_date");
+
+  try {
+    await db.execAsync(`
+      CREATE INDEX IF NOT EXISTS workout_type_instance_calendar_date_idx
+      ON Workout_Type_Instance(${workoutDateSql}, day_id)
+      WHERE deleted_at IS NULL;
+
+      CREATE INDEX IF NOT EXISTS workout_type_instance_calendar_day_idx
+      ON Workout_Type_Instance(day_id, deleted_at);
+
+      CREATE INDEX IF NOT EXISTS day_calendar_date_idx
+      ON Day(${dayDateSql}, program_id, microcycle_id)
+      WHERE deleted_at IS NULL;
+
+      CREATE INDEX IF NOT EXISTS day_calendar_program_idx
+      ON Day(program_id, microcycle_id, deleted_at);
+
+      CREATE INDEX IF NOT EXISTS exercise_instance_calendar_workout_idx
+      ON Exercise_Instance(workout_type_instance_id, deleted_at);
+
+      CREATE INDEX IF NOT EXISTS set_calendar_exercise_record_idx
+      ON "Set"(exercise_instance_id, personal_record, done, failed, deleted_at);
+
+      CREATE INDEX IF NOT EXISTS sickness_calendar_start_idx
+      ON Sickness(${sicknessStartDateSql}, deleted_at);
+    `);
+  } catch (error) {
+    console.warn("Could not create calendar performance indexes:", error);
+  }
+}
+
 async function ensureColumnExists(db, tableName, columnName, columnDefinition) {
   const columns = await db.getAllAsync(
     `PRAGMA table_info(${quoteIdentifier(tableName)});`
@@ -1616,6 +1661,7 @@ export async function initializeDatabase(db) {
   await backfillSyncStateColumns(db, "Exercise_Instance");
   await backfillSyncStateColumns(db, "Set");
   await initializeSideBySideSyncMetadata(db);
+  await ensureCalendarPerformanceIndexes(db);
 
   await ensureTableColumns(db, "Run", [
     ["type", "TEXT NOT NULL DEFAULT 'WORKING_SET'"],

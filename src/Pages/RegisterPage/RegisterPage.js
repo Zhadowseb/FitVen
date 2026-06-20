@@ -189,7 +189,7 @@ export default function RegisterPage() {
               <ThemedTextInput
                 value={usernameBase}
                 onChangeText={setUsernameBase}
-                placeholder="zhadowseb"
+                placeholder="your_name"
                 autoCapitalize="none"
                 autoCorrect={false}
                 error={
