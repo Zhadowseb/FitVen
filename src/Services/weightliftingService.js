@@ -15,6 +15,8 @@ import {
 import {
   classifyWorkoutFromMuscleGroups,
   isWorkoutLabelAutoAssignable,
+  PRIMARY_MUSCLE_WEIGHT,
+  SECONDARY_MUSCLE_WEIGHT,
 } from "../Utils/workoutClassification";
 import { calculateBrzyckiOneRepMax } from "../Utils/oneRepMaxUtils";
 
