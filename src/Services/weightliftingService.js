@@ -15,8 +15,6 @@ import {
 import {
   classifyWorkoutFromMuscleGroups,
   isWorkoutLabelAutoAssignable,
-  PRIMARY_MUSCLE_WEIGHT,
-  SECONDARY_MUSCLE_WEIGHT,
 } from "../Utils/workoutClassification";
 import { calculateBrzyckiOneRepMax } from "../Utils/oneRepMaxUtils";
 
@@ -98,6 +96,8 @@ const CLASSIFIABLE_WORKOUT_TYPES = new Set([
   "Upperbody",
   "Legs",
 ]);
+const MUSCLE_LOAD_PRIMARY_POINTS = 3;
+const MUSCLE_LOAD_SECONDARY_POINTS = 1;
 const MUSCLE_LOAD_GROUPS = [
   { key: "chest", label: "Chest" },
   { key: "shoulder", label: "Shoulder" },
@@ -1423,13 +1423,13 @@ function buildProgramWeeklyMuscleLoadSummary({
     addMuscleLoadScore(
       totals,
       primaryCategoryKeys,
-      PRIMARY_MUSCLE_WEIGHT,
+      MUSCLE_LOAD_PRIMARY_POINTS,
       setCount
     );
     addMuscleLoadScore(
       totals,
       secondaryCategoryKeys,
-      SECONDARY_MUSCLE_WEIGHT,
+      MUSCLE_LOAD_SECONDARY_POINTS,
       setCount
     );
     scoredExerciseCount += 1;
