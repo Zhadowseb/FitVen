@@ -42,14 +42,14 @@ const TREND_CHART_PADDING = {
   left: 44,
 };
 const MUSCLE_LOAD_CHART_WIDTH = 320;
-const MUSCLE_LOAD_CHART_HEIGHT = 250;
-const MUSCLE_LOAD_CHART_PADDING = {
-  top: 18,
-  right: 18,
-  bottom: 42,
-  left: 48,
+const MUSCLE_LOAD_CHART_HEIGHT = 300;
+const MUSCLE_LOAD_CHART_CENTER = {
+  x: 160,
+  y: 150,
 };
-const MUSCLE_LOAD_GRID_STEPS = [0, 0.5, 1];
+const MUSCLE_LOAD_CHART_RADIUS = 112;
+const MUSCLE_LOAD_LABEL_RADIUS = 136;
+const MUSCLE_LOAD_GRID_STEPS = [0.2, 0.4, 0.6, 0.8, 1];
 
 function formatTrendAxisValue(value) {
   const numericValue = Number(value);
@@ -157,37 +157,40 @@ function buildTrendChartGeometry(points = []) {
   };
 }
 
-function buildSmoothLinePath(points = []) {
+function getMuscleLoadRadarPoint(index, pointCount, radius) {
+  const angle = -Math.PI / 2 + (index / pointCount) * Math.PI * 2;
+
+  return {
+    x: MUSCLE_LOAD_CHART_CENTER.x + Math.cos(angle) * radius,
+    y: MUSCLE_LOAD_CHART_CENTER.y + Math.sin(angle) * radius,
+  };
+}
+
+function buildClosedPath(points = []) {
   if (points.length === 0) {
     return "";
   }
 
-  if (points.length === 1) {
-    return `M ${points[0].x} ${points[0].y}`;
-  }
-
-  const smoothing = 0.18;
-  let path = `M ${points[0].x} ${points[0].y}`;
-
-  for (let index = 1; index < points.length; index += 1) {
-    const previousPreviousPoint = points[index - 2] ?? points[index - 1];
-    const previousPoint = points[index - 1];
-    const point = points[index];
-    const nextPoint = points[index + 1] ?? point;
-    const cp1x =
-      previousPoint.x + (point.x - previousPreviousPoint.x) * smoothing;
-    const cp1y =
-      previousPoint.y + (point.y - previousPreviousPoint.y) * smoothing;
-    const cp2x = point.x - (nextPoint.x - previousPoint.x) * smoothing;
-    const cp2y = point.y - (nextPoint.y - previousPoint.y) * smoothing;
-
-    path += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${point.x} ${point.y}`;
-  }
-
-  return path;
+  return (
+    points
+      .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`)
+      .join(" ") + " Z"
+  );
 }
 
-function buildMuscleLoadChartGeometry(points = []) {
+function getRadarTextAnchor(x) {
+  if (x < MUSCLE_LOAD_CHART_CENTER.x - 8) {
+    return "end";
+  }
+
+  if (x > MUSCLE_LOAD_CHART_CENTER.x + 8) {
+    return "start";
+  }
+
+  return "middle";
+}
+
+function buildMuscleLoadRadarGeometry(points = []) {
   const validPoints = points.filter((point) =>
     Number.isFinite(Number(point?.value))
   );
@@ -198,58 +201,53 @@ function buildMuscleLoadChartGeometry(points = []) {
 
   const values = validPoints.map((point) => Number(point.value));
   const rawMaxValue = Math.max(...values, 0);
-  const maxValue =
-    rawMaxValue <= 0 ? 10 : rawMaxValue + Math.max(rawMaxValue * 0.15, 2);
-  const minValue = 0;
-  const valueRange = maxValue - minValue || 1;
-  const plotWidth =
-    MUSCLE_LOAD_CHART_WIDTH -
-    MUSCLE_LOAD_CHART_PADDING.left -
-    MUSCLE_LOAD_CHART_PADDING.right;
-  const plotHeight =
-    MUSCLE_LOAD_CHART_HEIGHT -
-    MUSCLE_LOAD_CHART_PADDING.top -
-    MUSCLE_LOAD_CHART_PADDING.bottom;
+  const maxValue = rawMaxValue <= 0 ? 1 : rawMaxValue;
+  const pointCount = validPoints.length;
 
   const chartPoints = validPoints.map((point, index) => {
-    const x =
-      MUSCLE_LOAD_CHART_PADDING.left +
-      (validPoints.length === 1
-        ? plotWidth / 2
-        : (index / (validPoints.length - 1)) * plotWidth);
-    const y =
-      MUSCLE_LOAD_CHART_PADDING.top +
-      ((maxValue - Number(point.value)) / valueRange) * plotHeight;
+    const valueRatio = Math.max(0, Number(point.value) || 0) / maxValue;
+    const radarPoint = getMuscleLoadRadarPoint(
+      index,
+      pointCount,
+      MUSCLE_LOAD_CHART_RADIUS * Math.min(1, valueRatio)
+    );
+    const labelPoint = getMuscleLoadRadarPoint(
+      index,
+      pointCount,
+      MUSCLE_LOAD_LABEL_RADIUS
+    );
 
     return {
       ...point,
-      x,
-      y,
+      x: radarPoint.x,
+      y: radarPoint.y,
+      labelX: labelPoint.x,
+      labelY: labelPoint.y,
+      textAnchor: getRadarTextAnchor(labelPoint.x),
       isHighest: Number(point.value) === rawMaxValue && rawMaxValue > 0,
     };
   });
-  const path = chartPoints
-    .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`)
-    .join(" ");
-  const smoothPath = buildSmoothLinePath(chartPoints);
-  const gridLines = MUSCLE_LOAD_GRID_STEPS.map((offset) => {
-    const y = MUSCLE_LOAD_CHART_PADDING.top + plotHeight * offset;
-    const value = maxValue - valueRange * offset;
-
-    return {
-      y,
-      label: formatTrendAxisValue(value),
-      isBaseline: offset === 1,
-    };
-  });
+  const axisLines = validPoints.map((point, index) => ({
+    key: point.key,
+    ...getMuscleLoadRadarPoint(index, pointCount, MUSCLE_LOAD_CHART_RADIUS),
+  }));
+  const gridPaths = MUSCLE_LOAD_GRID_STEPS.map((step) =>
+    buildClosedPath(
+      validPoints.map((_, index) =>
+        getMuscleLoadRadarPoint(
+          index,
+          pointCount,
+          MUSCLE_LOAD_CHART_RADIUS * step
+        )
+      )
+    )
+  );
 
   return {
     chartPoints,
-    path,
-    smoothPath,
-    gridLines,
-    baselineY: MUSCLE_LOAD_CHART_PADDING.top + plotHeight,
-    topY: MUSCLE_LOAD_CHART_PADDING.top,
+    axisLines,
+    gridPaths,
+    dataPath: buildClosedPath(chartPoints),
   };
 }
 
@@ -416,7 +414,7 @@ const PersonalRecordsPage = () => {
   const renderMuscleLoadCard = () => {
     const points = muscleLoad?.points ?? [];
     const hasPrograms = muscleLoadProgramItems.length > 0;
-    const chartGeometry = buildMuscleLoadChartGeometry(points);
+    const chartGeometry = buildMuscleLoadRadarGeometry(points);
     const hasMuscleLoadData = !!muscleLoad?.hasData && !!chartGeometry;
 
     return (
@@ -469,49 +467,51 @@ const PersonalRecordsPage = () => {
               height={MUSCLE_LOAD_CHART_HEIGHT}
               viewBox={`0 0 ${MUSCLE_LOAD_CHART_WIDTH} ${MUSCLE_LOAD_CHART_HEIGHT}`}
             >
-              {chartGeometry.chartPoints.map((point) => (
+              <Defs>
+                <LinearGradient
+                  id="personalRecordMuscleLoadFill"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
+                  <Stop offset="0" stopColor={primaryColor} stopOpacity="0.34" />
+                  <Stop offset="1" stopColor={primaryColor} stopOpacity="0.14" />
+                </LinearGradient>
+              </Defs>
+
+              {chartGeometry.axisLines.map((axisLine) => (
                 <Line
-                  key={`vertical-grid-${point.key}`}
-                  x1={point.x}
-                  y1={chartGeometry.topY}
-                  x2={point.x}
-                  y2={chartGeometry.baselineY}
+                  key={`axis-${axisLine.key}`}
+                  x1={MUSCLE_LOAD_CHART_CENTER.x}
+                  y1={MUSCLE_LOAD_CHART_CENTER.y}
+                  x2={axisLine.x}
+                  y2={axisLine.y}
                   stroke={quietText}
-                  strokeDasharray="3 3"
-                  strokeOpacity={0.08}
+                  strokeOpacity={0.12}
                   strokeWidth={1}
                 />
               ))}
 
-              {chartGeometry.gridLines.map((line, index) => (
-                <G key={`grid-${index}`}>
-                  <Line
-                    x1={MUSCLE_LOAD_CHART_PADDING.left}
-                    y1={line.y}
-                    x2={MUSCLE_LOAD_CHART_WIDTH - MUSCLE_LOAD_CHART_PADDING.right}
-                    y2={line.y}
-                    stroke={quietText}
-                    strokeOpacity={line.isBaseline ? 0.24 : 0.14}
-                    strokeDasharray={line.isBaseline ? undefined : "3 3"}
-                    strokeWidth={1}
-                  />
-                  <SvgText
-                    x={MUSCLE_LOAD_CHART_PADDING.left - 9}
-                    y={line.y + 3}
-                    fill={quietText}
-                    fontSize="9"
-                    fontWeight="800"
-                    textAnchor="end"
-                  >
-                    {line.label}
-                  </SvgText>
-                </G>
+              {chartGeometry.gridPaths.map((path, index) => (
+                <Path
+                  key={`grid-${index}`}
+                  d={path}
+                  fill="none"
+                  stroke={quietText}
+                  strokeOpacity={
+                    index === chartGeometry.gridPaths.length - 1 ? 0.24 : 0.13
+                  }
+                  strokeWidth={
+                    index === chartGeometry.gridPaths.length - 1 ? 1.7 : 1
+                  }
+                />
               ))}
 
-              {chartGeometry.chartPoints.length > 1 && (
+              {!!chartGeometry.dataPath && (
                 <Path
-                  d={chartGeometry.smoothPath || chartGeometry.path}
-                  fill="none"
+                  d={chartGeometry.dataPath}
+                  fill="url(#personalRecordMuscleLoadFill)"
                   stroke={primaryColor}
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -530,12 +530,12 @@ const PersonalRecordsPage = () => {
                     strokeWidth={2}
                   />
                   <SvgText
-                    x={point.x}
-                    y={chartGeometry.baselineY + 22}
+                    x={point.labelX}
+                    y={point.labelY + 4}
                     fill={quietText}
                     fontSize="9"
-                    fontWeight="800"
-                    textAnchor="middle"
+                    fontWeight="900"
+                    textAnchor={point.textAnchor}
                   >
                     {point.label}
                   </SvgText>

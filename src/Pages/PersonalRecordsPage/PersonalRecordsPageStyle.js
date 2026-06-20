@@ -62,7 +62,7 @@ export default StyleSheet.create({
     paddingVertical: 9,
   },
   muscleLoadChartFrame: {
-    minHeight: 250,
+    minHeight: 300,
     borderRadius: 12,
     overflow: "hidden",
     marginTop: 14,
@@ -70,7 +70,7 @@ export default StyleSheet.create({
     justifyContent: "center",
   },
   muscleLoadEmptyState: {
-    minHeight: 250,
+    minHeight: 300,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 22,
