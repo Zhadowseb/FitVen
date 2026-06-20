@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { View, Text, TouchableOpacity, Modal } from 'react-native';
+import { Alert, View, Text, TouchableOpacity, Modal } from 'react-native';
 import { useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
@@ -131,6 +131,25 @@ const Day = ( {day, program_id, microcycle_id} ) => {
             console.error("Failed to delete workout:", err);
             throw err;
         }
+    };
+
+    const confirmDeleteWorkout = (workoutId) => {
+        Alert.alert(
+            "Delete workout?",
+            "This removes the workout and all sets saved inside it.",
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Delete workout",
+                    style: "destructive",
+                    onPress: () => {
+                        void deleteWorkout(workoutId);
+                        set_pickWorkoutModal_visible(false);
+                        set_OptionsBottomsheet_visible(false);
+                    },
+                },
+            ]
+        );
     };
 
 
@@ -380,9 +399,7 @@ const Day = ( {day, program_id, microcycle_id} ) => {
                 }
 
                 if(pickMode === PICK_MODE.DELETE){
-                    deleteWorkout(workout.workout_id)
-                    set_pickWorkoutModal_visible(false);
-                    set_OptionsBottomsheet_visible(false);
+                    confirmDeleteWorkout(workout.workout_id);
                 }
             }}
         />

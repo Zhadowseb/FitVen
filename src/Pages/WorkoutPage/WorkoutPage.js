@@ -156,6 +156,24 @@ const WorkoutPage = ({ route }) => {
     );
   };
 
+  const confirmRestartWorkout = () => {
+    Alert.alert(
+      "Restart workout?",
+      "This clears the timer, completion state, and workout progress for this workout.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Restart workout",
+          style: "destructive",
+          onPress: () => {
+            setOptionsBottomsheetVisible(false);
+            setRestartRequestKey(Date.now());
+          },
+        },
+      ]
+    );
+  };
+
   const closeCopyTargetModal = () => {
     if (isCopyingWorkout) {
       return;
@@ -352,10 +370,7 @@ const WorkoutPage = ({ route }) => {
           {supportsTimerRestart && (
             <TouchableOpacity
               style={styles.option}
-              onPress={() => {
-                setOptionsBottomsheetVisible(false);
-                setRestartRequestKey(Date.now());
-              }}
+              onPress={confirmRestartWorkout}
             >
               <Reload width={24} height={24} />
               <ThemedText style={styles.optionText}>Restart Workout</ThemedText>

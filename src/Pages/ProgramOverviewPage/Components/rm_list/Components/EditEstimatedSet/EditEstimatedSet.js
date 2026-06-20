@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ScrollView, View, useColorScheme } from "react-native";
+import { Alert, ScrollView, View, useColorScheme } from "react-native";
 
 import { Colors } from "../../../../../../Resources/GlobalStyling/colors";
 import styles from "./EditEstimatedSetStyle";
@@ -103,6 +103,23 @@ export default function EditEstimatedSet({
       id: estimatedSet.estimated_set_id,
     });
     onClose();
+  };
+
+  const confirmDelete = () => {
+    Alert.alert(
+      "Delete estimated 1 RM?",
+      "This removes the saved estimate for this exercise.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete 1 RM",
+          style: "destructive",
+          onPress: () => {
+            void handleDelete();
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -250,7 +267,7 @@ export default function EditEstimatedSet({
           <ThemedButton
             title="Delete 1 RM"
             variant="danger"
-            onPress={handleDelete}
+            onPress={confirmDelete}
             style={styles.actionButton}
           />
         </View>

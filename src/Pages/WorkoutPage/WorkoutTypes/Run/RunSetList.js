@@ -1,5 +1,12 @@
 import { useState, useCallback, useRef } from "react";
-import { Dimensions, Modal, Pressable, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  Dimensions,
+  Modal,
+  Pressable,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
 import { useFocusEffect } from "@react-navigation/native";
 import { useColorScheme } from "react-native";
@@ -313,6 +320,29 @@ const RunSetList = ({
     set_selectedSet(null);
     set_bottomsheetVisible(false);
     triggerReload();
+  };
+
+  const confirmDeleteSet = () => {
+    if (!selectedSet) {
+      return;
+    }
+
+    Alert.alert(
+      selectedSet.is_pause ? "Delete rest?" : "Delete set?",
+      selectedSet.is_pause
+        ? "This removes the rest segment from the run."
+        : "This removes the run set and its saved values.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            void deleteSet();
+          },
+        },
+      ]
+    );
   };
 
   const togglePause = async () => {
@@ -1107,7 +1137,7 @@ const RunSetList = ({
               styles.bottomsheetActionDanger,
               { borderColor: theme.danger ?? primaryColor },
             ]}
-            onPress={deleteSet}
+            onPress={confirmDeleteSet}
           >
             <Delete width={20} height={20} color={theme.danger ?? primaryColor} />
             <ThemedText

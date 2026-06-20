@@ -751,6 +751,29 @@ const WorkoutCalendarPage = () => {
     }
   };
 
+  const confirmDeleteWorkoutFromCalendar = (workout) => {
+    if (!workout?.workout_id) {
+      return;
+    }
+
+    setPickWorkoutModalVisible(false);
+
+    Alert.alert(
+      "Delete workout?",
+      "This removes the workout and all sets saved inside it.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete workout",
+          style: "destructive",
+          onPress: () => {
+            void deleteWorkoutFromCalendar(workout);
+          },
+        },
+      ]
+    );
+  };
+
   const completeWorkoutCopy = async () => {
     setPendingCopyTarget(null);
     setCopySourceWorkout(null);
@@ -912,7 +935,7 @@ const WorkoutCalendarPage = () => {
     const dayWorkouts = selectedCalendarDay?.workouts ?? [];
 
     if (dayWorkouts.length === 1) {
-      deleteWorkoutFromCalendar(dayWorkouts[0]);
+      confirmDeleteWorkoutFromCalendar(dayWorkouts[0]);
       return;
     }
 
@@ -1315,7 +1338,7 @@ const WorkoutCalendarPage = () => {
             return;
           }
 
-          deleteWorkoutFromCalendar(workout);
+          confirmDeleteWorkoutFromCalendar(workout);
         }}
       />
 

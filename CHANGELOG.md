@@ -1,6 +1,11 @@
 # Changelog
 
-## [0.17.33] - Unreleased
+## [0.17.34] - Unreleased
+### Changed
+- Ask for confirmation before deleting strength sets, strength exercises, run sets, estimated 1RMs, calendar workouts, and before restarting workouts.
+
+---
+## [0.17.33] - Released
 ### Changed
 - Auto-classify resistance workout labels from exercise muscle metadata and set volume.
 - Speed up Workout Calendar by loading the visible month from local data before cloud sync and prefetching adjacent months afterward.
@@ -10,27 +15,27 @@
 - Ask for confirmation before deleting mesocycles, weeks, and workouts from program and workout screens.
 
 ---
-## [0.17.32] - Unreleased
+## [0.17.32] - Released
 ### Changed
 - Redesign the week copy target picker with focused block, week, and day selection, and mark copied weeks with the primary label.
 
 ---
-## [0.17.31] - Unreleased
+## [0.17.31] - Released
 ### Changed
 - Move program import into the Program options menu and remove the standalone import action from the page body.
 
 ---
-## [0.17.30] - Unreleased
+## [0.17.30] - Released
 ### Changed
 - Add a block-level week call to action for adding new program weeks from the Program Overview flow.
 
 ---
-## [0.17.29] - Unreleased
+## [0.17.29] - Released
 ### Changed
 - Send workout-start notifications immediately when workouts start and manage push-token ownership through the `manage-push-token` Edge Function.
 
 ---
-## [0.17.28] - Unreleased
+## [0.17.28] - Released
 ### Changed
 - Ask before adding a standalone workout copy to a program day, while program workout copies automatically use a matching program day or fall back to the workout calendar.
 - Add workout copy actions to the Workout Calendar day menu.
@@ -38,33 +43,33 @@
 - Redesign workout copy conflicts as a Date Conflict decision modal with selectable program and standalone cards.
 
 ---
-## [0.17.27] - Unreleased
+## [0.17.27] - Released
 ### Changed
 - Open notification history when a push notification is tapped.
 - Keep notification history unread until the user opens it from the Home bell.
 
 ---
-## [0.17.26] - Unreleased
+## [0.17.26] - Released
 ### Changed
 - Add a drawn-tab style indicator around the Rest set header to show it can be tapped.
 
 ---
-## [0.17.25] - Unreleased
+## [0.17.25] - Released
 ### Changed
 - Simplify the Profile About section to show only the FitVen app name and configured app version.
 
 ---
-## [0.17.24] - Unreleased
+## [0.17.24] - Released
 ### Changed
 - Add an About section at the bottom of Profile with app version, build, runtime, and platform details.
 
 ---
-## [0.17.23] - Unreleased
+## [0.17.23] - Released
 ### Changed
 - Add program export/import using FitApp program JSON files, including program structure, workouts, exercises, sets, run rows, estimated 1RMs, and program display settings.
 
 ---
-## [0.17.22] - Unreleased
+## [0.17.22] - Released
 ### Changed
 - Move set rest into an editable overlay pill inside the existing Rest column, tied to the previous set without adding spacing between sets.
 - Default rest editing to minutes.
@@ -73,37 +78,37 @@
 - Start a rest countdown from the completed set's rest value, including the final set, while the workout is running, and show it in the rest field and active workout menu circle; the rest field border turns primary while counting down and secondary when complete.
 
 ---
-## [0.17.21] - Unreleased
+## [0.17.21] - Released
 ### Changed
 - Move the expanded exercise history action back to the top-right of the exercise card.
 
 ---
-## [0.17.20] - Unreleased
+## [0.17.20] - Released
 ### Changed
 - Add a rest title unit picker for switching set rest entry between minutes and seconds.
 
 ---
-## [0.17.19] - Unreleased
+## [0.17.19] - Released
 ### Changed
 - Use the secondary color treatment for the paused run finish button and match its height to the continue button.
 
 ---
-## [0.17.18] - Unreleased
+## [0.17.18] - Released
 ### Fixed
 - Keep block week counts in sync when deleting a week so later added weeks use the next correct date.
 
 ---
-## [0.17.17] - Unreleased
+## [0.17.17] - Released
 ### Changed
 - Add an auto-push post-commit hook for work branches and document the commit-to-cloud workflow.
 
 ---
-## [0.17.16] - Unreleased
+## [0.17.16] - Released
 ### Changed
 - Add paginated "See all" loading for recent workouts in the quick start sheet.
 
 ---
-## [0.17.15] - Unreleased
+## [0.17.15] - Released
 ### Changed
 - Redesign the program overview header and streamline its stats.
 - Create programs as drafts or start them immediately, with draft scheduling
@@ -117,17 +122,17 @@
 - Use the primary color for the Home notification bell.
 
 ---
-## [0.17.14] - Unreleased
+## [0.17.14] - Released
 ### Fixed
 - Highlight incomplete workout totals on completed program cards.
 
 ---
-## [0.17.13] - Unreleased
+## [0.17.13] - Released
 ### Fixed
 - Keep valid run distance segments when locked phones deliver background locations less frequently.
 
 ---
-## [0.17.12] - Unreleased
+## [0.17.12] - Released
 ### Changed
 - Redesign program cards as image-backed covers with workout-type badges, schedule details, and progress.
 - Use the Resistance Training cover image for programs containing resistance workouts.
@@ -138,7 +143,7 @@
 - Calculate program-card progress and completion solely from elapsed calendar days, independent of completed workouts.
 
 ---
-## [0.17.11] - Unreleased
+## [0.17.11] - Released
 ### Changed
 - Reorder the bottom navigation to place Home on the right beside Train.
 

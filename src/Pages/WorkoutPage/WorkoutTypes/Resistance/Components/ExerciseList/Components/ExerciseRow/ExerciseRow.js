@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   PanResponder,
   TouchableOpacity,
   View,
@@ -267,6 +268,24 @@ const ExerciseRow = ({
     } catch (error) {
       console.error(error);
     }
+  };
+
+  const confirmDeleteExercise = () => {
+    Alert.alert(
+      "Delete exercise?",
+      "This removes the exercise and all sets saved inside it.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete exercise",
+          style: "destructive",
+          onPress: async () => {
+            await deleteExercise(exercise.exercise_id);
+            setPanelModalVisible(false);
+          },
+        },
+      ]
+    );
   };
 
   const addSet = async () => {
@@ -1014,10 +1033,7 @@ const ExerciseRow = ({
         visible={panelModalVisible}
         currentColumns={visibleColumns}
         currentNote={exerciseNote}
-        onDelete={async () => {
-          await deleteExercise(exercise.exercise_id);
-          setPanelModalVisible(false);
-        }}
+        onDelete={confirmDeleteExercise}
         onClose={async ({ columns, note }) => {
           await saveExerciseSettings({ columns, note });
           setPanelModalVisible(false);

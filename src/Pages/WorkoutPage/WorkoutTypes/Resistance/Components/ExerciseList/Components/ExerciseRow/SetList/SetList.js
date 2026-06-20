@@ -1,4 +1,4 @@
-import { TouchableOpacity, View } from "react-native";
+import { Alert, TouchableOpacity, View } from "react-native";
 import { useColorScheme } from "react-native";
 import { useEffect, useRef, useState } from "react";
 import { useSQLiteContext } from "expo-sqlite";
@@ -371,6 +371,28 @@ const SetList = ({
     await weightliftingRepository.deleteSet(db, setId);
     await updateUI?.();
     await onWorkoutMetadataChange?.();
+  };
+
+  const confirmDeleteSelectedSet = () => {
+    if (!selectedSet) {
+      return;
+    }
+
+    Alert.alert(
+      "Delete set?",
+      "This removes the set and its saved values.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete set",
+          style: "destructive",
+          onPress: async () => {
+            await deleteSet(selectedSet.sets_id);
+            setSetOptionsVisible(false);
+          },
+        },
+      ]
+    );
   };
 
   const updateField = async (field, value, setId) => {
@@ -973,14 +995,7 @@ const SetList = ({
 
           <TouchableOpacity
             style={styles.option}
-            onPress={async () => {
-              if (!selectedSet) {
-                return;
-              }
-
-              await deleteSet(selectedSet.sets_id);
-              setSetOptionsVisible(false);
-            }}
+            onPress={confirmDeleteSelectedSet}
           >
             <Delete width={24} height={24} />
             <ThemedText style={styles.option_text}>Delete set</ThemedText>
