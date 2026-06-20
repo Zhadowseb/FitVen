@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
+  Alert,
   ScrollView,
   View,
   TouchableOpacity,
@@ -111,6 +112,23 @@ const MicrocyclePage = ({ route }) => {
 
     set_OptionsBottomsheet_visible(false);
     navigation.goBack();
+  };
+
+  const confirmDeleteMesocycle = () => {
+    Alert.alert(
+      "Delete mesocycle?",
+      "This removes the block and all weeks and workouts inside it.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete mesocycle",
+          style: "destructive",
+          onPress: () => {
+            void deleteMesocycle();
+          },
+        },
+      ]
+    );
   };
 
   const updateFocus = async (nextFocus) => {
@@ -381,9 +399,7 @@ const MicrocyclePage = ({ route }) => {
 
           <TouchableOpacity
             style={styles.option}
-            onPress={async () => {
-              await deleteMesocycle();
-            }}
+            onPress={confirmDeleteMesocycle}
           >
             <Delete width={24} height={24} />
             <ThemedText style={styles.option_text}>

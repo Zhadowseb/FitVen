@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import {
+  Alert,
   FlatList,
   Image,
   Modal,
@@ -413,7 +414,22 @@ const MicrocycleList = ({
     }
   };
 
-
+  const confirmDeleteMicrocycle = (microcycleId) => {
+    Alert.alert(
+      "Delete week?",
+      "This removes the week and all workouts inside it.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete week",
+          style: "destructive",
+          onPress: () => {
+            void deleteMicrocycle(microcycleId);
+          },
+        },
+      ]
+    );
+  };
 
   /*
   Add in total sets for each exercise.
@@ -485,6 +501,37 @@ const MicrocycleList = ({
     setPickWorkoutModalVisible(true);
   };
 
+  const deleteWorkout = async (workoutId) => {
+    try {
+      await programRepository.deleteWorkout(db, workoutId);
+      setPickWorkoutModalVisible(false);
+      setDayOptionsVisible(false);
+      setSelectedDay(null);
+      setSelectedWorkoutId(null);
+      setPickMode(null);
+      updateui();
+    } catch (error) {
+      console.error("Failed to delete workout:", error);
+    }
+  };
+
+  const confirmDeleteWorkout = (workoutId) => {
+    Alert.alert(
+      "Delete workout?",
+      "This removes the workout and all sets saved inside it.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete workout",
+          style: "destructive",
+          onPress: () => {
+            void deleteWorkout(workoutId);
+          },
+        },
+      ]
+    );
+  };
+
   const deleteSelectedDayWorkout = () => {
     const workouts = selectedDay?.workouts ?? [];
 
@@ -493,7 +540,7 @@ const MicrocycleList = ({
     }
 
     if (workouts.length === 1) {
-      deleteWorkout(workouts[0].workout_id);
+      confirmDeleteWorkout(workouts[0].workout_id);
       return;
     }
 
@@ -721,20 +768,6 @@ const MicrocycleList = ({
       sicknessType: selectedSicknessType,
       note: sicknessNote.trim() || null,
     });
-  };
-
-  const deleteWorkout = async (workoutId) => {
-    try {
-      await programRepository.deleteWorkout(db, workoutId);
-      setPickWorkoutModalVisible(false);
-      setDayOptionsVisible(false);
-      setSelectedDay(null);
-      setSelectedWorkoutId(null);
-      setPickMode(null);
-      updateui();
-    } catch (error) {
-      console.error("Failed to delete workout:", error);
-    }
   };
 
   const copyWorkoutToDate = async (workoutId, date) => {
@@ -978,8 +1011,8 @@ const MicrocycleList = ({
           {/* Delete microcycle */}
           <TouchableOpacity 
               style={styles.option}
-              onPress={async () => {
-                await deleteMicrocycle(selectedWeek.microcycle_id);
+              onPress={() => {
+                confirmDeleteMicrocycle(selectedWeek.microcycle_id);
               }}>
 
               <Delete
@@ -1024,7 +1057,7 @@ const MicrocycleList = ({
       }}
       onSubmit={(workout) => {
         if (pickMode === PICK_MODE.DELETE) {
-          deleteWorkout(workout.workout_id);
+          confirmDeleteWorkout(workout.workout_id);
           return;
         }
 

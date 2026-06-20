@@ -7,6 +7,7 @@
 - Keep Workout Calendar swipe paging to one month at a time while recentering the pager.
 - Add calendar database indexes for workout, day, sickness, exercise, and set lookups.
 - Replace the registration username placeholder with a neutral example.
+- Ask for confirmation before deleting mesocycles, weeks, and workouts from program and workout screens.
 
 ---
 ## [0.17.32] - Unreleased

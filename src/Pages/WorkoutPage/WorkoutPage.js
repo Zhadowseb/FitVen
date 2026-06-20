@@ -139,6 +139,23 @@ const WorkoutPage = ({ route }) => {
     }
   };
 
+  const confirmDeleteWorkout = () => {
+    Alert.alert(
+      "Delete workout?",
+      "This removes the workout and all sets saved inside it.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete workout",
+          style: "destructive",
+          onPress: () => {
+            void deleteWorkout();
+          },
+        },
+      ]
+    );
+  };
+
   const closeCopyTargetModal = () => {
     if (isCopyingWorkout) {
       return;
@@ -379,9 +396,7 @@ const WorkoutPage = ({ route }) => {
 
           <TouchableOpacity
             style={styles.option}
-            onPress={async () => {
-              await deleteWorkout();
-            }}
+            onPress={confirmDeleteWorkout}
           >
             <Delete width={24} height={24} />
             <ThemedText style={styles.optionText}>Delete Workout</ThemedText>
