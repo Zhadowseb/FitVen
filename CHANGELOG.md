@@ -2,7 +2,7 @@
 
 ## [0.17.35] - Unreleased
 ### Changed
-- Add a weekly muscle load radar to Personal Records with program selection.
+- Add a weekly muscle load chart to Personal Records with program selection.
 
 ---
 ## [0.17.34] - Unreleased

@@ -41,14 +41,15 @@ const TREND_CHART_PADDING = {
   bottom: 34,
   left: 44,
 };
-const MUSCLE_RADAR_CHART_WIDTH = 320;
-const MUSCLE_RADAR_CHART_HEIGHT = 270;
-const MUSCLE_RADAR_CENTER = {
-  x: 160,
-  y: 132,
+const MUSCLE_LOAD_CHART_WIDTH = 320;
+const MUSCLE_LOAD_CHART_HEIGHT = 250;
+const MUSCLE_LOAD_CHART_PADDING = {
+  top: 18,
+  right: 18,
+  bottom: 42,
+  left: 48,
 };
-const MUSCLE_RADAR_RADIUS = 82;
-const MUSCLE_RADAR_GRID_STEPS = [0.25, 0.5, 0.75, 1];
+const MUSCLE_LOAD_GRID_STEPS = [0, 0.5, 1];
 
 function formatTrendAxisValue(value) {
   const numericValue = Number(value);
@@ -62,58 +63,6 @@ function formatTrendAxisValue(value) {
   return Number.isInteger(roundedValue)
     ? String(roundedValue)
     : roundedValue.toFixed(1);
-}
-
-function getMuscleRadarPoint(index, pointCount, radius) {
-  const angle = -Math.PI / 2 + (index / pointCount) * Math.PI * 2;
-
-  return {
-    x: MUSCLE_RADAR_CENTER.x + Math.cos(angle) * radius,
-    y: MUSCLE_RADAR_CENTER.y + Math.sin(angle) * radius,
-  };
-}
-
-function buildMuscleRadarPath(pointCount, radius) {
-  if (pointCount <= 0) {
-    return "";
-  }
-
-  return Array.from({ length: pointCount }, (_, index) => {
-    const point = getMuscleRadarPoint(index, pointCount, radius);
-
-    return `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`;
-  }).join(" ") + " Z";
-}
-
-function buildMuscleLoadRadarPath(points = [], maxValue = 0) {
-  if (points.length === 0 || maxValue <= 0) {
-    return "";
-  }
-
-  return points
-    .map((point, index) => {
-      const ratio = Math.max(0, Number(point?.value) || 0) / maxValue;
-      const radarPoint = getMuscleRadarPoint(
-        index,
-        points.length,
-        MUSCLE_RADAR_RADIUS * Math.min(1, ratio)
-      );
-
-      return `${index === 0 ? "M" : "L"} ${radarPoint.x} ${radarPoint.y}`;
-    })
-    .join(" ") + " Z";
-}
-
-function getRadarLabelAnchor(x) {
-  if (x < MUSCLE_RADAR_CENTER.x - 12) {
-    return "end";
-  }
-
-  if (x > MUSCLE_RADAR_CENTER.x + 12) {
-    return "start";
-  }
-
-  return "middle";
 }
 
 function buildTrendChartGeometry(points = []) {
@@ -205,6 +154,69 @@ function buildTrendChartGeometry(points = []) {
         ? chartPoints[chartPoints.length - 1]?.dateDisplay ??
           `Workout ${chartPoints.length}`
         : null,
+  };
+}
+
+function buildMuscleLoadChartGeometry(points = []) {
+  const validPoints = points.filter((point) =>
+    Number.isFinite(Number(point?.value))
+  );
+
+  if (validPoints.length === 0) {
+    return null;
+  }
+
+  const values = validPoints.map((point) => Number(point.value));
+  const rawMaxValue = Math.max(...values, 0);
+  const maxValue =
+    rawMaxValue <= 0 ? 10 : rawMaxValue + Math.max(rawMaxValue * 0.15, 2);
+  const minValue = 0;
+  const valueRange = maxValue - minValue || 1;
+  const plotWidth =
+    MUSCLE_LOAD_CHART_WIDTH -
+    MUSCLE_LOAD_CHART_PADDING.left -
+    MUSCLE_LOAD_CHART_PADDING.right;
+  const plotHeight =
+    MUSCLE_LOAD_CHART_HEIGHT -
+    MUSCLE_LOAD_CHART_PADDING.top -
+    MUSCLE_LOAD_CHART_PADDING.bottom;
+
+  const chartPoints = validPoints.map((point, index) => {
+    const x =
+      MUSCLE_LOAD_CHART_PADDING.left +
+      (validPoints.length === 1
+        ? plotWidth / 2
+        : (index / (validPoints.length - 1)) * plotWidth);
+    const y =
+      MUSCLE_LOAD_CHART_PADDING.top +
+      ((maxValue - Number(point.value)) / valueRange) * plotHeight;
+
+    return {
+      ...point,
+      x,
+      y,
+      isHighest: Number(point.value) === rawMaxValue && rawMaxValue > 0,
+    };
+  });
+  const path = chartPoints
+    .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`)
+    .join(" ");
+  const gridLines = MUSCLE_LOAD_GRID_STEPS.map((offset) => {
+    const y = MUSCLE_LOAD_CHART_PADDING.top + plotHeight * offset;
+    const value = maxValue - valueRange * offset;
+
+    return {
+      y,
+      label: formatTrendAxisValue(value),
+      isBaseline: offset === 1,
+    };
+  });
+
+  return {
+    chartPoints,
+    path,
+    gridLines,
+    baselineY: MUSCLE_LOAD_CHART_PADDING.top + plotHeight,
   };
 }
 
@@ -371,9 +383,8 @@ const PersonalRecordsPage = () => {
   const renderMuscleLoadCard = () => {
     const points = muscleLoad?.points ?? [];
     const hasPrograms = muscleLoadProgramItems.length > 0;
-    const hasMuscleLoadData = !!muscleLoad?.hasData;
-    const maxValue = Math.max(1, Number(muscleLoad?.maxValue) || 0);
-    const radarPath = buildMuscleLoadRadarPath(points, maxValue);
+    const chartGeometry = buildMuscleLoadChartGeometry(points);
+    const hasMuscleLoadData = !!muscleLoad?.hasData && !!chartGeometry;
 
     return (
       <View
@@ -423,61 +434,38 @@ const PersonalRecordsPage = () => {
           ) : hasPrograms && hasMuscleLoadData ? (
             <Svg
               width="100%"
-              height={MUSCLE_RADAR_CHART_HEIGHT}
-              viewBox={`0 0 ${MUSCLE_RADAR_CHART_WIDTH} ${MUSCLE_RADAR_CHART_HEIGHT}`}
+              height={MUSCLE_LOAD_CHART_HEIGHT}
+              viewBox={`0 0 ${MUSCLE_LOAD_CHART_WIDTH} ${MUSCLE_LOAD_CHART_HEIGHT}`}
             >
-              <Defs>
-                <LinearGradient
-                  id="personalRecordMuscleLoadFill"
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2="1"
-                >
-                  <Stop offset="0" stopColor={primaryColor} stopOpacity="0.42" />
-                  <Stop offset="1" stopColor={primaryColor} stopOpacity="0.12" />
-                </LinearGradient>
-              </Defs>
-
-              {MUSCLE_RADAR_GRID_STEPS.map((step) => (
-                <Path
-                  key={`grid-${step}`}
-                  d={buildMuscleRadarPath(
-                    points.length,
-                    MUSCLE_RADAR_RADIUS * step
-                  )}
-                  fill="none"
-                  stroke={quietText}
-                  strokeOpacity={step === 1 ? 0.28 : 0.14}
-                  strokeWidth={1}
-                />
-              ))}
-
-              {points.map((point, index) => {
-                const axisPoint = getMuscleRadarPoint(
-                  index,
-                  points.length,
-                  MUSCLE_RADAR_RADIUS
-                );
-
-                return (
+              {chartGeometry.gridLines.map((line, index) => (
+                <G key={`grid-${index}`}>
                   <Line
-                    key={`axis-${point.key}`}
-                    x1={MUSCLE_RADAR_CENTER.x}
-                    y1={MUSCLE_RADAR_CENTER.y}
-                    x2={axisPoint.x}
-                    y2={axisPoint.y}
+                    x1={MUSCLE_LOAD_CHART_PADDING.left}
+                    y1={line.y}
+                    x2={MUSCLE_LOAD_CHART_WIDTH - MUSCLE_LOAD_CHART_PADDING.right}
+                    y2={line.y}
                     stroke={quietText}
-                    strokeOpacity={0.14}
+                    strokeOpacity={line.isBaseline ? 0.24 : 0.14}
+                    strokeDasharray={line.isBaseline ? undefined : "3 3"}
                     strokeWidth={1}
                   />
-                );
-              })}
+                  <SvgText
+                    x={MUSCLE_LOAD_CHART_PADDING.left - 9}
+                    y={line.y + 3}
+                    fill={quietText}
+                    fontSize="9"
+                    fontWeight="800"
+                    textAnchor="end"
+                  >
+                    {line.label}
+                  </SvgText>
+                </G>
+              ))}
 
-              {!!radarPath && (
+              {chartGeometry.chartPoints.length > 1 && (
                 <Path
-                  d={radarPath}
-                  fill="url(#personalRecordMuscleLoadFill)"
+                  d={chartGeometry.path}
+                  fill="none"
                   stroke={primaryColor}
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -485,53 +473,38 @@ const PersonalRecordsPage = () => {
                 />
               )}
 
-              {points.map((point, index) => {
-                const ratio = Math.max(0, Number(point.value) || 0) / maxValue;
-                const radarPoint = getMuscleRadarPoint(
-                  index,
-                  points.length,
-                  MUSCLE_RADAR_RADIUS * Math.min(1, ratio)
-                );
-                const labelPoint = getMuscleRadarPoint(
-                  index,
-                  points.length,
-                  MUSCLE_RADAR_RADIUS + 28
-                );
-                const textAnchor = getRadarLabelAnchor(labelPoint.x);
-
-                return (
-                  <G key={point.key}>
-                    <Circle
-                      cx={radarPoint.x}
-                      cy={radarPoint.y}
-                      r={3.8}
-                      fill={secondaryColor}
-                      stroke={panelSurface}
-                      strokeWidth={2}
-                    />
-                    <SvgText
-                      x={labelPoint.x}
-                      y={labelPoint.y}
-                      fill={titleColor}
-                      fontSize="10"
-                      fontWeight="900"
-                      textAnchor={textAnchor}
-                    >
-                      {point.label}
-                    </SvgText>
-                    <SvgText
-                      x={labelPoint.x}
-                      y={labelPoint.y + 13}
-                      fill={quietText}
-                      fontSize="9"
-                      fontWeight="800"
-                      textAnchor={textAnchor}
-                    >
-                      {point.valueDisplay}
-                    </SvgText>
-                  </G>
-                );
-              })}
+              {chartGeometry.chartPoints.map((point) => (
+                <G key={point.key}>
+                  <Circle
+                    cx={point.x}
+                    cy={point.y}
+                    r={point.isHighest ? 4.8 : 3.6}
+                    fill={point.isHighest ? secondaryColor : primaryColor}
+                    stroke={panelSurface}
+                    strokeWidth={2}
+                  />
+                  <SvgText
+                    x={point.x}
+                    y={chartGeometry.baselineY + 22}
+                    fill={quietText}
+                    fontSize="9"
+                    fontWeight="800"
+                    textAnchor="middle"
+                  >
+                    {point.label}
+                  </SvgText>
+                  <SvgText
+                    x={point.x}
+                    y={Math.max(12, point.y - 10)}
+                    fill={point.isHighest ? secondaryColor : titleColor}
+                    fontSize="9"
+                    fontWeight="900"
+                    textAnchor="middle"
+                  >
+                    {point.valueDisplay}
+                  </SvgText>
+                </G>
+              ))}
             </Svg>
           ) : (
             <View style={styles.muscleLoadEmptyState}>
