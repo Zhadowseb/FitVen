@@ -16,6 +16,102 @@ export default StyleSheet.create({
     paddingTop: 12,
   },
 
+  runFlowHeader: {
+    marginBottom: 14,
+    paddingHorizontal: 2,
+  },
+
+  runFlowEyebrow: {
+    fontSize: 11,
+    fontWeight: "900",
+    lineHeight: 13,
+    textTransform: "uppercase",
+    marginBottom: 5,
+  },
+
+  runFlowTitle: {
+    fontSize: 28,
+    lineHeight: 32,
+    fontWeight: "900",
+  },
+
+  runFlowGrid: {
+    gap: 12,
+  },
+
+  runFlowCard: {
+    minHeight: 142,
+    borderRadius: 26,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    overflow: "hidden",
+  },
+
+  runFlowCardCopy: {
+    flex: 1,
+    minWidth: 0,
+    paddingRight: 12,
+  },
+
+  runFlowBadge: {
+    alignSelf: "flex-start",
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    marginBottom: 10,
+  },
+
+  runFlowBadgeText: {
+    fontSize: 10,
+    fontWeight: "900",
+    lineHeight: 12,
+    textTransform: "uppercase",
+  },
+
+  runFlowCardTitle: {
+    fontSize: 20,
+    lineHeight: 24,
+    fontWeight: "900",
+  },
+
+  runFlowCardSubtitle: {
+    marginTop: 5,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "700",
+  },
+
+  runFlowImageFrame: {
+    width: 112,
+    height: 96,
+    flexShrink: 0,
+    borderRadius: 20,
+    borderWidth: 1,
+    overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  runFlowImage: {
+    width: "100%",
+    height: "100%",
+  },
+
+  runLoadingCard: {
+    width: "100%",
+    minHeight: 180,
+    marginHorizontal: 0,
+    marginVertical: 0,
+    borderRadius: 26,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
   heroCard: {
     width: "100%",
     marginHorizontal: 0,

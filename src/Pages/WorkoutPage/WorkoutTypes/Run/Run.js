@@ -1,4 +1,12 @@
-import { Alert, AppState, TouchableOpacity, View, Vibration } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  AppState,
+  Image,
+  TouchableOpacity,
+  View,
+  Vibration,
+} from "react-native";
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useSQLiteContext } from "expo-sqlite";
 import { useFocusEffect } from "@react-navigation/native";
@@ -96,6 +104,37 @@ const getRunTrackingStartMessage = (error) => {
   return "Check that location is allowed and turned on, then try again.";
 };
 
+const RUN_WORKOUT_FLOW_OPTIONS = [
+  {
+    id: "endurance-base",
+    title: "Endurance & base",
+    subtitle: "Steady aerobic work",
+    badge: "Base",
+    image: require("./Assets/Endurance&base.png"),
+  },
+  {
+    id: "speed-structure",
+    title: "Speed & Structure",
+    subtitle: "Intervals and run blocks",
+    badge: "Current",
+    image: require("./Assets/Speed&structure.png"),
+  },
+  {
+    id: "performance-threshold",
+    title: "Performance & Threshold",
+    subtitle: "Tempo and threshold work",
+    badge: "Tempo",
+    image: require("./Assets/Performance&threshold.png"),
+  },
+  {
+    id: "custom",
+    title: "Custom",
+    subtitle: "Build from blank",
+    badge: "Blank",
+    image: require("./Assets/Custom.png"),
+  },
+];
+
 const Run = ({ workout_id, restartRequestKey }) => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -106,10 +145,14 @@ const Run = ({ workout_id, restartRequestKey }) => {
     set_updateCount((prev) => prev + 1);
   };
 
+  const [selectedRunFlow, set_selectedRunFlow] = useState(null);
+  const [hasRunStructure, set_hasRunStructure] = useState(false);
+  const [runStructureLoaded, set_runStructureLoaded] = useState(false);
   const [original_start_time, set_original_start_time] = useState(null);
   const [timer_start, set_timer_start] = useState(null);
   const [elapsed_time, set_elapsed_time] = useState(0);
   const [isDone, set_isDone] = useState(false);
+  const [workoutStateLoaded, set_workoutStateLoaded] = useState(false);
   const [isRunning, set_isRunning] = useState(false);
   const [isControlBusy, set_isControlBusy] = useState(false);
   const [totalDistance, set_totalDistance] = useState(0);
@@ -129,6 +172,13 @@ const Run = ({ workout_id, restartRequestKey }) => {
 
   const normalizeTimerStartValue = (value) =>
     normalizeStoredTimestampSeconds(value);
+
+  useEffect(() => {
+    set_selectedRunFlow(null);
+    set_hasRunStructure(false);
+    set_runStructureLoaded(false);
+    set_workoutStateLoaded(false);
+  }, [workout_id]);
 
   const currentElapsed =
     normalizeElapsedDurationSeconds(elapsed_time, 0) +
@@ -194,6 +244,21 @@ const Run = ({ workout_id, restartRequestKey }) => {
       console.error("Failed to load tracked run summary:", error);
     } finally {
       trackedSummaryLoadingRef.current = false;
+    }
+  }, [db, workout_id]);
+
+  const loadRunStructureState = useCallback(async () => {
+    try {
+      const sets = await runningRepository.getOrderedRunSetsForWorkout(
+        db,
+        workout_id
+      );
+
+      set_hasRunStructure(sets.length > 0);
+    } catch (error) {
+      console.error("Failed to load run structure state:", error);
+    } finally {
+      set_runStructureLoaded(true);
     }
   }, [db, workout_id]);
 
@@ -271,7 +336,12 @@ const Run = ({ workout_id, restartRequestKey }) => {
 
     const row = await workoutRepository.getWorkoutTimerState(db, workout_id);
 
-    if (!row || requestId !== workoutStateLoadRequestRef.current) {
+    if (requestId !== workoutStateLoadRequestRef.current) {
+      return;
+    }
+
+    if (!row) {
+      set_workoutStateLoaded(true);
       return;
     }
 
@@ -326,6 +396,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
     }
 
     await loadTrackedRunSummary();
+    set_workoutStateLoaded(true);
   }, [db, workout_id, calculateActiveSet, loadTrackedRunSummary]);
 
   useFocusEffect(
@@ -333,6 +404,16 @@ const Run = ({ workout_id, restartRequestKey }) => {
       void loadWorkoutState();
     }, [loadWorkoutState])
   );
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadRunStructureState();
+    }, [loadRunStructureState])
+  );
+
+  useEffect(() => {
+    void loadRunStructureState();
+  }, [loadRunStructureState, updateCount]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (nextAppState) => {
@@ -571,6 +652,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
       set_isRunning(false);
       set_isDone(false);
       set_totalDistance(0);
+      set_selectedRunFlow(null);
       clearActiveSegment();
       triggerReload();
     } catch (error) {
@@ -599,6 +681,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
         workoutId: workout_id,
         type: setVariety,
       });
+      set_hasRunStructure(true);
       triggerReload();
     } catch (error) {
       console.error("Failed to add run set:", error);
@@ -610,6 +693,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
   const secondaryDark = theme.secondaryDark ?? secondaryColor;
   const screenBackground = theme.background ?? "#0E0F12";
   const cardSurface = theme.cardBackground ?? theme.background;
+  const innerSurface = theme.uiBackground ?? cardSurface;
   const cardBorder = theme.cardBorder ?? theme.iconColor ?? theme.text;
   const titleColor = theme.title ?? theme.text;
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
@@ -653,6 +737,143 @@ const Run = ({ workout_id, restartRequestKey }) => {
       unit: "bpm",
     },
   ];
+  const runShellReady = workoutStateLoaded && runStructureLoaded;
+  const shouldShowRunFlowSelection =
+    runShellReady &&
+    selectedRunFlow === null &&
+    original_start_time === null &&
+    !isDone &&
+    !isRunning &&
+    !hasRunStructure;
+  const runFlowCards = RUN_WORKOUT_FLOW_OPTIONS.map((option, index) => ({
+    ...option,
+    accentColor:
+      index === 0
+        ? secondaryColor
+        : index === 1
+          ? primaryColor
+          : index === 2
+            ? secondaryDark
+            : quietText,
+  }));
+
+  const renderRunFlowImage = (option) => (
+    <View
+      style={[
+        styles.runFlowImageFrame,
+        {
+          backgroundColor: innerSurface,
+          borderColor: cardBorder,
+        },
+      ]}
+    >
+      <Image
+        source={option.image}
+        resizeMode="cover"
+        style={styles.runFlowImage}
+      />
+    </View>
+  );
+
+  const renderRunFlowSelection = () => (
+    <ThemedView
+      safe={false}
+      style={[styles.screen, { backgroundColor: screenBackground }]}
+    >
+      <ThemedKeyboardProtection
+        scroll
+        contentContainerStyle={styles.scrollContent}
+        scrollViewProps={{ showsVerticalScrollIndicator: false }}
+      >
+        <View style={styles.runLayout}>
+          <View style={styles.runFlowHeader}>
+            <ThemedText style={styles.runFlowEyebrow} setColor={primaryColor}>
+              Run workout
+            </ThemedText>
+            <ThemedText style={styles.runFlowTitle} setColor={titleColor}>
+              Choose your run focus
+            </ThemedText>
+          </View>
+
+          <View style={styles.runFlowGrid}>
+            {runFlowCards.map((option) => (
+              <TouchableOpacity
+                key={option.id}
+                activeOpacity={0.84}
+                accessibilityRole="button"
+                onPress={() => set_selectedRunFlow(option.id)}
+                style={[
+                  styles.runFlowCard,
+                  {
+                    backgroundColor: cardSurface,
+                    borderColor: cardBorder,
+                  },
+                ]}
+              >
+                <View style={styles.runFlowCardCopy}>
+                  <View
+                    style={[
+                      styles.runFlowBadge,
+                      {
+                        backgroundColor: innerSurface,
+                        borderColor: option.accentColor,
+                      },
+                    ]}
+                  >
+                    <ThemedText
+                      style={styles.runFlowBadgeText}
+                      setColor={option.accentColor}
+                    >
+                      {option.badge}
+                    </ThemedText>
+                  </View>
+
+                  <ThemedText style={styles.runFlowCardTitle} setColor={titleColor}>
+                    {option.title}
+                  </ThemedText>
+                  <ThemedText
+                    style={styles.runFlowCardSubtitle}
+                    setColor={quietText}
+                  >
+                    {option.subtitle}
+                  </ThemedText>
+                </View>
+
+                {renderRunFlowImage(option)}
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </ThemedKeyboardProtection>
+    </ThemedView>
+  );
+
+  const renderRunLoadingState = () => (
+    <ThemedView
+      safe={false}
+      style={[styles.screen, { backgroundColor: screenBackground }]}
+    >
+      <ThemedKeyboardProtection
+        scroll
+        contentContainerStyle={styles.scrollContent}
+        scrollViewProps={{ showsVerticalScrollIndicator: false }}
+      >
+        <View style={styles.runLayout}>
+          <ThemedCard
+            style={[
+              styles.runLoadingCard,
+              {
+                backgroundColor: cardSurface,
+                borderColor: cardBorder,
+              },
+            ]}
+          >
+            <ActivityIndicator color={primaryColor} />
+          </ThemedCard>
+        </View>
+      </ThemedKeyboardProtection>
+    </ThemedView>
+  );
 
   const sectionConfigs = [
     {
@@ -677,6 +898,14 @@ const Run = ({ workout_id, restartRequestKey }) => {
       emptySummary: "Add cooldown",
     },
   ];
+
+  if (!runShellReady) {
+    return renderRunLoadingState();
+  }
+
+  if (shouldShowRunFlowSelection) {
+    return renderRunFlowSelection();
+  }
 
   return (
     <ThemedView
