@@ -787,6 +787,8 @@ const Run = ({ workout_id, restartRequestKey }) => {
               },
             ]}
           >
+            {renderRunFlowImage(option)}
+
             <View style={styles.runFlowCardCopy}>
               <ThemedText
                 style={styles.runFlowCardTitle}
@@ -803,8 +805,6 @@ const Run = ({ workout_id, restartRequestKey }) => {
                 {option.subtitle}
               </ThemedText>
             </View>
-
-            {renderRunFlowImage(option)}
           </TouchableOpacity>
         ))}
       </View>

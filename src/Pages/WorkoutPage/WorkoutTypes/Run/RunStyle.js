@@ -40,44 +40,45 @@ export default StyleSheet.create({
   },
 
   runFlowGrid: {
-    gap: 9,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    rowGap: 10,
   },
 
   runFlowCard: {
-    minHeight: 108,
-    borderRadius: 22,
+    width: "48.5%",
+    minHeight: 174,
+    borderRadius: 20,
     borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 11,
-    flexDirection: "row",
-    alignItems: "center",
+    padding: 9,
+    alignItems: "stretch",
     overflow: "hidden",
   },
 
   runFlowCardCopy: {
     flex: 1,
     minWidth: 0,
-    paddingRight: 10,
+    marginTop: 8,
   },
 
   runFlowCardTitle: {
-    fontSize: 18,
-    lineHeight: 22,
+    fontSize: 16,
+    lineHeight: 20,
     fontWeight: "900",
   },
 
   runFlowCardSubtitle: {
     marginTop: 4,
-    fontSize: 11,
-    lineHeight: 15,
+    fontSize: 10,
+    lineHeight: 14,
     fontWeight: "700",
   },
 
   runFlowImageFrame: {
-    width: 88,
-    height: 76,
-    flexShrink: 0,
-    borderRadius: 17,
+    width: "100%",
+    height: 86,
+    borderRadius: 15,
     borderWidth: 1,
     overflow: "hidden",
     alignItems: "center",
