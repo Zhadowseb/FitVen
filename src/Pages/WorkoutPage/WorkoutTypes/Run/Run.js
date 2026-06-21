@@ -699,6 +699,12 @@ const Run = ({ workout_id, restartRequestKey }) => {
   const formattedTotalDistance = Number(totalDistance.toFixed(2)).toFixed(2);
   const avgPaceDisplay = formatPaceDisplay(avgPaceMinutes);
   const elapsedDisplay = formatRunClock(currentElapsed);
+  const runShellReady = workoutStateLoaded && runStructureLoaded;
+  const isFreshRunWithoutStructure =
+    original_start_time === null && !isDone && !isRunning && !hasRunStructure;
+  const shouldShowRunFlowSuggestions =
+    runShellReady && selectedRunFlow === null && isFreshRunWithoutStructure;
+  const shouldShowHeroMetrics = !isFreshRunWithoutStructure;
   const shouldShowFinishRunPill =
     original_start_time !== null && !isRunning && !isDone;
   const primaryActionLabel = isRunning
@@ -707,7 +713,11 @@ const Run = ({ workout_id, restartRequestKey }) => {
       ? "Continue run"
       : "Start run";
   const canUsePrimaryAction = !isDone && !isControlBusy;
-  const handlePrimaryAction = isRunning ? pauseWorkout : startWorkout;
+  const handlePrimaryAction = shouldShowRunFlowSuggestions
+    ? () => set_selectedRunFlow("custom")
+    : isRunning
+      ? pauseWorkout
+      : startWorkout;
   const metricCards = [
     {
       label: "TIME",
@@ -733,15 +743,6 @@ const Run = ({ workout_id, restartRequestKey }) => {
       unit: "bpm",
     },
   ];
-  const runShellReady = workoutStateLoaded && runStructureLoaded;
-  const shouldShowRunFlowSuggestions =
-    runShellReady &&
-    selectedRunFlow === null &&
-    original_start_time === null &&
-    !isDone &&
-    !isRunning &&
-    !hasRunStructure;
-
   const renderRunFlowImage = (option) => (
     <View
       style={[
@@ -880,55 +881,57 @@ const Run = ({ workout_id, restartRequestKey }) => {
               },
             ]}
           >
-            <View style={styles.heroMetricsRow}>
-              {metricCards.map((metric, index) => (
-                <View
-                  key={metric.label}
-                  style={styles.heroMetricGroup}
-                >
-                  <View style={styles.heroMetricCard}>
-                    <View style={styles.heroMetricHeader}>
-                      {metric.Icon ? (
-                        <metric.Icon
-                          width={20}
-                          height={20}
-                          stroke={primaryColor}
-                          color={primaryColor}
-                        />
-                      ) : (
-                        <ThemedText
-                          style={styles.heroMetricLabel}
-                          setColor={primaryColor}
-                        >
-                          {metric.label}
-                        </ThemedText>
-                      )}
+            {shouldShowHeroMetrics && (
+              <View style={styles.heroMetricsRow}>
+                {metricCards.map((metric, index) => (
+                  <View
+                    key={metric.label}
+                    style={styles.heroMetricGroup}
+                  >
+                    <View style={styles.heroMetricCard}>
+                      <View style={styles.heroMetricHeader}>
+                        {metric.Icon ? (
+                          <metric.Icon
+                            width={20}
+                            height={20}
+                            stroke={primaryColor}
+                            color={primaryColor}
+                          />
+                        ) : (
+                          <ThemedText
+                            style={styles.heroMetricLabel}
+                            setColor={primaryColor}
+                          >
+                            {metric.label}
+                          </ThemedText>
+                        )}
+                      </View>
+                      <ThemedText
+                        style={styles.heroMetricValue}
+                        setColor={titleColor}
+                        numberOfLines={1}
+                        adjustsFontSizeToFit
+                        minimumFontScale={0.72}
+                      >
+                        {metric.value}
+                      </ThemedText>
+                      <ThemedText style={styles.heroMetricUnit} setColor={quietText}>
+                        {metric.unit ?? " "}
+                      </ThemedText>
                     </View>
-                    <ThemedText
-                      style={styles.heroMetricValue}
-                      setColor={titleColor}
-                      numberOfLines={1}
-                      adjustsFontSizeToFit
-                      minimumFontScale={0.72}
-                    >
-                      {metric.value}
-                    </ThemedText>
-                    <ThemedText style={styles.heroMetricUnit} setColor={quietText}>
-                      {metric.unit ?? " "}
-                    </ThemedText>
-                  </View>
 
-                  {index < metricCards.length - 1 && (
-                    <View
-                      style={[
-                        styles.heroMetricDivider,
-                        { backgroundColor: cardBorder },
-                      ]}
-                    />
-                  )}
-                </View>
-              ))}
-            </View>
+                    {index < metricCards.length - 1 && (
+                      <View
+                        style={[
+                          styles.heroMetricDivider,
+                          { backgroundColor: cardBorder },
+                        ]}
+                      />
+                    )}
+                  </View>
+                ))}
+              </View>
+            )}
 
             {!isDone && (
               <View style={styles.heroActionRow}>
