@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.17.35-minor-pr-muscle-radar.1",
+  "version": "0.18.0-major-run-workout-flow.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",

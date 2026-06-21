@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.18.0] - Unreleased
+### Changed
+- Add a fresh-run workout selection flow with Endurance & base, Speed & Structure, Performance & Threshold, and Custom cards.
+
+---
 ## [0.17.35] - Unreleased
 ### Changed
 - Add a weekly muscle load chart to Personal Records with program selection.
