@@ -510,10 +510,6 @@ const PersonalRecordsPage = () => {
                 <Path
                   d={chartGeometry.dataPath}
                   fill="url(#personalRecordMuscleLoadFill)"
-                  stroke={primaryColor}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2.4}
                 />
               )}
 
@@ -523,7 +519,7 @@ const PersonalRecordsPage = () => {
                     x={point.labelX}
                     y={point.labelY + 4}
                     fill="#FFFFFF"
-                    fontSize="9"
+                    fontSize="12"
                     fontWeight="900"
                     textAnchor={point.textAnchor}
                   >
