@@ -485,8 +485,8 @@ const PersonalRecordsPage = () => {
                   y1={MUSCLE_LOAD_CHART_CENTER.y}
                   x2={axisLine.x}
                   y2={axisLine.y}
-                  stroke={quietText}
-                  strokeOpacity={0.12}
+                  stroke="#FFFFFF"
+                  strokeOpacity={0.18}
                   strokeWidth={1}
                 />
               ))}
@@ -496,9 +496,9 @@ const PersonalRecordsPage = () => {
                   key={`grid-${index}`}
                   d={path}
                   fill="none"
-                  stroke={quietText}
+                  stroke="#FFFFFF"
                   strokeOpacity={
-                    index === chartGeometry.gridPaths.length - 1 ? 0.24 : 0.13
+                    index === chartGeometry.gridPaths.length - 1 ? 0.38 : 0.2
                   }
                   strokeWidth={
                     index === chartGeometry.gridPaths.length - 1 ? 1.7 : 1
@@ -522,7 +522,7 @@ const PersonalRecordsPage = () => {
                   <SvgText
                     x={point.labelX}
                     y={point.labelY + 4}
-                    fill={quietText}
+                    fill="#FFFFFF"
                     fontSize="9"
                     fontWeight="900"
                     textAnchor={point.textAnchor}
@@ -542,59 +542,6 @@ const PersonalRecordsPage = () => {
               </ThemedText>
             </View>
           )}
-        </View>
-
-        <View style={styles.muscleLoadMetaRow}>
-          <View
-            style={[
-              styles.muscleLoadMetaItem,
-              {
-                backgroundColor: panelSurface,
-                borderColor: cardBorder,
-              },
-            ]}
-          >
-            <ThemedText style={styles.muscleLoadMetaValue} setColor={titleColor}>
-              {muscleLoad?.weekCount ?? 0}
-            </ThemedText>
-            <ThemedText style={styles.muscleLoadMetaLabel} setColor={quietText}>
-              weeks
-            </ThemedText>
-          </View>
-
-          <View
-            style={[
-              styles.muscleLoadMetaItem,
-              {
-                backgroundColor: panelSurface,
-                borderColor: cardBorder,
-              },
-            ]}
-          >
-            <ThemedText style={styles.muscleLoadMetaValue} setColor={titleColor}>
-              {muscleLoad?.scoredExerciseCount ?? 0}
-            </ThemedText>
-            <ThemedText style={styles.muscleLoadMetaLabel} setColor={quietText}>
-              exercises
-            </ThemedText>
-          </View>
-
-          <View
-            style={[
-              styles.muscleLoadMetaItem,
-              {
-                backgroundColor: panelSurface,
-                borderColor: cardBorder,
-              },
-            ]}
-          >
-            <ThemedText style={styles.muscleLoadMetaValue} setColor={titleColor}>
-              {hasMuscleLoadData ? "8:1" : "--"}
-            </ThemedText>
-            <ThemedText style={styles.muscleLoadMetaLabel} setColor={quietText}>
-              points
-            </ThemedText>
-          </View>
         </View>
       </View>
     );

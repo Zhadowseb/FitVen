@@ -87,31 +87,6 @@ export default StyleSheet.create({
     textAlign: "center",
     marginTop: 5,
   },
-  muscleLoadMetaRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginTop: 12,
-  },
-  muscleLoadMetaItem: {
-    flex: 1,
-    minHeight: 48,
-    borderWidth: 1,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  muscleLoadMetaValue: {
-    fontSize: 16,
-    fontWeight: "900",
-    lineHeight: 19,
-  },
-  muscleLoadMetaLabel: {
-    fontSize: 9,
-    fontWeight: "900",
-    lineHeight: 11,
-    marginTop: 2,
-    textTransform: "uppercase",
-  },
   exerciseList: {
     gap: 10,
   },
