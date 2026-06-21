@@ -131,6 +131,12 @@ const RUN_WORKOUT_FLOW_OPTIONS = [
   },
 ];
 
+function getRunFlowOption(optionId) {
+  return (
+    RUN_WORKOUT_FLOW_OPTIONS.find((option) => option.id === optionId) ?? null
+  );
+}
+
 const Run = ({ workout_id, restartRequestKey }) => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -364,6 +370,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
     set_original_start_time(resolvedOriginalStartTime);
     set_timer_start(resolvedTimerStart);
     set_elapsed_time(resolvedElapsedTime);
+    set_selectedRunFlow(getRunFlowOption(row.run_focus_type)?.id ?? null);
 
     if (requestId !== workoutStateLoadRequestRef.current) {
       return;
@@ -648,7 +655,6 @@ const Run = ({ workout_id, restartRequestKey }) => {
       set_isRunning(false);
       set_isDone(false);
       set_totalDistance(0);
-      set_selectedRunFlow(null);
       clearActiveSegment();
       triggerReload();
     } catch (error) {
@@ -684,6 +690,21 @@ const Run = ({ workout_id, restartRequestKey }) => {
     }
   };
 
+  const selectRunFlow = async (runFlowId) => {
+    const nextRunFlowId = getRunFlowOption(runFlowId)?.id ?? null;
+
+    set_selectedRunFlow(nextRunFlowId);
+
+    try {
+      await workoutRepository.updateWorkoutRunFocusType(db, {
+        workoutId: workout_id,
+        runFocusType: nextRunFlowId,
+      });
+    } catch (error) {
+      console.error("Failed to save run focus type:", error);
+    }
+  };
+
   const primaryColor = theme.primary ?? theme.iconColor ?? theme.text;
   const secondaryColor = theme.secondary ?? Colors.dark.secondary;
   const secondaryDark = theme.secondaryDark ?? secondaryColor;
@@ -705,6 +726,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
   const shouldShowRunFlowSuggestions =
     runShellReady && selectedRunFlow === null && isFreshRunWithoutStructure;
   const shouldShowHeroMetrics = !isFreshRunWithoutStructure;
+  const selectedRunFlowOption = getRunFlowOption(selectedRunFlow);
   const shouldShowFinishRunPill =
     original_start_time !== null && !isRunning && !isDone;
   const primaryActionLabel = isRunning
@@ -714,7 +736,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
       : "Start run";
   const canUsePrimaryAction = !isDone && !isControlBusy;
   const handlePrimaryAction = shouldShowRunFlowSuggestions
-    ? () => set_selectedRunFlow("custom")
+    ? () => selectRunFlow("custom")
     : isRunning
       ? pauseWorkout
       : startWorkout;
@@ -775,7 +797,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
             key={option.id}
             activeOpacity={0.84}
             accessibilityRole="button"
-            onPress={() => set_selectedRunFlow(option.id)}
+            onPress={() => selectRunFlow(option.id)}
             style={[
               styles.runFlowCard,
               {
@@ -883,6 +905,25 @@ const Run = ({ workout_id, restartRequestKey }) => {
               },
             ]}
           >
+            {selectedRunFlowOption && (
+              <View
+                style={[
+                  styles.heroRunFocusBadge,
+                  {
+                    backgroundColor: innerSurface,
+                    borderColor: primaryColor,
+                  },
+                ]}
+              >
+                <ThemedText
+                  style={styles.heroRunFocusBadgeText}
+                  setColor={primaryColor}
+                >
+                  {selectedRunFlowOption.title}
+                </ThemedText>
+              </View>
+            )}
+
             {shouldShowHeroMetrics && (
               <View style={styles.heroMetricsRow}>
                 {metricCards.map((metric, index) => (

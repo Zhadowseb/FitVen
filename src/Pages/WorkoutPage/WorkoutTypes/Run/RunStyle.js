@@ -105,6 +105,21 @@ export default StyleSheet.create({
     borderWidth: 1,
   },
 
+  heroRunFocusBadge: {
+    alignSelf: "flex-start",
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: 11,
+    paddingVertical: 6,
+    marginBottom: 14,
+  },
+
+  heroRunFocusBadgeText: {
+    fontSize: 10,
+    lineHeight: 12,
+    fontWeight: "900",
+  },
+
   heroMetricsRow: {
     flexDirection: "row",
     alignItems: "center",

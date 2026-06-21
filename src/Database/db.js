@@ -1547,6 +1547,7 @@ export async function initializeDatabase(db) {
     ["deleted_at", "TEXT"],
     ["workout_type", "TEXT"],
     ["label", "TEXT"],
+    ["run_focus_type", "TEXT"],
     ["done", "INTEGER NOT NULL DEFAULT 0"],
     ["needs_sync", "INTEGER NOT NULL DEFAULT 1"],
     ["is_active", "INTEGER DEFAULT 0"],

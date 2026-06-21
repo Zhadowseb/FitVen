@@ -162,6 +162,16 @@ export async function getWorkoutTimerState(db, workoutId) {
   return workoutRepository.getWorkoutTimerState(db, workoutId);
 }
 
+export async function updateWorkoutRunFocusType(
+  db,
+  { workoutId, runFocusType }
+) {
+  await workoutRepository.updateWorkoutRunFocusType(db, {
+    workoutId,
+    runFocusType,
+  });
+}
+
 export async function getActiveWorkoutTimer(db) {
   return workoutRepository.getActiveWorkoutTimer(db);
 }

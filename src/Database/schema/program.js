@@ -141,6 +141,7 @@ export const programSchemaSql = `
       workout_type TEXT,
       date TEXT NOT NULL,
       label TEXT,
+      run_focus_type TEXT,
       done INTEGER NOT NULL DEFAULT 0,
       needs_sync INTEGER NOT NULL DEFAULT 1,
 

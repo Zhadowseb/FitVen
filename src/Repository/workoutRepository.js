@@ -63,10 +63,23 @@ export async function getWorkoutTimerState(db, workoutId) {
         done,
         original_start_time,
         timer_start,
-        elapsed_time
+        elapsed_time,
+        run_focus_type
      FROM Workout_Type_Instance
      WHERE workout_id = ?;`,
     [workoutId]
+  );
+}
+
+export async function updateWorkoutRunFocusType(
+  db,
+  { workoutId, runFocusType }
+) {
+  await db.runAsync(
+    `UPDATE Workout_Type_Instance
+     SET run_focus_type = ?
+     WHERE workout_id = ?;`,
+    [runFocusType ?? null, workoutId]
   );
 }
 

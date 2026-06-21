@@ -2,7 +2,7 @@
 
 ## [0.18.0] - Unreleased
 ### Changed
-- Add a fresh-run workout selection flow with Endurance & base, Speed & Structure, Performance & Threshold, and Custom cards.
+- Add a fresh-run workout selection flow with persisted run focus choices and Endurance & base, Speed & Structure, Performance & Threshold, and Custom cards.
 
 ---
 ## [0.17.35] - Unreleased
