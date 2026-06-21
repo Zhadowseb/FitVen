@@ -25,14 +25,6 @@ export default StyleSheet.create({
     paddingHorizontal: 2,
   },
 
-  runFlowEyebrow: {
-    fontSize: 11,
-    fontWeight: "900",
-    lineHeight: 13,
-    textTransform: "uppercase",
-    marginBottom: 5,
-  },
-
   runFlowTitle: {
     fontSize: 24,
     lineHeight: 29,

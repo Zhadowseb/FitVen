@@ -764,9 +764,6 @@ const Run = ({ workout_id, restartRequestKey }) => {
   const renderRunFlowSuggestions = () => (
     <View style={styles.runFlowShell}>
       <View style={styles.runFlowHeader}>
-        <ThemedText style={styles.runFlowEyebrow} setColor={primaryColor}>
-          Run workout
-        </ThemedText>
         <ThemedText style={styles.runFlowTitle} setColor={titleColor}>
           Choose your run focus
         </ThemedText>
@@ -799,7 +796,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
               </ThemedText>
               <ThemedText
                 style={styles.runFlowCardSubtitle}
-                setColor={quietText}
+                setColor={primaryColor}
                 numberOfLines={2}
               >
                 {option.subtitle}
