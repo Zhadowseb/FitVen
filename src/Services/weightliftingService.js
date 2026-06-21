@@ -1289,12 +1289,7 @@ function createMuscleLoadTotals() {
   return MUSCLE_LOAD_GROUPS.reduce(
     (totals, group) => ({
       ...totals,
-      [group.key]: {
-        primarySetCount: 0,
-        secondarySetCount: 0,
-        primaryScore: 0,
-        secondaryScore: 0,
-      },
+      [group.key]: 0,
     }),
     {}
   );
@@ -1370,19 +1365,7 @@ function getExerciseMuscleLoadSignals(exercise, officialSignalsByExerciseId) {
 
 function addMuscleLoadScore(totals, categoryKeys, points, setCount) {
   for (const categoryKey of categoryKeys) {
-    const total = totals[categoryKey];
-
-    if (!total) {
-      continue;
-    }
-
-    if (points === MUSCLE_LOAD_PRIMARY_POINTS) {
-      total.primarySetCount += setCount;
-      total.primaryScore += points * setCount;
-    } else {
-      total.secondarySetCount += setCount;
-      total.secondaryScore += points * setCount;
-    }
+    totals[categoryKey] += points * setCount;
   }
 }
 
@@ -1453,31 +1436,16 @@ function buildProgramWeeklyMuscleLoadSummary({
   }
 
   const points = MUSCLE_LOAD_GROUPS.map((group) => {
-    const total = totals[group.key] ?? {};
-    const primarySetCount = total.primarySetCount ?? 0;
-    const secondarySetCount = total.secondarySetCount ?? 0;
-    const primaryScore = total.primaryScore ?? 0;
-    const secondaryScore = total.secondaryScore ?? 0;
-    const totalScore = primaryScore + secondaryScore;
+    const totalScore = totals[group.key] ?? 0;
     const averageScore = totalScore / averageDivisor;
-    const formulaDisplay =
-      `(${formatMuscleLoadValue(primarySetCount)} x ${MUSCLE_LOAD_PRIMARY_POINTS}) + ` +
-      `(${formatMuscleLoadValue(secondarySetCount)} x ${MUSCLE_LOAD_SECONDARY_POINTS}) = ` +
-      `${formatMuscleLoadValue(totalScore)} / ${averageDivisor} weeks = ` +
-      formatMuscleLoadValue(averageScore);
 
     return {
       key: group.key,
       label: group.label,
-      primarySetCount,
-      secondarySetCount,
-      primaryScore,
-      secondaryScore,
       totalScore,
       averageScore,
       value: averageScore,
       valueDisplay: formatMuscleLoadValue(averageScore),
-      formulaDisplay,
     };
   });
   const maxValue = Math.max(...points.map((point) => point.value), 0);
