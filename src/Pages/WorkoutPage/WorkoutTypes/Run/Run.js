@@ -137,6 +137,41 @@ function getRunFlowOption(optionId) {
   );
 }
 
+const EMPTY_RUN_SECTION_COUNTS = {
+  WARMUP: 0,
+  WORKING_SET: 0,
+  COOLDOWN: 0,
+};
+
+function normalizeRunSectionType(type) {
+  const normalizedType = String(type ?? "WORKING_SET")
+    .trim()
+    .replace(/[-\s]+/g, "_")
+    .toUpperCase();
+
+  if (normalizedType === "WARMUP" || normalizedType === "WARM_UP") {
+    return "WARMUP";
+  }
+
+  if (normalizedType === "COOLDOWN" || normalizedType === "COOL_DOWN") {
+    return "COOLDOWN";
+  }
+
+  return "WORKING_SET";
+}
+
+function getRunSectionCounts(sets) {
+  return sets.reduce(
+    (counts, set) => {
+      const type = normalizeRunSectionType(set.type);
+      counts[type] += 1;
+
+      return counts;
+    },
+    { ...EMPTY_RUN_SECTION_COUNTS }
+  );
+}
+
 const Run = ({ workout_id, restartRequestKey }) => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -150,6 +185,9 @@ const Run = ({ workout_id, restartRequestKey }) => {
   const [selectedRunFlow, set_selectedRunFlow] = useState(null);
   const [isSelectingRunFlow, set_isSelectingRunFlow] = useState(false);
   const [hasRunStructure, set_hasRunStructure] = useState(false);
+  const [runSectionCounts, set_runSectionCounts] = useState(
+    EMPTY_RUN_SECTION_COUNTS
+  );
   const [runStructureLoaded, set_runStructureLoaded] = useState(false);
   const [original_start_time, set_original_start_time] = useState(null);
   const [timer_start, set_timer_start] = useState(null);
@@ -180,6 +218,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
     set_selectedRunFlow(null);
     set_isSelectingRunFlow(false);
     set_hasRunStructure(false);
+    set_runSectionCounts(EMPTY_RUN_SECTION_COUNTS);
     set_runStructureLoaded(false);
     set_workoutStateLoaded(false);
   }, [workout_id]);
@@ -259,6 +298,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
       );
 
       set_hasRunStructure(sets.length > 0);
+      set_runSectionCounts(getRunSectionCounts(sets));
     } catch (error) {
       console.error("Failed to load run structure state:", error);
     } finally {
@@ -750,6 +790,8 @@ const Run = ({ workout_id, restartRequestKey }) => {
   const shouldShowHeroMetrics =
     !isFreshRunWithoutStructure || selectedRunFlow === "speed-structure";
   const selectedRunFlowOption = getRunFlowOption(selectedRunFlow);
+  const shouldPruneEmptyPlanSections =
+    selectedRunFlow === "speed-structure" && original_start_time !== null;
   const shouldShowFinishRunPill =
     original_start_time !== null && !isRunning && !isDone;
   const primaryActionLabel = isRunning
@@ -903,6 +945,16 @@ const Run = ({ workout_id, restartRequestKey }) => {
       emptySummary: "Add cooldown",
     },
   ];
+  const visibleSectionConfigs = sectionConfigs.filter((section) => {
+    if (
+      !shouldPruneEmptyPlanSections ||
+      section.type === "WORKING_SET"
+    ) {
+      return true;
+    }
+
+    return (runSectionCounts[section.type] ?? 0) > 0;
+  });
 
   if (!runShellReady) {
     return renderRunLoadingState();
@@ -1076,7 +1128,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
 
           {shouldShowRunFlowSuggestions
             ? renderRunFlowSuggestions()
-            : sectionConfigs.map((section) => (
+            : visibleSectionConfigs.map((section) => (
                 <RunSetList
                   key={section.type}
                   reloadKey={updateCount}

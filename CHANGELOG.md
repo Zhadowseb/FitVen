@@ -3,6 +3,7 @@
 ## [0.18.0] - Unreleased
 ### Changed
 - Add a fresh-run workout selection flow with persisted run focus choices and Endurance & base, Speed & Structure, Performance & Threshold, and Custom cards.
+- Hide empty Speed & Structure warmup and cooldown sections from the run plan once the run starts.
 
 ---
 ## [0.17.35] - Unreleased
