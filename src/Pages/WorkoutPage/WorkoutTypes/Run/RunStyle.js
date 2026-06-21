@@ -17,11 +17,11 @@ export default StyleSheet.create({
   },
 
   runFlowShell: {
-    marginBottom: 14,
+    marginBottom: 12,
   },
 
   runFlowHeader: {
-    marginBottom: 14,
+    marginBottom: 12,
     paddingHorizontal: 2,
   },
 
@@ -34,21 +34,21 @@ export default StyleSheet.create({
   },
 
   runFlowTitle: {
-    fontSize: 28,
-    lineHeight: 32,
+    fontSize: 24,
+    lineHeight: 29,
     fontWeight: "900",
   },
 
   runFlowGrid: {
-    gap: 12,
+    gap: 9,
   },
 
   runFlowCard: {
-    minHeight: 142,
-    borderRadius: 26,
+    minHeight: 108,
+    borderRadius: 22,
     borderWidth: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 11,
     flexDirection: "row",
     alignItems: "center",
     overflow: "hidden",
@@ -57,27 +57,27 @@ export default StyleSheet.create({
   runFlowCardCopy: {
     flex: 1,
     minWidth: 0,
-    paddingRight: 12,
+    paddingRight: 10,
   },
 
   runFlowCardTitle: {
-    fontSize: 20,
-    lineHeight: 24,
+    fontSize: 18,
+    lineHeight: 22,
     fontWeight: "900",
   },
 
   runFlowCardSubtitle: {
-    marginTop: 5,
-    fontSize: 12,
-    lineHeight: 17,
+    marginTop: 4,
+    fontSize: 11,
+    lineHeight: 15,
     fontWeight: "700",
   },
 
   runFlowImageFrame: {
-    width: 112,
-    height: 96,
+    width: 88,
+    height: 76,
     flexShrink: 0,
-    borderRadius: 20,
+    borderRadius: 17,
     borderWidth: 1,
     overflow: "hidden",
     alignItems: "center",

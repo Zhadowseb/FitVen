@@ -107,20 +107,20 @@ const getRunTrackingStartMessage = (error) => {
 const RUN_WORKOUT_FLOW_OPTIONS = [
   {
     id: "endurance-base",
-    title: "Endurance & base",
-    subtitle: "Steady aerobic work",
+    title: "Endurance & Base",
+    subtitle: "Base Run, Long Run, Recovery Run",
     image: require("./Assets/Endurance&base.png"),
   },
   {
     id: "speed-structure",
     title: "Speed & Structure",
-    subtitle: "Intervals and run blocks",
+    subtitle: "Interval, Fartlek, Hill Repeats",
     image: require("./Assets/Speed&structure.png"),
   },
   {
     id: "performance-threshold",
     title: "Performance & Threshold",
-    subtitle: "Tempo and threshold work",
+    subtitle: "Tempo Run, Progression Run",
     image: require("./Assets/Performance&threshold.png"),
   },
   {
@@ -788,12 +788,17 @@ const Run = ({ workout_id, restartRequestKey }) => {
             ]}
           >
             <View style={styles.runFlowCardCopy}>
-              <ThemedText style={styles.runFlowCardTitle} setColor={titleColor}>
+              <ThemedText
+                style={styles.runFlowCardTitle}
+                setColor={titleColor}
+                numberOfLines={2}
+              >
                 {option.title}
               </ThemedText>
               <ThemedText
                 style={styles.runFlowCardSubtitle}
                 setColor={quietText}
+                numberOfLines={2}
               >
                 {option.subtitle}
               </ThemedText>
