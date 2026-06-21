@@ -554,6 +554,35 @@ const PersonalRecordsPage = () => {
           )}
         </View>
 
+        {hasMuscleLoadData && (
+          <View
+            style={[
+              styles.muscleLoadFormulaPanel,
+              {
+                backgroundColor: panelSurface,
+                borderColor: cardBorder,
+              },
+            ]}
+          >
+            {points.map((point) => (
+              <View key={`formula-${point.key}`} style={styles.muscleLoadFormulaRow}>
+                <ThemedText
+                  style={styles.muscleLoadFormulaLabel}
+                  setColor={titleColor}
+                >
+                  {point.label}
+                </ThemedText>
+                <ThemedText
+                  style={styles.muscleLoadFormulaText}
+                  setColor={quietText}
+                >
+                  {point.formulaDisplay}
+                </ThemedText>
+              </View>
+            ))}
+          </View>
+        )}
+
         <View style={styles.muscleLoadMetaRow}>
           <View
             style={[

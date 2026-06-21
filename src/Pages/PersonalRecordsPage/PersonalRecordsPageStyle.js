@@ -92,6 +92,33 @@ export default StyleSheet.create({
     gap: 10,
     marginTop: 12,
   },
+  muscleLoadFormulaPanel: {
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 7,
+    marginTop: 12,
+  },
+  muscleLoadFormulaRow: {
+    minHeight: 20,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+  },
+  muscleLoadFormulaLabel: {
+    width: 62,
+    fontSize: 11,
+    fontWeight: "900",
+    lineHeight: 14,
+  },
+  muscleLoadFormulaText: {
+    flex: 1,
+    minWidth: 0,
+    fontSize: 11,
+    fontWeight: "700",
+    lineHeight: 14,
+  },
   muscleLoadMetaItem: {
     flex: 1,
     minHeight: 48,
