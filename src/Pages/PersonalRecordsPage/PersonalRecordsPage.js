@@ -200,8 +200,7 @@ function buildMuscleLoadRadarGeometry(points = []) {
   }
 
   const values = validPoints.map((point) => Number(point.value));
-  const rawMaxValue = Math.max(...values, 0);
-  const maxValue = rawMaxValue <= 0 ? 1 : rawMaxValue;
+  const maxValue = Math.max(...values, 1);
   const pointCount = validPoints.length;
 
   const chartPoints = validPoints.map((point, index) => {
@@ -224,7 +223,6 @@ function buildMuscleLoadRadarGeometry(points = []) {
       labelX: labelPoint.x,
       labelY: labelPoint.y,
       textAnchor: getRadarTextAnchor(labelPoint.x),
-      isHighest: Number(point.value) === rawMaxValue && rawMaxValue > 0,
     };
   });
   const axisLines = validPoints.map((point, index) => ({
@@ -521,14 +519,6 @@ const PersonalRecordsPage = () => {
 
               {chartGeometry.chartPoints.map((point) => (
                 <G key={point.key}>
-                  <Circle
-                    cx={point.x}
-                    cy={point.y}
-                    r={point.isHighest ? 4.8 : 3.6}
-                    fill={point.isHighest ? secondaryColor : primaryColor}
-                    stroke={cardSurface}
-                    strokeWidth={2}
-                  />
                   <SvgText
                     x={point.labelX}
                     y={point.labelY + 4}
