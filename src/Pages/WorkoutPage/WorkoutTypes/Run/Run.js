@@ -148,6 +148,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
   };
 
   const [selectedRunFlow, set_selectedRunFlow] = useState(null);
+  const [isSelectingRunFlow, set_isSelectingRunFlow] = useState(false);
   const [hasRunStructure, set_hasRunStructure] = useState(false);
   const [runStructureLoaded, set_runStructureLoaded] = useState(false);
   const [original_start_time, set_original_start_time] = useState(null);
@@ -177,6 +178,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
 
   useEffect(() => {
     set_selectedRunFlow(null);
+    set_isSelectingRunFlow(false);
     set_hasRunStructure(false);
     set_runStructureLoaded(false);
     set_workoutStateLoaded(false);
@@ -694,6 +696,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
     const nextRunFlowId = getRunFlowOption(runFlowId)?.id ?? null;
 
     set_selectedRunFlow(nextRunFlowId);
+    set_isSelectingRunFlow(false);
 
     try {
       await workoutRepository.updateWorkoutRunFocusType(db, {
@@ -702,6 +705,20 @@ const Run = ({ workout_id, restartRequestKey }) => {
       });
     } catch (error) {
       console.error("Failed to save run focus type:", error);
+    }
+  };
+
+  const returnToRunFlowSelection = async () => {
+    set_selectedRunFlow(null);
+    set_isSelectingRunFlow(true);
+
+    try {
+      await workoutRepository.updateWorkoutRunFocusType(db, {
+        workoutId: workout_id,
+        runFocusType: null,
+      });
+    } catch (error) {
+      console.error("Failed to clear run focus type:", error);
     }
   };
 
@@ -721,11 +738,17 @@ const Run = ({ workout_id, restartRequestKey }) => {
   const avgPaceDisplay = formatPaceDisplay(avgPaceMinutes);
   const elapsedDisplay = formatRunClock(currentElapsed);
   const runShellReady = workoutStateLoaded && runStructureLoaded;
+  const canChangeRunFlow =
+    original_start_time === null && !isDone && !isRunning;
   const isFreshRunWithoutStructure =
     original_start_time === null && !isDone && !isRunning && !hasRunStructure;
   const shouldShowRunFlowSuggestions =
-    runShellReady && selectedRunFlow === null && isFreshRunWithoutStructure;
-  const shouldShowHeroMetrics = !isFreshRunWithoutStructure;
+    runShellReady &&
+    selectedRunFlow === null &&
+    canChangeRunFlow &&
+    (isFreshRunWithoutStructure || isSelectingRunFlow);
+  const shouldShowHeroMetrics =
+    !isFreshRunWithoutStructure || selectedRunFlow === "speed-structure";
   const selectedRunFlowOption = getRunFlowOption(selectedRunFlow);
   const shouldShowFinishRunPill =
     original_start_time !== null && !isRunning && !isDone;
@@ -906,7 +929,11 @@ const Run = ({ workout_id, restartRequestKey }) => {
             ]}
           >
             {selectedRunFlowOption && (
-              <View
+              <TouchableOpacity
+                activeOpacity={canChangeRunFlow ? 0.78 : 1}
+                accessibilityRole="button"
+                disabled={!canChangeRunFlow}
+                onPress={returnToRunFlowSelection}
                 style={[
                   styles.heroRunFocusBadge,
                   {
@@ -921,7 +948,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
                 >
                   {selectedRunFlowOption.title}
                 </ThemedText>
-              </View>
+              </TouchableOpacity>
             )}
 
             {shouldShowHeroMetrics && (
