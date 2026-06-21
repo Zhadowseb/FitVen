@@ -473,8 +473,8 @@ const PersonalRecordsPage = () => {
                   x2="0"
                   y2="1"
                 >
-                  <Stop offset="0" stopColor={primaryColor} stopOpacity="0.34" />
-                  <Stop offset="1" stopColor={primaryColor} stopOpacity="0.14" />
+                  <Stop offset="0" stopColor={primaryColor} stopOpacity="0.52" />
+                  <Stop offset="1" stopColor={primaryColor} stopOpacity="0.28" />
                 </LinearGradient>
               </Defs>
 
