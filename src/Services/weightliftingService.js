@@ -96,7 +96,7 @@ const CLASSIFIABLE_WORKOUT_TYPES = new Set([
   "Upperbody",
   "Legs",
 ]);
-const MUSCLE_LOAD_PRIMARY_POINTS = 3;
+const MUSCLE_LOAD_PRIMARY_POINTS = 8;
 const MUSCLE_LOAD_SECONDARY_POINTS = 1;
 const MUSCLE_LOAD_GROUPS = [
   { key: "chest", label: "Chest" },

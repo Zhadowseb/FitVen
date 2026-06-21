@@ -628,7 +628,7 @@ const PersonalRecordsPage = () => {
             ]}
           >
             <ThemedText style={styles.muscleLoadMetaValue} setColor={titleColor}>
-              {hasMuscleLoadData ? "3:1" : "--"}
+              {hasMuscleLoadData ? "8:1" : "--"}
             </ThemedText>
             <ThemedText style={styles.muscleLoadMetaLabel} setColor={quietText}>
               points
