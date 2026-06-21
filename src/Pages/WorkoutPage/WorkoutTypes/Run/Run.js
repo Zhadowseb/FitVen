@@ -109,28 +109,24 @@ const RUN_WORKOUT_FLOW_OPTIONS = [
     id: "endurance-base",
     title: "Endurance & base",
     subtitle: "Steady aerobic work",
-    badge: "Base",
     image: require("./Assets/Endurance&base.png"),
   },
   {
     id: "speed-structure",
     title: "Speed & Structure",
     subtitle: "Intervals and run blocks",
-    badge: "Current",
     image: require("./Assets/Speed&structure.png"),
   },
   {
     id: "performance-threshold",
     title: "Performance & Threshold",
     subtitle: "Tempo and threshold work",
-    badge: "Tempo",
     image: require("./Assets/Performance&threshold.png"),
   },
   {
     id: "custom",
     title: "Custom",
     subtitle: "Build from blank",
-    badge: "Blank",
     image: require("./Assets/Custom.png"),
   },
 ];
@@ -738,24 +734,13 @@ const Run = ({ workout_id, restartRequestKey }) => {
     },
   ];
   const runShellReady = workoutStateLoaded && runStructureLoaded;
-  const shouldShowRunFlowSelection =
+  const shouldShowRunFlowSuggestions =
     runShellReady &&
     selectedRunFlow === null &&
     original_start_time === null &&
     !isDone &&
     !isRunning &&
     !hasRunStructure;
-  const runFlowCards = RUN_WORKOUT_FLOW_OPTIONS.map((option, index) => ({
-    ...option,
-    accentColor:
-      index === 0
-        ? secondaryColor
-        : index === 1
-          ? primaryColor
-          : index === 2
-            ? secondaryDark
-            : quietText,
-  }));
 
   const renderRunFlowImage = (option) => (
     <View
@@ -775,77 +760,49 @@ const Run = ({ workout_id, restartRequestKey }) => {
     </View>
   );
 
-  const renderRunFlowSelection = () => (
-    <ThemedView
-      safe={false}
-      style={[styles.screen, { backgroundColor: screenBackground }]}
-    >
-      <ThemedKeyboardProtection
-        scroll
-        contentContainerStyle={styles.scrollContent}
-        scrollViewProps={{ showsVerticalScrollIndicator: false }}
-      >
-        <View style={styles.runLayout}>
-          <View style={styles.runFlowHeader}>
-            <ThemedText style={styles.runFlowEyebrow} setColor={primaryColor}>
-              Run workout
-            </ThemedText>
-            <ThemedText style={styles.runFlowTitle} setColor={titleColor}>
-              Choose your run focus
-            </ThemedText>
-          </View>
+  const renderRunFlowSuggestions = () => (
+    <View style={styles.runFlowShell}>
+      <View style={styles.runFlowHeader}>
+        <ThemedText style={styles.runFlowEyebrow} setColor={primaryColor}>
+          Run workout
+        </ThemedText>
+        <ThemedText style={styles.runFlowTitle} setColor={titleColor}>
+          Choose your run focus
+        </ThemedText>
+      </View>
 
-          <View style={styles.runFlowGrid}>
-            {runFlowCards.map((option) => (
-              <TouchableOpacity
-                key={option.id}
-                activeOpacity={0.84}
-                accessibilityRole="button"
-                onPress={() => set_selectedRunFlow(option.id)}
-                style={[
-                  styles.runFlowCard,
-                  {
-                    backgroundColor: cardSurface,
-                    borderColor: cardBorder,
-                  },
-                ]}
+      <View style={styles.runFlowGrid}>
+        {RUN_WORKOUT_FLOW_OPTIONS.map((option) => (
+          <TouchableOpacity
+            key={option.id}
+            activeOpacity={0.84}
+            accessibilityRole="button"
+            onPress={() => set_selectedRunFlow(option.id)}
+            style={[
+              styles.runFlowCard,
+              {
+                backgroundColor: cardSurface,
+                borderColor: cardBorder,
+              },
+            ]}
+          >
+            <View style={styles.runFlowCardCopy}>
+              <ThemedText style={styles.runFlowCardTitle} setColor={titleColor}>
+                {option.title}
+              </ThemedText>
+              <ThemedText
+                style={styles.runFlowCardSubtitle}
+                setColor={quietText}
               >
-                <View style={styles.runFlowCardCopy}>
-                  <View
-                    style={[
-                      styles.runFlowBadge,
-                      {
-                        backgroundColor: innerSurface,
-                        borderColor: option.accentColor,
-                      },
-                    ]}
-                  >
-                    <ThemedText
-                      style={styles.runFlowBadgeText}
-                      setColor={option.accentColor}
-                    >
-                      {option.badge}
-                    </ThemedText>
-                  </View>
+                {option.subtitle}
+              </ThemedText>
+            </View>
 
-                  <ThemedText style={styles.runFlowCardTitle} setColor={titleColor}>
-                    {option.title}
-                  </ThemedText>
-                  <ThemedText
-                    style={styles.runFlowCardSubtitle}
-                    setColor={quietText}
-                  >
-                    {option.subtitle}
-                  </ThemedText>
-                </View>
-
-                {renderRunFlowImage(option)}
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      </ThemedKeyboardProtection>
-    </ThemedView>
+            {renderRunFlowImage(option)}
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
   );
 
   const renderRunLoadingState = () => (
@@ -901,10 +858,6 @@ const Run = ({ workout_id, restartRequestKey }) => {
 
   if (!runShellReady) {
     return renderRunLoadingState();
-  }
-
-  if (shouldShowRunFlowSelection) {
-    return renderRunFlowSelection();
   }
 
   return (
@@ -1048,22 +1001,24 @@ const Run = ({ workout_id, restartRequestKey }) => {
             )}
           </ThemedCard>
 
-          {sectionConfigs.map((section) => (
-            <RunSetList
-              key={section.type}
-              reloadKey={updateCount}
-              triggerReload={triggerReload}
-              workout_id={workout_id}
-              type={section.type}
-              variant={section.variant}
-              sectionTitle={section.title}
-              sectionEyebrow={section.eyebrow}
-              emptySummary={section.emptySummary}
-              onAddSet={() => addSet(section.type)}
-              activeSet={activeSet}
-              activeSet_remainingTime={activeSet_remainingTime}
-            />
-          ))}
+          {shouldShowRunFlowSuggestions
+            ? renderRunFlowSuggestions()
+            : sectionConfigs.map((section) => (
+                <RunSetList
+                  key={section.type}
+                  reloadKey={updateCount}
+                  triggerReload={triggerReload}
+                  workout_id={workout_id}
+                  type={section.type}
+                  variant={section.variant}
+                  sectionTitle={section.title}
+                  sectionEyebrow={section.eyebrow}
+                  emptySummary={section.emptySummary}
+                  onAddSet={() => addSet(section.type)}
+                  activeSet={activeSet}
+                  activeSet_remainingTime={activeSet_remainingTime}
+                />
+              ))}
         </View>
       </ThemedKeyboardProtection>
     </ThemedView>

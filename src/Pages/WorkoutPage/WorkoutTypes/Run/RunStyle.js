@@ -16,6 +16,10 @@ export default StyleSheet.create({
     paddingTop: 12,
   },
 
+  runFlowShell: {
+    marginBottom: 14,
+  },
+
   runFlowHeader: {
     marginBottom: 14,
     paddingHorizontal: 2,
@@ -54,22 +58,6 @@ export default StyleSheet.create({
     flex: 1,
     minWidth: 0,
     paddingRight: 12,
-  },
-
-  runFlowBadge: {
-    alignSelf: "flex-start",
-    borderRadius: 999,
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    marginBottom: 10,
-  },
-
-  runFlowBadgeText: {
-    fontSize: 10,
-    fontWeight: "900",
-    lineHeight: 12,
-    textTransform: "uppercase",
   },
 
   runFlowCardTitle: {
