@@ -105,6 +105,58 @@ export default StyleSheet.create({
     borderWidth: 1,
   },
 
+  runStatusProgress: {
+    width: "100%",
+    minHeight: 34,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 14,
+  },
+
+  runStatusStepWrap: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  runStatusStep: {
+    width: 54,
+    alignItems: "center",
+  },
+
+  runStatusDot: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  runStatusDotCore: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+
+  runStatusLabel: {
+    width: "100%",
+    marginTop: 5,
+    fontSize: 10,
+    lineHeight: 12,
+    fontWeight: "900",
+    textAlign: "center",
+  },
+
+  runStatusConnector: {
+    flex: 1,
+    minWidth: 18,
+    height: 2,
+    marginTop: 8,
+    opacity: 0.9,
+  },
+
   heroRunFocusBadge: {
     alignSelf: "flex-start",
     borderRadius: 999,

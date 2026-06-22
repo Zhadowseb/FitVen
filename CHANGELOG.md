@@ -5,6 +5,7 @@
 - Add a fresh-run workout selection flow with persisted run focus choices and Endurance & base, Speed & Structure, Performance & Threshold, and Custom cards.
 - Hide empty Speed & Structure warmup and cooldown sections from the run plan once the run starts.
 - Add a focused Speed & Structure run timer with active action countdown, live pace, interval count, segment distance, and total progress.
+- Show Run workout progress through Plan, Active, and Done stages in the workout header.
 
 ---
 ## [0.17.35] - Unreleased

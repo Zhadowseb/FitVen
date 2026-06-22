@@ -142,6 +142,12 @@ const RUN_WORKOUT_FLOW_OPTIONS = [
   },
 ];
 
+const RUN_WORKOUT_STATUS_STEPS = [
+  { id: "plan", label: "Plan" },
+  { id: "active", label: "Active" },
+  { id: "done", label: "Done" },
+];
+
 function getRunFlowOption(optionId) {
   return (
     RUN_WORKOUT_FLOW_OPTIONS.find((option) => option.id === optionId) ?? null
@@ -942,6 +948,14 @@ const Run = ({ workout_id, restartRequestKey }) => {
   const selectedRunFlowOption = getRunFlowOption(selectedRunFlow);
   const shouldShowSpeedStructureTimer =
     selectedRunFlow === "speed-structure" && original_start_time !== null;
+  const runWorkoutStatus = isDone
+    ? "done"
+    : original_start_time !== null
+      ? "active"
+      : "plan";
+  const runWorkoutStatusIndex = RUN_WORKOUT_STATUS_STEPS.findIndex(
+    (step) => step.id === runWorkoutStatus
+  );
   const shouldPruneEmptyPlanSections =
     selectedRunFlow === "speed-structure" && original_start_time !== null;
   const shouldShowFinishRunPill =
@@ -1012,6 +1026,64 @@ const Run = ({ workout_id, restartRequestKey }) => {
         resizeMode="cover"
         style={styles.runFlowImage}
       />
+    </View>
+  );
+
+  const renderRunStatusProgress = () => (
+    <View style={styles.runStatusProgress}>
+      {RUN_WORKOUT_STATUS_STEPS.map((step, index) => {
+        const isReached = index <= runWorkoutStatusIndex;
+        const isCurrent = step.id === runWorkoutStatus;
+
+        return (
+          <View key={step.id} style={styles.runStatusStepWrap}>
+            <View style={styles.runStatusStep}>
+              <View
+                style={[
+                  styles.runStatusDot,
+                  {
+                    backgroundColor: isReached ? primaryColor : "transparent",
+                    borderColor: isReached ? primaryColor : cardBorder,
+                  },
+                  isCurrent && { borderColor: primaryColor },
+                ]}
+              >
+                {isCurrent && (
+                  <View
+                    style={[
+                      styles.runStatusDotCore,
+                      { backgroundColor: invertedText },
+                    ]}
+                  />
+                )}
+              </View>
+              <ThemedText
+                style={styles.runStatusLabel}
+                setColor={
+                  isCurrent ? primaryColor : isReached ? titleColor : quietText
+                }
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.78}
+              >
+                {step.label}
+              </ThemedText>
+            </View>
+
+            {index < RUN_WORKOUT_STATUS_STEPS.length - 1 && (
+              <View
+                style={[
+                  styles.runStatusConnector,
+                  {
+                    backgroundColor:
+                      index < runWorkoutStatusIndex ? primaryColor : cardBorder,
+                  },
+                ]}
+              />
+            )}
+          </View>
+        );
+      })}
     </View>
   );
 
@@ -1265,6 +1337,8 @@ const Run = ({ workout_id, restartRequestKey }) => {
               },
             ]}
           >
+            {renderRunStatusProgress()}
+
             {selectedRunFlowOption && (
               <TouchableOpacity
                 activeOpacity={canChangeRunFlow ? 0.78 : 1}
