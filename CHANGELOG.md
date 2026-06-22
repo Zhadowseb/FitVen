@@ -9,6 +9,7 @@
 - Allow tapping the Run workout status indicator to preview Plan, Active, and Done states while testing.
 - Move the selected run focus into a centered title above the timer header and simplify the active timer heading.
 - Show the Run plan mode start action outside the timer card and style the selected run focus as a centered badge.
+- Use the global fields surface color for Run status and focus badge backgrounds.
 
 ---
 ## [0.17.35] - Unreleased

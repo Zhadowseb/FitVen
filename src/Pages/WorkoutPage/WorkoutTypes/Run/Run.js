@@ -931,6 +931,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
   const screenBackground = theme.background ?? "#0E0F12";
   const cardSurface = theme.cardBackground ?? theme.background;
   const innerSurface = theme.uiBackground ?? cardSurface;
+  const fieldSurface = theme.fields ?? innerSurface;
   const cardBorder = theme.cardBorder ?? theme.iconColor ?? theme.text;
   const titleColor = theme.title ?? theme.text;
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
@@ -1043,7 +1044,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
       style={[
         styles.runStatusPill,
         {
-          backgroundColor: innerSurface,
+          backgroundColor: fieldSurface,
           borderColor: cardBorder,
         },
       ]}
@@ -1113,7 +1114,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
         style={[
           styles.runFocusTitleButton,
           {
-            backgroundColor: innerSurface,
+            backgroundColor: fieldSurface,
             borderColor: primaryColor,
           },
         ]}
