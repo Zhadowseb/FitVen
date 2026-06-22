@@ -1030,56 +1030,63 @@ const Run = ({ workout_id, restartRequestKey }) => {
   );
 
   const renderRunStatusProgress = () => (
-    <View style={styles.runStatusProgress}>
+    <View
+      style={[
+        styles.runStatusPill,
+        {
+          backgroundColor: innerSurface,
+          borderColor: cardBorder,
+        },
+      ]}
+    >
       {RUN_WORKOUT_STATUS_STEPS.map((step, index) => {
-        const isReached = index <= runWorkoutStatusIndex;
         const isCurrent = step.id === runWorkoutStatus;
+        const isReached = index <= runWorkoutStatusIndex;
 
         return (
-          <View key={step.id} style={styles.runStatusStepWrap}>
-            <View style={styles.runStatusStep}>
-              <View
-                style={[
-                  styles.runStatusDot,
-                  {
-                    backgroundColor: isReached ? primaryColor : "transparent",
-                    borderColor: isReached ? primaryColor : cardBorder,
-                  },
-                  isCurrent && { borderColor: primaryColor },
-                ]}
-              >
-                {isCurrent && (
-                  <View
-                    style={[
-                      styles.runStatusDotCore,
-                      { backgroundColor: invertedText },
-                    ]}
-                  />
-                )}
-              </View>
-              <ThemedText
-                style={styles.runStatusLabel}
-                setColor={
-                  isCurrent ? primaryColor : isReached ? titleColor : quietText
-                }
-                numberOfLines={1}
-                adjustsFontSizeToFit
-                minimumFontScale={0.78}
-              >
-                {step.label}
-              </ThemedText>
-            </View>
+          <View
+            key={step.id}
+            style={[
+              styles.runStatusTab,
+              isCurrent && { backgroundColor: cardSurface },
+            ]}
+          >
+            <ThemedText
+              style={styles.runStatusLabel}
+              setColor={
+                isCurrent ? primaryColor : isReached ? titleColor : quietText
+              }
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.78}
+            >
+              {step.label}
+            </ThemedText>
 
-            {index < RUN_WORKOUT_STATUS_STEPS.length - 1 && (
-              <View
-                style={[
-                  styles.runStatusConnector,
-                  {
-                    backgroundColor:
-                      index < runWorkoutStatusIndex ? primaryColor : cardBorder,
-                  },
-                ]}
-              />
+            {isCurrent && (
+              <View style={styles.runStatusLampWrap}>
+                <View
+                  style={[
+                    styles.runStatusLampGlowWide,
+                    { backgroundColor: primaryColor },
+                  ]}
+                />
+                <View
+                  style={[
+                    styles.runStatusLampGlowTight,
+                    { backgroundColor: primaryColor },
+                  ]}
+                />
+                <View
+                  style={[
+                    styles.runStatusLamp,
+                    {
+                      backgroundColor: primaryColor,
+                      shadowColor: primaryColor,
+                    },
+                  ]}
+                />
+              </View>
             )}
           </View>
         );

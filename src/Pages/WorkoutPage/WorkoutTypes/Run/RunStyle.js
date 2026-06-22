@@ -105,56 +105,81 @@ export default StyleSheet.create({
     borderWidth: 1,
   },
 
-  runStatusProgress: {
+  runStatusPill: {
     width: "100%",
-    minHeight: 34,
+    minHeight: 52,
     flexDirection: "row",
-    alignItems: "flex-start",
-    marginBottom: 14,
+    alignItems: "center",
+    borderRadius: 999,
+    borderWidth: 1,
+    padding: 4,
+    marginBottom: 15,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 14,
+    elevation: 4,
   },
 
-  runStatusStepWrap: {
+  runStatusTab: {
     flex: 1,
     minWidth: 0,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  runStatusStep: {
-    width: 54,
-    alignItems: "center",
-  },
-
-  runStatusDot: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 2,
+    minHeight: 42,
+    borderRadius: 999,
     alignItems: "center",
     justifyContent: "center",
-  },
-
-  runStatusDotCore: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    position: "relative",
+    overflow: "visible",
   },
 
   runStatusLabel: {
     width: "100%",
-    marginTop: 5,
-    fontSize: 10,
-    lineHeight: 12,
-    fontWeight: "900",
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: "800",
     textAlign: "center",
+    paddingHorizontal: 6,
   },
 
-  runStatusConnector: {
-    flex: 1,
-    minWidth: 18,
-    height: 2,
-    marginTop: 8,
-    opacity: 0.9,
+  runStatusLampWrap: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: -8,
+    height: 14,
+    alignItems: "center",
+    justifyContent: "flex-start",
+  },
+
+  runStatusLamp: {
+    width: 34,
+    height: 4,
+    borderTopLeftRadius: 4,
+    borderTopRightRadius: 4,
+    borderBottomLeftRadius: 2,
+    borderBottomRightRadius: 2,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.55,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+
+  runStatusLampGlowWide: {
+    position: "absolute",
+    top: 2,
+    width: 56,
+    height: 12,
+    borderRadius: 999,
+    opacity: 0.18,
+  },
+
+  runStatusLampGlowTight: {
+    position: "absolute",
+    top: 0,
+    width: 36,
+    height: 10,
+    borderRadius: 999,
+    opacity: 0.24,
   },
 
   heroRunFocusBadge: {
