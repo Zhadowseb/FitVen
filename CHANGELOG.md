@@ -10,6 +10,7 @@
 - Move the selected run focus into a centered title above the timer header and simplify the active timer heading.
 - Show the Run plan mode start action outside the timer card and style the selected run focus as a centered badge.
 - Use the global fields surface color for Run status and focus badge backgrounds.
+- Use the global fields surface color for Run warmup and cooldown field controls.
 
 ---
 ## [0.17.35] - Unreleased

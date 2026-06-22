@@ -209,7 +209,7 @@ const RunSetList = ({
   const titleColor = theme.title ?? theme.text;
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const cardSurface = theme.cardBackground ?? theme.background;
-  const mutedSurface = theme.uiBackground ?? cardSurface;
+  const mutedSurface = theme.fields ?? theme.uiBackground ?? cardSurface;
   const cardBorder = theme.cardBorder ?? theme.iconColor ?? theme.text;
   const invertedText = theme.textInverted ?? theme.background ?? "#0E0F12";
   const isCompactSection = variant === "segment";
