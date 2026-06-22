@@ -1335,6 +1335,8 @@ const Run = ({ workout_id, restartRequestKey }) => {
         scrollViewProps={{ showsVerticalScrollIndicator: false }}
       >
         <View style={styles.runLayout}>
+          {renderRunStatusProgress()}
+
           <ThemedCard
             style={[
               styles.heroCard,
@@ -1344,8 +1346,6 @@ const Run = ({ workout_id, restartRequestKey }) => {
               },
             ]}
           >
-            {renderRunStatusProgress()}
-
             {selectedRunFlowOption && (
               <TouchableOpacity
                 activeOpacity={canChangeRunFlow ? 0.78 : 1}
