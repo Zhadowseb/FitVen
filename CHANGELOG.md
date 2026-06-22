@@ -11,7 +11,7 @@
 - Show the Run plan mode start action outside the timer card and style the selected run focus as a centered badge.
 - Use the global fields surface color for Run status and focus badge backgrounds.
 - Use the global fields surface color for Run warmup and cooldown field controls.
-- Automatically add a rest row before the second Run interval set.
+- Automatically add a rest row before new Run interval sets when the previous interval row is not already a rest.
 - Delete Run sets directly from the edit sheet without a confirmation alert.
 
 ---
