@@ -120,6 +120,119 @@ export default StyleSheet.create({
     fontWeight: "900",
   },
 
+  speedTimerShell: {
+    marginBottom: 22,
+  },
+
+  speedTimerActionBlock: {
+    marginBottom: 17,
+  },
+
+  speedTimerEyebrow: {
+    marginBottom: 7,
+    fontSize: 10,
+    lineHeight: 12,
+    fontWeight: "900",
+    letterSpacing: 2.4,
+  },
+
+  speedTimerActionRow: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+
+  speedTimerActionText: {
+    flex: 1,
+    minWidth: 0,
+    fontSize: 32,
+    lineHeight: 38,
+    fontWeight: "900",
+  },
+
+  speedTimerCountdown: {
+    minWidth: 118,
+    fontSize: 42,
+    lineHeight: 48,
+    fontWeight: "900",
+    textAlign: "right",
+    fontVariant: ["tabular-nums"],
+  },
+
+  speedTimerPrimaryRow: {
+    minHeight: 96,
+    flexDirection: "row",
+    alignItems: "center",
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    paddingVertical: 14,
+    marginBottom: 13,
+  },
+
+  speedTimerPrimaryStat: {
+    flex: 1,
+    minWidth: 0,
+    alignItems: "center",
+  },
+
+  speedTimerDivider: {
+    width: 1,
+    height: 56,
+    opacity: 0.72,
+  },
+
+  speedTimerLabel: {
+    marginBottom: 8,
+    fontSize: 10,
+    lineHeight: 12,
+    fontWeight: "900",
+    letterSpacing: 1.7,
+    textAlign: "center",
+  },
+
+  speedTimerPrimaryValue: {
+    width: "100%",
+    fontSize: 30,
+    lineHeight: 35,
+    fontWeight: "900",
+    textAlign: "center",
+    fontVariant: ["tabular-nums"],
+  },
+
+  speedTimerUnit: {
+    marginTop: 2,
+    fontSize: 10,
+    lineHeight: 12,
+    fontWeight: "800",
+    textAlign: "center",
+  },
+
+  speedTimerSecondaryRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+
+  speedTimerSecondaryStat: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  speedTimerSecondaryLabel: {
+    marginBottom: 5,
+    fontSize: 9,
+    lineHeight: 11,
+    fontWeight: "900",
+    letterSpacing: 1.5,
+  },
+
+  speedTimerSecondaryValue: {
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "800",
+    fontVariant: ["tabular-nums"],
+  },
+
   heroMetricsRow: {
     flexDirection: "row",
     alignItems: "center",

@@ -30,6 +30,7 @@ import {
   normalizeElapsedDurationSeconds,
   normalizeStoredTimestampSeconds,
 } from "../../../../Utils/timeUtils";
+import { calculateTrackedDistanceSummary } from "../../../../Utils/locationUtils";
 import {
   locationService,
   runningService as runningRepository,
@@ -88,6 +89,16 @@ const formatRunClock = (totalSeconds) => {
   }
 
   return `${paddedMinutes}:${paddedSeconds}`;
+};
+
+const formatRunDistance = (distanceKm) => {
+  const safeDistance = Number(distanceKm);
+
+  if (!Number.isFinite(safeDistance) || safeDistance <= 0) {
+    return "0.00";
+  }
+
+  return safeDistance.toFixed(2);
 };
 
 const getRunTrackingStartMessage = (error) => {
@@ -172,6 +183,79 @@ function getRunSectionCounts(sets) {
   );
 }
 
+function getRunSegmentLabel(set) {
+  const type = normalizeRunSectionType(set?.type);
+
+  if (Number(set?.is_pause) === 1) {
+    return "Rest";
+  }
+
+  if (type === "WARMUP") {
+    return "Warmup";
+  }
+
+  if (type === "COOLDOWN") {
+    return "Cooldown";
+  }
+
+  return "Sprint";
+}
+
+function getLocationLogTimestamp(log) {
+  const timestamp = Number(log?.timestamp);
+  return Number.isFinite(timestamp) ? timestamp : null;
+}
+
+function getLogsFromTimestamp(logs, startTimestampMs) {
+  if (!Number.isFinite(startTimestampMs)) {
+    return [];
+  }
+
+  return logs.filter((log) => {
+    const timestamp = getLocationLogTimestamp(log);
+    return timestamp !== null && timestamp >= startTimestampMs;
+  });
+}
+
+function calculatePaceForLogWindow(logs) {
+  const summary = calculateTrackedDistanceSummary(logs);
+
+  if (!Number.isFinite(summary.totalDistanceKm) || summary.totalDistanceKm <= 0) {
+    return null;
+  }
+
+  const timestamps = logs
+    .map(getLocationLogTimestamp)
+    .filter((timestamp) => timestamp !== null);
+
+  if (timestamps.length < 2) {
+    return null;
+  }
+
+  const elapsedMinutes =
+    (Math.max(...timestamps) - Math.min(...timestamps)) / 60000;
+
+  if (!Number.isFinite(elapsedMinutes) || elapsedMinutes <= 0) {
+    return null;
+  }
+
+  return elapsedMinutes / summary.totalDistanceKm;
+}
+
+function getRecentPaceMinutes(logs, currentTimestampSeconds) {
+  const currentTimestampMs = currentTimestampSeconds * 1000;
+  const recentLogs = getLogsFromTimestamp(logs, currentTimestampMs - 30000);
+  const recentPace = calculatePaceForLogWindow(recentLogs);
+
+  if (recentPace !== null) {
+    return recentPace;
+  }
+
+  return calculatePaceForLogWindow(
+    getLogsFromTimestamp(logs, currentTimestampMs - 60000)
+  );
+}
+
 const Run = ({ workout_id, restartRequestKey }) => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -188,6 +272,9 @@ const Run = ({ workout_id, restartRequestKey }) => {
   const [runSectionCounts, set_runSectionCounts] = useState(
     EMPTY_RUN_SECTION_COUNTS
   );
+  const [activeRunSegment, set_activeRunSegment] = useState(null);
+  const [currentPaceMinutes, set_currentPaceMinutes] = useState(null);
+  const [activeSegmentDistance, set_activeSegmentDistance] = useState(0);
   const [runStructureLoaded, set_runStructureLoaded] = useState(false);
   const [original_start_time, set_original_start_time] = useState(null);
   const [timer_start, set_timer_start] = useState(null);
@@ -205,6 +292,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
   const [activeSet_remainingTime, set_activeSet_remainingTime] = useState(0);
 
   const previousActiveSetRef = useRef(null);
+  const activeRunSegmentRef = useRef(null);
   const timerStartRef = useRef(null);
   const elapsedTimeRef = useRef(0);
   const workoutStateLoadRequestRef = useRef(0);
@@ -219,6 +307,9 @@ const Run = ({ workout_id, restartRequestKey }) => {
     set_isSelectingRunFlow(false);
     set_hasRunStructure(false);
     set_runSectionCounts(EMPTY_RUN_SECTION_COUNTS);
+    set_activeRunSegment(null);
+    set_currentPaceMinutes(null);
+    set_activeSegmentDistance(0);
     set_runStructureLoaded(false);
     set_workoutStateLoaded(false);
   }, [workout_id]);
@@ -236,6 +327,10 @@ const Run = ({ workout_id, restartRequestKey }) => {
   useEffect(() => {
     elapsedTimeRef.current = elapsed_time;
   }, [elapsed_time]);
+
+  useEffect(() => {
+    activeRunSegmentRef.current = activeRunSegment;
+  }, [activeRunSegment]);
 
   const persistCurrentTimerState = useCallback(async () => {
     await workoutRepository.persistWorkoutTimerState(db, {
@@ -259,8 +354,11 @@ const Run = ({ workout_id, restartRequestKey }) => {
 
   const clearActiveSegment = () => {
     previousActiveSetRef.current = null;
+    activeRunSegmentRef.current = null;
     set_activeSet(null);
     set_activeSet_remainingTime(0);
+    set_activeRunSegment(null);
+    set_activeSegmentDistance(0);
   };
 
   const getCurrentElapsedSeconds = useCallback(() => {
@@ -281,8 +379,22 @@ const Run = ({ workout_id, restartRequestKey }) => {
     trackedSummaryLoadingRef.current = true;
 
     try {
-      const summary = await locationService.getTrackedRunSummary(db, workout_id);
+      const logs = await locationService.getLocationLogsByWorkout(db, workout_id);
+      const summary = calculateTrackedDistanceSummary(logs);
+      const activeSegmentStartTimestampSeconds =
+        activeRunSegmentRef.current?.startTimestampSeconds ?? null;
+      const activeSegmentLogs =
+        activeSegmentStartTimestampSeconds !== null
+          ? getLogsFromTimestamp(logs, activeSegmentStartTimestampSeconds * 1000)
+          : [];
+      const activeSegmentSummary =
+        calculateTrackedDistanceSummary(activeSegmentLogs);
+
       set_totalDistance(summary.totalDistanceKm);
+      set_activeSegmentDistance(activeSegmentSummary.totalDistanceKm);
+      set_currentPaceMinutes(
+        getRecentPaceMinutes(logs, getCurrentStoredTimestampSeconds())
+      );
     } catch (error) {
       console.error("Failed to load tracked run summary:", error);
     } finally {
@@ -306,7 +418,10 @@ const Run = ({ workout_id, restartRequestKey }) => {
     }
   }, [db, workout_id]);
 
-  const calculateActiveSet = useCallback(async (currentElapsed) => {
+  const calculateActiveSet = useCallback(async (
+    currentElapsed,
+    startTimestampSeconds = original_start_time
+  ) => {
     if (activeSetCalculationInFlightRef.current) {
       return;
     }
@@ -325,9 +440,19 @@ const Run = ({ workout_id, restartRequestKey }) => {
       }
 
       let remainingElapsed = currentElapsed;
+      let elapsedBeforeSegment = 0;
+      let completedWorkingSetCount = 0;
+      const totalWorkingSetCount = sets.filter(
+        (set) =>
+          normalizeRunSectionType(set.type) === "WORKING_SET" &&
+          Number(set.is_pause) !== 1
+      ).length;
 
       for (let i = 0; i < sets.length; i++) {
         const setDuration = (sets[i].time ?? 0) * 60;
+        const isWorkingSet =
+          normalizeRunSectionType(sets[i].type) === "WORKING_SET" &&
+          Number(sets[i].is_pause) !== 1;
 
         if (remainingElapsed >= setDuration) {
           if (!sets[i].done) {
@@ -337,10 +462,18 @@ const Run = ({ workout_id, restartRequestKey }) => {
             });
           }
           remainingElapsed -= setDuration;
+          elapsedBeforeSegment += setDuration;
+
+          if (isWorkingSet) {
+            completedWorkingSetCount += 1;
+          }
           continue;
         }
 
         const newActiveSet = sets[i].Run_id;
+        const activeWorkingSetCount = isWorkingSet
+          ? completedWorkingSetCount + 1
+          : completedWorkingSetCount;
 
         if (previousActiveSetRef.current !== newActiveSet) {
           previousActiveSetRef.current = newActiveSet;
@@ -354,6 +487,21 @@ const Run = ({ workout_id, restartRequestKey }) => {
 
         set_activeSet(newActiveSet);
         set_activeSet_remainingTime(Math.max(0, setDuration - remainingElapsed));
+        const nextActiveRunSegment = {
+          ...sets[i],
+          actionLabel: getRunSegmentLabel(sets[i]),
+          elapsedSeconds: Math.max(0, remainingElapsed),
+          remainingSeconds: Math.max(0, setDuration - remainingElapsed),
+          startTimestampSeconds:
+            startTimestampSeconds !== null
+              ? startTimestampSeconds + elapsedBeforeSegment
+              : null,
+          intervalIndex: activeWorkingSetCount,
+          totalIntervals: totalWorkingSetCount,
+        };
+
+        activeRunSegmentRef.current = nextActiveRunSegment;
+        set_activeRunSegment(nextActiveRunSegment);
         return;
       }
 
@@ -361,7 +509,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
     } finally {
       activeSetCalculationInFlightRef.current = false;
     }
-  }, [db, workout_id]);
+  }, [db, original_start_time, workout_id]);
 
   const loadWorkoutState = useCallback(async () => {
     // Ignore older resume/focus reloads so they cannot overwrite a newer pause/finish action.
@@ -418,8 +566,8 @@ const Run = ({ workout_id, restartRequestKey }) => {
       return;
     }
 
-    if (row.original_start_time !== null && !nextIsDone) {
-      await calculateActiveSet(currentElapsed);
+    if (resolvedOriginalStartTime !== null && !nextIsDone) {
+      await calculateActiveSet(currentElapsed, resolvedOriginalStartTime);
     } else {
       clearActiveSegment();
     }
@@ -697,6 +845,8 @@ const Run = ({ workout_id, restartRequestKey }) => {
       set_isRunning(false);
       set_isDone(false);
       set_totalDistance(0);
+      set_currentPaceMinutes(null);
+      set_activeSegmentDistance(0);
       clearActiveSegment();
       triggerReload();
     } catch (error) {
@@ -774,7 +924,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
   const invertedText = theme.textInverted ?? theme.background ?? "#0E0F12";
   const avgPaceMinutes =
     totalDistance > 0 ? currentElapsed / 60 / totalDistance : null;
-  const formattedTotalDistance = Number(totalDistance.toFixed(2)).toFixed(2);
+  const formattedTotalDistance = formatRunDistance(totalDistance);
   const avgPaceDisplay = formatPaceDisplay(avgPaceMinutes);
   const elapsedDisplay = formatRunClock(currentElapsed);
   const runShellReady = workoutStateLoaded && runStructureLoaded;
@@ -790,6 +940,8 @@ const Run = ({ workout_id, restartRequestKey }) => {
   const shouldShowHeroMetrics =
     !isFreshRunWithoutStructure || selectedRunFlow === "speed-structure";
   const selectedRunFlowOption = getRunFlowOption(selectedRunFlow);
+  const shouldShowSpeedStructureTimer =
+    selectedRunFlow === "speed-structure" && original_start_time !== null;
   const shouldPruneEmptyPlanSections =
     selectedRunFlow === "speed-structure" && original_start_time !== null;
   const shouldShowFinishRunPill =
@@ -830,6 +982,21 @@ const Run = ({ workout_id, restartRequestKey }) => {
       unit: "bpm",
     },
   ];
+  const speedStructureActionLabel =
+    activeRunSegment?.actionLabel ?? (isDone ? "Complete" : "No active step");
+  const speedStructureCountdownDisplay = formatRunClock(
+    activeRunSegment?.remainingSeconds ?? 0
+  );
+  const currentPaceDisplay = formatPaceDisplay(currentPaceMinutes);
+  const currentIntervalValue =
+    activeRunSegment?.totalIntervals > 0
+      ? `${activeRunSegment.intervalIndex} / ${activeRunSegment.totalIntervals}`
+      : "--";
+  const pulseDisplay = activeRunSegment?.heartrate
+    ? `Z${activeRunSegment.heartrate}`
+    : "--";
+  const activeSegmentDistanceDisplay = formatRunDistance(activeSegmentDistance);
+  const totalTimeDistanceDisplay = `${elapsedDisplay} / ${formattedTotalDistance}`;
   const renderRunFlowImage = (option) => (
     <View
       style={[
@@ -891,6 +1058,124 @@ const Run = ({ workout_id, restartRequestKey }) => {
             </View>
           </TouchableOpacity>
         ))}
+      </View>
+    </View>
+  );
+
+  const renderSpeedStructureTimer = () => (
+    <View style={styles.speedTimerShell}>
+      <View style={styles.speedTimerActionBlock}>
+        <ThemedText style={styles.speedTimerEyebrow} setColor={primaryColor}>
+          ACTION
+        </ThemedText>
+        <View style={styles.speedTimerActionRow}>
+          <ThemedText
+            style={styles.speedTimerActionText}
+            setColor={titleColor}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.72}
+          >
+            {speedStructureActionLabel}
+          </ThemedText>
+          <ThemedText
+            style={styles.speedTimerCountdown}
+            setColor={primaryColor}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.65}
+          >
+            {speedStructureCountdownDisplay}
+          </ThemedText>
+        </View>
+      </View>
+
+      <View
+        style={[
+          styles.speedTimerPrimaryRow,
+          {
+            borderTopColor: cardBorder,
+            borderBottomColor: cardBorder,
+          },
+        ]}
+      >
+        <View style={styles.speedTimerPrimaryStat}>
+          <ThemedText style={styles.speedTimerLabel} setColor={quietText}>
+            CURRENT PACE
+          </ThemedText>
+          <ThemedText
+            style={styles.speedTimerPrimaryValue}
+            setColor={titleColor}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.72}
+          >
+            {currentPaceDisplay}
+          </ThemedText>
+          <ThemedText style={styles.speedTimerUnit} setColor={quietText}>
+            /km
+          </ThemedText>
+        </View>
+
+        <View
+          style={[
+            styles.speedTimerDivider,
+            { backgroundColor: cardBorder },
+          ]}
+        />
+
+        <View style={styles.speedTimerPrimaryStat}>
+          <ThemedText style={styles.speedTimerLabel} setColor={quietText}>
+            INTERVAL
+          </ThemedText>
+          <ThemedText
+            style={styles.speedTimerPrimaryValue}
+            setColor={titleColor}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.72}
+          >
+            {currentIntervalValue}
+          </ThemedText>
+          <ThemedText style={styles.speedTimerUnit} setColor={quietText}>
+            set
+          </ThemedText>
+        </View>
+      </View>
+
+      <View style={styles.speedTimerSecondaryRow}>
+        <View style={styles.speedTimerSecondaryStat}>
+          <ThemedText style={styles.speedTimerSecondaryLabel} setColor={quietText}>
+            HR
+          </ThemedText>
+          <ThemedText style={styles.speedTimerSecondaryValue} setColor={titleColor}>
+            {pulseDisplay}
+          </ThemedText>
+        </View>
+
+        <View style={styles.speedTimerSecondaryStat}>
+          <ThemedText style={styles.speedTimerSecondaryLabel} setColor={quietText}>
+            SEG DIST
+          </ThemedText>
+          <ThemedText style={styles.speedTimerSecondaryValue} setColor={titleColor}>
+            {activeSegmentDistanceDisplay} km
+          </ThemedText>
+        </View>
+
+        <View style={styles.speedTimerSecondaryStat}>
+          <ThemedText style={styles.speedTimerSecondaryLabel} setColor={quietText}>
+            TOTAL
+          </ThemedText>
+          <ThemedText
+            style={styles.speedTimerSecondaryValue}
+            setColor={titleColor}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.72}
+          >
+            {totalTimeDistanceDisplay} km
+          </ThemedText>
+        </View>
       </View>
     </View>
   );
@@ -1003,7 +1288,9 @@ const Run = ({ workout_id, restartRequestKey }) => {
               </TouchableOpacity>
             )}
 
-            {shouldShowHeroMetrics && (
+            {shouldShowSpeedStructureTimer ? (
+              renderSpeedStructureTimer()
+            ) : shouldShowHeroMetrics && (
               <View style={styles.heroMetricsRow}>
                 {metricCards.map((metric, index) => (
                   <View
