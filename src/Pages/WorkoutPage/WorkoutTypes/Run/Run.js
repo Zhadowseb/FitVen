@@ -1083,18 +1083,6 @@ const Run = ({ workout_id, restartRequestKey }) => {
               <View style={styles.runStatusLampWrap}>
                 <View
                   style={[
-                    styles.runStatusLampGlowWide,
-                    { backgroundColor: primaryColor },
-                  ]}
-                />
-                <View
-                  style={[
-                    styles.runStatusLampGlowTight,
-                    { backgroundColor: primaryColor },
-                  ]}
-                />
-                <View
-                  style={[
                     styles.runStatusLamp,
                     {
                       backgroundColor: primaryColor,
@@ -1109,6 +1097,32 @@ const Run = ({ workout_id, restartRequestKey }) => {
       })}
     </View>
   );
+
+  const renderRunFocusTitle = () => {
+    if (!selectedRunFlowOption) {
+      return null;
+    }
+
+    return (
+      <TouchableOpacity
+        activeOpacity={canChangeRunFlow ? 0.78 : 1}
+        accessibilityRole="button"
+        disabled={!canChangeRunFlow}
+        onPress={returnToRunFlowSelection}
+        style={styles.runFocusTitleButton}
+      >
+        <ThemedText
+          style={styles.runFocusTitle}
+          setColor={titleColor}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.78}
+        >
+          {selectedRunFlowOption.title}
+        </ThemedText>
+      </TouchableOpacity>
+    );
+  };
 
   const renderRunFlowSuggestions = () => (
     <View style={styles.runFlowShell}>
@@ -1160,9 +1174,6 @@ const Run = ({ workout_id, restartRequestKey }) => {
   const renderSpeedStructureTimer = () => (
     <View style={styles.speedTimerShell}>
       <View style={styles.speedTimerActionBlock}>
-        <ThemedText style={styles.speedTimerEyebrow} setColor={primaryColor}>
-          ACTION
-        </ThemedText>
         <View style={styles.speedTimerActionRow}>
           <ThemedText
             style={styles.speedTimerActionText}
@@ -1352,6 +1363,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
       >
         <View style={styles.runLayout}>
           {renderRunStatusProgress()}
+          {renderRunFocusTitle()}
 
           <ThemedCard
             style={[
@@ -1362,29 +1374,6 @@ const Run = ({ workout_id, restartRequestKey }) => {
               },
             ]}
           >
-            {selectedRunFlowOption && (
-              <TouchableOpacity
-                activeOpacity={canChangeRunFlow ? 0.78 : 1}
-                accessibilityRole="button"
-                disabled={!canChangeRunFlow}
-                onPress={returnToRunFlowSelection}
-                style={[
-                  styles.heroRunFocusBadge,
-                  {
-                    backgroundColor: innerSurface,
-                    borderColor: primaryColor,
-                  },
-                ]}
-              >
-                <ThemedText
-                  style={styles.heroRunFocusBadgeText}
-                  setColor={primaryColor}
-                >
-                  {selectedRunFlowOption.title}
-                </ThemedText>
-              </TouchableOpacity>
-            )}
-
             {shouldShowSpeedStructureTimer ? (
               renderSpeedStructureTimer()
             ) : shouldShowHeroMetrics && (

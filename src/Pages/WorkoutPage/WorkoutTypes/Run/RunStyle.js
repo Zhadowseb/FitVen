@@ -145,56 +145,38 @@ export default StyleSheet.create({
     position: "absolute",
     left: 0,
     right: 0,
-    bottom: -8,
-    height: 14,
+    bottom: -10,
+    height: 24,
     alignItems: "center",
     justifyContent: "flex-start",
   },
 
   runStatusLamp: {
-    width: 34,
-    height: 4,
-    borderTopLeftRadius: 4,
-    borderTopRightRadius: 4,
-    borderBottomLeftRadius: 2,
-    borderBottomRightRadius: 2,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.55,
-    shadowRadius: 8,
-    elevation: 8,
+    width: 42,
+    height: 5,
+    borderRadius: 3,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.36,
+    shadowRadius: 18,
+    elevation: 12,
   },
 
-  runStatusLampGlowWide: {
-    position: "absolute",
-    top: 2,
-    width: 56,
-    height: 12,
-    borderRadius: 999,
-    opacity: 0.18,
+  runFocusTitleButton: {
+    width: "100%",
+    minHeight: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: -2,
+    marginBottom: 13,
+    paddingHorizontal: 18,
   },
 
-  runStatusLampGlowTight: {
-    position: "absolute",
-    top: 0,
-    width: 36,
-    height: 10,
-    borderRadius: 999,
-    opacity: 0.24,
-  },
-
-  heroRunFocusBadge: {
-    alignSelf: "flex-start",
-    borderRadius: 999,
-    borderWidth: 1,
-    paddingHorizontal: 11,
-    paddingVertical: 6,
-    marginBottom: 14,
-  },
-
-  heroRunFocusBadgeText: {
-    fontSize: 10,
-    lineHeight: 12,
+  runFocusTitle: {
+    width: "100%",
+    fontSize: 22,
+    lineHeight: 27,
     fontWeight: "900",
+    textAlign: "center",
   },
 
   speedTimerShell: {
@@ -202,15 +184,7 @@ export default StyleSheet.create({
   },
 
   speedTimerActionBlock: {
-    marginBottom: 17,
-  },
-
-  speedTimerEyebrow: {
-    marginBottom: 7,
-    fontSize: 10,
-    lineHeight: 12,
-    fontWeight: "900",
-    letterSpacing: 2.4,
+    marginBottom: 18,
   },
 
   speedTimerActionRow: {

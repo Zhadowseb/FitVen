@@ -7,6 +7,7 @@
 - Add a focused Speed & Structure run timer with active action countdown, live pace, interval count, segment distance, and total progress.
 - Show Run workout progress through Plan, Active, and Done stages with a tubelight-style indicator above the timer header.
 - Allow tapping the Run workout status indicator to preview Plan, Active, and Done states while testing.
+- Move the selected run focus into a centered title above the timer header and simplify the active timer heading.
 
 ---
 ## [0.17.35] - Unreleased
