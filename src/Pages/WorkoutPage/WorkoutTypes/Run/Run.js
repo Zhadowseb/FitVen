@@ -964,6 +964,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
   const runWorkoutStatusIndex = RUN_WORKOUT_STATUS_STEPS.findIndex(
     (step) => step.id === runWorkoutStatus
   );
+  const shouldShowPlanOnlyStartAction = actualRunWorkoutStatus === "plan";
   const shouldPruneEmptyPlanSections =
     selectedRunFlow === "speed-structure" && original_start_time !== null;
   const shouldShowFinishRunPill =
@@ -1109,11 +1110,17 @@ const Run = ({ workout_id, restartRequestKey }) => {
         accessibilityRole="button"
         disabled={!canChangeRunFlow}
         onPress={returnToRunFlowSelection}
-        style={styles.runFocusTitleButton}
+        style={[
+          styles.runFocusTitleButton,
+          {
+            backgroundColor: innerSurface,
+            borderColor: primaryColor,
+          },
+        ]}
       >
         <ThemedText
           style={styles.runFocusTitle}
-          setColor={titleColor}
+          setColor={primaryColor}
           numberOfLines={1}
           adjustsFontSizeToFit
           minimumFontScale={0.78}
@@ -1374,9 +1381,9 @@ const Run = ({ workout_id, restartRequestKey }) => {
               },
             ]}
           >
-            {shouldShowSpeedStructureTimer ? (
+            {!shouldShowPlanOnlyStartAction && shouldShowSpeedStructureTimer ? (
               renderSpeedStructureTimer()
-            ) : shouldShowHeroMetrics && (
+            ) : !shouldShowPlanOnlyStartAction && shouldShowHeroMetrics && (
               <View style={styles.heroMetricsRow}>
                 {metricCards.map((metric, index) => (
                   <View

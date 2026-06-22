@@ -8,6 +8,7 @@
 - Show Run workout progress through Plan, Active, and Done stages with a tubelight-style indicator above the timer header.
 - Allow tapping the Run workout status indicator to preview Plan, Active, and Done states while testing.
 - Move the selected run focus into a centered title above the timer header and simplify the active timer heading.
+- Show only the start action in Run plan mode and style the selected run focus as a centered badge.
 
 ---
 ## [0.17.35] - Unreleased
