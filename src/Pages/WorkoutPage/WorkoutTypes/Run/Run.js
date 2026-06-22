@@ -1293,6 +1293,82 @@ const Run = ({ workout_id, restartRequestKey }) => {
     </View>
   );
 
+  const renderHeroActionRow = () => {
+    if (isDone) {
+      return null;
+    }
+
+    return (
+      <View style={styles.heroActionRow}>
+        <TouchableOpacity
+          activeOpacity={0.86}
+          disabled={!canUsePrimaryAction}
+          onPress={handlePrimaryAction}
+          style={[
+            styles.heroPrimaryButton,
+            {
+              backgroundColor: primaryColor,
+              opacity: canUsePrimaryAction ? 1 : 0.58,
+            },
+          ]}
+        >
+          {isRunning ? (
+            <View style={styles.heroPauseSymbol}>
+              <View
+                style={[
+                  styles.heroPauseBar,
+                  { backgroundColor: invertedText },
+                ]}
+              />
+              <View
+                style={[
+                  styles.heroPauseBar,
+                  { backgroundColor: invertedText },
+                ]}
+              />
+            </View>
+          ) : (
+            <View
+              style={[
+                styles.heroPlayIcon,
+                { borderLeftColor: invertedText },
+              ]}
+            />
+          )}
+          <ThemedText
+            style={styles.heroPrimaryButtonText}
+            setColor={invertedText}
+          >
+            {primaryActionLabel}
+          </ThemedText>
+        </TouchableOpacity>
+
+        {shouldShowFinishRunPill ? (
+          <TouchableOpacity
+            activeOpacity={0.78}
+            disabled={isControlBusy}
+            onPress={endWorkout}
+            style={[
+              styles.heroSecondaryButton,
+              {
+                backgroundColor: secondaryColor,
+                borderColor: secondaryDark,
+                opacity: isControlBusy ? 0.58 : 1,
+              },
+            ]}
+          >
+            <ThemedText
+              style={styles.heroSecondaryButtonText}
+              setColor={invertedText}
+            >
+              FINISH
+            </ThemedText>
+          </TouchableOpacity>
+        ) : null}
+      </View>
+    );
+  };
+
   const renderRunLoadingState = () => (
     <ThemedView
       safe={false}
@@ -1372,139 +1448,80 @@ const Run = ({ workout_id, restartRequestKey }) => {
           {renderRunStatusProgress()}
           {renderRunFocusTitle()}
 
-          <ThemedCard
-            style={[
-              styles.heroCard,
-              {
-                backgroundColor: cardSurface,
-                borderColor: isRunning ? primaryColor : cardBorder,
-              },
-            ]}
-          >
-            {!shouldShowPlanOnlyStartAction && shouldShowSpeedStructureTimer ? (
-              renderSpeedStructureTimer()
-            ) : !shouldShowPlanOnlyStartAction && shouldShowHeroMetrics && (
-              <View style={styles.heroMetricsRow}>
-                {metricCards.map((metric, index) => (
-                  <View
-                    key={metric.label}
-                    style={styles.heroMetricGroup}
-                  >
-                    <View style={styles.heroMetricCard}>
-                      <View style={styles.heroMetricHeader}>
-                        {metric.Icon ? (
-                          <metric.Icon
-                            width={20}
-                            height={20}
-                            stroke={primaryColor}
-                            color={primaryColor}
-                          />
-                        ) : (
-                          <ThemedText
-                            style={styles.heroMetricLabel}
-                            setColor={primaryColor}
-                          >
-                            {metric.label}
-                          </ThemedText>
-                        )}
-                      </View>
-                      <ThemedText
-                        style={styles.heroMetricValue}
-                        setColor={titleColor}
-                        numberOfLines={1}
-                        adjustsFontSizeToFit
-                        minimumFontScale={0.72}
-                      >
-                        {metric.value}
-                      </ThemedText>
-                      <ThemedText style={styles.heroMetricUnit} setColor={quietText}>
-                        {metric.unit ?? " "}
-                      </ThemedText>
-                    </View>
-
-                    {index < metricCards.length - 1 && (
-                      <View
-                        style={[
-                          styles.heroMetricDivider,
-                          { backgroundColor: cardBorder },
-                        ]}
-                      />
-                    )}
-                  </View>
-                ))}
-              </View>
-            )}
-
-            {!isDone && (
-              <View style={styles.heroActionRow}>
-                <TouchableOpacity
-                  activeOpacity={0.86}
-                  disabled={!canUsePrimaryAction}
-                  onPress={handlePrimaryAction}
-                  style={[
-                    styles.heroPrimaryButton,
-                    {
-                      backgroundColor: primaryColor,
-                      opacity: canUsePrimaryAction ? 1 : 0.58,
-                    },
-                  ]}
-                >
-                  {isRunning ? (
-                    <View style={styles.heroPauseSymbol}>
-                      <View
-                        style={[
-                          styles.heroPauseBar,
-                          { backgroundColor: invertedText },
-                        ]}
-                      />
-                      <View
-                        style={[
-                          styles.heroPauseBar,
-                          { backgroundColor: invertedText },
-                        ]}
-                      />
-                    </View>
-                  ) : (
+          {shouldShowPlanOnlyStartAction ? (
+            <View style={styles.planStartActionShell}>
+              {renderHeroActionRow()}
+            </View>
+          ) : (
+            <ThemedCard
+              style={[
+                styles.heroCard,
+                {
+                  backgroundColor: cardSurface,
+                  borderColor: isRunning ? primaryColor : cardBorder,
+                },
+              ]}
+            >
+              {shouldShowSpeedStructureTimer ? (
+                renderSpeedStructureTimer()
+              ) : shouldShowHeroMetrics && (
+                <View style={styles.heroMetricsRow}>
+                  {metricCards.map((metric, index) => (
                     <View
-                      style={[
-                        styles.heroPlayIcon,
-                        { borderLeftColor: invertedText },
-                      ]}
-                    />
-                  )}
-                  <ThemedText
-                    style={styles.heroPrimaryButtonText}
-                    setColor={invertedText}
-                  >
-                    {primaryActionLabel}
-                  </ThemedText>
-                </TouchableOpacity>
-
-                {shouldShowFinishRunPill ? (
-                  <TouchableOpacity
-                    activeOpacity={0.78}
-                    disabled={isControlBusy}
-                    onPress={endWorkout}
-                    style={[
-                      styles.heroSecondaryButton,
-                      {
-                        backgroundColor: secondaryColor,
-                        borderColor: secondaryDark,
-                        opacity: isControlBusy ? 0.58 : 1,
-                      },
-                    ]}
-                  >
-                    <ThemedText
-                      style={styles.heroSecondaryButtonText}
-                      setColor={invertedText}
+                      key={metric.label}
+                      style={styles.heroMetricGroup}
                     >
-                      FINISH
-                    </ThemedText>
-                  </TouchableOpacity>
-                ) : null}
-              </View>
-            )}
-          </ThemedCard>
+                      <View style={styles.heroMetricCard}>
+                        <View style={styles.heroMetricHeader}>
+                          {metric.Icon ? (
+                            <metric.Icon
+                              width={20}
+                              height={20}
+                              stroke={primaryColor}
+                              color={primaryColor}
+                            />
+                          ) : (
+                            <ThemedText
+                              style={styles.heroMetricLabel}
+                              setColor={primaryColor}
+                            >
+                              {metric.label}
+                            </ThemedText>
+                          )}
+                        </View>
+                        <ThemedText
+                          style={styles.heroMetricValue}
+                          setColor={titleColor}
+                          numberOfLines={1}
+                          adjustsFontSizeToFit
+                          minimumFontScale={0.72}
+                        >
+                          {metric.value}
+                        </ThemedText>
+                        <ThemedText
+                          style={styles.heroMetricUnit}
+                          setColor={quietText}
+                        >
+                          {metric.unit ?? " "}
+                        </ThemedText>
+                      </View>
+
+                      {index < metricCards.length - 1 && (
+                        <View
+                          style={[
+                            styles.heroMetricDivider,
+                            { backgroundColor: cardBorder },
+                          ]}
+                        />
+                      )}
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              {renderHeroActionRow()}
+            </ThemedCard>
+          )}
 
           {shouldShowRunFlowSuggestions
             ? renderRunFlowSuggestions()

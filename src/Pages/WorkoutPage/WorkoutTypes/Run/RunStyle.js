@@ -351,6 +351,11 @@ export default StyleSheet.create({
     textAlign: "center",
   },
 
+  planStartActionShell: {
+    width: "100%",
+    marginBottom: 14,
+  },
+
   heroActionRow: {
     flexDirection: "row",
     alignItems: "center",
