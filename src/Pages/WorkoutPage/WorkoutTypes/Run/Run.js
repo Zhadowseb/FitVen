@@ -274,6 +274,8 @@ const Run = ({ workout_id, restartRequestKey }) => {
 
   const [selectedRunFlow, set_selectedRunFlow] = useState(null);
   const [isSelectingRunFlow, set_isSelectingRunFlow] = useState(false);
+  const [previewRunWorkoutStatus, set_previewRunWorkoutStatus] =
+    useState(null);
   const [hasRunStructure, set_hasRunStructure] = useState(false);
   const [runSectionCounts, set_runSectionCounts] = useState(
     EMPTY_RUN_SECTION_COUNTS
@@ -311,6 +313,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
   useEffect(() => {
     set_selectedRunFlow(null);
     set_isSelectingRunFlow(false);
+    set_previewRunWorkoutStatus(null);
     set_hasRunStructure(false);
     set_runSectionCounts(EMPTY_RUN_SECTION_COUNTS);
     set_activeRunSegment(null);
@@ -337,6 +340,10 @@ const Run = ({ workout_id, restartRequestKey }) => {
   useEffect(() => {
     activeRunSegmentRef.current = activeRunSegment;
   }, [activeRunSegment]);
+
+  useEffect(() => {
+    set_previewRunWorkoutStatus(null);
+  }, [isDone, original_start_time]);
 
   const persistCurrentTimerState = useCallback(async () => {
     await workoutRepository.persistWorkoutTimerState(db, {
@@ -948,11 +955,12 @@ const Run = ({ workout_id, restartRequestKey }) => {
   const selectedRunFlowOption = getRunFlowOption(selectedRunFlow);
   const shouldShowSpeedStructureTimer =
     selectedRunFlow === "speed-structure" && original_start_time !== null;
-  const runWorkoutStatus = isDone
+  const actualRunWorkoutStatus = isDone
     ? "done"
     : original_start_time !== null
       ? "active"
       : "plan";
+  const runWorkoutStatus = previewRunWorkoutStatus ?? actualRunWorkoutStatus;
   const runWorkoutStatusIndex = RUN_WORKOUT_STATUS_STEPS.findIndex(
     (step) => step.id === runWorkoutStatus
   );
@@ -1044,8 +1052,16 @@ const Run = ({ workout_id, restartRequestKey }) => {
         const isReached = index <= runWorkoutStatusIndex;
 
         return (
-          <View
+          <TouchableOpacity
             key={step.id}
+            activeOpacity={0.78}
+            accessibilityRole="button"
+            accessibilityLabel={`Preview ${step.label} run status`}
+            onPress={() =>
+              set_previewRunWorkoutStatus((currentStatus) =>
+                currentStatus === step.id ? null : step.id
+              )
+            }
             style={[
               styles.runStatusTab,
               isCurrent && { backgroundColor: cardSurface },
@@ -1088,7 +1104,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
                 />
               </View>
             )}
-          </View>
+          </TouchableOpacity>
         );
       })}
     </View>

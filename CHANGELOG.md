@@ -6,6 +6,7 @@
 - Hide empty Speed & Structure warmup and cooldown sections from the run plan once the run starts.
 - Add a focused Speed & Structure run timer with active action countdown, live pace, interval count, segment distance, and total progress.
 - Show Run workout progress through Plan, Active, and Done stages with a tubelight-style indicator above the timer header.
+- Allow tapping the Run workout status indicator to preview Plan, Active, and Done states while testing.
 
 ---
 ## [0.17.35] - Unreleased
