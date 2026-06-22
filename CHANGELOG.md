@@ -12,6 +12,7 @@
 - Use the global fields surface color for Run status and focus badge backgrounds.
 - Use the global fields surface color for Run warmup and cooldown field controls.
 - Automatically add a rest row before the second Run interval set.
+- Delete Run sets directly from the edit sheet without a confirmation alert.
 
 ---
 ## [0.17.35] - Unreleased

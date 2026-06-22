@@ -1,6 +1,5 @@
 import { useState, useCallback, useRef } from "react";
 import {
-  Alert,
   Dimensions,
   Modal,
   Pressable,
@@ -320,29 +319,6 @@ const RunSetList = ({
     set_selectedSet(null);
     set_bottomsheetVisible(false);
     triggerReload();
-  };
-
-  const confirmDeleteSet = () => {
-    if (!selectedSet) {
-      return;
-    }
-
-    Alert.alert(
-      selectedSet.is_pause ? "Delete rest?" : "Delete set?",
-      selectedSet.is_pause
-        ? "This removes the rest segment from the run."
-        : "This removes the run set and its saved values.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            void deleteSet();
-          },
-        },
-      ]
-    );
   };
 
   const togglePause = async () => {
@@ -1137,7 +1113,9 @@ const RunSetList = ({
               styles.bottomsheetActionDanger,
               { borderColor: theme.danger ?? primaryColor },
             ]}
-            onPress={confirmDeleteSet}
+            onPress={() => {
+              void deleteSet();
+            }}
           >
             <Delete width={20} height={20} color={theme.danger ?? primaryColor} />
             <ThemedText
