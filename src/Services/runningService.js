@@ -1,6 +1,33 @@
 import { runningRepository } from "../Repository";
 import { withTransaction } from "./shared";
 
+const RUN_WORKING_SET_TYPE = "WORKING_SET";
+const AUTO_PAUSE_AFTER_SET_NUMBER = 2;
+
+function normalizeRunSetType(type) {
+  const normalizedType = String(type ?? "")
+    .trim()
+    .replace(/[- ]/g, "_")
+    .toUpperCase();
+
+  if (normalizedType === "WARMUP" || normalizedType === "WARM_UP") {
+    return "WARMUP";
+  }
+
+  if (normalizedType === "COOLDOWN" || normalizedType === "COOL_DOWN") {
+    return "COOLDOWN";
+  }
+
+  return RUN_WORKING_SET_TYPE;
+}
+
+function shouldAddAutomaticPause({ type, setNumber }) {
+  return (
+    normalizeRunSetType(type) === RUN_WORKING_SET_TYPE &&
+    setNumber === AUTO_PAUSE_AFTER_SET_NUMBER
+  );
+}
+
 export async function getRunSets(db, { workoutId, type }) {
   return runningRepository.getRunSets(db, { workoutId, type });
 }
@@ -10,15 +37,27 @@ export async function getOrderedRunSetsForWorkout(db, workoutId) {
 }
 
 export async function addRunSet(db, { workoutId, type }) {
-  const row = await runningRepository.countActiveRunSets(db, {
-    workoutId,
-    type,
-  });
+  await withTransaction(db, async () => {
+    const row = await runningRepository.countActiveRunSets(db, {
+      workoutId,
+      type,
+    });
+    const nextSetNumber = (row?.count ?? 0) + 1;
 
-  await runningRepository.createRunSet(db, {
-    workoutId,
-    type,
-    setNumber: (row?.count ?? 0) + 1,
+    await runningRepository.createRunSet(db, {
+      workoutId,
+      type,
+      setNumber: nextSetNumber,
+    });
+
+    if (shouldAddAutomaticPause({ type, setNumber: nextSetNumber })) {
+      await runningRepository.createRunSet(db, {
+        workoutId,
+        type,
+        setNumber: nextSetNumber,
+        isPause: 1,
+      });
+    }
   });
 }
 

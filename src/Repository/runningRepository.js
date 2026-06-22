@@ -15,7 +15,7 @@ export async function getRunSets(db, { workoutId, type }) {
      FROM Run
      WHERE workout_id = ?
        AND ${NORMALIZED_RUN_TYPE_SQL} = ?
-     ORDER BY set_number ASC;`,
+     ORDER BY set_number ASC, is_pause ASC, Run_id ASC;`,
     [workoutId, type]
   );
 }
@@ -31,7 +31,9 @@ export async function getOrderedRunSetsForWorkout(db, workoutId) {
          WHEN 'WORKING_SET' THEN 2
          WHEN 'COOLDOWN' THEN 3
        END,
-       set_number ASC;`,
+       set_number ASC,
+       is_pause ASC,
+       Run_id ASC;`,
     [workoutId]
   );
 }
