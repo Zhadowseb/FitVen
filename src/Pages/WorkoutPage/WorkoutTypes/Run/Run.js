@@ -2075,39 +2075,14 @@ const Run = ({ workout_id, restartRequestKey }) => {
             styles.completedSummaryCard,
             {
               backgroundColor: cardSurface,
-              borderColor: primaryColor,
+              borderColor: secondaryColor,
             },
           ]}
         >
-          <View style={styles.completedSummaryHeader}>
-            <View
-              style={[
-                styles.completedSummaryCheck,
-                { backgroundColor: secondaryColor },
-              ]}
-            >
-              <Feather name="check" size={20} color={invertedText} />
-            </View>
-            <View style={styles.completedSummaryHeading}>
-              <ThemedText
-                style={styles.completedSummaryEyebrow}
-                setColor={secondaryColor}
-              >
-                RUN COMPLETE
-              </ThemedText>
-              <ThemedText
-                style={styles.completedSummaryTitle}
-                setColor={titleColor}
-              >
-                Nice work
-              </ThemedText>
-            </View>
-          </View>
-
           <View style={styles.completedDistanceRow}>
             <ThemedText
               style={styles.completedDistanceValue}
-              setColor={primaryColor}
+              setColor={secondaryColor}
               numberOfLines={1}
               adjustsFontSizeToFit
               minimumFontScale={0.62}

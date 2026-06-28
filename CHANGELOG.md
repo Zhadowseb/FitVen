@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.18.3] - Unreleased
+### Changed
+- Simplify the completed Run summary and use the secondary color for its border and distance.
+
+---
 ## [0.18.2] - Unreleased
 ### Changed
 - Add shared private birth date and max heart rate settings to Public profile and Run settings, including calculated, manual, and measured max-pulse sources.

@@ -236,39 +236,6 @@ export default StyleSheet.create({
     overflow: "hidden",
   },
 
-  completedSummaryHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-
-  completedSummaryCheck: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  completedSummaryHeading: {
-    flex: 1,
-    minWidth: 0,
-  },
-
-  completedSummaryEyebrow: {
-    marginBottom: 1,
-    fontSize: 9,
-    lineHeight: 12,
-    fontWeight: "900",
-    letterSpacing: 1.2,
-  },
-
-  completedSummaryTitle: {
-    fontSize: 20,
-    lineHeight: 24,
-    fontWeight: "900",
-  },
-
   completedDistanceRow: {
     minHeight: 88,
     flexDirection: "row",
