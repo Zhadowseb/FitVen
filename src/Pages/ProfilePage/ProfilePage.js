@@ -18,8 +18,8 @@ import { useAuth } from "../../Contexts/AuthContext";
 import { notificationService, socialService } from "../../Services";
 import Bell from "../../Resources/Icons/UI-icons/Bell";
 import FeedbackModal from "../../Resources/Components/FeedbackModal/FeedbackModal";
-import Library from "../../Resources/Icons/UI-icons/Library";
 import Social from "../../Resources/Icons/UI-icons/Social";
+import Feather from "@expo/vector-icons/Feather";
 import TailArrowUpRight from "../../Resources/Icons/UI-icons/TailArrowUpRight";
 import {
   ThemedButton,
@@ -335,10 +335,6 @@ export default function ProfilePage() {
     }
   };
 
-  const openSettingsDraft = (sectionName) => {
-    Alert.alert(sectionName, "Settings for this section will be added here.");
-  };
-
   return (
     <ThemedView safe={["top", "left", "right"]} style={styles.container}>
       <ThemedHeader>
@@ -599,7 +595,7 @@ export default function ProfilePage() {
             <View style={styles.settingsList}>
               <TouchableOpacity
                 activeOpacity={0.82}
-                onPress={() => openSettingsDraft("Exercises")}
+                onPress={() => navigation.navigate("WorkoutTypesSettingsPage")}
                 style={[
                   styles.settingsButton,
                   {
@@ -609,12 +605,12 @@ export default function ProfilePage() {
                 ]}
               >
                 <View style={styles.settingsButtonContent}>
-                  <Library width={22} height={22} color={titleColor} />
+                  <Feather name="layers" size={22} color={titleColor} />
                   <ThemedText
                     style={styles.settingsButtonText}
                     setColor={titleColor}
                   >
-                    Exercises
+                    Workout Types
                   </ThemedText>
                 </View>
                 <TailArrowUpRight

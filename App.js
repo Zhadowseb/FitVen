@@ -37,6 +37,7 @@ import SocialPostEditPage from "./src/Pages/SocialPostEditPage/SocialPostEditPag
 import SocialPostSettingsPage from "./src/Pages/SocialPostSettingsPage/SocialPostSettingsPage";
 import ExerciseSocialPostSettingsPage from "./src/Pages/ExerciseSocialPostSettingsPage/ExerciseSocialPostSettingsPage";
 import OneRepMaxCalculatorPage from "./src/Pages/OneRepMaxCalculatorPage/OneRepMaxCalculatorPage";
+import WorkoutTypesSettingsPage from "./src/Pages/WorkoutTypesSettingsPage/WorkoutTypesSettingsPage";
 import RunHeartRateChartPage from "./src/Pages/WorkoutPage/WorkoutTypes/Run/RunHeartRateChartPage";
 
 import { Colors } from './src/Resources/GlobalStyling/colors';
@@ -285,6 +286,7 @@ function RootNavigator() {
                 <Stack.Screen name="SocialPostSettingsPage" component={SocialPostSettingsPage} options={{ headerShown: false }} />
                 <Stack.Screen name="ExerciseSocialPostSettingsPage" component={ExerciseSocialPostSettingsPage} options={{ headerShown: false }} />
                 <Stack.Screen name="OneRepMaxCalculatorPage" component={OneRepMaxCalculatorPage} options={{ headerShown: false }} />
+                <Stack.Screen name="WorkoutTypesSettingsPage" component={WorkoutTypesSettingsPage} options={{ headerShown: false }} />
                 <Stack.Screen
                   name={RUN_HEART_RATE_CHART_ROUTE}
                   component={RunHeartRateChartPage}

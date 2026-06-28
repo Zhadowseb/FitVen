@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.18.1] - Unreleased
+### Changed
+- Add a Workout Types entry under Personal settings with Strength Training and Run, and move Exercises under Strength Training.
+
+---
 ## [0.18.0] - Unreleased
 ### Changed
 - Add a fresh-run workout selection flow with persisted run focus choices and Endurance & base, Speed & Structure, Performance & Threshold, and Custom cards.
