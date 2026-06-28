@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.18.6] - Unreleased
+### Changed
+- Remove dashed grid lines from the Run completion charts.
+
+---
 ## [0.18.5] - Unreleased
 ### Changed
 - Add selectable max-heart-rate sources and calculate Run chart zones from the resolved profile value.

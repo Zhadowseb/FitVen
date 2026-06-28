@@ -1,7 +1,7 @@
 import { StatusBar, TouchableOpacity, useColorScheme, View } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import Feather from "@expo/vector-icons/Feather";
-import Svg, { G, Line, Path, Rect, Text as SvgText } from "react-native-svg";
+import Svg, { Path, Rect, Text as SvgText } from "react-native-svg";
 
 import { Colors } from "../../../../Resources/GlobalStyling/colors";
 import {
@@ -297,43 +297,16 @@ const RunHeartRateChartPage = () => {
             const y = getYPosition(tick, chart);
 
             return (
-              <G key={tick}>
-                <Line
-                  x1={chart.left}
-                  x2={chart.right}
-                  y1={y}
-                  y2={y}
-                  stroke={cardBorder}
-                  strokeWidth="1"
-                  strokeDasharray="5 8"
-                />
-                <SvgText
-                  x="7"
-                  y={y + 4}
-                  fill={quietText}
-                  fontSize="12"
-                  fontWeight="700"
-                >
-                  {tick}
-                </SvgText>
-              </G>
-            );
-          })}
-
-          {X_AXIS_RATIOS.map((ratio) => {
-            const x = chart.left + ratio * (chart.right - chart.left);
-
-            return (
-              <Line
-                key={ratio}
-                x1={x}
-                x2={x}
-                y1={chart.top}
-                y2={chart.bottom}
-                stroke={cardBorder}
-                strokeWidth="1"
-                strokeDasharray="5 8"
-              />
+              <SvgText
+                key={tick}
+                x="7"
+                y={y + 4}
+                fill={quietText}
+                fontSize="12"
+                fontWeight="700"
+              >
+                {tick}
+              </SvgText>
             );
           })}
 

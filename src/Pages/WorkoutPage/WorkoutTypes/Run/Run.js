@@ -13,7 +13,7 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useColorScheme } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import MapView, { Marker, Polyline } from "react-native-maps";
-import Svg, { Line, Path, Rect, Text as SvgText } from "react-native-svg";
+import Svg, { Path, Rect, Text as SvgText } from "react-native-svg";
 
 import RunSetList from "./RunSetList";
 import { Colors } from "../../../../Resources/GlobalStyling/colors";
@@ -1594,21 +1594,6 @@ const Run = ({ workout_id, restartRequestKey }) => {
                   height={band.height}
                   fill={band.color}
                   fillOpacity="0.16"
-                />
-              ))}
-              {(yAxisGridLines.length > 0
-                ? yAxisGridLines
-                : [24, 61, 98].map((y) => ({ value: null, y }))
-              ).map((gridLine) => (
-                <Line
-                  key={`${gridLine.value ?? "grid"}:${gridLine.y}`}
-                  x1={chartLeft}
-                  x2={chartRight}
-                  y1={gridLine.y}
-                  y2={gridLine.y}
-                  stroke={cardBorder}
-                  strokeWidth="1"
-                  strokeDasharray="4 6"
                 />
               ))}
               {yAxisGridLines.map((gridLine) => (
