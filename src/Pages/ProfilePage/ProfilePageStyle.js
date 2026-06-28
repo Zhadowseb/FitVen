@@ -270,6 +270,53 @@ export default StyleSheet.create({
   inputWrapper: {
     marginTop: 0,
   },
+  birthDateField: {
+    minHeight: 58,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderRadius: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 11,
+  },
+  birthDateCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+  birthDateValue: {
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: "800",
+  },
+  birthDatePrivacy: {
+    marginTop: 2,
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: "700",
+  },
+  ageValue: {
+    minWidth: 42,
+    alignItems: "center",
+  },
+  ageNumber: {
+    fontSize: 19,
+    lineHeight: 22,
+    fontWeight: "900",
+  },
+  ageLabel: {
+    fontSize: 7,
+    lineHeight: 9,
+    fontWeight: "900",
+  },
+  clearBirthDate: {
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: "900",
+  },
+  birthDateMetaRow: {
+    marginTop: 8,
+    alignItems: "flex-end",
+  },
   bioInput: {
     minHeight: 120,
     paddingTop: 12,

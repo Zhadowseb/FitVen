@@ -119,3 +119,51 @@ export function getTodaysDate() {
   return formatDate(today);
 }
 
+export function isoDateToLocalDate(value) {
+  const normalizedDate = normalizeIsoDateString(value);
+
+  if (!normalizedDate) {
+    return null;
+  }
+
+  const [year, month, day] = normalizedDate.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+export function dateToIsoDate(date) {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+export function calculateAgeFromBirthDate(value, referenceDate = new Date()) {
+  const birthDate = isoDateToLocalDate(value);
+
+  if (
+    !birthDate ||
+    !(referenceDate instanceof Date) ||
+    Number.isNaN(referenceDate.getTime()) ||
+    birthDate > referenceDate
+  ) {
+    return null;
+  }
+
+  let age = referenceDate.getFullYear() - birthDate.getFullYear();
+  const birthdayHasPassed =
+    referenceDate.getMonth() > birthDate.getMonth() ||
+    (referenceDate.getMonth() === birthDate.getMonth() &&
+      referenceDate.getDate() >= birthDate.getDate());
+
+  if (!birthdayHasPassed) {
+    age -= 1;
+  }
+
+  return age;
+}
+

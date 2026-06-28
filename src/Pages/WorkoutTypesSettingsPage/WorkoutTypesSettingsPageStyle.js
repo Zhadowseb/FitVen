@@ -159,4 +159,69 @@ export default StyleSheet.create({
     lineHeight: 18,
     fontWeight: "800",
   },
+
+  typeSettingMeta: {
+    marginTop: 2,
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: "700",
+  },
+
+  maxHeartRateRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    flexShrink: 0,
+  },
+
+  maxHeartRateBadge: {
+    minHeight: 22,
+    paddingHorizontal: 7,
+    borderWidth: 1,
+    borderRadius: 6,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  maxHeartRateBadgeText: {
+    fontSize: 8,
+    lineHeight: 10,
+    fontWeight: "900",
+    textTransform: "uppercase",
+  },
+
+  modalBody: {
+    fontSize: 12,
+    lineHeight: 17,
+    textAlign: "center",
+  },
+
+  clearManualButton: {
+    minHeight: 34,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  clearManualButtonText: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "900",
+  },
+
+  modalActions: {
+    flexDirection: "row",
+    gap: 10,
+  },
+
+  modalAction: {
+    flex: 1,
+    borderRadius: 16,
+  },
+
+  feedbackText: {
+    marginTop: 12,
+    fontSize: 12,
+    lineHeight: 17,
+    textAlign: "center",
+  },
 });

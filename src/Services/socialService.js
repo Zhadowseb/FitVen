@@ -1,5 +1,6 @@
 import { supabase } from "../Database/supaBaseClient";
 import {
+  calculateAgeFromBirthDate,
   normalizeIsoDateString,
   normalizeLocalDateString,
 } from "../Utils/dateUtils";
@@ -16,8 +17,13 @@ import {
   normalizeElapsedDurationSeconds,
   normalizeStoredTimestampSeconds,
 } from "../Utils/timeUtils";
+import {
+  normalizeMaxHeartRate,
+  resolveMaxHeartRate,
+} from "../Utils/heartRateUtils";
 
 const PROFILES_TABLE = "profiles";
+const PROFILE_PRIVATE_TABLE = "profile_private";
 const USER_FOLLOWS_TABLE = "user_follows";
 const WORKOUT_TYPE_INSTANCE_TABLE = "workout_type_instance";
 const AVATAR_BUCKET = "avatars";
@@ -31,6 +37,8 @@ const WORKOUT_TYPE_SETUP_MESSAGE =
   "Workout types are not set up in Supabase yet. Run docs/supabase-workout-types.sql in the Supabase SQL editor first.";
 const SOCIAL_AVATAR_SETUP_MESSAGE =
   "Profile photos are not set up in Supabase yet. Make sure the avatars bucket exists and rerun the updated docs/supabase-social-search.sql script first.";
+const PROFILE_BIRTH_DATE_SETUP_MESSAGE =
+  "Birth date settings are not set up in Supabase yet. Run docs/supabase-profile-birthdate.sql in the Supabase SQL editor first.";
 export const PROFILE_DISPLAY_NAME_MAX_LENGTH = 40;
 export const PROFILE_BIO_MAX_LENGTH = 160;
 export const PROFILE_AVATAR_MAX_BYTES = 3 * 1024 * 1024;
@@ -79,13 +87,30 @@ function createFallbackDisplayName(user, usernameBase) {
   return usernameBase;
 }
 
-function mapProfileRow(row, followingIdSet = new Set()) {
+function mapProfileRow(
+  row,
+  followingIdSet = new Set(),
+  privateSettings = {}
+) {
   const parsedUsername = splitFullUsername(row.username);
   const usernameBase =
     row.username_base ?? parsedUsername?.usernameBase ?? "";
   const usernameCode =
     row.username_code ?? parsedUsername?.usernameCode ?? "";
   const updatedAt = row.updated_at ?? row.created_at ?? null;
+  const birthDate = normalizeIsoDateString(privateSettings.birthDate);
+  const age = calculateAgeFromBirthDate(birthDate);
+  const manualMaxHeartRate = normalizeMaxHeartRate(
+    privateSettings.manualMaxHeartRate
+  );
+  const measuredMaxHeartRate = normalizeMaxHeartRate(
+    privateSettings.measuredMaxHeartRate
+  );
+  const maxHeartRate = resolveMaxHeartRate({
+    age,
+    manualMaxHeartRate,
+    measuredMaxHeartRate,
+  });
 
   return {
     id: row.id,
@@ -95,6 +120,12 @@ function mapProfileRow(row, followingIdSet = new Set()) {
     usernameCode,
     displayName: row.display_name,
     bio: row.bio ?? "",
+    birthDate,
+    age,
+    manualMaxHeartRate,
+    measuredMaxHeartRate,
+    maxHeartRate: maxHeartRate.value,
+    maxHeartRateSource: maxHeartRate.source,
     avatarPath: row.avatar_path ?? null,
     avatarUrl: buildAvatarPublicUrl(row.avatar_path, updatedAt),
     createdAt: row.created_at ?? null,
@@ -334,11 +365,19 @@ function isMissingSocialSchemaError(error) {
 }
 
 function normalizeSocialError(error) {
+  const message = `${error?.message ?? ""} ${error?.details ?? ""}`.toLowerCase();
+
+  if (
+    message.includes(PROFILE_PRIVATE_TABLE) &&
+    (message.includes("does not exist") || message.includes("schema cache"))
+  ) {
+    return new Error(PROFILE_BIRTH_DATE_SETUP_MESSAGE);
+  }
+
   if (isMissingSocialSchemaError(error)) {
     return new Error(SOCIAL_SETUP_MESSAGE);
   }
 
-  const message = `${error?.message ?? ""} ${error?.details ?? ""}`.toLowerCase();
   if (
     message.includes("workout_type") &&
     (message.includes("does not exist") ||
@@ -364,11 +403,75 @@ function buildSearchFilter(query) {
   return query.replace(/[,%()]/g, " ").replace(/^@+/, "").trim();
 }
 
-function normalizeProfileValues({ displayName, bio }) {
+function normalizeProfileValues({ displayName, bio, birthDate }) {
   return {
     displayName: (displayName ?? "").trim(),
     bio: (bio ?? "").trim(),
+    birthDate: normalizeBirthDateValue(birthDate),
   };
+}
+
+function normalizeBirthDateValue(birthDate) {
+  return birthDate === null || birthDate === undefined || birthDate === ""
+    ? null
+    : normalizeIsoDateString(birthDate);
+}
+
+function validateBirthDate(birthDate, normalizedBirthDate) {
+  if (birthDate && !normalizedBirthDate) {
+    throw new Error("Birth date is invalid.");
+  }
+
+  if (
+    normalizedBirthDate &&
+    normalizedBirthDate > new Date().toISOString().slice(0, 10)
+  ) {
+    throw new Error("Birth date cannot be in the future.");
+  }
+
+  if (normalizedBirthDate && normalizedBirthDate < "1900-01-01") {
+    throw new Error("Birth date must be on or after 01.01.1900.");
+  }
+}
+
+async function saveOwnBirthDate(userId, birthDate) {
+  const { error } = await supabase
+    .from(PROFILE_PRIVATE_TABLE)
+    .upsert(
+      {
+        user_id: userId,
+        birth_date: birthDate,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id" }
+    );
+
+  if (error) {
+    throw normalizeSocialError(error);
+  }
+}
+
+async function getOwnPrivateSettings(userId) {
+  const { data, error } = await supabase
+    .from(PROFILE_PRIVATE_TABLE)
+    .select("birth_date, manual_max_heart_rate, measured_max_heart_rate")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) {
+    throw normalizeSocialError(error);
+  }
+
+  return {
+    birthDate: normalizeIsoDateString(data?.birth_date),
+    manualMaxHeartRate: normalizeMaxHeartRate(data?.manual_max_heart_rate),
+    measuredMaxHeartRate: normalizeMaxHeartRate(data?.measured_max_heart_rate),
+  };
+}
+
+async function mapOwnProfileRow(row, userId) {
+  const privateSettings = await getOwnPrivateSettings(userId);
+  return mapProfileRow(row, new Set(), privateSettings);
 }
 
 async function fetchFollowingIdSet({ currentUserId, profileIds }) {
@@ -474,7 +577,7 @@ export async function ensureOwnProfile(user) {
   }
 
   if (existingProfile) {
-    return mapProfileRow(existingProfile);
+    return mapOwnProfileRow(existingProfile, user.id);
   }
 
   const usernameBase = createFallbackUsernameBase(user);
@@ -500,7 +603,7 @@ export async function ensureOwnProfile(user) {
       .single();
 
     if (!insertError) {
-      return mapProfileRow(insertedProfile);
+      return mapOwnProfileRow(insertedProfile, user.id);
     }
 
     if (insertError.code !== "23505") {
@@ -518,7 +621,7 @@ export async function ensureOwnProfile(user) {
     }
 
     if (refetchedProfile) {
-      return mapProfileRow(refetchedProfile);
+      return mapOwnProfileRow(refetchedProfile, user.id);
     }
   }
 
@@ -527,12 +630,18 @@ export async function ensureOwnProfile(user) {
   );
 }
 
-export async function updateOwnProfile({ user, displayName, bio }) {
+export async function updateOwnProfile({ user, displayName, bio, birthDate }) {
   if (!user?.id) {
     throw new Error("You need to be signed in to update your profile.");
   }
 
-  const normalizedProfile = normalizeProfileValues({ displayName, bio });
+  const normalizedProfile = normalizeProfileValues({
+    displayName,
+    bio,
+    birthDate,
+  });
+
+  validateBirthDate(birthDate, normalizedProfile.birthDate);
 
   if (!normalizedProfile.displayName) {
     throw new Error("Display name cannot be empty.");
@@ -569,6 +678,8 @@ export async function updateOwnProfile({ user, displayName, bio }) {
     throw normalizeSocialError(updateError);
   }
 
+  await saveOwnBirthDate(user.id, normalizedProfile.birthDate);
+
   const existingMetadata = user.user_metadata ?? {};
   if (existingMetadata.display_name !== normalizedProfile.displayName) {
     const { error: metadataError } = await supabase.auth.updateUser({
@@ -586,7 +697,59 @@ export async function updateOwnProfile({ user, displayName, bio }) {
     }
   }
 
-  return mapProfileRow(updatedProfile);
+  return mapOwnProfileRow(updatedProfile, user.id);
+}
+
+export async function updateOwnBirthDate({ user, birthDate }) {
+  if (!user?.id) {
+    throw new Error("You need to be signed in to update your birth date.");
+  }
+
+  const normalizedBirthDate = normalizeBirthDateValue(birthDate);
+  validateBirthDate(birthDate, normalizedBirthDate);
+  await ensureOwnProfile(user);
+  await saveOwnBirthDate(user.id, normalizedBirthDate);
+
+  return ensureOwnProfile(user);
+}
+
+export async function updateOwnManualMaxHeartRate({
+  user,
+  maxHeartRate,
+}) {
+  if (!user?.id) {
+    throw new Error("You need to be signed in to update max heart rate.");
+  }
+
+  const normalizedMaxHeartRate = normalizeMaxHeartRate(maxHeartRate);
+
+  if (
+    maxHeartRate !== null &&
+    maxHeartRate !== undefined &&
+    maxHeartRate !== "" &&
+    normalizedMaxHeartRate === null
+  ) {
+    throw new Error("Max heart rate must be a whole number from 60 to 250.");
+  }
+
+  await ensureOwnProfile(user);
+
+  const { error } = await supabase
+    .from(PROFILE_PRIVATE_TABLE)
+    .upsert(
+      {
+        user_id: user.id,
+        manual_max_heart_rate: normalizedMaxHeartRate,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id" }
+    );
+
+  if (error) {
+    throw normalizeSocialError(error);
+  }
+
+  return ensureOwnProfile(user);
 }
 
 export async function uploadOwnAvatar({ user, asset }) {
@@ -645,7 +808,7 @@ export async function uploadOwnAvatar({ user, asset }) {
     throw normalizeSocialError(updateError);
   }
 
-  return mapProfileRow(updatedProfile);
+  return mapOwnProfileRow(updatedProfile, user.id);
 }
 
 export async function searchUsers({ query, currentUserId, limit = 20 }) {

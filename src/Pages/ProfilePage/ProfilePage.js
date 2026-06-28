@@ -22,8 +22,15 @@ import Social from "../../Resources/Icons/UI-icons/Social";
 import Feather from "@expo/vector-icons/Feather";
 import TailArrowUpRight from "../../Resources/Icons/UI-icons/TailArrowUpRight";
 import {
+  calculateAgeFromBirthDate,
+  dateToIsoDate,
+  isoDateToLocalDate,
+  normalizeLocalDateString,
+} from "../../Utils/dateUtils";
+import {
   ThemedButton,
   ThemedCard,
+  ThemedDateWheelPicker,
   ThemedHeader,
   ThemedKeyboardProtection,
   ThemedText,
@@ -77,6 +84,8 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState(null);
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
+  const [birthDate, setBirthDate] = useState("");
+  const [birthDatePickerVisible, setBirthDatePickerVisible] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [feedbackModalVisible, setFeedbackModalVisible] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
@@ -104,12 +113,15 @@ export default function ProfilePage() {
         : quietText;
   const normalizedDisplayName = displayName.trim();
   const normalizedBio = bio.trim();
+  const calculatedAge = calculateAgeFromBirthDate(birthDate);
+  const birthDateDisplay = normalizeLocalDateString(birthDate);
   const displayNameError = normalizedDisplayName
     ? undefined
     : "Display name cannot be empty.";
   const hasUnsavedChanges = profile
     ? normalizedDisplayName !== profile.displayName ||
-      normalizedBio !== (profile.bio ?? "")
+      normalizedBio !== (profile.bio ?? "") ||
+      birthDate !== (profile.birthDate ?? "")
     : false;
   const avatarButtonLabel = isUploadingAvatar
     ? "Uploading..."
@@ -136,6 +148,7 @@ export default function ProfilePage() {
           setProfile(null);
           setDisplayName("");
           setBio("");
+          setBirthDate("");
           setIsLoadingProfile(false);
           setProfileFeedback({
             status: "error",
@@ -160,6 +173,7 @@ export default function ProfilePage() {
           setProfile(nextProfile);
           setDisplayName(nextProfile.displayName);
           setBio(nextProfile.bio ?? "");
+          setBirthDate(nextProfile.birthDate ?? "");
         } catch (error) {
           if (isCancelled) {
             return;
@@ -168,6 +182,7 @@ export default function ProfilePage() {
           setProfile(null);
           setDisplayName("");
           setBio("");
+          setBirthDate("");
           setProfileFeedback({
             status: "error",
             message:
@@ -227,11 +242,13 @@ export default function ProfilePage() {
         user,
         displayName,
         bio,
+        birthDate: birthDate || null,
       });
 
       setProfile(updatedProfile);
       setDisplayName(updatedProfile.displayName);
       setBio(updatedProfile.bio ?? "");
+      setBirthDate(updatedProfile.birthDate ?? "");
       setProfileFeedback({
         status: "success",
         message: "Profile updated.",
@@ -314,6 +331,30 @@ export default function ProfilePage() {
     }
   };
 
+  const getBirthDatePickerValue = () => {
+    const selectedBirthDate = isoDateToLocalDate(birthDate);
+
+    if (selectedBirthDate) {
+      return selectedBirthDate;
+    }
+
+    const defaultBirthDate = new Date();
+    defaultBirthDate.setFullYear(defaultBirthDate.getFullYear() - 18);
+    return defaultBirthDate;
+  };
+
+  const handleBirthDateConfirm = (selectedDate) => {
+    const nextBirthDate = dateToIsoDate(selectedDate);
+
+    if (!nextBirthDate) {
+      return;
+    }
+
+    clearProfileFeedback();
+    setBirthDate(nextBirthDate);
+    setBirthDatePickerVisible(false);
+  };
+
   const handleLogout = async () => {
     setLogoutError("");
     setIsLoggingOut(true);
@@ -384,8 +425,8 @@ export default function ProfilePage() {
               How others see you
             </ThemedTitle>
             <ThemedText style={styles.cardBody} setColor={quietText}>
-              Your display name and bio show up in people search. Your username
-              tag stays fixed once the account is created.
+              Manage the information shown on your profile. Your username tag
+              stays fixed once the account is created.
             </ThemedText>
 
             <View style={styles.avatarSection}>
@@ -451,6 +492,69 @@ export default function ProfilePage() {
                   {user?.email ?? "Unknown account"}
                 </ThemedText>
               </View>
+            </View>
+
+            <View style={styles.formSection}>
+              <ThemedText style={styles.inputLabel} setColor={quietText}>
+                Birth date
+              </ThemedText>
+              <TouchableOpacity
+                activeOpacity={0.78}
+                disabled={isLoadingProfile || isSavingProfile}
+                onPress={() => setBirthDatePickerVisible(true)}
+                style={[
+                  styles.birthDateField,
+                  {
+                    backgroundColor: fieldsColor,
+                    borderColor: cardBorder,
+                    opacity: isLoadingProfile || isSavingProfile ? 0.55 : 1,
+                  },
+                ]}
+              >
+                <Feather name="calendar" size={20} color={primaryColor} />
+                <View style={styles.birthDateCopy}>
+                  <ThemedText
+                    style={styles.birthDateValue}
+                    setColor={birthDateDisplay ? titleColor : quietText}
+                  >
+                    {birthDateDisplay ?? "Select birth date"}
+                  </ThemedText>
+                  <ThemedText
+                    style={styles.birthDatePrivacy}
+                    setColor={quietText}
+                  >
+                    Exact date stays private
+                  </ThemedText>
+                </View>
+                {calculatedAge !== null ? (
+                  <View style={styles.ageValue}>
+                    <ThemedText style={styles.ageNumber} setColor={titleColor}>
+                      {calculatedAge}
+                    </ThemedText>
+                    <ThemedText style={styles.ageLabel} setColor={quietText}>
+                      YEARS
+                    </ThemedText>
+                  </View>
+                ) : null}
+              </TouchableOpacity>
+              {birthDate ? (
+                <View style={styles.birthDateMetaRow}>
+                  <TouchableOpacity
+                    activeOpacity={0.72}
+                    onPress={() => {
+                      clearProfileFeedback();
+                      setBirthDate("");
+                    }}
+                  >
+                    <ThemedText
+                      style={styles.clearBirthDate}
+                      setColor={primaryColor}
+                    >
+                      Clear
+                    </ThemedText>
+                  </TouchableOpacity>
+                </View>
+              ) : null}
             </View>
 
             <View style={styles.formSection}>
@@ -523,6 +627,15 @@ export default function ProfilePage() {
                 </ThemedText>
               </View>
             </View>
+
+            <ThemedDateWheelPicker
+              visible={birthDatePickerVisible}
+              value={getBirthDatePickerValue()}
+              minYear={1900}
+              title="Birth date"
+              onClose={() => setBirthDatePickerVisible(false)}
+              onConfirm={handleBirthDateConfirm}
+            />
 
             {isLoadingProfile ? (
               <ThemedText style={styles.loadingText} setColor={quietText}>

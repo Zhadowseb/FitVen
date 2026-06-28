@@ -1,10 +1,13 @@
 import {
+  ActivityIndicator,
   Alert,
   ScrollView,
   TouchableOpacity,
   useColorScheme,
   View,
 } from "react-native";
+import { useCallback, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import Feather from "@expo/vector-icons/Feather";
 
 import styles from "./WorkoutTypesSettingsPageStyle";
@@ -13,10 +16,27 @@ import ResistanceIcon from "../../Resources/Icons/WorkoutLabels/Resistance";
 import RunIcon from "../../Resources/Icons/WorkoutLabels/Run";
 import Library from "../../Resources/Icons/UI-icons/Library";
 import TailArrowUpRight from "../../Resources/Icons/UI-icons/TailArrowUpRight";
+import { useAuth } from "../../Contexts/AuthContext";
+import { socialService } from "../../Services";
 import {
+  calculateAgeFromBirthDate,
+  dateToIsoDate,
+  isoDateToLocalDate,
+  normalizeLocalDateString,
+} from "../../Utils/dateUtils";
+import {
+  MAX_MAX_HEART_RATE,
+  MIN_MAX_HEART_RATE,
+  normalizeMaxHeartRate,
+} from "../../Utils/heartRateUtils";
+import {
+  ThemedButton,
   ThemedCard,
+  ThemedDateWheelPicker,
   ThemedHeader,
+  ThemedModal,
   ThemedText,
+  ThemedTextInput,
   ThemedTitle,
   ThemedView,
 } from "../../Resources/ThemedComponents";
@@ -41,6 +61,19 @@ const WORKOUT_TYPES = [
 export default function WorkoutTypesSettingsPage() {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const { user } = useAuth();
+  const [birthDate, setBirthDate] = useState("");
+  const [birthDatePickerVisible, setBirthDatePickerVisible] = useState(false);
+  const [isLoadingBirthDate, setIsLoadingBirthDate] = useState(true);
+  const [isSavingBirthDate, setIsSavingBirthDate] = useState(false);
+  const [birthDateError, setBirthDateError] = useState("");
+  const [maxHeartRate, setMaxHeartRate] = useState(null);
+  const [maxHeartRateSource, setMaxHeartRateSource] = useState("calculated");
+  const [manualMaxHeartRate, setManualMaxHeartRate] = useState(null);
+  const [maxHeartRateInput, setMaxHeartRateInput] = useState("");
+  const [maxHeartRateModalVisible, setMaxHeartRateModalVisible] =
+    useState(false);
+  const [isSavingMaxHeartRate, setIsSavingMaxHeartRate] = useState(false);
   const titleColor = theme.title ?? theme.text;
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const primaryColor = theme.primary ?? "#f7742e";
@@ -48,6 +81,151 @@ export default function WorkoutTypesSettingsPage() {
   const cardSurface = theme.cardBackground ?? theme.background;
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor;
   const iconSurface = theme.fields ?? theme.uiBackground ?? cardSurface;
+  const recordColor = theme.record ?? "rgb(3, 111, 252)";
+  const birthDateDisplay = normalizeLocalDateString(birthDate);
+  const calculatedAge = calculateAgeFromBirthDate(birthDate);
+  const normalizedMaxHeartRateInput = normalizeMaxHeartRate(maxHeartRateInput);
+  const maxHeartRateInputError =
+    maxHeartRateInput.trim() && normalizedMaxHeartRateInput === null
+      ? `Use a whole number from ${MIN_MAX_HEART_RATE} to ${MAX_MAX_HEART_RATE}.`
+      : "";
+  const maxHeartRateSourceColor =
+    maxHeartRateSource === "measured"
+      ? recordColor
+      : maxHeartRateSource === "manual"
+        ? primaryColor
+        : secondaryColor;
+
+  const applyRunProfileSettings = useCallback((profile) => {
+    setBirthDate(profile.birthDate ?? "");
+    setManualMaxHeartRate(profile.manualMaxHeartRate ?? null);
+    setMaxHeartRate(profile.maxHeartRate ?? null);
+    setMaxHeartRateSource(profile.maxHeartRateSource ?? "calculated");
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      let isCancelled = false;
+
+      const loadBirthDate = async () => {
+        if (!user?.id) {
+          setBirthDate("");
+          setBirthDateError("Sign in to manage Run settings.");
+          setIsLoadingBirthDate(false);
+          return;
+        }
+
+        setIsLoadingBirthDate(true);
+        setBirthDateError("");
+
+        try {
+          const profile = await socialService.ensureOwnProfile(user);
+
+          if (!isCancelled) {
+            applyRunProfileSettings(profile);
+          }
+        } catch (error) {
+          if (!isCancelled) {
+            setBirthDateError(
+              error instanceof Error
+                ? error.message
+                : "Could not load Run settings."
+            );
+          }
+        } finally {
+          if (!isCancelled) {
+            setIsLoadingBirthDate(false);
+          }
+        }
+      };
+
+      void loadBirthDate();
+
+      return () => {
+        isCancelled = true;
+      };
+    }, [applyRunProfileSettings, user])
+  );
+
+  const getBirthDatePickerValue = () => {
+    const selectedBirthDate = isoDateToLocalDate(birthDate);
+
+    if (selectedBirthDate) {
+      return selectedBirthDate;
+    }
+
+    const defaultBirthDate = new Date();
+    defaultBirthDate.setFullYear(defaultBirthDate.getFullYear() - 18);
+    return defaultBirthDate;
+  };
+
+  const saveBirthDate = async (selectedDate) => {
+    const nextBirthDate = dateToIsoDate(selectedDate);
+
+    if (!nextBirthDate || isSavingBirthDate) {
+      return;
+    }
+
+    setIsSavingBirthDate(true);
+    setBirthDateError("");
+
+    try {
+      const updatedBirthDate = await socialService.updateOwnBirthDate({
+        user,
+        birthDate: nextBirthDate,
+      });
+
+      applyRunProfileSettings(updatedBirthDate);
+      setBirthDatePickerVisible(false);
+    } catch (error) {
+      setBirthDateError(
+        error instanceof Error ? error.message : "Could not save birth date."
+      );
+    } finally {
+      setIsSavingBirthDate(false);
+    }
+  };
+
+  const openMaxHeartRateModal = () => {
+    setMaxHeartRateInput(
+      manualMaxHeartRate === null ? "" : String(manualMaxHeartRate)
+    );
+    setBirthDateError("");
+    setMaxHeartRateModalVisible(true);
+  };
+
+  const saveManualMaxHeartRate = async (value = maxHeartRateInput) => {
+    if (isSavingMaxHeartRate) {
+      return;
+    }
+
+    const normalizedValue = normalizeMaxHeartRate(value);
+
+    if (value !== "" && normalizedValue === null) {
+      return;
+    }
+
+    setIsSavingMaxHeartRate(true);
+    setBirthDateError("");
+
+    try {
+      const profile = await socialService.updateOwnManualMaxHeartRate({
+        user,
+        maxHeartRate: value === "" ? null : normalizedValue,
+      });
+
+      applyRunProfileSettings(profile);
+      setMaxHeartRateModalVisible(false);
+    } catch (error) {
+      setBirthDateError(
+        error instanceof Error
+          ? error.message
+          : "Could not save max heart rate."
+      );
+    } finally {
+      setIsSavingMaxHeartRate(false);
+    }
+  };
 
   return (
     <ThemedView safe={["top", "left", "right"]} style={styles.container}>
@@ -187,11 +365,204 @@ export default function WorkoutTypesSettingsPage() {
                     />
                   </TouchableOpacity>
                 ) : null}
+
+                {workoutType.id === "run" ? (
+                  <>
+                    <TouchableOpacity
+                      activeOpacity={0.78}
+                      disabled={isLoadingBirthDate || isSavingBirthDate}
+                      onPress={() => setBirthDatePickerVisible(true)}
+                      style={[
+                        styles.typeSettingRow,
+                        {
+                          borderTopColor: cardBorder,
+                          opacity: isLoadingBirthDate ? 0.55 : 1,
+                        },
+                      ]}
+                    >
+                      <View style={styles.typeSettingCopy}>
+                        <Feather name="calendar" size={20} color={titleColor} />
+                        <View>
+                          <ThemedText
+                            style={styles.typeSettingTitle}
+                            setColor={titleColor}
+                          >
+                            Birth date
+                          </ThemedText>
+                          <ThemedText
+                            style={styles.typeSettingMeta}
+                            setColor={quietText}
+                          >
+                            {birthDateDisplay
+                              ? `${birthDateDisplay}  /  Age ${calculatedAge}`
+                              : "Set birth date"}
+                          </ThemedText>
+                        </View>
+                      </View>
+                      {isLoadingBirthDate || isSavingBirthDate ? (
+                        <ActivityIndicator size="small" color={secondaryColor} />
+                      ) : (
+                        <TailArrowUpRight
+                          width={17}
+                          height={17}
+                          stroke={titleColor}
+                          color={titleColor}
+                        />
+                      )}
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      activeOpacity={0.78}
+                      disabled={isLoadingBirthDate || isSavingMaxHeartRate}
+                      onPress={openMaxHeartRateModal}
+                      style={[
+                        styles.typeSettingRow,
+                        {
+                          borderTopColor: cardBorder,
+                          opacity: isLoadingBirthDate ? 0.55 : 1,
+                        },
+                      ]}
+                    >
+                      <View style={styles.typeSettingCopy}>
+                        <Feather name="heart" size={20} color={titleColor} />
+                        <View>
+                          <ThemedText
+                            style={styles.typeSettingTitle}
+                            setColor={titleColor}
+                          >
+                            Max heart rate
+                          </ThemedText>
+                          <ThemedText
+                            style={styles.typeSettingMeta}
+                            setColor={quietText}
+                          >
+                            {maxHeartRate === null
+                              ? "Set birth date or enter manually"
+                              : `${maxHeartRate} bpm`}
+                          </ThemedText>
+                        </View>
+                      </View>
+
+                      <View style={styles.maxHeartRateRight}>
+                        <View
+                          style={[
+                            styles.maxHeartRateBadge,
+                            { borderColor: maxHeartRateSourceColor },
+                          ]}
+                        >
+                          <ThemedText
+                            style={styles.maxHeartRateBadgeText}
+                            setColor={maxHeartRateSourceColor}
+                          >
+                            {maxHeartRateSource}
+                          </ThemedText>
+                        </View>
+                        <TailArrowUpRight
+                          width={16}
+                          height={16}
+                          stroke={titleColor}
+                          color={titleColor}
+                        />
+                      </View>
+                    </TouchableOpacity>
+                  </>
+                ) : null}
               </ThemedCard>
             );
           })}
         </View>
+
+        {birthDateError ? (
+          <ThemedText style={styles.feedbackText} setColor={theme.danger}>
+            {birthDateError}
+          </ThemedText>
+        ) : null}
       </ScrollView>
+
+      <ThemedDateWheelPicker
+        visible={birthDatePickerVisible}
+        value={getBirthDatePickerValue()}
+        minYear={1900}
+        title="Run birth date"
+        isConfirming={isSavingBirthDate}
+        onClose={() => {
+          if (!isSavingBirthDate) {
+            setBirthDatePickerVisible(false);
+          }
+        }}
+        onConfirm={saveBirthDate}
+      />
+
+      <ThemedModal
+        visible={maxHeartRateModalVisible}
+        title="Max heart rate"
+        dismissOnBackdropPress={!isSavingMaxHeartRate}
+        onClose={() => {
+          if (!isSavingMaxHeartRate) {
+            setMaxHeartRateModalVisible(false);
+          }
+        }}
+      >
+        <ThemedText style={styles.modalBody} setColor={quietText}>
+          Enter a manual max heart rate. A measured value will always take
+          priority.
+        </ThemedText>
+        <ThemedTextInput
+          value={maxHeartRateInput}
+          onChangeText={(value) =>
+            setMaxHeartRateInput(value.replace(/[^0-9]/g, "").slice(0, 3))
+          }
+          placeholder={
+            maxHeartRate === null
+              ? "Max bpm"
+              : `Current ${maxHeartRate} bpm`
+          }
+          keyboardType="number-pad"
+          editable={!isSavingMaxHeartRate}
+          error={maxHeartRateInputError || undefined}
+          inputStyle={{
+            backgroundColor: iconSurface,
+            color: titleColor,
+          }}
+          placeholderTextColor={quietText}
+        />
+
+        {manualMaxHeartRate !== null ? (
+          <TouchableOpacity
+            activeOpacity={0.72}
+            disabled={isSavingMaxHeartRate}
+            onPress={() => saveManualMaxHeartRate("")}
+            style={styles.clearManualButton}
+          >
+            <ThemedText
+              style={styles.clearManualButtonText}
+              setColor={secondaryColor}
+            >
+              Clear manual value
+            </ThemedText>
+          </TouchableOpacity>
+        ) : null}
+
+        <View style={styles.modalActions}>
+          <ThemedButton
+            title="Cancel"
+            variant="secondary"
+            disabled={isSavingMaxHeartRate}
+            onPress={() => setMaxHeartRateModalVisible(false)}
+            style={styles.modalAction}
+          />
+          <ThemedButton
+            title={isSavingMaxHeartRate ? "Saving..." : "Save"}
+            disabled={
+              isSavingMaxHeartRate ||
+              !maxHeartRateInput.trim() ||
+              Boolean(maxHeartRateInputError)
+            }
+            onPress={() => saveManualMaxHeartRate()}
+            style={styles.modalAction}
+          />
+        </View>
+      </ThemedModal>
     </ThemedView>
   );
 }

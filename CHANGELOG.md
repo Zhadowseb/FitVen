@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.18.2] - Unreleased
+### Changed
+- Add shared private birth date and max heart rate settings to Public profile and Run settings, including calculated, manual, and measured max-pulse sources.
+
+---
 ## [0.18.1] - Unreleased
 ### Changed
 - Add a Workout Types entry under Personal settings with Strength Training and Run, and move Exercises under Strength Training.

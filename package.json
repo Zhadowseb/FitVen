@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.18.1-minor-workout-type-settings.1",
+  "version": "0.18.2-minor-profile-birthdate.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",
@@ -18,6 +18,8 @@
     "branch:hooks:install": "git config core.hooksPath .githooks",
     "test:custom-exercise": "node scripts/test-custom-exercise-muscles.js",
     "test:location": "node scripts/test-location-distance.js",
+    "test:profile-birthdate": "node scripts/test-profile-birthdate.js",
+    "test:heart-rate-settings": "node scripts/test-heart-rate-settings.js",
     "test:notifications": "node scripts/test-notification-registration.js",
     "release:prepare": "node scripts/version.js release",
     "release:android": "node scripts/release-android.js",
