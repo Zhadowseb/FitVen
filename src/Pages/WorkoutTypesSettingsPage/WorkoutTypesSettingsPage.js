@@ -119,7 +119,7 @@ export default function WorkoutTypesSettingsPage() {
         setBirthDateError("");
 
         try {
-          const profile = await socialService.ensureOwnProfile(user);
+          const profile = await socialService.getOwnRunProfileSettings(user);
 
           if (!isCancelled) {
             applyRunProfileSettings(profile);

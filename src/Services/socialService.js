@@ -399,6 +399,17 @@ function normalizeSocialError(error) {
   return error;
 }
 
+function isMissingPrivateMaxHeartRateColumnsError(error) {
+  const message = `${error?.message ?? ""} ${error?.details ?? ""}`.toLowerCase();
+
+  return (
+    message.includes(PROFILE_PRIVATE_TABLE) &&
+    (message.includes("manual_max_heart_rate") ||
+      message.includes("measured_max_heart_rate")) &&
+    (message.includes("does not exist") || message.includes("schema cache"))
+  );
+}
+
 function buildSearchFilter(query) {
   return query.replace(/[,%()]/g, " ").replace(/^@+/, "").trim();
 }
@@ -458,6 +469,24 @@ async function getOwnPrivateSettings(userId) {
     .eq("user_id", userId)
     .maybeSingle();
 
+  if (error && isMissingPrivateMaxHeartRateColumnsError(error)) {
+    const { data: legacyData, error: legacyError } = await supabase
+      .from(PROFILE_PRIVATE_TABLE)
+      .select("birth_date")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (legacyError) {
+      throw normalizeSocialError(legacyError);
+    }
+
+    return {
+      birthDate: normalizeIsoDateString(legacyData?.birth_date),
+      manualMaxHeartRate: null,
+      measuredMaxHeartRate: null,
+    };
+  }
+
   if (error) {
     throw normalizeSocialError(error);
   }
@@ -470,8 +499,47 @@ async function getOwnPrivateSettings(userId) {
 }
 
 async function mapOwnProfileRow(row, userId) {
-  const privateSettings = await getOwnPrivateSettings(userId);
-  return mapProfileRow(row, new Set(), privateSettings);
+  try {
+    const privateSettings = await getOwnPrivateSettings(userId);
+    return {
+      ...mapProfileRow(row, new Set(), privateSettings),
+      privateSettingsAvailable: true,
+      privateSettingsError: null,
+    };
+  } catch (error) {
+    console.warn("Private profile settings are unavailable:", error);
+    return {
+      ...mapProfileRow(row),
+      privateSettingsAvailable: false,
+      privateSettingsError:
+        error instanceof Error
+          ? error.message
+          : "Private profile settings are unavailable.",
+    };
+  }
+}
+
+export async function getOwnRunProfileSettings(user) {
+  const profile = await ensureOwnProfile(user);
+  const privateSettings = await getOwnPrivateSettings(user.id);
+  const age = calculateAgeFromBirthDate(privateSettings.birthDate);
+  const maxHeartRate = resolveMaxHeartRate({
+    age,
+    manualMaxHeartRate: privateSettings.manualMaxHeartRate,
+    measuredMaxHeartRate: privateSettings.measuredMaxHeartRate,
+  });
+
+  return {
+    ...profile,
+    birthDate: privateSettings.birthDate,
+    age,
+    manualMaxHeartRate: privateSettings.manualMaxHeartRate,
+    measuredMaxHeartRate: privateSettings.measuredMaxHeartRate,
+    maxHeartRate: maxHeartRate.value,
+    maxHeartRateSource: maxHeartRate.source,
+    privateSettingsAvailable: true,
+    privateSettingsError: null,
+  };
 }
 
 async function fetchFollowingIdSet({ currentUserId, profileIds }) {
@@ -678,7 +746,17 @@ export async function updateOwnProfile({ user, displayName, bio, birthDate }) {
     throw normalizeSocialError(updateError);
   }
 
-  await saveOwnBirthDate(user.id, normalizedProfile.birthDate);
+  let privateSettingsError = null;
+
+  try {
+    await saveOwnBirthDate(user.id, normalizedProfile.birthDate);
+  } catch (error) {
+    privateSettingsError = error;
+    console.warn(
+      "Public profile saved without private profile settings:",
+      error
+    );
+  }
 
   const existingMetadata = user.user_metadata ?? {};
   if (existingMetadata.display_name !== normalizedProfile.displayName) {
@@ -697,7 +775,20 @@ export async function updateOwnProfile({ user, displayName, bio, birthDate }) {
     }
   }
 
-  return mapOwnProfileRow(updatedProfile, user.id);
+  const mappedProfile = await mapOwnProfileRow(updatedProfile, user.id);
+
+  if (!privateSettingsError) {
+    return mappedProfile;
+  }
+
+  return {
+    ...mappedProfile,
+    privateSettingsAvailable: false,
+    privateSettingsError:
+      privateSettingsError instanceof Error
+        ? privateSettingsError.message
+        : "Private profile settings could not be saved.",
+  };
 }
 
 export async function updateOwnBirthDate({ user, birthDate }) {
@@ -710,7 +801,7 @@ export async function updateOwnBirthDate({ user, birthDate }) {
   await ensureOwnProfile(user);
   await saveOwnBirthDate(user.id, normalizedBirthDate);
 
-  return ensureOwnProfile(user);
+  return getOwnRunProfileSettings(user);
 }
 
 export async function updateOwnManualMaxHeartRate({
@@ -749,7 +840,7 @@ export async function updateOwnManualMaxHeartRate({
     throw normalizeSocialError(error);
   }
 
-  return ensureOwnProfile(user);
+  return getOwnRunProfileSettings(user);
 }
 
 export async function uploadOwnAvatar({ user, asset }) {

@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.18.4] - Unreleased
+### Changed
+- Keep public profiles and social circles available when private profile settings are missing or using an older Supabase schema cache.
+- Stabilize the birth date wheel so drag and momentum events cannot fight over the selected value.
+
+---
 ## [0.18.3] - Unreleased
 ### Changed
 - Simplify the completed Run summary and use the secondary color for its border and distance.

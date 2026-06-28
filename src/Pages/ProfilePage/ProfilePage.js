@@ -248,10 +248,14 @@ export default function ProfilePage() {
       setProfile(updatedProfile);
       setDisplayName(updatedProfile.displayName);
       setBio(updatedProfile.bio ?? "");
-      setBirthDate(updatedProfile.birthDate ?? "");
+      if (!updatedProfile.privateSettingsError) {
+        setBirthDate(updatedProfile.birthDate ?? "");
+      }
       setProfileFeedback({
-        status: "success",
-        message: "Profile updated.",
+        status: updatedProfile.privateSettingsError ? "error" : "success",
+        message: updatedProfile.privateSettingsError
+          ? `Public profile updated. ${updatedProfile.privateSettingsError}`
+          : "Profile updated.",
       });
     } catch (error) {
       setProfileFeedback({

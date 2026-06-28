@@ -55,19 +55,28 @@ function WheelColumn({
 }) {
   const listRef = useRef(null);
   const scrollY = useRef(new Animated.Value(selectedIndex * ITEM_HEIGHT)).current;
+  const currentIndexRef = useRef(selectedIndex);
 
   useEffect(() => {
+    const nextIndex = clamp(selectedIndex, 0, items.length - 1);
+
+    if (currentIndexRef.current === nextIndex) {
+      return;
+    }
+
+    currentIndexRef.current = nextIndex;
     requestAnimationFrame(() => {
       listRef.current?.scrollToOffset({
-        offset: selectedIndex * ITEM_HEIGHT,
+        offset: nextIndex * ITEM_HEIGHT,
         animated: false,
       });
-      scrollY.setValue(selectedIndex * ITEM_HEIGHT);
+      scrollY.setValue(nextIndex * ITEM_HEIGHT);
     });
   }, [items.length, scrollY, selectedIndex]);
 
   const selectIndex = (index) => {
     const nextIndex = clamp(index, 0, items.length - 1);
+    currentIndexRef.current = nextIndex;
     listRef.current?.scrollToOffset({
       offset: nextIndex * ITEM_HEIGHT,
       animated: true,
@@ -76,10 +85,17 @@ function WheelColumn({
   };
 
   const handleScrollEnd = (event) => {
-    const nextIndex = Math.round(
-      event.nativeEvent.contentOffset.y / ITEM_HEIGHT
+    const nextIndex = clamp(
+      Math.round(event.nativeEvent.contentOffset.y / ITEM_HEIGHT),
+      0,
+      items.length - 1
     );
-    selectIndex(nextIndex);
+
+    currentIndexRef.current = nextIndex;
+
+    if (nextIndex !== selectedIndex) {
+      onChange(nextIndex);
+    }
   };
 
   return (
