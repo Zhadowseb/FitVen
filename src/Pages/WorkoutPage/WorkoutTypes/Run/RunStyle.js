@@ -179,6 +179,225 @@ export default StyleSheet.create({
     gap: 8,
   },
 
+  enduranceDashboard: {
+    width: "100%",
+    marginBottom: 14,
+  },
+
+  enduranceCard: {
+    width: "100%",
+    marginHorizontal: 0,
+    marginVertical: 0,
+    paddingHorizontal: 0,
+    paddingVertical: 0,
+    borderRadius: 24,
+    borderWidth: 1.5,
+    overflow: "hidden",
+  },
+
+  enduranceStatusRow: {
+    minHeight: 42,
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+
+  enduranceStatusCopy: {
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+
+  enduranceStatusDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+  },
+
+  enduranceStatusLabel: {
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: "900",
+    letterSpacing: 1.2,
+  },
+
+  enduranceStatusValue: {
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: "900",
+    letterSpacing: 1.1,
+  },
+
+  enduranceDistanceBlock: {
+    minHeight: 112,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  enduranceDistanceValueRow: {
+    maxWidth: "100%",
+    minHeight: 68,
+    flexDirection: "row",
+    alignItems: "baseline",
+    justifyContent: "center",
+    gap: 6,
+  },
+
+  enduranceDistanceValue: {
+    maxWidth: "78%",
+    fontSize: 60,
+    lineHeight: 68,
+    fontWeight: "900",
+    fontVariant: ["tabular-nums"],
+    textAlign: "center",
+  },
+
+  enduranceDistanceUnit: {
+    fontSize: 18,
+    lineHeight: 23,
+    fontWeight: "900",
+  },
+
+  endurancePrimaryRow: {
+    minHeight: 132,
+    borderTopWidth: 1,
+    flexDirection: "row",
+    alignItems: "stretch",
+  },
+
+  endurancePrimaryStat: {
+    flex: 1,
+    minWidth: 0,
+    paddingHorizontal: 10,
+    paddingVertical: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  endurancePrimaryDivider: {
+    width: 1,
+    marginVertical: 18,
+    opacity: 0.7,
+  },
+
+  endurancePrimaryLabel: {
+    marginTop: 5,
+    marginBottom: 5,
+    fontSize: 9,
+    lineHeight: 11,
+    fontWeight: "900",
+    letterSpacing: 1.1,
+    textAlign: "center",
+  },
+
+  endurancePrimaryValue: {
+    maxWidth: "100%",
+    fontSize: 29,
+    lineHeight: 35,
+    fontWeight: "900",
+    fontVariant: ["tabular-nums"],
+    textAlign: "center",
+  },
+
+  enduranceHeartRateValueRow: {
+    minHeight: 35,
+    flexDirection: "row",
+    alignItems: "baseline",
+    justifyContent: "center",
+    gap: 4,
+  },
+
+  enduranceHeartRateUnit: {
+    fontSize: 10,
+    lineHeight: 12,
+    fontWeight: "800",
+  },
+
+  enduranceZoneBadge: {
+    minHeight: 20,
+    marginTop: 4,
+    paddingHorizontal: 7,
+    borderWidth: 1,
+    borderRadius: 6,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  enduranceZoneBadgeText: {
+    fontSize: 8,
+    lineHeight: 10,
+    fontWeight: "900",
+  },
+
+  enduranceSecondaryRow: {
+    minHeight: 66,
+    borderTopWidth: 1,
+    flexDirection: "row",
+    alignItems: "stretch",
+  },
+
+  enduranceSecondaryStat: {
+    flex: 1,
+    minWidth: 0,
+    paddingHorizontal: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  enduranceSecondaryDivider: {
+    width: 1,
+    marginVertical: 13,
+    opacity: 0.7,
+  },
+
+  enduranceSecondaryLabel: {
+    marginBottom: 4,
+    fontSize: 8,
+    lineHeight: 10,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
+
+  enduranceSecondaryValue: {
+    width: "100%",
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: "900",
+    fontVariant: ["tabular-nums"],
+    textAlign: "center",
+  },
+
+  enduranceControlRow: {
+    minHeight: 76,
+    paddingHorizontal: 28,
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+
+  enduranceControl: {
+    width: 64,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  enduranceControlLabel: {
+    marginTop: 5,
+    fontSize: 8,
+    lineHeight: 10,
+    fontWeight: "900",
+    letterSpacing: 1,
+    textAlign: "center",
+  },
+
   workoutPlanToggle: {
     width: "100%",
     minHeight: 52,

@@ -113,6 +113,20 @@ const formatRunDistance = (distanceKm) => {
   return safeDistance.toFixed(2);
 };
 
+const formatFinishClock = (timestampSeconds) => {
+  const numericTimestamp = Number(timestampSeconds);
+
+  if (!Number.isFinite(numericTimestamp)) {
+    return "--:--";
+  }
+
+  const finishDate = new Date(numericTimestamp * 1000);
+
+  return `${String(finishDate.getHours()).padStart(2, "0")}:${String(
+    finishDate.getMinutes()
+  ).padStart(2, "0")}`;
+};
+
 const getRunTrackingStartMessage = (error) => {
   const message = String(error?.message ?? "");
 
@@ -711,7 +725,8 @@ const Run = ({ workout_id, restartRequestKey }) => {
 
   const calculateActiveSet = useCallback(async (
     currentElapsed,
-    startTimestampSeconds = original_start_time
+    startTimestampSeconds = original_start_time,
+    runFlowId = selectedRunFlow
   ) => {
     if (activeSetCalculationInFlightRef.current) {
       return;
@@ -720,10 +735,14 @@ const Run = ({ workout_id, restartRequestKey }) => {
     activeSetCalculationInFlightRef.current = true;
 
     try {
-      const sets = await runningRepository.getOrderedRunSetsForWorkout(
+      const orderedSets = await runningRepository.getOrderedRunSetsForWorkout(
         db,
         workout_id
       );
+      const sets =
+        runFlowId === "endurance-base"
+          ? orderedSets.filter((set) => Number(set.is_pause) !== 1)
+          : orderedSets;
 
       if (!sets.length) {
         clearActiveSegment();
@@ -814,7 +833,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
     } finally {
       activeSetCalculationInFlightRef.current = false;
     }
-  }, [db, original_start_time, workout_id]);
+  }, [db, original_start_time, selectedRunFlow, workout_id]);
 
   const loadWorkoutState = useCallback(async () => {
     // Ignore older resume/focus reloads so they cannot overwrite a newer pause/finish action.
@@ -865,14 +884,20 @@ const Run = ({ workout_id, restartRequestKey }) => {
     set_original_start_time(resolvedOriginalStartTime);
     set_timer_start(resolvedTimerStart);
     set_elapsed_time(resolvedElapsedTime);
-    set_selectedRunFlow(getRunFlowOption(row.run_focus_type)?.id ?? null);
+    const resolvedRunFlow =
+      getRunFlowOption(row.run_focus_type)?.id ?? null;
+    set_selectedRunFlow(resolvedRunFlow);
 
     if (requestId !== workoutStateLoadRequestRef.current) {
       return;
     }
 
     if (resolvedOriginalStartTime !== null && !nextIsDone) {
-      await calculateActiveSet(currentElapsed, resolvedOriginalStartTime);
+      await calculateActiveSet(
+        currentElapsed,
+        resolvedOriginalStartTime,
+        resolvedRunFlow
+      );
     } else {
       clearActiveSegment();
     }
@@ -1216,6 +1241,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
       await runningRepository.addRunSet(db, {
         workoutId: workout_id,
         type: setVariety,
+        addAutomaticPause: selectedRunFlow !== "endurance-base",
       });
       set_hasRunStructure(true);
       triggerReload();
@@ -1288,6 +1314,60 @@ const Run = ({ workout_id, restartRequestKey }) => {
     heartRateZoneBands
   );
   const actualHeartRateHistory = [];
+  const latestHeartRatePoint =
+    actualHeartRateHistory[actualHeartRateHistory.length - 1];
+  const currentHeartRate = Number.isFinite(Number(latestHeartRatePoint?.y))
+    ? Math.round(Number(latestHeartRatePoint.y))
+    : null;
+  const currentHeartRateBand =
+    currentHeartRate === null
+      ? null
+      : heartRateZoneBands.find((band) => currentHeartRate <= band.max) ??
+        heartRateZoneBands[heartRateZoneBands.length - 1];
+  const fallbackHeartRateTarget = runPlanSets.find(
+    (set) =>
+      Number(set?.is_pause) !== 1 &&
+      Number(set?.heartrate) >= 1 &&
+      Number(set?.heartrate) <= 5
+  )?.heartrate;
+  const plannedHeartRateZone = Number(
+    activeRunSegment?.heartrate ?? fallbackHeartRateTarget
+  );
+  const enduranceHeartRateZone =
+    currentHeartRateBand?.zone ??
+    (Number.isInteger(plannedHeartRateZone) &&
+    plannedHeartRateZone >= 1 &&
+    plannedHeartRateZone <= 5
+      ? plannedHeartRateZone
+      : null);
+  const enduranceHeartRateColor =
+    heartRateZoneBands.find(
+      (band) => band.zone === enduranceHeartRateZone
+    )?.color ?? secondaryColor;
+  const endurancePlanSets = runPlanSets.filter(
+    (set) => Number(set?.is_pause) !== 1
+  );
+  const plannedEnduranceDistance = endurancePlanSets.reduce(
+    (total, set) => total + Math.max(0, Number(set?.distance) || 0),
+    0
+  );
+  const plannedEnduranceDurationSeconds = endurancePlanSets.reduce(
+    (total, set) => total + Math.max(0, Number(set?.time) || 0) * 60,
+    0
+  );
+  const estimatedRemainingSeconds =
+    plannedEnduranceDistance > 0 && avgPaceMinutes !== null
+      ? Math.max(
+          0,
+          (plannedEnduranceDistance - totalDistance) * avgPaceMinutes * 60
+        )
+      : plannedEnduranceDurationSeconds > 0
+        ? Math.max(0, plannedEnduranceDurationSeconds - currentElapsed)
+        : null;
+  const estimatedFinishDisplay =
+    estimatedRemainingSeconds === null
+      ? "--:--"
+      : formatFinishClock(timerTick + estimatedRemainingSeconds);
   const targetHeartRateZones = [
     ...new Set(targetHeartRateHistory.map((point) => Number(point.zone))),
   ].sort((left, right) => left - right);
@@ -1326,6 +1406,10 @@ const Run = ({ workout_id, restartRequestKey }) => {
   const selectedRunFlowOption = getRunFlowOption(selectedRunFlow);
   const shouldShowSpeedStructureTimer =
     selectedRunFlow === "speed-structure" && original_start_time !== null && !isDone;
+  const shouldShowEnduranceBaseDashboard =
+    selectedRunFlow === "endurance-base" &&
+    original_start_time !== null &&
+    !isDone;
   const actualRunWorkoutStatus = isDone
     ? "done"
     : original_start_time !== null
@@ -1336,7 +1420,9 @@ const Run = ({ workout_id, restartRequestKey }) => {
   const shouldShowWorkoutPlan =
     !isWorkoutPlanCollapsible || isWorkoutPlanExpanded;
   const shouldPruneEmptyPlanSections =
-    selectedRunFlow === "speed-structure" && original_start_time !== null;
+    (selectedRunFlow === "speed-structure" ||
+      selectedRunFlow === "endurance-base") &&
+    original_start_time !== null;
   const shouldShowFinishRunPill =
     original_start_time !== null && !isRunning && !isDone;
   const primaryActionLabel = isRunning
@@ -2338,6 +2424,244 @@ const Run = ({ workout_id, restartRequestKey }) => {
     </View>
   );
 
+  const renderEnduranceBaseDashboard = () => {
+    const canFinishRun =
+      original_start_time !== null && !isDone && !isControlBusy;
+
+    return (
+      <View style={styles.enduranceDashboard}>
+        {renderActiveCardTitle("Live run")}
+        <ThemedCard
+          style={[
+            styles.enduranceCard,
+            {
+              backgroundColor: cardSurface,
+              borderColor: secondaryColor,
+            },
+          ]}
+        >
+          <View style={styles.enduranceStatusRow}>
+            <View style={styles.enduranceStatusCopy}>
+              <View
+                style={[
+                  styles.enduranceStatusDot,
+                  {
+                    backgroundColor: isRunning
+                      ? secondaryColor
+                      : quietText,
+                  },
+                ]}
+              />
+              <ThemedText
+                style={styles.enduranceStatusLabel}
+                setColor={quietText}
+              >
+                CONTINUOUS RUN
+              </ThemedText>
+            </View>
+            <ThemedText
+              style={styles.enduranceStatusValue}
+              setColor={isRunning ? secondaryColor : quietText}
+            >
+              {isRunning ? "ACTIVE" : "PAUSED"}
+            </ThemedText>
+          </View>
+
+          <View style={styles.enduranceDistanceBlock}>
+            <ThemedText
+              style={styles.endurancePrimaryLabel}
+              setColor={quietText}
+            >
+              DISTANCE
+            </ThemedText>
+            <View style={styles.enduranceDistanceValueRow}>
+              <ThemedText
+                style={styles.enduranceDistanceValue}
+                setColor={titleColor}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.68}
+              >
+                {formattedTotalDistance}
+              </ThemedText>
+              <ThemedText
+                style={styles.enduranceDistanceUnit}
+                setColor={secondaryColor}
+              >
+                km
+              </ThemedText>
+            </View>
+          </View>
+
+          <View
+            style={[
+              styles.endurancePrimaryRow,
+              { borderTopColor: cardBorder },
+            ]}
+          >
+            <View style={styles.endurancePrimaryStat}>
+              <Feather name="clock" size={18} color={primaryColor} />
+              <ThemedText
+                style={styles.endurancePrimaryLabel}
+                setColor={quietText}
+              >
+                TOTAL TIME
+              </ThemedText>
+              <ThemedText
+                style={styles.endurancePrimaryValue}
+                setColor={titleColor}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.72}
+              >
+                {elapsedDisplay}
+              </ThemedText>
+            </View>
+
+            <View
+              style={[
+                styles.endurancePrimaryDivider,
+                { backgroundColor: cardBorder },
+              ]}
+            />
+
+            <View style={styles.endurancePrimaryStat}>
+              <Feather
+                name="heart"
+                size={18}
+                color={enduranceHeartRateColor}
+              />
+              <ThemedText
+                style={styles.endurancePrimaryLabel}
+                setColor={quietText}
+              >
+                CURRENT HR
+              </ThemedText>
+              <View style={styles.enduranceHeartRateValueRow}>
+                <ThemedText
+                  style={styles.endurancePrimaryValue}
+                  setColor={titleColor}
+                >
+                  {currentHeartRate ?? "--"}
+                </ThemedText>
+                <ThemedText
+                  style={styles.enduranceHeartRateUnit}
+                  setColor={quietText}
+                >
+                  bpm
+                </ThemedText>
+              </View>
+              <View
+                style={[
+                  styles.enduranceZoneBadge,
+                  { borderColor: enduranceHeartRateColor },
+                ]}
+              >
+                <ThemedText
+                  style={styles.enduranceZoneBadgeText}
+                  setColor={enduranceHeartRateColor}
+                >
+                  {enduranceHeartRateZone
+                    ? currentHeartRate === null
+                      ? `TARGET Z${enduranceHeartRateZone}`
+                      : `ZONE ${enduranceHeartRateZone}`
+                    : "NO ZONE"}
+                </ThemedText>
+              </View>
+            </View>
+          </View>
+
+          <View
+            style={[
+              styles.enduranceSecondaryRow,
+              {
+                backgroundColor: innerSurface,
+                borderTopColor: cardBorder,
+              },
+            ]}
+          >
+            <View style={styles.enduranceSecondaryStat}>
+              <ThemedText
+                style={styles.enduranceSecondaryLabel}
+                setColor={quietText}
+              >
+                AVG PACE
+              </ThemedText>
+              <ThemedText
+                style={styles.enduranceSecondaryValue}
+                setColor={titleColor}
+              >
+                {avgPaceDisplay} /km
+              </ThemedText>
+            </View>
+            <View
+              style={[
+                styles.enduranceSecondaryDivider,
+                { backgroundColor: cardBorder },
+              ]}
+            />
+            <View style={styles.enduranceSecondaryStat}>
+              <ThemedText
+                style={styles.enduranceSecondaryLabel}
+                setColor={quietText}
+              >
+                EST. FINISH
+              </ThemedText>
+              <ThemedText
+                style={styles.enduranceSecondaryValue}
+                setColor={titleColor}
+              >
+                {estimatedFinishDisplay}
+              </ThemedText>
+            </View>
+          </View>
+
+          <View
+            style={[
+              styles.enduranceControlRow,
+              { borderTopColor: cardBorder },
+            ]}
+          >
+            <View style={styles.enduranceControl}>
+              {renderActiveTimerPrimaryButton()}
+              <ThemedText
+                style={styles.enduranceControlLabel}
+                setColor={quietText}
+              >
+                {isRunning ? "PAUSE" : "RESUME"}
+              </ThemedText>
+            </View>
+
+            <View style={styles.enduranceControl}>
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel="Finish run"
+                activeOpacity={0.78}
+                disabled={!canFinishRun}
+                onPress={endWorkout}
+                style={[
+                  styles.activeTimerIconButton,
+                  {
+                    borderColor: secondaryDark,
+                    opacity: canFinishRun ? 1 : 0.42,
+                  },
+                ]}
+              >
+                <Feather name="check" size={22} color={secondaryColor} />
+              </TouchableOpacity>
+              <ThemedText
+                style={styles.enduranceControlLabel}
+                setColor={quietText}
+              >
+                FINISH
+              </ThemedText>
+            </View>
+          </View>
+        </ThemedCard>
+      </View>
+    );
+  };
+
   const renderActiveRunDashboard = () => (
     <View style={styles.activeRunDashboard}>
       {renderActiveSummaryCard()}
@@ -2497,9 +2821,18 @@ const Run = ({ workout_id, restartRequestKey }) => {
     {
       type: "WORKING_SET",
       variant: "intervals",
-      title: "Intervals",
-      eyebrow: "INTERVALS",
-      emptySummary: "Add intervals to build this run",
+      title:
+        selectedRunFlow === "endurance-base"
+          ? "Main activity"
+          : "Intervals",
+      eyebrow:
+        selectedRunFlow === "endurance-base"
+          ? "MAIN ACTIVITY"
+          : "INTERVALS",
+      emptySummary:
+        selectedRunFlow === "endurance-base"
+          ? "Add the main run"
+          : "Add intervals to build this run",
     },
     {
       type: "COOLDOWN",
@@ -2510,6 +2843,14 @@ const Run = ({ workout_id, restartRequestKey }) => {
     },
   ];
   const visibleSectionConfigs = sectionConfigs.filter((section) => {
+    if (
+      selectedRunFlow === "endurance-base" &&
+      section.type === "COOLDOWN" &&
+      (runSectionCounts.COOLDOWN ?? 0) === 0
+    ) {
+      return false;
+    }
+
     if (
       !shouldPruneEmptyPlanSections ||
       section.type === "WORKING_SET"
@@ -2543,6 +2884,8 @@ const Run = ({ workout_id, restartRequestKey }) => {
             <View style={styles.planStartActionShell}>
               {renderHeroActionRow()}
             </View>
+          ) : shouldShowEnduranceBaseDashboard ? (
+            renderEnduranceBaseDashboard()
           ) : shouldShowSpeedStructureTimer ? (
             renderActiveRunDashboard()
           ) : (
@@ -2638,6 +2981,9 @@ const Run = ({ workout_id, restartRequestKey }) => {
                           activeSet={activeSet}
                           activeSet_remainingTime={activeSet_remainingTime}
                           workoutStarted={original_start_time !== null}
+                          hidePauseRows={
+                            selectedRunFlow === "endurance-base"
+                          }
                         />
                       ))
                     : null}

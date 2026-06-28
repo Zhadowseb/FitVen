@@ -279,6 +279,7 @@ const RunSetList = ({
   emptySummary = "No sets",
   onAddSet,
   workoutStarted = false,
+  hidePauseRows = false,
 }) => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -332,12 +333,16 @@ const RunSetList = ({
         type,
       });
 
-      setSets(rows);
-      empty?.(rows.length === 0);
+      const visibleRows = hidePauseRows
+        ? rows.filter((set) => Number(set.is_pause) !== 1)
+        : rows;
+
+      setSets(visibleRows);
+      empty?.(visibleRows.length === 0);
     } catch (err) {
       console.error("Failed to load run sets:", err);
     }
-  }, [db, empty, type, workout_id]);
+  }, [db, empty, hidePauseRows, type, workout_id]);
 
   useFocusEffect(
     useCallback(() => {
@@ -1347,7 +1352,7 @@ const RunSetList = ({
         </View>
 
         <View style={styles.bottomsheetActionRow}>
-          {type === "WORKING_SET" && (
+          {type === "WORKING_SET" && !hidePauseRows && (
             <TouchableOpacity
               activeOpacity={0.78}
               style={[

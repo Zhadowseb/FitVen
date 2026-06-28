@@ -40,7 +40,10 @@ export async function getOrderedRunSetsForWorkout(db, workoutId) {
   return runningRepository.getOrderedRunSetsForWorkout(db, workoutId);
 }
 
-export async function addRunSet(db, { workoutId, type }) {
+export async function addRunSet(
+  db,
+  { workoutId, type, addAutomaticPause = true }
+) {
   await withTransaction(db, async () => {
     const existingRunSets =
       normalizeRunSetType(type) === RUN_WORKING_SET_TYPE
@@ -53,7 +56,10 @@ export async function addRunSet(db, { workoutId, type }) {
     const nextSetNumber = (row?.count ?? 0) + 1;
     const previousRunSet = existingRunSets[existingRunSets.length - 1];
 
-    if (shouldAddAutomaticPause({ type, previousRunSet })) {
+    if (
+      addAutomaticPause &&
+      shouldAddAutomaticPause({ type, previousRunSet })
+    ) {
       await runningRepository.createRunSet(db, {
         workoutId,
         type,

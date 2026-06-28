@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.18.7] - Unreleased
+### Changed
+- Add a continuous Endurance & Base Run dashboard focused on distance, time, heart-rate control, average pace, and estimated finish time.
+- Keep Endurance & Base plans continuous by omitting automatic rest rows from their workflow.
+
+---
 ## [0.18.6] - Unreleased
 ### Changed
 - Remove dashed grid lines from the Run completion charts.
