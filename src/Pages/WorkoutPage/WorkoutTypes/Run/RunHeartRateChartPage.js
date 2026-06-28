@@ -9,23 +9,23 @@ import {
   ThemedView,
 } from "../../../../Resources/ThemedComponents";
 import {
-  HEART_RATE_ZONE_BANDS,
-  HEART_RATE_ZONE_THRESHOLDS,
+  FALLBACK_MAX_HEART_RATE,
+  getHeartRateZoneThresholds,
   getHeartRateZoneColor,
-  TEST_MAX_HEART_RATE,
 } from "./RunHeartRateChartConfig";
+import {
+  buildHeartRateZones,
+  normalizeMaxHeartRate,
+} from "../../../../Utils/heartRateUtils";
 import styles from "./RunHeartRateChartPageStyle";
 
-const CHART = {
+const CHART_BOUNDS = {
   left: 58,
   right: 966,
   top: 22,
   bottom: 326,
-  minBpm: 60,
-  maxBpm: TEST_MAX_HEART_RATE,
 };
 
-const Y_AXIS_TICKS = [220, 200, 180, 160, 140, 120, 100, 80, 60];
 const X_AXIS_RATIOS = [0, 0.25, 0.5, 0.75, 1];
 
 function formatClock(totalSeconds) {
@@ -39,18 +39,21 @@ function formatClock(totalSeconds) {
   )}`;
 }
 
-function getYPosition(bpm) {
-  const range = CHART.maxBpm - CHART.minBpm;
-  const clampedBpm = Math.min(Math.max(Number(bpm), CHART.minBpm), CHART.maxBpm);
+function getYPosition(bpm, chart) {
+  const range = chart.maxBpm - chart.minBpm;
+  const clampedBpm = Math.min(
+    Math.max(Number(bpm), chart.minBpm),
+    chart.maxBpm
+  );
 
   return (
-    CHART.top +
-    (1 - (clampedBpm - CHART.minBpm) / range) *
-      (CHART.bottom - CHART.top)
+    chart.top +
+    (1 - (clampedBpm - chart.minBpm) / range) *
+      (chart.bottom - chart.top)
   );
 }
 
-function buildHeartRatePath(history, durationMinutes) {
+function buildHeartRatePath(history, durationMinutes, chart) {
   if (!Array.isArray(history) || history.length < 2) {
     return null;
   }
@@ -64,9 +67,9 @@ function buildHeartRatePath(history, durationMinutes) {
 
     return {
       x:
-        CHART.left +
-        (elapsedMinutes / xRange) * (CHART.right - CHART.left),
-      y: getYPosition(point?.y),
+        chart.left +
+        (elapsedMinutes / xRange) * (chart.right - chart.left),
+      y: getYPosition(point?.y, chart),
     };
   });
 
@@ -80,7 +83,12 @@ function buildHeartRatePath(history, durationMinutes) {
   }, "");
 }
 
-function buildActualHeartRateSegments(history, durationMinutes) {
+function buildActualHeartRateSegments(
+  history,
+  durationMinutes,
+  chart,
+  zoneBands
+) {
   if (!Array.isArray(history) || history.length < 2) {
     return [];
   }
@@ -92,19 +100,20 @@ function buildActualHeartRateSegments(history, durationMinutes) {
       xRange
     );
     const bpm = Math.min(
-      Math.max(Number(point?.y) || CHART.minBpm, CHART.minBpm),
-      CHART.maxBpm
+      Math.max(Number(point?.y) || chart.minBpm, chart.minBpm),
+      chart.maxBpm
     );
 
     return {
       bpm,
       x:
-        CHART.left +
-        (elapsedMinutes / xRange) * (CHART.right - CHART.left),
-      y: getYPosition(bpm),
+        chart.left +
+        (elapsedMinutes / xRange) * (chart.right - chart.left),
+      y: getYPosition(bpm, chart),
     };
   });
   const segments = [];
+  const zoneThresholds = getHeartRateZoneThresholds(zoneBands);
 
   for (let index = 1; index < points.length; index += 1) {
     const start = points[index - 1];
@@ -113,7 +122,7 @@ function buildActualHeartRateSegments(history, durationMinutes) {
     const crossingRatios =
       bpmDifference === 0
         ? []
-        : HEART_RATE_ZONE_THRESHOLDS.map(
+        : zoneThresholds.map(
             (threshold) => (threshold - start.bpm) / bpmDifference
           ).filter((ratio) => ratio > 0 && ratio < 1);
     const ratios = [0, ...crossingRatios.sort((left, right) => left - right), 1];
@@ -129,7 +138,7 @@ function buildActualHeartRateSegments(history, durationMinutes) {
         start.bpm + bpmDifference * ((startRatio + endRatio) / 2);
 
       segments.push({
-        color: getHeartRateZoneColor(midpointBpm),
+        color: getHeartRateZoneColor(midpointBpm, zoneBands),
         path: `M ${segmentStartX} ${segmentStartY} L ${segmentEndX} ${segmentEndY}`,
       });
     }
@@ -155,6 +164,27 @@ const RunHeartRateChartPage = () => {
     ? route.params.plannedHistory
     : [];
   const targetDisplay = route.params?.targetDisplay ?? "--";
+  const maxHeartRate =
+    normalizeMaxHeartRate(route.params?.maxHeartRate) ??
+    FALLBACK_MAX_HEART_RATE;
+  const routeZoneBands = route.params?.zoneBands;
+  const zoneBands =
+    Array.isArray(routeZoneBands) && routeZoneBands.length === 5
+      ? routeZoneBands
+      : buildHeartRateZones(maxHeartRate);
+  const chart = {
+    ...CHART_BOUNDS,
+    minBpm: 60,
+    maxBpm: Math.max(maxHeartRate, 61),
+  };
+  const yAxisTicks = [
+    chart.maxBpm,
+    ...Array.from(
+      { length: Math.max(0, Math.floor((chart.maxBpm - 60) / 20)) },
+      (_, index) => chart.maxBpm - (index + 1) * 20
+    ).filter((tick) => tick > 60),
+    60,
+  ].filter((tick, index, ticks) => ticks.indexOf(tick) === index);
   const screenBackground = theme.background ?? "#0E0F12";
   const cardBorder = theme.cardBorder ?? theme.iconColor ?? theme.text;
   const titleColor = theme.title ?? theme.text;
@@ -163,9 +193,15 @@ const RunHeartRateChartPage = () => {
   const plannedColor = theme.planned ?? "#FFDD00";
   const actualSegments = buildActualHeartRateSegments(
     actualHistory,
-    durationMinutes
+    durationMinutes,
+    chart,
+    zoneBands
   );
-  const plannedPath = buildHeartRatePath(plannedHistory, durationMinutes);
+  const plannedPath = buildHeartRatePath(
+    plannedHistory,
+    durationMinutes,
+    chart
+  );
 
   return (
     <ThemedView
@@ -195,7 +231,7 @@ const RunHeartRateChartPage = () => {
           <View style={styles.legend}>
             <View style={styles.legendItem}>
               <View style={styles.legendZoneLine}>
-                {HEART_RATE_ZONE_BANDS.map((band) => (
+                {zoneBands.map((band) => (
                   <View
                     key={band.zone}
                     style={[
@@ -235,18 +271,21 @@ const RunHeartRateChartPage = () => {
 
       <View style={styles.chartShell}>
         <Svg width="100%" height="100%" viewBox="0 0 1000 370">
-          {HEART_RATE_ZONE_BANDS.map((band) => {
-            const min = Math.max(CHART.minBpm, band.min);
-            const max = Math.min(CHART.maxBpm, band.max);
-            const top = getYPosition(max);
-            const bottom = getYPosition(min);
+          {zoneBands.map((band) => {
+            const min = Math.max(
+              chart.minBpm,
+              band.min - (band.zone > 1 ? 1 : 0)
+            );
+            const max = Math.min(chart.maxBpm, band.max);
+            const top = getYPosition(max, chart);
+            const bottom = getYPosition(min, chart);
 
             return (
               <Rect
                 key={band.zone}
-                x={CHART.left}
+                x={chart.left}
                 y={top}
-                width={CHART.right - CHART.left}
+                width={chart.right - chart.left}
                 height={Math.max(0, bottom - top)}
                 fill={band.color}
                 fillOpacity="0.2"
@@ -254,14 +293,14 @@ const RunHeartRateChartPage = () => {
             );
           })}
 
-          {Y_AXIS_TICKS.map((tick) => {
-            const y = getYPosition(tick);
+          {yAxisTicks.map((tick) => {
+            const y = getYPosition(tick, chart);
 
             return (
               <G key={tick}>
                 <Line
-                  x1={CHART.left}
-                  x2={CHART.right}
+                  x1={chart.left}
+                  x2={chart.right}
                   y1={y}
                   y2={y}
                   stroke={cardBorder}
@@ -282,15 +321,15 @@ const RunHeartRateChartPage = () => {
           })}
 
           {X_AXIS_RATIOS.map((ratio) => {
-            const x = CHART.left + ratio * (CHART.right - CHART.left);
+            const x = chart.left + ratio * (chart.right - chart.left);
 
             return (
               <Line
                 key={ratio}
                 x1={x}
                 x2={x}
-                y1={CHART.top}
-                y2={CHART.bottom}
+                y1={chart.top}
+                y2={chart.bottom}
                 stroke={cardBorder}
                 strokeWidth="1"
                 strokeDasharray="5 8"
@@ -298,15 +337,17 @@ const RunHeartRateChartPage = () => {
             );
           })}
 
-          {HEART_RATE_ZONE_BANDS.map((band) => {
-            const min = Math.max(CHART.minBpm, band.min);
-            const max = Math.min(CHART.maxBpm, band.max);
+          {zoneBands.map((band) => {
+            const min = Math.max(chart.minBpm, band.min);
+            const max = Math.min(chart.maxBpm, band.max);
 
             return (
               <SvgText
                 key={`zone:${band.zone}`}
-                x={CHART.right - 8}
-                y={(getYPosition(min) + getYPosition(max)) / 2 + 4}
+                x={chart.right - 8}
+                y={
+                  (getYPosition(min, chart) + getYPosition(max, chart)) / 2 + 4
+                }
                 fill={band.color}
                 fontSize="11"
                 fontWeight="900"
@@ -341,7 +382,7 @@ const RunHeartRateChartPage = () => {
           ))}
 
           {X_AXIS_RATIOS.map((ratio) => {
-            const x = CHART.left + ratio * (CHART.right - CHART.left);
+            const x = chart.left + ratio * (chart.right - chart.left);
             const label = formatClock(durationSeconds * ratio);
 
             return (

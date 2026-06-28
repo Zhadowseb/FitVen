@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.18.5] - Unreleased
+### Changed
+- Add selectable max-heart-rate sources and calculate Run chart zones from the resolved profile value.
+
+---
 ## [0.18.4] - Unreleased
 ### Changed
 - Keep public profiles and social circles available when private profile settings are missing or using an older Supabase schema cache.

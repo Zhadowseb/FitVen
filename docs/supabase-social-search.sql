@@ -24,19 +24,24 @@ create table if not exists public.profile_private (
   birth_date date,
   manual_max_heart_rate smallint,
   measured_max_heart_rate smallint,
+  max_heart_rate_source text not null default 'auto',
   updated_at timestamptz not null default timezone('utc', now()),
   constraint profile_private_birth_date_minimum
     check (birth_date is null or birth_date >= date '1900-01-01'),
   constraint profile_private_manual_max_heart_rate_range
     check (manual_max_heart_rate is null or manual_max_heart_rate between 60 and 250),
   constraint profile_private_measured_max_heart_rate_range
-    check (measured_max_heart_rate is null or measured_max_heart_rate between 60 and 250)
+    check (measured_max_heart_rate is null or measured_max_heart_rate between 60 and 250),
+  constraint profile_private_max_heart_rate_source
+    check (max_heart_rate_source in ('auto', 'manual', 'calculated', 'measured'))
 );
 
 alter table public.profile_private
   add column if not exists manual_max_heart_rate smallint;
 alter table public.profile_private
   add column if not exists measured_max_heart_rate smallint;
+alter table public.profile_private
+  add column if not exists max_heart_rate_source text not null default 'auto';
 
 do $$
 begin
@@ -60,6 +65,17 @@ begin
     alter table public.profile_private
       add constraint profile_private_measured_max_heart_rate_range
       check (measured_max_heart_rate is null or measured_max_heart_rate between 60 and 250);
+  end if;
+
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'profile_private_max_heart_rate_source'
+      and conrelid = 'public.profile_private'::regclass
+  ) then
+    alter table public.profile_private
+      add constraint profile_private_max_heart_rate_source
+      check (max_heart_rate_source in ('auto', 'manual', 'calculated', 'measured'));
   end if;
 end;
 $$;

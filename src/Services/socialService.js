@@ -18,7 +18,9 @@ import {
   normalizeStoredTimestampSeconds,
 } from "../Utils/timeUtils";
 import {
+  MAX_HEART_RATE_SOURCE_AUTO,
   normalizeMaxHeartRate,
+  normalizeMaxHeartRateSource,
   resolveMaxHeartRate,
 } from "../Utils/heartRateUtils";
 
@@ -106,10 +108,14 @@ function mapProfileRow(
   const measuredMaxHeartRate = normalizeMaxHeartRate(
     privateSettings.measuredMaxHeartRate
   );
+  const preferredMaxHeartRateSource = normalizeMaxHeartRateSource(
+    privateSettings.preferredMaxHeartRateSource
+  );
   const maxHeartRate = resolveMaxHeartRate({
     age,
     manualMaxHeartRate,
     measuredMaxHeartRate,
+    preferredSource: preferredMaxHeartRateSource,
   });
 
   return {
@@ -126,6 +132,7 @@ function mapProfileRow(
     measuredMaxHeartRate,
     maxHeartRate: maxHeartRate.value,
     maxHeartRateSource: maxHeartRate.source,
+    preferredMaxHeartRateSource,
     avatarPath: row.avatar_path ?? null,
     avatarUrl: buildAvatarPublicUrl(row.avatar_path, updatedAt),
     createdAt: row.created_at ?? null,
@@ -410,6 +417,16 @@ function isMissingPrivateMaxHeartRateColumnsError(error) {
   );
 }
 
+function isMissingPrivateMaxHeartRateSourceError(error) {
+  const message = `${error?.message ?? ""} ${error?.details ?? ""}`.toLowerCase();
+
+  return (
+    message.includes(PROFILE_PRIVATE_TABLE) &&
+    message.includes("max_heart_rate_source") &&
+    (message.includes("does not exist") || message.includes("schema cache"))
+  );
+}
+
 function buildSearchFilter(query) {
   return query.replace(/[,%()]/g, " ").replace(/^@+/, "").trim();
 }
@@ -465,9 +482,53 @@ async function saveOwnBirthDate(userId, birthDate) {
 async function getOwnPrivateSettings(userId) {
   const { data, error } = await supabase
     .from(PROFILE_PRIVATE_TABLE)
-    .select("birth_date, manual_max_heart_rate, measured_max_heart_rate")
+    .select(
+      "birth_date, manual_max_heart_rate, measured_max_heart_rate, max_heart_rate_source"
+    )
     .eq("user_id", userId)
     .maybeSingle();
+
+  if (error && isMissingPrivateMaxHeartRateSourceError(error)) {
+    const { data: previousData, error: previousError } = await supabase
+      .from(PROFILE_PRIVATE_TABLE)
+      .select("birth_date, manual_max_heart_rate, measured_max_heart_rate")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (!previousError) {
+      return {
+        birthDate: normalizeIsoDateString(previousData?.birth_date),
+        manualMaxHeartRate: normalizeMaxHeartRate(
+          previousData?.manual_max_heart_rate
+        ),
+        measuredMaxHeartRate: normalizeMaxHeartRate(
+          previousData?.measured_max_heart_rate
+        ),
+        preferredMaxHeartRateSource: MAX_HEART_RATE_SOURCE_AUTO,
+      };
+    }
+
+    if (!isMissingPrivateMaxHeartRateColumnsError(previousError)) {
+      throw normalizeSocialError(previousError);
+    }
+
+    const { data: legacyData, error: legacyError } = await supabase
+      .from(PROFILE_PRIVATE_TABLE)
+      .select("birth_date")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (legacyError) {
+      throw normalizeSocialError(legacyError);
+    }
+
+    return {
+      birthDate: normalizeIsoDateString(legacyData?.birth_date),
+      manualMaxHeartRate: null,
+      measuredMaxHeartRate: null,
+      preferredMaxHeartRateSource: MAX_HEART_RATE_SOURCE_AUTO,
+    };
+  }
 
   if (error && isMissingPrivateMaxHeartRateColumnsError(error)) {
     const { data: legacyData, error: legacyError } = await supabase
@@ -484,6 +545,7 @@ async function getOwnPrivateSettings(userId) {
       birthDate: normalizeIsoDateString(legacyData?.birth_date),
       manualMaxHeartRate: null,
       measuredMaxHeartRate: null,
+      preferredMaxHeartRateSource: MAX_HEART_RATE_SOURCE_AUTO,
     };
   }
 
@@ -495,6 +557,9 @@ async function getOwnPrivateSettings(userId) {
     birthDate: normalizeIsoDateString(data?.birth_date),
     manualMaxHeartRate: normalizeMaxHeartRate(data?.manual_max_heart_rate),
     measuredMaxHeartRate: normalizeMaxHeartRate(data?.measured_max_heart_rate),
+    preferredMaxHeartRateSource: normalizeMaxHeartRateSource(
+      data?.max_heart_rate_source
+    ),
   };
 }
 
@@ -527,6 +592,7 @@ export async function getOwnRunProfileSettings(user) {
     age,
     manualMaxHeartRate: privateSettings.manualMaxHeartRate,
     measuredMaxHeartRate: privateSettings.measuredMaxHeartRate,
+    preferredSource: privateSettings.preferredMaxHeartRateSource,
   });
 
   return {
@@ -537,6 +603,7 @@ export async function getOwnRunProfileSettings(user) {
     measuredMaxHeartRate: privateSettings.measuredMaxHeartRate,
     maxHeartRate: maxHeartRate.value,
     maxHeartRateSource: maxHeartRate.source,
+    preferredMaxHeartRateSource: maxHeartRate.preferredSource,
     privateSettingsAvailable: true,
     privateSettingsError: null,
   };
@@ -831,6 +898,40 @@ export async function updateOwnManualMaxHeartRate({
       {
         user_id: user.id,
         manual_max_heart_rate: normalizedMaxHeartRate,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id" }
+    );
+
+  if (error) {
+    throw normalizeSocialError(error);
+  }
+
+  return getOwnRunProfileSettings(user);
+}
+
+export async function updateOwnMaxHeartRateSource({
+  user,
+  preferredSource,
+}) {
+  if (!user?.id) {
+    throw new Error("You need to be signed in to update max heart rate.");
+  }
+
+  const normalizedSource = normalizeMaxHeartRateSource(preferredSource);
+
+  if (normalizedSource !== preferredSource) {
+    throw new Error("Choose a valid max heart rate source.");
+  }
+
+  await ensureOwnProfile(user);
+
+  const { error } = await supabase
+    .from(PROFILE_PRIVATE_TABLE)
+    .upsert(
+      {
+        user_id: user.id,
+        max_heart_rate_source: normalizedSource,
         updated_at: new Date().toISOString(),
       },
       { onConflict: "user_id" }

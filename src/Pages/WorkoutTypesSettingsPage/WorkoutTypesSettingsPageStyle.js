@@ -190,10 +190,42 @@ export default StyleSheet.create({
     textTransform: "uppercase",
   },
 
-  modalBody: {
-    fontSize: 12,
+  maxHeartRateSourceList: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 7,
+  },
+
+  maxHeartRateSourceOption: {
+    width: "48%",
+    minHeight: 58,
+    flexGrow: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderRadius: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+
+  maxHeartRateSourceOptionCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  maxHeartRateSourceOptionTitle: {
+    fontSize: 13,
     lineHeight: 17,
-    textAlign: "center",
+    fontWeight: "900",
+  },
+
+  maxHeartRateSourceOptionDetail: {
+    marginTop: 2,
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: "700",
   },
 
   clearManualButton: {

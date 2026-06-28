@@ -26,6 +26,7 @@ import {
 } from "../../Utils/dateUtils";
 import {
   MAX_MAX_HEART_RATE,
+  MAX_HEART_RATE_SOURCE_AUTO,
   MIN_MAX_HEART_RATE,
   normalizeMaxHeartRate,
 } from "../../Utils/heartRateUtils";
@@ -68,8 +69,11 @@ export default function WorkoutTypesSettingsPage() {
   const [isSavingBirthDate, setIsSavingBirthDate] = useState(false);
   const [birthDateError, setBirthDateError] = useState("");
   const [maxHeartRate, setMaxHeartRate] = useState(null);
-  const [maxHeartRateSource, setMaxHeartRateSource] = useState("calculated");
+  const [maxHeartRateSource, setMaxHeartRateSource] = useState(null);
+  const [preferredMaxHeartRateSource, setPreferredMaxHeartRateSource] =
+    useState(MAX_HEART_RATE_SOURCE_AUTO);
   const [manualMaxHeartRate, setManualMaxHeartRate] = useState(null);
+  const [measuredMaxHeartRate, setMeasuredMaxHeartRate] = useState(null);
   const [maxHeartRateInput, setMaxHeartRateInput] = useState("");
   const [maxHeartRateModalVisible, setMaxHeartRateModalVisible] =
     useState(false);
@@ -95,12 +99,51 @@ export default function WorkoutTypesSettingsPage() {
       : maxHeartRateSource === "manual"
         ? primaryColor
         : secondaryColor;
+  const maxHeartRateSourceOptions = [
+    {
+      id: MAX_HEART_RATE_SOURCE_AUTO,
+      title: "Auto",
+      detail: "Manual, then calculated, then measured",
+      available: true,
+    },
+    {
+      id: "manual",
+      title: "Manual",
+      detail:
+        manualMaxHeartRate === null
+          ? "Enter and save a manual value first"
+          : `${manualMaxHeartRate} bpm`,
+      available: manualMaxHeartRate !== null,
+    },
+    {
+      id: "calculated",
+      title: "Calculated",
+      detail:
+        calculatedAge === null
+          ? "Set your birth date first"
+          : `${220 - calculatedAge} bpm from age`,
+      available: calculatedAge !== null,
+    },
+    {
+      id: "measured",
+      title: "Measured",
+      detail:
+        measuredMaxHeartRate === null
+          ? "No measured value available"
+          : `${measuredMaxHeartRate} bpm`,
+      available: measuredMaxHeartRate !== null,
+    },
+  ];
 
   const applyRunProfileSettings = useCallback((profile) => {
     setBirthDate(profile.birthDate ?? "");
     setManualMaxHeartRate(profile.manualMaxHeartRate ?? null);
+    setMeasuredMaxHeartRate(profile.measuredMaxHeartRate ?? null);
     setMaxHeartRate(profile.maxHeartRate ?? null);
-    setMaxHeartRateSource(profile.maxHeartRateSource ?? "calculated");
+    setMaxHeartRateSource(profile.maxHeartRateSource ?? null);
+    setPreferredMaxHeartRateSource(
+      profile.preferredMaxHeartRateSource ?? MAX_HEART_RATE_SOURCE_AUTO
+    );
   }, []);
 
   useFocusEffect(
@@ -221,6 +264,35 @@ export default function WorkoutTypesSettingsPage() {
         error instanceof Error
           ? error.message
           : "Could not save max heart rate."
+      );
+    } finally {
+      setIsSavingMaxHeartRate(false);
+    }
+  };
+
+  const saveMaxHeartRateSource = async (preferredSource) => {
+    if (
+      isSavingMaxHeartRate ||
+      preferredSource === preferredMaxHeartRateSource
+    ) {
+      return;
+    }
+
+    setIsSavingMaxHeartRate(true);
+    setBirthDateError("");
+
+    try {
+      const profile = await socialService.updateOwnMaxHeartRateSource({
+        user,
+        preferredSource,
+      });
+
+      applyRunProfileSettings(profile);
+    } catch (error) {
+      setBirthDateError(
+        error instanceof Error
+          ? error.message
+          : "Could not save max heart rate source."
       );
     } finally {
       setIsSavingMaxHeartRate(false);
@@ -503,10 +575,54 @@ export default function WorkoutTypesSettingsPage() {
           }
         }}
       >
-        <ThemedText style={styles.modalBody} setColor={quietText}>
-          Enter a manual max heart rate. A measured value will always take
-          priority.
-        </ThemedText>
+        <View style={styles.maxHeartRateSourceList}>
+          {maxHeartRateSourceOptions.map((option) => {
+            const isSelected =
+              option.id === preferredMaxHeartRateSource;
+
+            return (
+              <TouchableOpacity
+                key={option.id}
+                accessibilityRole="radio"
+                accessibilityState={{
+                  checked: isSelected,
+                  disabled: !option.available,
+                }}
+                activeOpacity={0.75}
+                disabled={!option.available || isSavingMaxHeartRate}
+                onPress={() => saveMaxHeartRateSource(option.id)}
+                style={[
+                  styles.maxHeartRateSourceOption,
+                  {
+                    backgroundColor: iconSurface,
+                    borderColor: isSelected ? primaryColor : cardBorder,
+                    opacity: option.available ? 1 : 0.45,
+                  },
+                ]}
+              >
+                <View style={styles.maxHeartRateSourceOptionCopy}>
+                  <ThemedText
+                    style={styles.maxHeartRateSourceOptionTitle}
+                    setColor={isSelected ? primaryColor : titleColor}
+                  >
+                    {option.title}
+                  </ThemedText>
+                  <ThemedText
+                    style={styles.maxHeartRateSourceOptionDetail}
+                    setColor={quietText}
+                  >
+                    {option.detail}
+                  </ThemedText>
+                </View>
+                <Feather
+                  name={isSelected ? "check-circle" : "circle"}
+                  size={18}
+                  color={isSelected ? primaryColor : quietText}
+                />
+              </TouchableOpacity>
+            );
+          })}
+        </View>
         <ThemedTextInput
           value={maxHeartRateInput}
           onChangeText={(value) =>

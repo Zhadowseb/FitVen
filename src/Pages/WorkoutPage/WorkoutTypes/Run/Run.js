@@ -29,11 +29,12 @@ import {
 import styles from "./RunStyle";
 import {
   buildTargetHeartRateHistory,
-  HEART_RATE_ZONE_BANDS,
-  HEART_RATE_ZONE_THRESHOLDS,
+  FALLBACK_MAX_HEART_RATE,
+  getHeartRateZoneThresholds,
   getHeartRateZoneColor,
-  TEST_MAX_HEART_RATE,
 } from "./RunHeartRateChartConfig";
+import { buildHeartRateZones } from "../../../../Utils/heartRateUtils";
+import { useAuth } from "../../../../Contexts/AuthContext";
 
 import {
   getCurrentStoredTimestampSeconds,
@@ -44,6 +45,7 @@ import { calculateTrackedDistanceSummary } from "../../../../Utils/locationUtils
 import {
   locationService,
   runningService as runningRepository,
+  socialService,
   workoutService as workoutRepository,
 } from "../../../../Services";
 
@@ -456,8 +458,9 @@ function buildHeartRateZoneSegments(
   {
     durationMinutes = null,
     domainMinY = 60,
-    domainMaxY = TEST_MAX_HEART_RATE,
+    domainMaxY = FALLBACK_MAX_HEART_RATE,
     chartLeft = 38,
+    zoneBands,
   } = {}
 ) {
   if (!Array.isArray(data) || data.length < 2) {
@@ -492,6 +495,7 @@ function buildHeartRateZoneSegments(
     };
   });
   const segments = [];
+  const zoneThresholds = getHeartRateZoneThresholds(zoneBands);
 
   for (let index = 1; index < points.length; index += 1) {
     const start = points[index - 1];
@@ -500,7 +504,7 @@ function buildHeartRateZoneSegments(
     const crossingRatios =
       bpmDifference === 0
         ? []
-        : HEART_RATE_ZONE_THRESHOLDS.map(
+        : zoneThresholds.map(
             (threshold) => (threshold - start.bpm) / bpmDifference
           ).filter((ratio) => ratio > 0 && ratio < 1);
     const ratios = [0, ...crossingRatios.sort((left, right) => left - right), 1];
@@ -516,7 +520,7 @@ function buildHeartRateZoneSegments(
         start.bpm + bpmDifference * ((startRatio + endRatio) / 2);
 
       segments.push({
-        color: getHeartRateZoneColor(midpointBpm),
+        color: getHeartRateZoneColor(midpointBpm, zoneBands),
         path: `M ${segmentStartX} ${segmentStartY} L ${segmentEndX} ${segmentEndY}`,
       });
     }
@@ -530,6 +534,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
   const theme = Colors[colorScheme] ?? Colors.light;
   const db = useSQLiteContext();
   const navigation = useNavigation();
+  const { user } = useAuth();
 
   const [updateCount, set_updateCount] = useState(0);
   const triggerReload = () => {
@@ -543,6 +548,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
     EMPTY_RUN_SECTION_COUNTS
   );
   const [runPlanSets, set_runPlanSets] = useState([]);
+  const [maxHeartRate, set_maxHeartRate] = useState(FALLBACK_MAX_HEART_RATE);
   const [locationLogs, set_locationLogs] = useState([]);
   const [activeRunSegment, set_activeRunSegment] = useState(null);
   const [nextRunSegment, set_nextRunSegment] = useState(null);
@@ -903,6 +909,41 @@ const Run = ({ workout_id, restartRequestKey }) => {
     }, [loadRunStructureState])
   );
 
+  useFocusEffect(
+    useCallback(() => {
+      let isCancelled = false;
+
+      const loadMaxHeartRate = async () => {
+        if (!user?.id) {
+          set_maxHeartRate(FALLBACK_MAX_HEART_RATE);
+          return;
+        }
+
+        try {
+          const profile = await socialService.getOwnRunProfileSettings(user);
+
+          if (!isCancelled) {
+            set_maxHeartRate(
+              profile.maxHeartRate ?? FALLBACK_MAX_HEART_RATE
+            );
+          }
+        } catch (error) {
+          console.warn("Unable to load max heart rate for Run charts:", error);
+
+          if (!isCancelled) {
+            set_maxHeartRate(FALLBACK_MAX_HEART_RATE);
+          }
+        }
+      };
+
+      void loadMaxHeartRate();
+
+      return () => {
+        isCancelled = true;
+      };
+    }, [user])
+  );
+
   useEffect(() => {
     void loadRunStructureState();
   }, [loadRunStructureState, updateCount]);
@@ -1233,7 +1274,19 @@ const Run = ({ workout_id, restartRequestKey }) => {
   const routeRegion = getRouteRegion(routeSegments);
   const routeCoordinates = routeSegments.flat();
   const paceHistory = buildPaceHistory(locationLogs);
-  const targetHeartRateHistory = buildTargetHeartRateHistory(runPlanSets);
+  const heartRateZoneBands = buildHeartRateZones(maxHeartRate);
+  const heartRateChartMax = Math.max(maxHeartRate, 61);
+  const heartRateAxisTicks = [
+    heartRateChartMax,
+    ...[0.75, 0.5, 0.25].map((ratio) =>
+      Math.round(60 + (heartRateChartMax - 60) * ratio)
+    ),
+    60,
+  ].filter((tick, index, ticks) => ticks.indexOf(tick) === index);
+  const targetHeartRateHistory = buildTargetHeartRateHistory(
+    runPlanSets,
+    heartRateZoneBands
+  );
   const actualHeartRateHistory = [];
   const targetHeartRateZones = [
     ...new Set(targetHeartRateHistory.map((point) => Number(point.zone))),
@@ -1418,6 +1471,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
           domainMinY,
           domainMaxY,
           chartLeft,
+          zoneBands,
         })
       : [];
     const chartBandRange =
@@ -1428,7 +1482,10 @@ const Run = ({ workout_id, restartRequestKey }) => {
         : null;
     const chartBandRects = chartBandRange
       ? zoneBands.map((band) => {
-          const min = Math.max(domainMinY, Number(band.min));
+          const min = Math.max(
+            domainMinY,
+            Number(band.min) - (band.zone > 1 ? 1 : 0)
+          );
           const max = Math.min(domainMaxY, Number(band.max));
           const top = 10 + (1 - (max - domainMinY) / chartBandRange) * 102;
           const height = ((max - min) / chartBandRange) * 102;
@@ -2271,10 +2328,10 @@ const Run = ({ workout_id, restartRequestKey }) => {
         plannedStepped: true,
         strokeWidth: 2,
         colorByHeartRateZone: true,
-        zoneBands: HEART_RATE_ZONE_BANDS,
+        zoneBands: heartRateZoneBands,
         domainMinY: 60,
-        domainMaxY: TEST_MAX_HEART_RATE,
-        yAxisTicks: [220, 180, 140, 100, 60],
+        domainMaxY: heartRateChartMax,
+        yAxisTicks: heartRateAxisTicks,
         onPress: () =>
           navigation.navigate("RunHeartRateChartPage", {
             workoutId: workout_id,
@@ -2282,6 +2339,8 @@ const Run = ({ workout_id, restartRequestKey }) => {
             actualHistory: actualHeartRateHistory,
             plannedHistory: targetHeartRateHistory,
             targetDisplay: targetHeartRateDisplay,
+            maxHeartRate,
+            zoneBands: heartRateZoneBands,
           }),
       })}
       {renderCompletedRouteCard()}
