@@ -3,7 +3,7 @@
     "name": "FitVen",
     "slug": "programapp",
     "version": "0.18.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/icon_v1.0.png",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
@@ -15,6 +15,7 @@
     "ios": {
       "bundleIdentifier": "com.fitven.app",
       "supportsTablet": true,
+      "requireFullScreen": true,
       "infoPlist": {
         "UIBackgroundModes": [
           "location",

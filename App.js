@@ -11,6 +11,7 @@ import { initializeDatabase } from './src/Database/db';
 import { View, useColorScheme } from "react-native"
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import * as TaskManager from 'expo-task-manager';
+import * as ScreenOrientation from "expo-screen-orientation";
 
 
 import LoginPage from './src/Pages/LoginPage/LoginPage';
@@ -36,6 +37,7 @@ import SocialPostEditPage from "./src/Pages/SocialPostEditPage/SocialPostEditPag
 import SocialPostSettingsPage from "./src/Pages/SocialPostSettingsPage/SocialPostSettingsPage";
 import ExerciseSocialPostSettingsPage from "./src/Pages/ExerciseSocialPostSettingsPage/ExerciseSocialPostSettingsPage";
 import OneRepMaxCalculatorPage from "./src/Pages/OneRepMaxCalculatorPage/OneRepMaxCalculatorPage";
+import RunHeartRateChartPage from "./src/Pages/WorkoutPage/WorkoutTypes/Run/RunHeartRateChartPage";
 
 import { Colors } from './src/Resources/GlobalStyling/colors';
 import {
@@ -94,6 +96,7 @@ TaskManager.defineTask(locationService.RUN_LOCATION_TASK, async ({ data, error }
 const Stack = createNativeStackNavigator();
 const navigationRef = createNavigationContainerRef();
 const NOTIFICATION_HISTORY_ROUTE = "NotificationHistoryPage";
+const RUN_HEART_RATE_CHART_ROUTE = "RunHeartRateChartPage";
 
 function getNotificationResponseKey(response) {
   const notification = response?.notification;
@@ -218,6 +221,17 @@ function RootNavigator() {
     openNotificationHistoryFromResponse,
   ]);
 
+  useEffect(() => {
+    const orientationLock =
+      currentRouteName === RUN_HEART_RATE_CHART_ROUTE
+        ? ScreenOrientation.OrientationLock.LANDSCAPE
+        : ScreenOrientation.OrientationLock.PORTRAIT_UP;
+
+    ScreenOrientation.lockAsync(orientationLock).catch((error) => {
+      console.warn("Unable to lock screen orientation:", error);
+    });
+  }, [currentRouteName]);
+
   if (isAuthLoading) {
     return (
       <ThemedView style={{ alignItems: "center", justifyContent: "center" }}>
@@ -272,6 +286,14 @@ function RootNavigator() {
                 <Stack.Screen name="ExerciseSocialPostSettingsPage" component={ExerciseSocialPostSettingsPage} options={{ headerShown: false }} />
                 <Stack.Screen name="OneRepMaxCalculatorPage" component={OneRepMaxCalculatorPage} options={{ headerShown: false }} />
                 <Stack.Screen
+                  name={RUN_HEART_RATE_CHART_ROUTE}
+                  component={RunHeartRateChartPage}
+                  options={{
+                    animation: "fade",
+                    headerShown: false,
+                  }}
+                />
+                <Stack.Screen
                   name="SicknessPage"
                   component={SicknessPage}
                   options={{ headerShown: false }}
@@ -287,7 +309,7 @@ function RootNavigator() {
         </NavigationContainer>
       </View>
 
-      {isAuthenticated ? (
+      {isAuthenticated && currentRouteName !== RUN_HEART_RATE_CHART_ROUTE ? (
         <ThemedBottomNavigation
           currentRouteName={currentRouteName}
           navigationRef={navigationRef}

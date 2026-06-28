@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import {
   Dimensions,
   Modal,
@@ -48,6 +48,12 @@ const ZONE_COLORS = {
 const ZONE_POPOVER_WIDTH = 238;
 const ZONE_POPOVER_HEIGHT = 40;
 const ZONE_POPOVER_MARGIN = 12;
+const DISTANCE_UNIT_METERS = "m";
+const DISTANCE_UNIT_KILOMETERS = "km";
+const METERS_PER_KILOMETER = 1000;
+const SMART_DISTANCE_METERS_THRESHOLD = 100;
+const AUTO_DISTANCE_KILOMETERS_THRESHOLD = 1;
+const RUN_INPUT_FALLBACK_FIELDS = ["distance", "pace", "time"];
 
 const parseNumberInput = (value) => {
   const normalized = String(value ?? "").trim().replace(",", ".");
@@ -86,7 +92,38 @@ const parseDurationInput = (value) => {
   return Number.isFinite(numericValue) ? numericValue : null;
 };
 
-const formatDistanceDisplay = (value, fallback = "") => {
+const parseDistanceInput = (value, distanceUnit) => {
+  const numericValue = parseNumberInput(value);
+
+  if (numericValue === null) {
+    return null;
+  }
+
+  if (
+    distanceUnit === DISTANCE_UNIT_METERS ||
+    numericValue > SMART_DISTANCE_METERS_THRESHOLD
+  ) {
+    return numericValue / METERS_PER_KILOMETER;
+  }
+
+  return numericValue;
+};
+
+const getDistanceInputValue = (value, distanceUnit) => {
+  const numericValue = Number(value);
+
+  if (!Number.isFinite(numericValue) || numericValue <= 0) {
+    return "";
+  }
+
+  if (distanceUnit === DISTANCE_UNIT_METERS) {
+    return String(Math.round(numericValue * METERS_PER_KILOMETER));
+  }
+
+  return String(numericValue);
+};
+
+const formatKilometersDisplay = (value, fallback = "") => {
   const numericValue = Number(value);
 
   if (!Number.isFinite(numericValue) || numericValue <= 0) {
@@ -94,6 +131,20 @@ const formatDistanceDisplay = (value, fallback = "") => {
   }
 
   return numericValue.toFixed(1);
+};
+
+const formatDistanceDisplay = (value, distanceUnit, fallback = "") => {
+  const numericValue = Number(value);
+
+  if (!Number.isFinite(numericValue) || numericValue <= 0) {
+    return fallback;
+  }
+
+  if (distanceUnit === DISTANCE_UNIT_METERS) {
+    return String(Math.round(numericValue));
+  }
+
+  return formatKilometersDisplay(numericValue, fallback);
 };
 
 const formatMinutesClock = (value, fallback = "") => {
@@ -147,6 +198,48 @@ const formatPaceDisplay = (value, fallback = "") => {
   return normalized;
 };
 
+const hasFieldValue = (value) =>
+  value !== "" && value !== null && value !== undefined;
+
+const buildRunInputFallbacks = (sets = []) =>
+  sets.reduce((fallbacks, set) => {
+    const setFallbacks = {};
+
+    RUN_INPUT_FALLBACK_FIELDS.forEach((field) => {
+      if (hasFieldValue(set?.[field])) {
+        setFallbacks[field] = set[field];
+      }
+    });
+
+    if (Object.keys(setFallbacks).length > 0) {
+      fallbacks[set.Run_id] = setFallbacks;
+    }
+
+    return fallbacks;
+  }, {});
+
+const colorWithAlpha = (color, alpha, fallback) => {
+  const normalizedColor = String(color ?? "").trim();
+
+  if (/^#[0-9a-f]{6}$/i.test(normalizedColor)) {
+    const red = parseInt(normalizedColor.slice(1, 3), 16);
+    const green = parseInt(normalizedColor.slice(3, 5), 16);
+    const blue = parseInt(normalizedColor.slice(5, 7), 16);
+
+    return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+  }
+
+  const rgbMatch = normalizedColor.match(
+    /^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)$/
+  );
+
+  if (rgbMatch) {
+    return `rgba(${rgbMatch[1]}, ${rgbMatch[2]}, ${rgbMatch[3]}, ${alpha})`;
+  }
+
+  return fallback;
+};
+
 const getIntervalsSummary = (sets, emptySummary) => {
   const workingSets = sets.filter((set) => !set.is_pause);
   const totalDistance = workingSets.reduce(
@@ -164,7 +257,7 @@ const getIntervalsSummary = (sets, emptySummary) => {
 
   const distanceText =
     totalDistance > 0
-      ? `${formatDistanceDisplay(totalDistance)} km total`
+      ? `${formatKilometersDisplay(totalDistance)} km total`
       : "Distance not set";
   const timeText =
     totalMinutes > 0 ? `~${Math.round(totalMinutes)} min` : "Time not set";
@@ -185,6 +278,7 @@ const RunSetList = ({
   sectionEyebrow,
   emptySummary = "No sets",
   onAddSet,
+  workoutStarted = false,
 }) => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -196,6 +290,10 @@ const RunSetList = ({
 
   const [zoneDropdownVisible, setZoneDropdownVisible] = useState(false);
   const [zoneSetId, setZoneSetId] = useState(null);
+  const [distanceUnit, setDistanceUnit] = useState(DISTANCE_UNIT_METERS);
+  const [distanceUnitManuallySelected, setDistanceUnitManuallySelected] =
+    useState(false);
+  const [runInputFallbacks, setRunInputFallbacks] = useState({});
   const [zonePopoverPosition, setZonePopoverPosition] = useState({
     left: ZONE_POPOVER_MARGIN,
     top: ZONE_POPOVER_MARGIN,
@@ -247,9 +345,132 @@ const RunSetList = ({
     }, [loadRunSets, reloadKey])
   );
 
+  useEffect(() => {
+    if (distanceUnitManuallySelected) {
+      return;
+    }
+
+    const shouldUseKilometers = sets.some(
+      (set) => Number(set.distance) >= AUTO_DISTANCE_KILOMETERS_THRESHOLD
+    );
+
+    setDistanceUnit(
+      shouldUseKilometers
+        ? DISTANCE_UNIT_KILOMETERS
+        : DISTANCE_UNIT_METERS
+    );
+  }, [distanceUnitManuallySelected, sets]);
+
+  useEffect(() => {
+    setDistanceUnitManuallySelected(false);
+    setRunInputFallbacks({});
+  }, [workout_id, type]);
+
+  useEffect(() => {
+    if (!workoutStarted) {
+      setRunInputFallbacks(buildRunInputFallbacks(sets));
+      return;
+    }
+
+    setRunInputFallbacks((currentFallbacks) =>
+      Object.keys(currentFallbacks).length > 0
+        ? currentFallbacks
+        : buildRunInputFallbacks(sets)
+    );
+  }, [sets, workoutStarted]);
+
   const closeZoneDropdown = () => {
     setZoneDropdownVisible(false);
   };
+
+  const toggleDistanceUnit = () => {
+    setDistanceUnitManuallySelected(true);
+    setDistanceUnit((currentUnit) =>
+      currentUnit === DISTANCE_UNIT_METERS
+        ? DISTANCE_UNIT_KILOMETERS
+        : DISTANCE_UNIT_METERS
+    );
+  };
+
+  const commitDistanceField = async (runId, value) => {
+    const nextDistance = parseDistanceInput(value, distanceUnit);
+
+    if (Number(nextDistance) >= AUTO_DISTANCE_KILOMETERS_THRESHOLD) {
+      setDistanceUnit(DISTANCE_UNIT_KILOMETERS);
+      setDistanceUnitManuallySelected(false);
+    }
+
+    await runningRepository.updateRunSetField(db, {
+      runId,
+      field: "distance",
+      value: nextDistance,
+    });
+    await loadRunSets();
+    triggerReload();
+  };
+
+  const getInputFallback = (runId, field) => {
+    const fallbackValue = runInputFallbacks[runId]?.[field];
+
+    if (!hasFieldValue(fallbackValue)) {
+      return "";
+    }
+
+    if (field === "distance") {
+      return formatDistanceDisplay(
+        getDistanceInputValue(fallbackValue, distanceUnit),
+        distanceUnit
+      );
+    }
+
+    if (field === "pace") {
+      return formatPaceDisplay(fallbackValue);
+    }
+
+    if (field === "time") {
+      return formatMinutesClock(fallbackValue);
+    }
+
+    return String(fallbackValue);
+  };
+
+  const matchesInputFallback = (runId, field, value) => {
+    const fallbackValue = runInputFallbacks[runId]?.[field];
+
+    if (!hasFieldValue(value) || !hasFieldValue(fallbackValue)) {
+      return false;
+    }
+
+    if (field === "pace") {
+      return String(value) === String(fallbackValue);
+    }
+
+    return Number(value) === Number(fallbackValue);
+  };
+
+  const getEditableDistanceValue = (set) => {
+    if (workoutStarted && matchesInputFallback(set.Run_id, "distance", set.distance)) {
+      return "";
+    }
+
+    return getDistanceInputValue(set.distance, distanceUnit);
+  };
+
+  const getEditableFieldValue = (set, field) => {
+    const value = set?.[field];
+
+    if (workoutStarted && matchesInputFallback(set.Run_id, field, value)) {
+      return "";
+    }
+
+    return value?.toString() ?? "";
+  };
+
+  const editablePlaceholderColor = colorWithAlpha(
+    primaryColor,
+    0.99,
+    quietText
+  );
 
   const handleZonePress = (setId) => {
     if (zoneSetId === setId && zoneDropdownVisible) {
@@ -305,6 +526,21 @@ const RunSetList = ({
     );
     await loadRunSets();
     triggerReload();
+  };
+
+  const updateSelectedSetDistance = async (value) => {
+    if (!selectedSet) {
+      return;
+    }
+
+    const nextDistance = parseDistanceInput(value, distanceUnit);
+
+    if (Number(nextDistance) >= AUTO_DISTANCE_KILOMETERS_THRESHOLD) {
+      setDistanceUnit(DISTANCE_UNIT_KILOMETERS);
+      setDistanceUnitManuallySelected(false);
+    }
+
+    await updateSelectedSetField("distance", nextDistance);
   };
 
   const deleteSet = async () => {
@@ -551,24 +787,21 @@ const RunSetList = ({
         <View style={[styles.runTableCell, styles.runDistanceColumn]}>
           {renderEditableValue({
             cellKey: `${set.Run_id}:distance`,
-            value: set.distance?.toString() ?? "",
-            displayFormatter: (value) => formatDistanceDisplay(value),
-            onCommit: async (value) => {
-              await runningRepository.updateRunSetField(db, {
-                runId: set.Run_id,
-                field: "distance",
-                value: parseNumberInput(value),
-              });
-              await loadRunSets();
-              triggerReload();
-            },
+            value: getEditableDistanceValue(set),
+            placeholder: getInputFallback(set.Run_id, "distance"),
+            placeholderTextColor: editablePlaceholderColor,
+            displayFormatter: (value) =>
+              formatDistanceDisplay(value, distanceUnit),
+            onCommit: async (value) => commitDistanceField(set.Run_id, value),
           })}
         </View>
 
         <View style={[styles.runTableCell, styles.runPaceColumn]}>
           {renderEditableValue({
             cellKey: `${set.Run_id}:pace`,
-            value: set.pace?.toString() ?? "",
+            value: getEditableFieldValue(set, "pace"),
+            placeholder: getInputFallback(set.Run_id, "pace"),
+            placeholderTextColor: editablePlaceholderColor,
             keyboardType: "normal",
             displayFormatter: (value) => formatPaceDisplay(value),
             onCommit: async (value) => {
@@ -591,7 +824,9 @@ const RunSetList = ({
           ) : (
             renderEditableValue({
               cellKey: `${set.Run_id}:time`,
-              value: set.time?.toString() ?? "",
+              value: getEditableFieldValue(set, "time"),
+              placeholder: getInputFallback(set.Run_id, "time"),
+              placeholderTextColor: editablePlaceholderColor,
               keyboardType: "normal",
               displayFormatter: (value) => formatMinutesClock(value),
               onCommit: async (value) => {
@@ -702,24 +937,21 @@ const RunSetList = ({
         <View style={[styles.runTableCell, styles.runDistanceColumn]}>
           {renderEditableValue({
             cellKey: `${set.Run_id}:distance`,
-            value: set.distance?.toString() ?? "",
-            displayFormatter: (value) => formatDistanceDisplay(value),
-            onCommit: async (value) => {
-              await runningRepository.updateRunSetField(db, {
-                runId: set.Run_id,
-                field: "distance",
-                value: parseNumberInput(value),
-              });
-              await loadRunSets();
-              triggerReload();
-            },
+            value: getEditableDistanceValue(set),
+            placeholder: getInputFallback(set.Run_id, "distance"),
+            placeholderTextColor: editablePlaceholderColor,
+            displayFormatter: (value) =>
+              formatDistanceDisplay(value, distanceUnit),
+            onCommit: async (value) => commitDistanceField(set.Run_id, value),
           })}
         </View>
 
         <View style={[styles.runTableCell, styles.runPaceColumn]}>
           {renderEditableValue({
             cellKey: `${set.Run_id}:pace`,
-            value: set.pace?.toString() ?? "",
+            value: getEditableFieldValue(set, "pace"),
+            placeholder: getInputFallback(set.Run_id, "pace"),
+            placeholderTextColor: editablePlaceholderColor,
             keyboardType: "normal",
             displayFormatter: (value) => formatPaceDisplay(value),
             onCommit: async (value) => {
@@ -742,7 +974,9 @@ const RunSetList = ({
           ) : (
             renderEditableValue({
               cellKey: `${set.Run_id}:time`,
-              value: set.time?.toString() ?? "",
+              value: getEditableFieldValue(set, "time"),
+              placeholder: getInputFallback(set.Run_id, "time"),
+              placeholderTextColor: editablePlaceholderColor,
               keyboardType: "normal",
               displayFormatter: (value) => formatMinutesClock(value),
               onCommit: async (value) => {
@@ -890,7 +1124,7 @@ const RunSetList = ({
             styles.intervalsCard,
             {
               backgroundColor: cardSurface,
-              borderColor: primaryColor,
+              borderColor: workoutStarted ? "transparent" : primaryColor,
             },
           ]}
         >
@@ -919,7 +1153,12 @@ const RunSetList = ({
               { backgroundColor: tableSurface, borderColor: tableBorder },
             ]}
           >
-            <ListHeader styles={styles} dividerColor={tableBorder} />
+            <ListHeader
+              styles={styles}
+              dividerColor={tableBorder}
+              distanceUnit={distanceUnit}
+              onDistanceUnitPress={toggleDistanceUnit}
+            />
 
             {sets.length === 0 ? (
               <View style={styles.emptyState}>
@@ -984,9 +1223,14 @@ const RunSetList = ({
 
         <View style={styles.bottomsheetEditGrid}>
           <View style={styles.bottomsheetField}>
-            <ThemedText style={styles.bottomsheetFieldLabel} setColor={quietText}>
-              DIST
-            </ThemedText>
+            <TouchableOpacity
+              activeOpacity={0.78}
+              onPress={toggleDistanceUnit}
+            >
+              <ThemedText style={styles.bottomsheetFieldLabel} setColor={quietText}>
+                DIST {distanceUnit}
+              </ThemedText>
+            </TouchableOpacity>
             <View
               style={[
                 styles.bottomsheetEditCell,
@@ -994,11 +1238,15 @@ const RunSetList = ({
               ]}
             >
               <ThemedEditableCell
-                value={selectedSet?.distance?.toString() ?? ""}
-                displayFormatter={(value) => formatDistanceDisplay(value)}
-                onCommit={(value) =>
-                  updateSelectedSetField("distance", parseNumberInput(value))
+                value={
+                  selectedSet ? getEditableDistanceValue(selectedSet) : ""
                 }
+                placeholder={getInputFallback(selectedSet?.Run_id, "distance")}
+                placeholderTextColor={editablePlaceholderColor}
+                displayFormatter={(value) =>
+                  formatDistanceDisplay(value, distanceUnit)
+                }
+                onCommit={updateSelectedSetDistance}
               />
             </View>
           </View>
@@ -1014,7 +1262,11 @@ const RunSetList = ({
               ]}
             >
               <ThemedEditableCell
-                value={selectedSet?.pace?.toString() ?? ""}
+                value={
+                  selectedSet ? getEditableFieldValue(selectedSet, "pace") : ""
+                }
+                placeholder={getInputFallback(selectedSet?.Run_id, "pace")}
+                placeholderTextColor={editablePlaceholderColor}
                 keyboardType="normal"
                 displayFormatter={(value) => formatPaceDisplay(value)}
                 onCommit={(value) =>
@@ -1035,7 +1287,11 @@ const RunSetList = ({
               ]}
             >
               <ThemedEditableCell
-                value={selectedSet?.time?.toString() ?? ""}
+                value={
+                  selectedSet ? getEditableFieldValue(selectedSet, "time") : ""
+                }
+                placeholder={getInputFallback(selectedSet?.Run_id, "time")}
+                placeholderTextColor={editablePlaceholderColor}
                 keyboardType="normal"
                 displayFormatter={(value) => formatMinutesClock(value)}
                 onCommit={(value) =>

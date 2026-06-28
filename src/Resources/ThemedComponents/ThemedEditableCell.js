@@ -14,6 +14,8 @@ const ThemedEditableCell = ({
   displayFormatter,
   showSuffixWhenEmpty = false,
   textAlign = "center",
+  placeholder = "",
+  placeholderTextColor,
   onFocus,
   onBlur,
 }) => {
@@ -33,6 +35,8 @@ const ThemedEditableCell = ({
     focused || !displayFormatter
       ? localValue ?? ""
       : displayFormatter(localValue ?? "");
+  const hasCustomPlaceholder =
+    !focused && !displayValue && Boolean(placeholder);
 
   const displaySuffix =
     suffixFormatter
@@ -76,6 +80,29 @@ const ThemedEditableCell = ({
         selectionColor={theme.primary}
       />
 
+      {hasCustomPlaceholder && (
+        <ThemedText
+          pointerEvents="none"
+          setColor={
+            placeholderTextColor ??
+            theme.quietText ??
+            theme.iconColor ??
+            theme.text
+          }
+          style={[
+            styles.placeholder,
+            {
+              textAlign,
+            },
+          ]}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.72}
+        >
+          {placeholder}
+        </ThemedText>
+      )}
+
       {shouldShowSuffix && (
         <ThemedText
           style={[
@@ -109,6 +136,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
     minWidth: 20,
+  },
+  placeholder: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    fontSize: 14,
+    fontWeight: "500",
   },
   suffix: {
     fontSize: 8,

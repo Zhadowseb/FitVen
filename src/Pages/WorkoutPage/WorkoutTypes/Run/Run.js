@@ -9,8 +9,11 @@ import {
 } from "react-native";
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useSQLiteContext } from "expo-sqlite";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useColorScheme } from "react-native";
+import Feather from "@expo/vector-icons/Feather";
+import MapView, { Marker, Polyline } from "react-native-maps";
+import Svg, { Line, Path, Rect, Text as SvgText } from "react-native-svg";
 
 import RunSetList from "./RunSetList";
 import { Colors } from "../../../../Resources/GlobalStyling/colors";
@@ -24,6 +27,13 @@ import {
   ThemedKeyboardProtection,
 } from "../../../../Resources/ThemedComponents";
 import styles from "./RunStyle";
+import {
+  buildTargetHeartRateHistory,
+  HEART_RATE_ZONE_BANDS,
+  HEART_RATE_ZONE_THRESHOLDS,
+  getHeartRateZoneColor,
+  TEST_MAX_HEART_RATE,
+} from "./RunHeartRateChartConfig";
 
 import {
   getCurrentStoredTimestampSeconds,
@@ -142,12 +152,6 @@ const RUN_WORKOUT_FLOW_OPTIONS = [
   },
 ];
 
-const RUN_WORKOUT_STATUS_STEPS = [
-  { id: "plan", label: "Plan" },
-  { id: "active", label: "Active" },
-  { id: "done", label: "Done" },
-];
-
 function getRunFlowOption(optionId) {
   return (
     RUN_WORKOUT_FLOW_OPTIONS.find((option) => option.id === optionId) ?? null
@@ -207,6 +211,27 @@ function getRunSegmentLabel(set) {
   return "Sprint";
 }
 
+function getWorkingSetPosition(sets, targetIndex) {
+  if (targetIndex < 0) {
+    return null;
+  }
+
+  let workingSetCount = 0;
+
+  for (let index = 0; index <= targetIndex; index++) {
+    const set = sets[index];
+    const isWorkingSet =
+      normalizeRunSectionType(set?.type) === "WORKING_SET" &&
+      Number(set?.is_pause) !== 1;
+
+    if (isWorkingSet) {
+      workingSetCount += 1;
+    }
+  }
+
+  return workingSetCount > 0 ? workingSetCount : null;
+}
+
 function getLocationLogTimestamp(log) {
   const timestamp = Number(log?.timestamp);
   return Number.isFinite(timestamp) ? timestamp : null;
@@ -262,10 +287,249 @@ function getRecentPaceMinutes(logs, currentTimestampSeconds) {
   );
 }
 
+function splitLocationRouteSegments(logs = []) {
+  const segments = [];
+  let currentSegment = [];
+
+  [...logs]
+    .sort(
+      (left, right) =>
+        (getLocationLogTimestamp(left) ?? 0) -
+        (getLocationLogTimestamp(right) ?? 0)
+    )
+    .forEach((log) => {
+      if (log?.latitude === null || log?.longitude === null) {
+        if (currentSegment.length > 0) {
+          segments.push(currentSegment);
+          currentSegment = [];
+        }
+        return;
+      }
+
+      const latitude = Number(log?.latitude);
+      const longitude = Number(log?.longitude);
+
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+        if (currentSegment.length > 0) {
+          segments.push(currentSegment);
+          currentSegment = [];
+        }
+        return;
+      }
+
+      currentSegment.push({ latitude, longitude });
+    });
+
+  if (currentSegment.length > 0) {
+    segments.push(currentSegment);
+  }
+
+  return segments;
+}
+
+function buildPaceHistory(logs = []) {
+  const orderedLogs = [...logs].sort(
+    (left, right) =>
+      (getLocationLogTimestamp(left) ?? 0) -
+      (getLocationLogTimestamp(right) ?? 0)
+  );
+  const firstTimestamp = orderedLogs
+    .map(getLocationLogTimestamp)
+    .find((timestamp) => timestamp !== null);
+
+  if (firstTimestamp === undefined) {
+    return [];
+  }
+
+  const sampleStep = Math.max(1, Math.ceil(orderedLogs.length / 42));
+  const history = [];
+
+  for (let index = sampleStep; index < orderedLogs.length; index += sampleStep) {
+    const timestamp = getLocationLogTimestamp(orderedLogs[index]);
+
+    if (timestamp === null) {
+      continue;
+    }
+
+    const windowLogs = orderedLogs.filter((log) => {
+      const logTimestamp = getLocationLogTimestamp(log);
+      return (
+        logTimestamp !== null &&
+        logTimestamp <= timestamp &&
+        logTimestamp >= timestamp - 60000
+      );
+    });
+    const pace = calculatePaceForLogWindow(windowLogs);
+
+    if (pace === null || pace < 1.5 || pace > 20) {
+      continue;
+    }
+
+    history.push({
+      x: Math.max(0, (timestamp - firstTimestamp) / 60000),
+      y: pace,
+    });
+  }
+
+  return history;
+}
+
+function getRouteRegion(routeSegments = []) {
+  const coordinates = routeSegments.flat();
+
+  if (coordinates.length === 0) {
+    return null;
+  }
+
+  const latitudes = coordinates.map((coordinate) => coordinate.latitude);
+  const longitudes = coordinates.map((coordinate) => coordinate.longitude);
+  const minLatitude = Math.min(...latitudes);
+  const maxLatitude = Math.max(...latitudes);
+  const minLongitude = Math.min(...longitudes);
+  const maxLongitude = Math.max(...longitudes);
+
+  return {
+    latitude: (minLatitude + maxLatitude) / 2,
+    longitude: (minLongitude + maxLongitude) / 2,
+    latitudeDelta: Math.max((maxLatitude - minLatitude) * 1.45, 0.006),
+    longitudeDelta: Math.max((maxLongitude - minLongitude) * 1.45, 0.006),
+  };
+}
+
+function buildChartPath(
+  data,
+  {
+    invert = false,
+    stepped = false,
+    durationMinutes = null,
+    domainMinY = null,
+    domainMaxY = null,
+    chartLeft = 14,
+  } = {}
+) {
+  if (!Array.isArray(data) || data.length < 2) {
+    return null;
+  }
+
+  const chartRight = 306;
+  const chartTop = 10;
+  const chartBottom = 112;
+  const xValues = data.map((point) => Number(point.x));
+  const yValues = data.map((point) => Number(point.y));
+  const minY = Number.isFinite(domainMinY) ? domainMinY : Math.min(...yValues);
+  const maxY = Number.isFinite(domainMaxY) ? domainMaxY : Math.max(...yValues);
+  const dataMaxX = Math.max(...xValues);
+  const xRange =
+    Number.isFinite(durationMinutes) && durationMinutes > 0
+      ? durationMinutes
+      : Math.max(dataMaxX, 1);
+  const yRange = maxY - minY;
+  const normalizedPoints = data.map((point) => {
+    const clampedX = Math.min(Math.max(Number(point.x), 0), xRange);
+    const x =
+      chartLeft + (clampedX / xRange) * (chartRight - chartLeft);
+    const clampedY = Math.min(Math.max(Number(point.y), minY), maxY);
+    const normalizedY =
+      yRange > 0 ? (clampedY - minY) / yRange : 0.5;
+    const yRatio = invert ? normalizedY : 1 - normalizedY;
+    const y = chartTop + yRatio * (chartBottom - chartTop);
+
+    return { x, y };
+  });
+
+  return normalizedPoints.reduce((path, point, index) => {
+    if (index === 0) {
+      return `M ${point.x} ${point.y}`;
+    }
+
+    if (stepped) {
+      const previousPoint = normalizedPoints[index - 1];
+      return `${path} L ${point.x} ${previousPoint.y} L ${point.x} ${point.y}`;
+    }
+
+    return `${path} L ${point.x} ${point.y}`;
+  }, "");
+}
+
+function buildHeartRateZoneSegments(
+  data,
+  {
+    durationMinutes = null,
+    domainMinY = 60,
+    domainMaxY = TEST_MAX_HEART_RATE,
+    chartLeft = 38,
+  } = {}
+) {
+  if (!Array.isArray(data) || data.length < 2) {
+    return [];
+  }
+
+  const chartRight = 306;
+  const chartTop = 10;
+  const chartBottom = 112;
+  const dataMaxX = Math.max(...data.map((point) => Number(point.x) || 0));
+  const xRange =
+    Number.isFinite(durationMinutes) && durationMinutes > 0
+      ? durationMinutes
+      : Math.max(dataMaxX, 1);
+  const yRange = domainMaxY - domainMinY;
+  const points = data.map((point) => {
+    const elapsedMinutes = Math.min(
+      Math.max(Number(point?.x) || 0, 0),
+      xRange
+    );
+    const bpm = Math.min(
+      Math.max(Number(point?.y) || domainMinY, domainMinY),
+      domainMaxY
+    );
+
+    return {
+      bpm,
+      x: chartLeft + (elapsedMinutes / xRange) * (chartRight - chartLeft),
+      y:
+        chartTop +
+        (1 - (bpm - domainMinY) / yRange) * (chartBottom - chartTop),
+    };
+  });
+  const segments = [];
+
+  for (let index = 1; index < points.length; index += 1) {
+    const start = points[index - 1];
+    const end = points[index];
+    const bpmDifference = end.bpm - start.bpm;
+    const crossingRatios =
+      bpmDifference === 0
+        ? []
+        : HEART_RATE_ZONE_THRESHOLDS.map(
+            (threshold) => (threshold - start.bpm) / bpmDifference
+          ).filter((ratio) => ratio > 0 && ratio < 1);
+    const ratios = [0, ...crossingRatios.sort((left, right) => left - right), 1];
+
+    for (let ratioIndex = 1; ratioIndex < ratios.length; ratioIndex += 1) {
+      const startRatio = ratios[ratioIndex - 1];
+      const endRatio = ratios[ratioIndex];
+      const segmentStartX = start.x + (end.x - start.x) * startRatio;
+      const segmentStartY = start.y + (end.y - start.y) * startRatio;
+      const segmentEndX = start.x + (end.x - start.x) * endRatio;
+      const segmentEndY = start.y + (end.y - start.y) * endRatio;
+      const midpointBpm =
+        start.bpm + bpmDifference * ((startRatio + endRatio) / 2);
+
+      segments.push({
+        color: getHeartRateZoneColor(midpointBpm),
+        path: `M ${segmentStartX} ${segmentStartY} L ${segmentEndX} ${segmentEndY}`,
+      });
+    }
+  }
+
+  return segments;
+}
+
 const Run = ({ workout_id, restartRequestKey }) => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const db = useSQLiteContext();
+  const navigation = useNavigation();
 
   const [updateCount, set_updateCount] = useState(0);
   const triggerReload = () => {
@@ -274,13 +538,14 @@ const Run = ({ workout_id, restartRequestKey }) => {
 
   const [selectedRunFlow, set_selectedRunFlow] = useState(null);
   const [isSelectingRunFlow, set_isSelectingRunFlow] = useState(false);
-  const [previewRunWorkoutStatus, set_previewRunWorkoutStatus] =
-    useState(null);
   const [hasRunStructure, set_hasRunStructure] = useState(false);
   const [runSectionCounts, set_runSectionCounts] = useState(
     EMPTY_RUN_SECTION_COUNTS
   );
+  const [runPlanSets, set_runPlanSets] = useState([]);
+  const [locationLogs, set_locationLogs] = useState([]);
   const [activeRunSegment, set_activeRunSegment] = useState(null);
+  const [nextRunSegment, set_nextRunSegment] = useState(null);
   const [currentPaceMinutes, set_currentPaceMinutes] = useState(null);
   const [activeSegmentDistance, set_activeSegmentDistance] = useState(0);
   const [runStructureLoaded, set_runStructureLoaded] = useState(false);
@@ -291,6 +556,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
   const [workoutStateLoaded, set_workoutStateLoaded] = useState(false);
   const [isRunning, set_isRunning] = useState(false);
   const [isControlBusy, set_isControlBusy] = useState(false);
+  const [isWorkoutPlanExpanded, set_isWorkoutPlanExpanded] = useState(false);
   const [totalDistance, set_totalDistance] = useState(0);
   const [timerTick, set_timerTick] = useState(() =>
     getCurrentStoredTimestampSeconds()
@@ -313,15 +579,22 @@ const Run = ({ workout_id, restartRequestKey }) => {
   useEffect(() => {
     set_selectedRunFlow(null);
     set_isSelectingRunFlow(false);
-    set_previewRunWorkoutStatus(null);
+    set_isWorkoutPlanExpanded(false);
     set_hasRunStructure(false);
     set_runSectionCounts(EMPTY_RUN_SECTION_COUNTS);
+    set_runPlanSets([]);
+    set_locationLogs([]);
     set_activeRunSegment(null);
+    set_nextRunSegment(null);
     set_currentPaceMinutes(null);
     set_activeSegmentDistance(0);
     set_runStructureLoaded(false);
     set_workoutStateLoaded(false);
   }, [workout_id]);
+
+  useEffect(() => {
+    set_isWorkoutPlanExpanded(false);
+  }, [original_start_time]);
 
   const currentElapsed =
     normalizeElapsedDurationSeconds(elapsed_time, 0) +
@@ -340,10 +613,6 @@ const Run = ({ workout_id, restartRequestKey }) => {
   useEffect(() => {
     activeRunSegmentRef.current = activeRunSegment;
   }, [activeRunSegment]);
-
-  useEffect(() => {
-    set_previewRunWorkoutStatus(null);
-  }, [isDone, original_start_time]);
 
   const persistCurrentTimerState = useCallback(async () => {
     await workoutRepository.persistWorkoutTimerState(db, {
@@ -371,6 +640,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
     set_activeSet(null);
     set_activeSet_remainingTime(0);
     set_activeRunSegment(null);
+    set_nextRunSegment(null);
     set_activeSegmentDistance(0);
   };
 
@@ -404,6 +674,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
         calculateTrackedDistanceSummary(activeSegmentLogs);
 
       set_totalDistance(summary.totalDistanceKm);
+      set_locationLogs(logs);
       set_activeSegmentDistance(activeSegmentSummary.totalDistanceKm);
       set_currentPaceMinutes(
         getRecentPaceMinutes(logs, getCurrentStoredTimestampSeconds())
@@ -424,6 +695,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
 
       set_hasRunStructure(sets.length > 0);
       set_runSectionCounts(getRunSectionCounts(sets));
+      set_runPlanSets(sets);
     } catch (error) {
       console.error("Failed to load run structure state:", error);
     } finally {
@@ -487,6 +759,10 @@ const Run = ({ workout_id, restartRequestKey }) => {
         const activeWorkingSetCount = isWorkingSet
           ? completedWorkingSetCount + 1
           : completedWorkingSetCount;
+        const nextSet = sets[i + 1] ?? null;
+        const nextWorkingSetPosition = nextSet
+          ? getWorkingSetPosition(sets, i + 1)
+          : null;
 
         if (previousActiveSetRef.current !== newActiveSet) {
           previousActiveSetRef.current = newActiveSet;
@@ -515,6 +791,16 @@ const Run = ({ workout_id, restartRequestKey }) => {
 
         activeRunSegmentRef.current = nextActiveRunSegment;
         set_activeRunSegment(nextActiveRunSegment);
+        set_nextRunSegment(
+          nextSet
+            ? {
+                ...nextSet,
+                actionLabel: getRunSegmentLabel(nextSet),
+                intervalIndex: nextWorkingSetPosition,
+                totalIntervals: totalWorkingSetCount,
+              }
+            : null
+        );
         return;
       }
 
@@ -828,6 +1114,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
       });
 
       await loadTrackedRunSummary();
+      await loadRunStructureState();
     } catch (error) {
       console.error("Failed to finish run:", error);
       Alert.alert(
@@ -858,6 +1145,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
       set_isRunning(false);
       set_isDone(false);
       set_totalDistance(0);
+      set_locationLogs([]);
       set_currentPaceMinutes(null);
       set_activeSegmentDistance(0);
       clearActiveSegment();
@@ -941,6 +1229,35 @@ const Run = ({ workout_id, restartRequestKey }) => {
   const formattedTotalDistance = formatRunDistance(totalDistance);
   const avgPaceDisplay = formatPaceDisplay(avgPaceMinutes);
   const elapsedDisplay = formatRunClock(currentElapsed);
+  const routeSegments = splitLocationRouteSegments(locationLogs);
+  const routeRegion = getRouteRegion(routeSegments);
+  const routeCoordinates = routeSegments.flat();
+  const paceHistory = buildPaceHistory(locationLogs);
+  const targetHeartRateHistory = buildTargetHeartRateHistory(runPlanSets);
+  const actualHeartRateHistory = [];
+  const targetHeartRateZones = [
+    ...new Set(targetHeartRateHistory.map((point) => Number(point.zone))),
+  ].sort((left, right) => left - right);
+  const targetHeartRateDisplay =
+    targetHeartRateZones.length === 0
+      ? "--"
+      : targetHeartRateZones.length === 1
+        ? `Z${targetHeartRateZones[0]}`
+        : `Z${targetHeartRateZones[0]}-Z${
+            targetHeartRateZones[targetHeartRateZones.length - 1]
+          }`;
+  const workingRunSets = runPlanSets.filter(
+    (set) =>
+      normalizeRunSectionType(set?.type) === "WORKING_SET" &&
+      Number(set?.is_pause) !== 1
+  );
+  const completedWorkingSetCount = workingRunSets.filter(
+    (set) => Number(set?.done) === 1
+  ).length;
+  const completedSetDisplay =
+    workingRunSets.length > 0
+      ? `${completedWorkingSetCount}/${workingRunSets.length}`
+      : "--";
   const runShellReady = workoutStateLoaded && runStructureLoaded;
   const canChangeRunFlow =
     original_start_time === null && !isDone && !isRunning;
@@ -955,17 +1272,16 @@ const Run = ({ workout_id, restartRequestKey }) => {
     !isFreshRunWithoutStructure || selectedRunFlow === "speed-structure";
   const selectedRunFlowOption = getRunFlowOption(selectedRunFlow);
   const shouldShowSpeedStructureTimer =
-    selectedRunFlow === "speed-structure" && original_start_time !== null;
+    selectedRunFlow === "speed-structure" && original_start_time !== null && !isDone;
   const actualRunWorkoutStatus = isDone
     ? "done"
     : original_start_time !== null
       ? "active"
       : "plan";
-  const runWorkoutStatus = previewRunWorkoutStatus ?? actualRunWorkoutStatus;
-  const runWorkoutStatusIndex = RUN_WORKOUT_STATUS_STEPS.findIndex(
-    (step) => step.id === runWorkoutStatus
-  );
   const shouldShowPlanOnlyStartAction = actualRunWorkoutStatus === "plan";
+  const isWorkoutPlanCollapsible = actualRunWorkoutStatus === "active";
+  const shouldShowWorkoutPlan =
+    !isWorkoutPlanCollapsible || isWorkoutPlanExpanded;
   const shouldPruneEmptyPlanSections =
     selectedRunFlow === "speed-structure" && original_start_time !== null;
   const shouldShowFinishRunPill =
@@ -1006,21 +1322,364 @@ const Run = ({ workout_id, restartRequestKey }) => {
       unit: "bpm",
     },
   ];
-  const speedStructureActionLabel =
-    activeRunSegment?.actionLabel ?? (isDone ? "Complete" : "No active step");
   const speedStructureCountdownDisplay = formatRunClock(
     activeRunSegment?.remainingSeconds ?? 0
   );
   const currentPaceDisplay = formatPaceDisplay(currentPaceMinutes);
-  const currentIntervalValue =
-    activeRunSegment?.totalIntervals > 0
-      ? `${activeRunSegment.intervalIndex} / ${activeRunSegment.totalIntervals}`
-      : "--";
   const pulseDisplay = activeRunSegment?.heartrate
     ? `Z${activeRunSegment.heartrate}`
     : "--";
-  const activeSegmentDistanceDisplay = formatRunDistance(activeSegmentDistance);
-  const totalTimeDistanceDisplay = `${elapsedDisplay} / ${formattedTotalDistance}`;
+  const formatSegmentPlanDistance = (segment) => {
+    const distance = Number(segment?.distance);
+
+    return Number.isFinite(distance) && distance > 0
+      ? `${formatRunDistance(distance)} km`
+      : "--";
+  };
+  const formatSegmentPlanTime = (segment) => {
+    const minutes = Number(segment?.time);
+
+    return Number.isFinite(minutes) && minutes > 0
+      ? formatRunClock(minutes * 60)
+      : "--";
+  };
+  const formatSegmentPlanPace = (segment) => {
+    const paceMinutes = parsePaceToMinutes(segment?.pace);
+
+    return paceMinutes !== null ? `${formatPaceDisplay(paceMinutes)} /km` : "--";
+  };
+  const formatSegmentPlanHeartRate = (segment) =>
+    segment?.heartrate ? `Z${segment.heartrate}` : "--";
+  const getSegmentPlanTitle = (segment) => {
+    if (!segment) {
+      return "No active set";
+    }
+
+    const label = segment.actionLabel ?? getRunSegmentLabel(segment);
+
+    if (segment.intervalIndex && segment.totalIntervals) {
+      return `${label} ${segment.intervalIndex}/${segment.totalIntervals}`;
+    }
+
+    if (Number(segment?.is_pause) !== 1 && segment?.set_number) {
+      return `${label} ${segment.set_number}`;
+    }
+
+    return label;
+  };
+  const renderActiveCardTitle = (label) => (
+    <ThemedText style={styles.activeCardTitle} setColor={quietText}>
+      {label}
+    </ThemedText>
+  );
+  const renderCompletionChart = ({
+    sectionTitle,
+    title,
+    subtitle,
+    icon,
+    data,
+    color,
+    value,
+    valueLabel,
+    invert = false,
+    stepped = false,
+    zoneBands = [],
+    domainMinY = null,
+    domainMaxY = null,
+    yAxisTicks = [],
+    onPress = null,
+    plannedData = [],
+    plannedColor = theme.planned ?? "#FFDD00",
+    strokeWidth = 3,
+    colorByHeartRateZone = false,
+    plannedStepped = stepped,
+  }) => {
+    const chartLeft = yAxisTicks.length > 0 ? 38 : 14;
+    const chartRight = 306;
+    const chartPath = buildChartPath(data, {
+      invert,
+      stepped,
+      durationMinutes: currentElapsed / 60,
+      domainMinY,
+      domainMaxY,
+      chartLeft,
+    });
+    const plannedChartPath = buildChartPath(plannedData, {
+      invert,
+      stepped: plannedStepped,
+      durationMinutes: currentElapsed / 60,
+      domainMinY,
+      domainMaxY,
+      chartLeft,
+    });
+    const heartRateZoneSegments = colorByHeartRateZone
+      ? buildHeartRateZoneSegments(data, {
+          durationMinutes: currentElapsed / 60,
+          domainMinY,
+          domainMaxY,
+          chartLeft,
+        })
+      : [];
+    const chartBandRange =
+      Number.isFinite(domainMinY) &&
+      Number.isFinite(domainMaxY) &&
+      domainMaxY > domainMinY
+        ? domainMaxY - domainMinY
+        : null;
+    const chartBandRects = chartBandRange
+      ? zoneBands.map((band) => {
+          const min = Math.max(domainMinY, Number(band.min));
+          const max = Math.min(domainMaxY, Number(band.max));
+          const top = 10 + (1 - (max - domainMinY) / chartBandRange) * 102;
+          const height = ((max - min) / chartBandRange) * 102;
+
+          return {
+            ...band,
+            top,
+            height,
+          };
+        })
+      : [];
+    const yAxisGridLines = chartBandRange
+      ? yAxisTicks.map((tick) => ({
+          value: tick,
+          y:
+            10 +
+            (1 - (Number(tick) - domainMinY) / chartBandRange) * 102,
+        }))
+      : [];
+
+    return (
+      <View style={styles.activeTitledCardShell}>
+        {renderActiveCardTitle(sectionTitle)}
+        <TouchableOpacity
+          accessibilityRole={onPress ? "button" : undefined}
+          accessibilityLabel={onPress ? `Open ${title} chart fullscreen` : undefined}
+          activeOpacity={onPress ? 0.82 : 1}
+          disabled={!onPress}
+          onPress={onPress}
+          style={styles.completionChartPressable}
+        >
+          <ThemedCard
+            style={[
+              styles.completionChartCard,
+              {
+                backgroundColor: cardSurface,
+                borderColor: cardBorder,
+              },
+            ]}
+          >
+            <View style={styles.completionChartHeader}>
+              <View style={styles.completionChartHeading}>
+                <View
+                  style={[
+                    styles.completionChartIcon,
+                    {
+                      borderColor: color,
+                      backgroundColor: innerSurface,
+                    },
+                  ]}
+                >
+                  <Feather name={icon} size={18} color={color} />
+                </View>
+                <View style={styles.completionChartTitleCopy}>
+                  <ThemedText
+                    style={styles.completionChartTitle}
+                    setColor={titleColor}
+                  >
+                    {title}
+                  </ThemedText>
+                  <ThemedText
+                    style={styles.completionChartSubtitle}
+                    setColor={quietText}
+                  >
+                    {subtitle}
+                  </ThemedText>
+                </View>
+              </View>
+
+              <View style={styles.completionChartHeaderActions}>
+                <View style={styles.completionChartValueWrap}>
+                  <ThemedText
+                    style={styles.completionChartValue}
+                    setColor={color}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.7}
+                  >
+                    {value}
+                  </ThemedText>
+                  <ThemedText
+                    style={styles.completionChartValueLabel}
+                    setColor={quietText}
+                  >
+                    {valueLabel}
+                  </ThemedText>
+                </View>
+                {onPress ? (
+                  <Feather name="maximize-2" size={17} color={quietText} />
+                ) : null}
+              </View>
+            </View>
+
+            <Svg
+              width="100%"
+              height={132}
+              viewBox="0 0 320 132"
+              style={styles.completionChart}
+            >
+              {chartBandRects.map((band) => (
+                <Rect
+                  key={band.zone}
+                  x={chartLeft}
+                  y={band.top}
+                  width={chartRight - chartLeft}
+                  height={band.height}
+                  fill={band.color}
+                  fillOpacity="0.16"
+                />
+              ))}
+              {(yAxisGridLines.length > 0
+                ? yAxisGridLines
+                : [24, 61, 98].map((y) => ({ value: null, y }))
+              ).map((gridLine) => (
+                <Line
+                  key={`${gridLine.value ?? "grid"}:${gridLine.y}`}
+                  x1={chartLeft}
+                  x2={chartRight}
+                  y1={gridLine.y}
+                  y2={gridLine.y}
+                  stroke={cardBorder}
+                  strokeWidth="1"
+                  strokeDasharray="4 6"
+                />
+              ))}
+              {yAxisGridLines.map((gridLine) => (
+                <SvgText
+                  key={`label:${gridLine.value}`}
+                  x="2"
+                  y={gridLine.y + 3}
+                  fill={quietText}
+                  fontSize="8"
+                  fontWeight="700"
+                >
+                  {gridLine.value}
+                </SvgText>
+              ))}
+              {plannedChartPath ? (
+                <Path
+                  d={plannedChartPath}
+                  fill="none"
+                  stroke={plannedColor}
+                  strokeWidth="1.25"
+                  strokeOpacity="0.78"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              ) : null}
+              {heartRateZoneSegments.map((segment, index) => (
+                <Path
+                  key={`${index}:${segment.color}`}
+                  d={segment.path}
+                  fill="none"
+                  stroke={segment.color}
+                  strokeWidth={strokeWidth}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              ))}
+              {chartPath && !colorByHeartRateZone ? (
+                <Path
+                  d={chartPath}
+                  fill="none"
+                  stroke={color}
+                  strokeWidth={strokeWidth}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              ) : null}
+            </Svg>
+            <View style={styles.completionChartAxis}>
+              <ThemedText
+                style={styles.completionChartAxisLabel}
+                setColor={quietText}
+              >
+                START
+              </ThemedText>
+              <ThemedText
+                style={styles.completionChartAxisLabel}
+                setColor={quietText}
+              >
+                {elapsedDisplay}
+              </ThemedText>
+            </View>
+          </ThemedCard>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+  const renderRunPlanStatRow = (segment) => {
+    const metrics = [
+      {
+        label: "DISTANCE",
+        value: formatSegmentPlanDistance(segment),
+        icon: "map-pin",
+      },
+      {
+        label: "PACE",
+        value: formatSegmentPlanPace(segment),
+        icon: "activity",
+      },
+      {
+        label: "TIME",
+        value: formatSegmentPlanTime(segment),
+        icon: "clock",
+      },
+      {
+        label: "HR",
+        value: formatSegmentPlanHeartRate(segment),
+        icon: "heart",
+      },
+    ];
+
+    return (
+      <View style={styles.activeSetStatRow}>
+        {metrics.map((metric, index) => (
+          <View key={metric.label} style={styles.activeSetStatItem}>
+            <View style={styles.activeSetStatHeader}>
+              <Feather name={metric.icon} size={16} color={quietText} />
+              <ThemedText
+                style={styles.activeSetStatLabel}
+                setColor={quietText}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.72}
+              >
+                {metric.label}
+              </ThemedText>
+            </View>
+            <ThemedText
+              style={styles.activeSetStatValue}
+              setColor={titleColor}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.68}
+            >
+              {metric.value}
+            </ThemedText>
+            {index < metrics.length - 1 ? (
+              <View
+                style={[
+                  styles.activeSetStatDivider,
+                  { backgroundColor: cardBorder },
+                ]}
+              />
+            ) : null}
+          </View>
+        ))}
+      </View>
+    );
+  };
   const renderRunFlowImage = (option) => (
     <View
       style={[
@@ -1039,69 +1698,8 @@ const Run = ({ workout_id, restartRequestKey }) => {
     </View>
   );
 
-  const renderRunStatusProgress = () => (
-    <View
-      style={[
-        styles.runStatusPill,
-        {
-          backgroundColor: fieldSurface,
-          borderColor: cardBorder,
-        },
-      ]}
-    >
-      {RUN_WORKOUT_STATUS_STEPS.map((step, index) => {
-        const isCurrent = step.id === runWorkoutStatus;
-        const isReached = index <= runWorkoutStatusIndex;
-
-        return (
-          <TouchableOpacity
-            key={step.id}
-            activeOpacity={0.78}
-            accessibilityRole="button"
-            accessibilityLabel={`Preview ${step.label} run status`}
-            onPress={() =>
-              set_previewRunWorkoutStatus((currentStatus) =>
-                currentStatus === step.id ? null : step.id
-              )
-            }
-            style={[
-              styles.runStatusTab,
-              isCurrent && { backgroundColor: cardSurface },
-            ]}
-          >
-            <ThemedText
-              style={styles.runStatusLabel}
-              setColor={
-                isCurrent ? primaryColor : isReached ? titleColor : quietText
-              }
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.78}
-            >
-              {step.label}
-            </ThemedText>
-
-            {isCurrent && (
-              <View style={styles.runStatusLampWrap}>
-                <View
-                  style={[
-                    styles.runStatusLamp,
-                    {
-                      backgroundColor: primaryColor,
-                      shadowColor: primaryColor,
-                    },
-                  ]}
-                />
-              </View>
-            )}
-          </TouchableOpacity>
-        );
-      })}
-    </View>
-  );
-
   const renderRunFocusTitle = () => {
-    if (!selectedRunFlowOption) {
+    if (!selectedRunFlowOption || actualRunWorkoutStatus === "active") {
       return null;
     }
 
@@ -1179,119 +1777,591 @@ const Run = ({ workout_id, restartRequestKey }) => {
     </View>
   );
 
-  const renderSpeedStructureTimer = () => (
-    <View style={styles.speedTimerShell}>
-      <View style={styles.speedTimerActionBlock}>
-        <View style={styles.speedTimerActionRow}>
-          <ThemedText
-            style={styles.speedTimerActionText}
-            setColor={titleColor}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.72}
-          >
-            {speedStructureActionLabel}
-          </ThemedText>
-          <ThemedText
-            style={styles.speedTimerCountdown}
-            setColor={primaryColor}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.65}
-          >
-            {speedStructureCountdownDisplay}
-          </ThemedText>
-        </View>
-      </View>
+  const renderActiveTimerPrimaryButton = () => {
+    if (isDone) {
+      return <View style={styles.activeTimerIconButtonPlaceholder} />;
+    }
 
-      <View
+    return (
+      <TouchableOpacity
+        activeOpacity={0.84}
+        disabled={!canUsePrimaryAction}
+        accessibilityRole="button"
+        accessibilityLabel={primaryActionLabel}
+        onPress={handlePrimaryAction}
         style={[
-          styles.speedTimerPrimaryRow,
+          styles.activeTimerIconButton,
           {
-            borderTopColor: cardBorder,
-            borderBottomColor: cardBorder,
+            backgroundColor: isRunning ? "transparent" : primaryColor,
+            borderColor: primaryColor,
+            opacity: canUsePrimaryAction ? 1 : 0.58,
           },
         ]}
       >
-        <View style={styles.speedTimerPrimaryStat}>
-          <ThemedText style={styles.speedTimerLabel} setColor={quietText}>
-            CURRENT PACE
-          </ThemedText>
-          <ThemedText
-            style={styles.speedTimerPrimaryValue}
-            setColor={titleColor}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.72}
-          >
-            {currentPaceDisplay}
-          </ThemedText>
-          <ThemedText style={styles.speedTimerUnit} setColor={quietText}>
-            /km
-          </ThemedText>
-        </View>
-
-        <View
-          style={[
-            styles.speedTimerDivider,
-            { backgroundColor: cardBorder },
-          ]}
+        <Feather
+          name={isRunning ? "pause" : "play"}
+          size={22}
+          color={isRunning ? primaryColor : invertedText}
         />
+      </TouchableOpacity>
+    );
+  };
 
-        <View style={styles.speedTimerPrimaryStat}>
-          <ThemedText style={styles.speedTimerLabel} setColor={quietText}>
-            INTERVAL
-          </ThemedText>
+  const renderActiveTimerFinishButton = () => {
+    const canFinishRun = shouldShowFinishRunPill && !isControlBusy;
+
+    return (
+      <TouchableOpacity
+        activeOpacity={0.78}
+        disabled={!canFinishRun}
+        accessibilityRole="button"
+        accessibilityLabel="Finish run"
+        onPress={endWorkout}
+        style={[
+          styles.activeTimerIconButton,
+          {
+            borderColor: secondaryDark,
+            opacity: canFinishRun ? 1 : 0.42,
+          },
+        ]}
+      >
+        <Feather name="check" size={22} color={secondaryColor} />
+      </TouchableOpacity>
+    );
+  };
+
+  const renderActiveSummaryCard = () => (
+    <View style={styles.activeTitledCardShell}>
+      {renderActiveCardTitle("Workout totals")}
+      <ThemedCard
+        style={[
+          styles.activeSummaryCard,
+          {
+            backgroundColor: cardSurface,
+            borderColor: cardBorder,
+          },
+        ]}
+      >
+        <View style={styles.activeSummaryItem}>
+          <View
+            style={[
+              styles.activeSummaryIconCircle,
+              { borderColor: primaryColor },
+            ]}
+          >
+            <Feather name="clock" size={20} color={primaryColor} />
+          </View>
+          <View style={styles.activeSummaryCopy}>
+            <ThemedText style={styles.activeSummaryLabel} setColor={quietText}>
+              TOTAL TIME
+            </ThemedText>
+            <ThemedText
+              style={styles.activeSummaryValue}
+              setColor={titleColor}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.68}
+            >
+              {elapsedDisplay}
+            </ThemedText>
+          </View>
+        </View>
+
+        <View style={[styles.activeSummaryDivider, { backgroundColor: cardBorder }]} />
+
+        <View style={styles.activeSummaryItem}>
+          <View
+            style={[
+              styles.activeSummaryIconCircle,
+              { borderColor: secondaryColor },
+            ]}
+          >
+            <Feather name="map-pin" size={20} color={secondaryColor} />
+          </View>
+          <View style={styles.activeSummaryCopy}>
+            <ThemedText style={styles.activeSummaryLabel} setColor={quietText}>
+              TOTAL DISTANCE
+            </ThemedText>
+            <ThemedText
+              style={styles.activeSummaryValue}
+              setColor={titleColor}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.58}
+            >
+              {formattedTotalDistance} km
+            </ThemedText>
+          </View>
+        </View>
+      </ThemedCard>
+    </View>
+  );
+
+  const renderCurrentSetCard = () => (
+    <View style={styles.activeTitledCardShell}>
+      {renderActiveCardTitle("Current set")}
+      <ThemedCard
+        style={[
+          styles.activeCurrentSetCard,
+          {
+            backgroundColor: cardSurface,
+            borderColor: primaryColor,
+          },
+        ]}
+      >
+        <View style={styles.currentSetTimerRow}>
+          <View style={styles.currentSetActionWrap}>
+            {renderActiveTimerPrimaryButton()}
+            <ThemedText style={styles.currentSetActionLabel} setColor={quietText}>
+              {isRunning ? "PAUSE" : "START"}
+            </ThemedText>
+          </View>
+
+          <View style={styles.currentSetTimerSlot}>
+            <ThemedText
+              style={styles.speedTimerCountdown}
+              setColor={primaryColor}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.58}
+            >
+              {speedStructureCountdownDisplay}
+            </ThemedText>
+          </View>
+
+          <View style={styles.currentSetActionWrap}>
+            {renderActiveTimerFinishButton()}
+            <ThemedText style={styles.currentSetActionLabel} setColor={quietText}>
+              FINISH
+            </ThemedText>
+          </View>
+        </View>
+
+        {renderRunPlanStatRow(activeRunSegment)}
+      </ThemedCard>
+    </View>
+  );
+
+  const renderActiveEffortCard = () => (
+    <View style={styles.activeTitledCardShell}>
+      {renderActiveCardTitle("Live stats")}
+      <ThemedCard
+        style={[
+          styles.activeEffortCard,
+          {
+            backgroundColor: cardSurface,
+            borderColor: cardBorder,
+          },
+        ]}
+      >
+        <View style={styles.activeEffortItem}>
+          <View
+            style={[
+              styles.activeEffortIconCircle,
+              { borderColor: secondaryColor },
+            ]}
+          >
+            <Feather name="zap" size={19} color={secondaryColor} />
+          </View>
+          <View style={styles.activeEffortCopy}>
+            <ThemedText style={styles.activeEffortLabel} setColor={secondaryColor}>
+              Current pace
+            </ThemedText>
+            <View style={styles.speedTimerValueLine}>
+              <ThemedText
+                style={styles.speedTimerPrimaryValue}
+                setColor={titleColor}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.72}
+              >
+                {currentPaceDisplay}
+              </ThemedText>
+              <ThemedText style={styles.speedTimerUnitInline} setColor={quietText}>
+                /km
+              </ThemedText>
+            </View>
+          </View>
+        </View>
+
+        <View style={[styles.activeEffortDivider, { backgroundColor: cardBorder }]} />
+
+        <View style={styles.activeEffortItem}>
+          <View
+            style={[
+              styles.activeEffortIconCircle,
+              { borderColor: primaryColor },
+            ]}
+          >
+            <Feather name="heart" size={19} color={primaryColor} />
+          </View>
+          <View style={styles.activeEffortCopy}>
+            <ThemedText style={styles.activeEffortLabel} setColor={primaryColor}>
+              Heart rate (HR)
+            </ThemedText>
+            <View style={styles.speedTimerValueLine}>
+              <ThemedText
+                style={styles.speedTimerPrimaryValue}
+                setColor={titleColor}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.72}
+              >
+                {pulseDisplay}
+              </ThemedText>
+              <ThemedText style={styles.speedTimerUnitInline} setColor={quietText}>
+                bpm/zone
+              </ThemedText>
+            </View>
+          </View>
+        </View>
+      </ThemedCard>
+    </View>
+  );
+
+  const renderNextIntervalCard = () => (
+    <View style={styles.activeTitledCardShell}>
+      {renderActiveCardTitle("Next interval")}
+      <ThemedCard
+        style={[
+          styles.nextIntervalCard,
+          {
+            backgroundColor: cardSurface,
+            borderColor: cardBorder,
+          },
+        ]}
+      >
+        <View style={styles.nextIntervalTitleRow}>
           <ThemedText
-            style={styles.speedTimerPrimaryValue}
+            style={styles.nextIntervalTitle}
             setColor={titleColor}
             numberOfLines={1}
             adjustsFontSizeToFit
-            minimumFontScale={0.72}
+            minimumFontScale={0.64}
           >
-            {currentIntervalValue}
-          </ThemedText>
-          <ThemedText style={styles.speedTimerUnit} setColor={quietText}>
-            set
+            {nextRunSegment ? getSegmentPlanTitle(nextRunSegment) : "No next set"}
           </ThemedText>
         </View>
+
+        {renderRunPlanStatRow(nextRunSegment)}
+      </ThemedCard>
+    </View>
+  );
+
+  const renderCompletedSummaryCard = () => {
+    const summaryStats = [
+      {
+        label: "TOTAL TIME",
+        value: elapsedDisplay,
+        icon: "clock",
+      },
+      {
+        label: "AVG PACE",
+        value: `${avgPaceDisplay} /km`,
+        icon: "activity",
+      },
+      {
+        label: "SETS",
+        value: completedSetDisplay,
+        icon: "check-circle",
+      },
+    ];
+
+    return (
+      <View style={styles.activeTitledCardShell}>
+        {renderActiveCardTitle("Workout summary")}
+        <ThemedCard
+          style={[
+            styles.completedSummaryCard,
+            {
+              backgroundColor: cardSurface,
+              borderColor: primaryColor,
+            },
+          ]}
+        >
+          <View style={styles.completedSummaryHeader}>
+            <View
+              style={[
+                styles.completedSummaryCheck,
+                { backgroundColor: secondaryColor },
+              ]}
+            >
+              <Feather name="check" size={20} color={invertedText} />
+            </View>
+            <View style={styles.completedSummaryHeading}>
+              <ThemedText
+                style={styles.completedSummaryEyebrow}
+                setColor={secondaryColor}
+              >
+                RUN COMPLETE
+              </ThemedText>
+              <ThemedText
+                style={styles.completedSummaryTitle}
+                setColor={titleColor}
+              >
+                Nice work
+              </ThemedText>
+            </View>
+          </View>
+
+          <View style={styles.completedDistanceRow}>
+            <ThemedText
+              style={styles.completedDistanceValue}
+              setColor={primaryColor}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.62}
+            >
+              {formattedTotalDistance}
+            </ThemedText>
+            <ThemedText
+              style={styles.completedDistanceUnit}
+              setColor={quietText}
+            >
+              km
+            </ThemedText>
+          </View>
+
+          <View
+            style={[
+              styles.completedSummaryStats,
+              { borderTopColor: cardBorder },
+            ]}
+          >
+            {summaryStats.map((stat, index) => (
+              <View key={stat.label} style={styles.completedSummaryStat}>
+                <View style={styles.completedSummaryStatLabelRow}>
+                  <Feather name={stat.icon} size={13} color={quietText} />
+                  <ThemedText
+                    style={styles.completedSummaryStatLabel}
+                    setColor={quietText}
+                  >
+                    {stat.label}
+                  </ThemedText>
+                </View>
+                <ThemedText
+                  style={styles.completedSummaryStatValue}
+                  setColor={titleColor}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.68}
+                >
+                  {stat.value}
+                </ThemedText>
+                {index < summaryStats.length - 1 ? (
+                  <View
+                    style={[
+                      styles.completedSummaryStatDivider,
+                      { backgroundColor: cardBorder },
+                    ]}
+                  />
+                ) : null}
+              </View>
+            ))}
+          </View>
+        </ThemedCard>
       </View>
+    );
+  };
 
-      <View style={styles.speedTimerSecondaryRow}>
-        <View style={styles.speedTimerSecondaryStat}>
-          <ThemedText style={styles.speedTimerSecondaryLabel} setColor={quietText}>
-            HR
-          </ThemedText>
-          <ThemedText style={styles.speedTimerSecondaryValue} setColor={titleColor}>
-            {pulseDisplay}
-          </ThemedText>
-        </View>
+  const renderCompletedRouteCard = () => {
+    const startCoordinate = routeCoordinates[0] ?? null;
+    const finishCoordinate =
+      routeCoordinates[routeCoordinates.length - 1] ?? null;
 
-        <View style={styles.speedTimerSecondaryStat}>
-          <ThemedText style={styles.speedTimerSecondaryLabel} setColor={quietText}>
-            SEG DIST
-          </ThemedText>
-          <ThemedText style={styles.speedTimerSecondaryValue} setColor={titleColor}>
-            {activeSegmentDistanceDisplay} km
-          </ThemedText>
-        </View>
+    return (
+      <View style={styles.activeTitledCardShell}>
+        {renderActiveCardTitle("Route")}
+        <ThemedCard
+          style={[
+            styles.completedRouteCard,
+            {
+              backgroundColor: cardSurface,
+              borderColor: cardBorder,
+            },
+          ]}
+        >
+          {routeRegion ? (
+            <MapView
+              key={`${workout_id}:${routeCoordinates.length}`}
+              initialRegion={routeRegion}
+              pitchEnabled={false}
+              rotateEnabled={false}
+              showsCompass={false}
+              showsMyLocationButton={false}
+              toolbarEnabled={false}
+              style={styles.completedRouteMap}
+            >
+              {routeSegments.map((segment, index) =>
+                segment.length > 1 ? (
+                  <Polyline
+                    key={`${index}:${segment.length}`}
+                    coordinates={segment}
+                    strokeColor={primaryColor}
+                    strokeWidth={5}
+                  />
+                ) : null
+              )}
+              {startCoordinate ? (
+                <Marker
+                  coordinate={startCoordinate}
+                  pinColor={secondaryColor}
+                  title="Start"
+                />
+              ) : null}
+              {finishCoordinate ? (
+                <Marker
+                  coordinate={finishCoordinate}
+                  pinColor={primaryColor}
+                  title="Finish"
+                />
+              ) : null}
+            </MapView>
+          ) : (
+            <View
+              style={[
+                styles.completedRouteEmpty,
+                { backgroundColor: innerSurface },
+              ]}
+            >
+              <View
+                style={[
+                  styles.completedRouteEmptyIcon,
+                  { borderColor: cardBorder },
+                ]}
+              >
+                <Feather name="map" size={24} color={quietText} />
+              </View>
+              <ThemedText
+                style={styles.completedRouteEmptyTitle}
+                setColor={titleColor}
+              >
+                No route recorded
+              </ThemedText>
+              <ThemedText
+                style={styles.completedRouteEmptyText}
+                setColor={quietText}
+              >
+                GPS points from the run will appear here.
+              </ThemedText>
+            </View>
+          )}
 
-        <View style={styles.speedTimerSecondaryStat}>
-          <ThemedText style={styles.speedTimerSecondaryLabel} setColor={quietText}>
-            TOTAL
-          </ThemedText>
-          <ThemedText
-            style={styles.speedTimerSecondaryValue}
-            setColor={titleColor}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.72}
-          >
-            {totalTimeDistanceDisplay} km
-          </ThemedText>
-        </View>
+          <View style={styles.completedRouteFooter}>
+            <View style={styles.completedRouteFooterItem}>
+              <Feather name="map-pin" size={15} color={primaryColor} />
+              <ThemedText
+                style={styles.completedRouteFooterValue}
+                setColor={titleColor}
+              >
+                {formattedTotalDistance} km
+              </ThemedText>
+            </View>
+            <ThemedText
+              style={styles.completedRouteFooterMeta}
+              setColor={quietText}
+            >
+              {routeCoordinates.length} GPS points
+            </ThemedText>
+          </View>
+        </ThemedCard>
+      </View>
+    );
+  };
+
+  const renderCompletedRunDashboard = () => (
+    <View style={styles.completedRunDashboard}>
+      {renderCompletedSummaryCard()}
+      {renderCompletionChart({
+        sectionTitle: "Pace over time",
+        title: "Pace",
+        subtitle: "GPS pace throughout the workout",
+        icon: "activity",
+        data: paceHistory,
+        color: primaryColor,
+        value: avgPaceDisplay,
+        valueLabel: "AVG /KM",
+        invert: true,
+      })}
+      {renderCompletionChart({
+        sectionTitle: "Heart rate over time",
+        title: "Heart rate",
+        subtitle: "Actual and planned heart rate",
+        icon: "heart",
+        data: actualHeartRateHistory,
+        plannedData: targetHeartRateHistory,
+        color: secondaryColor,
+        value: targetHeartRateDisplay,
+        valueLabel: "TARGET",
+        plannedStepped: true,
+        strokeWidth: 2,
+        colorByHeartRateZone: true,
+        zoneBands: HEART_RATE_ZONE_BANDS,
+        domainMinY: 60,
+        domainMaxY: TEST_MAX_HEART_RATE,
+        yAxisTicks: [220, 180, 140, 100, 60],
+        onPress: () =>
+          navigation.navigate("RunHeartRateChartPage", {
+            workoutId: workout_id,
+            durationSeconds: currentElapsed,
+            actualHistory: actualHeartRateHistory,
+            plannedHistory: targetHeartRateHistory,
+            targetDisplay: targetHeartRateDisplay,
+          }),
+      })}
+      {renderCompletedRouteCard()}
+      <View style={styles.completedPlanHeading}>
+        <Feather name="list" size={16} color={primaryColor} />
+        <ThemedText style={styles.completedPlanTitle} setColor={titleColor}>
+          Workout plan
+        </ThemedText>
       </View>
     </View>
+  );
+
+  const renderActiveRunDashboard = () => (
+    <View style={styles.activeRunDashboard}>
+      {renderActiveSummaryCard()}
+      {renderCurrentSetCard()}
+      {renderActiveEffortCard()}
+      {renderNextIntervalCard()}
+    </View>
+  );
+
+  const renderWorkoutPlanToggle = () => (
+    <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityLabel={
+        isWorkoutPlanExpanded ? "Hide workout plan" : "Show workout plan"
+      }
+      activeOpacity={0.78}
+      onPress={() => set_isWorkoutPlanExpanded((isExpanded) => !isExpanded)}
+      style={[
+        styles.workoutPlanToggle,
+        {
+          backgroundColor: cardSurface,
+          borderColor: cardBorder,
+        },
+      ]}
+    >
+      <View style={styles.workoutPlanToggleCopy}>
+        <Feather name="list" size={17} color={primaryColor} />
+        <ThemedText style={styles.workoutPlanToggleTitle} setColor={titleColor}>
+          Workout plan
+        </ThemedText>
+      </View>
+
+      <View style={styles.workoutPlanToggleAction}>
+        <ThemedText style={styles.workoutPlanToggleLabel} setColor={primaryColor}>
+          {isWorkoutPlanExpanded ? "Hide plan" : "Show plan"}
+        </ThemedText>
+        <Feather
+          name={isWorkoutPlanExpanded ? "chevron-up" : "chevron-down"}
+          size={18}
+          color={primaryColor}
+        />
+      </View>
+    </TouchableOpacity>
   );
 
   const renderHeroActionRow = () => {
@@ -1446,13 +2516,16 @@ const Run = ({ workout_id, restartRequestKey }) => {
         scrollViewProps={{ showsVerticalScrollIndicator: false }}
       >
         <View style={styles.runLayout}>
-          {renderRunStatusProgress()}
           {renderRunFocusTitle()}
 
-          {shouldShowPlanOnlyStartAction ? (
+          {isDone ? (
+            renderCompletedRunDashboard()
+          ) : shouldShowPlanOnlyStartAction ? (
             <View style={styles.planStartActionShell}>
               {renderHeroActionRow()}
             </View>
+          ) : shouldShowSpeedStructureTimer ? (
+            renderActiveRunDashboard()
           ) : (
             <ThemedCard
               style={[
@@ -1463,9 +2536,7 @@ const Run = ({ workout_id, restartRequestKey }) => {
                 },
               ]}
             >
-              {shouldShowSpeedStructureTimer ? (
-                renderSpeedStructureTimer()
-              ) : shouldShowHeroMetrics && (
+              {shouldShowHeroMetrics && (
                 <View style={styles.heroMetricsRow}>
                   {metricCards.map((metric, index) => (
                     <View
@@ -1526,22 +2597,33 @@ const Run = ({ workout_id, restartRequestKey }) => {
 
           {shouldShowRunFlowSuggestions
             ? renderRunFlowSuggestions()
-            : visibleSectionConfigs.map((section) => (
-                <RunSetList
-                  key={section.type}
-                  reloadKey={updateCount}
-                  triggerReload={triggerReload}
-                  workout_id={workout_id}
-                  type={section.type}
-                  variant={section.variant}
-                  sectionTitle={section.title}
-                  sectionEyebrow={section.eyebrow}
-                  emptySummary={section.emptySummary}
-                  onAddSet={() => addSet(section.type)}
-                  activeSet={activeSet}
-                  activeSet_remainingTime={activeSet_remainingTime}
-                />
-              ))}
+            : (
+                <>
+                  {isWorkoutPlanCollapsible
+                    ? renderWorkoutPlanToggle()
+                    : null}
+
+                  {shouldShowWorkoutPlan
+                    ? visibleSectionConfigs.map((section) => (
+                        <RunSetList
+                          key={section.type}
+                          reloadKey={updateCount}
+                          triggerReload={triggerReload}
+                          workout_id={workout_id}
+                          type={section.type}
+                          variant={section.variant}
+                          sectionTitle={section.title}
+                          sectionEyebrow={section.eyebrow}
+                          emptySummary={section.emptySummary}
+                          onAddSet={() => addSet(section.type)}
+                          activeSet={activeSet}
+                          activeSet_remainingTime={activeSet_remainingTime}
+                          workoutStarted={original_start_time !== null}
+                        />
+                      ))
+                    : null}
+                </>
+              )}
         </View>
       </ThemedKeyboardProtection>
     </ThemedView>

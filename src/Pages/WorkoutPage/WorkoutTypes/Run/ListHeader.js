@@ -1,10 +1,15 @@
-import { View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 import { useColorScheme } from "react-native";
 import { Colors } from "../../../../Resources/GlobalStyling/colors";
 import Checkmark from "../../../../Resources/Icons/UI-icons/Checkmark";
 import { ThemedText } from "../../../../Resources/ThemedComponents";
 
-const ListHeader = ({ styles, dividerColor }) => {
+const ListHeader = ({
+  styles,
+  dividerColor,
+  distanceUnit = "m",
+  onDistanceUnitPress,
+}) => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const headerTextColor =
@@ -18,14 +23,18 @@ const ListHeader = ({ styles, dividerColor }) => {
         </ThemedText>
       </View>
 
-      <View style={[styles.runTableHeaderCell, styles.runDistanceColumn]}>
+      <TouchableOpacity
+        activeOpacity={0.78}
+        onPress={onDistanceUnitPress}
+        style={[styles.runTableHeaderCell, styles.runDistanceColumn]}
+      >
         <ThemedText style={styles.runTableHeaderLabel} setColor={headerTextColor}>
           DIST
         </ThemedText>
         <ThemedText style={styles.runTableHeaderUnit} setColor={headerTextColor}>
-          km
+          {distanceUnit}
         </ThemedText>
-      </View>
+      </TouchableOpacity>
 
       <View style={[styles.runTableHeaderCell, styles.runPaceColumn]}>
         <ThemedText style={styles.runTableHeaderLabel} setColor={headerTextColor}>

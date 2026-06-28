@@ -105,62 +105,6 @@ export default StyleSheet.create({
     borderWidth: 1,
   },
 
-  runStatusPill: {
-    width: "100%",
-    minHeight: 52,
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: 999,
-    borderWidth: 1,
-    padding: 4,
-    marginBottom: 15,
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 14,
-    elevation: 4,
-  },
-
-  runStatusTab: {
-    flex: 1,
-    minWidth: 0,
-    minHeight: 42,
-    borderRadius: 999,
-    alignItems: "center",
-    justifyContent: "center",
-    position: "relative",
-    overflow: "visible",
-  },
-
-  runStatusLabel: {
-    width: "100%",
-    fontSize: 14,
-    lineHeight: 18,
-    fontWeight: "800",
-    textAlign: "center",
-    paddingHorizontal: 6,
-  },
-
-  runStatusLampWrap: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: -10,
-    height: 24,
-    alignItems: "center",
-    justifyContent: "flex-start",
-  },
-
-  runStatusLamp: {
-    width: 42,
-    height: 5,
-    borderRadius: 3,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.36,
-    shadowRadius: 18,
-    elevation: 12,
-  },
-
   runFocusTitleButton: {
     alignSelf: "center",
     maxWidth: "92%",
@@ -183,109 +127,663 @@ export default StyleSheet.create({
     textAlign: "center",
   },
 
-  speedTimerShell: {
-    marginBottom: 22,
+  speedTimerCountdown: {
+    width: "100%",
+    fontSize: 54,
+    lineHeight: 61,
+    fontWeight: "900",
+    textAlign: "center",
+    fontVariant: ["tabular-nums"],
   },
 
-  speedTimerActionBlock: {
-    marginBottom: 18,
+  activeTimerIconButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
 
-  speedTimerActionRow: {
+  activeTimerIconButtonPlaceholder: {
+    width: 44,
+    height: 44,
+  },
+
+  speedTimerPrimaryValue: {
+    fontSize: 30,
+    lineHeight: 35,
+    fontWeight: "900",
+    fontVariant: ["tabular-nums"],
+  },
+
+  speedTimerValueLine: {
+    width: "100%",
+    minHeight: 38,
     flexDirection: "row",
-    alignItems: "flex-end",
+    alignItems: "baseline",
+    justifyContent: "center",
+    gap: 4,
+  },
+
+  speedTimerUnitInline: {
+    fontSize: 10,
+    lineHeight: 12,
+    fontWeight: "800",
+    textAlign: "center",
+  },
+
+  activeRunDashboard: {
+    width: "100%",
+    marginBottom: 14,
+    gap: 8,
+  },
+
+  workoutPlanToggle: {
+    width: "100%",
+    minHeight: 52,
+    marginBottom: 14,
+    paddingHorizontal: 16,
+    borderRadius: 18,
+    borderWidth: 1,
+    flexDirection: "row",
+    alignItems: "center",
     justifyContent: "space-between",
     gap: 12,
   },
 
-  speedTimerActionText: {
+  workoutPlanToggleCopy: {
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 9,
+  },
+
+  workoutPlanToggleTitle: {
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: "800",
+  },
+
+  workoutPlanToggleAction: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+
+  workoutPlanToggleLabel: {
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: "900",
+    textTransform: "uppercase",
+  },
+
+  completedRunDashboard: {
+    width: "100%",
+    marginBottom: 4,
+    gap: 10,
+  },
+
+  completedSummaryCard: {
+    width: "100%",
+    marginHorizontal: 0,
+    marginVertical: 0,
+    paddingHorizontal: 18,
+    paddingTop: 16,
+    paddingBottom: 0,
+    borderRadius: 22,
+    borderWidth: 1.5,
+    overflow: "hidden",
+  },
+
+  completedSummaryHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+
+  completedSummaryCheck: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  completedSummaryHeading: {
     flex: 1,
     minWidth: 0,
-    fontSize: 32,
-    lineHeight: 38,
+  },
+
+  completedSummaryEyebrow: {
+    marginBottom: 1,
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: "900",
+    letterSpacing: 1.2,
+  },
+
+  completedSummaryTitle: {
+    fontSize: 20,
+    lineHeight: 24,
     fontWeight: "900",
   },
 
-  speedTimerCountdown: {
-    minWidth: 118,
-    fontSize: 42,
-    lineHeight: 48,
+  completedDistanceRow: {
+    minHeight: 88,
+    flexDirection: "row",
+    alignItems: "baseline",
+    justifyContent: "center",
+    gap: 7,
+  },
+
+  completedDistanceValue: {
+    maxWidth: "78%",
+    fontSize: 58,
+    lineHeight: 68,
+    fontWeight: "900",
+    fontVariant: ["tabular-nums"],
+  },
+
+  completedDistanceUnit: {
+    fontSize: 17,
+    lineHeight: 22,
+    fontWeight: "800",
+  },
+
+  completedSummaryStats: {
+    minHeight: 70,
+    marginHorizontal: -18,
+    paddingHorizontal: 10,
+    borderTopWidth: 1,
+    flexDirection: "row",
+    alignItems: "stretch",
+  },
+
+  completedSummaryStat: {
+    flex: 1,
+    minWidth: 0,
+    paddingHorizontal: 7,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  completedSummaryStatLabelRow: {
+    maxWidth: "100%",
+    marginBottom: 5,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+  },
+
+  completedSummaryStatLabel: {
+    flexShrink: 1,
+    fontSize: 8,
+    lineHeight: 10,
+    fontWeight: "900",
+    textAlign: "center",
+  },
+
+  completedSummaryStatValue: {
+    width: "100%",
+    fontSize: 15,
+    lineHeight: 19,
+    fontWeight: "900",
+    textAlign: "center",
+    fontVariant: ["tabular-nums"],
+  },
+
+  completedSummaryStatDivider: {
+    position: "absolute",
+    top: 14,
+    right: 0,
+    bottom: 14,
+    width: 1,
+  },
+
+  completionChartCard: {
+    width: "100%",
+    minHeight: 220,
+    marginHorizontal: 0,
+    marginVertical: 0,
+    paddingHorizontal: 15,
+    paddingTop: 14,
+    paddingBottom: 12,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+
+  completionChartPressable: {
+    width: "100%",
+  },
+
+  completionChartHeader: {
+    minHeight: 48,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+
+  completionChartHeading: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 9,
+  },
+
+  completionChartIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  completionChartTitleCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  completionChartTitle: {
+    fontSize: 15,
+    lineHeight: 19,
+    fontWeight: "900",
+  },
+
+  completionChartSubtitle: {
+    marginTop: 1,
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: "700",
+  },
+
+  completionChartValueWrap: {
+    maxWidth: 88,
+    alignItems: "flex-end",
+  },
+
+  completionChartHeaderActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 9,
+  },
+
+  completionChartValue: {
+    width: "100%",
+    fontSize: 21,
+    lineHeight: 25,
     fontWeight: "900",
     textAlign: "right",
     fontVariant: ["tabular-nums"],
   },
 
-  speedTimerPrimaryRow: {
-    minHeight: 96,
+  completionChartValueLabel: {
+    marginTop: 1,
+    fontSize: 8,
+    lineHeight: 10,
+    fontWeight: "900",
+  },
+
+  completionChart: {
+    marginTop: 7,
+  },
+
+  completionChartAxis: {
+    marginTop: -6,
+    paddingHorizontal: 2,
     flexDirection: "row",
     alignItems: "center",
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    paddingVertical: 14,
-    marginBottom: 13,
+    justifyContent: "space-between",
   },
 
-  speedTimerPrimaryStat: {
-    flex: 1,
-    minWidth: 0,
-    alignItems: "center",
-  },
-
-  speedTimerDivider: {
-    width: 1,
-    height: 56,
-    opacity: 0.72,
-  },
-
-  speedTimerLabel: {
-    marginBottom: 8,
-    fontSize: 10,
-    lineHeight: 12,
-    fontWeight: "900",
-    letterSpacing: 1.7,
-    textAlign: "center",
-  },
-
-  speedTimerPrimaryValue: {
-    width: "100%",
-    fontSize: 30,
-    lineHeight: 35,
-    fontWeight: "900",
-    textAlign: "center",
-    fontVariant: ["tabular-nums"],
-  },
-
-  speedTimerUnit: {
-    marginTop: 2,
-    fontSize: 10,
-    lineHeight: 12,
+  completionChartAxisLabel: {
+    fontSize: 8,
+    lineHeight: 10,
     fontWeight: "800",
+  },
+
+  completedRouteCard: {
+    width: "100%",
+    marginHorizontal: 0,
+    marginVertical: 0,
+    padding: 0,
+    borderRadius: 20,
+    borderWidth: 1,
+    overflow: "hidden",
+  },
+
+  completedRouteMap: {
+    width: "100%",
+    height: 218,
+  },
+
+  completedRouteEmpty: {
+    width: "100%",
+    minHeight: 218,
+    paddingHorizontal: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  completedRouteEmptyIcon: {
+    width: 52,
+    height: 52,
+    marginBottom: 10,
+    borderRadius: 26,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  completedRouteEmptyTitle: {
+    marginBottom: 4,
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: "900",
     textAlign: "center",
   },
 
-  speedTimerSecondaryRow: {
+  completedRouteEmptyText: {
+    maxWidth: 260,
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+
+  completedRouteFooter: {
+    minHeight: 48,
+    paddingHorizontal: 15,
     flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     gap: 10,
   },
 
-  speedTimerSecondaryStat: {
+  completedRouteFooterItem: {
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+
+  completedRouteFooterValue: {
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "900",
+  },
+
+  completedRouteFooterMeta: {
+    flexShrink: 1,
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: "700",
+    textAlign: "right",
+  },
+
+  completedPlanHeading: {
+    marginTop: 7,
+    marginBottom: -1,
+    marginLeft: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+  },
+
+  completedPlanTitle: {
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: "900",
+  },
+
+  activeSummaryCard: {
+    width: "100%",
+    minHeight: 82,
+    marginHorizontal: 0,
+    marginVertical: 0,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    borderRadius: 20,
+    borderWidth: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+
+  activeSummaryItem: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 9,
+  },
+
+  activeSummaryIconCircle: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    borderWidth: 1.5,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  activeSummaryCopy: {
     flex: 1,
     minWidth: 0,
   },
 
-  speedTimerSecondaryLabel: {
-    marginBottom: 5,
+  activeSummaryLabel: {
+    marginBottom: 4,
     fontSize: 9,
     lineHeight: 11,
     fontWeight: "900",
-    letterSpacing: 1.5,
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
   },
 
-  speedTimerSecondaryValue: {
-    fontSize: 13,
-    lineHeight: 17,
-    fontWeight: "800",
+  activeSummaryValue: {
+    fontSize: 23,
+    lineHeight: 28,
+    fontWeight: "900",
     fontVariant: ["tabular-nums"],
+  },
+
+  activeSummaryDivider: {
+    width: 1,
+    height: 48,
+    opacity: 0.7,
+  },
+
+  activeTitledCardShell: {
+    width: "100%",
+  },
+
+  activeCardTitle: {
+    marginLeft: 14,
+    marginBottom: 5,
+    fontSize: 11,
+    lineHeight: 13,
+    fontWeight: "900",
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
+  },
+
+  activeCurrentSetCard: {
+    width: "100%",
+    marginHorizontal: 0,
+    marginVertical: 0,
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 14,
+    borderRadius: 24,
+    borderWidth: 1,
+  },
+
+  currentSetTimerRow: {
+    width: "100%",
+    minHeight: 98,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 8,
+  },
+
+  currentSetActionWrap: {
+    width: 62,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  currentSetActionLabel: {
+    marginTop: 9,
+    fontSize: 10,
+    lineHeight: 12,
+    fontWeight: "900",
+    letterSpacing: 1.3,
+    textAlign: "center",
+  },
+
+  currentSetTimerSlot: {
+    flex: 1,
+    minWidth: 0,
+    alignItems: "center",
+  },
+
+  activeSetStatRow: {
+    width: "100%",
+    minHeight: 56,
+    flexDirection: "row",
+    alignItems: "stretch",
+  },
+
+  activeSetStatItem: {
+    flex: 1,
+    minWidth: 0,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 4,
+  },
+
+  activeSetStatHeader: {
+    minHeight: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+    marginBottom: 4,
+  },
+
+  activeSetStatLabel: {
+    flexShrink: 1,
+    minWidth: 0,
+    fontSize: 8,
+    lineHeight: 10,
+    fontWeight: "900",
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+    textAlign: "center",
+  },
+
+  activeSetStatValue: {
+    width: "100%",
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: "900",
+    textAlign: "center",
+    fontVariant: ["tabular-nums"],
+  },
+
+  activeSetStatDivider: {
+    position: "absolute",
+    right: 0,
+    top: 8,
+    bottom: 8,
+    width: 1,
+    opacity: 0.55,
+  },
+
+  activeEffortCard: {
+    width: "100%",
+    minHeight: 86,
+    marginHorizontal: 0,
+    marginVertical: 0,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 20,
+    borderWidth: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+
+  activeEffortItem: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 9,
+  },
+
+  activeEffortIconCircle: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    borderWidth: 1.5,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  activeEffortCopy: {
+    flex: 1,
+    minWidth: 0,
+    alignItems: "center",
+  },
+
+  activeEffortLabel: {
+    width: "100%",
+    marginBottom: 5,
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: "900",
+    textAlign: "center",
+  },
+
+  activeEffortDivider: {
+    width: 1,
+    height: 54,
+    opacity: 0.7,
+  },
+
+  nextIntervalCard: {
+    width: "100%",
+    marginHorizontal: 0,
+    marginVertical: 0,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 14,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+
+  nextIntervalTitleRow: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 8,
+  },
+
+  nextIntervalTitle: {
+    flex: 1,
+    minWidth: 0,
+    fontSize: 22,
+    lineHeight: 27,
+    fontWeight: "900",
+    textAlign: "center",
   },
 
   heroMetricsRow: {
