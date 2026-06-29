@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Alert, View, TouchableOpacity, useColorScheme } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
@@ -55,6 +55,11 @@ const WorkoutPage = ({ route }) => {
   const [isRepostingWorkoutPost, setIsRepostingWorkoutPost] = useState(false);
   const [isCopyingWorkout, setIsCopyingWorkout] = useState(false);
   const [pendingCopyTarget, setPendingCopyTarget] = useState(null);
+  const [runHeaderTitle, setRunHeaderTitle] = useState(null);
+
+  useEffect(() => {
+    setRunHeaderTitle(null);
+  }, [workout_id]);
 
   const loadMetadata = useCallback(async () => {
     try {
@@ -314,7 +319,9 @@ const WorkoutPage = ({ route }) => {
             style={styles.pageHeaderTitleMain}
             numberOfLines={1}
           >
-            {workoutLabel}
+            {isRunWorkout && runHeaderTitle
+              ? runHeaderTitle
+              : workoutLabel}
           </ThemedTitle>
 
           {!!workoutSubtitle && (
@@ -336,7 +343,11 @@ const WorkoutPage = ({ route }) => {
       </ThemedHeader>
 
       {isRunWorkout && (
-        <Run workout_id={workout_id} restartRequestKey={restartRequestKey} />
+        <Run
+          workout_id={workout_id}
+          restartRequestKey={restartRequestKey}
+          onHeaderTitleChange={setRunHeaderTitle}
+        />
       )}
 
       {isStrengthWorkout && (

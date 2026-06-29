@@ -5033,6 +5033,7 @@ async function cloneWorkoutContents(
       pace: runSet.pace,
       time: runSet.time,
       heartrate: runSet.heartrate,
+      statPriority: runSet.stat_priority,
       done: 0,
     });
   }

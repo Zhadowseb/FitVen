@@ -91,7 +91,7 @@ export function buildHeartRateZones(maxHeartRate) {
     normalizeMaxHeartRate(maxHeartRate) ?? DEFAULT_MAX_HEART_RATE;
   const upperBounds = [
     Math.floor(normalizedMaxHeartRate * 0.65),
-    Math.floor(normalizedMaxHeartRate * 0.71),
+    Math.floor(normalizedMaxHeartRate * 0.81),
     Math.floor(normalizedMaxHeartRate * 0.89),
     Math.floor(normalizedMaxHeartRate * 0.97),
     normalizedMaxHeartRate,

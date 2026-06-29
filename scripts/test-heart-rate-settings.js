@@ -93,8 +93,8 @@ async function run() {
     })),
     [
       { zone: 1, min: 0, max: 130 },
-      { zone: 2, min: 131, max: 142 },
-      { zone: 3, min: 143, max: 178 },
+      { zone: 2, min: 131, max: 162 },
+      { zone: 3, min: 163, max: 178 },
       { zone: 4, min: 179, max: 194 },
       { zone: 5, min: 195, max: 200 },
     ]

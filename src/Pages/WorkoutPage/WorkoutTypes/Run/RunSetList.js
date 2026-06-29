@@ -280,6 +280,7 @@ const RunSetList = ({
   onAddSet,
   workoutStarted = false,
   hidePauseRows = false,
+  maxSets = null,
 }) => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -507,6 +508,14 @@ const RunSetList = ({
   };
 
   const handleAddSet = async () => {
+    const workingSetCount = sets.filter(
+      (set) => Number(set.is_pause) !== 1
+    ).length;
+
+    if (Number.isInteger(maxSets) && workingSetCount >= maxSets) {
+      return;
+    }
+
     await onAddSet?.();
   };
 
@@ -1121,6 +1130,8 @@ const RunSetList = ({
     const workingSets = sets.filter((set) => !set.is_pause);
     const completedSets = workingSets.filter((set) => Number(set.done) === 1);
     const summary = getIntervalsSummary(sets, emptySummary);
+    const canAddSet =
+      !Number.isInteger(maxSets) || workingSets.length < maxSets;
 
     return (
       <View style={styles.sectionShell}>
@@ -1177,13 +1188,15 @@ const RunSetList = ({
               )
             )}
 
-            <TouchableOpacity
-              activeOpacity={0.78}
-              style={[styles.tableAddRow, { borderTopColor: tableBorder }]}
-              onPress={handleAddSet}
-            >
-              <Plus width={18} height={18} color={quietText} thickness={1.7} />
-            </TouchableOpacity>
+            {canAddSet ? (
+              <TouchableOpacity
+                activeOpacity={0.78}
+                style={[styles.tableAddRow, { borderTopColor: tableBorder }]}
+                onPress={handleAddSet}
+              >
+                <Plus width={18} height={18} color={quietText} thickness={1.7} />
+              </TouchableOpacity>
+            ) : null}
           </View>
         </ThemedCard>
       </View>

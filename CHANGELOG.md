@@ -2,7 +2,13 @@
 
 ## [0.18.7] - Unreleased
 ### Changed
-- Add a continuous Endurance & Base Run dashboard focused on distance, time, heart-rate control, average pace, and estimated finish time.
+- Add planned-set and progress cards for the single main Endurance & Base set, including duration, pace, zone, distance, and completion progress.
+- Add a persisted drag-and-drop priority list for populated Endurance & Base plan stats.
+- Open Custom runs directly on a graph-free workout dashboard with a manual start, live pace metrics, and a transparent, swipeable close-up view of colored heart-rate zones with BPM boundary labels.
+- Follow the live pulse in the Custom heart-rate viewport until the user swipes, then preserve manual browsing with a fixed pulse dot and a Recenter action.
+- Place the Custom run controls inside the upper metrics card.
+- Hide the Workout plan heading and section from completed Custom and legacy blank runs.
+- Correct the shared heart-rate boundaries so zone 2 spans 66–81% HRmax and is wider than zone 3 at 82–89% HRmax.
 - Keep Endurance & Base plans continuous by omitting automatic rest rows from their workflow.
 
 ---

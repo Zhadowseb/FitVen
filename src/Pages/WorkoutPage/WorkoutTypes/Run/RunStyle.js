@@ -182,205 +182,575 @@ export default StyleSheet.create({
   enduranceDashboard: {
     width: "100%",
     marginBottom: 14,
+    gap: 10,
   },
 
-  enduranceCard: {
+  customRunDashboard: {
+    width: "100%",
+    marginBottom: 14,
+    gap: 10,
+  },
+
+  customRunMetricsCard: {
+    width: "100%",
+    minHeight: 112,
+    marginHorizontal: 0,
+    marginVertical: 0,
+    paddingHorizontal: 8,
+    paddingVertical: 14,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+
+  customRunMetricsRow: {
+    width: "100%",
+    minHeight: 84,
+    flexDirection: "row",
+    alignItems: "stretch",
+  },
+
+  customRunActions: {
+    minHeight: 76,
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+  },
+
+  customRunMetric: {
+    flex: 1,
+    minWidth: 0,
+    paddingHorizontal: 5,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  customRunMetricLabel: {
+    minHeight: 20,
+    fontSize: 8,
+    lineHeight: 10,
+    fontWeight: "900",
+    letterSpacing: 0.6,
+    textAlign: "center",
+  },
+
+  customRunMetricValue: {
+    width: "100%",
+    marginTop: 4,
+    fontSize: 22,
+    lineHeight: 27,
+    fontWeight: "900",
+    fontVariant: ["tabular-nums"],
+    textAlign: "center",
+  },
+
+  customRunMetricMeta: {
+    marginTop: 3,
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+
+  customRunMetricDivider: {
+    position: "absolute",
+    top: 8,
+    right: 0,
+    bottom: 8,
+    width: 1,
+    opacity: 0.7,
+  },
+
+  customHeartRateCard: {
+    width: "100%",
+    minHeight: 230,
+    marginHorizontal: 0,
+    marginVertical: 0,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+
+  customHeartRateHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+
+  customHeartRateValue: {
+    fontSize: 36,
+    lineHeight: 42,
+    fontWeight: "900",
+    fontVariant: ["tabular-nums"],
+  },
+
+  customHeartRateUnit: {
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "800",
+  },
+
+  customHeartRateZone: {
+    marginTop: 2,
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "900",
+  },
+
+  customHeartRateViewport: {
+    position: "relative",
+    width: "100%",
+    height: 92,
+    marginTop: 18,
+    overflow: "hidden",
+  },
+
+  customHeartRateScrollView: {
+    width: "100%",
+    height: 92,
+  },
+
+  customHeartRateTrack: {
+    position: "relative",
+    height: 92,
+  },
+
+  customHeartRateCenterLine: {
+    position: "absolute",
+    top: 8,
+    bottom: 8,
+    left: "50%",
+    width: 1,
+    opacity: 0.35,
+    zIndex: 2,
+  },
+
+  customHeartRateZoneBand: {
+    position: "absolute",
+    top: 18,
+    height: 44,
+    borderRadius: 12,
+    overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  customHeartRateZoneBandFill: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    opacity: 0.2,
+  },
+
+  customHeartRateZoneBandText: {
+    paddingHorizontal: 8,
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "900",
+    letterSpacing: 0.5,
+  },
+
+  customHeartRateZoneBoundary: {
+    position: "absolute",
+    top: 12,
+    width: 58,
+    height: 74,
+    marginLeft: -29,
+    alignItems: "center",
+  },
+
+  customHeartRateZoneBoundaryLine: {
+    width: 1,
+    height: 54,
+    opacity: 0.55,
+  },
+
+  customHeartRateZoneBoundaryText: {
+    marginTop: 3,
+    fontSize: 9,
+    lineHeight: 11,
+    fontWeight: "800",
+    fontVariant: ["tabular-nums"],
+  },
+
+  customHeartRateCurrentDot: {
+    position: "absolute",
+    top: 34,
+    width: 14,
+    height: 14,
+    marginLeft: -7,
+    borderRadius: 7,
+    borderWidth: 2,
+    borderColor: "#FFFFFF",
+    zIndex: 3,
+  },
+
+  customHeartRateRecenterRow: {
+    width: "100%",
+    minHeight: 30,
+    marginTop: 7,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  customHeartRateRecenterButton: {
+    minHeight: 28,
+    paddingHorizontal: 11,
+    borderRadius: 14,
+    borderWidth: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+  },
+
+  customHeartRateRecenterText: {
+    fontSize: 9,
+    lineHeight: 11,
+    fontWeight: "900",
+    letterSpacing: 0.7,
+  },
+
+  customHeartRateScaleMeta: {
+    marginTop: 7,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+
+  customHeartRateScaleText: {
+    fontSize: 8,
+    lineHeight: 10,
+    fontWeight: "900",
+    letterSpacing: 0.7,
+  },
+
+  endurancePlanCard: {
     width: "100%",
     marginHorizontal: 0,
     marginVertical: 0,
     paddingHorizontal: 0,
     paddingVertical: 0,
-    borderRadius: 24,
-    borderWidth: 1.5,
+    borderRadius: 20,
+    borderWidth: 1,
     overflow: "hidden",
   },
 
-  enduranceStatusRow: {
-    minHeight: 42,
+  endurancePlanControlHeader: {
+    minHeight: 88,
     paddingHorizontal: 16,
+    paddingVertical: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  endurancePlanStats: {
+    minHeight: 94,
+    paddingHorizontal: 8,
+    borderTopWidth: 1,
+    flexDirection: "row",
+    alignItems: "stretch",
+  },
+
+  endurancePlanStatsStandalone: {
+    borderTopWidth: 0,
+  },
+
+  endurancePlanStat: {
+    flex: 1,
+    minWidth: 0,
+    paddingHorizontal: 5,
+    paddingVertical: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  endurancePlanStatLabelRow: {
+    minHeight: 18,
+    marginBottom: 5,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 5,
+  },
+
+  endurancePlanStatLabel: {
+    fontSize: 8,
+    lineHeight: 10,
+    fontWeight: "900",
+    letterSpacing: 0.8,
+    textAlign: "center",
+  },
+
+  endurancePlanStatValue: {
+    width: "100%",
+    fontSize: 19,
+    lineHeight: 24,
+    fontWeight: "900",
+    fontVariant: ["tabular-nums"],
+    textAlign: "center",
+  },
+
+  endurancePlanStatMeta: {
+    width: "100%",
+    marginTop: 3,
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+
+  endurancePlanStatDivider: {
+    width: 1,
+    marginVertical: 16,
+    opacity: 0.7,
+  },
+
+  enduranceRoutesCard: {
+    width: "100%",
+    minHeight: 104,
+    marginHorizontal: 0,
+    marginTop: 10,
+    marginBottom: 0,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    borderRadius: 20,
+    borderWidth: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+
+  enduranceRoutesIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 13,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+
+  enduranceRoutesCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  enduranceRoutesEyebrow: {
+    fontSize: 8,
+    lineHeight: 10,
+    fontWeight: "900",
+    letterSpacing: 1.1,
+  },
+
+  enduranceRoutesTitle: {
+    marginTop: 2,
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: "900",
+  },
+
+  enduranceRoutesDescription: {
+    marginTop: 3,
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: "700",
+  },
+
+  enduranceRoutesBadge: {
+    minHeight: 27,
+    paddingHorizontal: 8,
+    borderRadius: 999,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+
+  enduranceRoutesBadgeText: {
+    fontSize: 7,
+    lineHeight: 9,
+    fontWeight: "900",
+    letterSpacing: 0.6,
+  },
+
+  statPrioritySection: {
+    width: "100%",
+    marginTop: 10,
+  },
+
+  statPriorityCard: {
+    width: "100%",
+    marginHorizontal: 0,
+    marginVertical: 0,
+    padding: 14,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+
+  statPriorityHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: 12,
   },
 
-  enduranceStatusCopy: {
-    minWidth: 0,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-
-  enduranceStatusDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-  },
-
-  enduranceStatusLabel: {
-    fontSize: 9,
-    lineHeight: 12,
-    fontWeight: "900",
-    letterSpacing: 1.2,
-  },
-
-  enduranceStatusValue: {
-    fontSize: 9,
-    lineHeight: 12,
-    fontWeight: "900",
-    letterSpacing: 1.1,
-  },
-
-  enduranceDistanceBlock: {
-    minHeight: 112,
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 14,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  enduranceDistanceValueRow: {
-    maxWidth: "100%",
-    minHeight: 68,
-    flexDirection: "row",
-    alignItems: "baseline",
-    justifyContent: "center",
-    gap: 6,
-  },
-
-  enduranceDistanceValue: {
-    maxWidth: "78%",
-    fontSize: 60,
-    lineHeight: 68,
-    fontWeight: "900",
-    fontVariant: ["tabular-nums"],
-    textAlign: "center",
-  },
-
-  enduranceDistanceUnit: {
-    fontSize: 18,
-    lineHeight: 23,
-    fontWeight: "900",
-  },
-
-  endurancePrimaryRow: {
-    minHeight: 132,
-    borderTopWidth: 1,
-    flexDirection: "row",
-    alignItems: "stretch",
-  },
-
-  endurancePrimaryStat: {
+  statPriorityHeaderCopy: {
     flex: 1,
     minWidth: 0,
-    paddingHorizontal: 10,
-    paddingVertical: 14,
-    alignItems: "center",
-    justifyContent: "center",
   },
 
-  endurancePrimaryDivider: {
-    width: 1,
-    marginVertical: 18,
-    opacity: 0.7,
-  },
-
-  endurancePrimaryLabel: {
-    marginTop: 5,
-    marginBottom: 5,
-    fontSize: 9,
-    lineHeight: 11,
+  statPriorityTitle: {
+    fontSize: 15,
+    lineHeight: 19,
     fontWeight: "900",
-    letterSpacing: 1.1,
-    textAlign: "center",
   },
 
-  endurancePrimaryValue: {
-    maxWidth: "100%",
-    fontSize: 29,
-    lineHeight: 35,
-    fontWeight: "900",
-    fontVariant: ["tabular-nums"],
-    textAlign: "center",
-  },
-
-  enduranceHeartRateValueRow: {
-    minHeight: 35,
-    flexDirection: "row",
-    alignItems: "baseline",
-    justifyContent: "center",
-    gap: 4,
-  },
-
-  enduranceHeartRateUnit: {
+  statPriorityDescription: {
+    marginTop: 2,
     fontSize: 10,
-    lineHeight: 12,
-    fontWeight: "800",
+    lineHeight: 14,
+    fontWeight: "700",
   },
 
-  enduranceZoneBadge: {
-    minHeight: 20,
-    marginTop: 4,
-    paddingHorizontal: 7,
+  statPriorityList: {
+    marginTop: 12,
+    gap: 7,
+  },
+
+  statPriorityRow: {
+    minHeight: 41,
+    paddingLeft: 10,
+    borderRadius: 12,
     borderWidth: 1,
-    borderRadius: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    zIndex: 1,
+  },
+
+  statPriorityRank: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
   },
 
-  enduranceZoneBadgeText: {
-    fontSize: 8,
-    lineHeight: 10,
+  statPriorityRankText: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "900",
+    fontVariant: ["tabular-nums"],
+  },
+
+  statPriorityLabel: {
+    flex: 1,
+    minWidth: 0,
+    marginLeft: 8,
+    fontSize: 13,
+    lineHeight: 17,
     fontWeight: "900",
   },
 
-  enduranceSecondaryRow: {
-    minHeight: 66,
-    borderTopWidth: 1,
+  statPriorityDragHandle: {
+    width: 46,
+    minHeight: 41,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  enduranceProgressCard: {
+    width: "100%",
+    marginHorizontal: 0,
+    marginVertical: 0,
+    paddingHorizontal: 14,
+    paddingTop: 15,
+    paddingBottom: 12,
+    borderRadius: 20,
+    borderWidth: 1.5,
+  },
+
+  enduranceProgressStats: {
+    minHeight: 96,
     flexDirection: "row",
     alignItems: "stretch",
   },
 
-  enduranceSecondaryStat: {
+  enduranceProgressStat: {
     flex: 1,
     minWidth: 0,
-    paddingHorizontal: 10,
-    alignItems: "center",
+    paddingHorizontal: 5,
     justifyContent: "center",
   },
 
-  enduranceSecondaryDivider: {
+  enduranceProgressDivider: {
     width: 1,
-    marginVertical: 13,
+    marginVertical: 9,
     opacity: 0.7,
   },
 
-  enduranceSecondaryLabel: {
+  enduranceProgressLabel: {
+    minHeight: 22,
     marginBottom: 4,
     fontSize: 8,
     lineHeight: 10,
     fontWeight: "900",
-    letterSpacing: 1,
+    letterSpacing: 0.6,
+    textAlign: "center",
   },
 
-  enduranceSecondaryValue: {
+  enduranceProgressValue: {
     width: "100%",
-    fontSize: 16,
-    lineHeight: 20,
+    fontSize: 19,
+    lineHeight: 24,
     fontWeight: "900",
     fontVariant: ["tabular-nums"],
     textAlign: "center",
   },
 
-  enduranceControlRow: {
-    minHeight: 76,
-    paddingHorizontal: 28,
-    paddingVertical: 10,
-    borderTopWidth: 1,
+  enduranceProgressMeta: {
+    width: "100%",
+    marginTop: 3,
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+
+  enduranceProgressTrack: {
+    width: "100%",
+    height: 8,
+    marginTop: 16,
+    borderRadius: 4,
+    overflow: "hidden",
+    backgroundColor: "rgba(128, 128, 128, 0.22)",
+  },
+
+  enduranceProgressFill: {
+    height: "100%",
+    borderRadius: 4,
+  },
+
+  enduranceProgressPercent: {
+    marginTop: 7,
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: "800",
+    textAlign: "center",
+  },
+
+  enduranceActions: {
+    width: "100%",
+    minHeight: 64,
+    paddingHorizontal: 26,
+    paddingTop: 2,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "center",
+    gap: 42,
   },
 
   enduranceControl: {

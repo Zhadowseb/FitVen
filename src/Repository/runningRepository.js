@@ -60,6 +60,7 @@ export async function createRunSet(
     pace = null,
     time = null,
     heartrate = null,
+    statPriority = null,
     done = 0,
   }
 ) {
@@ -73,8 +74,9 @@ export async function createRunSet(
       pace,
       time,
       heartrate,
+      stat_priority,
       done
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
     [
       workoutId,
       type,
@@ -84,6 +86,7 @@ export async function createRunSet(
       pace,
       time,
       heartrate,
+      statPriority,
       done,
     ]
   );

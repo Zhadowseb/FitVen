@@ -1671,6 +1671,7 @@ export async function initializeDatabase(db) {
     ["pace", "TEXT"],
     ["time", "INTEGER"],
     ["heartrate", "INTEGER"],
+    ["stat_priority", "TEXT"],
     ["done", "INTEGER NOT NULL DEFAULT 0"],
   ]);
 

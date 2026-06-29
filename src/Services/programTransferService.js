@@ -367,6 +367,7 @@ async function getProgramExportTables(db, programId) {
           r.pace,
           r.time,
           r.heartrate,
+          r.stat_priority,
           r.done
        FROM Run r
        JOIN Workout_Type_Instance w ON w.workout_id = r.workout_id
@@ -792,8 +793,9 @@ async function insertImportedProgram(db, payload) {
           pace,
           time,
           heartrate,
+          stat_priority,
           done
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
         sqliteParams([
           requireMappedId(workoutIdMap, run.workout_id, "workout"),
           normalizeRunType(run.type),
@@ -803,6 +805,7 @@ async function insertImportedProgram(db, payload) {
           normalizeText(run.pace),
           toIntegerOrNull(run.time),
           toIntegerOrNull(run.heartrate),
+          normalizeText(run.stat_priority),
           toBooleanInt(run.done),
         ])
       );
