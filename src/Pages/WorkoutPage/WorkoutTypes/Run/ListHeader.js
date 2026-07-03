@@ -1,59 +1,70 @@
-import { View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 import { useColorScheme } from "react-native";
 import { Colors } from "../../../../Resources/GlobalStyling/colors";
+import Checkmark from "../../../../Resources/Icons/UI-icons/Checkmark";
 import { ThemedText } from "../../../../Resources/ThemedComponents";
 
-/**
- * ListHeader
- *
- * Renders column headers for run sets
- */
-const ListHeader = ({ styles }) => {
+const ListHeader = ({
+  styles,
+  dividerColor,
+  distanceUnit = "m",
+  onDistanceUnitPress,
+}) => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const headerTextColor =
+    colorScheme === "dark" ? "#8f96b3" : theme.quietText ?? theme.text;
 
   return (
-    <View style={{ flexDirection: "row" }}>
-      <View style={[styles.set, styles.sharedGrid, styles.title]}>
-        <ThemedText size={10} style={{ color: theme.quietText }}>
+    <View style={[styles.runTableHeaderRow, { borderColor: dividerColor }]}>
+      <View style={[styles.runTableHeaderCell, styles.runSetColumn]}>
+        <ThemedText style={styles.runTableHeaderLabel} setColor={headerTextColor}>
           SET
         </ThemedText>
       </View>
 
-      <View style={[styles.distance, styles.sharedGrid, styles.title]}>
-        <ThemedText size={10} style={{ color: theme.quietText }}>
-          DISTANCE
+      <TouchableOpacity
+        activeOpacity={0.78}
+        onPress={onDistanceUnitPress}
+        style={[styles.runTableHeaderCell, styles.runDistanceColumn]}
+      >
+        <ThemedText style={styles.runTableHeaderLabel} setColor={headerTextColor}>
+          DIST
         </ThemedText>
-        <ThemedText size={10} style={{ color: theme.quietText }}>
-          (km)
+        <ThemedText style={styles.runTableHeaderUnit} setColor={headerTextColor}>
+          {distanceUnit}
         </ThemedText>
-      </View>
+      </TouchableOpacity>
 
-      <View style={[styles.pace, styles.sharedGrid, styles.title]}>
-        <ThemedText size={10} style={{ color: theme.quietText }}>
+      <View style={[styles.runTableHeaderCell, styles.runPaceColumn]}>
+        <ThemedText style={styles.runTableHeaderLabel} setColor={headerTextColor}>
           PACE
         </ThemedText>
-        <ThemedText size={10} style={{ color: theme.quietText }}>
-          (min/km)
+        <ThemedText style={styles.runTableHeaderUnit} setColor={headerTextColor}>
+          min/km
         </ThemedText>
       </View>
 
-      <View style={[styles.time, styles.sharedGrid, styles.title]}>
-        <ThemedText size={10} style={{ color: theme.quietText }}>
+      <View style={[styles.runTableHeaderCell, styles.runTimeColumn]}>
+        <ThemedText style={styles.runTableHeaderLabel} setColor={headerTextColor}>
           TIME
         </ThemedText>
-        <ThemedText size={10} style={{ color: theme.quietText }}>
-          (min)
+        <ThemedText style={styles.runTableHeaderUnit} setColor={headerTextColor}>
+          min
         </ThemedText>
       </View>
 
-      <View style={[styles.zone, styles.sharedGrid, styles.title]}>
-        <ThemedText size={10} style={{ color: theme.quietText }}>
+      <View style={[styles.runTableHeaderCell, styles.runZoneColumn]}>
+        <ThemedText style={styles.runTableHeaderLabel} setColor={headerTextColor}>
           ZONE
         </ThemedText>
-        <ThemedText size={10} style={{ color: theme.quietText }}>
-          (bpm/zone)
+        <ThemedText style={styles.runTableHeaderUnit} setColor={headerTextColor}>
+          bpm/zone
         </ThemedText>
+      </View>
+
+      <View style={[styles.runTableHeaderCell, styles.runDoneColumn]}>
+        <Checkmark width={12} height={12} color={headerTextColor} thickness={2.2} />
       </View>
     </View>
   );

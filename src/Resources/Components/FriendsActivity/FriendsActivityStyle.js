@@ -1,0 +1,123 @@
+import { StyleSheet } from "react-native";
+
+export default StyleSheet.create({
+  section: {
+    marginTop: 12,
+    marginBottom: 10,
+  },
+  scrollContent: {
+    paddingHorizontal: 18,
+    paddingBottom: 4,
+    alignItems: "center",
+    gap: 12,
+  },
+  circleCard: {
+    width: 76,
+    alignItems: "center",
+    gap: 6,
+  },
+  avatarShell: {
+    position: "relative",
+  },
+  avatarRing: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    borderWidth: 3,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 3,
+  },
+  statusBadge: {
+    position: "absolute",
+    right: -2,
+    bottom: -1,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "#0E0F12",
+  },
+  avatarInner: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  circleName: {
+    maxWidth: 76,
+    fontSize: 12,
+    fontWeight: "700",
+    lineHeight: 15,
+    minHeight: 24,
+    textAlign: "center",
+  },
+  circleBadge: {
+    marginTop: -2,
+    borderRadius: 9999,
+    overflow: "hidden",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    minHeight: 22,
+    justifyContent: "center",
+  },
+  circleBadgeText: {
+    fontSize: 10,
+    fontWeight: "700",
+    lineHeight: 12,
+    textAlign: "center",
+  },
+  divider: {
+    width: 1,
+    height: 54,
+    marginHorizontal: 2,
+    opacity: 0.7,
+  },
+  emptyCard: {
+    minHeight: 116,
+    width: 172,
+    borderWidth: 1,
+    borderRadius: 22,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    justifyContent: "center",
+    gap: 8,
+  },
+  emptyTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  emptyBody: {
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  loadingSlot: {
+    minHeight: 116,
+    width: 172,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ringLoadingShell: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  noticeCard: {
+    marginHorizontal: 18,
+    borderWidth: 1,
+    borderRadius: 22,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  noticeTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    marginBottom: 6,
+  },
+  noticeBody: {
+    fontSize: 12,
+    lineHeight: 18,
+  },
+});

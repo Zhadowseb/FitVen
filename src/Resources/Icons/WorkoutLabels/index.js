@@ -1,32 +1,61 @@
 import Run from "./Run";
-import StrengthTraining from "./StrengthTraining";
+import Resistance from "./Resistance";
 
 export const WORKOUT_ICONS = [
   {
     id: "Resistance",
     short: "Resist...",
-    Icon: StrengthTraining,
+    Icon: Resistance,
     selectable: true,
   },
   {
     id: "Upperbody",
-    short: "Resist...",
-    Icon: StrengthTraining,
+    short: "Upper",
+    Icon: Resistance,
     selectable: false,
   },
   {
     id: "Legs",
-    short: "Resist...",
-    Icon: StrengthTraining,
+    short: "Legs",
+    Icon: Resistance,
     selectable: false,
   },
   {
     id: "StrengthTraining",
     short: "Resist...",
-    Icon: StrengthTraining,
+    Icon: Resistance,
     selectable: false,
   },
-
+  {
+    id: "Push",
+    short: "Push",
+    Icon: Resistance,
+    selectable: false,
+  },
+  {
+    id: "Pull",
+    short: "Pull",
+    Icon: Resistance,
+    selectable: false,
+  },
+  {
+    id: "Core",
+    short: "Core",
+    Icon: Resistance,
+    selectable: false,
+  },
+  {
+    id: "Mobility",
+    short: "Mobility",
+    Icon: Resistance,
+    selectable: false,
+  },
+  {
+    id: "Lowerbody",
+    short: "Lower",
+    Icon: Resistance,
+    selectable: false,
+  },
   { id: "Run",
     short: "Run",
     Icon: Run,

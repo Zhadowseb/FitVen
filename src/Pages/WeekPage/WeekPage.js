@@ -31,7 +31,7 @@ const WeekPage = ( {route} ) => {
         'Sunday'];    
 
   return (
-    <ThemedView>
+    <ThemedView safe={["top", "left", "right"]}>
         <ThemedHeader>
             <ThemedText size={18}>Week {week_number} </ThemedText>
             <ThemedText size={10}> {period_start} - {period_end}  </ThemedText>

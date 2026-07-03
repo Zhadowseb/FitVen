@@ -6,88 +6,40 @@ export default StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingTop: 10,
+    paddingTop: 16,
   },
-  button_spacing: {
-    padding: 12,
-    borderRadius: 8,
-    marginVertical: 5, 
-    marginHorizontal: 50, 
+  contentContainer: {
+    paddingBottom: 28,
   },
-  headerAvatar: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    overflow: "hidden",
-  },
-  pageHeaderTitleGroup: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  pageHeaderTitleEyebrow: {
-    fontWeight: "800",
-    letterSpacing: 1,
-    textTransform: "uppercase",
-    marginBottom: 2,
-  },
-  pageHeaderTitleMain: {
-    textAlign: "center",
-    lineHeight: 26,
-  },
-  feedbackPortal: {
-    marginTop: 20,
-    marginHorizontal: 22,
-    borderWidth: 1,
-    borderRadius: 28,
-    paddingHorizontal: 18,
+  feedFooter: {
     paddingVertical: 18,
-    overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
   },
-  feedbackPortalGlowPrimary: {
-    position: "absolute",
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    top: -84,
-    right: -46,
-    opacity: 0.18,
+  socialSectionSpacer: {
+    marginTop: 8,
   },
-  feedbackPortalGlowSecondary: {
-    position: "absolute",
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    bottom: -40,
-    left: -18,
-    opacity: 0.12,
+  postOptionsTitle: {
+    alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: "#2e2e2e",
+    paddingBottom: 18,
   },
-  feedbackPortalTopRow: {
-    alignItems: "flex-end",
-    marginBottom: 10,
+  postOptionsTitleText: {
+    fontSize: 16,
+    fontWeight: "700",
   },
-  feedbackPortalSticker: {
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    marginBottom: -30,
-    transform: [{ rotate: "8deg" }],
+  postOptionsBody: {
+    paddingVertical: 18,
   },
-  feedbackPortalStickerText: {
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 0.9,
-    textTransform: "uppercase",
+  postOption: {
+    paddingVertical: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
   },
-  feedbackPortalTitle: {
-    lineHeight: 28,
-    marginBottom: 8,
-  },
-  feedbackPortalDescription: {
-    fontSize: 14,
-    lineHeight: 21,
+  postOptionText: {
+    fontSize: 16,
+    fontWeight: "700",
   },
 });

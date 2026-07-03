@@ -8,7 +8,15 @@ export const Colors = {
         secondary: "#60daacff",
         secondaryLight: "rgb(178, 214, 200)",
         secondaryDark: "rgb(24, 160, 108)",
+        third: "#b8b07a",
+        fields: "rgba(247, 116, 46, 0.08)",
+        record: "rgb(3, 111, 252)",
+        recordLight: "rgb(51, 139, 255)",
+        recordDark: "rgb(2, 49, 111)",
         danger: "#ba0000ff",
+        planned: "rgb(255, 221, 0)",
+        plannedLight: "rgb(255, 238, 130)",
+        plannedDark: "rgb(201, 174, 0)",
 
         NOT_STARTED: "#9E9E9E",
         ACTIVE: "#f7742eff",
@@ -24,6 +32,7 @@ export const Colors = {
         cardBorder: "#383838ff",
         navBackground: "#201e2b",
         uiBackground: "#2f2b3d",
+        libraryMetricBackground: "rgba(26, 32, 45, 0.92)",
 
         iconColor: "#9591a5",
         iconColorFocused: "#fff",
@@ -36,6 +45,12 @@ export const Colors = {
         navBackground: "#e8e7ef",
         iconColor: "#686477",
         iconColorFocused: "#201e2b",
-        uiBackground: "#d6d5e1",       
+        uiBackground: "#d6d5e1",
+        fields: "rgba(247, 116, 46, 0.08)",
+        libraryMetricBackground: "rgba(26, 32, 45, 0.92)",
+        record: "rgb(33, 41, 150)",
+        recordLight: "rgb(218, 221, 255)",
+        recordDark: "rgb(19, 27, 126)",
+        planned: "rgb(255, 221, 0)",
     }
 }

@@ -35,7 +35,7 @@ export default StyleSheet.create({
     mesocycle_container: {
         padding: 0,
         minHeight: 50,
-        marginBottom: 12,
+        marginBottom: 4,
     },
     pr_scroll: {
         marginBottom: 12,
@@ -146,6 +146,58 @@ export default StyleSheet.create({
     pr_header_value: {
         textAlign: "right",
     },
+    stats_section: {
+        marginBottom: 18,
+    },
+    stats_section_label: {
+        fontSize: 12,
+        lineHeight: 16,
+        fontWeight: "800",
+        letterSpacing: 3,
+        textTransform: "uppercase",
+        marginBottom: 12,
+    },
+    stats_grid: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+    },
+    stats_card: {
+        width: "48.5%",
+        minHeight: 120,
+        borderWidth: 1,
+        borderRadius: 14,
+        paddingHorizontal: 16,
+        paddingVertical: 16,
+    },
+    stats_card_left: {
+        marginRight: "3%",
+    },
+    stats_card_header: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: 16,
+    },
+    stats_card_label: {
+        flex: 1,
+        minWidth: 0,
+        fontSize: 11,
+        lineHeight: 14,
+        fontWeight: "800",
+        letterSpacing: 1.8,
+        textTransform: "uppercase",
+        marginLeft: 7,
+    },
+    stats_card_value: {
+        fontSize: 24,
+        lineHeight: 29,
+        fontWeight: "800",
+        marginBottom: 4,
+    },
+    stats_card_detail: {
+        fontSize: 13,
+        lineHeight: 17,
+        fontWeight: "600",
+    },
     delete_button_container: {
         minHeight: 50,
         marginBottom: 12,
@@ -177,23 +229,6 @@ export default StyleSheet.create({
         marginLeft: "auto",
         marginRight: 8,
     },
-    page_header_title_group: {
-        alignItems: "center",
-        justifyContent: "center",
-        minWidth: 0,
-    },
-    page_header_title_eyebrow: {
-        fontWeight: "700",
-        letterSpacing: 1,
-        textTransform: "uppercase",
-        marginBottom: 2,
-    },
-    page_header_title_main: {
-        padding: 0,
-        textAlign: "center",
-        maxWidth: 220,
-    },
-
     settings_card: {
         padding: 18,
     },
@@ -276,6 +311,34 @@ export default StyleSheet.create({
         paddingVertical: 14,
         justifyContent: "center",
     },
+    settings_export_tile: {
+        minHeight: 64,
+        borderWidth: 1,
+        borderRadius: 24,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        flexDirection: "row",
+        alignItems: "center",
+    },
+    settings_export_icon: {
+        width: 34,
+        height: 34,
+        borderRadius: 17,
+        alignItems: "center",
+        justifyContent: "center",
+        marginRight: 12,
+    },
+    settings_export_content: {
+        flex: 1,
+        minWidth: 0,
+    },
+    settings_export_title: {
+        fontWeight: "700",
+    },
+    settings_export_description: {
+        marginTop: 3,
+        lineHeight: 16,
+    },
 
     //BottomSheet Styling:
 
@@ -321,6 +384,57 @@ export default StyleSheet.create({
     },
     filter_option_text_unselected: {
         fontWeight: "400",
+    },
+    confirm_sheet_header: {
+        gap: 10,
+        alignItems: "center",
+    },
+    confirm_sheet_title: {
+        textAlign: "center",
+    },
+    confirm_modal: {
+        width: "88%",
+        maxWidth: 420,
+        borderRadius: 24,
+        paddingTop: 22,
+        paddingHorizontal: 18,
+    },
+    confirm_sheet_description: {
+        fontSize: 14,
+        lineHeight: 21,
+        textAlign: "center",
+    },
+    confirm_sheet_actions: {
+        flexDirection: "row",
+        gap: 12,
+        marginTop: 24,
+    },
+    confirm_action: {
+        flex: 1,
+        minHeight: 52,
+        borderRadius: 18,
+        alignItems: "center",
+        justifyContent: "center",
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+    },
+    confirm_action_secondary: {
+        borderWidth: 1,
+    },
+    confirm_action_danger: {
+        borderWidth: 1,
+        borderColor: "transparent",
+    },
+    confirm_action_secondary_text: {
+        fontSize: 15,
+        fontWeight: "700",
+        textAlign: "center",
+    },
+    confirm_action_danger_text: {
+        fontSize: 15,
+        fontWeight: "700",
+        color: "#fff",
+        textAlign: "center",
     },
 
 });

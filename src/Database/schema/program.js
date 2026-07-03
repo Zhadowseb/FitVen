@@ -1,8 +1,19 @@
 export const programSchemaSql = `
 
+  CREATE TABLE IF NOT EXISTS App_Metadata (
+    metadata_key TEXT PRIMARY KEY,
+    metadata_value TEXT
+  );
+
   CREATE TABLE IF NOT EXISTS Program (
     program_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    cloud_id INTEGER,
+    last_updated INTEGER NOT NULL DEFAULT 0,
     cloud_program_id INTEGER,
+    remote_local_program_id INTEGER,
+    sync_id TEXT,
+    sync_version INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT,
     program_name TEXT,
     start_date TEXT NOT NULL,
     status TEXT
@@ -14,7 +25,9 @@ export const programSchemaSql = `
 
   CREATE TABLE IF NOT EXISTS Program_Sync_Delete (
     program_sync_delete_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    cloud_program_id INTEGER NOT NULL UNIQUE,
+    cloud_program_id INTEGER UNIQUE,
+    sync_id TEXT,
+    sync_version INTEGER NOT NULL DEFAULT 0,
     deleted_at TEXT
   );
 
@@ -29,48 +42,136 @@ export const programSchemaSql = `
 
   CREATE TABLE IF NOT EXISTS Mesocycle(
       mesocycle_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      cloud_id INTEGER,
+      last_updated INTEGER NOT NULL DEFAULT 0,
+      cloud_mesocycle_id INTEGER,
+      remote_local_mesocycle_id INTEGER,
+      sync_id TEXT,
+      sync_version INTEGER NOT NULL DEFAULT 0,
+      deleted_at TEXT,
       program_id INTEGER NOT NULL,
       mesocycle_number INTEGER NOT NULL,
       weeks INTEGER NOT NULL DEFAULT 0,
       focus TEXT DEFAULT "No focus set",
-      done INTEGER NOT NULL DEFAULT 0
+      done INTEGER NOT NULL DEFAULT 0,
+      needs_sync INTEGER NOT NULL DEFAULT 1
+  );
+
+  CREATE TABLE IF NOT EXISTS Mesocycle_Sync_Delete (
+    mesocycle_sync_delete_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    cloud_mesocycle_id INTEGER UNIQUE,
+    sync_id TEXT,
+    sync_version INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT
   );
 
   CREATE TABLE IF NOT EXISTS Microcycle(
       microcycle_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      cloud_id INTEGER,
+      last_updated INTEGER NOT NULL DEFAULT 0,
+      cloud_microcycle_id INTEGER,
+      sync_id TEXT,
+      sync_version INTEGER NOT NULL DEFAULT 0,
+      deleted_at TEXT,
       mesocycle_id INTEGER NOT NULL,
       microcycle_number INTEGER NOT NULL,
       focus TEXT DEFAULT "No focus",
-      done INTEGER NOT NULL DEFAULT 0
+      done INTEGER NOT NULL DEFAULT 0,
+      needs_sync INTEGER NOT NULL DEFAULT 1
+  );
+
+  CREATE TABLE IF NOT EXISTS Microcycle_Sync_Delete (
+    microcycle_sync_delete_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    cloud_microcycle_id INTEGER UNIQUE,
+    sync_id TEXT,
+    sync_version INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT
   );
 
   CREATE TABLE IF NOT EXISTS Day (
       day_id INTEGER PRIMARY KEY AUTOINCREMENT,
-      microcycle_id INTEGER NOT NULL,
-      program_id INTEGER NOT NULL,
+      cloud_id INTEGER,
+      last_updated INTEGER NOT NULL DEFAULT 0,
+      cloud_day_id INTEGER,
+      remote_local_day_id INTEGER,
+      sync_id TEXT,
+      sync_version INTEGER NOT NULL DEFAULT 0,
+      deleted_at TEXT,
+      microcycle_id INTEGER,
+      program_id INTEGER,
       Weekday TEXT NOT NULL,
       date TEXT NOT NULL,
-      done INTEGER NOT NULL DEFAULT 0
+      done INTEGER NOT NULL DEFAULT 0,
+      is_sick INTEGER NOT NULL DEFAULT 0,
+      needs_sync INTEGER NOT NULL DEFAULT 1
+  );
+
+  CREATE TABLE IF NOT EXISTS Sickness (
+      sickness_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      cloud_id INTEGER,
+      last_updated INTEGER NOT NULL DEFAULT 0,
+      cloud_sickness_id INTEGER,
+      sync_id TEXT,
+      sync_version INTEGER NOT NULL DEFAULT 0,
+      deleted_at TEXT,
+      start_date TEXT NOT NULL,
+      end_date TEXT,
+      sickness_type TEXT,
+      note TEXT,
+      needs_sync INTEGER NOT NULL DEFAULT 1
   );
 
   CREATE TABLE IF NOT EXISTS Workout_Type (
       workout_type_id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL UNIQUE,
-      display_name TEXT
+      display_name TEXT,
+      is_active INTEGER NOT NULL DEFAULT 0
   );
 
   CREATE TABLE IF NOT EXISTS Workout_Type_Instance (
       workout_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      cloud_id INTEGER,
+      last_updated INTEGER NOT NULL DEFAULT 0,
+      cloud_workout_type_instance_id INTEGER,
+      remote_local_workout_type_instance_id INTEGER,
+      sync_id TEXT,
+      sync_version INTEGER NOT NULL DEFAULT 0,
+      deleted_at TEXT,
       day_id INTEGER NOT NULL,
       workout_type TEXT,
       date TEXT NOT NULL,
       label TEXT,
+      run_focus_type TEXT,
       done INTEGER NOT NULL DEFAULT 0,
+      needs_sync INTEGER NOT NULL DEFAULT 1,
 
       /*======Workout Timer=======*/
       is_active INTEGER DEFAULT 0,
       original_start_time INTEGER,
       timer_start INTEGER,
       elapsed_time INTEGER DEFAULT 0
+  );
+
+  CREATE TABLE IF NOT EXISTS Workout_Type_Instance_Sync_Delete (
+    workout_type_instance_sync_delete_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    cloud_workout_type_instance_id INTEGER UNIQUE,
+    remote_local_workout_type_instance_id INTEGER UNIQUE,
+    sync_id TEXT,
+    sync_version INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT
+  );
+
+  CREATE TABLE IF NOT EXISTS Sync_Outbox (
+    sync_outbox_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    entity_table TEXT NOT NULL,
+    entity_local_id INTEGER,
+    entity_cloud_id INTEGER,
+    operation TEXT NOT NULL CHECK (operation IN ('create', 'update', 'delete')),
+    payload_json TEXT,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'failed')),
+    attempts INTEGER NOT NULL DEFAULT 0,
+    last_error TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
 `;

@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.5.0-feat-program-cloud-sync.1",
+  "version": "0.18.8-minor-walk-workout-type.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",
@@ -14,13 +14,22 @@
     "version:branch": "node scripts/version.js branch",
     "version:status": "node scripts/version.js status",
     "version:sync": "node scripts/version.js sync",
+    "branch:auto-push": "node scripts/git-post-commit-auto-push.js",
+    "branch:hooks:install": "git config core.hooksPath .githooks",
+    "test:custom-exercise": "node scripts/test-custom-exercise-muscles.js",
+    "test:location": "node scripts/test-location-distance.js",
+    "test:profile-birthdate": "node scripts/test-profile-birthdate.js",
+    "test:heart-rate-settings": "node scripts/test-heart-rate-settings.js",
+    "test:notifications": "node scripts/test-notification-registration.js",
     "release:prepare": "node scripts/version.js release",
+    "release:android": "node scripts/release-android.js",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
     "build-aab:android": "npx eas build -p android --profile production"
   },
   "dependencies": {
     "@expo/ui": "~0.2.0-beta.9",
     "@expo/vector-icons": "^15.0.3",
+    "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/datetimepicker": "8.4.4",
     "@react-native-picker/picker": "^2.11.4",
     "@react-navigation/native": "^7.1.21",
@@ -29,20 +38,31 @@
     "eas-cli": "^18.3.0",
     "expo": "~54.0.25",
     "expo-checkbox": "~5.0.8",
+    "expo-constants": "~18.0.13",
     "expo-dev-client": "~6.0.20",
+    "expo-document-picker": "~14.0.8",
+    "expo-file-system": "~19.0.23",
+    "expo-image-picker": "~17.0.10",
     "expo-location": "~19.0.8",
+    "expo-notifications": "~0.32.17",
+    "expo-screen-orientation": "~9.0.9",
+    "expo-sharing": "~14.0.8",
     "expo-sqlite": "^16.0.9",
     "expo-status-bar": "~3.0.8",
     "expo-task-manager": "~14.0.9",
     "react": "19.1.0",
     "react-native": "0.81.5",
     "react-native-bouncy-checkbox": "^4.1.4",
+    "react-native-maps": "1.20.1",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
-    "react-native-svg": "15.12.1"
+    "react-native-svg": "15.12.1",
+    "react-native-url-polyfill": "^3.0.0",
+    "supabase": "^2.105.0"
   },
   "private": true,
   "devDependencies": {
+    "@types/react": "~19.1.10",
     "conventional-changelog-cli": "^5.0.0"
   }
 }

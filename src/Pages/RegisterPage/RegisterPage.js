@@ -6,6 +6,11 @@ import styles from "./RegisterPageStyle";
 import { Colors } from "../../Resources/GlobalStyling/colors";
 import { registerWithEmail } from "../../Database/supaBaseClient";
 import {
+  buildFullUsername,
+  isValidUsernameBase,
+  normalizeUsernameBaseInput,
+} from "../../Utils/socialUsername";
+import {
   ThemedButton,
   ThemedCard,
   ThemedHeader,
@@ -18,6 +23,7 @@ import {
 export default function RegisterPage() {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const [usernameBase, setUsernameBase] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [retypePassword, setRetypePassword] = useState("");
@@ -29,13 +35,21 @@ export default function RegisterPage() {
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const cardSurface = theme.cardBackground ?? theme.background;
   const cardBorder = theme.cardBorder ?? theme.iconColor ?? theme.text;
+  const normalizedUsername = normalizeUsernameBaseInput(usernameBase);
+  const usernameInvalid =
+    normalizedUsername.length > 0 &&
+    !isValidUsernameBase(normalizedUsername);
   const passwordsMismatch =
     retypePassword.length > 0 && password !== retypePassword;
   const isFormIncomplete =
+    usernameBase.trim().length === 0 ||
     email.trim().length === 0 ||
     password.length === 0 ||
     retypePassword.length === 0;
   const passwordTooShort = password.length > 0 && password.length < 6;
+  const usernamePreview = normalizedUsername && !usernameInvalid
+    ? buildFullUsername(normalizedUsername, "1234")
+    : "your_name#1234";
   const statusColor =
     submitState.status === "success"
       ? theme.secondary ?? titleColor
@@ -46,10 +60,19 @@ export default function RegisterPage() {
   const handleRegister = async () => {
     const normalizedEmail = email.trim().toLowerCase();
 
-    if (!normalizedEmail || !password || !retypePassword) {
+    if (!normalizedUsername || !normalizedEmail || !password || !retypePassword) {
       setSubmitState({
         status: "error",
-        message: "Fill out email and both password fields first.",
+        message: "Fill out username, email and both password fields first.",
+      });
+      return;
+    }
+
+    if (!isValidUsernameBase(normalizedUsername)) {
+      setSubmitState({
+        status: "error",
+        message:
+          "Username must be 3-20 characters and use only lowercase letters, numbers or underscores.",
       });
       return;
     }
@@ -79,6 +102,7 @@ export default function RegisterPage() {
       const result = await registerWithEmail({
         email: normalizedEmail,
         password,
+        usernameBase: normalizedUsername,
       });
 
       const needsEmailConfirmation = !result.session;
@@ -90,6 +114,7 @@ export default function RegisterPage() {
           : "Account created. You can now sign in.",
       });
 
+      setUsernameBase("");
       setEmail(normalizedEmail);
       setPassword("");
       setRetypePassword("");
@@ -152,6 +177,32 @@ export default function RegisterPage() {
             <ThemedText style={styles.cardTitle} setColor={titleColor}>
               Account details
             </ThemedText>
+            <ThemedText style={styles.cardBody} setColor={quietText}>
+              Pick your base username. FitVen will lock in a 4-digit tag, so it
+              shows up like {usernamePreview}.
+            </ThemedText>
+
+            <View style={styles.formSection}>
+              <ThemedText style={styles.inputLabel} setColor={quietText}>
+                Username
+              </ThemedText>
+              <ThemedTextInput
+                value={usernameBase}
+                onChangeText={setUsernameBase}
+                placeholder="your_name"
+                autoCapitalize="none"
+                autoCorrect={false}
+                error={
+                  usernameInvalid
+                    ? "Use 3-20 lowercase letters, numbers or underscores."
+                    : undefined
+                }
+                style={styles.inputWrapper}
+              />
+              <ThemedText style={styles.fieldHint} setColor={quietText}>
+                The 4-digit tag is generated automatically and cannot be changed later.
+              </ThemedText>
+            </View>
 
             <View style={styles.formSection}>
               <ThemedText style={styles.inputLabel} setColor={quietText}>
@@ -214,6 +265,7 @@ export default function RegisterPage() {
               disabled={
                 submitState.status === "loading" ||
                 isFormIncomplete ||
+                usernameInvalid ||
                 passwordsMismatch ||
                 passwordTooShort
               }

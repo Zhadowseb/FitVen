@@ -24,10 +24,11 @@ This file applies to everything inside `src/`.
 
 ## Sync Rules
 
-- Treat `Workout_Type_Instance` as the lowest-level cloud sync boundary for workout data.
-- Changes to `Set`, `Exercise_Instance`, or other workout-child rows should update local state immediately, but should not trigger direct cloud writes on their own.
-- Child-row changes should instead mark the owning `Workout_Type_Instance` as dirty so the full workout payload can be synced together later.
-- Prefer syncing workout-child data when the owning `Workout_Type_Instance` is completed or when an explicit higher-level workout sync runs.
+- Treat `Set` as the lowest-level cloud sync boundary for strength workout data.
+- Keep `Workout_Type_Instance` cloud sync focused on workout-level fields such as workout type, label, date, completion, and timer state.
+- Changes to `Exercise_Instance` should update local state immediately and sync the owning exercise row without bypassing the established repository and service layers.
+- Changes to `Set` rows should update local state immediately, keep the owning `Exercise_Instance` derived fields in sync locally, and then sync both levels in the correct parent-first order.
+- Keep `Run` data on its own workout-level sync path until a lower-level running sync exists.
 
 ## Related Guides
 

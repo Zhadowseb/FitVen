@@ -20,11 +20,24 @@ Keep the root guide short and place domain-specific rules in closer `AGENTS.md` 
 - If the user asks for code changes while on `master` or `main`, stop first and propose a branch name before making changes.
 - Review local changes before switching branches or rewriting Git history.
 
+## GitHub Issue Fixes
+
+- When the user asks the agent to review GitHub issues and solve them, only inspect, evaluate, or implement code for issues labeled `codex-fix` or `codex-fix-human-input`.
+- For issues labeled `codex-fix`, proceed with the fix without asking for confirmation first.
+- For issues labeled `codex-fix-human-input`, always ask before implementing and describe the intended implementation.
+- Do not inspect, evaluate, or act on issues with other labels unless the user explicitly asks for those issues.
+- After implementing an issue fix, add a GitHub issue comment describing what changed before adding any completion label.
+- After commenting, add the `codex-fixed` label to show the user that the issue is ready for review and can be closed manually from GitHub.
+- Do not close GitHub issues automatically unless the user explicitly asks for that.
+
 ## Branch And Commit Discipline
 
 - Treat a new feature, fix, refactor, or unrelated request as a new unit of work.
 - Before starting a new unit of work, check whether the current branch and uncommitted changes belong to the previous task.
 - If the user appears satisfied with the current work and then asks for something new, suggest committing the finished work before starting the next change.
+- Before switching to a new work branch, make sure the finished branch is committed and pushed if its state should stay visible on GitHub.
+- After every successful commit on a work branch, push the branch immediately. Use the existing upstream when present; otherwise use `git push -u origin <branch>`.
+- The repo's `.githooks/post-commit` hook automates commit pushes in configured clones. If the hook is unavailable, push manually after committing.
 - If the current branch name no longer matches the requested work, suggest creating a new branch before editing files.
 - When suggesting a branch, propose a concrete branch name instead of asking an open-ended question.
 
@@ -32,8 +45,9 @@ Keep the root guide short and place domain-specific rules in closer `AGENTS.md` 
 
 - After creating or switching to a work branch, use `npm run version:auto` before making further version edits so the branch version is derived from its base commit.
 - Use `npm run version:status` whenever you need to verify the current branch/version state.
-- Prefer branch names like `feat/...`, `fix/...`, or `release/x.y.z`.
+- Prefer branch names like `major/...`, `minor/...`, `fix/...`, or `release/x.y.z`.
 - Use `npm run release:prepare -- <version>` for stable releases.
+- If a release closes one version line and the next work should start the next minor line, use `npm run version:sync -- <nextMinor>.0` on the first follow-up branch before continuing normal branch versioning.
 - See `docs/VERSIONING.md` for the full workflow and branch rules.
 
 ## Local Guides

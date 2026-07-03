@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { View, Text, TouchableOpacity, Modal } from 'react-native';
+import { Alert, View, Text, TouchableOpacity, Modal } from 'react-native';
 import { useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
@@ -9,14 +9,13 @@ import { useColorScheme } from "react-native";
 import { Colors } from "../../../../Resources/GlobalStyling/colors";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import PickWorkoutModal from './Components/PickWorkoutModal/PickWorkoutModal';
-import AddWorkoutModal from "../../../../Resources/Components/AddWorkoutModal";
 
 import styles from './DayStyle';
 import { getWorkoutIconConfig } from '../../../../Resources/Icons/WorkoutLabels/index';
 
 //Icons:
 import ThreeDots from '../../../../Resources/Icons/UI-icons/ThreeDots';
-import Plus from '../../../../Resources/Icons/UI-icons/Plus';
+import PlusCircled from '../../../../Resources/Icons/UI-icons/PlusCircled';
 import Copy from '../../../../Resources/Icons/UI-icons/Copy';
 import Delete from "../../../../Resources/Icons/UI-icons/Delete";
 
@@ -26,6 +25,7 @@ import { ThemedCard,
         ThemedBottomSheet, 
         ThemedBouncyCheckbox } from "../../../../Resources/ThemedComponents";
 import { formatDate } from '../../../../Utils/dateUtils';
+import { requestOpenQuickWorkoutMenu } from "../../../../Utils/quickWorkoutMenuEvents";
 import { programService as programRepository } from "../../../../Services";
 
 const Day = ( {day, program_id, microcycle_id} ) => {
@@ -66,7 +66,6 @@ const Day = ( {day, program_id, microcycle_id} ) => {
     const [pickWorkoutModal_visible, set_pickWorkoutModal_visible] = useState(false);
     const [datePicker_visible, set_datePicker_visible] = useState(false);
     const [OptionsBottomsheet_visible, set_OptionsBottomsheet_visible] = useState(false);
-    const [labelModal_visible, set_labelModal_visible] = useState(false);
     
     const hasWorkouts = workouts.length > 0;
     
@@ -108,7 +107,7 @@ const Day = ( {day, program_id, microcycle_id} ) => {
 
     const copyWorkoutToDate = async (workoutId, date) => {
         try{
-            const copiedWorkoutId = await programRepository.copyWorkoutToDate(db, {
+            const copiedWorkoutId = await programRepository.copyProgramWorkoutToDate(db, {
                 workoutId,
                 programId: program_id,
                 date,
@@ -132,6 +131,25 @@ const Day = ( {day, program_id, microcycle_id} ) => {
             console.error("Failed to delete workout:", err);
             throw err;
         }
+    };
+
+    const confirmDeleteWorkout = (workoutId) => {
+        Alert.alert(
+            "Delete workout?",
+            "This removes the workout and all sets saved inside it.",
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Delete workout",
+                    style: "destructive",
+                    onPress: () => {
+                        void deleteWorkout(workoutId);
+                        set_pickWorkoutModal_visible(false);
+                        set_OptionsBottomsheet_visible(false);
+                    },
+                },
+            ]
+        );
     };
 
 
@@ -303,10 +321,15 @@ const Day = ( {day, program_id, microcycle_id} ) => {
                     style={[styles.option, {paddingTop: 0}]}
                     onPress={async () => {
                         set_OptionsBottomsheet_visible(false);
-                        set_labelModal_visible(true);
+                        requestOpenQuickWorkoutMenu({
+                            date,
+                            day,
+                            dayId: day_id,
+                            programId: program_id,
+                        });
 
                     }}>
-                    <Plus
+                    <PlusCircled
                         width={24}
                         height={24}/>
                     <ThemedText style={styles.option_text}> 
@@ -352,30 +375,6 @@ const Day = ( {day, program_id, microcycle_id} ) => {
 
         </ThemedBottomSheet>
 
-        <AddWorkoutModal
-            visible={labelModal_visible}
-            onClose={() => set_labelModal_visible(false)}
-            onSubmit={async (labelId) => {
-
-                set_labelModal_visible(false);
-
-                const workout_id = await programRepository.createWorkoutForDay(db, {
-                    date,
-                    dayId: day_id,
-                    workoutType: labelId.id,
-                    label: labelId.id,
-                });
-
-                navigation.navigate("WorkoutPage", {
-                    program_id,
-                    date,
-                    workout_id: workout_id.lastInsertRowId,
-                    workout_label: labelId.id,
-                    workout_type: labelId.id,
-                });
-            }}
-        />
-
         <PickWorkoutModal 
             workouts={workouts}
             visible={pickWorkoutModal_visible}
@@ -400,9 +399,7 @@ const Day = ( {day, program_id, microcycle_id} ) => {
                 }
 
                 if(pickMode === PICK_MODE.DELETE){
-                    deleteWorkout(workout.workout_id)
-                    set_pickWorkoutModal_visible(false);
-                    set_OptionsBottomsheet_visible(false);
+                    confirmDeleteWorkout(workout.workout_id);
                 }
             }}
         />

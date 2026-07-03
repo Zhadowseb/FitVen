@@ -1,0 +1,5 @@
+[functions.send-workout-started-notification]
+verify_jwt = false
+
+[functions.manage-push-token]
+verify_jwt = true

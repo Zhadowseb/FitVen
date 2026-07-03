@@ -1,54 +1,188 @@
-import { Pressable, ScrollView, View, useColorScheme } from "react-native";
+import {
+  Pressable,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  View,
+  useColorScheme,
+} from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
 import { useState, useEffect } from "react";
 
 import styles from "./ExerciseLibraryListStyle";
 import { weightliftingService as weightliftingRepository } from "../../../../Services";
-import ExerciseMuscleModal from "../ExerciseMuscleModal/ExerciseMuscleModal";
 import { Colors } from "../../../../Resources/GlobalStyling/colors";
+import BodyMapPreview from "../../../../Resources/Components/BodyMapPreview/BodyMapPreview";
+import Filter from "../../../../Resources/Icons/UI-icons/Filter";
+import Library from "../../../../Resources/Icons/UI-icons/Library";
+import Search from "../../../../Resources/Icons/UI-icons/Search";
 import {
+  EXERCISE_MUSCLE_FILTERS,
+  toggleExerciseMuscleFilterKey,
+} from "../../../../Utils/exerciseMuscleGroups";
+import {
+  ThemedButton,
   ThemedCard,
+  ThemedModal,
   ThemedText,
   ThemedTitle,
 } from "../../../../Resources/ThemedComponents";
 
-const ExerciseLibraryList = ({ refreshKey }) => {
+const GROUP_FILTERS = [
+  { key: "all", label: "All" },
+  { key: "push", label: "Push" },
+  { key: "pull", label: "Pull" },
+  { key: "legs", label: "Legs" },
+  { key: "core", label: "Core" },
+  { key: "mobility", label: "Mobility" },
+];
+
+const MUSCLE_FILTERS = EXERCISE_MUSCLE_FILTERS;
+
+const EXERCISE_REGION_KEY_FIELDS = [
+  "primary_body_map_region_keys",
+  "secondary_body_map_region_keys",
+  "primary_front_body_map_region_keys",
+  "secondary_front_body_map_region_keys",
+  "primary_back_body_map_region_keys",
+  "secondary_back_body_map_region_keys",
+];
+
+const getExerciseRegionKeySet = (exercise) => {
+  const regionKeys = new Set();
+
+  for (const field of EXERCISE_REGION_KEY_FIELDS) {
+    const values = Array.isArray(exercise?.[field]) ? exercise[field] : [];
+
+    for (const value of values) {
+      if (typeof value === "string" && value.trim() !== "") {
+        regionKeys.add(value.trim().toLocaleLowerCase());
+      }
+    }
+  }
+
+  return regionKeys;
+};
+
+const formatMuscleBadgeLabel = (count, label) => `${count}\u00A0${label}`;
+
+const ExerciseMuscleBadges = ({
+  primaryBadgeSurface,
+  primaryBadgeText,
+  primaryCount,
+  secondaryBadgeSurface,
+  secondaryBadgeText,
+  secondaryCount,
+  style,
+}) => {
+  const shouldShowSecondaryBadge = Number(secondaryCount) > 0;
+
+  return (
+    <View style={[styles.muscleBadgeRow, style]}>
+      <View
+        style={[
+          styles.muscleBadge,
+          styles.primaryMuscleBadge,
+          { backgroundColor: primaryBadgeSurface },
+        ]}
+      >
+        <ThemedText
+          style={styles.muscleBadgeText}
+          setColor={primaryBadgeText}
+          numberOfLines={1}
+          ellipsizeMode="clip"
+        >
+          {formatMuscleBadgeLabel(primaryCount, "PRIMARY")}
+        </ThemedText>
+      </View>
+
+      {shouldShowSecondaryBadge && (
+        <View
+          style={[
+            styles.muscleBadge,
+            styles.secondaryMuscleBadge,
+            { backgroundColor: secondaryBadgeSurface },
+          ]}
+        >
+          <ThemedText
+            style={styles.muscleBadgeText}
+            setColor={secondaryBadgeText}
+            numberOfLines={1}
+            ellipsizeMode="clip"
+          >
+            {formatMuscleBadgeLabel(secondaryCount, "SECONDARY")}
+          </ThemedText>
+        </View>
+      )}
+    </View>
+  );
+};
+
+const ExerciseLibraryList = ({
+  refreshKey,
+  mode = "catalog",
+  onSelectExercise,
+  onAddCustomExercise,
+  selectingExerciseName = null,
+}) => {
   const db = useSQLiteContext();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const [exercises, set_exercises] = useState([]);
-  const [selectedExerciseName, set_selectedExerciseName] = useState("");
-  const [detailsVisible, set_detailsVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedGroupKey, setSelectedGroupKey] = useState("all");
+  const [selectedMuscleKeys, setSelectedMuscleKeys] = useState(["all"]);
+  const [selectedExercise, setSelectedExercise] = useState(null);
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
+  const titleColor = theme.title ?? theme.text;
+  const primaryColor = theme.primary ?? "#f7742e";
+  const secondaryColor = theme.secondary ?? "#60daac";
   const cardSurface =
     theme.cardBackground ?? theme.navBackground ?? theme.background;
   const cardBorder = theme.cardBorder ?? theme.iconColor ?? theme.text;
-  const rowSurface = theme.uiBackground ?? theme.navBackground ?? theme.background;
-  const rowBorder = theme.cardBorder ?? theme.iconColor ?? theme.text;
+  const inputSurface = theme.background ?? cardSurface;
+  const activeFilterText = theme.cardBackground ?? theme.textInverted ?? "#1b1918";
   const badgeSurface =
-    theme.primaryLight ??
+    theme.uiBackground ??
     (colorScheme === "dark"
-      ? "rgba(247, 116, 46, 0.18)"
-      : "rgba(247, 116, 46, 0.12)");
-  const indexSurface = theme.primary ?? badgeSurface;
-  const indexTextColor =
-    theme.cardBackground ?? theme.background ?? theme.text;
-  const primaryBadgeSurface =
-    theme.secondaryLight ??
-    (colorScheme === "dark"
-      ? "rgba(96, 218, 172, 0.18)"
-      : "rgba(96, 218, 172, 0.14)");
-  const secondaryBadgeSurface =
-    theme.primaryLight ??
-    (colorScheme === "dark"
-      ? "rgba(247, 116, 46, 0.16)"
-      : "rgba(247, 116, 46, 0.12)");
-  const primaryBadgeText =
-    theme.secondaryDark ?? theme.secondary ?? theme.text;
-  const secondaryBadgeText = theme.primaryDark ?? theme.primary ?? theme.text;
-  const countLabel =
-    exercises.length === 1 ? "1 exercise" : `${exercises.length} exercises`;
+      ? "rgba(47, 43, 61, 0.8)"
+      : "rgba(214, 213, 225, 0.8)");
+  const primaryBadgeSurface = "rgba(96, 218, 172, 0.2)";
+  const secondaryBadgeSurface = "rgba(247, 116, 46, 0.18)";
+  const primaryFilterSurface = "rgba(247, 116, 46, 0.12)";
+  const secondaryFilterSurface = "rgba(96, 218, 172, 0.12)";
+  const primaryBadgeText = secondaryColor;
+  const secondaryBadgeText = primaryColor;
+  const normalizedSearchQuery = searchQuery.trim().toLocaleLowerCase();
+  const isAllMusclesSelected = selectedMuscleKeys.includes("all");
+  const selectedMuscleFilters = isAllMusclesSelected
+    ? [MUSCLE_FILTERS[0]]
+    : MUSCLE_FILTERS.filter((filter) =>
+        selectedMuscleKeys.includes(filter.key)
+      );
+  const filteredExercises = exercises.filter((exercise) => {
+    const exerciseName = exercise.exercise_name ?? "";
+    const nickname = exercise.nickname ?? "";
+    const matchesSearch =
+      normalizedSearchQuery === "" ||
+      exerciseName.toLocaleLowerCase().includes(normalizedSearchQuery) ||
+      nickname.toLocaleLowerCase().includes(normalizedSearchQuery);
+    const groupKeys = Array.isArray(exercise.group_keys)
+      ? exercise.group_keys
+      : [];
+    const matchesGroup =
+      selectedGroupKey === "all" || groupKeys.includes(selectedGroupKey);
+    const regionKeySet = getExerciseRegionKeySet(exercise);
+    const matchesMuscle =
+      isAllMusclesSelected ||
+      selectedMuscleFilters.some((filter) =>
+        filter.regionKeys.some((regionKey) => regionKeySet.has(regionKey))
+      );
 
+    return matchesSearch && matchesGroup && matchesMuscle;
+  });
+  const isWorkoutPicker = mode === "workout-picker";
+  const isSelectionBusy = Boolean(selectingExerciseName);
   const loadExerciseStorage = async () => {
     try {
       const rows = await weightliftingRepository.getExerciseLibraryEntries(db);
@@ -62,29 +196,49 @@ const ExerciseLibraryList = ({ refreshKey }) => {
     loadExerciseStorage();
   }, [refreshKey]);
 
-  const handleOpenExerciseDetails = (exerciseName) => {
-    set_selectedExerciseName(exerciseName);
-    set_detailsVisible(true);
+  const resetFilters = () => {
+    setSearchQuery("");
+    setSelectedGroupKey("all");
+    setSelectedMuscleKeys(["all"]);
+  };
+
+  const handleMuscleFilterPress = (filterKey) => {
+    setSelectedMuscleKeys((currentKeys) =>
+      toggleExerciseMuscleFilterKey(currentKeys, filterKey)
+    );
   };
 
   return (
-    <ThemedCard
-      style={[
-        styles.card,
-        {
-          backgroundColor: cardSurface,
-          borderColor: cardBorder,
-        },
-      ]}
-    >
+    <>
+      <ThemedCard
+        style={[
+          styles.card,
+          {
+            backgroundColor: cardSurface,
+            borderColor: cardBorder,
+          },
+        ]}
+      >
       <View style={styles.header}>
+        <View style={[styles.headerIcon, { backgroundColor: secondaryBadgeSurface }]}>
+          <Library width={22} height={22} color={primaryColor} />
+        </View>
+
         <View style={styles.headerCopy}>
-          <ThemedText size={12} style={styles.eyebrow} setColor={quietText}>
-            Catalog
+          <ThemedText size={11} style={styles.eyebrow} setColor={primaryColor}>
+            {isWorkoutPicker ? "Add Exercise" : "Exercise Library"}
           </ThemedText>
-          <ThemedTitle type="h3" style={styles.title}>
-            Available exercise names
+          <ThemedTitle
+            type="h3"
+            style={[styles.title, { color: titleColor }]}
+          >
+            {isWorkoutPicker ? "Choose Exercise" : "Catalog"}
           </ThemedTitle>
+          {isWorkoutPicker ? (
+            <ThemedText style={styles.description} setColor={quietText}>
+              Workout exercise
+            </ThemedText>
+          ) : null}
         </View>
 
         <View
@@ -96,16 +250,14 @@ const ExerciseLibraryList = ({ refreshKey }) => {
             },
           ]}
         >
-          <ThemedText style={styles.countBadgeText}>
-            {countLabel}
+          <ThemedText style={styles.countBadgeText} setColor={titleColor}>
+            <ThemedText style={styles.countBadgeNumber} setColor={primaryColor}>
+              {filteredExercises.length}
+            </ThemedText>{" "}
+            exercises
           </ThemedText>
         </View>
       </View>
-
-      <ThemedText style={styles.description} setColor={quietText}>
-        This library is synced from the shared cloud database whenever the app
-        opens.
-      </ThemedText>
 
       <View
         style={[
@@ -113,6 +265,191 @@ const ExerciseLibraryList = ({ refreshKey }) => {
           { backgroundColor: theme.border ?? cardBorder },
         ]}
       />
+
+      <View style={styles.searchRow}>
+        <View
+          style={[
+            styles.searchBox,
+            {
+              backgroundColor: inputSurface,
+              borderColor: cardBorder,
+            },
+          ]}
+        >
+          <Search width={18} height={18} color={quietText} />
+          <TextInput
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Search exercises..."
+            placeholderTextColor={quietText}
+            style={[styles.searchInput, { color: titleColor }]}
+            autoCorrect={false}
+          />
+        </View>
+
+        <TouchableOpacity
+          activeOpacity={0.86}
+          onPress={resetFilters}
+          style={[
+            styles.filterButton,
+            {
+              backgroundColor: inputSurface,
+              borderColor: cardBorder,
+            },
+          ]}
+        >
+          <Filter width={20} height={20} color={quietText} />
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.filterSections}>
+        <View style={styles.filterSection}>
+          <View style={styles.filterSectionHeading}>
+            <View
+              style={[
+                styles.filterSectionAccent,
+                { backgroundColor: primaryColor },
+              ]}
+            />
+            <ThemedText style={styles.filterSectionLabel} setColor={quietText}>
+              Training focus
+            </ThemedText>
+          </View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.filterScroll}
+            contentContainerStyle={styles.filterContent}
+          >
+            {GROUP_FILTERS.map((filter) => {
+              const isSelected = selectedGroupKey === filter.key;
+
+              return (
+                <Pressable
+                  key={filter.key}
+                  onPress={() => setSelectedGroupKey(filter.key)}
+                  style={[
+                    styles.groupFilter,
+                    {
+                      backgroundColor: isSelected
+                        ? primaryFilterSurface
+                        : "transparent",
+                      borderColor: isSelected ? primaryColor : cardBorder,
+                    },
+                  ]}
+                >
+                  <ThemedText
+                    style={styles.groupFilterText}
+                    setColor={isSelected ? primaryColor : quietText}
+                  >
+                    {filter.label}
+                  </ThemedText>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
+
+        <View style={styles.filterSection}>
+          <View style={styles.filterSectionHeading}>
+            <View
+              style={[
+                styles.filterSectionAccent,
+                { backgroundColor: secondaryColor },
+              ]}
+            />
+            <ThemedText style={styles.filterSectionLabel} setColor={quietText}>
+              Muscles
+            </ThemedText>
+          </View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.filterScroll}
+            contentContainerStyle={styles.filterContent}
+          >
+            {MUSCLE_FILTERS.map((filter) => {
+              const isSelected = selectedMuscleKeys.includes(filter.key);
+
+              return (
+                <Pressable
+                  key={filter.key}
+                  onPress={() => handleMuscleFilterPress(filter.key)}
+                  style={[
+                    styles.groupFilter,
+                    {
+                      backgroundColor: isSelected
+                        ? secondaryFilterSurface
+                        : "transparent",
+                      borderColor: isSelected ? secondaryColor : cardBorder,
+                    },
+                  ]}
+                >
+                  <ThemedText
+                    style={styles.groupFilterText}
+                    setColor={isSelected ? secondaryColor : quietText}
+                  >
+                    {filter.label}
+                  </ThemedText>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
+      </View>
+
+      <View style={styles.muscleRoleLegend}>
+        <View
+          style={[
+            styles.muscleRoleLegendItem,
+            { borderLeftColor: primaryBadgeText },
+          ]}
+        >
+          <ThemedText
+            style={styles.muscleRoleLegendLabel}
+            setColor={primaryBadgeText}
+          >
+            Primary
+          </ThemedText>
+          <ThemedText style={styles.muscleRoleLegendText} setColor={quietText}>
+            Main working muscles, expected to fatigue or fail first.
+          </ThemedText>
+        </View>
+        <View
+          style={[
+            styles.muscleRoleLegendItem,
+            { borderLeftColor: secondaryBadgeText },
+          ]}
+        >
+          <ThemedText
+            style={styles.muscleRoleLegendLabel}
+            setColor={secondaryBadgeText}
+          >
+            Secondary
+          </ThemedText>
+          <ThemedText style={styles.muscleRoleLegendText} setColor={quietText}>
+            Support muscles used during the exercise, but not intended to be
+            the limiting point.
+          </ThemedText>
+        </View>
+      </View>
+
+      {onAddCustomExercise ? (
+        <View style={styles.customExerciseAction}>
+          <ThemedButton
+            title="Add custom exercise"
+            fullWidth
+            onPress={onAddCustomExercise}
+          />
+        </View>
+      ) : null}
+
+      <View style={styles.tableHeader}>
+        <View style={styles.tableHeaderPreview} />
+        <ThemedText style={styles.tableHeaderExercise} setColor={quietText}>
+          Exercise
+        </ThemedText>
+      </View>
 
       {exercises.length === 0 ? (
         <View style={styles.emptyState}>
@@ -123,6 +460,15 @@ const ExerciseLibraryList = ({ refreshKey }) => {
             No exercise names were found in the shared cloud library yet.
           </ThemedText>
         </View>
+      ) : filteredExercises.length === 0 ? (
+        <View style={styles.emptyState}>
+          <ThemedTitle type="h3" style={styles.emptyTitle}>
+            No matches
+          </ThemedTitle>
+          <ThemedText style={styles.emptyBody} setColor={quietText}>
+            Try another search or reset the active filter.
+          </ThemedText>
+        </View>
       ) : (
         <ScrollView
           style={styles.listScroll}
@@ -130,83 +476,155 @@ const ExerciseLibraryList = ({ refreshKey }) => {
           showsVerticalScrollIndicator={false}
           nestedScrollEnabled
         >
-          {exercises.map((exercise, index) => (
-            <Pressable
-              key={exercise.exercise_name}
-              onPress={() => handleOpenExerciseDetails(exercise.exercise_name)}
-              style={[
-                styles.exerciseRow,
-                index === exercises.length - 1 && styles.exerciseRowLast,
-                {
-                  backgroundColor: rowSurface,
-                  borderColor: rowBorder,
-                },
-              ]}
-              android_ripple={{ color: badgeSurface }}
-            >
-              <View
+          {filteredExercises.map((exercise, index) => {
+            const primaryCount = exercise.primary_muscle_count ?? 0;
+            const secondaryCount = exercise.secondary_muscle_count ?? 0;
+
+            return (
+              <Pressable
+                key={exercise.exercise_name}
+                accessibilityRole="button"
+                accessibilityLabel={
+                  isWorkoutPicker
+                    ? `Add ${exercise.exercise_name} to workout`
+                    : `Show ${exercise.exercise_name} muscles`
+                }
+                disabled={isSelectionBusy}
+                onPress={() => {
+                  if (isWorkoutPicker) {
+                    onSelectExercise?.(exercise);
+                    return;
+                  }
+
+                  setSelectedExercise(exercise);
+                }}
                 style={[
-                  styles.exerciseIndex,
-                  { backgroundColor: indexSurface },
+                  styles.exerciseRow,
+                  index === filteredExercises.length - 1 &&
+                    styles.exerciseRowLast,
+                  selectingExerciseName === exercise.exercise_name &&
+                    styles.exerciseRowSelected,
+                  { borderColor: cardBorder },
                 ]}
               >
-                <ThemedText
-                  style={styles.exerciseIndexText}
-                  setColor={indexTextColor}
-                >
-                  {index + 1}
-                </ThemedText>
-              </View>
+                <BodyMapPreview
+                  bodyView={exercise.body_map_view}
+                  crop={exercise.body_map_section}
+                  primaryRegionKeys={exercise.primary_body_map_region_keys}
+                  secondaryRegionKeys={exercise.secondary_body_map_region_keys}
+                  style={styles.exercisePreviewBodyMap}
+                />
 
-              <View style={styles.exerciseBody}>
-                <ThemedText style={styles.exerciseName}>
-                  {exercise.exercise_name}
-                </ThemedText>
-
-                <View style={styles.exerciseMetaRow}>
-                  <View
-                    style={[
-                      styles.exerciseMetaBadge,
-                      { backgroundColor: primaryBadgeSurface },
-                    ]}
-                  >
+                <View style={styles.exerciseBody}>
+                  <View style={styles.exerciseTitleRow}>
                     <ThemedText
-                      style={styles.exerciseMetaBadgeText}
-                      setColor={primaryBadgeText}
+                      style={styles.exerciseName}
+                      setColor={titleColor}
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
                     >
-                      {exercise.primary_muscle_group_count ?? 0} primary
+                      {exercise.exercise_name}
                     </ThemedText>
+
+                    {exercise.is_custom || exercise.official ? (
+                      <View
+                        style={[
+                          styles.exerciseStatusBadge,
+                          {
+                            backgroundColor: exercise.is_custom
+                              ? primaryColor
+                              : secondaryColor,
+                          },
+                        ]}
+                      >
+                        <ThemedText
+                          style={styles.exerciseStatusBadgeText}
+                          setColor={activeFilterText}
+                        >
+                          {exercise.is_custom ? "Custom" : "Official"}
+                        </ThemedText>
+                      </View>
+                    ) : null}
                   </View>
 
-                  <View
-                    style={[
-                      styles.exerciseMetaBadge,
-                      { backgroundColor: secondaryBadgeSurface },
-                    ]}
-                  >
-                    <ThemedText
-                      style={styles.exerciseMetaBadgeText}
-                      setColor={secondaryBadgeText}
-                    >
-                      {exercise.secondary_muscle_group_count ?? 0} secondary
-                    </ThemedText>
-                  </View>
+                  <ExerciseMuscleBadges
+                    primaryBadgeSurface={primaryBadgeSurface}
+                    primaryBadgeText={primaryBadgeText}
+                    primaryCount={primaryCount}
+                    secondaryBadgeSurface={secondaryBadgeSurface}
+                    secondaryBadgeText={secondaryBadgeText}
+                    secondaryCount={secondaryCount}
+                  />
                 </View>
-              </View>
-            </Pressable>
-          ))}
+              </Pressable>
+            );
+          })}
         </ScrollView>
       )}
+      </ThemedCard>
 
-      <ExerciseMuscleModal
-        visible={detailsVisible}
-        exerciseName={selectedExerciseName}
-        onClose={() => {
-          set_detailsVisible(false);
-          set_selectedExerciseName("");
-        }}
-      />
-    </ThemedCard>
+      <ThemedModal
+        visible={Boolean(selectedExercise)}
+        onClose={() => setSelectedExercise(null)}
+        title={selectedExercise?.exercise_name}
+        style={styles.exerciseBodyMapModal}
+        contentStyle={styles.exerciseBodyMapModalBody}
+      >
+        {selectedExercise ? (
+          <>
+            <ExerciseMuscleBadges
+              primaryBadgeSurface={primaryBadgeSurface}
+              primaryBadgeText={primaryBadgeText}
+              primaryCount={selectedExercise.primary_muscle_count ?? 0}
+              secondaryBadgeSurface={secondaryBadgeSurface}
+              secondaryBadgeText={secondaryBadgeText}
+              secondaryCount={selectedExercise.secondary_muscle_count ?? 0}
+              style={styles.exerciseBodyMapModalBadges}
+            />
+
+            <View style={styles.exerciseBodyMapModalFigures}>
+              <View style={styles.exerciseBodyMapModalFigure}>
+                <ThemedText
+                  style={styles.exerciseBodyMapModalFigureLabel}
+                  setColor={quietText}
+                >
+                  Front
+                </ThemedText>
+                <BodyMapPreview
+                  bodyView="front"
+                  primaryRegionKeys={
+                    selectedExercise.primary_front_body_map_region_keys
+                  }
+                  secondaryRegionKeys={
+                    selectedExercise.secondary_front_body_map_region_keys
+                  }
+                  style={styles.exerciseBodyMapModalPreview}
+                />
+              </View>
+
+              <View style={styles.exerciseBodyMapModalFigure}>
+                <ThemedText
+                  style={styles.exerciseBodyMapModalFigureLabel}
+                  setColor={quietText}
+                >
+                  Back
+                </ThemedText>
+                <BodyMapPreview
+                  bodyView="back"
+                  primaryRegionKeys={
+                    selectedExercise.primary_back_body_map_region_keys
+                  }
+                  secondaryRegionKeys={
+                    selectedExercise.secondary_back_body_map_region_keys
+                  }
+                  style={styles.exerciseBodyMapModalPreview}
+                />
+              </View>
+            </View>
+          </>
+        ) : null}
+      </ThemedModal>
+    </>
   );
 };
 

@@ -1,6 +1,6 @@
-import { View, ScrollView, TouchableOpacity } from 'react-native';
+import { Alert, View, ScrollView, TouchableOpacity } from 'react-native';
 import { useSQLiteContext } from "expo-sqlite";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
@@ -11,16 +11,21 @@ import { Colors } from "../../Resources/GlobalStyling/colors";
 import styles from './ProgramOverviewPageStyle';
 import {
   programService,
+  programTransferService,
   weightliftingService,
 } from "../../Services";
 import Rm_List from './Components/rm_list/rm_list';
 
 import AddEstimatedSet from './Components/rm_list/Components/AddEstimatedSet/AddEstimatedSet';
-import TodayShortcut from './Components/TodayShortcut/TodayShortcut';
 import MesocycleList from "./Components/MesocycleList/MesocycleList";
+import ProgramOverviewHeader from "./Components/ProgramOverviewHeader";
+import StartProgramModal from "./Components/StartProgramModal";
 import ThreeDots from "../../Resources/Icons/UI-icons/ThreeDots"
 import Cogwheel from "../../Resources/Icons/UI-icons/Cogwheel";
 import Checkmark from "../../Resources/Icons/UI-icons/Checkmark";
+import TradeUp from "../../Resources/Icons/UI-icons/TradeUp";
+import Info from "../../Resources/Icons/UI-icons/Info";
+import Copy from "../../Resources/Icons/UI-icons/Copy";
 
 import { ThemedTitle, 
         ThemedCard, 
@@ -29,10 +34,88 @@ import { ThemedTitle,
         ThemedButton, 
         ThemedHeader,
         ThemedBottomSheet, 
+        ThemedModal,
         ThemedEditableCell} 
   from "../../Resources/ThemedComponents";
 import Delete from '../../Resources/Icons/UI-icons/Delete';
 import { formatDate, parseCustomDate } from '../../Utils/dateUtils';
+import { getProgramEndDate } from '../../Utils/programUtils';
+
+const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+
+const emptyProgramStats = {
+    totalVolume: 0,
+    avgSessionMinutes: 0,
+    completionPercent: 0,
+    completedWorkouts: 0,
+    totalWorkouts: 0,
+    streakWeeks: 0,
+};
+
+function formatStatNumber(value) {
+    const numberValue = Number(value) || 0;
+
+    return Math.round(numberValue)
+        .toString()
+        .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+function getLocalDateIndex(date) {
+    return Math.floor(
+        Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) /
+            MILLISECONDS_PER_DAY
+    );
+}
+
+function formatHeaderDate(value) {
+    if (!value) {
+        return "-";
+    }
+
+    const date = parseCustomDate(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return value;
+    }
+
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = String(date.getFullYear()).slice(-2);
+
+    return `${day}.${month}.${year}`;
+}
+
+function getProgramTimeline(startDate, totalDays) {
+    const normalizedTotalDays = Math.max(0, Math.trunc(Number(totalDays) || 0));
+    const totalWeeks = Math.ceil(normalizedTotalDays / 7);
+
+    if (!startDate || normalizedTotalDays === 0) {
+        return {
+            currentWeek: 0,
+            totalWeeks,
+        };
+    }
+
+    const start = parseCustomDate(startDate);
+
+    if (Number.isNaN(start.getTime())) {
+        return {
+            currentWeek: 0,
+            totalWeeks,
+        };
+    }
+
+    const elapsedDays = getLocalDateIndex(new Date()) - getLocalDateIndex(start);
+    const currentWeek = Math.min(
+        totalWeeks,
+        Math.max(1, Math.floor(Math.max(0, elapsedDays) / 7) + 1)
+    );
+
+    return {
+        currentWeek,
+        totalWeeks,
+    };
+}
 
 const ProgramOverviewPage = ( {route} ) => {
     const db = useSQLiteContext();
@@ -42,19 +125,27 @@ const ProgramOverviewPage = ( {route} ) => {
     const theme = Colors[colorScheme] ?? Colors.light;
 
     const program_id = route.params.program_id;
-    const start_date = route.params.start_date;
+    const initialProgramName = route.params.program_name ?? "";
 
     const [addEstimatedSet_visible, set_AddEstimatedSet_visible] = useState(false);
     const [refreshKey, set_refreshKey] = useState(0);
     const [status, set_status] = useState("NOT_STARTED");
-    const [program_name, set_program_name] = useState("");
+    const [program_name, set_program_name] = useState(initialProgramName);
+    const [start_date, set_start_date] = useState(route.params.start_date);
     const [end_date, set_end_date] = useState("");
+    const [programDayCount, setProgramDayCount] = useState(0);
     const [programExercises, set_programExercises] = useState([]);
     const [visibleProgramBestExercises, set_visibleProgramBestExercises] = useState({});
     const [programExerciseBests, set_programExerciseBests] = useState([]);
+    const [programStats, setProgramStats] = useState(emptyProgramStats);
 
     const [OptionsBottomsheet_visible, set_OptionsBottomsheet_visible] = useState(false);
     const [prSettingsBottomsheet_visible, set_prSettingsBottomsheet_visible] = useState(false);
+    const [deleteConfirmModal_visible, set_DeleteConfirmModal_visible] = useState(false);
+    const [isDeletingProgram, set_IsDeletingProgram] = useState(false);
+    const [startProgramModal_visible, setStartProgramModalVisible] = useState(false);
+    const [isStartingProgram, setIsStartingProgram] = useState(false);
+    const [isExportingProgram, setIsExportingProgram] = useState(false);
 
     const refresh = () => {
         set_refreshKey(prev => prev + 1);
@@ -68,11 +159,11 @@ const ProgramOverviewPage = ( {route} ) => {
                 await Promise.all([
                     getStatus(),
                     getName(),
+                    loadProgramStats(),
                     loadProgramBestExerciseOptions(),
                     loadProgramExerciseBests(),
+                    loadProgramPeriod(),
                 ]);
-                const nextEndDate = await calculateEndDay();
-                set_end_date(nextEndDate);
             };
 
             loadOverview();
@@ -142,14 +233,68 @@ const ProgramOverviewPage = ( {route} ) => {
         }
     }
 
-    const deleteProgram = async () => {
+    const loadProgramStats = async () => {
         try {
-            await programService.deleteProgram(db, program_id);
-        } catch (e) {
-            throw e;
+            const nextStats = await programService.getProgramStats(db, program_id);
+            setProgramStats(nextStats);
+        } catch (error) {
+            console.error(error);
+            setProgramStats(emptyProgramStats);
+        }
+    }
+
+    useEffect(() => {
+        if (refreshKey === 0) {
+            return;
         }
 
-        navigation.navigate("ProgramPage");
+        loadProgramStats();
+        loadProgramPeriod();
+    }, [refreshKey]);
+
+    const deleteProgram = async () => {
+        try {
+            set_IsDeletingProgram(true);
+            await programService.deleteProgram(db, program_id);
+        } catch (e) {
+            console.error("deleteProgram failed:", e);
+            set_IsDeletingProgram(false);
+            return;
+        }
+
+        set_IsDeletingProgram(false);
+        set_DeleteConfirmModal_visible(false);
+        set_OptionsBottomsheet_visible(false);
+        navigation.replace("ProgramPage");
+    };
+
+    const exportProgram = async () => {
+        if (isExportingProgram) {
+            return;
+        }
+
+        try {
+            setIsExportingProgram(true);
+            const result = await programTransferService.exportProgramToFile(
+                db,
+                program_id
+            );
+
+            Alert.alert(
+                "Program exported",
+                result.shared
+                    ? `${result.programName} is ready to share.`
+                    : `${result.fileName} was created on this device.`
+            );
+        } catch (error) {
+            console.error("Program export failed:", error);
+            Alert.alert(
+                "Export failed",
+                error?.message ?? "The program file could not be created."
+            );
+        } finally {
+            setIsExportingProgram(false);
+        }
     };
 
     const changeStatus = async (new_status) => {
@@ -160,13 +305,48 @@ const ProgramOverviewPage = ( {route} ) => {
         set_status(new_status);
     }
 
-    const calculateEndDay = async () => {
-        const result = await programService.getProgramDayCount(db, program_id);
+    const handleStatusChange = (new_status) => {
+        if (status === "NOT_STARTED" && new_status === "ACTIVE") {
+            setStartProgramModalVisible(true);
+            return;
+        }
 
-        const start = parseCustomDate(start_date);
-        const end = new Date(start);
-        end.setDate(end.getDate() + result.total_days);
-        return formatDate(end)
+        changeStatus(new_status);
+    }
+
+    const startProgram = async (selectedWeek) => {
+        const nextStartDate = formatDate(selectedWeek);
+
+        try {
+            setIsStartingProgram(true);
+            await programService.startProgram(db, {
+                programId: program_id,
+                startDate: nextStartDate,
+            });
+
+            set_start_date(nextStartDate);
+            set_end_date(getProgramEndDate(nextStartDate, programDayCount));
+            set_status("ACTIVE");
+            setStartProgramModalVisible(false);
+            refresh();
+        } catch (error) {
+            console.error("startProgram failed:", error);
+        } finally {
+            setIsStartingProgram(false);
+        }
+    }
+
+    const loadProgramPeriod = async () => {
+        const [result, metadata] = await Promise.all([
+            programService.getProgramDayCount(db, program_id),
+            programService.getProgramMetadata(db, program_id),
+        ]);
+        const totalDays = Math.max(0, Math.trunc(Number(result?.total_days) || 0));
+        const nextStartDate = metadata?.start_date ?? start_date;
+
+        setProgramDayCount(totalDays);
+        set_start_date(nextStartDate);
+        set_end_date(getProgramEndDate(nextStartDate, totalDays));
     }
 
     const toggleProgramBestExercise = async (exerciseName) => {
@@ -221,6 +401,8 @@ const ProgramOverviewPage = ( {route} ) => {
         (colorScheme === "dark"
             ? "rgba(212, 212, 212, 0.72)"
             : "rgba(32, 30, 43, 0.66)");
+    const quietText = theme.iconColor ?? settingsLabelColor;
+    const titleColor = theme.title ?? theme.text ?? "#fff";
     const settingsOutlineColor =
         theme.cardBorder ??
         (colorScheme === "dark"
@@ -241,8 +423,8 @@ const ProgramOverviewPage = ( {route} ) => {
     const statusOptions = [
         {
             value: "NOT_STARTED",
-            label: "Not started",
-            description: "Keep the program staged until you are ready to begin.",
+            label: "Draft",
+            description: "Keep planning until you are ready to choose a start week.",
             color: theme.NOT_STARTED ?? "#9E9E9E",
             surface:
                 colorScheme === "dark"
@@ -266,54 +448,138 @@ const ProgramOverviewPage = ( {route} ) => {
     ];
     const currentStatusOption =
         statusOptions.find((option) => option.value === status) ?? statusOptions[0];
+    const visibleStatusOptions =
+        status === "NOT_STARTED"
+            ? statusOptions.filter((option) => option.value !== "COMPLETE")
+            : statusOptions.filter((option) => option.value !== "NOT_STARTED");
     const headerTitle = (program_name ?? "").trim() || "Program";
+    const headerStatusColor =
+        status === "ACTIVE"
+            ? theme.secondary ?? currentStatusOption.color
+            : currentStatusOption.color;
+    const calculatedProgramTimeline = getProgramTimeline(
+        start_date,
+        programDayCount
+    );
+    const programTimeline =
+        status === "NOT_STARTED"
+            ? {
+                ...calculatedProgramTimeline,
+                currentWeek: calculatedProgramTimeline.totalWeeks > 0 ? 1 : 0,
+            }
+            : calculatedProgramTimeline;
+    const programProgressPercent =
+        status === "NOT_STARTED" ? 0 : programStats.completionPercent;
+    const headerPeriod =
+        `${formatHeaderDate(start_date)} - ${formatHeaderDate(end_date)}`;
+    const statsCardBackground =
+        theme.cardBackground ?? theme.background ?? "transparent";
+    const statsCards = [
+        {
+            label: "Total volume",
+            value: formatStatNumber(programStats.totalVolume),
+            detail: "kg lifted",
+            Icon: TradeUp,
+            color: theme.primary ?? "#f7742e",
+        },
+        {
+            label: "Avg session",
+            value: String(programStats.avgSessionMinutes),
+            detail: "min per workout",
+            Icon: Info,
+            color: quietText,
+        },
+    ];
 
   return (
     <>
-    <ThemedView>
+    <ThemedView safe={["top", "left", "right"]}>
         <ThemedHeader
             right={
                 <TouchableOpacity onPress={() => {
                     set_OptionsBottomsheet_visible(true) }}>
                     <ThreeDots width={20} height={20} />
-                </TouchableOpacity> } >
-            <View style={styles.page_header_title_group}>
-                <ThemedText
-                    size={10}
-                    style={[
-                        styles.page_header_title_eyebrow,
-                        { color: settingsLabelColor },
-                    ]}>
-                    Program overview
-                </ThemedText>
-
-                <ThemedTitle
-                    type="h3"
-                    style={styles.page_header_title_main}
-                    numberOfLines={1}>
-                    {headerTitle}
-                </ThemedTitle>
-            </View>
-        
-        </ThemedHeader>
+                </TouchableOpacity> }
+        />
 
         <ScrollView 
             style={styles.container}
             nestedScrollEnabled
             contentContainerStyle={{ paddingBottom: insets.bottom + 15}}>
 
-            {/* Workout shortcut */}
-            <View>    
-                <TodayShortcut
-                    program_id = {program_id}/>
+            <ProgramOverviewHeader
+                title={headerTitle}
+                status={status}
+                statusColor={headerStatusColor}
+                currentWeek={programTimeline.currentWeek}
+                totalWeeks={programTimeline.totalWeeks}
+                period={headerPeriod}
+                progressPercent={programProgressPercent}
+                onStart={() => setStartProgramModalVisible(true)}
+            />
+
+            <View style={styles.stats_section}>
+                <ThemedText
+                    style={styles.stats_section_label}
+                    setColor={quietText}>
+                    Stats
+                </ThemedText>
+
+                <View style={styles.stats_grid}>
+                    {statsCards.map((stat, index) => {
+                        const Icon = stat.Icon;
+
+                        return (
+                            <View
+                                key={stat.label}
+                                style={[
+                                    styles.stats_card,
+                                    index % 2 === 0 && styles.stats_card_left,
+                                    {
+                                        backgroundColor: statsCardBackground,
+                                        borderColor: settingsOutlineColor,
+                                    },
+                                ]}>
+                                <View style={styles.stats_card_header}>
+                                    <Icon
+                                        width={14}
+                                        height={14}
+                                        color={stat.color}
+                                        stroke={stat.color}
+                                        thickness={1.7}
+                                    />
+                                    <ThemedText
+                                        style={styles.stats_card_label}
+                                        setColor={quietText}
+                                        numberOfLines={1}>
+                                        {stat.label}
+                                    </ThemedText>
+                                </View>
+
+                                <ThemedText
+                                    style={styles.stats_card_value}
+                                    setColor={titleColor}
+                                    numberOfLines={1}>
+                                    {stat.value}
+                                </ThemedText>
+                                <ThemedText
+                                    style={styles.stats_card_detail}
+                                    setColor={quietText}
+                                    numberOfLines={1}>
+                                    {stat.detail}
+                                </ThemedText>
+                            </View>
+                        );
+                    })}
+                </View>
             </View>
 
             {/* Mesocycle list */}
-            <ThemedTitle type="h2"> Blocks </ThemedTitle>
             <ThemedView style={styles.mesocycle_container}>
                     <MesocycleList 
                         program_id = {program_id}
                         start_date={start_date}
+                        program_status={status}
                         refreshKey= {refreshKey} 
                         refresh={refresh}/>
             </ThemedView>
@@ -491,7 +757,7 @@ const ProgramOverviewPage = ( {route} ) => {
                         </ThemedText>
                     </View>
 
-                    {statusOptions.map((option) => {
+                    {visibleStatusOptions.map((option) => {
                         const isSelected = status === option.value;
 
                         return (
@@ -508,7 +774,7 @@ const ProgramOverviewPage = ( {route} ) => {
                                             : settingsOutlineColor,
                                     },
                                 ]}
-                                onPress={() => changeStatus(option.value)}>
+                                onPress={() => handleStatusChange(option.value)}>
                                 <View
                                     style={[
                                         styles.settings_status_marker,
@@ -576,7 +842,9 @@ const ProgramOverviewPage = ( {route} ) => {
                                     size={14}
                                     style={styles.settings_period_value}
                                     setColor={theme.title}>
-                                    {start_date}
+                                    {status === "NOT_STARTED"
+                                        ? "Not scheduled"
+                                        : start_date}
                                 </ThemedText>
                             </View>
 
@@ -598,14 +866,16 @@ const ProgramOverviewPage = ( {route} ) => {
                                     size={14}
                                     style={styles.settings_period_value}
                                     setColor={theme.title}>
-                                    {end_date || "-"}
+                                    {status === "NOT_STARTED"
+                                        ? "Not scheduled"
+                                        : end_date || "-"}
                                 </ThemedText>
                             </View>
                         </View>
                     </View>
                 </View>
 
-                <View style={styles.settings_section_last}>
+                <View style={styles.settings_section}>
                     <View style={styles.settings_section_header}>
                         <ThemedText
                             size={11}
@@ -644,6 +914,59 @@ const ProgramOverviewPage = ( {route} ) => {
                         />
                     </View>
                 </View>
+
+                <View style={styles.settings_section_last}>
+                    <View style={styles.settings_section_header}>
+                        <ThemedText
+                            size={11}
+                            style={[
+                                styles.settings_section_eyebrow,
+                                { color: settingsLabelColor },
+                            ]}>
+                            Export
+                        </ThemedText>
+                    </View>
+
+                    <TouchableOpacity
+                        style={[
+                            styles.settings_export_tile,
+                            {
+                                backgroundColor: settingsPanelBackground,
+                                borderColor: isExportingProgram
+                                    ? theme.primary ?? Colors.dark.primary
+                                    : settingsOutlineColor,
+                                opacity: isExportingProgram ? 0.68 : 1,
+                            },
+                        ]}
+                        disabled={isExportingProgram}
+                        onPress={exportProgram}>
+                        <View
+                            style={[
+                                styles.settings_export_icon,
+                                { backgroundColor: accentSoft },
+                            ]}>
+                            <Copy width={18} height={18} />
+                        </View>
+
+                        <View style={styles.settings_export_content}>
+                            <ThemedText
+                                size={16}
+                                style={styles.settings_export_title}
+                                setColor={theme.title}>
+                                {isExportingProgram
+                                    ? "Exporting..."
+                                    : "Export program"}
+                            </ThemedText>
+
+                            <ThemedText
+                                size={12}
+                                style={styles.settings_export_description}
+                                setColor={settingsLabelColor}>
+                                FitApp program file
+                            </ThemedText>
+                        </View>
+                    </TouchableOpacity>
+                </View>
             </ThemedCard>
 
             
@@ -667,8 +990,9 @@ const ProgramOverviewPage = ( {route} ) => {
                 {/* Delete Program */}
                 <TouchableOpacity 
                     style={styles.option}
-                    onPress={async () => {
-                        deleteProgram();
+                    onPress={() => {
+                        set_OptionsBottomsheet_visible(false);
+                        set_DeleteConfirmModal_visible(true);
                     }}>
 
                     <Delete
@@ -683,6 +1007,75 @@ const ProgramOverviewPage = ( {route} ) => {
 
 
         </ThemedBottomSheet>
+
+        <ThemedModal
+            visible={deleteConfirmModal_visible}
+            onClose={() => {
+                if (isDeletingProgram) {
+                    return;
+                }
+
+                set_DeleteConfirmModal_visible(false);
+            }}
+            dismissOnBackdropPress={!isDeletingProgram}
+            style={styles.confirm_modal}>
+
+            <View style={styles.confirm_sheet_header}>
+                <ThemedTitle type={"h3"} style={styles.confirm_sheet_title}>
+                    Delete program?
+                </ThemedTitle>
+
+                <ThemedText style={styles.confirm_sheet_description}>
+                    Are you sure you want to delete this program? This will remove the full program structure and cannot be undone.
+                </ThemedText>
+            </View>
+
+            <View style={styles.confirm_sheet_actions}>
+                <TouchableOpacity
+                    style={[
+                        styles.confirm_action,
+                        styles.confirm_action_secondary,
+                        {
+                            borderColor: settingsOutlineColor,
+                            opacity: isDeletingProgram ? 0.6 : 1,
+                        },
+                    ]}
+                    disabled={isDeletingProgram}
+                    onPress={() => set_DeleteConfirmModal_visible(false)}>
+                    <ThemedText style={styles.confirm_action_secondary_text}>
+                        Cancel
+                    </ThemedText>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={[
+                        styles.confirm_action,
+                        styles.confirm_action_danger,
+                        {
+                            backgroundColor: theme.danger ?? "#ba0000",
+                            opacity: isDeletingProgram ? 0.7 : 1,
+                        },
+                    ]}
+                    disabled={isDeletingProgram}
+                    onPress={deleteProgram}>
+                    <ThemedText style={styles.confirm_action_danger_text}>
+                        {isDeletingProgram ? "Deleting..." : "Delete program"}
+                    </ThemedText>
+                </TouchableOpacity>
+            </View>
+
+        </ThemedModal>
+
+        <StartProgramModal
+            visible={startProgramModal_visible}
+            onClose={() => {
+                if (!isStartingProgram) {
+                    setStartProgramModalVisible(false);
+                }
+            }}
+            onStart={startProgram}
+            isStarting={isStartingProgram}
+        />
 
         <ThemedBottomSheet
             visible={prSettingsBottomsheet_visible}

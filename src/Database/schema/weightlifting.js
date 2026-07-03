@@ -2,26 +2,65 @@ export const weightliftingSchemaSql = `
 
   CREATE TABLE IF NOT EXISTS Exercise (
       exercise_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      cloud_exercise_id INTEGER UNIQUE,
       name TEXT NOT NULL UNIQUE,
-      nickname TEXT
+      nickname TEXT,
+      default_visible_columns TEXT,
+      official INTEGER NOT NULL DEFAULT 0,
+      is_custom INTEGER NOT NULL DEFAULT 0,
+      custom_muscle_group_keys TEXT
+  );
+
+  CREATE TABLE IF NOT EXISTS Exercise_Column_Preference (
+      exercise_column_preference_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT NOT NULL,
+      cloud_exercise_id INTEGER,
+      exercise_name TEXT NOT NULL,
+      visible_columns TEXT NOT NULL,
+      needs_sync INTEGER NOT NULL DEFAULT 1,
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(user_id, exercise_name)
   );
 
   CREATE TABLE IF NOT EXISTS Exercise_Instance (
       exercise_instance_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      cloud_id INTEGER,
+      last_updated INTEGER NOT NULL DEFAULT 0,
+      cloud_exercise_instance_id INTEGER,
+      remote_local_exercise_instance_id INTEGER,
+      sync_id TEXT,
+      sync_version INTEGER NOT NULL DEFAULT 0,
+      deleted_at TEXT,
       workout_type_instance_id INTEGER NOT NULL,
       exercise_name TEXT NOT NULL,
+      exercise_order INTEGER NOT NULL DEFAULT 0,
       sets INTEGER NOT NULL DEFAULT 0,
       visible_columns TEXT,
       note TEXT,
+      done INTEGER NOT NULL DEFAULT 0,
+      needs_sync INTEGER NOT NULL DEFAULT 1
+  );
 
-      done INTEGER NOT NULL DEFAULT 0
+  CREATE TABLE IF NOT EXISTS Exercise_Instance_Sync_Delete (
+      exercise_instance_sync_delete_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      cloud_exercise_instance_id INTEGER UNIQUE,
+      remote_local_exercise_instance_id INTEGER UNIQUE,
+      sync_id TEXT,
+      sync_version INTEGER NOT NULL DEFAULT 0,
+      deleted_at TEXT
   );
 
   CREATE TABLE IF NOT EXISTS "Set" (
       sets_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      cloud_id INTEGER,
+      last_updated INTEGER NOT NULL DEFAULT 0,
+      cloud_set_id INTEGER,
+      remote_local_set_id INTEGER,
+      sync_id TEXT,
+      sync_version INTEGER NOT NULL DEFAULT 0,
+      deleted_at TEXT,
       set_number INTEGER NOT NULL,
       exercise_instance_id INTEGER NOT NULL,
-      date TEXT,
 
       personal_record INTEGER NOT NULL DEFAULT 0,
 
@@ -34,7 +73,17 @@ export const weightliftingSchemaSql = `
       done INTEGER NOT NULL DEFAULT 0,
       failed INTEGER NOT NULL DEFAULT 0,
       amrap INTEGER NOT NULL DEFAULT 0,
-      note TEXT
+      note TEXT,
+      needs_sync INTEGER NOT NULL DEFAULT 1
+  );
+
+  CREATE TABLE IF NOT EXISTS Set_Sync_Delete (
+      set_sync_delete_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      cloud_set_id INTEGER UNIQUE,
+      remote_local_set_id INTEGER UNIQUE,
+      sync_id TEXT,
+      sync_version INTEGER NOT NULL DEFAULT 0,
+      deleted_at TEXT
   );
 
   CREATE TABLE IF NOT EXISTS Estimated_Set (
@@ -64,16 +113,31 @@ export async function initializeWeightliftingData(db) {
     'Pull-Up',
     'Dip',
   ];
+  const defaultVisibleColumns = JSON.stringify({
+    note: true,
+    rest: true,
+    set: true,
+    reps: true,
+    rpe: true,
+    rm_percentage: true,
+    weight: true,
+    done: true,
+  });
 
   const checkExercisesInit = await db.getFirstAsync(
     `SELECT COUNT(*) as count FROM Exercise;`
   );
 
   if (checkExercisesInit.count === 0) {
-    const placeholders = standardExercises.map(() => '(?)').join(', ');
+    const placeholders = standardExercises.map(() => '(?, ?)').join(', ');
+    const values = standardExercises.flatMap((exerciseName) => [
+      exerciseName,
+      defaultVisibleColumns,
+    ]);
+
     await db.runAsync(
-      `INSERT INTO Exercise (name) VALUES ${placeholders};`,
-      standardExercises
+      `INSERT INTO Exercise (name, default_visible_columns) VALUES ${placeholders};`,
+      values
     );
   }
 }

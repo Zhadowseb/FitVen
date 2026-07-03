@@ -4,6 +4,7 @@ import { useSQLiteContext } from "expo-sqlite";
 
 import { useAuth } from "../Contexts/AuthContext";
 import { programService } from "../Services";
+import { enqueueSync } from "./syncQueue";
 
 export default function ProgramSync() {
   const db = useSQLiteContext();
@@ -18,7 +19,7 @@ export default function ProgramSync() {
     isSyncingRef.current = true;
 
     try {
-      await programService.syncProgramsWithCloud(db);
+      await enqueueSync(() => programService.syncProgramsWithCloud(db));
     } catch (error) {
       console.error("Program cloud sync failed:", error);
     } finally {

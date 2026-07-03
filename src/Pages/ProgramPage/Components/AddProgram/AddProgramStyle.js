@@ -1,52 +1,69 @@
 import { StyleSheet } from "react-native";
 
 export default StyleSheet.create({
-
-  card: {
-    flexDirection: "row",
-    backgroundColor: "#fff",
-    padding: 16,
-    marginVertical: 10,
-    marginHorizontal: 16,
-    borderRadius: 10,
-    elevation: 3, // Android shadow
-    shadowColor: "#000", // iOS shadow
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    shadowOffset: { height: 2, width: 0 },
+  modal: {
+    width: "94%",
+    borderRadius: 28,
+    padding: 18,
   },
-
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center"
+  content: {
+    gap: 18,
+    minHeight: 0,
   },
-  modalBox: {
-    width: "80%",
-    backgroundColor: "white",
-    padding: 20,
-    borderRadius: 10,
+  hero: {
+    gap: 6,
+  },
+  eyebrow: {
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 1,
+    textTransform: "uppercase",
   },
   title: {
-    fontSize: 20,
-    marginBottom: 15,
-    fontWeight: "bold",
+    fontSize: 24,
+    lineHeight: 29,
+  },
+  description: {
+    fontSize: 13,
+    lineHeight: 19,
+  },
+  fieldGroup: {
+    gap: 8,
+  },
+  label: {
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
   },
   input: {
-    padding: 10,
+    borderRadius: 18,
+  },
+  actions: {
+    gap: 10,
+    marginTop: 2,
+  },
+  primaryAction: {
+    borderRadius: 18,
+  },
+  secondaryAction: {
+    height: 48,
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 5,
-    marginVertical: 8,
+    borderRadius: 18,
   },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 15,
+  secondaryActionText: {
+    fontSize: 14,
+    fontWeight: "700",
   },
-
-  calender_icon: {
-    paddingLeft: 30,
+  cancelAction: {
+    minHeight: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cancelActionText: {
+    fontSize: 13,
+    fontWeight: "700",
   },
 });

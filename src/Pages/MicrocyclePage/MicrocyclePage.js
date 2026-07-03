@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
+  Alert,
   ScrollView,
   View,
   TouchableOpacity,
@@ -12,7 +13,7 @@ import { Colors } from "../../Resources/GlobalStyling/colors";
 import styles from "./MicrocyclePageStyle";
 import MicrocycleList from "./Components/MicrocycleList/MicrocycleList";
 import ThreeDots from "../../Resources/Icons/UI-icons/ThreeDots";
-import Plus from "../../Resources/Icons/UI-icons/Plus";
+import PlusCircled from "../../Resources/Icons/UI-icons/PlusCircled";
 import Delete from "../../Resources/Icons/UI-icons/Delete";
 
 import {
@@ -113,6 +114,23 @@ const MicrocyclePage = ({ route }) => {
     navigation.goBack();
   };
 
+  const confirmDeleteMesocycle = () => {
+    Alert.alert(
+      "Delete mesocycle?",
+      "This removes the block and all weeks and workouts inside it.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete mesocycle",
+          style: "destructive",
+          onPress: () => {
+            void deleteMesocycle();
+          },
+        },
+      ]
+    );
+  };
+
   const updateFocus = async (nextFocus) => {
     try {
       await programRepository.updateMesocycleFocus(db, {
@@ -163,7 +181,7 @@ const MicrocyclePage = ({ route }) => {
 
   return (
     <>
-      <ThemedView>
+      <ThemedView safe={["top", "left", "right"]}>
         <ThemedHeader
           right={
             <TouchableOpacity
@@ -373,7 +391,7 @@ const MicrocyclePage = ({ route }) => {
               addExtraWeek();
             }}
           >
-            <Plus width={24} height={24} />
+            <PlusCircled width={24} height={24} />
             <ThemedText style={styles.option_text}>
               Add week to mesocycle.
             </ThemedText>
@@ -381,9 +399,7 @@ const MicrocyclePage = ({ route }) => {
 
           <TouchableOpacity
             style={styles.option}
-            onPress={async () => {
-              await deleteMesocycle();
-            }}
+            onPress={confirmDeleteMesocycle}
           >
             <Delete width={24} height={24} />
             <ThemedText style={styles.option_text}>

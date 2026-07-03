@@ -22,6 +22,14 @@ export default StyleSheet.create({
     textAlign: "center",
   },
 
+  pageHeaderTitleMetaPill: {
+    marginTop: 3,
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+    borderRadius: 999,
+    overflow: "hidden",
+  },
+
   bottomsheetTitle: {
     borderBottomWidth: 1,
     borderBottomColor: "#2e2e2eff",
@@ -50,5 +58,13 @@ export default StyleSheet.create({
   filterOptionText: {
     fontWeight: 600,
     fontSize: 16,
+  },
+  modalActions: {
+    flexDirection: "row",
+    gap: 10,
+    justifyContent: "flex-end",
+  },
+  modalAction: {
+    flex: 1,
   },
 });

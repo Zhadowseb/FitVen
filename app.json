@@ -2,8 +2,8 @@
   "expo": {
     "name": "FitVen",
     "slug": "programapp",
-    "version": "0.5.0-feat-program-cloud-sync.1",
-    "orientation": "portrait",
+    "version": "0.18.8",
+    "orientation": "default",
     "icon": "./assets/icon_v1.0.png",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
@@ -13,17 +13,24 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
+      "bundleIdentifier": "com.fitven.app",
       "supportsTablet": true,
+      "requireFullScreen": true,
       "infoPlist": {
         "UIBackgroundModes": [
+          "location",
           "location"
         ],
         "NSLocationWhenInUseUsageDescription": "We use your location to track workout distance.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "We use your location to track workout distance even when the app is in background."
-      }
+        "NSLocationAlwaysUsageDescription": "We use your location to track workout distance even when the app is in background.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "We use your location to track workout distance even when the app is in background.",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "buildNumber": "14"
     },
     "android": {
-      "versionCode": 9,
+      "googleServicesFile": "./google-services.json",
+      "versionCode": 14,
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon_v1.0.png",
         "backgroundColor": "#ffffff"
@@ -32,18 +39,49 @@
       "softwareKeyboardLayoutMode": "resize",
       "package": "com.anonymous.programapp",
       "permissions": [
-        "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION",
-        "ACCESS_BACKGROUND_LOCATION",
-        "FOREGROUND_SERVICE",
-        "FOREGROUND_SERVICE_LOCATION"
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_LOCATION"
       ]
     },
     "web": {
       "favicon": "./assets/icon_v1.0.png"
     },
     "plugins": [
-      "expo-sqlite"
+      "expo-sqlite",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#ff7a2a",
+          "defaultChannel": "activity"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "FitVen uses your precise location to track run distance.",
+          "locationAlwaysAndWhenInUsePermission": "FitVen uses your precise location to track run distance while your workout is running.",
+          "isIosBackgroundLocationEnabled": true,
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "FitVen uses your photos so you can upload a profile picture.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ]
     ],
     "extra": {
       "eas": {

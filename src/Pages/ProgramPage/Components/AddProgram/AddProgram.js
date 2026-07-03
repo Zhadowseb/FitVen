@@ -1,94 +1,117 @@
 import React, { useState } from "react";
-import { Modal, View, Text, TextInput, Button, TouchableOpacity } from "react-native";
-import { Picker } from "@react-native-picker/picker";
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { Pressable, View, useColorScheme } from "react-native";
 
 import styles from "./AddProgramStyle";
-import Calender from "../../../../Resources/Icons/UI-icons/Calender"
+import { Colors } from "../../../../Resources/GlobalStyling/colors";
+import { getWeekStart } from "../../../../Utils/weekUtils";
+import {
+  ThemedButton,
+  ThemedModal,
+  ThemedText,
+  ThemedTextInput,
+  ThemedTitle,
+} from "../../../../Resources/ThemedComponents";
 
 export default function AddProgram({ visible, onClose, onSubmit }) {
-    
-  const [program_name, set_Program_name] = useState("");
-  const [start_date, set_Start_date] = useState(new Date());
-  const [status, set_Status] = useState("NOT_STARTED");
-  const [datePicker_visible, set_datePicker_visible] = useState(false);
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme] ?? Colors.light;
+  const [programName, setProgramName] = useState("");
 
+  const titleColor = theme.title ?? theme.text;
+  const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
+  const cardBorder = theme.cardBorder ?? theme.iconColor ?? theme.text;
+  const innerSurface =
+    theme.fields ?? theme.cardBackground ?? theme.background;
+  const accentColor = theme.primary ?? "#f7742e";
+  const normalizedProgramName = programName.trim();
+  const canCreate = normalizedProgramName.length > 0;
 
-  const handleSubmit = () => {
-    onSubmit({ program_name, start_date, status });
-    set_Program_name("");
-    set_Start_date(new Date());
-    set_Status("NOT_STARTED");
+  const resetAndClose = () => {
+    setProgramName("");
+    onClose();
+  };
+
+  const handleSubmit = (status) => {
+    if (!canCreate) {
+      return;
+    }
+
+    onSubmit({
+      program_name: normalizedProgramName,
+      start_date: getWeekStart(new Date()),
+      status,
+    });
+    setProgramName("");
   };
 
   return (
-    <Modal
+    <ThemedModal
       visible={visible}
-      transparent
-      animationType="fade">
+      onClose={resetAndClose}
+      style={styles.modal}
+      contentStyle={styles.content}
+    >
+      <View style={styles.hero}>
+        <ThemedText style={styles.eyebrow} setColor={accentColor}>
+          New program
+        </ThemedText>
 
-      <View style={styles.overlay}>
-        <View style={styles.modalBox}>
+        <ThemedTitle type="h3" style={styles.title}>
+          Create a training plan
+        </ThemedTitle>
 
-          <Text style={styles.title}>Create a new program</Text>
-
-          <TextInput
-            placeholder="Program Name"
-            style={styles.input}
-            value={program_name}
-            onChangeText={set_Program_name}
-          />
-
-          <TouchableOpacity
-            style={styles.card}
-            onPress={() => set_datePicker_visible(true)}>
-
-            <Text>
-              Selected: {start_date instanceof Date
-              ? start_date.toLocaleDateString()
-              : ""}
-
-            </Text>
-            <View style={styles.calender_icon}>
-              <Calender 
-                width={24} 
-                height={24} />
-            </View>
-          </TouchableOpacity>
-
-          {datePicker_visible && (
-            <DateTimePicker
-              value={start_date}
-              mode="date"
-              display="default"
-              onChange={(event, date) => {
-                set_datePicker_visible(false);
-                if (date) set_Start_date(date);
-              }}
-            />
-          )}
-
-
-
-            
-
-          <Picker
-          selectedValue={status}
-          onValueChange={(value) => set_Status(value)}
-          >
-              <Picker.Item label="Not started" value="NOT_STARTED" />
-              <Picker.Item label="Active" value="ACTIVE" />
-              <Picker.Item label="Complete" value="COMPLETE" />
-          </Picker>
-
-
-          <View style={styles.row}>
-            <Button title="Cancel" color="red" onPress={onClose} />
-            <Button title="Add" color="green" onPress={handleSubmit} />
-          </View>
-
-        </View>
+        <ThemedText style={styles.description} setColor={quietText}>
+          Create a draft to plan it first, or start it immediately in the
+          current week.
+        </ThemedText>
       </View>
-    </Modal>
+
+      <View style={styles.fieldGroup}>
+        <ThemedText style={styles.label} setColor={quietText}>
+          Program name
+        </ThemedText>
+
+        <ThemedTextInput
+          placeholder="Example: Spring strength block"
+          value={programName}
+          onChangeText={setProgramName}
+          inputStyle={[styles.input, { backgroundColor: innerSurface }]}
+        />
+      </View>
+
+      <View style={styles.actions}>
+        <ThemedButton
+          title="Start now"
+          variant="primary"
+          disabled={!canCreate}
+          onPress={() => handleSubmit("ACTIVE")}
+          style={[styles.primaryAction, { backgroundColor: accentColor }]}
+          fullWidth
+        />
+
+        <Pressable
+          disabled={!canCreate}
+          onPress={() => handleSubmit("NOT_STARTED")}
+          style={({ pressed }) => [
+            styles.secondaryAction,
+            {
+              backgroundColor: innerSurface,
+              borderColor: cardBorder,
+              opacity: !canCreate ? 0.4 : pressed ? 0.8 : 1,
+            },
+          ]}
+        >
+          <ThemedText style={styles.secondaryActionText} setColor={titleColor}>
+            Create draft
+          </ThemedText>
+        </Pressable>
+
+        <Pressable onPress={resetAndClose} style={styles.cancelAction}>
+          <ThemedText style={styles.cancelActionText} setColor={quietText}>
+            Cancel
+          </ThemedText>
+        </Pressable>
+      </View>
+    </ThemedModal>
   );
 }

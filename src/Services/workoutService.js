@@ -1,5 +1,127 @@
 import { workoutRepository } from "../Repository";
+import * as notificationService from "./notificationService";
 import { withTransaction } from "./shared";
+import { startBackgroundSync } from "./syncScheduler";
+
+let dirtyWorkoutHierarchyPushScheduled = false;
+let dirtyWorkoutHierarchyPushNeedsRerun = false;
+
+function pushDirtyWorkoutHierarchyInBackground(db) {
+  if (dirtyWorkoutHierarchyPushScheduled) {
+    dirtyWorkoutHierarchyPushNeedsRerun = true;
+    return;
+  }
+
+  dirtyWorkoutHierarchyPushScheduled = true;
+  startBackgroundSync(
+    async () => {
+      try {
+        do {
+          dirtyWorkoutHierarchyPushNeedsRerun = false;
+          const programServiceModule = await import("./programService");
+          await programServiceModule.pushDirtyStrengthHierarchyWithCloud(db);
+        } while (dirtyWorkoutHierarchyPushNeedsRerun);
+      } finally {
+        dirtyWorkoutHierarchyPushScheduled = false;
+      }
+    },
+    "Workout hierarchy cloud push failed:"
+  );
+}
+
+async function createCompletedWorkoutPost(
+  db,
+  workoutId,
+  { repairCloudIdentity = false, source = "automatic" } = {}
+) {
+  const programServiceModule = await import("./programService");
+
+  if (repairCloudIdentity) {
+    await programServiceModule.syncWorkoutTypeInstancesWithCloud(db);
+  } else {
+    await programServiceModule.pushDirtyStrengthHierarchyWithCloud(db);
+  }
+
+  const socialPostServiceModule = await import("./socialPostService");
+  let result =
+    await socialPostServiceModule.createWorkoutSummaryPostForCompletedWorkout(
+      db,
+      { workoutId, source }
+    );
+
+  if (result?.skipped && result.reason === "missing_cloud_workout_id") {
+    await programServiceModule.syncWorkoutTypeInstancesWithCloud(db);
+    result =
+      await socialPostServiceModule.createWorkoutSummaryPostForCompletedWorkout(
+        db,
+        { workoutId, source }
+      );
+  }
+
+  return result;
+}
+
+async function createCompletedWorkoutPostBestEffort(
+  db,
+  workoutId,
+  options = {}
+) {
+  try {
+    const result = await createCompletedWorkoutPost(db, workoutId, options);
+
+    if (result?.skipped) {
+      console.info(
+        "Workout summary post skipped:",
+        result.reason ?? "unknown"
+      );
+    }
+
+    return result;
+  } catch (error) {
+    console.error("Workout summary social post failed:", error);
+    return { skipped: true, reason: "error" };
+  }
+}
+
+async function syncWorkoutTypeInstancesInBackground(db) {
+  try {
+    pushDirtyWorkoutHierarchyInBackground(db);
+  } catch (error) {
+    console.error("Failed to start workout type instance cloud sync:", error);
+  }
+}
+
+export function notifyWorkoutStartedInBackground(
+  db,
+  { workoutId, startedAt } = {}
+) {
+  if (!workoutId) {
+    return;
+  }
+
+  void (async () => {
+    try {
+      const workout =
+        await workoutRepository.getWorkoutStartNotificationDetails(
+          db,
+          workoutId
+        );
+      const result = await notificationService.notifyWorkoutStarted({
+        workout,
+        startedAt,
+      });
+
+      if (result?.skipped) {
+        console.info(
+          "Workout start notification skipped:",
+          result.reason ?? "unknown"
+        );
+      }
+    } catch (error) {
+      console.warn("Workout start notification failed:", error);
+    }
+  })();
+}
 
 export async function refreshWorkoutHierarchyCompletionByIds(
   db,
@@ -40,6 +162,29 @@ export async function getWorkoutTimerState(db, workoutId) {
   return workoutRepository.getWorkoutTimerState(db, workoutId);
 }
 
+export async function updateWorkoutRunFocusType(
+  db,
+  { workoutId, runFocusType }
+) {
+  await workoutRepository.updateWorkoutRunFocusType(db, {
+    workoutId,
+    runFocusType,
+  });
+}
+
+export async function getActiveWorkoutTimer(db) {
+  return workoutRepository.getActiveWorkoutTimer(db);
+}
+
+export async function updateWorkoutLabel(db, { workoutId, label }) {
+  await workoutRepository.updateWorkoutLabel(db, {
+    workoutId,
+    label,
+  });
+
+  syncWorkoutTypeInstancesInBackground(db);
+}
+
 export async function persistWorkoutTimerState(
   db,
   { workoutId, timerStart, elapsedTime }
@@ -49,6 +194,8 @@ export async function persistWorkoutTimerState(
     timerStart,
     elapsedTime,
   });
+
+  syncWorkoutTypeInstancesInBackground(db);
 }
 
 export async function updateWorkoutElapsedTime(
@@ -73,6 +220,8 @@ export async function setWorkoutOriginalStartTime(
     workoutId,
     startTime,
   });
+
+  syncWorkoutTypeInstancesInBackground(db);
 }
 
 export async function getWorkoutStartTimestamp(db, workoutId) {
@@ -105,6 +254,51 @@ export async function setWorkoutDone(db, { workoutId, done }) {
 
     await refreshWorkoutHierarchyCompletion(db, workoutId);
   });
+
+  await syncWorkoutSummaryPostForCompletionState(db, { workoutId, done });
+}
+
+const WORKOUT_SUMMARY_REPOST_SKIP_MESSAGES = {
+  signed_out: "You need to be signed in to repost a workout summary.",
+  not_completed: "Finish the workout before reposting its summary.",
+  unsupported_workout_type:
+    "Workout summaries can only be posted for Resistance workouts right now.",
+  missing_cloud_workout_id:
+    "This workout has not synced to Supabase yet. Try again in a moment.",
+  error: "Could not repost the workout summary.",
+};
+
+function getWorkoutSummaryRepostErrorMessage(result) {
+  return (
+    WORKOUT_SUMMARY_REPOST_SKIP_MESSAGES[result?.reason] ??
+    "Could not repost the workout summary."
+  );
+}
+
+export async function repostWorkoutSummaryPost(db, { workoutId }) {
+  const result = await createCompletedWorkoutPost(db, workoutId, {
+    repairCloudIdentity: true,
+    source: "manual",
+  });
+
+  if (result?.skipped) {
+    throw new Error(getWorkoutSummaryRepostErrorMessage(result));
+  }
+
+  return result;
+}
+
+export async function syncWorkoutSummaryPostForCompletionState(
+  db,
+  { workoutId, done }
+) {
+  if (done) {
+    await createCompletedWorkoutPostBestEffort(db, workoutId, {
+      repairCloudIdentity: true,
+    });
+  } else {
+    syncWorkoutTypeInstancesInBackground(db);
+  }
 }
 
 export async function resetWorkoutState(db, workoutId) {
@@ -112,4 +306,6 @@ export async function resetWorkoutState(db, workoutId) {
     await workoutRepository.resetWorkoutStateFields(db, workoutId);
     await refreshWorkoutHierarchyCompletion(db, workoutId);
   });
+
+  syncWorkoutTypeInstancesInBackground(db);
 }

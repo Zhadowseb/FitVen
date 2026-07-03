@@ -1,12 +1,12 @@
-import * as React from "react"
-import Svg, { Path } from "react-native-svg"
-import {useColorScheme} from "react-native"
-import { Colors } from "../../GlobalStyling/colors"
+import * as React from "react";
+import Svg, { Path } from "react-native-svg";
+import { useColorScheme } from "react-native";
+import { Colors } from "../../GlobalStyling/colors";
 
-function Plus({width, height, color}) {
-    
-  const colorScheme = useColorScheme()
-  const theme = Colors[colorScheme] ?? Colors.light
+function Plus({ width = 24, height = 24, color, thickness = 1.8 }) {
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme] ?? Colors.light;
+  const iconColor = color ?? theme.iconColor;
 
   return (
     <Svg
@@ -14,16 +14,15 @@ function Plus({width, height, color}) {
       viewBox="0 0 24 24"
       width={width}
       height={height}
-      color="currentColor"
       fill="none"
-      stroke={color ? color : theme.iconColor}
-      strokeWidth={1.5}
+      stroke={iconColor}
+      strokeWidth={thickness}
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <Path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12s4.477 10 10 10 10-4.477 10-10zM12 8v8m4-4H8" />
+      <Path d="M12 5v14M5 12h14" />
     </Svg>
-  )
+  );
 }
 
-export default Plus
+export default Plus;

@@ -10,6 +10,8 @@ const ThemedHeader = ({
   right,         // custom right slot (optional)
   children,      // center content
   showBack = true,
+  leftWidth = 48,
+  rightWidth = 48,
 }) => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -28,7 +30,7 @@ const ThemedHeader = ({
       }}
     >
       {/* LEFT */}
-      <View style={{ width: 48, justifyContent: "center" }}>
+      <View style={{ width: leftWidth, justifyContent: "center" }}>
         {left ? (
           left
         ) : (
@@ -52,7 +54,7 @@ const ThemedHeader = ({
       </View>
 
       {/* RIGHT */}
-      <View style={{ width: 48, alignItems: "flex-end" }}>
+      <View style={{ width: rightWidth, alignItems: "flex-end" }}>
         {right}
       </View>
     </View>

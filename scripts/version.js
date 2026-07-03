@@ -18,8 +18,8 @@ if (!command || !["auto", "branch", "release", "status", "sync"].includes(comman
       "  node scripts/version.js auto\n" +
       "  node scripts/version.js auto --dry-run\n" +
       "  node scripts/version.js branch\n" +
-      "  node scripts/version.js branch --branch feat/new-ui\n" +
-      "  node scripts/version.js branch feat/new-ui dry-run\n" +
+      "  node scripts/version.js branch --branch major/new-ui\n" +
+      "  node scripts/version.js branch minor/new-ui dry-run\n" +
       "  node scripts/version.js branch --bump minor\n" +
       "  node scripts/version.js status\n" +
       "  node scripts/version.js release 0.4.0\n" +
@@ -242,7 +242,7 @@ function prepareBranchVersioning(currentOptions) {
 
   if (!inferredBump) {
     console.error(
-      `Could not infer a version bump from "${branchName}". Use --bump major|minor|patch or rename the branch to feat/*, fix/*, or release/x.y.z`
+      `Could not infer a version bump from "${branchName}". Use --bump major|minor|patch or rename the branch to major/*, minor/*, fix/*, breaking/*, or release/x.y.z`
     );
     process.exit(1);
   }
@@ -282,10 +282,11 @@ function buildVersioningSummary({ mode, branchName, targetVersion, changelogMode
   const appJson = readJson(appJsonPath);
   const nextPackageJson = structuredClone(packageJson);
   const nextAppJson = structuredClone(appJson);
+  const targetAppVersion = getAppStoreVersion(targetVersion);
 
   nextPackageJson.version = targetVersion;
   nextAppJson.expo = nextAppJson.expo || {};
-  nextAppJson.expo.version = targetVersion;
+  nextAppJson.expo.version = targetAppVersion;
 
   let nextBuildNumber = null;
 
@@ -299,7 +300,7 @@ function buildVersioningSummary({ mode, branchName, targetVersion, changelogMode
 
   const changelogContent = fs.existsSync(changelogPath)
     ? fs.readFileSync(changelogPath, "utf8")
-    : "# Changelog\n\nAll changes to the project are logged here.\n";
+    : "# Changelog\n";
   const nextChangelogContent = updateChangelog({
     content: changelogContent,
     changelogMode,
@@ -310,6 +311,7 @@ function buildVersioningSummary({ mode, branchName, targetVersion, changelogMode
     mode,
     branchName,
     targetVersion,
+    targetAppVersion,
     changelogMode,
     nextBuildNumber,
     packageJson,
@@ -345,13 +347,20 @@ function printSummary(summary, dryRun) {
     console.log(`${prefix}Branch: ${summary.branchName}`);
   }
   console.log(`${prefix}Version: ${summary.targetVersion}`);
+  if (summary.targetAppVersion !== summary.targetVersion) {
+    console.log(`${prefix}Expo app version: ${summary.targetAppVersion}`);
+  }
 
   if (summary.mode === "release" && summary.nextBuildNumber !== null) {
     console.log(`${prefix}Android versionCode / iOS buildNumber: ${summary.nextBuildNumber}`);
   }
 
   if (summary.changelogMode === "unreleased") {
-    console.log(`${prefix}CHANGELOG.md: ensured an [Unreleased] section`);
+    console.log(
+      `${prefix}CHANGELOG.md: ensured version section ${getChangelogSectionVersion(
+        summary.targetVersion
+      )} - Unreleased`
+    );
   } else if (summary.changelogMode === "release") {
     console.log(`${prefix}CHANGELOG.md: prepared release entry ${summary.targetVersion}`);
   } else {
@@ -365,17 +374,30 @@ function printStatus(currentOptions) {
   const appJson = readJson(appJsonPath);
   const packageVersion = packageJson.version;
   const appVersion = appJson?.expo?.version || "(missing)";
-  const versionsAligned = packageVersion === appVersion;
+  const expectedAppVersionFromPackage = getAppStoreVersion(packageVersion);
+  const versionsAligned = appVersion === expectedAppVersionFromPackage;
   const changelogContent = fs.existsSync(changelogPath)
     ? fs.readFileSync(changelogPath, "utf8")
     : "";
-  const hasUnreleasedSection = /^## \[Unreleased\]$/m.test(changelogContent);
+  const changelogVersion = branchName
+    ? getChangelogSectionVersion(
+        /^release[/-](\d+\.\d+\.\d+)$/i.test(branchName)
+          ? branchName.match(/^release[/-](\d+\.\d+\.\d+)$/i)[1]
+          : packageVersion
+      )
+    : null;
+  const hasCurrentVersionSection = changelogVersion
+    ? hasVersionSection(changelogContent, changelogVersion)
+    : false;
 
   console.log(`Branch: ${branchName || "(unknown)"}`);
   console.log(`package.json version: ${packageVersion}`);
   console.log(`app.json version: ${appVersion}`);
-  console.log(`Versions aligned: ${versionsAligned ? "yes" : "no"}`);
-  console.log(`CHANGELOG.md has [Unreleased]: ${hasUnreleasedSection ? "yes" : "no"}`);
+  console.log(`Expected app.json version: ${expectedAppVersionFromPackage}`);
+  console.log(`App Store version aligned: ${versionsAligned ? "yes" : "no"}`);
+  console.log(
+    `CHANGELOG.md has current version section: ${hasCurrentVersionSection ? "yes" : "no"}`
+  );
 
   if (!branchName) {
     console.log("Recommended action: create or switch to a work branch, then run npm run version:auto");
@@ -407,7 +429,7 @@ function printStatus(currentOptions) {
 
   if (!inferredBump) {
     console.log(
-      "Recommended action: rename the branch to feat/*, fix/*, or release/x.y.z, or run npm run version:branch -- <branch-name> <major|minor|patch>"
+      "Recommended action: rename the branch to major/*, minor/*, fix/*, breaking/*, or release/x.y.z, or run npm run version:branch -- <branch-name> <major|minor|patch>"
     );
     return;
   }
@@ -458,15 +480,15 @@ function resolveGitDir() {
 }
 
 function inferBumpFromBranch(branchName) {
-  if (/^(feat|feature)([/-]|$)/i.test(branchName)) {
-    return "minor";
-  }
-
-  if (/^(fix|bugfix|hotfix|quickfix)([/-]|$)/i.test(branchName)) {
+  if (/^(fix|bugfix|hotfix|quickfix|minor|minor-feature|minorfeature)([/-]|$)/i.test(branchName)) {
     return "patch";
   }
 
-  if (/^(major|breaking)([/-]|$)/i.test(branchName)) {
+  if (/^(feat|feature|major|major-feature|majorfeature)([/-]|$)/i.test(branchName)) {
+    return "minor";
+  }
+
+  if (/^(breaking)([/-]|$)/i.test(branchName)) {
     return "major";
   }
 
@@ -518,6 +540,10 @@ function normalizeStableVersion(version) {
   return `${Number(match[1])}.${Number(match[2])}.${Number(match[3])}`;
 }
 
+function getAppStoreVersion(version) {
+  return normalizeStableVersion(version);
+}
+
 function bumpStableVersion(version, bumpType) {
   const [major, minor, patch] = normalizeStableVersion(version)
     .split(".")
@@ -557,60 +583,175 @@ function updateChangelog({ content, changelogMode, targetVersion }) {
   const eol = detectEol(content);
   let nextContent = content.trim().length
     ? content
-    : "# Changelog\n\nAll changes to the project are logged here.\n";
+    : "# Changelog\n";
 
-  nextContent = ensureIntro(nextContent, eol);
-  nextContent = ensureUnreleasedSection(nextContent, eol);
+  nextContent = normalizeChangelogTitle(nextContent, eol);
+  nextContent = removeLegacyIntroParagraph(nextContent, eol);
+  nextContent = removeGlobalUnreleasedSection(nextContent, eol);
 
   if (changelogMode === "release") {
+    nextContent = markOlderUnreleasedSectionsAsReleasedWith(nextContent, targetVersion);
     nextContent = upsertReleaseSection(nextContent, targetVersion, eol);
+  } else if (changelogMode === "unreleased") {
+    nextContent = upsertUnreleasedVersionSection(nextContent, targetVersion, eol);
   }
 
   return ensureTrailingEol(nextContent, eol);
 }
 
-function ensureIntro(content, eol) {
-  if (/^# Changelog/m.test(content)) {
-    return content.replace(
-      /^# Changelog[\s\S]*?(?=^## \[|$)/m,
-      `# Changelog${eol}${eol}All changes to the project are logged here.${eol}${eol}`
-    );
+function normalizeChangelogTitle(content, eol) {
+  if (/^# Changelog$/m.test(content)) {
+    return content.replace(/^# Changelog[\s\r\n]*/m, `# Changelog${eol}${eol}`);
   }
 
-  return `# Changelog${eol}${eol}All changes to the project are logged here.${eol}${eol}${content.trim()}${eol}`;
+  return `# Changelog${eol}${eol}${content.trim()}${eol}`;
 }
 
-function ensureUnreleasedSection(content, eol) {
-  if (/^## \[Unreleased\]$/m.test(content)) {
-    return content;
+function removeLegacyIntroParagraph(content, eol) {
+  const normalized = content.replace(
+    /(?:^|\r?\n)All changes to the project are logged here\.(?=\r?\n|$)/g,
+    ""
+  );
+
+  return normalized.replace(
+    /^# Changelog(?:\r?\n){2,}/,
+    `# Changelog${eol}${eol}`
+  );
+}
+
+function removeGlobalUnreleasedSection(content, eol) {
+  const lines = content.split(/\r?\n/);
+  const nextLines = [];
+  let index = 0;
+
+  while (index < lines.length) {
+    const line = lines[index];
+
+    if (line === "## [Unreleased]") {
+      index += 1;
+
+      while (index < lines.length) {
+        const currentLine = lines[index];
+
+        if (/^## \[/.test(currentLine) || currentLine === "---") {
+          break;
+        }
+
+        index += 1;
+      }
+
+      while (index < lines.length && lines[index] === "---") {
+        index += 1;
+      }
+
+      while (index < lines.length && lines[index].trim() === "") {
+        index += 1;
+      }
+
+      continue;
+    }
+
+    nextLines.push(line);
+    index += 1;
   }
 
-  const unreleasedSection = [
-    "## [Unreleased]",
+  return nextLines.join(eol).trimEnd();
+}
+
+function getChangelogSectionVersion(targetVersion) {
+  const [stablePart] = String(targetVersion).split("-");
+  return normalizeStableVersion(stablePart);
+}
+
+function compareStableVersions(leftVersion, rightVersion) {
+  const left = normalizeStableVersion(leftVersion)
+    .split(".")
+    .map((value) => Number(value));
+  const right = normalizeStableVersion(rightVersion)
+    .split(".")
+    .map((value) => Number(value));
+
+  for (let index = 0; index < 3; index += 1) {
+    if (left[index] < right[index]) {
+      return -1;
+    }
+
+    if (left[index] > right[index]) {
+      return 1;
+    }
+  }
+
+  return 0;
+}
+
+function markOlderUnreleasedSectionsAsReleasedWith(content, targetVersion) {
+  const releaseVersion = getChangelogSectionVersion(targetVersion);
+
+  return content.replace(
+    /^## \[(\d+\.\d+\.\d+)\] - Unreleased$/gm,
+    (match, version) => {
+      if (compareStableVersions(version, releaseVersion) < 0) {
+        return buildVersionSectionHeader(version, `Released with ${releaseVersion}`);
+      }
+
+      return match;
+    }
+  );
+}
+
+function buildVersionSectionHeader(version, suffix) {
+  return `## [${version}] - ${suffix}`;
+}
+
+function buildVersionSectionRegex(version) {
+  return new RegExp(
+    `^## \\[${escapeRegExp(version)}\\] - .*$`,
+    "m"
+  );
+}
+
+function hasVersionSection(content, version) {
+  return buildVersionSectionRegex(version).test(content);
+}
+
+function upsertUnreleasedVersionSection(content, targetVersion, eol) {
+  const changelogVersion = getChangelogSectionVersion(targetVersion);
+  const sectionHeader = buildVersionSectionHeader(changelogVersion, "Unreleased");
+  const sectionContent = [
+    sectionHeader,
     "### Changed",
-    "- Describe upcoming changes here.",
+    "- Describe pending changes here.",
     "",
     "---",
     "",
   ].join(eol);
+  const existingHeaderPattern = buildVersionSectionRegex(changelogVersion);
 
-  const firstReleaseIndex = content.search(/^## \[(?!Unreleased\]).+\]$/m);
+  if (existingHeaderPattern.test(content)) {
+    return content.replace(existingHeaderPattern, sectionHeader);
+  }
 
-  if (firstReleaseIndex >= 0) {
+  const firstVersionIndex = content.search(/^## \[.+\] - .+$/m);
+
+  if (firstVersionIndex >= 0) {
     return (
-      content.slice(0, firstReleaseIndex).trimEnd() +
+      content.slice(0, firstVersionIndex).trimEnd() +
       eol +
       eol +
-      unreleasedSection +
-      content.slice(firstReleaseIndex).trimStart()
+      sectionContent +
+      content.slice(firstVersionIndex).trimStart()
     );
   }
 
-  return `${content.trimEnd()}${eol}${eol}${unreleasedSection}`;
+  return `${content.trimEnd()}${eol}${eol}${sectionContent}`;
 }
 
 function upsertReleaseSection(content, targetVersion, eol) {
-  const releaseHeader = `## [${targetVersion}] - ${formatLocalDate(new Date())}`;
+  const changelogVersion = getChangelogSectionVersion(targetVersion);
+  const releaseHeader = buildVersionSectionHeader(
+    changelogVersion,
+    formatLocalDate(new Date())
+  );
   const releaseSection = [
     releaseHeader,
     "### Changed",
@@ -619,16 +760,13 @@ function upsertReleaseSection(content, targetVersion, eol) {
     "---",
     "",
   ].join(eol);
-  const existingHeaderPattern = new RegExp(
-    `^## \\[${escapeRegExp(targetVersion)}\\] - .*$`,
-    "m"
-  );
+  const existingHeaderPattern = buildVersionSectionRegex(changelogVersion);
 
   if (existingHeaderPattern.test(content)) {
     return content.replace(existingHeaderPattern, releaseHeader);
   }
 
-  const firstReleaseIndex = content.search(/^## \[(?!Unreleased\]).+\]$/m);
+  const firstReleaseIndex = content.search(/^## \[.+\] - .+$/m);
 
   if (firstReleaseIndex >= 0) {
     return (

@@ -1,0 +1,148 @@
+import { StyleSheet } from "react-native";
+
+export default StyleSheet.create({
+  card: {
+    borderWidth: 1,
+    borderRadius: 24,
+    paddingHorizontal: 18,
+    paddingTop: 18,
+    paddingBottom: 17,
+    marginBottom: 20,
+    overflow: "hidden",
+  },
+  topRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    marginBottom: 22,
+  },
+  titleGroup: {
+    flex: 1,
+    minWidth: 0,
+    paddingRight: 14,
+  },
+  eyebrow: {
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: "800",
+    letterSpacing: 1.7,
+    textTransform: "uppercase",
+    marginBottom: 5,
+  },
+  title: {
+    fontSize: 20,
+    lineHeight: 25,
+    fontWeight: "800",
+  },
+  statusChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginTop: 1,
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 999,
+    marginRight: 6,
+  },
+  statusText: {
+    fontSize: 9,
+    lineHeight: 11,
+    fontWeight: "800",
+    letterSpacing: 0.9,
+    textTransform: "uppercase",
+  },
+  startButton: {
+    minHeight: 34,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 16,
+    marginTop: 1,
+  },
+  startButtonText: {
+    color: "#0E0F12",
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+  },
+  detailRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    marginBottom: 22,
+  },
+  detailGroup: {
+    flex: 1,
+    minWidth: 0,
+  },
+  periodGroup: {
+    alignItems: "flex-end",
+    marginLeft: 16,
+  },
+  detailLabel: {
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: "800",
+    letterSpacing: 1.5,
+    textTransform: "uppercase",
+    marginBottom: 6,
+  },
+  phaseValueRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+  },
+  detailValue: {
+    fontSize: 15,
+    lineHeight: 19,
+    fontWeight: "800",
+  },
+  phaseTotal: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "700",
+    marginLeft: 4,
+  },
+  periodValue: {
+    fontSize: 12,
+    lineHeight: 19,
+    textAlign: "right",
+  },
+  progressHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  progressPhase: {
+    flexDirection: "row",
+    alignItems: "baseline",
+  },
+  progressLabel: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "800",
+  },
+  progressTotal: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "700",
+  },
+  progressPercent: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "800",
+    fontVariant: ["tabular-nums"],
+  },
+  progressTrack: {
+    height: 6,
+    borderRadius: 999,
+    overflow: "hidden",
+  },
+});

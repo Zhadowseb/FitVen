@@ -1,5 +1,11 @@
-import { useState, useCallback, useRef } from "react";
-import { Dimensions, TouchableOpacity, View } from "react-native";
+import { useState, useCallback, useEffect, useRef } from "react";
+import {
+  Dimensions,
+  Modal,
+  Pressable,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
 import { useFocusEffect } from "@react-navigation/native";
 import { useColorScheme } from "react-native";
@@ -12,12 +18,252 @@ import {
   ThemedEditableCell,
 } from "../../../../Resources/ThemedComponents";
 
-import Delete from "../../../../Resources/Icons/UI-icons/Delete";
+import Advanced from "../../../../Resources/Icons/UI-icons/Advanced";
+import Checkmark from "../../../../Resources/Icons/UI-icons/Checkmark";
 import Cross from "../../../../Resources/Icons/UI-icons/Cross";
+import Delete from "../../../../Resources/Icons/UI-icons/Delete";
+import Fire from "../../../../Resources/Icons/UI-icons/Fire";
+import Plus from "../../../../Resources/Icons/UI-icons/Plus";
+import Snow from "../../../../Resources/Icons/UI-icons/Snow";
 import styles from "./RunStyle";
 import ListHeader from "./ListHeader";
-import { formatTime } from "../../../../Utils/timeUtils";
 import { runningService as runningRepository } from "../../../../Services";
+
+const ZONES = [
+  { label: "1", value: 1 },
+  { label: "2", value: 2 },
+  { label: "3", value: 3 },
+  { label: "4", value: 4 },
+  { label: "5", value: 5 },
+];
+
+const ZONE_COLORS = {
+  1: "#9CA3AF",
+  2: "#22C7F2",
+  3: "#10B981",
+  4: "#F7742E",
+  5: "#EF4444",
+};
+
+const ZONE_POPOVER_WIDTH = 238;
+const ZONE_POPOVER_HEIGHT = 40;
+const ZONE_POPOVER_MARGIN = 12;
+const DISTANCE_UNIT_METERS = "m";
+const DISTANCE_UNIT_KILOMETERS = "km";
+const METERS_PER_KILOMETER = 1000;
+const SMART_DISTANCE_METERS_THRESHOLD = 100;
+const AUTO_DISTANCE_KILOMETERS_THRESHOLD = 1;
+const RUN_INPUT_FALLBACK_FIELDS = ["distance", "pace", "time"];
+
+const parseNumberInput = (value) => {
+  const normalized = String(value ?? "").trim().replace(",", ".");
+
+  if (!normalized) {
+    return null;
+  }
+
+  const numericValue = Number(normalized);
+  return Number.isFinite(numericValue) ? numericValue : null;
+};
+
+const parseDurationInput = (value) => {
+  const normalized = String(value ?? "")
+    .trim()
+    .replace(",", ".")
+    .replace(/[\u2019\u2032]/g, "'")
+    .replace(/[\u201d\u2033]/g, "");
+
+  if (!normalized) {
+    return null;
+  }
+
+  const clockMatch = normalized.match(/^(\d+)[\:'](\d{1,2})$/);
+
+  if (clockMatch) {
+    const minutes = Number(clockMatch[1]);
+    const seconds = Number(clockMatch[2]);
+
+    if (Number.isFinite(minutes) && Number.isFinite(seconds)) {
+      return minutes + seconds / 60;
+    }
+  }
+
+  const numericValue = Number(normalized);
+  return Number.isFinite(numericValue) ? numericValue : null;
+};
+
+const parseDistanceInput = (value, distanceUnit) => {
+  const numericValue = parseNumberInput(value);
+
+  if (numericValue === null) {
+    return null;
+  }
+
+  if (
+    distanceUnit === DISTANCE_UNIT_METERS ||
+    numericValue > SMART_DISTANCE_METERS_THRESHOLD
+  ) {
+    return numericValue / METERS_PER_KILOMETER;
+  }
+
+  return numericValue;
+};
+
+const getDistanceInputValue = (value, distanceUnit) => {
+  const numericValue = Number(value);
+
+  if (!Number.isFinite(numericValue) || numericValue <= 0) {
+    return "";
+  }
+
+  if (distanceUnit === DISTANCE_UNIT_METERS) {
+    return String(Math.round(numericValue * METERS_PER_KILOMETER));
+  }
+
+  return String(numericValue);
+};
+
+const formatKilometersDisplay = (value, fallback = "") => {
+  const numericValue = Number(value);
+
+  if (!Number.isFinite(numericValue) || numericValue <= 0) {
+    return fallback;
+  }
+
+  return numericValue.toFixed(1);
+};
+
+const formatDistanceDisplay = (value, distanceUnit, fallback = "") => {
+  const numericValue = Number(value);
+
+  if (!Number.isFinite(numericValue) || numericValue <= 0) {
+    return fallback;
+  }
+
+  if (distanceUnit === DISTANCE_UNIT_METERS) {
+    return String(Math.round(numericValue));
+  }
+
+  return formatKilometersDisplay(numericValue, fallback);
+};
+
+const formatMinutesClock = (value, fallback = "") => {
+  const numericValue = parseDurationInput(value);
+
+  if (!Number.isFinite(numericValue) || numericValue <= 0) {
+    return fallback;
+  }
+
+  const totalSeconds = Math.round(numericValue * 60);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+};
+
+const formatSecondsClock = (totalSeconds) => {
+  const safeSeconds = Math.max(0, Math.round(Number(totalSeconds) || 0));
+  const minutes = Math.floor(safeSeconds / 60);
+  const seconds = safeSeconds % 60;
+
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+};
+
+const formatPaceDisplay = (value, fallback = "") => {
+  const normalized = String(value ?? "")
+    .trim()
+    .replace(",", ".")
+    .replace(/[\u2019\u2032]/g, "'")
+    .replace(/[\u201d\u2033]/g, "");
+
+  if (!normalized) {
+    return fallback;
+  }
+
+  const clockMatch = normalized.match(/^(\d+)[\:'](\d{1,2})$/);
+
+  if (clockMatch) {
+    return `${Number(clockMatch[1])}:${String(Number(clockMatch[2])).padStart(
+      2,
+      "0"
+    )}`;
+  }
+
+  const numericValue = Number(normalized);
+
+  if (Number.isFinite(numericValue) && numericValue > 0) {
+    return formatMinutesClock(numericValue);
+  }
+
+  return normalized;
+};
+
+const hasFieldValue = (value) =>
+  value !== "" && value !== null && value !== undefined;
+
+const buildRunInputFallbacks = (sets = []) =>
+  sets.reduce((fallbacks, set) => {
+    const setFallbacks = {};
+
+    RUN_INPUT_FALLBACK_FIELDS.forEach((field) => {
+      if (hasFieldValue(set?.[field])) {
+        setFallbacks[field] = set[field];
+      }
+    });
+
+    if (Object.keys(setFallbacks).length > 0) {
+      fallbacks[set.Run_id] = setFallbacks;
+    }
+
+    return fallbacks;
+  }, {});
+
+const colorWithAlpha = (color, alpha, fallback) => {
+  const normalizedColor = String(color ?? "").trim();
+
+  if (/^#[0-9a-f]{6}$/i.test(normalizedColor)) {
+    const red = parseInt(normalizedColor.slice(1, 3), 16);
+    const green = parseInt(normalizedColor.slice(3, 5), 16);
+    const blue = parseInt(normalizedColor.slice(5, 7), 16);
+
+    return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+  }
+
+  const rgbMatch = normalizedColor.match(
+    /^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)$/
+  );
+
+  if (rgbMatch) {
+    return `rgba(${rgbMatch[1]}, ${rgbMatch[2]}, ${rgbMatch[3]}, ${alpha})`;
+  }
+
+  return fallback;
+};
+
+const getIntervalsSummary = (sets, emptySummary) => {
+  const workingSets = sets.filter((set) => !set.is_pause);
+  const totalDistance = workingSets.reduce(
+    (sum, set) => sum + (Number(set.distance) || 0),
+    0
+  );
+  const totalMinutes = sets.reduce(
+    (sum, set) => sum + (parseDurationInput(set.time) || 0),
+    0
+  );
+
+  if (!sets.length) {
+    return emptySummary;
+  }
+
+  const distanceText =
+    totalDistance > 0
+      ? `${formatKilometersDisplay(totalDistance)} km total`
+      : "Distance not set";
+  const timeText =
+    totalMinutes > 0 ? `~${Math.round(totalMinutes)} min` : "Time not set";
+
+  return `${distanceText} - ${timeText}`;
+};
 
 const RunSetList = ({
   workout_id,
@@ -27,6 +273,14 @@ const RunSetList = ({
   triggerReload,
   activeSet,
   activeSet_remainingTime,
+  variant = "intervals",
+  sectionTitle,
+  sectionEyebrow,
+  emptySummary = "No sets",
+  onAddSet,
+  workoutStarted = false,
+  hidePauseRows = false,
+  maxSets = null,
 }) => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -38,92 +292,269 @@ const RunSetList = ({
 
   const [zoneDropdownVisible, setZoneDropdownVisible] = useState(false);
   const [zoneSetId, setZoneSetId] = useState(null);
-  const [zoneDropdownDirection, setZoneDropdownDirection] = useState("down");
+  const [distanceUnit, setDistanceUnit] = useState(DISTANCE_UNIT_METERS);
+  const [distanceUnitManuallySelected, setDistanceUnitManuallySelected] =
+    useState(false);
+  const [runInputFallbacks, setRunInputFallbacks] = useState({});
+  const [zonePopoverPosition, setZonePopoverPosition] = useState({
+    left: ZONE_POPOVER_MARGIN,
+    top: ZONE_POPOVER_MARGIN,
+  });
+  const [activeEditableCell, setActiveEditableCell] = useState(null);
   const zoneTriggerRefs = useRef({});
 
-  const ZONES = [
-    { label: "1", value: 1 },
-    { label: "2", value: 2 },
-    { label: "3", value: 3 },
-    { label: "4", value: 4 },
-    { label: "5", value: 5 },
-  ];
+  const primaryColor = theme.primary ?? theme.iconColor ?? theme.text;
+  const secondaryColor = theme.secondary ?? primaryColor;
+  const titleColor = theme.title ?? theme.text;
+  const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
+  const cardSurface = theme.cardBackground ?? theme.background;
+  const mutedSurface = theme.fields ?? theme.uiBackground ?? cardSurface;
+  const cardBorder = theme.cardBorder ?? theme.iconColor ?? theme.text;
+  const invertedText = theme.textInverted ?? theme.background ?? "#0E0F12";
+  const isCompactSection = variant === "segment";
+  const isDark = colorScheme === "dark";
+  const tableSurface = isDark ? "rgba(16, 17, 24, 0.58)" : "#f5f4fa";
+  const tableBorder = isDark
+    ? "rgba(255, 255, 255, 0.07)"
+    : "rgba(32, 30, 43, 0.12)";
+  const cellSurface = isDark
+    ? "rgba(24, 25, 34, 0.9)"
+    : "rgba(255, 255, 255, 0.86)";
+  const cellBorder = isDark
+    ? "rgba(255, 255, 255, 0.045)"
+    : "rgba(32, 30, 43, 0.08)";
+  const setChipBackground = isDark
+    ? "rgba(247, 116, 46, 0.17)"
+    : "rgba(247, 116, 46, 0.14)";
 
-  const ZONE_COLORS = {
-    1: "#b6b6b6",
-    2: "#02a5e4",
-    3: "#00ad5c",
-    4: "#ea8106",
-    5: "#ff2600",
-  };
-  const ZONE_DROPDOWN_ESTIMATED_HEIGHT = 236;
-  const ZONE_DROPDOWN_SAFE_MARGIN = 20;
-
-  const handleZonePress = (setId) => {
-    const toggleDropdown = (direction = "down") => {
-      setZoneDropdownDirection(direction);
-
-      if (zoneSetId === setId) {
-        setZoneDropdownVisible((prev) => !prev);
-        return;
-      }
-
-      setZoneSetId(setId);
-      setZoneDropdownVisible(true);
-    };
-
-    const anchor = zoneTriggerRefs.current[setId];
-
-    if (!anchor?.measureInWindow) {
-      toggleDropdown("down");
-      return;
-    }
-
-    anchor.measureInWindow((_x, y, _width, height) => {
-      const screenHeight = Dimensions.get("window").height;
-      const spaceBelow = screenHeight - (y + height);
-      const spaceAbove = y;
-      const requiredSpace =
-        ZONE_DROPDOWN_ESTIMATED_HEIGHT + ZONE_DROPDOWN_SAFE_MARGIN;
-      const canOpenDown = spaceBelow >= requiredSpace;
-      const canOpenUp = spaceAbove >= requiredSpace;
-
-      let shouldOpenUp = false;
-
-      if (!canOpenDown && canOpenUp) {
-        shouldOpenUp = true;
-      } else if (!canOpenDown && !canOpenUp) {
-        shouldOpenUp = spaceAbove >= spaceBelow;
-      }
-
-      toggleDropdown(shouldOpenUp ? "up" : "down");
-    });
-  };
-
-  useFocusEffect(
-    useCallback(() => {
-      loadRunSets();
-    }, [reloadKey])
-  );
-
-  useFocusEffect(
-    useCallback(() => {
-      loadRunSets();
-    }, [workout_id, type])
-  );
-
-  const loadRunSets = async () => {
+  const loadRunSets = useCallback(async () => {
     try {
       const rows = await runningRepository.getRunSets(db, {
         workoutId: workout_id,
         type,
       });
 
-      setSets(rows);
-      empty?.(rows.length === 0);
+      const visibleRows = hidePauseRows
+        ? rows.filter((set) => Number(set.is_pause) !== 1)
+        : rows;
+
+      setSets(visibleRows);
+      empty?.(visibleRows.length === 0);
     } catch (err) {
       console.error("Failed to load run sets:", err);
     }
+  }, [db, empty, hidePauseRows, type, workout_id]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadRunSets();
+    }, [loadRunSets, reloadKey])
+  );
+
+  useEffect(() => {
+    if (distanceUnitManuallySelected) {
+      return;
+    }
+
+    const shouldUseKilometers = sets.some(
+      (set) => Number(set.distance) >= AUTO_DISTANCE_KILOMETERS_THRESHOLD
+    );
+
+    setDistanceUnit(
+      shouldUseKilometers
+        ? DISTANCE_UNIT_KILOMETERS
+        : DISTANCE_UNIT_METERS
+    );
+  }, [distanceUnitManuallySelected, sets]);
+
+  useEffect(() => {
+    setDistanceUnitManuallySelected(false);
+    setRunInputFallbacks({});
+  }, [workout_id, type]);
+
+  useEffect(() => {
+    if (!workoutStarted) {
+      setRunInputFallbacks(buildRunInputFallbacks(sets));
+      return;
+    }
+
+    setRunInputFallbacks((currentFallbacks) =>
+      Object.keys(currentFallbacks).length > 0
+        ? currentFallbacks
+        : buildRunInputFallbacks(sets)
+    );
+  }, [sets, workoutStarted]);
+
+  const closeZoneDropdown = () => {
+    setZoneDropdownVisible(false);
+  };
+
+  const toggleDistanceUnit = () => {
+    setDistanceUnitManuallySelected(true);
+    setDistanceUnit((currentUnit) =>
+      currentUnit === DISTANCE_UNIT_METERS
+        ? DISTANCE_UNIT_KILOMETERS
+        : DISTANCE_UNIT_METERS
+    );
+  };
+
+  const commitDistanceField = async (runId, value) => {
+    const nextDistance = parseDistanceInput(value, distanceUnit);
+
+    if (Number(nextDistance) >= AUTO_DISTANCE_KILOMETERS_THRESHOLD) {
+      setDistanceUnit(DISTANCE_UNIT_KILOMETERS);
+      setDistanceUnitManuallySelected(false);
+    }
+
+    await runningRepository.updateRunSetField(db, {
+      runId,
+      field: "distance",
+      value: nextDistance,
+    });
+    await loadRunSets();
+    triggerReload();
+  };
+
+  const getInputFallback = (runId, field) => {
+    const fallbackValue = runInputFallbacks[runId]?.[field];
+
+    if (!hasFieldValue(fallbackValue)) {
+      return "";
+    }
+
+    if (field === "distance") {
+      return formatDistanceDisplay(
+        getDistanceInputValue(fallbackValue, distanceUnit),
+        distanceUnit
+      );
+    }
+
+    if (field === "pace") {
+      return formatPaceDisplay(fallbackValue);
+    }
+
+    if (field === "time") {
+      return formatMinutesClock(fallbackValue);
+    }
+
+    return String(fallbackValue);
+  };
+
+  const matchesInputFallback = (runId, field, value) => {
+    const fallbackValue = runInputFallbacks[runId]?.[field];
+
+    if (!hasFieldValue(value) || !hasFieldValue(fallbackValue)) {
+      return false;
+    }
+
+    if (field === "pace") {
+      return String(value) === String(fallbackValue);
+    }
+
+    return Number(value) === Number(fallbackValue);
+  };
+
+  const getEditableDistanceValue = (set) => {
+    if (workoutStarted && matchesInputFallback(set.Run_id, "distance", set.distance)) {
+      return "";
+    }
+
+    return getDistanceInputValue(set.distance, distanceUnit);
+  };
+
+  const getEditableFieldValue = (set, field) => {
+    const value = set?.[field];
+
+    if (workoutStarted && matchesInputFallback(set.Run_id, field, value)) {
+      return "";
+    }
+
+    return value?.toString() ?? "";
+  };
+
+  const editablePlaceholderColor = colorWithAlpha(
+    primaryColor,
+    0.99,
+    quietText
+  );
+
+  const handleZonePress = (setId) => {
+    if (zoneSetId === setId && zoneDropdownVisible) {
+      closeZoneDropdown();
+      return;
+    }
+
+    const anchor = zoneTriggerRefs.current[setId];
+
+    if (!anchor?.measureInWindow) {
+      return;
+    }
+
+    anchor.measureInWindow((x, y, width, height) => {
+      const screenWidth = Dimensions.get("window").width;
+      const screenHeight = Dimensions.get("window").height;
+      const preferredLeft = x + width - ZONE_POPOVER_WIDTH;
+      const preferredTop = y + height / 2 - ZONE_POPOVER_HEIGHT / 2;
+      const maxLeft = screenWidth - ZONE_POPOVER_WIDTH - ZONE_POPOVER_MARGIN;
+      const maxTop = screenHeight - ZONE_POPOVER_HEIGHT - ZONE_POPOVER_MARGIN;
+
+      setZonePopoverPosition({
+        left: Math.max(ZONE_POPOVER_MARGIN, Math.min(preferredLeft, maxLeft)),
+        top: Math.max(ZONE_POPOVER_MARGIN, Math.min(preferredTop, maxTop)),
+      });
+      setZoneSetId(setId);
+      setZoneDropdownVisible(true);
+    });
+  };
+
+  const handleAddSet = async () => {
+    const workingSetCount = sets.filter(
+      (set) => Number(set.is_pause) !== 1
+    ).length;
+
+    if (Number.isInteger(maxSets) && workingSetCount >= maxSets) {
+      return;
+    }
+
+    await onAddSet?.();
+  };
+
+  const openSetOptions = (set) => {
+    set_selectedSet(set);
+    set_bottomsheetVisible(true);
+  };
+
+  const updateSelectedSetField = async (field, value) => {
+    if (!selectedSet) {
+      return;
+    }
+
+    await runningRepository.updateRunSetField(db, {
+      runId: selectedSet.Run_id,
+      field,
+      value,
+    });
+
+    set_selectedSet((prev) =>
+      prev?.Run_id === selectedSet.Run_id ? { ...prev, [field]: value } : prev
+    );
+    await loadRunSets();
+    triggerReload();
+  };
+
+  const updateSelectedSetDistance = async (value) => {
+    if (!selectedSet) {
+      return;
+    }
+
+    const nextDistance = parseDistanceInput(value, distanceUnit);
+
+    if (Number(nextDistance) >= AUTO_DISTANCE_KILOMETERS_THRESHOLD) {
+      setDistanceUnit(DISTANCE_UNIT_KILOMETERS);
+      setDistanceUnitManuallySelected(false);
+    }
+
+    await updateSelectedSetField("distance", nextDistance);
   };
 
   const deleteSet = async () => {
@@ -135,6 +566,8 @@ const RunSetList = ({
       type,
     });
 
+    set_selectedSet(null);
+    set_bottomsheetVisible(false);
     triggerReload();
   };
 
@@ -150,293 +583,825 @@ const RunSetList = ({
       isPause: newValue === 1,
     });
 
+    set_selectedSet((prev) =>
+      prev?.Run_id === selectedSet.Run_id ? { ...prev, is_pause: newValue } : prev
+    );
     await loadRunSets();
     triggerReload();
-    set_bottomsheetVisible(false);
   };
 
-  if (sets.length === 0) {
-    return (
-      <ThemedCard
-        style={{
-          opacity: 0.3,
-          marginHorizontal: 0,
-          marginVertical: 0,
-        }}
-      >
-        <ThemedText style={{ paddingLeft: 15 }}>No sets</ThemedText>
-      </ThemedCard>
+  const toggleDone = async (set) => {
+    await runningRepository.updateRunSetDone(db, {
+      runId: set.Run_id,
+      done: !set.done,
+    });
+
+    set_selectedSet((prev) =>
+      prev?.Run_id === set.Run_id ? { ...prev, done: set.done ? 0 : 1 } : prev
     );
-  }
+    await loadRunSets();
+    triggerReload();
+  };
 
-  return (
-    <View style={{ flex: 1 }}>
-      <ThemedCard
-        style={{
-          opacity: sets.length === 0 ? 0.3 : 1,
-          overflow: "visible",
-          marginHorizontal: 0,
-          marginVertical: 0,
-          paddingHorizontal: 0,
-          paddingVertical: 0,
-        }}
+  const renderEditableValue = ({ cellKey, onFocus, onBlur, ...props }) => {
+    const isActive = activeEditableCell === cellKey;
+
+    return (
+      <View
+        style={[
+          styles.valuePill,
+          {
+            backgroundColor: isActive ? cellSurface : "transparent",
+            borderColor: isActive ? cellBorder : "transparent",
+          },
+        ]}
       >
-        <ListHeader styles={styles} />
+        <ThemedEditableCell
+          {...props}
+          onFocus={(event) => {
+            setActiveEditableCell(cellKey);
+            onFocus?.(event);
+          }}
+          onBlur={() => {
+            setActiveEditableCell((currentCell) =>
+              currentCell === cellKey ? null : currentCell
+            );
+            onBlur?.();
+          }}
+        />
+      </View>
+    );
+  };
 
-        {sets.map((set, index) => {
-          const isActive = activeSet === set.Run_id;
+  const renderDoneButton = (set) => {
+    const done = Number(set.done) === 1;
 
-          return (
-            <View
-              key={set.Run_id}
-              style={[styles.grid, isActive && styles.timeRunning]}
+    return (
+      <TouchableOpacity
+        activeOpacity={0.78}
+        onPress={() => toggleDone(set)}
+        style={styles.doneButton}
+      >
+        <View
+          style={[
+            styles.doneCircle,
+            {
+              borderColor: done ? secondaryColor : theme.secondaryDark ?? secondaryColor,
+              backgroundColor: done ? secondaryColor : "transparent",
+            },
+          ]}
+        >
+          {done && (
+            <Checkmark
+              width={17}
+              height={17}
+              color={invertedText}
+              thickness={2.2}
+            />
+          )}
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderZoneDropdown = (set) => {
+    if (!zoneDropdownVisible || zoneSetId !== set.Run_id) {
+      return null;
+    }
+
+    return (
+      <Modal
+        visible
+        transparent
+        animationType="fade"
+        onRequestClose={closeZoneDropdown}
+      >
+        <View style={styles.zoneDropdownOverlay}>
+          <Pressable
+            style={styles.zoneDropdownBackdrop}
+            onPress={closeZoneDropdown}
+          />
+
+          <View
+            style={[
+              styles.zoneDropdownContainer,
+              zonePopoverPosition,
+              {
+                backgroundColor: cardSurface,
+                borderColor: cardBorder,
+              },
+            ]}
+          >
+            <TouchableOpacity
+              style={[
+                styles.zoneDropdownOption,
+                styles.zoneDropdownClear,
+                { borderColor: theme.danger ?? ZONE_COLORS[5] },
+              ]}
+              onPress={async () => {
+                closeZoneDropdown();
+                await runningRepository.updateRunSetField(db, {
+                  runId: set.Run_id,
+                  field: "heartrate",
+                  value: null,
+                });
+
+                await loadRunSets();
+                triggerReload();
+              }}
             >
-              <TouchableOpacity
-                style={[
-                  styles.set,
-                  styles.sharedGrid,
-                  { borderRightWidth: 0, justifyContent: "center", alignItems: "center" },
-                  index === sets.length - 1 && styles.lastGrid,
-                ]}
-                onPress={() => {
-                  set_selectedSet(set);
-                  set_bottomsheetVisible(true);
-                }}
-              >
-                {set.is_pause ? (
-                  <ThemedText style={{ color: theme.quietText }}>Pause</ThemedText>
-                ) : (
-                  <View style={styles.set_number_button}>
-                    <ThemedText
-                      style={styles.set_number_button_text}
-                      setColor={theme.primary ?? theme.text}
-                    >
-                      {set.set_number}
-                    </ThemedText>
-                  </View>
-                )}
-              </TouchableOpacity>
+              <Cross
+                width={14}
+                height={14}
+                color={theme.danger ?? ZONE_COLORS[5]}
+              />
+            </TouchableOpacity>
 
-              <View
-                style={[
-                  styles.distance,
-                  styles.sharedGrid,
-                  index === sets.length - 1 && styles.lastGrid,
-                ]}
-              >
-                <ThemedEditableCell
-                  value={set.distance?.toString() ?? ""}
-                  onCommit={async (v) => {
+            {ZONES.map((zone) => {
+              const bgColor = ZONE_COLORS[zone.value];
+
+              return (
+                <TouchableOpacity
+                  key={zone.value}
+                  style={[styles.zoneDropdownOption, { backgroundColor: bgColor }]}
+                  onPress={async () => {
+                    closeZoneDropdown();
+
                     await runningRepository.updateRunSetField(db, {
                       runId: set.Run_id,
-                      field: "distance",
-                      value: v === "" ? null : Number(v),
+                      field: "heartrate",
+                      value: zone.value,
                     });
+
                     await loadRunSets();
                     triggerReload();
                   }}
-                />
-              </View>
-
-              <View
-                style={[
-                  styles.pace,
-                  styles.sharedGrid,
-                  index === sets.length - 1 && styles.lastGrid,
-                ]}
-              >
-                <ThemedEditableCell
-                  value={set.pace?.toString() ?? ""}
-                  keyboardType="normal"
-                  onCommit={async (v) => {
-                    await runningRepository.updateRunSetField(db, {
-                      runId: set.Run_id,
-                      field: "pace",
-                      value: v === "" ? null : v,
-                    });
-                    await loadRunSets();
-                    triggerReload();
-                  }}
-                />
-              </View>
-
-              <View
-                style={[
-                  styles.time,
-                  styles.sharedGrid,
-                  index === sets.length - 1 && styles.lastGrid,
-                ]}
-              >
-                {isActive ? (
-                  <ThemedText style={{ textAlign: "center", fontWeight: "600" }}>
-                    {formatTime(activeSet_remainingTime)}
+                >
+                  <ThemedText
+                    style={[
+                      styles.zoneDropdownText,
+                      { color: zone.value === 1 ? "#111111" : "#FFFFFF" },
+                    ]}
+                  >
+                    {zone.label}
                   </ThemedText>
-                ) : (
-                  <ThemedEditableCell
-                    value={set.time?.toString() ?? ""}
-                  onCommit={async (v) => {
-                    await runningRepository.updateRunSetField(db, {
-                      runId: set.Run_id,
-                      field: "time",
-                      value: v === "" ? null : Number(v),
-                    });
-                    await loadRunSets();
-                    triggerReload();
-                  }}
-                />
-                )}
-              </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+      </Modal>
+    );
+  };
 
-              <View
+  const renderWorkingRow = (set, index) => {
+    const isActive = activeSet === set.Run_id;
+    const isLast = index === sets.length - 1;
+
+    return (
+      <View
+        key={set.Run_id}
+        style={[
+          styles.runTableRow,
+          { borderBottomColor: tableBorder },
+          isActive && [
+            styles.runTableRowActive,
+            {
+              borderLeftColor: primaryColor,
+              borderRightColor: primaryColor,
+              backgroundColor: cellSurface,
+            },
+          ],
+          isLast && styles.lastRunTableRow,
+        ]}
+      >
+        <TouchableOpacity
+          activeOpacity={0.78}
+          style={[styles.runTableCell, styles.runSetColumn]}
+          onPress={() => openSetOptions(set)}
+        >
+          <View
+            style={[
+              styles.setNumberBadge,
+              {
+                backgroundColor: isActive ? primaryColor : setChipBackground,
+                borderColor: isActive ? primaryColor : cellBorder,
+              },
+            ]}
+          >
+            <ThemedText
+              style={styles.setNumberText}
+              setColor={isActive ? invertedText : primaryColor}
+            >
+              {set.set_number}
+            </ThemedText>
+          </View>
+        </TouchableOpacity>
+
+        <View style={[styles.runTableCell, styles.runDistanceColumn]}>
+          {renderEditableValue({
+            cellKey: `${set.Run_id}:distance`,
+            value: getEditableDistanceValue(set),
+            placeholder: getInputFallback(set.Run_id, "distance"),
+            placeholderTextColor: editablePlaceholderColor,
+            displayFormatter: (value) =>
+              formatDistanceDisplay(value, distanceUnit),
+            onCommit: async (value) => commitDistanceField(set.Run_id, value),
+          })}
+        </View>
+
+        <View style={[styles.runTableCell, styles.runPaceColumn]}>
+          {renderEditableValue({
+            cellKey: `${set.Run_id}:pace`,
+            value: getEditableFieldValue(set, "pace"),
+            placeholder: getInputFallback(set.Run_id, "pace"),
+            placeholderTextColor: editablePlaceholderColor,
+            keyboardType: "normal",
+            displayFormatter: (value) => formatPaceDisplay(value),
+            onCommit: async (value) => {
+              await runningRepository.updateRunSetField(db, {
+                runId: set.Run_id,
+                field: "pace",
+                value: value === "" ? null : value,
+              });
+              await loadRunSets();
+              triggerReload();
+            },
+          })}
+        </View>
+
+        <View style={[styles.runTableCell, styles.runTimeColumn]}>
+          {isActive ? (
+            <ThemedText style={styles.activeTimeText} setColor={titleColor}>
+              {formatSecondsClock(activeSet_remainingTime)}
+            </ThemedText>
+          ) : (
+            renderEditableValue({
+              cellKey: `${set.Run_id}:time`,
+              value: getEditableFieldValue(set, "time"),
+              placeholder: getInputFallback(set.Run_id, "time"),
+              placeholderTextColor: editablePlaceholderColor,
+              keyboardType: "normal",
+              displayFormatter: (value) => formatMinutesClock(value),
+              onCommit: async (value) => {
+                await runningRepository.updateRunSetField(db, {
+                  runId: set.Run_id,
+                  field: "time",
+                  value: parseDurationInput(value),
+                });
+                await loadRunSets();
+                triggerReload();
+              },
+            })
+          )}
+        </View>
+
+        <View style={[styles.runTableCell, styles.runZoneColumn]}>
+          <View
+            ref={(node) => {
+              if (node) {
+                zoneTriggerRefs.current[set.Run_id] = node;
+              } else {
+                delete zoneTriggerRefs.current[set.Run_id];
+              }
+            }}
+            style={styles.zoneAnchor}
+          >
+            <TouchableOpacity
+              activeOpacity={0.78}
+              style={[
+                styles.zonePill,
+                {
+                  backgroundColor: set.heartrate
+                    ? ZONE_COLORS[set.heartrate]
+                    : "transparent",
+                  borderColor: set.heartrate
+                    ? ZONE_COLORS[set.heartrate]
+                    : "transparent",
+                },
+              ]}
+              onPress={() => handleZonePress(set.Run_id)}
+            >
+              <ThemedText
                 style={[
-                  styles.zone,
-                  styles.sharedGrid,
-                  index === sets.length - 1 && styles.lastGrid,
-                  set.heartrate && {
-                    backgroundColor: ZONE_COLORS[set.heartrate],
-                    borderRadius: 5,
+                  styles.zoneText,
+                  {
+                    color:
+                      set.heartrate && set.heartrate !== 1
+                        ? "#FFFFFF"
+                        : titleColor,
                   },
                 ]}
               >
-                <View
-                  ref={(node) => {
-                    if (node) {
-                      zoneTriggerRefs.current[set.Run_id] = node;
-                    } else {
-                      delete zoneTriggerRefs.current[set.Run_id];
-                    }
-                  }}
-                  style={{ position: "relative", width: "100%" }}
-                >
-                  <TouchableOpacity
-                    style={{
-                      width: "100%",
-                      position: "relative",
-                      justifyContent: "center",
-                    }}
-                    onPress={() => handleZonePress(set.Run_id)}
-                  >
-                    <ThemedText style={{ textAlign: "center" }}>
-                      {set.heartrate ? `${set.heartrate}` : ""}
-                    </ThemedText>
-                  </TouchableOpacity>
+                {set.heartrate ? `Z${set.heartrate}` : ""}
+              </ThemedText>
+            </TouchableOpacity>
 
-                  {zoneDropdownVisible && zoneSetId === set.Run_id && (
-                    <View
-                      style={[
-                        styles.zone_dropdown_container,
-                        zoneDropdownDirection === "up"
-                          ? styles.zone_dropdown_container_up
-                          : styles.zone_dropdown_container_down,
-                        {
-                          backgroundColor: theme.cardBackground,
-                          borderColor: theme.border,
-                        },
-                      ]}
-                    >
-                      <TouchableOpacity
-                        style={{
-                          padding: 10,
-                          alignItems: "center",
-                          borderBottomWidth: 1,
-                          borderColor: theme.border,
-                        }}
-                        onPress={async () => {
-                          setZoneDropdownVisible(false);
+            {renderZoneDropdown(set)}
+          </View>
+        </View>
 
-                          await runningRepository.updateRunSetField(db, {
-                            runId: set.Run_id,
-                            field: "heartrate",
-                            value: null,
-                          });
+        <View style={[styles.runTableCell, styles.runDoneColumn]}>
+          {renderDoneButton(set)}
+        </View>
+      </View>
+    );
+  };
 
-                          await loadRunSets();
-                          triggerReload();
-                        }}
-                      >
-                        <Cross width={14} height={14} />
-                      </TouchableOpacity>
+  const renderPauseRow = (set, index) => {
+    const isActive = activeSet === set.Run_id;
+    const isLast = index === sets.length - 1;
 
-                      {ZONES.map((zone) => {
-                        const bgColor = ZONE_COLORS[zone.value];
+    return (
+      <View
+        key={set.Run_id}
+        style={[
+          styles.runTableRow,
+          { borderBottomColor: tableBorder },
+          isActive && [
+            styles.runTableRowActive,
+            {
+              borderLeftColor: primaryColor,
+              borderRightColor: primaryColor,
+              backgroundColor: cellSurface,
+            },
+          ],
+          isLast && styles.lastRunTableRow,
+        ]}
+      >
+        <TouchableOpacity
+          activeOpacity={0.78}
+          style={[styles.runTableCell, styles.runSetColumn]}
+          onPress={() => openSetOptions(set)}
+        >
+          <View
+            style={[
+              styles.pauseIconBadge,
+              {
+                backgroundColor: mutedSurface,
+                borderColor: cellBorder,
+              },
+            ]}
+          >
+            <View style={[styles.pauseBar, { backgroundColor: "#B8B8B8" }]} />
+            <View style={[styles.pauseBar, { backgroundColor: "#B8B8B8" }]} />
+          </View>
+        </TouchableOpacity>
 
-                        return (
-                          <TouchableOpacity
-                            key={zone.value}
-                            style={{
-                              padding: 10,
-                              alignItems: "center",
-                              backgroundColor: bgColor,
-                            }}
-                            onPress={async () => {
-                              setZoneDropdownVisible(false);
+        <View style={[styles.runTableCell, styles.runDistanceColumn]}>
+          {renderEditableValue({
+            cellKey: `${set.Run_id}:distance`,
+            value: getEditableDistanceValue(set),
+            placeholder: getInputFallback(set.Run_id, "distance"),
+            placeholderTextColor: editablePlaceholderColor,
+            displayFormatter: (value) =>
+              formatDistanceDisplay(value, distanceUnit),
+            onCommit: async (value) => commitDistanceField(set.Run_id, value),
+          })}
+        </View>
 
-                              await runningRepository.updateRunSetField(db, {
-                                runId: set.Run_id,
-                                field: "heartrate",
-                                value: zone.value,
-                              });
+        <View style={[styles.runTableCell, styles.runPaceColumn]}>
+          {renderEditableValue({
+            cellKey: `${set.Run_id}:pace`,
+            value: getEditableFieldValue(set, "pace"),
+            placeholder: getInputFallback(set.Run_id, "pace"),
+            placeholderTextColor: editablePlaceholderColor,
+            keyboardType: "normal",
+            displayFormatter: (value) => formatPaceDisplay(value),
+            onCommit: async (value) => {
+              await runningRepository.updateRunSetField(db, {
+                runId: set.Run_id,
+                field: "pace",
+                value: value === "" ? null : value,
+              });
+              await loadRunSets();
+              triggerReload();
+            },
+          })}
+        </View>
 
-                              await loadRunSets();
-                              triggerReload();
-                            }}
-                          >
-                            <ThemedText
-                              style={{
-                                textAlign: "center",
-                                color: zone.value === 1 ? "#000" : "#fff",
-                                fontWeight: "600",
-                              }}
-                            >
-                              {zone.label}
-                            </ThemedText>
-                          </TouchableOpacity>
-                        );
-                      })}
-                    </View>
-                  )}
-                </View>
-              </View>
+        <View style={[styles.runTableCell, styles.runTimeColumn]}>
+          {isActive ? (
+            <ThemedText style={styles.activeTimeText} setColor={titleColor}>
+              {formatSecondsClock(activeSet_remainingTime)}
+            </ThemedText>
+          ) : (
+            renderEditableValue({
+              cellKey: `${set.Run_id}:time`,
+              value: getEditableFieldValue(set, "time"),
+              placeholder: getInputFallback(set.Run_id, "time"),
+              placeholderTextColor: editablePlaceholderColor,
+              keyboardType: "normal",
+              displayFormatter: (value) => formatMinutesClock(value),
+              onCommit: async (value) => {
+                await runningRepository.updateRunSetField(db, {
+                  runId: set.Run_id,
+                  field: "time",
+                  value: parseDurationInput(value),
+                });
+                await loadRunSets();
+                triggerReload();
+              },
+            })
+          )}
+        </View>
+
+        <View style={[styles.runTableCell, styles.runZoneColumn]}>
+          <View
+            ref={(node) => {
+              if (node) {
+                zoneTriggerRefs.current[set.Run_id] = node;
+              } else {
+                delete zoneTriggerRefs.current[set.Run_id];
+              }
+            }}
+            style={styles.zoneAnchor}
+          >
+            <TouchableOpacity
+              activeOpacity={0.78}
+              style={[
+                styles.zonePill,
+                {
+                  backgroundColor: set.heartrate
+                    ? ZONE_COLORS[set.heartrate]
+                    : "transparent",
+                  borderColor: set.heartrate
+                    ? ZONE_COLORS[set.heartrate]
+                    : "transparent",
+                },
+              ]}
+              onPress={() => handleZonePress(set.Run_id)}
+            >
+              <ThemedText
+                style={[
+                  styles.zoneText,
+                  {
+                    color:
+                      set.heartrate && set.heartrate !== 1
+                        ? "#FFFFFF"
+                        : titleColor,
+                  },
+                ]}
+              >
+                {set.heartrate ? `Z${set.heartrate}` : ""}
+              </ThemedText>
+            </TouchableOpacity>
+
+            {renderZoneDropdown(set)}
+          </View>
+        </View>
+
+        <View style={[styles.runTableCell, styles.runDoneColumn]}>
+          {renderDoneButton(set)}
+        </View>
+      </View>
+    );
+  };
+
+  const renderSegmentCard = () => {
+    const SegmentIcon = type === "COOLDOWN" ? Snow : Fire;
+    const accentColor = type === "COOLDOWN" ? theme.recordLight ?? primaryColor : primaryColor;
+
+    return (
+      <View style={styles.sectionShell}>
+        <ThemedCard
+          style={[
+            styles.segmentCard,
+            {
+              backgroundColor: cardSurface,
+              borderColor: cardBorder,
+            },
+          ]}
+        >
+          <TouchableOpacity
+            activeOpacity={0.82}
+            style={styles.segmentMain}
+            onPress={handleAddSet}
+          >
+            <View
+              style={[
+                styles.segmentIconFrame,
+                { backgroundColor: mutedSurface, borderColor: cardBorder },
+              ]}
+            >
+              <SegmentIcon
+                width={19}
+                height={19}
+                color={accentColor}
+                stroke={accentColor}
+              />
             </View>
-          );
-        })}
-      </ThemedCard>
+
+            <View style={styles.segmentTextBlock}>
+              <ThemedText style={styles.segmentEyebrow} setColor={quietText}>
+                {sectionEyebrow}
+              </ThemedText>
+              <ThemedText
+                style={styles.segmentSummaryText}
+                setColor={quietText}
+                numberOfLines={1}
+              >
+                {emptySummary}
+              </ThemedText>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.78}
+            style={[
+              styles.segmentActionButton,
+              { backgroundColor: mutedSurface, borderColor: cardBorder },
+            ]}
+            onPress={handleAddSet}
+          >
+            <Advanced
+              width={18}
+              height={18}
+              color={primaryColor}
+              stroke={primaryColor}
+            />
+          </TouchableOpacity>
+        </ThemedCard>
+      </View>
+    );
+  };
+
+  const renderIntervalsCard = () => {
+    const workingSets = sets.filter((set) => !set.is_pause);
+    const completedSets = workingSets.filter((set) => Number(set.done) === 1);
+    const summary = getIntervalsSummary(sets, emptySummary);
+    const canAddSet =
+      !Number.isInteger(maxSets) || workingSets.length < maxSets;
+
+    return (
+      <View style={styles.sectionShell}>
+        <ThemedCard
+          style={[
+            styles.intervalsCard,
+            {
+              backgroundColor: cardSurface,
+              borderColor: workoutStarted ? "transparent" : primaryColor,
+            },
+          ]}
+        >
+          <View style={styles.intervalsHeader}>
+            <View style={styles.intervalsTitleBlock}>
+              <ThemedText style={styles.intervalsEyebrow} setColor={primaryColor}>
+                {sectionEyebrow}
+              </ThemedText>
+              <ThemedText style={styles.intervalsTitle} setColor={titleColor}>
+                {sectionTitle}
+              </ThemedText>
+            </View>
+
+            <ThemedText style={styles.intervalsSetCount} setColor={quietText}>
+              {completedSets.length} / {workingSets.length} sets
+            </ThemedText>
+          </View>
+
+          <ThemedText style={styles.intervalsSummary} setColor={quietText}>
+            {summary}
+          </ThemedText>
+
+          <View
+            style={[
+              styles.runTableShell,
+              { backgroundColor: tableSurface, borderColor: tableBorder },
+            ]}
+          >
+            <ListHeader
+              styles={styles}
+              dividerColor={tableBorder}
+              distanceUnit={distanceUnit}
+              onDistanceUnitPress={toggleDistanceUnit}
+            />
+
+            {sets.length === 0 ? (
+              <View style={styles.emptyState}>
+                <ThemedText style={styles.emptyStateText} setColor={quietText}>
+                  {emptySummary}
+                </ThemedText>
+              </View>
+            ) : (
+              sets.map((set, index) =>
+                set.is_pause ? renderPauseRow(set, index) : renderWorkingRow(set, index)
+              )
+            )}
+
+            {canAddSet ? (
+              <TouchableOpacity
+                activeOpacity={0.78}
+                style={[styles.tableAddRow, { borderTopColor: tableBorder }]}
+                onPress={handleAddSet}
+              >
+                <Plus width={18} height={18} color={quietText} thickness={1.7} />
+              </TouchableOpacity>
+            ) : null}
+          </View>
+        </ThemedCard>
+      </View>
+    );
+  };
+
+  const selectedSetTitle = selectedSet?.is_pause
+    ? "Rest"
+    : type === "WARMUP"
+      ? "Warmup"
+      : type === "COOLDOWN"
+        ? "Cooldown"
+        : `Set ${selectedSet?.set_number ?? ""}`;
+
+  return (
+    <>
+      {isCompactSection && sets.length === 0
+        ? renderSegmentCard()
+        : renderIntervalsCard()}
 
       <ThemedBottomSheet
         visible={bottomsheetVisible}
         onClose={() => set_bottomsheetVisible(false)}
       >
-        <View style={styles.bottomsheet_title}>
-          <ThemedText>Set: {selectedSet?.set_number}</ThemedText>
+        <View style={styles.bottomsheetHeader}>
+          <View>
+            <ThemedText style={styles.bottomsheetEyebrow} setColor={quietText}>
+              {sectionEyebrow}
+            </ThemedText>
+            <ThemedText style={styles.bottomsheetSetTitle} setColor={titleColor}>
+              {selectedSetTitle}
+            </ThemedText>
+          </View>
 
-          <View
-            style={[
-              styles.togglepauseorworking,
-              { borderColor: theme.primary },
-            ]}
+          <TouchableOpacity
+            activeOpacity={0.78}
+            onPress={() => set_bottomsheetVisible(false)}
           >
-            <TouchableOpacity onPress={togglePause}>
-              <ThemedText>
-                {selectedSet?.is_pause ? "Pause" : "Working Set"}
+            <Cross width={20} height={20} color={quietText} />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.bottomsheetEditGrid}>
+          <View style={styles.bottomsheetField}>
+            <TouchableOpacity
+              activeOpacity={0.78}
+              onPress={toggleDistanceUnit}
+            >
+              <ThemedText style={styles.bottomsheetFieldLabel} setColor={quietText}>
+                DIST {distanceUnit}
               </ThemedText>
             </TouchableOpacity>
+            <View
+              style={[
+                styles.bottomsheetEditCell,
+                { backgroundColor: mutedSurface, borderColor: cardBorder },
+              ]}
+            >
+              <ThemedEditableCell
+                value={
+                  selectedSet ? getEditableDistanceValue(selectedSet) : ""
+                }
+                placeholder={getInputFallback(selectedSet?.Run_id, "distance")}
+                placeholderTextColor={editablePlaceholderColor}
+                displayFormatter={(value) =>
+                  formatDistanceDisplay(value, distanceUnit)
+                }
+                onCommit={updateSelectedSetDistance}
+              />
+            </View>
+          </View>
+
+          <View style={styles.bottomsheetField}>
+            <ThemedText style={styles.bottomsheetFieldLabel} setColor={quietText}>
+              PACE
+            </ThemedText>
+            <View
+              style={[
+                styles.bottomsheetEditCell,
+                { backgroundColor: mutedSurface, borderColor: cardBorder },
+              ]}
+            >
+              <ThemedEditableCell
+                value={
+                  selectedSet ? getEditableFieldValue(selectedSet, "pace") : ""
+                }
+                placeholder={getInputFallback(selectedSet?.Run_id, "pace")}
+                placeholderTextColor={editablePlaceholderColor}
+                keyboardType="normal"
+                displayFormatter={(value) => formatPaceDisplay(value)}
+                onCommit={(value) =>
+                  updateSelectedSetField("pace", value === "" ? null : value)
+                }
+              />
+            </View>
+          </View>
+
+          <View style={styles.bottomsheetField}>
+            <ThemedText style={styles.bottomsheetFieldLabel} setColor={quietText}>
+              TIME
+            </ThemedText>
+            <View
+              style={[
+                styles.bottomsheetEditCell,
+                { backgroundColor: mutedSurface, borderColor: cardBorder },
+              ]}
+            >
+              <ThemedEditableCell
+                value={
+                  selectedSet ? getEditableFieldValue(selectedSet, "time") : ""
+                }
+                placeholder={getInputFallback(selectedSet?.Run_id, "time")}
+                placeholderTextColor={editablePlaceholderColor}
+                keyboardType="normal"
+                displayFormatter={(value) => formatMinutesClock(value)}
+                onCommit={(value) =>
+                  updateSelectedSetField("time", parseDurationInput(value))
+                }
+              />
+            </View>
           </View>
         </View>
 
-        <View style={styles.bottomsheet_body}>
+        <View style={styles.zoneChipRow}>
           <TouchableOpacity
-            style={styles.option}
-            onPress={async () => {
-              await deleteSet();
-              set_bottomsheetVisible(false);
+            activeOpacity={0.78}
+            style={[
+              styles.zoneChip,
+              {
+                backgroundColor: selectedSet?.heartrate ? "transparent" : mutedSurface,
+                borderColor: cardBorder,
+              },
+            ]}
+            onPress={() => updateSelectedSetField("heartrate", null)}
+          >
+            <ThemedText style={styles.zoneChipText} setColor={quietText}>
+              NO ZONE
+            </ThemedText>
+          </TouchableOpacity>
+
+          {ZONES.map((zone) => {
+            const selected = Number(selectedSet?.heartrate) === zone.value;
+
+            return (
+              <TouchableOpacity
+                key={zone.value}
+                activeOpacity={0.78}
+                style={[
+                  styles.zoneChip,
+                  {
+                    backgroundColor: selected ? ZONE_COLORS[zone.value] : "transparent",
+                    borderColor: selected ? ZONE_COLORS[zone.value] : cardBorder,
+                  },
+                ]}
+                onPress={() => updateSelectedSetField("heartrate", zone.value)}
+              >
+                <ThemedText
+                  style={styles.zoneChipText}
+                  setColor={selected && zone.value !== 1 ? "#FFFFFF" : titleColor}
+                >
+                  Z{zone.label}
+                </ThemedText>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        <View style={styles.bottomsheetActionRow}>
+          {type === "WORKING_SET" && !hidePauseRows && (
+            <TouchableOpacity
+              activeOpacity={0.78}
+              style={[
+                styles.bottomsheetAction,
+                { backgroundColor: mutedSurface, borderColor: cardBorder },
+              ]}
+              onPress={togglePause}
+            >
+              <ThemedText style={styles.bottomsheetActionText} setColor={titleColor}>
+                {selectedSet?.is_pause ? "Make interval" : "Make rest"}
+              </ThemedText>
+            </TouchableOpacity>
+          )}
+
+          <TouchableOpacity
+            activeOpacity={0.78}
+            style={[
+              styles.bottomsheetAction,
+              styles.bottomsheetActionDanger,
+              { borderColor: theme.danger ?? primaryColor },
+            ]}
+            onPress={() => {
+              void deleteSet();
             }}
           >
-            <Delete width={24} height={24} />
-            <ThemedText style={styles.option_text}>Delete set</ThemedText>
+            <Delete width={20} height={20} color={theme.danger ?? primaryColor} />
+            <ThemedText
+              style={styles.bottomsheetActionText}
+              setColor={theme.danger ?? primaryColor}
+            >
+              Delete
+            </ThemedText>
           </TouchableOpacity>
         </View>
       </ThemedBottomSheet>
-    </View>
+    </>
   );
 };
 

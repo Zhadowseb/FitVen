@@ -15,7 +15,7 @@ export async function getRunSets(db, { workoutId, type }) {
      FROM Run
      WHERE workout_id = ?
        AND ${NORMALIZED_RUN_TYPE_SQL} = ?
-     ORDER BY set_number ASC;`,
+     ORDER BY set_number ASC, is_pause DESC, Run_id ASC;`,
     [workoutId, type]
   );
 }
@@ -31,7 +31,9 @@ export async function getOrderedRunSetsForWorkout(db, workoutId) {
          WHEN 'WORKING_SET' THEN 2
          WHEN 'COOLDOWN' THEN 3
        END,
-       set_number ASC;`,
+       set_number ASC,
+       is_pause DESC,
+       Run_id ASC;`,
     [workoutId]
   );
 }
@@ -58,6 +60,7 @@ export async function createRunSet(
     pace = null,
     time = null,
     heartrate = null,
+    statPriority = null,
     done = 0,
   }
 ) {
@@ -71,8 +74,9 @@ export async function createRunSet(
       pace,
       time,
       heartrate,
+      stat_priority,
       done
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
     [
       workoutId,
       type,
@@ -82,6 +86,7 @@ export async function createRunSet(
       pace,
       time,
       heartrate,
+      statPriority,
       done,
     ]
   );

@@ -4,6 +4,7 @@ import { useSQLiteContext } from "expo-sqlite";
 
 import { useAuth } from "../Contexts/AuthContext";
 import { weightliftingService } from "../Services";
+import { enqueueSync } from "./syncQueue";
 
 export default function ExerciseLibrarySync() {
   const db = useSQLiteContext();
@@ -18,7 +19,9 @@ export default function ExerciseLibrarySync() {
     isSyncingRef.current = true;
 
     try {
-      await weightliftingService.syncExerciseLibraryFromCloud(db);
+      await enqueueSync(() =>
+        weightliftingService.syncExerciseLibraryFromCloud(db)
+      );
     } catch (error) {
       console.error("Exercise library cloud sync failed:", error);
     } finally {

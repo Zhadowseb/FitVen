@@ -14,6 +14,7 @@ export const runningSchemaSql = `
       pace TEXT,
       time INTEGER,
       heartrate INTEGER,
+      stat_priority TEXT,
 
       done INTEGER NOT NULL DEFAULT 0
   );

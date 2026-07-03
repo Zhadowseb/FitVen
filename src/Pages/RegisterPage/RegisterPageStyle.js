@@ -109,6 +109,12 @@ export default StyleSheet.create({
     marginTop: 0,
   },
 
+  fieldHint: {
+    marginTop: 8,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+
   actions: {
     marginTop: 18,
   },

@@ -1,17 +1,23 @@
 import * as React from "react"
 import Svg, { Path } from "react-native-svg"
+import { useColorScheme } from "react-native"
+import { Colors } from "../../GlobalStyling/colors"
 
-function SvgComponent({width, height}) {
+function SvgComponent({width, height, color, thickness}) {
+  const colorScheme = useColorScheme()
+  const theme = Colors[colorScheme] ?? Colors.light
+  const iconColor = color ? color : theme.iconColor ?? "#141B34"
+
   return (
     <Svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
       width={width}
       height={height}
-      color="currentColor"
+      color={iconColor}
       fill="none"
-      stroke="#141B34"
-      strokeWidth={1.5}
+      stroke={iconColor}
+      strokeWidth={thickness ? thickness : 1.5}
       strokeLinecap="round"
       strokeLinejoin="round"
     >
