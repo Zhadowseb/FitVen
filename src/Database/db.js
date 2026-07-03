@@ -14,6 +14,7 @@ const DEFAULT_WORKOUT_TYPES = [
   ["Legs", "Legs", 0],
   ["StrengthTraining", "StrengthTraining", 0],
   ["Run", "Run", 1],
+  ["Walk", "Walk", 1],
 ];
 
 const DEFAULT_ACTIVE_WORKOUT_TYPES = DEFAULT_WORKOUT_TYPES

@@ -27,6 +27,7 @@ import { programService, workoutService } from "../../Services";
 import { formatDate } from "../../Utils/dateUtils";
 
 import Run from "./WorkoutTypes/Run/Run";
+import Walk from "./WorkoutTypes/Walk/Walk";
 import Resistance from "./WorkoutTypes/Resistance/Resistance";
 
 const WorkoutPage = ({ route }) => {
@@ -92,12 +93,14 @@ const WorkoutPage = ({ route }) => {
   const workoutSubtitle = [workoutDay, workoutDate].filter(Boolean).join(" - ");
   const headerEyebrowColor = theme.quietText ?? theme.iconColor;
   const isRunWorkout = workoutType === "Run";
+  const isWalkWorkout = workoutType === "Walk";
   const isStrengthWorkout =
     workoutType === "Resistance" ||
     workoutType === "Upperbody" ||
     workoutType === "Legs" ||
     workoutType === "StrengthTraining";
-  const supportsTimerRestart = isRunWorkout || isStrengthWorkout;
+  const supportsTimerRestart =
+    isRunWorkout || isWalkWorkout || isStrengthWorkout;
   const canRepostWorkoutSummary = workoutType === "Resistance";
 
   const openLabelModal = () => {
@@ -347,6 +350,13 @@ const WorkoutPage = ({ route }) => {
           workout_id={workout_id}
           restartRequestKey={restartRequestKey}
           onHeaderTitleChange={setRunHeaderTitle}
+        />
+      )}
+
+      {isWalkWorkout && (
+        <Walk
+          workout_id={workout_id}
+          restartRequestKey={restartRequestKey}
         />
       )}
 

@@ -289,11 +289,11 @@ const formatRunDistance = (distanceKm) => {
   return safeDistance.toFixed(2);
 };
 
-const getRunTrackingStartMessage = (error) => {
+const getRunTrackingStartMessage = (error, activityLabel = "run") => {
   const message = String(error?.message ?? "");
 
   if (message.includes("Precise location permission")) {
-    return "FitVen needs Precise/Fine location permission to track run distance accurately. Enable precise location for FitVen and try again.";
+    return `FitVen needs Precise/Fine location permission to track ${activityLabel} distance accurately. Enable precise location for FitVen and try again.`;
   }
 
   if (message.includes("Background location permission")) {
@@ -705,7 +705,20 @@ function buildHeartRateZoneSegments(
   return segments;
 }
 
-const Run = ({ workout_id, restartRequestKey, onHeaderTitleChange }) => {
+const Run = ({
+  workout_id,
+  restartRequestKey,
+  onHeaderTitleChange,
+  forcedRunFlow = null,
+  activityLabel = "Run",
+}) => {
+  const normalizedForcedRunFlow =
+    getRunFlowOption(forcedRunFlow)?.id ?? null;
+  const normalizedActivityLabel =
+    typeof activityLabel === "string" && activityLabel.trim()
+      ? activityLabel.trim()
+      : "Run";
+  const activityLabelLower = normalizedActivityLabel.toLowerCase();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const db = useSQLiteContext();
@@ -717,7 +730,9 @@ const Run = ({ workout_id, restartRequestKey, onHeaderTitleChange }) => {
     set_updateCount((prev) => prev + 1);
   };
 
-  const [selectedRunFlow, set_selectedRunFlow] = useState(null);
+  const [selectedRunFlow, set_selectedRunFlow] = useState(
+    normalizedForcedRunFlow
+  );
   const [isSelectingRunFlow, set_isSelectingRunFlow] = useState(false);
   const [hasRunStructure, set_hasRunStructure] = useState(false);
   const [runSectionCounts, set_runSectionCounts] = useState(
@@ -774,7 +789,7 @@ const Run = ({ workout_id, restartRequestKey, onHeaderTitleChange }) => {
     normalizeStoredTimestampSeconds(value);
 
   useEffect(() => {
-    set_selectedRunFlow(null);
+    set_selectedRunFlow(normalizedForcedRunFlow);
     set_isSelectingRunFlow(false);
     set_isWorkoutPlanExpanded(false);
     set_hasRunStructure(false);
@@ -790,7 +805,7 @@ const Run = ({ workout_id, restartRequestKey, onHeaderTitleChange }) => {
     setIsCustomHeartRateFollowing(true);
     setEnduranceZoneDropdownVisible(false);
     setEnduranceZoneSetId(null);
-  }, [workout_id]);
+  }, [normalizedForcedRunFlow, workout_id]);
 
   useEffect(() => {
     set_isWorkoutPlanExpanded(false);
@@ -1097,7 +1112,9 @@ const Run = ({ workout_id, restartRequestKey, onHeaderTitleChange }) => {
     set_timer_start(resolvedTimerStart);
     set_elapsed_time(resolvedElapsedTime);
     const resolvedRunFlow =
-      getRunFlowOption(row.run_focus_type)?.id ?? null;
+      normalizedForcedRunFlow ??
+      getRunFlowOption(row.run_focus_type)?.id ??
+      null;
     set_selectedRunFlow(resolvedRunFlow);
 
     if (requestId !== workoutStateLoadRequestRef.current) {
@@ -1132,7 +1149,13 @@ const Run = ({ workout_id, restartRequestKey, onHeaderTitleChange }) => {
 
     await loadTrackedRunSummary();
     set_workoutStateLoaded(true);
-  }, [db, workout_id, calculateActiveSet, loadTrackedRunSummary]);
+  }, [
+    db,
+    workout_id,
+    calculateActiveSet,
+    loadTrackedRunSummary,
+    normalizedForcedRunFlow,
+  ]);
 
   useFocusEffect(
     useCallback(() => {
@@ -1331,7 +1354,7 @@ const Run = ({ workout_id, restartRequestKey, onHeaderTitleChange }) => {
       console.error("Failed to start run tracking:", error);
       Alert.alert(
         "Location tracking could not start",
-        getRunTrackingStartMessage(error)
+        getRunTrackingStartMessage(error, activityLabelLower)
       );
     } finally {
       set_isControlBusy(false);
@@ -1359,7 +1382,7 @@ const Run = ({ workout_id, restartRequestKey, onHeaderTitleChange }) => {
     } catch (error) {
       console.error("Failed to pause run:", error);
       Alert.alert(
-        "Run could not be paused",
+        `${normalizedActivityLabel} could not be paused`,
         "The timer state will be refreshed so you can try again."
       );
       await loadWorkoutState();
@@ -1396,7 +1419,7 @@ const Run = ({ workout_id, restartRequestKey, onHeaderTitleChange }) => {
     } catch (error) {
       console.error("Failed to finish run:", error);
       Alert.alert(
-        "Run could not be finished",
+        `${normalizedActivityLabel} could not be finished`,
         "The timer state will be refreshed so you can try again."
       );
       await loadWorkoutState();
@@ -1431,7 +1454,7 @@ const Run = ({ workout_id, restartRequestKey, onHeaderTitleChange }) => {
     } catch (error) {
       console.error("Failed to restart run:", error);
       Alert.alert(
-        "Run could not be restarted",
+        `${normalizedActivityLabel} could not be restarted`,
         "The timer state will be refreshed so you can try again."
       );
       await loadWorkoutState();
@@ -1897,8 +1920,8 @@ const Run = ({ workout_id, restartRequestKey, onHeaderTitleChange }) => {
   const primaryActionLabel = isRunning
     ? "Pause"
     : original_start_time !== null
-      ? "Continue run"
-      : "Start run";
+      ? `Continue ${activityLabelLower}`
+      : `Start ${activityLabelLower}`;
   const canUsePrimaryAction = !isDone && !isControlBusy;
   const handlePrimaryAction = shouldShowRunFlowSuggestions
     ? () => selectRunFlow("custom")
@@ -2540,7 +2563,7 @@ const Run = ({ workout_id, restartRequestKey, onHeaderTitleChange }) => {
         activeOpacity={0.78}
         disabled={!canFinishRun}
         accessibilityRole="button"
-        accessibilityLabel="Finish run"
+        accessibilityLabel={`Finish ${activityLabelLower}`}
         onPress={endWorkout}
         style={[
           styles.activeTimerIconButton,

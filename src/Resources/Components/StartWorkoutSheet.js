@@ -94,6 +94,12 @@ const freshStarts = [
     details: "Distance & pace",
     type: "run",
   },
+  {
+    id: "Walk",
+    title: "Walk",
+    details: "Distance & pace",
+    type: "walk",
+  },
 ];
 
 function getWorkoutType(workout) {
@@ -111,7 +117,17 @@ function getWorkoutTypeLabel(workout) {
 }
 
 function getWorkoutIconType(workout) {
-  return getWorkoutType(workout) === "Run" ? "run" : "resistance";
+  const workoutType = getWorkoutType(workout);
+
+  if (workoutType === "Run") {
+    return "run";
+  }
+
+  if (workoutType === "Walk") {
+    return "walk";
+  }
+
+  return "resistance";
 }
 
 function getWorkoutTitle(workout) {

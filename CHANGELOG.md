@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.18.8] - Unreleased
+### Changed
+- Add the first Walk workout draft with direct GPS tracking, timer controls, distance, pace, heart-rate zones, and completed-workout insights.
+- Register Walk as an active local and Supabase workout type.
+- Show Walk as a Start fresh option and recognize it in planned and recent workout cards.
+
+---
 ## [0.18.7] - Unreleased
 ### Changed
 - Add planned-set and progress cards for the single main Endurance & Base set, including duration, pace, zone, distance, and completion progress.

@@ -48,6 +48,7 @@ with seed_workout_types(type, display_name, is_active) as (
   values
     ('Resistance', 'Resistance', true),
     ('Run', 'Run', true),
+    ('Walk', 'Walk', true),
     ('Upperbody', 'Upperbody', false),
     ('Legs', 'Legs', false),
     ('StrengthTraining', 'StrengthTraining', false)

@@ -52,6 +52,10 @@ const DAY_CLOUD_SYNC_SELECT =
   "id, user_id, local_day_id, sync_id, sync_version, deleted_at, last_updated, is_deleting, delete_requested_at, local_watchers, cloud_microcycle_id, weekday, date, done, is_sick";
 const WORKOUT_TYPE_CLOUD_TABLE = "workout_type";
 const WORKOUT_TYPE_CLOUD_SELECT = "type, display_name, is_active";
+const REQUIRED_LOCAL_WORKOUT_TYPES = [
+  { name: "Walk", displayName: "Walk", isActive: 1 },
+];
+const LOCATION_WORKOUT_TYPES = new Set(["Run", "Walk"]);
 const WORKOUT_TYPE_INSTANCE_CLOUD_TABLE = "workout_type_instance";
 const WORKOUT_TYPE_INSTANCE_CLOUD_SYNC_SELECT =
   "id, user_id, local_workout_type_instance_id, sync_id, sync_version, deleted_at, last_updated, is_deleting, delete_requested_at, local_watchers, cloud_day_id, workout_type, date, label, done, is_active, original_start_time, timer_start, elapsed_time";
@@ -1599,6 +1603,10 @@ export async function syncWorkoutTypesWithCloud(db) {
     await programRepository.markAllWorkoutTypesInactive(db);
 
     for (const workoutType of workoutTypes) {
+      await programRepository.upsertWorkoutType(db, workoutType);
+    }
+
+    for (const workoutType of REQUIRED_LOCAL_WORKOUT_TYPES) {
       await programRepository.upsertWorkoutType(db, workoutType);
     }
   });
@@ -7167,7 +7175,7 @@ export async function copyWorkoutToStandaloneDate(
     throw new Error("The recent workout could not be found.");
   }
 
-  if (sourceMetadata.workout_type !== "Run") {
+  if (!LOCATION_WORKOUT_TYPES.has(sourceMetadata.workout_type)) {
     const localExercises =
       await weightliftingRepository.getExercisesByWorkoutId(db, workoutId);
     const localSetCountRow =
