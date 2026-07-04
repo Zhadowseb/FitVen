@@ -7,6 +7,7 @@ import {
   Image,
   Modal,
   PanResponder,
+  Platform,
   Pressable,
   ScrollView,
   TouchableOpacity,
@@ -17,6 +18,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { useSQLiteContext } from "expo-sqlite";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useColorScheme } from "react-native";
+import Constants from "expo-constants";
 import Feather from "@expo/vector-icons/Feather";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import Svg, { Line, Path, Rect, Text as SvgText } from "react-native-svg";
@@ -553,25 +555,97 @@ function buildPaceHistory(logs = []) {
 }
 
 function getRouteRegion(routeSegments = []) {
-  const coordinates = routeSegments.flat();
+  let minLatitude = Infinity;
+  let maxLatitude = -Infinity;
+  let minLongitude = Infinity;
+  let maxLongitude = -Infinity;
+  let coordinateCount = 0;
 
-  if (coordinates.length === 0) {
-    return null;
+  // Loops instead of Math.min(...array): spreading thousands of tracked
+  // points into a function call can overflow the engine's argument limit.
+  for (const segment of routeSegments) {
+    if (!Array.isArray(segment)) {
+      continue;
+    }
+
+    for (const coordinate of segment) {
+      const latitude = coordinate?.latitude;
+      const longitude = coordinate?.longitude;
+
+      if (
+        typeof latitude !== "number" ||
+        typeof longitude !== "number" ||
+        !Number.isFinite(latitude) ||
+        !Number.isFinite(longitude)
+      ) {
+        continue;
+      }
+
+      coordinateCount += 1;
+      if (latitude < minLatitude) minLatitude = latitude;
+      if (latitude > maxLatitude) maxLatitude = latitude;
+      if (longitude < minLongitude) minLongitude = longitude;
+      if (longitude > maxLongitude) maxLongitude = longitude;
+    }
   }
 
-  const latitudes = coordinates.map((coordinate) => coordinate.latitude);
-  const longitudes = coordinates.map((coordinate) => coordinate.longitude);
-  const minLatitude = Math.min(...latitudes);
-  const maxLatitude = Math.max(...latitudes);
-  const minLongitude = Math.min(...longitudes);
-  const maxLongitude = Math.max(...longitudes);
+  if (coordinateCount === 0) {
+    return null;
+  }
 
   return {
     latitude: (minLatitude + maxLatitude) / 2,
     longitude: (minLongitude + maxLongitude) / 2,
-    latitudeDelta: Math.max((maxLatitude - minLatitude) * 1.45, 0.006),
-    longitudeDelta: Math.max((maxLongitude - minLongitude) * 1.45, 0.006),
+    latitudeDelta: Math.min(
+      Math.max((maxLatitude - minLatitude) * 1.45, 0.006),
+      120
+    ),
+    longitudeDelta: Math.min(
+      Math.max((maxLongitude - minLongitude) * 1.45, 0.006),
+      120
+    ),
   };
+}
+
+// react-native-maps on Android hard-crashes the app when a MapView mounts in
+// a build whose manifest is missing the Google Maps API key. Only mount the
+// map when the key is configured; otherwise show a friendly fallback card.
+const hasNativeMapSupport = () => {
+  if (Platform.OS !== "android") {
+    return true;
+  }
+
+  const apiKey =
+    Constants.expoConfig?.android?.config?.googleMaps?.apiKey ??
+    Constants.manifest2?.extra?.expoClient?.android?.config?.googleMaps?.apiKey;
+
+  return typeof apiKey === "string" && apiKey.trim().length > 0;
+};
+
+const MAX_ROUTE_POINTS_PER_SEGMENT = 500;
+
+function simplifyRouteSegmentForDisplay(segment) {
+  if (
+    !Array.isArray(segment) ||
+    segment.length <= MAX_ROUTE_POINTS_PER_SEGMENT
+  ) {
+    return segment;
+  }
+
+  const stride = Math.ceil(segment.length / MAX_ROUTE_POINTS_PER_SEGMENT);
+  const simplified = [];
+
+  for (let index = 0; index < segment.length; index += stride) {
+    simplified.push(segment[index]);
+  }
+
+  const lastPoint = segment[segment.length - 1];
+
+  if (simplified[simplified.length - 1] !== lastPoint) {
+    simplified.push(lastPoint);
+  }
+
+  return simplified;
 }
 
 function buildChartPath(
@@ -2891,6 +2965,13 @@ const Run = ({
     const startCoordinate = routeCoordinates[0] ?? null;
     const finishCoordinate =
       routeCoordinates[routeCoordinates.length - 1] ?? null;
+    const canRenderRouteMap = routeRegion !== null && hasNativeMapSupport();
+    const routeEmptyTitle =
+      routeRegion === null ? "No route recorded" : "Map unavailable";
+    const routeEmptyText =
+      routeRegion === null
+        ? "GPS points from the run will appear here."
+        : "Add a Google Maps Android API key in app.json (android.config.googleMaps.apiKey) and rebuild the app to show the route.";
 
     return (
       <View style={styles.activeTitledCardShell}>
@@ -2904,7 +2985,7 @@ const Run = ({
             },
           ]}
         >
-          {routeRegion ? (
+          {canRenderRouteMap ? (
             <MapView
               key={`${workout_id}:${routeCoordinates.length}`}
               initialRegion={routeRegion}
@@ -2915,16 +2996,18 @@ const Run = ({
               toolbarEnabled={false}
               style={styles.completedRouteMap}
             >
-              {routeSegments.map((segment, index) =>
-                segment.length > 1 ? (
+              {routeSegments.map((segment, index) => {
+                const displaySegment = simplifyRouteSegmentForDisplay(segment);
+
+                return displaySegment.length > 1 ? (
                   <Polyline
                     key={`${index}:${segment.length}`}
-                    coordinates={segment}
+                    coordinates={displaySegment}
                     strokeColor={primaryColor}
                     strokeWidth={5}
                   />
-                ) : null
-              )}
+                ) : null;
+              })}
               {startCoordinate ? (
                 <Marker
                   coordinate={startCoordinate}
@@ -2959,13 +3042,13 @@ const Run = ({
                 style={styles.completedRouteEmptyTitle}
                 setColor={titleColor}
               >
-                No route recorded
+                {routeEmptyTitle}
               </ThemedText>
               <ThemedText
                 style={styles.completedRouteEmptyText}
                 setColor={quietText}
               >
-                GPS points from the run will appear here.
+                {routeEmptyText}
               </ThemedText>
             </View>
           )}

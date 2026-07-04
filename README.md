@@ -291,3 +291,10 @@ For the detailed rules, see `docs/VERSIONING.md`.
 - The app currently uses a local SQLite database, not a remote backend, but will in the future as the app develops to the next stage.
 - `WeekPage` still exists in the codebase, but the main flow from `MicrocyclePage` now navigates more directly into workouts. This means WeekPage currently isn't used, but will potentially be reintroduced at some point.
 - Larger schema changes may require explicit migrations or a reset of local app data during development.
+
+### Run tracking and the route map
+
+- The completed-workout route map uses `react-native-maps`, which on Android requires a Google Maps API key. The key is configured in `app.json` under `android.config.googleMaps.apiKey` and is baked into the native manifest, so **a new native build (dev client and release) is required** after changing it. Without the key, mounting the map crashes the app on Android; the app now falls back to a "Map unavailable" card instead of mounting the map in that case.
+- The configured key belongs to the same Google Cloud project as `google-services.json`. "Maps SDK for Android" must be enabled for that project in the Google Cloud console, otherwise the map renders blank tiles. Consider restricting the key to the Android package name and the Maps SDK.
+- Background GPS tracking runs through a foreground service on Android. On devices with aggressive battery managers (Samsung, Xiaomi, etc.), users should exclude FitVen from battery optimization ("Unrestricted" battery usage) so tracking is not throttled while the phone is locked. On Android 13+ the foreground-service notification also requires the notification permission to be visible.
+- If the OS still interrupts location delivery, the app detects stale tracking when it returns to the foreground during a live run and restarts the location provider automatically. Gaps longer than the distance filter's `maxSegmentGapSeconds` are never counted as distance.
