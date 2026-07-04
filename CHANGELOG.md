@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.18.9] - Unreleased
+### Changed
+- Fix the crash when opening a completed Run or Walk workout on Android by configuring the Google Maps Android API key and only mounting the route map when the key is available, with a clear fallback card otherwise.
+- Stop losing GPS points during Run and Walk tracking: the background location task now keeps one cached database connection with a busy timeout and writes each GPS batch in a single retried transaction instead of opening, migrating, and closing a new connection per batch.
+- Recover automatically when the OS silently stops background location delivery while the phone is locked: returning to a live workout with stale tracking restarts the location provider.
+- Harden route-map helpers for long workouts (no argument-spread over thousands of points, clamped map regions, simplified polylines) and remove the duplicated iOS location background mode.
+
+---
 ## [0.18.8] - Unreleased
 ### Changed
 - Add the first Walk workout draft with direct GPS tracking, timer controls, distance, pace, heart-rate zones, and completed-workout insights.

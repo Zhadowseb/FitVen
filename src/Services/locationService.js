@@ -146,25 +146,30 @@ export async function recordTrackedLocations(db, locations) {
     return;
   }
 
-  let previousStoredPoint = normalizeLocationPoint(
-    await locationRepository.getLatestLocationLogByWorkout(db, workout.workout_id)
-  );
+  // One transaction per GPS batch: the writes become atomic, take the write
+  // lock once instead of once per point, and reuse the retry-on-lock queue
+  // shared with the rest of the app so points are not silently dropped.
+  await withTransaction(db, async () => {
+    let previousStoredPoint = normalizeLocationPoint(
+      await locationRepository.getLatestLocationLogByWorkout(db, workout.workout_id)
+    );
 
-  for (const location of normalizedLocations) {
-    if (isSameLocationPoint(previousStoredPoint, location)) {
-      continue;
+    for (const location of normalizedLocations) {
+      if (isSameLocationPoint(previousStoredPoint, location)) {
+        continue;
+      }
+
+      await locationRepository.createLocationLog(db, {
+        workoutId: workout.workout_id,
+        latitude: location.latitude,
+        longitude: location.longitude,
+        accuracy: location.accuracy,
+        timestamp: location.timestamp,
+      });
+
+      previousStoredPoint = location;
     }
-
-    await locationRepository.createLocationLog(db, {
-      workoutId: workout.workout_id,
-      latitude: location.latitude,
-      longitude: location.longitude,
-      accuracy: location.accuracy,
-      timestamp: location.timestamp,
-    });
-
-    previousStoredPoint = location;
-  }
+  });
 }
 
 export async function startRunTracking(db, workoutId, { resetLogs = false } = {}) {
@@ -189,6 +194,29 @@ export async function startRunTracking(db, workoutId, { resetLogs = false } = {}
   }
 }
 
+// Some devices silently stop delivering background locations when the phone
+// is locked for a while (aggressive battery managers, provider restarts).
+// hasStartedLocationUpdatesAsync still reports true in that state, so the run
+// looks alive while no new points arrive. When the app comes back to the
+// foreground with a live timer but stale location data, restart the provider.
+const STALE_TRACKED_LOCATION_THRESHOLD_MS = 60000;
+const TRACKING_RESTART_COOLDOWN_MS = 45000;
+let lastTrackingRestartTimestampMs = 0;
+
+async function hasStaleTrackedLocation(db, workoutId) {
+  const latestLog = await locationRepository.getLatestLocationLogByWorkout(
+    db,
+    workoutId
+  );
+  const latestTimestamp = Number(latestLog?.timestamp);
+
+  if (!Number.isFinite(latestTimestamp)) {
+    return false;
+  }
+
+  return Date.now() - latestTimestamp > STALE_TRACKED_LOCATION_THRESHOLD_MS;
+}
+
 export async function ensureRunTracking(db, workoutId) {
   await ensureLocationServicesEnabled();
   await ensureForegroundLocationPermission();
@@ -203,7 +231,28 @@ export async function ensureRunTracking(db, workoutId) {
       RUN_LOCATION_TASK,
       getLocationTrackingOptions()
     );
+    return;
   }
+
+  const now = Date.now();
+
+  if (now - lastTrackingRestartTimestampMs < TRACKING_RESTART_COOLDOWN_MS) {
+    return;
+  }
+
+  if (!(await hasStaleTrackedLocation(db, workoutId))) {
+    return;
+  }
+
+  // No tracking break is inserted here: this is a recovery of a run that was
+  // supposed to keep tracking, so short gaps may still be bridged by the
+  // distance filter, while gaps above maxSegmentGapSeconds stay excluded.
+  lastTrackingRestartTimestampMs = now;
+  await Location.stopLocationUpdatesAsync(RUN_LOCATION_TASK);
+  await Location.startLocationUpdatesAsync(
+    RUN_LOCATION_TASK,
+    getLocationTrackingOptions()
+  );
 }
 
 export async function syncRunTrackingState(db) {

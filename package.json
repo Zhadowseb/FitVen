@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.18.8-minor-walk-workout-type.1",
+  "version": "0.18.9-fix-run-walk-tracking-and-route-map.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",

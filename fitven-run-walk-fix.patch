@@ -1,0 +1,527 @@
+diff --git a/App.js b/App.js
+index f0809ba..210b392 100644
+--- a/App.js
++++ b/App.js
+@@ -8,6 +8,7 @@ import {
+ import { createNativeStackNavigator } from '@react-navigation/native-stack';
+ import { SQLiteProvider } from 'expo-sqlite';
+ import { initializeDatabase } from './src/Database/db';
++import { locationSchemaSql } from './src/Database/schema/location';
+ import { View, useColorScheme } from "react-native"
+ import { SafeAreaProvider } from "react-native-safe-area-context";
+ import * as TaskManager from 'expo-task-manager';
+@@ -62,33 +63,103 @@ import WorkoutTypeInstanceSync from "./src/Sync/WorkoutTypeInstanceSync";
+ 
+ import * as SQLite from 'expo-sqlite';
+ 
+-const initializedTaskDatabaseNames = new Set();
++// The location task fires roughly every second while a run is tracked, so it
++// keeps one cached connection per database instead of opening, migrating, and
++// closing a fresh connection for every GPS batch. The old approach raced the
++// foreground app for the write lock and made whole batches of points disappear
++// whenever SQLite reported "database is locked".
++const locationTaskDatabaseCache = {
++  name: null,
++  openPromise: null,
++};
++
++async function openLocationTaskDatabase(databaseName) {
++  const db = await SQLite.openDatabaseAsync(databaseName, {
++    useNewConnection: true,
++  });
++
++  // busy_timeout is a per-connection setting: without it a concurrent write
++  // from the app connection makes inserts fail instantly instead of waiting.
++  // The location tables are created idempotently so the task never has to run
++  // the full migration suite inside a headless background invocation.
++  await db.execAsync(`
++    PRAGMA busy_timeout = 5000;
++    PRAGMA journal_mode = WAL;
++    ${locationSchemaSql}
++  `);
++
++  return db;
++}
++
++function getLocationTaskDatabase(databaseName) {
++  if (
++    locationTaskDatabaseCache.name !== databaseName ||
++    !locationTaskDatabaseCache.openPromise
++  ) {
++    const staleOpenPromise = locationTaskDatabaseCache.openPromise;
++
++    locationTaskDatabaseCache.name = databaseName;
++    locationTaskDatabaseCache.openPromise = (async () => {
++      if (staleOpenPromise) {
++        try {
++          const staleDb = await staleOpenPromise;
++          await staleDb.closeAsync();
++        } catch {
++          // The stale connection is unusable either way.
++        }
++      }
++
++      return openLocationTaskDatabase(databaseName);
++    })();
++  }
++
++  return locationTaskDatabaseCache.openPromise;
++}
++
++function resetLocationTaskDatabaseCache() {
++  locationTaskDatabaseCache.name = null;
++  locationTaskDatabaseCache.openPromise = null;
++}
++
++function isUnusableDatabaseConnectionError(error) {
++  const message = String(error?.message ?? error ?? "").toLowerCase();
++
++  return (
++    message.includes("closed resource") ||
++    message.includes("database is closed") ||
++    message.includes("access to closed") ||
++    message.includes("connection") ||
++    message.includes("nullpointer")
++  );
++}
+ 
+ TaskManager.defineTask(locationService.RUN_LOCATION_TASK, async ({ data, error }) => {
+   if (error) return;
+   if (!data?.locations?.length) return;
+ 
+-  let db = null;
+-
+-  try {
++  const persistLocations = async () => {
+     const databaseName = await getActiveDatabaseName();
+-    db = await SQLite.openDatabaseAsync(databaseName, {
+-      useNewConnection: true,
+-    });
++    const db = await getLocationTaskDatabase(databaseName);
++    await locationService.recordTrackedLocations(db, data.locations);
++  };
+ 
+-    if (!initializedTaskDatabaseNames.has(databaseName)) {
+-      await initializeDatabase(db);
+-      initializedTaskDatabaseNames.add(databaseName);
++  try {
++    await persistLocations();
++  } catch (taskError) {
++    if (!isUnusableDatabaseConnectionError(taskError)) {
++      console.error("Failed to persist tracked run locations:", taskError);
++      return;
+     }
+ 
+-    await locationService.recordTrackedLocations(db, data.locations);
+-  } catch (taskError) {
+-    console.error("Failed to persist tracked run locations:", taskError);
+-  } finally {
++    // The OS can recycle the background process and leave a dead cached
++    // handle behind. Reopen once and retry so a single stale connection
++    // cannot break tracking for the rest of the run.
++    resetLocationTaskDatabaseCache();
++
+     try {
+-      await db.closeAsync();
+-    } catch {
+-      // Ignore cleanup failures in the background task.
++      await persistLocations();
++    } catch (retryError) {
++      console.error("Failed to persist tracked run locations:", retryError);
+     }
+   }
+ });
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 38ba147..3881dc6 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,5 +1,13 @@
+ # Changelog
+ 
++## [0.18.9] - Unreleased
++### Changed
++- Fix the crash when opening a completed Run or Walk workout on Android by configuring the Google Maps Android API key and only mounting the route map when the key is available, with a clear fallback card otherwise.
++- Stop losing GPS points during Run and Walk tracking: the background location task now keeps one cached database connection with a busy timeout and writes each GPS batch in a single retried transaction instead of opening, migrating, and closing a new connection per batch.
++- Recover automatically when the OS silently stops background location delivery while the phone is locked: returning to a live workout with stale tracking restarts the location provider.
++- Harden route-map helpers for long workouts (no argument-spread over thousands of points, clamped map regions, simplified polylines) and remove the duplicated iOS location background mode.
++
++---
+ ## [0.18.8] - Unreleased
+ ### Changed
+ - Add the first Walk workout draft with direct GPS tracking, timer controls, distance, pace, heart-rate zones, and completed-workout insights.
+diff --git a/README.md b/README.md
+index 6c1d446..2e56e1b 100644
+--- a/README.md
++++ b/README.md
+@@ -291,3 +291,10 @@ For the detailed rules, see `docs/VERSIONING.md`.
+ - The app currently uses a local SQLite database, not a remote backend, but will in the future as the app develops to the next stage.
+ - `WeekPage` still exists in the codebase, but the main flow from `MicrocyclePage` now navigates more directly into workouts. This means WeekPage currently isn't used, but will potentially be reintroduced at some point.
+ - Larger schema changes may require explicit migrations or a reset of local app data during development.
++
++### Run tracking and the route map
++
++- The completed-workout route map uses `react-native-maps`, which on Android requires a Google Maps API key. The key is configured in `app.json` under `android.config.googleMaps.apiKey` and is baked into the native manifest, so **a new native build (dev client and release) is required** after changing it. Without the key, mounting the map crashes the app on Android; the app now falls back to a "Map unavailable" card instead of mounting the map in that case.
++- The configured key belongs to the same Google Cloud project as `google-services.json`. "Maps SDK for Android" must be enabled for that project in the Google Cloud console, otherwise the map renders blank tiles. Consider restricting the key to the Android package name and the Maps SDK.
++- Background GPS tracking runs through a foreground service on Android. On devices with aggressive battery managers (Samsung, Xiaomi, etc.), users should exclude FitVen from battery optimization ("Unrestricted" battery usage) so tracking is not throttled while the phone is locked. On Android 13+ the foreground-service notification also requires the notification permission to be visible.
++- If the OS still interrupts location delivery, the app detects stale tracking when it returns to the foreground during a live run and restarts the location provider automatically. Gaps longer than the distance filter's `maxSegmentGapSeconds` are never counted as distance.
+diff --git a/app.json b/app.json
+index 9ea1c1b..9327c47 100644
+--- a/app.json
++++ b/app.json
+@@ -2,7 +2,7 @@
+   "expo": {
+     "name": "FitVen",
+     "slug": "programapp",
+-    "version": "0.18.8",
++    "version": "0.18.9",
+     "orientation": "default",
+     "icon": "./assets/icon_v1.0.png",
+     "userInterfaceStyle": "dark",
+@@ -18,7 +18,6 @@
+       "requireFullScreen": true,
+       "infoPlist": {
+         "UIBackgroundModes": [
+-          "location",
+           "location"
+         ],
+         "NSLocationWhenInUseUsageDescription": "We use your location to track workout distance.",
+@@ -31,6 +30,11 @@
+     "android": {
+       "googleServicesFile": "./google-services.json",
+       "versionCode": 14,
++      "config": {
++        "googleMaps": {
++          "apiKey": "AIzaSyBzhic_QC-cV-3qKnqR1a87D8D8jMX4xI4"
++        }
++      },
+       "adaptiveIcon": {
+         "foregroundImage": "./assets/icon_v1.0.png",
+         "backgroundColor": "#ffffff"
+diff --git a/package.json b/package.json
+index 3b2fddf..89f881c 100644
+--- a/package.json
++++ b/package.json
+@@ -1,6 +1,6 @@
+ {
+   "name": "programapp",
+-  "version": "0.18.8-minor-walk-workout-type.1",
++  "version": "0.18.9-fix-run-walk-tracking-and-route-map.1",
+   "main": "index.js",
+   "scripts": {
+     "start": "expo start --dev-client --scheme exp+programapp-dev",
+diff --git a/src/Database/db.js b/src/Database/db.js
+index 9466c48..000c4c8 100644
+--- a/src/Database/db.js
++++ b/src/Database/db.js
+@@ -1444,6 +1444,7 @@ export async function initializeDatabase(db) {
+     ${locationSchemaSql}
+ 
+     PRAGMA journal_mode = WAL;
++    PRAGMA busy_timeout = 5000;
+   `);
+ 
+   await ensureTableColumns(db, "Program", [
+diff --git a/src/Pages/WorkoutPage/WorkoutTypes/Run/Run.js b/src/Pages/WorkoutPage/WorkoutTypes/Run/Run.js
+index d263d55..1a725f9 100644
+--- a/src/Pages/WorkoutPage/WorkoutTypes/Run/Run.js
++++ b/src/Pages/WorkoutPage/WorkoutTypes/Run/Run.js
+@@ -7,6 +7,7 @@ import {
+   Image,
+   Modal,
+   PanResponder,
++  Platform,
+   Pressable,
+   ScrollView,
+   TouchableOpacity,
+@@ -17,6 +18,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
+ import { useSQLiteContext } from "expo-sqlite";
+ import { useFocusEffect, useNavigation } from "@react-navigation/native";
+ import { useColorScheme } from "react-native";
++import Constants from "expo-constants";
+ import Feather from "@expo/vector-icons/Feather";
+ import MapView, { Marker, Polyline } from "react-native-maps";
+ import Svg, { Line, Path, Rect, Text as SvgText } from "react-native-svg";
+@@ -553,27 +555,99 @@ function buildPaceHistory(logs = []) {
+ }
+ 
+ function getRouteRegion(routeSegments = []) {
+-  const coordinates = routeSegments.flat();
++  let minLatitude = Infinity;
++  let maxLatitude = -Infinity;
++  let minLongitude = Infinity;
++  let maxLongitude = -Infinity;
++  let coordinateCount = 0;
++
++  // Loops instead of Math.min(...array): spreading thousands of tracked
++  // points into a function call can overflow the engine's argument limit.
++  for (const segment of routeSegments) {
++    if (!Array.isArray(segment)) {
++      continue;
++    }
+ 
+-  if (coordinates.length === 0) {
+-    return null;
++    for (const coordinate of segment) {
++      const latitude = coordinate?.latitude;
++      const longitude = coordinate?.longitude;
++
++      if (
++        typeof latitude !== "number" ||
++        typeof longitude !== "number" ||
++        !Number.isFinite(latitude) ||
++        !Number.isFinite(longitude)
++      ) {
++        continue;
++      }
++
++      coordinateCount += 1;
++      if (latitude < minLatitude) minLatitude = latitude;
++      if (latitude > maxLatitude) maxLatitude = latitude;
++      if (longitude < minLongitude) minLongitude = longitude;
++      if (longitude > maxLongitude) maxLongitude = longitude;
++    }
+   }
+ 
+-  const latitudes = coordinates.map((coordinate) => coordinate.latitude);
+-  const longitudes = coordinates.map((coordinate) => coordinate.longitude);
+-  const minLatitude = Math.min(...latitudes);
+-  const maxLatitude = Math.max(...latitudes);
+-  const minLongitude = Math.min(...longitudes);
+-  const maxLongitude = Math.max(...longitudes);
++  if (coordinateCount === 0) {
++    return null;
++  }
+ 
+   return {
+     latitude: (minLatitude + maxLatitude) / 2,
+     longitude: (minLongitude + maxLongitude) / 2,
+-    latitudeDelta: Math.max((maxLatitude - minLatitude) * 1.45, 0.006),
+-    longitudeDelta: Math.max((maxLongitude - minLongitude) * 1.45, 0.006),
++    latitudeDelta: Math.min(
++      Math.max((maxLatitude - minLatitude) * 1.45, 0.006),
++      120
++    ),
++    longitudeDelta: Math.min(
++      Math.max((maxLongitude - minLongitude) * 1.45, 0.006),
++      120
++    ),
+   };
+ }
+ 
++// react-native-maps on Android hard-crashes the app when a MapView mounts in
++// a build whose manifest is missing the Google Maps API key. Only mount the
++// map when the key is configured; otherwise show a friendly fallback card.
++const hasNativeMapSupport = () => {
++  if (Platform.OS !== "android") {
++    return true;
++  }
++
++  const apiKey =
++    Constants.expoConfig?.android?.config?.googleMaps?.apiKey ??
++    Constants.manifest2?.extra?.expoClient?.android?.config?.googleMaps?.apiKey;
++
++  return typeof apiKey === "string" && apiKey.trim().length > 0;
++};
++
++const MAX_ROUTE_POINTS_PER_SEGMENT = 500;
++
++function simplifyRouteSegmentForDisplay(segment) {
++  if (
++    !Array.isArray(segment) ||
++    segment.length <= MAX_ROUTE_POINTS_PER_SEGMENT
++  ) {
++    return segment;
++  }
++
++  const stride = Math.ceil(segment.length / MAX_ROUTE_POINTS_PER_SEGMENT);
++  const simplified = [];
++
++  for (let index = 0; index < segment.length; index += stride) {
++    simplified.push(segment[index]);
++  }
++
++  const lastPoint = segment[segment.length - 1];
++
++  if (simplified[simplified.length - 1] !== lastPoint) {
++    simplified.push(lastPoint);
++  }
++
++  return simplified;
++}
++
+ function buildChartPath(
+   data,
+   {
+@@ -2891,6 +2965,13 @@ const Run = ({
+     const startCoordinate = routeCoordinates[0] ?? null;
+     const finishCoordinate =
+       routeCoordinates[routeCoordinates.length - 1] ?? null;
++    const canRenderRouteMap = routeRegion !== null && hasNativeMapSupport();
++    const routeEmptyTitle =
++      routeRegion === null ? "No route recorded" : "Map unavailable";
++    const routeEmptyText =
++      routeRegion === null
++        ? "GPS points from the run will appear here."
++        : "Add a Google Maps Android API key in app.json (android.config.googleMaps.apiKey) and rebuild the app to show the route.";
+ 
+     return (
+       <View style={styles.activeTitledCardShell}>
+@@ -2904,7 +2985,7 @@ const Run = ({
+             },
+           ]}
+         >
+-          {routeRegion ? (
++          {canRenderRouteMap ? (
+             <MapView
+               key={`${workout_id}:${routeCoordinates.length}`}
+               initialRegion={routeRegion}
+@@ -2915,16 +2996,18 @@ const Run = ({
+               toolbarEnabled={false}
+               style={styles.completedRouteMap}
+             >
+-              {routeSegments.map((segment, index) =>
+-                segment.length > 1 ? (
++              {routeSegments.map((segment, index) => {
++                const displaySegment = simplifyRouteSegmentForDisplay(segment);
++
++                return displaySegment.length > 1 ? (
+                   <Polyline
+                     key={`${index}:${segment.length}`}
+-                    coordinates={segment}
++                    coordinates={displaySegment}
+                     strokeColor={primaryColor}
+                     strokeWidth={5}
+                   />
+-                ) : null
+-              )}
++                ) : null;
++              })}
+               {startCoordinate ? (
+                 <Marker
+                   coordinate={startCoordinate}
+@@ -2959,13 +3042,13 @@ const Run = ({
+                 style={styles.completedRouteEmptyTitle}
+                 setColor={titleColor}
+               >
+-                No route recorded
++                {routeEmptyTitle}
+               </ThemedText>
+               <ThemedText
+                 style={styles.completedRouteEmptyText}
+                 setColor={quietText}
+               >
+-                GPS points from the run will appear here.
++                {routeEmptyText}
+               </ThemedText>
+             </View>
+           )}
+diff --git a/src/Services/locationService.js b/src/Services/locationService.js
+index 325fa7f..be5aaaf 100644
+--- a/src/Services/locationService.js
++++ b/src/Services/locationService.js
+@@ -146,25 +146,30 @@ export async function recordTrackedLocations(db, locations) {
+     return;
+   }
+ 
+-  let previousStoredPoint = normalizeLocationPoint(
+-    await locationRepository.getLatestLocationLogByWorkout(db, workout.workout_id)
+-  );
++  // One transaction per GPS batch: the writes become atomic, take the write
++  // lock once instead of once per point, and reuse the retry-on-lock queue
++  // shared with the rest of the app so points are not silently dropped.
++  await withTransaction(db, async () => {
++    let previousStoredPoint = normalizeLocationPoint(
++      await locationRepository.getLatestLocationLogByWorkout(db, workout.workout_id)
++    );
+ 
+-  for (const location of normalizedLocations) {
+-    if (isSameLocationPoint(previousStoredPoint, location)) {
+-      continue;
+-    }
++    for (const location of normalizedLocations) {
++      if (isSameLocationPoint(previousStoredPoint, location)) {
++        continue;
++      }
+ 
+-    await locationRepository.createLocationLog(db, {
+-      workoutId: workout.workout_id,
+-      latitude: location.latitude,
+-      longitude: location.longitude,
+-      accuracy: location.accuracy,
+-      timestamp: location.timestamp,
+-    });
++      await locationRepository.createLocationLog(db, {
++        workoutId: workout.workout_id,
++        latitude: location.latitude,
++        longitude: location.longitude,
++        accuracy: location.accuracy,
++        timestamp: location.timestamp,
++      });
+ 
+-    previousStoredPoint = location;
+-  }
++      previousStoredPoint = location;
++    }
++  });
+ }
+ 
+ export async function startRunTracking(db, workoutId, { resetLogs = false } = {}) {
+@@ -189,6 +194,29 @@ export async function startRunTracking(db, workoutId, { resetLogs = false } = {}
+   }
+ }
+ 
++// Some devices silently stop delivering background locations when the phone
++// is locked for a while (aggressive battery managers, provider restarts).
++// hasStartedLocationUpdatesAsync still reports true in that state, so the run
++// looks alive while no new points arrive. When the app comes back to the
++// foreground with a live timer but stale location data, restart the provider.
++const STALE_TRACKED_LOCATION_THRESHOLD_MS = 60000;
++const TRACKING_RESTART_COOLDOWN_MS = 45000;
++let lastTrackingRestartTimestampMs = 0;
++
++async function hasStaleTrackedLocation(db, workoutId) {
++  const latestLog = await locationRepository.getLatestLocationLogByWorkout(
++    db,
++    workoutId
++  );
++  const latestTimestamp = Number(latestLog?.timestamp);
++
++  if (!Number.isFinite(latestTimestamp)) {
++    return false;
++  }
++
++  return Date.now() - latestTimestamp > STALE_TRACKED_LOCATION_THRESHOLD_MS;
++}
++
+ export async function ensureRunTracking(db, workoutId) {
+   await ensureLocationServicesEnabled();
+   await ensureForegroundLocationPermission();
+@@ -203,7 +231,28 @@ export async function ensureRunTracking(db, workoutId) {
+       RUN_LOCATION_TASK,
+       getLocationTrackingOptions()
+     );
++    return;
++  }
++
++  const now = Date.now();
++
++  if (now - lastTrackingRestartTimestampMs < TRACKING_RESTART_COOLDOWN_MS) {
++    return;
+   }
++
++  if (!(await hasStaleTrackedLocation(db, workoutId))) {
++    return;
++  }
++
++  // No tracking break is inserted here: this is a recovery of a run that was
++  // supposed to keep tracking, so short gaps may still be bridged by the
++  // distance filter, while gaps above maxSegmentGapSeconds stay excluded.
++  lastTrackingRestartTimestampMs = now;
++  await Location.stopLocationUpdatesAsync(RUN_LOCATION_TASK);
++  await Location.startLocationUpdatesAsync(
++    RUN_LOCATION_TASK,
++    getLocationTrackingOptions()
++  );
+ }
+ 
+ export async function syncRunTrackingState(db) {

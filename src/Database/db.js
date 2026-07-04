@@ -1444,6 +1444,7 @@ export async function initializeDatabase(db) {
     ${locationSchemaSql}
 
     PRAGMA journal_mode = WAL;
+    PRAGMA busy_timeout = 5000;
   `);
 
   await ensureTableColumns(db, "Program", [
