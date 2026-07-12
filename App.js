@@ -56,6 +56,7 @@ import {
 import { locationService, notificationService } from "./src/Services";
 import { AuthProvider, useAuth } from './src/Contexts/AuthContext';
 import { ThemeModeProvider, useThemeMode } from './src/Contexts/ThemeContext';
+import { ExerciseViewSettingsProvider } from './src/Contexts/ExerciseViewSettingsContext';
 import ExerciseLibrarySync from "./src/Sync/ExerciseLibrarySync";
 import PushNotificationRegistrationSync from "./src/Sync/PushNotificationRegistrationSync";
 import SetSync from "./src/Sync/SetSync";
@@ -467,9 +468,11 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <ThemeModeProvider>
-        <AuthProvider>
-          <UserScopedDatabaseApp />
-        </AuthProvider>
+        <ExerciseViewSettingsProvider>
+          <AuthProvider>
+            <UserScopedDatabaseApp />
+          </AuthProvider>
+        </ExerciseViewSettingsProvider>
       </ThemeModeProvider>
     </SafeAreaProvider>
   );

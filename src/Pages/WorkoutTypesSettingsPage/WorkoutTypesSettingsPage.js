@@ -1,6 +1,5 @@
 import {
   ActivityIndicator,
-  Alert,
   ScrollView,
   TouchableOpacity,
   useColorScheme,
@@ -17,7 +16,11 @@ import RunIcon from "../../Resources/Icons/WorkoutLabels/Run";
 import Library from "../../Resources/Icons/UI-icons/Library";
 import TailArrowUpRight from "../../Resources/Icons/UI-icons/TailArrowUpRight";
 import { useAuth } from "../../Contexts/AuthContext";
+import { useExerciseViewSettings } from "../../Contexts/ExerciseViewSettingsContext";
 import { socialService } from "../../Services";
+import CollapsedSetSummary, {
+  ClassicSetSummary,
+} from "../WorkoutPage/WorkoutTypes/Resistance/Components/ExerciseList/Components/ExerciseRow/CollapsedSetSummary";
 import {
   calculateAgeFromBirthDate,
   dateToIsoDate,
@@ -59,10 +62,47 @@ const WORKOUT_TYPES = [
   },
 ];
 
+const EXERCISE_VIEW_OPTIONS = [
+  {
+    value: "cells",
+    title: "Standard",
+    description: "All sets as cells with weight and reps",
+  },
+  {
+    value: "compact",
+    title: "Compact",
+    description: "Few sets (≤3) on one line — more as cells",
+  },
+  {
+    value: "progressOnly",
+    title: "Progress only",
+    description: "Hide set summary — show name and dots",
+  },
+];
+
+const EXERCISE_CARD_LAYOUT_OPTIONS = [
+  {
+    value: "compact",
+    title: "Compact layout",
+    description: "Progress dots and the expand arrow stay beside the exercise name",
+  },
+  {
+    value: "classic",
+    title: "Classic layout",
+    description: "Use the previous rounded set bubbles beneath the header",
+  },
+];
+
 export default function WorkoutTypesSettingsPage() {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const { user } = useAuth();
+  const {
+    collapsedExerciseView,
+    setCollapsedExerciseView,
+    collapsedExerciseCardLayout,
+    setCollapsedExerciseCardLayout,
+  } = useExerciseViewSettings();
   const [birthDate, setBirthDate] = useState("");
   const [birthDatePickerVisible, setBirthDatePickerVisible] = useState(false);
   const [isLoadingBirthDate, setIsLoadingBirthDate] = useState(true);
@@ -407,35 +447,142 @@ export default function WorkoutTypesSettingsPage() {
                 </View>
 
                 {workoutType.id === "strength-training" ? (
-                  <TouchableOpacity
-                    activeOpacity={0.78}
-                    onPress={() =>
-                      Alert.alert(
-                        "Exercises",
-                        "Settings for this section will be added here."
-                      )
-                    }
-                    style={[
-                      styles.typeSettingRow,
-                      { borderTopColor: cardBorder },
-                    ]}
+                  <View
+                    style={[styles.exerciseViewSettings, { borderTopColor: cardBorder }]}
                   >
-                    <View style={styles.typeSettingCopy}>
-                      <Library width={20} height={20} color={titleColor} />
-                      <ThemedText
-                        style={styles.typeSettingTitle}
-                        setColor={titleColor}
-                      >
-                        Exercises
+                    <View style={styles.exerciseViewHeading}>
+                      <View style={styles.typeSettingCopy}>
+                        <Library width={20} height={20} color={titleColor} />
+                        <ThemedText style={styles.typeSettingTitle} setColor={titleColor}>
+                          Exercise cards
+                        </ThemedText>
+                      </View>
+                      <ThemedText style={styles.exerciseViewSubtitle} setColor={quietText}>
+                        Choose the layout and set details for collapsed exercises
                       </ThemedText>
                     </View>
-                    <TailArrowUpRight
-                      width={17}
-                      height={17}
-                      stroke={titleColor}
-                      color={titleColor}
-                    />
-                  </TouchableOpacity>
+
+                    <ThemedText style={styles.exerciseViewPreviewLabel} setColor={quietText}>
+                      Card layout
+                    </ThemedText>
+                    {EXERCISE_CARD_LAYOUT_OPTIONS.map((option) => (
+                      <TouchableOpacity
+                        key={option.value}
+                        activeOpacity={0.82}
+                        onPress={() => setCollapsedExerciseCardLayout(option.value)}
+                        style={styles.exerciseViewOption}
+                      >
+                        <View
+                          style={[
+                            styles.exerciseViewRadio,
+                            {
+                              borderColor:
+                                collapsedExerciseCardLayout === option.value
+                                  ? primaryColor
+                                  : quietText,
+                            },
+                          ]}
+                        >
+                          {collapsedExerciseCardLayout === option.value ? (
+                            <View
+                              style={[
+                                styles.exerciseViewRadioDot,
+                                { backgroundColor: primaryColor },
+                              ]}
+                            />
+                          ) : null}
+                        </View>
+                        <View style={styles.exerciseViewOptionText}>
+                          <ThemedText style={styles.exerciseViewOptionTitle} setColor={titleColor}>
+                            {option.title}
+                          </ThemedText>
+                          <ThemedText style={styles.exerciseViewOptionDescription} setColor={quietText}>
+                            {option.description}
+                          </ThemedText>
+                        </View>
+                      </TouchableOpacity>
+                    ))}
+
+                    <ThemedText style={styles.exerciseViewPreviewLabel} setColor={quietText}>
+                      Set summary
+                    </ThemedText>
+                    {EXERCISE_VIEW_OPTIONS.map((option) => (
+                      <TouchableOpacity
+                        key={option.value}
+                        activeOpacity={0.82}
+                        onPress={() => setCollapsedExerciseView(option.value)}
+                        style={styles.exerciseViewOption}
+                      >
+                        <View
+                          style={[
+                            styles.exerciseViewRadio,
+                            {
+                              borderColor:
+                                collapsedExerciseView === option.value
+                                  ? primaryColor
+                                  : quietText,
+                            },
+                          ]}
+                        >
+                          {collapsedExerciseView === option.value ? (
+                            <View
+                              style={[
+                                styles.exerciseViewRadioDot,
+                                { backgroundColor: primaryColor },
+                              ]}
+                            />
+                          ) : null}
+                        </View>
+                        <View style={styles.exerciseViewOptionText}>
+                          <ThemedText style={styles.exerciseViewOptionTitle} setColor={titleColor}>
+                            {option.title}
+                          </ThemedText>
+                          <ThemedText style={styles.exerciseViewOptionDescription} setColor={quietText}>
+                            {option.description}
+                          </ThemedText>
+                        </View>
+                      </TouchableOpacity>
+                    ))}
+
+                    <ThemedText style={styles.exerciseViewPreviewLabel} setColor={quietText}>
+                      Preview
+                    </ThemedText>
+                    <View
+                      style={[
+                        styles.exerciseViewPreview,
+                        { backgroundColor: cardSurface, borderColor: cardBorder },
+                      ]}
+                    >
+                      <View style={styles.exerciseViewPreviewHeader}>
+                        <ThemedText style={styles.exerciseViewPreviewName} setColor={titleColor}>
+                          Bench Press
+                        </ThemedText>
+                        <ThemedText setColor={quietText}>● ★ ● ●</ThemedText>
+                      </View>
+                      {collapsedExerciseCardLayout === "classic" ? (
+                        <ClassicSetSummary
+                          theme={theme}
+                          sets={[
+                            { sets_id: "preview-1", weight: 45, reps: 10, done: 1 },
+                            { sets_id: "preview-2", weight: 45, reps: 8, done: 1 },
+                            { sets_id: "preview-3", weight: 47.5, reps: 6, failed: 1 },
+                            { sets_id: "preview-4", weight: 50, reps: 4 },
+                          ]}
+                        />
+                      ) : (
+                        <CollapsedSetSummary
+                          view={collapsedExerciseView}
+                          theme={theme}
+                          sets={[
+                            { sets_id: "preview-1", weight: 45, reps: 10, done: 1 },
+                            { sets_id: "preview-2", weight: 45, reps: 8, done: 1 },
+                            { sets_id: "preview-3", weight: 47.5, reps: 6, failed: 1 },
+                            { sets_id: "preview-4", weight: 50, reps: 4 },
+                          ]}
+                        />
+                      )}
+                    </View>
+                  </View>
                 ) : null}
 
                 {workoutType.id === "run" ? (

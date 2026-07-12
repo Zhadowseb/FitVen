@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.18.10-fix-android-run-map-api-key.1",
+  "version": "0.18.11-minor-exercise-card-settings.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",

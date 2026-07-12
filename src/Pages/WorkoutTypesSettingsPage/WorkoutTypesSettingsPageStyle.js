@@ -167,6 +167,91 @@ export default StyleSheet.create({
     fontWeight: "700",
   },
 
+  exerciseViewSettings: {
+    marginHorizontal: 14,
+    paddingTop: 14,
+    paddingBottom: 14,
+    borderTopWidth: 1,
+    gap: 5,
+  },
+
+  exerciseViewHeading: {
+    gap: 3,
+    marginBottom: 4,
+  },
+
+  exerciseViewSubtitle: {
+    marginLeft: 30,
+    fontSize: 10,
+    lineHeight: 15,
+  },
+
+  exerciseViewOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 7,
+    gap: 10,
+  },
+
+  exerciseViewRadio: {
+    width: 19,
+    height: 19,
+    borderRadius: 10,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  exerciseViewRadioDot: {
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+  },
+
+  exerciseViewOptionText: {
+    flex: 1,
+    gap: 1,
+  },
+
+  exerciseViewOptionTitle: {
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "800",
+  },
+
+  exerciseViewOptionDescription: {
+    fontSize: 10,
+    lineHeight: 14,
+  },
+
+  exerciseViewPreviewLabel: {
+    marginTop: 4,
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: "800",
+    letterSpacing: 1,
+    textTransform: "uppercase",
+  },
+
+  exerciseViewPreview: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 10,
+    marginTop: 2,
+  },
+
+  exerciseViewPreviewHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+
+  exerciseViewPreviewName: {
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: "800",
+  },
+
   maxHeartRateRight: {
     flexDirection: "row",
     alignItems: "center",

@@ -23,7 +23,7 @@ export default StyleSheet.create({
 
   headerRow: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
   },
 
   headerRowExpanded: {
@@ -124,6 +124,14 @@ export default StyleSheet.create({
     width: 76,
     minHeight: 32,
     justifyContent: "flex-end",
+  },
+
+  collapsedExpandButton: {
+    width: 24,
+    height: 32,
+    marginLeft: 8,
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   actionButton: {
@@ -294,7 +302,7 @@ export default StyleSheet.create({
   },
 
   summaryCollapsedRow: {
-    marginTop: 8,
+    marginTop: 4,
     marginBottom: -4,
     flexDirection: "row",
     alignItems: "center",
@@ -341,6 +349,7 @@ export default StyleSheet.create({
     paddingRight: 2,
     justifyContent: "center",
   },
+
 
   summaryChipRow: {
     width: "100%",

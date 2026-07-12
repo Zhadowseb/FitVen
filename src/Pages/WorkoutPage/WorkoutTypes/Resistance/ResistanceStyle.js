@@ -198,6 +198,16 @@ export default StyleSheet.create({
     alignItems: "center",
   },
 
+  setsToggle: {
+    height: 32,
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+
   toolbarButton: {
     width: 40,
     height: 40,

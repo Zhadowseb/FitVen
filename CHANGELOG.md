@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.18.11] - Unreleased
+### Changed
+- Moved exercise card display settings to Settings > Workout Types > Strength Training.
+- Persisted the selected collapsed exercise card view on the device.
+- Added standard, compact, and progress-only collapsed exercise card views with a preview.
+- Reduced spacing between exercise names and collapsed set summaries.
+- Added a Sets toolbar toggle; set summaries are hidden by default and can be shown on demand.
+- Moved the expand arrow next to the progress dots and aligned the dots with the exercise title.
+- Added a clearer outline to pending set progress dots.
+- Added a selectable classic collapsed exercise card layout with the previous rounded set bubbles.
+- Tightened vertical alignment inside classic set bubbles.
+- Added mandatory branch, version, changelog, and validation preflight checks to the repository guide.
+
+---
 ## [0.19.0] - Unreleased
 ### Changed
 - Show a distinct completed-workout card on the home page, with finished time, duration, summary access, and the next planned workout.

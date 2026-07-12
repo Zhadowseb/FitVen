@@ -26,6 +26,8 @@ const ExerciseList = ({
   onRestTimerCancel,
   onWorkoutMetadataChange,
   onExerciseCountChange,
+  collapsedSetsVisible = true,
+  collapsedCardLayout = "compact",
 }) => {
   const [exercises, setExercises] = useState([]);
   const [expandedExercises, setExpandedExercises] = useState({});
@@ -642,6 +644,8 @@ const ExerciseList = ({
         onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
         onWorkoutMetadataChange={onWorkoutMetadataChange}
+        collapsedSetsVisible={collapsedSetsVisible}
+        collapsedCardLayout={collapsedCardLayout}
       />
     </Animated.View>
   );

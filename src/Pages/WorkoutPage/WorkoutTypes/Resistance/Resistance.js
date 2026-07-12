@@ -36,12 +36,14 @@ import {
   subscribeRestTimer,
 } from "../../../../Utils/restTimerEvents";
 import { weightliftingService, workoutService } from "../../../../Services";
+import { useExerciseViewSettings } from "../../../../Contexts/ExerciseViewSettingsContext";
 
 //Icons:
 import Filter from "../../../../Resources/Icons/UI-icons/Filter";
 import Checkmark from "../../../../Resources/Icons/UI-icons/Checkmark";
 import ArrowDoubleDown from "../../../../Resources/Icons/UI-icons/ArrowDoubleDown";
 import ArrowDoubleUp from "../../../../Resources/Icons/UI-icons/ArrowDoubleUp";
+import Eye from "../../../../Resources/Icons/UI-icons/Eye";
 
 const Resistance = ({
   workout_id,
@@ -54,6 +56,19 @@ const Resistance = ({
   const theme = Colors[colorScheme] ?? Colors.light;
 
   const db = useSQLiteContext();
+  const { collapsedExerciseView, collapsedExerciseCardLayout } =
+    useExerciseViewSettings();
+  const [showCollapsedSets, setShowCollapsedSets] = useState(false);
+  useEffect(() => {
+    if (collapsedExerciseCardLayout === "classic") {
+      setShowCollapsedSets(true);
+      return;
+    }
+
+    if (collapsedExerciseView === "progressOnly") {
+      setShowCollapsedSets(false);
+    }
+  }, [collapsedExerciseCardLayout, collapsedExerciseView]);
 
   const [refreshing, set_refreshing] = useState(0);
   const [filterBottomsheetVisible, setFilterBottomsheetVisible] = useState(false);
@@ -599,6 +614,18 @@ const Resistance = ({
 
           <View style={styles.toolbarActions}>
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="Toggle collapsed set details"
+              onPress={() => setShowCollapsedSets((current) => !current)}
+              style={[styles.setsToggle, {
+                backgroundColor: showCollapsedSets ? "rgba(247,116,46,0.14)" : "rgba(255,255,255,0.05)",
+                borderColor: showCollapsedSets ? "rgba(247,116,46,0.4)" : "rgba(255,255,255,0.10)",
+              }]}
+            >
+              <Eye width={15} height={15} color={showCollapsedSets ? primaryColor : quietText} />
+              <ThemedText size={10} style={{ fontWeight: "800" }} setColor={showCollapsedSets ? primaryColor : quietText}>Sets</ThemedText>
+            </TouchableOpacity>
+            <TouchableOpacity
               style={[
                 styles.toolbarButton,
                 {
@@ -663,6 +690,8 @@ const Resistance = ({
             onRestTimerCancel={handleRestTimerCancel}
             onWorkoutMetadataChange={onWorkoutMetadataChange}
             onExerciseCountChange={setExerciseCount}
+            collapsedSetsVisible={showCollapsedSets}
+            collapsedCardLayout={collapsedExerciseCardLayout}
           />
         </View>
 

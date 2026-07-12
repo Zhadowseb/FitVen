@@ -19,13 +19,18 @@ import Plus from "../../../../../../../../Resources/Icons/UI-icons/Plus";
 import ReplayHistory from "../../../../../../../../Resources/Icons/UI-icons/ReplayHistory";
 
 import {
-  ThemedBouncyCheckbox,
   ThemedModal,
   ThemedText,
   ThemedTitle,
 } from "../../../../../../../../Resources/ThemedComponents";
 import PanelSettingsModal from "./PanelSettingsModal";
 import { weightliftingService as weightliftingRepository } from "../../../../../../../../Services";
+import { useExerciseViewSettings } from "../../../../../../../../Contexts/ExerciseViewSettingsContext";
+import CollapsedSetSummary, {
+  ClassicSetSummary,
+  SetProgressDots,
+  isPersonalRecordSet,
+} from "./CollapsedSetSummary";
 
 const REORDER_LONG_PRESS_DELAY_MS = 320;
 const REORDER_MOVE_CANCEL_DISTANCE = 10;
@@ -42,6 +47,8 @@ const ExerciseRow = ({
   onDragMove,
   onDragEnd,
   onWorkoutMetadataChange,
+  collapsedSetsVisible = true,
+  collapsedCardLayout = "compact",
 }) => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -56,9 +63,7 @@ const ExerciseRow = ({
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyLoadError, setHistoryLoadError] = useState(false);
   const [addingSet, setAddingSet] = useState(false);
-  const [wrappedConnectorIndexes, setWrappedConnectorIndexes] = useState([]);
   const addingSetRef = useRef(false);
-  const summarySetLayoutsRef = useRef({});
   const dragActiveRef = useRef(false);
   const dragStartPageYRef = useRef(null);
   const latestTouchPageYRef = useRef(null);
@@ -70,6 +75,8 @@ const ExerciseRow = ({
   const onDragEndRef = useRef(onDragEnd);
 
   const db = useSQLiteContext();
+  const { collapsedExerciseView } = useExerciseViewSettings();
+  const usesClassicCollapsedCard = collapsedCardLayout === "classic";
 
   useEffect(() => {
     onDragStartRef.current = onDragStart;
@@ -365,10 +372,7 @@ const ExerciseRow = ({
 
   const isDone = Number(exercise.done) === 1;
   const hasNote = exerciseNote.trim().length > 0;
-  const trackerSetCount = Math.max(
-    Number(exercise.setCount) || 0,
-    exercise.sets.length
-  );
+  const trackerSetCount = exercise.sets.length;
   const primaryColor = theme.primary ?? theme.iconColor ?? theme.text;
   const secondaryColor = theme.secondary ?? primaryColor;
   const dangerColor = theme.danger ?? "#d94141";
@@ -410,22 +414,20 @@ const ExerciseRow = ({
     colorScheme === "dark" ? "rgba(255, 255, 255, 0.08)" : "rgba(32, 30, 43, 0.12)";
   const summaryBubbleBorderColor =
     colorScheme === "dark" ? "rgba(255, 255, 255, 0.24)" : "rgba(32, 30, 43, 0.2)";
+  const exerciseIsDone = exercise.sets.length > 0 && exercise.sets.every((set) => Number(set?.done) === 1);
+  const exerciseIsFailed = exercise.sets.length > 0 && exercise.sets.every((set) => Number(set?.failed) === 1);
   const exerciseCardBackground = isRecordExercise
-    ? recordDarkColor
-    : isDone
-      ? withAlpha(secondaryColor, 0.1)
-    : cardSurface;
+    ? (colorScheme === "dark" ? "rgba(242,193,78,0.05)" : "rgba(192,138,18,0.05)")
+    : exerciseIsDone ? withAlpha(secondaryColor, 0.07) : cardSurface;
   const exerciseCardBorderColor = isRecordExercise
-    ? recordColor
-    : isDone
-      ? secondaryColor
-      : cardBorder;
-  const exerciseCheckboxFillColor = isRecordExercise
-    ? recordColor
-    : secondaryColor;
-  const exerciseCheckboxCheckmarkColor = isRecordExercise
-    ? recordExerciseTextColor
-    : cardSurface;
+    ? "rgba(242,193,78,0.45)"
+    : exerciseIsDone ? withAlpha(secondaryColor, 0.35) : cardBorder;
+  const exerciseTitleColor = exerciseIsFailed
+    ? quietText
+    : isRecordExercise ? (theme.planned ?? "#F2C14E")
+      : exerciseIsDone ? secondaryColor : titleColor;
+  const exerciseCheckboxFillColor = secondaryColor;
+  const exerciseCheckboxCheckmarkColor = cardSurface;
   const setProgressTrackColor =
     colorScheme === "dark" ? "rgba(255, 255, 255, 0.08)" : "rgba(32, 30, 43, 0.1)";
   const setProgressSegments =
@@ -479,47 +481,6 @@ const ExerciseRow = ({
       weight: normalizedWeight,
     };
   });
-  const collapsedSetLayoutKey = collapsedSetSummaryItems
-    .map((item) => item.key)
-    .join("|");
-
-  useEffect(() => {
-    summarySetLayoutsRef.current = {};
-    setWrappedConnectorIndexes([]);
-  }, [collapsedSetLayoutKey]);
-
-  const handleSummarySetLayout = (index, layout) => {
-    summarySetLayoutsRef.current[index] = layout;
-
-    if (
-      Object.keys(summarySetLayoutsRef.current).length <
-      collapsedSetSummaryItems.length
-    ) {
-      return;
-    }
-
-    const nextWrappedConnectorIndexes = [];
-
-    for (let itemIndex = 0; itemIndex < collapsedSetSummaryItems.length - 1; itemIndex += 1) {
-      const currentLayout = summarySetLayoutsRef.current[itemIndex];
-      const nextLayout = summarySetLayoutsRef.current[itemIndex + 1];
-
-      if (currentLayout && nextLayout && nextLayout.y > currentLayout.y + 2) {
-        nextWrappedConnectorIndexes.push(itemIndex);
-      }
-    }
-
-    setWrappedConnectorIndexes((currentIndexes) => {
-      const isUnchanged =
-        currentIndexes.length === nextWrappedConnectorIndexes.length &&
-        currentIndexes.every(
-          (itemIndex, arrayIndex) =>
-            itemIndex === nextWrappedConnectorIndexes[arrayIndex]
-        );
-
-      return isUnchanged ? currentIndexes : nextWrappedConnectorIndexes;
-    });
-  };
 
   const historySessions = exerciseHistory?.sessions ?? [];
   const historySummaryText = historyLoading
@@ -669,53 +630,6 @@ const ExerciseRow = ({
             },
           ]}
         >
-        {trackerSetCount > 0 && (
-          <View
-            pointerEvents="none"
-            style={styles.setProgressClip}
-          >
-            <View
-              style={[
-                styles.setProgressTrack,
-                { backgroundColor: setProgressTrackColor },
-              ]}
-            >
-              {setProgressSegments.map((segment) =>
-                segment.isFilled ? (
-                  <View
-                    key={segment.index}
-                    style={[
-                      styles.setProgressSegment,
-                      {
-                        left: `${segment.left}%`,
-                        width: `${segment.width}%`,
-                        backgroundColor: segment.isFailed
-                          ? dangerColor
-                          : segment.isPersonalRecord
-                            ? recordColor
-                            : secondaryColor,
-                      },
-                    ]}
-                  />
-                ) : null
-              )}
-
-              {setProgressDividers.map((dividerOffset) => (
-                <View
-                  key={dividerOffset}
-                  style={[
-                    styles.setProgressDivider,
-                    {
-                      left: `${dividerOffset}%`,
-                      backgroundColor: exerciseCardBackground,
-                    },
-                  ]}
-                />
-              ))}
-            </View>
-          </View>
-        )}
-
         <View
           collapsable={false}
           style={[
@@ -731,20 +645,6 @@ const ExerciseRow = ({
               isExpanded && styles.headerMainExpanded,
             ]}
           >
-            {!isExpanded && (
-              <View style={styles.checkboxShell}>
-                <ThemedBouncyCheckbox
-                  value={isDone}
-                  size={20}
-                  edgeSize={2}
-                  disabled
-                  fillColor={exerciseCheckboxFillColor}
-                  checkmarkColor={exerciseCheckboxCheckmarkColor}
-                  style={styles.checkbox}
-                />
-              </View>
-            )}
-
             <View
               style={[
                 styles.titleBlock,
@@ -756,7 +656,7 @@ const ExerciseRow = ({
                 style={[
                   styles.exerciseTitle,
                   isExpanded && styles.exerciseTitleExpanded,
-                  { color: recordExerciseTextColor },
+                  { color: exerciseTitleColor, textDecorationLine: exerciseIsFailed ? "line-through" : "none" },
                 ]}
                 numberOfLines={1}
               >
@@ -796,13 +696,18 @@ const ExerciseRow = ({
             )}
 
             {!isExpanded && (
-              <ThemedText
-                size={11}
-                style={styles.exerciseSetCount}
-                setColor={primaryColor}
-              >
-                {`${trackerSetCount} ${trackerSetCount === 1 ? "SET" : "SETS"}`}
-              </ThemedText>
+              <>
+                <SetProgressDots sets={exercise.sets} theme={theme} />
+                <TouchableOpacity
+                  activeOpacity={0.88}
+                  accessibilityRole="button"
+                  accessibilityLabel="Expand exercise"
+                  onPress={() => handleCardPress(onToggleExpanded)}
+                  style={styles.collapsedExpandButton}
+                >
+                  <Expand width={18} height={18} color={primaryColor} />
+                </TouchableOpacity>
+              </>
             )}
 
           </View>
@@ -880,7 +785,34 @@ const ExerciseRow = ({
           </View>
         )}
 
-        {!isExpanded && (
+        {!isExpanded && (collapsedSetsVisible || exercise.sets.length === 0) && (
+          <View style={styles.summaryCollapsedRow}>
+            {exercise.sets.length === 0 ? (
+              <View style={styles.firstSetActionSlot}>
+                <TouchableOpacity accessibilityRole="button" accessibilityLabel="Add first set" disabled={addingSet} onPress={addSet} style={styles.firstSetButton}>
+                  {addingSet ? <ActivityIndicator size="small" color={addSetColor} /> : <><Plus width={17} height={17} color={addSetColor} /><ThemedText size={11} style={styles.firstSetButtonText} setColor={addSetColor}>Add first set</ThemedText></>}
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity activeOpacity={0.88} onPress={() => handleCardPress(onToggleExpanded)} style={styles.summaryRow}>
+                <View style={styles.summaryTextBlock}>
+                  {usesClassicCollapsedCard ? (
+                    <ClassicSetSummary sets={exercise.sets} theme={theme} />
+                  ) : (
+                    <CollapsedSetSummary
+                      sets={exercise.sets}
+                      view={collapsedExerciseView}
+                      theme={theme}
+                    />
+                  )}
+                </View>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+
+        {/* legacy collapsed markup removed */}
+        {false && (
           <View style={styles.summaryCollapsedRow}>
             {collapsedSetSummaryItems.length === 0 ? (
               <View
