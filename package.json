@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.18.12-minor-home-completed-workout.1",
+  "version": "0.19.0-major-live-heart-rate.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",
@@ -22,6 +22,7 @@
     "test:program-progress": "node scripts/test-program-progress-queries.js",
     "test:profile-birthdate": "node scripts/test-profile-birthdate.js",
     "test:heart-rate-settings": "node scripts/test-heart-rate-settings.js",
+    "test:ble-heart-rate": "node scripts/test-ble-heart-rate.js",
     "test:notifications": "node scripts/test-notification-registration.js",
     "release:prepare": "node scripts/version.js release",
     "release:android": "node scripts/release-android.js",
@@ -54,6 +55,7 @@
     "expo-task-manager": "~14.0.9",
     "react": "19.1.0",
     "react-native": "0.81.5",
+    "react-native-ble-plx": "^3.5.1",
     "react-native-bouncy-checkbox": "^4.1.4",
     "react-native-maps": "1.20.1",
     "react-native-safe-area-context": "~5.6.0",

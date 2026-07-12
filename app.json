@@ -2,7 +2,7 @@
   "expo": {
     "name": "FitVen",
     "slug": "programapp",
-    "version": "0.18.12",
+    "version": "0.19.0",
     "orientation": "default",
     "icon": "./assets/icon_v1.0.png",
     "userInterfaceStyle": "dark",
@@ -60,6 +60,13 @@
     },
     "plugins": [
       "expo-sqlite",
+      [
+        "react-native-ble-plx",
+        {
+          "isBackgroundEnabled": false,
+          "bluetoothAlwaysPermission": "FitVen uses Bluetooth to connect to your heart rate monitor and show live heart rate during workouts."
+        }
+      ],
       [
         "expo-notifications",
         {

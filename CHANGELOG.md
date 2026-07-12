@@ -22,6 +22,12 @@
 
 ---
 ## [0.19.0] - Unreleased
+### Added
+- Added direct Bluetooth Low Energy pairing for Garmin HRM-Pro and other standard heart-rate monitors.
+- Added a remembered heart-rate sensor, automatic workout reconnection, live BPM and heart-rate zone display.
+- Feed live heart-rate measurements into run metrics and the existing actual-versus-planned heart-rate charts.
+- Added Android nearby-device and iOS Bluetooth configuration through the Expo BLE plugin.
+
 ### Changed
 - Show a distinct completed-workout card on the home page, with finished time, duration, summary access, and the next planned workout.
 

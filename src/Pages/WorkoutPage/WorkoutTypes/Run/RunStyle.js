@@ -1257,6 +1257,43 @@ export default StyleSheet.create({
     textAlign: "center",
     fontVariant: ["tabular-nums"],
   },
+
+  heartRateSensorBar: {
+    width: "100%",
+    minHeight: 72,
+    borderWidth: 1,
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+
+  heartRateSensorIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  heartRateSensorCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  heartRateSensorTitle: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "900",
+  },
+
+  heartRateSensorDetail: {
+    marginTop: 3,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "700",
+  },
   activeSetActualResult: {
     marginTop: 10,
     textAlign: "center",

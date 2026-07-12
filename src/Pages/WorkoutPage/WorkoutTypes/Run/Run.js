@@ -23,6 +23,7 @@ import MapView, { Marker, Polyline } from "react-native-maps";
 import Svg, { Line, Path, Rect, Text as SvgText } from "react-native-svg";
 
 import RunSetList from "./RunSetList";
+import HeartRateDeviceModal from "./HeartRateDeviceModal";
 import { Colors } from "../../../../Resources/GlobalStyling/colors";
 import Distance from "../../../../Resources/Icons/UI-icons/Distance";
 import Speed from "../../../../Resources/Icons/UI-icons/Speed";
@@ -59,6 +60,7 @@ import {
 } from "../../../../Utils/runIntervalUtils";
 import {
   locationService,
+  heartRateService,
   runningService as runningRepository,
   socialService,
   workoutService as workoutRepository,
@@ -838,6 +840,13 @@ const Run = ({
     useState(0);
   const [isCustomHeartRateFollowing, setIsCustomHeartRateFollowing] =
     useState(true);
+  const [actualHeartRateHistory, setActualHeartRateHistory] = useState([]);
+  const [currentHeartRate, setCurrentHeartRate] = useState(null);
+  const [heartRateDevice, setHeartRateDevice] = useState(null);
+  const [heartRateDevices, setHeartRateDevices] = useState([]);
+  const [heartRateStatus, setHeartRateStatus] = useState("idle");
+  const [heartRateError, setHeartRateError] = useState("");
+  const [heartRateModalVisible, setHeartRateModalVisible] = useState(false);
 
   const [activeSet, set_activeSet] = useState(null);
   const [activeSet_remainingTime, set_activeSet_remainingTime] = useState(0);
@@ -852,6 +861,10 @@ const Run = ({
   const enduranceZoneTriggerRef = useRef(null);
   const enduranceZonePreparingRef = useRef(false);
   const customHeartRateScrollRef = useRef(null);
+  const heartRateSessionRef = useRef(null);
+  const heartRateScanStopRef = useRef(null);
+  const heartRateScanTimeoutRef = useRef(null);
+  const heartRateConnectionRequestRef = useRef(0);
 
   const normalizeTimerStartValue = (value) =>
     normalizeStoredTimestampSeconds(value);
@@ -870,6 +883,8 @@ const Run = ({
     set_activeSegmentDistance(0);
     set_runStructureLoaded(false);
     set_workoutStateLoaded(false);
+    setActualHeartRateHistory([]);
+    setCurrentHeartRate(null);
     setIsCustomHeartRateFollowing(true);
     setEnduranceZoneDropdownVisible(false);
     setEnduranceZoneSetId(null);
@@ -900,6 +915,216 @@ const Run = ({
     (normalizeTimerStartValue(timer_start) !== null
       ? Math.max(0, timerTick - normalizeTimerStartValue(timer_start))
       : 0);
+
+  const stopHeartRateScan = useCallback(() => {
+    heartRateScanStopRef.current?.();
+    heartRateScanStopRef.current = null;
+
+    if (heartRateScanTimeoutRef.current) {
+      clearTimeout(heartRateScanTimeoutRef.current);
+      heartRateScanTimeoutRef.current = null;
+    }
+  }, []);
+
+  const disconnectHeartRateDevice = useCallback(async () => {
+    heartRateConnectionRequestRef.current += 1;
+    stopHeartRateScan();
+
+    const session = heartRateSessionRef.current;
+    heartRateSessionRef.current = null;
+    await session?.disconnect?.();
+
+    setHeartRateDevice(null);
+    setCurrentHeartRate(null);
+    setHeartRateStatus("idle");
+    setHeartRateError("");
+  }, [stopHeartRateScan]);
+
+  const connectHeartRateDevice = useCallback(
+    async (device, { remember = true } = {}) => {
+      if (!device?.id) {
+        return;
+      }
+
+      const requestId = heartRateConnectionRequestRef.current + 1;
+      heartRateConnectionRequestRef.current = requestId;
+      stopHeartRateScan();
+      setHeartRateStatus("connecting");
+      setHeartRateError("");
+
+      const previousSession = heartRateSessionRef.current;
+      heartRateSessionRef.current = null;
+      await previousSession?.disconnect?.();
+
+      try {
+        const session = await heartRateService.connectToHeartRateDevice(device, {
+          onMeasurement: (measurement) => {
+            setCurrentHeartRate(measurement.bpm);
+            const timerStart = normalizeStoredTimestampSeconds(
+              timerStartRef.current
+            );
+            const capturedAtSeconds = Math.floor(measurement.capturedAt / 1000);
+            const elapsedSeconds =
+              normalizeElapsedDurationSeconds(elapsedTimeRef.current, 0) +
+              (timerStart === null
+                ? 0
+                : Math.max(0, capturedAtSeconds - timerStart));
+            const point = {
+              x: elapsedSeconds / 60,
+              y: measurement.bpm,
+              capturedAt: measurement.capturedAt,
+              rrIntervalsMs: measurement.rrIntervalsMs,
+            };
+
+            setActualHeartRateHistory((history) => {
+              const previousPoint = history[history.length - 1];
+
+              if (point.x === 0 && previousPoint?.x === 0) {
+                return [...history.slice(0, -1), point];
+              }
+
+              const nextHistory = [...history, point];
+              return nextHistory.length > 10000
+                ? nextHistory.slice(nextHistory.length - 10000)
+                : nextHistory;
+            });
+          },
+          onDisconnected: (error) => {
+            if (heartRateConnectionRequestRef.current !== requestId) {
+              return;
+            }
+
+            heartRateSessionRef.current = null;
+            setHeartRateDevice(null);
+            setCurrentHeartRate(null);
+            setHeartRateStatus("error");
+            setHeartRateError(
+              error?.message ||
+                "The heart rate monitor disconnected. Put it on and reconnect."
+            );
+          },
+        });
+
+        if (heartRateConnectionRequestRef.current !== requestId) {
+          await session.disconnect();
+          return;
+        }
+
+        heartRateSessionRef.current = session;
+        setHeartRateDevice(session.device);
+        setHeartRateStatus("connected");
+        setHeartRateError("");
+
+        if (remember) {
+          await heartRateService.saveHeartRateDevice(session.device);
+        }
+      } catch (error) {
+        if (heartRateConnectionRequestRef.current !== requestId) {
+          return;
+        }
+
+        setHeartRateDevice(null);
+        setCurrentHeartRate(null);
+        setHeartRateStatus("error");
+        setHeartRateError(
+          error?.message || "FitVen could not connect to the heart rate monitor."
+        );
+      }
+    },
+    [stopHeartRateScan]
+  );
+
+  const startHeartRateScan = useCallback(async () => {
+    stopHeartRateScan();
+    setHeartRateDevices([]);
+    setHeartRateError("");
+
+    try {
+      const hasPermission =
+        await heartRateService.requestHeartRatePermissions();
+
+      if (!hasPermission) {
+        setHeartRateStatus("error");
+        setHeartRateError(
+          "Allow nearby device access so FitVen can find your HRM-Pro."
+        );
+        return;
+      }
+
+      setHeartRateStatus("scanning");
+      heartRateScanStopRef.current =
+        await heartRateService.scanForHeartRateDevices({
+          onDevice: (device) => {
+            setHeartRateDevices((devices) => {
+              const byId = new Map(devices.map((item) => [item.id, item]));
+              byId.set(device.id, device);
+
+              return [...byId.values()].sort((left, right) => {
+                const leftIsGarmin = /hrm|garmin/i.test(left.name);
+                const rightIsGarmin = /hrm|garmin/i.test(right.name);
+
+                if (leftIsGarmin !== rightIsGarmin) {
+                  return leftIsGarmin ? -1 : 1;
+                }
+
+                return (right.rssi ?? -999) - (left.rssi ?? -999);
+              });
+            });
+          },
+          onError: (error) => {
+            stopHeartRateScan();
+            setHeartRateStatus("error");
+            setHeartRateError(
+              error?.message || "FitVen could not scan for heart rate monitors."
+            );
+          },
+        });
+
+      heartRateScanTimeoutRef.current = setTimeout(() => {
+        stopHeartRateScan();
+        setHeartRateStatus("idle");
+      }, 15000);
+    } catch (error) {
+      setHeartRateStatus("error");
+      setHeartRateError(
+        error?.message || "FitVen could not start the Bluetooth scan."
+      );
+    }
+  }, [stopHeartRateScan]);
+
+  const openHeartRateSetup = useCallback(() => {
+    setHeartRateModalVisible(true);
+
+    if (!heartRateSessionRef.current) {
+      startHeartRateScan();
+    }
+  }, [startHeartRateScan]);
+
+  const selectHeartRateDevice = useCallback(
+    async (device) => {
+      await connectHeartRateDevice(device);
+    },
+    [connectHeartRateDevice]
+  );
+
+  useEffect(() => {
+    let disposed = false;
+
+    heartRateService.getSavedHeartRateDevice().then((savedDevice) => {
+      if (!disposed && savedDevice) {
+        connectHeartRateDevice(savedDevice, { remember: false });
+      }
+    });
+
+    return () => {
+      disposed = true;
+      heartRateConnectionRequestRef.current += 1;
+      stopHeartRateScan();
+      const session = heartRateSessionRef.current;
+      heartRateSessionRef.current = null;
+      session?.disconnect?.();
+    };
+  }, [connectHeartRateDevice, stopHeartRateScan, workout_id]);
 
   useEffect(() => {
     timerStartRef.current = timer_start;
@@ -1703,12 +1928,6 @@ const Run = ({
     runPlanSets,
     heartRateZoneBands
   );
-  const actualHeartRateHistory = [];
-  const latestHeartRatePoint =
-    actualHeartRateHistory[actualHeartRateHistory.length - 1];
-  const currentHeartRate = Number.isFinite(Number(latestHeartRatePoint?.y))
-    ? Math.round(Number(latestHeartRatePoint.y))
-    : null;
   const currentHeartRateBand =
     currentHeartRate === null
       ? null
@@ -2105,7 +2324,7 @@ const Run = ({
     },
     {
       label: "HR",
-      value: "--",
+      value: currentHeartRate ?? "--",
       unit: "bpm",
     },
   ];
@@ -4540,6 +4759,89 @@ const Run = ({
     </TouchableOpacity>
   );
 
+  const renderHeartRateSensorBar = () => {
+    const isConnected = heartRateStatus === "connected";
+    const isBusy =
+      heartRateStatus === "connecting" || heartRateStatus === "scanning";
+    const statusColor = isConnected
+      ? secondaryColor
+      : heartRateStatus === "error"
+        ? primaryColor
+        : quietText;
+    const statusTitle = isConnected
+      ? heartRateDevice?.name || "Heart rate monitor"
+      : heartRateStatus === "connecting"
+        ? "Connecting to heart rate monitor"
+        : heartRateStatus === "scanning"
+          ? "Looking for your HRM-Pro"
+          : heartRateStatus === "error"
+            ? "Heart rate monitor disconnected"
+            : "Connect HRM-Pro";
+    const statusDetail = isConnected
+      ? currentHeartRate === null
+        ? "Connected · waiting for pulse"
+        : `Live · ${currentHeartRate} bpm${
+            currentHeartRateBand
+              ? ` · Zone ${currentHeartRateBand.zone}`
+              : ""
+          }`
+      : heartRateStatus === "error"
+        ? "Tap to reconnect"
+        : "Show live heart rate during this workout";
+
+    return (
+      <TouchableOpacity
+        activeOpacity={0.82}
+        accessibilityRole="button"
+        accessibilityLabel={statusTitle}
+        onPress={openHeartRateSetup}
+        style={[
+          styles.heartRateSensorBar,
+          {
+            backgroundColor: cardSurface,
+            borderColor: isConnected ? secondaryColor : cardBorder,
+          },
+        ]}
+      >
+        <View
+          style={[
+            styles.heartRateSensorIcon,
+            { backgroundColor: `${statusColor}22` },
+          ]}
+        >
+          {isBusy ? (
+            <ActivityIndicator size="small" color={statusColor} />
+          ) : (
+            <Feather
+              name={isConnected ? "heart" : "bluetooth"}
+              size={19}
+              color={statusColor}
+            />
+          )}
+        </View>
+
+        <View style={styles.heartRateSensorCopy}>
+          <ThemedText
+            style={styles.heartRateSensorTitle}
+            setColor={titleColor}
+            numberOfLines={1}
+          >
+            {statusTitle}
+          </ThemedText>
+          <ThemedText
+            style={styles.heartRateSensorDetail}
+            setColor={statusColor}
+            numberOfLines={1}
+          >
+            {statusDetail}
+          </ThemedText>
+        </View>
+
+        <Feather name="chevron-right" size={19} color={quietText} />
+      </TouchableOpacity>
+    );
+  };
+
   const renderHeroActionRow = () => {
     if (isDone) {
       return null;
@@ -4711,6 +5013,8 @@ const Run = ({
         <View style={styles.runLayout}>
           {renderRunFocusTitle()}
 
+          {!isDone ? renderHeartRateSensorBar() : null}
+
           {isDone ? (
             renderCompletedRunDashboard()
           ) : shouldShowPlanOnlyStartAction ? (
@@ -4839,6 +5143,25 @@ const Run = ({
               )}
         </View>
       </ThemedKeyboardProtection>
+
+      <HeartRateDeviceModal
+        visible={heartRateModalVisible}
+        devices={heartRateDevices}
+        status={heartRateStatus}
+        error={heartRateError}
+        connectedDevice={heartRateDevice}
+        theme={theme}
+        onClose={() => {
+          setHeartRateModalVisible(false);
+          if (heartRateStatus === "scanning") {
+            stopHeartRateScan();
+            setHeartRateStatus("idle");
+          }
+        }}
+        onRefresh={startHeartRateScan}
+        onSelectDevice={selectHeartRateDevice}
+        onDisconnect={disconnectHeartRateDevice}
+      />
     </ThemedView>
   );
 };
