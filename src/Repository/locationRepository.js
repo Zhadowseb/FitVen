@@ -64,3 +64,73 @@ export async function deleteLocationDebugLogsByWorkout(db, workoutId) {
     [workoutId]
   );
 }
+
+export async function replaceLocationDebugLogsByWorkout(
+  db,
+  workoutId,
+  diagnostics
+) {
+  await deleteLocationDebugLogsByWorkout(db, workoutId);
+  const createdAt = Date.now();
+  const statement = await db.prepareAsync(
+    `INSERT INTO LocationDebugLog (
+      workout_id,
+      latitude,
+      longitude,
+      accuracy,
+      timestamp,
+      accepted,
+      rejection_reason,
+      distance_meters,
+      time_diff_seconds,
+      speed_meters_per_second,
+      created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`
+  );
+
+  try {
+    for (const diagnostic of Array.isArray(diagnostics) ? diagnostics : []) {
+      await statement.executeAsync([
+          workoutId,
+          diagnostic.latitude,
+          diagnostic.longitude,
+          diagnostic.accuracy,
+          diagnostic.timestamp,
+          diagnostic.accepted ? 1 : 0,
+          diagnostic.rejectionReason,
+          diagnostic.distanceMeters,
+          diagnostic.timeDiffSeconds,
+          diagnostic.speedMetersPerSecond,
+          createdAt,
+        ]);
+    }
+  } finally {
+    await statement.finalizeAsync();
+  }
+}
+
+export async function getLocationDebugLogsByWorkout(db, workoutId) {
+  return db.getAllAsync(
+    `SELECT *
+     FROM LocationDebugLog
+     WHERE workout_id = ?
+     ORDER BY timestamp ASC, id ASC;`,
+    [workoutId]
+  );
+}
+
+export async function getLocationDebugSummaryByWorkout(db, workoutId) {
+  return db.getAllAsync(
+    `SELECT
+       rejection_reason,
+       accepted,
+       COUNT(*) AS point_count,
+       AVG(accuracy) AS average_accuracy,
+       MAX(time_diff_seconds) AS max_gap_seconds
+     FROM LocationDebugLog
+     WHERE workout_id = ?
+     GROUP BY rejection_reason, accepted
+     ORDER BY point_count DESC;`,
+    [workoutId]
+  );
+}

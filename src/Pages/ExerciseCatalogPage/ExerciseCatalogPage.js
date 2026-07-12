@@ -7,11 +7,7 @@ import { useSQLiteContext } from "expo-sqlite";
 import ExerciseLibraryList from "../ExerciseLibraryPage/Components/ExerciseLibraryList/ExerciseLibraryList";
 import CustomExerciseModal from "./Components/CustomExerciseModal/CustomExerciseModal";
 import styles from "./ExerciseCatalogPageStyle";
-import {
-  ThemedHeader,
-  ThemedTitle,
-  ThemedView,
-} from "../../Resources/ThemedComponents";
+import { ThemedView } from "../../Resources/ThemedComponents";
 import { weightliftingService } from "../../Services";
 
 const ExerciseCatalogPage = ({ route }) => {
@@ -83,12 +79,6 @@ const ExerciseCatalogPage = ({ route }) => {
 
   return (
     <ThemedView safe={["top", "left", "right"]} style={styles.container}>
-      {isWorkoutPicker && (
-        <ThemedHeader>
-          <ThemedTitle type="h3">Add exercise</ThemedTitle>
-        </ThemedHeader>
-      )}
-
       <ScrollView
         style={styles.content}
         contentContainerStyle={styles.scrollContent}
@@ -100,6 +90,7 @@ const ExerciseCatalogPage = ({ route }) => {
           onSelectExercise={isWorkoutPicker ? handleSelectExercise : undefined}
           onAddCustomExercise={() => setIsCustomExerciseModalVisible(true)}
           selectingExerciseName={selectingExerciseName}
+          workoutPicker={workoutPicker}
         />
       </ScrollView>
 

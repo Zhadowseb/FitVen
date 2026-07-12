@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.18.9-fix-run-walk-tracking-and-route-map.1",
+  "version": "0.18.10-fix-android-run-map-api-key.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",
@@ -18,6 +18,8 @@
     "branch:hooks:install": "git config core.hooksPath .githooks",
     "test:custom-exercise": "node scripts/test-custom-exercise-muscles.js",
     "test:location": "node scripts/test-location-distance.js",
+    "test:run-intervals": "node scripts/test-run-interval-utils.js",
+    "test:program-progress": "node scripts/test-program-progress-queries.js",
     "test:profile-birthdate": "node scripts/test-profile-birthdate.js",
     "test:heart-rate-settings": "node scripts/test-heart-rate-settings.js",
     "test:notifications": "node scripts/test-notification-registration.js",

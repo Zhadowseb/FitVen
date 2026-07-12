@@ -12,7 +12,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import styles from "./NotificationSettingsPageStyle";
 import { useAuth } from "../../Contexts/AuthContext";
 import { notificationService, socialService } from "../../Services";
-import { Colors } from "../../Resources/GlobalStyling/colors";
+import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
 import Checkmark from "../../Resources/Icons/UI-icons/Checkmark";
 import Search from "../../Resources/Icons/UI-icons/Search";
 import {
@@ -92,10 +92,10 @@ export default function NotificationSettingsPage() {
   const pageSurface = theme.background;
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor;
   const primaryColor = theme.primary ?? "#f7742e";
-  const selectedSurface =
-    colorScheme === "dark"
-      ? "rgba(247, 116, 46, 0.12)"
-      : "rgba(247, 116, 46, 0.14)";
+  const selectedSurface = withAlpha(
+    theme.primary,
+    colorScheme === "dark" ? 0.12 : 0.14
+  );
   const selectedSourceIdSet = useMemo(
     () => new Set(selectedSourceIds),
     [selectedSourceIds]

@@ -14,6 +14,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Colors } from "../GlobalStyling/colors";
 import ArrowDoubleDown from "../Icons/UI-icons/ArrowDoubleDown";
 import ArrowDoubleUp from "../Icons/UI-icons/ArrowDoubleUp";
+import Cross from "../Icons/UI-icons/Cross";
+import Plus from "../Icons/UI-icons/Plus";
 import ReplayHistory from "../Icons/UI-icons/ReplayHistory";
 import Resistance from "../Icons/WorkoutLabels/Resistance";
 import Run from "../Icons/WorkoutLabels/Run";
@@ -55,6 +57,7 @@ function createSheetPalette(theme) {
   const secondary = theme.secondary ?? fallbackTheme.secondary;
   const record = theme.record ?? fallbackTheme.record;
   const sheet = theme.cardBackground ?? theme.background ?? fallbackTheme.cardBackground;
+  const inset = theme.background ?? theme.uiBackground ?? fallbackTheme.background;
   const border = theme.cardBorder ?? theme.iconColor ?? fallbackTheme.cardBorder;
   const muted = theme.iconColor ?? theme.quietText ?? theme.text ?? fallbackTheme.iconColor;
   const title = theme.title ?? theme.text ?? fallbackTheme.title;
@@ -68,6 +71,7 @@ function createSheetPalette(theme) {
     muted,
     label: muted,
     card: sheet,
+    inset,
     cardBorder: border,
     cardSoft: colorWithAlpha(primary, 0.08, sheet),
     orange: primary,
@@ -261,10 +265,18 @@ function getIconColors(type, palette) {
   };
 }
 
-function IconTile({ type, palette, styles, size = "regular", active = false }) {
+function IconTile({
+  type,
+  palette,
+  styles,
+  size = "regular",
+  active = false,
+  badge = null,
+}) {
   const iconColors = getIconColors(type, palette);
   const tileSize = size === "large" ? 56 : 46;
   const glyphSize = size === "large" ? 30 : 25;
+  const badgeIconSize = badge === "fresh" ? 11 : 12;
 
   return (
     <View
@@ -283,6 +295,33 @@ function IconTile({ type, palette, styles, size = "regular", active = false }) {
         size={glyphSize}
         color={active ? palette.iconOnAccent : iconColors.color}
       />
+      {badge ? (
+        <View
+          style={[
+            styles.iconTileBadge,
+            {
+              backgroundColor:
+                badge === "fresh" ? iconColors.color : palette.inset,
+              borderColor: palette.sheet,
+            },
+          ]}
+        >
+          {badge === "fresh" ? (
+            <Plus
+              width={badgeIconSize}
+              height={badgeIconSize}
+              color={palette.iconOnAccent}
+              thickness={2.4}
+            />
+          ) : (
+            <ReplayHistory
+              width={badgeIconSize}
+              height={badgeIconSize}
+              color={iconColors.color}
+            />
+          )}
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -298,20 +337,28 @@ function MiniClock({ styles }) {
 
 function SectionHeader({
   title,
+  subtitle,
   action,
   actionDisabled = false,
   onActionPress = noop,
   palette,
   styles,
   showRotationIcon = false,
+  showPlusIcon = false,
 }) {
   return (
     <View style={styles.sectionHeader}>
-      <View style={styles.sectionTitleGroup}>
-        {showRotationIcon ? (
-          <ReplayHistory width={15} height={15} color={palette.label} />
-        ) : null}
-        <Text style={styles.sectionTitle}>{title}</Text>
+      <View style={styles.sectionCopy}>
+        <View style={styles.sectionTitleGroup}>
+          {showPlusIcon ? (
+            <Plus width={14} height={14} color={palette.label} thickness={2.2} />
+          ) : null}
+          {showRotationIcon ? (
+            <ReplayHistory width={15} height={15} color={palette.label} />
+          ) : null}
+          <Text style={styles.sectionTitle}>{title}</Text>
+        </View>
+        {subtitle ? <Text style={styles.sectionSubtitle}>{subtitle}</Text> : null}
       </View>
       {action ? (
         <TouchableOpacity
@@ -372,7 +419,7 @@ function PlannedTodaySection({ isToday, shortcut, onOpen, palette, styles }) {
         />
         <View style={styles.todayShortcutCopy}>
           <Text style={styles.todayShortcutLabel}>
-            {isToday ? "TODAY" : "PLANNED"}
+            {isToday ? "PLANNED TODAY" : "PLANNED"}
           </Text>
           <Text style={styles.cardTitle} numberOfLines={1}>
             {hasMultipleWorkouts
@@ -503,6 +550,12 @@ function UsualWorkoutSection({ isLoading, workouts, palette, styles }) {
 }
 
 function RecentWorkoutRow({ workout, disabled, onPress, palette, styles }) {
+  const isSuggested = Boolean(workout?.suggested);
+  const occurrenceCount = Number(workout?.occurrenceCount) || 0;
+  const detail = workout?.exerciseCount
+    ? getUsualWorkoutDetail(workout)
+    : getRecentWorkoutDetail(workout);
+
   return (
     <TouchableOpacity
       activeOpacity={0.84}
@@ -514,31 +567,45 @@ function RecentWorkoutRow({ workout, disabled, onPress, palette, styles }) {
         type={getWorkoutIconType(workout)}
         palette={palette}
         styles={styles}
+        badge="repeat"
       />
       <View style={styles.recentCopy}>
-        <Text style={styles.cardTitle} numberOfLines={1}>
-          {getWorkoutTitle(workout)}
-        </Text>
+        <View style={styles.repeatTitleRow}>
+          <Text style={styles.cardTitle} numberOfLines={1}>
+            {getWorkoutTitle(workout)}
+          </Text>
+          {isSuggested ? (
+            <View style={styles.suggestedBadge}>
+              <Text style={styles.suggestedText}>SUGGESTED</Text>
+            </View>
+          ) : null}
+        </View>
         <Text style={styles.cardDetails} numberOfLines={1}>
-          {getRecentWorkoutDetail(workout)}
+          {detail}
         </Text>
       </View>
-      <View style={styles.inlineMeta}>
-        <MiniClock styles={styles} />
+      <View style={styles.repeatMetaColumn}>
         <Text style={styles.metaText} numberOfLines={1}>
-          {getRecentWorkoutMeta(workout)}
+          {isSuggested ? getUsualWorkoutMeta(workout) : getRecentWorkoutMeta(workout)}
         </Text>
+        {occurrenceCount > 0 ? (
+          <View style={styles.repeatCountChip}>
+            <Text style={styles.repeatCountText}>{occurrenceCount}x</Text>
+          </View>
+        ) : null}
       </View>
     </TouchableOpacity>
   );
 }
 
 function RecentWorkoutSection({
+  isLoadingUsual,
   isLoading,
   isExpanded,
   isLoadingMore,
   isStartingWorkout,
-  workouts,
+  usualWorkouts = [],
+  workouts = [],
   canShowAll,
   onLoadMore,
   onToggleExpanded,
@@ -547,11 +614,12 @@ function RecentWorkoutSection({
   styles,
 }) {
   const action = isExpanded ? "Show less" : canShowAll ? "See all" : null;
+  const repeatWorkouts = [...usualWorkouts, ...workouts];
   const workoutRows = (
     <>
-      {workouts.map((workout) => (
+      {repeatWorkouts.map((workout, index) => (
         <RecentWorkoutRow
-          key={workout.workout_id}
+          key={`${workout.workout_id ?? workout.id}-${index}`}
           workout={workout}
           disabled={isStartingWorkout}
           onPress={onCopyWorkout}
@@ -583,18 +651,20 @@ function RecentWorkoutSection({
   return (
     <View style={styles.section}>
       <SectionHeader
-        title="RECENT"
+        title="REPEAT A WORKOUT"
+        subtitle="Copies the exercises & sets from a past session."
         action={action}
         actionDisabled={isLoading || isLoadingMore}
         onActionPress={onToggleExpanded}
         palette={palette}
         styles={styles}
+        showRotationIcon
       />
-      {isLoading ? (
+      {isLoading || isLoadingUsual ? (
         <View style={styles.recentStateRow}>
           <Text style={styles.recentStateText}>Loading recent workouts...</Text>
         </View>
-      ) : workouts.length > 0 ? (
+      ) : repeatWorkouts.length > 0 ? (
         isExpanded ? (
           <ScrollView
             nestedScrollEnabled
@@ -611,7 +681,9 @@ function RecentWorkoutSection({
         )
       ) : (
         <View style={styles.recentStateRow}>
-          <Text style={styles.recentStateText}>No recent workouts yet.</Text>
+          <Text style={styles.recentStateText}>
+            Repeat a workout twice to see it here.
+          </Text>
         </View>
       )}
     </View>
@@ -619,6 +691,8 @@ function RecentWorkoutSection({
 }
 
 function FreshStartCard({ item, disabled, onPress, palette, styles }) {
+  const iconColors = getIconColors(item.type, palette);
+
   return (
     <TouchableOpacity
       activeOpacity={0.84}
@@ -629,9 +703,16 @@ function FreshStartCard({ item, disabled, onPress, palette, styles }) {
           displayName: item.title,
         })
       }
-      style={[styles.freshCard, disabled ? styles.disabledCard : null]}
+      style={[
+        styles.freshCard,
+        {
+          borderColor: iconColors.color,
+          backgroundColor: iconColors.backgroundColor,
+        },
+        disabled ? styles.disabledCard : null,
+      ]}
     >
-      <IconTile type={item.type} palette={palette} styles={styles} />
+      <IconTile type={item.type} palette={palette} styles={styles} badge="fresh" />
       <View>
         <Text style={styles.cardTitle}>{item.title}</Text>
         <Text style={styles.cardDetails}>{item.details}</Text>
@@ -694,7 +775,7 @@ export default function StartWorkoutSheet({
             onPress={onClose}
             style={styles.closeButton}
           >
-            <Text style={styles.closeText}>X</Text>
+            <Cross width={19} height={19} color={palette.muted} />
           </TouchableOpacity>
 
           <ScrollView
@@ -720,32 +801,13 @@ export default function StartWorkoutSheet({
               />
             ) : null}
 
-            <UsualWorkoutSection
-              isLoading={isLoadingUsualWorkouts}
-              workouts={usualWorkouts}
-              palette={palette}
-              styles={styles}
-            />
-
-            <RecentWorkoutSection
-              isLoading={isLoadingRecentWorkouts}
-              isExpanded={isRecentWorkoutsExpanded}
-              isLoadingMore={isLoadingMoreRecentWorkouts}
-              isStartingWorkout={isStartingWorkout}
-              workouts={recentWorkouts}
-              canShowAll={canShowAllRecentWorkouts}
-              onLoadMore={onLoadMoreRecentWorkouts}
-              onToggleExpanded={onToggleRecentWorkouts}
-              onCopyWorkout={onCopyRecentWorkout}
-              palette={palette}
-              styles={styles}
-            />
-
             <View style={styles.section}>
               <SectionHeader
                 title="START FRESH"
+                subtitle="A blank workout you build as you go."
                 palette={palette}
                 styles={styles}
+                showPlusIcon
               />
               <View style={styles.freshGrid}>
                 {freshStarts.map((item) => (
@@ -760,6 +822,22 @@ export default function StartWorkoutSheet({
                 ))}
               </View>
             </View>
+
+            <RecentWorkoutSection
+              isLoadingUsual={isLoadingUsualWorkouts}
+              isLoading={isLoadingRecentWorkouts}
+              isExpanded={isRecentWorkoutsExpanded}
+              isLoadingMore={isLoadingMoreRecentWorkouts}
+              isStartingWorkout={isStartingWorkout}
+              usualWorkouts={usualWorkouts}
+              workouts={recentWorkouts}
+              canShowAll={canShowAllRecentWorkouts}
+              onLoadMore={onLoadMoreRecentWorkouts}
+              onToggleExpanded={onToggleRecentWorkouts}
+              onCopyWorkout={onCopyRecentWorkout}
+              palette={palette}
+              styles={styles}
+            />
           </ScrollView>
         </View>
       </View>
@@ -780,6 +858,8 @@ function createStyles(palette) {
     backgroundColor: palette.sheet,
     borderTopWidth: 1,
     borderTopColor: palette.sheetBorder,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     overflow: "hidden",
   },
   handle: {
@@ -800,6 +880,9 @@ function createStyles(palette) {
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: palette.inset,
+    borderWidth: 1,
+    borderColor: palette.cardBorder,
     zIndex: 2,
   },
   closeText: {
@@ -810,8 +893,8 @@ function createStyles(palette) {
   },
   content: {
     paddingHorizontal: 18,
-    paddingBottom: 8,
-    gap: 28,
+    paddingBottom: 18,
+    gap: 24,
   },
   header: {
     gap: 8,
@@ -835,10 +918,10 @@ function createStyles(palette) {
     gap: 12,
   },
   plannedTodayPrompt: {
-    color: palette.title,
-    fontSize: 16,
-    lineHeight: 22,
-    fontWeight: "800",
+    color: palette.muted,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "700",
     letterSpacing: 0,
   },
   todayShortcutCard: {
@@ -911,8 +994,14 @@ function createStyles(palette) {
   sectionHeader: {
     minHeight: 18,
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "space-between",
+    gap: 12,
+  },
+  sectionCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 3,
   },
   sectionTitleGroup: {
     flexDirection: "row",
@@ -931,6 +1020,12 @@ function createStyles(palette) {
     fontSize: 12,
     lineHeight: 16,
     fontWeight: "900",
+  },
+  sectionSubtitle: {
+    color: palette.muted,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "700",
   },
   disabledAction: {
     opacity: 0.56,
@@ -975,6 +1070,7 @@ function createStyles(palette) {
     backgroundColor: palette.orangeDeep,
     paddingHorizontal: 9,
     paddingVertical: 4,
+    flexShrink: 0,
   },
   suggestedText: {
     color: palette.orange,
@@ -1035,11 +1131,37 @@ function createStyles(palette) {
     borderRadius: 16,
     borderWidth: 1,
     borderColor: palette.cardBorder,
-    backgroundColor: palette.card,
+    backgroundColor: palette.inset,
     paddingHorizontal: 14,
     flexDirection: "row",
     alignItems: "center",
     gap: 14,
+  },
+  repeatTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    minWidth: 0,
+    gap: 8,
+  },
+  repeatMetaColumn: {
+    alignItems: "flex-end",
+    gap: 5,
+    maxWidth: 86,
+  },
+  repeatCountChip: {
+    borderRadius: 999,
+    backgroundColor: palette.card,
+    borderWidth: 1,
+    borderColor: palette.cardBorder,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  repeatCountText: {
+    color: palette.orange,
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: "900",
+    fontVariant: ["tabular-nums"],
   },
   recentCopy: {
     flex: 1,
@@ -1068,12 +1190,12 @@ function createStyles(palette) {
     gap: 10,
   },
   freshCard: {
-    width: "48%",
+    flex: 1,
+    minWidth: "30%",
     minHeight: 124,
     borderRadius: 16,
-    borderWidth: 1,
-    borderColor: palette.cardBorder,
-    backgroundColor: palette.card,
+    borderWidth: 1.5,
+    borderStyle: "dashed",
     padding: 14,
     justifyContent: "space-between",
   },
@@ -1081,6 +1203,18 @@ function createStyles(palette) {
     opacity: 0.64,
   },
   iconTile: {
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+  },
+  iconTileBadge: {
+    position: "absolute",
+    right: -5,
+    bottom: -5,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
     alignItems: "center",
     justifyContent: "center",
   },

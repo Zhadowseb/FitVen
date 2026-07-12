@@ -1,18 +1,26 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
+  Animated,
   AppState,
+  Easing,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
   useColorScheme,
 } from "react-native";
+import Svg, { Circle } from "react-native-svg";
 import { useSQLiteContext } from "expo-sqlite";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Colors } from "../GlobalStyling/colors";
+import { Colors, withAlpha } from "../GlobalStyling/colors";
 import StartWorkoutSheet from "../Components/StartWorkoutSheet";
+import {
+  useBlinkAnimation,
+  usePulseAnimation,
+  useSpinAnimation,
+} from "../Components/animationHooks";
 import Home from "../Icons/UI-icons/Home";
 import Male from "../Icons/UI-icons/Male";
 import Plus from "../Icons/UI-icons/Plus";
@@ -25,7 +33,8 @@ import {
   parseCustomDate,
 } from "../../Utils/dateUtils";
 import {
-  formatTime,
+  formatCountdownTime,
+  formatElapsedTime,
   getCurrentStoredTimestampSeconds,
   normalizeElapsedDurationSeconds,
   normalizeStoredTimestampSeconds,
@@ -39,6 +48,13 @@ import {
 
 const RECENT_WORKOUT_PREVIEW_LIMIT = 2;
 const RECENT_WORKOUT_PAGE_SIZE = 10;
+
+const LIVE_TIMER_SIZE = 66;
+const LIVE_RING_RADIUS = 30;
+const LIVE_RING_STROKE = 3;
+const LIVE_RING_CIRCUMFERENCE = 2 * Math.PI * LIVE_RING_RADIUS;
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 function getWorkoutType(workout) {
   return workout?.workout_type ?? workout?.label ?? null;
@@ -103,16 +119,24 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     "ExerciseLibraryPage",
     "ExerciseCatalogPage",
     "PersonalRecordsPage",
+    "ProgramPage",
+    "ProgramOverviewPage",
+    "MicrocyclePage",
+    "WeekPage",
+    "WorkoutCalendarPage",
+    "SicknessPage",
+    "OneRepMaxCalculatorPage",
   ].includes(currentRouteName);
   const isHomeActive = !isProfileActive && !isSocialActive && !isLibraryActive;
   const activeColor =
     theme.iconColorFocused ?? theme.primary ?? theme.title ?? theme.text;
   const inactiveColor = theme.iconColor ?? theme.quietText ?? theme.text;
   const barBackground =
-    theme.cardBackground ?? theme.navBackground ?? theme.background;
-  const barBorder = theme.border ?? theme.cardBorder ?? theme.iconColor;
-  const plusBackground = theme.primary ?? "#f7742e";
-  const plusIconColor = theme.textInverted ?? theme.cardBackground ?? "#10131a";
+    theme.navBackground ?? theme.cardBackground ?? theme.background;
+  const barBorder = theme.hairline ?? theme.cardBorder ?? theme.iconColor;
+  const plusBackground = theme.primary ?? "#F7742E";
+  const plusIconColor = theme.textInverted ?? theme.cardBackground ?? "#14100C";
+  const fabBorderColor = theme.background ?? barBackground;
   const activeWorkoutElapsed = activeWorkoutTimer
     ? normalizeElapsedDurationSeconds(activeWorkoutTimer.elapsed_time, 0) +
       Math.max(
@@ -127,10 +151,52 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     ? Math.max(0, activeRestTimer.endsAt - timerTick)
     : 0;
   const isRestTimerActive = restTimerRemaining > 0;
-  const centerTimerValue = isRestTimerActive
-    ? restTimerRemaining
-    : activeWorkoutElapsed;
   const shouldShowCenterTimer = Boolean(activeWorkoutTimer) || isRestTimerActive;
+  const centerTimerText = isRestTimerActive
+    ? formatCountdownTime(restTimerRemaining)
+    : formatElapsedTime(activeWorkoutElapsed);
+  const centerTimerLabel = isRestTimerActive ? "REST" : "LIVE";
+  const restDurationSeconds = activeRestTimer
+    ? Math.max(
+        1,
+        normalizeElapsedDurationSeconds(activeRestTimer.durationSeconds, 0)
+      )
+    : 1;
+  const restRingFraction = isRestTimerActive
+    ? Math.max(0, Math.min(1, restTimerRemaining / restDurationSeconds))
+    : 0;
+
+  const fabPulse = usePulseAnimation(shouldShowCenterTimer);
+  const fabLabelBlink = useBlinkAnimation(shouldShowCenterTimer);
+  // Resistance rest: the ring empties with the countdown. No rest running:
+  // a partial arc spins continuously as the "active workout" indicator.
+  const fabSpinRotation = useSpinAnimation(
+    shouldShowCenterTimer && !isRestTimerActive
+  );
+  const restRingOffset = useRef(new Animated.Value(0)).current;
+  const restRingTimerIdRef = useRef(null);
+
+  useEffect(() => {
+    if (!isRestTimerActive || !activeRestTimer) {
+      restRingTimerIdRef.current = null;
+      return;
+    }
+
+    const targetOffset = LIVE_RING_CIRCUMFERENCE * (1 - restRingFraction);
+
+    if (restRingTimerIdRef.current !== activeRestTimer.id) {
+      restRingTimerIdRef.current = activeRestTimer.id;
+      restRingOffset.setValue(targetOffset);
+      return;
+    }
+
+    Animated.timing(restRingOffset, {
+      toValue: targetOffset,
+      duration: 1000,
+      easing: Easing.linear,
+      useNativeDriver: false,
+    }).start();
+  }, [activeRestTimer, isRestTimerActive, restRingFraction, restRingOffset]);
 
   const handleHomePress = () => {
     if (!navigationRef?.isReady?.()) {
@@ -604,146 +670,242 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
           },
         ]}
       >
-        <TouchableOpacity
-          activeOpacity={0.82}
-          onPress={handleProfilePress}
-          style={styles.tab}
-        >
-          <Male
-            width={27}
-            height={27}
-            color={isProfileActive ? activeColor : inactiveColor}
-          />
-          <Text
-            style={[
-              styles.tabLabel,
-              { color: isProfileActive ? activeColor : inactiveColor },
-            ]}
-          >
-            PROFILE
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          activeOpacity={0.82}
-          onPress={handleSocialPress}
-          style={styles.tab}
-        >
-          <Social
-            width={27}
-            height={27}
-            color={isSocialActive ? activeColor : inactiveColor}
-          />
-          <Text
-            style={[
-              styles.tabLabel,
-              { color: isSocialActive ? activeColor : inactiveColor },
-            ]}
-          >
-            SOCIAL
-          </Text>
-        </TouchableOpacity>
-
-        <View style={styles.plusSlot}>
+        <View style={styles.itemsRow}>
           <TouchableOpacity
-            activeOpacity={0.86}
-            accessibilityLabel={
-              shouldShowCenterTimer
-                ? isRestTimerActive
-                  ? `Active rest timer ${formatTime(centerTimerValue)}`
-                  : `Active workout timer ${formatTime(centerTimerValue)}`
-                : "Create workout"
-            }
-            accessibilityRole="button"
-            disabled={isCreatingQuickWorkout}
-            onPress={handleCenterButtonPress}
-            style={[
-              styles.plusButton,
-              {
-                backgroundColor: isRestTimerActive
-                  ? theme.secondary ?? plusBackground
-                  : plusBackground,
-                borderColor: barBackground,
-                opacity: isCreatingQuickWorkout ? 0.72 : 1,
-              },
-            ]}
+            activeOpacity={0.82}
+            onPress={handleProfilePress}
+            style={styles.tab}
           >
+            <Male
+              width={23}
+              height={23}
+              color={isProfileActive ? activeColor : inactiveColor}
+            />
+            <Text
+              style={[
+                styles.tabLabel,
+                { color: isProfileActive ? activeColor : inactiveColor },
+              ]}
+            >
+              PROFILE
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.82}
+            onPress={handleSocialPress}
+            style={styles.tab}
+          >
+            <Social
+              width={23}
+              height={23}
+              color={isSocialActive ? activeColor : inactiveColor}
+            />
+            <Text
+              style={[
+                styles.tabLabel,
+                { color: isSocialActive ? activeColor : inactiveColor },
+              ]}
+            >
+              SOCIAL
+            </Text>
+          </TouchableOpacity>
+
+          <View style={styles.plusSlot}>
             {shouldShowCenterTimer ? (
-              <>
-                {isRestTimerActive && (
-                  <View pointerEvents="none" style={styles.restPauseBackground}>
-                    <View
-                      style={[
-                        styles.restPauseBackgroundBar,
-                        { backgroundColor: plusIconColor },
-                      ]}
-                    />
-                    <View
-                      style={[
-                        styles.restPauseBackgroundBar,
-                        { backgroundColor: plusIconColor },
-                      ]}
-                    />
-                  </View>
-                )}
-                <Text
-                  adjustsFontSizeToFit
-                  numberOfLines={1}
-                  style={[styles.activeTimerText, { color: plusIconColor }]}
+              <View style={styles.liveTimerWrap}>
+                <Animated.View
+                  pointerEvents="none"
+                  style={[
+                    styles.liveTimerPulse,
+                    {
+                      backgroundColor: withAlpha(plusBackground, 0.5),
+                      opacity: fabPulse.opacity,
+                      transform: [{ scale: fabPulse.scale }],
+                    },
+                  ]}
+                />
+                <TouchableOpacity
+                  activeOpacity={0.86}
+                  accessibilityLabel={
+                    isRestTimerActive
+                      ? `Active rest timer ${centerTimerText}`
+                      : `Active workout timer ${centerTimerText}`
+                  }
+                  accessibilityRole="button"
+                  disabled={isCreatingQuickWorkout}
+                  onPress={handleCenterButtonPress}
+                  style={[
+                    styles.liveTimerButton,
+                    {
+                      backgroundColor: plusBackground,
+                      borderColor: fabBorderColor,
+                      shadowColor: plusBackground,
+                      opacity: isCreatingQuickWorkout ? 0.72 : 1,
+                    },
+                  ]}
                 >
-                  {formatTime(centerTimerValue)}
-                </Text>
-              </>
+                  <Text
+                    adjustsFontSizeToFit
+                    numberOfLines={1}
+                    style={[styles.liveTimerValue, { color: plusIconColor }]}
+                  >
+                    {centerTimerText}
+                  </Text>
+                  <View style={styles.liveTimerLabelRow}>
+                    <Animated.View
+                      style={[
+                        styles.liveTimerLabelDot,
+                        {
+                          backgroundColor: plusIconColor,
+                          opacity: fabLabelBlink,
+                        },
+                      ]}
+                    />
+                    <Text style={styles.liveTimerLabelText}>
+                      {centerTimerLabel}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+                {isRestTimerActive ? (
+                  <Svg
+                    pointerEvents="none"
+                    width={LIVE_TIMER_SIZE}
+                    height={LIVE_TIMER_SIZE}
+                    viewBox={`0 0 ${LIVE_TIMER_SIZE} ${LIVE_TIMER_SIZE}`}
+                    style={[styles.liveTimerRing, styles.liveTimerRingStart]}
+                  >
+                    <Circle
+                      cx={LIVE_TIMER_SIZE / 2}
+                      cy={LIVE_TIMER_SIZE / 2}
+                      r={LIVE_RING_RADIUS}
+                      fill="none"
+                      stroke={withAlpha(plusBackground, 0.25)}
+                      strokeWidth={LIVE_RING_STROKE}
+                    />
+                    <AnimatedCircle
+                      cx={LIVE_TIMER_SIZE / 2}
+                      cy={LIVE_TIMER_SIZE / 2}
+                      r={LIVE_RING_RADIUS}
+                      fill="none"
+                      stroke={plusBackground}
+                      strokeWidth={LIVE_RING_STROKE}
+                      strokeLinecap="round"
+                      strokeDasharray={`${LIVE_RING_CIRCUMFERENCE}`}
+                      strokeDashoffset={restRingOffset}
+                    />
+                  </Svg>
+                ) : (
+                  <Animated.View
+                    pointerEvents="none"
+                    style={[
+                      styles.liveTimerRing,
+                      { transform: [{ rotate: fabSpinRotation }] },
+                    ]}
+                  >
+                    <Svg
+                      width={LIVE_TIMER_SIZE}
+                      height={LIVE_TIMER_SIZE}
+                      viewBox={`0 0 ${LIVE_TIMER_SIZE} ${LIVE_TIMER_SIZE}`}
+                    >
+                      <Circle
+                        cx={LIVE_TIMER_SIZE / 2}
+                        cy={LIVE_TIMER_SIZE / 2}
+                        r={LIVE_RING_RADIUS}
+                        fill="none"
+                        stroke={withAlpha(plusBackground, 0.25)}
+                        strokeWidth={LIVE_RING_STROKE}
+                      />
+                      <Circle
+                        cx={LIVE_TIMER_SIZE / 2}
+                        cy={LIVE_TIMER_SIZE / 2}
+                        r={LIVE_RING_RADIUS}
+                        fill="none"
+                        stroke={plusBackground}
+                        strokeWidth={LIVE_RING_STROKE}
+                        strokeLinecap="round"
+                        strokeDasharray={`${LIVE_RING_CIRCUMFERENCE * 0.25} ${LIVE_RING_CIRCUMFERENCE}`}
+                      />
+                    </Svg>
+                  </Animated.View>
+                )}
+              </View>
             ) : (
-              <Plus
-                width={34}
-                height={34}
-                color={plusIconColor}
-                thickness={2.2}
-              />
+              <TouchableOpacity
+                activeOpacity={0.86}
+                accessibilityLabel="Create workout"
+                accessibilityRole="button"
+                disabled={isCreatingQuickWorkout}
+                onPress={handleCenterButtonPress}
+                style={[
+                  styles.plusButton,
+                  {
+                    backgroundColor: plusBackground,
+                    borderColor: fabBorderColor,
+                    shadowColor: plusBackground,
+                    opacity: isCreatingQuickWorkout ? 0.72 : 1,
+                  },
+                ]}
+              >
+                <Plus
+                  width={26}
+                  height={26}
+                  color={plusIconColor}
+                  thickness={2.4}
+                />
+              </TouchableOpacity>
             )}
+          </View>
+
+          <TouchableOpacity
+            activeOpacity={0.82}
+            onPress={handleLibraryPress}
+            style={styles.tab}
+          >
+            <UpwardGraf
+              width={23}
+              height={23}
+              color={isLibraryActive ? activeColor : inactiveColor}
+            />
+            <Text
+              style={[
+                styles.tabLabel,
+                { color: isLibraryActive ? activeColor : inactiveColor },
+              ]}
+            >
+              TRAIN
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.82}
+            onPress={handleHomePress}
+            style={styles.tab}
+          >
+            <Home
+              width={23}
+              height={23}
+              color={isHomeActive ? activeColor : inactiveColor}
+            />
+            <Text
+              style={[
+                styles.tabLabel,
+                { color: isHomeActive ? activeColor : inactiveColor },
+              ]}
+            >
+              HOME
+            </Text>
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity
-          activeOpacity={0.82}
-          onPress={handleLibraryPress}
-          style={styles.tab}
-        >
-          <UpwardGraf
-            width={27}
-            height={27}
-            color={isLibraryActive ? activeColor : inactiveColor}
-          />
-          <Text
+        <View style={styles.handleRow}>
+          <View
             style={[
-              styles.tabLabel,
-              { color: isLibraryActive ? activeColor : inactiveColor },
+              styles.handle,
+              { backgroundColor: theme.navHandle ?? barBorder },
             ]}
-          >
-            TRAIN
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          activeOpacity={0.82}
-          onPress={handleHomePress}
-          style={styles.tab}
-        >
-          <Home
-            width={28}
-            height={28}
-            color={isHomeActive ? activeColor : inactiveColor}
           />
-          <Text
-            style={[
-              styles.tabLabel,
-              { color: isHomeActive ? activeColor : inactiveColor },
-            ]}
-          >
-            HOME
-          </Text>
-        </TouchableOpacity>
+        </View>
       </View>
 
       <StartWorkoutSheet
@@ -775,70 +937,120 @@ export default ThemedBottomNavigation;
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: "row",
-    alignItems: "center",
     borderTopWidth: 1,
-    paddingTop: 8,
-    paddingHorizontal: 16,
-    minHeight: 66,
+  },
+  itemsRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    paddingTop: 10,
+    paddingHorizontal: 10,
   },
   tab: {
     flex: 1,
-    minHeight: 48,
+    minHeight: 44,
     alignItems: "center",
-    justifyContent: "center",
-    gap: 2,
+    justifyContent: "flex-start",
+    gap: 3,
   },
   tabLabel: {
-    fontSize: 10,
+    fontSize: 9.5,
     lineHeight: 12,
     fontWeight: "800",
-    letterSpacing: 0,
+    letterSpacing: 0.7,
+    textTransform: "uppercase",
   },
   plusSlot: {
     flex: 1,
-    minHeight: 48,
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "flex-start",
   },
   plusButton: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 5,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: -26,
+    shadowColor: "#F7742E",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.35,
+    shadowRadius: 26,
+    elevation: 12,
+  },
+  liveTimerWrap: {
+    width: LIVE_TIMER_SIZE,
+    height: LIVE_TIMER_SIZE,
+    marginTop: -31,
+  },
+  liveTimerPulse: {
+    position: "absolute",
+    top: 3,
+    left: 3,
+    right: 3,
+    bottom: 3,
+    borderRadius: 999,
+  },
+  liveTimerButton: {
+    position: "absolute",
+    top: 3,
+    left: 3,
+    right: 3,
+    bottom: 3,
+    borderRadius: 999,
     borderWidth: 4,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: -34,
-    shadowColor: "#f7742e",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.36,
-    shadowRadius: 18,
+    gap: 1,
+    shadowColor: "#F7742E",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.4,
+    shadowRadius: 26,
     elevation: 12,
-    overflow: "hidden",
   },
-  restPauseBackground: {
-    position: "absolute",
-    top: 15,
-    left: 0,
-    right: 0,
-    height: 42,
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 6,
-    opacity: 0.18,
-  },
-  restPauseBackgroundBar: {
-    width: 12,
-    height: 42,
-    borderRadius: 7,
-  },
-  activeTimerText: {
-    maxWidth: 58,
-    fontSize: 17,
-    lineHeight: 21,
-    fontWeight: "900",
+  liveTimerValue: {
+    maxWidth: 44,
+    fontSize: 12.5,
+    lineHeight: 13,
+    fontWeight: "800",
+    letterSpacing: -0.2,
     fontVariant: ["tabular-nums"],
     textAlign: "center",
-    zIndex: 1,
+  },
+  liveTimerLabelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 2.5,
+  },
+  liveTimerLabelDot: {
+    width: 3.5,
+    height: 3.5,
+    borderRadius: 2,
+  },
+  liveTimerLabelText: {
+    fontSize: 6.5,
+    fontWeight: "800",
+    letterSpacing: 1,
+    color: "rgba(20, 16, 12, 0.75)",
+  },
+  liveTimerRing: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: LIVE_TIMER_SIZE,
+    height: LIVE_TIMER_SIZE,
+  },
+  liveTimerRingStart: {
+    transform: [{ rotate: "-90deg" }],
+  },
+  handleRow: {
+    paddingTop: 14,
+    paddingBottom: 9,
+    alignItems: "center",
+  },
+  handle: {
+    width: 134,
+    height: 5,
+    borderRadius: 999,
   },
 });

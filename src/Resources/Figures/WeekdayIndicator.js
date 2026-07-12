@@ -2,7 +2,7 @@ import { Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-nativ
 import { useColorScheme } from "react-native";
 import Svg, { Path, Polygon } from "react-native-svg";
 
-import { Colors } from "../GlobalStyling/colors";
+import { Colors, withAlpha } from "../GlobalStyling/colors";
 
 const MONTH_LABELS = [
   "jan",
@@ -63,11 +63,11 @@ const WeekdayIndicator = ({
   const surfaceColor = theme.uiBackground ?? theme.cardBackground ?? theme.background;
   const activeSurface =
     colorScheme === "dark"
-      ? "rgba(247, 116, 46, 0.13)"
+      ? withAlpha(theme.primary, 0.13)
       : theme.primaryLight ?? surfaceColor;
   const completedSurface =
     colorScheme === "dark"
-      ? "rgba(96, 218, 172, 0.12)"
+      ? withAlpha(theme.secondary, 0.12)
       : theme.secondaryLight ?? surfaceColor;
   const cardBorder = theme.cardBorder ?? theme.iconColor ?? theme.text;
   const activeBorder = theme.primary ?? cardBorder;

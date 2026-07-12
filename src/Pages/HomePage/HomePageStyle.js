@@ -6,7 +6,6 @@ export default StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingTop: 16,
   },
   contentContainer: {
     paddingBottom: 28,

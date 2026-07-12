@@ -2,7 +2,7 @@ import { Alert, TouchableOpacity, View } from "react-native";
 import { useColorScheme } from "react-native";
 import { useEffect, useRef, useState } from "react";
 import { useSQLiteContext } from "expo-sqlite";
-import { Colors } from "../../../../../../../../../Resources/GlobalStyling/colors";
+import { Colors, withAlpha } from "../../../../../../../../../Resources/GlobalStyling/colors";
 import {
   formatTime,
   getCurrentStoredTimestampSeconds,
@@ -116,9 +116,7 @@ const SetList = ({
   const cellBorder = isDark
     ? "rgba(255, 255, 255, 0.045)"
     : "rgba(32, 30, 43, 0.08)";
-  const setChipBackground = isDark
-    ? "rgba(247, 116, 46, 0.17)"
-    : "rgba(247, 116, 46, 0.14)";
+  const setChipBackground = withAlpha(theme.primary, isDark ? 0.17 : 0.14);
   const primaryColor = theme.primary ?? theme.text;
   const setChipTextColor = primaryColor;
   const personalRecordColor =

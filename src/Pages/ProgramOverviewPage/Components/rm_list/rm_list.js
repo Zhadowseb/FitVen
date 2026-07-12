@@ -1,8 +1,7 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   View,
   TouchableOpacity,
-  ScrollView,
   ActivityIndicator,
   useColorScheme,
 } from "react-native";
@@ -14,6 +13,8 @@ import { weightliftingService } from "../../../../Services";
 import EditEstimatedSet from "./Components/EditEstimatedSet/EditEstimatedSet";
 
 import { ThemedText } from "../../../../Resources/ThemedComponents";
+import Pencil from "../../../../Resources/Icons/UI-icons/Pencil";
+import Plus from "../../../../Resources/Icons/UI-icons/Plus";
 
 function formatWeight(value) {
   const parsedValue = Number(value);
@@ -30,6 +31,7 @@ const RmList = ({
   refreshKey,
   refresh,
   programExerciseBestMap = {},
+  onAddPress,
 }) => {
   const db = useSQLiteContext();
   const colorScheme = useColorScheme();
@@ -40,14 +42,8 @@ const RmList = ({
   const [estimated_sets, setEstimated_sets] = useState([]);
   const [selectedSet, setSelectedSet] = useState(null);
 
-  const accentSoft = theme.primaryLight ?? "rgba(247, 116, 46, 0.18)";
-  const successSoft = theme.secondaryLight ?? "rgba(96, 218, 172, 0.18)";
-  const badgeBackground = theme.cardBackground ?? theme.uiBackground ?? "#1b1918";
-  const badgeTextColor = theme.text ?? "#d4d4d4";
-  const quietText = theme.quietText ?? theme.iconColor ?? "#9591a5";
-  const tileTextColor = theme.cardBackground ?? theme.textInverted ?? "#201e2b";
-  const emptyBackground = theme.uiBackground ?? "rgba(255, 255, 255, 0.04)";
-  const emptyBorder = theme.cardBorder ?? theme.iconColor ?? "#383838";
+  const quietText = theme.quietText;
+  const titleColor = theme.title;
 
   const loadEstimatedSets = async () => {
     try {
@@ -96,117 +92,91 @@ const RmList = ({
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color={theme.primary} />
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        nestedScrollEnabled
-        style={styles.wrapper}
-        contentContainerStyle={styles.list}
-      >
-        {estimated_sets.length > 0 && (
+      {estimated_sets.length > 0 && (
+        <>
           <View style={styles.metaRow}>
-            <ThemedText size={12} setColor={quietText}>
-              {estimated_sets.length} estimated lifts
+            <ThemedText style={styles.metaLeft} setColor={theme.text}>
+              {`${estimated_sets.length} estimated ${
+                estimated_sets.length === 1 ? "lift" : "lifts"
+              }`}
             </ThemedText>
-            <ThemedText size={11} style={styles.metaHint} setColor={quietText}>
+            <ThemedText style={styles.metaHint} setColor={quietText}>
               Tap a row to edit
             </ThemedText>
           </View>
-        )}
+          <View style={[styles.dividerFull, { backgroundColor: theme.hairline }]} />
+        </>
+      )}
 
-        {estimated_sets.length === 0 && (
-          <View
-            style={[
-              styles.emptyState,
-              {
-                backgroundColor: emptyBackground,
-                borderColor: emptyBorder,
-              },
-            ]}
+      {estimated_sets.length === 0 && (
+        <View style={styles.emptyState}>
+          <ThemedText style={styles.emptyText} setColor={titleColor}>
+            No 1 RM have been set.
+          </ThemedText>
+          <ThemedText style={styles.emptyHint} setColor={quietText}>
+            Add your first estimate below to start using weight targets.
+          </ThemedText>
+        </View>
+      )}
+
+      {estimated_sets.map((item, index) => (
+        <View key={item.estimated_set_id}>
+          {index > 0 && (
+            <View
+              style={[styles.dividerInset, { backgroundColor: theme.hairline }]}
+            />
+          )}
+          <TouchableOpacity
+            style={styles.row}
+            activeOpacity={0.75}
+            onPress={() => {
+              setSelectedSet(item);
+              set_editEstimatedSet_visible(true);
+            }}
           >
-            <ThemedText style={styles.emptyText}>
-              No 1 RM have been set.
+            <ThemedText style={styles.rowName} setColor={titleColor} numberOfLines={1}>
+              {item.exercise_name}
             </ThemedText>
-            <ThemedText
-              size={12}
-              style={styles.emptyHint}
-              setColor={quietText}
-            >
-              Add your first estimate below to start using weight targets.
-            </ThemedText>
-          </View>
-        )}
 
-        {estimated_sets.map((item, index) => {
-          const tileBackground = index % 2 === 0 ? accentSoft : successSoft;
+            <View style={styles.rowValueGroup}>
+              <ThemedText style={styles.rowValue} setColor={titleColor}>
+                {formatWeight(item.estimated_weight)}
+              </ThemedText>
+              <ThemedText style={styles.rowUnit} setColor={quietText}>
+                {" kg"}
+              </ThemedText>
+            </View>
 
-          return (
-            <TouchableOpacity
-              key={item.estimated_set_id}
-              style={[
-                styles.estimateTile,
-                { backgroundColor: tileBackground },
-              ]}
-              activeOpacity={0.88}
-              onPress={() => {
-                setSelectedSet(item);
-                set_editEstimatedSet_visible(true);
-              }}
-            >
-              <View style={styles.estimateContent}>
-                <ThemedText
-                  size={10}
-                  style={styles.estimateEyebrow}
-                  setColor={quietText}
-                >
-                  Exercise
-                </ThemedText>
-                <ThemedText
-                  size={18}
-                  style={styles.estimateExerciseName}
-                  setColor={tileTextColor}
-                >
-                  {item.exercise_name}
-                </ThemedText>
-                <ThemedText
-                  size={11}
-                  style={styles.estimateHint}
-                  setColor={quietText}
-                >
-                  Estimated one rep max
-                </ThemedText>
-              </View>
+            <Pencil width={15} height={15} color={quietText} thickness={1.8} />
+          </TouchableOpacity>
+        </View>
+      ))}
 
-              <View
-                style={[
-                  styles.weightBadge,
-                  { backgroundColor: badgeBackground },
-                ]}
-              >
-                <ThemedText
-                  size={24}
-                  style={styles.weightValue}
-                  setColor={badgeTextColor}
-                >
-                  {formatWeight(item.estimated_weight)}
-                </ThemedText>
-                <ThemedText
-                  size={10}
-                  style={styles.weightLabel}
-                  setColor={badgeTextColor}
-                >
-                  kg
-                </ThemedText>
-              </View>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
+      <View style={styles.footer}>
+        <TouchableOpacity
+          style={[
+            styles.addButton,
+            {
+              backgroundColor: theme.chipBackground,
+              borderColor: theme.border,
+            },
+          ]}
+          activeOpacity={0.85}
+          onPress={onAddPress}
+        >
+          <Plus width={15} height={15} color={theme.title} thickness={2.2} />
+          <ThemedText style={styles.addButtonText} setColor={theme.title}>
+            Add 1RM
+          </ThemedText>
+        </TouchableOpacity>
+      </View>
 
       <EditEstimatedSet
         visible={editEstimatedSet_visible}

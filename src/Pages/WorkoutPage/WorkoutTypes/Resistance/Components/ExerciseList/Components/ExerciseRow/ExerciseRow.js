@@ -9,7 +9,7 @@ import {
 import { useColorScheme } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
 
-import { Colors } from "../../../../../../../../Resources/GlobalStyling/colors";
+import { Colors, withAlpha } from "../../../../../../../../Resources/GlobalStyling/colors";
 import styles from "./ExerciseRowStyle.js";
 import SetList from "./SetList/SetList";
 
@@ -399,9 +399,9 @@ const ExerciseRow = ({
   const recordExerciseTextColor =
     isRecordExercise && colorScheme === "light" ? recordLightColor : titleColor;
   const repeatBadgeBackground =
-    colorScheme === "dark" ? "rgba(247, 116, 46, 0.24)" : "rgba(247, 116, 46, 0.14)";
+    withAlpha(theme.primary, colorScheme === "dark" ? 0.24 : 0.14);
   const repeatBadgeBorder =
-    colorScheme === "dark" ? "rgba(247, 116, 46, 0.36)" : "rgba(247, 116, 46, 0.24)";
+    withAlpha(theme.primary, colorScheme === "dark" ? 0.36 : 0.24);
   const historyPanelSurface =
     colorScheme === "dark" ? "rgba(13, 15, 22, 0.78)" : "rgba(255, 255, 255, 0.72)";
   const historyChipSurface =
@@ -413,7 +413,7 @@ const ExerciseRow = ({
   const exerciseCardBackground = isRecordExercise
     ? recordDarkColor
     : isDone
-      ? "rgba(96, 218, 172, 0.1)"
+      ? withAlpha(secondaryColor, 0.1)
     : cardSurface;
   const exerciseCardBorderColor = isRecordExercise
     ? recordColor

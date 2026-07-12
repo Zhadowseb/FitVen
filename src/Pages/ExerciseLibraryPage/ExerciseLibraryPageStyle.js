@@ -4,408 +4,209 @@ export default StyleSheet.create({
   container: {
     flex: 1,
   },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+  },
+  headerTextColumn: {
+    flex: 1,
+    flexDirection: "column",
+    gap: 2,
+  },
+  eyebrow: {
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 1.8,
+    textTransform: "uppercase",
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: "800",
+    letterSpacing: -0.3,
+  },
+  searchCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   content: {
     flex: 1,
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 18,
     paddingBottom: 16,
+    gap: 22,
   },
-  trainShortcutRow: {
+  section: {
+    flexDirection: "column",
+    gap: 12,
+  },
+  sectionEyebrow: {
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 1.8,
+    textTransform: "uppercase",
+  },
+
+  // Quick tools grid (2-col image cards)
+  quickToolsGrid: {
     flexDirection: "row",
     gap: 12,
-    marginBottom: 18,
   },
-  quickAccessSection: {
-    marginBottom: 18,
-  },
-  quickAccessGrid: {
-    gap: 12,
-  },
-  quickAccessCard: {
+  quickToolCard: {
+    flex: 1,
     borderWidth: 1,
-    borderRadius: 26,
-    paddingHorizontal: 18,
-    paddingTop: 20,
-    paddingBottom: 16,
+    borderRadius: 20,
     overflow: "hidden",
   },
-  quickAccessAccent: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 4,
+  quickToolImageArea: {
+    height: 88,
+    width: "100%",
+    position: "relative",
   },
-  quickAccessCardHeader: {
-    marginBottom: 10,
-  },
-  quickAccessCardEyebrow: {
-    fontSize: 10,
-    fontWeight: "800",
-    textTransform: "uppercase",
-    marginBottom: 4,
-  },
-  quickAccessCardTitle: {
-    lineHeight: 28,
-  },
-  quickAccessCardDescription: {
-    fontSize: 14,
-    lineHeight: 21,
-  },
-  quickAccessMetricsRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginTop: 16,
-  },
-  quickAccessMetricCard: {
-    flex: 1,
-    borderWidth: 1,
-    borderRadius: 18,
-    paddingHorizontal: 8,
-    paddingVertical: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 74,
-  },
-  quickAccessMetricValue: {
-    fontSize: 22,
-    fontWeight: "800",
-    lineHeight: 28,
-  },
-  quickAccessMetricLabel: {
-    fontSize: 10,
-    fontWeight: "700",
-    lineHeight: 12,
-    textTransform: "uppercase",
-    marginTop: 4,
-    textAlign: "center",
-  },
-  heroMetricCardCentered: {
-    alignItems: "center",
-  },
-  heroMetricTextCentered: {
-    alignSelf: "stretch",
-    textAlign: "center",
-  },
-  quickAccessFooter: {
-    marginTop: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  quickAccessFooterText: {
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  quickAccessFooterAccent: {
-    width: 28,
-    height: 8,
-    borderRadius: 999,
-  },
-  programsHeroCard: {
-    minHeight: 322,
-    paddingHorizontal: 18,
-    paddingTop: 0,
-    paddingBottom: 18,
-    borderRadius: 18,
-  },
-  programsHeroImage: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 172,
-    zIndex: 0,
-  },
-  programsHeroImageAsset: {
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
-  },
-  programsHeroImageShade: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.2)",
-  },
-  programsHeroImageFade: {
-    position: "absolute",
-    top: 66,
-    left: 0,
-    right: 0,
-    height: 116,
-    zIndex: 1,
-  },
-  programsHeroImageFadeStep: {
-    flex: 1,
-  },
-  programsHeroTopAccent: {
-    left: 0,
-    right: 0,
-    height: 3,
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
-    zIndex: 3,
-  },
-  programsHeroTopRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingTop: 16,
-    marginBottom: 114,
-    zIndex: 2,
-  },
-  programsHeroEyebrowRow: {
+  quickToolFooter: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-  },
-  programsHeroEyebrowDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 999,
-  },
-  programsHeroEyebrow: {
-    fontSize: 10,
-    fontWeight: "800",
-    textTransform: "uppercase",
-  },
-  programsHeroAction: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  programsHeroContent: {
-    gap: 8,
-    zIndex: 2,
-  },
-  programsHeroTitle: {
-    color: "#ffffff",
-    lineHeight: 28,
-  },
-  programsHeroDescription: {
-    fontSize: 14,
-    lineHeight: 21,
-  },
-  programsHeroMetricsRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginTop: 8,
-  },
-  programsHeroMetricCard: {
-    flex: 1,
-    minHeight: 58,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.08)",
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    justifyContent: "center",
-  },
-  programsHeroMetricValue: {
-    fontSize: 20,
-    fontWeight: "800",
-    lineHeight: 24,
-  },
-  programsHeroMetricLabel: {
-    fontSize: 9,
-    fontWeight: "800",
-    lineHeight: 11,
-    textTransform: "uppercase",
-    marginTop: 5,
-  },
-  exerciseLibraryHeroCard: {
-    minHeight: 322,
-    paddingHorizontal: 18,
-    paddingTop: 0,
-    paddingBottom: 18,
-    borderRadius: 18,
-  },
-  exerciseLibraryHeroTopAccent: {
-    left: 0,
-    right: 0,
-    height: 3,
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
-    zIndex: 3,
-  },
-  exerciseLibraryHeroTopRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingTop: 16,
-    marginBottom: 114,
-    zIndex: 2,
-  },
-  exerciseLibraryHeroEyebrowRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  exerciseLibraryHeroEyebrowDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 999,
-  },
-  exerciseLibraryHeroEyebrow: {
-    fontSize: 10,
-    fontWeight: "800",
-    textTransform: "uppercase",
-  },
-  exerciseLibraryHeroAction: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  exerciseLibraryHeroImage: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 172,
-    zIndex: 0,
-  },
-  exerciseLibraryHeroImageAsset: {
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
-    opacity: 0.68,
-  },
-  exerciseLibraryHeroImageShade: {
-    flex: 1,
-    opacity: 0.12,
-  },
-  exerciseLibraryHeroImageFade: {
-    position: "absolute",
-    top: 66,
-    left: 0,
-    right: 0,
-    height: 116,
-    zIndex: 1,
-  },
-  exerciseLibraryHeroContent: {
-    zIndex: 2,
-  },
-  exerciseLibraryHeroTitle: {
-    color: "#ffffff",
-    lineHeight: 26,
-  },
-  exerciseLibraryHeroDescription: {
-    fontSize: 14,
-    lineHeight: 21,
-    marginTop: 4,
-  },
-  exerciseLibraryHeroMetricsRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginTop: 14,
-  },
-  exerciseLibraryHeroMetricCard: {
-    flex: 1,
-    minHeight: 58,
-    borderRadius: 10,
-    borderWidth: 1,
     paddingHorizontal: 14,
-    paddingVertical: 10,
-    justifyContent: "center",
+    paddingTop: 4,
+    paddingBottom: 13,
   },
-  exerciseLibraryHeroMetricValue: {
-    fontSize: 20,
+  quickToolLabel: {
+    flex: 1,
+    fontSize: 12.5,
     fontWeight: "800",
-    lineHeight: 24,
   },
-  exerciseLibraryHeroMetricLabel: {
-    fontSize: 9,
-    fontWeight: "800",
-    lineHeight: 11,
-    textTransform: "uppercase",
-    marginTop: 5,
-  },
-  personalRecordsHeroCard: {
-    minHeight: 322,
-    paddingHorizontal: 18,
-    paddingTop: 0,
-    paddingBottom: 18,
-    borderRadius: 18,
-  },
-  personalRecordsHeroTopAccent: {
-    left: 0,
-    right: 0,
-    height: 3,
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
-    zIndex: 3,
-  },
-  personalRecordsHeroTopRow: {
+
+  // 1RM Calculator row
+  calculatorRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingTop: 16,
-    marginBottom: 114,
-    zIndex: 2,
+    gap: 13,
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
   },
-  personalRecordsHeroEyebrowRow: {
+  calculatorThumb: {
+    width: 48,
+    height: 48,
+    borderRadius: 13,
+    overflow: "hidden",
+  },
+  calculatorTextColumn: {
+    flex: 1,
+    flexDirection: "column",
+    gap: 1,
+  },
+  calculatorTitle: {
+    fontSize: 14,
+    fontWeight: "800",
+  },
+  calculatorSubtitle: {
+    fontSize: 11,
+    fontWeight: "600",
+  },
+
+  // Programs hero card
+  programsCard: {
+    borderWidth: 1,
+    borderRadius: 20,
+    overflow: "hidden",
+  },
+  programsImageArea: {
+    height: 110,
+    width: "100%",
+    position: "relative",
+  },
+  programsPill: {
+    position: "absolute",
+    top: 12,
+    left: 12,
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-  },
-  personalRecordsHeroEyebrowDot: {
-    width: 7,
-    height: 7,
+    gap: 6,
     borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: 11,
+    paddingVertical: 5,
   },
-  personalRecordsHeroEyebrow: {
+  programsPillText: {
     fontSize: 10,
     fontWeight: "800",
-    textTransform: "uppercase",
+    letterSpacing: 0.8,
   },
-  personalRecordsHeroAction: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  programsBody: {
+    paddingHorizontal: 18,
+    paddingTop: 2,
+    paddingBottom: 16,
+    flexDirection: "column",
+    gap: 10,
+  },
+
+  // Shared card body pieces (programs / records / library)
+  cardTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  cardTitleColumn: {
+    flex: 1,
+    flexDirection: "column",
+    gap: 2,
+  },
+  cardTitle: {
+    fontSize: 17,
+    fontWeight: "800",
+    letterSpacing: -0.2,
+  },
+  cardSubtitle: {
+    fontSize: 12,
+    fontWeight: "500",
+    lineHeight: 17,
+  },
+  chipsRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  chip: {
+    borderRadius: 999,
+    paddingHorizontal: 11,
+    paddingVertical: 5,
+  },
+  chipText: {
+    fontSize: 10.5,
+    fontWeight: "800",
+  },
+
+  // Personal records / exercise library cards
+  infoCard: {
     borderWidth: 1,
+    borderRadius: 20,
+    paddingHorizontal: 18,
+    paddingVertical: 16,
+    flexDirection: "column",
+    gap: 10,
+  },
+  infoCardHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  iconSquare: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-  },
-  personalRecordsHeroImage: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 172,
-    zIndex: 0,
-  },
-  personalRecordsHeroImageAsset: {
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
-    opacity: 0.74,
-  },
-  personalRecordsHeroImageShade: {
-    flex: 1,
-    opacity: 0.08,
-  },
-  personalRecordsHeroImageFade: {
-    position: "absolute",
-    top: 66,
-    left: 0,
-    right: 0,
-    height: 116,
-    zIndex: 1,
-  },
-  personalRecordsHeroContent: {
-    zIndex: 2,
-  },
-  personalRecordsHeroTitle: {
-    color: "#ffffff",
-    lineHeight: 26,
-  },
-  personalRecordsHeroDescription: {
-    fontSize: 14,
-    lineHeight: 21,
-    marginTop: 4,
   },
 });

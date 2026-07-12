@@ -1,6 +1,6 @@
 import { StatusBar } from "expo-status-bar";
 import {
-  ImageBackground,
+  Image,
   ScrollView,
   TouchableOpacity,
   View,
@@ -11,58 +11,35 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
 
 import styles from "./ExerciseLibraryPageStyle";
-import { Colors } from "../../Resources/GlobalStyling/colors";
-import HomeImageShortcutCard from "../../Resources/Components/HomeImageShortcutCard/HomeImageShortcutCard";
-import SicknessLogCard from "../../Resources/Components/SicknessLogCard/SicknessLogCard";
-import TailArrowUpRight from "../../Resources/Icons/UI-icons/TailArrowUpRight";
+import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
+import CoverGradient from "../../Resources/Components/CoverGradient";
+import ChevronRight from "../../Resources/Icons/UI-icons/ChevronRight";
+import Search from "../../Resources/Icons/UI-icons/Search";
+import Layers from "../../Resources/Icons/UI-icons/Layers";
+import Star from "../../Resources/Icons/UI-icons/Star";
+import Dumbbell from "../../Resources/Icons/UI-icons/Dumbbell";
 import { programService, weightliftingService } from "../../Services";
-import {
-  ThemedText,
-  ThemedTitle,
-  ThemedView,
-} from "../../Resources/ThemedComponents";
+import { ThemedText, ThemedView } from "../../Resources/ThemedComponents";
 
-const programsHeroImage = require("../../../assets/programs-hero.jpg");
-const exerciseLibraryHeroImage = require("../../../assets/exercise-library-hero.jpg");
-const personalRecordsHeroImage = require("../../../assets/personal-records-hero.jpg");
+const sicknessDarkImage = require("../../Resources/Images/DarkVersion/sickness dark.png");
 const workoutCalendarDarkImage = require("../../Resources/Images/DarkVersion/workout calender dark.png");
 const calculatorDarkImage = require("../../Resources/Images/DarkVersion/Calculator.png");
-const programsHeroFadeStops = [
-  0,
-  0.03,
-  0.08,
-  0.15,
-  0.24,
-  0.35,
-  0.48,
-  0.62,
-  0.76,
-  0.88,
-  0.96,
-  1,
-];
+const programsCoverImage = require("../../Resources/Images/WorkoutTypes/ResistanceTraining/52c5c0a6-e32a-48a8-a731-95ca73deeabd.png");
 
 const ExerciseLibraryPage = () => {
   const db = useSQLiteContext();
   const navigation = useNavigation();
   const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
   const theme = Colors[colorScheme] ?? Colors.light;
+
   const [quickAccessStats, setQuickAccessStats] = useState({
     programCount: 0,
-    completedProgramCount: 0,
+    activeProgramCount: 0,
     exerciseCount: 0,
     recordExerciseCount: 0,
     recordSlotCount: 0,
   });
-  const primaryColor = theme.primary ?? "#f7742e";
-  const secondaryColor = theme.secondary ?? "#60daac";
-  const cardSurface = theme.cardBackground ?? theme.background;
-  const libraryMetricSurface =
-    theme.libraryMetricBackground ?? "rgba(26, 32, 45, 0.92)";
-  const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor ?? theme.text;
-  const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
-  const titleColor = theme.title ?? theme.text;
-  const cardTextColor = theme.cardBackground ?? theme.textInverted ?? "#1b1918";
 
   const loadQuickAccessStats = useCallback(async () => {
     try {
@@ -74,8 +51,8 @@ const ExerciseLibraryPage = () => {
 
       setQuickAccessStats({
         programCount: programs.length,
-        completedProgramCount: programs.filter(
-          (program) => program.status === "COMPLETE"
+        activeProgramCount: programs.filter(
+          (program) => program.status === "ACTIVE"
         ).length,
         exerciseCount: exerciseRows.length,
         recordExerciseCount: personalRecordRows.length,
@@ -88,7 +65,7 @@ const ExerciseLibraryPage = () => {
       console.error(error);
       setQuickAccessStats({
         programCount: 0,
-        completedProgramCount: 0,
+        activeProgramCount: 0,
         exerciseCount: 0,
         recordExerciseCount: 0,
         recordSlotCount: 0,
@@ -102,616 +79,368 @@ const ExerciseLibraryPage = () => {
     }, [loadQuickAccessStats])
   );
 
-  const quickAccessCards = [
+  const quickTools = [
     {
-      key: "programs",
-      variant: "programsHero",
-      eyebrow: "PROGRAMS",
-      title: "Manage your programs",
-      description:
-        "Create, edit and manage your programs, and keep your templates close as your library grows.",
-      accent: primaryColor,
-      actionBorder: "rgba(247, 116, 46, 0.28)",
-      onPress: () => navigation.navigate("ProgramPage"),
-      metrics: [
-        { label: "Total", value: quickAccessStats.programCount },
-        { label: "Completed", value: quickAccessStats.completedProgramCount },
-        { label: "Templates", value: 0 },
-      ],
-      footer: "Open programs",
+      key: "sickness",
+      label: "Sickness log",
+      image: sicknessDarkImage,
+      onPress: () => navigation.navigate("SicknessPage"),
     },
     {
-      key: "personal-records",
-      variant: "personalRecordsHero",
-      eyebrow: "PERSONAL RECORDS",
-      title: "Track your best lifts",
-      description:
-        "See your strongest reps across every rep range and watch your numbers climb over time.",
-      accent: primaryColor,
-      actionBorder: "rgba(247, 116, 46, 0.28)",
-      onPress: () => navigation.navigate("PersonalRecordsPage"),
-      metrics: [
-        { label: "Exercises", value: quickAccessStats.recordExerciseCount },
-        { label: "Records", value: quickAccessStats.recordSlotCount },
-      ],
-      footer: "Open records",
-    },
-    {
-      key: "exercise-library",
-      variant: "exerciseLibraryHero",
-      eyebrow: "EXERCISE LIBRARY",
-      title: "Browse your catalog",
-      description:
-        "Search the shared catalog, filter by broad training groups, and create your own exercises.",
-      accent: secondaryColor,
-      actionBorder: "rgba(96, 218, 172, 0.28)",
-      onPress: () => navigation.navigate("ExerciseCatalogPage"),
-      metrics: [
-        { label: "Exercises", value: quickAccessStats.exerciseCount },
-        { label: "Custom", value: 0 },
-      ],
-      footer: "Open catalog",
+      key: "calendar",
+      label: "Calendar",
+      image: workoutCalendarDarkImage,
+      onPress: () => navigation.navigate("WorkoutCalendarPage"),
     },
   ];
 
+  const neutralChipBackground = theme.chipBackground ?? "rgba(255,255,255,0.06)";
+  const orangeChipBackground = withAlpha(theme.primary, 0.12);
+  const yellowIconSquareBackground = "rgba(242, 193, 78, 0.12)";
+  const orangeIconSquareBackground = withAlpha(theme.primary, 0.12);
+  const programsPillBackground = isDark
+    ? "rgba(10, 11, 15, 0.72)"
+    : "rgba(255, 255, 255, 0.88)";
+  const programsPillBorder = isDark
+    ? "rgba(255, 255, 255, 0.14)"
+    : "rgba(15, 17, 22, 0.14)";
+
   return (
     <ThemedView safe={["top", "left", "right"]} style={styles.container}>
+      <View
+        style={[styles.header, { borderBottomColor: theme.hairline }]}
+      >
+        <View style={styles.headerTextColumn}>
+          <ThemedText style={styles.eyebrow} setColor={theme.quietText}>
+            FitVen
+          </ThemedText>
+          <ThemedText style={styles.headerTitle} setColor={theme.title}>
+            Training
+          </ThemedText>
+        </View>
+
+        <TouchableOpacity
+          activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel="Search exercises"
+          onPress={() => navigation.navigate("ExerciseCatalogPage")}
+          style={[
+            styles.searchCircle,
+            {
+              backgroundColor: theme.cardBackground,
+              borderColor: theme.cardBorder,
+            },
+          ]}
+        >
+          <Search width={18} height={18} color={theme.text} thickness={1.8} />
+        </TouchableOpacity>
+      </View>
+
       <ScrollView
         style={styles.content}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.trainShortcutRow}>
-          <SicknessLogCard />
+        <View style={styles.section}>
+          <ThemedText style={styles.sectionEyebrow} setColor={theme.quietText}>
+            Quick tools
+          </ThemedText>
 
-          <HomeImageShortcutCard
-            accessibilityLabel="Open workout calendar"
-            imageSource={workoutCalendarDarkImage}
-            onPress={() => navigation.navigate("WorkoutCalendarPage")}
-            title="Workout Calendar"
-          />
-        </View>
-
-        <View style={styles.trainShortcutRow}>
-          <HomeImageShortcutCard
-            accentColor={secondaryColor}
-            accessibilityLabel="Open one rep max calculator"
-            imageSource={calculatorDarkImage}
-            onPress={() => navigation.navigate("OneRepMaxCalculatorPage")}
-            title="1RM Calculator"
-          />
-        </View>
-
-        <View style={styles.quickAccessSection}>
-          <View style={styles.quickAccessGrid}>
-            {quickAccessCards.map((card) => {
-              const CardWrapper = card.onPress ? TouchableOpacity : View;
-              const wrapperProps = card.onPress
-                ? {
-                    activeOpacity: 0.92,
-                    onPress: card.onPress,
-                  }
-                : {};
-              const isProgramsHero = card.variant === "programsHero";
-              const isExerciseLibraryHero =
-                card.variant === "exerciseLibraryHero";
-              const isPersonalRecordsHero =
-                card.variant === "personalRecordsHero";
-
-              if (isProgramsHero) {
-                return (
-                  <CardWrapper
-                    key={card.key}
-                    {...wrapperProps}
-                    style={[
-                      styles.quickAccessCard,
-                      styles.programsHeroCard,
-                      {
-                        backgroundColor: cardSurface,
-                        borderColor: "rgba(255, 255, 255, 0.12)",
-                      },
-                    ]}
-                  >
-                    <ImageBackground
-                      source={programsHeroImage}
-                      resizeMode="cover"
-                      style={styles.programsHeroImage}
-                      imageStyle={styles.programsHeroImageAsset}
-                    >
-                      <View style={styles.programsHeroImageShade} />
-                    </ImageBackground>
-
-                    <View
-                      pointerEvents="none"
-                      style={styles.programsHeroImageFade}
-                    >
-                      {programsHeroFadeStops.map((opacity, index) => (
-                        <View
-                          key={`programs-hero-fade-${index}`}
-                          style={[
-                            styles.programsHeroImageFadeStep,
-                            {
-                              backgroundColor: cardSurface,
-                              opacity,
-                            },
-                          ]}
-                        />
-                      ))}
-                    </View>
-
-                    <View
-                      pointerEvents="none"
-                      style={[
-                        styles.quickAccessAccent,
-                        styles.programsHeroTopAccent,
-                        { backgroundColor: card.accent },
-                      ]}
-                    />
-
-                    <View style={styles.programsHeroTopRow}>
-                      <View style={styles.programsHeroEyebrowRow}>
-                        <View
-                          style={[
-                            styles.programsHeroEyebrowDot,
-                            { backgroundColor: card.accent },
-                          ]}
-                        />
-                        <ThemedText
-                          style={styles.programsHeroEyebrow}
-                          setColor={card.accent}
-                        >
-                          {card.eyebrow}
-                        </ThemedText>
-                      </View>
-
-                      <View
-                        pointerEvents="none"
-                        style={[
-                          styles.programsHeroAction,
-                          {
-                            backgroundColor: "rgba(0, 0, 0, 0.38)",
-                            borderColor: card.actionBorder,
-                          },
-                        ]}
-                      >
-                        <TailArrowUpRight
-                          width={17}
-                          height={17}
-                          stroke={card.accent}
-                        />
-                      </View>
-                    </View>
-
-                    <View style={styles.programsHeroContent}>
-                      <ThemedTitle
-                        type="h3"
-                        style={styles.programsHeroTitle}
-                      >
-                        {card.title}
-                      </ThemedTitle>
-
-                      <ThemedText
-                        style={styles.programsHeroDescription}
-                        setColor="#7892ba"
-                      >
-                        {card.description}
-                      </ThemedText>
-
-                      <View style={styles.programsHeroMetricsRow}>
-                        {card.metrics.map((metric) => (
-                          <View
-                            key={`${card.key}-${metric.label}`}
-                            style={[
-                              styles.programsHeroMetricCard,
-                              styles.heroMetricCardCentered,
-                              { backgroundColor: libraryMetricSurface },
-                            ]}
-                          >
-                            <ThemedText
-                              style={[
-                                styles.programsHeroMetricValue,
-                                styles.heroMetricTextCentered,
-                              ]}
-                              setColor="#ffffff"
-                            >
-                              {metric.value}
-                            </ThemedText>
-                            <ThemedText
-                              style={[
-                                styles.programsHeroMetricLabel,
-                                styles.heroMetricTextCentered,
-                              ]}
-                              setColor={card.accent}
-                            >
-                              {metric.label}
-                            </ThemedText>
-                          </View>
-                        ))}
-                      </View>
-                    </View>
-                  </CardWrapper>
-                );
-              }
-
-              if (isExerciseLibraryHero) {
-                return (
-                  <CardWrapper
-                    key={card.key}
-                    {...wrapperProps}
-                    style={[
-                      styles.quickAccessCard,
-                      styles.exerciseLibraryHeroCard,
-                      {
-                        backgroundColor: cardSurface,
-                        borderColor: "rgba(255, 255, 255, 0.12)",
-                      },
-                    ]}
-                  >
-                    <View
-                      pointerEvents="none"
-                      style={[
-                        styles.quickAccessAccent,
-                        styles.exerciseLibraryHeroTopAccent,
-                        { backgroundColor: card.accent },
-                      ]}
-                    />
-
-                    <View style={styles.exerciseLibraryHeroTopRow}>
-                      <View style={styles.exerciseLibraryHeroEyebrowRow}>
-                        <View
-                          style={[
-                            styles.exerciseLibraryHeroEyebrowDot,
-                            { backgroundColor: card.accent },
-                          ]}
-                        />
-                        <ThemedText
-                          style={styles.exerciseLibraryHeroEyebrow}
-                          setColor={card.accent}
-                        >
-                          {card.eyebrow}
-                        </ThemedText>
-                      </View>
-
-                      <View
-                        pointerEvents="none"
-                        style={[
-                          styles.exerciseLibraryHeroAction,
-                          {
-                            backgroundColor: "rgba(0, 0, 0, 0.38)",
-                            borderColor: card.actionBorder,
-                          },
-                        ]}
-                      >
-                        <TailArrowUpRight
-                          width={17}
-                          height={17}
-                          stroke={card.accent}
-                        />
-                      </View>
-                    </View>
-
-                    <ImageBackground
-                      source={exerciseLibraryHeroImage}
-                      resizeMode="cover"
-                      style={styles.exerciseLibraryHeroImage}
-                      imageStyle={styles.exerciseLibraryHeroImageAsset}
-                    >
-                      <View
-                        style={[
-                          styles.exerciseLibraryHeroImageShade,
-                          { backgroundColor: cardSurface },
-                        ]}
-                      />
-                    </ImageBackground>
-
-                    <View
-                      pointerEvents="none"
-                      style={styles.exerciseLibraryHeroImageFade}
-                    >
-                      {programsHeroFadeStops.map((opacity, index) => (
-                        <View
-                          key={`exercise-library-hero-fade-${index}`}
-                          style={[
-                            styles.programsHeroImageFadeStep,
-                            {
-                              backgroundColor: cardSurface,
-                              opacity,
-                            },
-                          ]}
-                        />
-                      ))}
-                    </View>
-
-                    <View style={styles.exerciseLibraryHeroContent}>
-                      <ThemedTitle
-                        type="h3"
-                        style={styles.exerciseLibraryHeroTitle}
-                      >
-                        {card.title}
-                      </ThemedTitle>
-
-                      <ThemedText
-                        style={styles.exerciseLibraryHeroDescription}
-                        setColor="#7892ba"
-                      >
-                        {card.description}
-                      </ThemedText>
-
-                      <View style={styles.exerciseLibraryHeroMetricsRow}>
-                        {card.metrics.map((metric) => (
-                          <View
-                            key={`${card.key}-${metric.label}`}
-                            style={[
-                              styles.exerciseLibraryHeroMetricCard,
-                              styles.heroMetricCardCentered,
-                              {
-                                backgroundColor: libraryMetricSurface,
-                                borderColor: cardBorder,
-                              },
-                            ]}
-                          >
-                            <ThemedText
-                              style={[
-                                styles.exerciseLibraryHeroMetricValue,
-                                styles.heroMetricTextCentered,
-                              ]}
-                              setColor="#ffffff"
-                            >
-                              {metric.value}
-                            </ThemedText>
-                            <ThemedText
-                              style={[
-                                styles.exerciseLibraryHeroMetricLabel,
-                                styles.heroMetricTextCentered,
-                              ]}
-                              setColor={card.accent}
-                            >
-                              {metric.label}
-                            </ThemedText>
-                          </View>
-                        ))}
-                      </View>
-                    </View>
-                  </CardWrapper>
-                );
-              }
-
-              if (isPersonalRecordsHero) {
-                return (
-                  <CardWrapper
-                    key={card.key}
-                    {...wrapperProps}
-                    style={[
-                      styles.quickAccessCard,
-                      styles.personalRecordsHeroCard,
-                      {
-                        backgroundColor: cardSurface,
-                        borderColor: "rgba(255, 255, 255, 0.12)",
-                      },
-                    ]}
-                  >
-                    <View
-                      pointerEvents="none"
-                      style={[
-                        styles.quickAccessAccent,
-                        styles.personalRecordsHeroTopAccent,
-                        { backgroundColor: card.accent },
-                      ]}
-                    />
-
-                    <View style={styles.personalRecordsHeroTopRow}>
-                      <View style={styles.personalRecordsHeroEyebrowRow}>
-                        <View
-                          style={[
-                            styles.personalRecordsHeroEyebrowDot,
-                            { backgroundColor: card.accent },
-                          ]}
-                        />
-                        <ThemedText
-                          style={styles.personalRecordsHeroEyebrow}
-                          setColor={card.accent}
-                        >
-                          {card.eyebrow}
-                        </ThemedText>
-                      </View>
-
-                      <View
-                        pointerEvents="none"
-                        style={[
-                          styles.personalRecordsHeroAction,
-                          {
-                            backgroundColor: "rgba(0, 0, 0, 0.38)",
-                            borderColor: card.actionBorder,
-                          },
-                        ]}
-                      >
-                        <TailArrowUpRight
-                          width={17}
-                          height={17}
-                          stroke={card.accent}
-                        />
-                      </View>
-                    </View>
-
-                    <ImageBackground
-                      source={personalRecordsHeroImage}
-                      resizeMode="cover"
-                      style={styles.personalRecordsHeroImage}
-                      imageStyle={styles.personalRecordsHeroImageAsset}
-                    >
-                      <View
-                        style={[
-                          styles.personalRecordsHeroImageShade,
-                          { backgroundColor: cardSurface },
-                        ]}
-                      />
-                    </ImageBackground>
-
-                    <View
-                      pointerEvents="none"
-                      style={styles.personalRecordsHeroImageFade}
-                    >
-                      {programsHeroFadeStops.map((opacity, index) => (
-                        <View
-                          key={`personal-records-hero-fade-${index}`}
-                          style={[
-                            styles.programsHeroImageFadeStep,
-                            {
-                              backgroundColor: cardSurface,
-                              opacity,
-                            },
-                          ]}
-                        />
-                      ))}
-                    </View>
-
-                    <View style={styles.personalRecordsHeroContent}>
-                      <ThemedTitle
-                        type="h3"
-                        style={styles.personalRecordsHeroTitle}
-                      >
-                        {card.title}
-                      </ThemedTitle>
-
-                      <ThemedText
-                        style={styles.personalRecordsHeroDescription}
-                        setColor="#7892ba"
-                      >
-                        {card.description}
-                      </ThemedText>
-
-                      <View style={styles.quickAccessMetricsRow}>
-                        {card.metrics.map((metric) => (
-                          <View
-                            key={`${card.key}-${metric.label}`}
-                            style={[
-                              styles.quickAccessMetricCard,
-                              styles.heroMetricCardCentered,
-                              {
-                                backgroundColor: libraryMetricSurface,
-                                borderColor: cardBorder,
-                              },
-                            ]}
-                          >
-                            <ThemedText
-                              style={[
-                                styles.quickAccessMetricValue,
-                                styles.heroMetricTextCentered,
-                              ]}
-                              setColor={titleColor}
-                            >
-                              {metric.value}
-                            </ThemedText>
-                            <ThemedText
-                              style={[
-                                styles.quickAccessMetricLabel,
-                                styles.heroMetricTextCentered,
-                              ]}
-                              setColor={card.accent}
-                            >
-                              {metric.label}
-                            </ThemedText>
-                          </View>
-                        ))}
-                      </View>
-                    </View>
-                  </CardWrapper>
-                );
-              }
-
-              return (
-                <CardWrapper
-                  key={card.key}
-                  {...wrapperProps}
-                  style={[
-                    styles.quickAccessCard,
-                    {
-                      backgroundColor: cardSurface,
-                      borderColor: cardBorder,
-                    },
-                  ]}
-                >
-                  <View
-                    pointerEvents="none"
-                    style={[
-                      styles.quickAccessAccent,
-                      { backgroundColor: card.accent },
+          <View style={styles.quickToolsGrid}>
+            {quickTools.map((tool) => (
+              <TouchableOpacity
+                key={tool.key}
+                activeOpacity={0.92}
+                onPress={tool.onPress}
+                style={[
+                  styles.quickToolCard,
+                  {
+                    backgroundColor: theme.cardBackground,
+                    borderColor: theme.cardBorder,
+                  },
+                ]}
+              >
+                <View style={styles.quickToolImageArea}>
+                  <Image
+                    source={tool.image}
+                    resizeMode="cover"
+                    style={{ width: "100%", height: "100%" }}
+                  />
+                  <CoverGradient
+                    color={theme.cardBackground}
+                    stops={[
+                      { offset: "30%", opacity: 0 },
+                      { offset: "100%", opacity: 1 },
                     ]}
                   />
+                </View>
 
-                  <View style={styles.quickAccessCardHeader}>
-                    <ThemedText
-                      style={styles.quickAccessCardEyebrow}
-                      setColor={card.accent}
-                    >
-                      {card.eyebrow}
-                    </ThemedText>
-                    <ThemedTitle
-                      type="h3"
-                      style={[styles.quickAccessCardTitle, { color: titleColor }]}
-                    >
-                      {card.title}
-                    </ThemedTitle>
-                  </View>
-
+                <View style={styles.quickToolFooter}>
                   <ThemedText
-                    style={styles.quickAccessCardDescription}
-                    setColor={quietText}
+                    style={styles.quickToolLabel}
+                    setColor={theme.title}
+                    numberOfLines={1}
                   >
-                    {card.description}
+                    {tool.label}
                   </ThemedText>
-
-                  <View style={styles.quickAccessMetricsRow}>
-                    {card.metrics.map((metric) => (
-                      <View
-                        key={`${card.key}-${metric.label}`}
-                        style={[
-                          styles.quickAccessMetricCard,
-                          {
-                            backgroundColor: libraryMetricSurface,
-                            borderColor: cardBorder,
-                          },
-                        ]}
-                      >
-                        <ThemedText
-                          style={styles.quickAccessMetricValue}
-                          setColor={titleColor}
-                        >
-                          {metric.value}
-                        </ThemedText>
-                        <ThemedText
-                          style={styles.quickAccessMetricLabel}
-                          setColor={card.accent}
-                        >
-                          {metric.label}
-                        </ThemedText>
-                      </View>
-                    ))}
-                  </View>
-
-                  <View style={styles.quickAccessFooter}>
-                    <ThemedText
-                      style={styles.quickAccessFooterText}
-                      setColor={cardTextColor}
-                    >
-                      {card.footer}
-                    </ThemedText>
-                    <View
-                      style={[
-                        styles.quickAccessFooterAccent,
-                        { backgroundColor: card.accent },
-                      ]}
-                    />
-                  </View>
-
-                </CardWrapper>
-              );
-            })}
+                  <ChevronRight
+                    width={15}
+                    height={15}
+                    color={theme.quietText}
+                    thickness={2}
+                  />
+                </View>
+              </TouchableOpacity>
+            ))}
           </View>
+
+          <TouchableOpacity
+            activeOpacity={0.92}
+            onPress={() => navigation.navigate("OneRepMaxCalculatorPage")}
+            style={[
+              styles.calculatorRow,
+              {
+                backgroundColor: theme.cardBackground,
+                borderColor: theme.cardBorder,
+              },
+            ]}
+          >
+            <View style={styles.calculatorThumb}>
+              <Image
+                source={calculatorDarkImage}
+                resizeMode="cover"
+                style={{ width: "100%", height: "100%" }}
+              />
+            </View>
+
+            <View style={styles.calculatorTextColumn}>
+              <ThemedText style={styles.calculatorTitle} setColor={theme.title}>
+                1RM Calculator
+              </ThemedText>
+              <ThemedText
+                style={styles.calculatorSubtitle}
+                setColor={theme.quietText}
+              >
+                Estimate your one rep max
+              </ThemedText>
+            </View>
+
+            <ChevronRight
+              width={17}
+              height={17}
+              color={theme.quietText}
+              thickness={2}
+            />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.section}>
+          <ThemedText style={styles.sectionEyebrow} setColor={theme.quietText}>
+            Your training
+          </ThemedText>
+
+          <TouchableOpacity
+            activeOpacity={0.92}
+            onPress={() => navigation.navigate("ProgramPage")}
+            style={[
+              styles.programsCard,
+              {
+                backgroundColor: theme.cardBackground,
+                borderColor: theme.cardBorder,
+              },
+            ]}
+          >
+            <View style={styles.programsImageArea}>
+              <Image
+                source={programsCoverImage}
+                resizeMode="cover"
+                style={{ width: "100%", height: "100%" }}
+              />
+              <CoverGradient
+                color={theme.cardBackground}
+                stops={[
+                  { offset: "20%", opacity: 0.15 },
+                  { offset: "100%", opacity: 1 },
+                ]}
+              />
+
+              <View
+                style={[
+                  styles.programsPill,
+                  {
+                    backgroundColor: programsPillBackground,
+                    borderColor: programsPillBorder,
+                  },
+                ]}
+              >
+                <Layers width={12} height={12} color={theme.primary} thickness={1.8} />
+                <ThemedText style={styles.programsPillText} setColor={theme.title}>
+                  PROGRAMS
+                </ThemedText>
+              </View>
+            </View>
+
+            <View style={styles.programsBody}>
+              <View style={styles.cardTitleRow}>
+                <View style={styles.cardTitleColumn}>
+                  <ThemedText style={styles.cardTitle} setColor={theme.title}>
+                    Manage your programs
+                  </ThemedText>
+                  <ThemedText style={styles.cardSubtitle} setColor={theme.text}>
+                    Plan blocks, weeks and workouts.
+                  </ThemedText>
+                </View>
+                <ChevronRight
+                  width={18}
+                  height={18}
+                  color={theme.quietText}
+                  thickness={2}
+                />
+              </View>
+
+              <View style={styles.chipsRow}>
+                <View
+                  style={[styles.chip, { backgroundColor: neutralChipBackground }]}
+                >
+                  <ThemedText style={styles.chipText} setColor={theme.text}>
+                    <ThemedText style={styles.chipText} setColor={theme.title}>
+                      {quickAccessStats.programCount}
+                    </ThemedText>{" "}
+                    total
+                  </ThemedText>
+                </View>
+
+                {quickAccessStats.activeProgramCount > 0 ? (
+                  <View
+                    style={[styles.chip, { backgroundColor: orangeChipBackground }]}
+                  >
+                    <ThemedText style={styles.chipText} setColor={theme.primary}>
+                      {quickAccessStats.activeProgramCount} active
+                    </ThemedText>
+                  </View>
+                ) : null}
+              </View>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.92}
+            onPress={() => navigation.navigate("PersonalRecordsPage")}
+            style={[
+              styles.infoCard,
+              {
+                backgroundColor: theme.cardBackground,
+                borderColor: theme.cardBorder,
+              },
+            ]}
+          >
+            <View style={styles.infoCardHeaderRow}>
+              <View
+                style={[
+                  styles.iconSquare,
+                  { backgroundColor: yellowIconSquareBackground },
+                ]}
+              >
+                <Star width={19} height={19} color={theme.planned} filled />
+              </View>
+
+              <View style={styles.cardTitleColumn}>
+                <ThemedText style={styles.cardTitle} setColor={theme.title}>
+                  Personal records
+                </ThemedText>
+                <ThemedText style={styles.cardSubtitle} setColor={theme.text}>
+                  Best lifts and estimated 1RM per exercise.
+                </ThemedText>
+              </View>
+
+              <ChevronRight
+                width={18}
+                height={18}
+                color={theme.quietText}
+                thickness={2}
+              />
+            </View>
+
+            <View style={styles.chipsRow}>
+              <View
+                style={[styles.chip, { backgroundColor: neutralChipBackground }]}
+              >
+                <ThemedText style={styles.chipText} setColor={theme.text}>
+                  <ThemedText style={styles.chipText} setColor={theme.title}>
+                    {quickAccessStats.recordExerciseCount}
+                  </ThemedText>{" "}
+                  exercises
+                </ThemedText>
+              </View>
+
+              <View
+                style={[styles.chip, { backgroundColor: neutralChipBackground }]}
+              >
+                <ThemedText style={styles.chipText} setColor={theme.text}>
+                  <ThemedText style={styles.chipText} setColor={theme.title}>
+                    {quickAccessStats.recordSlotCount}
+                  </ThemedText>{" "}
+                  records
+                </ThemedText>
+              </View>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.92}
+            onPress={() => navigation.navigate("ExerciseCatalogPage")}
+            style={[
+              styles.infoCard,
+              {
+                backgroundColor: theme.cardBackground,
+                borderColor: theme.cardBorder,
+              },
+            ]}
+          >
+            <View style={styles.infoCardHeaderRow}>
+              <View
+                style={[
+                  styles.iconSquare,
+                  { backgroundColor: orangeIconSquareBackground },
+                ]}
+              >
+                <Dumbbell width={19} height={19} color={theme.primary} thickness={1.6} />
+              </View>
+
+              <View style={styles.cardTitleColumn}>
+                <ThemedText style={styles.cardTitle} setColor={theme.title}>
+                  Exercise library
+                </ThemedText>
+                <ThemedText style={styles.cardSubtitle} setColor={theme.text}>
+                  All exercises with primary and secondary muscles.
+                </ThemedText>
+              </View>
+
+              <ChevronRight
+                width={18}
+                height={18}
+                color={theme.quietText}
+                thickness={2}
+              />
+            </View>
+
+            <View style={styles.chipsRow}>
+              <View
+                style={[styles.chip, { backgroundColor: neutralChipBackground }]}
+              >
+                <ThemedText style={styles.chipText} setColor={theme.text}>
+                  <ThemedText style={styles.chipText} setColor={theme.title}>
+                    {quickAccessStats.exerciseCount}
+                  </ThemedText>{" "}
+                  exercises
+                </ThemedText>
+              </View>
+            </View>
+          </TouchableOpacity>
         </View>
       </ScrollView>
 
-      <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
+      <StatusBar style={isDark ? "light" : "dark"} />
     </ThemedView>
   );
 };

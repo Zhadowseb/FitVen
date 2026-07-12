@@ -1,12 +1,17 @@
 const EARTH_RADIUS_METERS = 6371000;
 
 export const DEFAULT_RUN_DISTANCE_FILTER = Object.freeze({
-  maxAccuracyMeters: 35,
+  // A phone carried in a pocket commonly reports 40-60m accuracy even while
+  // its route is still usable. The previous 35m hard cut-off discarded those
+  // points and then lost the distance across the resulting tracking gaps.
+  maxAccuracyMeters: 65,
   minSegmentDistanceMeters: 3,
-  maxAccuracyDistanceFloorMeters: 10,
+  maxAccuracyDistanceFloorMeters: 15,
   accuracyDistanceFloorMultiplier: 0.5,
   maxSegmentSpeedMetersPerSecond: 8.5,
-  maxSegmentGapSeconds: 120,
+  // Android may deliver sparse points while the screen is locked. A plausible
+  // segment is safer to retain than dropping several minutes of a real run.
+  maxSegmentGapSeconds: 600,
   samePointCoordinateEpsilon: 0.0000001,
 });
 
@@ -144,7 +149,11 @@ const compareLocationLogs = (left, right) => {
   return (toFiniteNumber(left?.id) ?? 0) - (toFiniteNumber(right?.id) ?? 0);
 };
 
-export const calculateTrackedDistanceSummary = (logs, filterOverrides = {}) => {
+const analyzeTrackedDistance = (
+  logs,
+  filterOverrides = {},
+  { includeDiagnostics = false } = {}
+) => {
   const options = {
     ...DEFAULT_RUN_DISTANCE_FILTER,
     ...filterOverrides,
@@ -162,19 +171,47 @@ export const calculateTrackedDistanceSummary = (logs, filterOverrides = {}) => {
   let rejectedPointCount = 0;
   let trackingBreakCount = 0;
   let reanchorCount = 0;
+  const diagnostics = includeDiagnostics ? [] : null;
+
+  const recordDiagnostic = (log, values) => {
+    if (!diagnostics) {
+      return;
+    }
+
+    diagnostics.push({
+      latitude: toFiniteNumber(log?.latitude),
+      longitude: toFiniteNumber(log?.longitude),
+      accuracy: toFiniteNumber(log?.accuracy),
+      timestamp: toFiniteNumber(log?.timestamp),
+      accepted: false,
+      rejectionReason: null,
+      distanceMeters: null,
+      timeDiffSeconds: null,
+      speedMetersPerSecond: null,
+      ...values,
+    });
+  };
 
   for (const log of orderedLogs) {
     if (isLocationTrackingBreak(log)) {
       previousAnchorPoint = null;
       previousUsablePoint = null;
       trackingBreakCount += 1;
+      recordDiagnostic(log, { rejectionReason: "tracking_break" });
       continue;
     }
 
     const currentPoint = normalizeLocationPoint(log);
 
-    if (!currentPoint || !hasUsableAccuracy(currentPoint, options)) {
+    if (!currentPoint) {
       rejectedPointCount += 1;
+      recordDiagnostic(log, { rejectionReason: "invalid_point" });
+      continue;
+    }
+
+    if (!hasUsableAccuracy(currentPoint, options)) {
+      rejectedPointCount += 1;
+      recordDiagnostic(log, { rejectionReason: "poor_accuracy" });
       continue;
     }
 
@@ -183,6 +220,7 @@ export const calculateTrackedDistanceSummary = (logs, filterOverrides = {}) => {
     if (!previousAnchorPoint) {
       previousAnchorPoint = currentPoint;
       previousUsablePoint = currentPoint;
+      recordDiagnostic(log, { accepted: true, rejectionReason: "anchor" });
       continue;
     }
 
@@ -193,24 +231,47 @@ export const calculateTrackedDistanceSummary = (logs, filterOverrides = {}) => {
         options.samePointCoordinateEpsilon
       )
     ) {
+      recordDiagnostic(log, { rejectionReason: "duplicate_point" });
       continue;
     }
 
     const {
+      distanceMeters: transitionDistanceMeters,
       timeDiffSeconds: transitionTimeDiffSeconds,
       speedMetersPerSecond: transitionSpeedMetersPerSecond,
     } = getLocationSegmentMetrics(previousUsablePoint, currentPoint);
+
+    const transitionDiagnostic = {
+      distanceMeters: transitionDistanceMeters,
+      timeDiffSeconds: transitionTimeDiffSeconds,
+      speedMetersPerSecond: transitionSpeedMetersPerSecond,
+    };
 
     if (
       !Number.isFinite(transitionTimeDiffSeconds) ||
       transitionTimeDiffSeconds <= 0
     ) {
       rejectedPointCount += 1;
+      recordDiagnostic(log, {
+        ...transitionDiagnostic,
+        rejectionReason: "non_monotonic_timestamp",
+      });
+      continue;
+    }
+
+    if (transitionTimeDiffSeconds > options.maxSegmentGapSeconds) {
+      previousAnchorPoint = currentPoint;
+      previousUsablePoint = currentPoint;
+      rejectedPointCount += 1;
+      reanchorCount += 1;
+      recordDiagnostic(log, {
+        ...transitionDiagnostic,
+        rejectionReason: "tracking_gap",
+      });
       continue;
     }
 
     if (
-      transitionTimeDiffSeconds > options.maxSegmentGapSeconds ||
       !Number.isFinite(transitionSpeedMetersPerSecond) ||
       transitionSpeedMetersPerSecond > options.maxSegmentSpeedMetersPerSecond
     ) {
@@ -218,6 +279,10 @@ export const calculateTrackedDistanceSummary = (logs, filterOverrides = {}) => {
       previousUsablePoint = currentPoint;
       rejectedPointCount += 1;
       reanchorCount += 1;
+      recordDiagnostic(log, {
+        ...transitionDiagnostic,
+        rejectionReason: "implausible_speed",
+      });
       continue;
     }
 
@@ -237,6 +302,11 @@ export const calculateTrackedDistanceSummary = (logs, filterOverrides = {}) => {
     ) {
       previousUsablePoint = currentPoint;
       rejectedPointCount += 1;
+      recordDiagnostic(log, {
+        ...transitionDiagnostic,
+        distanceMeters,
+        rejectionReason: "below_noise_floor",
+      });
       continue;
     }
 
@@ -244,9 +314,16 @@ export const calculateTrackedDistanceSummary = (logs, filterOverrides = {}) => {
     previousAnchorPoint = currentPoint;
     previousUsablePoint = currentPoint;
     acceptedSegmentCount += 1;
+    recordDiagnostic(log, {
+      ...transitionDiagnostic,
+      accepted: true,
+      distanceMeters,
+      rejectionReason:
+        transitionTimeDiffSeconds > 120 ? "accepted_after_gap" : "accepted",
+    });
   }
 
-  return {
+  const summary = {
     totalDistanceMeters,
     totalDistanceKm: totalDistanceMeters / 1000,
     pointCount: orderedLogs.length,
@@ -256,4 +333,14 @@ export const calculateTrackedDistanceSummary = (logs, filterOverrides = {}) => {
     trackingBreakCount,
     reanchorCount,
   };
+
+  return diagnostics ? { ...summary, diagnostics } : summary;
 };
+
+export const calculateTrackedDistanceSummary = (logs, filterOverrides = {}) =>
+  analyzeTrackedDistance(logs, filterOverrides);
+
+export const calculateTrackedDistanceDiagnostics = (
+  logs,
+  filterOverrides = {}
+) => analyzeTrackedDistance(logs, filterOverrides, { includeDiagnostics: true });

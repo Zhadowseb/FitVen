@@ -2,43 +2,88 @@ import { StyleSheet } from "react-native";
 
 export default StyleSheet.create({
   section: {
-    marginTop: 12,
-    marginBottom: 10,
-  },
-  scrollContent: {
-    paddingHorizontal: 18,
-    paddingBottom: 4,
-    alignItems: "center",
+    marginTop: 18,
     gap: 12,
   },
-  circleCard: {
-    width: 76,
+  headerRow: {
+    paddingHorizontal: 20,
+    flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 8,
+  },
+  headerEyebrow: {
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 1.8,
+    textTransform: "uppercase",
+  },
+  headerSpacer: {
+    flex: 1,
+  },
+  livePill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    borderRadius: 999,
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+  },
+  livePillDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+  },
+  livePillText: {
+    fontSize: 9.5,
+    fontWeight: "800",
+  },
+  seeAllText: {
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 2,
+    paddingBottom: 4,
+    gap: 18,
+  },
+  circleCard: {
+    width: 72,
+    alignItems: "center",
+    gap: 7,
+  },
+  youDivider: {
+    width: 1,
+    height: 68,
+    borderRadius: 1,
+    alignSelf: "flex-start",
   },
   avatarShell: {
     position: "relative",
+    width: 68,
+    height: 68,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  pulseRing: {
+    position: "absolute",
+    top: 2,
+    left: 2,
+    right: 2,
+    bottom: 2,
+    borderRadius: 999,
   },
   avatarRing: {
     width: 68,
     height: 68,
     borderRadius: 34,
-    borderWidth: 3,
+    borderWidth: 2.5,
     alignItems: "center",
     justifyContent: "center",
     padding: 3,
   },
-  statusBadge: {
-    position: "absolute",
-    right: -2,
-    bottom: -1,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 2,
-    borderColor: "#0E0F12",
+  addRing: {
+    borderStyle: "dashed",
   },
   avatarInner: {
     width: "100%",
@@ -47,34 +92,34 @@ export default StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  nameStatusColumn: {
+    alignItems: "center",
+    gap: 1,
+  },
   circleName: {
-    maxWidth: 76,
+    maxWidth: 72,
     fontSize: 12,
     fontWeight: "700",
     lineHeight: 15,
-    minHeight: 24,
     textAlign: "center",
   },
-  circleBadge: {
-    marginTop: -2,
-    borderRadius: 9999,
-    overflow: "hidden",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    minHeight: 22,
-    justifyContent: "center",
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
   },
-  circleBadgeText: {
+  statusDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+  },
+  statusText: {
     fontSize: 10,
     fontWeight: "700",
-    lineHeight: 12,
-    textAlign: "center",
   },
-  divider: {
-    width: 1,
-    height: 54,
-    marginHorizontal: 2,
-    opacity: 0.7,
+  addLabel: {
+    fontSize: 12,
+    fontWeight: "700",
   },
   emptyCard: {
     minHeight: 116,
@@ -105,7 +150,7 @@ export default StyleSheet.create({
     justifyContent: "center",
   },
   noticeCard: {
-    marginHorizontal: 18,
+    marginHorizontal: 20,
     borderWidth: 1,
     borderRadius: 22,
     paddingHorizontal: 16,

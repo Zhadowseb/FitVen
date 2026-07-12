@@ -40,6 +40,23 @@ function localDateToIsoValue(value) {
   return normalizeIsoDateString(value) ?? value;
 }
 
+// Sickness is an absence, not a completed day. For progress displays only,
+// workouts on a sick day count once that calendar day has passed. Keeping this
+// as a derived value preserves Day.done and avoids syncing a false completion.
+function completedWorkoutForProgressSql(dayAlias = "d", workoutAlias = "w") {
+  const dayDateSql = localDateToIsoSql(`${dayAlias}.date`);
+
+  return `CASE
+    WHEN COALESCE(${workoutAlias}.done, 0) = 1
+      OR (
+        COALESCE(${dayAlias}.is_sick, 0) = 1
+        AND date(${dayDateSql}) < date('now', 'localtime')
+      )
+    THEN 1
+    ELSE 0
+  END`;
+}
+
 function workoutHasPersonalRecordSql(workoutAlias = "w") {
   return `EXISTS (
     SELECT 1
@@ -794,7 +811,7 @@ export async function getProgramsOverview(db) {
         SELECT
           d.program_id,
           COUNT(w.workout_id) AS workout_count,
-          SUM(CASE WHEN w.done = 1 THEN 1 ELSE 0 END) AS completed_workout_count,
+          SUM(${completedWorkoutForProgressSql("d", "w")}) AS completed_workout_count,
           GROUP_CONCAT(DISTINCT w.workout_type) AS workout_types
         FROM Day d
         LEFT JOIN Workout_Type_Instance w
@@ -1476,7 +1493,7 @@ export async function getMesocycleWorkoutCountsByProgram(db, programId) {
     `SELECT
         m.mesocycle_id,
         COUNT(w.workout_id) AS workout_count,
-        COALESCE(SUM(CASE WHEN w.done = 1 THEN 1 ELSE 0 END), 0) AS completed_workout_count
+        COALESCE(SUM(${completedWorkoutForProgressSql("d", "w")}), 0) AS completed_workout_count
      FROM Mesocycle m
      LEFT JOIN Microcycle mc ON mc.mesocycle_id = m.mesocycle_id
      LEFT JOIN Day d ON d.microcycle_id = mc.microcycle_id
@@ -1492,7 +1509,7 @@ export async function getProgramOverviewStats(db, programId) {
   return db.getFirstAsync(
     `SELECT
         COUNT(w.workout_id) AS total_workouts,
-        COALESCE(SUM(CASE WHEN w.done = 1 THEN 1 ELSE 0 END), 0) AS completed_workouts,
+        COALESCE(SUM(${completedWorkoutForProgressSql("d", "w")}), 0) AS completed_workouts,
         COALESCE(AVG(CASE
           WHEN w.done = 1 AND COALESCE(w.elapsed_time, 0) > 0
           THEN w.elapsed_time
@@ -1529,7 +1546,7 @@ export async function getProgramWeekCompletionStats(db, programId) {
         MIN(d.date) AS period_start,
         MAX(d.date) AS period_end,
         COUNT(w.workout_id) AS total_workouts,
-        COALESCE(SUM(CASE WHEN w.done = 1 THEN 1 ELSE 0 END), 0) AS completed_workouts
+        COALESCE(SUM(${completedWorkoutForProgressSql("d", "w")}), 0) AS completed_workouts
      FROM Microcycle mc
      JOIN Mesocycle m
        ON m.mesocycle_id = mc.mesocycle_id

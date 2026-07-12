@@ -3,10 +3,11 @@ import Svg, { Path } from "react-native-svg"
 import {useColorScheme} from "react-native"
 import { Colors } from "../../GlobalStyling/colors"
 
-function ArrowLeft({width = 24, height = 24}) {
+function ArrowLeft({width = 24, height = 24, color}) {
 
   const colorScheme = useColorScheme()
   const theme = Colors[colorScheme] ?? Colors.light
+  const iconColor = color ?? theme.primary
 
   return (
     <Svg
@@ -16,7 +17,7 @@ function ArrowLeft({width = 24, height = 24}) {
       height={height}
       color="currentColor"
       fill="none"
-      stroke={theme.primary}
+      stroke={iconColor}
       strokeWidth={1.5}
       strokeLinecap="round"
       strokeLinejoin="round"

@@ -3,6 +3,7 @@ import { Platform } from "react-native";
 
 import { locationRepository, workoutRepository } from "../Repository";
 import {
+  calculateTrackedDistanceDiagnostics,
   calculateTrackedDistanceSummary,
   isSameLocationPoint,
   normalizeLocationPoint,
@@ -128,6 +129,21 @@ export async function getLocationLogsByWorkout(db, workoutId) {
 export async function getTrackedRunSummary(db, workoutId) {
   const logs = await locationRepository.getLocationLogsByWorkout(db, workoutId);
   return calculateTrackedDistanceSummary(logs);
+}
+
+export async function refreshTrackedRunDiagnostics(db, workoutId) {
+  const logs = await locationRepository.getLocationLogsByWorkout(db, workoutId);
+  const analysis = calculateTrackedDistanceDiagnostics(logs);
+
+  await withTransaction(db, async () => {
+    await locationRepository.replaceLocationDebugLogsByWorkout(
+      db,
+      workoutId,
+      analysis.diagnostics
+    );
+  });
+
+  return analysis;
 }
 
 export async function recordTrackedLocations(db, locations) {
@@ -268,12 +284,21 @@ export async function syncRunTrackingState(db) {
   await Location.stopLocationUpdatesAsync(RUN_LOCATION_TASK);
 }
 
-export async function stopRunTracking(db) {
-  await workoutRepository.clearActiveWorkoutFlags(db);
-
+export async function stopRunTracking(db, workoutId = null) {
   const hasStarted = await Location.hasStartedLocationUpdatesAsync(RUN_LOCATION_TASK);
 
   if (hasStarted) {
     await Location.stopLocationUpdatesAsync(RUN_LOCATION_TASK);
   }
+
+  if (workoutId !== null && workoutId !== undefined) {
+    try {
+      await refreshTrackedRunDiagnostics(db, workoutId);
+    } catch (error) {
+      // Diagnostics must never prevent a user from pausing or ending a run.
+      console.warn("Unable to refresh run location diagnostics:", error);
+    }
+  }
+
+  await workoutRepository.clearActiveWorkoutFlags(db);
 }

@@ -94,6 +94,44 @@ export const formatTime = (totalSeconds) => {
   return `${minutes}.${paddedSeconds}`;
 };
 
+// Redesign format: "mm:ss" with zero-padded minutes, "h:mm:ss" past an hour.
+export const formatElapsedTime = (totalSeconds) => {
+  const safeTotalSeconds = normalizeElapsedDurationSeconds(totalSeconds, 0);
+  const hours = Math.floor(safeTotalSeconds / 3600);
+  const minutes = Math.floor((safeTotalSeconds % 3600) / 60);
+  const seconds = safeTotalSeconds % 60;
+
+  const paddedMinutes = minutes < 10 ? `0${minutes}` : `${minutes}`;
+  const paddedSeconds = seconds < 10 ? `0${seconds}` : `${seconds}`;
+
+  if (hours > 0) {
+    return `${hours}:${paddedMinutes}:${paddedSeconds}`;
+  }
+
+  return `${paddedMinutes}:${paddedSeconds}`;
+};
+
+// Rest countdowns read best without a leading zero: "2:30", "0:45".
+export const formatCountdownTime = (totalSeconds) => {
+  const safeTotalSeconds = normalizeElapsedDurationSeconds(totalSeconds, 0);
+  const minutes = Math.floor(safeTotalSeconds / 60);
+  const seconds = safeTotalSeconds % 60;
+  const paddedSeconds = seconds < 10 ? `0${seconds}` : `${seconds}`;
+
+  return `${minutes}:${paddedSeconds}`;
+};
+
+export const formatClockTime = (timestamp) => {
+  const timestampMs = storedTimestampSecondsToMilliseconds(timestamp);
+
+  if (!timestampMs) return "";
+
+  const date = new Date(timestampMs);
+  const pad = (num) => String(num).padStart(2, "0");
+
+  return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
+
 export const formatWorkoutStart = (timestamp) => {
   const timestampMs = storedTimestampSecondsToMilliseconds(timestamp);
 

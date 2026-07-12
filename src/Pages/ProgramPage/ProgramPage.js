@@ -7,20 +7,21 @@ import {
 } from 'react-native';
 import { useState } from "react";
 import { useSQLiteContext } from "expo-sqlite";
+import { useNavigation } from "@react-navigation/native";
 
 import ProgramList from './Components/ProgramList/ProgramList';
 import AddProgram from './Components/AddProgram/AddProgram';
 import { formatDate } from '../../Utils/dateUtils';
 import { programService, programTransferService } from "../../Services";
 import { Colors } from "../../Resources/GlobalStyling/colors";
-import ThreeDots from "../../Resources/Icons/UI-icons/ThreeDots";
+import ChevronLeft from "../../Resources/Icons/UI-icons/ChevronLeft";
+import Plus from "../../Resources/Icons/UI-icons/Plus";
 import PlusCircled from "../../Resources/Icons/UI-icons/PlusCircled";
 import ArrowDown from "../../Resources/Icons/UI-icons/ArrowDown";
 
 import {
   ThemedView,
   ThemedText,
-  ThemedHeader,
   ThemedBottomSheet,
   ThemedTitle,
 } from "../../Resources/ThemedComponents";
@@ -30,6 +31,7 @@ import styles from './ProgramPageStyle';
 
 export default function App() {
   const db = useSQLiteContext();
+  const navigation = useNavigation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
 
@@ -95,20 +97,38 @@ export default function App() {
     <>
     <ThemedView safe={["top", "left", "right"]}>
 
-      <ThemedHeader
-        leftWidth={48}
-        rightWidth={48}
-        right={
-          <View style={styles.header_actions}>
-            <TouchableOpacity
-              style={styles.header_menu_button}
-              onPress={() => setOptionsBottomSheetVisible(true)}>
-              <ThreeDots width={20} height={20} />
-            </TouchableOpacity>
-          </View>
-        }>
-        <ThemedText size={18}>Programs</ThemedText>
-      </ThemedHeader>
+      <View
+        style={[styles.header, { borderBottomColor: theme.hairline }]}
+      >
+        <TouchableOpacity
+          style={[
+            styles.headerCircle,
+            {
+              backgroundColor: theme.cardBackground,
+              borderColor: theme.cardBorder,
+            },
+          ]}
+          onPress={() => navigation.goBack()}
+        >
+          <ChevronLeft width={19} height={19} color={theme.title} thickness={2} />
+        </TouchableOpacity>
+
+        <View style={styles.headerCenter}>
+          <ThemedText style={styles.headerEyebrow} setColor={theme.quietText}>
+            Train
+          </ThemedText>
+          <ThemedText style={styles.headerTitle} setColor={theme.title}>
+            Programs
+          </ThemedText>
+        </View>
+
+        <TouchableOpacity
+          style={[styles.headerCircle, styles.headerCircleAdd, { backgroundColor: theme.primary, shadowColor: theme.primary }]}
+          onPress={() => setOptionsBottomSheetVisible(true)}
+        >
+          <Plus width={19} height={19} color={theme.ink} thickness={2.4} />
+        </TouchableOpacity>
+      </View>
 
       <ProgramList
         refreshKey={refreshKey}

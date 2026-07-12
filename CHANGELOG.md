@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.19.0] - Unreleased
+### Changed
+- Show a distinct completed-workout card on the home page, with finished time, duration, summary access, and the next planned workout.
+
+---
+## [0.18.10] - Unreleased
+### Changed
+- Rename the front-page workout action from "Start workout" to "Open workout" to make it clear that the workout opens before it begins.
+- Mark the active auto-advance target directly on each Speed & Structure interval and allow Time, Distance, or Automatic selection from the set options.
+- Count workouts on past sickness-marked days as completed in program, block, and home progress displays, without changing `Day.done` or its sync state.
+- Let Speed & Structure intervals with a distance but no TIME field progress from GPS distance instead of being skipped. When the target is reached, save and show the actual time, distance, and pace without replacing the planned pace.
+- Improve Run and Walk distance tracking for phones carried in pockets by accepting moderately degraded GPS accuracy and retaining plausible segments across short background-delivery gaps.
+- Populate `LocationDebugLog` when a tracked workout pauses or finishes, including per-point acceptance decisions and rejection reasons for easier device-specific GPS troubleshooting.
+- Redesign the Add exercise workout picker with a custom header, body-map exercise rows, primary/secondary muscle labels, a custom-exercise footer, and an exercise detail popup with muscle-group chips and an add action.
+- Add an exercise filter bottom sheet with training focus, grouped muscle filters, built-in/custom type filtering, live result counts, and filter badges for both picker and catalog views.
+- Redesign the Start workout sheet so planned workouts, fresh starts, and repeated workouts have distinct visual treatments, with dashed plus cards for new workouts and solid replay rows for copied workouts.
+
+---
 ## [0.18.9] - Unreleased
 ### Changed
 - Fix the crash when opening a completed Run or Walk workout on Android by configuring the Google Maps Android API key and only mounting the route map when the key is available, with a clear fallback card otherwise.

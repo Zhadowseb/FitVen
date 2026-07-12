@@ -10,7 +10,7 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 
 import styles from "./SocialPostSettingsPageStyle";
 import { useAuth } from "../../Contexts/AuthContext";
-import { Colors } from "../../Resources/GlobalStyling/colors";
+import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
 import Checkmark from "../../Resources/Icons/UI-icons/Checkmark";
 import Library from "../../Resources/Icons/UI-icons/Library";
 import Social from "../../Resources/Icons/UI-icons/Social";
@@ -83,10 +83,10 @@ export default function SocialPostSettingsPage() {
   const panelSurface = theme.uiBackground ?? theme.background;
   const primaryColor = theme.primary ?? "#f7742e";
   const choiceSurface = colorScheme === "dark" ? "#221f1d" : "#f1eff2";
-  const selectedChoiceSurface =
-    colorScheme === "dark"
-      ? "rgba(247, 116, 46, 0.12)"
-      : "rgba(247, 116, 46, 0.14)";
+  const selectedChoiceSurface = withAlpha(
+    theme.primary,
+    colorScheme === "dark" ? 0.12 : 0.14
+  );
   const dangerColor = theme.danger ?? "#da1212";
 
   useFocusEffect(

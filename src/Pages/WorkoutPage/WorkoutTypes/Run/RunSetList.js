@@ -9,7 +9,7 @@ import {
 import { useSQLiteContext } from "expo-sqlite";
 import { useFocusEffect } from "@react-navigation/native";
 import { useColorScheme } from "react-native";
-import { Colors } from "../../../../Resources/GlobalStyling/colors";
+import { Colors, withAlpha } from "../../../../Resources/GlobalStyling/colors";
 
 import {
   ThemedCard,
@@ -28,6 +28,7 @@ import Snow from "../../../../Resources/Icons/UI-icons/Snow";
 import styles from "./RunStyle";
 import ListHeader from "./ListHeader";
 import { runningService as runningRepository } from "../../../../Services";
+import { getRunSetCompletionMode } from "../../../../Utils/runIntervalUtils";
 
 const ZONES = [
   { label: "1", value: 1 },
@@ -167,6 +168,14 @@ const formatSecondsClock = (totalSeconds) => {
   const seconds = safeSeconds % 60;
 
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
+};
+
+const formatActualPace = (paceMinutes) => {
+  const numericValue = Number(paceMinutes);
+
+  return Number.isFinite(numericValue) && numericValue > 0
+    ? formatMinutesClock(numericValue)
+    : null;
 };
 
 const formatPaceDisplay = (value, fallback = "") => {
@@ -323,9 +332,7 @@ const RunSetList = ({
   const cellBorder = isDark
     ? "rgba(255, 255, 255, 0.045)"
     : "rgba(32, 30, 43, 0.08)";
-  const setChipBackground = isDark
-    ? "rgba(247, 116, 46, 0.17)"
-    : "rgba(247, 116, 46, 0.14)";
+  const setChipBackground = withAlpha(theme.primary, isDark ? 0.17 : 0.14);
 
   const loadRunSets = useCallback(async () => {
     try {
@@ -529,14 +536,36 @@ const RunSetList = ({
       return;
     }
 
+    const clearsCompletionTarget =
+      (field === "distance" &&
+        selectedSet.completion_target === "distance" &&
+        !(Number(value) > 0)) ||
+      (field === "time" &&
+        selectedSet.completion_target === "time" &&
+        !(Number(value) > 0));
+
     await runningRepository.updateRunSetField(db, {
       runId: selectedSet.Run_id,
       field,
       value,
     });
 
+    if (clearsCompletionTarget) {
+      await runningRepository.updateRunSetField(db, {
+        runId: selectedSet.Run_id,
+        field: "completion_target",
+        value: null,
+      });
+    }
+
     set_selectedSet((prev) =>
-      prev?.Run_id === selectedSet.Run_id ? { ...prev, [field]: value } : prev
+      prev?.Run_id === selectedSet.Run_id
+        ? {
+            ...prev,
+            [field]: value,
+            ...(clearsCompletionTarget ? { completion_target: null } : {}),
+          }
+        : prev
     );
     await loadRunSets();
     triggerReload();
@@ -629,6 +658,38 @@ const RunSetList = ({
             onBlur?.();
           }}
         />
+      </View>
+    );
+  };
+
+  const renderCompletionTargetCell = (set, mode, content) => {
+    const isTarget =
+      Number(set?.is_pause) !== 1 && getRunSetCompletionMode(set) === mode;
+
+    return (
+      <View
+        style={[
+          styles.completionTargetCell,
+          isTarget && [
+            styles.completionTargetCellActive,
+            {
+              borderColor: primaryColor,
+              backgroundColor: withAlpha(primaryColor, 0.1),
+            },
+          ],
+        ]}
+      >
+        {isTarget ? (
+          <View style={[styles.completionTargetDot, { borderColor: primaryColor }]}>
+            <View
+              style={[
+                styles.completionTargetDotCenter,
+                { backgroundColor: primaryColor },
+              ]}
+            />
+          </View>
+        ) : null}
+        {content}
       </View>
     );
   };
@@ -799,15 +860,19 @@ const RunSetList = ({
         </TouchableOpacity>
 
         <View style={[styles.runTableCell, styles.runDistanceColumn]}>
-          {renderEditableValue({
-            cellKey: `${set.Run_id}:distance`,
-            value: getEditableDistanceValue(set),
-            placeholder: getInputFallback(set.Run_id, "distance"),
-            placeholderTextColor: editablePlaceholderColor,
-            displayFormatter: (value) =>
-              formatDistanceDisplay(value, distanceUnit),
-            onCommit: async (value) => commitDistanceField(set.Run_id, value),
-          })}
+          {renderCompletionTargetCell(
+            set,
+            "distance",
+            renderEditableValue({
+              cellKey: `${set.Run_id}:distance`,
+              value: getEditableDistanceValue(set),
+              placeholder: getInputFallback(set.Run_id, "distance"),
+              placeholderTextColor: editablePlaceholderColor,
+              displayFormatter: (value) =>
+                formatDistanceDisplay(value, distanceUnit),
+              onCommit: async (value) => commitDistanceField(set.Run_id, value),
+            })
+          )}
         </View>
 
         <View style={[styles.runTableCell, styles.runPaceColumn]}>
@@ -828,32 +893,46 @@ const RunSetList = ({
               triggerReload();
             },
           })}
+          {Number(set.done) === 1 && formatActualPace(set.actual_pace) ? (
+            <ThemedText style={styles.actualIntervalResult} setColor={secondaryColor}>
+              Actual {formatActualPace(set.actual_pace)}
+            </ThemedText>
+          ) : null}
         </View>
 
         <View style={[styles.runTableCell, styles.runTimeColumn]}>
-          {isActive ? (
-            <ThemedText style={styles.activeTimeText} setColor={titleColor}>
-              {formatSecondsClock(activeSet_remainingTime)}
-            </ThemedText>
-          ) : (
-            renderEditableValue({
-              cellKey: `${set.Run_id}:time`,
-              value: getEditableFieldValue(set, "time"),
-              placeholder: getInputFallback(set.Run_id, "time"),
-              placeholderTextColor: editablePlaceholderColor,
-              keyboardType: "normal",
-              displayFormatter: (value) => formatMinutesClock(value),
-              onCommit: async (value) => {
-                await runningRepository.updateRunSetField(db, {
-                  runId: set.Run_id,
-                  field: "time",
-                  value: parseDurationInput(value),
-                });
-                await loadRunSets();
-                triggerReload();
-              },
-            })
+          {renderCompletionTargetCell(
+            set,
+            "time",
+            isActive ? (
+              <ThemedText style={styles.activeTimeText} setColor={titleColor}>
+                {formatSecondsClock(activeSet_remainingTime)}
+              </ThemedText>
+            ) : (
+              renderEditableValue({
+                cellKey: `${set.Run_id}:time`,
+                value: getEditableFieldValue(set, "time"),
+                placeholder: getInputFallback(set.Run_id, "time"),
+                placeholderTextColor: editablePlaceholderColor,
+                keyboardType: "normal",
+                displayFormatter: (value) => formatMinutesClock(value),
+                onCommit: async (value) => {
+                  await runningRepository.updateRunSetField(db, {
+                    runId: set.Run_id,
+                    field: "time",
+                    value: parseDurationInput(value),
+                  });
+                  await loadRunSets();
+                  triggerReload();
+                },
+              })
+            )
           )}
+          {Number(set.done) === 1 && Number(set.actual_duration_seconds) > 0 ? (
+            <ThemedText style={styles.actualIntervalResult} setColor={secondaryColor}>
+              Actual {formatSecondsClock(set.actual_duration_seconds)}
+            </ThemedText>
+          ) : null}
         </View>
 
         <View style={[styles.runTableCell, styles.runZoneColumn]}>
@@ -1238,6 +1317,83 @@ const RunSetList = ({
             <Cross width={20} height={20} color={quietText} />
           </TouchableOpacity>
         </View>
+
+        {selectedSet && !selectedSet.is_pause ? (
+          <View style={styles.completionTargetSection}>
+            <ThemedText
+              style={styles.completionTargetSectionLabel}
+              setColor={quietText}
+            >
+              AUTO-ADVANCE TARGET
+            </ThemedText>
+            <View style={styles.completionTargetOptions}>
+              {[
+                {
+                  value: null,
+                  label: "Automatic",
+                  enabled: true,
+                },
+                {
+                  value: "distance",
+                  label: "Distance",
+                  enabled: Number(selectedSet.distance) > 0,
+                },
+                {
+                  value: "time",
+                  label: "Time",
+                  enabled: Number(selectedSet.time) > 0,
+                },
+              ].map((option) => {
+                const isAutomatic = option.value === null;
+                const selected = isAutomatic
+                  ? !selectedSet.completion_target
+                  : selectedSet.completion_target === option.value;
+
+                return (
+                  <TouchableOpacity
+                    key={option.label}
+                    activeOpacity={0.78}
+                    disabled={!option.enabled}
+                    onPress={() =>
+                      updateSelectedSetField("completion_target", option.value)
+                    }
+                    style={[
+                      styles.completionTargetOption,
+                      {
+                        backgroundColor: selected
+                          ? withAlpha(primaryColor, 0.14)
+                          : mutedSurface,
+                        borderColor: selected ? primaryColor : cardBorder,
+                        opacity: option.enabled ? 1 : 0.42,
+                      },
+                    ]}
+                  >
+                    {selected ? (
+                      <View
+                        style={[
+                          styles.completionTargetOptionDot,
+                          { backgroundColor: primaryColor },
+                        ]}
+                      />
+                    ) : null}
+                    <ThemedText
+                      style={styles.completionTargetOptionText}
+                      setColor={selected ? primaryColor : titleColor}
+                    >
+                      {option.label}
+                    </ThemedText>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            <ThemedText
+              style={styles.completionTargetHint}
+              setColor={quietText}
+            >
+              The marked field decides when this interval moves to the next set.
+            </ThemedText>
+          </View>
+        ) : null}
 
         <View style={styles.bottomsheetEditGrid}>
           <View style={styles.bottomsheetField}>

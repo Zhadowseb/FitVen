@@ -1,17 +1,45 @@
 import { StyleSheet } from 'react-native';
 
 export default StyleSheet.create({
-  header_actions: {
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-end',
+    gap: 12,
+    paddingTop: 8,
+    paddingHorizontal: 20,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
   },
-  header_menu_button: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  headerCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
+  },
+  headerCircleAdd: {
+    borderWidth: 0,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 18,
+    elevation: 6,
+  },
+  headerCenter: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 1,
+  },
+  headerEyebrow: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1.8,
+    textTransform: 'uppercase',
+  },
+  headerTitle: {
+    fontSize: 16,
+    fontWeight: '800',
   },
   container: {
     borderWidth: 1,

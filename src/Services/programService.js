@@ -1595,7 +1595,45 @@ export async function syncWorkoutTypesWithCloud(db) {
     throw error;
   }
 
-  const workoutTypes = (data ?? [])
+  let cloudRows = data ?? [];
+
+  // App-required types (e.g. Walk) must exist in the cloud catalog too:
+  // workout_type_instance.workout_type carries an FK to workout_type, so a
+  // type that only exists locally makes every instance push fail with 23503.
+  const cloudTypeNames = new Set(
+    cloudRows.map((row) => normalizeWorkoutType(row?.type)).filter(Boolean)
+  );
+  const missingRequiredTypes = REQUIRED_LOCAL_WORKOUT_TYPES.filter(
+    (workoutType) => !cloudTypeNames.has(workoutType.name)
+  );
+
+  if (missingRequiredTypes.length > 0) {
+    const { data: insertedRows, error: insertError } = await supabase
+      .from(WORKOUT_TYPE_CLOUD_TABLE)
+      .upsert(
+        missingRequiredTypes.map((workoutType) => ({
+          type: workoutType.name,
+          display_name: workoutType.displayName ?? workoutType.name,
+          is_active: Boolean(workoutType.isActive),
+        })),
+        { onConflict: "type" }
+      )
+      .select(WORKOUT_TYPE_CLOUD_SELECT);
+
+    if (insertError) {
+      // RLS may forbid catalog writes from the client. The local catalog
+      // still works, but instance pushes for these types keep failing until
+      // the rows are added server-side.
+      console.warn(
+        "Could not add required workout types to the cloud catalog:",
+        insertError
+      );
+    } else {
+      cloudRows = cloudRows.concat(insertedRows ?? []);
+    }
+  }
+
+  const workoutTypes = cloudRows
     .map(normalizeWorkoutTypeCatalogRow)
     .filter(Boolean);
 
@@ -5940,10 +5978,14 @@ export async function getUsualWorkouts(
     .slice(0, limit)
     .map((group) => ({
       id: group.id,
+      workout_id: group.latestWorkout.workout_id,
       title: group.title,
+      label: group.title,
       workout_type: group.workoutType,
       exerciseCount: group.exerciseCount,
       occurrenceCount: group.occurrenceCount,
+      date: group.latestWorkout.date,
+      date_iso: group.latestWorkout.date_iso,
       latestDate: group.latestWorkout.date,
       latestDateIso: group.latestWorkout.date_iso,
       suggested: group.weekdays.has(todayWeekday),

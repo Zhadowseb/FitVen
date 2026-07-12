@@ -1,6 +1,5 @@
 import {
-  Alert,
-  Pressable,
+  TextInput,
   TouchableOpacity,
   View,
   useColorScheme,
@@ -8,19 +7,29 @@ import {
 import { useCallback, useState } from "react";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
-import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
 
 import appConfig from "../../../app.json";
 import styles from "./ProfilePageStyle";
-import { Colors } from "../../Resources/GlobalStyling/colors";
+import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
 import { logout } from "../../Database/supaBaseClient";
 import { useAuth } from "../../Contexts/AuthContext";
+import { useThemeMode } from "../../Contexts/ThemeContext";
 import { notificationService, socialService } from "../../Services";
 import Bell from "../../Resources/Icons/UI-icons/Bell";
+import Dumbbell from "../../Resources/Icons/UI-icons/Dumbbell";
+import Pencil from "../../Resources/Icons/UI-icons/Pencil";
+import Moon from "../../Resources/Icons/UI-icons/Moon";
+import ChevronRight from "../../Resources/Icons/UI-icons/ChevronRight";
 import FeedbackModal from "../../Resources/Components/FeedbackModal/FeedbackModal";
-import Social from "../../Resources/Icons/UI-icons/Social";
-import Feather from "@expo/vector-icons/Feather";
-import TailArrowUpRight from "../../Resources/Icons/UI-icons/TailArrowUpRight";
+import LockIcon from "./Components/LockIcon";
+import DotsHorizontalIcon from "./Components/DotsHorizontalIcon";
+import MessageCircleIcon from "./Components/MessageCircleIcon";
+import SectionEyebrow from "./Components/SectionEyebrow";
+import InsetDivider from "./Components/InsetDivider";
+import SettingsIconTile from "./Components/SettingsIconTile";
+import AppearanceSegmentedControl from "./Components/AppearanceSegmentedControl";
+import AccentThemePicker from "./Components/AccentThemePicker";
+import Star from "../../Resources/Icons/UI-icons/Star";
 import {
   calculateAgeFromBirthDate,
   dateToIsoDate,
@@ -31,40 +40,11 @@ import {
   ThemedButton,
   ThemedCard,
   ThemedDateWheelPicker,
-  ThemedHeader,
   ThemedKeyboardProtection,
   ThemedText,
-  ThemedTextInput,
-  ThemedTitle,
   ThemedView,
   UserAvatar,
 } from "../../Resources/ThemedComponents";
-
-const FeedbackGlow = ({
-  style,
-  color,
-  gradientId,
-  centerOpacity,
-  middleOpacity,
-}) => (
-  <Svg
-    pointerEvents="none"
-    style={style}
-    viewBox="0 0 100 100"
-    preserveAspectRatio="none"
-  >
-    <Defs>
-      <RadialGradient id={gradientId} cx="50%" cy="50%" r="50%">
-        <Stop offset="0%" stopColor={color} stopOpacity={centerOpacity} />
-        <Stop offset="34%" stopColor={color} stopOpacity={middleOpacity} />
-        <Stop offset="68%" stopColor={color} stopOpacity={middleOpacity * 0.46} />
-        <Stop offset="90%" stopColor={color} stopOpacity={middleOpacity * 0.12} />
-        <Stop offset="100%" stopColor={color} stopOpacity={0} />
-      </RadialGradient>
-    </Defs>
-    <Rect width="100" height="100" fill={`url(#${gradientId})`} />
-  </Svg>
-);
 
 function getNormalizedString(value) {
   if (value === null || value === undefined) {
@@ -81,6 +61,8 @@ export default function ProfilePage() {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const { user } = useAuth();
+  const { themeMode, setThemeMode, accentTheme, setAccentTheme } =
+    useThemeMode();
   const [profile, setProfile] = useState(null);
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
@@ -96,21 +78,13 @@ export default function ProfilePage() {
   });
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState("");
-  const headerEyebrowColor = theme.quietText ?? theme.iconColor;
-  const titleColor = theme.title ?? theme.text;
-  const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
-  const cardSurface = theme.cardBackground ?? theme.background;
-  const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor;
-  const panelSurface = theme.uiBackground ?? theme.background;
-  const primaryColor = theme.primary ?? "#f7742e";
-  const secondaryColor = theme.secondary ?? "#60daac";
-  const fieldsColor = theme.fields ?? panelSurface;
+
   const profileStatusColor =
     profileFeedback.status === "success"
-      ? theme.secondaryDark ?? theme.secondary ?? titleColor
+      ? theme.secondary
       : profileFeedback.status === "error"
-        ? theme.danger ?? titleColor
-        : quietText;
+        ? theme.danger
+        : theme.quietText;
   const normalizedDisplayName = displayName.trim();
   const normalizedBio = bio.trim();
   const calculatedAge = calculateAgeFromBirthDate(birthDate);
@@ -128,16 +102,12 @@ export default function ProfilePage() {
     : profile?.avatarUrl
       ? "Change photo"
       : "Upload photo";
-  const aboutRows = [
-    {
-      label: "App",
-      value: getNormalizedString(appConfig?.expo?.name) ?? "FitVen",
-    },
-    {
-      label: "Version",
-      value: getNormalizedString(appConfig?.expo?.version) ?? "Unknown",
-    },
-  ];
+  const avatarMaxMb = Math.round(
+    socialService.PROFILE_AVATAR_MAX_BYTES / (1024 * 1024)
+  );
+  const appName = getNormalizedString(appConfig?.expo?.name) ?? "FitVen";
+  const appVersion =
+    getNormalizedString(appConfig?.expo?.version) ?? "Unknown";
 
   useFocusEffect(
     useCallback(() => {
@@ -382,167 +352,169 @@ export default function ProfilePage() {
 
   return (
     <ThemedView safe={["top", "left", "right"]} style={styles.container}>
-      <ThemedHeader>
-        <View style={styles.pageHeaderTitleGroup}>
+      <View style={[styles.header, { borderBottomColor: theme.hairline }]}>
+        <View style={styles.headerTitleGroup}>
           <ThemedText
             size={10}
-            style={[
-              styles.pageHeaderTitleEyebrow,
-              { color: headerEyebrowColor },
-            ]}
+            style={styles.headerEyebrow}
+            setColor={theme.quietText}
           >
             FitVen
           </ThemedText>
-
-          <ThemedTitle
-            type="h3"
-            style={styles.pageHeaderTitleMain}
-            numberOfLines={1}
-          >
+          <ThemedText style={[styles.headerTitle, { color: theme.title }]}>
             Profile
-          </ThemedTitle>
+          </ThemedText>
         </View>
-      </ThemedHeader>
+
+        <View
+          style={[
+            styles.headerMenuButton,
+            {
+              backgroundColor: theme.cardBackground,
+              borderColor: theme.cardBorder,
+            },
+          ]}
+        >
+          <DotsHorizontalIcon width={18} height={18} color={theme.text} />
+        </View>
+      </View>
 
       <View style={styles.content}>
         <ThemedKeyboardProtection
           scroll
           contentContainerStyle={styles.scrollContent}
         >
-          <ThemedCard
-            style={[
-              styles.profileCard,
-              {
-                backgroundColor: cardSurface,
-                borderColor: cardBorder,
-              },
-            ]}
-          >
-            <ThemedText
-              size={12}
-              style={styles.cardEyebrow}
-              setColor={headerEyebrowColor}
-            >
-              Public profile
-            </ThemedText>
-            <ThemedTitle type="h3" style={styles.cardTitle}>
-              How others see you
-            </ThemedTitle>
-            <ThemedText style={styles.cardBody} setColor={quietText}>
-              Manage the information shown on your profile. Your username tag
-              stays fixed once the account is created.
-            </ThemedText>
+          {/* Public profile */}
+          <View style={styles.section}>
+            <SectionEyebrow>Public profile</SectionEyebrow>
+            <ThemedCard style={styles.card}>
+              <View style={styles.avatarRow}>
+                <View style={[styles.avatarRing, { borderColor: theme.primary }]}>
+                  <UserAvatar
+                    uri={profile?.avatarUrl}
+                    size={53}
+                    iconSize={26}
+                    iconColor={theme.text}
+                    backgroundColor={theme.uiBackground}
+                    style={styles.avatarInner}
+                  />
+                </View>
 
-            <View style={styles.avatarSection}>
-              <UserAvatar
-                uri={profile?.avatarUrl}
-                size={104}
-                iconSize={42}
-                iconColor={theme.primary ?? titleColor}
-                backgroundColor={fieldsColor}
-                borderColor={cardBorder}
-                borderWidth={1}
-              />
+                <View style={styles.avatarInfo}>
+                  <TouchableOpacity
+                    onPress={handleChooseAvatar}
+                    disabled={isLoadingProfile || isUploadingAvatar}
+                    activeOpacity={0.85}
+                    style={[
+                      styles.changePhotoChip,
+                      {
+                        backgroundColor: theme.chipBackground,
+                        borderColor: theme.border,
+                        opacity: isLoadingProfile || isUploadingAvatar ? 0.6 : 1,
+                      },
+                    ]}
+                  >
+                    <ThemedText
+                      style={styles.changePhotoChipText}
+                      setColor={theme.title}
+                    >
+                      {avatarButtonLabel}
+                    </ThemedText>
+                  </TouchableOpacity>
 
-              <Pressable
-                onPress={handleChooseAvatar}
-                disabled={isLoadingProfile || isUploadingAvatar}
-                style={({ pressed }) => [
-                  styles.avatarButton,
-                  {
-                    backgroundColor: fieldsColor,
-                    borderColor: cardBorder,
-                  },
-                  pressed && !isLoadingProfile && !isUploadingAvatar
-                    ? styles.avatarButtonPressed
-                    : null,
-                ]}
-              >
-                <ThemedText
-                  style={styles.avatarButtonText}
-                  setColor={titleColor}
-                >
-                  {avatarButtonLabel}
-                </ThemedText>
-              </Pressable>
-
-              <ThemedText style={styles.avatarHelperText} setColor={quietText}>
-                Shown in your profile, search and social circle. Square images
-                work best. Up to{" "}
-                {Math.round(socialService.PROFILE_AVATAR_MAX_BYTES / (1024 * 1024))}{" "}
-                MB.
-              </ThemedText>
-            </View>
-
-            <View style={styles.identityList}>
-              <View style={styles.identityGroup}>
-                <ThemedText style={styles.identityLabel} setColor={quietText}>
-                  Username
-                </ThemedText>
-                <ThemedText style={styles.identityValue} setColor={titleColor}>
-                  {profile?.username ?? "...#...."}
-                </ThemedText>
+                  <ThemedText
+                    style={styles.avatarHelperText}
+                    setColor={theme.quietText}
+                  >
+                    Square images work best · up to {avatarMaxMb} MB
+                  </ThemedText>
+                </View>
               </View>
 
-              <View style={styles.identityGroup}>
-                <ThemedText style={styles.identityLabel} setColor={quietText}>
+              <InsetDivider />
+
+              <View style={styles.fieldRow}>
+                <ThemedText style={styles.fieldLabel} setColor={theme.quietText}>
+                  Username
+                </ThemedText>
+                <ThemedText
+                  style={styles.fieldValue}
+                  setColor={theme.title}
+                  numberOfLines={1}
+                >
+                  {profile?.usernameBase ?? profile?.username ?? "..."}
+                  {profile?.usernameCode ? (
+                    <ThemedText
+                      style={styles.fieldValue}
+                      setColor={theme.primary}
+                    >
+                      #{profile.usernameCode}
+                    </ThemedText>
+                  ) : null}
+                </ThemedText>
+                <LockIcon width={15} height={15} color={theme.quietText} />
+              </View>
+
+              <InsetDivider />
+
+              <View style={styles.fieldRow}>
+                <ThemedText style={styles.fieldLabel} setColor={theme.quietText}>
                   Email
                 </ThemedText>
                 <ThemedText
-                  style={styles.identityValue}
-                  setColor={titleColor}
+                  style={styles.fieldValue}
+                  setColor={theme.title}
                   numberOfLines={1}
                 >
                   {user?.email ?? "Unknown account"}
                 </ThemedText>
+                <LockIcon width={15} height={15} color={theme.quietText} />
               </View>
-            </View>
 
-            <View style={styles.formSection}>
-              <ThemedText style={styles.inputLabel} setColor={quietText}>
-                Birth date
-              </ThemedText>
+              <InsetDivider />
+
               <TouchableOpacity
                 activeOpacity={0.78}
                 disabled={isLoadingProfile || isSavingProfile}
                 onPress={() => setBirthDatePickerVisible(true)}
-                style={[
-                  styles.birthDateField,
-                  {
-                    backgroundColor: fieldsColor,
-                    borderColor: cardBorder,
-                    opacity: isLoadingProfile || isSavingProfile ? 0.55 : 1,
-                  },
-                ]}
+                style={styles.birthDateRow}
               >
-                <Feather name="calendar" size={20} color={primaryColor} />
+                <ThemedText style={styles.fieldLabel} setColor={theme.quietText}>
+                  Birth date
+                </ThemedText>
                 <View style={styles.birthDateCopy}>
                   <ThemedText
                     style={styles.birthDateValue}
-                    setColor={birthDateDisplay ? titleColor : quietText}
+                    setColor={birthDateDisplay ? theme.title : theme.quietText}
                   >
                     {birthDateDisplay ?? "Select birth date"}
                   </ThemedText>
                   <ThemedText
-                    style={styles.birthDatePrivacy}
-                    setColor={quietText}
+                    style={styles.birthDateSubline}
+                    setColor={theme.quietText}
                   >
                     Exact date stays private
                   </ThemedText>
                 </View>
                 {calculatedAge !== null ? (
-                  <View style={styles.ageValue}>
-                    <ThemedText style={styles.ageNumber} setColor={titleColor}>
-                      {calculatedAge}
-                    </ThemedText>
-                    <ThemedText style={styles.ageLabel} setColor={quietText}>
-                      YEARS
+                  <View
+                    style={[
+                      styles.agePill,
+                      { backgroundColor: withAlpha(theme.primary, 0.12) },
+                    ]}
+                  >
+                    <ThemedText
+                      style={styles.agePillText}
+                      setColor={theme.primary}
+                    >
+                      {calculatedAge} years
                     </ThemedText>
                   </View>
                 ) : null}
               </TouchableOpacity>
+
               {birthDate ? (
-                <View style={styles.birthDateMetaRow}>
+                <View style={styles.clearBirthDateRow}>
                   <TouchableOpacity
                     activeOpacity={0.72}
                     onPress={() => {
@@ -551,441 +523,388 @@ export default function ProfilePage() {
                     }}
                   >
                     <ThemedText
-                      style={styles.clearBirthDate}
-                      setColor={primaryColor}
+                      style={styles.clearBirthDateText}
+                      setColor={theme.primary}
                     >
                       Clear
                     </ThemedText>
                   </TouchableOpacity>
                 </View>
               ) : null}
-            </View>
 
-            <View style={styles.formSection}>
-              <ThemedText style={styles.inputLabel} setColor={quietText}>
-                Display name
-              </ThemedText>
-              <ThemedTextInput
-                value={displayName}
-                onChangeText={(nextValue) => {
-                  clearProfileFeedback();
-                  setDisplayName(nextValue);
-                }}
-                placeholder="How your name appears"
-                autoCapitalize="words"
-                autoCorrect={false}
-                editable={!isLoadingProfile && !isSavingProfile}
-                maxLength={socialService.PROFILE_DISPLAY_NAME_MAX_LENGTH}
-                error={!isLoadingProfile ? displayNameError : undefined}
-                style={styles.inputWrapper}
-                inputStyle={{
-                  backgroundColor: fieldsColor,
-                  color: titleColor,
-                }}
-                placeholderTextColor={quietText}
-              />
-              <View style={styles.metaRow}>
-                <ThemedText style={styles.metaText} setColor={quietText}>
-                  Visible in people search
-                </ThemedText>
-                <ThemedText style={styles.metaText} setColor={quietText}>
-                  {displayName.length}/
-                  {socialService.PROFILE_DISPLAY_NAME_MAX_LENGTH}
-                </ThemedText>
-              </View>
-            </View>
+              <InsetDivider />
 
-            <View style={styles.formSection}>
-              <ThemedText style={styles.inputLabel} setColor={quietText}>
-                Bio
-              </ThemedText>
-              <ThemedTextInput
-                value={bio}
-                onChangeText={(nextValue) => {
-                  clearProfileFeedback();
-                  setBio(nextValue);
-                }}
-                placeholder="Tell people a little about your training."
-                autoCapitalize="sentences"
-                autoCorrect
-                editable={!isLoadingProfile && !isSavingProfile}
-                maxLength={socialService.PROFILE_BIO_MAX_LENGTH}
-                multiline
-                textAlignVertical="top"
-                style={styles.inputWrapper}
-                inputStyle={[
-                  styles.bioInput,
-                  {
-                    backgroundColor: fieldsColor,
-                    color: titleColor,
-                  },
-                ]}
-                placeholderTextColor={quietText}
-              />
-              <View style={styles.metaRow}>
-                <ThemedText style={styles.metaText} setColor={quietText}>
-                  Short, public intro
-                </ThemedText>
-                <ThemedText style={styles.metaText} setColor={quietText}>
-                  {bio.length}/{socialService.PROFILE_BIO_MAX_LENGTH}
-                </ThemedText>
-              </View>
-            </View>
-
-            <ThemedDateWheelPicker
-              visible={birthDatePickerVisible}
-              value={getBirthDatePickerValue()}
-              minYear={1900}
-              title="Birth date"
-              onClose={() => setBirthDatePickerVisible(false)}
-              onConfirm={handleBirthDateConfirm}
-            />
-
-            {isLoadingProfile ? (
-              <ThemedText style={styles.loadingText} setColor={quietText}>
-                Loading profile...
-              </ThemedText>
-            ) : null}
-
-            {profileFeedback.message ? (
-              <View
-                style={[
-                  styles.feedbackBanner,
-                  {
-                    backgroundColor:
-                      profileFeedback.status === "error"
-                        ? "rgba(186, 0, 0, 0.12)"
-                        : theme.secondaryLight ?? "rgba(96, 218, 172, 0.16)",
-                    borderColor:
-                      profileFeedback.status === "error"
-                        ? theme.danger ?? cardBorder
-                        : theme.secondary ?? cardBorder,
-                  },
-                ]}
-              >
+              <View style={styles.displayNameSection}>
                 <ThemedText
-                  style={styles.feedbackBannerText}
-                  setColor={profileStatusColor}
+                  style={styles.fieldSectionLabel}
+                  setColor={theme.quietText}
                 >
-                  {profileFeedback.message}
+                  Display name
                 </ThemedText>
-              </View>
-            ) : null}
-
-            <View style={styles.actions}>
-              <ThemedButton
-                title={isSavingProfile ? "Saving..." : "Save profile"}
-                onPress={handleSaveProfile}
-                fullWidth
-                disabled={
-                  isLoadingProfile ||
-                  isSavingProfile ||
-                  !profile ||
-                  !hasUnsavedChanges ||
-                  Boolean(displayNameError)
-                }
-                style={styles.primaryButton}
-              />
-            </View>
-          </ThemedCard>
-
-          <ThemedCard
-            style={[
-              styles.settingsCard,
-              {
-                backgroundColor: cardSurface,
-                borderColor: cardBorder,
-              },
-            ]}
-          >
-            <ThemedText
-              size={12}
-              style={styles.cardEyebrow}
-              setColor={headerEyebrowColor}
-            >
-              Settings
-            </ThemedText>
-            <ThemedTitle type="h3" style={styles.cardTitle}>
-              Personal settings
-            </ThemedTitle>
-
-            <View style={styles.settingsList}>
-              <TouchableOpacity
-                activeOpacity={0.82}
-                onPress={() => navigation.navigate("WorkoutTypesSettingsPage")}
-                style={[
-                  styles.settingsButton,
-                  {
-                    backgroundColor: fieldsColor,
-                    borderColor: cardBorder,
-                  },
-                ]}
-              >
-                <View style={styles.settingsButtonContent}>
-                  <Feather name="layers" size={22} color={titleColor} />
-                  <ThemedText
-                    style={styles.settingsButtonText}
-                    setColor={titleColor}
-                  >
-                    Workout Types
-                  </ThemedText>
-                </View>
-                <TailArrowUpRight
-                  width={18}
-                  height={18}
-                  stroke={titleColor}
-                  color={titleColor}
-                />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                activeOpacity={0.82}
-                onPress={() => navigation.navigate("NotificationSettingsPage")}
-                style={[
-                  styles.settingsButton,
-                  {
-                    backgroundColor: fieldsColor,
-                    borderColor: cardBorder,
-                  },
-                ]}
-              >
-                <View style={styles.settingsButtonContent}>
-                  <Bell width={22} height={22} color={titleColor} />
-                  <ThemedText
-                    style={styles.settingsButtonText}
-                    setColor={titleColor}
-                  >
-                    Notifications
-                  </ThemedText>
-                </View>
-                <TailArrowUpRight
-                  width={18}
-                  height={18}
-                  stroke={titleColor}
-                  color={titleColor}
-                />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                activeOpacity={0.82}
-                onPress={() => navigation.navigate("SocialPostSettingsPage")}
-                style={[
-                  styles.settingsButton,
-                  {
-                    backgroundColor: fieldsColor,
-                    borderColor: cardBorder,
-                  },
-                ]}
-              >
-                <View style={styles.settingsButtonContent}>
-                  <Social width={22} height={22} color={titleColor} />
-                  <ThemedText
-                    style={styles.settingsButtonText}
-                    setColor={titleColor}
-                  >
-                    Social posts
-                  </ThemedText>
-                </View>
-                <TailArrowUpRight
-                  width={18}
-                  height={18}
-                  stroke={titleColor}
-                  color={titleColor}
-                />
-              </TouchableOpacity>
-            </View>
-          </ThemedCard>
-
-          <TouchableOpacity
-            activeOpacity={0.92}
-            onPress={() => setFeedbackModalVisible(true)}
-            style={[
-              styles.feedbackPortal,
-              {
-                backgroundColor: cardSurface,
-                borderColor: cardBorder,
-              },
-            ]}
-          >
-            <FeedbackGlow
-              style={styles.feedbackPortalGlowPrimary}
-              color={primaryColor}
-              gradientId="profileFeedbackPrimaryGlow"
-              centerOpacity={0.28}
-              middleOpacity={0.15}
-            />
-            <FeedbackGlow
-              style={styles.feedbackPortalGlowSecondary}
-              color={secondaryColor}
-              gradientId="profileFeedbackSecondaryGlow"
-              centerOpacity={0.23}
-              middleOpacity={0.12}
-            />
-
-            <View style={styles.feedbackPortalHeader}>
-              <View style={styles.feedbackPortalStatusCluster}>
                 <View
                   style={[
-                    styles.feedbackPortalStatusDot,
-                    { backgroundColor: secondaryColor },
-                  ]}
-                />
-                <ThemedText
-                  style={styles.feedbackPortalEyebrow}
-                  setColor={quietText}
-                >
-                  FEEDBACK
-                </ThemedText>
-              </View>
-
-              <View
-                style={[
-                  styles.feedbackPortalActionIcon,
-                  {
-                    backgroundColor: panelSurface,
-                    borderColor: cardBorder,
-                  },
-                ]}
-              >
-                <TailArrowUpRight
-                  width={18}
-                  height={18}
-                  stroke={primaryColor}
-                  color={primaryColor}
-                />
-              </View>
-            </View>
-
-            <ThemedTitle
-              type="h3"
-              style={[styles.feedbackPortalTitle, { color: titleColor }]}
-            >
-              Send Feedback
-            </ThemedTitle>
-
-            <ThemedText
-              style={styles.feedbackPortalDescription}
-              setColor={quietText}
-            >
-              Report bugs, odd behavior, ideas or something you're missing.
-            </ThemedText>
-
-            <View style={styles.feedbackPortalChipRow}>
-              {["Bugs", "Ideas", "Missing"].map((label) => (
-                <View
-                  key={label}
-                  style={[
-                    styles.feedbackPortalChip,
+                    styles.inputField,
                     {
-                      backgroundColor: panelSurface,
-                      borderColor: cardBorder,
+                      backgroundColor: theme.uiBackground,
+                      borderColor: theme.border,
+                    },
+                  ]}
+                >
+                  <TextInput
+                    value={displayName}
+                    onChangeText={(nextValue) => {
+                      clearProfileFeedback();
+                      setDisplayName(nextValue);
+                    }}
+                    placeholder="How your name appears"
+                    placeholderTextColor={theme.quietText}
+                    autoCapitalize="words"
+                    autoCorrect={false}
+                    editable={!isLoadingProfile && !isSavingProfile}
+                    maxLength={socialService.PROFILE_DISPLAY_NAME_MAX_LENGTH}
+                    style={[styles.inputFieldValue, { color: theme.title }]}
+                  />
+                  <ThemedText
+                    style={styles.inputFieldCounter}
+                    setColor={theme.quietText}
+                  >
+                    {displayName.length}/
+                    {socialService.PROFILE_DISPLAY_NAME_MAX_LENGTH}
+                  </ThemedText>
+                </View>
+                {displayNameError && !isLoadingProfile ? (
+                  <ThemedText
+                    style={styles.fieldHelperText}
+                    setColor={theme.danger}
+                  >
+                    {displayNameError}
+                  </ThemedText>
+                ) : (
+                  <ThemedText
+                    style={styles.fieldHelperText}
+                    setColor={theme.quietText}
+                  >
+                    Visible in people search
+                  </ThemedText>
+                )}
+              </View>
+
+              <View style={styles.bioSection}>
+                <ThemedText
+                  style={styles.fieldSectionLabel}
+                  setColor={theme.quietText}
+                >
+                  Bio
+                </ThemedText>
+                <View
+                  style={[
+                    styles.bioField,
+                    {
+                      backgroundColor: theme.uiBackground,
+                      borderColor: theme.border,
+                    },
+                  ]}
+                >
+                  <TextInput
+                    value={bio}
+                    onChangeText={(nextValue) => {
+                      clearProfileFeedback();
+                      setBio(nextValue);
+                    }}
+                    placeholder="Tell people a little about your training."
+                    placeholderTextColor={theme.quietText}
+                    autoCapitalize="sentences"
+                    autoCorrect
+                    editable={!isLoadingProfile && !isSavingProfile}
+                    maxLength={socialService.PROFILE_BIO_MAX_LENGTH}
+                    multiline
+                    textAlignVertical="top"
+                    style={[styles.bioFieldValue, { color: theme.title }]}
+                  />
+                  <ThemedText
+                    style={styles.bioFieldCounter}
+                    setColor={theme.quietText}
+                  >
+                    {bio.length}/{socialService.PROFILE_BIO_MAX_LENGTH}
+                  </ThemedText>
+                </View>
+              </View>
+
+              <ThemedDateWheelPicker
+                visible={birthDatePickerVisible}
+                value={getBirthDatePickerValue()}
+                minYear={1900}
+                title="Birth date"
+                onClose={() => setBirthDatePickerVisible(false)}
+                onConfirm={handleBirthDateConfirm}
+              />
+
+              {isLoadingProfile ? (
+                <ThemedText style={styles.loadingText} setColor={theme.quietText}>
+                  Loading profile...
+                </ThemedText>
+              ) : null}
+
+              {profileFeedback.message ? (
+                <View
+                  style={[
+                    styles.feedbackBanner,
+                    {
+                      backgroundColor:
+                        profileFeedback.status === "error"
+                          ? withAlpha(theme.danger, 0.08)
+                          : withAlpha(theme.secondary, 0.12),
+                      borderColor:
+                        profileFeedback.status === "error"
+                          ? theme.danger
+                          : theme.secondary,
                     },
                   ]}
                 >
                   <ThemedText
-                    style={styles.feedbackPortalChipText}
-                    setColor={quietText}
+                    style={styles.feedbackBannerText}
+                    setColor={profileStatusColor}
                   >
-                    {label}
+                    {profileFeedback.message}
                   </ThemedText>
                 </View>
-              ))}
-            </View>
-          </TouchableOpacity>
+              ) : null}
 
-          <ThemedCard
-            style={[
-              styles.accountCard,
-              {
-                backgroundColor: cardSurface,
-                borderColor: cardBorder,
-              },
-            ]}
-          >
-            <ThemedText
-              size={12}
-              style={styles.cardEyebrow}
-              setColor={headerEyebrowColor}
+              <View style={styles.saveButtonWrapper}>
+                <ThemedButton
+                  title={isSavingProfile ? "Saving..." : "Save profile"}
+                  onPress={handleSaveProfile}
+                  fullWidth
+                  height={50}
+                  textSize={15}
+                  disabled={
+                    isLoadingProfile ||
+                    isSavingProfile ||
+                    !profile ||
+                    !hasUnsavedChanges ||
+                    Boolean(displayNameError)
+                  }
+                  style={styles.saveButton}
+                />
+              </View>
+            </ThemedCard>
+          </View>
+
+          {/* Settings */}
+          <View style={styles.section}>
+            <SectionEyebrow>Settings</SectionEyebrow>
+            <ThemedCard style={styles.card}>
+              <TouchableOpacity
+                activeOpacity={0.82}
+                onPress={() => navigation.navigate("WorkoutTypesSettingsPage")}
+                style={styles.settingsRow}
+              >
+                <SettingsIconTile backgroundColor={withAlpha(theme.primary, 0.12)}>
+                  <Dumbbell width={18} height={18} color={theme.primary} thickness={1.6} />
+                </SettingsIconTile>
+                <ThemedText style={styles.settingsRowLabel} setColor={theme.title}>
+                  Workout types
+                </ThemedText>
+                <ChevronRight width={18} height={18} color={theme.quietText} />
+              </TouchableOpacity>
+
+              <InsetDivider />
+
+              <TouchableOpacity
+                activeOpacity={0.82}
+                onPress={() => navigation.navigate("NotificationSettingsPage")}
+                style={styles.settingsRow}
+              >
+                <SettingsIconTile backgroundColor={withAlpha(theme.primary, 0.12)}>
+                  <Bell width={18} height={18} color={theme.primary} thickness={1.7} />
+                </SettingsIconTile>
+                <ThemedText style={styles.settingsRowLabel} setColor={theme.title}>
+                  Notifications
+                </ThemedText>
+                <ChevronRight width={18} height={18} color={theme.quietText} />
+              </TouchableOpacity>
+
+              <InsetDivider />
+
+              <TouchableOpacity
+                activeOpacity={0.82}
+                onPress={() => navigation.navigate("SocialPostSettingsPage")}
+                style={styles.settingsRow}
+              >
+                <SettingsIconTile backgroundColor={withAlpha(theme.primary, 0.12)}>
+                  <Pencil width={18} height={18} color={theme.primary} thickness={1.7} />
+                </SettingsIconTile>
+                <ThemedText style={styles.settingsRowLabel} setColor={theme.title}>
+                  Social posts
+                </ThemedText>
+                <ChevronRight width={18} height={18} color={theme.quietText} />
+              </TouchableOpacity>
+
+              <InsetDivider />
+
+              <View style={styles.settingsRow}>
+                <SettingsIconTile backgroundColor={withAlpha(theme.primary, 0.12)}>
+                  <Moon width={18} height={18} color={theme.primary} thickness={1.7} />
+                </SettingsIconTile>
+                <ThemedText style={styles.settingsRowLabel} setColor={theme.title}>
+                  Appearance
+                </ThemedText>
+                <AppearanceSegmentedControl
+                  value={themeMode}
+                  onChange={setThemeMode}
+                />
+              </View>
+
+              <InsetDivider />
+
+              <View style={styles.settingsRow}>
+                <SettingsIconTile backgroundColor={withAlpha(theme.primary, 0.12)}>
+                  <Star width={18} height={18} color={theme.primary} filled />
+                </SettingsIconTile>
+                <ThemedText style={styles.settingsRowLabel} setColor={theme.title}>
+                  Color theme
+                </ThemedText>
+              </View>
+
+              <View style={styles.accentPickerWrap}>
+                <AccentThemePicker
+                  value={accentTheme}
+                  onChange={setAccentTheme}
+                />
+              </View>
+            </ThemedCard>
+          </View>
+
+          {/* Feedback */}
+          <View style={styles.section}>
+            <SectionEyebrow>Feedback</SectionEyebrow>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => setFeedbackModalVisible(true)}
+              style={[
+                styles.card,
+                styles.feedbackCard,
+                {
+                  backgroundColor: theme.cardBackground,
+                  borderColor: theme.cardBorder,
+                },
+              ]}
             >
-              Account
-            </ThemedText>
-            <ThemedTitle type="h3" style={styles.cardTitle}>
-              Logged in
-            </ThemedTitle>
-            <ThemedText style={styles.accountValue}>
-              {user?.email ?? "Unknown account"}
-            </ThemedText>
-            <ThemedText style={styles.cardBody} setColor={headerEyebrowColor}>
-              You can log out here when you want to switch account.
-            </ThemedText>
+              <View style={styles.feedbackHeaderRow}>
+                <SettingsIconTile backgroundColor={withAlpha(theme.secondary, 0.12)}>
+                  <MessageCircleIcon
+                    width={18}
+                    height={18}
+                    color={theme.secondary}
+                    thickness={1.7}
+                  />
+                </SettingsIconTile>
+                <View style={styles.feedbackTextColumn}>
+                  <ThemedText style={styles.feedbackTitle} setColor={theme.title}>
+                    Send feedback
+                  </ThemedText>
+                  <ThemedText style={styles.feedbackSubtitle} setColor={theme.text}>
+                    Report bugs, odd behavior or ideas.
+                  </ThemedText>
+                </View>
+              </View>
 
-            <View style={styles.actions}>
-              <ThemedButton
-                title={isLoggingOut ? "Logging out..." : "Log out"}
-                variant="danger"
-                onPress={handleLogout}
-                fullWidth
-                disabled={isLoggingOut}
-                style={styles.logoutButton}
-              />
+              <View style={styles.feedbackChipRow}>
+                {["Bugs", "Ideas", "Missing"].map((label) => (
+                  <View
+                    key={label}
+                    style={[
+                      styles.feedbackChip,
+                      {
+                        backgroundColor: theme.chipBackground,
+                        borderColor: theme.border,
+                      },
+                    ]}
+                  >
+                    <ThemedText
+                      style={styles.feedbackChipText}
+                      setColor={theme.textStrong}
+                    >
+                      {label}
+                    </ThemedText>
+                  </View>
+                ))}
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          {/* Account */}
+          <View style={styles.section}>
+            <SectionEyebrow>Account</SectionEyebrow>
+            <ThemedCard style={styles.card}>
+              <View style={styles.accountRow}>
+                <View style={styles.accountInfo}>
+                  <ThemedText style={styles.accountLabel} setColor={theme.quietText}>
+                    Logged in as
+                  </ThemedText>
+                  <ThemedText
+                    style={styles.accountValue}
+                    setColor={theme.title}
+                    numberOfLines={1}
+                  >
+                    {user?.email ?? "Unknown account"}
+                  </ThemedText>
+                </View>
+
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  onPress={handleLogout}
+                  disabled={isLoggingOut}
+                  style={[
+                    styles.logoutButton,
+                    {
+                      borderColor: "rgba(232,92,74,0.4)",
+                      backgroundColor: "rgba(232,92,74,0.08)",
+                      opacity: isLoggingOut ? 0.6 : 1,
+                    },
+                  ]}
+                >
+                  <ThemedText
+                    style={styles.logoutButtonText}
+                    setColor={theme.danger}
+                  >
+                    {isLoggingOut ? "Logging out..." : "Log out"}
+                  </ThemedText>
+                </TouchableOpacity>
+              </View>
 
               {logoutError ? (
                 <ThemedText style={styles.errorText} setColor={theme.danger}>
                   {logoutError}
                 </ThemedText>
               ) : null}
-            </View>
-          </ThemedCard>
 
-          <ThemedCard
-            style={[
-              styles.aboutCard,
-              {
-                backgroundColor: cardSurface,
-                borderColor: cardBorder,
-              },
-            ]}
-          >
-            <ThemedText
-              size={12}
-              style={styles.cardEyebrow}
-              setColor={headerEyebrowColor}
-            >
-              About
-            </ThemedText>
-            <ThemedTitle type="h3" style={styles.cardTitle}>
-              App information
-            </ThemedTitle>
+              <InsetDivider />
 
-            <View style={styles.aboutList}>
-              {aboutRows.map((row, index) => {
-                const isLastRow = index === aboutRows.length - 1;
+              <View style={styles.metaRow}>
+                <ThemedText style={styles.metaRowLabel} setColor={theme.quietText}>
+                  App
+                </ThemedText>
+                <ThemedText style={styles.metaRowValue} setColor={theme.title}>
+                  {appName}
+                </ThemedText>
+              </View>
 
-                return (
-                  <View
-                    key={row.label}
-                    style={[
-                      styles.aboutRow,
-                      !isLastRow && styles.aboutRowDivider,
-                      !isLastRow && { borderBottomColor: cardBorder },
-                    ]}
-                  >
-                    <ThemedText style={styles.aboutLabel} setColor={quietText}>
-                      {row.label}
-                    </ThemedText>
+              <InsetDivider />
 
-                    <ThemedText
-                      style={styles.aboutValue}
-                      setColor={titleColor}
-                      numberOfLines={2}
-                    >
-                      {row.value}
-                    </ThemedText>
-                  </View>
-                );
-              })}
-            </View>
-          </ThemedCard>
+              <View style={styles.metaRow}>
+                <ThemedText style={styles.metaRowLabel} setColor={theme.quietText}>
+                  Version
+                </ThemedText>
+                <ThemedText
+                  style={[styles.metaRowValue, { fontVariant: ["tabular-nums"] }]}
+                  setColor={theme.title}
+                >
+                  {appVersion}
+                </ThemedText>
+              </View>
+            </ThemedCard>
+          </View>
         </ThemedKeyboardProtection>
       </View>
 

@@ -84,6 +84,14 @@ export async function updateRunSetDone(db, { runId, done }) {
   await runningRepository.updateRunSetDone(db, { runId, done });
 }
 
+export async function completeRunSet(db, completion) {
+  await runningRepository.completeRunSet(db, completion);
+}
+
+export async function resetRunSetProgress(db, workoutId) {
+  await runningRepository.resetRunSetProgress(db, workoutId);
+}
+
 export async function renumberWorkingRunSets(db, { workoutId, type }) {
   const rows = await runningRepository.getRunSets(db, { workoutId, type });
 

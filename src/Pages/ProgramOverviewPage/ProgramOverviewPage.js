@@ -6,7 +6,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback } from "react";
 import { useColorScheme } from "react-native";
-import { Colors } from "../../Resources/GlobalStyling/colors";
+import Svg, { Path } from "react-native-svg";
+import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
 
 import styles from './ProgramOverviewPageStyle';
 import {
@@ -20,22 +21,18 @@ import AddEstimatedSet from './Components/rm_list/Components/AddEstimatedSet/Add
 import MesocycleList from "./Components/MesocycleList/MesocycleList";
 import ProgramOverviewHeader from "./Components/ProgramOverviewHeader";
 import StartProgramModal from "./Components/StartProgramModal";
-import ThreeDots from "../../Resources/Icons/UI-icons/ThreeDots"
-import Cogwheel from "../../Resources/Icons/UI-icons/Cogwheel";
 import Checkmark from "../../Resources/Icons/UI-icons/Checkmark";
-import TradeUp from "../../Resources/Icons/UI-icons/TradeUp";
 import Info from "../../Resources/Icons/UI-icons/Info";
 import Copy from "../../Resources/Icons/UI-icons/Copy";
+import Star from "../../Resources/Icons/UI-icons/Star";
+import Pencil from "../../Resources/Icons/UI-icons/Pencil";
 
-import { ThemedTitle, 
-        ThemedCard, 
-        ThemedView, 
-        ThemedText, 
-        ThemedButton, 
-        ThemedHeader,
-        ThemedBottomSheet, 
+import { ThemedTitle,
+        ThemedView,
+        ThemedText,
+        ThemedBottomSheet,
         ThemedModal,
-        ThemedEditableCell} 
+        ThemedEditableCell}
   from "../../Resources/ThemedComponents";
 import Delete from '../../Resources/Icons/UI-icons/Delete';
 import { formatDate, parseCustomDate } from '../../Utils/dateUtils';
@@ -52,12 +49,16 @@ const emptyProgramStats = {
     streakWeeks: 0,
 };
 
-function formatStatNumber(value) {
-    const numberValue = Number(value) || 0;
+function formatCompactVolume(value) {
+    const numberValue = Math.max(0, Number(value) || 0);
 
-    return Math.round(numberValue)
-        .toString()
-        .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    if (numberValue >= 1000) {
+        const thousands = numberValue / 1000;
+        const rounded = Math.round(thousands * 10) / 10;
+        return `${rounded % 1 === 0 ? rounded.toFixed(0) : rounded.toFixed(1)}k`;
+    }
+
+    return Math.round(numberValue).toString();
 }
 
 function getLocalDateIndex(date) {
@@ -80,7 +81,7 @@ function formatHeaderDate(value) {
 
     const day = String(date.getDate()).padStart(2, "0");
     const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = String(date.getFullYear()).slice(-2);
+    const year = date.getFullYear();
 
     return `${day}.${month}.${year}`;
 }
@@ -117,12 +118,43 @@ function getProgramTimeline(startDate, totalDays) {
     };
 }
 
+const BackChevronIcon = ({ color }) => (
+    <Svg
+        width={19}
+        height={19}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke={color}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round">
+        <Path d="M15 18l-6-6 6-6" />
+    </Svg>
+);
+
+const ThreeDotsIcon = ({ color }) => (
+    <Svg
+        width={18}
+        height={18}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke={color}
+        strokeWidth={2}
+        strokeLinecap="round">
+        <Path d="M5 12h.01M12 12h.01M19 12h.01" />
+    </Svg>
+);
+
 const ProgramOverviewPage = ( {route} ) => {
     const db = useSQLiteContext();
     const navigation = useNavigation();
     const insets = useSafeAreaInsets();
     const colorScheme = useColorScheme();
     const theme = Colors[colorScheme] ?? Colors.light;
+    const radioBorderColor =
+        colorScheme === "dark"
+            ? "rgba(255, 255, 255, 0.18)"
+            : "rgba(15, 17, 22, 0.18)";
 
     const program_id = route.params.program_id;
     const initialProgramName = route.params.program_name ?? "";
@@ -306,6 +338,10 @@ const ProgramOverviewPage = ( {route} ) => {
     }
 
     const handleStatusChange = (new_status) => {
+        if (status === new_status) {
+            return;
+        }
+
         if (status === "NOT_STARTED" && new_status === "ACTIVE") {
             setStartProgramModalVisible(true);
             return;
@@ -379,597 +415,468 @@ const ProgramOverviewPage = ( {route} ) => {
     const programExerciseBestMap = Object.fromEntries(
         programExerciseBests.map((best) => [best.exercise_name, best])
     );
-    const accentSoft = theme.primaryLight ?? "rgba(247, 116, 46, 0.18)";
-    const successSoft = theme.secondaryLight ?? "rgba(96, 218, 172, 0.18)";
-    const emptyTileBackground = theme.uiBackground ?? "rgba(255, 255, 255, 0.04)";
-    const tileTextColor = theme.cardBackground ?? theme.textInverted ?? theme.text;
-    const badgeBackground = theme.cardBackground ?? "#1b1918";
-    const badgeTextColor = theme.text ?? "#d4d4d4";
-    const emptyBorder = theme.cardBorder ?? theme.iconColor ?? "#383838";
-    const estimatedBadgeBackground = theme.primary ?? accentSoft;
-    const estimatedBadgeText = theme.cardBackground ?? theme.textInverted ?? "#201e2b";
-    const detailPanelBackground =
-        colorScheme === "dark"
-            ? "rgba(14, 15, 18, 0.18)"
-            : "rgba(255, 255, 255, 0.65)";
-    const filterDividerColor =
-        colorScheme === "dark"
-            ? "rgba(255, 255, 255, 0.08)"
-            : "rgba(0, 0, 0, 0.08)";
-    const settingsLabelColor =
-        theme.quietText ??
-        (colorScheme === "dark"
-            ? "rgba(212, 212, 212, 0.72)"
-            : "rgba(32, 30, 43, 0.66)");
-    const quietText = theme.iconColor ?? settingsLabelColor;
-    const titleColor = theme.title ?? theme.text ?? "#fff";
-    const settingsOutlineColor =
-        theme.cardBorder ??
-        (colorScheme === "dark"
-            ? "rgba(255, 255, 255, 0.08)"
-            : "rgba(0, 0, 0, 0.08)");
-    const settingsPanelBackground =
-        colorScheme === "dark"
-            ? "rgba(255, 255, 255, 0.04)"
-            : "rgba(255, 255, 255, 0.68)";
-    const settingsEditorBackground =
-        colorScheme === "dark"
-            ? "rgba(14, 15, 18, 0.56)"
-            : "rgba(255, 255, 255, 0.84)";
-    const settingsSelectedTextColor =
-        colorScheme === "dark"
-            ? theme.cardBackground ?? theme.textInverted ?? "#1b1918"
-            : theme.title ?? "#201e2b";
+
+    const headerTitle = (program_name ?? "").trim() || "Program";
+    const programTimeline = getProgramTimeline(start_date, programDayCount);
+    const weekProgressPercent =
+        status === "NOT_STARTED" || programTimeline.totalWeeks <= 0
+            ? 0
+            : Math.round(
+                  (programTimeline.currentWeek / programTimeline.totalWeeks) * 100
+              );
+    const headerPeriod =
+        `${formatHeaderDate(start_date)} – ${formatHeaderDate(end_date)}`;
+
     const statusOptions = [
         {
             value: "NOT_STARTED",
             label: "Draft",
-            description: "Keep planning until you are ready to choose a start week.",
-            color: theme.NOT_STARTED ?? "#9E9E9E",
-            surface:
-                colorScheme === "dark"
-                    ? "rgba(158, 158, 158, 0.20)"
-                    : "rgba(158, 158, 158, 0.14)",
+            description: "Keep planning until you choose a start week.",
         },
         {
             value: "ACTIVE",
             label: "Active",
-            description: "Use this while the program is active and sessions are in progress.",
-            color: theme.ACTIVE ?? theme.primary ?? "#f7742e",
-            surface: accentSoft,
+            description: "Use while the program is running.",
         },
         {
             value: "COMPLETE",
             label: "Complete",
-            description: "Mark the cycle as finished when the final week is done.",
-            color: theme.COMPLETE ?? theme.secondary ?? "#60daac",
-            surface: successSoft,
-        },
-    ];
-    const currentStatusOption =
-        statusOptions.find((option) => option.value === status) ?? statusOptions[0];
-    const visibleStatusOptions =
-        status === "NOT_STARTED"
-            ? statusOptions.filter((option) => option.value !== "COMPLETE")
-            : statusOptions.filter((option) => option.value !== "NOT_STARTED");
-    const headerTitle = (program_name ?? "").trim() || "Program";
-    const headerStatusColor =
-        status === "ACTIVE"
-            ? theme.secondary ?? currentStatusOption.color
-            : currentStatusOption.color;
-    const calculatedProgramTimeline = getProgramTimeline(
-        start_date,
-        programDayCount
-    );
-    const programTimeline =
-        status === "NOT_STARTED"
-            ? {
-                ...calculatedProgramTimeline,
-                currentWeek: calculatedProgramTimeline.totalWeeks > 0 ? 1 : 0,
-            }
-            : calculatedProgramTimeline;
-    const programProgressPercent =
-        status === "NOT_STARTED" ? 0 : programStats.completionPercent;
-    const headerPeriod =
-        `${formatHeaderDate(start_date)} - ${formatHeaderDate(end_date)}`;
-    const statsCardBackground =
-        theme.cardBackground ?? theme.background ?? "transparent";
-    const statsCards = [
-        {
-            label: "Total volume",
-            value: formatStatNumber(programStats.totalVolume),
-            detail: "kg lifted",
-            Icon: TradeUp,
-            color: theme.primary ?? "#f7742e",
-        },
-        {
-            label: "Avg session",
-            value: String(programStats.avgSessionMinutes),
-            detail: "min per workout",
-            Icon: Info,
-            color: quietText,
+            description: "Mark the cycle finished after the final week.",
         },
     ];
 
   return (
     <>
     <ThemedView safe={["top", "left", "right"]}>
-        <ThemedHeader
-            right={
-                <TouchableOpacity onPress={() => {
-                    set_OptionsBottomsheet_visible(true) }}>
-                    <ThreeDots width={20} height={20} />
-                </TouchableOpacity> }
-        />
+        <View
+            style={[
+                styles.headerRow,
+                { borderBottomColor: theme.hairline },
+            ]}>
+            <TouchableOpacity
+                style={[
+                    styles.headerCircleButton,
+                    {
+                        backgroundColor: theme.cardBackground,
+                        borderColor: theme.cardBorder,
+                    },
+                ]}
+                onPress={() => navigation.goBack()}>
+                <BackChevronIcon color={theme.title} />
+            </TouchableOpacity>
 
-        <ScrollView 
+            <View style={styles.headerCenter}>
+                <ThemedText style={styles.headerEyebrow} setColor={theme.quietText}>
+                    Program
+                </ThemedText>
+                <ThemedText
+                    style={styles.headerTitle}
+                    setColor={theme.title}
+                    numberOfLines={1}>
+                    {headerTitle}
+                </ThemedText>
+            </View>
+
+            <TouchableOpacity
+                style={[
+                    styles.headerCircleButton,
+                    {
+                        backgroundColor: theme.cardBackground,
+                        borderColor: theme.cardBorder,
+                    },
+                ]}
+                onPress={() => set_OptionsBottomsheet_visible(true)}>
+                <ThreeDotsIcon color={theme.text} />
+            </TouchableOpacity>
+        </View>
+
+        <ScrollView
             style={styles.container}
             nestedScrollEnabled
-            contentContainerStyle={{ paddingBottom: insets.bottom + 15}}>
+            contentContainerStyle={[
+                styles.content,
+                { paddingBottom: insets.bottom + 15 },
+            ]}>
 
             <ProgramOverviewHeader
                 title={headerTitle}
                 status={status}
-                statusColor={headerStatusColor}
                 currentWeek={programTimeline.currentWeek}
                 totalWeeks={programTimeline.totalWeeks}
                 period={headerPeriod}
-                progressPercent={programProgressPercent}
+                weekProgressPercent={weekProgressPercent}
+                completedWorkouts={programStats.completedWorkouts}
+                totalWorkouts={programStats.totalWorkouts}
+                totalVolumeLabel={formatCompactVolume(programStats.totalVolume)}
+                avgSessionMinutes={programStats.avgSessionMinutes}
                 onStart={() => setStartProgramModalVisible(true)}
             />
 
-            <View style={styles.stats_section}>
-                <ThemedText
-                    style={styles.stats_section_label}
-                    setColor={quietText}>
-                    Stats
-                </ThemedText>
+            {/* Mesocycle list / blocks timeline */}
+            <MesocycleList
+                program_id={program_id}
+                start_date={start_date}
+                program_status={status}
+                program_current_week={programTimeline.currentWeek}
+                refreshKey={refreshKey}
+                refresh={refresh}/>
 
-                <View style={styles.stats_grid}>
-                    {statsCards.map((stat, index) => {
-                        const Icon = stat.Icon;
+            {/* Program bests */}
+            <View style={styles.section}>
+                <View style={styles.section_header}>
+                    <ThemedText
+                        style={styles.section_header_eyebrow}
+                        setColor={theme.quietText}>
+                        Program bests
+                    </ThemedText>
+
+                    <TouchableOpacity
+                        style={styles.section_header_icon}
+                        onPress={() => set_prSettingsBottomsheet_visible(true)}>
+                        <Info width={15} height={15} color={theme.quietText} thickness={1.8} />
+                    </TouchableOpacity>
+                </View>
+
+                <View
+                    style={[
+                        styles.card_shell,
+                        {
+                            backgroundColor: theme.cardBackground,
+                            borderColor: theme.cardBorder,
+                        },
+                    ]}>
+                    {programExercises.length === 0 && (
+                        <View style={styles.pr_empty}>
+                            <ThemedText setColor={theme.quietText}>
+                                No exercises in this program yet.
+                            </ThemedText>
+                        </View>
+                    )}
+
+                    {programExercises.length > 0 && selectedProgramBestExercises.length === 0 && (
+                        <View style={styles.pr_empty}>
+                            <ThemedText setColor={theme.quietText}>
+                                No exercises selected.
+                            </ThemedText>
+                        </View>
+                    )}
+
+                    {selectedProgramBestExercises.map((exerciseName, index) => {
+                        const programBest = programExerciseBestMap[exerciseName];
+                        const hasCompletedSet = Boolean(programBest);
+                        const setDisplay = programBest?.setDisplayValue
+                            ? programBest.setDisplayValue.replace(" x ", " × ")
+                            : null;
 
                         return (
-                            <View
-                                key={stat.label}
-                                style={[
-                                    styles.stats_card,
-                                    index % 2 === 0 && styles.stats_card_left,
-                                    {
-                                        backgroundColor: statsCardBackground,
-                                        borderColor: settingsOutlineColor,
-                                    },
-                                ]}>
-                                <View style={styles.stats_card_header}>
-                                    <Icon
-                                        width={14}
-                                        height={14}
-                                        color={stat.color}
-                                        stroke={stat.color}
-                                        thickness={1.7}
+                            <View key={exerciseName}>
+                                {index > 0 && (
+                                    <View
+                                        style={[
+                                            styles.pr_divider,
+                                            { backgroundColor: theme.hairline },
+                                        ]}
                                     />
-                                    <ThemedText
-                                        style={styles.stats_card_label}
-                                        setColor={quietText}
-                                        numberOfLines={1}>
-                                        {stat.label}
-                                    </ThemedText>
-                                </View>
+                                )}
 
-                                <ThemedText
-                                    style={styles.stats_card_value}
-                                    setColor={titleColor}
-                                    numberOfLines={1}>
-                                    {stat.value}
-                                </ThemedText>
-                                <ThemedText
-                                    style={styles.stats_card_detail}
-                                    setColor={quietText}
-                                    numberOfLines={1}>
-                                    {stat.detail}
-                                </ThemedText>
+                                <View style={styles.pr_row}>
+                                    <View
+                                        style={[
+                                            styles.pr_star_tile,
+                                            { backgroundColor: "rgba(242, 193, 78, 0.12)" },
+                                        ]}>
+                                        <Star width={18} height={18} color={theme.planned} filled />
+                                    </View>
+
+                                    <View style={styles.pr_info}>
+                                        <ThemedText
+                                            style={styles.pr_name}
+                                            setColor={theme.title}
+                                            numberOfLines={1}>
+                                            {exerciseName}
+                                        </ThemedText>
+                                        <ThemedText
+                                            style={styles.pr_subtitle}
+                                            setColor={theme.quietText}
+                                            numberOfLines={1}>
+                                            {hasCompletedSet
+                                                ? `Best set ${setDisplay} · ${programBest.performedDate}`
+                                                : "No completed sets."}
+                                        </ThemedText>
+                                    </View>
+
+                                    <View style={styles.pr_value_group}>
+                                        <ThemedText
+                                            style={styles.pr_value}
+                                            setColor={hasCompletedSet ? theme.primary : theme.quietText}>
+                                            {programBest?.rmDisplayValue ?? "--"}
+                                        </ThemedText>
+                                        <ThemedText
+                                            style={styles.pr_value_label}
+                                            setColor={theme.quietText}>
+                                            Est. 1RM
+                                        </ThemedText>
+                                    </View>
+                                </View>
                             </View>
                         );
                     })}
                 </View>
             </View>
 
-            {/* Mesocycle list */}
-            <ThemedView style={styles.mesocycle_container}>
-                    <MesocycleList 
-                        program_id = {program_id}
-                        start_date={start_date}
-                        program_status={status}
-                        refreshKey= {refreshKey} 
-                        refresh={refresh}/>
-            </ThemedView>
-
-            {/* Program PR's */}
-            <View style={styles.section_header}>
-                <ThemedTitle type="h2"> Program bests </ThemedTitle>
-
-                <TouchableOpacity
-                    style={styles.section_header_icon}
-                    onPress={() => set_prSettingsBottomsheet_visible(true)}>
-                    <Cogwheel
-                        width={24}
-                        height={24} />
-                </TouchableOpacity>
-            </View>
-            {programExercises.length === 0 && (
-                <ThemedText>
-                    No exercises in this program yet.
-                </ThemedText>
-            )}
-
-            {programExercises.length > 0 && selectedProgramBestExercises.length === 0 && (
-                <ThemedText>
-                    No exercises selected.
-                </ThemedText>
-            )}
-
-            {selectedProgramBestExercises.length > 0 && (
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    style={styles.pr_scroll}
-                    contentContainerStyle={styles.pr_body}>
-                    {selectedProgramBestExercises.map((exerciseName, index) => {
-                        const programBest = programExerciseBestMap[exerciseName];
-                        const hasCompletedSet = Boolean(programBest);
-                        const cardBackground = hasCompletedSet
-                            ? index % 2 === 0
-                                ? accentSoft
-                                : successSoft
-                            : emptyTileBackground;
-
-                        return (
-                            <ThemedCard
-                                key={exerciseName}
-                                style={[
-                                    styles.pr_feature_card,
-                                    {
-                                        backgroundColor: cardBackground,
-                                        borderColor: hasCompletedSet ? "transparent" : emptyBorder,
-                                    },
-                                ]}>
-                                <View style={styles.pr_feature_header}>
-                                    <View
-                                        style={[
-                                            styles.pr_feature_rank,
-                                            { backgroundColor: badgeBackground },
-                                        ]}>
-                                        <ThemedText
-                                            size={10}
-                                            style={styles.pr_feature_rank_text}
-                                            setColor={badgeTextColor}>
-                                            {programBest?.performedDate
-                                                ? `achieved on ${programBest.performedDate}`
-                                                : "No PR"}
-                                        </ThemedText>
-                                    </View>
-
-                                    <ThemedText
-                                        size={20}
-                                        style={styles.pr_feature_name}
-                                        numberOfLines={2}
-                                        setColor={hasCompletedSet ? tileTextColor : undefined}>
-                                        {exerciseName}
-                                    </ThemedText>
-                                </View>
-
-                                <View style={styles.pr_feature_body}>
-                                    <View
-                                        style={[
-                                            styles.pr_feature_set_panel,
-                                            { backgroundColor: detailPanelBackground },
-                                        ]}>
-                                        <ThemedText
-                                            size={10}
-                                            style={styles.pr_feature_set_label}
-                                            setColor={hasCompletedSet ? tileTextColor : theme.quietText}>
-                                            Best set
-                                        </ThemedText>
-                                        <ThemedText
-                                            size={12}
-                                            style={
-                                                hasCompletedSet
-                                                    ? styles.pr_feature_set_value
-                                                    : styles.pr_feature_set_empty
-                                            }
-                                            setColor={hasCompletedSet ? tileTextColor : theme.quietText}>
-                                            {programBest?.setDisplayValue ?? "No completed sets."}
-                                        </ThemedText>
-                                    </View>
-
-                                    <View style={styles.pr_feature_footer}>
-                                        <ThemedText
-                                            size={30}
-                                            style={styles.pr_feature_rm_value}
-                                            setColor={hasCompletedSet ? tileTextColor : theme.quietText}>
-                                            {programBest?.rmDisplayValue ?? "--"}
-                                        </ThemedText>
-                                        {programBest?.isEstimated && (
-                                            <View
-                                                style={[
-                                                    styles.pr_feature_estimated_badge,
-                                                    { backgroundColor: estimatedBadgeBackground },
-                                                ]}>
-                                                <ThemedText
-                                                    size={10}
-                                                    style={styles.pr_feature_estimated_text}
-                                                    setColor={estimatedBadgeText}>
-                                                    {programBest.estimatedLabel}
-                                                </ThemedText>
-                                            </View>
-                                        )}
-                                        <ThemedText
-                                            size={10}
-                                            style={styles.pr_feature_rm_label}
-                                            setColor={hasCompletedSet ? tileTextColor : theme.quietText}>
-                                            1 Rep Max
-                                        </ThemedText>
-                                    </View>
-                                </View>
-                            </ThemedCard>
-                        );
-                    })}
-                </ScrollView>
-            )}
-
             {/* 1 rm estimates. */}
-            <ThemedTitle type="h2"> Estimated 1 RM's </ThemedTitle>
-            <ThemedCard style={styles.rm_container}>
+            <View style={styles.section}>
+                <ThemedText
+                    style={styles.section_header_eyebrow}
+                    setColor={theme.quietText}>
+                    Estimated 1RM's
+                </ThemedText>
 
-                <View style={styles.rm_body}>
+                <View
+                    style={[
+                        styles.card_shell,
+                        styles.rm_container,
+                        {
+                            backgroundColor: theme.cardBackground,
+                            borderColor: theme.cardBorder,
+                        },
+                    ]}>
                     <Rm_List
-                        program_id = {program_id}
-                        refreshKey = {refreshKey}
-                        refresh = {refresh}
-                        programExerciseBestMap={programExerciseBestMap} />
-                </View>
+                        program_id={program_id}
+                        refreshKey={refreshKey}
+                        refresh={refresh}
+                        programExerciseBestMap={programExerciseBestMap}
+                        onAddPress={() => set_AddEstimatedSet_visible(true)} />
 
-                <View style={styles.rm_footer}>
-                    <ThemedButton 
-                        title="Add 1 RM" 
-                        onPress={() => set_AddEstimatedSet_visible(true)}/>
-
-                    <AddEstimatedSet 
+                    <AddEstimatedSet
                         visible={addEstimatedSet_visible}
                         onClose={() => set_AddEstimatedSet_visible(false)}
                         onSubmit={handleAdd}
                         programExerciseBestMap={programExerciseBestMap}/>
                 </View>
-            </ThemedCard>
+            </View>
 
             {/* Program setting and status */}
-            <ThemedTitle type="h2"> Settings </ThemedTitle>
-            <ThemedCard style={styles.settings_card}>
-                <View style={styles.settings_section}>
-                    <View style={styles.settings_section_header}>
+            <View style={styles.section}>
+                <ThemedText
+                    style={styles.section_header_eyebrow}
+                    setColor={theme.quietText}>
+                    Settings
+                </ThemedText>
+
+                <View
+                    style={[
+                        styles.card_shell,
+                        {
+                            backgroundColor: theme.cardBackground,
+                            borderColor: theme.cardBorder,
+                        },
+                    ]}>
+                    <View style={styles.settings_status_label_wrap}>
                         <ThemedText
-                            size={11}
-                            style={[
-                                styles.settings_section_eyebrow,
-                                { color: settingsLabelColor },
-                            ]}>
+                            style={styles.settings_status_label}
+                            setColor={theme.quietText}>
                             Program status
                         </ThemedText>
                     </View>
 
-                    {visibleStatusOptions.map((option) => {
+                    {statusOptions.map((option) => {
                         const isSelected = status === option.value;
 
                         return (
                             <TouchableOpacity
                                 key={option.value}
                                 style={[
-                                    styles.settings_status_tile,
-                                    {
-                                        backgroundColor: isSelected
-                                            ? option.surface
-                                            : settingsPanelBackground,
-                                        borderColor: isSelected
-                                            ? option.color
-                                            : settingsOutlineColor,
+                                    styles.settings_status_row,
+                                    isSelected && {
+                                        backgroundColor: withAlpha(theme.primary, 0.06),
                                     },
                                 ]}
                                 onPress={() => handleStatusChange(option.value)}>
                                 <View
                                     style={[
-                                        styles.settings_status_marker,
-                                        { backgroundColor: option.color },
-                                    ]}
-                                />
+                                        styles.settings_radio,
+                                        {
+                                            borderColor: isSelected
+                                                ? theme.primary
+                                                : radioBorderColor,
+                                        },
+                                    ]}>
+                                    {isSelected && (
+                                        <View
+                                            style={[
+                                                styles.settings_radio_dot,
+                                                { backgroundColor: theme.primary },
+                                            ]}
+                                        />
+                                    )}
+                                </View>
 
-                                <View style={styles.settings_status_content}>
+                                <View style={styles.settings_status_text}>
                                     <ThemedText
-                                        size={16}
                                         style={styles.settings_status_title}
-                                        setColor={
-                                            isSelected
-                                                ? settingsSelectedTextColor
-                                                : theme.title
-                                        }>
+                                        setColor={theme.title}>
                                         {option.label}
                                     </ThemedText>
-
                                     <ThemedText
-                                        size={12}
                                         style={styles.settings_status_description}
-                                        setColor={
-                                            isSelected
-                                                ? settingsSelectedTextColor
-                                                : settingsLabelColor
-                                        }>
+                                        setColor={theme.quietText}>
                                         {option.description}
                                     </ThemedText>
                                 </View>
                             </TouchableOpacity>
                         );
                     })}
-                </View>
 
-                <View style={styles.settings_section}>
-                    <View style={styles.settings_section_header}>
+                    <View
+                        style={[
+                            styles.settings_divider,
+                            { backgroundColor: theme.hairline },
+                        ]}
+                    />
+
+                    <View style={styles.settings_name_block}>
                         <ThemedText
-                            size={11}
-                            style={[
-                                styles.settings_section_eyebrow,
-                                { color: settingsLabelColor },
-                            ]}>
-                            Period
+                            style={styles.settings_name_label}
+                            setColor={theme.quietText}>
+                            Program name
                         </ThemedText>
+
+                        <View
+                            style={[
+                                styles.settings_name_field,
+                                {
+                                    backgroundColor: theme.uiBackground,
+                                    borderColor: theme.border,
+                                },
+                            ]}>
+                            <View style={styles.settings_name_value}>
+                                <ThemedEditableCell
+                                    value={program_name ?? ""}
+                                    keyboardType="default"
+                                    textAlign="left"
+                                    onCommit={async (v) => {
+                                        set_program_name(v);
+                                        await programService.updateProgramName(db, {
+                                            programId: program_id,
+                                            programName: v,
+                                        });
+                                    }}
+                                />
+                            </View>
+                            <Pencil width={15} height={15} color={theme.quietText} thickness={1.8} />
+                        </View>
                     </View>
 
                     <View
                         style={[
-                            styles.settings_period_panel,
-                            {
-                                backgroundColor: settingsPanelBackground,
-                                borderColor: settingsOutlineColor,
-                            },
-                        ]}>
-                        <View style={styles.settings_period_row}>
+                            styles.settings_divider,
+                            { backgroundColor: theme.hairline },
+                        ]}
+                    />
+
+                    <View style={styles.settings_period_block_wrap}>
+                        <ThemedText
+                            style={styles.settings_name_label}
+                            setColor={theme.quietText}>
+                            Period
+                        </ThemedText>
+
+                        <View
+                            style={[
+                                styles.settings_period_row,
+                                {
+                                    backgroundColor: theme.uiBackground,
+                                    borderColor: theme.border,
+                                },
+                            ]}>
                             <View style={styles.settings_period_block}>
                                 <ThemedText
-                                    size={10}
                                     style={styles.settings_period_label}
-                                    setColor={settingsLabelColor}>
+                                    setColor={theme.quietText}>
                                     Start
                                 </ThemedText>
                                 <ThemedText
-                                    size={14}
                                     style={styles.settings_period_value}
                                     setColor={theme.title}>
-                                    {status === "NOT_STARTED"
-                                        ? "Not scheduled"
-                                        : start_date}
+                                    {status === "NOT_STARTED" ? "Not scheduled" : start_date}
                                 </ThemedText>
                             </View>
 
                             <View
                                 style={[
                                     styles.settings_period_divider,
-                                    { backgroundColor: settingsOutlineColor },
+                                    { backgroundColor: theme.border },
                                 ]}
                             />
 
                             <View style={styles.settings_period_block}>
                                 <ThemedText
-                                    size={10}
                                     style={styles.settings_period_label}
-                                    setColor={settingsLabelColor}>
+                                    setColor={theme.quietText}>
                                     End
                                 </ThemedText>
                                 <ThemedText
-                                    size={14}
                                     style={styles.settings_period_value}
                                     setColor={theme.title}>
-                                    {status === "NOT_STARTED"
-                                        ? "Not scheduled"
-                                        : end_date || "-"}
+                                    {status === "NOT_STARTED" ? "Not scheduled" : end_date || "-"}
                                 </ThemedText>
                             </View>
                         </View>
                     </View>
-                </View>
-
-                <View style={styles.settings_section}>
-                    <View style={styles.settings_section_header}>
-                        <ThemedText
-                            size={11}
-                            style={[
-                                styles.settings_section_eyebrow,
-                                { color: settingsLabelColor },
-                            ]}>
-                            Program name
-                        </ThemedText>
-                        <ThemedText
-                            size={12}
-                            style={{ color: settingsLabelColor }}>
-                            Click to rename
-                        </ThemedText>
-                    </View>
 
                     <View
                         style={[
-                            styles.settings_name_editor,
-                            {
-                                backgroundColor: settingsEditorBackground,
-                                borderColor: settingsOutlineColor,
-                            },
-                        ]}>
-                        <ThemedEditableCell
-                            value={program_name ?? ""}
-                            keyboardType="default"
-                            textAlign="left"
-                            onCommit={async (v) => {
-                                set_program_name(v);
-                                await programService.updateProgramName(db, {
-                                    programId: program_id,
-                                    programName: v,
-                                });
-                            }}
-                        />
-                    </View>
-                </View>
+                            styles.settings_divider,
+                            { backgroundColor: theme.hairline },
+                        ]}
+                    />
 
-                <View style={styles.settings_section_last}>
-                    <View style={styles.settings_section_header}>
+                    <View style={styles.settings_period_block_wrap}>
                         <ThemedText
-                            size={11}
-                            style={[
-                                styles.settings_section_eyebrow,
-                                { color: settingsLabelColor },
-                            ]}>
+                            style={styles.settings_name_label}
+                            setColor={theme.quietText}>
                             Export
                         </ThemedText>
-                    </View>
 
-                    <TouchableOpacity
-                        style={[
-                            styles.settings_export_tile,
-                            {
-                                backgroundColor: settingsPanelBackground,
-                                borderColor: isExportingProgram
-                                    ? theme.primary ?? Colors.dark.primary
-                                    : settingsOutlineColor,
-                                opacity: isExportingProgram ? 0.68 : 1,
-                            },
-                        ]}
-                        disabled={isExportingProgram}
-                        onPress={exportProgram}>
-                        <View
+                        <TouchableOpacity
                             style={[
-                                styles.settings_export_icon,
-                                { backgroundColor: accentSoft },
-                            ]}>
-                            <Copy width={18} height={18} />
-                        </View>
+                                styles.settings_export_row,
+                                {
+                                    backgroundColor: theme.uiBackground,
+                                    borderColor: isExportingProgram
+                                        ? theme.primary
+                                        : theme.border,
+                                    opacity: isExportingProgram ? 0.68 : 1,
+                                },
+                            ]}
+                            disabled={isExportingProgram}
+                            onPress={exportProgram}>
+                            <View
+                                style={[
+                                    styles.settings_export_icon,
+                                    { backgroundColor: withAlpha(theme.primary, 0.12) },
+                                ]}>
+                                <Copy width={16} height={16} />
+                            </View>
 
-                        <View style={styles.settings_export_content}>
-                            <ThemedText
-                                size={16}
-                                style={styles.settings_export_title}
-                                setColor={theme.title}>
-                                {isExportingProgram
-                                    ? "Exporting..."
-                                    : "Export program"}
-                            </ThemedText>
-
-                            <ThemedText
-                                size={12}
-                                style={styles.settings_export_description}
-                                setColor={settingsLabelColor}>
-                                FitApp program file
-                            </ThemedText>
-                        </View>
-                    </TouchableOpacity>
+                            <View style={styles.settings_export_content}>
+                                <ThemedText
+                                    style={styles.settings_export_title}
+                                    setColor={theme.title}>
+                                    {isExportingProgram ? "Exporting..." : "Export program"}
+                                </ThemedText>
+                                <ThemedText
+                                    style={styles.settings_export_description}
+                                    setColor={theme.quietText}>
+                                    FitApp program file
+                                </ThemedText>
+                            </View>
+                        </TouchableOpacity>
+                    </View>
                 </View>
-            </ThemedCard>
+            </View>
 
-            
         </ScrollView>
     </ThemedView>
 
@@ -978,17 +885,17 @@ const ProgramOverviewPage = ( {route} ) => {
             onClose={() => set_OptionsBottomsheet_visible(false)} >
 
             <View style={styles.bottomsheet_title}>
-                <ThemedTitle type={"h3"} style={{flex: 10}}> 
-                    Program actions 
+                <ThemedTitle type={"h3"} style={{flex: 10}}>
+                    Program actions
                 </ThemedTitle>
 
 
             </View>
 
             <View style={styles.bottomsheet_body}>
-                
+
                 {/* Delete Program */}
-                <TouchableOpacity 
+                <TouchableOpacity
                     style={styles.option}
                     onPress={() => {
                         set_OptionsBottomsheet_visible(false);
@@ -998,7 +905,7 @@ const ProgramOverviewPage = ( {route} ) => {
                     <Delete
                         width={24}
                         height={24}/>
-                    <ThemedText style={styles.option_text}> 
+                    <ThemedText style={styles.option_text}>
                         Delete program.
                     </ThemedText>
 
@@ -1036,7 +943,7 @@ const ProgramOverviewPage = ( {route} ) => {
                         styles.confirm_action,
                         styles.confirm_action_secondary,
                         {
-                            borderColor: settingsOutlineColor,
+                            borderColor: theme.cardBorder,
                             opacity: isDeletingProgram ? 0.6 : 1,
                         },
                     ]}
@@ -1052,7 +959,7 @@ const ProgramOverviewPage = ( {route} ) => {
                         styles.confirm_action,
                         styles.confirm_action_danger,
                         {
-                            backgroundColor: theme.danger ?? "#ba0000",
+                            backgroundColor: theme.danger,
                             opacity: isDeletingProgram ? 0.7 : 1,
                         },
                     ]}
@@ -1102,7 +1009,7 @@ const ProgramOverviewPage = ( {route} ) => {
                             styles.filter_option,
                             index < programExercises.length - 1 && styles.filter_option_divider,
                             index < programExercises.length - 1 && {
-                                borderBottomColor: filterDividerColor,
+                                borderBottomColor: theme.hairline,
                             },
                             !(visibleProgramBestExercises[exerciseName] ?? true) &&
                                 styles.filter_option_unselected,

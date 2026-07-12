@@ -7,7 +7,7 @@ import {
 } from "react-native";
 
 import BodyMapPreview from "../../../../Resources/Components/BodyMapPreview/BodyMapPreview";
-import { Colors } from "../../../../Resources/GlobalStyling/colors";
+import { Colors, withAlpha } from "../../../../Resources/GlobalStyling/colors";
 import {
   ThemedButton,
   ThemedModal,
@@ -34,13 +34,18 @@ export default function CustomExerciseModal({ visible, onClose, onCreate }) {
   const dangerColor = theme.danger ?? "#ba0000";
   const [step, setStep] = useState(NAME_STEP);
   const [exerciseName, setExerciseName] = useState("");
-  const [selectedMuscleKeys, setSelectedMuscleKeys] = useState([]);
+  const [primaryMuscleKeys, setPrimaryMuscleKeys] = useState([]);
+  const [secondaryMuscleKeys, setSecondaryMuscleKeys] = useState([]);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const normalizedExerciseName = exerciseName.trim();
   const muscleMetadata = useMemo(
-    () => buildCustomExerciseMuscleMetadata(selectedMuscleKeys),
-    [selectedMuscleKeys]
+    () =>
+      buildCustomExerciseMuscleMetadata({
+        primary: primaryMuscleKeys,
+        secondary: secondaryMuscleKeys,
+      }),
+    [primaryMuscleKeys, secondaryMuscleKeys]
   );
 
   useEffect(() => {
@@ -50,7 +55,8 @@ export default function CustomExerciseModal({ visible, onClose, onCreate }) {
 
     setStep(NAME_STEP);
     setExerciseName("");
-    setSelectedMuscleKeys([]);
+    setPrimaryMuscleKeys([]);
+    setSecondaryMuscleKeys([]);
     setError("");
     setIsSubmitting(false);
   }, [visible]);
@@ -71,18 +77,31 @@ export default function CustomExerciseModal({ visible, onClose, onCreate }) {
     setStep(MUSCLE_STEP);
   };
 
-  const toggleMuscleGroup = (muscleGroupKey) => {
+  // Tap cycle per muscle group: none -> primary -> secondary -> none.
+  const cycleMuscleGroup = (muscleGroupKey) => {
     setError("");
-    setSelectedMuscleKeys((currentKeys) =>
-      currentKeys.includes(muscleGroupKey)
-        ? currentKeys.filter((key) => key !== muscleGroupKey)
-        : [...currentKeys, muscleGroupKey]
-    );
+
+    if (primaryMuscleKeys.includes(muscleGroupKey)) {
+      setPrimaryMuscleKeys((currentKeys) =>
+        currentKeys.filter((key) => key !== muscleGroupKey)
+      );
+      setSecondaryMuscleKeys((currentKeys) => [...currentKeys, muscleGroupKey]);
+      return;
+    }
+
+    if (secondaryMuscleKeys.includes(muscleGroupKey)) {
+      setSecondaryMuscleKeys((currentKeys) =>
+        currentKeys.filter((key) => key !== muscleGroupKey)
+      );
+      return;
+    }
+
+    setPrimaryMuscleKeys((currentKeys) => [...currentKeys, muscleGroupKey]);
   };
 
   const handleCreate = async () => {
-    if (selectedMuscleKeys.length === 0 || isSubmitting) {
-      setError("Select at least one muscle group.");
+    if (primaryMuscleKeys.length === 0 || isSubmitting) {
+      setError("Select at least one primary muscle group.");
       return;
     }
 
@@ -91,7 +110,10 @@ export default function CustomExerciseModal({ visible, onClose, onCreate }) {
       setIsSubmitting(true);
       await onCreate?.({
         exerciseName: normalizedExerciseName,
-        muscleGroupKeys: selectedMuscleKeys,
+        muscleGroupKeys: {
+          primary: primaryMuscleKeys,
+          secondary: secondaryMuscleKeys,
+        },
       });
       onClose?.();
     } catch (createError) {
@@ -151,7 +173,8 @@ export default function CustomExerciseModal({ visible, onClose, onCreate }) {
           <View style={styles.copy}>
             <ThemedTitle type="h3">Select muscle groups</ThemedTitle>
             <ThemedText style={styles.description} setColor={quietText}>
-              Choose every muscle group targeted by {normalizedExerciseName}.
+              Tap once for a primary muscle, twice for a secondary — tap again
+              to remove it.
             </ThemedText>
           </View>
 
@@ -165,6 +188,9 @@ export default function CustomExerciseModal({ visible, onClose, onCreate }) {
                 primaryRegionKeys={
                   muscleMetadata.primary_front_body_map_region_keys
                 }
+                secondaryRegionKeys={
+                  muscleMetadata.secondary_front_body_map_region_keys
+                }
                 style={styles.bodyMap}
               />
             </View>
@@ -177,34 +203,82 @@ export default function CustomExerciseModal({ visible, onClose, onCreate }) {
                 primaryRegionKeys={
                   muscleMetadata.primary_back_body_map_region_keys
                 }
+                secondaryRegionKeys={
+                  muscleMetadata.secondary_back_body_map_region_keys
+                }
                 style={styles.bodyMap}
               />
             </View>
           </View>
 
+          <View style={styles.legendRow}>
+            <View style={styles.legendItem}>
+              <View
+                style={[styles.legendDot, { backgroundColor: primaryColor }]}
+              />
+              <ThemedText style={styles.legendText} setColor={quietText}>
+                Primary
+              </ThemedText>
+            </View>
+            <View style={styles.legendItem}>
+              <View
+                style={[
+                  styles.legendDot,
+                  {
+                    backgroundColor: withAlpha(primaryColor, 0.16),
+                    borderWidth: 1,
+                    borderColor: primaryColor,
+                  },
+                ]}
+              />
+              <ThemedText style={styles.legendText} setColor={quietText}>
+                Secondary
+              </ThemedText>
+            </View>
+          </View>
+
           <View style={styles.chipGrid}>
             {EXERCISE_MUSCLE_GROUPS.map((muscleGroup) => {
-              const isSelected = selectedMuscleKeys.includes(muscleGroup.key);
+              const isPrimary = primaryMuscleKeys.includes(muscleGroup.key);
+              const isSecondary = secondaryMuscleKeys.includes(
+                muscleGroup.key
+              );
 
               return (
                 <Pressable
                   key={muscleGroup.key}
-                  accessibilityRole="checkbox"
-                  accessibilityState={{ checked: isSelected }}
-                  onPress={() => toggleMuscleGroup(muscleGroup.key)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: isPrimary || isSecondary }}
+                  accessibilityLabel={
+                    isPrimary
+                      ? `${muscleGroup.label}, primary muscle`
+                      : isSecondary
+                        ? `${muscleGroup.label}, secondary muscle`
+                        : muscleGroup.label
+                  }
+                  onPress={() => cycleMuscleGroup(muscleGroup.key)}
                   style={[
                     styles.chip,
                     {
-                      backgroundColor: isSelected
+                      backgroundColor: isPrimary
                         ? primaryColor
-                        : theme.uiBackground,
-                      borderColor: isSelected ? primaryColor : cardBorder,
+                        : isSecondary
+                          ? withAlpha(primaryColor, 0.16)
+                          : theme.uiBackground,
+                      borderColor:
+                        isPrimary || isSecondary ? primaryColor : cardBorder,
                     },
                   ]}
                 >
                   <ThemedText
                     style={styles.chipText}
-                    setColor={isSelected ? activeChipText : theme.text}
+                    setColor={
+                      isPrimary
+                        ? activeChipText
+                        : isSecondary
+                          ? primaryColor
+                          : theme.text
+                    }
                   >
                     {muscleGroup.label}
                   </ThemedText>
@@ -240,7 +314,7 @@ export default function CustomExerciseModal({ visible, onClose, onCreate }) {
           disabled={
             step === NAME_STEP
               ? normalizedExerciseName.length < 2
-              : selectedMuscleKeys.length === 0 || isSubmitting
+              : primaryMuscleKeys.length === 0 || isSubmitting
           }
           onPress={step === NAME_STEP ? handleNext : handleCreate}
           style={styles.action}

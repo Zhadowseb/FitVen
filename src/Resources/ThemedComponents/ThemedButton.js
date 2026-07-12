@@ -25,6 +25,11 @@ const ThemedButton = ({
     const variants = {
         primary: {
             backgroundColor: theme.primary,
+            shadowColor: theme.primary,
+            shadowOffset: { width: 0, height: 10 },
+            shadowOpacity: 0.25,
+            shadowRadius: 24,
+            elevation: 6,
         },
         secondary: {
             backgroundColor: theme.secondary,
@@ -55,10 +60,18 @@ const ThemedButton = ({
         style,
       ]}
     >
-      <ThemedText 
-        style={styles.text}
+      <ThemedText
+        style={[
+          styles.text,
+          {
+            color:
+              variant === "secondary"
+                ? theme.inkOnSecondary ?? theme.textInverted ?? "#0C1410"
+                : theme.textInverted ?? "#14100C",
+          },
+        ]}
         size={textSize ? textSize : 14}>
-        
+
         {title}
       </ThemedText>
     </Pressable>
@@ -70,14 +83,13 @@ export default ThemedButton;
 const styles = StyleSheet.create({
   base: {
     paddingHorizontal: 20,
-    borderRadius: 25,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
   },
 
   text: {
-    fontWeight: "600",
-    color: "#0E0F12",
+    fontWeight: "800",
   },
 
   pressed: {

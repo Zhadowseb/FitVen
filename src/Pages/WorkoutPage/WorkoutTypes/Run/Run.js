@@ -18,7 +18,6 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { useSQLiteContext } from "expo-sqlite";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useColorScheme } from "react-native";
-import Constants from "expo-constants";
 import Feather from "@expo/vector-icons/Feather";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import Svg, { Line, Path, Rect, Text as SvgText } from "react-native-svg";
@@ -52,6 +51,12 @@ import {
   normalizeStoredTimestampSeconds,
 } from "../../../../Utils/timeUtils";
 import { calculateTrackedDistanceSummary } from "../../../../Utils/locationUtils";
+import {
+  getActualPaceMinutesPerKm,
+  getDistanceIntervalProgress,
+  getRunSetCompletionMode,
+  getRunSetRecordedDurationSeconds,
+} from "../../../../Utils/runIntervalUtils";
 import {
   locationService,
   runningService as runningRepository,
@@ -309,24 +314,28 @@ const RUN_WORKOUT_FLOW_OPTIONS = [
   {
     id: "endurance-base",
     title: "Endurance & Base",
-    subtitle: "Base Run, Long Run, Recovery Run",
+    gridTitle: "Endurance & Base",
+    subtitle: "Base Run · Long Run · Recovery Run",
     image: require("./Assets/Endurance&base.png"),
   },
   {
     id: "speed-structure",
     title: "Speed & Structure",
-    subtitle: "Interval, Fartlek, Hill Repeats",
+    gridTitle: "Speed & Structure",
+    subtitle: "Interval · Fartlek · Hill Repeats",
     image: require("./Assets/Speed&structure.png"),
   },
   {
     id: "performance-threshold",
     title: "Performance & Threshold",
-    subtitle: "Tempo Run, Progression Run",
+    gridTitle: "Performance",
+    subtitle: "Tempo Run · Progression Run",
     image: require("./Assets/Performance&threshold.png"),
   },
   {
     id: "custom",
     title: "Custom",
+    gridTitle: "Custom",
     subtitle: "Build from blank",
     image: require("./Assets/Custom.png"),
   },
@@ -606,21 +615,6 @@ function getRouteRegion(routeSegments = []) {
     ),
   };
 }
-
-// react-native-maps on Android hard-crashes the app when a MapView mounts in
-// a build whose manifest is missing the Google Maps API key. Only mount the
-// map when the key is configured; otherwise show a friendly fallback card.
-const hasNativeMapSupport = () => {
-  if (Platform.OS !== "android") {
-    return true;
-  }
-
-  const apiKey =
-    Constants.expoConfig?.android?.config?.googleMaps?.apiKey ??
-    Constants.manifest2?.extra?.expoClient?.android?.config?.googleMaps?.apiKey;
-
-  return typeof apiKey === "string" && apiKey.trim().length > 0;
-};
 
 const MAX_ROUTE_POINTS_PER_SEGMENT = 500;
 
@@ -929,11 +923,11 @@ const Run = ({
 
   const stopRunTrackingSafely = useCallback(async () => {
     try {
-      await locationService.stopRunTracking(db);
+      await locationService.stopRunTracking(db, workout_id);
     } catch (error) {
       console.error("Failed to stop run tracking cleanly:", error);
     }
-  }, [db]);
+  }, [db, workout_id]);
 
   const invalidatePendingWorkoutStateLoads = useCallback(() => {
     workoutStateLoadRequestRef.current += 1;
@@ -1050,7 +1044,6 @@ const Run = ({
         return;
       }
 
-      let remainingElapsed = currentElapsed;
       let elapsedBeforeSegment = 0;
       let completedWorkingSetCount = 0;
       const totalWorkingSetCount = sets.filter(
@@ -1060,19 +1053,96 @@ const Run = ({
       ).length;
 
       for (let i = 0; i < sets.length; i++) {
-        const setDuration = (sets[i].time ?? 0) * 60;
+        const setDuration = getRunSetRecordedDurationSeconds(sets[i]);
+        const completionMode = getRunSetCompletionMode(sets[i]);
         const isWorkingSet =
           normalizeRunSectionType(sets[i].type) === "WORKING_SET" &&
           Number(sets[i].is_pause) !== 1;
+        const elapsedInSegment = Math.max(0, currentElapsed - elapsedBeforeSegment);
 
-        if (remainingElapsed >= setDuration) {
+        if (sets[i].done) {
+          elapsedBeforeSegment += setDuration;
+
+          if (isWorkingSet) {
+            completedWorkingSetCount += 1;
+          }
+          continue;
+        }
+
+        const segmentStartTimestampSeconds =
+          startTimestampSeconds !== null
+            ? startTimestampSeconds + elapsedBeforeSegment
+            : null;
+        const segmentStartTimestampMs =
+          segmentStartTimestampSeconds !== null
+            ? segmentStartTimestampSeconds * 1000
+            : null;
+        const segmentLogs =
+          segmentStartTimestampMs !== null
+            ? getLogsFromTimestamp(locationLogs, segmentStartTimestampMs)
+            : [];
+
+        if (completionMode === "manual") {
+          await runningRepository.updateRunSetDone(db, {
+            runId: sets[i].Run_id,
+            done: true,
+          });
+
+          if (isWorkingSet) {
+            completedWorkingSetCount += 1;
+          }
+          continue;
+        }
+
+        if (completionMode === "distance") {
+          const distanceSummary = calculateTrackedDistanceSummary(segmentLogs);
+          const distanceProgress = getDistanceIntervalProgress({
+            targetDistanceKm: sets[i].distance,
+            completedDistanceKm: distanceSummary.totalDistanceKm,
+          });
+
+          if (distanceProgress.isComplete) {
+            const actualDurationSeconds = Math.max(
+              1,
+              Math.round(elapsedInSegment)
+            );
+            const actualPaceMinutes = getActualPaceMinutesPerKm({
+              durationSeconds: actualDurationSeconds,
+              distanceKm: distanceProgress.targetKm,
+            });
+
+            await runningRepository.completeRunSet(db, {
+              runId: sets[i].Run_id,
+              actualDistanceKm: distanceProgress.completedKm,
+              actualDurationSeconds,
+              actualPaceMinutes,
+            });
+            sets[i] = {
+              ...sets[i],
+              done: 1,
+              actual_distance: distanceProgress.completedKm,
+              actual_duration_seconds: actualDurationSeconds,
+              actual_pace: actualPaceMinutes,
+            };
+            set_runPlanSets((currentSets) =>
+              currentSets.map((set) =>
+                set.Run_id === sets[i].Run_id ? { ...set, ...sets[i] } : set
+              )
+            );
+            elapsedBeforeSegment += actualDurationSeconds;
+
+            if (isWorkingSet) {
+              completedWorkingSetCount += 1;
+            }
+            continue;
+          }
+        } else if (completionMode === "time" && elapsedInSegment >= setDuration) {
           if (!sets[i].done) {
             await runningRepository.updateRunSetDone(db, {
               runId: sets[i].Run_id,
               done: true,
             });
           }
-          remainingElapsed -= setDuration;
           elapsedBeforeSegment += setDuration;
 
           if (isWorkingSet) {
@@ -1101,16 +1171,26 @@ const Run = ({
         }
 
         set_activeSet(newActiveSet);
-        set_activeSet_remainingTime(Math.max(0, setDuration - remainingElapsed));
+        set_activeSet_remainingTime(
+          completionMode === "time" ? Math.max(0, setDuration - elapsedInSegment) : 0
+        );
+        const activeDistanceProgress =
+          completionMode === "distance"
+            ? getDistanceIntervalProgress({
+                targetDistanceKm: sets[i].distance,
+                completedDistanceKm: calculateTrackedDistanceSummary(segmentLogs)
+                  .totalDistanceKm,
+              })
+            : null;
         const nextActiveRunSegment = {
           ...sets[i],
           actionLabel: getRunSegmentLabel(sets[i]),
-          elapsedSeconds: Math.max(0, remainingElapsed),
-          remainingSeconds: Math.max(0, setDuration - remainingElapsed),
-          startTimestampSeconds:
-            startTimestampSeconds !== null
-              ? startTimestampSeconds + elapsedBeforeSegment
-              : null,
+          completionMode,
+          elapsedSeconds: elapsedInSegment,
+          remainingSeconds:
+            completionMode === "time" ? Math.max(0, setDuration - elapsedInSegment) : 0,
+          distanceProgress: activeDistanceProgress,
+          startTimestampSeconds: segmentStartTimestampSeconds,
           intervalIndex: activeWorkingSetCount,
           totalIntervals: totalWorkingSetCount,
         };
@@ -1134,7 +1214,7 @@ const Run = ({
     } finally {
       activeSetCalculationInFlightRef.current = false;
     }
-  }, [db, original_start_time, selectedRunFlow, workout_id]);
+  }, [db, locationLogs, original_start_time, selectedRunFlow, workout_id]);
 
   const loadWorkoutState = useCallback(async () => {
     // Ignore older resume/focus reloads so they cannot overwrite a newer pause/finish action.
@@ -1513,6 +1593,7 @@ const Run = ({
     try {
       await stopRunTrackingSafely();
       await locationService.clearTrackedRunData(db, workout_id);
+      await runningRepository.resetRunSetProgress(db, workout_id);
       await workoutRepository.resetWorkoutState(db, workout_id);
       set_original_start_time(null);
       set_timer_start(null);
@@ -1975,7 +2056,8 @@ const Run = ({
   const shouldShowPlanOnlyStartAction =
     actualRunWorkoutStatus === "plan" &&
     selectedRunFlow !== "endurance-base" &&
-    selectedRunFlow !== "custom";
+    selectedRunFlow !== "custom" &&
+    !shouldShowRunFlowSuggestions;
   const isWorkoutPlanCollapsible =
     actualRunWorkoutStatus === "active" &&
     selectedRunFlow !== "custom";
@@ -2027,9 +2109,16 @@ const Run = ({
       unit: "bpm",
     },
   ];
-  const speedStructureCountdownDisplay = formatRunClock(
-    activeRunSegment?.remainingSeconds ?? 0
-  );
+  const speedStructureCountdownDisplay =
+    activeRunSegment?.completionMode === "distance"
+      ? `${Math.ceil(
+          Math.max(0, activeRunSegment?.distanceProgress?.remainingKm ?? 0) * 1000
+        )} m`
+      : formatRunClock(activeRunSegment?.remainingSeconds ?? 0);
+  const speedStructureCountdownLabel =
+    activeRunSegment?.completionMode === "distance"
+      ? "DISTANCE LEFT"
+      : "TIME LEFT";
   const currentPaceDisplay = formatPaceDisplay(currentPaceMinutes);
   const pulseDisplay = activeRunSegment?.heartrate
     ? `Z${activeRunSegment.heartrate}`
@@ -2461,8 +2550,9 @@ const Run = ({
     ];
 
     return (
-      <View style={styles.activeSetStatRow}>
-        {metrics.map((metric, index) => (
+      <>
+        <View style={styles.activeSetStatRow}>
+          {metrics.map((metric, index) => (
           <View key={metric.label} style={styles.activeSetStatItem}>
             <View style={styles.activeSetStatHeader}>
               <Feather name={metric.icon} size={16} color={quietText} />
@@ -2494,20 +2584,18 @@ const Run = ({
               />
             ) : null}
           </View>
-        ))}
-      </View>
+          ))}
+        </View>
+        {Number(segment?.actual_duration_seconds) > 0 ? (
+          <ThemedText style={styles.activeSetActualResult} setColor={secondaryColor}>
+            Actual {formatRunClock(segment.actual_duration_seconds)} · {formatPaceDisplay(Number(segment.actual_pace))} /km
+          </ThemedText>
+        ) : null}
+      </>
     );
   };
   const renderRunFlowImage = (option) => (
-    <View
-      style={[
-        styles.runFlowImageFrame,
-        {
-          backgroundColor: innerSurface,
-          borderColor: cardBorder,
-        },
-      ]}
-    >
+    <View style={styles.runFlowChooserImageFrame}>
       <Image
         source={option.image}
         resizeMode="cover"
@@ -2558,6 +2646,9 @@ const Run = ({
         <ThemedText style={styles.runFlowTitle} setColor={titleColor}>
           Choose your run focus
         </ThemedText>
+        <ThemedText style={styles.runFlowSubtitle} setColor={theme.text}>
+          Pick a structure — you can adjust every set afterwards.
+        </ThemedText>
       </View>
 
       <View style={styles.runFlowGrid}>
@@ -2583,11 +2674,11 @@ const Run = ({
                 setColor={titleColor}
                 numberOfLines={2}
               >
-                {option.title}
+                {option.gridTitle ?? option.title}
               </ThemedText>
               <ThemedText
                 style={styles.runFlowCardSubtitle}
-                setColor={primaryColor}
+                setColor={quietText}
                 numberOfLines={2}
               >
                 {option.subtitle}
@@ -2748,6 +2839,9 @@ const Run = ({
               minimumFontScale={0.58}
             >
               {speedStructureCountdownDisplay}
+            </ThemedText>
+            <ThemedText style={styles.currentSetActionLabel} setColor={quietText}>
+              {speedStructureCountdownLabel}
             </ThemedText>
           </View>
 
@@ -2965,13 +3059,14 @@ const Run = ({
     const startCoordinate = routeCoordinates[0] ?? null;
     const finishCoordinate =
       routeCoordinates[routeCoordinates.length - 1] ?? null;
-    const canRenderRouteMap = routeRegion !== null && hasNativeMapSupport();
+    // The API key is provided through the native Android manifest. It is not
+    // reliably exposed to JavaScript in an installed Expo app, so checking it
+    // here incorrectly hides maps that are correctly configured natively.
+    const canRenderRouteMap = routeRegion !== null;
     const routeEmptyTitle =
       routeRegion === null ? "No route recorded" : "Map unavailable";
     const routeEmptyText =
-      routeRegion === null
-        ? "GPS points from the run will appear here."
-        : "Add a Google Maps Android API key in app.json (android.config.googleMaps.apiKey) and rebuild the app to show the route.";
+      "GPS points from the run will appear here.";
 
     return (
       <View style={styles.activeTitledCardShell}>

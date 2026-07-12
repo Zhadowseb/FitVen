@@ -18,63 +18,68 @@ export default StyleSheet.create({
 
   runFlowShell: {
     marginBottom: 12,
+    gap: 16,
   },
 
   runFlowHeader: {
-    marginBottom: 12,
-    paddingHorizontal: 2,
+    gap: 3,
   },
 
   runFlowTitle: {
-    fontSize: 24,
-    lineHeight: 29,
-    fontWeight: "900",
+    fontSize: 21,
+    lineHeight: 25,
+    fontWeight: "800",
+    letterSpacing: -0.3,
+  },
+
+  runFlowSubtitle: {
+    fontSize: 12.5,
+    lineHeight: 17,
+    fontWeight: "500",
   },
 
   runFlowGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between",
-    rowGap: 10,
+    columnGap: 12,
+    rowGap: 12,
   },
 
   runFlowCard: {
-    width: "48.5%",
-    minHeight: 174,
+    width: "48.2%",
     borderRadius: 20,
     borderWidth: 1,
-    padding: 9,
+    paddingHorizontal: 10,
+    paddingTop: 10,
+    paddingBottom: 14,
     alignItems: "stretch",
     overflow: "hidden",
+    gap: 10,
   },
 
   runFlowCardCopy: {
-    flex: 1,
     minWidth: 0,
-    marginTop: 8,
+    paddingHorizontal: 4,
+    gap: 2,
   },
 
   runFlowCardTitle: {
-    fontSize: 16,
-    lineHeight: 20,
-    fontWeight: "900",
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: "800",
   },
 
   runFlowCardSubtitle: {
-    marginTop: 4,
-    fontSize: 10,
-    lineHeight: 14,
-    fontWeight: "700",
+    fontSize: 10.5,
+    lineHeight: 15,
+    fontWeight: "600",
   },
 
-  runFlowImageFrame: {
+  runFlowChooserImageFrame: {
     width: "100%",
-    height: 86,
-    borderRadius: 15,
-    borderWidth: 1,
+    aspectRatio: 1,
+    borderRadius: 13,
     overflow: "hidden",
-    alignItems: "center",
-    justifyContent: "center",
   },
 
   runFlowImage: {
@@ -1252,6 +1257,12 @@ export default StyleSheet.create({
     textAlign: "center",
     fontVariant: ["tabular-nums"],
   },
+  activeSetActualResult: {
+    marginTop: 10,
+    textAlign: "center",
+    fontSize: 13,
+    fontFamily: "SpaceGrotesk_600SemiBold",
+  },
 
   activeSetStatDivider: {
     position: "absolute",
@@ -1741,6 +1752,15 @@ export default StyleSheet.create({
     fontVariant: ["tabular-nums"],
   },
 
+  actualIntervalResult: {
+    marginTop: 4,
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "700",
+    textAlign: "center",
+    fontVariant: ["tabular-nums"],
+  },
+
   zoneAnchor: {
     position: "relative",
     width: "100%",
@@ -1843,6 +1863,38 @@ export default StyleSheet.create({
     overflow: "hidden",
   },
 
+  completionTargetCell: {
+    width: "96%",
+    minHeight: 34,
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: "transparent",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  completionTargetCellActive: {
+    paddingLeft: 17,
+  },
+
+  completionTargetDot: {
+    position: "absolute",
+    left: 8,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  completionTargetDotCenter: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+  },
+
   bottomsheetHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -1871,6 +1923,52 @@ export default StyleSheet.create({
     flexDirection: "row",
     gap: 10,
     marginBottom: 16,
+  },
+
+  completionTargetSection: {
+    marginBottom: 16,
+    gap: 8,
+  },
+
+  completionTargetSectionLabel: {
+    fontSize: 10,
+    lineHeight: 12,
+    fontWeight: "900",
+    letterSpacing: 2.1,
+  },
+
+  completionTargetOptions: {
+    flexDirection: "row",
+    gap: 8,
+  },
+
+  completionTargetOption: {
+    flex: 1,
+    minHeight: 38,
+    borderWidth: 1,
+    borderRadius: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 5,
+    paddingHorizontal: 7,
+  },
+
+  completionTargetOptionDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+
+  completionTargetOptionText: {
+    fontSize: 11,
+    fontWeight: "800",
+  },
+
+  completionTargetHint: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "600",
   },
 
   bottomsheetField: {

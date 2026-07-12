@@ -1,7 +1,7 @@
 import {
   Animated,
-  Easing,
   ScrollView,
+  Text,
   TouchableOpacity,
   View,
   useColorScheme,
@@ -10,15 +10,12 @@ import { useEffect, useRef } from "react";
 import Svg, { Circle } from "react-native-svg";
 
 import styles from "./FriendsActivityStyle";
-import { Colors } from "../../GlobalStyling/colors";
-import Calender from "../../Icons/UI-icons/Calender";
+import { Colors, withAlpha } from "../../GlobalStyling/colors";
 import Checkmark from "../../Icons/UI-icons/Checkmark";
 import Male from "../../Icons/UI-icons/Male";
-import { getWorkoutIconConfig } from "../../Icons/WorkoutLabels";
-import {
-  ThemedText,
-  UserAvatar,
-} from "../../ThemedComponents";
+import Plus from "../../Icons/UI-icons/Plus";
+import { ThemedText, UserAvatar } from "../../ThemedComponents";
+import { useBlinkAnimation, usePulseAnimation } from "../animationHooks";
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -34,7 +31,6 @@ function RingLoading({ color, mutedColor, size = 52 }) {
           Animated.timing(progress, {
             toValue: 1,
             duration: 1800,
-            easing: Easing.out(Easing.cubic),
             useNativeDriver: false,
           }),
           Animated.timing(progress, {
@@ -109,184 +105,169 @@ function RingLoading({ color, mutedColor, size = 52 }) {
   );
 }
 
-function getActivityMeta(theme, activityState, workoutType) {
-  const primary = theme.primary ?? "#f7742e";
-  const secondary = theme.secondary ?? "#60daac";
-  const darkText = theme.background ?? theme.textInverted ?? "#0E0F12";
-  const border = theme.border ?? theme.cardBorder ?? theme.iconColor;
-  const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
-  const plannedColor = theme.planned ?? Colors.dark.planned ?? "#ffdd00";
-  const workoutIconConfig = workoutType ? getWorkoutIconConfig(workoutType) : null;
-  const defaultLiveIconConfig = getWorkoutIconConfig("Resistance");
-
+// Resolves ring color + status-line content per the mock's per-state mapping:
+// live -> orange (blinking dot + "Training now"/detail), done -> green
+// (checkmark + detail), planned -> yellow (static dot + detail),
+// rest/none -> muted hairline ring, no dot, "No activity".
+function getActivityMeta(theme, activityState) {
   switch (activityState) {
     case "live":
       return {
-        ringColor: primary,
-        chipBackground: primary,
-        chipTextColor: darkText,
-        badgeBackground: primary,
-        badgeType: "workout",
-        badgeIconConfig: workoutIconConfig ?? defaultLiveIconConfig,
+        ringColor: theme.primary,
+        statusColor: theme.primary,
+        statusKind: "blinkDot",
       };
     case "done":
       return {
-        ringColor: secondary,
-        chipBackground: secondary,
-        chipTextColor: darkText,
-        badgeBackground: secondary,
-        badgeType: "done",
+        ringColor: theme.secondary,
+        statusColor: theme.secondary,
+        statusKind: "check",
       };
     case "planned":
       return {
-        ringColor: plannedColor,
-        chipBackground: plannedColor,
-        chipTextColor: darkText,
-        badgeBackground: plannedColor,
-        badgeIconColor: darkText,
-        badgeType: "planned",
+        ringColor: theme.planned,
+        statusColor: theme.planned,
+        statusKind: "dot",
       };
     default:
       return {
-        ringColor: border,
-        chipBackground: theme.uiBackground ?? "rgba(255, 255, 255, 0.08)",
-        chipTextColor: quietText,
-        badgeBackground: null,
-        badgeType: null,
+        ringColor: theme.border,
+        statusColor: theme.quietText,
+        statusKind: "none",
       };
   }
 }
 
-function getCircleMeta(theme, person) {
-  return getActivityMeta(theme, person?.activityState, person?.workoutType);
-}
+function StatusLine({ theme, statusKind, statusColor, label }) {
+  const blinkOpacity = useBlinkAnimation(statusKind === "blinkDot");
 
-function StatusBadge({
-  badgeType,
-  badgeBackground,
-  badgeIconColor,
-  badgeIconConfig,
-}) {
-  if (!badgeType || !badgeBackground) {
-    return null;
-  }
-
-  let icon = null;
-
-  if (badgeType === "done") {
-    icon = (
-      <Checkmark width={12} height={12} color="#0E0F12" thickness={2.3} />
+  if (statusKind === "none") {
+    return (
+      <Text style={[styles.statusText, { color: statusColor }]} numberOfLines={1}>
+        {label}
+      </Text>
     );
-  } else if (badgeType === "planned") {
-    icon = (
-      <Calender
-        width={12}
-        height={12}
-        color={badgeIconColor ?? "#0E0F12"}
-        thickness={1.8}
-      />
-    );
-  } else if (badgeType === "workout" && badgeIconConfig?.Icon) {
-    const WorkoutIcon = badgeIconConfig.Icon;
-    icon =
-      badgeIconConfig.id === "Run" ? (
-        <WorkoutIcon width={12} height={12} primaryColor="#ffffff" />
-      ) : (
-        <WorkoutIcon width={12} height={12} color="#ffffff" />
-      );
-  }
-
-  if (!icon) {
-    return null;
   }
 
   return (
-    <View
-      style={[
-        styles.statusBadge,
-        {
-          backgroundColor: badgeBackground,
-        },
-      ]}
-    >
-      {icon}
+    <View style={styles.statusRow}>
+      {statusKind === "check" ? (
+        <Checkmark width={10} height={10} color={statusColor} thickness={2.6} />
+      ) : (
+        <Animated.View
+          style={[
+            styles.statusDot,
+            {
+              backgroundColor: statusColor,
+              opacity: statusKind === "blinkDot" ? blinkOpacity : 1,
+            },
+          ]}
+        />
+      )}
+      <Text style={[styles.statusText, { color: statusColor }]} numberOfLines={1}>
+        {label}
+      </Text>
+    </View>
+  );
+}
+
+function LiveAvatarRing({ ringColor, cardBackground, pulseRingBackground, children }) {
+  const { scale, opacity } = usePulseAnimation(true);
+
+  return (
+    <View style={styles.avatarShell}>
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          styles.pulseRing,
+          {
+            backgroundColor: pulseRingBackground,
+            opacity,
+            transform: [{ scale }],
+          },
+        ]}
+      />
+      <View style={[styles.avatarRing, { borderColor: ringColor }]}>
+        <View style={[styles.avatarInner, { backgroundColor: cardBackground }]}>
+          {children}
+        </View>
+      </View>
     </View>
   );
 }
 
 function CircleCard({
   title,
-  subtitle,
-  ringColor,
-  chipBackground,
-  chipTextColor,
-  iconColor,
-  avatarBackgroundColor,
+  statusLabel,
+  theme,
+  activityState,
   avatarUrl,
-  badgeType,
-  badgeBackground,
-  badgeIconColor,
-  badgeIconConfig,
+  iconColor,
   onPress,
 }) {
+  const meta = getActivityMeta(theme, activityState);
+  const cardBackground = theme.cardBackground;
+  const pulseRingBackground = withAlpha(theme.primary, 0.45);
+  const avatarNode = (
+    <UserAvatar
+      uri={avatarUrl}
+      size={56}
+      iconSize={24}
+      iconColor={iconColor}
+      backgroundColor={cardBackground}
+    />
+  );
+
   return (
-    <TouchableOpacity
-      activeOpacity={0.9}
-      onPress={onPress}
-      style={styles.circleCard}
-    >
+    <TouchableOpacity activeOpacity={0.9} onPress={onPress} style={styles.circleCard}>
+      {activityState === "live" ? (
+        <LiveAvatarRing
+          ringColor={meta.ringColor}
+          cardBackground={cardBackground}
+          pulseRingBackground={pulseRingBackground}
+        >
+          {avatarNode}
+        </LiveAvatarRing>
+      ) : (
+        <View style={styles.avatarShell}>
+          <View style={[styles.avatarRing, { borderColor: meta.ringColor }]}>
+            <View style={[styles.avatarInner, { backgroundColor: cardBackground }]}>
+              {avatarNode}
+            </View>
+          </View>
+        </View>
+      )}
+
+      <View style={styles.nameStatusColumn}>
+        <ThemedText style={styles.circleName} numberOfLines={1}>
+          {title}
+        </ThemedText>
+        <StatusLine
+          theme={theme}
+          statusKind={meta.statusKind}
+          statusColor={meta.statusColor}
+          label={statusLabel}
+        />
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+function AddFriendCell({ theme, dashedBorderColor, onPress }) {
+  return (
+    <TouchableOpacity activeOpacity={0.85} onPress={onPress} style={styles.circleCard}>
       <View style={styles.avatarShell}>
         <View
           style={[
             styles.avatarRing,
-            {
-              borderColor: ringColor,
-            },
+            styles.addRing,
+            { borderColor: dashedBorderColor },
           ]}
         >
-          <View
-            style={[
-              styles.avatarInner,
-              {
-                backgroundColor: avatarBackgroundColor,
-              },
-            ]}
-          >
-            <UserAvatar
-              uri={avatarUrl}
-              size={56}
-              iconSize={28}
-              iconColor={iconColor}
-              backgroundColor={avatarBackgroundColor}
-            />
-          </View>
+          <Plus width={20} height={20} color={theme.quietText} thickness={1.8} />
         </View>
-        <StatusBadge
-          badgeType={badgeType}
-          badgeBackground={badgeBackground}
-          badgeIconColor={badgeIconColor}
-          badgeIconConfig={badgeIconConfig}
-        />
       </View>
-
-      <ThemedText style={styles.circleName} numberOfLines={1}>
-        {title}
-      </ThemedText>
-
-      {subtitle ? (
-        <View
-          style={[
-            styles.circleBadge,
-            {
-              backgroundColor: chipBackground,
-            },
-          ]}
-        >
-          <ThemedText style={styles.circleBadgeText} setColor={chipTextColor}>
-            {subtitle}
-          </ThemedText>
-        </View>
-      ) : null}
+      <Text style={[styles.addLabel, { color: theme.quietText }]}>Add</Text>
     </TouchableOpacity>
   );
 }
@@ -298,6 +279,8 @@ export default function FriendsActivity({
   isLoading = false,
   onSeeAll,
   onOpenProfile,
+  showHeader = false,
+  onAddFriend,
 }) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -305,26 +288,54 @@ export default function FriendsActivity({
   const titleColor = theme.title ?? theme.text;
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor;
   const cardSurface = theme.cardBackground ?? theme.background;
-  const avatarBackgroundColor =
-    theme.fields ??
-    theme.uiBackground ??
-    theme.inputBackground ??
-    "rgba(255,255,255,0.08)";
-  const iconColor = theme.primary ?? theme.text;
-  const currentUserMeta = getActivityMeta(
-    theme,
-    currentUser?.activityState,
-    currentUser?.workoutType
-  );
-  const ownProfileSubtitle =
-    currentUser?.displayName
-      ? currentUser?.activityState && currentUser.activityState !== "rest"
-        ? currentUser.activityDetail ?? currentUser.workoutLabel ?? "No activity"
-        : "No activity"
-      : "Set up profile";
+  const iconColor = theme.text ?? theme.iconColor;
+  const addRingBorderColor =
+    colorScheme === "light" ? "rgba(15, 17, 22, 0.16)" : "rgba(255, 255, 255, 0.16)";
+  // Instagram-style hairline that sets "You" apart from everyone else.
+  const youDividerColor =
+    colorScheme === "light" ? "rgba(15, 17, 22, 0.12)" : "rgba(255, 255, 255, 0.12)";
+  const ownIsLive = currentUser?.activityState === "live";
+  const ownStatusLabel = currentUser?.displayName
+    ? currentUser?.activityState && currentUser.activityState !== "rest"
+      ? ownIsLive
+        ? "Training now"
+        : currentUser.activityDetail ?? currentUser.workoutLabel ?? "No activity"
+      : "No activity"
+    : "Set up profile";
+  const liveCount =
+    (ownIsLive ? 1 : 0) +
+    (people ?? []).filter((person) => person?.activityState === "live").length;
 
   return (
     <View style={styles.section}>
+      {showHeader ? (
+        <View style={styles.headerRow}>
+          <Text style={[styles.headerEyebrow, { color: quietText }]}>
+            FRIENDS ACTIVITY
+          </Text>
+
+          {liveCount > 0 ? (
+            <View
+              style={[
+                styles.livePill,
+                { backgroundColor: withAlpha(theme.secondary, 0.12) },
+              ]}
+            >
+              <LivePillDot color={theme.secondary} />
+              <Text style={[styles.livePillText, { color: theme.secondary }]}>
+                {`${liveCount} LIVE`}
+              </Text>
+            </View>
+          ) : null}
+
+          <View style={styles.headerSpacer} />
+
+          <TouchableOpacity activeOpacity={0.75} onPress={onSeeAll}>
+            <Text style={[styles.seeAllText, { color: theme.primary }]}>See all</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
+
       {errorMessage ? (
         <View
           style={[
@@ -350,41 +361,27 @@ export default function FriendsActivity({
         >
           <CircleCard
             title="You"
-            subtitle={ownProfileSubtitle}
-            ringColor={currentUserMeta.ringColor}
-            chipBackground={currentUserMeta.chipBackground}
-            chipTextColor={currentUserMeta.chipTextColor}
-            iconColor={iconColor}
-            avatarBackgroundColor={avatarBackgroundColor}
+            statusLabel={ownStatusLabel}
+            theme={theme}
+            activityState={currentUser?.activityState}
             avatarUrl={currentUser?.avatarUrl}
-            badgeType={currentUserMeta.badgeType}
-            badgeBackground={currentUserMeta.badgeBackground}
-            badgeIconColor={currentUserMeta.badgeIconColor}
-            badgeIconConfig={currentUserMeta.badgeIconConfig}
+            iconColor={iconColor}
             onPress={onOpenProfile}
           />
 
-          <View
-            style={[
-              styles.divider,
-              {
-                backgroundColor: cardBorder,
-              },
-            ]}
-          />
+          {!isLoading && people.length > 0 ? (
+            <View
+              style={[styles.youDivider, { backgroundColor: youDividerColor }]}
+            />
+          ) : null}
 
           {isLoading ? (
             <View style={styles.loadingSlot}>
-              <RingLoading
-                color={theme.primary ?? iconColor}
-                mutedColor={cardBorder}
-                size={58}
-              />
+              <RingLoading color={theme.primary ?? iconColor} mutedColor={cardBorder} size={58} />
             </View>
           ) : people.length ? (
             people.map((person) => {
-              const meta = getCircleMeta(theme, person);
-              const subtitle =
+              const statusLabel =
                 person.activityState && person.activityState !== "rest"
                   ? person.activityDetail ?? person.workoutLabel ?? "No activity"
                   : "No activity";
@@ -393,17 +390,11 @@ export default function FriendsActivity({
                 <CircleCard
                   key={person.id}
                   title={person.displayName || person.usernameBase || "Member"}
-                  subtitle={subtitle}
-                  ringColor={meta.ringColor}
-                  chipBackground={meta.chipBackground}
-                  chipTextColor={meta.chipTextColor}
-                  iconColor={iconColor}
-                  avatarBackgroundColor={avatarBackgroundColor}
+                  statusLabel={statusLabel}
+                  theme={theme}
+                  activityState={person.activityState}
                   avatarUrl={person.avatarUrl}
-                  badgeType={meta.badgeType}
-                  badgeBackground={meta.badgeBackground}
-                  badgeIconColor={meta.badgeIconColor}
-                  badgeIconConfig={meta.badgeIconConfig}
+                  iconColor={iconColor}
                   onPress={onSeeAll}
                 />
               );
@@ -427,8 +418,26 @@ export default function FriendsActivity({
               </ThemedText>
             </View>
           )}
+
+          {!isLoading && !errorMessage ? (
+            <AddFriendCell
+              theme={theme}
+              dashedBorderColor={addRingBorderColor}
+              onPress={onAddFriend ?? onSeeAll}
+            />
+          ) : null}
         </ScrollView>
       )}
     </View>
+  );
+}
+
+function LivePillDot({ color }) {
+  const blinkOpacity = useBlinkAnimation(true);
+
+  return (
+    <Animated.View
+      style={[styles.livePillDot, { backgroundColor: color, opacity: blinkOpacity }]}
+    />
   );
 }

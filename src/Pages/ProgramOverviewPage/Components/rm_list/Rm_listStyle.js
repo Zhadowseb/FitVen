@@ -5,97 +5,108 @@ export default StyleSheet.create({
     flex: 1,
   },
 
-  wrapper: {
-    paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 8,
+  loadingContainer: {
+    paddingTop: 32,
+    paddingBottom: 24,
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   metaRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 14,
+    paddingHorizontal: 18,
+    paddingTop: 13,
+    paddingBottom: 11,
+  },
+
+  metaLeft: {
+    fontSize: 11.5,
+    fontWeight: "700",
   },
 
   metaHint: {
-    textAlign: "right",
+    fontSize: 10.5,
+    fontWeight: "600",
   },
 
-  list: {
-    paddingBottom: 8,
+  dividerFull: {
+    height: 1,
   },
 
-  estimateTile: {
+  dividerInset: {
+    height: 1,
+    marginHorizontal: 18,
+  },
+
+  row: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 22,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    marginBottom: 10,
+    gap: 10,
+    paddingHorizontal: 18,
+    paddingVertical: 13,
   },
 
-  estimateContent: {
+  rowName: {
     flex: 1,
-    paddingRight: 12,
-  },
-
-  estimateEyebrow: {
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
-    marginBottom: 6,
-  },
-
-  estimateExerciseName: {
+    fontSize: 13.5,
     fontWeight: "700",
-    marginBottom: 6,
   },
 
-  estimateHint: {
-    lineHeight: 16,
+  rowValueGroup: {
+    flexDirection: "row",
+    alignItems: "baseline",
   },
 
-  weightBadge: {
-    minWidth: 82,
-    borderRadius: 18,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    alignItems: "center",
-    justifyContent: "center",
+  rowValue: {
+    fontSize: 14,
+    fontWeight: "800",
+    fontVariant: ["tabular-nums"],
   },
 
-  weightValue: {
-    fontWeight: "700",
-    textAlign: "center",
-  },
-
-  weightLabel: {
-    marginTop: 2,
-    textAlign: "center",
+  rowUnit: {
+    fontSize: 11,
+    fontWeight: "800",
   },
 
   emptyState: {
-    borderRadius: 22,
-    borderWidth: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 18,
+    paddingHorizontal: 18,
+    paddingVertical: 20,
     alignItems: "center",
+    gap: 6,
   },
 
   emptyText: {
+    fontSize: 13,
+    fontWeight: "700",
     textAlign: "center",
-    marginBottom: 6,
   },
 
   emptyHint: {
+    fontSize: 12,
+    lineHeight: 17,
     textAlign: "center",
-    lineHeight: 18,
   },
 
-  loadingContainer: {
-    paddingTop: 32,
-    paddingBottom: 24,
+  footer: {
+    paddingHorizontal: 18,
+    paddingTop: 6,
+    paddingBottom: 16,
+  },
+
+  addButton: {
+    height: 42,
+    borderRadius: 12,
+    borderWidth: 1,
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    gap: 7,
+  },
+
+  addButtonText: {
+    fontSize: 12.5,
+    fontWeight: "800",
   },
 });

@@ -1,17 +1,11 @@
 import { Pressable, View, useColorScheme } from "react-native";
-import Svg, {
-  Defs,
-  LinearGradient,
-  Rect,
-  Stop,
-} from "react-native-svg";
 
-import { Colors } from "../../../Resources/GlobalStyling/colors";
+import { Colors, withAlpha } from "../../../Resources/GlobalStyling/colors";
 import { ThemedText } from "../../../Resources/ThemedComponents";
+import StatusPill from "../../../Resources/Components/StatusPill";
+import ProgressBar from "../../../Resources/Components/ProgressBar";
+import Calender from "../../../Resources/Icons/UI-icons/Calender";
 import styles from "./ProgramOverviewHeaderStyle";
-
-const PROGRESS_BAR_WIDTH = 100;
-const PROGRESS_BAR_HEIGHT = 6;
 
 const STATUS_LABELS = {
   NOT_STARTED: "Draft",
@@ -19,217 +13,148 @@ const STATUS_LABELS = {
   COMPLETE: "Complete",
 };
 
-function parseHexColor(color) {
-  if (typeof color !== "string" || !color.startsWith("#")) {
-    return null;
-  }
-
-  const hex = color.slice(1);
-  const normalizedHex =
-    hex.length === 3
-      ? hex
-          .split("")
-          .map((digit) => `${digit}${digit}`)
-          .join("")
-      : hex.slice(0, 6);
-
-  if (!/^[0-9a-f]{6}$/i.test(normalizedHex)) {
-    return null;
-  }
-
-  return {
-    red: parseInt(normalizedHex.slice(0, 2), 16),
-    green: parseInt(normalizedHex.slice(2, 4), 16),
-    blue: parseInt(normalizedHex.slice(4, 6), 16),
-  };
-}
-
-function interpolateColor(startColor, endColor, progressPercent) {
-  const start = parseHexColor(startColor);
-  const end = parseHexColor(endColor);
-
-  if (!start || !end) {
-    return startColor;
-  }
-
-  const progress = Math.min(1, Math.max(0, progressPercent / 100));
-  const mix = (startValue, endValue) =>
-    Math.round(startValue + (endValue - startValue) * progress);
-
-  return `rgb(${mix(start.red, end.red)}, ${mix(
-    start.green,
-    end.green
-  )}, ${mix(start.blue, end.blue)})`;
-}
-
 const ProgramOverviewHeader = ({
   title,
   status,
-  statusColor,
   currentWeek,
   totalWeeks,
   period,
-  progressPercent,
+  weekProgressPercent,
+  completedWorkouts,
+  totalWorkouts,
+  totalVolumeLabel,
+  totalVolumeUnit = "kg",
+  avgSessionMinutes,
   onStart,
 }) => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
-  const titleColor = theme.title ?? theme.text ?? "#ffffff";
-  const quietText = theme.iconColor ?? theme.quietText ?? theme.text;
-  const cardBackground =
-    theme.cardBackground ?? theme.background ?? "transparent";
-  const cardBorder =
-    colorScheme === "dark"
-      ? "rgba(255, 255, 255, 0.07)"
-      : theme.cardBorder ?? "rgba(32, 30, 43, 0.10)";
-  const trackBackground =
-    colorScheme === "dark"
-      ? "rgba(255, 255, 255, 0.07)"
-      : "rgba(32, 30, 43, 0.10)";
-  const primaryColor = theme.primary ?? Colors.dark.primary ?? "#f7742e";
-  const secondaryColor =
-    theme.secondary ?? Colors.dark.secondary ?? "#60daac";
-  const safeProgressPercent = Math.min(
-    100,
-    Math.max(0, Number(progressPercent) || 0)
-  );
-  const progressColor = interpolateColor(
-    primaryColor,
-    secondaryColor,
-    safeProgressPercent
-  );
+
+  const isNotStarted = status === "NOT_STARTED";
+  const isComplete = status === "COMPLETE";
+  const statusColor = isComplete ? theme.secondary : theme.primary;
+  const statusBackground = isComplete
+    ? withAlpha(theme.secondary, 0.12)
+    : withAlpha(theme.primary, 0.12);
+  const safePercent = Math.min(100, Math.max(0, Number(weekProgressPercent) || 0));
 
   return (
     <View
       style={[
         styles.card,
         {
-          backgroundColor: cardBackground,
-          borderColor: cardBorder,
+          backgroundColor: theme.cardBackground,
+          borderColor: theme.cardBorder,
         },
       ]}
     >
       <View style={styles.topRow}>
         <View style={styles.titleGroup}>
-          <ThemedText style={styles.eyebrow} setColor={quietText}>
-            Program overview
-          </ThemedText>
-          <ThemedText
-            style={styles.title}
-            setColor={titleColor}
-            numberOfLines={2}
-          >
+          <ThemedText style={styles.title} setColor={theme.title} numberOfLines={2}>
             {title}
           </ThemedText>
+          <View style={styles.dateRow}>
+            <Calender width={13} height={13} color={theme.quietText} thickness={1.8} />
+            <ThemedText style={styles.dateText} setColor={theme.quietText}>
+              {isNotStarted ? "Not scheduled" : period}
+            </ThemedText>
+          </View>
         </View>
 
-        {status === "NOT_STARTED" && onStart ? (
+        {isNotStarted && onStart ? (
           <Pressable
             onPress={onStart}
             style={({ pressed }) => [
               styles.startButton,
               {
-                backgroundColor: primaryColor,
+                backgroundColor: theme.primary,
                 opacity: pressed ? 0.82 : 1,
               },
             ]}
           >
-            <ThemedText style={styles.startButtonText}>Start</ThemedText>
+            <ThemedText style={styles.startButtonText} setColor={theme.textInverted}>
+              Start
+            </ThemedText>
           </Pressable>
         ) : (
-          <View style={[styles.statusChip, { borderColor: statusColor }]}>
-            <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
-            <ThemedText style={styles.statusText} setColor={statusColor}>
-              {STATUS_LABELS[status] ?? STATUS_LABELS.NOT_STARTED}
-            </ThemedText>
-          </View>
+          <StatusPill
+            style={styles.statusPill}
+            label={STATUS_LABELS[status] ?? STATUS_LABELS.NOT_STARTED}
+            color={statusColor}
+            backgroundColor={statusBackground}
+            dotSize={5}
+          />
         )}
       </View>
 
-      <View style={styles.detailRow}>
-        <View style={styles.detailGroup}>
-          <ThemedText style={styles.detailLabel} setColor={quietText}>
-            Current phase
+      <View style={styles.progressGroup}>
+        <View style={styles.progressHeader}>
+          <View style={styles.progressLeft}>
+            <ThemedText style={styles.weekLabel} setColor={theme.title}>
+              {totalWeeks > 0 ? `Week ${currentWeek} ` : "No weeks"}
+            </ThemedText>
+            {totalWeeks > 0 && (
+              <ThemedText style={styles.weekOfLabel} setColor={theme.quietText}>
+                {`of ${totalWeeks}`}
+              </ThemedText>
+            )}
+          </View>
+          <ThemedText style={styles.progressPercent} setColor={theme.primary}>
+            {`${safePercent}%`}
           </ThemedText>
-          {status === "NOT_STARTED" ? (
-            <ThemedText style={styles.detailValue} setColor={titleColor}>
-              Draft
-            </ThemedText>
-          ) : totalWeeks > 0 ? (
-            <View style={styles.phaseValueRow}>
-              <ThemedText style={styles.detailValue} setColor={titleColor}>
-                {`Week ${currentWeek}`}
-              </ThemedText>
-              <ThemedText style={styles.phaseTotal} setColor={quietText}>
-                {`/ ${totalWeeks}`}
-              </ThemedText>
-            </View>
-          ) : (
-            <ThemedText style={styles.detailValue} setColor={titleColor}>
-              No weeks yet
-            </ThemedText>
-          )}
         </View>
 
-        <View style={[styles.detailGroup, styles.periodGroup]}>
-          <ThemedText style={styles.detailLabel} setColor={quietText}>
-            Period
-          </ThemedText>
-          <ThemedText
-            style={[styles.detailValue, styles.periodValue]}
-            setColor={titleColor}
-            numberOfLines={1}
-          >
-            {status === "NOT_STARTED" ? "Not scheduled" : period}
-          </ThemedText>
-        </View>
-      </View>
+        <ProgressBar progress={safePercent / 100} height={6} />
 
-      <View style={styles.progressHeader}>
-        <View style={styles.progressPhase}>
-          <ThemedText style={styles.progressLabel} setColor={progressColor}>
-            {totalWeeks > 0 ? `Week ${currentWeek}` : "No weeks"}
-          </ThemedText>
-          {totalWeeks > 0 && (
-            <ThemedText style={styles.progressTotal} setColor={quietText}>
-              {` of ${totalWeeks}`}
-            </ThemedText>
-          )}
-        </View>
-        <ThemedText style={styles.progressPercent} setColor={progressColor}>
-          {`${safeProgressPercent}%`}
+        <ThemedText style={styles.caption} setColor={theme.quietText}>
+          {`${completedWorkouts} of ${totalWorkouts} workouts completed`}
         </ThemedText>
       </View>
 
-      <View style={[styles.progressTrack, { backgroundColor: trackBackground }]}>
-        <Svg
-          width="100%"
-          height="100%"
-          viewBox={`0 0 ${PROGRESS_BAR_WIDTH} ${PROGRESS_BAR_HEIGHT}`}
-          preserveAspectRatio="none"
+      <View style={styles.statsRow}>
+        <View
+          style={[
+            styles.statField,
+            {
+              backgroundColor: theme.uiBackground,
+              borderColor: theme.hairline,
+            },
+          ]}
         >
-          <Defs>
-            <LinearGradient
-              id="programOverviewProgressGradient"
-              x1="0"
-              y1="0"
-              x2={PROGRESS_BAR_WIDTH}
-              y2="0"
-              gradientUnits="userSpaceOnUse"
-            >
-              <Stop offset="0" stopColor={primaryColor} />
-              <Stop offset="1" stopColor={secondaryColor} />
-            </LinearGradient>
-          </Defs>
-          <Rect
-            x="0"
-            y="0"
-            width={safeProgressPercent}
-            height={PROGRESS_BAR_HEIGHT}
-            rx={PROGRESS_BAR_HEIGHT / 2}
-            fill="url(#programOverviewProgressGradient)"
-          />
-        </Svg>
+          <ThemedText style={styles.statLabel} setColor={theme.quietText}>
+            Total volume
+          </ThemedText>
+          <View style={styles.statValueRow}>
+            <ThemedText style={styles.statValue} setColor={theme.title}>
+              {totalVolumeLabel}
+            </ThemedText>
+            <ThemedText style={styles.statUnit} setColor={theme.quietText}>
+              {` ${totalVolumeUnit}`}
+            </ThemedText>
+          </View>
+        </View>
+
+        <View
+          style={[
+            styles.statField,
+            {
+              backgroundColor: theme.uiBackground,
+              borderColor: theme.hairline,
+            },
+          ]}
+        >
+          <ThemedText style={styles.statLabel} setColor={theme.quietText}>
+            Avg session
+          </ThemedText>
+          <View style={styles.statValueRow}>
+            <ThemedText style={styles.statValue} setColor={theme.title}>
+              {avgSessionMinutes}
+            </ThemedText>
+            <ThemedText style={styles.statUnit} setColor={theme.quietText}>
+              {" min"}
+            </ThemedText>
+          </View>
+        </View>
       </View>
     </View>
   );

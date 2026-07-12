@@ -55,6 +55,7 @@ import {
 } from "./src/Database/localDatabase";
 import { locationService, notificationService } from "./src/Services";
 import { AuthProvider, useAuth } from './src/Contexts/AuthContext';
+import { ThemeModeProvider, useThemeMode } from './src/Contexts/ThemeContext';
 import ExerciseLibrarySync from "./src/Sync/ExerciseLibrarySync";
 import PushNotificationRegistrationSync from "./src/Sync/PushNotificationRegistrationSync";
 import SetSync from "./src/Sync/SetSync";
@@ -170,6 +171,16 @@ const navigationRef = createNavigationContainerRef();
 const NOTIFICATION_HISTORY_ROUTE = "NotificationHistoryPage";
 const RUN_HEART_RATE_CHART_ROUTE = "RunHeartRateChartPage";
 
+// Changing the accent theme remounts RootNavigator (fresh mounts re-read the
+// mutated Colors palettes). The latest navigation state is mirrored here so
+// the remounted container restores the user's place instead of resetting to
+// the initial route. Keyed by auth mode: a state captured while authenticated
+// must not be restored into the login stack (and vice versa).
+const preservedNavigationState = {
+  state: null,
+  isAuthenticated: null,
+};
+
 function getNotificationResponseKey(response) {
   const notification = response?.notification;
   const request = notification?.request;
@@ -225,7 +236,20 @@ function RootNavigator() {
   const syncCurrentRoute = () => {
     const nextRouteName = navigationRef.getCurrentRoute()?.name ?? null;
     setCurrentRouteName(nextRouteName);
+
+    try {
+      preservedNavigationState.state = navigationRef.getRootState() ?? null;
+      preservedNavigationState.isAuthenticated = isAuthenticated;
+    } catch {
+      preservedNavigationState.state = null;
+      preservedNavigationState.isAuthenticated = null;
+    }
   };
+
+  const restoredNavigationState =
+    preservedNavigationState.isAuthenticated === isAuthenticated
+      ? preservedNavigationState.state ?? undefined
+      : undefined;
 
   const openNotificationHistoryFromResponse = useCallback((response) => {
     if (!response) {
@@ -320,6 +344,7 @@ function RootNavigator() {
         <NavigationContainer
           ref={navigationRef}
           theme={navTheme}
+          initialState={restoredNavigationState}
           onReady={syncCurrentRoute}
           onStateChange={syncCurrentRoute}
         >
@@ -395,6 +420,7 @@ function RootNavigator() {
 function UserScopedDatabaseApp() {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const { accentTheme } = useThemeMode();
   const { user, isAuthLoading } = useAuth();
   const userId = user?.id ?? null;
   const databaseName = getDatabaseNameForUserId(userId);
@@ -432,7 +458,7 @@ function UserScopedDatabaseApp() {
       <SetSync />
       <WorkoutTypeInstanceSync />
       <PushNotificationRegistrationSync />
-      <RootNavigator />
+      <RootNavigator key={`accent-${accentTheme}`} />
     </SQLiteProvider>
   );
 }
@@ -440,9 +466,11 @@ function UserScopedDatabaseApp() {
 export default function App() {
   return (
     <SafeAreaProvider>
-      <AuthProvider>
-        <UserScopedDatabaseApp />
-      </AuthProvider>
+      <ThemeModeProvider>
+        <AuthProvider>
+          <UserScopedDatabaseApp />
+        </AuthProvider>
+      </ThemeModeProvider>
     </SafeAreaProvider>
   );
 }

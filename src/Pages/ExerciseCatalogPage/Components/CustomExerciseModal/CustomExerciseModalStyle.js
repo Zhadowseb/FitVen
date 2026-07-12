@@ -51,6 +51,24 @@ export default StyleSheet.create({
     width: 70,
     maxWidth: 70,
   },
+  legendRow: {
+    flexDirection: "row",
+    gap: 16,
+  },
+  legendItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  legendDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+  },
+  legendText: {
+    fontSize: 11,
+    fontWeight: "700",
+  },
   chipGrid: {
     flexDirection: "row",
     flexWrap: "wrap",

@@ -11,6 +11,8 @@ import { enqueueSync, startBackgroundSync } from "./syncScheduler";
 import {
   buildCustomExerciseMuscleMetadata,
   normalizeExerciseMuscleGroupKeys,
+  normalizeExerciseMuscleSelection,
+  serializeExerciseMuscleSelection,
 } from "../Utils/exerciseMuscleGroups";
 import {
   classifyWorkoutFromMuscleGroups,
@@ -123,6 +125,7 @@ const MUSCLE_LOAD_CATEGORY_BY_GROUP_KEY = {
   obliques: "core",
   "lower-back": "core",
   lower_back: "core",
+  "rotator-cuff": "back",
 };
 const MUSCLE_LOAD_FALLBACK_RULES = [
   {
@@ -1252,16 +1255,16 @@ function buildClassificationInput(exercises, officialSignalsByExerciseId) {
     const plannedSetCount = getClassificationSetCount(exercise);
 
     if (isCustomClassificationExercise(exercise)) {
-      const primaryGroupKeys = normalizeExerciseMuscleGroupKeys(
+      const { primaryKeys, secondaryKeys } = normalizeExerciseMuscleSelection(
         exercise?.custom_muscle_group_keys
       );
 
-      if (primaryGroupKeys.length > 0) {
+      if (primaryKeys.length > 0) {
         classificationExercises.push({
           exerciseName: exercise?.exercise_name,
           plannedSetCount,
-          primaryGroupKeys,
-          secondaryGroupKeys: [],
+          primaryGroupKeys: primaryKeys,
+          secondaryGroupKeys: secondaryKeys,
         });
       }
 
@@ -1340,11 +1343,13 @@ function getFallbackMuscleLoadSignals(exerciseName) {
 
 function getExerciseMuscleLoadSignals(exercise, officialSignalsByExerciseId) {
   if (isCustomClassificationExercise(exercise)) {
+    const { primaryKeys, secondaryKeys } = normalizeExerciseMuscleSelection(
+      exercise?.custom_muscle_group_keys
+    );
+
     return {
-      primaryGroupKeys: normalizeExerciseMuscleGroupKeys(
-        exercise?.custom_muscle_group_keys
-      ),
-      secondaryGroupKeys: [],
+      primaryGroupKeys: primaryKeys,
+      secondaryGroupKeys: secondaryKeys,
     };
   }
 
@@ -1590,7 +1595,9 @@ function normalizeExerciseCatalogEntries(entries) {
       Number(entry?.official) === 1 ||
       String(entry?.official).trim().toLocaleLowerCase() === "true";
     const isCustom = Number(entry?.is_custom) === 1;
-    const customMuscleGroupKeys = normalizeExerciseMuscleGroupKeys(
+    // Preserve the primary/secondary split; a plain key list would flatten
+    // every secondary muscle into a primary one.
+    const customMuscleGroupKeys = serializeExerciseMuscleSelection(
       entry?.custom_muscle_group_keys
     );
 
@@ -2356,7 +2363,7 @@ function mapExerciseCatalogForDisplay(entries) {
     default_visible_columns: entry.default_visible_columns ?? null,
     official: Boolean(entry.official),
     is_custom: Boolean(entry.is_custom),
-    custom_muscle_group_keys: normalizeExerciseMuscleGroupKeys(
+    custom_muscle_group_keys: serializeExerciseMuscleSelection(
       entry.custom_muscle_group_keys
     ),
     primary_muscle_count: Number(entry.primary_muscle_count) || 0,
@@ -2417,8 +2424,10 @@ export async function createCustomExercise(
 ) {
   const normalizedExerciseName =
     typeof exerciseName === "string" ? exerciseName.trim() : "";
-  const normalizedMuscleGroupKeys =
-    normalizeExerciseMuscleGroupKeys(muscleGroupKeys);
+  // Accepts both the legacy plain array (all primary) and the
+  // { primary, secondary } selection shape from the muscle picker.
+  const normalizedSelection = serializeExerciseMuscleSelection(muscleGroupKeys);
+  const { primaryKeys } = normalizeExerciseMuscleSelection(normalizedSelection);
 
   if (normalizedExerciseName.length < 2) {
     throw new Error("Exercise name must contain at least 2 characters.");
@@ -2428,8 +2437,8 @@ export async function createCustomExercise(
     throw new Error("Exercise name cannot contain more than 80 characters.");
   }
 
-  if (normalizedMuscleGroupKeys.length === 0) {
-    throw new Error("Select at least one muscle group.");
+  if (primaryKeys.length === 0) {
+    throw new Error("Select at least one primary muscle group.");
   }
 
   const existingExercise =
@@ -2444,13 +2453,13 @@ export async function createCustomExercise(
 
   const exercise = await weightliftingRepository.createCustomExerciseStorage(db, {
     exerciseName: normalizedExerciseName,
-    muscleGroupKeys: normalizedMuscleGroupKeys,
+    muscleGroupKeys: normalizedSelection,
   });
 
   return mapExerciseCatalogForDisplay([
     {
       ...exercise,
-      ...buildCustomExerciseMuscleMetadata(normalizedMuscleGroupKeys),
+      ...buildCustomExerciseMuscleMetadata(normalizedSelection),
     },
   ])[0];
 }

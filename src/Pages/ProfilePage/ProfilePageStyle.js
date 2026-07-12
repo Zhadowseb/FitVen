@@ -4,363 +4,379 @@ export default StyleSheet.create({
   container: {
     flex: 1,
   },
-  content: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 20,
-  },
-  scrollContent: {
-    paddingBottom: 28,
-  },
-  pageHeaderTitleGroup: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  pageHeaderTitleEyebrow: {
-    fontWeight: "800",
-    letterSpacing: 1,
-    textTransform: "uppercase",
-    marginBottom: 2,
-  },
-  pageHeaderTitleMain: {
-    textAlign: "center",
-    lineHeight: 26,
-  },
-  profileCard: {
-    marginHorizontal: 0,
-    marginVertical: 0,
-    paddingHorizontal: 18,
-    paddingVertical: 18,
-    borderWidth: 1,
-    borderRadius: 24,
-  },
-  accountCard: {
-    marginHorizontal: 0,
-    marginTop: 16,
-    marginBottom: 0,
-    paddingHorizontal: 18,
-    paddingVertical: 18,
-    borderWidth: 1,
-    borderRadius: 24,
-  },
-  aboutCard: {
-    marginHorizontal: 0,
-    marginTop: 16,
-    marginBottom: 0,
-    paddingHorizontal: 18,
-    paddingVertical: 18,
-    borderWidth: 1,
-    borderRadius: 24,
-  },
-  settingsCard: {
-    marginHorizontal: 0,
-    marginTop: 16,
-    marginBottom: 0,
-    paddingHorizontal: 18,
-    paddingVertical: 18,
-    borderWidth: 1,
-    borderRadius: 24,
-  },
-  cardEyebrow: {
-    fontWeight: "800",
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
-    marginBottom: 8,
-  },
-  cardTitle: {
-    marginBottom: 8,
-  },
-  accountValue: {
-    fontSize: 16,
-    fontWeight: "700",
-    marginBottom: 8,
-  },
-  cardBody: {
-    lineHeight: 20,
-  },
-  feedbackPortal: {
-    marginTop: 16,
-    marginBottom: 0,
-    borderWidth: 1,
-    borderRadius: 24,
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    overflow: "hidden",
-  },
-  feedbackPortalGlowPrimary: {
-    position: "absolute",
-    width: 360,
-    height: 310,
-    top: -160,
-    right: -138,
-  },
-  feedbackPortalGlowSecondary: {
-    position: "absolute",
-    width: 310,
-    height: 270,
-    bottom: -144,
-    left: -118,
-  },
-  feedbackPortalHeader: {
-    minHeight: 38,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 18,
-  },
-  feedbackPortalStatusCluster: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  feedbackPortalStatusDot: {
-    width: 9,
-    height: 9,
-    borderRadius: 5,
-    marginRight: 10,
-    opacity: 0.84,
-  },
-  feedbackPortalEyebrow: {
-    fontSize: 11,
-    lineHeight: 14,
-    fontWeight: "800",
-    letterSpacing: 3.2,
-  },
-  feedbackPortalActionIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 13,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  feedbackPortalTitle: {
-    fontSize: 26,
-    lineHeight: 31,
-    marginBottom: 8,
-  },
-  feedbackPortalDescription: {
-    fontSize: 14,
-    lineHeight: 21,
-    maxWidth: 290,
-  },
-  feedbackPortalChipRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginTop: 16,
-  },
-  feedbackPortalChip: {
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  feedbackPortalChipText: {
-    fontSize: 11,
-    lineHeight: 14,
-    fontWeight: "800",
-  },
-  settingsList: {
-    gap: 10,
-    marginTop: 10,
-  },
-  settingsButton: {
-    minHeight: 56,
-    borderWidth: 1,
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 12,
-  },
-  settingsButtonContent: {
+
+  // Header
+  header: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    minWidth: 0,
-  },
-  settingsButtonText: {
-    fontSize: 15,
-    fontWeight: "800",
-    lineHeight: 20,
-  },
-  aboutList: {
-    marginTop: 6,
-  },
-  aboutRow: {
-    minHeight: 42,
-    paddingVertical: 10,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 16,
-  },
-  aboutRowDivider: {
+    paddingTop: 8,
+    paddingBottom: 14,
+    paddingHorizontal: 20,
     borderBottomWidth: 1,
   },
-  aboutLabel: {
+  headerTitleGroup: {
+    flex: 1,
+    gap: 2,
+  },
+  headerEyebrow: {
+    fontWeight: "800",
+    letterSpacing: 1.8,
+    textTransform: "uppercase",
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: "800",
+    letterSpacing: -0.3,
+  },
+  headerMenuButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  // Content
+  content: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 18,
+    paddingBottom: 28,
+    gap: 22,
+  },
+  section: {
+    gap: 10,
+  },
+
+  // Card shell
+  card: {
+    borderRadius: 20,
+    borderWidth: 1,
+    overflow: "hidden",
+    marginVertical: 0,
+    marginHorizontal: 0,
+    padding: 0,
+  },
+
+  // 2a. Avatar row
+  avatarRow: {
+    padding: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+  },
+  avatarRing: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    borderWidth: 2.5,
+    padding: 3,
     flexShrink: 0,
-    fontSize: 12,
-    lineHeight: 16,
+  },
+  avatarInner: {
+    borderRadius: 999,
+  },
+  avatarInfo: {
+    flex: 1,
+    minWidth: 0,
+    gap: 6,
+    alignItems: "flex-start",
+  },
+  changePhotoChip: {
+    height: 34,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  changePhotoChipText: {
+    fontSize: 12.5,
+    fontWeight: "800",
+  },
+  avatarHelperText: {
+    fontSize: 10.5,
+    lineHeight: 15,
+    fontWeight: "500",
+  },
+
+  // 2b/2c. Username & email rows
+  fieldRow: {
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  fieldLabel: {
+    width: 88,
+    fontSize: 11,
     fontWeight: "800",
     letterSpacing: 0.6,
     textTransform: "uppercase",
   },
-  aboutValue: {
+  fieldValue: {
     flex: 1,
-    minWidth: 0,
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: "700",
-    textAlign: "right",
-  },
-  avatarSection: {
-    marginTop: 18,
-    alignItems: "center",
-  },
-  avatarButton: {
-    marginTop: 12,
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
-  avatarButtonPressed: {
-    opacity: 0.88,
-  },
-  avatarButtonText: {
-    fontSize: 13,
+    fontSize: 13.5,
     fontWeight: "700",
   },
-  avatarHelperText: {
-    marginTop: 10,
-    fontSize: 12,
-    lineHeight: 18,
-    textAlign: "center",
-  },
-  identityList: {
-    marginTop: 16,
-    gap: 14,
-  },
-  identityGroup: {
-    gap: 4,
-  },
-  identityLabel: {
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
-  },
-  identityValue: {
-    fontSize: 15,
-    fontWeight: "700",
-    lineHeight: 20,
-  },
-  formSection: {
-    marginTop: 18,
-  },
-  inputLabel: {
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
-    marginBottom: 8,
-  },
-  inputWrapper: {
-    marginTop: 0,
-  },
-  birthDateField: {
-    minHeight: 58,
-    paddingHorizontal: 14,
-    borderWidth: 1,
-    borderRadius: 16,
+
+  // 2d. Birth date row
+  birthDateRow: {
+    paddingVertical: 12,
+    paddingHorizontal: 18,
     flexDirection: "row",
     alignItems: "center",
-    gap: 11,
+    gap: 10,
   },
   birthDateCopy: {
     flex: 1,
     minWidth: 0,
+    gap: 1,
   },
   birthDateValue: {
-    fontSize: 14,
-    lineHeight: 18,
-    fontWeight: "800",
-  },
-  birthDatePrivacy: {
-    marginTop: 2,
-    fontSize: 9,
-    lineHeight: 12,
+    fontSize: 13.5,
     fontWeight: "700",
+    fontVariant: ["tabular-nums"],
   },
-  ageValue: {
-    minWidth: 42,
-    alignItems: "center",
+  birthDateSubline: {
+    fontSize: 10.5,
+    fontWeight: "500",
   },
-  ageNumber: {
-    fontSize: 19,
-    lineHeight: 22,
-    fontWeight: "900",
+  agePill: {
+    borderRadius: 999,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
   },
-  ageLabel: {
-    fontSize: 7,
-    lineHeight: 9,
-    fontWeight: "900",
+  agePillText: {
+    fontSize: 10.5,
+    fontWeight: "800",
+    flexShrink: 0,
   },
-  clearBirthDate: {
-    fontSize: 12,
-    lineHeight: 18,
-    fontWeight: "900",
-  },
-  birthDateMetaRow: {
-    marginTop: 8,
+  clearBirthDateRow: {
+    paddingHorizontal: 18,
+    paddingBottom: 8,
     alignItems: "flex-end",
   },
-  bioInput: {
-    minHeight: 120,
-    paddingTop: 12,
+  clearBirthDateText: {
+    fontSize: 11,
+    fontWeight: "800",
   },
-  metaRow: {
-    marginTop: 8,
+
+  // 2e. Display name section
+  displayNameSection: {
+    padding: 14,
+    paddingHorizontal: 18,
+    gap: 6,
+  },
+  fieldSectionLabel: {
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 0.6,
+    textTransform: "uppercase",
+  },
+  inputField: {
+    height: 44,
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 14,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    gap: 12,
+    gap: 8,
   },
-  metaText: {
-    fontSize: 12,
-    lineHeight: 18,
+  inputFieldValue: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "700",
+    padding: 0,
   },
+  inputFieldCounter: {
+    fontSize: 10.5,
+    fontWeight: "700",
+    fontVariant: ["tabular-nums"],
+    flexShrink: 0,
+  },
+  fieldHelperText: {
+    fontSize: 10.5,
+    fontWeight: "500",
+  },
+
+  // 2f. Bio section
+  bioSection: {
+    paddingHorizontal: 18,
+    paddingBottom: 14,
+    gap: 6,
+  },
+  bioField: {
+    minHeight: 60,
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingVertical: 11,
+    paddingHorizontal: 14,
+    gap: 6,
+  },
+  bioFieldValue: {
+    fontSize: 13.5,
+    lineHeight: 19,
+    fontWeight: "600",
+    padding: 0,
+    textAlignVertical: "top",
+  },
+  bioFieldCounter: {
+    alignSelf: "flex-end",
+    fontSize: 10.5,
+    fontWeight: "700",
+    fontVariant: ["tabular-nums"],
+  },
+
+  // Loading / feedback banner
   loadingText: {
-    marginTop: 14,
-    fontSize: 13,
-    lineHeight: 18,
+    paddingHorizontal: 18,
+    paddingTop: 4,
+    fontSize: 12.5,
   },
   feedbackBanner: {
-    marginTop: 14,
+    marginHorizontal: 18,
+    marginTop: 4,
+    marginBottom: 10,
     borderWidth: 1,
-    borderRadius: 16,
+    borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
   feedbackBannerText: {
-    fontSize: 13,
-    lineHeight: 19,
+    fontSize: 12.5,
+    lineHeight: 18,
   },
-  actions: {
-    marginTop: 24,
+
+  // 2g. Save button
+  saveButtonWrapper: {
+    paddingHorizontal: 18,
+    paddingBottom: 18,
   },
-  primaryButton: {
-    marginTop: 0,
-    borderRadius: 18,
-    height: 52,
+  saveButton: {
+    height: 50,
+    borderRadius: 14,
+    width: "100%",
+  },
+
+  // 3. Settings rows
+  settingsRow: {
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  settingsRowLabel: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  accentPickerWrap: {
+    paddingHorizontal: 18,
+    paddingBottom: 16,
+    paddingTop: 2,
+  },
+
+  // 4. Feedback card
+  feedbackCard: {
+    padding: 18,
+    gap: 10,
+  },
+  feedbackHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  feedbackTextColumn: {
+    flex: 1,
+    gap: 1,
+  },
+  feedbackTitle: {
+    fontSize: 14,
+    fontWeight: "800",
+  },
+  feedbackSubtitle: {
+    fontSize: 11.5,
+    lineHeight: 16,
+    fontWeight: "500",
+  },
+  feedbackChipRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  feedbackChip: {
+    borderRadius: 999,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+  },
+  feedbackChipText: {
+    fontSize: 11,
+    fontWeight: "800",
+  },
+
+  // 5. Account card
+  accountRow: {
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  accountInfo: {
+    flex: 1,
+    minWidth: 0,
+    gap: 1,
+  },
+  accountLabel: {
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 0.6,
+    textTransform: "uppercase",
+  },
+  accountValue: {
+    fontSize: 13.5,
+    fontWeight: "700",
   },
   logoutButton: {
-    marginTop: 0,
+    height: 38,
+    borderRadius: 11,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  logoutButtonText: {
+    fontSize: 12.5,
+    fontWeight: "800",
+  },
+  metaRow: {
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  metaRowLabel: {
+    flex: 1,
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 0.6,
+    textTransform: "uppercase",
+  },
+  metaRowValue: {
+    fontSize: 13,
+    fontWeight: "700",
   },
   errorText: {
-    marginTop: 12,
-    textAlign: "center",
+    paddingHorizontal: 18,
+    paddingBottom: 12,
+    fontSize: 12,
   },
 });

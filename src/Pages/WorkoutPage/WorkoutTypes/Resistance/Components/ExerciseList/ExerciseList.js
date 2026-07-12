@@ -25,6 +25,7 @@ const ExerciseList = ({
   onRestTimerStart,
   onRestTimerCancel,
   onWorkoutMetadataChange,
+  onExerciseCountChange,
 }) => {
   const [exercises, setExercises] = useState([]);
   const [expandedExercises, setExpandedExercises] = useState({});
@@ -48,6 +49,10 @@ const ExerciseList = ({
       ),
     [exercises, showCompletedExercises]
   );
+
+  useEffect(() => {
+    onExerciseCountChange?.(visibleExercises.length);
+  }, [onExerciseCountChange, visibleExercises.length]);
 
   const moveExercise = (items, fromIndex, toIndex) => {
     const nextItems = [...items];
