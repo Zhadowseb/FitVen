@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.18.12] - Unreleased
+### Changed
+- Removed the redundant completed-workout message panel from the home card.
+- Show the next planned workout in place of the completed-workout summary action.
+- Open the completed workout when tapping anywhere on its home card.
+
+---
 ## [0.18.11] - Unreleased
 ### Changed
 - Moved exercise card display settings to Settings > Workout Types > Strength Training.

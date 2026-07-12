@@ -89,8 +89,7 @@ export default function TodayHeroCard({
       <CompletedWorkoutCard
         workout={workout}
         nextWorkout={nextWorkout}
-        onViewSummary={onStartWorkout}
-        onOpenNextWorkout={onOpenNextWorkout}
+        onOpenWorkout={onStartWorkout}
         theme={theme}
       />
     );
@@ -193,20 +192,22 @@ export default function TodayHeroCard({
 function CompletedWorkoutCard({
   workout,
   nextWorkout,
-  onViewSummary,
-  onOpenNextWorkout,
+  onOpenWorkout,
   theme,
 }) {
   const coverImage = getWorkoutCoverImage(workout.workoutType);
   const completionColor = theme.COMPLETE ?? theme.secondary;
-  const completionText = theme.inkOnSecondary ?? theme.ink;
   const completionMeta = [
     workout.completedAt ? `Finished ${workout.completedAt}` : "Finished",
     workout.durationLabel,
   ].filter(Boolean);
 
   return (
-    <View
+    <TouchableOpacity
+      activeOpacity={0.88}
+      accessibilityRole="button"
+      accessibilityLabel={`Open completed workout ${workout.title}`}
+      onPress={onOpenWorkout}
       style={[
         styles.card,
         styles.completedCard,
@@ -279,58 +280,39 @@ function CompletedWorkoutCard({
         </View>
       </View>
 
-      <View style={styles.completedBody}>
-        <View
-          style={[
-            styles.completedSummary,
-            {
-              backgroundColor: withAlpha(completionColor, 0.1),
-              borderColor: withAlpha(completionColor, 0.46),
-            },
-          ]}
-        >
-          <View style={[styles.completedSummaryIcon, { backgroundColor: completionColor }]}>
-            <Checkmark width={29} height={29} color={completionText} thickness={3.1} />
-          </View>
-          <View style={styles.completedSummaryCopy}>
-            <Text style={[styles.completedSummaryTitle, { color: theme.title }]}>
-              Workout complete
-            </Text>
-            <Text style={[styles.completedSummarySubtitle, { color: theme.text }]}>
-              Great work — you're done for today.
-            </Text>
-          </View>
-        </View>
-
-        <TouchableOpacity
-          activeOpacity={0.84}
-          accessibilityRole="button"
-          accessibilityLabel={`View summary for ${workout.title}`}
-          onPress={onViewSummary}
-          style={[styles.summaryButton, { borderColor: theme.border }]}
-        >
-          <Text style={[styles.summaryButtonText, { color: theme.title }]}>View summary</Text>
-          <ChevronRight width={20} height={20} color={theme.title} thickness={2.4} />
-        </TouchableOpacity>
-      </View>
-
       {nextWorkout ? (
-        <>
-          <View style={[styles.divider, { backgroundColor: theme.hairline }]} />
-          <UpNextRow theme={theme} nextWorkout={nextWorkout} onPress={onOpenNextWorkout} />
-        </>
+        <View style={styles.completedBody}>
+          <UpNextRow
+            theme={theme}
+            nextWorkout={nextWorkout}
+            bare
+            interactive={false}
+          />
+        </View>
       ) : null}
-    </View>
+    </TouchableOpacity>
   );
 }
 
-function UpNextRow({ theme, nextWorkout, onPress, bare = false }) {
+function UpNextRow({
+  theme,
+  nextWorkout,
+  onPress,
+  bare = false,
+  interactive = true,
+}) {
+  const Container = interactive ? TouchableOpacity : View;
+
   return (
-    <TouchableOpacity
-      activeOpacity={0.84}
-      accessibilityRole="button"
-      accessibilityLabel={`Open planned workout ${nextWorkout.title}`}
-      onPress={onPress}
+    <Container
+      {...(interactive
+        ? {
+            activeOpacity: 0.84,
+            accessibilityRole: "button",
+            accessibilityLabel: `Open planned workout ${nextWorkout.title}`,
+            onPress,
+          }
+        : {})}
       style={[styles.upNextRow, bare && styles.upNextRowBare]}
     >
       <View
@@ -358,6 +340,6 @@ function UpNextRow({ theme, nextWorkout, onPress, bare = false }) {
       </View>
 
       <ChevronRight width={18} height={18} color={theme.quietText} thickness={2} />
-    </TouchableOpacity>
+    </Container>
   );
 }
