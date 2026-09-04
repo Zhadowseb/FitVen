@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.21.0] - Unreleased
+### Added
+- Colour tokens for the surfaces that components used to build with a light/dark ternary of their own: table surfaces, gridlines and alternating rows, the record highlight, three neutral overlays, the ink on a danger fill and the two scrim strengths.
+- `Spacing`, `Radius` and `Elevation` constants in `GlobalStyling/spacing.js`, for new code and for files another change touches anyway.
+
+### Removed
+- Seven palette tokens nothing referenced: `third`, `textMuted`, `plannedLight`, `libraryMetricBackground` and the `NOT_STARTED`/`ACTIVE`/`COMPLETE` status aliases, the last two also from all four accent themes.
+
+---
 ## [0.20.0] - Unreleased
 ### Changed
 - Every gesture on a calendar day now opens one day sheet, which holds the day's workouts, its programs and the add, copy and delete actions.

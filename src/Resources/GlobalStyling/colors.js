@@ -15,7 +15,6 @@ export const Colors = {
         secondary: "#4ED39A",
         secondaryLight: "rgb(178, 214, 200)",
         secondaryDark: "rgb(24, 160, 108)",
-        third: "#b8b07a",
         fields: "rgba(247, 116, 46, 0.08)",
         record: "#4BA3DB",
         recordLight: "rgb(51, 139, 255)",
@@ -23,17 +22,10 @@ export const Colors = {
         danger: "#E85C4A",
         dangerDark: "rgb(168, 55, 41)",
         planned: "#F2C14E",
-        plannedLight: "rgb(255, 238, 130)",
         plannedDark: "rgb(201, 174, 0)",
-
-        NOT_STARTED: "#676B76",
-        ACTIVE: "#F7742E",
-        COMPLETE: "#4ED39A",
 
         text: "#A4A8B3",
         textStrong: "#ECEDF1",
-        // 5.4:1 against the card surface, where the old #676B76 sat at 3.4:1.
-        textMuted: "#868C99",
         textDisabled: "#3A3D46",
         textInverted: "#14100C",
         quietText: "#868C99",
@@ -48,7 +40,25 @@ export const Colors = {
         hairline: "rgba(255, 255, 255, 0.06)",
         chipBackground: "rgba(255, 255, 255, 0.06)",
         navHandle: "rgba(255, 255, 255, 0.22)",
-        libraryMetricBackground: "rgba(26, 32, 45, 0.92)",
+
+        // Data tables: the set lists build a surface, gridlines and alternating
+        // rows out of these instead of a scheme ternary per component.
+        tableSurface: "rgba(16, 17, 24, 0.58)",
+        tableGridline: "rgba(255, 255, 255, 0.07)",
+        tableRowSurface: "rgba(24, 25, 34, 0.9)",
+        tableRowAltSurface: "rgba(255, 255, 255, 0.045)",
+        recordSurface: "rgba(55, 63, 174, 0.38)",
+
+        // Neutral overlays for stacked surfaces, strongest first.
+        overlayStrong: "rgba(255, 255, 255, 0.14)",
+        overlayMedium: "rgba(255, 255, 255, 0.10)",
+        overlaySoft: "rgba(255, 255, 255, 0.07)",
+
+        // Fixed in both schemes: a scrim darkens whatever sits under it, and
+        // white is the only legible ink on the danger fill.
+        onDanger: "#FFFFFF",
+        scrim: "rgba(0, 0, 0, 0.5)",
+        sheetScrim: "rgba(0, 0, 0, 0.62)",
 
         iconColor: "#868C99",
         iconColorFocused: "#F7742E",
@@ -64,7 +74,6 @@ export const Colors = {
         secondary: "#1E9E6A",
         secondaryLight: "rgb(178, 214, 200)",
         secondaryDark: "rgb(24, 160, 108)",
-        third: "#b8b07a",
         fields: "rgba(247, 116, 46, 0.08)",
         record: "#2C7FBF",
         recordLight: "rgb(218, 221, 255)",
@@ -72,16 +81,10 @@ export const Colors = {
         danger: "#D64533",
         dangerDark: "rgb(150, 40, 26)",
         planned: "#C08A12",
-        plannedLight: "rgb(255, 238, 130)",
         plannedDark: "rgb(201, 174, 0)",
-
-        NOT_STARTED: "#676B76",
-        ACTIVE: "#F7742E",
-        COMPLETE: "#1E9E6A",
 
         text: "#5C6270",
         textStrong: "#22252C",
-        textMuted: "#676B76",
         textDisabled: "#C9CDD5",
         textInverted: "#14100C",
         quietText: "#676B76",
@@ -96,7 +99,20 @@ export const Colors = {
         hairline: "rgba(15, 17, 22, 0.06)",
         chipBackground: "rgba(15, 17, 22, 0.06)",
         navHandle: "rgba(15, 17, 22, 0.22)",
-        libraryMetricBackground: "rgba(255, 255, 255, 0.92)",
+
+        tableSurface: "#f5f4fa",
+        tableGridline: "rgba(32, 30, 43, 0.12)",
+        tableRowSurface: "rgba(255, 255, 255, 0.86)",
+        tableRowAltSurface: "rgba(32, 30, 43, 0.08)",
+        recordSurface: "rgba(55, 63, 174, 0.16)",
+
+        overlayStrong: "rgba(15, 17, 22, 0.14)",
+        overlayMedium: "rgba(15, 17, 22, 0.10)",
+        overlaySoft: "rgba(15, 17, 22, 0.07)",
+
+        onDanger: "#FFFFFF",
+        scrim: "rgba(0, 0, 0, 0.5)",
+        sheetScrim: "rgba(0, 0, 0, 0.62)",
 
         iconColor: "#676B76",
         iconColorFocused: "#F7742E",
@@ -123,8 +139,6 @@ export const AccentThemes = {
             secondaryLight: "rgb(178, 214, 200)",
             secondaryDark: "rgb(24, 160, 108)",
             fields: "rgba(247, 116, 46, 0.08)",
-            ACTIVE: "#F7742E",
-            COMPLETE: "#4ED39A",
             iconColorFocused: "#F7742E",
         },
         light: {
@@ -139,8 +153,6 @@ export const AccentThemes = {
             secondaryLight: "rgb(178, 214, 200)",
             secondaryDark: "rgb(24, 160, 108)",
             fields: "rgba(247, 116, 46, 0.08)",
-            ACTIVE: "#F7742E",
-            COMPLETE: "#1E9E6A",
             iconColorFocused: "#F7742E",
         },
     },
@@ -160,8 +172,6 @@ export const AccentThemes = {
             secondaryLight: "rgb(176, 182, 255)",
             secondaryDark: "rgb(87, 94, 179)",
             fields: "rgba(200, 240, 74, 0.08)",
-            ACTIVE: "#C8F04A",
-            COMPLETE: "#7C86FF",
             iconColorFocused: "#C8F04A",
         },
         light: {
@@ -176,8 +186,6 @@ export const AccentThemes = {
             secondaryLight: "rgb(176, 182, 255)",
             secondaryDark: "rgb(87, 94, 179)",
             fields: "rgba(110, 143, 18, 0.08)",
-            ACTIVE: "#6E8F12",
-            COMPLETE: "#5B6AE8",
             iconColorFocused: "#6E8F12",
         },
     },
@@ -197,8 +205,6 @@ export const AccentThemes = {
             secondaryLight: "rgb(255, 218, 147)",
             secondaryDark: "rgb(179, 136, 53)",
             fields: "rgba(139, 124, 245, 0.08)",
-            ACTIVE: "#8B7CF5",
-            COMPLETE: "#FFC24B",
             iconColorFocused: "#8B7CF5",
         },
         light: {
@@ -213,8 +219,6 @@ export const AccentThemes = {
             secondaryLight: "rgb(255, 218, 147)",
             secondaryDark: "rgb(179, 136, 53)",
             fields: "rgba(110, 92, 240, 0.08)",
-            ACTIVE: "#6E5CF0",
-            COMPLETE: "#D99A16",
             iconColorFocused: "#6E5CF0",
         },
     },
@@ -234,8 +238,6 @@ export const AccentThemes = {
             secondaryLight: "rgb(122, 229, 217)",
             secondaryDark: "rgb(24, 148, 134)",
             fields: "rgba(255, 122, 122, 0.08)",
-            ACTIVE: "#FF7A7A",
-            COMPLETE: "#22D3C0",
             iconColorFocused: "#FF7A7A",
         },
         light: {
@@ -250,8 +252,6 @@ export const AccentThemes = {
             secondaryLight: "rgb(122, 229, 217)",
             secondaryDark: "rgb(24, 148, 134)",
             fields: "rgba(226, 59, 59, 0.08)",
-            ACTIVE: "#E23B3B",
-            COMPLETE: "#12A697",
             iconColorFocused: "#E23B3B",
         },
     },

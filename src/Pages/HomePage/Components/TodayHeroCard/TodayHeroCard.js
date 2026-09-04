@@ -203,7 +203,7 @@ function CompletedWorkoutCard({
   theme,
 }) {
   const coverImage = getWorkoutCoverImage(workout.workoutType);
-  const completionColor = theme.COMPLETE ?? theme.secondary;
+  const completionColor = theme.secondary;
   const completionMeta = [
     workout.completedAt ? `Finished ${workout.completedAt}` : "Finished",
     workout.durationLabel,
