@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.21.2] - Unreleased
+### Added
+- `ThemedSheetHandle`, one grab handle for every bottom sheet. Eight sheets drew their own across three sizes, four radii and seven colours, four of which were hardcoded white and invisible in the light theme.
+
+### Fixed
+- The exercise filter sheet and the exercise library no longer tint their selected chips and cards Ember orange regardless of the chosen accent theme; the same applies to the library's green highlights.
+- Both sheet palettes fell back to the dark palette when a token was missing, which would have been the wrong scheme in the light theme.
+- The accent now reads as text through `primaryText` and as a fill through `primary` in the start-workout sheet and the filter sheet, instead of one colour doing both.
+
+### Changed
+- The start-workout sheet and the exercise filter sheet build their styles from the theme directly; the intermediate colour-alias object each of them carried is gone.
+
+---
 ## [0.21.1] - Unreleased
 ### Changed
 - The relative timestamp on the feed card and the notification list now comes from one `formatTimeAgo` in `Utils/dateUtils`, in place of two identical copies.

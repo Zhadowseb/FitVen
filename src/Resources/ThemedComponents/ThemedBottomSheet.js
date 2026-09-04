@@ -10,7 +10,8 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Colors, withAlpha } from "../GlobalStyling/colors";
+import { Colors } from "../GlobalStyling/colors";
+import ThemedSheetHandle from "./ThemedSheetHandle";
 import ThemedKeyboardSheet, {
   dismissThenClose,
   useSheetKeyboardHeight,
@@ -89,12 +90,7 @@ const ThemedBottomSheet = ({ visible, onClose, children, footer = null }) => {
       >
         {/* Drag handle */}
         <View {...panResponder.panHandlers} style={styles.dragZone}>
-          <View
-            style={[
-              styles.handle,
-              { backgroundColor: withAlpha(theme.text, 0.28) },
-            ]}
-          />
+          <ThemedSheetHandle />
         </View>
 
         {/* Scrollable content */}
@@ -137,10 +133,4 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  handle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-
-  },
 });

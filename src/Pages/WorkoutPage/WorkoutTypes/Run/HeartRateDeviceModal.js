@@ -9,7 +9,10 @@ import {
   View,
 } from "react-native";
 
-import { ThemedText } from "../../../../Resources/ThemedComponents";
+import {
+  ThemedSheetHandle,
+  ThemedText,
+} from "../../../../Resources/ThemedComponents";
 
 export default function HeartRateDeviceModal({
   visible,
@@ -48,7 +51,7 @@ export default function HeartRateDeviceModal({
             { backgroundColor: cardSurface, borderColor },
           ]}
         >
-          <View style={styles.handle} />
+          <ThemedSheetHandle style={styles.handle} />
 
           <View style={styles.header}>
             <View style={styles.headerCopy}>
@@ -228,13 +231,8 @@ const styles = StyleSheet.create({
     paddingBottom: 28,
   },
   handle: {
-    alignSelf: "center",
-    width: 42,
-    height: 4,
     marginTop: 10,
     marginBottom: 18,
-    borderRadius: 2,
-    backgroundColor: "rgba(151, 151, 151, 0.5)",
   },
   header: {
     flexDirection: "row",

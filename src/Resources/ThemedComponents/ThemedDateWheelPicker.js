@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Colors } from "../GlobalStyling/colors";
 import ThemedButton from "./ThemedButton";
 import ThemedText from "./ThemedText";
+import ThemedSheetHandle from "./ThemedSheetHandle";
 
 const ITEM_HEIGHT = 42;
 const VISIBLE_ITEMS = 5;
@@ -333,7 +334,7 @@ export default function ThemedDateWheelPicker({
             },
           ]}
         >
-          <View style={styles.handle} />
+          <ThemedSheetHandle style={styles.handle} />
           <View style={styles.header}>
             <View>
               <ThemedText style={styles.eyebrow} setColor={primaryTextColor}>
@@ -448,12 +449,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 22,
   },
   handle: {
-    width: 38,
-    height: 4,
     marginBottom: 12,
-    borderRadius: 2,
-    backgroundColor: "#777",
-    alignSelf: "center",
   },
   header: {
     minHeight: 52,

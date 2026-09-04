@@ -47,9 +47,6 @@ const GROUP_FILTERS = [
 
 const MUSCLE_FILTERS = EXERCISE_MUSCLE_FILTERS;
 
-const TINTED_ORANGE_SURFACE = "rgba(247,116,46,0.14)";
-const TINTED_GREEN_SURFACE = "rgba(78,211,154,0.07)";
-const TINTED_GREEN_BORDER = "rgba(78,211,154,0.35)";
 
 const MUSCLE_LABEL_BY_REGION_KEY = EXERCISE_MUSCLE_GROUPS.reduce(
   (labelsByRegionKey, group) => {
@@ -454,7 +451,7 @@ const ExerciseLibraryList = ({
                   styles.pickerFocusChip,
                   {
                     backgroundColor: isSelected
-                      ? TINTED_ORANGE_SURFACE
+                      ? withAlpha(theme.primary, 0.14)
                       : cardSurface,
                     borderColor: isSelected ? primaryColor : cardBorder,
                   },
@@ -572,7 +569,7 @@ const ExerciseLibraryList = ({
                   style={[
                     styles.pickerExerciseRow,
                     isCurrentSelection && {
-                      backgroundColor: TINTED_GREEN_SURFACE,
+                      backgroundColor: withAlpha(theme.secondary, 0.07),
                     },
                   ]}
                 >
@@ -588,7 +585,7 @@ const ExerciseLibraryList = ({
                       {
                         backgroundColor: inputSurface,
                         borderColor: isCurrentSelection
-                          ? TINTED_GREEN_BORDER
+                          ? withAlpha(theme.secondary, 0.35)
                           : cardBorder,
                       },
                     ]}
@@ -619,7 +616,7 @@ const ExerciseLibraryList = ({
                         <View
                           style={[
                             styles.pickerCustomBadge,
-                            { backgroundColor: TINTED_ORANGE_SURFACE },
+                            { backgroundColor: withAlpha(theme.primary, 0.14) },
                           ]}
                         >
                           <ThemedText
@@ -695,7 +692,7 @@ const ExerciseLibraryList = ({
                       {
                         backgroundColor: isCurrentSelection
                           ? secondaryColor
-                          : TINTED_ORANGE_SURFACE,
+                          : withAlpha(theme.primary, 0.14),
                       },
                     ]}
                   >
@@ -1117,7 +1114,7 @@ const ExerciseLibraryList = ({
               style={[
                 styles.activeFilterChip,
                 {
-                  backgroundColor: TINTED_ORANGE_SURFACE,
+                  backgroundColor: withAlpha(theme.primary, 0.14),
                   borderColor: withAlpha(primaryColor, 0.45),
                 },
               ]}

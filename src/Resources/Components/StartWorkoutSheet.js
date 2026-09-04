@@ -12,6 +12,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Colors, withAlpha } from "../GlobalStyling/colors";
+import ThemedSheetHandle from "../ThemedComponents/ThemedSheetHandle";
 import ArrowDoubleDown from "../Icons/UI-icons/ArrowDoubleDown";
 import ArrowDoubleUp from "../Icons/UI-icons/ArrowDoubleUp";
 import Cross from "../Icons/UI-icons/Cross";
@@ -25,42 +26,6 @@ import { isWorkoutTypeComingSoon } from "../../Utils/workoutTypeAvailability";
 import ComingSoonBadge from "./ComingSoonBadge";
 
 const noop = () => {};
-
-function createSheetPalette(theme) {
-  const fallbackTheme = Colors.dark;
-  const primary = theme.primary ?? fallbackTheme.primary;
-  const secondary = theme.secondary ?? fallbackTheme.secondary;
-  const record = theme.record ?? fallbackTheme.record;
-  const sheet = theme.cardBackground ?? theme.background ?? fallbackTheme.cardBackground;
-  const inset = theme.background ?? theme.uiBackground ?? fallbackTheme.background;
-  const border = theme.cardBorder ?? theme.iconColor ?? fallbackTheme.cardBorder;
-  const muted = theme.iconColor ?? theme.quietText ?? theme.text ?? fallbackTheme.iconColor;
-  const title = theme.title ?? theme.text ?? fallbackTheme.title;
-
-  return {
-    backdrop: "rgba(0, 0, 0, 0.62)",
-    sheet,
-    sheetBorder: border,
-    // cardBorder is a 7% hairline - too faint for a grab handle. Derived from
-    // the text colour instead, so it stays visible in both themes.
-    handle: withAlpha(title, 0.28),
-    title,
-    muted,
-    label: muted,
-    card: sheet,
-    inset,
-    cardBorder: border,
-    cardSoft: withAlpha(primary, 0.08),
-    orange: primary,
-    orangeDeep: withAlpha(primary, 0.14),
-    orangeBorder: withAlpha(primary, 0.52),
-    blue: record,
-    blueDeep: withAlpha(record, 0.16),
-    green: secondary,
-    greenDeep: withAlpha(secondary, 0.14),
-    iconOnAccent: theme.textInverted ?? sheet,
-  };
-}
 
 const freshStarts = [
   {
@@ -218,36 +183,36 @@ function WorkoutGlyph({ type, size = 26, color }) {
   return <Resistance width={size} height={size} color={color} />;
 }
 
-function getIconColors(type, palette) {
+function getIconColors(type, theme) {
   if (type === "run") {
     return {
-      backgroundColor: palette.blueDeep,
-      color: palette.blue,
+      backgroundColor: withAlpha(theme.record, 0.16),
+      color: theme.record,
     };
   }
 
   if (type === "walk") {
     return {
-      backgroundColor: palette.greenDeep,
-      color: palette.green,
+      backgroundColor: withAlpha(theme.secondary, 0.14),
+      color: theme.secondary,
     };
   }
 
   return {
-    backgroundColor: palette.orangeDeep,
-    color: palette.orange,
+    backgroundColor: withAlpha(theme.primary, 0.14),
+    color: theme.primaryText,
   };
 }
 
 function IconTile({
   type,
-  palette,
+  theme,
   styles,
   size = "regular",
   active = false,
   badge = null,
 }) {
-  const iconColors = getIconColors(type, palette);
+  const iconColors = getIconColors(type, theme);
   const tileSize = size === "large" ? 56 : 46;
   const glyphSize = size === "large" ? 30 : 25;
   const badgeIconSize = badge === "fresh" ? 11 : 12;
@@ -260,14 +225,14 @@ function IconTile({
           width: tileSize,
           height: tileSize,
           borderRadius: size === "large" ? 14 : 12,
-          backgroundColor: active ? palette.orange : iconColors.backgroundColor,
+          backgroundColor: active ? theme.primary : iconColors.backgroundColor,
         },
       ]}
     >
       <WorkoutGlyph
         type={type}
         size={glyphSize}
-        color={active ? palette.iconOnAccent : iconColors.color}
+        color={active ? theme.textInverted : iconColors.color}
       />
       {badge ? (
         <View
@@ -275,8 +240,8 @@ function IconTile({
             styles.iconTileBadge,
             {
               backgroundColor:
-                badge === "fresh" ? iconColors.color : palette.inset,
-              borderColor: palette.sheet,
+                badge === "fresh" ? iconColors.color : theme.background,
+              borderColor: theme.cardBackground,
             },
           ]}
         >
@@ -284,7 +249,7 @@ function IconTile({
             <Plus
               width={badgeIconSize}
               height={badgeIconSize}
-              color={palette.iconOnAccent}
+              color={theme.textInverted}
               thickness={2.4}
             />
           ) : (
@@ -315,7 +280,7 @@ function SectionHeader({
   action,
   actionDisabled = false,
   onActionPress = noop,
-  palette,
+  theme,
   styles,
   showRotationIcon = false,
   showPlusIcon = false,
@@ -326,13 +291,13 @@ function SectionHeader({
       <View style={styles.sectionCopy}>
         <View style={styles.sectionTitleGroup}>
           {showPlusIcon ? (
-            <Plus width={14} height={14} color={palette.label} thickness={2.2} />
+            <Plus width={14} height={14} color={theme.quietText} thickness={2.2} />
           ) : null}
           {showRotationIcon ? (
             <ReplayHistory
               width={15}
               height={15}
-              color={emphasizeTitle ? palette.title : palette.label}
+              color={emphasizeTitle ? theme.title : theme.quietText}
             />
           ) : null}
           <Text
@@ -361,7 +326,7 @@ function SectionHeader({
   );
 }
 
-function PlannedTodaySection({ isToday, shortcut, onOpen, palette, styles }) {
+function PlannedTodaySection({ isToday, shortcut, onOpen, theme, styles }) {
   const [showChoices, setShowChoices] = useState(false);
   const plannedWorkouts = shortcut?.workouts ?? [];
   const primaryWorkout = plannedWorkouts[0] ?? null;
@@ -398,7 +363,7 @@ function PlannedTodaySection({ isToday, shortcut, onOpen, palette, styles }) {
       >
         <IconTile
           type={getWorkoutIconType(workout)}
-          palette={palette}
+          theme={theme}
           styles={styles}
           size="large"
           active
@@ -420,9 +385,9 @@ function PlannedTodaySection({ isToday, shortcut, onOpen, palette, styles }) {
         </View>
         <View style={styles.expandIcon}>
           {showChoices ? (
-            <ArrowDoubleUp width={20} height={20} color={palette.muted} />
+            <ArrowDoubleUp width={20} height={20} color={theme.quietText} />
           ) : (
-            <ArrowDoubleDown width={20} height={20} color={palette.muted} />
+            <ArrowDoubleDown width={20} height={20} color={theme.quietText} />
           )}
         </View>
       </TouchableOpacity>
@@ -438,7 +403,7 @@ function PlannedTodaySection({ isToday, shortcut, onOpen, palette, styles }) {
             >
               <IconTile
                 type={getWorkoutIconType(plannedWorkout.workout)}
-                palette={palette}
+                theme={theme}
                 styles={styles}
               />
               <View style={styles.recentCopy}>
@@ -458,7 +423,7 @@ function PlannedTodaySection({ isToday, shortcut, onOpen, palette, styles }) {
   );
 }
 
-function UsualWorkoutCard({ workout, palette, styles }) {
+function UsualWorkoutCard({ workout, theme, styles }) {
   return (
     <TouchableOpacity
       activeOpacity={0.84}
@@ -471,7 +436,7 @@ function UsualWorkoutCard({ workout, palette, styles }) {
       <View style={styles.usualTopRow}>
         <IconTile
           type={getWorkoutIconType(workout)}
-          palette={palette}
+          theme={theme}
           styles={styles}
         />
         {workout.suggested ? (
@@ -499,13 +464,13 @@ function UsualWorkoutCard({ workout, palette, styles }) {
   );
 }
 
-function UsualWorkoutSection({ isLoading, workouts, palette, styles }) {
+function UsualWorkoutSection({ isLoading, workouts, theme, styles }) {
   return (
     <View style={styles.section}>
       <SectionHeader
         title="YOUR USUAL WORKOUTS"
         action="Manage"
-        palette={palette}
+        theme={theme}
         styles={styles}
         showRotationIcon
       />
@@ -519,7 +484,7 @@ function UsualWorkoutSection({ isLoading, workouts, palette, styles }) {
             <UsualWorkoutCard
               key={workout.id}
               workout={workout}
-              palette={palette}
+              theme={theme}
               styles={styles}
             />
           ))}
@@ -535,7 +500,7 @@ function UsualWorkoutSection({ isLoading, workouts, palette, styles }) {
   );
 }
 
-function RecentWorkoutRow({ workout, disabled, onPress, palette, styles }) {
+function RecentWorkoutRow({ workout, disabled, onPress, theme, styles }) {
   const [showExercises, setShowExercises] = useState(false);
   const isSuggested = Boolean(workout?.suggested);
   const occurrenceCount = Number(workout?.occurrenceCount) || 0;
@@ -557,7 +522,7 @@ function RecentWorkoutRow({ workout, disabled, onPress, palette, styles }) {
         >
           <IconTile
             type={getWorkoutIconType(workout)}
-            palette={palette}
+            theme={theme}
             styles={styles}
             badge="repeat"
           />
@@ -604,7 +569,7 @@ function RecentWorkoutRow({ workout, disabled, onPress, palette, styles }) {
           <Eye
             width={17}
             height={17}
-            color={showExercises ? palette.orange : palette.muted}
+            color={showExercises ? theme.primaryText : theme.quietText}
           />
         </TouchableOpacity>
       </View>
@@ -642,7 +607,7 @@ function RecentWorkoutSection({
   workouts = [],
   onLoadMore,
   onCopyWorkout,
-  palette,
+  theme,
   styles,
 }) {
   const repeatWorkouts = [...usualWorkouts, ...workouts].filter(
@@ -658,7 +623,7 @@ function RecentWorkoutSection({
           workout={workout}
           disabled={isStartingWorkout}
           onPress={onCopyWorkout}
-          palette={palette}
+          theme={theme}
           styles={styles}
         />
       ))}
@@ -687,7 +652,7 @@ function RecentWorkoutSection({
     <View style={styles.section}>
       <SectionHeader
         title="REPEAT A WORKOUT"
-        palette={palette}
+        theme={theme}
         styles={styles}
         showRotationIcon
         emphasizeTitle
@@ -718,11 +683,11 @@ function RecentWorkoutSection({
   );
 }
 
-function FreshStartCard({ item, disabled, onPress, palette, styles }) {
+function FreshStartCard({ item, disabled, onPress, theme, styles }) {
   const isComingSoon = isWorkoutTypeComingSoon(item.type);
   const iconColors = isComingSoon
-    ? { color: palette.muted, backgroundColor: palette.inset }
-    : getIconColors(item.type, palette);
+    ? { color: theme.quietText, backgroundColor: theme.background }
+    : getIconColors(item.type, theme);
 
   return (
     <TouchableOpacity
@@ -755,7 +720,7 @@ function FreshStartCard({ item, disabled, onPress, palette, styles }) {
         style={[
           styles.cardTitle,
           styles.freshCardTitle,
-          isComingSoon ? { color: palette.muted } : null,
+          isComingSoon ? { color: theme.quietText } : null,
         ]}
         numberOfLines={1}
       >
@@ -769,11 +734,11 @@ function FreshStartCard({ item, disabled, onPress, palette, styles }) {
             styles.iconTileBadge,
             {
               backgroundColor: iconColors.color,
-              borderColor: palette.sheet,
+              borderColor: theme.cardBackground,
             },
           ]}
         >
-          <Plus width={11} height={11} color={palette.iconOnAccent} />
+          <Plus width={11} height={11} color={theme.textInverted} />
         </View>
       )}
     </TouchableOpacity>
@@ -799,8 +764,7 @@ export default function StartWorkoutSheet({
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const insets = useSafeAreaInsets();
-  const palette = useMemo(() => createSheetPalette(theme), [theme]);
-  const styles = useMemo(() => createStyles(palette), [palette]);
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const isToday = !targetDate || targetDate === getTodaysDate();
   const targetDateLabel = targetDate?.slice(0, 5);
 
@@ -822,7 +786,7 @@ export default function StartWorkoutSheet({
             },
           ]}
         >
-          <View style={styles.handle} />
+          <ThemedSheetHandle style={styles.handle} />
 
           <TouchableOpacity
             activeOpacity={0.72}
@@ -832,7 +796,7 @@ export default function StartWorkoutSheet({
             onPress={onClose}
             style={styles.closeButton}
           >
-            <Cross width={19} height={19} color={palette.muted} />
+            <Cross width={19} height={19} color={theme.quietText} />
           </TouchableOpacity>
 
           <ScrollView
@@ -855,7 +819,7 @@ export default function StartWorkoutSheet({
                 shortcut={plannedTodayShortcut}
                 isToday={isToday}
                 onOpen={onOpenPlannedWorkout}
-                palette={palette}
+                theme={theme}
                 styles={styles}
               />
             ) : null}
@@ -868,7 +832,7 @@ export default function StartWorkoutSheet({
                     item={item}
                     disabled={isStartingWorkout}
                     onPress={onStartFresh}
-                    palette={palette}
+                    theme={theme}
                     styles={styles}
                   />
                 ))}
@@ -884,7 +848,7 @@ export default function StartWorkoutSheet({
               workouts={recentWorkouts}
               onLoadMore={onLoadMoreRecentWorkouts}
               onCopyWorkout={onCopyRecentWorkout}
-              palette={palette}
+              theme={theme}
               styles={styles}
             />
           </ScrollView>
@@ -894,19 +858,19 @@ export default function StartWorkoutSheet({
   );
 }
 
-function createStyles(palette) {
+function createStyles(theme) {
   return StyleSheet.create({
   overlay: {
     flex: 1,
     justifyContent: "flex-end",
-    backgroundColor: palette.backdrop,
+    backgroundColor: theme.sheetScrim,
   },
   sheet: {
     width: "100%",
     maxHeight: "85%",
-    backgroundColor: palette.sheet,
+    backgroundColor: theme.cardBackground,
     borderTopWidth: 1,
-    borderTopColor: palette.sheetBorder,
+    borderTopColor: theme.cardBorder,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     overflow: "hidden",
@@ -914,11 +878,6 @@ function createStyles(palette) {
   handle: {
     position: "absolute",
     top: 14,
-    alignSelf: "center",
-    width: 44,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: palette.handle,
   },
   closeButton: {
     position: "absolute",
@@ -929,13 +888,13 @@ function createStyles(palette) {
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: palette.inset,
+    backgroundColor: theme.background,
     borderWidth: 1,
-    borderColor: palette.cardBorder,
+    borderColor: theme.cardBorder,
     zIndex: 2,
   },
   closeText: {
-    color: palette.muted,
+    color: theme.quietText,
     fontSize: 19,
     lineHeight: 22,
     fontWeight: "500",
@@ -950,7 +909,7 @@ function createStyles(palette) {
     paddingRight: 36,
   },
   title: {
-    color: palette.title,
+    color: theme.title,
     fontSize: 22,
     lineHeight: 28,
     fontWeight: "900",
@@ -960,7 +919,7 @@ function createStyles(palette) {
     gap: 12,
   },
   plannedTodayPrompt: {
-    color: palette.muted,
+    color: theme.quietText,
     fontSize: 13,
     lineHeight: 18,
     fontWeight: "700",
@@ -969,9 +928,9 @@ function createStyles(palette) {
   todayShortcutCard: {
     minHeight: 92,
     borderWidth: 1,
-    borderColor: palette.orangeBorder,
+    borderColor: withAlpha(theme.primary, 0.52),
     borderRadius: 14,
-    backgroundColor: palette.orangeDeep,
+    backgroundColor: withAlpha(theme.primary, 0.14),
     padding: 18,
     flexDirection: "row",
     alignItems: "center",
@@ -983,7 +942,7 @@ function createStyles(palette) {
     gap: 3,
   },
   todayShortcutLabel: {
-    color: palette.orange,
+    color: theme.primaryText,
     fontSize: 11,
     lineHeight: 14,
     fontWeight: "900",
@@ -996,15 +955,15 @@ function createStyles(palette) {
     minHeight: 70,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: palette.cardBorder,
-    backgroundColor: palette.card,
+    borderColor: theme.cardBorder,
+    backgroundColor: theme.cardBackground,
     paddingHorizontal: 14,
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
   },
   cardTitle: {
-    color: palette.title,
+    color: theme.title,
     fontSize: 15,
     lineHeight: 20,
     fontWeight: "900",
@@ -1016,14 +975,14 @@ function createStyles(palette) {
     textAlign: "center",
   },
   cardDetails: {
-    color: palette.muted,
+    color: theme.quietText,
     fontSize: 13,
     lineHeight: 18,
     fontWeight: "500",
     letterSpacing: 0,
   },
   chevron: {
-    color: palette.muted,
+    color: theme.quietText,
     fontSize: 24,
     lineHeight: 28,
     fontWeight: "300",
@@ -1056,23 +1015,23 @@ function createStyles(palette) {
     gap: 8,
   },
   sectionTitle: {
-    color: palette.label,
+    color: theme.quietText,
     fontSize: 12,
     lineHeight: 16,
     fontWeight: "800",
     letterSpacing: 4,
   },
   sectionTitleStrong: {
-    color: palette.title,
+    color: theme.title,
   },
   sectionAction: {
-    color: palette.orange,
+    color: theme.primaryText,
     fontSize: 12,
     lineHeight: 16,
     fontWeight: "900",
   },
   sectionSubtitle: {
-    color: palette.muted,
+    color: theme.quietText,
     fontSize: 12,
     lineHeight: 16,
     fontWeight: "700",
@@ -1089,14 +1048,14 @@ function createStyles(palette) {
     minHeight: 144,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: palette.cardBorder,
-    backgroundColor: palette.card,
+    borderColor: theme.cardBorder,
+    backgroundColor: theme.cardBackground,
     padding: 14,
     gap: 7,
   },
   usualCardSuggested: {
-    borderColor: palette.orangeBorder,
-    backgroundColor: palette.cardSoft,
+    borderColor: withAlpha(theme.primary, 0.52),
+    backgroundColor: withAlpha(theme.primary, 0.08),
   },
   usualTopRow: {
     minHeight: 46,
@@ -1109,21 +1068,21 @@ function createStyles(palette) {
     minHeight: 74,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: palette.cardBorder,
-    backgroundColor: palette.card,
+    borderColor: theme.cardBorder,
+    backgroundColor: theme.cardBackground,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 14,
   },
   suggestedBadge: {
     borderRadius: 999,
-    backgroundColor: palette.orangeDeep,
+    backgroundColor: withAlpha(theme.primary, 0.14),
     paddingHorizontal: 9,
     paddingVertical: 4,
     flexShrink: 0,
   },
   suggestedText: {
-    color: palette.orange,
+    color: theme.primaryText,
     fontSize: 11,
     lineHeight: 11,
     fontWeight: "900",
@@ -1142,7 +1101,7 @@ function createStyles(palette) {
     gap: 5,
   },
   metaText: {
-    color: palette.muted,
+    color: theme.quietText,
     fontSize: 12,
     lineHeight: 16,
     fontWeight: "500",
@@ -1152,7 +1111,7 @@ function createStyles(palette) {
     height: 12,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: palette.muted,
+    borderColor: theme.quietText,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -1161,14 +1120,14 @@ function createStyles(palette) {
     width: 1,
     height: 4,
     top: 2,
-    backgroundColor: palette.muted,
+    backgroundColor: theme.quietText,
   },
   clockHandWide: {
     position: "absolute",
     width: 3,
     height: 1,
     right: 2,
-    backgroundColor: palette.muted,
+    backgroundColor: theme.quietText,
   },
   listStack: {
     gap: 10,
@@ -1179,8 +1138,8 @@ function createStyles(palette) {
   recentRow: {
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: palette.cardBorder,
-    backgroundColor: palette.inset,
+    borderColor: theme.cardBorder,
+    backgroundColor: theme.background,
     paddingHorizontal: 14,
   },
   recentRowTop: {
@@ -1203,15 +1162,15 @@ function createStyles(palette) {
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: palette.cardBorder,
+    borderColor: theme.cardBorder,
   },
   eyeButtonOpen: {
-    borderColor: palette.orangeBorder,
-    backgroundColor: palette.orangeDeep,
+    borderColor: withAlpha(theme.primary, 0.52),
+    backgroundColor: withAlpha(theme.primary, 0.14),
   },
   exerciseList: {
     borderTopWidth: 1,
-    borderTopColor: palette.cardBorder,
+    borderTopColor: theme.cardBorder,
     paddingVertical: 10,
     gap: 6,
   },
@@ -1224,13 +1183,13 @@ function createStyles(palette) {
   exerciseName: {
     flex: 1,
     minWidth: 0,
-    color: palette.title,
+    color: theme.title,
     fontSize: 13,
     lineHeight: 17,
     fontWeight: "600",
   },
   exerciseDetail: {
-    color: palette.muted,
+    color: theme.quietText,
     fontSize: 12,
     lineHeight: 16,
     fontWeight: "500",
@@ -1248,14 +1207,14 @@ function createStyles(palette) {
   },
   repeatCountChip: {
     borderRadius: 999,
-    backgroundColor: palette.card,
+    backgroundColor: theme.cardBackground,
     borderWidth: 1,
-    borderColor: palette.cardBorder,
+    borderColor: theme.cardBorder,
     paddingHorizontal: 8,
     paddingVertical: 2,
   },
   repeatCountText: {
-    color: palette.orange,
+    color: theme.primaryText,
     fontSize: 11,
     lineHeight: 14,
     fontWeight: "900",
@@ -1270,14 +1229,14 @@ function createStyles(palette) {
     minHeight: 56,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: palette.cardBorder,
-    backgroundColor: palette.card,
+    borderColor: theme.cardBorder,
+    backgroundColor: theme.cardBackground,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 14,
   },
   recentStateText: {
-    color: palette.muted,
+    color: theme.quietText,
     fontSize: 13,
     lineHeight: 18,
     fontWeight: "700",

@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSQLiteContext } from "expo-sqlite";
 
 import { Colors, withAlpha } from "../GlobalStyling/colors";
+import ThemedSheetHandle from "../ThemedComponents/ThemedSheetHandle";
 import ArrowLeft from "../Icons/UI-icons/ArrowLeft";
 import ChevronRight from "../Icons/UI-icons/ChevronRight";
 import Cross from "../Icons/UI-icons/Cross";
@@ -227,7 +228,7 @@ export default function RepeatWorkoutSheet({
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
 
         <View style={[styles.sheet, { paddingBottom: insets.bottom + 18 }]}>
-          <View style={styles.handle} />
+          <ThemedSheetHandle style={styles.handle} />
 
           <View style={styles.header}>
             {mode === "plan" ? (
@@ -402,11 +403,6 @@ function createStyles(theme) {
       paddingHorizontal: 18,
     },
     handle: {
-      alignSelf: "center",
-      width: 44,
-      height: 5,
-      borderRadius: 3,
-      backgroundColor: withAlpha(theme.text, 0.28),
       marginBottom: 14,
     },
     header: {

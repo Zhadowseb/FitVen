@@ -16,7 +16,11 @@ import ArrowLeft from "../../Icons/UI-icons/ArrowLeft";
 import Checkmark from "../../Icons/UI-icons/Checkmark";
 import Cross from "../../Icons/UI-icons/Cross";
 import Library from "../../Icons/UI-icons/Library";
-import { ThemedText, ThemedModal } from "../../ThemedComponents";
+import {
+  ThemedModal,
+  ThemedSheetHandle,
+  ThemedText,
+} from "../../ThemedComponents";
 
 const SHORT_MONTHS = [
   "Jan",
@@ -194,7 +198,7 @@ const Microcycle = ({
       ]}
       contentStyle={styles.modalBody}
     >
-      <View style={styles.handle} />
+      <ThemedSheetHandle style={styles.handle} />
 
       <View style={styles.header}>
         <View style={[styles.headerIcon, { backgroundColor: fieldSurface }]}>
@@ -511,11 +515,6 @@ const styles = StyleSheet.create({
     flexGrow: 0,
   },
   handle: {
-    alignSelf: "center",
-    width: 44,
-    height: 5,
-    borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.1)",
     marginTop: 10,
     marginBottom: 16,
   },

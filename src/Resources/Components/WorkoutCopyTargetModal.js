@@ -13,7 +13,11 @@ import Calender from "../Icons/UI-icons/Calender";
 import Checkmark from "../Icons/UI-icons/Checkmark";
 import Cross from "../Icons/UI-icons/Cross";
 import Library from "../Icons/UI-icons/Library";
-import { ThemedModal, ThemedText } from "../ThemedComponents";
+import {
+  ThemedModal,
+  ThemedSheetHandle,
+  ThemedText,
+} from "../ThemedComponents";
 
 const SINGLE_WORKOUT_KEY = "single-workout";
 const SHORT_MONTHS = [
@@ -150,7 +154,7 @@ function WorkoutCopyTargetModal({
       ]}
       contentStyle={styles.modalBody}
     >
-      <View style={styles.handle} />
+      <ThemedSheetHandle style={styles.handle} />
 
       <View style={styles.header}>
         <View style={[styles.warningBadge, { backgroundColor: fieldSurface }]}>
@@ -398,11 +402,6 @@ const styles = StyleSheet.create({
     flexGrow: 0,
   },
   handle: {
-    alignSelf: "center",
-    width: 44,
-    height: 5,
-    borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.08)",
     marginTop: 10,
     marginBottom: 16,
   },

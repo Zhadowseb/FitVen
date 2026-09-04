@@ -12,6 +12,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Colors, withAlpha } from "../../../../Resources/GlobalStyling/colors";
+import ThemedSheetHandle from "../../../../Resources/ThemedComponents/ThemedSheetHandle";
 import Checkmark from "../../../../Resources/Icons/UI-icons/Checkmark";
 import Cross from "../../../../Resources/Icons/UI-icons/Cross";
 import Filter from "../../../../Resources/Icons/UI-icons/Filter";
@@ -39,48 +40,20 @@ const MUSCLE_GROUP_SECTIONS = [
   { key: "core", label: "Core" },
 ];
 
-function createSheetPalette(theme) {
-  const fallbackTheme = Colors.dark;
-  const primary = theme.primary ?? fallbackTheme.primary;
-  const sheet = theme.cardBackground ?? theme.background ?? fallbackTheme.cardBackground;
-  const inset = theme.background ?? theme.uiBackground ?? fallbackTheme.background;
-  const border = theme.cardBorder ?? theme.iconColor ?? fallbackTheme.cardBorder;
-  const muted = theme.quietText ?? theme.iconColor ?? theme.text ?? fallbackTheme.iconColor;
-  const title = theme.title ?? theme.text ?? fallbackTheme.title;
-
-  return {
-    backdrop: "rgba(0, 0, 0, 0.62)",
-    sheet,
-    inset,
-    sheetBorder: border,
-    handle: border,
-    title,
-    text: theme.text ?? fallbackTheme.text,
-    muted,
-    cardBorder: border,
-    primary,
-    primarySoft: "rgba(247,116,46,0.14)",
-    blue: theme.record ?? fallbackTheme.record,
-    green: theme.secondary ?? fallbackTheme.secondary,
-    yellow: theme.planned ?? fallbackTheme.planned,
-    ink: theme.textInverted ?? fallbackTheme.textInverted,
-  };
-}
-
-function getFocusColor(sectionKey, palette) {
+function getFocusColor(sectionKey, theme) {
   if (sectionKey === "pull") {
-    return palette.blue;
+    return theme.record;
   }
 
   if (sectionKey === "legs") {
-    return palette.green;
+    return theme.secondary;
   }
 
   if (sectionKey === "core") {
-    return palette.yellow;
+    return theme.planned;
   }
 
-  return palette.primary;
+  return theme.primaryText;
 }
 
 function SectionLabel({ children, meta, styles }) {
@@ -107,8 +80,7 @@ export default function ExerciseFilterSheet({
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const insets = useSafeAreaInsets();
-  const palette = useMemo(() => createSheetPalette(theme), [theme]);
-  const styles = useMemo(() => createStyles(palette), [palette]);
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const selectedMuscleSet = useMemo(
     () => new Set(Array.isArray(selectedMuscleKeys) ? selectedMuscleKeys : []),
     [selectedMuscleKeys]
@@ -136,7 +108,7 @@ export default function ExerciseFilterSheet({
             },
           ]}
         >
-          <View style={styles.handle} />
+          <ThemedSheetHandle style={styles.handle} />
 
           <TouchableOpacity
             activeOpacity={0.72}
@@ -145,7 +117,7 @@ export default function ExerciseFilterSheet({
             onPress={onClose}
             style={styles.closeButton}
           >
-            <Cross width={19} height={19} color={palette.muted} />
+            <Cross width={19} height={19} color={theme.quietText} />
           </TouchableOpacity>
 
           <ScrollView
@@ -154,7 +126,7 @@ export default function ExerciseFilterSheet({
           >
             <View style={styles.header}>
               <View style={styles.headerIcon}>
-                <Filter width={19} height={19} color={palette.primary} />
+                <Filter width={19} height={19} color={theme.primaryText} />
               </View>
               <View style={styles.headerCopy}>
                 <Text style={styles.eyebrow}>REFINE</Text>
@@ -176,11 +148,11 @@ export default function ExerciseFilterSheet({
                         styles.chip,
                         {
                           backgroundColor: isSelected
-                            ? palette.primarySoft
-                            : palette.inset,
+                            ? withAlpha(theme.primary, 0.14)
+                            : theme.background,
                           borderColor: isSelected
-                            ? palette.primary
-                            : palette.cardBorder,
+                            ? theme.primary
+                            : theme.cardBorder,
                         },
                       ]}
                     >
@@ -188,7 +160,7 @@ export default function ExerciseFilterSheet({
                         style={[
                           styles.chipText,
                           {
-                            color: isSelected ? palette.primary : palette.text,
+                            color: isSelected ? theme.primaryText : theme.text,
                           },
                           isSelected ? styles.chipTextActive : null,
                         ]}
@@ -211,7 +183,7 @@ export default function ExerciseFilterSheet({
 
               <View style={styles.muscleSections}>
                 {MUSCLE_GROUP_SECTIONS.map((section) => {
-                  const sectionColor = getFocusColor(section.key, palette);
+                  const sectionColor = getFocusColor(section.key, theme);
                   const muscleGroups = EXERCISE_MUSCLE_GROUPS.filter(
                     (group) => group.trainingGroupKey === section.key
                   );
@@ -235,10 +207,10 @@ export default function ExerciseFilterSheet({
                                 {
                                   backgroundColor: isSelected
                                     ? withAlpha(sectionColor, 0.15)
-                                    : palette.inset,
+                                    : theme.background,
                                   borderColor: isSelected
                                     ? sectionColor
-                                    : palette.cardBorder,
+                                    : theme.cardBorder,
                                 },
                               ]}
                             >
@@ -248,7 +220,7 @@ export default function ExerciseFilterSheet({
                                   {
                                     color: isSelected
                                       ? sectionColor
-                                      : palette.text,
+                                      : theme.text,
                                   },
                                   isSelected ? styles.chipTextActive : null,
                                 ]}
@@ -292,7 +264,7 @@ export default function ExerciseFilterSheet({
                         style={[
                           styles.segmentText,
                           {
-                            color: isSelected ? palette.ink : palette.text,
+                            color: isSelected ? theme.textInverted : theme.text,
                           },
                           isSelected ? styles.segmentTextActive : null,
                         ]}
@@ -332,19 +304,19 @@ export default function ExerciseFilterSheet({
   );
 }
 
-function createStyles(palette) {
+function createStyles(theme) {
   return StyleSheet.create({
     overlay: {
       flex: 1,
       justifyContent: "flex-end",
-      backgroundColor: palette.backdrop,
+      backgroundColor: theme.sheetScrim,
     },
     sheet: {
       width: "100%",
       maxHeight: "92%",
-      backgroundColor: palette.sheet,
+      backgroundColor: theme.cardBackground,
       borderTopWidth: 1,
-      borderTopColor: palette.sheetBorder,
+      borderTopColor: theme.cardBorder,
       borderTopLeftRadius: 28,
       borderTopRightRadius: 28,
       overflow: "hidden",
@@ -352,11 +324,6 @@ function createStyles(palette) {
     handle: {
       position: "absolute",
       top: 14,
-      alignSelf: "center",
-      width: 44,
-      height: 5,
-      borderRadius: 3,
-      backgroundColor: palette.handle,
     },
     closeButton: {
       position: "absolute",
@@ -367,9 +334,9 @@ function createStyles(palette) {
       borderRadius: 16,
       alignItems: "center",
       justifyContent: "center",
-      backgroundColor: palette.inset,
+      backgroundColor: theme.background,
       borderWidth: 1,
-      borderColor: palette.cardBorder,
+      borderColor: theme.cardBorder,
       zIndex: 2,
     },
     content: {
@@ -389,21 +356,21 @@ function createStyles(palette) {
       borderRadius: 14,
       alignItems: "center",
       justifyContent: "center",
-      backgroundColor: palette.primarySoft,
+      backgroundColor: withAlpha(theme.primary, 0.14),
     },
     headerCopy: {
       flex: 1,
       minWidth: 0,
     },
     eyebrow: {
-      color: palette.primary,
+      color: theme.primaryText,
       fontSize: 11,
       lineHeight: 13,
       fontWeight: "800",
       letterSpacing: 2,
     },
     title: {
-      color: palette.title,
+      color: theme.title,
       fontSize: 22,
       lineHeight: 28,
       fontWeight: "900",
@@ -418,7 +385,7 @@ function createStyles(palette) {
       gap: 12,
     },
     sectionLabel: {
-      color: palette.text,
+      color: theme.text,
       fontSize: 12,
       lineHeight: 16,
       fontWeight: "900",
@@ -426,7 +393,7 @@ function createStyles(palette) {
       textTransform: "uppercase",
     },
     sectionMeta: {
-      color: palette.primary,
+      color: theme.primaryText,
       fontSize: 11,
       lineHeight: 14,
       fontWeight: "800",
@@ -473,11 +440,11 @@ function createStyles(palette) {
     },
     segmentControl: {
       flexDirection: "row",
-      backgroundColor: palette.inset,
+      backgroundColor: theme.background,
       borderRadius: 10,
       padding: 3,
       borderWidth: 1,
-      borderColor: palette.cardBorder,
+      borderColor: theme.cardBorder,
     },
     segment: {
       flex: 1,
@@ -487,7 +454,7 @@ function createStyles(palette) {
       justifyContent: "center",
     },
     segmentActive: {
-      backgroundColor: palette.primary,
+      backgroundColor: theme.primary,
     },
     segmentText: {
       fontSize: 12,
@@ -503,20 +470,20 @@ function createStyles(palette) {
       paddingHorizontal: 18,
       paddingTop: 12,
       borderTopWidth: 1,
-      borderTopColor: palette.cardBorder,
-      backgroundColor: palette.sheet,
+      borderTopColor: theme.cardBorder,
+      backgroundColor: theme.cardBackground,
     },
     resetButton: {
       minHeight: 48,
       borderRadius: 14,
       borderWidth: 1,
-      borderColor: palette.cardBorder,
+      borderColor: theme.cardBorder,
       paddingHorizontal: 18,
       alignItems: "center",
       justifyContent: "center",
     },
     resetButtonText: {
-      color: palette.text,
+      color: theme.text,
       fontSize: 13,
       lineHeight: 16,
       fontWeight: "900",
@@ -525,13 +492,13 @@ function createStyles(palette) {
       flex: 1,
       minHeight: 48,
       borderRadius: 14,
-      backgroundColor: palette.primary,
+      backgroundColor: theme.primary,
       alignItems: "center",
       justifyContent: "center",
       paddingHorizontal: 18,
     },
     showButtonText: {
-      color: palette.ink,
+      color: theme.textInverted,
       fontSize: 13,
       lineHeight: 16,
       fontWeight: "900",
