@@ -29,6 +29,7 @@ import styles from "./RunStyle";
 import ListHeader from "./ListHeader";
 import { runningService as runningRepository } from "../../../../Services";
 import { getRunSetCompletionMode } from "../../../../Utils/runIntervalUtils";
+import { getZoneColor } from "../../../../Utils/heartRateUtils";
 
 const ZONES = [
   { label: "1", value: 1 },
@@ -37,14 +38,6 @@ const ZONES = [
   { label: "4", value: 4 },
   { label: "5", value: 5 },
 ];
-
-const ZONE_COLORS = {
-  1: "#9CA3AF",
-  2: "#22C7F2",
-  3: "#10B981",
-  4: "#F7742E",
-  5: "#EF4444",
-};
 
 const ZONE_POPOVER_WIDTH = 238;
 const ZONE_POPOVER_HEIGHT = 40;
@@ -226,28 +219,6 @@ const buildRunInputFallbacks = (sets = []) =>
 
     return fallbacks;
   }, {});
-
-const colorWithAlpha = (color, alpha, fallback) => {
-  const normalizedColor = String(color ?? "").trim();
-
-  if (/^#[0-9a-f]{6}$/i.test(normalizedColor)) {
-    const red = parseInt(normalizedColor.slice(1, 3), 16);
-    const green = parseInt(normalizedColor.slice(3, 5), 16);
-    const blue = parseInt(normalizedColor.slice(5, 7), 16);
-
-    return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
-  }
-
-  const rgbMatch = normalizedColor.match(
-    /^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)$/
-  );
-
-  if (rgbMatch) {
-    return `rgba(${rgbMatch[1]}, ${rgbMatch[2]}, ${rgbMatch[3]}, ${alpha})`;
-  }
-
-  return fallback;
-};
 
 const getIntervalsSummary = (sets, emptySummary) => {
   const workingSets = sets.filter((set) => !set.is_pause);
@@ -479,11 +450,7 @@ const RunSetList = ({
     return value?.toString() ?? "";
   };
 
-  const editablePlaceholderColor = colorWithAlpha(
-    primaryColor,
-    0.99,
-    quietText
-  );
+  const editablePlaceholderColor = withAlpha(primaryColor, 0.99);
 
   const handleZonePress = (setId) => {
     if (zoneSetId === setId && zoneDropdownVisible) {
@@ -757,7 +724,7 @@ const RunSetList = ({
               style={[
                 styles.zoneDropdownOption,
                 styles.zoneDropdownClear,
-                { borderColor: theme.danger ?? ZONE_COLORS[5] },
+                { borderColor: theme.danger ?? getZoneColor(5) },
               ]}
               onPress={async () => {
                 closeZoneDropdown();
@@ -774,12 +741,12 @@ const RunSetList = ({
               <Cross
                 width={14}
                 height={14}
-                color={theme.danger ?? ZONE_COLORS[5]}
+                color={theme.danger ?? getZoneColor(5)}
               />
             </TouchableOpacity>
 
             {ZONES.map((zone) => {
-              const bgColor = ZONE_COLORS[zone.value];
+              const bgColor = getZoneColor(zone.value);
 
               return (
                 <TouchableOpacity
@@ -952,10 +919,10 @@ const RunSetList = ({
                 styles.zonePill,
                 {
                   backgroundColor: set.heartrate
-                    ? ZONE_COLORS[set.heartrate]
+                    ? getZoneColor(set.heartrate)
                     : "transparent",
                   borderColor: set.heartrate
-                    ? ZONE_COLORS[set.heartrate]
+                    ? getZoneColor(set.heartrate)
                     : "transparent",
                 },
               ]}
@@ -1102,10 +1069,10 @@ const RunSetList = ({
                 styles.zonePill,
                 {
                   backgroundColor: set.heartrate
-                    ? ZONE_COLORS[set.heartrate]
+                    ? getZoneColor(set.heartrate)
                     : "transparent",
                   borderColor: set.heartrate
-                    ? ZONE_COLORS[set.heartrate]
+                    ? getZoneColor(set.heartrate)
                     : "transparent",
                 },
               ]}
@@ -1503,8 +1470,8 @@ const RunSetList = ({
                 style={[
                   styles.zoneChip,
                   {
-                    backgroundColor: selected ? ZONE_COLORS[zone.value] : "transparent",
-                    borderColor: selected ? ZONE_COLORS[zone.value] : cardBorder,
+                    backgroundColor: selected ? getZoneColor(zone.value) : "transparent",
+                    borderColor: selected ? getZoneColor(zone.value) : cardBorder,
                   },
                 ]}
                 onPress={() => updateSelectedSetField("heartrate", zone.value)}

@@ -8,51 +8,12 @@ import Checkmark from "../../../../Resources/Icons/UI-icons/Checkmark";
 import Star from "../../../../Resources/Icons/UI-icons/Star";
 import ThreeDots from "../../../../Resources/Icons/UI-icons/ThreeDots";
 import { Colors, withAlpha } from "../../../../Resources/GlobalStyling/colors";
+import { formatTimeAgo } from "../../../../Utils/dateUtils";
 import { ThemedText, UserAvatar } from "../../../../Resources/ThemedComponents";
 
 // No tokens for these two: the gold bar gradient is specific to this card.
 const GOLD_BAR_FROM = "#C98F2C";
 const GOLD_BAR_TO = "#F0C868";
-
-function formatTimeAgo(value) {
-  const timestamp = value ? new Date(value).getTime() : NaN;
-
-  if (!Number.isFinite(timestamp)) {
-    return "Just now";
-  }
-
-  const elapsedSeconds = Math.max(
-    0,
-    Math.floor((Date.now() - timestamp) / 1000),
-  );
-
-  if (elapsedSeconds < 60) {
-    return "Just now";
-  }
-
-  const elapsedMinutes = Math.floor(elapsedSeconds / 60);
-
-  if (elapsedMinutes < 60) {
-    return `${elapsedMinutes}m ago`;
-  }
-
-  const elapsedHours = Math.floor(elapsedMinutes / 60);
-
-  if (elapsedHours < 24) {
-    return `${elapsedHours}h ago`;
-  }
-
-  const elapsedDays = Math.floor(elapsedHours / 24);
-
-  if (elapsedDays < 7) {
-    return `${elapsedDays}d ago`;
-  }
-
-  return new Date(timestamp).toLocaleDateString(undefined, {
-    day: "numeric",
-    month: "short",
-  });
-}
 
 /** 81 min reads as "1 hour 21 min", not "81 min". */
 function buildDurationParts(durationSeconds) {

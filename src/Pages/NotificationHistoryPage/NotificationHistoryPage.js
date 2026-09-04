@@ -12,6 +12,7 @@ import styles from "./NotificationHistoryPageStyle";
 import { useAuth } from "../../Contexts/AuthContext";
 import { notificationService } from "../../Services";
 import { Colors } from "../../Resources/GlobalStyling/colors";
+import { formatTimeAgo } from "../../Utils/dateUtils";
 import Bell from "../../Resources/Icons/UI-icons/Bell";
 import Cogwheel from "../../Resources/Icons/UI-icons/Cogwheel";
 import {
@@ -21,43 +22,6 @@ import {
   ThemedView,
   UserAvatar,
 } from "../../Resources/ThemedComponents";
-
-function formatTimeAgo(value) {
-  const timestamp = value ? new Date(value).getTime() : NaN;
-
-  if (!Number.isFinite(timestamp)) {
-    return "Just now";
-  }
-
-  const elapsedSeconds = Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
-
-  if (elapsedSeconds < 60) {
-    return "Just now";
-  }
-
-  const elapsedMinutes = Math.floor(elapsedSeconds / 60);
-
-  if (elapsedMinutes < 60) {
-    return `${elapsedMinutes}m ago`;
-  }
-
-  const elapsedHours = Math.floor(elapsedMinutes / 60);
-
-  if (elapsedHours < 24) {
-    return `${elapsedHours}h ago`;
-  }
-
-  const elapsedDays = Math.floor(elapsedHours / 24);
-
-  if (elapsedDays < 7) {
-    return `${elapsedDays}d ago`;
-  }
-
-  return new Date(timestamp).toLocaleDateString(undefined, {
-    day: "numeric",
-    month: "short",
-  });
-}
 
 export default function NotificationHistoryPage() {
   const navigation = useNavigation();

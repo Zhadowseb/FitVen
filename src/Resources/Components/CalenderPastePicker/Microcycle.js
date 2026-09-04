@@ -11,7 +11,7 @@ import {
 import { useSQLiteContext } from "expo-sqlite";
 
 import { programService as programRepository } from "../../../Services";
-import { Colors } from "../../GlobalStyling/colors";
+import { Colors, withAlpha } from "../../GlobalStyling/colors";
 import ArrowLeft from "../../Icons/UI-icons/ArrowLeft";
 import Checkmark from "../../Icons/UI-icons/Checkmark";
 import Cross from "../../Icons/UI-icons/Cross";
@@ -32,34 +32,6 @@ const SHORT_MONTHS = [
   "Nov",
   "Dec",
 ];
-
-function colorWithAlpha(color, alpha, fallback) {
-  if (typeof color !== "string") {
-    return fallback;
-  }
-
-  const hexMatch = color.trim().match(/^#([0-9a-f]{6})([0-9a-f]{2})?$/i);
-
-  if (hexMatch) {
-    const hex = hexMatch[1];
-    const red = parseInt(hex.slice(0, 2), 16);
-    const green = parseInt(hex.slice(2, 4), 16);
-    const blue = parseInt(hex.slice(4, 6), 16);
-
-    return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
-  }
-
-  const rgbMatch = color
-    .trim()
-    .match(/^rgb\(\s*(\d+),\s*(\d+),\s*(\d+)\s*\)$/i);
-
-  if (rgbMatch) {
-    const [, red, green, blue] = rgbMatch;
-    return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
-  }
-
-  return fallback;
-}
 
 function parseLocalDate(dateLabel) {
   if (typeof dateLabel !== "string") {
@@ -133,9 +105,9 @@ const Microcycle = ({
   const cardBackground = theme.cardBackground ?? theme.background;
   const fieldSurface = theme.fields ?? theme.uiBackground ?? cardBackground;
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor;
-  const primarySoft = colorWithAlpha(primaryColor, 0.14, fieldSurface);
-  const secondarySoft = colorWithAlpha(secondaryColor, 0.14, fieldSurface);
-  const warningSoft = colorWithAlpha(warningColor, 0.16, fieldSurface);
+  const primarySoft = withAlpha(primaryColor, 0.14);
+  const secondarySoft = withAlpha(secondaryColor, 0.14);
+  const warningSoft = withAlpha(warningColor, 0.16);
 
   useEffect(() => {
     if (!visible) {

@@ -17,6 +17,12 @@ export const HEART_RATE_ZONE_COLORS = [
   "#EF4444",
 ];
 
+// Zones are 1-based everywhere in the UI while the palette above is indexed
+// from 0. Two screens each kept their own 1..5 colour map to bridge that.
+export function getZoneColor(zone) {
+  return HEART_RATE_ZONE_COLORS[Number(zone) - 1] ?? HEART_RATE_ZONE_COLORS[0];
+}
+
 export function normalizeMaxHeartRate(value) {
   if (value === null || value === undefined || value === "") {
     return null;

@@ -42,6 +42,7 @@ import {
   FALLBACK_MAX_HEART_RATE,
   getHeartRateZoneThresholds,
   getHeartRateZoneColor,
+  getZoneColor,
 } from "./RunHeartRateChartConfig";
 import { buildHeartRateZones } from "../../../../Utils/heartRateUtils";
 import { useAuth } from "../../../../Contexts/AuthContext";
@@ -67,13 +68,6 @@ import {
 } from "../../../../Services";
 
 const RUN_HEART_RATE_ZONES = [1, 2, 3, 4, 5];
-const RUN_HEART_RATE_ZONE_COLORS = {
-  1: "#9CA3AF",
-  2: "#22C7F2",
-  3: "#10B981",
-  4: "#F7742E",
-  5: "#EF4444",
-};
 const RUN_ZONE_POPOVER_WIDTH = 238;
 const RUN_ZONE_POPOVER_HEIGHT = 40;
 const RUN_ZONE_POPOVER_MARGIN = 12;
@@ -3629,7 +3623,7 @@ const Run = ({
               styles.zoneDropdownClear,
               {
                 borderColor:
-                  theme.danger ?? RUN_HEART_RATE_ZONE_COLORS[5],
+                  theme.danger ?? getZoneColor(5),
               },
             ]}
             onPress={() => {
@@ -3639,7 +3633,7 @@ const Run = ({
             <Cross
               width={14}
               height={14}
-              color={theme.danger ?? RUN_HEART_RATE_ZONE_COLORS[5]}
+              color={theme.danger ?? getZoneColor(5)}
             />
           </TouchableOpacity>
 
@@ -3648,7 +3642,7 @@ const Run = ({
               key={zone}
               style={[
                 styles.zoneDropdownOption,
-                { backgroundColor: RUN_HEART_RATE_ZONE_COLORS[zone] },
+                { backgroundColor: getZoneColor(zone) },
               ]}
               onPress={() => {
                 void updateEnduranceZone(zone);

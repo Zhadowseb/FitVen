@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.21.1] - Unreleased
+### Changed
+- The relative timestamp on the feed card and the notification list now comes from one `formatTimeAgo` in `Utils/dateUtils`, in place of two identical copies.
+- Number display formatting is now one `formatDisplayNumber` in `Utils/numberUtils`, shared by the RM list, the estimated-set dialogs, the 1RM calculator and the program service. The program service no longer throws on a missing value; it shows the same placeholder as the screens do.
+- The suggested program-best weight is now one helper in `Utils/oneRepMaxUtils` instead of a copy in each estimated-set dialog.
+- The heart-rate zone colours now come from `Utils/heartRateUtils` through a shared 1-based accessor, in place of a colour map of its own in the run screen and the run set list.
+- The four local `colorWithAlpha` helpers are gone; every caller uses `withAlpha` from the colour tokens.
+
+---
 ## [0.21.0] - Unreleased
 ### Added
 - Colour tokens for the surfaces that components used to build with a light/dark ternary of their own: table surfaces, gridlines and alternating rows, the record highlight, three neutral overlays, the ink on a danger fill and the two scrim strengths.

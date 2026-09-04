@@ -9,6 +9,7 @@ import {
 
 import styles from "./OneRepMaxCalculatorPageStyle";
 import { Colors } from "../../Resources/GlobalStyling/colors";
+import { formatDisplayNumber } from "../../Utils/numberUtils";
 import {
   ThemedButton,
   ThemedHeader,
@@ -30,18 +31,6 @@ function parseDecimal(value) {
   const parsedValue = Number(normalizedValue);
 
   return Number.isFinite(parsedValue) ? parsedValue : null;
-}
-
-function formatWeight(value) {
-  const numericValue = Number(value);
-
-  if (!Number.isFinite(numericValue)) {
-    return "--";
-  }
-
-  return Number.isInteger(numericValue)
-    ? String(numericValue)
-    : numericValue.toFixed(1);
 }
 
 export default function OneRepMaxCalculatorPage() {
@@ -207,7 +196,7 @@ export default function OneRepMaxCalculatorPage() {
               </ThemedText>
               <View style={styles.resultValueRow}>
                 <ThemedText style={styles.resultValue} setColor={titleColor}>
-                  {formatWeight(estimatedOneRepMax)}
+                  {formatDisplayNumber(estimatedOneRepMax)}
                 </ThemedText>
                 <ThemedText style={styles.resultUnit} setColor={quietText}>
                   kg
@@ -275,7 +264,7 @@ export default function OneRepMaxCalculatorPage() {
                       {percentage}%
                     </ThemedText>
                     <ThemedText style={styles.loadValue} setColor={titleColor}>
-                      {formatWeight(load)} kg
+                      {formatDisplayNumber(load)} kg
                     </ThemedText>
                   </View>
                 );

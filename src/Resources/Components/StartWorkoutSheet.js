@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Colors } from "../GlobalStyling/colors";
+import { Colors, withAlpha } from "../GlobalStyling/colors";
 import ArrowDoubleDown from "../Icons/UI-icons/ArrowDoubleDown";
 import ArrowDoubleUp from "../Icons/UI-icons/ArrowDoubleUp";
 import Cross from "../Icons/UI-icons/Cross";
@@ -25,34 +25,6 @@ import { isWorkoutTypeComingSoon } from "../../Utils/workoutTypeAvailability";
 import ComingSoonBadge from "./ComingSoonBadge";
 
 const noop = () => {};
-
-function colorWithAlpha(color, alpha, fallback) {
-  if (typeof color !== "string") {
-    return fallback;
-  }
-
-  const hexMatch = color.trim().match(/^#([0-9a-f]{6})([0-9a-f]{2})?$/i);
-
-  if (hexMatch) {
-    const hex = hexMatch[1];
-    const red = parseInt(hex.slice(0, 2), 16);
-    const green = parseInt(hex.slice(2, 4), 16);
-    const blue = parseInt(hex.slice(4, 6), 16);
-
-    return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
-  }
-
-  const rgbMatch = color
-    .trim()
-    .match(/^rgb\(\s*(\d+),\s*(\d+),\s*(\d+)\s*\)$/i);
-
-  if (rgbMatch) {
-    const [, red, green, blue] = rgbMatch;
-    return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
-  }
-
-  return fallback;
-}
 
 function createSheetPalette(theme) {
   const fallbackTheme = Colors.dark;
@@ -71,21 +43,21 @@ function createSheetPalette(theme) {
     sheetBorder: border,
     // cardBorder is a 7% hairline - too faint for a grab handle. Derived from
     // the text colour instead, so it stays visible in both themes.
-    handle: colorWithAlpha(title, 0.28, border),
+    handle: withAlpha(title, 0.28),
     title,
     muted,
     label: muted,
     card: sheet,
     inset,
     cardBorder: border,
-    cardSoft: colorWithAlpha(primary, 0.08, sheet),
+    cardSoft: withAlpha(primary, 0.08),
     orange: primary,
-    orangeDeep: colorWithAlpha(primary, 0.14, sheet),
-    orangeBorder: colorWithAlpha(primary, 0.52, border),
+    orangeDeep: withAlpha(primary, 0.14),
+    orangeBorder: withAlpha(primary, 0.52),
     blue: record,
-    blueDeep: colorWithAlpha(record, 0.16, sheet),
+    blueDeep: withAlpha(record, 0.16),
     green: secondary,
-    greenDeep: colorWithAlpha(secondary, 0.14, sheet),
+    greenDeep: withAlpha(secondary, 0.14),
     iconOnAccent: theme.textInverted ?? sheet,
   };
 }

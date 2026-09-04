@@ -7,6 +7,7 @@ import {
 } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
 import { Colors } from "../../../../Resources/GlobalStyling/colors";
+import { formatDisplayNumber } from "../../../../Utils/numberUtils";
 
 import styles from "./Rm_listStyle";
 import { weightliftingService } from "../../../../Services";
@@ -15,16 +16,6 @@ import EditEstimatedSet from "./Components/EditEstimatedSet/EditEstimatedSet";
 import { ThemedText } from "../../../../Resources/ThemedComponents";
 import Pencil from "../../../../Resources/Icons/UI-icons/Pencil";
 import Plus from "../../../../Resources/Icons/UI-icons/Plus";
-
-function formatWeight(value) {
-  const parsedValue = Number(value);
-
-  if (!Number.isFinite(parsedValue)) {
-    return "--";
-  }
-
-  return Number.isInteger(parsedValue) ? `${parsedValue}` : parsedValue.toFixed(1);
-}
 
 const RmList = ({
   program_id,
@@ -148,7 +139,7 @@ const RmList = ({
 
             <View style={styles.rowValueGroup}>
               <ThemedText style={styles.rowValue} setColor={titleColor}>
-                {formatWeight(item.estimated_weight)}
+                {formatDisplayNumber(item.estimated_weight)}
               </ThemedText>
               <ThemedText style={styles.rowUnit} setColor={quietText}>
                 {" kg"}

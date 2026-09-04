@@ -8,7 +8,7 @@ import {
   useColorScheme,
 } from "react-native";
 
-import { Colors } from "../GlobalStyling/colors";
+import { Colors, withAlpha } from "../GlobalStyling/colors";
 import Calender from "../Icons/UI-icons/Calender";
 import Checkmark from "../Icons/UI-icons/Checkmark";
 import Cross from "../Icons/UI-icons/Cross";
@@ -34,34 +34,6 @@ const SHORT_WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 function getTargetKey(target) {
   return `program-${target?.program_id ?? "unknown"}-${target?.day_id ?? "day"}`;
-}
-
-function colorWithAlpha(color, alpha, fallback) {
-  if (typeof color !== "string") {
-    return fallback;
-  }
-
-  const hexMatch = color.trim().match(/^#([0-9a-f]{6})([0-9a-f]{2})?$/i);
-
-  if (hexMatch) {
-    const hex = hexMatch[1];
-    const red = parseInt(hex.slice(0, 2), 16);
-    const green = parseInt(hex.slice(2, 4), 16);
-    const blue = parseInt(hex.slice(4, 6), 16);
-
-    return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
-  }
-
-  const rgbMatch = color
-    .trim()
-    .match(/^rgb\(\s*(\d+),\s*(\d+),\s*(\d+)\s*\)$/i);
-
-  if (rgbMatch) {
-    const [, red, green, blue] = rgbMatch;
-    return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
-  }
-
-  return fallback;
 }
 
 function parseLocalDate(dateLabel) {
@@ -132,8 +104,8 @@ function WorkoutCopyTargetModal({
   const fieldSurface = theme.fields ?? theme.cardBackground ?? theme.background;
   const cardBorder = theme.cardBorder ?? theme.iconColor ?? theme.text;
   const confirmTextColor = theme.textInverted ?? theme.background ?? "#0E0F12";
-  const primarySoft = colorWithAlpha(primaryColor, 0.14, fieldSurface);
-  const secondarySoft = colorWithAlpha(secondaryColor, 0.14, fieldSurface);
+  const primarySoft = withAlpha(primaryColor, 0.14);
+  const secondarySoft = withAlpha(secondaryColor, 0.14);
   const selectedProgramTarget = useMemo(
     () => programTargets.find((target) => getTargetKey(target) === selectedKey),
     [programTargets, selectedKey]

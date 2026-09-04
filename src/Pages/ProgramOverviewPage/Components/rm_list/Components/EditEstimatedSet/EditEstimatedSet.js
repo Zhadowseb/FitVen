@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Alert, ScrollView, View, useColorScheme } from "react-native";
 
 import { Colors } from "../../../../../../Resources/GlobalStyling/colors";
+import { formatDisplayNumber } from "../../../../../../Utils/numberUtils";
+import { getSuggestedProgramBestWeight } from "../../../../../../Utils/oneRepMaxUtils";
 import styles from "./EditEstimatedSetStyle";
 import {
   ThemedButton,
@@ -9,38 +11,6 @@ import {
   ThemedText,
   ThemedTextInput,
 } from "../../../../../../Resources/ThemedComponents";
-
-function formatDisplayNumber(value) {
-  const parsedValue = Number(value);
-
-  if (!Number.isFinite(parsedValue)) {
-    return "--";
-  }
-
-  return Number.isInteger(parsedValue)
-    ? `${parsedValue}`
-    : parsedValue.toFixed(1);
-}
-
-function getSuggestedProgramBestWeight(programBest) {
-  if (!programBest) {
-    return null;
-  }
-
-  if (programBest.isEstimated) {
-    const estimatedValue = Number(programBest.estimatedOneRepMax);
-
-    if (!Number.isFinite(estimatedValue)) {
-      return null;
-    }
-
-    return Math.round(estimatedValue);
-  }
-
-  const weightValue = Number(programBest.weight);
-
-  return Number.isFinite(weightValue) ? weightValue : null;
-}
 
 export default function EditEstimatedSet({
   visible,

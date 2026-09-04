@@ -3,6 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "../Database/supaBaseClient";
 import { normalizeElapsedDurationSeconds } from "../Utils/timeUtils";
 import { ensureOwnProfile } from "./socialService";
+import { formatOptionalNumber } from "../Utils/numberUtils";
 
 const SOCIAL_POST_TABLE = "social_post";
 const SOCIAL_POST_LIKE_TABLE = "social_post_like";
@@ -270,20 +271,8 @@ function normalizeInteger(value, fallback = 0) {
   return Number.isFinite(numericValue) ? Math.trunc(numericValue) : fallback;
 }
 
-function formatDisplayNumber(value) {
-  const numericValue = Number(value);
-
-  if (!Number.isFinite(numericValue)) {
-    return null;
-  }
-
-  return Number.isInteger(numericValue)
-    ? `${numericValue}`
-    : numericValue.toFixed(1);
-}
-
 function formatWeightDisplay(value, unit = "kg") {
-  const displayValue = formatDisplayNumber(value);
+  const displayValue = formatOptionalNumber(value);
 
   return displayValue ? `${displayValue} ${unit}` : null;
 }
