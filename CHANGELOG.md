@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.21.10] - Unreleased
+### Security
+- A workout start notification now takes its text from the stored workout row, not from the caller's request, so a sender can no longer put their own wording on every follower's lock screen. A label is capped at 40 characters and stripped to a charset that cannot form a link, and a workout type has to exist in the catalog.
+- The notification function is rate limited to 12 events per account per hour.
+- The deduplication key is now the database's own row id, or the sender's own id plus their workout id when the row has not synced yet, so nobody can register a key ahead of somebody else and swallow their notification.
+- The webhook secret is compared in constant time.
+- Registering a push token no longer switches off another account's row on demand. The token is only released once the other account has gone quiet for seven days; until then the new device is registered but left disabled.
+
+---
 ## [0.21.9] - Unreleased
 ### Security
 - Removed the one-time program import, which carried a named user's email address, Supabase user id and full training history in the app bundle of every installation.

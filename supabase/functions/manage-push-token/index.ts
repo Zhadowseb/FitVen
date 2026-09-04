@@ -13,7 +13,16 @@ type PushTokenRow = {
   expo_push_token: string;
 };
 
+type TokenOwnerRow = {
+  id: string;
+  user_id: string;
+  last_seen_at: string | null;
+};
+
 const VALID_PLATFORMS = new Set(["android", "ios", "web", "unknown"]);
+// How long another account's row has to go untouched before this device may
+// take its push token.
+const STALE_TOKEN_DAYS = 7;
 
 const jsonHeaders = {
   "Content-Type": "application/json",
@@ -162,56 +171,72 @@ Deno.serve(async (req) => {
 
   const platform = normalizePlatform(payload.platform);
 
-  const disableOtherOwners = async () =>
-    supabase
-      .from("push_tokens")
-      .update({
-        enabled: false,
-        updated_at: now,
-      })
-      .eq("expo_push_token", expoPushToken)
-      .neq("user_id", userId)
-      .eq("enabled", true)
-      .select("id");
+  // Only one row per token may be enabled, so a device that changes hands has
+  // to take the token from its previous account. This used to happen on any
+  // client call: send somebody else's token and their row was switched off,
+  // silently, and they simply stopped receiving notifications.
+  //
+  // Now the previous row is only released once it has gone quiet. An account
+  // still using the app keeps its token; one that logged out badly, deleted the
+  // app or wiped the phone goes stale and lets the new owner through.
+  const { data: otherOwners, error: otherOwnersError } = await supabase
+    .from("push_tokens")
+    .select("id, user_id, last_seen_at")
+    .eq("expo_push_token", expoPushToken)
+    .eq("enabled", true)
+    .neq("user_id", userId)
+    .returns<TokenOwnerRow[]>();
 
-  const upsertCurrentOwner = async () =>
-    supabase
-      .from("push_tokens")
-      .upsert(
-        {
-          user_id: userId,
-          expo_push_token: expoPushToken,
-          platform,
-          enabled: true,
-          last_seen_at: now,
-          updated_at: now,
-        },
-        { onConflict: "user_id,expo_push_token" }
-      )
-      .select("id, expo_push_token")
-      .single<PushTokenRow>();
-
-  const { data: disabledRows, error: disableError } =
-    await disableOtherOwners();
-
-  if (disableError) {
-    return errorResponse(disableError);
+  if (otherOwnersError) {
+    return errorResponse(otherOwnersError);
   }
 
-  let { data: registeredToken, error: upsertError } =
-    await upsertCurrentOwner();
+  const staleBefore = Date.now() - STALE_TOKEN_DAYS * 24 * 60 * 60 * 1000;
+  const staleOwners = (otherOwners ?? []).filter((owner: TokenOwnerRow) => {
+    const lastSeen = Date.parse(String(owner.last_seen_at ?? ""));
 
-  if (upsertError?.code === "23505") {
-    const { error: retryDisableError } = await disableOtherOwners();
+    return !Number.isFinite(lastSeen) || lastSeen < staleBefore;
+  });
+  const activeOwnerCount = (otherOwners ?? []).length - staleOwners.length;
 
-    if (retryDisableError) {
-      return errorResponse(retryDisableError);
+  if (staleOwners.length) {
+    const { error: releaseError } = await supabase
+      .from("push_tokens")
+      .update({ enabled: false, updated_at: now })
+      .in(
+        "id",
+        staleOwners.map((owner: TokenOwnerRow) => owner.id)
+      );
+
+    if (releaseError) {
+      return errorResponse(releaseError);
     }
 
-    const retryResult = await upsertCurrentOwner();
-    registeredToken = retryResult.data;
-    upsertError = retryResult.error;
+    // Worth a line in the function log: it moves a device between accounts.
+    console.info(
+      `Released ${staleOwners.length} stale push token row(s) to user ${userId}`
+    );
   }
+
+  // Another account is still active on this token, so this row is stored but
+  // left switched off rather than taking the device from them.
+  const enabled = activeOwnerCount === 0;
+
+  const { data: registeredToken, error: upsertError } = await supabase
+    .from("push_tokens")
+    .upsert(
+      {
+        user_id: userId,
+        expo_push_token: expoPushToken,
+        platform,
+        enabled,
+        last_seen_at: now,
+        updated_at: now,
+      },
+      { onConflict: "user_id,expo_push_token" }
+    )
+    .select("id, expo_push_token")
+    .single<PushTokenRow>();
 
   if (upsertError) {
     return errorResponse(upsertError);
@@ -219,8 +244,10 @@ Deno.serve(async (req) => {
 
   return jsonResponse({
     registered: true,
+    enabled,
     tokenId: registeredToken?.id ?? null,
     expoPushToken: registeredToken?.expo_push_token ?? expoPushToken,
-    disabledOtherOwnerCount: disabledRows?.length ?? 0,
+    releasedStaleOwnerCount: staleOwners.length,
+    blockedByActiveOwner: !enabled,
   });
 });
