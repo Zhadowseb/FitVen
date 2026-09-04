@@ -1,5 +1,97 @@
 # Changelog
 
+## [0.21.8] - Unreleased
+### Removed
+- The five unmounted sync components for programs, blocks, weeks, days and exercise instances. `SetSync` already pushes that whole hierarchy in parent-first order, which is what the sync rules now ask for.
+
+### Changed
+- The workout-label icon list says which of its icons are placeholders for workout types still to come, so a dead-code sweep does not offer to delete them again.
+
+---
+## [0.21.7] - Unreleased
+### Added
+- `ThemedText` takes a `type` naming a step on the typography scale, the way `ThemedTitle` already does, plus an `overline` step for the small uppercase label above a page or section title. Existing call sites are untouched.
+- `Services/authService`, so the login, register and profile screens no longer reach into `src/Database` directly.
+
+### Changed
+- The `rm_list` folder and its two files are PascalCase like the rest of the codebase.
+- The padlock and chat-bubble icons moved from the profile screen's own folder into the shared `UI-icons`.
+- Five components had their inline `StyleSheet.create` moved to a sibling `Style.js`, matching the other 53 screens.
+
+### Removed
+- 16 files nothing imported, including two whole components whose only caller was itself dead.
+
+---
+## [0.21.6] - Unreleased
+### Changed
+- The last 71 raw `Text` elements are now `ThemedText`, so a line without an explicit colour falls back to the theme's text colour instead of the platform default.
+
+---
+## [0.21.5] - Unreleased
+### Changed
+- `ThemedCard` is a surface only. It used to bake in 10 px of margin and padding, which every single call site then had to undo, so 69 reset declarations are gone with it.
+- `ThemedButton` passes unknown props through to its `Pressable`, so `accessibilityLabel`, `testID` and `onLongPress` reach it, and it announces itself as a button by default.
+
+### Removed
+- 93 dead colour fallbacks. Every one sat behind a token that is always defined, and most held a pre-redesign colour — `#f7742e`, `#60daac`, `#0E0F12`, `#ba0000ff` — that read as a valid value to anyone editing the line. Fourteen of them fell back to the dark palette, which would have been the wrong scheme in the light theme.
+
+---
+## [0.21.4] - Unreleased
+### Fixed
+- The set summary under an exercise no longer draws white on white in the light theme: the compact table's surface, its gridlines, the set bubbles' borders and the connector between them now come from the palette.
+- The set cell's status tints are derived from the status colours themselves, so they follow the accent theme.
+- The run screen's start button shadow followed a fixed orange under every accent; it now follows the accent.
+- Seven bottom-sheet headings used a near-black divider from the pre-redesign palette, which read as a hard black line in the light theme. They use the hairline token now.
+- The heart-rate marker ring and the endurance progress track no longer use a fixed white and grey.
+- The exercise dropdown's border was a fixed light grey.
+
+### Removed
+- 67 style keys nothing referenced, across 13 style files, most of them left behind by the redesign.
+
+---
+## [0.21.3] - Unreleased
+### Added
+- `ThemedStateBlock`, one component for a screen's loading, empty and error state. Thirteen screens used to spell it out by hand.
+- `ThemedSegmentedControl`, which takes any number of options, replacing the two-option `ThemedSegmentedToggle` that had no call sites. The appearance setting is its first user.
+
+### Removed
+- `ThemedSegmentedToggle`, `ThemedWorkoutModal` (a pass-through wrapper around `ThemedModal`) and `AppearanceSegmentedControl`, plus 30 style keys the state blocks no longer need.
+
+### Changed
+- The appearance segments now carry a 44 px touch target through hitSlop, without the row getting taller.
+
+---
+## [0.21.2] - Unreleased
+### Added
+- `ThemedSheetHandle`, one grab handle for every bottom sheet. Eight sheets drew their own across three sizes, four radii and seven colours, four of which were hardcoded white and invisible in the light theme.
+
+### Fixed
+- The exercise filter sheet and the exercise library no longer tint their selected chips and cards Ember orange regardless of the chosen accent theme; the same applies to the library's green highlights.
+- Both sheet palettes fell back to the dark palette when a token was missing, which would have been the wrong scheme in the light theme.
+- The accent now reads as text through `primaryText` and as a fill through `primary` in the start-workout sheet and the filter sheet, instead of one colour doing both.
+
+### Changed
+- The start-workout sheet and the exercise filter sheet build their styles from the theme directly; the intermediate colour-alias object each of them carried is gone.
+
+---
+## [0.21.1] - Unreleased
+### Changed
+- The relative timestamp on the feed card and the notification list now comes from one `formatTimeAgo` in `Utils/dateUtils`, in place of two identical copies.
+- Number display formatting is now one `formatDisplayNumber` in `Utils/numberUtils`, shared by the RM list, the estimated-set dialogs, the 1RM calculator and the program service. The program service no longer throws on a missing value; it shows the same placeholder as the screens do.
+- The suggested program-best weight is now one helper in `Utils/oneRepMaxUtils` instead of a copy in each estimated-set dialog.
+- The heart-rate zone colours now come from `Utils/heartRateUtils` through a shared 1-based accessor, in place of a colour map of its own in the run screen and the run set list.
+- The four local `colorWithAlpha` helpers are gone; every caller uses `withAlpha` from the colour tokens.
+
+---
+## [0.21.0] - Unreleased
+### Added
+- Colour tokens for the surfaces that components used to build with a light/dark ternary of their own: table surfaces, gridlines and alternating rows, the record highlight, three neutral overlays, the ink on a danger fill and the two scrim strengths.
+- `Spacing`, `Radius` and `Elevation` constants in `GlobalStyling/spacing.js`, for new code and for files another change touches anyway.
+
+### Removed
+- Seven palette tokens nothing referenced: `third`, `textMuted`, `plannedLight`, `libraryMetricBackground` and the `NOT_STARTED`/`ACTIVE`/`COMPLETE` status aliases, the last two also from all four accent themes.
+
+---
 ## [0.20.0] - Unreleased
 ### Changed
 - Every gesture on a calendar day now opens one day sheet, which holds the day's workouts, its programs and the add, copy and delete actions.

@@ -26,9 +26,6 @@ export default StyleSheet.create({
     borderRadius: 18,
     borderWidth: 1,
     overflow: "hidden",
-    marginVertical: 0,
-    marginHorizontal: 0,
-    padding: 0,
   },
 
   // 2a. Avatar row

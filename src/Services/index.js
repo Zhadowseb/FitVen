@@ -1,3 +1,4 @@
+export * as authService from "./authService";
 export * as locationService from "./locationService";
 export * as feedbackService from "./feedbackService";
 export * as heartRateService from "./heartRateService";

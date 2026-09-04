@@ -22,3 +22,25 @@ export function roundToNearestWeightIncrement(weight, increment = 0.5) {
 
   return Math.round(numericWeight / numericIncrement) * numericIncrement;
 }
+
+// The weight to pre-fill an estimated-set field with: an estimated program best
+// is rounded to a whole number, a measured one is used as it stands.
+export function getSuggestedProgramBestWeight(programBest) {
+  if (!programBest) {
+    return null;
+  }
+
+  if (programBest.isEstimated) {
+    const estimatedValue = Number(programBest.estimatedOneRepMax);
+
+    if (!Number.isFinite(estimatedValue)) {
+      return null;
+    }
+
+    return Math.round(estimatedValue);
+  }
+
+  const weightValue = Number(programBest.weight);
+
+  return Number.isFinite(weightValue) ? weightValue : null;
+}

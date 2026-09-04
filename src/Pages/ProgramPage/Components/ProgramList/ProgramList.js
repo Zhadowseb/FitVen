@@ -508,12 +508,12 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
                     <Checkmark
                       width={11}
                       height={11}
-                      color={theme.inkOnSecondary ?? "#0C1410"}
+                      color={theme.inkOnSecondary}
                       thickness={3}
                     />
                     <ThemedText
                       style={styles.statusPillLabel}
-                      setColor={theme.inkOnSecondary ?? "#0C1410"}
+                      setColor={theme.inkOnSecondary}
                     >
                       COMPLETE
                     </ThemedText>

@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import styles from "./RegisterPageStyle";
 import { Colors } from "../../Resources/GlobalStyling/colors";
-import { registerWithEmail } from "../../Database/supaBaseClient";
+import { authService } from "../../Services";
 import {
   buildFullUsername,
   isValidUsernameBase,
@@ -99,7 +99,7 @@ export default function RegisterPage() {
     });
 
     try {
-      const result = await registerWithEmail({
+      const result = await authService.register({
         email: normalizedEmail,
         password,
         usernameBase: normalizedUsername,

@@ -125,31 +125,29 @@ const SetList = ({
   const primaryTextColor = theme.primaryText ?? theme.primary;
   const setChipTextColor = primaryColor;
   const personalRecordColor =
-    recordColor ?? theme.record ?? Colors.dark.record ?? setChipTextColor;
+    recordColor ?? theme.record ?? setChipTextColor;
   const personalRecordSurface =
     recordLightColor ??
     theme.recordLight ??
-    Colors.dark.recordLight ??
     (isDark ? "rgba(55, 63, 174, 0.38)" : "rgba(55, 63, 174, 0.16)");
   const personalRecordBorder =
     recordDarkColor ??
     theme.recordDark ??
-    Colors.dark.recordDark ??
     personalRecordColor;
   const personalRecordControlFill =
     recordControlFillColor ?? personalRecordBorder;
   const personalRecordControlText =
     recordControlTextColor ?? personalRecordSurface;
   // Same gold as the collapsed set dots use for a record.
-  const personalRecordStarColor = theme.planned ?? "#F2C14E";
-  const personalRecordStarTextColor = theme.textInverted ?? "#14100C";
+  const personalRecordStarColor = theme.planned;
+  const personalRecordStarTextColor = theme.textInverted;
   const addSetColor = theme.iconColor ?? theme.quietText ?? theme.text;
   const exerciseActionColor = theme.primary ?? addSetColor;
-  const secondaryColor = theme.secondary ?? Colors.dark.secondary;
+  const secondaryColor = theme.secondary;
   const selectedRestUnitTextColor =
-    theme.textInverted ?? theme.cardBackground ?? "#0E0F12";
+    theme.textInverted ?? theme.cardBackground;
   const restUnitBorderColor =
-    theme.cardBorder ?? theme.iconColor ?? "rgba(255, 255, 255, 0.12)";
+    theme.cardBorder ?? theme.iconColor;
   const restSettingsFieldSurface = theme.fields ?? cellSurface;
 
   const db = useSQLiteContext();

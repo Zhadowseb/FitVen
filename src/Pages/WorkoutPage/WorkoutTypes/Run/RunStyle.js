@@ -90,8 +90,8 @@ export default StyleSheet.create({
   runLoadingCard: {
     width: "100%",
     minHeight: 180,
-    marginHorizontal: 0,
-    marginVertical: 0,
+    // Was inheriting ThemedCard's old built-in padding.
+    padding: 10,
     borderRadius: 26,
     borderWidth: 1,
     alignItems: "center",
@@ -100,7 +100,6 @@ export default StyleSheet.create({
 
   heroCard: {
     width: "100%",
-    marginHorizontal: 0,
     marginTop: 0,
     marginBottom: 14,
     paddingHorizontal: 22,
@@ -199,8 +198,6 @@ export default StyleSheet.create({
   customRunMetricsCard: {
     width: "100%",
     minHeight: 112,
-    marginHorizontal: 0,
-    marginVertical: 0,
     paddingHorizontal: 8,
     paddingVertical: 14,
     borderRadius: 20,
@@ -268,8 +265,6 @@ export default StyleSheet.create({
   customHeartRateCard: {
     width: "100%",
     minHeight: 230,
-    marginHorizontal: 0,
-    marginVertical: 0,
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderRadius: 20,
@@ -389,7 +384,6 @@ export default StyleSheet.create({
     marginLeft: -7,
     borderRadius: 7,
     borderWidth: 2,
-    borderColor: "#FFFFFF",
     zIndex: 3,
   },
 
@@ -435,10 +429,6 @@ export default StyleSheet.create({
 
   endurancePlanCard: {
     width: "100%",
-    marginHorizontal: 0,
-    marginVertical: 0,
-    paddingHorizontal: 0,
-    paddingVertical: 0,
     borderRadius: 20,
     borderWidth: 1,
     overflow: "hidden",
@@ -517,7 +507,6 @@ export default StyleSheet.create({
   enduranceRoutesCard: {
     width: "100%",
     minHeight: 104,
-    marginHorizontal: 0,
     marginTop: 10,
     marginBottom: 0,
     paddingHorizontal: 14,
@@ -589,8 +578,6 @@ export default StyleSheet.create({
 
   statPriorityCard: {
     width: "100%",
-    marginHorizontal: 0,
-    marginVertical: 0,
     padding: 14,
     borderRadius: 20,
     borderWidth: 1,
@@ -669,8 +656,6 @@ export default StyleSheet.create({
 
   enduranceProgressCard: {
     width: "100%",
-    marginHorizontal: 0,
-    marginVertical: 0,
     paddingHorizontal: 14,
     paddingTop: 15,
     paddingBottom: 12,
@@ -731,7 +716,6 @@ export default StyleSheet.create({
     marginTop: 16,
     borderRadius: 4,
     overflow: "hidden",
-    backgroundColor: "rgba(128, 128, 128, 0.22)",
   },
 
   enduranceProgressFill: {
@@ -820,8 +804,6 @@ export default StyleSheet.create({
 
   completedSummaryCard: {
     width: "100%",
-    marginHorizontal: 0,
-    marginVertical: 0,
     paddingHorizontal: 18,
     paddingTop: 16,
     paddingBottom: 0,
@@ -906,8 +888,6 @@ export default StyleSheet.create({
   completionChartCard: {
     width: "100%",
     minHeight: 220,
-    marginHorizontal: 0,
-    marginVertical: 0,
     paddingHorizontal: 15,
     paddingTop: 14,
     paddingBottom: 12,
@@ -1009,9 +989,6 @@ export default StyleSheet.create({
 
   completedRouteCard: {
     width: "100%",
-    marginHorizontal: 0,
-    marginVertical: 0,
-    padding: 0,
     borderRadius: 20,
     borderWidth: 1,
     overflow: "hidden",
@@ -1104,8 +1081,6 @@ export default StyleSheet.create({
   activeSummaryCard: {
     width: "100%",
     minHeight: 82,
-    marginHorizontal: 0,
-    marginVertical: 0,
     paddingHorizontal: 14,
     paddingVertical: 11,
     borderRadius: 20,
@@ -1175,8 +1150,6 @@ export default StyleSheet.create({
 
   activeCurrentSetCard: {
     width: "100%",
-    marginHorizontal: 0,
-    marginVertical: 0,
     paddingHorizontal: 16,
     paddingTop: 10,
     paddingBottom: 14,
@@ -1313,8 +1286,6 @@ export default StyleSheet.create({
   activeEffortCard: {
     width: "100%",
     minHeight: 86,
-    marginHorizontal: 0,
-    marginVertical: 0,
     paddingHorizontal: 14,
     paddingVertical: 12,
     borderRadius: 20,
@@ -1364,8 +1335,6 @@ export default StyleSheet.create({
 
   nextIntervalCard: {
     width: "100%",
-    marginHorizontal: 0,
-    marginVertical: 0,
     paddingHorizontal: 16,
     paddingTop: 14,
     paddingBottom: 14,
@@ -1471,7 +1440,6 @@ export default StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#ff7a2b",
     shadowOffset: { width: 0, height: 14 },
     shadowOpacity: 0.28,
     shadowRadius: 18,
@@ -1533,8 +1501,6 @@ export default StyleSheet.create({
   segmentCard: {
     width: "100%",
     minHeight: 68,
-    marginHorizontal: 0,
-    marginVertical: 0,
     paddingHorizontal: 18,
     paddingVertical: 12,
     borderRadius: 22,
@@ -1591,8 +1557,6 @@ export default StyleSheet.create({
 
   intervalsCard: {
     width: "100%",
-    marginHorizontal: 0,
-    marginVertical: 0,
     paddingHorizontal: 22,
     paddingTop: 23,
     paddingBottom: 18,
@@ -1665,35 +1629,6 @@ export default StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
     fontWeight: "700",
-  },
-
-  runTableHeaderRow: {
-    minHeight: 30,
-    flexDirection: "row",
-    alignItems: "center",
-    borderBottomWidth: 1,
-    paddingHorizontal: 8,
-  },
-
-  runTableHeaderCell: {
-    minHeight: 30,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  runTableHeaderLabel: {
-    fontSize: 9,
-    lineHeight: 11,
-    fontWeight: "800",
-    letterSpacing: 0.8,
-    textAlign: "center",
-  },
-
-  runTableHeaderUnit: {
-    fontSize: 7,
-    lineHeight: 8,
-    fontWeight: "700",
-    textAlign: "center",
   },
 
   runTableRow: {
@@ -1937,7 +1872,6 @@ export default StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     borderBottomWidth: 1,
-    borderBottomColor: "#2e2e2eff",
     paddingBottom: 18,
     marginBottom: 18,
   },

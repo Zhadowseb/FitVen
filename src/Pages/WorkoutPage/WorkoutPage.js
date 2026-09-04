@@ -304,7 +304,7 @@ const WorkoutPage = ({ route }) => {
     visible={optionsBottomsheetVisible}
     onClose={() => setOptionsBottomsheetVisible(false)}
   >
-    <View style={styles.bottomsheetTitle}>
+    <View style={[styles.bottomsheetTitle, { borderBottomColor: theme.hairline }]}>
       <ThemedText>{workoutLabel}</ThemedText>
       <ThemedText>{workoutSubtitle}</ThemedText>
     </View>

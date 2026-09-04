@@ -27,8 +27,6 @@ export default StyleSheet.create({
     paddingBottom: 28,
   },
   card: {
-    marginHorizontal: 0,
-    marginVertical: 0,
     marginBottom: 16,
     paddingHorizontal: 18,
     paddingVertical: 18,

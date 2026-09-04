@@ -5,13 +5,6 @@ export default StyleSheet.create({
     flex: 1,
   },
 
-  loadingContainer: {
-    paddingTop: 32,
-    paddingBottom: 24,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
   metaRow: {
     flexDirection: "row",
     alignItems: "center",

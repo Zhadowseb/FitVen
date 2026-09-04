@@ -105,9 +105,6 @@ export default StyleSheet.create({
   },
 
   card: {
-    marginHorizontal: 0,
-    marginVertical: 0,
-    padding: 0,
     borderRadius: 18,
     overflow: "hidden",
   },
@@ -268,8 +265,6 @@ export default StyleSheet.create({
   },
 
   emptyCard: {
-    marginHorizontal: 0,
-    marginVertical: 0,
     paddingHorizontal: 18,
     paddingTop: 30,
     paddingBottom: 26,
@@ -307,8 +302,6 @@ export default StyleSheet.create({
   },
 
   errorCard: {
-    marginHorizontal: 0,
-    marginVertical: 0,
     paddingHorizontal: 18,
     paddingTop: 24,
     paddingBottom: 22,

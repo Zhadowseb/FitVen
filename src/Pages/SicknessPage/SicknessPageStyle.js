@@ -41,10 +41,6 @@ export default StyleSheet.create({
     justifyContent: "center",
     gap: 10,
   },
-  loadingLabel: {
-    fontSize: 13,
-    lineHeight: 18,
-  },
   sectionHeader: {
     gap: 3,
   },

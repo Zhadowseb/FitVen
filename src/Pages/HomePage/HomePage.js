@@ -946,7 +946,9 @@ export default function App() {
         visible={!!selectedWorkoutSummaryPost}
         onClose={() => setSelectedWorkoutSummaryPost(null)}
       >
-        <View style={styles.postOptionsTitle}>
+        <View
+          style={[styles.postOptionsTitle, { borderBottomColor: theme.hairline }]}
+        >
           <ThemedText style={styles.postOptionsTitleText}>
             {getWorkoutSummaryDisplayTitle(selectedWorkoutSummaryPost)}
           </ThemedText>

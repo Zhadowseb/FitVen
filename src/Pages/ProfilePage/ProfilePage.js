@@ -11,7 +11,7 @@ import * as ImagePicker from "expo-image-picker";
 import appConfig from "../../../app.json";
 import styles from "./ProfilePageStyle";
 import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
-import { logout } from "../../Database/supaBaseClient";
+import { authService } from "../../Services";
 import { useAuth } from "../../Contexts/AuthContext";
 import { useThemeMode } from "../../Contexts/ThemeContext";
 import { notificationService, socialService } from "../../Services";
@@ -21,12 +21,11 @@ import Pencil from "../../Resources/Icons/UI-icons/Pencil";
 import Moon from "../../Resources/Icons/UI-icons/Moon";
 import ChevronRight from "../../Resources/Icons/UI-icons/ChevronRight";
 import FeedbackModal from "../../Resources/Components/FeedbackModal/FeedbackModal";
-import LockIcon from "./Components/LockIcon";
-import MessageCircleIcon from "./Components/MessageCircleIcon";
+import Lock from "../../Resources/Icons/UI-icons/Lock";
+import MessageCircle from "../../Resources/Icons/UI-icons/MessageCircle";
 import SectionEyebrow from "./Components/SectionEyebrow";
 import InsetDivider from "./Components/InsetDivider";
 import SettingsIconTile from "./Components/SettingsIconTile";
-import AppearanceSegmentedControl from "./Components/AppearanceSegmentedControl";
 import AccentThemePicker from "./Components/AccentThemePicker";
 import Star from "../../Resources/Icons/UI-icons/Star";
 import {
@@ -40,10 +39,17 @@ import {
   ThemedCard,
   ThemedDateWheelPicker,
   ThemedKeyboardProtection,
+  ThemedSegmentedControl,
   ThemedText,
   ThemedView,
   UserAvatar,
 } from "../../Resources/ThemedComponents";
+
+const APPEARANCE_OPTIONS = [
+  { value: "dark", label: "Dark" },
+  { value: "light", label: "Light" },
+  { value: "auto", label: "Auto" },
+];
 
 function getNormalizedString(value) {
   if (value === null || value === undefined) {
@@ -340,7 +346,7 @@ export default function ProfilePage() {
         console.warn("Push token logout cleanup failed:", cleanupError);
       }
 
-      await logout();
+      await authService.logout();
     } catch (error) {
       setLogoutError(
         error instanceof Error ? error.message : "Could not log out."
@@ -426,7 +432,7 @@ export default function ProfilePage() {
                     </ThemedText>
                   ) : null}
                 </ThemedText>
-                <LockIcon width={15} height={15} color={theme.quietText} />
+                <Lock width={15} height={15} color={theme.quietText} />
               </View>
 
               <InsetDivider />
@@ -442,7 +448,7 @@ export default function ProfilePage() {
                 >
                   {user?.email ?? "Unknown account"}
                 </ThemedText>
-                <LockIcon width={15} height={15} color={theme.quietText} />
+                <Lock width={15} height={15} color={theme.quietText} />
               </View>
 
               <InsetDivider />
@@ -723,7 +729,8 @@ export default function ProfilePage() {
                 <ThemedText style={styles.settingsRowLabel} setColor={theme.title}>
                   Appearance
                 </ThemedText>
-                <AppearanceSegmentedControl
+                <ThemedSegmentedControl
+                  options={APPEARANCE_OPTIONS}
                   value={themeMode}
                   onChange={setThemeMode}
                 />
@@ -766,7 +773,7 @@ export default function ProfilePage() {
             >
               <View style={styles.feedbackHeaderRow}>
                 <SettingsIconTile backgroundColor={withAlpha(theme.secondary, 0.12)}>
-                  <MessageCircleIcon
+                  <MessageCircle
                     width={18}
                     height={18}
                     color={theme.secondary}

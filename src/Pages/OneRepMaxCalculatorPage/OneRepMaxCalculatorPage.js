@@ -9,6 +9,7 @@ import {
 
 import styles from "./OneRepMaxCalculatorPageStyle";
 import { Colors } from "../../Resources/GlobalStyling/colors";
+import { formatDisplayNumber } from "../../Utils/numberUtils";
 import {
   ThemedButton,
   ThemedHeader,
@@ -32,18 +33,6 @@ function parseDecimal(value) {
   return Number.isFinite(parsedValue) ? parsedValue : null;
 }
 
-function formatWeight(value) {
-  const numericValue = Number(value);
-
-  if (!Number.isFinite(numericValue)) {
-    return "--";
-  }
-
-  return Number.isInteger(numericValue)
-    ? String(numericValue)
-    : numericValue.toFixed(1);
-}
-
 export default function OneRepMaxCalculatorPage() {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -52,10 +41,10 @@ export default function OneRepMaxCalculatorPage() {
   const [estimatedOneRepMax, setEstimatedOneRepMax] = useState(null);
   const [errors, setErrors] = useState({});
 
-  const primaryColor = theme.primary ?? "#f7742e";
+  const primaryColor = theme.primary;
 
   const primaryTextColor = theme.primaryText ?? theme.primary;
-  const secondaryColor = theme.secondary ?? "#60daac";
+  const secondaryColor = theme.secondary;
   const cardSurface = theme.cardBackground ?? theme.background;
   const innerSurface = theme.fields ?? theme.uiBackground ?? cardSurface;
   const cardBorder =
@@ -207,7 +196,7 @@ export default function OneRepMaxCalculatorPage() {
               </ThemedText>
               <View style={styles.resultValueRow}>
                 <ThemedText style={styles.resultValue} setColor={titleColor}>
-                  {formatWeight(estimatedOneRepMax)}
+                  {formatDisplayNumber(estimatedOneRepMax)}
                 </ThemedText>
                 <ThemedText style={styles.resultUnit} setColor={quietText}>
                   kg
@@ -275,7 +264,7 @@ export default function OneRepMaxCalculatorPage() {
                       {percentage}%
                     </ThemedText>
                     <ThemedText style={styles.loadValue} setColor={titleColor}>
-                      {formatWeight(load)} kg
+                      {formatDisplayNumber(load)} kg
                     </ThemedText>
                   </View>
                 );

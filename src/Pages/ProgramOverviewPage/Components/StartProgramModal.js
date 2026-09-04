@@ -50,7 +50,7 @@ const StartProgramModal = ({
   const cardBorder = theme.cardBorder ?? theme.iconColor ?? theme.text;
   const innerSurface =
     theme.fields ?? theme.cardBackground ?? theme.background;
-  const accentColor = theme.primary ?? "#f7742e";
+  const accentColor = theme.primary;
   const selectedWeekInfo = getIsoWeekInfo(selectedWeek);
   const weekOptions = buildWeekOptions(pickerYear);
 

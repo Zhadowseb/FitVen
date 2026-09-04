@@ -63,8 +63,6 @@ export default StyleSheet.create({
   },
 
   loginCard: {
-    marginHorizontal: 0,
-    marginVertical: 0,
     paddingHorizontal: 18,
     paddingVertical: 18,
     borderWidth: 1,

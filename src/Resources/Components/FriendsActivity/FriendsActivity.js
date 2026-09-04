@@ -1,7 +1,6 @@
 import {
   Animated,
   ScrollView,
-  Text,
   TouchableOpacity,
   View,
   useColorScheme,
@@ -143,9 +142,9 @@ function StatusLine({ theme, statusKind, statusColor, label }) {
 
   if (statusKind === "none") {
     return (
-      <Text style={[styles.statusText, { color: statusColor }]} numberOfLines={1}>
+      <ThemedText style={[styles.statusText, { color: statusColor }]} numberOfLines={1}>
         {label}
-      </Text>
+      </ThemedText>
     );
   }
 
@@ -164,9 +163,9 @@ function StatusLine({ theme, statusKind, statusColor, label }) {
           ]}
         />
       )}
-      <Text style={[styles.statusText, { color: statusColor }]} numberOfLines={1}>
+      <ThemedText style={[styles.statusText, { color: statusColor }]} numberOfLines={1}>
         {label}
-      </Text>
+      </ThemedText>
     </View>
   );
 }
@@ -267,7 +266,7 @@ function AddFriendCell({ theme, dashedBorderColor, onPress }) {
           <Plus width={20} height={20} color={theme.quietText} thickness={1.8} />
         </View>
       </View>
-      <Text style={[styles.addLabel, { color: theme.quietText }]}>Add</Text>
+      <ThemedText style={[styles.addLabel, { color: theme.quietText }]}>Add</ThemedText>
     </TouchableOpacity>
   );
 }
@@ -310,9 +309,9 @@ export default function FriendsActivity({
     <View style={styles.section}>
       {showHeader ? (
         <View style={styles.headerRow}>
-          <Text style={[styles.headerEyebrow, { color: quietText }]}>
+          <ThemedText style={[styles.headerEyebrow, { color: quietText }]}>
             FRIENDS ACTIVITY
-          </Text>
+          </ThemedText>
 
           {liveCount > 0 ? (
             <View
@@ -322,16 +321,16 @@ export default function FriendsActivity({
               ]}
             >
               <LivePillDot color={theme.secondary} />
-              <Text style={[styles.livePillText, { color: theme.secondary }]}>
+              <ThemedText style={[styles.livePillText, { color: theme.secondary }]}>
                 {`${liveCount} LIVE`}
-              </Text>
+              </ThemedText>
             </View>
           ) : null}
 
           <View style={styles.headerSpacer} />
 
           <TouchableOpacity activeOpacity={0.75} onPress={onSeeAll}>
-            <Text style={[styles.seeAllText, { color: theme.primary }]}>See all</Text>
+            <ThemedText style={[styles.seeAllText, { color: theme.primary }]}>See all</ThemedText>
           </TouchableOpacity>
         </View>
       ) : null}

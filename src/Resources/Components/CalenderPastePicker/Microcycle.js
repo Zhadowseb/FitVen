@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -11,12 +10,17 @@ import {
 import { useSQLiteContext } from "expo-sqlite";
 
 import { programService as programRepository } from "../../../Services";
-import { Colors } from "../../GlobalStyling/colors";
+import { Colors, withAlpha } from "../../GlobalStyling/colors";
 import ArrowLeft from "../../Icons/UI-icons/ArrowLeft";
 import Checkmark from "../../Icons/UI-icons/Checkmark";
 import Cross from "../../Icons/UI-icons/Cross";
 import Library from "../../Icons/UI-icons/Library";
-import { ThemedText, ThemedModal } from "../../ThemedComponents";
+import {
+  ThemedModal,
+  ThemedSheetHandle,
+  ThemedStateBlock,
+  ThemedText,
+} from "../../ThemedComponents";
 
 const SHORT_MONTHS = [
   "Jan",
@@ -32,34 +36,6 @@ const SHORT_MONTHS = [
   "Nov",
   "Dec",
 ];
-
-function colorWithAlpha(color, alpha, fallback) {
-  if (typeof color !== "string") {
-    return fallback;
-  }
-
-  const hexMatch = color.trim().match(/^#([0-9a-f]{6})([0-9a-f]{2})?$/i);
-
-  if (hexMatch) {
-    const hex = hexMatch[1];
-    const red = parseInt(hex.slice(0, 2), 16);
-    const green = parseInt(hex.slice(2, 4), 16);
-    const blue = parseInt(hex.slice(4, 6), 16);
-
-    return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
-  }
-
-  const rgbMatch = color
-    .trim()
-    .match(/^rgb\(\s*(\d+),\s*(\d+),\s*(\d+)\s*\)$/i);
-
-  if (rgbMatch) {
-    const [, red, green, blue] = rgbMatch;
-    return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
-  }
-
-  return fallback;
-}
 
 function parseLocalDate(dateLabel) {
   if (typeof dateLabel !== "string") {
@@ -126,16 +102,16 @@ const Microcycle = ({
   const titleColor = theme.title ?? theme.text;
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const mutedText = theme.iconColor ?? quietText;
-  const primaryColor = theme.primary ?? "#f7742e";
+  const primaryColor = theme.primary;
   const primaryTextColor = theme.primaryText ?? theme.primary;
-  const secondaryColor = theme.secondary ?? "#60daac";
-  const warningColor = theme.planned ?? "#ffdd00";
+  const secondaryColor = theme.secondary;
+  const warningColor = theme.planned;
   const cardBackground = theme.cardBackground ?? theme.background;
   const fieldSurface = theme.fields ?? theme.uiBackground ?? cardBackground;
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor;
-  const primarySoft = colorWithAlpha(primaryColor, 0.14, fieldSurface);
-  const secondarySoft = colorWithAlpha(secondaryColor, 0.14, fieldSurface);
-  const warningSoft = colorWithAlpha(warningColor, 0.16, fieldSurface);
+  const primarySoft = withAlpha(primaryColor, 0.14);
+  const secondarySoft = withAlpha(secondaryColor, 0.14);
+  const warningSoft = withAlpha(warningColor, 0.16);
 
   useEffect(() => {
     if (!visible) {
@@ -222,7 +198,7 @@ const Microcycle = ({
       ]}
       contentStyle={styles.modalBody}
     >
-      <View style={styles.handle} />
+      <ThemedSheetHandle style={styles.handle} />
 
       <View style={styles.header}>
         <View style={[styles.headerIcon, { backgroundColor: fieldSurface }]}>
@@ -254,9 +230,7 @@ const Microcycle = ({
       </View>
 
       {loading ? (
-        <View style={styles.loadingWrap}>
-          <ActivityIndicator color={primaryTextColor} />
-        </View>
+        <ThemedStateBlock />
       ) : groupedMesocycles.length === 0 ? (
         <View
           style={[
@@ -539,11 +513,6 @@ const styles = StyleSheet.create({
     flexGrow: 0,
   },
   handle: {
-    alignSelf: "center",
-    width: 44,
-    height: 5,
-    borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.1)",
     marginTop: 10,
     marginBottom: 16,
   },
@@ -589,11 +558,6 @@ const styles = StyleSheet.create({
     height: 40,
     alignItems: "center",
     justifyContent: "center",
-  },
-  loadingWrap: {
-    minHeight: 180,
-    justifyContent: "center",
-    alignItems: "center",
   },
   emptyCard: {
     minHeight: 96,

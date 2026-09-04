@@ -4,12 +4,15 @@ import {
   Modal,
   Pressable,
   ScrollView,
-  StyleSheet,
   TouchableOpacity,
   View,
 } from "react-native";
 
-import { ThemedText } from "../../../../Resources/ThemedComponents";
+import {
+  ThemedSheetHandle,
+  ThemedText,
+} from "../../../../Resources/ThemedComponents";
+import styles from "./HeartRateDeviceModalStyle";
 
 export default function HeartRateDeviceModal({
   visible,
@@ -25,8 +28,8 @@ export default function HeartRateDeviceModal({
 }) {
   const titleColor = theme.title ?? theme.text;
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
-  const primaryColor = theme.primary ?? "#F7742E";
-  const secondaryColor = theme.secondary ?? "#60DAAC";
+  const primaryColor = theme.primary;
+  const secondaryColor = theme.secondary;
   const cardSurface = theme.cardBackground ?? theme.background;
   const innerSurface = theme.uiBackground ?? cardSurface;
   const borderColor = theme.cardBorder ?? theme.iconColor ?? theme.text;
@@ -48,7 +51,7 @@ export default function HeartRateDeviceModal({
             { backgroundColor: cardSurface, borderColor },
           ]}
         >
-          <View style={styles.handle} />
+          <ThemedSheetHandle style={styles.handle} />
 
           <View style={styles.header}>
             <View style={styles.headerCopy}>
@@ -211,177 +214,3 @@ export default function HeartRateDeviceModal({
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: "flex-end",
-    backgroundColor: "rgba(0, 0, 0, 0.58)",
-  },
-  sheet: {
-    maxHeight: "82%",
-    minHeight: 470,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    borderWidth: 1,
-    paddingHorizontal: 20,
-    paddingBottom: 28,
-  },
-  handle: {
-    alignSelf: "center",
-    width: 42,
-    height: 4,
-    marginTop: 10,
-    marginBottom: 18,
-    borderRadius: 2,
-    backgroundColor: "rgba(151, 151, 151, 0.5)",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 12,
-  },
-  headerCopy: {
-    flex: 1,
-  },
-  eyebrow: {
-    fontSize: 11,
-    fontWeight: "900",
-    letterSpacing: 1.1,
-  },
-  title: {
-    marginTop: 5,
-    fontSize: 24,
-    lineHeight: 29,
-    fontWeight: "900",
-  },
-  subtitle: {
-    marginTop: 7,
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: "600",
-  },
-  closeButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  connectedCard: {
-    marginTop: 22,
-    borderWidth: 1,
-    borderRadius: 18,
-    padding: 16,
-    gap: 13,
-  },
-  deviceIdentity: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  deviceIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  deviceCopy: {
-    flex: 1,
-    minWidth: 0,
-  },
-  deviceName: {
-    fontSize: 15,
-    fontWeight: "900",
-  },
-  deviceMeta: {
-    marginTop: 3,
-    fontSize: 12,
-    lineHeight: 17,
-    fontWeight: "600",
-  },
-  textButton: {
-    alignSelf: "flex-start",
-    paddingVertical: 3,
-  },
-  textButtonLabel: {
-    fontSize: 13,
-    fontWeight: "900",
-  },
-  errorCard: {
-    marginTop: 16,
-    borderRadius: 14,
-    padding: 13,
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 9,
-  },
-  errorText: {
-    flex: 1,
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: "600",
-  },
-  listHeader: {
-    marginTop: 22,
-    marginBottom: 10,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  listTitle: {
-    fontSize: 15,
-    fontWeight: "900",
-  },
-  refreshButton: {
-    minHeight: 36,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 7,
-    paddingHorizontal: 4,
-  },
-  refreshLabel: {
-    fontSize: 13,
-    fontWeight: "900",
-  },
-  deviceList: {
-    flexGrow: 0,
-  },
-  deviceListContent: {
-    gap: 10,
-    paddingBottom: 8,
-  },
-  deviceRow: {
-    minHeight: 72,
-    borderWidth: 1,
-    borderRadius: 17,
-    paddingHorizontal: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  emptyState: {
-    minHeight: 190,
-    borderWidth: 1,
-    borderStyle: "dashed",
-    borderRadius: 18,
-    paddingHorizontal: 28,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  emptyTitle: {
-    marginTop: 12,
-    fontSize: 16,
-    fontWeight: "900",
-    textAlign: "center",
-  },
-  emptyText: {
-    marginTop: 6,
-    fontSize: 13,
-    lineHeight: 19,
-    fontWeight: "600",
-    textAlign: "center",
-  },
-});

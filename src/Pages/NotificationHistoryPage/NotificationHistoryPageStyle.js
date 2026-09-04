@@ -87,22 +87,8 @@ export default StyleSheet.create({
     lineHeight: 17,
     fontWeight: "800",
   },
-  loadingState: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
-    paddingHorizontal: 24,
-  },
-  loadingText: {
-    fontSize: 13,
-    lineHeight: 18,
-  },
+  // Lifts the empty state clear of the list's bottom inset.
   emptyState: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 28,
     paddingBottom: 70,
   },
   emptyIcon: {
@@ -113,46 +99,5 @@ export default StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 18,
-  },
-  emptyTitle: {
-    textAlign: "center",
-    marginBottom: 7,
-  },
-  emptyBody: {
-    maxWidth: 280,
-    fontSize: 13,
-    lineHeight: 19,
-    textAlign: "center",
-  },
-  errorState: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 28,
-    paddingBottom: 70,
-  },
-  errorTitle: {
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  errorBody: {
-    maxWidth: 310,
-    fontSize: 13,
-    lineHeight: 19,
-    textAlign: "center",
-  },
-  retryButton: {
-    minWidth: 120,
-    minHeight: 42,
-    borderRadius: 22,
-    marginTop: 18,
-    paddingHorizontal: 18,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  retryButtonText: {
-    fontSize: 13,
-    lineHeight: 17,
-    fontWeight: "900",
   },
 });

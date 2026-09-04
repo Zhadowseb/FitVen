@@ -7,7 +7,6 @@ import {
   Image,
   Modal,
   PanResponder,
-  Platform,
   Pressable,
   ScrollView,
   TouchableOpacity,
@@ -42,6 +41,7 @@ import {
   FALLBACK_MAX_HEART_RATE,
   getHeartRateZoneThresholds,
   getHeartRateZoneColor,
+  getZoneColor,
 } from "./RunHeartRateChartConfig";
 import { buildHeartRateZones } from "../../../../Utils/heartRateUtils";
 import { useAuth } from "../../../../Contexts/AuthContext";
@@ -67,13 +67,6 @@ import {
 } from "../../../../Services";
 
 const RUN_HEART_RATE_ZONES = [1, 2, 3, 4, 5];
-const RUN_HEART_RATE_ZONE_COLORS = {
-  1: "#9CA3AF",
-  2: "#22C7F2",
-  3: "#10B981",
-  4: "#F7742E",
-  5: "#EF4444",
-};
 const RUN_ZONE_POPOVER_WIDTH = 238;
 const RUN_ZONE_POPOVER_HEIGHT = 40;
 const RUN_ZONE_POPOVER_MARGIN = 12;
@@ -1896,16 +1889,16 @@ const Run = ({
   };
 
   const primaryColor = theme.primary ?? theme.iconColor ?? theme.text;
-  const secondaryColor = theme.secondary ?? Colors.dark.secondary;
+  const secondaryColor = theme.secondary;
   const secondaryDark = theme.secondaryDark ?? secondaryColor;
-  const screenBackground = theme.background ?? "#0E0F12";
+  const screenBackground = theme.background;
   const cardSurface = theme.cardBackground ?? theme.background;
   const innerSurface = theme.uiBackground ?? cardSurface;
   const fieldSurface = theme.fields ?? innerSurface;
   const cardBorder = theme.cardBorder ?? theme.iconColor ?? theme.text;
   const titleColor = theme.title ?? theme.text;
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
-  const invertedText = theme.textInverted ?? theme.background ?? "#0E0F12";
+  const invertedText = theme.textInverted ?? theme.background;
   const avgPaceMinutes =
     totalDistance > 0 ? currentElapsed / 60 / totalDistance : null;
   const formattedTotalDistance = formatRunDistance(totalDistance);
@@ -2126,7 +2119,7 @@ const Run = ({
     paceDeltaSeconds === null
       ? primaryColor
       : paceDeltaSeconds > 5
-        ? theme.danger ?? "#EF4444"
+        ? theme.danger
         : secondaryColor;
   const paceComparisonLabel =
     paceDeltaSeconds === null
@@ -2402,7 +2395,7 @@ const Run = ({
     yAxisTicks = [],
     onPress = null,
     plannedData = [],
-    plannedColor = theme.planned ?? "#FFDD00",
+    plannedColor = theme.planned,
     strokeWidth = 3,
     colorByHeartRateZone = false,
     plannedStepped = stepped,
@@ -3629,7 +3622,7 @@ const Run = ({
               styles.zoneDropdownClear,
               {
                 borderColor:
-                  theme.danger ?? RUN_HEART_RATE_ZONE_COLORS[5],
+                  theme.danger ?? getZoneColor(5),
               },
             ]}
             onPress={() => {
@@ -3639,7 +3632,7 @@ const Run = ({
             <Cross
               width={14}
               height={14}
-              color={theme.danger ?? RUN_HEART_RATE_ZONE_COLORS[5]}
+              color={theme.danger ?? getZoneColor(5)}
             />
           </TouchableOpacity>
 
@@ -3648,7 +3641,7 @@ const Run = ({
               key={zone}
               style={[
                 styles.zoneDropdownOption,
-                { backgroundColor: RUN_HEART_RATE_ZONE_COLORS[zone] },
+                { backgroundColor: getZoneColor(zone) },
               ]}
               onPress={() => {
                 void updateEnduranceZone(zone);
@@ -4301,7 +4294,12 @@ const Run = ({
                   </View>
                 </View>
 
-                <View style={styles.enduranceProgressTrack}>
+                <View
+                  style={[
+                    styles.enduranceProgressTrack,
+                    { backgroundColor: theme.chipBackground },
+                  ]}
+                >
                   <View
                     style={[
                       styles.enduranceProgressFill,
@@ -4650,7 +4648,8 @@ const Run = ({
                         {
                           left: customHeartRatePosition(currentHeartRate),
                           backgroundColor:
-                            currentHeartRateBand?.color ?? "#FFFFFF",
+                            currentHeartRateBand?.color ?? theme.title,
+                          borderColor: theme.title,
                         },
                       ]}
                     />
@@ -4857,6 +4856,8 @@ const Run = ({
             styles.heroPrimaryButton,
             {
               backgroundColor: primaryColor,
+              // Followed the accent, so it stayed orange under every theme.
+              shadowColor: primaryColor,
               opacity: canUsePrimaryAction ? 1 : 0.58,
             },
           ]}

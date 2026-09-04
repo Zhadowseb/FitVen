@@ -146,14 +146,14 @@ export default function SocialPostSettingsPage() {
   const cardSurface = theme.cardBackground ?? theme.background;
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor;
   const panelSurface = theme.uiBackground ?? theme.background;
-  const primaryColor = theme.primary ?? "#f7742e";
+  const primaryColor = theme.primary;
   const primaryTextColor = theme.primaryText ?? theme.primary;
   const choiceSurface = colorScheme === "dark" ? "#221f1d" : "#f1eff2";
   const selectedChoiceSurface = withAlpha(
     theme.primary,
     colorScheme === "dark" ? 0.12 : 0.14
   );
-  const dangerColor = theme.danger ?? "#da1212";
+  const dangerColor = theme.danger;
 
   useFocusEffect(
     useCallback(() => {

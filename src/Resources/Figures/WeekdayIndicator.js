@@ -1,8 +1,9 @@
-import { Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Pressable, StyleSheet, TouchableOpacity, View } from "react-native";
 import { useColorScheme } from "react-native";
 import Svg, { Path, Polygon } from "react-native-svg";
 
 import { Colors, withAlpha } from "../GlobalStyling/colors";
+import ThemedText from "../ThemedComponents/ThemedText";
 
 const MONTH_LABELS = [
   "jan",
@@ -96,22 +97,22 @@ const WeekdayIndicator = ({
   const activeBorder = theme.primary ?? cardBorder;
   const completedBorder = theme.secondary ?? cardBorder;
   const recordColor =
-    theme.record ?? Colors.dark.record ?? theme.secondary ?? titleColor;
-  const recordBorder = theme.recordDark ?? Colors.dark.recordDark ?? recordColor;
-  const dangerColor = theme.danger ?? Colors.dark.danger ?? "#ba0000ff";
+    theme.record ?? theme.secondary ?? titleColor;
+  const recordBorder = theme.recordDark ?? recordColor;
+  const dangerColor = theme.danger;
   const dangerBorderColor =
-    theme.dangerDark ?? Colors.dark.dangerDark ?? dangerColor;
-  const sickColor = theme.planned ?? Colors.dark.planned ?? "#ffdd00";
-  const sickBorderColor = theme.plannedDark ?? Colors.dark.plannedDark ?? sickColor;
+    theme.dangerDark ?? dangerColor;
+  const sickColor = theme.planned;
+  const sickBorderColor = theme.plannedDark ?? sickColor;
   const sickSurface =
     colorScheme === "dark" ? "rgba(255, 221, 0, 0.13)" : "rgba(255, 221, 0, 0.28)";
   const activeText = theme.primary ?? titleColor;
   const completedText = theme.secondary ?? titleColor;
-  const todayBadgeText = theme.textInverted ?? theme.cardBackground ?? "#141414";
+  const todayBadgeText = theme.textInverted ?? theme.cardBackground;
   const statusBadgeLabel = active ? "TODAY" : isSick ? "SICK" : null;
   const statusBadgeColor = active ? activeBorder : isSick ? sickColor : activeBorder;
   const statusBadgeTextColor =
-    active ? todayBadgeText : theme.textInverted ?? "#141414";
+    active ? todayBadgeText : theme.textInverted;
   const badgeBackgroundColor = isSick
     ? sickSurface
     : active
@@ -162,9 +163,9 @@ const WeekdayIndicator = ({
               },
             ]}
           >
-            <Text style={[styles.todayBadgeText, { color: statusBadgeTextColor }]}>
+            <ThemedText style={[styles.todayBadgeText, { color: statusBadgeTextColor }]}>
               {statusBadgeLabel}
-            </Text>
+            </ThemedText>
           </View>
         </View>
       )}
@@ -191,13 +192,13 @@ const WeekdayIndicator = ({
             pointerEvents="none"
             style={[
               styles.programDot,
-              { backgroundColor: theme.primary ?? "#f7742e" },
+              { backgroundColor: theme.primary },
             ]}
           />
         )}
 
         {showWeekdayLabel && Boolean(label) && (
-          <Text
+          <ThemedText
             style={[
               styles.weekdayLabel,
               active && styles.weekdayLabelActive,
@@ -205,12 +206,12 @@ const WeekdayIndicator = ({
             ]}
           >
             {label}
-          </Text>
+          </ThemedText>
         )}
 
         {!!dateLabel && (
           <View style={[styles.dateStack, compact && styles.dateStackCompact]}>
-            <Text
+            <ThemedText
               style={[
                 styles.dateNumber,
                 compact && styles.dateNumberCompact,
@@ -218,12 +219,12 @@ const WeekdayIndicator = ({
               ]}
             >
               {dayNumber ?? dateLabel}
-            </Text>
+            </ThemedText>
 
             {!!monthLabel && (
-              <Text style={[styles.dateMonth, { color: badgeLabelColor }]}>
+              <ThemedText style={[styles.dateMonth, { color: badgeLabelColor }]}>
                 {monthLabel}
-              </Text>
+              </ThemedText>
             )}
           </View>
         )}
@@ -256,9 +257,9 @@ const WeekdayIndicator = ({
               ))}
 
             {workoutCards.length > MAX_MONTH_MARKERS && (
-              <Text style={[styles.markerOverflow, { color: quietText }]}>
+              <ThemedText style={[styles.markerOverflow, { color: quietText }]}>
                 +{workoutCards.length - (MAX_MONTH_MARKERS - 1)}
-              </Text>
+              </ThemedText>
             )}
           </View>
         )}
@@ -375,7 +376,7 @@ const WeekdayIndicator = ({
                   )}
 
                   {!WorkoutIcon && workoutCard.iconLabel && (
-                    <Text
+                    <ThemedText
                       style={[
                         styles.iconLabel,
                         styles.iconLabelOnly,
@@ -383,7 +384,7 @@ const WeekdayIndicator = ({
                       ]}
                     >
                       {workoutCard.iconLabel}
-                    </Text>
+                    </ThemedText>
                   )}
                 </View>
               </TouchableOpacity>
@@ -432,7 +433,7 @@ const WeekdayIndicator = ({
           )}
 
           {!Icon && iconLabel && (
-            <Text
+            <ThemedText
               style={[
                 styles.iconLabel,
                 styles.iconLabelOnly,
@@ -440,7 +441,7 @@ const WeekdayIndicator = ({
               ]}
             >
               {iconLabel}
-            </Text>
+            </ThemedText>
           )}
         </View>
       )}

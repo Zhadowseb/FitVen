@@ -27,12 +27,12 @@ const MUSCLE_STEP = 2;
 export default function CustomExerciseModal({ visible, onClose, onCreate }) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
-  const primaryColor = theme.primary ?? "#f7742e";
+  const primaryColor = theme.primary;
   const primaryTextColor = theme.primaryText ?? theme.primary;
   const cardBorder = theme.cardBorder ?? theme.iconColor;
   const quietText = theme.iconColor ?? theme.text;
-  const activeChipText = theme.textInverted ?? "#0E0F12";
-  const dangerColor = theme.danger ?? "#ba0000";
+  const activeChipText = theme.textInverted;
+  const dangerColor = theme.danger;
   const nameInputRef = useRef(null);
   const [step, setStep] = useState(NAME_STEP);
   const [exerciseName, setExerciseName] = useState("");

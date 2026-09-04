@@ -1,14 +1,13 @@
 import * as React from "react";
 import Svg, { Path, Rect } from "react-native-svg";
 import { useColorScheme } from "react-native";
-import { Colors } from "../../../Resources/GlobalStyling/colors";
+import { Colors } from "../../GlobalStyling/colors";
 
-// Page-local icon (not in shared UI-icons): small padlock used on the
-// Username/Email rows. Spec: rect(4,11,16,10,rx2) + shackle path, sw 1.8.
-function LockIcon({ width = 15, height = 15, color, thickness = 1.8 }) {
+// Small padlock, for a read-only row. rect(4,11,16,10,rx2) + shackle path.
+function Lock({ width = 15, height = 15, color, thickness = 1.8 }) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
-  const iconColor = color ?? theme.quietText ?? theme.iconColor;
+  const iconColor = color ?? theme.quietText;
 
   return (
     <Svg
@@ -28,4 +27,4 @@ function LockIcon({ width = 15, height = 15, color, thickness = 1.8 }) {
   );
 }
 
-export default LockIcon;
+export default Lock;

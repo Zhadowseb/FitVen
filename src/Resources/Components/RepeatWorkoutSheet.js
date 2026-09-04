@@ -5,7 +5,6 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
   useColorScheme,
@@ -14,6 +13,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSQLiteContext } from "expo-sqlite";
 
 import { Colors, withAlpha } from "../GlobalStyling/colors";
+import ThemedSheetHandle from "../ThemedComponents/ThemedSheetHandle";
+import ThemedText from "../ThemedComponents/ThemedText";
 import ArrowLeft from "../Icons/UI-icons/ArrowLeft";
 import ChevronRight from "../Icons/UI-icons/ChevronRight";
 import Cross from "../Icons/UI-icons/Cross";
@@ -227,7 +228,7 @@ export default function RepeatWorkoutSheet({
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
 
         <View style={[styles.sheet, { paddingBottom: insets.bottom + 18 }]}>
-          <View style={styles.handle} />
+          <ThemedSheetHandle style={styles.handle} />
 
           <View style={styles.header}>
             {mode === "plan" ? (
@@ -244,12 +245,12 @@ export default function RepeatWorkoutSheet({
             )}
 
             <View style={styles.headerCopy}>
-              <Text style={styles.eyebrow} numberOfLines={1}>
+              <ThemedText style={styles.eyebrow} numberOfLines={1}>
                 {workout?.label ?? "Workout"}
-              </Text>
-              <Text style={styles.title} numberOfLines={1}>
+              </ThemedText>
+              <ThemedText style={styles.title} numberOfLines={1}>
                 {mode === "choice" ? "Repeat workout" : STEP_LABELS[step]}
-              </Text>
+              </ThemedText>
             </View>
 
             <TouchableOpacity
@@ -275,10 +276,10 @@ export default function RepeatWorkoutSheet({
                   <ReplayHistory width={18} height={18} color={primaryTextColor} />
                 </View>
                 <View style={styles.choiceCopy}>
-                  <Text style={styles.choiceTitle}>Start</Text>
-                  <Text style={styles.choiceSubtitle}>
+                  <ThemedText style={styles.choiceTitle}>Start</ThemedText>
+                  <ThemedText style={styles.choiceSubtitle}>
                     Copy it to today and open it right away.
-                  </Text>
+                  </ThemedText>
                 </View>
                 {isWorking ? (
                   <ActivityIndicator color={primaryTextColor} />
@@ -303,10 +304,10 @@ export default function RepeatWorkoutSheet({
                   <Calender width={18} height={18} color={theme.quietText} />
                 </View>
                 <View style={styles.choiceCopy}>
-                  <Text style={styles.choiceTitle}>Plan</Text>
-                  <Text style={styles.choiceSubtitle}>
+                  <ThemedText style={styles.choiceTitle}>Plan</ThemedText>
+                  <ThemedText style={styles.choiceSubtitle}>
                     Pick a program, block, week and day.
-                  </Text>
+                  </ThemedText>
                 </View>
                 <ChevronRight
                   width={17}
@@ -319,9 +320,9 @@ export default function RepeatWorkoutSheet({
           ) : (
             <View style={styles.optionBlock}>
               {breadcrumb ? (
-                <Text style={styles.breadcrumb} numberOfLines={1}>
+                <ThemedText style={styles.breadcrumb} numberOfLines={1}>
                   {breadcrumb}
-                </Text>
+                </ThemedText>
               ) : null}
 
               {isLoading ? (
@@ -347,13 +348,13 @@ export default function RepeatWorkoutSheet({
                         style={styles.optionRow}
                       >
                         <View style={styles.choiceCopy}>
-                          <Text style={styles.optionTitle} numberOfLines={1}>
+                          <ThemedText style={styles.optionTitle} numberOfLines={1}>
                             {getOptionLabel(option)}
-                          </Text>
+                          </ThemedText>
                           {detail ? (
-                            <Text style={styles.optionDetail} numberOfLines={1}>
+                            <ThemedText style={styles.optionDetail} numberOfLines={1}>
                               {detail}
-                            </Text>
+                            </ThemedText>
                           ) : null}
                         </View>
                         <ChevronRight
@@ -368,9 +369,9 @@ export default function RepeatWorkoutSheet({
                 </ScrollView>
               ) : (
                 <View style={styles.stateBlock}>
-                  <Text style={styles.optionDetail}>
+                  <ThemedText style={styles.optionDetail}>
                     Nothing to choose from here.
-                  </Text>
+                  </ThemedText>
                 </View>
               )}
             </View>
@@ -402,11 +403,6 @@ function createStyles(theme) {
       paddingHorizontal: 18,
     },
     handle: {
-      alignSelf: "center",
-      width: 44,
-      height: 5,
-      borderRadius: 3,
-      backgroundColor: withAlpha(theme.text, 0.28),
       marginBottom: 14,
     },
     header: {

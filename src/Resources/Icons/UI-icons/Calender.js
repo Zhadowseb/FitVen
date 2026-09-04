@@ -6,7 +6,7 @@ import { Colors } from "../../GlobalStyling/colors"
 function SvgComponent({width, height, color, thickness}) {
   const colorScheme = useColorScheme()
   const theme = Colors[colorScheme] ?? Colors.light
-  const iconColor = color ? color : theme.iconColor ?? "#141B34"
+  const iconColor = color ? color : theme.iconColor
 
   return (
     <Svg

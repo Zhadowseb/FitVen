@@ -27,6 +27,7 @@ import {
 } from "../Utils/syncUtils";
 import { getStableSyncDeviceId } from "../Utils/deviceIdentity";
 import { calculateBrzyckiOneRepMax } from "../Utils/oneRepMaxUtils";
+import { formatDisplayNumber } from "../Utils/numberUtils";
 
 const WEEK_DAYS = [
   "Monday",
@@ -102,10 +103,6 @@ const EXERCISE_VISIBLE_COLUMN_KEYS = [
   "weight",
   "done",
 ];
-
-function formatDisplayNumber(value) {
-  return Number.isInteger(value) ? `${value}` : value.toFixed(1);
-}
 
 function getWeekdayLabel(date) {
   return WEEK_DAYS[(date.getDay() + 6) % 7] ?? WEEK_DAYS[0];

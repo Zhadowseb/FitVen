@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable } from "react-native";
+import { Pressable } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
 import { programService as programRepository } from "../../../Services";
-import { ThemedPicker, ThemedText, ThemedModal } from "../../ThemedComponents";
+import {
+  ThemedModal,
+  ThemedStateBlock,
+  ThemedText,
+} from "../../ThemedComponents";
 
 const Mesocycle = ({ program_id, visible, close }) => {
   const db = useSQLiteContext();
@@ -27,7 +31,7 @@ const Mesocycle = ({ program_id, visible, close }) => {
     load();
   }, [program_id]);
 
-  if (loading) return <ActivityIndicator />;
+  if (loading) return <ThemedStateBlock />;
 
   if (mesocycles.length === 0) {
     return <ThemedText>No blocks</ThemedText>;

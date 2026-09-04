@@ -33,8 +33,6 @@ export default StyleSheet.create({
     marginBottom: 0,
   },
   noticeCard: {
-    marginHorizontal: 0,
-    marginVertical: 0,
     borderWidth: 1,
     borderRadius: 24,
     paddingHorizontal: 18,
@@ -54,10 +52,6 @@ export default StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 28,
-  },
-  loadingLabel: {
-    marginTop: 10,
-    fontSize: 13,
   },
   resultsList: {
     marginTop: 2,
@@ -89,8 +83,6 @@ export default StyleSheet.create({
     flexShrink: 0,
   },
   emptyStateCard: {
-    marginHorizontal: 0,
-    marginVertical: 0,
     borderWidth: 1,
     borderRadius: 24,
     paddingHorizontal: 18,

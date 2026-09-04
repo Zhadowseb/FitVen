@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { ScrollView, View, useColorScheme } from "react-native";
 
 import { Colors } from "../../../../../../Resources/GlobalStyling/colors";
+import { formatDisplayNumber } from "../../../../../../Utils/numberUtils";
+import { getSuggestedProgramBestWeight } from "../../../../../../Utils/oneRepMaxUtils";
 import styles from "./AddEstimatedSetStyle";
 import ExerciseDropdown from "../../../../../../Resources/Components/ExerciseDropdown/ExerciseDropdown";
 import {
@@ -10,38 +12,6 @@ import {
   ThemedText,
   ThemedTextInput,
 } from "../../../../../../Resources/ThemedComponents";
-
-function formatDisplayNumber(value) {
-  const parsedValue = Number(value);
-
-  if (!Number.isFinite(parsedValue)) {
-    return "--";
-  }
-
-  return Number.isInteger(parsedValue)
-    ? `${parsedValue}`
-    : parsedValue.toFixed(1);
-}
-
-function getSuggestedProgramBestWeight(programBest) {
-  if (!programBest) {
-    return null;
-  }
-
-  if (programBest.isEstimated) {
-    const estimatedValue = Number(programBest.estimatedOneRepMax);
-
-    if (!Number.isFinite(estimatedValue)) {
-      return null;
-    }
-
-    return Math.round(estimatedValue);
-  }
-
-  const weightValue = Number(programBest.weight);
-
-  return Number.isFinite(weightValue) ? weightValue : null;
-}
 
 export default function AddEstimatedSet({
   visible,
@@ -65,10 +35,10 @@ export default function AddEstimatedSet({
       : `${formatDisplayNumber(suggestedWeight)} kg`;
   const canSubmit =
     selectedExerciseName.trim() !== "" && estimated_weight.trim() !== "";
-  const surfaceColor = theme.uiBackground ?? "rgba(255, 255, 255, 0.04)";
-  const borderColor = theme.cardBorder ?? theme.iconColor ?? "#383838";
+  const surfaceColor = theme.uiBackground;
+  const borderColor = theme.cardBorder ?? theme.iconColor;
   const badgeBackground = theme.primary;
-  const badgeTextColor = theme.cardBackground ?? theme.textInverted ?? "#201e2b";
+  const badgeTextColor = theme.cardBackground ?? theme.textInverted;
 
   const handleClose = () => {
     set_estimated_weight("");

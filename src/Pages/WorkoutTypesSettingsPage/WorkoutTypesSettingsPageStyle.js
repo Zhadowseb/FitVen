@@ -68,10 +68,6 @@ export default StyleSheet.create({
 
   typeCard: {
     width: "100%",
-    marginHorizontal: 0,
-    marginVertical: 0,
-    paddingHorizontal: 0,
-    paddingVertical: 0,
     borderRadius: 18,
     borderWidth: 1,
     overflow: "hidden",

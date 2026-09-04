@@ -1,5 +1,6 @@
-import { Animated, StyleSheet, Text, View } from "react-native";
+import { Animated, StyleSheet, View } from "react-native";
 import { useBlinkAnimation } from "./animationHooks";
+import ThemedText from "../ThemedComponents/ThemedText";
 
 // Small status pill from the redesign: optional dot + uppercase 10px/800 label
 // on an alpha-tinted background (e.g. "IN PROGRESS", "3 LIVE", "ACTIVE").
@@ -31,7 +32,7 @@ function StatusPill({
           ]}
         />
       ) : null}
-      <Text style={[styles.label, { color }, textStyle]}>{label}</Text>
+      <ThemedText style={[styles.label, { color }, textStyle]}>{label}</ThemedText>
     </View>
   );
 }

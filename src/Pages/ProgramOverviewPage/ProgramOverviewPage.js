@@ -6,14 +6,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback } from "react";
 import { useColorScheme } from "react-native";
-import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
+import { Colors } from "../../Resources/GlobalStyling/colors";
 
 import styles from './ProgramOverviewPageStyle';
 
 import { programService, weightliftingService } from "../../Services";
-import Rm_List from './Components/rm_list/rm_list';
+import RmList from './Components/RmList/RmList';
 
-import AddEstimatedSet from './Components/rm_list/Components/AddEstimatedSet/AddEstimatedSet';
+import AddEstimatedSet from './Components/RmList/Components/AddEstimatedSet/AddEstimatedSet';
 import MesocycleList from "./Components/MesocycleList/MesocycleList";
 import ProgramOverviewHeader from "./Components/ProgramOverviewHeader";
 import StartProgramModal from "./Components/StartProgramModal";
@@ -511,7 +511,7 @@ const ProgramOverviewPage = ( {route} ) => {
                             borderColor: theme.cardBorder,
                         },
                     ]}>
-                    <Rm_List
+                    <RmList
                         program_id={program_id}
                         refreshKey={refreshKey}
                         refresh={refresh}
@@ -544,7 +544,12 @@ const ProgramOverviewPage = ( {route} ) => {
             visible={prSettingsBottomsheet_visible}
             onClose={() => set_prSettingsBottomsheet_visible(false)}>
 
-            <View style={styles.bottomsheet_title}>
+            <View
+              style={[
+                styles.bottomsheet_title,
+                { borderBottomColor: theme.hairline },
+              ]}
+            >
                 <ThemedTitle type={"h3"} style={{flex: 10}}>
                     Select exercises
                 </ThemedTitle>

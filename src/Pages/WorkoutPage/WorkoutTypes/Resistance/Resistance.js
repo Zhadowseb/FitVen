@@ -456,7 +456,7 @@ const Resistance = ({
   const cardBorder = theme.cardBorder ?? theme.iconColor ?? theme.text;
   const titleColor = theme.title ?? theme.text;
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
-  const invertedText = theme.textInverted ?? theme.background ?? "#0E0F12";
+  const invertedText = theme.textInverted ?? theme.background;
 
   const currentElapsed = normalizeElapsedDurationSeconds(
     elapsed_time + computeCurrentElapsed(),

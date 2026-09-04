@@ -1,5 +1,5 @@
 import { StatusBar } from "expo-status-bar";
-import { ActivityIndicator, RefreshControl, ScrollView, TouchableOpacity, View, useColorScheme } from "react-native";
+import { RefreshControl, ScrollView, View, useColorScheme } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
 import { useCallback, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
@@ -12,6 +12,7 @@ import Day from "./Components/Day/Day";
 
 import {
   ThemedHeader,
+  ThemedStateBlock,
   ThemedText,
   ThemedTitle,
   ThemedView,
@@ -31,7 +32,6 @@ const WeekPage = ({ route }) => {
   const db = useSQLiteContext();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
-  const primaryTextColor = theme.primaryText ?? theme.primary;
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
 
   const microcycle_id = route.params.microcycle_id;
@@ -110,34 +110,15 @@ const WeekPage = ({ route }) => {
       </ThemedHeader>
 
       {loading ? (
-        <View style={styles.stateBlock}>
-          <ActivityIndicator color={primaryTextColor} />
-          <ThemedText style={styles.stateText} setColor={quietText}>
-            Loading this week...
-          </ThemedText>
-        </View>
+        <ThemedStateBlock variant="loading" message="Loading this week..." />
       ) : errorMessage ? (
-        <View style={styles.stateBlock}>
-          <ThemedTitle type="h3" style={styles.stateTitle}>
-            Week unavailable
-          </ThemedTitle>
-          <ThemedText style={styles.stateText} setColor={quietText}>
-            {errorMessage}
-          </ThemedText>
-          <TouchableOpacity
-            accessibilityRole="button"
-            activeOpacity={0.82}
-            onPress={() => loadWeek({ showLoader: true })}
-            style={[styles.stateAction, { backgroundColor: theme.primary }]}
-          >
-            <ThemedText
-              style={styles.stateActionText}
-              setColor={theme.textInverted ?? theme.cardBackground}
-            >
-              Try again
-            </ThemedText>
-          </TouchableOpacity>
-        </View>
+        <ThemedStateBlock
+          variant="error"
+          title="Week unavailable"
+          message={errorMessage}
+          actionLabel="Try again"
+          onAction={() => loadWeek({ showLoader: true })}
+        />
       ) : (
         <ScrollView
           style={styles.scroll}
@@ -154,14 +135,11 @@ const WeekPage = ({ route }) => {
           }
         >
           {dayCount === 0 ? (
-            <View style={styles.stateBlock}>
-              <ThemedTitle type="h3" style={styles.stateTitle}>
-                No days in this week
-              </ThemedTitle>
-              <ThemedText style={styles.stateText} setColor={quietText}>
-                This week has no days yet. Add them from the block overview.
-              </ThemedText>
-            </View>
+            <ThemedStateBlock
+              variant="empty"
+              title="No days in this week"
+              message="This week has no days yet. Add them from the block overview."
+            />
           ) : (
             WEEK_DAYS.map((day) => (
               <Day

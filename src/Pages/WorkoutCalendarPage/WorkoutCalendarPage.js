@@ -33,6 +33,7 @@ import CalendarWeekView from "./Components/CalendarWeekView/CalendarWeekView";
 import {
   ThemedBottomSheet,
   ThemedHeader,
+  ThemedStateBlock,
   ThemedText,
   ThemedTitle,
   ThemedModal,
@@ -337,15 +338,15 @@ const WorkoutCalendarPage = () => {
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const cardSurface = theme.cardBackground ?? theme.background;
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor ?? theme.text;
-  const primaryColor = theme.primary ?? "#f7742e";
+  const primaryColor = theme.primary;
   const gridPalette = useGridPalette();
   const primaryTextColor = theme.primaryText ?? theme.primary;
-  const secondaryColor = theme.secondary ?? "#60daac";
+  const secondaryColor = theme.secondary;
   const modalCardSurface = theme.fields ?? theme.cardBackground ?? theme.background;
-  const actionTextColor = theme.textInverted ?? theme.cardBackground ?? "#141414";
-  const dangerColor = theme.danger ?? Colors.dark.danger;
-  const recordColor = theme.record ?? Colors.dark.record ?? secondaryColor;
-  const sickColor = theme.planned ?? Colors.dark.planned;
+  const actionTextColor = theme.textInverted ?? theme.cardBackground;
+  const dangerColor = theme.danger;
+  const recordColor = theme.record ?? secondaryColor;
+  const sickColor = theme.planned;
   const rawVisibleMonthIndex = visibleMonthOffset - monthOffsetRange.start;
   const monthPages = useMemo(
     () =>
@@ -1163,30 +1164,17 @@ const WorkoutCalendarPage = () => {
       </ThemedHeader>
 
       {errorMessage ? (
-        <View style={styles.errorState}>
-          <ThemedTitle type="h3" style={styles.errorTitle}>
-            Calendar unavailable
-          </ThemedTitle>
-          <ThemedText style={styles.errorBody} setColor={quietText}>
-            {errorMessage}
-          </ThemedText>
-          <TouchableOpacity
-            accessibilityRole="button"
-            activeOpacity={0.78}
-            disabled={isLoading}
-            onPress={() => {
-              void loadCalendarWorkouts();
-            }}
-            style={[styles.retryButton, { backgroundColor: primaryColor }]}
-          >
-            <ThemedText
-              style={styles.retryButtonText}
-              setColor={actionTextColor}
-            >
-              Try again
-            </ThemedText>
-          </TouchableOpacity>
-        </View>
+        <ThemedStateBlock
+          fill
+          variant="error"
+          title="Calendar unavailable"
+          message={errorMessage}
+          actionLabel="Try again"
+          actionDisabled={isLoading}
+          onAction={() => {
+            void loadCalendarWorkouts();
+          }}
+        />
       ) : calendarView === "week" ? (
         <ScrollView
           ref={weekPagerRef}

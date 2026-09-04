@@ -17,6 +17,7 @@ import Search from "../../Resources/Icons/UI-icons/Search";
 import {
   ThemedCard,
   ThemedHeader,
+  ThemedStateBlock,
   ThemedSwitch,
   ThemedText,
   ThemedTitle,
@@ -48,9 +49,8 @@ export default function ExerciseSocialPostSettingsPage() {
   const cardSurface = theme.cardBackground ?? theme.background;
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor;
   const panelSurface = theme.uiBackground ?? theme.background;
-  const primaryColor = theme.primary ?? "#f7742e";
   const primaryTextColor = theme.primaryText ?? theme.primary;
-  const dangerColor = theme.danger ?? "#da1212";
+  const dangerColor = theme.danger;
   const normalizedSearchQuery = searchQuery.trim().toLocaleLowerCase();
   const hiddenCount = hiddenExerciseIds.size;
 
@@ -308,12 +308,7 @@ export default function ExerciseSocialPostSettingsPage() {
       </ThemedHeader>
 
       {loading ? (
-        <View style={styles.loadingState}>
-          <ActivityIndicator color={primaryTextColor} />
-          <ThemedText style={styles.loadingText} setColor={quietText}>
-            Loading exercises...
-          </ThemedText>
-        </View>
+        <ThemedStateBlock fill variant="loading" message="Loading exercises..." />
       ) : (
         <FlatList
           data={filteredExercises}
@@ -323,14 +318,11 @@ export default function ExerciseSocialPostSettingsPage() {
           renderItem={renderExerciseRow}
           ListHeaderComponent={renderHeader}
           ListEmptyComponent={
-            <View style={styles.emptyState}>
-              <ThemedTitle type="h3" style={styles.emptyTitle}>
-                No exercises found
-              </ThemedTitle>
-              <ThemedText style={styles.emptyBody} setColor={quietText}>
-                Try another search or sync the exercise catalog.
-              </ThemedText>
-            </View>
+            <ThemedStateBlock
+              variant="empty"
+              title="No exercises found"
+              message="Try another search or sync the exercise catalog."
+            />
           }
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}

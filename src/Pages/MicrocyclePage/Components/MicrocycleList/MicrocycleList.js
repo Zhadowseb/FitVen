@@ -16,7 +16,6 @@ import { useNavigation } from "@react-navigation/native";
 import { useColorScheme } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { Colors } from "../../../../Resources/GlobalStyling/colors";
-import ThreeDots from "../../../../Resources/Icons/UI-icons/ThreeDots"
 import Copy from "../../../../Resources/Icons/UI-icons/Copy";
 import Thermostat from "../../../../Resources/Icons/UI-icons/Thermostat";
 import CalenderPastePicker from "../../../../Resources/Components/CalenderPastePicker/CalenderPasteModal";
@@ -168,15 +167,15 @@ const MicrocycleList = ({
   const colorScheme = useColorScheme();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const theme = Colors[colorScheme] ?? Colors.light;
-  const sickColor = theme.planned ?? Colors.dark.planned ?? "#ffdd00";
+  const sickColor = theme.planned;
   const sickBorderColor =
-    theme.plannedDark ?? Colors.dark.plannedDark ?? sickColor;
+    theme.plannedDark ?? sickColor;
   const modalBorderColor =
     theme.cardBorder ?? theme.border ?? theme.iconColor ?? theme.text;
   const modalTitleColor = theme.title ?? theme.text;
   const modalQuietColor = theme.quietText ?? theme.iconColor ?? theme.text;
   const modalInvertedColor =
-    theme.textInverted ?? theme.cardBackground ?? "#0E0F12";
+    theme.textInverted ?? theme.cardBackground;
   const db = useSQLiteContext();
   const navigation = useNavigation();
   const palette = useGridPalette();
@@ -1045,7 +1044,9 @@ const MicrocycleList = ({
       visible={OptionsBottomsheet_visible}
       onClose={() => set_OptionsBottomsheet_visible(false)} >
 
-      <View style={styles.bottomsheet_title}>
+      <View
+        style={[styles.bottomsheet_title, { borderBottomColor: theme.hairline }]}
+      >
 
           <ThemedTitle type={"h3"} style={{flex: 10}}> 
             Week {selectedWeek.microcycle_number}
@@ -1208,10 +1209,10 @@ const MicrocycleList = ({
           <View style={styles.dayContextBody}>
             <DayContextMenuAction
               Icon={MenuAddIcon}
-              iconColor={theme.primary ?? "#f7742e"}
+              iconColor={theme.primary}
               label="Add new workout"
               onPress={addWorkoutToSelectedDay}
-              textColor={theme.primary ?? "#f7742e"}
+              textColor={theme.primary}
             />
 
             <DayContextMenuAction
@@ -1235,10 +1236,10 @@ const MicrocycleList = ({
             {!!selectedDay?.workouts?.length && (
               <DayContextMenuAction
                 Icon={MenuDeleteIcon}
-                iconColor={theme.danger ?? Colors.dark.danger ?? "#ba0000ff"}
+                iconColor={theme.danger}
                 label="Delete workout"
                 onPress={deleteSelectedDayWorkout}
-                textColor={theme.danger ?? Colors.dark.danger ?? "#ba0000ff"}
+                textColor={theme.danger}
               />
             )}
           </View>

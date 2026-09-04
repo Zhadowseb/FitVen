@@ -8,8 +8,6 @@ export default StyleSheet.create({
     },
 
     wrapper: {
-        marginHorizontal: 0,
-        marginVertical: 0,
         width: "100%",
         paddingHorizontal: 8,
         paddingTop: 6,
@@ -55,14 +53,6 @@ export default StyleSheet.create({
     rm_percentage: {flex: 14},
     done:   {flex: 10, maxWidth: 33},
 
-    override: {
-        borderLeftWidth: 0,
-        borderBottomColor: "#555555ff",
-        borderBottomWidth: 1,
-        justifyContent: "center",
-        alignItems: "center",
-    },
-
     titleCell: {
         justifyContent: "center",
         alignItems: "center",
@@ -72,32 +62,6 @@ export default StyleSheet.create({
         fontWeight: "800",
         fontSize: 11,
         letterSpacing: 0.8,
-    },
-
-
-    editableInput: {
-        borderWidth: 1,
-        paddingVertical: 1,
-        textAlign: "center",
-        fontSize: 13,
-    },
-
-    input: {
-        alignItems: "center",
-        justifyContent: "center",
-        marginTop: 7,
-    },
-    widthPause: {
-        minWidth: 35,
-    },
-    widthReps: {
-        minWidth: 35,
-    },
-    widthRPE: {
-        minWidth: 35,
-    },
-    widthWeight: {
-        minWidth: 45,
     },
 
     editable_cell: {
@@ -363,6 +327,5 @@ export default StyleSheet.create({
     restMirrorSwitchThumbActive: {
         alignSelf: "flex-end",
     },
-
 
 });

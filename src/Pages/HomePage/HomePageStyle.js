@@ -73,13 +73,9 @@ export default StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  socialSectionSpacer: {
-    marginTop: 8,
-  },
   postOptionsTitle: {
     alignItems: "center",
     borderBottomWidth: 1,
-    borderBottomColor: "#2e2e2e",
     paddingBottom: 18,
   },
   postOptionsTitleText: {

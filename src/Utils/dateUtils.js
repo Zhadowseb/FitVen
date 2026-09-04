@@ -167,3 +167,43 @@ export function calculateAgeFromBirthDate(value, referenceDate = new Date()) {
   return age;
 }
 
+
+// "Just now" under a minute, then minutes, hours and days, and a short local
+// date once a week has passed. Shared by the feed card and the notification
+// list, which each carried an identical copy.
+export function formatTimeAgo(value) {
+  const timestamp = value ? new Date(value).getTime() : NaN;
+
+  if (!Number.isFinite(timestamp)) {
+    return "Just now";
+  }
+
+  const elapsedSeconds = Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
+
+  if (elapsedSeconds < 60) {
+    return "Just now";
+  }
+
+  const elapsedMinutes = Math.floor(elapsedSeconds / 60);
+
+  if (elapsedMinutes < 60) {
+    return `${elapsedMinutes}m ago`;
+  }
+
+  const elapsedHours = Math.floor(elapsedMinutes / 60);
+
+  if (elapsedHours < 24) {
+    return `${elapsedHours}h ago`;
+  }
+
+  const elapsedDays = Math.floor(elapsedHours / 24);
+
+  if (elapsedDays < 7) {
+    return `${elapsedDays}d ago`;
+  }
+
+  return new Date(timestamp).toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "short",
+  });
+}

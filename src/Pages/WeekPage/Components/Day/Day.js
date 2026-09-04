@@ -2,7 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Alert, View, Text, TouchableOpacity, Modal } from 'react-native';
 import { useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback } from "react";
 import { useColorScheme } from "react-native";
@@ -310,7 +310,12 @@ const Day = ( {day, program_id, microcycle_id, refreshKey = 0} ) => {
             visible={OptionsBottomsheet_visible}
             onClose={() => set_OptionsBottomsheet_visible(false)} >
 
-            <View style={styles.bottomsheet_title}>
+            <View
+              style={[
+                styles.bottomsheet_title,
+                { borderBottomColor: theme.hairline },
+              ]}
+            >
                 <ThemedText> {day} </ThemedText>
                 <ThemedText> {date} </ThemedText>
             </View>

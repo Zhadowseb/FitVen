@@ -1,6 +1,11 @@
 import Run from "./Run";
 import Resistance from "./Resistance";
 
+// Only Resistance and Run have an entry below. The other nine icons in this
+// folder - ArmMuscle, BoxingGlove, Dumbbell, LegMuscle, MultipleWorkouts,
+// Rest, RunningShoes, SkippingRope and Treadmil - are placeholders for
+// workout types still to come, not dead code. Leave them where they are.
+
 export const WORKOUT_ICONS = [
   {
     id: "Resistance",
