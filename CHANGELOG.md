@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.21.9] - Unreleased
+### Security
+- Removed the one-time program import, which carried a named user's email address, Supabase user id and full training history in the app bundle of every installation.
+
+### Added
+- `docs/SIKKERHED-DINE-OPGAVER.md`, the steps for the parts of the security review that live in the Supabase and Google dashboards.
+
+---
 ## [0.21.8] - Unreleased
 ### Removed
 - The five unmounted sync components for programs, blocks, weeks, days and exercise instances. `SetSync` already pushes that whole hierarchy in parent-first order, which is what the sync rules now ask for.
