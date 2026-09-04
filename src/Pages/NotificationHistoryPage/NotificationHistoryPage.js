@@ -36,8 +36,8 @@ export default function NotificationHistoryPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const titleColor = theme.title ?? theme.text;
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
-  const primaryColor = theme.primary ?? "#f7742e";
-  const secondaryColor = theme.secondary ?? "#60daac";
+  const primaryColor = theme.primary;
+  const secondaryColor = theme.secondary;
   const cardSurface = theme.cardBackground ?? theme.background;
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor;
   const avatarSurface = theme.fields ?? theme.uiBackground ?? cardSurface;
@@ -143,7 +143,7 @@ export default function NotificationHistoryPage() {
             },
           ]}
         >
-          <Bell width={11} height={11} color={theme.textInverted ?? "#1b1918"} />
+          <Bell width={11} height={11} color={theme.textInverted} />
         </View>
       </View>
 

@@ -50,7 +50,7 @@ export default function ExerciseSocialPostSettingsPage() {
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor;
   const panelSurface = theme.uiBackground ?? theme.background;
   const primaryTextColor = theme.primaryText ?? theme.primary;
-  const dangerColor = theme.danger ?? "#da1212";
+  const dangerColor = theme.danger;
   const normalizedSearchQuery = searchQuery.trim().toLocaleLowerCase();
   const hiddenCount = hiddenExerciseIds.size;
 

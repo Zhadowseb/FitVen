@@ -185,12 +185,12 @@ const RunHeartRateChartPage = () => {
     ).filter((tick) => tick > 60),
     60,
   ].filter((tick, index, ticks) => ticks.indexOf(tick) === index);
-  const screenBackground = theme.background ?? "#0E0F12";
+  const screenBackground = theme.background;
   const cardBorder = theme.cardBorder ?? theme.iconColor ?? theme.text;
   const titleColor = theme.title ?? theme.text;
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
-  const heartRateColor = theme.secondary ?? "#60daac";
-  const plannedColor = theme.planned ?? "#FFDD00";
+  const heartRateColor = theme.secondary;
+  const plannedColor = theme.planned;
   const actualSegments = buildActualHeartRateSegments(
     actualHistory,
     durationMinutes,

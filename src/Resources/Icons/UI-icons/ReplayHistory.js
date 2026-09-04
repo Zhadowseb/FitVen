@@ -6,7 +6,7 @@ import { Colors } from "../../GlobalStyling/colors"
 function ReplayHistory({ width, height, color }) {
   const colorScheme = useColorScheme()
   const theme = Colors[colorScheme] ?? Colors.light
-  const iconColor = color ? color : theme.primary ?? "#f7742eff"
+  const iconColor = color ? color : theme.primary
 
   return (
     <Svg

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Pressable, View, useColorScheme } from "react-native";
 
 import styles from "./AddProgramStyle";
@@ -22,7 +22,7 @@ export default function AddProgram({ visible, onClose, onSubmit }) {
   const cardBorder = theme.cardBorder ?? theme.iconColor ?? theme.text;
   const innerSurface =
     theme.fields ?? theme.cardBackground ?? theme.background;
-  const accentColor = theme.primary ?? "#f7742e";
+  const accentColor = theme.primary;
   const normalizedProgramName = programName.trim();
   const canCreate = normalizedProgramName.length > 0;
 

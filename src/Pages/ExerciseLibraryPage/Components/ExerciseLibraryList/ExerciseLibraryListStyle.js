@@ -8,10 +8,6 @@ const LIST_VIEWPORT_HEIGHT = EXERCISE_ROW_HEIGHT * VISIBLE_EXERCISE_COUNT;
 
 export default StyleSheet.create({
   card: {
-    marginHorizontal: 0,
-    marginVertical: 0,
-    paddingHorizontal: 0,
-    paddingVertical: 0,
     borderWidth: 1,
     borderRadius: 18,
     overflow: "hidden",

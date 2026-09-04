@@ -235,14 +235,14 @@ const ExerciseLibraryList = ({
   );
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const titleColor = theme.title ?? theme.text;
-  const primaryColor = theme.primary ?? "#f7742e";
+  const primaryColor = theme.primary;
   const primaryTextColor = theme.primaryText ?? theme.primary;
-  const secondaryColor = theme.secondary ?? "#60daac";
+  const secondaryColor = theme.secondary;
   const cardSurface =
     theme.cardBackground ?? theme.navBackground ?? theme.background;
   const cardBorder = theme.cardBorder ?? theme.iconColor ?? theme.text;
   const inputSurface = theme.background ?? cardSurface;
-  const activeFilterText = theme.cardBackground ?? theme.textInverted ?? "#1b1918";
+  const activeFilterText = theme.cardBackground ?? theme.textInverted;
   const badgeSurface =
     theme.uiBackground ??
     (colorScheme === "dark"

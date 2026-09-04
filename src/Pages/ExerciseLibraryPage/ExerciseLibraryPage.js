@@ -139,7 +139,7 @@ const ExerciseLibraryPage = () => {
     },
   ];
 
-  const neutralChipBackground = theme.chipBackground ?? "rgba(255,255,255,0.06)";
+  const neutralChipBackground = theme.chipBackground;
   const orangeChipBackground = withAlpha(theme.primary, 0.12);
   const yellowIconSquareBackground = "rgba(242, 193, 78, 0.12)";
   const orangeIconSquareBackground = withAlpha(theme.primary, 0.12);

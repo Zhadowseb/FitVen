@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { ScrollView, View, useColorScheme } from "react-native";
 
 import { Colors } from "../../../../../../Resources/GlobalStyling/colors";
@@ -35,10 +35,10 @@ export default function AddEstimatedSet({
       : `${formatDisplayNumber(suggestedWeight)} kg`;
   const canSubmit =
     selectedExerciseName.trim() !== "" && estimated_weight.trim() !== "";
-  const surfaceColor = theme.uiBackground ?? "rgba(255, 255, 255, 0.04)";
-  const borderColor = theme.cardBorder ?? theme.iconColor ?? "#383838";
+  const surfaceColor = theme.uiBackground;
+  const borderColor = theme.cardBorder ?? theme.iconColor;
   const badgeBackground = theme.primary;
-  const badgeTextColor = theme.cardBackground ?? theme.textInverted ?? "#201e2b";
+  const badgeTextColor = theme.cardBackground ?? theme.textInverted;
 
   const handleClose = () => {
     set_estimated_weight("");

@@ -8,8 +8,6 @@ export default StyleSheet.create({
     },
 
     wrapper: {
-        marginHorizontal: 0,
-        marginVertical: 0,
         width: "100%",
         paddingHorizontal: 8,
         paddingTop: 6,

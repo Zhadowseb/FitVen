@@ -290,7 +290,7 @@ const RunSetList = ({
   const cardSurface = theme.cardBackground ?? theme.background;
   const mutedSurface = theme.fields ?? theme.uiBackground ?? cardSurface;
   const cardBorder = theme.cardBorder ?? theme.iconColor ?? theme.text;
-  const invertedText = theme.textInverted ?? theme.background ?? "#0E0F12";
+  const invertedText = theme.textInverted ?? theme.background;
   const isCompactSection = variant === "segment";
   const isDark = colorScheme === "dark";
   const tableSurface = isDark ? "rgba(16, 17, 24, 0.58)" : "#f5f4fa";

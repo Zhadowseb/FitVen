@@ -30,7 +30,7 @@ export default function FeedbackModal({ visible, onClose, userId }) {
   }, [visible]);
 
   const trimmedLength = useMemo(() => message.trim().length, [message]);
-  const accentPrimary = theme.primary ?? "#f7742e";
+  const accentPrimary = theme.primary;
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor ?? theme.text;
   const innerSurface = theme.uiBackground ?? theme.cardBackground ?? theme.background;
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
@@ -77,7 +77,7 @@ export default function FeedbackModal({ visible, onClose, userId }) {
           styles.inputShell,
           {
             backgroundColor: innerSurface,
-            borderColor: errorMessage ? theme.danger ?? "#ba0000" : cardBorder,
+            borderColor: errorMessage ? theme.danger : cardBorder,
           },
         ]}
       >
@@ -116,13 +116,13 @@ export default function FeedbackModal({ visible, onClose, userId }) {
             styles.feedbackBanner,
             {
               backgroundColor: "rgba(186, 0, 0, 0.12)",
-              borderColor: theme.danger ?? "#ba0000",
+              borderColor: theme.danger,
             },
           ]}
         >
           <ThemedText
             style={styles.feedbackBannerText}
-            setColor={theme.danger ?? "#ba0000"}
+            setColor={theme.danger}
           >
             {errorMessage}
           </ThemedText>
@@ -135,14 +135,14 @@ export default function FeedbackModal({ visible, onClose, userId }) {
             styles.feedbackBanner,
             {
               backgroundColor:
-                theme.secondaryLight ?? "rgba(96, 218, 172, 0.16)",
-              borderColor: theme.secondary ?? "#60daac",
+                theme.secondaryLight,
+              borderColor: theme.secondary,
             },
           ]}
         >
           <ThemedText
             style={styles.feedbackBannerText}
-            setColor={theme.secondaryDark ?? theme.secondary ?? "#60daac"}
+            setColor={theme.secondaryDark ?? theme.secondary}
           >
             {successMessage}
           </ThemedText>

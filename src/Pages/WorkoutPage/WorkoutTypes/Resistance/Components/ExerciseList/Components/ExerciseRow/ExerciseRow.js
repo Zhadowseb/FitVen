@@ -37,7 +37,6 @@ import { EXERCISE_COLLAPSE_DURATION_MS } from "../../exerciseCollapseAnimation";
 import CollapsedSetSummary, {
   ClassicSetSummary,
   SetProgressDots,
-  isPersonalRecordSet,
 } from "./CollapsedSetSummary";
 
 const REORDER_LONG_PRESS_DELAY_MS = 320;
@@ -432,7 +431,7 @@ const ExerciseRow = ({
   const primaryColor = theme.primary ?? theme.iconColor ?? theme.text;
   const primaryTextColor = theme.primaryText ?? theme.primary;
   const secondaryColor = theme.secondary ?? primaryColor;
-  const dangerColor = theme.danger ?? "#d94141";
+  const dangerColor = theme.danger;
   const cardBorder = theme.cardBorder ?? theme.iconColor ?? theme.text;
   const cardSurface = theme.cardBackground ?? theme.background;
   const innerSurface = theme.uiBackground ?? cardSurface;
@@ -441,13 +440,12 @@ const ExerciseRow = ({
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const addSetColor = theme.iconColor ?? quietText;
   const titleColor = theme.title ?? theme.text;
-  const replayIconColor = theme.primary ?? "#f7742eff";
-  const recordColor = theme.record ?? Colors.dark.record ?? primaryColor;
+  const replayIconColor = theme.primary;
+  const recordColor = theme.record ?? primaryColor;
   const recordLightColor =
     theme.recordLight ??
-    Colors.dark.recordLight ??
     (colorScheme === "dark" ? "rgba(55, 63, 174, 0.38)" : "rgba(55, 63, 174, 0.16)");
-  const recordDarkColor = theme.recordDark ?? Colors.dark.recordDark ?? recordColor;
+  const recordDarkColor = theme.recordDark ?? recordColor;
   const hasPersonalRecord =
     Boolean(exercise.hasPersonalRecord) ||
     exercise.sets.some(
@@ -481,7 +479,7 @@ const ExerciseRow = ({
     : exerciseIsDone ? withAlpha(secondaryColor, 0.35) : cardBorder;
   const exerciseTitleColor = exerciseIsFailed
     ? quietText
-    : isRecordExercise ? (theme.planned ?? "#F2C14E")
+    : isRecordExercise ? (theme.planned)
       : exerciseIsDone ? secondaryColor : titleColor;
   const exerciseCheckboxFillColor = secondaryColor;
   const exerciseCheckboxCheckmarkColor = cardSurface;

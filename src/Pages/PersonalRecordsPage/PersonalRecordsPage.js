@@ -283,14 +283,14 @@ const PersonalRecordsPage = () => {
     [muscleLoadPrograms]
   );
 
-  const primaryColor = theme.primary ?? "#f7742e";
+  const primaryColor = theme.primary;
 
   const primaryTextColor = theme.primaryText ?? theme.primary;
-  const secondaryColor = theme.secondary ?? "#60daac";
+  const secondaryColor = theme.secondary;
   const primarySoft = withAlpha(theme.primary, 0.16);
   const primaryRowSurface = withAlpha(theme.primary, 0.09);
   const secondarySoft = withAlpha(theme.secondary, 0.22);
-  const backgroundColor = theme.background ?? "#0e0f12";
+  const backgroundColor = theme.background;
   const cardSurface = theme.cardBackground ?? backgroundColor;
   const panelSurface = theme.uiBackground ?? cardSurface;
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor ?? theme.text;

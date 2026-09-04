@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.21.5] - Unreleased
+### Changed
+- `ThemedCard` is a surface only. It used to bake in 10 px of margin and padding, which every single call site then had to undo, so 69 reset declarations are gone with it.
+- `ThemedButton` passes unknown props through to its `Pressable`, so `accessibilityLabel`, `testID` and `onLongPress` reach it, and it announces itself as a button by default.
+
+### Removed
+- 93 dead colour fallbacks. Every one sat behind a token that is always defined, and most held a pre-redesign colour — `#f7742e`, `#60daac`, `#0E0F12`, `#ba0000ff` — that read as a valid value to anyone editing the line. Fourteen of them fell back to the dark palette, which would have been the wrong scheme in the light theme.
+
+---
 ## [0.21.4] - Unreleased
 ### Fixed
 - The set summary under an exercise no longer draws white on white in the light theme: the compact table's surface, its gridlines, the set bubbles' borders and the connector between them now come from the palette.

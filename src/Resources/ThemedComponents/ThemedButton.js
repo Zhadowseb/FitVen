@@ -16,6 +16,7 @@ const ThemedButton = ({
   width,
   height = 48,
   fullWidth = false,
+  ...props
 }) => {
 
 
@@ -37,7 +38,7 @@ const ThemedButton = ({
         secondary: {
             backgroundColor: "transparent",
             borderWidth: 1,
-            borderColor: withAlpha(theme.title ?? theme.text, 0.28),
+            borderColor: withAlpha(theme.title, 0.28),
         },
         success: {
             backgroundColor: theme.secondary,
@@ -57,6 +58,11 @@ const ThemedButton = ({
 
   return (
     <Pressable
+      accessibilityRole="button"
+      // Spread first, so onPress, disabled and style below cannot be
+      // overwritten by accident; everything else - accessibilityLabel,
+      // testID, onLongPress - now reaches Pressable.
+      {...props}
       onPress={onPress}
       disabled={disabled}
       style={({ pressed }) => [
@@ -74,10 +80,10 @@ const ThemedButton = ({
           {
             color:
               variant === "secondary"
-                ? theme.title ?? theme.text
+                ? theme.title
                 : variant === "success"
-                  ? theme.inkOnSecondary ?? theme.textInverted ?? "#0C1410"
-                  : theme.textInverted ?? "#14100C",
+                  ? theme.inkOnSecondary
+                  : theme.textInverted,
           },
         ]}
         size={textSize ? textSize : 14}>

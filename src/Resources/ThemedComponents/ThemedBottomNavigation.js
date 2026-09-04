@@ -138,8 +138,8 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
   const barBackground =
     theme.navBackground ?? theme.cardBackground ?? theme.background;
   const barBorder = theme.hairline ?? theme.cardBorder ?? theme.iconColor;
-  const plusBackground = theme.primary ?? "#F7742E";
-  const plusIconColor = theme.textInverted ?? theme.cardBackground ?? "#14100C";
+  const plusBackground = theme.primary;
+  const plusIconColor = theme.textInverted ?? theme.cardBackground;
   const fabBorderColor = theme.background ?? barBackground;
   const activeWorkoutElapsed = activeWorkoutTimer
     ? normalizeElapsedDurationSeconds(activeWorkoutTimer.elapsed_time, 0) +

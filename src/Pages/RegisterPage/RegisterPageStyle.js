@@ -64,8 +64,6 @@ export default StyleSheet.create({
   },
 
   registerCard: {
-    marginHorizontal: 0,
-    marginVertical: 0,
     paddingHorizontal: 18,
     paddingVertical: 18,
     borderWidth: 1,

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Alert, ScrollView, View, useColorScheme } from "react-native";
 
 import { Colors } from "../../../../../../Resources/GlobalStyling/colors";
@@ -36,10 +36,10 @@ export default function EditEstimatedSet({
     suggestedWeight === null
       ? null
       : `${formatDisplayNumber(suggestedWeight)} kg`;
-  const surfaceColor = theme.uiBackground ?? "rgba(255, 255, 255, 0.04)";
-  const borderColor = theme.cardBorder ?? theme.iconColor ?? "#383838";
+  const surfaceColor = theme.uiBackground;
+  const borderColor = theme.cardBorder ?? theme.iconColor;
   const badgeBackground = theme.primary;
-  const badgeTextColor = theme.cardBackground ?? theme.textInverted ?? "#201e2b";
+  const badgeTextColor = theme.cardBackground ?? theme.textInverted;
 
   const persistChanges = async () => {
     const nextEstimatedWeight = estimated_weight.trim();

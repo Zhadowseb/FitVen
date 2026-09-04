@@ -27,12 +27,8 @@ export default StyleSheet.create({
     lineHeight: 26,
   },
   card: {
-    marginHorizontal: 0,
-    marginVertical: 0,
     borderWidth: 1,
     borderRadius: 24,
-    paddingHorizontal: 0,
-    paddingVertical: 0,
     overflow: "hidden",
   },
   cardHeader: {

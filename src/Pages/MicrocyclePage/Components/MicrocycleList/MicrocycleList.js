@@ -167,15 +167,15 @@ const MicrocycleList = ({
   const colorScheme = useColorScheme();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const theme = Colors[colorScheme] ?? Colors.light;
-  const sickColor = theme.planned ?? Colors.dark.planned ?? "#ffdd00";
+  const sickColor = theme.planned;
   const sickBorderColor =
-    theme.plannedDark ?? Colors.dark.plannedDark ?? sickColor;
+    theme.plannedDark ?? sickColor;
   const modalBorderColor =
     theme.cardBorder ?? theme.border ?? theme.iconColor ?? theme.text;
   const modalTitleColor = theme.title ?? theme.text;
   const modalQuietColor = theme.quietText ?? theme.iconColor ?? theme.text;
   const modalInvertedColor =
-    theme.textInverted ?? theme.cardBackground ?? "#0E0F12";
+    theme.textInverted ?? theme.cardBackground;
   const db = useSQLiteContext();
   const navigation = useNavigation();
   const palette = useGridPalette();
@@ -1209,10 +1209,10 @@ const MicrocycleList = ({
           <View style={styles.dayContextBody}>
             <DayContextMenuAction
               Icon={MenuAddIcon}
-              iconColor={theme.primary ?? "#f7742e"}
+              iconColor={theme.primary}
               label="Add new workout"
               onPress={addWorkoutToSelectedDay}
-              textColor={theme.primary ?? "#f7742e"}
+              textColor={theme.primary}
             />
 
             <DayContextMenuAction
@@ -1236,10 +1236,10 @@ const MicrocycleList = ({
             {!!selectedDay?.workouts?.length && (
               <DayContextMenuAction
                 Icon={MenuDeleteIcon}
-                iconColor={theme.danger ?? Colors.dark.danger ?? "#ba0000ff"}
+                iconColor={theme.danger}
                 label="Delete workout"
                 onPress={deleteSelectedDayWorkout}
-                textColor={theme.danger ?? Colors.dark.danger ?? "#ba0000ff"}
+                textColor={theme.danger}
               />
             )}
           </View>

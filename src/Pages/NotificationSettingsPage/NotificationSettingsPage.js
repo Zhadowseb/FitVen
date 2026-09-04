@@ -2,7 +2,6 @@ import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
-  ScrollView,
   TextInput,
   View,
   useColorScheme,
@@ -94,7 +93,7 @@ export default function NotificationSettingsPage() {
   const customPanelSurface = theme.fields ?? cardSurface;
   const pageSurface = theme.background;
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor;
-  const primaryColor = theme.primary ?? "#f7742e";
+  const primaryColor = theme.primary;
   const primaryTextColor = theme.primaryText ?? theme.primary;
   const selectedSurface = withAlpha(
     theme.primary,
@@ -497,7 +496,7 @@ export default function NotificationSettingsPage() {
                             <Checkmark
                               width={15}
                               height={15}
-                              color={theme.textInverted ?? "#15100d"}
+                              color={theme.textInverted}
                               thickness={2.2}
                             />
                           ) : null}

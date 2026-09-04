@@ -244,7 +244,7 @@ export default function ThemedDateWheelPicker({
   const cardSurface = theme.cardBackground ?? theme.background;
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor;
   const selectedSurface = theme.fields ?? theme.uiBackground ?? cardSurface;
-  const primaryColor = theme.primary ?? "#f7742e";
+  const primaryColor = theme.primary;
   const primaryTextColor = theme.primaryText ?? theme.primary;
   const months = useMemo(() => {
     const formatter = new Intl.DateTimeFormat(locale, { month: "long" });

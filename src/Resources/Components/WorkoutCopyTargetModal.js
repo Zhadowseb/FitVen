@@ -101,13 +101,13 @@ function WorkoutCopyTargetModal({
   const titleColor = theme.title ?? theme.text;
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const mutedText = theme.iconColor ?? quietText;
-  const primaryColor = theme.primary ?? "#f7742e";
+  const primaryColor = theme.primary;
   const primaryTextColor = theme.primaryText ?? theme.primary;
-  const secondaryColor = theme.secondary ?? "#60daac";
-  const warningColor = theme.planned ?? "#ffdd00";
+  const secondaryColor = theme.secondary;
+  const warningColor = theme.planned;
   const fieldSurface = theme.fields ?? theme.cardBackground ?? theme.background;
   const cardBorder = theme.cardBorder ?? theme.iconColor ?? theme.text;
-  const confirmTextColor = theme.textInverted ?? theme.background ?? "#0E0F12";
+  const confirmTextColor = theme.textInverted ?? theme.background;
   const primarySoft = withAlpha(primaryColor, 0.14);
   const secondarySoft = withAlpha(secondaryColor, 0.14);
   const selectedProgramTarget = useMemo(

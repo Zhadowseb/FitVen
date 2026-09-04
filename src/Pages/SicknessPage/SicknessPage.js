@@ -87,15 +87,15 @@ export default function SicknessPage() {
   const [datePickerTarget, setDatePickerTarget] = useState(null);
 
   const primaryTextColor = theme.primaryText ?? theme.primary;
-  const sicknessColor = theme.planned ?? Colors.dark.planned ?? "#ffdd00";
+  const sicknessColor = theme.planned;
   const sicknessBorderColor =
-    theme.plannedDark ?? Colors.dark.plannedDark ?? sicknessColor;
+    theme.plannedDark ?? sicknessColor;
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor ?? theme.text;
   const innerSurface = theme.uiBackground ?? theme.cardBackground ?? theme.background;
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const titleColor = theme.title ?? theme.text;
-  const invertedText = theme.textInverted ?? theme.background ?? "#0E0F12";
-  const dangerColor = theme.danger ?? Colors.dark.danger ?? "#ba0000ff";
+  const invertedText = theme.textInverted ?? theme.background;
+  const dangerColor = theme.danger;
   const normalizedStartDate = normalizeLocalDateString(startDate);
   const normalizedEndDate = endDate.trim()
     ? normalizeLocalDateString(endDate)

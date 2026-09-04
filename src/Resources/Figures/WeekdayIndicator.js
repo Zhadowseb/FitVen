@@ -96,22 +96,22 @@ const WeekdayIndicator = ({
   const activeBorder = theme.primary ?? cardBorder;
   const completedBorder = theme.secondary ?? cardBorder;
   const recordColor =
-    theme.record ?? Colors.dark.record ?? theme.secondary ?? titleColor;
-  const recordBorder = theme.recordDark ?? Colors.dark.recordDark ?? recordColor;
-  const dangerColor = theme.danger ?? Colors.dark.danger ?? "#ba0000ff";
+    theme.record ?? theme.secondary ?? titleColor;
+  const recordBorder = theme.recordDark ?? recordColor;
+  const dangerColor = theme.danger;
   const dangerBorderColor =
-    theme.dangerDark ?? Colors.dark.dangerDark ?? dangerColor;
-  const sickColor = theme.planned ?? Colors.dark.planned ?? "#ffdd00";
-  const sickBorderColor = theme.plannedDark ?? Colors.dark.plannedDark ?? sickColor;
+    theme.dangerDark ?? dangerColor;
+  const sickColor = theme.planned;
+  const sickBorderColor = theme.plannedDark ?? sickColor;
   const sickSurface =
     colorScheme === "dark" ? "rgba(255, 221, 0, 0.13)" : "rgba(255, 221, 0, 0.28)";
   const activeText = theme.primary ?? titleColor;
   const completedText = theme.secondary ?? titleColor;
-  const todayBadgeText = theme.textInverted ?? theme.cardBackground ?? "#141414";
+  const todayBadgeText = theme.textInverted ?? theme.cardBackground;
   const statusBadgeLabel = active ? "TODAY" : isSick ? "SICK" : null;
   const statusBadgeColor = active ? activeBorder : isSick ? sickColor : activeBorder;
   const statusBadgeTextColor =
-    active ? todayBadgeText : theme.textInverted ?? "#141414";
+    active ? todayBadgeText : theme.textInverted;
   const badgeBackgroundColor = isSick
     ? sickSurface
     : active
@@ -191,7 +191,7 @@ const WeekdayIndicator = ({
             pointerEvents="none"
             style={[
               styles.programDot,
-              { backgroundColor: theme.primary ?? "#f7742e" },
+              { backgroundColor: theme.primary },
             ]}
           />
         )}

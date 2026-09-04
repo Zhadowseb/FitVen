@@ -41,10 +41,10 @@ export default function OneRepMaxCalculatorPage() {
   const [estimatedOneRepMax, setEstimatedOneRepMax] = useState(null);
   const [errors, setErrors] = useState({});
 
-  const primaryColor = theme.primary ?? "#f7742e";
+  const primaryColor = theme.primary;
 
   const primaryTextColor = theme.primaryText ?? theme.primary;
-  const secondaryColor = theme.secondary ?? "#60daac";
+  const secondaryColor = theme.secondary;
   const cardSurface = theme.cardBackground ?? theme.background;
   const innerSurface = theme.fields ?? theme.uiBackground ?? cardSurface;
   const cardBorder =

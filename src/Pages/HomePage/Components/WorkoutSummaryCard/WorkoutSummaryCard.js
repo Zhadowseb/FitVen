@@ -148,9 +148,9 @@ export default function WorkoutSummaryCard({
   const setsCount = Number(payload.setsCount) || 0;
   const exerciseCount = Number(payload.exerciseCount) || 0;
 
-  const accent = theme.primary ?? "#F7742E";
-  const gold = theme.planned ?? "#E8B44A";
-  const titleColor = theme.title ?? "#F2F3F5";
+  const accent = theme.primary;
+  const gold = theme.planned;
+  const titleColor = theme.title;
   const bodyText = theme.textStrong ?? titleColor;
   const noteColor = theme.text ?? titleColor;
   const quietText = theme.quietText ?? theme.iconColor;

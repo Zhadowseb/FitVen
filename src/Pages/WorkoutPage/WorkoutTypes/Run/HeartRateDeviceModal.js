@@ -28,8 +28,8 @@ export default function HeartRateDeviceModal({
 }) {
   const titleColor = theme.title ?? theme.text;
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
-  const primaryColor = theme.primary ?? "#F7742E";
-  const secondaryColor = theme.secondary ?? "#60DAAC";
+  const primaryColor = theme.primary;
+  const secondaryColor = theme.secondary;
   const cardSurface = theme.cardBackground ?? theme.background;
   const innerSurface = theme.uiBackground ?? cardSurface;
   const borderColor = theme.cardBorder ?? theme.iconColor ?? theme.text;

@@ -7,7 +7,6 @@ import {
   Image,
   Modal,
   PanResponder,
-  Platform,
   Pressable,
   ScrollView,
   TouchableOpacity,
@@ -1890,16 +1889,16 @@ const Run = ({
   };
 
   const primaryColor = theme.primary ?? theme.iconColor ?? theme.text;
-  const secondaryColor = theme.secondary ?? Colors.dark.secondary;
+  const secondaryColor = theme.secondary;
   const secondaryDark = theme.secondaryDark ?? secondaryColor;
-  const screenBackground = theme.background ?? "#0E0F12";
+  const screenBackground = theme.background;
   const cardSurface = theme.cardBackground ?? theme.background;
   const innerSurface = theme.uiBackground ?? cardSurface;
   const fieldSurface = theme.fields ?? innerSurface;
   const cardBorder = theme.cardBorder ?? theme.iconColor ?? theme.text;
   const titleColor = theme.title ?? theme.text;
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
-  const invertedText = theme.textInverted ?? theme.background ?? "#0E0F12";
+  const invertedText = theme.textInverted ?? theme.background;
   const avgPaceMinutes =
     totalDistance > 0 ? currentElapsed / 60 / totalDistance : null;
   const formattedTotalDistance = formatRunDistance(totalDistance);
@@ -2120,7 +2119,7 @@ const Run = ({
     paceDeltaSeconds === null
       ? primaryColor
       : paceDeltaSeconds > 5
-        ? theme.danger ?? "#EF4444"
+        ? theme.danger
         : secondaryColor;
   const paceComparisonLabel =
     paceDeltaSeconds === null
@@ -2396,7 +2395,7 @@ const Run = ({
     yAxisTicks = [],
     onPress = null,
     plannedData = [],
-    plannedColor = theme.planned ?? "#FFDD00",
+    plannedColor = theme.planned,
     strokeWidth = 3,
     colorByHeartRateZone = false,
     plannedStepped = stepped,

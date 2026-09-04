@@ -129,13 +129,13 @@ export default function WorkoutTypesSettingsPage() {
   const [isSavingMaxHeartRate, setIsSavingMaxHeartRate] = useState(false);
   const titleColor = theme.title ?? theme.text;
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
-  const primaryColor = theme.primary ?? "#f7742e";
+  const primaryColor = theme.primary;
   const primaryTextColor = theme.primaryText ?? theme.primary;
-  const secondaryColor = theme.secondary ?? "#60daac";
+  const secondaryColor = theme.secondary;
   const cardSurface = theme.cardBackground ?? theme.background;
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor;
   const iconSurface = theme.fields ?? theme.uiBackground ?? cardSurface;
-  const recordColor = theme.record ?? "rgb(3, 111, 252)";
+  const recordColor = theme.record;
   const birthDateDisplay = normalizeLocalDateString(birthDate);
   const calculatedAge = calculateAgeFromBirthDate(birthDate);
   const normalizedMaxHeartRateInput = normalizeMaxHeartRate(maxHeartRateInput);
