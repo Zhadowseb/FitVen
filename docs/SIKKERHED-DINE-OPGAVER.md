@@ -33,6 +33,49 @@ på `user_id`. Alt ser rigtigt ud, indtil nogen sender en forespørgsel udenom.
    order by relrowsecurity, relname;
    ```
 
+HER ER MIT SVAR:
+
+Det her var responset:
+
+relname,relrowsecurity
+Day,true
+Exercise,true
+Feedback,true
+Mesocycle,true
+Microcycle,true
+Muscle,true
+Muscle_Activation,true
+Program,true
+Sickness,true
+body_map_region,true
+day_template,true
+exercise_column_preferences,true
+exercise_instance,true
+exercise_instance_template,true
+mesocycle_template,true
+microcycle_template,true
+muscle_body_map_region,true
+muscle_group,true
+muscle_group_assignment,true
+notification_events,true
+notification_inbox,true
+notification_preferences,true
+profile_private,true
+profiles,true
+program_template,true
+push_tokens,true
+set,true
+set_template,true
+social_post,true
+social_post_hidden_exercise,true
+social_post_like,true
+sync_local_watchers,true
+user_follows,true
+workout_start_notification_sources,true
+workout_template,true
+workout_type,true
+workout_type_instance,true
+
 3. Kør derefter denne:
 
    ```sql
@@ -41,6 +84,115 @@ på `user_id`. Alt ser rigtigt ud, indtil nogen sender en forespørgsel udenom.
    where schemaname = 'public'
    order by tablename, cmd;
    ```
+
+MIT SVAR:
+
+Her er responset:
+
+tablename,policyname,cmd,roles,qual,with_check
+Day,Enable delete for users based on user_id,DELETE,{public},(( SELECT auth.uid() AS uid) = user_id),null
+Day,Enable insert for users based on user_id,INSERT,{public},null,(( SELECT auth.uid() AS uid) = user_id)
+Day,Enable users to view their own data only,SELECT,{authenticated},(( SELECT auth.uid() AS uid) = user_id),null
+Day,Enable update for users based on user_id,UPDATE,{public},(( SELECT auth.uid() AS uid) = user_id),null
+Exercise,Enable read access for all users,SELECT,{public},true,null
+Feedback,Enable insert for users based on user_id,INSERT,{public},null,(( SELECT auth.uid() AS uid) = user_id)
+Mesocycle,Enable delete for users based on user_id,DELETE,{public},(( SELECT auth.uid() AS uid) = user_id),null
+Mesocycle,Enable insert for users based on user_id,INSERT,{public},null,(( SELECT auth.uid() AS uid) = user_id)
+Mesocycle,Enable users to view their own data only,SELECT,{authenticated},(( SELECT auth.uid() AS uid) = user_id),null
+Mesocycle,Enable update for users based on user_id,UPDATE,{public},(( SELECT auth.uid() AS uid) = user_id),null
+Microcycle,Enable delete for users based on user_id,DELETE,{public},(( SELECT auth.uid() AS uid) = user_id),null
+Microcycle,Enable insert for users based on user_id,INSERT,{public},null,(( SELECT auth.uid() AS uid) = user_id)
+Microcycle,Enable users to view their own data only,SELECT,{authenticated},(( SELECT auth.uid() AS uid) = user_id),null
+Microcycle,Enable update for users based on user_id,UPDATE,{public},(( SELECT auth.uid() AS uid) = user_id),null
+Muscle,Enable read access for all users,SELECT,{public},true,null
+Muscle_Activation,Enable read access for all users,SELECT,{public},true,null
+Program,Enable delete for users based on user_id,DELETE,{public},(( SELECT auth.uid() AS uid) = user_id),null
+Program,Enable insert for users based on user_id,INSERT,{public},null,(( SELECT auth.uid() AS uid) = user_id)
+Program,Enable users to view their own data only,SELECT,{authenticated},(( SELECT auth.uid() AS uid) = user_id),null
+Program,Enable update for users based on user_id,UPDATE,{public},(( SELECT auth.uid() AS uid) = user_id),null
+Sickness,Users can delete their own sickness records,DELETE,{authenticated},(auth.uid() = user_id),null
+Sickness,Users can insert their own sickness records,INSERT,{authenticated},null,(auth.uid() = user_id)
+Sickness,Users can view their own sickness records,SELECT,{authenticated},(auth.uid() = user_id),null
+Sickness,Users can update their own sickness records,UPDATE,{authenticated},(auth.uid() = user_id),(auth.uid() = user_id)
+body_map_region,Body map regions are viewable by authenticated users,SELECT,{authenticated},true,null
+exercise_column_preferences,Users can delete their own exercise column preferences,DELETE,{authenticated},(( SELECT auth.uid() AS uid) = user_id),null
+exercise_column_preferences,Users can insert their own exercise column preferences,INSERT,{authenticated},null,(( SELECT auth.uid() AS uid) = user_id)
+exercise_column_preferences,Users can view their own exercise column preferences,SELECT,{authenticated},(( SELECT auth.uid() AS uid) = user_id),null
+exercise_column_preferences,Users can update their own exercise column preferences,UPDATE,{authenticated},(( SELECT auth.uid() AS uid) = user_id),(( SELECT auth.uid() AS uid) = user_id)
+exercise_instance,Enable delete for users based on user_id,DELETE,{public},(( SELECT auth.uid() AS uid) = user_id),null
+exercise_instance,Enable insert for users based on user_id,INSERT,{public},null,(( SELECT auth.uid() AS uid) = user_id)
+exercise_instance,Enable users to view their own data only,SELECT,{authenticated},(( SELECT auth.uid() AS uid) = user_id),null
+exercise_instance,Enable update for users based on user_id,UPDATE,{public},(( SELECT auth.uid() AS uid) = user_id),null
+muscle_body_map_region,Muscle body map regions are viewable by authenticated users,SELECT,{authenticated},true,null
+muscle_group,Muscle groups are viewable by authenticated users,SELECT,{authenticated},true,null
+muscle_group_assignment,Muscle group assignments are viewable by authenticated users,SELECT,{authenticated},true,null
+notification_inbox,Users can delete their own notifications,DELETE,{authenticated},(( SELECT auth.uid() AS uid) = user_id),null
+notification_inbox,Users can view their own notification inbox,SELECT,{authenticated},(( SELECT auth.uid() AS uid) = user_id),null
+notification_inbox,Users can mark their own notifications as read,UPDATE,{authenticated},(( SELECT auth.uid() AS uid) = user_id),(( SELECT auth.uid() AS uid) = user_id)
+notification_preferences,Users can delete their own notification preferences,DELETE,{authenticated},(( SELECT auth.uid() AS uid) = user_id),null
+notification_preferences,Users can insert their own notification preferences,INSERT,{authenticated},null,(( SELECT auth.uid() AS uid) = user_id)
+notification_preferences,Users can view their own notification preferences,SELECT,{authenticated},(( SELECT auth.uid() AS uid) = user_id),null
+notification_preferences,Users can update their own notification preferences,UPDATE,{authenticated},(( SELECT auth.uid() AS uid) = user_id),(( SELECT auth.uid() AS uid) = user_id)
+profile_private,Users can delete their own private profile,DELETE,{authenticated},(( SELECT auth.uid() AS uid) = user_id),null
+profile_private,Users can insert their own private profile,INSERT,{authenticated},null,(( SELECT auth.uid() AS uid) = user_id)
+profile_private,Users can view their own private profile,SELECT,{authenticated},(( SELECT auth.uid() AS uid) = user_id),null
+profile_private,Users can update their own private profile,UPDATE,{authenticated},(( SELECT auth.uid() AS uid) = user_id),(( SELECT auth.uid() AS uid) = user_id)
+profiles,Users can insert their own profile,INSERT,{authenticated},null,(auth.uid() = id)
+profiles,Profiles are viewable by authenticated users,SELECT,{authenticated},true,null
+profiles,Users can update their own profile,UPDATE,{authenticated},(auth.uid() = id),(auth.uid() = id)
+push_tokens,Users can delete their own push tokens,DELETE,{authenticated},(( SELECT auth.uid() AS uid) = user_id),null
+push_tokens,Users can register their own push tokens,INSERT,{authenticated},null,(( SELECT auth.uid() AS uid) = user_id)
+push_tokens,Users can view their own push tokens,SELECT,{authenticated},(( SELECT auth.uid() AS uid) = user_id),null
+push_tokens,Users can update their own push tokens,UPDATE,{authenticated},(( SELECT auth.uid() AS uid) = user_id),(( SELECT auth.uid() AS uid) = user_id)
+set,Enable delete for users based on user_id,DELETE,{public},(( SELECT auth.uid() AS uid) = user_id),null
+set,Enable insert for users based on user_id,INSERT,{public},null,(( SELECT auth.uid() AS uid) = user_id)
+set,Enable users to view their own data only,SELECT,{authenticated},(( SELECT auth.uid() AS uid) = user_id),null
+set,Enable update for users based on user_id,UPDATE,{public},(( SELECT auth.uid() AS uid) = user_id),null
+social_post,Users can delete their own social posts,DELETE,{authenticated},(( SELECT auth.uid() AS uid) = author_id),null
+social_post,Users can insert their own social posts,INSERT,{authenticated},null,"((( SELECT auth.uid() AS uid) = author_id) AND (deleted_at IS NULL) AND (EXISTS ( SELECT 1
+   FROM workout_type_instance workout
+  WHERE ((workout.id = social_post.source_workout_type_instance_id) AND (workout.user_id = ( SELECT auth.uid() AS uid))))))"
+social_post,Social posts are viewable by owners and allowed audience,SELECT,{authenticated},"((( SELECT auth.uid() AS uid) IS NOT NULL) AND ((author_id = ( SELECT auth.uid() AS uid)) OR ((deleted_at IS NULL) AND ((visibility = 'everyone'::text) OR ((visibility = 'following'::text) AND (EXISTS ( SELECT 1
+   FROM user_follows follow
+  WHERE ((follow.follower_id = social_post.author_id) AND (follow.following_id = ( SELECT auth.uid() AS uid))))))))))",null
+social_post,Users can update their own social posts,UPDATE,{authenticated},(( SELECT auth.uid() AS uid) = author_id),"((( SELECT auth.uid() AS uid) = author_id) AND (EXISTS ( SELECT 1
+   FROM workout_type_instance workout
+  WHERE ((workout.id = social_post.source_workout_type_instance_id) AND (workout.user_id = ( SELECT auth.uid() AS uid))))))"
+social_post_hidden_exercise,Users can unhide their own social post exercises,DELETE,{authenticated},(( SELECT auth.uid() AS uid) = user_id),null
+social_post_hidden_exercise,Users can hide their own social post exercises,INSERT,{authenticated},null,(( SELECT auth.uid() AS uid) = user_id)
+social_post_hidden_exercise,Users can view their hidden social post exercises,SELECT,{authenticated},(( SELECT auth.uid() AS uid) = user_id),null
+social_post_like,Users can remove their own social post likes,DELETE,{authenticated},(( SELECT auth.uid() AS uid) = user_id),null
+social_post_like,Users can like visible social posts,INSERT,{authenticated},null,"((( SELECT auth.uid() AS uid) = user_id) AND (EXISTS ( SELECT 1
+   FROM social_post post
+  WHERE ((post.id = social_post_like.post_id) AND (post.deleted_at IS NULL) AND ((post.author_id = ( SELECT auth.uid() AS uid)) OR (post.visibility = 'everyone'::text) OR ((post.visibility = 'following'::text) AND (EXISTS ( SELECT 1
+           FROM user_follows follow
+          WHERE ((follow.follower_id = post.author_id) AND (follow.following_id = ( SELECT auth.uid() AS uid)))))))))))"
+social_post_like,Social post likes are viewable with visible posts,SELECT,{authenticated},"(EXISTS ( SELECT 1
+   FROM social_post post
+  WHERE ((post.id = social_post_like.post_id) AND (post.deleted_at IS NULL) AND ((post.author_id = ( SELECT auth.uid() AS uid)) OR (post.visibility = 'everyone'::text) OR ((post.visibility = 'following'::text) AND (EXISTS ( SELECT 1
+           FROM user_follows follow
+          WHERE ((follow.follower_id = post.author_id) AND (follow.following_id = ( SELECT auth.uid() AS uid))))))))))",null
+sync_local_watchers,Users can delete own sync watchers,DELETE,{authenticated},(( SELECT auth.uid() AS uid) = user_id),null
+sync_local_watchers,Users can insert own sync watchers,INSERT,{authenticated},null,(( SELECT auth.uid() AS uid) = user_id)
+sync_local_watchers,Users can view own sync watchers,SELECT,{authenticated},(( SELECT auth.uid() AS uid) = user_id),null
+sync_local_watchers,Users can update own sync watchers,UPDATE,{authenticated},(( SELECT auth.uid() AS uid) = user_id),(( SELECT auth.uid() AS uid) = user_id)
+user_follows,Users can delete their own follows,DELETE,{authenticated},(auth.uid() = follower_id),null
+user_follows,Users can follow from their own profile,INSERT,{authenticated},null,((auth.uid() = follower_id) AND (follower_id <> following_id))
+user_follows,Follow rows are viewable by authenticated users,SELECT,{authenticated},true,null
+workout_start_notification_sources,Users can delete their own workout start sources,DELETE,{authenticated},(( SELECT auth.uid() AS uid) = user_id),null
+workout_start_notification_sources,Users can insert their own workout start sources,INSERT,{authenticated},null,"((( SELECT auth.uid() AS uid) = user_id) AND (EXISTS ( SELECT 1
+   FROM user_follows follow
+  WHERE ((follow.follower_id = ( SELECT auth.uid() AS uid)) AND (follow.following_id = workout_start_notification_sources.source_user_id)))))"
+workout_start_notification_sources,Users can view their own workout start sources,SELECT,{authenticated},(( SELECT auth.uid() AS uid) = user_id),null
+workout_type,Workout types are viewable by authenticated users,SELECT,{authenticated},true,null
+workout_type_instance,Enable delete for users based on user_id,DELETE,{public},(( SELECT auth.uid() AS uid) = user_id),null
+workout_type_instance,Enable insert for users based on user_id,INSERT,{public},null,(( SELECT auth.uid() AS uid) = user_id)
+workout_type_instance,Followed workout activity is viewable,SELECT,{authenticated},"((( SELECT auth.uid() AS uid) = user_id) OR ((deleted_at IS NULL) AND ((date >= (CURRENT_DATE - 1)) AND (date <= (CURRENT_DATE + 1))) AND (EXISTS ( SELECT 1
+   FROM user_follows follow
+  WHERE ((follow.follower_id = ( SELECT auth.uid() AS uid)) AND (follow.following_id = workout_type_instance.user_id))))))",null
+workout_type_instance,Enable users to view their own data only,SELECT,{authenticated},(( SELECT auth.uid() AS uid) = user_id),null
+workout_type_instance,Enable update for users based on user_id,UPDATE,{public},(( SELECT auth.uid() AS uid) = user_id),null
+
 
 **Hvad du kigger efter:** Alt i første resultat med `relrowsecurity = false` er
 åbent. Kryds derefter af i andet resultat: en tabel med RLS slået til, men uden
@@ -75,6 +227,10 @@ levetid — det er den rigtige løsning, fordi et slettet billede så også reel
 forsvinder. Bemærk at eksisterende offentlige URL'er allerede kan være kopieret
 eller cachet; ændringen lukker fremtiden, ikke fortiden.
 
+MIT SVAR:
+
+Den er public.
+
 ---
 
 ## 3. Begræns Google Maps-nøglen
@@ -97,6 +253,10 @@ kortet holder op med at virke for dine brugere. Ingen persondata er berørt.
    Tilføj også iOS-bundle-id'et `com.fitven.app` hvis nøglen bruges der.
 5. Under **API restrictions**: begræns til de Maps-API'er du faktisk bruger.
 6. Gem.
+
+MIT SVAR:
+
+Det er blevet rykket, så det skal vi nok gemme til sidst, så du kan hjælpe mig med det.
 
 > Pakkenavnet ser forkert ud (`com.anonymous.*`), men det **skal** blive som det
 > er — det er appens identitet på Play Store. Ændrer du det, bliver det en ny
@@ -129,6 +289,14 @@ den reelle beskyttelse.
 **Overvej MFA.** Appen behandler helbredsoplysninger, så det er relevant. Det
 kræver også arbejde i appen — sig til hvis du vil have det med.
 
+MIT SVAR:
+
+Leaked password protection, er kun pro plan, som jeg ikke har endnu. Det må vi gemme til senere.
+
+Confirm email er nu slået til.
+
+Der er rate limits på.
+
 ---
 
 ## 5. Region, databehandleraftaler og backups
@@ -155,6 +323,13 @@ oplysninger til at kunne henvise korrekt i.
    dokumenteret grundlag.
 
 **Send mig region og backup-periode.** De skal stå i persondatapolitikken.
+
+MIT SVAR:
+
+Region: eu-north-1
+Backup: ikke slået til på gratis plan, når der begynder at komme lidt tracksion, opgraderer jeg til pro.
+Evt må du godt lave issues på github, med de ting jeg har netop vi gemmer til senere, når jeg opgraderer til pro plan.
+Du må også godt lave en issue på at downloade databehandleraftalerne.
 
 ---
 

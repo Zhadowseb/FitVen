@@ -38,7 +38,6 @@ const LEGACY_COPY_TABLE_ORDER = [
   "RMWeightProgression",
   "Run",
   "LocationLog",
-  "LocationDebugLog",
 ];
 
 const USER_DATA_TABLES = [

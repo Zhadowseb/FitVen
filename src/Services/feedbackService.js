@@ -14,22 +14,6 @@ function getNormalizedString(value) {
   return normalizedValue.length > 0 ? normalizedValue : null;
 }
 
-function getDeviceInfo() {
-  const platformConstants = Platform.constants ?? {};
-  const parts = [
-    Platform.OS ? Platform.OS.toUpperCase() : null,
-    Platform.Version !== null && Platform.Version !== undefined
-      ? `OS ${Platform.Version}`
-      : null,
-    platformConstants.Brand ?? platformConstants.brand ?? null,
-    platformConstants.Model ?? platformConstants.model ?? null,
-  ]
-    .map(getNormalizedString)
-    .filter(Boolean);
-
-  return parts.length > 0 ? [...new Set(parts)].join(" | ") : null;
-}
-
 function getAppVersion() {
   const appVersion = getNormalizedString(appConfig?.expo?.version);
   const androidVersionCode =
@@ -50,9 +34,10 @@ export async function submitFeedback({ message, userId = null }) {
     throw new Error("Feedback message is required.");
   }
 
+  // device_info used to carry brand, model and OS version. None of it is
+  // needed to read a message, and together they fingerprint the device.
   const payload = {
     message: normalizedMessage,
-    device_info: getDeviceInfo(),
     app_version: getAppVersion(),
   };
 

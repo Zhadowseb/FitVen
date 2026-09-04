@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.21.11] - Unreleased
+### Security
+- `console.log`, `.info` and `.debug` are stripped from production bundles. `error` and `warn` stay.
+- `LocationDebugLog` is gone. It kept every GPS point the tracker saw, accepted or rejected, with speed and accuracy and no cleanup — a home address sitting unencrypted on the device forever. Existing installs drop the table on the next launch.
+- Feedback no longer sends the device's brand, model and OS version.
+- Only the birth year is stored. `docs/supabase-birth-year-only.sql` truncates the rows written before this.
+- The user search filter allows a known-good set of characters instead of removing a known-bad one.
+
+---
 ## [0.21.10] - Unreleased
 ### Security
 - A workout start notification now takes its text from the stored workout row, not from the caller's request, so a sender can no longer put their own wording on every follower's lock screen. A label is capped at 40 characters and stripped to a charset that cannot form a link, and a workout type has to exist in the catalog.

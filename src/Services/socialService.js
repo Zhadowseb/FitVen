@@ -427,8 +427,18 @@ function isMissingPrivateMaxHeartRateSourceError(error) {
   );
 }
 
+// The result is interpolated into a PostgREST `or=(...)` string, where a comma
+// or a bracket would end the value and start a new filter, and % and * are
+// wildcards. This used to strip a list of known-bad characters; a positive list
+// cannot quietly stop covering everything if that string ever gains a field or
+// an operator. Letters and digits are unicode, so a name in any alphabet still
+// searches.
 function buildSearchFilter(query) {
-  return query.replace(/[,%()]/g, " ").replace(/^@+/, "").trim();
+  return String(query ?? "")
+    .replace(/^@+/, "")
+    .replace(/[^\p{L}\p{N} _-]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function normalizeProfileValues({ displayName, bio, birthDate }) {
@@ -439,10 +449,17 @@ function normalizeProfileValues({ displayName, bio, birthDate }) {
   };
 }
 
+// The birth date is only ever used to work out an age for heart rate zones, so
+// the day and month are thrown away before anything is stored. Everything
+// downstream keeps working on a date; it is simply always the 1st of January.
 function normalizeBirthDateValue(birthDate) {
-  return birthDate === null || birthDate === undefined || birthDate === ""
-    ? null
-    : normalizeIsoDateString(birthDate);
+  if (birthDate === null || birthDate === undefined || birthDate === "") {
+    return null;
+  }
+
+  const normalized = normalizeIsoDateString(birthDate);
+
+  return normalized ? `${normalized.slice(0, 4)}-01-01` : normalized;
 }
 
 function validateBirthDate(birthDate, normalizedBirthDate) {

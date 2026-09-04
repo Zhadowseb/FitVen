@@ -32,7 +32,6 @@ import {
   calculateAgeFromBirthDate,
   dateToIsoDate,
   isoDateToLocalDate,
-  normalizeLocalDateString,
 } from "../../Utils/dateUtils";
 import {
   ThemedButton,
@@ -94,7 +93,8 @@ export default function ProfilePage() {
   const normalizedDisplayName = displayName.trim();
   const normalizedBio = bio.trim();
   const calculatedAge = calculateAgeFromBirthDate(birthDate);
-  const birthDateDisplay = normalizeLocalDateString(birthDate);
+  // Only the year is kept, so only the year is shown.
+  const birthYearDisplay = birthDate ? String(birthDate).slice(0, 4) : null;
   const displayNameError = normalizedDisplayName
     ? undefined
     : "Display name cannot be empty.";
@@ -460,20 +460,20 @@ export default function ProfilePage() {
                 style={styles.birthDateRow}
               >
                 <ThemedText style={styles.fieldLabel} setColor={theme.quietText}>
-                  Birth date
+                  Birth year
                 </ThemedText>
                 <View style={styles.birthDateCopy}>
                   <ThemedText
                     style={styles.birthDateValue}
-                    setColor={birthDateDisplay ? theme.title : theme.quietText}
+                    setColor={birthYearDisplay ? theme.title : theme.quietText}
                   >
-                    {birthDateDisplay ?? "Select birth date"}
+                    {birthYearDisplay ?? "Select birth year"}
                   </ThemedText>
                   <ThemedText
                     style={styles.birthDateSubline}
                     setColor={theme.quietText}
                   >
-                    Exact date stays private
+                    Only the year is stored, for your heart rate zones
                   </ThemedText>
                 </View>
                 {calculatedAge !== null ? (
@@ -614,7 +614,7 @@ export default function ProfilePage() {
                 visible={birthDatePickerVisible}
                 value={getBirthDatePickerValue()}
                 minYear={1900}
-                title="Birth date"
+                title="Birth year"
                 onClose={() => setBirthDatePickerVisible(false)}
                 onConfirm={handleBirthDateConfirm}
               />

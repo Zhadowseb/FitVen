@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.21.10-fix-security-report.1",
+  "version": "0.21.11-fix-security-report.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",
@@ -71,6 +71,8 @@
   "private": true,
   "devDependencies": {
     "@types/react": "~19.1.10",
+    "babel-plugin-transform-remove-console": "^6.9.4",
+    "babel-preset-expo": "~54.0.7",
     "conventional-changelog-cli": "^5.0.0"
   }
 }
