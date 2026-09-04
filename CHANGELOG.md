@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.21.8] - Unreleased
+### Removed
+- The five unmounted sync components for programs, blocks, weeks, days and exercise instances. `SetSync` already pushes that whole hierarchy in parent-first order, which is what the sync rules now ask for.
+
+### Changed
+- The workout-label icon list says which of its icons are placeholders for workout types still to come, so a dead-code sweep does not offer to delete them again.
+
+---
 ## [0.21.7] - Unreleased
 ### Added
 - `ThemedText` takes a `type` naming a step on the typography scale, the way `ThemedTitle` already does, plus an `overline` step for the small uppercase label above a page or section title. Existing call sites are untouched.
