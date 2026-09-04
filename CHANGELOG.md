@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.21.3] - Unreleased
+### Added
+- `ThemedStateBlock`, one component for a screen's loading, empty and error state. Thirteen screens used to spell it out by hand.
+- `ThemedSegmentedControl`, which takes any number of options, replacing the two-option `ThemedSegmentedToggle` that had no call sites. The appearance setting is its first user.
+
+### Removed
+- `ThemedSegmentedToggle`, `ThemedWorkoutModal` (a pass-through wrapper around `ThemedModal`) and `AppearanceSegmentedControl`, plus 30 style keys the state blocks no longer need.
+
+### Changed
+- The appearance segments now carry a 44 px touch target through hitSlop, without the row getting taller.
+
+---
 ## [0.21.2] - Unreleased
 ### Added
 - `ThemedSheetHandle`, one grab handle for every bottom sheet. Eight sheets drew their own across three sizes, four radii and seven colours, four of which were hardcoded white and invisible in the light theme.

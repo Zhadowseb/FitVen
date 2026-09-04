@@ -55,10 +55,6 @@ export default StyleSheet.create({
     justifyContent: "center",
     paddingVertical: 28,
   },
-  loadingLabel: {
-    marginTop: 10,
-    fontSize: 13,
-  },
   resultsList: {
     marginTop: 2,
   },

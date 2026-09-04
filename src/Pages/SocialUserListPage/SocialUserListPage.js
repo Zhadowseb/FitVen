@@ -1,6 +1,5 @@
 import { StatusBar } from "expo-status-bar";
 import {
-  ActivityIndicator,
   ScrollView,
   View,
   useColorScheme,
@@ -17,6 +16,7 @@ import {
   ThemedCard,
   ThemedConfirmModal,
   ThemedHeader,
+  ThemedStateBlock,
   ThemedText,
   ThemedTextInput,
   ThemedTitle,
@@ -228,12 +228,10 @@ const SocialUserListPage = () => {
         ) : null}
 
         {isLoading ? (
-          <View style={styles.loadingState}>
-            <ActivityIndicator color={theme.primary ?? theme.iconColor} />
-            <ThemedText style={styles.loadingLabel} setColor={quietText}>
-              Loading people...
-            </ThemedText>
-          </View>
+          <ThemedStateBlock
+            style={styles.loadingState}
+            message="Loading people..."
+          />
         ) : results.length > 0 ? (
           <View style={styles.resultsList}>
             {results.map((profile) => (

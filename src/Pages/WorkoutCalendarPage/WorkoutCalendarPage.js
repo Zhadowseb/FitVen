@@ -33,6 +33,7 @@ import CalendarWeekView from "./Components/CalendarWeekView/CalendarWeekView";
 import {
   ThemedBottomSheet,
   ThemedHeader,
+  ThemedStateBlock,
   ThemedText,
   ThemedTitle,
   ThemedModal,
@@ -1163,30 +1164,17 @@ const WorkoutCalendarPage = () => {
       </ThemedHeader>
 
       {errorMessage ? (
-        <View style={styles.errorState}>
-          <ThemedTitle type="h3" style={styles.errorTitle}>
-            Calendar unavailable
-          </ThemedTitle>
-          <ThemedText style={styles.errorBody} setColor={quietText}>
-            {errorMessage}
-          </ThemedText>
-          <TouchableOpacity
-            accessibilityRole="button"
-            activeOpacity={0.78}
-            disabled={isLoading}
-            onPress={() => {
-              void loadCalendarWorkouts();
-            }}
-            style={[styles.retryButton, { backgroundColor: primaryColor }]}
-          >
-            <ThemedText
-              style={styles.retryButtonText}
-              setColor={actionTextColor}
-            >
-              Try again
-            </ThemedText>
-          </TouchableOpacity>
-        </View>
+        <ThemedStateBlock
+          fill
+          variant="error"
+          title="Calendar unavailable"
+          message={errorMessage}
+          actionLabel="Try again"
+          actionDisabled={isLoading}
+          onAction={() => {
+            void loadCalendarWorkouts();
+          }}
+        />
       ) : calendarView === "week" ? (
         <ScrollView
           ref={weekPagerRef}

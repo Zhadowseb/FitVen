@@ -26,7 +26,6 @@ import MessageCircleIcon from "./Components/MessageCircleIcon";
 import SectionEyebrow from "./Components/SectionEyebrow";
 import InsetDivider from "./Components/InsetDivider";
 import SettingsIconTile from "./Components/SettingsIconTile";
-import AppearanceSegmentedControl from "./Components/AppearanceSegmentedControl";
 import AccentThemePicker from "./Components/AccentThemePicker";
 import Star from "../../Resources/Icons/UI-icons/Star";
 import {
@@ -40,10 +39,17 @@ import {
   ThemedCard,
   ThemedDateWheelPicker,
   ThemedKeyboardProtection,
+  ThemedSegmentedControl,
   ThemedText,
   ThemedView,
   UserAvatar,
 } from "../../Resources/ThemedComponents";
+
+const APPEARANCE_OPTIONS = [
+  { value: "dark", label: "Dark" },
+  { value: "light", label: "Light" },
+  { value: "auto", label: "Auto" },
+];
 
 function getNormalizedString(value) {
   if (value === null || value === undefined) {
@@ -723,7 +729,8 @@ export default function ProfilePage() {
                 <ThemedText style={styles.settingsRowLabel} setColor={theme.title}>
                   Appearance
                 </ThemedText>
-                <AppearanceSegmentedControl
+                <ThemedSegmentedControl
+                  options={APPEARANCE_OPTIONS}
                   value={themeMode}
                   onChange={setThemeMode}
                 />

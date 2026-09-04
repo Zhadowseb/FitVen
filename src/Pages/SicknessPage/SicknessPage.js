@@ -1,6 +1,5 @@
 import { useCallback, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Image,
   Platform,
@@ -19,6 +18,7 @@ import { programService } from "../../Services";
 import {
   ThemedButton,
   ThemedHeader,
+  ThemedStateBlock,
   ThemedModal,
   ThemedText,
   ThemedTextInput,
@@ -85,8 +85,6 @@ export default function SicknessPage() {
   const [registerModalVisible, setRegisterModalVisible] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [datePickerTarget, setDatePickerTarget] = useState(null);
-
-  const primaryColor = theme.primary ?? "#f7742e";
 
   const primaryTextColor = theme.primaryText ?? theme.primary;
   const sicknessColor = theme.planned ?? Colors.dark.planned ?? "#ffdd00";
@@ -294,12 +292,10 @@ export default function SicknessPage() {
         </View>
 
         {historyLoading && records.length === 0 && (
-          <View style={styles.loadingState}>
-            <ActivityIndicator color={primaryTextColor} />
-            <ThemedText style={styles.loadingLabel} setColor={quietText}>
-              Loading sickness history...
-            </ThemedText>
-          </View>
+          <ThemedStateBlock
+            style={styles.loadingState}
+            message="Loading sickness history..."
+          />
         )}
 
         {!historyLoading && records.length === 0 && (

@@ -13,7 +13,10 @@ import { Colors, withAlpha } from "../../../../Resources/GlobalStyling/colors";
 
 import { programService } from "../../../../Services";
 import AddMesocycleModal from "./AddMesocycleModal";
-import { ThemedText } from "../../../../Resources/ThemedComponents";
+import {
+  ThemedStateBlock,
+  ThemedText,
+} from "../../../../Resources/ThemedComponents";
 import StatusPill from "../../../../Resources/Components/StatusPill";
 import ProgressBar from "../../../../Resources/Components/ProgressBar";
 import Plus from "../../../../Resources/Icons/UI-icons/Plus";
@@ -47,11 +50,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "800",
     fontVariant: ["tabular-nums"],
-  },
-  loadingContainer: {
-    justifyContent: "center",
-    alignItems: "center",
-    paddingTop: 40,
   },
   timeline: {
     flexDirection: "column",
@@ -445,9 +443,7 @@ const MesocycleList = ({
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={accentColor} />
-      </View>
+      <ThemedStateBlock indicatorColor={accentColor} />
     );
   }
 

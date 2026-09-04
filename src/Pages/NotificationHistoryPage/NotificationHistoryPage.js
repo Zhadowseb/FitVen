@@ -1,6 +1,5 @@
 import { useCallback, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   FlatList,
   TouchableOpacity,
   View,
@@ -17,6 +16,7 @@ import Bell from "../../Resources/Icons/UI-icons/Bell";
 import Cogwheel from "../../Resources/Icons/UI-icons/Cogwheel";
 import {
   ThemedHeader,
+  ThemedStateBlock,
   ThemedText,
   ThemedTitle,
   ThemedView,
@@ -37,7 +37,6 @@ export default function NotificationHistoryPage() {
   const titleColor = theme.title ?? theme.text;
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const primaryColor = theme.primary ?? "#f7742e";
-  const primaryTextColor = theme.primaryText ?? theme.primary;
   const secondaryColor = theme.secondary ?? "#60daac";
   const cardSurface = theme.cardBackground ?? theme.background;
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor;
@@ -179,25 +178,23 @@ export default function NotificationHistoryPage() {
   );
 
   const emptyState = (
-    <View style={styles.emptyState}>
-      <View
-        style={[
-          styles.emptyIcon,
-          {
-            backgroundColor: cardSurface,
-            borderColor: cardBorder,
-          },
-        ]}
-      >
-        <Bell width={29} height={29} color={quietText} thickness={1.7} />
-      </View>
-      <ThemedTitle type="h3" style={styles.emptyTitle}>
-        You&apos;re all caught up
-      </ThemedTitle>
-      <ThemedText style={styles.emptyBody} setColor={quietText}>
-        Workout starts and future activity updates will appear here.
-      </ThemedText>
-    </View>
+    <ThemedStateBlock
+      fill
+      variant="empty"
+      style={styles.emptyState}
+      icon={
+        <View
+          style={[
+            styles.emptyIcon,
+            { backgroundColor: cardSurface, borderColor: cardBorder },
+          ]}
+        >
+          <Bell width={29} height={29} color={quietText} thickness={1.7} />
+        </View>
+      }
+      title="You're all caught up"
+      message="Workout starts and future activity updates will appear here."
+    />
   );
 
   return (
@@ -234,34 +231,16 @@ export default function NotificationHistoryPage() {
       </ThemedHeader>
 
       {loading ? (
-        <View style={styles.loadingState}>
-          <ActivityIndicator color={primaryTextColor} />
-          <ThemedText style={styles.loadingText} setColor={quietText}>
-            Loading notifications...
-          </ThemedText>
-        </View>
+        <ThemedStateBlock fill variant="loading" message="Loading notifications..." />
       ) : errorMessage ? (
-        <View style={styles.errorState}>
-          <ThemedTitle type="h3" style={styles.errorTitle}>
-            Notifications unavailable
-          </ThemedTitle>
-          <ThemedText style={styles.errorBody} setColor={quietText}>
-            {errorMessage}
-          </ThemedText>
-          <TouchableOpacity
-            activeOpacity={0.78}
-            accessibilityRole="button"
-            onPress={() => loadNotifications({ showLoader: true })}
-            style={[styles.retryButton, { backgroundColor: primaryColor }]}
-          >
-            <ThemedText
-              style={styles.retryButtonText}
-              setColor={theme.textInverted ?? "#1b1918"}
-            >
-              Try again
-            </ThemedText>
-          </TouchableOpacity>
-        </View>
+        <ThemedStateBlock
+          fill
+          variant="error"
+          title="Notifications unavailable"
+          message={errorMessage}
+          actionLabel="Try again"
+          onAction={() => loadNotifications({ showLoader: true })}
+        />
       ) : (
         <FlatList
           data={notifications}

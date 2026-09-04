@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import {
   View,
   TouchableOpacity,
-  ActivityIndicator,
   useColorScheme,
 } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
@@ -13,7 +12,10 @@ import styles from "./Rm_listStyle";
 import { weightliftingService } from "../../../../Services";
 import EditEstimatedSet from "./Components/EditEstimatedSet/EditEstimatedSet";
 
-import { ThemedText } from "../../../../Resources/ThemedComponents";
+import {
+  ThemedStateBlock,
+  ThemedText,
+} from "../../../../Resources/ThemedComponents";
 import Pencil from "../../../../Resources/Icons/UI-icons/Pencil";
 import Plus from "../../../../Resources/Icons/UI-icons/Plus";
 
@@ -27,7 +29,6 @@ const RmList = ({
   const db = useSQLiteContext();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
-  const primaryTextColor = theme.primaryText ?? theme.primary;
 
   const [loading, setLoading] = useState(false);
   const [editEstimatedSet_visible, set_editEstimatedSet_visible] = useState(false);
@@ -82,11 +83,7 @@ const RmList = ({
   }, [program_id, refreshKey]);
 
   if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={primaryTextColor} />
-      </View>
-    );
+    return <ThemedStateBlock />;
   }
 
   return (

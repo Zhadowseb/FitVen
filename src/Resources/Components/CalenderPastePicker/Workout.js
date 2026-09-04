@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable } from "react-native";
+import { Pressable } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
 import { programService as programRepository } from "../../../Services";
-import { ThemedPicker, ThemedText, ThemedModal } from "../../ThemedComponents";
+import {
+  ThemedModal,
+  ThemedStateBlock,
+  ThemedText,
+} from "../../ThemedComponents";
 
 const Workout = ({ program_id, visible, close }) => {
   const db = useSQLiteContext();
@@ -27,7 +31,7 @@ const Workout = ({ program_id, visible, close }) => {
     load();
   }, [program_id]);
 
-  if (loading) return <ActivityIndicator />;
+  if (loading) return <ThemedStateBlock />;
 
   if (workouts.length === 0) {
     return <ThemedText>No workouts</ThemedText>;

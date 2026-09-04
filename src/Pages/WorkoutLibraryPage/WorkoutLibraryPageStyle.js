@@ -66,29 +66,6 @@ export default StyleSheet.create({
     paddingBottom: 28,
     gap: 10,
   },
-  stateBlock: {
-    paddingVertical: 32,
-    alignItems: "center",
-    gap: 14,
-  },
-  stateText: {
-    fontSize: 13,
-    fontWeight: "600",
-    textAlign: "center",
-  },
-  stateAction: {
-    minHeight: 44,
-    minWidth: 140,
-    borderRadius: 22,
-    paddingHorizontal: 18,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  stateActionText: {
-    fontSize: 13,
-    lineHeight: 17,
-    fontWeight: "900",
-  },
   row: {
     borderRadius: 14,
     borderWidth: 1,

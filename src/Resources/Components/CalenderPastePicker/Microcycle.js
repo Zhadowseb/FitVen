@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -19,6 +18,7 @@ import Library from "../../Icons/UI-icons/Library";
 import {
   ThemedModal,
   ThemedSheetHandle,
+  ThemedStateBlock,
   ThemedText,
 } from "../../ThemedComponents";
 
@@ -230,9 +230,7 @@ const Microcycle = ({
       </View>
 
       {loading ? (
-        <View style={styles.loadingWrap}>
-          <ActivityIndicator color={primaryTextColor} />
-        </View>
+        <ThemedStateBlock />
       ) : groupedMesocycles.length === 0 ? (
         <View
           style={[
@@ -560,11 +558,6 @@ const styles = StyleSheet.create({
     height: 40,
     alignItems: "center",
     justifyContent: "center",
-  },
-  loadingWrap: {
-    minHeight: 180,
-    justifyContent: "center",
-    alignItems: "center",
   },
   emptyCard: {
     minHeight: 96,

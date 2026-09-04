@@ -32,37 +32,6 @@ export default StyleSheet.create({
   nextMonthIcon: {
     transform: [{ rotate: "180deg" }],
   },
-  errorState: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 28,
-    paddingBottom: 70,
-  },
-  errorTitle: {
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  errorBody: {
-    maxWidth: 310,
-    fontSize: 13,
-    lineHeight: 19,
-    textAlign: "center",
-  },
-  retryButton: {
-    minWidth: 120,
-    minHeight: 44,
-    borderRadius: 22,
-    marginTop: 18,
-    paddingHorizontal: 18,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  retryButtonText: {
-    fontSize: 13,
-    lineHeight: 17,
-    fontWeight: "900",
-  },
   monthPager: {
     flex: 1,
   },

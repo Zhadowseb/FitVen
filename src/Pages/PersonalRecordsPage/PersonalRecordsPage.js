@@ -26,6 +26,7 @@ import Calender from "../../Resources/Icons/UI-icons/Calender";
 import TradeUp from "../../Resources/Icons/UI-icons/TradeUp";
 import {
   ThemedHeader,
+  ThemedStateBlock,
   ThemedPicker,
   ThemedSwitch,
   ThemedText,
@@ -551,11 +552,7 @@ const PersonalRecordsPage = () => {
 
   const renderExerciseList = () => (
     <View style={styles.exerciseList}>
-      {loading && (
-        <View style={styles.loadingState}>
-          <ActivityIndicator color={primaryTextColor} />
-        </View>
-      )}
+      {loading && <ThemedStateBlock style={styles.loadingState} />}
 
       {!loading && summaries.length === 0 && (
         <View
@@ -647,11 +644,7 @@ const PersonalRecordsPage = () => {
         : detail?.rows ?? [];
 
     if (detailLoading) {
-      return (
-        <View style={styles.loadingState}>
-          <ActivityIndicator color={primaryTextColor} />
-        </View>
-      );
+      return <ThemedStateBlock style={styles.loadingState} />;
     }
 
     if (!detail) {

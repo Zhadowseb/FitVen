@@ -1,6 +1,5 @@
 import { StatusBar } from "expo-status-bar";
 import {
-  ActivityIndicator,
   Alert,
   FlatList,
   TouchableOpacity,
@@ -24,6 +23,7 @@ import Run from "../../Resources/Icons/WorkoutLabels/Run";
 import {
   ThemedBottomSheet,
   ThemedHeader,
+  ThemedStateBlock,
   ThemedText,
   ThemedTitle,
   ThemedView,
@@ -802,9 +802,7 @@ const WorkoutLibraryPage = () => {
       </ThemedHeader>
 
       {isLoading ? (
-        <View style={styles.stateBlock}>
-          <ActivityIndicator color={primaryTextColor} />
-        </View>
+        <ThemedStateBlock />
       ) : (
         <FlatList
           data={visibleWorkouts}
@@ -813,34 +811,18 @@ const WorkoutLibraryPage = () => {
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
-            <View style={styles.stateBlock}>
-              <ThemedText style={styles.stateText} setColor={theme.quietText}>
-                {!hasActiveFilters
+            <ThemedStateBlock
+              variant="empty"
+              message={
+                !hasActiveFilters
                   ? "Your finished workouts show up here."
                   : favoritesOnly
                     ? "You have not saved any favorites yet."
-                    : "No workouts match these filters."}
-              </ThemedText>
-
-              {hasActiveFilters ? (
-                <TouchableOpacity
-                  accessibilityRole="button"
-                  activeOpacity={0.82}
-                  onPress={clearFilters}
-                  style={[
-                    styles.stateAction,
-                    { backgroundColor: theme.primary },
-                  ]}
-                >
-                  <ThemedText
-                    style={styles.stateActionText}
-                    setColor={theme.textInverted ?? theme.cardBackground}
-                  >
-                    Reset filters
-                  </ThemedText>
-                </TouchableOpacity>
-              ) : null}
-            </View>
+                    : "No workouts match these filters."
+              }
+              actionLabel={hasActiveFilters ? "Reset filters" : undefined}
+              onAction={hasActiveFilters ? clearFilters : undefined}
+            />
           }
           renderItem={({ item }) => (
             <WorkoutRow

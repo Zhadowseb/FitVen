@@ -1,7 +1,6 @@
 import { StatusBar } from "expo-status-bar";
 import { useCallback, useMemo, useState } from "react";
 import {
-  ActivityIndicator,
   FlatList,
   RefreshControl,
   TouchableOpacity,
@@ -12,7 +11,7 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
 
 import styles from "./WorkoutPostsPageStyle";
-import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
+import { Colors } from "../../Resources/GlobalStyling/colors";
 import Checkmark from "../../Resources/Icons/UI-icons/Checkmark";
 import Delete from "../../Resources/Icons/UI-icons/Delete";
 import EditPostNoteSheet from "../../Resources/Components/EditPostNoteSheet";
@@ -25,6 +24,7 @@ import {
   ThemedBottomSheet,
   ThemedConfirmModal,
   ThemedHeader,
+  ThemedStateBlock,
   ThemedText,
   ThemedTitle,
   ThemedView,
@@ -233,11 +233,7 @@ export default function WorkoutPostsPage() {
 
   const renderEmpty = useCallback(() => {
     if (isLoading) {
-      return (
-        <View style={styles.stateBlock}>
-          <ActivityIndicator size="large" color={primaryTextColor} />
-        </View>
-      );
+      return <ThemedStateBlock />;
     }
 
     return (

@@ -124,32 +124,6 @@ export default StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  loadingState: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 28,
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 13,
-    lineHeight: 18,
-    textAlign: "center",
-  },
-  emptyState: {
-    paddingVertical: 42,
-    alignItems: "center",
-  },
-  emptyTitle: {
-    textAlign: "center",
-  },
-  emptyBody: {
-    marginTop: 8,
-    maxWidth: 280,
-    fontSize: 13,
-    lineHeight: 19,
-    textAlign: "center",
-  },
   errorText: {
     marginTop: 12,
     fontSize: 13,
