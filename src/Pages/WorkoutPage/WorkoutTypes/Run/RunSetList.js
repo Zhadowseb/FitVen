@@ -1267,7 +1267,9 @@ const RunSetList = ({
         visible={bottomsheetVisible}
         onClose={() => set_bottomsheetVisible(false)}
       >
-        <View style={styles.bottomsheetHeader}>
+        <View
+          style={[styles.bottomsheetHeader, { borderBottomColor: theme.hairline }]}
+        >
           <View>
             <ThemedText style={styles.bottomsheetEyebrow} setColor={quietText}>
               {sectionEyebrow}

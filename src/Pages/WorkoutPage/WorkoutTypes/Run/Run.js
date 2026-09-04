@@ -4295,7 +4295,12 @@ const Run = ({
                   </View>
                 </View>
 
-                <View style={styles.enduranceProgressTrack}>
+                <View
+                  style={[
+                    styles.enduranceProgressTrack,
+                    { backgroundColor: theme.chipBackground },
+                  ]}
+                >
                   <View
                     style={[
                       styles.enduranceProgressFill,
@@ -4644,7 +4649,8 @@ const Run = ({
                         {
                           left: customHeartRatePosition(currentHeartRate),
                           backgroundColor:
-                            currentHeartRateBand?.color ?? "#FFFFFF",
+                            currentHeartRateBand?.color ?? theme.title,
+                          borderColor: theme.title,
                         },
                       ]}
                     />
@@ -4851,6 +4857,8 @@ const Run = ({
             styles.heroPrimaryButton,
             {
               backgroundColor: primaryColor,
+              // Followed the accent, so it stayed orange under every theme.
+              shadowColor: primaryColor,
               opacity: canUsePrimaryAction ? 1 : 0.58,
             },
           ]}

@@ -105,52 +105,6 @@ export default StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  filterScroll: {
-    flexGrow: 0,
-  },
-  filterSections: {
-    gap: 13,
-    paddingBottom: 14,
-  },
-  filterSection: {
-    gap: 7,
-  },
-  filterSectionHeading: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 7,
-    paddingHorizontal: 14,
-  },
-  filterSectionAccent: {
-    width: 14,
-    height: 2,
-    borderRadius: 999,
-  },
-  filterSectionLabel: {
-    fontSize: 11,
-    fontWeight: "900",
-    lineHeight: 13,
-    letterSpacing: 0.7,
-    textTransform: "uppercase",
-  },
-  filterContent: {
-    paddingHorizontal: 14,
-    gap: 8,
-  },
-  groupFilter: {
-    minHeight: 28,
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 13,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  groupFilterText: {
-    fontSize: 11,
-    fontWeight: "800",
-    lineHeight: 14,
-    textTransform: "uppercase",
-  },
   activeFilterRow: {
     flexDirection: "row",
     flexWrap: "wrap",

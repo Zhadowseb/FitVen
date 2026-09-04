@@ -45,54 +45,6 @@ export default StyleSheet.create({
     paddingRight: 0,
   },
 
-  setProgressClip: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 24,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    zIndex: 1,
-    overflow: "hidden",
-  },
-
-  setProgressTrack: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 4,
-    overflow: "hidden",
-  },
-
-  setProgressSegment: {
-    position: "absolute",
-    top: 0,
-    bottom: 0,
-    height: "100%",
-  },
-
-  setProgressDivider: {
-    position: "absolute",
-    top: 0,
-    bottom: 0,
-    width: 4,
-    marginLeft: -1,
-  },
-
-  checkboxShell: {
-    width: 28,
-    height: 28,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 10,
-  },
-
-  checkbox: {
-    marginLeft: 2,
-  },
-
   titleBlock: {
     flex: 1,
     justifyContent: "center",
@@ -140,11 +92,6 @@ export default StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginLeft: 6,
-  },
-
-  exerciseSetCount: {
-    marginLeft: 8,
-    fontWeight: "900",
   },
 
   historySection: {
@@ -349,7 +296,6 @@ export default StyleSheet.create({
     paddingRight: 2,
     justifyContent: "center",
   },
-
 
   summaryChipRow: {
     width: "100%",

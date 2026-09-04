@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.21.4] - Unreleased
+### Fixed
+- The set summary under an exercise no longer draws white on white in the light theme: the compact table's surface, its gridlines, the set bubbles' borders and the connector between them now come from the palette.
+- The set cell's status tints are derived from the status colours themselves, so they follow the accent theme.
+- The run screen's start button shadow followed a fixed orange under every accent; it now follows the accent.
+- Seven bottom-sheet headings used a near-black divider from the pre-redesign palette, which read as a hard black line in the light theme. They use the hairline token now.
+- The heart-rate marker ring and the endurance progress track no longer use a fixed white and grey.
+- The exercise dropdown's border was a fixed light grey.
+
+### Removed
+- 67 style keys nothing referenced, across 13 style files, most of them left behind by the redesign.
+
+---
 ## [0.21.3] - Unreleased
 ### Added
 - `ThemedStateBlock`, one component for a screen's loading, empty and error state. Thirteen screens used to spell it out by hand.

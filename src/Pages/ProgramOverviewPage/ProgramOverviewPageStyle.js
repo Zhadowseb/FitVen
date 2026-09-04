@@ -2,23 +2,6 @@ import { StyleSheet } from 'react-native';
 
 export default StyleSheet.create({
 
-    //Header
-    headerRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 12,
-        paddingHorizontal: 20,
-        paddingTop: 8,
-        paddingBottom: 14,
-        borderBottomWidth: 1,
-    },
-    headerBack: {
-        width: 38,
-        height: 38,
-        alignItems: "flex-start",
-        justifyContent: "center",
-        flexShrink: 0,
-    },
     headerCircleButton: {
         width: 44,
         height: 44,
@@ -26,17 +9,6 @@ export default StyleSheet.create({
         borderWidth: 1,
         alignItems: "center",
         justifyContent: "center",
-    },
-    headerCenter: {
-        flex: 1,
-        alignItems: "center",
-        gap: 1,
-    },
-    headerTitle: {
-        fontSize: 22,
-        fontWeight: "800",
-        lineHeight: 28,
-        letterSpacing: -0.3,
     },
 
     //Main containers flex
@@ -133,7 +105,6 @@ export default StyleSheet.create({
     bottomsheet_title: {
         flexDirection: "row",
         borderBottomWidth: 1,
-        borderBottomColor: "#2e2e2eff",
         paddingBottom: 30,
     },
     bottomsheet_body: {

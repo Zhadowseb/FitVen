@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Alert, View, TouchableOpacity, useColorScheme } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
 import { useNavigation } from "@react-navigation/native";
@@ -142,7 +142,9 @@ const MicrocyclePage = ({ route }) => {
         visible={OptionsBottomsheet_visible}
         onClose={() => set_OptionsBottomsheet_visible(false)}
       >
-        <View style={styles.bottomsheet_title}>
+        <View
+          style={[styles.bottomsheet_title, { borderBottomColor: theme.hairline }]}
+        >
           <ThemedTitle type={"h3"} style={{ flex: 10 }}>
             Block {mesocycle_number}
           </ThemedTitle>

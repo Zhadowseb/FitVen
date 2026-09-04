@@ -2,11 +2,6 @@ import { StyleSheet } from 'react-native';
 
 export default StyleSheet.create({
 
-  circle: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
   card: {
     marginVertical: 3,
     marginHorizontal: 5,
@@ -29,14 +24,6 @@ export default StyleSheet.create({
     overflow: "hidden",
   },
 
-  focus: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: "center",
-    borderTopRightRadius: 15,
-    borderBottomRightRadius: 15,
-  },
-
   options: {
     flex: 0.2,
     alignItems: "flex-end",
@@ -48,24 +35,8 @@ export default StyleSheet.create({
     zIndex: 2,
   },
 
-  svg: {
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#000000',
-  },
-
-  container_row: {
-    flex: 0.9,
-    flexDirection: 'row',
-  },
-
-  touchable: {
-    flex: 1,
-  },
-
   bottomsheet_title: {
     borderBottomWidth: 1,
-    borderBottomColor: "#2e2e2eff",
     paddingBottom: 30,
   },
   bottomsheet_body: {
@@ -84,6 +55,5 @@ export default StyleSheet.create({
     flexDirection: "row",
     paddingTop: 20,
   },
-
 
 });

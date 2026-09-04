@@ -28,15 +28,6 @@ export default StyleSheet.create({
     letterSpacing: 1.8,
     textTransform: 'uppercase',
   },
-  container: {
-    borderWidth: 1,
-    borderRadius: 6,
-    marginBottom: 16,
-    paddingTop: 30,
-  },
-  loaderContainer: {
-    paddingVertical: 10,
-  },
   bottomsheet_title: {
     alignItems: 'center',
     marginBottom: 12,

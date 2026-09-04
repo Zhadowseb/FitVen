@@ -16,7 +16,6 @@ import { useNavigation } from "@react-navigation/native";
 import { useColorScheme } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { Colors } from "../../../../Resources/GlobalStyling/colors";
-import ThreeDots from "../../../../Resources/Icons/UI-icons/ThreeDots"
 import Copy from "../../../../Resources/Icons/UI-icons/Copy";
 import Thermostat from "../../../../Resources/Icons/UI-icons/Thermostat";
 import CalenderPastePicker from "../../../../Resources/Components/CalenderPastePicker/CalenderPasteModal";
@@ -1045,7 +1044,9 @@ const MicrocycleList = ({
       visible={OptionsBottomsheet_visible}
       onClose={() => set_OptionsBottomsheet_visible(false)} >
 
-      <View style={styles.bottomsheet_title}>
+      <View
+        style={[styles.bottomsheet_title, { borderBottomColor: theme.hairline }]}
+      >
 
           <ThemedTitle type={"h3"} style={{flex: 10}}> 
             Week {selectedWeek.microcycle_number}

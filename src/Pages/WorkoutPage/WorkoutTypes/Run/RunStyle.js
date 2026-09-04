@@ -389,7 +389,6 @@ export default StyleSheet.create({
     marginLeft: -7,
     borderRadius: 7,
     borderWidth: 2,
-    borderColor: "#FFFFFF",
     zIndex: 3,
   },
 
@@ -731,7 +730,6 @@ export default StyleSheet.create({
     marginTop: 16,
     borderRadius: 4,
     overflow: "hidden",
-    backgroundColor: "rgba(128, 128, 128, 0.22)",
   },
 
   enduranceProgressFill: {
@@ -1471,7 +1469,6 @@ export default StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#ff7a2b",
     shadowOffset: { width: 0, height: 14 },
     shadowOpacity: 0.28,
     shadowRadius: 18,
@@ -1665,35 +1662,6 @@ export default StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
     fontWeight: "700",
-  },
-
-  runTableHeaderRow: {
-    minHeight: 30,
-    flexDirection: "row",
-    alignItems: "center",
-    borderBottomWidth: 1,
-    paddingHorizontal: 8,
-  },
-
-  runTableHeaderCell: {
-    minHeight: 30,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  runTableHeaderLabel: {
-    fontSize: 9,
-    lineHeight: 11,
-    fontWeight: "800",
-    letterSpacing: 0.8,
-    textAlign: "center",
-  },
-
-  runTableHeaderUnit: {
-    fontSize: 7,
-    lineHeight: 8,
-    fontWeight: "700",
-    textAlign: "center",
   },
 
   runTableRow: {
@@ -1937,7 +1905,6 @@ export default StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     borderBottomWidth: 1,
-    borderBottomColor: "#2e2e2eff",
     paddingBottom: 18,
     marginBottom: 18,
   },

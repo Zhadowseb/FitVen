@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback } from "react";
 import { useColorScheme } from "react-native";
-import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
+import { Colors } from "../../Resources/GlobalStyling/colors";
 
 import styles from './ProgramOverviewPageStyle';
 
@@ -544,7 +544,12 @@ const ProgramOverviewPage = ( {route} ) => {
             visible={prSettingsBottomsheet_visible}
             onClose={() => set_prSettingsBottomsheet_visible(false)}>
 
-            <View style={styles.bottomsheet_title}>
+            <View
+              style={[
+                styles.bottomsheet_title,
+                { borderBottomColor: theme.hairline },
+              ]}
+            >
                 <ThemedTitle type={"h3"} style={{flex: 10}}>
                     Select exercises
                 </ThemedTitle>

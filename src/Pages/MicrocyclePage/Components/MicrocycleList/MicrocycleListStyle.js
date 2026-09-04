@@ -2,27 +2,9 @@ import { StyleSheet } from "react-native";
 
 export default StyleSheet.create({
 
-
-
-
-
-
-
-
-
-
-
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingTop: 40,
-  },
-
   bottomsheet_title: {
     flexDirection: "row",
     borderBottomWidth: 1,
-    borderBottomColor: "#2e2e2eff",
     paddingBottom: 30,
   },
   bottomsheet_body: {
@@ -41,8 +23,6 @@ export default StyleSheet.create({
     flexDirection: "row",
     paddingTop: 20,
   },
-
-
 
   focus: {
     flex: 8,

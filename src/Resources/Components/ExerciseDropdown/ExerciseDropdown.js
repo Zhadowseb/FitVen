@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
-import { View, ActivityIndicator } from "react-native";
+import { View, ActivityIndicator, useColorScheme } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
 
 import styles from "./ExerciseDropdownStyle";
+import { Colors } from "../../GlobalStyling/colors";
 import { weightliftingService as weightliftingRepository } from "../../../Services";
 import { ThemedPicker, ThemedText } from "../../ThemedComponents";
 
 const ExerciseDropdown = ({ selectedExerciseName, onChange }) => {
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme] ?? Colors.light;
   const [exercises, setExercises] = useState([]);
   const [loading, setLoading] = useState(true);
   const db = useSQLiteContext();
@@ -47,7 +50,7 @@ const ExerciseDropdown = ({ selectedExerciseName, onChange }) => {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { borderColor: theme.cardBorder }]}>
       <ThemedPicker
         value={selectedExerciseName}
         onChange={onChange}
