@@ -11,9 +11,9 @@ import { Colors } from "../../Resources/GlobalStyling/colors";
 import styles from './ProgramOverviewPageStyle';
 
 import { programService, weightliftingService } from "../../Services";
-import Rm_List from './Components/rm_list/rm_list';
+import RmList from './Components/RmList/RmList';
 
-import AddEstimatedSet from './Components/rm_list/Components/AddEstimatedSet/AddEstimatedSet';
+import AddEstimatedSet from './Components/RmList/Components/AddEstimatedSet/AddEstimatedSet';
 import MesocycleList from "./Components/MesocycleList/MesocycleList";
 import ProgramOverviewHeader from "./Components/ProgramOverviewHeader";
 import StartProgramModal from "./Components/StartProgramModal";
@@ -511,7 +511,7 @@ const ProgramOverviewPage = ( {route} ) => {
                             borderColor: theme.cardBorder,
                         },
                     ]}>
-                    <Rm_List
+                    <RmList
                         program_id={program_id}
                         refreshKey={refreshKey}
                         refresh={refresh}

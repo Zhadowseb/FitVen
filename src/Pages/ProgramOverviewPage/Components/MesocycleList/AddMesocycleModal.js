@@ -1,19 +1,12 @@
-import React, { useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { useState } from "react";
+import { View } from "react-native";
 
 import {
   ThemedTextInput,
   ThemedButton,
   ThemedModal,
 } from "../../../../Resources/ThemedComponents";
-
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 15,
-  },
-});
+import styles from "./AddMesocycleModalStyle";
 
 export default function AddMesocycleModal({ visible, onClose, onSubmit }) {
   const [focus, setFocus] = useState("");

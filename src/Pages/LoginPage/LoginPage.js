@@ -5,7 +5,7 @@ import { useState } from "react";
 
 import styles from "./LoginPageStyle";
 import { Colors } from "../../Resources/GlobalStyling/colors";
-import { loginWithEmail } from "../../Database/supaBaseClient";
+import { authService } from "../../Services";
 import {
   ThemedButton,
   ThemedCard,
@@ -54,7 +54,7 @@ export default function LoginPage() {
     });
 
     try {
-      await loginWithEmail({
+      await authService.login({
         email: normalizedEmail,
         password,
       });

@@ -8,7 +8,7 @@ import { useSQLiteContext } from "expo-sqlite";
 import { Colors } from "../../../../Resources/GlobalStyling/colors";
 import { formatDisplayNumber } from "../../../../Utils/numberUtils";
 
-import styles from "./Rm_listStyle";
+import styles from "./RmListStyle";
 import { weightliftingService } from "../../../../Services";
 import EditEstimatedSet from "./Components/EditEstimatedSet/EditEstimatedSet";
 

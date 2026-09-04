@@ -1,11 +1,10 @@
 import * as React from "react";
 import Svg, { Path } from "react-native-svg";
 import { useColorScheme } from "react-native";
-import { Colors } from "../../../Resources/GlobalStyling/colors";
+import { Colors } from "../../GlobalStyling/colors";
 
-// Page-local icon (not in shared UI-icons): chat-bubble used on the
-// Feedback card icon tile.
-function MessageCircleIcon({ width = 18, height = 18, color, thickness = 1.7 }) {
+// Chat bubble, for anything that opens a message or feedback flow.
+function MessageCircle({ width = 18, height = 18, color, thickness = 1.7 }) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const iconColor = color ?? theme.secondary;
@@ -27,4 +26,4 @@ function MessageCircleIcon({ width = 18, height = 18, color, thickness = 1.7 }) 
   );
 }
 
-export default MessageCircleIcon;
+export default MessageCircle;

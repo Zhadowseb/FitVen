@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.21.7] - Unreleased
+### Added
+- `ThemedText` takes a `type` naming a step on the typography scale, the way `ThemedTitle` already does, plus an `overline` step for the small uppercase label above a page or section title. Existing call sites are untouched.
+- `Services/authService`, so the login, register and profile screens no longer reach into `src/Database` directly.
+
+### Changed
+- The `rm_list` folder and its two files are PascalCase like the rest of the codebase.
+- The padlock and chat-bubble icons moved from the profile screen's own folder into the shared `UI-icons`.
+- Five components had their inline `StyleSheet.create` moved to a sibling `Style.js`, matching the other 53 screens.
+
+### Removed
+- 16 files nothing imported, including two whole components whose only caller was itself dead.
+
+---
 ## [0.21.6] - Unreleased
 ### Changed
 - The last 71 raw `Text` elements are now `ThemedText`, so a line without an explicit colour falls back to the theme's text colour instead of the platform default.

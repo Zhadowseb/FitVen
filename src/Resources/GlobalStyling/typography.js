@@ -70,6 +70,17 @@ export const Typography = {
     letterSpacing: 0.5,
   },
 
+  // The small uppercase label above a page or section title. Every screen
+  // writes this out by hand today, at 12 px since the design review lifted it
+  // off the 11 px floor.
+  overline: {
+    fontSize: 12,
+    fontWeight: "800",
+    lineHeight: 15,
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
+  },
+
   /* ========= NUMBERS / DATA ========= */
 
   numberLarge: {
