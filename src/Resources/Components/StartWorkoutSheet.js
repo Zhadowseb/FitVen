@@ -1,10 +1,9 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Modal,
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
   useColorScheme,
@@ -13,6 +12,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Colors, withAlpha } from "../GlobalStyling/colors";
 import ThemedSheetHandle from "../ThemedComponents/ThemedSheetHandle";
+import ThemedText from "../ThemedComponents/ThemedText";
 import ArrowDoubleDown from "../Icons/UI-icons/ArrowDoubleDown";
 import ArrowDoubleUp from "../Icons/UI-icons/ArrowDoubleUp";
 import Cross from "../Icons/UI-icons/Cross";
@@ -300,16 +300,16 @@ function SectionHeader({
               color={emphasizeTitle ? theme.title : theme.quietText}
             />
           ) : null}
-          <Text
+          <ThemedText
             style={[
               styles.sectionTitle,
               emphasizeTitle ? styles.sectionTitleStrong : null,
             ]}
           >
             {title}
-          </Text>
+          </ThemedText>
         </View>
-        {subtitle ? <Text style={styles.sectionSubtitle}>{subtitle}</Text> : null}
+        {subtitle ? <ThemedText style={styles.sectionSubtitle}>{subtitle}</ThemedText> : null}
       </View>
       {action ? (
         <TouchableOpacity
@@ -319,7 +319,7 @@ function SectionHeader({
           onPress={onActionPress}
           style={actionDisabled ? styles.disabledAction : null}
         >
-          <Text style={styles.sectionAction}>{action}</Text>
+          <ThemedText style={styles.sectionAction}>{action}</ThemedText>
         </TouchableOpacity>
       ) : null}
     </View>
@@ -343,11 +343,11 @@ function PlannedTodaySection({ isToday, shortcut, onOpen, theme, styles }) {
 
   return (
     <View style={styles.plannedTodaySection}>
-      <Text style={styles.plannedTodayPrompt}>
+      <ThemedText style={styles.plannedTodayPrompt}>
         {hasMultipleWorkouts
           ? `You have multiple workouts planned ${isToday ? "today" : "on this day"}.`
           : `You have a workout planned ${isToday ? "today" : "on this day"}.`}
-      </Text>
+      </ThemedText>
 
       <TouchableOpacity
         activeOpacity={0.86}
@@ -369,19 +369,19 @@ function PlannedTodaySection({ isToday, shortcut, onOpen, theme, styles }) {
           active
         />
         <View style={styles.todayShortcutCopy}>
-          <Text style={styles.todayShortcutLabel}>
+          <ThemedText style={styles.todayShortcutLabel}>
             {isToday ? "PLANNED TODAY" : "PLANNED"}
-          </Text>
-          <Text style={styles.cardTitle} numberOfLines={1}>
+          </ThemedText>
+          <ThemedText style={styles.cardTitle} numberOfLines={1}>
             {hasMultipleWorkouts
               ? `${plannedWorkouts.length} workouts planned`
               : getWorkoutTitle(workout)}
-          </Text>
-          <Text style={styles.cardDetails} numberOfLines={1}>
+          </ThemedText>
+          <ThemedText style={styles.cardDetails} numberOfLines={1}>
             {hasMultipleWorkouts
               ? `${plannedWorkouts.length} ready`
               : getWorkoutDetail(primaryWorkout)}
-          </Text>
+          </ThemedText>
         </View>
         <View style={styles.expandIcon}>
           {showChoices ? (
@@ -407,14 +407,14 @@ function PlannedTodaySection({ isToday, shortcut, onOpen, theme, styles }) {
                 styles={styles}
               />
               <View style={styles.recentCopy}>
-                <Text style={styles.cardTitle} numberOfLines={1}>
+                <ThemedText style={styles.cardTitle} numberOfLines={1}>
                   {getWorkoutTitle(plannedWorkout.workout)}
-                </Text>
-                <Text style={styles.cardDetails} numberOfLines={1}>
+                </ThemedText>
+                <ThemedText style={styles.cardDetails} numberOfLines={1}>
                   {getWorkoutDetail(plannedWorkout)}
-                </Text>
+                </ThemedText>
               </View>
-              <Text style={styles.chevron}>{">"}</Text>
+              <ThemedText style={styles.chevron}>{">"}</ThemedText>
             </TouchableOpacity>
           ))}
         </View>
@@ -441,24 +441,24 @@ function UsualWorkoutCard({ workout, theme, styles }) {
         />
         {workout.suggested ? (
           <View style={styles.suggestedBadge}>
-            <Text style={styles.suggestedText}>SUGGESTED</Text>
+            <ThemedText style={styles.suggestedText}>SUGGESTED</ThemedText>
           </View>
         ) : null}
       </View>
-      <Text style={styles.cardTitle} numberOfLines={1}>
+      <ThemedText style={styles.cardTitle} numberOfLines={1}>
         {workout.title}
-      </Text>
-      <Text style={styles.cardDetails} numberOfLines={1}>
+      </ThemedText>
+      <ThemedText style={styles.cardDetails} numberOfLines={1}>
         {getUsualWorkoutDetail(workout)}
-      </Text>
+      </ThemedText>
       <View style={styles.cardMetaRow}>
         <View style={styles.inlineMeta}>
           <MiniClock styles={styles} />
-          <Text style={styles.metaText} numberOfLines={1}>
+          <ThemedText style={styles.metaText} numberOfLines={1}>
             {getUsualWorkoutMeta(workout)}
-          </Text>
+          </ThemedText>
         </View>
-        <Text style={styles.metaText}>{workout.occurrenceCount}x</Text>
+        <ThemedText style={styles.metaText}>{workout.occurrenceCount}x</ThemedText>
       </View>
     </TouchableOpacity>
   );
@@ -476,7 +476,7 @@ function UsualWorkoutSection({ isLoading, workouts, theme, styles }) {
       />
       {isLoading ? (
         <View style={styles.usualStateRow}>
-          <Text style={styles.recentStateText}>Finding usual workouts...</Text>
+          <ThemedText style={styles.recentStateText}>Finding usual workouts...</ThemedText>
         </View>
       ) : workouts.length > 0 ? (
         <View style={styles.usualGrid}>
@@ -491,9 +491,9 @@ function UsualWorkoutSection({ isLoading, workouts, theme, styles }) {
         </View>
       ) : (
         <View style={styles.usualStateRow}>
-          <Text style={styles.recentStateText}>
+          <ThemedText style={styles.recentStateText}>
             Repeat a workout twice to see it here.
-          </Text>
+          </ThemedText>
         </View>
       )}
     </View>
@@ -528,28 +528,28 @@ function RecentWorkoutRow({ workout, disabled, onPress, theme, styles }) {
           />
           <View style={styles.recentCopy}>
             <View style={styles.repeatTitleRow}>
-              <Text style={styles.cardTitle} numberOfLines={1}>
+              <ThemedText style={styles.cardTitle} numberOfLines={1}>
                 {getWorkoutTitle(workout)}
-              </Text>
+              </ThemedText>
               {isSuggested ? (
                 <View style={styles.suggestedBadge}>
-                  <Text style={styles.suggestedText}>SUGGESTED</Text>
+                  <ThemedText style={styles.suggestedText}>SUGGESTED</ThemedText>
                 </View>
               ) : null}
             </View>
-            <Text style={styles.cardDetails} numberOfLines={1}>
+            <ThemedText style={styles.cardDetails} numberOfLines={1}>
               {detail}
-            </Text>
+            </ThemedText>
           </View>
           <View style={styles.repeatMetaColumn}>
-            <Text style={styles.metaText} numberOfLines={1}>
+            <ThemedText style={styles.metaText} numberOfLines={1}>
               {isSuggested
                 ? getUsualWorkoutMeta(workout)
                 : getRecentWorkoutMeta(workout)}
-            </Text>
+            </ThemedText>
             {occurrenceCount > 0 ? (
               <View style={styles.repeatCountChip}>
-                <Text style={styles.repeatCountText}>{occurrenceCount}x</Text>
+                <ThemedText style={styles.repeatCountText}>{occurrenceCount}x</ThemedText>
               </View>
             ) : null}
           </View>
@@ -579,18 +579,18 @@ function RecentWorkoutRow({ workout, disabled, onPress, theme, styles }) {
           {previewItems.length > 0 ? (
             previewItems.map((item, index) => (
               <View key={`${item.label}-${index}`} style={styles.exerciseRow}>
-                <Text style={styles.exerciseName} numberOfLines={1}>
+                <ThemedText style={styles.exerciseName} numberOfLines={1}>
                   {item.label}
-                </Text>
+                </ThemedText>
                 {item.detail ? (
-                  <Text style={styles.exerciseDetail} numberOfLines={1}>
+                  <ThemedText style={styles.exerciseDetail} numberOfLines={1}>
                     {item.detail}
-                  </Text>
+                  </ThemedText>
                 ) : null}
               </View>
             ))
           ) : (
-            <Text style={styles.exerciseDetail}>No exercises on this workout.</Text>
+            <ThemedText style={styles.exerciseDetail}>No exercises on this workout.</ThemedText>
           )}
         </View>
       ) : null}
@@ -629,7 +629,7 @@ function RecentWorkoutSection({
       ))}
       {isLoadingMore ? (
         <View style={styles.recentStateRow}>
-          <Text style={styles.recentStateText}>Loading more workouts...</Text>
+          <ThemedText style={styles.recentStateText}>Loading more workouts...</ThemedText>
         </View>
       ) : null}
     </>
@@ -659,7 +659,7 @@ function RecentWorkoutSection({
       />
       {isLoading || isLoadingUsual ? (
         <View style={styles.recentStateRow}>
-          <Text style={styles.recentStateText}>Loading recent workouts...</Text>
+          <ThemedText style={styles.recentStateText}>Loading recent workouts...</ThemedText>
         </View>
       ) : repeatWorkouts.length > 0 ? (
         <ScrollView
@@ -674,9 +674,9 @@ function RecentWorkoutSection({
         </ScrollView>
       ) : (
         <View style={styles.recentStateRow}>
-          <Text style={styles.recentStateText}>
+          <ThemedText style={styles.recentStateText}>
             Repeat a workout twice to see it here.
-          </Text>
+          </ThemedText>
         </View>
       )}
     </View>
@@ -716,7 +716,7 @@ function FreshStartCard({ item, disabled, onPress, theme, styles }) {
       <View style={isComingSoon ? styles.comingSoonContent : null}>
         <WorkoutGlyph type={item.type} size={32} color={iconColors.color} />
       </View>
-      <Text
+      <ThemedText
         style={[
           styles.cardTitle,
           styles.freshCardTitle,
@@ -725,7 +725,7 @@ function FreshStartCard({ item, disabled, onPress, theme, styles }) {
         numberOfLines={1}
       >
         {item.title}
-      </Text>
+      </ThemedText>
       {isComingSoon ? (
         <ComingSoonBadge size="small" />
       ) : (
@@ -807,11 +807,11 @@ export default function StartWorkoutSheet({
             ]}
           >
             <View style={styles.header}>
-              <Text style={styles.title}>
+              <ThemedText style={styles.title}>
                 {isToday
                   ? "START NEW WORKOUT"
                   : `What are you doing on ${targetDateLabel}?`}
-              </Text>
+              </ThemedText>
             </View>
 
             {plannedTodayShortcut ? (

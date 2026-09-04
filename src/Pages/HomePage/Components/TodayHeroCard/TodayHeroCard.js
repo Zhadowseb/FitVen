@@ -1,6 +1,7 @@
-import { Image, Text, TouchableOpacity, View, useColorScheme } from "react-native";
+import { Image, TouchableOpacity, View, useColorScheme } from "react-native";
 
 import styles from "./TodayHeroCardStyle";
+import { ThemedText } from "../../../../Resources/ThemedComponents";
 import { Colors, withAlpha } from "../../../../Resources/GlobalStyling/colors";
 import CoverGradient from "../../../../Resources/Components/CoverGradient";
 import ChevronRight from "../../../../Resources/Icons/UI-icons/ChevronRight";
@@ -38,19 +39,19 @@ export default function TodayHeroCard({
         ]}
       >
         <View style={styles.emptyCopy}>
-          <Text
+          <ThemedText
             style={[styles.emptyTitle, { color: theme.title }]}
             numberOfLines={1}
           >
             Nothing scheduled today
-          </Text>
+          </ThemedText>
 
-          <Text
+          <ThemedText
             style={[styles.emptySubtitle, { color: theme.quietText }]}
             numberOfLines={2}
           >
             Rest up, or start a workout.
-          </Text>
+          </ThemedText>
 
           <TouchableOpacity
             activeOpacity={0.88}
@@ -62,14 +63,14 @@ export default function TodayHeroCard({
               { backgroundColor: theme.primary },
             ]}
           >
-            <Text
+            <ThemedText
               style={[
                 styles.emptyStartButtonText,
                 { color: theme.textInverted },
               ]}
             >
               Quick start
-            </Text>
+            </ThemedText>
           </TouchableOpacity>
         </View>
 
@@ -129,9 +130,9 @@ export default function TodayHeroCard({
           ]}
         >
           <View style={[styles.chipDot, { backgroundColor: theme.primary }]} />
-          <Text style={[styles.chipLabel, { color: theme.title }]}>
+          <ThemedText style={[styles.chipLabel, { color: theme.title }]}>
             Today's workout
-          </Text>
+          </ThemedText>
         </View>
 
         <View
@@ -141,24 +142,24 @@ export default function TodayHeroCard({
             { backgroundColor: withAlpha(theme.primary, 0.95) },
           ]}
         >
-          <Text style={[styles.typeChipLabel, { color: theme.textInverted }]}>
+          <ThemedText style={[styles.typeChipLabel, { color: theme.textInverted }]}>
             {workout.typeLabel}
-          </Text>
+          </ThemedText>
         </View>
 
         <View style={styles.overlayText}>
-          <Text style={[styles.heroTitle, { color: theme.title }]} numberOfLines={1}>
+          <ThemedText style={[styles.heroTitle, { color: theme.title }]} numberOfLines={1}>
             {workout.title}
-          </Text>
+          </ThemedText>
           <View style={styles.metaRow}>
             {workout.metaItems.map((metaItem, index) => (
               <View key={metaItem} style={styles.metaItemRow}>
                 {index > 0 ? (
                   <View style={[styles.metaDot, { backgroundColor: theme.quietText }]} />
                 ) : null}
-                <Text style={[styles.metaText, { color: metaTextColor }]}>
+                <ThemedText style={[styles.metaText, { color: metaTextColor }]}>
                   {metaItem}
-                </Text>
+                </ThemedText>
               </View>
             ))}
           </View>
@@ -180,9 +181,9 @@ export default function TodayHeroCard({
           ]}
         >
           <View style={[styles.playTriangle, { borderLeftColor: theme.textInverted }]} />
-          <Text style={[styles.startButtonText, { color: theme.textInverted }]}>
+          <ThemedText style={[styles.startButtonText, { color: theme.textInverted }]}>
             {primaryActionLabel}
-          </Text>
+          </ThemedText>
         </TouchableOpacity>
       </View>
 
@@ -247,20 +248,20 @@ function CompletedWorkoutCard({
           ]}
         >
           <Checkmark width={14} height={14} color={completionColor} thickness={2.8} />
-          <Text style={[styles.chipLabel, { color: completionColor }]}>Completed</Text>
+          <ThemedText style={[styles.chipLabel, { color: completionColor }]}>Completed</ThemedText>
         </View>
 
         <View style={styles.overlayText}>
-          <Text style={[styles.heroTitle, { color: theme.title }]} numberOfLines={1}>
+          <ThemedText style={[styles.heroTitle, { color: theme.title }]} numberOfLines={1}>
             {workout.title}
-          </Text>
+          </ThemedText>
           <View style={styles.metaRow}>
             {completionMeta.map((metaItem, index) => (
               <View key={metaItem} style={styles.metaItemRow}>
                 {index > 0 ? (
                   <View style={[styles.metaDot, { backgroundColor: theme.quietText }]} />
                 ) : null}
-                <Text
+                <ThemedText
                   style={[
                     styles.metaText,
                     index === 0 && styles.completedMetaText,
@@ -268,7 +269,7 @@ function CompletedWorkoutCard({
                   ]}
                 >
                   {metaItem}
-                </Text>
+                </ThemedText>
               </View>
             ))}
           </View>
@@ -319,19 +320,19 @@ function UpNextRow({
           },
         ]}
       >
-        <Text style={[styles.dateBadgeWeekday, { color: theme.primary }]}>
+        <ThemedText style={[styles.dateBadgeWeekday, { color: theme.primary }]}>
           {nextWorkout.weekday}
-        </Text>
-        <Text style={[styles.dateBadgeNumber, { color: theme.title }]}>
+        </ThemedText>
+        <ThemedText style={[styles.dateBadgeNumber, { color: theme.title }]}>
           {nextWorkout.day}
-        </Text>
+        </ThemedText>
       </View>
 
       <View style={styles.upNextTextColumn}>
-        <Text style={[styles.upNextEyebrow, { color: theme.quietText }]}>UP NEXT</Text>
-        <Text style={[styles.upNextTitle, { color: theme.title }]} numberOfLines={1}>
+        <ThemedText style={[styles.upNextEyebrow, { color: theme.quietText }]}>UP NEXT</ThemedText>
+        <ThemedText style={[styles.upNextTitle, { color: theme.title }]} numberOfLines={1}>
           {nextWorkout.title}
-        </Text>
+        </ThemedText>
       </View>
 
       <ChevronRight width={18} height={18} color={theme.quietText} thickness={2} />

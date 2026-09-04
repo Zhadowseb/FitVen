@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.21.6] - Unreleased
+### Changed
+- The last 71 raw `Text` elements are now `ThemedText`, so a line without an explicit colour falls back to the theme's text colour instead of the platform default.
+
+---
 ## [0.21.5] - Unreleased
 ### Changed
 - `ThemedCard` is a surface only. It used to bake in 10 px of margin and padding, which every single call site then had to undo, so 69 reset declarations are gone with it.

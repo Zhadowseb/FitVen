@@ -1,8 +1,9 @@
-import { Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Pressable, StyleSheet, TouchableOpacity, View } from "react-native";
 import { useColorScheme } from "react-native";
 import Svg, { Path, Polygon } from "react-native-svg";
 
 import { Colors, withAlpha } from "../GlobalStyling/colors";
+import ThemedText from "../ThemedComponents/ThemedText";
 
 const MONTH_LABELS = [
   "jan",
@@ -162,9 +163,9 @@ const WeekdayIndicator = ({
               },
             ]}
           >
-            <Text style={[styles.todayBadgeText, { color: statusBadgeTextColor }]}>
+            <ThemedText style={[styles.todayBadgeText, { color: statusBadgeTextColor }]}>
               {statusBadgeLabel}
-            </Text>
+            </ThemedText>
           </View>
         </View>
       )}
@@ -197,7 +198,7 @@ const WeekdayIndicator = ({
         )}
 
         {showWeekdayLabel && Boolean(label) && (
-          <Text
+          <ThemedText
             style={[
               styles.weekdayLabel,
               active && styles.weekdayLabelActive,
@@ -205,12 +206,12 @@ const WeekdayIndicator = ({
             ]}
           >
             {label}
-          </Text>
+          </ThemedText>
         )}
 
         {!!dateLabel && (
           <View style={[styles.dateStack, compact && styles.dateStackCompact]}>
-            <Text
+            <ThemedText
               style={[
                 styles.dateNumber,
                 compact && styles.dateNumberCompact,
@@ -218,12 +219,12 @@ const WeekdayIndicator = ({
               ]}
             >
               {dayNumber ?? dateLabel}
-            </Text>
+            </ThemedText>
 
             {!!monthLabel && (
-              <Text style={[styles.dateMonth, { color: badgeLabelColor }]}>
+              <ThemedText style={[styles.dateMonth, { color: badgeLabelColor }]}>
                 {monthLabel}
-              </Text>
+              </ThemedText>
             )}
           </View>
         )}
@@ -256,9 +257,9 @@ const WeekdayIndicator = ({
               ))}
 
             {workoutCards.length > MAX_MONTH_MARKERS && (
-              <Text style={[styles.markerOverflow, { color: quietText }]}>
+              <ThemedText style={[styles.markerOverflow, { color: quietText }]}>
                 +{workoutCards.length - (MAX_MONTH_MARKERS - 1)}
-              </Text>
+              </ThemedText>
             )}
           </View>
         )}
@@ -375,7 +376,7 @@ const WeekdayIndicator = ({
                   )}
 
                   {!WorkoutIcon && workoutCard.iconLabel && (
-                    <Text
+                    <ThemedText
                       style={[
                         styles.iconLabel,
                         styles.iconLabelOnly,
@@ -383,7 +384,7 @@ const WeekdayIndicator = ({
                       ]}
                     >
                       {workoutCard.iconLabel}
-                    </Text>
+                    </ThemedText>
                   )}
                 </View>
               </TouchableOpacity>
@@ -432,7 +433,7 @@ const WeekdayIndicator = ({
           )}
 
           {!Icon && iconLabel && (
-            <Text
+            <ThemedText
               style={[
                 styles.iconLabel,
                 styles.iconLabelOnly,
@@ -440,7 +441,7 @@ const WeekdayIndicator = ({
               ]}
             >
               {iconLabel}
-            </Text>
+            </ThemedText>
           )}
         </View>
       )}

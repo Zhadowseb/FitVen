@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.21.5-major-code-design-cleanup.1",
+  "version": "0.21.6-major-code-design-cleanup.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",

@@ -1,6 +1,7 @@
-import { Text, TouchableOpacity, View, useColorScheme } from "react-native";
+import { TouchableOpacity, View, useColorScheme } from "react-native";
 
 import styles from "./GreetingHeaderStyle";
+import { ThemedText } from "../../../../Resources/ThemedComponents";
 import { Colors, withAlpha } from "../../../../Resources/GlobalStyling/colors";
 import Bell from "../../../../Resources/Icons/UI-icons/Bell";
 import Layers from "../../../../Resources/Icons/UI-icons/Layers";
@@ -63,12 +64,12 @@ export default function GreetingHeader({
   return (
     <View style={styles.container}>
       <View style={styles.topRow}>
-        <Text
+        <ThemedText
           style={[styles.eyebrow, { color: theme.quietText }]}
           numberOfLines={1}
         >
           {dateEyebrow}
-        </Text>
+        </ThemedText>
 
         <View style={styles.actions}>
         <TouchableOpacity
@@ -126,18 +127,18 @@ export default function GreetingHeader({
                 },
               ]}
             >
-              <Text style={[styles.badgeText, { color: theme.textInverted }]}>
+              <ThemedText style={[styles.badgeText, { color: theme.textInverted }]}>
                 {badgeCount}
-              </Text>
+              </ThemedText>
             </View>
           ) : null}
         </TouchableOpacity>
         </View>
       </View>
 
-      <Text style={[styles.title, { color: theme.title }]} numberOfLines={1}>
+      <ThemedText style={[styles.title, { color: theme.title }]} numberOfLines={1}>
         {greetingTitle}
-      </Text>
+      </ThemedText>
     </View>
   );
 }
