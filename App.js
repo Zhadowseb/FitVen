@@ -11,6 +11,7 @@ import { initializeDatabase } from './src/Database/db';
 import { locationSchemaSql } from './src/Database/schema/location';
 import { View, useColorScheme } from "react-native"
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { KeyboardProvider, KeyboardToolbar } from "react-native-keyboard-controller";
 import * as TaskManager from 'expo-task-manager';
 import * as ScreenOrientation from "expo-screen-orientation";
 
@@ -21,20 +22,21 @@ import HomePage from './src/Pages/HomePage/HomePage';
 import ProfilePage from './src/Pages/ProfilePage/ProfilePage';
 import ProgramPage from './src/Pages/ProgramPage/ProgramPage';
 import ProgramOverviewPage from './src/Pages/ProgramOverviewPage/ProgramOverviewPage';
+import ProgramSettingsPage from './src/Pages/ProgramSettingsPage/ProgramSettingsPage';
+import WorkoutPostsPage from './src/Pages/WorkoutPostsPage/WorkoutPostsPage';
 import MicrocyclePage from './src/Pages/MicrocyclePage/MicrocyclePage';
 import SearchPage from "./src/Pages/SearchPage/SearchPage";
 import SocialUserListPage from "./src/Pages/SocialUserListPage/SocialUserListPage";
 import WeekPage from './src/Pages/WeekPage/WeekPage';
 import WorkoutPage from './src/Pages/WorkoutPage/WorkoutPage';
-import SetPage from './src/Pages/SetPage/SetPage';
 import ExerciseCatalogPage from "./src/Pages/ExerciseCatalogPage/ExerciseCatalogPage";
 import ExerciseLibraryPage from "./src/Pages/ExerciseLibraryPage/ExerciseLibraryPage";
 import PersonalRecordsPage from "./src/Pages/PersonalRecordsPage/PersonalRecordsPage";
+import WorkoutLibraryPage from "./src/Pages/WorkoutLibraryPage/WorkoutLibraryPage";
 import WorkoutCalendarPage from "./src/Pages/WorkoutCalendarPage/WorkoutCalendarPage";
 import SicknessPage from "./src/Pages/SicknessPage/SicknessPage";
 import NotificationHistoryPage from "./src/Pages/NotificationHistoryPage/NotificationHistoryPage";
 import NotificationSettingsPage from "./src/Pages/NotificationSettingsPage/NotificationSettingsPage";
-import SocialPostEditPage from "./src/Pages/SocialPostEditPage/SocialPostEditPage";
 import SocialPostSettingsPage from "./src/Pages/SocialPostSettingsPage/SocialPostSettingsPage";
 import ExerciseSocialPostSettingsPage from "./src/Pages/ExerciseSocialPostSettingsPage/ExerciseSocialPostSettingsPage";
 import OneRepMaxCalculatorPage from "./src/Pages/OneRepMaxCalculatorPage/OneRepMaxCalculatorPage";
@@ -340,9 +342,10 @@ function RootNavigator() {
   }
   
   return (
-    <View style={{ flex: 1, backgroundColor: theme.background }}>
-      <View style={{ flex: 1 }}>
-        <NavigationContainer
+    <KeyboardProvider>
+      <View style={{ flex: 1, backgroundColor: theme.background }}>
+        <View style={{ flex: 1 }}>
+          <NavigationContainer
           ref={navigationRef}
           theme={navTheme}
           initialState={restoredNavigationState}
@@ -369,17 +372,18 @@ function RootNavigator() {
                 <Stack.Screen name="ProfilePage" component={ProfilePage} options={{ headerShown: false }} />
                 <Stack.Screen name="ProgramPage" component={ProgramPage} options={{headerShown: false}} />
                 <Stack.Screen name="ProgramOverviewPage" component={ProgramOverviewPage} options={{headerShown: false}} />
+                <Stack.Screen name="ProgramSettingsPage" component={ProgramSettingsPage} options={{headerShown: false}} />
                 <Stack.Screen name="MicrocyclePage" component={MicrocyclePage} options={{headerShown: false}} />
                 <Stack.Screen name="WeekPage" component={WeekPage} options={{headerShown: false}} />
                 <Stack.Screen name="WorkoutPage" component={WorkoutPage} options={{headerShown: false}} />
-                <Stack.Screen name="SetPage" component={SetPage} />
                 <Stack.Screen name="ExerciseCatalogPage" component={ExerciseCatalogPage} options={{ headerShown: false }} />
                 <Stack.Screen name="ExerciseLibraryPage" component={ExerciseLibraryPage} options={{ headerShown: false }} />
                 <Stack.Screen name="PersonalRecordsPage" component={PersonalRecordsPage} options={{ headerShown: false }} />
+                <Stack.Screen name="WorkoutLibraryPage" component={WorkoutLibraryPage} options={{ headerShown: false }} />
+                <Stack.Screen name="WorkoutPostsPage" component={WorkoutPostsPage} options={{ headerShown: false }} />
                 <Stack.Screen name="WorkoutCalendarPage" component={WorkoutCalendarPage} options={{ headerShown: false }} />
                 <Stack.Screen name="NotificationHistoryPage" component={NotificationHistoryPage} options={{ headerShown: false }} />
                 <Stack.Screen name="NotificationSettingsPage" component={NotificationSettingsPage} options={{ headerShown: false }} />
-                <Stack.Screen name="SocialPostEditPage" component={SocialPostEditPage} options={{ headerShown: false }} />
                 <Stack.Screen name="SocialPostSettingsPage" component={SocialPostSettingsPage} options={{ headerShown: false }} />
                 <Stack.Screen name="ExerciseSocialPostSettingsPage" component={ExerciseSocialPostSettingsPage} options={{ headerShown: false }} />
                 <Stack.Screen name="OneRepMaxCalculatorPage" component={OneRepMaxCalculatorPage} options={{ headerShown: false }} />
@@ -405,16 +409,20 @@ function RootNavigator() {
               </>
             )}
           </Stack.Navigator>
-        </NavigationContainer>
+          </NavigationContainer>
+        </View>
+
+        {isAuthenticated && currentRouteName !== RUN_HEART_RATE_CHART_ROUTE ? (
+          <ThemedBottomNavigation
+            currentRouteName={currentRouteName}
+            navigationRef={navigationRef}
+          />
+        ) : null}
       </View>
 
-      {isAuthenticated && currentRouteName !== RUN_HEART_RATE_CHART_ROUTE ? (
-        <ThemedBottomNavigation
-          currentRouteName={currentRouteName}
-          navigationRef={navigationRef}
-        />
-      ) : null}
-    </View>
+      {/* Gives every field - numeric ones included - a Done button. */}
+      <KeyboardToolbar />
+    </KeyboardProvider>
   );
 }
 

@@ -2,67 +2,15 @@ import { StyleSheet } from "react-native";
 
 export default StyleSheet.create({
 
-  listHeader: {
-    paddingTop: 0,
-  },
 
-  card: {
-    flexDirection: "column",
-    paddingTop: 14,
-    paddingBottom: 12,
-  },
 
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-  },
 
-  cardHeaderContent: {
-    flex: 1,
-    paddingRight: 12,
-  },
 
-  cardTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
 
-  weekNumberBadge: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
 
-  weekNumberBadgeText: {
-    fontSize: 12,
-    lineHeight: 15,
-    fontWeight: "800",
-  },
 
-  cardHeaderTitle: {
-    flex: 1,
-    marginBottom: 0,
-  },
 
-  cardHeaderSide: {
-    alignItems: "flex-end",
-    justifyContent: "flex-start",
-  },
 
-  optionsButton: {
-    width: 28,
-    height: 28,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  weekdaysShell: {
-    paddingTop: 2,
-  },
 
   loadingContainer: {
     flex: 1,
@@ -86,7 +34,7 @@ export default StyleSheet.create({
   option_text: {
     paddingLeft: 10,
     fontWeight: 600,
-    fontSize: 16,
+    fontSize: 15,
   },
 
   option: {
@@ -94,18 +42,7 @@ export default StyleSheet.create({
     paddingTop: 20,
   },
 
-  weekdaysRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    paddingTop: 2,
-    paddingBottom: 2,
-  },
 
-  weekdayTouchable: {
-    flex: 1,
-    alignItems: "center",
-  },
 
   focus: {
     flex: 8,
@@ -155,7 +92,7 @@ export default StyleSheet.create({
 
   dayContextTitle: {
     marginTop: 6,
-    fontSize: 20,
+    fontSize: 19,
     lineHeight: 25,
     fontWeight: "800",
   },
@@ -195,7 +132,7 @@ export default StyleSheet.create({
   },
 
   sickContinuationText: {
-    fontSize: 14,
+    fontSize: 13,
     lineHeight: 20,
     textAlign: "center",
   },
@@ -296,8 +233,8 @@ export default StyleSheet.create({
 
   sicknessNoteInput: {
     minHeight: 92,
-    borderRadius: 12,
-    fontSize: 14,
+    borderRadius: 10,
+    fontSize: 13,
     lineHeight: 20,
     paddingTop: 12,
   },

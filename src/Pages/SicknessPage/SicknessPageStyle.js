@@ -4,18 +4,53 @@ export default StyleSheet.create({
   container: {
     flex: 1,
   },
+  scroll: {
+    flex: 1,
+  },
   content: {
     paddingHorizontal: 18,
     paddingTop: 18,
-    paddingBottom: 104,
+    paddingBottom: 20,
     gap: 14,
+  },
+  pageHeaderTitleGroup: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  pageHeaderTitleEyebrow: {
+    fontWeight: "800",
+    letterSpacing: 1,
+    textTransform: "uppercase",
+    marginBottom: 2,
+  },
+  pageHeaderTitleMain: {
+    textAlign: "center",
+    lineHeight: 26,
+  },
+  // The bottom navigation is a sibling below this screen rather than an
+  // overlay, so the footer needs no safe-area inset of its own.
+  footer: {
+    paddingHorizontal: 18,
+    paddingTop: 12,
+    paddingBottom: 12,
+    borderTopWidth: 1,
+  },
+  loadingState: {
+    minHeight: 120,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+  },
+  loadingLabel: {
+    fontSize: 13,
+    lineHeight: 18,
   },
   sectionHeader: {
     gap: 3,
   },
   sectionEyebrow: {
-    fontSize: 11,
-    lineHeight: 14,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "800",
     letterSpacing: 1.2,
     textTransform: "uppercase",
@@ -24,9 +59,6 @@ export default StyleSheet.create({
     fontSize: 22,
     lineHeight: 28,
     fontWeight: "800",
-  },
-  registerButton: {
-    width: "100%",
   },
   dateRow: {
     flexDirection: "row",
@@ -46,12 +78,12 @@ export default StyleSheet.create({
   datePickerField: {
     minHeight: 46,
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: 10,
     justifyContent: "center",
     paddingHorizontal: 14,
   },
   datePickerText: {
-    fontSize: 14,
+    fontSize: 13,
     lineHeight: 18,
     fontWeight: "800",
   },
@@ -72,14 +104,14 @@ export default StyleSheet.create({
   },
   noteInput: {
     minHeight: 98,
-    borderRadius: 12,
-    fontSize: 14,
+    borderRadius: 10,
+    fontSize: 13,
     lineHeight: 20,
     paddingTop: 12,
   },
   historyItem: {
     borderWidth: 1,
-    borderRadius: 16,
+    borderRadius: 14,
     minHeight: 84,
     overflow: "hidden",
     position: "relative",
@@ -122,7 +154,7 @@ export default StyleSheet.create({
   },
   emptyHistory: {
     borderWidth: 1,
-    borderRadius: 16,
+    borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 16,
   },

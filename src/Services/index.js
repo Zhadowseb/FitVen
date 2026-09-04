@@ -3,6 +3,7 @@ export * as feedbackService from "./feedbackService";
 export * as heartRateService from "./heartRateService";
 export * as localProgramImportService from "./localProgramImportService";
 export * as notificationService from "./notificationService";
+export * as ownWorkoutPostService from "./ownWorkoutPostService";
 export * as programService from "./programService";
 export * as programTransferService from "./programTransferService";
 export * as runningService from "./runningService";

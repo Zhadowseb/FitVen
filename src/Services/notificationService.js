@@ -131,6 +131,34 @@ function normalizeFunctionError(error, functionName) {
   return error;
 }
 
+// FunctionsHttpError only reports "non-2xx status code". The function puts the
+// real reason in the response body, so read it before giving up on it.
+async function describeFunctionError(error, functionName) {
+  const normalized = normalizeFunctionError(error, functionName);
+  const response = error?.context;
+
+  if (typeof response?.text !== "function") {
+    return normalized;
+  }
+
+  try {
+    const body = (await response.text())?.trim();
+
+    if (!body) {
+      return normalized;
+    }
+
+    return new Error(
+      `${functionName} failed (${response.status ?? "error"}): ${body.slice(
+        0,
+        300
+      )}`
+    );
+  } catch {
+    return normalized;
+  }
+}
+
 function buildAvatarPublicUrl(avatarPath, updatedAt) {
   if (!avatarPath) {
     return null;
@@ -406,7 +434,7 @@ export async function registerPushTokenForUser({
   );
 
   if (error) {
-    throw normalizeFunctionError(error, MANAGE_PUSH_TOKEN_FUNCTION);
+    throw await describeFunctionError(error, MANAGE_PUSH_TOKEN_FUNCTION);
   }
 
   return {
@@ -443,7 +471,7 @@ export async function disableCurrentPushTokenForUser({ user } = {}) {
   );
 
   if (error) {
-    throw normalizeFunctionError(error, MANAGE_PUSH_TOKEN_FUNCTION);
+    throw await describeFunctionError(error, MANAGE_PUSH_TOKEN_FUNCTION);
   }
 
   return {
@@ -577,7 +605,21 @@ export async function setWorkoutStartNotificationMode({
   }
 
   if (nextMode !== WORKOUT_START_NOTIFICATION_MODES.NONE) {
-    const registrationResult = await registerPushTokenForUser({ user });
+    // The preference above is already saved. Registering this device is a
+    // separate step, and letting its failure escape rolled the choice back in
+    // the UI while the database kept the new mode - so the screen jumped back
+    // to the old option on every visit.
+    let registrationResult = null;
+
+    try {
+      registrationResult = await registerPushTokenForUser({ user });
+    } catch (registrationError) {
+      console.warn(
+        "Push token registration failed while saving the notification mode:",
+        registrationError
+      );
+      registrationResult = { skipped: true, reason: "registration_failed" };
+    }
 
     if (registrationResult?.skipped) {
       return {

@@ -1,4 +1,4 @@
-import { Alert, View, ScrollView, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
@@ -6,15 +6,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback } from "react";
 import { useColorScheme } from "react-native";
-import Svg, { Path } from "react-native-svg";
 import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
 
 import styles from './ProgramOverviewPageStyle';
-import {
-  programService,
-  programTransferService,
-  weightliftingService,
-} from "../../Services";
+
+import { programService, weightliftingService } from "../../Services";
 import Rm_List from './Components/rm_list/rm_list';
 
 import AddEstimatedSet from './Components/rm_list/Components/AddEstimatedSet/AddEstimatedSet';
@@ -22,19 +18,17 @@ import MesocycleList from "./Components/MesocycleList/MesocycleList";
 import ProgramOverviewHeader from "./Components/ProgramOverviewHeader";
 import StartProgramModal from "./Components/StartProgramModal";
 import Checkmark from "../../Resources/Icons/UI-icons/Checkmark";
-import Info from "../../Resources/Icons/UI-icons/Info";
-import Copy from "../../Resources/Icons/UI-icons/Copy";
+import Filter from "../../Resources/Icons/UI-icons/Filter";
 import Star from "../../Resources/Icons/UI-icons/Star";
-import Pencil from "../../Resources/Icons/UI-icons/Pencil";
 
 import { ThemedTitle,
+        ThemedHeader,
         ThemedView,
         ThemedText,
         ThemedBottomSheet,
-        ThemedModal,
-        ThemedEditableCell}
+        ThemedKeyboardProtection}
   from "../../Resources/ThemedComponents";
-import Delete from '../../Resources/Icons/UI-icons/Delete';
+import Cogwheel from '../../Resources/Icons/UI-icons/Cogwheel';
 import { formatDate, parseCustomDate } from '../../Utils/dateUtils';
 import { getProgramEndDate } from '../../Utils/programUtils';
 
@@ -118,44 +112,12 @@ function getProgramTimeline(startDate, totalDays) {
     };
 }
 
-const BackChevronIcon = ({ color }) => (
-    <Svg
-        width={19}
-        height={19}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke={color}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round">
-        <Path d="M15 18l-6-6 6-6" />
-    </Svg>
-);
-
-const ThreeDotsIcon = ({ color }) => (
-    <Svg
-        width={18}
-        height={18}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke={color}
-        strokeWidth={2}
-        strokeLinecap="round">
-        <Path d="M5 12h.01M12 12h.01M19 12h.01" />
-    </Svg>
-);
-
 const ProgramOverviewPage = ( {route} ) => {
     const db = useSQLiteContext();
     const navigation = useNavigation();
     const insets = useSafeAreaInsets();
     const colorScheme = useColorScheme();
     const theme = Colors[colorScheme] ?? Colors.light;
-    const radioBorderColor =
-        colorScheme === "dark"
-            ? "rgba(255, 255, 255, 0.18)"
-            : "rgba(15, 17, 22, 0.18)";
-
     const program_id = route.params.program_id;
     const initialProgramName = route.params.program_name ?? "";
 
@@ -171,13 +133,9 @@ const ProgramOverviewPage = ( {route} ) => {
     const [programExerciseBests, set_programExerciseBests] = useState([]);
     const [programStats, setProgramStats] = useState(emptyProgramStats);
 
-    const [OptionsBottomsheet_visible, set_OptionsBottomsheet_visible] = useState(false);
     const [prSettingsBottomsheet_visible, set_prSettingsBottomsheet_visible] = useState(false);
-    const [deleteConfirmModal_visible, set_DeleteConfirmModal_visible] = useState(false);
-    const [isDeletingProgram, set_IsDeletingProgram] = useState(false);
     const [startProgramModal_visible, setStartProgramModalVisible] = useState(false);
     const [isStartingProgram, setIsStartingProgram] = useState(false);
-    const [isExportingProgram, setIsExportingProgram] = useState(false);
 
     const refresh = () => {
         set_refreshKey(prev => prev + 1);
@@ -284,72 +242,6 @@ const ProgramOverviewPage = ( {route} ) => {
         loadProgramPeriod();
     }, [refreshKey]);
 
-    const deleteProgram = async () => {
-        try {
-            set_IsDeletingProgram(true);
-            await programService.deleteProgram(db, program_id);
-        } catch (e) {
-            console.error("deleteProgram failed:", e);
-            set_IsDeletingProgram(false);
-            return;
-        }
-
-        set_IsDeletingProgram(false);
-        set_DeleteConfirmModal_visible(false);
-        set_OptionsBottomsheet_visible(false);
-        navigation.replace("ProgramPage");
-    };
-
-    const exportProgram = async () => {
-        if (isExportingProgram) {
-            return;
-        }
-
-        try {
-            setIsExportingProgram(true);
-            const result = await programTransferService.exportProgramToFile(
-                db,
-                program_id
-            );
-
-            Alert.alert(
-                "Program exported",
-                result.shared
-                    ? `${result.programName} is ready to share.`
-                    : `${result.fileName} was created on this device.`
-            );
-        } catch (error) {
-            console.error("Program export failed:", error);
-            Alert.alert(
-                "Export failed",
-                error?.message ?? "The program file could not be created."
-            );
-        } finally {
-            setIsExportingProgram(false);
-        }
-    };
-
-    const changeStatus = async (new_status) => {
-        await programService.updateProgramStatus(db, {
-            programId: program_id,
-            status: new_status,
-        });
-        set_status(new_status);
-    }
-
-    const handleStatusChange = (new_status) => {
-        if (status === new_status) {
-            return;
-        }
-
-        if (status === "NOT_STARTED" && new_status === "ACTIVE") {
-            setStartProgramModalVisible(true);
-            return;
-        }
-
-        changeStatus(new_status);
-    }
-
     const startProgram = async (selectedWeek) => {
         const nextStartDate = formatDate(selectedWeek);
 
@@ -427,76 +319,51 @@ const ProgramOverviewPage = ( {route} ) => {
     const headerPeriod =
         `${formatHeaderDate(start_date)} – ${formatHeaderDate(end_date)}`;
 
-    const statusOptions = [
-        {
-            value: "NOT_STARTED",
-            label: "Draft",
-            description: "Keep planning until you choose a start week.",
-        },
-        {
-            value: "ACTIVE",
-            label: "Active",
-            description: "Use while the program is running.",
-        },
-        {
-            value: "COMPLETE",
-            label: "Complete",
-            description: "Mark the cycle finished after the final week.",
-        },
-    ];
-
   return (
     <>
     <ThemedView safe={["top", "left", "right"]}>
-        <View
-            style={[
-                styles.headerRow,
-                { borderBottomColor: theme.hairline },
-            ]}>
-            <TouchableOpacity
-                style={[
-                    styles.headerCircleButton,
-                    {
-                        backgroundColor: theme.cardBackground,
-                        borderColor: theme.cardBorder,
-                    },
-                ]}
-                onPress={() => navigation.goBack()}>
-                <BackChevronIcon color={theme.title} />
-            </TouchableOpacity>
+        <ThemedHeader
+            rightWidth={56}
+            right={
+                <TouchableOpacity
+                    style={[
+                        styles.headerCircleButton,
+                        {
+                            backgroundColor: theme.cardBackground,
+                            borderColor: theme.cardBorder,
+                        },
+                    ]}
+                    accessibilityRole="button"
+                    accessibilityLabel="Program settings"
+                    hitSlop={8}
+                    onPress={() =>
+                        navigation.navigate("ProgramSettingsPage", {
+                            program_id,
+                            program_name,
+                            start_date,
+                        })
+                    }>
+                    <Cogwheel width={18} height={18} color={theme.text} />
+                </TouchableOpacity>
+            }>
+            {/* Navigation label only - the program name is the card heading
+                below, and repeating it here read as a duplicate. */}
+            <ThemedTitle type="pageTitle" numberOfLines={1}>
+                Program
+            </ThemedTitle>
+        </ThemedHeader>
 
-            <View style={styles.headerCenter}>
-                <ThemedText style={styles.headerEyebrow} setColor={theme.quietText}>
-                    Program
-                </ThemedText>
-                <ThemedText
-                    style={styles.headerTitle}
-                    setColor={theme.title}
-                    numberOfLines={1}>
-                    {headerTitle}
-                </ThemedText>
-            </View>
-
-            <TouchableOpacity
-                style={[
-                    styles.headerCircleButton,
-                    {
-                        backgroundColor: theme.cardBackground,
-                        borderColor: theme.cardBorder,
-                    },
-                ]}
-                onPress={() => set_OptionsBottomsheet_visible(true)}>
-                <ThreeDotsIcon color={theme.text} />
-            </TouchableOpacity>
-        </View>
-
-        <ScrollView
-            style={styles.container}
-            nestedScrollEnabled
+        <ThemedKeyboardProtection
+            scroll
+            bottomOffset={64}
             contentContainerStyle={[
                 styles.content,
                 { paddingBottom: insets.bottom + 15 },
-            ]}>
+            ]}
+            scrollViewProps={{
+                style: styles.container,
+                nestedScrollEnabled: true,
+            }}>
 
             <ProgramOverviewHeader
                 title={headerTitle}
@@ -526,14 +393,17 @@ const ProgramOverviewPage = ( {route} ) => {
                 <View style={styles.section_header}>
                     <ThemedText
                         style={styles.section_header_eyebrow}
-                        setColor={theme.quietText}>
+                        setColor={theme.text}>
                         Program bests
                     </ThemedText>
 
                     <TouchableOpacity
+                        accessibilityRole="button"
+                        accessibilityLabel="Select exercises"
+                        hitSlop={12}
                         style={styles.section_header_icon}
                         onPress={() => set_prSettingsBottomsheet_visible(true)}>
-                        <Info width={15} height={15} color={theme.quietText} thickness={1.8} />
+                        <Filter width={15} height={15} color={theme.quietText} />
                     </TouchableOpacity>
                 </View>
 
@@ -628,8 +498,8 @@ const ProgramOverviewPage = ( {route} ) => {
             <View style={styles.section}>
                 <ThemedText
                     style={styles.section_header_eyebrow}
-                    setColor={theme.quietText}>
-                    Estimated 1RM's
+                    setColor={theme.text}>
+                    Estimated 1RMs
                 </ThemedText>
 
                 <View
@@ -656,322 +526,8 @@ const ProgramOverviewPage = ( {route} ) => {
                 </View>
             </View>
 
-            {/* Program setting and status */}
-            <View style={styles.section}>
-                <ThemedText
-                    style={styles.section_header_eyebrow}
-                    setColor={theme.quietText}>
-                    Settings
-                </ThemedText>
-
-                <View
-                    style={[
-                        styles.card_shell,
-                        {
-                            backgroundColor: theme.cardBackground,
-                            borderColor: theme.cardBorder,
-                        },
-                    ]}>
-                    <View style={styles.settings_status_label_wrap}>
-                        <ThemedText
-                            style={styles.settings_status_label}
-                            setColor={theme.quietText}>
-                            Program status
-                        </ThemedText>
-                    </View>
-
-                    {statusOptions.map((option) => {
-                        const isSelected = status === option.value;
-
-                        return (
-                            <TouchableOpacity
-                                key={option.value}
-                                style={[
-                                    styles.settings_status_row,
-                                    isSelected && {
-                                        backgroundColor: withAlpha(theme.primary, 0.06),
-                                    },
-                                ]}
-                                onPress={() => handleStatusChange(option.value)}>
-                                <View
-                                    style={[
-                                        styles.settings_radio,
-                                        {
-                                            borderColor: isSelected
-                                                ? theme.primary
-                                                : radioBorderColor,
-                                        },
-                                    ]}>
-                                    {isSelected && (
-                                        <View
-                                            style={[
-                                                styles.settings_radio_dot,
-                                                { backgroundColor: theme.primary },
-                                            ]}
-                                        />
-                                    )}
-                                </View>
-
-                                <View style={styles.settings_status_text}>
-                                    <ThemedText
-                                        style={styles.settings_status_title}
-                                        setColor={theme.title}>
-                                        {option.label}
-                                    </ThemedText>
-                                    <ThemedText
-                                        style={styles.settings_status_description}
-                                        setColor={theme.quietText}>
-                                        {option.description}
-                                    </ThemedText>
-                                </View>
-                            </TouchableOpacity>
-                        );
-                    })}
-
-                    <View
-                        style={[
-                            styles.settings_divider,
-                            { backgroundColor: theme.hairline },
-                        ]}
-                    />
-
-                    <View style={styles.settings_name_block}>
-                        <ThemedText
-                            style={styles.settings_name_label}
-                            setColor={theme.quietText}>
-                            Program name
-                        </ThemedText>
-
-                        <View
-                            style={[
-                                styles.settings_name_field,
-                                {
-                                    backgroundColor: theme.uiBackground,
-                                    borderColor: theme.border,
-                                },
-                            ]}>
-                            <View style={styles.settings_name_value}>
-                                <ThemedEditableCell
-                                    value={program_name ?? ""}
-                                    keyboardType="default"
-                                    textAlign="left"
-                                    onCommit={async (v) => {
-                                        set_program_name(v);
-                                        await programService.updateProgramName(db, {
-                                            programId: program_id,
-                                            programName: v,
-                                        });
-                                    }}
-                                />
-                            </View>
-                            <Pencil width={15} height={15} color={theme.quietText} thickness={1.8} />
-                        </View>
-                    </View>
-
-                    <View
-                        style={[
-                            styles.settings_divider,
-                            { backgroundColor: theme.hairline },
-                        ]}
-                    />
-
-                    <View style={styles.settings_period_block_wrap}>
-                        <ThemedText
-                            style={styles.settings_name_label}
-                            setColor={theme.quietText}>
-                            Period
-                        </ThemedText>
-
-                        <View
-                            style={[
-                                styles.settings_period_row,
-                                {
-                                    backgroundColor: theme.uiBackground,
-                                    borderColor: theme.border,
-                                },
-                            ]}>
-                            <View style={styles.settings_period_block}>
-                                <ThemedText
-                                    style={styles.settings_period_label}
-                                    setColor={theme.quietText}>
-                                    Start
-                                </ThemedText>
-                                <ThemedText
-                                    style={styles.settings_period_value}
-                                    setColor={theme.title}>
-                                    {status === "NOT_STARTED" ? "Not scheduled" : start_date}
-                                </ThemedText>
-                            </View>
-
-                            <View
-                                style={[
-                                    styles.settings_period_divider,
-                                    { backgroundColor: theme.border },
-                                ]}
-                            />
-
-                            <View style={styles.settings_period_block}>
-                                <ThemedText
-                                    style={styles.settings_period_label}
-                                    setColor={theme.quietText}>
-                                    End
-                                </ThemedText>
-                                <ThemedText
-                                    style={styles.settings_period_value}
-                                    setColor={theme.title}>
-                                    {status === "NOT_STARTED" ? "Not scheduled" : end_date || "-"}
-                                </ThemedText>
-                            </View>
-                        </View>
-                    </View>
-
-                    <View
-                        style={[
-                            styles.settings_divider,
-                            { backgroundColor: theme.hairline },
-                        ]}
-                    />
-
-                    <View style={styles.settings_period_block_wrap}>
-                        <ThemedText
-                            style={styles.settings_name_label}
-                            setColor={theme.quietText}>
-                            Export
-                        </ThemedText>
-
-                        <TouchableOpacity
-                            style={[
-                                styles.settings_export_row,
-                                {
-                                    backgroundColor: theme.uiBackground,
-                                    borderColor: isExportingProgram
-                                        ? theme.primary
-                                        : theme.border,
-                                    opacity: isExportingProgram ? 0.68 : 1,
-                                },
-                            ]}
-                            disabled={isExportingProgram}
-                            onPress={exportProgram}>
-                            <View
-                                style={[
-                                    styles.settings_export_icon,
-                                    { backgroundColor: withAlpha(theme.primary, 0.12) },
-                                ]}>
-                                <Copy width={16} height={16} />
-                            </View>
-
-                            <View style={styles.settings_export_content}>
-                                <ThemedText
-                                    style={styles.settings_export_title}
-                                    setColor={theme.title}>
-                                    {isExportingProgram ? "Exporting..." : "Export program"}
-                                </ThemedText>
-                                <ThemedText
-                                    style={styles.settings_export_description}
-                                    setColor={theme.quietText}>
-                                    FitApp program file
-                                </ThemedText>
-                            </View>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </View>
-
-        </ScrollView>
+        </ThemedKeyboardProtection>
     </ThemedView>
-
-        <ThemedBottomSheet
-            visible={OptionsBottomsheet_visible}
-            onClose={() => set_OptionsBottomsheet_visible(false)} >
-
-            <View style={styles.bottomsheet_title}>
-                <ThemedTitle type={"h3"} style={{flex: 10}}>
-                    Program actions
-                </ThemedTitle>
-
-
-            </View>
-
-            <View style={styles.bottomsheet_body}>
-
-                {/* Delete Program */}
-                <TouchableOpacity
-                    style={styles.option}
-                    onPress={() => {
-                        set_OptionsBottomsheet_visible(false);
-                        set_DeleteConfirmModal_visible(true);
-                    }}>
-
-                    <Delete
-                        width={24}
-                        height={24}/>
-                    <ThemedText style={styles.option_text}>
-                        Delete program.
-                    </ThemedText>
-
-                </TouchableOpacity>
-            </View>
-
-
-        </ThemedBottomSheet>
-
-        <ThemedModal
-            visible={deleteConfirmModal_visible}
-            onClose={() => {
-                if (isDeletingProgram) {
-                    return;
-                }
-
-                set_DeleteConfirmModal_visible(false);
-            }}
-            dismissOnBackdropPress={!isDeletingProgram}
-            style={styles.confirm_modal}>
-
-            <View style={styles.confirm_sheet_header}>
-                <ThemedTitle type={"h3"} style={styles.confirm_sheet_title}>
-                    Delete program?
-                </ThemedTitle>
-
-                <ThemedText style={styles.confirm_sheet_description}>
-                    Are you sure you want to delete this program? This will remove the full program structure and cannot be undone.
-                </ThemedText>
-            </View>
-
-            <View style={styles.confirm_sheet_actions}>
-                <TouchableOpacity
-                    style={[
-                        styles.confirm_action,
-                        styles.confirm_action_secondary,
-                        {
-                            borderColor: theme.cardBorder,
-                            opacity: isDeletingProgram ? 0.6 : 1,
-                        },
-                    ]}
-                    disabled={isDeletingProgram}
-                    onPress={() => set_DeleteConfirmModal_visible(false)}>
-                    <ThemedText style={styles.confirm_action_secondary_text}>
-                        Cancel
-                    </ThemedText>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={[
-                        styles.confirm_action,
-                        styles.confirm_action_danger,
-                        {
-                            backgroundColor: theme.danger,
-                            opacity: isDeletingProgram ? 0.7 : 1,
-                        },
-                    ]}
-                    disabled={isDeletingProgram}
-                    onPress={deleteProgram}>
-                    <ThemedText style={styles.confirm_action_danger_text}>
-                        {isDeletingProgram ? "Deleting..." : "Delete program"}
-                    </ThemedText>
-                </TouchableOpacity>
-            </View>
-
-        </ThemedModal>
 
         <StartProgramModal
             visible={startProgramModal_visible}
@@ -990,7 +546,7 @@ const ProgramOverviewPage = ( {route} ) => {
 
             <View style={styles.bottomsheet_title}>
                 <ThemedTitle type={"h3"} style={{flex: 10}}>
-                    Filter exercises
+                    Select exercises
                 </ThemedTitle>
             </View>
 

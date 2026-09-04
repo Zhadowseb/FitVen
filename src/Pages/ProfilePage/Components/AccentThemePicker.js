@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 9,
-    borderRadius: 12,
+    borderRadius: 10,
     borderWidth: 1,
     paddingVertical: 9,
     paddingHorizontal: 12,

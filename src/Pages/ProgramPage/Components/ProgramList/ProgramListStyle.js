@@ -15,13 +15,17 @@ export default StyleSheet.create({
   },
 
   filterChip: {
+    minHeight: 40,
     borderRadius: 999,
-    paddingVertical: 7,
+    borderWidth: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
     paddingHorizontal: 14,
   },
 
   filterChipText: {
-    fontSize: 12.5,
+    fontSize: 13,
     fontWeight: "700",
   },
 
@@ -36,7 +40,7 @@ export default StyleSheet.create({
   },
 
   listHeaderLabel: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: "800",
     letterSpacing: 1.8,
     textTransform: "uppercase",
@@ -52,23 +56,59 @@ export default StyleSheet.create({
   },
 
   countBadgeText: {
-    fontSize: 10.5,
+    fontSize: 11,
     fontWeight: "800",
     fontVariant: ["tabular-nums"],
   },
 
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingTop: 40,
+  // Placeholder shaped like a real card, so the page keeps its height and the
+  // filter row above it does not jump while programs load.
+  skeletonCard: {
+    borderRadius: 18,
+    borderWidth: 1,
+    overflow: "hidden",
+  },
+
+  skeletonCover: {
+    height: 140,
+  },
+
+  skeletonBody: {
+    paddingHorizontal: 18,
+    paddingTop: 14,
+    paddingBottom: 18,
+    gap: 10,
+  },
+
+  skeletonLine: {
+    height: 12,
+    borderRadius: 6,
+  },
+
+  skeletonLineShort: {
+    width: "42%",
+  },
+
+  skeletonLineTitle: {
+    height: 18,
+    width: "68%",
+  },
+
+  skeletonLineWide: {
+    width: "88%",
+  },
+
+  skeletonBar: {
+    height: 6,
+    borderRadius: 3,
+    marginTop: 2,
   },
 
   card: {
     marginHorizontal: 0,
     marginVertical: 0,
     padding: 0,
-    borderRadius: 20,
+    borderRadius: 18,
     overflow: "hidden",
   },
 
@@ -107,7 +147,7 @@ export default StyleSheet.create({
   },
 
   statusPillLabel: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: "800",
     letterSpacing: 1.2,
   },
@@ -126,7 +166,7 @@ export default StyleSheet.create({
   },
 
   typePillLabel: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: "800",
     letterSpacing: 0.6,
   },
@@ -142,15 +182,36 @@ export default StyleSheet.create({
     gap: 2,
   },
 
+  // Sits outside the card-wide touchable, so the button press cannot be
+  // swallowed by the navigate-to-program press.
+  cardFooter: {
+    paddingHorizontal: 18,
+    paddingBottom: 18,
+  },
+
+  cardAction: {
+    minHeight: 46,
+    borderRadius: 14,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 16,
+  },
+
+  cardActionText: {
+    fontSize: 15,
+    fontWeight: "800",
+  },
+
   dateRange: {
-    fontSize: 10.5,
+    fontSize: 11,
     fontWeight: "700",
     letterSpacing: 0.6,
     fontVariant: ["tabular-nums"],
   },
 
   title: {
-    fontSize: 20,
+    fontSize: 19,
     fontWeight: "800",
     letterSpacing: -0.3,
   },
@@ -188,7 +249,7 @@ export default StyleSheet.create({
   },
 
   progressLabel: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: "800",
     letterSpacing: 1.2,
     textTransform: "uppercase",
@@ -212,22 +273,79 @@ export default StyleSheet.create({
     paddingHorizontal: 18,
     paddingTop: 30,
     paddingBottom: 26,
-    borderRadius: 20,
+    borderRadius: 18,
     overflow: "hidden",
   },
 
   filteredEmpty: {
     paddingVertical: 24,
     alignItems: "center",
+    gap: 12,
   },
 
   filteredEmptyText: {
-    fontSize: 13.5,
+    fontSize: 13,
     fontWeight: "600",
+  },
+
+  filteredEmptyAction: {
+    minHeight: 40,
+    borderRadius: 999,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 18,
+  },
+
+  filteredEmptyActionText: {
+    fontSize: 13,
+    fontWeight: "800",
   },
 
   emptyContent: {
     gap: 14,
+  },
+
+  errorCard: {
+    marginHorizontal: 0,
+    marginVertical: 0,
+    paddingHorizontal: 18,
+    paddingTop: 24,
+    paddingBottom: 22,
+    borderRadius: 18,
+    overflow: "hidden",
+  },
+
+  errorContent: {
+    alignItems: "center",
+    gap: 10,
+  },
+
+  errorTitle: {
+    textAlign: "center",
+  },
+
+  errorText: {
+    maxWidth: 310,
+    textAlign: "center",
+    fontSize: 13,
+    lineHeight: 19,
+  },
+
+  errorAction: {
+    minWidth: 140,
+    minHeight: 44,
+    borderRadius: 22,
+    paddingHorizontal: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 6,
+  },
+
+  errorActionText: {
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "900",
   },
 
   emptyText: {
@@ -238,7 +356,7 @@ export default StyleSheet.create({
 
   emptySubtext: {
     textAlign: "center",
-    fontSize: 14,
+    fontSize: 13,
     lineHeight: 20,
     fontWeight: "700",
   },

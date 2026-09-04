@@ -32,7 +32,7 @@ function pushDirtyWorkoutHierarchyInBackground(db) {
 async function createCompletedWorkoutPost(
   db,
   workoutId,
-  { repairCloudIdentity = false, source = "automatic" } = {}
+  { repairCloudIdentity = false, source = "automatic", note = null } = {}
 ) {
   const programServiceModule = await import("./programService");
 
@@ -46,7 +46,7 @@ async function createCompletedWorkoutPost(
   let result =
     await socialPostServiceModule.createWorkoutSummaryPostForCompletedWorkout(
       db,
-      { workoutId, source }
+      { workoutId, source, note }
     );
 
   if (result?.skipped && result.reason === "missing_cloud_workout_id") {
@@ -54,7 +54,7 @@ async function createCompletedWorkoutPost(
     result =
       await socialPostServiceModule.createWorkoutSummaryPostForCompletedWorkout(
         db,
-        { workoutId, source }
+        { workoutId, source, note }
       );
   }
 
@@ -176,6 +176,10 @@ export async function getActiveWorkoutTimer(db) {
   return workoutRepository.getActiveWorkoutTimer(db);
 }
 
+export async function getStartableWorkout(db, { date }) {
+  return workoutRepository.getStartableWorkout(db, { date });
+}
+
 export async function updateWorkoutLabel(db, { workoutId, label }) {
   await workoutRepository.updateWorkoutLabel(db, {
     workoutId,
@@ -258,6 +262,39 @@ export async function setWorkoutDone(db, { workoutId, done }) {
   await syncWorkoutSummaryPostForCompletionState(db, { workoutId, done });
 }
 
+// A user finishing the timer is an explicit workout-level completion. Keep it
+// independent from the derived completion state of exercises and sets.
+/**
+ * `createPost: false` finishes the workout without publishing anything, for
+ * screens that ask the user first. The cloud identity sync still runs, so a
+ * later manual post can find the workout.
+ */
+export async function finishWorkout(
+  db,
+  { workoutId, elapsedTime, createPost = true }
+) {
+  await withTransaction(db, async () => {
+    await workoutRepository.persistWorkoutTimerState(db, {
+      workoutId,
+      timerStart: null,
+      elapsedTime,
+    });
+
+    await workoutRepository.updateWorkoutDone(db, {
+      workoutId,
+      done: true,
+    });
+
+    await refreshWorkoutHierarchyCompletion(db, workoutId);
+  });
+
+  await syncWorkoutSummaryPostForCompletionState(db, {
+    workoutId,
+    done: true,
+    createPost,
+  });
+}
+
 const WORKOUT_SUMMARY_REPOST_SKIP_MESSAGES = {
   signed_out: "You need to be signed in to repost a workout summary.",
   not_completed: "Finish the workout before reposting its summary.",
@@ -275,10 +312,11 @@ function getWorkoutSummaryRepostErrorMessage(result) {
   );
 }
 
-export async function repostWorkoutSummaryPost(db, { workoutId }) {
+export async function repostWorkoutSummaryPost(db, { workoutId, note = null }) {
   const result = await createCompletedWorkoutPost(db, workoutId, {
     repairCloudIdentity: true,
     source: "manual",
+    note,
   });
 
   if (result?.skipped) {
@@ -290,9 +328,9 @@ export async function repostWorkoutSummaryPost(db, { workoutId }) {
 
 export async function syncWorkoutSummaryPostForCompletionState(
   db,
-  { workoutId, done }
+  { workoutId, done, createPost = true }
 ) {
-  if (done) {
+  if (done && createPost) {
     await createCompletedWorkoutPostBestEffort(db, workoutId, {
       repairCloudIdentity: true,
     });

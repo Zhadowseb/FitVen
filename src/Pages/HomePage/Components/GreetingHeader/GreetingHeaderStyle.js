@@ -4,18 +4,19 @@ export default StyleSheet.create({
   container: {
     paddingTop: 14,
     paddingHorizontal: 20,
+    gap: 4,
+  },
+  topRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: 12,
-  },
-  textColumn: {
-    flex: 1,
-    minWidth: 0,
-    gap: 4,
+    // Keeps the row as tall as the buttons so the date sits on their line.
+    minHeight: 42,
   },
   eyebrow: {
-    fontSize: 10,
+    flexShrink: 1,
+    fontSize: 11,
     fontWeight: "800",
     letterSpacing: 1.8,
     textTransform: "uppercase",
@@ -26,10 +27,16 @@ export default StyleSheet.create({
     letterSpacing: -0.4,
     lineHeight: 32,
   },
-  bellButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+  actions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    flexShrink: 0,
+  },
+  iconButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
@@ -48,7 +55,7 @@ export default StyleSheet.create({
     justifyContent: "center",
   },
   badgeText: {
-    fontSize: 9,
+    fontSize: 11,
     lineHeight: 10,
     fontWeight: "800",
     fontVariant: ["tabular-nums"],

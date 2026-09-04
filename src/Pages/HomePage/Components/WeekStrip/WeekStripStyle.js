@@ -12,25 +12,27 @@ export default StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 4,
-    paddingTop: 9,
-    paddingBottom: 8,
-    borderRadius: 13,
+    paddingTop: 6,
+    paddingBottom: 0,
   },
-  todayCell: {
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 18,
-    elevation: 6,
+  todayUnderline: {
+    width: 16,
+    height: 2,
+    borderRadius: 1,
+    marginTop: 4,
   },
   weekdayLabel: {
-    fontSize: 8.5,
+    fontSize: 11,
     fontWeight: "800",
-    letterSpacing: 0.6,
+    letterSpacing: 0.4,
   },
   dayNumber: {
     fontSize: 13,
     fontWeight: "800",
     fontVariant: ["tabular-nums"],
+  },
+  dayNumberToday: {
+    fontWeight: "900",
   },
   dotMarker: {
     width: 5,

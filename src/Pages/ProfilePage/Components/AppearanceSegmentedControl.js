@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   segment: {
-    borderRadius: 8,
+    borderRadius: 6,
     paddingVertical: 5,
     paddingHorizontal: 11,
   },

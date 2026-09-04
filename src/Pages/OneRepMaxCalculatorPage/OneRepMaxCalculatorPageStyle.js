@@ -23,39 +23,6 @@ export default StyleSheet.create({
     paddingBottom: 110,
     gap: 14,
   },
-  heroCard: {
-    borderWidth: 1,
-    borderRadius: 24,
-    paddingHorizontal: 18,
-    paddingTop: 22,
-    paddingBottom: 20,
-    overflow: "hidden",
-  },
-  heroAccent: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 4,
-  },
-  heroEyebrow: {
-    fontSize: 10,
-    lineHeight: 13,
-    fontWeight: "900",
-    letterSpacing: 1.2,
-    textTransform: "uppercase",
-  },
-  heroTitle: {
-    padding: 0,
-    fontSize: 24,
-    lineHeight: 29,
-    marginTop: 5,
-  },
-  heroDescription: {
-    fontSize: 13,
-    lineHeight: 19,
-    marginTop: 8,
-  },
   calculatorCard: {
     borderWidth: 1,
     borderRadius: 24,
@@ -72,7 +39,7 @@ export default StyleSheet.create({
     minWidth: 0,
   },
   inputLabel: {
-    fontSize: 10,
+    fontSize: 11,
     lineHeight: 13,
     fontWeight: "900",
     letterSpacing: 1,
@@ -81,31 +48,23 @@ export default StyleSheet.create({
   },
   input: {
     minHeight: 54,
-    borderRadius: 16,
-    fontSize: 20,
+    borderRadius: 14,
+    fontSize: 19,
     lineHeight: 25,
     fontWeight: "800",
-  },
-  inputUnit: {
-    fontSize: 9,
-    lineHeight: 12,
-    fontWeight: "800",
-    textTransform: "uppercase",
-    marginTop: 5,
-    marginLeft: 3,
   },
   calculateButton: {
     borderRadius: 18,
   },
   resultCard: {
     borderWidth: 1,
-    borderRadius: 20,
+    borderRadius: 18,
     paddingHorizontal: 18,
     paddingVertical: 16,
     alignItems: "center",
   },
   resultLabel: {
-    fontSize: 10,
+    fontSize: 11,
     lineHeight: 13,
     fontWeight: "900",
     letterSpacing: 1.2,
@@ -123,7 +82,7 @@ export default StyleSheet.create({
     fontVariant: ["tabular-nums"],
   },
   resultUnit: {
-    fontSize: 14,
+    fontSize: 13,
     lineHeight: 18,
     fontWeight: "800",
     marginLeft: 7,
@@ -144,7 +103,7 @@ export default StyleSheet.create({
     marginBottom: 13,
   },
   percentageEyebrow: {
-    fontSize: 10,
+    fontSize: 11,
     lineHeight: 13,
     fontWeight: "900",
     letterSpacing: 1.1,
@@ -182,7 +141,7 @@ export default StyleSheet.create({
   },
   infoCard: {
     borderWidth: 1,
-    borderRadius: 20,
+    borderRadius: 18,
     padding: 16,
   },
   infoTitle: {

@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   headerEyebrow: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: "800",
     letterSpacing: 1.8,
     textTransform: "uppercase",
@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   headerCountText: {
-    fontSize: 10.5,
+    fontSize: 11,
     fontWeight: "800",
     fontVariant: ["tabular-nums"],
   },
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
   },
   card: {
     flex: 1,
-    borderRadius: 20,
+    borderRadius: 18,
     borderWidth: 1,
     padding: 16,
     marginBottom: 12,
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   cardEyebrow: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: "800",
     letterSpacing: 1.6,
     textTransform: "uppercase",
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   statusPillNotStartedText: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: "800",
   },
   activeStatusPill: {
@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   focusTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: "800",
     letterSpacing: -0.2,
     flexShrink: 1,
@@ -152,14 +152,14 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   progressCountText: {
-    fontSize: 11.5,
+    fontSize: 11,
     fontWeight: "700",
   },
   progressCountStrong: {
     fontWeight: "800",
   },
   progressPercent: {
-    fontSize: 11.5,
+    fontSize: 11,
     fontWeight: "800",
     fontVariant: ["tabular-nums"],
   },
@@ -170,11 +170,11 @@ const styles = StyleSheet.create({
     paddingTop: 2,
   },
   footerText: {
-    fontSize: 10.5,
+    fontSize: 11,
     fontWeight: "700",
   },
   footerDateText: {
-    fontSize: 10.5,
+    fontSize: 11,
     fontWeight: "700",
     fontVariant: ["tabular-nums"],
   },
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
     flex: 1,
     borderWidth: 1.5,
     borderStyle: "dashed",
-    borderRadius: 20,
+    borderRadius: 18,
     paddingHorizontal: 16,
     paddingVertical: 15,
     flexDirection: "row",
@@ -225,11 +225,11 @@ const styles = StyleSheet.create({
     gap: 1,
   },
   addTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "800",
   },
   addSubtitle: {
-    fontSize: 11.5,
+    fontSize: 11,
     fontWeight: "500",
   },
 });

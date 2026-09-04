@@ -4,6 +4,7 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  RefreshControl,
   TouchableOpacity,
   View,
   useColorScheme,
@@ -14,11 +15,12 @@ import { useSQLiteContext } from "expo-sqlite";
 import styles from './HomePageStyle';
 import GreetingHeader from './Components/GreetingHeader/GreetingHeader';
 import WeekStrip from './Components/WeekStrip/WeekStrip';
+import HomeSkeleton from './Components/HomeSkeleton/HomeSkeleton';
 import TodayHeroCard from './Components/TodayHeroCard/TodayHeroCard';
-import ActiveProgramSnapshot from './Components/ActiveProgramSnapshot/ActiveProgramSnapshot';
 import WorkoutSummaryCard from './Components/WorkoutSummaryCard/WorkoutSummaryCard';
+import EditPostNoteSheet from "../../Resources/Components/EditPostNoteSheet";
 import FriendsActivity from "../../Resources/Components/FriendsActivity/FriendsActivity";
-import { Colors } from "../../Resources/GlobalStyling/colors";
+import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
 import Delete from "../../Resources/Icons/UI-icons/Delete";
 import EditSocialPost from "../../Resources/Icons/UI-icons/EditSocialPost";
 import {
@@ -132,6 +134,7 @@ export default function App() {
   const db = useSQLiteContext();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const primaryTextColor = theme.primaryText ?? theme.primary;
   const todayDate = getTodaysDate();
   const [circlePreview, setCirclePreview] = useState({
     currentUser: null,
@@ -140,9 +143,15 @@ export default function App() {
   const [isLoadingCirclePreview, setIsLoadingCirclePreview] = useState(true);
   const [circlePreviewError, setCirclePreviewError] = useState("");
   const [workoutSummaryPosts, setWorkoutSummaryPosts] = useState([]);
+  const [hasLoadedWorkoutSummaryFeed, setHasLoadedWorkoutSummaryFeed] =
+    useState(false);
+  const [hasLoadedHomeSnapshot, setHasLoadedHomeSnapshot] = useState(false);
+  const [homeSnapshotError, setHomeSnapshotError] = useState("");
+  const [isRefreshingHome, setIsRefreshingHome] = useState(false);
   const [workoutSummaryLoadingMore, setWorkoutSummaryLoadingMore] =
     useState(false);
   const [updatingLikePostId, setUpdatingLikePostId] = useState(null);
+  const [editingPostNote, setEditingPostNote] = useState(null);
   const [selectedWorkoutSummaryPost, setSelectedWorkoutSummaryPost] =
     useState(null);
   const [deletingPostId, setDeletingPostId] = useState(null);
@@ -154,6 +163,7 @@ export default function App() {
   const workoutSummaryFeedOffsetRef = useRef(0);
   const workoutSummaryFeedHasMoreRef = useRef(true);
   const workoutSummaryFeedLoadingRef = useRef(false);
+  const workoutSummaryFeedPendingResetRef = useRef(false);
   const navigation = useNavigation();
   const { user } = useAuth();
 
@@ -210,6 +220,7 @@ export default function App() {
 
   const loadHomeSnapshot = useCallback(async () => {
     try {
+      setHomeSnapshotError("");
       const today = parseCustomDate(todayDate);
       const { monday, sunday } = getCurrentWeekRange(today);
       const tomorrow = addDays(today, 1);
@@ -318,6 +329,8 @@ export default function App() {
           weekday: targetWorkout.day?.Weekday,
           programId: targetWorkout.program_id ?? null,
           isCompleted,
+          isStarted: targetWorkout.original_start_time !== null,
+          isRunning: targetWorkout.timer_start !== null,
           ...getCompletedWorkoutDetails(targetWorkout),
         });
       } else {
@@ -383,6 +396,11 @@ export default function App() {
       setUnreadNotificationCount(unreadCount);
     } catch (error) {
       console.error("Could not load the home snapshot:", error);
+      setHomeSnapshotError(
+        "Today's workout could not be loaded. Check your connection and try again."
+      );
+    } finally {
+      setHasLoadedHomeSnapshot(true);
     }
   }, [db, todayDate, user]);
 
@@ -390,6 +408,7 @@ export default function App() {
     workoutSummaryFeedOffsetRef.current = 0;
     workoutSummaryFeedHasMoreRef.current = true;
     workoutSummaryFeedLoadingRef.current = false;
+    workoutSummaryFeedPendingResetRef.current = false;
     setWorkoutSummaryPosts([]);
     setWorkoutSummaryLoadingMore(false);
   }, []);
@@ -400,7 +419,13 @@ export default function App() {
       return;
     }
 
+    // A refresh asked for while a page is still loading used to be dropped on
+    // the floor. Remember it and run it once the in-flight load lets go.
     if (workoutSummaryFeedLoadingRef.current) {
+      if (reset) {
+        workoutSummaryFeedPendingResetRef.current = true;
+      }
+
       return;
     }
 
@@ -413,11 +438,18 @@ export default function App() {
     setWorkoutSummaryLoadingMore(!reset);
 
     try {
-      const posts = await socialPostService.getWorkoutSummaryFeed({
+      const fetchedPosts = await socialPostService.getWorkoutSummaryFeed({
         user,
         limit: WORKOUT_SUMMARY_FEED_PAGE_SIZE,
         offset,
       });
+      // Posts stored without a progression baseline get one from the local
+      // history, so their bars draw without waiting for the cloud repair.
+      const posts = await socialPostService.attachLocalTopSetBaselines(
+        db,
+        fetchedPosts
+      );
+
       const hasMore = posts.length === WORKOUT_SUMMARY_FEED_PAGE_SIZE;
 
       setWorkoutSummaryPosts((currentPosts) => {
@@ -447,8 +479,44 @@ export default function App() {
     } finally {
       workoutSummaryFeedLoadingRef.current = false;
       setWorkoutSummaryLoadingMore(false);
+      setHasLoadedWorkoutSummaryFeed(true);
     }
-  }, [resetWorkoutSummaryFeed, user]);
+
+    if (workoutSummaryFeedPendingResetRef.current) {
+      workoutSummaryFeedPendingResetRef.current = false;
+      await loadWorkoutSummaryFeedRef.current?.({ reset: true });
+    }
+  }, [db, resetWorkoutSummaryFeed, user]);
+
+  // The loader reaches its own latest version through this, so the deferred
+  // refresh above does not need the callback as a dependency of itself.
+  const loadWorkoutSummaryFeedRef = useRef(null);
+  loadWorkoutSummaryFeedRef.current = loadWorkoutSummaryFeed;
+
+  // Repairs own posts written before the progression bar existed. Its own
+  // effect on purpose, so it is not tied to a particular feed load.
+  useEffect(() => {
+    if (!user?.id) {
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    socialPostService
+      .backfillWorkoutSummaryPostBaselines(db)
+      .then((result) => {
+        if (!cancelled && (result?.updated ?? 0) > 0) {
+          loadWorkoutSummaryFeed({ reset: true });
+        }
+      })
+      .catch((error) => {
+        console.warn("Post baseline backfill failed:", error);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [db, loadWorkoutSummaryFeed, user?.id]);
 
   const handleToggleWorkoutPostLike = useCallback(
     async (post) => {
@@ -514,6 +582,20 @@ export default function App() {
     loadWorkoutSummaryFeed();
   }, [loadWorkoutSummaryFeed]);
 
+  const handleRefreshHome = useCallback(async () => {
+    setIsRefreshingHome(true);
+
+    try {
+      await Promise.all([
+        loadCirclePreview(),
+        loadHomeSnapshot(),
+        loadWorkoutSummaryFeed({ reset: true }),
+      ]);
+    } finally {
+      setIsRefreshingHome(false);
+    }
+  }, [loadCirclePreview, loadHomeSnapshot, loadWorkoutSummaryFeed]);
+
   const handleOpenWorkoutSummaryOptions = useCallback((post) => {
     setSelectedWorkoutSummaryPost(post);
   }, []);
@@ -525,12 +607,12 @@ export default function App() {
 
     const post = selectedWorkoutSummaryPost;
     setSelectedWorkoutSummaryPost(null);
-    navigation.navigate("SocialPostEditPage", {
-      postId: post.id,
-      initialNote: post.body ?? "",
-      postTitle: getWorkoutSummaryDisplayTitle(post),
+    setEditingPostNote({
+      id: post.id,
+      title: getWorkoutSummaryDisplayTitle(post),
+      note: post.body ?? "",
     });
-  }, [navigation, selectedWorkoutSummaryPost]);
+  }, [selectedWorkoutSummaryPost]);
 
   const deleteWorkoutSummaryPost = useCallback(
     async (post) => {
@@ -649,17 +731,65 @@ export default function App() {
           today={parseCustomDate(todayDate)}
           unreadNotificationCount={unreadNotificationCount}
           onOpenNotifications={openNotificationHistory}
+          activeProgramName={activeProgramSnapshot?.programName ?? null}
+          displayName={
+            circlePreview.currentUser?.displayName ??
+            user?.user_metadata?.display_name ??
+            user?.email?.split("@")[0] ??
+            null
+          }
+          onOpenActiveProgram={openActiveProgram}
         />
 
-        <WeekStrip days={weekDays} />
+        {homeSnapshotError ? (
+          <View
+            style={[
+              styles.errorBanner,
+              {
+                backgroundColor: withAlpha(theme.danger, 0.12),
+                borderColor: withAlpha(theme.danger, 0.4),
+              },
+            ]}
+          >
+            <ThemedText
+              style={styles.errorBannerText}
+              setColor={theme.danger}
+              numberOfLines={2}
+            >
+              {homeSnapshotError}
+            </ThemedText>
 
-        <TodayHeroCard
-          workout={heroWorkout}
-          onStartWorkout={openHeroWorkout}
-          nextWorkout={nextWorkoutInfo}
-          onOpenNextWorkout={openNextWorkout}
-          onQuickStart={() => requestOpenQuickWorkoutMenu()}
-        />
+            <TouchableOpacity
+              activeOpacity={0.82}
+              accessibilityRole="button"
+              onPress={loadHomeSnapshot}
+              hitSlop={8}
+            >
+              <ThemedText
+                style={styles.errorBannerAction}
+                setColor={theme.danger}
+              >
+                Try again
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
+        {hasLoadedHomeSnapshot ? (
+          <>
+            <WeekStrip days={weekDays} />
+
+            <TodayHeroCard
+              workout={heroWorkout}
+              onStartWorkout={openHeroWorkout}
+              nextWorkout={nextWorkoutInfo}
+              onOpenNextWorkout={openNextWorkout}
+              onQuickStart={() => requestOpenQuickWorkoutMenu()}
+            />
+          </>
+        ) : (
+          <HomeSkeleton />
+        )}
 
         <FriendsActivity
           currentUser={circlePreview.currentUser}
@@ -671,17 +801,6 @@ export default function App() {
           showHeader
         />
 
-        {activeProgramSnapshot ? (
-          <ActiveProgramSnapshot
-            programName={activeProgramSnapshot.programName}
-            currentWeek={activeProgramSnapshot.currentWeek}
-            totalWeeks={activeProgramSnapshot.totalWeeks}
-            completedWorkouts={activeProgramSnapshot.completedWorkouts}
-            totalWorkouts={activeProgramSnapshot.totalWorkouts}
-            progress={activeProgramSnapshot.progress}
-            onPress={openActiveProgram}
-          />
-        ) : null}
       </>
     ),
     [
@@ -695,6 +814,9 @@ export default function App() {
       openActiveProgram,
       openHeroWorkout,
       openNextWorkout,
+      hasLoadedHomeSnapshot,
+      homeSnapshotError,
+      loadHomeSnapshot,
       openNotificationHistory,
       todayDate,
       unreadNotificationCount,
@@ -728,6 +850,67 @@ export default function App() {
     );
   }, [workoutSummaryLoadingMore]);
 
+  // Without this the feed just stops after the friends row, with no hint that
+  // the area exists or what puts anything in it.
+  const renderWorkoutSummaryEmpty = useCallback(() => {
+    if (!hasLoadedWorkoutSummaryFeed) {
+      return null;
+    }
+
+    const followsNobody = (circlePreview.people ?? []).length === 0;
+
+    return (
+      <View
+        style={[
+          styles.feedEmptyCard,
+          {
+            backgroundColor: theme.cardBackground,
+            borderColor: theme.cardBorder,
+          },
+        ]}
+      >
+        <ThemedText style={styles.feedEmptyTitle} setColor={theme.title}>
+          {followsNobody ? "No workouts to show yet" : "Nothing shared yet"}
+        </ThemedText>
+
+        <ThemedText style={styles.feedEmptyBody} setColor={theme.quietText}>
+          {followsNobody
+            ? "Follow someone to see their workouts here, or finish a workout to share your own."
+            : "Finish a workout and it shows up here for the people who follow you."}
+        </ThemedText>
+
+        <TouchableOpacity
+          activeOpacity={0.86}
+          accessibilityRole="button"
+          onPress={() =>
+            followsNobody
+              ? navigation.navigate("SearchPage")
+              : requestOpenQuickWorkoutMenu()
+          }
+          style={[
+            styles.feedEmptyAction,
+            {
+              backgroundColor: withAlpha(theme.primary, 0.14),
+              borderColor: withAlpha(theme.primary, 0.45),
+            },
+          ]}
+        >
+          <ThemedText
+            style={styles.feedEmptyActionText}
+            setColor={primaryTextColor}
+          >
+            {followsNobody ? "Find people to follow" : "Start a workout"}
+          </ThemedText>
+        </TouchableOpacity>
+      </View>
+    );
+  }, [
+    circlePreview.people,
+    hasLoadedWorkoutSummaryFeed,
+    navigation,
+    theme,
+  ]);
+
   return (
     <ThemedView safe={["top", "left", "right"]} style={styles.container}>
       <FlatList
@@ -737,10 +920,26 @@ export default function App() {
         keyExtractor={(post) => String(post.id)}
         renderItem={renderWorkoutSummaryPost}
         ListHeaderComponent={renderHomeHeader}
+        ListEmptyComponent={renderWorkoutSummaryEmpty}
         ListFooterComponent={renderWorkoutSummaryFooter}
         onEndReached={handleLoadMoreWorkoutSummaryFeed}
         onEndReachedThreshold={0.45}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshingHome}
+            onRefresh={handleRefreshHome}
+            tintColor={theme.primary}
+            colors={[theme.primary]}
+            progressBackgroundColor={theme.cardBackground}
+          />
+        }
+      />
+
+      <EditPostNoteSheet
+        post={editingPostNote}
+        onClose={() => setEditingPostNote(null)}
+        onSaved={() => loadWorkoutSummaryFeed({ reset: true })}
       />
 
       <ThemedBottomSheet

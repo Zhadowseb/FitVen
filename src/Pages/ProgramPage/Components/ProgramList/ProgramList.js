@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Image,
+  RefreshControl,
   ScrollView,
   TouchableOpacity,
   View,
@@ -23,9 +23,15 @@ import {
   ThemedCard,
   ThemedButton,
   ThemedText,
+  ThemedTitle,
 } from "../../../../Resources/ThemedComponents";
 import { getProgramEndDate } from "../../../../Utils/programUtils";
-import { parseCustomDate } from "../../../../Utils/dateUtils";
+import {
+  formatDate,
+  getTodaysDate,
+  parseCustomDate,
+} from "../../../../Utils/dateUtils";
+import StartProgramModal from "../../../ProgramOverviewPage/Components/StartProgramModal";
 
 // "Dark glass" type pill — alpha-tinted one-offs with no shared token.
 const TYPE_PILL_GLASS = {
@@ -126,19 +132,33 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
   const db = useSQLiteContext();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const primaryTextColor = theme.primaryText ?? theme.primary;
 
   const [programs, setPrograms] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [todayWorkoutByProgramId, setTodayWorkoutByProgramId] = useState({});
+  const [startProgramTarget, setStartProgramTarget] = useState(null);
+  const [isStartingProgram, setIsStartingProgram] = useState(false);
   const hasHandledInitialFocusRef = useRef(false);
   const typePillGlass =
     colorScheme === "dark" ? TYPE_PILL_GLASS.dark : TYPE_PILL_GLASS.light;
 
-  const loadPrograms = useCallback(async () => {
+  const loadPrograms = useCallback(async ({ showLoader = false } = {}) => {
     try {
-      setLoading(true);
+      if (showLoader) {
+        setLoading(true);
+      }
 
-      const rows = await programService.getProgramsOverview(db);
+      setErrorMessage("");
+
+      const todayDate = getTodaysDate();
+      const [rows, todaySnapshots] = await Promise.all([
+        programService.getProgramsOverview(db),
+        programService.getTodayProgramSnapshots(db, { date: todayDate }),
+      ]);
 
       setPrograms(
         rows.map((program) => ({
@@ -146,15 +166,50 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
           end_date: getProgramEndDate(program.start_date, program.day_count),
         }))
       );
+
+      // Only unfinished sessions count - a program whose day is already done
+      // has nothing to continue, so its card falls back to "Open program".
+      const nextWorkoutByProgram = {};
+
+      for (const snapshot of todaySnapshots) {
+        const workout = snapshot.workouts.find(
+          (candidate) => Number(candidate.done) !== 1
+        );
+
+        if (!workout) {
+          continue;
+        }
+
+        nextWorkoutByProgram[snapshot.program.program_id] = {
+          workout_id: workout.workout_id,
+          workout_label: workout.label,
+          workout_type: workout.workout_type ?? workout.label ?? "Resistance",
+          day: snapshot.day?.Weekday,
+          date: todayDate,
+        };
+      }
+
+      setTodayWorkoutByProgramId(nextWorkoutByProgram);
     } catch (error) {
       console.error("Error loading programs", error);
+      setErrorMessage(
+        error instanceof Error && error.message
+          ? error.message
+          : "Your programs could not be loaded."
+      );
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, [db]);
 
-  useEffect(() => {
+  const refreshPrograms = () => {
+    setRefreshing(true);
     loadPrograms();
+  };
+
+  useEffect(() => {
+    loadPrograms({ showLoader: true });
   }, [loadPrograms, refreshKey]);
 
   useFocusEffect(
@@ -169,14 +224,51 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
     }, [loadPrograms])
   );
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={theme.primary} />
-      </View>
-    );
-  }
+  const openProgram = (program) => {
+    navigation.navigate("ProgramOverviewPage", {
+      program_id: program.program_id,
+      program_name: program.program_name,
+      start_date: program.start_date,
+    });
+  };
 
+  const continueTraining = (program) => {
+    const todayWorkout = todayWorkoutByProgramId[program.program_id];
+
+    if (!todayWorkout) {
+      openProgram(program);
+      return;
+    }
+
+    navigation.navigate("WorkoutPage", {
+      ...todayWorkout,
+      program_id: program.program_id,
+    });
+  };
+
+  const startProgram = async (selectedWeek) => {
+    if (!startProgramTarget || isStartingProgram) {
+      return;
+    }
+
+    try {
+      setIsStartingProgram(true);
+      await programService.startProgram(db, {
+        programId: startProgramTarget.program_id,
+        startDate: formatDate(selectedWeek),
+      });
+
+      setStartProgramTarget(null);
+      await loadPrograms();
+    } catch (error) {
+      console.error("startProgram failed:", error);
+    } finally {
+      setIsStartingProgram(false);
+    }
+  };
+
+  const isInitialLoading = loading && programs.length === 0;
+  const skeletonTone = withAlpha(theme.title, 0.07);
   const filteredPrograms =
     statusFilter === "ALL"
       ? programs
@@ -188,8 +280,17 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
     <ScrollView
       contentContainerStyle={styles.listContainer}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={refreshPrograms}
+          tintColor={theme.primary}
+          colors={[theme.primary]}
+          progressBackgroundColor={theme.cardBackground}
+        />
+      }
     >
-      {programs.length > 0 && (
+      {(programs.length > 0 || isInitialLoading) && (
         <View style={styles.filterRow}>
           {STATUS_FILTERS.map((filter) => {
             const isSelected = statusFilter === filter.key;
@@ -198,16 +299,31 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
               <TouchableOpacity
                 key={filter.key}
                 activeOpacity={0.85}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isSelected }}
                 onPress={() => setStatusFilter(filter.key)}
                 style={[
                   styles.filterChip,
-                  {
-                    backgroundColor: isSelected
-                      ? theme.primary
-                      : theme.chipBackground,
-                  },
+                  isSelected
+                    ? {
+                        backgroundColor: theme.primary,
+                        borderColor: theme.primary,
+                      }
+                    : {
+                        backgroundColor: theme.chipBackground,
+                        borderColor: theme.cardBorder,
+                      },
                 ]}
               >
+                {isSelected ? (
+                  <Checkmark
+                    width={12}
+                    height={12}
+                    color={theme.ink}
+                    thickness={3}
+                  />
+                ) : null}
+
                 <ThemedText
                   style={[
                     styles.filterChipText,
@@ -231,10 +347,88 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
           style={[styles.countBadge, { backgroundColor: theme.chipBackground }]}
         >
           <ThemedText style={styles.countBadgeText} setColor={theme.text}>
-            {filteredPrograms.length}
+            {isInitialLoading ? "-" : filteredPrograms.length}
           </ThemedText>
         </View>
       </View>
+
+      {errorMessage ? (
+        <ThemedCard style={styles.errorCard}>
+          <View style={styles.errorContent}>
+            <ThemedTitle type="h3" style={styles.errorTitle}>
+              Programs unavailable
+            </ThemedTitle>
+
+            <ThemedText style={styles.errorText} setColor={theme.quietText}>
+              {errorMessage}
+            </ThemedText>
+
+            <TouchableOpacity
+              accessibilityRole="button"
+              activeOpacity={0.84}
+              disabled={loading}
+              onPress={() => loadPrograms({ showLoader: true })}
+              style={[styles.errorAction, { backgroundColor: theme.primary }]}
+            >
+              <ThemedText
+                style={styles.errorActionText}
+                setColor={theme.textInverted ?? theme.cardBackground}
+              >
+                Try again
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
+        </ThemedCard>
+      ) : null}
+
+      {isInitialLoading
+        ? [0, 1].map((skeletonIndex) => (
+            <View
+              key={`skeleton-${skeletonIndex}`}
+              style={[
+                styles.skeletonCard,
+                {
+                  backgroundColor: theme.cardBackground,
+                  borderColor: theme.cardBorder,
+                },
+              ]}
+            >
+              <View
+                style={[
+                  styles.skeletonCover,
+                  { backgroundColor: skeletonTone },
+                ]}
+              />
+
+              <View style={styles.skeletonBody}>
+                <View
+                  style={[
+                    styles.skeletonLine,
+                    styles.skeletonLineShort,
+                    { backgroundColor: skeletonTone },
+                  ]}
+                />
+                <View
+                  style={[
+                    styles.skeletonLine,
+                    styles.skeletonLineTitle,
+                    { backgroundColor: skeletonTone },
+                  ]}
+                />
+                <View
+                  style={[
+                    styles.skeletonLine,
+                    styles.skeletonLineWide,
+                    { backgroundColor: skeletonTone },
+                  ]}
+                />
+                <View
+                  style={[styles.skeletonBar, { backgroundColor: skeletonTone }]}
+                />
+              </View>
+            </View>
+          ))
+        : null}
 
       {filteredPrograms.map((item) => {
         const totalWorkouts = Number(item.workout_count) || 0;
@@ -280,13 +474,7 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
           >
             <TouchableOpacity
               activeOpacity={0.92}
-              onPress={() =>
-                navigation.navigate("ProgramOverviewPage", {
-                  program_id: item.program_id,
-                  program_name: item.program_name,
-                  start_date: item.start_date,
-                })
-              }
+              onPress={() => openProgram(item)}
             >
               <View style={styles.cover}>
                 <Image
@@ -460,7 +648,7 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
                     ) : (
                       <ThemedText
                         style={styles.progressPercent}
-                        setColor={theme.primary}
+                        setColor={primaryTextColor}
                       >
                         {progressPercent}%
                       </ThemedText>
@@ -477,6 +665,54 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
               </View>
             </TouchableOpacity>
 
+            {isDraft ? (
+              <View style={styles.cardFooter}>
+                <TouchableOpacity
+                  activeOpacity={0.84}
+                  accessibilityRole="button"
+                  onPress={() => setStartProgramTarget(item)}
+                  style={[
+                    styles.cardAction,
+                    {
+                      backgroundColor: theme.cardBackground,
+                      borderColor: withAlpha(theme.primary, 0.5),
+                    },
+                  ]}
+                >
+                  <ThemedText
+                    style={styles.cardActionText}
+                    setColor={primaryTextColor}
+                  >
+                    Start program
+                  </ThemedText>
+                </TouchableOpacity>
+              </View>
+            ) : isCompleted ? null : (
+              <View style={styles.cardFooter}>
+                <TouchableOpacity
+                  activeOpacity={0.84}
+                  accessibilityRole="button"
+                  onPress={() => continueTraining(item)}
+                  style={[
+                    styles.cardAction,
+                    {
+                      backgroundColor: theme.primary,
+                      borderColor: theme.primary,
+                    },
+                  ]}
+                >
+                  <ThemedText
+                    style={styles.cardActionText}
+                    setColor={theme.ink}
+                  >
+                    {todayWorkoutByProgramId[item.program_id]
+                      ? "Continue training"
+                      : "Open program"}
+                  </ThemedText>
+                </TouchableOpacity>
+              </View>
+            )}
+
             {statusAccent ? (
               <View
                 pointerEvents="none"
@@ -487,7 +723,7 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
         );
       })}
 
-      {programs.length === 0 && (
+      {programs.length === 0 && !isInitialLoading && !errorMessage && (
         <ThemedCard style={styles.emptyCard}>
           <View style={styles.emptyContent}>
             <ThemedText style={styles.emptyText} setColor={theme.quietText}>
@@ -507,14 +743,47 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
         </ThemedCard>
       )}
 
-      {programs.length > 0 && filteredPrograms.length === 0 && (
+      <StartProgramModal
+        visible={Boolean(startProgramTarget)}
+        onClose={() => {
+          if (!isStartingProgram) {
+            setStartProgramTarget(null);
+          }
+        }}
+        onStart={startProgram}
+        isStarting={isStartingProgram}
+      />
+
+      {programs.length > 0 && !loading && filteredPrograms.length === 0 && (
         <View style={styles.filteredEmpty}>
           <ThemedText
             style={styles.filteredEmptyText}
             setColor={theme.quietText}
           >
-            No {activeFilterLabel.toLowerCase()} programs.
+            No {activeFilterLabel.toLowerCase()} programs
           </ThemedText>
+
+          {/* Without this the filter is a dead end: nothing on screen says how
+              to get back to the full list. */}
+          <TouchableOpacity
+            activeOpacity={0.84}
+            accessibilityRole="button"
+            onPress={() => setStatusFilter("ALL")}
+            style={[
+              styles.filteredEmptyAction,
+              {
+                backgroundColor: withAlpha(theme.primary, 0.12),
+                borderColor: withAlpha(theme.primary, 0.45),
+              },
+            ]}
+          >
+            <ThemedText
+              style={styles.filteredEmptyActionText}
+              setColor={primaryTextColor}
+            >
+              Show all programs
+            </ThemedText>
+          </TouchableOpacity>
         </View>
       )}
     </ScrollView>

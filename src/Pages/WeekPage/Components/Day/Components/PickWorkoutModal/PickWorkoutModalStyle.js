@@ -29,7 +29,7 @@ export default StyleSheet.create({
     borderRadius: 10,
   },
   title: {
-    fontSize: 20,
+    fontSize: 19,
     marginBottom: 15,
     fontWeight: "bold",
   },
@@ -37,7 +37,7 @@ export default StyleSheet.create({
     padding: 10,
     borderWidth: 1,
     borderColor: "#ccc",
-    borderRadius: 5,
+    borderRadius: 6,
     marginVertical: 8,
   },
   row: {

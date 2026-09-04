@@ -5863,6 +5863,38 @@ export async function getRecentWorkouts(
   return Promise.all(workouts.map((workout) => buildWorkoutPreview(db, workout)));
 }
 
+export async function getWorkoutLibrary(db, { limit = 500, offset = 0 } = {}) {
+  const rows = await programRepository.getWorkoutLibrary(db, { limit, offset });
+
+  return rows.map((row) => ({
+    ...row,
+    exerciseCount: Number(row.exercise_count) || 0,
+    setCount: Number(row.set_count) || 0,
+    completedSetCount: Number(row.completed_set_count) || 0,
+    hasPersonalRecord: Number(row.has_personal_record) === 1,
+    isCompleted: Number(row.done) === 1,
+    isFavorite: Number(row.is_favorite) === 1,
+  }));
+}
+
+export async function setWorkoutFavorite(db, { workoutId, isFavorite }) {
+  await programRepository.setWorkoutFavorite(db, { workoutId, isFavorite });
+}
+
+export async function getDaysByMicrocycle(db, microcycleId) {
+  return programRepository.getDaysByMicrocycle(db, microcycleId);
+}
+
+export async function getWorkoutLibraryCounts(db) {
+  return programRepository.getWorkoutLibraryCounts(db);
+}
+
+export async function getWorkoutExercisePreview(db, workoutId) {
+  const preview = await buildWorkoutPreview(db, { workout_id: workoutId });
+
+  return preview.previewItems ?? [];
+}
+
 function normalizeUsualExerciseName(exerciseName) {
   return String(exerciseName ?? "")
     .trim()
@@ -5989,6 +6021,9 @@ export async function getUsualWorkouts(
       latestDate: group.latestWorkout.date,
       latestDateIso: group.latestWorkout.date_iso,
       suggested: group.weekdays.has(todayWeekday),
+      previewItems: [...group.latestWorkout.exerciseNames.values()].map(
+        (exerciseName) => ({ label: exerciseName })
+      ),
     }));
 }
 

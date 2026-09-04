@@ -1,5 +1,5 @@
 const DEFAULT_WORKOUT_COVER = require("../Resources/Images/WorkoutTypes/Default/download.jpg");
-const RESISTANCE_WORKOUT_COVER = require("../Resources/Images/WorkoutTypes/ResistanceTraining/52c5c0a6-e32a-48a8-a731-95ca73deeabd.png");
+const RESISTANCE_WORKOUT_COVER = require("../Resources/Images/WorkoutTypes/ResistanceTraining/52c5c0a6-e32a-48a8-a731-95ca73deeabd.jpg");
 const RUN_WORKOUT_COVER = require("../Resources/Images/WorkoutTypes/Run/program-cover-run.jpg");
 
 const RESISTANCE_TYPES = new Set([

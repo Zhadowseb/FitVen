@@ -3,7 +3,7 @@ import { StyleSheet } from "react-native";
 export default StyleSheet.create({
   card: {
     borderWidth: 1,
-    borderRadius: 20,
+    borderRadius: 18,
     padding: 18,
     gap: 14,
   },
@@ -19,7 +19,7 @@ export default StyleSheet.create({
     gap: 3,
   },
   title: {
-    fontSize: 21,
+    fontSize: 22,
     fontWeight: "800",
     letterSpacing: -0.3,
   },
@@ -29,26 +29,28 @@ export default StyleSheet.create({
     gap: 6,
   },
   dateText: {
-    fontSize: 11.5,
+    fontSize: 11,
     fontWeight: "700",
     fontVariant: ["tabular-nums"],
   },
   statusPill: {
     flexShrink: 0,
   },
+  // Full-width primary action, not a corner pill: starting the program is the
+  // whole point of this screen while the program is still a draft.
   startButton: {
-    flexShrink: 0,
-    minHeight: 30,
-    borderRadius: 999,
+    minHeight: 48,
+    borderRadius: 14,
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 14,
-    paddingVertical: 6,
+    gap: 8,
+    paddingHorizontal: 18,
   },
   startButtonText: {
-    fontSize: 10.5,
+    fontSize: 15,
     fontWeight: "800",
-    letterSpacing: 0.6,
+    letterSpacing: 0.3,
   },
   progressGroup: {
     gap: 7,
@@ -92,7 +94,7 @@ export default StyleSheet.create({
     gap: 3,
   },
   statLabel: {
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: "800",
     letterSpacing: 1.4,
     textTransform: "uppercase",

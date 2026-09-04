@@ -10,78 +10,23 @@ export default StyleSheet.create({
     justifyContent: "center",
   },
 
-  page_header_title_eyebrow: {
-    fontWeight: "700",
-    letterSpacing: 0.9,
-    textTransform: "uppercase",
-    marginBottom: 1,
-  },
 
   page_header_title_main: {
     textAlign: "center",
   },
 
-  section_container: {
-    paddingHorizontal: 10,
-  },
 
-  progression_section: {
-    marginBottom: 14,
-  },
 
-  progression_selector_scroll: {
-    marginBottom: 10,
-  },
 
-  progression_selector_list: {
-    paddingRight: 8,
-  },
 
-  progression_selector_chip: {
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    marginRight: 8,
-  },
 
-  progression_selector_chip_text: {
-    fontWeight: "600",
-  },
 
-  progression_detail_box: {
-    borderWidth: 1,
-    borderRadius: 18,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
 
-  progression_empty: {
-    paddingTop: 2,
-  },
 
-  progression_detail_row: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 2,
-  },
 
-  progression_detail_label: {
-    paddingRight: 12,
-  },
 
-  progression_detail_value: {
-    fontWeight: "600",
-  },
 
-  progression_value: {
-    fontWeight: "700",
-  },
 
-  weeks_title: {
-    marginBottom: 6,
-  },
 
   card: {
     backgroundColor: "#fff",
@@ -124,7 +69,7 @@ export default StyleSheet.create({
   option_text: {
     paddingLeft: 10,
     fontWeight: 600,
-    fontSize: 16,
+    fontSize: 15,
   },
 
   focus: {
@@ -133,55 +78,12 @@ export default StyleSheet.create({
     alignItems: "center",
   },
 
-  progression_modal: {
-    maxHeight: 420,
-  },
 
-  progression_modal_card: {
-    borderWidth: 1,
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 18,
-    marginBottom: 12,
-  },
 
-  progression_modal_label: {
-    fontWeight: "700",
-    letterSpacing: 0.7,
-    textTransform: "uppercase",
-    marginBottom: 6,
-  },
 
-  progression_modal_value: {
-    fontWeight: "700",
-    marginBottom: 8,
-  },
 
-  progression_pill: {
-    flexDirection: "row",
-    borderRadius: 999,
-    overflow: "hidden",
-  },
 
-  progression_pill_button: {
-    flex: 1,
-    minHeight: 52,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 12,
-  },
 
-  progression_pill_button_left: {
-    borderTopLeftRadius: 999,
-    borderBottomLeftRadius: 999,
-  },
 
-  progression_pill_button_right: {
-    borderTopRightRadius: 999,
-    borderBottomRightRadius: 999,
-  },
 
-  progression_pill_button_text: {
-    fontWeight: "700",
-  },
 });

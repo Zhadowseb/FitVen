@@ -16,6 +16,7 @@ import Library from "../../Resources/Icons/UI-icons/Library";
 import Social from "../../Resources/Icons/UI-icons/Social";
 import TailArrowUpRight from "../../Resources/Icons/UI-icons/TailArrowUpRight";
 import { socialPostService } from "../../Services";
+import Star from "../../Resources/Icons/UI-icons/Star";
 import {
   ThemedCard,
   ThemedHeader,
@@ -28,17 +29,26 @@ const POST_MODE_OPTIONS = [
   {
     value: socialPostService.WORKOUT_SUMMARY_POST_MODES.FULL_INFO,
     title: "Full info",
-    body: "Automatically post workout summaries with stats, top sets and PR badges.",
+    preview: {
+      stats: ["48 min", "4 200 kg", "5 exercises"],
+      topSets: [
+        { name: "Bench Press", set: "5 x 90 kg", record: true },
+        { name: "Barbell Row", set: "8 x 70 kg", record: false },
+      ],
+    },
   },
   {
     value: socialPostService.WORKOUT_SUMMARY_POST_MODES.SUMMARY_ONLY,
     title: "Summary only",
-    body: "Automatically post workout summaries with duration, sets and exercises only.",
+    preview: {
+      stats: ["48 min", "4 200 kg", "5 exercises"],
+      topSets: [],
+    },
   },
   {
     value: socialPostService.WORKOUT_SUMMARY_POST_MODES.OFF,
     title: "Off",
-    body: "Do not create workout summary posts automatically.",
+    preview: null,
   },
 ];
 
@@ -46,19 +56,74 @@ const POST_VISIBILITY_OPTIONS = [
   {
     value: socialPostService.WORKOUT_SUMMARY_POST_VISIBILITIES.EVERYONE,
     title: "Everyone",
-    body: "Everyone can see your workout summary posts.",
   },
   {
     value: socialPostService.WORKOUT_SUMMARY_POST_VISIBILITIES.FOLLOWING,
     title: "People I follow",
-    body: "Only profiles you follow can see your workout summary posts.",
   },
   {
     value: socialPostService.WORKOUT_SUMMARY_POST_VISIBILITIES.PRIVATE,
     title: "Only me",
-    body: "Only you can see your workout summary posts.",
   },
 ];
+
+const POST_VISIBILITY_NOTE =
+  "Decides who can see your workout summary posts. Only me keeps them out of every other feed.";
+
+// A sample of the post itself, so the choice is not a word to be interpreted.
+function PostModePreview({ preview, theme }) {
+  const quietText = theme.quietText ?? theme.text;
+  const titleColor = theme.title ?? theme.text;
+
+  if (!preview) {
+    return (
+      <ThemedText style={styles.previewEmptyText} setColor={quietText}>
+        Nothing is posted.
+      </ThemedText>
+    );
+  }
+
+  return (
+    <View style={styles.previewBody}>
+      <View style={styles.previewStatRow}>
+        {preview.stats.map((stat) => (
+          <ThemedText
+            key={stat}
+            style={styles.previewStat}
+            setColor={titleColor}
+          >
+            {stat}
+          </ThemedText>
+        ))}
+      </View>
+
+      {preview.topSets.map((topSet) => (
+        <View key={topSet.name} style={styles.previewTopSetRow}>
+          <View style={styles.previewStarSlot}>
+            {topSet.record ? (
+              <Star
+                width={11}
+                height={11}
+                color={theme.record ?? theme.secondary}
+                filled
+              />
+            ) : null}
+          </View>
+          <ThemedText
+            style={styles.previewTopSetName}
+            setColor={quietText}
+            numberOfLines={1}
+          >
+            {topSet.name}
+          </ThemedText>
+          <ThemedText style={styles.previewTopSetValue} setColor={titleColor}>
+            {topSet.set}
+          </ThemedText>
+        </View>
+      ))}
+    </View>
+  );
+}
 
 export default function SocialPostSettingsPage() {
   const navigation = useNavigation();
@@ -82,6 +147,7 @@ export default function SocialPostSettingsPage() {
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor;
   const panelSurface = theme.uiBackground ?? theme.background;
   const primaryColor = theme.primary ?? "#f7742e";
+  const primaryTextColor = theme.primaryText ?? theme.primary;
   const choiceSurface = colorScheme === "dark" ? "#221f1d" : "#f1eff2";
   const selectedChoiceSurface = withAlpha(
     theme.primary,
@@ -206,13 +272,13 @@ export default function SocialPostSettingsPage() {
       <ThemedHeader>
         <View style={styles.pageHeaderTitleGroup}>
           <ThemedText
-            size={10}
+            size={12}
             style={[styles.pageHeaderTitleEyebrow, { color: quietText }]}
           >
             Settings
           </ThemedText>
           <ThemedTitle
-            type="h3"
+            type="pageTitle"
             style={styles.pageHeaderTitleMain}
             numberOfLines={1}
           >
@@ -226,6 +292,10 @@ export default function SocialPostSettingsPage() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        <ThemedText style={styles.scopeNote} setColor={quietText}>
+          Applies to all workouts
+        </ThemedText>
+
         <ThemedCard
           style={[
             styles.card,
@@ -245,7 +315,7 @@ export default function SocialPostSettingsPage() {
                 },
               ]}
             >
-              <Social width={26} height={26} color={primaryColor} />
+              <Social width={26} height={26} color={primaryTextColor} />
             </View>
 
             <View style={styles.heroCopy}>
@@ -288,9 +358,17 @@ export default function SocialPostSettingsPage() {
                       <ThemedText style={styles.choiceTitle} setColor={titleColor}>
                         {option.title}
                       </ThemedText>
-                      <ThemedText style={styles.choiceBody} setColor={quietText}>
-                        {option.body}
-                      </ThemedText>
+                      <View
+                        style={[
+                          styles.previewFrame,
+                          {
+                            backgroundColor: panelSurface,
+                            borderColor: cardBorder,
+                          },
+                        ]}
+                      >
+                        <PostModePreview preview={option.preview} theme={theme} />
+                      </View>
                     </View>
 
                     <View
@@ -375,9 +453,6 @@ export default function SocialPostSettingsPage() {
                       <ThemedText style={styles.choiceTitle} setColor={titleColor}>
                         {option.title}
                       </ThemedText>
-                      <ThemedText style={styles.choiceBody} setColor={quietText}>
-                        {option.body}
-                      </ThemedText>
                     </View>
 
                     <View
@@ -407,6 +482,10 @@ export default function SocialPostSettingsPage() {
               })}
             </View>
           )}
+
+          <ThemedText style={styles.groupNote} setColor={quietText}>
+            {POST_VISIBILITY_NOTE}
+          </ThemedText>
 
           {visibilityError ? (
             <ThemedText style={styles.errorText} setColor={dangerColor}>
@@ -444,7 +523,7 @@ export default function SocialPostSettingsPage() {
             ]}
           >
             <View style={styles.settingsButtonContent}>
-              <Library width={22} height={22} color={primaryColor} />
+              <Library width={22} height={22} color={primaryTextColor} />
               <View style={styles.settingsButtonCopy}>
                 <ThemedText
                   style={styles.settingsButtonTitle}

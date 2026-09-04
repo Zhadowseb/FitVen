@@ -23,6 +23,12 @@ export default StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 32,
   },
+  scopeNote: {
+    marginBottom: 14,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "700",
+  },
   listHeader: {
     marginBottom: 6,
   },
@@ -42,7 +48,7 @@ export default StyleSheet.create({
   heroIcon: {
     width: 52,
     height: 52,
-    borderRadius: 17,
+    borderRadius: 18,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
@@ -62,7 +68,7 @@ export default StyleSheet.create({
     minHeight: 48,
     marginTop: 18,
     borderWidth: 1,
-    borderRadius: 16,
+    borderRadius: 14,
     paddingHorizontal: 13,
     flexDirection: "row",
     alignItems: "center",

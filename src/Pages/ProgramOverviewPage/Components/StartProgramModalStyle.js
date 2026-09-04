@@ -14,7 +14,7 @@ export default StyleSheet.create({
     gap: 5,
   },
   eyebrow: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: "800",
     letterSpacing: 1,
     textTransform: "uppercase",
@@ -38,7 +38,7 @@ export default StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderRadius: 16,
+    borderRadius: 14,
     paddingHorizontal: 10,
   },
   yearButtonText: {
@@ -86,7 +86,7 @@ export default StyleSheet.create({
     marginLeft: 8,
   },
   currentWeekBadgeText: {
-    fontSize: 8,
+    fontSize: 11,
     lineHeight: 10,
     fontWeight: "800",
     letterSpacing: 0.6,
@@ -131,7 +131,7 @@ export default StyleSheet.create({
     borderRadius: 18,
   },
   cancelButtonText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "700",
   },
   startButton: {

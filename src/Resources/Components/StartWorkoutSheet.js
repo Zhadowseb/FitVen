@@ -15,11 +15,14 @@ import { Colors } from "../GlobalStyling/colors";
 import ArrowDoubleDown from "../Icons/UI-icons/ArrowDoubleDown";
 import ArrowDoubleUp from "../Icons/UI-icons/ArrowDoubleUp";
 import Cross from "../Icons/UI-icons/Cross";
+import Eye from "../Icons/UI-icons/Eye";
 import Plus from "../Icons/UI-icons/Plus";
 import ReplayHistory from "../Icons/UI-icons/ReplayHistory";
 import Resistance from "../Icons/WorkoutLabels/Resistance";
 import Run from "../Icons/WorkoutLabels/Run";
 import { getTodaysDate } from "../../Utils/dateUtils";
+import { isWorkoutTypeComingSoon } from "../../Utils/workoutTypeAvailability";
+import ComingSoonBadge from "./ComingSoonBadge";
 
 const noop = () => {};
 
@@ -66,7 +69,9 @@ function createSheetPalette(theme) {
     backdrop: "rgba(0, 0, 0, 0.62)",
     sheet,
     sheetBorder: border,
-    handle: border,
+    // cardBorder is a 7% hairline - too faint for a grab handle. Derived from
+    // the text colour instead, so it stays visible in both themes.
+    handle: colorWithAlpha(title, 0.28, border),
     title,
     muted,
     label: muted,
@@ -89,19 +94,16 @@ const freshStarts = [
   {
     id: "Resistance",
     title: "Resistance",
-    details: "Sets & reps",
     type: "resistance",
   },
   {
     id: "Run",
     title: "Run",
-    details: "Distance & pace",
     type: "run",
   },
   {
     id: "Walk",
     title: "Walk",
-    details: "Distance & pace",
     type: "walk",
   },
 ];
@@ -345,6 +347,7 @@ function SectionHeader({
   styles,
   showRotationIcon = false,
   showPlusIcon = false,
+  emphasizeTitle = false,
 }) {
   return (
     <View style={styles.sectionHeader}>
@@ -354,9 +357,20 @@ function SectionHeader({
             <Plus width={14} height={14} color={palette.label} thickness={2.2} />
           ) : null}
           {showRotationIcon ? (
-            <ReplayHistory width={15} height={15} color={palette.label} />
+            <ReplayHistory
+              width={15}
+              height={15}
+              color={emphasizeTitle ? palette.title : palette.label}
+            />
           ) : null}
-          <Text style={styles.sectionTitle}>{title}</Text>
+          <Text
+            style={[
+              styles.sectionTitle,
+              emphasizeTitle ? styles.sectionTitleStrong : null,
+            ]}
+          >
+            {title}
+          </Text>
         </View>
         {subtitle ? <Text style={styles.sectionSubtitle}>{subtitle}</Text> : null}
       </View>
@@ -550,71 +564,120 @@ function UsualWorkoutSection({ isLoading, workouts, palette, styles }) {
 }
 
 function RecentWorkoutRow({ workout, disabled, onPress, palette, styles }) {
+  const [showExercises, setShowExercises] = useState(false);
   const isSuggested = Boolean(workout?.suggested);
   const occurrenceCount = Number(workout?.occurrenceCount) || 0;
   const detail = workout?.exerciseCount
     ? getUsualWorkoutDetail(workout)
     : getRecentWorkoutDetail(workout);
+  const previewItems = Array.isArray(workout?.previewItems)
+    ? workout.previewItems
+    : [];
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.84}
-      disabled={disabled}
-      onPress={() => onPress(workout)}
-      style={[styles.recentRow, disabled ? styles.disabledCard : null]}
-    >
-      <IconTile
-        type={getWorkoutIconType(workout)}
-        palette={palette}
-        styles={styles}
-        badge="repeat"
-      />
-      <View style={styles.recentCopy}>
-        <View style={styles.repeatTitleRow}>
-          <Text style={styles.cardTitle} numberOfLines={1}>
-            {getWorkoutTitle(workout)}
-          </Text>
-          {isSuggested ? (
-            <View style={styles.suggestedBadge}>
-              <Text style={styles.suggestedText}>SUGGESTED</Text>
+    <View style={[styles.recentRow, disabled ? styles.disabledCard : null]}>
+      <View style={styles.recentRowTop}>
+        <TouchableOpacity
+          activeOpacity={0.84}
+          disabled={disabled}
+          onPress={() => onPress(workout)}
+          style={styles.recentRowMain}
+        >
+          <IconTile
+            type={getWorkoutIconType(workout)}
+            palette={palette}
+            styles={styles}
+            badge="repeat"
+          />
+          <View style={styles.recentCopy}>
+            <View style={styles.repeatTitleRow}>
+              <Text style={styles.cardTitle} numberOfLines={1}>
+                {getWorkoutTitle(workout)}
+              </Text>
+              {isSuggested ? (
+                <View style={styles.suggestedBadge}>
+                  <Text style={styles.suggestedText}>SUGGESTED</Text>
+                </View>
+              ) : null}
             </View>
-          ) : null}
-        </View>
-        <Text style={styles.cardDetails} numberOfLines={1}>
-          {detail}
-        </Text>
-      </View>
-      <View style={styles.repeatMetaColumn}>
-        <Text style={styles.metaText} numberOfLines={1}>
-          {isSuggested ? getUsualWorkoutMeta(workout) : getRecentWorkoutMeta(workout)}
-        </Text>
-        {occurrenceCount > 0 ? (
-          <View style={styles.repeatCountChip}>
-            <Text style={styles.repeatCountText}>{occurrenceCount}x</Text>
+            <Text style={styles.cardDetails} numberOfLines={1}>
+              {detail}
+            </Text>
           </View>
-        ) : null}
+          <View style={styles.repeatMetaColumn}>
+            <Text style={styles.metaText} numberOfLines={1}>
+              {isSuggested
+                ? getUsualWorkoutMeta(workout)
+                : getRecentWorkoutMeta(workout)}
+            </Text>
+            {occurrenceCount > 0 ? (
+              <View style={styles.repeatCountChip}>
+                <Text style={styles.repeatCountText}>{occurrenceCount}x</Text>
+              </View>
+            ) : null}
+          </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel={
+            showExercises
+              ? `Hide exercises in ${getWorkoutTitle(workout)}`
+              : `Show exercises in ${getWorkoutTitle(workout)}`
+          }
+          onPress={() => setShowExercises((isOpen) => !isOpen)}
+          style={[styles.eyeButton, showExercises ? styles.eyeButtonOpen : null]}
+        >
+          <Eye
+            width={17}
+            height={17}
+            color={showExercises ? palette.orange : palette.muted}
+          />
+        </TouchableOpacity>
       </View>
-    </TouchableOpacity>
+
+      {showExercises ? (
+        <View style={styles.exerciseList}>
+          {previewItems.length > 0 ? (
+            previewItems.map((item, index) => (
+              <View key={`${item.label}-${index}`} style={styles.exerciseRow}>
+                <Text style={styles.exerciseName} numberOfLines={1}>
+                  {item.label}
+                </Text>
+                {item.detail ? (
+                  <Text style={styles.exerciseDetail} numberOfLines={1}>
+                    {item.detail}
+                  </Text>
+                ) : null}
+              </View>
+            ))
+          ) : (
+            <Text style={styles.exerciseDetail}>No exercises on this workout.</Text>
+          )}
+        </View>
+      ) : null}
+    </View>
   );
 }
 
 function RecentWorkoutSection({
   isLoadingUsual,
   isLoading,
-  isExpanded,
   isLoadingMore,
   isStartingWorkout,
   usualWorkouts = [],
   workouts = [],
-  canShowAll,
   onLoadMore,
-  onToggleExpanded,
   onCopyWorkout,
   palette,
   styles,
 }) {
-  const action = isExpanded ? "Show less" : canShowAll ? "See all" : null;
-  const repeatWorkouts = [...usualWorkouts, ...workouts];
+  const repeatWorkouts = [...usualWorkouts, ...workouts].filter(
+    (workout) =>
+      !isWorkoutTypeComingSoon(getWorkoutIconType(workout)) &&
+      (workout?.previewItems?.length ?? 0) > 0
+  );
   const workoutRows = (
     <>
       {repeatWorkouts.map((workout, index) => (
@@ -635,7 +698,7 @@ function RecentWorkoutSection({
     </>
   );
   const handleListScroll = ({ nativeEvent }) => {
-    if (!isExpanded || isLoadingMore) {
+    if (isLoadingMore) {
       return;
     }
 
@@ -652,33 +715,26 @@ function RecentWorkoutSection({
     <View style={styles.section}>
       <SectionHeader
         title="REPEAT A WORKOUT"
-        subtitle="Copies the exercises & sets from a past session."
-        action={action}
-        actionDisabled={isLoading || isLoadingMore}
-        onActionPress={onToggleExpanded}
         palette={palette}
         styles={styles}
         showRotationIcon
+        emphasizeTitle
       />
       {isLoading || isLoadingUsual ? (
         <View style={styles.recentStateRow}>
           <Text style={styles.recentStateText}>Loading recent workouts...</Text>
         </View>
       ) : repeatWorkouts.length > 0 ? (
-        isExpanded ? (
-          <ScrollView
-            nestedScrollEnabled
-            showsVerticalScrollIndicator
-            onScroll={handleListScroll}
-            scrollEventThrottle={16}
-            style={styles.expandedRecentList}
-            contentContainerStyle={styles.listStack}
-          >
-            {workoutRows}
-          </ScrollView>
-        ) : (
-          <View style={styles.listStack}>{workoutRows}</View>
-        )
+        <ScrollView
+          nestedScrollEnabled
+          showsVerticalScrollIndicator
+          onScroll={handleListScroll}
+          scrollEventThrottle={16}
+          style={styles.recentList}
+          contentContainerStyle={styles.listStack}
+        >
+          {workoutRows}
+        </ScrollView>
       ) : (
         <View style={styles.recentStateRow}>
           <Text style={styles.recentStateText}>
@@ -691,12 +747,20 @@ function RecentWorkoutSection({
 }
 
 function FreshStartCard({ item, disabled, onPress, palette, styles }) {
-  const iconColors = getIconColors(item.type, palette);
+  const isComingSoon = isWorkoutTypeComingSoon(item.type);
+  const iconColors = isComingSoon
+    ? { color: palette.muted, backgroundColor: palette.inset }
+    : getIconColors(item.type, palette);
 
   return (
     <TouchableOpacity
       activeOpacity={0.84}
-      disabled={disabled}
+      disabled={disabled || isComingSoon}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: disabled || isComingSoon }}
+      accessibilityLabel={
+        isComingSoon ? `${item.title} — coming soon` : item.title
+      }
       onPress={() =>
         onPress({
           id: item.id,
@@ -712,11 +776,34 @@ function FreshStartCard({ item, disabled, onPress, palette, styles }) {
         disabled ? styles.disabledCard : null,
       ]}
     >
-      <IconTile type={item.type} palette={palette} styles={styles} badge="fresh" />
-      <View>
-        <Text style={styles.cardTitle}>{item.title}</Text>
-        <Text style={styles.cardDetails}>{item.details}</Text>
+      <View style={isComingSoon ? styles.comingSoonContent : null}>
+        <WorkoutGlyph type={item.type} size={32} color={iconColors.color} />
       </View>
+      <Text
+        style={[
+          styles.cardTitle,
+          styles.freshCardTitle,
+          isComingSoon ? { color: palette.muted } : null,
+        ]}
+        numberOfLines={1}
+      >
+        {item.title}
+      </Text>
+      {isComingSoon ? (
+        <ComingSoonBadge size="small" />
+      ) : (
+        <View
+          style={[
+            styles.iconTileBadge,
+            {
+              backgroundColor: iconColors.color,
+              borderColor: palette.sheet,
+            },
+          ]}
+        >
+          <Plus width={11} height={11} color={palette.iconOnAccent} />
+        </View>
+      )}
     </TouchableOpacity>
   );
 }
@@ -731,11 +818,8 @@ export default function StartWorkoutSheet({
   isLoadingUsualWorkouts = false,
   recentWorkouts = [],
   isLoadingRecentWorkouts = false,
-  isRecentWorkoutsExpanded = false,
   isLoadingMoreRecentWorkouts = false,
-  canShowAllRecentWorkouts = false,
   onLoadMoreRecentWorkouts = noop,
-  onToggleRecentWorkouts = noop,
   onCopyRecentWorkout = noop,
   isStartingWorkout = false,
   targetDate = null,
@@ -772,6 +856,7 @@ export default function StartWorkoutSheet({
             activeOpacity={0.72}
             accessibilityLabel="Close workout starter"
             accessibilityRole="button"
+            hitSlop={6}
             onPress={onClose}
             style={styles.closeButton}
           >
@@ -780,13 +865,15 @@ export default function StartWorkoutSheet({
 
           <ScrollView
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.content}
+            contentContainerStyle={[
+              styles.content,
+              { paddingBottom: insets.bottom + 18 },
+            ]}
           >
             <View style={styles.header}>
-              <Text style={styles.eyebrow}>START A WORKOUT</Text>
               <Text style={styles.title}>
                 {isToday
-                  ? "What are you doing today?"
+                  ? "START NEW WORKOUT"
                   : `What are you doing on ${targetDateLabel}?`}
               </Text>
             </View>
@@ -802,13 +889,6 @@ export default function StartWorkoutSheet({
             ) : null}
 
             <View style={styles.section}>
-              <SectionHeader
-                title="START FRESH"
-                subtitle="A blank workout you build as you go."
-                palette={palette}
-                styles={styles}
-                showPlusIcon
-              />
               <View style={styles.freshGrid}>
                 {freshStarts.map((item) => (
                   <FreshStartCard
@@ -826,14 +906,11 @@ export default function StartWorkoutSheet({
             <RecentWorkoutSection
               isLoadingUsual={isLoadingUsualWorkouts}
               isLoading={isLoadingRecentWorkouts}
-              isExpanded={isRecentWorkoutsExpanded}
               isLoadingMore={isLoadingMoreRecentWorkouts}
               isStartingWorkout={isStartingWorkout}
               usualWorkouts={usualWorkouts}
               workouts={recentWorkouts}
-              canShowAll={canShowAllRecentWorkouts}
               onLoadMore={onLoadMoreRecentWorkouts}
-              onToggleExpanded={onToggleRecentWorkouts}
               onCopyWorkout={onCopyRecentWorkout}
               palette={palette}
               styles={styles}
@@ -854,7 +931,7 @@ function createStyles(palette) {
   },
   sheet: {
     width: "100%",
-    maxHeight: "98%",
+    maxHeight: "85%",
     backgroundColor: palette.sheet,
     borderTopWidth: 1,
     borderTopColor: palette.sheetBorder,
@@ -875,8 +952,8 @@ function createStyles(palette) {
     position: "absolute",
     top: 24,
     right: 22,
-    width: 32,
-    height: 32,
+    width: 40,
+    height: 40,
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
@@ -887,7 +964,7 @@ function createStyles(palette) {
   },
   closeText: {
     color: palette.muted,
-    fontSize: 20,
+    fontSize: 19,
     lineHeight: 22,
     fontWeight: "500",
   },
@@ -899,13 +976,6 @@ function createStyles(palette) {
   header: {
     gap: 8,
     paddingRight: 36,
-  },
-  eyebrow: {
-    color: palette.label,
-    fontSize: 12,
-    lineHeight: 15,
-    fontWeight: "800",
-    letterSpacing: 3,
   },
   title: {
     color: palette.title,
@@ -928,7 +998,7 @@ function createStyles(palette) {
     minHeight: 92,
     borderWidth: 1,
     borderColor: palette.orangeBorder,
-    borderRadius: 16,
+    borderRadius: 14,
     backgroundColor: palette.orangeDeep,
     padding: 18,
     flexDirection: "row",
@@ -963,10 +1033,15 @@ function createStyles(palette) {
   },
   cardTitle: {
     color: palette.title,
-    fontSize: 16,
+    fontSize: 15,
     lineHeight: 20,
     fontWeight: "900",
     letterSpacing: 0,
+  },
+  freshCardTitle: {
+    fontSize: 13,
+    lineHeight: 18,
+    textAlign: "center",
   },
   cardDetails: {
     color: palette.muted,
@@ -977,7 +1052,7 @@ function createStyles(palette) {
   },
   chevron: {
     color: palette.muted,
-    fontSize: 26,
+    fontSize: 24,
     lineHeight: 28,
     fontWeight: "300",
   },
@@ -1015,6 +1090,9 @@ function createStyles(palette) {
     fontWeight: "800",
     letterSpacing: 4,
   },
+  sectionTitleStrong: {
+    color: palette.title,
+  },
   sectionAction: {
     color: palette.orange,
     fontSize: 12,
@@ -1037,7 +1115,7 @@ function createStyles(palette) {
   usualCard: {
     flex: 1,
     minHeight: 144,
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: palette.cardBorder,
     backgroundColor: palette.card,
@@ -1057,7 +1135,7 @@ function createStyles(palette) {
   },
   usualStateRow: {
     minHeight: 74,
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: palette.cardBorder,
     backgroundColor: palette.card,
@@ -1074,7 +1152,7 @@ function createStyles(palette) {
   },
   suggestedText: {
     color: palette.orange,
-    fontSize: 9,
+    fontSize: 11,
     lineHeight: 11,
     fontWeight: "900",
     letterSpacing: 1,
@@ -1123,19 +1201,67 @@ function createStyles(palette) {
   listStack: {
     gap: 10,
   },
-  expandedRecentList: {
-    maxHeight: 430,
+  recentList: {
+    maxHeight: 326,
   },
   recentRow: {
-    minHeight: 74,
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: palette.cardBorder,
     backgroundColor: palette.inset,
     paddingHorizontal: 14,
+  },
+  recentRowTop: {
+    minHeight: 74,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  recentRowMain: {
+    flex: 1,
+    minWidth: 0,
     flexDirection: "row",
     alignItems: "center",
     gap: 14,
+  },
+  eyeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: palette.cardBorder,
+  },
+  eyeButtonOpen: {
+    borderColor: palette.orangeBorder,
+    backgroundColor: palette.orangeDeep,
+  },
+  exerciseList: {
+    borderTopWidth: 1,
+    borderTopColor: palette.cardBorder,
+    paddingVertical: 10,
+    gap: 6,
+  },
+  exerciseRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+  exerciseName: {
+    flex: 1,
+    minWidth: 0,
+    color: palette.title,
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "600",
+  },
+  exerciseDetail: {
+    color: palette.muted,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "500",
   },
   repeatTitleRow: {
     flexDirection: "row",
@@ -1170,7 +1296,7 @@ function createStyles(palette) {
   },
   recentStateRow: {
     minHeight: 56,
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: palette.cardBorder,
     backgroundColor: palette.card,
@@ -1192,15 +1318,21 @@ function createStyles(palette) {
   freshCard: {
     flex: 1,
     minWidth: "30%",
-    minHeight: 124,
-    borderRadius: 16,
+    minHeight: 96,
+    borderRadius: 14,
     borderWidth: 1.5,
     borderStyle: "dashed",
-    padding: 14,
-    justifyContent: "space-between",
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
   },
   disabledCard: {
     opacity: 0.64,
+  },
+  comingSoonContent: {
+    opacity: 0.5,
   },
   iconTile: {
     alignItems: "center",

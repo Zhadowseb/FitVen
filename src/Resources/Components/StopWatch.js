@@ -139,7 +139,7 @@ const WorkoutStopwatchSQLite = ({ workout_id, onStop }) => {
 
       {!running ? (
         <ThemedButton
-          variant="secondary"
+          variant="success"
           title="Start workout"
           onPress={start} />
       ) : (

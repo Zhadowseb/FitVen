@@ -22,7 +22,6 @@ import Moon from "../../Resources/Icons/UI-icons/Moon";
 import ChevronRight from "../../Resources/Icons/UI-icons/ChevronRight";
 import FeedbackModal from "../../Resources/Components/FeedbackModal/FeedbackModal";
 import LockIcon from "./Components/LockIcon";
-import DotsHorizontalIcon from "./Components/DotsHorizontalIcon";
 import MessageCircleIcon from "./Components/MessageCircleIcon";
 import SectionEyebrow from "./Components/SectionEyebrow";
 import InsetDivider from "./Components/InsetDivider";
@@ -60,6 +59,7 @@ export default function ProfilePage() {
   const navigation = useNavigation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const primaryTextColor = theme.primaryText ?? theme.primary;
   const { user } = useAuth();
   const { themeMode, setThemeMode, accentTheme, setAccentTheme } =
     useThemeMode();
@@ -352,36 +352,10 @@ export default function ProfilePage() {
 
   return (
     <ThemedView safe={["top", "left", "right"]} style={styles.container}>
-      <View style={[styles.header, { borderBottomColor: theme.hairline }]}>
-        <View style={styles.headerTitleGroup}>
-          <ThemedText
-            size={10}
-            style={styles.headerEyebrow}
-            setColor={theme.quietText}
-          >
-            FitVen
-          </ThemedText>
-          <ThemedText style={[styles.headerTitle, { color: theme.title }]}>
-            Profile
-          </ThemedText>
-        </View>
-
-        <View
-          style={[
-            styles.headerMenuButton,
-            {
-              backgroundColor: theme.cardBackground,
-              borderColor: theme.cardBorder,
-            },
-          ]}
-        >
-          <DotsHorizontalIcon width={18} height={18} color={theme.text} />
-        </View>
-      </View>
-
       <View style={styles.content}>
         <ThemedKeyboardProtection
           scroll
+          bottomOffset={96}
           contentContainerStyle={styles.scrollContent}
         >
           {/* Public profile */}
@@ -446,7 +420,7 @@ export default function ProfilePage() {
                   {profile?.usernameCode ? (
                     <ThemedText
                       style={styles.fieldValue}
-                      setColor={theme.primary}
+                      setColor={primaryTextColor}
                     >
                       #{profile.usernameCode}
                     </ThemedText>
@@ -505,7 +479,7 @@ export default function ProfilePage() {
                   >
                     <ThemedText
                       style={styles.agePillText}
-                      setColor={theme.primary}
+                      setColor={primaryTextColor}
                     >
                       {calculatedAge} years
                     </ThemedText>
@@ -524,7 +498,7 @@ export default function ProfilePage() {
                   >
                     <ThemedText
                       style={styles.clearBirthDateText}
-                      setColor={theme.primary}
+                      setColor={primaryTextColor}
                     >
                       Clear
                     </ThemedText>
@@ -537,7 +511,7 @@ export default function ProfilePage() {
               <View style={styles.displayNameSection}>
                 <ThemedText
                   style={styles.fieldSectionLabel}
-                  setColor={theme.quietText}
+                  setColor={theme.text}
                 >
                   Display name
                 </ThemedText>
@@ -592,7 +566,7 @@ export default function ProfilePage() {
               <View style={styles.bioSection}>
                 <ThemedText
                   style={styles.fieldSectionLabel}
-                  setColor={theme.quietText}
+                  setColor={theme.text}
                 >
                   Bio
                 </ThemedText>
@@ -700,7 +674,7 @@ export default function ProfilePage() {
                 style={styles.settingsRow}
               >
                 <SettingsIconTile backgroundColor={withAlpha(theme.primary, 0.12)}>
-                  <Dumbbell width={18} height={18} color={theme.primary} thickness={1.6} />
+                  <Dumbbell width={18} height={18} color={primaryTextColor} thickness={1.6} />
                 </SettingsIconTile>
                 <ThemedText style={styles.settingsRowLabel} setColor={theme.title}>
                   Workout types
@@ -716,7 +690,7 @@ export default function ProfilePage() {
                 style={styles.settingsRow}
               >
                 <SettingsIconTile backgroundColor={withAlpha(theme.primary, 0.12)}>
-                  <Bell width={18} height={18} color={theme.primary} thickness={1.7} />
+                  <Bell width={18} height={18} color={primaryTextColor} thickness={1.7} />
                 </SettingsIconTile>
                 <ThemedText style={styles.settingsRowLabel} setColor={theme.title}>
                   Notifications
@@ -732,7 +706,7 @@ export default function ProfilePage() {
                 style={styles.settingsRow}
               >
                 <SettingsIconTile backgroundColor={withAlpha(theme.primary, 0.12)}>
-                  <Pencil width={18} height={18} color={theme.primary} thickness={1.7} />
+                  <Pencil width={18} height={18} color={primaryTextColor} thickness={1.7} />
                 </SettingsIconTile>
                 <ThemedText style={styles.settingsRowLabel} setColor={theme.title}>
                   Social posts
@@ -744,7 +718,7 @@ export default function ProfilePage() {
 
               <View style={styles.settingsRow}>
                 <SettingsIconTile backgroundColor={withAlpha(theme.primary, 0.12)}>
-                  <Moon width={18} height={18} color={theme.primary} thickness={1.7} />
+                  <Moon width={18} height={18} color={primaryTextColor} thickness={1.7} />
                 </SettingsIconTile>
                 <ThemedText style={styles.settingsRowLabel} setColor={theme.title}>
                   Appearance
@@ -759,7 +733,7 @@ export default function ProfilePage() {
 
               <View style={styles.settingsRow}>
                 <SettingsIconTile backgroundColor={withAlpha(theme.primary, 0.12)}>
-                  <Star width={18} height={18} color={theme.primary} filled />
+                  <Star width={18} height={18} color={primaryTextColor} filled />
                 </SettingsIconTile>
                 <ThemedText style={styles.settingsRowLabel} setColor={theme.title}>
                   Color theme

@@ -48,7 +48,7 @@ export default StyleSheet.create({
   optionText: {
     paddingLeft: 10,
     fontWeight: 600,
-    fontSize: 16,
+    fontSize: 15,
   },
   filterOption: {
     justifyContent: "space-between",
@@ -57,7 +57,7 @@ export default StyleSheet.create({
   },
   filterOptionText: {
     fontWeight: 600,
-    fontSize: 16,
+    fontSize: 15,
   },
   modalActions: {
     flexDirection: "row",

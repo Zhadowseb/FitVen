@@ -26,6 +26,25 @@ function jsonResponse(body: JsonRecord, status = 200) {
   });
 }
 
+// A thrown error leaves Deno.serve to answer with an opaque 500, and the client
+// then only knows "non-2xx". Postgres says exactly what went wrong - a missing
+// table or a missing unique index for the upsert - so pass that on.
+function errorResponse(error: unknown, status = 500) {
+  const detail = error as
+    | { code?: string; message?: string; details?: string; hint?: string }
+    | null;
+
+  return jsonResponse(
+    {
+      error: detail?.message ?? "Unexpected error",
+      code: detail?.code ?? null,
+      details: detail?.details ?? null,
+      hint: detail?.hint ?? null,
+    },
+    status
+  );
+}
+
 function requireEnv(name: string) {
   const value = Deno.env.get(name);
 
@@ -66,8 +85,16 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "Method not allowed" }, 405);
   }
 
-  const supabaseUrl = requireEnv("SUPABASE_URL");
-  const serviceRoleKey = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+  let supabaseUrl: string;
+  let serviceRoleKey: string;
+
+  try {
+    supabaseUrl = requireEnv("SUPABASE_URL");
+    serviceRoleKey = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+  } catch (error) {
+    return errorResponse(error);
+  }
+
   const supabase = createClient(supabaseUrl, serviceRoleKey, {
     auth: {
       persistSession: false,
@@ -119,7 +146,7 @@ Deno.serve(async (req) => {
       .select("id");
 
     if (error) {
-      throw error;
+      return errorResponse(error);
     }
 
     return jsonResponse({
@@ -168,7 +195,7 @@ Deno.serve(async (req) => {
     await disableOtherOwners();
 
   if (disableError) {
-    throw disableError;
+    return errorResponse(disableError);
   }
 
   let { data: registeredToken, error: upsertError } =
@@ -178,7 +205,7 @@ Deno.serve(async (req) => {
     const { error: retryDisableError } = await disableOtherOwners();
 
     if (retryDisableError) {
-      throw retryDisableError;
+      return errorResponse(retryDisableError);
     }
 
     const retryResult = await upsertCurrentOwner();
@@ -187,7 +214,7 @@ Deno.serve(async (req) => {
   }
 
   if (upsertError) {
-    throw upsertError;
+    return errorResponse(upsertError);
   }
 
   return jsonResponse({

@@ -1,0 +1,1678 @@
+<title>FitVen Designgennemgang</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<style>
+  :root {
+    --ground: #F1F3F5;
+    --surface: #FFFFFF;
+    --surface-sunk: #E7EBEE;
+    --ink: #141A21;
+    --ink-soft: #4A5763;
+    --ink-faint: #7A8794;
+    --rule: #D3DAE0;
+    --rule-soft: #E3E8EC;
+    --accent: #0E5E63;
+    --accent-soft: rgba(14, 94, 99, 0.10);
+    --hoj: #B3261E;
+    --hoj-soft: rgba(179, 38, 30, 0.10);
+    --middel: #8A5300;
+    --middel-soft: rgba(138, 83, 0, 0.10);
+    --lav: #4F6070;
+    --lav-soft: rgba(79, 96, 112, 0.10);
+    --good: #1D6B4F;
+    --good-soft: rgba(29, 107, 79, 0.10);
+    --on-accent: #FFFFFF;
+
+    --measure: 68ch;
+    --step--1: 0.815rem;
+    --step-0: 1.0rem;
+    --step-1: 1.15rem;
+    --step-2: 1.45rem;
+    --step-3: 1.95rem;
+    --step-4: 2.7rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0F1419;
+      --surface: #171D24;
+      --surface-sunk: #12181E;
+      --ink: #E9EEF3;
+      --ink-soft: #A6B3BF;
+      --ink-faint: #7C8B98;
+      --rule: #2A333C;
+      --rule-soft: #212932;
+      --accent: #5FD3C8;
+      --accent-soft: rgba(95, 211, 200, 0.12);
+      --hoj: #FF8577;
+      --hoj-soft: rgba(255, 133, 119, 0.13);
+      --middel: #E5AA55;
+      --middel-soft: rgba(229, 170, 85, 0.13);
+      --lav: #93A3B1;
+      --lav-soft: rgba(147, 163, 177, 0.12);
+      --good: #64C79E;
+      --good-soft: rgba(100, 199, 158, 0.13);
+      --on-accent: #0F1419;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0F1419;
+    --surface: #171D24;
+    --surface-sunk: #12181E;
+    --ink: #E9EEF3;
+    --ink-soft: #A6B3BF;
+    --ink-faint: #7C8B98;
+    --rule: #2A333C;
+    --rule-soft: #212932;
+    --accent: #5FD3C8;
+    --accent-soft: rgba(95, 211, 200, 0.12);
+    --hoj: #FF8577;
+    --hoj-soft: rgba(255, 133, 119, 0.13);
+    --middel: #E5AA55;
+    --middel-soft: rgba(229, 170, 85, 0.13);
+    --lav: #93A3B1;
+    --lav-soft: rgba(147, 163, 177, 0.12);
+    --good: #64C79E;
+    --good-soft: rgba(100, 199, 158, 0.13);
+    --on-accent: #0F1419;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Source Serif 4", Georgia, "Times New Roman", serif;
+    font-size: var(--step-0);
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 54rem;
+    margin: 0 auto;
+    padding: 3.5rem 1.35rem 5rem;
+  }
+
+  .mono {
+    font-family: "IBM Plex Mono", ui-monospace, "Courier New", monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  h1, h2, h3 {
+    font-family: Archivo, "Helvetica Neue", Arial, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  /* ---------- masthead ---------- */
+  .masthead { border-top: 3px solid var(--accent); padding-top: 1.5rem; }
+
+  .kicker {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 0.9rem;
+  }
+
+  h1 { font-size: var(--step-4); line-height: 1.08; }
+
+  .standfirst {
+    max-width: var(--measure);
+    margin: 1.1rem 0 0;
+    font-size: var(--step-1);
+    color: var(--ink-soft);
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 2rem;
+    margin-top: 1.8rem;
+    padding-top: 1.1rem;
+    border-top: 1px solid var(--rule);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+
+  /* ---------- tally ---------- */
+  .tally {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: 0.7rem;
+    margin: 2.4rem 0 0;
+  }
+
+  .tile {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 0.85rem 1rem 0.95rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+  .tile-stripe { height: 3px; border-radius: 2px; width: 2.2rem; margin-bottom: 0.5rem; }
+  .tile-num {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: var(--step-3);
+    font-weight: 600;
+    line-height: 1;
+    color: var(--ink);
+  }
+  .tile-label {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  /* ---------- section headings ---------- */
+  .lede {
+    max-width: var(--measure);
+    margin: 3.2rem 0 0;
+  }
+  .lede h2 { font-size: var(--step-2); }
+  .lede p { color: var(--ink-soft); margin: 0.6rem 0 0; }
+
+  /* ---------- index ---------- */
+  .index {
+    margin: 1.4rem 0 0;
+    border-top: 1px solid var(--rule);
+  }
+  .index a {
+    display: grid;
+    grid-template-columns: 2.4rem 1fr auto;
+    gap: 0.9rem;
+    align-items: baseline;
+    padding: 0.55rem 0.2rem;
+    border-bottom: 1px solid var(--rule-soft);
+    text-decoration: none;
+    color: var(--ink);
+  }
+  .index a:hover { background: var(--accent-soft); }
+  .index a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .index .rank { font-family: "IBM Plex Mono", monospace; font-size: 0.75rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+  .index .name { font-family: Archivo, sans-serif; font-weight: 500; font-size: 0.95rem; }
+  .index .counts { font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; letter-spacing: 0.04em; color: var(--ink-faint); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .index .counts .h { color: var(--hoj); font-weight: 600; }
+  .index .counts .m { color: var(--middel); font-weight: 600; }
+  .index .counts .l { color: var(--lav); font-weight: 600; }
+
+  /* ---------- screen block ---------- */
+  .screen {
+    margin-top: 3.4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--rule);
+    scroll-margin-top: 1.5rem;
+  }
+  .screen-rank {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 0.45rem;
+  }
+  .screen h2 { font-size: var(--step-2); line-height: 1.2; }
+  .path {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.74rem;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    background: var(--surface-sunk);
+    border-left: 2px solid var(--accent);
+    padding: 0.5rem 0.75rem;
+    margin: 0.85rem 0 0;
+    overflow-x: auto;
+  }
+  .path b { color: var(--ink); font-weight: 500; }
+
+  .findings { margin: 1.35rem 0 0; display: flex; flex-direction: column; gap: 1.05rem; }
+
+  .finding {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.15rem;
+    align-items: start;
+  }
+
+  .cbwrap {
+    display: inline-flex;
+    padding: 0.6rem;
+    margin: -0.35rem 0.05rem 0 -0.6rem;
+    cursor: pointer;
+  }
+  .cbwrap-empty { padding: 0.6rem; cursor: default; }
+  .cbwrap-empty::before { content: ""; display: block; width: 1.5rem; height: 1.5rem; }
+
+  .cb {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin: 0;
+    border: 1.5px solid var(--ink-faint);
+    border-radius: 4px;
+    background: var(--surface);
+    cursor: pointer;
+    display: grid;
+    place-content: center;
+    flex: 0 0 auto;
+  }
+  .cb::after {
+    content: "";
+    width: 0.78rem;
+    height: 0.44rem;
+    border-left: 2.2px solid var(--on-accent);
+    border-bottom: 2.2px solid var(--on-accent);
+    transform: rotate(-45deg) translate(1px, -2px);
+    opacity: 0;
+  }
+  .cb:checked { background: var(--accent); border-color: var(--accent); }
+  .cb:checked::after { opacity: 1; }
+  .cb:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .fhead {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.45rem;
+    max-width: var(--measure);
+  }
+
+  .copy {
+    margin-left: auto;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+    background: transparent;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 0.4rem 0.6rem;
+    min-height: 2.1rem;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .copy:hover { border-color: var(--accent); color: var(--accent); }
+  .copy:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .copy.ok { border-color: var(--accent); color: var(--accent); }
+  .copy.fail { border-color: var(--hoj); color: var(--hoj); }
+
+  .finding.done .finding-body p { opacity: 0.42; }
+  .finding.done .el { text-decoration: line-through; text-decoration-thickness: 1px; }
+
+  .chip {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.63rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.4rem;
+    border-radius: 2px;
+    text-align: center;
+    justify-self: start;
+    white-space: nowrap;
+    flex: 0 0 auto;
+  }
+  .chip.h { color: var(--hoj); background: var(--hoj-soft); border: 1px solid var(--hoj); }
+  .chip.m { color: var(--middel); background: var(--middel-soft); border: 1px solid var(--middel); }
+  .chip.l { color: var(--lav); background: var(--lav-soft); border: 1px solid var(--lav); }
+  .chip.g { color: var(--good); background: var(--good-soft); border: 1px solid var(--good); }
+
+  .finding-body { max-width: var(--measure); }
+  .finding-body p { margin: 0; }
+  .el { font-family: Archivo, sans-serif; font-weight: 600; font-size: 0.95rem; }
+  .fix {
+    margin-top: 0.3rem;
+    padding-left: 1.15rem;
+    position: relative;
+    color: var(--ink-soft);
+  }
+  .fix::before {
+    content: "\2192 ";
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-family: "IBM Plex Mono", monospace;
+  }
+  .num { font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums; font-size: 0.94em; }
+
+  /* ---------- closing ---------- */
+  .close { margin-top: 4rem; border-top: 3px solid var(--accent); padding-top: 1.6rem; }
+  .close h2 { font-size: var(--step-3); }
+
+  ol.top5 { counter-reset: t; list-style: none; padding: 0; margin: 1.4rem 0 0; display: flex; flex-direction: column; gap: 1.1rem; }
+  ol.top5 > li {
+    counter-increment: t;
+    display: grid;
+    grid-template-columns: 2.6rem 1fr;
+    gap: 0.8rem;
+    align-items: start;
+  }
+  ol.top5 > li::before {
+    content: counter(t, decimal-leading-zero);
+    font-family: "IBM Plex Mono", monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--accent);
+    line-height: 1.25;
+  }
+  ol.top5 .t-title { font-family: Archivo, sans-serif; font-weight: 600; font-size: 1.02rem; display: block; }
+  ol.top5 p { margin: 0.15rem 0 0; color: var(--ink-soft); max-width: var(--measure); }
+
+  ul.patterns { list-style: none; padding: 0; margin: 1.4rem 0 0; display: flex; flex-direction: column; gap: 0.95rem; }
+  ul.patterns > li {
+    border-left: 2px solid var(--rule);
+    padding: 0.1rem 0 0.1rem 0.95rem;
+    max-width: var(--measure);
+  }
+  ul.patterns .p-title { font-family: Archivo, sans-serif; font-weight: 600; font-size: 0.98rem; display: block; }
+  ul.patterns p { margin: 0.15rem 0 0; color: var(--ink-soft); }
+
+  .note {
+    margin-top: 2.6rem;
+    padding: 0.9rem 1.1rem;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    font-size: var(--step--1);
+    color: var(--ink-soft);
+    max-width: var(--measure);
+  }
+
+
+  /* ---------- progress ---------- */
+  .progress {
+    margin: 0.7rem 0 0;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 0.9rem 1rem 1rem;
+  }
+  .progress-top {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+  }
+  .progress-count {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+  }
+  .progress-count b { color: var(--ink); font-size: 1.05rem; font-weight: 600; }
+  .ghost {
+    margin-left: auto;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+    background: transparent;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 0.45rem 0.7rem;
+    min-height: 2.2rem;
+    cursor: pointer;
+  }
+  .ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .ghost:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .progress-track {
+    margin-top: 0.7rem;
+    height: 5px;
+    border-radius: 3px;
+    background: var(--surface-sunk);
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 3px;
+    background: var(--accent);
+    transition: width 180ms ease-out;
+  }
+  .progress-note {
+    margin: 0.6rem 0 0;
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+  }
+  .index a.is-done .name { text-decoration: line-through; text-decoration-thickness: 1px; }
+  .index a.is-done { opacity: 0.55; }
+  .index .tick { font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; color: var(--accent); }
+
+  a { color: var(--accent); }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="page">
+
+  <header class="masthead">
+    <p class="kicker">Ekstern UX / UI-gennemgang</p>
+    <h1>FitVen: designgennemgang af 24 sk&#230;rme</h1>
+    <p class="standfirst">Appen har en gennemf&#248;rt visuel retning &#8212; m&#248;rk baggrund, billedkort, accentfarve, statuspiller. Problemerne ligger ikke i stilen, men i tre ting: de vigtigste handlinger er de mindste elementer p&#229; sk&#230;rmen, teksten er for lille og for lys, og hver sk&#230;rm har fundet sin egen version af topbj&#230;lke, knap og panel.</p>
+    <div class="meta">
+      <span>Dato <b>31.08.2026</b></span>
+      <span>Omfang <b>24 sk&#230;rme i brug + 2 uden indgang</b></span>
+      <span>Metode <b>gennemgang af sk&#230;rmenes opbygning</b></span>
+      <span>Fund <b>i alt 121</b></span>
+    </div>
+  </header>
+
+  <section class="tally" aria-label="Fund fordelt p&#229; prioritet">
+    <div class="tile">
+      <div class="tile-stripe" style="background: var(--hoj)"></div>
+      <span class="tile-num">33</span>
+      <span class="tile-label">H&#248;j</span>
+    </div>
+    <div class="tile">
+      <div class="tile-stripe" style="background: var(--middel)"></div>
+      <span class="tile-num">64</span>
+      <span class="tile-label">Middel</span>
+    </div>
+    <div class="tile">
+      <div class="tile-stripe" style="background: var(--lav)"></div>
+      <span class="tile-num">24</span>
+      <span class="tile-label">Lav</span>
+    </div>
+    <div class="tile">
+      <div class="tile-stripe" style="background: var(--accent)"></div>
+      <span class="tile-num">35</span>
+      <span class="tile-label">Tekstst&#248;rrelser i brug</span>
+    </div>
+  </section>
+
+  <div class="progress">
+    <div class="progress-top">
+      <span class="progress-count"><b id="doneCount">0</b> af 121 punkter klaret</span>
+      <button type="button" class="ghost" id="resetBtn">Ryd afkrydsninger</button>
+    </div>
+    <div class="progress-track" role="progressbar" aria-labelledby="doneCount" aria-valuemin="0" aria-valuemax="121" aria-valuenow="0" id="progressBar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+    <p class="progress-note" id="progressNote">S&#230;t flueben ved et punkt n&#229;r det er klaret. Afkrydsningerne gemmes kun i denne browser.</p>
+  </div>
+
+  <div class="lede">
+    <h2>Sk&#230;rme, sorteret efter hvor kritiske de er for brugeren</h2>
+    <p>R&#230;kkef&#248;lgen f&#248;lger hvor ofte sk&#230;rmen bruges, og hvor meget der g&#229;r tabt hvis den ikke virker. Tallene til h&#248;jre er antal fund pr. prioritet.</p>
+  </div>
+
+  <nav class="index" aria-label="Indhold">
+    <a href="#s01"><span class="rank mono">01</span><span class="name">Aktiv styrketr&#230;ning</span><span class="counts"><span class="h">4H</span> &#183; <span class="m">3M</span> &#183; <span class="l">1L</span></span></a>
+    <a href="#s02"><span class="rank mono">02</span><span class="name">L&#248;betr&#230;ning</span><span class="counts"><span class="h">2H</span> &#183; <span class="m">3M</span> &#183; <span class="l">1L</span></span></a>
+    <a href="#s03"><span class="rank mono">03</span><span class="name">Forside</span><span class="counts"><span class="h">3H</span> &#183; <span class="m">4M</span> &#183; <span class="l">1L</span></span></a>
+    <a href="#s04"><span class="rank mono">04</span><span class="name">Bundnavigation</span><span class="counts"><span class="h">2H</span> &#183; <span class="m">2M</span> &#183; <span class="l">1L</span></span></a>
+    <a href="#s05"><span class="rank mono">05</span><span class="name">Start tr&#230;ning-panelet</span><span class="counts"><span class="h">1H</span> &#183; <span class="m">2M</span> &#183; <span class="l">1L</span></span></a>
+    <a href="#s06"><span class="rank mono">06</span><span class="name">Programoversigt</span><span class="counts"><span class="h">3H</span> &#183; <span class="m">3M</span> &#183; <span class="l">1L</span></span></a>
+    <a href="#s07"><span class="rank mono">07</span><span class="name">Bloksk&#230;rm med ugerne</span><span class="counts"><span class="h">3H</span> &#183; <span class="m">3M</span> &#183; <span class="l">1L</span></span></a>
+    <a href="#s08"><span class="rank mono">08</span><span class="name">Programliste</span><span class="counts"><span class="h">1H</span> &#183; <span class="m">4M</span> &#183; <span class="l">2L</span></span></a>
+    <a href="#s09"><span class="rank mono">09</span><span class="name">Tr&#230;ningskalender</span><span class="counts"><span class="h">2H</span> &#183; <span class="m">2M</span> &#183; <span class="l">1L</span></span></a>
+    <a href="#s10"><span class="rank mono">10</span><span class="name">Train-forsiden</span><span class="counts"><span class="h">1H</span> &#183; <span class="m">2M</span> &#183; <span class="l">1L</span></span></a>
+    <a href="#s11"><span class="rank mono">11</span><span class="name">&#216;velseskatalog</span><span class="counts"><span class="h">1H</span> &#183; <span class="m">2M</span> &#183; <span class="l">1L</span></span></a>
+    <a href="#s12"><span class="rank mono">12</span><span class="name">Login</span><span class="counts"><span class="h">3H</span> &#183; <span class="m">2M</span> &#183; <span class="l">1L</span></span></a>
+    <a href="#s13"><span class="rank mono">13</span><span class="name">Opret konto</span><span class="counts"><span class="h">1H</span> &#183; <span class="m">3M</span> &#183; <span class="l">1L</span></span></a>
+    <a href="#s14"><span class="rank mono">14</span><span class="name">Profil</span><span class="counts"><span class="h">2H</span> &#183; <span class="m">4M</span> &#183; <span class="l">1L</span></span></a>
+    <a href="#s15"><span class="rank mono">15</span><span class="name">Tr&#230;ningsbibliotek</span><span class="counts"><span class="m">3M</span> &#183; <span class="l">1L</span></span></a>
+    <a href="#s16"><span class="rank mono">16</span><span class="name">Personlige rekorder</span><span class="counts"><span class="m">3M</span> &#183; <span class="l">1L</span></span></a>
+    <a href="#s17"><span class="rank mono">17</span><span class="name">Notifikationer</span><span class="counts"><span class="m">1M</span> &#183; <span class="l">1L</span></span></a>
+    <a href="#s18"><span class="rank mono">18</span><span class="name">Notifikationsindstillinger</span><span class="counts"><span class="m">2M</span> &#183; <span class="l">1L</span></span></a>
+    <a href="#s19"><span class="rank mono">19</span><span class="name">Social</span><span class="counts"><span class="h">2H</span> &#183; <span class="m">2M</span> &#183; <span class="l">1L</span></span></a>
+    <a href="#s20"><span class="rank mono">20</span><span class="name">Find brugere</span><span class="counts"><span class="m">2M</span> &#183; <span class="l">1L</span></span></a>
+    <a href="#s21"><span class="rank mono">21</span><span class="name">Sygdomslog</span><span class="counts"><span class="h">1H</span> &#183; <span class="m">2M</span> &#183; <span class="l">1L</span></span></a>
+    <a href="#s22"><span class="rank mono">22</span><span class="name">Tr&#230;ningstyper</span><span class="counts"><span class="h">1H</span> &#183; <span class="m">2M</span></span></a>
+    <a href="#s23"><span class="rank mono">23</span><span class="name">Opslagsindstillinger</span><span class="counts"><span class="m">2M</span> &#183; <span class="l">1L</span></span></a>
+    <a href="#s24"><span class="rank mono">24</span><span class="name">1RM-beregner</span><span class="counts"><span class="m">3M</span></span></a>
+    <a href="#s25"><span class="rank mono">25</span><span class="name">Redig&#233;r opslag</span><span class="counts"><span class="m">1M</span> &#183; <span class="l">1L</span></span></a>
+    <a href="#s26"><span class="rank mono">26</span><span class="name">Pulsgraf i liggende format</span><span class="counts"><span class="m">1M</span></span></a>
+    <a href="#s27"><span class="rank mono">27</span><span class="name">Sk&#230;rme uden indgang</span><span class="counts"><span class="m">1M</span></span></a>
+  </nav>
+
+  <!-- 01 -->
+  <section class="screen" id="s01">
+    <span class="screen-rank">Sk&#230;rm 01</span>
+    <h2>Aktiv styrketr&#230;ning</h2>
+    <p class="path">Forside &#8594; <b>&#197;bn dagens tr&#230;ning</b> &#183; eller &#8853; i bundnavigationen &#8594; <b>Start ny tr&#230;ning</b> &#183; eller kalender/uge &#8594; en styrketr&#230;ning</p>
+    <div class="findings">
+      <div class="finding" data-id="s01-1"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s01-1" aria-labelledby="lbl-s01-1"></label><div class="finding-body">
+        <div class="fhead"><span class="chip h">H&#248;j</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s01-1"><span class="el">Start / pause / afslut:</span> sk&#230;rmens vigtigste handlinger er to firkantede ikonknapper p&#229; <span class="num">42&#215;42 px</span> yderst til h&#248;jre ved siden af timeren. Der er ingen tekst, s&#229; en ny bruger kan ikke se hvad de g&#248;r, og de er sm&#229; at ramme med svedige h&#230;nder.</p>
+        <p class="fix">G&#248;r "Start tr&#230;ning" til en knap i fuld bredde under timeren med tekst. Lad "Afslut tr&#230;ning" komme frem som en sekund&#230;r knap f&#248;rst n&#229;r tr&#230;ningen k&#248;rer.</p>
+      </div></div>
+      <div class="finding" data-id="s01-2"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s01-2" aria-labelledby="lbl-s01-2"></label><div class="finding-body">
+        <div class="fhead"><span class="chip h">H&#248;j</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s01-2"><span class="el">V&#230;rkt&#248;jslinjen over &#248;velseslisten:</span> fire ikoner (&#248;je, dobbeltpil ned, dobbeltpil op, flueben) i samme orange, uden labels. To af dem er til/fra-knapper, to er engangshandlinger &#8212; men de ser identiske ud, s&#229; brugeren m&#229; pr&#248;ve sig frem.</p>
+        <p class="fix">Sk&#230;r ned til to kontroller med tekst ("Vis s&#230;t", "Fold alle ud/ind"), og mark&#233;r til/fra-tilstand med en tydeligt anden baggrund end de handlingsknapper.</p>
+      </div></div>
+      <div class="finding" data-id="s01-3"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s01-3" aria-labelledby="lbl-s01-3"></label><div class="finding-body">
+        <div class="fhead"><span class="chip h">H&#248;j</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s01-3"><span class="el">S&#230;tskemaet:</span> op til otte kolonner (note, pause, s&#230;tnummer, reps, RPE, 1RM%, v&#230;gt, udf&#248;rt) p&#229; en telefonbredde. Kolonneoverskrifterne er <span class="num">9 px</span> versaler, og indtastningsfelterne er nede omkring <span class="num">35&#8211;45 px</span> brede. Det er et regneark p&#229; en telefon.</p>
+        <p class="fix">Vis kun reps, v&#230;gt og udf&#248;rt som standard. Lad brugeren sl&#229; de &#248;vrige kolonner til pr. &#248;velse, og g&#248;r de synlige felter tilsvarende bredere.</p>
+      </div></div>
+      <div class="finding" data-id="s01-4"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s01-4" aria-labelledby="lbl-s01-4"></label><div class="finding-body">
+        <div class="fhead"><span class="chip h">H&#248;j</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s01-4"><span class="el">"Tilf&#248;j &#248;velse":</span> et bart plus-ikon p&#229; <span class="num">30&#215;30 px</span> centreret nederst i listen, uden tekst og uden ramme. Det er den handling man bruger hver gang man improviserer en tr&#230;ning.</p>
+        <p class="fix">Erstat med en knap i fuld bredde med teksten "Tilf&#248;j &#248;velse" og et plus foran.</p>
+      </div></div>
+      <div class="finding" data-id="s01-5"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s01-5" aria-labelledby="lbl-s01-5"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s01-5"><span class="el">Bekr&#230;ftelse ved afslutning:</span> dialogen "Finish workout?" har "Finish" formateret som en destruktiv handling i r&#248;dt. At fuldf&#248;re en tr&#230;ning er en succes, ikke en sletning &#8212; r&#248;dt f&#229;r brugeren til at tvivle.</p>
+        <p class="fix">Brug normal eller positiv styling til "Afslut tr&#230;ning", og gem r&#248;dt til sletning.</p>
+      </div></div>
+      <div class="finding" data-id="s01-6"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s01-6" aria-labelledby="lbl-s01-6"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s01-6"><span class="el">Kolonneoverskriften "REST":</span> den er i virkeligheden en knap, der &#229;bner valg af tidsenhed, men ser ud som en overskrift p&#229; linje med de andre. Funktionen findes reelt ikke for brugeren.</p>
+        <p class="fix">Flyt indstillingen ind i &#248;velsens menu, eller giv overskriften et synligt knapudtryk.</p>
+      </div></div>
+      <div class="finding" data-id="s01-7"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s01-7" aria-labelledby="lbl-s01-7"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s01-7"><span class="el">Klikm&#229;l i &#248;velseskortene:</span> fold ud-pil <span class="num">24&#215;32</span>, &#248;velsesmenu <span class="num">32&#215;32</span>, afkrydsning <span class="num">28&#215;28</span>. Alle under de <span class="num">44&#215;44 px</span>, der er minimum for en finger.</p>
+        <p class="fix">Behold ikonst&#248;rrelsen, men udvid det trykbare felt omkring hvert ikon til mindst 44&#215;44.</p>
+      </div></div>
+      <div class="finding" data-id="s01-8"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s01-8" aria-labelledby="lbl-s01-8"></label><div class="finding-body">
+        <div class="fhead"><span class="chip l">Lav</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s01-8"><span class="el">Hj&#248;rneradier:</span> &#248;velseskort 24, s&#230;tpanelet 16 foroven og 24 forneden, historikfelter 8, chips 6 og helt runde. Fem radier inden for samme kort.</p>
+        <p class="fix">V&#230;lg to radier (fx 16 til kort, 8 til felter) og hold dem.</p>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section class="screen" id="s02">
+    <span class="screen-rank">Sk&#230;rm 02</span>
+    <h2>L&#248;betr&#230;ning</h2>
+    <p class="path">Forside eller kalender &#8594; <b>en l&#248;betr&#230;ning</b> &#183; eller &#8853; &#8594; Start ny tr&#230;ning &#8594; l&#248;betype</p>
+    <div class="findings">
+      <div class="finding" data-id="s02-1"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s02-1" aria-labelledby="lbl-s02-1"></label><div class="finding-body">
+        <div class="fhead"><span class="chip h">H&#248;j</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s02-1"><span class="el">Alt ligger i &#233;n lang rulle:</span> valg af l&#248;betype, planl&#230;gning af intervaller, live-tal, rutekort, tempograf, pulsgraf og opsummering findes p&#229; samme sk&#230;rm. Midt i et l&#248;b skal brugeren rulle for at finde start- og pauseknappen.</p>
+        <p class="fix">Del i tre tilstande p&#229; samme sk&#230;rm: "Plan" f&#248;r start, "Live" med kun de store tal og pause/stop, og "Opsummering" efter afslutning.</p>
+      </div></div>
+      <div class="finding" data-id="s02-2"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s02-2" aria-labelledby="lbl-s02-2"></label><div class="finding-body">
+        <div class="fhead"><span class="chip h">H&#248;j</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s02-2"><span class="el">Tekstst&#248;rrelser:</span> sk&#230;rmen bruger over 20 forskellige st&#248;rrelser, heraf labels p&#229; <span class="num">7</span> og <span class="num">8 px</span>. Det kan ikke l&#230;ses i bev&#230;gelse, udend&#248;rs, med sved i &#248;jnene.</p>
+        <p class="fix">S&#230;t en fast skala for sk&#230;rmen &#8212; fx 11 / 13 / 15 / 22 / 54 &#8212; og lad ingen live-v&#230;rdi v&#230;re under 22 px.</p>
+      </div></div>
+      <div class="finding" data-id="s02-3"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s02-3" aria-labelledby="lbl-s02-3"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s02-3"><span class="el">Knaptekster:</span> samme handling skrives b&#229;de "PAUSE" og "Pause", "START" og "Start", afh&#230;ngigt af hvor p&#229; sk&#230;rmen man er.</p>
+        <p class="fix">V&#230;lg &#233;t format for knapper i hele appen &#8212; anbefalet: normal skrift, stort begyndelsesbogstav.</p>
+      </div></div>
+      <div class="finding" data-id="s02-4"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s02-4" aria-labelledby="lbl-s02-4"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s02-4"><span class="el">Forkortelser blandes:</span> "DIST" i live-tallene, "DISTANCE" i planblokken, "TIME LEFT" og "TID" side om side i forskellige felter.</p>
+        <p class="fix">Ensret betegnelserne, og skriv dem helt ud n&#229;r der er plads.</p>
+      </div></div>
+      <div class="finding" data-id="s02-5"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s02-5" aria-labelledby="lbl-s02-5"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s02-5"><span class="el">Statusbeskeder:</span> "WAITING FOR DATA", "BEHIND PLAN", "AHEAD OF PLAN" i versaler, uden at fort&#230;lle hvad brugeren skal g&#248;re.</p>
+        <p class="fix">Skriv dem som s&#230;tninger med en handling: "Venter p&#229; GPS-signal" / "Du ligger 20 sek. bag planen &#8212; s&#230;t tempoet lidt op".</p>
+      </div></div>
+      <div class="finding" data-id="s02-6"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s02-6" aria-labelledby="lbl-s02-6"></label><div class="finding-body">
+        <div class="fhead"><span class="chip l">Lav</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s02-6"><span class="el">Zonefarver:</span> pulszonernes farver ligger fast og f&#248;lger ikke brugerens valgte farvetema, s&#229; zone 4 er orange ogs&#229; n&#229;r brugeren har valgt et lilla eller gr&#248;nt tema.</p>
+        <p class="fix">Lad zonefarverne f&#248;lge temaet, eller g&#248;r dem bevidst temauafh&#230;ngige og forklar det i signaturen.</p>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section class="screen" id="s03">
+    <span class="screen-rank">Sk&#230;rm 03</span>
+    <h2>Forside</h2>
+    <p class="path">App-start efter login &#183; eller <b>HOME</b> i bundnavigationen</p>
+    <div class="findings">
+      <div class="finding" data-id="s03-1"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s03-1" aria-labelledby="lbl-s03-1"></label><div class="finding-body">
+        <div class="fhead"><span class="chip h">H&#248;j</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s03-1"><span class="el">"Welcome back!":</span> sk&#230;rmens st&#248;rste typografi (<span class="num">28 px</span>) bruges p&#229; en tekst, der er ens hver dag og ikke indeholder information. Brugerens navn st&#229;r ikke nogen steder.</p>
+        <p class="fix">Brug pladsen p&#229; noget der &#230;ndrer sig: brugerens navn og tidspunkt ("Godmorgen, Sebastian"), eller flyt dagens tr&#230;ning helt op i toppen.</p>
+      </div></div>
+      <div class="finding" data-id="s03-2"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s03-2" aria-labelledby="lbl-s03-2"></label><div class="finding-body">
+        <div class="fhead"><span class="chip h">H&#248;j</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s03-2"><span class="el">Ugestriben:</span> de syv datofelter har kortbaggrund, ramme og skygge p&#229; dagens felt &#8212; de ser ud som knapper, men de kan ikke trykkes.</p>
+        <p class="fix">G&#248;r dagene trykbare, s&#229; man hopper til den dags tr&#230;ning. Ellers fjern kortudtrykket, s&#229; de l&#230;ses som ren status.</p>
+      </div></div>
+      <div class="finding" data-id="s03-3"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s03-3" aria-labelledby="lbl-s03-3"></label><div class="finding-body">
+        <div class="fhead"><span class="chip h">H&#248;j</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s03-3"><span class="el">Feedet nederst:</span> har man ingen tr&#230;nings-opslag, stopper siden brat efter venner&#230;kken &#8212; der er ingen tom tilstand og ingen forklaring p&#229; hvad omr&#229;det er til.</p>
+        <p class="fix">Vis et tomt-felt med en handling: "Del din f&#248;rste tr&#230;ning" eller "F&#248;lg nogen for at se deres tr&#230;ninger her".</p>
+      </div></div>
+      <div class="finding" data-id="s03-4"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s03-4" aria-labelledby="lbl-s03-4"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s03-4"><span class="el">Knappen p&#229; dagens kort</span> hedder "Open workout", men har et play-ikon. At &#229;bne og at starte er to forskellige forventninger.</p>
+        <p class="fix">Kald den "Start tr&#230;ning" n&#229;r intet er registreret, og "Forts&#230;t" n&#229;r tr&#230;ningen er i gang.</p>
+      </div></div>
+      <div class="finding" data-id="s03-5"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s03-5" aria-labelledby="lbl-s03-5"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s03-5"><span class="el">Den tomme udgave af dagens kort</span> er designet anderledes end den fyldte: mindre radius, centreret tekst p&#229; <span class="num">11,5 px</span> og en knap p&#229; <span class="num">34 px</span> h&#248;jde. Det ser ud som en anden app.</p>
+        <p class="fix">Genbrug samme korth&#248;jde, typografi og knapst&#248;rrelse som i den fyldte tilstand &#8212; kun indholdet skal skifte.</p>
+      </div></div>
+      <div class="finding" data-id="s03-6"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s03-6" aria-labelledby="lbl-s03-6"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s03-6"><span class="el">Ingen indl&#230;sningstilstand og ingen "tr&#230;k for at opdatere":</span> ved &#229;bning st&#229;r ugestribe og dagens kort tomme indtil data er hentet, og der er ingen m&#229;de at hente forfra.</p>
+        <p class="fix">Vis skeletkort under indl&#230;sning, og tilf&#248;j tr&#230;k-for-at-opdatere p&#229; hele siden.</p>
+      </div></div>
+      <div class="finding" data-id="s03-7"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s03-7" aria-labelledby="lbl-s03-7"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s03-7"><span class="el">Fejl vises ikke:</span> g&#229;r hentningen af dagens data galt, st&#229;r sk&#230;rmen blot tom. Brugeren kan ikke se forskel p&#229; "ingen tr&#230;ning i dag" og "kunne ikke hentes".</p>
+        <p class="fix">Vis en kort fejllinje &#248;verst med "Pr&#248;v igen" &#8212; samme m&#248;nster som notifikationssk&#230;rmen allerede bruger.</p>
+      </div></div>
+      <div class="finding" data-id="s03-8"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s03-8" aria-labelledby="lbl-s03-8"></label><div class="finding-body">
+        <div class="fhead"><span class="chip l">Lav</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s03-8"><span class="el">Ugedagslabels:</span> <span class="num">8,5 px</span> i d&#230;mpet gr&#229; p&#229; kortbaggrund, hvilket giver omkring <span class="num">3,4:1</span> i kontrast &#8212; under WCAG AA p&#229; <span class="num">4,5:1</span>.</p>
+        <p class="fix">Mindst 11 px og en lysere gr&#229;.</p>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 04 -->
+  <section class="screen" id="s04">
+    <span class="screen-rank">Sk&#230;rm 04</span>
+    <h2>Bundnavigation (vises p&#229; alle sk&#230;rme)</h2>
+    <p class="path">Fast nederst p&#229; alle sk&#230;rme efter login &#8212; undtagen pulsgrafen i liggende format</p>
+    <div class="findings">
+      <div class="finding" data-id="s04-1"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s04-1" aria-labelledby="lbl-s04-1"></label><div class="finding-body">
+        <div class="fhead"><span class="chip h">H&#248;j</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s04-1"><span class="el">Faner&#230;kkef&#248;lgen</span> er Profil &#8211; Social &#8211; &#8853; &#8211; Train &#8211; Home. Startsk&#230;rmen ligger yderst til h&#248;jre og profilen yderst til venstre, alts&#229; omvendt af hvad brugere kender fra alle andre apps.</p>
+        <p class="fix">Byt om: Home yderst til venstre, Profil yderst til h&#248;jre, &#8853; i midten.</p>
+      </div></div>
+      <div class="finding" data-id="s04-2"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s04-2" aria-labelledby="lbl-s04-2"></label><div class="finding-body">
+        <div class="fhead"><span class="chip h">H&#248;j</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s04-2"><span class="el">Fanelabels og aktiv tilstand:</span> labels er <span class="num">9,5 px</span> versaler med kraftig bogstavafstand. I lyst tema er den aktive fane orange p&#229; n&#230;sten hvid (ca. <span class="num">2,5:1</span>) &#8212; alts&#229; <em>lavere</em> kontrast end de inaktive gr&#229;. Brugeren kan ikke se hvor de er.</p>
+        <p class="fix">H&#230;v labels til 11 px, og brug en m&#248;rkere accentfarve i lyst tema. Marker aktiv fane med b&#229;de farve og en lille indikator.</p>
+      </div></div>
+      <div class="finding" data-id="s04-3"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s04-3" aria-labelledby="lbl-s04-3"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s04-3"><span class="el">Fanerne opf&#248;rer sig ikke som faner:</span> et fanetryk l&#230;gger en ny sk&#230;rm oven p&#229; den forrige i stedet for at skifte sektion. Tilbage-pilen f&#248;rer derfor til den forrige fane, ikke et niveau op, og hver fane glemmer hvor man var.</p>
+        <p class="fix">Giv hver fane sin egen historik, s&#229; tilbage altid betyder "et niveau op i denne sektion".</p>
+      </div></div>
+      <div class="finding" data-id="s04-4"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s04-4" aria-labelledby="lbl-s04-4"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s04-4"><span class="el">Live-timeren i midten:</span> n&#229;r en tr&#230;ning k&#248;rer, bliver &#8853;-knappen en rund timer med tid i <span class="num">12,5 px</span> og en tilstandslabel ("LIVE"/"REST") i <span class="num">6,5 px</span>. Labelen er reelt usynlig, og dens farve er l&#229;st til m&#248;rk tekst, s&#229; den forsvinder helt p&#229; de lyse accenttemaer.</p>
+        <p class="fix">Vis kun tiden, mindst 13 px, og lad ringen om knappen vise tilstanden (fyldt = tr&#230;ning, aftagende = pause).</p>
+      </div></div>
+      <div class="finding" data-id="s04-5"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s04-5" aria-labelledby="lbl-s04-5"></label><div class="finding-body">
+        <div class="fhead"><span class="chip l">Lav</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s04-5"><span class="el">H&#229;ndtaget nederst:</span> en <span class="num">134&#215;5 px</span> streg under fanerne ligner et tr&#230;k-h&#229;ndtag, men bj&#230;lken kan ikke tr&#230;kkes.</p>
+        <p class="fix">Fjern det, eller g&#248;r bj&#230;lken foldbar.</p>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 05 -->
+  <section class="screen" id="s05">
+    <span class="screen-rank">Sk&#230;rm 05</span>
+    <h2>Start tr&#230;ning-panelet</h2>
+    <p class="path">&#8853; i bundnavigationen &#183; eller en dag i ugen/kalenderen &#8594; <b>Tilf&#248;j ny tr&#230;ning</b></p>
+    <div class="findings">
+      <div class="finding" data-id="s05-1"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s05-1" aria-labelledby="lbl-s05-1"></label><div class="finding-body">
+        <div class="fhead"><span class="chip h">H&#248;j</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s05-1"><span class="el">Panelh&#248;jden er fast:</span> alle bundpaneler i appen &#229;bner i cirka <span class="num">60 %</span> af sk&#230;rmh&#248;jden uanset indhold. Et panel med to valg efterlader derfor et stort tomt felt, hvor brugeren leder efter mere.</p>
+        <p class="fix">Lad panelh&#248;jden f&#248;lge indholdet, med et maksimum p&#229; ca. 85 % og rul kun n&#229;r det er n&#248;dvendigt.</p>
+      </div></div>
+      <div class="finding" data-id="s05-2"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s05-2" aria-labelledby="lbl-s05-2"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s05-2"><span class="el">Fire ligev&#230;rdige sektioner:</span> "Planlagt i dag", "Dine s&#230;dvanlige tr&#230;ninger", "Gentag en tr&#230;ning" og "Start ny tr&#230;ning" har samme overskriftsstil i versaler. Intet fort&#230;ller hvad man skal v&#230;lge.</p>
+        <p class="fix">L&#248;ft "Planlagt i dag" op som fremh&#230;vet kort med en prim&#230;r knap, og saml resten under &#233;n overskrift nedenunder.</p>
+      </div></div>
+      <div class="finding" data-id="s05-3"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s05-3" aria-labelledby="lbl-s05-3"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s05-3"><span class="el">Tr&#230;kh&#229;ndtaget</span> har en fast gr&#229; farve, der ikke f&#248;lger lyst/m&#248;rkt tema, s&#229; det n&#230;sten forsvinder i m&#248;rkt tema og bliver for kraftigt i lyst.</p>
+        <p class="fix">Brug samme temafarve som appens &#248;vrige skillelinjer.</p>
+      </div></div>
+      <div class="finding" data-id="s05-4"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s05-4" aria-labelledby="lbl-s05-4"></label><div class="finding-body">
+        <div class="fhead"><span class="chip l">Lav</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s05-4"><span class="el">Ingen luk-knap:</span> panelet lukkes kun ved at trykke uden for det eller tr&#230;kke det ned.</p>
+        <p class="fix">Tilf&#248;j et kryds i panelets &#248;verste h&#248;jre hj&#248;rne.</p>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 06 -->
+  <section class="screen" id="s06">
+    <span class="screen-rank">Sk&#230;rm 06</span>
+    <h2>Programoversigt</h2>
+    <p class="path">TRAIN &#8594; <b>Manage your programs</b> &#8594; et program &#183; eller Forside &#8594; <b>lag-ikonet</b> (aktivt program)</p>
+    <div class="findings">
+      <div class="finding" data-id="s06-1"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s06-1" aria-labelledby="lbl-s06-1"></label><div class="finding-body">
+        <div class="fhead"><span class="chip h">H&#248;j</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s06-1"><span class="el">"Start"-knappen p&#229; et ikke-startet program</span> er sk&#230;rmens mindste element: en pille p&#229; <span class="num">30 px</span> h&#248;jde med <span class="num">10,5 px</span> tekst i &#248;verste h&#248;jre hj&#248;rne af kortet. Den vigtigste handling er den mest usynlige.</p>
+        <p class="fix">G&#248;r den til en prim&#230;r knap i fuld bredde under programtitlen, med teksten "Start program".</p>
+      </div></div>
+      <div class="finding" data-id="s06-2"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s06-2" aria-labelledby="lbl-s06-2"></label><div class="finding-body">
+        <div class="fhead"><span class="chip h">H&#248;j</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s06-2"><span class="el">Programnavnet st&#229;r to gange</span> lige over hinanden &#8212; i topbj&#230;lken og igen som overskrift i kortet nedenunder.</p>
+        <p class="fix">Vis navnet &#233;n gang, i kortet. Lad topbj&#230;lken v&#230;re ren navigation med "Program" som label.</p>
+      </div></div>
+      <div class="finding" data-id="s06-3"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s06-3" aria-labelledby="lbl-s06-3"></label><div class="finding-body">
+        <div class="fhead"><span class="chip h">H&#248;j</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s06-3"><span class="el">Indstillinger ligger p&#229; datasiden:</span> nederst p&#229; samme side som statistik og rekorder findes radioknapper til programmets status, omd&#248;bning, periode og eksport. Man kan ved et uheld s&#230;tte et aktivt program til "kladde" mens man kigger p&#229; tal.</p>
+        <p class="fix">Flyt hele indstillingsblokken til en separat side, som &#229;bnes fra &#8943;-menuen.</p>
+      </div></div>
+      <div class="finding" data-id="s06-4"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s06-4" aria-labelledby="lbl-s06-4"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s06-4"><span class="el">Info-ikonet</span> ved "Program bests" &#229;bner et filter-panel, hvor man v&#230;lger hvilke &#248;velser der vises. Ikonet lover en forklaring og giver en indstilling.</p>
+        <p class="fix">Brug filter-ikonet, som appen allerede har, og kald panelet "V&#230;lg &#248;velser".</p>
+      </div></div>
+      <div class="finding" data-id="s06-5"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s06-5" aria-labelledby="lbl-s06-5"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s06-5"><span class="el">&#8943;-menuen</span> hedder "Program actions", men indeholder kun &#233;n handling: slet program. Brugeren &#229;bner en menu for at finde &#233;t punkt.</p>
+        <p class="fix">Vis "Slet program" direkte, eller udvid menuen med de handlinger, der i dag ligger nederst p&#229; siden (omd&#248;b, eksport&#233;r).</p>
+      </div></div>
+      <div class="finding" data-id="s06-6"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s06-6" aria-labelledby="lbl-s06-6"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s06-6"><span class="el">Sektionsoverskrifter</span> ("Program bests", "Settings") er <span class="num">10 px</span> versaler i d&#230;mpet gr&#229;. De b&#230;rer hele sidens struktur, men er den svageste tekst p&#229; sk&#230;rmen.</p>
+        <p class="fix">L&#248;ft til 12 px og en lysere farve, s&#229; inddelingen kan ses ved et hurtigt blik.</p>
+      </div></div>
+      <div class="finding" data-id="s06-7"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s06-7" aria-labelledby="lbl-s06-7"></label><div class="finding-body">
+        <div class="fhead"><span class="chip l">Lav</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s06-7"><span class="el">Sprogfejl i labels:</span> "Estimated 1RM's" (forkert apostrof), og eksport-teksten hedder "FitApp program file" &#8212; appen heder FitVen.</p>
+        <p class="fix">Ret til "Estimerede 1RM" og "FitVen-programfil".</p>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 07 -->
+  <section class="screen" id="s07">
+    <span class="screen-rank">Sk&#230;rm 07</span>
+    <h2>Bloksk&#230;rm med ugerne</h2>
+    <p class="path">Programoversigt &#8594; <b>en blok i tidslinjen</b></p>
+    <div class="findings">
+      <div class="finding" data-id="s07-1"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s07-1" aria-labelledby="lbl-s07-1"></label><div class="finding-body">
+        <div class="fhead"><span class="chip h">H&#248;j</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s07-1"><span class="el">Ugekortenes titel er ugens fokus</span> ("Volume", "Deload", "No focus set"), mens ugenummeret kun st&#229;r i en <span class="num">24 px</span> cirkel til venstre. Brugeren leder efter "uge 3" og finder et fagudtryk.</p>
+        <p class="fix">S&#230;t "Uge 3" som titel og fokus som undertekst eller pille ved siden af.</p>
+      </div></div>
+      <div class="finding" data-id="s07-2"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s07-2" aria-labelledby="lbl-s07-2"></label><div class="finding-body">
+        <div class="fhead"><span class="chip h">H&#248;j</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s07-2"><span class="el">Dagsmenuen kr&#230;ver langt tryk</span> uden nogen visuel antydning. Handlinger som "tilf&#248;j tr&#230;ning" og "kopi&#233;r dag" er reelt skjult for de fleste brugere.</p>
+        <p class="fix">L&#230;g en synlig &#8943; p&#229; dagen, eller lad almindeligt tryk &#229;bne dagen med handlingerne synlige.</p>
+      </div></div>
+      <div class="finding" data-id="s07-3"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s07-3" aria-labelledby="lbl-s07-3"></label><div class="finding-body">
+        <div class="fhead"><span class="chip h">H&#248;j</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s07-3"><span class="el">Syv dage side om side:</span> hver dag har ikon, dato og sm&#229; tr&#230;ningskort med labels p&#229; <span class="num">8&#8211;9 px</span>. P&#229; en telefon bliver hver dag omkring <span class="num">45 px</span> bred &#8212; for lidt til b&#229;de at l&#230;se og ramme.</p>
+        <p class="fix">Vis ugen som en lodret liste med &#233;n dag pr. r&#230;kke, eller vis kun et statusikon pr. dag og detaljerne n&#229;r man trykker.</p>
+      </div></div>
+      <div class="finding" data-id="s07-4"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s07-4" aria-labelledby="lbl-s07-4"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s07-4"><span class="el">Ordforr&#229;det skifter:</span> de samme to niveauer kaldes "Block", "Mesocycle", "Microcycle" og "Week". Menuerne hedder "Mesocycle number: 3" og "Week number: 2", mens kortene siger "Block 3".</p>
+        <p class="fix">V&#230;lg to ord &#8212; anbefalet "Blok" og "Uge" &#8212; og brug dem i titler, menuer og bekr&#230;ftelser.</p>
+      </div></div>
+      <div class="finding" data-id="s07-5"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s07-5" aria-labelledby="lbl-s07-5"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s07-5"><span class="el">Markeringsfarven skifter:</span> i "Progressive Overload" er den valgte &#248;velse gr&#248;n, mens valgt tilstand alle andre steder i appen er orange.</p>
+        <p class="fix">Brug accentfarven til "valgt" overalt.</p>
+      </div></div>
+      <div class="finding" data-id="s07-6"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s07-6" aria-labelledby="lbl-s07-6"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s07-6"><span class="el">"+2,5 kg" er gr&#248;n og "&#8722;2,5 kg" er r&#248;d.</span> R&#248;d er appens farve for sletning og fare, ikke for "lidt mindre v&#230;gt". Brugeren t&#248;ver f&#248;r den ene af to helt ufarlige knapper.</p>
+        <p class="fix">G&#248;r begge knapper neutrale med tydelige plus/minus-ikoner, og gem r&#248;d til destruktive handlinger.</p>
+      </div></div>
+      <div class="finding" data-id="s07-7"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s07-7" aria-labelledby="lbl-s07-7"></label><div class="finding-body">
+        <div class="fhead"><span class="chip l">Lav</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s07-7"><span class="el">Menupunkter med punktum</span> og skiftende store bogstaver: "Add week to mesocycle.", "Delete Week.", "Delete mesocycle."</p>
+        <p class="fix">Fjern punktummer, ensret til "Tilf&#248;j uge" / "Slet uge".</p>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 08 -->
+  <section class="screen" id="s08">
+    <span class="screen-rank">Sk&#230;rm 08</span>
+    <h2>Programliste</h2>
+    <p class="path">TRAIN &#8594; <b>Manage your programs</b></p>
+    <div class="findings">
+      <div class="finding" data-id="s08-1"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s08-1" aria-labelledby="lbl-s08-1"></label><div class="finding-body">
+        <div class="fhead"><span class="chip h">H&#248;j</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s08-1"><span class="el">Programkortene har ingen handling:</span> hele kortet f&#248;rer videre, og "start" eller "forts&#230;t" findes f&#248;rst et niveau nede. Kortene viser fint status og fremdrift, men man kan ikke g&#248;re noget fra listen.</p>
+        <p class="fix">L&#230;g en prim&#230;r knap i det aktive kort ("Forts&#230;t tr&#230;ning") og en sekund&#230;r i kladdekortene ("Start program").</p>
+      </div></div>
+      <div class="finding" data-id="s08-2"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s08-2" aria-labelledby="lbl-s08-2"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s08-2"><span class="el">Sidetitlen "Programs" er <span class="num">16 px</span></span> &#8212; mens Forsiden bruger 28 px og Train-siden 22 px til samme slags titel. Titlen er mindre end br&#248;dteksten i kortene nedenunder.</p>
+        <p class="fix">&#201;n st&#248;rrelse for sidetitler i hele appen, fx 22 px.</p>
+      </div></div>
+      <div class="finding" data-id="s08-3"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s08-3" aria-labelledby="lbl-s08-3"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s08-3"><span class="el">Filterchips</span> ("All / Active / Complete / Draft") er ca. <span class="num">30 px</span> h&#248;je og har ingen ramme i ikke-valgt tilstand, s&#229; de l&#230;ses som labels frem for knapper.</p>
+        <p class="fix">H&#248;jde mindst 40 px med synlig ramme, og lad valgt tilstand v&#230;re b&#229;de fyldt og markeret med flueben.</p>
+      </div></div>
+      <div class="finding" data-id="s08-4"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s08-4" aria-labelledby="lbl-s08-4"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s08-4"><span class="el">Indl&#230;sning fjerner hele listen</span> inklusive filterr&#230;kken, s&#229; siden hopper hver gang man vender tilbage til den.</p>
+        <p class="fix">Behold filterr&#230;kken og vis skeletkort under indl&#230;sning.</p>
+      </div></div>
+      <div class="finding" data-id="s08-5"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s08-5" aria-labelledby="lbl-s08-5"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s08-5"><span class="el">Tomt filterresultat</span> viser kun "No active programs." uden nogen vej ud af filteret.</p>
+        <p class="fix">Tilf&#248;j en "Vis alle programmer"-knap i det tomme felt.</p>
+      </div></div>
+      <div class="finding" data-id="s08-6"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s08-6" aria-labelledby="lbl-s08-6"></label><div class="finding-body">
+        <div class="fhead"><span class="chip l">Lav</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s08-6"><span class="el">Tilbage-knappen</span> er en <span class="num">38 px</span> cirkel, alts&#229; under 44 px. Appens standardpil er desuden orange, hvilket i lyst tema giver ca. <span class="num">2,5:1</span> mod baggrunden.</p>
+        <p class="fix">44 px trykfelt og en pil i tekstfarve, ikke accentfarve.</p>
+      </div></div>
+      <div class="finding" data-id="s08-7"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s08-7" aria-labelledby="lbl-s08-7"></label><div class="finding-body">
+        <div class="fhead"><span class="chip l">Lav</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s08-7"><span class="el">Menupunkter uden f&#230;lles form:</span> "Create new program." med punktum lige under "Import program" uden.</p>
+        <p class="fix">Ensret uden punktum.</p>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 09 -->
+  <section class="screen" id="s09">
+    <span class="screen-rank">Sk&#230;rm 09</span>
+    <h2>Tr&#230;ningskalender</h2>
+    <p class="path">TRAIN &#8594; <b>Calendar</b> &#183; eller Forside &#8594; lag-ikonet (n&#229;r intet program er aktivt)</p>
+    <div class="findings">
+      <div class="finding" data-id="s09-1"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s09-1" aria-labelledby="lbl-s09-1"></label><div class="finding-body">
+        <div class="fhead"><span class="chip h">H&#248;j</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s09-1"><span class="el">En dag reagerer forskelligt afh&#230;ngigt af sit indhold:</span> almindeligt tryk g&#248;r ingenting hvis dagen ikke h&#248;rer til et program, langt tryk &#229;bner en menu, og tryk p&#229; et lille tr&#230;ningskort &#229;bner tr&#230;ningen. Brugeren kan ikke g&#230;tte reglen.</p>
+        <p class="fix">Lad tryk p&#229; en dag altid &#229;bne dagen, og l&#230;g alle handlinger inde i dagsvisningen.</p>
+      </div></div>
+      <div class="finding" data-id="s09-2"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s09-2" aria-labelledby="lbl-s09-2"></label><div class="finding-body">
+        <div class="fhead"><span class="chip h">H&#248;j</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s09-2"><span class="el">Dagfelterne er overfyldte:</span> ikon, dato, programmarkering, sygdomsmarkering og op til flere tr&#230;ningskort i <span class="num">8&#8211;9 px</span> tekst i et felt p&#229; under 50 px bredde.</p>
+        <p class="fix">Maks. &#233;n markering pr. dag i m&#229;nedsvisningen (fx en farvet prik pr. tr&#230;ning), og detaljerne i et dagspanel.</p>
+      </div></div>
+      <div class="finding" data-id="s09-3"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s09-3" aria-labelledby="lbl-s09-3"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s09-3"><span class="el">Fejlbeskeder</span> vises som d&#230;mpet gr&#229; tekst i et kort uden handling, mens notifikationssk&#230;rmen viser fejl med overskrift og "Pr&#248;v igen".</p>
+        <p class="fix">Brug det samme fejlm&#248;nster overalt: overskrift, forklaring, handling.</p>
+      </div></div>
+      <div class="finding" data-id="s09-4"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s09-4" aria-labelledby="lbl-s09-4"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s09-4"><span class="el">M&#229;nedspilene er <span class="num">36 px</span></span> og placeret i samme r&#230;kke som to overskrifter, en t&#230;lling og en indl&#230;sningsspinner. R&#230;kken er t&#230;ttere pakket end resten af appen.</p>
+        <p class="fix">44 px trykfelt, og flyt t&#230;llingen ned til m&#229;nedstitlen som undertekst.</p>
+      </div></div>
+      <div class="finding" data-id="s09-5"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s09-5" aria-labelledby="lbl-s09-5"></label><div class="finding-body">
+        <div class="fhead"><span class="chip l">Lav</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s09-5"><span class="el">Dobbelt overskrift:</span> m&#229;neden st&#229;r som titel, og lige over den st&#229;r en pille med "12 workouts" i endnu en overskriftsr&#230;kke.</p>
+        <p class="fix">Sl&#229; dem sammen: "August 2026 &#183; 12 tr&#230;ninger, 8 gennemf&#248;rt".</p>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 10 -->
+  <section class="screen" id="s10">
+    <span class="screen-rank">Sk&#230;rm 10</span>
+    <h2>Train-forsiden</h2>
+    <p class="path"><b>TRAIN</b> i bundnavigationen</p>
+    <div class="findings">
+      <div class="finding" data-id="s10-1"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s10-1" aria-labelledby="lbl-s10-1"></label><div class="finding-body">
+        <div class="fhead"><span class="chip h">H&#248;j</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s10-1"><span class="el">Tre navne for to steder:</span> fanen heder "TRAIN", sk&#230;rmen kalder sig "Training", og den sk&#230;rm den f&#248;rer til hedder "Catalog" i titlen, "Exercise Library" i sin egen overskrift og "Exercise library" p&#229; kortet man kom fra.</p>
+        <p class="fix">V&#230;lg &#233;t navn pr. sted, og brug det i fane, sidetitel og det kort der f&#248;rer derhen.</p>
+      </div></div>
+      <div class="finding" data-id="s10-2"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s10-2" aria-labelledby="lbl-s10-2"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s10-2"><span class="el">To indgange til samme sk&#230;rm:</span> s&#248;gecirklen &#248;verst til h&#248;jre og kortet "Exercise library" nederst f&#248;rer til pr&#230;cis samme sted.</p>
+        <p class="fix">Behold kortet, og lad s&#248;gecirklen &#229;bne samme sk&#230;rm <em>med tastaturet fremme i s&#248;gefeltet</em> &#8212; ellers fjern den.</p>
+      </div></div>
+      <div class="finding" data-id="s10-3"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s10-3" aria-labelledby="lbl-s10-3"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s10-3"><span class="el">Seks ligev&#230;rdige billedkort:</span> sygdomslog, kalender, 1RM-beregner, programmer, tr&#230;ninger, rekorder og &#248;velser har n&#230;sten samme st&#248;rrelse og v&#230;gt. Intet fort&#230;ller hvad man bruger dagligt.</p>
+        <p class="fix">Fremh&#230;v "Programmer" og "Kalender" som store kort, og g&#248;r resten til kompakte r&#230;kker med ikon og pil.</p>
+      </div></div>
+      <div class="finding" data-id="s10-4"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s10-4" aria-labelledby="lbl-s10-4"></label><div class="finding-body">
+        <div class="fhead"><span class="chip l">Lav</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s10-4"><span class="el">Sektionsoverskrifter</span> ("Quick tools", "Your training") er <span class="num">10 px</span> versaler i d&#230;mpet gr&#229;.</p>
+        <p class="fix">12 px og lysere farve.</p>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 11 -->
+  <section class="screen" id="s11">
+    <span class="screen-rank">Sk&#230;rm 11</span>
+    <h2>&#216;velseskatalog</h2>
+    <p class="path">TRAIN &#8594; s&#248;geikon eller kortet <b>Exercise library</b> &#183; eller under en tr&#230;ning &#8594; <b>Tilf&#248;j &#248;velse</b></p>
+    <div class="findings">
+      <div class="finding" data-id="s11-1"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s11-1" aria-labelledby="lbl-s11-1"></label><div class="finding-body">
+        <div class="fhead"><span class="chip h">H&#248;j</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s11-1"><span class="el">Ingen tilbage-knap:</span> &#229;bnet fra Train-forsiden har sk&#230;rmen slet ingen topbj&#230;lke &#8212; kun listens eget kort-hoved. Brugeren kan kun komme tilbage med telefonens egen gestus. Den samme sk&#230;rm <em>har</em> b&#229;de titel og tilbage-pil, n&#229;r den &#229;bnes som "tilf&#248;j &#248;velse" under en tr&#230;ning.</p>
+        <p class="fix">Brug samme topbj&#230;lke i begge tilf&#230;lde &#8212; den findes allerede i appen.</p>
+      </div></div>
+      <div class="finding" data-id="s11-2"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s11-2" aria-labelledby="lbl-s11-2"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s11-2"><span class="el">Skiftende overskrifter:</span> samme sk&#230;rm heder "Catalog" i &#233;n tilstand og "Choose Exercise" i en anden, med "Exercise Library" som label ovenover.</p>
+        <p class="fix">&#201;n titel pr. tilstand: "&#216;velser" ved gennemsyn, "Tilf&#248;j &#248;velse" ved valg.</p>
+      </div></div>
+      <div class="finding" data-id="s11-3"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s11-3" aria-labelledby="lbl-s11-3"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s11-3"><span class="el">S&#248;gefelt og filterknap er <span class="num">38 px</span> h&#248;je</span> &#8212; under 44 px, og s&#248;gefeltets tekst er 13 px.</p>
+        <p class="fix">44 px h&#248;jde og 15 px tekst i s&#248;gefeltet.</p>
+      </div></div>
+      <div class="finding" data-id="s11-4"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s11-4" aria-labelledby="lbl-s11-4"></label><div class="finding-body">
+        <div class="fhead"><span class="chip l">Lav</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s11-4"><span class="el">Aktive filtre</span> vises som et lille tal p&#229; filterknappen, men "Nulstil filtre" findes kun inde i filterpanelet.</p>
+        <p class="fix">Vis aktive filtre som chips over listen, med kryds til at fjerne dem.</p>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 12 -->
+  <section class="screen" id="s12">
+    <span class="screen-rank">Sk&#230;rm 12</span>
+    <h2>Login</h2>
+    <p class="path">Appens f&#248;rste sk&#230;rm, n&#229;r man ikke er logget ind</p>
+    <div class="findings">
+      <div class="finding" data-id="s12-1"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s12-1" aria-labelledby="lbl-s12-1"></label><div class="finding-body">
+        <div class="fhead"><span class="chip h">H&#248;j</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s12-1"><span class="el">To identiske knapper:</span> "Login" og "Create account" er begge orange, fulde bredde, samme h&#248;jde, lige over hinanden. Der er ingen visuel forskel p&#229; hovedhandlingen og alternativet.</p>
+        <p class="fix">Behold "Login" som prim&#230;r knap. G&#248;r "Opret konto" til et tekstlink eller en omridsknap under den.</p>
+      </div></div>
+      <div class="finding" data-id="s12-2"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s12-2" aria-labelledby="lbl-s12-2"></label><div class="finding-body">
+        <div class="fhead"><span class="chip h">H&#248;j</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s12-2"><span class="el">Fejlbeskeden ligger mellem de to knapper.</span> Den skubber "Opret konto" ned og bliver let overset, netop n&#229;r brugeren er i tvivl om noget gik galt.</p>
+        <p class="fix">Plac&#233;r beskeden direkte under det felt eller den knap den h&#248;rer til, med ikon og farve.</p>
+      </div></div>
+      <div class="finding" data-id="s12-3"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s12-3" aria-labelledby="lbl-s12-3"></label><div class="finding-body">
+        <div class="fhead"><span class="chip h">H&#248;j</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s12-3"><span class="el">Tre overskrifter til &#233;n formular:</span> "Login" i <span class="num">42 px</span>, "Account" som label og "Sign in" i <span class="num">24 px</span> inde i kortet. Brugeren skal l&#230;se tre gange for at n&#229; to felter.</p>
+        <p class="fix">Behold &#233;n overskrift ("Log ind") og lad kortet v&#230;re rent felter.</p>
+      </div></div>
+      <div class="finding" data-id="s12-4"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s12-4" aria-labelledby="lbl-s12-4"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s12-4"><span class="el">Ingen "Glemt adgangskode"</span> og ingen mulighed for at vise adgangskoden, mens man skriver.</p>
+        <p class="fix">Tilf&#248;j begge &#8212; &#248;je-ikon i feltet og et link under knappen.</p>
+      </div></div>
+      <div class="finding" data-id="s12-5"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s12-5" aria-labelledby="lbl-s12-5"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s12-5"><span class="el">Deaktiveret knap uden forklaring:</span> knappen er nedtonet til <span class="num">40 %</span> gennemsigtighed indtil begge felter er udfyldt. S&#229;dan ser den mere ud som en fejl end som en venteposition.</p>
+        <p class="fix">Lad knappen v&#230;re aktiv og vis feltvalidering ved tryk, eller skriv hvorfor den er sl&#229;et fra.</p>
+      </div></div>
+      <div class="finding" data-id="s12-6"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s12-6" aria-labelledby="lbl-s12-6"></label><div class="finding-body">
+        <div class="fhead"><span class="chip l">Lav</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s12-6"><span class="el">"FitVen Cloud"</span> som label &#248;verst er teknisk sprog. For brugeren er der ikke en "cloud", der er bare FitVen.</p>
+        <p class="fix">Skriv "FitVen".</p>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 13 -->
+  <section class="screen" id="s13">
+    <span class="screen-rank">Sk&#230;rm 13</span>
+    <h2>Opret konto</h2>
+    <p class="path">Login &#8594; <b>Create account</b></p>
+    <div class="findings">
+      <div class="finding" data-id="s13-1"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s13-1" aria-labelledby="lbl-s13-1"></label><div class="finding-body">
+        <div class="fhead"><span class="chip h">H&#248;j</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s13-1"><span class="el">Ingen vej videre efter oprettelse:</span> der vises kun teksten "Account created. You can now sign in.", formularen t&#248;mmes, og brugeren st&#229;r tilbage p&#229; oprettelsessiden uden en knap til login.</p>
+        <p class="fix">Vis en tydelig "G&#229; til login"-knap, eller log brugeren ind automatisk n&#229;r det er muligt.</p>
+      </div></div>
+      <div class="finding" data-id="s13-2"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s13-2" aria-labelledby="lbl-s13-2"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s13-2"><span class="el">Adgangskodekravet afsl&#248;res f&#248;rst som fejl.</span> "Mindst 6 tegn" fort&#230;lles ikke f&#248;r brugeren har skrevet noget for kort.</p>
+        <p class="fix">Vis kravet som hj&#230;lpetekst under feltet fra starten.</p>
+      </div></div>
+      <div class="finding" data-id="s13-3"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s13-3" aria-labelledby="lbl-s13-3"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s13-3"><span class="el">Topbj&#230;lken har en tilbage-pil, men ingen titel</span> &#8212; siden mangler stedmarkering i toppen, og pilen st&#229;r alene i et tomt b&#229;nd.</p>
+        <p class="fix">S&#230;t "Opret konto" i topbj&#230;lken.</p>
+      </div></div>
+      <div class="finding" data-id="s13-4"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s13-4" aria-labelledby="lbl-s13-4"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s13-4"><span class="el">Feltlabels er mindre end hj&#230;lpeteksterne:</span> labels er <span class="num">11 px</span> versaler, hj&#230;lpetekst under felterne er 12 px normal. Det vender hierarkiet om.</p>
+        <p class="fix">Labels 13 px, hj&#230;lpetekst 12 px i d&#230;mpet farve.</p>
+      </div></div>
+      <div class="finding" data-id="s13-5"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s13-5" aria-labelledby="lbl-s13-5"></label><div class="finding-body">
+        <div class="fhead"><span class="chip l">Lav</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s13-5"><span class="el">Samme tre-overskriftsproblem som login:</span> "Register", "New account", "Account details".</p>
+        <p class="fix">Behold &#233;n.</p>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 14 -->
+  <section class="screen" id="s14">
+    <span class="screen-rank">Sk&#230;rm 14</span>
+    <h2>Profil</h2>
+    <p class="path"><b>PROFILE</b> i bundnavigationen</p>
+    <div class="findings">
+      <div class="finding" data-id="s14-1"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s14-1" aria-labelledby="lbl-s14-1"></label><div class="finding-body">
+        <div class="fhead"><span class="chip h">H&#248;j</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s14-1"><span class="el">En knap der ikke er en knap:</span> &#248;verst til h&#248;jre st&#229;r et &#8943;-ikon i en cirkel med kant og kortbaggrund, pr&#230;cis som appens rigtige menuknapper. Den kan ikke trykkes &#8212; den er ren dekoration.</p>
+        <p class="fix">Fjern den, eller giv den et menuindhold (fx "Redig&#233;r profil", "Log ud").</p>
+      </div></div>
+      <div class="finding" data-id="s14-2"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s14-2" aria-labelledby="lbl-s14-2"></label><div class="finding-body">
+        <div class="fhead"><span class="chip h">H&#248;j</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s14-2"><span class="el">"Log out" sker uden bekr&#230;ftelse.</span> Et fejltryk logger brugeren ud midt i en tr&#230;ningsuge.</p>
+        <p class="fix">Bekr&#230;ft med en dialog: "Log ud af FitVen? Dine tr&#230;ninger bliver gemt."</p>
+      </div></div>
+      <div class="finding" data-id="s14-3"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s14-3" aria-labelledby="lbl-s14-3"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s14-3"><span class="el">E-mailadressen st&#229;r to gange</span> p&#229; samme sk&#230;rm &#8212; i "Public profile" og igen i "Account". I den f&#248;rste er den l&#229;st med et h&#230;ngel&#229;sikon, i den anden er den blot information.</p>
+        <p class="fix">Vis den &#233;n gang, i "Konto".</p>
+      </div></div>
+      <div class="finding" data-id="s14-4"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s14-4" aria-labelledby="lbl-s14-4"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s14-4"><span class="el">Indstillingslisten blander to slags r&#230;kker:</span> nogle navigerer videre (pil til h&#248;jre), andre indeholder en kontrol man betjener p&#229; stedet (tema, farvevalg). De ser fuldst&#230;ndig ens ud.</p>
+        <p class="fix">Adskil dem i to grupper, eller giv "betjen her"-r&#230;kker en anden baggrund.</p>
+      </div></div>
+      <div class="finding" data-id="s14-5"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s14-5" aria-labelledby="lbl-s14-5"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s14-5"><span class="el">Temav&#230;lgeren (Dark / Light / Auto)</span> er ca. <span class="num">26 px</span> h&#248;j med 11 px tekst &#8212; langt under 44 px. Appen har desuden to forskellige segmentkontroller med forskelligt udseende.</p>
+        <p class="fix">&#201;n segmentkontrol i appen, mindst 40 px h&#248;j, 13 px tekst.</p>
+      </div></div>
+      <div class="finding" data-id="s14-6"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s14-6" aria-labelledby="lbl-s14-6"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s14-6"><span class="el">Sm&#229; knapper:</span> "Change photo" er <span class="num">34 px</span>, "Log out" er <span class="num">38 px</span>.</p>
+        <p class="fix">Mindst 44 px h&#248;jde p&#229; begge.</p>
+      </div></div>
+      <div class="finding" data-id="s14-7"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s14-7" aria-labelledby="lbl-s14-7"></label><div class="finding-body">
+        <div class="fhead"><span class="chip l">Lav</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s14-7"><span class="el">Log ud-knappens farver</span> er faste r&#248;de v&#230;rdier, der ikke f&#248;lger lyst tema, s&#229; kanten er tunet til m&#248;rk baggrund uanset hvad brugeren har valgt.</p>
+        <p class="fix">Brug appens fejlfarve fra temaet.</p>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 15 -->
+  <section class="screen" id="s15">
+    <span class="screen-rank">Sk&#230;rm 15</span>
+    <h2>Tr&#230;ningsbibliotek</h2>
+    <p class="path">TRAIN &#8594; <b>Your workouts</b></p>
+    <div class="findings">
+      <div class="finding" data-id="s15-1"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s15-1" aria-labelledby="lbl-s15-1"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s15-1"><span class="el">Filterpillerne peger den forkerte vej:</span> "SORT BY" og "WORKOUT TYPE" har en pil mod h&#248;jre, men &#229;bner et panel nedefra. H&#248;jrepil betyder "g&#229; videre" alle andre steder i appen.</p>
+        <p class="fix">Brug en nedad-pil p&#229; pillerne.</p>
+      </div></div>
+      <div class="finding" data-id="s15-2"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s15-2" aria-labelledby="lbl-s15-2"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s15-2"><span class="el">Eget paneldesign:</span> sk&#230;rmen har sit helt eget bundpanel, som ser anderledes ud end appens &#248;vrige tre panelvarianter &#8212; fjerde version af samme m&#248;nster.</p>
+        <p class="fix">Brug appens f&#230;lles panel.</p>
+      </div></div>
+      <div class="finding" data-id="s15-3"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s15-3" aria-labelledby="lbl-s15-3"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s15-3"><span class="el">Samme valg, to formuleringer:</span> panelet siger "Newest first" / "Oldest first", pillen siger "Newest" / "Oldest".</p>
+        <p class="fix">Samme tekst begge steder.</p>
+      </div></div>
+      <div class="finding" data-id="s15-4"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s15-4" aria-labelledby="lbl-s15-4"></label><div class="finding-body">
+        <div class="fhead"><span class="chip l">Lav</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s15-4"><span class="el">Tom tilstand uden udvej:</span> "No workouts match these filters." er en god besked, men mangler en knap til at rydde filtrene.</p>
+        <p class="fix">Tilf&#248;j "Nulstil filtre".</p>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 16 -->
+  <section class="screen" id="s16">
+    <span class="screen-rank">Sk&#230;rm 16</span>
+    <h2>Personlige rekorder</h2>
+    <p class="path">TRAIN &#8594; <b>Personal records</b></p>
+    <div class="findings">
+      <div class="finding" data-id="s16-1"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s16-1" aria-labelledby="lbl-s16-1"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s16-1"><span class="el">Programv&#230;lgeren siger ikke hvad den vil:</span> feltet st&#229;r med ordet "Program" som pladsholder, og f&#248;rst n&#229;r man trykker, hedder den "Pick program".</p>
+        <p class="fix">Skriv "V&#230;lg program" i feltet, med en nedad-pil.</p>
+      </div></div>
+      <div class="finding" data-id="s16-2"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s16-2" aria-labelledby="lbl-s16-2"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s16-2"><span class="el">"Hide empty" / "Show all"</span> er &#233;n til/fra-knap, hvis tekst skifter mellem to forskellige begreber. Brugeren kan ikke se om teksten beskriver tilstanden nu eller handlingen ved tryk.</p>
+        <p class="fix">&#201;n formulering med tydelig tilstand, fx en kontakt med labelen "Skjul &#248;velser uden data".</p>
+      </div></div>
+      <div class="finding" data-id="s16-3"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s16-3" aria-labelledby="lbl-s16-3"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s16-3"><span class="el">V&#230;rdi og label har n&#230;sten samme v&#230;gt:</span> sk&#230;rmen bruger 10 tekstst&#248;rrelser fra 9 til 20 px, og rekordtallet &#8212; det man kommer for &#8212; skiller sig kun lidt ud.</p>
+        <p class="fix">G&#248;r rekordv&#230;rdien markant st&#248;rre end sin label, og sk&#230;r antallet af st&#248;rrelser ned til fire.</p>
+      </div></div>
+      <div class="finding" data-id="s16-4"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s16-4" aria-labelledby="lbl-s16-4"></label><div class="finding-body">
+        <div class="fhead"><span class="chip l">Lav</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s16-4"><span class="el">Tomme v&#230;rdier som s&#230;tninger:</span> "No set" og "No workout" st&#229;r i talkolonnerne.</p>
+        <p class="fix">Brug "&#8211;" i talkolonner, og forklar eventuelt i en fodnote.</p>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 17 -->
+  <section class="screen" id="s17">
+    <span class="screen-rank">Sk&#230;rm 17</span>
+    <h2>Notifikationer</h2>
+    <p class="path">Forside &#8594; <b>klokke-ikonet</b> &#248;verst til h&#248;jre &#183; eller ved tryk p&#229; en push-besked</p>
+    <div class="findings">
+      <div class="finding no-cb" data-id="s17-1"><span class="cbwrap cbwrap-empty" aria-hidden="true"></span><div class="finding-body">
+        <div class="fhead"><span class="chip g">Ros</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s17-1"><span class="el">Denne sk&#230;rm g&#248;r det rigtigt:</span> den har indl&#230;sningstilstand, fejl med "Try again", tom tilstand og tr&#230;k-for-at-opdatere. Det er det eneste sted i appen hvor alle fire tilstande er d&#230;kket.</p>
+        <p class="fix">Brug den som f&#230;lles m&#248;nster for de &#248;vrige sk&#230;rme &#8212; is&#230;r Forsiden, kalenderen og programlisten.</p>
+      </div></div>
+      <div class="finding" data-id="s17-2"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s17-2" aria-labelledby="lbl-s17-2"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s17-2"><span class="el">To ord for samme sted:</span> titlen er "Notifications" med "Activity" som label ovenover.</p>
+        <p class="fix">V&#230;lg &#233;t, og brug samme ord i indstillingerne.</p>
+      </div></div>
+      <div class="finding" data-id="s17-3"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s17-3" aria-labelledby="lbl-s17-3"></label><div class="finding-body">
+        <div class="fhead"><span class="chip l">Lav</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s17-3"><span class="el">Tidsstempler og "Unread"</span> er <span class="num">10&#8211;12 px</span> i d&#230;mpet gr&#229; &#8212; netop de to oplysninger, man skanner listen for.</p>
+        <p class="fix">12&#8211;13 px, og mark&#233;r ul&#230;ste med en farvet prik i stedet for tekst.</p>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 18 -->
+  <section class="screen" id="s18">
+    <span class="screen-rank">Sk&#230;rm 18</span>
+    <h2>Notifikationsindstillinger</h2>
+    <p class="path">Notifikationer &#8594; <b>tandhjulet</b> &#183; eller Profil &#8594; Settings &#8594; <b>Notifications</b></p>
+    <div class="findings">
+      <div class="finding" data-id="s18-1"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s18-1" aria-labelledby="lbl-s18-1"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s18-1"><span class="el">Tonen falder ud af appen:</span> valget "Stay focused - never get pinged." er skrevet som en reklametekst med bindestreg brugt som tankestreg, mens resten af indstillingerne er neutrale.</p>
+        <p class="fix">Skriv beskrivende: "Ingen notifikationer".</p>
+      </div></div>
+      <div class="finding" data-id="s18-2"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s18-2" aria-labelledby="lbl-s18-2"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s18-2"><span class="el">"Custom" siger ikke hvad der sker.</span> Valget &#229;bner en s&#248;gning blandt de personer man f&#248;lger, men det fremg&#229;r ikke af labelen.</p>
+        <p class="fix">Kald det "V&#230;lg bestemte personer" og vis de valgte som chips under.</p>
+      </div></div>
+      <div class="finding" data-id="s18-3"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s18-3" aria-labelledby="lbl-s18-3"></label><div class="finding-body">
+        <div class="fhead"><span class="chip l">Lav</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s18-3"><span class="el">Labels er mindre end br&#248;dteksten</span> (10 px mod 13&#8211;14 px), s&#229; gruppeoverskrifterne forsvinder i listen.</p>
+        <p class="fix">L&#248;ft labels til 12 px.</p>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 19 -->
+  <section class="screen" id="s19">
+    <span class="screen-rank">Sk&#230;rm 19</span>
+    <h2>Social</h2>
+    <p class="path"><b>SOCIAL</b> i bundnavigationen</p>
+    <div class="findings">
+      <div class="finding" data-id="s19-1"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s19-1" aria-labelledby="lbl-s19-1"></label><div class="finding-body">
+        <div class="fhead"><span class="chip h">H&#248;j</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s19-1"><span class="el">Sk&#230;rmen er n&#230;sten tom:</span> "Social" indeholder en r&#230;kke med venners status og &#233;t stort billedkort ("Find Friends"). Selve s&#248;gningen efter personer ligger et niveau dybere, selv om det er hele form&#229;let med fanen.</p>
+        <p class="fix">L&#230;g s&#248;gefeltet direkte p&#229; sk&#230;rmen, med forslag til personer nedenunder.</p>
+      </div></div>
+      <div class="finding" data-id="s19-2"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s19-2" aria-labelledby="lbl-s19-2"></label><div class="finding-body">
+        <div class="fhead"><span class="chip h">H&#248;j</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s19-2"><span class="el">F&#248;lger/f&#248;lgere er for sm&#229; at ramme:</span> tallene i topbj&#230;lken er 13 px v&#230;rdi over 9 px label i et trykfelt p&#229; ca. <span class="num">23 px</span> h&#248;jde &#8212; og de er faktisk knapper, der &#229;bner en liste.</p>
+        <p class="fix">G&#248;r dem til rigtige knapper med mindst 44 px h&#248;jde, og plac&#233;r dem under profilnavnet i stedet for i topbj&#230;lken.</p>
+      </div></div>
+      <div class="finding" data-id="s19-3"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s19-3" aria-labelledby="lbl-s19-3"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s19-3"><span class="el">Tilbage-pil p&#229; en fane-forside:</span> topbj&#230;lken har en tilbage-pil, selvom sk&#230;rmen er en af de fire hovedsektioner.</p>
+        <p class="fix">Skjul tilbage-pilen p&#229; fane-forsider.</p>
+      </div></div>
+      <div class="finding" data-id="s19-4"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s19-4" aria-labelledby="lbl-s19-4"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s19-4"><span class="el">"Close" ser ud som en bekr&#230;ftelse:</span> appens "sekund&#230;re" knap er en fyldt gr&#248;n flade, s&#229; luk-knappen i f&#248;lger-listen bliver sk&#230;rmens mest i&#248;jnefaldende element.</p>
+        <p class="fix">Giv sekund&#230;re knapper omrids og tekst i tekstfarve i stedet for en fyldt farveflade.</p>
+      </div></div>
+      <div class="finding" data-id="s19-5"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s19-5" aria-labelledby="lbl-s19-5"></label><div class="finding-body">
+        <div class="fhead"><span class="chip l">Lav</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s19-5"><span class="el">"Stories"</span> er l&#229;nt fra andre apps, men indholdet er dagens tr&#230;ningsstatus, ikke billeder der forsvinder.</p>
+        <p class="fix">Kald det "Dagens aktivitet".</p>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 20 -->
+  <section class="screen" id="s20">
+    <span class="screen-rank">Sk&#230;rm 20</span>
+    <h2>Find brugere</h2>
+    <p class="path">Social &#8594; <b>Find Friends</b> &#183; eller "se alle" i aktivitetsr&#230;kken</p>
+    <div class="findings">
+      <div class="finding" data-id="s20-1"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s20-1" aria-labelledby="lbl-s20-1"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s20-1"><span class="el">"Follow" / "Following":</span> brugeren kan ikke se om "Following" beskriver en tilstand eller er en handling, der vil f&#229; dem til at f&#248;lge personen igen.</p>
+        <p class="fix">Vis "F&#248;lg" som prim&#230;r knap og "F&#248;lger &#10003;" som tydeligt sekund&#230;r tilstand, med bekr&#230;ftelse ved at stoppe.</p>
+      </div></div>
+      <div class="finding" data-id="s20-2"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s20-2" aria-labelledby="lbl-s20-2"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s20-2"><span class="el">Pladsholderen er teknisk og for lang:</span> "Search username tags or display names".</p>
+        <p class="fix">"S&#248;g efter navn eller brugernavn".</p>
+      </div></div>
+      <div class="finding" data-id="s20-3"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s20-3" aria-labelledby="lbl-s20-3"></label><div class="finding-body">
+        <div class="fhead"><span class="chip l">Lav</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s20-3"><span class="el">To n&#230;sten identiske tomme tilstande:</span> "No other users yet." og "No users matched." Brugeren kan ikke se om der ingen brugere er, eller om s&#248;gningen bare ikke gav resultat.</p>
+        <p class="fix">Adskil dem klart, og lad s&#248;getilstanden vise s&#248;geordet.</p>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 21 -->
+  <section class="screen" id="s21">
+    <span class="screen-rank">Sk&#230;rm 21</span>
+    <h2>Sygdomslog</h2>
+    <p class="path">TRAIN &#8594; <b>Sickness log</b> &#183; eller en dag i kalenderen &#8594; dagsmenu</p>
+    <div class="findings">
+      <div class="finding" data-id="s21-1"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s21-1" aria-labelledby="lbl-s21-1"></label><div class="finding-body">
+        <div class="fhead"><span class="chip h">H&#248;j</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s21-1"><span class="el">Den prim&#230;re knap ligger over indholdet:</span> "Register new sickness" er det f&#248;rste man ser, f&#248;r man har set om der i forvejen er registreringer. Den har desuden sin egen farve, som ikke er appens prim&#230;rfarve.</p>
+        <p class="fix">Vis listen f&#248;rst, og l&#230;g knappen fast nederst p&#229; sk&#230;rmen i appens prim&#230;rfarve.</p>
+      </div></div>
+      <div class="finding" data-id="s21-2"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s21-2" aria-labelledby="lbl-s21-2"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s21-2"><span class="el">Endnu en variant af sidetitel:</span> topbj&#230;lken har kun ordet "Sickness" i 18 px, uden label og uden den to-linjede titel resten af appen bruger.</p>
+        <p class="fix">Brug appens f&#230;lles topbj&#230;lke.</p>
+      </div></div>
+      <div class="finding" data-id="s21-3"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s21-3" aria-labelledby="lbl-s21-3"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s21-3"><span class="el">Indl&#230;sning som tekst:</span> "Loading sickness history..." st&#229;r som gr&#229; tekst i et tomt kort, mens andre sk&#230;rme viser en spinner.</p>
+        <p class="fix">Ensret til &#233;n indl&#230;sningsvisning i hele appen.</p>
+      </div></div>
+      <div class="finding" data-id="s21-4"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s21-4" aria-labelledby="lbl-s21-4"></label><div class="finding-body">
+        <div class="fhead"><span class="chip l">Lav</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s21-4"><span class="el">Tre titler for samme flow:</span> "Register new sickness", "Register sickness", "Edit sickness".</p>
+        <p class="fix">"Ny sygdomsperiode" og "Redig&#233;r sygdomsperiode".</p>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 22 -->
+  <section class="screen" id="s22">
+    <span class="screen-rank">Sk&#230;rm 22</span>
+    <h2>Tr&#230;ningstyper</h2>
+    <p class="path">Profil &#8594; Settings &#8594; <b>Workout types</b></p>
+    <div class="findings">
+      <div class="finding" data-id="s22-1"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s22-1" aria-labelledby="lbl-s22-1"></label><div class="finding-body">
+        <div class="fhead"><span class="chip h">H&#248;j</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s22-1"><span class="el">Tekst p&#229; <span class="num">7&#8211;8 px</span>:</span> statuslabels og kategorim&#230;rker p&#229; tr&#230;ningstyperne er sk&#230;rmens mindste tekst &#8212; under enhver l&#230;sbarhedsgr&#230;nse, ogs&#229; for brugere med normalt syn.</p>
+        <p class="fix">Ingen tekst under 11 px. Er der ikke plads, s&#229; vis det som ikon eller farve i stedet.</p>
+      </div></div>
+      <div class="finding" data-id="s22-2"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s22-2" aria-labelledby="lbl-s22-2"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s22-2"><span class="el">Layoutvalg forklaret i ord:</span> "All sets as cells with weight and reps", "SETS / REPS / WEIGHT", "Compact layout", "Classic layout". Brugeren skal forestille sig resultatet.</p>
+        <p class="fix">Vis en lille visuel forh&#229;ndsvisning af hvert layout i stedet for at beskrive det.</p>
+      </div></div>
+      <div class="finding" data-id="s22-3"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s22-3" aria-labelledby="lbl-s22-3"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s22-3"><span class="el">For meget i &#233;n r&#230;kke:</span> maxpuls har fire tilstande (Auto, Manual, Calculated, Measured) plus betingede beskeder som "Set your birth date first" og "No measured value available".</p>
+        <p class="fix">Del i to: "Hvordan beregnes din maxpuls" som valg, og "Manuel v&#230;rdi" som felt der kun vises n&#229;r det er relevant.</p>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 23 -->
+  <section class="screen" id="s23">
+    <span class="screen-rank">Sk&#230;rm 23</span>
+    <h2>Opslagsindstillinger</h2>
+    <p class="path">Profil &#8594; Settings &#8594; <b>Social posts</b> &#8594; (videre til indstillinger pr. &#248;velse)</p>
+    <div class="findings">
+      <div class="finding" data-id="s23-1"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s23-1" aria-labelledby="lbl-s23-1"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s23-1"><span class="el">To n&#230;sten identiske sk&#230;rme:</span> indstillinger for opslag generelt og indstillinger pr. &#248;velse har samme layout, samme titelstil og n&#230;sten samme valg. Man kan ikke se hvor man er.</p>
+        <p class="fix">Giv hver sk&#230;rm en undertitel der siger hvad indstillingen g&#230;lder: "G&#230;lder alle tr&#230;ninger" / "G&#230;lder kun denne &#248;velse".</p>
+      </div></div>
+      <div class="finding" data-id="s23-2"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s23-2" aria-labelledby="lbl-s23-2"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s23-2"><span class="el">Valgene beskriver ikke resultatet:</span> "Full info", "Summary only", "Progress only" fort&#230;ller ikke hvad andre faktisk kommer til at se.</p>
+        <p class="fix">Vis et lille eksempel-opslag under hvert valg.</p>
+      </div></div>
+      <div class="finding" data-id="s23-3"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s23-3" aria-labelledby="lbl-s23-3"></label><div class="finding-body">
+        <div class="fhead"><span class="chip l">Lav</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s23-3"><span class="el">Synlighedsvalgene</span> ("Everyone", "People I follow", "Only me") har hver sin forklaringss&#230;tning i lille gr&#229; tekst, hvilket g&#248;r listen tung at skanne.</p>
+        <p class="fix">Kort label pr. valg, og &#233;n samlet forklaring under gruppen.</p>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 24 -->
+  <section class="screen" id="s24">
+    <span class="screen-rank">Sk&#230;rm 24</span>
+    <h2>1RM-beregner</h2>
+    <p class="path">TRAIN &#8594; <b>1RM Calculator</b></p>
+    <div class="findings">
+      <div class="finding" data-id="s24-1"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s24-1" aria-labelledby="lbl-s24-1"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s24-1"><span class="el">V&#230;rkt&#248;jet ligger under en reklame:</span> &#248;verst er et stort kort med overskriften "Turn a working set into an estimate" og en forklaring, s&#229; selve de to felter f&#248;rst kommer nedenunder.</p>
+        <p class="fix">S&#230;t felterne &#248;verst, og flyt forklaringen om formlen ned under resultatet.</p>
+      </div></div>
+      <div class="finding" data-id="s24-2"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s24-2" aria-labelledby="lbl-s24-2"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s24-2"><span class="el">Enheden st&#229;r under feltet:</span> "kg" og "completed" er placeret som hj&#230;lpetekst under indtastningsfelterne, hvor de l&#230;ses som en label til det n&#230;ste felt.</p>
+        <p class="fix">Skriv enheden inde i feltet til h&#248;jre for tallet.</p>
+      </div></div>
+      <div class="finding" data-id="s24-3"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s24-3" aria-labelledby="lbl-s24-3"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s24-3"><span class="el">Resultatet vises under knappen</span>, alts&#229; netop d&#233;r hvor tastaturet typisk d&#230;kker, n&#229;r man har tastet reps og trykket "beregn".</p>
+        <p class="fix">Vis resultatet over knappen, og luk tastaturet ved beregning.</p>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 25 -->
+  <section class="screen" id="s25">
+    <span class="screen-rank">Sk&#230;rm 25</span>
+    <h2>Redig&#233;r opslag</h2>
+    <p class="path">Forside &#8594; eget tr&#230;nings-opslag &#8594; <b>&#8943;</b> &#8594; Edit post</p>
+    <div class="findings">
+      <div class="finding" data-id="s25-1"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s25-1" aria-labelledby="lbl-s25-1"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s25-1"><span class="el">En hel sk&#230;rm til &#233;t felt:</span> redigering af noten til et opslag &#229;bner en fuld side, hvor brugeren mister overblikket over selve opslaget.</p>
+        <p class="fix">Brug et panel over opslaget, s&#229; konteksten er synlig mens man skriver.</p>
+      </div></div>
+      <div class="finding" data-id="s25-2"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s25-2" aria-labelledby="lbl-s25-2"></label><div class="finding-body">
+        <div class="fhead"><span class="chip l">Lav</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s25-2"><span class="el">Ingen tegnt&#230;ller</span> og ingen antydning af hvor langt en note m&#229; v&#230;re.</p>
+        <p class="fix">Vis t&#230;ller, hvis der er en gr&#230;nse.</p>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 26 -->
+  <section class="screen" id="s26">
+    <span class="screen-rank">Sk&#230;rm 26</span>
+    <h2>Pulsgraf i liggende format</h2>
+    <p class="path">En l&#248;betr&#230;ning &#8594; <b>pulsgrafen</b></p>
+    <div class="findings">
+      <div class="finding" data-id="s26-1"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s26-1" aria-labelledby="lbl-s26-1"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s26-1"><span class="el">Sk&#230;rmen l&#229;ser telefonen i liggende format og skjuler bundnavigationen.</span> Om der er en tydelig vej tilbage kan ikke vurderes uden at k&#248;re appen &#8212; men sk&#230;rmen fjerner appens to normale udgange p&#229; &#233;n gang, s&#229; risikoen for at brugeren f&#248;ler sig fanget er reel.</p>
+        <p class="fix">L&#230;g en fast luk-knap i et hj&#248;rne, som altid er synlig oven p&#229; grafen.</p>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 27 -->
+  <section class="screen" id="s27">
+    <span class="screen-rank">Sk&#230;rm 27</span>
+    <h2>Sk&#230;rme uden indgang</h2>
+    <p class="path">Ingen &#8212; de er bygget ind i appen, men der er ingen vej dertil</p>
+    <div class="findings">
+      <div class="finding" data-id="s27-1"><label class="cbwrap"><input type="checkbox" class="cb" data-id="s27-1" aria-labelledby="lbl-s27-1"></label><div class="finding-body">
+        <div class="fhead"><span class="chip m">Middel</span><button type="button" class="copy">Kopi&#233;r</button></div>
+        <p id="lbl-s27-1"><span class="el">To sk&#230;rme kan ikke n&#229;s fra brugerfladen:</span> en ugevisning med syv dagskort (hj&#248;rneradius 30, hviledage med 60 % gennemsigtighed over hele kortet) og en &#230;ldre s&#230;t-editor med hvide kort og gr&#229; topbj&#230;lke, som ikke underst&#248;tter m&#248;rkt tema. Begge tr&#230;kker designsproget i en anden retning end resten af appen.</p>
+        <p class="fix">Fjern dem, eller opdat&#233;r dem til det nuv&#230;rende design, f&#248;r de eventuelt g&#248;res tilg&#230;ngelige igen.</p>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- ================= CLOSING ================= -->
+  <section class="close">
+    <h2>Top 5: de &#230;ndringer der flytter mest</h2>
+    <ol class="top5">
+      <li>
+        <div>
+          <span class="t-title">G&#248;r de prim&#230;re handlinger til rigtige knapper med tekst</span>
+          <p>Start/pause/afslut tr&#230;ning, tilf&#248;j &#248;velse og start program er i dag ikonknapper eller minipiller p&#229; 30&#8211;42 px, placeret i hj&#248;rner. Det er appens fem vigtigste handlinger. &#201;n f&#230;lles prim&#230;rknap &#8212; fuld bredde, mindst 48 px, tekst der siger hvad der sker &#8212; l&#248;fter alle de vigtige sk&#230;rme p&#229; &#233;n gang.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <span class="t-title">S&#230;t et minimum for tekst: 11 px og WCAG AA</span>
+          <p>Appen har tekst helt ned til 6,5 px, og den d&#230;mpede gr&#229;, der bruges til n&#230;sten alle labels og metadata, ligger p&#229; ca. 3,4&#8211;3,7:1 i m&#248;rkt tema &#8212; under kravet p&#229; 4,5:1. Et gulv p&#229; 11 px og en lysere gr&#229; er den enkelt&#230;ndring, der p&#229;virker flest sk&#230;rme.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <span class="t-title">Ret accentfarven i lyst tema</span>
+          <p>Standardtemaet "Ember" bruger den samme orange i lyst som i m&#248;rkt tema. P&#229; lys baggrund giver det ca. 2,5:1, s&#229; aktiv fane, tilbage-pile, procenttal og fremh&#230;vede tal er de svageste elementer p&#229; sk&#230;rmen &#8212; de tre &#248;vrige farvetemaer g&#248;r det rigtigt og m&#248;rkner deres accent i lyst tema.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <span class="t-title">Forenkl s&#230;tskemaet under tr&#230;ning</span>
+          <p>Otte kolonner, 9 px overskrifter og 35 px felter er den v&#230;rste kombination p&#229; appens mest brugte sk&#230;rm. Vis reps, v&#230;gt og udf&#248;rt som standard, og lad de &#248;vrige kolonner v&#230;re noget brugeren sl&#229;r til.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <span class="t-title">Ensret topbj&#230;lke og fanenavigation</span>
+          <p>Fem forskellige topbj&#230;lker bliver til &#233;n komponent med label, titel og valgfri handling. Samtidig: ingen tilbage-pil p&#229; fane-forsider, egen historik pr. fane, og Home yderst til venstre. Det er den &#230;ndring, der g&#248;r at brugeren altid ved hvor de er.</p>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <section class="close" style="border-top-width: 1px;">
+    <h2>Gennemg&#229;ende m&#248;nstre</h2>
+    <ul class="patterns">
+      <li>
+        <span class="p-title">Designsystemet findes, men bruges ikke</span>
+        <p>Der er en f&#230;lles typografiskala og en farvepalet, men sk&#230;rmene s&#230;tter deres egne v&#230;rdier: <span class="mono">35</span> forskellige tekstst&#248;rrelser fordelt p&#229; over 600 steder, og <span class="mono">36</span> forskellige hj&#248;rneradier &#8212; praktisk taget hvert helt tal fra 1 til 32. Der ligger desuden to for&#230;ldede kopier af farvepaletten i projektet, som ikke l&#230;ngere svarer til den aktive.</p>
+      </li>
+      <li>
+        <span class="p-title">Fem forskellige topbj&#230;lker</span>
+        <p>Forsiden, Programlisten, Programoversigten, den f&#230;lles komponent og styrketr&#230;ningen har hver sin variant med forskellig h&#248;jde, titelst&#248;rrelse (16 / 18 / 22 / 28 px) og knapform. &#216;velseskataloget har ingen. Brugeren f&#229;r ikke et fast holdepunkt i toppen af sk&#230;rmen.</p>
+      </li>
+      <li>
+        <span class="p-title">Klikm&#229;l under 44 px n&#230;sten overalt</span>
+        <p>Tilbage- og menuknapper 34&#8211;38 px, temav&#230;lger 26 px, filterchips 30 px, fold ud-pile 24 px, f&#248;lger-tal 23 px. Det rammer h&#229;rdest p&#229; tr&#230;ningssk&#230;rmene, hvor brugeren st&#229;r op, sveder og har travlt.</p>
+      </li>
+      <li>
+        <span class="p-title">Ikoner uden labels &#8212; og ikoner der betyder noget andet</span>
+        <p>Start, pause, afslut, tilf&#248;j &#248;velse, fold ud, vis s&#230;t og skjul f&#230;rdige &#248;velser er alle ikoner uden tekst. Dertil peger flere ikoner det forkerte sted: info &#229;bner et filter, en h&#248;jrepil &#229;bner et panel nedefra, et &#248;je sl&#229;r s&#230;tdetaljer til. Et par ord ved siden af ikonet fjerner hele g&#230;ttearbejdet.</p>
+      </li>
+      <li>
+        <span class="p-title">Tilstande er uj&#230;vnt d&#230;kket</span>
+        <p>Notifikationssk&#230;rmen har indl&#230;sning, fejl med "pr&#248;v igen", tom tilstand og tr&#230;k-for-at-opdatere. Forsiden, kalenderen, programlisten og ugeoversigten mangler mindst to af de fire &#8212; flere steder skjules fejl helt, s&#229; en tom sk&#230;rm kan betyde b&#229;de "ingenting i dag" og "det gik galt".</p>
+      </li>
+      <li>
+        <span class="p-title">Farvernes betydning skrider</span>
+        <p>Gr&#248;n er b&#229;de "gennemf&#248;rt", "sekund&#230;r knap" og "valgt"; r&#248;d er b&#229;de "slet" og "&#8722;2,5 kg"; orange er "valgt" p&#229; nogle sk&#230;rme, gr&#248;n p&#229; andre. Dertil er nogle farver l&#229;st fast uanset brugerens valgte tema &#8212; panelernes skillelinjer, timerens tilstandslabel, pulszonerne og kroppens muskelmarkeringer skifter ikke med temaet.</p>
+      </li>
+      <li>
+        <span class="p-title">Sproget er ikke ensrettet</span>
+        <p>Punktummer p&#229; nogle menupunkter og ikke andre ("Delete Week." / "Import program"), blandet versal- og normalskrift for samme knap ("PAUSE" / "Pause"), fire ord for to niveauer (Block / Mesocycle / Microcycle / Week), og produktnavnet skifter mellem FitVen og "FitApp".</p>
+      </li>
+    </ul>
+  </section>
+
+  <p class="note">Gennemgangen er lavet ved at l&#230;se sk&#230;rmenes opbygning, m&#229;l, farver og tekster. Alt om faktiske animationer, hastighed, tastaturopf&#248;rsel og hvordan sk&#230;rmene fylder p&#229; konkrete telefoner er markeret som "kan ikke vurderes uden at k&#248;re appen".</p>
+
+</div>
+
+<script>
+(function () {
+  var KEY = "fitven-designgennemgang-v1";
+
+  function read() {
+    try {
+      var raw = window.localStorage.getItem(KEY);
+      if (!raw) return {};
+      var parsed = JSON.parse(raw);
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function write(state) {
+    try {
+      window.localStorage.setItem(KEY, JSON.stringify(state));
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  var state = read();
+  var boxes = Array.prototype.slice.call(document.querySelectorAll(".cb"));
+  var total = boxes.length;
+  var countEl = document.getElementById("doneCount");
+  var fillEl = document.getElementById("progressFill");
+  var barEl = document.getElementById("progressBar");
+  var noteEl = document.getElementById("progressNote");
+  var resetBtn = document.getElementById("resetBtn");
+  var storageWorks = write(state);
+
+  if (!storageWorks && noteEl) {
+    noteEl.textContent = "Denne browser gemmer ikke data for siden, s\u00e5 afkrydsningerne forsvinder ved genindl\u00e6sning.";
+  }
+
+  /* section id -> {done, total, link, tick} */
+  var sections = {};
+  boxes.forEach(function (box) {
+    var id = box.getAttribute("data-id") || "";
+    var sec = id.split("-")[0];
+    if (!sections[sec]) {
+      var link = document.querySelector('.index a[href="#' + sec + '"]');
+      var tick = null;
+      if (link) {
+        tick = document.createElement("span");
+        tick.className = "tick";
+        tick.setAttribute("aria-hidden", "true");
+        link.appendChild(tick);
+      }
+      sections[sec] = { done: 0, total: 0, link: link, tick: tick };
+    }
+    sections[sec].total += 1;
+  });
+
+  function refresh() {
+    var done = 0;
+    Object.keys(sections).forEach(function (sec) { sections[sec].done = 0; });
+
+    boxes.forEach(function (box) {
+      var id = box.getAttribute("data-id") || "";
+      var on = !!state[id];
+      box.checked = on;
+      var row = box.closest(".finding");
+      if (row) row.classList.toggle("done", on);
+      if (on) {
+        done += 1;
+        var sec = id.split("-")[0];
+        if (sections[sec]) sections[sec].done += 1;
+      }
+    });
+
+    if (countEl) countEl.textContent = String(done);
+    var pct = total ? Math.round((done / total) * 1000) / 10 : 0;
+    if (fillEl) fillEl.style.width = pct + "%";
+    if (barEl) barEl.setAttribute("aria-valuenow", String(done));
+
+    Object.keys(sections).forEach(function (sec) {
+      var s = sections[sec];
+      if (!s.link) return;
+      var complete = s.total > 0 && s.done === s.total;
+      s.link.classList.toggle("is-done", complete);
+      if (s.tick) s.tick.textContent = s.done ? " " + s.done + "/" + s.total + (complete ? " \u2713" : "") : "";
+    });
+  }
+
+  boxes.forEach(function (box) {
+    box.addEventListener("change", function () {
+      var id = box.getAttribute("data-id");
+      if (!id) return;
+      if (box.checked) { state[id] = 1; } else { delete state[id]; }
+      write(state);
+      refresh();
+    });
+  });
+
+  if (resetBtn) {
+    var armed = false;
+    var armTimer = null;
+    resetBtn.addEventListener("click", function () {
+      if (!armed) {
+        armed = true;
+        resetBtn.textContent = "Ryd alle \u2014 tryk igen";
+        armTimer = window.setTimeout(function () {
+          armed = false;
+          resetBtn.textContent = "Ryd afkrydsninger";
+        }, 4000);
+        return;
+      }
+      window.clearTimeout(armTimer);
+      armed = false;
+      resetBtn.textContent = "Ryd afkrydsninger";
+      state = {};
+      write(state);
+      refresh();
+    });
+  }
+
+  /* ---------- copy one finding as plain text ---------- */
+  function clean(node) {
+    return node ? node.textContent.replace(/\s+/g, " ").trim() : "";
+  }
+
+  function buildText(row) {
+    var section = row.closest("section.screen");
+    var rank = section ? clean(section.querySelector(".screen-rank")) : "";
+    var title = section ? clean(section.querySelector("h2")) : "";
+    var chip = clean(row.querySelector(".chip"));
+    var body = row.querySelector(".finding-body");
+    var problem = "";
+    var fix = "";
+    if (body) {
+      var ps = body.querySelectorAll("p");
+      for (var i = 0; i < ps.length; i++) {
+        if (ps[i].classList.contains("fix")) {
+          if (!fix) fix = clean(ps[i]);
+        } else if (!problem) {
+          problem = clean(ps[i]);
+        }
+      }
+    }
+    var head = "[" + chip + "] " + (rank ? rank + " \u00b7 " : "") + title;
+    return head + "\n" + problem + (fix ? "\n\u2192 " + fix : "") + "\n";
+  }
+
+  function legacyCopy(text) {
+    var area = document.createElement("textarea");
+    area.value = text;
+    area.setAttribute("readonly", "");
+    area.style.position = "fixed";
+    area.style.top = "-1000px";
+    area.style.opacity = "0";
+    document.body.appendChild(area);
+    area.select();
+    var ok = false;
+    try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+    document.body.removeChild(area);
+    return ok;
+  }
+
+  function flash(button, message, cls) {
+    button.textContent = message;
+    button.classList.remove("ok", "fail");
+    if (cls) button.classList.add(cls);
+    window.setTimeout(function () {
+      button.textContent = "Kopi\u00e9r";
+      button.classList.remove("ok", "fail");
+    }, 1600);
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll(".copy"), function (button) {
+    button.addEventListener("click", function () {
+      var row = button.closest(".finding");
+      if (!row) return;
+      var text = buildText(row);
+
+      function fallback() {
+        var ok = legacyCopy(text);
+        flash(button, ok ? "Kopieret \u2713" : "Kunne ikke kopiere", ok ? "ok" : "fail");
+      }
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        try {
+          navigator.clipboard.writeText(text).then(function () {
+            flash(button, "Kopieret \u2713", "ok");
+          }, fallback);
+          return;
+        } catch (e) {
+          fallback();
+          return;
+        }
+      }
+
+      fallback();
+    });
+  });
+
+  refresh();
+})();
+</script>

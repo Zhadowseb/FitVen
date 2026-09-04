@@ -15,6 +15,7 @@ import { socialService } from "../../Services";
 import {
   ThemedButton,
   ThemedCard,
+  ThemedConfirmModal,
   ThemedHeader,
   ThemedText,
   ThemedTextInput,
@@ -33,6 +34,7 @@ const SocialUserListPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const [busyUserId, setBusyUserId] = useState(null);
+  const [unfollowTarget, setUnfollowTarget] = useState(null);
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const titleColor = theme.title ?? theme.text;
   const cardSurface = theme.cardBackground ?? theme.background;
@@ -90,6 +92,24 @@ const SocialUserListPage = () => {
     };
   }, [query, refreshKey, user]);
 
+  const requestToggleFollow = (profile) => {
+    if (profile?.isFollowing) {
+      setUnfollowTarget(profile);
+      return;
+    }
+
+    void handleToggleFollow(profile);
+  };
+
+  const confirmUnfollow = () => {
+    const profile = unfollowTarget;
+    setUnfollowTarget(null);
+
+    if (profile) {
+      void handleToggleFollow(profile);
+    }
+  };
+
   const handleToggleFollow = async (profile) => {
     if (!user?.id || busyUserId) {
       return;
@@ -136,19 +156,23 @@ const SocialUserListPage = () => {
     }
   };
 
-  const emptyStateTitle =
-    query.trim().length > 0 ? "No users matched." : "No other users yet.";
-  const emptyStateBody =
-    query.trim().length > 0
-      ? "Try a different username, tag or display name."
-      : "When more people join FitVen, they will show up here.";
+  const trimmedQuery = query.trim();
+  const isSearching = trimmedQuery.length > 0;
+  // Two distinct answers: nobody to show, or nobody matching this search. The
+  // search case repeats the term, so it is clear what was looked for.
+  const emptyStateTitle = isSearching
+    ? `No match for "${trimmedQuery}"`
+    : "No other users yet";
+  const emptyStateBody = isSearching
+    ? "Check the spelling, or search for their username instead."
+    : "When more people join FitVen, they will show up here.";
 
   return (
     <ThemedView safe={["top", "left", "right"]} style={styles.container}>
       <ThemedHeader>
         <View style={styles.pageHeaderTitleGroup}>
           <ThemedText
-            size={10}
+            size={12}
             style={[
               styles.pageHeaderTitleEyebrow,
               { color: quietText },
@@ -158,7 +182,7 @@ const SocialUserListPage = () => {
           </ThemedText>
 
           <ThemedTitle
-            type="h3"
+            type="pageTitle"
             style={styles.pageHeaderTitleMain}
             numberOfLines={1}
           >
@@ -177,7 +201,7 @@ const SocialUserListPage = () => {
           <ThemedTextInput
             value={query}
             onChangeText={setQuery}
-            placeholder="Search username tags or display names"
+            placeholder="Search by name or username"
             autoCapitalize="none"
             autoCorrect={false}
             style={styles.searchInputWrapper}
@@ -254,10 +278,10 @@ const SocialUserListPage = () => {
                     busyUserId === profile.id
                       ? "Saving..."
                       : profile.isFollowing
-                        ? "Following"
+                        ? "Following \u2713"
                         : "Follow"
                   }
-                  onPress={() => handleToggleFollow(profile)}
+                  onPress={() => requestToggleFollow(profile)}
                   width={112}
                   height={36}
                   textSize={13}
@@ -287,6 +311,22 @@ const SocialUserListPage = () => {
           </ThemedCard>
         )}
       </ScrollView>
+
+      <ThemedConfirmModal
+        visible={Boolean(unfollowTarget)}
+        title="Stop following?"
+        message={`${
+          unfollowTarget?.displayName ??
+          unfollowTarget?.username ??
+          "This person"
+        } will no longer appear in your feed. You can follow them again later.`}
+        confirmLabel="Stop following"
+        cancelLabel="Keep following"
+        tone="danger"
+        isWorking={Boolean(busyUserId)}
+        onConfirm={confirmUnfollow}
+        onClose={() => setUnfollowTarget(null)}
+      />
 
       <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
     </ThemedView>

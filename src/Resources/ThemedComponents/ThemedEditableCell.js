@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
     margin: 0,
     borderWidth: 0,
     backgroundColor: "transparent",
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "500",
     minWidth: 20,
   },
@@ -141,11 +141,11 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 0,
     right: 0,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "500",
   },
   suffix: {
-    fontSize: 8,
+    fontSize: 11,
     marginLeft: 2,
   },
 });

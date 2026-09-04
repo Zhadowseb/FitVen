@@ -126,6 +126,7 @@ function WorkoutCopyTargetModal({
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const mutedText = theme.iconColor ?? quietText;
   const primaryColor = theme.primary ?? "#f7742e";
+  const primaryTextColor = theme.primaryText ?? theme.primary;
   const secondaryColor = theme.secondary ?? "#60daac";
   const warningColor = theme.planned ?? "#ffdd00";
   const fieldSurface = theme.fields ?? theme.cardBackground ?? theme.background;
@@ -249,12 +250,12 @@ function WorkoutCopyTargetModal({
                   { backgroundColor: primarySoft },
                 ]}
               >
-                <Library width={22} height={22} color={primaryColor} />
+                <Library width={22} height={22} color={primaryTextColor} />
               </View>
 
               <View style={styles.optionText}>
                 <View style={styles.optionEyebrowRow}>
-                  <ThemedText style={styles.optionEyebrow} setColor={primaryColor}>
+                  <ThemedText style={styles.optionEyebrow} setColor={primaryTextColor}>
                     {getProgramMeta(target)}
                   </ThemedText>
                   {index === 0 ? (
@@ -266,7 +267,7 @@ function WorkoutCopyTargetModal({
                     >
                       <ThemedText
                         style={styles.recommendedText}
-                        setColor={primaryColor}
+                        setColor={primaryTextColor}
                       >
                         RECOMMENDED
                       </ThemedText>
@@ -456,21 +457,21 @@ const styles = StyleSheet.create({
     paddingTop: 2,
   },
   eyebrow: {
-    fontSize: 10,
+    fontSize: 11,
     lineHeight: 13,
     fontWeight: "900",
     letterSpacing: 1.4,
   },
   title: {
     marginTop: 3,
-    fontSize: 21,
+    fontSize: 22,
     lineHeight: 25,
     fontWeight: "900",
   },
   closeButton: {
     marginTop: -2,
-    width: 34,
-    height: 34,
+    width: 40,
+    height: 40,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -531,7 +532,7 @@ const styles = StyleSheet.create({
     gap: 7,
   },
   optionEyebrow: {
-    fontSize: 10,
+    fontSize: 11,
     lineHeight: 13,
     fontWeight: "900",
     letterSpacing: 1.2,
@@ -543,14 +544,14 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   recommendedText: {
-    fontSize: 8,
+    fontSize: 11,
     lineHeight: 10,
     fontWeight: "900",
     letterSpacing: 0.8,
   },
   optionTitle: {
     marginTop: 6,
-    fontSize: 18,
+    fontSize: 17,
     lineHeight: 23,
     fontWeight: "900",
   },

@@ -1,7 +1,7 @@
 // src/Resources/Components/ThemedButton.js
 import { Pressable, StyleSheet } from "react-native";
 import { useColorScheme } from "react-native";
-import { Colors } from "../GlobalStyling/colors";
+import { Colors, withAlpha } from "../GlobalStyling/colors";
 import ThemedText from "./ThemedText";
 
 const ThemedButton = ({
@@ -10,7 +10,7 @@ const ThemedButton = ({
   onPress,
   style,
 
-  variant = "primary", // primary | secondary | danger
+  variant = "primary", // primary | secondary | success | danger
   disabled = false, 
 
   width,
@@ -31,7 +31,15 @@ const ThemedButton = ({
             shadowRadius: 24,
             elevation: 6,
         },
+        // A Cancel or Close must not outshine the action beside it, so the
+        // secondary button is an outline. The filled colour field it used to
+        // be now lives in "success", for the few places that want it.
         secondary: {
+            backgroundColor: "transparent",
+            borderWidth: 1,
+            borderColor: withAlpha(theme.title ?? theme.text, 0.28),
+        },
+        success: {
             backgroundColor: theme.secondary,
             borderWidth: 1,
             borderColor: theme.border,
@@ -66,8 +74,10 @@ const ThemedButton = ({
           {
             color:
               variant === "secondary"
-                ? theme.inkOnSecondary ?? theme.textInverted ?? "#0C1410"
-                : theme.textInverted ?? "#14100C",
+                ? theme.title ?? theme.text
+                : variant === "success"
+                  ? theme.inkOnSecondary ?? theme.textInverted ?? "#0C1410"
+                  : theme.textInverted ?? "#14100C",
           },
         ]}
         size={textSize ? textSize : 14}>

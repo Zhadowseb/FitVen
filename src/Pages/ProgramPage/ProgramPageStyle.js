@@ -1,15 +1,6 @@
 import { StyleSheet } from 'react-native';
 
 export default StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingTop: 8,
-    paddingHorizontal: 20,
-    paddingBottom: 14,
-    borderBottomWidth: 1,
-  },
   headerCircle: {
     width: 38,
     height: 38,
@@ -32,18 +23,14 @@ export default StyleSheet.create({
     gap: 1,
   },
   headerEyebrow: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '800',
     letterSpacing: 1.8,
     textTransform: 'uppercase',
   },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-  },
   container: {
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 6,
     marginBottom: 16,
     paddingTop: 30,
   },
@@ -67,6 +54,6 @@ export default StyleSheet.create({
     opacity: 0.56,
   },
   option_text: {
-    fontSize: 16,
+    fontSize: 15,
   },
 });

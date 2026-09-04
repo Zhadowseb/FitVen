@@ -54,13 +54,15 @@ function syncSetsInBackground(db) {
   pushDirtyStrengthHierarchyInBackground(db);
 }
 
+// Only the columns a lifter needs on every set. Note, RPE and 1RM% are opt-in
+// per exercise via the exercise settings panel.
 export const DEFAULT_VISIBLE_COLUMNS = {
-  note: true,
+  note: false,
   rest: true,
   set: true,
   reps: true,
-  rpe: true,
-  rm_percentage: true,
+  rpe: false,
+  rm_percentage: false,
   weight: true,
   done: true,
 };
@@ -207,13 +209,6 @@ function normalizeOptionalNumber(value) {
 
 function formatWeightDisplay(value) {
   return Number.isInteger(value) ? `${value}` : value.toFixed(1);
-}
-
-function formatSignedWeightDisplay(value) {
-  const parsedValue = Number(value) || 0;
-  const sign = parsedValue >= 0 ? "+" : "-";
-
-  return `${sign}${formatWeightDisplay(Math.abs(parsedValue))} kg`;
 }
 
 function normalizeOptionalInteger(value, fallbackValue = null) {
@@ -1478,6 +1473,14 @@ async function reclassifyWorkoutLabelBestEffort(db, workoutId) {
   }
 }
 
+function reclassifyWorkoutLabelInBackground(db, workoutId) {
+  if (!workoutId) {
+    return;
+  }
+
+  void reclassifyWorkoutLabelBestEffort(db, workoutId);
+}
+
 function parseVisibleColumns(value) {
   if (value === null || value === undefined || value === "") {
     return { ...DEFAULT_VISIBLE_COLUMNS };
@@ -2209,152 +2212,6 @@ async function getEstimatedWeightForSet(db, setId) {
   return estimatedWeight;
 }
 
-async function ensureMesocycleProgressions(
-  db,
-  { mesocycleId, programId, mesocycleNumber }
-) {
-  const estimatedSets = await weightliftingRepository.getEstimatedSets(db, programId);
-  const existingProgressions =
-    await weightliftingRepository.getMesocycleRmProgressions(db, mesocycleId);
-  const existingExerciseNames = new Set(
-    existingProgressions.map((progression) => progression.exercise_name)
-  );
-
-  for (const estimatedSet of estimatedSets) {
-    if (existingExerciseNames.has(estimatedSet.exercise_name)) {
-      continue;
-    }
-
-    const defaultProgressionWeight =
-      await getDefaultMesocycleProgressionWeight(db, {
-        programId,
-        mesocycleNumber,
-        exerciseName: estimatedSet.exercise_name,
-      });
-
-    await weightliftingRepository.insertRmWeightProgression(db, {
-      mesocycleId,
-      exerciseName: estimatedSet.exercise_name,
-      progressionWeight: defaultProgressionWeight,
-    });
-  }
-}
-
-async function ensureProgramMesocycleProgressions(db, programId) {
-  const mesocycles = await programRepository.getMesocyclesByProgram(db, programId);
-
-  for (const mesocycle of mesocycles) {
-    await ensureMesocycleProgressions(db, {
-      mesocycleId: mesocycle.mesocycle_id,
-      programId,
-      mesocycleNumber: mesocycle.mesocycle_number,
-    });
-  }
-
-  return mesocycles;
-}
-
-function buildProgressionGroups(rows, selectedExerciseNames) {
-  const rowsByExercise = new Map();
-
-  for (const row of rows) {
-    if (!selectedExerciseNames.has(row.exercise_name)) {
-      continue;
-    }
-
-    const existingRows = rowsByExercise.get(row.exercise_name) ?? [];
-    existingRows.push(row);
-    rowsByExercise.set(row.exercise_name, existingRows);
-  }
-
-  const groupedProgressions = {};
-
-  for (const [exerciseName, exerciseRows] of rowsByExercise.entries()) {
-    const sortedRows = [...exerciseRows].sort(
-      (left, right) => left.mesocycle_number - right.mesocycle_number
-    );
-    let previousProgressionWeight = 0;
-
-    for (const row of sortedRows) {
-      const estimatedWeight = Number(row.estimated_weight);
-
-      if (!Number.isFinite(estimatedWeight)) {
-        continue;
-      }
-
-      const progressionWeight = Number(row.progression_weight) || 0;
-      const blockDelta = progressionWeight - previousProgressionWeight;
-      const previousWeight = estimatedWeight + previousProgressionWeight;
-      const currentWeight = estimatedWeight + progressionWeight;
-
-      if (!groupedProgressions[row.mesocycle_id]) {
-        groupedProgressions[row.mesocycle_id] = [];
-      }
-
-      groupedProgressions[row.mesocycle_id].push({
-        exercise_name: exerciseName,
-        estimated_weight: estimatedWeight,
-        estimated_weight_display: `${formatWeightDisplay(estimatedWeight)} kg`,
-        progression_weight: progressionWeight,
-        previous_progression_weight: previousProgressionWeight,
-        previous_weight: previousWeight,
-        previous_weight_display: `${formatWeightDisplay(previousWeight)} kg`,
-        current_weight: currentWeight,
-        current_weight_display: `${formatWeightDisplay(currentWeight)} kg`,
-        block_delta: blockDelta,
-        block_delta_display: formatSignedWeightDisplay(blockDelta),
-        progression_display: formatSignedWeightDisplay(blockDelta),
-        is_base_mesocycle: row.mesocycle_number === 1,
-        mesocycle_number: row.mesocycle_number,
-      });
-
-      previousProgressionWeight = progressionWeight;
-    }
-  }
-
-  for (const mesocycleId of Object.keys(groupedProgressions)) {
-    groupedProgressions[mesocycleId].sort((left, right) =>
-      left.exercise_name.localeCompare(right.exercise_name)
-    );
-  }
-
-  return groupedProgressions;
-}
-
-async function getSelectedProgramBestExerciseNames(db, programId) {
-  const programExercises = await weightliftingRepository.getProgramExerciseNames(
-    db,
-    programId
-  );
-  const selections = await programRepository.getProgramBestExerciseSelections(
-    db,
-    programId
-  );
-  const selectionMap = new Map(
-    selections.map((selection) => [
-      selection.exercise_name,
-      Number(selection.is_selected) === 1,
-    ])
-  );
-
-  for (const exercise of programExercises) {
-    if (!selectionMap.has(exercise.exercise_name)) {
-      await programRepository.insertProgramBestExerciseSelection(db, {
-        programId,
-        exerciseName: exercise.exercise_name,
-        isSelected: true,
-      });
-      selectionMap.set(exercise.exercise_name, true);
-    }
-  }
-
-  return new Set(
-    programExercises
-      .filter((exercise) => selectionMap.get(exercise.exercise_name) ?? true)
-      .map((exercise) => exercise.exercise_name)
-  );
-}
-
 function mapExerciseCatalogForDisplay(entries) {
   return entries.map((entry) => ({
     cloud_exercise_id: entry.cloud_exercise_id ?? entry.id ?? null,
@@ -2756,100 +2613,6 @@ export async function deleteEstimatedSet(db, estimatedSetId) {
   });
 }
 
-export async function getMesocycleProgressiveOverload(
-  db,
-  { mesocycleId, programId, mesocycleNumber }
-) {
-  await ensureMesocycleProgressions(db, {
-    mesocycleId,
-    programId,
-    mesocycleNumber,
-  });
-
-  const rows =
-    await weightliftingRepository.getMesocycleEstimatedSetProgressionsByProgram(
-      db,
-      programId
-    );
-  const selectedExerciseNames = await getSelectedProgramBestExerciseNames(
-    db,
-    programId
-  );
-  const groupedProgressions = buildProgressionGroups(rows, selectedExerciseNames);
-  const progressions = groupedProgressions[mesocycleId] ?? [];
-
-  const uniformBlockDelta =
-    progressions.length > 0 &&
-    progressions.every(
-      (progression) =>
-        progression.block_delta === progressions[0].block_delta
-    )
-      ? progressions[0].block_delta
-      : null;
-
-  return {
-    summary:
-      rows.length === 0
-        ? "No 1 RM values yet."
-        : progressions.length === 0
-          ? "No Program bests selected."
-        : mesocycleNumber === 1 && uniformBlockDelta === 0
-          ? "Base 1 RM values"
-        : uniformBlockDelta !== null
-          ? `This block: ${formatSignedWeightDisplay(uniformBlockDelta)}`
-          : "Custom progression",
-    progressions,
-  };
-}
-
-export async function getMesocycleProgressiveOverloadByProgram(db, programId) {
-  await ensureProgramMesocycleProgressions(db, programId);
-
-  const rows =
-    await weightliftingRepository.getMesocycleEstimatedSetProgressionsByProgram(
-      db,
-      programId
-    );
-  const selectedExerciseNames = await getSelectedProgramBestExerciseNames(
-    db,
-    programId
-  );
-
-  return buildProgressionGroups(rows, selectedExerciseNames);
-}
-
-export async function adjustMesocycleProgressionByDelta(
-  db,
-  { programId, mesocycleId, exerciseName, delta }
-) {
-  const numericDelta = Number(delta);
-
-  if (!Number.isFinite(numericDelta) || numericDelta === 0) {
-    return;
-  }
-
-  const mesocycles = await ensureProgramMesocycleProgressions(db, programId);
-  const currentMesocycle = mesocycles.find(
-    (mesocycle) => mesocycle.mesocycle_id === mesocycleId
-  );
-
-  if (!currentMesocycle) {
-    throw new Error("Mesocycle not found");
-  }
-
-  await withTransaction(db, async () => {
-    await weightliftingRepository.incrementRmWeightProgressionsFromMesocycle(
-      db,
-      {
-        programId,
-        exerciseName,
-        mesocycleNumber: currentMesocycle.mesocycle_number,
-        delta: numericDelta,
-      }
-    );
-  });
-}
-
 export async function getStrengthWorkoutSummary(db, workoutId) {
   const total = await weightliftingRepository.getTotalPlannedSetsByWorkout(
     db,
@@ -2945,6 +2708,25 @@ function getSerializedDefaultVisibleColumns() {
   return JSON.stringify(DEFAULT_VISIBLE_COLUMNS);
 }
 
+// Note, RPE and 1RM% are a per-exercise user choice, made in the exercise
+// settings panel. The shared catalog default must not switch them on for
+// everyone, so they are stripped from whatever the catalog carries.
+const OPT_IN_VISIBLE_COLUMN_KEYS = ["note", "rpe", "rm_percentage"];
+
+function withoutOptInColumns(serializedColumns) {
+  const normalizedColumns = deserializeVisibleColumns(serializedColumns);
+
+  if (!normalizedColumns) {
+    return null;
+  }
+
+  for (const key of OPT_IN_VISIBLE_COLUMN_KEYS) {
+    normalizedColumns[key] = false;
+  }
+
+  return serializeVisibleColumns(normalizedColumns);
+}
+
 async function resolveExerciseVisibleColumnsForNewExercise(db, exerciseName) {
   const normalizedExerciseName = normalizeOptionalText(exerciseName);
 
@@ -2977,7 +2759,10 @@ async function resolveExerciseVisibleColumnsForNewExercise(db, exerciseName) {
     exerciseCatalogEntry?.default_visible_columns
   );
 
-  return defaultVisibleColumns ?? getSerializedDefaultVisibleColumns();
+  return (
+    withoutOptInColumns(defaultVisibleColumns) ??
+    getSerializedDefaultVisibleColumns()
+  );
 }
 
 async function saveExerciseColumnPreference(
@@ -3608,7 +3393,7 @@ export async function getWorkoutExercises(
   }
 
   if (ensureHydrated) {
-    await reclassifyWorkoutLabelBestEffort(db, workoutId);
+    reclassifyWorkoutLabelInBackground(db, workoutId);
   }
 
   return exercises;
@@ -3742,7 +3527,7 @@ export async function addExerciseToWorkout(db, { workoutId, exerciseName }) {
     await workoutService.refreshWorkoutHierarchyCompletion(db, workoutId);
   });
 
-  await reclassifyWorkoutLabelBestEffort(db, workoutId);
+  reclassifyWorkoutLabelInBackground(db, workoutId);
   syncExerciseInstancesInBackground(db);
 }
 
@@ -3881,9 +3666,7 @@ export async function deleteExercise(db, exerciseId) {
     }
   });
 
-  if (workoutId) {
-    await reclassifyWorkoutLabelBestEffort(db, workoutId);
-  }
+  reclassifyWorkoutLabelInBackground(db, workoutId);
 
   syncExerciseInstancesInBackground(db);
 }
@@ -3915,9 +3698,7 @@ export async function addSetToExercise(db, exerciseId) {
     }
   });
 
-  if (workoutId) {
-    await reclassifyWorkoutLabelBestEffort(db, workoutId);
-  }
+  reclassifyWorkoutLabelInBackground(db, workoutId);
 
   syncExerciseInstancesInBackground(db);
   syncSetsInBackground(db);
@@ -4033,9 +3814,7 @@ export async function deleteSet(db, setId) {
     await workoutService.refreshWorkoutHierarchyCompletion(db, set.workout_id);
   });
 
-  if (workoutId) {
-    await reclassifyWorkoutLabelBestEffort(db, workoutId);
-  }
+  reclassifyWorkoutLabelInBackground(db, workoutId);
 
   syncExerciseInstancesInBackground(db);
   syncSetsInBackground(db);
@@ -4195,9 +3974,7 @@ export async function initializeExerciseSets(db, { exerciseId, count }) {
     await weightliftingRepository.updateExerciseSetCount(db, exerciseId);
   });
 
-  if (workoutId) {
-    await reclassifyWorkoutLabelBestEffort(db, workoutId);
-  }
+  reclassifyWorkoutLabelInBackground(db, workoutId);
 
   syncExerciseInstancesInBackground(db);
   syncSetsInBackground(db);
@@ -4245,9 +4022,7 @@ export async function saveExerciseSets(db, { exerciseId, sets }) {
     }
   });
 
-  if (workoutId) {
-    await reclassifyWorkoutLabelBestEffort(db, workoutId);
-  }
+  reclassifyWorkoutLabelInBackground(db, workoutId);
 
   syncExerciseInstancesInBackground(db);
   syncSetsInBackground(db);

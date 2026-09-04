@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   View,
   useColorScheme,
+  useWindowDimensions,
 } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
 import { useNavigation } from "@react-navigation/native";
@@ -15,8 +16,8 @@ import styles from "./ExerciseLibraryListStyle";
 import ExerciseFilterSheet from "../ExerciseFilterSheet/ExerciseFilterSheet";
 import { weightliftingService as weightliftingRepository } from "../../../../Services";
 import { Colors, withAlpha } from "../../../../Resources/GlobalStyling/colors";
+import Cross from "../../../../Resources/Icons/UI-icons/Cross";
 import BodyMapPreview from "../../../../Resources/Components/BodyMapPreview/BodyMapPreview";
-import ArrowLeft from "../../../../Resources/Icons/UI-icons/ArrowLeft";
 import Checkmark from "../../../../Resources/Icons/UI-icons/Checkmark";
 import Filter from "../../../../Resources/Icons/UI-icons/Filter";
 import Library from "../../../../Resources/Icons/UI-icons/Library";
@@ -227,9 +228,18 @@ const ExerciseLibraryList = ({
   const [exerciseTypeFilter, setExerciseTypeFilter] = useState("all");
   const [isFilterSheetVisible, setIsFilterSheetVisible] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState(null);
+  const [isLoadingExercises, setIsLoadingExercises] = useState(true);
+  const { height: windowHeight } = useWindowDimensions();
+  // The body map is 503x1294, so width-driven sizing makes it far too tall for
+  // the modal. Drive it by height and let aspectRatio give the width.
+  const bodyMapFigureHeight = Math.max(
+    140,
+    Math.min(210, Math.round(windowHeight * 0.23))
+  );
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const titleColor = theme.title ?? theme.text;
   const primaryColor = theme.primary ?? "#f7742e";
+  const primaryTextColor = theme.primaryText ?? theme.primary;
   const secondaryColor = theme.secondary ?? "#60daac";
   const cardSurface =
     theme.cardBackground ?? theme.navBackground ?? theme.background;
@@ -283,12 +293,63 @@ const ExerciseLibraryList = ({
     (selectedGroupKey === "all" ? 0 : 1) +
     (isAllMusclesSelected ? 0 : selectedMuscleKeys.length) +
     (exerciseTypeFilter === "all" ? 0 : 1);
+
+  const clearMuscleKey = (muscleKey) => {
+    setSelectedMuscleKeys((currentKeys) => {
+      const nextKeys = currentKeys.filter((key) => key !== muscleKey);
+
+      return nextKeys.length === 0 ? ["all"] : nextKeys;
+    });
+  };
+
+  const activeFilterChips = [];
+
+  if (selectedGroupKey !== "all") {
+    activeFilterChips.push({
+      key: `group-${selectedGroupKey}`,
+      label:
+        GROUP_FILTERS.find((filter) => filter.key === selectedGroupKey)?.label ??
+        selectedGroupKey,
+      onRemove: () => setSelectedGroupKey("all"),
+    });
+  }
+
+  if (!isAllMusclesSelected) {
+    for (const muscleKey of selectedMuscleKeys) {
+      activeFilterChips.push({
+        key: `muscle-${muscleKey}`,
+        label:
+          MUSCLE_FILTERS.find((filter) => filter.key === muscleKey)?.label ??
+          muscleKey,
+        onRemove: () => clearMuscleKey(muscleKey),
+      });
+    }
+  }
+
+  if (exerciseTypeFilter !== "all") {
+    activeFilterChips.push({
+      key: `type-${exerciseTypeFilter}`,
+      label: exerciseTypeFilter === "custom" ? "Custom" : "Built-in",
+      onRemove: () => setExerciseTypeFilter("all"),
+    });
+  }
+
+  const clearAllFilters = () => {
+    setSelectedGroupKey("all");
+    setSelectedMuscleKeys(["all"]);
+    setExerciseTypeFilter("all");
+  };
+
+  const visibleCount = filteredExercises.length;
   const loadExerciseStorage = async () => {
     try {
+      setIsLoadingExercises(true);
       const rows = await weightliftingRepository.getExerciseLibraryEntries(db);
       set_exercises(rows);
     } catch (error) {
       console.error("Error loading exercise storage", error);
+    } finally {
+      setIsLoadingExercises(false);
     }
   };
 
@@ -322,64 +383,6 @@ const ExerciseLibraryList = ({
     return (
       <>
       <View style={styles.pickerShell}>
-        <View style={styles.pickerHeader}>
-          <TouchableOpacity
-            activeOpacity={0.86}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-            onPress={() => navigation.goBack()}
-            style={[
-              styles.pickerBackButton,
-              {
-                backgroundColor: cardSurface,
-                borderColor: cardBorder,
-              },
-            ]}
-          >
-            <ArrowLeft width={18} height={18} color={titleColor} />
-          </TouchableOpacity>
-
-          <View style={styles.pickerHeaderCopy}>
-            <ThemedText
-              style={styles.pickerEyebrow}
-              setColor={primaryColor}
-              numberOfLines={1}
-            >
-              Add to {workoutTargetLabel}
-            </ThemedText>
-            <ThemedTitle
-              type="h3"
-              style={[styles.pickerTitle, { color: titleColor }]}
-            >
-              Add exercise
-            </ThemedTitle>
-          </View>
-
-          <View
-            style={[
-              styles.pickerCountPill,
-              {
-                backgroundColor: badgeSurface,
-                borderColor: cardBorder,
-              },
-            ]}
-          >
-            <ThemedText style={styles.pickerCountText} setColor={theme.text}>
-              <ThemedText
-                style={styles.pickerCountNumber}
-                setColor={primaryColor}
-              >
-                {filteredExercises.length}
-              </ThemedText>{" "}
-              exercises
-            </ThemedText>
-          </View>
-        </View>
-
-        <View
-          style={[styles.pickerDivider, { backgroundColor: cardBorder }]}
-        />
-
         <View style={styles.pickerSearchRow}>
           <View
             style={[
@@ -434,6 +437,7 @@ const ExerciseLibraryList = ({
         </View>
 
         <ScrollView
+        keyboardShouldPersistTaps="handled"
           horizontal
           showsHorizontalScrollIndicator={false}
           style={styles.pickerChipScroll}
@@ -471,8 +475,17 @@ const ExerciseLibraryList = ({
         </ScrollView>
 
         <View style={styles.pickerSectionHeader}>
-          <ThemedText style={styles.pickerSectionEyebrow} setColor={quietText}>
-            All exercises
+          <ThemedText
+            style={styles.pickerSectionEyebrow}
+            setColor={theme.text}
+          >
+            <ThemedText
+              style={styles.pickerSectionCount}
+              setColor={primaryTextColor}
+            >
+              {visibleCount}
+            </ThemedText>
+            {visibleCount === 1 ? " exercise" : " exercises"}
           </ThemedText>
 
           <View style={styles.pickerLegend}>
@@ -510,7 +523,14 @@ const ExerciseLibraryList = ({
             },
           ]}
         >
-          {exercises.length === 0 ? (
+          {isLoadingExercises && exercises.length === 0 ? (
+            <View style={styles.pickerEmptyState}>
+              <ActivityIndicator color={primaryTextColor} />
+              <ThemedText style={styles.emptyBody} setColor={quietText}>
+                Loading exercises...
+              </ThemedText>
+            </View>
+          ) : exercises.length === 0 ? (
             <View style={styles.pickerEmptyState}>
               <ThemedTitle type="h3" style={styles.emptyTitle}>
                 No exercises yet
@@ -546,8 +566,9 @@ const ExerciseLibraryList = ({
                 <Pressable
                   key={exercise.exercise_name}
                   accessibilityRole="button"
-                  accessibilityLabel={`Show ${exercise.exercise_name} muscles`}
-                  onPress={() => setSelectedExercise(exercise)}
+                  accessibilityLabel={`Add ${exercise.exercise_name} to workout`}
+                  disabled={isSelectionBusy}
+                  onPress={() => onSelectExercise?.(exercise)}
                   style={[
                     styles.pickerExerciseRow,
                     isCurrentSelection && {
@@ -555,7 +576,13 @@ const ExerciseLibraryList = ({
                     },
                   ]}
                 >
-                  <View
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`Show ${exercise.exercise_name} muscles`}
+                    onPress={(event) => {
+                      event.stopPropagation?.();
+                      setSelectedExercise(exercise);
+                    }}
                     style={[
                       styles.pickerPreviewTile,
                       {
@@ -575,7 +602,7 @@ const ExerciseLibraryList = ({
                       }
                       style={styles.pickerPreviewBodyMap}
                     />
-                  </View>
+                  </Pressable>
 
                   <View style={styles.pickerExerciseBody}>
                     <View style={styles.pickerExerciseTitleRow}>
@@ -597,7 +624,7 @@ const ExerciseLibraryList = ({
                         >
                           <ThemedText
                             style={styles.pickerCustomBadgeText}
-                            setColor={primaryColor}
+                            setColor={primaryTextColor}
                           >
                             Custom
                           </ThemedText>
@@ -690,7 +717,7 @@ const ExerciseLibraryList = ({
                       <Plus
                         width={17}
                         height={17}
-                        color={primaryColor}
+                        color={primaryTextColor}
                         thickness={2.1}
                       />
                     )}
@@ -747,6 +774,7 @@ const ExerciseLibraryList = ({
         title={selectedExercise?.exercise_name}
         style={styles.exerciseBodyMapModal}
         contentStyle={styles.exerciseBodyMapModalBody}
+        showCloseButton
       >
         {selectedExercise ? (
           <>
@@ -776,7 +804,10 @@ const ExerciseLibraryList = ({
                   secondaryRegionKeys={
                     selectedExercise.secondary_front_body_map_region_keys
                   }
-                  style={styles.exerciseBodyMapModalPreview}
+                  style={[
+                    styles.exerciseBodyMapModalPreview,
+                    { height: bodyMapFigureHeight },
+                  ]}
                 />
               </View>
 
@@ -795,7 +826,10 @@ const ExerciseLibraryList = ({
                   secondaryRegionKeys={
                     selectedExercise.secondary_back_body_map_region_keys
                   }
-                  style={styles.exerciseBodyMapModalPreview}
+                  style={[
+                    styles.exerciseBodyMapModalPreview,
+                    { height: bodyMapFigureHeight },
+                  ]}
                 />
               </View>
             </View>
@@ -975,18 +1009,18 @@ const ExerciseLibraryList = ({
       >
       <View style={styles.header}>
         <View style={[styles.headerIcon, { backgroundColor: secondaryBadgeSurface }]}>
-          <Library width={22} height={22} color={primaryColor} />
+          <Library width={22} height={22} color={primaryTextColor} />
         </View>
 
         <View style={styles.headerCopy}>
-          <ThemedText size={11} style={styles.eyebrow} setColor={primaryColor}>
-            {isWorkoutPicker ? "Add Exercise" : "Exercise Library"}
+          <ThemedText size={11} style={styles.eyebrow} setColor={primaryTextColor}>
+            {isWorkoutPicker ? "Workout" : "Train"}
           </ThemedText>
           <ThemedTitle
             type="h3"
             style={[styles.title, { color: titleColor }]}
           >
-            {isWorkoutPicker ? "Choose Exercise" : "Catalog"}
+            {isWorkoutPicker ? "Add exercise" : "Exercise library"}
           </ThemedTitle>
           {isWorkoutPicker ? (
             <ThemedText style={styles.description} setColor={quietText}>
@@ -1005,7 +1039,7 @@ const ExerciseLibraryList = ({
           ]}
         >
           <ThemedText style={styles.countBadgeText} setColor={titleColor}>
-            <ThemedText style={styles.countBadgeNumber} setColor={primaryColor}>
+            <ThemedText style={styles.countBadgeNumber} setColor={primaryTextColor}>
               {filteredExercises.length}
             </ThemedText>{" "}
             exercises
@@ -1071,6 +1105,63 @@ const ExerciseLibraryList = ({
         </TouchableOpacity>
       </View>
 
+      {activeFilterChips.length > 0 ? (
+        <View style={styles.activeFilterRow}>
+          {activeFilterChips.map((chip) => (
+            <TouchableOpacity
+              key={chip.key}
+              activeOpacity={0.84}
+              accessibilityRole="button"
+              accessibilityLabel={`Remove filter ${chip.label}`}
+              onPress={chip.onRemove}
+              style={[
+                styles.activeFilterChip,
+                {
+                  backgroundColor: TINTED_ORANGE_SURFACE,
+                  borderColor: withAlpha(primaryColor, 0.45),
+                },
+              ]}
+            >
+              <ThemedText
+                style={styles.activeFilterChipText}
+                setColor={primaryTextColor}
+              >
+                {chip.label}
+              </ThemedText>
+              <Cross width={11} height={11} color={primaryTextColor} />
+            </TouchableOpacity>
+          ))}
+
+          {activeFilterChips.length > 1 ? (
+            <TouchableOpacity
+              activeOpacity={0.75}
+              accessibilityRole="button"
+              onPress={clearAllFilters}
+              style={styles.activeFilterClearAll}
+            >
+              <ThemedText
+                style={styles.activeFilterClearAllText}
+                setColor={quietText}
+              >
+                Clear all
+              </ThemedText>
+            </TouchableOpacity>
+          ) : null}
+        </View>
+      ) : null}
+
+      <View style={styles.catalogSectionHeader}>
+        <ThemedText style={styles.catalogSectionLabel} setColor={theme.text}>
+          <ThemedText
+            style={styles.catalogSectionCount}
+            setColor={primaryTextColor}
+          >
+            {visibleCount}
+          </ThemedText>
+          {visibleCount === 1 ? " exercise" : " exercises"}
+        </ThemedText>
+      </View>
+
       <View style={styles.muscleRoleLegend}>
         <View
           style={[
@@ -1124,7 +1215,14 @@ const ExerciseLibraryList = ({
         </ThemedText>
       </View>
 
-      {exercises.length === 0 ? (
+      {isLoadingExercises && exercises.length === 0 ? (
+        <View style={styles.emptyState}>
+          <ActivityIndicator color={primaryTextColor} />
+          <ThemedText style={styles.emptyBody} setColor={quietText}>
+            Loading exercises...
+          </ThemedText>
+        </View>
+      ) : exercises.length === 0 ? (
         <View style={styles.emptyState}>
           <ThemedTitle type="h3" style={styles.emptyTitle}>
             No exercises yet
@@ -1144,6 +1242,7 @@ const ExerciseLibraryList = ({
         </View>
       ) : (
         <ScrollView
+        keyboardShouldPersistTaps="handled"
           style={styles.listScroll}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
@@ -1242,6 +1341,7 @@ const ExerciseLibraryList = ({
         title={selectedExercise?.exercise_name}
         style={styles.exerciseBodyMapModal}
         contentStyle={styles.exerciseBodyMapModalBody}
+        showCloseButton
       >
         {selectedExercise ? (
           <>
@@ -1271,7 +1371,10 @@ const ExerciseLibraryList = ({
                   secondaryRegionKeys={
                     selectedExercise.secondary_front_body_map_region_keys
                   }
-                  style={styles.exerciseBodyMapModalPreview}
+                  style={[
+                    styles.exerciseBodyMapModalPreview,
+                    { height: bodyMapFigureHeight },
+                  ]}
                 />
               </View>
 
@@ -1290,7 +1393,10 @@ const ExerciseLibraryList = ({
                   secondaryRegionKeys={
                     selectedExercise.secondary_back_body_map_region_keys
                   }
-                  style={styles.exerciseBodyMapModalPreview}
+                  style={[
+                    styles.exerciseBodyMapModalPreview,
+                    { height: bodyMapFigureHeight },
+                  ]}
                 />
               </View>
             </View>

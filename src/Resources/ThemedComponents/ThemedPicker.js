@@ -3,6 +3,7 @@ import { View, StyleSheet, Pressable, ScrollView } from "react-native";
 import { useColorScheme } from "react-native";
 
 import { Colors } from "../GlobalStyling/colors";
+import ChevronRight from "../Icons/UI-icons/ChevronRight";
 import ThemedText from "./ThemedText";
 import ThemedModal from "./ThemedModal";
 
@@ -39,6 +40,7 @@ const ThemedPicker = ({
     <>
       {/* Closed state */}
       <Pressable
+        accessibilityRole="button"
         onPress={() => setOpen(true)}
         style={[
           styles.input,
@@ -49,7 +51,20 @@ const ThemedPicker = ({
           style,
         ]}
       >
-        <ThemedText>{selectedLabel}</ThemedText>
+        <ThemedText style={styles.inputLabel} numberOfLines={1}>
+          {selectedLabel}
+        </ThemedText>
+
+        {/* Rotated a quarter turn: this opens a list below, it does not
+            navigate onwards. */}
+        <View style={styles.inputChevron}>
+          <ChevronRight
+            width={14}
+            height={14}
+            color={theme.quietText ?? theme.iconColor}
+            thickness={2.4}
+          />
+        </View>
       </Pressable>
 
       {/* Modal */}
@@ -86,6 +101,18 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingVertical: 12,
     paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+
+  inputLabel: {
+    flexShrink: 1,
+  },
+
+  inputChevron: {
+    transform: [{ rotate: "90deg" }],
   },
 
   option: {

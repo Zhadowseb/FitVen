@@ -36,6 +36,7 @@ const RmList = ({
   const db = useSQLiteContext();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const primaryTextColor = theme.primaryText ?? theme.primary;
 
   const [loading, setLoading] = useState(false);
   const [editEstimatedSet_visible, set_editEstimatedSet_visible] = useState(false);
@@ -92,7 +93,7 @@ const RmList = ({
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={theme.primary} />
+        <ActivityIndicator size="large" color={primaryTextColor} />
       </View>
     );
   }

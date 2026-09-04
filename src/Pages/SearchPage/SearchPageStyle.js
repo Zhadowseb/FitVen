@@ -9,113 +9,104 @@ export default StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingTop: 12,
     paddingBottom: 18,
   },
-  pageHeaderTitleGroup: {
+  relationshipStat: {
+    flex: 1,
+    minHeight: 44,
+    borderRadius: 14,
+    borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
+    paddingHorizontal: 12,
   },
-  pageHeaderTitleEyebrow: {
-    fontWeight: "800",
-    letterSpacing: 1,
-    textTransform: "uppercase",
-    marginBottom: 2,
-  },
-  pageHeaderTitleMain: {
-    textAlign: "center",
-    lineHeight: 26,
-  },
-  headerRelationshipStats: {
-    width: 132,
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    alignItems: "center",
-    gap: 12,
-  },
-  headerRelationshipStat: {
-    minWidth: 52,
-    alignItems: "center",
-    paddingVertical: 4,
-  },
-  headerRelationshipStatPressed: {
+  relationshipStatPressed: {
     opacity: 0.68,
   },
-  headerRelationshipValue: {
+  relationshipStatText: {
     fontSize: 13,
-    fontWeight: "800",
-    lineHeight: 15,
-  },
-  headerRelationshipLabel: {
-    fontSize: 9,
     fontWeight: "700",
-    lineHeight: 11,
-    marginTop: 1,
+  },
+  relationshipStatValue: {
+    fontSize: 15,
+    fontWeight: "800",
+  },
+  relationshipStats: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    gap: 10,
+    marginTop: 14,
   },
   storiesSection: {
-    marginBottom: 14,
-  },
-  sectionHeaderRow: {
-    marginBottom: 2,
+    marginBottom: 0,
   },
   sectionTitle: {
     padding: 0,
+    marginBottom: 2,
     fontSize: 22,
     lineHeight: 28,
   },
   storiesRail: {
     marginHorizontal: -20,
   },
-  findFriendsCard: {
-    height: 168,
-    borderWidth: 1,
+  // The artwork is 4:3 and carries its own label, so the box takes the image's
+  // proportions instead of a fixed height - cover then fills it without
+  // cropping anything away.
+  // One shared set for both hero cards on this page. Only the aspect ratio is
+  // per card, because the two images have different proportions.
+  heroCard: {
+    width: "100%",
     borderRadius: 24,
     overflow: "hidden",
-    marginBottom: 18,
+    marginTop: 14,
   },
-  findFriendsImage: {
+  heroCardPosts: {
+    aspectRatio: 1200 / 885,
+  },
+  heroCardFriends: {
+    aspectRatio: 1200 / 786,
+  },
+  heroImage: {
+    flex: 1,
+  },
+  heroContent: {
     flex: 1,
     justifyContent: "space-between",
-    paddingHorizontal: 14,
-    paddingTop: 14,
-    paddingBottom: 15,
+    padding: 16,
   },
-  findFriendsImageRadius: {
-    borderRadius: 24,
-  },
-  findFriendsScrim: {
+  heroScrim: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(6, 8, 12, 0.42)",
   },
-  findFriendsActionRow: {
+  heroActionRow: {
     flexDirection: "row",
     justifyContent: "flex-end",
   },
-  findFriendsActionIcon: {
+  heroActionIcon: {
     width: 34,
     height: 34,
-    borderRadius: 12,
+    borderRadius: 10,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "rgba(14, 15, 18, 0.52)",
     borderColor: "rgba(255, 255, 255, 0.24)",
   },
-  findFriendsCopy: {
+  heroCopy: {
     alignItems: "flex-start",
   },
-  findFriendsEyebrow: {
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 1,
-    textTransform: "uppercase",
-    marginBottom: 4,
+  heroEyebrow: {
+    fontSize: 13,
+    fontWeight: "700",
+    marginBottom: 1,
   },
-  findFriendsTitle: {
+  heroTitle: {
     padding: 0,
-    color: "#ffffff",
     fontSize: 24,
     lineHeight: 29,
+    fontWeight: "800",
+    color: "#ffffff",
   },
   relationshipModal: {
     maxHeight: 520,
@@ -151,7 +142,7 @@ export default StyleSheet.create({
     lineHeight: 18,
   },
   relationshipStateText: {
-    fontSize: 14,
+    fontSize: 13,
     lineHeight: 20,
   },
   relationshipCloseButton: {

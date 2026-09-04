@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   PanResponder,
   TouchableOpacity,
   View,
@@ -19,6 +18,7 @@ import Plus from "../../../../../../../../Resources/Icons/UI-icons/Plus";
 import ReplayHistory from "../../../../../../../../Resources/Icons/UI-icons/ReplayHistory";
 
 import {
+  ThemedConfirmModal,
   ThemedModal,
   ThemedText,
   ThemedTitle,
@@ -26,6 +26,14 @@ import {
 import PanelSettingsModal from "./PanelSettingsModal";
 import { weightliftingService as weightliftingRepository } from "../../../../../../../../Services";
 import { useExerciseViewSettings } from "../../../../../../../../Contexts/ExerciseViewSettingsContext";
+import ReanimatedAnimated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
+
+import { EXERCISE_COLLAPSE_DURATION_MS } from "../../exerciseCollapseAnimation";
 import CollapsedSetSummary, {
   ClassicSetSummary,
   SetProgressDots,
@@ -40,6 +48,7 @@ const ExerciseRow = ({
   exercise,
   isExpanded,
   onToggleExpanded,
+  onAddSet,
   updateUI,
   onToggleSet,
   updateWeight,
@@ -63,6 +72,13 @@ const ExerciseRow = ({
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyLoadError, setHistoryLoadError] = useState(false);
   const [addingSet, setAddingSet] = useState(false);
+  const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
+  const [restUnitRequestKey, setRestUnitRequestKey] = useState(0);
+  // The expanded section stays mounted until the collapse has played out, and
+  // its height is animated directly instead of relying on layout animations.
+  const [isSectionMounted, setIsSectionMounted] = useState(isExpanded);
+  const [expandedHeight, setExpandedHeight] = useState(0);
+  const expandProgress = useSharedValue(isExpanded ? 1 : 0);
   const addingSetRef = useRef(false);
   const dragActiveRef = useRef(false);
   const dragStartPageYRef = useRef(null);
@@ -278,21 +294,7 @@ const ExerciseRow = ({
   };
 
   const confirmDeleteExercise = () => {
-    Alert.alert(
-      "Delete exercise?",
-      "This removes the exercise and all sets saved inside it.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete exercise",
-          style: "destructive",
-          onPress: async () => {
-            await deleteExercise(exercise.exercise_id);
-            setPanelModalVisible(false);
-          },
-        },
-      ]
-    );
+    setDeleteConfirmVisible(true);
   };
 
   const addSet = async () => {
@@ -303,15 +305,69 @@ const ExerciseRow = ({
     try {
       addingSetRef.current = true;
       setAddingSet(true);
-      await weightliftingRepository.addSetToExercise(db, exercise.exercise_id);
-      await updateUI?.();
-      await onWorkoutMetadataChange?.();
+      // The list owns the exercise state, so it inserts the row optimistically
+      // and reconciles afterwards; nothing here waits for the database.
+      await onAddSet?.(exercise.exercise_id);
     } catch (error) {
       console.error(error);
     } finally {
       addingSetRef.current = false;
       setAddingSet(false);
     }
+  };
+
+  useEffect(() => {
+    if (isExpanded) {
+      setIsSectionMounted(true);
+      expandProgress.value = withTiming(1, {
+        duration: EXERCISE_COLLAPSE_DURATION_MS,
+      });
+      return;
+    }
+
+    expandProgress.value = withTiming(
+      0,
+      { duration: EXERCISE_COLLAPSE_DURATION_MS },
+      (finished) => {
+        if (finished) {
+          runOnJS(setIsSectionMounted)(false);
+        }
+      }
+    );
+  }, [expandProgress, isExpanded]);
+
+  const expandedSectionStyle = useAnimatedStyle(() => ({
+    height: expandedHeight > 0 ? expandProgress.value * expandedHeight : undefined,
+    opacity: expandProgress.value,
+  }));
+
+  // Removing the last set leaves nothing to show, so the card folds itself
+  // back up. Only the >0 -> 0 transition counts: adding the first set expands
+  // the card while the count is still 0, and that must not collapse it again.
+  const previousSetCountRef = useRef(exercise.sets.length);
+
+  useEffect(() => {
+    const setCount = exercise.sets.length;
+    const previousSetCount = previousSetCountRef.current;
+    previousSetCountRef.current = setCount;
+
+    if (setCount === 0 && previousSetCount > 0 && isExpanded) {
+      onToggleExpanded?.();
+    }
+  }, [exercise.sets.length, isExpanded, onToggleExpanded]);
+
+  // Adding the first set from the collapsed header should also open the
+  // exercise, so the user lands straight in the new set.
+  const addFirstSetAndExpand = async () => {
+    if (addingSetRef.current) {
+      return;
+    }
+
+    if (!isExpanded) {
+      onToggleExpanded?.();
+    }
+
+    await addSet();
   };
 
   const saveExerciseSettings = async ({ columns, note }) => {
@@ -374,6 +430,7 @@ const ExerciseRow = ({
   const hasNote = exerciseNote.trim().length > 0;
   const trackerSetCount = exercise.sets.length;
   const primaryColor = theme.primary ?? theme.iconColor ?? theme.text;
+  const primaryTextColor = theme.primaryText ?? theme.primary;
   const secondaryColor = theme.secondary ?? primaryColor;
   const dangerColor = theme.danger ?? "#d94141";
   const cardBorder = theme.cardBorder ?? theme.iconColor ?? theme.text;
@@ -639,6 +696,9 @@ const ExerciseRow = ({
         >
           <TouchableOpacity
             activeOpacity={0.88}
+            // With no sets there is nothing to expand into: the plus is the
+            // only way in, and it adds the first set as it opens the card.
+            disabled={!isExpanded && exercise.sets.length === 0}
             onPress={() => handleCardPress(onToggleExpanded)}
             style={[
               styles.headerMain,
@@ -676,10 +736,11 @@ const ExerciseRow = ({
             {hasNote && (
               <TouchableOpacity
                 activeOpacity={0.88}
+                hitSlop={10}
                 style={styles.actionButton}
                 onPress={() => setNoteModalVisible(true)}
               >
-                <Note width={18} height={18} color={primaryColor} />
+                <Note width={18} height={18} color={primaryTextColor} />
               </TouchableOpacity>
             )}
 
@@ -688,6 +749,7 @@ const ExerciseRow = ({
                 activeOpacity={0.88}
                 accessibilityRole="button"
                 accessibilityLabel="Toggle exercise history summary"
+                hitSlop={10}
                 style={styles.actionButton}
                 onPress={toggleExerciseHistory}
               >
@@ -698,15 +760,39 @@ const ExerciseRow = ({
             {!isExpanded && (
               <>
                 <SetProgressDots sets={exercise.sets} theme={theme} />
-                <TouchableOpacity
-                  activeOpacity={0.88}
-                  accessibilityRole="button"
-                  accessibilityLabel="Expand exercise"
-                  onPress={() => handleCardPress(onToggleExpanded)}
-                  style={styles.collapsedExpandButton}
-                >
-                  <Expand width={18} height={18} color={primaryColor} />
-                </TouchableOpacity>
+                {exercise.sets.length === 0 ? (
+                  <TouchableOpacity
+                    activeOpacity={0.88}
+                    accessibilityRole="button"
+                    accessibilityLabel="Add first set"
+                    disabled={addingSet}
+                    onPress={() => handleCardPress(addFirstSetAndExpand)}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    style={styles.collapsedExpandButton}
+                  >
+                    {addingSet ? (
+                      <ActivityIndicator size="small" color={primaryTextColor} />
+                    ) : (
+                      <Plus
+                        width={18}
+                        height={18}
+                        color={primaryTextColor}
+                        thickness={2.4}
+                      />
+                    )}
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    activeOpacity={0.88}
+                    accessibilityRole="button"
+                    accessibilityLabel="Expand exercise"
+                    onPress={() => handleCardPress(onToggleExpanded)}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    style={styles.collapsedExpandButton}
+                  >
+                    <Expand width={18} height={18} color={primaryTextColor} />
+                  </TouchableOpacity>
+                )}
               </>
             )}
 
@@ -785,29 +871,21 @@ const ExerciseRow = ({
           </View>
         )}
 
-        {!isExpanded && (collapsedSetsVisible || exercise.sets.length === 0) && (
+        {!isExpanded && collapsedSetsVisible && exercise.sets.length > 0 && (
           <View style={styles.summaryCollapsedRow}>
-            {exercise.sets.length === 0 ? (
-              <View style={styles.firstSetActionSlot}>
-                <TouchableOpacity accessibilityRole="button" accessibilityLabel="Add first set" disabled={addingSet} onPress={addSet} style={styles.firstSetButton}>
-                  {addingSet ? <ActivityIndicator size="small" color={addSetColor} /> : <><Plus width={17} height={17} color={addSetColor} /><ThemedText size={11} style={styles.firstSetButtonText} setColor={addSetColor}>Add first set</ThemedText></>}
-                </TouchableOpacity>
+            <TouchableOpacity activeOpacity={0.88} onPress={() => handleCardPress(onToggleExpanded)} style={styles.summaryRow}>
+              <View style={styles.summaryTextBlock}>
+                {usesClassicCollapsedCard ? (
+                  <ClassicSetSummary sets={exercise.sets} theme={theme} />
+                ) : (
+                  <CollapsedSetSummary
+                    sets={exercise.sets}
+                    view={collapsedExerciseView}
+                    theme={theme}
+                  />
+                )}
               </View>
-            ) : (
-              <TouchableOpacity activeOpacity={0.88} onPress={() => handleCardPress(onToggleExpanded)} style={styles.summaryRow}>
-                <View style={styles.summaryTextBlock}>
-                  {usesClassicCollapsedCard ? (
-                    <ClassicSetSummary sets={exercise.sets} theme={theme} />
-                  ) : (
-                    <CollapsedSetSummary
-                      sets={exercise.sets}
-                      view={collapsedExerciseView}
-                      theme={theme}
-                    />
-                  )}
-                </View>
-              </TouchableOpacity>
-            )}
+            </TouchableOpacity>
           </View>
         )}
 
@@ -929,21 +1007,34 @@ const ExerciseRow = ({
                 },
               ]}
             >
-              <Expand width={18} height={18} color={primaryColor} />
+              <Expand width={18} height={18} color={primaryTextColor} />
             </TouchableOpacity>
           </View>
         )}
 
-        {isExpanded && (
-          <View
+        {isSectionMounted && (
+          <ReanimatedAnimated.View
             collapsable={false}
             onTouchStart={stopCardDragPropagation}
-            style={styles.expandedSection}
+            style={[styles.expandedAnimator, expandedSectionStyle]}
           >
+            <View
+              style={styles.expandedSection}
+              onLayout={(event) => {
+                const { height } = event.nativeEvent.layout;
+
+                // Only grow the stored height: reading it back while the
+                // collapse plays would shrink the target to zero.
+                if (height > 0 && height > expandedHeight) {
+                  setExpandedHeight(height);
+                }
+              }}
+            >
             <SetList
               sets={exercise.sets}
               exerciseName={exercise.exercise_name}
               visibleColumns={visibleColumns}
+              restUnitRequestKey={restUnitRequestKey}
               onToggleSet={onToggleSet}
               updateWeight={updateWeight}
               updateUI={updateUI}
@@ -956,7 +1047,8 @@ const ExerciseRow = ({
               recordControlFillColor={exerciseCheckboxFillColor}
               recordControlTextColor={exerciseCheckboxCheckmarkColor}
             />
-          </View>
+            </View>
+          </ReanimatedAnimated.View>
         )}
       </View>
       </View>
@@ -966,6 +1058,7 @@ const ExerciseRow = ({
         currentColumns={visibleColumns}
         currentNote={exerciseNote}
         onDelete={confirmDeleteExercise}
+        onOpenRestUnit={() => setRestUnitRequestKey((key) => key + 1)}
         onClose={async ({ columns, note }) => {
           await saveExerciseSettings({ columns, note });
           setPanelModalVisible(false);
@@ -979,6 +1072,19 @@ const ExerciseRow = ({
       >
         <ThemedText>{exerciseNote}</ThemedText>
       </ThemedModal>
+      <ThemedConfirmModal
+        visible={deleteConfirmVisible}
+        title="Delete exercise?"
+        message="This removes the exercise and all sets saved inside it."
+        confirmLabel="Delete exercise"
+        tone="danger"
+        onConfirm={async () => {
+          setDeleteConfirmVisible(false);
+          await deleteExercise(exercise.exercise_id);
+          setPanelModalVisible(false);
+        }}
+        onClose={() => setDeleteConfirmVisible(false)}
+      />
     </>
   );
 };

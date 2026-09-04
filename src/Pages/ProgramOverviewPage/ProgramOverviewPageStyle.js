@@ -12,10 +12,17 @@ export default StyleSheet.create({
         paddingBottom: 14,
         borderBottomWidth: 1,
     },
-    headerCircleButton: {
+    headerBack: {
         width: 38,
         height: 38,
-        borderRadius: 19,
+        alignItems: "flex-start",
+        justifyContent: "center",
+        flexShrink: 0,
+    },
+    headerCircleButton: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
         borderWidth: 1,
         alignItems: "center",
         justifyContent: "center",
@@ -25,15 +32,11 @@ export default StyleSheet.create({
         alignItems: "center",
         gap: 1,
     },
-    headerEyebrow: {
-        fontSize: 10,
-        fontWeight: "800",
-        letterSpacing: 1.8,
-        textTransform: "uppercase",
-    },
     headerTitle: {
-        fontSize: 16,
+        fontSize: 22,
         fontWeight: "800",
+        lineHeight: 28,
+        letterSpacing: -0.3,
     },
 
     //Main containers flex
@@ -55,9 +58,9 @@ export default StyleSheet.create({
         justifyContent: "space-between",
     },
     section_header_eyebrow: {
-        fontSize: 10,
+        fontSize: 12,
         fontWeight: "800",
-        letterSpacing: 1.8,
+        letterSpacing: 1.4,
         textTransform: "uppercase",
     },
     section_header_icon: {
@@ -65,7 +68,7 @@ export default StyleSheet.create({
     },
     card_shell: {
         borderWidth: 1,
-        borderRadius: 20,
+        borderRadius: 18,
         overflow: "hidden",
     },
 
@@ -80,7 +83,7 @@ export default StyleSheet.create({
     pr_star_tile: {
         width: 38,
         height: 38,
-        borderRadius: 11,
+        borderRadius: 10,
         alignItems: "center",
         justifyContent: "center",
     },
@@ -106,7 +109,7 @@ export default StyleSheet.create({
         fontVariant: ["tabular-nums"],
     },
     pr_value_label: {
-        fontSize: 9,
+        fontSize: 11,
         fontWeight: "800",
         letterSpacing: 1,
         textTransform: "uppercase",
@@ -123,148 +126,6 @@ export default StyleSheet.create({
     //RM containers
     rm_container: {
         padding: 0,
-    },
-
-    //Settings
-    settings_status_label_wrap: {
-        paddingHorizontal: 18,
-        paddingTop: 14,
-        paddingBottom: 4,
-    },
-    settings_status_label: {
-        fontSize: 11,
-        fontWeight: "800",
-        letterSpacing: 0.6,
-        textTransform: "uppercase",
-    },
-    settings_status_row: {
-        flexDirection: "row",
-        alignItems: "flex-start",
-        gap: 12,
-        paddingHorizontal: 18,
-        paddingVertical: 11,
-    },
-    settings_radio: {
-        width: 20,
-        height: 20,
-        borderRadius: 10,
-        borderWidth: 2,
-        alignItems: "center",
-        justifyContent: "center",
-        marginTop: 1,
-        flexShrink: 0,
-    },
-    settings_radio_dot: {
-        width: 9,
-        height: 9,
-        borderRadius: 5,
-    },
-    settings_status_text: {
-        flex: 1,
-        gap: 1,
-    },
-    settings_status_title: {
-        fontSize: 13.5,
-        fontWeight: "800",
-    },
-    settings_status_description: {
-        fontSize: 11,
-        lineHeight: 15,
-        fontWeight: "500",
-    },
-    settings_divider: {
-        height: 1,
-        marginTop: 4,
-        marginHorizontal: 18,
-    },
-    settings_name_block: {
-        paddingHorizontal: 18,
-        paddingTop: 14,
-        paddingBottom: 16,
-        gap: 6,
-    },
-    settings_name_label: {
-        fontSize: 11,
-        fontWeight: "800",
-        letterSpacing: 0.6,
-        textTransform: "uppercase",
-    },
-    settings_name_field: {
-        height: 44,
-        borderRadius: 12,
-        borderWidth: 1,
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 10,
-        paddingHorizontal: 14,
-    },
-    settings_name_value: {
-        flex: 1,
-        fontSize: 14,
-        fontWeight: "700",
-    },
-
-    //Period / export (kept, restyled to card language; not in mock)
-    settings_period_block_wrap: {
-        paddingHorizontal: 18,
-        paddingTop: 14,
-        paddingBottom: 16,
-        gap: 8,
-    },
-    settings_period_row: {
-        flexDirection: "row",
-        alignItems: "center",
-        borderWidth: 1,
-        borderRadius: 12,
-        paddingHorizontal: 14,
-        paddingVertical: 12,
-    },
-    settings_period_block: {
-        flex: 1,
-    },
-    settings_period_label: {
-        fontSize: 9,
-        fontWeight: "800",
-        letterSpacing: 1,
-        textTransform: "uppercase",
-        marginBottom: 4,
-    },
-    settings_period_value: {
-        fontSize: 13,
-        fontWeight: "700",
-    },
-    settings_period_divider: {
-        width: 1,
-        alignSelf: "stretch",
-        marginHorizontal: 14,
-    },
-    settings_export_row: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 12,
-        borderWidth: 1,
-        borderRadius: 12,
-        paddingHorizontal: 14,
-        paddingVertical: 12,
-    },
-    settings_export_icon: {
-        width: 32,
-        height: 32,
-        borderRadius: 10,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    settings_export_content: {
-        flex: 1,
-        minWidth: 0,
-    },
-    settings_export_title: {
-        fontSize: 13.5,
-        fontWeight: "700",
-    },
-    settings_export_description: {
-        fontSize: 11,
-        marginTop: 2,
     },
 
     //BottomSheet Styling:
@@ -285,11 +146,6 @@ export default StyleSheet.create({
         flexDirection: "row",
         paddingTop: 20,
     },
-    option_text: {
-        paddingLeft: 10,
-        fontWeight: 600,
-        fontSize: 16,
-    },
     filter_option: {
         justifyContent: "space-between",
         alignItems: "center",
@@ -304,64 +160,13 @@ export default StyleSheet.create({
     },
     filter_option_text: {
         fontWeight: 600,
-        fontSize: 16,
+        fontSize: 15,
     },
     filter_option_text_selected: {
         fontWeight: "700",
     },
     filter_option_text_unselected: {
         fontWeight: "400",
-    },
-    confirm_sheet_header: {
-        gap: 10,
-        alignItems: "center",
-    },
-    confirm_sheet_title: {
-        textAlign: "center",
-    },
-    confirm_modal: {
-        width: "88%",
-        maxWidth: 420,
-        borderRadius: 24,
-        paddingTop: 22,
-        paddingHorizontal: 18,
-    },
-    confirm_sheet_description: {
-        fontSize: 14,
-        lineHeight: 21,
-        textAlign: "center",
-    },
-    confirm_sheet_actions: {
-        flexDirection: "row",
-        gap: 12,
-        marginTop: 24,
-    },
-    confirm_action: {
-        flex: 1,
-        minHeight: 52,
-        borderRadius: 18,
-        alignItems: "center",
-        justifyContent: "center",
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-    },
-    confirm_action_secondary: {
-        borderWidth: 1,
-    },
-    confirm_action_danger: {
-        borderWidth: 1,
-        borderColor: "transparent",
-    },
-    confirm_action_secondary_text: {
-        fontSize: 15,
-        fontWeight: "700",
-        textAlign: "center",
-    },
-    confirm_action_danger_text: {
-        fontSize: 15,
-        fontWeight: "700",
-        color: "#fff",
-        textAlign: "center",
     },
 
 });

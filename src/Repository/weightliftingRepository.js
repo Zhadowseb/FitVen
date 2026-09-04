@@ -449,16 +449,6 @@ export async function deleteEstimatedSet(db, estimatedSetId) {
   );
 }
 
-export async function getMesocycleRmProgressions(db, mesocycleId) {
-  return db.getAllAsync(
-    `SELECT exercise_name, progression_weight
-     FROM RMWeightProgression
-     WHERE mesocycle_id = ?
-     ORDER BY exercise_name COLLATE NOCASE ASC;`,
-    [mesocycleId]
-  );
-}
-
 export async function insertRmWeightProgression(
   db,
   { mesocycleId, exerciseName, progressionWeight }
@@ -487,80 +477,6 @@ export async function getLatestRmProgressionWeightBeforeMesocycle(
      ORDER BY m.mesocycle_number DESC
      LIMIT 1;`,
     [programId, exerciseName, mesocycleNumber]
-  );
-}
-
-export async function incrementRmWeightProgressionsFromMesocycle(
-  db,
-  { programId, exerciseName, mesocycleNumber, delta }
-) {
-  await db.runAsync(
-    `UPDATE RMWeightProgression
-     SET progression_weight = progression_weight + ?
-     WHERE exercise_name = ?
-       AND mesocycle_id IN (
-         SELECT mesocycle_id
-         FROM Mesocycle
-         WHERE program_id = ?
-           AND mesocycle_number >= ?
-       );`,
-    [delta, exerciseName, programId, mesocycleNumber]
-  );
-}
-
-export async function getMesocycleEstimatedSetProgressions(db, mesocycleId) {
-  return db.getAllAsync(
-    `SELECT
-        m.mesocycle_id,
-        m.mesocycle_number,
-        es.exercise_name,
-        es.estimated_weight,
-        COALESCE(
-          rmp.progression_weight,
-          CASE
-            WHEN m.mesocycle_number > 1
-              THEN (m.mesocycle_number - 1) * 2.5
-            ELSE 0
-          END
-        ) AS progression_weight
-     FROM Mesocycle m
-     LEFT JOIN Estimated_Set es
-       ON es.program_id = m.program_id
-     LEFT JOIN RMWeightProgression rmp
-       ON rmp.mesocycle_id = m.mesocycle_id
-      AND rmp.exercise_name = es.exercise_name
-     WHERE m.mesocycle_id = ?
-       AND es.exercise_name IS NOT NULL
-     ORDER BY es.exercise_name COLLATE NOCASE ASC;`,
-    [mesocycleId]
-  );
-}
-
-export async function getMesocycleEstimatedSetProgressionsByProgram(db, programId) {
-  return db.getAllAsync(
-    `SELECT
-        m.mesocycle_id,
-        m.mesocycle_number,
-        es.exercise_name,
-        es.estimated_weight,
-        COALESCE(
-          rmp.progression_weight,
-          CASE
-            WHEN m.mesocycle_number > 1
-              THEN (m.mesocycle_number - 1) * 2.5
-            ELSE 0
-          END
-        ) AS progression_weight
-     FROM Mesocycle m
-     LEFT JOIN Estimated_Set es
-       ON es.program_id = m.program_id
-     LEFT JOIN RMWeightProgression rmp
-       ON rmp.mesocycle_id = m.mesocycle_id
-      AND rmp.exercise_name = es.exercise_name
-     WHERE m.program_id = ?
-       AND es.exercise_name IS NOT NULL
-     ORDER BY m.mesocycle_number ASC, es.exercise_name COLLATE NOCASE ASC;`,
-    [programId]
   );
 }
 

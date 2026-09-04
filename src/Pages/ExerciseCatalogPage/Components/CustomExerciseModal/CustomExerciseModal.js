@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Pressable,
   ScrollView,
@@ -28,10 +28,12 @@ export default function CustomExerciseModal({ visible, onClose, onCreate }) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const primaryColor = theme.primary ?? "#f7742e";
+  const primaryTextColor = theme.primaryText ?? theme.primary;
   const cardBorder = theme.cardBorder ?? theme.iconColor;
   const quietText = theme.iconColor ?? theme.text;
   const activeChipText = theme.textInverted ?? "#0E0F12";
   const dangerColor = theme.danger ?? "#ba0000";
+  const nameInputRef = useRef(null);
   const [step, setStep] = useState(NAME_STEP);
   const [exerciseName, setExerciseName] = useState("");
   const [primaryMuscleKeys, setPrimaryMuscleKeys] = useState([]);
@@ -129,12 +131,16 @@ export default function CustomExerciseModal({ visible, onClose, onCreate }) {
     <ThemedModal
       visible={visible}
       onClose={handleClose}
+      // Focus after the open animation, otherwise the keyboard is up before
+      // the modal has measured itself and the lift is computed against a
+      // layout that does not exist yet.
+      onShow={() => nameInputRef.current?.focus()}
       title="Add custom exercise"
       dismissOnBackdropPress={!isSubmitting}
       style={styles.modal}
       contentStyle={styles.modalContent}
     >
-      <ThemedText style={styles.stepLabel} setColor={primaryColor}>
+      <ThemedText style={styles.stepLabel} setColor={primaryTextColor}>
         STEP {step} OF 2
       </ThemedText>
 
@@ -155,7 +161,7 @@ export default function CustomExerciseModal({ visible, onClose, onCreate }) {
               setError("");
             }}
             placeholder="Exercise name"
-            autoFocus
+            innerRef={nameInputRef}
             autoCapitalize="words"
             maxLength={80}
             returnKeyType="next"

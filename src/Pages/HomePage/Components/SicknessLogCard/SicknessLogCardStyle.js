@@ -14,14 +14,14 @@ export default StyleSheet.create({
     paddingVertical: 14,
   },
   modalEyebrow: {
-    fontSize: 10,
+    fontSize: 11,
     lineHeight: 13,
     fontWeight: "800",
     letterSpacing: 1,
     marginBottom: 6,
   },
   modalCopy: {
-    fontSize: 14,
+    fontSize: 13,
     lineHeight: 21,
   },
   symptomGrid: {

@@ -12,7 +12,7 @@ export default StyleSheet.create({
     gap: 8,
   },
   headerEyebrow: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: "800",
     letterSpacing: 1.8,
     textTransform: "uppercase",
@@ -34,7 +34,7 @@ export default StyleSheet.create({
     borderRadius: 3,
   },
   livePillText: {
-    fontSize: 9.5,
+    fontSize: 11,
     fontWeight: "800",
   },
   seeAllText: {
@@ -114,7 +114,7 @@ export default StyleSheet.create({
     borderRadius: 3,
   },
   statusText: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: "700",
   },
   addLabel: {

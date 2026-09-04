@@ -6,37 +6,6 @@ export default StyleSheet.create({
   },
 
   // Header
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingTop: 8,
-    paddingBottom: 14,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-  },
-  headerTitleGroup: {
-    flex: 1,
-    gap: 2,
-  },
-  headerEyebrow: {
-    fontWeight: "800",
-    letterSpacing: 1.8,
-    textTransform: "uppercase",
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: "800",
-    letterSpacing: -0.3,
-  },
-  headerMenuButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
 
   // Content
   content: {
@@ -54,7 +23,7 @@ export default StyleSheet.create({
 
   // Card shell
   card: {
-    borderRadius: 20,
+    borderRadius: 18,
     borderWidth: 1,
     overflow: "hidden",
     marginVertical: 0,
@@ -87,7 +56,7 @@ export default StyleSheet.create({
     alignItems: "flex-start",
   },
   changePhotoChip: {
-    height: 34,
+    height: 40,
     borderRadius: 10,
     paddingHorizontal: 14,
     borderWidth: 1,
@@ -95,11 +64,11 @@ export default StyleSheet.create({
     justifyContent: "center",
   },
   changePhotoChipText: {
-    fontSize: 12.5,
+    fontSize: 12,
     fontWeight: "800",
   },
   avatarHelperText: {
-    fontSize: 10.5,
+    fontSize: 11,
     lineHeight: 15,
     fontWeight: "500",
   },
@@ -121,7 +90,7 @@ export default StyleSheet.create({
   },
   fieldValue: {
     flex: 1,
-    fontSize: 13.5,
+    fontSize: 13,
     fontWeight: "700",
   },
 
@@ -139,12 +108,12 @@ export default StyleSheet.create({
     gap: 1,
   },
   birthDateValue: {
-    fontSize: 13.5,
+    fontSize: 13,
     fontWeight: "700",
     fontVariant: ["tabular-nums"],
   },
   birthDateSubline: {
-    fontSize: 10.5,
+    fontSize: 11,
     fontWeight: "500",
   },
   agePill: {
@@ -153,7 +122,7 @@ export default StyleSheet.create({
     paddingHorizontal: 10,
   },
   agePillText: {
-    fontSize: 10.5,
+    fontSize: 11,
     fontWeight: "800",
     flexShrink: 0,
   },
@@ -174,14 +143,14 @@ export default StyleSheet.create({
     gap: 6,
   },
   fieldSectionLabel: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "800",
     letterSpacing: 0.6,
     textTransform: "uppercase",
   },
   inputField: {
     height: 44,
-    borderRadius: 12,
+    borderRadius: 10,
     borderWidth: 1,
     paddingHorizontal: 14,
     flexDirection: "row",
@@ -190,18 +159,18 @@ export default StyleSheet.create({
   },
   inputFieldValue: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "700",
     padding: 0,
   },
   inputFieldCounter: {
-    fontSize: 10.5,
+    fontSize: 11,
     fontWeight: "700",
     fontVariant: ["tabular-nums"],
     flexShrink: 0,
   },
   fieldHelperText: {
-    fontSize: 10.5,
+    fontSize: 11,
     fontWeight: "500",
   },
 
@@ -213,14 +182,14 @@ export default StyleSheet.create({
   },
   bioField: {
     minHeight: 60,
-    borderRadius: 12,
+    borderRadius: 10,
     borderWidth: 1,
     paddingVertical: 11,
     paddingHorizontal: 14,
     gap: 6,
   },
   bioFieldValue: {
-    fontSize: 13.5,
+    fontSize: 13,
     lineHeight: 19,
     fontWeight: "600",
     padding: 0,
@@ -228,7 +197,7 @@ export default StyleSheet.create({
   },
   bioFieldCounter: {
     alignSelf: "flex-end",
-    fontSize: 10.5,
+    fontSize: 11,
     fontWeight: "700",
     fontVariant: ["tabular-nums"],
   },
@@ -237,19 +206,19 @@ export default StyleSheet.create({
   loadingText: {
     paddingHorizontal: 18,
     paddingTop: 4,
-    fontSize: 12.5,
+    fontSize: 12,
   },
   feedbackBanner: {
     marginHorizontal: 18,
     marginTop: 4,
     marginBottom: 10,
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
   feedbackBannerText: {
-    fontSize: 12.5,
+    fontSize: 12,
     lineHeight: 18,
   },
 
@@ -274,7 +243,7 @@ export default StyleSheet.create({
   },
   settingsRowLabel: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "700",
   },
   accentPickerWrap: {
@@ -298,11 +267,11 @@ export default StyleSheet.create({
     gap: 1,
   },
   feedbackTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "800",
   },
   feedbackSubtitle: {
-    fontSize: 11.5,
+    fontSize: 11,
     lineHeight: 16,
     fontWeight: "500",
   },
@@ -341,12 +310,12 @@ export default StyleSheet.create({
     textTransform: "uppercase",
   },
   accountValue: {
-    fontSize: 13.5,
+    fontSize: 13,
     fontWeight: "700",
   },
   logoutButton: {
-    height: 38,
-    borderRadius: 11,
+    height: 44,
+    borderRadius: 22,
     paddingHorizontal: 16,
     borderWidth: 1,
     alignItems: "center",
@@ -354,7 +323,7 @@ export default StyleSheet.create({
     flexShrink: 0,
   },
   logoutButtonText: {
-    fontSize: 12.5,
+    fontSize: 12,
     fontWeight: "800",
   },
   metaRow: {

@@ -42,7 +42,7 @@ export default StyleSheet.create({
     marginBottom: 14,
   },
   noticeTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "700",
     marginBottom: 6,
   },
@@ -97,12 +97,12 @@ export default StyleSheet.create({
     paddingVertical: 18,
   },
   emptyStateTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: "700",
     marginBottom: 6,
   },
   emptyStateBody: {
-    fontSize: 14,
+    fontSize: 13,
     lineHeight: 21,
   },
 });

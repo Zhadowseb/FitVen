@@ -29,6 +29,7 @@ const ProgramOverviewHeader = ({
 }) => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const primaryTextColor = theme.primaryText ?? theme.primary;
 
   const isNotStarted = status === "NOT_STARTED";
   const isComplete = status === "COMPLETE";
@@ -61,31 +62,36 @@ const ProgramOverviewHeader = ({
           </View>
         </View>
 
-        {isNotStarted && onStart ? (
-          <Pressable
-            onPress={onStart}
-            style={({ pressed }) => [
-              styles.startButton,
-              {
-                backgroundColor: theme.primary,
-                opacity: pressed ? 0.82 : 1,
-              },
-            ]}
-          >
-            <ThemedText style={styles.startButtonText} setColor={theme.textInverted}>
-              Start
-            </ThemedText>
-          </Pressable>
-        ) : (
-          <StatusPill
-            style={styles.statusPill}
-            label={STATUS_LABELS[status] ?? STATUS_LABELS.NOT_STARTED}
-            color={statusColor}
-            backgroundColor={statusBackground}
-            dotSize={5}
-          />
-        )}
+        <StatusPill
+          style={styles.statusPill}
+          label={STATUS_LABELS[status] ?? STATUS_LABELS.NOT_STARTED}
+          color={statusColor}
+          backgroundColor={statusBackground}
+          dotSize={5}
+        />
       </View>
+
+      {isNotStarted && onStart ? (
+        <Pressable
+          onPress={onStart}
+          accessibilityRole="button"
+          accessibilityLabel="Start program"
+          style={({ pressed }) => [
+            styles.startButton,
+            {
+              backgroundColor: theme.primary,
+              opacity: pressed ? 0.82 : 1,
+            },
+          ]}
+        >
+          <ThemedText
+            style={styles.startButtonText}
+            setColor={theme.textInverted}
+          >
+            Start program
+          </ThemedText>
+        </Pressable>
+      ) : null}
 
       <View style={styles.progressGroup}>
         <View style={styles.progressHeader}>
@@ -99,7 +105,7 @@ const ProgramOverviewHeader = ({
               </ThemedText>
             )}
           </View>
-          <ThemedText style={styles.progressPercent} setColor={theme.primary}>
+          <ThemedText style={styles.progressPercent} setColor={primaryTextColor}>
             {`${safePercent}%`}
           </ThemedText>
         </View>

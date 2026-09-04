@@ -4,39 +4,6 @@ export default StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 14,
-    borderBottomWidth: 1,
-  },
-  headerTextColumn: {
-    flex: 1,
-    flexDirection: "column",
-    gap: 2,
-  },
-  eyebrow: {
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 1.8,
-    textTransform: "uppercase",
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: "800",
-    letterSpacing: -0.3,
-  },
-  searchCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   content: {
     flex: 1,
   },
@@ -51,76 +18,50 @@ export default StyleSheet.create({
     gap: 12,
   },
   sectionEyebrow: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: "800",
-    letterSpacing: 1.8,
+    letterSpacing: 1.4,
     textTransform: "uppercase",
   },
 
   // Quick tools grid (2-col image cards)
-  quickToolsGrid: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  quickToolCard: {
-    flex: 1,
-    borderWidth: 1,
-    borderRadius: 20,
-    overflow: "hidden",
-  },
-  quickToolImageArea: {
-    height: 88,
-    width: "100%",
-    position: "relative",
-  },
-  quickToolFooter: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 14,
-    paddingTop: 4,
-    paddingBottom: 13,
-  },
-  quickToolLabel: {
-    flex: 1,
-    fontSize: 12.5,
-    fontWeight: "800",
-  },
 
   // 1RM Calculator row
-  calculatorRow: {
+  toolRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 13,
+    gap: 12,
     borderWidth: 1,
-    borderRadius: 20,
+    borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 12,
   },
-  calculatorThumb: {
-    width: 48,
-    height: 48,
-    borderRadius: 13,
-    overflow: "hidden",
+  toolRowIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  calculatorTextColumn: {
+  toolRowCopy: {
     flex: 1,
-    flexDirection: "column",
-    gap: 1,
+    minWidth: 0,
+    gap: 2,
   },
-  calculatorTitle: {
-    fontSize: 14,
+  toolRowTitle: {
+    fontSize: 15,
     fontWeight: "800",
   },
-  calculatorSubtitle: {
+  toolRowDetail: {
     fontSize: 11,
+    lineHeight: 15,
     fontWeight: "600",
   },
 
   // Programs hero card
   programsCard: {
     borderWidth: 1,
-    borderRadius: 20,
+    borderRadius: 18,
     overflow: "hidden",
   },
   programsImageArea: {
@@ -141,7 +82,7 @@ export default StyleSheet.create({
     paddingVertical: 5,
   },
   programsPillText: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: "800",
     letterSpacing: 0.8,
   },
@@ -184,29 +125,9 @@ export default StyleSheet.create({
     paddingVertical: 5,
   },
   chipText: {
-    fontSize: 10.5,
+    fontSize: 11,
     fontWeight: "800",
   },
 
   // Personal records / exercise library cards
-  infoCard: {
-    borderWidth: 1,
-    borderRadius: 20,
-    paddingHorizontal: 18,
-    paddingVertical: 16,
-    flexDirection: "column",
-    gap: 10,
-  },
-  infoCardHeaderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  iconSquare: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
 });

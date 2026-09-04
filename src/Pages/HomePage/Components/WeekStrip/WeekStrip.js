@@ -11,56 +11,50 @@ const REST_DOT_LIGHT = "rgba(15, 17, 22, 0.14)";
 
 // One cell: weekday label, date number, and a status marker (check / dot).
 function WeekStripCell({ cell, theme, restDotColor }) {
-  if (cell.isToday) {
-    return (
-      <View
+  // Status, not buttons: no surface, no border, no shadow. Today is marked by
+  // an underline and colour instead of a raised card.
+  return (
+    <View style={styles.cell}>
+      <Text
         style={[
-          styles.cell,
-          styles.todayCell,
-          {
-            backgroundColor: theme.primary,
-            shadowColor: theme.primary,
-          },
+          styles.weekdayLabel,
+          // theme.text, not quietText: quietText is only 3.7:1 on the dark
+          // background, below the 4.5:1 minimum.
+          { color: cell.isToday ? theme.primary : theme.text },
         ]}
       >
-        <Text style={[styles.weekdayLabel, { color: "rgba(20,16,12,0.7)" }]}>
-          {cell.weekday}
-        </Text>
-        <Text style={[styles.dayNumber, { color: theme.textInverted }]}>
-          {cell.day}
-        </Text>
-        <View style={[styles.dotMarker, { backgroundColor: theme.textInverted }]} />
-      </View>
-    );
-  }
-
-  return (
-    <View
-      style={[
-        styles.cell,
-        {
-          backgroundColor: theme.cardBackground,
-          borderWidth: 1,
-          borderColor: theme.hairline,
-        },
-      ]}
-    >
-      <Text style={[styles.weekdayLabel, { color: theme.quietText }]}>
         {cell.weekday}
       </Text>
       <Text
         style={[
           styles.dayNumber,
-          { color: cell.done ? theme.textStrong : theme.quietText },
+          cell.isToday && styles.dayNumberToday,
+          {
+            color: cell.isToday
+              ? theme.primary
+              : cell.done
+                ? theme.textStrong
+                : theme.text,
+          },
         ]}
       >
         {cell.day}
       </Text>
+
       {cell.done ? (
         <Checkmark width={10} height={10} color={theme.secondary} thickness={3} />
       ) : (
         <View style={[styles.dotMarker, { backgroundColor: restDotColor }]} />
       )}
+
+      <View
+        style={[
+          styles.todayUnderline,
+          {
+            backgroundColor: cell.isToday ? theme.primary : "transparent",
+          },
+        ]}
+      />
     </View>
   );
 }

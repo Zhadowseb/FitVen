@@ -41,7 +41,7 @@ export default StyleSheet.create({
     paddingBottom: 8,
   },
   cardTitleText: {
-    fontSize: 14,
+    fontSize: 13,
     lineHeight: 18,
     fontWeight: "900",
     marginBottom: 6,
@@ -91,7 +91,7 @@ export default StyleSheet.create({
     minWidth: 0,
   },
   optionTitle: {
-    fontSize: 14,
+    fontSize: 13,
     lineHeight: 18,
     fontWeight: "900",
     marginBottom: 3,
@@ -108,10 +108,42 @@ export default StyleSheet.create({
     paddingBottom: 12,
   },
   selectedLabel: {
-    fontSize: 10,
-    lineHeight: 13,
+    fontSize: 12,
+    lineHeight: 15,
     fontWeight: "800",
-    letterSpacing: 2.4,
+    letterSpacing: 1.6,
+  },
+
+  chipRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 10,
+  },
+
+  chip: {
+    maxWidth: "100%",
+    minHeight: 32,
+    borderWidth: 1,
+    borderRadius: 999,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    paddingLeft: 12,
+    paddingRight: 10,
+  },
+
+  chipText: {
+    flexShrink: 1,
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "800",
+  },
+
+  chipHint: {
+    marginTop: 8,
+    fontSize: 13,
+    lineHeight: 18,
   },
   searchBox: {
     height: 40,
@@ -127,7 +159,7 @@ export default StyleSheet.create({
   searchInput: {
     flex: 1,
     minWidth: 0,
-    fontSize: 14,
+    fontSize: 13,
     paddingVertical: 0,
   },
   peopleList: {
@@ -162,7 +194,7 @@ export default StyleSheet.create({
     minWidth: 0,
   },
   personName: {
-    fontSize: 14,
+    fontSize: 13,
     lineHeight: 18,
     fontWeight: "900",
   },

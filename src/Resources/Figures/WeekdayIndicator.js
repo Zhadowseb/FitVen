@@ -19,6 +19,29 @@ const MONTH_LABELS = [
   "dec",
 ];
 
+// A month cell is under 50 px wide, so it carries one dot per workout instead
+// of the week view's icon cards. Same colour language, no 8 px text.
+const MAX_MONTH_MARKERS = 6;
+
+const getWorkoutMarkerColor = (workoutCard, palette) => {
+  if (
+    workoutCard.sickOverdue ||
+    (workoutCard.completed && workoutCard.sickCompleted)
+  ) {
+    return palette.sick;
+  }
+
+  if (workoutCard.overdue) {
+    return palette.danger;
+  }
+
+  if (workoutCard.completed) {
+    return workoutCard.hasPersonalRecord ? palette.record : palette.completed;
+  }
+
+  return palette.planned;
+};
+
 const getMonthLabel = (monthNumber) => {
   const monthIndex = Number(monthNumber);
 
@@ -76,6 +99,8 @@ const WeekdayIndicator = ({
     theme.record ?? Colors.dark.record ?? theme.secondary ?? titleColor;
   const recordBorder = theme.recordDark ?? Colors.dark.recordDark ?? recordColor;
   const dangerColor = theme.danger ?? Colors.dark.danger ?? "#ba0000ff";
+  const dangerBorderColor =
+    theme.dangerDark ?? Colors.dark.dangerDark ?? dangerColor;
   const sickColor = theme.planned ?? Colors.dark.planned ?? "#ffdd00";
   const sickBorderColor = theme.plannedDark ?? Colors.dark.plannedDark ?? sickColor;
   const sickSurface =
@@ -91,14 +116,14 @@ const WeekdayIndicator = ({
     ? sickSurface
     : active
     ? activeSurface
-    : completed
+    : completed && !compact
       ? completedSurface
       : surfaceColor;
   const badgeBorderColor = isSick
     ? sickColor
     : active
     ? activeBorder
-    : completed
+    : completed && !compact
       ? completedBorder
       : cardBorder;
   const badgeLabelColor = isSick
@@ -108,12 +133,13 @@ const WeekdayIndicator = ({
     : completed
       ? completedText
       : quietText;
-  const badgeDateColor = isSick
-    ? titleColor
-    : active
-    ? titleColor
-    : completed
-      ? titleColor
+  // The month grid has no program dot, so the date number carries the program
+  // span instead - no extra element in a 50 px cell. Today is skipped: its
+  // badge is already flagged in the accent colour, and accent text on an
+  // accent-tinted badge has no contrast.
+  const badgeDateColor =
+    compact && programActive && !active
+      ? theme.primary ?? titleColor
       : titleColor;
   const weekdayTextColor = isSick
     ? sickColor
@@ -125,18 +151,11 @@ const WeekdayIndicator = ({
 
   return (
     <View style={[styles.container, compact && styles.containerCompact]}>
-      {!!statusBadgeLabel && (
-        <View
-          pointerEvents="none"
-          style={[
-            styles.todayBadgeSlot,
-            compact && styles.todayBadgeSlotCompact,
-          ]}
-        >
+      {!compact && !!statusBadgeLabel && (
+        <View pointerEvents="none" style={styles.todayBadgeSlot}>
           <View
             style={[
               styles.todayBadge,
-              compact && styles.todayBadgeCompact,
               {
                 backgroundColor: statusBadgeColor,
                 borderColor: theme.cardBackground ?? theme.background,
@@ -167,12 +186,11 @@ const WeekdayIndicator = ({
           },
         ]}
       >
-        {programActive && (
+        {programActive && !compact && (
           <View
             pointerEvents="none"
             style={[
               styles.programDot,
-              compact && styles.programDotCompact,
               { backgroundColor: theme.primary ?? "#f7742e" },
             ]}
           />
@@ -209,9 +227,44 @@ const WeekdayIndicator = ({
             )}
           </View>
         )}
+
+        {hasWorkoutCards && compact && (
+          <View style={styles.markerRow}>
+            {workoutCards
+              .slice(
+                0,
+                workoutCards.length > MAX_MONTH_MARKERS
+                  ? MAX_MONTH_MARKERS - 1
+                  : MAX_MONTH_MARKERS
+              )
+              .map((workoutCard, index) => (
+                <View
+                  key={workoutCard.key ?? `${workoutCard.iconLabel}-${index}`}
+                  style={[
+                    styles.marker,
+                    {
+                      backgroundColor: getWorkoutMarkerColor(workoutCard, {
+                        sick: sickColor,
+                        danger: dangerColor,
+                        record: recordColor,
+                        completed: theme.secondary,
+                        planned: theme.primary,
+                      }),
+                    },
+                  ]}
+                />
+              ))}
+
+            {workoutCards.length > MAX_MONTH_MARKERS && (
+              <Text style={[styles.markerOverflow, { color: quietText }]}>
+                +{workoutCards.length - (MAX_MONTH_MARKERS - 1)}
+              </Text>
+            )}
+          </View>
+        )}
       </Pressable>
 
-      {hasWorkoutCards && (
+      {hasWorkoutCards && !compact && (
         <View style={styles.workoutCards}>
           {workoutCards.map((workoutCard, index) => {
             const WorkoutIcon = workoutCard.icon;
@@ -241,7 +294,7 @@ const WeekdayIndicator = ({
               : workoutCard.sickOverdue
               ? sickBorderColor
               : workoutCard.overdue
-              ? dangerColor
+              ? dangerBorderColor
               : isPersonalRecordWorkout
                 ? completedWorkoutBorderColor
               : workoutCard.completed
@@ -357,7 +410,7 @@ const WeekdayIndicator = ({
               borderColor: sickOverdue
                 ? sickBorderColor
                 : overdue
-                ? dangerColor
+                ? dangerBorderColor
                 : completed && hasPersonalRecord
                   ? recordBorder
                 : completed
@@ -423,26 +476,32 @@ const styles = StyleSheet.create({
     marginBottom: 7,
     position: "relative",
   },
+  // Fills its column, like the cells in the week grid under the calendar - the
+  // old 78 % left uneven gaps between the days.
+  // Every measurement headerBadge sets has to be reset here, or its
+  // maxWidth 58 / minWidth 44 / minHeight 60 keep winning and the month cells
+  // grow past their column.
   headerBadgeCompact: {
-    width: "78%",
-    maxWidth: 44,
-    minWidth: 34,
-    minHeight: 38,
+    width: "100%",
+    maxWidth: 9999,
+    minWidth: 0,
+    height: 42,
+    minHeight: 42,
     paddingHorizontal: 2,
-    paddingTop: 3,
-    paddingBottom: 3,
-    borderRadius: 12,
-    marginBottom: 4,
+    paddingTop: 0,
+    paddingBottom: 0,
+    borderRadius: 11,
+    marginBottom: 0,
   },
   weekdayLabel: {
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0,
     lineHeight: 11,
   },
   weekdayLabelActive: {
-    fontSize: 9,
+    fontSize: 11,
     letterSpacing: 0,
   },
   programDot: {
@@ -453,13 +512,6 @@ const styles = StyleSheet.create({
     height: 7,
     borderRadius: 4,
   },
-  programDotCompact: {
-    top: 4,
-    right: 3,
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
   todayBadgeSlot: {
     position: "absolute",
     top: 0,
@@ -467,9 +519,6 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: "center",
     zIndex: 3,
-  },
-  todayBadgeSlotCompact: {
-    top: 0,
   },
   todayBadge: {
     width: "80%",
@@ -481,13 +530,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: "center",
   },
-  todayBadgeCompact: {
-    width: "70%",
-    maxWidth: 42,
-    minWidth: 34,
-  },
   todayBadgeText: {
-    fontSize: 8,
+    fontSize: 11,
     fontWeight: "800",
     letterSpacing: 0,
     lineHeight: 10,
@@ -506,15 +550,32 @@ const styles = StyleSheet.create({
     lineHeight: 21,
   },
   dateNumberCompact: {
-    fontSize: 17,
-    lineHeight: 19,
+    fontSize: 15,
+    lineHeight: 17,
   },
   dateMonth: {
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: "700",
     lineHeight: 10,
     opacity: 0.8,
     textTransform: "lowercase",
+  },
+  markerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 2,
+    marginTop: 3,
+  },
+  marker: {
+    width: 3,
+    height: 3,
+    borderRadius: 2,
+  },
+  markerOverflow: {
+    fontSize: 11,
+    fontWeight: "800",
+    lineHeight: 12,
   },
   circle: {
     width: 40,
@@ -530,7 +591,7 @@ const styles = StyleSheet.create({
   circleCompact: {
     width: 34,
     height: 34,
-    borderRadius: 12,
+    borderRadius: 10,
     marginBottom: 6,
   },
   splitWorkoutBackground: {
@@ -557,12 +618,12 @@ const styles = StyleSheet.create({
     marginBottom: 3,
   },
   iconLabel: {
-    fontSize: 8,
+    fontSize: 11,
     opacity: 0.85,
     marginTop: 1,
   },
   iconLabelOnly: {
-    fontSize: 9,
+    fontSize: 11,
     marginTop: 0,
   },
 });

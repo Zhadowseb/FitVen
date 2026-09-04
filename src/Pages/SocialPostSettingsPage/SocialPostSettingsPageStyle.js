@@ -43,7 +43,7 @@ export default StyleSheet.create({
   heroIcon: {
     width: 52,
     height: 52,
-    borderRadius: 17,
+    borderRadius: 18,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
@@ -96,10 +96,64 @@ export default StyleSheet.create({
     fontWeight: "800",
     lineHeight: 20,
   },
-  choiceBody: {
-    marginTop: 3,
+  scopeNote: {
+    marginBottom: 14,
     fontSize: 13,
     lineHeight: 18,
+    fontWeight: "700",
+  },
+  groupNote: {
+    marginTop: 12,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  previewFrame: {
+    marginTop: 8,
+    minHeight: 34,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    justifyContent: "center",
+  },
+  previewBody: {
+    gap: 5,
+  },
+  previewStatRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  previewStat: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "800",
+    fontVariant: ["tabular-nums"],
+  },
+  previewTopSetRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+  previewStarSlot: {
+    width: 11,
+    alignItems: "center",
+  },
+  previewTopSetName: {
+    flex: 1,
+    minWidth: 0,
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  previewTopSetValue: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "800",
+    fontVariant: ["tabular-nums"],
+  },
+  previewEmptyText: {
+    fontSize: 12,
+    lineHeight: 16,
   },
   choiceControl: {
     width: 28,

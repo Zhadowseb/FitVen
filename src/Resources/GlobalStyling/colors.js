@@ -5,6 +5,9 @@ export const Colors = {
 
     dark: {
         primary: "#F7742E",
+        // Accent for text and icons. On dark surfaces the accent itself is
+        // legible; on light ones it is not, so the light palette darkens it.
+        primaryText: "#F7742E",
         primaryLight: "rgb(237, 178, 146)",
         primaryDark: "rgb(190, 74, 11)",
         ink: "#14100C",
@@ -18,6 +21,7 @@ export const Colors = {
         recordLight: "rgb(51, 139, 255)",
         recordDark: "rgb(2, 49, 111)",
         danger: "#E85C4A",
+        dangerDark: "rgb(168, 55, 41)",
         planned: "#F2C14E",
         plannedLight: "rgb(255, 238, 130)",
         plannedDark: "rgb(201, 174, 0)",
@@ -28,10 +32,11 @@ export const Colors = {
 
         text: "#A4A8B3",
         textStrong: "#ECEDF1",
-        textMuted: "#676B76",
+        // 5.4:1 against the card surface, where the old #676B76 sat at 3.4:1.
+        textMuted: "#868C99",
         textDisabled: "#3A3D46",
         textInverted: "#14100C",
-        quietText: "#676B76",
+        quietText: "#868C99",
         title: "#F2F3F5",
 
         background: "#0A0B0F",
@@ -45,12 +50,13 @@ export const Colors = {
         navHandle: "rgba(255, 255, 255, 0.22)",
         libraryMetricBackground: "rgba(26, 32, 45, 0.92)",
 
-        iconColor: "#676B76",
+        iconColor: "#868C99",
         iconColorFocused: "#F7742E",
     },
 
     light: {
         primary: "#F7742E",
+        primaryText: "#B4470B",
         primaryLight: "rgb(237, 178, 146)",
         primaryDark: "rgb(190, 74, 11)",
         ink: "#14100C",
@@ -64,6 +70,7 @@ export const Colors = {
         recordLight: "rgb(218, 221, 255)",
         recordDark: "rgb(19, 27, 126)",
         danger: "#D64533",
+        dangerDark: "rgb(150, 40, 26)",
         planned: "#C08A12",
         plannedLight: "rgb(255, 238, 130)",
         plannedDark: "rgb(201, 174, 0)",
@@ -106,6 +113,7 @@ export const AccentThemes = {
         swatch: { primary: "#F7742E", secondary: "#4ED39A" },
         dark: {
             primary: "#F7742E",
+            primaryText: "#F7742E",
             primaryLight: "rgb(237, 178, 146)",
             primaryDark: "rgb(190, 74, 11)",
             ink: "#14100C",
@@ -121,6 +129,7 @@ export const AccentThemes = {
         },
         light: {
             primary: "#F7742E",
+            primaryText: "#B4470B",
             primaryLight: "rgb(237, 178, 146)",
             primaryDark: "rgb(190, 74, 11)",
             ink: "#14100C",
@@ -141,6 +150,7 @@ export const AccentThemes = {
         swatch: { primary: "#C8F04A", secondary: "#7C86FF" },
         dark: {
             primary: "#C8F04A",
+            primaryText: "#C8F04A",
             primaryLight: "rgb(222, 246, 146)",
             primaryDark: "rgb(140, 168, 52)",
             ink: "#12160A",
@@ -156,6 +166,7 @@ export const AccentThemes = {
         },
         light: {
             primary: "#6E8F12",
+            primaryText: "#5A7510",
             primaryLight: "rgb(222, 246, 146)",
             primaryDark: "rgb(140, 168, 52)",
             ink: "#12160A",
@@ -176,6 +187,7 @@ export const AccentThemes = {
         swatch: { primary: "#6E5CF0", secondary: "#FFC24B" },
         dark: {
             primary: "#8B7CF5",
+            primaryText: "#8B7CF5",
             primaryLight: "rgb(168, 157, 246)",
             primaryDark: "rgb(77, 64, 168)",
             ink: "#F5F4FF",
@@ -191,6 +203,7 @@ export const AccentThemes = {
         },
         light: {
             primary: "#6E5CF0",
+            primaryText: "#5A48D6",
             primaryLight: "rgb(168, 157, 246)",
             primaryDark: "rgb(77, 64, 168)",
             ink: "#F5F4FF",
@@ -211,6 +224,7 @@ export const AccentThemes = {
         swatch: { primary: "#FF5D5D", secondary: "#22D3C0" },
         dark: {
             primary: "#FF7A7A",
+            primaryText: "#FF7A7A",
             primaryLight: "rgb(255, 158, 158)",
             primaryDark: "rgb(179, 65, 65)",
             ink: "#2A0C0C",
@@ -226,6 +240,7 @@ export const AccentThemes = {
         },
         light: {
             primary: "#E23B3B",
+            primaryText: "#C22C2C",
             primaryLight: "rgb(255, 158, 158)",
             primaryDark: "rgb(179, 65, 65)",
             ink: "#2A0C0C",

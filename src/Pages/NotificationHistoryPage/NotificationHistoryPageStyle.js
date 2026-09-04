@@ -8,21 +8,14 @@ export default StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  headerEyebrow: {
-    fontSize: 10,
-    lineHeight: 13,
-    fontWeight: "800",
-    letterSpacing: 1.8,
-    textTransform: "uppercase",
-    marginBottom: 1,
-  },
   headerTitle: {
-    lineHeight: 25,
+    lineHeight: 28,
+    textAlign: "center",
   },
   settingsButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
@@ -73,8 +66,8 @@ export default StyleSheet.create({
   notificationTitle: {
     flex: 1,
     minWidth: 0,
-    fontSize: 14,
-    lineHeight: 18,
+    fontSize: 15,
+    lineHeight: 20,
     fontWeight: "900",
   },
   unreadDot: {
@@ -85,15 +78,14 @@ export default StyleSheet.create({
   },
   notificationBody: {
     marginTop: 3,
-    fontSize: 12,
-    lineHeight: 17,
+    fontSize: 13,
+    lineHeight: 18,
   },
   notificationTime: {
     marginTop: 6,
-    fontSize: 10,
-    lineHeight: 13,
+    fontSize: 13,
+    lineHeight: 17,
     fontWeight: "800",
-    textTransform: "uppercase",
   },
   loadingState: {
     flex: 1,
@@ -152,7 +144,7 @@ export default StyleSheet.create({
   retryButton: {
     minWidth: 120,
     minHeight: 42,
-    borderRadius: 21,
+    borderRadius: 22,
     marginTop: 18,
     paddingHorizontal: 18,
     alignItems: "center",

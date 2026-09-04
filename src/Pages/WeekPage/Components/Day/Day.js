@@ -28,7 +28,7 @@ import { formatDate } from '../../../../Utils/dateUtils';
 import { requestOpenQuickWorkoutMenu } from "../../../../Utils/quickWorkoutMenuEvents";
 import { programService as programRepository } from "../../../../Services";
 
-const Day = ( {day, program_id, microcycle_id} ) => {
+const Day = ( {day, program_id, microcycle_id, refreshKey = 0} ) => {
     const colorScheme = useColorScheme();
     const theme = Colors[colorScheme] ?? Colors.light;
     
@@ -70,9 +70,10 @@ const Day = ( {day, program_id, microcycle_id} ) => {
     const hasWorkouts = workouts.length > 0;
     
     useFocusEffect(
+        // refreshKey is what a pull-to-refresh on the week bumps.
         useCallback(() => {
             loadDay();
-        }, [day, microcycle_id])
+        }, [day, microcycle_id, refreshKey])
     );
 
     const loadDay = async () => {

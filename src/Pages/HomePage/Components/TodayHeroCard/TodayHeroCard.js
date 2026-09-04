@@ -4,7 +4,6 @@ import styles from "./TodayHeroCardStyle";
 import { Colors, withAlpha } from "../../../../Resources/GlobalStyling/colors";
 import CoverGradient from "../../../../Resources/Components/CoverGradient";
 import ChevronRight from "../../../../Resources/Icons/UI-icons/ChevronRight";
-import Calender from "../../../../Resources/Icons/UI-icons/Calender";
 import Checkmark from "../../../../Resources/Icons/UI-icons/Checkmark";
 import { getWorkoutCoverImage } from "../../../../Utils/workoutCoverImages";
 
@@ -38,39 +37,41 @@ export default function TodayHeroCard({
           },
         ]}
       >
-        <View
-          style={[
-            styles.emptyIconCircle,
-            { backgroundColor: theme.chipBackground },
-          ]}
-        >
-          <Calender width={26} height={26} color={theme.quietText} thickness={1.7} />
-        </View>
-        <Text style={[styles.emptyTitle, { color: theme.title }]}>
-          Nothing scheduled today
-        </Text>
-        <Text style={[styles.emptySubtitle, { color: theme.quietText }]}>
-          Rest up, or jump into a quick workout.
-        </Text>
-
-        <TouchableOpacity
-          activeOpacity={0.88}
-          accessibilityRole="button"
-          accessibilityLabel="Quick start workout"
-          onPress={onQuickStart}
-          style={[
-            styles.startButton,
-            styles.emptyStartButton,
-            {
-              backgroundColor: theme.primary,
-              shadowColor: theme.primary,
-            },
-          ]}
-        >
-          <Text style={[styles.startButtonText, { color: theme.textInverted }]}>
-            Quick start
+        <View style={styles.emptyCopy}>
+          <Text
+            style={[styles.emptyTitle, { color: theme.title }]}
+            numberOfLines={1}
+          >
+            Nothing scheduled today
           </Text>
-        </TouchableOpacity>
+
+          <Text
+            style={[styles.emptySubtitle, { color: theme.quietText }]}
+            numberOfLines={2}
+          >
+            Rest up, or start a workout.
+          </Text>
+
+          <TouchableOpacity
+            activeOpacity={0.88}
+            accessibilityRole="button"
+            accessibilityLabel="Quick start workout"
+            onPress={onQuickStart}
+            style={[
+              styles.emptyStartButton,
+              { backgroundColor: theme.primary },
+            ]}
+          >
+            <Text
+              style={[
+                styles.emptyStartButtonText,
+                { color: theme.textInverted },
+              ]}
+            >
+              Quick start
+            </Text>
+          </TouchableOpacity>
+        </View>
 
         {nextWorkout ? (
           <UpNextRow
@@ -96,6 +97,12 @@ export default function TodayHeroCard({
   }
 
   const coverImage = getWorkoutCoverImage(workout.workoutType);
+  // "Open" says nothing about what happens; the play icon promises a start.
+  const primaryActionLabel = workout.isRunning
+    ? "Continue"
+    : workout.isStarted
+      ? "Resume workout"
+      : "Start workout";
 
   return (
     <View
@@ -162,7 +169,7 @@ export default function TodayHeroCard({
         <TouchableOpacity
           activeOpacity={0.88}
           accessibilityRole="button"
-          accessibilityLabel="Open workout"
+          accessibilityLabel={primaryActionLabel}
           onPress={onStartWorkout}
           style={[
             styles.startButton,
@@ -174,7 +181,7 @@ export default function TodayHeroCard({
         >
           <View style={[styles.playTriangle, { borderLeftColor: theme.textInverted }]} />
           <Text style={[styles.startButtonText, { color: theme.textInverted }]}>
-            Open workout
+            {primaryActionLabel}
           </Text>
         </TouchableOpacity>
       </View>
@@ -241,18 +248,6 @@ function CompletedWorkoutCard({
         >
           <Checkmark width={14} height={14} color={completionColor} thickness={2.8} />
           <Text style={[styles.chipLabel, { color: completionColor }]}>Completed</Text>
-        </View>
-
-        <View
-          style={[
-            styles.completedCheckCircle,
-            {
-              backgroundColor: withAlpha(completionColor, 0.16),
-              borderColor: withAlpha(completionColor, 0.76),
-            },
-          ]}
-        >
-          <Checkmark width={31} height={31} color={completionColor} thickness={2.7} />
         </View>
 
         <View style={styles.overlayText}>

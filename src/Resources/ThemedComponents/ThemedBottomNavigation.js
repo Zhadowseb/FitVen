@@ -17,10 +17,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Colors, withAlpha } from "../GlobalStyling/colors";
 import StartWorkoutSheet from "../Components/StartWorkoutSheet";
 import {
-  useBlinkAnimation,
-  usePulseAnimation,
-  useSpinAnimation,
-} from "../Components/animationHooks";
+  isWorkoutComingSoon,
+  isWorkoutTypeComingSoon,
+} from "../../Utils/workoutTypeAvailability";
+import { usePulseAnimation } from "../Components/animationHooks";
 import Home from "../Icons/UI-icons/Home";
 import Male from "../Icons/UI-icons/Male";
 import Plus from "../Icons/UI-icons/Plus";
@@ -89,12 +89,12 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
   const [isLoadingUsualWorkouts, setIsLoadingUsualWorkouts] = useState(false);
   const [recentWorkouts, setRecentWorkouts] = useState([]);
   const [isLoadingRecentWorkouts, setIsLoadingRecentWorkouts] = useState(false);
-  const [isRecentWorkoutsExpanded, setIsRecentWorkoutsExpanded] =
-    useState(false);
   const [hasMoreRecentWorkouts, setHasMoreRecentWorkouts] = useState(false);
   const [isLoadingMoreRecentWorkouts, setIsLoadingMoreRecentWorkouts] =
     useState(false);
   const [activeWorkoutTimer, setActiveWorkoutTimer] = useState(null);
+  const [startableWorkout, setStartableWorkout] = useState(null);
+  const [isStartingWorkoutTimer, setIsStartingWorkoutTimer] = useState(false);
   const [activeRestTimer, setActiveRestTimer] = useState(() =>
     getActiveRestTimer()
   );
@@ -128,8 +128,12 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     "OneRepMaxCalculatorPage",
   ].includes(currentRouteName);
   const isHomeActive = !isProfileActive && !isSocialActive && !isLibraryActive;
+  // theme.primary is #F7742E, which is only 2.8:1 on the light nav bar - worse
+  // than the inactive grey. primaryDark clears 4.5:1.
   const activeColor =
-    theme.iconColorFocused ?? theme.primary ?? theme.title ?? theme.text;
+    colorScheme === "light"
+      ? theme.primaryDark ?? theme.primary
+      : theme.iconColorFocused ?? theme.primary ?? theme.title ?? theme.text;
   const inactiveColor = theme.iconColor ?? theme.quietText ?? theme.text;
   const barBackground =
     theme.navBackground ?? theme.cardBackground ?? theme.background;
@@ -155,7 +159,6 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
   const centerTimerText = isRestTimerActive
     ? formatCountdownTime(restTimerRemaining)
     : formatElapsedTime(activeWorkoutElapsed);
-  const centerTimerLabel = isRestTimerActive ? "REST" : "LIVE";
   const restDurationSeconds = activeRestTimer
     ? Math.max(
         1,
@@ -167,12 +170,6 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     : 0;
 
   const fabPulse = usePulseAnimation(shouldShowCenterTimer);
-  const fabLabelBlink = useBlinkAnimation(shouldShowCenterTimer);
-  // Resistance rest: the ring empties with the countdown. No rest running:
-  // a partial arc spins continuously as the "active workout" indicator.
-  const fabSpinRotation = useSpinAnimation(
-    shouldShowCenterTimer && !isRestTimerActive
-  );
   const restRingOffset = useRef(new Animated.Value(0)).current;
   const restRingTimerIdRef = useRef(null);
 
@@ -382,13 +379,14 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     setPlannedTodayShortcut(null);
     setUsualWorkouts([]);
     setRecentWorkouts([]);
-    setIsRecentWorkoutsExpanded(false);
     setHasMoreRecentWorkouts(false);
     setIsLoadingMoreRecentWorkouts(false);
     setQuickWorkoutModalVisible(true);
     loadPlannedShortcut(quickWorkoutDate);
     loadUsualWorkouts(quickWorkoutDate);
-    loadRecentWorkouts(quickWorkoutDate);
+    loadRecentWorkouts(quickWorkoutDate, {
+      limit: RECENT_WORKOUT_PAGE_SIZE,
+    });
   }, [
     isCreatingQuickWorkout,
     loadPlannedShortcut,
@@ -396,33 +394,8 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     loadUsualWorkouts,
   ]);
 
-  const handleToggleRecentWorkouts = useCallback(() => {
-    if (isLoadingRecentWorkouts || isLoadingMoreRecentWorkouts) {
-      return;
-    }
-
-    const quickWorkoutDate = quickWorkoutDateRef.current;
-
-    if (isRecentWorkoutsExpanded) {
-      setIsRecentWorkoutsExpanded(false);
-      loadRecentWorkouts(quickWorkoutDate);
-      return;
-    }
-
-    setIsRecentWorkoutsExpanded(true);
-    loadRecentWorkouts(quickWorkoutDate, {
-      limit: RECENT_WORKOUT_PAGE_SIZE,
-    });
-  }, [
-    isLoadingMoreRecentWorkouts,
-    isLoadingRecentWorkouts,
-    isRecentWorkoutsExpanded,
-    loadRecentWorkouts,
-  ]);
-
   const handleLoadMoreRecentWorkouts = useCallback(() => {
     if (
-      !isRecentWorkoutsExpanded ||
       isLoadingRecentWorkouts ||
       isLoadingMoreRecentWorkouts ||
       !hasMoreRecentWorkouts
@@ -439,7 +412,6 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     hasMoreRecentWorkouts,
     isLoadingMoreRecentWorkouts,
     isLoadingRecentWorkouts,
-    isRecentWorkoutsExpanded,
     loadRecentWorkouts,
     recentWorkouts.length,
   ]);
@@ -452,6 +424,55 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     return subscribeRestTimer(setActiveRestTimer);
   }, []);
 
+  // Starts the day's existing workout straight from the nav button and drops
+  // the user into it, so they skip the create-workout sheet.
+  const handleStartWorkoutTimer = useCallback(async () => {
+    if (!startableWorkout || isStartingWorkoutTimer) {
+      return;
+    }
+
+    setIsStartingWorkoutTimer(true);
+
+    try {
+      const startTime = getCurrentStoredTimestampSeconds();
+
+      if (startableWorkout.original_start_time === null) {
+        await workoutService.setWorkoutOriginalStartTime(db, {
+          workoutId: startableWorkout.workout_id,
+          startTime,
+        });
+        workoutService.notifyWorkoutStartedInBackground(db, {
+          workoutId: startableWorkout.workout_id,
+          startedAt: startTime,
+        });
+      }
+
+      await workoutService.persistWorkoutTimerState(db, {
+        workoutId: startableWorkout.workout_id,
+        timerStart: startTime,
+        elapsedTime: normalizeElapsedDurationSeconds(
+          startableWorkout.elapsed_time,
+          0
+        ),
+      });
+
+      if (navigationRef?.isReady?.()) {
+        navigationRef.navigate("WorkoutPage", {
+          workout_id: startableWorkout.workout_id,
+          workout_label: startableWorkout.label ?? startableWorkout.workout_type,
+          workout_type: startableWorkout.workout_type ?? startableWorkout.label,
+          day: startableWorkout.day,
+          date: startableWorkout.date,
+          program_id: startableWorkout.program_id,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to start workout from the nav button:", error);
+    } finally {
+      setIsStartingWorkoutTimer(false);
+    }
+  }, [db, isStartingWorkoutTimer, startableWorkout]);
+
   const loadActiveWorkoutTimer = useCallback(async () => {
     if (activeWorkoutLoadRef.current) {
       return;
@@ -462,10 +483,18 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     try {
       const workout = await workoutService.getActiveWorkoutTimer(db);
       setActiveWorkoutTimer(workout ?? null);
+      setStartableWorkout(
+        workout
+          ? null
+          : await workoutService.getStartableWorkout(db, {
+              date: getTodaysDate(),
+            })
+      );
       setTimerTick(getCurrentStoredTimestampSeconds());
     } catch (error) {
       console.error("Failed to load active workout timer:", error);
       setActiveWorkoutTimer(null);
+      setStartableWorkout(null);
     } finally {
       activeWorkoutLoadRef.current = false;
     }
@@ -526,6 +555,11 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
 
   const handleCreateQuickWorkout = async (workoutType) => {
     if (!navigationRef?.isReady?.() || isCreatingQuickWorkout) {
+      return;
+    }
+
+    // Backstop for the disabled types - the sheet already blocks the tap.
+    if (isWorkoutTypeComingSoon(workoutType?.id)) {
       return;
     }
 
@@ -604,6 +638,10 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
       return;
     }
 
+    if (isWorkoutComingSoon(workout)) {
+      return;
+    }
+
     setIsCreatingQuickWorkout(true);
     setQuickWorkoutModalVisible(false);
 
@@ -673,42 +711,58 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
         <View style={styles.itemsRow}>
           <TouchableOpacity
             activeOpacity={0.82}
-            onPress={handleProfilePress}
+            onPress={handleHomePress}
             style={styles.tab}
           >
-            <Male
+            <Home
               width={23}
               height={23}
-              color={isProfileActive ? activeColor : inactiveColor}
+              color={isHomeActive ? activeColor : inactiveColor}
             />
             <Text
               style={[
                 styles.tabLabel,
-                { color: isProfileActive ? activeColor : inactiveColor },
+                { color: isHomeActive ? activeColor : inactiveColor },
               ]}
             >
-              PROFILE
+              HOME
             </Text>
+            <View
+              style={[
+                styles.tabIndicator,
+                {
+                  backgroundColor: isHomeActive ? activeColor : "transparent",
+                },
+              ]}
+            />
           </TouchableOpacity>
 
           <TouchableOpacity
             activeOpacity={0.82}
-            onPress={handleSocialPress}
+            onPress={handleLibraryPress}
             style={styles.tab}
           >
-            <Social
+            <UpwardGraf
               width={23}
               height={23}
-              color={isSocialActive ? activeColor : inactiveColor}
+              color={isLibraryActive ? activeColor : inactiveColor}
             />
             <Text
               style={[
                 styles.tabLabel,
-                { color: isSocialActive ? activeColor : inactiveColor },
+                { color: isLibraryActive ? activeColor : inactiveColor },
               ]}
             >
-              SOCIAL
+              TRAIN
             </Text>
+            <View
+              style={[
+                styles.tabIndicator,
+                {
+                  backgroundColor: isLibraryActive ? activeColor : "transparent",
+                },
+              ]}
+            />
           </TouchableOpacity>
 
           <View style={styles.plusSlot}>
@@ -752,20 +806,6 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
                   >
                     {centerTimerText}
                   </Text>
-                  <View style={styles.liveTimerLabelRow}>
-                    <Animated.View
-                      style={[
-                        styles.liveTimerLabelDot,
-                        {
-                          backgroundColor: plusIconColor,
-                          opacity: fabLabelBlink,
-                        },
-                      ]}
-                    />
-                    <Text style={styles.liveTimerLabelText}>
-                      {centerTimerLabel}
-                    </Text>
-                  </View>
                 </TouchableOpacity>
                 {isRestTimerActive ? (
                   <Svg
@@ -796,40 +836,49 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
                     />
                   </Svg>
                 ) : (
-                  <Animated.View
+                  <Svg
                     pointerEvents="none"
-                    style={[
-                      styles.liveTimerRing,
-                      { transform: [{ rotate: fabSpinRotation }] },
-                    ]}
+                    width={LIVE_TIMER_SIZE}
+                    height={LIVE_TIMER_SIZE}
+                    viewBox={`0 0 ${LIVE_TIMER_SIZE} ${LIVE_TIMER_SIZE}`}
+                    style={styles.liveTimerRing}
                   >
-                    <Svg
-                      width={LIVE_TIMER_SIZE}
-                      height={LIVE_TIMER_SIZE}
-                      viewBox={`0 0 ${LIVE_TIMER_SIZE} ${LIVE_TIMER_SIZE}`}
-                    >
-                      <Circle
-                        cx={LIVE_TIMER_SIZE / 2}
-                        cy={LIVE_TIMER_SIZE / 2}
-                        r={LIVE_RING_RADIUS}
-                        fill="none"
-                        stroke={withAlpha(plusBackground, 0.25)}
-                        strokeWidth={LIVE_RING_STROKE}
-                      />
-                      <Circle
-                        cx={LIVE_TIMER_SIZE / 2}
-                        cy={LIVE_TIMER_SIZE / 2}
-                        r={LIVE_RING_RADIUS}
-                        fill="none"
-                        stroke={plusBackground}
-                        strokeWidth={LIVE_RING_STROKE}
-                        strokeLinecap="round"
-                        strokeDasharray={`${LIVE_RING_CIRCUMFERENCE * 0.25} ${LIVE_RING_CIRCUMFERENCE}`}
-                      />
-                    </Svg>
-                  </Animated.View>
+                    {/* Workout running: a full ring. Rest counts down as a
+                        depleting arc in the branch above. */}
+                    <Circle
+                      cx={LIVE_TIMER_SIZE / 2}
+                      cy={LIVE_TIMER_SIZE / 2}
+                      r={LIVE_RING_RADIUS}
+                      fill="none"
+                      stroke={plusBackground}
+                      strokeWidth={LIVE_RING_STROKE}
+                    />
+                  </Svg>
                 )}
               </View>
+            ) : startableWorkout ? (
+              <TouchableOpacity
+                activeOpacity={0.86}
+                accessibilityLabel={`Start workout ${
+                  startableWorkout.label ?? startableWorkout.workout_type
+                }`}
+                accessibilityRole="button"
+                disabled={isStartingWorkoutTimer}
+                onPress={handleStartWorkoutTimer}
+                style={[
+                  styles.plusButton,
+                  {
+                    backgroundColor: plusBackground,
+                    borderColor: fabBorderColor,
+                    shadowColor: plusBackground,
+                    opacity: isStartingWorkoutTimer ? 0.72 : 1,
+                  },
+                ]}
+              >
+                <View
+                  style={[styles.playIcon, { borderLeftColor: plusIconColor }]}
+                />
+              </TouchableOpacity>
             ) : (
               <TouchableOpacity
                 activeOpacity={0.86}
@@ -859,52 +908,59 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
 
           <TouchableOpacity
             activeOpacity={0.82}
-            onPress={handleLibraryPress}
+            onPress={handleSocialPress}
             style={styles.tab}
           >
-            <UpwardGraf
+            <Social
               width={23}
               height={23}
-              color={isLibraryActive ? activeColor : inactiveColor}
+              color={isSocialActive ? activeColor : inactiveColor}
             />
             <Text
               style={[
                 styles.tabLabel,
-                { color: isLibraryActive ? activeColor : inactiveColor },
+                { color: isSocialActive ? activeColor : inactiveColor },
               ]}
             >
-              TRAIN
+              SOCIAL
             </Text>
+            <View
+              style={[
+                styles.tabIndicator,
+                {
+                  backgroundColor: isSocialActive ? activeColor : "transparent",
+                },
+              ]}
+            />
           </TouchableOpacity>
 
           <TouchableOpacity
             activeOpacity={0.82}
-            onPress={handleHomePress}
+            onPress={handleProfilePress}
             style={styles.tab}
           >
-            <Home
+            <Male
               width={23}
               height={23}
-              color={isHomeActive ? activeColor : inactiveColor}
+              color={isProfileActive ? activeColor : inactiveColor}
             />
             <Text
               style={[
                 styles.tabLabel,
-                { color: isHomeActive ? activeColor : inactiveColor },
+                { color: isProfileActive ? activeColor : inactiveColor },
               ]}
             >
-              HOME
+              PROFILE
             </Text>
+            <View
+              style={[
+                styles.tabIndicator,
+                {
+                  backgroundColor: isProfileActive ? activeColor : "transparent",
+                },
+              ]}
+            />
           </TouchableOpacity>
-        </View>
-
-        <View style={styles.handleRow}>
-          <View
-            style={[
-              styles.handle,
-              { backgroundColor: theme.navHandle ?? barBorder },
-            ]}
-          />
         </View>
       </View>
 
@@ -918,13 +974,8 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
         isLoadingUsualWorkouts={isLoadingUsualWorkouts}
         recentWorkouts={recentWorkouts}
         isLoadingRecentWorkouts={isLoadingRecentWorkouts}
-        isRecentWorkoutsExpanded={isRecentWorkoutsExpanded}
         isLoadingMoreRecentWorkouts={isLoadingMoreRecentWorkouts}
-        canShowAllRecentWorkouts={
-          isRecentWorkoutsExpanded || hasMoreRecentWorkouts
-        }
         onLoadMoreRecentWorkouts={handleLoadMoreRecentWorkouts}
-        onToggleRecentWorkouts={handleToggleRecentWorkouts}
         onCopyRecentWorkout={handleCopyRecentWorkout}
         isStartingWorkout={isCreatingQuickWorkout}
         targetDate={quickWorkoutDateRef.current}
@@ -943,6 +994,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
     paddingTop: 10,
+    // Replaces the padding the removed handle row used to provide, so the tabs
+    // do not sit flush against the edge on devices without a bottom inset.
+    paddingBottom: 8,
     paddingHorizontal: 10,
   },
   tab: {
@@ -952,11 +1006,17 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
     gap: 3,
   },
+  tabIndicator: {
+    width: 14,
+    height: 2,
+    borderRadius: 1,
+    marginTop: 3,
+  },
   tabLabel: {
-    fontSize: 9.5,
+    fontSize: 11,
     lineHeight: 12,
     fontWeight: "800",
-    letterSpacing: 0.7,
+    letterSpacing: 0.3,
     textTransform: "uppercase",
   },
   plusSlot: {
@@ -977,6 +1037,16 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.35,
     shadowRadius: 26,
     elevation: 12,
+  },
+  playIcon: {
+    width: 0,
+    height: 0,
+    borderTopWidth: 11,
+    borderBottomWidth: 11,
+    borderLeftWidth: 18,
+    borderTopColor: "transparent",
+    borderBottomColor: "transparent",
+    marginLeft: 5,
   },
   liveTimerWrap: {
     width: LIVE_TIMER_SIZE,
@@ -1009,29 +1079,13 @@ const styles = StyleSheet.create({
     elevation: 12,
   },
   liveTimerValue: {
-    maxWidth: 44,
-    fontSize: 12.5,
-    lineHeight: 13,
+    maxWidth: 48,
+    fontSize: 13,
+    lineHeight: 16,
     fontWeight: "800",
     letterSpacing: -0.2,
     fontVariant: ["tabular-nums"],
     textAlign: "center",
-  },
-  liveTimerLabelRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 2.5,
-  },
-  liveTimerLabelDot: {
-    width: 3.5,
-    height: 3.5,
-    borderRadius: 2,
-  },
-  liveTimerLabelText: {
-    fontSize: 6.5,
-    fontWeight: "800",
-    letterSpacing: 1,
-    color: "rgba(20, 16, 12, 0.75)",
   },
   liveTimerRing: {
     position: "absolute",
@@ -1042,15 +1096,5 @@ const styles = StyleSheet.create({
   },
   liveTimerRingStart: {
     transform: [{ rotate: "-90deg" }],
-  },
-  handleRow: {
-    paddingTop: 14,
-    paddingBottom: 9,
-    alignItems: "center",
-  },
-  handle: {
-    width: 134,
-    height: 5,
-    borderRadius: 999,
   },
 });

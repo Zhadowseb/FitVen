@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useMemo } from "react";
 import {
   Modal,
   View,
@@ -7,34 +7,39 @@ import {
   useColorScheme,
   Animated,
   PanResponder,
-  Dimensions,
-  ScrollView,
+  useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Colors } from "../GlobalStyling/colors";
+import { Colors, withAlpha } from "../GlobalStyling/colors";
+import ThemedKeyboardSheet, {
+  dismissThenClose,
+  useSheetKeyboardHeight,
+} from "./ThemedKeyboardSheet";
 
-const SCREEN_HEIGHT = Dimensions.get("window").height;
-
-// Sheet size
-const SHEET_HEIGHT = SCREEN_HEIGHT * 0.95;
-
-// Snap positions (translateY)
-const SNAP_EXPANDED = SCREEN_HEIGHT * 0.05; // næsten top
-const SNAP_COLLAPSED = SCREEN_HEIGHT * 0.4; // ~60% synlig
-
-const ThemedBottomSheet = ({ visible, onClose, children }) => {
+const ThemedBottomSheet = ({ visible, onClose, children, footer = null }) => {
   const scheme = useColorScheme();
   const theme = Colors[scheme] ?? Colors.light;
   const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
+  const keyboardHeight = useSheetKeyboardHeight();
 
-  const translateY = useRef(new Animated.Value(SNAP_COLLAPSED)).current;
+  // Height follows the content up to a cap, so a sheet with two options is not
+  // padded out to 60% of the screen. Measured per render so folds, display-zoom
+  // changes and a shrunken window are all handled.
+  const maxSheetHeight = useMemo(
+    () => Math.max(200, (windowHeight - keyboardHeight) * 0.85),
+    [keyboardHeight, windowHeight]
+  );
 
-  // Reset position when opened
+  // 0 is fully open. Dragging down raises the value; releasing far enough
+  // closes, otherwise it springs back.
+  const translateY = useRef(new Animated.Value(0)).current;
+
   useEffect(() => {
     if (visible) {
-      translateY.setValue(SNAP_COLLAPSED);
+      translateY.setValue(0);
     }
-  }, [visible]);
+  }, [visible, translateY]);
 
   const panResponder = useRef(
     PanResponder.create({
@@ -42,25 +47,20 @@ const ThemedBottomSheet = ({ visible, onClose, children }) => {
       onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dy) > 5,
 
       onPanResponderMove: (_, g) => {
-        const nextY = SNAP_COLLAPSED + g.dy;
-
-        if (nextY >= SNAP_EXPANDED && nextY <= SNAP_COLLAPSED) {
-          translateY.setValue(nextY);
+        if (g.dy > 0) {
+          translateY.setValue(g.dy);
         }
       },
 
       onPanResponderRelease: (_, g) => {
-        // Swipe down → close
+        // Swipe down -> close
         if (g.dy > 140) {
-          onClose();
+          dismissThenClose(onClose)();
           return;
         }
 
-        // Snap logic
-        const shouldExpand = g.dy < -60;
-
         Animated.spring(translateY, {
-          toValue: shouldExpand ? SNAP_EXPANDED : SNAP_COLLAPSED,
+          toValue: 0,
           useNativeDriver: true,
         }).start();
       },
@@ -72,14 +72,15 @@ const ThemedBottomSheet = ({ visible, onClose, children }) => {
   return (
     <Modal transparent animationType="fade" visible={visible}>
       {/* Overlay */}
-      <Pressable style={styles.overlay} onPress={onClose} />
+      <Pressable style={styles.overlay} onPress={dismissThenClose(onClose)} />
 
       {/* Bottom Sheet */}
       <Animated.View
         style={[
           styles.sheet,
           {
-            height: SHEET_HEIGHT,
+            maxHeight: maxSheetHeight,
+            bottom: keyboardHeight,
             backgroundColor: theme.cardBackground,
             paddingBottom: insets.bottom + 12,
             transform: [{ translateY }],
@@ -88,17 +89,18 @@ const ThemedBottomSheet = ({ visible, onClose, children }) => {
       >
         {/* Drag handle */}
         <View {...panResponder.panHandlers} style={styles.dragZone}>
-          <View style={styles.handle} />
+          <View
+            style={[
+              styles.handle,
+              { backgroundColor: withAlpha(theme.text, 0.28) },
+            ]}
+          />
         </View>
 
         {/* Scrollable content */}
-        <ScrollView
-          contentContainerStyle={{ paddingBottom: 24 }}
-          showsVerticalScrollIndicator={false}
-          nestedScrollEnabled
-        >
+        <ThemedKeyboardSheet footer={footer} style={styles.sheetBody}>
           {children}
-        </ScrollView>
+        </ThemedKeyboardSheet>
       </Animated.View>
     </Modal>
   );
@@ -107,6 +109,13 @@ const ThemedBottomSheet = ({ visible, onClose, children }) => {
 export default ThemedBottomSheet;
 
 const styles = StyleSheet.create({
+  sheetBody: {
+    // Shrinks under the sheet's maxHeight but never stretches the sheet past
+    // its content.
+    flexShrink: 1,
+    minHeight: 0,
+  },
+
   overlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
@@ -132,6 +141,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: "#888",
+
   },
 });

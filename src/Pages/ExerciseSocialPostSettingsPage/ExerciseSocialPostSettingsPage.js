@@ -49,6 +49,7 @@ export default function ExerciseSocialPostSettingsPage() {
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor;
   const panelSurface = theme.uiBackground ?? theme.background;
   const primaryColor = theme.primary ?? "#f7742e";
+  const primaryTextColor = theme.primaryText ?? theme.primary;
   const dangerColor = theme.danger ?? "#da1212";
   const normalizedSearchQuery = searchQuery.trim().toLocaleLowerCase();
   const hiddenCount = hiddenExerciseIds.size;
@@ -163,6 +164,10 @@ export default function ExerciseSocialPostSettingsPage() {
 
   const renderHeader = () => (
     <View style={styles.listHeader}>
+      <ThemedText style={styles.scopeNote} setColor={quietText}>
+        Applies to individual exercises
+      </ThemedText>
+
       <ThemedCard
         style={[
           styles.heroCard,
@@ -182,7 +187,7 @@ export default function ExerciseSocialPostSettingsPage() {
               },
             ]}
           >
-            <Library width={25} height={25} color={primaryColor} />
+            <Library width={25} height={25} color={primaryTextColor} />
           </View>
 
           <View style={styles.heroCopy}>
@@ -267,7 +272,7 @@ export default function ExerciseSocialPostSettingsPage() {
 
         <View style={styles.switchWrap}>
           {isSaving ? (
-            <ActivityIndicator size="small" color={primaryColor} />
+            <ActivityIndicator size="small" color={primaryTextColor} />
           ) : (
             <ThemedSwitch
               value={!isHidden}
@@ -287,13 +292,13 @@ export default function ExerciseSocialPostSettingsPage() {
       <ThemedHeader>
         <View style={styles.pageHeaderTitleGroup}>
           <ThemedText
-            size={10}
+            size={12}
             style={[styles.pageHeaderTitleEyebrow, { color: quietText }]}
           >
             Settings
           </ThemedText>
           <ThemedTitle
-            type="h3"
+            type="pageTitle"
             style={styles.pageHeaderTitleMain}
             numberOfLines={1}
           >
@@ -304,7 +309,7 @@ export default function ExerciseSocialPostSettingsPage() {
 
       {loading ? (
         <View style={styles.loadingState}>
-          <ActivityIndicator color={primaryColor} />
+          <ActivityIndicator color={primaryTextColor} />
           <ThemedText style={styles.loadingText} setColor={quietText}>
             Loading exercises...
           </ThemedText>

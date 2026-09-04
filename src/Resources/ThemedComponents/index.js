@@ -4,6 +4,7 @@ export { default as ThemedTitle } from "./ThemedTitle";
 export { default as ThemedView } from "./ThemedView";
 export { default as ThemedButton } from "./ThemedButton";
 export { default as ThemedModal } from "./ThemedModal";
+export { default as ThemedConfirmModal } from "./ThemedConfirmModal";
 export { default as ThemedWorkoutModal } from "./ThemedWorkoutModal";
 export { default as ThemedTextInput } from "./ThemedTextInput";
 export { default as ThemedPicker } from "./ThemedPicker";

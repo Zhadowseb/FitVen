@@ -318,28 +318,28 @@ const RUN_WORKOUT_FLOW_OPTIONS = [
     title: "Endurance & Base",
     gridTitle: "Endurance & Base",
     subtitle: "Base Run · Long Run · Recovery Run",
-    image: require("./Assets/Endurance&base.png"),
+    image: require("./Assets/Endurance&base.jpg"),
   },
   {
     id: "speed-structure",
     title: "Speed & Structure",
     gridTitle: "Speed & Structure",
     subtitle: "Interval · Fartlek · Hill Repeats",
-    image: require("./Assets/Speed&structure.png"),
+    image: require("./Assets/Speed&structure.jpg"),
   },
   {
     id: "performance-threshold",
     title: "Performance & Threshold",
     gridTitle: "Performance",
     subtitle: "Tempo Run · Progression Run",
-    image: require("./Assets/Performance&threshold.png"),
+    image: require("./Assets/Performance&threshold.jpg"),
   },
   {
     id: "custom",
     title: "Custom",
     gridTitle: "Custom",
     subtitle: "Build from blank",
-    image: require("./Assets/Custom.png"),
+    image: require("./Assets/Custom.jpg"),
   },
 ];
 
@@ -3779,7 +3779,7 @@ const Run = ({
                       value={enduranceMainSet?.time?.toString() ?? ""}
                       placeholder="--"
                       placeholderTextColor={titleColor}
-                      keyboardType="normal"
+                      keyboardType="numbers-and-punctuation"
                       displayFormatter={(value) => {
                         const minutes = parsePaceToMinutes(value);
 
@@ -3918,7 +3918,7 @@ const Run = ({
                       value={enduranceMainSet?.pace?.toString() ?? ""}
                       placeholder="--"
                       placeholderTextColor={titleColor}
-                      keyboardType="normal"
+                      keyboardType="numbers-and-punctuation"
                       displayFormatter={(value) =>
                         formatPaceDisplay(parsePaceToMinutes(value))
                       }
@@ -4925,6 +4925,7 @@ const Run = ({
     >
       <ThemedKeyboardProtection
         scroll
+        bottomOffset={96}
         contentContainerStyle={styles.scrollContent}
         scrollViewProps={{ showsVerticalScrollIndicator: false }}
       >
@@ -5007,6 +5008,7 @@ const Run = ({
     >
       <ThemedKeyboardProtection
         scroll
+        bottomOffset={96}
         contentContainerStyle={styles.scrollContent}
         scrollViewProps={{ showsVerticalScrollIndicator: false }}
       >

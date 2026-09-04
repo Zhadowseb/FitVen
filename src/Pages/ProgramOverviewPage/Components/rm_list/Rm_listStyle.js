@@ -22,12 +22,12 @@ export default StyleSheet.create({
   },
 
   metaLeft: {
-    fontSize: 11.5,
+    fontSize: 11,
     fontWeight: "700",
   },
 
   metaHint: {
-    fontSize: 10.5,
+    fontSize: 11,
     fontWeight: "600",
   },
 
@@ -50,7 +50,7 @@ export default StyleSheet.create({
 
   rowName: {
     flex: 1,
-    fontSize: 13.5,
+    fontSize: 13,
     fontWeight: "700",
   },
 
@@ -60,7 +60,7 @@ export default StyleSheet.create({
   },
 
   rowValue: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "800",
     fontVariant: ["tabular-nums"],
   },
@@ -96,8 +96,8 @@ export default StyleSheet.create({
   },
 
   addButton: {
-    height: 42,
-    borderRadius: 12,
+    height: 44,
+    borderRadius: 10,
     borderWidth: 1,
     flexDirection: "row",
     alignItems: "center",
@@ -106,7 +106,7 @@ export default StyleSheet.create({
   },
 
   addButtonText: {
-    fontSize: 12.5,
+    fontSize: 12,
     fontWeight: "800",
   },
 });

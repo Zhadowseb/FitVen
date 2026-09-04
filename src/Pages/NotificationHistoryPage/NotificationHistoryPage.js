@@ -73,6 +73,7 @@ export default function NotificationHistoryPage() {
   const titleColor = theme.title ?? theme.text;
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const primaryColor = theme.primary ?? "#f7742e";
+  const primaryTextColor = theme.primaryText ?? theme.primary;
   const secondaryColor = theme.secondary ?? "#60daac";
   const cardSurface = theme.cardBackground ?? theme.background;
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor;
@@ -258,10 +259,11 @@ export default function NotificationHistoryPage() {
         rightWidth={52}
       >
         <View style={styles.headerTitleGroup}>
-          <ThemedText style={styles.headerEyebrow} setColor={quietText}>
-            Activity
-          </ThemedText>
-          <ThemedTitle type="h3" style={styles.headerTitle} numberOfLines={1}>
+          <ThemedTitle
+            type="pageTitle"
+            style={styles.headerTitle}
+            numberOfLines={1}
+          >
             Notifications
           </ThemedTitle>
         </View>
@@ -269,7 +271,7 @@ export default function NotificationHistoryPage() {
 
       {loading ? (
         <View style={styles.loadingState}>
-          <ActivityIndicator color={primaryColor} />
+          <ActivityIndicator color={primaryTextColor} />
           <ThemedText style={styles.loadingText} setColor={quietText}>
             Loading notifications...
           </ThemedText>

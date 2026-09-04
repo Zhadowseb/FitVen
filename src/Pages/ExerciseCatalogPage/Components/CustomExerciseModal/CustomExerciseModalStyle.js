@@ -77,7 +77,7 @@ export default StyleSheet.create({
   chip: {
     minHeight: 38,
     borderWidth: 1,
-    borderRadius: 20,
+    borderRadius: 18,
     paddingHorizontal: 13,
     alignItems: "center",
     justifyContent: "center",

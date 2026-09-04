@@ -3,7 +3,16 @@ import Svg, { Path } from "react-native-svg";
 import { useColorScheme } from "react-native";
 import { Colors } from "../../GlobalStyling/colors";
 
-function Star({ width = 24, height = 24, color, filled = true, thickness = 1.7 }) {
+// roundness: stroke the filled shape in its own colour with round joins, which
+// softens the five points. 0 keeps the original sharp star.
+function Star({
+  width = 24,
+  height = 24,
+  color,
+  filled = true,
+  thickness = 1.7,
+  roundness = 0,
+}) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const iconColor = color ?? theme.planned;
@@ -15,8 +24,8 @@ function Star({ width = 24, height = 24, color, filled = true, thickness = 1.7 }
       width={width}
       height={height}
       fill={filled ? iconColor : "none"}
-      stroke={filled ? "none" : iconColor}
-      strokeWidth={filled ? 0 : thickness}
+      stroke={filled && roundness <= 0 ? "none" : iconColor}
+      strokeWidth={filled ? roundness : thickness}
       strokeLinecap="round"
       strokeLinejoin="round"
     >

@@ -17,6 +17,8 @@ import Library from "../../Resources/Icons/UI-icons/Library";
 import TailArrowUpRight from "../../Resources/Icons/UI-icons/TailArrowUpRight";
 import { useAuth } from "../../Contexts/AuthContext";
 import { useExerciseViewSettings } from "../../Contexts/ExerciseViewSettingsContext";
+import { isWorkoutTypeComingSoon } from "../../Utils/workoutTypeAvailability";
+import ComingSoonBadge from "../../Resources/Components/ComingSoonBadge";
 import { socialService } from "../../Services";
 import CollapsedSetSummary, {
   ClassicSetSummary,
@@ -63,35 +65,42 @@ const WORKOUT_TYPES = [
 ];
 
 const EXERCISE_VIEW_OPTIONS = [
-  {
-    value: "cells",
-    title: "Standard",
-    description: "All sets as cells with weight and reps",
-  },
-  {
-    value: "compact",
-    title: "Compact",
-    description: "Few sets (≤3) on one line — more as cells",
-  },
-  {
-    value: "progressOnly",
-    title: "Progress only",
-    description: "Hide set summary — show name and dots",
-  },
+  { value: "cells", title: "Standard" },
+  { value: "compact", title: "Compact" },
+  { value: "progressOnly", title: "Progress only" },
 ];
 
 const EXERCISE_CARD_LAYOUT_OPTIONS = [
-  {
-    value: "compact",
-    title: "Compact layout",
-    description: "Progress dots and the expand arrow stay beside the exercise name",
-  },
-  {
-    value: "classic",
-    title: "Classic layout",
-    description: "Use the previous rounded set bubbles beneath the header",
-  },
+  { value: "compact", title: "Compact layout" },
+  { value: "classic", title: "Classic layout" },
 ];
+
+// One sample for every preview on this screen, so an option shows what it will
+// actually look like rather than a sentence describing it.
+const PREVIEW_SETS = [
+  { sets_id: "preview-1", weight: 45, reps: 10, done: 1 },
+  { sets_id: "preview-2", weight: 45, reps: 8, done: 1 },
+  { sets_id: "preview-3", weight: 47.5, reps: 6, failed: 1 },
+  { sets_id: "preview-4", weight: 50, reps: 4 },
+];
+
+// "Progress only" renders nothing on purpose - the empty frame is its preview.
+// Compact only puts sets on one line while there are three or fewer, so its
+// sample is trimmed to three; with four it would be indistinguishable from
+// Standard and the preview would be telling the user something untrue.
+function LayoutOptionPreview({ cardLayout, view, theme }) {
+  if (cardLayout === "classic") {
+    return <ClassicSetSummary theme={theme} sets={PREVIEW_SETS} />;
+  }
+
+  return (
+    <CollapsedSetSummary
+      view={view}
+      theme={theme}
+      sets={view === "compact" ? PREVIEW_SETS.slice(0, 3) : PREVIEW_SETS}
+    />
+  );
+}
 
 export default function WorkoutTypesSettingsPage() {
   const colorScheme = useColorScheme();
@@ -121,6 +130,7 @@ export default function WorkoutTypesSettingsPage() {
   const titleColor = theme.title ?? theme.text;
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const primaryColor = theme.primary ?? "#f7742e";
+  const primaryTextColor = theme.primaryText ?? theme.primary;
   const secondaryColor = theme.secondary ?? "#60daac";
   const cardSurface = theme.cardBackground ?? theme.background;
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor;
@@ -139,6 +149,13 @@ export default function WorkoutTypesSettingsPage() {
       : maxHeartRateSource === "manual"
         ? primaryColor
         : secondaryColor;
+  // Shown when a manual value is in play - the chosen source uses it, or there
+  // is none yet and Manual cannot be chosen until one exists.
+  const showManualMaxHeartRateField =
+    manualMaxHeartRate === null ||
+    preferredMaxHeartRateSource === "manual" ||
+    preferredMaxHeartRateSource === MAX_HEART_RATE_SOURCE_AUTO;
+
   const maxHeartRateSourceOptions = [
     {
       id: MAX_HEART_RATE_SOURCE_AUTO,
@@ -344,13 +361,13 @@ export default function WorkoutTypesSettingsPage() {
       <ThemedHeader>
         <View style={styles.pageHeaderTitleGroup}>
           <ThemedText
-            size={10}
+            size={12}
             style={[styles.pageHeaderTitleEyebrow, { color: quietText }]}
           >
             Settings
           </ThemedText>
           <ThemedTitle
-            type="h3"
+            type="pageTitle"
             style={styles.pageHeaderTitleMain}
             numberOfLines={1}
           >
@@ -366,7 +383,7 @@ export default function WorkoutTypesSettingsPage() {
       >
         <View style={styles.sectionHeader}>
           <View>
-            <ThemedText style={styles.sectionEyebrow} setColor={primaryColor}>
+            <ThemedText style={styles.sectionEyebrow} setColor={primaryTextColor}>
               AVAILABLE
             </ThemedText>
             <ThemedText style={styles.sectionTitle} setColor={titleColor}>
@@ -380,8 +397,12 @@ export default function WorkoutTypesSettingsPage() {
 
         <View style={styles.typeList}>
           {WORKOUT_TYPES.map((workoutType) => {
-            const accentColor =
-              workoutType.id === "run" ? secondaryColor : primaryColor;
+            const isComingSoon = isWorkoutTypeComingSoon(workoutType.id);
+            const accentColor = isComingSoon
+              ? quietText
+              : workoutType.id === "run"
+                ? secondaryColor
+                : primaryColor;
             const WorkoutTypeIcon = workoutType.Icon;
 
             return (
@@ -427,7 +448,10 @@ export default function WorkoutTypesSettingsPage() {
                     >
                       {workoutType.category}
                     </ThemedText>
-                    <ThemedText style={styles.typeTitle} setColor={titleColor}>
+                    <ThemedText
+                      style={styles.typeTitle}
+                      setColor={isComingSoon ? quietText : titleColor}
+                    >
                       {workoutType.title}
                     </ThemedText>
                     <ThemedText style={styles.typeMetrics} setColor={quietText}>
@@ -435,15 +459,21 @@ export default function WorkoutTypesSettingsPage() {
                     </ThemedText>
                   </View>
 
-                  <View style={styles.availableStatus}>
-                    <Feather name="check-circle" size={17} color={accentColor} />
-                    <ThemedText
-                      style={styles.availableStatusText}
-                      setColor={quietText}
+                  {isComingSoon ? (
+                    <ComingSoonBadge size="small" inline angle={-10} />
+                  ) : (
+                    <View
+                      accessible
+                      accessibilityLabel="Available"
+                      style={styles.availableStatus}
                     >
-                      AVAILABLE
-                    </ThemedText>
-                  </View>
+                      <Feather
+                        name="check-circle"
+                        size={20}
+                        color={accentColor}
+                      />
+                    </View>
+                  )}
                 </View>
 
                 {workoutType.id === "strength-training" ? (
@@ -496,9 +526,18 @@ export default function WorkoutTypesSettingsPage() {
                           <ThemedText style={styles.exerciseViewOptionTitle} setColor={titleColor}>
                             {option.title}
                           </ThemedText>
-                          <ThemedText style={styles.exerciseViewOptionDescription} setColor={quietText}>
-                            {option.description}
-                          </ThemedText>
+                          <View
+                            style={[
+                              styles.exerciseViewOptionPreview,
+                              { borderColor: cardBorder },
+                            ]}
+                          >
+                            <LayoutOptionPreview
+                              cardLayout={option.value}
+                              view={collapsedExerciseView}
+                              theme={theme}
+                            />
+                          </View>
                         </View>
                       </TouchableOpacity>
                     ))}
@@ -537,9 +576,18 @@ export default function WorkoutTypesSettingsPage() {
                           <ThemedText style={styles.exerciseViewOptionTitle} setColor={titleColor}>
                             {option.title}
                           </ThemedText>
-                          <ThemedText style={styles.exerciseViewOptionDescription} setColor={quietText}>
-                            {option.description}
-                          </ThemedText>
+                          <View
+                            style={[
+                              styles.exerciseViewOptionPreview,
+                              { borderColor: cardBorder },
+                            ]}
+                          >
+                            <LayoutOptionPreview
+                              cardLayout="compact"
+                              view={option.value}
+                              theme={theme}
+                            />
+                          </View>
                         </View>
                       </TouchableOpacity>
                     ))}
@@ -559,28 +607,11 @@ export default function WorkoutTypesSettingsPage() {
                         </ThemedText>
                         <ThemedText setColor={quietText}>● ★ ● ●</ThemedText>
                       </View>
-                      {collapsedExerciseCardLayout === "classic" ? (
-                        <ClassicSetSummary
-                          theme={theme}
-                          sets={[
-                            { sets_id: "preview-1", weight: 45, reps: 10, done: 1 },
-                            { sets_id: "preview-2", weight: 45, reps: 8, done: 1 },
-                            { sets_id: "preview-3", weight: 47.5, reps: 6, failed: 1 },
-                            { sets_id: "preview-4", weight: 50, reps: 4 },
-                          ]}
-                        />
-                      ) : (
-                        <CollapsedSetSummary
-                          view={collapsedExerciseView}
-                          theme={theme}
-                          sets={[
-                            { sets_id: "preview-1", weight: 45, reps: 10, done: 1 },
-                            { sets_id: "preview-2", weight: 45, reps: 8, done: 1 },
-                            { sets_id: "preview-3", weight: 47.5, reps: 6, failed: 1 },
-                            { sets_id: "preview-4", weight: 50, reps: 4 },
-                          ]}
-                        />
-                      )}
+                      <LayoutOptionPreview
+                        cardLayout={collapsedExerciseCardLayout}
+                        view={collapsedExerciseView}
+                        theme={theme}
+                      />
                     </View>
                   </View>
                 ) : null}
@@ -589,13 +620,16 @@ export default function WorkoutTypesSettingsPage() {
                   <>
                     <TouchableOpacity
                       activeOpacity={0.78}
-                      disabled={isLoadingBirthDate || isSavingBirthDate}
+                      disabled={
+                        isComingSoon || isLoadingBirthDate || isSavingBirthDate
+                      }
                       onPress={() => setBirthDatePickerVisible(true)}
                       style={[
                         styles.typeSettingRow,
                         {
                           borderTopColor: cardBorder,
-                          opacity: isLoadingBirthDate ? 0.55 : 1,
+                          opacity:
+                            isComingSoon || isLoadingBirthDate ? 0.55 : 1,
                         },
                       ]}
                     >
@@ -632,13 +666,18 @@ export default function WorkoutTypesSettingsPage() {
 
                     <TouchableOpacity
                       activeOpacity={0.78}
-                      disabled={isLoadingBirthDate || isSavingMaxHeartRate}
+                      disabled={
+                        isComingSoon ||
+                        isLoadingBirthDate ||
+                        isSavingMaxHeartRate
+                      }
                       onPress={openMaxHeartRateModal}
                       style={[
                         styles.typeSettingRow,
                         {
                           borderTopColor: cardBorder,
-                          opacity: isLoadingBirthDate ? 0.55 : 1,
+                          opacity:
+                            isComingSoon || isLoadingBirthDate ? 0.55 : 1,
                         },
                       ]}
                     >
@@ -722,6 +761,10 @@ export default function WorkoutTypesSettingsPage() {
           }
         }}
       >
+        <ThemedText style={styles.modalSectionLabel} setColor={quietText}>
+          How it is worked out
+        </ThemedText>
+
         <View style={styles.maxHeartRateSourceList}>
           {maxHeartRateSourceOptions.map((option) => {
             const isSelected =
@@ -770,61 +813,79 @@ export default function WorkoutTypesSettingsPage() {
             );
           })}
         </View>
-        <ThemedTextInput
-          value={maxHeartRateInput}
-          onChangeText={(value) =>
-            setMaxHeartRateInput(value.replace(/[^0-9]/g, "").slice(0, 3))
-          }
-          placeholder={
-            maxHeartRate === null
-              ? "Max bpm"
-              : `Current ${maxHeartRate} bpm`
-          }
-          keyboardType="number-pad"
-          editable={!isSavingMaxHeartRate}
-          error={maxHeartRateInputError || undefined}
-          inputStyle={{
-            backgroundColor: iconSurface,
-            color: titleColor,
-          }}
-          placeholderTextColor={quietText}
-        />
-
-        {manualMaxHeartRate !== null ? (
-          <TouchableOpacity
-            activeOpacity={0.72}
-            disabled={isSavingMaxHeartRate}
-            onPress={() => saveManualMaxHeartRate("")}
-            style={styles.clearManualButton}
-          >
-            <ThemedText
-              style={styles.clearManualButtonText}
-              setColor={secondaryColor}
-            >
-              Clear manual value
+        {showManualMaxHeartRateField ? (
+          <>
+            <ThemedText style={styles.modalSectionLabel} setColor={quietText}>
+              Manual value
             </ThemedText>
-          </TouchableOpacity>
-        ) : null}
 
-        <View style={styles.modalActions}>
+            <ThemedTextInput
+              value={maxHeartRateInput}
+              onChangeText={(value) =>
+                setMaxHeartRateInput(value.replace(/[^0-9]/g, "").slice(0, 3))
+              }
+              placeholder={
+                maxHeartRate === null
+                  ? "Max bpm"
+                  : `Current ${maxHeartRate} bpm`
+              }
+              keyboardType="number-pad"
+              editable={!isSavingMaxHeartRate}
+              error={maxHeartRateInputError || undefined}
+              inputStyle={{
+                backgroundColor: iconSurface,
+                color: titleColor,
+              }}
+              placeholderTextColor={quietText}
+            />
+
+            {manualMaxHeartRate !== null ? (
+              <TouchableOpacity
+                activeOpacity={0.72}
+                disabled={isSavingMaxHeartRate}
+                onPress={() => saveManualMaxHeartRate("")}
+                style={styles.clearManualButton}
+              >
+                <ThemedText
+                  style={styles.clearManualButtonText}
+                  setColor={secondaryColor}
+                >
+                  Clear manual value
+                </ThemedText>
+              </TouchableOpacity>
+            ) : null}
+
+            <View style={styles.modalActions}>
+              <ThemedButton
+                title="Cancel"
+                variant="secondary"
+                disabled={isSavingMaxHeartRate}
+                onPress={() => setMaxHeartRateModalVisible(false)}
+                style={styles.modalAction}
+              />
+              <ThemedButton
+                title={isSavingMaxHeartRate ? "Saving..." : "Save"}
+                disabled={
+                  isSavingMaxHeartRate ||
+                  !maxHeartRateInput.trim() ||
+                  Boolean(maxHeartRateInputError)
+                }
+                onPress={() => saveManualMaxHeartRate()}
+                style={styles.modalAction}
+              />
+            </View>
+          </>
+        ) : (
+          // Nothing to save here: the source choice is written the moment it is
+          // tapped, so a Save button would sit permanently disabled.
           <ThemedButton
-            title="Cancel"
+            title="Done"
             variant="secondary"
             disabled={isSavingMaxHeartRate}
             onPress={() => setMaxHeartRateModalVisible(false)}
-            style={styles.modalAction}
+            fullWidth
           />
-          <ThemedButton
-            title={isSavingMaxHeartRate ? "Saving..." : "Save"}
-            disabled={
-              isSavingMaxHeartRate ||
-              !maxHeartRateInput.trim() ||
-              Boolean(maxHeartRateInputError)
-            }
-            onPress={() => saveManualMaxHeartRate()}
-            style={styles.modalAction}
-          />
-        </View>
+        )}
       </ThemedModal>
     </ThemedView>
   );

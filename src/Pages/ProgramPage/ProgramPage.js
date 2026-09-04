@@ -14,7 +14,6 @@ import AddProgram from './Components/AddProgram/AddProgram';
 import { formatDate } from '../../Utils/dateUtils';
 import { programService, programTransferService } from "../../Services";
 import { Colors } from "../../Resources/GlobalStyling/colors";
-import ChevronLeft from "../../Resources/Icons/UI-icons/ChevronLeft";
 import Plus from "../../Resources/Icons/UI-icons/Plus";
 import PlusCircled from "../../Resources/Icons/UI-icons/PlusCircled";
 import ArrowDown from "../../Resources/Icons/UI-icons/ArrowDown";
@@ -23,6 +22,7 @@ import {
   ThemedView,
   ThemedText,
   ThemedBottomSheet,
+  ThemedHeader,
   ThemedTitle,
 } from "../../Resources/ThemedComponents";
 
@@ -34,6 +34,7 @@ export default function App() {
   const navigation = useNavigation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const primaryTextColor = theme.primaryText ?? theme.primary;
 
   const [addProgram_Visible, set_addProgram_Visible] = useState(false);
   const [refreshKey, set_refreshKey] = useState(0);
@@ -97,38 +98,37 @@ export default function App() {
     <>
     <ThemedView safe={["top", "left", "right"]}>
 
-      <View
-        style={[styles.header, { borderBottomColor: theme.hairline }]}
+      <ThemedHeader
+        rightWidth={56}
+        right={
+          <TouchableOpacity
+            style={[
+              styles.headerCircle,
+              styles.headerCircleAdd,
+              { backgroundColor: theme.primary, shadowColor: theme.primary },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel="Program options"
+            hitSlop={8}
+            onPress={() => setOptionsBottomSheetVisible(true)}
+          >
+            <Plus width={19} height={19} color={theme.ink} thickness={2.4} />
+          </TouchableOpacity>
+        }
       >
-        <TouchableOpacity
-          style={[
-            styles.headerCircle,
-            {
-              backgroundColor: theme.cardBackground,
-              borderColor: theme.cardBorder,
-            },
-          ]}
-          onPress={() => navigation.goBack()}
-        >
-          <ChevronLeft width={19} height={19} color={theme.title} thickness={2} />
-        </TouchableOpacity>
-
         <View style={styles.headerCenter}>
-          <ThemedText style={styles.headerEyebrow} setColor={theme.quietText}>
+          <ThemedText
+            size={12}
+            style={styles.headerEyebrow}
+            setColor={theme.quietText}
+          >
             Train
           </ThemedText>
-          <ThemedText style={styles.headerTitle} setColor={theme.title}>
+          <ThemedTitle type="pageTitle" numberOfLines={1}>
             Programs
-          </ThemedText>
+          </ThemedTitle>
         </View>
-
-        <TouchableOpacity
-          style={[styles.headerCircle, styles.headerCircleAdd, { backgroundColor: theme.primary, shadowColor: theme.primary }]}
-          onPress={() => setOptionsBottomSheetVisible(true)}
-        >
-          <Plus width={19} height={19} color={theme.ink} thickness={2.4} />
-        </TouchableOpacity>
-      </View>
+      </ThemedHeader>
 
       <ProgramList
         refreshKey={refreshKey}
@@ -164,7 +164,7 @@ export default function App() {
             handleImportProgram();
           }}>
           {isImportingProgram ? (
-            <ActivityIndicator size="small" color={theme.primary} />
+            <ActivityIndicator size="small" color={primaryTextColor} />
           ) : (
             <ArrowDown width={24} height={24} />
           )}
@@ -181,7 +181,7 @@ export default function App() {
           }}>
           <PlusCircled width={24} height={24} />
           <ThemedText style={styles.option_text}>
-            Create new program.
+            Create new program
           </ThemedText>
         </TouchableOpacity>
       </View>

@@ -881,7 +881,7 @@ const RunSetList = ({
             value: getEditableFieldValue(set, "pace"),
             placeholder: getInputFallback(set.Run_id, "pace"),
             placeholderTextColor: editablePlaceholderColor,
-            keyboardType: "normal",
+            keyboardType: "numbers-and-punctuation",
             displayFormatter: (value) => formatPaceDisplay(value),
             onCommit: async (value) => {
               await runningRepository.updateRunSetField(db, {
@@ -914,7 +914,7 @@ const RunSetList = ({
                 value: getEditableFieldValue(set, "time"),
                 placeholder: getInputFallback(set.Run_id, "time"),
                 placeholderTextColor: editablePlaceholderColor,
-                keyboardType: "normal",
+                keyboardType: "numbers-and-punctuation",
                 displayFormatter: (value) => formatMinutesClock(value),
                 onCommit: async (value) => {
                   await runningRepository.updateRunSetField(db, {
@@ -1045,7 +1045,7 @@ const RunSetList = ({
             value: getEditableFieldValue(set, "pace"),
             placeholder: getInputFallback(set.Run_id, "pace"),
             placeholderTextColor: editablePlaceholderColor,
-            keyboardType: "normal",
+            keyboardType: "numbers-and-punctuation",
             displayFormatter: (value) => formatPaceDisplay(value),
             onCommit: async (value) => {
               await runningRepository.updateRunSetField(db, {
@@ -1070,7 +1070,7 @@ const RunSetList = ({
               value: getEditableFieldValue(set, "time"),
               placeholder: getInputFallback(set.Run_id, "time"),
               placeholderTextColor: editablePlaceholderColor,
-              keyboardType: "normal",
+              keyboardType: "numbers-and-punctuation",
               displayFormatter: (value) => formatMinutesClock(value),
               onCommit: async (value) => {
                 await runningRepository.updateRunSetField(db, {
@@ -1441,7 +1441,7 @@ const RunSetList = ({
                 }
                 placeholder={getInputFallback(selectedSet?.Run_id, "pace")}
                 placeholderTextColor={editablePlaceholderColor}
-                keyboardType="normal"
+                keyboardType="numbers-and-punctuation"
                 displayFormatter={(value) => formatPaceDisplay(value)}
                 onCommit={(value) =>
                   updateSelectedSetField("pace", value === "" ? null : value)
@@ -1466,7 +1466,7 @@ const RunSetList = ({
                 }
                 placeholder={getInputFallback(selectedSet?.Run_id, "time")}
                 placeholderTextColor={editablePlaceholderColor}
-                keyboardType="normal"
+                keyboardType="numbers-and-punctuation"
                 displayFormatter={(value) => formatMinutesClock(value)}
                 onCommit={(value) =>
                   updateSelectedSetField("time", parseDurationInput(value))
