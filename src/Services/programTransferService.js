@@ -478,7 +478,7 @@ function validateProgramImportPayload(payload) {
   const exportVersion = payload?.export_version ?? payload?.exportVersion;
 
   if (exportType !== EXPORT_TYPE || Number(exportVersion) !== EXPORT_VERSION) {
-    throw new Error("Filen er ikke en gyldig FitApp program-export.");
+    throw new Error("The file is not a valid FitVen program export.");
   }
 
   const programs = getTable(payload, "Program");

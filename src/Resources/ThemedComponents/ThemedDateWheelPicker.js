@@ -244,6 +244,7 @@ export default function ThemedDateWheelPicker({
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor;
   const selectedSurface = theme.fields ?? theme.uiBackground ?? cardSurface;
   const primaryColor = theme.primary ?? "#f7742e";
+  const primaryTextColor = theme.primaryText ?? theme.primary;
   const months = useMemo(() => {
     const formatter = new Intl.DateTimeFormat(locale, { month: "long" });
     return Array.from({ length: 12 }, (_, month) =>
@@ -335,7 +336,7 @@ export default function ThemedDateWheelPicker({
           <View style={styles.handle} />
           <View style={styles.header}>
             <View>
-              <ThemedText style={styles.eyebrow} setColor={primaryColor}>
+              <ThemedText style={styles.eyebrow} setColor={primaryTextColor}>
                 DATE
               </ThemedText>
               <ThemedText style={styles.title} setColor={titleColor}>
@@ -463,7 +464,7 @@ const styles = StyleSheet.create({
   },
   eyebrow: {
     marginBottom: 2,
-    fontSize: 9,
+    fontSize: 11,
     lineHeight: 11,
     fontWeight: "900",
     letterSpacing: 1.2,
@@ -488,21 +489,21 @@ const styles = StyleSheet.create({
   },
   dayLabel: {
     width: "24%",
-    fontSize: 8,
+    fontSize: 11,
     lineHeight: 10,
     fontWeight: "900",
     textAlign: "center",
   },
   monthLabel: {
     width: "44%",
-    fontSize: 8,
+    fontSize: 11,
     lineHeight: 10,
     fontWeight: "900",
     textAlign: "center",
   },
   yearLabel: {
     width: "28%",
-    fontSize: 8,
+    fontSize: 11,
     lineHeight: 10,
     fontWeight: "900",
     textAlign: "center",
@@ -537,7 +538,7 @@ const styles = StyleSheet.create({
   },
   wheelItemText: {
     width: "100%",
-    fontSize: 16,
+    fontSize: 15,
     lineHeight: 21,
     fontWeight: "800",
     textAlign: "center",
@@ -549,6 +550,6 @@ const styles = StyleSheet.create({
   },
   action: {
     flex: 1,
-    borderRadius: 16,
+    borderRadius: 14,
   },
 });

@@ -14,6 +14,7 @@ import { weightliftingService as weightliftingRepository } from "../../../../../
 
 import ExerciseRow from "./Components/ExerciseRow/ExerciseRow"
 import PlusCircled from "../../../../../../Resources/Icons/UI-icons/PlusCircled";
+import { EXERCISE_COLLAPSE_DURATION_MS } from "./exerciseCollapseAnimation";
 
 const ExerciseList = ({
   workout_id,
@@ -25,6 +26,11 @@ const ExerciseList = ({
   onRestTimerStart,
   onRestTimerCancel,
   onWorkoutMetadataChange,
+  onExerciseCountChange,
+  onSetCompleted,
+  collapsedSetsVisible = true,
+  collapsedCardLayout = "compact",
+  isWorkoutDone = false,
 }) => {
   const [exercises, setExercises] = useState([]);
   const [expandedExercises, setExpandedExercises] = useState({});
@@ -39,6 +45,11 @@ const ExerciseList = ({
   const dragOffsetYValueRef = useRef(0);
   const dragOffsetY = useRef(new Animated.Value(0)).current;
   const loadRequestIdRef = useRef(0);
+  const optimisticSetCounterRef = useRef(0);
+  // Expansion is restored after the drag settles; the flag tells the layout
+  // effect that row heights changed and the drag context must be re-measured.
+  const expandedBeforeDragRef = useRef(null);
+  const needsDragContextRefreshRef = useRef(false);
   const draggingExerciseId = dragState?.exerciseId ?? null;
 
   const visibleExercises = useMemo(
@@ -48,6 +59,10 @@ const ExerciseList = ({
       ),
     [exercises, showCompletedExercises]
   );
+
+  useEffect(() => {
+    onExerciseCountChange?.(visibleExercises.length);
+  }, [onExerciseCountChange, visibleExercises.length]);
 
   const moveExercise = (items, fromIndex, toIndex) => {
     const nextItems = [...items];
@@ -282,7 +297,61 @@ const ExerciseList = ({
     );
   };
 
+  // Adding a set costs six queries plus a workout relabel, so the row is
+  // inserted locally first and reconciled when loadExercises catches up.
+  const addSetToExercise = useCallback(
+    async (exerciseId) => {
+      const placeholderId = `pending-${exerciseId}-${optimisticSetCounterRef.current++}`;
+
+      setExercises((prevExercises) =>
+        prevExercises.map((exercise) => {
+          if (Number(exercise.exercise_id) !== Number(exerciseId)) {
+            return exercise;
+          }
+
+          const sets = exercise.sets ?? [];
+
+          return {
+            ...exercise,
+            setCount: sets.length + 1,
+            sets: [
+              ...sets,
+              {
+                sets_id: placeholderId,
+                set_number: sets.length + 1,
+                reps: null,
+                weight: null,
+                rpe: null,
+                pause: null,
+                rm_percentage: null,
+                personal_record: 0,
+                done: 0,
+                failed: 0,
+                isPending: true,
+              },
+            ],
+          };
+        })
+      );
+
+      try {
+        await weightliftingRepository.addSetToExercise(db, exerciseId);
+      } catch (error) {
+        console.error("addSetToExercise failed:", error);
+      }
+
+      loadExercises();
+      onWorkoutMetadataChange?.();
+    },
+    [db, loadExercises, onWorkoutMetadataChange]
+  );
+
   const updateSetDone = async (sets_id, completion, sourceSet = null) => {
+    // Placeholder rows have no database id yet.
+    if (!Number.isFinite(Number(sets_id))) {
+      return;
+    }
+
     const { done, failed } = normalizeSetCompletion(completion);
     const restTimerPayload =
       done === 1 && failed !== 1
@@ -295,6 +364,10 @@ const ExerciseList = ({
       onRestTimerStart?.(restTimerPayload);
     } else if (done !== 1 || failed === 1) {
       onRestTimerCancel?.(sets_id);
+    }
+
+    if (done === 1 && failed !== 1) {
+      onSetCompleted?.();
     }
 
     try {
@@ -420,6 +493,13 @@ const ExerciseList = ({
     dragOffsetYValueRef.current = 0;
     dragOffsetY.setValue(0);
     setDragState(null);
+    needsDragContextRefreshRef.current = false;
+
+    if (expandedBeforeDragRef.current) {
+      setExpandedExercises(expandedBeforeDragRef.current);
+      expandedBeforeDragRef.current = null;
+    }
+
     onReorderDragChange?.(false);
   }, [dragOffsetY, onReorderDragChange]);
 
@@ -461,12 +541,80 @@ const ExerciseList = ({
         activeHeight: rowLayout.height,
         isSettling: false,
       });
+      // Collapsing every card makes the list short enough to see where the
+      // exercise is going. The rows change height, so the context captured
+      // above is re-measured once the new layout lands.
+      expandedBeforeDragRef.current = expandedExercises;
+      needsDragContextRefreshRef.current = true;
+      setExpandedExercises({});
+
       onReorderDragChange?.(true);
       Vibration.vibrate(12);
       return true;
     },
-    [dragOffsetY, exercises, onReorderDragChange, visibleExercises]
+    [
+      dragOffsetY,
+      exercises,
+      expandedExercises,
+      onReorderDragChange,
+      visibleExercises,
+    ]
   );
+
+  // Re-measure after the collapse so the drop target is calculated against the
+  // heights the user is actually looking at.
+  useEffect(() => {
+    if (!dragState || dragState.isSettling) {
+      return;
+    }
+
+    if (!needsDragContextRefreshRef.current) {
+      return;
+    }
+
+    // Waits out the collapse animation: mid-animation heights would give the
+    // wrong drop target.
+    const timeout = setTimeout(() => {
+      {
+        const dragContext = dragContextRef.current;
+
+        if (!dragContext) {
+          return;
+        }
+
+        const layoutsById = {};
+        for (const exercise of dragContext.baseVisibleExercises) {
+          layoutsById[exercise.exercise_id] =
+            rowLayoutsRef.current[exercise.exercise_id];
+        }
+
+        const rowLayout = layoutsById[dragContext.exerciseId];
+
+        if (!rowLayout) {
+          return;
+        }
+
+        needsDragContextRefreshRef.current = false;
+        dragContextRef.current = {
+          ...dragContext,
+          layoutsById,
+          activeHeight: rowLayout.height,
+          startCenterY: rowLayout.y + rowLayout.height / 2,
+        };
+        setDragState((previous) =>
+          previous &&
+          previous.exerciseId === dragContext.exerciseId &&
+          !previous.isSettling
+            ? { ...previous, activeHeight: rowLayout.height }
+            : previous
+        );
+      }
+    }, EXERCISE_COLLAPSE_DURATION_MS + 40);
+
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [dragState]);
 
   const handleDragMove = useCallback((dy) => {
     const dragContext = dragContextRef.current;
@@ -630,6 +778,7 @@ const ExerciseList = ({
         isExpanded={Boolean(expandedExercises[item.exercise_id])}
         onToggleExpanded={() => toggleExpanded(item.exercise_id)}
         updateUI={updateUI}
+        onAddSet={addSetToExercise}
         onToggleSet={updateSetDone}
         refreshing={refreshing}
         isDragging={draggingExerciseId === item.exercise_id}
@@ -637,6 +786,8 @@ const ExerciseList = ({
         onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
         onWorkoutMetadataChange={onWorkoutMetadataChange}
+        collapsedSetsVisible={collapsedSetsVisible}
+        collapsedCardLayout={collapsedCardLayout}
       />
     </Animated.View>
   );
@@ -647,21 +798,26 @@ const ExerciseList = ({
       {visibleExercises.map((item) => renderItem(item))}
     </View>
 
-    <View style={{alignItems: "center", paddingTop: 30}}>
+    {!isWorkoutDone && (
+      <View style={{alignItems: "center", paddingTop: 30}}>
 
-      <TouchableOpacity
-        onPress={ () => {
-          navigation.navigate("ExerciseCatalogPage", {
-            workoutPicker: {
-              workoutId: workout_id,
-            },
-          });
-        }}>
-        <PlusCircled
-          width={30}
-          height={30} />
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="Add exercise"
+          hitSlop={10}
+          onPress={ () => {
+            navigation.navigate("ExerciseCatalogPage", {
+              workoutPicker: {
+                workoutId: workout_id,
+              },
+            });
+          }}>
+          <PlusCircled
+            width={30}
+            height={30} />
+        </TouchableOpacity>
+      </View>
+    )}
     </>
   );
 };

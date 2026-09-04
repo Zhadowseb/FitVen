@@ -1,8 +1,8 @@
-import { Alert, TouchableOpacity, View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 import { useColorScheme } from "react-native";
 import { useEffect, useRef, useState } from "react";
 import { useSQLiteContext } from "expo-sqlite";
-import { Colors } from "../../../../../../../../../Resources/GlobalStyling/colors";
+import { Colors, withAlpha } from "../../../../../../../../../Resources/GlobalStyling/colors";
 import {
   formatTime,
   getCurrentStoredTimestampSeconds,
@@ -16,9 +16,10 @@ import styles from "./SetListStyle.js";
 import Title from "./Title";
 
 import {
-  ThemedBouncyCheckbox,
   ThemedBottomSheet,
+  ThemedBouncyCheckbox,
   ThemedCard,
+  ThemedConfirmModal,
   ThemedEditableCell,
   ThemedModal,
   ThemedText,
@@ -29,6 +30,7 @@ import Note from "../../../../../../../../../Resources/Icons/UI-icons/Note";
 import Amrap from "../../../../../../../../../Resources/Icons/UI-icons/Amrap";
 import Plus from "../../../../../../../../../Resources/Icons/UI-icons/Plus";
 import Cogwheel from "../../../../../../../../../Resources/Icons/UI-icons/Cogwheel";
+import Star from "../../../../../../../../../Resources/Icons/UI-icons/Star";
 import { weightliftingService as weightliftingRepository } from "../../../../../../../../../Services";
 
 const SET_LIST_COLUMN_KEYS = [
@@ -41,10 +43,11 @@ const SET_LIST_COLUMN_KEYS = [
   "weight",
   "done",
 ];
+const SET_LIST_OPT_IN_COLUMN_KEYS = ["note", "rpe", "rm_percentage"];
 const SET_LIST_DEFAULT_VISIBLE_COLUMNS = SET_LIST_COLUMN_KEYS.reduce(
   (columns, key) => ({
     ...columns,
-    [key]: true,
+    [key]: !SET_LIST_OPT_IN_COLUMN_KEYS.includes(key),
   }),
   {}
 );
@@ -92,6 +95,7 @@ const SetList = ({
   sets,
   exerciseName,
   visibleColumns,
+  restUnitRequestKey = 0,
   onToggleSet,
   updateUI,
   onAddSet,
@@ -116,10 +120,9 @@ const SetList = ({
   const cellBorder = isDark
     ? "rgba(255, 255, 255, 0.045)"
     : "rgba(32, 30, 43, 0.08)";
-  const setChipBackground = isDark
-    ? "rgba(247, 116, 46, 0.17)"
-    : "rgba(247, 116, 46, 0.14)";
+  const setChipBackground = withAlpha(theme.primary, isDark ? 0.17 : 0.14);
   const primaryColor = theme.primary ?? theme.text;
+  const primaryTextColor = theme.primaryText ?? theme.primary;
   const setChipTextColor = primaryColor;
   const personalRecordColor =
     recordColor ?? theme.record ?? Colors.dark.record ?? setChipTextColor;
@@ -137,6 +140,9 @@ const SetList = ({
     recordControlFillColor ?? personalRecordBorder;
   const personalRecordControlText =
     recordControlTextColor ?? personalRecordSurface;
+  // Same gold as the collapsed set dots use for a record.
+  const personalRecordStarColor = theme.planned ?? "#F2C14E";
+  const personalRecordStarTextColor = theme.textInverted ?? "#14100C";
   const addSetColor = theme.iconColor ?? theme.quietText ?? theme.text;
   const exerciseActionColor = theme.primary ?? addSetColor;
   const secondaryColor = theme.secondary ?? Colors.dark.secondary;
@@ -154,11 +160,24 @@ const SetList = ({
   const [selectedSet, set_selectedSet] = useState(null);
   const [selectedSetNote, setSelectedSetNote] = useState("");
   const [noteModalVisible, setNoteModalVisible] = useState(false);
+  const [deleteSetConfirmVisible, setDeleteSetConfirmVisible] = useState(false);
   const [noteModalText, setNoteModalText] = useState("");
   const [activeEditableCell, setActiveEditableCell] = useState(null);
   const [restUnit, setRestUnit] = useState(REST_UNIT_MINUTES);
-  const [mirrorRestValues, setMirrorRestValues] = useState(false);
+  const [mirrorRestValues, setMirrorRestValues] = useState(true);
   const [restUnitModalVisible, setRestUnitModalVisible] = useState(false);
+  const restUnitRequestSeenRef = useRef(restUnitRequestKey);
+
+  // The rest-unit picker is opened from the exercise settings panel, which
+  // lives one level up, so the request arrives as a changing key.
+  useEffect(() => {
+    if (restUnitRequestKey === restUnitRequestSeenRef.current) {
+      return;
+    }
+
+    restUnitRequestSeenRef.current = restUnitRequestKey;
+    setRestUnitModalVisible(true);
+  }, [restUnitRequestKey]);
   const [setRowLayouts, setSetRowLayouts] = useState({});
   const [activeRestTimer, setActiveRestTimer] = useState(null);
   const [completedRestTimer, setCompletedRestTimer] = useState(null);
@@ -367,7 +386,15 @@ const SetList = ({
     return restUnit === REST_UNIT_MINUTES ? pauseValue * 60 : pauseValue;
   };
 
+  // A set added optimistically has no database id until the insert lands, so
+  // every write is held back until it does.
+  const isPersistedSet = (setId) => Number.isFinite(Number(setId));
+
   const deleteSet = async (setId) => {
+    if (!isPersistedSet(setId)) {
+      return;
+    }
+
     await weightliftingRepository.deleteSet(db, setId);
     await updateUI?.();
     await onWorkoutMetadataChange?.();
@@ -378,24 +405,14 @@ const SetList = ({
       return;
     }
 
-    Alert.alert(
-      "Delete set?",
-      "This removes the set and its saved values.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete set",
-          style: "destructive",
-          onPress: async () => {
-            await deleteSet(selectedSet.sets_id);
-            setSetOptionsVisible(false);
-          },
-        },
-      ]
-    );
+    setDeleteSetConfirmVisible(true);
   };
 
   const updateField = async (field, value, setId) => {
+    if (!isPersistedSet(setId)) {
+      return;
+    }
+
     const nextValue =
       field === "note"
         ? value === "" ? null : value
@@ -422,6 +439,10 @@ const SetList = ({
   };
 
   const updateRestPause = async (value, setId) => {
+    if (!isPersistedSet(setId)) {
+      return;
+    }
+
     if (!mirrorRestValues) {
       await updateField("pause", value, setId);
       return;
@@ -454,6 +475,10 @@ const SetList = ({
   };
 
   const updateRmPercentage = async (value, setId) => {
+    if (!isPersistedSet(setId)) {
+      return;
+    }
+
     const result = await weightliftingRepository.updateSetRmPercentage(db, {
       setId,
       rmPercentage: value,
@@ -488,6 +513,10 @@ const SetList = ({
   };
 
   const updateWeight = async (value, setId) => {
+    if (!isPersistedSet(setId)) {
+      return;
+    }
+
     const result = await weightliftingRepository.updateSetWeight(db, {
       setId,
       weight: value,
@@ -586,6 +615,7 @@ const SetList = ({
       case "note":
         return set.note ? (
           <TouchableOpacity
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             style={styles.note_button}
             onPress={() => {
               setNoteModalText(set.note);
@@ -605,23 +635,39 @@ const SetList = ({
         return (
           <TouchableOpacity
             activeOpacity={0.82}
+            hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
             style={[
               styles.set_chip,
-              {
-                backgroundColor: isPersonalRecord
-                  ? personalRecordControlFill
-                  : setChipBackground,
-                borderColor: isPersonalRecord
-                  ? personalRecordControlFill
-                  : cellBorder,
-              },
+              isPersonalRecord
+                ? styles.set_chip_record
+                : {
+                    backgroundColor: setChipBackground,
+                    borderColor: cellBorder,
+                  },
             ]}
             onPress={() => handleOpenSetOptions(set)}
           >
+            {isPersonalRecord ? (
+              <View style={styles.set_chip_star} pointerEvents="none">
+                <Star
+                  width={40}
+                  height={40}
+                  color={personalRecordStarColor}
+                  filled
+                  roundness={2.2}
+                />
+              </View>
+            ) : null}
+
             <ThemedText
-              style={styles.set_chip_text}
+              style={[
+                styles.set_chip_text,
+                isPersonalRecord && styles.set_chip_text_record,
+              ]}
               setColor={
-                isPersonalRecord ? personalRecordControlText : setChipTextColor
+                isPersonalRecord
+                  ? personalRecordStarTextColor
+                  : setChipTextColor
               }
             >
               {set.set_number}
@@ -862,7 +908,6 @@ const SetList = ({
         {hasSets && (
           <Title
             visibleColumns={renderedVisibleColumns}
-            onRestTitlePress={() => setRestUnitModalVisible(true)}
           />
         )}
 
@@ -949,14 +994,141 @@ const SetList = ({
         visible={setOptionsVisible}
         onClose={handleCloseSetOptions}
       >
-        <View style={styles.bottomsheet_title}>
-          <ThemedText>Set: {selectedSet?.set_number}</ThemedText>
-          <ThemedText>{exerciseName}</ThemedText>
+        <View style={styles.setOptionsHeader}>
+          <View
+            style={[
+              styles.setOptionsBadge,
+              { backgroundColor: setChipBackground },
+            ]}
+          >
+            <ThemedText
+              style={styles.setOptionsBadgeText}
+              setColor={primaryTextColor}
+            >
+              {selectedSet?.set_number}
+            </ThemedText>
+          </View>
+
+          <View style={styles.setOptionsHeaderCopy}>
+            <ThemedText
+              style={styles.setOptionsEyebrow}
+              setColor={theme.quietText}
+            >
+              Set {selectedSet?.set_number}
+            </ThemedText>
+            <ThemedText
+              style={styles.setOptionsTitle}
+              setColor={theme.title}
+              numberOfLines={1}
+            >
+              {exerciseName}
+            </ThemedText>
+          </View>
         </View>
 
-        <View style={styles.bottomsheet_body}>
-          <View style={styles.note_section}>
-            <ThemedText size={12} setColor={theme.quietText}>
+        <View style={styles.setOptionsBody}>
+          <View style={styles.setOptionsSection}>
+            <ThemedText
+              style={styles.setOptionsLabel}
+              setColor={theme.quietText}
+            >
+              Actions
+            </ThemedText>
+
+            <TouchableOpacity
+              activeOpacity={0.84}
+              accessibilityRole="button"
+              style={[
+                styles.setOptionsAction,
+                {
+                  backgroundColor: restSettingsFieldSurface,
+                  borderColor:
+                    selectedSet?.amrap === 1
+                      ? withAlpha(theme.primary, 0.45)
+                      : restUnitBorderColor,
+                },
+              ]}
+              onPress={async () => {
+                if (!selectedSet) {
+                  return;
+                }
+
+                await updateField(
+                  "amrap",
+                  selectedSet.amrap === 1 ? 0 : 1,
+                  selectedSet.sets_id
+                );
+                setSetOptionsVisible(false);
+              }}
+            >
+              <View
+                style={[
+                  styles.setOptionsActionIcon,
+                  { backgroundColor: withAlpha(theme.primary, 0.14) },
+                ]}
+              >
+                <Amrap width={19} height={19} color={primaryTextColor} />
+              </View>
+
+              <View style={styles.setOptionsActionCopy}>
+                <ThemedText
+                  style={styles.setOptionsActionTitle}
+                  setColor={theme.title}
+                >
+                  {selectedSet?.amrap === 1 ? "Remove AMRAP" : "Mark as AMRAP"}
+                </ThemedText>
+                <ThemedText
+                  style={styles.setOptionsActionDetail}
+                  setColor={theme.quietText}
+                >
+                  As many reps as possible
+                </ThemedText>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.84}
+              accessibilityRole="button"
+              style={[
+                styles.setOptionsAction,
+                {
+                  backgroundColor: restSettingsFieldSurface,
+                  borderColor: withAlpha(theme.danger, 0.35),
+                },
+              ]}
+              onPress={confirmDeleteSelectedSet}
+            >
+              <View
+                style={[
+                  styles.setOptionsActionIcon,
+                  { backgroundColor: withAlpha(theme.danger, 0.14) },
+                ]}
+              >
+                <Delete width={19} height={19} color={theme.danger} />
+              </View>
+
+              <View style={styles.setOptionsActionCopy}>
+                <ThemedText
+                  style={styles.setOptionsActionTitle}
+                  setColor={theme.danger}
+                >
+                  Delete set
+                </ThemedText>
+                <ThemedText
+                  style={styles.setOptionsActionDetail}
+                  setColor={theme.quietText}
+                >
+                  Removes the set and its values
+                </ThemedText>
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.setOptionsSection}>
+            <ThemedText
+              style={styles.setOptionsLabel}
+              setColor={theme.quietText}
+            >
               Note
             </ThemedText>
 
@@ -969,38 +1141,8 @@ const SetList = ({
               inputStyle={styles.note_input}
             />
           </View>
-
-          <TouchableOpacity
-            style={styles.option}
-            onPress={async () => {
-              if (!selectedSet) {
-                return;
-              }
-
-              await updateField(
-                "amrap",
-                selectedSet.amrap === 1 ? 0 : 1,
-                selectedSet.sets_id
-              );
-              setSetOptionsVisible(false);
-            }}
-          >
-            <Amrap width={24} height={24} />
-            <ThemedText style={styles.option_text}>
-              {selectedSet?.amrap === 1
-                ? "Remove AMRAP mark"
-                : "Mark as AMRAP"}
-            </ThemedText>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.option}
-            onPress={confirmDeleteSelectedSet}
-          >
-            <Delete width={24} height={24} />
-            <ThemedText style={styles.option_text}>Delete set</ThemedText>
-          </TouchableOpacity>
         </View>
+
       </ThemedBottomSheet>
 
       <ThemedModal
@@ -1117,6 +1259,19 @@ const SetList = ({
           </TouchableOpacity>
         </View>
       </ThemedModal>
+      <ThemedConfirmModal
+        visible={deleteSetConfirmVisible}
+        title="Delete set?"
+        message="This removes the set and its saved values."
+        confirmLabel="Delete set"
+        tone="danger"
+        onConfirm={async () => {
+          setDeleteSetConfirmVisible(false);
+          await deleteSet(selectedSet?.sets_id);
+          setSetOptionsVisible(false);
+        }}
+        onClose={() => setDeleteSetConfirmVisible(false)}
+      />
     </>
   );
 };

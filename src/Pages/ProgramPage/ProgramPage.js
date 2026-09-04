@@ -7,21 +7,22 @@ import {
 } from 'react-native';
 import { useState } from "react";
 import { useSQLiteContext } from "expo-sqlite";
+import { useNavigation } from "@react-navigation/native";
 
 import ProgramList from './Components/ProgramList/ProgramList';
 import AddProgram from './Components/AddProgram/AddProgram';
 import { formatDate } from '../../Utils/dateUtils';
 import { programService, programTransferService } from "../../Services";
 import { Colors } from "../../Resources/GlobalStyling/colors";
-import ThreeDots from "../../Resources/Icons/UI-icons/ThreeDots";
+import Plus from "../../Resources/Icons/UI-icons/Plus";
 import PlusCircled from "../../Resources/Icons/UI-icons/PlusCircled";
 import ArrowDown from "../../Resources/Icons/UI-icons/ArrowDown";
 
 import {
   ThemedView,
   ThemedText,
-  ThemedHeader,
   ThemedBottomSheet,
+  ThemedHeader,
   ThemedTitle,
 } from "../../Resources/ThemedComponents";
 
@@ -30,8 +31,10 @@ import styles from './ProgramPageStyle';
 
 export default function App() {
   const db = useSQLiteContext();
+  const navigation = useNavigation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const primaryTextColor = theme.primaryText ?? theme.primary;
 
   const [addProgram_Visible, set_addProgram_Visible] = useState(false);
   const [refreshKey, set_refreshKey] = useState(0);
@@ -96,18 +99,35 @@ export default function App() {
     <ThemedView safe={["top", "left", "right"]}>
 
       <ThemedHeader
-        leftWidth={48}
-        rightWidth={48}
+        rightWidth={56}
         right={
-          <View style={styles.header_actions}>
-            <TouchableOpacity
-              style={styles.header_menu_button}
-              onPress={() => setOptionsBottomSheetVisible(true)}>
-              <ThreeDots width={20} height={20} />
-            </TouchableOpacity>
-          </View>
-        }>
-        <ThemedText size={18}>Programs</ThemedText>
+          <TouchableOpacity
+            style={[
+              styles.headerCircle,
+              styles.headerCircleAdd,
+              { backgroundColor: theme.primary, shadowColor: theme.primary },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel="Program options"
+            hitSlop={8}
+            onPress={() => setOptionsBottomSheetVisible(true)}
+          >
+            <Plus width={19} height={19} color={theme.ink} thickness={2.4} />
+          </TouchableOpacity>
+        }
+      >
+        <View style={styles.headerCenter}>
+          <ThemedText
+            size={12}
+            style={styles.headerEyebrow}
+            setColor={theme.quietText}
+          >
+            Train
+          </ThemedText>
+          <ThemedTitle type="pageTitle" numberOfLines={1}>
+            Programs
+          </ThemedTitle>
+        </View>
       </ThemedHeader>
 
       <ProgramList
@@ -144,7 +164,7 @@ export default function App() {
             handleImportProgram();
           }}>
           {isImportingProgram ? (
-            <ActivityIndicator size="small" color={theme.primary} />
+            <ActivityIndicator size="small" color={primaryTextColor} />
           ) : (
             <ArrowDown width={24} height={24} />
           )}
@@ -161,7 +181,7 @@ export default function App() {
           }}>
           <PlusCircled width={24} height={24} />
           <ThemedText style={styles.option_text}>
-            Create new program.
+            Create new program
           </ThemedText>
         </TouchableOpacity>
       </View>

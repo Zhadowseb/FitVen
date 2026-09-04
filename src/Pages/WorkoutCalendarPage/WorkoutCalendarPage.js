@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
-  Modal,
   Pressable,
   ScrollView,
   TouchableOpacity,
@@ -19,19 +17,29 @@ import { programService } from "../../Services";
 import { Colors } from "../../Resources/GlobalStyling/colors";
 import WorkoutCopyTargetModal from "../../Resources/Components/WorkoutCopyTargetModal";
 import ArrowLeft from "../../Resources/Icons/UI-icons/ArrowLeft";
+import Checkmark from "../../Resources/Icons/UI-icons/Checkmark";
+import ChevronRight from "../../Resources/Icons/UI-icons/ChevronRight";
 import Copy from "../../Resources/Icons/UI-icons/Copy";
 import Delete from "../../Resources/Icons/UI-icons/Delete";
 import PlusCircled from "../../Resources/Icons/UI-icons/PlusCircled";
 import { getWorkoutIconConfig } from "../../Resources/Icons/WorkoutLabels";
 import WeekdayIndicator from "../../Resources/Figures/WeekdayIndicator";
-import PickWorkoutModal from "../WeekPage/Components/Day/Components/PickWorkoutModal/PickWorkoutModal";
 import {
+  DayCell,
+  useGridPalette,
+} from "../MicrocyclePage/Components/BlockWeekGrid/BlockWeekGrid";
+import gridStyles from "../MicrocyclePage/Components/BlockWeekGrid/BlockWeekGridStyle";
+import CalendarWeekView from "./Components/CalendarWeekView/CalendarWeekView";
+import {
+  ThemedBottomSheet,
+  ThemedHeader,
   ThemedText,
   ThemedTitle,
   ThemedModal,
   ThemedView,
 } from "../../Resources/ThemedComponents";
 import { parseCustomDate } from "../../Utils/dateUtils";
+import { isWorkoutComingSoon } from "../../Utils/workoutTypeAvailability";
 import { requestOpenQuickWorkoutMenu } from "../../Utils/quickWorkoutMenuEvents";
 
 const ADJACENT_MONTH_COUNT = 1;
@@ -52,31 +60,19 @@ const MONTH_LABELS = [
   "December",
 ];
 const WEEKDAY_LABELS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
-const DAY_CONTEXT_MENU_WIDTH = 266;
-const DAY_CONTEXT_MENU_HEIGHT = 274;
-const DAY_CONTEXT_MENU_MARGIN = 18;
-const WORKOUT_PICK_MODE = {
-  COPY: "copy",
-  DELETE: "delete",
+const CALENDAR_VIEWS = [
+  { value: "block", label: "Block" },
+  { value: "week", label: "Week" },
+];
+const WEEKDAY_FULL_LABELS = {
+  MON: "Monday",
+  TUE: "Tuesday",
+  WED: "Wednesday",
+  THU: "Thursday",
+  FRI: "Friday",
+  SAT: "Saturday",
+  SUN: "Sunday",
 };
-
-const DayContextMenuAction = ({
-  children,
-  icon,
-  onPress,
-  textColor,
-}) => (
-  <TouchableOpacity
-    activeOpacity={0.78}
-    onPress={onPress}
-    style={styles.dayContextAction}
-  >
-    <View style={styles.dayContextActionIcon}>{icon}</View>
-    <ThemedText style={styles.dayContextActionText} setColor={textColor}>
-      {children}
-    </ThemedText>
-  </TouchableOpacity>
-);
 
 function padDatePart(value) {
   return String(value).padStart(2, "0");
@@ -121,6 +117,8 @@ function getMondayWeekdayIndex(date) {
   return (date.getDay() + 6) % 7;
 }
 
+
+
 function getMonthPage(baseDate, monthOffset) {
   const monthDate = new Date(
     baseDate.getFullYear(),
@@ -160,6 +158,52 @@ function getMonthPage(baseDate, monthOffset) {
     endIsoDate: formatIsoDate(gridEnd),
     weeks,
   };
+}
+
+/** The seven days of one week, `weekOffset` weeks from the week holding today. */
+function getWeekPage(baseDate, weekOffset) {
+  const monday = addDays(
+    startOfDay(baseDate),
+    -getMondayWeekdayIndex(baseDate) + weekOffset * 7
+  );
+
+  return {
+    key: formatIsoDate(monday),
+    weekOffset,
+    days: Array.from({ length: 7 }, (_, index) => {
+      const date = addDays(monday, index);
+
+      return {
+        date,
+        dateLabel: formatLocalDate(date),
+        isoDate: formatIsoDate(date),
+        inMonth: true,
+        label: WEEKDAY_LABELS[index],
+      };
+    }),
+  };
+}
+
+/**
+ * Which month a week belongs to, counted from today's month. A week that
+ * straddles two months belongs to the one holding its Thursday, the way an ISO
+ * week number does - so switching back to Block lands on the month the week
+ * reads as.
+ */
+function getMonthOffsetForWeek(baseDate, weekOffset) {
+  const thursday = addDays(
+    startOfDay(baseDate),
+    -getMondayWeekdayIndex(baseDate) + weekOffset * 7 + 3
+  );
+
+  return (
+    (thursday.getFullYear() - baseDate.getFullYear()) * 12 +
+    (thursday.getMonth() - baseDate.getMonth())
+  );
+}
+
+function getWeekOffsetRange(weekOffset) {
+  return { start: weekOffset - 1, end: weekOffset + 1 };
 }
 
 function getMonthOffsetRange(monthOffset) {
@@ -222,10 +266,31 @@ function getProgramCopyLocation(programDay) {
   return `Add to ${getProgramDayLocation(programDay)}`;
 }
 
+function getWorkoutDayStatus(workout, { isSick = false, isPast = false } = {}) {
+  const isDone = Number(workout?.done) === 1;
+
+  if (isDone) {
+    return Number(workout?.has_personal_record) === 1
+      ? { label: "Completed - personal record", tone: "record" }
+      : { label: "Completed", tone: "done" };
+  }
+
+  if (isSick) {
+    return { label: isPast ? "Missed - sick day" : "Sick day", tone: "sick" };
+  }
+
+  return isPast
+    ? { label: "Overdue", tone: "overdue" }
+    : { label: "Planned", tone: "planned" };
+}
+
 const WorkoutCalendarPage = () => {
   const db = useSQLiteContext();
   const navigation = useNavigation();
   const monthPagerRef = useRef(null);
+  const weekPagerRef = useRef(null);
+  const weekPagerRecenteringRef = useRef(false);
+  const pendingWeekScrollRef = useRef(null);
   const visibleMonthOffsetRef = useRef(INITIAL_VISIBLE_MONTH_OFFSET);
   const pendingScrollModeRef = useRef("instant");
   const previousPageWidthRef = useRef(null);
@@ -237,7 +302,7 @@ const WorkoutCalendarPage = () => {
   const monthPagerRecenteringTimeoutRef = useRef(null);
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
-  const { width, height } = useWindowDimensions();
+  const { width } = useWindowDimensions();
   const pageWidth = Math.max(width, 1);
   const today = useMemo(() => startOfDay(new Date()), []);
   const todayLabel = useMemo(() => formatLocalDate(today), [today]);
@@ -245,17 +310,10 @@ const WorkoutCalendarPage = () => {
   const [workouts, setWorkouts] = useState([]);
   const [programDays, setProgramDays] = useState([]);
   const [sicknessPeriods, setSicknessPeriods] = useState([]);
-  const [selectedProgramDate, setSelectedProgramDate] = useState(null);
   const [selectedCalendarDay, setSelectedCalendarDay] = useState(null);
-  const [dayOptionsVisible, setDayOptionsVisible] = useState(false);
-  const [dayOptionsPosition, setDayOptionsPosition] = useState({
-    left: DAY_CONTEXT_MENU_MARGIN,
-    top: 120,
-  });
+  const [daySheetVisible, setDaySheetVisible] = useState(false);
   const [programTargetModalVisible, setProgramTargetModalVisible] =
     useState(false);
-  const [pickWorkoutModalVisible, setPickWorkoutModalVisible] = useState(false);
-  const [workoutPickMode, setWorkoutPickMode] = useState(null);
   const [copyDatePickerVisible, setCopyDatePickerVisible] = useState(false);
   const [copySourceWorkout, setCopySourceWorkout] = useState(null);
   const [pendingCopyTarget, setPendingCopyTarget] = useState(null);
@@ -266,6 +324,13 @@ const WorkoutCalendarPage = () => {
     INITIAL_VISIBLE_MONTH_OFFSET
   );
   const [isLoading, setIsLoading] = useState(false);
+  const [calendarView, setCalendarView] = useState("block");
+  const [viewMenuVisible, setViewMenuVisible] = useState(false);
+  // Weeks from the week holding today. In Week view this is what a swipe moves.
+  const [visibleWeekOffset, setVisibleWeekOffset] = useState(0);
+  const [weekOffsetRange, setWeekOffsetRange] = useState(() =>
+    getWeekOffsetRange(0)
+  );
   const [isCopyingWorkout, setIsCopyingWorkout] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const titleColor = theme.title ?? theme.text;
@@ -273,9 +338,14 @@ const WorkoutCalendarPage = () => {
   const cardSurface = theme.cardBackground ?? theme.background;
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor ?? theme.text;
   const primaryColor = theme.primary ?? "#f7742e";
+  const gridPalette = useGridPalette();
+  const primaryTextColor = theme.primaryText ?? theme.primary;
   const secondaryColor = theme.secondary ?? "#60daac";
   const modalCardSurface = theme.fields ?? theme.cardBackground ?? theme.background;
   const actionTextColor = theme.textInverted ?? theme.cardBackground ?? "#141414";
+  const dangerColor = theme.danger ?? Colors.dark.danger;
+  const recordColor = theme.record ?? Colors.dark.record ?? secondaryColor;
+  const sickColor = theme.planned ?? Colors.dark.planned;
   const rawVisibleMonthIndex = visibleMonthOffset - monthOffsetRange.start;
   const monthPages = useMemo(
     () =>
@@ -392,22 +462,113 @@ const WorkoutCalendarPage = () => {
     }),
     [visibleMonth?.endIsoDate, visibleMonth?.startIsoDate]
   );
-  const visibleMonthKey = visibleMonth ? getMonthKey(visibleMonth.monthDate) : "";
-  const visibleMonthWorkouts = workouts.filter((workout) =>
-    String(workout?.date_iso ?? "").startsWith(visibleMonthKey)
+  const weekPages = useMemo(
+    () =>
+      Array.from(
+        { length: weekOffsetRange.end - weekOffsetRange.start + 1 },
+        (_, index) => getWeekPage(today, weekOffsetRange.start + index)
+      ),
+    [today, weekOffsetRange.end, weekOffsetRange.start]
   );
-  const visibleMonthDoneCount = visibleMonthWorkouts.filter(
-    (workout) => Number(workout.done) === 1
-  ).length;
-  const selectedProgramDayRows = selectedProgramDate
-    ? programsByDate.get(selectedProgramDate) ?? []
+  const visibleWeekIndex = Math.min(
+    Math.max(visibleWeekOffset - weekOffsetRange.start, 0),
+    Math.max(weekPages.length - 1, 0)
+  );
+
+  // One routine for both views: the calendar's lookups turned into the day
+  // shape the grid and the week rows both read.
+  const enrichDay = (day, pageKey) => {
+    const dayWorkouts = workoutsByDate.get(day.dateLabel) ?? [];
+    const dayProgramRows = programsByDate.get(day.dateLabel) ?? [];
+
+    return {
+      ...day,
+      microcycleId: pageKey,
+      active: day.dateLabel === todayLabel,
+      hasProgram: programDates.has(day.dateLabel),
+      isSick:
+        sickDates.has(day.dateLabel) || dayProgramRows.some(isProgramDaySick),
+      workouts: dayWorkouts,
+      workoutCards: dayWorkouts.map((workout) => {
+        const iconConfig = getWorkoutIconConfig(getWorkoutType(workout));
+
+        return {
+          key: workout.workout_id,
+          workout,
+          icon: iconConfig?.Icon,
+          iconLabel: iconConfig?.short ?? getWorkoutIconLabel(workout),
+          completed: Number(workout.done) === 1,
+        };
+      }),
+    };
+  };
+
+  const buildMonthWeeks = (monthPage) =>
+    (monthPage?.weeks ?? []).map((week) => ({
+      key: `${monthPage?.key}-${week[0].isoDate}`,
+      days: week.map((day) => enrichDay(day, monthPage?.key)),
+      isCurrentWeek: week.some((day) => day.dateLabel === todayLabel),
+    }));
+
+  const buildWeek = (weekPage) => ({
+    key: weekPage.key,
+    days: weekPage.days.map((day) => enrichDay(day, weekPage.key)),
+    dateRange: `${MONTH_LABELS[weekPage.days[0].date.getMonth()].slice(0, 3)} ${
+      weekPage.days[0].date.getDate()
+    } - ${
+      weekPage.days[0].date.getMonth() === weekPage.days[6].date.getMonth()
+        ? ""
+        : `${MONTH_LABELS[weekPage.days[6].date.getMonth()].slice(0, 3)} `
+    }${weekPage.days[6].date.getDate()}`,
+  });
+
+  const getWeekPageTitle = (weekPage) => {
+    const thursday = weekPage.days[3].date;
+
+    return `${MONTH_LABELS[thursday.getMonth()]} ${thursday.getFullYear()}`;
+  };
+
+  const getWeekPageLabel = (weekPage) => {
+    if (weekPage.weekOffset === 0) {
+      return "This week";
+    }
+
+    if (weekPage.weekOffset === -1) {
+      return "Last week";
+    }
+
+    if (weekPage.weekOffset === 1) {
+      return "Next week";
+    }
+
+    const monday = weekPage.days[0].date;
+
+    return `Week of ${MONTH_LABELS[monday.getMonth()].slice(0, 3)} ${monday.getDate()}`;
+  };
+
+  // Only the loading state: the workout counts live on each week's own line.
+  const monthSummaryText = isLoading ? "Loading..." : "";
+  // Derived, not stored: the sheet keeps showing the truth after a workout is
+  // deleted or copied, without having to be reopened.
+  const selectedDayWorkouts = selectedCalendarDay
+    ? workoutsByDate.get(selectedCalendarDay.dateLabel) ?? []
     : [];
-  const selectedProgramModalTitle =
-    selectedProgramDayRows.length === 1
-      ? selectedProgramDayRows[0].program_name
-      : selectedProgramDate
-        ? `Programs on ${selectedProgramDate}`
-        : "Programs";
+  const selectedDayPrograms = selectedCalendarDay
+    ? programsByDate.get(selectedCalendarDay.dateLabel) ?? []
+    : [];
+  const selectedDayIsSick = Boolean(
+    selectedCalendarDay &&
+      (sickDates.has(selectedCalendarDay.dateLabel) ||
+        selectedDayPrograms.some(isProgramDaySick))
+  );
+  const selectedDayIsPast = Boolean(
+    selectedCalendarDay && selectedCalendarDay.isoDate < todayIsoDate
+  );
+  const selectedDayIsToday = selectedCalendarDay?.dateLabel === todayLabel;
+  const selectedDayWeekday =
+    WEEKDAY_FULL_LABELS[selectedCalendarDay?.label] ??
+    selectedCalendarDay?.label ??
+    "";
   const copyDatePickerValue = useMemo(() => {
     const fallbackDate = new Date();
 
@@ -431,6 +592,35 @@ const WorkoutCalendarPage = () => {
   useEffect(() => {
     visibleMonthOffsetRef.current = visibleMonthOffset;
   }, [visibleMonthOffset]);
+
+  // The month follows the week on show, so the data loader keeps covering it
+  // and switching back to Block lands on the month that week belongs to.
+  useEffect(() => {
+    if (calendarView !== "week") {
+      return;
+    }
+
+    const targetMonthOffset = getMonthOffsetForWeek(today, visibleWeekOffset);
+
+    if (targetMonthOffset !== visibleMonthOffsetRef.current) {
+      showMonthOffset(targetMonthOffset);
+    }
+  }, [calendarView, showMonthOffset, today, visibleWeekOffset]);
+
+  useEffect(() => {
+    const scrollMode = pendingWeekScrollRef.current;
+
+    if (!scrollMode) {
+      return;
+    }
+
+    pendingWeekScrollRef.current = null;
+    weekPagerRef.current?.scrollTo({
+      x: visibleWeekIndex * pageWidth,
+      y: 0,
+      animated: false,
+    });
+  }, [pageWidth, visibleWeekIndex, weekOffsetRange.end, weekOffsetRange.start]);
 
   useEffect(() => {
     const scrollMode = pendingScrollModeRef.current;
@@ -594,6 +784,41 @@ const WorkoutCalendarPage = () => {
     []
   );
 
+  const showWeekOffset = (nextWeekOffset) => {
+    pendingWeekScrollRef.current = "instant";
+    weekPagerRecenteringRef.current = false;
+    setVisibleWeekOffset(nextWeekOffset);
+    setWeekOffsetRange(getWeekOffsetRange(nextWeekOffset));
+  };
+
+  const handleWeekScrollEnd = (event) => {
+    const nextIndex = Math.round(event.nativeEvent.contentOffset.x / pageWidth);
+    const weekDelta = nextIndex - visibleWeekIndex;
+
+    if (weekPagerRecenteringRef.current) {
+      if (weekDelta === 0) {
+        weekPagerRecenteringRef.current = false;
+      }
+
+      return;
+    }
+
+    if (weekDelta === 0) {
+      return;
+    }
+
+    const nextWeekOffset = visibleWeekOffset + weekDelta;
+    weekPagerRecenteringRef.current = true;
+    pendingWeekScrollRef.current = null;
+    weekPagerRef.current?.scrollTo({
+      x: INITIAL_VISIBLE_MONTH_INDEX * pageWidth,
+      y: 0,
+      animated: false,
+    });
+    setVisibleWeekOffset(nextWeekOffset);
+    setWeekOffsetRange(getWeekOffsetRange(nextWeekOffset));
+  };
+
   const handleScrollEnd = (event) => {
     const nextIndex = Math.round(
       event.nativeEvent.contentOffset.x / pageWidth
@@ -639,6 +864,7 @@ const WorkoutCalendarPage = () => {
       return;
     }
 
+    closeDaySheet();
     navigation.navigate("WorkoutPage", {
       workout_id: workout.workout_id,
       workout_label: workout.label,
@@ -649,22 +875,28 @@ const WorkoutCalendarPage = () => {
     });
   };
 
-  const openProgramDayModal = (day) => {
-    const datePrograms = programsByDate.get(day?.dateLabel) ?? [];
-
-    if (datePrograms.length === 0) {
+  // Every gesture on a day opens this one sheet - the date badge, a workout
+  // card and a long press alike - and every action for the day lives inside it,
+  // so there is a single rule to learn.
+  const openDaySheet = (day) => {
+    if (!day?.dateLabel) {
       return;
     }
 
-    setSelectedProgramDate(day.dateLabel);
+    setSelectedCalendarDay({
+      dateLabel: day.dateLabel,
+      isoDate: day.isoDate,
+      label: day.label,
+    });
+    setDaySheetVisible(true);
   };
 
-  const closeProgramDayModal = () => {
-    setSelectedProgramDate(null);
+  const closeDaySheet = () => {
+    setDaySheetVisible(false);
   };
 
   const openProgramOverview = (programDay) => {
-    closeProgramDayModal();
+    closeDaySheet();
     navigation.navigate("ProgramOverviewPage", {
       program_id: programDay.program_id,
       program_name: programDay.program_name,
@@ -672,38 +904,10 @@ const WorkoutCalendarPage = () => {
     });
   };
 
-  const closeDayOptions = () => {
-    setDayOptionsVisible(false);
-  };
-
-  const handleDayLongPress = (day, event) => {
-    const pageX = event?.nativeEvent?.pageX ?? width / 2;
-    const pageY = event?.nativeEvent?.pageY ?? 160;
-    const maxLeft = Math.max(
-      DAY_CONTEXT_MENU_MARGIN,
-      width - DAY_CONTEXT_MENU_WIDTH - DAY_CONTEXT_MENU_MARGIN
-    );
-    const maxTop = Math.max(
-      DAY_CONTEXT_MENU_MARGIN,
-      height - DAY_CONTEXT_MENU_HEIGHT - DAY_CONTEXT_MENU_MARGIN
-    );
-
-    setSelectedCalendarDay({
-      ...day,
-      programDays: programsByDate.get(day.dateLabel) ?? [],
-      workouts: workoutsByDate.get(day.dateLabel) ?? [],
-    });
-    setDayOptionsPosition({
-      left: Math.min(Math.max(DAY_CONTEXT_MENU_MARGIN, pageX - 42), maxLeft),
-      top: Math.min(Math.max(DAY_CONTEXT_MENU_MARGIN, pageY - 48), maxTop),
-    });
-    setDayOptionsVisible(true);
-  };
-
   const beginAddWorkout = () => {
-    const programDayRows = selectedCalendarDay?.programDays ?? [];
+    const programDayRows = selectedDayPrograms;
 
-    closeDayOptions();
+    closeDaySheet();
 
     if (programDayRows.length > 1) {
       setProgramTargetModalVisible(true);
@@ -738,12 +942,10 @@ const WorkoutCalendarPage = () => {
       return;
     }
 
+    // The sheet stays open on purpose: it is derived from the calendar data, so
+    // it shows what is left on the day right after the delete.
     try {
       await programService.deleteWorkout(db, workout.workout_id);
-      setPickWorkoutModalVisible(false);
-      setWorkoutPickMode(null);
-      setDayOptionsVisible(false);
-      setSelectedCalendarDay(null);
       await loadCalendarWorkouts();
     } catch (error) {
       console.error("Failed to delete workout from calendar:", error);
@@ -755,8 +957,6 @@ const WorkoutCalendarPage = () => {
     if (!workout?.workout_id) {
       return;
     }
-
-    setPickWorkoutModalVisible(false);
 
     Alert.alert(
       "Delete workout?",
@@ -777,10 +977,6 @@ const WorkoutCalendarPage = () => {
   const completeWorkoutCopy = async () => {
     setPendingCopyTarget(null);
     setCopySourceWorkout(null);
-    setSelectedCalendarDay(null);
-    setDayOptionsVisible(false);
-    setPickWorkoutModalVisible(false);
-    setWorkoutPickMode(null);
     await loadCalendarWorkouts();
   };
 
@@ -862,7 +1058,7 @@ const WorkoutCalendarPage = () => {
   };
 
   const copyWorkoutToDate = async (workout, selectedDate) => {
-    if (!workout?.workout_id) {
+    if (!workout?.workout_id || isWorkoutComingSoon(workout)) {
       return;
     }
 
@@ -907,88 +1103,16 @@ const WorkoutCalendarPage = () => {
       return;
     }
 
-    closeDayOptions();
+    closeDaySheet();
     setCopySourceWorkout(workout);
-    setPickWorkoutModalVisible(false);
-    setWorkoutPickMode(null);
     setCopyDatePickerVisible(true);
-  };
-
-  const beginCopyWorkout = () => {
-    const dayWorkouts = selectedCalendarDay?.workouts ?? [];
-
-    if (dayWorkouts.length === 0) {
-      return;
-    }
-
-    if (dayWorkouts.length === 1) {
-      startWorkoutCopy(dayWorkouts[0]);
-      return;
-    }
-
-    closeDayOptions();
-    setWorkoutPickMode(WORKOUT_PICK_MODE.COPY);
-    setPickWorkoutModalVisible(true);
-  };
-
-  const beginDeleteWorkout = () => {
-    const dayWorkouts = selectedCalendarDay?.workouts ?? [];
-
-    if (dayWorkouts.length === 1) {
-      confirmDeleteWorkoutFromCalendar(dayWorkouts[0]);
-      return;
-    }
-
-    closeDayOptions();
-    setWorkoutPickMode(WORKOUT_PICK_MODE.DELETE);
-    setPickWorkoutModalVisible(true);
   };
 
   return (
     <ThemedView safe={["top", "left", "right"]} style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerText}>
-          <ThemedText style={styles.eyebrow} setColor={primaryColor}>
-            CALENDAR
-          </ThemedText>
-          <ThemedTitle type="h2" style={[styles.title, { color: titleColor }]}>
-            Workout Calendar
-          </ThemedTitle>
-        </View>
-
-        <View
-          style={[
-            styles.summaryPill,
-            {
-              backgroundColor: cardSurface,
-              borderColor: cardBorder,
-            },
-          ]}
-        >
-          <ThemedText style={styles.summaryValue} setColor={titleColor}>
-            {visibleMonthWorkouts.length}
-          </ThemedText>
-          <ThemedText style={styles.summaryLabel} setColor={quietText}>
-            workouts
-          </ThemedText>
-        </View>
-      </View>
-
-      <View style={styles.monthHeader}>
-        <View style={styles.monthHeaderText}>
-          <ThemedTitle type="h3" style={styles.monthTitle}>
-            {visibleMonth?.title ?? ""}
-          </ThemedTitle>
-          <ThemedText style={styles.monthMeta} setColor={quietText}>
-            {visibleMonthDoneCount}/{visibleMonthWorkouts.length} done
-          </ThemedText>
-        </View>
-
-        <View style={styles.monthActions}>
-          {isLoading ? (
-            <ActivityIndicator size="small" color={primaryColor} />
-          ) : null}
-
+      <ThemedHeader
+        rightWidth={92}
+        right={
           <View style={styles.monthControls}>
             <TouchableOpacity
               accessibilityLabel="Previous month"
@@ -1024,230 +1148,593 @@ const WorkoutCalendarPage = () => {
               </View>
             </TouchableOpacity>
           </View>
+        }
+      >
+        <View style={styles.headerTitleGroup}>
+          <ThemedTitle type="pageTitle" numberOfLines={1}>
+            Calendar
+          </ThemedTitle>
+          {monthSummaryText ? (
+            <ThemedText style={styles.monthMeta} setColor={quietText}>
+              {monthSummaryText}
+            </ThemedText>
+          ) : null}
         </View>
-      </View>
+      </ThemedHeader>
 
       {errorMessage ? (
-        <View
-          style={[
-            styles.stateCard,
-            {
-              backgroundColor: cardSurface,
-              borderColor: cardBorder,
-            },
-          ]}
-        >
-          <ThemedText style={styles.stateText} setColor={quietText}>
+        <View style={styles.errorState}>
+          <ThemedTitle type="h3" style={styles.errorTitle}>
+            Calendar unavailable
+          </ThemedTitle>
+          <ThemedText style={styles.errorBody} setColor={quietText}>
             {errorMessage}
           </ThemedText>
-        </View>
-      ) : null}
-
-      <ScrollView
-        ref={monthPagerRef}
-        style={styles.monthPager}
-        horizontal
-        pagingEnabled
-        contentOffset={{ x: INITIAL_VISIBLE_MONTH_INDEX * pageWidth, y: 0 }}
-        showsHorizontalScrollIndicator={false}
-        onMomentumScrollEnd={handleScrollEnd}
-        scrollEventThrottle={16}
-      >
-        {monthPages.map((monthPage) => (
-          <View
-            key={monthPage.key}
-            style={[styles.monthPage, { width: pageWidth }]}
+          <TouchableOpacity
+            accessibilityRole="button"
+            activeOpacity={0.78}
+            disabled={isLoading}
+            onPress={() => {
+              void loadCalendarWorkouts();
+            }}
+            style={[styles.retryButton, { backgroundColor: primaryColor }]}
           >
-            <View style={styles.weekdayHeaderRow} pointerEvents="none">
-              {WEEKDAY_LABELS.map((weekdayLabel) => (
-                <View
-                  key={`${monthPage.key}-${weekdayLabel}`}
-                  style={styles.weekdayHeaderCell}
+            <ThemedText
+              style={styles.retryButtonText}
+              setColor={actionTextColor}
+            >
+              Try again
+            </ThemedText>
+          </TouchableOpacity>
+        </View>
+      ) : calendarView === "week" ? (
+        <ScrollView
+          ref={weekPagerRef}
+          style={styles.monthPager}
+          horizontal
+          pagingEnabled
+          contentOffset={{ x: INITIAL_VISIBLE_MONTH_INDEX * pageWidth, y: 0 }}
+          showsHorizontalScrollIndicator={false}
+          onMomentumScrollEnd={handleWeekScrollEnd}
+          scrollEventThrottle={16}
+        >
+          {weekPages.map((weekPage) => (
+            <ScrollView
+              key={weekPage.key}
+              style={[styles.monthPage, { width: pageWidth }]}
+              contentContainerStyle={styles.monthPageContent}
+              showsVerticalScrollIndicator={false}
+            >
+              <View style={styles.monthSectionHeader}>
+                <ThemedText
+                  style={styles.sectionEyebrow}
+                  setColor={primaryTextColor}
                 >
-                  <ThemedText
-                    style={styles.weekdayHeaderText}
-                    setColor={quietText}
-                  >
-                    {weekdayLabel}
-                  </ThemedText>
-                </View>
-              ))}
-            </View>
-
-            <View style={styles.calendarGrid}>
-              {monthPage.weeks.map((week, weekIndex) => (
-                <View key={`${monthPage.key}-${weekIndex}`} style={styles.weekRow}>
-                  {week.map((day) => {
-                    const dayWorkouts = workoutsByDate.get(day.dateLabel) ?? [];
-                    const dayProgramRows = programsByDate.get(day.dateLabel) ?? [];
-                    const dayHasProgram = programDates.has(day.dateLabel);
-                    const dayIsSick =
-                      sickDates.has(day.dateLabel) ||
-                      dayProgramRows.some(isProgramDaySick);
-                    const dayHasWorkouts = dayWorkouts.length > 0;
-                    const dayCompleted =
-                      dayHasWorkouts &&
-                      dayWorkouts.every((workout) => Number(workout.done) === 1);
-                    const dayOverdue =
-                      !dayIsSick &&
-                      day.isoDate < todayIsoDate &&
-                      dayWorkouts.some((workout) => Number(workout.done) !== 1);
-                    const workoutCards = dayWorkouts.map((workout) => {
-                      const iconConfig = getWorkoutIconConfig(getWorkoutType(workout));
-                      const isCompleted = Number(workout.done) === 1;
-                      const isPastWorkout = day.isoDate < todayIsoDate;
-
-                      return {
-                        key: workout.workout_id,
-                        workout,
-                        icon: iconConfig?.Icon,
-                        iconLabel: iconConfig?.short ?? getWorkoutIconLabel(workout),
-                        completed: isCompleted,
-                        hasPersonalRecord: Number(workout.has_personal_record) === 1,
-                        sickCompleted: dayIsSick && isCompleted,
-                        overdue: !dayIsSick && isPastWorkout && !isCompleted,
-                        sickOverdue: dayIsSick && isPastWorkout && !isCompleted,
-                      };
-                    });
-
-                    return (
-                      <View
-                        key={`${monthPage.key}-${day.dateLabel}`}
-                        style={[
-                          styles.daySlot,
-                          !day.inMonth && styles.daySlotOutsideMonth,
-                        ]}
-                      >
-                        <WeekdayIndicator
-                          label={day.label}
-                          dateLabel={day.dateLabel}
-                          active={day.dateLabel === todayLabel}
-                          completed={dayCompleted}
-                          isSick={dayIsSick}
-                          overdue={dayOverdue}
-                          programActive={dayHasProgram}
-                          compact
-                          showWeekdayLabel={false}
-                          showMonthLabel={false}
-                          workoutCards={workoutCards}
-                          onWorkoutPress={openWorkout}
-                          onDayLongPress={(event) =>
-                            handleDayLongPress(day, event)
-                          }
-                          onDayPress={
-                            dayHasProgram
-                              ? () => openProgramDayModal(day)
-                              : undefined
-                          }
-                        />
-                      </View>
-                    );
-                  })}
-                </View>
-              ))}
-            </View>
-
-            {visibleMonthWorkouts.length === 0 && monthPage.key === visibleMonthKey ? (
-              <View style={styles.emptyMonth}>
-                <View
-                  style={[
-                    styles.emptyDot,
-                    { backgroundColor: secondaryColor },
-                  ]}
-                />
-                <ThemedText style={styles.emptyText} setColor={quietText}>
-                  No workouts this month.
+                  {getWeekPageTitle(weekPage)}
                 </ThemedText>
-              </View>
-            ) : null}
-          </View>
-        ))}
-      </ScrollView>
 
-      <Modal
-        visible={dayOptionsVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={closeDayOptions}
+                <TouchableOpacity
+                    accessibilityRole="button"
+                    accessibilityLabel="Change calendar layout"
+                    activeOpacity={0.8}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    onPress={() => setViewMenuVisible(true)}
+                    style={[
+                      styles.viewPill,
+                      {
+                        backgroundColor: cardSurface,
+                        borderColor: cardBorder,
+                      },
+                    ]}
+                  >
+                    <ThemedText
+                      style={styles.viewPillText}
+                      setColor={titleColor}
+                    >
+                      {CALENDAR_VIEWS.find(
+                        (view) => view.value === calendarView
+                      )?.label ?? "Block"}
+                    </ThemedText>
+                    <View style={styles.viewPillChevron}>
+                      <ChevronRight
+                        width={13}
+                        height={13}
+                        color={quietText}
+                        thickness={2.4}
+                      />
+                    </View>
+                  </TouchableOpacity>
+                </View>
+
+              <CalendarWeekView
+                week={buildWeek(weekPage)}
+                weekLabel={getWeekPageLabel(weekPage)}
+                canGoBack
+                canGoForward
+                onPrevious={() => showWeekOffset(weekPage.weekOffset - 1)}
+                onNext={() => showWeekOffset(weekPage.weekOffset + 1)}
+                onOpenWorkout={(workout, day) =>
+                  workout ? openWorkout(workout) : openDaySheet(day)
+                }
+                onOpenDay={openDaySheet}
+                palette={gridPalette}
+              />
+            </ScrollView>
+          ))}
+        </ScrollView>
+      ) : (
+        <ScrollView
+          ref={monthPagerRef}
+          style={styles.monthPager}
+          horizontal
+          pagingEnabled
+          contentOffset={{ x: INITIAL_VISIBLE_MONTH_INDEX * pageWidth, y: 0 }}
+          showsHorizontalScrollIndicator={false}
+          onMomentumScrollEnd={handleScrollEnd}
+          scrollEventThrottle={16}
+        >
+          {monthPages.map((monthPage) => (
+            <ScrollView
+              key={monthPage.key}
+              style={[styles.monthPage, { width: pageWidth }]}
+              contentContainerStyle={styles.monthPageContent}
+              showsVerticalScrollIndicator={false}
+            >
+              <View style={styles.monthSectionHeader}>
+                <ThemedText
+                  style={styles.sectionEyebrow}
+                  setColor={primaryTextColor}
+                >
+                  {monthPage.title}
+                </ThemedText>
+
+                <TouchableOpacity
+                    accessibilityRole="button"
+                    accessibilityLabel="Change calendar layout"
+                    activeOpacity={0.8}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    onPress={() => setViewMenuVisible(true)}
+                    style={[
+                      styles.viewPill,
+                      {
+                        backgroundColor: cardSurface,
+                        borderColor: cardBorder,
+                      },
+                    ]}
+                  >
+                    <ThemedText
+                      style={styles.viewPillText}
+                      setColor={titleColor}
+                    >
+                      {CALENDAR_VIEWS.find(
+                        (view) => view.value === calendarView
+                      )?.label ?? "Block"}
+                    </ThemedText>
+                    <View style={styles.viewPillChevron}>
+                      <ChevronRight
+                        width={13}
+                        height={13}
+                        color={quietText}
+                        thickness={2.4}
+                      />
+                    </View>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.weekdayHeaderRow} pointerEvents="none">
+                  {WEEKDAY_LABELS.map((weekdayLabel) => (
+                    <View
+                      key={`${monthPage.key}-${weekdayLabel}`}
+                      style={styles.weekdayHeaderCell}
+                    >
+                      <ThemedText
+                        style={styles.weekdayHeaderText}
+                        setColor={quietText}
+                      >
+                        {weekdayLabel}
+                      </ThemedText>
+                    </View>
+                  ))}
+                </View>
+
+                <View style={styles.calendarGrid}>
+                  {monthPage.weeks.map((week, weekIndex) => (
+                    <View key={`${monthPage.key}-${weekIndex}`} style={styles.weekRow}>
+                      {week.map((day) => {
+                        const dayWorkouts = workoutsByDate.get(day.dateLabel) ?? [];
+                        const dayProgramRows = programsByDate.get(day.dateLabel) ?? [];
+                        const dayHasProgram = programDates.has(day.dateLabel);
+                        const dayIsSick =
+                          sickDates.has(day.dateLabel) ||
+                          dayProgramRows.some(isProgramDaySick);
+                        const dayHasWorkouts = dayWorkouts.length > 0;
+                        const dayCompleted =
+                          dayHasWorkouts &&
+                          dayWorkouts.every((workout) => Number(workout.done) === 1);
+                        const dayOverdue =
+                          !dayIsSick &&
+                          day.isoDate < todayIsoDate &&
+                          dayWorkouts.some((workout) => Number(workout.done) !== 1);
+                        const workoutCards = dayWorkouts.map((workout) => {
+                          const iconConfig = getWorkoutIconConfig(getWorkoutType(workout));
+                          const isCompleted = Number(workout.done) === 1;
+                          const isPastWorkout = day.isoDate < todayIsoDate;
+
+                          return {
+                            key: workout.workout_id,
+                            workout,
+                            icon: iconConfig?.Icon,
+                            iconLabel: iconConfig?.short ?? getWorkoutIconLabel(workout),
+                            completed: isCompleted,
+                            hasPersonalRecord: Number(workout.has_personal_record) === 1,
+                            sickCompleted: dayIsSick && isCompleted,
+                            overdue: !dayIsSick && isPastWorkout && !isCompleted,
+                            sickOverdue: dayIsSick && isPastWorkout && !isCompleted,
+                          };
+                        });
+
+                        return (
+                          <View
+                            key={`${monthPage.key}-${day.dateLabel}`}
+                            style={[
+                              styles.daySlot,
+                              !day.inMonth && styles.daySlotOutsideMonth,
+                            ]}
+                          >
+                            <WeekdayIndicator
+                              label={day.label}
+                              dateLabel={day.dateLabel}
+                              active={day.dateLabel === todayLabel}
+                              completed={dayCompleted}
+                              isSick={dayIsSick}
+                              overdue={dayOverdue}
+                              programActive={dayHasProgram}
+                              compact
+                              showWeekdayLabel={false}
+                              showMonthLabel={false}
+                              workoutCards={workoutCards}
+                              onWorkoutPress={() => openDaySheet(day)}
+                              onDayLongPress={() => openDaySheet(day)}
+                              onDayPress={() => openDaySheet(day)}
+                            />
+                          </View>
+                        );
+                      })}
+                    </View>
+                  ))}
+                </View>
+
+                <View style={styles.weekListSection}>
+                  <View
+                    style={[
+                      styles.weekListHeader,
+                      { borderTopColor: cardBorder },
+                    ]}
+                  >
+                    <ThemedText
+                      style={styles.sectionEyebrow}
+                      setColor={primaryTextColor}
+                    >
+                      Workouts
+                    </ThemedText>
+                  </View>
+
+                  {buildMonthWeeks(monthPage).map((week) => (
+                    <View key={week.key} style={styles.weekListRow}>
+                      <View style={gridStyles.weekGrid}>
+                        {week.days.map((day) => (
+                          <Pressable
+                            key={`${week.key}-${day.dateLabel}`}
+                            accessibilityRole="button"
+                            accessibilityLabel={`${day.label} ${day.dateLabel}`}
+                            style={[
+                              gridStyles.cellSlot,
+                              !day.inMonth && styles.daySlotOutsideMonth,
+                            ]}
+                            onPress={() => openDaySheet(day)}
+                            onLongPress={() => openDaySheet(day)}
+                          >
+                            <DayCell
+                              day={day}
+                              showRestDate
+                              palette={gridPalette}
+                            />
+                          </Pressable>
+                        ))}
+                      </View>
+                    </View>
+                  ))}
+                </View>
+            </ScrollView>
+          ))}
+        </ScrollView>
+      )}
+
+      <ThemedBottomSheet
+        visible={viewMenuVisible}
+        onClose={() => setViewMenuVisible(false)}
       >
-        <View style={styles.dayContextOverlay}>
-          <Pressable
-            style={styles.dayContextBackdrop}
-            onPress={closeDayOptions}
-          />
+        <ThemedText style={styles.viewMenuTitle} setColor={quietText}>
+          Layout
+        </ThemedText>
 
-          <View
+        {CALENDAR_VIEWS.map((view) => (
+          <TouchableOpacity
+            key={view.value}
+            accessibilityRole="button"
+            accessibilityState={{ selected: calendarView === view.value }}
+            activeOpacity={0.82}
+            onPress={() => {
+              setCalendarView(view.value);
+              setViewMenuVisible(false);
+            }}
+            style={styles.viewMenuOption}
+          >
+            <ThemedText
+              style={styles.viewMenuOptionText}
+              setColor={
+                calendarView === view.value ? primaryTextColor : titleColor
+              }
+            >
+              {view.label}
+            </ThemedText>
+
+            {calendarView === view.value ? (
+              <Checkmark width={16} height={16} color={primaryColor} />
+            ) : null}
+          </TouchableOpacity>
+        ))}
+      </ThemedBottomSheet>
+
+      <ThemedBottomSheet
+        visible={daySheetVisible}
+        onClose={closeDaySheet}
+        footer={
+          <TouchableOpacity
+            accessibilityRole="button"
+            activeOpacity={0.85}
+            onPress={beginAddWorkout}
             style={[
-              styles.dayContextMenu,
-              {
-                left: dayOptionsPosition.left,
-                top: dayOptionsPosition.top,
-                backgroundColor:
-                  colorScheme === "dark"
-                    ? "#151922"
-                    : theme.cardBackground ?? theme.background,
-                borderColor: cardBorder,
-              },
+              styles.daySheetAddButton,
+              { backgroundColor: primaryColor },
             ]}
           >
+            <PlusCircled width={20} height={20} color={actionTextColor} />
+            <ThemedText
+              style={styles.daySheetAddText}
+              setColor={actionTextColor}
+            >
+              Add workout
+            </ThemedText>
+          </TouchableOpacity>
+        }
+      >
+        <View style={[styles.daySheetHeader, { borderBottomColor: cardBorder }]}>
+          <View style={styles.daySheetHeaderText}>
+            <ThemedText style={styles.daySheetEyebrow} setColor={primaryTextColor}>
+              {selectedDayWeekday}
+            </ThemedText>
+            <ThemedText style={styles.daySheetTitle} setColor={titleColor}>
+              {selectedCalendarDay?.dateLabel ?? ""}
+            </ThemedText>
+          </View>
+
+          {selectedDayIsSick || selectedDayIsToday ? (
             <View
               style={[
-                styles.dayContextHeader,
-                { borderBottomColor: cardBorder },
+                styles.daySheetBadge,
+                { backgroundColor: selectedDayIsSick ? sickColor : primaryColor },
               ]}
             >
-              <ThemedText style={styles.dayContextMeta} setColor={quietText}>
-                {selectedCalendarDay?.dateLabel ?? ""}
-              </ThemedText>
-              <ThemedText style={styles.dayContextTitle} setColor={titleColor}>
-                {selectedCalendarDay?.label ?? "Day options"}
+              <ThemedText
+                style={styles.daySheetBadgeText}
+                setColor={actionTextColor}
+              >
+                {selectedDayIsSick ? "SICK DAY" : "TODAY"}
               </ThemedText>
             </View>
+          ) : null}
+        </View>
 
-            <View style={styles.dayContextBody}>
-              <DayContextMenuAction
-                icon={
-                  <PlusCircled
-                    width={22}
-                    height={22}
-                    color={primaryColor}
+        {selectedDayWorkouts.length > 0 && (
+          <ThemedText style={styles.daySheetSectionLabel} setColor={quietText}>
+            {selectedDayWorkouts.length === 1
+              ? "1 workout"
+              : `${selectedDayWorkouts.length} workouts`}
+          </ThemedText>
+        )}
+
+        {selectedDayWorkouts.length === 0 ? (
+          <ThemedText style={styles.daySheetEmptyText} setColor={quietText}>
+            Nothing planned on this day yet.
+          </ThemedText>
+        ) : (
+          <View style={styles.daySheetList}>
+            {selectedDayWorkouts.map((workout) => {
+              const iconConfig = getWorkoutIconConfig(getWorkoutType(workout));
+              const WorkoutIcon = iconConfig?.Icon;
+              const status = getWorkoutDayStatus(workout, {
+                isSick: selectedDayIsSick,
+                isPast: selectedDayIsPast,
+              });
+              const statusColor =
+                status.tone === "record"
+                  ? recordColor
+                  : status.tone === "done"
+                  ? secondaryColor
+                  : status.tone === "sick"
+                  ? sickColor
+                  : status.tone === "overdue"
+                    ? dangerColor
+                    : primaryColor;
+              const comingSoon = isWorkoutComingSoon(workout);
+
+              return (
+                <View
+                  key={workout.workout_id}
+                  style={[
+                    styles.dayWorkoutCard,
+                    {
+                      backgroundColor: modalCardSurface,
+                      borderColor: cardBorder,
+                    },
+                  ]}
+                >
+                  <TouchableOpacity
+                    accessibilityRole="button"
+                    activeOpacity={0.82}
+                    onPress={() => openWorkout(workout)}
+                    style={styles.dayWorkoutMain}
+                  >
+                    <View
+                      style={[
+                        styles.dayWorkoutIcon,
+                        { backgroundColor: statusColor },
+                      ]}
+                    >
+                      {WorkoutIcon ? (
+                        <WorkoutIcon
+                          width={20}
+                          height={20}
+                          color={cardSurface}
+                          fill={cardSurface}
+                          primaryColor={cardSurface}
+                          backgroundColor="transparent"
+                        />
+                      ) : (
+                        <ThemedText
+                          style={styles.dayWorkoutIconLabel}
+                          setColor={cardSurface}
+                        >
+                          {iconConfig?.short ?? getWorkoutIconLabel(workout)}
+                        </ThemedText>
+                      )}
+                    </View>
+
+                    <View style={styles.dayWorkoutText}>
+                      <ThemedText
+                        style={styles.dayWorkoutName}
+                        setColor={titleColor}
+                        numberOfLines={1}
+                      >
+                        {workout.label ?? getWorkoutType(workout)}
+                      </ThemedText>
+                      <ThemedText
+                        style={styles.dayWorkoutStatus}
+                        setColor={statusColor}
+                      >
+                        {status.label}
+                      </ThemedText>
+                      {!!workout.program_name && (
+                        <ThemedText
+                          style={styles.dayWorkoutMeta}
+                          setColor={quietText}
+                          numberOfLines={1}
+                        >
+                          {workout.program_name}
+                        </ThemedText>
+                      )}
+                    </View>
+
+                    <ChevronRight width={18} height={18} color={quietText} />
+                  </TouchableOpacity>
+
+                  <View
+                    style={[
+                      styles.dayWorkoutActions,
+                      { borderTopColor: cardBorder },
+                    ]}
+                  >
+                    {!comingSoon && (
+                      <TouchableOpacity
+                        accessibilityRole="button"
+                        activeOpacity={0.78}
+                        onPress={() => startWorkoutCopy(workout)}
+                        style={styles.dayWorkoutAction}
+                      >
+                        <Copy width={17} height={17} />
+                        <ThemedText
+                          style={styles.dayWorkoutActionText}
+                          setColor={secondaryColor}
+                        >
+                          Copy to date
+                        </ThemedText>
+                      </TouchableOpacity>
+                    )}
+
+                    <TouchableOpacity
+                      accessibilityRole="button"
+                      activeOpacity={0.78}
+                      onPress={() => confirmDeleteWorkoutFromCalendar(workout)}
+                      style={styles.dayWorkoutAction}
+                    >
+                      <Delete width={17} height={17} color={dangerColor} />
+                      <ThemedText
+                        style={styles.dayWorkoutActionText}
+                        setColor={dangerColor}
+                      >
+                        Delete
+                      </ThemedText>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        )}
+
+        {selectedDayPrograms.length > 0 && (
+          <View>
+            <ThemedText
+              style={styles.daySheetSectionLabel}
+              setColor={quietText}
+            >
+              {selectedDayPrograms.length === 1 ? "Program" : "Programs"}
+            </ThemedText>
+
+            <View style={styles.daySheetList}>
+              {selectedDayPrograms.map((programDay) => (
+                <TouchableOpacity
+                  key={`${programDay.program_id}-${programDay.day_id}`}
+                  accessibilityRole="button"
+                  activeOpacity={0.82}
+                  onPress={() => openProgramOverview(programDay)}
+                  style={[
+                    styles.dayProgramRow,
+                    {
+                      backgroundColor: modalCardSurface,
+                      borderColor: cardBorder,
+                    },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.programDayDot,
+                      { backgroundColor: primaryColor },
+                    ]}
                   />
-                }
-                onPress={beginAddWorkout}
-                textColor={primaryColor}
-              >
-                Add new workout
-              </DayContextMenuAction>
-
-              {!!selectedCalendarDay?.workouts?.length && (
-                <DayContextMenuAction
-                  icon={<Copy width={22} height={22} />}
-                  onPress={beginCopyWorkout}
-                  textColor={secondaryColor}
-                >
-                  Copy workout
-                </DayContextMenuAction>
-              )}
-
-              {!!selectedCalendarDay?.workouts?.length && (
-                <DayContextMenuAction
-                  icon={
-                    <Delete
-                      width={22}
-                      height={22}
-                      color={theme.danger ?? Colors.dark.danger}
-                    />
-                  }
-                  onPress={beginDeleteWorkout}
-                  textColor={theme.danger ?? Colors.dark.danger}
-                >
-                  Delete workout
-                </DayContextMenuAction>
-              )}
+                  <View style={styles.programDayText}>
+                    <ThemedText
+                      style={styles.programDayName}
+                      setColor={titleColor}
+                      numberOfLines={1}
+                    >
+                      {programDay.program_name}
+                    </ThemedText>
+                    <ThemedText
+                      style={styles.programDayMeta}
+                      setColor={quietText}
+                    >
+                      {getProgramDayLocation(programDay)}
+                    </ThemedText>
+                  </View>
+                  <ChevronRight width={18} height={18} color={quietText} />
+                </TouchableOpacity>
+              ))}
             </View>
           </View>
-        </View>
-      </Modal>
+        )}
+      </ThemedBottomSheet>
 
       {copyDatePickerVisible && (
         <DateTimePicker
@@ -1283,7 +1770,7 @@ const WorkoutCalendarPage = () => {
           contentContainerStyle={styles.programTargetListContent}
           showsVerticalScrollIndicator={false}
         >
-          {(selectedCalendarDay?.programDays ?? []).map((programDay) => (
+          {selectedDayPrograms.map((programDay) => (
             <TouchableOpacity
               key={`${programDay.program_id}-${programDay.day_id}`}
               activeOpacity={0.82}
@@ -1325,89 +1812,6 @@ const WorkoutCalendarPage = () => {
         }
       />
 
-      <PickWorkoutModal
-        workouts={selectedCalendarDay?.workouts ?? []}
-        visible={pickWorkoutModalVisible}
-        onClose={() => {
-          setPickWorkoutModalVisible(false);
-          setWorkoutPickMode(null);
-        }}
-        onSubmit={(workout) => {
-          if (workoutPickMode === WORKOUT_PICK_MODE.COPY) {
-            startWorkoutCopy(workout);
-            return;
-          }
-
-          confirmDeleteWorkoutFromCalendar(workout);
-        }}
-      />
-
-      <ThemedModal
-        visible={Boolean(selectedProgramDate)}
-        onClose={closeProgramDayModal}
-        title={selectedProgramModalTitle}
-        style={styles.programDayModal}
-        contentStyle={styles.programDayModalBody}
-      >
-        {selectedProgramDate ? (
-          <ThemedText style={styles.programDayDate} setColor={quietText}>
-            {selectedProgramDate}
-          </ThemedText>
-        ) : null}
-
-        <ScrollView
-          style={styles.programDayList}
-          contentContainerStyle={styles.programDayListContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {selectedProgramDayRows.map((programDay) => (
-            <View
-              key={`${programDay.program_id}-${programDay.day_id}`}
-              style={[
-                styles.programDayCard,
-                {
-                  backgroundColor: modalCardSurface,
-                  borderColor: cardBorder,
-                },
-              ]}
-            >
-              <View style={styles.programDayHeader}>
-                <View
-                  style={[
-                    styles.programDayDot,
-                    { backgroundColor: primaryColor },
-                  ]}
-                />
-                <View style={styles.programDayText}>
-                  <ThemedText style={styles.programDayName} setColor={titleColor}>
-                    {programDay.program_name}
-                  </ThemedText>
-                  <ThemedText style={styles.programDayMeta} setColor={quietText}>
-                    {getProgramDayLocation(programDay)}
-                  </ThemedText>
-                </View>
-              </View>
-
-              <TouchableOpacity
-                accessibilityRole="button"
-                activeOpacity={0.82}
-                onPress={() => openProgramOverview(programDay)}
-                style={[
-                  styles.programDayAction,
-                  { backgroundColor: primaryColor },
-                ]}
-              >
-                <ThemedText
-                  style={styles.programDayActionText}
-                  setColor={actionTextColor}
-                >
-                  Open program
-                </ThemedText>
-              </TouchableOpacity>
-            </View>
-          ))}
-        </ScrollView>
-      </ThemedModal>
     </ThemedView>
   );
 };

@@ -1,5 +1,114 @@
 # Changelog
 
+## [0.20.0] - Unreleased
+### Changed
+- Every gesture on a calendar day now opens one day sheet, which holds the day's workouts, its programs and the add, copy and delete actions.
+- Calendar month cells now carry the date plus one coloured dot per workout instead of icon cards, the today/sick stamp and the program dot.
+- Calendar month cells now show the program span through the date number's colour, in place of the removed program dot.
+- Calendar load failures now use the same error pattern as the notification screen: a heading, the explanation and a Try again action.
+- Merged the calendar's workout-count pill into the month title's subtext, dropped the header spinner and gave the month arrows a 44 px touch target.
+- The workout library's sort and type panels now use the app's shared bottom sheet instead of a panel of their own.
+- The workout library's filter pills now read exactly like the option they select, so "Newest first" is no longer shortened to "Newest".
+- An empty filter result in the workout library now offers a Reset filters action, and an empty library says so instead of blaming the filters.
+- The workout calendar now has the app's standard header with a back arrow.
+- Pickers now carry a downward chevron, so a field that opens a list no longer looks like a link onwards.
+- Personal records now uses four text sizes, with the record value set well above its label.
+- Personal records now shows an en dash for missing values in number columns, explained in a footnote under the table.
+- Replaced the personal-record Hide empty / Show all button with a switch labelled Hide empty rep ranges.
+- The notification screen now has a single title, Notifications, matching the settings screen, and readable timestamps.
+- A failed program load now shows a heading, the reason and a Try again action instead of only reaching the console.
+- The program list can now be pulled down to refresh.
+- Reworded the No notifications option to describe the setting rather than sell it.
+- Renamed the Custom notification option to Pick specific people, and the chosen people now appear as removable chips instead of only a count.
+- Lifted the notification settings group labels to 12 px so they are no longer smaller than the body text they head.
+- Followers and following on the social screen are now full 44 px buttons on their own row below the activity rail, instead of 30 px chips beside the heading.
+- Secondary buttons are now outlined with text-coloured labels, so a Cancel or Close no longer reads as the screen's main action. The filled green fill moved to a new success variant, used by Start workout.
+- Renamed the social screen's Stories section to Today's activity, which is what it shows.
+- Following now reads as a state with a checkmark, and unfollowing asks for confirmation first.
+- Shortened the Find Friends search placeholder, and split its two empty states so the search case repeats the term that found nothing.
+- Every page-header eyebrow is now 12 px, so the label above a page title is no longer smaller than the body text on the page.
+- The sickness log now shows its history first, with New sickness period as a fixed footer button in the app's primary colour.
+- The sickness log uses the app's shared page header and its spinner for loading, and names the flow the same way in the button and the dialog.
+- No text on the workout-types screen is under 11 px any more; the 7 px Available label is now just its check icon.
+- The exercise-card layout options now preview themselves with the real renderers instead of describing the result in a sentence.
+- Split the max heart rate dialog into how it is worked out and a manual value that only appears when it has a part to play.
+- Both social post settings screens now open with a line saying what the settings cover, so the two are no longer indistinguishable.
+- The posting modes now show a sample of the post a reader would see, instead of describing it.
+- Visibility choices are now bare labels with one explanation under the group.
+- The 1RM calculator now opens on its two fields; the formula explanation moved below the result, and the units sit inside the fields.
+- The 1RM result now appears above the calculate button, and calculating closes the keyboard that used to cover it.
+- ThemedTextInput takes a suffix, for a unit shown inside the field to the right of the value.
+- Editing a post note now opens a panel over the post instead of a whole screen, so the post stays visible while writing. The SocialPostEditPage screen and its route are gone.
+- No text outside the run screens is under 11 px any more, and the app's text sizes are down from 33 values to 12.
+- The muted grey used for labels and metadata is now #868C99, which clears 4.5:1 in dark mode where the old #676B76 sat at 3.4:1.
+- Added a primaryText accent token, darkened in light mode, and pointed all 95 accent text and icon usages at it; fills keep primary.
+- Corner radii for rectangular shapes now snap to a 2/6/10/14/18/22 ladder; circles and pills keep their derived radius.
+- The programs and program overview screens now use the shared header, leaving no page with a top bar of its own.
+- Touch targets: 25 standalone icon buttons grew to at least 40 px, and the ones in dense rows gained a hit area instead.
+- The week overview now has all four states: loading, a failure with Try again, an empty week, and pull to refresh.
+- Deleted two stale copies of the colour palette (GlobalStyling/theme.js and spacing.js), neither of which was imported.
+- The block screen's weeks are now one grid with a shared, sticky weekday header instead of a card per week, and a day with several workouts shows a count with a dot each and opens them in a dropdown anchored to its cell.
+- Each week in the block grid now opens with a filled band and shows a date above every day, so the weeks read as separate groups and each day says which date it is.
+- The workout calendar keeps its month grid and lists the month's weeks underneath it in the week-grid style; each month is one page that scrolls as a whole, and the month name and the month arrows live in the header.
+- The week lines dropped their workout counter, the date range moved to the right in its place, and a day with no workout shows its date faintly inside the cell.
+- The month calendar's workout dots are now 3 px and sit inside the date badge, and the date is 15 px rather than 17.
+- The week list under the calendar dropped its week headings: it is now the same grid as the month above it, read the other way round, with the workouts in the cells.
+- The month grid now uses the same seven-column geometry as the week grid under it, so the two line up and the gaps between days are even.
+- The calendar has a layout pill beside the month heading: Block keeps the two grids, and the new Week layout shows one week as a row per day, with every workout its own tile. In Week the swipe moves a week at a time, and the month follows the week on show, so switching back to Block lands on that week's month.
+
+### Fixed
+- Saving a workout-start notification mode no longer rolls the choice back when this device cannot register for push notifications; the preference is already stored, and the screen now says the device may not receive pushes yet.
+- The manage-push-token function now answers with the underlying error and its Postgres code instead of an opaque 500, and the client reads that body into the thrown error.
+---
+## [0.19.1] - Unreleased
+### Changed
+- Finish on a strength-workout timer now atomically marks the workout complete, even when planned exercises or sets remain unfinished.
+---
+## [0.18.12] - Unreleased
+### Changed
+- Removed the redundant completed-workout message panel from the home card.
+- Show the next planned workout in place of the completed-workout summary action.
+- Open the completed workout when tapping anywhere on its home card.
+
+---
+## [0.18.11] - Unreleased
+### Changed
+- Moved exercise card display settings to Settings > Workout Types > Strength Training.
+- Persisted the selected collapsed exercise card view on the device.
+- Added standard, compact, and progress-only collapsed exercise card views with a preview.
+- Reduced spacing between exercise names and collapsed set summaries.
+- Added a Sets toolbar toggle; set summaries are hidden by default and can be shown on demand.
+- Moved the expand arrow next to the progress dots and aligned the dots with the exercise title.
+- Added a clearer outline to pending set progress dots.
+- Added a selectable classic collapsed exercise card layout with the previous rounded set bubbles.
+- Tightened vertical alignment inside classic set bubbles.
+- Added mandatory branch, version, changelog, and validation preflight checks to the repository guide.
+
+---
+## [0.19.0] - Unreleased
+### Added
+- Added direct Bluetooth Low Energy pairing for Garmin HRM-Pro and other standard heart-rate monitors.
+- Added a remembered heart-rate sensor, automatic workout reconnection, live BPM and heart-rate zone display.
+- Feed live heart-rate measurements into run metrics and the existing actual-versus-planned heart-rate charts.
+- Added Android nearby-device and iOS Bluetooth configuration through the Expo BLE plugin.
+
+### Changed
+- Show a distinct completed-workout card on the home page, with finished time, duration, summary access, and the next planned workout.
+
+---
+## [0.18.10] - Unreleased
+### Changed
+- Rename the front-page workout action from "Start workout" to "Open workout" to make it clear that the workout opens before it begins.
+- Mark the active auto-advance target directly on each Speed & Structure interval and allow Time, Distance, or Automatic selection from the set options.
+- Count workouts on past sickness-marked days as completed in program, block, and home progress displays, without changing `Day.done` or its sync state.
+- Let Speed & Structure intervals with a distance but no TIME field progress from GPS distance instead of being skipped. When the target is reached, save and show the actual time, distance, and pace without replacing the planned pace.
+- Improve Run and Walk distance tracking for phones carried in pockets by accepting moderately degraded GPS accuracy and retaining plausible segments across short background-delivery gaps.
+- Populate `LocationDebugLog` when a tracked workout pauses or finishes, including per-point acceptance decisions and rejection reasons for easier device-specific GPS troubleshooting.
+- Redesign the Add exercise workout picker with a custom header, body-map exercise rows, primary/secondary muscle labels, a custom-exercise footer, and an exercise detail popup with muscle-group chips and an add action.
+- Add an exercise filter bottom sheet with training focus, grouped muscle filters, built-in/custom type filtering, live result counts, and filter badges for both picker and catalog views.
+- Redesign the Start workout sheet so planned workouts, fresh starts, and repeated workouts have distinct visual treatments, with dashed plus cards for new workouts and solid replay rows for copied workouts.
+
+---
 ## [0.18.9] - Unreleased
 ### Changed
 - Fix the crash when opening a completed Run or Walk workout on Android by configuring the Google Maps Android API key and only mounting the route map when the key is available, with a clear fallback card otherwise.

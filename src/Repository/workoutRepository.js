@@ -127,6 +127,33 @@ export async function getActiveWorkoutTimer(db) {
   );
 }
 
+// A workout for the given day that exists but has not been started yet, so the
+// nav button can offer to start it instead of creating a new one.
+export async function getStartableWorkout(db, { date }) {
+  return db.getFirstAsync(
+    `SELECT
+        w.workout_id,
+        w.workout_type,
+        w.label,
+        w.date,
+        w.original_start_time,
+        w.timer_start,
+        w.elapsed_time,
+        d.program_id,
+        d.Weekday AS day
+     FROM Workout_Type_Instance w
+     LEFT JOIN Day d ON d.day_id = w.day_id
+     WHERE w.done = 0
+       AND w.is_active = 1
+       AND w.timer_start IS NULL
+       AND w.deleted_at IS NULL
+       AND w.date = ?
+     ORDER BY w.workout_id DESC
+     LIMIT 1;`,
+    [date]
+  );
+}
+
 export async function updateWorkoutLabel(db, { workoutId, label }) {
   const syncVersion = createNextSyncVersion();
   await db.runAsync(

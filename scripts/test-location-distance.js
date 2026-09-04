@@ -15,6 +15,7 @@ async function run() {
   const moduleUrl = `data:text/javascript;base64,${Buffer.from(source).toString("base64")}`;
   const {
     DEFAULT_RUN_DISTANCE_FILTER,
+    calculateTrackedDistanceDiagnostics,
     calculateTrackedDistanceSummary,
   } = await import(moduleUrl);
 
@@ -24,13 +25,16 @@ async function run() {
   verifyGpsJumpCannotBeAbsorbedLater(calculateTrackedDistanceSummary);
   verifyStationarySamplesKeepSpeedWindowFresh(calculateTrackedDistanceSummary);
   verifyPoorAccuracyDoesNotAddDistance(calculateTrackedDistanceSummary);
+  verifyPocketAccuracyIsCounted(calculateTrackedDistanceSummary);
   verifyPauseMovementIsIgnored(calculateTrackedDistanceSummary);
   verifyBatchedBackgroundLocationsAreCounted(calculateTrackedDistanceSummary);
   verifyBatchedBackgroundJumpIsRejected(calculateTrackedDistanceSummary);
+  verifyRecoverableBackgroundGapIsCounted(calculateTrackedDistanceSummary);
   verifyVeryLongTrackingGapStartsFresh(
     calculateTrackedDistanceSummary,
     DEFAULT_RUN_DISTANCE_FILTER
   );
+  verifyDiagnosticReasons(calculateTrackedDistanceDiagnostics);
 
   console.log("Location distance regression checks passed.");
 }
@@ -137,6 +141,18 @@ function verifyPoorAccuracyDoesNotAddDistance(calculateTrackedDistanceSummary) {
   assert.ok(summary.rejectedPointCount >= 2);
 }
 
+function verifyPocketAccuracyIsCounted(calculateTrackedDistanceSummary) {
+  const summary = calculateTrackedDistanceSummary([
+    point(0, 0, 50),
+    point(20, 5, 50),
+    point(40, 10, 50),
+    point(60, 15, 50),
+  ]);
+
+  assertDistance(summary, 60);
+  assert.strictEqual(summary.acceptedSegmentCount, 3);
+}
+
 function verifyPauseMovementIsIgnored(calculateTrackedDistanceSummary) {
   const summary = calculateTrackedDistanceSummary([
     point(0, 0),
@@ -176,6 +192,19 @@ function verifyBatchedBackgroundJumpIsRejected(calculateTrackedDistanceSummary) 
   assert.strictEqual(summary.reanchorCount, 1);
 }
 
+function verifyRecoverableBackgroundGapIsCounted(
+  calculateTrackedDistanceSummary
+) {
+  const summary = calculateTrackedDistanceSummary([
+    point(0, 0),
+    point(600, 300),
+    point(610, 305),
+  ]);
+
+  assertDistance(summary, 610);
+  assert.strictEqual(summary.reanchorCount, 0);
+}
+
 function verifyVeryLongTrackingGapStartsFresh(
   calculateTrackedDistanceSummary,
   distanceFilter
@@ -189,4 +218,19 @@ function verifyVeryLongTrackingGapStartsFresh(
 
   assertDistance(summary, 5);
   assert.strictEqual(summary.reanchorCount, 1);
+}
+
+function verifyDiagnosticReasons(calculateTrackedDistanceDiagnostics) {
+  const summary = calculateTrackedDistanceDiagnostics([
+    point(0, 0),
+    point(5, 1, 100),
+    point(2, 2),
+    point(20, 5),
+  ]);
+
+  assert.strictEqual(summary.diagnostics.length, 4);
+  assert.deepStrictEqual(
+    summary.diagnostics.map((diagnostic) => diagnostic.rejectionReason),
+    ["anchor", "poor_accuracy", "below_noise_floor", "accepted"]
+  );
 }

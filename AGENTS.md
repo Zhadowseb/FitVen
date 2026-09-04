@@ -20,6 +20,22 @@ Keep the root guide short and place domain-specific rules in closer `AGENTS.md` 
 - If the user asks for code changes while on `master` or `main`, stop first and propose a branch name before making changes.
 - Review local changes before switching branches or rewriting Git history.
 
+## Mandatory Preflight
+
+Before editing any file:
+
+1. Run `git branch --show-current` and `git status --short`.
+2. Confirm the current branch clearly matches the requested work. If it does not, stop and propose a concrete branch name before editing.
+3. Review existing local changes before switching branches.
+4. After creating or switching to a work branch, run `npm run version:auto` before making further version edits.
+
+Before handoff:
+
+1. Run `npm run version:status`.
+2. Verify that the changelog contains the current branch version and describes the actual changes.
+3. Run the relevant tests or checks and inspect `git diff --check`.
+4. Report the current branch, validation results, and any uncommitted or unpushed changes explicitly.
+
 ## GitHub Issue Fixes
 
 - When the user asks the agent to review GitHub issues and solve them, only inspect, evaluate, or implement code for issues labeled `codex-fix` or `codex-fix-human-input`.

@@ -1333,6 +1333,79 @@ async function migrateExerciseInstanceDeleteQueueSchema(db) {
   });
 }
 
+// Note, RPE and 1RM% are opt-in per exercise. Existing rows were written when
+// they were on by default, so they are switched off here. Every other column
+// keeps whatever the row already had, and rows already matching are left alone,
+// which makes this idempotent.
+const OPT_IN_VISIBLE_COLUMN_KEYS = ["note", "rpe", "rm_percentage"];
+
+function applyOptInColumnDefaults(serializedColumns) {
+  if (typeof serializedColumns !== "string" || serializedColumns === "") {
+    return null;
+  }
+
+  let parsedColumns;
+
+  try {
+    parsedColumns = JSON.parse(serializedColumns);
+  } catch {
+    return null;
+  }
+
+  if (!parsedColumns || typeof parsedColumns !== "object" || Array.isArray(parsedColumns)) {
+    return null;
+  }
+
+  const needsChange = OPT_IN_VISIBLE_COLUMN_KEYS.some(
+    (key) => parsedColumns[key] === true
+  );
+
+  if (!needsChange) {
+    return null;
+  }
+
+  const nextColumns = { ...parsedColumns };
+
+  for (const key of OPT_IN_VISIBLE_COLUMN_KEYS) {
+    nextColumns[key] = false;
+  }
+
+  return JSON.stringify(nextColumns);
+}
+
+async function migrateLegacyVisibleColumnDefaults(db) {
+  const targets = [
+    { table: "Exercise_Instance", idColumn: "exercise_instance_id" },
+    {
+      table: "Exercise_Column_Preference",
+      idColumn: "exercise_column_preference_id",
+    },
+  ];
+
+  for (const target of targets) {
+    const rows = await db.getAllAsync(
+      `SELECT ${target.idColumn} AS id, visible_columns
+       FROM ${target.table}
+       WHERE visible_columns IS NOT NULL AND visible_columns != '';`
+    );
+
+    for (const row of rows) {
+      const nextColumns = applyOptInColumnDefaults(row.visible_columns);
+
+      if (!nextColumns) {
+        continue;
+      }
+
+      await db.runAsync(
+        `UPDATE ${target.table}
+         SET visible_columns = ?, needs_sync = 1
+         WHERE ${target.idColumn} = ?;`,
+        [nextColumns, row.id]
+      );
+    }
+  }
+}
+
 async function migrateSetDeleteQueueSchema(db) {
   const queueColumns = await getTableColumns(db, "Set_Sync_Delete");
 
@@ -1674,6 +1747,10 @@ export async function initializeDatabase(db) {
     ["time", "INTEGER"],
     ["heartrate", "INTEGER"],
     ["stat_priority", "TEXT"],
+    ["completion_target", "TEXT"],
+    ["actual_distance", "REAL"],
+    ["actual_duration_seconds", "INTEGER"],
+    ["actual_pace", "REAL"],
     ["done", "INTEGER NOT NULL DEFAULT 0"],
   ]);
 
@@ -1692,6 +1769,8 @@ export async function initializeDatabase(db) {
   await repairRunSetState(db);
   await repairProgramDateFormats(db);
   await repairCloudParentForeignKeySyncState(db);
+
+  await migrateLegacyVisibleColumnDefaults(db);
 
   await initializeWeightliftingData(db);
 

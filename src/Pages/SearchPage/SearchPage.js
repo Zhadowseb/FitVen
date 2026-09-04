@@ -20,7 +20,6 @@ import { programService, socialService } from "../../Services";
 import { getTodaysDate } from "../../Utils/dateUtils";
 import {
   ThemedButton,
-  ThemedHeader,
   ThemedModal,
   ThemedText,
   ThemedTitle,
@@ -28,7 +27,8 @@ import {
   UserAvatar,
 } from "../../Resources/ThemedComponents";
 
-const searchPeopleImage = require("../../Resources/Images/DarkVersion/Search_people.png");
+const findFriendsImage = require("../../Resources/Images/DarkVersion/Find_friends.jpg");
+const ownPostsImage = require("../../Resources/Images/DarkVersion/Social_posts_edit.jpg");
 
 const SearchPage = () => {
   const db = useSQLiteContext();
@@ -115,7 +115,9 @@ const SearchPage = () => {
         following: 0,
       });
       setCirclePreviewError(
-        error instanceof Error ? error.message : "Could not load your stories."
+        error instanceof Error
+          ? error.message
+          : "Could not load today's activity.",
       );
     } finally {
       setIsLoadingFollowCounts(false);
@@ -125,7 +127,7 @@ const SearchPage = () => {
   useFocusEffect(
     useCallback(() => {
       loadCirclePreview();
-    }, [loadCirclePreview])
+    }, [loadCirclePreview]),
   );
 
   const handleOpenUserList = () => {
@@ -166,74 +168,46 @@ const SearchPage = () => {
       setRelationshipError(
         error instanceof Error
           ? error.message
-          : `Could not load ${relationshipType}.`
+          : `Could not load ${relationshipType}.`,
       );
     } finally {
       setIsLoadingRelationships(false);
     }
   };
 
-  const renderHeaderRelationshipStat = (relationshipType, label, value) => (
+  // These open a list, so they are buttons with a real 44 px target on their
+  // own row - as a chip beside the heading they were a 30 px strip that did not
+  // look tappable.
+  const renderRelationshipButton = (relationshipType, label, value) => (
     <Pressable
       key={relationshipType}
       onPress={() => handleOpenRelationshipModal(relationshipType)}
       disabled={!user?.id}
-      hitSlop={8}
+      accessibilityRole="button"
+      accessibilityLabel={`${value} ${label}`}
       style={({ pressed }) => [
-        styles.headerRelationshipStat,
-        pressed && user?.id ? styles.headerRelationshipStatPressed : null,
+        styles.relationshipStat,
+        {
+          backgroundColor: theme.chipBackground,
+          borderColor: cardBorder,
+        },
+        pressed && user?.id ? styles.relationshipStatPressed : null,
       ]}
     >
-      <ThemedText style={styles.headerRelationshipValue} setColor={titleColor}>
-        {isLoadingFollowCounts ? "..." : value}
-      </ThemedText>
-      <ThemedText style={styles.headerRelationshipLabel} setColor={quietText}>
-        {label}
+      <ThemedText style={styles.relationshipStatText} setColor={quietText}>
+        <ThemedText
+          style={styles.relationshipStatValue}
+          setColor={titleColor}
+        >
+          {isLoadingFollowCounts ? "..." : value}
+        </ThemedText>
+        {` ${label}`}
       </ThemedText>
     </Pressable>
   );
 
   return (
     <ThemedView safe={["top", "left", "right"]} style={styles.container}>
-      <ThemedHeader
-        leftWidth={132}
-        rightWidth={132}
-        right={
-          <View style={styles.headerRelationshipStats}>
-            {renderHeaderRelationshipStat(
-              "followers",
-              "followers",
-              followCounts.followers
-            )}
-            {renderHeaderRelationshipStat(
-              "following",
-              "following",
-              followCounts.following
-            )}
-          </View>
-        }
-      >
-        <View style={styles.pageHeaderTitleGroup}>
-          <ThemedText
-            size={10}
-            style={[
-              styles.pageHeaderTitleEyebrow,
-              { color: quietText },
-            ]}
-          >
-            Connect
-          </ThemedText>
-
-          <ThemedTitle
-            type="h3"
-            style={styles.pageHeaderTitleMain}
-            numberOfLines={1}
-          >
-            Social
-          </ThemedTitle>
-        </View>
-      </ThemedHeader>
-
       <ScrollView
         style={styles.content}
         contentContainerStyle={styles.scrollContent}
@@ -241,11 +215,9 @@ const SearchPage = () => {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.storiesSection}>
-          <View style={styles.sectionHeaderRow}>
-            <ThemedTitle type="h3" style={styles.sectionTitle}>
-              Stories
-            </ThemedTitle>
-          </View>
+          <ThemedTitle type="h3" style={styles.sectionTitle}>
+            Today&apos;s activity
+          </ThemedTitle>
 
           <View style={styles.storiesRail}>
             <FriendsActivity
@@ -257,45 +229,101 @@ const SearchPage = () => {
               onOpenProfile={() => navigation.navigate("ProfilePage")}
             />
           </View>
+
+          <View style={styles.relationshipStats}>
+            {renderRelationshipButton(
+              "followers",
+              "followers",
+              followCounts.followers,
+            )}
+            {renderRelationshipButton(
+              "following",
+              "following",
+              followCounts.following,
+            )}
+          </View>
         </View>
+
+        <TouchableOpacity
+          activeOpacity={0.92}
+          accessibilityRole="button"
+          accessibilityLabel="Your workout posts"
+          onPress={() => navigation.navigate("WorkoutPostsPage")}
+          style={[styles.heroCard, styles.heroCardPosts]}
+        >
+          <ImageBackground
+            source={ownPostsImage}
+            resizeMode="cover"
+            style={styles.heroImage}
+          >
+            <View style={styles.heroScrim} />
+
+            <View style={styles.heroContent}>
+              <View style={styles.heroActionRow}>
+                <View style={styles.heroActionIcon}>
+                  <TailArrowUpRight
+                    width={15}
+                    height={15}
+                    stroke="#ffffff"
+                    color="#ffffff"
+                  />
+                </View>
+              </View>
+
+              <View style={styles.heroCopy}>
+                <ThemedText style={styles.heroEyebrow} setColor="#ffffff">
+                  Your Workout
+                </ThemedText>
+                <ThemedTitle
+                  type="h3"
+                  style={styles.heroTitle}
+                  numberOfLines={1}
+                >
+                  Posts
+                </ThemedTitle>
+              </View>
+            </View>
+          </ImageBackground>
+        </TouchableOpacity>
 
         <TouchableOpacity
           activeOpacity={0.92}
           accessibilityRole="button"
           accessibilityLabel="Search for friends"
           onPress={handleOpenUserList}
-          style={[styles.findFriendsCard, { borderColor: cardBorder }]}
+          style={[styles.heroCard, styles.heroCardFriends]}
         >
           <ImageBackground
-            source={searchPeopleImage}
+            source={findFriendsImage}
             resizeMode="cover"
-            style={styles.findFriendsImage}
-            imageStyle={styles.findFriendsImageRadius}
+            style={styles.heroImage}
           >
-            <View style={styles.findFriendsScrim} />
+            <View style={styles.heroScrim} />
 
-            <View style={styles.findFriendsActionRow}>
-              <View style={styles.findFriendsActionIcon}>
-                <TailArrowUpRight
-                  width={15}
-                  height={15}
-                  stroke="#ffffff"
-                  color="#ffffff"
-                />
+            <View style={styles.heroContent}>
+              <View style={styles.heroActionRow}>
+                <View style={styles.heroActionIcon}>
+                  <TailArrowUpRight
+                    width={15}
+                    height={15}
+                    stroke="#ffffff"
+                    color="#ffffff"
+                  />
+                </View>
               </View>
-            </View>
 
-            <View style={styles.findFriendsCopy}>
-              <ThemedText style={styles.findFriendsEyebrow} setColor="#ffffff">
-                Discover
-              </ThemedText>
-              <ThemedTitle
-                type="h3"
-                style={styles.findFriendsTitle}
-                numberOfLines={2}
-              >
-                Find Friends
-              </ThemedTitle>
+              <View style={styles.heroCopy}>
+                <ThemedText style={styles.heroEyebrow} setColor="#ffffff">
+                  Discover
+                </ThemedText>
+                <ThemedTitle
+                  type="h3"
+                  style={styles.heroTitle}
+                  numberOfLines={1}
+                >
+                  Find Friends
+                </ThemedTitle>
+              </View>
             </View>
           </ImageBackground>
         </TouchableOpacity>
@@ -304,9 +332,11 @@ const SearchPage = () => {
       <ThemedModal
         visible={Boolean(activeRelationshipType)}
         onClose={closeRelationshipModal}
-        title={`${relationshipTitle} (${activeRelationshipType === "following"
-          ? followCounts.following
-          : followCounts.followers})`}
+        title={`${relationshipTitle} (${
+          activeRelationshipType === "following"
+            ? followCounts.following
+            : followCounts.followers
+        })`}
         style={[
           styles.relationshipModal,
           {

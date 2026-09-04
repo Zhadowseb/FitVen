@@ -1,6 +1,11 @@
 import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
-import { TouchableOpacity, View, useColorScheme } from "react-native";
+import {
+  Keyboard,
+  TouchableOpacity,
+  View,
+  useColorScheme,
+} from "react-native";
 
 import styles from "./OneRepMaxCalculatorPageStyle";
 import { Colors } from "../../Resources/GlobalStyling/colors";
@@ -48,6 +53,8 @@ export default function OneRepMaxCalculatorPage() {
   const [errors, setErrors] = useState({});
 
   const primaryColor = theme.primary ?? "#f7742e";
+
+  const primaryTextColor = theme.primaryText ?? theme.primary;
   const secondaryColor = theme.secondary ?? "#60daac";
   const cardSurface = theme.cardBackground ?? theme.background;
   const innerSurface = theme.fields ?? theme.uiBackground ?? cardSurface;
@@ -57,6 +64,8 @@ export default function OneRepMaxCalculatorPage() {
   const titleColor = theme.title ?? theme.text;
 
   const calculate = () => {
+    Keyboard.dismiss();
+
     const parsedWeight = parseDecimal(weight);
     const parsedReps = parseDecimal(reps);
     const nextErrors = {};
@@ -97,14 +106,14 @@ export default function OneRepMaxCalculatorPage() {
       <ThemedHeader>
         <View style={styles.pageHeaderTitleGroup}>
           <ThemedText
-            size={10}
+            size={12}
             style={styles.pageHeaderTitleEyebrow}
             setColor={quietText}
           >
             Train
           </ThemedText>
           <ThemedTitle
-            type="h3"
+            type="pageTitle"
             style={styles.pageHeaderTitleMain}
             numberOfLines={1}
           >
@@ -115,34 +124,10 @@ export default function OneRepMaxCalculatorPage() {
 
       <ThemedKeyboardProtection
         scroll
+        bottomOffset={48}
         contentContainerStyle={styles.content}
         scrollViewProps={{ showsVerticalScrollIndicator: false }}
       >
-        <View
-          style={[
-            styles.heroCard,
-            {
-              backgroundColor: cardSurface,
-              borderColor: cardBorder,
-            },
-          ]}
-        >
-          <View
-            pointerEvents="none"
-            style={[styles.heroAccent, { backgroundColor: secondaryColor }]}
-          />
-          <ThemedText style={styles.heroEyebrow} setColor={secondaryColor}>
-            ESTIMATED ONE REP MAX
-          </ThemedText>
-          <ThemedTitle type="h2" style={styles.heroTitle}>
-            Turn a working set into an estimate
-          </ThemedTitle>
-          <ThemedText style={styles.heroDescription} setColor={quietText}>
-            Enter the weight and completed reps. The result uses the same
-            Brzycki formula as your automatic personal records.
-          </ThemedText>
-        </View>
-
         <View
           style={[
             styles.calculatorCard,
@@ -168,6 +153,7 @@ export default function OneRepMaxCalculatorPage() {
                 keyboardType="decimal-pad"
                 returnKeyType="next"
                 error={errors.weight}
+                suffix="kg"
                 inputStyle={[
                   styles.input,
                   {
@@ -176,9 +162,6 @@ export default function OneRepMaxCalculatorPage() {
                   },
                 ]}
               />
-              <ThemedText style={styles.inputUnit} setColor={quietText}>
-                kg
-              </ThemedText>
             </View>
 
             <View style={styles.inputColumn}>
@@ -197,6 +180,7 @@ export default function OneRepMaxCalculatorPage() {
                 returnKeyType="done"
                 error={errors.reps}
                 onSubmitEditing={calculate}
+                suffix="reps"
                 inputStyle={[
                   styles.input,
                   {
@@ -205,18 +189,8 @@ export default function OneRepMaxCalculatorPage() {
                   },
                 ]}
               />
-              <ThemedText style={styles.inputUnit} setColor={quietText}>
-                completed
-              </ThemedText>
             </View>
           </View>
-
-          <ThemedButton
-            title="Calculate estimated 1RM"
-            onPress={calculate}
-            fullWidth
-            style={[styles.calculateButton, { backgroundColor: primaryColor }]}
-          />
 
           {estimatedOneRepMax !== null ? (
             <View
@@ -244,6 +218,13 @@ export default function OneRepMaxCalculatorPage() {
               </ThemedText>
             </View>
           ) : null}
+
+          <ThemedButton
+            title="Calculate estimated 1RM"
+            onPress={calculate}
+            fullWidth
+            style={[styles.calculateButton, { backgroundColor: primaryColor }]}
+          />
         </View>
 
         {estimatedOneRepMax !== null ? (
@@ -260,7 +241,7 @@ export default function OneRepMaxCalculatorPage() {
               <View>
                 <ThemedText
                   style={styles.percentageEyebrow}
-                  setColor={primaryColor}
+                  setColor={primaryTextColor}
                 >
                   TRAINING LOADS
                 </ThemedText>
@@ -289,7 +270,7 @@ export default function OneRepMaxCalculatorPage() {
                   >
                     <ThemedText
                       style={styles.percentageValue}
-                      setColor={primaryColor}
+                      setColor={primaryTextColor}
                     >
                       {percentage}%
                     </ThemedText>
@@ -316,8 +297,9 @@ export default function OneRepMaxCalculatorPage() {
             About the estimate
           </ThemedText>
           <ThemedText style={styles.infoText} setColor={quietText}>
-            Estimates are generally most useful from hard sets of 1-10 reps.
-            Fatigue, technique and exercise choice can change the result.
+            The result uses the same Brzycki formula as your automatic personal
+            records. Estimates are generally most useful from hard sets of 1-10
+            reps; fatigue, technique and exercise choice can change the result.
           </ThemedText>
         </View>
 
@@ -327,7 +309,7 @@ export default function OneRepMaxCalculatorPage() {
             onPress={reset}
             style={[styles.resetButton, { borderColor: cardBorder }]}
           >
-            <ThemedText style={styles.resetButtonText} setColor={primaryColor}>
+            <ThemedText style={styles.resetButtonText} setColor={primaryTextColor}>
               Reset calculator
             </ThemedText>
           </TouchableOpacity>

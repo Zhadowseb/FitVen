@@ -22,15 +22,23 @@ import Thermostat from "../../../../Resources/Icons/UI-icons/Thermostat";
 import CalenderPastePicker from "../../../../Resources/Components/CalenderPastePicker/CalenderPasteModal";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback } from "react";
-import WeekdayIndicator from "../../../../Resources/Figures/WeekdayIndicator";
+import ChevronRight from "../../../../Resources/Icons/UI-icons/ChevronRight";
+import {
+  DayCell,
+  WeekBand,
+  WeekDateRow,
+  WeekdayHeader,
+  useGridPalette,
+} from "../BlockWeekGrid/BlockWeekGrid";
+import gridStyles from "../BlockWeekGrid/BlockWeekGridStyle";
 import { getWorkoutIconConfig } from "../../../../Resources/Icons/WorkoutLabels";
 import PickWorkoutModal from "../../../WeekPage/Components/Day/Components/PickWorkoutModal/PickWorkoutModal";
 
 import styles from "./MicrocycleListStyle";
 import { programService as programRepository } from "../../../../Services";
 
-import { ThemedCard, 
-        ThemedText, 
+import {
+        ThemedText,
         ThemedBottomSheet,
         ThemedModal,
         ThemedPicker,
@@ -43,6 +51,44 @@ import {
   DEFAULT_SICKNESS_TYPE,
   SICKNESS_TYPES,
 } from "../../../../Resources/Images/sicknessTypes";
+
+const MONTH_SHORT_LABELS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+const DROPDOWN_WIDTH = 214;
+const DROPDOWN_SCREEN_MARGIN = 18;
+const DROPDOWN_GAP = 6;
+
+/** "22.06.2026" + "28.06.2026" -> "Jun 22 - 28", across months "Jun 29 - Jul 5". */
+function formatWeekRange(startLabel, endLabel) {
+  const start = String(startLabel ?? "").split(".");
+  const end = String(endLabel ?? "").split(".");
+
+  if (start.length < 2 || end.length < 2) {
+    return "";
+  }
+
+  const startMonth = MONTH_SHORT_LABELS[Number(start[1]) - 1] ?? "";
+  const endMonth = MONTH_SHORT_LABELS[Number(end[1]) - 1] ?? "";
+  const startDay = Number(start[0]);
+  const endDay = Number(end[0]);
+
+  return startMonth === endMonth
+    ? `${startMonth} ${startDay} - ${endDay}`
+    : `${startMonth} ${startDay} - ${endMonth} ${endDay}`;
+}
 
 const DAY_CONTEXT_MENU_WIDTH = 266;
 const DAY_CONTEXT_MENU_HEIGHT = 330;
@@ -118,7 +164,6 @@ const MicrocycleList = ({
   period_end,
   refreshKey,
   updateui,
-  headerComponent = null,
 }) => {
   const colorScheme = useColorScheme();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
@@ -134,12 +179,12 @@ const MicrocycleList = ({
     theme.textInverted ?? theme.cardBackground ?? "#0E0F12";
   const db = useSQLiteContext();
   const navigation = useNavigation();
+  const palette = useGridPalette();
 
   const [microcycles, setMicrocycles] = useState([]);
   const [weekSummaries, setWeekSummaries] = useState({});
   const [loading, setLoading] = useState(false);
 
-  const [workoutCounts, setWorkoutCounts] = useState({});
 
   const [selectedWeek, set_selectedWeek] = useState(0);
   const [targetWeek, set_targetWeek] = useState(0);
@@ -149,6 +194,7 @@ const MicrocycleList = ({
   const [selectedWorkoutId, setSelectedWorkoutId] = useState(null);
   const [pickWorkoutModalVisible, setPickWorkoutModalVisible] = useState(false);
   const [pickMode, setPickMode] = useState(null);
+  const [workoutDropdown, setWorkoutDropdown] = useState(null);
   const [dayOptionsVisible, setDayOptionsVisible] = useState(false);
   const [dayOptionsPosition, setDayOptionsPosition] = useState({
     left: DAY_CONTEXT_MENU_MARGIN,
@@ -322,21 +368,6 @@ const MicrocycleList = ({
     }
   };
 
-  const getWorkoutCounts = async (microcycle_id) => {
-    return programRepository.getMicrocycleWorkoutCounts(db, microcycle_id);
-  };
-
-  const loadCounts = async () => {
-    const result = {};
-
-    for (const mc of microcycles) {
-      result[mc.microcycle_id] =
-        await getWorkoutCounts(mc.microcycle_id);
-    }
-
-    setWorkoutCounts(result);
-  };
-
   useFocusEffect(
     useCallback(() => {
       loadMicrocycles();
@@ -345,13 +376,8 @@ const MicrocycleList = ({
   );
 
   useEffect(() => {
-    loadCounts();
-  }, [refreshKey]);
-
-  useEffect(() => {
     if (microcycles.length === 0) return;
     loadWeekSummaries();
-    loadCounts();
   }, [microcycles]);
   
   const buildMicrocycleDate = (periodStart, dayOffset) => {
@@ -446,7 +472,49 @@ const MicrocycleList = ({
     });
   };
 
-  const handleWeekdayLongPress = (day, event) => {
+  // A day with several workouts opens a list anchored to its own cell. The
+  // calendar behind it must not move, so this is an overlay, not a row that
+  // pushes the grid apart.
+  const openWorkoutDropdown = (day, event) => {
+    const pageX = event?.nativeEvent?.pageX ?? windowWidth / 2;
+    const pageY = event?.nativeEvent?.pageY ?? 200;
+    const rowCount = Math.min((day.workouts ?? []).length, 5);
+    const estimatedHeight = 38 + rowCount * 44;
+    const opensUpward = pageY > windowHeight - estimatedHeight - 120;
+
+    setWorkoutDropdown({
+      day,
+      left: Math.min(
+        Math.max(DROPDOWN_SCREEN_MARGIN, pageX - DROPDOWN_WIDTH / 2),
+        Math.max(
+          DROPDOWN_SCREEN_MARGIN,
+          windowWidth - DROPDOWN_WIDTH - DROPDOWN_SCREEN_MARGIN
+        )
+      ),
+      top: opensUpward ? null : pageY + DROPDOWN_GAP + 22,
+      bottom: opensUpward ? windowHeight - pageY + DROPDOWN_GAP + 22 : null,
+    });
+  };
+
+  const closeWorkoutDropdown = () => setWorkoutDropdown(null);
+
+  const handleDayCellPress = (day, event) => {
+    const workouts = day.workouts ?? [];
+
+    if (workouts.length === 0) {
+      handleWeekdayMenuOpen(day, event);
+      return;
+    }
+
+    if (workouts.length === 1) {
+      navigateToWorkout(workouts[0], day);
+      return;
+    }
+
+    openWorkoutDropdown(day, event);
+  };
+
+  const handleWeekdayMenuOpen = (day, event) => {
     const pageX = event?.nativeEvent?.pageX ?? windowWidth / 2;
     const pageY = event?.nativeEvent?.pageY ?? 160;
     const maxLeft = Math.max(
@@ -798,163 +866,180 @@ const MicrocycleList = ({
   };
 
   const renderItem = ({ item }) => {
-
-    const counts =
-      workoutCounts[item.microcycle_id] ?? { total: 0, done: 0 };
     const days = weekSummaries[item.microcycle_id] ?? buildWeekdayIndicators(item);
-    const sickDayCount = days.filter((day) => day.isSick).length;
-    const isWeekComplete = counts.total > 0 && counts.done === counts.total;
-    const isWeekSick = sickDayCount >= 4;
-    const hasWeekRecord = days.some((day) =>
-      (day.workoutCards ?? []).some(
-        (workoutCard) =>
-          workoutCard.completed && Boolean(workoutCard.hasPersonalRecord)
-      )
-    );
-    const primaryColor = theme.primary ?? Colors.dark.primary ?? "#f7742e";
-    const primaryBorderColor =
-      theme.primaryDark ?? Colors.dark.primaryDark ?? primaryColor;
-    const secondaryColor = theme.secondary ?? Colors.dark.secondary ?? "#60daac";
-    const secondaryBorderColor =
-      theme.secondaryDark ?? Colors.dark.secondaryDark ?? secondaryColor;
-    const recordColor = theme.record ?? Colors.dark.record ?? secondaryColor;
-    const recordBorderColor =
-      theme.recordDark ?? Colors.dark.recordDark ?? recordColor;
-    const sickBorderColor =
-      theme.plannedDark ?? Colors.dark.plannedDark ?? sickColor;
-    const cardBorder = theme.cardBorder ?? theme.iconColor;
-    const weekCardBorderColor = isWeekSick
-      ? sickBorderColor
-      : hasWeekRecord
-        ? recordBorderColor
-      : isWeekComplete
-        ? secondaryColor
-        : cardBorder;
-    const weekNumberBackgroundColor = isWeekSick
-      ? sickColor
-      : hasWeekRecord
-        ? recordColor
-      : isWeekComplete
-        ? secondaryColor
-        : primaryColor;
-    const weekNumberBorderColor = isWeekSick
-      ? sickBorderColor
-      : hasWeekRecord
-        ? recordBorderColor
-      : isWeekComplete
-        ? secondaryBorderColor
-        : primaryBorderColor;
-    const titleColor = theme.title ?? theme.text;
-    const badgeTextColor = hasWeekRecord && !isWeekSick
-      ? theme.title ?? "#ffffff"
-      : theme.textInverted ?? theme.cardBackground ?? "#0E0F12";
+    const focusLabel = (item.focus ?? "").trim();
+    const hasFocus = focusLabel !== "" && focusLabel !== "No focus set";
+    const isCurrentWeek = days.some((day) => day.active);
 
     return (
-      <ThemedCard
-        style={[
-          styles.card,
-          {
-            borderWidth: 1,
-            borderColor: weekCardBorderColor,
-            borderStyle: isWeekSick ? "dashed" : "solid",
-          },
-        ]}
-      >
-        <View style={styles.cardHeader}>
-          <View style={styles.cardHeaderContent}>
-            <View style={styles.cardTitleRow}>
-              <View
-                style={[
-                  styles.weekNumberBadge,
-                  {
-                    backgroundColor: weekNumberBackgroundColor,
-                    borderColor: weekNumberBorderColor,
-                    borderStyle: isWeekSick ? "dashed" : "solid",
-                    borderWidth: 2,
-                  },
-                ]}
-              >
-                <ThemedText
-                  style={styles.weekNumberBadgeText}
-                  setColor={badgeTextColor}
-                >
-                  {item.microcycle_number}
-                </ThemedText>
-              </View>
+      <View style={gridStyles.weekRow}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Week ${item.microcycle_number} options`}
+          onLongPress={() => {
+            set_selectedWeek(item);
+            set_OptionsBottomsheet_visible(true);
+          }}
+        >
+          <WeekBand
+            weekLabel={`Week ${item.microcycle_number}`}
+            focusLabel={hasFocus ? focusLabel : "No focus"}
+            dateRange={formatWeekRange(item.period_start, item.period_end)}
+            isCurrentWeek={isCurrentWeek}
+            palette={palette}
+          />
+        </Pressable>
 
-              <ThemedTitle
-                type="h3"
-                style={[styles.cardHeaderTitle, { color: titleColor }]}
-              >
-                {item.focus || "No focus set"}
-              </ThemedTitle>
-            </View>
-          </View>
+        <WeekDateRow
+          days={days}
+          isCurrentWeek={isCurrentWeek}
+          palette={palette}
+        />
 
-          <View style={styles.cardHeaderSide}>
-            <TouchableOpacity
-              style={styles.optionsButton}
-              onPress={async () => {
-                set_selectedWeek(item);
-                set_OptionsBottomsheet_visible(true);
-              }}
+        <View style={gridStyles.weekGrid}>
+          {days.map((day) => (
+            <Pressable
+              key={`${item.microcycle_id}-${day.day}`}
+              accessibilityRole="button"
+              accessibilityLabel={`${day.day} ${day.dateLabel}`}
+              hitSlop={{ top: 2, bottom: 2, left: 2, right: 2 }}
+              style={gridStyles.cellSlot}
+              onPress={(event) => handleDayCellPress(day, event)}
+              onLongPress={(event) => handleWeekdayMenuOpen(day, event)}
             >
-              <ThreeDots
-                width={"20"}
-                height={"20"}
+              <DayCell
+                day={day}
+                isSelected={
+                  workoutDropdown?.day?.microcycleId === day.microcycleId &&
+                  workoutDropdown?.day?.date === day.date
+                }
+                palette={palette}
               />
-            </TouchableOpacity>
-          </View>
+            </Pressable>
+          ))}
         </View>
-
-        <View style={styles.weekdaysShell}>
-          <View style={styles.weekdaysRow}>
-            {days.map((day) => (
-              <View
-                key={`${item.microcycle_id}-${day.day}`}
-                style={styles.weekdayTouchable}
-              >
-                <WeekdayIndicator
-                  label={day.label}
-                  dateLabel={day.dateLabel}
-                  active={day.active}
-                  completed={day.completed}
-                  isSick={day.isSick}
-                  icon={day.icon}
-                  iconLabel={day.iconLabel}
-                  workoutCards={day.workoutCards}
-                  onWorkoutPress={(workout) => {
-                    if (!workout) {
-                      return;
-                    }
-
-                    navigateToWorkout(workout, day);
-                  }}
-                  onDayLongPress={(event) => {
-                    handleWeekdayLongPress(day, event);
-                  }}
-                />
-              </View>
-            ))}
-          </View>
-        </View>
-      </ThemedCard>
+      </View>
     );
   };
 
   return (
     <>
     <FlatList
+      keyboardShouldPersistTaps="handled"
       data={microcycles}
       renderItem={renderItem}
-      ListHeaderComponent={
-        headerComponent ? (
-          <View style={styles.listHeader}>
-            {headerComponent}
-          </View>
-        ) : null
-      }
+      keyExtractor={(item) => String(item.microcycle_id)}
+      ListHeaderComponent={WeekdayHeader}
+      stickyHeaderIndices={[0]}
+      contentContainerStyle={gridStyles.listContent}
+      showsVerticalScrollIndicator={false}
     />
+
+    <Modal
+      visible={Boolean(workoutDropdown)}
+      transparent
+      animationType="fade"
+      onRequestClose={closeWorkoutDropdown}
+    >
+      <View style={gridStyles.dropdownOverlay}>
+        <Pressable
+          style={gridStyles.dropdownBackdrop}
+          onPress={closeWorkoutDropdown}
+        />
+
+        <View
+          style={[
+            gridStyles.dropdown,
+            {
+              left: workoutDropdown?.left ?? DROPDOWN_SCREEN_MARGIN,
+              top: workoutDropdown?.top ?? undefined,
+              bottom: workoutDropdown?.bottom ?? undefined,
+              backgroundColor: palette.sheet,
+              borderColor: palette.sheetBorder,
+            },
+          ]}
+        >
+          <View style={gridStyles.dropdownHeader}>
+            <ThemedText
+              style={gridStyles.dropdownDate}
+              setColor={palette.title}
+            >
+              {workoutDropdown?.day?.dateLabel ?? ""}
+            </ThemedText>
+            <ThemedText
+              style={gridStyles.dropdownCount}
+              setColor={palette.quietText}
+            >
+              {`${(workoutDropdown?.day?.workouts ?? []).length} workouts`}
+            </ThemedText>
+          </View>
+
+          <ScrollView
+            style={gridStyles.dropdownList}
+            showsVerticalScrollIndicator={false}
+          >
+            {(workoutDropdown?.day?.workoutCards ?? []).map((card) => {
+              const Icon = card.icon;
+              const rowColor = card.completed
+                ? palette.secondary
+                : palette.quietText;
+
+              return (
+                <TouchableOpacity
+                  key={card.key}
+                  activeOpacity={0.8}
+                  style={[
+                    gridStyles.dropdownRow,
+                    { borderTopColor: palette.divider },
+                  ]}
+                  onPress={() => {
+                    const day = workoutDropdown?.day;
+                    closeWorkoutDropdown();
+
+                    if (day) {
+                      navigateToWorkout(card.workout, day);
+                    }
+                  }}
+                >
+                  {Icon ? (
+                    <Icon
+                      width={18}
+                      height={18}
+                      color={rowColor}
+                      primaryColor={rowColor}
+                      backgroundColor="transparent"
+                    />
+                  ) : null}
+
+                  <View style={gridStyles.dropdownRowCopy}>
+                    <ThemedText
+                      style={gridStyles.dropdownRowName}
+                      setColor={palette.title}
+                      numberOfLines={1}
+                    >
+                      {card.workout?.label ?? card.iconLabel}
+                    </ThemedText>
+                    <ThemedText
+                      style={gridStyles.dropdownRowMeta}
+                      setColor={rowColor}
+                      numberOfLines={1}
+                    >
+                      {card.completed ? "Completed" : "Planned"}
+                    </ThemedText>
+                  </View>
+
+                  <ChevronRight
+                    width={14}
+                    height={14}
+                    color={palette.dotIdle}
+                  />
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
 
     <ThemedBottomSheet
       visible={OptionsBottomsheet_visible}
@@ -963,7 +1048,7 @@ const MicrocycleList = ({
       <View style={styles.bottomsheet_title}>
 
           <ThemedTitle type={"h3"} style={{flex: 10}}> 
-            Week number: {selectedWeek.microcycle_number} 
+            Week {selectedWeek.microcycle_number}
           </ThemedTitle>
 
           <View style={styles.focus}>
@@ -975,7 +1060,7 @@ const MicrocycleList = ({
                 updateFocus(selectedWeek.microcycle_id, newFocus);
               }}
               placeholder="Focus"
-              title="Select Week Focus"
+              title="Select week focus"
               items={[
                 "Progressive Overload",
                 "Volume",
@@ -1002,8 +1087,8 @@ const MicrocycleList = ({
               <Copy
                   width={24}
                   height={24}/>
-              <ThemedText style={styles.option_text}> 
-                  Copy workouts to a different week
+              <ThemedText style={styles.option_text}>
+                  Copy workouts to another week
               </ThemedText>
 
           </TouchableOpacity>
@@ -1018,8 +1103,8 @@ const MicrocycleList = ({
               <Delete
                   width={24}
                   height={24}/>
-              <ThemedText style={styles.option_text}> 
-                  Delete Week.
+              <ThemedText style={styles.option_text}>
+                  Delete week
               </ThemedText>
 
           </TouchableOpacity>
@@ -1234,8 +1319,51 @@ const MicrocycleList = ({
         },
       ]}
       contentStyle={styles.sicknessDetailsContent}
+      scroll={false}
+      footer={
+        <View style={styles.sicknessDetailsButtonRow}>
+        <TouchableOpacity
+          activeOpacity={0.82}
+          onPress={closeSicknessDetailsModal}
+          style={[
+            styles.sickContinuationButton,
+            {
+              borderColor: modalBorderColor,
+            },
+          ]}
+        >
+          <ThemedText
+            style={styles.sickContinuationButtonText}
+            setColor={modalTitleColor}
+          >
+            Cancel
+          </ThemedText>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          activeOpacity={0.82}
+          onPress={submitSicknessDetails}
+          style={[
+            styles.sickContinuationButton,
+            styles.sickContinuationPrimaryButton,
+            {
+              backgroundColor: sickColor,
+              borderColor: sickBorderColor,
+            },
+          ]}
+        >
+          <ThemedText
+            style={styles.sickContinuationButtonText}
+            setColor={modalInvertedColor}
+          >
+            Save
+          </ThemedText>
+        </TouchableOpacity>
+        </View>
+      }
     >
       <ScrollView
+        keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.sicknessDetailsScroll}
       >
@@ -1301,45 +1429,6 @@ const MicrocycleList = ({
         </View>
       </ScrollView>
 
-      <View style={styles.sicknessDetailsButtonRow}>
-        <TouchableOpacity
-          activeOpacity={0.82}
-          onPress={closeSicknessDetailsModal}
-          style={[
-            styles.sickContinuationButton,
-            {
-              borderColor: modalBorderColor,
-            },
-          ]}
-        >
-          <ThemedText
-            style={styles.sickContinuationButtonText}
-            setColor={modalTitleColor}
-          >
-            Cancel
-          </ThemedText>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          activeOpacity={0.82}
-          onPress={submitSicknessDetails}
-          style={[
-            styles.sickContinuationButton,
-            styles.sickContinuationPrimaryButton,
-            {
-              backgroundColor: sickColor,
-              borderColor: sickBorderColor,
-            },
-          ]}
-        >
-          <ThemedText
-            style={styles.sickContinuationButtonText}
-            setColor={modalInvertedColor}
-          >
-            Save
-          </ThemedText>
-        </TouchableOpacity>
-      </View>
     </ThemedModal>
 
     {datePickerVisible && (

@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Image,
   Platform,
@@ -21,6 +22,7 @@ import {
   ThemedModal,
   ThemedText,
   ThemedTextInput,
+  ThemedTitle,
   ThemedView,
 } from "../../Resources/ThemedComponents";
 import {
@@ -85,6 +87,8 @@ export default function SicknessPage() {
   const [datePickerTarget, setDatePickerTarget] = useState(null);
 
   const primaryColor = theme.primary ?? "#f7742e";
+
+  const primaryTextColor = theme.primaryText ?? theme.primary;
   const sicknessColor = theme.planned ?? Colors.dark.planned ?? "#ffdd00";
   const sicknessBorderColor =
     theme.plannedDark ?? Colors.dark.plannedDark ?? sicknessColor;
@@ -256,22 +260,32 @@ export default function SicknessPage() {
   return (
     <ThemedView safe={["top", "left", "right"]} style={styles.container}>
       <ThemedHeader>
-        <ThemedText size={18}>Sickness</ThemedText>
+        <View style={styles.pageHeaderTitleGroup}>
+          <ThemedText
+            size={12}
+            style={styles.pageHeaderTitleEyebrow}
+            setColor={quietText}
+          >
+            Library
+          </ThemedText>
+          <ThemedTitle
+            type="pageTitle"
+            style={styles.pageHeaderTitleMain}
+            numberOfLines={1}
+          >
+            Sickness
+          </ThemedTitle>
+        </View>
       </ThemedHeader>
 
       <ScrollView
+        keyboardShouldPersistTaps="handled"
+        style={styles.scroll}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <ThemedButton
-          title="Register new sickness"
-          variant="primary"
-          onPress={openRegisterModal}
-          style={[styles.registerButton, { backgroundColor: sicknessColor }]}
-        />
-
         <View style={styles.sectionHeader}>
-          <ThemedText style={styles.sectionEyebrow} setColor={primaryColor}>
+          <ThemedText style={styles.sectionEyebrow} setColor={primaryTextColor}>
             HISTORY
           </ThemedText>
           <ThemedText style={styles.sectionTitle} setColor={titleColor}>
@@ -280,16 +294,9 @@ export default function SicknessPage() {
         </View>
 
         {historyLoading && records.length === 0 && (
-          <View
-            style={[
-              styles.emptyHistory,
-              {
-                backgroundColor: theme.cardBackground ?? innerSurface,
-                borderColor: cardBorder,
-              },
-            ]}
-          >
-            <ThemedText style={styles.emptyHistoryText} setColor={quietText}>
+          <View style={styles.loadingState}>
+            <ActivityIndicator color={primaryTextColor} />
+            <ThemedText style={styles.loadingLabel} setColor={quietText}>
               Loading sickness history...
             </ThemedText>
           </View>
@@ -356,10 +363,19 @@ export default function SicknessPage() {
         ))}
       </ScrollView>
 
+      <View style={[styles.footer, { borderTopColor: cardBorder }]}>
+        <ThemedButton
+          title="New sickness period"
+          variant="primary"
+          onPress={openRegisterModal}
+          fullWidth
+        />
+      </View>
+
       <ThemedModal
         visible={registerModalVisible}
         onClose={closeRegisterModal}
-        title={isEditing ? "Edit sickness" : "Register sickness"}
+        title={isEditing ? "Edit sickness period" : "New sickness period"}
         style={[
           styles.registerModal,
           {
@@ -369,6 +385,7 @@ export default function SicknessPage() {
         contentStyle={styles.registerModalContent}
       >
         <ScrollView
+        keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.registerModalScroll}
         >

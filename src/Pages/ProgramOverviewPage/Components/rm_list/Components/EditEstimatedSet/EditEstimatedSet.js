@@ -139,7 +139,7 @@ export default function EditEstimatedSet({
           },
         ]}
       >
-        <ThemedText size={11} style={styles.sectionLabel} setColor={theme.quietText}>
+        <ThemedText size={12} style={styles.sectionLabel} setColor={theme.text}>
           Exercise
         </ThemedText>
         <ThemedText size={20} style={styles.exerciseName}>
@@ -151,6 +151,7 @@ export default function EditEstimatedSet({
       </View>
 
       <ScrollView
+        keyboardShouldPersistTaps="handled"
         style={styles.scrollArea}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -167,9 +168,9 @@ export default function EditEstimatedSet({
         >
           <View style={styles.sectionHeader}>
             <ThemedText
-              size={11}
+              size={12}
               style={styles.sectionLabel}
-              setColor={theme.quietText}
+              setColor={theme.text}
             >
               Program best
             </ThemedText>
@@ -228,9 +229,9 @@ export default function EditEstimatedSet({
           ]}
         >
           <ThemedText
-            size={11}
+            size={12}
             style={styles.sectionLabel}
-            setColor={theme.quietText}
+            setColor={theme.text}
           >
             Estimated 1 RM
           </ThemedText>

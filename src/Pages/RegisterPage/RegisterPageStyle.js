@@ -88,7 +88,7 @@ export default StyleSheet.create({
   },
 
   cardBody: {
-    fontSize: 14,
+    fontSize: 13,
     lineHeight: 21,
     maxWidth: 280,
   },

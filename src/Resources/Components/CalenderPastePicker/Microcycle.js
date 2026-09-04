@@ -127,6 +127,7 @@ const Microcycle = ({
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const mutedText = theme.iconColor ?? quietText;
   const primaryColor = theme.primary ?? "#f7742e";
+  const primaryTextColor = theme.primaryText ?? theme.primary;
   const secondaryColor = theme.secondary ?? "#60daac";
   const warningColor = theme.planned ?? "#ffdd00";
   const cardBackground = theme.cardBackground ?? theme.background;
@@ -254,7 +255,7 @@ const Microcycle = ({
 
       {loading ? (
         <View style={styles.loadingWrap}>
-          <ActivityIndicator color={primaryColor} />
+          <ActivityIndicator color={primaryTextColor} />
         </View>
       ) : groupedMesocycles.length === 0 ? (
         <View
@@ -308,7 +309,7 @@ const Microcycle = ({
                 </ThemedText>
               </View>
 
-              <ThemedText style={styles.changeLabel} setColor={primaryColor}>
+              <ThemedText style={styles.changeLabel} setColor={primaryTextColor}>
                 Change
               </ThemedText>
             </TouchableOpacity>
@@ -446,12 +447,12 @@ const Microcycle = ({
                               <Checkmark
                                 width={11}
                                 height={11}
-                                color={primaryColor}
+                                color={primaryTextColor}
                                 thickness={2.3}
                               />
                               <ThemedText
                                 style={styles.statusText}
-                                setColor={primaryColor}
+                                setColor={primaryTextColor}
                               >
                                 COPIED
                               </ThemedText>
@@ -565,7 +566,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   eyebrow: {
-    fontSize: 10,
+    fontSize: 11,
     lineHeight: 13,
     fontWeight: "900",
     letterSpacing: 1.5,
@@ -584,8 +585,8 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     marginTop: -2,
-    width: 34,
-    height: 34,
+    width: 40,
+    height: 40,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -605,7 +606,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   emptyTitle: {
-    fontSize: 18,
+    fontSize: 17,
     lineHeight: 23,
     fontWeight: "900",
   },
@@ -663,7 +664,7 @@ const styles = StyleSheet.create({
   },
   blockTitle: {
     marginTop: 8,
-    fontSize: 18,
+    fontSize: 17,
     lineHeight: 22,
     fontWeight: "900",
   },
@@ -730,13 +731,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   weekBadgeLabel: {
-    fontSize: 9,
+    fontSize: 11,
     lineHeight: 11,
     fontWeight: "900",
     letterSpacing: 0.5,
   },
   weekBadgeNumber: {
-    fontSize: 20,
+    fontSize: 19,
     lineHeight: 23,
     fontWeight: "900",
   },
@@ -757,14 +758,14 @@ const styles = StyleSheet.create({
   },
   statusPill: {
     minHeight: 20,
-    borderRadius: 5,
+    borderRadius: 6,
     paddingHorizontal: 7,
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
   },
   statusText: {
-    fontSize: 9,
+    fontSize: 11,
     lineHeight: 12,
     fontWeight: "900",
     letterSpacing: 0.4,
@@ -784,7 +785,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   chevronText: {
-    fontSize: 18,
+    fontSize: 17,
     lineHeight: 21,
     fontWeight: "900",
   },

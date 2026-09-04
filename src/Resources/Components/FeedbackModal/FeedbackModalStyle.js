@@ -38,7 +38,7 @@ export default StyleSheet.create({
   },
   feedbackBanner: {
     borderWidth: 1,
-    borderRadius: 16,
+    borderRadius: 14,
     paddingHorizontal: 12,
     paddingVertical: 10,
   },

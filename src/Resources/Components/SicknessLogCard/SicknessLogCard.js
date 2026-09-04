@@ -2,7 +2,7 @@ import { useNavigation } from "@react-navigation/native";
 
 import HomeImageShortcutCard from "../HomeImageShortcutCard/HomeImageShortcutCard";
 
-const sicknessDarkImage = require("../../Images/DarkVersion/sickness dark.png");
+const sicknessDarkImage = require("../../Images/DarkVersion/sickness dark.jpg");
 
 export default function SicknessLogCard() {
   const navigation = useNavigation();

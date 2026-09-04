@@ -14,9 +14,7 @@ export default StyleSheet.create({
         paddingHorizontal: 8,
         paddingTop: 6,
         paddingBottom: 0,
-        borderRadius: 16,
-        borderBottomLeftRadius: 24,
-        borderBottomRightRadius: 24,
+        borderRadius: 14,
         borderWidth: 1,
         position: "relative",
         overflow: "hidden",
@@ -70,33 +68,10 @@ export default StyleSheet.create({
         alignItems: "center",
         paddingHorizontal: 2,
     },
-    restTitleCell: {
-        position: "relative",
-        overflow: "visible",
-    },
-    restTitleAffordance: {
-        position: "absolute",
-        bottom: -1,
-        width: "74%",
-        minWidth: 54,
-        maxWidth: 78,
-        height: 27,
-        borderTopWidth: 2,
-        borderLeftWidth: 2,
-        borderRightWidth: 2,
-        borderBottomWidth: 0,
-        borderTopLeftRadius: 13,
-        borderTopRightRadius: 13,
-        opacity: 0.95,
-    },
-
     titleText: {
         fontWeight: "800",
-        fontSize: 9,
+        fontSize: 11,
         letterSpacing: 0.8,
-    },
-    restTitleText: {
-        zIndex: 1,
     },
 
 
@@ -104,7 +79,7 @@ export default StyleSheet.create({
         borderWidth: 1,
         paddingVertical: 1,
         textAlign: "center",
-        fontSize: 14,
+        fontSize: 13,
     },
 
     input: {
@@ -135,7 +110,7 @@ export default StyleSheet.create({
     valuePill: {
         width: "94%",
         height: 30,
-        borderRadius: 9,
+        borderRadius: 6,
         borderWidth: 1,
         justifyContent: "center",
         alignItems: "center",
@@ -179,44 +154,116 @@ export default StyleSheet.create({
         textAlign: "center",
     },
 
-    bottomsheet_title: {
-        borderBottomWidth: 1,
-        borderBottomColor: "#2e2e2eff",
-        paddingBottom: 20,
-    },
-    bottomsheet_body: {
-        justifyContent: "center",
-        padding: 20,
-        paddingLeft: 0,
-    },
-    option: {
+    setOptionsHeader: {
         flexDirection: "row",
         alignItems: "center",
-        paddingTop: 20,
+        gap: 12,
+        paddingBottom: 18,
     },
-    option_text: {
-        paddingLeft: 10,
-        fontWeight: 600,
-        fontSize: 16,
+    setOptionsBadge: {
+        width: 38,
+        height: 38,
+        borderRadius: 6,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    setOptionsBadgeText: {
+        fontSize: 15,
+        fontWeight: "900",
+        fontVariant: ["tabular-nums"],
+    },
+    setOptionsHeaderCopy: {
+        flex: 1,
+        minWidth: 0,
+        gap: 2,
+    },
+    setOptionsEyebrow: {
+        fontSize: 11,
+        fontWeight: "800",
+        letterSpacing: 1.6,
+        textTransform: "uppercase",
+    },
+    setOptionsTitle: {
+        fontSize: 17,
+        fontWeight: "900",
+    },
+    setOptionsBody: {
+        gap: 18,
+        paddingBottom: 24,
+    },
+    setOptionsSection: {
+        gap: 8,
+    },
+    setOptionsLabel: {
+        fontSize: 11,
+        fontWeight: "800",
+        letterSpacing: 1.6,
+        textTransform: "uppercase",
+    },
+    setOptionsAction: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+        borderRadius: 6,
+        borderWidth: 1,
+        paddingHorizontal: 12,
+        paddingVertical: 11,
+    },
+    setOptionsActionIcon: {
+        width: 34,
+        height: 34,
+        borderRadius: 6,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    setOptionsActionCopy: {
+        flex: 1,
+        minWidth: 0,
+        gap: 1,
+    },
+    setOptionsActionTitle: {
+        fontSize: 15,
+        fontWeight: "800",
+    },
+    setOptionsActionDetail: {
+        fontSize: 11,
+        fontWeight: "600",
     },
     note_button: {
         justifyContent: "center",
         alignItems: "center",
         width: 30,
         height: 30,
-        borderRadius: 9,
+        borderRadius: 6,
     },
     set_chip: {
         width: 28,
         height: 30,
-        borderRadius: 9,
+        borderRadius: 6,
         borderWidth: 1,
         justifyContent: "center",
         alignItems: "center",
     },
+    set_chip_record: {
+        backgroundColor: "transparent",
+        borderColor: "transparent",
+    },
+    set_chip_star: {
+        position: "absolute",
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+        alignItems: "center",
+        justifyContent: "center",
+    },
     set_chip_text: {
         fontWeight: "800",
         fontSize: 13,
+    },
+    set_chip_text_record: {
+        fontSize: 12,
+        marginTop: -1,
     },
     addSetRow: {
         borderTopWidth: 1,
@@ -238,9 +285,6 @@ export default StyleSheet.create({
         minHeight: 100,
         textAlignVertical: "top",
     },
-    note_section: {
-        paddingBottom: 12,
-    },
     restUnitModal: {
         width: "82%",
         maxWidth: 340,
@@ -252,7 +296,7 @@ export default StyleSheet.create({
         gap: 8,
     },
     restSettingsLabel: {
-        fontSize: 10,
+        fontSize: 11,
         lineHeight: 12,
         fontWeight: "800",
         textTransform: "uppercase",
@@ -260,7 +304,7 @@ export default StyleSheet.create({
     },
     restUnitToggle: {
         height: 44,
-        borderRadius: 12,
+        borderRadius: 6,
         borderWidth: 1,
         padding: 4,
         flexDirection: "row",
@@ -269,7 +313,7 @@ export default StyleSheet.create({
     restUnitOption: {
         flex: 1,
         minWidth: 0,
-        borderRadius: 9,
+        borderRadius: 6,
         alignItems: "center",
         justifyContent: "center",
     },
@@ -280,7 +324,7 @@ export default StyleSheet.create({
     },
     restMirrorButton: {
         minHeight: 58,
-        borderRadius: 12,
+        borderRadius: 6,
         borderWidth: 1,
         paddingHorizontal: 12,
         paddingVertical: 9,
@@ -294,7 +338,7 @@ export default StyleSheet.create({
         paddingRight: 12,
     },
     restMirrorTitle: {
-        fontSize: 14,
+        fontSize: 13,
         lineHeight: 17,
         fontWeight: "800",
     },

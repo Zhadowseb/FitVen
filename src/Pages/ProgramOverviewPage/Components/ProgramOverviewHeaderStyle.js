@@ -3,146 +3,113 @@ import { StyleSheet } from "react-native";
 export default StyleSheet.create({
   card: {
     borderWidth: 1,
-    borderRadius: 24,
-    paddingHorizontal: 18,
-    paddingTop: 18,
-    paddingBottom: 17,
-    marginBottom: 20,
-    overflow: "hidden",
+    borderRadius: 18,
+    padding: 18,
+    gap: 14,
   },
   topRow: {
     flexDirection: "row",
     alignItems: "flex-start",
     justifyContent: "space-between",
-    marginBottom: 22,
+    gap: 10,
   },
   titleGroup: {
     flex: 1,
     minWidth: 0,
-    paddingRight: 14,
-  },
-  eyebrow: {
-    fontSize: 9,
-    lineHeight: 12,
-    fontWeight: "800",
-    letterSpacing: 1.7,
-    textTransform: "uppercase",
-    marginBottom: 5,
+    gap: 3,
   },
   title: {
-    fontSize: 20,
-    lineHeight: 25,
+    fontSize: 22,
     fontWeight: "800",
+    letterSpacing: -0.3,
   },
-  statusChip: {
+  dateRow: {
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    marginTop: 1,
+    gap: 6,
   },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 999,
-    marginRight: 6,
+  dateText: {
+    fontSize: 11,
+    fontWeight: "700",
+    fontVariant: ["tabular-nums"],
   },
-  statusText: {
-    fontSize: 9,
-    lineHeight: 11,
-    fontWeight: "800",
-    letterSpacing: 0.9,
-    textTransform: "uppercase",
+  statusPill: {
+    flexShrink: 0,
   },
+  // Full-width primary action, not a corner pill: starting the program is the
+  // whole point of this screen while the program is still a draft.
   startButton: {
-    minHeight: 34,
-    borderRadius: 999,
+    minHeight: 48,
+    borderRadius: 14,
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 16,
-    marginTop: 1,
+    gap: 8,
+    paddingHorizontal: 18,
   },
   startButtonText: {
-    color: "#0E0F12",
-    fontSize: 11,
-    lineHeight: 14,
-    fontWeight: "800",
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
-  },
-  detailRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    marginBottom: 22,
-  },
-  detailGroup: {
-    flex: 1,
-    minWidth: 0,
-  },
-  periodGroup: {
-    alignItems: "flex-end",
-    marginLeft: 16,
-  },
-  detailLabel: {
-    fontSize: 9,
-    lineHeight: 12,
-    fontWeight: "800",
-    letterSpacing: 1.5,
-    textTransform: "uppercase",
-    marginBottom: 6,
-  },
-  phaseValueRow: {
-    flexDirection: "row",
-    alignItems: "baseline",
-  },
-  detailValue: {
     fontSize: 15,
-    lineHeight: 19,
     fontWeight: "800",
+    letterSpacing: 0.3,
   },
-  phaseTotal: {
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: "700",
-    marginLeft: 4,
-  },
-  periodValue: {
-    fontSize: 12,
-    lineHeight: 19,
-    textAlign: "right",
+  progressGroup: {
+    gap: 7,
   },
   progressHeader: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "baseline",
     justifyContent: "space-between",
-    marginBottom: 8,
   },
-  progressPhase: {
+  progressLeft: {
     flexDirection: "row",
     alignItems: "baseline",
   },
-  progressLabel: {
-    fontSize: 10,
-    lineHeight: 13,
+  weekLabel: {
+    fontSize: 13,
     fontWeight: "800",
   },
-  progressTotal: {
-    fontSize: 10,
-    lineHeight: 13,
+  weekOfLabel: {
+    fontSize: 13,
     fontWeight: "700",
   },
   progressPercent: {
-    fontSize: 10,
-    lineHeight: 13,
+    fontSize: 13,
     fontWeight: "800",
     fontVariant: ["tabular-nums"],
   },
-  progressTrack: {
-    height: 6,
-    borderRadius: 999,
-    overflow: "hidden",
+  caption: {
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  statsRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  statField: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 3,
+  },
+  statLabel: {
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 1.4,
+    textTransform: "uppercase",
+  },
+  statValueRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+  },
+  statValue: {
+    fontSize: 19,
+    fontWeight: "800",
+    fontVariant: ["tabular-nums"],
+  },
+  statUnit: {
+    fontSize: 11,
+    fontWeight: "800",
   },
 });

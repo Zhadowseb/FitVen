@@ -43,22 +43,22 @@ export default StyleSheet.create({
 
   sectionEyebrow: {
     marginBottom: 3,
-    fontSize: 9,
-    lineHeight: 12,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "900",
     letterSpacing: 1.2,
   },
 
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 19,
     lineHeight: 24,
     fontWeight: "900",
   },
 
   sectionCount: {
     paddingBottom: 2,
-    fontSize: 9,
-    lineHeight: 12,
+    fontSize: 12,
+    lineHeight: 15,
     fontWeight: "800",
   },
 
@@ -103,39 +103,33 @@ export default StyleSheet.create({
 
   typeCategory: {
     marginBottom: 2,
-    fontSize: 8,
-    lineHeight: 10,
+    fontSize: 11,
+    lineHeight: 14,
     fontWeight: "900",
     letterSpacing: 1,
   },
 
   typeTitle: {
     marginBottom: 5,
-    fontSize: 16,
+    fontSize: 15,
     lineHeight: 20,
     fontWeight: "900",
   },
 
   typeMetrics: {
-    fontSize: 8,
-    lineHeight: 11,
+    fontSize: 11,
+    lineHeight: 15,
     fontWeight: "800",
   },
 
   availableStatus: {
-    width: 54,
+    width: 40,
     alignItems: "center",
     justifyContent: "center",
     gap: 5,
     flexShrink: 0,
   },
 
-  availableStatusText: {
-    fontSize: 7,
-    lineHeight: 9,
-    fontWeight: "900",
-    textAlign: "center",
-  },
 
   typeSettingRow: {
     minHeight: 52,
@@ -155,16 +149,106 @@ export default StyleSheet.create({
   },
 
   typeSettingTitle: {
-    fontSize: 14,
+    fontSize: 13,
     lineHeight: 18,
     fontWeight: "800",
   },
 
   typeSettingMeta: {
     marginTop: 2,
-    fontSize: 9,
-    lineHeight: 12,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "700",
+  },
+
+  exerciseViewSettings: {
+    marginHorizontal: 14,
+    paddingTop: 14,
+    paddingBottom: 14,
+    borderTopWidth: 1,
+    gap: 5,
+  },
+
+  exerciseViewHeading: {
+    gap: 3,
+    marginBottom: 4,
+  },
+
+  exerciseViewSubtitle: {
+    marginLeft: 30,
+    fontSize: 12,
+    lineHeight: 17,
+  },
+
+  exerciseViewOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 7,
+    gap: 10,
+  },
+
+  exerciseViewRadio: {
+    width: 19,
+    height: 19,
+    borderRadius: 10,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  exerciseViewRadioDot: {
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+  },
+
+  exerciseViewOptionText: {
+    flex: 1,
+    gap: 1,
+  },
+
+  exerciseViewOptionTitle: {
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "800",
+  },
+
+  exerciseViewOptionPreview: {
+    marginTop: 6,
+    minHeight: 34,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 7,
+    justifyContent: "center",
+  },
+
+  exerciseViewPreviewLabel: {
+    marginTop: 4,
+    fontSize: 12,
+    lineHeight: 15,
+    fontWeight: "800",
+    letterSpacing: 1,
+    textTransform: "uppercase",
+  },
+
+  exerciseViewPreview: {
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 10,
+    marginTop: 2,
+  },
+
+  exerciseViewPreviewHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+
+  exerciseViewPreviewName: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "800",
   },
 
   maxHeartRateRight: {
@@ -175,7 +259,7 @@ export default StyleSheet.create({
   },
 
   maxHeartRateBadge: {
-    minHeight: 22,
+    minHeight: 24,
     paddingHorizontal: 7,
     borderWidth: 1,
     borderRadius: 6,
@@ -184,12 +268,20 @@ export default StyleSheet.create({
   },
 
   maxHeartRateBadgeText: {
-    fontSize: 8,
-    lineHeight: 10,
+    fontSize: 11,
+    lineHeight: 14,
     fontWeight: "900",
     textTransform: "uppercase",
   },
 
+  modalSectionLabel: {
+    marginBottom: 8,
+    fontSize: 12,
+    lineHeight: 15,
+    fontWeight: "800",
+    letterSpacing: 1,
+    textTransform: "uppercase",
+  },
   maxHeartRateSourceList: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -203,7 +295,7 @@ export default StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 6,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -223,8 +315,8 @@ export default StyleSheet.create({
 
   maxHeartRateSourceOptionDetail: {
     marginTop: 2,
-    fontSize: 9,
-    lineHeight: 12,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: "700",
   },
 
@@ -247,7 +339,7 @@ export default StyleSheet.create({
 
   modalAction: {
     flex: 1,
-    borderRadius: 16,
+    borderRadius: 14,
   },
 
   feedbackText: {

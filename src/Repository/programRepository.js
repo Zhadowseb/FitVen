@@ -40,6 +40,23 @@ function localDateToIsoValue(value) {
   return normalizeIsoDateString(value) ?? value;
 }
 
+// Sickness is an absence, not a completed day. For progress displays only,
+// workouts on a sick day count once that calendar day has passed. Keeping this
+// as a derived value preserves Day.done and avoids syncing a false completion.
+function completedWorkoutForProgressSql(dayAlias = "d", workoutAlias = "w") {
+  const dayDateSql = localDateToIsoSql(`${dayAlias}.date`);
+
+  return `CASE
+    WHEN COALESCE(${workoutAlias}.done, 0) = 1
+      OR (
+        COALESCE(${dayAlias}.is_sick, 0) = 1
+        AND date(${dayDateSql}) < date('now', 'localtime')
+      )
+    THEN 1
+    ELSE 0
+  END`;
+}
+
 function workoutHasPersonalRecordSql(workoutAlias = "w") {
   return `EXISTS (
     SELECT 1
@@ -794,7 +811,7 @@ export async function getProgramsOverview(db) {
         SELECT
           d.program_id,
           COUNT(w.workout_id) AS workout_count,
-          SUM(CASE WHEN w.done = 1 THEN 1 ELSE 0 END) AS completed_workout_count,
+          SUM(${completedWorkoutForProgressSql("d", "w")}) AS completed_workout_count,
           GROUP_CONCAT(DISTINCT w.workout_type) AS workout_types
         FROM Day d
         LEFT JOIN Workout_Type_Instance w
@@ -1123,6 +1140,101 @@ export async function getRecentWorkouts(
      LIMIT ? OFFSET ?;`,
     [maxIsoDate, normalizedLimit, normalizedOffset]
   );
+}
+
+// Favourites are stored locally only. A separate table keeps the cloud-synced
+// Workout_Type_Instance schema untouched.
+async function ensureWorkoutFavoriteTable(db) {
+  await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS Workout_Favorite (
+      workout_id INTEGER PRIMARY KEY,
+      created_at TEXT NOT NULL
+    );
+  `);
+}
+
+export async function setWorkoutFavorite(db, { workoutId, isFavorite }) {
+  await ensureWorkoutFavoriteTable(db);
+
+  if (isFavorite) {
+    await db.runAsync(
+      `INSERT OR REPLACE INTO Workout_Favorite (workout_id, created_at)
+       VALUES (?, ?);`,
+      [workoutId, new Date().toISOString()]
+    );
+    return;
+  }
+
+  await db.runAsync(`DELETE FROM Workout_Favorite WHERE workout_id = ?;`, [
+    workoutId,
+  ]);
+}
+
+export async function getWorkoutLibrary(db, { limit = 500, offset = 0 } = {}) {
+  await ensureWorkoutFavoriteTable(db);
+  const workoutIsoDateSql = localDateToIsoSql("w.date");
+  const normalizedLimit = Math.max(1, Math.trunc(Number(limit) || 500));
+  const normalizedOffset = Math.max(0, Math.trunc(Number(offset) || 0));
+
+  return db.getAllAsync(
+    `SELECT
+        w.workout_id,
+        w.workout_type,
+        ${workoutDisplayLabelSql("w", "wt")} AS label,
+        w.date,
+        ${workoutIsoDateSql} AS date_iso,
+        w.done,
+        w.day_id,
+        d.Weekday AS weekday,
+        d.program_id,
+        p.program_name,
+        ${workoutHasPersonalRecordSql("w")} AS has_personal_record,
+        (SELECT COUNT(*)
+           FROM Exercise_Instance ei
+          WHERE ei.workout_type_instance_id = w.workout_id) AS exercise_count,
+        (SELECT COUNT(*)
+           FROM "Set" s
+           JOIN Exercise_Instance ei ON ei.exercise_instance_id = s.exercise_instance_id
+          WHERE ei.workout_type_instance_id = w.workout_id
+            AND s.deleted_at IS NULL) AS set_count,
+        (SELECT COUNT(*)
+           FROM "Set" s
+           JOIN Exercise_Instance ei ON ei.exercise_instance_id = s.exercise_instance_id
+          WHERE ei.workout_type_instance_id = w.workout_id
+            AND s.deleted_at IS NULL
+            AND COALESCE(s.done, 0) = 1) AS completed_set_count,
+        CASE WHEN f.workout_id IS NULL THEN 0 ELSE 1 END AS is_favorite
+     FROM Workout_Type_Instance w
+     JOIN Day d ON d.day_id = w.day_id
+     LEFT JOIN Program p ON p.program_id = d.program_id
+     LEFT JOIN Workout_Type wt ON wt.name = w.workout_type
+     LEFT JOIN Workout_Favorite f ON f.workout_id = w.workout_id
+     WHERE w.deleted_at IS NULL
+       AND d.deleted_at IS NULL
+       AND (p.program_id IS NULL OR p.deleted_at IS NULL)
+     ORDER BY date_iso DESC, w.workout_id DESC
+     LIMIT ? OFFSET ?;`,
+    [normalizedLimit, normalizedOffset]
+  );
+}
+
+export async function getWorkoutLibraryCounts(db) {
+  const row = await db.getFirstAsync(
+    `SELECT
+        COUNT(*) AS total_count,
+        SUM(CASE WHEN COALESCE(w.done, 0) = 1 THEN 1 ELSE 0 END) AS completed_count
+     FROM Workout_Type_Instance w
+     JOIN Day d ON d.day_id = w.day_id
+     LEFT JOIN Program p ON p.program_id = d.program_id
+     WHERE w.deleted_at IS NULL
+       AND d.deleted_at IS NULL
+       AND (p.program_id IS NULL OR p.deleted_at IS NULL);`
+  );
+
+  return {
+    totalCount: Number(row?.total_count) || 0,
+    completedCount: Number(row?.completed_count) || 0,
+  };
 }
 
 export async function getCompletedWorkoutExerciseHistory(
@@ -1476,7 +1588,7 @@ export async function getMesocycleWorkoutCountsByProgram(db, programId) {
     `SELECT
         m.mesocycle_id,
         COUNT(w.workout_id) AS workout_count,
-        COALESCE(SUM(CASE WHEN w.done = 1 THEN 1 ELSE 0 END), 0) AS completed_workout_count
+        COALESCE(SUM(${completedWorkoutForProgressSql("d", "w")}), 0) AS completed_workout_count
      FROM Mesocycle m
      LEFT JOIN Microcycle mc ON mc.mesocycle_id = m.mesocycle_id
      LEFT JOIN Day d ON d.microcycle_id = mc.microcycle_id
@@ -1492,7 +1604,7 @@ export async function getProgramOverviewStats(db, programId) {
   return db.getFirstAsync(
     `SELECT
         COUNT(w.workout_id) AS total_workouts,
-        COALESCE(SUM(CASE WHEN w.done = 1 THEN 1 ELSE 0 END), 0) AS completed_workouts,
+        COALESCE(SUM(${completedWorkoutForProgressSql("d", "w")}), 0) AS completed_workouts,
         COALESCE(AVG(CASE
           WHEN w.done = 1 AND COALESCE(w.elapsed_time, 0) > 0
           THEN w.elapsed_time
@@ -1529,7 +1641,7 @@ export async function getProgramWeekCompletionStats(db, programId) {
         MIN(d.date) AS period_start,
         MAX(d.date) AS period_end,
         COUNT(w.workout_id) AS total_workouts,
-        COALESCE(SUM(CASE WHEN w.done = 1 THEN 1 ELSE 0 END), 0) AS completed_workouts
+        COALESCE(SUM(${completedWorkoutForProgressSql("d", "w")}), 0) AS completed_workouts
      FROM Microcycle mc
      JOIN Mesocycle m
        ON m.mesocycle_id = mc.mesocycle_id

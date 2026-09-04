@@ -11,6 +11,7 @@ import { initializeDatabase } from './src/Database/db';
 import { locationSchemaSql } from './src/Database/schema/location';
 import { View, useColorScheme } from "react-native"
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { KeyboardProvider, KeyboardToolbar } from "react-native-keyboard-controller";
 import * as TaskManager from 'expo-task-manager';
 import * as ScreenOrientation from "expo-screen-orientation";
 
@@ -21,20 +22,21 @@ import HomePage from './src/Pages/HomePage/HomePage';
 import ProfilePage from './src/Pages/ProfilePage/ProfilePage';
 import ProgramPage from './src/Pages/ProgramPage/ProgramPage';
 import ProgramOverviewPage from './src/Pages/ProgramOverviewPage/ProgramOverviewPage';
+import ProgramSettingsPage from './src/Pages/ProgramSettingsPage/ProgramSettingsPage';
+import WorkoutPostsPage from './src/Pages/WorkoutPostsPage/WorkoutPostsPage';
 import MicrocyclePage from './src/Pages/MicrocyclePage/MicrocyclePage';
 import SearchPage from "./src/Pages/SearchPage/SearchPage";
 import SocialUserListPage from "./src/Pages/SocialUserListPage/SocialUserListPage";
 import WeekPage from './src/Pages/WeekPage/WeekPage';
 import WorkoutPage from './src/Pages/WorkoutPage/WorkoutPage';
-import SetPage from './src/Pages/SetPage/SetPage';
 import ExerciseCatalogPage from "./src/Pages/ExerciseCatalogPage/ExerciseCatalogPage";
 import ExerciseLibraryPage from "./src/Pages/ExerciseLibraryPage/ExerciseLibraryPage";
 import PersonalRecordsPage from "./src/Pages/PersonalRecordsPage/PersonalRecordsPage";
+import WorkoutLibraryPage from "./src/Pages/WorkoutLibraryPage/WorkoutLibraryPage";
 import WorkoutCalendarPage from "./src/Pages/WorkoutCalendarPage/WorkoutCalendarPage";
 import SicknessPage from "./src/Pages/SicknessPage/SicknessPage";
 import NotificationHistoryPage from "./src/Pages/NotificationHistoryPage/NotificationHistoryPage";
 import NotificationSettingsPage from "./src/Pages/NotificationSettingsPage/NotificationSettingsPage";
-import SocialPostEditPage from "./src/Pages/SocialPostEditPage/SocialPostEditPage";
 import SocialPostSettingsPage from "./src/Pages/SocialPostSettingsPage/SocialPostSettingsPage";
 import ExerciseSocialPostSettingsPage from "./src/Pages/ExerciseSocialPostSettingsPage/ExerciseSocialPostSettingsPage";
 import OneRepMaxCalculatorPage from "./src/Pages/OneRepMaxCalculatorPage/OneRepMaxCalculatorPage";
@@ -55,6 +57,8 @@ import {
 } from "./src/Database/localDatabase";
 import { locationService, notificationService } from "./src/Services";
 import { AuthProvider, useAuth } from './src/Contexts/AuthContext';
+import { ThemeModeProvider, useThemeMode } from './src/Contexts/ThemeContext';
+import { ExerciseViewSettingsProvider } from './src/Contexts/ExerciseViewSettingsContext';
 import ExerciseLibrarySync from "./src/Sync/ExerciseLibrarySync";
 import PushNotificationRegistrationSync from "./src/Sync/PushNotificationRegistrationSync";
 import SetSync from "./src/Sync/SetSync";
@@ -170,6 +174,16 @@ const navigationRef = createNavigationContainerRef();
 const NOTIFICATION_HISTORY_ROUTE = "NotificationHistoryPage";
 const RUN_HEART_RATE_CHART_ROUTE = "RunHeartRateChartPage";
 
+// Changing the accent theme remounts RootNavigator (fresh mounts re-read the
+// mutated Colors palettes). The latest navigation state is mirrored here so
+// the remounted container restores the user's place instead of resetting to
+// the initial route. Keyed by auth mode: a state captured while authenticated
+// must not be restored into the login stack (and vice versa).
+const preservedNavigationState = {
+  state: null,
+  isAuthenticated: null,
+};
+
 function getNotificationResponseKey(response) {
   const notification = response?.notification;
   const request = notification?.request;
@@ -225,7 +239,20 @@ function RootNavigator() {
   const syncCurrentRoute = () => {
     const nextRouteName = navigationRef.getCurrentRoute()?.name ?? null;
     setCurrentRouteName(nextRouteName);
+
+    try {
+      preservedNavigationState.state = navigationRef.getRootState() ?? null;
+      preservedNavigationState.isAuthenticated = isAuthenticated;
+    } catch {
+      preservedNavigationState.state = null;
+      preservedNavigationState.isAuthenticated = null;
+    }
   };
+
+  const restoredNavigationState =
+    preservedNavigationState.isAuthenticated === isAuthenticated
+      ? preservedNavigationState.state ?? undefined
+      : undefined;
 
   const openNotificationHistoryFromResponse = useCallback((response) => {
     if (!response) {
@@ -315,11 +342,13 @@ function RootNavigator() {
   }
   
   return (
-    <View style={{ flex: 1, backgroundColor: theme.background }}>
-      <View style={{ flex: 1 }}>
-        <NavigationContainer
+    <KeyboardProvider>
+      <View style={{ flex: 1, backgroundColor: theme.background }}>
+        <View style={{ flex: 1 }}>
+          <NavigationContainer
           ref={navigationRef}
           theme={navTheme}
+          initialState={restoredNavigationState}
           onReady={syncCurrentRoute}
           onStateChange={syncCurrentRoute}
         >
@@ -343,17 +372,18 @@ function RootNavigator() {
                 <Stack.Screen name="ProfilePage" component={ProfilePage} options={{ headerShown: false }} />
                 <Stack.Screen name="ProgramPage" component={ProgramPage} options={{headerShown: false}} />
                 <Stack.Screen name="ProgramOverviewPage" component={ProgramOverviewPage} options={{headerShown: false}} />
+                <Stack.Screen name="ProgramSettingsPage" component={ProgramSettingsPage} options={{headerShown: false}} />
                 <Stack.Screen name="MicrocyclePage" component={MicrocyclePage} options={{headerShown: false}} />
                 <Stack.Screen name="WeekPage" component={WeekPage} options={{headerShown: false}} />
                 <Stack.Screen name="WorkoutPage" component={WorkoutPage} options={{headerShown: false}} />
-                <Stack.Screen name="SetPage" component={SetPage} />
                 <Stack.Screen name="ExerciseCatalogPage" component={ExerciseCatalogPage} options={{ headerShown: false }} />
                 <Stack.Screen name="ExerciseLibraryPage" component={ExerciseLibraryPage} options={{ headerShown: false }} />
                 <Stack.Screen name="PersonalRecordsPage" component={PersonalRecordsPage} options={{ headerShown: false }} />
+                <Stack.Screen name="WorkoutLibraryPage" component={WorkoutLibraryPage} options={{ headerShown: false }} />
+                <Stack.Screen name="WorkoutPostsPage" component={WorkoutPostsPage} options={{ headerShown: false }} />
                 <Stack.Screen name="WorkoutCalendarPage" component={WorkoutCalendarPage} options={{ headerShown: false }} />
                 <Stack.Screen name="NotificationHistoryPage" component={NotificationHistoryPage} options={{ headerShown: false }} />
                 <Stack.Screen name="NotificationSettingsPage" component={NotificationSettingsPage} options={{ headerShown: false }} />
-                <Stack.Screen name="SocialPostEditPage" component={SocialPostEditPage} options={{ headerShown: false }} />
                 <Stack.Screen name="SocialPostSettingsPage" component={SocialPostSettingsPage} options={{ headerShown: false }} />
                 <Stack.Screen name="ExerciseSocialPostSettingsPage" component={ExerciseSocialPostSettingsPage} options={{ headerShown: false }} />
                 <Stack.Screen name="OneRepMaxCalculatorPage" component={OneRepMaxCalculatorPage} options={{ headerShown: false }} />
@@ -379,22 +409,27 @@ function RootNavigator() {
               </>
             )}
           </Stack.Navigator>
-        </NavigationContainer>
+          </NavigationContainer>
+        </View>
+
+        {isAuthenticated && currentRouteName !== RUN_HEART_RATE_CHART_ROUTE ? (
+          <ThemedBottomNavigation
+            currentRouteName={currentRouteName}
+            navigationRef={navigationRef}
+          />
+        ) : null}
       </View>
 
-      {isAuthenticated && currentRouteName !== RUN_HEART_RATE_CHART_ROUTE ? (
-        <ThemedBottomNavigation
-          currentRouteName={currentRouteName}
-          navigationRef={navigationRef}
-        />
-      ) : null}
-    </View>
+      {/* Gives every field - numeric ones included - a Done button. */}
+      <KeyboardToolbar />
+    </KeyboardProvider>
   );
 }
 
 function UserScopedDatabaseApp() {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const { accentTheme } = useThemeMode();
   const { user, isAuthLoading } = useAuth();
   const userId = user?.id ?? null;
   const databaseName = getDatabaseNameForUserId(userId);
@@ -432,7 +467,7 @@ function UserScopedDatabaseApp() {
       <SetSync />
       <WorkoutTypeInstanceSync />
       <PushNotificationRegistrationSync />
-      <RootNavigator />
+      <RootNavigator key={`accent-${accentTheme}`} />
     </SQLiteProvider>
   );
 }
@@ -440,9 +475,13 @@ function UserScopedDatabaseApp() {
 export default function App() {
   return (
     <SafeAreaProvider>
-      <AuthProvider>
-        <UserScopedDatabaseApp />
-      </AuthProvider>
+      <ThemeModeProvider>
+        <ExerciseViewSettingsProvider>
+          <AuthProvider>
+            <UserScopedDatabaseApp />
+          </AuthProvider>
+        </ExerciseViewSettingsProvider>
+      </ThemeModeProvider>
     </SafeAreaProvider>
   );
 }

@@ -13,6 +13,8 @@ const ThemedBouncyCheckbox = ({
   edgeSize = 2,
   checkmarkColor,
   fillColor,
+  // A finger needs 44x44; the visual size stays whatever `size` says.
+  minTouchSize = 44,
   ...props
 }) => {
   const colorScheme = useColorScheme();
@@ -34,8 +36,9 @@ const ThemedBouncyCheckbox = ({
       text={text}
       textStyle={{
         color: theme.text,
-        fontSize: 14,
+        fontSize: 13,
       }}
+      hitSlop={Math.max(0, Math.round((minTouchSize - size) / 2))}
       style={style}
       iconComponent={
         value ? (

@@ -10,7 +10,7 @@ export default StyleSheet.create({
 
   exerciseCard: {
     borderWidth: 1,
-    borderRadius: 24,
+    borderRadius: 14,
     paddingHorizontal: 12,
     paddingVertical: 12,
     overflow: "hidden",
@@ -23,7 +23,7 @@ export default StyleSheet.create({
 
   headerRow: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
   },
 
   headerRowExpanded: {
@@ -51,8 +51,8 @@ export default StyleSheet.create({
     left: 0,
     right: 0,
     height: 24,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
     zIndex: 1,
     overflow: "hidden",
   },
@@ -126,9 +126,17 @@ export default StyleSheet.create({
     justifyContent: "flex-end",
   },
 
-  actionButton: {
-    width: 32,
+  collapsedExpandButton: {
+    width: 24,
     height: 32,
+    marginLeft: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  actionButton: {
+    width: 40,
+    height: 40,
     justifyContent: "center",
     alignItems: "center",
     marginLeft: 6,
@@ -146,7 +154,7 @@ export default StyleSheet.create({
   historySummaryBar: {
     minHeight: 36,
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 6,
     paddingHorizontal: 10,
     paddingVertical: 6,
     flexDirection: "row",
@@ -194,7 +202,7 @@ export default StyleSheet.create({
 
   historyPanel: {
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 6,
     marginTop: 8,
     paddingHorizontal: 12,
     paddingVertical: 12,
@@ -294,7 +302,7 @@ export default StyleSheet.create({
   },
 
   summaryCollapsedRow: {
-    marginTop: 8,
+    marginTop: 4,
     marginBottom: -4,
     flexDirection: "row",
     alignItems: "center",
@@ -341,6 +349,7 @@ export default StyleSheet.create({
     paddingRight: 2,
     justifyContent: "center",
   },
+
 
   summaryChipRow: {
     width: "100%",
@@ -409,10 +418,17 @@ export default StyleSheet.create({
     alignItems: "center",
   },
 
-  expandedSection: {
+  // The clipping lives here so the animated height can trim the content
+  // vertically. The negative horizontal margins sit on this layer too, so the
+  // bleed past the card edge is outside the clip.
+  expandedAnimator: {
     marginTop: 10,
     marginHorizontal: -12,
     marginBottom: -12,
+    overflow: "hidden",
+  },
+
+  expandedSection: {
     overflow: "visible",
     position: "relative",
     zIndex: 1,

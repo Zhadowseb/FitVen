@@ -110,6 +110,38 @@ export async function updateRunSetDone(db, { runId, done }) {
   );
 }
 
+export async function completeRunSet(
+  db,
+  { runId, actualDistanceKm, actualDurationSeconds, actualPaceMinutes }
+) {
+  await db.runAsync(
+    `UPDATE Run
+     SET done = 1,
+         actual_distance = ?,
+         actual_duration_seconds = ?,
+         actual_pace = ?
+     WHERE Run_id = ?;`,
+    [
+      actualDistanceKm ?? null,
+      actualDurationSeconds ?? null,
+      actualPaceMinutes ?? null,
+      runId,
+    ]
+  );
+}
+
+export async function resetRunSetProgress(db, workoutId) {
+  await db.runAsync(
+    `UPDATE Run
+     SET done = 0,
+         actual_distance = NULL,
+         actual_duration_seconds = NULL,
+         actual_pace = NULL
+     WHERE workout_id = ?;`,
+    [workoutId]
+  );
+}
+
 export async function deleteRunSetById(db, runId) {
   await db.runAsync(
     `DELETE FROM Run

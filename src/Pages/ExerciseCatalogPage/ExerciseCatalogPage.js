@@ -1,5 +1,5 @@
 import { StatusBar } from "expo-status-bar";
-import { Alert, ScrollView, useColorScheme } from "react-native";
+import { Alert, ScrollView, View, useColorScheme } from "react-native";
 import { useCallback, useState } from "react";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
@@ -7,8 +7,10 @@ import { useSQLiteContext } from "expo-sqlite";
 import ExerciseLibraryList from "../ExerciseLibraryPage/Components/ExerciseLibraryList/ExerciseLibraryList";
 import CustomExerciseModal from "./Components/CustomExerciseModal/CustomExerciseModal";
 import styles from "./ExerciseCatalogPageStyle";
+import { Colors } from "../../Resources/GlobalStyling/colors";
 import {
   ThemedHeader,
+  ThemedText,
   ThemedTitle,
   ThemedView,
 } from "../../Resources/ThemedComponents";
@@ -22,10 +24,18 @@ const ExerciseCatalogPage = ({ route }) => {
   const [selectingExerciseName, setSelectingExerciseName] = useState(null);
   const [isCustomExerciseModalVisible, setIsCustomExerciseModalVisible] =
     useState(false);
+  const theme = Colors[colorScheme] ?? Colors.light;
+  const primaryTextColor = theme.primaryText ?? theme.primary;
   const workoutPicker = route?.params?.workoutPicker ?? null;
   const workoutPickerId = Number(workoutPicker?.workoutId);
   const isWorkoutPicker =
     Number.isFinite(workoutPickerId) && workoutPickerId > 0;
+  const workoutTargetLabel =
+    workoutPicker?.workoutName ??
+    workoutPicker?.name ??
+    workoutPicker?.title ??
+    workoutPicker?.workoutTitle ??
+    "workout";
 
   useFocusEffect(
     useCallback(() => {
@@ -83,13 +93,31 @@ const ExerciseCatalogPage = ({ route }) => {
 
   return (
     <ThemedView safe={["top", "left", "right"]} style={styles.container}>
-      {isWorkoutPicker && (
-        <ThemedHeader>
-          <ThemedTitle type="h3">Add exercise</ThemedTitle>
-        </ThemedHeader>
-      )}
+      <ThemedHeader>
+        <View style={styles.headerTitleGroup}>
+          {isWorkoutPicker ? (
+            <ThemedText
+              style={styles.headerEyebrow}
+              setColor={primaryTextColor}
+              numberOfLines={1}
+            >
+              {`Add to ${workoutTargetLabel}`}
+            </ThemedText>
+          ) : null}
+
+          <ThemedTitle
+            type="pageTitle"
+            style={styles.headerTitle}
+            numberOfLines={1}
+          >
+            {isWorkoutPicker ? "Add exercise" : "Exercises"}
+          </ThemedTitle>
+        </View>
+      </ThemedHeader>
 
       <ScrollView
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         style={styles.content}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -100,6 +128,7 @@ const ExerciseCatalogPage = ({ route }) => {
           onSelectExercise={isWorkoutPicker ? handleSelectExercise : undefined}
           onAddCustomExercise={() => setIsCustomExerciseModalVisible(true)}
           selectingExerciseName={selectingExerciseName}
+          workoutPicker={workoutPicker}
         />
       </ScrollView>
 

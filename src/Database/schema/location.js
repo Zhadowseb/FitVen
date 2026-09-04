@@ -23,4 +23,10 @@ export const locationSchemaSql = `
     speed_meters_per_second REAL,
     created_at INTEGER NOT NULL
   );
+
+  CREATE INDEX IF NOT EXISTS location_log_workout_timestamp_idx
+  ON LocationLog(workout_id, timestamp);
+
+  CREATE INDEX IF NOT EXISTS location_debug_log_workout_timestamp_idx
+  ON LocationDebugLog(workout_id, timestamp);
 `;

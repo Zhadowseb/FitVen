@@ -16,21 +16,30 @@ export const Typography = {
   },
 
   h3: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: "600",
     lineHeight: 24,
+  },
+
+  // The one size for a screen's own title in its top bar. Page titles used to
+  // range from 16 to 28 px depending on which header a screen was built with.
+  pageTitle: {
+    fontSize: 22,
+    fontWeight: "800",
+    lineHeight: 28,
+    letterSpacing: -0.3,
   },
 
   /* ========= BODY TEXT ========= */
 
   bodyLarge: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "400",
     lineHeight: 22,
   },
 
   body: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "400",
     lineHeight: 20,
   },
@@ -64,13 +73,13 @@ export const Typography = {
   /* ========= NUMBERS / DATA ========= */
 
   numberLarge: {
-    fontSize: 20,
+    fontSize: 19,
     fontWeight: "700",
     fontVariant: ["tabular-nums"],
   },
 
   number: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "500",
     fontVariant: ["tabular-nums"],
   },

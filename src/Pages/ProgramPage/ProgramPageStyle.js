@@ -1,21 +1,36 @@
 import { StyleSheet } from 'react-native';
 
 export default StyleSheet.create({
-  header_actions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-  },
-  header_menu_button: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  headerCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
+  },
+  headerCircleAdd: {
+    borderWidth: 0,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 18,
+    elevation: 6,
+  },
+  headerCenter: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 1,
+  },
+  headerEyebrow: {
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 1.8,
+    textTransform: 'uppercase',
   },
   container: {
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 6,
     marginBottom: 16,
     paddingTop: 30,
   },
@@ -39,6 +54,6 @@ export default StyleSheet.create({
     opacity: 0.56,
   },
   option_text: {
-    fontSize: 16,
+    fontSize: 15,
   },
 });

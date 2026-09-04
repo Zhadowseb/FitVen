@@ -1,19 +1,19 @@
 export const SICKNESS_TYPES = [
   {
     label: "General Sickness",
-    image: require("./DarkVersion/General Sickness.png"),
+    image: require("./DarkVersion/General Sickness.jpg"),
   },
   {
     label: "Injury",
-    image: require("./DarkVersion/Injury.png"),
+    image: require("./DarkVersion/Injury.jpg"),
   },
   {
     label: "Mental",
-    image: require("./DarkVersion/Mental.png"),
+    image: require("./DarkVersion/Mental.jpg"),
   },
   {
     label: "Fatigue",
-    image: require("./DarkVersion/Fatigue.png"),
+    image: require("./DarkVersion/Fatigue.jpg"),
   },
 ];
 

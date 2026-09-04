@@ -54,7 +54,7 @@ export default StyleSheet.create({
     borderRadius: 18,
   },
   secondaryActionText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "700",
   },
   cancelAction: {

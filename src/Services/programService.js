@@ -1595,7 +1595,45 @@ export async function syncWorkoutTypesWithCloud(db) {
     throw error;
   }
 
-  const workoutTypes = (data ?? [])
+  let cloudRows = data ?? [];
+
+  // App-required types (e.g. Walk) must exist in the cloud catalog too:
+  // workout_type_instance.workout_type carries an FK to workout_type, so a
+  // type that only exists locally makes every instance push fail with 23503.
+  const cloudTypeNames = new Set(
+    cloudRows.map((row) => normalizeWorkoutType(row?.type)).filter(Boolean)
+  );
+  const missingRequiredTypes = REQUIRED_LOCAL_WORKOUT_TYPES.filter(
+    (workoutType) => !cloudTypeNames.has(workoutType.name)
+  );
+
+  if (missingRequiredTypes.length > 0) {
+    const { data: insertedRows, error: insertError } = await supabase
+      .from(WORKOUT_TYPE_CLOUD_TABLE)
+      .upsert(
+        missingRequiredTypes.map((workoutType) => ({
+          type: workoutType.name,
+          display_name: workoutType.displayName ?? workoutType.name,
+          is_active: Boolean(workoutType.isActive),
+        })),
+        { onConflict: "type" }
+      )
+      .select(WORKOUT_TYPE_CLOUD_SELECT);
+
+    if (insertError) {
+      // RLS may forbid catalog writes from the client. The local catalog
+      // still works, but instance pushes for these types keep failing until
+      // the rows are added server-side.
+      console.warn(
+        "Could not add required workout types to the cloud catalog:",
+        insertError
+      );
+    } else {
+      cloudRows = cloudRows.concat(insertedRows ?? []);
+    }
+  }
+
+  const workoutTypes = cloudRows
     .map(normalizeWorkoutTypeCatalogRow)
     .filter(Boolean);
 
@@ -5825,6 +5863,38 @@ export async function getRecentWorkouts(
   return Promise.all(workouts.map((workout) => buildWorkoutPreview(db, workout)));
 }
 
+export async function getWorkoutLibrary(db, { limit = 500, offset = 0 } = {}) {
+  const rows = await programRepository.getWorkoutLibrary(db, { limit, offset });
+
+  return rows.map((row) => ({
+    ...row,
+    exerciseCount: Number(row.exercise_count) || 0,
+    setCount: Number(row.set_count) || 0,
+    completedSetCount: Number(row.completed_set_count) || 0,
+    hasPersonalRecord: Number(row.has_personal_record) === 1,
+    isCompleted: Number(row.done) === 1,
+    isFavorite: Number(row.is_favorite) === 1,
+  }));
+}
+
+export async function setWorkoutFavorite(db, { workoutId, isFavorite }) {
+  await programRepository.setWorkoutFavorite(db, { workoutId, isFavorite });
+}
+
+export async function getDaysByMicrocycle(db, microcycleId) {
+  return programRepository.getDaysByMicrocycle(db, microcycleId);
+}
+
+export async function getWorkoutLibraryCounts(db) {
+  return programRepository.getWorkoutLibraryCounts(db);
+}
+
+export async function getWorkoutExercisePreview(db, workoutId) {
+  const preview = await buildWorkoutPreview(db, { workout_id: workoutId });
+
+  return preview.previewItems ?? [];
+}
+
 function normalizeUsualExerciseName(exerciseName) {
   return String(exerciseName ?? "")
     .trim()
@@ -5940,13 +6010,20 @@ export async function getUsualWorkouts(
     .slice(0, limit)
     .map((group) => ({
       id: group.id,
+      workout_id: group.latestWorkout.workout_id,
       title: group.title,
+      label: group.title,
       workout_type: group.workoutType,
       exerciseCount: group.exerciseCount,
       occurrenceCount: group.occurrenceCount,
+      date: group.latestWorkout.date,
+      date_iso: group.latestWorkout.date_iso,
       latestDate: group.latestWorkout.date,
       latestDateIso: group.latestWorkout.date_iso,
       suggested: group.weekdays.has(todayWeekday),
+      previewItems: [...group.latestWorkout.exerciseNames.values()].map(
+        (exerciseName) => ({ label: exerciseName })
+      ),
     }));
 }
 

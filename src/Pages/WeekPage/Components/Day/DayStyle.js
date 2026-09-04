@@ -77,7 +77,7 @@ export default StyleSheet.create({
   option_text: {
     paddingLeft: 10,
     fontWeight: 600,
-    fontSize: 16,
+    fontSize: 15,
   },
 
   option: {

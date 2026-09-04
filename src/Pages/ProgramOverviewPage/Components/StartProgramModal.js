@@ -46,7 +46,7 @@ const StartProgramModal = ({
 
   const titleColor = theme.title ?? theme.text;
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
-  const dateRangeColor = "#ffffff";
+  const dateRangeColor = quietText;
   const cardBorder = theme.cardBorder ?? theme.iconColor ?? theme.text;
   const innerSurface =
     theme.fields ?? theme.cardBackground ?? theme.background;

@@ -1,231 +1,220 @@
 import { StyleSheet } from "react-native";
 
 export default StyleSheet.create({
-  heroShell: {
-    width: "95%",
-    alignSelf: "center",
-    marginTop: 2,
-    marginBottom: 12,
+  postNoteInput: {
+    minHeight: 84,
+    textAlignVertical: "top",
   },
 
-  heroCard: {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  statusBarStrip: {
     width: "100%",
-    marginHorizontal: 0,
-    marginVertical: 0,
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderRadius: 18,
-    borderWidth: 1,
+  },
+
+  topArea: {
+    width: "100%",
     overflow: "hidden",
     position: "relative",
   },
 
-  heroAccentPrimary: {
+  topGlow: {
     position: "absolute",
-    width: 260,
-    height: 220,
-    top: -116,
-    right: -96,
+    top: -140,
+    right: -90,
   },
 
-  heroAccentSecondary: {
-    position: "absolute",
-    width: 250,
-    height: 210,
-    bottom: -110,
-    left: -104,
-  },
-
-  heroTopRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 0,
-  },
-
-  heroStatusInline: {
+  navRow: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 10,
+    paddingHorizontal: 16,
+    paddingTop: 14,
   },
 
-  heroStatusDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 999,
-    marginRight: 9,
-  },
-
-  heroStatusText: {
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 2.4,
-    textTransform: "uppercase",
-  },
-
-  heroStartedBlock: {
-    position: "absolute",
-    right: 0,
-    alignItems: "flex-end",
-  },
-
-  heroStartedLabel: {
-    fontSize: 10,
-    fontWeight: "700",
-    letterSpacing: 2,
-    textTransform: "uppercase",
-    marginBottom: 6,
-  },
-
-  heroStartedValue: {
-    fontSize: 13,
-    lineHeight: 17,
-    fontWeight: "800",
-    fontVariant: ["tabular-nums"],
-  },
-
-  heroWorkoutInstanceLabel: {
-    flex: 1,
-    maxWidth: "58%",
-    paddingRight: 12,
-    fontSize: 15,
-    lineHeight: 17,
-    fontWeight: "800",
-  },
-
-  heroTimerBlock: {
-    alignSelf: "flex-start",
-    minHeight: 54,
+  navButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 17,
+    alignItems: "center",
     justifyContent: "center",
-    position: "relative",
   },
 
-  heroTimerValue: {
-    fontSize: 48,
-    lineHeight: 54,
-    fontWeight: "800",
-    fontVariant: ["tabular-nums"],
-  },
-
-  heroTimerLabel: {
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 2.4,
-    textTransform: "uppercase",
-    marginTop: 4,
-  },
-
-  heroSetsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "baseline",
-    marginTop: 0,
-    marginBottom: 9,
-  },
-
-  heroSetsBlock: {
-    alignItems: "flex-end",
-  },
-
-  heroSetsLabel: {
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 2.4,
-    textTransform: "uppercase",
-    marginLeft: 8,
-  },
-
-  heroSetsCount: {
-    flexDirection: "row",
-    alignItems: "baseline",
-  },
-
-  heroSetsCountDone: {
-    fontSize: 18,
-    fontWeight: "800",
-    fontVariant: ["tabular-nums"],
-  },
-
-  heroSetsCountTotal: {
-    fontSize: 14,
-    fontWeight: "700",
-    fontVariant: ["tabular-nums"],
-  },
-
-  heroProgressTrack: {
-    width: "100%",
-    height: 7,
-    borderRadius: 999,
-    overflow: "hidden",
-  },
-
-  heroProgressFill: {
-    height: "100%",
+  navTitle: {
+    flex: 1,
     minWidth: 0,
-    borderRadius: 999,
+    fontSize: 15,
+    fontWeight: "800",
   },
 
-  heroActionsRow: {
+  navDate: {
+    flexShrink: 0,
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 1.6,
+    textTransform: "uppercase",
+  },
+
+  timerRow: {
     flexDirection: "row",
-    marginTop: 20,
-    gap: 12,
+    alignItems: "flex-end",
+    gap: 16,
+    paddingHorizontal: 16,
+    marginTop: 16,
   },
 
-  heroActionButton: {
+  timerValue: {
+    fontSize: 52,
+    lineHeight: 52,
+    letterSpacing: -1,
+    fontWeight: "800",
+    fontVariant: ["tabular-nums"],
+  },
+
+  timerMeta: {
+    gap: 4,
+    paddingBottom: 6,
+  },
+
+  timerMetaRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: 6,
+  },
+
+  timerMetaLabel: {
+    minWidth: 32,
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 1.6,
+    textTransform: "uppercase",
+  },
+
+  timerMetaValue: {
+    fontSize: 13,
+    fontWeight: "800",
+    fontVariant: ["tabular-nums"],
+  },
+
+  timerMetaTotal: {
+    fontSize: 12,
+    fontWeight: "700",
+  },
+
+  timerSpacer: {
     flex: 1,
-    flexBasis: 0,
-    minHeight: 52,
-    borderRadius: 13,
+  },
+
+  timerActions: {
     flexDirection: "row",
+    gap: 8,
+    paddingBottom: 3,
+  },
+
+  timerActionButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
   },
 
-  heroActionPrimary: {},
+  timerPauseIcon: {
+    flexDirection: "row",
+    gap: 4,
+  },
 
-  heroActionSecondary: {},
+  timerPauseBar: {
+    width: 3,
+    height: 14,
+    borderRadius: 1,
+  },
 
-  heroPlayIcon: {
+  timerPlayIcon: {
     width: 0,
     height: 0,
     borderTopWidth: 8,
     borderBottomWidth: 8,
-    borderLeftWidth: 12,
+    borderLeftWidth: 13,
     borderTopColor: "transparent",
     borderBottomColor: "transparent",
-    marginRight: 12,
+    marginLeft: 3,
   },
 
-  heroPauseIcon: {
-    width: 14,
-    height: 16,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginRight: 12,
+  topAreaSpacer: {
+    height: 20,
   },
 
-  heroPauseBar: {
-    width: 4,
-    height: 16,
-    borderRadius: 2,
+  progressTrack: {
+    width: "100%",
+    height: 4,
   },
 
-  heroActionText: {
-    fontSize: 15,
-    fontWeight: "800",
+  progressFill: {
+    height: 4,
   },
 
   toolbar: {
-    alignSelf: "center",
-    width: "95%",
+    width: "100%",
+    paddingHorizontal: 16,
+    marginTop: 14,
     marginBottom: 6,
     flexDirection: "row",
-    justifyContent: "flex-end",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+
+  toolbarLabel: {
+    flexDirection: "row",
+    alignItems: "center",
+    minWidth: 0,
+    paddingLeft: 2,
+  },
+
+  toolbarLabelText: {
+    fontSize: 12,
+    fontWeight: "900",
+    letterSpacing: 1.4,
+    textTransform: "uppercase",
+  },
+
+  toolbarLabelNumber: {
+    fontSize: 12,
+    fontWeight: "900",
+    fontVariant: ["tabular-nums"],
+  },
+
+  toolbarActions: {
+    flexDirection: "row",
     alignItems: "center",
   },
 
   toolbarButton: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     borderRadius: 14,
     borderWidth: 1,
     alignItems: "center",
@@ -235,6 +224,9 @@ export default StyleSheet.create({
 
   workingSets: {
     width: "100%",
+    // The cards carry marginHorizontal: 6, so 10 here lines them up with the
+    // 16dp inset used by the header and the toolbar.
+    paddingHorizontal: 10,
     paddingBottom: 24,
   },
 });

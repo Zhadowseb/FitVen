@@ -30,7 +30,7 @@ const Mesocycle = ({ program_id, visible, close }) => {
   if (loading) return <ActivityIndicator />;
 
   if (mesocycles.length === 0) {
-    return <ThemedText>No mesocycles</ThemedText>;
+    return <ThemedText>No blocks</ThemedText>;
   }
 
   return (
@@ -38,7 +38,7 @@ const Mesocycle = ({ program_id, visible, close }) => {
       <ThemedModal
         visible={visible}
         onClose={() => close()}
-        title="Pick a Mesocycle">
+        title="Pick a block">
 
         {mesocycles.map(mc => (
           <Pressable
@@ -49,7 +49,7 @@ const Mesocycle = ({ program_id, visible, close }) => {
             style={{ paddingVertical: 12 }}
           >
             <ThemedText>
-              Mesocycle {mc.mesocycle_number}
+              Block {mc.mesocycle_number}
             </ThemedText>
           </Pressable>
         ))}

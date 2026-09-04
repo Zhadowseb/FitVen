@@ -114,12 +114,12 @@ export async function initializeWeightliftingData(db) {
     'Dip',
   ];
   const defaultVisibleColumns = JSON.stringify({
-    note: true,
+    note: false,
     rest: true,
     set: true,
     reps: true,
-    rpe: true,
-    rm_percentage: true,
+    rpe: false,
+    rm_percentage: false,
     weight: true,
     done: true,
   });

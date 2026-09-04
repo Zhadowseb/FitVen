@@ -21,12 +21,13 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
 
 import styles from "./PersonalRecordsPageStyle";
-import { Colors } from "../../Resources/GlobalStyling/colors";
+import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
 import Calender from "../../Resources/Icons/UI-icons/Calender";
 import TradeUp from "../../Resources/Icons/UI-icons/TradeUp";
 import {
   ThemedHeader,
   ThemedPicker,
+  ThemedSwitch,
   ThemedText,
   ThemedTitle,
   ThemedView,
@@ -42,6 +43,10 @@ const TREND_CHART_PADDING = {
   left: 44,
 };
 const MUSCLE_LOAD_CHART_WIDTH = 320;
+// Number columns get an en dash when there is nothing to show; a sentence in a
+// value column reads as data.
+const EMPTY_VALUE = "\u2013";
+
 const MUSCLE_LOAD_CHART_HEIGHT = 300;
 const MUSCLE_LOAD_CHART_CENTER = {
   x: 160,
@@ -278,17 +283,18 @@ const PersonalRecordsPage = () => {
   );
 
   const primaryColor = theme.primary ?? "#f7742e";
+
+  const primaryTextColor = theme.primaryText ?? theme.primary;
   const secondaryColor = theme.secondary ?? "#60daac";
-  const primarySoft = "rgba(247, 116, 46, 0.16)";
-  const primaryRowSurface = "rgba(247, 116, 46, 0.09)";
-  const secondarySoft = "rgba(96, 218, 172, 0.22)";
+  const primarySoft = withAlpha(theme.primary, 0.16);
+  const primaryRowSurface = withAlpha(theme.primary, 0.09);
+  const secondarySoft = withAlpha(theme.secondary, 0.22);
   const backgroundColor = theme.background ?? "#0e0f12";
   const cardSurface = theme.cardBackground ?? backgroundColor;
   const panelSurface = theme.uiBackground ?? cardSurface;
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor ?? theme.text;
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const titleColor = theme.title ?? theme.text;
-  const invertedText = theme.cardBackground ?? theme.textInverted ?? "#1b1918";
 
   const updateSelectedProgramId = useCallback((programId) => {
     selectedProgramIdRef.current = programId;
@@ -427,7 +433,7 @@ const PersonalRecordsPage = () => {
       >
         <View style={styles.muscleLoadHeader}>
           <View style={styles.muscleLoadHeaderText}>
-            <ThemedText style={styles.muscleLoadEyebrow} setColor={primaryColor}>
+            <ThemedText style={styles.muscleLoadEyebrow} setColor={primaryTextColor}>
               PERSONAL RECORDS
             </ThemedText>
             <ThemedText style={styles.muscleLoadTitle} setColor={titleColor}>
@@ -440,8 +446,8 @@ const PersonalRecordsPage = () => {
               value={selectedProgramId}
               items={muscleLoadProgramItems}
               onChange={handleChangeMuscleLoadProgram}
-              placeholder="Program"
-              title="Pick program"
+              placeholder="Select program"
+              title="Select program"
               style={styles.muscleLoadPicker}
             />
           )}
@@ -457,7 +463,7 @@ const PersonalRecordsPage = () => {
         >
           {muscleLoadLoading ? (
             <View style={styles.muscleLoadEmptyState}>
-              <ActivityIndicator color={primaryColor} />
+              <ActivityIndicator color={primaryTextColor} />
             </View>
           ) : hasPrograms && hasMuscleLoadData ? (
             <Svg
@@ -547,7 +553,7 @@ const PersonalRecordsPage = () => {
     <View style={styles.exerciseList}>
       {loading && (
         <View style={styles.loadingState}>
-          <ActivityIndicator color={primaryColor} />
+          <ActivityIndicator color={primaryTextColor} />
         </View>
       )}
 
@@ -594,7 +600,7 @@ const PersonalRecordsPage = () => {
                 width={21}
                 height={21}
                 stroke={primaryColor}
-                color={primaryColor}
+                color={primaryTextColor}
               />
             </View>
 
@@ -606,10 +612,17 @@ const PersonalRecordsPage = () => {
               >
                 {summary.exerciseName}
               </ThemedText>
-              <ThemedText style={styles.exerciseListMeta} setColor={quietText}>
-                {summary.latestRecordRelativeDateLabel
-                  ? `Last PR ${summary.latestRecordDateDisplay} - ${summary.latestRecordRelativeDateLabel}`
-                  : `Last PR ${summary.latestRecordDateDisplay}`}
+              {/* The relative age is what the row is scanned for; the exact
+                  date lives on the detail screen. */}
+              <ThemedText
+                style={styles.exerciseListMeta}
+                setColor={quietText}
+                numberOfLines={1}
+              >
+                {`Last PR ${
+                  summary.latestRecordRelativeDateLabel ||
+                  summary.latestRecordDateDisplay
+                }`}
               </ThemedText>
             </View>
 
@@ -636,7 +649,7 @@ const PersonalRecordsPage = () => {
     if (detailLoading) {
       return (
         <View style={styles.loadingState}>
-          <ActivityIndicator color={primaryColor} />
+          <ActivityIndicator color={primaryTextColor} />
         </View>
       );
     }
@@ -660,7 +673,7 @@ const PersonalRecordsPage = () => {
             onPress={closeExerciseDetail}
             style={[styles.backToListButton, { borderColor: cardBorder }]}
           >
-            <ThemedText style={styles.backToListText} setColor={primaryColor}>
+            <ThemedText style={styles.backToListText} setColor={primaryTextColor}>
               All records
             </ThemedText>
           </TouchableOpacity>
@@ -687,7 +700,7 @@ const PersonalRecordsPage = () => {
         >
           <View style={styles.trendHeader}>
             <View style={styles.trendHeaderText}>
-              <ThemedText style={styles.trendEyebrow} setColor={primaryColor}>
+              <ThemedText style={styles.trendEyebrow} setColor={primaryTextColor}>
                 ESTIMATED 1RM
               </ThemedText>
               <ThemedText style={styles.trendTitle} setColor={titleColor}>
@@ -704,7 +717,7 @@ const PersonalRecordsPage = () => {
                 },
               ]}
             >
-              <ThemedText style={styles.trendCountValue} setColor={primaryColor}>
+              <ThemedText style={styles.trendCountValue} setColor={primaryTextColor}>
                 {trend?.pointCount ?? 0}
               </ThemedText>
               <ThemedText style={styles.trendCountLabel} setColor={quietText}>
@@ -719,14 +732,14 @@ const PersonalRecordsPage = () => {
                 BEST
               </ThemedText>
               <ThemedText style={styles.trendMetricValue} setColor={titleColor}>
-                {bestPoint?.estimatedOneRepMaxDisplay ?? "--"}
+                {bestPoint?.estimatedOneRepMaxDisplay ?? EMPTY_VALUE}
               </ThemedText>
               <ThemedText
                 style={styles.trendMetricSubvalue}
                 setColor={quietText}
                 numberOfLines={1}
               >
-                {bestPoint?.setDisplay ?? "No set"}
+                {bestPoint?.setDisplay ?? EMPTY_VALUE}
               </ThemedText>
             </View>
 
@@ -735,14 +748,14 @@ const PersonalRecordsPage = () => {
                 LATEST
               </ThemedText>
               <ThemedText style={styles.trendMetricValue} setColor={titleColor}>
-                {latestPoint?.estimatedOneRepMaxDisplay ?? "--"}
+                {latestPoint?.estimatedOneRepMaxDisplay ?? EMPTY_VALUE}
               </ThemedText>
               <ThemedText
                 style={styles.trendMetricSubvalue}
                 setColor={quietText}
                 numberOfLines={1}
               >
-                {latestPoint?.dateDisplay ?? "No workout"}
+                {latestPoint?.dateDisplay ?? EMPTY_VALUE}
               </ThemedText>
             </View>
           </View>
@@ -916,30 +929,25 @@ const PersonalRecordsPage = () => {
             onPress={closeExerciseDetail}
             style={[styles.backToListButton, { borderColor: cardBorder }]}
           >
-            <ThemedText style={styles.backToListText} setColor={primaryColor}>
+            <ThemedText style={styles.backToListText} setColor={primaryTextColor}>
               All records
             </ThemedText>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            activeOpacity={0.86}
-            onPress={() => setHideEmptyRepRanges((current) => !current)}
-            style={[
-              styles.recordFilterButton,
-              {
-                backgroundColor: hideEmptyRepRanges ? primaryColor : cardSurface,
-                borderColor: hideEmptyRepRanges ? primaryColor : cardBorder,
-              },
-            ]}
-          >
+          <View style={styles.recordFilterToggle}>
             <ThemedText
-              style={styles.recordFilterText}
-              setColor={hideEmptyRepRanges ? invertedText : quietText}
+              style={styles.recordFilterLabel}
+              setColor={quietText}
               numberOfLines={1}
             >
-              {hideEmptyRepRanges ? "Show all" : "Hide empty"}
+              Hide empty rep ranges
             </ThemedText>
-          </TouchableOpacity>
+            <ThemedSwitch
+              accessibilityLabel="Hide empty rep ranges"
+              value={hideEmptyRepRanges}
+              onValueChange={setHideEmptyRepRanges}
+            />
+          </View>
         </View>
 
         <View
@@ -967,12 +975,12 @@ const PersonalRecordsPage = () => {
                 width={25}
                 height={25}
                 stroke={primaryColor}
-                color={primaryColor}
+                color={primaryTextColor}
               />
             </View>
 
             <View style={styles.recordHeaderText}>
-              <ThemedText style={styles.recordEyebrow} setColor={primaryColor}>
+              <ThemedText style={styles.recordEyebrow} setColor={primaryTextColor}>
                 PERSONAL RECORDS
               </ThemedText>
               <ThemedTitle
@@ -1047,7 +1055,7 @@ const PersonalRecordsPage = () => {
                     ]}
                     setColor={row.hasRecord ? titleColor : quietText}
                   >
-                    {row.weightDisplay}
+                    {row.hasRecord ? row.weightDisplay : EMPTY_VALUE}
                   </ThemedText>
                   {row.hasRecord && (
                     <ThemedText style={styles.recordWeightUnit} setColor={quietText}>
@@ -1073,7 +1081,7 @@ const PersonalRecordsPage = () => {
                         { backgroundColor: primarySoft },
                       ]}
                     >
-                      <ThemedText style={styles.newBadgeText} setColor={primaryColor}>
+                      <ThemedText style={styles.newBadgeText} setColor={primaryTextColor}>
                         NEW
                       </ThemedText>
                     </View>
@@ -1113,7 +1121,7 @@ const PersonalRecordsPage = () => {
                     setColor={row.hasRecord ? titleColor : quietText}
                     numberOfLines={1}
                   >
-                    {row.hasRecord ? row.dateDisplay : "No set"}
+                    {row.hasRecord ? row.dateDisplay : EMPTY_VALUE}
                   </ThemedText>
                 </View>
                 {!!row.relativeDateLabel && (
@@ -1124,6 +1132,15 @@ const PersonalRecordsPage = () => {
               </View>
             </View>
           ))}
+
+          {visibleRecordRows.some((row) => !row.hasRecord) ? (
+            <ThemedText
+              style={[styles.tableFootnote, { borderTopColor: cardBorder }]}
+              setColor={quietText}
+            >
+              {EMPTY_VALUE} No record in this rep range yet.
+            </ThemedText>
+          ) : null}
         </View>
 
         {renderOneRepMaxTrend()}
@@ -1135,11 +1152,11 @@ const PersonalRecordsPage = () => {
     <ThemedView safe={["top", "left", "right"]} style={styles.container}>
       <ThemedHeader>
         <View style={styles.pageHeaderTitleGroup}>
-          <ThemedText size={10} style={styles.pageHeaderTitleEyebrow} setColor={quietText}>
+          <ThemedText size={12} style={styles.pageHeaderTitleEyebrow} setColor={quietText}>
             Library
           </ThemedText>
           <ThemedTitle
-            type="h3"
+            type="pageTitle"
             style={styles.pageHeaderTitleMain}
             numberOfLines={1}
           >

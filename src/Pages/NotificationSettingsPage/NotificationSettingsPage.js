@@ -12,22 +12,24 @@ import { useFocusEffect } from "@react-navigation/native";
 import styles from "./NotificationSettingsPageStyle";
 import { useAuth } from "../../Contexts/AuthContext";
 import { notificationService, socialService } from "../../Services";
-import { Colors } from "../../Resources/GlobalStyling/colors";
+import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
 import Checkmark from "../../Resources/Icons/UI-icons/Checkmark";
+import Cross from "../../Resources/Icons/UI-icons/Cross";
 import Search from "../../Resources/Icons/UI-icons/Search";
 import {
-  ThemedCard,
   ThemedHeader,
+  ThemedKeyboardProtection,
   ThemedText,
   ThemedTitle,
   ThemedView,
+ThemedCard,
 } from "../../Resources/ThemedComponents";
 
 const WORKOUT_START_OPTIONS = [
   {
     value: notificationService.WORKOUT_START_NOTIFICATION_MODES.NONE,
     title: "No notifications",
-    body: "Stay focused - never get pinged.",
+    body: "No notifications when someone starts a workout.",
   },
   {
     value: notificationService.WORKOUT_START_NOTIFICATION_MODES.FOLLOWING,
@@ -36,8 +38,8 @@ const WORKOUT_START_OPTIONS = [
   },
   {
     value: notificationService.WORKOUT_START_NOTIFICATION_MODES.CUSTOM,
-    title: "Custom",
-    body: "Pick a specific list of people.",
+    title: "Pick specific people",
+    body: "Only the people you choose below.",
   },
 ];
 
@@ -85,6 +87,7 @@ export default function NotificationSettingsPage() {
   const [savingMode, setSavingMode] = useState(null);
   const [savingSourceId, setSavingSourceId] = useState(null);
   const [feedback, setFeedback] = useState("");
+  const [feedbackTone, setFeedbackTone] = useState("error");
   const titleColor = theme.title ?? theme.text;
   const quietText = theme.iconColor ?? theme.quietText ?? theme.text;
   const cardSurface = theme.cardBackground ?? theme.background;
@@ -92,10 +95,18 @@ export default function NotificationSettingsPage() {
   const pageSurface = theme.background;
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor;
   const primaryColor = theme.primary ?? "#f7742e";
-  const selectedSurface =
-    colorScheme === "dark"
-      ? "rgba(247, 116, 46, 0.12)"
-      : "rgba(247, 116, 46, 0.14)";
+  const primaryTextColor = theme.primaryText ?? theme.primary;
+  const selectedSurface = withAlpha(
+    theme.primary,
+    colorScheme === "dark" ? 0.12 : 0.14
+  );
+  // A saved choice whose device registration failed is a warning, not a
+  // failure: the preference is stored either way.
+  const showFeedback = (text, tone = "error") => {
+    setFeedback(text);
+    setFeedbackTone(tone);
+  };
+
   const selectedSourceIdSet = useMemo(
     () => new Set(selectedSourceIds),
     [selectedSourceIds]
@@ -109,13 +120,13 @@ export default function NotificationSettingsPage() {
 
   const loadSettings = useCallback(async () => {
     if (!user?.id) {
-      setFeedback("Sign in to manage notification settings.");
+      showFeedback("Sign in to manage notification settings.");
       setIsLoading(false);
       return;
     }
 
     setIsLoading(true);
-    setFeedback("");
+    showFeedback("");
 
     try {
       const [nextSettings, nextFollowingProfiles] = await Promise.all([
@@ -131,7 +142,7 @@ export default function NotificationSettingsPage() {
       setSelectedSourceIds(nextSettings.selectedSourceIds ?? []);
       setFollowingProfiles(nextFollowingProfiles);
     } catch (error) {
-      setFeedback(
+      showFeedback(
         error instanceof Error
           ? error.message
           : "Could not load notification settings."
@@ -155,7 +166,7 @@ export default function NotificationSettingsPage() {
     const previousMode = selectedMode;
     setSelectedMode(mode);
     setSavingMode(mode);
-    setFeedback("");
+    showFeedback("");
 
     try {
       const nextSettings =
@@ -167,12 +178,17 @@ export default function NotificationSettingsPage() {
       setSelectedMode(nextSettings.workoutStartMode);
       setSelectedSourceIds(nextSettings.selectedSourceIds ?? selectedSourceIds);
 
-      if (nextSettings?.skipped && nextSettings.reason === "permission_denied") {
-        setFeedback("Notification permission was not granted on this device.");
+      if (nextSettings?.skipped) {
+        showFeedback(
+          nextSettings.reason === "permission_denied"
+            ? "Saved. Notification permission was not granted on this device."
+            : "Saved. This device could not register for push notifications, so it may not receive them yet.",
+          "warning"
+        );
       }
     } catch (error) {
       setSelectedMode(previousMode);
-      setFeedback(
+      showFeedback(
         error instanceof Error
           ? error.message
           : "Could not save notification settings."
@@ -195,7 +211,7 @@ export default function NotificationSettingsPage() {
 
     setSelectedSourceIds(nextSourceIds);
     setSavingSourceId(profile.id);
-    setFeedback("");
+    showFeedback("");
 
     try {
       const nextSettings =
@@ -207,7 +223,7 @@ export default function NotificationSettingsPage() {
       setSelectedSourceIds(nextSettings.selectedSourceIds ?? nextSourceIds);
     } catch (error) {
       setSelectedSourceIds(previousSourceIds);
-      setFeedback(
+      showFeedback(
         error instanceof Error
           ? error.message
           : "Could not update custom notification list."
@@ -222,13 +238,13 @@ export default function NotificationSettingsPage() {
       <ThemedHeader>
         <View style={styles.pageHeaderTitleGroup}>
           <ThemedText
-            size={10}
+            size={12}
             style={[styles.pageHeaderTitleEyebrow, { color: quietText }]}
           >
             Settings
           </ThemedText>
           <ThemedTitle
-            type="h3"
+            type="pageTitle"
             style={styles.pageHeaderTitleMain}
             numberOfLines={1}
           >
@@ -237,11 +253,14 @@ export default function NotificationSettingsPage() {
         </View>
       </ThemedHeader>
 
-      <ScrollView
-        style={styles.content}
+      <ThemedKeyboardProtection
+        scroll
+        bottomOffset={180}
         contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
+        scrollViewProps={{
+          style: styles.content,
+          showsVerticalScrollIndicator: false,
+        }}
       >
         <ThemedCard
           style={[
@@ -263,7 +282,7 @@ export default function NotificationSettingsPage() {
 
           {isLoading ? (
             <View style={styles.loadingRow}>
-              <ActivityIndicator color={primaryColor} />
+              <ActivityIndicator color={primaryTextColor} />
             </View>
           ) : (
             <View style={styles.optionList}>
@@ -317,7 +336,7 @@ export default function NotificationSettingsPage() {
                     </View>
 
                     {saving ? (
-                      <ActivityIndicator size="small" color={primaryColor} />
+                      <ActivityIndicator size="small" color={primaryTextColor} />
                     ) : null}
                   </Pressable>
                 );
@@ -338,8 +357,53 @@ export default function NotificationSettingsPage() {
             >
               <View style={styles.selectedBlock}>
                 <ThemedText style={styles.selectedLabel} setColor={quietText}>
-                  SELECTED - {selectedProfiles.length}
+                  SELECTED ({selectedProfiles.length})
                 </ThemedText>
+
+                {selectedProfiles.length ? (
+                  <View style={styles.chipRow}>
+                    {selectedProfiles.map((profile) => (
+                      <Pressable
+                        key={profile.id}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Remove ${
+                          profile.displayName ?? profile.username ?? "person"
+                        }`}
+                        disabled={Boolean(savingSourceId)}
+                        onPress={() => toggleSource(profile)}
+                        style={({ pressed }) => [
+                          styles.chip,
+                          {
+                            backgroundColor: selectedSurface,
+                            borderColor: withAlpha(theme.primary, 0.45),
+                          },
+                          pressed && !savingSourceId ? styles.pressed : null,
+                        ]}
+                      >
+                        <ThemedText
+                          style={styles.chipText}
+                          setColor={primaryTextColor}
+                          numberOfLines={1}
+                        >
+                          {profile.displayName ?? profile.username}
+                        </ThemedText>
+
+                        {savingSourceId === profile.id ? (
+                          <ActivityIndicator
+                            size="small"
+                            color={primaryTextColor}
+                          />
+                        ) : (
+                          <Cross width={12} height={12} color={primaryTextColor} />
+                        )}
+                      </Pressable>
+                    ))}
+                  </View>
+                ) : (
+                  <ThemedText style={styles.chipHint} setColor={quietText}>
+                    Nobody selected yet. Pick people from the list below.
+                  </ThemedText>
+                )}
               </View>
 
               <View
@@ -428,7 +492,7 @@ export default function NotificationSettingsPage() {
                           ]}
                         >
                           {saving ? (
-                            <ActivityIndicator size="small" color={primaryColor} />
+                            <ActivityIndicator size="small" color={primaryTextColor} />
                           ) : selected ? (
                             <Checkmark
                               width={15}
@@ -457,11 +521,18 @@ export default function NotificationSettingsPage() {
         </ThemedCard>
 
         {feedback ? (
-          <ThemedText style={styles.feedbackText} setColor={theme.danger}>
+          <ThemedText
+            style={styles.feedbackText}
+            setColor={
+              feedbackTone === "warning"
+                ? theme.planned ?? theme.danger
+                : theme.danger
+            }
+          >
             {feedback}
           </ThemedText>
         ) : null}
-      </ScrollView>
+      </ThemedKeyboardProtection>
     </ThemedView>
   );
 }

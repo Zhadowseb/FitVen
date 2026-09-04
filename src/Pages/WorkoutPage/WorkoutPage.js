@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, View, TouchableOpacity, useColorScheme } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
@@ -9,6 +9,7 @@ import styles from "./WorkoutPageStyle";
 import {
   ThemedBottomSheet,
   ThemedButton,
+  ThemedConfirmModal,
   ThemedHeader,
   ThemedModal,
   ThemedText,
@@ -51,6 +52,10 @@ const WorkoutPage = ({ route }) => {
   const [nextWorkoutLabel, setNextWorkoutLabel] = useState("");
   const [isSavingLabel, setIsSavingLabel] = useState(false);
   const [newDate, setNewDate] = useState(new Date());
+  const labelInputRef = useRef(null);
+  const [deleteWorkoutConfirmVisible, setDeleteWorkoutConfirmVisible] =
+    useState(false);
+  const [restartConfirmVisible, setRestartConfirmVisible] = useState(false);
   const [metadata, setMetadata] = useState(null);
   const [restartRequestKey, setRestartRequestKey] = useState(0);
   const [isRepostingWorkoutPost, setIsRepostingWorkoutPost] = useState(false);
@@ -148,38 +153,11 @@ const WorkoutPage = ({ route }) => {
   };
 
   const confirmDeleteWorkout = () => {
-    Alert.alert(
-      "Delete workout?",
-      "This removes the workout and all sets saved inside it.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete workout",
-          style: "destructive",
-          onPress: () => {
-            void deleteWorkout();
-          },
-        },
-      ]
-    );
+    setDeleteWorkoutConfirmVisible(true);
   };
 
   const confirmRestartWorkout = () => {
-    Alert.alert(
-      "Restart workout?",
-      "This clears the timer, completion state, and workout progress for this workout.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Restart workout",
-          style: "destructive",
-          onPress: () => {
-            setOptionsBottomsheetVisible(false);
-            setRestartRequestKey(Date.now());
-          },
-        },
-      ]
-    );
+    setRestartConfirmVisible(true);
   };
 
   const closeCopyTargetModal = () => {
@@ -293,6 +271,192 @@ const WorkoutPage = ({ route }) => {
     }
   };
 
+  const overlays = (
+    <>
+      <ThemedConfirmModal
+        visible={deleteWorkoutConfirmVisible}
+        title="Delete workout?"
+        message="This removes the workout and all sets saved inside it."
+        confirmLabel="Delete workout"
+        tone="danger"
+        onConfirm={() => {
+          setDeleteWorkoutConfirmVisible(false);
+          void deleteWorkout();
+        }}
+        onClose={() => setDeleteWorkoutConfirmVisible(false)}
+      />
+
+      <ThemedConfirmModal
+        visible={restartConfirmVisible}
+        title="Restart workout?"
+        message="This clears the timer, completion state, and workout progress for this workout."
+        confirmLabel="Restart workout"
+        tone="danger"
+        onConfirm={() => {
+          setRestartConfirmVisible(false);
+          setOptionsBottomsheetVisible(false);
+          setRestartRequestKey(Date.now());
+        }}
+        onClose={() => setRestartConfirmVisible(false)}
+      />
+
+  <ThemedBottomSheet
+    visible={optionsBottomsheetVisible}
+    onClose={() => setOptionsBottomsheetVisible(false)}
+  >
+    <View style={styles.bottomsheetTitle}>
+      <ThemedText>{workoutLabel}</ThemedText>
+      <ThemedText>{workoutSubtitle}</ThemedText>
+    </View>
+
+    <View style={styles.bottomsheetBody}>
+      <TouchableOpacity
+        style={[styles.option, { paddingTop: 0 }]}
+        onPress={openLabelModal}
+      >
+        <Name width={24} height={24} color={theme.iconColor} />
+        <ThemedText style={styles.optionText}>Change name</ThemedText>
+      </TouchableOpacity>
+
+      {supportsTimerRestart && (
+        <TouchableOpacity
+          style={styles.option}
+          onPress={confirmRestartWorkout}
+        >
+          <Reload width={24} height={24} />
+          <ThemedText style={styles.optionText}>Restart Workout</ThemedText>
+        </TouchableOpacity>
+      )}
+
+      <TouchableOpacity
+        style={[
+          styles.option,
+          !canRepostWorkoutSummary || isRepostingWorkoutPost
+            ? { opacity: 0.45 }
+            : null,
+        ]}
+        onPress={repostWorkoutSummary}
+        disabled={!canRepostWorkoutSummary || isRepostingWorkoutPost}
+      >
+        <Social width={24} height={24} color={theme.iconColor} />
+        <ThemedText style={styles.optionText}>
+          {isRepostingWorkoutPost ? "Reposting summary..." : "Repost summary"}
+        </ThemedText>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[
+          styles.option,
+          { paddingTop: supportsTimerRestart ? 20 : 0 },
+        ]}
+        onPress={() => {
+          setOptionsBottomsheetVisible(false);
+          setDatePickerVisible(true);
+        }}
+      >
+        <Copy width={24} height={24} />
+        <ThemedText style={styles.optionText}>
+          Copy workout to a different day
+        </ThemedText>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.option}
+        onPress={confirmDeleteWorkout}
+      >
+        <Delete width={24} height={24} />
+        <ThemedText style={styles.optionText}>Delete Workout</ThemedText>
+      </TouchableOpacity>
+    </View>
+  </ThemedBottomSheet>
+
+  {datePickerVisible && (
+    <DateTimePicker
+      value={newDate}
+      mode="date"
+      display="default"
+      onChange={async (event, selectedDate) => {
+        setDatePickerVisible(false);
+
+        if (event.type !== "set" || !selectedDate) {
+          return;
+        }
+
+        setNewDate(selectedDate);
+        await copyWorkoutToDate(selectedDate);
+      }}
+    />
+  )}
+
+  <WorkoutCopyTargetModal
+    visible={Boolean(pendingCopyTarget)}
+    onClose={closeCopyTargetModal}
+    dateLabel={pendingCopyTarget?.dateLabel}
+    programTargets={pendingCopyTarget?.programTargets ?? []}
+    isSubmitting={isCopyingWorkout}
+    onConfirmProgramTarget={(target) =>
+      copyWorkoutToProgramTarget(target, pendingCopyTarget?.date)
+    }
+    onConfirmSingleWorkout={() =>
+      copyWorkoutToCalendarOnly(pendingCopyTarget?.date)
+    }
+  />
+
+  <ThemedModal
+    visible={labelModalVisible}
+    title="Workout name"
+    onClose={() => setLabelModalVisible(false)}
+    onShow={() => labelInputRef.current?.focus()}
+  >
+    <ThemedTextInput
+      value={nextWorkoutLabel}
+      onChangeText={setNextWorkoutLabel}
+      placeholder="Workout label"
+      innerRef={labelInputRef}
+      maxLength={40}
+      returnKeyType="done"
+      onSubmitEditing={saveWorkoutLabel}
+    />
+
+    <View style={styles.modalActions}>
+      <ThemedButton
+        title="Cancel"
+        variant="danger"
+        onPress={() => setLabelModalVisible(false)}
+        style={styles.modalAction}
+      />
+      <ThemedButton
+        title={isSavingLabel ? "Saving..." : "Save"}
+        onPress={saveWorkoutLabel}
+        disabled={isSavingLabel}
+        style={styles.modalAction}
+      />
+    </View>
+  </ThemedModal>
+    </>
+  );
+
+  // Strength workouts paint their own top area, status bar included, so the
+  // page must not reserve the top inset or draw the shared header.
+  if (isStrengthWorkout) {
+    return (
+      <ThemedView safe={["left", "right"]}>
+        <Resistance
+          workout_id={workout_id}
+          date={workoutDate}
+          workoutLabel={workoutLabel}
+          workoutSubtitle={workoutSubtitle}
+          workoutInstanceLabel={workoutInstanceLabel}
+          restartRequestKey={restartRequestKey}
+          onWorkoutMetadataChange={loadMetadata}
+          onOpenOptions={() => setOptionsBottomsheetVisible(true)}
+        />
+
+        {overlays}
+      </ThemedView>
+    );
+  }
+
   return (
     <ThemedView safe={["top", "left", "right"]}>
       <ThemedHeader
@@ -318,7 +482,7 @@ const WorkoutPage = ({ route }) => {
           </ThemedText>
 
           <ThemedTitle
-            type="h3"
+            type="pageTitle"
             style={styles.pageHeaderTitleMain}
             numberOfLines={1}
           >
@@ -370,138 +534,7 @@ const WorkoutPage = ({ route }) => {
         />
       )}
 
-      <ThemedBottomSheet
-        visible={optionsBottomsheetVisible}
-        onClose={() => setOptionsBottomsheetVisible(false)}
-      >
-        <View style={styles.bottomsheetTitle}>
-          <ThemedText>{workoutLabel}</ThemedText>
-          <ThemedText>{workoutSubtitle}</ThemedText>
-        </View>
-
-        <View style={styles.bottomsheetBody}>
-          <TouchableOpacity
-            style={[styles.option, { paddingTop: 0 }]}
-            onPress={openLabelModal}
-          >
-            <Name width={24} height={24} color={theme.iconColor} />
-            <ThemedText style={styles.optionText}>Change name</ThemedText>
-          </TouchableOpacity>
-
-          {supportsTimerRestart && (
-            <TouchableOpacity
-              style={styles.option}
-              onPress={confirmRestartWorkout}
-            >
-              <Reload width={24} height={24} />
-              <ThemedText style={styles.optionText}>Restart Workout</ThemedText>
-            </TouchableOpacity>
-          )}
-
-          <TouchableOpacity
-            style={[
-              styles.option,
-              !canRepostWorkoutSummary || isRepostingWorkoutPost
-                ? { opacity: 0.45 }
-                : null,
-            ]}
-            onPress={repostWorkoutSummary}
-            disabled={!canRepostWorkoutSummary || isRepostingWorkoutPost}
-          >
-            <Social width={24} height={24} color={theme.iconColor} />
-            <ThemedText style={styles.optionText}>
-              {isRepostingWorkoutPost ? "Reposting summary..." : "Repost summary"}
-            </ThemedText>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.option,
-              { paddingTop: supportsTimerRestart ? 20 : 0 },
-            ]}
-            onPress={() => {
-              setOptionsBottomsheetVisible(false);
-              setDatePickerVisible(true);
-            }}
-          >
-            <Copy width={24} height={24} />
-            <ThemedText style={styles.optionText}>
-              Copy workout to a different day
-            </ThemedText>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.option}
-            onPress={confirmDeleteWorkout}
-          >
-            <Delete width={24} height={24} />
-            <ThemedText style={styles.optionText}>Delete Workout</ThemedText>
-          </TouchableOpacity>
-        </View>
-      </ThemedBottomSheet>
-
-      {datePickerVisible && (
-        <DateTimePicker
-          value={newDate}
-          mode="date"
-          display="default"
-          onChange={async (event, selectedDate) => {
-            setDatePickerVisible(false);
-
-            if (event.type !== "set" || !selectedDate) {
-              return;
-            }
-
-            setNewDate(selectedDate);
-            await copyWorkoutToDate(selectedDate);
-          }}
-        />
-      )}
-
-      <WorkoutCopyTargetModal
-        visible={Boolean(pendingCopyTarget)}
-        onClose={closeCopyTargetModal}
-        dateLabel={pendingCopyTarget?.dateLabel}
-        programTargets={pendingCopyTarget?.programTargets ?? []}
-        isSubmitting={isCopyingWorkout}
-        onConfirmProgramTarget={(target) =>
-          copyWorkoutToProgramTarget(target, pendingCopyTarget?.date)
-        }
-        onConfirmSingleWorkout={() =>
-          copyWorkoutToCalendarOnly(pendingCopyTarget?.date)
-        }
-      />
-
-      <ThemedModal
-        visible={labelModalVisible}
-        title="Workout name"
-        onClose={() => setLabelModalVisible(false)}
-      >
-        <ThemedTextInput
-          value={nextWorkoutLabel}
-          onChangeText={setNextWorkoutLabel}
-          placeholder="Workout label"
-          autoFocus
-          maxLength={40}
-          returnKeyType="done"
-          onSubmitEditing={saveWorkoutLabel}
-        />
-
-        <View style={styles.modalActions}>
-          <ThemedButton
-            title="Cancel"
-            variant="danger"
-            onPress={() => setLabelModalVisible(false)}
-            style={styles.modalAction}
-          />
-          <ThemedButton
-            title={isSavingLabel ? "Saving..." : "Save"}
-            onPress={saveWorkoutLabel}
-            disabled={isSavingLabel}
-            style={styles.modalAction}
-          />
-        </View>
-      </ThemedModal>
+      {overlays}
     </ThemedView>
   );
 };

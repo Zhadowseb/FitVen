@@ -24,7 +24,7 @@ export default StyleSheet.create({
 
   section: {
     borderWidth: 1,
-    borderRadius: 20,
+    borderRadius: 18,
     padding: 14,
     gap: 10,
   },
