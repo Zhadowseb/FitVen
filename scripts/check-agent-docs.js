@@ -186,6 +186,28 @@ for (const match of (read("AGENTS.md") ?? "").matchAll(/^- `(src\/[^`]+AGENTS\.m
   }
 }
 
+// The public site serves exactly one directory.
+//
+// web/README.md promises this, and the promise is the whole reason the privacy
+// policy is not generated into docs/. Widening it to "." or "docs" publishes the
+// security review, the structure audit, the performance audit, an export query
+// and google-services.json, and nothing would say so until somebody found them.
+const netlify = read("netlify.toml");
+
+if (netlify === null) {
+  problems.push(
+    "netlify.toml is missing - without it the host falls back to publishing the whole repository"
+  );
+} else {
+  const publishDirectory = netlify.match(/^\s*publish\s*=\s*"([^"]*)"/m)?.[1];
+
+  if (publishDirectory !== "web") {
+    problems.push(
+      `netlify.toml publishes "${publishDirectory ?? "nothing declared"}" - it has to be "web", the only directory meant to be public`
+    );
+  }
+}
+
 // ---------------------------------------------------------------- report ---
 if (problems.length) {
   console.error("Agent guides have drifted from the code:\n");

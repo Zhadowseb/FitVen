@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.23.8] - Unreleased
+### Added
+- `npm test` fails if `netlify.toml` is missing or publishes anything other than `web/`. Widening it to the repository root would put the security review, the structure audit, the performance audit, an export query and `google-services.json` on the open internet, and nothing would have said so until somebody found them.
+
+---
 ## [0.23.7] - Unreleased
 ### Changed
 - The privacy policy is finished. The last outstanding statement, the name and postal address of the person responsible, is filled in.
