@@ -25,11 +25,11 @@
         "NSLocationAlwaysAndWhenInUseUsageDescription": "We use your location to track workout distance even when the app is in background.",
         "ITSAppUsesNonExemptEncryption": false
       },
-      "buildNumber": "14"
+      "buildNumber": "15"
     },
     "android": {
       "googleServicesFile": "./google-services.json",
-      "versionCode": 14,
+      "versionCode": 15,
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyBzhic_QC-cV-3qKnqR1a87D8D8jMX4xI4"
