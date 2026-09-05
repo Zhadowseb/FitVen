@@ -9,7 +9,7 @@
 //  a wrong answer in a privacy policy is worse than no policy at all.
 //
 //  Google Play also requires a privacy policy at a public URL, separate from
-//  this screen. docs/privacy-policy.html is that page, generated from this file
+//  this screen. web/privacy/index.html is that page, generated from this file
 //  so the two copies cannot say different things - never edit it by hand, run
 //  `npm run build:privacy-policy` after changing anything here. Host it, then
 //  put the address in PRIVACY_POLICY_URL below and the same one in the Play
@@ -32,7 +32,10 @@ export const PRIVACY_POLICY_SECTIONS = [
     title: "Who is responsible",
     body: `FitVen is run by a private individual rather than a company, so there is no CVR number.
 
-[SKAL UDFYLDES: fulde navn og postadresse]
+Sebastian Dalbjørn
+Ørnegårdsvej 61, 1. th.
+2820 Gentofte
+Denmark
 
 Anything about your data — a copy of it, a correction, having it deleted, or a complaint — goes to zhadowseb@gmail.com.`,
   },

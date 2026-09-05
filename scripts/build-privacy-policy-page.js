@@ -1,11 +1,15 @@
 #!/usr/bin/env node
-// Writes docs/privacy-policy.html from src/Resources/Legal/privacyPolicy.js.
+// Writes web/privacy/index.html from src/Resources/Legal/privacyPolicy.js.
 //
 // Google Play requires the policy at a public address, and the app shows it on
 // a screen. Those are two copies of a legal document, and two copies drift -
 // somebody edits the app text, the hosted page still says something else, and
 // which one a user agreed to becomes an open question. So the hosted page is
 // generated, never edited, and npm test fails if it is out of date.
+//
+// It goes in web/, which is the only directory the public site serves. Not in
+// docs/ - that holds the security review, the structure audit and an export
+// query, and a host pointed at that folder would publish every one of them.
 //
 // Run with --check to compare instead of write.
 
@@ -14,7 +18,7 @@ const fs = require("fs");
 const loadAppModule = require("./lib/loadAppModule");
 
 const root = path.resolve(__dirname, "..");
-const outputFile = path.join(root, "docs", "privacy-policy.html");
+const outputFile = path.join(root, "web", "privacy", "index.html");
 
 const {
   PRIVACY_POLICY_LAST_UPDATED,
@@ -35,7 +39,15 @@ function renderBody(body) {
     .split(/\n{2,}/)
     .map((paragraph) => paragraph.trim())
     .filter(Boolean)
-    .map((paragraph) => `      <p>${escapeHtml(paragraph)}</p>`)
+    // A single newline inside a paragraph is one the author meant - a postal
+    // address is four of them. HTML would run them together, and the page would
+    // then say something the app screen does not.
+    .map(
+      (paragraph) =>
+        `      <p>${escapeHtml(paragraph)
+          .split("\n")
+          .join("<br>\n      ")}</p>`
+    )
     .join("\n");
 }
 
@@ -110,7 +122,7 @@ if (process.argv.includes("--check")) {
 
   if (current === null) {
     console.error(
-      "docs/privacy-policy.html is missing. Run: npm run build:privacy-policy"
+      "web/privacy/index.html is missing. Run: npm run build:privacy-policy"
     );
     process.exit(1);
   }
@@ -118,7 +130,7 @@ if (process.argv.includes("--check")) {
   // Normalised, because git rewrites the line endings on this repo.
   if (current.replace(/\r\n/g, "\n") !== html.replace(/\r\n/g, "\n")) {
     console.error(
-      "docs/privacy-policy.html no longer matches the policy the app shows.\n" +
+      "web/privacy/index.html no longer matches the policy the app shows.\n" +
         "The hosted copy and the in-app copy must say the same thing.\n" +
         "Run: npm run build:privacy-policy"
     );

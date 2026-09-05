@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.23.7] - Unreleased
+### Changed
+- The privacy policy is finished. The last outstanding statement, the name and postal address of the person responsible, is filled in.
+- The public page moved from `docs/privacy-policy.html` to `web/privacy/index.html`, with `netlify.toml` publishing `web/` and nothing else. `docs/` holds the security review, the structure audit, the performance audit and an export query — a static host pointed at that folder would have published all of them next to the policy.
+
+### Fixed
+- A single line break inside a paragraph was collapsed by the generated page, so a four-line postal address read as one run-on line on the web while the app showed it correctly. The two copies exist to say the same thing.
+
+### Notes
+- `PRIVACY_POLICY_URL` is still empty and is the last step: host `web/`, then set it here and the same address in the Play Console listing.
+
+---
 ## [0.23.6] - Unreleased
 ### Changed
 - The privacy policy names a contact address (zhadowseb@gmail.com), states that FitVen is run by a private individual with no CVR number, and sets the minimum age at 13 — the age Danish law lets somebody consent to their own data being processed, and the lowest the app can set without a way to ask a parent.
