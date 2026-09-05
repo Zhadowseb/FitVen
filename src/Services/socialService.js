@@ -1293,3 +1293,62 @@ export async function getBlockedProfiles({ userId }) {
     }))
   );
 }
+
+/* ------------------------------------------------------- privacy consent -- */
+
+/**
+ * Which version of the policy this user has agreed to, if any. Null means they
+ * have never been asked, which the consent gate treats as outstanding.
+ */
+export async function getPrivacyConsent({ user }) {
+  if (!user?.id) {
+    return { version: null, acceptedAt: null };
+  }
+
+  const { data, error } = await supabase
+    .from(PROFILE_PRIVATE_TABLE)
+    .select("privacy_policy_version, privacy_policy_accepted_at")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (error) {
+    throw normalizeSocialError(error);
+  }
+
+  return {
+    version: data?.privacy_policy_version ?? null,
+    acceptedAt: data?.privacy_policy_accepted_at ?? null,
+  };
+}
+
+export async function acceptPrivacyPolicy({ user, version }) {
+  if (!user?.id) {
+    throw new Error("You need to be signed in to accept the privacy policy.");
+  }
+
+  if (!version) {
+    throw new Error("Missing privacy policy version.");
+  }
+
+  // The profile row has to exist first: profile_private is keyed on it, and a
+  // brand new account reaches the consent screen before anything else has
+  // touched the profile.
+  await ensureOwnProfile(user);
+
+  const acceptedAt = new Date().toISOString();
+  const { error } = await supabase.from(PROFILE_PRIVATE_TABLE).upsert(
+    {
+      user_id: user.id,
+      privacy_policy_version: version,
+      privacy_policy_accepted_at: acceptedAt,
+      updated_at: acceptedAt,
+    },
+    { onConflict: "user_id" }
+  );
+
+  if (error) {
+    throw normalizeSocialError(error);
+  }
+
+  return { version, acceptedAt };
+}

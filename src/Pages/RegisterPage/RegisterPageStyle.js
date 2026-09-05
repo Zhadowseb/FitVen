@@ -128,4 +128,14 @@ export default StyleSheet.create({
     fontSize: 13,
     lineHeight: 19,
   },
+  privacyLink: {
+    minHeight: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 8,
+  },
+  privacyLinkText: {
+    fontSize: 13,
+    fontWeight: "600",
+  },
 });

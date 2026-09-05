@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.23.2] - Unreleased
+### Added
+- A privacy policy screen, reachable from the profile and from the register screen, and a consent gate that stands in front of the app until the current version has been accepted. Which version was accepted, and when, is stored — a boolean would not survive the policy text changing.
+- `scripts/check-privacy-policy.js` in `npm test`. It prints a loud warning while the policy is a draft, and fails outright once `PRIVACY_POLICY_URL` is filled in but placeholders remain, so a published policy cannot keep them.
+
+### Notes
+- **The policy text is a skeleton and must not ship as it stands.** Eight statements in `src/Resources/Legal/privacyPolicy.js` are marked `[SKAL UDFYLDES]` and are legal facts nobody but the controller can supply: who is responsible, the contact address, third parties that receive data, retention after backups, and the minimum age.
+- Google Play separately requires the policy at a public URL. `PRIVACY_POLICY_URL` is empty.
+- Requires `supabase/migrations/20260905174500_privacy-consent.sql`. Without it the gate fails open and nobody is asked, which means no consent is being collected at all.
+- The gate also fails open on a network error. Being locked out of your own training data because Supabase is unreachable is the worse failure.
+
+---
 ## [0.23.1] - Unreleased
 ### Added
 - Delete account, at the bottom of the account card in your profile. It removes your programs, workouts, records, posts, follows, notifications, profile and photo from the cloud, deletes the sign-in itself, and removes this phone's copy of the database. You type DELETE to confirm; there is no undo and no grace period.

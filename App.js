@@ -24,6 +24,7 @@ import ProgramSettingsPage from './src/Pages/ProgramSettingsPage/ProgramSettings
 import WorkoutPostsPage from './src/Pages/WorkoutPostsPage/WorkoutPostsPage';
 import MicrocyclePage from './src/Pages/MicrocyclePage/MicrocyclePage';
 import SearchPage from "./src/Pages/SearchPage/SearchPage";
+import PrivacyPolicyPage from "./src/Pages/PrivacyPolicyPage/PrivacyPolicyPage";
 import SocialUserListPage from "./src/Pages/SocialUserListPage/SocialUserListPage";
 import WeekPage from './src/Pages/WeekPage/WeekPage';
 import WorkoutPage from './src/Pages/WorkoutPage/WorkoutPage';
@@ -58,6 +59,7 @@ import "./src/Services/locationBackgroundTask";
 import { AuthProvider, useAuth } from './src/Contexts/AuthContext';
 import { ThemeModeProvider, useThemeMode } from './src/Contexts/ThemeContext';
 import { ExerciseViewSettingsProvider } from './src/Contexts/ExerciseViewSettingsContext';
+import PrivacyConsentGate from "./src/Resources/Components/PrivacyConsentGate/PrivacyConsentGate";
 import ExerciseLibrarySync from "./src/Sync/ExerciseLibrarySync";
 import PushNotificationRegistrationSync from "./src/Sync/PushNotificationRegistrationSync";
 import SetSync from "./src/Sync/SetSync";
@@ -283,6 +285,7 @@ function RootNavigator() {
                 <Stack.Screen name="ExerciseSocialPostSettingsPage" component={ExerciseSocialPostSettingsPage} options={{ headerShown: false }} />
                 <Stack.Screen name="OneRepMaxCalculatorPage" component={OneRepMaxCalculatorPage} options={{ headerShown: false }} />
                 <Stack.Screen name="WorkoutTypesSettingsPage" component={WorkoutTypesSettingsPage} options={{ headerShown: false }} />
+                <Stack.Screen name="PrivacyPolicyPage" component={PrivacyPolicyPage} options={{ headerShown: false }} />
                 <Stack.Screen
                   name={RUN_HEART_RATE_CHART_ROUTE}
                   component={RunHeartRateChartPage}
@@ -301,6 +304,10 @@ function RootNavigator() {
               <>
                 <Stack.Screen name="LoginPage" component={LoginPage} options={{ headerShown: false }} />
                 <Stack.Screen name="RegisterPage" component={RegisterPage} options={{ headerShown: false }} />
+                {/* Registered on both sides: art. 13 says people have to be
+                    able to read this before they hand over an email address,
+                    not only after they are signed in. */}
+                <Stack.Screen name="PrivacyPolicyPage" component={PrivacyPolicyPage} options={{ headerShown: false }} />
               </>
             )}
           </Stack.Navigator>
@@ -362,7 +369,9 @@ function UserScopedDatabaseApp() {
       <SetSync />
       <WorkoutTypeInstanceSync />
       <PushNotificationRegistrationSync />
-      <RootNavigator key={`accent-${accentTheme}`} />
+      <PrivacyConsentGate>
+        <RootNavigator key={`accent-${accentTheme}`} />
+      </PrivacyConsentGate>
     </SQLiteProvider>
   );
 }

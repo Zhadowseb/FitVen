@@ -41,6 +41,7 @@ behind by accident.
 | `20260905113510_drop-unused-template-tables.sql` | no |
 | `20260905143000_user-blocks.sql` | no |
 | `20260905161500_delete-account.sql` | no |
+| `20260905174500_privacy-consent.sql` | no |
 
 `20260905113510_drop-unused-template-tables.sql` is optional: it drops the seven
 `*_template` tables, and only if they are genuinely empty. Run it or delete it.
@@ -52,6 +53,9 @@ error, because the app now asks for a function that does not exist yet.
 `20260905161500_delete-account.sql` is the account-deletion side and pairs with
 the `delete-account` Edge Function. Both have to be in place, or Delete account
 in the profile fails with a function error.
+
+`20260905174500_privacy-consent.sql` adds the two columns the consent gate
+writes to. Without it the gate cannot read or write an answer, fails open, and nobody is ever asked - so consent is not being collected at all.
 
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to

@@ -944,6 +944,35 @@ export default function ProfilePage() {
               <TouchableOpacity
                 activeOpacity={0.85}
                 accessibilityRole="button"
+                accessibilityLabel="Privacy"
+                onPress={() => navigation.navigate("PrivacyPolicyPage")}
+                style={styles.deleteAccountRow}
+              >
+                <View style={styles.accountInfo}>
+                  <ThemedText style={styles.accountValue} setColor={theme.title}>
+                    Privacy
+                  </ThemedText>
+                  <ThemedText
+                    style={styles.deleteAccountHint}
+                    setColor={theme.quietText}
+                  >
+                    What FitVen stores about you, and what you agreed to.
+                  </ThemedText>
+                </View>
+
+                <ChevronRight
+                  width={16}
+                  height={16}
+                  stroke={theme.quietText}
+                  color={theme.quietText}
+                />
+              </TouchableOpacity>
+
+              <InsetDivider />
+
+              <TouchableOpacity
+                activeOpacity={0.85}
+                accessibilityRole="button"
                 accessibilityLabel="Delete account"
                 onPress={() => setDeleteModalVisible(true)}
                 style={styles.deleteAccountRow}

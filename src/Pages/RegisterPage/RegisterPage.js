@@ -1,6 +1,7 @@
 import { StatusBar } from "expo-status-bar";
-import { View, useColorScheme } from "react-native";
+import { TouchableOpacity, View, useColorScheme } from "react-native";
 import { useState } from "react";
+import { useNavigation } from "@react-navigation/native";
 
 import styles from "./RegisterPageStyle";
 import { Colors } from "../../Resources/GlobalStyling/colors";
@@ -23,6 +24,7 @@ import {
 export default function RegisterPage() {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const navigation = useNavigation();
   const [usernameBase, setUsernameBase] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -279,6 +281,23 @@ export default function RegisterPage() {
                 {submitState.message}
               </ThemedText>
             ) : null}
+
+            {/* Art. 13: readable before an email address is handed over, not
+                only after. Consent itself is taken on first sign-in, where
+                there is a profile row to record it against. */}
+            <TouchableOpacity
+              activeOpacity={0.7}
+              accessibilityRole="link"
+              onPress={() => navigation.navigate("PrivacyPolicyPage")}
+              style={styles.privacyLink}
+            >
+              <ThemedText
+                style={styles.privacyLinkText}
+                setColor={theme.primaryText ?? theme.primary}
+              >
+                How FitVen handles your data
+              </ThemedText>
+            </TouchableOpacity>
           </View>
         </ThemedKeyboardProtection>
       </View>
