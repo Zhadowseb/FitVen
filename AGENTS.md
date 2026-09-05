@@ -7,9 +7,55 @@ Keep the root guide short and place domain-specific rules in closer `AGENTS.md` 
 
 ## Project Snapshot
 
-- `programapp` is an Expo / React Native application.
+- `programapp` is an Expo / React Native application (Android and iOS).
 - Main application code lives in `src/`.
+- Data lives in a per-user local SQLite database **and** syncs to Supabase.
+  This is not an offline-only app: every data change has a cloud side.
 - Use `package.json` scripts as the source of truth for local commands.
+
+## Commands
+
+```
+npm run start          # Expo dev client
+npm run android        # native run
+npm test               # every check, including the doc drift check
+npm run version:auto   # right after creating a work branch
+npm run version:status # verify the branch/version state
+```
+
+There is no linter and no type checking. `npm test` covers a handful of
+isolated helpers plus the doc drift check, so changes to services,
+repositories and screens cannot be verified automatically. Read the code.
+
+## The Layers
+
+```
+Pages ──▶ Services ──▶ Repository ──▶ Database (SQLite)
+  │           └──────▶ Supabase (cloud)
+  └──▶ Resources, Utils, Contexts
+```
+
+Screens call services. Services call repositories. Repositories write SQL.
+The one deliberate exception is auth: Login, Register and Profile reach
+`Services/authService`, which is the only thing that touches
+`Database/supaBaseClient` for sign-in.
+
+## What Most Often Goes Wrong Here
+
+1. **A new database field has to be remembered in 8 to 11 places across four
+   layers.** Skip the cloud half and the field works on one phone and vanishes
+   on the next. The checklist is in `src/Services/AGENTS.md`.
+2. **The schema lives in two files.** `src/Database/schema/*.js` is the truth
+   for a fresh install, `src/Database/db.js` for an existing one. Both have to
+   change, and they have to end up in the same place.
+3. **Colours must never sit in a `*Style.js`.** `applyAccentTheme()` mutates
+   the `Colors` object in place, and `StyleSheet.create` runs once at import.
+   See `src/Pages/AGENTS.md`.
+4. **Never alias one layer to another layer's name.** 45 function names exist
+   in both `Services` and `Repository` with the same signature, so
+   `import { xService as xRepository }` sends the next reader to the wrong
+   file. `npm test` fails if one reappears.
+5. **`src/Sync/` only runs what `App.js` mounts.** See `src/Sync/AGENTS.md`.
 
 ## Global Working Rules
 
@@ -32,8 +78,8 @@ Before editing any file:
 Before handoff:
 
 1. Run `npm run version:status`.
-2. Verify that the changelog contains the current branch version and describes the actual changes.
-3. Run the relevant tests or checks and inspect `git diff --check`.
+2. Verify that the changelog contains the current branch version and describes the actual changes. Read only the top: `sed -n '1,60p' CHANGELOG.md`. The current version is always first, and the rest is history you do not need.
+3. Run `npm test` and inspect `git diff --check`.
 4. Report the current branch, validation results, and any uncommitted or unpushed changes explicitly.
 
 ## GitHub Issue Fixes
@@ -66,8 +112,25 @@ Before handoff:
 - If a release closes one version line and the next work should start the next minor line, use `npm run version:sync -- <nextMinor>.0` on the first follow-up branch before continuing normal branch versioning.
 - See `docs/VERSIONING.md` for the full workflow and branch rules.
 
+## Keeping These Guides True
+
+These files are only worth reading if they are correct, and the fastest way to
+make them worthless is to change the code and leave them behind.
+
+- If a change makes a sentence in any `AGENTS.md`, `CLAUDE.md` or `README.md`
+  wrong, fix the sentence in the same commit. That includes deleting a rule
+  once the thing it warns about is gone.
+- `npm test` runs `scripts/check-agent-docs.js`, which fails when a path named
+  in a guide no longer exists, when a documented npm script is missing, or when
+  one of the invariants the guides promise stops holding. It cannot check
+  prose, so it is a floor, not a substitute for reading.
+- Do not add a second set of guides. `CLAUDE.md` is a pointer to `AGENTS.md`,
+  never a copy.
+
 ## Local Guides
 
 - `src/AGENTS.md`: source structure and layering
 - `src/Pages/AGENTS.md`: UI and screen work
 - `src/Database/AGENTS.md`: schema and data safety
+- `src/Services/AGENTS.md`: the cloud sync field checklist
+- `src/Sync/AGENTS.md`: which sync components actually run

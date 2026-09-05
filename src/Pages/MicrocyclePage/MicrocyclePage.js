@@ -19,7 +19,7 @@ import {
   ThemedPicker,
 } from "../../Resources/ThemedComponents";
 
-import { programService as programRepository } from "../../Services";
+import { programService } from "../../Services";
 
 const MicrocyclePage = ({ route }) => {
   const db = useSQLiteContext();
@@ -48,7 +48,7 @@ const MicrocyclePage = ({ route }) => {
 
   const deleteMesocycle = async () => {
     try {
-      await programRepository.deleteMesocycle(db, mesocycle_id);
+      await programService.deleteMesocycle(db, mesocycle_id);
     } catch (error) {
       console.error("deleteMesocycle failed:", error);
       throw error;
@@ -77,7 +77,7 @@ const MicrocyclePage = ({ route }) => {
 
   const updateFocus = async (nextFocus) => {
     try {
-      await programRepository.updateMesocycleFocus(db, {
+      await programService.updateMesocycleFocus(db, {
         mesocycleId: mesocycle_id,
         focus: nextFocus,
       });
@@ -90,7 +90,7 @@ const MicrocyclePage = ({ route }) => {
 
   const addExtraWeek = async () => {
     try {
-      await programRepository.addWeekToMesocycle(db, {
+      await programService.addWeekToMesocycle(db, {
         mesocycleId: mesocycle_id,
         programId: program_id,
       });

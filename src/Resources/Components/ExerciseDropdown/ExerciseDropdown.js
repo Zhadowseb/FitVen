@@ -4,7 +4,7 @@ import { useSQLiteContext } from "expo-sqlite";
 
 import styles from "./ExerciseDropdownStyle";
 import { Colors } from "../../GlobalStyling/colors";
-import { weightliftingService as weightliftingRepository } from "../../../Services";
+import { weightliftingService } from "../../../Services";
 import { ThemedPicker, ThemedText } from "../../ThemedComponents";
 
 const ExerciseDropdown = ({ selectedExerciseName, onChange }) => {
@@ -18,7 +18,7 @@ const ExerciseDropdown = ({ selectedExerciseName, onChange }) => {
     try {
       setLoading(true);
 
-      const rows = await weightliftingRepository.getExerciseStorage(db);
+      const rows = await weightliftingService.getExerciseStorage(db);
 
       setExercises(rows);
 

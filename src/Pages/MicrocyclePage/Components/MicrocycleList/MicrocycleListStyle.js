@@ -36,7 +36,6 @@ export default StyleSheet.create({
 
   dayContextBackdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.04)",
   },
 
   dayContextMenu: {

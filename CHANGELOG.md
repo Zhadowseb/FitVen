@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.22.0] - Unreleased
+### Added
+- `npm test` — one command that runs every check, including a new drift check over the agent guides.
+- `scripts/check-agent-docs.js`, which fails when a guide names a path that no longer exists, tells you to run a script that is gone, or promises an invariant the code has stopped holding.
+- `src/Services/AGENTS.md` with the checklist for adding a field to a synced table, and `src/Sync/AGENTS.md` with the table of which sync components actually run.
+- A `scrimSoft` colour token for a tap-catcher that dims rather than darkens.
+
+### Changed
+- Thirteen files no longer import a service under a repository's name. 45 function names exist in both layers with the same signature, so the alias sent readers to the wrong file.
+- The agent guides now cover what the code depends on and cannot be read from it: the sync field checklist, the two schema files, the theming rule, the layering, and what the five names for "exercise" mean.
+- README no longer reproduces the folder tree, no longer claims the app has no backend, and no longer says WeekPage is unused without mentioning that a live screen depends on a component inside it.
+
+---
 ## [0.21.12] - 2026-09-05
 ### Security
 - Profile pictures are read through short-lived signed URLs instead of permanent public links, so an avatar can no longer be collected once and kept, and deleting one actually takes it away. Requires `docs/supabase-avatar-private-bucket.sql` and, once this version has shipped, the `avatars` bucket set to Private.

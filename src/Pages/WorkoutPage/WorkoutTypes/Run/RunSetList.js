@@ -27,7 +27,7 @@ import Plus from "../../../../Resources/Icons/UI-icons/Plus";
 import Snow from "../../../../Resources/Icons/UI-icons/Snow";
 import styles from "./RunStyle";
 import ListHeader from "./ListHeader";
-import { runningService as runningRepository } from "../../../../Services";
+import { runningService } from "../../../../Services";
 import { getRunSetCompletionMode } from "../../../../Utils/runIntervalUtils";
 import { getZoneColor } from "../../../../Utils/heartRateUtils";
 
@@ -307,7 +307,7 @@ const RunSetList = ({
 
   const loadRunSets = useCallback(async () => {
     try {
-      const rows = await runningRepository.getRunSets(db, {
+      const rows = await runningService.getRunSets(db, {
         workoutId: workout_id,
         type,
       });
@@ -384,7 +384,7 @@ const RunSetList = ({
       setDistanceUnitManuallySelected(false);
     }
 
-    await runningRepository.updateRunSetField(db, {
+    await runningService.updateRunSetField(db, {
       runId,
       field: "distance",
       value: nextDistance,
@@ -511,14 +511,14 @@ const RunSetList = ({
         selectedSet.completion_target === "time" &&
         !(Number(value) > 0));
 
-    await runningRepository.updateRunSetField(db, {
+    await runningService.updateRunSetField(db, {
       runId: selectedSet.Run_id,
       field,
       value,
     });
 
     if (clearsCompletionTarget) {
-      await runningRepository.updateRunSetField(db, {
+      await runningService.updateRunSetField(db, {
         runId: selectedSet.Run_id,
         field: "completion_target",
         value: null,
@@ -556,7 +556,7 @@ const RunSetList = ({
   const deleteSet = async () => {
     if (!selectedSet) return;
 
-    await runningRepository.deleteRunSet(db, {
+    await runningService.deleteRunSet(db, {
       runId: selectedSet.Run_id,
       workoutId: workout_id,
       type,
@@ -572,7 +572,7 @@ const RunSetList = ({
 
     const newValue = selectedSet.is_pause ? 0 : 1;
 
-    await runningRepository.toggleRunSetPause(db, {
+    await runningService.toggleRunSetPause(db, {
       runId: selectedSet.Run_id,
       workoutId: workout_id,
       type,
@@ -587,7 +587,7 @@ const RunSetList = ({
   };
 
   const toggleDone = async (set) => {
-    await runningRepository.updateRunSetDone(db, {
+    await runningService.updateRunSetDone(db, {
       runId: set.Run_id,
       done: !set.done,
     });
@@ -728,7 +728,7 @@ const RunSetList = ({
               ]}
               onPress={async () => {
                 closeZoneDropdown();
-                await runningRepository.updateRunSetField(db, {
+                await runningService.updateRunSetField(db, {
                   runId: set.Run_id,
                   field: "heartrate",
                   value: null,
@@ -755,7 +755,7 @@ const RunSetList = ({
                   onPress={async () => {
                     closeZoneDropdown();
 
-                    await runningRepository.updateRunSetField(db, {
+                    await runningService.updateRunSetField(db, {
                       runId: set.Run_id,
                       field: "heartrate",
                       value: zone.value,
@@ -851,7 +851,7 @@ const RunSetList = ({
             keyboardType: "numbers-and-punctuation",
             displayFormatter: (value) => formatPaceDisplay(value),
             onCommit: async (value) => {
-              await runningRepository.updateRunSetField(db, {
+              await runningService.updateRunSetField(db, {
                 runId: set.Run_id,
                 field: "pace",
                 value: value === "" ? null : value,
@@ -884,7 +884,7 @@ const RunSetList = ({
                 keyboardType: "numbers-and-punctuation",
                 displayFormatter: (value) => formatMinutesClock(value),
                 onCommit: async (value) => {
-                  await runningRepository.updateRunSetField(db, {
+                  await runningService.updateRunSetField(db, {
                     runId: set.Run_id,
                     field: "time",
                     value: parseDurationInput(value),
@@ -1015,7 +1015,7 @@ const RunSetList = ({
             keyboardType: "numbers-and-punctuation",
             displayFormatter: (value) => formatPaceDisplay(value),
             onCommit: async (value) => {
-              await runningRepository.updateRunSetField(db, {
+              await runningService.updateRunSetField(db, {
                 runId: set.Run_id,
                 field: "pace",
                 value: value === "" ? null : value,
@@ -1040,7 +1040,7 @@ const RunSetList = ({
               keyboardType: "numbers-and-punctuation",
               displayFormatter: (value) => formatMinutesClock(value),
               onCommit: async (value) => {
-                await runningRepository.updateRunSetField(db, {
+                await runningService.updateRunSetField(db, {
                   runId: set.Run_id,
                   field: "time",
                   value: parseDurationInput(value),

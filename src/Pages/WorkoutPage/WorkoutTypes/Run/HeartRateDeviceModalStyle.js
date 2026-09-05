@@ -4,7 +4,6 @@ export default StyleSheet.create({
   overlay: {
     flex: 1,
     justifyContent: "flex-end",
-    backgroundColor: "rgba(0, 0, 0, 0.58)",
   },
   sheet: {
     maxHeight: "82%",

@@ -61,9 +61,9 @@ import {
 import {
   locationService,
   heartRateService,
-  runningService as runningRepository,
+  runningService,
   socialService,
-  workoutService as workoutRepository,
+  workoutService,
 } from "../../../../Services";
 
 const RUN_HEART_RATE_ZONES = [1, 2, 3, 4, 5];
@@ -1132,7 +1132,7 @@ const Run = ({
   }, [activeRunSegment]);
 
   const persistCurrentTimerState = useCallback(async () => {
-    await workoutRepository.persistWorkoutTimerState(db, {
+    await workoutService.persistWorkoutTimerState(db, {
       workoutId: workout_id,
       timerStart: timerStartRef.current,
       elapsedTime: elapsedTimeRef.current,
@@ -1205,7 +1205,7 @@ const Run = ({
 
   const loadRunStructureState = useCallback(async () => {
     try {
-      const sets = await runningRepository.getOrderedRunSetsForWorkout(
+      const sets = await runningService.getOrderedRunSetsForWorkout(
         db,
         workout_id
       );
@@ -1232,7 +1232,7 @@ const Run = ({
     activeSetCalculationInFlightRef.current = true;
 
     try {
-      const orderedSets = await runningRepository.getOrderedRunSetsForWorkout(
+      const orderedSets = await runningService.getOrderedRunSetsForWorkout(
         db,
         workout_id
       );
@@ -1301,7 +1301,7 @@ const Run = ({
             : [];
 
         if (completionMode === "manual") {
-          await runningRepository.updateRunSetDone(db, {
+          await runningService.updateRunSetDone(db, {
             runId: sets[i].Run_id,
             done: true,
           });
@@ -1329,7 +1329,7 @@ const Run = ({
               distanceKm: distanceProgress.targetKm,
             });
 
-            await runningRepository.completeRunSet(db, {
+            await runningService.completeRunSet(db, {
               runId: sets[i].Run_id,
               actualDistanceKm: distanceProgress.completedKm,
               actualDurationSeconds,
@@ -1356,7 +1356,7 @@ const Run = ({
           }
         } else if (completionMode === "time" && elapsedInSegment >= setDuration) {
           if (!sets[i].done) {
-            await runningRepository.updateRunSetDone(db, {
+            await runningService.updateRunSetDone(db, {
               runId: sets[i].Run_id,
               done: true,
             });
@@ -1449,7 +1449,7 @@ const Run = ({
       return;
     }
 
-    const row = await workoutRepository.getWorkoutTimerState(db, workout_id);
+    const row = await workoutService.getWorkoutTimerState(db, workout_id);
 
     if (requestId !== workoutStateLoadRequestRef.current) {
       return;
@@ -1647,7 +1647,7 @@ const Run = ({
       0
     );
 
-    await workoutRepository.persistWorkoutTimerState(db, {
+    await workoutService.persistWorkoutTimerState(db, {
       workoutId: workout_id,
       timerStart: null,
       elapsedTime: newElapsed,
@@ -1668,18 +1668,18 @@ const Run = ({
     invalidatePendingWorkoutStateLoads();
 
     try {
-      const row = await workoutRepository.getWorkoutOriginalStartTime(db, workout_id);
+      const row = await workoutService.getWorkoutOriginalStartTime(db, workout_id);
       const start_time = getCurrentStoredTimestampSeconds();
       const isFreshStart = row.original_start_time === null;
 
       if (isFreshStart) {
-        await workoutRepository.setWorkoutOriginalStartTime(db, {
+        await workoutService.setWorkoutOriginalStartTime(db, {
           workoutId: workout_id,
           startTime: start_time,
         });
       }
 
-      await workoutRepository.persistWorkoutTimerState(db, {
+      await workoutService.persistWorkoutTimerState(db, {
         workoutId: workout_id,
         timerStart: start_time,
         elapsedTime: elapsedTimeRef.current ?? elapsed_time,
@@ -1690,14 +1690,14 @@ const Run = ({
           resetLogs: isFreshStart,
         });
       } catch (trackingError) {
-        await workoutRepository.persistWorkoutTimerState(db, {
+        await workoutService.persistWorkoutTimerState(db, {
           workoutId: workout_id,
           timerStart: null,
           elapsedTime: elapsedTimeRef.current ?? elapsed_time,
         });
 
         if (isFreshStart) {
-          await workoutRepository.setWorkoutOriginalStartTime(db, {
+          await workoutService.setWorkoutOriginalStartTime(db, {
             workoutId: workout_id,
             startTime: null,
           });
@@ -1707,7 +1707,7 @@ const Run = ({
       }
 
       if (isFreshStart) {
-        workoutRepository.notifyWorkoutStartedInBackground(db, {
+        workoutService.notifyWorkoutStartedInBackground(db, {
           workoutId: workout_id,
           startedAt: start_time,
         });
@@ -1781,7 +1781,7 @@ const Run = ({
       set_elapsed_time(finalElapsed);
       clearActiveSegment();
 
-      await workoutRepository.setWorkoutDone(db, {
+      await workoutService.setWorkoutDone(db, {
         workoutId: workout_id,
         done: true,
       });
@@ -1811,8 +1811,8 @@ const Run = ({
     try {
       await stopRunTrackingSafely();
       await locationService.clearTrackedRunData(db, workout_id);
-      await runningRepository.resetRunSetProgress(db, workout_id);
-      await workoutRepository.resetWorkoutState(db, workout_id);
+      await runningService.resetRunSetProgress(db, workout_id);
+      await workoutService.resetWorkoutState(db, workout_id);
       set_original_start_time(null);
       set_timer_start(null);
       set_elapsed_time(0);
@@ -1846,7 +1846,7 @@ const Run = ({
 
   const addSet = async (setVariety) => {
     try {
-      await runningRepository.addRunSet(db, {
+      await runningService.addRunSet(db, {
         workoutId: workout_id,
         type: setVariety,
         addAutomaticPause: selectedRunFlow !== "endurance-base",
@@ -1865,7 +1865,7 @@ const Run = ({
     set_isSelectingRunFlow(false);
 
     try {
-      await workoutRepository.updateWorkoutRunFocusType(db, {
+      await workoutService.updateWorkoutRunFocusType(db, {
         workoutId: workout_id,
         runFocusType: nextRunFlowId,
       });
@@ -1879,7 +1879,7 @@ const Run = ({
     set_isSelectingRunFlow(true);
 
     try {
-      await workoutRepository.updateWorkoutRunFocusType(db, {
+      await workoutService.updateWorkoutRunFocusType(db, {
         workoutId: workout_id,
         runFocusType: null,
       });
@@ -3451,12 +3451,12 @@ const Run = ({
       enduranceZonePreparingRef.current = true;
 
       try {
-        await runningRepository.addRunSet(db, {
+        await runningService.addRunSet(db, {
           workoutId: workout_id,
           type: "WORKING_SET",
           addAutomaticPause: false,
         });
-        const sets = await runningRepository.getOrderedRunSetsForWorkout(
+        const sets = await runningService.getOrderedRunSetsForWorkout(
           db,
           workout_id
         );
@@ -3531,7 +3531,7 @@ const Run = ({
     }
 
     try {
-      await runningRepository.updateRunSetField(db, {
+      await runningService.updateRunSetField(db, {
         runId: targetSet.Run_id,
         field,
         value,
@@ -3582,7 +3582,7 @@ const Run = ({
     closeEnduranceZoneDropdown();
 
     try {
-      await runningRepository.updateRunSetField(db, {
+      await runningService.updateRunSetField(db, {
         runId: enduranceZoneSetId,
         field: "heartrate",
         value: zone,

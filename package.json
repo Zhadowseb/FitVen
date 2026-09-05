@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.21.12",
+  "version": "0.22.0-major-structure-audit.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",
@@ -10,6 +10,8 @@
     "android:dev": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
+    "test": "node scripts/check-agent-docs.js && npm run test:custom-exercise && npm run test:location && npm run test:run-intervals && npm run test:program-progress && npm run test:workout-finish && npm run test:profile-birthdate && npm run test:heart-rate-settings && npm run test:ble-heart-rate && npm run test:notifications",
+    "docs:check": "node scripts/check-agent-docs.js",
     "version:auto": "node scripts/version.js auto",
     "version:branch": "node scripts/version.js branch",
     "version:status": "node scripts/version.js status",

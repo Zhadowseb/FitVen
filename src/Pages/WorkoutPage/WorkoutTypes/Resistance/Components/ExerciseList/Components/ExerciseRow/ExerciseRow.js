@@ -24,7 +24,7 @@ import {
   ThemedTitle,
 } from "../../../../../../../../Resources/ThemedComponents";
 import PanelSettingsModal from "./PanelSettingsModal";
-import { weightliftingService as weightliftingRepository } from "../../../../../../../../Services";
+import { weightliftingService } from "../../../../../../../../Services";
 import { useExerciseViewSettings } from "../../../../../../../../Contexts/ExerciseViewSettingsContext";
 import ReanimatedAnimated, {
   runOnJS,
@@ -284,7 +284,7 @@ const ExerciseRow = ({
 
   const deleteExercise = async (exerciseId) => {
     try {
-      await weightliftingRepository.deleteExercise(db, exerciseId);
+      await weightliftingService.deleteExercise(db, exerciseId);
       await updateUI?.();
       await onWorkoutMetadataChange?.();
     } catch (error) {
@@ -370,11 +370,11 @@ const ExerciseRow = ({
   };
 
   const saveExerciseSettings = async ({ columns, note }) => {
-    await weightliftingRepository.updateExerciseVisibleColumns(db, {
+    await weightliftingService.updateExerciseVisibleColumns(db, {
       exerciseId: exercise.exercise_id,
       columns,
     });
-    await weightliftingRepository.updateExerciseNote(db, {
+    await weightliftingService.updateExerciseNote(db, {
       exerciseId: exercise.exercise_id,
       note,
     });
@@ -392,7 +392,7 @@ const ExerciseRow = ({
       setHistoryLoading(true);
       setHistoryLoadError(false);
 
-      const history = await weightliftingRepository.getExerciseHistory(db, {
+      const history = await weightliftingService.getExerciseHistory(db, {
         exerciseId: exercise.exercise_id,
         exerciseName: exercise.exercise_name,
         limit: 3,

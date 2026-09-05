@@ -43,7 +43,7 @@ export default function HeartRateDeviceModal({
       transparent
       onRequestClose={onClose}
     >
-      <View style={styles.overlay}>
+      <View style={[styles.overlay, { backgroundColor: theme.sheetScrim }]}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
         <View
           style={[

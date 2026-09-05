@@ -58,6 +58,9 @@ export const Colors = {
         // white is the only legible ink on the danger fill.
         onDanger: "#FFFFFF",
         scrim: "rgba(0, 0, 0, 0.5)",
+        scrimSoft: "rgba(0, 0, 0, 0.04)",
+        // Barely a tint - a tap-catcher behind a popover, not a dimmer.
+        scrimSoft: "rgba(0, 0, 0, 0.04)",
         sheetScrim: "rgba(0, 0, 0, 0.62)",
 
         iconColor: "#868C99",

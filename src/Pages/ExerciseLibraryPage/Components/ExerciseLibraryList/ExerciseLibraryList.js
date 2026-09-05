@@ -14,7 +14,7 @@ import { useState, useEffect } from "react";
 
 import styles from "./ExerciseLibraryListStyle";
 import ExerciseFilterSheet from "../ExerciseFilterSheet/ExerciseFilterSheet";
-import { weightliftingService as weightliftingRepository } from "../../../../Services";
+import { weightliftingService } from "../../../../Services";
 import { Colors, withAlpha } from "../../../../Resources/GlobalStyling/colors";
 import Cross from "../../../../Resources/Icons/UI-icons/Cross";
 import BodyMapPreview from "../../../../Resources/Components/BodyMapPreview/BodyMapPreview";
@@ -341,7 +341,7 @@ const ExerciseLibraryList = ({
   const loadExerciseStorage = async () => {
     try {
       setIsLoadingExercises(true);
-      const rows = await weightliftingRepository.getExerciseLibraryEntries(db);
+      const rows = await weightliftingService.getExerciseLibraryEntries(db);
       set_exercises(rows);
     } catch (error) {
       console.error("Error loading exercise storage", error);

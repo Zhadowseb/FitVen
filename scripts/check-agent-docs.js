@@ -1,0 +1,186 @@
+#!/usr/bin/env node
+// Fails when a guide has drifted away from the code.
+//
+// AGENTS.md, CLAUDE.md and README.md are only worth reading if they are true,
+// and the cheapest way to make them worthless is to change the code and leave
+// them behind. That is exactly how README ended up claiming this app has no
+// backend while five sync loops were running.
+//
+// Two kinds of check:
+//   1. Every repo path a guide names in backticks has to exist.
+//   2. Every invariant a guide promises has to still hold.
+//
+// It cannot read prose. It is a floor, not a substitute for reading.
+
+const fs = require("fs");
+const path = require("path");
+
+const root = path.resolve(__dirname, "..");
+const problems = [];
+
+const DOCS = [
+  "AGENTS.md",
+  "CLAUDE.md",
+  "README.md",
+  "src/AGENTS.md",
+  "src/Pages/AGENTS.md",
+  "src/Database/AGENTS.md",
+  "src/Services/AGENTS.md",
+  "src/Sync/AGENTS.md",
+];
+
+function read(rel) {
+  const full = path.join(root, rel);
+
+  return fs.existsSync(full) ? fs.readFileSync(full, "utf8") : null;
+}
+
+function walk(dir, out = []) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (entry.name === "node_modules" || entry.name.startsWith(".")) continue;
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) walk(full, out);
+    else out.push(path.relative(root, full).split(path.sep).join("/"));
+  }
+
+  return out;
+}
+
+const allFiles = walk(root);
+const allDirs = new Set(
+  allFiles.map((f) => path.posix.dirname(f)).flatMap((d) => {
+    const parts = d.split("/");
+
+    return parts.map((_, i) => parts.slice(0, i + 1).join("/"));
+  })
+);
+
+// ---------------------------------------------------------------- paths ----
+// Only tokens that actually look like a repo path, so `npm run start`,
+// `auth.uid()` and a bare table name are left alone.
+const ROOTS = ["src", "docs", "scripts", "supabase", "assets", "plugins", "android"];
+const FILE_AT_ROOT = /^(App|index|package|app|eas|tsconfig|babel|metro)\.(js|json)$/;
+
+function looksLikePath(token) {
+  if (token.includes(" ") || token.includes("(")) return false;
+  if (FILE_AT_ROOT.test(token)) return true;
+
+  const head = token.split("/")[0];
+
+  return token.includes("/") && ROOTS.includes(head);
+}
+
+for (const rel of DOCS) {
+  const text = read(rel);
+
+  if (text === null) {
+    problems.push(`${rel} is listed as a guide but does not exist`);
+    continue;
+  }
+
+  const seen = new Set();
+
+  for (const match of text.matchAll(/`([^`\n]+)`/g)) {
+    // strip a trailing slash, a line reference, and any glob
+    const token = match[1].replace(/[:#].*$/, "").replace(/\/$/, "");
+
+    if (!looksLikePath(token) || seen.has(token)) continue;
+    seen.add(token);
+
+    if (token.includes("*")) {
+      const dir = path.posix.dirname(token);
+      const suffix = path.posix.basename(token).replace("*", "");
+      const hit = allFiles.some(
+        (f) => path.posix.dirname(f) === dir && f.endsWith(suffix)
+      );
+      if (!hit) problems.push(`${rel} names \`${token}\`, which matches nothing`);
+      continue;
+    }
+
+    if (!allFiles.includes(token) && !allDirs.has(token)) {
+      problems.push(`${rel} names \`${token}\`, which does not exist`);
+    }
+  }
+}
+
+// ------------------------------------------------------------ npm scripts --
+const pkg = JSON.parse(read("package.json"));
+
+for (const rel of DOCS) {
+  const text = read(rel) ?? "";
+
+  for (const match of text.matchAll(/npm run ([a-z][a-z0-9:-]*)/g)) {
+    if (!(match[1] in pkg.scripts)) {
+      problems.push(`${rel} tells you to run \`npm run ${match[1]}\`, which is not a script`);
+    }
+  }
+}
+
+// ------------------------------------------------------------ invariants ---
+const sourceFiles = allFiles.filter(
+  (f) => f.endsWith(".js") && (f.startsWith("src/") || f === "App.js")
+);
+
+function sourcesMatching(pattern) {
+  return sourceFiles.filter((f) => pattern.test(fs.readFileSync(path.join(root, f), "utf8")));
+}
+
+// "Never alias one layer to another layer's name" - root and src AGENTS.md
+const aliased = sourcesMatching(/Service as [A-Za-z]+Repository/);
+
+if (aliased.length) {
+  problems.push(
+    `the guides promise no layer aliasing, but ${aliased.length} file(s) still do it:\n    ` +
+      aliased.join("\n    ")
+  );
+}
+
+// "src/Sync only runs what App.js mounts" - the table in src/Sync/AGENTS.md
+const appSource = read("App.js");
+const syncTable = read("src/Sync/AGENTS.md") ?? "";
+
+for (const file of allFiles.filter((f) => /^src\/Sync\/.*Sync\.js$/.test(f))) {
+  const name = path.posix.basename(file, ".js");
+
+  if (!appSource.includes(`<${name} `) && !appSource.includes(`<${name}/`)) {
+    problems.push(`src/Sync/${name}.js is not mounted in App.js - mount it or delete it`);
+  }
+
+  if (!syncTable.includes(name)) {
+    problems.push(`src/Sync/${name}.js is missing from the table in src/Sync/AGENTS.md`);
+  }
+}
+
+// "Colours must never sit in a *Style.js" - src/Pages/AGENTS.md.
+// Shadows and text over photographs are the documented exceptions.
+const COLOUR_IN_STYLE = /^\s*(?!shadowColor)[A-Za-z]+:\s*"(#[0-9a-fA-F]{3,8}|rgba?\()/m;
+const ALLOWED = new Set(["src/Pages/SearchPage/SearchPageStyle.js"]);
+const colouredStyles = allFiles
+  .filter((f) => f.endsWith("Style.js") && !ALLOWED.has(f))
+  .filter((f) => COLOUR_IN_STYLE.test(fs.readFileSync(path.join(root, f), "utf8")));
+
+if (colouredStyles.length) {
+  problems.push(
+    `the guides promise no colours in a *Style.js, but ${colouredStyles.length} file(s) have one:\n    ` +
+      colouredStyles.join("\n    ")
+  );
+}
+
+// The guides that the root file points at have to exist
+for (const match of (read("AGENTS.md") ?? "").matchAll(/^- `(src\/[^`]+AGENTS\.md)`/gm)) {
+  if (!allFiles.includes(match[1])) {
+    problems.push(`AGENTS.md points at ${match[1]}, which does not exist`);
+  }
+}
+
+// ---------------------------------------------------------------- report ---
+if (problems.length) {
+  console.error("Agent guides have drifted from the code:\n");
+  for (const problem of problems) console.error(`  - ${problem}`);
+  console.error(
+    `\n${problems.length} problem(s). Fix the guide or the code, whichever is wrong.`
+  );
+  process.exit(1);
+}
+
+console.log(`Agent guide checks passed (${DOCS.length} documents).`);

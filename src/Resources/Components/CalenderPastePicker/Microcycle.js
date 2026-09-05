@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
 
-import { programService as programRepository } from "../../../Services";
+import { programService } from "../../../Services";
 import { Colors, withAlpha } from "../../GlobalStyling/colors";
 import ArrowLeft from "../../Icons/UI-icons/ArrowLeft";
 import Checkmark from "../../Icons/UI-icons/Checkmark";
@@ -131,7 +131,7 @@ const Microcycle = ({
         setLoading(true);
 
         const { mesocycles: mesoRows, microcycles: microRows } =
-          await programRepository.getMicrocycleOptions(db, program_id);
+          await programService.getMicrocycleOptions(db, program_id);
 
         setMesocycles(mesoRows);
         setMicrocycles(microRows);

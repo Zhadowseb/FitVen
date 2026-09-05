@@ -31,7 +31,7 @@ import Amrap from "../../../../../../../../../Resources/Icons/UI-icons/Amrap";
 import Plus from "../../../../../../../../../Resources/Icons/UI-icons/Plus";
 import Cogwheel from "../../../../../../../../../Resources/Icons/UI-icons/Cogwheel";
 import Star from "../../../../../../../../../Resources/Icons/UI-icons/Star";
-import { weightliftingService as weightliftingRepository } from "../../../../../../../../../Services";
+import { weightliftingService } from "../../../../../../../../../Services";
 
 const SET_LIST_COLUMN_KEYS = [
   "note",
@@ -67,7 +67,7 @@ const resolveSetListVisibleColumns = (visibleColumns) => {
   }
 
   const defaultColumns =
-    weightliftingRepository.DEFAULT_VISIBLE_COLUMNS ??
+    weightliftingService.DEFAULT_VISIBLE_COLUMNS ??
     SET_LIST_DEFAULT_VISIBLE_COLUMNS;
 
   if (
@@ -393,7 +393,7 @@ const SetList = ({
       return;
     }
 
-    await weightliftingRepository.deleteSet(db, setId);
+    await weightliftingService.deleteSet(db, setId);
     await updateUI?.();
     await onWorkoutMetadataChange?.();
   };
@@ -426,7 +426,7 @@ const SetList = ({
       prev?.sets_id === setId ? { ...prev, [field]: nextValue } : prev
     );
 
-    const result = await weightliftingRepository.updateSetField(db, {
+    const result = await weightliftingService.updateSetField(db, {
       field,
       value: nextValue,
       setId,
@@ -461,7 +461,7 @@ const SetList = ({
 
     await Promise.all(
       mirroredSetIds.map((mirroredSetId) =>
-        weightliftingRepository.updateSetField(db, {
+        weightliftingService.updateSetField(db, {
           field: "pause",
           value: nextValue,
           setId: mirroredSetId,
@@ -477,7 +477,7 @@ const SetList = ({
       return;
     }
 
-    const result = await weightliftingRepository.updateSetRmPercentage(db, {
+    const result = await weightliftingService.updateSetRmPercentage(db, {
       setId,
       rmPercentage: value,
     });
@@ -515,7 +515,7 @@ const SetList = ({
       return;
     }
 
-    const result = await weightliftingRepository.updateSetWeight(db, {
+    const result = await weightliftingService.updateSetWeight(db, {
       setId,
       weight: value,
     });

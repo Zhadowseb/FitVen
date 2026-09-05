@@ -34,7 +34,7 @@ import { getWorkoutIconConfig } from "../../../../Resources/Icons/WorkoutLabels"
 import PickWorkoutModal from "../../../WeekPage/Components/Day/Components/PickWorkoutModal/PickWorkoutModal";
 
 import styles from "./MicrocycleListStyle";
-import { programService as programRepository } from "../../../../Services";
+import { programService } from "../../../../Services";
 
 import {
         ThemedText,
@@ -225,7 +225,7 @@ const MicrocycleList = ({
     try {
       setLoading(true);
       const cycles =
-        await programRepository.getMicrocyclesByMesocycle(db, mesocycle_id);
+        await programService.getMicrocyclesByMesocycle(db, mesocycle_id);
 
       const enriched = enrichMicrocycles(cycles);
       setMicrocycles(enriched);
@@ -257,7 +257,7 @@ const MicrocycleList = ({
       const days = [];
 
       for (let i = 0; i < 7; i++) {
-        const dayRow = await programRepository.getDayDetails(db, {
+        const dayRow = await programService.getDayDetails(db, {
           microcycleId: mc.microcycle_id,
           weekday: weekDayNames[i],
         });
@@ -337,7 +337,7 @@ const MicrocycleList = ({
     try {
       setLoading(true);
 
-      await programRepository.updateMicrocycleFocus(db, {
+      await programService.updateMicrocycleFocus(db, {
         microcycleId: microcycle_id,
         focus,
       });
@@ -354,7 +354,7 @@ const MicrocycleList = ({
     try {
       setLoading(true);
 
-      await programRepository.copyMicrocycleWorkouts(db, {
+      await programService.copyMicrocycleWorkouts(db, {
         sourceMicrocycleId: source_microcycle_id,
         targetMicrocycleId: target_microcycle_id,
       });
@@ -429,7 +429,7 @@ const MicrocycleList = ({
 
   const deleteMicrocycle = async (microcycle_id) => {
     try {
-      await programRepository.deleteMicrocycle(db, microcycle_id);
+      await programService.deleteMicrocycle(db, microcycle_id);
 
       updateui(); // refresh list
       set_OptionsBottomsheet_visible(false);
@@ -570,7 +570,7 @@ const MicrocycleList = ({
 
   const deleteWorkout = async (workoutId) => {
     try {
-      await programRepository.deleteWorkout(db, workoutId);
+      await programService.deleteWorkout(db, workoutId);
       setPickWorkoutModalVisible(false);
       setDayOptionsVisible(false);
       setSelectedDay(null);
@@ -664,7 +664,7 @@ const MicrocycleList = ({
       return null;
     }
 
-    const previousDayRow = await programRepository.getDayByDate(db, {
+    const previousDayRow = await programService.getDayByDate(db, {
       programId: program_id,
       date: previousDate,
     });
@@ -689,7 +689,7 @@ const MicrocycleList = ({
       const dayRow =
         day.dayId
           ? { day_id: day.dayId }
-          : await programRepository.getDayByMicrocycleAndDate(db, {
+          : await programService.getDayByMicrocycleAndDate(db, {
               microcycleId: day.microcycleId,
               date: day.date,
             });
@@ -699,7 +699,7 @@ const MicrocycleList = ({
         return;
       }
 
-      await programRepository.markDaySick(db, {
+      await programService.markDaySick(db, {
         dayId: dayRow.day_id,
         isSick: nextIsSick,
         date: day.date,
@@ -839,7 +839,7 @@ const MicrocycleList = ({
 
   const copyWorkoutToDate = async (workoutId, date) => {
     try {
-      const copiedWorkoutId = await programRepository.copyProgramWorkoutToDate(db, {
+      const copiedWorkoutId = await programService.copyProgramWorkoutToDate(db, {
         workoutId,
         programId: program_id,
         date,
@@ -1166,7 +1166,10 @@ const MicrocycleList = ({
     >
       <View style={styles.dayContextOverlay}>
         <Pressable
-          style={styles.dayContextBackdrop}
+          style={[
+            styles.dayContextBackdrop,
+            { backgroundColor: theme.scrimSoft },
+          ]}
           onPress={() => setDayOptionsVisible(false)}
         />
 

@@ -10,7 +10,7 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useNavigation } from "@react-navigation/native";
 
 import styles from "./ExerciseListStyle.js";
-import { weightliftingService as weightliftingRepository } from "../../../../../../Services";
+import { weightliftingService } from "../../../../../../Services";
 
 import ExerciseRow from "./Components/ExerciseRow/ExerciseRow"
 import PlusCircled from "../../../../../../Resources/Icons/UI-icons/PlusCircled";
@@ -121,7 +121,7 @@ const ExerciseList = ({
     try {
       setLoading(true);
 
-      const localExercises = await weightliftingRepository.getWorkoutExercises(
+      const localExercises = await weightliftingService.getWorkoutExercises(
         db,
         workout_id,
         { ensureHydrated: false }
@@ -137,7 +137,7 @@ const ExerciseList = ({
         return;
       }
 
-      const hydratedExercises = await weightliftingRepository.getWorkoutExercises(
+      const hydratedExercises = await weightliftingService.getWorkoutExercises(
         db,
         workout_id,
         { ensureHydrated: true }
@@ -335,7 +335,7 @@ const ExerciseList = ({
       );
 
       try {
-        await weightliftingRepository.addSetToExercise(db, exerciseId);
+        await weightliftingService.addSetToExercise(db, exerciseId);
       } catch (error) {
         console.error("addSetToExercise failed:", error);
       }
@@ -371,7 +371,7 @@ const ExerciseList = ({
     }
 
     try {
-      const result = await weightliftingRepository.updateStrengthSetDone(db, {
+      const result = await weightliftingService.updateStrengthSetDone(db, {
         workoutId: workout_id,
         setId: sets_id,
         done,
@@ -708,7 +708,7 @@ const ExerciseList = ({
     }
 
     try {
-      await weightliftingRepository.reorderWorkoutExercises(db, {
+      await weightliftingService.reorderWorkoutExercises(db, {
         workoutId: workout_id,
         exerciseIds: nextExerciseIds,
       });
