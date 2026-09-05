@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.23.15] - Unreleased
+### Added
+- `supabase/templates/` holds the auth emails — confirm signup, reset password, magic link, change email. They were only ever in the dashboard, which has no history, no review, and nothing to recover from. They still have to be pasted in by hand; the repo is the record of what was pasted.
+- `npm test` fails if a template links to `{{ .RedirectTo }}` or leaves a stray quote after an `href`. Those are the two faults that were in the reset template, and neither points at itself: the stray quote makes Go's html/template refuse to render, which surfaces as "Error sending recovery email" and reads like a mail server fault, and the wrong variable produces a link with no token that the reset page reports as expired.
+
+---
 ## [0.23.14] - Unreleased
 ### Changed
 - Creating an account ends somewhere. It used to print a line of text, empty the form, and leave you on the screen you had just finished with, no way onwards. There is a panel now that says whether the address needs confirming, and a Go to login button.

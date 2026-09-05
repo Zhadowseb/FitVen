@@ -35,6 +35,12 @@ function read(rel) {
   return fs.existsSync(full) ? fs.readFileSync(full, "utf8") : null;
 }
 
+function list(rel) {
+  const full = path.join(root, rel);
+
+  return fs.existsSync(full) ? fs.readdirSync(full) : null;
+}
+
 function walk(dir, out = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     if (entry.name === "node_modules" || entry.name.startsWith(".")) continue;
@@ -183,6 +189,32 @@ for (const file of allFiles.filter((f) => /^supabase\/migrations\/.*\.sql$/.test
 for (const match of (read("AGENTS.md") ?? "").matchAll(/^- `(src\/[^`]+AGENTS\.md)`/gm)) {
   if (!allFiles.includes(match[1])) {
     problems.push(`AGENTS.md points at ${match[1]}, which does not exist`);
+  }
+}
+
+// The auth email templates, against the two mistakes that were in them.
+//
+// Neither announces itself. A stray quote makes Go's html/template refuse to
+// render, and the send comes back as "Error sending recovery email" - which
+// reads like a mail server fault. The wrong variable sends a link with no token
+// on it, and the page it reaches says the link has expired.
+for (const name of (list("supabase/templates") ?? []).filter((file) =>
+  file.endsWith(".html")
+)) {
+  const template = read(`supabase/templates/${name}`);
+
+  if (template === null) continue;
+
+  if (/href="\{\{\s*\.RedirectTo\s*\}\}"/.test(template)) {
+    problems.push(
+      `supabase/templates/${name} links to {{ .RedirectTo }}, which carries no token - the link has to be {{ .ConfirmationURL }}`
+    );
+  }
+
+  if (/href="[^"]*"\s*"/.test(template)) {
+    problems.push(
+      `supabase/templates/${name} has a stray quote after an href - Go's html/template refuses to render it and the email never sends`
+    );
   }
 }
 
