@@ -128,17 +128,30 @@
   } else {
     var client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: {
-        // The recovery token arrives in the URL and is what stands in for being
-        // signed in. Nothing is kept afterwards: this is a borrowed browser as
-        // often as not.
+        // The recovery token arrives in the URL fragment and is what stands in
+        // for being signed in. Nothing is kept afterwards: this is a borrowed
+        // browser as often as not.
+        //
+        // Not PKCE, deliberately. PKCE keeps a code verifier in the storage of
+        // whatever asked for the reset - the phone - and the link is opened in
+        // a browser that has never seen it, so the exchange could never
+        // complete. The app's client does not use PKCE either, so the link
+        // arrives as #access_token=... and detectSessionInUrl reads it.
         detectSessionInUrl: true,
         persistSession: false,
-        flowType: "pkce",
       },
     });
 
-    client.auth.getSession().then(function (result) {
-      if (result.data && result.data.session) {
+    var decided = false;
+
+    function ready(session) {
+      if (decided) {
+        return;
+      }
+
+      decided = true;
+
+      if (session) {
         intro.textContent = "Choose a new password for your FitVen account.";
         form.hidden = false;
         return;
@@ -148,7 +161,22 @@
       // fails only after somebody has typed a password into it twice.
       intro.textContent =
         "This link has expired or has already been used. Open FitVen, tap Forgot password, and ask for a new one.";
+    }
+
+    // Both, because they race. detectSessionInUrl reads the fragment while the
+    // client is starting up, so getSession() can answer null just before the
+    // token lands - and the event never fires at all when there is no token.
+    client.auth.onAuthStateChange(function (event, session) {
+      if (session) {
+        ready(session);
+      }
     });
+
+    setTimeout(function () {
+      client.auth.getSession().then(function (result) {
+        ready(result.data && result.data.session);
+      });
+    }, 1200);
 
     form.addEventListener("submit", function (event) {
       event.preventDefault();

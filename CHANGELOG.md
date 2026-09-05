@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.23.13] - Unreleased
+### Fixed
+- The password reset page asked Supabase for the PKCE flow, which could never have worked. PKCE keeps a code verifier in the storage of whatever requested the reset — the phone — and the link is opened in a browser that has never seen it. The app does not use PKCE either, so the link arrives as a URL fragment and the page reads that instead.
+- The page decided whether the link was valid by calling `getSession()` once, racing the client's own parse of the fragment. It listens for the session and falls back to a delayed check, so a valid link cannot be reported as expired.
+
+---
 ## [0.23.12] - Unreleased
 ### Changed
 - Forgot password is quiet grey with an underline instead of accent orange. It is the way out for the few people who need it, not something that should pull the eye off the field they were about to fill in.
