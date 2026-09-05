@@ -4,11 +4,11 @@ import { supabase } from "../Database/supaBaseClient";
 import { normalizeElapsedDurationSeconds } from "../Utils/timeUtils";
 import { ensureOwnProfile } from "./socialService";
 import { formatOptionalNumber } from "../Utils/numberUtils";
+import { attachAvatarUrls } from "./avatarUrls";
 
 const SOCIAL_POST_TABLE = "social_post";
 const SOCIAL_POST_LIKE_TABLE = "social_post_like";
 const SOCIAL_POST_HIDDEN_EXERCISE_TABLE = "social_post_hidden_exercise";
-const AVATAR_BUCKET = "avatars";
 const WORKOUT_SUMMARY_POST_TYPE = "workout_summary";
 const SOCIAL_POST_SETUP_MESSAGE =
   "Workout summary posts are not set up in Supabase yet. Run docs/supabase-social-posts.sql and the follow-up social post SQL files in the Supabase SQL editor first.";
@@ -277,19 +277,6 @@ function formatWeightDisplay(value, unit = "kg") {
   return displayValue ? `${displayValue} ${unit}` : null;
 }
 
-function buildAvatarPublicUrl(avatarPath, updatedAt) {
-  if (!avatarPath) {
-    return null;
-  }
-
-  const { data } = supabase.storage.from(AVATAR_BUCKET).getPublicUrl(avatarPath);
-  const publicUrl = data?.publicUrl;
-
-  return publicUrl && updatedAt
-    ? `${publicUrl}?t=${encodeURIComponent(updatedAt)}`
-    : publicUrl ?? null;
-}
-
 function mapPostAuthor(row) {
   const author = Array.isArray(row?.author) ? row.author[0] : row?.author;
 
@@ -306,8 +293,24 @@ function mapPostAuthor(row) {
     id: author.id,
     username: author.username ?? null,
     displayName: author.display_name ?? author.username ?? "FitVen athlete",
-    avatarUrl: buildAvatarPublicUrl(author.avatar_path, author.updated_at),
+    avatarPath: author.avatar_path ?? null,
+    avatarUpdatedAt: author.updated_at ?? null,
+    avatarUrl: null,
   };
+}
+
+// Signing runs once over a whole list rather than per row, so a feed of twenty
+// posts is one request and not twenty.
+async function withAuthorAvatar(post) {
+  await attachAvatarUrls([post], (entry) => entry.author);
+
+  return post;
+}
+
+async function withAuthorAvatars(posts) {
+  await attachAvatarUrls(posts, (entry) => entry.author);
+
+  return posts;
 }
 
 function mapSocialPostRow(row, likesByPostId = new Map(), likedPostIds = new Set()) {
@@ -1120,7 +1123,7 @@ export async function createWorkoutSummaryPostForCompletedWorkout(
       visibility: selectedPostVisibility,
     })
   ) {
-    return mapSocialPostRow(existingPost);
+    return withAuthorAvatar(mapSocialPostRow(existingPost));
   }
 
   const now = new Date().toISOString();
@@ -1155,7 +1158,7 @@ export async function createWorkoutSummaryPostForCompletedWorkout(
     throw normalizeSocialPostError(error);
   }
 
-  return mapSocialPostRow(data);
+  return withAuthorAvatar(mapSocialPostRow(data));
 }
 
 export async function deleteWorkoutSummaryPostForWorkout(db, { workoutId }) {
@@ -1245,7 +1248,9 @@ export async function getWorkoutSummaryFeed({ user, limit = 10, offset = 0 }) {
     }
   });
 
-  return posts.map((post) => mapSocialPostRow(post, likesByPostId, likedPostIds));
+  return withAuthorAvatars(
+    posts.map((post) => mapSocialPostRow(post, likesByPostId, likedPostIds))
+  );
 }
 
 export async function getWorkoutSummaryPostById({ user, postId }) {
@@ -1268,7 +1273,7 @@ export async function getWorkoutSummaryPostById({ user, postId }) {
     throw normalizeSocialPostError(error);
   }
 
-  return mapSocialPostRow(data);
+  return withAuthorAvatar(mapSocialPostRow(data));
 }
 
 export async function updateWorkoutSummaryPostNote({ user, postId, note }) {
@@ -1295,7 +1300,7 @@ export async function updateWorkoutSummaryPostNote({ user, postId, note }) {
     throw normalizeSocialPostError(error);
   }
 
-  return mapSocialPostRow(data);
+  return withAuthorAvatar(mapSocialPostRow(data));
 }
 
 export async function deleteWorkoutSummaryPost({ user, postId }) {

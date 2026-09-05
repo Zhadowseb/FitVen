@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.21.12] - Unreleased
+### Security
+- Profile pictures are read through short-lived signed URLs instead of permanent public links, so an avatar can no longer be collected once and kept, and deleting one actually takes it away. Requires `docs/supabase-avatar-private-bucket.sql` and, once this version has shipped, the `avatars` bucket set to Private.
+
+### Changed
+- The three copies of the avatar URL builder are one shared module that signs a whole list in a single request and caches the result.
+
+---
 ## [0.21.11] - Unreleased
 ### Security
 - `console.log`, `.info` and `.debug` are stripped from production bundles. `error` and `warn` stay.

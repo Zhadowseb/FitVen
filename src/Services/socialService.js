@@ -1,5 +1,11 @@
 import { supabase } from "../Database/supaBaseClient";
 import {
+  AVATAR_BUCKET,
+  attachAvatarUrls,
+  forgetAvatarUrl,
+  getAvatarObjectPath,
+} from "./avatarUrls";
+import {
   calculateAgeFromBirthDate,
   normalizeIsoDateString,
   normalizeLocalDateString,
@@ -28,7 +34,6 @@ const PROFILES_TABLE = "profiles";
 const PROFILE_PRIVATE_TABLE = "profile_private";
 const USER_FOLLOWS_TABLE = "user_follows";
 const WORKOUT_TYPE_INSTANCE_TABLE = "workout_type_instance";
-const AVATAR_BUCKET = "avatars";
 const PROFILE_SELECT_FIELDS =
   "id, username, username_base, username_code, display_name, bio, avatar_path, created_at, updated_at";
 const WORKOUT_ACTIVITY_SELECT_FIELDS =
@@ -45,25 +50,6 @@ export const PROFILE_DISPLAY_NAME_MAX_LENGTH = 40;
 export const PROFILE_BIO_MAX_LENGTH = 160;
 export const PROFILE_AVATAR_MAX_BYTES = 3 * 1024 * 1024;
 const USERNAME_INSERT_RETRY_LIMIT = 3;
-
-function buildAvatarPublicUrl(avatarPath, updatedAt) {
-  if (!avatarPath) {
-    return null;
-  }
-
-  const { data } = supabase.storage.from(AVATAR_BUCKET).getPublicUrl(avatarPath);
-  const publicUrl = data?.publicUrl;
-
-  if (!publicUrl) {
-    return null;
-  }
-
-  return updatedAt ? `${publicUrl}?t=${encodeURIComponent(updatedAt)}` : publicUrl;
-}
-
-function getAvatarObjectPath(userId) {
-  return `${userId}/avatar`;
-}
 
 function createFallbackUsernameBase(user) {
   return slugifyUsernameBase(
@@ -134,7 +120,8 @@ function mapProfileRow(
     maxHeartRateSource: maxHeartRate.source,
     preferredMaxHeartRateSource,
     avatarPath: row.avatar_path ?? null,
-    avatarUrl: buildAvatarPublicUrl(row.avatar_path, updatedAt),
+    avatarUpdatedAt: updatedAt,
+    avatarUrl: null,
     createdAt: row.created_at ?? null,
     updatedAt,
     isFollowing: followingIdSet.has(row.id),
@@ -583,15 +570,21 @@ async function getOwnPrivateSettings(userId) {
 async function mapOwnProfileRow(row, userId) {
   try {
     const privateSettings = await getOwnPrivateSettings(userId);
+    const profile = mapProfileRow(row, new Set(), privateSettings);
+    await attachAvatarUrls([profile]);
+
     return {
-      ...mapProfileRow(row, new Set(), privateSettings),
+      ...profile,
       privateSettingsAvailable: true,
       privateSettingsError: null,
     };
   } catch (error) {
     console.warn("Private profile settings are unavailable:", error);
+    const profile = mapProfileRow(row);
+    await attachAvatarUrls([profile]);
+
     return {
-      ...mapProfileRow(row),
+      ...profile,
       privateSettingsAvailable: false,
       privateSettingsError:
         error instanceof Error
@@ -667,10 +660,12 @@ async function fetchProfilesByIds({ profileIds, currentUserId }) {
     (profiles ?? []).map((profile) => [profile.id, profile])
   );
 
-  return uniqueProfileIds
-    .map((profileId) => profilesById.get(profileId))
-    .filter(Boolean)
-    .map((profile) => mapProfileRow(profile, followingIdSet));
+  return attachAvatarUrls(
+    uniqueProfileIds
+      .map((profileId) => profilesById.get(profileId))
+      .filter(Boolean)
+      .map((profile) => mapProfileRow(profile, followingIdSet))
+  );
 }
 
 async function findAvailableUsernameCode(usernameBase) {
@@ -1002,6 +997,10 @@ export async function uploadOwnAvatar({ user, asset }) {
     throw normalizeSocialError(uploadError);
   }
 
+  // The object path stays the same, so a cached signature would still point at
+  // the picture that was just replaced.
+  forgetAvatarUrl(avatarPath);
+
   const nextUpdatedAt = new Date().toISOString();
   const { data: updatedProfile, error: updateError } = await supabase
     .from(PROFILES_TABLE)
@@ -1054,7 +1053,9 @@ export async function searchUsers({ query, currentUserId, limit = 20 }) {
     profileIds: profiles.map((profile) => profile.id),
   });
 
-  return profiles.map((row) => mapProfileRow(row, followingIdSet));
+  return attachAvatarUrls(
+    profiles.map((row) => mapProfileRow(row, followingIdSet))
+  );
 }
 
 export async function getFollowCounts({ userId }) {
