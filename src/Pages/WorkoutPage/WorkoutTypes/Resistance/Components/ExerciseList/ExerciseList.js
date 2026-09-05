@@ -310,6 +310,11 @@ const ExerciseList = ({
           }
 
           const sets = exercise.sets ?? [];
+          // The same three fields the service copies. Repeated here so the row
+          // appears already filled in: leaving it blank would show empty boxes
+          // for as long as the write takes and then fill them in by itself,
+          // which looks like the app typing over you.
+          const previousSet = sets[sets.length - 1];
 
           return {
             ...exercise,
@@ -319,10 +324,10 @@ const ExerciseList = ({
               {
                 sets_id: placeholderId,
                 set_number: sets.length + 1,
-                reps: null,
-                weight: null,
+                reps: previousSet?.reps ?? null,
+                weight: previousSet?.weight ?? null,
                 rpe: null,
-                pause: null,
+                pause: previousSet?.pause ?? null,
                 rm_percentage: null,
                 personal_record: 0,
                 done: 0,

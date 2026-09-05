@@ -229,6 +229,71 @@ export async function getCompletedExerciseHistorySets(
   );
 }
 
+/**
+ * The last set already logged against this exercise instance, so the next one
+ * can start from it instead of from four empty fields.
+ */
+export async function getLastSetValuesForExercise(db, exerciseId) {
+  return db.getFirstAsync(
+    `SELECT pause, reps, weight
+     FROM "Set"
+     WHERE exercise_instance_id = ?
+       AND COALESCE(deleted_at, '') = ''
+     ORDER BY set_number DESC, sets_id DESC
+     LIMIT 1;`,
+    [exerciseId]
+  );
+}
+
+/**
+ * The last set of the last time this exercise was done, by name, in any earlier
+ * workout. Seeds the first set of a newly added exercise.
+ *
+ * Not restricted to completed sets. Somebody who wrote down 80 kg for 8 and
+ * never ticked the box still lifted 80 for 8, and reaching further back for a
+ * "done" set would offer weights older than the ones they are working from.
+ * A row with nothing in it is skipped, which is what the last condition does.
+ */
+export async function getLastSetValuesForExerciseName(
+  db,
+  { exerciseName, excludeExerciseId = null }
+) {
+  return db.getFirstAsync(
+    `SELECT
+        s.pause,
+        s.reps,
+        s.weight,
+        CASE
+          WHEN COALESCE(d.date, w.date) LIKE '__.__.____'
+          THEN substr(COALESCE(d.date, w.date), 7, 4) || '-' ||
+               substr(COALESCE(d.date, w.date), 4, 2) || '-' ||
+               substr(COALESCE(d.date, w.date), 1, 2)
+          ELSE COALESCE(d.date, w.date)
+        END AS performed_date_sort
+     FROM Exercise_Instance e
+     JOIN Workout_Type_Instance w
+       ON w.workout_id = e.workout_type_instance_id
+     LEFT JOIN Day d
+       ON d.day_id = w.day_id
+     JOIN "Set" s
+       ON s.exercise_instance_id = e.exercise_instance_id
+     WHERE e.exercise_name = ? COLLATE NOCASE
+       AND e.exercise_instance_id <> COALESCE(?, -1)
+       AND COALESCE(s.deleted_at, '') = ''
+       AND COALESCE(e.deleted_at, '') = ''
+       AND COALESCE(w.deleted_at, '') = ''
+       AND COALESCE(d.deleted_at, '') = ''
+       AND (s.pause IS NOT NULL OR s.reps IS NOT NULL OR s.weight IS NOT NULL)
+     ORDER BY
+       performed_date_sort DESC,
+       e.exercise_instance_id DESC,
+       s.set_number DESC,
+       s.sets_id DESC
+     LIMIT 1;`,
+    [exerciseName, excludeExerciseId]
+  );
+}
+
 export async function createExerciseStorage(db, exerciseName) {
   await db.runAsync(
     `INSERT INTO Exercise (name, nickname, default_visible_columns)

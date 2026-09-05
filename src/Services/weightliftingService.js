@@ -3508,15 +3508,34 @@ export async function addExerciseToWorkout(db, { workoutId, exerciseName }) {
         workoutId
       );
 
-    await weightliftingRepository.createExercise(db, {
+    const created = await weightliftingRepository.createExercise(db, {
       workoutId,
       exerciseName,
-      sets: 0,
+      sets: 1,
       visibleColumns,
       exerciseOrder: normalizeExerciseOrder(
         nextExerciseOrder?.exercise_order,
         1
       ),
+    });
+
+    // The exercise arrives with its first set already there. Adding an exercise
+    // and then adding a set to it were always the same intention, and the empty
+    // exercise in between was a state nobody wanted to be in.
+    //
+    // Its values come from the last time this exercise was done, so the common
+    // case - same weight, same reps, same rest as last week - needs no typing
+    // at all. If it has never been done, the fields are empty as before.
+    const previousSet =
+      await weightliftingRepository.getLastSetValuesForExerciseName(db, {
+        exerciseName,
+        excludeExerciseId: created?.lastInsertRowId ?? null,
+      });
+
+    await weightliftingRepository.createSet(db, {
+      setNumber: 1,
+      exerciseId: created.lastInsertRowId,
+      ...carriedSetValues(previousSet),
     });
 
     await workoutRepository.updateWorkoutDone(db, {
@@ -3529,6 +3548,9 @@ export async function addExerciseToWorkout(db, { workoutId, exerciseName }) {
 
   reclassifyWorkoutLabelInBackground(db, workoutId);
   syncExerciseInstancesInBackground(db);
+  // Adding an exercise now creates a row in "Set" as well, so that table has to
+  // be pushed too. Without this the set exists on this phone only.
+  syncSetsInBackground(db);
 }
 
 async function resequenceWorkoutExerciseOrder(db, workoutId) {
@@ -3671,6 +3693,21 @@ export async function deleteExercise(db, exerciseId) {
   syncExerciseInstancesInBackground(db);
 }
 
+/**
+ * The three fields a new set inherits: rest, reps and weight.
+ *
+ * Deliberately not RPE, AMRAP or the note. Those describe what happened on one
+ * particular set, and carrying them forward would put a claim in the row that
+ * nobody made.
+ */
+function carriedSetValues(previousSet) {
+  return {
+    pause: previousSet?.pause ?? null,
+    reps: previousSet?.reps ?? null,
+    weight: previousSet?.weight ?? null,
+  };
+}
+
 export async function addSetToExercise(db, exerciseId) {
   let workoutId = null;
 
@@ -3680,10 +3717,18 @@ export async function addSetToExercise(db, exerciseId) {
       exerciseId
     );
     const row = await weightliftingRepository.countSetsByExercise(db, exerciseId);
+    // Set two starts where set one left off, and so on. A working set almost
+    // always repeats the one before it, and typing the same three numbers again
+    // is the most repeated action in the app.
+    const previousSet = await weightliftingRepository.getLastSetValuesForExercise(
+      db,
+      exerciseId
+    );
 
     await weightliftingRepository.createSet(db, {
       setNumber: (row?.count ?? 0) + 1,
       exerciseId,
+      ...carriedSetValues(previousSet),
     });
 
     await weightliftingRepository.updateExerciseSetCount(db, exerciseId);

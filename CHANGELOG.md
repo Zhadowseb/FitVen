@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.23.19] - Unreleased
+### Changed
+- Adding an exercise to a strength workout gives it its first set straight away. Adding the exercise and then adding a set to it were always the same intention, and the empty exercise in between was a state nobody wanted to be in.
+- That first set starts with the rest, reps and weight from the last time you did the exercise, so the ordinary case — same as last week — needs no typing at all. An exercise you have never done still starts empty.
+- Adding set two, three and so on copies rest, reps and weight from the set above it.
+
+### Added
+- `scripts/test-set-carry-over.js`, which runs the two queries behind this against a real SQLite database built by the test. They fail quietly — the fields simply hold numbers from the wrong session, which looks like the right answer until somebody notices they are lifting last month's weight — so the test covers ordering across both date formats in this schema, deleted sets and exercises, blank rows, and case-insensitive names.
+
+### Notes
+- RPE, AMRAP and the note are deliberately not carried over. They describe what happened on one particular set, and copying them would put a claim in the row that nobody made.
+
+---
 ## [0.23.18] - Unreleased
 ### Changed
 - The deletion page says how to delete part of your data without losing the account. That has always been true — a program, a workout, a set, a tracked run and its route, a sickness entry, a post can each go on their own — but the page only described deleting everything, which is the answer Play asks about separately and checks at that address.
