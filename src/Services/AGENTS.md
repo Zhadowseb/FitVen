@@ -6,11 +6,25 @@ This file applies to `src/Services`.
 
 ## What Lives Here
 
-Business logic and multi-step flows, plus the cloud sync engine.
-`programService.js` carries both: the sync engine for seven entities, and the
-program domain. Note that **`Set` and `Exercise_Instance` sync live in
-`programService.js`, not in `weightliftingService.js`** — the file name does not
-tell you that.
+Business logic and multi-step flows. The cloud sync engine is
+`src/Services/cloudSync/`, one module per entity over a shared base:
+
+```
+cloudSyncShared.js  identity, normalisation, payload building, watcher/cascade
+programSync.js      ─┐
+mesocycleSync.js     │ each syncs its parent first, so the chain runs
+microcycleSync.js    │ parent to child and the modules stay acyclic
+daySync.js           │
+workoutTypeInstanceSync.js
+exerciseInstanceSync.js
+setSync.js          ─┘
+hierarchy.js        pushes all seven in one pass - this is what SetSync mounts
+workoutTypes.js     the workout type catalog
+index.js            re-exported by programService, so callers see no change
+```
+
+Note that **`Set` and `Exercise_Instance` sync live here, not in
+`weightliftingService.js`** — the names do not tell you that.
 
 ## Adding A Field To A Synced Table
 
@@ -29,10 +43,10 @@ Using `Set` as the example:
 | 2 | `src/Database/db.js` | add it to the table rebuild — the truth for an **existing install**. Both, always. |
 | 3 | `src/Repository/weightliftingRepository.js` | add it to every SELECT that reads the row |
 | 4 | `src/Repository/weightliftingRepository.js` | add it to INSERT/UPDATE, and keep the sync bookkeeping (see below) |
-| 5 | `src/Services/programService.js` `getComparableSetSnapshot` | otherwise a change to the field never counts as a change |
-| 6 | `src/Services/programService.js` `areComparableSetsEqual` | same |
-| 7 | `src/Services/programService.js` `buildCloudSetPayload` | otherwise the field is never uploaded |
-| 8 | `src/Services/programService.js` `reconcileSetsFromCloud` | otherwise the next pull overwrites it locally |
+| 5 | `src/Services/cloudSync/cloudSyncShared.js` `getComparableSetSnapshot` | otherwise a change to the field never counts as a change |
+| 6 | `src/Services/cloudSync/cloudSyncShared.js` `areComparableSetsEqual` | same |
+| 7 | `src/Services/cloudSync/cloudSyncShared.js` `buildCloudSetPayload` | otherwise the field is never uploaded |
+| 8 | `src/Services/cloudSync/setSync.js` `reconcileSetsFromCloud` | otherwise the next pull overwrites it locally |
 | 9 | `src/Services/weightliftingService.js` | normalisation or derived fields, if any |
 | 10 | the screen | display |
 | 11 | **the Supabase table** | a migration in `supabase/migrations/`, and somebody has to run it against the project |
@@ -41,7 +55,8 @@ Steps 5 to 8 are the ones that get skipped. They are the cloud half.
 
 For another entity, swap `Set` for its name: the same four functions exist per
 entity, named `getComparableXSnapshot`, `areComparableXsEqual`,
-`buildCloudXPayload` and `reconcileXsFromCloud`.
+`buildCloudXPayload` and `reconcileXsFromCloud`. The first three are in
+`cloudSyncShared.js`, the fourth in that entity's own module.
 
 ## Rules That The Code Depends On
 

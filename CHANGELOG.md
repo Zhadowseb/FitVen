@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.22.4] - Unreleased
+### Changed
+- The cloud sync engine moved out of `programService.js` into `src/Services/cloudSync/`, one module per entity over a shared base. `programService.js` drops from 7,424 lines to 2,164, and the largest sync module is 601. Everything is re-exported, so no caller changed.
+
+---
 ## [0.22.3] - Unreleased
 ### Added
 - Path aliases `@contexts`, `@database`, `@repository`, `@resources`, `@services` and `@utils`, defined in `babel.config.js` and mirrored in `tsconfig.json`.
