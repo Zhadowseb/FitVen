@@ -13,6 +13,8 @@ import { getDatabaseNameForUserId } from "../Database/localDatabase";
 // src/AGENTS.md. This is the seam they go through now.
 
 const DELETE_ACCOUNT_FUNCTION = "delete-account";
+// web/reset-password/index.html. Kept in step with that page by npm test.
+const PASSWORD_RESET_REDIRECT = "https://fitven.netlify.app/reset-password/";
 // The local database file is still open when the account is deleted. The
 // provider in App.js remounts on the auth change and closes it, but not before
 // this returns, so the delete is retried a few times rather than raced.
@@ -115,4 +117,31 @@ export async function deleteAccount({ user } = {}) {
     removedFileCount: data?.removedFileCount ?? 0,
     localDatabaseRemoved,
   };
+}
+
+/**
+ * Sends the "set a new password" email.
+ *
+ * The link in it lands on a web page, not back in the app. It has to work from
+ * whatever the person opens their mail in, on a phone that may no longer have
+ * FitVen on it - a deep link would need the scheme registered, the app present
+ * and the right build, which is three ways to leave somebody locked out.
+ *
+ * Supabase has to allow PASSWORD_RESET_REDIRECT under Authentication - URL
+ * Configuration - Redirect URLs, or it refuses to send anyone there.
+ */
+export async function requestPasswordReset({ email }) {
+  const normalizedEmail = String(email ?? "").trim().toLowerCase();
+
+  if (!normalizedEmail) {
+    throw new Error("Enter your email address first.");
+  }
+
+  const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
+    redirectTo: PASSWORD_RESET_REDIRECT,
+  });
+
+  if (error) {
+    throw error;
+  }
 }

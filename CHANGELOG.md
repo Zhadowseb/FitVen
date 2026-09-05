@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.23.11] - Unreleased
+### Added
+- Forgot password, under the Login button. It sends a link to set a new one, and says the same thing whether or not the address has an account — anything else turns the login screen into a way to ask which email addresses are registered.
+- `web/reset-password/` is where that link lands. A web page rather than a screen in the app: the link has to work from whatever the person opens their mail in, on a phone that may not have FitVen on it any more, and a deep link would need the scheme registered, the app installed and the right build — three ways to leave somebody locked out of their own account.
+- `npm test` fails if the reset page points at a different Supabase project or anon key than the app. Nothing else connects the two, and a mismatch would break only for people who are already locked out and cannot report it from inside the app.
+
+### Notes
+- **Supabase has to allow the address.** Authentication → URL Configuration → Redirect URLs must list `https://fitven.netlify.app/reset-password/`, or the link in the email refuses to go there.
+- Untested end to end: sending a real reset email needs that allowlist entry first.
+
+---
 ## [0.23.10] - Unreleased
 ### Changed
 - The login screen had two identical orange full-width buttons stacked on each other, so nothing said which one you came here to do. Create account is an outline under a `New here?` label; Login keeps the fill.

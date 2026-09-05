@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>FitVen — Set a new password</title>
+<!--
+  Where the "forgot password" email lands.
+
+  It is a web page and not a screen in the app because the link has to work from
+  whatever the person opens their mail in, on a phone that may not have FitVen
+  installed any more. A deep link back into the app would need the scheme
+  registered, the app present, and the right build - three ways to leave somebody
+  locked out of their own account.
+
+  The anon key below is the same one shipped inside the app. It is meant to be
+  public: everything it can reach is behind row-level security. It is kept in
+  step with src/Database/supaBaseClient.js by npm test.
+
+  Supabase has to allow this address under Authentication - URL Configuration -
+  Redirect URLs, or the link in the email refuses to come here.
+-->
+<style>
+  :root {
+    color-scheme: light dark;
+    --ink: #16181d;
+    --quiet: #5c626e;
+    --ground: #ffffff;
+    --field: #ffffff;
+    --rule: #d9dde3;
+    --accent: #f26d5b;
+    --danger: #c8382a;
+    --ok: #1f7a4d;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #edeff3;
+      --quiet: #a2a9b6;
+      --ground: #121419;
+      --field: #1b1f26;
+      --rule: #333944;
+      --danger: #ff8b7d;
+      --ok: #58d39a;
+    }
+  }
+  body {
+    margin: 0;
+    padding: 48px 20px 64px;
+    background: var(--ground);
+    color: var(--ink);
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 400px; margin: 0 auto; }
+  h1 { font-size: 26px; margin: 0 0 8px; }
+  p { margin: 0 0 20px; color: var(--quiet); }
+  label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+  input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    font-size: 16px;
+    color: var(--ink);
+    background: var(--field);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+  }
+  button {
+    width: 100%;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #16181d;
+    background: var(--accent);
+    border: 0;
+    border-radius: 14px;
+    cursor: pointer;
+  }
+  button[disabled] { opacity: .55; cursor: default; }
+  .message { margin-top: 18px; font-size: 14px; }
+  .error { color: var(--danger); }
+  .ok { color: var(--ok); }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Set a new password</h1>
+  <p id="intro">Checking your link…</p>
+
+  <form id="form" hidden>
+    <label for="password">New password</label>
+    <input id="password" type="password" autocomplete="new-password" minlength="6" required>
+
+    <label for="confirm">Repeat it</label>
+    <input id="confirm" type="password" autocomplete="new-password" minlength="6" required>
+
+    <button id="submit" type="submit">Save password</button>
+  </form>
+
+  <p id="message" class="message" hidden></p>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+  // Same values as src/Database/supaBaseClient.js.
+  var SUPABASE_URL = "https://tgfeedchhogerswntuvy.supabase.co";
+  var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRnZmVlZGNoaG9nZXJzd250dXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzODAwMjcsImV4cCI6MjA4OTk1NjAyN30.yKXLdHRx64c_TqY9dmZPFjG2tYRlOx_t4QDrlBc9WfQ";
+  // The app refuses anything shorter; the two have to agree or somebody sets a
+  // password here that will not let them back in.
+  var MINIMUM_PASSWORD_LENGTH = 6;
+
+  var intro = document.getElementById("intro");
+  var form = document.getElementById("form");
+  var message = document.getElementById("message");
+  var submit = document.getElementById("submit");
+
+  function say(text, kind) {
+    message.textContent = text;
+    message.className = "message " + (kind || "");
+    message.hidden = false;
+  }
+
+  if (!window.supabase) {
+    intro.textContent =
+      "This page could not load. Check your connection and open the link again.";
+  } else {
+    var client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        // The recovery token arrives in the URL and is what stands in for being
+        // signed in. Nothing is kept afterwards: this is a borrowed browser as
+        // often as not.
+        detectSessionInUrl: true,
+        persistSession: false,
+        flowType: "pkce",
+      },
+    });
+
+    client.auth.getSession().then(function (result) {
+      if (result.data && result.data.session) {
+        intro.textContent = "Choose a new password for your FitVen account.";
+        form.hidden = false;
+        return;
+      }
+
+      // A recovery link is single use and expires. Saying so beats a form that
+      // fails only after somebody has typed a password into it twice.
+      intro.textContent =
+        "This link has expired or has already been used. Open FitVen, tap Forgot password, and ask for a new one.";
+    });
+
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+
+      var password = document.getElementById("password").value;
+      var confirm = document.getElementById("confirm").value;
+
+      if (password.length < MINIMUM_PASSWORD_LENGTH) {
+        say("The password has to be at least " + MINIMUM_PASSWORD_LENGTH + " characters.", "error");
+        return;
+      }
+
+      if (password !== confirm) {
+        say("The two passwords are not the same.", "error");
+        return;
+      }
+
+      submit.disabled = true;
+      submit.textContent = "Saving…";
+
+      client.auth.updateUser({ password: password }).then(function (result) {
+        if (result.error) {
+          submit.disabled = false;
+          submit.textContent = "Save password";
+          say(result.error.message || "Could not save the password.", "error");
+          return;
+        }
+
+        form.hidden = true;
+        intro.hidden = true;
+        say("Password changed. Open FitVen and sign in with it.", "ok");
+        client.auth.signOut();
+      });
+    });
+  }
+</script>
+</body>
+</html>

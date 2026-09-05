@@ -1,11 +1,12 @@
 import { StatusBar } from "expo-status-bar";
-import { View, useColorScheme } from "react-native";
+import { Pressable, View, useColorScheme } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useState } from "react";
 
 import styles from "./LoginPageStyle";
 import { Colors } from "../../Resources/GlobalStyling/colors";
 import { authService } from "../../Services";
+import Checkmark from "../../Resources/Icons/UI-icons/Checkmark";
 import Cross from "../../Resources/Icons/UI-icons/Cross";
 import Eye from "../../Resources/Icons/UI-icons/Eye";
 import {
@@ -25,6 +26,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
+  const [isSendingReset, setIsSendingReset] = useState(false);
   const [submitState, setSubmitState] = useState({
     status: "idle",
     message: "",
@@ -58,6 +60,47 @@ export default function LoginPage() {
     }
 
     return errors;
+  };
+
+  // Deliberately says the same thing whether or not the address has an
+  // account. Anything else turns this screen into a way to ask which email
+  // addresses are registered.
+  const handleForgotPassword = async () => {
+    if (isSendingReset) {
+      return;
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail) {
+      setFieldErrors({
+        email: "Enter your email address, then tap this again.",
+      });
+      setSubmitState({ status: "idle", message: "" });
+      return;
+    }
+
+    setFieldErrors({});
+    setIsSendingReset(true);
+
+    try {
+      await authService.requestPasswordReset({ email: normalizedEmail });
+      setSubmitState({
+        status: "sent",
+        message:
+          "If that address has an account, a link to set a new password is on its way. It expires, and it only works once.",
+      });
+    } catch (error) {
+      setSubmitState({
+        status: "error",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Could not send the email. Try again.",
+      });
+    } finally {
+      setIsSendingReset(false);
+    }
   };
 
   const handleLogin = async () => {
@@ -208,6 +251,29 @@ export default function LoginPage() {
                 </ThemedText>
               </View>
             ) : null}
+
+            {submitState.status === "sent" && submitState.message ? (
+              <View style={styles.errorRow}>
+                <Checkmark width={15} height={15} color={theme.secondary} />
+                <ThemedText style={styles.errorText} setColor={quietText}>
+                  {submitState.message}
+                </ThemedText>
+              </View>
+            ) : null}
+
+            <Pressable
+              onPress={handleForgotPassword}
+              disabled={isSendingReset}
+              accessibilityRole="button"
+              style={styles.forgotLink}
+            >
+              <ThemedText
+                style={styles.forgotLinkText}
+                setColor={theme.primaryText ?? theme.primary}
+              >
+                {isSendingReset ? "Sending..." : "Forgot password?"}
+              </ThemedText>
+            </Pressable>
 
             <View style={styles.alternativeBlock}>
               <ThemedText style={styles.alternativeLabel} setColor={quietText}>

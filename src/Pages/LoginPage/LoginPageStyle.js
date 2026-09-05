@@ -102,8 +102,20 @@ export default StyleSheet.create({
     lineHeight: 19,
   },
 
+  forgotLink: {
+    minHeight: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 6,
+  },
+
+  forgotLinkText: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+
   alternativeBlock: {
-    marginTop: 24,
+    marginTop: 18,
     gap: 10,
   },
 

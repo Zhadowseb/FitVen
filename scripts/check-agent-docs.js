@@ -186,6 +186,51 @@ for (const match of (read("AGENTS.md") ?? "").matchAll(/^- `(src\/[^`]+AGENTS\.m
   }
 }
 
+// The password reset page talks to the same project as the app.
+//
+// It is a static page outside the bundle, so nothing else connects the two. If
+// the project or its anon key ever changes, the app keeps working and the reset
+// link quietly stops - and it only fails for somebody who is already locked out
+// and cannot report it from inside the app.
+const resetPage = read("web/reset-password/index.html");
+const client = read("src/Database/supaBaseClient.js");
+
+if (resetPage === null) {
+  problems.push(
+    "web/reset-password/index.html is missing - the forgot-password email has nowhere to land"
+  );
+} else if (client !== null) {
+  const pairs = [
+    ["SUPABASE_URL", /supabaseUrl = '([^']+)'/, /var SUPABASE_URL = "([^"]+)"/],
+    ["anon key", /supabaseAnonKey = '([^']+)'/, /var SUPABASE_ANON_KEY = "([^"]+)"/],
+  ];
+
+  for (const [label, appPattern, pagePattern] of pairs) {
+    const inApp = client.match(appPattern)?.[1];
+    const inPage = resetPage.match(pagePattern)?.[1];
+
+    if (!inApp || !inPage) {
+      problems.push(
+        `Could not read the ${label} out of both supaBaseClient.js and the reset page - the check that keeps them in step is broken`
+      );
+    } else if (inApp !== inPage) {
+      problems.push(
+        `web/reset-password/index.html uses a different ${label} than the app - the reset link would reach the wrong project`
+      );
+    }
+  }
+
+  const redirect = read("src/Services/authService.js")?.match(
+    /PASSWORD_RESET_REDIRECT = "([^"]+)"/
+  )?.[1];
+
+  if (redirect && !redirect.includes("/reset-password/")) {
+    problems.push(
+      `PASSWORD_RESET_REDIRECT is ${redirect}, which is not the reset page`
+    );
+  }
+}
+
 // The public site serves exactly one directory.
 //
 // web/README.md promises this, and the promise is the whole reason the privacy
