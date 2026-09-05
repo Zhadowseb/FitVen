@@ -1141,11 +1141,11 @@ const Run = ({
 
   const stopRunTrackingSafely = useCallback(async () => {
     try {
-      await locationService.stopRunTracking(db, workout_id);
+      await locationService.stopRunTracking(db);
     } catch (error) {
       console.error("Failed to stop run tracking cleanly:", error);
     }
-  }, [db, workout_id]);
+  }, [db]);
 
   const invalidatePendingWorkoutStateLoads = useCallback(() => {
     workoutStateLoadRequestRef.current += 1;

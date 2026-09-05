@@ -113,9 +113,20 @@ assert.match(
   workoutNotificationFunctionSource,
   /\.from\("notification_inbox"\)[\s\S]*\.from\("push_tokens"\)/
 );
+// A register call must not switch another account's row off on demand: it may
+// only release a row that has gone stale, and otherwise register itself
+// disabled.
 assert.match(
   managePushTokenFunctionSource,
-  /\.neq\("user_id", userId\)[\s\S]*\.eq\("enabled", true\)/
+  /STALE_TOKEN_DAYS/
+);
+assert.match(
+  managePushTokenFunctionSource,
+  /const enabled = activeOwnerCount === 0;/
+);
+assert.doesNotMatch(
+  managePushTokenFunctionSource,
+  /disableOtherOwners/
 );
 assert.match(
   managePushTokenFunctionSource,

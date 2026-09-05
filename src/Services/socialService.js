@@ -1,5 +1,11 @@
 import { supabase } from "../Database/supaBaseClient";
 import {
+  AVATAR_BUCKET,
+  attachAvatarUrls,
+  forgetAvatarUrl,
+  getAvatarObjectPath,
+} from "./avatarUrls";
+import {
   calculateAgeFromBirthDate,
   normalizeIsoDateString,
   normalizeLocalDateString,
@@ -28,7 +34,6 @@ const PROFILES_TABLE = "profiles";
 const PROFILE_PRIVATE_TABLE = "profile_private";
 const USER_FOLLOWS_TABLE = "user_follows";
 const WORKOUT_TYPE_INSTANCE_TABLE = "workout_type_instance";
-const AVATAR_BUCKET = "avatars";
 const PROFILE_SELECT_FIELDS =
   "id, username, username_base, username_code, display_name, bio, avatar_path, created_at, updated_at";
 const WORKOUT_ACTIVITY_SELECT_FIELDS =
@@ -45,25 +50,6 @@ export const PROFILE_DISPLAY_NAME_MAX_LENGTH = 40;
 export const PROFILE_BIO_MAX_LENGTH = 160;
 export const PROFILE_AVATAR_MAX_BYTES = 3 * 1024 * 1024;
 const USERNAME_INSERT_RETRY_LIMIT = 3;
-
-function buildAvatarPublicUrl(avatarPath, updatedAt) {
-  if (!avatarPath) {
-    return null;
-  }
-
-  const { data } = supabase.storage.from(AVATAR_BUCKET).getPublicUrl(avatarPath);
-  const publicUrl = data?.publicUrl;
-
-  if (!publicUrl) {
-    return null;
-  }
-
-  return updatedAt ? `${publicUrl}?t=${encodeURIComponent(updatedAt)}` : publicUrl;
-}
-
-function getAvatarObjectPath(userId) {
-  return `${userId}/avatar`;
-}
 
 function createFallbackUsernameBase(user) {
   return slugifyUsernameBase(
@@ -134,7 +120,8 @@ function mapProfileRow(
     maxHeartRateSource: maxHeartRate.source,
     preferredMaxHeartRateSource,
     avatarPath: row.avatar_path ?? null,
-    avatarUrl: buildAvatarPublicUrl(row.avatar_path, updatedAt),
+    avatarUpdatedAt: updatedAt,
+    avatarUrl: null,
     createdAt: row.created_at ?? null,
     updatedAt,
     isFollowing: followingIdSet.has(row.id),
@@ -427,8 +414,18 @@ function isMissingPrivateMaxHeartRateSourceError(error) {
   );
 }
 
+// The result is interpolated into a PostgREST `or=(...)` string, where a comma
+// or a bracket would end the value and start a new filter, and % and * are
+// wildcards. This used to strip a list of known-bad characters; a positive list
+// cannot quietly stop covering everything if that string ever gains a field or
+// an operator. Letters and digits are unicode, so a name in any alphabet still
+// searches.
 function buildSearchFilter(query) {
-  return query.replace(/[,%()]/g, " ").replace(/^@+/, "").trim();
+  return String(query ?? "")
+    .replace(/^@+/, "")
+    .replace(/[^\p{L}\p{N} _-]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function normalizeProfileValues({ displayName, bio, birthDate }) {
@@ -439,10 +436,17 @@ function normalizeProfileValues({ displayName, bio, birthDate }) {
   };
 }
 
+// The birth date is only ever used to work out an age for heart rate zones, so
+// the day and month are thrown away before anything is stored. Everything
+// downstream keeps working on a date; it is simply always the 1st of January.
 function normalizeBirthDateValue(birthDate) {
-  return birthDate === null || birthDate === undefined || birthDate === ""
-    ? null
-    : normalizeIsoDateString(birthDate);
+  if (birthDate === null || birthDate === undefined || birthDate === "") {
+    return null;
+  }
+
+  const normalized = normalizeIsoDateString(birthDate);
+
+  return normalized ? `${normalized.slice(0, 4)}-01-01` : normalized;
 }
 
 function validateBirthDate(birthDate, normalizedBirthDate) {
@@ -566,15 +570,21 @@ async function getOwnPrivateSettings(userId) {
 async function mapOwnProfileRow(row, userId) {
   try {
     const privateSettings = await getOwnPrivateSettings(userId);
+    const profile = mapProfileRow(row, new Set(), privateSettings);
+    await attachAvatarUrls([profile]);
+
     return {
-      ...mapProfileRow(row, new Set(), privateSettings),
+      ...profile,
       privateSettingsAvailable: true,
       privateSettingsError: null,
     };
   } catch (error) {
     console.warn("Private profile settings are unavailable:", error);
+    const profile = mapProfileRow(row);
+    await attachAvatarUrls([profile]);
+
     return {
-      ...mapProfileRow(row),
+      ...profile,
       privateSettingsAvailable: false,
       privateSettingsError:
         error instanceof Error
@@ -650,10 +660,12 @@ async function fetchProfilesByIds({ profileIds, currentUserId }) {
     (profiles ?? []).map((profile) => [profile.id, profile])
   );
 
-  return uniqueProfileIds
-    .map((profileId) => profilesById.get(profileId))
-    .filter(Boolean)
-    .map((profile) => mapProfileRow(profile, followingIdSet));
+  return attachAvatarUrls(
+    uniqueProfileIds
+      .map((profileId) => profilesById.get(profileId))
+      .filter(Boolean)
+      .map((profile) => mapProfileRow(profile, followingIdSet))
+  );
 }
 
 async function findAvailableUsernameCode(usernameBase) {
@@ -985,6 +997,10 @@ export async function uploadOwnAvatar({ user, asset }) {
     throw normalizeSocialError(uploadError);
   }
 
+  // The object path stays the same, so a cached signature would still point at
+  // the picture that was just replaced.
+  forgetAvatarUrl(avatarPath);
+
   const nextUpdatedAt = new Date().toISOString();
   const { data: updatedProfile, error: updateError } = await supabase
     .from(PROFILES_TABLE)
@@ -1037,7 +1053,9 @@ export async function searchUsers({ query, currentUserId, limit = 20 }) {
     profileIds: profiles.map((profile) => profile.id),
   });
 
-  return profiles.map((row) => mapProfileRow(row, followingIdSet));
+  return attachAvatarUrls(
+    profiles.map((row) => mapProfileRow(row, followingIdSet))
+  );
 }
 
 export async function getFollowCounts({ userId }) {

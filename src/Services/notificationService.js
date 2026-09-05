@@ -3,13 +3,13 @@ import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
 
 import { supabase } from "../Database/supaBaseClient";
+import { attachAvatarUrls } from "./avatarUrls";
 
 const PUSH_TOKENS_TABLE = "push_tokens";
 const NOTIFICATION_PREFERENCES_TABLE = "notification_preferences";
 const WORKOUT_START_NOTIFICATION_SOURCES_TABLE =
   "workout_start_notification_sources";
 const NOTIFICATION_INBOX_TABLE = "notification_inbox";
-const AVATAR_BUCKET = "avatars";
 const ACTIVITY_NOTIFICATION_CHANNEL_ID = "activity";
 const MANAGE_PUSH_TOKEN_FUNCTION = "manage-push-token";
 const SEND_WORKOUT_STARTED_NOTIFICATION_FUNCTION =
@@ -159,19 +159,6 @@ async function describeFunctionError(error, functionName) {
   }
 }
 
-function buildAvatarPublicUrl(avatarPath, updatedAt) {
-  if (!avatarPath) {
-    return null;
-  }
-
-  const { data } = supabase.storage.from(AVATAR_BUCKET).getPublicUrl(avatarPath);
-  const publicUrl = data?.publicUrl;
-
-  return publicUrl && updatedAt
-    ? `${publicUrl}?t=${encodeURIComponent(updatedAt)}`
-    : publicUrl ?? null;
-}
-
 function mapNotificationHistoryRow(row) {
   const actor = Array.isArray(row?.actor) ? row.actor[0] : row?.actor;
   const data =
@@ -193,7 +180,9 @@ function mapNotificationHistoryRow(row) {
           username: actor.username ?? null,
           displayName:
             actor.display_name ?? actor.username ?? "FitVen athlete",
-          avatarUrl: buildAvatarPublicUrl(actor.avatar_path, actor.updated_at),
+          avatarPath: actor.avatar_path ?? null,
+          avatarUpdatedAt: actor.updated_at ?? null,
+          avatarUrl: null,
         }
       : null,
   };
@@ -690,7 +679,10 @@ export async function getNotificationHistory({ user, limit = 50 } = {}) {
     throw normalizeNotificationError(error);
   }
 
-  return (data ?? []).map(mapNotificationHistoryRow);
+  return attachAvatarUrls(
+    (data ?? []).map(mapNotificationHistoryRow),
+    (notification) => notification.actor
+  );
 }
 
 export async function getUnreadNotificationCount({ user } = {}) {

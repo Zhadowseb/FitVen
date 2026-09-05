@@ -4,6 +4,13 @@ const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
 const EXPO_BATCH_SIZE = 100;
 const WEBHOOK_SECRET_HEADER = "x-fitven-webhook-secret";
 const ACTIVITY_CHANNEL_ID = "activity";
+// A workout label reaches every follower's lock screen, so it is capped short
+// enough that it cannot carry a sentence and a link, and stripped to a charset
+// that cannot form a URL.
+const MAX_WORKOUT_LABEL_LENGTH = 40;
+const WORKOUT_LABEL_ALLOWED = /[^\p{L}\p{N} .,'&\/+-]/gu;
+// Per actor, per hour. A real user starts a handful of workouts a day.
+const MAX_EVENTS_PER_HOUR = 12;
 
 type JsonRecord = Record<string, unknown>;
 
@@ -19,6 +26,10 @@ type WorkoutRecord = {
   is_deleting?: boolean | number | string | null;
   timer_start?: string | null;
   deleted_at?: string | null;
+  // Set by the server, never by the client: the id of the stored row this
+  // notification was matched to, and whether the text can be trusted.
+  verified_row_id?: string | null;
+  verified_source?: "database" | "client" | null;
 };
 
 type DatabaseWebhookPayload = {
@@ -150,10 +161,80 @@ function isWorkoutStartedPayload(payload: DatabaseWebhookPayload) {
   );
 }
 
+function sanitizeWorkoutLabel(value: unknown) {
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  return value
+    .replace(WORKOUT_LABEL_ALLOWED, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, MAX_WORKOUT_LABEL_LENGTH)
+    .trim();
+}
+
+// The catalog is the server's own list, so a type that is not in it cannot
+// reach a notification.
+async function findKnownWorkoutType(
+  supabase: ReturnType<typeof createClient>,
+  value: unknown
+) {
+  const candidate = sanitizeWorkoutLabel(value);
+
+  if (!candidate) {
+    return null;
+  }
+
+  const { data } = await supabase
+    .from("workout_type")
+    .select("type")
+    .eq("type", candidate)
+    .limit(1)
+    .maybeSingle<{ type: string | null }>();
+
+  return normalizeText(data?.type);
+}
+
+// The row the caller says they started, as the database has it - and only if it
+// belongs to the caller. This is what replaces trusting `force`.
+async function findOwnStoredWorkout(
+  supabase: ReturnType<typeof createClient>,
+  record: WorkoutRecord,
+  userId: string
+) {
+  const syncId = normalizeText(record.sync_id);
+  const rowId = normalizeText(record.id);
+
+  for (const [column, value] of [
+    ["sync_id", syncId],
+    ["id", rowId],
+  ] as const) {
+    if (!value) {
+      continue;
+    }
+
+    const { data } = await supabase
+      .from("workout_type_instance")
+      .select(
+        "id, sync_id, user_id, workout_type, label, done, is_active, is_deleting, timer_start, deleted_at"
+      )
+      .eq(column, value)
+      .eq("user_id", userId)
+      .limit(1)
+      .maybeSingle<WorkoutRecord>();
+
+    if (data) {
+      return data;
+    }
+  }
+
+  return null;
+}
+
 function getWorkoutLabel(workout: WorkoutRecord) {
-  const label = typeof workout.label === "string" ? workout.label.trim() : "";
-  const workoutType =
-    typeof workout.workout_type === "string" ? workout.workout_type.trim() : "";
+  const label = sanitizeWorkoutLabel(workout.label);
+  const workoutType = sanitizeWorkoutLabel(workout.workout_type);
 
   if (label && label.toLowerCase() !== workoutType.toLowerCase()) {
     return label;
@@ -162,16 +243,28 @@ function getWorkoutLabel(workout: WorkoutRecord) {
   return workoutType || "Workout";
 }
 
-function getWorkoutEventKey(workout: WorkoutRecord) {
-  const syncId = normalizeText(workout.sync_id);
+function getWorkoutEventKey(workout: WorkoutRecord, actorId: string) {
+  const verifiedRowId = normalizeText(workout.verified_row_id);
 
-  if (syncId) {
-    return `workout_started:${syncId}`;
+  // Matched to a stored row: the database's own id is the key, so a caller
+  // cannot choose it.
+  if (verifiedRowId) {
+    return `workout_started:${verifiedRowId}`;
   }
 
-  const workoutId = normalizeText(workout.id);
+  const identity = normalizeText(workout.sync_id) ?? normalizeText(workout.id);
 
-  return workoutId ? `workout_started:${workoutId}` : null;
+  if (!identity) {
+    return null;
+  }
+
+  // Unverified: namespaced by the actor, so registering a key cannot suppress
+  // somebody else's notification.
+  if (workout.verified_source === "client") {
+    return `workout_started:${actorId}:${identity}`;
+  }
+
+  return `workout_started:${identity}`;
 }
 
 function getWorkoutSourceId(workout: WorkoutRecord) {
@@ -276,11 +369,27 @@ function getInvalidTokenIds(tokens: PushTokenRow[], tickets: ExpoTicket[]) {
     .filter((tokenId): tokenId is string => Boolean(tokenId));
 }
 
+// Compares in constant time, so a caller cannot learn the secret one character
+// at a time from how long the comparison takes.
+function secretsMatch(expected: string, received: string) {
+  const expectedBytes = new TextEncoder().encode(expected);
+  const receivedBytes = new TextEncoder().encode(received);
+  let mismatch = expectedBytes.length ^ receivedBytes.length;
+
+  for (let index = 0; index < expectedBytes.length; index += 1) {
+    mismatch |= expectedBytes[index] ^ (receivedBytes[index] ?? 0);
+  }
+
+  return mismatch === 0;
+}
+
 function validateWebhookSecret(req: Request) {
   const expectedSecret = Deno.env.get("FITVEN_NOTIFICATION_WEBHOOK_SECRET");
   const receivedSecret = req.headers.get(WEBHOOK_SECRET_HEADER);
 
-  return Boolean(expectedSecret && receivedSecret === expectedSecret);
+  return Boolean(
+    expectedSecret && receivedSecret && secretsMatch(expectedSecret, receivedSecret)
+  );
 }
 
 function getBearerToken(req: Request) {
@@ -314,13 +423,41 @@ async function authenticateRequest(
   return { kind: "user", userId };
 }
 
-function normalizeClientPayload(
+// A client call used to be taken at its word: `force: true` skipped every
+// check, and the notification text came straight out of the caller's JSON.
+// Now the row is looked up in the database first.
+//
+// The workout may not have reached the cloud yet - the client notifies as soon
+// as the timer starts, and the sync runs on its own schedule - so a missing row
+// is not an error. It just means nothing in the payload can be trusted for the
+// text: the free-text label is dropped and only a workout type that exists in
+// the catalog survives.
+async function normalizeClientPayload(
+  supabase: ReturnType<typeof createClient>,
   payload: DatabaseWebhookPayload,
   userId: string
-): DatabaseWebhookPayload {
+): Promise<DatabaseWebhookPayload> {
   const record = payload.record ?? {};
+  // started_at may arrive as a number; the column is text.
   const timerStart =
-    record.timer_start ?? payload.started_at ?? new Date().toISOString();
+    normalizeText(record.timer_start) ??
+    normalizeText(payload.started_at) ??
+    new Date().toISOString();
+  const stored = await findOwnStoredWorkout(supabase, record, userId);
+
+  const verified: WorkoutRecord = stored
+    ? {
+        workout_type: stored.workout_type ?? null,
+        label: stored.label ?? null,
+        verified_row_id: normalizeText(stored.id),
+        verified_source: "database",
+      }
+    : {
+        workout_type: await findKnownWorkoutType(supabase, record.workout_type),
+        label: null,
+        verified_row_id: null,
+        verified_source: "client",
+      };
 
   return {
     ...payload,
@@ -332,6 +469,7 @@ function normalizeClientPayload(
     old_record: null,
     record: {
       ...record,
+      ...verified,
       user_id: userId,
       done: false,
       is_active: true,
@@ -340,6 +478,29 @@ function normalizeClientPayload(
       timer_start: timerStart,
     },
   };
+}
+
+// Stops one account from turning the function into a push cannon aimed at its
+// own followers.
+async function isOverEventRateLimit(
+  supabase: ReturnType<typeof createClient>,
+  actorId: string
+) {
+  const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const { count, error } = await supabase
+    .from("notification_events")
+    .select("id", { count: "exact", head: true })
+    .eq("actor_id", actorId)
+    .gte("created_at", since);
+
+  if (error) {
+    // Fail open rather than lose a legitimate notification; the cap is a
+    // brake on abuse, not an authorisation check.
+    console.warn("Rate limit lookup failed:", error);
+    return false;
+  }
+
+  return (count ?? 0) >= MAX_EVENTS_PER_HOUR;
 }
 
 function getEventPayload(payload: DatabaseWebhookPayload): JsonRecord {
@@ -427,7 +588,11 @@ Deno.serve(async (req) => {
   }
 
   if (requestAuth.kind === "user") {
-    payload = normalizeClientPayload(payload, requestAuth.userId);
+    payload = await normalizeClientPayload(
+      supabase,
+      payload,
+      requestAuth.userId
+    );
   }
 
   if (!isWorkoutStartedPayload(payload)) {
@@ -440,7 +605,8 @@ Deno.serve(async (req) => {
   const workout = payload.record;
   const actorId = workout?.user_id;
   const workoutId = workout ? getWorkoutSourceId(workout) : null;
-  const eventKey = workout ? getWorkoutEventKey(workout) : null;
+  const eventKey =
+    workout && actorId ? getWorkoutEventKey(workout, actorId) : null;
 
   if (!workout || !actorId || !workoutId || !eventKey) {
     return jsonResponse(
@@ -449,6 +615,16 @@ Deno.serve(async (req) => {
         reason: "missing_workout_identity",
       },
       400
+    );
+  }
+
+  if (await isOverEventRateLimit(supabase, actorId)) {
+    return jsonResponse(
+      {
+        skipped: true,
+        reason: "rate_limited",
+      },
+      429
     );
   }
 
