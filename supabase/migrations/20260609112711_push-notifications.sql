@@ -1,6 +1,6 @@
 -- Adds device push token storage for Expo push notifications.
 --
--- Run after docs/supabase-social-search.sql and before enabling notification
+-- Run after supabase/migrations/20260424004053_social-search.sql and before enabling notification
 -- registration in the app.
 -- The follow-up workout notification trigger/Edge Function can read enabled
 -- rows from this table when sending pushes to followers.

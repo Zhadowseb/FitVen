@@ -1,12 +1,10 @@
 import {
   ActivityIndicator,
-  Animated,
   Alert,
   AppState,
   Dimensions,
   Image,
   Modal,
-  PanResponder,
   Pressable,
   ScrollView,
   TouchableOpacity,
@@ -36,11 +34,41 @@ import {
   ThemedEditableCell,
 } from "../../../../Resources/ThemedComponents";
 import styles from "./RunStyle";
+import DraggablePriorityRow from "./Components/DraggablePriorityRow/DraggablePriorityRow";
+import { normalizeEnduranceStatPriority } from "./runEnduranceStats";
+import {
+  formatPaceAxisLabel,
+  formatPaceDisplay,
+  formatRunClock,
+  formatRunDistance,
+  formatSignedPaceDelta,
+  getRunTrackingStartMessage,
+  parsePaceToMinutes,
+  parsePositiveRunValue,
+} from "./runFormatUtils";
+import {
+  EMPTY_RUN_SECTION_COUNTS,
+  buildChartPath,
+  buildHeartRateZoneSegments,
+  buildPaceHistory,
+  getLogsFromTimestamp,
+  getRecentPaceMinutes,
+  getRouteRegion,
+  getRunSectionCounts,
+  getRunSegmentLabel,
+  getWorkingSetPosition,
+  normalizeRunSectionType,
+  simplifyRouteSegmentForDisplay,
+  splitLocationRouteSegments,
+} from "./runDisplayUtils";
+import {
+  RUN_WORKOUT_FLOW_OPTIONS,
+  getRunFlowOption,
+} from "./runFlowOptions";
+
 import {
   buildTargetHeartRateHistory,
   FALLBACK_MAX_HEART_RATE,
-  getHeartRateZoneThresholds,
-  getHeartRateZoneColor,
   getZoneColor,
 } from "./RunHeartRateChartConfig";
 import { buildHeartRateZones } from "../../../../Utils/heartRateUtils";
@@ -61,713 +89,15 @@ import {
 import {
   locationService,
   heartRateService,
-  runningService as runningRepository,
+  runningService,
   socialService,
-  workoutService as workoutRepository,
+  workoutService,
 } from "../../../../Services";
 
 const RUN_HEART_RATE_ZONES = [1, 2, 3, 4, 5];
 const RUN_ZONE_POPOVER_WIDTH = 238;
 const RUN_ZONE_POPOVER_HEIGHT = 40;
 const RUN_ZONE_POPOVER_MARGIN = 12;
-const DEFAULT_ENDURANCE_STAT_PRIORITY = [
-  "time",
-  "zone",
-  "distance",
-  "pace",
-];
-const ENDURANCE_STAT_LABELS = {
-  time: "Time",
-  zone: "Zone",
-  distance: "Distance",
-  pace: "Pace",
-};
-const STAT_PRIORITY_ROW_HEIGHT = 48;
-
-const normalizeEnduranceStatPriority = (value) => {
-  let parsedValue = value;
-
-  if (typeof value === "string") {
-    try {
-      parsedValue = JSON.parse(value);
-    } catch {
-      parsedValue = [];
-    }
-  }
-
-  const validValues = Array.isArray(parsedValue)
-    ? parsedValue.filter((key) =>
-        DEFAULT_ENDURANCE_STAT_PRIORITY.includes(key)
-      )
-    : [];
-
-  return [
-    ...new Set([
-      ...validValues,
-      ...DEFAULT_ENDURANCE_STAT_PRIORITY,
-    ]),
-  ];
-};
-
-const DraggablePriorityRow = ({
-  itemKey,
-  index,
-  itemCount,
-  onMove,
-  cardBorder,
-  quietText,
-  titleColor,
-}) => {
-  const translateY = useRef(new Animated.Value(0)).current;
-  const indexRef = useRef(index);
-  const itemCountRef = useRef(itemCount);
-  const onMoveRef = useRef(onMove);
-
-  useEffect(() => {
-    indexRef.current = index;
-    itemCountRef.current = itemCount;
-    onMoveRef.current = onMove;
-  }, [index, itemCount, onMove]);
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderMove: (_, gestureState) => {
-        translateY.setValue(gestureState.dy);
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        const targetIndex = Math.max(
-          0,
-          Math.min(
-            itemCountRef.current - 1,
-            indexRef.current +
-              Math.round(gestureState.dy / STAT_PRIORITY_ROW_HEIGHT)
-          )
-        );
-
-        Animated.spring(translateY, {
-          toValue: 0,
-          useNativeDriver: true,
-          speed: 24,
-          bounciness: 4,
-        }).start();
-        onMoveRef.current?.(itemKey, targetIndex);
-      },
-      onPanResponderTerminate: () => {
-        Animated.spring(translateY, {
-          toValue: 0,
-          useNativeDriver: true,
-        }).start();
-      },
-    })
-  ).current;
-
-  return (
-    <Animated.View
-      style={[
-        styles.statPriorityRow,
-        {
-          borderColor: cardBorder,
-          transform: [{ translateY }],
-        },
-      ]}
-    >
-      <View style={styles.statPriorityRank}>
-        <ThemedText style={styles.statPriorityRankText} setColor={quietText}>
-          {index + 1}
-        </ThemedText>
-      </View>
-      <ThemedText style={styles.statPriorityLabel} setColor={titleColor}>
-        {ENDURANCE_STAT_LABELS[itemKey]}
-      </ThemedText>
-      <View
-        accessibilityRole="adjustable"
-        accessibilityLabel={`Reorder ${ENDURANCE_STAT_LABELS[itemKey]}`}
-        style={styles.statPriorityDragHandle}
-        {...panResponder.panHandlers}
-      >
-        <Feather name="menu" size={20} color={quietText} />
-      </View>
-    </Animated.View>
-  );
-};
-
-const parsePaceToMinutes = (value) => {
-  if (value === null || value === undefined || value === "") {
-    return null;
-  }
-
-  const normalized = String(value)
-    .trim()
-    .replace(",", ".")
-    .replace(/[’′]/g, "'")
-    .replace(/[”″]/g, "")
-    .replace(/\s+/g, "");
-
-  const splitMatch = normalized.match(/^(\d+)[\:'](\d{1,2})$/);
-
-  if (splitMatch) {
-    const minutes = Number(splitMatch[1]);
-    const seconds = Number(splitMatch[2]);
-
-    if (Number.isFinite(minutes) && Number.isFinite(seconds)) {
-      return minutes + seconds / 60;
-    }
-  }
-
-  const numericValue = Number(normalized.replace(/[^0-9.]/g, ""));
-  return Number.isFinite(numericValue) ? numericValue : null;
-};
-
-const parsePositiveRunValue = (value) => {
-  const numericValue = Number(String(value ?? "").trim().replace(",", "."));
-
-  return Number.isFinite(numericValue) && numericValue > 0
-    ? numericValue
-    : null;
-};
-
-const formatPaceDisplay = (paceMinutes) => {
-  if (!Number.isFinite(paceMinutes) || paceMinutes <= 0) {
-    return "--'--''";
-  }
-
-  const totalSeconds = Math.round(paceMinutes * 60);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-
-  return `${minutes}'${String(seconds).padStart(2, "0")}`;
-};
-
-const formatPaceAxisLabel = (paceMinutes) => {
-  const totalSeconds = Math.max(0, Math.round(Number(paceMinutes) * 60));
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-
-  return `${minutes}:${String(seconds).padStart(2, "0")}`;
-};
-
-const formatSignedPaceDelta = (seconds) => {
-  const numericSeconds = Number(seconds);
-
-  if (!Number.isFinite(numericSeconds)) {
-    return "--";
-  }
-
-  const roundedSeconds = Math.round(numericSeconds);
-  const sign = roundedSeconds > 0 ? "+" : roundedSeconds < 0 ? "-" : "";
-  const absoluteSeconds = Math.abs(roundedSeconds);
-  const minutes = Math.floor(absoluteSeconds / 60);
-  const remainingSeconds = absoluteSeconds % 60;
-
-  return `${sign}${String(minutes).padStart(2, "0")}'${String(
-    remainingSeconds
-  ).padStart(2, "0")}"`;
-};
-
-const formatRunClock = (totalSeconds) => {
-  const safeTotalSeconds = normalizeElapsedDurationSeconds(totalSeconds, 0);
-  const hours = Math.floor(safeTotalSeconds / 3600);
-  const minutes = Math.floor((safeTotalSeconds % 3600) / 60);
-  const seconds = safeTotalSeconds % 60;
-  const paddedMinutes = String(minutes).padStart(2, "0");
-  const paddedSeconds = String(seconds).padStart(2, "0");
-
-  if (hours > 0) {
-    return `${hours}:${paddedMinutes}:${paddedSeconds}`;
-  }
-
-  return `${paddedMinutes}:${paddedSeconds}`;
-};
-
-const formatRunDistance = (distanceKm) => {
-  const safeDistance = Number(distanceKm);
-
-  if (!Number.isFinite(safeDistance) || safeDistance <= 0) {
-    return "0.00";
-  }
-
-  return safeDistance.toFixed(2);
-};
-
-const getRunTrackingStartMessage = (error, activityLabel = "run") => {
-  const message = String(error?.message ?? "");
-
-  if (message.includes("Precise location permission")) {
-    return `FitVen needs Precise/Fine location permission to track ${activityLabel} distance accurately. Enable precise location for FitVen and try again.`;
-  }
-
-  if (message.includes("Background location permission")) {
-    return "FitVen needs background location permission so distance continues tracking while the app is not in front.";
-  }
-
-  return "Check that location is allowed and turned on, then try again.";
-};
-
-const RUN_WORKOUT_FLOW_OPTIONS = [
-  {
-    id: "endurance-base",
-    title: "Endurance & Base",
-    gridTitle: "Endurance & Base",
-    subtitle: "Base Run · Long Run · Recovery Run",
-    image: require("./Assets/Endurance&base.jpg"),
-  },
-  {
-    id: "speed-structure",
-    title: "Speed & Structure",
-    gridTitle: "Speed & Structure",
-    subtitle: "Interval · Fartlek · Hill Repeats",
-    image: require("./Assets/Speed&structure.jpg"),
-  },
-  {
-    id: "performance-threshold",
-    title: "Performance & Threshold",
-    gridTitle: "Performance",
-    subtitle: "Tempo Run · Progression Run",
-    image: require("./Assets/Performance&threshold.jpg"),
-  },
-  {
-    id: "custom",
-    title: "Custom",
-    gridTitle: "Custom",
-    subtitle: "Build from blank",
-    image: require("./Assets/Custom.jpg"),
-  },
-];
-
-function getRunFlowOption(optionId) {
-  return (
-    RUN_WORKOUT_FLOW_OPTIONS.find((option) => option.id === optionId) ?? null
-  );
-}
-
-const EMPTY_RUN_SECTION_COUNTS = {
-  WARMUP: 0,
-  WORKING_SET: 0,
-  COOLDOWN: 0,
-};
-
-function normalizeRunSectionType(type) {
-  const normalizedType = String(type ?? "WORKING_SET")
-    .trim()
-    .replace(/[-\s]+/g, "_")
-    .toUpperCase();
-
-  if (normalizedType === "WARMUP" || normalizedType === "WARM_UP") {
-    return "WARMUP";
-  }
-
-  if (normalizedType === "COOLDOWN" || normalizedType === "COOL_DOWN") {
-    return "COOLDOWN";
-  }
-
-  return "WORKING_SET";
-}
-
-function getRunSectionCounts(sets) {
-  return sets.reduce(
-    (counts, set) => {
-      const type = normalizeRunSectionType(set.type);
-      counts[type] += 1;
-
-      return counts;
-    },
-    { ...EMPTY_RUN_SECTION_COUNTS }
-  );
-}
-
-function getRunSegmentLabel(set) {
-  const type = normalizeRunSectionType(set?.type);
-
-  if (Number(set?.is_pause) === 1) {
-    return "Rest";
-  }
-
-  if (type === "WARMUP") {
-    return "Warmup";
-  }
-
-  if (type === "COOLDOWN") {
-    return "Cooldown";
-  }
-
-  return "Sprint";
-}
-
-function getWorkingSetPosition(sets, targetIndex) {
-  if (targetIndex < 0) {
-    return null;
-  }
-
-  let workingSetCount = 0;
-
-  for (let index = 0; index <= targetIndex; index++) {
-    const set = sets[index];
-    const isWorkingSet =
-      normalizeRunSectionType(set?.type) === "WORKING_SET" &&
-      Number(set?.is_pause) !== 1;
-
-    if (isWorkingSet) {
-      workingSetCount += 1;
-    }
-  }
-
-  return workingSetCount > 0 ? workingSetCount : null;
-}
-
-function getLocationLogTimestamp(log) {
-  const timestamp = Number(log?.timestamp);
-  return Number.isFinite(timestamp) ? timestamp : null;
-}
-
-function getLogsFromTimestamp(logs, startTimestampMs) {
-  if (!Number.isFinite(startTimestampMs)) {
-    return [];
-  }
-
-  return logs.filter((log) => {
-    const timestamp = getLocationLogTimestamp(log);
-    return timestamp !== null && timestamp >= startTimestampMs;
-  });
-}
-
-function calculatePaceForLogWindow(logs) {
-  const summary = calculateTrackedDistanceSummary(logs);
-
-  if (!Number.isFinite(summary.totalDistanceKm) || summary.totalDistanceKm <= 0) {
-    return null;
-  }
-
-  const timestamps = logs
-    .map(getLocationLogTimestamp)
-    .filter((timestamp) => timestamp !== null);
-
-  if (timestamps.length < 2) {
-    return null;
-  }
-
-  const elapsedMinutes =
-    (Math.max(...timestamps) - Math.min(...timestamps)) / 60000;
-
-  if (!Number.isFinite(elapsedMinutes) || elapsedMinutes <= 0) {
-    return null;
-  }
-
-  return elapsedMinutes / summary.totalDistanceKm;
-}
-
-function getRecentPaceMinutes(logs, currentTimestampSeconds) {
-  const currentTimestampMs = currentTimestampSeconds * 1000;
-  const recentLogs = getLogsFromTimestamp(logs, currentTimestampMs - 30000);
-  const recentPace = calculatePaceForLogWindow(recentLogs);
-
-  if (recentPace !== null) {
-    return recentPace;
-  }
-
-  return calculatePaceForLogWindow(
-    getLogsFromTimestamp(logs, currentTimestampMs - 60000)
-  );
-}
-
-function splitLocationRouteSegments(logs = []) {
-  const segments = [];
-  let currentSegment = [];
-
-  [...logs]
-    .sort(
-      (left, right) =>
-        (getLocationLogTimestamp(left) ?? 0) -
-        (getLocationLogTimestamp(right) ?? 0)
-    )
-    .forEach((log) => {
-      if (log?.latitude === null || log?.longitude === null) {
-        if (currentSegment.length > 0) {
-          segments.push(currentSegment);
-          currentSegment = [];
-        }
-        return;
-      }
-
-      const latitude = Number(log?.latitude);
-      const longitude = Number(log?.longitude);
-
-      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
-        if (currentSegment.length > 0) {
-          segments.push(currentSegment);
-          currentSegment = [];
-        }
-        return;
-      }
-
-      currentSegment.push({ latitude, longitude });
-    });
-
-  if (currentSegment.length > 0) {
-    segments.push(currentSegment);
-  }
-
-  return segments;
-}
-
-function buildPaceHistory(logs = []) {
-  const orderedLogs = [...logs].sort(
-    (left, right) =>
-      (getLocationLogTimestamp(left) ?? 0) -
-      (getLocationLogTimestamp(right) ?? 0)
-  );
-  const firstTimestamp = orderedLogs
-    .map(getLocationLogTimestamp)
-    .find((timestamp) => timestamp !== null);
-
-  if (firstTimestamp === undefined) {
-    return [];
-  }
-
-  const sampleStep = Math.max(1, Math.ceil(orderedLogs.length / 42));
-  const history = [];
-
-  for (let index = sampleStep; index < orderedLogs.length; index += sampleStep) {
-    const timestamp = getLocationLogTimestamp(orderedLogs[index]);
-
-    if (timestamp === null) {
-      continue;
-    }
-
-    const windowLogs = orderedLogs.filter((log) => {
-      const logTimestamp = getLocationLogTimestamp(log);
-      return (
-        logTimestamp !== null &&
-        logTimestamp <= timestamp &&
-        logTimestamp >= timestamp - 60000
-      );
-    });
-    const pace = calculatePaceForLogWindow(windowLogs);
-
-    if (pace === null || pace < 1.5 || pace > 20) {
-      continue;
-    }
-
-    history.push({
-      x: Math.max(0, (timestamp - firstTimestamp) / 60000),
-      y: pace,
-    });
-  }
-
-  return history;
-}
-
-function getRouteRegion(routeSegments = []) {
-  let minLatitude = Infinity;
-  let maxLatitude = -Infinity;
-  let minLongitude = Infinity;
-  let maxLongitude = -Infinity;
-  let coordinateCount = 0;
-
-  // Loops instead of Math.min(...array): spreading thousands of tracked
-  // points into a function call can overflow the engine's argument limit.
-  for (const segment of routeSegments) {
-    if (!Array.isArray(segment)) {
-      continue;
-    }
-
-    for (const coordinate of segment) {
-      const latitude = coordinate?.latitude;
-      const longitude = coordinate?.longitude;
-
-      if (
-        typeof latitude !== "number" ||
-        typeof longitude !== "number" ||
-        !Number.isFinite(latitude) ||
-        !Number.isFinite(longitude)
-      ) {
-        continue;
-      }
-
-      coordinateCount += 1;
-      if (latitude < minLatitude) minLatitude = latitude;
-      if (latitude > maxLatitude) maxLatitude = latitude;
-      if (longitude < minLongitude) minLongitude = longitude;
-      if (longitude > maxLongitude) maxLongitude = longitude;
-    }
-  }
-
-  if (coordinateCount === 0) {
-    return null;
-  }
-
-  return {
-    latitude: (minLatitude + maxLatitude) / 2,
-    longitude: (minLongitude + maxLongitude) / 2,
-    latitudeDelta: Math.min(
-      Math.max((maxLatitude - minLatitude) * 1.45, 0.006),
-      120
-    ),
-    longitudeDelta: Math.min(
-      Math.max((maxLongitude - minLongitude) * 1.45, 0.006),
-      120
-    ),
-  };
-}
-
-const MAX_ROUTE_POINTS_PER_SEGMENT = 500;
-
-function simplifyRouteSegmentForDisplay(segment) {
-  if (
-    !Array.isArray(segment) ||
-    segment.length <= MAX_ROUTE_POINTS_PER_SEGMENT
-  ) {
-    return segment;
-  }
-
-  const stride = Math.ceil(segment.length / MAX_ROUTE_POINTS_PER_SEGMENT);
-  const simplified = [];
-
-  for (let index = 0; index < segment.length; index += stride) {
-    simplified.push(segment[index]);
-  }
-
-  const lastPoint = segment[segment.length - 1];
-
-  if (simplified[simplified.length - 1] !== lastPoint) {
-    simplified.push(lastPoint);
-  }
-
-  return simplified;
-}
-
-function buildChartPath(
-  data,
-  {
-    invert = false,
-    stepped = false,
-    durationMinutes = null,
-    domainMinY = null,
-    domainMaxY = null,
-    chartLeft = 14,
-    chartRight = 306,
-    chartTop = 10,
-    chartBottom = 112,
-  } = {}
-) {
-  if (!Array.isArray(data) || data.length < 2) {
-    return null;
-  }
-
-  const xValues = data.map((point) => Number(point.x));
-  const yValues = data.map((point) => Number(point.y));
-  const minY = Number.isFinite(domainMinY) ? domainMinY : Math.min(...yValues);
-  const maxY = Number.isFinite(domainMaxY) ? domainMaxY : Math.max(...yValues);
-  const dataMaxX = Math.max(...xValues);
-  const xRange =
-    Number.isFinite(durationMinutes) && durationMinutes > 0
-      ? durationMinutes
-      : Math.max(dataMaxX, 1);
-  const yRange = maxY - minY;
-  const normalizedPoints = data.map((point) => {
-    const clampedX = Math.min(Math.max(Number(point.x), 0), xRange);
-    const x =
-      chartLeft + (clampedX / xRange) * (chartRight - chartLeft);
-    const clampedY = Math.min(Math.max(Number(point.y), minY), maxY);
-    const normalizedY =
-      yRange > 0 ? (clampedY - minY) / yRange : 0.5;
-    const yRatio = invert ? normalizedY : 1 - normalizedY;
-    const y = chartTop + yRatio * (chartBottom - chartTop);
-
-    return { x, y };
-  });
-
-  return normalizedPoints.reduce((path, point, index) => {
-    if (index === 0) {
-      return `M ${point.x} ${point.y}`;
-    }
-
-    if (stepped) {
-      const previousPoint = normalizedPoints[index - 1];
-      return `${path} L ${point.x} ${previousPoint.y} L ${point.x} ${point.y}`;
-    }
-
-    return `${path} L ${point.x} ${point.y}`;
-  }, "");
-}
-
-function buildHeartRateZoneSegments(
-  data,
-  {
-    durationMinutes = null,
-    domainMinY = 60,
-    domainMaxY = FALLBACK_MAX_HEART_RATE,
-    chartLeft = 38,
-    chartRight = 306,
-    chartTop = 10,
-    chartBottom = 112,
-    zoneBands,
-  } = {}
-) {
-  if (!Array.isArray(data) || data.length < 2) {
-    return [];
-  }
-
-  const dataMaxX = Math.max(...data.map((point) => Number(point.x) || 0));
-  const xRange =
-    Number.isFinite(durationMinutes) && durationMinutes > 0
-      ? durationMinutes
-      : Math.max(dataMaxX, 1);
-  const yRange = domainMaxY - domainMinY;
-  const points = data.map((point) => {
-    const elapsedMinutes = Math.min(
-      Math.max(Number(point?.x) || 0, 0),
-      xRange
-    );
-    const bpm = Math.min(
-      Math.max(Number(point?.y) || domainMinY, domainMinY),
-      domainMaxY
-    );
-
-    return {
-      bpm,
-      x: chartLeft + (elapsedMinutes / xRange) * (chartRight - chartLeft),
-      y:
-        chartTop +
-        (1 - (bpm - domainMinY) / yRange) * (chartBottom - chartTop),
-    };
-  });
-  const segments = [];
-  const zoneThresholds = getHeartRateZoneThresholds(zoneBands);
-
-  for (let index = 1; index < points.length; index += 1) {
-    const start = points[index - 1];
-    const end = points[index];
-    const bpmDifference = end.bpm - start.bpm;
-    const crossingRatios =
-      bpmDifference === 0
-        ? []
-        : zoneThresholds.map(
-            (threshold) => (threshold - start.bpm) / bpmDifference
-          ).filter((ratio) => ratio > 0 && ratio < 1);
-    const ratios = [0, ...crossingRatios.sort((left, right) => left - right), 1];
-
-    for (let ratioIndex = 1; ratioIndex < ratios.length; ratioIndex += 1) {
-      const startRatio = ratios[ratioIndex - 1];
-      const endRatio = ratios[ratioIndex];
-      const segmentStartX = start.x + (end.x - start.x) * startRatio;
-      const segmentStartY = start.y + (end.y - start.y) * startRatio;
-      const segmentEndX = start.x + (end.x - start.x) * endRatio;
-      const segmentEndY = start.y + (end.y - start.y) * endRatio;
-      const midpointBpm =
-        start.bpm + bpmDifference * ((startRatio + endRatio) / 2);
-
-      segments.push({
-        color: getHeartRateZoneColor(midpointBpm, zoneBands),
-        path: `M ${segmentStartX} ${segmentStartY} L ${segmentEndX} ${segmentEndY}`,
-      });
-    }
-  }
-
-  return segments;
-}
-
 const Run = ({
   workout_id,
   restartRequestKey,
@@ -1132,7 +462,7 @@ const Run = ({
   }, [activeRunSegment]);
 
   const persistCurrentTimerState = useCallback(async () => {
-    await workoutRepository.persistWorkoutTimerState(db, {
+    await workoutService.persistWorkoutTimerState(db, {
       workoutId: workout_id,
       timerStart: timerStartRef.current,
       elapsedTime: elapsedTimeRef.current,
@@ -1205,7 +535,7 @@ const Run = ({
 
   const loadRunStructureState = useCallback(async () => {
     try {
-      const sets = await runningRepository.getOrderedRunSetsForWorkout(
+      const sets = await runningService.getOrderedRunSetsForWorkout(
         db,
         workout_id
       );
@@ -1232,7 +562,7 @@ const Run = ({
     activeSetCalculationInFlightRef.current = true;
 
     try {
-      const orderedSets = await runningRepository.getOrderedRunSetsForWorkout(
+      const orderedSets = await runningService.getOrderedRunSetsForWorkout(
         db,
         workout_id
       );
@@ -1301,7 +631,7 @@ const Run = ({
             : [];
 
         if (completionMode === "manual") {
-          await runningRepository.updateRunSetDone(db, {
+          await runningService.updateRunSetDone(db, {
             runId: sets[i].Run_id,
             done: true,
           });
@@ -1329,7 +659,7 @@ const Run = ({
               distanceKm: distanceProgress.targetKm,
             });
 
-            await runningRepository.completeRunSet(db, {
+            await runningService.completeRunSet(db, {
               runId: sets[i].Run_id,
               actualDistanceKm: distanceProgress.completedKm,
               actualDurationSeconds,
@@ -1356,7 +686,7 @@ const Run = ({
           }
         } else if (completionMode === "time" && elapsedInSegment >= setDuration) {
           if (!sets[i].done) {
-            await runningRepository.updateRunSetDone(db, {
+            await runningService.updateRunSetDone(db, {
               runId: sets[i].Run_id,
               done: true,
             });
@@ -1449,7 +779,7 @@ const Run = ({
       return;
     }
 
-    const row = await workoutRepository.getWorkoutTimerState(db, workout_id);
+    const row = await workoutService.getWorkoutTimerState(db, workout_id);
 
     if (requestId !== workoutStateLoadRequestRef.current) {
       return;
@@ -1647,7 +977,7 @@ const Run = ({
       0
     );
 
-    await workoutRepository.persistWorkoutTimerState(db, {
+    await workoutService.persistWorkoutTimerState(db, {
       workoutId: workout_id,
       timerStart: null,
       elapsedTime: newElapsed,
@@ -1668,18 +998,18 @@ const Run = ({
     invalidatePendingWorkoutStateLoads();
 
     try {
-      const row = await workoutRepository.getWorkoutOriginalStartTime(db, workout_id);
+      const row = await workoutService.getWorkoutOriginalStartTime(db, workout_id);
       const start_time = getCurrentStoredTimestampSeconds();
       const isFreshStart = row.original_start_time === null;
 
       if (isFreshStart) {
-        await workoutRepository.setWorkoutOriginalStartTime(db, {
+        await workoutService.setWorkoutOriginalStartTime(db, {
           workoutId: workout_id,
           startTime: start_time,
         });
       }
 
-      await workoutRepository.persistWorkoutTimerState(db, {
+      await workoutService.persistWorkoutTimerState(db, {
         workoutId: workout_id,
         timerStart: start_time,
         elapsedTime: elapsedTimeRef.current ?? elapsed_time,
@@ -1690,14 +1020,14 @@ const Run = ({
           resetLogs: isFreshStart,
         });
       } catch (trackingError) {
-        await workoutRepository.persistWorkoutTimerState(db, {
+        await workoutService.persistWorkoutTimerState(db, {
           workoutId: workout_id,
           timerStart: null,
           elapsedTime: elapsedTimeRef.current ?? elapsed_time,
         });
 
         if (isFreshStart) {
-          await workoutRepository.setWorkoutOriginalStartTime(db, {
+          await workoutService.setWorkoutOriginalStartTime(db, {
             workoutId: workout_id,
             startTime: null,
           });
@@ -1707,7 +1037,7 @@ const Run = ({
       }
 
       if (isFreshStart) {
-        workoutRepository.notifyWorkoutStartedInBackground(db, {
+        workoutService.notifyWorkoutStartedInBackground(db, {
           workoutId: workout_id,
           startedAt: start_time,
         });
@@ -1781,7 +1111,7 @@ const Run = ({
       set_elapsed_time(finalElapsed);
       clearActiveSegment();
 
-      await workoutRepository.setWorkoutDone(db, {
+      await workoutService.setWorkoutDone(db, {
         workoutId: workout_id,
         done: true,
       });
@@ -1811,8 +1141,8 @@ const Run = ({
     try {
       await stopRunTrackingSafely();
       await locationService.clearTrackedRunData(db, workout_id);
-      await runningRepository.resetRunSetProgress(db, workout_id);
-      await workoutRepository.resetWorkoutState(db, workout_id);
+      await runningService.resetRunSetProgress(db, workout_id);
+      await workoutService.resetWorkoutState(db, workout_id);
       set_original_start_time(null);
       set_timer_start(null);
       set_elapsed_time(0);
@@ -1846,7 +1176,7 @@ const Run = ({
 
   const addSet = async (setVariety) => {
     try {
-      await runningRepository.addRunSet(db, {
+      await runningService.addRunSet(db, {
         workoutId: workout_id,
         type: setVariety,
         addAutomaticPause: selectedRunFlow !== "endurance-base",
@@ -1865,7 +1195,7 @@ const Run = ({
     set_isSelectingRunFlow(false);
 
     try {
-      await workoutRepository.updateWorkoutRunFocusType(db, {
+      await workoutService.updateWorkoutRunFocusType(db, {
         workoutId: workout_id,
         runFocusType: nextRunFlowId,
       });
@@ -1879,7 +1209,7 @@ const Run = ({
     set_isSelectingRunFlow(true);
 
     try {
-      await workoutRepository.updateWorkoutRunFocusType(db, {
+      await workoutService.updateWorkoutRunFocusType(db, {
         workoutId: workout_id,
         runFocusType: null,
       });
@@ -3451,12 +2781,12 @@ const Run = ({
       enduranceZonePreparingRef.current = true;
 
       try {
-        await runningRepository.addRunSet(db, {
+        await runningService.addRunSet(db, {
           workoutId: workout_id,
           type: "WORKING_SET",
           addAutomaticPause: false,
         });
-        const sets = await runningRepository.getOrderedRunSetsForWorkout(
+        const sets = await runningService.getOrderedRunSetsForWorkout(
           db,
           workout_id
         );
@@ -3531,7 +2861,7 @@ const Run = ({
     }
 
     try {
-      await runningRepository.updateRunSetField(db, {
+      await runningService.updateRunSetField(db, {
         runId: targetSet.Run_id,
         field,
         value,
@@ -3582,7 +2912,7 @@ const Run = ({
     closeEnduranceZoneDropdown();
 
     try {
-      await runningRepository.updateRunSetField(db, {
+      await runningService.updateRunSetField(db, {
         runId: enduranceZoneSetId,
         field: "heartrate",
         value: zone,

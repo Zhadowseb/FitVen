@@ -8,7 +8,7 @@ import { useCallback } from "react";
 import { useColorScheme } from "react-native";
 import { Colors } from "../../../../Resources/GlobalStyling/colors";
 import DateTimePicker from '@react-native-community/datetimepicker';
-import PickWorkoutModal from './Components/PickWorkoutModal/PickWorkoutModal';
+import PickWorkoutModal from '../../../../Resources/Components/PickWorkoutModal/PickWorkoutModal';
 
 import styles from './DayStyle';
 import { getWorkoutIconConfig } from '../../../../Resources/Icons/WorkoutLabels/index';
@@ -26,7 +26,7 @@ import { ThemedCard,
         ThemedBouncyCheckbox } from "../../../../Resources/ThemedComponents";
 import { formatDate } from '../../../../Utils/dateUtils';
 import { requestOpenQuickWorkoutMenu } from "../../../../Utils/quickWorkoutMenuEvents";
-import { programService as programRepository } from "../../../../Services";
+import { programService } from "../../../../Services";
 
 const Day = ( {day, program_id, microcycle_id, refreshKey = 0} ) => {
     const colorScheme = useColorScheme();
@@ -78,7 +78,7 @@ const Day = ( {day, program_id, microcycle_id, refreshKey = 0} ) => {
 
     const loadDay = async () => {
         try {
-            const dayRow = await programRepository.getDayDetails(db, {
+            const dayRow = await programService.getDayDetails(db, {
                 microcycleId: microcycle_id,
                 weekday: day,
             });
@@ -108,7 +108,7 @@ const Day = ( {day, program_id, microcycle_id, refreshKey = 0} ) => {
 
     const copyWorkoutToDate = async (workoutId, date) => {
         try{
-            const copiedWorkoutId = await programRepository.copyProgramWorkoutToDate(db, {
+            const copiedWorkoutId = await programService.copyProgramWorkoutToDate(db, {
                 workoutId,
                 programId: program_id,
                 date,
@@ -127,7 +127,7 @@ const Day = ( {day, program_id, microcycle_id, refreshKey = 0} ) => {
 
     const deleteWorkout = async (selectedWorkout) => {
         try {
-            await programRepository.deleteWorkout(db, selectedWorkout);
+            await programService.deleteWorkout(db, selectedWorkout);
         } catch (err) {
             console.error("Failed to delete workout:", err);
             throw err;

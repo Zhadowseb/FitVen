@@ -12,6 +12,24 @@ This file applies to `src/Database` and all descendant folders.
 - Do not assume existing local SQLite data can be dropped or recreated without explicit approval.
 - Keep table and column naming stable unless the task explicitly requires a rename.
 
+## The Schema Lives In Two Files
+
+- `src/Database/schema/*.js` holds `CREATE TABLE IF NOT EXISTS`. It is the truth
+  for a **fresh install**.
+- `src/Database/db.js` holds the table rebuilds, `ensureTableColumns`, triggers
+  and backfills. It is the truth for an **existing install**.
+
+Every schema change has to be made in both, and both have to end up in the same
+state. Change only the first and the app works for new users and fails silently
+for everyone who already has it. Change only the second and it is the other way
+round. Nothing warns you.
+
+If the table is synced, `src/Services/AGENTS.md` has the rest of the checklist.
+
+The **cloud** schema is a third place, and it is not in either of those files:
+every change to it is a migration in `supabase/migrations/`. See the README
+there for the running order and what has actually been applied.
+
 ## SQLite Connection Safety
 
 - Keep `SQLiteProvider` props stable. Memoize `onInit` callbacks with `useCallback` so auth/session re-renders do not close and reopen the active database connection.

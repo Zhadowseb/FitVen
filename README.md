@@ -50,45 +50,12 @@ The app is structured in three layers around the local database:
 
 ## Project Structure
 
-```text
-FitApp/
-|-- App.js
-|-- src/
-|   |-- Database/
-|   |   |-- db.js
-|   |   `-- schema/
-|   |       |-- location.js
-|   |       |-- program.js
-|   |       |-- running.js
-|   |       `-- weightlifting.js
-|   |-- Repository/
-|   |   |-- index.js
-|   |   |-- locationRepository.js
-|   |   |-- programRepository.js
-|   |   |-- runningRepository.js
-|   |   |-- weightliftingRepository.js
-|   |   `-- workoutRepository.js
-|   |-- Services/
-|   |   |-- index.js
-|   |   |-- locationService.js
-|   |   |-- programService.js
-|   |   |-- runningService.js
-|   |   |-- shared.js
-|   |   |-- weightliftingService.js
-|   |   `-- workoutService.js
-|   |-- Pages/
-|   |   |-- ExerciseStoragePage/
-|   |   |-- HomePage/
-|   |   |-- MicrocyclePage/
-|   |   |-- ProgramOverviewPage/
-|   |   |-- ProgramPage/
-|   |   |-- SetPage/
-|   |   |-- WeekPage/
-|   |   `-- WorkoutPage/
-|   |-- Resources/
-|   `-- Utils/
-`-- README.md
-```
+The layering is `Pages -> Services -> Repository -> Database`, with `Resources`,
+`Utils` and `Contexts` alongside. `AGENTS.md` in the root and in the relevant
+subfolder describes each layer and the rules that go with it.
+
+The folder tree itself is deliberately not reproduced here: it was wrong within
+a month last time, and `ls src/` is never wrong.
 
 ---
 
@@ -288,8 +255,8 @@ For the detailed rules, see `docs/VERSIONING.md`.
 
 ## Notes
 
-- The app currently uses a local SQLite database, not a remote backend, but will in the future as the app develops to the next stage.
-- `WeekPage` still exists in the codebase, but the main flow from `MicrocyclePage` now navigates more directly into workouts. This means WeekPage currently isn't used, but will potentially be reintroduced at some point.
+- Data lives in a per-user local SQLite database and syncs to Supabase. Every data change has a cloud side; see `src/Services/AGENTS.md` for what that means when you add a field.
+- `WeekPage` is outside the main flow, which now goes from `MicrocyclePage` into workouts directly, but it is still a registered route and may come back. Do not delete the folder: `WeekPage/Components/Day/Components/PickWorkoutModal/` is used by `MicrocyclePage`.
 - Larger schema changes may require explicit migrations or a reset of local app data during development.
 
 ### Run tracking and the route map

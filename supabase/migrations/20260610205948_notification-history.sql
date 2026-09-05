@@ -1,8 +1,8 @@
 -- Adds a durable, user-readable notification inbox.
 --
 -- Run after:
---   docs/supabase-social-search.sql
---   docs/supabase-workout-start-notifications.sql
+--   supabase/migrations/20260424004053_social-search.sql
+--   supabase/migrations/20260609112712_workout-start-notifications.sql
 
 begin;
 

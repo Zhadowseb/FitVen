@@ -1,7 +1,7 @@
 -- Adds social feed persistence for automatically generated workout summaries.
 --
 -- Run after:
---   docs/supabase-social-search.sql
+--   supabase/migrations/20260424004053_social-search.sql
 --   the sync schema that creates public.workout_type_instance
 --
 -- Workout summary posts store a snapshot payload so feed posts do not change

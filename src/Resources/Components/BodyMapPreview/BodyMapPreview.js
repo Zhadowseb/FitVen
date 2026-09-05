@@ -8,7 +8,7 @@ import styles from "./BodyMapPreviewStyle";
 const backBodyImage = require("../../BodyMap/Back/Back_body_compressed.png");
 const frontBodyImage = require("../../BodyMap/Front/Front_body_compressed.png");
 const frontMuscleMasksSvg = require(
-  "../../BodyMap/Front/Muscle_masks/Front_muscle_masks.svg"
+  "../../BodyMap/Front/MuscleMasks/Front_muscle_masks.svg"
 );
 
 export default function BodyMapPreview({

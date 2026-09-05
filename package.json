@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.21.12",
+  "version": "0.22.6-major-structure-audit.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",
@@ -10,6 +10,8 @@
     "android:dev": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
+    "test": "node scripts/check-agent-docs.js && node scripts/check-imports.js && node scripts/check-undeclared.js && npm run test:cloud-sync-fields && npm run test:custom-exercise && npm run test:location && npm run test:run-intervals && npm run test:run-display && npm run test:program-progress && npm run test:workout-finish && npm run test:profile-birthdate && npm run test:heart-rate-settings && npm run test:ble-heart-rate && npm run test:notifications",
+    "docs:check": "node scripts/check-agent-docs.js",
     "version:auto": "node scripts/version.js auto",
     "version:branch": "node scripts/version.js branch",
     "version:status": "node scripts/version.js status",
@@ -19,6 +21,7 @@
     "test:custom-exercise": "node scripts/test-custom-exercise-muscles.js",
     "test:location": "node scripts/test-location-distance.js",
     "test:run-intervals": "node scripts/test-run-interval-utils.js",
+    "test:run-display": "node scripts/test-run-display-utils.js",
     "test:program-progress": "node scripts/test-program-progress-queries.js",
     "test:workout-finish": "node scripts/test-workout-finish-completion.js",
     "test:profile-birthdate": "node scripts/test-profile-birthdate.js",
@@ -28,7 +31,10 @@
     "release:prepare": "node scripts/version.js release",
     "release:android": "node scripts/release-android.js",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
-    "build-aab:android": "npx eas build -p android --profile production"
+    "build-aab:android": "npx eas build -p android --profile production",
+    "imports:check": "node scripts/check-imports.js",
+    "test:cloud-sync-fields": "node scripts/test-cloud-sync-fields.js",
+    "undeclared:check": "node scripts/check-undeclared.js"
   },
   "dependencies": {
     "@expo/ui": "~0.2.0-beta.9",
@@ -71,6 +77,7 @@
   "private": true,
   "devDependencies": {
     "@types/react": "~19.1.10",
+    "babel-plugin-module-resolver": "^5.0.3",
     "babel-plugin-transform-remove-console": "^6.9.4",
     "babel-preset-expo": "~54.0.7",
     "conventional-changelog-cli": "^5.0.0"

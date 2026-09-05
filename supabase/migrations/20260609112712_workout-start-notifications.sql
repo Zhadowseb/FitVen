@@ -1,7 +1,7 @@
 -- Adds durable notification-event dedupe for workout-start pushes.
 --
 -- Run after:
---   docs/supabase-push-notifications.sql
+--   supabase/migrations/20260609112711_push-notifications.sql
 --
 -- The Edge Function uses this table to prevent repeated pushes for the same
 -- workout if the app sends the immediate start event, a webhook retries, or

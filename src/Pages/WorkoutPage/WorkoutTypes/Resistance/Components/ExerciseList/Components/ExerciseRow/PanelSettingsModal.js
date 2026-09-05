@@ -4,16 +4,16 @@ import { useColorScheme } from "react-native";
 import {
   Colors,
   withAlpha,
-} from "../../../../../../../../Resources/GlobalStyling/colors";
-import ChevronRight from "../../../../../../../../Resources/Icons/UI-icons/ChevronRight";
-import Delete from "../../../../../../../../Resources/Icons/UI-icons/Delete";
-import Time from "../../../../../../../../Resources/Icons/UI-icons/Time";
+} from "@resources/GlobalStyling/colors";
+import ChevronRight from "@resources/Icons/UI-icons/ChevronRight";
+import Delete from "@resources/Icons/UI-icons/Delete";
+import Time from "@resources/Icons/UI-icons/Time";
 
 import {
   ThemedModal,
   ThemedText,
   ThemedTextInput,
-} from "../../../../../../../../Resources/ThemedComponents";
+} from "@resources/ThemedComponents";
 import styles from "./PanelSettingsModalStyle";
 
 const COLUMN_CONFIG = [

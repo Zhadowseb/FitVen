@@ -1,10 +1,10 @@
 import { View } from "react-native";
 import { useColorScheme } from "react-native";
-import { Colors } from "../../../../../../../../../Resources/GlobalStyling/colors";
-import Checkmark from "../../../../../../../../../Resources/Icons/UI-icons/Checkmark";
+import { Colors } from "@resources/GlobalStyling/colors";
+import Checkmark from "@resources/Icons/UI-icons/Checkmark";
 
 import {ThemedText}
-  from "../../../../../../../../../Resources/ThemedComponents";
+  from "@resources/ThemedComponents";
 
 import styles from "./SetListStyle.js";
 

@@ -329,18 +329,6 @@ export default StyleSheet.create({
     position: "relative",
   },
 
-  summarySetConnectorArrow: {
-    position: "absolute",
-    top: -3,
-    right: -1,
-    width: 0,
-    height: 0,
-    borderTopWidth: 3,
-    borderBottomWidth: 3,
-    borderLeftWidth: 5,
-    borderTopColor: "transparent",
-    borderBottomColor: "transparent",
-  },
 
   summaryChipText: {
     fontWeight: "700",

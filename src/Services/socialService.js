@@ -39,13 +39,13 @@ const PROFILE_SELECT_FIELDS =
 const WORKOUT_ACTIVITY_SELECT_FIELDS =
   "id, user_id, workout_type, date, label, done, is_active, timer_start, elapsed_time, deleted_at, workout_catalog:workout_type!workout_type_instance_workout_type_fkey(display_name)";
 const SOCIAL_SETUP_MESSAGE =
-  "User search and follows are not set up in Supabase yet. Run docs/supabase-social-search.sql in the Supabase SQL editor first.";
+  "User search and follows are not set up in Supabase yet. Run supabase/migrations/20260424004053_social-search.sql in the Supabase SQL editor first.";
 const WORKOUT_TYPE_SETUP_MESSAGE =
-  "Workout types are not set up in Supabase yet. Run docs/supabase-workout-types.sql in the Supabase SQL editor first.";
+  "Workout types are not set up in Supabase yet. Run supabase/migrations/20260429131030_workout-types.sql in the Supabase SQL editor first.";
 const SOCIAL_AVATAR_SETUP_MESSAGE =
-  "Profile photos are not set up in Supabase yet. Make sure the avatars bucket exists and rerun the updated docs/supabase-social-search.sql script first.";
+  "Profile photos are not set up in Supabase yet. Make sure the avatars bucket exists and rerun the updated supabase/migrations/20260424004053_social-search.sql script first.";
 const PROFILE_BIRTH_DATE_SETUP_MESSAGE =
-  "Birth date settings are not set up in Supabase yet. Run docs/supabase-profile-birthdate.sql in the Supabase SQL editor first.";
+  "Birth date settings are not set up in Supabase yet. Run supabase/migrations/20260628211540_profile-birthdate.sql in the Supabase SQL editor first.";
 export const PROFILE_DISPLAY_NAME_MAX_LENGTH = 40;
 export const PROFILE_BIO_MAX_LENGTH = 160;
 export const PROFILE_AVATAR_MAX_BYTES = 3 * 1024 * 1024;

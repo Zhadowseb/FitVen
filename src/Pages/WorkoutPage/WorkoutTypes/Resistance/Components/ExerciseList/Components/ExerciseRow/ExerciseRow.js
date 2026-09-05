@@ -8,24 +8,24 @@ import {
 import { useColorScheme } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
 
-import { Colors, withAlpha } from "../../../../../../../../Resources/GlobalStyling/colors";
+import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
 import styles from "./ExerciseRowStyle.js";
 import SetList from "./SetList/SetList";
 
-import Note from "../../../../../../../../Resources/Icons/UI-icons/Note";
-import Expand from "../../../../../../../../Resources/Icons/UI-icons/Expand";
-import Plus from "../../../../../../../../Resources/Icons/UI-icons/Plus";
-import ReplayHistory from "../../../../../../../../Resources/Icons/UI-icons/ReplayHistory";
+import Note from "@resources/Icons/UI-icons/Note";
+import Expand from "@resources/Icons/UI-icons/Expand";
+import Plus from "@resources/Icons/UI-icons/Plus";
+import ReplayHistory from "@resources/Icons/UI-icons/ReplayHistory";
 
 import {
   ThemedConfirmModal,
   ThemedModal,
   ThemedText,
   ThemedTitle,
-} from "../../../../../../../../Resources/ThemedComponents";
+} from "@resources/ThemedComponents";
 import PanelSettingsModal from "./PanelSettingsModal";
-import { weightliftingService as weightliftingRepository } from "../../../../../../../../Services";
-import { useExerciseViewSettings } from "../../../../../../../../Contexts/ExerciseViewSettingsContext";
+import { weightliftingService } from "@services";
+import { useExerciseViewSettings } from "@contexts/ExerciseViewSettingsContext";
 import ReanimatedAnimated, {
   runOnJS,
   useAnimatedStyle,
@@ -284,7 +284,7 @@ const ExerciseRow = ({
 
   const deleteExercise = async (exerciseId) => {
     try {
-      await weightliftingRepository.deleteExercise(db, exerciseId);
+      await weightliftingService.deleteExercise(db, exerciseId);
       await updateUI?.();
       await onWorkoutMetadataChange?.();
     } catch (error) {
@@ -370,11 +370,11 @@ const ExerciseRow = ({
   };
 
   const saveExerciseSettings = async ({ columns, note }) => {
-    await weightliftingRepository.updateExerciseVisibleColumns(db, {
+    await weightliftingService.updateExerciseVisibleColumns(db, {
       exerciseId: exercise.exercise_id,
       columns,
     });
-    await weightliftingRepository.updateExerciseNote(db, {
+    await weightliftingService.updateExerciseNote(db, {
       exerciseId: exercise.exercise_id,
       note,
     });
@@ -392,7 +392,7 @@ const ExerciseRow = ({
       setHistoryLoading(true);
       setHistoryLoadError(false);
 
-      const history = await weightliftingRepository.getExerciseHistory(db, {
+      const history = await weightliftingService.getExerciseHistory(db, {
         exerciseId: exercise.exercise_id,
         exerciseName: exercise.exercise_name,
         limit: 3,
@@ -934,9 +934,6 @@ const ExerciseRow = ({
                       return (
                         <View
                           key={item.key}
-                          onLayout={({ nativeEvent }) =>
-                            handleSummarySetLayout(index, nativeEvent.layout)
-                          }
                           style={styles.summarySetItem}
                         >
                           <View
@@ -976,16 +973,7 @@ const ExerciseRow = ({
                                 styles.summarySetConnector,
                                 { backgroundColor: summaryBubbleBorderColor },
                               ]}
-                            >
-                              {wrappedConnectorIndexes.includes(index) && (
-                                <View
-                                  style={[
-                                    styles.summarySetConnectorArrow,
-                                    { borderLeftColor: summaryBubbleBorderColor },
-                                  ]}
-                                />
-                              )}
-                            </View>
+                            />
                           )}
                         </View>
                       );

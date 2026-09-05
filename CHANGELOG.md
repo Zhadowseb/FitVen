@@ -1,5 +1,79 @@
 # Changelog
 
+## [0.22.6] - Unreleased
+### Added
+- `scripts/check-undeclared.js`, run as part of `npm test`: Babel's own scope analysis over all 310 source files, reporting any name a file uses but never declares or imports. There is no linter and no type checking here, so those failed at runtime, only on the code path that used them.
+- `scripts/test-run-display-utils.js`, the first automated coverage the run screen has had: pace and clock formatting, section counts and labels, route splitting and thinning, and the two chart path builders.
+
+### Changed
+- `Run.js` drops from 5,172 lines to 4,502. The pure maths moved beside it into `runDisplayUtils.js`, `runFormatUtils.js`, `runEnduranceStats.js` and `runFlowOptions.js`, and `DraggablePriorityRow` into its own component folder. The GPS and Bluetooth hooks stay in the screen; they are wired into its state and cannot move without a device to test against.
+
+### Fixed
+- `programService.js` lost its `workoutService` import when the sync engine was split in 0.22.4. Four calls in it would have thrown as soon as a workout hierarchy was refreshed.
+- `HeartRateDeviceModal.js` used `StyleSheet.absoluteFill` after its `StyleSheet` import was removed.
+- The workout library's option sheet read a colour that is declared in the screen below it, and would have crashed when opened.
+- An exercise row measured its layout into a handler that was never written, and drew a wrap arrow from an index that was never computed. Both dated back to the row's introduction and are removed.
+
+---
+## [0.22.5] - Unreleased
+### Added
+- `SYNCED_FIELDS` in `src/Services/cloudSync/cloudSyncFields.js`: one row per synced column, with the snapshot, the comparison and the cloud payload all derived from it. Adding a field to a synced table is now one row instead of three edits that have to agree.
+- `scripts/test-cloud-sync-fields.js`, the first automated coverage the sync engine has had. It fails if a field is compared but never uploaded, compared but missing from the snapshot, or not stable under a second normalisation.
+- `scripts/lib/loadAppModule.js`, which compiles a real application module through the project's own Babel setup so a test can exercise it. The existing scripts could only read a file as text, which is why anything with an import had no coverage.
+
+### Fixed
+- A workout's `timer_start` and `original_start_time` are normalised differently for the comparison and for the upload. The asymmetry is preserved and now documented rather than hidden in two separate function bodies.
+
+---
+## [0.22.4] - Unreleased
+### Changed
+- The cloud sync engine moved out of `programService.js` into `src/Services/cloudSync/`, one module per entity over a shared base. `programService.js` drops from 7,424 lines to 2,164, and the largest sync module is 601. Everything is re-exported, so no caller changed.
+
+---
+## [0.22.3] - Unreleased
+### Added
+- Path aliases `@contexts`, `@database`, `@repository`, `@resources`, `@services` and `@utils`, defined in `babel.config.js` and mirrored in `tsconfig.json`.
+- `npm test` now resolves aliased imports too, catches an alias that is neither a package nor defined, and fails if the babel and tsconfig maps disagree.
+
+### Changed
+- The five files in the exercise row tree, which had the deepest imports in the project at eight and nine levels of `../`, use aliases. The remaining 149 deep imports were left alone on purpose.
+
+---
+## [0.22.2] - Unreleased
+### Changed
+- The 19 cloud schema files moved from loose `docs/*.sql` into `supabase/migrations/`, timestamped so they carry the order they were applied in.
+- `supabase/migrations/README.md` records which migrations have been run. `npm test` fails if a migration is not in that table, so the ledger cannot fall behind.
+
+### Fixed
+- `docs/export-user-programs.sql` had a real user's UUID committed in it. It takes a placeholder now.
+
+---
+## [0.22.1] - Unreleased
+### Added
+- `scripts/check-imports.js`, which resolves every relative import with the exact casing on disk and runs as part of `npm test`. Windows is case-insensitive and Android is not, so a wrong-case path used to work locally and fail only in a build.
+
+### Changed
+- `PickWorkoutModal` moved from five levels down inside `WeekPage` to `Resources/Components/`. It is used by the microcycle screen, so a cleanup of the "unused" WeekPage folder would have taken a live screen with it.
+- The background GPS task moved out of `App.js` into `Services/locationBackgroundTask.js`. `App.js` drops from 487 to 382 lines.
+- The muscle mask folders are `MuscleMasks`, matching every other folder in the project.
+
+### Fixed
+- The pick-a-workout dialog referenced two style keys that were never defined and coloured a completed workout with a hardcoded green that ignored the theme.
+
+---
+## [0.22.0] - Unreleased
+### Added
+- `npm test` — one command that runs every check, including a new drift check over the agent guides.
+- `scripts/check-agent-docs.js`, which fails when a guide names a path that no longer exists, tells you to run a script that is gone, or promises an invariant the code has stopped holding.
+- `src/Services/AGENTS.md` with the checklist for adding a field to a synced table, and `src/Sync/AGENTS.md` with the table of which sync components actually run.
+- A `scrimSoft` colour token for a tap-catcher that dims rather than darkens.
+
+### Changed
+- Thirteen files no longer import a service under a repository's name. 45 function names exist in both layers with the same signature, so the alias sent readers to the wrong file.
+- The agent guides now cover what the code depends on and cannot be read from it: the sync field checklist, the two schema files, the theming rule, the layering, and what the five names for "exercise" mean.
+- README no longer reproduces the folder tree, no longer claims the app has no backend, and no longer says WeekPage is unused without mentioning that a live screen depends on a component inside it.
+
+---
 ## [0.21.12] - 2026-09-05
 ### Security
 - Profile pictures are read through short-lived signed URLs instead of permanent public links, so an avatar can no longer be collected once and kept, and deleting one actually takes it away. Requires `docs/supabase-avatar-private-bucket.sql` and, once this version has shipped, the `avatars` bucket set to Private.

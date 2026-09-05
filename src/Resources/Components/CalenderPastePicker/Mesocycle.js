@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Pressable } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
-import { programService as programRepository } from "../../../Services";
+import { programService } from "../../../Services";
 import {
   ThemedModal,
   ThemedStateBlock,
@@ -19,7 +19,7 @@ const Mesocycle = ({ program_id, visible, close }) => {
     const load = async () => {
       try {
         set_Loading(true);
-        const rows = await programRepository.getMesocycleOptions(db, program_id);
+        const rows = await programService.getMesocycleOptions(db, program_id);
         set_Mesocycles(rows);
       } catch (e) {
         console.error(e);
