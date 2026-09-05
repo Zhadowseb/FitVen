@@ -39,9 +39,14 @@ behind by accident.
 | `20260905013310_birth-year-only.sql` | yes |
 | `20260905113144_avatar-private-bucket.sql` | yes |
 | `20260905113510_drop-unused-template-tables.sql` | no |
+| `20260905143000_user-blocks.sql` | no |
 
-The one `no` is optional: it drops the seven `*_template` tables, and only if
-they are genuinely empty. Run it or delete it.
+`20260905113510_drop-unused-template-tables.sql` is optional: it drops the seven
+`*_template` tables, and only if they are genuinely empty. Run it or delete it.
+
+`20260905143000_user-blocks.sql` is **not** optional and has to be run before a
+build carrying blocking reaches anyone. Until it is, user search returns an
+error, because the app now asks for a function that does not exist yet.
 
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to

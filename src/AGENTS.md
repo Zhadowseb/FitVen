@@ -30,6 +30,23 @@ This file applies to everything inside `src/`.
 - Changes to `Set` rows should update local state immediately, keep the owning `Exercise_Instance` derived fields in sync locally, and then sync both levels in the correct parent-first order.
 - Keep `Run` data on its own workout-level sync path until a lower-level running sync exists.
 
+## Blocking
+
+- Everything one user can see about another is gated on a row in
+  `public.user_follows`. A block deletes those rows in both directions and a
+  trigger refuses new ones, so activity, posts, likes and push notifications
+  all stop without any of their own policies knowing blocking exists. Keep it
+  that way: a new follower-visible feature inherits the block for free as long
+  as it reads through `user_follows`.
+- Never check a block in an RLS policy expression. The policy runs as the
+  person doing the write, and the block row they need to see belongs to
+  somebody else, so the check silently passes. It has to be a `security
+  definer` trigger or function.
+- `public.profiles` no longer answers for strangers. Finding someone you have
+  no relationship with goes through `public.search_profiles`, and the list of
+  people you blocked through `public.list_blocked_profiles` — both `security
+  definer`, both filtering blocks in either direction.
+
 ## Conventions The Code Depends On
 
 - Every service and repository function takes `db` as its first argument. The

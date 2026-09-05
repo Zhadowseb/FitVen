@@ -33,6 +33,7 @@ import {
 const PROFILES_TABLE = "profiles";
 const PROFILE_PRIVATE_TABLE = "profile_private";
 const USER_FOLLOWS_TABLE = "user_follows";
+const USER_BLOCKS_TABLE = "user_blocks";
 const WORKOUT_TYPE_INSTANCE_TABLE = "workout_type_instance";
 const PROFILE_SELECT_FIELDS =
   "id, username, username_base, username_code, display_name, bio, avatar_path, created_at, updated_at";
@@ -44,11 +45,14 @@ const WORKOUT_TYPE_SETUP_MESSAGE =
   "Workout types are not set up in Supabase yet. Run supabase/migrations/20260429131030_workout-types.sql in the Supabase SQL editor first.";
 const SOCIAL_AVATAR_SETUP_MESSAGE =
   "Profile photos are not set up in Supabase yet. Make sure the avatars bucket exists and rerun the updated supabase/migrations/20260424004053_social-search.sql script first.";
+const SOCIAL_BLOCK_SETUP_MESSAGE =
+  "Blocking and the new user search are not set up in Supabase yet. Run supabase/migrations/20260905143000_user-blocks.sql in the Supabase SQL editor first.";
 const PROFILE_BIRTH_DATE_SETUP_MESSAGE =
   "Birth date settings are not set up in Supabase yet. Run supabase/migrations/20260628211540_profile-birthdate.sql in the Supabase SQL editor first.";
 export const PROFILE_DISPLAY_NAME_MAX_LENGTH = 40;
 export const PROFILE_BIO_MAX_LENGTH = 160;
 export const PROFILE_AVATAR_MAX_BYTES = 3 * 1024 * 1024;
+export const USER_SEARCH_MIN_LENGTH = 2;
 const USERNAME_INSERT_RETRY_LIMIT = 3;
 
 function createFallbackUsernameBase(user) {
@@ -366,6 +370,16 @@ function normalizeSocialError(error) {
     (message.includes("does not exist") || message.includes("schema cache"))
   ) {
     return new Error(PROFILE_BIRTH_DATE_SETUP_MESSAGE);
+  }
+
+  // Checked before the generic one: these three arrive as a 404 or a
+  // missing-function error, and the generic message names the wrong file.
+  if (
+    message.includes("search_profiles") ||
+    message.includes("list_blocked_profiles") ||
+    (message.includes(USER_BLOCKS_TABLE) && message.includes("does not exist"))
+  ) {
+    return new Error(SOCIAL_BLOCK_SETUP_MESSAGE);
   }
 
   if (isMissingSocialSchemaError(error)) {
@@ -1025,20 +1039,24 @@ export async function searchUsers({ query, currentUserId, limit = 20 }) {
   }
 
   const normalizedQuery = buildSearchFilter(query ?? "");
-  let profilesQuery = supabase
-    .from(PROFILES_TABLE)
-    .select(PROFILE_SELECT_FIELDS)
-    .neq("id", currentUserId)
-    .order("display_name", { ascending: true })
-    .limit(limit);
 
-  if (normalizedQuery.length > 0) {
-    profilesQuery = profilesQuery.or(
-      `username.ilike.%${normalizedQuery}%,username_base.ilike.%${normalizedQuery}%,display_name.ilike.%${normalizedQuery}%`
-    );
+  // Below the minimum the old query returned the entire user base in
+  // display-name order, which is the enumeration the search function replaced.
+  // Save the round trip and let the screen say so.
+  if (normalizedQuery.length < USER_SEARCH_MIN_LENGTH) {
+    return [];
   }
 
-  const { data: profiles, error: profileError } = await profilesQuery;
+  // Not a table read: public.profiles no longer answers to a client that has no
+  // relationship with the row. search_profiles is the one way past that, and it
+  // is where blocked people are filtered out in both directions.
+  const { data: profiles, error: profileError } = await supabase.rpc(
+    "search_profiles",
+    {
+      search_query: normalizedQuery,
+      result_limit: limit,
+    }
+  );
 
   if (profileError) {
     throw normalizeSocialError(profileError);
@@ -1206,4 +1224,72 @@ export async function unfollowUser({ userId, targetUserId }) {
   if (error) {
     throw normalizeSocialError(error);
   }
+}
+
+/* --------------------------------------------------------------- blocks -- */
+
+export async function blockUser({ userId, targetUserId }) {
+  if (!userId || !targetUserId) {
+    throw new Error("Missing user information for block.");
+  }
+
+  if (userId === targetUserId) {
+    throw new Error("You cannot block yourself.");
+  }
+
+  // The follow rows in both directions are cut by a trigger on this insert, not
+  // here: the client has no permission to delete the row where the other person
+  // is the follower, which is the direction that matters.
+  const { error } = await supabase.from(USER_BLOCKS_TABLE).insert({
+    blocker_id: userId,
+    blocked_id: targetUserId,
+  });
+
+  // 23505 is the row already being there, which is the state we wanted anyway.
+  if (error && error.code !== "23505") {
+    throw normalizeSocialError(error);
+  }
+}
+
+export async function unblockUser({ userId, targetUserId }) {
+  if (!userId || !targetUserId) {
+    throw new Error("Missing user information for unblock.");
+  }
+
+  const { error } = await supabase
+    .from(USER_BLOCKS_TABLE)
+    .delete()
+    .eq("blocker_id", userId)
+    .eq("blocked_id", targetUserId);
+
+  if (error) {
+    throw normalizeSocialError(error);
+  }
+}
+
+export async function getBlockedProfiles({ userId }) {
+  if (!userId) {
+    throw new Error("You need to be signed in to see who you have blocked.");
+  }
+
+  // Through a function, because once the follow is gone the blocked profile is
+  // no longer readable through public.profiles - which is the profile policy
+  // working, and would otherwise leave the unblock list showing blank rows.
+  const { data, error } = await supabase.rpc("list_blocked_profiles");
+
+  if (error) {
+    throw normalizeSocialError(error);
+  }
+
+  return attachAvatarUrls(
+    (data ?? []).map((row) => ({
+      id: row.id,
+      username: row.username,
+      displayName: row.display_name,
+      avatarPath: row.avatar_path ?? null,
+      avatarUpdatedAt: row.created_at ?? null,
+      avatarUrl: null,
+      blockedAt: row.created_at ?? null,
+    }))
+  );
 }

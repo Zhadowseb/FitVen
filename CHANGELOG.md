@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.23.0] - Unreleased
+### Added
+- You can block someone. Tap followers or following on the social page, then Block on their row; Blocked accounts at the bottom of that list is where you undo it. A block removes the follow in both directions, stops them following you again, and takes you out of each other's search results. They are not told.
+
+### Security
+- The follow graph was readable in full by any signed-in user. `user_follows` now only answers for rows you are part of.
+- The profile table was readable in full, so a client could list the entire user base with one request. Reading a profile now needs a relationship — yours, someone you follow, or someone who follows you — and finding a stranger goes through a search function that caps the result set and hides blocked people.
+- User search needs at least two characters. Under that, the old query returned every account in the app in name order, which is the enumeration this closes.
+- `profiles` had no DELETE policy, so a user could not remove their own row. Needed for account deletion, and wrong without it.
+
+### Notes
+- Requires `supabase/migrations/20260905143000_user-blocks.sql`. Until it is run, user search fails with a message saying so.
+
+---
 ## [0.22.6] - Unreleased
 ### Added
 - `scripts/check-undeclared.js`, run as part of `npm test`: Babel's own scope analysis over all 310 source files, reporting any name a file uses but never declares or imports. There is no linter and no type checking here, so those failed at runtime, only on the code path that used them.

@@ -145,6 +145,34 @@ export default StyleSheet.create({
     fontSize: 13,
     lineHeight: 20,
   },
+  relationshipAction: {
+    minHeight: 32,
+    paddingHorizontal: 12,
+    justifyContent: "center",
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  relationshipActionPressed: {
+    opacity: 0.7,
+  },
+  relationshipActionText: {
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  relationshipFooter: {
+    paddingTop: 12,
+    alignItems: "center",
+  },
+  relationshipFooterLink: {
+    minHeight: 44,
+    justifyContent: "center",
+    paddingHorizontal: 8,
+  },
+  relationshipFooterText: {
+    fontSize: 13,
+    fontWeight: "600",
+    lineHeight: 18,
+  },
   relationshipCloseButton: {
     marginTop: 8,
   },
