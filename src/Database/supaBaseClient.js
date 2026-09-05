@@ -1,8 +1,12 @@
 import { Platform } from "react-native";
 import "react-native-url-polyfill/auto";
 import "expo-sqlite/localStorage/install";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createClient, processLock } from '@supabase/supabase-js';
+
+import {
+  forgetLegacyPlaintextSession,
+  secureSessionStorage,
+} from "./secureSessionStorage";
 
 import {
   isValidUsernameBase,
@@ -56,13 +60,23 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     fetch: retryingFetch,
   },
   auth: {
-    ...(Platform.OS !== "web" ? { storage: AsyncStorage } : { storage: globalThis.localStorage }),
+    ...(Platform.OS !== "web"
+      ? { storage: secureSessionStorage }
+      : { storage: globalThis.localStorage }),
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
     lock: processLock,
   },
 });
+
+// Once, at startup. Moving the session behind the keystore achieves nothing
+// while the readable copy the old version wrote is still sitting next to it.
+// Native only: on web the session lives in localStorage under the same key, and
+// AsyncStorage is localStorage, so this would delete the live session.
+if (Platform.OS !== "web") {
+  void forgetLegacyPlaintextSession();
+}
 
 export async function registerWithEmail({ email, password, usernameBase }) {
   const normalizedEmail = email.trim().toLowerCase();

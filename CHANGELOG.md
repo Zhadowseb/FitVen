@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.23.4] - Unreleased
+### Security
+- The sign-in session moved from AsyncStorage to `expo-secure-store`, behind the Android Keystore and the iOS Keychain. What was sitting there in the clear is a refresh token — a working key to the account until it rotates — in a file that is readable on a rooted phone and in a full-device backup.
+- **Everyone is signed out once by this update and has to enter their password again.** That is the point rather than a side effect: the old tokens have been readable on disk, so they are treated as spent, and the plaintext copy is deleted on first launch instead of being carried across.
+
+### Added
+- `scripts/test-secure-session-storage.js`. Secure storage holds small values — over 2048 bytes may not store at all on Android — and a session is several times that, so it is split across numbered entries. The test drives that against a fake store that enforces the real key charset and byte ceiling: round trips at the chunk boundaries, multi-byte characters, a session that shrinks, one that has lost a piece, and a device with no keystore.
+- `loadAppModule.stubModule`, so a test can hand a module a fake package instead of the throwing stub. That is what made the storage adapter testable at all.
+
+### Notes
+- If secure storage is unavailable on a device, the session falls back to the old unencrypted storage with a warning rather than failing to sign in.
+
+---
 ## [0.23.3] - Unreleased
 ### Security
 - `refresh_sync_local_watchers_count` was a callable REST endpoint that took the user id as a parameter and ran without a fixed `search_path`. It is only ever used by a trigger, so it moved to the `private` schema and the endpoint is gone rather than hardened. Row-level security had kept it from touching another user's rows, so nothing was exposed by it.
