@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.21.12] - Unreleased
+## [0.21.12] - 2026-09-05
 ### Security
 - Profile pictures are read through short-lived signed URLs instead of permanent public links, so an avatar can no longer be collected once and kept, and deleting one actually takes it away. Requires `docs/supabase-avatar-private-bucket.sql` and, once this version has shipped, the `avatars` bucket set to Private.
 
@@ -8,7 +8,7 @@
 - The three copies of the avatar URL builder are one shared module that signs a whole list in a single request and caches the result.
 
 ---
-## [0.21.11] - Unreleased
+## [0.21.11] - Released with 0.21.12
 ### Security
 - `console.log`, `.info` and `.debug` are stripped from production bundles. `error` and `warn` stay.
 - `LocationDebugLog` is gone. It kept every GPS point the tracker saw, accepted or rejected, with speed and accuracy and no cleanup — a home address sitting unencrypted on the device forever. Existing installs drop the table on the next launch.
@@ -17,7 +17,7 @@
 - The user search filter allows a known-good set of characters instead of removing a known-bad one.
 
 ---
-## [0.21.10] - Unreleased
+## [0.21.10] - Released with 0.21.12
 ### Security
 - A workout start notification now takes its text from the stored workout row, not from the caller's request, so a sender can no longer put their own wording on every follower's lock screen. A label is capped at 40 characters and stripped to a charset that cannot form a link, and a workout type has to exist in the catalog.
 - The notification function is rate limited to 12 events per account per hour.
@@ -26,7 +26,7 @@
 - Registering a push token no longer switches off another account's row on demand. The token is only released once the other account has gone quiet for seven days; until then the new device is registered but left disabled.
 
 ---
-## [0.21.9] - Unreleased
+## [0.21.9] - Released with 0.21.12
 ### Security
 - Removed the one-time program import, which carried a named user's email address, Supabase user id and full training history in the app bundle of every installation.
 
@@ -34,7 +34,7 @@
 - `docs/SIKKERHED-DINE-OPGAVER.md`, the steps for the parts of the security review that live in the Supabase and Google dashboards.
 
 ---
-## [0.21.8] - Unreleased
+## [0.21.8] - Released with 0.21.12
 ### Removed
 - The five unmounted sync components for programs, blocks, weeks, days and exercise instances. `SetSync` already pushes that whole hierarchy in parent-first order, which is what the sync rules now ask for.
 
@@ -42,7 +42,7 @@
 - The workout-label icon list says which of its icons are placeholders for workout types still to come, so a dead-code sweep does not offer to delete them again.
 
 ---
-## [0.21.7] - Unreleased
+## [0.21.7] - Released with 0.21.12
 ### Added
 - `ThemedText` takes a `type` naming a step on the typography scale, the way `ThemedTitle` already does, plus an `overline` step for the small uppercase label above a page or section title. Existing call sites are untouched.
 - `Services/authService`, so the login, register and profile screens no longer reach into `src/Database` directly.
@@ -56,12 +56,12 @@
 - 16 files nothing imported, including two whole components whose only caller was itself dead.
 
 ---
-## [0.21.6] - Unreleased
+## [0.21.6] - Released with 0.21.12
 ### Changed
 - The last 71 raw `Text` elements are now `ThemedText`, so a line without an explicit colour falls back to the theme's text colour instead of the platform default.
 
 ---
-## [0.21.5] - Unreleased
+## [0.21.5] - Released with 0.21.12
 ### Changed
 - `ThemedCard` is a surface only. It used to bake in 10 px of margin and padding, which every single call site then had to undo, so 69 reset declarations are gone with it.
 - `ThemedButton` passes unknown props through to its `Pressable`, so `accessibilityLabel`, `testID` and `onLongPress` reach it, and it announces itself as a button by default.
@@ -70,7 +70,7 @@
 - 93 dead colour fallbacks. Every one sat behind a token that is always defined, and most held a pre-redesign colour — `#f7742e`, `#60daac`, `#0E0F12`, `#ba0000ff` — that read as a valid value to anyone editing the line. Fourteen of them fell back to the dark palette, which would have been the wrong scheme in the light theme.
 
 ---
-## [0.21.4] - Unreleased
+## [0.21.4] - Released with 0.21.12
 ### Fixed
 - The set summary under an exercise no longer draws white on white in the light theme: the compact table's surface, its gridlines, the set bubbles' borders and the connector between them now come from the palette.
 - The set cell's status tints are derived from the status colours themselves, so they follow the accent theme.
@@ -83,7 +83,7 @@
 - 67 style keys nothing referenced, across 13 style files, most of them left behind by the redesign.
 
 ---
-## [0.21.3] - Unreleased
+## [0.21.3] - Released with 0.21.12
 ### Added
 - `ThemedStateBlock`, one component for a screen's loading, empty and error state. Thirteen screens used to spell it out by hand.
 - `ThemedSegmentedControl`, which takes any number of options, replacing the two-option `ThemedSegmentedToggle` that had no call sites. The appearance setting is its first user.
@@ -95,7 +95,7 @@
 - The appearance segments now carry a 44 px touch target through hitSlop, without the row getting taller.
 
 ---
-## [0.21.2] - Unreleased
+## [0.21.2] - Released with 0.21.12
 ### Added
 - `ThemedSheetHandle`, one grab handle for every bottom sheet. Eight sheets drew their own across three sizes, four radii and seven colours, four of which were hardcoded white and invisible in the light theme.
 
@@ -108,7 +108,7 @@
 - The start-workout sheet and the exercise filter sheet build their styles from the theme directly; the intermediate colour-alias object each of them carried is gone.
 
 ---
-## [0.21.1] - Unreleased
+## [0.21.1] - Released with 0.21.12
 ### Changed
 - The relative timestamp on the feed card and the notification list now comes from one `formatTimeAgo` in `Utils/dateUtils`, in place of two identical copies.
 - Number display formatting is now one `formatDisplayNumber` in `Utils/numberUtils`, shared by the RM list, the estimated-set dialogs, the 1RM calculator and the program service. The program service no longer throws on a missing value; it shows the same placeholder as the screens do.
@@ -117,7 +117,7 @@
 - The four local `colorWithAlpha` helpers are gone; every caller uses `withAlpha` from the colour tokens.
 
 ---
-## [0.21.0] - Unreleased
+## [0.21.0] - Released with 0.21.12
 ### Added
 - Colour tokens for the surfaces that components used to build with a light/dark ternary of their own: table surfaces, gridlines and alternating rows, the record highlight, three neutral overlays, the ink on a danger fill and the two scrim strengths.
 - `Spacing`, `Radius` and `Elevation` constants in `GlobalStyling/spacing.js`, for new code and for files another change touches anyway.
@@ -126,7 +126,7 @@
 - Seven palette tokens nothing referenced: `third`, `textMuted`, `plannedLight`, `libraryMetricBackground` and the `NOT_STARTED`/`ACTIVE`/`COMPLETE` status aliases, the last two also from all four accent themes.
 
 ---
-## [0.20.0] - Unreleased
+## [0.20.0] - Released with 0.21.12
 ### Changed
 - Every gesture on a calendar day now opens one day sheet, which holds the day's workouts, its programs and the add, copy and delete actions.
 - Calendar month cells now carry the date plus one coloured dot per workout instead of icon cards, the today/sick stamp and the program dot.
@@ -186,18 +186,18 @@
 - Saving a workout-start notification mode no longer rolls the choice back when this device cannot register for push notifications; the preference is already stored, and the screen now says the device may not receive pushes yet.
 - The manage-push-token function now answers with the underlying error and its Postgres code instead of an opaque 500, and the client reads that body into the thrown error.
 ---
-## [0.19.1] - Unreleased
+## [0.19.1] - Released with 0.21.12
 ### Changed
 - Finish on a strength-workout timer now atomically marks the workout complete, even when planned exercises or sets remain unfinished.
 ---
-## [0.18.12] - Unreleased
+## [0.18.12] - Released with 0.21.12
 ### Changed
 - Removed the redundant completed-workout message panel from the home card.
 - Show the next planned workout in place of the completed-workout summary action.
 - Open the completed workout when tapping anywhere on its home card.
 
 ---
-## [0.18.11] - Unreleased
+## [0.18.11] - Released with 0.21.12
 ### Changed
 - Moved exercise card display settings to Settings > Workout Types > Strength Training.
 - Persisted the selected collapsed exercise card view on the device.
@@ -211,7 +211,7 @@
 - Added mandatory branch, version, changelog, and validation preflight checks to the repository guide.
 
 ---
-## [0.19.0] - Unreleased
+## [0.19.0] - Released with 0.21.12
 ### Added
 - Added direct Bluetooth Low Energy pairing for Garmin HRM-Pro and other standard heart-rate monitors.
 - Added a remembered heart-rate sensor, automatic workout reconnection, live BPM and heart-rate zone display.
@@ -222,7 +222,7 @@
 - Show a distinct completed-workout card on the home page, with finished time, duration, summary access, and the next planned workout.
 
 ---
-## [0.18.10] - Unreleased
+## [0.18.10] - Released with 0.21.12
 ### Changed
 - Rename the front-page workout action from "Start workout" to "Open workout" to make it clear that the workout opens before it begins.
 - Mark the active auto-advance target directly on each Speed & Structure interval and allow Time, Distance, or Automatic selection from the set options.
@@ -235,7 +235,7 @@
 - Redesign the Start workout sheet so planned workouts, fresh starts, and repeated workouts have distinct visual treatments, with dashed plus cards for new workouts and solid replay rows for copied workouts.
 
 ---
-## [0.18.9] - Unreleased
+## [0.18.9] - Released with 0.21.12
 ### Changed
 - Fix the crash when opening a completed Run or Walk workout on Android by configuring the Google Maps Android API key and only mounting the route map when the key is available, with a clear fallback card otherwise.
 - Stop losing GPS points during Run and Walk tracking: the background location task now keeps one cached database connection with a busy timeout and writes each GPS batch in a single retried transaction instead of opening, migrating, and closing a new connection per batch.
@@ -243,14 +243,14 @@
 - Harden route-map helpers for long workouts (no argument-spread over thousands of points, clamped map regions, simplified polylines) and remove the duplicated iOS location background mode.
 
 ---
-## [0.18.8] - Unreleased
+## [0.18.8] - Released with 0.21.12
 ### Changed
 - Add the first Walk workout draft with direct GPS tracking, timer controls, distance, pace, heart-rate zones, and completed-workout insights.
 - Register Walk as an active local and Supabase workout type.
 - Show Walk as a Start fresh option and recognize it in planned and recent workout cards.
 
 ---
-## [0.18.7] - Unreleased
+## [0.18.7] - Released with 0.21.12
 ### Changed
 - Add planned-set and progress cards for the single main Endurance & Base set, including duration, pace, zone, distance, and completion progress.
 - Add a persisted drag-and-drop priority list for populated Endurance & Base plan stats.
@@ -262,38 +262,38 @@
 - Keep Endurance & Base plans continuous by omitting automatic rest rows from their workflow.
 
 ---
-## [0.18.6] - Unreleased
+## [0.18.6] - Released with 0.21.12
 ### Changed
 - Remove dashed grid lines from the Run completion charts.
 
 ---
-## [0.18.5] - Unreleased
+## [0.18.5] - Released with 0.21.12
 ### Changed
 - Add selectable max-heart-rate sources and calculate Run chart zones from the resolved profile value.
 
 ---
-## [0.18.4] - Unreleased
+## [0.18.4] - Released with 0.21.12
 ### Changed
 - Keep public profiles and social circles available when private profile settings are missing or using an older Supabase schema cache.
 - Stabilize the birth date wheel so drag and momentum events cannot fight over the selected value.
 
 ---
-## [0.18.3] - Unreleased
+## [0.18.3] - Released with 0.21.12
 ### Changed
 - Simplify the completed Run summary and use the secondary color for its border and distance.
 
 ---
-## [0.18.2] - Unreleased
+## [0.18.2] - Released with 0.21.12
 ### Changed
 - Add shared private birth date and max heart rate settings to Public profile and Run settings, including calculated, manual, and measured max-pulse sources.
 
 ---
-## [0.18.1] - Unreleased
+## [0.18.1] - Released with 0.21.12
 ### Changed
 - Add a Workout Types entry under Personal settings with Strength Training and Run, and move Exercises under Strength Training.
 
 ---
-## [0.18.0] - Unreleased
+## [0.18.0] - Released with 0.21.12
 ### Changed
 - Add a fresh-run workout selection flow with persisted run focus choices and Endurance & base, Speed & Structure, Performance & Threshold, and Custom cards.
 - Hide empty Speed & Structure warmup and cooldown sections from the run plan once the run starts.
@@ -308,12 +308,12 @@
 - Delete Run sets directly from the edit sheet without a confirmation alert.
 
 ---
-## [0.17.35] - Unreleased
+## [0.17.35] - Released with 0.21.12
 ### Changed
 - Add a weekly muscle load chart to Personal Records with program selection.
 
 ---
-## [0.17.34] - Unreleased
+## [0.17.34] - Released with 0.21.12
 ### Changed
 - Ask for confirmation before deleting strength sets, strength exercises, run sets, estimated 1RMs, calendar workouts, and before restarting workouts.
 
