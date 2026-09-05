@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.23.5] - Unreleased
+### Added
+- `docs/privacy-policy.html`, the public copy Google Play requires, generated from the same file the in-app screen reads. `npm test` fails if it drifts — two hand-maintained copies of a legal document end with nobody able to say which one a user agreed to.
+
+### Changed
+- Five of the eight unwritten sections in the privacy policy are filled in from what the code actually does: the third parties (Supabase, Expo, Google Maps, and nothing else — no analytics, no advertising, no crash reporting), that the map request tells Google roughly where a run happened, that there are no backups today, that the dashboard gives direct access to the database, and the one-month deadline for answering a request.
+
+### Notes
+- Three statements are still outstanding and are decisions rather than facts about the code: who the data controller is, the contact address for data requests, and the minimum age.
+
+---
 ## [0.23.4] - Unreleased
 ### Security
 - The sign-in session moved from AsyncStorage to `expo-secure-store`, behind the Android Keystore and the iOS Keychain. What was sitting there in the clear is a refresh token — a working key to the account until it rotates — in a file that is readable on a rooted phone and in a full-device backup.

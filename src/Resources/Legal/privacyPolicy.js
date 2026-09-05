@@ -9,8 +9,11 @@
 //  a wrong answer in a privacy policy is worse than no policy at all.
 //
 //  Google Play also requires a privacy policy at a public URL, separate from
-//  this screen. Put that address in PRIVACY_POLICY_URL below and the same one
-//  in the Play Console listing.
+//  this screen. docs/privacy-policy.html is that page, generated from this file
+//  so the two copies cannot say different things - never edit it by hand, run
+//  `npm run build:privacy-policy` after changing anything here. Host it, then
+//  put the address in PRIVACY_POLICY_URL below and the same one in the Play
+//  Console listing.
 //
 //  When you change the wording in a way that changes what people are agreeing
 //  to, raise PRIVACY_POLICY_VERSION. Everyone is asked again on their next
@@ -57,7 +60,9 @@ Push notifications are delivered through Expo's notification service, which mean
 
 Location is only read while a run is actively being tracked, and only if you allow it. It is stored with the run.
 
-[SKAL UDFYLDES] If you add any other service that receives user data — analytics, crash reporting, a mailing list — it has to be named here.`,
+The map that draws your route is Google Maps. Drawing a route means asking Google for the map of that area, so Google can see roughly where you ran, even though the route itself is never sent to them.
+
+Those three — Supabase, Expo and Google Maps — are the only outside services FitVen uses. There is no analytics, no advertising, no crash reporting, and no mailing list.`,
   },
   {
     title: "How long it is kept",
@@ -67,7 +72,7 @@ Notification history is kept for 14 days and then deleted automatically.
 
 When you delete your account, everything is removed immediately. There is no grace period and no backup copy you can be restored from.
 
-[SKAL UDFYLDES] If backups are turned on later, say how long a backup is kept, because data survives in a backup after deletion.`,
+There are no database backups today, so nothing survives a deletion anywhere. If backups are turned on later this section has to say how long one is kept, because deleted data lives on inside a backup until it expires.`,
   },
   {
     title: "Who can see your data",
@@ -75,7 +80,7 @@ When you delete your account, everything is removed immediately. There is no gra
 
 Blocking someone removes the follow in both directions and takes you out of each other's search results.
 
-[SKAL UDFYLDES] Whether anyone at your end can read user data in the Supabase dashboard, and under what circumstances.`,
+The person responsible for FitVen can read the database directly through the Supabase dashboard. That access exists so the app can be run and repaired, and it is not used to look at individual training data without a reason such as a fault you have reported.`,
   },
   {
     title: "Your rights",
@@ -85,7 +90,7 @@ You can delete your account, and everything in it, from your profile — Account
 
 You have the right to a copy of your data, to have it corrected, to have it erased, and to complain to Datatilsynet if you believe it is being handled wrongly.
 
-[SKAL UDFYLDES] The email address people write to in order to exercise those rights, and how quickly they can expect an answer.`,
+[SKAL UDFYLDES: kontakt-e-mail] Write to the address above. You will have an answer within one month, which is the deadline the regulation sets.`,
   },
   {
     title: "Children",
