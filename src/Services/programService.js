@@ -16,6 +16,7 @@ import {
   weightliftingRepository,
   workoutRepository,
 } from "@repository";
+import * as workoutService from "@services/workoutService";
 import { withTransaction } from "@services/shared";
 import {
   createNextSyncVersion,

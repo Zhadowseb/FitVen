@@ -934,9 +934,6 @@ const ExerciseRow = ({
                       return (
                         <View
                           key={item.key}
-                          onLayout={({ nativeEvent }) =>
-                            handleSummarySetLayout(index, nativeEvent.layout)
-                          }
                           style={styles.summarySetItem}
                         >
                           <View
@@ -976,16 +973,7 @@ const ExerciseRow = ({
                                 styles.summarySetConnector,
                                 { backgroundColor: summaryBubbleBorderColor },
                               ]}
-                            >
-                              {wrappedConnectorIndexes.includes(index) && (
-                                <View
-                                  style={[
-                                    styles.summarySetConnectorArrow,
-                                    { borderLeftColor: summaryBubbleBorderColor },
-                                  ]}
-                                />
-                              )}
-                            </View>
+                            />
                           )}
                         </View>
                       );

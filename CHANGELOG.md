@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.22.6] - Unreleased
+### Added
+- `scripts/check-undeclared.js`, run as part of `npm test`: Babel's own scope analysis over all 310 source files, reporting any name a file uses but never declares or imports. There is no linter and no type checking here, so those failed at runtime, only on the code path that used them.
+- `scripts/test-run-display-utils.js`, the first automated coverage the run screen has had: pace and clock formatting, section counts and labels, route splitting and thinning, and the two chart path builders.
+
+### Changed
+- `Run.js` drops from 5,172 lines to 4,502. The pure maths moved beside it into `runDisplayUtils.js`, `runFormatUtils.js`, `runEnduranceStats.js` and `runFlowOptions.js`, and `DraggablePriorityRow` into its own component folder. The GPS and Bluetooth hooks stay in the screen; they are wired into its state and cannot move without a device to test against.
+
+### Fixed
+- `programService.js` lost its `workoutService` import when the sync engine was split in 0.22.4. Four calls in it would have thrown as soon as a workout hierarchy was refreshed.
+- `HeartRateDeviceModal.js` used `StyleSheet.absoluteFill` after its `StyleSheet` import was removed.
+- The workout library's option sheet read a colour that is declared in the screen below it, and would have crashed when opened.
+- An exercise row measured its layout into a handler that was never written, and drew a wrap arrow from an index that was never computed. Both dated back to the row's introduction and are removed.
+
+---
 ## [0.22.5] - Unreleased
 ### Added
 - `SYNCED_FIELDS` in `src/Services/cloudSync/cloudSyncFields.js`: one row per synced column, with the snapshot, the comparison and the cloud payload all derived from it. Adding a field to a synced table is now one row instead of three edits that have to agree.

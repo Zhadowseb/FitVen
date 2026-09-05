@@ -69,6 +69,12 @@ Five names, and they are not interchangeable:
   `src/Resources/ThemedComponents/ThemedBottomNavigation.js` and
   `src/Resources/Components/StartWorkoutSheet.js` — not in `src/Pages/`. The
   navigation is mounted in `App.js` outside the navigator.
+- The run screen is split, but only its pure parts. `Run.js` is still ~4,500
+  lines because the GPS and Bluetooth hooks are wired into its state and cannot
+  move without a device to test on. The maths that could move lives beside it in
+  `runDisplayUtils.js` (sections, route, charts), `runFormatUtils.js` (pace,
+  clock, distance), `runEnduranceStats.js` and `runFlowOptions.js`, and is the
+  only part with tests. Put new run maths there, not back in the screen.
 - `src/Pages/WeekPage/` is outside the active user flow, but it is still a
   registered route.
 

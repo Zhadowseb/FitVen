@@ -191,6 +191,10 @@ function OptionSheet({
   onClose,
   theme,
 }) {
+  // Was reaching for a primaryTextColor that only exists in the screen
+  // below, so a selected option's checkmark threw as soon as the sheet opened.
+  const primaryTextColor = theme.primaryText ?? theme.primary;
+
   return (
     <ThemedBottomSheet visible={visible} onClose={onClose}>
       <ThemedText style={styles.optionSheetTitle} setColor={theme.quietText}>
