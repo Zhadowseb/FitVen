@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.23.1] - Unreleased
+### Added
+- Delete account, at the bottom of the account card in your profile. It removes your programs, workouts, records, posts, follows, notifications, profile and photo from the cloud, deletes the sign-in itself, and removes this phone's copy of the database. You type DELETE to confirm; there is no undo and no grace period.
+
+### Notes
+- Requires `supabase/migrations/20260905161500_delete-account.sql` **and** the `delete-account` Edge Function deployed. Without both, the button fails with a function error and nothing is removed.
+- The tables to erase are discovered from the schema, not listed in the code: every table in `public` with a column that names a user. A table added later is covered without anyone remembering to add it. If a foreign key still refuses after three passes the function raises, so a half-erased account reports as a failure rather than a success.
+
+---
 ## [0.23.0] - Unreleased
 ### Added
 - You can block someone. Tap followers or following on the social page, then Block on their row; Blocked accounts at the bottom of that list is where you undo it. A block removes the follow in both directions, stops them following you again, and takes you out of each other's search results. They are not told.

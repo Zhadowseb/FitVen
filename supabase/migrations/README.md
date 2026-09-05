@@ -40,6 +40,7 @@ behind by accident.
 | `20260905113144_avatar-private-bucket.sql` | yes |
 | `20260905113510_drop-unused-template-tables.sql` | no |
 | `20260905143000_user-blocks.sql` | no |
+| `20260905161500_delete-account.sql` | no |
 
 `20260905113510_drop-unused-template-tables.sql` is optional: it drops the seven
 `*_template` tables, and only if they are genuinely empty. Run it or delete it.
@@ -47,6 +48,10 @@ behind by accident.
 `20260905143000_user-blocks.sql` is **not** optional and has to be run before a
 build carrying blocking reaches anyone. Until it is, user search returns an
 error, because the app now asks for a function that does not exist yet.
+
+`20260905161500_delete-account.sql` is the account-deletion side and pairs with
+the `delete-account` Edge Function. Both have to be in place, or Delete account
+in the profile fails with a function error.
 
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to

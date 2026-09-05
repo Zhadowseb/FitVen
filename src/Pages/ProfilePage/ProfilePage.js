@@ -38,11 +38,17 @@ import {
   ThemedCard,
   ThemedDateWheelPicker,
   ThemedKeyboardProtection,
+  ThemedModal,
   ThemedSegmentedControl,
+  ThemedTextInput,
   ThemedText,
   ThemedView,
   UserAvatar,
 } from "../../Resources/ThemedComponents";
+
+// Not localised on purpose: the word the user types has to match exactly, and
+// a translated one is a different word on a phone in a different language.
+const DELETE_CONFIRMATION_WORD = "DELETE";
 
 const APPEARANCE_OPTIONS = [
   { value: "dark", label: "Dark" },
@@ -83,6 +89,10 @@ export default function ProfilePage() {
   });
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState("");
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   const profileStatusColor =
     profileFeedback.status === "success"
@@ -353,6 +363,50 @@ export default function ProfilePage() {
       );
     } finally {
       setIsLoggingOut(false);
+    }
+  };
+
+  const closeDeleteModal = () => {
+    if (isDeletingAccount) {
+      return;
+    }
+
+    setDeleteModalVisible(false);
+    setDeleteConfirmText("");
+    setDeleteError("");
+  };
+
+  // Typed rather than a second Yes button. This is the one action in the app
+  // with nothing behind it - no trash, no grace period, no support request that
+  // can bring it back - so it should not be reachable by two taps in a row.
+  const canConfirmDelete =
+    deleteConfirmText.trim().toUpperCase() === DELETE_CONFIRMATION_WORD;
+
+  const handleDeleteAccount = async () => {
+    if (!canConfirmDelete || isDeletingAccount) {
+      return;
+    }
+
+    setDeleteError("");
+    setIsDeletingAccount(true);
+
+    try {
+      try {
+        await notificationService.disableCurrentPushTokenForUser({ user });
+      } catch (cleanupError) {
+        console.warn("Push token delete cleanup failed:", cleanupError);
+      }
+
+      // On success this signs out, which unmounts the screen. Nothing after it
+      // is guaranteed to run, so there is no success state to set.
+      await authService.deleteAccount({ user });
+    } catch (error) {
+      setDeleteError(
+        error instanceof Error
+          ? error.message
+          : "Could not delete the account. Nothing was removed."
+      );
+      setIsDeletingAccount(false);
     }
   };
 
@@ -884,6 +938,39 @@ export default function ProfilePage() {
                   {appVersion}
                 </ThemedText>
               </View>
+
+              <InsetDivider />
+
+              <TouchableOpacity
+                activeOpacity={0.85}
+                accessibilityRole="button"
+                accessibilityLabel="Delete account"
+                onPress={() => setDeleteModalVisible(true)}
+                style={styles.deleteAccountRow}
+              >
+                <View style={styles.accountInfo}>
+                  <ThemedText
+                    style={styles.accountValue}
+                    setColor={theme.danger}
+                  >
+                    Delete account
+                  </ThemedText>
+                  <ThemedText
+                    style={styles.deleteAccountHint}
+                    setColor={theme.quietText}
+                  >
+                    Removes your programs, workouts and profile everywhere. This
+                    cannot be undone.
+                  </ThemedText>
+                </View>
+
+                <ChevronRight
+                  width={16}
+                  height={16}
+                  stroke={theme.danger}
+                  color={theme.danger}
+                />
+              </TouchableOpacity>
             </ThemedCard>
           </View>
         </ThemedKeyboardProtection>
@@ -894,6 +981,60 @@ export default function ProfilePage() {
         onClose={() => setFeedbackModalVisible(false)}
         userId={user?.id ?? null}
       />
+
+      <ThemedModal
+        visible={deleteModalVisible}
+        onClose={closeDeleteModal}
+        title="Delete your account"
+      >
+        <ThemedText style={styles.deleteModalBody} setColor={theme.quietText}>
+          Your programs, workouts, personal records, posts, profile and photo
+          are removed from FitVen and from this phone. People who follow you
+          stop following you. There is no way to get any of it back.
+        </ThemedText>
+
+        <ThemedText
+          style={styles.deleteModalPrompt}
+          setColor={theme.title}
+        >
+          Type {DELETE_CONFIRMATION_WORD} to confirm
+        </ThemedText>
+
+        <ThemedTextInput
+          value={deleteConfirmText}
+          onChangeText={setDeleteConfirmText}
+          placeholder={DELETE_CONFIRMATION_WORD}
+          autoCapitalize="characters"
+          autoCorrect={false}
+          editable={!isDeletingAccount}
+        />
+
+        {deleteError ? (
+          <ThemedText style={styles.errorText} setColor={theme.danger}>
+            {deleteError}
+          </ThemedText>
+        ) : null}
+
+        <ThemedButton
+          title={isDeletingAccount ? "Deleting..." : "Delete my account"}
+          variant="danger"
+          onPress={handleDeleteAccount}
+          disabled={!canConfirmDelete || isDeletingAccount}
+          fullWidth
+          height={44}
+          style={styles.deleteModalConfirm}
+        />
+
+        <ThemedButton
+          title="Cancel"
+          variant="secondary"
+          onPress={closeDeleteModal}
+          disabled={isDeletingAccount}
+          fullWidth
+          height={44}
+          style={styles.deleteModalCancel}
+        />
+      </ThemedModal>
     </ThemedView>
   );
 }

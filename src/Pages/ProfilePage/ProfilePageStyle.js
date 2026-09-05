@@ -345,4 +345,32 @@ export default StyleSheet.create({
     paddingBottom: 12,
     fontSize: 12,
   },
+  deleteAccountRow: {
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    minHeight: 44,
+  },
+  deleteAccountHint: {
+    fontSize: 12,
+    lineHeight: 17,
+  },
+  deleteModalBody: {
+    fontSize: 13,
+    lineHeight: 19,
+  },
+  deleteModalPrompt: {
+    fontSize: 12,
+    fontWeight: "700",
+    marginTop: 16,
+    marginBottom: 6,
+  },
+  deleteModalConfirm: {
+    marginTop: 16,
+  },
+  deleteModalCancel: {
+    marginTop: 8,
+  },
 });
