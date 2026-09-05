@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.23.18] - Unreleased
+### Changed
+- The deletion page says how to delete part of your data without losing the account. That has always been true — a program, a workout, a set, a tracked run and its route, a sickness entry, a post can each go on their own — but the page only described deleting everything, which is the answer Play asks about separately and checks at that address.
+
+---
 ## [0.23.17] - Unreleased
 ### Added
 - `web/delete-account/`, the account deletion page Google Play requires and links to from the store page. It exists separately from the Delete account button in the app because the people most likely to need it are the ones who have already uninstalled: it names the app, needs no sign-in, and offers an email route as well as the in-app steps.
