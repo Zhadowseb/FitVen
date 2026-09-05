@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.23.14] - Unreleased
+### Changed
+- Creating an account ends somewhere. It used to print a line of text, empty the form, and leave you on the screen you had just finished with, no way onwards. There is a panel now that says whether the address needs confirming, and a Go to login button.
+- The password rule is written under the field from the start instead of appearing as an error once it has been broken.
+- The top bar says Create account. It was a back arrow alone in an empty band.
+- Field labels are 13 px in the text colour, helper text 12 px in the quiet one. Labels were 11 px uppercase quiet and the helper text below them was larger, which put the hierarchy upside down. Changed on the login screen too, or two screens one tap apart disagree.
+- One heading, not three. "Register", "New account" and "Account details" all said the same thing above the same four fields.
+- The Create account button no longer greys out until four separate rules pass. Same as the login screen: it is pressable, and pressing it marks whichever field is not right yet.
+
+### Added
+- A show/hide toggle on the password fields, matching the login screen.
+
+---
 ## [0.23.13] - Unreleased
 ### Fixed
 - The password reset page asked Supabase for the PKCE flow, which could never have worked. PKCE keeps a code verifier in the storage of whatever requested the reset — the phone — and the link is opened in a browser that has never seen it. The app does not use PKCE either, so the link arrives as a URL fragment and the page reads that instead.

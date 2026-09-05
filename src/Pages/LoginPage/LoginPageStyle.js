@@ -74,10 +74,8 @@ export default StyleSheet.create({
   },
 
   inputLabel: {
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
+    fontSize: 13,
+    fontWeight: "700",
     marginBottom: 8,
   },
 

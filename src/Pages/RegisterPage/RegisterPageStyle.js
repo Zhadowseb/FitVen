@@ -50,13 +50,6 @@ export default StyleSheet.create({
     marginBottom: 8,
   },
 
-  title: {
-    fontSize: 42,
-    lineHeight: 44,
-    fontWeight: "800",
-    marginBottom: 10,
-  },
-
   subtitle: {
     fontSize: 15,
     lineHeight: 22,
@@ -70,36 +63,13 @@ export default StyleSheet.create({
     borderRadius: 28,
   },
 
-  cardLabel: {
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 0.9,
-    textTransform: "uppercase",
-    marginBottom: 10,
-  },
-
-  cardTitle: {
-    fontSize: 24,
-    lineHeight: 28,
-    fontWeight: "800",
-    marginBottom: 10,
-  },
-
-  cardBody: {
-    fontSize: 13,
-    lineHeight: 21,
-    maxWidth: 280,
-  },
-
   formSection: {
     marginTop: 14,
   },
 
   inputLabel: {
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
+    fontSize: 13,
+    fontWeight: "700",
     marginBottom: 8,
   },
 
@@ -122,12 +92,40 @@ export default StyleSheet.create({
     height: 52,
   },
 
-  connectionStatus: {
-    marginTop: 12,
-    marginBottom: 12,
+
+  errorRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+    marginTop: 10,
+  },
+
+  errorText: {
+    flex: 1,
     fontSize: 13,
     lineHeight: 19,
   },
+
+  doneIconRow: {
+    marginBottom: 10,
+  },
+
+  doneTitle: {
+    fontSize: 20,
+    lineHeight: 26,
+    fontWeight: "800",
+    marginBottom: 8,
+  },
+
+  doneBody: {
+    fontSize: 14,
+    lineHeight: 21,
+  },
+
+  doneButton: {
+    marginTop: 20,
+  },
+
   privacyLink: {
     minHeight: 44,
     alignItems: "center",

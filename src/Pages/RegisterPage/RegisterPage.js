@@ -6,6 +6,9 @@ import { useNavigation } from "@react-navigation/native";
 import styles from "./RegisterPageStyle";
 import { Colors } from "../../Resources/GlobalStyling/colors";
 import { authService } from "../../Services";
+import Checkmark from "../../Resources/Icons/UI-icons/Checkmark";
+import Cross from "../../Resources/Icons/UI-icons/Cross";
+import Eye from "../../Resources/Icons/UI-icons/Eye";
 import {
   buildFullUsername,
   isValidUsernameBase,
@@ -18,8 +21,11 @@ import {
   ThemedKeyboardProtection,
   ThemedText,
   ThemedTextInput,
+  ThemedTitle,
   ThemedView,
 } from "../../Resources/ThemedComponents";
+
+const MINIMUM_PASSWORD_LENGTH = 6;
 
 export default function RegisterPage() {
   const colorScheme = useColorScheme();
@@ -29,6 +35,9 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [retypePassword, setRetypePassword] = useState("");
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [createdAccount, setCreatedAccount] = useState(null);
   const [submitState, setSubmitState] = useState({
     status: "idle",
     message: "",
@@ -38,67 +47,68 @@ export default function RegisterPage() {
   const cardSurface = theme.cardBackground ?? theme.background;
   const cardBorder = theme.cardBorder ?? theme.iconColor ?? theme.text;
   const normalizedUsername = normalizeUsernameBaseInput(usernameBase);
-  const usernameInvalid =
-    normalizedUsername.length > 0 &&
-    !isValidUsernameBase(normalizedUsername);
-  const passwordsMismatch =
-    retypePassword.length > 0 && password !== retypePassword;
-  const isFormIncomplete =
-    usernameBase.trim().length === 0 ||
-    email.trim().length === 0 ||
-    password.length === 0 ||
-    retypePassword.length === 0;
-  const passwordTooShort = password.length > 0 && password.length < 6;
-  const usernamePreview = normalizedUsername && !usernameInvalid
-    ? buildFullUsername(normalizedUsername, "1234")
-    : "your_name#1234";
-  const statusColor =
-    submitState.status === "success"
-      ? theme.secondary ?? titleColor
-      : submitState.status === "error"
-        ? theme.danger ?? titleColor
-        : quietText;
+  const usernamePreview =
+    normalizedUsername && isValidUsernameBase(normalizedUsername)
+      ? buildFullUsername(normalizedUsername, "1234")
+      : "your_name#1234";
+  const isRegistering = submitState.status === "loading";
+
+  const clearErrors = () => {
+    setFieldErrors({});
+
+    if (submitState.status === "error") {
+      setSubmitState({ status: "idle", message: "" });
+    }
+  };
+
+  // Checked on press rather than by greying the button out. The same reasoning
+  // as the login screen: a button at 40% opacity with nothing saying why reads
+  // as broken, and it never says which of the four rules it is waiting for.
+  const findFieldErrors = (normalizedEmail) => {
+    const errors = {};
+
+    if (!normalizedUsername) {
+      errors.username = "Pick a username.";
+    } else if (!isValidUsernameBase(normalizedUsername)) {
+      errors.username =
+        "Use 3-20 lowercase letters, numbers or underscores.";
+    }
+
+    if (!normalizedEmail) {
+      errors.email = "Enter your email address.";
+    }
+
+    if (!password) {
+      errors.password = "Choose a password.";
+    } else if (password.length < MINIMUM_PASSWORD_LENGTH) {
+      errors.password = `At least ${MINIMUM_PASSWORD_LENGTH} characters.`;
+    }
+
+    if (!retypePassword) {
+      errors.retypePassword = "Type the password again.";
+    } else if (password !== retypePassword) {
+      errors.retypePassword = "The two passwords are not the same.";
+    }
+
+    return errors;
+  };
 
   const handleRegister = async () => {
+    if (isRegistering) {
+      return;
+    }
+
     const normalizedEmail = email.trim().toLowerCase();
+    const nextFieldErrors = findFieldErrors(normalizedEmail);
 
-    if (!normalizedUsername || !normalizedEmail || !password || !retypePassword) {
-      setSubmitState({
-        status: "error",
-        message: "Fill out username, email and both password fields first.",
-      });
+    setFieldErrors(nextFieldErrors);
+
+    if (Object.keys(nextFieldErrors).length > 0) {
+      setSubmitState({ status: "idle", message: "" });
       return;
     }
 
-    if (!isValidUsernameBase(normalizedUsername)) {
-      setSubmitState({
-        status: "error",
-        message:
-          "Username must be 3-20 characters and use only lowercase letters, numbers or underscores.",
-      });
-      return;
-    }
-
-    if (passwordsMismatch) {
-      setSubmitState({
-        status: "error",
-        message: "Passwords do not match.",
-      });
-      return;
-    }
-
-    if (password.length < 6) {
-      setSubmitState({
-        status: "error",
-        message: "Password must be at least 6 characters.",
-      });
-      return;
-    }
-
-    setSubmitState({
-      status: "loading",
-      message: "Creating account...",
-    });
+    setSubmitState({ status: "loading", message: "" });
 
     try {
       const result = await authService.register({
@@ -107,33 +117,34 @@ export default function RegisterPage() {
         usernameBase: normalizedUsername,
       });
 
-      const needsEmailConfirmation = !result.session;
-
-      setSubmitState({
-        status: "success",
-        message: needsEmailConfirmation
-          ? "Account created. Check your email to confirm the account."
-          : "Account created. You can now sign in.",
+      // A session comes back only if the project confirms addresses
+      // automatically. It does not today, so this lands on the panel below
+      // rather than signing anybody in - but if that setting is ever turned on,
+      // the auth change unmounts this screen and the panel is never seen.
+      setCreatedAccount({
+        email: normalizedEmail,
+        needsEmailConfirmation: !result.session,
       });
-
-      setUsernameBase("");
-      setEmail(normalizedEmail);
-      setPassword("");
-      setRetypePassword("");
+      setSubmitState({ status: "idle", message: "" });
     } catch (error) {
       setSubmitState({
         status: "error",
         message:
-          error instanceof Error
-            ? error.message
-            : "Could not create account.",
+          error instanceof Error ? error.message : "Could not create account.",
       });
     }
   };
 
+  const goToLogin = () => navigation.navigate("LoginPage");
+
   return (
     <ThemedView style={styles.container}>
-      <ThemedHeader />
+      {/* The bar used to be a back arrow alone in an empty band. */}
+      <ThemedHeader>
+        <ThemedTitle type="h3" numberOfLines={1}>
+          Create account
+        </ThemedTitle>
+      </ThemedHeader>
 
       <View
         pointerEvents="none"
@@ -152,153 +163,202 @@ export default function RegisterPage() {
 
       <View style={styles.content}>
         <ThemedKeyboardProtection scroll contentContainerStyle={styles.scrollContent}>
-          <View style={styles.heroBlock}>
-            <ThemedText style={styles.eyebrow} setColor={quietText}>
-              FitVen Cloud
-            </ThemedText>
-            <ThemedText style={styles.title} setColor={titleColor}>
-              Register
-            </ThemedText>
-            <ThemedText style={styles.subtitle} setColor={quietText}>
-              Create a new cloud account for syncing programs and workouts.
-            </ThemedText>
-          </View>
-
-          <ThemedCard
-            style={[
-              styles.registerCard,
-              {
-                backgroundColor: cardSurface,
-                borderColor: cardBorder,
-              },
-            ]}
-          >
-            <ThemedText style={styles.cardLabel} setColor={quietText}>
-              New account
-            </ThemedText>
-            <ThemedText style={styles.cardTitle} setColor={titleColor}>
-              Account details
-            </ThemedText>
-            <ThemedText style={styles.cardBody} setColor={quietText}>
-              Pick your base username. FitVen will lock in a 4-digit tag, so it
-              shows up like {usernamePreview}.
-            </ThemedText>
-
-            <View style={styles.formSection}>
-              <ThemedText style={styles.inputLabel} setColor={quietText}>
-                Username
-              </ThemedText>
-              <ThemedTextInput
-                value={usernameBase}
-                onChangeText={setUsernameBase}
-                placeholder="your_name"
-                autoCapitalize="none"
-                autoCorrect={false}
-                error={
-                  usernameInvalid
-                    ? "Use 3-20 lowercase letters, numbers or underscores."
-                    : undefined
-                }
-                style={styles.inputWrapper}
-              />
-              <ThemedText style={styles.fieldHint} setColor={quietText}>
-                The 4-digit tag is generated automatically and cannot be changed later.
-              </ThemedText>
-            </View>
-
-            <View style={styles.formSection}>
-              <ThemedText style={styles.inputLabel} setColor={quietText}>
-                Email
-              </ThemedText>
-              <ThemedTextInput
-                value={email}
-                onChangeText={setEmail}
-                placeholder="you@example.com"
-                autoCapitalize="none"
-                autoCorrect={false}
-                keyboardType="email-address"
-                style={styles.inputWrapper}
-              />
-            </View>
-
-            <View style={styles.formSection}>
-              <ThemedText style={styles.inputLabel} setColor={quietText}>
-                Password
-              </ThemedText>
-              <ThemedTextInput
-                value={password}
-                onChangeText={setPassword}
-                placeholder="Enter password"
-                secureTextEntry
-                autoCapitalize="none"
-                autoCorrect={false}
-                error={passwordTooShort ? "Password must be at least 6 characters." : undefined}
-                style={styles.inputWrapper}
-              />
-            </View>
-
-            <View style={styles.formSection}>
-              <ThemedText style={styles.inputLabel} setColor={quietText}>
-                Retype password
-              </ThemedText>
-              <ThemedTextInput
-                value={retypePassword}
-                onChangeText={setRetypePassword}
-                placeholder="Retype password"
-                secureTextEntry
-                autoCapitalize="none"
-                autoCorrect={false}
-                error={passwordsMismatch ? "Passwords do not match." : undefined}
-                style={styles.inputWrapper}
-              />
-            </View>
-          </ThemedCard>
-
-          <View style={styles.actions}>
-            <ThemedButton
-              title={
-                submitState.status === "loading"
-                  ? "Registering..."
-                  : "Register"
-              }
-              onPress={handleRegister}
-              fullWidth
-              style={styles.primaryButton}
-              disabled={
-                submitState.status === "loading" ||
-                isFormIncomplete ||
-                usernameInvalid ||
-                passwordsMismatch ||
-                passwordTooShort
-              }
-            />
-
-            {submitState.message ? (
-              <ThemedText
-                style={styles.connectionStatus}
-                setColor={statusColor}
-              >
-                {submitState.message}
-              </ThemedText>
-            ) : null}
-
-            {/* Art. 13: readable before an email address is handed over, not
-                only after. Consent itself is taken on first sign-in, where
-                there is a profile row to record it against. */}
-            <TouchableOpacity
-              activeOpacity={0.7}
-              accessibilityRole="link"
-              onPress={() => navigation.navigate("PrivacyPolicyPage")}
-              style={styles.privacyLink}
+          {createdAccount ? (
+            // Creating the account used to end here: a line of text, an emptied
+            // form, and no way onwards from the screen you had just finished
+            // with.
+            <ThemedCard
+              style={[
+                styles.registerCard,
+                {
+                  backgroundColor: cardSurface,
+                  borderColor: cardBorder,
+                },
+              ]}
             >
-              <ThemedText
-                style={styles.privacyLinkText}
-                setColor={theme.primaryText ?? theme.primary}
-              >
-                How FitVen handles your data
+              <View style={styles.doneIconRow}>
+                <Checkmark width={22} height={22} color={theme.secondary} />
+              </View>
+
+              <ThemedText style={styles.doneTitle} setColor={titleColor}>
+                {createdAccount.needsEmailConfirmation
+                  ? "Confirm your email"
+                  : "Account created"}
               </ThemedText>
-            </TouchableOpacity>
-          </View>
+
+              <ThemedText style={styles.doneBody} setColor={quietText}>
+                {createdAccount.needsEmailConfirmation
+                  ? `We sent a link to ${createdAccount.email}. Open it to confirm the address, then sign in.`
+                  : "Your account is ready. Sign in to start."}
+              </ThemedText>
+
+              <ThemedButton
+                title="Go to login"
+                onPress={goToLogin}
+                fullWidth
+                style={[styles.primaryButton, styles.doneButton]}
+              />
+            </ThemedCard>
+          ) : (
+            <>
+              <View style={styles.heroBlock}>
+                <ThemedText style={styles.eyebrow} setColor={quietText}>
+                  FitVen
+                </ThemedText>
+                <ThemedText style={styles.subtitle} setColor={quietText}>
+                  An account syncs your programs and workouts across devices.
+                </ThemedText>
+              </View>
+
+              <ThemedCard
+                style={[
+                  styles.registerCard,
+                  {
+                    backgroundColor: cardSurface,
+                    borderColor: cardBorder,
+                  },
+                ]}
+              >
+                <View style={styles.formSection}>
+                  <ThemedText style={styles.inputLabel} setColor={titleColor}>
+                    Username
+                  </ThemedText>
+                  <ThemedTextInput
+                    value={usernameBase}
+                    onChangeText={(next) => {
+                      setUsernameBase(next);
+                      clearErrors();
+                    }}
+                    placeholder="your_name"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    error={fieldErrors.username}
+                    style={styles.inputWrapper}
+                  />
+                  {fieldErrors.username ? null : (
+                    <ThemedText style={styles.fieldHint} setColor={quietText}>
+                      FitVen adds a 4-digit tag, so it shows up as{" "}
+                      {usernamePreview}. The tag cannot be changed later.
+                    </ThemedText>
+                  )}
+                </View>
+
+                <View style={styles.formSection}>
+                  <ThemedText style={styles.inputLabel} setColor={titleColor}>
+                    Email
+                  </ThemedText>
+                  <ThemedTextInput
+                    value={email}
+                    onChangeText={(next) => {
+                      setEmail(next);
+                      clearErrors();
+                    }}
+                    placeholder="you@example.com"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    keyboardType="email-address"
+                    error={fieldErrors.email}
+                    style={styles.inputWrapper}
+                  />
+                </View>
+
+                <View style={styles.formSection}>
+                  <ThemedText style={styles.inputLabel} setColor={titleColor}>
+                    Password
+                  </ThemedText>
+                  <ThemedTextInput
+                    value={password}
+                    onChangeText={(next) => {
+                      setPassword(next);
+                      clearErrors();
+                    }}
+                    placeholder="Enter password"
+                    secureTextEntry={!isPasswordVisible}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    error={fieldErrors.password}
+                    style={styles.inputWrapper}
+                    action={{
+                      label: isPasswordVisible
+                        ? "Hide password"
+                        : "Show password",
+                      onPress: () => setIsPasswordVisible((shown) => !shown),
+                      icon: (
+                        <Eye
+                          width={20}
+                          height={20}
+                          color={
+                            isPasswordVisible ? theme.primary : theme.iconColor
+                          }
+                        />
+                      ),
+                    }}
+                  />
+                  {/* The rule, before it is broken rather than after. */}
+                  {fieldErrors.password ? null : (
+                    <ThemedText style={styles.fieldHint} setColor={quietText}>
+                      At least {MINIMUM_PASSWORD_LENGTH} characters.
+                    </ThemedText>
+                  )}
+                </View>
+
+                <View style={styles.formSection}>
+                  <ThemedText style={styles.inputLabel} setColor={titleColor}>
+                    Repeat password
+                  </ThemedText>
+                  <ThemedTextInput
+                    value={retypePassword}
+                    onChangeText={(next) => {
+                      setRetypePassword(next);
+                      clearErrors();
+                    }}
+                    placeholder="Repeat password"
+                    secureTextEntry={!isPasswordVisible}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    error={fieldErrors.retypePassword}
+                    style={styles.inputWrapper}
+                  />
+                </View>
+              </ThemedCard>
+
+              <View style={styles.actions}>
+                <ThemedButton
+                  title={isRegistering ? "Creating account..." : "Create account"}
+                  onPress={handleRegister}
+                  fullWidth
+                  style={styles.primaryButton}
+                  disabled={isRegistering}
+                />
+
+                {submitState.status === "error" && submitState.message ? (
+                  <View style={styles.errorRow}>
+                    <Cross width={15} height={15} color={theme.danger} />
+                    <ThemedText style={styles.errorText} setColor={theme.danger}>
+                      {submitState.message}
+                    </ThemedText>
+                  </View>
+                ) : null}
+
+                {/* Art. 13: readable before an email address is handed over, not
+                    only after. Consent itself is taken on first sign-in, where
+                    there is a profile row to record it against. */}
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  accessibilityRole="link"
+                  onPress={() => navigation.navigate("PrivacyPolicyPage")}
+                  style={styles.privacyLink}
+                >
+                  <ThemedText
+                    style={styles.privacyLinkText}
+                    setColor={quietText}
+                  >
+                    How FitVen handles your data
+                  </ThemedText>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
         </ThemedKeyboardProtection>
       </View>
 

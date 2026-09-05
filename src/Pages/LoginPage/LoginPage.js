@@ -183,7 +183,7 @@ export default function LoginPage() {
             ]}
           >
             <View style={styles.formSection}>
-              <ThemedText style={styles.inputLabel} setColor={quietText}>
+              <ThemedText style={styles.inputLabel} setColor={titleColor}>
                 Email
               </ThemedText>
               <ThemedTextInput
@@ -202,7 +202,7 @@ export default function LoginPage() {
             </View>
 
             <View style={styles.formSection}>
-              <ThemedText style={styles.inputLabel} setColor={quietText}>
+              <ThemedText style={styles.inputLabel} setColor={titleColor}>
                 Password
               </ThemedText>
               <ThemedTextInput
