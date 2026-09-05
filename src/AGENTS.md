@@ -34,9 +34,14 @@ This file applies to everything inside `src/`.
 
 - Every service and repository function takes `db` as its first argument. The
   screen gets it with `useSQLiteContext()` and passes it down.
-- Import through the barrel: `from "../../Services"`, not
-  `from "../../Services/programService"`. Same for
-  `../../Resources/ThemedComponents`.
+- Import through the barrel: `from "@services"`, not
+  `from "@services/programService"`. Same for `@resources/ThemedComponents`.
+- Use a path alias instead of climbing out of the folder. The six are
+  `@contexts`, `@database`, `@repository`, `@resources`, `@services` and
+  `@utils`, defined in `babel.config.js` and mirrored in `tsconfig.json` so
+  editor navigation follows. `./` and `../` stay for a file's own neighbours.
+  The 149 older deep imports were deliberately left alone; convert one when a
+  change is already touching its file.
 - Never alias one layer to another layer's name. 45 function names exist in
   both `Services` and `Repository` with the same signature, so
   `import { xService as xRepository }` sends the next reader to the wrong file.

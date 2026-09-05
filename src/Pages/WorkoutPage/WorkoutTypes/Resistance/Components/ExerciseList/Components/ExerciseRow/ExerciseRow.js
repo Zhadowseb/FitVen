@@ -8,24 +8,24 @@ import {
 import { useColorScheme } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
 
-import { Colors, withAlpha } from "../../../../../../../../Resources/GlobalStyling/colors";
+import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
 import styles from "./ExerciseRowStyle.js";
 import SetList from "./SetList/SetList";
 
-import Note from "../../../../../../../../Resources/Icons/UI-icons/Note";
-import Expand from "../../../../../../../../Resources/Icons/UI-icons/Expand";
-import Plus from "../../../../../../../../Resources/Icons/UI-icons/Plus";
-import ReplayHistory from "../../../../../../../../Resources/Icons/UI-icons/ReplayHistory";
+import Note from "@resources/Icons/UI-icons/Note";
+import Expand from "@resources/Icons/UI-icons/Expand";
+import Plus from "@resources/Icons/UI-icons/Plus";
+import ReplayHistory from "@resources/Icons/UI-icons/ReplayHistory";
 
 import {
   ThemedConfirmModal,
   ThemedModal,
   ThemedText,
   ThemedTitle,
-} from "../../../../../../../../Resources/ThemedComponents";
+} from "@resources/ThemedComponents";
 import PanelSettingsModal from "./PanelSettingsModal";
-import { weightliftingService } from "../../../../../../../../Services";
-import { useExerciseViewSettings } from "../../../../../../../../Contexts/ExerciseViewSettingsContext";
+import { weightliftingService } from "@services";
+import { useExerciseViewSettings } from "@contexts/ExerciseViewSettingsContext";
 import ReanimatedAnimated, {
   runOnJS,
   useAnimatedStyle,

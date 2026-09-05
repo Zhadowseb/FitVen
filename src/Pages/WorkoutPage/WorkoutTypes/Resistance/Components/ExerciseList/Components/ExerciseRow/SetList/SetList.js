@@ -2,15 +2,15 @@ import { TouchableOpacity, View } from "react-native";
 import { useColorScheme } from "react-native";
 import { useEffect, useRef, useState } from "react";
 import { useSQLiteContext } from "expo-sqlite";
-import { Colors, withAlpha } from "../../../../../../../../../Resources/GlobalStyling/colors";
+import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
 import {
   formatTime,
   getCurrentStoredTimestampSeconds,
-} from "../../../../../../../../../Utils/timeUtils";
+} from "@utils/timeUtils";
 import {
   clearActiveRestTimer,
   subscribeRestTimer,
-} from "../../../../../../../../../Utils/restTimerEvents";
+} from "@utils/restTimerEvents";
 
 import styles from "./SetListStyle.js";
 import Title from "./Title";
@@ -24,14 +24,14 @@ import {
   ThemedModal,
   ThemedText,
   ThemedTextInput,
-} from "../../../../../../../../../Resources/ThemedComponents";
-import Delete from "../../../../../../../../../Resources/Icons/UI-icons/Delete";
-import Note from "../../../../../../../../../Resources/Icons/UI-icons/Note";
-import Amrap from "../../../../../../../../../Resources/Icons/UI-icons/Amrap";
-import Plus from "../../../../../../../../../Resources/Icons/UI-icons/Plus";
-import Cogwheel from "../../../../../../../../../Resources/Icons/UI-icons/Cogwheel";
-import Star from "../../../../../../../../../Resources/Icons/UI-icons/Star";
-import { weightliftingService } from "../../../../../../../../../Services";
+} from "@resources/ThemedComponents";
+import Delete from "@resources/Icons/UI-icons/Delete";
+import Note from "@resources/Icons/UI-icons/Note";
+import Amrap from "@resources/Icons/UI-icons/Amrap";
+import Plus from "@resources/Icons/UI-icons/Plus";
+import Cogwheel from "@resources/Icons/UI-icons/Cogwheel";
+import Star from "@resources/Icons/UI-icons/Star";
+import { weightliftingService } from "@services";
 
 const SET_LIST_COLUMN_KEYS = [
   "note",

@@ -1,4 +1,20 @@
 {
-  "compilerOptions": {},
-  "extends": "expo/tsconfig.base"
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@contexts/*": ["src/Contexts/*"],
+      "@contexts": ["src/Contexts"],
+      "@database/*": ["src/Database/*"],
+      "@database": ["src/Database"],
+      "@repository/*": ["src/Repository/*"],
+      "@repository": ["src/Repository"],
+      "@resources/*": ["src/Resources/*"],
+      "@resources": ["src/Resources"],
+      "@services/*": ["src/Services/*"],
+      "@services": ["src/Services"],
+      "@utils/*": ["src/Utils/*"],
+      "@utils": ["src/Utils"]
+    }
+  }
 }

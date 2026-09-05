@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.22.3] - Unreleased
+### Added
+- Path aliases `@contexts`, `@database`, `@repository`, `@resources`, `@services` and `@utils`, defined in `babel.config.js` and mirrored in `tsconfig.json`.
+- `npm test` now resolves aliased imports too, catches an alias that is neither a package nor defined, and fails if the babel and tsconfig maps disagree.
+
+### Changed
+- The five files in the exercise row tree, which had the deepest imports in the project at eight and nine levels of `../`, use aliases. The remaining 149 deep imports were left alone on purpose.
+
+---
 ## [0.22.2] - Unreleased
 ### Changed
 - The 19 cloud schema files moved from loose `docs/*.sql` into `supabase/migrations/`, timestamped so they carry the order they were applied in.

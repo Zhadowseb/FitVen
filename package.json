@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.22.2-major-structure-audit.1",
+  "version": "0.22.3-major-structure-audit.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",
@@ -74,6 +74,7 @@
   "private": true,
   "devDependencies": {
     "@types/react": "~19.1.10",
+    "babel-plugin-module-resolver": "^5.0.3",
     "babel-plugin-transform-remove-console": "^6.9.4",
     "babel-preset-expo": "~54.0.7",
     "conventional-changelog-cli": "^5.0.0"

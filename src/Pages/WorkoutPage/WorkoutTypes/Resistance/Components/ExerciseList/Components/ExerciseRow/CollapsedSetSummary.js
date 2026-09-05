@@ -1,7 +1,7 @@
 import { View } from "react-native";
-import { ThemedText } from "../../../../../../../../Resources/ThemedComponents";
-import { withAlpha } from "../../../../../../../../Resources/GlobalStyling/colors";
-import Star from "../../../../../../../../Resources/Icons/UI-icons/Star";
+import { ThemedText } from "@resources/ThemedComponents";
+import { withAlpha } from "@resources/GlobalStyling/colors";
+import Star from "@resources/Icons/UI-icons/Star";
 import styles from "./CollapsedSetSummaryStyle";
 
 function value(value) {
