@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.23.10] - Unreleased
+### Changed
+- The login screen had two identical orange full-width buttons stacked on each other, so nothing said which one you came here to do. Create account is an outline under a `New here?` label; Login keeps the fill.
+- Three headings for two fields — a 42 px "Login", an "Account" label and a 24 px "Sign in" inside the card — are one. The card is fields.
+- The Login button no longer greys out until both fields are filled. It stayed at 40% opacity with nothing saying why, which reads as broken rather than as waiting. It is always pressable and marks the fields that are empty.
+- An error used to sit between the two buttons, pushing the lower one down and easy to miss. A missing field is now marked on that field, and a failed sign-in sits directly under the Login button with an icon.
+- The eyebrow says "FitVen" rather than "FitVen Cloud". There is no cloud from where the user is standing.
+
+### Added
+- A show/hide toggle in the password field.
+- `ThemedTextInput` takes an `action`: a control inside the field, right of the value. Separate from `suffix`, which is `pointerEvents="none"` on purpose — a unit is not something you tap, and making it tappable would swallow taps meant for the field.
+
+---
 ## [0.23.9] - Unreleased
 ### Changed
 - `PRIVACY_POLICY_URL` points at https://fitven.netlify.app/privacy/, which serves the generated page and nothing else — the repository root, `docs/` and `google-services.json` all return 404 there.

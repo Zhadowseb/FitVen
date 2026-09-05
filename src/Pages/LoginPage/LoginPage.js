@@ -6,6 +6,8 @@ import { useState } from "react";
 import styles from "./LoginPageStyle";
 import { Colors } from "../../Resources/GlobalStyling/colors";
 import { authService } from "../../Services";
+import Cross from "../../Resources/Icons/UI-icons/Cross";
+import Eye from "../../Resources/Icons/UI-icons/Eye";
 import {
   ThemedButton,
   ThemedCard,
@@ -21,6 +23,8 @@ export default function LoginPage() {
   const theme = Colors[colorScheme] ?? Colors.light;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
   const [submitState, setSubmitState] = useState({
     status: "idle",
     message: "",
@@ -29,28 +33,51 @@ export default function LoginPage() {
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const cardSurface = theme.cardBackground ?? theme.background;
   const cardBorder = theme.cardBorder ?? theme.iconColor ?? theme.text;
-  const isFormIncomplete = email.trim().length === 0 || password.length === 0;
-  const statusColor =
-    submitState.status === "success"
-      ? theme.secondary ?? titleColor
-      : submitState.status === "error"
-        ? theme.danger ?? titleColor
-        : quietText;
+  const isSigningIn = submitState.status === "loading";
+
+  const clearErrors = () => {
+    setFieldErrors({});
+
+    if (submitState.status === "error") {
+      setSubmitState({ status: "idle", message: "" });
+    }
+  };
+
+  // The button stays enabled and this runs on press. Greying it out until both
+  // fields are filled reads as "broken", not as "not yet" - and it never says
+  // which field it is waiting for.
+  const findFieldErrors = (normalizedEmail) => {
+    const errors = {};
+
+    if (!normalizedEmail) {
+      errors.email = "Enter your email address.";
+    }
+
+    if (!password) {
+      errors.password = "Enter your password.";
+    }
+
+    return errors;
+  };
 
   const handleLogin = async () => {
-    const normalizedEmail = email.trim().toLowerCase();
+    if (isSigningIn) {
+      return;
+    }
 
-    if (!normalizedEmail || !password) {
-      setSubmitState({
-        status: "error",
-        message: "Enter both email and password first.",
-      });
+    const normalizedEmail = email.trim().toLowerCase();
+    const nextFieldErrors = findFieldErrors(normalizedEmail);
+
+    setFieldErrors(nextFieldErrors);
+
+    if (Object.keys(nextFieldErrors).length > 0) {
+      setSubmitState({ status: "idle", message: "" });
       return;
     }
 
     setSubmitState({
       status: "loading",
-      message: "Signing in...",
+      message: "",
     });
 
     try {
@@ -59,17 +86,12 @@ export default function LoginPage() {
         password,
       });
 
-      setSubmitState({
-        status: "success",
-        message: "Login successful.",
-      });
+      // Nothing on success: signing in unmounts this screen.
     } catch (error) {
       setSubmitState({
         status: "error",
         message:
-          error instanceof Error
-            ? error.message
-            : "Could not sign in.",
+          error instanceof Error ? error.message : "Could not sign in.",
       });
     }
   };
@@ -93,15 +115,18 @@ export default function LoginPage() {
 
       <View style={styles.content}>
         <ThemedKeyboardProtection scroll contentContainerStyle={styles.scrollContent}>
+          {/* One heading. This screen used to carry three - a 42 px "Login", an
+              "Account" label and a 24 px "Sign in" inside the card - for two
+              fields. */}
           <View style={styles.heroBlock}>
             <ThemedText style={styles.eyebrow} setColor={quietText}>
-              FitVen Cloud
+              FitVen
             </ThemedText>
             <ThemedText style={styles.title} setColor={titleColor}>
               Login
             </ThemedText>
             <ThemedText style={styles.subtitle} setColor={quietText}>
-              Sign in to your cloud account to load programs and workouts.
+              Sign in to load your programs and workouts.
             </ThemedText>
           </View>
 
@@ -114,24 +139,21 @@ export default function LoginPage() {
               },
             ]}
           >
-            <ThemedText style={styles.cardLabel} setColor={quietText}>
-              Account
-            </ThemedText>
-            <ThemedText style={styles.cardTitle} setColor={titleColor}>
-              Sign in
-            </ThemedText>
-
             <View style={styles.formSection}>
               <ThemedText style={styles.inputLabel} setColor={quietText}>
                 Email
               </ThemedText>
               <ThemedTextInput
                 value={email}
-                onChangeText={setEmail}
+                onChangeText={(nextEmail) => {
+                  setEmail(nextEmail);
+                  clearErrors();
+                }}
                 placeholder="you@example.com"
                 autoCapitalize="none"
                 autoCorrect={false}
                 keyboardType="email-address"
+                error={fieldErrors.email}
                 style={styles.inputWrapper}
               />
             </View>
@@ -142,44 +164,66 @@ export default function LoginPage() {
               </ThemedText>
               <ThemedTextInput
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={(nextPassword) => {
+                  setPassword(nextPassword);
+                  clearErrors();
+                }}
                 placeholder="Enter password"
-                secureTextEntry
+                secureTextEntry={!isPasswordVisible}
                 autoCapitalize="none"
                 autoCorrect={false}
+                error={fieldErrors.password}
                 style={styles.inputWrapper}
+                action={{
+                  label: isPasswordVisible ? "Hide password" : "Show password",
+                  onPress: () => setIsPasswordVisible((shown) => !shown),
+                  icon: (
+                    <Eye
+                      width={20}
+                      height={20}
+                      color={isPasswordVisible ? theme.primary : theme.iconColor}
+                    />
+                  ),
+                }}
               />
             </View>
           </ThemedCard>
 
           <View style={styles.actions}>
             <ThemedButton
-              title={
-                submitState.status === "loading"
-                  ? "Signing in..."
-                  : "Login"
-              }
+              title={isSigningIn ? "Signing in..." : "Login"}
               onPress={handleLogin}
               fullWidth
               style={styles.primaryButton}
-              disabled={submitState.status === "loading" || isFormIncomplete}
+              disabled={isSigningIn}
             />
 
-            {submitState.message ? (
-              <ThemedText
-                style={styles.connectionStatus}
-                setColor={statusColor}
-              >
-                {submitState.message}
-              </ThemedText>
+            {/* Directly under the button it belongs to, with an icon, so it is
+                not mistaken for a caption on whatever sits below it. */}
+            {submitState.status === "error" && submitState.message ? (
+              <View style={styles.errorRow}>
+                <Cross width={15} height={15} color={theme.danger} />
+                <ThemedText style={styles.errorText} setColor={theme.danger}>
+                  {submitState.message}
+                </ThemedText>
+              </View>
             ) : null}
 
-            <ThemedButton
-              title="Create account"
-              onPress={() => navigation.navigate("RegisterPage")}
-              fullWidth
-              style={[styles.primaryButton, styles.secondaryActionButton]}
-            />
+            <View style={styles.alternativeBlock}>
+              <ThemedText style={styles.alternativeLabel} setColor={quietText}>
+                New here?
+              </ThemedText>
+              {/* An outline, not a second orange button. Two identical fills
+                  stacked on top of each other said nothing about which one was
+                  the thing you came here to do. */}
+              <ThemedButton
+                title="Create account"
+                variant="secondary"
+                onPress={() => navigation.navigate("RegisterPage")}
+                fullWidth
+                style={styles.primaryButton}
+              />
+            </View>
           </View>
         </ThemedKeyboardProtection>
       </View>

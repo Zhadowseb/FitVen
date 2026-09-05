@@ -1,5 +1,11 @@
 // src/Resources/Components/ThemedTextInput.js
-import { TextInput, View, StyleSheet, useColorScheme } from "react-native";
+import {
+  Pressable,
+  StyleSheet,
+  TextInput,
+  View,
+  useColorScheme,
+} from "react-native";
 import { useRef } from "react";
 import { Colors } from "../GlobalStyling/colors";
 import ThemedText from "./ThemedText";
@@ -15,6 +21,11 @@ const ThemedTextInput = ({
   onFocus,
   innerRef,
   suffix = null, // unit shown inside the field, right of the value
+  // A control inside the field, right of the value: { icon, onPress, label }.
+  // Separate from `suffix` because that one is pointerEvents="none" on purpose -
+  // a unit is not something you tap, and making it tappable would swallow taps
+  // meant to focus the field.
+  action = null,
   ...props
 }) => {
   const colorScheme = useColorScheme();
@@ -48,11 +59,25 @@ const ThemedTextInput = ({
               color: theme.text,
               borderColor: error ? theme.danger : theme.cardBorder,
             },
-            suffix ? styles.inputWithSuffix : null,
+            suffix || action ? styles.inputWithSuffix : null,
             inputStyle,
           ]}
           {...props}
         />
+
+        {action ? (
+          <Pressable
+            onPress={action.onPress}
+            accessibilityRole="button"
+            accessibilityLabel={action.label}
+            // The icon is 20 px; the slot is the whole height of the field so
+            // the tap target clears 44 px without the icon growing.
+            style={styles.actionSlot}
+            hitSlop={8}
+          >
+            {action.icon}
+          </Pressable>
+        ) : null}
 
         {suffix ? (
           // The wrapper only holds the field, so justifyContent centres this
@@ -88,6 +113,16 @@ const styles = StyleSheet.create({
   suffixSlot: {
     position: "absolute",
     right: 14,
+  },
+
+  actionSlot: {
+    position: "absolute",
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 46,
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   suffix: {
