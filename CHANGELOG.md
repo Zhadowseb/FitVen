@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.23.16] - Unreleased
+### Changed
+- The privacy policy and the password reset page are served from `https://fitven.dk/` instead of the netlify.app subdomain. Both hostnames answer, so nothing breaks in either direction.
+
+### Notes
+- Supabase must keep `https://fitven.netlify.app/reset-password/` on the redirect allowlist alongside the new one. Somebody on an older build who forgets their password asks the server for the old address; dropping it locks them out with no way back in.
+- The Play Console listing carries the policy address and has to be updated with it.
+
+---
 ## [0.23.15] - Unreleased
 ### Added
 - `supabase/templates/` holds the auth emails — confirm signup, reset password, magic link, change email. They were only ever in the dashboard, which has no history, no review, and nothing to recover from. They still have to be pasted in by hand; the repo is the record of what was pasted.

@@ -13,8 +13,14 @@ import { getDatabaseNameForUserId } from "../Database/localDatabase";
 // src/AGENTS.md. This is the seam they go through now.
 
 const DELETE_ACCOUNT_FUNCTION = "delete-account";
-// web/reset-password/index.html. Kept in step with that page by npm test.
-const PASSWORD_RESET_REDIRECT = "https://fitven.netlify.app/reset-password/";
+// web/reset-password/index.html, served from the project's own domain. Kept
+// in step with that page by npm test.
+//
+// Supabase has to keep allowing the old netlify.app address as well, until
+// every build carrying it is out of circulation. Somebody on an older app who
+// forgets their password is asking the server for that URL, and dropping it
+// from the allowlist locks them out with no way back in.
+const PASSWORD_RESET_REDIRECT = "https://fitven.dk/reset-password/";
 // The local database file is still open when the account is deleted. The
 // provider in App.js remounts on the auth change and closes it, but not before
 // this returns, so the delete is retried a few times rather than raced.
