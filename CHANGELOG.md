@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.23.3] - Unreleased
+### Security
+- `refresh_sync_local_watchers_count` was a callable REST endpoint that took the user id as a parameter and ran without a fixed `search_path`. It is only ever used by a trigger, so it moved to the `private` schema and the endpoint is gone rather than hardened. Row-level security had kept it from touching another user's rows, so nothing was exposed by it.
+- A new account no longer takes its public username and display name from the part of the email address before the @. For most people that is their real name, published to every user of the app, from a field they only entered in order to sign in. Existing names are left alone — silently renaming live accounts is worse — and the migration carries the query for finding them.
+
+### Fixed
+- Claiming a username tag went through the database's own allocator instead of the client picking one. The client used to read every profile sharing the base and pick a code that was not among them; 0.23.0 stopped profiles answering to strangers, so that read came back empty and the check became a guess. The database has done this under an advisory lock all along.
+
+### Notes
+- Requires `supabase/migrations/20260905190000_rpc-hardening.sql`, which has to be run together with `20260905143000_user-blocks.sql`.
+
+---
 ## [0.23.2] - Unreleased
 ### Added
 - A privacy policy screen, reachable from the profile and from the register screen, and a consent gate that stands in front of the app until the current version has been accepted. Which version was accepted, and when, is stored — a boolean would not survive the policy text changing.

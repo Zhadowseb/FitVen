@@ -16,7 +16,6 @@ import {
   normalizeUsernameBaseInput,
   slugifyUsernameBase,
   splitFullUsername,
-  USERNAME_CODE_LENGTH,
   USERNAME_BASE_PATTERN,
 } from "../Utils/socialUsername";
 import {
@@ -55,28 +54,24 @@ export const PROFILE_AVATAR_MAX_BYTES = 3 * 1024 * 1024;
 export const USER_SEARCH_MIN_LENGTH = 2;
 const USERNAME_INSERT_RETRY_LIMIT = 3;
 
+// The email address is deliberately not a source for either of these. For most
+// people the part before the @ is their real name, and both of these end up on
+// a public profile. The same change is in private.handle_new_user, which is the
+// path that normally runs; this is the fallback for an account whose trigger
+// did not fire.
 function createFallbackUsernameBase(user) {
   return slugifyUsernameBase(
     user?.user_metadata?.username_base ??
       user?.user_metadata?.username ??
       user?.user_metadata?.display_name ??
-      user?.email?.split("@")[0] ??
       "user"
   );
 }
 
 function createFallbackDisplayName(user, usernameBase) {
   const metadataDisplayName = user?.user_metadata?.display_name?.trim();
-  if (metadataDisplayName) {
-    return metadataDisplayName;
-  }
 
-  const emailName = user?.email?.split("@")[0]?.trim();
-  if (emailName) {
-    return emailName;
-  }
-
-  return usernameBase;
+  return metadataDisplayName || usernameBase;
 }
 
 function mapProfileRow(
@@ -377,6 +372,7 @@ function normalizeSocialError(error) {
   if (
     message.includes("search_profiles") ||
     message.includes("list_blocked_profiles") ||
+    message.includes("claim_username_code") ||
     (message.includes(USER_BLOCKS_TABLE) && message.includes("does not exist"))
   ) {
     return new Error(SOCIAL_BLOCK_SETUP_MESSAGE);
@@ -689,37 +685,28 @@ async function findAvailableUsernameCode(usernameBase) {
     throw new Error("Username base is invalid.");
   }
 
-  const { data: existingRows, error } = await supabase
-    .from(PROFILES_TABLE)
-    .select("username_code")
-    .eq("username_base", normalizedUsernameBase)
-    .limit(10000);
+  // This used to read every profile sharing the base and pick a code that was
+  // not among them. Two problems with that, and the second one is new:
+  // there was nothing stopping two clients picking the same free code at the
+  // same moment, and since profiles stopped answering to strangers the read
+  // comes back empty, so the "check" was really a guess. The database has
+  // allocated tags under an advisory lock all along.
+  const { data: claimedCode, error } = await supabase.rpc(
+    "claim_username_code",
+    { username_base: normalizedUsernameBase }
+  );
 
   if (error) {
     throw normalizeSocialError(error);
   }
 
-  const takenCodes = new Set(
-    (existingRows ?? [])
-      .map((row) => row.username_code)
-      .filter((value) => typeof value === "string")
-      .map((value) => formatUsernameCode(value))
-  );
-  const randomStart = Math.floor(Math.random() * 10 ** USERNAME_CODE_LENGTH);
-
-  for (let offset = 0; offset < 10 ** USERNAME_CODE_LENGTH; offset += 1) {
-    const candidateNumber =
-      (randomStart + offset) % 10 ** USERNAME_CODE_LENGTH;
-    const candidateCode = formatUsernameCode(candidateNumber);
-
-    if (!takenCodes.has(candidateCode)) {
-      return candidateCode;
-    }
+  if (typeof claimedCode !== "string" || !claimedCode) {
+    throw new Error(
+      `Username base "${normalizedUsernameBase}" has no remaining 4-digit tags.`
+    );
   }
 
-  throw new Error(
-    `Username base "${normalizedUsernameBase}" has no remaining 4-digit tags.`
-  );
+  return formatUsernameCode(claimedCode);
 }
 
 export async function ensureOwnProfile(user) {
