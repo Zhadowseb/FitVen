@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.23.9] - Unreleased
+### Changed
+- `PRIVACY_POLICY_URL` points at https://fitven.netlify.app/privacy/, which serves the generated page and nothing else — the repository root, `docs/` and `google-services.json` all return 404 there.
+- The policy check turns from a warning into a hard failure now that a URL claims the policy is published: an unfinished section fails `npm test` outright.
+- The header of `privacyPolicy.js` said the text must not ship. It says what actually has to be kept in step instead: the generated page, and the Play Console listing, which Google rejects if its minimum age or policy address disagrees with this file.
+
+---
 ## [0.23.8] - Unreleased
 ### Added
 - `npm test` fails if `netlify.toml` is missing or publishes anything other than `web/`. Widening it to the repository root would put the security review, the structure audit, the performance audit, an export query and `google-services.json` on the open internet, and nothing would have said so until somebody found them.

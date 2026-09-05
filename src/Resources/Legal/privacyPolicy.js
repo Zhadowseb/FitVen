@@ -1,29 +1,28 @@
 // The privacy policy shown in the app, and the version recorded against each
 // user's consent.
 //
-// ─────────────────────────────────────────────────────────────────────────────
-//  THE TEXT BELOW IS NOT FINISHED AND MUST NOT SHIP AS IT STANDS.
+// This is the source. Two other things are derived from it and must not be
+// edited on their own:
 //
-//  Everything marked [SKAL UDFYLDES] is a legal statement about who you are and
-//  what you do with people's data. It is not something this file can guess, and
-//  a wrong answer in a privacy policy is worse than no policy at all.
+//   * web/privacy/index.html, the public copy Google Play requires, hosted at
+//     PRIVACY_POLICY_URL below. Run `npm run build:privacy-policy` after any
+//     change here; npm test fails if it has drifted.
+//   * The Play Console listing, which carries the same address and the same
+//     minimum age. Google rejects a listing that disagrees with the policy.
 //
-//  Google Play also requires a privacy policy at a public URL, separate from
-//  this screen. web/privacy/index.html is that page, generated from this file
-//  so the two copies cannot say different things - never edit it by hand, run
-//  `npm run build:privacy-policy` after changing anything here. Host it, then
-//  put the address in PRIVACY_POLICY_URL below and the same one in the Play
-//  Console listing.
+// Changing the wording is not free. If what somebody is agreeing to changes,
+// raise PRIVACY_POLICY_VERSION: everyone is asked again on their next launch
+// and the new version is recorded against them. Fixing a typo is not that.
 //
-//  When you change the wording in a way that changes what people are agreeing
-//  to, raise PRIVACY_POLICY_VERSION. Everyone is asked again on their next
-//  launch, and the new version is recorded against them.
-// ─────────────────────────────────────────────────────────────────────────────
+// Anything a person has to decide - who is responsible, the contact address,
+// the age limit, a new company receiving data - is marked [SKAL UDFYLDES] and
+// counted by scripts/check-privacy-policy.js, which fails the build while the
+// policy claims to be published and is not finished.
 
 export const PRIVACY_POLICY_VERSION = "2026-09-05";
 
-/** The public copy. Required by Google Play; leave empty until it exists. */
-export const PRIVACY_POLICY_URL = "";
+/** The public copy. Required by Google Play, and the address in its listing. */
+export const PRIVACY_POLICY_URL = "https://fitven.netlify.app/privacy/";
 
 export const PRIVACY_POLICY_LAST_UPDATED = "5 September 2026";
 
