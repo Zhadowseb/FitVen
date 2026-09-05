@@ -12,15 +12,18 @@
 
 const path = require("path");
 const fs = require("fs");
+const loadAppModule = require("./lib/loadAppModule");
 
 const root = path.resolve(__dirname, "..");
 const policyFile = path.join(root, "src", "Resources", "Legal", "privacyPolicy.js");
-const source = fs.readFileSync(policyFile, "utf8");
 
-const PLACEHOLDER = "[SKAL UDFYLDES]";
-const placeholderCount = source.split(PLACEHOLDER).length - 1;
-const urlMatch = source.match(/PRIVACY_POLICY_URL = "([^"]*)"/);
-const publicUrl = urlMatch?.[1] ?? "";
+// Counted from the sections themselves, not from the file text. The file also
+// names the placeholder in a comment and in the code that looks for it, so
+// counting occurrences would never reach zero and this could never pass.
+const policy = loadAppModule("src/Resources/Legal/privacyPolicy.js");
+const unfinishedSections = policy.getUnfinishedPolicySections();
+const placeholderCount = unfinishedSections.length;
+const publicUrl = policy.PRIVACY_POLICY_URL ?? "";
 
 if (placeholderCount === 0 && publicUrl) {
   console.log("Privacy policy checks passed (finished, public URL set).");
@@ -30,7 +33,8 @@ if (placeholderCount === 0 && publicUrl) {
 if (placeholderCount > 0 && publicUrl) {
   console.error(
     `The privacy policy is published at ${publicUrl} but still has ` +
-      `${placeholderCount} unfilled placeholder(s) in ${path.relative(root, policyFile)}.`
+      `${placeholderCount} unfinished section(s) in ${path.relative(root, policyFile)}: ` +
+      unfinishedSections.join(", ")
   );
   process.exit(1);
 }
@@ -45,8 +49,9 @@ const lines = [
 
 if (placeholderCount > 0) {
   lines.push(
-    `  ${placeholderCount} statement(s) marked ${PLACEHOLDER} still have to be written`,
-    "  by a person, in src/Resources/Legal/privacyPolicy.js."
+    `  ${placeholderCount} section(s) still have to be written by a person, in`,
+    "  src/Resources/Legal/privacyPolicy.js:",
+    ...unfinishedSections.map((title) => `    - ${title}`)
   );
 }
 

@@ -30,7 +30,11 @@ export const PRIVACY_POLICY_LAST_UPDATED = "5 September 2026";
 export const PRIVACY_POLICY_SECTIONS = [
   {
     title: "Who is responsible",
-    body: `[SKAL UDFYLDES] The name, address and CVR number of the person or company that is the data controller for FitVen, and an email address people can write to about their data.`,
+    body: `FitVen is run by a private individual rather than a company, so there is no CVR number.
+
+[SKAL UDFYLDES: fulde navn og postadresse]
+
+Anything about your data — a copy of it, a correction, having it deleted, or a complaint — goes to zhadowseb@gmail.com.`,
   },
   {
     title: "What FitVen stores about you",
@@ -90,17 +94,24 @@ You can delete your account, and everything in it, from your profile — Account
 
 You have the right to a copy of your data, to have it corrected, to have it erased, and to complain to Datatilsynet if you believe it is being handled wrongly.
 
-[SKAL UDFYLDES: kontakt-e-mail] Write to the address above. You will have an answer within one month, which is the deadline the regulation sets.`,
+For a copy of your data, write to zhadowseb@gmail.com and it will be put together by hand; the app has no export button. You will have an answer within one month, which is the deadline the regulation sets.`,
   },
   {
     title: "Children",
-    body: `[SKAL UDFYLDES] The minimum age for using FitVen. In Denmark, consent for data processing can be given from the age of 13; below that a parent has to give it. Decide the age and say it here, and be aware that Google Play asks the same question in the listing.`,
+    body: `You have to be at least 13 to use FitVen.
+
+Thirteen is the age at which Danish law lets you consent to your own data being processed. Below it a parent has to give that consent, and FitVen has no way to ask a parent or to check that one answered, so accounts for younger children cannot be created lawfully here.`,
   },
 ];
+
+// Matched on the opening of the marker rather than the whole of it, so a
+// placeholder that names what is missing - [SKAL UDFYLDES: postadresse] - is
+// still counted as missing.
+const PLACEHOLDER_PREFIX = "[SKAL UDFYLDES";
 
 /** Every section that still carries a placeholder. Empty means it is finished. */
 export function getUnfinishedPolicySections() {
   return PRIVACY_POLICY_SECTIONS.filter((section) =>
-    section.body.includes("[SKAL UDFYLDES]")
+    section.body.includes(PLACEHOLDER_PREFIX)
   ).map((section) => section.title);
 }

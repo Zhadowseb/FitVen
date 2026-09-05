@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.23.6] - Unreleased
+### Changed
+- The privacy policy names a contact address (zhadowseb@gmail.com), states that FitVen is run by a private individual with no CVR number, and sets the minimum age at 13 — the age Danish law lets somebody consent to their own data being processed, and the lowest the app can set without a way to ask a parent.
+- The section on your rights says plainly that a copy of your data is put together by hand, because there is no export button.
+
+### Fixed
+- The policy check counted the marker everywhere in the file, including the comment that explains it and the code that looks for it, so it could never have reached zero and setting  would have failed forever. It counts unfinished sections now.
+- A placeholder that named what was missing —  — read as finished, because the check matched the closing bracket too. It matches the opening.
+
+### Notes
+- One statement is left: the full name and postal address of the person responsible. A private individual has to be reachable at a real address, and it will be public on the hosted page.
+
+---
 ## [0.23.5] - Unreleased
 ### Added
 - `docs/privacy-policy.html`, the public copy Google Play requires, generated from the same file the in-app screen reads. `npm test` fails if it drifts — two hand-maintained copies of a legal document end with nobody able to say which one a user agreed to.
