@@ -11,8 +11,14 @@ performance audit and an export query along with it.
 ## What is here
 
 - `privacy/index.html` — the public copy of the privacy policy.
+- `delete-account/index.html` — how to delete an account without the app.
+  Google Play links to it from the store page and requires it to load, to name
+  the app, and to work for somebody who has already uninstalled — so no login
+  and no form that needs one. Hand-written, unlike the policy page.
+- `reset-password/index.html` — where the forgot-password email lands.
 
-**Do not edit it.** It is generated from `src/Resources/Legal/privacyPolicy.js`,
+**`privacy/index.html` is generated — do not edit it.** It comes from
+`src/Resources/Legal/privacyPolicy.js`,
 which is the same file the in-app privacy screen reads, so the hosted page and
 the app cannot say different things. After changing the policy:
 

@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FitVen — Delete your account</title>
+<!--
+  The address given to Google Play under Data safety, "Webadresse til sletning
+  af konto". Play links to it from the store page.
+
+  It exists separately from the Delete account button in the app because the
+  people most likely to need it are the ones who have already uninstalled.
+  Google's requirements for this page: it has to load, name the app as the store
+  listing names it, make the way to request deletion obvious, and be reachable
+  without signing in - so there is no login on it and no form that needs one.
+-->
+<style>
+  :root {
+    color-scheme: light dark;
+    --ink: #16181d;
+    --quiet: #5c626e;
+    --ground: #ffffff;
+    --panel: #f6f7f9;
+    --rule: #e3e6eb;
+    --accent: #F7742E;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #edeff3;
+      --quiet: #a2a9b6;
+      --ground: #121419;
+      --panel: #1b1f26;
+      --rule: #2a2e37;
+    }
+  }
+  body {
+    margin: 0;
+    padding: 40px 20px 64px;
+    background: var(--ground);
+    color: var(--ink);
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 620px; margin: 0 auto; }
+  h1 { font-size: 28px; margin: 0 0 4px; }
+  h2 { font-size: 18px; margin: 0 0 10px; }
+  p { margin: 0 0 14px; }
+  ol { margin: 0 0 14px; padding-left: 20px; }
+  li { margin-bottom: 6px; }
+  .lede { color: var(--quiet); margin-bottom: 32px; }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .cta {
+    display: inline-block;
+    background: var(--accent);
+    color: #16181d;
+    font-weight: 700;
+    text-decoration: none;
+    padding: 12px 20px;
+    border-radius: 12px;
+    margin-top: 6px;
+  }
+  .note { font-size: 14px; color: var(--quiet); }
+  table { border-collapse: collapse; width: 100%; font-size: 15px; }
+  th, td { text-align: left; padding: 8px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { width: 40%; font-weight: 700; }
+  tr:last-child th, tr:last-child td { border-bottom: 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Delete your FitVen account</h1>
+  <p class="lede">
+    FitVen is the training app published by Sebastian Dalbjørn. This page is how
+    you delete your account and everything stored with it. There are two ways,
+    and both remove the same data.
+  </p>
+
+  <div class="panel">
+    <h2>If you still have the app</h2>
+    <p>This is immediate and needs nobody's help:</p>
+    <ol>
+      <li>Open FitVen and go to <strong>Profile</strong>.</li>
+      <li>Scroll to the <strong>Account</strong> card at the bottom.</li>
+      <li>Tap <strong>Delete account</strong>.</li>
+      <li>Type <strong>DELETE</strong> to confirm.</li>
+    </ol>
+    <p class="note">
+      Your account is gone by the time the screen closes. There is no waiting
+      period and nothing to undo.
+    </p>
+  </div>
+
+  <div class="panel">
+    <h2>If you have already uninstalled it</h2>
+    <p>
+      Write to the address below from the email address the account uses, and it
+      will be deleted for you. Nothing else is needed — no password, no
+      reinstalling the app.
+    </p>
+    <p>
+      <a class="cta" href="mailto:zhadowseb@gmail.com?subject=Delete%20my%20FitVen%20account">
+        Email a deletion request
+      </a>
+    </p>
+    <p class="note">
+      zhadowseb@gmail.com — answered within one month at the latest, which is the
+      deadline the GDPR sets, and normally much sooner.
+    </p>
+  </div>
+
+  <h2>What is deleted</h2>
+  <table>
+    <tr>
+      <th>Your training</th>
+      <td>Programs, workouts, exercises, sets, personal records, sickness entries, tracked runs and their routes</td>
+    </tr>
+    <tr>
+      <th>Your profile</th>
+      <td>Display name, username, bio, birth year, and your profile photo</td>
+    </tr>
+    <tr>
+      <th>Your social data</th>
+      <td>Who you follow, who follows you, anyone you blocked, your posts and your likes</td>
+    </tr>
+    <tr>
+      <th>Notifications</th>
+      <td>Everything you were sent, and the token identifying your device</td>
+    </tr>
+    <tr>
+      <th>The sign-in itself</th>
+      <td>Your email address and password</td>
+    </tr>
+    <tr>
+      <th>This phone's copy</th>
+      <td>The local database, when you delete from inside the app</td>
+    </tr>
+  </table>
+
+  <h2 style="margin-top:28px">What is kept</h2>
+  <p>
+    Nothing. There is no grace period, no archive and no database backup you
+    could be restored from, so deletion is final in every copy at once.
+  </p>
+  <p class="note">
+    <a href="/privacy/" style="color:var(--accent)">How FitVen handles your data</a>
+  </p>
+</main>
+</body>
+</html>

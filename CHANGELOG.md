@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.23.17] - Unreleased
+### Added
+- `web/delete-account/`, the account deletion page Google Play requires and links to from the store page. It exists separately from the Delete account button in the app because the people most likely to need it are the ones who have already uninstalled: it names the app, needs no sign-in, and offers an email route as well as the in-app steps.
+- `npm test` fails if either page Play links to is missing, or if the deletion page stops naming the app. A 404 on those is a policy violation on a page nobody using the app would notice had gone.
+
+---
 ## [0.23.16] - Unreleased
 ### Changed
 - The privacy policy and the password reset page are served from `https://fitven.dk/` instead of the netlify.app subdomain. Both hostnames answer, so nothing breaks in either direction.

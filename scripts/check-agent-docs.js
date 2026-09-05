@@ -218,6 +218,29 @@ for (const name of (list("supabase/templates") ?? []).filter((file) =>
   }
 }
 
+// The two pages Google Play links to from the store page.
+//
+// Play carries these addresses in the listing. A 404 on either is a policy
+// violation on a page nobody in the app would ever notice was gone, so their
+// existence is checked rather than remembered.
+for (const [file, what] of [
+  ["web/privacy/index.html", "the privacy policy Play requires"],
+  ["web/delete-account/index.html", "the account deletion page Play links to"],
+]) {
+  if (read(file) === null) {
+    problems.push(`${file} is missing - ${what}`);
+  }
+}
+
+// Play requires the deletion page to name the app as the listing names it.
+const deletionPage = read("web/delete-account/index.html");
+
+if (deletionPage !== null && !deletionPage.includes("FitVen")) {
+  problems.push(
+    "web/delete-account/index.html does not name FitVen - Play requires the page to identify the app or developer it belongs to"
+  );
+}
+
 // The password reset page talks to the same project as the app.
 //
 // It is a static page outside the bundle, so nothing else connects the two. If
