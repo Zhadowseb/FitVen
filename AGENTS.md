@@ -124,6 +124,9 @@ make them worthless is to change the code and leave them behind.
   in a guide no longer exists, when a documented npm script is missing, or when
   one of the invariants the guides promise stops holding. It cannot check
   prose, so it is a floor, not a substitute for reading.
+- `npm test` also runs `scripts/check-imports.js`, which resolves every relative
+  import with the exact casing on disk. Windows is case-insensitive and Android
+  is not, so a wrong-case path works locally and fails only in a build.
 - Do not add a second set of guides. `CLAUDE.md` is a pointer to `AGENTS.md`,
   never a copy.
 

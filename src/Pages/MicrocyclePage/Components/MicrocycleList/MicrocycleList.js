@@ -31,7 +31,7 @@ import {
 } from "../BlockWeekGrid/BlockWeekGrid";
 import gridStyles from "../BlockWeekGrid/BlockWeekGridStyle";
 import { getWorkoutIconConfig } from "../../../../Resources/Icons/WorkoutLabels";
-import PickWorkoutModal from "../../../WeekPage/Components/Day/Components/PickWorkoutModal/PickWorkoutModal";
+import PickWorkoutModal from "../../../../Resources/Components/PickWorkoutModal/PickWorkoutModal";
 
 import styles from "./MicrocycleListStyle";
 import { programService } from "../../../../Services";

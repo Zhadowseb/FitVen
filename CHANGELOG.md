@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.22.1] - Unreleased
+### Added
+- `scripts/check-imports.js`, which resolves every relative import with the exact casing on disk and runs as part of `npm test`. Windows is case-insensitive and Android is not, so a wrong-case path used to work locally and fail only in a build.
+
+### Changed
+- `PickWorkoutModal` moved from five levels down inside `WeekPage` to `Resources/Components/`. It is used by the microcycle screen, so a cleanup of the "unused" WeekPage folder would have taken a live screen with it.
+- The background GPS task moved out of `App.js` into `Services/locationBackgroundTask.js`. `App.js` drops from 487 to 382 lines.
+- The muscle mask folders are `MuscleMasks`, matching every other folder in the project.
+
+### Fixed
+- The pick-a-workout dialog referenced two style keys that were never defined and coloured a completed workout with a hardcoded green that ignored the theme.
+
+---
 ## [0.22.0] - Unreleased
 ### Added
 - `npm test` — one command that runs every check, including a new drift check over the agent guides.

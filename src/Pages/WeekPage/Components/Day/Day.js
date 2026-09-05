@@ -8,7 +8,7 @@ import { useCallback } from "react";
 import { useColorScheme } from "react-native";
 import { Colors } from "../../../../Resources/GlobalStyling/colors";
 import DateTimePicker from '@react-native-community/datetimepicker';
-import PickWorkoutModal from './Components/PickWorkoutModal/PickWorkoutModal';
+import PickWorkoutModal from '../../../../Resources/Components/PickWorkoutModal/PickWorkoutModal';
 
 import styles from './DayStyle';
 import { getWorkoutIconConfig } from '../../../../Resources/Icons/WorkoutLabels/index';
