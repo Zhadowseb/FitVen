@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.23.12] - Unreleased
+### Changed
+- Forgot password is quiet grey with an underline instead of accent orange. It is the way out for the few people who need it, not something that should pull the eye off the field they were about to fill in.
+
+---
 ## [0.23.11] - Unreleased
 ### Added
 - Forgot password, under the Login button. It sends a link to set a new one, and says the same thing whether or not the address has an account — anything else turns the login screen into a way to ask which email addresses are registered.

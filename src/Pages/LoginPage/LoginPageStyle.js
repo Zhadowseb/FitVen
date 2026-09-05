@@ -111,7 +111,8 @@ export default StyleSheet.create({
 
   forgotLinkText: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "500",
+    textDecorationLine: "underline",
   },
 
   alternativeBlock: {

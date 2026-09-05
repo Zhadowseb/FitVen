@@ -267,10 +267,10 @@ export default function LoginPage() {
               accessibilityRole="button"
               style={styles.forgotLink}
             >
-              <ThemedText
-                style={styles.forgotLinkText}
-                setColor={theme.primaryText ?? theme.primary}
-              >
+              {/* Quiet grey, not the accent. This is the way out for the few
+                  people who need it, not something to draw the eye away from
+                  the field they were about to fill in. */}
+              <ThemedText style={styles.forgotLinkText} setColor={quietText}>
                 {isSendingReset ? "Sending..." : "Forgot password?"}
               </ThemedText>
             </Pressable>
