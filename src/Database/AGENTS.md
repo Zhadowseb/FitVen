@@ -26,6 +26,10 @@ round. Nothing warns you.
 
 If the table is synced, `src/Services/AGENTS.md` has the rest of the checklist.
 
+The **cloud** schema is a third place, and it is not in either of those files:
+every change to it is a migration in `supabase/migrations/`. See the README
+there for the running order and what has actually been applied.
+
 ## SQLite Connection Safety
 
 - Keep `SQLiteProvider` props stable. Memoize `onInit` callbacks with `useCallback` so auth/session re-renders do not close and reopen the active database connection.

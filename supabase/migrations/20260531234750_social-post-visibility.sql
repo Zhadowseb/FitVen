@@ -1,7 +1,7 @@
 -- Adds audience visibility controls for workout summary social posts.
 --
 -- Run after:
---   docs/supabase-social-posts.sql
+--   supabase/migrations/20260525142801_social-posts.sql
 --
 -- Visibility values:
 --   everyone  - any authenticated user can see the post

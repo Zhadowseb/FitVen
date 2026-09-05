@@ -11,7 +11,7 @@ const SOCIAL_POST_LIKE_TABLE = "social_post_like";
 const SOCIAL_POST_HIDDEN_EXERCISE_TABLE = "social_post_hidden_exercise";
 const WORKOUT_SUMMARY_POST_TYPE = "workout_summary";
 const SOCIAL_POST_SETUP_MESSAGE =
-  "Workout summary posts are not set up in Supabase yet. Run docs/supabase-social-posts.sql and the follow-up social post SQL files in the Supabase SQL editor first.";
+  "Workout summary posts are not set up in Supabase yet. Run supabase/migrations/20260525142801_social-posts.sql and the follow-up social post SQL files in the Supabase SQL editor first.";
 const WORKOUT_SUMMARY_POST_MODE_STORAGE_PREFIX =
   "fitven:workout-summary-post-mode";
 const WORKOUT_SUMMARY_POST_VISIBILITY_STORAGE_PREFIX =

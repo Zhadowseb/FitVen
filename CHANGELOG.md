@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.22.2] - Unreleased
+### Changed
+- The 19 cloud schema files moved from loose `docs/*.sql` into `supabase/migrations/`, timestamped so they carry the order they were applied in.
+- `supabase/migrations/README.md` records which migrations have been run. `npm test` fails if a migration is not in that table, so the ledger cannot fall behind.
+
+### Fixed
+- `docs/export-user-programs.sql` had a real user's UUID committed in it. It takes a placeholder now.
+
+---
 ## [0.22.1] - Unreleased
 ### Added
 - `scripts/check-imports.js`, which resolves every relative import with the exact casing on disk and runs as part of `npm test`. Windows is case-insensitive and Android is not, so a wrong-case path used to work locally and fail only in a build.

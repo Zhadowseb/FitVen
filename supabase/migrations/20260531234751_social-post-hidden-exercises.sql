@@ -1,7 +1,7 @@
 -- Adds per-user exercise visibility preferences for workout summary posts.
 --
 -- Run after:
---   docs/supabase-social-search.sql
+--   supabase/migrations/20260424004053_social-search.sql
 --   the exercise catalog schema that creates public."Exercise"
 --
 -- No row means the exercise is shown in social posts. A row means the user has

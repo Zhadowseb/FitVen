@@ -35,7 +35,7 @@ Using `Set` as the example:
 | 8 | `src/Services/programService.js` `reconcileSetsFromCloud` | otherwise the next pull overwrites it locally |
 | 9 | `src/Services/weightliftingService.js` | normalisation or derived fields, if any |
 | 10 | the screen | display |
-| 11 | **the Supabase table** | a SQL migration, and somebody has to run it against the project |
+| 11 | **the Supabase table** | a migration in `supabase/migrations/`, and somebody has to run it against the project |
 
 Steps 5 to 8 are the ones that get skipped. They are the cloud half.
 

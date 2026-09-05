@@ -166,6 +166,19 @@ if (colouredStyles.length) {
   );
 }
 
+// Every migration has to be in the ledger - supabase/migrations/README.md
+const ledger = read("supabase/migrations/README.md") ?? "";
+
+for (const file of allFiles.filter((f) => /^supabase\/migrations\/.*\.sql$/.test(f))) {
+  const name = path.posix.basename(file);
+
+  if (!ledger.includes(name)) {
+    problems.push(
+      `${name} is missing from supabase/migrations/README.md - record whether it has been run`
+    );
+  }
+}
+
 // The guides that the root file points at have to exist
 for (const match of (read("AGENTS.md") ?? "").matchAll(/^- `(src\/[^`]+AGENTS\.md)`/gm)) {
   if (!allFiles.includes(match[1])) {

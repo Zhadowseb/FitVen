@@ -15,9 +15,9 @@ const MANAGE_PUSH_TOKEN_FUNCTION = "manage-push-token";
 const SEND_WORKOUT_STARTED_NOTIFICATION_FUNCTION =
   "send-workout-started-notification";
 const NOTIFICATION_SETUP_MESSAGE =
-  "Push notifications are not set up in Supabase yet. Run docs/supabase-push-notifications.sql in the Supabase SQL editor first.";
+  "Push notifications are not set up in Supabase yet. Run supabase/migrations/20260609112711_push-notifications.sql in the Supabase SQL editor first.";
 const NOTIFICATION_HISTORY_SETUP_MESSAGE =
-  "Notification history is not set up in Supabase yet. Run docs/supabase-notification-history.sql in the Supabase SQL editor first.";
+  "Notification history is not set up in Supabase yet. Run supabase/migrations/20260610205948_notification-history.sql in the Supabase SQL editor first.";
 const NOTIFICATION_HISTORY_SELECT_FIELDS = `
   id,
   event_type,

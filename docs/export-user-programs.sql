@@ -1,8 +1,12 @@
 -- Read-only export of all non-deleted program data for one Supabase user.
 -- Run in the Supabase SQL editor and copy/download the single JSON result.
+--
+-- Put the user's id in the line below before running. It used to be a real
+-- user's UUID, committed to the repository, which is the same class of problem
+-- the security review raised about the one-time import payload.
 
 with constants as (
-  select '3a91c5d3-0257-4c89-bf00-f4c223b768cc'::uuid as user_id
+  select '00000000-0000-0000-0000-000000000000'::uuid as user_id
 ),
 program_scope as (
   select p.*

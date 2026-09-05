@@ -31,5 +31,5 @@ using (
 
 -- The own-folder policy is now redundant for reads, but writing is still
 -- restricted to your own folder by the insert, update and delete policies in
--- docs/supabase-social-search.sql. Left in place: it does no harm, and dropping
+-- supabase/migrations/20260424004053_social-search.sql. Left in place: it does no harm, and dropping
 -- it is a separate decision.
