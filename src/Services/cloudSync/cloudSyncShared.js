@@ -25,6 +25,57 @@ import {
   normalizeSyncVersion,
 } from "@utils/syncUtils";
 import { getStableSyncDeviceId } from "@utils/deviceIdentity";
+import {
+  normalizeBooleanFlag,
+  normalizeCloudTimeString,
+  normalizeDayDate,
+  normalizeExerciseVisibleColumns,
+  normalizeLastUpdatedMs,
+  normalizeOptionalInteger,
+  normalizeOptionalText,
+  normalizeWeekday,
+  resolveDayCloudLocalId,
+  resolveExerciseInstanceCloudLocalId,
+  resolveMesocycleCloudLocalId,
+  resolveProgramCloudLocalId,
+  resolveWorkoutTypeInstanceCloudLocalId,
+} from "./cloudSyncFields";
+// Re-exported so the entity modules keep importing from one place.
+export {
+  areComparableDaysEqual,
+  areComparableExerciseInstancesEqual,
+  areComparableMesocyclesEqual,
+  areComparableMicrocyclesEqual,
+  areComparableProgramsEqual,
+  areComparableSetsEqual,
+  areComparableWorkoutTypeInstancesEqual,
+  buildCloudDayPayload,
+  buildCloudExerciseInstancePayload,
+  buildCloudMesocyclePayload,
+  buildCloudMicrocyclePayload,
+  buildCloudProgramPayload,
+  buildCloudSetPayload,
+  buildCloudWorkoutTypeInstancePayload,
+  getComparableDaySnapshot,
+  getComparableExerciseInstanceSnapshot,
+  getComparableMesocycleSnapshot,
+  getComparableMicrocycleSnapshot,
+  getComparableProgramSnapshot,
+  getComparableSetSnapshot,
+  getComparableWorkoutTypeInstanceSnapshot,
+  normalizeBooleanFlag,
+  normalizeExerciseOrder,
+  normalizeOptionalInteger,
+  normalizeProgramStatus,
+  normalizeWorkoutLabel,
+  normalizeWorkoutType,
+  resolveDayCloudLocalId,
+  resolveExerciseInstanceCloudLocalId,
+  resolveMesocycleCloudLocalId,
+  resolveProgramCloudLocalId,
+  resolveSetCloudLocalId,
+  resolveWorkoutTypeInstanceCloudLocalId,
+} from "./cloudSyncFields";
 
 export const WEEK_DAYS = [
   "Monday",
@@ -37,8 +88,6 @@ export const WEEK_DAYS = [
 ];
 
 export const PROGRAM_CLOUD_TABLE = "Program";
-
-const PROGRAM_STATUS_VALUES = new Set(["COMPLETE", "ACTIVE", "NOT_STARTED"]);
 
 export const PROGRAM_CLOUD_SYNC_SELECT =
   "id, user_id, local_program_id, sync_id, sync_version, deleted_at, last_updated, is_deleting, delete_requested_at, local_watchers, program_name, start_date, status";
@@ -102,17 +151,6 @@ const CLOUD_CHILD_RELATIONSHIPS = {
   },
 };
 
-const EXERCISE_VISIBLE_COLUMN_KEYS = [
-  "note",
-  "rest",
-  "set",
-  "reps",
-  "rpe",
-  "rm_percentage",
-  "weight",
-  "done",
-];
-
 export function getWeekdayLabel(date) {
   return WEEK_DAYS[(date.getDay() + 6) % 7] ?? WEEK_DAYS[0];
 }
@@ -142,108 +180,9 @@ export function formatElapsedWorkoutDetail(workout) {
   return `${totalElapsedMinutes} min in`;
 }
 
-function normalizeProgramName(value) {
-  if (typeof value !== "string") {
-    return null;
-  }
-
-  const trimmedValue = value.trim();
-  return trimmedValue.length > 0 ? trimmedValue : null;
-}
-
-function normalizeProgramStartDate(value) {
-  return normalizeLocalDateString(value);
-}
-
-function normalizeProgramStartDateForCloud(value) {
-  return normalizeIsoDateString(value);
-}
-
-export function normalizeProgramStatus(value) {
-  const normalizedStatus =
-    typeof value === "string" ? value.trim().toUpperCase() : "";
-
-  return PROGRAM_STATUS_VALUES.has(normalizedStatus)
-    ? normalizedStatus
-    : "NOT_STARTED";
-}
-
-export function resolveProgramCloudLocalId(program) {
-  return normalizeOptionalInteger(
-    program?.remote_local_program_id ??
-      program?.local_program_id ??
-      program?.program_id,
-    null
-  );
-}
-
-export function getComparableProgramSnapshot(program) {
-  return {
-    local_program_id: normalizeOptionalInteger(program?.local_program_id, null),
-    program_name: normalizeProgramName(program?.program_name),
-    start_date: normalizeProgramStartDate(program?.start_date),
-    status: normalizeProgramStatus(program?.status),
-  };
-}
-
-export function areComparableProgramsEqual(leftProgram, rightProgram) {
-  const leftSnapshot = getComparableProgramSnapshot(leftProgram);
-  const rightSnapshot = getComparableProgramSnapshot(rightProgram);
-
-  return (
-    leftSnapshot.program_name === rightSnapshot.program_name &&
-    leftSnapshot.start_date === rightSnapshot.start_date &&
-    leftSnapshot.status === rightSnapshot.status
-  );
-}
-
-function getCloudSyncMetadataPayload(entity) {
-  const deletedAt = normalizeDeletedAt(entity?.deleted_at);
-
-  return {
-    sync_id: normalizeSyncId(entity?.sync_id),
-    sync_version: normalizeSyncVersion(entity?.sync_version, 0),
-    deleted_at: deletedAt,
-    last_updated: normalizeLastUpdatedForCloud(entity),
-    is_deleting: normalizeBooleanFlag(entity?.is_deleting) || deletedAt !== null,
-    delete_requested_at:
-      normalizeOptionalText(entity?.delete_requested_at) ??
-      (deletedAt !== null ? deletedAt : null),
-  };
-}
-
-export function buildCloudProgramPayload(localProgram, userId) {
-  return {
-    user_id: userId,
-    local_program_id: resolveProgramCloudLocalId(localProgram),
-    ...getCloudSyncMetadataPayload(localProgram),
-    program_name: normalizeProgramName(localProgram.program_name),
-    start_date: normalizeProgramStartDateForCloud(localProgram.start_date),
-    status: normalizeProgramStatus(localProgram.status),
-  };
-}
-
 export function parseCloudProgramId(value) {
   const numericValue = Number(value);
   return Number.isFinite(numericValue) ? numericValue : null;
-}
-
-function normalizeOptionalText(value) {
-  if (typeof value !== "string") {
-    return null;
-  }
-
-  const trimmedValue = value.trim();
-  return trimmedValue.length > 0 ? trimmedValue : null;
-}
-
-export function normalizeOptionalInteger(value, fallbackValue = 0) {
-  if (value === null || value === undefined || value === "") {
-    return fallbackValue;
-  }
-
-  const numericValue = Number(value);
-  return Number.isFinite(numericValue) ? Math.trunc(numericValue) : fallbackValue;
 }
 
 export function resolveSideBySideCloudId(entity, legacyCloudIdColumn) {
@@ -251,64 +190,6 @@ export function resolveSideBySideCloudId(entity, legacyCloudIdColumn) {
     entity?.cloud_id ?? entity?.[legacyCloudIdColumn],
     null
   );
-}
-
-export function normalizeBooleanFlag(value) {
-  if (typeof value === "boolean") {
-    return value;
-  }
-
-  if (typeof value === "number") {
-    return value !== 0;
-  }
-
-  if (typeof value === "string") {
-    const normalizedValue = value.trim().toLowerCase();
-    return ["1", "true", "yes"].includes(normalizedValue);
-  }
-
-  return false;
-}
-
-function normalizeLastUpdatedMs(value, fallbackSyncVersion = null) {
-  if (value === null || value === undefined || value === "") {
-    const fallbackVersion = normalizeSyncVersion(fallbackSyncVersion, 0);
-    return fallbackVersion > 0 ? fallbackVersion * 1000 : null;
-  }
-
-  if (typeof value === "number") {
-    if (!Number.isFinite(value) || value <= 0) {
-      return normalizeLastUpdatedMs(null, fallbackSyncVersion);
-    }
-
-    return value >= 100000000000
-      ? Math.trunc(value)
-      : Math.trunc(value * 1000);
-  }
-
-  const numericValue = Number(value);
-
-  if (Number.isFinite(numericValue) && numericValue > 0) {
-    return normalizeLastUpdatedMs(numericValue, fallbackSyncVersion);
-  }
-
-  const parsedTime = Date.parse(value);
-  return Number.isFinite(parsedTime)
-    ? parsedTime
-    : normalizeLastUpdatedMs(null, fallbackSyncVersion);
-}
-
-function normalizeLastUpdatedForCloud(entity) {
-  const lastUpdatedMs = normalizeLastUpdatedMs(
-    entity?.last_updated,
-    entity?.sync_version
-  );
-
-  if (lastUpdatedMs === null) {
-    return new Date().toISOString();
-  }
-
-  return new Date(lastUpdatedMs).toISOString();
 }
 
 function getEntitySyncState(entity) {
@@ -367,35 +248,9 @@ export function parseCloudMesocycleId(value) {
   return Number.isFinite(numericValue) ? numericValue : null;
 }
 
-export function resolveMesocycleCloudLocalId(mesocycle) {
-  return normalizeOptionalInteger(
-    mesocycle?.remote_local_mesocycle_id ??
-      mesocycle?.local_mesocycle_id ??
-      mesocycle?.mesocycle_id,
-    null
-  );
-}
-
 export function parseCloudMicrocycleId(value) {
   const numericValue = Number(value);
   return Number.isFinite(numericValue) ? numericValue : null;
-}
-
-function normalizeWeekday(value) {
-  if (typeof value !== "string") {
-    return null;
-  }
-
-  const trimmedValue = value.trim();
-  return trimmedValue.length > 0 ? trimmedValue : null;
-}
-
-function normalizeDayDate(value) {
-  return normalizeLocalDateString(value);
-}
-
-function normalizeDayDateForCloud(value) {
-  return normalizeIsoDateString(value);
 }
 
 export async function resolveDayDateFallback(
@@ -432,13 +287,6 @@ export async function resolveDayDateFallback(
 export function parseCloudDayId(value) {
   const numericValue = Number(value);
   return Number.isFinite(numericValue) ? numericValue : null;
-}
-
-export function resolveDayCloudLocalId(day) {
-  return normalizeOptionalInteger(
-    day?.remote_local_day_id ?? day?.local_day_id ?? day?.day_id,
-    null
-  );
 }
 
 export async function ensureProgramCloudIdentity(db, userId, localProgram) {
@@ -830,127 +678,6 @@ export async function ensureExerciseInstanceCloudIdentity(db, userId, localExerc
   return null;
 }
 
-export function getComparableMesocycleSnapshot(mesocycle) {
-  return {
-    cloud_program_id: normalizeOptionalInteger(
-      mesocycle?.cloud_program_id,
-      null
-    ),
-    mesocycle_number: normalizeOptionalInteger(mesocycle?.mesocycle_number, 0),
-    weeks: normalizeOptionalInteger(mesocycle?.weeks, 0),
-    focus: normalizeOptionalText(mesocycle?.focus),
-    done: normalizeBooleanFlag(mesocycle?.done),
-  };
-}
-
-export function areComparableMesocyclesEqual(leftMesocycle, rightMesocycle) {
-  const leftSnapshot = getComparableMesocycleSnapshot(leftMesocycle);
-  const rightSnapshot = getComparableMesocycleSnapshot(rightMesocycle);
-
-  return (
-    leftSnapshot.cloud_program_id === rightSnapshot.cloud_program_id &&
-    leftSnapshot.mesocycle_number === rightSnapshot.mesocycle_number &&
-    leftSnapshot.weeks === rightSnapshot.weeks &&
-    leftSnapshot.focus === rightSnapshot.focus &&
-    leftSnapshot.done === rightSnapshot.done
-  );
-}
-
-export function buildCloudMesocyclePayload(localMesocycle, userId, cloudProgramId) {
-  return {
-    user_id: userId,
-    local_mesocycle_id: resolveMesocycleCloudLocalId(localMesocycle),
-    ...getCloudSyncMetadataPayload(localMesocycle),
-    cloud_program_id: cloudProgramId,
-    mesocycle_number: normalizeOptionalInteger(localMesocycle.mesocycle_number, 0),
-    weeks: normalizeOptionalInteger(localMesocycle.weeks, 0),
-    focus: normalizeOptionalText(localMesocycle.focus),
-    done: normalizeBooleanFlag(localMesocycle.done),
-  };
-}
-
-export function getComparableMicrocycleSnapshot(microcycle) {
-  return {
-    cloud_mesocycle_id: normalizeOptionalInteger(
-      microcycle?.cloud_mesocycle_id,
-      null
-    ),
-    microcycle_number: normalizeOptionalInteger(
-      microcycle?.microcycle_number,
-      0
-    ),
-    focus: normalizeOptionalText(microcycle?.focus),
-    done: normalizeBooleanFlag(microcycle?.done),
-  };
-}
-
-export function areComparableMicrocyclesEqual(leftMicrocycle, rightMicrocycle) {
-  const leftSnapshot = getComparableMicrocycleSnapshot(leftMicrocycle);
-  const rightSnapshot = getComparableMicrocycleSnapshot(rightMicrocycle);
-
-  return (
-    leftSnapshot.cloud_mesocycle_id === rightSnapshot.cloud_mesocycle_id &&
-    leftSnapshot.microcycle_number === rightSnapshot.microcycle_number &&
-    leftSnapshot.focus === rightSnapshot.focus &&
-    leftSnapshot.done === rightSnapshot.done
-  );
-}
-
-export function buildCloudMicrocyclePayload(localMicrocycle, userId, cloudMesocycleId) {
-  return {
-    user_id: userId,
-    local_microcycle_id: localMicrocycle.microcycle_id,
-    ...getCloudSyncMetadataPayload(localMicrocycle),
-    cloud_mesocycle_id: cloudMesocycleId,
-    microcycle_number: normalizeOptionalInteger(
-      localMicrocycle.microcycle_number,
-      0
-    ),
-    focus: normalizeOptionalText(localMicrocycle.focus),
-    done: normalizeBooleanFlag(localMicrocycle.done),
-  };
-}
-
-export function getComparableDaySnapshot(day) {
-  return {
-    local_day_id: normalizeOptionalInteger(day?.local_day_id, null),
-    cloud_microcycle_id: normalizeOptionalInteger(
-      day?.cloud_microcycle_id,
-      null
-    ),
-    weekday: normalizeWeekday(day?.weekday ?? day?.Weekday),
-    date: normalizeDayDate(day?.date),
-    done: normalizeBooleanFlag(day?.done),
-    is_sick: normalizeBooleanFlag(day?.is_sick),
-  };
-}
-
-export function areComparableDaysEqual(leftDay, rightDay) {
-  const leftSnapshot = getComparableDaySnapshot(leftDay);
-  const rightSnapshot = getComparableDaySnapshot(rightDay);
-
-  return (
-    leftSnapshot.cloud_microcycle_id === rightSnapshot.cloud_microcycle_id &&
-    leftSnapshot.weekday === rightSnapshot.weekday &&
-    leftSnapshot.date === rightSnapshot.date &&
-    leftSnapshot.done === rightSnapshot.done &&
-    leftSnapshot.is_sick === rightSnapshot.is_sick
-  );
-}
-
-export function buildCloudDayPayload(localDay, userId, cloudMicrocycleId) {
-  return {
-    user_id: userId,
-    local_day_id: resolveDayCloudLocalId(localDay),
-    ...getCloudSyncMetadataPayload(localDay),
-    cloud_microcycle_id: cloudMicrocycleId,
-    weekday: normalizeWeekday(localDay.weekday ?? localDay.Weekday),
-    date: normalizeDayDateForCloud(localDay.date),
-    done: normalizeBooleanFlag(localDay.done),
-    is_sick: normalizeBooleanFlag(localDay.is_sick),
-  };
-}
-
 export function getDayIdentityKey(microcycleId, weekday) {
   const normalizedMicrocycleId = normalizeOptionalInteger(microcycleId, null);
   const normalizedWeekday = normalizeWeekday(weekday);
@@ -973,85 +700,6 @@ export function parseCloudWorkoutTypeInstanceId(value) {
   return Number.isFinite(numericValue) ? numericValue : null;
 }
 
-export function resolveWorkoutTypeInstanceCloudLocalId(workout) {
-  return normalizeOptionalInteger(
-    workout?.remote_local_workout_type_instance_id ??
-      workout?.local_workout_type_instance_id ??
-      workout?.workout_id,
-    null
-  );
-}
-
-export function normalizeWorkoutType(value) {
-  return normalizeOptionalText(value);
-}
-
-export function normalizeWorkoutLabel(value) {
-  return normalizeOptionalText(value);
-}
-
-function normalizeWorkoutDate(value) {
-  return normalizeLocalDateString(value);
-}
-
-function normalizeWorkoutDateForCloud(value) {
-  return normalizeIsoDateString(value);
-}
-
-function normalizeCloudTimeString(value) {
-  if (typeof value !== "string") {
-    return null;
-  }
-
-  const trimmedValue = value.trim();
-  const match = trimmedValue.match(/^(\d{2}):(\d{2})(?::(\d{2}))?/);
-
-  if (!match) {
-    return null;
-  }
-
-  const hours = Number(match[1]);
-  const minutes = Number(match[2]);
-  const seconds = Number(match[3] ?? "00");
-
-  if (
-    !Number.isInteger(hours) ||
-    !Number.isInteger(minutes) ||
-    !Number.isInteger(seconds) ||
-    hours < 0 ||
-    hours > 23 ||
-    minutes < 0 ||
-    minutes > 59 ||
-    seconds < 0 ||
-    seconds > 59
-  ) {
-    return null;
-  }
-
-  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
-    2,
-    "0"
-  )}:${String(seconds).padStart(2, "0")}`;
-}
-
-function timestampToCloudTimeString(value) {
-  const normalizedTimestampMs = storedTimestampSecondsToMilliseconds(value);
-
-  if (normalizedTimestampMs === null) {
-    return null;
-  }
-
-  const date = new Date(normalizedTimestampMs);
-
-  if (Number.isNaN(date.getTime())) {
-    return null;
-  }
-
-  return `${String(date.getHours()).padStart(2, "0")}:${String(
-    date.getMinutes()
-  ).padStart(2, "0")}:${String(date.getSeconds()).padStart(2, "0")}`;
-}
-
 export function cloudTimeStringToLocalTimestamp(dateValue, timeValue) {
   const normalizedDate = normalizeLocalDateString(dateValue);
   const normalizedTime = normalizeCloudTimeString(timeValue);
@@ -1068,123 +716,9 @@ export function cloudTimeStringToLocalTimestamp(dateValue, timeValue) {
   return Number.isNaN(timestampMs) ? null : Math.trunc(timestampMs / 1000);
 }
 
-export function getComparableWorkoutTypeInstanceSnapshot(workout) {
-  return {
-    local_workout_type_instance_id: normalizeOptionalInteger(
-      workout?.local_workout_type_instance_id,
-      null
-    ),
-    cloud_day_id: normalizeOptionalInteger(workout?.cloud_day_id, null),
-    workout_type: normalizeWorkoutType(workout?.workout_type),
-    date: normalizeWorkoutDate(workout?.date),
-    label: normalizeWorkoutLabel(workout?.label),
-    done: normalizeBooleanFlag(workout?.done),
-    is_active: normalizeBooleanFlag(workout?.is_active),
-    original_start_time: normalizeCloudTimeString(
-      typeof workout?.original_start_time === "string"
-        ? workout?.original_start_time
-        : timestampToCloudTimeString(workout?.original_start_time)
-    ),
-    timer_start: normalizeCloudTimeString(
-      typeof workout?.timer_start === "string"
-        ? workout?.timer_start
-        : timestampToCloudTimeString(workout?.timer_start)
-    ),
-    elapsed_time: normalizeElapsedDurationSeconds(workout?.elapsed_time, 0),
-  };
-}
-
-export function areComparableWorkoutTypeInstancesEqual(leftWorkout, rightWorkout) {
-  const leftSnapshot = getComparableWorkoutTypeInstanceSnapshot(leftWorkout);
-  const rightSnapshot = getComparableWorkoutTypeInstanceSnapshot(rightWorkout);
-
-  return (
-    leftSnapshot.cloud_day_id === rightSnapshot.cloud_day_id &&
-    leftSnapshot.workout_type === rightSnapshot.workout_type &&
-    leftSnapshot.date === rightSnapshot.date &&
-    leftSnapshot.label === rightSnapshot.label &&
-    leftSnapshot.done === rightSnapshot.done &&
-    leftSnapshot.is_active === rightSnapshot.is_active &&
-    leftSnapshot.original_start_time === rightSnapshot.original_start_time &&
-    leftSnapshot.timer_start === rightSnapshot.timer_start &&
-    leftSnapshot.elapsed_time === rightSnapshot.elapsed_time
-  );
-}
-
-export function buildCloudWorkoutTypeInstancePayload(localWorkout, userId, cloudDayId) {
-  return {
-    user_id: userId,
-    local_workout_type_instance_id:
-      resolveWorkoutTypeInstanceCloudLocalId(localWorkout),
-    ...getCloudSyncMetadataPayload(localWorkout),
-    cloud_day_id: cloudDayId,
-    workout_type: normalizeWorkoutType(localWorkout.workout_type),
-    date: normalizeWorkoutDateForCloud(localWorkout.date),
-    label: normalizeWorkoutLabel(localWorkout.label),
-    done: normalizeBooleanFlag(localWorkout.done),
-    is_active: normalizeBooleanFlag(localWorkout.is_active),
-    original_start_time: timestampToCloudTimeString(
-      localWorkout.original_start_time
-    ),
-    timer_start: timestampToCloudTimeString(localWorkout.timer_start),
-    elapsed_time: normalizeElapsedDurationSeconds(localWorkout.elapsed_time, 0),
-  };
-}
-
 export function parseCloudExerciseInstanceId(value) {
   const numericValue = Number(value);
   return Number.isFinite(numericValue) ? numericValue : null;
-}
-
-export function resolveExerciseInstanceCloudLocalId(exercise) {
-  return normalizeOptionalInteger(
-    exercise?.remote_local_exercise_instance_id ??
-      exercise?.local_exercise_instance_id ??
-      exercise?.exercise_instance_id,
-    null
-  );
-}
-
-function normalizeExerciseName(value) {
-  return normalizeOptionalText(value);
-}
-
-export function normalizeExerciseOrder(value) {
-  return Math.max(0, normalizeOptionalInteger(value, 0) ?? 0);
-}
-
-function normalizeExerciseVisibleColumns(value) {
-  if (value === null || value === undefined || value === "") {
-    return null;
-  }
-
-  let parsedValue = value;
-
-  if (typeof value === "string") {
-    try {
-      parsedValue = JSON.parse(value);
-    } catch {
-      return null;
-    }
-  }
-
-  if (
-    !parsedValue ||
-    typeof parsedValue !== "object" ||
-    Array.isArray(parsedValue)
-  ) {
-    return null;
-  }
-
-  const normalizedColumns = {};
-
-  for (const key of EXERCISE_VISIBLE_COLUMN_KEYS) {
-    if (Object.prototype.hasOwnProperty.call(parsedValue, key)) {
-      normalizedColumns[key] = Boolean(parsedValue[key]);
-    }
-  }
-
-  return Object.keys(normalizedColumns).length > 0 ? normalizedColumns : null;
 }
 
 export function serializeExerciseVisibleColumns(value) {
@@ -1192,136 +726,9 @@ export function serializeExerciseVisibleColumns(value) {
   return normalizedColumns ? JSON.stringify(normalizedColumns) : null;
 }
 
-export function getComparableExerciseInstanceSnapshot(exercise) {
-  return {
-    local_exercise_instance_id: normalizeOptionalInteger(
-      exercise?.local_exercise_instance_id,
-      null
-    ),
-    cloud_workout_type_instance_id: normalizeOptionalInteger(
-      exercise?.cloud_workout_type_instance_id,
-      null
-    ),
-    exercise_name: normalizeExerciseName(exercise?.exercise_name),
-    exercise_order: normalizeExerciseOrder(exercise?.exercise_order),
-    sets: normalizeOptionalInteger(exercise?.sets, 0),
-    visible_columns: normalizeExerciseVisibleColumns(exercise?.visible_columns),
-    note: normalizeOptionalText(exercise?.note),
-    done: normalizeBooleanFlag(exercise?.done),
-  };
-}
-
-export function areComparableExerciseInstancesEqual(leftExercise, rightExercise) {
-  const leftSnapshot = getComparableExerciseInstanceSnapshot(leftExercise);
-  const rightSnapshot = getComparableExerciseInstanceSnapshot(rightExercise);
-
-  return (
-    leftSnapshot.cloud_workout_type_instance_id ===
-      rightSnapshot.cloud_workout_type_instance_id &&
-    leftSnapshot.exercise_name === rightSnapshot.exercise_name &&
-    leftSnapshot.exercise_order === rightSnapshot.exercise_order &&
-    leftSnapshot.sets === rightSnapshot.sets &&
-    JSON.stringify(leftSnapshot.visible_columns) ===
-      JSON.stringify(rightSnapshot.visible_columns) &&
-    leftSnapshot.note === rightSnapshot.note &&
-    leftSnapshot.done === rightSnapshot.done
-  );
-}
-
-export function buildCloudExerciseInstancePayload(
-  localExercise,
-  userId,
-  cloudWorkoutTypeInstanceId
-) {
-  return {
-    user_id: userId,
-    local_exercise_instance_id:
-      resolveExerciseInstanceCloudLocalId(localExercise),
-    ...getCloudSyncMetadataPayload(localExercise),
-    cloud_workout_type_instance_id: cloudWorkoutTypeInstanceId,
-    exercise_name: normalizeExerciseName(localExercise.exercise_name),
-    exercise_order: normalizeExerciseOrder(localExercise.exercise_order),
-    sets: normalizeOptionalInteger(localExercise.sets, 0),
-    visible_columns: normalizeExerciseVisibleColumns(
-      localExercise.visible_columns
-    ),
-    note: normalizeOptionalText(localExercise.note),
-    done: normalizeBooleanFlag(localExercise.done),
-  };
-}
-
 export function parseCloudSetId(value) {
   const numericValue = Number(value);
   return Number.isFinite(numericValue) ? numericValue : null;
-}
-
-export function resolveSetCloudLocalId(set) {
-  return normalizeOptionalInteger(
-    set?.remote_local_set_id ?? set?.local_set_id ?? set?.sets_id,
-    null
-  );
-}
-
-export function getComparableSetSnapshot(set) {
-  return {
-    local_set_id: normalizeOptionalInteger(set?.local_set_id, null),
-    cloud_exercise_instance_id: normalizeOptionalInteger(
-      set?.cloud_exercise_instance_id,
-      null
-    ),
-    set_number: normalizeOptionalInteger(set?.set_number, null),
-    personal_record: normalizeBooleanFlag(set?.personal_record),
-    pause: normalizeOptionalInteger(set?.pause, null),
-    rpe: normalizeOptionalInteger(set?.rpe, null),
-    weight: normalizeOptionalInteger(set?.weight, null),
-    rm_percentage: normalizeOptionalInteger(set?.rm_percentage, null),
-    reps: normalizeOptionalInteger(set?.reps, null),
-    done: normalizeBooleanFlag(set?.done),
-    failed: normalizeBooleanFlag(set?.failed),
-    amrap: normalizeBooleanFlag(set?.amrap),
-    note: normalizeOptionalText(set?.note),
-  };
-}
-
-export function areComparableSetsEqual(leftSet, rightSet) {
-  const leftSnapshot = getComparableSetSnapshot(leftSet);
-  const rightSnapshot = getComparableSetSnapshot(rightSet);
-
-  return (
-    leftSnapshot.cloud_exercise_instance_id ===
-      rightSnapshot.cloud_exercise_instance_id &&
-    leftSnapshot.set_number === rightSnapshot.set_number &&
-    leftSnapshot.personal_record === rightSnapshot.personal_record &&
-    leftSnapshot.pause === rightSnapshot.pause &&
-    leftSnapshot.rpe === rightSnapshot.rpe &&
-    leftSnapshot.weight === rightSnapshot.weight &&
-    leftSnapshot.rm_percentage === rightSnapshot.rm_percentage &&
-    leftSnapshot.reps === rightSnapshot.reps &&
-    leftSnapshot.done === rightSnapshot.done &&
-    leftSnapshot.failed === rightSnapshot.failed &&
-    leftSnapshot.amrap === rightSnapshot.amrap &&
-    leftSnapshot.note === rightSnapshot.note
-  );
-}
-
-export function buildCloudSetPayload(localSet, userId, cloudExerciseInstanceId) {
-  return {
-    user_id: userId,
-    local_set_id: resolveSetCloudLocalId(localSet),
-    ...getCloudSyncMetadataPayload(localSet),
-    cloud_exercise_instance_id: cloudExerciseInstanceId,
-    set_number: normalizeOptionalInteger(localSet.set_number, null),
-    personal_record: normalizeBooleanFlag(localSet.personal_record),
-    pause: normalizeOptionalInteger(localSet.pause, null),
-    rpe: normalizeOptionalInteger(localSet.rpe, null),
-    weight: normalizeOptionalInteger(localSet.weight, null),
-    rm_percentage: normalizeOptionalInteger(localSet.rm_percentage, null),
-    reps: normalizeOptionalInteger(localSet.reps, null),
-    done: normalizeBooleanFlag(localSet.done),
-    failed: normalizeBooleanFlag(localSet.failed),
-    amrap: normalizeBooleanFlag(localSet.amrap),
-    note: normalizeOptionalText(localSet.note),
-  };
 }
 
 export async function getAuthenticatedUserId() {

@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.22.5] - Unreleased
+### Added
+- `SYNCED_FIELDS` in `src/Services/cloudSync/cloudSyncFields.js`: one row per synced column, with the snapshot, the comparison and the cloud payload all derived from it. Adding a field to a synced table is now one row instead of three edits that have to agree.
+- `scripts/test-cloud-sync-fields.js`, the first automated coverage the sync engine has had. It fails if a field is compared but never uploaded, compared but missing from the snapshot, or not stable under a second normalisation.
+- `scripts/lib/loadAppModule.js`, which compiles a real application module through the project's own Babel setup so a test can exercise it. The existing scripts could only read a file as text, which is why anything with an import had no coverage.
+
+### Fixed
+- A workout's `timer_start` and `original_start_time` are normalised differently for the comparison and for the upload. The asymmetry is preserved and now documented rather than hidden in two separate function bodies.
+
+---
 ## [0.22.4] - Unreleased
 ### Changed
 - The cloud sync engine moved out of `programService.js` into `src/Services/cloudSync/`, one module per entity over a shared base. `programService.js` drops from 7,424 lines to 2,164, and the largest sync module is 601. Everything is re-exported, so no caller changed.

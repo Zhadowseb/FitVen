@@ -10,7 +10,8 @@ Business logic and multi-step flows. The cloud sync engine is
 `src/Services/cloudSync/`, one module per entity over a shared base:
 
 ```
-cloudSyncShared.js  identity, normalisation, payload building, watcher/cascade
+cloudSyncFields.js  the field tables: how a row is normalised, compared, uploaded
+cloudSyncShared.js  identity, watcher/cascade, local deletes
 programSync.js      ─┐
 mesocycleSync.js     │ each syncs its parent first, so the chain runs
 microcycleSync.js    │ parent to child and the modules stay acyclic
@@ -43,9 +44,7 @@ Using `Set` as the example:
 | 2 | `src/Database/db.js` | add it to the table rebuild — the truth for an **existing install**. Both, always. |
 | 3 | `src/Repository/weightliftingRepository.js` | add it to every SELECT that reads the row |
 | 4 | `src/Repository/weightliftingRepository.js` | add it to INSERT/UPDATE, and keep the sync bookkeeping (see below) |
-| 5 | `src/Services/cloudSync/cloudSyncShared.js` `getComparableSetSnapshot` | otherwise a change to the field never counts as a change |
-| 6 | `src/Services/cloudSync/cloudSyncShared.js` `areComparableSetsEqual` | same |
-| 7 | `src/Services/cloudSync/cloudSyncShared.js` `buildCloudSetPayload` | otherwise the field is never uploaded |
+| 5-7 | `src/Services/cloudSync/cloudSyncFields.js` `SYNCED_FIELDS.Set` | **one row**, and the snapshot, the comparison and the payload all follow from it |
 | 8 | `src/Services/cloudSync/setSync.js` `reconcileSetsFromCloud` | otherwise the next pull overwrites it locally |
 | 9 | `src/Services/weightliftingService.js` | normalisation or derived fields, if any |
 | 10 | the screen | display |
@@ -53,10 +52,26 @@ Using `Set` as the example:
 
 Steps 5 to 8 are the ones that get skipped. They are the cloud half.
 
-For another entity, swap `Set` for its name: the same four functions exist per
-entity, named `getComparableXSnapshot`, `areComparableXsEqual`,
-`buildCloudXPayload` and `reconcileXsFromCloud`. The first three are in
-`cloudSyncShared.js`, the fourth in that entity's own module.
+For another entity, swap `Set` for its name. `SYNCED_FIELDS` has a table per
+entity, and `getComparableXSnapshot`, `areComparableXsEqual` and
+`buildCloudXPayload` are all derived from it. `reconcileXsFromCloud` lives in
+that entity's own module and still has to be updated by hand.
+
+A row looks like this:
+
+```js
+field("weight", int())                       // read, normalise, compare, upload
+field("date", normalizeDayDate, {            // different normaliser for the cloud
+  cloud: normalizeDayDateForCloud,
+})
+field("cloud_day_id", int(), {               // the payload builder sets this one
+  payload: "head",
+})
+```
+
+`npm test` runs `scripts/test-cloud-sync-fields.js`, which fails if a field is
+compared but never uploaded, compared but not in the snapshot, or not stable
+under a second normalisation.
 
 ## Rules That The Code Depends On
 
