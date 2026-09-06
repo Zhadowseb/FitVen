@@ -2839,6 +2839,54 @@ export async function getDayByWeekdayAndMicrocycle(
   );
 }
 
+// The plural forms of the two above. The microcycle list needs every day of
+// every microcycle it shows, and asked one weekday of one microcycle at a
+// time - seven questions per week, each pulling its own workouts, each of
+// those pulling its own exercises. Roughly 135 round trips to draw one
+// screen. Placeholders are built from the id list, which SQLite needs anyway
+// and which keeps the values bound rather than pasted into the SQL.
+export async function getDaysByMicrocycleIds(db, microcycleIds) {
+  if (!microcycleIds.length) {
+    return [];
+  }
+
+  const placeholders = microcycleIds.map(() => "?").join(", ");
+
+  return db.getAllAsync(
+    `SELECT day_id, date, done, is_sick, Weekday AS weekday, microcycle_id
+     FROM Day
+     WHERE microcycle_id IN (${placeholders});`,
+    microcycleIds
+  );
+}
+
+export async function getWorkoutsByDayIds(db, dayIds) {
+  if (!dayIds.length) {
+    return [];
+  }
+
+  const placeholders = dayIds.map(() => "?").join(", ");
+
+  return db.getAllAsync(
+    `SELECT
+        w.workout_id,
+        w.workout_type,
+        ${workoutDisplayLabelSql("w", "wt")} AS label,
+        w.done,
+        w.day_id,
+        w.is_active,
+        w.original_start_time,
+        w.timer_start,
+        w.elapsed_time,
+        ${workoutHasPersonalRecordSql("w")} AS has_personal_record
+     FROM Workout_Type_Instance w
+     LEFT JOIN Workout_Type wt ON wt.name = w.workout_type
+     WHERE w.day_id IN (${placeholders})
+     ORDER BY w.day_id ASC, w.workout_id ASC;`,
+    dayIds
+  );
+}
+
 export async function createWorkout(
   db,
   { date, dayId, workoutType = null, label = workoutType }

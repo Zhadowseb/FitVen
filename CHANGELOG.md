@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.23.28] - Unreleased
+### Performance
+- **PERF-12.** The microcycle list asked the database once per weekday per microcycle, and each of those answers then fetched its own workouts, and each workout its own exercises — around 135 sequential queries to draw one screen. `programService.getMicrocycleDayDetails` does the same work in three: the days of every visible microcycle, their workouts, and those workouts' exercises, regrouped in memory.
+- The batched workout query orders by day and then by workout id, so the per-day order the screen relied on is the order it gets. Where a weekday has no row at all the screen still sees nothing rather than an empty day, which is what decides between a placeholder and a card.
+
+### Added
+- `scripts/test-microcycle-day-details.js` runs both paths — the old per-day queries and the new batched ones, read out of the repository files rather than copied — against the same fixture and compares the assembled days field for field. The fixture is deliberately uneven: a weekday with no row, a day with no workouts, a day with two, and a workout carrying a personal record.
+
+---
 ## [0.23.27] - Unreleased
 ### Performance
 - **PERF-15.** The calendar fetched the visible month, set its state, then immediately fetched all three months and overwrote the same state — six queries per swipe with three of them thrown away as the second pair landed. It fetches the wider range once. Rows are indexed by date and looked up per day, so holding three months costs nothing to show one.

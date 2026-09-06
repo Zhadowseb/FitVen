@@ -796,6 +796,27 @@ export async function getExerciseSummariesByWorkout(db, workoutId) {
   );
 }
 
+// The plural form, so a screen showing many workouts asks once rather than
+// once per workout. workout_type_instance_id comes back so the caller can
+// group the rows again.
+export async function getExerciseSummariesByWorkoutIds(db, workoutIds) {
+  if (!workoutIds.length) {
+    return [];
+  }
+
+  await ensureExerciseOrderColumn(db);
+
+  const placeholders = workoutIds.map(() => "?").join(", ");
+
+  return db.getAllAsync(
+    `SELECT workout_type_instance_id, exercise_name, sets
+     FROM Exercise_Instance
+     WHERE workout_type_instance_id IN (${placeholders})
+     ORDER BY exercise_order ASC, exercise_instance_id ASC;`,
+    workoutIds
+  );
+}
+
 export async function getSetsByWorkout(db, workoutId) {
   await ensureExerciseOrderColumn(db);
 

@@ -1381,6 +1381,87 @@ export async function getDayDetails(db, { microcycleId, weekday }) {
   };
 }
 
+/**
+ * Every day of every given microcycle, in three queries.
+ *
+ * getDayDetails answers for one weekday of one microcycle, and the microcycle
+ * list wanted all seven of several - so it asked in a loop, and each answer
+ * fetched its own workouts, and each workout its own exercises. Around 135
+ * round trips to draw one screen.
+ *
+ * Returns a Map keyed `${microcycleId}:${weekday}`, which is how the caller
+ * looks them up.
+ */
+export async function getMicrocycleDayDetails(db, { microcycleIds }) {
+  const detailsByKey = new Map();
+  const ids = [...new Set((microcycleIds ?? []).filter(Boolean))];
+
+  if (!ids.length) {
+    return detailsByKey;
+  }
+
+  const days = await programRepository.getDaysByMicrocycleIds(db, ids);
+
+  if (!days.length) {
+    return detailsByKey;
+  }
+
+  const workouts = await programRepository.getWorkoutsByDayIds(
+    db,
+    days.map((day) => day.day_id)
+  );
+  const exercises =
+    await weightliftingRepository.getExerciseSummariesByWorkoutIds(
+      db,
+      workouts.map((workout) => workout.workout_id)
+    );
+
+  const exercisesByWorkoutId = new Map();
+  for (const exercise of exercises) {
+    const workoutId = exercise.workout_type_instance_id;
+    const list = exercisesByWorkoutId.get(workoutId) ?? [];
+
+    list.push({
+      exercise_name: exercise.exercise_name,
+      sets: exercise.sets,
+    });
+    exercisesByWorkoutId.set(workoutId, list);
+  }
+
+  const workoutsByDayId = new Map();
+  for (const workout of workouts) {
+    const list = workoutsByDayId.get(workout.day_id) ?? [];
+
+    list.push(workout);
+    workoutsByDayId.set(workout.day_id, list);
+  }
+
+  for (const day of days) {
+    const key = `${day.microcycle_id}:${day.weekday}`;
+
+    // getDayByWeekdayAndMicrocycle took the first row, so a duplicate weekday
+    // must not overwrite it here either.
+    if (detailsByKey.has(key)) {
+      continue;
+    }
+
+    const dayWorkouts = workoutsByDayId.get(day.day_id) ?? [];
+
+    detailsByKey.set(key, {
+      ...day,
+      workouts: dayWorkouts,
+      workoutExercises: dayWorkouts.map((workout) => ({
+        workout_id: workout.workout_id,
+        label: workout.label,
+        exercises: exercisesByWorkoutId.get(workout.workout_id) ?? [],
+      })),
+      workoutsDone: day.done === 1,
+    });
+  }
+
+  return detailsByKey;
+}
+
 async function persistSicknessPeriodForDay(
   db,
   {
