@@ -11,6 +11,10 @@
 - `scripts/test-cloud-sync-upload-batching.js` runs each of the seven queries for real, both ways, and checks that `dirtyOnly` returns only the rows waiting to upload — NULL counts as clean, as it did in JavaScript — while the plain call still returns every row. It also drives the parent cache: one lookup per parent, a missing parent remembered so its other children do not re-ask, a parent with no key never cached, and a fresh cache per run.
 - `scripts/test-cloud-watcher-claims.js` runs the claim against a fake Supabase over eight kinds of download and checks the watcher rows afterwards against the old rule — every live record in the download is watched. It covers a fresh device, the steady state, deleted records, unidentifiable rows, duplicates, another device's rows, the same id in another table, and a 2,500-record history that must be read across pages and written to zero times.
 
+### Notes
+- Verified on the device: adding an exercise mid-workout uploads through the changed path — the new exercise and its set came back with cloud ids and a clear `needs_sync`, and all seven tables held zero rows waiting to upload afterwards. Backgrounding and reopening the app ran a full reconcile with no errors.
+- **Found while testing, and not caused by this work: deleting an exercise does not stick.** Delete an exercise that has already synced, let the app sync again, and it comes back — same cloud id, marked as needing upload, sometimes carrying sets that were never in it. Reproduced on the commit before these changes, so it predates them. The local delete drains its queue, but the cloud row survives and the next reconcile pulls it back down.
+
 ---
 ## [0.23.31] - Unreleased
 ### Fixed
