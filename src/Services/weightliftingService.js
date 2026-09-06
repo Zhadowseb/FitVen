@@ -3,7 +3,10 @@ import {
   weightliftingRepository,
   workoutRepository,
 } from "../Repository";
-import { supabase } from "../Database/supaBaseClient";
+import {
+  getCurrentUserId,
+  supabase,
+} from "../Database/supaBaseClient";
 import * as workoutService from "./workoutService";
 import { withTransaction } from "./shared";
 import { createNextSyncVersion, normalizeSyncId } from "../Utils/syncUtils";
@@ -2661,10 +2664,13 @@ export async function getProgramWeeklyMuscleLoad(db, programId) {
   });
 }
 
+// Was supabase.auth.getUser(), which is an HTTP request, on a path that runs
+// once a second for the whole of a strength workout. See getCurrentUserId in
+// supaBaseClient.js for what that cost and why a local read is enough here.
 async function getAuthenticatedUserId() {
-  const { data, error } = await supabase.auth.getUser();
-
-  if (error) {
+  try {
+    return await getCurrentUserId();
+  } catch (error) {
     const errorMessage = String(error?.message ?? "");
 
     if (errorMessage.toLowerCase().includes("auth session missing")) {
@@ -2673,8 +2679,6 @@ async function getAuthenticatedUserId() {
 
     throw error;
   }
-
-  return data.user?.id ?? null;
 }
 
 function getExerciseColumnPreferenceUserId(userId) {

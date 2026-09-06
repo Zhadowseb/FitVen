@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.23.24] - Unreleased
+### Performance
+- **PERF-1.** Looking up who is signed in no longer makes an HTTP request. `supabase.auth.getUser()` sends `GET /auth/v1/user` and takes a process lock on the way, and it sat on a path that runs once a second for the whole of a strength workout — roughly 3,600 calls an hour, on a code path that is otherwise entirely offline, competing with the token refresh for the same lock and retried up to three times each on a bad connection. It reads the stored session instead, cached and kept current by one auth subscription.
+- The same call in `socialPostService` is gone too. It was the same disagreement between two files about the same question, just not inside a loop.
+- **PERF-14.** The bottom bar's one-second interval only ticks while a workout or rest timer is actually running. It is mounted for the entire signed-in session and used to run a database query and a state update — re-rendering the bar and everything under it — sixty times a minute with nothing running, so the app never went idle. With nothing running it now checks every ten seconds and does not tick at all, and it refreshes whenever the screen changes, which is how a workout usually starts or ends.
+
+### Notes
+- `getSession()` does not revalidate the token with the server. That is the right trade here: the id decides which local preference rows to read, and everything that matters is enforced by row-level security on each request anyway.
+
+---
 ## [0.23.23] - Unreleased
 ### Performance
 - **PERF-5.** An index on `Exercise_Instance(exercise_name, exercise_instance_id)`. Ticking a set off recalculates that exercise's personal record, and both queries behind it were scanning the user's entire exercise history on every tap — 22.9 ms over 50,000 sets when the review measured it, 23× faster with the index, and getting worse for as long as somebody uses the app.

@@ -500,13 +500,27 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     }
   }, [db]);
 
+  // This bar is mounted for the whole signed-in session, and its interval used
+  // to run at 1 Hz regardless: a SQLite query and a state update - which
+  // re-renders this component and everything under it - sixty times a minute
+  // with no workout anywhere in sight. The app never went idle.
+  //
+  // A second is what a running clock needs. Nothing else here does.
+  const hasRunningTimer = Boolean(activeWorkoutTimer) || Boolean(activeRestTimer);
+  const pollIntervalMs = hasRunningTimer ? 1000 : 10000;
+
   useEffect(() => {
     loadActiveWorkoutTimer();
 
     const interval = setInterval(() => {
-      setTimerTick(getCurrentStoredTimestampSeconds());
+      // The tick exists to advance a displayed clock. Without one, setting it
+      // only forces a re-render of a screen that has not changed.
+      if (hasRunningTimer) {
+        setTimerTick(getCurrentStoredTimestampSeconds());
+      }
+
       loadActiveWorkoutTimer();
-    }, 1000);
+    }, pollIntervalMs);
     const appStateSubscription = AppState.addEventListener(
       "change",
       (nextAppState) => {
@@ -520,7 +534,13 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
       clearInterval(interval);
       appStateSubscription.remove();
     };
-  }, [loadActiveWorkoutTimer]);
+  }, [loadActiveWorkoutTimer, hasRunningTimer, pollIntervalMs]);
+
+  // Moving between screens is how a workout usually starts or ends, so the
+  // slower idle poll almost never decides anything on its own.
+  useEffect(() => {
+    loadActiveWorkoutTimer();
+  }, [currentRouteName, loadActiveWorkoutTimer]);
 
   useEffect(() => {
     if (activeRestTimer && activeRestTimer.endsAt <= timerTick) {
