@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.23.27] - Unreleased
+### Performance
+- **PERF-15.** The calendar fetched the visible month, set its state, then immediately fetched all three months and overwrote the same state — six queries per swipe with three of them thrown away as the second pair landed. It fetches the wider range once. Rows are indexed by date and looked up per day, so holding three months costs nothing to show one.
+- Sickness periods are no longer part of that fetch. They do not vary by the month on screen and were being re-read on every swipe.
+- Loading is driven by the range changing rather than by the focus callback changing identity, which fired for other reasons too. The first focus no longer reloads on top of the mount load.
+
+### Notes
+- Verified on the device: markers show in the visible month and in the adjacent months either side of it, before and after swiping — which is the thing the double fetch existed to guarantee.
+
+---
 ## [0.23.26] - Unreleased
 ### Performance
 - **PERF-2.** A running strength workout no longer re-reads every exercise and every set from the database once a second. The clock advanced by bumping the same counter that tells the exercise list to reload itself, so moving one digit re-loaded the whole list, rebuilt every row with new object identities, and re-rendered the entire subtree — around thirty components with number fields and icons, once a second, for the length of the workout, while the user is trying to tap and type in them. The clock has its own tick; the list reloads when something actually changes.
