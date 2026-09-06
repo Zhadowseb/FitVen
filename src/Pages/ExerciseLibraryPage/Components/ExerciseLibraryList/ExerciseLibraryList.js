@@ -1,5 +1,6 @@
 import {
   ActivityIndicator,
+  FlatList,
   Pressable,
   ScrollView,
   TextInput,
@@ -12,7 +13,9 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useNavigation } from "@react-navigation/native";
 import { useState, useEffect } from "react";
 
-import styles from "./ExerciseLibraryListStyle";
+import styles, {
+  VISIBLE_EXERCISE_COUNT,
+} from "./ExerciseLibraryListStyle";
 import ExerciseFilterSheet from "../ExerciseFilterSheet/ExerciseFilterSheet";
 import { weightliftingService } from "../../../../Services";
 import { Colors, withAlpha } from "../../../../Resources/GlobalStyling/colors";
@@ -511,42 +514,55 @@ const ExerciseLibraryList = ({
           </View>
         </View>
 
-        <View
+        {/*
+          The list scrolls, rather than the screen around it: 89 rows each
+          holding a body-map image and an SVG overlay were all mounted at
+          once, and every keystroke in the search field rebuilt the lot.
+        */}
+        <FlatList
+          data={filteredExercises}
+          keyExtractor={(exercise) => exercise.exercise_name}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          showsVerticalScrollIndicator={false}
+          initialNumToRender={VISIBLE_EXERCISE_COUNT}
+          windowSize={5}
           style={[
-            styles.pickerExerciseCard,
+            styles.pickerExerciseList,
             {
               backgroundColor: cardSurface,
               borderColor: cardBorder,
             },
           ]}
-        >
-          {isLoadingExercises && exercises.length === 0 ? (
-            <View style={styles.pickerEmptyState}>
-              <ActivityIndicator color={primaryTextColor} />
-              <ThemedText style={styles.emptyBody} setColor={quietText}>
-                Loading exercises...
-              </ThemedText>
-            </View>
-          ) : exercises.length === 0 ? (
-            <View style={styles.pickerEmptyState}>
-              <ThemedTitle type="h3" style={styles.emptyTitle}>
-                No exercises yet
-              </ThemedTitle>
-              <ThemedText style={styles.emptyBody} setColor={quietText}>
-                No exercise names were found in the shared cloud library yet.
-              </ThemedText>
-            </View>
-          ) : filteredExercises.length === 0 ? (
-            <View style={styles.pickerEmptyState}>
-              <ThemedTitle type="h3" style={styles.emptyTitle}>
-                No matches
-              </ThemedTitle>
-              <ThemedText style={styles.emptyBody} setColor={quietText}>
-                Try another search or reset the active filter.
-              </ThemedText>
-            </View>
-          ) : (
-            filteredExercises.map((exercise, index) => {
+          ListEmptyComponent={
+            isLoadingExercises && exercises.length === 0 ? (
+              <View style={styles.pickerEmptyState}>
+                <ActivityIndicator color={primaryTextColor} />
+                <ThemedText style={styles.emptyBody} setColor={quietText}>
+                  Loading exercises...
+                </ThemedText>
+              </View>
+            ) : exercises.length === 0 ? (
+              <View style={styles.pickerEmptyState}>
+                <ThemedTitle type="h3" style={styles.emptyTitle}>
+                  No exercises yet
+                </ThemedTitle>
+                <ThemedText style={styles.emptyBody} setColor={quietText}>
+                  No exercise names were found in the shared cloud library yet.
+                </ThemedText>
+              </View>
+            ) : (
+              <View style={styles.pickerEmptyState}>
+                <ThemedTitle type="h3" style={styles.emptyTitle}>
+                  No matches
+                </ThemedTitle>
+                <ThemedText style={styles.emptyBody} setColor={quietText}>
+                  Try another search or reset the active filter.
+                </ThemedText>
+              </View>
+            )
+          }
+          renderItem={({ item: exercise, index }) => {
               const isCurrentSelection =
                 selectingExerciseName === exercise.exercise_name;
               const isLast = index === filteredExercises.length - 1;
@@ -561,7 +577,6 @@ const ExerciseLibraryList = ({
 
               return (
                 <Pressable
-                  key={exercise.exercise_name}
                   accessibilityRole="button"
                   accessibilityLabel={`Add ${exercise.exercise_name} to workout`}
                   disabled={isSelectionBusy}
@@ -730,9 +745,8 @@ const ExerciseLibraryList = ({
                   ) : null}
                 </Pressable>
               );
-            })
-          )}
-        </View>
+          }}
+        />
 
         {onAddCustomExercise ? (
           <View
@@ -1238,20 +1252,22 @@ const ExerciseLibraryList = ({
           </ThemedText>
         </View>
       ) : (
-        <ScrollView
-        keyboardShouldPersistTaps="handled"
+        <FlatList
+          data={filteredExercises}
+          keyExtractor={(exercise) => exercise.exercise_name}
+          keyboardShouldPersistTaps="handled"
           style={styles.listScroll}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           nestedScrollEnabled
-        >
-          {filteredExercises.map((exercise, index) => {
+          initialNumToRender={VISIBLE_EXERCISE_COUNT}
+          windowSize={5}
+          renderItem={({ item: exercise, index }) => {
             const primaryCount = exercise.primary_muscle_count ?? 0;
             const secondaryCount = exercise.secondary_muscle_count ?? 0;
 
             return (
               <Pressable
-                key={exercise.exercise_name}
                 accessibilityRole="button"
                 accessibilityLabel={
                   isWorkoutPicker
@@ -1327,8 +1343,8 @@ const ExerciseLibraryList = ({
                 </View>
               </Pressable>
             );
-          })}
-        </ScrollView>
+          }}
+        />
       )}
       </ThemedCard>
 

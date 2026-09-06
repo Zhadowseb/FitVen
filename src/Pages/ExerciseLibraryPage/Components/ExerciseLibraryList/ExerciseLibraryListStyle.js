@@ -3,7 +3,9 @@ import { StyleSheet } from "react-native";
 const EXERCISE_ROW_HEIGHT = 62;
 const EXERCISE_PREVIEW_GAP = 14;
 const EXERCISE_PREVIEW_WIDTH = Math.round(EXERCISE_ROW_HEIGHT * (503 / 647));
-const VISIBLE_EXERCISE_COUNT = 10;
+// How many rows the catalog window shows, and so how many are worth
+// rendering before the list is scrolled.  Exported for the list itself.
+export const VISIBLE_EXERCISE_COUNT = 10;
 const LIST_VIEWPORT_HEIGHT = EXERCISE_ROW_HEIGHT * VISIBLE_EXERCISE_COUNT;
 
 export default StyleSheet.create({
@@ -451,7 +453,10 @@ export default StyleSheet.create({
     fontWeight: "700",
     lineHeight: 12,
   },
-  pickerExerciseCard: {
+  // The picker list scrolls itself, so it takes the space left under the
+  // search field and chips rather than sizing to its rows.
+  pickerExerciseList: {
+    flex: 1,
     borderWidth: 1,
     borderRadius: 18,
     overflow: "hidden",

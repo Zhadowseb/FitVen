@@ -91,6 +91,17 @@ const ExerciseCatalogPage = ({ route }) => {
     [db, handleSelectExercise, isWorkoutPicker]
   );
 
+  const exerciseList = (
+    <ExerciseLibraryList
+      refreshKey={refreshKey}
+      mode={isWorkoutPicker ? "workout-picker" : "catalog"}
+      onSelectExercise={isWorkoutPicker ? handleSelectExercise : undefined}
+      onAddCustomExercise={() => setIsCustomExerciseModalVisible(true)}
+      selectingExerciseName={selectingExerciseName}
+      workoutPicker={workoutPicker}
+    />
+  );
+
   return (
     <ThemedView safe={["top", "left", "right"]} style={styles.container}>
       <ThemedHeader>
@@ -115,22 +126,25 @@ const ExerciseCatalogPage = ({ route }) => {
         </View>
       </ThemedHeader>
 
-      <ScrollView
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
-        style={styles.content}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <ExerciseLibraryList
-          refreshKey={refreshKey}
-          mode={isWorkoutPicker ? "workout-picker" : "catalog"}
-          onSelectExercise={isWorkoutPicker ? handleSelectExercise : undefined}
-          onAddCustomExercise={() => setIsCustomExerciseModalVisible(true)}
-          selectingExerciseName={selectingExerciseName}
-          workoutPicker={workoutPicker}
-        />
-      </ScrollView>
+      {/*
+        The picker scrolls its own list. A list inside a ScrollView is handed
+        unlimited height and so renders every row, which is the whole reason
+        the picker was slow. The catalog keeps the page scroll: its list is a
+        fixed-height window with the rest of the card above it.
+      */}
+      {isWorkoutPicker ? (
+        <View style={[styles.content, styles.scrollContent]}>{exerciseList}</View>
+      ) : (
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          style={styles.content}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {exerciseList}
+        </ScrollView>
+      )}
 
       <CustomExerciseModal
         visible={isCustomExerciseModalVisible}

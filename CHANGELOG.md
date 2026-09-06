@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.23.30] - Unreleased
+### Performance
+- **PERF-13.** The exercise library rendered every row it had — each one a body-map image with an SVG muscle overlay on top — and rebuilt the whole set on every keystroke in the search field. Both lists are virtualised now, so only the rows near the screen exist.
+- The picker scrolls its own list rather than sitting inside the page's scroll view. A list inside a scroll view is handed unlimited height and renders everything, so it had to own the scrolling for virtualisation to mean anything. The catalog keeps the page scroll: its list is already a fixed-height window with the rest of the card above it.
+
+---
 ## [0.23.29] - Unreleased
 ### Performance
 - **PERF-7.** Home built today's snapshot twice on every visit. The activity ring asked for it through `getTodayActivitySummary` and the hero card asked for it directly, both in the same focus pass, neither knowing about the other — and building it is most of the work Home does. Overlapping calls now share one fetch. Anything that starts after it settles still gets fresh data, so nothing is cached stale.
