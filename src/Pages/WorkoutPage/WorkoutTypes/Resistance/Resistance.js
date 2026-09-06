@@ -541,7 +541,17 @@ const Resistance = ({
   const isResting = restRemaining > 0;
   const elapsedDisplay = formatElapsedTime(currentElapsed);
   const restDisplay = formatElapsedTime(restRemaining);
+
   const primaryTimerDisplay = isResting ? restDisplay : elapsedDisplay;
+  // "00:00" fits at 52. "1:00:00" does not, and "10:00:00" is wider
+  // still. Stepping by length keeps the digits from resizing as they roll
+  // over, which continuous auto-fitting would do once a second.
+  const timerFontSize =
+    primaryTimerDisplay.length >= 8
+      ? 36
+      : primaryTimerDisplay.length >= 7
+        ? 42
+        : 52;
   const secondaryTimerLabel = isResting ? "Total" : "Rest";
   const secondaryTimerDisplay = isResting ? elapsedDisplay : restDisplay;
 
@@ -617,9 +627,17 @@ const Resistance = ({
         </View>
 
         <View style={styles.timerRow}>
+          {/* The clock gains two characters the moment a workout passes an
+              hour - "59:59" becomes "1:00:00" - and at 52 px that was wide
+              enough to push the pause and finish buttons off the right edge.
+              Somebody who left a workout running could no longer end it.
+              The size steps down with the length instead. */}
           <ThemedText
-            style={styles.timerValue}
+            style={[styles.timerValue, { fontSize: timerFontSize }]}
             setColor={isResting ? primaryColor : titleColor}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.6}
           >
             {primaryTimerDisplay}
           </ThemedText>

@@ -81,14 +81,18 @@ export default StyleSheet.create({
   timerRow: {
     flexDirection: "row",
     alignItems: "flex-end",
-    gap: 16,
+    gap: 12,
     paddingHorizontal: 16,
     marginTop: 16,
   },
 
   timerValue: {
-    fontSize: 52,
-    lineHeight: 52,
+    // fontSize is set on the element, stepped down for the hour formats.
+    // Shrinking rather than pushing: the buttons beside it are the way to
+    // pause and to finish, and neither may leave the screen.
+    flexShrink: 1,
+    minWidth: 0,
+    lineHeight: 56,
     letterSpacing: -1,
     fontWeight: "800",
     fontVariant: ["tabular-nums"],
@@ -97,6 +101,8 @@ export default StyleSheet.create({
   timerMeta: {
     gap: 4,
     paddingBottom: 6,
+    flexShrink: 1,
+    minWidth: 0,
   },
 
   timerMetaRow: {
@@ -132,11 +138,14 @@ export default StyleSheet.create({
     flexDirection: "row",
     gap: 8,
     paddingBottom: 3,
+    // Never squeezed, never pushed: whatever the clock reads, these stay.
+    flexShrink: 0,
   },
 
   timerActionButton: {
     width: 44,
     height: 44,
+    flexShrink: 0,
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",

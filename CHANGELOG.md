@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.23.25] - Unreleased
+### Fixed
+- Past one hour, the workout clock pushed the pause and finish buttons off the right edge of the screen. "59:59" becomes "1:00:00" — two characters wider at 52 px — and nothing in that row could shrink, so somebody who left a workout running had no way to end it. The clock steps down in size with the length and the buttons cannot be moved or squeezed.
+
+---
 ## [0.23.24] - Unreleased
 ### Performance
 - **PERF-1.** Looking up who is signed in no longer makes an HTTP request. `supabase.auth.getUser()` sends `GET /auth/v1/user` and takes a process lock on the way, and it sat on a path that runs once a second for the whole of a strength workout — roughly 3,600 calls an hour, on a code path that is otherwise entirely offline, competing with the token refresh for the same lock and retried up to three times each on a bad connection. It reads the stored session instead, cached and kept current by one auth subscription.

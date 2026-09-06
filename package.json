@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.23.24-major-social-safety-gdpr.1",
+  "version": "0.23.25-major-social-safety-gdpr.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",
