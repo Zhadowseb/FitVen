@@ -1252,22 +1252,23 @@ const ExerciseLibraryList = ({
           </ThemedText>
         </View>
       ) : (
-        <FlatList
-          data={filteredExercises}
-          keyExtractor={(exercise) => exercise.exercise_name}
+        <ScrollView
+          // Still a plain map: this list is a fixed-height window inside a
+          // page that scrolls, so it cannot own the scrolling without moving
+          // the card around it. That is a layout change, not a perf one.
           keyboardShouldPersistTaps="handled"
           style={styles.listScroll}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           nestedScrollEnabled
-          initialNumToRender={VISIBLE_EXERCISE_COUNT}
-          windowSize={5}
-          renderItem={({ item: exercise, index }) => {
+        >
+          {filteredExercises.map((exercise, index) => {
             const primaryCount = exercise.primary_muscle_count ?? 0;
             const secondaryCount = exercise.secondary_muscle_count ?? 0;
 
             return (
               <Pressable
+                key={exercise.exercise_name}
                 accessibilityRole="button"
                 accessibilityLabel={
                   isWorkoutPicker
@@ -1343,8 +1344,8 @@ const ExerciseLibraryList = ({
                 </View>
               </Pressable>
             );
-          }}
-        />
+          })}
+        </ScrollView>
       )}
       </ThemedCard>
 

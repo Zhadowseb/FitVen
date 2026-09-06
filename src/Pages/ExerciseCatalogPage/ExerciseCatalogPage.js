@@ -129,8 +129,9 @@ const ExerciseCatalogPage = ({ route }) => {
       {/*
         The picker scrolls its own list. A list inside a ScrollView is handed
         unlimited height and so renders every row, which is the whole reason
-        the picker was slow. The catalog keeps the page scroll: its list is a
-        fixed-height window with the rest of the card above it.
+        the picker was slow. The catalog keeps the page scroll - its list is a
+        fixed-height window with the rest of the card above it, so it cannot
+        own the scrolling without moving the card around it.
       */}
       {isWorkoutPicker ? (
         <View style={[styles.content, styles.scrollContent]}>{exerciseList}</View>

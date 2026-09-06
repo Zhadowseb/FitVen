@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.23.31] - Unreleased
+### Fixed
+- Corrects 0.23.30: the exercise **catalog** list is back to a plain map. On the device it printed "VirtualizedLists should never be nested" — the catalog list is a fixed-height window inside the page's scroll view, and a list nested in a scroll view of the same direction is exactly what that warning is about. Making it virtualise for real means giving the list the page's scroll and moving the card chrome above it into a list header, which is a layout change and not one to make unasked.
+- The **picker** keeps its virtualised list. That is the one that matters: it is opened mid-workout, holds all 89 exercises, and re-filters on every keystroke.
+
+### Notes
+- Verified on the device: the microcycle screen still separates a completed day from a planned one, a day with no workouts from a weekday with no day at all, and shows the right icon per workout (0.23.28). The picker scrolls, filters to six on "bench", shows "No matches" on a miss, and adding an exercise still creates its first set carried over from last time (0.23.30).
+
+---
 ## [0.23.30] - Unreleased
 ### Performance
 - **PERF-13.** The exercise library rendered every row it had — each one a body-map image with an SVG muscle overlay on top — and rebuilt the whole set on every keystroke in the search field. Both lists are virtualised now, so only the rows near the screen exist.
