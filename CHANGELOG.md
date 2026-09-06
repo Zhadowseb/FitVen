@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.23.32] - Unreleased
+### Performance
+- **PERF-6.** Uploading read the whole table across the bridge and dropped the clean rows in JavaScript — on a full history, every row read to find the handful that changed. The seven `get*ForCloudSync` queries take a `dirtyOnly` flag and the upload paths pass it. Reconcile still asks for everything; it matches cloud rows against local ones and would start duplicating them if it could not see them.
+- Each dirty row asked the cloud for its parent's identity, once per row rather than once per parent — twenty-five sets over five exercises made twenty-five requests where five would do. All six upload loops now share one cache per run. It is thrown away when the run ends, so the repair pass that follows a missing parent looks that parent up again rather than trusting a stale answer.
+- **Not done: the batch upsert.** That is the rest of PERF-6 and the report's own advice is to do these two first. It replaces the per-row read-then-write with one request, but the conflict handling that lets the cloud win on a higher `sync_version` lives in that per-row path, and getting it wrong overwrites newer data from another device.
+- **PERF-17.** The sync claimed a watcher row for every record in the download, every sync. A watcher row is what marks an entity as still held by this device — `last_seen_at` is written and never read — and every upsert fires a per-row trigger that recounts the watchers and writes the total back onto the entity. On a full history that was tens of thousands of writes per table per sync, restating rows that already said the same thing. It reads what the device already watches and claims only the rest, a page at a time. The rows afterwards are the same; in the steady state nothing is written at all.
+
+### Added
+- `scripts/test-cloud-sync-upload-batching.js` runs each of the seven queries for real, both ways, and checks that `dirtyOnly` returns only the rows waiting to upload — NULL counts as clean, as it did in JavaScript — while the plain call still returns every row. It also drives the parent cache: one lookup per parent, a missing parent remembered so its other children do not re-ask, a parent with no key never cached, and a fresh cache per run.
+- `scripts/test-cloud-watcher-claims.js` runs the claim against a fake Supabase over eight kinds of download and checks the watcher rows afterwards against the old rule — every live record in the download is watched. It covers a fresh device, the steady state, deleted records, unidentifiable rows, duplicates, another device's rows, the same id in another table, and a 2,500-record history that must be read across pages and written to zero times.
+
+---
 ## [0.23.31] - Unreleased
 ### Fixed
 - Corrects 0.23.30: the exercise **catalog** list is back to a plain map. On the device it printed "VirtualizedLists should never be nested" — the catalog list is a fixed-height window inside the page's scroll view, and a list nested in a scroll view of the same direction is exactly what that warning is about. Making it virtualise for real means giving the list the page's scroll and moving the card chrome above it into a list header, which is a layout change and not one to make unasked.

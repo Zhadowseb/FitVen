@@ -19,6 +19,7 @@ import {
   claimCloudWatchers,
   compareEntitySyncVersions,
   deleteLocalDayHierarchy,
+  createParentCloudIdCache,
   ensureMicrocycleCloudIdentity,
   getAuthenticatedUserId,
   getComparableDaySnapshot,
@@ -43,7 +44,7 @@ export async function uploadDirtyDays(
   { allowParentRepair = true } = {}
 ) {
   const [localDays, localMicrocycles] = await Promise.all([
-    programRepository.getDaysForCloudSync(db),
+    programRepository.getDaysForCloudSync(db, { dirtyOnly: true }),
     programRepository.getMicrocyclesForCloudSync(db),
   ]);
   const [localPrograms, localMesocycles] = await Promise.all([
@@ -58,6 +59,9 @@ export async function uploadDirtyDays(
   );
   const localMicrocyclesById = new Map(
     localMicrocycles.map((microcycle) => [microcycle.microcycle_id, microcycle])
+  );
+  const resolveParentMicrocycleCloudId = createParentCloudIdCache(
+    ensureMicrocycleCloudIdentity
   );
   let uploadedCount = 0;
   let requiresMicrocycleRepair = false;
@@ -77,7 +81,12 @@ export async function uploadDirtyDays(
         : null;
     const parentMicrocycleCloudId =
       parentMicrocycleId !== null
-        ? await ensureMicrocycleCloudIdentity(db, userId, parentMicrocycle)
+        ? await resolveParentMicrocycleCloudId(
+            db,
+            userId,
+            parentMicrocycle,
+            parentMicrocycleId
+          )
         : null;
 
     if (parentMicrocycleId !== null && parentMicrocycleCloudId === null) {

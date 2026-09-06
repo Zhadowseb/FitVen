@@ -59,7 +59,9 @@ export async function processQueuedProgramDeletes(db, userId) {
 }
 
 export async function uploadDirtyPrograms(db, userId) {
-  const localPrograms = await programRepository.getProgramsForCloudSync(db);
+  const localPrograms = await programRepository.getProgramsForCloudSync(db, {
+    dirtyOnly: true,
+  });
   let uploadedCount = 0;
 
   for (const localProgram of localPrograms) {

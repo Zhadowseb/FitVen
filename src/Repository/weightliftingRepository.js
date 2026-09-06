@@ -850,7 +850,13 @@ export async function getExercisesByWorkoutId(db, workoutId) {
   );
 }
 
-export async function getExercisesForCloudSync(db) {
+/**
+ * @param dirtyOnly Only the rows waiting to be uploaded. The upload path used
+ *   to read the whole table across the bridge and drop the clean rows in JS,
+ *   which on a full history is every row to find the handful that changed.
+ *   Reconcile still wants them all - it matches cloud rows against local ones.
+ */
+export async function getExercisesForCloudSync(db, { dirtyOnly = false } = {}) {
   await ensureExerciseOrderColumn(db);
 
   return db.getAllAsync(
@@ -872,6 +878,7 @@ export async function getExercisesForCloudSync(db) {
         done,
         needs_sync
      FROM Exercise_Instance
+     ${dirtyOnly ? "WHERE needs_sync = 1" : ""}
      ORDER BY workout_type_instance_id ASC, exercise_order ASC, exercise_instance_id ASC;`
   );
 }
@@ -1303,7 +1310,13 @@ export async function createSet(
   );
 }
 
-export async function getSetsForCloudSync(db) {
+/**
+ * @param dirtyOnly Only the rows waiting to be uploaded. The upload path used
+ *   to read the whole table across the bridge and drop the clean rows in JS,
+ *   which on a full history is every row to find the handful that changed.
+ *   Reconcile still wants them all - it matches cloud rows against local ones.
+ */
+export async function getSetsForCloudSync(db, { dirtyOnly = false } = {}) {
   return db.getAllAsync(
     `SELECT
         sets_id,
@@ -1328,6 +1341,7 @@ export async function getSetsForCloudSync(db) {
         note,
         needs_sync
      FROM "Set"
+     ${dirtyOnly ? "WHERE needs_sync = 1" : ""}
      ORDER BY sets_id ASC;`
   );
 }

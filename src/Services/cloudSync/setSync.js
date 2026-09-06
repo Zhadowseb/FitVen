@@ -19,6 +19,7 @@ import {
   buildCloudSetPayload,
   claimCloudWatchers,
   compareEntitySyncVersions,
+  createParentCloudIdCache,
   ensureExerciseInstanceCloudIdentity,
   getAuthenticatedUserId,
   getComparableSetSnapshot,
@@ -70,11 +71,14 @@ export async function uploadDirtySets(
   { allowParentRepair = true } = {}
 ) {
   const [localSets, localExercises] = await Promise.all([
-    weightliftingRepository.getSetsForCloudSync(db),
+    weightliftingRepository.getSetsForCloudSync(db, { dirtyOnly: true }),
     weightliftingRepository.getExercisesForCloudSync(db),
   ]);
   const localExercisesById = new Map(
     localExercises.map((exercise) => [exercise.exercise_instance_id, exercise])
+  );
+  const resolveParentExerciseCloudId = createParentCloudIdCache(
+    ensureExerciseInstanceCloudIdentity
   );
   let uploadedCount = 0;
   let requiresExerciseRepair = false;
@@ -85,10 +89,11 @@ export async function uploadDirtySets(
     }
 
     const parentExercise = localExercisesById.get(localSet.exercise_instance_id);
-    const parentExerciseCloudId = await ensureExerciseInstanceCloudIdentity(
+    const parentExerciseCloudId = await resolveParentExerciseCloudId(
       db,
       userId,
-      parentExercise
+      parentExercise,
+      localSet.exercise_instance_id
     );
 
     if (parentExerciseCloudId === null) {

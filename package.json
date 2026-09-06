@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.23.31-major-social-safety-gdpr.1",
+  "version": "0.23.32-major-social-safety-gdpr.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",
@@ -10,7 +10,7 @@
     "android:dev": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "test": "node scripts/check-agent-docs.js && node scripts/check-imports.js && node scripts/check-undeclared.js && node scripts/check-privacy-policy.js && node scripts/build-privacy-policy-page.js --check && npm run test:cloud-sync-fields && npm run test:secure-session && npm run test:set-carry-over && npm run test:pr-index && npm run test:microcycle-days && npm run test:next-workout && npm run test:custom-exercise && npm run test:location && npm run test:run-intervals && npm run test:run-display && npm run test:program-progress && npm run test:workout-finish && npm run test:profile-birthdate && npm run test:heart-rate-settings && npm run test:ble-heart-rate && npm run test:notifications",
+    "test": "node scripts/check-agent-docs.js && node scripts/check-imports.js && node scripts/check-undeclared.js && node scripts/check-privacy-policy.js && node scripts/build-privacy-policy-page.js --check && npm run test:cloud-sync-fields && npm run test:secure-session && npm run test:set-carry-over && npm run test:pr-index && npm run test:microcycle-days && npm run test:next-workout && npm run test:sync-upload && npm run test:sync-watchers && npm run test:custom-exercise && npm run test:location && npm run test:run-intervals && npm run test:run-display && npm run test:program-progress && npm run test:workout-finish && npm run test:profile-birthdate && npm run test:heart-rate-settings && npm run test:ble-heart-rate && npm run test:notifications",
     "docs:check": "node scripts/check-agent-docs.js",
     "version:auto": "node scripts/version.js auto",
     "version:branch": "node scripts/version.js branch",
@@ -39,6 +39,8 @@
     "test:pr-index": "node scripts/test-personal-record-index.js",
     "test:microcycle-days": "node scripts/test-microcycle-day-details.js",
     "test:next-workout": "node scripts/test-next-unfinished-workout.js",
+    "test:sync-upload": "node scripts/test-cloud-sync-upload-batching.js",
+    "test:sync-watchers": "node scripts/test-cloud-watcher-claims.js",
     "build:privacy-policy": "node scripts/build-privacy-policy-page.js",
     "undeclared:check": "node scripts/check-undeclared.js"
   },

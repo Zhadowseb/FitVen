@@ -613,6 +613,35 @@ export async function ensureWorkoutTypeInstanceCloudIdentity(db, userId, localWo
   return null;
 }
 
+/**
+ * One cloud lookup per parent, instead of one per child.
+ *
+ * Every upload loop asks the cloud for its parent's identity before sending a
+ * row, and children of the same parent arrive together: twenty-five sets
+ * spread over five exercises made twenty-five requests where five would do.
+ *
+ * The cache lasts for one upload run and is then thrown away, so the repair
+ * pass that follows a missing parent looks that parent up again.
+ */
+export function createParentCloudIdCache(resolveParentCloudId) {
+  const cloudIdByParentKey = new Map();
+
+  return async (db, userId, parent, parentKey) => {
+    if (parentKey === null || parentKey === undefined) {
+      return resolveParentCloudId(db, userId, parent);
+    }
+
+    if (!cloudIdByParentKey.has(parentKey)) {
+      cloudIdByParentKey.set(
+        parentKey,
+        await resolveParentCloudId(db, userId, parent)
+      );
+    }
+
+    return cloudIdByParentKey.get(parentKey);
+  };
+}
+
 export async function ensureExerciseInstanceCloudIdentity(db, userId, localExercise) {
   const remoteLocalExerciseInstanceId =
     resolveExerciseInstanceCloudLocalId(localExercise);
@@ -774,36 +803,119 @@ async function claimCloudWatcher({ userId, tableName, cloudId, cloudRecord }) {
   }
 }
 
-export async function claimCloudWatchers({ userId, tableName, cloudRecords }) {
-  const claimableRecords = (cloudRecords ?? []).filter(
-    (record) =>
-      normalizeOptionalInteger(record?.id, null) !== null &&
-      !isCloudSnapshotDeleted(record)
-  );
+// PostgREST caps how many rows one response may carry, and the claim below
+// reads a device's whole watcher list, so it reads it a page at a time.
+const WATCHER_PAGE_SIZE = 1000;
 
-  if (!claimableRecords.length) {
+/** The entities this device already watches in one cloud table. */
+async function getWatchedEntityIds({ userId, tableName, deviceId }) {
+  const watchedEntityIds = new Set();
+  let lastEntityId = null;
+
+  for (;;) {
+    let query = supabase
+      .from(SYNC_WATCHERS_CLOUD_TABLE)
+      .select("entity_id")
+      .eq("user_id", userId)
+      .eq("entity_table", tableName)
+      .eq("device_id", deviceId)
+      .order("entity_id", { ascending: true })
+      .limit(WATCHER_PAGE_SIZE);
+
+    if (lastEntityId !== null) {
+      query = query.gt("entity_id", lastEntityId);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      throw error;
+    }
+
+    for (const row of data ?? []) {
+      const entityId = normalizeOptionalInteger(row?.entity_id, null);
+
+      if (entityId !== null) {
+        watchedEntityIds.add(entityId);
+        lastEntityId = entityId;
+      }
+    }
+
+    if ((data?.length ?? 0) < WATCHER_PAGE_SIZE) {
+      return watchedEntityIds;
+    }
+  }
+}
+
+/**
+ * Records this device holds a live copy of, so the cloud row is not hard
+ * deleted until every device has seen the deletion.
+ *
+ * This used to upsert a row for every record in the download, every sync. A
+ * watcher row is what counts - `last_seen_at` is written and never read - and
+ * each upsert fires a per-row trigger that recounts the watchers and writes the
+ * total back onto the entity. On a full history that was tens of thousands of
+ * pointless writes per table per sync, to restate rows that already said the
+ * same thing.
+ *
+ * So it reads what this device already watches and claims only the rest. The
+ * set of rows afterwards is identical; in the steady state nothing is written.
+ */
+export async function claimCloudWatchers({ userId, tableName, cloudRecords }) {
+  const claimableEntityIds = [
+    ...new Set(
+      (cloudRecords ?? [])
+        .filter((record) => !isCloudSnapshotDeleted(record))
+        .map((record) => normalizeOptionalInteger(record?.id, null))
+        .filter((entityId) => entityId !== null)
+    ),
+  ];
+
+  if (!claimableEntityIds.length) {
     return;
   }
 
   const deviceId = await getStableSyncDeviceId();
-  const now = new Date().toISOString();
-  const { error } = await supabase
-    .from(SYNC_WATCHERS_CLOUD_TABLE)
-    .upsert(
-      claimableRecords.map((record) => ({
-        user_id: userId,
-        entity_table: tableName,
-        entity_id: normalizeOptionalInteger(record.id, null),
-        device_id: deviceId,
-        last_seen_at: now,
-      })),
-      {
-        onConflict: "user_id,entity_table,entity_id,device_id",
-      }
-    );
+  const watchedEntityIds = await getWatchedEntityIds({
+    userId,
+    tableName,
+    deviceId,
+  });
+  const unwatchedEntityIds = claimableEntityIds.filter(
+    (entityId) => !watchedEntityIds.has(entityId)
+  );
 
-  if (error) {
-    throw error;
+  if (!unwatchedEntityIds.length) {
+    return;
+  }
+
+  const now = new Date().toISOString();
+
+  for (
+    let start = 0;
+    start < unwatchedEntityIds.length;
+    start += WATCHER_PAGE_SIZE
+  ) {
+    const { error } = await supabase
+      .from(SYNC_WATCHERS_CLOUD_TABLE)
+      .upsert(
+        unwatchedEntityIds
+          .slice(start, start + WATCHER_PAGE_SIZE)
+          .map((entityId) => ({
+            user_id: userId,
+            entity_table: tableName,
+            entity_id: entityId,
+            device_id: deviceId,
+            last_seen_at: now,
+          })),
+        {
+          onConflict: "user_id,entity_table,entity_id,device_id",
+        }
+      );
+
+    if (error) {
+      throw error;
+    }
   }
 }
 

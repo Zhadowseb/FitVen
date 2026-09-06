@@ -22,6 +22,7 @@ import {
   buildCloudExerciseInstancePayload,
   claimCloudWatchers,
   compareEntitySyncVersions,
+  createParentCloudIdCache,
   ensureWorkoutTypeInstanceCloudIdentity,
   getAuthenticatedUserId,
   getComparableExerciseInstanceSnapshot,
@@ -77,11 +78,14 @@ export async function uploadDirtyExerciseInstances(
   { allowParentRepair = true } = {}
 ) {
   const [localExercises, localWorkouts] = await Promise.all([
-    weightliftingRepository.getExercisesForCloudSync(db),
+    weightliftingRepository.getExercisesForCloudSync(db, { dirtyOnly: true }),
     programRepository.getWorkoutsForCloudSync(db),
   ]);
   const localWorkoutsById = new Map(
     localWorkouts.map((workout) => [workout.workout_id, workout])
+  );
+  const resolveParentWorkoutCloudId = createParentCloudIdCache(
+    ensureWorkoutTypeInstanceCloudIdentity
   );
   let uploadedCount = 0;
   let requiresWorkoutRepair = false;
@@ -94,10 +98,11 @@ export async function uploadDirtyExerciseInstances(
     const parentWorkout = localWorkoutsById.get(
       localExercise.workout_type_instance_id
     );
-    const parentWorkoutCloudId = await ensureWorkoutTypeInstanceCloudIdentity(
+    const parentWorkoutCloudId = await resolveParentWorkoutCloudId(
       db,
       userId,
-      parentWorkout
+      parentWorkout,
+      localExercise.workout_type_instance_id
     );
 
     if (parentWorkoutCloudId === null) {

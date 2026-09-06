@@ -107,7 +107,13 @@ export async function setAppMetadataValue(db, metadataKey, metadataValue) {
   );
 }
 
-export async function getProgramsForCloudSync(db) {
+/**
+ * @param dirtyOnly Only the rows waiting to be uploaded. The upload path used
+ *   to read the whole table across the bridge and drop the clean rows in JS,
+ *   which on a full history is every row to find the handful that changed.
+ *   Reconcile still wants them all - it matches cloud rows against local ones.
+ */
+export async function getProgramsForCloudSync(db, { dirtyOnly = false } = {}) {
   return db.getAllAsync(
     `SELECT
         program_id,
@@ -123,6 +129,7 @@ export async function getProgramsForCloudSync(db) {
         status,
         needs_sync
      FROM Program
+     ${dirtyOnly ? "WHERE needs_sync = 1" : ""}
      ORDER BY program_id ASC;`
   );
 }
@@ -295,7 +302,13 @@ export async function getProgramSyncMetadata(db, programId) {
   );
 }
 
-export async function getMesocyclesForCloudSync(db) {
+/**
+ * @param dirtyOnly Only the rows waiting to be uploaded. The upload path used
+ *   to read the whole table across the bridge and drop the clean rows in JS,
+ *   which on a full history is every row to find the handful that changed.
+ *   Reconcile still wants them all - it matches cloud rows against local ones.
+ */
+export async function getMesocyclesForCloudSync(db, { dirtyOnly = false } = {}) {
   return db.getAllAsync(
     `SELECT
         mesocycle_id,
@@ -313,6 +326,7 @@ export async function getMesocyclesForCloudSync(db) {
         done,
         needs_sync
      FROM Mesocycle
+     ${dirtyOnly ? "WHERE needs_sync = 1" : ""}
      ORDER BY mesocycle_id ASC;`
   );
 }
@@ -500,7 +514,13 @@ export async function getMesocycleSyncMetadata(db, mesocycleId) {
   );
 }
 
-export async function getMicrocyclesForCloudSync(db) {
+/**
+ * @param dirtyOnly Only the rows waiting to be uploaded. The upload path used
+ *   to read the whole table across the bridge and drop the clean rows in JS,
+ *   which on a full history is every row to find the handful that changed.
+ *   Reconcile still wants them all - it matches cloud rows against local ones.
+ */
+export async function getMicrocyclesForCloudSync(db, { dirtyOnly = false } = {}) {
   return db.getAllAsync(
     `SELECT
         microcycle_id,
@@ -516,6 +536,7 @@ export async function getMicrocyclesForCloudSync(db) {
         done,
         needs_sync
      FROM Microcycle
+     ${dirtyOnly ? "WHERE needs_sync = 1" : ""}
      ORDER BY microcycle_id ASC;`
   );
 }
@@ -2043,7 +2064,13 @@ export async function getDaysByMicrocycle(db, microcycleId) {
   );
 }
 
-export async function getDaysForCloudSync(db) {
+/**
+ * @param dirtyOnly Only the rows waiting to be uploaded. The upload path used
+ *   to read the whole table across the bridge and drop the clean rows in JS,
+ *   which on a full history is every row to find the handful that changed.
+ *   Reconcile still wants them all - it matches cloud rows against local ones.
+ */
+export async function getDaysForCloudSync(db, { dirtyOnly = false } = {}) {
   return db.getAllAsync(
     `SELECT
         day_id,
@@ -2062,6 +2089,7 @@ export async function getDaysForCloudSync(db) {
         is_sick,
         needs_sync
      FROM Day
+     ${dirtyOnly ? "WHERE needs_sync = 1" : ""}
      ORDER BY day_id ASC;`
   );
 }
@@ -2504,7 +2532,13 @@ export async function getWorkoutsByDay(db, dayId) {
   );
 }
 
-export async function getWorkoutsForCloudSync(db) {
+/**
+ * @param dirtyOnly Only the rows waiting to be uploaded. The upload path used
+ *   to read the whole table across the bridge and drop the clean rows in JS,
+ *   which on a full history is every row to find the handful that changed.
+ *   Reconcile still wants them all - it matches cloud rows against local ones.
+ */
+export async function getWorkoutsForCloudSync(db, { dirtyOnly = false } = {}) {
   return db.getAllAsync(
     `SELECT
         workout_id,
@@ -2526,6 +2560,7 @@ export async function getWorkoutsForCloudSync(db) {
         elapsed_time,
         needs_sync
      FROM Workout_Type_Instance
+     ${dirtyOnly ? "WHERE needs_sync = 1" : ""}
      ORDER BY workout_id ASC;`
   );
 }
