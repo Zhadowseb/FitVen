@@ -36,6 +36,7 @@ import {
 import {
   ThemedButton,
   ThemedCard,
+  ThemedConfirmModal,
   ThemedDateWheelPicker,
   ThemedKeyboardProtection,
   ThemedModal,
@@ -89,6 +90,7 @@ export default function ProfilePage() {
   });
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState("");
+  const [logoutConfirmVisible, setLogoutConfirmVisible] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
@@ -345,7 +347,10 @@ export default function ProfilePage() {
     setBirthDatePickerVisible(false);
   };
 
+  // Signing out mid-week used to be one stray tap away, with the button
+  // sitting in a list people scroll past to reach the settings under it.
   const handleLogout = async () => {
+    setLogoutConfirmVisible(false);
     setLogoutError("");
     setIsLoggingOut(true);
 
@@ -489,21 +494,10 @@ export default function ProfilePage() {
                 <Lock width={15} height={15} color={theme.quietText} />
               </View>
 
-              <InsetDivider />
-
-              <View style={styles.fieldRow}>
-                <ThemedText style={styles.fieldLabel} setColor={theme.quietText}>
-                  Email
-                </ThemedText>
-                <ThemedText
-                  style={styles.fieldValue}
-                  setColor={theme.title}
-                  numberOfLines={1}
-                >
-                  {user?.email ?? "Unknown account"}
-                </ThemedText>
-                <Lock width={15} height={15} color={theme.quietText} />
-              </View>
+              {/* The email used to sit here too, under a heading that says
+                  Public profile - which it is not, and which was the second
+                  place on this one screen it appeared. It is in Account, once,
+                  where the thing it identifies actually lives. */}
 
               <InsetDivider />
 
@@ -774,14 +768,23 @@ export default function ProfilePage() {
                 <ChevronRight width={18} height={18} color={theme.quietText} />
               </TouchableOpacity>
 
-              <InsetDivider />
+            </ThemedCard>
+          </View>
 
-              <View style={styles.settingsRow}>
+          {/* Appearance
+              Its own card, because these two are worked here rather than
+              somewhere else. Mixed into the list above they looked identical to
+              the rows that navigate away, and the only way to tell which kind a
+              row was, was to press it. */}
+          <View style={styles.section}>
+            <SectionEyebrow>Appearance</SectionEyebrow>
+            <ThemedCard style={styles.card}>
+              <View style={styles.settingsControlRow}>
                 <SettingsIconTile backgroundColor={withAlpha(theme.primary, 0.12)}>
                   <Moon width={18} height={18} color={primaryTextColor} thickness={1.7} />
                 </SettingsIconTile>
                 <ThemedText style={styles.settingsRowLabel} setColor={theme.title}>
-                  Appearance
+                  Theme
                 </ThemedText>
                 <ThemedSegmentedControl
                   options={APPEARANCE_OPTIONS}
@@ -792,12 +795,12 @@ export default function ProfilePage() {
 
               <InsetDivider />
 
-              <View style={styles.settingsRow}>
+              <View style={styles.settingsControlRow}>
                 <SettingsIconTile backgroundColor={withAlpha(theme.primary, 0.12)}>
                   <Star width={18} height={18} color={primaryTextColor} filled />
                 </SettingsIconTile>
                 <ThemedText style={styles.settingsRowLabel} setColor={theme.title}>
-                  Color theme
+                  Colour
                 </ThemedText>
               </View>
 
@@ -888,13 +891,16 @@ export default function ProfilePage() {
 
                 <TouchableOpacity
                   activeOpacity={0.85}
-                  onPress={handleLogout}
+                  onPress={() => setLogoutConfirmVisible(true)}
                   disabled={isLoggingOut}
                   style={[
                     styles.logoutButton,
                     {
-                      borderColor: "rgba(232,92,74,0.4)",
-                      backgroundColor: "rgba(232,92,74,0.08)",
+                      // Was two fixed rgba values tuned for the dark theme, so
+                      // in light mode the border was a colour from the other
+                      // one. The danger token follows the theme.
+                      borderColor: withAlpha(theme.danger, 0.4),
+                      backgroundColor: withAlpha(theme.danger, 0.08),
                       opacity: isLoggingOut ? 0.6 : 1,
                     },
                   ]}
@@ -1009,6 +1015,18 @@ export default function ProfilePage() {
         visible={feedbackModalVisible}
         onClose={() => setFeedbackModalVisible(false)}
         userId={user?.id ?? null}
+      />
+
+      <ThemedConfirmModal
+        visible={logoutConfirmVisible}
+        title="Log out of FitVen?"
+        message="Your workouts are saved. You will need your password to sign back in."
+        confirmLabel="Log out"
+        cancelLabel="Stay signed in"
+        tone="danger"
+        isWorking={isLoggingOut}
+        onConfirm={handleLogout}
+        onClose={() => setLogoutConfirmVisible(false)}
       />
 
       <ThemedModal

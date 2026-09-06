@@ -53,7 +53,7 @@ export default StyleSheet.create({
     alignItems: "flex-start",
   },
   changePhotoChip: {
-    height: 40,
+    height: 44,
     borderRadius: 10,
     paddingHorizontal: 14,
     borderWidth: 1,
@@ -237,6 +237,16 @@ export default StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+  },
+  // A row you work here rather than one that takes you somewhere. Taller,
+  // because it holds a control instead of a chevron.
+  settingsControlRow: {
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    minHeight: 64,
   },
   settingsRowLabel: {
     flex: 1,

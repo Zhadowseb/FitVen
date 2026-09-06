@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.23.22] - Unreleased
+### Changed
+- Logging out asks first. It was one stray tap, in a list people scroll past to reach the settings under it.
+- The email address appeared twice on the profile: once under Public profile — where it is not public — and again under Account. It is in Account, once.
+- Settings and Appearance are separate cards. Rows that navigate somewhere and rows you work in place looked identical, and the only way to tell them apart was to press one.
+- The theme control is about 40 px tall with 13 px labels, up from 26 px and 11 px. It relied on hitSlop for the rest of the target, which serves the finger and not the eye: something that small does not read as pressable.
+- Change photo is 44 px.
+- The log out button took its border and fill from two fixed rgba values tuned for the dark theme, so in light mode it wore a colour from the other one. It uses the theme's danger token.
+
+### Notes
+- Two items in the review no longer applied: the decorative `⋯` at the top right is gone, and there is only one segmented control in the app now — the second was removed in 0.21.x.
+
+---
 ## [0.23.21] - Unreleased
 ### Fixed
 - The set counter in the workout header only refreshed when the screen regained focus, so adding a set left it saying 0 / 1 with two sets on the screen below it. It follows the sets now. Pre-existing, and easier to see since a new exercise arrives with a set already in it.
