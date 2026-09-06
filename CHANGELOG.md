@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.23.20] - Unreleased
+### Fixed
+- **Workout sync stopped working** the moment `20260905190000_rpc-hardening.sql` was run. That migration moved the sync watcher functions into the `private` schema and left them as security invoker, so the body ran as `authenticated` — which has no access to that schema, by design. Every write to `sync_local_watchers` failed with `42501: permission denied for schema private`, and that is on the path of ordinary workout sync.
+- The functions are security definer now, which is safe for the reason the original change was arguing about: the user id comes from a row the watcher table's own policy has already pinned to `auth.uid()`, so the updates cannot reach another user's rows.
+
+### Notes
+- Requires `supabase/migrations/20260906091500_fix-watcher-trigger-permissions.sql`. **If `20260905190000` has been run, this has to be run too** — nothing was exposed, but syncing does not resume without it.
+
+---
 ## [0.23.19] - Unreleased
 ### Changed
 - Adding an exercise to a strength workout gives it its first set straight away. Adding the exercise and then adding a set to it were always the same intention, and the empty exercise in between was a state nobody wanted to be in.

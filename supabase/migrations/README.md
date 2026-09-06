@@ -43,6 +43,7 @@ behind by accident.
 | `20260905161500_delete-account.sql` | no |
 | `20260905174500_privacy-consent.sql` | no |
 | `20260905190000_rpc-hardening.sql` | no |
+| `20260906091500_fix-watcher-trigger-permissions.sql` | no |
 
 `20260905113510_drop-unused-template-tables.sql` is optional: it drops the seven
 `*_template` tables, and only if they are genuinely empty. Run it or delete it.
@@ -61,6 +62,12 @@ writes to. Without it the gate cannot read or write an answer, fails open, and n
 `20260905190000_rpc-hardening.sql` has to run with 20260905143000: it adds the
 function the client uses to claim a username tag, which the tightened profile
 policy in that migration took away.
+
+`20260906091500_fix-watcher-trigger-permissions.sql` repairs a break that
+migration caused. It left the watcher functions as security invoker in the
+`private` schema, which `authenticated` has no access to, so every write to
+`sync_local_watchers` failed with 42501 and workout sync stopped. **If
+20260905190000 has been run, this one has to be run too.**
 
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to
