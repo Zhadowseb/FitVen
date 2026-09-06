@@ -150,6 +150,30 @@ const Resistance = ({
     }
   };
 
+  // Both counters from one query, for the path that runs every time a set is
+  // added or removed. loadTotalSets and loadCompletedSets each ask the same
+  // question, and calling them together asks it twice.
+  const loadSetSummary = useCallback(async () => {
+    try {
+      const result = await weightliftingService.getStrengthWorkoutSummary(
+        db,
+        workout_id
+      );
+
+      set_totalSets(result.totalSets);
+      set_doneSets(result.doneSets);
+    } catch (err) {
+      console.error("Failed to load the set counts for this workout:", err);
+    }
+  }, [db, workout_id]);
+
+  // The header used to hold whatever the counts were when the screen was last
+  // focused, so adding a set left it saying 0 / 1 with two sets on screen.
+  const handleWorkoutMetadataChange = useCallback(() => {
+    loadSetSummary();
+    onWorkoutMetadataChange?.();
+  }, [loadSetSummary, onWorkoutMetadataChange]);
+
   const loadCompletedSets = async () => {
     try {
       const result =
@@ -812,7 +836,7 @@ const Resistance = ({
             onReorderDragChange={setIsReorderingExercises}
             onRestTimerStart={handleRestTimerStart}
             onRestTimerCancel={handleRestTimerCancel}
-            onWorkoutMetadataChange={onWorkoutMetadataChange}
+            onWorkoutMetadataChange={handleWorkoutMetadataChange}
             onExerciseCountChange={setExerciseCount}
             onSetCompleted={handleSetCompleted}
             collapsedSetsVisible={showCollapsedSets}

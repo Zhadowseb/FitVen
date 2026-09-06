@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.23.21] - Unreleased
+### Fixed
+- The set counter in the workout header only refreshed when the screen regained focus, so adding a set left it saying 0 / 1 with two sets on the screen below it. It follows the sets now. Pre-existing, and easier to see since a new exercise arrives with a set already in it.
+- Both counters come from one query on that path instead of asking the same question twice.
+
+---
 ## [0.23.20] - Unreleased
 ### Fixed
 - **Workout sync stopped working** the moment `20260905190000_rpc-hardening.sql` was run. That migration moved the sync watcher functions into the `private` schema and left them as security invoker, so the body ran as `authenticated` — which has no access to that schema, by design. Every write to `sync_local_watchers` failed with `42501: permission denied for schema private`, and that is on the path of ordinary workout sync.
