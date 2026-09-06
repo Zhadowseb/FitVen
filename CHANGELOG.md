@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.23.26] - Unreleased
+### Performance
+- **PERF-2.** A running strength workout no longer re-reads every exercise and every set from the database once a second. The clock advanced by bumping the same counter that tells the exercise list to reload itself, so moving one digit re-loaded the whole list, rebuilt every row with new object identities, and re-rendered the entire subtree — around thirty components with number fields and icons, once a second, for the length of the workout, while the user is trying to tap and type in them. The clock has its own tick; the list reloads when something actually changes.
+- The two set counters in the header came from two loaders that each asked the same query and kept one field of the answer, so every refresh ran it twice. One query, both counters.
+- `ExerciseRow` was handed a `refreshing` prop it never read. All it did was change on every bump.
+
+### Notes
+- Verified on the device with a running workout: ticking a set updates the counter and the progress bar at once, adding a set updates the list, and backgrounding mid-workout returns with the right time and data.
+- Not re-tested here, and untouched by this change: the personal-record badge and the rest countdown, which has always had its own separate tick.
+- The report also suggests `React.memo` on the rows and preserving object identity across reloads. Neither is in this version — with the per-second reload gone there is much less left for them to save, and both are changes to how the screen renders rather than to how often.
+
+---
 ## [0.23.25] - Unreleased
 ### Fixed
 - Past one hour, the workout clock pushed the pause and finish buttons off the right edge of the screen. "59:59" becomes "1:00:00" — two characters wider at 52 px — and nothing in that row could shrink, so somebody who left a workout running had no way to end it. The clock steps down in size with the length and the buttons cannot be moved or squeezed.

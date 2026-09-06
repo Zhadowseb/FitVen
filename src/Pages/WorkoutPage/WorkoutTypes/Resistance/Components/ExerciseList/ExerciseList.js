@@ -785,7 +785,6 @@ const ExerciseList = ({
         updateUI={updateUI}
         onAddSet={addSetToExercise}
         onToggleSet={updateSetDone}
-        refreshing={refreshing}
         isDragging={draggingExerciseId === item.exercise_id}
         onDragStart={() => handleDragStart(item.exercise_id)}
         onDragMove={handleDragMove}

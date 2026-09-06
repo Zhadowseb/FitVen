@@ -105,6 +105,9 @@ const Resistance = ({
   const [isDone, set_isDone] = useState(false);
   const [isRunning, set_isRunning] = useState(false);
   const [activeRestTimer, setActiveRestTimer] = useState(null);
+  const [workoutTick, setWorkoutTick] = useState(() =>
+    getCurrentStoredTimestampSeconds()
+  );
   const timerStartRef = useRef(null);
   const elapsedTimeRef = useRef(0);
   const wasAllSetsDoneRef = useRef(false);
@@ -140,19 +143,10 @@ const Resistance = ({
     });
   }, [db, workout_id]);
 
-  const loadTotalSets = async () => {
-    try {
-      const result =
-        await weightliftingService.getStrengthWorkoutSummary(db, workout_id);
-      set_totalSets(result.totalSets);
-    } catch (err) {
-      console.error("Failed to load the amount of sets to do for this workout:", err);
-    }
-  };
 
-  // Both counters from one query, for the path that runs every time a set is
-  // added or removed. loadTotalSets and loadCompletedSets each ask the same
-  // question, and calling them together asks it twice.
+  // Both counters from one query. There used to be one loader per counter,
+  // each asking getStrengthWorkoutSummary the same question and keeping one
+  // field of the answer, so every place that wanted both ran it twice.
   const loadSetSummary = useCallback(async () => {
     try {
       const result = await weightliftingService.getStrengthWorkoutSummary(
@@ -174,23 +168,13 @@ const Resistance = ({
     onWorkoutMetadataChange?.();
   }, [loadSetSummary, onWorkoutMetadataChange]);
 
-  const loadCompletedSets = async () => {
-    try {
-      const result =
-        await weightliftingService.getStrengthWorkoutSummary(db, workout_id);
-      set_doneSets(result.doneSets);
-    } catch (err) {
-      console.error("Failed to load the done sets for this workout:", err);
-    }
-  };
 
   //Focus coming back to the page
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
       
-      loadTotalSets();
-      loadCompletedSets();
+      loadSetSummary();
 
       const reload = async () => {
           const row = await workoutService.getWorkoutTimerState(db, workout_id);
@@ -241,20 +225,29 @@ const Resistance = ({
   }, [persistCurrentTimerState]);
 
   useEffect(() => {
-    loadCompletedSets();
-    loadTotalSets();
-  }, [refreshing]);
+    loadSetSummary();
+  }, [refreshing, loadSetSummary]);
 
-  //Time loop
+  // The clock's own second hand. It used to advance by bumping
+  // `refreshing`, which is the same signal that tells the exercise list to
+  // re-read itself from SQLite - so a running workout re-loaded every
+  // exercise and every set once a second, and handed every row a new object
+  // identity, to move one digit. `refreshing` is now bumped only by actual
+  // changes: a set ticked off, added, deleted or edited, all of which
+  // already call updateUI.
   useEffect(() => {
-    if(!isRunning) return;
+    if (!isRunning) {
+      return undefined;
+    }
+
+    setWorkoutTick(getCurrentStoredTimestampSeconds());
 
     const interval = setInterval(() => {
-      refresh()
+      setWorkoutTick(getCurrentStoredTimestampSeconds());
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isRunning, isRunning, timer_start]);
+  }, [isRunning, timer_start]);
 
   // The workout tick only runs while the workout is running, so the rest
   // countdown gets its own second hand.
@@ -276,15 +269,14 @@ const Resistance = ({
     return () => clearInterval(interval);
   }, [activeRestTimer]);
 
-  const computeCurrentElapsed = () => {
+  const computeCurrentElapsed = (
+    nowSeconds = getCurrentStoredTimestampSeconds()
+  ) => {
       const resolvedTimerStart = normalizeTimerStartValue(timer_start);
 
       if (resolvedTimerStart === null) return 0;
 
-      return Math.max(
-          0,
-          getCurrentStoredTimestampSeconds() - resolvedTimerStart
-      );
+      return Math.max(0, nowSeconds - resolvedTimerStart);
   };
 
   const updateElapsed = async () => {
@@ -483,7 +475,7 @@ const Resistance = ({
   const invertedText = theme.textInverted ?? theme.background;
 
   const currentElapsed = normalizeElapsedDurationSeconds(
-    elapsed_time + computeCurrentElapsed(),
+    elapsed_time + computeCurrentElapsed(workoutTick),
     0
   );
   const resolvedTotalSets = Math.max(Number(totalSets) || 0, 0);
