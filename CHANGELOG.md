@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.23.29] - Unreleased
+### Performance
+- **PERF-7.** Home built today's snapshot twice on every visit. The activity ring asked for it through `getTodayActivitySummary` and the hero card asked for it directly, both in the same focus pass, neither knowing about the other — and building it is most of the work Home does. Overlapping calls now share one fetch. Anything that starts after it settles still gets fresh data, so nothing is cached stale.
+- The "up next" card fetched every workout from tomorrow to 180 days out, ran the personal-record subquery on each row, and kept the first unfinished one. It asks for that row instead. The ordering came along with it: on a shared date the program name decides which workout you are told about next.
+- `getTodayProgramSnapshot` re-read the program's status, once per program, to check what its only caller had already filtered on. It takes the status it is given.
+
+### Added
+- `scripts/test-next-unfinished-workout.js` runs the new single-row query against the old scan-and-filter — the SQL read out of the repository rather than copied — over six date windows. The fixture covers what the two could disagree about: a `done` of NULL, a `done` stored as text, a finished workout ahead of an unfinished one, two programs sharing a date with the id order and the name order deliberately in conflict, a standalone workout, and a workout on a program that never started.
+
+---
 ## [0.23.28] - Unreleased
 ### Performance
 - **PERF-12.** The microcycle list asked the database once per weekday per microcycle, and each of those answers then fetched its own workouts, and each workout its own exercises — around 135 sequential queries to draw one screen. `programService.getMicrocycleDayDetails` does the same work in three: the days of every visible microcycle, their workouts, and those workouts' exercises, regrouped in memory.

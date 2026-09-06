@@ -448,10 +448,19 @@ export async function getProgramDayCount(db, programId) {
   return programRepository.getProgramDayCount(db, programId);
 }
 
-export async function getTodayProgramSnapshot(db, { programId, date }) {
-  const programStatus = await programRepository.getProgramStatus(db, programId);
+/**
+ * @param status The program's status, if the caller already knows it. The
+ *   overview query returns it, and the only caller that loops over programs
+ *   has already filtered on it - so re-reading it here was a query per
+ *   program to confirm what was just checked.
+ */
+export async function getTodayProgramSnapshot(db, { programId, date, status }) {
+  const knownStatus =
+    status === undefined
+      ? (await programRepository.getProgramStatus(db, programId))?.status
+      : status;
 
-  if (normalizeProgramStatus(programStatus?.status) === "NOT_STARTED") {
+  if (normalizeProgramStatus(knownStatus) === "NOT_STARTED") {
     return null;
   }
 
@@ -480,8 +489,14 @@ export async function getTodayProgramSnapshot(db, { programId, date }) {
   };
 }
 
-export async function getTodayActivitySummary(db, { date }) {
-  const todaySnapshots = await getTodayWorkoutSnapshots(db, { date });
+/**
+ * @param snapshots Today's snapshots, if the caller already has them. Home
+ *   builds them for its own hero card in the same pass, and building them is
+ *   the expensive part of this function.
+ */
+export async function getTodayActivitySummary(db, { date, snapshots }) {
+  const todaySnapshots =
+    snapshots ?? (await getTodayWorkoutSnapshots(db, { date }));
   const todaysWorkouts = todaySnapshots.flatMap((snapshot) => snapshot.workouts);
 
   if (!todaysWorkouts.length) {
@@ -539,6 +554,7 @@ export async function getTodayProgramSnapshots(db, { date }) {
       const snapshot = await getTodayProgramSnapshot(db, {
         programId: program.program_id,
         date,
+        status: program.status,
       });
 
       if (!snapshot || snapshot.workouts.length === 0) {
@@ -789,6 +805,23 @@ export async function getWorkoutCalendarWorkouts(
   }
 
   return programRepository.getWorkoutsBetweenDates(db, {
+    startIsoDate: normalizedStartDate,
+    endIsoDate: normalizedEndDate,
+  });
+}
+
+export async function getNextUnfinishedCalendarWorkout(
+  db,
+  { startIsoDate, endIsoDate }
+) {
+  const normalizedStartDate = normalizeIsoDateString(startIsoDate);
+  const normalizedEndDate = normalizeIsoDateString(endIsoDate);
+
+  if (!normalizedStartDate || !normalizedEndDate) {
+    return null;
+  }
+
+  return programRepository.getNextUnfinishedWorkoutBetweenDates(db, {
     startIsoDate: normalizedStartDate,
     endIsoDate: normalizedEndDate,
   });

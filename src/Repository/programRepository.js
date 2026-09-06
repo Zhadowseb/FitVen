@@ -1067,6 +1067,52 @@ export async function getWorkoutOptions(db, programId) {
   );
 }
 
+/**
+ * The first workout in the range that is not finished yet.
+ *
+ * Home shows one 'up next' card, and used to get it by fetching every
+ * workout between tomorrow and 180 days out and taking the first unfinished
+ * one - up to 180 rows, each running the personal-record subquery, to fill in
+ * a weekday, a date and a title. The card reads none of the rest.
+ */
+export async function getNextUnfinishedWorkoutBetweenDates(
+  db,
+  { startIsoDate, endIsoDate }
+) {
+  const workoutIsoDateSql = localDateToIsoSql("w.date");
+
+  return db.getFirstAsync(
+    `SELECT
+        w.workout_id,
+        w.workout_type,
+        ${workoutDisplayLabelSql("w", "wt")} AS label,
+        w.date,
+        ${workoutIsoDateSql} AS date_iso,
+        w.done,
+        w.day_id,
+        d.Weekday AS weekday,
+        d.program_id,
+        p.program_name
+     FROM Workout_Type_Instance w
+     JOIN Day d ON d.day_id = w.day_id
+     LEFT JOIN Program p ON p.program_id = d.program_id
+     LEFT JOIN Workout_Type wt ON wt.name = w.workout_type
+     WHERE w.deleted_at IS NULL
+       AND d.deleted_at IS NULL
+       AND COALESCE(w.done, 0) != 1
+       AND (
+         p.program_id IS NULL OR (
+           p.deleted_at IS NULL
+           AND p.status != 'NOT_STARTED'
+         )
+       )
+       AND date(${workoutIsoDateSql}) BETWEEN date(?) AND date(?)
+      ORDER BY date_iso ASC, COALESCE(p.program_name, '') COLLATE NOCASE ASC, w.workout_id ASC
+      LIMIT 1;`,
+    [startIsoDate, endIsoDate]
+  );
+}
+
 export async function getWorkoutsBetweenDates(db, { startIsoDate, endIsoDate }) {
   const workoutIsoDateSql = localDateToIsoSql("w.date");
 
