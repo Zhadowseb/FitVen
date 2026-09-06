@@ -500,7 +500,11 @@ async function syncDaysWithCloudInternal(db) {
 
   const initialDownloadedCount = await reconcileDaysFromCloud(db, userId);
   const uploadedCount = await uploadDirtyDays(db, userId);
-  const finalDownloadedCount = await reconcileDaysFromCloud(db, userId);
+  // Only worth a second pass when the first pass had something to push. This
+  // download exists to collect the ids the cloud assigned to rows we just
+  // sent; with nothing sent, it fetches the entire table to learn nothing.
+  const finalDownloadedCount =
+    uploadedCount > 0 ? await reconcileDaysFromCloud(db, userId) : 0;
   const downloadedCount = initialDownloadedCount + finalDownloadedCount;
 
   return {

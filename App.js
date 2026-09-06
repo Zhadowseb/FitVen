@@ -331,7 +331,7 @@ function RootNavigator() {
 function UserScopedDatabaseApp() {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
-  const { accentTheme } = useThemeMode();
+  const { accentTheme, isThemeLoading } = useThemeMode();
   const { user, isAuthLoading } = useAuth();
   const userId = user?.id ?? null;
   const databaseName = getDatabaseNameForUserId(userId);
@@ -349,7 +349,12 @@ function UserScopedDatabaseApp() {
     }
   }, [databaseName, userId]);
 
-  if (isAuthLoading) {
+  // The navigator is keyed on the accent, so mounting it before the stored
+  // one has been read means throwing the whole screen tree away and building
+  // it again a tick later - with every loader on the home screen running
+  // twice. Waiting costs one AsyncStorage read on a screen that was already
+  // waiting for auth.
+  if (isAuthLoading || isThemeLoading) {
     return (
       <ThemedView style={{ alignItems: "center", justifyContent: "center" }}>
         <ThemedText setColor={theme.quietText ?? theme.iconColor}>

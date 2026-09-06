@@ -529,10 +529,13 @@ async function syncWorkoutTypeInstancesWithCloudInternal(db) {
     userId
   );
   const uploadedCount = await uploadDirtyWorkoutTypeInstances(db, userId);
-  const finalDownloadedCount = await reconcileWorkoutTypeInstancesFromCloud(
-    db,
-    userId
-  );
+  // Only worth a second pass when the first pass had something to push. This
+  // download exists to collect the ids the cloud assigned to rows we just
+  // sent; with nothing sent, it fetches the entire table to learn nothing.
+  const finalDownloadedCount =
+    uploadedCount > 0 || deletedCount > 0
+      ? await reconcileWorkoutTypeInstancesFromCloud(db, userId)
+      : 0;
   const downloadedCount = initialDownloadedCount + finalDownloadedCount;
 
   return {

@@ -496,7 +496,13 @@ async function syncSetsWithCloudInternal(db) {
   }
 
   try {
-    finalDownloadedCount = await reconcileSetsFromCloud(db, userId);
+    // Only worth a second pass when the first pass had something to push. This
+    // download exists to collect the ids the cloud assigned to rows we just
+    // sent; with nothing sent, it fetches the entire table to learn nothing -
+    // and for sets that is the largest table the user has.
+    if (uploadedCount > 0 || deletedCount > 0) {
+      finalDownloadedCount = await reconcileSetsFromCloud(db, userId);
+    }
   } catch (error) {
     throw new Error(
       `Set sync failed while reconciling cloud sets: ${error?.message ?? error}`

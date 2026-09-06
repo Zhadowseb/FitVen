@@ -568,10 +568,15 @@ async function syncExerciseInstancesWithCloudInternal(db) {
   }
 
   try {
-    finalDownloadedCount = await reconcileExerciseInstancesFromCloud(
-      db,
-      userId
-    );
+    // Only worth a second pass when the first pass had something to push. This
+    // download exists to collect the ids the cloud assigned to rows we just
+    // sent; with nothing sent, it fetches the entire table to learn nothing.
+    if (uploadedCount > 0 || deletedCount > 0) {
+      finalDownloadedCount = await reconcileExerciseInstancesFromCloud(
+        db,
+        userId
+      );
+    }
   } catch (error) {
     throw new Error(
       `Exercise sync failed while reconciling cloud exercises: ${error?.message ?? error}`

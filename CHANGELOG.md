@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.23.23] - Unreleased
+### Performance
+- **PERF-5.** An index on `Exercise_Instance(exercise_name, exercise_instance_id)`. Ticking a set off recalculates that exercise's personal record, and both queries behind it were scanning the user's entire exercise history on every tap — 22.9 ms over 50,000 sets when the review measured it, 23× faster with the index, and getting worse for as long as somebody uses the app.
+- **PERF-8.** The second cloud reconcile only runs when the first pass actually uploaded something. It exists to collect the ids the cloud assigns to rows we just sent; with nothing sent it downloaded the user's whole table to learn nothing. Four tables did this on every sync: days, workouts, exercises and sets.
+- **PERF-16.** The navigator is keyed on the accent theme, and the stored accent arrives a tick after the first render — so the whole screen tree was thrown away and rebuilt at every cold start, running every home screen loader twice. The app waits for the theme the same way it already waits for auth.
+
+### Added
+- `scripts/test-personal-record-index.js`, which reads the query plan and fails if the personal record lookup goes back to scanning. An index makes no difference anyone can see except in time, and time that grows with use is exactly what nobody notices.
+
+### Notes
+- The delta filter on reconcile — downloading only rows changed since the last sync — is the other half of PERF-8 and is not in this version.
+
+---
 ## [0.23.22] - Unreleased
 ### Changed
 - Logging out asks first. It was one stray tap, in a list people scroll past to reach the settings under it.
