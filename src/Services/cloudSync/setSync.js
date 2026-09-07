@@ -18,6 +18,7 @@ import {
   areComparableSetsEqual,
   buildCloudSetPayload,
   claimCloudWatchers,
+  createPendingDeleteIndex,
   compareEntitySyncVersions,
   createParentCloudIdCache,
   ensureExerciseInstanceCloudIdentity,
@@ -177,19 +178,11 @@ async function reconcileSetsFromCloud(db, userId) {
     weightliftingRepository.getSetsForCloudSync(db),
     weightliftingRepository.getExercisesForCloudSync(db),
   ]);
-  const queuedDeletes = await weightliftingRepository.getQueuedSetDeletes(db);
   const localExercisesByCloudId = new Map();
   const localSetsByCloudId = new Map();
   const localSetsBySyncId = new Map();
   const localSetsByRemoteLocalId = new Map();
   const localSetsByLocalId = new Map();
-  const pendingDeletedSetLocalIds = new Set(
-    queuedDeletes
-      .map((queuedDelete) =>
-        normalizeOptionalInteger(queuedDelete.remote_local_set_id, null)
-      )
-      .filter((setLocalId) => setLocalId !== null)
-  );
 
   for (const localExercise of localExercises) {
     const cloudExerciseInstanceId = parseCloudExerciseInstanceId(
@@ -227,6 +220,13 @@ async function reconcileSetsFromCloud(db, userId) {
   const pendingDeletionAcks = [];
 
   await withTransaction(db, async () => {
+    // Read inside the transaction, for the same reason the exercises are:
+    // a delete that lands mid-pass must not be undone by a stale snapshot.
+    const pendingDeletes = createPendingDeleteIndex(
+      await weightliftingRepository.getQueuedSetDeletes(db),
+      { cloudIdColumn: "cloud_set_id", localIdColumn: "remote_local_set_id" }
+    );
+
     for (const cloudSet of cloudSets ?? []) {
       const cloudSetId = parseCloudSetId(cloudSet.id);
       const cloudSyncId = normalizeSyncId(cloudSet.sync_id);
@@ -246,7 +246,13 @@ async function reconcileSetsFromCloud(db, userId) {
         continue;
       }
 
-      if (pendingDeletedSetLocalIds.has(localSetId)) {
+      if (
+        pendingDeletes.has({
+          cloudId: cloudSetId,
+          syncId: cloudSyncId,
+          localId: localSetId,
+        })
+      ) {
         continue;
       }
 

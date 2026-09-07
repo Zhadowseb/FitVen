@@ -817,6 +817,22 @@ export async function getExerciseSummariesByWorkoutIds(db, workoutIds) {
   );
 }
 
+/** Every exercise of a workout, with what the cloud knows it by. */
+export async function getExerciseSyncMetadataByWorkout(db, workoutId) {
+  return db.getAllAsync(
+    `SELECT
+        exercise_instance_id,
+        cloud_id,
+        cloud_exercise_instance_id,
+        remote_local_exercise_instance_id,
+        sync_id,
+        sync_version
+     FROM Exercise_Instance
+     WHERE workout_type_instance_id = ?;`,
+    [workoutId]
+  );
+}
+
 export async function getSetsByWorkout(db, workoutId) {
   await ensureExerciseOrderColumn(db);
 

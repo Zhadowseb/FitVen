@@ -33,6 +33,7 @@ import {
   normalizeExerciseOrder,
   normalizeOptionalInteger,
   normalizeProgramStatus,
+  queueCloudDeletesForWorkoutChildren,
   resolveSideBySideCloudId,
   resolveWorkoutTypeInstanceCloudLocalId,
 } from "./cloudSync/cloudSyncShared";
@@ -2241,6 +2242,7 @@ export async function deleteWorkout(db, workoutId) {
       });
     }
 
+    await queueCloudDeletesForWorkoutChildren(db, workoutId);
     await weightliftingRepository.deleteSetsByWorkout(db, workoutId);
     await weightliftingRepository.deleteExercisesByWorkout(db, workoutId);
     await runningRepository.deleteRunSetsByWorkout(db, workoutId);

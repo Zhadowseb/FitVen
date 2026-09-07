@@ -20,6 +20,7 @@ import {
   weightliftingRepository,
 } from "@repository";
 import {
+  createNextSyncVersion,
   normalizeDeletedAt,
   normalizeSyncId,
   normalizeSyncVersion,
@@ -1348,6 +1349,144 @@ export async function applyQueuedCloudDelete({
   });
 
   return true;
+}
+
+/**
+ * The rows a reconcile must not put back.
+ *
+ * A sync pass fetches the cloud rows first and writes what it found after.
+ * If the user deletes something in between, the pass is still holding a
+ * snapshot from before the delete and will re-create the row - and once it is
+ * back and marked dirty, the next upload clears the tombstone and the delete
+ * is undone for good.
+ *
+ * The delete queue is the record of what the user removed. Build this from a
+ * read taken inside the writing transaction, not alongside the fetch, so a
+ * delete that landed while the pass was in flight still counts.
+ *
+ * All three identities are indexed because a queued delete may only know one
+ * of them: a row created on this device has a local id long before the cloud
+ * gives it an id.
+ */
+/**
+ * Queues the cloud delete for every set of an exercise that is about to go.
+ *
+ * Deleting an exercise removed its sets from this device and told the cloud
+ * about the exercise alone. The set rows stayed live up there, pointing at an
+ * exercise that no longer exists, so anything that brought the exercise back
+ * brought them with it - including sets it never had.
+ *
+ * Must run before the sets are removed, while their identities can still be
+ * read.
+ */
+export async function queueCloudDeletesForExerciseSets(db, exerciseId) {
+  const sets = await weightliftingRepository.getSetsByExercise(db, exerciseId);
+
+  for (const set of sets) {
+    const remoteLocalSetId =
+      normalizeOptionalInteger(set?.remote_local_set_id, null) ??
+      normalizeOptionalInteger(set?.sets_id, null);
+    const cloudSetId = resolveSideBySideCloudId(set, "cloud_set_id");
+
+    if (cloudSetId === null && remoteLocalSetId === null) {
+      continue;
+    }
+
+    await weightliftingRepository.queueSetDeleteSync(db, {
+      cloudSetId,
+      remoteLocalSetId,
+      syncId: normalizeSyncId(set?.sync_id),
+      syncVersion: createNextSyncVersion(set?.sync_version),
+      deletedAt: new Date().toISOString(),
+    });
+  }
+}
+
+/**
+ * The same, one level up: everything under a workout that is about to go.
+ *
+ * Deleting a workout told the cloud about the workout alone and left its
+ * exercises and sets live up there. Queueing each row is also what lets a
+ * reconcile holding an older snapshot know not to put them back.
+ */
+export async function queueCloudDeletesForWorkoutChildren(db, workoutId) {
+  const exercises =
+    await weightliftingRepository.getExerciseSyncMetadataByWorkout(
+      db,
+      workoutId
+    );
+
+  for (const exercise of exercises) {
+    await queueCloudDeletesForExerciseSets(db, exercise.exercise_instance_id);
+
+    const remoteLocalExerciseInstanceId =
+      normalizeOptionalInteger(
+        exercise?.remote_local_exercise_instance_id,
+        null
+      ) ?? normalizeOptionalInteger(exercise?.exercise_instance_id, null);
+    const cloudExerciseInstanceId = resolveSideBySideCloudId(
+      exercise,
+      "cloud_exercise_instance_id"
+    );
+
+    if (
+      cloudExerciseInstanceId === null &&
+      remoteLocalExerciseInstanceId === null
+    ) {
+      continue;
+    }
+
+    await weightliftingRepository.queueExerciseInstanceDeleteSync(db, {
+      cloudExerciseInstanceId,
+      remoteLocalExerciseInstanceId,
+      syncId: normalizeSyncId(exercise?.sync_id),
+      syncVersion: createNextSyncVersion(exercise?.sync_version),
+      deletedAt: new Date().toISOString(),
+    });
+  }
+}
+
+export function createPendingDeleteIndex(
+  queuedDeletes,
+  { cloudIdColumn, localIdColumn }
+) {
+  const cloudIds = new Set();
+  const syncIds = new Set();
+  const localIds = new Set();
+
+  for (const queuedDelete of queuedDeletes ?? []) {
+    const cloudId = normalizeOptionalInteger(
+      queuedDelete?.[cloudIdColumn],
+      null
+    );
+    const syncId = normalizeSyncId(queuedDelete?.sync_id);
+    const localId = normalizeOptionalInteger(
+      queuedDelete?.[localIdColumn],
+      null
+    );
+
+    if (cloudId !== null) {
+      cloudIds.add(cloudId);
+    }
+
+    if (syncId) {
+      syncIds.add(syncId);
+    }
+
+    if (localId !== null) {
+      localIds.add(localId);
+    }
+  }
+
+  return {
+    has({ cloudId = null, syncId = null, localId = null } = {}) {
+      return (
+        (cloudId !== null && cloudIds.has(cloudId)) ||
+        (Boolean(syncId) && syncIds.has(syncId)) ||
+        (localId !== null && localIds.has(localId))
+      );
+    },
+  };
 }
 
 export function shouldKeepLocalEntityForCloudTombstone(localEntity, cloudEntity) {

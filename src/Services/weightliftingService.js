@@ -8,6 +8,10 @@ import {
   supabase,
 } from "../Database/supaBaseClient";
 import * as workoutService from "./workoutService";
+import {
+  createPendingDeleteIndex,
+  queueCloudDeletesForExerciseSets,
+} from "./cloudSync/cloudSyncShared";
 import { withTransaction } from "./shared";
 import { createNextSyncVersion, normalizeSyncId } from "../Utils/syncUtils";
 import { enqueueSync, startBackgroundSync } from "./syncScheduler";
@@ -3080,6 +3084,17 @@ async function hydrateWorkoutStrengthDataFromCloud(db, workoutId) {
   let didHydrate = false;
 
   await withTransaction(db, async () => {
+    // Opening a workout fetches its cloud rows, and the user may delete one
+    // before this writes. Read the queue here, inside the transaction, or a
+    // snapshot older than the delete puts the row straight back.
+    const pendingExerciseDeletes = createPendingDeleteIndex(
+      await weightliftingRepository.getQueuedExerciseInstanceDeletes(db),
+      {
+        cloudIdColumn: "cloud_exercise_instance_id",
+        localIdColumn: "remote_local_exercise_instance_id",
+      }
+    );
+
     for (const cloudExercise of cloudExercises ?? []) {
       const cloudExerciseInstanceId = normalizeOptionalInteger(
         cloudExercise?.id,
@@ -3092,6 +3107,16 @@ async function hydrateWorkoutStrengthDataFromCloud(db, workoutId) {
       const exerciseName = normalizeOptionalText(cloudExercise?.exercise_name);
 
       if (cloudExerciseInstanceId === null || !exerciseName) {
+        continue;
+      }
+
+      if (
+        pendingExerciseDeletes.has({
+          cloudId: cloudExerciseInstanceId,
+          syncId: normalizeSyncId(cloudExercise?.sync_id),
+          localId: remoteLocalExerciseInstanceId,
+        })
+      ) {
         continue;
       }
 
@@ -3241,6 +3266,12 @@ async function hydrateWorkoutStrengthDataFromCloud(db, workoutId) {
   }
 
   await withTransaction(db, async () => {
+    // Same reason as the exercises above.
+    const pendingSetDeletes = createPendingDeleteIndex(
+      await weightliftingRepository.getQueuedSetDeletes(db),
+      { cloudIdColumn: "cloud_set_id", localIdColumn: "remote_local_set_id" }
+    );
+
     for (const cloudSet of cloudSets ?? []) {
       const cloudSetId = normalizeOptionalInteger(cloudSet?.id, null);
       const remoteLocalSetId = normalizeOptionalInteger(
@@ -3258,6 +3289,16 @@ async function hydrateWorkoutStrengthDataFromCloud(db, workoutId) {
         cloudSetId === null ||
         cloudExerciseInstanceId === null ||
         !parentExercise
+      ) {
+        continue;
+      }
+
+      if (
+        pendingSetDeletes.has({
+          cloudId: cloudSetId,
+          syncId: normalizeSyncId(cloudSet?.sync_id),
+          localId: remoteLocalSetId,
+        })
       ) {
         continue;
       }
@@ -3679,6 +3720,7 @@ export async function deleteExercise(db, exerciseId) {
       });
     }
 
+    await queueCloudDeletesForExerciseSets(db, exerciseId);
     await weightliftingRepository.deleteSetsByExercise(db, exerciseId);
     await weightliftingRepository.deleteExerciseById(db, exerciseId);
 

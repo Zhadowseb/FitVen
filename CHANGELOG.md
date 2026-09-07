@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.23.33] - Unreleased
+### Fixed
+- **A deleted exercise came back.** Delete one that had already synced, wait for the next sync, and it returned — with its old cloud id, marked as needing upload, sometimes carrying every cloud set still pointing at it including sets it never had. Once back, the upload cleared the tombstone in the cloud and the delete was undone for good.
+- The cause, read off the device: a sync pass fetches the cloud rows first and writes what it found after, and the two steps straddled the delete. The local row was gone at 01:41:15, a pass holding a snapshot from before that wrote it back at 01:41:16, and the tombstone only reached the cloud at 01:41:19. Nothing in between asked whether the row had just been deleted.
+- Every path that writes cloud rows back — both reconciles and the hydration that fills a workout when you open it — now reads the delete queue **inside the transaction it writes in**, and skips anything the user has removed. It matches on cloud id, sync id and local id, because a queued delete may only know one of them: a row created on this device has a local id long before the cloud gives it one.
+- Deleting an exercise also records its sets as deleted, and deleting a workout records its exercises and sets. They used to be removed from the device while their cloud copies stayed live under a parent that no longer existed — which is where the borrowed sets came from.
+
+### Added
+- `scripts/test-delete-stays-deleted.js` runs the pending-delete index against what the queue actually holds — a row the cloud knows by id, one only this device has seen, one known by sync id — and checks it does not swallow rows nobody deleted. It also checks the invariants that broke: that each reconcile reads its queue after opening its transaction rather than alongside the fetch, and that deleting an exercise or a workout records its children before removing them, while their sync ids can still be read.
+
+### Notes
+- Verified on the device, before and after: on the old code, adding an exercise, syncing, deleting it and syncing brought it straight back every time, and the log showed the row being re-created four milliseconds after the delete. On the fixed code the same cycle leaves the workout empty, and it is still empty after two restarts with a full sync each.
+
+---
 ## [0.23.32] - Unreleased
 ### Performance
 - **PERF-6.** Uploading read the whole table across the bridge and dropped the clean rows in JavaScript — on a full history, every row read to find the handful that changed. The seven `get*ForCloudSync` queries take a `dirtyOnly` flag and the upload paths pass it. Reconcile still asks for everything; it matches cloud rows against local ones and would start duplicating them if it could not see them.
