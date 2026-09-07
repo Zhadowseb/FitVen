@@ -84,23 +84,29 @@ async function ensureCalendarPerformanceIndexes(db) {
   }
 }
 
-async function ensureColumnExists(db, tableName, columnName, columnDefinition) {
-  const columns = await db.getAllAsync(
-    `PRAGMA table_info(${quoteIdentifier(tableName)});`
-  );
-
-  if (columns.some((column) => column.name === columnName)) {
-    return;
-  }
-
-  await db.execAsync(
-    `ALTER TABLE ${quoteIdentifier(tableName)} ADD COLUMN ${columnName} ${columnDefinition};`
-  );
-}
-
+/**
+ * Adds whichever of `columns` the table does not have yet.
+ *
+ * This used to ask the table what it had once per column. Startup makes 19 of
+ * these calls covering 126 columns, and each question is a round trip across
+ * the bridge - measured at 40-85 ms per table on a mid-range Android, which
+ * was most of the second the app spent on its database before the first frame.
+ * It asks once per table and keeps track of what it adds.
+ */
 async function ensureTableColumns(db, tableName, columns) {
+  const existingColumns = new Set(
+    (await getTableColumns(db, tableName)).map((column) => column.name)
+  );
+
   for (const [columnName, columnDefinition] of columns) {
-    await ensureColumnExists(db, tableName, columnName, columnDefinition);
+    if (existingColumns.has(columnName)) {
+      continue;
+    }
+
+    await db.execAsync(
+      `ALTER TABLE ${quoteIdentifier(tableName)} ADD COLUMN ${columnName} ${columnDefinition};`
+    );
+    existingColumns.add(columnName);
   }
 }
 
@@ -1125,10 +1131,22 @@ async function repairResistanceTrainingState(db) {
   await db.execAsync(`
     UPDATE Exercise_Instance
     SET visible_columns = NULL
-    WHERE TRIM(COALESCE(visible_columns, '')) IN ('', 'undefined', 'null', '[object Object]');
+    -- An empty string counts as junk, and so did a column that was already
+    -- NULL - which meant writing NULL over NULL for every exercise, at every
+    -- app start.
+    WHERE visible_columns IS NOT NULL
+      AND TRIM(visible_columns) IN ('', 'undefined', 'null', '[object Object]');
 
     UPDATE Exercise_Instance
     SET done = (
+      NOT EXISTS (
+        SELECT 1
+        FROM "Set"
+        WHERE "Set".exercise_instance_id = Exercise_Instance.exercise_instance_id
+          AND "Set".done = 0
+      )
+    )
+    WHERE COALESCE(done, -1) != (
       NOT EXISTS (
         SELECT 1
         FROM "Set"
@@ -1157,7 +1175,22 @@ async function repairResistanceTrainingState(db) {
       SELECT 1
       FROM Exercise_Instance
       WHERE Exercise_Instance.workout_type_instance_id = Workout_Type_Instance.workout_id
-    );
+    )
+      -- A run workout keeps whatever it had, so it never needs writing, and a
+      -- strength workout only when the flag disagrees with its exercises.
+      AND NOT EXISTS (
+        SELECT 1
+        FROM Run
+        WHERE Run.workout_id = Workout_Type_Instance.workout_id
+      )
+      AND COALESCE(done, -1) != (
+        NOT EXISTS (
+          SELECT 1
+          FROM Exercise_Instance
+          WHERE Exercise_Instance.workout_type_instance_id = Workout_Type_Instance.workout_id
+            AND Exercise_Instance.done = 0
+        )
+      );
   `);
 }
 
@@ -1171,7 +1204,11 @@ async function repairRunSetState(db) {
       WHEN UPPER(REPLACE(REPLACE(TRIM(type), '-', '_'), ' ', '_')) IN ('COOLDOWN', 'COOL_DOWN')
         THEN 'COOLDOWN'
       ELSE 'WORKING_SET'
-    END;
+    END
+    -- A row already holding one of the three canonical values is left
+    -- alone. Anything else still goes through the CASE above.
+    WHERE type IS NULL
+       OR type NOT IN ('WARMUP', 'WORKING_SET', 'COOLDOWN');
 
     UPDATE Run
     SET done = COALESCE(done, 0),
@@ -1771,6 +1808,14 @@ export async function initializeDatabase(db) {
       SELECT COUNT(*)
       FROM "Set"
       WHERE "Set".exercise_instance_id = Exercise_Instance.exercise_instance_id
+    )
+    -- Only the rows that are actually wrong. SQLite writes a row to the WAL
+    -- even when the new value equals the old one, and this ran over every
+    -- exercise at every start.
+    WHERE COALESCE(sets, -1) != (
+      SELECT COUNT(*)
+      FROM "Set"
+      WHERE "Set".exercise_instance_id = Exercise_Instance.exercise_instance_id
     );
   `);
 
@@ -1784,38 +1829,4 @@ export async function initializeDatabase(db) {
   await migrateLegacyVisibleColumnDefaults(db);
 
   await initializeWeightliftingData(db);
-
-  /*
-  await db.execAsync(`
-    ALTER TABLE Workout_Type_Instance ADD COLUMN is_active INTEGER DEFAULT 0;
-  `);
-  */
-
-  /*
-  await db.execAsync(`
-    ALTER TABLE Exercise_Instance ADD COLUMN visible_columns TEXT;
-
-  `);
-  */
-
-  /*
-  await db.execAsync(`
-    DROP TABLE IF EXISTS Run;
-  `);
-  /*
-
-
-  //Drop all tables:
-  /*
-  await db.execAsync(`
-    DROP TABLE IF EXISTS Program;
-    DROP TABLE IF EXISTS "Set";
-    DROP TABLE IF EXISTS Exercise;
-    DROP TABLE IF EXISTS Exercise_Instance;
-    DROP TABLE IF EXISTS Workout_Type_Instance;
-    DROP TABLE IF EXISTS Day;
-    DROP TABLE IF EXISTS Microcycle;
-    DROP TABLE IF EXISTS Mesocycle;
-  `);
-  */
 }

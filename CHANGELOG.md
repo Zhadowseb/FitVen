@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.23.34] - Unreleased
+### Performance
+- **PERF-11.** Measured first, as the report asked: `initializeDatabase` took a median of **1,674 ms** over five cold starts on the device, on a database with only 168 days and 48 sets in it. That is the app's most expensive startup cost, and it is paid before the first frame — the user is looking at "Restoring session…" for all of it. It is now a median of **~425 ms**.
+- The cost was not where the report expected. It was `ensureTableColumns`, which asked the table what columns it had **once per column** — 126 round trips across the bridge at startup, measured at 40–85 ms per table. It asks once per table and keeps track of what it adds.
+- The repairs that ran over a whole table at every start now carry a `WHERE` that skips rows already holding the right value. SQLite writes a row to the WAL even when the new value equals the old one, so on a full history these were tens of thousands of pointless writes. The worst was the `visible_columns` reset, whose condition treated an empty string as junk — and a column that was already NULL counts as an empty string, so it wrote NULL over NULL for every exercise, every start.
+- Deleted the four commented-out migration blocks at the end of `db.js`, including a "drop all tables" one. They were inert, and one of them had been closed with `/*` instead of `*/`, so it silently swallowed the block after it.
+
+### Added
+- `scripts/test-database-repairs.js` runs the repair statements, read out of `db.js`, against a fixture covering every state the columns are known to reach: 72 exercises, 24 workouts (run-backed and strength-backed, with the stored flag right, wrong and missing) and the twelve spellings the run types have arrived in. It checks two things — that after one pass every row holds what the test computed for it in JavaScript rather than what the SQL says, and that a second pass writes nothing at all, which is the property the new `WHERE` clauses exist to provide.
+
+### Notes
+- **PERF-9 and PERF-10 were already gone.** The 13 MB of PNGs the report found are now 677 kB of JPGs — a bundled asset payload of 1.4 MB in total — and the one-time import payload and its service have been deleted. Both were fixed by other work since the report was written.
+- What is left of PERF-9 is repo weight, not app weight: `src/Resources/BodyMap` holds 6.5 MB, of which two 3 MB source SVGs and about seventy muscle-mask files are referenced by nothing. The overlays inline their paths. Nothing unreferenced reaches the bundle.
+
+---
 ## [0.23.33] - Unreleased
 ### Fixed
 - **A deleted exercise came back.** Delete one that had already synced, wait for the next sync, and it returned — with its old cloud id, marked as needing upload, sometimes carrying every cloud set still pointing at it including sets it never had. Once back, the upload cleared the tombstone in the cloud and the delete was undone for good.
