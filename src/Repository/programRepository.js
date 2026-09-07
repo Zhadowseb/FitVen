@@ -1134,6 +1134,50 @@ export async function getNextUnfinishedWorkoutBetweenDates(
   );
 }
 
+/**
+ * The distinct exercises used in the last few workouts.
+ *
+ * What the quick-access list in the picker is built from. An exercise that
+ * appears in all four workouts is one entry, not four - the question being
+ * answered is "what have I been training", not "how often".
+ *
+ * It lives here rather than in the weightlifting repository because the
+ * selecting is done on workouts and their dates, which are stored two ways in
+ * this schema and normalised by the helper above.
+ */
+export async function getRecentlyUsedExerciseNames(
+  db,
+  { workoutLimit = 4, excludeWorkoutId = null } = {}
+) {
+  const workoutIsoDateSql = localDateToIsoSql("w.date");
+
+  const rows = await db.getAllAsync(
+    `WITH recent_workouts AS (
+       SELECT w.workout_id
+       FROM Workout_Type_Instance w
+       WHERE w.deleted_at IS NULL
+         AND (? IS NULL OR w.workout_id != ?)
+         AND EXISTS (
+           SELECT 1
+           FROM Exercise_Instance e
+           WHERE e.workout_type_instance_id = w.workout_id
+             AND COALESCE(e.deleted_at, '') = ''
+         )
+       ORDER BY date(${workoutIsoDateSql}) DESC, w.workout_id DESC
+       LIMIT ?
+     )
+     SELECT DISTINCT e.exercise_name
+     FROM Exercise_Instance e
+     JOIN recent_workouts r
+       ON r.workout_id = e.workout_type_instance_id
+     WHERE COALESCE(e.deleted_at, '') = ''
+     ORDER BY e.exercise_name COLLATE NOCASE ASC;`,
+    [excludeWorkoutId, excludeWorkoutId, workoutLimit]
+  );
+
+  return rows.map((row) => row.exercise_name);
+}
+
 export async function getWorkoutsBetweenDates(db, { startIsoDate, endIsoDate }) {
   const workoutIsoDateSql = localDateToIsoSql("w.date");
 

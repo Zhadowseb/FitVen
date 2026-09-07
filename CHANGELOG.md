@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.23.36] - Unreleased
+### Added
+- **Favourite exercises.** A star on every row of the exercise catalog and of the mid-workout picker, a filter for showing only starred ones, and starred exercises sorted to the top of whatever list is on screen. The star flips before the write finishes and goes back if the write fails, so the screen never shows something it did not manage to store.
+- Favourites follow the user. They are stored per user with a dirty flag and synced both ways, shaped on `exercise_column_preferences`: local table, cloud table keyed on the shared exercise id, RLS so a row is readable only by the user it belongs to. Un-starring keeps the row with the flag at 0 rather than deleting it — a missing row means "never starred here", which is not the same thing as "starred and then un-starred", and only the row can carry that across devices.
+- **Two buttons at the bottom of a strength workout, instead of one bare plus.** One opens the whole catalog; the other opens it filtered to the exercises used in the last four workouts. An exercise used in all four is listed once — the question being answered is what you have been training, not how often. The workout being added to does not count as one of the four, so the exercises already in it do not crowd out the ones before it.
+
+### Changed
+- The exercise catalog no longer marks an exercise "OFFICIAL". Everything in the catalog is official, so saying so on almost every row said nothing; only the ones the user made themselves are marked, as "CUSTOM".
+
+### Added
+- `scripts/test-recent-exercises.js` runs the recent-exercises query, read out of the repository, against a fixture that mixes both stored date formats — "dd.mm.yyyy" and ISO, with February and March both present so a plain text sort gets the order wrong. It checks one entry per exercise, that the look-back is four workouts rather than four exercises, and that the open workout, deleted workouts, deleted exercises and workouts with nothing in them are all left out.
+
+### Notes
+- **`supabase/migrations/20260907110000_exercise-favourites.sql` has to be applied before favourites can sync.** Until it is, the app stars exercises locally and logs a warning each time it tries to push them; nothing is lost, and the first sync after the migration carries them up.
+
+---
 ## [0.23.35] - Unreleased
 ### Changed
 - **PERF-18.** `eas-cli` and `supabase` are build tools and now sit in `devDependencies` where they belong. They never reached the JS bundle, so this changes nothing at runtime — it takes 26 MB out of what a production install has to fetch. `npx eas` and `npx supabase` still resolve.

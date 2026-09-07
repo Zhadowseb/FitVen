@@ -241,6 +241,19 @@ export default StyleSheet.create({
     fontWeight: "800",
     lineHeight: 20,
   },
+  favouriteChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  favouriteToggle: {
+    width: 34,
+    height: 34,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
   exerciseStatusBadge: {
     minHeight: 18,
     borderRadius: 999,

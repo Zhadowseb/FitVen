@@ -26,6 +26,8 @@ import Filter from "../../../../Resources/Icons/UI-icons/Filter";
 import Library from "../../../../Resources/Icons/UI-icons/Library";
 import Plus from "../../../../Resources/Icons/UI-icons/Plus";
 import Search from "../../../../Resources/Icons/UI-icons/Search";
+import Star from "../../../../Resources/Icons/UI-icons/Star";
+import ReplayHistory from "../../../../Resources/Icons/UI-icons/ReplayHistory";
 import {
   EXERCISE_MUSCLE_GROUPS,
   EXERCISE_MUSCLE_FILTERS,
@@ -216,6 +218,7 @@ const ExerciseLibraryList = ({
   onAddCustomExercise,
   selectingExerciseName = null,
   workoutPicker = null,
+  initialFilter = null,
 }) => {
   const db = useSQLiteContext();
   const navigation = useNavigation();
@@ -229,6 +232,14 @@ const ExerciseLibraryList = ({
   const [isFilterSheetVisible, setIsFilterSheetVisible] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [isLoadingExercises, setIsLoadingExercises] = useState(true);
+  const [favouriteNames, setFavouriteNames] = useState(() => new Set());
+  const [showFavouritesOnly, setShowFavouritesOnly] = useState(
+    initialFilter === "favourites"
+  );
+  const [showRecentOnly, setShowRecentOnly] = useState(
+    initialFilter === "recent"
+  );
+  const [recentNames, setRecentNames] = useState(() => new Set());
   const { height: windowHeight } = useWindowDimensions();
   // The body map is 503x1294, so width-driven sizing makes it far too tall for
   // the modal. Drive it by height and let aspectRatio give the width.
@@ -285,14 +296,37 @@ const ExerciseLibraryList = ({
       (exerciseTypeFilter === "custom" && Boolean(exercise.is_custom)) ||
       (exerciseTypeFilter === "builtin" && !exercise.is_custom);
 
-    return matchesSearch && matchesGroup && matchesMuscle && matchesType;
+    const lowerCasedName = exerciseName.toLocaleLowerCase();
+    const matchesFavourite =
+      !showFavouritesOnly || favouriteNames.has(lowerCasedName);
+    const matchesRecent = !showRecentOnly || recentNames.has(lowerCasedName);
+
+    return (
+      matchesSearch &&
+      matchesGroup &&
+      matchesMuscle &&
+      matchesType &&
+      matchesFavourite &&
+      matchesRecent
+    );
   });
+
+  const isFavouriteExercise = (exercise) =>
+    favouriteNames.has((exercise.exercise_name ?? "").toLocaleLowerCase());
+
+  // Starred first, and otherwise in the order the catalog came back in.
+  filteredExercises.sort(
+    (left, right) =>
+      (isFavouriteExercise(left) ? 0 : 1) - (isFavouriteExercise(right) ? 0 : 1)
+  );
   const isWorkoutPicker = mode === "workout-picker";
   const isSelectionBusy = Boolean(selectingExerciseName);
   const activeFilterCount =
     (selectedGroupKey === "all" ? 0 : 1) +
     (isAllMusclesSelected ? 0 : selectedMuscleKeys.length) +
-    (exerciseTypeFilter === "all" ? 0 : 1);
+    (exerciseTypeFilter === "all" ? 0 : 1) +
+    (showFavouritesOnly ? 1 : 0) +
+    (showRecentOnly ? 1 : 0);
 
   const clearMuscleKey = (muscleKey) => {
     setSelectedMuscleKeys((currentKeys) => {
@@ -334,22 +368,94 @@ const ExerciseLibraryList = ({
     });
   }
 
+  if (showFavouritesOnly) {
+    activeFilterChips.push({
+      key: "favourites",
+      label: "Favourites",
+      onRemove: () => setShowFavouritesOnly(false),
+    });
+  }
+
+  if (showRecentOnly) {
+    activeFilterChips.push({
+      key: "recent",
+      label: "Last 4 workouts",
+      onRemove: () => setShowRecentOnly(false),
+    });
+  }
+
   const clearAllFilters = () => {
     setSelectedGroupKey("all");
     setSelectedMuscleKeys(["all"]);
     setExerciseTypeFilter("all");
+    setShowFavouritesOnly(false);
+    setShowRecentOnly(false);
   };
 
   const visibleCount = filteredExercises.length;
   const loadExerciseStorage = async () => {
     try {
       setIsLoadingExercises(true);
-      const rows = await weightliftingService.getExerciseLibraryEntries(db);
+
+      const [rows, favourites, recent] = await Promise.all([
+        weightliftingService.getExerciseLibraryEntries(db),
+        weightliftingService.getFavouriteExerciseNames(db),
+        weightliftingService.getRecentlyUsedExerciseNames(db, {
+          excludeWorkoutId: workoutPicker?.workoutId ?? null,
+        }),
+      ]);
+
       set_exercises(rows);
+      setFavouriteNames(favourites);
+      setRecentNames(recent);
     } catch (error) {
       console.error("Error loading exercise storage", error);
     } finally {
       setIsLoadingExercises(false);
+    }
+  };
+
+  /**
+   * Stars or un-stars an exercise.
+   *
+   * The star flips before the write finishes, because the write also queues a
+   * cloud sync and waiting on that would make the tap feel broken. If the write
+   * fails the star goes back, so the screen never shows something it did not
+   * manage to store.
+   */
+  const toggleFavourite = async (exercise) => {
+    const exerciseName = exercise.exercise_name ?? "";
+    const key = exerciseName.toLocaleLowerCase();
+
+    if (!key) {
+      return;
+    }
+
+    const wasFavourite = favouriteNames.has(key);
+    const applyFavourite = (shouldBeFavourite) => {
+      setFavouriteNames((currentNames) => {
+        const nextNames = new Set(currentNames);
+
+        if (shouldBeFavourite) {
+          nextNames.add(key);
+        } else {
+          nextNames.delete(key);
+        }
+
+        return nextNames;
+      });
+    };
+
+    applyFavourite(!wasFavourite);
+
+    try {
+      await weightliftingService.setExerciseFavourite(db, {
+        exerciseName,
+        isFavourite: !wasFavourite,
+      });
+    } catch (error) {
+      console.error("Could not change the exercise favourite", error);
+      applyFavourite(wasFavourite);
     }
   };
 
@@ -362,6 +468,8 @@ const ExerciseLibraryList = ({
     setSelectedGroupKey("all");
     setSelectedMuscleKeys(["all"]);
     setExerciseTypeFilter("all");
+    setShowFavouritesOnly(false);
+    setShowRecentOnly(false);
   };
 
   const handleMuscleFilterPress = (filterKey) => {
@@ -443,6 +551,74 @@ const ExerciseLibraryList = ({
           style={styles.pickerChipScroll}
           contentContainerStyle={styles.pickerChipContent}
         >
+          {/* Ahead of the muscle groups, because it is the one chip that
+              narrows the list to what this user actually reaches for. */}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ selected: showFavouritesOnly }}
+            accessibilityLabel="Show only favourite exercises"
+            onPress={() => setShowFavouritesOnly((current) => !current)}
+            style={[
+              styles.pickerFocusChip,
+              styles.favouriteChip,
+              {
+                backgroundColor: showFavouritesOnly
+                  ? withAlpha(theme.planned, 0.16)
+                  : cardSurface,
+                borderColor: showFavouritesOnly ? theme.planned : cardBorder,
+              },
+            ]}
+          >
+            <Star
+              width={13}
+              height={13}
+              color={showFavouritesOnly ? theme.planned : quietText}
+              filled={showFavouritesOnly}
+              roundness={1.4}
+            />
+            <ThemedText
+              style={[
+                styles.pickerFocusChipText,
+                showFavouritesOnly && styles.pickerFocusChipTextActive,
+              ]}
+              setColor={showFavouritesOnly ? theme.planned : theme.text}
+            >
+              Favourites
+            </ThemedText>
+          </Pressable>
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ selected: showRecentOnly }}
+            accessibilityLabel="Show only exercises from the last four workouts"
+            onPress={() => setShowRecentOnly((current) => !current)}
+            style={[
+              styles.pickerFocusChip,
+              styles.favouriteChip,
+              {
+                backgroundColor: showRecentOnly
+                  ? withAlpha(theme.secondary, 0.16)
+                  : cardSurface,
+                borderColor: showRecentOnly ? secondaryColor : cardBorder,
+              },
+            ]}
+          >
+            <ReplayHistory
+              width={13}
+              height={13}
+              color={showRecentOnly ? secondaryColor : quietText}
+            />
+            <ThemedText
+              style={[
+                styles.pickerFocusChipText,
+                showRecentOnly && styles.pickerFocusChipTextActive,
+              ]}
+              setColor={showRecentOnly ? secondaryColor : theme.text}
+            >
+              Recent
+            </ThemedText>
+          </Pressable>
+
           {GROUP_FILTERS.map((filter) => {
             const isSelected = selectedGroupKey === filter.key;
 
@@ -692,6 +868,33 @@ const ExerciseLibraryList = ({
                       </View>
                     )}
                   </View>
+
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    hitSlop={8}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: isFavouriteExercise(exercise) }}
+                    accessibilityLabel={
+                      isFavouriteExercise(exercise)
+                        ? `Remove ${exercise.exercise_name} from favourites`
+                        : `Add ${exercise.exercise_name} to favourites`
+                    }
+                    onPress={(event) => {
+                      event.stopPropagation?.();
+                      toggleFavourite(exercise);
+                    }}
+                    style={styles.favouriteToggle}
+                  >
+                    <Star
+                      width={19}
+                      height={19}
+                      color={
+                        isFavouriteExercise(exercise) ? theme.planned : quietText
+                      }
+                      filled={isFavouriteExercise(exercise)}
+                      roundness={1.6}
+                    />
+                  </TouchableOpacity>
 
                   <TouchableOpacity
                     activeOpacity={0.86}
@@ -1088,6 +1291,31 @@ const ExerciseLibraryList = ({
 
         <TouchableOpacity
           activeOpacity={0.86}
+          accessibilityRole="button"
+          accessibilityState={{ selected: showFavouritesOnly }}
+          accessibilityLabel="Show only favourite exercises"
+          onPress={() => setShowFavouritesOnly((current) => !current)}
+          style={[
+            styles.filterButton,
+            {
+              backgroundColor: showFavouritesOnly
+                ? withAlpha(theme.planned, 0.16)
+                : inputSurface,
+              borderColor: showFavouritesOnly ? theme.planned : cardBorder,
+            },
+          ]}
+        >
+          <Star
+            width={20}
+            height={20}
+            color={showFavouritesOnly ? theme.planned : quietText}
+            filled={showFavouritesOnly}
+            roundness={1.6}
+          />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          activeOpacity={0.86}
           onPress={() => setIsFilterSheetVisible(true)}
           style={[
             styles.filterButton,
@@ -1312,22 +1540,21 @@ const ExerciseLibraryList = ({
                       {exercise.exercise_name}
                     </ThemedText>
 
-                    {exercise.is_custom || exercise.official ? (
+                    {/* Only the ones the user made themselves are worth
+                        marking. Everything else in the catalog is official,
+                        so saying so on almost every row said nothing. */}
+                    {exercise.is_custom ? (
                       <View
                         style={[
                           styles.exerciseStatusBadge,
-                          {
-                            backgroundColor: exercise.is_custom
-                              ? primaryColor
-                              : secondaryColor,
-                          },
+                          { backgroundColor: primaryColor },
                         ]}
                       >
                         <ThemedText
                           style={styles.exerciseStatusBadgeText}
                           setColor={activeFilterText}
                         >
-                          {exercise.is_custom ? "Custom" : "Official"}
+                          Custom
                         </ThemedText>
                       </View>
                     ) : null}
@@ -1342,6 +1569,33 @@ const ExerciseLibraryList = ({
                     secondaryCount={secondaryCount}
                   />
                 </View>
+
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: isFavouriteExercise(exercise) }}
+                  accessibilityLabel={
+                    isFavouriteExercise(exercise)
+                      ? `Remove ${exercise.exercise_name} from favourites`
+                      : `Add ${exercise.exercise_name} to favourites`
+                  }
+                  onPress={(event) => {
+                    event.stopPropagation?.();
+                    toggleFavourite(exercise);
+                  }}
+                  style={styles.favouriteToggle}
+                >
+                  <Star
+                    width={19}
+                    height={19}
+                    color={
+                      isFavouriteExercise(exercise) ? theme.planned : quietText
+                    }
+                    filled={isFavouriteExercise(exercise)}
+                    roundness={1.6}
+                  />
+                </TouchableOpacity>
               </Pressable>
             );
           })}

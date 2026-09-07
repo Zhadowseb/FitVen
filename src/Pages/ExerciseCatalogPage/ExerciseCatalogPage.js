@@ -27,6 +27,9 @@ const ExerciseCatalogPage = ({ route }) => {
   const theme = Colors[colorScheme] ?? Colors.light;
   const primaryTextColor = theme.primaryText ?? theme.primary;
   const workoutPicker = route?.params?.workoutPicker ?? null;
+  // Which list the picker opens on. The workout screen has a button for the
+  // whole catalog and one for what was used recently, and they land here.
+  const initialFilter = route?.params?.initialFilter ?? null;
   const workoutPickerId = Number(workoutPicker?.workoutId);
   const isWorkoutPicker =
     Number.isFinite(workoutPickerId) && workoutPickerId > 0;
@@ -99,6 +102,7 @@ const ExerciseCatalogPage = ({ route }) => {
       onAddCustomExercise={() => setIsCustomExerciseModalVisible(true)}
       selectingExerciseName={selectingExerciseName}
       workoutPicker={workoutPicker}
+      initialFilter={initialFilter}
     />
   );
 

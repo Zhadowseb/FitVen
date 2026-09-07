@@ -465,6 +465,100 @@ export async function markExerciseColumnPreferenceSynced(
   );
 }
 
+/** The exercise names this user has starred, lower-cased for lookup. */
+export async function getExerciseFavouriteNames(db, userId) {
+  const rows = await db.getAllAsync(
+    `SELECT exercise_name
+     FROM Exercise_Favourite
+     WHERE user_id = ?
+       AND is_favourite = 1
+     ORDER BY exercise_name COLLATE NOCASE ASC;`,
+    [userId]
+  );
+
+  return rows.map((row) => row.exercise_name);
+}
+
+export async function getDirtyExerciseFavourites(db, userId) {
+  return db.getAllAsync(
+    `SELECT
+        f.exercise_favourite_id,
+        f.user_id,
+        COALESCE(f.cloud_exercise_id, e.cloud_exercise_id) AS cloud_exercise_id,
+        f.exercise_name,
+        f.is_favourite,
+        f.updated_at
+     FROM Exercise_Favourite f
+     LEFT JOIN Exercise e
+       ON e.name = f.exercise_name COLLATE NOCASE
+     WHERE f.user_id = ?
+       AND f.needs_sync = 1
+     ORDER BY f.updated_at ASC, f.exercise_favourite_id ASC;`,
+    [userId]
+  );
+}
+
+export async function upsertExerciseFavourite(
+  db,
+  {
+    userId,
+    cloudExerciseId = null,
+    exerciseName,
+    isFavourite,
+    needsSync = 1,
+    updatedAt = new Date().toISOString(),
+  }
+) {
+  await db.runAsync(
+    `INSERT INTO Exercise_Favourite (
+        user_id,
+        cloud_exercise_id,
+        exercise_name,
+        is_favourite,
+        needs_sync,
+        updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?)
+      ON CONFLICT(user_id, exercise_name)
+      DO UPDATE SET
+        cloud_exercise_id = COALESCE(
+          excluded.cloud_exercise_id,
+          Exercise_Favourite.cloud_exercise_id
+        ),
+        is_favourite = excluded.is_favourite,
+        needs_sync = excluded.needs_sync,
+        updated_at = excluded.updated_at;`,
+    [
+      userId,
+      cloudExerciseId,
+      exerciseName,
+      isFavourite ? 1 : 0,
+      needsSync ? 1 : 0,
+      updatedAt,
+    ]
+  );
+}
+
+export async function markExerciseFavouriteSynced(
+  db,
+  { userId, exerciseName, updatedAt = null }
+) {
+  const params = [userId, exerciseName];
+  const updatedAtFilter = updatedAt ? "AND updated_at = ?" : "";
+
+  if (updatedAt) {
+    params.push(updatedAt);
+  }
+
+  await db.runAsync(
+    `UPDATE Exercise_Favourite
+     SET needs_sync = 0
+     WHERE user_id = ?
+       AND exercise_name = ? COLLATE NOCASE
+       ${updatedAtFilter};`,
+    params
+  );
+}
+
 export async function getEstimatedSets(db, programId) {
   return db.getAllAsync(
     `SELECT estimated_set_id, estimated_weight, exercise_name

@@ -79,6 +79,8 @@ const EXERCISE_LIBRARY_NAME_COLUMN = "name";
 const EXERCISE_LIBRARY_ID_COLUMN = "id";
 const EXERCISE_LIBRARY_SELECT =
   `${EXERCISE_LIBRARY_ID_COLUMN}, ${EXERCISE_LIBRARY_NAME_COLUMN}, nickname, default_visible_columns, official`;
+const EXERCISE_FAVOURITE_CLOUD_TABLE = "exercise_favourites";
+const EXERCISE_FAVOURITE_CLOUD_SELECT = "exercise_id, is_favourite, updated_at";
 const EXERCISE_COLUMN_PREFERENCE_CLOUD_TABLE =
   "exercise_column_preferences";
 const EXERCISE_COLUMN_PREFERENCE_CLOUD_SELECT =
@@ -2552,9 +2554,224 @@ export async function syncExerciseLibraryFromCloud(db) {
     console.warn("Exercise column preference cloud sync failed:", error);
   }
 
+  let favouriteSyncResult = { changed: false };
+
+  try {
+    favouriteSyncResult = await syncExerciseFavouritesWithCloud(db);
+  } catch (error) {
+    console.warn("Exercise favourite cloud sync failed:", error);
+  }
+
   return {
-    changed: catalogChanged || Boolean(preferenceSyncResult.changed),
+    changed:
+      catalogChanged ||
+      Boolean(preferenceSyncResult.changed) ||
+      Boolean(favouriteSyncResult.changed),
     exerciseCount: cloudExercises.length,
+  };
+}
+
+/** The exercises this user has starred, as a Set of lower-cased names. */
+/**
+ * The exercises used in the last few workouts, as a Set of lower-cased names.
+ *
+ * @param excludeWorkoutId The workout being added to, so the exercises already
+ *   in it do not count as "recent" and crowd out the ones before it.
+ */
+export async function getRecentlyUsedExerciseNames(
+  db,
+  { workoutLimit = 4, excludeWorkoutId = null } = {}
+) {
+  const names = await programRepository.getRecentlyUsedExerciseNames(db, {
+    workoutLimit,
+    excludeWorkoutId: normalizeOptionalInteger(excludeWorkoutId, null),
+  });
+
+  return new Set(names.map((name) => name.toLocaleLowerCase()));
+}
+
+export async function getFavouriteExerciseNames(db) {
+  const userId = await getCurrentExerciseColumnPreferenceUserId();
+  const names = await weightliftingRepository.getExerciseFavouriteNames(
+    db,
+    userId
+  );
+
+  return new Set(names.map((name) => name.toLocaleLowerCase()));
+}
+
+/**
+ * Stars or un-stars one exercise.
+ *
+ * Un-starring keeps the row and sets the flag to 0, so the change reaches the
+ * user's other devices. A missing row means "never starred here", which is a
+ * different thing from "starred and then un-starred".
+ */
+export async function setExerciseFavourite(
+  db,
+  { exerciseName, isFavourite }
+) {
+  const name = normalizeOptionalText(exerciseName);
+
+  if (!name) {
+    return;
+  }
+
+  const userId = await getCurrentExerciseColumnPreferenceUserId();
+  const exercise = await weightliftingRepository.getExerciseCatalogEntryByName(
+    db,
+    name
+  );
+
+  await weightliftingRepository.upsertExerciseFavourite(db, {
+    userId,
+    cloudExerciseId: normalizeOptionalInteger(
+      exercise?.cloud_exercise_id,
+      null
+    ),
+    exerciseName: name,
+    isFavourite,
+  });
+
+  syncExerciseFavouritesInBackground(db);
+}
+
+/**
+ * Pushes a starred exercise up when there is a chance to.
+ *
+ * Warns rather than errors, because the star is already stored on the device
+ * and a failure here means the sync will carry it next time - not that the tap
+ * was lost. An error would raise a red box over a screen where nothing is
+ * wrong.
+ */
+function syncExerciseFavouritesInBackground(db) {
+  void enqueueSync(async () => {
+    await syncExerciseFavouritesWithCloud(db);
+  }).catch((error) => {
+    console.warn("Exercise favourite cloud sync failed:", error);
+  });
+}
+
+/**
+ * Favourites, both ways.
+ *
+ * Built on the same shape as the column preferences below it: the cloud row is
+ * keyed on the shared exercise id, so a favourite can only travel once the
+ * catalog entry it points at has one.
+ */
+export async function syncExerciseFavouritesWithCloud(db) {
+  const userId = await getAuthenticatedUserId();
+
+  if (!userId) {
+    return { changed: false, downloadedCount: 0, uploadedCount: 0 };
+  }
+
+  const favouriteUserId = getExerciseColumnPreferenceUserId(userId);
+  const localExercises = normalizeExerciseCatalogEntries(
+    await weightliftingRepository.getExerciseStorage(db)
+  );
+  const localExercisesByName = new Map(
+    localExercises.map((exercise) => [
+      exercise.name.toLocaleLowerCase(),
+      exercise,
+    ])
+  );
+  const localExercisesByCloudId = new Map(
+    localExercises
+      .filter((exercise) => exercise.cloud_exercise_id !== null)
+      .map((exercise) => [Number(exercise.cloud_exercise_id), exercise])
+  );
+  const dirtyFavourites =
+    await weightliftingRepository.getDirtyExerciseFavourites(
+      db,
+      favouriteUserId
+    );
+  let uploadedCount = 0;
+  let downloadedCount = 0;
+
+  for (const favourite of dirtyFavourites) {
+    const localExercise =
+      localExercisesByCloudId.get(Number(favourite.cloud_exercise_id)) ??
+      localExercisesByName.get(
+        String(favourite.exercise_name ?? "").toLocaleLowerCase()
+      );
+    const cloudExerciseId = normalizeOptionalInteger(
+      localExercise?.cloud_exercise_id ?? favourite.cloud_exercise_id,
+      null
+    );
+
+    if (cloudExerciseId === null) {
+      continue;
+    }
+
+    const { error } = await supabase
+      .from(EXERCISE_FAVOURITE_CLOUD_TABLE)
+      .upsert(
+        {
+          user_id: userId,
+          exercise_id: cloudExerciseId,
+          is_favourite: Number(favourite.is_favourite) === 1,
+          updated_at: favourite.updated_at ?? new Date().toISOString(),
+        },
+        { onConflict: "user_id,exercise_id" }
+      );
+
+    if (error) {
+      throw error;
+    }
+
+    await weightliftingRepository.markExerciseFavouriteSynced(db, {
+      userId: favouriteUserId,
+      exerciseName: favourite.exercise_name,
+      updatedAt: favourite.updated_at,
+    });
+    uploadedCount += 1;
+  }
+
+  const cloudExerciseIds = [...localExercisesByCloudId.keys()];
+
+  if (cloudExerciseIds.length === 0) {
+    return { changed: uploadedCount > 0, downloadedCount, uploadedCount };
+  }
+
+  const { data: cloudFavourites, error: cloudFavouritesError } = await supabase
+    .from(EXERCISE_FAVOURITE_CLOUD_TABLE)
+    .select(EXERCISE_FAVOURITE_CLOUD_SELECT)
+    .eq("user_id", userId)
+    .in("exercise_id", cloudExerciseIds);
+
+  if (cloudFavouritesError) {
+    throw cloudFavouritesError;
+  }
+
+  for (const cloudFavourite of cloudFavourites ?? []) {
+    const cloudExerciseId = normalizeOptionalInteger(
+      cloudFavourite?.exercise_id,
+      null
+    );
+    const localExercise = localExercisesByCloudId.get(Number(cloudExerciseId));
+
+    if (!localExercise) {
+      continue;
+    }
+
+    await weightliftingRepository.upsertExerciseFavourite(db, {
+      userId: favouriteUserId,
+      cloudExerciseId,
+      exerciseName: localExercise.name,
+      isFavourite: Boolean(cloudFavourite?.is_favourite),
+      needsSync: 0,
+      updatedAt:
+        normalizeOptionalText(cloudFavourite?.updated_at) ??
+        new Date().toISOString(),
+    });
+    downloadedCount += 1;
+  }
+
+  return {
+    changed: uploadedCount > 0 || downloadedCount > 0,
+    downloadedCount,
+    uploadedCount,
   };
 }
 

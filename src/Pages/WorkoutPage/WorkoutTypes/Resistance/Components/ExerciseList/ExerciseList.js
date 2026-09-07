@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   View,
   Vibration,
+  useColorScheme,
 } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
 import { useNavigation } from "@react-navigation/native";
@@ -14,6 +15,12 @@ import { weightliftingService } from "../../../../../../Services";
 
 import ExerciseRow from "./Components/ExerciseRow/ExerciseRow"
 import PlusCircled from "../../../../../../Resources/Icons/UI-icons/PlusCircled";
+import ReplayHistory from "../../../../../../Resources/Icons/UI-icons/ReplayHistory";
+import ThemedText from "../../../../../../Resources/ThemedComponents/ThemedText";
+import {
+  Colors,
+  withAlpha,
+} from "../../../../../../Resources/GlobalStyling/colors";
 import { EXERCISE_COLLAPSE_DURATION_MS } from "./exerciseCollapseAnimation";
 
 const ExerciseList = ({
@@ -39,6 +46,8 @@ const ExerciseList = ({
 
   const db = useSQLiteContext();
   const navigation = useNavigation();
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme] ?? Colors.light;
   const rowLayoutsRef = useRef({});
   const dragContextRef = useRef(null);
   const dragTargetIndexRef = useRef(null);
@@ -803,22 +812,69 @@ const ExerciseList = ({
     </View>
 
     {!isWorkoutDone && (
-      <View style={{alignItems: "center", paddingTop: 30}}>
+      // Two ways in rather than one bare plus: the whole catalog, and the
+      // handful of exercises the last four workouts actually used, which is
+      // what someone adding to a session mid-workout is usually reaching for.
+      <View style={styles.addExerciseRow}>
+        <TouchableOpacity
+          activeOpacity={0.86}
+          accessibilityRole="button"
+          accessibilityLabel="Add an exercise used in the last four workouts"
+          style={[
+            styles.addExerciseButton,
+            {
+              backgroundColor: withAlpha(theme.secondary, 0.14),
+              borderColor: withAlpha(theme.secondary, 0.45),
+            },
+          ]}
+          onPress={() => {
+            navigation.navigate("ExerciseCatalogPage", {
+              workoutPicker: { workoutId: workout_id },
+              initialFilter: "recent",
+            });
+          }}
+        >
+          <ReplayHistory
+            width={17}
+            height={17}
+            color={theme.secondaryText ?? theme.secondary}
+          />
+          <ThemedText
+            style={styles.addExerciseButtonText}
+            setColor={theme.secondaryText ?? theme.secondary}
+          >
+            Recent
+          </ThemedText>
+        </TouchableOpacity>
 
         <TouchableOpacity
+          activeOpacity={0.86}
           accessibilityRole="button"
-          accessibilityLabel="Add exercise"
-          hitSlop={10}
-          onPress={ () => {
+          accessibilityLabel="Add an exercise from the catalog"
+          style={[
+            styles.addExerciseButton,
+            {
+              backgroundColor: withAlpha(theme.primary, 0.14),
+              borderColor: withAlpha(theme.primary, 0.45),
+            },
+          ]}
+          onPress={() => {
             navigation.navigate("ExerciseCatalogPage", {
-              workoutPicker: {
-                workoutId: workout_id,
-              },
+              workoutPicker: { workoutId: workout_id },
             });
-          }}>
+          }}
+        >
           <PlusCircled
-            width={30}
-            height={30} />
+            width={17}
+            height={17}
+            color={theme.primaryText ?? theme.primary}
+          />
+          <ThemedText
+            style={styles.addExerciseButtonText}
+            setColor={theme.primaryText ?? theme.primary}
+          >
+            All exercises
+          </ThemedText>
         </TouchableOpacity>
       </View>
     )}

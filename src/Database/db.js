@@ -423,6 +423,42 @@ async function ensureExerciseColumnPreferenceSchema(db) {
   `);
 }
 
+/**
+ * The exercises a user has starred.
+ *
+ * A row with is_favourite = 0 is kept rather than deleted, because that is
+ * how un-starring reaches the other devices - a missing row means "never
+ * starred here", which is not the same thing.
+ */
+async function ensureExerciseFavouriteSchema(db) {
+  await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS Exercise_Favourite (
+      exercise_favourite_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT NOT NULL,
+      cloud_exercise_id INTEGER,
+      exercise_name TEXT NOT NULL,
+      is_favourite INTEGER NOT NULL DEFAULT 1,
+      needs_sync INTEGER NOT NULL DEFAULT 1,
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(user_id, exercise_name)
+    );
+  `);
+
+  await ensureTableColumns(db, "Exercise_Favourite", [
+    ["user_id", "TEXT NOT NULL DEFAULT ''"],
+    ["cloud_exercise_id", "INTEGER"],
+    ["exercise_name", "TEXT NOT NULL DEFAULT ''"],
+    ["is_favourite", "INTEGER NOT NULL DEFAULT 1"],
+    ["needs_sync", "INTEGER NOT NULL DEFAULT 1"],
+    ["updated_at", "TEXT NOT NULL DEFAULT (datetime('now'))"],
+  ]);
+
+  await db.execAsync(`
+    CREATE UNIQUE INDEX IF NOT EXISTS exercise_favourite_user_name_idx
+    ON Exercise_Favourite(user_id, exercise_name);
+  `);
+}
+
 async function migrateExerciseInstanceSchema(db) {
   const exerciseInstanceColumns = await getTableColumns(db, "Exercise_Instance");
 
@@ -1710,6 +1746,7 @@ export async function initializeDatabase(db) {
     WHERE cloud_exercise_id IS NOT NULL;
   `);
   await ensureExerciseColumnPreferenceSchema(db);
+  await ensureExerciseFavouriteSchema(db);
 
   await ensureTableColumns(db, "Exercise_Instance", [
     ["cloud_exercise_instance_id", "INTEGER"],
