@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.23.35] - Unreleased
+### Changed
+- **PERF-18.** `eas-cli` and `supabase` are build tools and now sit in `devDependencies` where they belong. They never reached the JS bundle, so this changes nothing at runtime — it takes 26 MB out of what a production install has to fetch. `npx eas` and `npx supabase` still resolve.
+- Removed `@expo/ui`, which nothing imported.
+- Removed `fitven-run-walk-fix.patch` from the repo root. Git has it.
+
+### Notes
+- The rest of PERF-18 was already done. A reachability scan from `App.js` finds **no dead files** under `src/` — the ~1,000 lines the report listed (`StopWatch.js`, `CircularProgression.js`, five unmounted sync components, `theme.js`) have all gone since it was written.
+- The nine unused icons in `Resources/Icons/WorkoutLabels` stay. The barrel's own comment says they are placeholders for workout types still to come, which is a decision already recorded in the repo rather than something to clean up.
+- `detailed new FitVen ER diagram.drawio.png` is still in the repo root. The report only suggested removing the patch file, and the diagram looks like something worth keeping.
+
+---
 ## [0.23.34] - Unreleased
 ### Performance
 - **PERF-11.** Measured first, as the report asked: `initializeDatabase` took a median of **1,674 ms** over five cold starts on the device, on a database with only 168 days and 48 sets in it. That is the app's most expensive startup cost, and it is paid before the first frame — the user is looking at "Restoring session…" for all of it. It is now a median of **~425 ms**.
