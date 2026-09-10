@@ -16,6 +16,16 @@ performance audit and an export query along with it.
   the app, and to work for somebody who has already uninstalled — so no login
   and no form that needs one. Hand-written, unlike the policy page.
 - `reset-password/index.html` — where the forgot-password email lands.
+- `support/index.html` — the Support URL App Store Connect requires. Apple wants
+  that address to lead to a page that actually offers support, and `/` here
+  redirects to the policy, so it could not double as one. Same rules as the
+  deletion page: no login, names the app, works for somebody who has already
+  uninstalled. Hand-written.
+
+`npm test` checks that the deletion page and the support page both name FitVen
+and both carry the contact address the policy publishes. Three pages naming
+three different addresses is the kind of thing a reviewer asks about, so the
+policy is the single source and the others have to agree with it.
 
 **`privacy/index.html` is generated — do not edit it.** It comes from
 `src/Resources/Legal/privacyPolicy.js`,

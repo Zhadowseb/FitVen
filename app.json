@@ -2,7 +2,7 @@
   "expo": {
     "name": "FitVen",
     "slug": "programapp",
-    "version": "0.23.36",
+    "version": "0.23.37",
     "orientation": "default",
     "icon": "./assets/icon_v1.0.png",
     "userInterfaceStyle": "dark",
@@ -14,15 +14,10 @@
     },
     "ios": {
       "bundleIdentifier": "com.fitven.app",
-      "supportsTablet": true,
+      "supportsTablet": false,
       "requireFullScreen": true,
       "infoPlist": {
-        "UIBackgroundModes": [
-          "location"
-        ],
         "NSLocationWhenInUseUsageDescription": "We use your location to track workout distance.",
-        "NSLocationAlwaysUsageDescription": "We use your location to track workout distance even when the app is in background.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "We use your location to track workout distance even when the app is in background.",
         "ITSAppUsesNonExemptEncryption": false
       },
       "buildNumber": "15"
@@ -45,12 +40,10 @@
       "permissions": [
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_BACKGROUND_LOCATION",
         "android.permission.FOREGROUND_SERVICE",
         "android.permission.FOREGROUND_SERVICE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.ACCESS_BACKGROUND_LOCATION",
         "android.permission.FOREGROUND_SERVICE",
         "android.permission.FOREGROUND_SERVICE_LOCATION"
       ]
@@ -80,9 +73,8 @@
         "expo-location",
         {
           "locationWhenInUsePermission": "FitVen uses your precise location to track run distance.",
-          "locationAlwaysAndWhenInUsePermission": "FitVen uses your precise location to track run distance while your workout is running.",
-          "isIosBackgroundLocationEnabled": true,
-          "isAndroidBackgroundLocationEnabled": true,
+          "isIosBackgroundLocationEnabled": false,
+          "isAndroidBackgroundLocationEnabled": false,
           "isAndroidForegroundServiceEnabled": true
         }
       ],

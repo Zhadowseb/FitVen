@@ -218,27 +218,61 @@ for (const name of (list("supabase/templates") ?? []).filter((file) =>
   }
 }
 
-// The two pages Google Play links to from the store page.
+// The pages the stores link to from the listing.
 //
-// Play carries these addresses in the listing. A 404 on either is a policy
-// violation on a page nobody in the app would ever notice was gone, so their
-// existence is checked rather than remembered.
+// Play and App Store Connect carry these addresses in the listing. A 404 on any
+// of them is a policy violation on a page nobody in the app would ever notice
+// was gone, so their existence is checked rather than remembered.
 for (const [file, what] of [
   ["web/privacy/index.html", "the privacy policy Play requires"],
   ["web/delete-account/index.html", "the account deletion page Play links to"],
+  ["web/support/index.html", "the Support URL App Store Connect requires"],
 ]) {
   if (read(file) === null) {
     problems.push(`${file} is missing - ${what}`);
   }
 }
 
-// Play requires the deletion page to name the app as the listing names it.
-const deletionPage = read("web/delete-account/index.html");
+// Both stores require these pages to name the app as the listing names it.
+for (const file of [
+  "web/delete-account/index.html",
+  "web/support/index.html",
+]) {
+  const page = read(file);
 
-if (deletionPage !== null && !deletionPage.includes("FitVen")) {
-  problems.push(
-    "web/delete-account/index.html does not name FitVen - Play requires the page to identify the app or developer it belongs to"
-  );
+  if (page !== null && !page.includes("FitVen")) {
+    problems.push(
+      `${file} does not name FitVen - the stores require the page to identify the app or developer it belongs to`
+    );
+  }
+}
+
+// One contact address, spelled the same in all three places.
+//
+// Apple's guideline 1.2 counts "published contact information" as one of the
+// four things a social app has to have, and a reviewer who finds two different
+// addresses has found a reason to ask which one is real. The policy is the
+// source: whatever address it carries is the one the other pages have to use.
+const policySource = read("src/Resources/Legal/privacyPolicy.js");
+// The trailing group has to end in word characters, or a sentence-final period
+// after the address ends up inside the match and nothing ever matches it.
+const contactMatch = policySource?.match(/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/);
+
+if (contactMatch) {
+  const contact = contactMatch[0];
+
+  for (const file of [
+    "web/support/index.html",
+    "web/delete-account/index.html",
+  ]) {
+    const page = read(file);
+
+    if (page !== null && !page.includes(contact)) {
+      problems.push(
+        `${file} does not carry ${contact}, the address the privacy policy publishes - the stores would show two different contacts`
+      );
+    }
+  }
 }
 
 // The password reset page talks to the same project as the app.

@@ -54,8 +54,8 @@ og bottom sheets, og rul den ud på alle 43 aktive felter. Global konfiguration 
 
 | Indstilling | Faktisk værdi | Kilde | Betydning |
 |---|---|---|---|
-| `requireFullScreen` | `true` | `app.json:23` | Ingen iPad Slide Over/Split View ⇒ tastaturhøjde er forudsigelig. |
-| `supportsTablet` | `true` | `app.json:22` | iPad skal med i testmatrix (floating keyboard på iPad kan give `screenY === 0`). |
+| `requireFullScreen` | `true` | `app.json:18` | Ingen iPad Slide Over/Split View ⇒ tastaturhøjde er forudsigelig. |
+| `supportsTablet` | `false` | `app.json:17` | Slået fra 2026-09-09 før App Store-indsendelsen: iPad ville kræve skærmbilleder i 2064 × 2752 og et layout ingen har testet. iPad er dermed **ude** af testmatricen, og iPad-tilfældet med floating keyboard (`screenY === 0`) kan ikke længere opstå. Slås den til igen, kommer begge ting tilbage. |
 | `userInterfaceStyle` | `"dark"` | `app.json:8` | Irrelevant for tastatur. |
 | Keyboard-avoidance | Kun i JS | — | iOS resizer aldrig vinduet; **alt** afhænger af app-koden. |
 

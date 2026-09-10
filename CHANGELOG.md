@@ -39,6 +39,23 @@
 ### Changed
 - **Catalog rows look like the muscle map.** The body artwork in `BodyMapPreview` is tinted down to a quiet silhouette the way `ExerciseMapBody` tints it, instead of showing as orange line art. The green highlights already used the map's `#60DAAC` and `#18A06C`, so the tint was the whole difference; the muscle shapes are in the PNG itself, which is why this gets the map's look without drawing 33 shapes per row.
 - `ExerciseMapBody` gained two options while this was being tried the expensive way: no `onSelect` means no touch handlers, no button role and taps passing through to whatever the figure sits in, and `showLabel={false}` drops the FRONT/BACK caption. Nothing uses them now, but they are what makes the figure usable as decoration.
+- **iPad support off, and background location gone**, both ahead of the App Store submission.
+  - `ios.supportsTablet` is `false`. With it on, App Store Connect requires iPad screenshots at 2064 × 2752 for a layout nobody has run on an iPad. Turning it back on brings both the screenshots and the iPad keyboard case back — `docs/tastatur-gennemgang.md` records that.
+  - `UIBackgroundModes` and the two `NSLocationAlways*` strings are out of `infoPlist`, `isIosBackgroundLocationEnabled` and `isAndroidBackgroundLocationEnabled` are `false`, and `ACCESS_BACKGROUND_LOCATION` is off the Android permission list. Apple's guideline 5.1.5 wants location used only where it is directly relevant to a shipped feature, and the run workout — the only caller — is unfinished and not in the first release. Asking for background location for a feature a reviewer cannot find is a rejection.
+
+### Added
+- **`web/support/index.html`** — the Support URL App Store Connect requires. Apple wants that address to lead to a page that actually offers support, and `netlify.toml` redirects `/` to the privacy policy, so nothing here could double as one. Contact route, seven answers covering password reset, offline use, who can see a workout, blocking, deletion and price. No login, same rules as the deletion page.
+- `check-agent-docs.js` now requires the support page to exist, requires it and the deletion page to name FitVen, and requires both to carry the contact address `privacyPolicy.js` publishes. Three store-facing pages naming three different addresses is something a reviewer asks about, so the policy is the single source. Writing the check found its own bug first — the address regex swallowed a sentence-final period, so nothing could ever match it.
+
+### Changed
+- **AI-provenance metadata out of the two body-map figures.** `Front_body.svg` and `Back_body.svg` carried a `data-name="ChatGPT Image …"` attribute and C2PA provenance chunks inside the base64 PNG. Apple asks you to confirm the rights to all content in the app, and that is a question worth answering knowingly rather than by accident. The PNGs were decoded, re-saved without ancillary chunks and re-encoded, with the pixels compared before and after — identical, and ~155 KB smaller each.
+
+### Notes
+- `assets/Find Friends.png` and `assets/social posts edit.png` carry the same metadata but no code references either one, so they are 3.2 MB of leftover mockups rather than shipped art. Left alone — deleting them is a call for whoever put them there.
+- **The run workout can no longer start.** `locationService.ensureBackgroundLocationPermission` throws "Background location is not available on this device." and `Run.js` is its only caller, so the screen fails with that message instead of tracking. It fails cleanly rather than crashing, but the screen is still reachable and should be hidden before anyone outside the team sees it.
+- Dropping `ACCESS_BACKGROUND_LOCATION` also removes Play's background-location declaration form from the list of things to fill in.
+- `isAndroidForegroundServiceEnabled` is deliberately left `true`. A foreground service is not background location, and switching it off is a separate decision about the run workout.
+- The Android permission list still holds the same five permissions twice. Android merges duplicates, so it is harmless; it was left alone rather than tidied as a side effect of this change.
 
 ---
 ## [0.23.36] - Unreleased
