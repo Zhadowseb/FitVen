@@ -9,6 +9,8 @@ export default StyleSheet.create({
     paddingTop: 26,
     paddingHorizontal: 16,
   },
+  // Dashed and grey on purpose: these sit under the exercises and should read
+  // as somewhere to add one, not as the thing to do next.
   addExerciseButton: {
     flex: 1,
     maxWidth: 190,
@@ -18,7 +20,8 @@ export default StyleSheet.create({
     gap: 7,
     minHeight: 42,
     borderRadius: 14,
-    borderWidth: 1,
+    borderWidth: 1.5,
+    borderStyle: "dashed",
     paddingHorizontal: 12,
   },
   addExerciseButtonText: {

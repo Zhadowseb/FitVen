@@ -2,7 +2,7 @@ import { StyleSheet } from "react-native";
 
 const EXERCISE_ROW_HEIGHT = 62;
 const EXERCISE_PREVIEW_GAP = 14;
-const EXERCISE_PREVIEW_WIDTH = Math.round(EXERCISE_ROW_HEIGHT * (503 / 647));
+export const EXERCISE_PREVIEW_WIDTH = Math.round(EXERCISE_ROW_HEIGHT * (503 / 647));
 // How many rows the catalog window shows, and so how many are worth
 // rendering before the list is scrolled.  Exported for the list itself.
 export const VISIBLE_EXERCISE_COUNT = 10;
@@ -219,6 +219,12 @@ export default StyleSheet.create({
     height: EXERCISE_ROW_HEIGHT,
     alignSelf: "center",
     marginRight: EXERCISE_PREVIEW_GAP,
+    // Fixed box, centred contents, clipped. A lower-body crop is taller than
+    // the row at this width, and rows that differ in height would undo the
+    // even list the figures are meant to sit in.
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
   },
   exerciseBody: {
     flex: 1,
@@ -240,6 +246,21 @@ export default StyleSheet.create({
     fontSize: 17,
     fontWeight: "800",
     lineHeight: 20,
+  },
+  catalogMap: {
+    gap: 10,
+    paddingBottom: 4,
+  },
+  catalogMapBodies: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "center",
+    gap: 12,
+  },
+  catalogMapHint: {
+    textAlign: "center",
+    fontSize: 12,
+    lineHeight: 17,
   },
   favouriteChip: {
     flexDirection: "row",

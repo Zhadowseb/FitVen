@@ -1,5 +1,46 @@
 # Changelog
 
+## [0.23.37] - Unreleased
+### Added
+- Exercise Map directly below Exercise Library in Train: a native, themed screen with the real exercise catalog, search, multi-muscle filtering, primary/secondary roles, front/back views, body crops and surface/contour styles.
+- Full trapezius contour on the new map and accessible muscle-name selection. Existing exercise previews and database/sync schemas are unchanged.
+- Regression checks for catalog muscle metadata, both body views, missing mappings and AND/OR filtering.
+
+### Fixed
+- Muscle taps now tolerate small finger movements on Android; scrolling across the figure cancels selection.
+- **Removing a selected muscle was slow.** The row, the separator and `keyExtractor` are now defined once at module scope instead of inside the component. `ItemSeparatorComponent` was an arrow function rebuilt on every render, which React reads as a new component *type* — so every separator was unmounted and remounted rather than left alone — and an inline `renderItem` re-rendered every visible row. `renderItem` now depends on `mode`, `selectedName` and the theme, not on the muscle selection or the result set, so rows that survive a toggle are not asked to draw again, and the row itself is `memo`'d.
+- Removal is the expensive direction and stays that way by design: `filterMapExercises` returns everything when nothing is selected, so clearing the last muscle widens the list from a handful of rows to the whole library. Measured at 0.5–2 ms for 200–2000 exercises, so the filter was never the cost — the re-render around it was.
+- **Exercise Library: `selectedMuscleFilters` is memoised.** It was rebuilt on every render, which made the `highlightedRegionKeys` memo below it miss every time and handed `ExerciseMapBody` a new `selected` array — so both figures re-rendered on every keystroke and every filter change for as long as any muscle was selected. `EMPTY_REGION_KEYS` already guarded the nothing-selected case; this is the other half of it.
+
+- **The catalog list is a `FlatList` instead of a `ScrollView` with a plain `.map()`.** Every row mounts a body figure — an image plus an SVG region overlay — and all 89 were built in one commit whenever the filter widened. The row moved into a memoised `CatalogExerciseRow`, and `toggleFavourite` reaches it through a ref so the memo is not undone by a callback that changes identity on every render.
+
+### Notes
+- **Measured on a Galaxy A34 (Android 16, dev build), removing a selected muscle in Exercise Library.** Frame time from `dumpsys gfxinfo framestats`:
+
+  | | Frame |
+  |---|---|
+  | before | **645 ms** |
+  | memoising `selectedMuscleFilters` | **521 ms** |
+  | `FlatList` | **74 ms** |
+
+- Selecting a muscle already cost 77 ms before any of this. Both directions redraw the same two figures, so that 77 ms was the floor and everything above it was the list. Removal now costs the same as selection, which is what says the asymmetry is gone rather than reduced.
+- The remaining ~74 ms is the two large figures. Splitting that SVG was the other candidate fix and would have been mostly wasted: it can win at most those 74 ms, and only part of them.
+- **No `getItemLayout`.** The rows measured 174–177 px at density 450 through `uiautomator dump`, so the height is not the clean constant `EXERCISE_ROW_HEIGHT` implies, and a wrong value there drifts the scroll position.
+- **React Native warns that the catalog list is a VirtualizedList nested inside a plain ScrollView, and the warning stays.** Its suggested fix — making the page scroll a `FlatList` that carries the page in `ListHeaderComponent` — was tried and reverted: it silences the warning but the inner list then stops scrolling entirely, sitting frozen on its first ten rows, because a VirtualizedList nested in another one hands its scrolling to the parent. Verified on the device both ways. The warning is a false alarm here — `styles.listScroll` gives the inner list a fixed height and so a real viewport — and it lives inside `if (__DEV__)`, so it never reaches a production build. `ExerciseCatalogPage` carries the reasoning so the next person does not retry it.
+- Numbers are from a **dev build**; production will be faster. The ratios are the finding, not the absolute values.
+- **Drawing the map's figure in every row was tried and rejected.** Same measurement, state verified before and after each run: 71 ms with `BodyMapPreview`, **420 ms** with `ExerciseMapBody` once per visible row. Flat fills were tried as a cheaper variant and came out at **952 ms**, worse — so the number of shapes is the cost, not the gradients. Tinting the existing preview gets the same look for the original price.
+- **The gradient fix costs nothing measurable.** A single reading of 288 ms suggested it had made the map four times more expensive; that turned out to be a bad measurement taken while the phone was losing its adb connection. Ten verified runs on a healthy device put the current screen at **64–86 ms**, with selecting and removing costing the same. The figures do render differently now — lighter and properly shaded, because the four-stop gradients are finally being applied — but not more slowly.
+- **Rejecting `ExerciseMapBody` in the rows was right, and was re-checked.** Because one number from that session proved unreliable, the comparison was run again on a healthy device: **340–437 ms** with the map's figure per row against **64–86 ms** with the tinted preview, four verified runs each. Same conclusion, sound data this time.
+- Every measurement here checks that the tap actually changed the screen before the frame time is counted. Three earlier readings were discarded for failing that: two captured idle frames, one measured the wrong screen after a stray tap opened a modal.
+
+### Fixed
+- **`ExerciseMapBody`'s gradient stops were strings with a leading dot** — `offset=".36"` — which `react-native-svg` rejects with `".36" is not a valid number or percentage string`. They are numbers now. The bug was always there; it only became visible when the figure started appearing once per catalog row instead of twice per screen, and then it filled the Metro log.
+
+### Changed
+- **Catalog rows look like the muscle map.** The body artwork in `BodyMapPreview` is tinted down to a quiet silhouette the way `ExerciseMapBody` tints it, instead of showing as orange line art. The green highlights already used the map's `#60DAAC` and `#18A06C`, so the tint was the whole difference; the muscle shapes are in the PNG itself, which is why this gets the map's look without drawing 33 shapes per row.
+- `ExerciseMapBody` gained two options while this was being tried the expensive way: no `onSelect` means no touch handlers, no button role and taps passing through to whatever the figure sits in, and `showLabel={false}` drops the FRONT/BACK caption. Nothing uses them now, but they are what makes the figure usable as decoration.
+
+---
 ## [0.23.36] - Unreleased
 ### Added
 - **Favourite exercises.** A star on every row of the exercise catalog and of the mid-workout picker, a filter for showing only starred ones, and starred exercises sorted to the top of whatever list is on screen. The star flips before the write finishes and goes back if the write fails, so the screen never shows something it did not manage to store.

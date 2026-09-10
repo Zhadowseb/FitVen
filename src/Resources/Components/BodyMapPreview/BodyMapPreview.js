@@ -1,5 +1,7 @@
-import { Image, View } from "react-native";
+import { Image, View, useColorScheme } from "react-native";
 import { LocalSvg } from "react-native-svg/css";
+
+import { Colors } from "../../GlobalStyling/colors";
 
 import BackBodyMapRegionOverlay from "./BackBodyMapRegionOverlay";
 import FrontBodyMapRegionOverlay from "./FrontBodyMapRegionOverlay";
@@ -19,6 +21,12 @@ export default function BodyMapPreview({
   secondaryRegionKeys = [],
   style,
 }) {
+  // The body is drawn the way the muscle map draws it: the artwork tinted
+  // down to a quiet silhouette, so the only thing with colour is the muscle
+  // the exercise works. Without the tint the same PNG reads as orange line
+  // art, which is what made a row look nothing like the map above it.
+  const scheme = useColorScheme();
+  const theme = Colors[scheme] ?? Colors.light;
   const isBackView = bodyView === "back";
   const isUpperCrop = crop === "upper";
   const isLowerCrop = crop === "lower";
@@ -44,7 +52,7 @@ export default function BodyMapPreview({
       <Image
         source={bodyImage}
         resizeMode="stretch"
-        style={frameStyle}
+        style={[frameStyle, { tintColor: theme.quietText, opacity: 0.3 }]}
       />
       {!isBackView ? (
         <FrontBodyMapRegionOverlay

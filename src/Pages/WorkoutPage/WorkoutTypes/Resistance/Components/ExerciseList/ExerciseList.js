@@ -17,10 +17,7 @@ import ExerciseRow from "./Components/ExerciseRow/ExerciseRow"
 import PlusCircled from "../../../../../../Resources/Icons/UI-icons/PlusCircled";
 import ReplayHistory from "../../../../../../Resources/Icons/UI-icons/ReplayHistory";
 import ThemedText from "../../../../../../Resources/ThemedComponents/ThemedText";
-import {
-  Colors,
-  withAlpha,
-} from "../../../../../../Resources/GlobalStyling/colors";
+import { Colors } from "../../../../../../Resources/GlobalStyling/colors";
 import { EXERCISE_COLLAPSE_DURATION_MS } from "./exerciseCollapseAnimation";
 
 const ExerciseList = ({
@@ -48,6 +45,7 @@ const ExerciseList = ({
   const navigation = useNavigation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const rowLayoutsRef = useRef({});
   const dragContextRef = useRef(null);
   const dragTargetIndexRef = useRef(null);
@@ -820,13 +818,7 @@ const ExerciseList = ({
           activeOpacity={0.86}
           accessibilityRole="button"
           accessibilityLabel="Add an exercise used in the last four workouts"
-          style={[
-            styles.addExerciseButton,
-            {
-              backgroundColor: withAlpha(theme.secondary, 0.14),
-              borderColor: withAlpha(theme.secondary, 0.45),
-            },
-          ]}
+          style={[styles.addExerciseButton, { borderColor: quietText }]}
           onPress={() => {
             navigation.navigate("ExerciseCatalogPage", {
               workoutPicker: { workoutId: workout_id },
@@ -834,15 +826,8 @@ const ExerciseList = ({
             });
           }}
         >
-          <ReplayHistory
-            width={17}
-            height={17}
-            color={theme.secondaryText ?? theme.secondary}
-          />
-          <ThemedText
-            style={styles.addExerciseButtonText}
-            setColor={theme.secondaryText ?? theme.secondary}
-          >
+          <ReplayHistory width={17} height={17} color={quietText} />
+          <ThemedText style={styles.addExerciseButtonText} setColor={quietText}>
             Recent
           </ThemedText>
         </TouchableOpacity>
@@ -851,28 +836,15 @@ const ExerciseList = ({
           activeOpacity={0.86}
           accessibilityRole="button"
           accessibilityLabel="Add an exercise from the catalog"
-          style={[
-            styles.addExerciseButton,
-            {
-              backgroundColor: withAlpha(theme.primary, 0.14),
-              borderColor: withAlpha(theme.primary, 0.45),
-            },
-          ]}
+          style={[styles.addExerciseButton, { borderColor: quietText }]}
           onPress={() => {
             navigation.navigate("ExerciseCatalogPage", {
               workoutPicker: { workoutId: workout_id },
             });
           }}
         >
-          <PlusCircled
-            width={17}
-            height={17}
-            color={theme.primaryText ?? theme.primary}
-          />
-          <ThemedText
-            style={styles.addExerciseButtonText}
-            setColor={theme.primaryText ?? theme.primary}
-          >
+          <PlusCircled width={17} height={17} color={quietText} />
+          <ThemedText style={styles.addExerciseButtonText} setColor={quietText}>
             All exercises
           </ThemedText>
         </TouchableOpacity>
