@@ -12,6 +12,18 @@ const DEV_APP_NAME = "FitVen Dev";
 // 3.31.6 ships ninja 1.12.1. Install it via the Android SDK Manager.
 const CMAKE_VERSION = "3.31.6";
 
+// ...and only on Windows. The 260-character limit is the whole reason this pin
+// exists, so pinning anywhere else asks a build image for a CMake it has no
+// reason to carry. EAS builds on Linux and has 3.22.1, which is fine there and
+// is not 3.31.6, so an unconditional pin fails the cloud build outright:
+//
+//   [CXX1300] CMake '3.31.6' was not found in SDK, PATH, or by cmake.dir property
+//
+// That is what happened to the first production AAB. Gating on the platform
+// rather than on EAS_BUILD keeps the rule tied to the reason: this is a Windows
+// workaround, and it applies where Windows does.
+const needsCmakePin = process.platform === "win32";
+
 function addApplicationIdSuffix(contents) {
   if (contents.includes("applicationIdSuffix")) {
     return contents;
@@ -56,10 +68,12 @@ function pinCmakeVersion(contents) {
 }
 
 const withPinnedCmake = (config) =>
-  withAppBuildGradle(config, (config) => {
-    config.modResults.contents = pinCmakeVersion(config.modResults.contents);
-    return config;
-  });
+  needsCmakePin
+    ? withAppBuildGradle(config, (config) => {
+        config.modResults.contents = pinCmakeVersion(config.modResults.contents);
+        return config;
+      })
+    : config;
 
 const withDevApplicationId = (config) =>
   withAppBuildGradle(config, (config) => {
