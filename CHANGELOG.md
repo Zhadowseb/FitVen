@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.23.38] - Unreleased
+### Fixed
+- **The CMake pin is Windows-only now, and the first cloud build is what found it.** `withDevAppVariant` pinned CMake to 3.31.6 for every build. That version exists on this machine because it was installed by hand: the ninja in 3.22.1 is not long-path aware and the C++ codegen breaks on Windows once object paths pass 260 characters. EAS builds on Linux, has 3.22.1, and has no reason to carry 3.31.6 — so the first production AAB failed outright with `[CXX1300] CMake '3.31.6' was not found in SDK, PATH, or by cmake.dir property` after five minutes of Gradle. The pin is gated on `process.platform === "win32"`, which ties it to the reason it exists rather than to a build environment, so a local Windows build is unchanged and a Linux one stops asking for a CMake it does not need.
+
+### Notes
+- Nothing had ever been built for release through EAS before, so the plugin had only ever run on Windows. A workaround that is correct locally and wrong everywhere else is invisible until something else builds it.
+
+---
 ## [0.23.37] - Unreleased
 ### Added
 - Exercise Map directly below Exercise Library in Train: a native, themed screen with the real exercise catalog, search, multi-muscle filtering, primary/secondary roles, front/back views, body crops and surface/contour styles.
