@@ -105,6 +105,9 @@ const Resistance = ({
   const [isDone, set_isDone] = useState(false);
   const [isRunning, set_isRunning] = useState(false);
   const [activeRestTimer, setActiveRestTimer] = useState(null);
+  const [workoutTick, setWorkoutTick] = useState(() =>
+    getCurrentStoredTimestampSeconds()
+  );
   const timerStartRef = useRef(null);
   const elapsedTimeRef = useRef(0);
   const wasAllSetsDoneRef = useRef(false);
@@ -140,33 +143,38 @@ const Resistance = ({
     });
   }, [db, workout_id]);
 
-  const loadTotalSets = async () => {
-    try {
-      const result =
-        await weightliftingService.getStrengthWorkoutSummary(db, workout_id);
-      set_totalSets(result.totalSets);
-    } catch (err) {
-      console.error("Failed to load the amount of sets to do for this workout:", err);
-    }
-  };
 
-  const loadCompletedSets = async () => {
+  // Both counters from one query. There used to be one loader per counter,
+  // each asking getStrengthWorkoutSummary the same question and keeping one
+  // field of the answer, so every place that wanted both ran it twice.
+  const loadSetSummary = useCallback(async () => {
     try {
-      const result =
-        await weightliftingService.getStrengthWorkoutSummary(db, workout_id);
+      const result = await weightliftingService.getStrengthWorkoutSummary(
+        db,
+        workout_id
+      );
+
+      set_totalSets(result.totalSets);
       set_doneSets(result.doneSets);
     } catch (err) {
-      console.error("Failed to load the done sets for this workout:", err);
+      console.error("Failed to load the set counts for this workout:", err);
     }
-  };
+  }, [db, workout_id]);
+
+  // The header used to hold whatever the counts were when the screen was last
+  // focused, so adding a set left it saying 0 / 1 with two sets on screen.
+  const handleWorkoutMetadataChange = useCallback(() => {
+    loadSetSummary();
+    onWorkoutMetadataChange?.();
+  }, [loadSetSummary, onWorkoutMetadataChange]);
+
 
   //Focus coming back to the page
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
       
-      loadTotalSets();
-      loadCompletedSets();
+      loadSetSummary();
 
       const reload = async () => {
           const row = await workoutService.getWorkoutTimerState(db, workout_id);
@@ -217,20 +225,29 @@ const Resistance = ({
   }, [persistCurrentTimerState]);
 
   useEffect(() => {
-    loadCompletedSets();
-    loadTotalSets();
-  }, [refreshing]);
+    loadSetSummary();
+  }, [refreshing, loadSetSummary]);
 
-  //Time loop
+  // The clock's own second hand. It used to advance by bumping
+  // `refreshing`, which is the same signal that tells the exercise list to
+  // re-read itself from SQLite - so a running workout re-loaded every
+  // exercise and every set once a second, and handed every row a new object
+  // identity, to move one digit. `refreshing` is now bumped only by actual
+  // changes: a set ticked off, added, deleted or edited, all of which
+  // already call updateUI.
   useEffect(() => {
-    if(!isRunning) return;
+    if (!isRunning) {
+      return undefined;
+    }
+
+    setWorkoutTick(getCurrentStoredTimestampSeconds());
 
     const interval = setInterval(() => {
-      refresh()
+      setWorkoutTick(getCurrentStoredTimestampSeconds());
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isRunning, isRunning, timer_start]);
+  }, [isRunning, timer_start]);
 
   // The workout tick only runs while the workout is running, so the rest
   // countdown gets its own second hand.
@@ -252,15 +269,14 @@ const Resistance = ({
     return () => clearInterval(interval);
   }, [activeRestTimer]);
 
-  const computeCurrentElapsed = () => {
+  const computeCurrentElapsed = (
+    nowSeconds = getCurrentStoredTimestampSeconds()
+  ) => {
       const resolvedTimerStart = normalizeTimerStartValue(timer_start);
 
       if (resolvedTimerStart === null) return 0;
 
-      return Math.max(
-          0,
-          getCurrentStoredTimestampSeconds() - resolvedTimerStart
-      );
+      return Math.max(0, nowSeconds - resolvedTimerStart);
   };
 
   const updateElapsed = async () => {
@@ -459,7 +475,7 @@ const Resistance = ({
   const invertedText = theme.textInverted ?? theme.background;
 
   const currentElapsed = normalizeElapsedDurationSeconds(
-    elapsed_time + computeCurrentElapsed(),
+    elapsed_time + computeCurrentElapsed(workoutTick),
     0
   );
   const resolvedTotalSets = Math.max(Number(totalSets) || 0, 0);
@@ -517,7 +533,17 @@ const Resistance = ({
   const isResting = restRemaining > 0;
   const elapsedDisplay = formatElapsedTime(currentElapsed);
   const restDisplay = formatElapsedTime(restRemaining);
+
   const primaryTimerDisplay = isResting ? restDisplay : elapsedDisplay;
+  // "00:00" fits at 52. "1:00:00" does not, and "10:00:00" is wider
+  // still. Stepping by length keeps the digits from resizing as they roll
+  // over, which continuous auto-fitting would do once a second.
+  const timerFontSize =
+    primaryTimerDisplay.length >= 8
+      ? 36
+      : primaryTimerDisplay.length >= 7
+        ? 42
+        : 52;
   const secondaryTimerLabel = isResting ? "Total" : "Rest";
   const secondaryTimerDisplay = isResting ? elapsedDisplay : restDisplay;
 
@@ -593,9 +619,17 @@ const Resistance = ({
         </View>
 
         <View style={styles.timerRow}>
+          {/* The clock gains two characters the moment a workout passes an
+              hour - "59:59" becomes "1:00:00" - and at 52 px that was wide
+              enough to push the pause and finish buttons off the right edge.
+              Somebody who left a workout running could no longer end it.
+              The size steps down with the length instead. */}
           <ThemedText
-            style={styles.timerValue}
+            style={[styles.timerValue, { fontSize: timerFontSize }]}
             setColor={isResting ? primaryColor : titleColor}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.6}
           >
             {primaryTimerDisplay}
           </ThemedText>
@@ -812,7 +846,7 @@ const Resistance = ({
             onReorderDragChange={setIsReorderingExercises}
             onRestTimerStart={handleRestTimerStart}
             onRestTimerCancel={handleRestTimerCancel}
-            onWorkoutMetadataChange={onWorkoutMetadataChange}
+            onWorkoutMetadataChange={handleWorkoutMetadataChange}
             onExerciseCountChange={setExerciseCount}
             onSetCompleted={handleSetCompleted}
             collapsedSetsVisible={showCollapsedSets}

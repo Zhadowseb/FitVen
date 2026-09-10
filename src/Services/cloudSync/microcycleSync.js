@@ -21,6 +21,7 @@ import {
   compareEntitySyncVersions,
   deleteLocalMicrocycleHierarchy,
   ensureDefaultDaysForMicrocycle,
+  createParentCloudIdCache,
   ensureMesocycleCloudIdentity,
   getAuthenticatedUserId,
   getComparableMicrocycleSnapshot,
@@ -66,11 +67,14 @@ export async function uploadDirtyMicrocycles(
   { allowParentRepair = true } = {}
 ) {
   const [localMicrocycles, localMesocycles] = await Promise.all([
-    programRepository.getMicrocyclesForCloudSync(db),
+    programRepository.getMicrocyclesForCloudSync(db, { dirtyOnly: true }),
     programRepository.getMesocyclesForCloudSync(db),
   ]);
   const localMesocyclesById = new Map(
     localMesocycles.map((mesocycle) => [mesocycle.mesocycle_id, mesocycle])
+  );
+  const resolveParentMesocycleCloudId = createParentCloudIdCache(
+    ensureMesocycleCloudIdentity
   );
   let uploadedCount = 0;
   let requiresMesocycleRepair = false;
@@ -83,10 +87,11 @@ export async function uploadDirtyMicrocycles(
     const parentMesocycle = localMesocyclesById.get(
       localMicrocycle.mesocycle_id
     );
-    const parentMesocycleCloudId = await ensureMesocycleCloudIdentity(
+    const parentMesocycleCloudId = await resolveParentMesocycleCloudId(
       db,
       userId,
-      parentMesocycle
+      parentMesocycle,
+      localMicrocycle.mesocycle_id
     );
 
     if (parentMesocycleCloudId === null) {

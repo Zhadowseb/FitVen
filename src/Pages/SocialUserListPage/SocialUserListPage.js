@@ -157,15 +157,17 @@ const SocialUserListPage = () => {
   };
 
   const trimmedQuery = query.trim();
-  const isSearching = trimmedQuery.length > 0;
-  // Two distinct answers: nobody to show, or nobody matching this search. The
-  // search case repeats the term, so it is clear what was looked for.
+  const isSearching =
+    trimmedQuery.length >= socialService.USER_SEARCH_MIN_LENGTH;
+  // Three answers now. The list used to open on every user in the app, which is
+  // what the search function was tightened to stop; below the minimum there is
+  // nothing to show and the screen has to say why rather than look broken.
   const emptyStateTitle = isSearching
     ? `No match for "${trimmedQuery}"`
-    : "No other users yet";
+    : "Search for someone";
   const emptyStateBody = isSearching
     ? "Check the spelling, or search for their username instead."
-    : "When more people join FitVen, they will show up here.";
+    : `Type at least ${socialService.USER_SEARCH_MIN_LENGTH} characters of a name or username. Usernames look like name#1234.`;
 
   return (
     <ThemedView safe={["top", "left", "right"]} style={styles.container}>

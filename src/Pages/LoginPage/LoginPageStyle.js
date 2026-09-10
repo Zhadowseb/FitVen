@@ -69,30 +69,13 @@ export default StyleSheet.create({
     borderRadius: 28,
   },
 
-  cardLabel: {
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 0.9,
-    textTransform: "uppercase",
-    marginBottom: 10,
-  },
-
-  cardTitle: {
-    fontSize: 24,
-    lineHeight: 28,
-    fontWeight: "800",
-    marginBottom: 10,
-  },
-
   formSection: {
     marginTop: 14,
   },
 
   inputLabel: {
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
+    fontSize: 13,
+    fontWeight: "700",
     marginBottom: 8,
   },
 
@@ -104,19 +87,44 @@ export default StyleSheet.create({
     marginTop: 18,
   },
 
+  errorRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+    marginTop: 10,
+  },
+
+  errorText: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 19,
+  },
+
+  forgotLink: {
+    minHeight: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 6,
+  },
+
+  forgotLinkText: {
+    fontSize: 14,
+    fontWeight: "500",
+    textDecorationLine: "underline",
+  },
+
+  alternativeBlock: {
+    marginTop: 18,
+    gap: 10,
+  },
+
+  alternativeLabel: {
+    fontSize: 13,
+    textAlign: "center",
+  },
+
   primaryButton: {
     borderRadius: 18,
     height: 52,
-  },
-
-  secondaryActionButton: {
-    marginTop: 18,
-  },
-
-  connectionStatus: {
-    marginTop: 12,
-    marginBottom: 12,
-    fontSize: 13,
-    lineHeight: 19,
   },
 });

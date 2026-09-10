@@ -12,6 +12,16 @@ export default StyleSheet.create({
     paddingTop: 14,
     paddingBottom: 16,
   },
+  headerAction: {
+    position: "absolute",
+    right: 0,
+    width: 38,
+    height: 38,
+    borderRadius: 13,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   headerTitleGroup: {
     alignItems: "center",
     justifyContent: "center",

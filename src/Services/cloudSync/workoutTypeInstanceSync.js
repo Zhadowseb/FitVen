@@ -21,6 +21,7 @@ import {
   cloudTimeStringToLocalTimestamp,
   compareEntitySyncVersions,
   deleteLocalWorkoutHierarchy,
+  createParentCloudIdCache,
   ensureDayCloudIdentity,
   getAuthenticatedUserId,
   getComparableWorkoutTypeInstanceSnapshot,
@@ -75,10 +76,13 @@ export async function uploadDirtyWorkoutTypeInstances(
   { allowParentRepair = true } = {}
 ) {
   const [localWorkouts, localDays] = await Promise.all([
-    programRepository.getWorkoutsForCloudSync(db),
+    programRepository.getWorkoutsForCloudSync(db, { dirtyOnly: true }),
     programRepository.getDaysForCloudSync(db),
   ]);
   const localDaysById = new Map(localDays.map((day) => [day.day_id, day]));
+  const resolveParentDayCloudId = createParentCloudIdCache(
+    ensureDayCloudIdentity
+  );
   let uploadedCount = 0;
   let requiresDayRepair = false;
 
@@ -88,7 +92,12 @@ export async function uploadDirtyWorkoutTypeInstances(
     }
 
     const parentDay = localDaysById.get(localWorkout.day_id);
-    const parentDayCloudId = await ensureDayCloudIdentity(db, userId, parentDay);
+    const parentDayCloudId = await resolveParentDayCloudId(
+      db,
+      userId,
+      parentDay,
+      localWorkout.day_id
+    );
 
     if (parentDayCloudId === null) {
       requiresDayRepair = true;
@@ -529,10 +538,13 @@ async function syncWorkoutTypeInstancesWithCloudInternal(db) {
     userId
   );
   const uploadedCount = await uploadDirtyWorkoutTypeInstances(db, userId);
-  const finalDownloadedCount = await reconcileWorkoutTypeInstancesFromCloud(
-    db,
-    userId
-  );
+  // Only worth a second pass when the first pass had something to push. This
+  // download exists to collect the ids the cloud assigned to rows we just
+  // sent; with nothing sent, it fetches the entire table to learn nothing.
+  const finalDownloadedCount =
+    uploadedCount > 0 || deletedCount > 0
+      ? await reconcileWorkoutTypeInstancesFromCloud(db, userId)
+      : 0;
   const downloadedCount = initialDownloadedCount + finalDownloadedCount;
 
   return {

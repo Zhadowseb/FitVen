@@ -35,6 +35,12 @@ function read(rel) {
   return fs.existsSync(full) ? fs.readFileSync(full, "utf8") : null;
 }
 
+function list(rel) {
+  const full = path.join(root, rel);
+
+  return fs.existsSync(full) ? fs.readdirSync(full) : null;
+}
+
 function walk(dir, out = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     if (entry.name === "node_modules" || entry.name.startsWith(".")) continue;
@@ -183,6 +189,156 @@ for (const file of allFiles.filter((f) => /^supabase\/migrations\/.*\.sql$/.test
 for (const match of (read("AGENTS.md") ?? "").matchAll(/^- `(src\/[^`]+AGENTS\.md)`/gm)) {
   if (!allFiles.includes(match[1])) {
     problems.push(`AGENTS.md points at ${match[1]}, which does not exist`);
+  }
+}
+
+// The auth email templates, against the two mistakes that were in them.
+//
+// Neither announces itself. A stray quote makes Go's html/template refuse to
+// render, and the send comes back as "Error sending recovery email" - which
+// reads like a mail server fault. The wrong variable sends a link with no token
+// on it, and the page it reaches says the link has expired.
+for (const name of (list("supabase/templates") ?? []).filter((file) =>
+  file.endsWith(".html")
+)) {
+  const template = read(`supabase/templates/${name}`);
+
+  if (template === null) continue;
+
+  if (/href="\{\{\s*\.RedirectTo\s*\}\}"/.test(template)) {
+    problems.push(
+      `supabase/templates/${name} links to {{ .RedirectTo }}, which carries no token - the link has to be {{ .ConfirmationURL }}`
+    );
+  }
+
+  if (/href="[^"]*"\s*"/.test(template)) {
+    problems.push(
+      `supabase/templates/${name} has a stray quote after an href - Go's html/template refuses to render it and the email never sends`
+    );
+  }
+}
+
+// The pages the stores link to from the listing.
+//
+// Play and App Store Connect carry these addresses in the listing. A 404 on any
+// of them is a policy violation on a page nobody in the app would ever notice
+// was gone, so their existence is checked rather than remembered.
+for (const [file, what] of [
+  ["web/privacy/index.html", "the privacy policy Play requires"],
+  ["web/delete-account/index.html", "the account deletion page Play links to"],
+  ["web/support/index.html", "the Support URL App Store Connect requires"],
+]) {
+  if (read(file) === null) {
+    problems.push(`${file} is missing - ${what}`);
+  }
+}
+
+// Both stores require these pages to name the app as the listing names it.
+for (const file of [
+  "web/delete-account/index.html",
+  "web/support/index.html",
+]) {
+  const page = read(file);
+
+  if (page !== null && !page.includes("FitVen")) {
+    problems.push(
+      `${file} does not name FitVen - the stores require the page to identify the app or developer it belongs to`
+    );
+  }
+}
+
+// One contact address, spelled the same in all three places.
+//
+// Apple's guideline 1.2 counts "published contact information" as one of the
+// four things a social app has to have, and a reviewer who finds two different
+// addresses has found a reason to ask which one is real. The policy is the
+// source: whatever address it carries is the one the other pages have to use.
+const policySource = read("src/Resources/Legal/privacyPolicy.js");
+// The trailing group has to end in word characters, or a sentence-final period
+// after the address ends up inside the match and nothing ever matches it.
+const contactMatch = policySource?.match(/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/);
+
+if (contactMatch) {
+  const contact = contactMatch[0];
+
+  for (const file of [
+    "web/support/index.html",
+    "web/delete-account/index.html",
+  ]) {
+    const page = read(file);
+
+    if (page !== null && !page.includes(contact)) {
+      problems.push(
+        `${file} does not carry ${contact}, the address the privacy policy publishes - the stores would show two different contacts`
+      );
+    }
+  }
+}
+
+// The password reset page talks to the same project as the app.
+//
+// It is a static page outside the bundle, so nothing else connects the two. If
+// the project or its anon key ever changes, the app keeps working and the reset
+// link quietly stops - and it only fails for somebody who is already locked out
+// and cannot report it from inside the app.
+const resetPage = read("web/reset-password/index.html");
+const client = read("src/Database/supaBaseClient.js");
+
+if (resetPage === null) {
+  problems.push(
+    "web/reset-password/index.html is missing - the forgot-password email has nowhere to land"
+  );
+} else if (client !== null) {
+  const pairs = [
+    ["SUPABASE_URL", /supabaseUrl = '([^']+)'/, /var SUPABASE_URL = "([^"]+)"/],
+    ["anon key", /supabaseAnonKey = '([^']+)'/, /var SUPABASE_ANON_KEY = "([^"]+)"/],
+  ];
+
+  for (const [label, appPattern, pagePattern] of pairs) {
+    const inApp = client.match(appPattern)?.[1];
+    const inPage = resetPage.match(pagePattern)?.[1];
+
+    if (!inApp || !inPage) {
+      problems.push(
+        `Could not read the ${label} out of both supaBaseClient.js and the reset page - the check that keeps them in step is broken`
+      );
+    } else if (inApp !== inPage) {
+      problems.push(
+        `web/reset-password/index.html uses a different ${label} than the app - the reset link would reach the wrong project`
+      );
+    }
+  }
+
+  const redirect = read("src/Services/authService.js")?.match(
+    /PASSWORD_RESET_REDIRECT = "([^"]+)"/
+  )?.[1];
+
+  if (redirect && !redirect.includes("/reset-password/")) {
+    problems.push(
+      `PASSWORD_RESET_REDIRECT is ${redirect}, which is not the reset page`
+    );
+  }
+}
+
+// The public site serves exactly one directory.
+//
+// web/README.md promises this, and the promise is the whole reason the privacy
+// policy is not generated into docs/. Widening it to "." or "docs" publishes the
+// security review, the structure audit, the performance audit, an export query
+// and google-services.json, and nothing would say so until somebody found them.
+const netlify = read("netlify.toml");
+
+if (netlify === null) {
+  problems.push(
+    "netlify.toml is missing - without it the host falls back to publishing the whole repository"
+  );
+} else {
+  const publishDirectory = netlify.match(/^\s*publish\s*=\s*"([^"]*)"/m)?.[1];
+
+  if (publishDirectory !== "web") {
+    problems.push(
+      `netlify.toml publishes "${publishDirectory ?? "nothing declared"}" - it has to be "web", the only directory meant to be public`
+    );
   }
 }
 

@@ -9,8 +9,10 @@ import ThemedText from "./ThemedText";
 // sites; the look here is the appearance control's, which is the one the
 // redesign actually shipped.
 //
-// The segments are short by design, so each carries hitSlop to reach a 44 px
-// touch target without growing the row.
+// Sized to about 40 px with 13 px labels. It used to be 26 px with 11 px
+// text, relying on hitSlop for the rest of the target - which works for the
+// finger and not at all for the eye: a control that small does not read as
+// something you can press. The hitSlop stays, and now adds to a real target.
 export default function ThemedSegmentedControl({
   options = [],
   value,
@@ -63,18 +65,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: Radius.md,
     borderWidth: 1,
-    padding: 3,
+    padding: 4,
     gap: 2,
   },
 
   segment: {
     borderRadius: Radius.sm,
-    paddingVertical: 5,
-    paddingHorizontal: 11,
+    minHeight: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 6,
+    paddingHorizontal: 13,
   },
 
   segmentText: {
-    fontSize: 11,
-    fontWeight: "800",
+    fontSize: 13,
+    fontWeight: "700",
   },
 });

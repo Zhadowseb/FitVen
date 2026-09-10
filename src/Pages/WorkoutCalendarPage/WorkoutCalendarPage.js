@@ -218,13 +218,6 @@ function hasCalendarRange(range) {
   return Boolean(range?.startIsoDate && range?.endIsoDate);
 }
 
-function isSameCalendarRange(leftRange, rightRange) {
-  return (
-    leftRange?.startIsoDate === rightRange?.startIsoDate &&
-    leftRange?.endIsoDate === rightRange?.endIsoDate
-  );
-}
-
 function getWorkoutType(workout) {
   return workout?.workout_type ?? workout?.label ?? "Resistance";
 }
@@ -299,6 +292,7 @@ const WorkoutCalendarPage = () => {
   const calendarMountedRef = useRef(false);
   const calendarLoadRequestRef = useRef(0);
   const loadCalendarWorkoutsRef = useRef(null);
+  const hasFocusedCalendarRef = useRef(false);
   const monthPagerRecenteringRef = useRef(false);
   const monthPagerRecenteringTimeoutRef = useRef(null);
   const colorScheme = useColorScheme();
@@ -651,11 +645,10 @@ const WorkoutCalendarPage = () => {
         return {
           workoutRows: [],
           programDayRows: [],
-          sicknessRows: [],
         };
       }
 
-      const [workoutRows, programDayRows, sicknessRows] = await Promise.all([
+      const [workoutRows, programDayRows] = await Promise.all([
         programService.getWorkoutCalendarWorkouts(db, {
           startIsoDate: range.startIsoDate,
           endIsoDate: range.endIsoDate,
@@ -664,16 +657,24 @@ const WorkoutCalendarPage = () => {
           startIsoDate: range.startIsoDate,
           endIsoDate: range.endIsoDate,
         }),
-        programService.getSicknessPeriods(db),
       ]);
 
-      return { workoutRows, programDayRows, sicknessRows };
+      return { workoutRows, programDayRows };
     },
     [db]
   );
 
+  // One fetch, for the widest range the calendar can show. It used to load
+  // the visible month, set state, then immediately load all three months and
+  // overwrite the same state - six queries per swipe, three of them thrown
+  // away the moment the second pair landed. Rows are indexed by date and
+  // looked up per day, so holding the wider range costs nothing to display.
   const loadCalendarWorkouts = useCallback(async () => {
-    if (!hasCalendarRange(visibleMonthRange)) {
+    const range = hasCalendarRange(calendarRange)
+      ? calendarRange
+      : visibleMonthRange;
+
+    if (!hasCalendarRange(range)) {
       return;
     }
 
@@ -686,15 +687,14 @@ const WorkoutCalendarPage = () => {
     setErrorMessage("");
 
     try {
-      const visibleRows = await loadCalendarRows(visibleMonthRange);
+      const rows = await loadCalendarRows(range);
 
       if (!isCurrentRequest()) {
         return;
       }
 
-      setWorkouts(visibleRows.workoutRows);
-      setProgramDays(visibleRows.programDayRows);
-      setSicknessPeriods(visibleRows.sicknessRows);
+      setWorkouts(rows.workoutRows);
+      setProgramDays(rows.programDayRows);
       setIsLoading(false);
     } catch (error) {
       if (!isCurrentRequest()) {
@@ -703,49 +703,56 @@ const WorkoutCalendarPage = () => {
 
       setWorkouts([]);
       setProgramDays([]);
-      setSicknessPeriods([]);
       setErrorMessage(
         error instanceof Error ? error.message : "Could not load workouts."
       );
       setIsLoading(false);
-      return;
-    }
-
-    if (
-      !hasCalendarRange(calendarRange) ||
-      isSameCalendarRange(calendarRange, visibleMonthRange)
-    ) {
-      return;
-    }
-
-    try {
-      const prefetchedRows = await loadCalendarRows(calendarRange);
-
-      if (!isCurrentRequest()) {
-        return;
-      }
-
-      setWorkouts(prefetchedRows.workoutRows);
-      setProgramDays(prefetchedRows.programDayRows);
-      setSicknessPeriods(prefetchedRows.sicknessRows);
-    } catch (prefetchError) {
-      console.warn("Could not prefetch adjacent calendar months:", prefetchError);
     }
   }, [
-    calendarRange.endIsoDate,
-    calendarRange.startIsoDate,
+    calendarRange,
     loadCalendarRows,
     visibleMonthRange,
   ]);
+
+  // Sickness periods are not a property of the month on screen, so they are
+  // not part of the range fetch and are not re-read on every swipe.
+  const loadSicknessPeriods = useCallback(async () => {
+    try {
+      setSicknessPeriods(await programService.getSicknessPeriods(db));
+    } catch (error) {
+      console.warn("Could not load sickness periods:", error);
+    }
+  }, [db]);
 
   useEffect(() => {
     loadCalendarWorkoutsRef.current = loadCalendarWorkouts;
   }, [loadCalendarWorkouts]);
 
+  // Swiping to another month widens the range, and the range is what decides
+  // what to fetch. This used to be a side effect of the focus callback
+  // changing identity, which fired for other reasons too.
+  useEffect(() => {
+    loadCalendarWorkoutsRef.current?.();
+  }, [
+    calendarRange.endIsoDate,
+    calendarRange.startIsoDate,
+    visibleMonthRange.endIsoDate,
+    visibleMonthRange.startIsoDate,
+  ]);
+
   useFocusEffect(
     useCallback(() => {
-      loadCalendarWorkouts();
-    }, [loadCalendarWorkouts])
+      loadSicknessPeriods();
+
+      // The first focus happens on mount, where the range effect above has
+      // just run. Loading again here would put the double fetch back.
+      if (!hasFocusedCalendarRef.current) {
+        hasFocusedCalendarRef.current = true;
+        return;
+      }
+
+      loadCalendarWorkoutsRef.current?.();
+    }, [loadSicknessPeriods])
   );
 
   useEffect(() => {

@@ -18,7 +18,9 @@ import {
   areComparableSetsEqual,
   buildCloudSetPayload,
   claimCloudWatchers,
+  createPendingDeleteIndex,
   compareEntitySyncVersions,
+  createParentCloudIdCache,
   ensureExerciseInstanceCloudIdentity,
   getAuthenticatedUserId,
   getComparableSetSnapshot,
@@ -70,11 +72,14 @@ export async function uploadDirtySets(
   { allowParentRepair = true } = {}
 ) {
   const [localSets, localExercises] = await Promise.all([
-    weightliftingRepository.getSetsForCloudSync(db),
+    weightliftingRepository.getSetsForCloudSync(db, { dirtyOnly: true }),
     weightliftingRepository.getExercisesForCloudSync(db),
   ]);
   const localExercisesById = new Map(
     localExercises.map((exercise) => [exercise.exercise_instance_id, exercise])
+  );
+  const resolveParentExerciseCloudId = createParentCloudIdCache(
+    ensureExerciseInstanceCloudIdentity
   );
   let uploadedCount = 0;
   let requiresExerciseRepair = false;
@@ -85,10 +90,11 @@ export async function uploadDirtySets(
     }
 
     const parentExercise = localExercisesById.get(localSet.exercise_instance_id);
-    const parentExerciseCloudId = await ensureExerciseInstanceCloudIdentity(
+    const parentExerciseCloudId = await resolveParentExerciseCloudId(
       db,
       userId,
-      parentExercise
+      parentExercise,
+      localSet.exercise_instance_id
     );
 
     if (parentExerciseCloudId === null) {
@@ -172,19 +178,11 @@ async function reconcileSetsFromCloud(db, userId) {
     weightliftingRepository.getSetsForCloudSync(db),
     weightliftingRepository.getExercisesForCloudSync(db),
   ]);
-  const queuedDeletes = await weightliftingRepository.getQueuedSetDeletes(db);
   const localExercisesByCloudId = new Map();
   const localSetsByCloudId = new Map();
   const localSetsBySyncId = new Map();
   const localSetsByRemoteLocalId = new Map();
   const localSetsByLocalId = new Map();
-  const pendingDeletedSetLocalIds = new Set(
-    queuedDeletes
-      .map((queuedDelete) =>
-        normalizeOptionalInteger(queuedDelete.remote_local_set_id, null)
-      )
-      .filter((setLocalId) => setLocalId !== null)
-  );
 
   for (const localExercise of localExercises) {
     const cloudExerciseInstanceId = parseCloudExerciseInstanceId(
@@ -222,6 +220,13 @@ async function reconcileSetsFromCloud(db, userId) {
   const pendingDeletionAcks = [];
 
   await withTransaction(db, async () => {
+    // Read inside the transaction, for the same reason the exercises are:
+    // a delete that lands mid-pass must not be undone by a stale snapshot.
+    const pendingDeletes = createPendingDeleteIndex(
+      await weightliftingRepository.getQueuedSetDeletes(db),
+      { cloudIdColumn: "cloud_set_id", localIdColumn: "remote_local_set_id" }
+    );
+
     for (const cloudSet of cloudSets ?? []) {
       const cloudSetId = parseCloudSetId(cloudSet.id);
       const cloudSyncId = normalizeSyncId(cloudSet.sync_id);
@@ -241,7 +246,13 @@ async function reconcileSetsFromCloud(db, userId) {
         continue;
       }
 
-      if (pendingDeletedSetLocalIds.has(localSetId)) {
+      if (
+        pendingDeletes.has({
+          cloudId: cloudSetId,
+          syncId: cloudSyncId,
+          localId: localSetId,
+        })
+      ) {
         continue;
       }
 
@@ -496,7 +507,13 @@ async function syncSetsWithCloudInternal(db) {
   }
 
   try {
-    finalDownloadedCount = await reconcileSetsFromCloud(db, userId);
+    // Only worth a second pass when the first pass had something to push. This
+    // download exists to collect the ids the cloud assigned to rows we just
+    // sent; with nothing sent, it fetches the entire table to learn nothing -
+    // and for sets that is the largest table the user has.
+    if (uploadedCount > 0 || deletedCount > 0) {
+      finalDownloadedCount = await reconcileSetsFromCloud(db, userId);
+    }
   } catch (error) {
     throw new Error(
       `Set sync failed while reconciling cloud sets: ${error?.message ?? error}`

@@ -20,6 +20,7 @@ import {
   claimCloudWatchers,
   compareEntitySyncVersions,
   deleteLocalMesocycleHierarchy,
+  createParentCloudIdCache,
   ensureProgramCloudIdentity,
   getAuthenticatedUserId,
   getComparableMesocycleSnapshot,
@@ -66,11 +67,14 @@ export async function uploadDirtyMesocycles(
   { allowParentRepair = true } = {}
 ) {
   const [localMesocycles, localPrograms] = await Promise.all([
-    programRepository.getMesocyclesForCloudSync(db),
+    programRepository.getMesocyclesForCloudSync(db, { dirtyOnly: true }),
     programRepository.getProgramsForCloudSync(db),
   ]);
   const localProgramsById = new Map(
     localPrograms.map((program) => [program.program_id, program])
+  );
+  const resolveParentProgramCloudId = createParentCloudIdCache(
+    ensureProgramCloudIdentity
   );
   let uploadedCount = 0;
   let requiresProgramRepair = false;
@@ -81,10 +85,11 @@ export async function uploadDirtyMesocycles(
     }
 
     const parentProgram = localProgramsById.get(localMesocycle.program_id);
-    const parentProgramCloudId = await ensureProgramCloudIdentity(
+    const parentProgramCloudId = await resolveParentProgramCloudId(
       db,
       userId,
-      parentProgram
+      parentProgram,
+      localMesocycle.program_id
     );
 
     if (parentProgramCloudId === null) {

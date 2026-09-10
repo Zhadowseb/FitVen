@@ -167,6 +167,32 @@ export default function App() {
   const navigation = useNavigation();
   const { user } = useAuth();
 
+  // Today's snapshots are wanted twice in the same focus pass - once for the
+  // hero card and once for the activity ring - and building them is most of
+  // the work Home does. Overlapping calls share one fetch; anything that
+  // starts after it settles gets fresh data, so nothing is ever cached stale.
+  const todaySnapshotsRef = useRef(null);
+
+  const fetchTodaySnapshots = useCallback(() => {
+    const inFlight = todaySnapshotsRef.current;
+
+    if (inFlight && inFlight.date === todayDate) {
+      return inFlight.promise;
+    }
+
+    const promise = programService
+      .getTodayWorkoutSnapshots(db, { date: todayDate })
+      .finally(() => {
+        if (todaySnapshotsRef.current?.promise === promise) {
+          todaySnapshotsRef.current = null;
+        }
+      });
+
+    todaySnapshotsRef.current = { date: todayDate, promise };
+
+    return promise;
+  }, [db, todayDate]);
+
   const loadCirclePreview = useCallback(async () => {
     if (!user?.id) {
       setCirclePreview({
@@ -188,9 +214,12 @@ export default function App() {
           limit: 12,
           date: todayDate,
         }),
-        programService.getTodayActivitySummary(db, {
-          date: todayDate,
-        }),
+        fetchTodaySnapshots().then((snapshots) =>
+          programService.getTodayActivitySummary(db, {
+            date: todayDate,
+            snapshots,
+          })
+        ),
       ]);
 
       setCirclePreview({
@@ -216,7 +245,7 @@ export default function App() {
     } finally {
       setIsLoadingCirclePreview(false);
     }
-  }, [db, todayDate, user]);
+  }, [db, fetchTodaySnapshots, todayDate, user]);
 
   const loadHomeSnapshot = useCallback(async () => {
     try {
@@ -229,7 +258,7 @@ export default function App() {
       const [
         weekWorkoutsResult,
         todaySnapshotsResult,
-        upcomingWorkoutsResult,
+        nextWorkoutResult,
         activeProgramsResult,
         unreadCountResult,
       ] = await Promise.allSettled([
@@ -237,8 +266,8 @@ export default function App() {
           startIsoDate: normalizeIsoDateString(formatDate(monday)),
           endIsoDate: normalizeIsoDateString(formatDate(sunday)),
         }),
-        programService.getTodayWorkoutSnapshots(db, { date: todayDate }),
-        programService.getWorkoutCalendarWorkouts(db, {
+        fetchTodaySnapshots(),
+        programService.getNextUnfinishedCalendarWorkout(db, {
           startIsoDate: normalizeIsoDateString(formatDate(tomorrow)),
           endIsoDate: normalizeIsoDateString(formatDate(rangeEnd)),
         }),
@@ -338,10 +367,8 @@ export default function App() {
       }
 
       // --- Up next ---
-      const upcomingWorkouts =
-        upcomingWorkoutsResult.status === "fulfilled" ? upcomingWorkoutsResult.value : [];
       const nextWorkout =
-        upcomingWorkouts.find((workout) => Number(workout.done) !== 1) ?? null;
+        nextWorkoutResult.status === "fulfilled" ? nextWorkoutResult.value : null;
       const nextWorkoutDateParts = getNextWorkoutDateParts(nextWorkout);
 
       setNextWorkoutInfo(
@@ -402,7 +429,7 @@ export default function App() {
     } finally {
       setHasLoadedHomeSnapshot(true);
     }
-  }, [db, todayDate, user]);
+  }, [db, fetchTodaySnapshots, todayDate, user]);
 
   const resetWorkoutSummaryFeed = useCallback(() => {
     workoutSummaryFeedOffsetRef.current = 0;

@@ -1,5 +1,6 @@
 import {
   ActivityIndicator,
+  FlatList,
   Pressable,
   ScrollView,
   TextInput,
@@ -10,9 +11,12 @@ import {
 } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
 import { useNavigation } from "@react-navigation/native";
-import { useState, useEffect } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import styles from "./ExerciseLibraryListStyle";
+import styles, {
+  EXERCISE_PREVIEW_WIDTH,
+  VISIBLE_EXERCISE_COUNT,
+} from "./ExerciseLibraryListStyle";
 import ExerciseFilterSheet from "../ExerciseFilterSheet/ExerciseFilterSheet";
 import { weightliftingService } from "../../../../Services";
 import { Colors, withAlpha } from "../../../../Resources/GlobalStyling/colors";
@@ -23,13 +27,15 @@ import Filter from "../../../../Resources/Icons/UI-icons/Filter";
 import Library from "../../../../Resources/Icons/UI-icons/Library";
 import Plus from "../../../../Resources/Icons/UI-icons/Plus";
 import Search from "../../../../Resources/Icons/UI-icons/Search";
+import Star from "../../../../Resources/Icons/UI-icons/Star";
+import ExerciseMapBody from "../../../ExerciseMapPage/ExerciseMapBody";
+import ReplayHistory from "../../../../Resources/Icons/UI-icons/ReplayHistory";
 import {
   EXERCISE_MUSCLE_GROUPS,
   EXERCISE_MUSCLE_FILTERS,
   toggleExerciseMuscleFilterKey,
 } from "../../../../Utils/exerciseMuscleGroups";
 import {
-  ThemedButton,
   ThemedCard,
   ThemedModal,
   ThemedText,
@@ -46,6 +52,129 @@ const GROUP_FILTERS = [
 ];
 
 const MUSCLE_FILTERS = EXERCISE_MUSCLE_FILTERS;
+
+// A stable empty array: ExerciseMapBody is memoised, and a fresh [] on every
+// render would defeat that for every muscle on both figures.
+const EMPTY_REGION_KEYS = [];
+
+const catalogKeyExtractor = (exercise) => exercise.exercise_name;
+
+/**
+ * One row of the catalog.
+ *
+ * Pulled out and memoised because every row mounts a body figure - an image
+ * plus an SVG overlay - and the list used to build all of them at once. See
+ * the FlatList below for the measurements.
+ */
+const CatalogExerciseRow = memo(function CatalogExerciseRow({
+  exercise,
+  isLast,
+  isSelecting,
+  isFavourite,
+  isSelectionBusy,
+  isWorkoutPicker,
+  colors,
+  onPress,
+  onToggleFavourite,
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={
+        isWorkoutPicker
+          ? `Add ${exercise.exercise_name} to workout`
+          : `Show ${exercise.exercise_name} muscles`
+      }
+      disabled={isSelectionBusy}
+      onPress={() => onPress(exercise)}
+      style={[
+        styles.exerciseRow,
+        isLast && styles.exerciseRowLast,
+        isSelecting && styles.exerciseRowSelected,
+        { borderColor: colors.cardBorder },
+      ]}
+    >
+      {/* Not `ExerciseMapBody`, deliberately. Drawing the map's figure here
+          matches it exactly but costs all 33 muscle shapes once per visible
+          row: measured at 420 ms against 71 ms for this, for the same tap.
+          `BodyMapPreview` draws the body once as an image and only the
+          muscles that actually work, in the map's colours. */}
+      <BodyMapPreview
+        bodyView={exercise.body_map_view}
+        crop={exercise.body_map_section}
+        primaryRegionKeys={exercise.primary_body_map_region_keys}
+        secondaryRegionKeys={exercise.secondary_body_map_region_keys}
+        style={styles.exercisePreviewBodyMap}
+      />
+
+      <View style={styles.exerciseBody}>
+        <View style={styles.exerciseTitleRow}>
+          <ThemedText
+            style={styles.exerciseName}
+            setColor={colors.titleColor}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {exercise.exercise_name}
+          </ThemedText>
+
+          {/* Only the ones the user made themselves are worth marking.
+              Everything else in the catalog is official, so saying so on
+              almost every row said nothing. */}
+          {exercise.is_custom ? (
+            <View
+              style={[
+                styles.exerciseStatusBadge,
+                { backgroundColor: colors.primaryColor },
+              ]}
+            >
+              <ThemedText
+                style={styles.exerciseStatusBadgeText}
+                setColor={colors.activeFilterText}
+              >
+                Custom
+              </ThemedText>
+            </View>
+          ) : null}
+        </View>
+      </View>
+
+      <TouchableOpacity
+        activeOpacity={0.7}
+        hitSlop={8}
+        accessibilityRole="button"
+        accessibilityState={{ selected: isFavourite }}
+        accessibilityLabel={
+          isFavourite
+            ? `Remove ${exercise.exercise_name} from favourites`
+            : `Add ${exercise.exercise_name} to favourites`
+        }
+        onPress={(event) => {
+          event.stopPropagation?.();
+          onToggleFavourite(exercise);
+        }}
+        style={styles.favouriteToggle}
+      >
+        <Star
+          width={19}
+          height={19}
+          color={isFavourite ? colors.starColor : colors.quietText}
+          filled={isFavourite}
+          roundness={1.6}
+        />
+      </TouchableOpacity>
+    </Pressable>
+  );
+});
+
+// Which group owns each muscle on the figure. The map and the filter sheet are
+// one selection, so tapping a muscle has to land on the same key the sheet
+// would have set - otherwise the sheet opens showing nothing chosen.
+const MUSCLE_FILTER_KEY_BY_REGION_KEY = new Map(
+  MUSCLE_FILTERS.flatMap((filter) =>
+    filter.regionKeys.map((regionKey) => [regionKey, filter.key])
+  )
+);
 
 
 const MUSCLE_LABEL_BY_REGION_KEY = EXERCISE_MUSCLE_GROUPS.reduce(
@@ -213,6 +342,7 @@ const ExerciseLibraryList = ({
   onAddCustomExercise,
   selectingExerciseName = null,
   workoutPicker = null,
+  initialFilter = null,
 }) => {
   const db = useSQLiteContext();
   const navigation = useNavigation();
@@ -226,9 +356,25 @@ const ExerciseLibraryList = ({
   const [isFilterSheetVisible, setIsFilterSheetVisible] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [isLoadingExercises, setIsLoadingExercises] = useState(true);
-  const { height: windowHeight } = useWindowDimensions();
+  const [favouriteNames, setFavouriteNames] = useState(() => new Set());
+  const [showFavouritesOnly, setShowFavouritesOnly] = useState(
+    initialFilter === "favourites"
+  );
+  const [showRecentOnly, setShowRecentOnly] = useState(
+    initialFilter === "recent"
+  );
+  const [recentNames, setRecentNames] = useState(() => new Set());
+
+  const { height: windowHeight, width: windowWidth } = useWindowDimensions();
   // The body map is 503x1294, so width-driven sizing makes it far too tall for
   // the modal. Drive it by height and let aspectRatio give the width.
+  // Two figures side by side. The model is 503x1294, so the height is about
+  // 2.6x whatever width is given - kept small enough that the list starts
+  // above the fold, because the map is a control here, not the subject.
+  const catalogMapWidth = Math.max(
+    72,
+    Math.min(96, Math.round((windowWidth - 120) / 2))
+  );
   const bodyMapFigureHeight = Math.max(
     140,
     Math.min(210, Math.round(windowHeight * 0.23))
@@ -243,22 +389,27 @@ const ExerciseLibraryList = ({
   const cardBorder = theme.cardBorder ?? theme.iconColor ?? theme.text;
   const inputSurface = theme.background ?? cardSurface;
   const activeFilterText = theme.cardBackground ?? theme.textInverted;
-  const badgeSurface =
-    theme.uiBackground ??
-    (colorScheme === "dark"
-      ? "rgba(47, 43, 61, 0.8)"
-      : "rgba(214, 213, 225, 0.8)");
   const primaryBadgeSurface = withAlpha(theme.secondary, 0.2);
   const secondaryBadgeSurface = withAlpha(theme.primary, 0.18);
   const primaryBadgeText = secondaryColor;
   const secondaryBadgeText = primaryColor;
   const normalizedSearchQuery = searchQuery.trim().toLocaleLowerCase();
   const isAllMusclesSelected = selectedMuscleKeys.includes("all");
-  const selectedMuscleFilters = isAllMusclesSelected
-    ? [MUSCLE_FILTERS[0]]
-    : MUSCLE_FILTERS.filter((filter) =>
-        selectedMuscleKeys.includes(filter.key)
-      );
+  // Memoised for its identity, not for the cost of the filter itself. It feeds
+  // `highlightedRegionKeys`, which is the `selected` prop of both figures, and
+  // a fresh array here made that memo miss on every render - so `ExerciseMapBody`
+  // re-rendered both figures, 67 gradient-filled paths, on every keystroke and
+  // every filter change for as long as any muscle was selected. Measured at
+  // 645 ms of blocked UI for a single tap before this.
+  const selectedMuscleFilters = useMemo(
+    () =>
+      isAllMusclesSelected
+        ? [MUSCLE_FILTERS[0]]
+        : MUSCLE_FILTERS.filter((filter) =>
+            selectedMuscleKeys.includes(filter.key)
+          ),
+    [isAllMusclesSelected, selectedMuscleKeys]
+  );
   const filteredExercises = exercises.filter((exercise) => {
     const exerciseName = exercise.exercise_name ?? "";
     const nickname = exercise.nickname ?? "";
@@ -272,9 +423,12 @@ const ExerciseLibraryList = ({
     const matchesGroup =
       selectedGroupKey === "all" || groupKeys.includes(selectedGroupKey);
     const regionKeySet = getExerciseRegionKeySet(exercise);
+    // Every filter has to hold, not just one of them: picking chest and
+    // triceps means exercises that use both. Inside a single group any of its
+    // muscles counts, because "chest" is one thing to the person choosing it.
     const matchesMuscle =
       isAllMusclesSelected ||
-      selectedMuscleFilters.some((filter) =>
+      selectedMuscleFilters.every((filter) =>
         filter.regionKeys.some((regionKey) => regionKeySet.has(regionKey))
       );
     const matchesType =
@@ -282,22 +436,102 @@ const ExerciseLibraryList = ({
       (exerciseTypeFilter === "custom" && Boolean(exercise.is_custom)) ||
       (exerciseTypeFilter === "builtin" && !exercise.is_custom);
 
-    return matchesSearch && matchesGroup && matchesMuscle && matchesType;
+    const lowerCasedName = exerciseName.toLocaleLowerCase();
+    const matchesFavourite =
+      !showFavouritesOnly || favouriteNames.has(lowerCasedName);
+    const matchesRecent = !showRecentOnly || recentNames.has(lowerCasedName);
+
+    return (
+      matchesSearch &&
+      matchesGroup &&
+      matchesMuscle &&
+      matchesType &&
+      matchesFavourite &&
+      matchesRecent
+    );
   });
+
+  // The figure lights up the muscles of every chosen group, whether the group
+  // was chosen in the sheet or by tapping one of its muscles here.
+  const highlightedRegionKeys = useMemo(() => {
+    if (isAllMusclesSelected) {
+      return EMPTY_REGION_KEYS;
+    }
+
+    return [
+      ...new Set(
+        selectedMuscleFilters.flatMap((filter) => filter.regionKeys)
+      ),
+    ];
+  }, [isAllMusclesSelected, selectedMuscleFilters]);
+
+  const muscleFilterLabels = isAllMusclesSelected
+    ? []
+    : selectedMuscleFilters.map((filter) => filter.label);
+
+  /**
+   * Turns the group a muscle belongs to on or off, from the figure.
+   *
+   * The same key the filter sheet sets, so tapping traps here shows Traps
+   * selected there. Every muscle on the figure belongs to a group, but the
+   * lookup can still miss if the map gains a region the groups do not know,
+   * and then the tap does nothing rather than filtering to nothing.
+   */
+  const toggleRegionKey = useCallback((regionKey) => {
+    const filterKey = MUSCLE_FILTER_KEY_BY_REGION_KEY.get(regionKey);
+
+    if (!filterKey) {
+      return;
+    }
+
+    setSelectedMuscleKeys((currentKeys) =>
+      toggleExerciseMuscleFilterKey(currentKeys, filterKey)
+    );
+  }, []);
+
+  const isFavouriteExercise = (exercise) =>
+    favouriteNames.has((exercise.exercise_name ?? "").toLocaleLowerCase());
+
+  // `toggleFavourite` is redefined on every render, and handing the memoised
+  // row a new callback each time would undo the memo. The ref keeps the row's
+  // prop stable while still calling the current version.
+  const toggleFavouriteRef = useRef(null);
+  const handleToggleFavourite = useCallback(
+    (exercise) => toggleFavouriteRef.current?.(exercise),
+    []
+  );
+  const rowColors = useMemo(
+    () => ({
+      cardBorder,
+      titleColor,
+      primaryColor,
+      activeFilterText,
+      quietText,
+      starColor: theme.planned,
+    }),
+    [
+      cardBorder,
+      titleColor,
+      primaryColor,
+      activeFilterText,
+      quietText,
+      theme.planned,
+    ]
+  );
+
+  // Starred first, and otherwise in the order the catalog came back in.
+  filteredExercises.sort(
+    (left, right) =>
+      (isFavouriteExercise(left) ? 0 : 1) - (isFavouriteExercise(right) ? 0 : 1)
+  );
   const isWorkoutPicker = mode === "workout-picker";
   const isSelectionBusy = Boolean(selectingExerciseName);
   const activeFilterCount =
     (selectedGroupKey === "all" ? 0 : 1) +
     (isAllMusclesSelected ? 0 : selectedMuscleKeys.length) +
-    (exerciseTypeFilter === "all" ? 0 : 1);
-
-  const clearMuscleKey = (muscleKey) => {
-    setSelectedMuscleKeys((currentKeys) => {
-      const nextKeys = currentKeys.filter((key) => key !== muscleKey);
-
-      return nextKeys.length === 0 ? ["all"] : nextKeys;
-    });
-  };
+    (exerciseTypeFilter === "all" ? 0 : 1) +
+    (showFavouritesOnly ? 1 : 0) +
+    (showRecentOnly ? 1 : 0);
 
   const activeFilterChips = [];
 
@@ -311,17 +545,8 @@ const ExerciseLibraryList = ({
     });
   }
 
-  if (!isAllMusclesSelected) {
-    for (const muscleKey of selectedMuscleKeys) {
-      activeFilterChips.push({
-        key: `muscle-${muscleKey}`,
-        label:
-          MUSCLE_FILTERS.find((filter) => filter.key === muscleKey)?.label ??
-          muscleKey,
-        onRemove: () => clearMuscleKey(muscleKey),
-      });
-    }
-  }
+  // No chips for muscles. The figure shows which are chosen and a second tap
+  // clears them, so a row of chips saying the same thing only cost space.
 
   if (exerciseTypeFilter !== "all") {
     activeFilterChips.push({
@@ -331,24 +556,139 @@ const ExerciseLibraryList = ({
     });
   }
 
+  if (showFavouritesOnly) {
+    activeFilterChips.push({
+      key: "favourites",
+      label: "Favourites",
+      onRemove: () => setShowFavouritesOnly(false),
+    });
+  }
+
+  if (showRecentOnly) {
+    activeFilterChips.push({
+      key: "recent",
+      label: "Last 4 workouts",
+      onRemove: () => setShowRecentOnly(false),
+    });
+  }
+
   const clearAllFilters = () => {
     setSelectedGroupKey("all");
     setSelectedMuscleKeys(["all"]);
     setExerciseTypeFilter("all");
+    setShowFavouritesOnly(false);
+    setShowRecentOnly(false);
   };
 
   const visibleCount = filteredExercises.length;
   const loadExerciseStorage = async () => {
     try {
       setIsLoadingExercises(true);
-      const rows = await weightliftingService.getExerciseLibraryEntries(db);
+
+      const [rows, favourites, recent] = await Promise.all([
+        weightliftingService.getExerciseLibraryEntries(db),
+        weightliftingService.getFavouriteExerciseNames(db),
+        weightliftingService.getRecentlyUsedExerciseNames(db, {
+          excludeWorkoutId: workoutPicker?.workoutId ?? null,
+        }),
+      ]);
+
       set_exercises(rows);
+      setFavouriteNames(favourites);
+      setRecentNames(recent);
     } catch (error) {
       console.error("Error loading exercise storage", error);
     } finally {
       setIsLoadingExercises(false);
     }
   };
+
+  /**
+   * Stars or un-stars an exercise.
+   *
+   * The star flips before the write finishes, because the write also queues a
+   * cloud sync and waiting on that would make the tap feel broken. If the write
+   * fails the star goes back, so the screen never shows something it did not
+   * manage to store.
+   */
+  const toggleFavourite = async (exercise) => {
+    const exerciseName = exercise.exercise_name ?? "";
+    const key = exerciseName.toLocaleLowerCase();
+
+    if (!key) {
+      return;
+    }
+
+    const wasFavourite = favouriteNames.has(key);
+    const applyFavourite = (shouldBeFavourite) => {
+      setFavouriteNames((currentNames) => {
+        const nextNames = new Set(currentNames);
+
+        if (shouldBeFavourite) {
+          nextNames.add(key);
+        } else {
+          nextNames.delete(key);
+        }
+
+        return nextNames;
+      });
+    };
+
+    applyFavourite(!wasFavourite);
+
+    try {
+      await weightliftingService.setExerciseFavourite(db, {
+        exerciseName,
+        isFavourite: !wasFavourite,
+      });
+    } catch (error) {
+      console.error("Could not change the exercise favourite", error);
+      applyFavourite(wasFavourite);
+    }
+  };
+
+  toggleFavouriteRef.current = toggleFavourite;
+
+  const handleRowPress = useCallback(
+    (exercise) => {
+      if (isWorkoutPicker) {
+        onSelectExercise?.(exercise);
+        return;
+      }
+
+      setSelectedExercise(exercise);
+    },
+    [isWorkoutPicker, onSelectExercise]
+  );
+
+  const lastCatalogIndex = filteredExercises.length - 1;
+  const renderCatalogRow = useCallback(
+    ({ item, index }) => (
+      <CatalogExerciseRow
+        exercise={item}
+        isLast={index === lastCatalogIndex}
+        isSelecting={selectingExerciseName === item.exercise_name}
+        isFavourite={favouriteNames.has(
+          (item.exercise_name ?? "").toLocaleLowerCase()
+        )}
+        isSelectionBusy={isSelectionBusy}
+        isWorkoutPicker={isWorkoutPicker}
+        colors={rowColors}
+        onPress={handleRowPress}
+        onToggleFavourite={handleToggleFavourite}
+      />
+    ),
+    [
+      lastCatalogIndex,
+      selectingExerciseName,
+      favouriteNames,
+      isSelectionBusy,
+      isWorkoutPicker,
+      rowColors,
+      handleRowPress,
+      handleToggleFavourite,
+    ]
+  );
 
   useEffect(() => {
     loadExerciseStorage();
@@ -359,6 +699,8 @@ const ExerciseLibraryList = ({
     setSelectedGroupKey("all");
     setSelectedMuscleKeys(["all"]);
     setExerciseTypeFilter("all");
+    setShowFavouritesOnly(false);
+    setShowRecentOnly(false);
   };
 
   const handleMuscleFilterPress = (filterKey) => {
@@ -440,6 +782,74 @@ const ExerciseLibraryList = ({
           style={styles.pickerChipScroll}
           contentContainerStyle={styles.pickerChipContent}
         >
+          {/* Ahead of the muscle groups, because it is the one chip that
+              narrows the list to what this user actually reaches for. */}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ selected: showFavouritesOnly }}
+            accessibilityLabel="Show only favourite exercises"
+            onPress={() => setShowFavouritesOnly((current) => !current)}
+            style={[
+              styles.pickerFocusChip,
+              styles.favouriteChip,
+              {
+                backgroundColor: showFavouritesOnly
+                  ? withAlpha(theme.planned, 0.16)
+                  : cardSurface,
+                borderColor: showFavouritesOnly ? theme.planned : cardBorder,
+              },
+            ]}
+          >
+            <Star
+              width={13}
+              height={13}
+              color={showFavouritesOnly ? theme.planned : quietText}
+              filled={showFavouritesOnly}
+              roundness={1.4}
+            />
+            <ThemedText
+              style={[
+                styles.pickerFocusChipText,
+                showFavouritesOnly && styles.pickerFocusChipTextActive,
+              ]}
+              setColor={showFavouritesOnly ? theme.planned : theme.text}
+            >
+              Favourites
+            </ThemedText>
+          </Pressable>
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ selected: showRecentOnly }}
+            accessibilityLabel="Show only exercises from the last four workouts"
+            onPress={() => setShowRecentOnly((current) => !current)}
+            style={[
+              styles.pickerFocusChip,
+              styles.favouriteChip,
+              {
+                backgroundColor: showRecentOnly
+                  ? withAlpha(theme.secondary, 0.16)
+                  : cardSurface,
+                borderColor: showRecentOnly ? secondaryColor : cardBorder,
+              },
+            ]}
+          >
+            <ReplayHistory
+              width={13}
+              height={13}
+              color={showRecentOnly ? secondaryColor : quietText}
+            />
+            <ThemedText
+              style={[
+                styles.pickerFocusChipText,
+                showRecentOnly && styles.pickerFocusChipTextActive,
+              ]}
+              setColor={showRecentOnly ? secondaryColor : theme.text}
+            >
+              Recent
+            </ThemedText>
+          </Pressable>
+
           {GROUP_FILTERS.map((filter) => {
             const isSelected = selectedGroupKey === filter.key;
 
@@ -511,57 +921,61 @@ const ExerciseLibraryList = ({
           </View>
         </View>
 
-        <View
+        {/*
+          The list scrolls, rather than the screen around it: 89 rows each
+          holding a body-map image and an SVG overlay were all mounted at
+          once, and every keystroke in the search field rebuilt the lot.
+        */}
+        <FlatList
+          data={filteredExercises}
+          keyExtractor={(exercise) => exercise.exercise_name}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          showsVerticalScrollIndicator={false}
+          initialNumToRender={VISIBLE_EXERCISE_COUNT}
+          windowSize={5}
           style={[
-            styles.pickerExerciseCard,
+            styles.pickerExerciseList,
             {
               backgroundColor: cardSurface,
               borderColor: cardBorder,
             },
           ]}
-        >
-          {isLoadingExercises && exercises.length === 0 ? (
-            <View style={styles.pickerEmptyState}>
-              <ActivityIndicator color={primaryTextColor} />
-              <ThemedText style={styles.emptyBody} setColor={quietText}>
-                Loading exercises...
-              </ThemedText>
-            </View>
-          ) : exercises.length === 0 ? (
-            <View style={styles.pickerEmptyState}>
-              <ThemedTitle type="h3" style={styles.emptyTitle}>
-                No exercises yet
-              </ThemedTitle>
-              <ThemedText style={styles.emptyBody} setColor={quietText}>
-                No exercise names were found in the shared cloud library yet.
-              </ThemedText>
-            </View>
-          ) : filteredExercises.length === 0 ? (
-            <View style={styles.pickerEmptyState}>
-              <ThemedTitle type="h3" style={styles.emptyTitle}>
-                No matches
-              </ThemedTitle>
-              <ThemedText style={styles.emptyBody} setColor={quietText}>
-                Try another search or reset the active filter.
-              </ThemedText>
-            </View>
-          ) : (
-            filteredExercises.map((exercise, index) => {
+          ListEmptyComponent={
+            isLoadingExercises && exercises.length === 0 ? (
+              <View style={styles.pickerEmptyState}>
+                <ActivityIndicator color={primaryTextColor} />
+                <ThemedText style={styles.emptyBody} setColor={quietText}>
+                  Loading exercises...
+                </ThemedText>
+              </View>
+            ) : exercises.length === 0 ? (
+              <View style={styles.pickerEmptyState}>
+                <ThemedTitle type="h3" style={styles.emptyTitle}>
+                  No exercises yet
+                </ThemedTitle>
+                <ThemedText style={styles.emptyBody} setColor={quietText}>
+                  No exercise names were found in the shared cloud library yet.
+                </ThemedText>
+              </View>
+            ) : (
+              <View style={styles.pickerEmptyState}>
+                <ThemedTitle type="h3" style={styles.emptyTitle}>
+                  No matches
+                </ThemedTitle>
+                <ThemedText style={styles.emptyBody} setColor={quietText}>
+                  Try another search or reset the active filter.
+                </ThemedText>
+              </View>
+            )
+          }
+          renderItem={({ item: exercise, index }) => {
               const isCurrentSelection =
                 selectingExerciseName === exercise.exercise_name;
               const isLast = index === filteredExercises.length - 1;
-              const primaryMuscleSummary = getExerciseMuscleSummary(
-                exercise,
-                "primary"
-              );
-              const secondaryMuscleSummary = getExerciseMuscleSummary(
-                exercise,
-                "secondary"
-              );
 
               return (
                 <Pressable
-                  key={exercise.exercise_name}
                   accessibilityRole="button"
                   accessibilityLabel={`Add ${exercise.exercise_name} to workout`}
                   disabled={isSelectionBusy}
@@ -638,45 +1052,39 @@ const ExerciseLibraryList = ({
                         Added to {workoutTargetLabel}
                       </ThemedText>
                     ) : (
-                      <View style={styles.pickerMuscleLine}>
-                        {primaryMuscleSummary ? (
-                          <View style={styles.pickerMuscleChunk}>
-                            <View
-                              style={[
-                                styles.pickerMuscleDot,
-                                { backgroundColor: primaryBadgeText },
-                              ]}
-                            />
-                            <ThemedText
-                              style={styles.pickerMuscleText}
-                              setColor={theme.text}
-                              numberOfLines={1}
-                            >
-                              {primaryMuscleSummary}
-                            </ThemedText>
-                          </View>
-                        ) : null}
-
-                        {secondaryMuscleSummary ? (
-                          <View style={styles.pickerMuscleChunk}>
-                            <View
-                              style={[
-                                styles.pickerMuscleDot,
-                                { backgroundColor: secondaryBadgeText },
-                              ]}
-                            />
-                            <ThemedText
-                              style={styles.pickerMuscleText}
-                              setColor={quietText}
-                              numberOfLines={1}
-                            >
-                              {secondaryMuscleSummary}
-                            </ThemedText>
-                          </View>
-                        ) : null}
-                      </View>
+                      // The muscles are on the row's own figure. Naming them
+                      // beside it said the same thing twice, in the space the
+                      // exercise name needed.
+                      null
                     )}
                   </View>
+
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    hitSlop={8}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: isFavouriteExercise(exercise) }}
+                    accessibilityLabel={
+                      isFavouriteExercise(exercise)
+                        ? `Remove ${exercise.exercise_name} from favourites`
+                        : `Add ${exercise.exercise_name} to favourites`
+                    }
+                    onPress={(event) => {
+                      event.stopPropagation?.();
+                      toggleFavourite(exercise);
+                    }}
+                    style={styles.favouriteToggle}
+                  >
+                    <Star
+                      width={19}
+                      height={19}
+                      color={
+                        isFavouriteExercise(exercise) ? theme.planned : quietText
+                      }
+                      filled={isFavouriteExercise(exercise)}
+                      roundness={1.6}
+                    />
+                  </TouchableOpacity>
 
                   <TouchableOpacity
                     activeOpacity={0.86}
@@ -730,9 +1138,8 @@ const ExerciseLibraryList = ({
                   ) : null}
                 </Pressable>
               );
-            })
-          )}
-        </View>
+          }}
+        />
 
         {onAddCustomExercise ? (
           <View
@@ -1026,22 +1433,6 @@ const ExerciseLibraryList = ({
           ) : null}
         </View>
 
-        <View
-          style={[
-            styles.countBadge,
-            {
-              backgroundColor: badgeSurface,
-              borderColor: cardBorder,
-            },
-          ]}
-        >
-          <ThemedText style={styles.countBadgeText} setColor={titleColor}>
-            <ThemedText style={styles.countBadgeNumber} setColor={primaryTextColor}>
-              {filteredExercises.length}
-            </ThemedText>{" "}
-            exercises
-          </ThemedText>
-        </View>
       </View>
 
       <View
@@ -1071,6 +1462,31 @@ const ExerciseLibraryList = ({
             autoCorrect={false}
           />
         </View>
+
+        <TouchableOpacity
+          activeOpacity={0.86}
+          accessibilityRole="button"
+          accessibilityState={{ selected: showFavouritesOnly }}
+          accessibilityLabel="Show only favourite exercises"
+          onPress={() => setShowFavouritesOnly((current) => !current)}
+          style={[
+            styles.filterButton,
+            {
+              backgroundColor: showFavouritesOnly
+                ? withAlpha(theme.planned, 0.16)
+                : inputSurface,
+              borderColor: showFavouritesOnly ? theme.planned : cardBorder,
+            },
+          ]}
+        >
+          <Star
+            width={20}
+            height={20}
+            color={showFavouritesOnly ? theme.planned : quietText}
+            filled={showFavouritesOnly}
+            roundness={1.6}
+          />
+        </TouchableOpacity>
 
         <TouchableOpacity
           activeOpacity={0.86}
@@ -1147,6 +1563,35 @@ const ExerciseLibraryList = ({
         </View>
       ) : null}
 
+      {/* The map replaces the two paragraphs that used to explain primary and
+          secondary here. It says the same thing by colouring the muscles, and
+          it does something as well: tapping one filters the list below. */}
+      <View style={styles.catalogMap}>
+        <View style={styles.catalogMapBodies}>
+          {["front", "back"].map((side) => (
+            <ExerciseMapBody
+              key={side}
+              side={side}
+              width={catalogMapWidth}
+              crop="full"
+              surface="surface"
+              primary={EMPTY_REGION_KEYS}
+              secondary={EMPTY_REGION_KEYS}
+              selected={highlightedRegionKeys}
+              mode="muscles"
+              onSelect={toggleRegionKey}
+            />
+          ))}
+        </View>
+
+        <ThemedText style={styles.catalogMapHint} setColor={quietText}>
+          {highlightedRegionKeys.length === 0
+            ? "Tap a muscle to filter the list"
+            : `Showing exercises that use ${muscleFilterLabels.join(" and ")}`}
+        </ThemedText>
+      </View>
+
+      {/* Between the map and the list, where it counts what the map just did. */}
       <View style={styles.catalogSectionHeader}>
         <ThemedText style={styles.catalogSectionLabel} setColor={theme.text}>
           <ThemedText
@@ -1156,59 +1601,6 @@ const ExerciseLibraryList = ({
             {visibleCount}
           </ThemedText>
           {visibleCount === 1 ? " exercise" : " exercises"}
-        </ThemedText>
-      </View>
-
-      <View style={styles.muscleRoleLegend}>
-        <View
-          style={[
-            styles.muscleRoleLegendItem,
-            { borderLeftColor: primaryBadgeText },
-          ]}
-        >
-          <ThemedText
-            style={styles.muscleRoleLegendLabel}
-            setColor={primaryBadgeText}
-          >
-            Primary
-          </ThemedText>
-          <ThemedText style={styles.muscleRoleLegendText} setColor={quietText}>
-            Main working muscles, expected to fatigue or fail first.
-          </ThemedText>
-        </View>
-        <View
-          style={[
-            styles.muscleRoleLegendItem,
-            { borderLeftColor: secondaryBadgeText },
-          ]}
-        >
-          <ThemedText
-            style={styles.muscleRoleLegendLabel}
-            setColor={secondaryBadgeText}
-          >
-            Secondary
-          </ThemedText>
-          <ThemedText style={styles.muscleRoleLegendText} setColor={quietText}>
-            Support muscles used during the exercise, but not intended to be
-            the limiting point.
-          </ThemedText>
-        </View>
-      </View>
-
-      {onAddCustomExercise ? (
-        <View style={styles.customExerciseAction}>
-          <ThemedButton
-            title="Add custom exercise"
-            fullWidth
-            onPress={onAddCustomExercise}
-          />
-        </View>
-      ) : null}
-
-      <View style={styles.tableHeader}>
-        <View style={styles.tableHeaderPreview} />
-        <ThemedText style={styles.tableHeaderExercise} setColor={quietText}>
-          Exercise
         </ThemedText>
       </View>
 
@@ -1238,97 +1630,34 @@ const ExerciseLibraryList = ({
           </ThemedText>
         </View>
       ) : (
-        <ScrollView
-        keyboardShouldPersistTaps="handled"
+        <FlatList
+          // Was a ScrollView with a plain `.map()`, on the reasoning that a
+          // fixed-height window inside a scrolling page could not own its own
+          // scrolling. It can: `styles.listScroll` already fixes the height,
+          // so a FlatList sits in the same card and needs no layout change.
+          //
+          // The reason it matters: every row mounts a body figure - an image
+          // plus an SVG overlay - and `.map()` built all 89 of them in one
+          // commit. Measured on a Galaxy A34 (dev build), removing a selected
+          // muscle took 521 ms, against 77 ms for selecting one. Both redraw
+          // the same two large figures; the difference was the list growing
+          // from 16 rows back to 89.
+          //
+          // No `getItemLayout`: the rows measured 174-177 px at density 450,
+          // so the height is not the clean constant `EXERCISE_ROW_HEIGHT`
+          // suggests, and a wrong value there drifts the scroll position.
+          data={filteredExercises}
+          keyExtractor={catalogKeyExtractor}
+          renderItem={renderCatalogRow}
+          initialNumToRender={VISIBLE_EXERCISE_COUNT}
+          maxToRenderPerBatch={VISIBLE_EXERCISE_COUNT}
+          windowSize={5}
+          keyboardShouldPersistTaps="handled"
           style={styles.listScroll}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           nestedScrollEnabled
-        >
-          {filteredExercises.map((exercise, index) => {
-            const primaryCount = exercise.primary_muscle_count ?? 0;
-            const secondaryCount = exercise.secondary_muscle_count ?? 0;
-
-            return (
-              <Pressable
-                key={exercise.exercise_name}
-                accessibilityRole="button"
-                accessibilityLabel={
-                  isWorkoutPicker
-                    ? `Add ${exercise.exercise_name} to workout`
-                    : `Show ${exercise.exercise_name} muscles`
-                }
-                disabled={isSelectionBusy}
-                onPress={() => {
-                  if (isWorkoutPicker) {
-                    onSelectExercise?.(exercise);
-                    return;
-                  }
-
-                  setSelectedExercise(exercise);
-                }}
-                style={[
-                  styles.exerciseRow,
-                  index === filteredExercises.length - 1 &&
-                    styles.exerciseRowLast,
-                  selectingExerciseName === exercise.exercise_name &&
-                    styles.exerciseRowSelected,
-                  { borderColor: cardBorder },
-                ]}
-              >
-                <BodyMapPreview
-                  bodyView={exercise.body_map_view}
-                  crop={exercise.body_map_section}
-                  primaryRegionKeys={exercise.primary_body_map_region_keys}
-                  secondaryRegionKeys={exercise.secondary_body_map_region_keys}
-                  style={styles.exercisePreviewBodyMap}
-                />
-
-                <View style={styles.exerciseBody}>
-                  <View style={styles.exerciseTitleRow}>
-                    <ThemedText
-                      style={styles.exerciseName}
-                      setColor={titleColor}
-                      numberOfLines={1}
-                      ellipsizeMode="tail"
-                    >
-                      {exercise.exercise_name}
-                    </ThemedText>
-
-                    {exercise.is_custom || exercise.official ? (
-                      <View
-                        style={[
-                          styles.exerciseStatusBadge,
-                          {
-                            backgroundColor: exercise.is_custom
-                              ? primaryColor
-                              : secondaryColor,
-                          },
-                        ]}
-                      >
-                        <ThemedText
-                          style={styles.exerciseStatusBadgeText}
-                          setColor={activeFilterText}
-                        >
-                          {exercise.is_custom ? "Custom" : "Official"}
-                        </ThemedText>
-                      </View>
-                    ) : null}
-                  </View>
-
-                  <ExerciseMuscleBadges
-                    primaryBadgeSurface={primaryBadgeSurface}
-                    primaryBadgeText={primaryBadgeText}
-                    primaryCount={primaryCount}
-                    secondaryBadgeSurface={secondaryBadgeSurface}
-                    secondaryBadgeText={secondaryBadgeText}
-                    secondaryCount={secondaryCount}
-                  />
-                </View>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
+        />
       )}
       </ThemedCard>
 

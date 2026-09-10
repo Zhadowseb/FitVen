@@ -27,6 +27,9 @@ const moduleResolver = (babelConfig.plugins ?? []).find(
 
 const EXTENSIONS = [".js", ".json"];
 const cache = new Map();
+// Stand-ins for packages a test wants to drive rather than avoid - a fake
+// secure store, say. Keyed by the specifier the module imports.
+const stubs = new Map();
 
 function resolveFile(target) {
   if (fs.existsSync(target) && fs.statSync(target).isFile()) return target;
@@ -71,6 +74,10 @@ function compile(file) {
       return compile(resolved);
     }
 
+    if (stubs.has(specifier)) {
+      return stubs.get(specifier);
+    }
+
     try {
       return projectRequire(specifier);
     } catch {
@@ -93,10 +100,22 @@ function compile(file) {
 }
 
 /** `loadAppModule("src/Services/cloudSync/cloudSyncFields.js")` */
-module.exports = function loadAppModule(relativePath) {
+function loadAppModule(relativePath) {
   const file = resolveFile(path.join(root, relativePath));
 
   if (!file) throw new Error(`No such module: ${relativePath}`);
 
   return compile(file);
+}
+
+/**
+ * Replaces a package with a test double for every module loaded afterwards.
+ * Call it before loadAppModule; the compiled-module cache is cleared so a
+ * module already loaded without the stub is rebuilt with it.
+ */
+loadAppModule.stubModule = function stubModule(specifier, replacement) {
+  stubs.set(specifier, replacement);
+  cache.clear();
 };
+
+module.exports = loadAppModule;

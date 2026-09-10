@@ -21,7 +21,9 @@ import {
   areComparableExerciseInstancesEqual,
   buildCloudExerciseInstancePayload,
   claimCloudWatchers,
+  createPendingDeleteIndex,
   compareEntitySyncVersions,
+  createParentCloudIdCache,
   ensureWorkoutTypeInstanceCloudIdentity,
   getAuthenticatedUserId,
   getComparableExerciseInstanceSnapshot,
@@ -77,11 +79,14 @@ export async function uploadDirtyExerciseInstances(
   { allowParentRepair = true } = {}
 ) {
   const [localExercises, localWorkouts] = await Promise.all([
-    weightliftingRepository.getExercisesForCloudSync(db),
+    weightliftingRepository.getExercisesForCloudSync(db, { dirtyOnly: true }),
     programRepository.getWorkoutsForCloudSync(db),
   ]);
   const localWorkoutsById = new Map(
     localWorkouts.map((workout) => [workout.workout_id, workout])
+  );
+  const resolveParentWorkoutCloudId = createParentCloudIdCache(
+    ensureWorkoutTypeInstanceCloudIdentity
   );
   let uploadedCount = 0;
   let requiresWorkoutRepair = false;
@@ -94,10 +99,11 @@ export async function uploadDirtyExerciseInstances(
     const parentWorkout = localWorkoutsById.get(
       localExercise.workout_type_instance_id
     );
-    const parentWorkoutCloudId = await ensureWorkoutTypeInstanceCloudIdentity(
+    const parentWorkoutCloudId = await resolveParentWorkoutCloudId(
       db,
       userId,
-      parentWorkout
+      parentWorkout,
+      localExercise.workout_type_instance_id
     );
 
     if (parentWorkoutCloudId === null) {
@@ -194,23 +200,11 @@ async function reconcileExerciseInstancesFromCloud(db, userId) {
     weightliftingRepository.getExercisesForCloudSync(db),
     programRepository.getWorkoutsForCloudSync(db),
   ]);
-  const queuedDeletes =
-    await weightliftingRepository.getQueuedExerciseInstanceDeletes(db);
   const localWorkoutsByCloudId = new Map();
   const localExercisesByCloudId = new Map();
   const localExercisesBySyncId = new Map();
   const localExercisesByRemoteLocalId = new Map();
   const localExercisesByLocalId = new Map();
-  const pendingDeletedExerciseLocalIds = new Set(
-    queuedDeletes
-      .map((queuedDelete) =>
-        normalizeOptionalInteger(
-          queuedDelete.remote_local_exercise_instance_id,
-          null
-        )
-      )
-      .filter((exerciseLocalId) => exerciseLocalId !== null)
-  );
 
   for (const localWorkout of localWorkouts) {
     const cloudWorkoutTypeInstanceId = parseCloudWorkoutTypeInstanceId(
@@ -258,6 +252,16 @@ async function reconcileExerciseInstancesFromCloud(db, userId) {
   const pendingDeletionAcks = [];
 
   await withTransaction(db, async () => {
+    // Read inside the transaction: this pass fetched its cloud rows before
+    // the user's delete, and without a fresh read it would put the row back.
+    const pendingDeletes = createPendingDeleteIndex(
+      await weightliftingRepository.getQueuedExerciseInstanceDeletes(db),
+      {
+        cloudIdColumn: "cloud_exercise_instance_id",
+        localIdColumn: "remote_local_exercise_instance_id",
+      }
+    );
+
     for (const cloudExercise of cloudExercises ?? []) {
       const cloudExerciseInstanceId = parseCloudExerciseInstanceId(
         cloudExercise.id
@@ -284,7 +288,13 @@ async function reconcileExerciseInstancesFromCloud(db, userId) {
         continue;
       }
 
-      if (pendingDeletedExerciseLocalIds.has(localExerciseInstanceId)) {
+      if (
+        pendingDeletes.has({
+          cloudId: cloudExerciseInstanceId,
+          syncId: cloudSyncId,
+          localId: localExerciseInstanceId,
+        })
+      ) {
         continue;
       }
 
@@ -568,10 +578,15 @@ async function syncExerciseInstancesWithCloudInternal(db) {
   }
 
   try {
-    finalDownloadedCount = await reconcileExerciseInstancesFromCloud(
-      db,
-      userId
-    );
+    // Only worth a second pass when the first pass had something to push. This
+    // download exists to collect the ids the cloud assigned to rows we just
+    // sent; with nothing sent, it fetches the entire table to learn nothing.
+    if (uploadedCount > 0 || deletedCount > 0) {
+      finalDownloadedCount = await reconcileExerciseInstancesFromCloud(
+        db,
+        userId
+      );
+    }
   } catch (error) {
     throw new Error(
       `Exercise sync failed while reconciling cloud exercises: ${error?.message ?? error}`

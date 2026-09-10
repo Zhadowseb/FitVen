@@ -253,14 +253,18 @@ const MicrocycleList = ({
     todayDate.setHours(0, 0, 0, 0);
     const today = formatDate(todayDate);
 
+    // One pass for every microcycle on screen, instead of a query per weekday
+    // per microcycle and another per workout inside each of those.
+    const detailsByKey = await programService.getMicrocycleDayDetails(db, {
+      microcycleIds: microcycles.map((mc) => mc.microcycle_id),
+    });
+
     for (const mc of microcycles) {
       const days = [];
 
       for (let i = 0; i < 7; i++) {
-        const dayRow = await programService.getDayDetails(db, {
-          microcycleId: mc.microcycle_id,
-          weekday: weekDayNames[i],
-        });
+        const dayRow =
+          detailsByKey.get(`${mc.microcycle_id}:${weekDayNames[i]}`) ?? null;
         const date = dayRow?.date ?? buildMicrocycleDate(mc.period_start, i);
         const dayDate = parseCustomDate(date);
         dayDate.setHours(0, 0, 0, 0);

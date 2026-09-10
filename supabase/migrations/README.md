@@ -39,9 +39,49 @@ behind by accident.
 | `20260905013310_birth-year-only.sql` | yes |
 | `20260905113144_avatar-private-bucket.sql` | yes |
 | `20260905113510_drop-unused-template-tables.sql` | no |
+| `20260905143000_user-blocks.sql` | yes |
+| `20260905161500_delete-account.sql` | yes |
+| `20260905174500_privacy-consent.sql` | yes |
+| `20260905190000_rpc-hardening.sql` | yes |
+| `20260906091500_fix-watcher-trigger-permissions.sql` | yes |
+| `20260907110000_exercise-favourites.sql` | yes |
 
-The one `no` is optional: it drops the seven `*_template` tables, and only if
-they are genuinely empty. Run it or delete it.
+`20260905113510_drop-unused-template-tables.sql` is optional: it drops the seven
+`*_template` tables, and only if they are genuinely empty. Run it or delete it.
+
+## The five from the security review, applied 2026-09-10
+
+They were run against the project in this order, through the SQL editor, one at
+a time. The order is not arbitrary — `rpc-hardening` restores a function that
+`user-blocks` takes away, and `fix-watcher-trigger-permissions` repairs a break
+that `rpc-hardening` causes, so a run that stops halfway leaves the app worse
+than before it started:
+
+1. `20260905143000_user-blocks.sql` — blocking, the tightened `profiles` and
+   `user_follows` policies, `search_profiles`, `list_blocked_profiles`.
+2. `20260905190000_rpc-hardening.sql` — adds `claim_username_code`, the function
+   the client uses to claim a username tag, which the policy above took away.
+3. `20260906091500_fix-watcher-trigger-permissions.sql` — the watcher functions
+   were left security invoker in the `private` schema, which `authenticated`
+   cannot reach, so every write to `sync_local_watchers` failed with 42501 and
+   workout sync stopped.
+4. `20260905161500_delete-account.sql` — `purge_user_account`, the doorway the
+   `delete-account` Edge Function calls. **That Function still has to be
+   deployed**; until it is, Delete account fails even though the SQL side is
+   ready.
+5. `20260905174500_privacy-consent.sql` — the two columns the consent gate
+   writes to. Without them the gate failed open and nobody was ever asked.
+
+Verified afterwards by querying the catalog: `user_blocks`, `search_profiles`,
+`claim_username_code`, `purge_user_account`, `list_blocked_profiles`, both
+`privacy_policy_*` columns, the watcher function's `prosecdef` flag and the
+trigger on `sync_local_watchers` all present.
+
+`20260907110000_exercise-favourites.sql` was run the same day, after the five
+above. It had been committed a ledger entry short, and the table turned out not
+to exist — favourites were being starred locally and refused on every sync. This
+is exactly the drift the ledger is meant to catch, and it did: `npm test` was
+failing on the missing entry the whole time.
 
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to

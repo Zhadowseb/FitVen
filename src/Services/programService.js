@@ -33,6 +33,7 @@ import {
   normalizeExerciseOrder,
   normalizeOptionalInteger,
   normalizeProgramStatus,
+  queueCloudDeletesForWorkoutChildren,
   resolveSideBySideCloudId,
   resolveWorkoutTypeInstanceCloudLocalId,
 } from "./cloudSync/cloudSyncShared";
@@ -448,10 +449,19 @@ export async function getProgramDayCount(db, programId) {
   return programRepository.getProgramDayCount(db, programId);
 }
 
-export async function getTodayProgramSnapshot(db, { programId, date }) {
-  const programStatus = await programRepository.getProgramStatus(db, programId);
+/**
+ * @param status The program's status, if the caller already knows it. The
+ *   overview query returns it, and the only caller that loops over programs
+ *   has already filtered on it - so re-reading it here was a query per
+ *   program to confirm what was just checked.
+ */
+export async function getTodayProgramSnapshot(db, { programId, date, status }) {
+  const knownStatus =
+    status === undefined
+      ? (await programRepository.getProgramStatus(db, programId))?.status
+      : status;
 
-  if (normalizeProgramStatus(programStatus?.status) === "NOT_STARTED") {
+  if (normalizeProgramStatus(knownStatus) === "NOT_STARTED") {
     return null;
   }
 
@@ -480,8 +490,14 @@ export async function getTodayProgramSnapshot(db, { programId, date }) {
   };
 }
 
-export async function getTodayActivitySummary(db, { date }) {
-  const todaySnapshots = await getTodayWorkoutSnapshots(db, { date });
+/**
+ * @param snapshots Today's snapshots, if the caller already has them. Home
+ *   builds them for its own hero card in the same pass, and building them is
+ *   the expensive part of this function.
+ */
+export async function getTodayActivitySummary(db, { date, snapshots }) {
+  const todaySnapshots =
+    snapshots ?? (await getTodayWorkoutSnapshots(db, { date }));
   const todaysWorkouts = todaySnapshots.flatMap((snapshot) => snapshot.workouts);
 
   if (!todaysWorkouts.length) {
@@ -539,6 +555,7 @@ export async function getTodayProgramSnapshots(db, { date }) {
       const snapshot = await getTodayProgramSnapshot(db, {
         programId: program.program_id,
         date,
+        status: program.status,
       });
 
       if (!snapshot || snapshot.workouts.length === 0) {
@@ -789,6 +806,23 @@ export async function getWorkoutCalendarWorkouts(
   }
 
   return programRepository.getWorkoutsBetweenDates(db, {
+    startIsoDate: normalizedStartDate,
+    endIsoDate: normalizedEndDate,
+  });
+}
+
+export async function getNextUnfinishedCalendarWorkout(
+  db,
+  { startIsoDate, endIsoDate }
+) {
+  const normalizedStartDate = normalizeIsoDateString(startIsoDate);
+  const normalizedEndDate = normalizeIsoDateString(endIsoDate);
+
+  if (!normalizedStartDate || !normalizedEndDate) {
+    return null;
+  }
+
+  return programRepository.getNextUnfinishedWorkoutBetweenDates(db, {
     startIsoDate: normalizedStartDate,
     endIsoDate: normalizedEndDate,
   });
@@ -1379,6 +1413,87 @@ export async function getDayDetails(db, { microcycleId, weekday }) {
     workoutExercises,
     workoutsDone: day.done === 1,
   };
+}
+
+/**
+ * Every day of every given microcycle, in three queries.
+ *
+ * getDayDetails answers for one weekday of one microcycle, and the microcycle
+ * list wanted all seven of several - so it asked in a loop, and each answer
+ * fetched its own workouts, and each workout its own exercises. Around 135
+ * round trips to draw one screen.
+ *
+ * Returns a Map keyed `${microcycleId}:${weekday}`, which is how the caller
+ * looks them up.
+ */
+export async function getMicrocycleDayDetails(db, { microcycleIds }) {
+  const detailsByKey = new Map();
+  const ids = [...new Set((microcycleIds ?? []).filter(Boolean))];
+
+  if (!ids.length) {
+    return detailsByKey;
+  }
+
+  const days = await programRepository.getDaysByMicrocycleIds(db, ids);
+
+  if (!days.length) {
+    return detailsByKey;
+  }
+
+  const workouts = await programRepository.getWorkoutsByDayIds(
+    db,
+    days.map((day) => day.day_id)
+  );
+  const exercises =
+    await weightliftingRepository.getExerciseSummariesByWorkoutIds(
+      db,
+      workouts.map((workout) => workout.workout_id)
+    );
+
+  const exercisesByWorkoutId = new Map();
+  for (const exercise of exercises) {
+    const workoutId = exercise.workout_type_instance_id;
+    const list = exercisesByWorkoutId.get(workoutId) ?? [];
+
+    list.push({
+      exercise_name: exercise.exercise_name,
+      sets: exercise.sets,
+    });
+    exercisesByWorkoutId.set(workoutId, list);
+  }
+
+  const workoutsByDayId = new Map();
+  for (const workout of workouts) {
+    const list = workoutsByDayId.get(workout.day_id) ?? [];
+
+    list.push(workout);
+    workoutsByDayId.set(workout.day_id, list);
+  }
+
+  for (const day of days) {
+    const key = `${day.microcycle_id}:${day.weekday}`;
+
+    // getDayByWeekdayAndMicrocycle took the first row, so a duplicate weekday
+    // must not overwrite it here either.
+    if (detailsByKey.has(key)) {
+      continue;
+    }
+
+    const dayWorkouts = workoutsByDayId.get(day.day_id) ?? [];
+
+    detailsByKey.set(key, {
+      ...day,
+      workouts: dayWorkouts,
+      workoutExercises: dayWorkouts.map((workout) => ({
+        workout_id: workout.workout_id,
+        label: workout.label,
+        exercises: exercisesByWorkoutId.get(workout.workout_id) ?? [],
+      })),
+      workoutsDone: day.done === 1,
+    });
+  }
+
+  return detailsByKey;
 }
 
 async function persistSicknessPeriodForDay(
@@ -2127,6 +2242,7 @@ export async function deleteWorkout(db, workoutId) {
       });
     }
 
+    await queueCloudDeletesForWorkoutChildren(db, workoutId);
     await weightliftingRepository.deleteSetsByWorkout(db, workoutId);
     await weightliftingRepository.deleteExercisesByWorkout(db, workoutId);
     await runningRepository.deleteRunSetsByWorkout(db, workoutId);

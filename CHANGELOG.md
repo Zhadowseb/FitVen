@@ -1,5 +1,443 @@
 # Changelog
 
+## [0.23.37] - Unreleased
+### Added
+- Exercise Map directly below Exercise Library in Train: a native, themed screen with the real exercise catalog, search, multi-muscle filtering, primary/secondary roles, front/back views, body crops and surface/contour styles.
+- Full trapezius contour on the new map and accessible muscle-name selection. Existing exercise previews and database/sync schemas are unchanged.
+- Regression checks for catalog muscle metadata, both body views, missing mappings and AND/OR filtering.
+
+### Fixed
+- Muscle taps now tolerate small finger movements on Android; scrolling across the figure cancels selection.
+- **Removing a selected muscle was slow.** The row, the separator and `keyExtractor` are now defined once at module scope instead of inside the component. `ItemSeparatorComponent` was an arrow function rebuilt on every render, which React reads as a new component *type* — so every separator was unmounted and remounted rather than left alone — and an inline `renderItem` re-rendered every visible row. `renderItem` now depends on `mode`, `selectedName` and the theme, not on the muscle selection or the result set, so rows that survive a toggle are not asked to draw again, and the row itself is `memo`'d.
+- Removal is the expensive direction and stays that way by design: `filterMapExercises` returns everything when nothing is selected, so clearing the last muscle widens the list from a handful of rows to the whole library. Measured at 0.5–2 ms for 200–2000 exercises, so the filter was never the cost — the re-render around it was.
+- **Exercise Library: `selectedMuscleFilters` is memoised.** It was rebuilt on every render, which made the `highlightedRegionKeys` memo below it miss every time and handed `ExerciseMapBody` a new `selected` array — so both figures re-rendered on every keystroke and every filter change for as long as any muscle was selected. `EMPTY_REGION_KEYS` already guarded the nothing-selected case; this is the other half of it.
+
+- **The catalog list is a `FlatList` instead of a `ScrollView` with a plain `.map()`.** Every row mounts a body figure — an image plus an SVG region overlay — and all 89 were built in one commit whenever the filter widened. The row moved into a memoised `CatalogExerciseRow`, and `toggleFavourite` reaches it through a ref so the memo is not undone by a callback that changes identity on every render.
+
+### Notes
+- **Measured on a Galaxy A34 (Android 16, dev build), removing a selected muscle in Exercise Library.** Frame time from `dumpsys gfxinfo framestats`:
+
+  | | Frame |
+  |---|---|
+  | before | **645 ms** |
+  | memoising `selectedMuscleFilters` | **521 ms** |
+  | `FlatList` | **74 ms** |
+
+- Selecting a muscle already cost 77 ms before any of this. Both directions redraw the same two figures, so that 77 ms was the floor and everything above it was the list. Removal now costs the same as selection, which is what says the asymmetry is gone rather than reduced.
+- The remaining ~74 ms is the two large figures. Splitting that SVG was the other candidate fix and would have been mostly wasted: it can win at most those 74 ms, and only part of them.
+- **No `getItemLayout`.** The rows measured 174–177 px at density 450 through `uiautomator dump`, so the height is not the clean constant `EXERCISE_ROW_HEIGHT` implies, and a wrong value there drifts the scroll position.
+- **React Native warns that the catalog list is a VirtualizedList nested inside a plain ScrollView, and the warning stays.** Its suggested fix — making the page scroll a `FlatList` that carries the page in `ListHeaderComponent` — was tried and reverted: it silences the warning but the inner list then stops scrolling entirely, sitting frozen on its first ten rows, because a VirtualizedList nested in another one hands its scrolling to the parent. Verified on the device both ways. The warning is a false alarm here — `styles.listScroll` gives the inner list a fixed height and so a real viewport — and it lives inside `if (__DEV__)`, so it never reaches a production build. `ExerciseCatalogPage` carries the reasoning so the next person does not retry it.
+- Numbers are from a **dev build**; production will be faster. The ratios are the finding, not the absolute values.
+- **Drawing the map's figure in every row was tried and rejected.** Same measurement, state verified before and after each run: 71 ms with `BodyMapPreview`, **420 ms** with `ExerciseMapBody` once per visible row. Flat fills were tried as a cheaper variant and came out at **952 ms**, worse — so the number of shapes is the cost, not the gradients. Tinting the existing preview gets the same look for the original price.
+- **The gradient fix costs nothing measurable.** A single reading of 288 ms suggested it had made the map four times more expensive; that turned out to be a bad measurement taken while the phone was losing its adb connection. Ten verified runs on a healthy device put the current screen at **64–86 ms**, with selecting and removing costing the same. The figures do render differently now — lighter and properly shaded, because the four-stop gradients are finally being applied — but not more slowly.
+- **Rejecting `ExerciseMapBody` in the rows was right, and was re-checked.** Because one number from that session proved unreliable, the comparison was run again on a healthy device: **340–437 ms** with the map's figure per row against **64–86 ms** with the tinted preview, four verified runs each. Same conclusion, sound data this time.
+- Every measurement here checks that the tap actually changed the screen before the frame time is counted. Three earlier readings were discarded for failing that: two captured idle frames, one measured the wrong screen after a stray tap opened a modal.
+
+### Fixed
+- **`ExerciseMapBody`'s gradient stops were strings with a leading dot** — `offset=".36"` — which `react-native-svg` rejects with `".36" is not a valid number or percentage string`. They are numbers now. The bug was always there; it only became visible when the figure started appearing once per catalog row instead of twice per screen, and then it filled the Metro log.
+
+### Changed
+- **Catalog rows look like the muscle map.** The body artwork in `BodyMapPreview` is tinted down to a quiet silhouette the way `ExerciseMapBody` tints it, instead of showing as orange line art. The green highlights already used the map's `#60DAAC` and `#18A06C`, so the tint was the whole difference; the muscle shapes are in the PNG itself, which is why this gets the map's look without drawing 33 shapes per row.
+- `ExerciseMapBody` gained two options while this was being tried the expensive way: no `onSelect` means no touch handlers, no button role and taps passing through to whatever the figure sits in, and `showLabel={false}` drops the FRONT/BACK caption. Nothing uses them now, but they are what makes the figure usable as decoration.
+- **iPad support off, and background location gone**, both ahead of the App Store submission.
+  - `ios.supportsTablet` is `false`. With it on, App Store Connect requires iPad screenshots at 2064 × 2752 for a layout nobody has run on an iPad. Turning it back on brings both the screenshots and the iPad keyboard case back — `docs/tastatur-gennemgang.md` records that.
+  - `UIBackgroundModes` and the two `NSLocationAlways*` strings are out of `infoPlist`, `isIosBackgroundLocationEnabled` and `isAndroidBackgroundLocationEnabled` are `false`, and `ACCESS_BACKGROUND_LOCATION` is off the Android permission list. Apple's guideline 5.1.5 wants location used only where it is directly relevant to a shipped feature, and the run workout — the only caller — is unfinished and not in the first release. Asking for background location for a feature a reviewer cannot find is a rejection.
+
+### Added
+- **`web/support/index.html`** — the Support URL App Store Connect requires. Apple wants that address to lead to a page that actually offers support, and `netlify.toml` redirects `/` to the privacy policy, so nothing here could double as one. Contact route, seven answers covering password reset, offline use, who can see a workout, blocking, deletion and price. No login, same rules as the deletion page.
+- `check-agent-docs.js` now requires the support page to exist, requires it and the deletion page to name FitVen, and requires both to carry the contact address `privacyPolicy.js` publishes. Three store-facing pages naming three different addresses is something a reviewer asks about, so the policy is the single source. Writing the check found its own bug first — the address regex swallowed a sentence-final period, so nothing could ever match it.
+
+### Changed
+- **AI-provenance metadata out of the two body-map figures.** `Front_body.svg` and `Back_body.svg` carried a `data-name="ChatGPT Image …"` attribute and C2PA provenance chunks inside the base64 PNG. Apple asks you to confirm the rights to all content in the app, and that is a question worth answering knowingly rather than by accident. The PNGs were decoded, re-saved without ancillary chunks and re-encoded, with the pixels compared before and after — identical, and ~155 KB smaller each.
+
+### Notes
+- `assets/Find Friends.png` and `assets/social posts edit.png` carry the same metadata but no code references either one, so they are 3.2 MB of leftover mockups rather than shipped art. Left alone — deleting them is a call for whoever put them there.
+- **The run workout can no longer start.** `locationService.ensureBackgroundLocationPermission` throws "Background location is not available on this device." and `Run.js` is its only caller, so the screen fails with that message instead of tracking. It fails cleanly rather than crashing, but the screen is still reachable and should be hidden before anyone outside the team sees it.
+- Dropping `ACCESS_BACKGROUND_LOCATION` also removes Play's background-location declaration form from the list of things to fill in.
+- `isAndroidForegroundServiceEnabled` is deliberately left `true`. A foreground service is not background location, and switching it off is a separate decision about the run workout.
+- The Android permission list still holds the same five permissions twice. Android merges duplicates, so it is harmless; it was left alone rather than tidied as a side effect of this change.
+
+---
+## [0.23.36] - Unreleased
+### Added
+- **Favourite exercises.** A star on every row of the exercise catalog and of the mid-workout picker, a filter for showing only starred ones, and starred exercises sorted to the top of whatever list is on screen. The star flips before the write finishes and goes back if the write fails, so the screen never shows something it did not manage to store.
+- Favourites follow the user. They are stored per user with a dirty flag and synced both ways, shaped on `exercise_column_preferences`: local table, cloud table keyed on the shared exercise id, RLS so a row is readable only by the user it belongs to. Un-starring keeps the row with the flag at 0 rather than deleting it — a missing row means "never starred here", which is not the same thing as "starred and then un-starred", and only the row can carry that across devices.
+- **Two buttons at the bottom of a strength workout, instead of one bare plus.** One opens the whole catalog; the other opens it filtered to the exercises used in the last four workouts. An exercise used in all four is listed once — the question being answered is what you have been training, not how often. The workout being added to does not count as one of the four, so the exercises already in it do not crowd out the ones before it.
+
+### Changed
+- The exercise catalog no longer marks an exercise "OFFICIAL". Everything in the catalog is official, so saying so on almost every row said nothing; only the ones the user made themselves are marked, as "CUSTOM".
+
+### Added
+- `scripts/test-recent-exercises.js` runs the recent-exercises query, read out of the repository, against a fixture that mixes both stored date formats — "dd.mm.yyyy" and ISO, with February and March both present so a plain text sort gets the order wrong. It checks one entry per exercise, that the look-back is four workouts rather than four exercises, and that the open workout, deleted workouts, deleted exercises and workouts with nothing in them are all left out.
+
+### Notes
+- **`supabase/migrations/20260907110000_exercise-favourites.sql` has to be applied before favourites can sync.** Until it is, the app stars exercises locally and logs a warning each time it tries to push them; nothing is lost, and the first sync after the migration carries them up.
+
+---
+## [0.23.35] - Unreleased
+### Changed
+- **PERF-18.** `eas-cli` and `supabase` are build tools and now sit in `devDependencies` where they belong. They never reached the JS bundle, so this changes nothing at runtime — it takes 26 MB out of what a production install has to fetch. `npx eas` and `npx supabase` still resolve.
+- Removed `@expo/ui`, which nothing imported.
+- Removed `fitven-run-walk-fix.patch` from the repo root. Git has it.
+
+### Notes
+- The rest of PERF-18 was already done. A reachability scan from `App.js` finds **no dead files** under `src/` — the ~1,000 lines the report listed (`StopWatch.js`, `CircularProgression.js`, five unmounted sync components, `theme.js`) have all gone since it was written.
+- The nine unused icons in `Resources/Icons/WorkoutLabels` stay. The barrel's own comment says they are placeholders for workout types still to come, which is a decision already recorded in the repo rather than something to clean up.
+- `detailed new FitVen ER diagram.drawio.png` is still in the repo root. The report only suggested removing the patch file, and the diagram looks like something worth keeping.
+
+---
+## [0.23.34] - Unreleased
+### Performance
+- **PERF-11.** Measured first, as the report asked: `initializeDatabase` took a median of **1,674 ms** over five cold starts on the device, on a database with only 168 days and 48 sets in it. That is the app's most expensive startup cost, and it is paid before the first frame — the user is looking at "Restoring session…" for all of it. It is now a median of **~425 ms**.
+- The cost was not where the report expected. It was `ensureTableColumns`, which asked the table what columns it had **once per column** — 126 round trips across the bridge at startup, measured at 40–85 ms per table. It asks once per table and keeps track of what it adds.
+- The repairs that ran over a whole table at every start now carry a `WHERE` that skips rows already holding the right value. SQLite writes a row to the WAL even when the new value equals the old one, so on a full history these were tens of thousands of pointless writes. The worst was the `visible_columns` reset, whose condition treated an empty string as junk — and a column that was already NULL counts as an empty string, so it wrote NULL over NULL for every exercise, every start.
+- Deleted the four commented-out migration blocks at the end of `db.js`, including a "drop all tables" one. They were inert, and one of them had been closed with `/*` instead of `*/`, so it silently swallowed the block after it.
+
+### Added
+- `scripts/test-database-repairs.js` runs the repair statements, read out of `db.js`, against a fixture covering every state the columns are known to reach: 72 exercises, 24 workouts (run-backed and strength-backed, with the stored flag right, wrong and missing) and the twelve spellings the run types have arrived in. It checks two things — that after one pass every row holds what the test computed for it in JavaScript rather than what the SQL says, and that a second pass writes nothing at all, which is the property the new `WHERE` clauses exist to provide.
+
+### Notes
+- **PERF-9 and PERF-10 were already gone.** The 13 MB of PNGs the report found are now 677 kB of JPGs — a bundled asset payload of 1.4 MB in total — and the one-time import payload and its service have been deleted. Both were fixed by other work since the report was written.
+- What is left of PERF-9 is repo weight, not app weight: `src/Resources/BodyMap` holds 6.5 MB, of which two 3 MB source SVGs and about seventy muscle-mask files are referenced by nothing. The overlays inline their paths. Nothing unreferenced reaches the bundle.
+
+---
+## [0.23.33] - Unreleased
+### Fixed
+- **A deleted exercise came back.** Delete one that had already synced, wait for the next sync, and it returned — with its old cloud id, marked as needing upload, sometimes carrying every cloud set still pointing at it including sets it never had. Once back, the upload cleared the tombstone in the cloud and the delete was undone for good.
+- The cause, read off the device: a sync pass fetches the cloud rows first and writes what it found after, and the two steps straddled the delete. The local row was gone at 01:41:15, a pass holding a snapshot from before that wrote it back at 01:41:16, and the tombstone only reached the cloud at 01:41:19. Nothing in between asked whether the row had just been deleted.
+- Every path that writes cloud rows back — both reconciles and the hydration that fills a workout when you open it — now reads the delete queue **inside the transaction it writes in**, and skips anything the user has removed. It matches on cloud id, sync id and local id, because a queued delete may only know one of them: a row created on this device has a local id long before the cloud gives it one.
+- Deleting an exercise also records its sets as deleted, and deleting a workout records its exercises and sets. They used to be removed from the device while their cloud copies stayed live under a parent that no longer existed — which is where the borrowed sets came from.
+
+### Added
+- `scripts/test-delete-stays-deleted.js` runs the pending-delete index against what the queue actually holds — a row the cloud knows by id, one only this device has seen, one known by sync id — and checks it does not swallow rows nobody deleted. It also checks the invariants that broke: that each reconcile reads its queue after opening its transaction rather than alongside the fetch, and that deleting an exercise or a workout records its children before removing them, while their sync ids can still be read.
+
+### Notes
+- Verified on the device, before and after: on the old code, adding an exercise, syncing, deleting it and syncing brought it straight back every time, and the log showed the row being re-created four milliseconds after the delete. On the fixed code the same cycle leaves the workout empty, and it is still empty after two restarts with a full sync each.
+
+---
+## [0.23.32] - Unreleased
+### Performance
+- **PERF-6.** Uploading read the whole table across the bridge and dropped the clean rows in JavaScript — on a full history, every row read to find the handful that changed. The seven `get*ForCloudSync` queries take a `dirtyOnly` flag and the upload paths pass it. Reconcile still asks for everything; it matches cloud rows against local ones and would start duplicating them if it could not see them.
+- Each dirty row asked the cloud for its parent's identity, once per row rather than once per parent — twenty-five sets over five exercises made twenty-five requests where five would do. All six upload loops now share one cache per run. It is thrown away when the run ends, so the repair pass that follows a missing parent looks that parent up again rather than trusting a stale answer.
+- **Not done: the batch upsert.** That is the rest of PERF-6 and the report's own advice is to do these two first. It replaces the per-row read-then-write with one request, but the conflict handling that lets the cloud win on a higher `sync_version` lives in that per-row path, and getting it wrong overwrites newer data from another device.
+- **PERF-17.** The sync claimed a watcher row for every record in the download, every sync. A watcher row is what marks an entity as still held by this device — `last_seen_at` is written and never read — and every upsert fires a per-row trigger that recounts the watchers and writes the total back onto the entity. On a full history that was tens of thousands of writes per table per sync, restating rows that already said the same thing. It reads what the device already watches and claims only the rest, a page at a time. The rows afterwards are the same; in the steady state nothing is written at all.
+
+### Added
+- `scripts/test-cloud-sync-upload-batching.js` runs each of the seven queries for real, both ways, and checks that `dirtyOnly` returns only the rows waiting to upload — NULL counts as clean, as it did in JavaScript — while the plain call still returns every row. It also drives the parent cache: one lookup per parent, a missing parent remembered so its other children do not re-ask, a parent with no key never cached, and a fresh cache per run.
+- `scripts/test-cloud-watcher-claims.js` runs the claim against a fake Supabase over eight kinds of download and checks the watcher rows afterwards against the old rule — every live record in the download is watched. It covers a fresh device, the steady state, deleted records, unidentifiable rows, duplicates, another device's rows, the same id in another table, and a 2,500-record history that must be read across pages and written to zero times.
+
+### Notes
+- Verified on the device: adding an exercise mid-workout uploads through the changed path — the new exercise and its set came back with cloud ids and a clear `needs_sync`, and all seven tables held zero rows waiting to upload afterwards. Backgrounding and reopening the app ran a full reconcile with no errors.
+- **Found while testing, and not caused by this work: deleting an exercise does not stick.** Delete an exercise that has already synced, let the app sync again, and it comes back — same cloud id, marked as needing upload, sometimes carrying sets that were never in it. Reproduced on the commit before these changes, so it predates them. The local delete drains its queue, but the cloud row survives and the next reconcile pulls it back down.
+
+---
+## [0.23.31] - Unreleased
+### Fixed
+- Corrects 0.23.30: the exercise **catalog** list is back to a plain map. On the device it printed "VirtualizedLists should never be nested" — the catalog list is a fixed-height window inside the page's scroll view, and a list nested in a scroll view of the same direction is exactly what that warning is about. Making it virtualise for real means giving the list the page's scroll and moving the card chrome above it into a list header, which is a layout change and not one to make unasked.
+- The **picker** keeps its virtualised list. That is the one that matters: it is opened mid-workout, holds all 89 exercises, and re-filters on every keystroke.
+
+### Notes
+- Verified on the device: the microcycle screen still separates a completed day from a planned one, a day with no workouts from a weekday with no day at all, and shows the right icon per workout (0.23.28). The picker scrolls, filters to six on "bench", shows "No matches" on a miss, and adding an exercise still creates its first set carried over from last time (0.23.30).
+
+---
+## [0.23.30] - Unreleased
+### Performance
+- **PERF-13.** The exercise library rendered every row it had — each one a body-map image with an SVG muscle overlay on top — and rebuilt the whole set on every keystroke in the search field. Both lists are virtualised now, so only the rows near the screen exist.
+- The picker scrolls its own list rather than sitting inside the page's scroll view. A list inside a scroll view is handed unlimited height and renders everything, so it had to own the scrolling for virtualisation to mean anything. The catalog keeps the page scroll: its list is already a fixed-height window with the rest of the card above it.
+
+---
+## [0.23.29] - Unreleased
+### Performance
+- **PERF-7.** Home built today's snapshot twice on every visit. The activity ring asked for it through `getTodayActivitySummary` and the hero card asked for it directly, both in the same focus pass, neither knowing about the other — and building it is most of the work Home does. Overlapping calls now share one fetch. Anything that starts after it settles still gets fresh data, so nothing is cached stale.
+- The "up next" card fetched every workout from tomorrow to 180 days out, ran the personal-record subquery on each row, and kept the first unfinished one. It asks for that row instead. The ordering came along with it: on a shared date the program name decides which workout you are told about next.
+- `getTodayProgramSnapshot` re-read the program's status, once per program, to check what its only caller had already filtered on. It takes the status it is given.
+
+### Added
+- `scripts/test-next-unfinished-workout.js` runs the new single-row query against the old scan-and-filter — the SQL read out of the repository rather than copied — over six date windows. The fixture covers what the two could disagree about: a `done` of NULL, a `done` stored as text, a finished workout ahead of an unfinished one, two programs sharing a date with the id order and the name order deliberately in conflict, a standalone workout, and a workout on a program that never started.
+
+---
+## [0.23.28] - Unreleased
+### Performance
+- **PERF-12.** The microcycle list asked the database once per weekday per microcycle, and each of those answers then fetched its own workouts, and each workout its own exercises — around 135 sequential queries to draw one screen. `programService.getMicrocycleDayDetails` does the same work in three: the days of every visible microcycle, their workouts, and those workouts' exercises, regrouped in memory.
+- The batched workout query orders by day and then by workout id, so the per-day order the screen relied on is the order it gets. Where a weekday has no row at all the screen still sees nothing rather than an empty day, which is what decides between a placeholder and a card.
+
+### Added
+- `scripts/test-microcycle-day-details.js` runs both paths — the old per-day queries and the new batched ones, read out of the repository files rather than copied — against the same fixture and compares the assembled days field for field. The fixture is deliberately uneven: a weekday with no row, a day with no workouts, a day with two, and a workout carrying a personal record.
+
+---
+## [0.23.27] - Unreleased
+### Performance
+- **PERF-15.** The calendar fetched the visible month, set its state, then immediately fetched all three months and overwrote the same state — six queries per swipe with three of them thrown away as the second pair landed. It fetches the wider range once. Rows are indexed by date and looked up per day, so holding three months costs nothing to show one.
+- Sickness periods are no longer part of that fetch. They do not vary by the month on screen and were being re-read on every swipe.
+- Loading is driven by the range changing rather than by the focus callback changing identity, which fired for other reasons too. The first focus no longer reloads on top of the mount load.
+
+### Notes
+- Verified on the device: markers show in the visible month and in the adjacent months either side of it, before and after swiping — which is the thing the double fetch existed to guarantee.
+
+---
+## [0.23.26] - Unreleased
+### Performance
+- **PERF-2.** A running strength workout no longer re-reads every exercise and every set from the database once a second. The clock advanced by bumping the same counter that tells the exercise list to reload itself, so moving one digit re-loaded the whole list, rebuilt every row with new object identities, and re-rendered the entire subtree — around thirty components with number fields and icons, once a second, for the length of the workout, while the user is trying to tap and type in them. The clock has its own tick; the list reloads when something actually changes.
+- The two set counters in the header came from two loaders that each asked the same query and kept one field of the answer, so every refresh ran it twice. One query, both counters.
+- `ExerciseRow` was handed a `refreshing` prop it never read. All it did was change on every bump.
+
+### Notes
+- Verified on the device with a running workout: ticking a set updates the counter and the progress bar at once, adding a set updates the list, and backgrounding mid-workout returns with the right time and data.
+- Not re-tested here, and untouched by this change: the personal-record badge and the rest countdown, which has always had its own separate tick.
+- The report also suggests `React.memo` on the rows and preserving object identity across reloads. Neither is in this version — with the per-second reload gone there is much less left for them to save, and both are changes to how the screen renders rather than to how often.
+
+---
+## [0.23.25] - Unreleased
+### Fixed
+- Past one hour, the workout clock pushed the pause and finish buttons off the right edge of the screen. "59:59" becomes "1:00:00" — two characters wider at 52 px — and nothing in that row could shrink, so somebody who left a workout running had no way to end it. The clock steps down in size with the length and the buttons cannot be moved or squeezed.
+
+---
+## [0.23.24] - Unreleased
+### Performance
+- **PERF-1.** Looking up who is signed in no longer makes an HTTP request. `supabase.auth.getUser()` sends `GET /auth/v1/user` and takes a process lock on the way, and it sat on a path that runs once a second for the whole of a strength workout — roughly 3,600 calls an hour, on a code path that is otherwise entirely offline, competing with the token refresh for the same lock and retried up to three times each on a bad connection. It reads the stored session instead, cached and kept current by one auth subscription.
+- The same call in `socialPostService` is gone too. It was the same disagreement between two files about the same question, just not inside a loop.
+- **PERF-14.** The bottom bar's one-second interval only ticks while a workout or rest timer is actually running. It is mounted for the entire signed-in session and used to run a database query and a state update — re-rendering the bar and everything under it — sixty times a minute with nothing running, so the app never went idle. With nothing running it now checks every ten seconds and does not tick at all, and it refreshes whenever the screen changes, which is how a workout usually starts or ends.
+
+### Notes
+- `getSession()` does not revalidate the token with the server. That is the right trade here: the id decides which local preference rows to read, and everything that matters is enforced by row-level security on each request anyway.
+
+---
+## [0.23.23] - Unreleased
+### Performance
+- **PERF-5.** An index on `Exercise_Instance(exercise_name, exercise_instance_id)`. Ticking a set off recalculates that exercise's personal record, and both queries behind it were scanning the user's entire exercise history on every tap — 22.9 ms over 50,000 sets when the review measured it, 23× faster with the index, and getting worse for as long as somebody uses the app.
+- **PERF-8.** The second cloud reconcile only runs when the first pass actually uploaded something. It exists to collect the ids the cloud assigns to rows we just sent; with nothing sent it downloaded the user's whole table to learn nothing. Four tables did this on every sync: days, workouts, exercises and sets.
+- **PERF-16.** The navigator is keyed on the accent theme, and the stored accent arrives a tick after the first render — so the whole screen tree was thrown away and rebuilt at every cold start, running every home screen loader twice. The app waits for the theme the same way it already waits for auth.
+
+### Added
+- `scripts/test-personal-record-index.js`, which reads the query plan and fails if the personal record lookup goes back to scanning. An index makes no difference anyone can see except in time, and time that grows with use is exactly what nobody notices.
+
+### Notes
+- The delta filter on reconcile — downloading only rows changed since the last sync — is the other half of PERF-8 and is not in this version.
+
+---
+## [0.23.22] - Unreleased
+### Changed
+- Logging out asks first. It was one stray tap, in a list people scroll past to reach the settings under it.
+- The email address appeared twice on the profile: once under Public profile — where it is not public — and again under Account. It is in Account, once.
+- Settings and Appearance are separate cards. Rows that navigate somewhere and rows you work in place looked identical, and the only way to tell them apart was to press one.
+- The theme control is about 40 px tall with 13 px labels, up from 26 px and 11 px. It relied on hitSlop for the rest of the target, which serves the finger and not the eye: something that small does not read as pressable.
+- Change photo is 44 px.
+- The log out button took its border and fill from two fixed rgba values tuned for the dark theme, so in light mode it wore a colour from the other one. It uses the theme's danger token.
+
+### Notes
+- Two items in the review no longer applied: the decorative `⋯` at the top right is gone, and there is only one segmented control in the app now — the second was removed in 0.21.x.
+
+---
+## [0.23.21] - Unreleased
+### Fixed
+- The set counter in the workout header only refreshed when the screen regained focus, so adding a set left it saying 0 / 1 with two sets on the screen below it. It follows the sets now. Pre-existing, and easier to see since a new exercise arrives with a set already in it.
+- Both counters come from one query on that path instead of asking the same question twice.
+
+---
+## [0.23.20] - Unreleased
+### Fixed
+- **Workout sync stopped working** the moment `20260905190000_rpc-hardening.sql` was run. That migration moved the sync watcher functions into the `private` schema and left them as security invoker, so the body ran as `authenticated` — which has no access to that schema, by design. Every write to `sync_local_watchers` failed with `42501: permission denied for schema private`, and that is on the path of ordinary workout sync.
+- The functions are security definer now, which is safe for the reason the original change was arguing about: the user id comes from a row the watcher table's own policy has already pinned to `auth.uid()`, so the updates cannot reach another user's rows.
+
+### Notes
+- Requires `supabase/migrations/20260906091500_fix-watcher-trigger-permissions.sql`. **If `20260905190000` has been run, this has to be run too** — nothing was exposed, but syncing does not resume without it.
+
+---
+## [0.23.19] - Unreleased
+### Changed
+- Adding an exercise to a strength workout gives it its first set straight away. Adding the exercise and then adding a set to it were always the same intention, and the empty exercise in between was a state nobody wanted to be in.
+- That first set starts with the rest, reps and weight from the last time you did the exercise, so the ordinary case — same as last week — needs no typing at all. An exercise you have never done still starts empty.
+- Adding set two, three and so on copies rest, reps and weight from the set above it.
+
+### Added
+- `scripts/test-set-carry-over.js`, which runs the two queries behind this against a real SQLite database built by the test. They fail quietly — the fields simply hold numbers from the wrong session, which looks like the right answer until somebody notices they are lifting last month's weight — so the test covers ordering across both date formats in this schema, deleted sets and exercises, blank rows, and case-insensitive names.
+
+### Notes
+- RPE, AMRAP and the note are deliberately not carried over. They describe what happened on one particular set, and copying them would put a claim in the row that nobody made.
+
+---
+## [0.23.18] - Unreleased
+### Changed
+- The deletion page says how to delete part of your data without losing the account. That has always been true — a program, a workout, a set, a tracked run and its route, a sickness entry, a post can each go on their own — but the page only described deleting everything, which is the answer Play asks about separately and checks at that address.
+
+---
+## [0.23.17] - Unreleased
+### Added
+- `web/delete-account/`, the account deletion page Google Play requires and links to from the store page. It exists separately from the Delete account button in the app because the people most likely to need it are the ones who have already uninstalled: it names the app, needs no sign-in, and offers an email route as well as the in-app steps.
+- `npm test` fails if either page Play links to is missing, or if the deletion page stops naming the app. A 404 on those is a policy violation on a page nobody using the app would notice had gone.
+
+---
+## [0.23.16] - Unreleased
+### Changed
+- The privacy policy and the password reset page are served from `https://fitven.dk/` instead of the netlify.app subdomain. Both hostnames answer, so nothing breaks in either direction.
+
+### Notes
+- Supabase must keep `https://fitven.netlify.app/reset-password/` on the redirect allowlist alongside the new one. Somebody on an older build who forgets their password asks the server for the old address; dropping it locks them out with no way back in.
+- The Play Console listing carries the policy address and has to be updated with it.
+
+---
+## [0.23.15] - Unreleased
+### Added
+- `supabase/templates/` holds the auth emails — confirm signup, reset password, magic link, change email. They were only ever in the dashboard, which has no history, no review, and nothing to recover from. They still have to be pasted in by hand; the repo is the record of what was pasted.
+- `npm test` fails if a template links to `{{ .RedirectTo }}` or leaves a stray quote after an `href`. Those are the two faults that were in the reset template, and neither points at itself: the stray quote makes Go's html/template refuse to render, which surfaces as "Error sending recovery email" and reads like a mail server fault, and the wrong variable produces a link with no token that the reset page reports as expired.
+
+---
+## [0.23.14] - Unreleased
+### Changed
+- Creating an account ends somewhere. It used to print a line of text, empty the form, and leave you on the screen you had just finished with, no way onwards. There is a panel now that says whether the address needs confirming, and a Go to login button.
+- The password rule is written under the field from the start instead of appearing as an error once it has been broken.
+- The top bar says Create account. It was a back arrow alone in an empty band.
+- Field labels are 13 px in the text colour, helper text 12 px in the quiet one. Labels were 11 px uppercase quiet and the helper text below them was larger, which put the hierarchy upside down. Changed on the login screen too, or two screens one tap apart disagree.
+- One heading, not three. "Register", "New account" and "Account details" all said the same thing above the same four fields.
+- The Create account button no longer greys out until four separate rules pass. Same as the login screen: it is pressable, and pressing it marks whichever field is not right yet.
+
+### Added
+- A show/hide toggle on the password fields, matching the login screen.
+
+---
+## [0.23.13] - Unreleased
+### Fixed
+- The password reset page asked Supabase for the PKCE flow, which could never have worked. PKCE keeps a code verifier in the storage of whatever requested the reset — the phone — and the link is opened in a browser that has never seen it. The app does not use PKCE either, so the link arrives as a URL fragment and the page reads that instead.
+- The page decided whether the link was valid by calling `getSession()` once, racing the client's own parse of the fragment. It listens for the session and falls back to a delayed check, so a valid link cannot be reported as expired.
+
+---
+## [0.23.12] - Unreleased
+### Changed
+- Forgot password is quiet grey with an underline instead of accent orange. It is the way out for the few people who need it, not something that should pull the eye off the field they were about to fill in.
+
+---
+## [0.23.11] - Unreleased
+### Added
+- Forgot password, under the Login button. It sends a link to set a new one, and says the same thing whether or not the address has an account — anything else turns the login screen into a way to ask which email addresses are registered.
+- `web/reset-password/` is where that link lands. A web page rather than a screen in the app: the link has to work from whatever the person opens their mail in, on a phone that may not have FitVen on it any more, and a deep link would need the scheme registered, the app installed and the right build — three ways to leave somebody locked out of their own account.
+- `npm test` fails if the reset page points at a different Supabase project or anon key than the app. Nothing else connects the two, and a mismatch would break only for people who are already locked out and cannot report it from inside the app.
+
+### Notes
+- **Supabase has to allow the address.** Authentication → URL Configuration → Redirect URLs must list `https://fitven.netlify.app/reset-password/`, or the link in the email refuses to go there.
+- Untested end to end: sending a real reset email needs that allowlist entry first.
+
+---
+## [0.23.10] - Unreleased
+### Changed
+- The login screen had two identical orange full-width buttons stacked on each other, so nothing said which one you came here to do. Create account is an outline under a `New here?` label; Login keeps the fill.
+- Three headings for two fields — a 42 px "Login", an "Account" label and a 24 px "Sign in" inside the card — are one. The card is fields.
+- The Login button no longer greys out until both fields are filled. It stayed at 40% opacity with nothing saying why, which reads as broken rather than as waiting. It is always pressable and marks the fields that are empty.
+- An error used to sit between the two buttons, pushing the lower one down and easy to miss. A missing field is now marked on that field, and a failed sign-in sits directly under the Login button with an icon.
+- The eyebrow says "FitVen" rather than "FitVen Cloud". There is no cloud from where the user is standing.
+
+### Added
+- A show/hide toggle in the password field.
+- `ThemedTextInput` takes an `action`: a control inside the field, right of the value. Separate from `suffix`, which is `pointerEvents="none"` on purpose — a unit is not something you tap, and making it tappable would swallow taps meant for the field.
+
+---
+## [0.23.9] - Unreleased
+### Changed
+- `PRIVACY_POLICY_URL` points at https://fitven.netlify.app/privacy/, which serves the generated page and nothing else — the repository root, `docs/` and `google-services.json` all return 404 there.
+- The policy check turns from a warning into a hard failure now that a URL claims the policy is published: an unfinished section fails `npm test` outright.
+- The header of `privacyPolicy.js` said the text must not ship. It says what actually has to be kept in step instead: the generated page, and the Play Console listing, which Google rejects if its minimum age or policy address disagrees with this file.
+
+---
+## [0.23.8] - Unreleased
+### Added
+- `npm test` fails if `netlify.toml` is missing or publishes anything other than `web/`. Widening it to the repository root would put the security review, the structure audit, the performance audit, an export query and `google-services.json` on the open internet, and nothing would have said so until somebody found them.
+
+---
+## [0.23.7] - Unreleased
+### Changed
+- The privacy policy is finished. The last outstanding statement, the name and postal address of the person responsible, is filled in.
+- The public page moved from `docs/privacy-policy.html` to `web/privacy/index.html`, with `netlify.toml` publishing `web/` and nothing else. `docs/` holds the security review, the structure audit, the performance audit and an export query — a static host pointed at that folder would have published all of them next to the policy.
+
+### Fixed
+- A single line break inside a paragraph was collapsed by the generated page, so a four-line postal address read as one run-on line on the web while the app showed it correctly. The two copies exist to say the same thing.
+
+### Notes
+- `PRIVACY_POLICY_URL` is still empty and is the last step: host `web/`, then set it here and the same address in the Play Console listing.
+
+---
+## [0.23.6] - Unreleased
+### Changed
+- The privacy policy names a contact address (zhadowseb@gmail.com), states that FitVen is run by a private individual with no CVR number, and sets the minimum age at 13 — the age Danish law lets somebody consent to their own data being processed, and the lowest the app can set without a way to ask a parent.
+- The section on your rights says plainly that a copy of your data is put together by hand, because there is no export button.
+
+### Fixed
+- The policy check counted the marker everywhere in the file, including the comment that explains it and the code that looks for it, so it could never have reached zero and setting `PRIVACY_POLICY_URL` would have failed forever. It counts unfinished sections now.
+- A placeholder that named what was missing — `[SKAL UDFYLDES: postadresse]` — read as finished, because the check matched the closing bracket too. It matches the opening.
+
+### Notes
+- One statement is left: the full name and postal address of the person responsible. A private individual has to be reachable at a real address, and it will be public on the hosted page.
+
+---
+## [0.23.5] - Unreleased
+### Added
+- `docs/privacy-policy.html`, the public copy Google Play requires, generated from the same file the in-app screen reads. `npm test` fails if it drifts — two hand-maintained copies of a legal document end with nobody able to say which one a user agreed to.
+
+### Changed
+- Five of the eight unwritten sections in the privacy policy are filled in from what the code actually does: the third parties (Supabase, Expo, Google Maps, and nothing else — no analytics, no advertising, no crash reporting), that the map request tells Google roughly where a run happened, that there are no backups today, that the dashboard gives direct access to the database, and the one-month deadline for answering a request.
+
+### Notes
+- Three statements are still outstanding and are decisions rather than facts about the code: who the data controller is, the contact address for data requests, and the minimum age.
+
+---
+## [0.23.4] - Unreleased
+### Security
+- The sign-in session moved from AsyncStorage to `expo-secure-store`, behind the Android Keystore and the iOS Keychain. What was sitting there in the clear is a refresh token — a working key to the account until it rotates — in a file that is readable on a rooted phone and in a full-device backup.
+- **Everyone is signed out once by this update and has to enter their password again.** That is the point rather than a side effect: the old tokens have been readable on disk, so they are treated as spent, and the plaintext copy is deleted on first launch instead of being carried across.
+
+### Added
+- `scripts/test-secure-session-storage.js`. Secure storage holds small values — over 2048 bytes may not store at all on Android — and a session is several times that, so it is split across numbered entries. The test drives that against a fake store that enforces the real key charset and byte ceiling: round trips at the chunk boundaries, multi-byte characters, a session that shrinks, one that has lost a piece, and a device with no keystore.
+- `loadAppModule.stubModule`, so a test can hand a module a fake package instead of the throwing stub. That is what made the storage adapter testable at all.
+
+### Notes
+- If secure storage is unavailable on a device, the session falls back to the old unencrypted storage with a warning rather than failing to sign in.
+
+---
+## [0.23.3] - Unreleased
+### Security
+- `refresh_sync_local_watchers_count` was a callable REST endpoint that took the user id as a parameter and ran without a fixed `search_path`. It is only ever used by a trigger, so it moved to the `private` schema and the endpoint is gone rather than hardened. Row-level security had kept it from touching another user's rows, so nothing was exposed by it.
+- A new account no longer takes its public username and display name from the part of the email address before the @. For most people that is their real name, published to every user of the app, from a field they only entered in order to sign in. Existing names are left alone — silently renaming live accounts is worse — and the migration carries the query for finding them.
+
+### Fixed
+- Claiming a username tag went through the database's own allocator instead of the client picking one. The client used to read every profile sharing the base and pick a code that was not among them; 0.23.0 stopped profiles answering to strangers, so that read came back empty and the check became a guess. The database has done this under an advisory lock all along.
+
+### Notes
+- Requires `supabase/migrations/20260905190000_rpc-hardening.sql`, which has to be run together with `20260905143000_user-blocks.sql`.
+
+---
+## [0.23.2] - Unreleased
+### Added
+- A privacy policy screen, reachable from the profile and from the register screen, and a consent gate that stands in front of the app until the current version has been accepted. Which version was accepted, and when, is stored — a boolean would not survive the policy text changing.
+- `scripts/check-privacy-policy.js` in `npm test`. It prints a loud warning while the policy is a draft, and fails outright once `PRIVACY_POLICY_URL` is filled in but placeholders remain, so a published policy cannot keep them.
+
+### Notes
+- **The policy text is a skeleton and must not ship as it stands.** Eight statements in `src/Resources/Legal/privacyPolicy.js` are marked `[SKAL UDFYLDES]` and are legal facts nobody but the controller can supply: who is responsible, the contact address, third parties that receive data, retention after backups, and the minimum age.
+- Google Play separately requires the policy at a public URL. `PRIVACY_POLICY_URL` is empty.
+- Requires `supabase/migrations/20260905174500_privacy-consent.sql`. Without it the gate fails open and nobody is asked, which means no consent is being collected at all.
+- The gate also fails open on a network error. Being locked out of your own training data because Supabase is unreachable is the worse failure.
+
+---
+## [0.23.1] - Unreleased
+### Added
+- Delete account, at the bottom of the account card in your profile. It removes your programs, workouts, records, posts, follows, notifications, profile and photo from the cloud, deletes the sign-in itself, and removes this phone's copy of the database. You type DELETE to confirm; there is no undo and no grace period.
+
+### Notes
+- Requires `supabase/migrations/20260905161500_delete-account.sql` **and** the `delete-account` Edge Function deployed. Without both, the button fails with a function error and nothing is removed.
+- The tables to erase are discovered from the schema, not listed in the code: every table in `public` with a column that names a user. A table added later is covered without anyone remembering to add it. If a foreign key still refuses after three passes the function raises, so a half-erased account reports as a failure rather than a success.
+
+---
+## [0.23.0] - Unreleased
+### Added
+- You can block someone. Tap followers or following on the social page, then Block on their row; Blocked accounts at the bottom of that list is where you undo it. A block removes the follow in both directions, stops them following you again, and takes you out of each other's search results. They are not told.
+
+### Security
+- The follow graph was readable in full by any signed-in user. `user_follows` now only answers for rows you are part of.
+- The profile table was readable in full, so a client could list the entire user base with one request. Reading a profile now needs a relationship — yours, someone you follow, or someone who follows you — and finding a stranger goes through a search function that caps the result set and hides blocked people.
+- User search needs at least two characters. Under that, the old query returned every account in the app in name order, which is the enumeration this closes.
+- `profiles` had no DELETE policy, so a user could not remove their own row. Needed for account deletion, and wrong without it.
+
+### Notes
+- Requires `supabase/migrations/20260905143000_user-blocks.sql`. Until it is run, user search fails with a message saying so.
+
+---
 ## [0.22.6] - Unreleased
 ### Added
 - `scripts/check-undeclared.js`, run as part of `npm test`: Babel's own scope analysis over all 310 source files, reporting any name a file uses but never declares or imports. There is no linter and no type checking here, so those failed at runtime, only on the code path that used them.

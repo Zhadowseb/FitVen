@@ -107,7 +107,13 @@ export async function setAppMetadataValue(db, metadataKey, metadataValue) {
   );
 }
 
-export async function getProgramsForCloudSync(db) {
+/**
+ * @param dirtyOnly Only the rows waiting to be uploaded. The upload path used
+ *   to read the whole table across the bridge and drop the clean rows in JS,
+ *   which on a full history is every row to find the handful that changed.
+ *   Reconcile still wants them all - it matches cloud rows against local ones.
+ */
+export async function getProgramsForCloudSync(db, { dirtyOnly = false } = {}) {
   return db.getAllAsync(
     `SELECT
         program_id,
@@ -123,6 +129,7 @@ export async function getProgramsForCloudSync(db) {
         status,
         needs_sync
      FROM Program
+     ${dirtyOnly ? "WHERE needs_sync = 1" : ""}
      ORDER BY program_id ASC;`
   );
 }
@@ -295,7 +302,13 @@ export async function getProgramSyncMetadata(db, programId) {
   );
 }
 
-export async function getMesocyclesForCloudSync(db) {
+/**
+ * @param dirtyOnly Only the rows waiting to be uploaded. The upload path used
+ *   to read the whole table across the bridge and drop the clean rows in JS,
+ *   which on a full history is every row to find the handful that changed.
+ *   Reconcile still wants them all - it matches cloud rows against local ones.
+ */
+export async function getMesocyclesForCloudSync(db, { dirtyOnly = false } = {}) {
   return db.getAllAsync(
     `SELECT
         mesocycle_id,
@@ -313,6 +326,7 @@ export async function getMesocyclesForCloudSync(db) {
         done,
         needs_sync
      FROM Mesocycle
+     ${dirtyOnly ? "WHERE needs_sync = 1" : ""}
      ORDER BY mesocycle_id ASC;`
   );
 }
@@ -500,7 +514,13 @@ export async function getMesocycleSyncMetadata(db, mesocycleId) {
   );
 }
 
-export async function getMicrocyclesForCloudSync(db) {
+/**
+ * @param dirtyOnly Only the rows waiting to be uploaded. The upload path used
+ *   to read the whole table across the bridge and drop the clean rows in JS,
+ *   which on a full history is every row to find the handful that changed.
+ *   Reconcile still wants them all - it matches cloud rows against local ones.
+ */
+export async function getMicrocyclesForCloudSync(db, { dirtyOnly = false } = {}) {
   return db.getAllAsync(
     `SELECT
         microcycle_id,
@@ -516,6 +536,7 @@ export async function getMicrocyclesForCloudSync(db) {
         done,
         needs_sync
      FROM Microcycle
+     ${dirtyOnly ? "WHERE needs_sync = 1" : ""}
      ORDER BY microcycle_id ASC;`
   );
 }
@@ -1065,6 +1086,96 @@ export async function getWorkoutOptions(db, programId) {
      ORDER BY w.date;`,
     [programId]
   );
+}
+
+/**
+ * The first workout in the range that is not finished yet.
+ *
+ * Home shows one 'up next' card, and used to get it by fetching every
+ * workout between tomorrow and 180 days out and taking the first unfinished
+ * one - up to 180 rows, each running the personal-record subquery, to fill in
+ * a weekday, a date and a title. The card reads none of the rest.
+ */
+export async function getNextUnfinishedWorkoutBetweenDates(
+  db,
+  { startIsoDate, endIsoDate }
+) {
+  const workoutIsoDateSql = localDateToIsoSql("w.date");
+
+  return db.getFirstAsync(
+    `SELECT
+        w.workout_id,
+        w.workout_type,
+        ${workoutDisplayLabelSql("w", "wt")} AS label,
+        w.date,
+        ${workoutIsoDateSql} AS date_iso,
+        w.done,
+        w.day_id,
+        d.Weekday AS weekday,
+        d.program_id,
+        p.program_name
+     FROM Workout_Type_Instance w
+     JOIN Day d ON d.day_id = w.day_id
+     LEFT JOIN Program p ON p.program_id = d.program_id
+     LEFT JOIN Workout_Type wt ON wt.name = w.workout_type
+     WHERE w.deleted_at IS NULL
+       AND d.deleted_at IS NULL
+       AND COALESCE(w.done, 0) != 1
+       AND (
+         p.program_id IS NULL OR (
+           p.deleted_at IS NULL
+           AND p.status != 'NOT_STARTED'
+         )
+       )
+       AND date(${workoutIsoDateSql}) BETWEEN date(?) AND date(?)
+      ORDER BY date_iso ASC, COALESCE(p.program_name, '') COLLATE NOCASE ASC, w.workout_id ASC
+      LIMIT 1;`,
+    [startIsoDate, endIsoDate]
+  );
+}
+
+/**
+ * The distinct exercises used in the last few workouts.
+ *
+ * What the quick-access list in the picker is built from. An exercise that
+ * appears in all four workouts is one entry, not four - the question being
+ * answered is "what have I been training", not "how often".
+ *
+ * It lives here rather than in the weightlifting repository because the
+ * selecting is done on workouts and their dates, which are stored two ways in
+ * this schema and normalised by the helper above.
+ */
+export async function getRecentlyUsedExerciseNames(
+  db,
+  { workoutLimit = 4, excludeWorkoutId = null } = {}
+) {
+  const workoutIsoDateSql = localDateToIsoSql("w.date");
+
+  const rows = await db.getAllAsync(
+    `WITH recent_workouts AS (
+       SELECT w.workout_id
+       FROM Workout_Type_Instance w
+       WHERE w.deleted_at IS NULL
+         AND (? IS NULL OR w.workout_id != ?)
+         AND EXISTS (
+           SELECT 1
+           FROM Exercise_Instance e
+           WHERE e.workout_type_instance_id = w.workout_id
+             AND COALESCE(e.deleted_at, '') = ''
+         )
+       ORDER BY date(${workoutIsoDateSql}) DESC, w.workout_id DESC
+       LIMIT ?
+     )
+     SELECT DISTINCT e.exercise_name
+     FROM Exercise_Instance e
+     JOIN recent_workouts r
+       ON r.workout_id = e.workout_type_instance_id
+     WHERE COALESCE(e.deleted_at, '') = ''
+     ORDER BY e.exercise_name COLLATE NOCASE ASC;`,
+    [excludeWorkoutId, excludeWorkoutId, workoutLimit]
+  );
+
+  return rows.map((row) => row.exercise_name);
 }
 
 export async function getWorkoutsBetweenDates(db, { startIsoDate, endIsoDate }) {
@@ -1997,7 +2108,13 @@ export async function getDaysByMicrocycle(db, microcycleId) {
   );
 }
 
-export async function getDaysForCloudSync(db) {
+/**
+ * @param dirtyOnly Only the rows waiting to be uploaded. The upload path used
+ *   to read the whole table across the bridge and drop the clean rows in JS,
+ *   which on a full history is every row to find the handful that changed.
+ *   Reconcile still wants them all - it matches cloud rows against local ones.
+ */
+export async function getDaysForCloudSync(db, { dirtyOnly = false } = {}) {
   return db.getAllAsync(
     `SELECT
         day_id,
@@ -2016,6 +2133,7 @@ export async function getDaysForCloudSync(db) {
         is_sick,
         needs_sync
      FROM Day
+     ${dirtyOnly ? "WHERE needs_sync = 1" : ""}
      ORDER BY day_id ASC;`
   );
 }
@@ -2458,7 +2576,13 @@ export async function getWorkoutsByDay(db, dayId) {
   );
 }
 
-export async function getWorkoutsForCloudSync(db) {
+/**
+ * @param dirtyOnly Only the rows waiting to be uploaded. The upload path used
+ *   to read the whole table across the bridge and drop the clean rows in JS,
+ *   which on a full history is every row to find the handful that changed.
+ *   Reconcile still wants them all - it matches cloud rows against local ones.
+ */
+export async function getWorkoutsForCloudSync(db, { dirtyOnly = false } = {}) {
   return db.getAllAsync(
     `SELECT
         workout_id,
@@ -2480,6 +2604,7 @@ export async function getWorkoutsForCloudSync(db) {
         elapsed_time,
         needs_sync
      FROM Workout_Type_Instance
+     ${dirtyOnly ? "WHERE needs_sync = 1" : ""}
      ORDER BY workout_id ASC;`
   );
 }
@@ -2836,6 +2961,54 @@ export async function getDayByWeekdayAndMicrocycle(
      WHERE Weekday = ?
        AND microcycle_id = ?;`,
     [weekday, microcycleId]
+  );
+}
+
+// The plural forms of the two above. The microcycle list needs every day of
+// every microcycle it shows, and asked one weekday of one microcycle at a
+// time - seven questions per week, each pulling its own workouts, each of
+// those pulling its own exercises. Roughly 135 round trips to draw one
+// screen. Placeholders are built from the id list, which SQLite needs anyway
+// and which keeps the values bound rather than pasted into the SQL.
+export async function getDaysByMicrocycleIds(db, microcycleIds) {
+  if (!microcycleIds.length) {
+    return [];
+  }
+
+  const placeholders = microcycleIds.map(() => "?").join(", ");
+
+  return db.getAllAsync(
+    `SELECT day_id, date, done, is_sick, Weekday AS weekday, microcycle_id
+     FROM Day
+     WHERE microcycle_id IN (${placeholders});`,
+    microcycleIds
+  );
+}
+
+export async function getWorkoutsByDayIds(db, dayIds) {
+  if (!dayIds.length) {
+    return [];
+  }
+
+  const placeholders = dayIds.map(() => "?").join(", ");
+
+  return db.getAllAsync(
+    `SELECT
+        w.workout_id,
+        w.workout_type,
+        ${workoutDisplayLabelSql("w", "wt")} AS label,
+        w.done,
+        w.day_id,
+        w.is_active,
+        w.original_start_time,
+        w.timer_start,
+        w.elapsed_time,
+        ${workoutHasPersonalRecordSql("w")} AS has_personal_record
+     FROM Workout_Type_Instance w
+     LEFT JOIN Workout_Type wt ON wt.name = w.workout_type
+     WHERE w.day_id IN (${placeholders})
+     ORDER BY w.day_id ASC, w.workout_id ASC;`,
+    dayIds
   );
 }
 

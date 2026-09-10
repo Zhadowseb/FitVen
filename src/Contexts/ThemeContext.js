@@ -23,6 +23,7 @@ const ThemeModeContext = createContext({
   themeMode: "auto",
   setThemeMode: () => {},
   accentTheme: DEFAULT_ACCENT_THEME,
+  isThemeLoading: true,
   setAccentTheme: () => {},
 });
 
@@ -42,6 +43,11 @@ function applyThemeMode(mode) {
 export function ThemeModeProvider({ children }) {
   const [themeMode, setThemeModeState] = useState("auto");
   const [accentTheme, setAccentThemeState] = useState(DEFAULT_ACCENT_THEME);
+  // The stored accent arrives one tick after the first render, and the
+  // navigator is keyed on it, so landing late threw the whole screen tree
+  // away and rebuilt it - every loader on the home screen ran twice. App.js
+  // waits on this instead.
+  const [isThemeLoading, setIsThemeLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
@@ -66,6 +72,13 @@ export function ThemeModeProvider({ children }) {
         }
       } catch (error) {
         console.error("Failed to load the theme preference:", error);
+      } finally {
+        // Also on failure: the defaults are already applied, and refusing
+        // to render because AsyncStorage is unhappy would be worse than a
+        // wrong accent.
+        if (isMounted) {
+          setIsThemeLoading(false);
+        }
       }
     })();
 
@@ -101,8 +114,14 @@ export function ThemeModeProvider({ children }) {
   }, []);
 
   const value = useMemo(
-    () => ({ themeMode, setThemeMode, accentTheme, setAccentTheme }),
-    [themeMode, setThemeMode, accentTheme, setAccentTheme]
+    () => ({
+      themeMode,
+      setThemeMode,
+      accentTheme,
+      setAccentTheme,
+      isThemeLoading,
+    }),
+    [themeMode, setThemeMode, accentTheme, setAccentTheme, isThemeLoading]
   );
 
   return (

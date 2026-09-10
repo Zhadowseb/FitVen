@@ -36,13 +36,20 @@ import {
 import {
   ThemedButton,
   ThemedCard,
+  ThemedConfirmModal,
   ThemedDateWheelPicker,
   ThemedKeyboardProtection,
+  ThemedModal,
   ThemedSegmentedControl,
+  ThemedTextInput,
   ThemedText,
   ThemedView,
   UserAvatar,
 } from "../../Resources/ThemedComponents";
+
+// Not localised on purpose: the word the user types has to match exactly, and
+// a translated one is a different word on a phone in a different language.
+const DELETE_CONFIRMATION_WORD = "DELETE";
 
 const APPEARANCE_OPTIONS = [
   { value: "dark", label: "Dark" },
@@ -83,6 +90,11 @@ export default function ProfilePage() {
   });
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState("");
+  const [logoutConfirmVisible, setLogoutConfirmVisible] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   const profileStatusColor =
     profileFeedback.status === "success"
@@ -335,7 +347,10 @@ export default function ProfilePage() {
     setBirthDatePickerVisible(false);
   };
 
+  // Signing out mid-week used to be one stray tap away, with the button
+  // sitting in a list people scroll past to reach the settings under it.
   const handleLogout = async () => {
+    setLogoutConfirmVisible(false);
     setLogoutError("");
     setIsLoggingOut(true);
 
@@ -353,6 +368,50 @@ export default function ProfilePage() {
       );
     } finally {
       setIsLoggingOut(false);
+    }
+  };
+
+  const closeDeleteModal = () => {
+    if (isDeletingAccount) {
+      return;
+    }
+
+    setDeleteModalVisible(false);
+    setDeleteConfirmText("");
+    setDeleteError("");
+  };
+
+  // Typed rather than a second Yes button. This is the one action in the app
+  // with nothing behind it - no trash, no grace period, no support request that
+  // can bring it back - so it should not be reachable by two taps in a row.
+  const canConfirmDelete =
+    deleteConfirmText.trim().toUpperCase() === DELETE_CONFIRMATION_WORD;
+
+  const handleDeleteAccount = async () => {
+    if (!canConfirmDelete || isDeletingAccount) {
+      return;
+    }
+
+    setDeleteError("");
+    setIsDeletingAccount(true);
+
+    try {
+      try {
+        await notificationService.disableCurrentPushTokenForUser({ user });
+      } catch (cleanupError) {
+        console.warn("Push token delete cleanup failed:", cleanupError);
+      }
+
+      // On success this signs out, which unmounts the screen. Nothing after it
+      // is guaranteed to run, so there is no success state to set.
+      await authService.deleteAccount({ user });
+    } catch (error) {
+      setDeleteError(
+        error instanceof Error
+          ? error.message
+          : "Could not delete the account. Nothing was removed."
+      );
+      setIsDeletingAccount(false);
     }
   };
 
@@ -435,21 +494,10 @@ export default function ProfilePage() {
                 <Lock width={15} height={15} color={theme.quietText} />
               </View>
 
-              <InsetDivider />
-
-              <View style={styles.fieldRow}>
-                <ThemedText style={styles.fieldLabel} setColor={theme.quietText}>
-                  Email
-                </ThemedText>
-                <ThemedText
-                  style={styles.fieldValue}
-                  setColor={theme.title}
-                  numberOfLines={1}
-                >
-                  {user?.email ?? "Unknown account"}
-                </ThemedText>
-                <Lock width={15} height={15} color={theme.quietText} />
-              </View>
+              {/* The email used to sit here too, under a heading that says
+                  Public profile - which it is not, and which was the second
+                  place on this one screen it appeared. It is in Account, once,
+                  where the thing it identifies actually lives. */}
 
               <InsetDivider />
 
@@ -720,14 +768,23 @@ export default function ProfilePage() {
                 <ChevronRight width={18} height={18} color={theme.quietText} />
               </TouchableOpacity>
 
-              <InsetDivider />
+            </ThemedCard>
+          </View>
 
-              <View style={styles.settingsRow}>
+          {/* Appearance
+              Its own card, because these two are worked here rather than
+              somewhere else. Mixed into the list above they looked identical to
+              the rows that navigate away, and the only way to tell which kind a
+              row was, was to press it. */}
+          <View style={styles.section}>
+            <SectionEyebrow>Appearance</SectionEyebrow>
+            <ThemedCard style={styles.card}>
+              <View style={styles.settingsControlRow}>
                 <SettingsIconTile backgroundColor={withAlpha(theme.primary, 0.12)}>
                   <Moon width={18} height={18} color={primaryTextColor} thickness={1.7} />
                 </SettingsIconTile>
                 <ThemedText style={styles.settingsRowLabel} setColor={theme.title}>
-                  Appearance
+                  Theme
                 </ThemedText>
                 <ThemedSegmentedControl
                   options={APPEARANCE_OPTIONS}
@@ -738,12 +795,12 @@ export default function ProfilePage() {
 
               <InsetDivider />
 
-              <View style={styles.settingsRow}>
+              <View style={styles.settingsControlRow}>
                 <SettingsIconTile backgroundColor={withAlpha(theme.primary, 0.12)}>
                   <Star width={18} height={18} color={primaryTextColor} filled />
                 </SettingsIconTile>
                 <ThemedText style={styles.settingsRowLabel} setColor={theme.title}>
-                  Color theme
+                  Colour
                 </ThemedText>
               </View>
 
@@ -834,13 +891,16 @@ export default function ProfilePage() {
 
                 <TouchableOpacity
                   activeOpacity={0.85}
-                  onPress={handleLogout}
+                  onPress={() => setLogoutConfirmVisible(true)}
                   disabled={isLoggingOut}
                   style={[
                     styles.logoutButton,
                     {
-                      borderColor: "rgba(232,92,74,0.4)",
-                      backgroundColor: "rgba(232,92,74,0.08)",
+                      // Was two fixed rgba values tuned for the dark theme, so
+                      // in light mode the border was a colour from the other
+                      // one. The danger token follows the theme.
+                      borderColor: withAlpha(theme.danger, 0.4),
+                      backgroundColor: withAlpha(theme.danger, 0.08),
                       opacity: isLoggingOut ? 0.6 : 1,
                     },
                   ]}
@@ -884,6 +944,68 @@ export default function ProfilePage() {
                   {appVersion}
                 </ThemedText>
               </View>
+
+              <InsetDivider />
+
+              <TouchableOpacity
+                activeOpacity={0.85}
+                accessibilityRole="button"
+                accessibilityLabel="Privacy"
+                onPress={() => navigation.navigate("PrivacyPolicyPage")}
+                style={styles.deleteAccountRow}
+              >
+                <View style={styles.accountInfo}>
+                  <ThemedText style={styles.accountValue} setColor={theme.title}>
+                    Privacy
+                  </ThemedText>
+                  <ThemedText
+                    style={styles.deleteAccountHint}
+                    setColor={theme.quietText}
+                  >
+                    What FitVen stores about you, and what you agreed to.
+                  </ThemedText>
+                </View>
+
+                <ChevronRight
+                  width={16}
+                  height={16}
+                  stroke={theme.quietText}
+                  color={theme.quietText}
+                />
+              </TouchableOpacity>
+
+              <InsetDivider />
+
+              <TouchableOpacity
+                activeOpacity={0.85}
+                accessibilityRole="button"
+                accessibilityLabel="Delete account"
+                onPress={() => setDeleteModalVisible(true)}
+                style={styles.deleteAccountRow}
+              >
+                <View style={styles.accountInfo}>
+                  <ThemedText
+                    style={styles.accountValue}
+                    setColor={theme.danger}
+                  >
+                    Delete account
+                  </ThemedText>
+                  <ThemedText
+                    style={styles.deleteAccountHint}
+                    setColor={theme.quietText}
+                  >
+                    Removes your programs, workouts and profile everywhere. This
+                    cannot be undone.
+                  </ThemedText>
+                </View>
+
+                <ChevronRight
+                  width={16}
+                  height={16}
+                  stroke={theme.danger}
+                  color={theme.danger}
+                />
+              </TouchableOpacity>
             </ThemedCard>
           </View>
         </ThemedKeyboardProtection>
@@ -894,6 +1016,72 @@ export default function ProfilePage() {
         onClose={() => setFeedbackModalVisible(false)}
         userId={user?.id ?? null}
       />
+
+      <ThemedConfirmModal
+        visible={logoutConfirmVisible}
+        title="Log out of FitVen?"
+        message="Your workouts are saved. You will need your password to sign back in."
+        confirmLabel="Log out"
+        cancelLabel="Stay signed in"
+        tone="danger"
+        isWorking={isLoggingOut}
+        onConfirm={handleLogout}
+        onClose={() => setLogoutConfirmVisible(false)}
+      />
+
+      <ThemedModal
+        visible={deleteModalVisible}
+        onClose={closeDeleteModal}
+        title="Delete your account"
+      >
+        <ThemedText style={styles.deleteModalBody} setColor={theme.quietText}>
+          Your programs, workouts, personal records, posts, profile and photo
+          are removed from FitVen and from this phone. People who follow you
+          stop following you. There is no way to get any of it back.
+        </ThemedText>
+
+        <ThemedText
+          style={styles.deleteModalPrompt}
+          setColor={theme.title}
+        >
+          Type {DELETE_CONFIRMATION_WORD} to confirm
+        </ThemedText>
+
+        <ThemedTextInput
+          value={deleteConfirmText}
+          onChangeText={setDeleteConfirmText}
+          placeholder={DELETE_CONFIRMATION_WORD}
+          autoCapitalize="characters"
+          autoCorrect={false}
+          editable={!isDeletingAccount}
+        />
+
+        {deleteError ? (
+          <ThemedText style={styles.errorText} setColor={theme.danger}>
+            {deleteError}
+          </ThemedText>
+        ) : null}
+
+        <ThemedButton
+          title={isDeletingAccount ? "Deleting..." : "Delete my account"}
+          variant="danger"
+          onPress={handleDeleteAccount}
+          disabled={!canConfirmDelete || isDeletingAccount}
+          fullWidth
+          height={44}
+          style={styles.deleteModalConfirm}
+        />
+
+        <ThemedButton
+          title="Cancel"
+          variant="secondary"
+          onPress={closeDeleteModal}
+          disabled={isDeletingAccount}
+          fullWidth
+          height={44}
+          style={styles.deleteModalCancel}
+        />
+      </ThemedModal>
     </ThemedView>
   );
 }

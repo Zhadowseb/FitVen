@@ -20,6 +20,7 @@ import { programService, socialService } from "../../Services";
 import { getTodaysDate } from "../../Utils/dateUtils";
 import {
   ThemedButton,
+  ThemedConfirmModal,
   ThemedModal,
   ThemedText,
   ThemedTitle,
@@ -51,12 +52,19 @@ const SearchPage = () => {
   const [relationshipProfiles, setRelationshipProfiles] = useState([]);
   const [isLoadingRelationships, setIsLoadingRelationships] = useState(false);
   const [relationshipError, setRelationshipError] = useState("");
+  const [blockTarget, setBlockTarget] = useState(null);
+  const [unblockTarget, setUnblockTarget] = useState(null);
+  const [isBlockWorking, setIsBlockWorking] = useState(false);
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const titleColor = theme.title ?? theme.text;
   const cardSurface = theme.cardBackground ?? theme.background;
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor;
   const relationshipTitle =
-    activeRelationshipType === "following" ? "Following" : "Followers";
+    activeRelationshipType === "following"
+      ? "Following"
+      : activeRelationshipType === "blocked"
+        ? "Blocked"
+        : "Followers";
 
   const loadCirclePreview = useCallback(async () => {
     if (!user?.id) {
@@ -141,6 +149,24 @@ const SearchPage = () => {
     setIsLoadingRelationships(false);
   };
 
+  const loadRelationshipProfiles = async (relationshipType) => {
+    if (relationshipType === "following") {
+      return socialService.getFollowing({
+        userId: user.id,
+        currentUserId: user.id,
+      });
+    }
+
+    if (relationshipType === "blocked") {
+      return socialService.getBlockedProfiles({ userId: user.id });
+    }
+
+    return socialService.getFollowers({
+      userId: user.id,
+      currentUserId: user.id,
+    });
+  };
+
   const handleOpenRelationshipModal = async (relationshipType) => {
     if (!user?.id) {
       return;
@@ -152,18 +178,7 @@ const SearchPage = () => {
     setIsLoadingRelationships(true);
 
     try {
-      const nextRelationshipProfiles =
-        relationshipType === "following"
-          ? await socialService.getFollowing({
-              userId: user.id,
-              currentUserId: user.id,
-            })
-          : await socialService.getFollowers({
-              userId: user.id,
-              currentUserId: user.id,
-            });
-
-      setRelationshipProfiles(nextRelationshipProfiles);
+      setRelationshipProfiles(await loadRelationshipProfiles(relationshipType));
     } catch (error) {
       setRelationshipError(
         error instanceof Error
@@ -172,6 +187,59 @@ const SearchPage = () => {
       );
     } finally {
       setIsLoadingRelationships(false);
+    }
+  };
+
+  // Blocking cuts the follow in both directions, so the counts on the page
+  // behind the modal are stale the moment it succeeds.
+  const applyBlockChange = async (action) => {
+    if (!user?.id || isBlockWorking) {
+      return;
+    }
+
+    setIsBlockWorking(true);
+    setRelationshipError("");
+
+    try {
+      await action();
+      await loadCirclePreview();
+      setRelationshipProfiles(
+        await loadRelationshipProfiles(activeRelationshipType),
+      );
+    } catch (error) {
+      setRelationshipError(
+        error instanceof Error ? error.message : "Could not update the block.",
+      );
+    } finally {
+      setIsBlockWorking(false);
+    }
+  };
+
+  const confirmBlock = () => {
+    const profile = blockTarget;
+    setBlockTarget(null);
+
+    if (profile) {
+      void applyBlockChange(() =>
+        socialService.blockUser({
+          userId: user.id,
+          targetUserId: profile.id,
+        }),
+      );
+    }
+  };
+
+  const confirmUnblock = () => {
+    const profile = unblockTarget;
+    setUnblockTarget(null);
+
+    if (profile) {
+      void applyBlockChange(() =>
+        socialService.unblockUser({
+          userId: user.id,
+          targetUserId: profile.id,
+        }),
+      );
     }
   };
 
@@ -397,6 +465,40 @@ const SearchPage = () => {
                     {relationshipProfile.username}
                   </ThemedText>
                 </View>
+
+                <Pressable
+                  onPress={() =>
+                    activeRelationshipType === "blocked"
+                      ? setUnblockTarget(relationshipProfile)
+                      : setBlockTarget(relationshipProfile)
+                  }
+                  disabled={isBlockWorking}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${
+                    activeRelationshipType === "blocked" ? "Unblock" : "Block"
+                  } ${relationshipProfile.displayName}`}
+                  style={({ pressed }) => [
+                    styles.relationshipAction,
+                    {
+                      borderColor: cardBorder,
+                      backgroundColor: theme.chipBackground,
+                    },
+                    pressed ? styles.relationshipActionPressed : null,
+                  ]}
+                >
+                  <ThemedText
+                    style={styles.relationshipActionText}
+                    setColor={
+                      activeRelationshipType === "blocked"
+                        ? titleColor
+                        : theme.danger
+                    }
+                  >
+                    {activeRelationshipType === "blocked"
+                      ? "Unblock"
+                      : "Block"}
+                  </ThemedText>
+                </Pressable>
               </View>
             ))}
           </ScrollView>
@@ -404,9 +506,36 @@ const SearchPage = () => {
           <ThemedText style={styles.relationshipStateText} setColor={quietText}>
             {activeRelationshipType === "following"
               ? "You are not following anyone yet."
-              : "No one is following you yet."}
+              : activeRelationshipType === "blocked"
+                ? "You have not blocked anyone."
+                : "No one is following you yet."}
           </ThemedText>
         )}
+
+        {/* The way back to an account you blocked. It lives here rather than as
+            a third chip on the page, because a permanent "0 blocked" counter
+            beside your followers is not something anyone needs to look at. */}
+        <View style={styles.relationshipFooter}>
+          <Pressable
+            onPress={() =>
+              handleOpenRelationshipModal(
+                activeRelationshipType === "blocked" ? "followers" : "blocked",
+              )
+            }
+            disabled={isLoadingRelationships || isBlockWorking}
+            accessibilityRole="button"
+            style={styles.relationshipFooterLink}
+          >
+            <ThemedText
+              style={styles.relationshipFooterText}
+              setColor={theme.primaryText ?? titleColor}
+            >
+              {activeRelationshipType === "blocked"
+                ? "Back to followers"
+                : "Blocked accounts"}
+            </ThemedText>
+          </Pressable>
+        </View>
 
         <ThemedButton
           title="Close"
@@ -417,6 +546,33 @@ const SearchPage = () => {
           style={styles.relationshipCloseButton}
         />
       </ThemedModal>
+
+      <ThemedConfirmModal
+        visible={Boolean(blockTarget)}
+        title="Block this person?"
+        message={`${
+          blockTarget?.displayName ?? blockTarget?.username ?? "This person"
+        } will stop following you and you will stop following them. They will not be told, and they will not be able to follow you again or find you in search.`}
+        confirmLabel="Block"
+        cancelLabel="Cancel"
+        tone="danger"
+        isWorking={isBlockWorking}
+        onConfirm={confirmBlock}
+        onClose={() => setBlockTarget(null)}
+      />
+
+      <ThemedConfirmModal
+        visible={Boolean(unblockTarget)}
+        title="Unblock this person?"
+        message={`${
+          unblockTarget?.displayName ?? unblockTarget?.username ?? "This person"
+        } will be able to find you and follow you again. Neither of you starts following the other.`}
+        confirmLabel="Unblock"
+        cancelLabel="Cancel"
+        isWorking={isBlockWorking}
+        onConfirm={confirmUnblock}
+        onClose={() => setUnblockTarget(null)}
+      />
 
       <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
     </ThemedView>

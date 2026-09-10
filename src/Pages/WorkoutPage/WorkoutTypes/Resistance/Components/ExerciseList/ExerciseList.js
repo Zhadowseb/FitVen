@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   View,
   Vibration,
+  useColorScheme,
 } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
 import { useNavigation } from "@react-navigation/native";
@@ -14,6 +15,9 @@ import { weightliftingService } from "../../../../../../Services";
 
 import ExerciseRow from "./Components/ExerciseRow/ExerciseRow"
 import PlusCircled from "../../../../../../Resources/Icons/UI-icons/PlusCircled";
+import ReplayHistory from "../../../../../../Resources/Icons/UI-icons/ReplayHistory";
+import ThemedText from "../../../../../../Resources/ThemedComponents/ThemedText";
+import { Colors } from "../../../../../../Resources/GlobalStyling/colors";
 import { EXERCISE_COLLAPSE_DURATION_MS } from "./exerciseCollapseAnimation";
 
 const ExerciseList = ({
@@ -39,6 +43,9 @@ const ExerciseList = ({
 
   const db = useSQLiteContext();
   const navigation = useNavigation();
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme] ?? Colors.light;
+  const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const rowLayoutsRef = useRef({});
   const dragContextRef = useRef(null);
   const dragTargetIndexRef = useRef(null);
@@ -310,6 +317,11 @@ const ExerciseList = ({
           }
 
           const sets = exercise.sets ?? [];
+          // The same three fields the service copies. Repeated here so the row
+          // appears already filled in: leaving it blank would show empty boxes
+          // for as long as the write takes and then fill them in by itself,
+          // which looks like the app typing over you.
+          const previousSet = sets[sets.length - 1];
 
           return {
             ...exercise,
@@ -319,10 +331,10 @@ const ExerciseList = ({
               {
                 sets_id: placeholderId,
                 set_number: sets.length + 1,
-                reps: null,
-                weight: null,
+                reps: previousSet?.reps ?? null,
+                weight: previousSet?.weight ?? null,
                 rpe: null,
-                pause: null,
+                pause: previousSet?.pause ?? null,
                 rm_percentage: null,
                 personal_record: 0,
                 done: 0,
@@ -780,7 +792,6 @@ const ExerciseList = ({
         updateUI={updateUI}
         onAddSet={addSetToExercise}
         onToggleSet={updateSetDone}
-        refreshing={refreshing}
         isDragging={draggingExerciseId === item.exercise_id}
         onDragStart={() => handleDragStart(item.exercise_id)}
         onDragMove={handleDragMove}
@@ -799,22 +810,43 @@ const ExerciseList = ({
     </View>
 
     {!isWorkoutDone && (
-      <View style={{alignItems: "center", paddingTop: 30}}>
+      // Two ways in rather than one bare plus: the whole catalog, and the
+      // handful of exercises the last four workouts actually used, which is
+      // what someone adding to a session mid-workout is usually reaching for.
+      <View style={styles.addExerciseRow}>
+        <TouchableOpacity
+          activeOpacity={0.86}
+          accessibilityRole="button"
+          accessibilityLabel="Add an exercise used in the last four workouts"
+          style={[styles.addExerciseButton, { borderColor: quietText }]}
+          onPress={() => {
+            navigation.navigate("ExerciseCatalogPage", {
+              workoutPicker: { workoutId: workout_id },
+              initialFilter: "recent",
+            });
+          }}
+        >
+          <ReplayHistory width={17} height={17} color={quietText} />
+          <ThemedText style={styles.addExerciseButtonText} setColor={quietText}>
+            Recent
+          </ThemedText>
+        </TouchableOpacity>
 
         <TouchableOpacity
+          activeOpacity={0.86}
           accessibilityRole="button"
-          accessibilityLabel="Add exercise"
-          hitSlop={10}
-          onPress={ () => {
+          accessibilityLabel="Add an exercise from the catalog"
+          style={[styles.addExerciseButton, { borderColor: quietText }]}
+          onPress={() => {
             navigation.navigate("ExerciseCatalogPage", {
-              workoutPicker: {
-                workoutId: workout_id,
-              },
+              workoutPicker: { workoutId: workout_id },
             });
-          }}>
-          <PlusCircled
-            width={30}
-            height={30} />
+          }}
+        >
+          <PlusCircled width={17} height={17} color={quietText} />
+          <ThemedText style={styles.addExerciseButtonText} setColor={quietText}>
+            All exercises
+          </ThemedText>
         </TouchableOpacity>
       </View>
     )}

@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.22.6-major-structure-audit.1",
+  "version": "0.23.37-minor-exercise-map.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",
@@ -10,7 +10,7 @@
     "android:dev": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "test": "node scripts/check-agent-docs.js && node scripts/check-imports.js && node scripts/check-undeclared.js && npm run test:cloud-sync-fields && npm run test:custom-exercise && npm run test:location && npm run test:run-intervals && npm run test:run-display && npm run test:program-progress && npm run test:workout-finish && npm run test:profile-birthdate && npm run test:heart-rate-settings && npm run test:ble-heart-rate && npm run test:notifications",
+    "test": "node scripts/check-agent-docs.js && node scripts/check-imports.js && node scripts/check-undeclared.js && node scripts/check-privacy-policy.js && node scripts/build-privacy-policy-page.js --check && npm run test:cloud-sync-fields && npm run test:secure-session && npm run test:set-carry-over && npm run test:pr-index && npm run test:microcycle-days && npm run test:next-workout && npm run test:sync-upload && npm run test:sync-watchers && npm run test:delete-sticks && npm run test:db-repairs && npm run test:recent-exercises && npm run test:custom-exercise && npm run test:location && npm run test:run-intervals && npm run test:run-display && npm run test:program-progress && npm run test:workout-finish && npm run test:profile-birthdate && npm run test:heart-rate-settings && npm run test:ble-heart-rate && npm run test:notifications && npm run test:exercise-map",
     "docs:check": "node scripts/check-agent-docs.js",
     "version:auto": "node scripts/version.js auto",
     "version:branch": "node scripts/version.js branch",
@@ -34,10 +34,21 @@
     "build-aab:android": "npx eas build -p android --profile production",
     "imports:check": "node scripts/check-imports.js",
     "test:cloud-sync-fields": "node scripts/test-cloud-sync-fields.js",
-    "undeclared:check": "node scripts/check-undeclared.js"
+    "test:secure-session": "node scripts/test-secure-session-storage.js",
+    "test:set-carry-over": "node scripts/test-set-carry-over.js",
+    "test:pr-index": "node scripts/test-personal-record-index.js",
+    "test:microcycle-days": "node scripts/test-microcycle-day-details.js",
+    "test:next-workout": "node scripts/test-next-unfinished-workout.js",
+    "test:sync-upload": "node scripts/test-cloud-sync-upload-batching.js",
+    "test:sync-watchers": "node scripts/test-cloud-watcher-claims.js",
+    "test:delete-sticks": "node scripts/test-delete-stays-deleted.js",
+    "test:db-repairs": "node scripts/test-database-repairs.js",
+    "test:recent-exercises": "node scripts/test-recent-exercises.js",
+    "build:privacy-policy": "node scripts/build-privacy-policy-page.js",
+    "undeclared:check": "node scripts/check-undeclared.js",
+    "test:exercise-map": "node scripts/test-exercise-map.js"
   },
   "dependencies": {
-    "@expo/ui": "~0.2.0-beta.9",
     "@expo/vector-icons": "^15.0.3",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/datetimepicker": "8.4.4",
@@ -45,7 +56,6 @@
     "@react-navigation/native": "^7.1.21",
     "@react-navigation/native-stack": "^7.8.0",
     "@supabase/supabase-js": "^2.100.0",
-    "eas-cli": "^18.3.0",
     "expo": "~54.0.25",
     "expo-checkbox": "~5.0.8",
     "expo-constants": "~18.0.13",
@@ -56,6 +66,7 @@
     "expo-location": "~19.0.8",
     "expo-notifications": "~0.32.17",
     "expo-screen-orientation": "~9.0.9",
+    "expo-secure-store": "~15.0.8",
     "expo-sharing": "~14.0.8",
     "expo-sqlite": "^16.0.9",
     "expo-status-bar": "~3.0.8",
@@ -71,8 +82,7 @@
     "react-native-screens": "~4.16.0",
     "react-native-svg": "15.12.1",
     "react-native-url-polyfill": "^3.0.0",
-    "react-native-worklets": "0.5.1",
-    "supabase": "^2.105.0"
+    "react-native-worklets": "0.5.1"
   },
   "private": true,
   "devDependencies": {
@@ -80,6 +90,8 @@
     "babel-plugin-module-resolver": "^5.0.3",
     "babel-plugin-transform-remove-console": "^6.9.4",
     "babel-preset-expo": "~54.0.7",
-    "conventional-changelog-cli": "^5.0.0"
+    "conventional-changelog-cli": "^5.0.0",
+    "eas-cli": "^18.3.0",
+    "supabase": "^2.105.0"
   }
 }

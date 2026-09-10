@@ -1,6 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { supabase } from "../Database/supaBaseClient";
+import {
+  getCurrentUserId,
+  supabase,
+} from "../Database/supaBaseClient";
 import { normalizeElapsedDurationSeconds } from "../Utils/timeUtils";
 import { ensureOwnProfile } from "./socialService";
 import { formatOptionalNumber } from "../Utils/numberUtils";
@@ -342,10 +345,17 @@ function normalizePostNote(note) {
   return String(note ?? "").trim();
 }
 
+// Every caller reads only `.id`, so this hands back just that. It used to be
+// supabase.auth.getUser(), an HTTP round trip, for a value the client already
+// holds - the same disagreement the strength service had. Whether the token is
+// still valid is the server's judgement to make, and row-level security makes
+// it on every one of these requests regardless.
 async function getAuthenticatedUser() {
-  const { data, error } = await supabase.auth.getUser();
+  try {
+    const userId = await getCurrentUserId();
 
-  if (error) {
+    return userId ? { id: userId } : null;
+  } catch (error) {
     const message = String(error?.message ?? "").toLowerCase();
 
     if (message.includes("auth session missing")) {
@@ -354,8 +364,6 @@ async function getAuthenticatedUser() {
 
     throw error;
   }
-
-  return data.user ?? null;
 }
 
 async function getWorkoutPostSource(db, workoutId) {

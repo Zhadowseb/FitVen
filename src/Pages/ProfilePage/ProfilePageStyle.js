@@ -53,7 +53,7 @@ export default StyleSheet.create({
     alignItems: "flex-start",
   },
   changePhotoChip: {
-    height: 40,
+    height: 44,
     borderRadius: 10,
     paddingHorizontal: 14,
     borderWidth: 1,
@@ -238,6 +238,16 @@ export default StyleSheet.create({
     alignItems: "center",
     gap: 12,
   },
+  // A row you work here rather than one that takes you somewhere. Taller,
+  // because it holds a control instead of a chevron.
+  settingsControlRow: {
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    minHeight: 64,
+  },
   settingsRowLabel: {
     flex: 1,
     fontSize: 13,
@@ -344,5 +354,33 @@ export default StyleSheet.create({
     paddingHorizontal: 18,
     paddingBottom: 12,
     fontSize: 12,
+  },
+  deleteAccountRow: {
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    minHeight: 44,
+  },
+  deleteAccountHint: {
+    fontSize: 12,
+    lineHeight: 17,
+  },
+  deleteModalBody: {
+    fontSize: 13,
+    lineHeight: 19,
+  },
+  deleteModalPrompt: {
+    fontSize: 12,
+    fontWeight: "700",
+    marginTop: 16,
+    marginBottom: 6,
+  },
+  deleteModalConfirm: {
+    marginTop: 16,
+  },
+  deleteModalCancel: {
+    marginTop: 8,
   },
 });

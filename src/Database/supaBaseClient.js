@@ -1,8 +1,12 @@
 import { Platform } from "react-native";
 import "react-native-url-polyfill/auto";
 import "expo-sqlite/localStorage/install";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createClient, processLock } from '@supabase/supabase-js';
+
+import {
+  forgetLegacyPlaintextSession,
+  secureSessionStorage,
+} from "./secureSessionStorage";
 
 import {
   isValidUsernameBase,
@@ -56,13 +60,23 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     fetch: retryingFetch,
   },
   auth: {
-    ...(Platform.OS !== "web" ? { storage: AsyncStorage } : { storage: globalThis.localStorage }),
+    ...(Platform.OS !== "web"
+      ? { storage: secureSessionStorage }
+      : { storage: globalThis.localStorage }),
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
     lock: processLock,
   },
 });
+
+// Once, at startup. Moving the session behind the keystore achieves nothing
+// while the readable copy the old version wrote is still sitting next to it.
+// Native only: on web the session lives in localStorage under the same key, and
+// AsyncStorage is localStorage, so this would delete the live session.
+if (Platform.OS !== "web") {
+  void forgetLegacyPlaintextSession();
+}
 
 export async function registerWithEmail({ email, password, usernameBase }) {
   const normalizedEmail = email.trim().toLowerCase();
@@ -114,4 +128,49 @@ export async function logout() {
   if (error) {
     throw error;
   }
+}
+
+/* ------------------------------------------------ the signed-in user's id -- */
+
+// Kept here because it is asked for on a path that runs once a second while
+// somebody is training, to look up which columns they want visible.
+//
+// It used to be `auth.getUser()`, which is not a local read: auth-js sends
+// GET /auth/v1/user and takes a process lock on the way. That is roughly 3,600
+// HTTP calls per hour of training, on a code path that is otherwise entirely
+// offline, competing with the token refresh for the same lock - and the fetch
+// wrapper above retries each one up to three times on a bad connection.
+//
+// getSession() reads the stored session instead. It does not revalidate the
+// token with the server, which is fine for this: the id decides which local
+// preference rows to read, and everything that actually matters is enforced by
+// row-level security on the server anyway.
+let cachedUserId = null;
+let hasCachedUserId = false;
+
+// One subscription for the life of the process. INITIAL_SESSION fires on
+// startup, so this warms itself; SIGNED_IN and SIGNED_OUT keep it honest.
+supabase.auth.onAuthStateChange((_event, session) => {
+  cachedUserId = session?.user?.id ?? null;
+  hasCachedUserId = true;
+});
+
+/**
+ * The signed-in user's id, or null. Local, and after the first call it does not
+ * touch storage either.
+ */
+export async function getCurrentUserId() {
+  if (hasCachedUserId) {
+    return cachedUserId;
+  }
+
+  const { data, error } = await supabase.auth.getSession();
+
+  if (error) {
+    throw error;
+  }
+
+  // Not marked as cached: the subscription above is what makes it authoritative,
+  // and it may not have fired yet.
+  return data.session?.user?.id ?? null;
 }

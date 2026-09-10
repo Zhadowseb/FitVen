@@ -19,6 +19,7 @@ import {
   claimCloudWatchers,
   compareEntitySyncVersions,
   deleteLocalDayHierarchy,
+  createParentCloudIdCache,
   ensureMicrocycleCloudIdentity,
   getAuthenticatedUserId,
   getComparableDaySnapshot,
@@ -43,7 +44,7 @@ export async function uploadDirtyDays(
   { allowParentRepair = true } = {}
 ) {
   const [localDays, localMicrocycles] = await Promise.all([
-    programRepository.getDaysForCloudSync(db),
+    programRepository.getDaysForCloudSync(db, { dirtyOnly: true }),
     programRepository.getMicrocyclesForCloudSync(db),
   ]);
   const [localPrograms, localMesocycles] = await Promise.all([
@@ -58,6 +59,9 @@ export async function uploadDirtyDays(
   );
   const localMicrocyclesById = new Map(
     localMicrocycles.map((microcycle) => [microcycle.microcycle_id, microcycle])
+  );
+  const resolveParentMicrocycleCloudId = createParentCloudIdCache(
+    ensureMicrocycleCloudIdentity
   );
   let uploadedCount = 0;
   let requiresMicrocycleRepair = false;
@@ -77,7 +81,12 @@ export async function uploadDirtyDays(
         : null;
     const parentMicrocycleCloudId =
       parentMicrocycleId !== null
-        ? await ensureMicrocycleCloudIdentity(db, userId, parentMicrocycle)
+        ? await resolveParentMicrocycleCloudId(
+            db,
+            userId,
+            parentMicrocycle,
+            parentMicrocycleId
+          )
         : null;
 
     if (parentMicrocycleId !== null && parentMicrocycleCloudId === null) {
@@ -500,7 +509,11 @@ async function syncDaysWithCloudInternal(db) {
 
   const initialDownloadedCount = await reconcileDaysFromCloud(db, userId);
   const uploadedCount = await uploadDirtyDays(db, userId);
-  const finalDownloadedCount = await reconcileDaysFromCloud(db, userId);
+  // Only worth a second pass when the first pass had something to push. This
+  // download exists to collect the ids the cloud assigned to rows we just
+  // sent; with nothing sent, it fetches the entire table to learn nothing.
+  const finalDownloadedCount =
+    uploadedCount > 0 ? await reconcileDaysFromCloud(db, userId) : 0;
   const downloadedCount = initialDownloadedCount + finalDownloadedCount;
 
   return {

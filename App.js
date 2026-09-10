@@ -24,11 +24,13 @@ import ProgramSettingsPage from './src/Pages/ProgramSettingsPage/ProgramSettings
 import WorkoutPostsPage from './src/Pages/WorkoutPostsPage/WorkoutPostsPage';
 import MicrocyclePage from './src/Pages/MicrocyclePage/MicrocyclePage';
 import SearchPage from "./src/Pages/SearchPage/SearchPage";
+import PrivacyPolicyPage from "./src/Pages/PrivacyPolicyPage/PrivacyPolicyPage";
 import SocialUserListPage from "./src/Pages/SocialUserListPage/SocialUserListPage";
 import WeekPage from './src/Pages/WeekPage/WeekPage';
 import WorkoutPage from './src/Pages/WorkoutPage/WorkoutPage';
 import ExerciseCatalogPage from "./src/Pages/ExerciseCatalogPage/ExerciseCatalogPage";
 import ExerciseLibraryPage from "./src/Pages/ExerciseLibraryPage/ExerciseLibraryPage";
+import ExerciseMapPage from "./src/Pages/ExerciseMapPage/ExerciseMapPage";
 import PersonalRecordsPage from "./src/Pages/PersonalRecordsPage/PersonalRecordsPage";
 import WorkoutLibraryPage from "./src/Pages/WorkoutLibraryPage/WorkoutLibraryPage";
 import WorkoutCalendarPage from "./src/Pages/WorkoutCalendarPage/WorkoutCalendarPage";
@@ -58,6 +60,7 @@ import "./src/Services/locationBackgroundTask";
 import { AuthProvider, useAuth } from './src/Contexts/AuthContext';
 import { ThemeModeProvider, useThemeMode } from './src/Contexts/ThemeContext';
 import { ExerciseViewSettingsProvider } from './src/Contexts/ExerciseViewSettingsContext';
+import PrivacyConsentGate from "./src/Resources/Components/PrivacyConsentGate/PrivacyConsentGate";
 import ExerciseLibrarySync from "./src/Sync/ExerciseLibrarySync";
 import PushNotificationRegistrationSync from "./src/Sync/PushNotificationRegistrationSync";
 import SetSync from "./src/Sync/SetSync";
@@ -273,6 +276,7 @@ function RootNavigator() {
                 <Stack.Screen name="WorkoutPage" component={WorkoutPage} options={{headerShown: false}} />
                 <Stack.Screen name="ExerciseCatalogPage" component={ExerciseCatalogPage} options={{ headerShown: false }} />
                 <Stack.Screen name="ExerciseLibraryPage" component={ExerciseLibraryPage} options={{ headerShown: false }} />
+                <Stack.Screen name="ExerciseMapPage" component={ExerciseMapPage} options={{ headerShown: false }} />
                 <Stack.Screen name="PersonalRecordsPage" component={PersonalRecordsPage} options={{ headerShown: false }} />
                 <Stack.Screen name="WorkoutLibraryPage" component={WorkoutLibraryPage} options={{ headerShown: false }} />
                 <Stack.Screen name="WorkoutPostsPage" component={WorkoutPostsPage} options={{ headerShown: false }} />
@@ -283,6 +287,7 @@ function RootNavigator() {
                 <Stack.Screen name="ExerciseSocialPostSettingsPage" component={ExerciseSocialPostSettingsPage} options={{ headerShown: false }} />
                 <Stack.Screen name="OneRepMaxCalculatorPage" component={OneRepMaxCalculatorPage} options={{ headerShown: false }} />
                 <Stack.Screen name="WorkoutTypesSettingsPage" component={WorkoutTypesSettingsPage} options={{ headerShown: false }} />
+                <Stack.Screen name="PrivacyPolicyPage" component={PrivacyPolicyPage} options={{ headerShown: false }} />
                 <Stack.Screen
                   name={RUN_HEART_RATE_CHART_ROUTE}
                   component={RunHeartRateChartPage}
@@ -301,6 +306,10 @@ function RootNavigator() {
               <>
                 <Stack.Screen name="LoginPage" component={LoginPage} options={{ headerShown: false }} />
                 <Stack.Screen name="RegisterPage" component={RegisterPage} options={{ headerShown: false }} />
+                {/* Registered on both sides: art. 13 says people have to be
+                    able to read this before they hand over an email address,
+                    not only after they are signed in. */}
+                <Stack.Screen name="PrivacyPolicyPage" component={PrivacyPolicyPage} options={{ headerShown: false }} />
               </>
             )}
           </Stack.Navigator>
@@ -324,7 +333,7 @@ function RootNavigator() {
 function UserScopedDatabaseApp() {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
-  const { accentTheme } = useThemeMode();
+  const { accentTheme, isThemeLoading } = useThemeMode();
   const { user, isAuthLoading } = useAuth();
   const userId = user?.id ?? null;
   const databaseName = getDatabaseNameForUserId(userId);
@@ -342,7 +351,12 @@ function UserScopedDatabaseApp() {
     }
   }, [databaseName, userId]);
 
-  if (isAuthLoading) {
+  // The navigator is keyed on the accent, so mounting it before the stored
+  // one has been read means throwing the whole screen tree away and building
+  // it again a tick later - with every loader on the home screen running
+  // twice. Waiting costs one AsyncStorage read on a screen that was already
+  // waiting for auth.
+  if (isAuthLoading || isThemeLoading) {
     return (
       <ThemedView style={{ alignItems: "center", justifyContent: "center" }}>
         <ThemedText setColor={theme.quietText ?? theme.iconColor}>
@@ -362,7 +376,9 @@ function UserScopedDatabaseApp() {
       <SetSync />
       <WorkoutTypeInstanceSync />
       <PushNotificationRegistrationSync />
-      <RootNavigator key={`accent-${accentTheme}`} />
+      <PrivacyConsentGate>
+        <RootNavigator key={`accent-${accentTheme}`} />
+      </PrivacyConsentGate>
     </SQLiteProvider>
   );
 }
