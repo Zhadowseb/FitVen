@@ -8,6 +8,8 @@
 - Biggest movers draws from a zero line, so an exercise that went backwards is shown going backwards instead of being dropped. Both directions share one kilo scale. The selection is named underneath — four biggest gains and the single biggest decline — because otherwise a drop among five looks like a broken sort.
 - **The exercise page is rebuilt too** (spec section 5). The 1RM chart has a real time axis: points sit on their dates, so gaps in training are visible instead of being smoothed away. Runs more than 14 days apart are drawn as separate curves joined by a dashed grey line, with the break shaded and its length named. A tick under the baseline marks every session, and the best estimate carries a gold dot and a dashed line down to the baseline.
 - The rep table became a grid, one tile per rep count. An untrained rep count keeps its tile with a dashed border rather than disappearing — the hole is the information. A record set inside the period is gold.
+- **The rep ladder runs to twelve, not ten.** A rep block commonly goes to twelve, and stopping at ten meant an eleven- or twelve-rep set could never be counted as a record at all. `PERSONAL_RECORD_REPS` moved with it, so the ladder and what the app treats as a record agree.
+
 - Added "Næste skridt", phrased forward rather than as a comparison across rep counts, and "Seneste sæt" with the sets from the last three sessions.
 
 - The plain exercise list is gone. "Vis alle N øvelser" expands the movers instead, which keeps one list rather than two that disagree about ordering.

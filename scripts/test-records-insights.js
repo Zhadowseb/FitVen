@@ -167,6 +167,7 @@ async function run() {
   assert.equal(sameDay.points[0].weight, 100, 'And it is the best set of that session');
 
   const ladder = insights.buildRepLadder(gapped, { name: 'Bench', now, days: 30 });
+  assert.equal(insights.REP_LADDER_SLOTS, 12, 'The ladder runs to twelve, matching a rep block');
   assert.equal(ladder.length, insights.REP_LADDER_SLOTS, 'Every rep slot stays in the grid');
   assert.equal(ladder[4].reps, 5);
   assert.equal(ladder[4].weight, 112.5, 'The five-rep slot carries the heaviest five');

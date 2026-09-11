@@ -351,7 +351,7 @@ export function buildLatestRecords(sets, { limit = 8 } = {}) {
 
 /** Breaks longer than this are drawn as a gap rather than a long straight line. */
 export const SERIES_GAP_DAYS = 14;
-export const REP_LADDER_SLOTS = 10;
+export const REP_LADDER_SLOTS = 12;
 
 export const EXERCISE_PERIODS = [
   { key: "1m", label: "1M", days: 30 },

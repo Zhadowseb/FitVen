@@ -269,7 +269,9 @@ function isCloudSnapshotDeleting(entity) {
   );
 }
 
-const PERSONAL_RECORD_REPS = Array.from({ length: 10 }, (_, index) => index + 1);
+// Twelve, not ten: a rep block commonly runs to twelve, and stopping the
+// ladder at ten meant an eleven- or twelve-rep set could never be a record.
+const PERSONAL_RECORD_REPS = Array.from({ length: 12 }, (_, index) => index + 1);
 const PERSONAL_RECORD_MONTHS = [
   "Jan",
   "Feb",
