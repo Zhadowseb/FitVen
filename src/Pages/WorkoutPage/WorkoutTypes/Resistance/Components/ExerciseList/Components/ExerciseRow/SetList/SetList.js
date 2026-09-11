@@ -720,6 +720,7 @@ const SetList = ({
 
         return (
           <ThemedBouncyCheckbox
+            accessibilityLabel={`Set ${set.set_number} done`}
             value={Number(set.done) === 1 || Number(set.failed) === 1}
             onChange={() =>
               onToggleSet(set.sets_id, getNextSetCompletion(set), set)

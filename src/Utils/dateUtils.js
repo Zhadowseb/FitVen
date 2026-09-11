@@ -255,14 +255,8 @@ export function formatTimeAgo(value) {
     return `${elapsedHours}h ago`;
   }
 
-  const elapsedDays = Math.floor(elapsedHours / 24);
-
-  if (elapsedDays < 7) {
-    return `${elapsedDays}d ago`;
-  }
-
-  return new Date(timestamp).toLocaleDateString(undefined, {
-    day: "numeric",
-    month: "short",
-  });
+  // BUG-20: past a day this used to say "1d ago" while the records screen said
+  // "Yesterday" about the same event. One vocabulary, and the day boundary is
+  // the calendar's rather than a rolling 24 hours.
+  return formatRelativeDay(timestamp);
 }

@@ -34,8 +34,16 @@ const ThemedHeader = ({
         {left ? (
           left
         ) : (
+          // BUG-18: an icon-only button has no name unless it is given one, so
+          // every screen using this header had an unlabelled back arrow. One
+          // fix covers all of them.
           showBack && (
-            <TouchableOpacity onPress={() => navigation.goBack()}>
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              onPress={() => navigation.goBack()}
+            >
               <ArrowLeft/>
             </TouchableOpacity>
           )

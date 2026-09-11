@@ -9,6 +9,9 @@ import {
   useColorScheme,
   useWindowDimensions,
 } from "react-native";
+// A deep import, because React Native does not re-export this from its root.
+// It is the same module Modal pulls it from; see the list below for why.
+import { VirtualizedListContextResetter } from "react-native/Libraries/Lists/VirtualizedListContext";
 import { useSQLiteContext } from "expo-sqlite";
 import { useNavigation } from "@react-navigation/native";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -1523,6 +1526,12 @@ const ExerciseLibraryList = ({
 
         <TouchableOpacity
           activeOpacity={0.86}
+          accessibilityRole="button"
+          accessibilityLabel={
+            activeFilterCount > 0
+              ? `Open exercise filters, ${activeFilterCount} active`
+              : "Open exercise filters"
+          }
           onPress={() => setIsFilterSheetVisible(true)}
           style={[
             styles.filterButton,
@@ -1692,6 +1701,17 @@ const ExerciseLibraryList = ({
           ) : null}
         </View>
       ) : (
+        // BUG-14: the warning "VirtualizedLists should never be nested inside
+        // plain ScrollViews" is about a list that was handed unlimited height
+        // and so cannot virtualize. That is not this list - `styles.listScroll`
+        // fixes its height, so it has a real viewport and owns its scrolling.
+        // The parent ScrollView has to stay: making it a list froze this one on
+        // its first ten rows, verified on a device.
+        //
+        // This resetter is React Native's own escape hatch for exactly that
+        // case - `Modal` uses it for the same reason - and it tells the list
+        // machinery there is no enclosing list, which is the truth here.
+        <VirtualizedListContextResetter>
         <FlatList
           // Was a ScrollView with a plain `.map()`, on the reasoning that a
           // fixed-height window inside a scrolling page could not own its own
@@ -1720,6 +1740,7 @@ const ExerciseLibraryList = ({
           showsVerticalScrollIndicator={false}
           nestedScrollEnabled
         />
+        </VirtualizedListContextResetter>
       )}
       </ThemedCard>
 

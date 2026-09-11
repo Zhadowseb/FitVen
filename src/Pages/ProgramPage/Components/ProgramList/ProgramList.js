@@ -26,7 +26,10 @@ import {
   ThemedText,
   ThemedTitle,
 } from "../../../../Resources/ThemedComponents";
-import { getProgramEndDate } from "../../../../Utils/programUtils";
+import {
+  getProgramDateRange,
+  getProgramEndDate,
+} from "../../../../Utils/programUtils";
 import {
   formatDate,
   getTodaysDate,
@@ -39,21 +42,6 @@ const TYPE_PILL_GLASS = {
   dark: { background: "rgba(10, 11, 15, 0.72)", border: "rgba(255, 255, 255, 0.14)" },
   light: { background: "rgba(255, 255, 255, 0.88)", border: "rgba(15, 17, 22, 0.14)" },
 };
-
-const MONTH_LABELS = [
-  "JAN",
-  "FEB",
-  "MAR",
-  "APR",
-  "MAY",
-  "JUN",
-  "JUL",
-  "AUG",
-  "SEP",
-  "OCT",
-  "NOV",
-  "DEC",
-];
 
 const RESISTANCE_WORKOUT_TYPES = new Set([
   "Resistance",
@@ -68,41 +56,6 @@ const STATUS_FILTERS = [
   { key: "COMPLETE", label: "Complete" },
   { key: "NOT_STARTED", label: "Draft" },
 ];
-
-function formatProgramDateLabel(value, { includeYear = false } = {}) {
-  if (!value) {
-    return "";
-  }
-
-  const date = parseCustomDate(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = MONTH_LABELS[date.getMonth()] ?? "";
-  const year = date.getFullYear();
-
-  return `${day} ${month}${includeYear ? ` ${year}` : ""}`.trim();
-}
-
-function getProgramDateRange(startDate, endDate) {
-  if (!startDate && !endDate) {
-    return "";
-  }
-
-  const start = parseCustomDate(startDate);
-  const end = parseCustomDate(endDate);
-  const showStartYear =
-    Number.isNaN(start.getTime()) ||
-    Number.isNaN(end.getTime()) ||
-    start.getFullYear() !== end.getFullYear();
-
-  return `${formatProgramDateLabel(startDate, {
-    includeYear: showStartYear,
-  })} – ${formatProgramDateLabel(endDate, { includeYear: true })}`;
-}
 
 function normalizeWorkoutType(type) {
   return RESISTANCE_WORKOUT_TYPES.has(type) ? "Resistance" : type;

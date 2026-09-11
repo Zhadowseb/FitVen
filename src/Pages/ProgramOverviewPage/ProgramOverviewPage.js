@@ -30,7 +30,7 @@ import { ThemedTitle,
   from "../../Resources/ThemedComponents";
 import Cogwheel from '../../Resources/Icons/UI-icons/Cogwheel';
 import { formatDate, parseCustomDate } from '../../Utils/dateUtils';
-import { getProgramEndDate } from '../../Utils/programUtils';
+import { getProgramDateRange, getProgramEndDate } from '../../Utils/programUtils';
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -67,23 +67,6 @@ function getLocalDateIndex(date) {
     );
 }
 
-function formatHeaderDate(value) {
-    if (!value) {
-        return "-";
-    }
-
-    const date = parseCustomDate(value);
-
-    if (Number.isNaN(date.getTime())) {
-        return value;
-    }
-
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-
-    return `${day}.${month}.${year}`;
-}
 
 function getProgramTimeline(startDate, totalDays) {
     const normalizedTotalDays = Math.max(0, Math.trunc(Number(totalDays) || 0));
@@ -331,7 +314,7 @@ const ProgramOverviewPage = ( {route} ) => {
     // and the week counter next to it already says where in the plan you are.
     const weekProgressPercent = programStats.completionPercent;
     const headerPeriod =
-        `${formatHeaderDate(start_date)} – ${formatHeaderDate(end_date)}`;
+        getProgramDateRange(start_date, end_date);
 
   return (
     <>

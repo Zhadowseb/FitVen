@@ -582,6 +582,10 @@ export default function ProfilePage() {
                 <View style={styles.clearBirthDateRow}>
                   <TouchableOpacity
                     activeOpacity={0.72}
+                    accessibilityRole="button"
+                    // BUG-18: "Clear" on its own says nothing about what it
+                    // clears, which is the birth year above it.
+                    accessibilityLabel="Clear birth year"
                     onPress={() => {
                       clearProfileFeedback();
                       setBirthDate("");
