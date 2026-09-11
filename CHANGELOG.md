@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.24.0] - Unreleased
+### Changed
+- **A personal record is gold, everywhere.** `record` was `#4BA3DB` blue and the new Records design wanted gold, which would have left one thing wearing two colours depending on the screen. The token changed instead of the screen, so the PR badge in a social post, the marker in SetList, the calendar and the workout library all moved together.
+- Light mode darkens the gold to `#8A6410`. `#E8B44A` reads at 1.9:1 on white; the design proposed `#B8860B`, which is 3.25:1 and still under the 4.5:1 a text colour needs.
+- `recordLight` in light mode was a pale tint that `ExerciseRow` uses as the *title colour* for a record exercise — unreadable before and unreadable in gold, so it now matches `record`.
+
+---
 ## [0.23.38] - Unreleased
 ### Fixed
 - **The CMake pin is Windows-only now, and the first cloud build is what found it.** `withDevAppVariant` pinned CMake to 3.31.6 for every build. That version exists on this machine because it was installed by hand: the ninja in 3.22.1 is not long-path aware and the C++ codegen breaks on Windows once object paths pass 260 characters. EAS builds on Linux, has 3.22.1, and has no reason to carry 3.31.6 — so the first production AAB failed outright with `[CXX1300] CMake '3.31.6' was not found in SDK, PATH, or by cmake.dir property` after five minutes of Gradle. The pin is gated on `process.platform === "win32"`, which ties it to the reason it exists rather than to a build environment, so a local Windows build is unchanged and a Linux one stops asking for a CMake it does not need.
