@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.23.38-fix-eas-cmake-pin.1",
+  "version": "0.23.39-minor-personal-records-redesign.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",

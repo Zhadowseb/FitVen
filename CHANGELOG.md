@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.23.39] - Unreleased
+### Changed
+- **Personal Records shows what it already knew.** The page opened on a radar chart with nothing in it, given its full 300 points of height, so four tenths of the screen was an empty box and the records started below the fold. With nothing to plot the muscle load card is now one line instead. In its place at the top is a strip of three numbers — exercises tracked, records filled out of the slots there are, and the heaviest lift with the exercise it belongs to.
+- **Exercise rows lead with the weight.** A row used to end in a set count, which says how much was logged rather than how much of the exercise is mapped out. It now ends in the heaviest lift, and carries a bar showing how many of the rep ranges have a record in them. Every value here was already on the summary the page fetches; none of it reached the screen. The row icon went to make space, since the same arrow on every row said nothing.
+
+---
 ## [0.23.38] - Unreleased
 ### Fixed
 - **The CMake pin is Windows-only now, and the first cloud build is what found it.** `withDevAppVariant` pinned CMake to 3.31.6 for every build. That version exists on this machine because it was installed by hand: the ninja in 3.22.1 is not long-path aware and the C++ codegen breaks on Windows once object paths pass 260 characters. EAS builds on Linux, has 3.22.1, and has no reason to carry 3.31.6 — so the first production AAB failed outright with `[CXX1300] CMake '3.31.6' was not found in SDK, PATH, or by cmake.dir property` after five minutes of Gradle. The pin is gated on `process.platform === "win32"`, which ties it to the reason it exists rather than to a build environment, so a local Windows build is unchanged and a Linux one stops asking for a CMake it does not need.

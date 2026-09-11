@@ -422,6 +422,50 @@ const PersonalRecordsPage = () => {
     const chartGeometry = buildMuscleLoadRadarGeometry(points);
     const hasMuscleLoadData = !!muscleLoad?.hasData && !!chartGeometry;
 
+    // A radar chart with nothing in it was still given its full 300 points of
+    // height, so the first thing on the page was an empty box taking four
+    // tenths of the screen and the records themselves started below the fold.
+    // With nothing to plot the card says so in one line and gets out of the way.
+    if (!muscleLoadLoading && !(hasPrograms && hasMuscleLoadData)) {
+      return (
+        <View
+          style={[
+            styles.muscleLoadResting,
+            { backgroundColor: cardSurface, borderColor: cardBorder },
+          ]}
+        >
+          <View
+            style={[styles.muscleLoadRestingIcon, { backgroundColor: primarySoft }]}
+          >
+            <TradeUp
+              width={18}
+              height={18}
+              stroke={primaryColor}
+              color={primaryTextColor}
+            />
+          </View>
+
+          <View style={styles.muscleLoadRestingText}>
+            <ThemedText
+              style={styles.muscleLoadRestingTitle}
+              setColor={titleColor}
+            >
+              Weekly muscle load
+            </ThemedText>
+            <ThemedText
+              style={styles.muscleLoadRestingMeta}
+              setColor={quietText}
+              numberOfLines={2}
+            >
+              {hasPrograms
+                ? "Log strength sets in a program and the balance across muscle groups appears here."
+                : "Start a program and the balance across muscle groups appears here."}
+            </ThemedText>
+          </View>
+        </View>
+      );
+    }
+
     return (
       <View
         style={[
@@ -550,8 +594,102 @@ const PersonalRecordsPage = () => {
     );
   };
 
+  // Three numbers the page could always have answered and never did: how many
+  // exercises are tracked, how much of their rep ranges are filled in, and what
+  // the heaviest lift across all of them is. All of it is already on the
+  // summaries; none of it reached the screen.
+  const overview = useMemo(() => {
+    if (summaries.length === 0) {
+      return null;
+    }
+
+    let filled = 0;
+    let slots = 0;
+    let heaviest = null;
+    let heaviestExercise = null;
+
+    for (const summary of summaries) {
+      filled += summary.completedRecordCount ?? 0;
+      slots += summary.recordSlotCount ?? 0;
+
+      if (
+        Number.isFinite(summary.heaviestWeight) &&
+        (heaviest === null || summary.heaviestWeight > heaviest)
+      ) {
+        heaviest = summary.heaviestWeight;
+        heaviestExercise = summary;
+      }
+    }
+
+    return {
+      exerciseCount: summaries.length,
+      filled,
+      slots,
+      heaviestDisplay: heaviestExercise?.heaviestWeightDisplay ?? EMPTY_VALUE,
+      heaviestExerciseName: heaviestExercise?.exerciseName ?? null,
+    };
+  }, [summaries]);
+
+  const renderOverview = () => {
+    if (loading || !overview) {
+      return null;
+    }
+
+    const stats = [
+      { key: "exercises", value: `${overview.exerciseCount}`, label: "exercises" },
+      {
+        key: "records",
+        value: `${overview.filled}`,
+        label: `of ${overview.slots} records`,
+      },
+      {
+        key: "heaviest",
+        value: overview.heaviestDisplay,
+        label: overview.heaviestExerciseName ?? "heaviest",
+      },
+    ];
+
+    return (
+      <View
+        style={[
+          styles.overviewStrip,
+          { backgroundColor: cardSurface, borderColor: cardBorder },
+        ]}
+      >
+        {stats.map((stat, index) => (
+          <View key={stat.key} style={styles.overviewCell}>
+            {index > 0 ? (
+              <View
+                style={[
+                  styles.overviewDivider,
+                  { backgroundColor: withAlpha(quietText, 0.24) },
+                ]}
+              />
+            ) : null}
+            <ThemedText
+              style={styles.overviewValue}
+              setColor={titleColor}
+              numberOfLines={1}
+            >
+              {stat.value}
+            </ThemedText>
+            <ThemedText
+              style={styles.overviewLabel}
+              setColor={quietText}
+              numberOfLines={1}
+            >
+              {stat.label}
+            </ThemedText>
+          </View>
+        ))}
+      </View>
+    );
+  };
+
   const renderExerciseList = () => (
     <View style={styles.exerciseList}>
+      {renderOverview()}
+
       {loading && <ThemedStateBlock style={styles.loadingState} />}
 
       {!loading && summaries.length === 0 && (
@@ -574,65 +712,96 @@ const PersonalRecordsPage = () => {
       )}
 
       {!loading &&
-        summaries.map((summary) => (
-          <TouchableOpacity
-            key={summary.exerciseName}
-            activeOpacity={0.88}
-            onPress={() => openExerciseDetail(summary.exerciseName)}
-            style={[
-              styles.exerciseListItem,
-              {
-                backgroundColor: cardSurface,
-                borderColor: cardBorder,
-              },
-            ]}
-          >
-            <View
+        summaries.map((summary) => {
+          // How many of the twelve rep ranges have a record in them. The row
+          // used to show the set count, which says how much was logged rather
+          // than how much of the exercise is mapped out.
+          const filled = summary.completedRecordCount ?? 0;
+          const slots = summary.recordSlotCount || 1;
+          const coverage = Math.max(0, Math.min(1, filled / slots));
+
+          return (
+            <TouchableOpacity
+              key={summary.exerciseName}
+              activeOpacity={0.88}
+              onPress={() => openExerciseDetail(summary.exerciseName)}
               style={[
-                styles.exerciseListIcon,
-                { backgroundColor: primarySoft },
+                styles.exerciseListItem,
+                {
+                  backgroundColor: cardSurface,
+                  borderColor: cardBorder,
+                },
               ]}
             >
-              <TradeUp
-                width={21}
-                height={21}
-                stroke={primaryColor}
-                color={primaryTextColor}
-              />
-            </View>
+              <View style={styles.exerciseListText}>
+                <ThemedText
+                  style={styles.exerciseListTitle}
+                  setColor={titleColor}
+                  numberOfLines={1}
+                >
+                  {summary.exerciseName}
+                </ThemedText>
+                {/* The relative age is what the row is scanned for; the exact
+                    date lives on the detail screen. */}
+                <ThemedText
+                  style={styles.exerciseListMeta}
+                  setColor={quietText}
+                  numberOfLines={1}
+                >
+                  {`Last PR ${
+                    summary.latestRecordRelativeDateLabel ||
+                    summary.latestRecordDateDisplay
+                  }`}
+                </ThemedText>
 
-            <View style={styles.exerciseListText}>
-              <ThemedText
-                style={styles.exerciseListTitle}
-                setColor={titleColor}
-                numberOfLines={1}
-              >
-                {summary.exerciseName}
-              </ThemedText>
-              {/* The relative age is what the row is scanned for; the exact
-                  date lives on the detail screen. */}
-              <ThemedText
-                style={styles.exerciseListMeta}
-                setColor={quietText}
-                numberOfLines={1}
-              >
-                {`Last PR ${
-                  summary.latestRecordRelativeDateLabel ||
-                  summary.latestRecordDateDisplay
-                }`}
-              </ThemedText>
-            </View>
+                <View style={styles.exerciseListCoverage}>
+                  <View
+                    style={[
+                      styles.exerciseListCoverageTrack,
+                      { backgroundColor: withAlpha(quietText, 0.22) },
+                    ]}
+                  >
+                    <View
+                      style={[
+                        styles.exerciseListCoverageFill,
+                        {
+                          backgroundColor: primaryColor,
+                          width: `${Math.round(coverage * 100)}%`,
+                        },
+                      ]}
+                    />
+                  </View>
+                  <ThemedText
+                    style={styles.exerciseListCoverageLabel}
+                    setColor={quietText}
+                  >
+                    {`${filled}/${slots} rep ranges`}
+                  </ThemedText>
+                </View>
+              </View>
 
-            <View style={styles.exerciseListStats}>
-              <ThemedText style={styles.exerciseListStatValue} setColor={titleColor}>
-                {summary.setCount}
-              </ThemedText>
-              <ThemedText style={styles.exerciseListStatLabel} setColor={quietText}>
-                sets
-              </ThemedText>
-            </View>
-          </TouchableOpacity>
-        ))}
+              {/* The heaviest lift is the number people come to this page for.
+                  It was already on the summary and the row never showed it. */}
+              <View style={styles.exerciseListStats}>
+                <ThemedText
+                  style={styles.exerciseListStatValue}
+                  setColor={titleColor}
+                  numberOfLines={1}
+                >
+                  {summary.heaviestWeightDisplay === "--"
+                    ? EMPTY_VALUE
+                    : summary.heaviestWeightDisplay}
+                </ThemedText>
+                <ThemedText
+                  style={styles.exerciseListStatLabel}
+                  setColor={quietText}
+                >
+                  best
+                </ThemedText>
+              </View>
+            </TouchableOpacity>
+          );
+        })}
     </View>
   );
 

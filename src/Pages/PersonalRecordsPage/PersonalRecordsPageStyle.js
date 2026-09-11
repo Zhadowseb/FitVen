@@ -87,6 +87,75 @@ export default StyleSheet.create({
     textAlign: "center",
     marginTop: 5,
   },
+  // The muscle load card when there is nothing to plot. One row, not a
+  // 300-point chart frame around an apology.
+  muscleLoadResting: {
+    borderWidth: 1,
+    borderRadius: 18,
+    padding: 14,
+    marginBottom: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  muscleLoadRestingIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 13,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  muscleLoadRestingText: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2,
+  },
+  muscleLoadRestingTitle: {
+    fontSize: 16,
+    fontWeight: "800",
+    lineHeight: 21,
+  },
+  muscleLoadRestingMeta: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  overviewStrip: {
+    borderWidth: 1,
+    borderRadius: 18,
+    paddingVertical: 14,
+    paddingHorizontal: 6,
+    marginBottom: 4,
+    flexDirection: "row",
+    alignItems: "stretch",
+  },
+  overviewCell: {
+    flex: 1,
+    minWidth: 0,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 6,
+    gap: 3,
+  },
+  // Hairlines between the three numbers rather than around each of them: the
+  // strip should read as one object, not as three cards that happen to touch.
+  overviewDivider: {
+    position: "absolute",
+    left: 0,
+    top: 4,
+    bottom: 4,
+    width: StyleSheet.hairlineWidth,
+  },
+  overviewValue: {
+    fontSize: 21,
+    fontWeight: "800",
+    lineHeight: 25,
+    fontVariant: ["tabular-nums"],
+  },
+  overviewLabel: {
+    fontSize: 12,
+    lineHeight: 16,
+    textAlign: "center",
+  },
   exerciseList: {
     gap: 10,
   },
@@ -94,18 +163,29 @@ export default StyleSheet.create({
     minHeight: 78,
     borderWidth: 1,
     borderRadius: 18,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     flexDirection: "row",
     alignItems: "center",
+    gap: 12,
   },
-  exerciseListIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
+  exerciseListCoverage: {
+    marginTop: 9,
+    gap: 5,
+  },
+  exerciseListCoverageTrack: {
+    height: 4,
+    borderRadius: 2,
+    overflow: "hidden",
+  },
+  exerciseListCoverageFill: {
+    height: 4,
+    borderRadius: 2,
+  },
+  exerciseListCoverageLabel: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontVariant: ["tabular-nums"],
   },
   exerciseListText: {
     flex: 1,
@@ -122,14 +202,17 @@ export default StyleSheet.create({
     marginTop: 3,
   },
   exerciseListStats: {
-    minWidth: 42,
+    minWidth: 78,
+    maxWidth: 104,
     alignItems: "flex-end",
     justifyContent: "center",
+    gap: 2,
   },
   exerciseListStatValue: {
     fontSize: 19,
     fontWeight: "800",
     lineHeight: 24,
+    fontVariant: ["tabular-nums"],
   },
   exerciseListStatLabel: {
     fontSize: 12,
