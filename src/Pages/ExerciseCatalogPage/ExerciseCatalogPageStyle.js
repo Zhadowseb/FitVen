@@ -22,6 +22,14 @@ export default StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  // The Done button carries a word and a count, so it cannot be the 38 px
+  // square the custom-exercise plus uses.
+  headerDoneAction: {
+    width: "auto",
+    minWidth: 64,
+    paddingHorizontal: 12,
+  },
+  headerDoneText: { fontSize: 14, fontWeight: "700" },
   headerTitleGroup: {
     alignItems: "center",
     justifyContent: "center",

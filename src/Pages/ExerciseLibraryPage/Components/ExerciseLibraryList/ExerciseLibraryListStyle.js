@@ -354,14 +354,24 @@ export default StyleSheet.create({
     width: undefined,
     maxWidth: undefined,
   },
+  // Was minHeight: LIST_VIEWPORT_HEIGHT with the text centred in it, which
+  // put the message below the fold and left the screen looking blank.
   emptyState: {
-    flex: 1,
+    alignItems: "center",
+    paddingVertical: 28,
+    paddingHorizontal: 18,
+    gap: 8,
+  },
+  emptyResetButton: {
+    marginTop: 6,
+    minHeight: 42,
+    paddingHorizontal: 18,
+    borderWidth: 1,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 40,
-    paddingHorizontal: 18,
-    minHeight: LIST_VIEWPORT_HEIGHT,
   },
+  emptyResetText: { fontSize: 15, fontWeight: "600" },
   emptyTitle: {
     textAlign: "center",
     marginBottom: 8,

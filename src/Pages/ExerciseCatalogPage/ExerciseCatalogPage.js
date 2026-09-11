@@ -29,6 +29,7 @@ const ExerciseCatalogPage = ({ route }) => {
   const colorScheme = useColorScheme();
   const [refreshKey, setRefreshKey] = useState(0);
   const [selectingExerciseName, setSelectingExerciseName] = useState(null);
+  const [addedExerciseNames, setAddedExerciseNames] = useState([]);
   const [isCustomExerciseModalVisible, setIsCustomExerciseModalVisible] =
     useState(false);
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -53,6 +54,11 @@ const ExerciseCatalogPage = ({ route }) => {
     }, [])
   );
 
+  // SPM-2: the sheet used to close after the first exercise, so a workout with
+  // six exercises meant six trips through the catalog with a fresh search each
+  // time - on a list whose every row carries its own + button, which says the
+  // opposite. It stays open, counts what has been added and leaves when the
+  // user says so.
   const handleSelectExercise = useCallback(
     async (exercise) => {
       if (!isWorkoutPicker || selectingExerciseName) {
@@ -71,7 +77,9 @@ const ExerciseCatalogPage = ({ route }) => {
           workoutId: workoutPickerId,
           exerciseName,
         });
-        navigation.goBack();
+        setAddedExerciseNames((current) =>
+          current.includes(exerciseName) ? current : [...current, exerciseName]
+        );
       } catch (error) {
         console.error("Failed to add exercise to workout:", error);
         Alert.alert(
@@ -82,7 +90,7 @@ const ExerciseCatalogPage = ({ route }) => {
         setSelectingExerciseName(null);
       }
     },
-    [db, isWorkoutPicker, navigation, selectingExerciseName, workoutPickerId]
+    [db, isWorkoutPicker, selectingExerciseName, workoutPickerId]
   );
 
   const handleCreateCustomExercise = useCallback(
@@ -108,6 +116,7 @@ const ExerciseCatalogPage = ({ route }) => {
       onSelectExercise={isWorkoutPicker ? handleSelectExercise : undefined}
       onAddCustomExercise={() => setIsCustomExerciseModalVisible(true)}
       selectingExerciseName={selectingExerciseName}
+      addedExerciseNames={addedExerciseNames}
       workoutPicker={workoutPicker}
       initialFilter={initialFilter}
     />
@@ -135,6 +144,39 @@ const ExerciseCatalogPage = ({ route }) => {
             {isWorkoutPicker ? "Add exercise" : "Exercises"}
           </ThemedTitle>
         </View>
+
+        {/* The way out, and the count of what has gone in so far. Without it
+            an open sheet gives no sign that anything was added. */}
+        {isWorkoutPicker ? (
+          <TouchableOpacity
+            activeOpacity={0.86}
+            accessibilityRole="button"
+            accessibilityLabel={
+              addedExerciseNames.length > 0
+                ? `Done, ${addedExerciseNames.length} added`
+                : "Done"
+            }
+            onPress={() => navigation.goBack()}
+            style={[
+              styles.headerAction,
+              styles.headerDoneAction,
+              {
+                backgroundColor: theme.uiBackground,
+                borderColor: theme.border,
+              },
+            ]}
+          >
+            <ThemedText
+              style={styles.headerDoneText}
+              setColor={primaryTextColor}
+              numberOfLines={1}
+            >
+              {addedExerciseNames.length > 0
+                ? `Done (${addedExerciseNames.length})`
+                : "Done"}
+            </ThemedText>
+          </TouchableOpacity>
+        ) : null}
 
         {/* Making your own exercise is a rare thing to do, and it had a
             full-width button in the middle of the list saying otherwise. */}
