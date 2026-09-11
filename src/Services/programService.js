@@ -1061,11 +1061,22 @@ export async function getProgramStats(db, programId) {
     streakWeeks += 1;
   }
 
+  // A program whose workouts were ticked off without logging anything has no
+  // volume and no session length. That is not zero kilos - it is no
+  // measurement, and printing "0 kg" next to "12 of 12 workouts completed"
+  // reads as a broken counter rather than as missing data.
+  const loggedSetCount = Number(overview?.logged_set_count) || 0;
+  const timedWorkoutCount = Number(overview?.timed_workout_count) || 0;
+
   return {
-    totalVolume: Math.round(Number(overview?.total_volume) || 0),
-    avgSessionMinutes: Math.round(
-      (Number(overview?.avg_session_seconds) || 0) / 60
-    ),
+    totalVolume:
+      loggedSetCount > 0
+        ? Math.round(Number(overview?.total_volume) || 0)
+        : null,
+    avgSessionMinutes:
+      timedWorkoutCount > 0
+        ? Math.round((Number(overview?.avg_session_seconds) || 0) / 60)
+        : null,
     completionPercent:
       totalWorkouts > 0
         ? Math.round((completedWorkouts / totalWorkouts) * 100)

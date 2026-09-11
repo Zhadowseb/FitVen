@@ -246,13 +246,22 @@ const SearchPage = () => {
   // These open a list, so they are buttons with a real 44 px target on their
   // own row - as a chip beside the heading they were a 30 px strip that did not
   // look tappable.
-  const renderRelationshipButton = (relationshipType, label, value) => (
+  // "1 followers" was string concatenation. "following" has no plural form, so
+  // each caller says what its singular and plural are.
+  const renderRelationshipButton = (
+    relationshipType,
+    label,
+    value,
+    singularLabel = label
+  ) => (
     <Pressable
       key={relationshipType}
       onPress={() => handleOpenRelationshipModal(relationshipType)}
       disabled={!user?.id}
       accessibilityRole="button"
-      accessibilityLabel={`${value} ${label}`}
+      accessibilityLabel={`${value} ${
+        value === 1 ? singularLabel : label
+      }`}
       style={({ pressed }) => [
         styles.relationshipStat,
         {
@@ -269,7 +278,7 @@ const SearchPage = () => {
         >
           {isLoadingFollowCounts ? "..." : value}
         </ThemedText>
-        {` ${label}`}
+        {` ${value === 1 && !isLoadingFollowCounts ? singularLabel : label}`}
       </ThemedText>
     </Pressable>
   );
@@ -303,6 +312,7 @@ const SearchPage = () => {
               "followers",
               "followers",
               followCounts.followers,
+              "follower",
             )}
             {renderRelationshipButton(
               "following",
@@ -400,11 +410,21 @@ const SearchPage = () => {
       <ThemedModal
         visible={Boolean(activeRelationshipType)}
         onClose={closeRelationshipModal}
-        title={`${relationshipTitle} (${
-          activeRelationshipType === "following"
-            ? followCounts.following
-            : followCounts.followers
-        })`}
+        // The blocked list fell through to the followers count, so a list
+        // reading "You have not blocked anyone." was headed "Blocked (1)" -
+        // the number of followers. A count is only shown once the list it
+        // counts has actually arrived.
+        title={
+          isLoadingRelationships
+            ? relationshipTitle
+            : `${relationshipTitle} (${
+                activeRelationshipType === "blocked"
+                  ? relationshipProfiles.length
+                  : activeRelationshipType === "following"
+                    ? followCounts.following
+                    : followCounts.followers
+              })`
+        }
         style={[
           styles.relationshipModal,
           {

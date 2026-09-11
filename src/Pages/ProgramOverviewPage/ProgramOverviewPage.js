@@ -35,15 +35,20 @@ import { getProgramEndDate } from '../../Utils/programUtils';
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
 const emptyProgramStats = {
-    totalVolume: 0,
-    avgSessionMinutes: 0,
+    totalVolume: null,
+    avgSessionMinutes: null,
     completionPercent: 0,
     completedWorkouts: 0,
     totalWorkouts: 0,
     streakWeeks: 0,
 };
 
+// null means nothing was logged, which is not the same as zero kilos.
 function formatCompactVolume(value) {
+    if (value === null || value === undefined) {
+        return null;
+    }
+
     const numberValue = Math.max(0, Number(value) || 0);
 
     if (numberValue >= 1000) {
@@ -375,7 +380,11 @@ const ProgramOverviewPage = ( {route} ) => {
                 completedWorkouts={programStats.completedWorkouts}
                 totalWorkouts={programStats.totalWorkouts}
                 totalVolumeLabel={formatCompactVolume(programStats.totalVolume)}
-                avgSessionMinutes={programStats.avgSessionMinutes}
+                avgSessionMinutes={
+                    programStats.avgSessionMinutes === null
+                        ? null
+                        : `${programStats.avgSessionMinutes}`
+                }
                 onStart={() => setStartProgramModalVisible(true)}
             />
 

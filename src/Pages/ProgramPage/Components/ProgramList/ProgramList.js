@@ -439,9 +439,12 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
           (!isDraft &&
             totalWorkouts > 0 &&
             completedWorkouts >= totalWorkouts);
+        // A draft used to be pinned at 0% no matter what its workouts said,
+        // so a card could read "5/5 workouts" next to "Progress 0%". The count
+        // means the same thing on every card, so the percentage does too.
         const progressPercent = isCompleted
           ? 100
-          : !isDraft && totalWorkouts > 0
+          : totalWorkouts > 0
           ? Math.min(
               100,
               Math.round((completedWorkouts / totalWorkouts) * 100)

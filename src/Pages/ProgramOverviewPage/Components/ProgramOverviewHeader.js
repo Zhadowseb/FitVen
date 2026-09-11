@@ -132,10 +132,12 @@ const ProgramOverviewHeader = ({
           </ThemedText>
           <View style={styles.statValueRow}>
             <ThemedText style={styles.statValue} setColor={theme.title}>
-              {totalVolumeLabel}
+              {totalVolumeLabel ?? "–"}
             </ThemedText>
             <ThemedText style={styles.statUnit} setColor={theme.quietText}>
-              {` ${totalVolumeUnit}`}
+              {totalVolumeLabel === null || totalVolumeLabel === undefined
+                ? " not logged"
+                : ` ${totalVolumeUnit}`}
             </ThemedText>
           </View>
         </View>
@@ -154,10 +156,12 @@ const ProgramOverviewHeader = ({
           </ThemedText>
           <View style={styles.statValueRow}>
             <ThemedText style={styles.statValue} setColor={theme.title}>
-              {avgSessionMinutes}
+              {avgSessionMinutes ?? "–"}
             </ThemedText>
             <ThemedText style={styles.statUnit} setColor={theme.quietText}>
-              {" min"}
+              {avgSessionMinutes === null || avgSessionMinutes === undefined
+                ? " not timed"
+                : " min"}
             </ThemedText>
           </View>
         </View>

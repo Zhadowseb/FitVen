@@ -1734,12 +1734,31 @@ export async function getProgramOverviewStats(db, programId) {
             AND s.done = 1
             AND s.weight IS NOT NULL
             AND s.reps IS NOT NULL
-        ), 0) AS total_volume
+        ), 0) AS total_volume,
+        COALESCE((
+          SELECT COUNT(*)
+          FROM "Set" s
+          JOIN Exercise_Instance e
+            ON e.exercise_instance_id = s.exercise_instance_id
+          JOIN Workout_Type_Instance sw
+            ON sw.workout_id = e.workout_type_instance_id
+          JOIN Day sd
+            ON sd.day_id = sw.day_id
+          WHERE sd.program_id = ?
+            AND s.done = 1
+            AND s.weight IS NOT NULL
+            AND s.reps IS NOT NULL
+        ), 0) AS logged_set_count,
+        COALESCE(SUM(CASE
+          WHEN w.done = 1 AND COALESCE(w.elapsed_time, 0) > 0
+          THEN 1
+          ELSE 0
+        END), 0) AS timed_workout_count
      FROM Day d
      LEFT JOIN Workout_Type_Instance w
        ON w.day_id = d.day_id
      WHERE d.program_id = ?;`,
-    [programId, programId]
+    [programId, programId, programId]
   );
 }
 
