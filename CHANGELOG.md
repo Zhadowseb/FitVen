@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.24.1] - Unreleased
+### Fixed
+- **The two paths into the workout-start notification could not dedupe against each other.** The app calls the Edge Function the moment a timer starts; the database webhook calls it again when that row reaches the cloud minutes later. Both paths are supposed to land on the same `notification_events` key, and none of the three keys in use collided: the stored row id when the client's workout had already synced, `actor:sync_id` when it had not, and a bare `sync_id` from the webhook. Enabling the webhook described in `20260609112712_workout-start-notifications.sql` would therefore have sent every follower two identical pushes for every workout. The key is now `workout_started:<actor>:<sync_id>` on both paths — `sync_id` is the only identity both hold, because the row id does not exist until the workout has synced. The actor prefix stays: it is what stops a caller from registering a key in somebody else's name to suppress their notification, and `actorId` is trusted on both paths. When the client's workout is matched to a stored row, the key uses the *stored* `sync_id`, so a caller sending a real row id under a wrong `sync_id` cannot get a second key out of it.
+- **Opening the notification list from a notification did not clear the unread badge.** The tap handler passed `markNotificationsRead: false`, so only the bell on Home could ever mark anything read and the badge kept counting notifications the user had already been shown.
+- **The unread badge went stale while the app was in the background.** A notification that arrives then never reaches the in-app listener, and screen focus does not change when the app is brought back, so Home kept its old number until the user navigated away and back. It now refreshes on `AppState` becoming active.
+- **A device registered to a second account said nothing about being switched off.** `manage-push-token` stores the row disabled while another account is still active on the same push token — deliberately, so a device is not silently taken — and returns `blockedByActiveOwner`. Nothing read it back, so notification settings reported a saved choice on a device registered to receive nothing. The settings screen now says so, and says what clears it.
+
+### Notes
+- Checked and found correct, so they are not changed here: blocks sever follows in both directions before any notification is sent; account deletion clears `push_tokens`, `notification_events`, `notification_inbox` and the custom source list; `POST_NOTIFICATIONS` comes from `expo-notifications`' own manifest through the merger, so its absence from `app.json`'s explicit Android permission array is not a gap; the actor's own devices are excluded from the push both by user id and by token, so a shared device does not notify the person who started the workout.
+- Not verified on a device: the delivery itself. It needs a second account to follow this one and start a workout, and on iOS it needs APNs credentials that do not exist until the first Apple build.
+
+---
 ## [0.24.0] - Unreleased
 ### Changed
 - **A personal record is gold, everywhere.** `record` was `#4BA3DB` blue and the new Records design wanted gold, which would have left one thing wearing two colours depending on the screen. The token changed instead of the screen, so the PR badge in a social post, the marker in SetList, the calendar and the workout library all moved together.

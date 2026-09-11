@@ -243,28 +243,32 @@ function getWorkoutLabel(workout: WorkoutRecord) {
   return workoutType || "Workout";
 }
 
+// Both entry points have to arrive at the same key for the same workout, or the
+// start is announced twice: the app calls this function the moment the timer
+// starts, and the database webhook calls it again when that row reaches the
+// cloud minutes later. Three key shapes used to be in play - the stored row id,
+// an actor-namespaced sync_id and a bare sync_id - and none of them collided,
+// so every workout sent two pushes to every follower.
+//
+// sync_id is the one identity both paths hold: the client generates it and the
+// webhook reads it back off the row. The row id only exists once the workout
+// has synced, so it cannot be the shared key.
+//
+// The actor prefix stays. It is what stops a caller from registering a key in
+// somebody else's name to suppress their notification, and it costs nothing
+// here because actorId is trusted on both paths - the authenticated caller on
+// the client path, the row's own user_id on the webhook path.
 function getWorkoutEventKey(workout: WorkoutRecord, actorId: string) {
-  const verifiedRowId = normalizeText(workout.verified_row_id);
-
-  // Matched to a stored row: the database's own id is the key, so a caller
-  // cannot choose it.
-  if (verifiedRowId) {
-    return `workout_started:${verifiedRowId}`;
-  }
-
-  const identity = normalizeText(workout.sync_id) ?? normalizeText(workout.id);
+  const identity =
+    normalizeText(workout.sync_id) ??
+    normalizeText(workout.verified_row_id) ??
+    normalizeText(workout.id);
 
   if (!identity) {
     return null;
   }
 
-  // Unverified: namespaced by the actor, so registering a key cannot suppress
-  // somebody else's notification.
-  if (workout.verified_source === "client") {
-    return `workout_started:${actorId}:${identity}`;
-  }
-
-  return `workout_started:${identity}`;
+  return `workout_started:${actorId}:${identity}`;
 }
 
 function getWorkoutSourceId(workout: WorkoutRecord) {
@@ -449,6 +453,11 @@ async function normalizeClientPayload(
     ? {
         workout_type: stored.workout_type ?? null,
         label: stored.label ?? null,
+        // The stored sync_id, not the one the caller sent. They are normally
+        // the same, but the dedupe key is built from this and the webhook will
+        // build its key from the stored value - so a caller sending a real row
+        // id under a wrong sync_id must not get a second key out of it.
+        sync_id: normalizeText(stored.sync_id),
         verified_row_id: normalizeText(stored.id),
         verified_source: "database",
       }

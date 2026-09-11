@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  AppState,
   FlatList,
   RefreshControl,
   TouchableOpacity,
@@ -592,18 +593,39 @@ export default function App() {
     }, [loadCirclePreview, loadHomeSnapshot, loadWorkoutSummaryFeed])
   );
 
+  const refreshUnreadNotificationCount = useCallback(() => {
+    if (!user?.id) {
+      setUnreadNotificationCount(0);
+      return;
+    }
+
+    notificationService
+      .getUnreadNotificationCount({ user })
+      .then(setUnreadNotificationCount)
+      .catch(() => setUnreadNotificationCount(0));
+  }, [user]);
+
   useEffect(() => {
     const subscription = notificationService.addNotificationReceivedListener(
-      () => {
-        notificationService
-          .getUnreadNotificationCount({ user })
-          .then(setUnreadNotificationCount)
-          .catch(() => setUnreadNotificationCount(0));
-      }
+      refreshUnreadNotificationCount
     );
 
     return () => subscription?.remove?.();
-  }, [user]);
+  }, [refreshUnreadNotificationCount]);
+
+  // A notification that arrives while the app is in the background never
+  // reaches the listener above, and screen focus does not change when the app
+  // is brought back - so without this the badge stayed on its old number until
+  // the user navigated away from Home and back.
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      if (nextAppState === "active") {
+        refreshUnreadNotificationCount();
+      }
+    });
+
+    return () => subscription.remove();
+  }, [refreshUnreadNotificationCount]);
 
   const handleLoadMoreWorkoutSummaryFeed = useCallback(() => {
     loadWorkoutSummaryFeed();

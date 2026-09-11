@@ -178,10 +178,16 @@ export default function NotificationSettingsPage() {
       setSelectedSourceIds(nextSettings.selectedSourceIds ?? selectedSourceIds);
 
       if (nextSettings?.skipped) {
+        const warnings = {
+          permission_denied:
+            "Saved. Notification permission was not granted on this device.",
+          blocked_by_active_owner:
+            "Saved. Another account is still signed in to notifications on this device, so this one will not receive them yet. Sign out of the other account, or wait a week for it to be released.",
+        };
+
         showFeedback(
-          nextSettings.reason === "permission_denied"
-            ? "Saved. Notification permission was not granted on this device."
-            : "Saved. This device could not register for push notifications, so it may not receive them yet.",
+          warnings[nextSettings.reason] ??
+            "Saved. This device could not register for push notifications, so it may not receive them yet.",
           "warning"
         );
       }
