@@ -23,6 +23,7 @@ import {
   buildRecentSessions,
   buildRepLadder,
 } from "../../../../Utils/recordsInsights";
+import { formatRelativeDay } from "../../../../Utils/dateUtils";
 
 const W = 340;
 const H = 190;
@@ -43,15 +44,6 @@ function kg(value) {
 function shortDate(at) {
   const date = new Date(at);
   return `${date.getUTCDate()}. ${MONTHS[date.getUTCMonth()]}`;
-}
-
-function relative(at, now) {
-  const days = Math.round((now - at) / 86400000);
-  if (days <= 0) return "i dag";
-  if (days === 1) return "i går";
-  if (days < 7) return `${days} dage siden`;
-  if (days < 31) return `${Math.floor(days / 7)} uger siden`;
-  return `${Math.max(1, Math.floor(days / 30))} mdr siden`;
 }
 
 /** Catmull-Rom through the points, emitted as cubic beziers. */
@@ -298,7 +290,7 @@ export default function RecordsExercise({
                   fontSize="9"
                   textAnchor="middle"
                 >
-                  {`${gap.days} dage`}
+                  {`${gap.days} days`}
                 </SvgText>
               </React.Fragment>
             ))}
@@ -414,7 +406,7 @@ export default function RecordsExercise({
           </Svg>
         ) : (
           <ThemedText style={styles.caption} setColor={quiet}>
-            Ingen sæt med vægt i perioden.
+            No sets with a weight in this period.
           </ThemedText>
         )}
 
@@ -429,7 +421,10 @@ export default function RecordsExercise({
 
         {last ? (
           <ThemedText style={styles.caption} setColor={quiet}>
-            {`Bedste sæt ${relative(last.at, now)} · ${kg(last.weight)} × ${last.reps}`}
+            {`Best set ${formatRelativeDay(
+              last.at,
+              now
+            ).toLowerCase()} · ${kg(last.weight)} × ${last.reps}`}
           </ThemedText>
         ) : null}
       </View>
@@ -442,10 +437,10 @@ export default function RecordsExercise({
           ]}
         >
           <ThemedText style={styles.nextStepTitle} setColor={title}>
-            {`Næste skridt på ${nextStep.reps} reps`}
+            {`Next step at ${nextStep.reps} reps`}
           </ThemedText>
           <ThemedText style={styles.caption} setColor={quiet}>
-            {`prøv ${kg(nextStep.target)} × ${nextStep.reps} · du tog ${kg(
+            {`try ${kg(nextStep.target)} × ${nextStep.reps} · you did ${kg(
               nextStep.current
             )} × ${nextStep.reps}`}
           </ThemedText>
@@ -496,7 +491,7 @@ export default function RecordsExercise({
                   )}
                 </View>
                 <ThemedText style={styles.caption} setColor={quiet}>
-                  {empty ? "intet sæt" : shortDate(slot.at)}
+                  {empty ? "no set" : shortDate(slot.at)}
                 </ThemedText>
               </View>
             );
@@ -508,7 +503,7 @@ export default function RecordsExercise({
         <View style={{ gap: 12 }}>
           <View style={styles.sectionHead}>
             <ThemedText style={styles.overline} setColor={quiet}>
-              Seneste sæt
+              Latest sets
             </ThemedText>
             <View style={[styles.sectionRule, { backgroundColor: hairline }]} />
           </View>
@@ -517,7 +512,7 @@ export default function RecordsExercise({
             {sessions.map((session) => (
               <View key={session.at} style={styles.sessionRow}>
                 <ThemedText style={styles.sessionDate} setColor={quiet}>
-                  {relative(session.at, now)}
+                  {formatRelativeDay(session.at, now)}
                 </ThemedText>
                 <ThemedText
                   style={styles.sessionSets}

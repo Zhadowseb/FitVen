@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.24.3] - Unreleased
+### Changed
+- Describe pending changes here.
+
+---
 ## [0.24.2] - Unreleased
 ### Fixed
 - **The new notification test only passed on a working copy with LF line endings.** It finds the Edge Function's helpers by looking for a closing brace on its own line, and git checks the file out with CRLF here, so the test went green on the branch that wrote it and red on master the moment it was merged. It normalises the source before searching it now.

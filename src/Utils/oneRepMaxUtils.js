@@ -1,3 +1,13 @@
+// The rep range the Brzycki estimate is kept over, and the length of the
+// record ladder - the same number, because a rep count the app will not keep a
+// record for is a rep count it should not be estimating from either.
+//
+// The 1RM calculator used to accept 36, which is where the formula's
+// denominator turns negative. That is where the arithmetic breaks, not where
+// the answer stops meaning anything: 100 kg for 36 reps returned 3703.5 kg
+// with no qualification at all.
+export const MAX_ESTIMATE_REPS = 12;
+
 export function calculateBrzyckiOneRepMax(weight, reps) {
   const denominator = 1.0278 - 0.0278 * reps;
 

@@ -17,8 +17,13 @@ import {
   buildStats,
   buildWeeklyVolume,
 } from "../../../../Utils/recordsInsights";
+import { formatCount, formatRelativeDay } from "../../../../Utils/dateUtils";
 
 const VOLUME_WEEKS = 12;
+// The movers window, in weeks. It was written once as 84 days in the query and
+// again as "12 uger" in the caption, which is exactly how a caption starts
+// lying about the number underneath it.
+const MOVER_WEEKS = 12;
 const CHART_WIDTH = 340;
 const CHART_HEIGHT = 152;
 const BAR_WIDTH = 16;
@@ -53,18 +58,29 @@ function formatRate(workoutsPerRecord) {
   const low = Math.max(1, Math.floor(workoutsPerRecord));
   const high = Math.max(low, Math.ceil(workoutsPerRecord));
 
-  return low === high ? `hver ${low}.` : `hver ${low}.-${high}.`;
+  return low === high
+    ? `every ${ordinal(low)}`
+    : `every ${ordinal(low)}-${ordinal(high)}`;
 }
 
-function relativeDay(at, now) {
-  const days = Math.round((now - at) / 86400000);
+// English ordinals for the record rate: "every 2nd-3rd workout".
+function ordinal(value) {
+  const rest = value % 100;
 
-  if (days <= 0) return "i dag";
-  if (days === 1) return "i går";
-  if (days < 7) return `${days} dage siden`;
-  if (days < 31) return `${Math.floor(days / 7)} uger siden`;
+  if (rest >= 11 && rest <= 13) {
+    return `${value}th`;
+  }
 
-  return `${Math.max(1, Math.floor(days / 30))} mdr siden`;
+  switch (value % 10) {
+    case 1:
+      return `${value}st`;
+    case 2:
+      return `${value}nd`;
+    case 3:
+      return `${value}rd`;
+    default:
+      return `${value}th`;
+  }
 }
 
 export default function RecordsOverview({
@@ -95,7 +111,7 @@ export default function RecordsOverview({
     RECORDS_PERIODS[0];
 
   const gains = useMemo(
-    () => buildExerciseGains(sets, { now, windowDays: 84 }),
+    () => buildExerciseGains(sets, { now, windowDays: MOVER_WEEKS * 7 }),
     [sets, now]
   );
   const directions = useMemo(() => buildDirections(sets, { now }), [sets, now]);
@@ -198,15 +214,16 @@ export default function RecordsOverview({
       <View style={styles.section}>
         {/* The label is load-bearing: these are estimated 1RMs, not lifted
             sets, and without saying so they contradict the record strip. */}
-        {sectionHead("Største ryk", "est. 1RM · 12 uger")}
+        {sectionHead("Biggest movers", `est. 1RM · ${MOVER_WEEKS} weeks`)}
 
         {movers.length === 0 ? (
           <View style={[styles.emptyCard, { backgroundColor: card, borderColor: border }]}>
             <ThemedText style={styles.emptyTitle} setColor={title}>
-              Ingen ryk at vise endnu
+              Nothing to measure yet
             </ThemedText>
             <ThemedText style={styles.emptyBody} setColor={quiet}>
-              Gentag en øvelse over et par uger, så kan vi måle om den går frem.
+              Repeat an exercise over a few weeks and we can tell you whether
+              it is going forwards.
             </ThemedText>
           </View>
         ) : (
@@ -250,7 +267,7 @@ export default function RecordsOverview({
                       setColor={isDown ? down : up}
                     >
                       {mover.gainPct === null
-                        ? "ny"
+                        ? "new"
                         : `${formatSigned(mover.gainPct * 100, 0)} %`}
                     </ThemedText>
                   </View>
@@ -258,8 +275,8 @@ export default function RecordsOverview({
                   <View style={styles.gainBottomLine}>
                     <ThemedText style={styles.gainBefore} setColor={quiet}>
                       {mover.bestBefore === null
-                        ? "først nu"
-                        : `før ${formatKg(mover.bestBefore)}`}
+                        ? "first time"
+                        : `was ${formatKg(mover.bestBefore)}`}
                     </ThemedText>
 
                     <View
@@ -310,19 +327,19 @@ export default function RecordsOverview({
               <View style={styles.legendItem}>
                 <View style={[styles.legendDot, { backgroundColor: up }]} />
                 <ThemedText style={styles.caption} setColor={quiet}>
-                  frem
+                  up
                 </ThemedText>
               </View>
               <View style={styles.legendItem}>
                 <View style={[styles.legendDot, { backgroundColor: down }]} />
                 <ThemedText style={styles.caption} setColor={quiet}>
-                  tilbage
+                  down
                 </ThemedText>
               </View>
               <ThemedText style={styles.caption} setColor={quiet}>
                 {showAllMovers
-                  ? "alle øvelser med en målt ændring"
-                  : "4 største frem og den største tilbage"}
+                  ? "every exercise with a measured change"
+                  : "4 biggest gains and the biggest decline"}
               </ThemedText>
             </View>
           </View>
@@ -337,8 +354,8 @@ export default function RecordsOverview({
           >
             <ThemedText style={styles.rowActionText} setColor={title}>
               {showAllMovers
-                ? "Vis færre"
-                : `Vis alle ${measuredCount} øvelser`}
+                ? "Show fewer"
+                : `Show all ${measuredCount} exercises`}
             </ThemedText>
           </TouchableOpacity>
         ) : null}
@@ -346,7 +363,7 @@ export default function RecordsOverview({
 
       {/* Statistics */}
       <View style={styles.section}>
-        {sectionHead("Statistik")}
+        {sectionHead("Statistics")}
 
         <ThemedSegmentedControl
           options={RECORDS_PERIODS.map((entry) => ({
@@ -364,15 +381,15 @@ export default function RecordsOverview({
           ]}
         >
           <ThemedText style={styles.overline} setColor={gold}>
-            Rekord
+            Record
           </ThemedText>
           <View style={styles.rateValueLine}>
             <ThemedText style={styles.rateValue} setColor={title}>
-              {formatRate(stats.current.workoutsPerRecord) ?? "ingen endnu"}
+              {formatRate(stats.current.workoutsPerRecord) ?? "none yet"}
             </ThemedText>
             {stats.current.workoutsPerRecord ? (
               <ThemedText style={styles.rateUnit} setColor={quiet}>
-                træning
+                workout
               </ThemedText>
             ) : null}
           </View>
@@ -380,15 +397,15 @@ export default function RecordsOverview({
               into information, so it is part of the card, not an extra. */}
           <ThemedText style={styles.caption} setColor={quiet}>
             {formatRate(stats.previous.workoutsPerRecord)
-              ? `før ${formatRate(stats.previous.workoutsPerRecord)}`
-              : "ingen sammenligning for perioden før"}
+              ? `was ${formatRate(stats.previous.workoutsPerRecord)}`
+              : "no comparison for the period before"}
           </ThemedText>
         </View>
 
         <View style={styles.tileGrid}>
           {[
-            { key: "workouts", value: `${stats.current.workouts}`, label: "Træninger" },
-            { key: "records", value: `${stats.current.records}`, label: "Rekorder" },
+            { key: "workouts", value: `${stats.current.workouts}`, label: "Workouts" },
+            { key: "records", value: `${stats.current.records}`, label: "Records" },
             {
               key: "improving",
               value:
@@ -396,8 +413,10 @@ export default function RecordsOverview({
                   ? `${improving.up}`
                   : `${improving.qualified}`,
               unit:
-                improving.qualified >= 4 ? `af ${improving.qualified}` : "følges",
-              label: "I fremgang",
+                improving.qualified >= 4
+                  ? `of ${improving.qualified}`
+                  : "tracking",
+              label: "Improving",
             },
             {
               key: "per",
@@ -405,7 +424,7 @@ export default function RecordsOverview({
                 stats.current.perWorkout === null
                   ? "–"
                   : stats.current.perWorkout.toFixed(1),
-              label: "Pr. træning",
+              label: "Per workout",
             },
           ].map((tile) => (
             <View
@@ -431,25 +450,25 @@ export default function RecordsOverview({
 
         <ThemedText style={styles.caption} setColor={quiet}>
           {period.days === null
-            ? "Hele din historik. Ingen periode at sammenligne med."
-            : `Sammenligningen er de ${Math.round(period.days / 7)} uger før perioden`}
+            ? "Your whole history. No earlier period to compare with."
+            : `Compared with the ${Math.round(period.days / 7)} weeks before it`}
         </ThemedText>
       </View>
 
       {/* Weekly volume */}
       <View style={styles.section}>
-        {sectionHead("Volumen pr. uge")}
+        {sectionHead("Volume per week")}
 
         <View style={[styles.card, { backgroundColor: card, borderColor: border }]}>
           <ThemedText style={styles.caption} setColor={quiet}>
-            denne uge
+            this week
           </ThemedText>
           <View style={styles.volumeHead}>
             <ThemedText style={styles.volumeValue} setColor={title}>
               {((thisWeek?.volume ?? 0) / 1000).toFixed(1)}
             </ThemedText>
             <ThemedText style={styles.volumeUnit} setColor={quiet}>
-              ton
+              tonnes
             </ThemedText>
             {versusAverage !== null ? (
               <View
@@ -462,7 +481,7 @@ export default function RecordsOverview({
                   style={styles.pillText}
                   setColor={versusAverage >= 0 ? up : down}
                 >
-                  {`${formatSigned(versusAverage * 100, 0)} % mod snit`}
+                  {`${formatSigned(versusAverage * 100, 0)}% vs average`}
                 </ThemedText>
               </View>
             ) : null}
@@ -537,7 +556,7 @@ export default function RecordsOverview({
           </Svg>
 
           <ThemedText style={styles.caption} setColor={quiet}>
-            12 uger · guldlinjen er 4-ugers snit
+            {`${VOLUME_WEEKS} weeks · the gold line is the 4-week average`}
           </ThemedText>
         </View>
       </View>
@@ -545,7 +564,7 @@ export default function RecordsOverview({
       {/* Latest records */}
       {latest.length > 0 ? (
         <View style={styles.section}>
-          {sectionHead("Nyeste rekorder")}
+          {sectionHead("Latest records")}
 
           <ScrollView
             horizontal
@@ -581,7 +600,7 @@ export default function RecordsOverview({
                   </ThemedText>
                 </View>
                 <ThemedText style={styles.caption} setColor={quiet}>
-                  {relativeDay(record.at, now)}
+                  {formatRelativeDay(record.at, now)}
                 </ThemedText>
               </TouchableOpacity>
             ))}
@@ -592,7 +611,7 @@ export default function RecordsOverview({
       {/* Sets per muscle group */}
       {muscles.length > 0 ? (
         <View style={styles.section}>
-          {sectionHead("Sæt pr. muskelgruppe", period.label)}
+          {sectionHead("Sets per muscle group", period.label)}
 
           <View style={[styles.card, { backgroundColor: card, borderColor: border }]}>
             {muscles.slice(0, 6).map((group, index, list) => {
@@ -635,9 +654,12 @@ export default function RecordsOverview({
             })}
 
             <ThemedText style={styles.caption} setColor={quiet}>
-              {`${muscles.reduce((sum, group) => sum + group.setCount, 0)} loggede sæt i perioden · ${
+              {`${formatCount(
+                muscles.reduce((sum, group) => sum + group.setCount, 0),
+                "logged set"
+              )} in the period · ${
                 muscles[muscles.length - 1]?.label ?? "–"
-              } er lavest belastet`}
+              } is trained least`}
             </ThemedText>
           </View>
         </View>
