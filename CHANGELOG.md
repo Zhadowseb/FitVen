@@ -4,6 +4,10 @@
 ### Changed
 - **A personal record is gold, everywhere.** `record` was `#4BA3DB` blue and the new Records design wanted gold, which would have left one thing wearing two colours depending on the screen. The token changed instead of the screen, so the PR badge in a social post, the marker in SetList, the calendar and the workout library all moved together.
 - Light mode darkens the gold to `#8A6410`. `#E8B44A` reads at 1.9:1 on white; the design proposed `#B8860B`, which is 3.25:1 and still under the 4.5:1 a text colour needs.
+- **The Records overview is rebuilt from the spec.** The weekly muscle-load radar is gone; the same question is answered further down by logged sets per muscle group, from what was trained rather than what a program planned. In its place: biggest movers measured against each exercise's best before the window, statistics as rates against the preceding window rather than totals, weekly volume with a four-week average, the newest records, and sets per muscle group.
+- Biggest movers draws from a zero line, so an exercise that went backwards is shown going backwards instead of being dropped. Both directions share one kilo scale. The selection is named underneath — four biggest gains and the single biggest decline — because otherwise a drop among five looks like a broken sort.
+- The plain exercise list is gone. "Vis alle N øvelser" expands the movers instead, which keeps one list rather than two that disagree about ordering.
+
 - `recordLight` in light mode was a pale tint that `ExerciseRow` uses as the *title colour* for a record exercise — unreadable before and unreadable in gold, so it now matches `record`.
 
 ---
