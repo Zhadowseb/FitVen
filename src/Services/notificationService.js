@@ -426,10 +426,16 @@ export async function registerPushTokenForUser({
     throw await describeFunctionError(error, MANAGE_PUSH_TOKEN_FUNCTION);
   }
 
+  // The function stores the row but leaves it switched off when another account
+  // is still active on this device's push token. Nothing used to read that
+  // back, so the settings screen reported a saved choice while this device was
+  // registered to receive nothing.
   return {
     skipped: false,
     tokenId: data?.tokenId ?? null,
     expoPushToken: data?.expoPushToken ?? expoPushToken,
+    enabled: data?.enabled !== false,
+    blockedByActiveOwner: data?.blockedByActiveOwner === true,
   };
 }
 
@@ -615,6 +621,14 @@ export async function setWorkoutStartNotificationMode({
         ...(await getPushNotificationSettings({ user })),
         skipped: true,
         reason: registrationResult.reason,
+      };
+    }
+
+    if (registrationResult?.blockedByActiveOwner) {
+      return {
+        ...(await getPushNotificationSettings({ user })),
+        skipped: true,
+        reason: "blocked_by_active_owner",
       };
     }
   }

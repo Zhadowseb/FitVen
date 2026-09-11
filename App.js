@@ -170,8 +170,12 @@ function RootNavigator() {
         return false;
       }
 
+      // Opening the list from the notification counts as reading it, the same
+      // as opening it from the bell. This used to pass false, so the unread
+      // badge on Home kept counting notifications the user had already been
+      // shown and only the bell could ever clear it.
       navigationRef.navigate(NOTIFICATION_HISTORY_ROUTE, {
-        markNotificationsRead: false,
+        markNotificationsRead: true,
         openedFromNotification: true,
         notificationHistoryOpenId: Date.now(),
       });
