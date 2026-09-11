@@ -67,6 +67,21 @@ function getNormalizedString(value) {
   return normalizedValue.length > 0 ? normalizedValue : null;
 }
 
+// BUG-11: leaving this screen through the tab bar pops it off the stack, so
+// the component unmounts and any unsaved edit goes with it - the field simply
+// came back holding the stored value, with no warning that anything was lost.
+// The draft therefore lives outside the component, keyed by user so it cannot
+// leak between accounts, and is dropped the moment a save succeeds.
+let unsavedProfileDraft = null;
+
+function rememberProfileDraft(userId, draft) {
+  if (!userId) {
+    return;
+  }
+
+  unsavedProfileDraft = { userId, ...draft };
+}
+
 export default function ProfilePage() {
   const navigation = useNavigation();
   const colorScheme = useColorScheme();
@@ -171,27 +186,45 @@ export default function ProfilePage() {
           // leaving the screen and coming back threw away whatever had been
           // typed and not saved, without a word. A field the user has edited
           // keeps what they wrote; the rest take the stored value.
-          setDisplayName((current) =>
-            current === loadedProfileRef.current.displayName
-              ? nextProfile.displayName
-              : current
-          );
-          setBio((current) =>
-            current === loadedProfileRef.current.bio
-              ? nextProfile.bio ?? ""
-              : current
-          );
-          setBirthDate((current) =>
-            current === loadedProfileRef.current.birthDate
-              ? nextProfile.birthDate ?? ""
-              : current
-          );
+          //
+          // The baseline is read into a local first. The updater functions run
+          // during the re-render, not here, so moving the ref forward before
+          // they run compares the field against the value just fetched instead
+          // of the value it was last given - which left every field empty.
+          const baseline = loadedProfileRef.current;
+          // Leaving this screen unmounts it, so unsaved edits cannot be kept in
+          // component state - they were gone before this ran. The draft lives
+          // outside the component and is cleared on save.
+          const draft =
+            unsavedProfileDraft?.userId === user.id ? unsavedProfileDraft : null;
 
           loadedProfileRef.current = {
             displayName: nextProfile.displayName,
             bio: nextProfile.bio ?? "",
             birthDate: nextProfile.birthDate ?? "",
           };
+
+          setDisplayName((current) =>
+            draft
+              ? draft.displayName
+              : current === baseline.displayName
+                ? nextProfile.displayName
+                : current
+          );
+          setBio((current) =>
+            draft
+              ? draft.bio
+              : current === baseline.bio
+                ? nextProfile.bio ?? ""
+                : current
+          );
+          setBirthDate((current) =>
+            draft
+              ? draft.birthDate
+              : current === baseline.birthDate
+                ? nextProfile.birthDate ?? ""
+                : current
+          );
         } catch (error) {
           if (isCancelled) {
             return;
@@ -266,6 +299,7 @@ export default function ProfilePage() {
       setProfile(updatedProfile);
       setDisplayName(updatedProfile.displayName);
       setBio(updatedProfile.bio ?? "");
+      unsavedProfileDraft = null;
       loadedProfileRef.current = {
         displayName: updatedProfile.displayName,
         bio: updatedProfile.bio ?? "",
@@ -381,6 +415,11 @@ export default function ProfilePage() {
 
     clearProfileFeedback();
     setBirthDate(nextBirthDate);
+    rememberProfileDraft(user?.id, {
+      displayName,
+      bio,
+      birthDate: nextBirthDate,
+    });
     setBirthDatePickerVisible(false);
   };
 
@@ -589,6 +628,11 @@ export default function ProfilePage() {
                     onPress={() => {
                       clearProfileFeedback();
                       setBirthDate("");
+                      rememberProfileDraft(user?.id, {
+                        displayName,
+                        bio,
+                        birthDate: "",
+                      });
                     }}
                   >
                     <ThemedText
@@ -624,6 +668,11 @@ export default function ProfilePage() {
                     onChangeText={(nextValue) => {
                       clearProfileFeedback();
                       setDisplayName(nextValue);
+                      rememberProfileDraft(user?.id, {
+                        displayName: nextValue,
+                        bio,
+                        birthDate,
+                      });
                     }}
                     placeholder="How your name appears"
                     placeholderTextColor={theme.quietText}
@@ -679,6 +728,11 @@ export default function ProfilePage() {
                     onChangeText={(nextValue) => {
                       clearProfileFeedback();
                       setBio(nextValue);
+                      rememberProfileDraft(user?.id, {
+                        displayName,
+                        bio: nextValue,
+                        birthDate,
+                      });
                     }}
                     placeholder="Tell people a little about your training."
                     placeholderTextColor={theme.quietText}

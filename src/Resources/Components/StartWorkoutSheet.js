@@ -1270,9 +1270,9 @@ function createStyles(theme) {
   comingSoonContent: {
     opacity: 0.5,
   },
+  // freshCard is already dashed, so this is only the dimming.
   comingSoonCard: {
     opacity: 0.62,
-    borderStyle: "dashed",
   },
   iconTile: {
     alignItems: "center",

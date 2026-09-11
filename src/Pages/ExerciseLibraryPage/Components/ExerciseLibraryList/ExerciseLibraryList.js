@@ -1708,10 +1708,13 @@ const ExerciseLibraryList = ({
         // The parent ScrollView has to stay: making it a list froze this one on
         // its first ten rows, verified on a device.
         //
-        // This resetter is React Native's own escape hatch for exactly that
-        // case - `Modal` uses it for the same reason - and it tells the list
-        // machinery there is no enclosing list, which is the truth here.
+        // These two are React Native's own escape hatch for exactly that case,
+        // and `Modal` pairs them the same way. The warning fires when an
+        // enclosing ScrollView's context is present and the list's own context
+        // is null, so the ScrollView provider is the half that silences it -
+        // the resetter alone makes it more likely, not less.
         <VirtualizedListContextResetter>
+        <ScrollView.Context.Provider value={null}>
         <FlatList
           // Was a ScrollView with a plain `.map()`, on the reasoning that a
           // fixed-height window inside a scrolling page could not own its own
@@ -1740,6 +1743,7 @@ const ExerciseLibraryList = ({
           showsVerticalScrollIndicator={false}
           nestedScrollEnabled
         />
+        </ScrollView.Context.Provider>
         </VirtualizedListContextResetter>
       )}
       </ThemedCard>
