@@ -30,6 +30,11 @@ export default StyleSheet.create({
     paddingHorizontal: 12,
   },
   headerDoneText: { fontSize: 14, fontWeight: "700" },
+  // The Done button is absolutely positioned on the right, so the centred
+  // title has to be kept out from under it.
+  headerTitleGroupWithAction: {
+    paddingRight: 92,
+  },
   headerTitleGroup: {
     alignItems: "center",
     justifyContent: "center",

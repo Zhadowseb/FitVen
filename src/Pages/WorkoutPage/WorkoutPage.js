@@ -472,6 +472,7 @@ const WorkoutPage = ({ route }) => {
           date={workoutDate}
           workoutLabel={workoutLabel}
           workoutSubtitle={workoutSubtitle}
+          autoNamedLabel={autoNamedLabel}
           workoutInstanceLabel={workoutInstanceLabel}
           restartRequestKey={restartRequestKey}
           onWorkoutMetadataChange={loadMetadata}
@@ -516,20 +517,6 @@ const WorkoutPage = ({ route }) => {
               ? runHeaderTitle
               : workoutLabel}
           </ThemedTitle>
-
-          {/* SPM-1: the app names a strength workout after the exercises put
-              into it, so a session started as "Resistance" turns into "Push"
-              while the user is looking at it. That is intended, but it used to
-              happen with no explanation at all. */}
-          {autoNamedLabel ? (
-            <ThemedText
-              size={10}
-              style={[styles.pageHeaderTitleMeta, { color: headerEyebrowColor }]}
-              numberOfLines={1}
-            >
-              {`Named ${autoNamedLabel} after your exercises`}
-            </ThemedText>
-          ) : null}
 
           {!!workoutSubtitle && (
             <ThemedText

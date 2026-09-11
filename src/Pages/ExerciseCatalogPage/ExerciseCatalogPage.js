@@ -125,7 +125,12 @@ const ExerciseCatalogPage = ({ route }) => {
   return (
     <ThemedView safe={["top", "left", "right"]} style={styles.container}>
       <ThemedHeader>
-        <View style={styles.headerTitleGroup}>
+        <View
+          style={[
+            styles.headerTitleGroup,
+            isWorkoutPicker ? styles.headerTitleGroupWithAction : null,
+          ]}
+        >
           {isWorkoutPicker ? (
             <ThemedText
               style={styles.headerEyebrow}

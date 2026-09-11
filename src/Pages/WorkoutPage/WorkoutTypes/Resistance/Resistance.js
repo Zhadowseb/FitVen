@@ -55,6 +55,7 @@ const Resistance = ({
   date,
   workoutLabel,
   workoutSubtitle,
+  autoNamedLabel = null,
   workoutInstanceLabel,
   restartRequestKey,
   onWorkoutMetadataChange,
@@ -652,11 +653,20 @@ const Resistance = ({
             {workoutLabel ?? "Workout"}
           </ThemedText>
 
-          {!!workoutSubtitle && (
+          {/* SPM-1: a strength workout names itself after the exercises put
+              into it, so a session started as "Resistance" turns into "Push"
+              while the user is looking at it. That is intended, and now says
+              so - in this header, because this is the one a resistance workout
+              actually draws. */}
+          {autoNamedLabel ? (
+            <ThemedText style={styles.navDate} setColor={primaryTextColor} numberOfLines={1}>
+              {`Named ${autoNamedLabel} after your exercises`}
+            </ThemedText>
+          ) : !!workoutSubtitle ? (
             <ThemedText style={styles.navDate} setColor={quietText} numberOfLines={1}>
               {workoutSubtitle}
             </ThemedText>
-          )}
+          ) : null}
 
           <TouchableOpacity
             accessibilityRole="button"

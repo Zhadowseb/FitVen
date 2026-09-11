@@ -1013,7 +1013,11 @@ const ExerciseLibraryList = ({
               return (
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel={`Add ${exercise.exercise_name} to workout`}
+                  accessibilityLabel={`${
+                    addedNameSet.has(exercise.exercise_name)
+                      ? "Add another"
+                      : "Add"
+                  } ${exercise.exercise_name} to workout`}
                   disabled={isSelectionBusy}
                   onPress={() => onSelectExercise?.(exercise)}
                   style={[
@@ -1079,7 +1083,11 @@ const ExerciseLibraryList = ({
                       ) : null}
                     </View>
 
-                    {isCurrentSelection ? (
+                    {/* The sheet stays open now, so this has to survive the
+                        moment the add finishes - otherwise a row that has
+                        already gone in looks the same as one that has not. */}
+                    {isCurrentSelection ||
+                    addedNameSet.has(exercise.exercise_name) ? (
                       <ThemedText
                         style={styles.pickerAddedText}
                         setColor={secondaryColor}
