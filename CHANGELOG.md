@@ -16,6 +16,10 @@
 
 - `recordLight` in light mode was a pale tint that `ExerciseRow` uses as the *title colour* for a record exercise — unreadable before and unreadable in gold, so it now matches `record`.
 
+### Removed
+- **The Exercise Map screen and the Train entry that opened it.** The map is in Exercise Library now, above the list it filters, so the separate screen was a second place to do the same thing. Gone: the tool row, the `ExerciseMapPage` route and its screen file, and the route name from the bottom navigation's library group. The figure, its outlines and its touch handling stay where they are — `src/Pages/ExerciseMapPage/` still holds them, and Exercise Library imports them. `docs/EXERCISE_MAP.md` describes what the folder is now.
+- `normalizeMapExercise` and `filterMapExercises` went with it — the screen was their only caller, and Exercise Library filters the catalog rows directly rather than adapting them first. `exerciseMapUtils.js` is now `REGION_LABELS` and nothing else, and `test-exercise-map.js` lost the assertions that covered them. What it still checks is the part that matters to the figure: that every region it can draw has a name, that the back trapezius is the full group, and the whole of the touch handling.
+
 ---
 ## [0.23.38] - Unreleased
 ### Fixed

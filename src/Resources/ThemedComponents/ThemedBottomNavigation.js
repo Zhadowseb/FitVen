@@ -118,7 +118,6 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
   const isLibraryActive = [
     "ExerciseLibraryPage",
     "ExerciseCatalogPage",
-    "ExerciseMapPage",
     "PersonalRecordsPage",
     "ProgramPage",
     "ProgramOverviewPage",
