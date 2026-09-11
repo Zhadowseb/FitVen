@@ -1,8 +1,40 @@
 # Changelog
 
 ## [0.24.3] - Unreleased
-### Changed
-- Describe pending changes here.
+### Fixed
+- **A typed number is checked for sense, not just for format** (BUG-1, pattern D). 999999 kg went straight through to the personal records, the Brzycki estimate, the weekly volume and every chart built on them; one slipped keypress rewrote the user's history permanently. `src/Utils/setValueLimits.js` caps weight, reps, RPE, %1RM and rest, applied in the service - the only path a set takes to the database - and in the set row, so the correction is visible immediately rather than appearing after a reload. The weight keyboard offers `-` and `,`: a comma is a decimal separator, a minus sign is a stray keypress and is dropped.
+- **The 1RM calculator stops at twelve reps, not thirty-six** (SPM-7). Thirty-six is where the Brzycki denominator turns negative - where the arithmetic breaks, not where the answer stops meaning anything: 100 kg for 36 reps returned 3703.5 kg with no qualification. Twelve is the length of the record ladder, and all three callers now read it from one constant. The placeholders read "e.g. 100" rather than looking like filled-in values on a form that then rejects them (SPM-11).
+- **Personal Records is in English** (BUG-2). A whole screen was in Danish inside an English app.
+- **"Yesterday" means yesterday** (BUG-9). A record set at 21:42 today read "i gaar", because its age was elapsed milliseconds measured against a date stored at midnight. Relative days are counted as calendar days by one shared formatter with plural agreement, and `formatTimeAgo` defers to it past a day so the same event is not "1d ago" on one screen and "Yesterday" on another (BUG-17, BUG-20).
+- **A program's volume says "not logged" rather than "0 kg"** (BUG-3). The query was right - I pulled the device database: those programs have 31 workouts, 25 done and no exercise instances at all. "TOTAL VOLUME 0 kg" beside "12 of 12 workouts completed" reads as a broken counter when what it means is that nothing was recorded. Absent and zero are now different.
+- **A draft's progress follows its workouts** (BUG-7, SPM-9). It was pinned at 0%, so a card read "5/5 workouts" next to "Progress 0%".
+- **The blocked list counts what it lists** (BUG-6). Its title fell through to the followers count, so an empty list was headed "Blocked (1)".
+- **Screens say "not known yet" instead of "nothing"** (BUG-8, pattern A). Personal Records painted "nothing to measure yet" and 0 records while its query ran; Friends activity asked an existing user to "Set up profile" while their profile was being fetched.
+- **The back button closes bottom sheets** (BUG-4). `ThemedBottomSheet` passed no `onRequestClose`, which is what Android's back gesture calls, so every sheet built on it ignored the system back button. The calendar's day sheet has no close button of its own, so the only way out was to find the backdrop.
+- **The tab bar stops lying, and its tabs stop dying** (BUG-5). The handlers no-opped whenever their tab was highlighted rather than when the user was already on its root screen, so from notification settings the PROFILE tab did nothing. Notification settings is reached both from the Home bell and from Profile, so no fixed route table can be right for both: those routes keep whichever tab the user was already on.
+- **Notification rows go somewhere** (BUG-15). They looked openable and were not. There is no screen for another user's profile, but every notification here is someone starting a workout, which is what Social shows.
+- **One timer question at a time** (BUG-12). Completing the only set of a workout that was never started raised both prompts back to back, and they contradicted each other: "Stop the timer and finish the workout?" and then "the workout timer has not been started".
+- **Finishing a workout says what was recorded** (BUG-13). Nothing changed on screen except the play button disappearing.
+- **An empty workout cannot be posted** (SPM-12). The feed already held "1 hour 6 min - 0 sets across 0 exercises".
+- **The muscle filter is OR** (SPM-6). Requiring every chosen muscle reads well with two and is useless with more: chest, traps, abs and lower back together matched nothing, because no exercise trains all four.
+- **The exercise catalog stays open** (SPM-2). It closed after the first exercise, so a workout with six meant six trips through it and six searches - on a list whose every row carries its own + button. It marks what has gone in and has a Done button that counts.
+- **"No matches" is visible and has a way out** (BUG-16). It was centred inside a viewport-height box, so it sat below the fold and the screen looked blank; the only reset was inside the filter sheet.
+- **One program runs at a time** (SPM-3). The home screen says "the active program", in the singular, and there were two. Starting a second while one is genuinely still running is refused, naming the one in the way - and all three call sites swallowed `startProgram` errors into the console, so the button would otherwise have done nothing at all.
+- **A program past its end date finishes itself** (SPM-4). One whose last day was 75 days ago was still ACTIVE, and still what the home screen linked to.
+- **One percentage, one meaning** (SPM-5). The detail page showed weeks elapsed beside "Week 5 of 5", so a program with six workouts left read 100% there and 81% on the card it was opened from.
+- **An empty program day is not a dead end** (BUG-10). It was a blank screen, and a finished one was worse: the add buttons hide when a workout is done, so a day ticked off by mistake had nothing on it and no way to put anything there.
+- **Unsaved profile edits survive leaving the screen** (BUG-11). Coming back discarded them without a word. An edited field keeps what the user wrote; untouched ones still refresh.
+- **Every completed workout can be shared** (SPM-8). The posts page stopped at the most recent 20 without saying so, beside a Train tab reporting 50 completed.
+- **A calendar count is not a bare number** (SPM-10). The 2nd with three workouts read "3"; the cell beside it read "3" because it was the 3rd. The count carries a dumbbell.
+- **The auto-rename explains itself** (SPM-1). A strength workout names itself after the exercises put into it - intended, and now said under the title, only for the rename the app did itself.
+- **Accessible names** (BUG-18) on the shared header's back arrow, the checkbox that completes a set, the exercise filter, block options and Profile's bare "Clear". The first two are shared components, so they cover most of the screens named.
+- **Run and Walk read as unavailable** (BUG-19). They already refused the tap and carried a COMING SOON badge, but only the icon was dimmed.
+- **One program date format** (BUG-20). Two local copies of the same function meant the list said "25 MAY - 28 JUN 2026" and the page it opened said "25.05.2026 - 28.06.2026".
+- **The nested-list warning** (BUG-14). It is about a list handed unlimited height, which this one is not: it has a fixed viewport and owns its scrolling, and the parent ScrollView has to stay because making it a list froze the inner one on its first ten rows. `VirtualizedListContextResetter` is React Native's own escape hatch for that case - `Modal` uses it for the same reason.
+
+### Notes
+- Verified on the device: the back button closing the calendar day sheet, and PROFILE reaching the profile from notification settings while HOME stays lit. The phone then dropped its adb connection, so the catalog, the records screen, the empty state and the list warning are unverified on hardware.
+- Not done: the button-casing half of BUG-20 ("Keep going"/"Post it" against "CANCEL"/"DELETE WORKOUT"). The labels are already title case; the uppercase comes from `textTransform` in a dozen style files. Picking one convention is a design decision across the whole app rather than a defect fix, and it cannot be judged without a device.
 
 ---
 ## [0.24.2] - Unreleased
