@@ -143,6 +143,11 @@ export default StyleSheet.create({
     fontWeight: "800",
   },
 
+  cellCountRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+  },
   cellCount: {
     fontSize: 17,
     lineHeight: 20,

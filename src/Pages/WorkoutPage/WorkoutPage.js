@@ -95,8 +95,34 @@ const WorkoutPage = ({ route }) => {
   const workoutDay = metadata?.day ?? initialDay ?? "";
   const workoutDate = metadata?.date ?? initialDate ?? "";
   const programId = metadata?.program_id ?? initialProgramId;
-  const workoutSubtitle = [workoutDay, workoutDate].filter(Boolean).join(" - ");
+  // BUG-20: the home screen writes this same pairing as "FRIDAY · 11.09.2026".
+  const workoutSubtitle = [workoutDay, workoutDate]
+    .filter(Boolean)
+    .join(" · ");
   const headerEyebrowColor = theme.quietText ?? theme.iconColor;
+  const [autoNamedLabel, setAutoNamedLabel] = useState(null);
+  const previousWorkoutLabelRef = useRef(workoutLabel);
+
+  useEffect(() => {
+    const previousLabel = previousWorkoutLabelRef.current;
+    previousWorkoutLabelRef.current = workoutLabel;
+
+    // Only the rename the app did itself: the title was the workout type, and
+    // is now something else. A rename through Change name is the user's own.
+    if (
+      previousLabel === workoutLabel ||
+      previousLabel !== workoutType ||
+      !workoutLabel ||
+      workoutLabel === workoutType
+    ) {
+      return;
+    }
+
+    setAutoNamedLabel(workoutLabel);
+    const timeoutId = setTimeout(() => setAutoNamedLabel(null), 6000);
+
+    return () => clearTimeout(timeoutId);
+  }, [workoutLabel, workoutType]);
   const isRunWorkout = workoutType === "Run";
   const isWalkWorkout = workoutType === "Walk";
   const isStrengthWorkout =
@@ -490,6 +516,20 @@ const WorkoutPage = ({ route }) => {
               ? runHeaderTitle
               : workoutLabel}
           </ThemedTitle>
+
+          {/* SPM-1: the app names a strength workout after the exercises put
+              into it, so a session started as "Resistance" turns into "Push"
+              while the user is looking at it. That is intended, but it used to
+              happen with no explanation at all. */}
+          {autoNamedLabel ? (
+            <ThemedText
+              size={10}
+              style={[styles.pageHeaderTitleMeta, { color: headerEyebrowColor }]}
+              numberOfLines={1}
+            >
+              {`Named ${autoNamedLabel} after your exercises`}
+            </ThemedText>
+          ) : null}
 
           {!!workoutSubtitle && (
             <ThemedText
