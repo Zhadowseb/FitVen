@@ -105,7 +105,14 @@ assert.match(
 // The client call and the database webhook both reach this function for the
 // same workout. If they disagree on the key the start is announced twice, so
 // the rule is checked by running the shipped source rather than by reading it.
-function extractFunction(source, name) {
+// Git checks these files out with CRLF on Windows, so every line-based search
+// below runs against a copy normalised to LF first.
+function toUnixNewlines(source) {
+  return source.split("\r\n").join("\n");
+}
+
+function extractFunction(rawSource, name) {
+  const source = toUnixNewlines(rawSource);
   const header = "\nfunction " + name + "(";
   const startIndex = source.indexOf(header);
 

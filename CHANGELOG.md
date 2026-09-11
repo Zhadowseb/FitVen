@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.24.2] - Unreleased
+### Fixed
+- **The new notification test only passed on a working copy with LF line endings.** It finds the Edge Function's helpers by looking for a closing brace on its own line, and git checks the file out with CRLF here, so the test went green on the branch that wrote it and red on master the moment it was merged. It normalises the source before searching it now.
+
+
+---
 ## [0.24.1] - Unreleased
 ### Fixed
 - **The two paths into the workout-start notification could not dedupe against each other.** The app calls the Edge Function the moment a timer starts; the database webhook calls it again when that row reaches the cloud minutes later. Both paths are supposed to land on the same `notification_events` key, and none of the three keys in use collided: the stored row id when the client's workout had already synced, `actor:sync_id` when it had not, and a bare `sync_id` from the webhook. Enabling the webhook described in `20260609112712_workout-start-notifications.sql` would therefore have sent every follower two identical pushes for every workout. The key is now `workout_started:<actor>:<sync_id>` on both paths — `sync_id` is the only identity both hold, because the row id does not exist until the workout has synced. The actor prefix stays: it is what stops a caller from registering a key in somebody else's name to suppress their notification, and `actorId` is trusted on both paths. When the client's workout is matched to a stored row, the key uses the *stored* `sync_id`, so a caller sending a real row id under a wrong `sync_id` cannot get a second key out of it.
