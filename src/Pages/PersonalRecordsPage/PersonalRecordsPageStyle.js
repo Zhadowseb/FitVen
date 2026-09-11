@@ -137,6 +137,9 @@ export default StyleSheet.create({
     lineHeight: 15,
     textTransform: "uppercase",
   },
+  pageSummary: {
+    marginBottom: 14,
+  },
   loadingState: {
     minHeight: 140,
     alignItems: "center",

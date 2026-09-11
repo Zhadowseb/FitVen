@@ -34,6 +34,8 @@ import {
 import {
   formatDate,
   getTodaysDate,
+  addDays,
+  getCurrentWeekRange,
   normalizeIsoDateString,
   parseCustomDate,
 } from "../../Utils/dateUtils";
@@ -74,21 +76,6 @@ function getWorkoutSummaryDisplayTitle(post) {
   }
 
   return title;
-}
-
-function addDays(date, days) {
-  const nextDate = new Date(date);
-  nextDate.setDate(nextDate.getDate() + days);
-  return nextDate;
-}
-
-// Monday..Sunday range containing `date` (Program weeks run Mon-Sun).
-function getCurrentWeekRange(date) {
-  const dayOfWeek = date.getDay(); // 0 = Sunday
-  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-  const monday = addDays(date, mondayOffset);
-  const sunday = addDays(monday, 6);
-  return { monday, sunday };
 }
 
 function getWorkoutTypeLabel(workoutType) {

@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.25.0] - Unreleased
+### Added
+- **A summary bar at the top of Train, Calendar and Personal Records.** `PageSummary` is one component in three places, so the three screens open the same way: what this screen covers, one sentence of where you stand, and two or three numbers. It is never tappable, so it cannot compete with the cards under it for the first tap, and a value that has not loaded yet renders an em dash rather than a confident `0` that is replaced a moment later.
+  - Train: sessions left this week, `done/planned` for the week, workouts completed, records, and the name of the next planned session.
+  - Calendar: planned, completed and sick days for the month on screen, following the swipe.
+  - Personal records: records, exercises, heaviest lift, and when the last record was set.
+
+### Changed
+- **The calendar is a hero card at the top of Train**, the same size and style as "Manage your programs" and "Your workouts", with its own cover image. It was a one-line row in the middle of the tools list, which is not where the app's own calendar belongs. The page order is now summary, calendar, the remaining tools, then programs and workouts.
+- The cover image is 1024x329 JPEG at 32 KB - narrower than the card needs at 3x density, and smaller than either of the two covers already in the app. The source PNG was 2210x711 and 1.5 MB; shipping it would have cost the bundle a megabyte and a half for a strip 110 dp tall. All three hero cards now share one `coverImage` style and pass `fadeDuration={0}`, because a local JPEG decodes before the first paint and the cross-fade only shows as a flash of card background.
+- `addDays` and `getCurrentWeekRange` moved from HomePage into `dateUtils`. Train needs the same Monday-to-Sunday week Home uses, and two screens disagreeing about where a week starts is the kind of thing that is only found months later.
+
+### Fixed
+- **Personal records and Train disagreed about how many records you have** - 14 against 11 for the same data. A set keeps its `personal_record` flag after a heavier set takes its rep slot, so counting flagged sets counts sets while `completedRecordCount` counts filled ladder slots. Both screens read the latter now.
+
+### Notes
+- Checked on a Galaxy A34 in dark mode: all three bars, the calendar card against the two it sits with, and the record count matching Train. Light mode is unverified - the component reads theme tokens throughout and defines no colour of its own, but that is an argument, not a check.
+
+---
 ## [0.24.3] - Unreleased
 ### Fixed
 - **A typed number is checked for sense, not just for format** (BUG-1, pattern D). 999999 kg went straight through to the personal records, the Brzycki estimate, the weekly volume and every chart built on them; one slipped keypress rewrote the user's history permanently. `src/Utils/setValueLimits.js` caps weight, reps, RPE, %1RM and rest, applied in the service - the only path a set takes to the database - and in the set row, so the correction is visible immediately rather than appearing after a reload. The weight keyboard offers `-` and `,`: a comma is a decimal separator, a minus sign is a stray keypress and is dropped.

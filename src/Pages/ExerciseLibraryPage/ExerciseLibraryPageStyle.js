@@ -64,6 +64,11 @@ export default StyleSheet.create({
     borderRadius: 18,
     overflow: "hidden",
   },
+  // The three hero cards all fill their image area the same way.
+  coverImage: {
+    width: "100%",
+    height: "100%",
+  },
   programsImageArea: {
     height: 110,
     width: "100%",

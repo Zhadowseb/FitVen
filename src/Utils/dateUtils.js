@@ -171,6 +171,22 @@ export function calculateAgeFromBirthDate(value, referenceDate = new Date()) {
 // "Just now" under a minute, then minutes, hours and days, and a short local
 // date once a week has passed. Shared by the feed card and the notification
 // list, which each carried an identical copy.
+export function addDays(date, days) {
+  const nextDate = new Date(date);
+  nextDate.setDate(nextDate.getDate() + days);
+  return nextDate;
+}
+
+// Monday..Sunday range containing `date`. Program weeks run Mon-Sun, so every
+// screen that talks about "this week" has to agree on where it starts.
+export function getCurrentWeekRange(date) {
+  const dayOfWeek = date.getDay(); // 0 = Sunday
+  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const monday = addDays(date, mondayOffset);
+
+  return { monday, sunday: addDays(monday, 6) };
+}
+
 // Plural agreement in one place. "1 followers" and "1 uger siden" were both
 // string concatenation that never asked how many there were.
 export function pluralize(count, singular, plural = `${singular}s`) {
