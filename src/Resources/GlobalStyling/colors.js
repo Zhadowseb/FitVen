@@ -16,9 +16,12 @@ export const Colors = {
         secondaryLight: "rgb(178, 214, 200)",
         secondaryDark: "rgb(24, 160, 108)",
         fields: "rgba(247, 116, 46, 0.08)",
-        record: "#4BA3DB",
-        recordLight: "rgb(51, 139, 255)",
-        recordDark: "rgb(2, 49, 111)",
+        // Gold, and gold everywhere: a personal record was blue here and the
+        // Records screen wanted gold, which would have meant one thing wearing
+        // two colours depending on which screen you were looking at.
+        record: "#E8B44A",
+        recordLight: "#F4D488",
+        recordDark: "#6B4E0A",
         danger: "#E85C4A",
         dangerDark: "rgb(168, 55, 41)",
         planned: "#F2C14E",
@@ -47,7 +50,7 @@ export const Colors = {
         tableGridline: "rgba(255, 255, 255, 0.07)",
         tableRowSurface: "rgba(24, 25, 34, 0.9)",
         tableRowAltSurface: "rgba(255, 255, 255, 0.045)",
-        recordSurface: "rgba(55, 63, 174, 0.38)",
+        recordSurface: "rgba(232, 180, 74, 0.22)",
 
         // Neutral overlays for stacked surfaces, strongest first.
         overlayStrong: "rgba(255, 255, 255, 0.14)",
@@ -78,9 +81,15 @@ export const Colors = {
         secondaryLight: "rgb(178, 214, 200)",
         secondaryDark: "rgb(24, 160, 108)",
         fields: "rgba(247, 116, 46, 0.08)",
-        record: "#2C7FBF",
-        recordLight: "rgb(218, 221, 255)",
-        recordDark: "rgb(19, 27, 126)",
+        // #E8B44A reads at 1.9:1 on white, so light mode darkens it. The
+        // design suggested #B8860B; that is 3.25:1, still under the 4.5:1 a
+        // text colour needs, so it goes darker still.
+        record: "#8A6410",
+        // Was a pale tint, and ExerciseRow uses this as the *text* colour for
+        // a record exercise in light mode - unreadable then, unreadable in
+        // gold. It matches `record` now so the title can actually be read.
+        recordLight: "#8A6410",
+        recordDark: "#5C4208",
         danger: "#D64533",
         dangerDark: "rgb(150, 40, 26)",
         planned: "#C08A12",
@@ -107,7 +116,7 @@ export const Colors = {
         tableGridline: "rgba(32, 30, 43, 0.12)",
         tableRowSurface: "rgba(255, 255, 255, 0.86)",
         tableRowAltSurface: "rgba(32, 30, 43, 0.08)",
-        recordSurface: "rgba(55, 63, 174, 0.16)",
+        recordSurface: "rgba(232, 180, 74, 0.18)",
 
         overlayStrong: "rgba(15, 17, 22, 0.14)",
         overlayMedium: "rgba(15, 17, 22, 0.10)",

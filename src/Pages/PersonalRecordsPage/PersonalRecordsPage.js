@@ -34,6 +34,9 @@ import {
   ThemedView,
 } from "../../Resources/ThemedComponents";
 import { programService, weightliftingService } from "../../Services";
+import RecordsOverview from "./Components/RecordsOverview/RecordsOverview";
+import RecordsExercise from "./Components/RecordsExercise/RecordsExercise";
+import { normalizeRecordRows } from "../../Utils/recordsInsights";
 
 const TREND_CHART_WIDTH = 320;
 const TREND_CHART_HEIGHT = 190;
@@ -260,6 +263,14 @@ const PersonalRecordsPage = () => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const [summaries, setSummaries] = useState([]);
+  const [recordSets, setRecordSets] = useState([]);
+  const [muscleGroups, setMuscleGroups] = useState(() => new Map());
+  const [overviewPeriod, setOverviewPeriod] = useState("3m");
+  const [showAllMovers, setShowAllMovers] = useState(false);
+  const [exercisePeriod, setExercisePeriod] = useState("3m");
+  // Frozen for the life of the screen so a period switch cannot shift what
+  // "now" means halfway through a comparison.
+  const nowRef = useRef(Date.now());
   const [muscleLoadPrograms, setMuscleLoadPrograms] = useState([]);
   const [selectedProgramId, setSelectedProgramId] = useState(null);
   const selectedProgramIdRef = useRef(null);
@@ -409,11 +420,26 @@ const PersonalRecordsPage = () => {
     [loadMuscleLoadData, updateSelectedProgramId]
   );
 
+  const loadRecordSets = useCallback(async () => {
+    try {
+      const { rows, groupsByExercise } =
+        await weightliftingService.getRecordsSourceData(db);
+
+      setRecordSets(normalizeRecordRows(rows));
+      setMuscleGroups(groupsByExercise);
+    } catch (error) {
+      console.error("Failed to load records source data:", error);
+      setRecordSets([]);
+      setMuscleGroups(new Map());
+    }
+  }, [db]);
+
   useFocusEffect(
     useCallback(() => {
+      loadRecordSets();
       loadSummaries();
       loadMuscleLoadPrograms();
-    }, [loadMuscleLoadPrograms, loadSummaries])
+    }, [loadMuscleLoadPrograms, loadRecordSets, loadSummaries])
   );
 
   const renderMuscleLoadCard = () => {
@@ -1163,8 +1189,32 @@ const PersonalRecordsPage = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {!selectedExerciseName && renderMuscleLoadCard()}
-        {selectedExerciseName ? renderRecordDetail() : renderExerciseList()}
+        {/* The weekly muscle-load radar is gone: the same question is answered
+            by logged sets per muscle group inside the overview, and from what
+            was actually trained rather than what a program planned. */}
+        {selectedExerciseName ? (
+          <RecordsExercise
+            name={selectedExerciseName}
+            sets={recordSets}
+            now={nowRef.current}
+            periodKey={exercisePeriod}
+            onChangePeriod={setExercisePeriod}
+            onBack={() => setSelectedExerciseName(null)}
+          />
+        ) : (
+          <>
+            <RecordsOverview
+              sets={recordSets}
+              groupsByExercise={muscleGroups}
+              now={nowRef.current}
+              periodKey={overviewPeriod}
+              onChangePeriod={setOverviewPeriod}
+              onSelectExercise={openExerciseDetail}
+              showAllMovers={showAllMovers}
+              onToggleAllMovers={() => setShowAllMovers((value) => !value)}
+            />
+          </>
+        )}
       </ScrollView>
 
       <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />

@@ -1,6 +1,21 @@
 # Changelog
 
-## [0.23.39] - Unreleased
+## [0.24.0] - Unreleased
+### Changed
+- **A personal record is gold, everywhere.** `record` was `#4BA3DB` blue and the new Records design wanted gold, which would have left one thing wearing two colours depending on the screen. The token changed instead of the screen, so the PR badge in a social post, the marker in SetList, the calendar and the workout library all moved together.
+- Light mode darkens the gold to `#8A6410`. `#E8B44A` reads at 1.9:1 on white; the design proposed `#B8860B`, which is 3.25:1 and still under the 4.5:1 a text colour needs.
+- **The Records overview is rebuilt from the spec.** The weekly muscle-load radar is gone; the same question is answered further down by logged sets per muscle group, from what was trained rather than what a program planned. In its place: biggest movers measured against each exercise's best before the window, statistics as rates against the preceding window rather than totals, weekly volume with a four-week average, the newest records, and sets per muscle group.
+- Biggest movers draws from a zero line, so an exercise that went backwards is shown going backwards instead of being dropped. Both directions share one kilo scale. The selection is named underneath — four biggest gains and the single biggest decline — because otherwise a drop among five looks like a broken sort.
+- **The exercise page is rebuilt too** (spec section 5). The 1RM chart has a real time axis: points sit on their dates, so gaps in training are visible instead of being smoothed away. Runs more than 14 days apart are drawn as separate curves joined by a dashed grey line, with the break shaded and its length named. A tick under the baseline marks every session, and the best estimate carries a gold dot and a dashed line down to the baseline.
+- The rep table became a grid, one tile per rep count. An untrained rep count keeps its tile with a dashed border rather than disappearing — the hole is the information. A record set inside the period is gold.
+- **The rep ladder runs to twelve, not ten.** A rep block commonly goes to twelve, and stopping at ten meant an eleven- or twelve-rep set could never be counted as a record at all. `PERSONAL_RECORD_REPS` moved with it, so the ladder and what the app treats as a record agree.
+
+- Added "Næste skridt", phrased forward rather than as a comparison across rep counts, and "Seneste sæt" with the sets from the last three sessions.
+
+- The plain exercise list is gone. "Vis alle N øvelser" expands the movers instead, which keeps one list rather than two that disagree about ordering.
+
+- `recordLight` in light mode was a pale tint that `ExerciseRow` uses as the *title colour* for a record exercise — unreadable before and unreadable in gold, so it now matches `record`.
+
 ### Removed
 - **The Exercise Map screen and the Train entry that opened it.** The map is in Exercise Library now, above the list it filters, so the separate screen was a second place to do the same thing. Gone: the tool row, the `ExerciseMapPage` route and its screen file, and the route name from the bottom navigation's library group. The figure, its outlines and its touch handling stay where they are — `src/Pages/ExerciseMapPage/` still holds them, and Exercise Library imports them. `docs/EXERCISE_MAP.md` describes what the folder is now.
 - `normalizeMapExercise` and `filterMapExercises` went with it — the screen was their only caller, and Exercise Library filters the catalog rows directly rather than adapting them first. `exerciseMapUtils.js` is now `REGION_LABELS` and nothing else, and `test-exercise-map.js` lost the assertions that covered them. What it still checks is the part that matters to the figure: that every region it can draw has a name, that the back trapezius is the full group, and the whole of the touch handling.

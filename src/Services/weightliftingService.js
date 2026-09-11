@@ -16,6 +16,7 @@ import { withTransaction } from "./shared";
 import { createNextSyncVersion, normalizeSyncId } from "../Utils/syncUtils";
 import { enqueueSync, startBackgroundSync } from "./syncScheduler";
 import {
+  EXERCISE_MUSCLE_GROUPS,
   buildCustomExerciseMuscleMetadata,
   normalizeExerciseMuscleGroupKeys,
   normalizeExerciseMuscleSelection,
@@ -268,7 +269,9 @@ function isCloudSnapshotDeleting(entity) {
   );
 }
 
-const PERSONAL_RECORD_REPS = Array.from({ length: 10 }, (_, index) => index + 1);
+// Twelve, not ten: a rep block commonly runs to twelve, and stopping the
+// ladder at ten meant an eleven- or twelve-rep set could never be a record.
+const PERSONAL_RECORD_REPS = Array.from({ length: 12 }, (_, index) => index + 1);
 const PERSONAL_RECORD_MONTHS = [
   "Jan",
   "Feb",
@@ -2328,6 +2331,72 @@ export async function createCustomExercise(
       ...buildCustomExerciseMuscleMetadata(normalizedSelection),
     },
   ])[0];
+}
+
+/**
+ * Everything the Records screen derives its numbers from, fetched once.
+ *
+ * The rows are the same ones the personal-record summaries are built from -
+ * weight, reps, exercise name, workout id and an ISO-sortable date - which
+ * covers gains, weekly volume and every window comparison without new SQL.
+ *
+ * The muscle-group mapping is the exception. Region keys for built-in
+ * exercises come from the cloud catalog, not the local database, so this
+ * returns an empty map offline and the section that needs it shows nothing
+ * rather than a wrong total.
+ */
+export async function getRecordsSourceData(db) {
+  const rows =
+    await weightliftingRepository.getCompletedStrengthSetsForPersonalRecords(db);
+  const groupsByExercise = new Map();
+
+  try {
+    const entries = await getExerciseLibraryEntries(db);
+    const groupByRegionKey = new Map();
+
+    for (const group of EXERCISE_MUSCLE_GROUPS) {
+      for (const region of group.regions) {
+        groupByRegionKey.set(region.key, group.label);
+      }
+    }
+
+    for (const entry of entries) {
+      const name =
+        typeof entry?.exercise_name === "string"
+          ? entry.exercise_name.trim().toLocaleLowerCase()
+          : "";
+
+      if (!name) {
+        continue;
+      }
+
+      const labels = new Set();
+
+      for (const field of [
+        "primary_front_body_map_region_keys",
+        "primary_back_body_map_region_keys",
+        "primary_body_map_region_keys",
+      ]) {
+        const keys = Array.isArray(entry?.[field]) ? entry[field] : [];
+
+        for (const key of keys) {
+          const label = groupByRegionKey.get(key);
+
+          if (label) {
+            labels.add(label);
+          }
+        }
+      }
+
+      if (labels.size > 0) {
+        groupsByExercise.set(name, [...labels]);
+      }
+    }
+  } catch (error) {
+    console.warn("Records muscle grouping unavailable:", error);
+  }
+
+  return { rows, groupsByExercise };
 }
 
 export async function getPersonalRecordExerciseSummaries(db) {
