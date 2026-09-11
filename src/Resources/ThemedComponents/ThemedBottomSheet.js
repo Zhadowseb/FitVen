@@ -71,7 +71,16 @@ const ThemedBottomSheet = ({ visible, onClose, children, footer = null }) => {
   if (!visible) return null;
 
   return (
-    <Modal transparent animationType="fade" visible={visible}>
+    // onRequestClose is what Android's back gesture calls. Without it the
+    // sheet simply ignored the system back button, and the only way out was
+    // to find the backdrop - the calendar's day sheet has no close button at
+    // all, so it read as a screen the app would not leave.
+    <Modal
+      transparent
+      animationType="fade"
+      visible={visible}
+      onRequestClose={dismissThenClose(onClose)}
+    >
       {/* Overlay */}
       <Pressable style={styles.overlay} onPress={dismissThenClose(onClose)} />
 
