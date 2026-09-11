@@ -809,7 +809,21 @@ const ExerciseList = ({
       {visibleExercises.map((item) => renderItem(item))}
     </View>
 
-    {!isWorkoutDone && (
+    {/* BUG-10: a program day with no exercises was a blank screen. A finished
+        one was worse - the add buttons hide when a workout is done, so a day
+        ticked off by mistake had nothing on it and no way to put anything
+        there. Only the back button led anywhere. */}
+    {visibleExercises.length === 0 && (
+      <View style={styles.emptyExercises}>
+        <ThemedText style={styles.emptyExercisesText} setColor={quietText}>
+          {isWorkoutDone
+            ? "This workout was finished without any exercises."
+            : "No exercises yet. Add one to get started."}
+        </ThemedText>
+      </View>
+    )}
+
+    {(!isWorkoutDone || visibleExercises.length === 0) && (
       // Two ways in rather than one bare plus: the whole catalog, and the
       // handful of exercises the last four workouts actually used, which is
       // what someone adding to a session mid-workout is usually reaching for.

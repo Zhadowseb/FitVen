@@ -108,6 +108,9 @@ const MicrocyclePage = ({ route }) => {
         <ThemedHeader
           right={
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="Block options"
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               onPress={() => {
                 set_focus(mesocycle_focus);
                 set_OptionsBottomsheet_visible(true);

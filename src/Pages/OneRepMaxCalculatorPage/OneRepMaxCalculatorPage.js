@@ -21,6 +21,7 @@ import {
 } from "../../Resources/ThemedComponents";
 import {
   calculateBrzyckiOneRepMax,
+  MAX_ESTIMATE_REPS,
   roundToNearestWeightIncrement,
 } from "../../Utils/oneRepMaxUtils";
 
@@ -67,9 +68,9 @@ export default function OneRepMaxCalculatorPage() {
       parsedReps === null ||
       !Number.isInteger(parsedReps) ||
       parsedReps < 1 ||
-      parsedReps > 36
+      parsedReps > MAX_ESTIMATE_REPS
     ) {
-      nextErrors.reps = "Enter a whole number between 1 and 36.";
+      nextErrors.reps = `Enter a whole number between 1 and ${MAX_ESTIMATE_REPS}.`;
     }
 
     if (Object.keys(nextErrors).length > 0) {
@@ -138,7 +139,7 @@ export default function OneRepMaxCalculatorPage() {
                   setEstimatedOneRepMax(null);
                   setErrors((current) => ({ ...current, weight: null }));
                 }}
-                placeholder="100"
+                placeholder="e.g. 100"
                 keyboardType="decimal-pad"
                 returnKeyType="next"
                 error={errors.weight}
@@ -164,7 +165,7 @@ export default function OneRepMaxCalculatorPage() {
                   setEstimatedOneRepMax(null);
                   setErrors((current) => ({ ...current, reps: null }));
                 }}
-                placeholder="5"
+                placeholder="e.g. 5"
                 keyboardType="number-pad"
                 returnKeyType="done"
                 error={errors.reps}
@@ -287,8 +288,10 @@ export default function OneRepMaxCalculatorPage() {
           </ThemedText>
           <ThemedText style={styles.infoText} setColor={quietText}>
             The result uses the same Brzycki formula as your automatic personal
-            records. Estimates are generally most useful from hard sets of 1-10
-            reps; fatigue, technique and exercise choice can change the result.
+            records, and takes the same 1-{MAX_ESTIMATE_REPS} rep range those
+            records are kept over. Beyond that the formula drifts far from what
+            anyone actually lifts. Fatigue, technique and exercise choice change
+            the result too, so treat it as an estimate.
           </ThemedText>
         </View>
 

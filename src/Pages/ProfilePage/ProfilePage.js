@@ -4,7 +4,7 @@ import {
   View,
   useColorScheme,
 } from "react-native";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
 
@@ -67,6 +67,21 @@ function getNormalizedString(value) {
   return normalizedValue.length > 0 ? normalizedValue : null;
 }
 
+// BUG-11: leaving this screen through the tab bar pops it off the stack, so
+// the component unmounts and any unsaved edit goes with it - the field simply
+// came back holding the stored value, with no warning that anything was lost.
+// The draft therefore lives outside the component, keyed by user so it cannot
+// leak between accounts, and is dropped the moment a save succeeds.
+let unsavedProfileDraft = null;
+
+function rememberProfileDraft(userId, draft) {
+  if (!userId) {
+    return;
+  }
+
+  unsavedProfileDraft = { userId, ...draft };
+}
+
 export default function ProfilePage() {
   const navigation = useNavigation();
   const colorScheme = useColorScheme();
@@ -78,6 +93,13 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState(null);
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
+  // What the last load put in the fields. A field that still matches this is
+  // untouched and may be refreshed; anything else is the user's own typing.
+  const loadedProfileRef = useRef({
+    displayName: "",
+    bio: "",
+    birthDate: "",
+  });
   const [birthDate, setBirthDate] = useState("");
   const [birthDatePickerVisible, setBirthDatePickerVisible] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
@@ -159,9 +181,50 @@ export default function ProfilePage() {
           }
 
           setProfile(nextProfile);
-          setDisplayName(nextProfile.displayName);
-          setBio(nextProfile.bio ?? "");
-          setBirthDate(nextProfile.birthDate ?? "");
+
+          // BUG-11: this used to overwrite the fields unconditionally, so
+          // leaving the screen and coming back threw away whatever had been
+          // typed and not saved, without a word. A field the user has edited
+          // keeps what they wrote; the rest take the stored value.
+          //
+          // The baseline is read into a local first. The updater functions run
+          // during the re-render, not here, so moving the ref forward before
+          // they run compares the field against the value just fetched instead
+          // of the value it was last given - which left every field empty.
+          const baseline = loadedProfileRef.current;
+          // Leaving this screen unmounts it, so unsaved edits cannot be kept in
+          // component state - they were gone before this ran. The draft lives
+          // outside the component and is cleared on save.
+          const draft =
+            unsavedProfileDraft?.userId === user.id ? unsavedProfileDraft : null;
+
+          loadedProfileRef.current = {
+            displayName: nextProfile.displayName,
+            bio: nextProfile.bio ?? "",
+            birthDate: nextProfile.birthDate ?? "",
+          };
+
+          setDisplayName((current) =>
+            draft
+              ? draft.displayName
+              : current === baseline.displayName
+                ? nextProfile.displayName
+                : current
+          );
+          setBio((current) =>
+            draft
+              ? draft.bio
+              : current === baseline.bio
+                ? nextProfile.bio ?? ""
+                : current
+          );
+          setBirthDate((current) =>
+            draft
+              ? draft.birthDate
+              : current === baseline.birthDate
+                ? nextProfile.birthDate ?? ""
+                : current
+          );
         } catch (error) {
           if (isCancelled) {
             return;
@@ -236,6 +299,14 @@ export default function ProfilePage() {
       setProfile(updatedProfile);
       setDisplayName(updatedProfile.displayName);
       setBio(updatedProfile.bio ?? "");
+      unsavedProfileDraft = null;
+      loadedProfileRef.current = {
+        displayName: updatedProfile.displayName,
+        bio: updatedProfile.bio ?? "",
+        birthDate: updatedProfile.privateSettingsError
+          ? loadedProfileRef.current.birthDate
+          : updatedProfile.birthDate ?? "",
+      };
       if (!updatedProfile.privateSettingsError) {
         setBirthDate(updatedProfile.birthDate ?? "");
       }
@@ -344,6 +415,11 @@ export default function ProfilePage() {
 
     clearProfileFeedback();
     setBirthDate(nextBirthDate);
+    rememberProfileDraft(user?.id, {
+      displayName,
+      bio,
+      birthDate: nextBirthDate,
+    });
     setBirthDatePickerVisible(false);
   };
 
@@ -545,9 +621,18 @@ export default function ProfilePage() {
                 <View style={styles.clearBirthDateRow}>
                   <TouchableOpacity
                     activeOpacity={0.72}
+                    accessibilityRole="button"
+                    // BUG-18: "Clear" on its own says nothing about what it
+                    // clears, which is the birth year above it.
+                    accessibilityLabel="Clear birth year"
                     onPress={() => {
                       clearProfileFeedback();
                       setBirthDate("");
+                      rememberProfileDraft(user?.id, {
+                        displayName,
+                        bio,
+                        birthDate: "",
+                      });
                     }}
                   >
                     <ThemedText
@@ -583,6 +668,11 @@ export default function ProfilePage() {
                     onChangeText={(nextValue) => {
                       clearProfileFeedback();
                       setDisplayName(nextValue);
+                      rememberProfileDraft(user?.id, {
+                        displayName: nextValue,
+                        bio,
+                        birthDate,
+                      });
                     }}
                     placeholder="How your name appears"
                     placeholderTextColor={theme.quietText}
@@ -638,6 +728,11 @@ export default function ProfilePage() {
                     onChangeText={(nextValue) => {
                       clearProfileFeedback();
                       setBio(nextValue);
+                      rememberProfileDraft(user?.id, {
+                        displayName,
+                        bio: nextValue,
+                        birthDate,
+                      });
                     }}
                     placeholder="Tell people a little about your training."
                     placeholderTextColor={theme.quietText}

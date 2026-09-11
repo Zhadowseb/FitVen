@@ -294,13 +294,19 @@ export default function FriendsActivity({
   const youDividerColor =
     colorScheme === "light" ? "rgba(15, 17, 22, 0.12)" : "rgba(255, 255, 255, 0.12)";
   const ownIsLive = currentUser?.activityState === "live";
+  // Pattern A: "Set up profile" is what an account without a display name is
+  // told. While the profile is still being fetched there is no display name
+  // either, so an existing user was being asked to set up the profile they
+  // already have, for as long as the request took.
   const ownStatusLabel = currentUser?.displayName
     ? currentUser?.activityState && currentUser.activityState !== "rest"
       ? ownIsLive
         ? "Training now"
         : currentUser.activityDetail ?? currentUser.workoutLabel ?? "No activity"
       : "No activity"
-    : "Set up profile";
+    : isLoading
+      ? "Loading..."
+      : "Set up profile";
   const liveCount =
     (ownIsLive ? 1 : 0) +
     (people ?? []).filter((person) => person?.activityState === "live").length;

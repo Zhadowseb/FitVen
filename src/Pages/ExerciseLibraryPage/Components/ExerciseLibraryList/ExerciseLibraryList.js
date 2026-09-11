@@ -9,6 +9,9 @@ import {
   useColorScheme,
   useWindowDimensions,
 } from "react-native";
+// A deep import, because React Native does not re-export this from its root.
+// It is the same module Modal pulls it from; see the list below for why.
+import { VirtualizedListContextResetter } from "react-native/Libraries/Lists/VirtualizedListContext";
 import { useSQLiteContext } from "expo-sqlite";
 import { useNavigation } from "@react-navigation/native";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -58,6 +61,7 @@ const MUSCLE_FILTERS = EXERCISE_MUSCLE_FILTERS;
 const EMPTY_REGION_KEYS = [];
 
 const catalogKeyExtractor = (exercise) => exercise.exercise_name;
+const EMPTY_ADDED_NAMES = [];
 
 /**
  * One row of the catalog.
@@ -70,6 +74,7 @@ const CatalogExerciseRow = memo(function CatalogExerciseRow({
   exercise,
   isLast,
   isSelecting,
+  isAdded,
   isFavourite,
   isSelectionBusy,
   isWorkoutPicker,
@@ -82,7 +87,9 @@ const CatalogExerciseRow = memo(function CatalogExerciseRow({
       accessibilityRole="button"
       accessibilityLabel={
         isWorkoutPicker
-          ? `Add ${exercise.exercise_name} to workout`
+          ? `${isAdded ? "Add another" : "Add"} ${
+              exercise.exercise_name
+            } to workout`
           : `Show ${exercise.exercise_name} muscles`
       }
       disabled={isSelectionBusy}
@@ -133,6 +140,24 @@ const CatalogExerciseRow = memo(function CatalogExerciseRow({
                 setColor={colors.activeFilterText}
               >
                 Custom
+              </ThemedText>
+            </View>
+          ) : null}
+
+          {/* The sheet stays open now, so a row has to say whether it has
+              already gone in. */}
+          {isAdded ? (
+            <View
+              style={[
+                styles.exerciseStatusBadge,
+                { backgroundColor: colors.secondaryColor },
+              ]}
+            >
+              <ThemedText
+                style={styles.exerciseStatusBadgeText}
+                setColor={colors.activeFilterText}
+              >
+                Added
               </ThemedText>
             </View>
           ) : null}
@@ -341,6 +366,7 @@ const ExerciseLibraryList = ({
   onSelectExercise,
   onAddCustomExercise,
   selectingExerciseName = null,
+  addedExerciseNames = EMPTY_ADDED_NAMES,
   workoutPicker = null,
   initialFilter = null,
 }) => {
@@ -423,12 +449,14 @@ const ExerciseLibraryList = ({
     const matchesGroup =
       selectedGroupKey === "all" || groupKeys.includes(selectedGroupKey);
     const regionKeySet = getExerciseRegionKeySet(exercise);
-    // Every filter has to hold, not just one of them: picking chest and
-    // triceps means exercises that use both. Inside a single group any of its
-    // muscles counts, because "chest" is one thing to the person choosing it.
+    // SPM-6: this used to require every chosen muscle to be in the same
+    // exercise. It reads well with two and is useless with more - chest, traps,
+    // abs and lower back together matched nothing at all, because no exercise
+    // trains all four. What people mean by picking four muscles is "show me
+    // exercises for these", so any of them counts.
     const matchesMuscle =
       isAllMusclesSelected ||
-      selectedMuscleFilters.every((filter) =>
+      selectedMuscleFilters.some((filter) =>
         filter.regionKeys.some((regionKey) => regionKeySet.has(regionKey))
       );
     const matchesType =
@@ -505,6 +533,7 @@ const ExerciseLibraryList = ({
       cardBorder,
       titleColor,
       primaryColor,
+      secondaryColor,
       activeFilterText,
       quietText,
       starColor: theme.planned,
@@ -513,6 +542,7 @@ const ExerciseLibraryList = ({
       cardBorder,
       titleColor,
       primaryColor,
+      secondaryColor,
       activeFilterText,
       quietText,
       theme.planned,
@@ -526,6 +556,10 @@ const ExerciseLibraryList = ({
   );
   const isWorkoutPicker = mode === "workout-picker";
   const isSelectionBusy = Boolean(selectingExerciseName);
+  const addedNameSet = useMemo(
+    () => new Set(addedExerciseNames),
+    [addedExerciseNames]
+  );
   const activeFilterCount =
     (selectedGroupKey === "all" ? 0 : 1) +
     (isAllMusclesSelected ? 0 : selectedMuscleKeys.length) +
@@ -668,6 +702,7 @@ const ExerciseLibraryList = ({
         exercise={item}
         isLast={index === lastCatalogIndex}
         isSelecting={selectingExerciseName === item.exercise_name}
+        isAdded={addedNameSet.has(item.exercise_name)}
         isFavourite={favouriteNames.has(
           (item.exercise_name ?? "").toLocaleLowerCase()
         )}
@@ -681,6 +716,7 @@ const ExerciseLibraryList = ({
     [
       lastCatalogIndex,
       selectingExerciseName,
+      addedNameSet,
       favouriteNames,
       isSelectionBusy,
       isWorkoutPicker,
@@ -977,7 +1013,11 @@ const ExerciseLibraryList = ({
               return (
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel={`Add ${exercise.exercise_name} to workout`}
+                  accessibilityLabel={`${
+                    addedNameSet.has(exercise.exercise_name)
+                      ? "Add another"
+                      : "Add"
+                  } ${exercise.exercise_name} to workout`}
                   disabled={isSelectionBusy}
                   onPress={() => onSelectExercise?.(exercise)}
                   style={[
@@ -1043,7 +1083,11 @@ const ExerciseLibraryList = ({
                       ) : null}
                     </View>
 
-                    {isCurrentSelection ? (
+                    {/* The sheet stays open now, so this has to survive the
+                        moment the add finishes - otherwise a row that has
+                        already gone in looks the same as one that has not. */}
+                    {isCurrentSelection ||
+                    addedNameSet.has(exercise.exercise_name) ? (
                       <ThemedText
                         style={styles.pickerAddedText}
                         setColor={secondaryColor}
@@ -1490,6 +1534,12 @@ const ExerciseLibraryList = ({
 
         <TouchableOpacity
           activeOpacity={0.86}
+          accessibilityRole="button"
+          accessibilityLabel={
+            activeFilterCount > 0
+              ? `Open exercise filters, ${activeFilterCount} active`
+              : "Open exercise filters"
+          }
           onPress={() => setIsFilterSheetVisible(true)}
           style={[
             styles.filterButton,
@@ -1587,7 +1637,13 @@ const ExerciseLibraryList = ({
         <ThemedText style={styles.catalogMapHint} setColor={quietText}>
           {highlightedRegionKeys.length === 0
             ? "Tap a muscle to filter the list"
-            : `Showing exercises that use ${muscleFilterLabels.join(" and ")}`}
+            : `Showing exercises that use ${
+                muscleFilterLabels.length === 1
+                  ? muscleFilterLabels[0]
+                  : `${muscleFilterLabels
+                      .slice(0, -1)
+                      .join(", ")} or ${muscleFilterLabels.at(-1)}`
+              }`}
         </ThemedText>
       </View>
 
@@ -1621,15 +1677,52 @@ const ExerciseLibraryList = ({
           </ThemedText>
         </View>
       ) : filteredExercises.length === 0 ? (
+        // BUG-16: this used to be a viewport-height box with its text centred
+        // in it, so a filter that matched nothing looked like a blank screen -
+        // the message sat below the fold. The way out was a Reset button
+        // inside the filter sheet, which is not visible from the list.
         <View style={styles.emptyState}>
           <ThemedTitle type="h3" style={styles.emptyTitle}>
             No matches
           </ThemedTitle>
           <ThemedText style={styles.emptyBody} setColor={quietText}>
-            Try another search or reset the active filter.
+            {activeFilterCount > 0
+              ? "No exercise matches every filter you have set."
+              : "Try another search."}
           </ThemedText>
+
+          {activeFilterCount > 0 ? (
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="Clear all filters"
+              activeOpacity={0.85}
+              onPress={resetFilters}
+              style={[styles.emptyResetButton, { borderColor: cardBorder }]}
+            >
+              <ThemedText
+                style={styles.emptyResetText}
+                setColor={primaryTextColor}
+              >
+                {`Clear ${activeFilterCount === 1 ? "filter" : "all filters"}`}
+              </ThemedText>
+            </TouchableOpacity>
+          ) : null}
         </View>
       ) : (
+        // BUG-14: the warning "VirtualizedLists should never be nested inside
+        // plain ScrollViews" is about a list that was handed unlimited height
+        // and so cannot virtualize. That is not this list - `styles.listScroll`
+        // fixes its height, so it has a real viewport and owns its scrolling.
+        // The parent ScrollView has to stay: making it a list froze this one on
+        // its first ten rows, verified on a device.
+        //
+        // These two are React Native's own escape hatch for exactly that case,
+        // and `Modal` pairs them the same way. The warning fires when an
+        // enclosing ScrollView's context is present and the list's own context
+        // is null, so the ScrollView provider is the half that silences it -
+        // the resetter alone makes it more likely, not less.
+        <VirtualizedListContextResetter>
+        <ScrollView.Context.Provider value={null}>
         <FlatList
           // Was a ScrollView with a plain `.map()`, on the reasoning that a
           // fixed-height window inside a scrolling page could not own its own
@@ -1658,6 +1751,8 @@ const ExerciseLibraryList = ({
           showsVerticalScrollIndicator={false}
           nestedScrollEnabled
         />
+        </ScrollView.Context.Provider>
+        </VirtualizedListContextResetter>
       )}
       </ThemedCard>
 

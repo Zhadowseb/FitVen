@@ -13,11 +13,21 @@ const SUPPORTED_WORKOUT_TYPES = ["Resistance"];
  * cards look the same as in the feed and work offline; only the posted flag
  * needs the cloud.
  */
-export async function getOwnWorkoutPosts(db, { user, limit = 20 } = {}) {
+// SPM-8: this used to stop at 20 without saying so, so the page read "4 of 20
+// posted" beside a Train tab reporting 50 completed workouts, and a user
+// looking for a particular older workout to share had no way to tell why it
+// was not there. The page renders through a FlatList, so the whole list costs
+// what is on screen.
+export async function getOwnWorkoutPosts(db, { user, limit = null } = {}) {
   if (!user?.id) {
     return [];
   }
 
+  const parsedLimit = Number(limit);
+  const normalizedLimit =
+    Number.isFinite(parsedLimit) && parsedLimit > 0
+      ? Math.trunc(parsedLimit)
+      : null;
   const placeholders = SUPPORTED_WORKOUT_TYPES.map(() => "?").join(", ");
   const workouts = await db.getAllAsync(
     `SELECT
@@ -46,8 +56,10 @@ export async function getOwnWorkoutPosts(db, { user, limit = 20 } = {}) {
        AND COALESCE(w.deleted_at, '') = ''
        AND COALESCE(d.deleted_at, '') = ''
      ORDER BY performed_date_sort DESC, w.workout_id DESC
-     LIMIT ?;`,
-    [...SUPPORTED_WORKOUT_TYPES, Math.max(1, Number(limit) || 20)]
+     ${normalizedLimit === null ? "" : "LIMIT ?"};`,
+    normalizedLimit === null
+      ? [...SUPPORTED_WORKOUT_TYPES]
+      : [...SUPPORTED_WORKOUT_TYPES, normalizedLimit]
   );
 
   if (!workouts?.length) {

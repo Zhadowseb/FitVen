@@ -1,4 +1,4 @@
-import { View, TouchableOpacity } from 'react-native';
+import { Alert, View, TouchableOpacity } from 'react-native';
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
@@ -30,20 +30,25 @@ import { ThemedTitle,
   from "../../Resources/ThemedComponents";
 import Cogwheel from '../../Resources/Icons/UI-icons/Cogwheel';
 import { formatDate, parseCustomDate } from '../../Utils/dateUtils';
-import { getProgramEndDate } from '../../Utils/programUtils';
+import { getProgramDateRange, getProgramEndDate } from '../../Utils/programUtils';
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
 const emptyProgramStats = {
-    totalVolume: 0,
-    avgSessionMinutes: 0,
+    totalVolume: null,
+    avgSessionMinutes: null,
     completionPercent: 0,
     completedWorkouts: 0,
     totalWorkouts: 0,
     streakWeeks: 0,
 };
 
+// null means nothing was logged, which is not the same as zero kilos.
 function formatCompactVolume(value) {
+    if (value === null || value === undefined) {
+        return null;
+    }
+
     const numberValue = Math.max(0, Number(value) || 0);
 
     if (numberValue >= 1000) {
@@ -62,23 +67,6 @@ function getLocalDateIndex(date) {
     );
 }
 
-function formatHeaderDate(value) {
-    if (!value) {
-        return "-";
-    }
-
-    const date = parseCustomDate(value);
-
-    if (Number.isNaN(date.getTime())) {
-        return value;
-    }
-
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-
-    return `${day}.${month}.${year}`;
-}
 
 function getProgramTimeline(startDate, totalDays) {
     const normalizedTotalDays = Math.max(0, Math.trunc(Number(totalDays) || 0));
@@ -259,6 +247,15 @@ const ProgramOverviewPage = ( {route} ) => {
             refresh();
         } catch (error) {
             console.error("startProgram failed:", error);
+            // SPM-3: starting a second program while one is running is refused
+            // now, and the reason names the one in the way. Swallowed into the
+            // console, the button would simply have done nothing.
+            Alert.alert(
+                "Could not start the program",
+                error instanceof Error
+                    ? error.message
+                    : "The program could not be started."
+            );
         } finally {
             setIsStartingProgram(false);
         }
@@ -310,14 +307,14 @@ const ProgramOverviewPage = ( {route} ) => {
 
     const headerTitle = (program_name ?? "").trim() || "Program";
     const programTimeline = getProgramTimeline(start_date, programDayCount);
-    const weekProgressPercent =
-        status === "NOT_STARTED" || programTimeline.totalWeeks <= 0
-            ? 0
-            : Math.round(
-                  (programTimeline.currentWeek / programTimeline.totalWeeks) * 100
-              );
+    // SPM-5: this was weeks elapsed, printed as a bare percentage right beside
+    // "Week 5 of 5" - so a program with six workouts left showed 100% here and
+    // 81% on the list it was opened from. Two different measurements under one
+    // name. The percentage is completed workouts now, the same as the card,
+    // and the week counter next to it already says where in the plan you are.
+    const weekProgressPercent = programStats.completionPercent;
     const headerPeriod =
-        `${formatHeaderDate(start_date)} – ${formatHeaderDate(end_date)}`;
+        getProgramDateRange(start_date, end_date);
 
   return (
     <>
@@ -375,7 +372,11 @@ const ProgramOverviewPage = ( {route} ) => {
                 completedWorkouts={programStats.completedWorkouts}
                 totalWorkouts={programStats.totalWorkouts}
                 totalVolumeLabel={formatCompactVolume(programStats.totalVolume)}
-                avgSessionMinutes={programStats.avgSessionMinutes}
+                avgSessionMinutes={
+                    programStats.avgSessionMinutes === null
+                        ? null
+                        : `${programStats.avgSessionMinutes}`
+                }
                 onStart={() => setStartProgramModalVisible(true)}
             />
 

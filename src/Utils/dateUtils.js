@@ -171,6 +171,65 @@ export function calculateAgeFromBirthDate(value, referenceDate = new Date()) {
 // "Just now" under a minute, then minutes, hours and days, and a short local
 // date once a week has passed. Shared by the feed card and the notification
 // list, which each carried an identical copy.
+// Plural agreement in one place. "1 followers" and "1 uger siden" were both
+// string concatenation that never asked how many there were.
+export function pluralize(count, singular, plural = `${singular}s`) {
+  return Math.abs(Number(count)) === 1 ? singular : plural;
+}
+
+export function formatCount(count, singular, plural) {
+  return `${count} ${pluralize(count, singular, plural)}`;
+}
+
+// Whole days between two instants, counted as calendar days in local time.
+//
+// Elapsed milliseconds are the wrong unit for "yesterday": a record stored
+// with a date and no time sits at midnight, so at nine in the evening it was
+// 0.9 days old, which rounded to 1 and read as "Yesterday" on the day it was
+// set. Midnight is the boundary people mean.
+export function calendarDaysBetween(from, to) {
+  const start = new Date(from);
+  const end = new Date(to);
+
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    return null;
+  }
+
+  start.setHours(0, 0, 0, 0);
+  end.setHours(0, 0, 0, 0);
+
+  return Math.round((end.getTime() - start.getTime()) / 86400000);
+}
+
+// The app's one way of saying how long ago a day was.
+export function formatRelativeDay(at, now = Date.now()) {
+  const days = calendarDaysBetween(at, now);
+
+  if (days === null) {
+    return "";
+  }
+
+  if (days <= 0) {
+    return "Today";
+  }
+
+  if (days === 1) {
+    return "Yesterday";
+  }
+
+  if (days < 7) {
+    return `${days} days ago`;
+  }
+
+  if (days < 31) {
+    const weeks = Math.floor(days / 7);
+    return `${weeks} ${pluralize(weeks, "week")} ago`;
+  }
+
+  const months = Math.max(1, Math.floor(days / 30));
+  return `${months} ${pluralize(months, "month")} ago`;
+}
+
 export function formatTimeAgo(value) {
   const timestamp = value ? new Date(value).getTime() : NaN;
 
@@ -196,14 +255,8 @@ export function formatTimeAgo(value) {
     return `${elapsedHours}h ago`;
   }
 
-  const elapsedDays = Math.floor(elapsedHours / 24);
-
-  if (elapsedDays < 7) {
-    return `${elapsedDays}d ago`;
-  }
-
-  return new Date(timestamp).toLocaleDateString(undefined, {
-    day: "numeric",
-    month: "short",
-  });
+  // BUG-20: past a day this used to say "1d ago" while the records screen said
+  // "Yesterday" about the same event. One vocabulary, and the day boundary is
+  // the calendar's rather than a rolling 24 hours.
+  return formatRelativeDay(timestamp);
 }

@@ -160,6 +160,15 @@ const ProgramSettingsPage = ({ route }) => {
             setStartProgramModalVisible(false);
         } catch (error) {
             console.error("startProgram failed:", error);
+            // SPM-3: starting a second program while one is running is refused
+            // now, and the reason names the one in the way. Swallowed into the
+            // console, the button would simply have done nothing.
+            Alert.alert(
+                "Could not start the program",
+                error instanceof Error
+                    ? error.message
+                    : "The program could not be started."
+            );
         } finally {
             setIsStartingProgram(false);
         }

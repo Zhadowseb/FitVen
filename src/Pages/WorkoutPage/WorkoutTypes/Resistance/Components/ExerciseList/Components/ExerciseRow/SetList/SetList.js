@@ -32,6 +32,10 @@ import Plus from "@resources/Icons/UI-icons/Plus";
 import Cogwheel from "@resources/Icons/UI-icons/Cogwheel";
 import Star from "@resources/Icons/UI-icons/Star";
 import { weightliftingService } from "@services";
+import {
+  clampSetValue,
+  isClampedSetField,
+} from "@utils/setValueLimits";
 
 const SET_LIST_COLUMN_KEYS = [
   "note",
@@ -411,10 +415,15 @@ const SetList = ({
       return;
     }
 
+    // The same ceiling the service applies. Without it the row showed the
+    // typed number until the screen was reloaded, and the user had no way to
+    // tell that something else had been stored.
     const nextValue =
       field === "note"
         ? value === "" ? null : value
-        : value === "" ? null : Number(value);
+        : isClampedSetField(field)
+          ? clampSetValue(field, value)
+          : value === "" ? null : Number(value);
 
     setLocalSets((prev) =>
       prev.map((set) =>
@@ -446,7 +455,7 @@ const SetList = ({
       return;
     }
 
-    const nextValue = value === "" ? null : Number(value);
+    const nextValue = clampSetValue("pause", value);
     const mirroredSetIds = displayedSets
       .map((set) => set.sets_id)
       .filter((id) => id !== null && id !== undefined);
@@ -711,6 +720,7 @@ const SetList = ({
 
         return (
           <ThemedBouncyCheckbox
+            accessibilityLabel={`Set ${set.set_number} done`}
             value={Number(set.done) === 1 || Number(set.failed) === 1}
             onChange={() =>
               onToggleSet(set.sets_id, getNextSetCompletion(set), set)

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  Alert,
   Image,
   RefreshControl,
   ScrollView,
@@ -25,7 +26,10 @@ import {
   ThemedText,
   ThemedTitle,
 } from "../../../../Resources/ThemedComponents";
-import { getProgramEndDate } from "../../../../Utils/programUtils";
+import {
+  getProgramDateRange,
+  getProgramEndDate,
+} from "../../../../Utils/programUtils";
 import {
   formatDate,
   getTodaysDate,
@@ -38,21 +42,6 @@ const TYPE_PILL_GLASS = {
   dark: { background: "rgba(10, 11, 15, 0.72)", border: "rgba(255, 255, 255, 0.14)" },
   light: { background: "rgba(255, 255, 255, 0.88)", border: "rgba(15, 17, 22, 0.14)" },
 };
-
-const MONTH_LABELS = [
-  "JAN",
-  "FEB",
-  "MAR",
-  "APR",
-  "MAY",
-  "JUN",
-  "JUL",
-  "AUG",
-  "SEP",
-  "OCT",
-  "NOV",
-  "DEC",
-];
 
 const RESISTANCE_WORKOUT_TYPES = new Set([
   "Resistance",
@@ -67,41 +56,6 @@ const STATUS_FILTERS = [
   { key: "COMPLETE", label: "Complete" },
   { key: "NOT_STARTED", label: "Draft" },
 ];
-
-function formatProgramDateLabel(value, { includeYear = false } = {}) {
-  if (!value) {
-    return "";
-  }
-
-  const date = parseCustomDate(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = MONTH_LABELS[date.getMonth()] ?? "";
-  const year = date.getFullYear();
-
-  return `${day} ${month}${includeYear ? ` ${year}` : ""}`.trim();
-}
-
-function getProgramDateRange(startDate, endDate) {
-  if (!startDate && !endDate) {
-    return "";
-  }
-
-  const start = parseCustomDate(startDate);
-  const end = parseCustomDate(endDate);
-  const showStartYear =
-    Number.isNaN(start.getTime()) ||
-    Number.isNaN(end.getTime()) ||
-    start.getFullYear() !== end.getFullYear();
-
-  return `${formatProgramDateLabel(startDate, {
-    includeYear: showStartYear,
-  })} – ${formatProgramDateLabel(endDate, { includeYear: true })}`;
-}
 
 function normalizeWorkoutType(type) {
   return RESISTANCE_WORKOUT_TYPES.has(type) ? "Resistance" : type;
@@ -153,6 +107,11 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
       }
 
       setErrorMessage("");
+
+      // SPM-4: a program whose last day has passed finishes itself, so the
+      // list cannot show something as ACTIVE two months after it ended and
+      // the home screen cannot link to it as the programme in progress.
+      await programService.completeExpiredPrograms(db);
 
       const todayDate = getTodaysDate();
       const [rows, todaySnapshots] = await Promise.all([
@@ -262,6 +221,14 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
       await loadPrograms();
     } catch (error) {
       console.error("startProgram failed:", error);
+      // SPM-3: only one program runs at a time now, and the refusal names the
+      // one still going. Logged to the console, the button did nothing.
+      Alert.alert(
+        "Could not start the program",
+        error instanceof Error
+          ? error.message
+          : "The program could not be started."
+      );
     } finally {
       setIsStartingProgram(false);
     }
@@ -439,9 +406,12 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
           (!isDraft &&
             totalWorkouts > 0 &&
             completedWorkouts >= totalWorkouts);
+        // A draft used to be pinned at 0% no matter what its workouts said,
+        // so a card could read "5/5 workouts" next to "Progress 0%". The count
+        // means the same thing on every card, so the percentage does too.
         const progressPercent = isCompleted
           ? 100
-          : !isDraft && totalWorkouts > 0
+          : totalWorkouts > 0
           ? Math.min(
               100,
               Math.round((completedWorkouts / totalWorkouts) * 100)

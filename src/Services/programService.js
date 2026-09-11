@@ -10,6 +10,7 @@ import {
   normalizeLocalDateString,
   parseCustomDate,
 } from "@utils/dateUtils";
+import { getProgramEndDate } from "@utils/programUtils";
 import {
   programRepository,
   runningRepository,
@@ -363,11 +364,85 @@ export async function updateProgramStatus(db, { programId, status }) {
   syncProgramsInBackground(db);
 }
 
+// SPM-3 and SPM-4: the home screen says "the active program", in the singular,
+// and links to whichever one comes first. Two at once is a state that should
+// not exist, and a program whose last day was ten weeks ago should not be one
+// of them.
+//
+// So: expired programs finish themselves, and starting a second one while one
+// is genuinely still running is refused with the name of the one in the way.
+export async function completeExpiredPrograms(db) {
+  const programs = await programRepository.getProgramsOverview(db);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const completedNames = [];
+
+  for (const program of programs) {
+    if (normalizeProgramStatus(program.status) !== "ACTIVE") {
+      continue;
+    }
+
+    // Program stores only a start date; the end is the last day it plans.
+    const endDateString = getProgramEndDate(
+      program.start_date,
+      program.day_count
+    );
+
+    if (!endDateString) {
+      continue;
+    }
+
+    const endDate = parseCustomDate(endDateString);
+
+    if (Number.isNaN(endDate.getTime()) || endDate >= today) {
+      continue;
+    }
+
+    await programRepository.updateProgramStatus(db, {
+      programId: program.program_id,
+      status: "COMPLETE",
+    });
+    completedNames.push(program.program_name ?? "Program");
+  }
+
+  if (completedNames.length) {
+    syncProgramsInBackground(db);
+  }
+
+  return completedNames;
+}
+
+export async function getBlockingActiveProgram(db, { excludeProgramId } = {}) {
+  await completeExpiredPrograms(db);
+
+  const programs = await programRepository.getProgramsOverview(db);
+
+  return (
+    programs.find(
+      (program) =>
+        normalizeProgramStatus(program.status) === "ACTIVE" &&
+        program.program_id !== excludeProgramId
+    ) ?? null
+  );
+}
+
 export async function startProgram(db, { programId, startDate }) {
   const normalizedStartDate = normalizeLocalDateString(startDate);
 
   if (!normalizedStartDate) {
     throw new Error("A valid program start date is required.");
+  }
+
+  const blockingProgram = await getBlockingActiveProgram(db, {
+    excludeProgramId: programId,
+  });
+
+  if (blockingProgram) {
+    throw new Error(
+      `"${
+        blockingProgram.program_name ?? "Another program"
+      }" is still running. Finish it before starting this one.`
+    );
   }
 
   await withTransaction(db, async () => {
@@ -1061,11 +1136,22 @@ export async function getProgramStats(db, programId) {
     streakWeeks += 1;
   }
 
+  // A program whose workouts were ticked off without logging anything has no
+  // volume and no session length. That is not zero kilos - it is no
+  // measurement, and printing "0 kg" next to "12 of 12 workouts completed"
+  // reads as a broken counter rather than as missing data.
+  const loggedSetCount = Number(overview?.logged_set_count) || 0;
+  const timedWorkoutCount = Number(overview?.timed_workout_count) || 0;
+
   return {
-    totalVolume: Math.round(Number(overview?.total_volume) || 0),
-    avgSessionMinutes: Math.round(
-      (Number(overview?.avg_session_seconds) || 0) / 60
-    ),
+    totalVolume:
+      loggedSetCount > 0
+        ? Math.round(Number(overview?.total_volume) || 0)
+        : null,
+    avgSessionMinutes:
+      timedWorkoutCount > 0
+        ? Math.round((Number(overview?.avg_session_seconds) || 0) / 60)
+        : null,
     completionPercent:
       totalWorkouts > 0
         ? Math.round((completedWorkouts / totalWorkouts) * 100)

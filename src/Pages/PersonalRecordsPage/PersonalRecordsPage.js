@@ -264,6 +264,11 @@ const PersonalRecordsPage = () => {
   const theme = Colors[colorScheme] ?? Colors.light;
   const [summaries, setSummaries] = useState([]);
   const [recordSets, setRecordSets] = useState([]);
+  // Pattern A: without this the screen paints its definitive "nothing to show"
+  // state - "Nothing to measure yet", 0 workouts, 0 records - while the query
+  // is still running, and then replaces it with the real numbers a moment
+  // later. Empty and not-known-yet are different answers.
+  const [recordsLoaded, setRecordsLoaded] = useState(false);
   const [muscleGroups, setMuscleGroups] = useState(() => new Map());
   const [overviewPeriod, setOverviewPeriod] = useState("3m");
   const [showAllMovers, setShowAllMovers] = useState(false);
@@ -431,6 +436,8 @@ const PersonalRecordsPage = () => {
       console.error("Failed to load records source data:", error);
       setRecordSets([]);
       setMuscleGroups(new Map());
+    } finally {
+      setRecordsLoaded(true);
     }
   }, [db]);
 
@@ -1192,7 +1199,9 @@ const PersonalRecordsPage = () => {
         {/* The weekly muscle-load radar is gone: the same question is answered
             by logged sets per muscle group inside the overview, and from what
             was actually trained rather than what a program planned. */}
-        {selectedExerciseName ? (
+        {!recordsLoaded ? (
+          <ThemedStateBlock style={styles.loadingState} />
+        ) : selectedExerciseName ? (
           <RecordsExercise
             name={selectedExerciseName}
             sets={recordSets}

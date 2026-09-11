@@ -5,12 +5,15 @@
 //
 // Pure on purpose. Dates come in as `now` so the caller decides what "today"
 // is and the tests can pick a day.
-import { calculateBrzyckiOneRepMax } from "./oneRepMaxUtils";
+import {
+  calculateBrzyckiOneRepMax,
+  MAX_ESTIMATE_REPS,
+} from "./oneRepMaxUtils";
 
 export const RECORDS_PERIODS = [
-  { key: "3m", label: "3 mdr", days: 91 },
-  { key: "1y", label: "1 år", days: 365 },
-  { key: "all", label: "Alt", days: null },
+  { key: "3m", label: "3 months", days: 91 },
+  { key: "1y", label: "1 year", days: 365 },
+  { key: "all", label: "All", days: null },
 ];
 
 // Section 7: an exercise has to have been logged with weight this many times,
@@ -351,14 +354,14 @@ export function buildLatestRecords(sets, { limit = 8 } = {}) {
 
 /** Breaks longer than this are drawn as a gap rather than a long straight line. */
 export const SERIES_GAP_DAYS = 14;
-export const REP_LADDER_SLOTS = 12;
+export const REP_LADDER_SLOTS = MAX_ESTIMATE_REPS;
 
 export const EXERCISE_PERIODS = [
   { key: "1m", label: "1M", days: 30 },
   { key: "3m", label: "3M", days: 91 },
   { key: "6m", label: "6M", days: 182 },
-  { key: "1y", label: "1Å", days: 365 },
-  { key: "all", label: "Alt", days: null },
+  { key: "1y", label: "1Y", days: 365 },
+  { key: "all", label: "All", days: null },
 ];
 
 function forExercise(sets, name) {

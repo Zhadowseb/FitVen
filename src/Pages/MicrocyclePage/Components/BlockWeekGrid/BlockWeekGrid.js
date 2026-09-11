@@ -3,6 +3,7 @@ import { View, useColorScheme } from "react-native";
 import styles from "./BlockWeekGridStyle";
 import { Colors, withAlpha } from "../../../../Resources/GlobalStyling/colors";
 import { ThemedText } from "../../../../Resources/ThemedComponents";
+import Dumbbell from "../../../../Resources/Icons/UI-icons/Dumbbell";
 
 export const WEEKDAY_INITIALS = ["M", "T", "W", "T", "F", "S", "S"];
 
@@ -227,14 +228,26 @@ export function DayCell({
   // Six dots is the most that fits; the number stays exact either way.
   const dots = cards.slice(0, 6);
 
+  // SPM-10: the count used to be a bare number, in a grid where a rest day
+  // shows its bare date. The 2nd of the month with three workouts read "3",
+  // and the cell next to it read "3" because it was the 3rd. The dumbbell is
+  // what tells the two numbers apart.
   return (
     <View style={cellStyle}>
-      <ThemedText
-        style={styles.cellCount}
-        setColor={isDone ? palette.secondary : palette.bodyText}
-      >
-        {workouts.length}
-      </ThemedText>
+      <View style={styles.cellCountRow}>
+        <Dumbbell
+          width={11}
+          height={11}
+          color={isDone ? palette.secondary : palette.bodyText}
+          thickness={1.8}
+        />
+        <ThemedText
+          style={styles.cellCount}
+          setColor={isDone ? palette.secondary : palette.bodyText}
+        >
+          {workouts.length}
+        </ThemedText>
+      </View>
 
       <View style={styles.cellDotRow}>
         {dots.map((card, index) => (

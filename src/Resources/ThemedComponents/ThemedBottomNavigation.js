@@ -76,6 +76,30 @@ function getPlannedShortcut(snapshots, date) {
   return workouts.length > 0 ? { date, workouts } : null;
 }
 
+const PROFILE_ROUTES = new Set([
+  "ProfilePage",
+  "SocialPostSettingsPage",
+  "ExerciseSocialPostSettingsPage",
+  "WorkoutTypesSettingsPage",
+]);
+const SOCIAL_ROUTES = new Set(["SearchPage", "SocialUserListPage"]);
+const LIBRARY_ROUTES = new Set([
+  "ExerciseLibraryPage",
+  "ExerciseCatalogPage",
+  "PersonalRecordsPage",
+  "ProgramPage",
+  "ProgramOverviewPage",
+  "MicrocyclePage",
+  "WeekPage",
+  "WorkoutCalendarPage",
+  "SicknessPage",
+  "OneRepMaxCalculatorPage",
+]);
+const INHERIT_TAB_ROUTES = new Set([
+  "NotificationHistoryPage",
+  "NotificationSettingsPage",
+]);
+
 function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
   const db = useSQLiteContext();
   const colorScheme = useColorScheme();
@@ -104,30 +128,38 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
   const activeWorkoutLoadRef = useRef(false);
   const recentWorkoutLoadRequestRef = useRef(0);
   const recentWorkoutAppendLoadRef = useRef(false);
+  const lastResolvedTabRef = useRef("home");
 
-  const isProfileActive = [
-    "ProfilePage",
-    "NotificationSettingsPage",
-    "SocialPostSettingsPage",
-    "ExerciseSocialPostSettingsPage",
-    "WorkoutTypesSettingsPage",
-  ].includes(currentRouteName);
-  const isSocialActive = ["SearchPage", "SocialUserListPage"].includes(
-    currentRouteName
-  );
-  const isLibraryActive = [
-    "ExerciseLibraryPage",
-    "ExerciseCatalogPage",
-    "PersonalRecordsPage",
-    "ProgramPage",
-    "ProgramOverviewPage",
-    "MicrocyclePage",
-    "WeekPage",
-    "WorkoutCalendarPage",
-    "SicknessPage",
-    "OneRepMaxCalculatorPage",
-  ].includes(currentRouteName);
+  // Notification settings is reached from the Home bell and from Profile, so
+  // no fixed table can be right for both: listing it under Profile meant the
+  // tab changed under a user halfway through a flow they started on Home.
+  // These routes keep whichever tab the user was already on.
+  const inheritedTab = INHERIT_TAB_ROUTES.has(currentRouteName)
+    ? lastResolvedTabRef.current
+    : null;
+  const isProfileActive =
+    inheritedTab === "profile" ||
+    (!inheritedTab && PROFILE_ROUTES.has(currentRouteName));
+  const isSocialActive =
+    inheritedTab === "social" ||
+    (!inheritedTab && SOCIAL_ROUTES.has(currentRouteName));
+  const isLibraryActive =
+    inheritedTab === "library" ||
+    (!inheritedTab && LIBRARY_ROUTES.has(currentRouteName));
   const isHomeActive = !isProfileActive && !isSocialActive && !isLibraryActive;
+  const resolvedTab = isProfileActive
+    ? "profile"
+    : isSocialActive
+      ? "social"
+      : isLibraryActive
+        ? "library"
+        : "home";
+
+  useEffect(() => {
+    if (!INHERIT_TAB_ROUTES.has(currentRouteName)) {
+      lastResolvedTabRef.current = resolvedTab;
+    }
+  }, [currentRouteName, resolvedTab]);
   // theme.primary is #F7742E, which is only 2.8:1 on the light nav bar - worse
   // than the inactive grey. primaryDark clears 4.5:1.
   const activeColor =
@@ -207,7 +239,7 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
   };
 
   const handleProfilePress = () => {
-    if (!navigationRef?.isReady?.() || isProfileActive) {
+    if (!navigationRef?.isReady?.() || currentRouteName === "ProfilePage") {
       return;
     }
 
@@ -215,7 +247,7 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
   };
 
   const handleSocialPress = () => {
-    if (!navigationRef?.isReady?.() || isSocialActive) {
+    if (!navigationRef?.isReady?.() || currentRouteName === "SearchPage") {
       return;
     }
 
@@ -223,7 +255,7 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
   };
 
   const handleLibraryPress = () => {
-    if (!navigationRef?.isReady?.() || isLibraryActive) {
+    if (!navigationRef?.isReady?.() || currentRouteName === "ExerciseLibraryPage") {
       return;
     }
 

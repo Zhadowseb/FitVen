@@ -26,7 +26,14 @@ import {
   classifyWorkoutFromMuscleGroups,
   isWorkoutLabelAutoAssignable,
 } from "../Utils/workoutClassification";
-import { calculateBrzyckiOneRepMax } from "../Utils/oneRepMaxUtils";
+import {
+  calculateBrzyckiOneRepMax,
+  MAX_ESTIMATE_REPS,
+} from "../Utils/oneRepMaxUtils";
+import {
+  clampSetValue,
+  isClampedSetField,
+} from "../Utils/setValueLimits";
 
 let dirtyStrengthHierarchyPushScheduled = false;
 let dirtyStrengthHierarchyPushNeedsRerun = false;
@@ -271,7 +278,10 @@ function isCloudSnapshotDeleting(entity) {
 
 // Twelve, not ten: a rep block commonly runs to twelve, and stopping the
 // ladder at ten meant an eleven- or twelve-rep set could never be a record.
-const PERSONAL_RECORD_REPS = Array.from({ length: 12 }, (_, index) => index + 1);
+const PERSONAL_RECORD_REPS = Array.from(
+  { length: MAX_ESTIMATE_REPS },
+  (_, index) => index + 1
+);
 const PERSONAL_RECORD_MONTHS = [
   "Jan",
   "Feb",
@@ -4198,8 +4208,18 @@ export async function deleteSet(db, setId) {
 }
 
 export async function updateSetField(db, { field, value, setId }) {
+  // The service is the only way a set reaches the database, so the ceiling
+  // sits here rather than on each of the screens that can edit one.
+  const storedValue = isClampedSetField(field)
+    ? clampSetValue(field, value)
+    : value;
+
   const result = await withTransaction(db, async () => {
-    await weightliftingRepository.updateSetField(db, { field, value, setId });
+    await weightliftingRepository.updateSetField(db, {
+      field,
+      value: storedValue,
+      setId,
+    });
 
     if (field !== "weight" && field !== "reps") {
       return null;
@@ -4211,11 +4231,11 @@ export async function updateSetField(db, { field, value, setId }) {
   });
 
   syncSetsInBackground(db);
-  return result;
+  return { ...(result ?? {}), value: storedValue };
 }
 
 export async function updateSetRmPercentage(db, { setId, rmPercentage }) {
-  const nextRmPercentage = normalizeOptionalNumber(rmPercentage);
+  const nextRmPercentage = clampSetValue("rm_percentage", rmPercentage);
 
   const result = await withTransaction(db, async () => {
     await weightliftingRepository.updateSetField(db, {
@@ -4242,8 +4262,9 @@ export async function updateSetRmPercentage(db, { setId, rmPercentage }) {
       };
     }
 
-    const calculatedWeight = Math.round(
-      estimatedWeight * (nextRmPercentage / 100)
+    const calculatedWeight = clampSetValue(
+      "weight",
+      Math.round(estimatedWeight * (nextRmPercentage / 100))
     );
 
     await weightliftingRepository.updateSetField(db, {
@@ -4265,7 +4286,7 @@ export async function updateSetRmPercentage(db, { setId, rmPercentage }) {
 }
 
 export async function updateSetWeight(db, { setId, weight }) {
-  const nextWeight = normalizeOptionalNumber(weight);
+  const nextWeight = clampSetValue("weight", weight);
 
   const result = await withTransaction(db, async () => {
     await weightliftingRepository.updateSetField(db, {

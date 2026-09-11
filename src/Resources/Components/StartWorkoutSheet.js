@@ -711,6 +711,11 @@ function FreshStartCard({ item, disabled, onPress, theme, styles }) {
           backgroundColor: iconColors.backgroundColor,
         },
         disabled ? styles.disabledCard : null,
+        // BUG-19: Run and Walk were already refusing the tap and carrying a
+        // COMING SOON badge, but only the icon was dimmed - the card itself
+        // still read as a live button, so tapping it looked like a dead
+        // control rather than one that is not ready.
+        isComingSoon ? styles.comingSoonCard : null,
       ]}
     >
       <View style={isComingSoon ? styles.comingSoonContent : null}>
@@ -1264,6 +1269,10 @@ function createStyles(theme) {
   },
   comingSoonContent: {
     opacity: 0.5,
+  },
+  // freshCard is already dashed, so this is only the dimming.
+  comingSoonCard: {
+    opacity: 0.62,
   },
   iconTile: {
     alignItems: "center",

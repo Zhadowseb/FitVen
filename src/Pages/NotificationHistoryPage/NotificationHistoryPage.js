@@ -116,8 +116,17 @@ export default function NotificationHistoryPage() {
     loadNotifications();
   };
 
+  // A card with an avatar and an unread dot reads as something you can open,
+  // and nothing happened when you did. There is no screen for another user's
+  // profile in this app, but every notification here is someone starting a
+  // workout, and that is what Social shows - so that is where a row goes.
   const renderNotification = ({ item }) => (
-    <View
+    <TouchableOpacity
+      activeOpacity={0.85}
+      accessibilityRole="button"
+      accessibilityLabel={`${item.title}. ${item.body}`}
+      accessibilityHint="Opens today's activity"
+      onPress={() => navigation.navigate("SearchPage")}
       style={[
         styles.notificationCard,
         {
@@ -174,7 +183,7 @@ export default function NotificationHistoryPage() {
           {formatTimeAgo(item.createdAt)}
         </ThemedText>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   const emptyState = (

@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "0.24.2-fix-notification-test-line-endings.1",
+  "version": "0.24.3-fix-qa-report-2026-09-11.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",

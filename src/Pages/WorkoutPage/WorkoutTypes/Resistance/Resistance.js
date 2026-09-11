@@ -55,6 +55,7 @@ const Resistance = ({
   date,
   workoutLabel,
   workoutSubtitle,
+  autoNamedLabel = null,
   workoutInstanceLabel,
   restartRequestKey,
   onWorkoutMetadataChange,
@@ -94,6 +95,12 @@ const Resistance = ({
   const [expansionAction, setExpansionAction] = useState(null);
   const [isReorderingExercises, setIsReorderingExercises] = useState(false);
   const [exerciseCount, setExerciseCount] = useState(0);
+  // BUG-13: finishing a workout changed nothing on screen except the
+  // play/pause button disappearing. The most important action in the app
+  // ended with no acknowledgement at all, so it now hands back what was
+  // recorded - either on its own, or above the share prompt when that is on.
+  const [finishedSummary, setFinishedSummary] = useState(null);
+  const [finishedSummaryVisible, setFinishedSummaryVisible] = useState(false);
 
   const [totalSets, set_totalSets] = useState(0);
   const [doneSets, set_doneSets] = useState(0);
@@ -394,17 +401,47 @@ const Resistance = ({
       });
 
       refresh();
-      await offerToPostSummary();
+
+      const summary = {
+        duration: formatElapsedTime(finalElapsed),
+        sets: resolvedDoneSets,
+        exercises: exerciseCount,
+      };
+
+      setFinishedSummary(summary);
+
+      const offeredPost = await offerToPostSummary();
+
+      if (!offeredPost) {
+        setFinishedSummaryVisible(true);
+      }
     } catch (error) {
       console.error("Failed to finish workout:", error);
     }
   };
 
+  const summaryLine = (summary) =>
+    summary
+      ? `${summary.duration} · ${summary.sets} ${
+          summary.sets === 1 ? "set" : "sets"
+        } across ${summary.exercises} ${
+          summary.exercises === 1 ? "exercise" : "exercises"
+        }`
+      : "";
+
   // Posting used to happen silently on finish. Now the user is asked, unless
   // they have turned workout posts off in settings.
+  // Returns whether the share prompt was put on screen, so the caller knows
+  // whether the finish still needs an acknowledgement of its own.
   const offerToPostSummary = async () => {
     if (!user?.id) {
-      return;
+      return false;
+    }
+
+    // Nothing was recorded, so there is nothing to share. The service refuses
+    // it too; this is so the question is never asked in the first place.
+    if (resolvedDoneSets <= 0) {
+      return false;
     }
 
     try {
@@ -413,13 +450,15 @@ const Resistance = ({
       });
 
       if (postMode === socialPostService.WORKOUT_SUMMARY_POST_MODES.OFF) {
-        return;
+        return false;
       }
 
       setPostNote("");
       setPostConfirmVisible(true);
+      return true;
     } catch (error) {
       console.error("Could not read the workout post setting:", error);
+      return false;
     }
   };
 
@@ -504,8 +543,16 @@ const Resistance = ({
       return;
     }
 
+    setAllSetsDoneConfirmVisible(false);
     setStartTimerConfirmVisible(true);
   }, [isDone, isRunning, original_start_time, resolvedDoneSets]);
+
+  // Completing the only set of a workout used to raise both prompts in a row,
+  // and they contradicted each other: "Stop the timer and finish the workout?"
+  // followed, after Keep going, by "the workout timer has not been started".
+  // The start-timer question comes first, so the finish question waits until
+  // there is a timer to stop.
+  const hasWorkoutStarted = isRunning || original_start_time !== null;
 
   useEffect(() => {
     const allSetsDone =
@@ -516,7 +563,7 @@ const Resistance = ({
       return;
     }
 
-    if (wasAllSetsDoneRef.current) {
+    if (!hasWorkoutStarted || wasAllSetsDoneRef.current) {
       return;
     }
 
@@ -525,7 +572,12 @@ const Resistance = ({
     if (!isDone) {
       setAllSetsDoneConfirmVisible(true);
     }
-  }, [isDone, resolvedDoneSets, resolvedTotalSets]);
+  }, [
+    hasWorkoutStarted,
+    isDone,
+    resolvedDoneSets,
+    resolvedTotalSets,
+  ]);
 
   const restRemaining = activeRestTimer
     ? Math.max(0, activeRestTimer.endsAt - restTick)
@@ -601,11 +653,20 @@ const Resistance = ({
             {workoutLabel ?? "Workout"}
           </ThemedText>
 
-          {!!workoutSubtitle && (
+          {/* SPM-1: a strength workout names itself after the exercises put
+              into it, so a session started as "Resistance" turns into "Push"
+              while the user is looking at it. That is intended, and now says
+              so - in this header, because this is the one a resistance workout
+              actually draws. */}
+          {autoNamedLabel ? (
+            <ThemedText style={styles.navDate} setColor={primaryTextColor} numberOfLines={1}>
+              {`Named ${autoNamedLabel} after your exercises`}
+            </ThemedText>
+          ) : !!workoutSubtitle ? (
             <ThemedText style={styles.navDate} setColor={quietText} numberOfLines={1}>
               {workoutSubtitle}
             </ThemedText>
-          )}
+          ) : null}
 
           <TouchableOpacity
             accessibilityRole="button"
@@ -873,7 +934,11 @@ const Resistance = ({
       <ThemedConfirmModal
         visible={allSetsDoneConfirmVisible}
         title="All sets are done"
-        message="Stop the timer and finish the workout?"
+        message={
+          isRunning
+            ? "Stop the timer and finish the workout?"
+            : "Finish the workout?"
+        }
         confirmLabel="Finish workout"
         cancelLabel="Keep going"
         tone="positive"
@@ -886,8 +951,10 @@ const Resistance = ({
 
       <ThemedConfirmModal
         visible={postConfirmVisible}
-        title="Share this workout?"
-        message="Post the summary to your feed so the people who follow you can see it."
+        title="Workout finished"
+        message={`${summaryLine(
+          finishedSummary
+        )}. Post it to your feed so the people who follow you can see it?`}
         confirmLabel={isPostingSummary ? "Posting..." : "Post it"}
         cancelLabel="Keep it private"
         tone="positive"
@@ -908,6 +975,17 @@ const Resistance = ({
           inputStyle={styles.postNoteInput}
         />
       </ThemedConfirmModal>
+
+      <ThemedConfirmModal
+        visible={finishedSummaryVisible}
+        title="Workout finished"
+        message={summaryLine(finishedSummary)}
+        confirmLabel="Done"
+        cancelLabel=""
+        tone="positive"
+        onConfirm={() => setFinishedSummaryVisible(false)}
+        onClose={() => setFinishedSummaryVisible(false)}
+      />
 
       <ThemedConfirmModal
         visible={startTimerConfirmVisible}

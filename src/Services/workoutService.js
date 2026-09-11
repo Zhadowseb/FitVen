@@ -298,6 +298,8 @@ export async function finishWorkout(
 const WORKOUT_SUMMARY_REPOST_SKIP_MESSAGES = {
   signed_out: "You need to be signed in to repost a workout summary.",
   not_completed: "Finish the workout before reposting its summary.",
+  no_sets_logged:
+    "There is nothing to post yet - this workout has no completed sets.",
   unsupported_workout_type:
     "Workout summaries can only be posted for Resistance workouts right now.",
   missing_cloud_workout_id:

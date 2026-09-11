@@ -39,6 +39,13 @@ const ThemedBouncyCheckbox = ({
         fontSize: 13,
       }}
       hitSlop={Math.max(0, Math.round((minTouchSize - size) / 2))}
+      // BUG-18: the circle that completes a set had no name and no state, so a
+      // screen reader announced nothing at all on the app's most-used control.
+      // A caller that knows what is being ticked passes its own label.
+      accessible
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked: Boolean(value) }}
+      accessibilityLabel={props.accessibilityLabel ?? text ?? "Mark as done"}
       style={style}
       iconComponent={
         value ? (
