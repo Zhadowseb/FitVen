@@ -1,5 +1,4 @@
 import { StatusBar } from "expo-status-bar";
-import { Ionicons } from "@expo/vector-icons";
 import {
   Image,
   ScrollView,
@@ -109,14 +108,6 @@ const ExerciseLibraryPage = () => {
       ),
       iconBackground: withAlpha(theme.primary, 0.12),
       onPress: () => navigation.navigate("ExerciseCatalogPage"),
-    },
-    {
-      key: "exercise-map",
-      label: "Exercise Map",
-      detail: "Explore muscles and find exercises",
-      icon: <Ionicons name="body-outline" size={20} color={primaryTextColor} />,
-      iconBackground: withAlpha(theme.primary, 0.12),
-      onPress: () => navigation.navigate("ExerciseMapPage"),
     },
     {
       key: "calculator",

@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.23.39] - Unreleased
+### Removed
+- **The Exercise Map screen and the Train entry that opened it.** The map is in Exercise Library now, above the list it filters, so the separate screen was a second place to do the same thing. Gone: the tool row, the `ExerciseMapPage` route and its screen file, and the route name from the bottom navigation's library group. The figure, its outlines and its touch handling stay where they are — `src/Pages/ExerciseMapPage/` still holds them, and Exercise Library imports them. `docs/EXERCISE_MAP.md` describes what the folder is now.
+- `normalizeMapExercise` and `filterMapExercises` went with it — the screen was their only caller, and Exercise Library filters the catalog rows directly rather than adapting them first. `exerciseMapUtils.js` is now `REGION_LABELS` and nothing else, and `test-exercise-map.js` lost the assertions that covered them. What it still checks is the part that matters to the figure: that every region it can draw has a name, that the back trapezius is the full group, and the whole of the touch handling.
+
+---
 ## [0.23.38] - Unreleased
 ### Fixed
 - **The CMake pin is Windows-only now, and the first cloud build is what found it.** `withDevAppVariant` pinned CMake to 3.31.6 for every build. That version exists on this machine because it was installed by hand: the ninja in 3.22.1 is not long-path aware and the C++ codegen breaks on Windows once object paths pass 260 characters. EAS builds on Linux, has 3.22.1, and has no reason to carry 3.31.6 — so the first production AAB failed outright with `[CXX1300] CMake '3.31.6' was not found in SDK, PATH, or by cmake.dir property` after five minutes of Gradle. The pin is gated on `process.platform === "win32"`, which ties it to the reason it exists rather than to a build environment, so a local Windows build is unchanged and a Linux one stops asking for a CMake it does not need.
