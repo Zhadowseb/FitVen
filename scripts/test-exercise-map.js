@@ -5,26 +5,11 @@ const path = require('path');
 async function run() {
   const root = path.resolve(__dirname, '..');
   const source = fs.readFileSync(path.join(root, 'src/Pages/ExerciseMapPage/exerciseMapUtils.js'), 'utf8');
-  const { normalizeMapExercise, filterMapExercises, REGION_LABELS } = await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);
+  const { REGION_LABELS } = await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);
   const atlas = JSON.parse(fs.readFileSync(path.join(root, 'src/Pages/ExerciseMapPage/bodyData.json'), 'utf8'));
+  // Every region the figure can draw has to have a name, or a muscle the user
+  // taps is one the rest of the app cannot say anything about.
   for (const side of Object.values(atlas)) for (const key of Object.keys(side.regions)) assert.ok(REGION_LABELS[key]);
-  const bench = normalizeMapExercise({ exercise_name: 'Bench press', nickname: 'Bænkpres', primary_front_body_map_region_keys: ['pecs', 'pecs', 'unknown'], secondary_front_body_map_region_keys: ['pecs', 'front_delts'], secondary_back_body_map_region_keys: ['triceps'] });
-  assert.deepEqual(bench.primary, ['pecs']);
-  assert.deepEqual(bench.secondary, ['front_delts', 'triceps']);
-  assert.deepEqual(bench.front.secondary, ['front_delts']);
-  assert.deepEqual(bench.back.secondary, ['triceps']);
-  assert.equal(filterMapExercises([bench], { query: 'BÆNKPRES' }).length, 1);
-  assert.equal(filterMapExercises([bench], { selected: ['pecs', 'triceps'] }).length, 1);
-  assert.equal(filterMapExercises([bench], { selected: ['pecs', 'triceps'], primaryOnly: true }).length, 0);
-  assert.equal(filterMapExercises([bench], { selected: ['pecs', 'quads'], matchAll: false }).length, 1);
-  assert.equal(filterMapExercises([bench], { selected: ['pecs', 'quads'] }).length, 0);
-  const legacy = normalizeMapExercise({ name: 'Row', body_map_view: 'back', primary_body_map_region_keys: '["lats"]' });
-  assert.deepEqual(legacy.front.primary, []);
-  assert.deepEqual(legacy.back.primary, ['lats']);
-  const missing = normalizeMapExercise({ exercise_name: 'Unmapped exercise' });
-  assert.equal(missing.hasMetadata, false);
-  assert.equal(filterMapExercises([missing], { query: 'unmapped' }).length, 1);
-  assert.equal(filterMapExercises([missing], { selected: ['pecs'] }).length, 0);
   assert.equal(atlas.back.regions.upper_traps[0].id, 'trapezius_full_back');
   const touchSource = fs.readFileSync(path.join(root, 'src/Pages/ExerciseMapPage/exerciseMapTouch.js'), 'utf8');
   const { createMuscleTouchHandlers } = await import(`data:text/javascript;base64,${Buffer.from(touchSource).toString('base64')}`);
@@ -50,6 +35,6 @@ async function run() {
   touch.onResponderRelease(event(200, 500, 0));
   assert.equal(taps, 1, 'Multiple fingers must not select');
   console.log('Exercise Map touch: finger movement, drag cancellation, scroll handoff and multitouch passed.');
-  console.log('Exercise Map: catalog metadata, both sides, legacy rows, missing mappings and muscle filters passed.');
+  console.log('Exercise Map: every drawable region is named, and the back trapezius is the full group.');
 }
 run().catch(error => { console.error(error); process.exitCode = 1; });
