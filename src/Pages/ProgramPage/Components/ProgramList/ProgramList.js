@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  Alert,
   Image,
   RefreshControl,
   ScrollView,
@@ -154,6 +155,11 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
 
       setErrorMessage("");
 
+      // SPM-4: a program whose last day has passed finishes itself, so the
+      // list cannot show something as ACTIVE two months after it ended and
+      // the home screen cannot link to it as the programme in progress.
+      await programService.completeExpiredPrograms(db);
+
       const todayDate = getTodaysDate();
       const [rows, todaySnapshots] = await Promise.all([
         programService.getProgramsOverview(db),
@@ -262,6 +268,14 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
       await loadPrograms();
     } catch (error) {
       console.error("startProgram failed:", error);
+      // SPM-3: only one program runs at a time now, and the refusal names the
+      // one still going. Logged to the console, the button did nothing.
+      Alert.alert(
+        "Could not start the program",
+        error instanceof Error
+          ? error.message
+          : "The program could not be started."
+      );
     } finally {
       setIsStartingProgram(false);
     }

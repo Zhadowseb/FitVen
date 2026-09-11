@@ -10,6 +10,7 @@ import {
   normalizeLocalDateString,
   parseCustomDate,
 } from "@utils/dateUtils";
+import { getProgramEndDate } from "@utils/programUtils";
 import {
   programRepository,
   runningRepository,
@@ -363,11 +364,85 @@ export async function updateProgramStatus(db, { programId, status }) {
   syncProgramsInBackground(db);
 }
 
+// SPM-3 and SPM-4: the home screen says "the active program", in the singular,
+// and links to whichever one comes first. Two at once is a state that should
+// not exist, and a program whose last day was ten weeks ago should not be one
+// of them.
+//
+// So: expired programs finish themselves, and starting a second one while one
+// is genuinely still running is refused with the name of the one in the way.
+export async function completeExpiredPrograms(db) {
+  const programs = await programRepository.getProgramsOverview(db);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const completedNames = [];
+
+  for (const program of programs) {
+    if (normalizeProgramStatus(program.status) !== "ACTIVE") {
+      continue;
+    }
+
+    // Program stores only a start date; the end is the last day it plans.
+    const endDateString = getProgramEndDate(
+      program.start_date,
+      program.day_count
+    );
+
+    if (!endDateString) {
+      continue;
+    }
+
+    const endDate = parseCustomDate(endDateString);
+
+    if (Number.isNaN(endDate.getTime()) || endDate >= today) {
+      continue;
+    }
+
+    await programRepository.updateProgramStatus(db, {
+      programId: program.program_id,
+      status: "COMPLETE",
+    });
+    completedNames.push(program.program_name ?? "Program");
+  }
+
+  if (completedNames.length) {
+    syncProgramsInBackground(db);
+  }
+
+  return completedNames;
+}
+
+export async function getBlockingActiveProgram(db, { excludeProgramId } = {}) {
+  await completeExpiredPrograms(db);
+
+  const programs = await programRepository.getProgramsOverview(db);
+
+  return (
+    programs.find(
+      (program) =>
+        normalizeProgramStatus(program.status) === "ACTIVE" &&
+        program.program_id !== excludeProgramId
+    ) ?? null
+  );
+}
+
 export async function startProgram(db, { programId, startDate }) {
   const normalizedStartDate = normalizeLocalDateString(startDate);
 
   if (!normalizedStartDate) {
     throw new Error("A valid program start date is required.");
+  }
+
+  const blockingProgram = await getBlockingActiveProgram(db, {
+    excludeProgramId: programId,
+  });
+
+  if (blockingProgram) {
+    throw new Error(
+      `"${
+        blockingProgram.program_name ?? "Another program"
+      }" is still running. Finish it before starting this one.`
+    );
   }
 
   await withTransaction(db, async () => {

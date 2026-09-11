@@ -2,6 +2,12 @@
 import { StyleSheet } from "react-native";
 
 export default StyleSheet.create({
+  emptyExercises: {
+    paddingVertical: 22,
+    paddingHorizontal: 18,
+    alignItems: "center",
+  },
+  emptyExercisesText: { fontSize: 14, lineHeight: 20, textAlign: "center" },
   addExerciseRow: {
     flexDirection: "row",
     justifyContent: "center",

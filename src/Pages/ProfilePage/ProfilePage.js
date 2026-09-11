@@ -4,7 +4,7 @@ import {
   View,
   useColorScheme,
 } from "react-native";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
 
@@ -78,6 +78,13 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState(null);
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
+  // What the last load put in the fields. A field that still matches this is
+  // untouched and may be refreshed; anything else is the user's own typing.
+  const loadedProfileRef = useRef({
+    displayName: "",
+    bio: "",
+    birthDate: "",
+  });
   const [birthDate, setBirthDate] = useState("");
   const [birthDatePickerVisible, setBirthDatePickerVisible] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
@@ -159,9 +166,32 @@ export default function ProfilePage() {
           }
 
           setProfile(nextProfile);
-          setDisplayName(nextProfile.displayName);
-          setBio(nextProfile.bio ?? "");
-          setBirthDate(nextProfile.birthDate ?? "");
+
+          // BUG-11: this used to overwrite the fields unconditionally, so
+          // leaving the screen and coming back threw away whatever had been
+          // typed and not saved, without a word. A field the user has edited
+          // keeps what they wrote; the rest take the stored value.
+          setDisplayName((current) =>
+            current === loadedProfileRef.current.displayName
+              ? nextProfile.displayName
+              : current
+          );
+          setBio((current) =>
+            current === loadedProfileRef.current.bio
+              ? nextProfile.bio ?? ""
+              : current
+          );
+          setBirthDate((current) =>
+            current === loadedProfileRef.current.birthDate
+              ? nextProfile.birthDate ?? ""
+              : current
+          );
+
+          loadedProfileRef.current = {
+            displayName: nextProfile.displayName,
+            bio: nextProfile.bio ?? "",
+            birthDate: nextProfile.birthDate ?? "",
+          };
         } catch (error) {
           if (isCancelled) {
             return;
@@ -236,6 +266,13 @@ export default function ProfilePage() {
       setProfile(updatedProfile);
       setDisplayName(updatedProfile.displayName);
       setBio(updatedProfile.bio ?? "");
+      loadedProfileRef.current = {
+        displayName: updatedProfile.displayName,
+        bio: updatedProfile.bio ?? "",
+        birthDate: updatedProfile.privateSettingsError
+          ? loadedProfileRef.current.birthDate
+          : updatedProfile.birthDate ?? "",
+      };
       if (!updatedProfile.privateSettingsError) {
         setBirthDate(updatedProfile.birthDate ?? "");
       }
