@@ -348,3 +348,141 @@ export function buildLatestRecords(sets, { limit = 8 } = {}) {
       at: set.at,
     }));
 }
+
+/** Breaks longer than this are drawn as a gap rather than a long straight line. */
+export const SERIES_GAP_DAYS = 14;
+export const REP_LADDER_SLOTS = 10;
+
+export const EXERCISE_PERIODS = [
+  { key: "1m", label: "1M", days: 30 },
+  { key: "3m", label: "3M", days: 91 },
+  { key: "6m", label: "6M", days: 182 },
+  { key: "1y", label: "1Å", days: 365 },
+  { key: "all", label: "Alt", days: null },
+];
+
+function forExercise(sets, name) {
+  const wanted = String(name ?? "").trim().toLocaleLowerCase();
+
+  return sets.filter((set) => set.name.toLocaleLowerCase() === wanted);
+}
+
+/**
+ * Section 5.2. One point per session, placed on its real date.
+ *
+ * Sessions further apart than SERIES_GAP_DAYS are returned as separate
+ * segments with the gap between them described, because a smooth line drawn
+ * across a six-week break claims progress that was never measured.
+ */
+export function buildExerciseSeries(sets, { name, now, days }) {
+  const from = days === null || days === undefined ? null : now - days * DAY_MS;
+  const mine = forExercise(sets, name).filter(
+    (set) => from === null || set.at >= from
+  );
+  const bySession = new Map();
+
+  for (const set of mine) {
+    const existing = bySession.get(set.sessionKey);
+
+    if (!existing || (set.e1rm ?? 0) > (existing.e1rm ?? 0)) {
+      bySession.set(set.sessionKey, {
+        at: set.at,
+        e1rm: set.e1rm,
+        weight: set.weight,
+        reps: set.reps,
+        isRecord: set.isRecord,
+      });
+    } else if (set.isRecord) {
+      existing.isRecord = true;
+    }
+  }
+
+  const points = [...bySession.values()].sort((left, right) => left.at - right.at);
+  const segments = [];
+  const gaps = [];
+  let current = [];
+
+  for (const point of points) {
+    const previous = current[current.length - 1];
+
+    if (previous && daysBetween(point.at, previous.at) > SERIES_GAP_DAYS) {
+      segments.push(current);
+      gaps.push({
+        fromAt: previous.at,
+        toAt: point.at,
+        days: Math.round(daysBetween(point.at, previous.at)),
+      });
+      current = [];
+    }
+
+    current.push(point);
+  }
+
+  if (current.length > 0) {
+    segments.push(current);
+  }
+
+  const best = points.reduce(
+    (highest, point) =>
+      highest === null || (point.e1rm ?? 0) > highest ? point.e1rm : highest,
+    null
+  );
+
+  return { points, segments, gaps, best, from, to: now };
+}
+
+/**
+ * Section 5.4. Best weight per rep count, and whether that best was set inside
+ * the period. A slot with nothing in it stays in the grid: the hole is the
+ * information.
+ */
+export function buildRepLadder(sets, { name, now, days }) {
+  const from = days === null || days === undefined ? null : now - days * DAY_MS;
+  const mine = forExercise(sets, name);
+  const bestByRep = new Map();
+
+  for (const set of mine) {
+    if (set.reps < 1 || set.reps > REP_LADDER_SLOTS) {
+      continue;
+    }
+
+    const existing = bestByRep.get(set.reps);
+
+    if (!existing || set.weight > existing.weight) {
+      bestByRep.set(set.reps, { weight: set.weight, at: set.at });
+    }
+  }
+
+  return Array.from({ length: REP_LADDER_SLOTS }, (_, index) => {
+    const reps = index + 1;
+    const best = bestByRep.get(reps) ?? null;
+
+    return {
+      reps,
+      weight: best?.weight ?? null,
+      at: best?.at ?? null,
+      isNewInPeriod: best !== null && from !== null && best.at >= from,
+    };
+  });
+}
+
+/** Section 5.5. The last few sessions, with every set performed in each. */
+export function buildRecentSessions(sets, { name, limit = 3 }) {
+  const mine = forExercise(sets, name);
+  const bySession = new Map();
+
+  for (const set of mine) {
+    const session = bySession.get(set.sessionKey) ?? { at: set.at, sets: [] };
+
+    session.sets.push({ weight: set.weight, reps: set.reps, isRecord: set.isRecord });
+    bySession.set(set.sessionKey, session);
+  }
+
+  return [...bySession.values()]
+    .sort((left, right) => right.at - left.at)
+    .slice(0, limit)
+    .map((session) => ({
+      ...session,
+      hasRecord: session.sets.some((set) => set.isRecord),
+    }));
+}

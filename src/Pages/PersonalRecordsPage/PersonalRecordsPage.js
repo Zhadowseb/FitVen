@@ -35,6 +35,7 @@ import {
 } from "../../Resources/ThemedComponents";
 import { programService, weightliftingService } from "../../Services";
 import RecordsOverview from "./Components/RecordsOverview/RecordsOverview";
+import RecordsExercise from "./Components/RecordsExercise/RecordsExercise";
 import { normalizeRecordRows } from "../../Utils/recordsInsights";
 
 const TREND_CHART_WIDTH = 320;
@@ -266,6 +267,7 @@ const PersonalRecordsPage = () => {
   const [muscleGroups, setMuscleGroups] = useState(() => new Map());
   const [overviewPeriod, setOverviewPeriod] = useState("3m");
   const [showAllMovers, setShowAllMovers] = useState(false);
+  const [exercisePeriod, setExercisePeriod] = useState("3m");
   // Frozen for the life of the screen so a period switch cannot shift what
   // "now" means halfway through a comparison.
   const nowRef = useRef(Date.now());
@@ -1191,7 +1193,14 @@ const PersonalRecordsPage = () => {
             by logged sets per muscle group inside the overview, and from what
             was actually trained rather than what a program planned. */}
         {selectedExerciseName ? (
-          renderRecordDetail()
+          <RecordsExercise
+            name={selectedExerciseName}
+            sets={recordSets}
+            now={nowRef.current}
+            periodKey={exercisePeriod}
+            onChangePeriod={setExercisePeriod}
+            onBack={() => setSelectedExerciseName(null)}
+          />
         ) : (
           <>
             <RecordsOverview

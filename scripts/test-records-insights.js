@@ -137,6 +137,48 @@ async function run() {
   assert.ok(latest[0].at > latest[1].at, 'Newest record first');
   assert.equal(latest[0].weight, 115);
 
+
+  // --- Exercise page -------------------------------------------------------
+
+  // A six-week break has to split the line. Drawing one smooth curve across it
+  // claims progress that was never measured.
+  const gapped = insights.normalizeRecordRows([
+    row('Bench', 100, 5, 120, { workout: 'g1' }),
+    row('Bench', 102.5, 5, 113, { workout: 'g2' }),
+    row('Bench', 110, 5, 20, { workout: 'g3' }),
+    row('Bench', 112.5, 5, 13, { workout: 'g4' }),
+  ]);
+  const series = insights.buildExerciseSeries(gapped, { name: 'Bench', now, days: null });
+  assert.equal(series.points.length, 4, 'One point per session');
+  assert.equal(series.segments.length, 2, 'The break splits the line in two');
+  assert.equal(series.gaps.length, 1);
+  assert.equal(series.gaps[0].days, 93, 'The gap knows how long it was');
+  assert.ok(series.best > 110, 'The best is the highest estimate in the window');
+
+  // Two sets on the same day are one point, and it is the better of them.
+  const sameDay = insights.buildExerciseSeries(
+    insights.normalizeRecordRows([
+      row('Bench', 90, 5, 2, { workout: 'd1' }),
+      row('Bench', 100, 5, 2, { workout: 'd1' }),
+    ]),
+    { name: 'Bench', now, days: null }
+  );
+  assert.equal(sameDay.points.length, 1, 'One session is one point');
+  assert.equal(sameDay.points[0].weight, 100, 'And it is the best set of that session');
+
+  const ladder = insights.buildRepLadder(gapped, { name: 'Bench', now, days: 30 });
+  assert.equal(ladder.length, insights.REP_LADDER_SLOTS, 'Every rep slot stays in the grid');
+  assert.equal(ladder[4].reps, 5);
+  assert.equal(ladder[4].weight, 112.5, 'The five-rep slot carries the heaviest five');
+  assert.equal(ladder[4].isNewInPeriod, true, 'Set 13 days ago falls inside a 30 day period');
+  assert.equal(ladder[0].weight, null, 'A rep count never trained stays empty rather than borrowing');
+
+  const sessions = insights.buildRecentSessions(gapped, { name: 'Bench', limit: 2 });
+  assert.equal(sessions.length, 2);
+  assert.ok(sessions[0].at > sessions[1].at, 'Newest session first');
+
+  console.log('Records exercise page: session points, gap splitting, same-day sessions, rep ladder holes and recent sessions passed.');
+
   console.log('Records insights: junk rows, gains and declines, qualification, empty-week averages, rate comparison and muscle grouping passed.');
 }
 
