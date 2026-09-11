@@ -1114,12 +1114,18 @@ export async function createWorkoutSummaryPostForCompletedWorkout(
 
   await ensureOwnProfile(user);
   const hiddenExerciseIds = await getHiddenWorkoutSummaryExerciseIds({ user });
-  const payload = applyWorkoutSummaryPostMode(
-    await buildWorkoutSummaryPayload(db, workoutSource, {
-      hiddenExerciseIds,
-    }),
-    selectedPostMode
-  );
+  const summaryPayload = await buildWorkoutSummaryPayload(db, workoutSource, {
+    hiddenExerciseIds,
+  });
+
+  // SPM-12: a post reading "1 hour 6 min - 0 sets across 0 exercises" tells the
+  // people following you nothing, and reads as a bug in the feed. A workout
+  // with nothing recorded in it is not a summary.
+  if (normalizeInteger(summaryPayload.setsCount, 0) <= 0) {
+    return { skipped: true, reason: "no_sets_logged" };
+  }
+
+  const payload = applyWorkoutSummaryPostMode(summaryPayload, selectedPostMode);
 
   const existingPost = await getExistingWorkoutSummaryPost({
     userId: user.id,

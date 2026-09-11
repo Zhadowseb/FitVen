@@ -48,23 +48,27 @@ export default function ThemedConfirmModal({
       {children}
 
       <View style={styles.actions}>
-        <TouchableOpacity
-          activeOpacity={0.84}
-          accessibilityRole="button"
-          disabled={isWorking}
-          onPress={onClose}
-          style={[
-            styles.button,
-            {
-              backgroundColor: theme.cardBackground,
-              borderColor: theme.cardBorder,
-            },
-          ]}
-        >
-          <ThemedText style={styles.buttonText} setColor={theme.title}>
-            {cancelLabel}
-          </ThemedText>
-        </TouchableOpacity>
+        {/* An acknowledgement has nothing to cancel, so an empty label drops
+            the button rather than drawing a blank one. */}
+        {cancelLabel ? (
+          <TouchableOpacity
+            activeOpacity={0.84}
+            accessibilityRole="button"
+            disabled={isWorking}
+            onPress={onClose}
+            style={[
+              styles.button,
+              {
+                backgroundColor: theme.cardBackground,
+                borderColor: theme.cardBorder,
+              },
+            ]}
+          >
+            <ThemedText style={styles.buttonText} setColor={theme.title}>
+              {cancelLabel}
+            </ThemedText>
+          </TouchableOpacity>
+        ) : null}
 
         <TouchableOpacity
           activeOpacity={0.84}
