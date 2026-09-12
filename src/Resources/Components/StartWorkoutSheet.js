@@ -22,28 +22,33 @@ import ReplayHistory from "../Icons/UI-icons/ReplayHistory";
 import Resistance from "../Icons/WorkoutLabels/Resistance";
 import Run from "../Icons/WorkoutLabels/Run";
 import { getTodaysDate } from "../../Utils/dateUtils";
-import { isWorkoutTypeComingSoon } from "../../Utils/workoutTypeAvailability";
-import ComingSoonBadge from "./ComingSoonBadge";
+import {
+  filterReleasedWorkoutTypes,
+  isWorkoutTypeComingSoon,
+} from "../../Utils/workoutTypeAvailability";
 
 const noop = () => {};
 
-const freshStarts = [
-  {
-    id: "Resistance",
-    title: "Resistance",
-    type: "resistance",
-  },
-  {
-    id: "Run",
-    title: "Run",
-    type: "run",
-  },
-  {
-    id: "Walk",
-    title: "Walk",
-    type: "walk",
-  },
-];
+const freshStarts = filterReleasedWorkoutTypes(
+  [
+    {
+      id: "Resistance",
+      title: "Resistance",
+      type: "resistance",
+    },
+    {
+      id: "Run",
+      title: "Run",
+      type: "run",
+    },
+    {
+      id: "Walk",
+      title: "Walk",
+      type: "walk",
+    },
+  ],
+  (item) => item.type
+);
 
 function getWorkoutType(workout) {
   return workout?.workout_type ?? workout?.label ?? null;
@@ -684,20 +689,15 @@ function RecentWorkoutSection({
 }
 
 function FreshStartCard({ item, disabled, onPress, theme, styles }) {
-  const isComingSoon = isWorkoutTypeComingSoon(item.type);
-  const iconColors = isComingSoon
-    ? { color: theme.quietText, backgroundColor: theme.background }
-    : getIconColors(item.type, theme);
+  const iconColors = getIconColors(item.type, theme);
 
   return (
     <TouchableOpacity
       activeOpacity={0.84}
-      disabled={disabled || isComingSoon}
+      disabled={disabled}
       accessibilityRole="button"
-      accessibilityState={{ disabled: disabled || isComingSoon }}
-      accessibilityLabel={
-        isComingSoon ? `${item.title} — coming soon` : item.title
-      }
+      accessibilityState={{ disabled }}
+      accessibilityLabel={item.title}
       onPress={() =>
         onPress({
           id: item.id,
@@ -711,41 +711,26 @@ function FreshStartCard({ item, disabled, onPress, theme, styles }) {
           backgroundColor: iconColors.backgroundColor,
         },
         disabled ? styles.disabledCard : null,
-        // BUG-19: Run and Walk were already refusing the tap and carrying a
-        // COMING SOON badge, but only the icon was dimmed - the card itself
-        // still read as a live button, so tapping it looked like a dead
-        // control rather than one that is not ready.
-        isComingSoon ? styles.comingSoonCard : null,
       ]}
     >
-      <View style={isComingSoon ? styles.comingSoonContent : null}>
-        <WorkoutGlyph type={item.type} size={32} color={iconColors.color} />
-      </View>
+      <WorkoutGlyph type={item.type} size={32} color={iconColors.color} />
       <ThemedText
-        style={[
-          styles.cardTitle,
-          styles.freshCardTitle,
-          isComingSoon ? { color: theme.quietText } : null,
-        ]}
+        style={[styles.cardTitle, styles.freshCardTitle]}
         numberOfLines={1}
       >
         {item.title}
       </ThemedText>
-      {isComingSoon ? (
-        <ComingSoonBadge size="small" />
-      ) : (
-        <View
-          style={[
-            styles.iconTileBadge,
-            {
-              backgroundColor: iconColors.color,
-              borderColor: theme.cardBackground,
-            },
-          ]}
-        >
-          <Plus width={11} height={11} color={theme.textInverted} />
-        </View>
-      )}
+      <View
+        style={[
+          styles.iconTileBadge,
+          {
+            backgroundColor: iconColors.color,
+            borderColor: theme.cardBackground,
+          },
+        ]}
+      >
+        <Plus width={11} height={11} color={theme.textInverted} />
+      </View>
     </TouchableOpacity>
   );
 }
@@ -1266,13 +1251,6 @@ function createStyles(theme) {
   },
   disabledCard: {
     opacity: 0.64,
-  },
-  comingSoonContent: {
-    opacity: 0.5,
-  },
-  // freshCard is already dashed, so this is only the dimming.
-  comingSoonCard: {
-    opacity: 0.62,
   },
   iconTile: {
     alignItems: "center",
