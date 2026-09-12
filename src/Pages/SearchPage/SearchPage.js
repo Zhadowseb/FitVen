@@ -153,6 +153,15 @@ const SearchPage = () => {
     setRelationshipProfiles([]);
     setRelationshipError("");
     setIsLoadingRelationships(false);
+
+    // The confirmations live inside this modal, so closing it unmounts them
+    // without their own onClose ever running. Left set, the target would still
+    // be there the next time the list opened and the confirmation would appear
+    // on top of it, asking about somebody the user had moved on from.
+    setBlockTarget(null);
+    setUnblockTarget(null);
+    setReportSentFor(null);
+    closeReport();
   };
 
   const loadRelationshipProfiles = async (relationshipType) => {
