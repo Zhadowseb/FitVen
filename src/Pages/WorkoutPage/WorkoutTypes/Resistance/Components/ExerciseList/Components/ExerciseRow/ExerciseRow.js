@@ -24,6 +24,7 @@ import {
   ThemedTitle,
 } from "@resources/ThemedComponents";
 import PanelSettingsModal from "./PanelSettingsModal";
+import { shouldStoreExpandedHeight } from "./expandedHeightRule";
 import { weightliftingService } from "@services";
 import { useExerciseViewSettings } from "@contexts/ExerciseViewSettingsContext";
 import ReanimatedAnimated, {
@@ -292,8 +293,30 @@ const ExerciseRow = ({
     }
   };
 
+  // Both of these open something from inside the settings panel, and on iOS a
+  // modal presented while another is still up is dropped by UIKit without an
+  // error: the button looks dead, and React Native leaves a full-screen view
+  // behind that swallows every touch afterwards. So the panel is closed first
+  // and the intent is held until it has actually gone.
+  const [pendingPanelAction, setPendingPanelAction] = useState(null);
+
+  const closePanelThen = (action) => {
+    setPendingPanelAction(action);
+    setPanelModalVisible(false);
+  };
+
+  const runPendingPanelAction = () => {
+    if (pendingPanelAction === "delete") {
+      setDeleteConfirmVisible(true);
+    } else if (pendingPanelAction === "restUnit") {
+      setRestUnitRequestKey((key) => key + 1);
+    }
+
+    setPendingPanelAction(null);
+  };
+
   const confirmDeleteExercise = () => {
-    setDeleteConfirmVisible(true);
+    closePanelThen("delete");
   };
 
   const addSet = async () => {
@@ -1009,9 +1032,13 @@ const ExerciseRow = ({
               onLayout={(event) => {
                 const { height } = event.nativeEvent.layout;
 
-                // Only grow the stored height: reading it back while the
-                // collapse plays would shrink the target to zero.
-                if (height > 0 && height > expandedHeight) {
+                if (
+                  shouldStoreExpandedHeight({
+                    measuredHeight: height,
+                    storedHeight: expandedHeight,
+                    isExpanded,
+                  })
+                ) {
                   setExpandedHeight(height);
                 }
               }}
@@ -1043,8 +1070,9 @@ const ExerciseRow = ({
         visible={panelModalVisible}
         currentColumns={visibleColumns}
         currentNote={exerciseNote}
+        onDismiss={runPendingPanelAction}
         onDelete={confirmDeleteExercise}
-        onOpenRestUnit={() => setRestUnitRequestKey((key) => key + 1)}
+        onOpenRestUnit={() => closePanelThen("restUnit")}
         onClose={async ({ columns, note }) => {
           await saveExerciseSettings({ columns, note });
           setPanelModalVisible(false);

@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.0.2] - Unreleased
+### Added
+- **Reporting.** A Report action beside Block on the followers and following lists, with five reasons and an optional note. Reports land in `public.user_reports`, readable only by the person who filed them — the reported account cannot learn that it was reported or by whom, which is the difference between a report and the next round of the argument. There is no update or delete policy: a report is a record.
+- **A term filter on everything a user can type that someone else reads** — a post's title and body, and a profile's display name and bio. It runs as a `before insert or update` trigger, not in the app: a rule that only runs in the client is a suggestion, because the same API answers an HTTP client holding the anon key.
+- The list lives in `public.blocked_terms` with row-level security on and no policy at all, so only the security definer function reads it. Publishing the list would hand every user the exact set of strings to route around. Terms can be added with the service role without shipping an app release, which on iOS means without waiting for review.
+- Matching is lowercased, whole-word, and collapses non-letters first, so "s p a m" and "s.p.a.m" do not walk past a list holding "spam" — while "assessment" and "Scunthorpe" still get through. A filter that fires on ordinary words gets worked around rather than respected.
+- `scripts/test-ugc-safety.js` guards the seam nothing else does: the reasons the client offers and the reasons the column accepts, the note length on both sides, that the select policy is still scoped to the reporter, that no update or delete policy appeared, and that the filter still watches every free-text column. Add a reason to one side only and the insert fails in production, on the path a user reaches when something has already gone wrong for them.
+
+### Fixed
+- **An exercise card grew when a set was added and never came back down when it was deleted**, leaving an empty strip under the last row until the card was collapsed and reopened. On both platforms — this one was never a modal problem.
+- The expand animation interpolates towards a stored height, and the rule for replacing it only ever let it grow. That was guarding something real: during a collapse the section is still mounted and reports its way down to nothing, and storing that would leave the target at zero so the row could never open again. It guarded too much — the stored value became a high-water mark. Shrinking is now accepted while the row is open and ignored while it is closing, which is the same protection without the side effect.
+- The rule moved out of the component into `expandedHeightRule.js` with `scripts/test-expanded-height.js` on it. It is four lines that look obviously right in two different ways, and the first version shipped.
+- **Deleting a set, deleting an exercise, and the rest-unit picker were dead on iPhone**, for the same reason blocking was: each opens a second modal while the first is still up, and UIKit drops the presentation without an error. React Native leaves a full-screen view behind when that happens, so every touch afterwards went nowhere — the symptom reported from the device was "nothing happened, then no button worked".
+- The set confirmation is now nested inside the options sheet, where the sheet presents it. The exercise panel could not nest: the rest-unit modal lives in a different component, so the panel closes first and the intent runs from `onDismiss`, which is the callback iOS fires once the dismissal has finished. `ThemedModal` forwards `onDismiss` for this.
+- **Blocking worked on Android and did nothing on iPhone.** The followers list is a modal, the confirmation was a sibling of it, and both were visible at once. Android renders a Modal as a view and shows both; iOS presents one at a time and silently drops the second, so the button looked dead. The confirmations now sit inside the list modal, where the outer one presents them. This was not cosmetic: blocking is one of the four things Apple's guideline 1.2 requires of an app with user-generated content.
+
+### Notes
+- `supabase/migrations/20260912220000_ugc-safety.sql` was run on 2026-09-12. Verified over the REST API with the anon key: `user_reports` answers with an empty array, and `blocked_terms` answers `42501 permission denied` — the second is the one worth checking, because an empty array there would have meant the app could read the word list.
+- Guideline 1.2 asks for four things. Blocking and published contact information were already there; this adds reporting and filtering. The fourth part of the reporting requirement is "timely responses to concerns", which is a process, not code — reports are read with the service role, and `supabase/migrations/README.md` carries the query.
+- The same bug turned out to be live in three more places, all now fixed: deleting a set, deleting an exercise, and the rest-unit picker. The pattern still exists wherever a modal opens another one, and the durable repair is a shared overlay host rather than a patch per site - but the four flows that were actually broken are closed.
+- The filter does not cover `username_base`. Usernames are claimed through `public.claim_username_code`, which is a different path with its own rules, and reaching into it from here would have split the validation across two places.
+
+---
 ## [1.0.1] - Unreleased
 ### Changed
 - **The Train summary says what it is again.** Its title is "Your training this week" rather than a count that changed as the week went, and the first stat is labelled Workouts rather than "This week" - the title carries the period, so the number under it does not have to repeat it.

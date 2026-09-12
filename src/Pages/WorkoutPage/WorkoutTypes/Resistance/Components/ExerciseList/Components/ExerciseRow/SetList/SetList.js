@@ -1151,6 +1151,24 @@ const SetList = ({
           </View>
         </View>
 
+        {/* Inside the sheet, not beside it. The delete button is in here, and
+            on iOS a modal presented while this one is up is dropped by UIKit
+            without an error - the button looked dead and the view left behind
+            swallowed every touch afterwards. Nested, the sheet presents it. */}
+        <ThemedConfirmModal
+          visible={deleteSetConfirmVisible}
+          title="Delete set?"
+          message="This removes the set and its saved values."
+          confirmLabel="Delete set"
+          tone="danger"
+          onConfirm={async () => {
+            setDeleteSetConfirmVisible(false);
+            await deleteSet(selectedSet?.sets_id);
+            setSetOptionsVisible(false);
+          }}
+          onClose={() => setDeleteSetConfirmVisible(false)}
+        />
+
       </ThemedBottomSheet>
 
       <ThemedModal
@@ -1267,19 +1285,6 @@ const SetList = ({
           </TouchableOpacity>
         </View>
       </ThemedModal>
-      <ThemedConfirmModal
-        visible={deleteSetConfirmVisible}
-        title="Delete set?"
-        message="This removes the set and its saved values."
-        confirmLabel="Delete set"
-        tone="danger"
-        onConfirm={async () => {
-          setDeleteSetConfirmVisible(false);
-          await deleteSet(selectedSet?.sets_id);
-          setSetOptionsVisible(false);
-        }}
-        onClose={() => setDeleteSetConfirmVisible(false)}
-      />
     </>
   );
 };
