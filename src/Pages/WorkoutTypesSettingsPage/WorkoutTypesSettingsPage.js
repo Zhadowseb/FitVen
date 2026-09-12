@@ -17,8 +17,7 @@ import Library from "../../Resources/Icons/UI-icons/Library";
 import TailArrowUpRight from "../../Resources/Icons/UI-icons/TailArrowUpRight";
 import { useAuth } from "../../Contexts/AuthContext";
 import { useExerciseViewSettings } from "../../Contexts/ExerciseViewSettingsContext";
-import { isWorkoutTypeComingSoon } from "../../Utils/workoutTypeAvailability";
-import ComingSoonBadge from "../../Resources/Components/ComingSoonBadge";
+import { filterReleasedWorkoutTypes } from "../../Utils/workoutTypeAvailability";
 import { socialService } from "../../Services";
 import CollapsedSetSummary, {
   ClassicSetSummary,
@@ -63,6 +62,13 @@ const WORKOUT_TYPES = [
     Icon: RunIcon,
   },
 ];
+
+// Only the types that have actually shipped. Run is still in the list above,
+// because this screen is where its settings will live again the day it does.
+const RELEASED_WORKOUT_TYPES = filterReleasedWorkoutTypes(
+  WORKOUT_TYPES,
+  (workoutType) => workoutType.id
+);
 
 const EXERCISE_VIEW_OPTIONS = [
   { value: "cells", title: "Standard" },
@@ -391,18 +397,14 @@ export default function WorkoutTypesSettingsPage() {
             </ThemedText>
           </View>
           <ThemedText style={styles.sectionCount} setColor={quietText}>
-            {WORKOUT_TYPES.length} TYPES
+            {RELEASED_WORKOUT_TYPES.length} TYPES
           </ThemedText>
         </View>
 
         <View style={styles.typeList}>
-          {WORKOUT_TYPES.map((workoutType) => {
-            const isComingSoon = isWorkoutTypeComingSoon(workoutType.id);
-            const accentColor = isComingSoon
-              ? quietText
-              : workoutType.id === "run"
-                ? secondaryColor
-                : primaryColor;
+          {RELEASED_WORKOUT_TYPES.map((workoutType) => {
+            const accentColor =
+              workoutType.id === "run" ? secondaryColor : primaryColor;
             const WorkoutTypeIcon = workoutType.Icon;
 
             return (
@@ -450,7 +452,7 @@ export default function WorkoutTypesSettingsPage() {
                     </ThemedText>
                     <ThemedText
                       style={styles.typeTitle}
-                      setColor={isComingSoon ? quietText : titleColor}
+                      setColor={titleColor}
                     >
                       {workoutType.title}
                     </ThemedText>
@@ -459,21 +461,17 @@ export default function WorkoutTypesSettingsPage() {
                     </ThemedText>
                   </View>
 
-                  {isComingSoon ? (
-                    <ComingSoonBadge size="small" inline angle={-10} />
-                  ) : (
-                    <View
-                      accessible
-                      accessibilityLabel="Available"
-                      style={styles.availableStatus}
-                    >
-                      <Feather
-                        name="check-circle"
-                        size={20}
-                        color={accentColor}
-                      />
-                    </View>
-                  )}
+                  <View
+                    accessible
+                    accessibilityLabel="Available"
+                    style={styles.availableStatus}
+                  >
+                    <Feather
+                      name="check-circle"
+                      size={20}
+                      color={accentColor}
+                    />
+                  </View>
                 </View>
 
                 {workoutType.id === "strength-training" ? (
@@ -620,16 +618,14 @@ export default function WorkoutTypesSettingsPage() {
                   <>
                     <TouchableOpacity
                       activeOpacity={0.78}
-                      disabled={
-                        isComingSoon || isLoadingBirthDate || isSavingBirthDate
-                      }
+                      disabled={isLoadingBirthDate || isSavingBirthDate}
                       onPress={() => setBirthDatePickerVisible(true)}
                       style={[
                         styles.typeSettingRow,
                         {
                           borderTopColor: cardBorder,
                           opacity:
-                            isComingSoon || isLoadingBirthDate ? 0.55 : 1,
+                            isLoadingBirthDate ? 0.55 : 1,
                         },
                       ]}
                     >
@@ -667,7 +663,6 @@ export default function WorkoutTypesSettingsPage() {
                     <TouchableOpacity
                       activeOpacity={0.78}
                       disabled={
-                        isComingSoon ||
                         isLoadingBirthDate ||
                         isSavingMaxHeartRate
                       }
@@ -677,7 +672,7 @@ export default function WorkoutTypesSettingsPage() {
                         {
                           borderTopColor: cardBorder,
                           opacity:
-                            isComingSoon || isLoadingBirthDate ? 0.55 : 1,
+                            isLoadingBirthDate ? 0.55 : 1,
                         },
                       ]}
                     >

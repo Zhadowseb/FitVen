@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.0.1] - Unreleased
+### Changed
+- **Run and Walk are gone from every list that offers a workout type**, rather than shown greyed out under a COMING SOON stamp. App Store review guideline 2.1 treats a control that announces a feature and then refuses it as an unfinished app, and it was not a control anyone could use in the meantime. Three places: the cards in the start sheet, the type list in Workout types settings, and the type filter in Your workouts.
+- **Workouts already recorded as Run or Walk are untouched.** They are the user's history, not an offer - this account has twenty of them - so those rows still appear in the calendar and the workout library, still carry the badge and still refuse to open.
+- `filterReleasedWorkoutTypes` in `workoutTypeAvailability.js` is the one way a list drops them, so shipping Run means editing `COMING_SOON_TYPES` and nothing else. The Run settings block in Workout types settings stays where it is for that day; it is simply unreachable until then.
+
+### Notes
+- Not verified on a device: the phone was disconnected when this was written. In particular the start sheet now has a single fresh-start card where it had three, and `freshCard` has `flex: 1`, so Resistance will stretch to the full width of the row. That is the layout doing what it was told, but nobody has looked at it.
+
+---
 ## [1.0.0] - 2026-09-12
 The first release. Everything below this line shipped in it; the sections under
 it are the work it is made of, kept as they were written.
