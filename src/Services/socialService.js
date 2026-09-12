@@ -33,6 +33,7 @@ const PROFILES_TABLE = "profiles";
 const PROFILE_PRIVATE_TABLE = "profile_private";
 const USER_FOLLOWS_TABLE = "user_follows";
 const USER_BLOCKS_TABLE = "user_blocks";
+const USER_REPORTS_TABLE = "user_reports";
 const WORKOUT_TYPE_INSTANCE_TABLE = "workout_type_instance";
 const PROFILE_SELECT_FIELDS =
   "id, username, username_base, username_code, display_name, bio, avatar_path, created_at, updated_at";
@@ -46,6 +47,8 @@ const SOCIAL_AVATAR_SETUP_MESSAGE =
   "Profile photos are not set up in Supabase yet. Make sure the avatars bucket exists and rerun the updated supabase/migrations/20260424004053_social-search.sql script first.";
 const SOCIAL_BLOCK_SETUP_MESSAGE =
   "Blocking and the new user search are not set up in Supabase yet. Run supabase/migrations/20260905143000_user-blocks.sql in the Supabase SQL editor first.";
+const SOCIAL_REPORT_SETUP_MESSAGE =
+  "Reporting is not set up in Supabase yet. Run supabase/migrations/20260912220000_ugc-safety.sql in the Supabase SQL editor first.";
 const PROFILE_BIRTH_DATE_SETUP_MESSAGE =
   "Birth date settings are not set up in Supabase yet. Run supabase/migrations/20260628211540_profile-birthdate.sql in the Supabase SQL editor first.";
 export const PROFILE_DISPLAY_NAME_MAX_LENGTH = 40;
@@ -365,6 +368,16 @@ function normalizeSocialError(error) {
     (message.includes("does not exist") || message.includes("schema cache"))
   ) {
     return new Error(PROFILE_BIRTH_DATE_SETUP_MESSAGE);
+  }
+
+  // Checked before the generic one, for the same reason as the block message
+  // below it: a missing reports table arrives as a 404 that the generic message
+  // would blame on the wrong migration.
+  if (
+    message.includes(USER_REPORTS_TABLE) &&
+    (message.includes("does not exist") || message.includes("schema cache"))
+  ) {
+    return new Error(SOCIAL_REPORT_SETUP_MESSAGE);
   }
 
   // Checked before the generic one: these three arrive as a 404 or a
@@ -1234,6 +1247,71 @@ export async function blockUser({ userId, targetUserId }) {
 
   // 23505 is the row already being there, which is the state we wanted anyway.
   if (error && error.code !== "23505") {
+    throw normalizeSocialError(error);
+  }
+}
+
+/* -------------------------------------------------------------- reports -- */
+
+/**
+ * The reasons the report sheet offers. The values are the ones the database
+ * constraint accepts, so adding one here without adding it there fails the
+ * insert rather than storing something nobody will recognise later.
+ */
+export const REPORT_REASONS = [
+  { value: "spam", label: "Spam or advertising" },
+  { value: "harassment", label: "Harassment or bullying" },
+  { value: "inappropriate", label: "Inappropriate content" },
+  { value: "impersonation", label: "Pretending to be someone else" },
+  { value: "other", label: "Something else" },
+];
+
+export const REPORT_NOTE_MAX_LENGTH = 1000;
+
+const REPORT_REASON_VALUES = new Set(
+  REPORT_REASONS.map((reason) => reason.value)
+);
+
+/**
+ * Report an account, or one post on it.
+ *
+ * `postId` is optional: without it the report is about the account, with it the
+ * report is about that post. The post id is stored loose rather than as a
+ * foreign key, so deleting the post does not delete the report - a report about
+ * something that has since been taken down is the one worth keeping.
+ */
+export async function reportUser({
+  userId,
+  targetUserId,
+  reason,
+  note = "",
+  postId = null,
+}) {
+  if (!userId || !targetUserId) {
+    throw new Error("Missing user information for report.");
+  }
+
+  if (userId === targetUserId) {
+    throw new Error("You cannot report yourself.");
+  }
+
+  if (!REPORT_REASON_VALUES.has(reason)) {
+    throw new Error("Choose a reason for the report.");
+  }
+
+  const trimmedNote = String(note ?? "")
+    .trim()
+    .slice(0, REPORT_NOTE_MAX_LENGTH);
+
+  const { error } = await supabase.from(USER_REPORTS_TABLE).insert({
+    reporter_id: userId,
+    reported_user_id: targetUserId,
+    reported_post_id: postId ?? null,
+    reason,
+    note: trimmedNote,
+  });
+
+  if (error) {
     throw normalizeSocialError(error);
   }
 }

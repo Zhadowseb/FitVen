@@ -23,6 +23,7 @@ import {
   ThemedConfirmModal,
   ThemedModal,
   ThemedText,
+  ThemedTextInput,
   ThemedTitle,
   ThemedView,
   UserAvatar,
@@ -54,6 +55,11 @@ const SearchPage = () => {
   const [relationshipError, setRelationshipError] = useState("");
   const [blockTarget, setBlockTarget] = useState(null);
   const [unblockTarget, setUnblockTarget] = useState(null);
+  const [reportTarget, setReportTarget] = useState(null);
+  const [reportReason, setReportReason] = useState(null);
+  const [reportNote, setReportNote] = useState("");
+  const [isReportWorking, setIsReportWorking] = useState(false);
+  const [reportSentFor, setReportSentFor] = useState(null);
   const [isBlockWorking, setIsBlockWorking] = useState(false);
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const titleColor = theme.title ?? theme.text;
@@ -240,6 +246,40 @@ const SearchPage = () => {
           targetUserId: profile.id,
         }),
       );
+    }
+  };
+
+  const closeReport = () => {
+    setReportTarget(null);
+    setReportReason(null);
+    setReportNote("");
+  };
+
+  const submitReport = async () => {
+    const profile = reportTarget;
+
+    if (!profile || !reportReason) {
+      return;
+    }
+
+    setIsReportWorking(true);
+
+    try {
+      await socialService.reportUser({
+        userId: user.id,
+        targetUserId: profile.id,
+        reason: reportReason,
+        note: reportNote,
+      });
+
+      closeReport();
+      setReportSentFor(profile.displayName ?? profile.username ?? "that account");
+    } catch (error) {
+      setRelationshipError(
+        error instanceof Error ? error.message : "Could not send the report.",
+      );
+    } finally {
+      setIsReportWorking(false);
     }
   };
 
@@ -519,6 +559,33 @@ const SearchPage = () => {
                       : "Block"}
                   </ThemedText>
                 </Pressable>
+
+                {/* Not offered on the blocked list: you have already dealt with
+                    them, and a report is about the service needing to know,
+                    which blocking does not cover. */}
+                {activeRelationshipType !== "blocked" ? (
+                  <Pressable
+                    onPress={() => setReportTarget(relationshipProfile)}
+                    disabled={isBlockWorking || isReportWorking}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Report ${relationshipProfile.displayName}`}
+                    style={({ pressed }) => [
+                      styles.relationshipAction,
+                      {
+                        borderColor: cardBorder,
+                        backgroundColor: theme.chipBackground,
+                      },
+                      pressed ? styles.relationshipActionPressed : null,
+                    ]}
+                  >
+                    <ThemedText
+                      style={styles.relationshipActionText}
+                      setColor={quietText}
+                    >
+                      Report
+                    </ThemedText>
+                  </Pressable>
+                ) : null}
               </View>
             ))}
           </ScrollView>
@@ -565,34 +632,106 @@ const SearchPage = () => {
           height={44}
           style={styles.relationshipCloseButton}
         />
+
+        {/* These three live inside the list modal rather than beside it.
+            On Android a Modal is just a view and two can be on screen at once;
+            on iOS UIKit presents one at a time and silently drops the second,
+            so a confirmation opened as a sibling of an open sheet never
+            appeared and the button looked dead. Nested in the tree, the outer
+            modal presents the inner one. Blocking is one of the four things
+            Apple's guideline 1.2 requires, so it failing on iOS was not a
+            cosmetic bug. */}
+        <ThemedConfirmModal
+          visible={Boolean(reportTarget)}
+          title={`Report ${
+            reportTarget?.displayName ?? reportTarget?.username ?? "this person"
+          }?`}
+          message="Tell us what is wrong. Reports are read by the developer and are not shown to the person you are reporting."
+          confirmLabel="Send report"
+          cancelLabel="Cancel"
+          tone="danger"
+          isWorking={isReportWorking}
+          onConfirm={submitReport}
+          onClose={closeReport}
+        >
+          <View style={styles.reportReasonList}>
+            {socialService.REPORT_REASONS.map((option) => {
+              const selected = reportReason === option.value;
+
+              return (
+                <Pressable
+                  key={option.value}
+                  onPress={() => setReportReason(option.value)}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected }}
+                  accessibilityLabel={option.label}
+                  style={({ pressed }) => [
+                    styles.reportReason,
+                    {
+                      borderColor: selected ? theme.danger : cardBorder,
+                      backgroundColor: theme.chipBackground,
+                    },
+                    pressed ? styles.relationshipActionPressed : null,
+                  ]}
+                >
+                  <ThemedText
+                    style={styles.reportReasonText}
+                    setColor={selected ? theme.danger : titleColor}
+                  >
+                    {option.label}
+                  </ThemedText>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <ThemedTextInput
+            value={reportNote}
+            onChangeText={setReportNote}
+            placeholder="Anything else we should know? (optional)"
+            multiline
+            maxLength={socialService.REPORT_NOTE_MAX_LENGTH}
+            style={styles.reportNote}
+          />
+        </ThemedConfirmModal>
+
+        <ThemedConfirmModal
+          visible={Boolean(reportSentFor)}
+          title="Report sent"
+          message={`Thanks. We will look at ${reportSentFor}. If you would rather not see them at all, block them as well — a report does not do that on its own.`}
+          confirmLabel="Done"
+          cancelLabel="Close"
+          onConfirm={() => setReportSentFor(null)}
+          onClose={() => setReportSentFor(null)}
+        />
+
+        <ThemedConfirmModal
+          visible={Boolean(blockTarget)}
+          title="Block this person?"
+          message={`${
+            blockTarget?.displayName ?? blockTarget?.username ?? "This person"
+          } will stop following you and you will stop following them. They will not be told, and they will not be able to follow you again or find you in search.`}
+          confirmLabel="Block"
+          cancelLabel="Cancel"
+          tone="danger"
+          isWorking={isBlockWorking}
+          onConfirm={confirmBlock}
+          onClose={() => setBlockTarget(null)}
+        />
+
+        <ThemedConfirmModal
+          visible={Boolean(unblockTarget)}
+          title="Unblock this person?"
+          message={`${
+            unblockTarget?.displayName ?? unblockTarget?.username ?? "This person"
+          } will be able to find you and follow you again. Neither of you starts following the other.`}
+          confirmLabel="Unblock"
+          cancelLabel="Cancel"
+          isWorking={isBlockWorking}
+          onConfirm={confirmUnblock}
+          onClose={() => setUnblockTarget(null)}
+        />
       </ThemedModal>
-
-      <ThemedConfirmModal
-        visible={Boolean(blockTarget)}
-        title="Block this person?"
-        message={`${
-          blockTarget?.displayName ?? blockTarget?.username ?? "This person"
-        } will stop following you and you will stop following them. They will not be told, and they will not be able to follow you again or find you in search.`}
-        confirmLabel="Block"
-        cancelLabel="Cancel"
-        tone="danger"
-        isWorking={isBlockWorking}
-        onConfirm={confirmBlock}
-        onClose={() => setBlockTarget(null)}
-      />
-
-      <ThemedConfirmModal
-        visible={Boolean(unblockTarget)}
-        title="Unblock this person?"
-        message={`${
-          unblockTarget?.displayName ?? unblockTarget?.username ?? "This person"
-        } will be able to find you and follow you again. Neither of you starts following the other.`}
-        confirmLabel="Unblock"
-        cancelLabel="Cancel"
-        isWorking={isBlockWorking}
-        onConfirm={confirmUnblock}
-        onClose={() => setUnblockTarget(null)}
-      />
 
       <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
     </ThemedView>

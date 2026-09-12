@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.0.2] - Unreleased
+### Added
+- **Reporting.** A Report action beside Block on the followers and following lists, with five reasons and an optional note. Reports land in `public.user_reports`, readable only by the person who filed them — the reported account cannot learn that it was reported or by whom, which is the difference between a report and the next round of the argument. There is no update or delete policy: a report is a record.
+- **A term filter on everything a user can type that someone else reads** — a post's title and body, and a profile's display name and bio. It runs as a `before insert or update` trigger, not in the app: a rule that only runs in the client is a suggestion, because the same API answers an HTTP client holding the anon key.
+- The list lives in `public.blocked_terms` with row-level security on and no policy at all, so only the security definer function reads it. Publishing the list would hand every user the exact set of strings to route around. Terms can be added with the service role without shipping an app release, which on iOS means without waiting for review.
+- Matching is lowercased, whole-word, and collapses non-letters first, so "s p a m" and "s.p.a.m" do not walk past a list holding "spam" — while "assessment" and "Scunthorpe" still get through. A filter that fires on ordinary words gets worked around rather than respected.
+- `scripts/test-ugc-safety.js` guards the seam nothing else does: the reasons the client offers and the reasons the column accepts, the note length on both sides, that the select policy is still scoped to the reporter, that no update or delete policy appeared, and that the filter still watches every free-text column. Add a reason to one side only and the insert fails in production, on the path a user reaches when something has already gone wrong for them.
+
+### Fixed
+- **Blocking worked on Android and did nothing on iPhone.** The followers list is a modal, the confirmation was a sibling of it, and both were visible at once. Android renders a Modal as a view and shows both; iOS presents one at a time and silently drops the second, so the button looked dead. The confirmations now sit inside the list modal, where the outer one presents them. This was not cosmetic: blocking is one of the four things Apple's guideline 1.2 requires of an app with user-generated content.
+
+### Notes
+- **`supabase/migrations/20260912220000_ugc-safety.sql` has to be run before a build goes to App Review.** Without it the Report button fails on every tap and nothing is filtered.
+- Guideline 1.2 asks for four things. Blocking and published contact information were already there; this adds reporting and filtering. The fourth part of the reporting requirement is "timely responses to concerns", which is a process, not code — reports are read with the service role, and `supabase/migrations/README.md` carries the query.
+- **The same iOS modal bug is still live in two other places**: deleting a set and deleting an exercise both open their confirmation from inside an open sheet. They are not fixed here because the pattern appears in six files and the honest repair is a shared overlay host rather than six separate patches. Blocking was fixed on its own because App Review tests it.
+- The filter does not cover `username_base`. Usernames are claimed through `public.claim_username_code`, which is a different path with its own rules, and reaching into it from here would have split the validation across two places.
+
+---
 ## [1.0.1] - Unreleased
 ### Changed
 - **The Train summary says what it is again.** Its title is "Your training this week" rather than a count that changed as the week went, and the first stat is labelled Workouts rather than "This week" - the title carries the period, so the number under it does not have to repeat it.

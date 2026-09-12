@@ -155,6 +155,29 @@ export default StyleSheet.create({
   relationshipActionPressed: {
     opacity: 0.7,
   },
+
+  // Report sheet. The reasons are a column rather than chips in a row: five
+  // labels of very different lengths wrapped into a ragged block that gave no
+  // hint which one was selected.
+  reportReasonList: {
+    gap: 8,
+    marginTop: 4,
+  },
+  reportReason: {
+    minHeight: 44,
+    paddingHorizontal: 14,
+    justifyContent: "center",
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  reportReasonText: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  reportNote: {
+    marginTop: 12,
+    minHeight: 80,
+  },
   relationshipActionText: {
     fontSize: 13,
     fontWeight: "600",

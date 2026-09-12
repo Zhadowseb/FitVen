@@ -45,6 +45,7 @@ behind by accident.
 | `20260905190000_rpc-hardening.sql` | yes |
 | `20260906091500_fix-watcher-trigger-permissions.sql` | yes |
 | `20260907110000_exercise-favourites.sql` | yes |
+| `20260912220000_ugc-safety.sql` | no |
 
 `20260905113510_drop-unused-template-tables.sql` is optional: it drops the seven
 `*_template` tables, and only if they are genuinely empty. Run it or delete it.
@@ -82,6 +83,27 @@ above. It had been committed a ledger entry short, and the table turned out not
 to exist — favourites were being starred locally and refused on every sync. This
 is exactly the drift the ledger is meant to catch, and it did: `npm test` was
 failing on the missing entry the whole time.
+
+`20260912220000_ugc-safety.sql` has **not** been run. It carries reporting and
+the term filter, which are the two halves of Apple's guideline 1.2 the app was
+missing, so it has to be applied before a build goes to App Review — the
+reporting screens call `report_user`, and without the table every report fails.
+
+It also seeds `public.blocked_terms`. That table has row-level security on and
+no policy, which is deliberate: only the security definer function reads it. To
+add a term afterwards, use the service role:
+
+```sql
+insert into public.blocked_terms (term, language) values ('<term>', 'da')
+on conflict (term) do nothing;
+```
+
+Reports are read the same way — there is no policy that lets anyone in the app
+see another user's report:
+
+```sql
+select * from public.user_reports where status = 'open' order by created_at;
+```
 
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to
