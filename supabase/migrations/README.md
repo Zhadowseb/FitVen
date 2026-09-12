@@ -45,7 +45,7 @@ behind by accident.
 | `20260905190000_rpc-hardening.sql` | yes |
 | `20260906091500_fix-watcher-trigger-permissions.sql` | yes |
 | `20260907110000_exercise-favourites.sql` | yes |
-| `20260912220000_ugc-safety.sql` | no |
+| `20260912220000_ugc-safety.sql` | yes |
 
 `20260905113510_drop-unused-template-tables.sql` is optional: it drops the seven
 `*_template` tables, and only if they are genuinely empty. Run it or delete it.
@@ -84,10 +84,14 @@ to exist — favourites were being starred locally and refused on every sync. Th
 is exactly the drift the ledger is meant to catch, and it did: `npm test` was
 failing on the missing entry the whole time.
 
-`20260912220000_ugc-safety.sql` has **not** been run. It carries reporting and
-the term filter, which are the two halves of Apple's guideline 1.2 the app was
-missing, so it has to be applied before a build goes to App Review — the
-reporting screens call `report_user`, and without the table every report fails.
+`20260912220000_ugc-safety.sql` was run on 2026-09-12. It carries reporting and
+the term filter, the two halves of Apple's guideline 1.2 the app was missing.
+
+Verified afterwards over the REST API with the anon key: `user_reports` answers
+with an empty array, so the table is there and row-level security is hiding
+everyone's rows, and `blocked_terms` answers `42501 permission denied`. That
+second one is the check worth keeping — an empty array there would have meant
+the revoke had not taken and the app could read the word list.
 
 It also seeds `public.blocked_terms`. That table has row-level security on and
 no policy, which is deliberate: only the security definer function reads it. To
