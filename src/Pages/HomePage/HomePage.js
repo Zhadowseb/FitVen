@@ -24,6 +24,8 @@ import FriendsActivity from "../../Resources/Components/FriendsActivity/FriendsA
 import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
 import Delete from "../../Resources/Icons/UI-icons/Delete";
 import EditSocialPost from "../../Resources/Icons/UI-icons/EditSocialPost";
+import Flag from "../../Resources/Icons/UI-icons/Flag";
+import ReportSheet from "../../Resources/Components/ReportSheet/ReportSheet";
 import {
   notificationService,
   programService,
@@ -48,6 +50,7 @@ import { requestOpenQuickWorkoutMenu } from "../../Utils/quickWorkoutMenuEvents"
 
 import {
   ThemedBottomSheet,
+  ThemedConfirmModal,
   ThemedText,
   ThemedView,
 } from "../../Resources/ThemedComponents";
@@ -140,6 +143,8 @@ export default function App() {
     useState(false);
   const [updatingLikePostId, setUpdatingLikePostId] = useState(null);
   const [editingPostNote, setEditingPostNote] = useState(null);
+  const [reportTarget, setReportTarget] = useState(null);
+  const [reportConfirmation, setReportConfirmation] = useState(null);
   const [selectedWorkoutSummaryPost, setSelectedWorkoutSummaryPost] =
     useState(null);
   const [deletingPostId, setDeletingPostId] = useState(null);
@@ -632,6 +637,44 @@ export default function App() {
     }
   }, [loadCirclePreview, loadHomeSnapshot, loadWorkoutSummaryFeed]);
 
+  const isOwnSelectedPost =
+    !!selectedWorkoutSummaryPost &&
+    selectedWorkoutSummaryPost.author?.id === user?.id;
+
+  const openReportSheet = useCallback((target) => {
+    setSelectedWorkoutSummaryPost(null);
+    setReportTarget(target);
+  }, []);
+
+  const handleReportWorkoutSummaryPost = useCallback(() => {
+    const post = selectedWorkoutSummaryPost;
+
+    if (!post?.id) {
+      return;
+    }
+
+    openReportSheet({
+      type: "post",
+      post,
+      userId: post.author?.id ?? null,
+      name: post.author?.displayName ?? "this account",
+    });
+  }, [openReportSheet, selectedWorkoutSummaryPost]);
+
+  const handleReportWorkoutSummaryAuthor = useCallback(() => {
+    const author = selectedWorkoutSummaryPost?.author;
+
+    if (!author?.id) {
+      return;
+    }
+
+    openReportSheet({
+      type: "user",
+      userId: author.id,
+      name: author.displayName ?? "this account",
+    });
+  }, [openReportSheet, selectedWorkoutSummaryPost]);
+
   const handleOpenWorkoutSummaryOptions = useCallback((post) => {
     setSelectedWorkoutSummaryPost(post);
   }, []);
@@ -865,9 +908,7 @@ export default function App() {
       <WorkoutSummaryCard
         post={post}
         onToggleLike={handleToggleWorkoutPostLike}
-        onOpenOptions={
-          post.author?.id === user?.id ? handleOpenWorkoutSummaryOptions : undefined
-        }
+        onOpenOptions={handleOpenWorkoutSummaryOptions}
         isLikeBusy={updatingLikePostId === post.id}
       />
     ),
@@ -991,6 +1032,41 @@ export default function App() {
         </View>
 
         <View style={styles.postOptionsBody}>
+          {!isOwnSelectedPost ? (
+            <>
+              <TouchableOpacity
+                style={styles.postOption}
+                activeOpacity={0.75}
+                accessibilityRole="button"
+                onPress={handleReportWorkoutSummaryPost}
+              >
+                <Flag width={22} height={22} color={theme.danger ?? theme.iconColor} />
+                <ThemedText
+                  style={styles.postOptionText}
+                  setColor={theme.danger ?? theme.text}
+                >
+                  Report post
+                </ThemedText>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.postOption}
+                activeOpacity={0.75}
+                accessibilityRole="button"
+                onPress={handleReportWorkoutSummaryAuthor}
+              >
+                <Flag width={22} height={22} color={theme.iconColor} />
+                <ThemedText style={styles.postOptionText}>
+                  {`Report ${
+                    selectedWorkoutSummaryPost?.author?.displayName ?? "this account"
+                  }`}
+                </ThemedText>
+              </TouchableOpacity>
+            </>
+          ) : null}
+
+          {isOwnSelectedPost ? (
+          <>
           <TouchableOpacity
             style={styles.postOption}
             activeOpacity={0.75}
@@ -1025,8 +1101,39 @@ export default function App() {
                 : "Delete post"}
             </ThemedText>
           </TouchableOpacity>
+          </>
+          ) : null}
         </View>
       </ThemedBottomSheet>
+
+      <ReportSheet
+        visible={!!reportTarget}
+        user={user}
+        target={reportTarget}
+        onClose={(result) => {
+          setReportTarget(null);
+
+          if (result?.reported) {
+            setReportConfirmation(
+              result.blocked
+                ? "Thanks. We will review this within 24 hours, and you will not see each other any more."
+                : "Thanks. We will review this within 24 hours."
+            );
+            loadWorkoutSummaryFeed({ reset: true });
+          }
+        }}
+      />
+
+      <ThemedConfirmModal
+        visible={!!reportConfirmation}
+        title="Report sent"
+        message={reportConfirmation ?? ""}
+        confirmLabel="Done"
+        cancelLabel=""
+        tone="positive"
+        onConfirm={() => setReportConfirmation(null)}
+        onClose={() => setReportConfirmation(null)}
+      />
 
       <StatusBar style="auto" />
     </ThemedView>

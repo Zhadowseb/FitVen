@@ -14,7 +14,11 @@ import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
 import { authService } from "../../Services";
 import { useAuth } from "../../Contexts/AuthContext";
 import { useThemeMode } from "../../Contexts/ThemeContext";
-import { notificationService, socialService } from "../../Services";
+import {
+  moderationService,
+  notificationService,
+  socialService,
+} from "../../Services";
 import Bell from "../../Resources/Icons/UI-icons/Bell";
 import Dumbbell from "../../Resources/Icons/UI-icons/Dumbbell";
 import Pencil from "../../Resources/Icons/UI-icons/Pencil";
@@ -289,6 +293,22 @@ export default function ProfilePage() {
     });
 
     try {
+      // A display name and a bio are user content too - they reach everyone who
+      // can find the account. The database refuses these as well; this is so
+      // the refusal arrives as feedback on this screen.
+      const allowed = await Promise.all([
+        moderationService.isTextAllowed(displayName),
+        moderationService.isTextAllowed(bio),
+      ]);
+
+      if (allowed.some((value) => value === false)) {
+        setProfileFeedback({
+          status: "error",
+          message: moderationService.BLOCKED_TEXT_MESSAGE,
+        });
+        return;
+      }
+
       const updatedProfile = await socialService.updateOwnProfile({
         user,
         displayName,

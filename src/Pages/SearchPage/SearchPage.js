@@ -15,6 +15,8 @@ import styles from "./SearchPageStyle";
 import FriendsActivity from "../../Resources/Components/FriendsActivity/FriendsActivity";
 import { Colors } from "../../Resources/GlobalStyling/colors";
 import TailArrowUpRight from "../../Resources/Icons/UI-icons/TailArrowUpRight";
+import Flag from "../../Resources/Icons/UI-icons/Flag";
+import ReportSheet from "../../Resources/Components/ReportSheet/ReportSheet";
 import { useAuth } from "../../Contexts/AuthContext";
 import { programService, socialService } from "../../Services";
 import { getTodaysDate } from "../../Utils/dateUtils";
@@ -53,6 +55,8 @@ const SearchPage = () => {
   const [isLoadingRelationships, setIsLoadingRelationships] = useState(false);
   const [relationshipError, setRelationshipError] = useState("");
   const [blockTarget, setBlockTarget] = useState(null);
+  const [reportTarget, setReportTarget] = useState(null);
+  const [reportConfirmation, setReportConfirmation] = useState(null);
   const [unblockTarget, setUnblockTarget] = useState(null);
   const [isBlockWorking, setIsBlockWorking] = useState(false);
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
@@ -486,6 +490,32 @@ const SearchPage = () => {
                   </ThemedText>
                 </View>
 
+                {/* Reporting sits next to blocking rather than inside it:
+                    blocking is what one person does about another, reporting
+                    is what they tell us about them, and the policies want
+                    both reachable from the person. */}
+                {activeRelationshipType !== "blocked" ? (
+                  <Pressable
+                    onPress={() =>
+                      setReportTarget({
+                        type: "user",
+                        userId: relationshipProfile.id,
+                        name: relationshipProfile.displayName,
+                      })
+                    }
+                    disabled={isBlockWorking}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Report ${relationshipProfile.displayName}`}
+                    hitSlop={8}
+                    style={({ pressed }) => [
+                      styles.relationshipReportAction,
+                      pressed ? styles.relationshipActionPressed : null,
+                    ]}
+                  >
+                    <Flag width={17} height={17} color={quietText} />
+                  </Pressable>
+                ) : null}
+
                 <Pressable
                   onPress={() =>
                     activeRelationshipType === "blocked"
@@ -566,6 +596,35 @@ const SearchPage = () => {
           style={styles.relationshipCloseButton}
         />
       </ThemedModal>
+
+      <ReportSheet
+        visible={!!reportTarget}
+        user={user}
+        target={reportTarget}
+        onClose={(result) => {
+          setReportTarget(null);
+
+          if (result?.reported) {
+            setReportConfirmation(
+              result.blocked
+                ? "Thanks. We will review this within 24 hours, and you will not see each other any more."
+                : "Thanks. We will review this within 24 hours."
+            );
+            loadCirclePreview();
+          }
+        }}
+      />
+
+      <ThemedConfirmModal
+        visible={!!reportConfirmation}
+        title="Report sent"
+        message={reportConfirmation ?? ""}
+        confirmLabel="Done"
+        cancelLabel=""
+        tone="positive"
+        onConfirm={() => setReportConfirmation(null)}
+        onClose={() => setReportConfirmation(null)}
+      />
 
       <ThemedConfirmModal
         visible={Boolean(blockTarget)}

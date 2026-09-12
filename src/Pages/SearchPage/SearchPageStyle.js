@@ -152,6 +152,12 @@ export default StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
   },
+  relationshipReportAction: {
+    width: 36,
+    height: 36,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   relationshipActionPressed: {
     opacity: 0.7,
   },

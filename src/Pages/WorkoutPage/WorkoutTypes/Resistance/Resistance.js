@@ -1,5 +1,6 @@
 import { StatusBar } from "expo-status-bar";
 import {
+  Alert,
   AppState,
   TouchableOpacity,
   View,
@@ -35,6 +36,7 @@ import {
   subscribeRestTimer,
 } from "../../../../Utils/restTimerEvents";
 import {
+  moderationService,
   socialPostService,
   weightliftingService,
   workoutService,
@@ -469,6 +471,14 @@ const Resistance = ({
 
     try {
       setIsPostingSummary(true);
+
+      // The database refuses a blocked note anyway; asking first means the
+      // user is told why instead of watching the sheet close on a failure.
+      if (!(await moderationService.isTextAllowed(postNote))) {
+        Alert.alert("Post not sent", moderationService.BLOCKED_TEXT_MESSAGE);
+        return;
+      }
+
       await workoutService.repostWorkoutSummaryPost(db, {
         workoutId: workout_id,
         note: postNote,
@@ -476,6 +486,12 @@ const Resistance = ({
       setPostConfirmVisible(false);
     } catch (error) {
       console.error("Could not post the workout summary:", error);
+      Alert.alert(
+        "Post not sent",
+        error instanceof Error
+          ? error.message
+          : "The workout summary could not be posted."
+      );
       setPostConfirmVisible(false);
     } finally {
       setIsPostingSummary(false);
