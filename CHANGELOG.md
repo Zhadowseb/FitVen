@@ -1,5 +1,15 @@
 # Changelog
 
+## [Unreleased]
+### Changed
+- **Run and Walk are gone from every list that offers a workout type**, rather than shown greyed out under a COMING SOON stamp. App Store review guideline 2.1 treats a control that announces a feature and then refuses it as an unfinished app, and it was not a control anyone could use in the meantime. Three places: the cards in the start sheet, the type list in Workout types settings, and the type filter in Your workouts.
+- **Workouts already recorded as Run or Walk are untouched.** They are the user's history, not an offer - this account has twenty of them - so those rows still appear in the calendar and the workout library, still carry the badge and still refuse to open.
+- `filterReleasedWorkoutTypes` in `workoutTypeAvailability.js` is the one way a list drops them, so shipping Run means editing `COMING_SOON_TYPES` and nothing else. The Run settings block in Workout types settings stays where it is for that day; it is simply unreachable until then.
+
+### Notes
+- Not verified on a device: the phone was disconnected when this was written. In particular the start sheet now has a single fresh-start card where it had three, and `freshCard` has `flex: 1`, so Resistance will stretch to the full width of the row. That is the layout doing what it was told, but nobody has looked at it.
+
+---
 ## [1.1.0] - 2026-09-16
 ### Added
 - **Terms of use, agreed to before an account can be created.** App Review rejected the app under guideline 1.2 with filtering, reporting, blocking and a published contact address all already in place, and named the missing piece: *"require that users agree to terms (EULA) and these terms must make it clear that there is no tolerance for objectionable content or abusive users"*. The zero-tolerance wording is therefore load-bearing, not decoration.
