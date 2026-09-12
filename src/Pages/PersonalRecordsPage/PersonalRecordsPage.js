@@ -37,9 +37,6 @@ import { programService, weightliftingService } from "../../Services";
 import RecordsOverview from "./Components/RecordsOverview/RecordsOverview";
 import RecordsExercise from "./Components/RecordsExercise/RecordsExercise";
 import { normalizeRecordRows } from "../../Utils/recordsInsights";
-import { formatRelativeDay } from "../../Utils/dateUtils";
-import { formatDisplayNumber } from "../../Utils/numberUtils";
-import PageSummary from "../../Resources/Components/PageSummary/PageSummary";
 
 const TREND_CHART_WIDTH = 320;
 const TREND_CHART_HEIGHT = 190;
@@ -443,46 +440,6 @@ const PersonalRecordsPage = () => {
       setRecordsLoaded(true);
     }
   }, [db]);
-
-  // The heaviest lift and the latest record come from the rows the overview
-  // already holds, so the bar costs a pass over an array rather than another
-  // query. The counts come from the same summaries the Train page counts.
-  //
-  // Deriving the record count here from the `personal_record` flag instead
-  // gave 14 against Train's 11 for the same data: a set can still carry the
-  // flag after a heavier set took its rep slot, so the flag counts sets while
-  // completedRecordCount counts filled slots. One number, one meaning.
-  const recordsSummary = useMemo(() => {
-    let heaviest = null;
-    let latestAt = null;
-
-    for (const set of recordSets) {
-      if (!set.isRecord) {
-        continue;
-      }
-
-      if (heaviest === null || set.weight > heaviest) {
-        heaviest = set.weight;
-      }
-
-      if (latestAt === null || set.at > latestAt) {
-        latestAt = set.at;
-      }
-    }
-
-    return {
-      records: summaries.reduce(
-        (total, exercise) => total + exercise.completedRecordCount,
-        0
-      ),
-      exercises: summaries.length,
-      heaviest: heaviest === null ? null : formatDisplayNumber(heaviest),
-      latestLabel:
-        latestAt === null
-          ? null
-          : formatRelativeDay(latestAt, nowRef.current),
-    };
-  }, [recordSets, summaries]);
 
   useFocusEffect(
     useCallback(() => {
@@ -1242,41 +1199,6 @@ const PersonalRecordsPage = () => {
         {/* The weekly muscle-load radar is gone: the same question is answered
             by logged sets per muscle group inside the overview, and from what
             was actually trained rather than what a program planned. */}
-        {/* The exercise view has its own header and back button, so the page
-            summary belongs to the overview only. */}
-        {recordsLoaded && !selectedExerciseName ? (
-          <PageSummary
-            style={styles.pageSummary}
-            // The page header already says Personal Records; this says what
-            // the numbers under it cover.
-            eyebrow="All time"
-            title={
-              recordsSummary.latestLabel
-                ? `Last record ${recordsSummary.latestLabel.toLowerCase()}`
-                : "No records yet"
-            }
-            stats={[
-              {
-                key: "records",
-                value: recordsSummary.records,
-                label: "Records",
-                tone: "record",
-              },
-              {
-                key: "exercises",
-                value: recordsSummary.exercises,
-                label: "Exercises",
-              },
-              {
-                key: "heaviest",
-                value: recordsSummary.heaviest,
-                unit: recordsSummary.heaviest === null ? null : "kg",
-                label: "Heaviest",
-              },
-            ]}
-          />
-        ) : null}
-
         {!recordsLoaded ? (
           <ThemedStateBlock style={styles.loadingState} />
         ) : selectedExerciseName ? (
