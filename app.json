@@ -2,7 +2,7 @@
   "expo": {
     "name": "FitVen",
     "slug": "programapp",
-    "version": "0.25.0",
+    "version": "1.0.0",
     "orientation": "default",
     "icon": "./assets/icon_v1.0.png",
     "userInterfaceStyle": "dark",
@@ -20,11 +20,11 @@
         "NSLocationWhenInUseUsageDescription": "We use your location to track workout distance.",
         "ITSAppUsesNonExemptEncryption": false
       },
-      "buildNumber": "15"
+      "buildNumber": "16"
     },
     "android": {
       "googleServicesFile": "./google-services.json",
-      "versionCode": 15,
+      "versionCode": 16,
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyBzhic_QC-cV-3qKnqR1a87D8D8jMX4xI4"
