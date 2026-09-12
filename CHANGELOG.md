@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.0.2] - Unreleased
+## [1.0.2] - 2026-09-13
 ### Added
 - **Reporting.** A Report action beside Block on the followers and following lists, with five reasons and an optional note. Reports land in `public.user_reports`, readable only by the person who filed them — the reported account cannot learn that it was reported or by whom, which is the difference between a report and the next round of the argument. There is no update or delete policy: a report is a record.
 - **A term filter on everything a user can type that someone else reads** — a post's title and body, and a profile's display name and bio. It runs as a `before insert or update` trigger, not in the app: a rule that only runs in the client is a suggestion, because the same API answers an HTTP client holding the anon key.
@@ -23,7 +23,7 @@
 - The filter does not cover `username_base`. Usernames are claimed through `public.claim_username_code`, which is a different path with its own rules, and reaching into it from here would have split the validation across two places.
 
 ---
-## [1.0.1] - Unreleased
+## [1.0.1] - Released with 1.0.2
 ### Changed
 - **The Train summary says what it is again.** Its title is "Your training this week" rather than a count that changed as the week went, and the first stat is labelled Workouts rather than "This week" - the title carries the period, so the number under it does not have to repeat it.
 
