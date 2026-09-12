@@ -56,7 +56,7 @@ maskinelt verificeret, og det er derfor du læser koden.
   sidst — kort, én linje.
 - Du gætter ikke. Kan du ikke afgøre, om noget er en fejl uden at åbne
   filen, så åbn filen. Kan du stadig ikke afgøre det, skriver du det som
-  et spørgsmål med lav sikkerhed i stedet for at påstå en fejl.
+  et spørgsmål med `Tillid: Mistanke` i stedet for at påstå en fejl.
 - Maks **8 fund**. Har du flere, tager du de otte vigtigste. En rapport med
   tyve små ting bliver ikke læst.
 - Ingen fund er et fuldgyldigt resultat. Skriv det kort og vær færdig.
@@ -92,7 +92,7 @@ Skriv præcis denne struktur. Den samlende agent parser den.
 - **Hvad:** hvad koden gør, i én til to sætninger.
 - **Konsekvens:** hvad der går galt for brugeren eller for dataene.
 - **Forslag:** den konkrete rettelse. Kode kun hvis den er kortere end ordene.
-- **Sikkerhed:** Bekræftet | Mistanke
+- **Tillid:** Bekræftet | Mistanke
 
 ### [MEDIUM] SEC-2: Næste fund
 ...
@@ -109,7 +109,7 @@ Skriv præcis denne struktur. Den samlende agent parser den.
 en samtale uden at citere hele titlen: `QA-`, `TEST-`, `SEC-`, `STRUKT-`,
 `KODE-`, `PERF-`, `UI-`, `DGN-`. Numrene starter forfra ved hver PR.
 
-**Sikkerhed** er `Bekræftet`, når du har åbnet filen og set det, eller
+**Tillid** er `Bekræftet`, når du har åbnet filen og set det, eller
 `Mistanke`, når du slutter dig til det ud fra noget andet. Skriv aldrig
 `Bekræftet` om noget, du ikke selv har slået efter — det er den eneste
 grund til, at feltet er værd at læse.

@@ -53,7 +53,7 @@ oveni. Det er den agent, hvor et falsk negativt er dyrest.
 
 - Tokens eller sessioner i almindelig `AsyncStorage` i stedet for sikker
   lagring. Repoet har allerede et mønster for det —
-  `scripts/test-secure-session.js` findes ikke uden grund.
+  `scripts/test-secure-session-storage.js` findes ikke uden grund.
 - Auth-tilstand udledt af noget lokalt, der kan ændres.
 - Logout der ikke rydder op.
 
@@ -106,7 +106,7 @@ tilbage, hvis de sætter id'et til en fremmeds? Svar konkret ved at læse
 politikken eller forespørgslen — ikke ved at antage, at der nok er en.
 
 Marker et fund `BLOKERENDE`, når du kan beskrive, hvordan en anden bruger
-udnytter det. Kan du ikke det, så skriv `HØJ` og vær ærlig om din sikkerhed.
+udnytter det. Kan du ikke det, så skriv `HØJ` og vær ærlig i `Tillid`.
 
 ## Ikke dit bord
 
