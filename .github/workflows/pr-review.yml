@@ -48,11 +48,18 @@ jobs:
           API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
         run: |
+          # Laengden, ikke vaerdien. En secret der findes med en tom vaerdi
+          # ser praecis ud som en der ikke findes, og det kostede en time
+          # foerste gang. Et token er typisk 100+ tegn; 0 betyder at
+          # "Paste your secret:" fik en tom streng.
+          echo "ANTHROPIC_API_KEY: ${#API_KEY} tegn"
+          echo "CLAUDE_CODE_OAUTH_TOKEN: ${#OAUTH_TOKEN} tegn"
+
           if [ -n "$API_KEY" ] || [ -n "$OAUTH_TOKEN" ]; then
             echo "has_credentials=true" >> "$GITHUB_OUTPUT"
           else
             echo "has_credentials=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::Hverken ANTHROPIC_API_KEY eller CLAUDE_CODE_OAUTH_TOKEN er sat som repository secret. Review-agenterne springes over."
+            echo "::warning::Hverken ANTHROPIC_API_KEY eller CLAUDE_CODE_OAUTH_TOKEN har en vaerdi. Enten er secret'en ikke sat, eller ogsaa blev den sat til en tom streng. Review-agenterne springes over."
           fi
 
       - id: pr
