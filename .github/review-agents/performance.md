@@ -53,6 +53,40 @@ der hakker, mens brugeren står med vægten i hånden.
 - Et nyt stort billede i `assets/` uden komprimering.
 - En ny afhængighed for noget, der er ti linjers kode.
 
+## Hvad der er fundet her før
+
+Performancegennemgangen fra 31. august fandt 18 fund. Mønstrene går igen, og
+det er dem, du skal kunne genkende i et diff:
+
+- **Arbejde pr. sekund under træning.** `supabase.auth.getUser()` over
+  netværket én gang i sekundet, hele øvelses- og sætlisten genindlæst og
+  gentegnet hvert sekund, et 1-sekunds-interval i bundnavigationen der kørte
+  på hver skærm altid. Et nyt interval eller en ny timer i træningsfladen er
+  derfor altid værd at kigge på.
+- **Sekventielle rundture.** Cloud-upload brugte 3–5 HTTP-rundture pr. række,
+  `MicrocyclePage` lavede ~135 sekventielle forespørgsler pr. visning,
+  `HomePage` ~28. Et nyt `await` inde i en løkke er det samme mønster igen.
+- **Dobbeltarbejde.** Forsiden beregnede dagens snapshot to gange,
+  kalenderen hentede data to gange pr. måned, reconcile blev kaldt to gange
+  pr. kørsel.
+- **Manglende indeks.** `Exercise_Instance(exercise_name)` gjorde hvert "sæt
+  udført"-tryk til en fuld scanning.
+- **GPS.** Løbeskærmen lavede O(42·N) arbejde over alle punkter i
+  render-scope, og alle punkter blev læst og distancen genberegnet hvert
+  andet sekund.
+- **Vægt ved opstart.** 13 MB PNG'er hvoraf flere vises i 48×48, en 150 kB
+  import-payload i hovedbundlen evalueret ved app-start, ubetingede
+  fuldtabel-opdateringer i `initializeDatabase`.
+- **Manglende virtualisering.** Øvelsesbiblioteket rendrede uden, med en
+  kropskort-SVG pr. række.
+
+Rapporten har også en `Del 3 — Undersøgt, men ingen ændring anbefalet` med
+15 ting, der blev målt og bevidst ryddet: kalenderens udtryks-indeks,
+`getProgramsOverview`s aggregeringer, begge contexts' memoisering, HomePages
+`FlatList`, GPS-skrivestien, baggrunds-syncens coalescing. **Rapportér ikke
+noget derfra som nyt, medmindre PR'en har ændret forudsætningen.** Er du i
+tvivl, så slå det op i `docs/PERFORMANCE-AUDIT-2026-08-31.md` først.
+
 ## Sådan arbejder du
 
 Spørg hver gang: hvor mange gange kører det her, og med hvor mange elementer

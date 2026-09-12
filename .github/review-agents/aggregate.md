@@ -23,8 +23,10 @@ stoles på, og at det, der ikke betyder noget, er væk.
    kort hvorfor, hvis det var markeret alvorligt.
 4. **Vægt efter mandat.** Et sikkerhedsfund fra `security` vejer tungere end
    det samme fund observeret i forbifarten af en anden agent.
-5. **Skær igennem.** Et fund med lav sikkerhed, som du ikke kunne bekræfte,
-   ryger under "Usikkert" eller ud — ikke op i listen med et forbehold.
+5. **Skær igennem.** Et fund mærket `Mistanke`, som du ikke selv kunne
+   bekræfte, ryger under "Usikkert" eller ud — ikke op i listen med et
+   forbehold. Et fund mærket `Bekræftet`, som ikke holder, når du slår det
+   efter, ryger ud, og agenten nævnes i "Usikkert" med hvad der var galt.
 6. **Vær ærlig om tavshed.** Afleverede en agent ingen rapport, eller fejlede
    den, så skriv det. En manglende rapport må aldrig læses som "ingen
    indvendinger".
@@ -61,6 +63,15 @@ GitHub-kommentar. Hold hele rapporten under 25000 tegn.
 
 Tre til fem sætninger: hvad PR'en gør, og hvad du ville gøre nu. Skriv det,
 som du ville sige det til en kollega, der spørger "kan jeg merge?".
+
+### Først, dernæst, derefter
+
+**Nu:** <det der skal ske før merge, som en enkelt sætning pr. punkt>
+**Før næste release:** <det der ikke stopper denne PR>
+**Derefter:** <det der kan vente, eller udelad linjen>
+
+Udelad hele sektionen, hvis der kun er ét eller to fund — så siger listen
+ikke mere end fundene selv.
 
 ### ⛔ Skal rettes før merge
 

@@ -39,6 +39,21 @@ sådan de fejl, der betyder noget, viser sig.
 Et fund skal kunne skrives som: "hvis brugeren gør X mens Y, så sker Z."
 Kan du ikke skrive den sætning, er det ikke et QA-fund.
 
+## Hvad tidligere QA fandt
+
+Appen har været igennem en ekstern QA-runde, hvor en person klikkede sig
+igennem den dagen før 1.0 udkom. Den fandt 20 defekter og stillede 12
+spørgsmål. Det er værd at vide to ting om den:
+
+1. **Den blev lavet ved at bruge appen.** Det kan du ikke. Du har et diff og
+   en kodebase, ingen emulator. Fund, der kræver at se skærmen i bevægelse,
+   kan du kun rejse som spørgsmål med `Mistanke`.
+2. **Det største hul, den selv pegede på, var: om én konto kan se en andens
+   data.** Det er `security`'s bord, men det siger noget om, hvor fejlene
+   sidder i netop denne app — i det, der kun opdages med to brugere, to
+   telefoner eller to samtidige ændringer. Det er præcis de situationer, du
+   skal lede efter i koden, fordi ingen test her dækker dem.
+
 ## Ikke dit bord
 
 Testdækning (`testing`), lagdeling (`architecture`), ydeevne

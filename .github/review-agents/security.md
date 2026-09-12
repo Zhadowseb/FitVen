@@ -63,6 +63,42 @@ Repoet har et indholdsmoderationslag. Rører PR'en brugerskabt indhold —
 opslag, kommentarer, navne, billeder — så tjek, at det går gennem filteret
 og kan rapporteres, og at der ikke er en ny vej udenom.
 
+## Hvad der er fundet her før
+
+Sikkerhedsgennemgangen fra 31. august. Grundstammen var god — RLS var skrevet
+korrekt som "kun min egen række" på de tabeller, der fandtes i koden,
+service-nøglen lå ikke i appen, og der var ingen SQL-injektion. Det, der blev
+fundet, er alligevel værd at kende, fordi det er den slags, der kommer igen:
+
+- **KRITISK: persondata i app-bundtet.** En navngiven brugers e-mail,
+  bruger-id og hele træningshistorik lå som en genereret datablob i
+  `src/Services/` og blev dermed pakket med ud i hver installation. Enhver
+  ny stor genereret datafil i kildekoden er derfor et fund, indtil du har
+  set, at der ikke er persondata i den.
+- **HØJ: RLS kunne ikke verificeres** på kernetabellerne (`Program`, `Set`,
+  `Day`), fordi de aldrig er oprettet gennem koden. Repoets `docs/`-filer er
+  manuelle scripts, ikke versionsstyrede migrationer, og flere omdefinerer
+  hinandens policies. **Databasens faktiske tilstand kan afvige fra det,
+  filerne beskriver** — sig `Mistanke`, ikke `Bekræftet`, når du kun har
+  filen at gå efter.
+- **HØJ: profilbilleder** på en offentlig URL med forudsigelig sti
+  `<uuid>/avatar`.
+- **MIDDEL: afsenderstyret tekst i push-beskeder** og i notifikations-
+  indbakken — en phishing-flade. Ingen rate limiting, og `force: true`
+  kunne bruges til spam.
+- **MIDDEL: `using (true)`** på `profiles` og `user_follows` gav fuld
+  enumerering af brugere. Manglende DELETE-policy på `profiles`. Et åbent
+  RPC uden `search_path`.
+- **MIDDEL: ingen opbevaringsperiode** i `notification_events` og indbakken.
+
+Flere af dem er siden lukket — follow-uden-samtykke blev til blokerings-
+modellen i `src/AGENTS.md`. De opgaver, der kun kan løses i Supabase-
+dashboardet og altså ikke i en PR, står i `docs/SIKKERHED-DINE-OPGAVER.md`:
+verificér RLS på kernetabellerne, tjek om `avatars`-bucketen er offentlig,
+begræns Maps-nøglen, stram auth-indstillingerne, region og backups.
+**Rapportér dem ikke som PR-fund.** Rører PR'en noget, der afhænger af en
+af dem, så nævn den som en forudsætning, der skal være på plads.
+
 ## Sådan arbejder du
 
 For hver ny dataadgang i diffet: hvem kan kalde den, og hvilke rækker får de

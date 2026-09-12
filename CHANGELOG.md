@@ -7,6 +7,8 @@
   - Every brief ends with what is *not* its job. Eight agents all looking for "problems" find the same three and write them eight times, so the mandates are deliberately disjoint and the aggregating agent drops duplicates on top of that.
   - The aggregator verifies a finding against the file before it reports it as blocking, and says so when an agent filed nothing rather than reading silence as approval.
   - `npm ci && npm test` runs alongside as the deterministic half, and its result is stated in the report.
+  - The briefs carry what the five consultant reviews in `docs/` already found, so an agent starts where the last review stopped rather than from general practice: the per-second work during a workout and the sequential round trips from the performance audit, the personal data that once shipped inside the bundle from the security review, the seven recurring design patterns - 35 text sizes, 36 corner radii, five top bars - and the keyboard handling that was globally ineffective on Android. Each brief says what was checked and deliberately cleared, so a settled question is not reopened on every PR.
+  - Findings carry an id per agent (`SEC-1`, `PERF-2`), and confidence is `Bekraeftet` or `Mistanke` rather than a vague scale: an agent may only write `Bekraeftet` about something it opened the file and saw. A report also lists what it examined and found sound, which is the half that tells you the silence was checked.
   - Authentication is either `ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN` as a repository secret. With neither set the review jobs skip instead of failing, so the workflow is safe to merge before the secret exists. Setup is in `.github/review-agents/README.md`.
 
 ---

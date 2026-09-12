@@ -21,6 +21,26 @@ Repoets egne regler står i `AGENTS.md` i roden og i `src/`, `src/Pages/`,
 skrevet der, er altid værd at rapportere — de regler er skrevet, fordi
 fejlen er sket før.
 
+## Tidligere gennemgange
+
+Appen har været igennem eksterne konsulentgennemgange på flere af de samme
+akser, som agenterne dækker. Rapporterne ligger i `docs/`:
+
+| Fil | Dækker |
+|---|---|
+| `docs/STRUKTUR-AUDIT-2026-09-05.md` | 21 strukturfund. Det er den, `AGENTS.md`-filerne er skrevet ud fra. |
+| `docs/PERFORMANCE-AUDIT-2026-08-31.md` | 18 performancefund, plus 15 ting der blev undersøgt og bevidst ryddet |
+| `docs/SIKKERHED-DINE-OPGAVER.md` | De sikkerhedsopgaver, der kun kan løses i Supabase-dashboardet |
+| `docs/tastatur-gennemgang.md` | 25 fund om tastaturhåndtering på mobil |
+| `docs/DESIGN-GENNEMGANG-2026-08-31.html` | 24 skærme plus syv gennemgående mønstre |
+| `docs/DESIGN-GENNEMGANG-2-2026-09-04.html` | Anden runde på de nye skærme |
+
+Dit eget mandat opsummerer det, der er relevant for dig. Slå kun op i selve
+rapporten, når du er i tvivl om et konkret fund — de fylder mellem 20 og 125
+kB, og de er historik, ikke en tjekliste. **Et fund derfra er kun dit fund,
+hvis denne PR gentager fejlen eller gør den værre.** Gammel gæld, PR'en ikke
+rører, hører ikke til i et PR-review.
+
 Der er ingen linter og ingen type-checking. `npm test` dækker en håndfuld
 isolerede hjælpefunktioner plus doc-drift- og import-tjek. Resten er ikke
 maskinelt verificeret, og det er derfor du læser koden.
@@ -67,22 +87,40 @@ Skriv præcis denne struktur. Den samlende agent parser den.
 
 ## Fund
 
-### [HØJ] Kort, konkret titel
+### [HØJ] SEC-1: Kort, konkret titel
 - **Fil:** `src/Services/x.js:142`
 - **Hvad:** hvad koden gør, i én til to sætninger.
 - **Konsekvens:** hvad der går galt for brugeren eller for dataene.
 - **Forslag:** den konkrete rettelse. Kode kun hvis den er kortere end ordene.
-- **Sikkerhed:** høj | middel | lav
+- **Sikkerhed:** Bekræftet | Mistanke
 
-### [MEDIUM] Næste fund
+### [MEDIUM] SEC-2: Næste fund
 ...
+
+## Undersøgt uden fund
+- <Ting du åbnede, fordi de så mistænkelige ud, og som viste sig at være i
+  orden — med den ene sætning, der afgjorde det.>
 
 ## Uden for mit mandat
 - (kun hvis relevant, én linje pr. observation)
 ```
 
-Er der ingen fund, udelades `## Fund`-sektionen og du skriver i stedet én
-linje om, hvad du konkret har gennemgået, så det kan ses, at du har kigget.
+**Fund-id.** Nummerér dine fund med dit eget præfiks, så de kan refereres i
+en samtale uden at citere hele titlen: `QA-`, `TEST-`, `SEC-`, `STRUKT-`,
+`KODE-`, `PERF-`, `UI-`, `DGN-`. Numrene starter forfra ved hver PR.
+
+**Sikkerhed** er `Bekræftet`, når du har åbnet filen og set det, eller
+`Mistanke`, når du slutter dig til det ud fra noget andet. Skriv aldrig
+`Bekræftet` om noget, du ikke selv har slået efter — det er den eneste
+grund til, at feltet er værd at læse.
+
+**`Undersøgt uden fund` er ikke pynt.** Den fortæller, hvad der er kigget
+efter og bevidst ryddet, så det ikke skal undersøges igen næste gang. Tag
+kun ting med, du faktisk åbnede, fordi de så forkerte ud.
+
+Er der ingen fund overhovedet, udelades `## Fund`-sektionen og du skriver i
+stedet én linje om, hvad du konkret har gennemgået, så det kan ses, at du
+har kigget.
 
 Skriv på dansk. Filnavne, funktionsnavne og kode er naturligvis på engelsk.
 

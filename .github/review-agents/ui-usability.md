@@ -51,6 +51,20 @@ Hver dataændring har en cloud-halvdel. Hvis den halvdel fejler:
 - Dobbelttryk der udløser handlingen to gange, fordi knappen ikke
   deaktiveres.
 
+### Tastatur
+
+Der findes en hel gennemgang af det her alene: 25 fund, ti af dem kritiske.
+Det gennemgående var **TAST-01: al tastaturhåndtering var uden effekt på
+Android**, globalt. Derudover var det de samme ti skærme igen og igen — et
+notefelt, et navnefelt, et vægtfelt — hvor tastaturet dækkede det felt,
+brugeren skrev i.
+
+Kommer der et nyt `TextInput` ind i en PR, så tjek det mod
+referenceimplementeringen i `docs/tastatur-gennemgang.md` (Del 2): følger det
+det fælles mønster, eller er det endnu et felt, der selv skal huskes senere?
+Talfelter skal have `keyboardType`. Felter i et bottom sheet er dem, der
+oftest går galt.
+
 ### Sprog
 
 - Fejlbeskeder og labels der er skrevet til udvikleren, ikke til brugeren.

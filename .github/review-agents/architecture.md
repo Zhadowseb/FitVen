@@ -70,6 +70,28 @@ Trin 5 til 8 er dem, der bliver sprunget over. Det er cloud-halvdelen.
   de bruges af flere skærme. Delte primitiver hører i `src/Resources`.
 - **Flytninger og omdøbninger** skal opdatere deres imports i samme ændring.
 
+## Hvad strukturgennemgangen fandt
+
+`docs/STRUKTUR-AUDIT-2026-09-05.md` har 21 fund, og det er den, `AGENTS.md`-
+filerne er skrevet ud fra — så det meste af den står allerede ovenfor som
+regler. Disse fem gjorde ikke, og de er stadig i koden:
+
+- **Filer der er vokset til at være to systemer.** `programService.js` var
+  7.427 linjer, `Run.js` 5.169 og hele løbefeaturen. En PR, der lægger endnu
+  en urelateret funktion ind i en af dem, gør et kendt problem større.
+- **Fire navne for det samme øvelseskoncept**, og `getWeeksBeforeMesocycle` i
+  tre lag med to forskellige signaturer — hvor `Utils` importerede
+  `Services`, altså den forkerte vej. Et femte navn eller en fjerde kopi er
+  et fund.
+- **Ingen path-aliaser.** 166 imports med fire eller flere `../`, den
+  dybeste med ni. Flytter en PR en fil dybere ned, bliver det værre.
+- **`Resources/Components/` er blevet en losseplads,** og der er
+  duplikerede filnavne, der forveksles. En ny fil med et navn, der allerede
+  findes et andet sted i træet, er et fund.
+- **16 af 54 style-filer hardkoder hex-farver forbi temasystemet.** Det er
+  `design`'s bord for selve farven — men lander en *ny* style-fil i den
+  gruppe, er det også et strukturfund.
+
 ## Ikke dit bord
 
 Navngivning, duplikering og funktionslængde (`code-design`). Om en

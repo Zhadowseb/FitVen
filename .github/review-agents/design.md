@@ -60,6 +60,46 @@ Tjek selv efter.
 - **Ikoner og aktiver.** Ny ikonstil der ikke matcher det sæt, der bruges.
   Et billede i en anden proportion end naboerne.
 
+## Hvad designgennemgangen fandt
+
+24 skærme blev gennemgået 31. august, og de nye skærme igen 4. september.
+Konklusionen var ikke, at enkeltskærme var forkerte — det var syv
+**gennemgående mønstre**. Det er dem, du skal kunne genkende, når en ny
+skærm eller komponent kommer ind:
+
+- **Designsystemet findes, men bruges ikke.** Der er en fælles typografiskala
+  og en palet, men skærmene sætter deres egne værdier: 35 forskellige
+  tekststørrelser fordelt på over 600 steder, og 36 forskellige hjørneradier
+  — praktisk talt hvert helt tal fra 1 til 32. En ny `fontSize` eller
+  `borderRadius`, der ikke findes i forvejen tæt på, gør det værre.
+- **Fem forskellige topbjælker** med hver sin højde, titelstørrelse (16 / 18
+  / 22 / 28 px) og knapform. En sjette variant er et fund.
+- **Klikmål under 44 px næsten overalt** — tilbageknapper 34–38 px,
+  temavælger 26 px, filterchips 30 px. Det rammer hårdest på
+  træningsskærmene, hvor brugeren står op og har travlt.
+- **Ikoner uden labels, og ikoner der betyder noget andet** — info åbner et
+  filter, en højrepil åbner et panel nedefra, et øje slår sætdetaljer til.
+- **Tilstande er ujævnt dækket.** Notifikationsskærmen har alle fire
+  (indlæsning, fejl med "prøv igen", tom, træk-for-at-opdatere). Forsiden,
+  kalenderen, programlisten og ugeoversigten mangler mindst to. Flere steder
+  skjules fejl helt, så en tom skærm både kan betyde "ingenting i dag" og
+  "det gik galt".
+- **Farvernes betydning skrider.** Grøn er både "gennemført", "sekundær
+  knap" og "valgt". Rød er både "slet" og "−2,5 kg". Orange er "valgt" nogle
+  steder, grøn andre. Og nogle farver er låst fast uanset tema —
+  skillelinjer, timerens tilstandslabel, pulszoner, muskelmarkeringer.
+- **Sproget er ikke ensrettet.** Punktummer på nogle menupunkter og ikke
+  andre, blandet versal- og normalskrift for samme knap ("PAUSE" / "Pause"),
+  fire ord for to niveauer (Block / Mesocycle / Microcycle / Week), og
+  produktnavnet skifter mellem FitVen og "FitApp".
+
+Anden runde fandt desuden **to parallelle dialogsystemer**, to farvetokens
+til samme opgave, og navnekollisioner ("Your workouts" to steder, "Block" i
+en tredje betydning).
+
+En PR, der tilføjer endnu en variant til et af de mønstre, er et fund — også
+en lille. Det er sådan, de er opstået.
+
 ## Sådan arbejder du
 
 Du kan ikke se skærmen. Læs derfor style-filen og komponenten sammen — det
