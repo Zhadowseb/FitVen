@@ -204,19 +204,9 @@ const ExerciseLibraryPage = () => {
       >
         <PageSummary
           eyebrow="Train"
-          // Not "Your training": that is the heading of the section further
-          // down, and a summary that repeats a heading says nothing.
-          title={
-            weekSummary.planned === null
-              ? "Loading..."
-              : weekSummary.planned === 0
-                ? "Nothing planned this week"
-                : weekSummary.completed >= weekSummary.planned
-                  ? "Week complete"
-                  : `${
-                      weekSummary.planned - weekSummary.completed
-                    } left this week`
-          }
+          // The title carries the period, so the stat under it does not have
+          // to repeat it.
+          title="Your training this week"
           badge={
             quickAccessStats.activeProgramCount > 0
               ? {
@@ -232,7 +222,7 @@ const ExerciseLibraryPage = () => {
                 weekSummary.planned === null
                   ? null
                   : `${weekSummary.completed}/${weekSummary.planned}`,
-              label: "This week",
+              label: "Workouts",
               tone: "primary",
             },
             {

@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.1] - Unreleased
+### Changed
+- **The Train summary says what it is again.** Its title is "Your training this week" rather than a count that changed as the week went, and the first stat is labelled Workouts rather than "This week" - the title carries the period, so the number under it does not have to repeat it.
+
+### Removed
+- **The summary bar on Personal Records.** It was a fourth thing to read before the screen's own first section, on a screen that already opens with Biggest movers and a Statistics block of its own. Its data went with it; nothing else used it.
+
+---
 ## [1.0.0] - 2026-09-12
 The first release. Everything below this line shipped in it; the sections under
 it are the work it is made of, kept as they were written.

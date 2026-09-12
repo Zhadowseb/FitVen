@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "1.0.0",
+  "version": "1.0.1-minor-train-summary-copy.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",
