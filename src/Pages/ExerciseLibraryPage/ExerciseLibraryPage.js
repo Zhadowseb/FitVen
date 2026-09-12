@@ -13,6 +13,7 @@ import { useSQLiteContext } from "expo-sqlite";
 import styles from "./ExerciseLibraryPageStyle";
 import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
 import CoverGradient from "../../Resources/Components/CoverGradient";
+import PageSummary from "../../Resources/Components/PageSummary/PageSummary";
 import ChevronRight from "../../Resources/Icons/UI-icons/ChevronRight";
 import Layers from "../../Resources/Icons/UI-icons/Layers";
 import Star from "../../Resources/Icons/UI-icons/Star";
@@ -21,10 +22,24 @@ import Calender from "../../Resources/Icons/UI-icons/Calender";
 import Thermostat from "../../Resources/Icons/UI-icons/Thermostat";
 import TradeUp from "../../Resources/Icons/UI-icons/TradeUp";
 import { programService, weightliftingService } from "../../Services";
+import {
+  addDays,
+  formatDate,
+  getCurrentWeekRange,
+  normalizeIsoDateString,
+  parseCustomDate,
+} from "../../Utils/dateUtils";
 import { ThemedText, ThemedView } from "../../Resources/ThemedComponents";
 
 const programsCoverImage = require("../../Resources/Images/WorkoutTypes/ResistanceTraining/52c5c0a6-e32a-48a8-a731-95ca73deeabd.jpg");
 const workoutsCoverImage = require("../../Resources/Images/WorkoutTypes/Default/download.jpg");
+const calendarCoverImage = require("../../Resources/Images/Tools/calendar-cover.jpg");
+
+const emptyWeekSummary = {
+  planned: null,
+  completed: null,
+  nextLabel: null,
+};
 
 const ExerciseLibraryPage = () => {
   const db = useSQLiteContext();
@@ -43,16 +58,36 @@ const ExerciseLibraryPage = () => {
     workoutCount: 0,
     completedWorkoutCount: 0,
   });
+  // Absent until the query answers, so the summary shows dashes rather than a
+  // confident "0 of 0 this week" that is replaced a moment later.
+  const [weekSummary, setWeekSummary] = useState(emptyWeekSummary);
 
   const loadQuickAccessStats = useCallback(async () => {
+    const today = parseCustomDate(formatDate(new Date()));
+    const { monday, sunday } = getCurrentWeekRange(today);
+
     try {
-      const [programs, exerciseRows, personalRecordRows, workoutCounts] =
-        await Promise.all([
-          programService.getProgramsOverview(db),
-          weightliftingService.getExerciseStorage(db),
-          weightliftingService.getPersonalRecordExerciseSummaries(db),
-          programService.getWorkoutLibraryCounts(db),
-        ]);
+      const [
+        programs,
+        exerciseRows,
+        personalRecordRows,
+        workoutCounts,
+        weekWorkouts,
+        nextWorkout,
+      ] = await Promise.all([
+        programService.getProgramsOverview(db),
+        weightliftingService.getExerciseStorage(db),
+        weightliftingService.getPersonalRecordExerciseSummaries(db),
+        programService.getWorkoutLibraryCounts(db),
+        programService.getWorkoutCalendarWorkouts(db, {
+          startIsoDate: normalizeIsoDateString(formatDate(monday)),
+          endIsoDate: normalizeIsoDateString(formatDate(sunday)),
+        }),
+        programService.getNextUnfinishedCalendarWorkout(db, {
+          startIsoDate: normalizeIsoDateString(formatDate(addDays(today, 1))),
+          endIsoDate: normalizeIsoDateString(formatDate(addDays(today, 180))),
+        }),
+      ]);
 
       setQuickAccessStats({
         programCount: programs.length,
@@ -68,6 +103,14 @@ const ExerciseLibraryPage = () => {
         workoutCount: workoutCounts.totalCount,
         completedWorkoutCount: workoutCounts.completedCount,
       });
+
+      setWeekSummary({
+        planned: weekWorkouts.length,
+        completed: weekWorkouts.filter((workout) => Number(workout.done) === 1)
+          .length,
+        nextLabel:
+          nextWorkout?.label ?? nextWorkout?.workout_type ?? null,
+      });
     } catch (error) {
       console.error(error);
       setQuickAccessStats({
@@ -79,6 +122,7 @@ const ExerciseLibraryPage = () => {
         workoutCount: 0,
         completedWorkoutCount: 0,
       });
+      setWeekSummary(emptyWeekSummary);
     }
   }, [db]);
 
@@ -88,7 +132,7 @@ const ExerciseLibraryPage = () => {
     }, [loadQuickAccessStats])
   );
 
-  // Programs and Your workouts stay as large cards; everything else is a
+  // Programs, Your workouts and Calendar are large cards; everything else is a
   // compact row, so the daily entries are not competing with the rest.
   const toolRows = [
     {
@@ -118,16 +162,6 @@ const ExerciseLibraryPage = () => {
       onPress: () => navigation.navigate("OneRepMaxCalculatorPage"),
     },
     {
-      key: "calendar",
-      label: "Calendar",
-      detail: "Plan and review your weeks",
-      icon: (
-        <Calender width={18} height={18} stroke={theme.record} color={theme.record} />
-      ),
-      iconBackground: withAlpha(theme.record, 0.14),
-      onPress: () => navigation.navigate("WorkoutCalendarPage"),
-    },
-    {
       key: "sickness",
       label: "Sickness log",
       detail: "Register days you were ill",
@@ -141,14 +175,25 @@ const ExerciseLibraryPage = () => {
 
   const neutralChipBackground = theme.chipBackground;
   const orangeChipBackground = withAlpha(theme.primary, 0.12);
-  const yellowIconSquareBackground = "rgba(242, 193, 78, 0.12)";
-  const orangeIconSquareBackground = withAlpha(theme.primary, 0.12);
   const programsPillBackground = isDark
     ? "rgba(10, 11, 15, 0.72)"
     : "rgba(255, 255, 255, 0.88)";
   const programsPillBorder = isDark
     ? "rgba(255, 255, 255, 0.14)"
     : "rgba(15, 17, 22, 0.14)";
+
+  const weekCaption =
+    weekSummary.planned === null
+      ? null
+      : weekSummary.planned === 0
+        ? weekSummary.nextLabel
+          ? `Nothing planned this week. Next up: ${weekSummary.nextLabel}.`
+          : "Nothing planned this week."
+        : weekSummary.completed >= weekSummary.planned
+          ? "Every session this week is done."
+          : weekSummary.nextLabel
+            ? `Next up: ${weekSummary.nextLabel}.`
+            : null;
 
   return (
     <ThemedView safe={["top", "left", "right"]} style={styles.container}>
@@ -157,6 +202,148 @@ const ExerciseLibraryPage = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        <PageSummary
+          eyebrow="Train"
+          // Not "Your training": that is the heading of the section further
+          // down, and a summary that repeats a heading says nothing.
+          title={
+            weekSummary.planned === null
+              ? "Loading..."
+              : weekSummary.planned === 0
+                ? "Nothing planned this week"
+                : weekSummary.completed >= weekSummary.planned
+                  ? "Week complete"
+                  : `${
+                      weekSummary.planned - weekSummary.completed
+                    } left this week`
+          }
+          badge={
+            quickAccessStats.activeProgramCount > 0
+              ? {
+                  label: `${quickAccessStats.activeProgramCount} active`,
+                  tone: "primary",
+                }
+              : null
+          }
+          stats={[
+            {
+              key: "week",
+              value:
+                weekSummary.planned === null
+                  ? null
+                  : `${weekSummary.completed}/${weekSummary.planned}`,
+              label: "This week",
+              tone: "primary",
+            },
+            {
+              key: "completed",
+              value: quickAccessStats.completedWorkoutCount,
+              label: "Completed",
+            },
+            {
+              key: "records",
+              value: quickAccessStats.recordSlotCount,
+              label: "Records",
+              tone: "record",
+            },
+          ]}
+          caption={weekCaption}
+        />
+
+        <TouchableOpacity
+          activeOpacity={0.92}
+          accessibilityRole="button"
+          accessibilityLabel="Calendar, plan and review your weeks"
+          onPress={() => navigation.navigate("WorkoutCalendarPage")}
+          style={[
+            styles.programsCard,
+            {
+              backgroundColor: theme.cardBackground,
+              borderColor: theme.cardBorder,
+            },
+          ]}
+        >
+          <View style={styles.programsImageArea}>
+            <Image
+              source={calendarCoverImage}
+              resizeMode="cover"
+              style={styles.coverImage}
+              // A local JPEG decodes before the first paint, so the cross-fade
+              // only shows as a flash of card background behind it.
+              fadeDuration={0}
+            />
+            <CoverGradient
+              color={theme.cardBackground}
+              stops={[
+                { offset: "20%", opacity: 0.15 },
+                { offset: "100%", opacity: 1 },
+              ]}
+            />
+
+            <View
+              style={[
+                styles.programsPill,
+                {
+                  backgroundColor: programsPillBackground,
+                  borderColor: programsPillBorder,
+                },
+              ]}
+            >
+              <Calender
+                width={12}
+                height={12}
+                stroke={primaryTextColor}
+                color={primaryTextColor}
+              />
+              <ThemedText style={styles.programsPillText} setColor={theme.title}>
+                CALENDAR
+              </ThemedText>
+            </View>
+          </View>
+
+          <View style={styles.programsBody}>
+            <View style={styles.cardTitleRow}>
+              <View style={styles.cardTitleColumn}>
+                <ThemedText style={styles.cardTitle} setColor={theme.title}>
+                  Plan and review your weeks
+                </ThemedText>
+                <ThemedText style={styles.cardSubtitle} setColor={theme.text}>
+                  Every day you have trained, planned or been ill.
+                </ThemedText>
+              </View>
+              <ChevronRight
+                width={18}
+                height={18}
+                color={theme.quietText}
+                thickness={2}
+              />
+            </View>
+
+            <View style={styles.chipsRow}>
+              <View
+                style={[styles.chip, { backgroundColor: neutralChipBackground }]}
+              >
+                <ThemedText style={styles.chipText} setColor={theme.text}>
+                  <ThemedText style={styles.chipText} setColor={theme.title}>
+                    {weekSummary.planned === null ? "–" : weekSummary.planned}
+                  </ThemedText>{" "}
+                  this week
+                </ThemedText>
+              </View>
+
+              {weekSummary.completed ? (
+                <View
+                  style={[styles.chip, { backgroundColor: orangeChipBackground }]}
+                >
+                  <ThemedText style={styles.chipText} setColor={primaryTextColor}>
+                    {weekSummary.completed} done
+                  </ThemedText>
+                </View>
+              ) : null}
+            </View>
+          </View>
+        </TouchableOpacity>
+
         <View style={styles.section}>
           <ThemedText style={styles.sectionEyebrow} setColor={theme.text}>
             Tools
@@ -227,7 +414,8 @@ const ExerciseLibraryPage = () => {
               <Image
                 source={programsCoverImage}
                 resizeMode="cover"
-                style={{ width: "100%", height: "100%" }}
+                style={styles.coverImage}
+                fadeDuration={0}
               />
               <CoverGradient
                 color={theme.cardBackground}
@@ -311,7 +499,8 @@ const ExerciseLibraryPage = () => {
               <Image
                 source={workoutsCoverImage}
                 resizeMode="cover"
-                style={{ width: "100%", height: "100%" }}
+                style={styles.coverImage}
+                fadeDuration={0}
               />
               <CoverGradient
                 color={theme.cardBackground}

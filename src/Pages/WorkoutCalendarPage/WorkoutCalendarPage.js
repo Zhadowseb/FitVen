@@ -16,6 +16,7 @@ import styles from "./WorkoutCalendarPageStyle";
 import { programService } from "../../Services";
 import { Colors } from "../../Resources/GlobalStyling/colors";
 import WorkoutCopyTargetModal from "../../Resources/Components/WorkoutCopyTargetModal";
+import PageSummary from "../../Resources/Components/PageSummary/PageSummary";
 import ArrowLeft from "../../Resources/Icons/UI-icons/ArrowLeft";
 import Checkmark from "../../Resources/Icons/UI-icons/Checkmark";
 import ChevronRight from "../../Resources/Icons/UI-icons/ChevronRight";
@@ -543,6 +544,54 @@ const WorkoutCalendarPage = () => {
 
   // Only the loading state: the workout counts live on each week's own line.
   const monthSummaryText = isLoading ? "Loading..." : "";
+
+  // What the month on screen adds up to. The grid below shows which days; this
+  // says how many, which is the question people open a calendar with.
+  const visibleMonthPage = monthPages[visibleMonthIndex];
+  const monthSummary = useMemo(() => {
+    if (isLoading || !visibleMonthPage) {
+      return { planned: null, completed: null, sick: null, monthName: "" };
+    }
+
+    const monthDates = new Set(
+      visibleMonthPage.weeks
+        .flat()
+        .filter((day) => day.inMonth)
+        .map((day) => day.dateLabel)
+    );
+    let planned = 0;
+    let completed = 0;
+
+    for (const [dateLabel, dateWorkouts] of workoutsByDate) {
+      if (!monthDates.has(dateLabel)) {
+        continue;
+      }
+
+      planned += dateWorkouts.length;
+      completed += dateWorkouts.filter(
+        (workout) => Number(workout.done) === 1
+      ).length;
+    }
+
+    let sick = 0;
+
+    for (const dateLabel of sickDates) {
+      if (monthDates.has(dateLabel)) {
+        sick += 1;
+      }
+    }
+
+    return {
+      planned,
+      completed,
+      sick,
+      // Title case, because the summary reads it as a sentence rather than as
+      // the all-caps heading the grid uses.
+      monthName:
+        visibleMonthPage.title.charAt(0) +
+        visibleMonthPage.title.slice(1).toLowerCase(),
+    };
+  }, [isLoading, sickDates, visibleMonthPage, workoutsByDate]);
   // Derived, not stored: the sheet keeps showing the truth after a workout is
   // deleted or copied, without having to be reopened.
   const selectedDayWorkouts = selectedCalendarDay
@@ -1169,6 +1218,46 @@ const WorkoutCalendarPage = () => {
           ) : null}
         </View>
       </ThemedHeader>
+
+      {!errorMessage ? (
+        <PageSummary
+          style={styles.pageSummary}
+          // The eyebrow says what the numbers cover, not what the page is
+          // called. "Calendar" is already the page header and "SEPTEMBER 2026"
+          // is already the grid heading a few pixels below; either would have
+          // been the same label twice in a row.
+          eyebrow="Month"
+          title={
+            monthSummary.planned === null
+              ? "Loading..."
+              : monthSummary.planned === 0
+                ? `Nothing planned in ${monthSummary.monthName}`
+                : monthSummary.completed >= monthSummary.planned
+                  ? `${monthSummary.monthName} complete`
+                  : `${
+                      monthSummary.planned - monthSummary.completed
+                    } left in ${monthSummary.monthName}`
+          }
+          stats={[
+            {
+              key: "planned",
+              value: monthSummary.planned,
+              label: "Planned",
+            },
+            {
+              key: "completed",
+              value: monthSummary.completed,
+              label: "Completed",
+              tone: "primary",
+            },
+            {
+              key: "sick",
+              value: monthSummary.sick,
+              label: "Sick days",
+            },
+          ]}
+        />
+      ) : null}
 
       {errorMessage ? (
         <ThemedStateBlock

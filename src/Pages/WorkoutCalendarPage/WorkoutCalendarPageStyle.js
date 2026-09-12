@@ -32,6 +32,10 @@ export default StyleSheet.create({
   nextMonthIcon: {
     transform: [{ rotate: "180deg" }],
   },
+  pageSummary: {
+    marginHorizontal: 20,
+    marginBottom: 4,
+  },
   monthPager: {
     flex: 1,
   },
