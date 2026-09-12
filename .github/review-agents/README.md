@@ -30,14 +30,21 @@ pull_request (opened, synchronize, reopened, ready_for_review)
 
 1. Tilføj ét af to repository secrets under **Settings → Secrets and
    variables → Actions**:
-   - `ANTHROPIC_API_KEY` — en API-nøgle fra Claude Console. Uafhængig af
-     abonnement, udløber ikke, faktureres pr. forbrug.
-   - `CLAUDE_CODE_OAUTH_TOKEN` — et token fra `claude setup-token`, der
-     bruger et Pro/Max-abonnement i stedet for API-kredit. Skal fornys
-     jævnligt.
+   - `CLAUDE_CODE_OAUTH_TOKEN` — **det er den, der bruges her.** Genereres
+     med `claude setup-token` i en terminal og kører på Pro/Max-abonnementet
+     i stedet for API-kredit. Den er bundet til den konto, der lavede den,
+     den udløber og skal fornys, og forbruget deles med din egen lokale
+     Claude Code.
+   - `ANTHROPIC_API_KEY` — en API-nøgle fra Claude Console. Udløber ikke og
+     er uafhængig af abonnementet, men faktureres pr. forbrug.
 
-   Workflowet tager den, der findes. Er ingen af dem sat, springer
-   review-jobbene over uden at fejle, og kørslen skriver en advarsel.
+   Workflowet tager den, der findes, så der skal ikke ændres en linje for at
+   skifte. Er ingen af dem sat, springer review-jobbene over uden at fejle,
+   og kørslen skriver en advarsel.
+
+   Når tokenet udløber, fejler alle otte agenter på én gang. Den samlende
+   agent er instrueret i at skrive netop det øverst i PR-kommentaren i
+   stedet for at lade det ligne otte tomme reviews.
 
 2. Intet andet. Workflowet poster selv kommentaren med det indbyggede
    `GITHUB_TOKEN`, så Claude GitHub App'en behøver ikke være installeret.
@@ -60,9 +67,15 @@ hurtige pushes ikke betaler for otte agenter flere gange.
 ## Hvad det koster
 
 Otte agenter plus en samlende agent pr. kørsel, hver begrænset af
-`--max-turns`. Prisen følger PR'ens størrelse, fordi diffet er det, de
-læser. Vil du skrue ned, er de tre knapper: færre agenter i matrixen, en
-lavere `--max-turns`, eller færre triggere end `synchronize`.
+`--max-turns`. Forbruget følger PR'ens størrelse, fordi diffet er det, de
+læser.
+
+På et abonnements-token tæller det i den samme forbrugsgrænse som din egen
+Claude Code. Derfor kører matrixen med `max-parallel: 4` frem for alle otte
+på én gang — det halverer ikke forbruget, men det holder kørslen fra at
+ramme grænsen i ét spring. Vil du skrue ned på selve forbruget, er der tre
+knapper: færre agenter i matrixen, en lavere `--max-turns`, eller at droppe
+`synchronize` fra triggerne, så der kun reviewes ved åbning af PR'en.
 
 ## Hvorfor mandaterne er skarpt adskilt
 

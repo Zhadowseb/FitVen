@@ -29,6 +29,12 @@ stoles på, og at det, der ikke betyder noget, er væk.
    den, så skriv det. En manglende rapport må aldrig læses som "ingen
    indvendinger".
 
+   Mangler **alle otte** rapporter, er det ikke otte tilfældige fejl. Så er
+   det næsten altid legitimationsoplysningerne: et `CLAUDE_CODE_OAUTH_TOKEN`
+   udløber og skal fornys med `claude setup-token`. Skriv det direkte øverst
+   i rapporten som det eneste punkt — det er det, læseren skal handle på, og
+   der er intet review at rapportere.
+
 ## Den samlede vurdering
 
 Vælg én:

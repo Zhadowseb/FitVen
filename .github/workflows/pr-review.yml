@@ -147,6 +147,12 @@ jobs:
     timeout-minutes: 25
     strategy:
       fail-fast: false
+      # Fire ad gangen, ikke otte. Et abonnements-token deler forbrugsgraense
+      # med din egen Claude Code, og otte samtidige sessioner er den
+      # hurtigste vej til at blive rate-limited midt i et review. Koerslen
+      # tager ca. dobbelt saa lang tid og bliver til gengaeld faerdig.
+      # Betaler du med en API-noegle i stedet, kan den saettes op til 8.
+      max-parallel: 4
       matrix:
         agent:
           - quality-assurance
