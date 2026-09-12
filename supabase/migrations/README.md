@@ -45,6 +45,7 @@ behind by accident.
 | `20260905190000_rpc-hardening.sql` | yes |
 | `20260906091500_fix-watcher-trigger-permissions.sql` | yes |
 | `20260907110000_exercise-favourites.sql` | yes |
+| `20260912120000_content-moderation.sql` | **no - run this before the next store submission** |
 
 `20260905113510_drop-unused-template-tables.sql` is optional: it drops the seven
 `*_template` tables, and only if they are genuinely empty. Run it or delete it.

@@ -9,7 +9,7 @@ import {
 
 import { Colors } from "../GlobalStyling/colors";
 import { useAuth } from "../../Contexts/AuthContext";
-import { socialPostService } from "../../Services";
+import { moderationService, socialPostService } from "../../Services";
 import {
   ThemedBottomSheet,
   ThemedButton,
@@ -94,6 +94,14 @@ export default function EditPostNoteSheet({ post, onClose, onSaved }) {
 
     try {
       setSaving(true);
+
+      // The database refuses this anyway; asking first turns a failed write
+      // into a sentence before the note is sent.
+      if (!(await moderationService.isTextAllowed(note))) {
+        Alert.alert("Could not save post", moderationService.BLOCKED_TEXT_MESSAGE);
+        return;
+      }
+
       await socialPostService.updateWorkoutSummaryPostNote({
         user,
         postId,
