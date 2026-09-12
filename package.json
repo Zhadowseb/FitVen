@@ -10,7 +10,7 @@
     "android:dev": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "test": "node scripts/check-agent-docs.js && node scripts/check-imports.js && node scripts/check-undeclared.js && node scripts/check-privacy-policy.js && node scripts/build-privacy-policy-page.js --check && npm run test:cloud-sync-fields && npm run test:secure-session && npm run test:set-carry-over && npm run test:pr-index && npm run test:microcycle-days && npm run test:next-workout && npm run test:sync-upload && npm run test:sync-watchers && npm run test:delete-sticks && npm run test:db-repairs && npm run test:recent-exercises && npm run test:custom-exercise && npm run test:location && npm run test:run-intervals && npm run test:run-display && npm run test:program-progress && npm run test:workout-finish && npm run test:profile-birthdate && npm run test:heart-rate-settings && npm run test:ble-heart-rate && npm run test:notifications && npm run test:exercise-map && npm run test:ugc-safety && npm run test:records-insights",
+    "test": "node scripts/check-agent-docs.js && node scripts/check-imports.js && node scripts/check-undeclared.js && node scripts/check-privacy-policy.js && node scripts/build-privacy-policy-page.js --check && npm run test:cloud-sync-fields && npm run test:secure-session && npm run test:set-carry-over && npm run test:pr-index && npm run test:microcycle-days && npm run test:next-workout && npm run test:sync-upload && npm run test:sync-watchers && npm run test:delete-sticks && npm run test:db-repairs && npm run test:recent-exercises && npm run test:custom-exercise && npm run test:location && npm run test:run-intervals && npm run test:run-display && npm run test:program-progress && npm run test:workout-finish && npm run test:profile-birthdate && npm run test:heart-rate-settings && npm run test:ble-heart-rate && npm run test:notifications && npm run test:exercise-map && npm run test:ugc-safety && npm run test:expanded-height && npm run test:records-insights",
     "docs:check": "node scripts/check-agent-docs.js",
     "version:auto": "node scripts/version.js auto",
     "version:branch": "node scripts/version.js branch",
@@ -46,6 +46,7 @@
     "test:recent-exercises": "node scripts/test-recent-exercises.js",
     "build:privacy-policy": "node scripts/build-privacy-policy-page.js",
     "undeclared:check": "node scripts/check-undeclared.js",
+    "test:expanded-height": "node scripts/test-expanded-height.js",
     "test:ugc-safety": "node scripts/test-ugc-safety.js",
     "test:exercise-map": "node scripts/test-exercise-map.js",
     "test:records-insights": "node scripts/test-records-insights.js"

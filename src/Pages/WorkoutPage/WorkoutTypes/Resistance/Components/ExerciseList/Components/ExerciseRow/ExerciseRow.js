@@ -24,6 +24,7 @@ import {
   ThemedTitle,
 } from "@resources/ThemedComponents";
 import PanelSettingsModal from "./PanelSettingsModal";
+import { shouldStoreExpandedHeight } from "./expandedHeightRule";
 import { weightliftingService } from "@services";
 import { useExerciseViewSettings } from "@contexts/ExerciseViewSettingsContext";
 import ReanimatedAnimated, {
@@ -1031,9 +1032,13 @@ const ExerciseRow = ({
               onLayout={(event) => {
                 const { height } = event.nativeEvent.layout;
 
-                // Only grow the stored height: reading it back while the
-                // collapse plays would shrink the target to zero.
-                if (height > 0 && height > expandedHeight) {
+                if (
+                  shouldStoreExpandedHeight({
+                    measuredHeight: height,
+                    storedHeight: expandedHeight,
+                    isExpanded,
+                  })
+                ) {
                   setExpandedHeight(height);
                 }
               }}
