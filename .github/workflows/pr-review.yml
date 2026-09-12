@@ -1,0 +1,388 @@
+name: PR Review Agents
+
+# Otte review-agenter laeser den samme PR parallelt, hver med sit eget mandat.
+# En niende agent samler rapporterne til en enkelt kommentar paa PR'en.
+#
+# Mandaterne ligger i .github/review-agents/*.md. Rediger dem der - denne fil
+# skal kun roeres, naar en agent skal tilfoejes eller fjernes.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: "PR-nummer der skal reviewes"
+        required: true
+        type: string
+
+concurrency:
+  group: pr-review-${{ github.event.pull_request.number || inputs.pr }}
+  cancel-in-progress: true
+
+# Laveste faellesnaevner. Kun aggregate skriver noget, og den haever selv
+# sine rettigheder. Isaer checks koerer vilkaarlig kode fra PR'en via
+# npm ci og npm test og skal ikke kunne skrive nogen steder.
+permissions:
+  contents: read
+
+env:
+  REVIEW_MODEL: claude-sonnet-5
+  SUMMARY_MODEL: claude-opus-5
+  COMMENT_MARKER: "<!-- fitven-ai-review -->"
+
+jobs:
+  # --------------------------------------------------------------- context --
+  # Henter diffet en gang og deler det med alle agenter, saa de ser praecis
+  # det samme og ingen af dem bruger tid paa at grave det frem selv.
+  context:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false
+    outputs:
+      pr: ${{ steps.pr.outputs.number }}
+      has_credentials: ${{ steps.creds.outputs.has_credentials }}
+    steps:
+      - id: creds
+        env:
+          API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          # Laengden, ikke vaerdien. En secret der findes med en tom vaerdi
+          # ser praecis ud som en der ikke findes, og det kostede en time
+          # foerste gang. Et token er typisk 100+ tegn; 0 betyder at
+          # "Paste your secret:" fik en tom streng.
+          echo "ANTHROPIC_API_KEY: ${#API_KEY} tegn"
+          echo "CLAUDE_CODE_OAUTH_TOKEN: ${#OAUTH_TOKEN} tegn"
+
+          if [ -n "$API_KEY" ] || [ -n "$OAUTH_TOKEN" ]; then
+            echo "has_credentials=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_credentials=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Hverken ANTHROPIC_API_KEY eller CLAUDE_CODE_OAUTH_TOKEN har en vaerdi. Enten er secret'en ikke sat, eller ogsaa blev den sat til en tom streng. Review-agenterne springes over."
+          fi
+
+      - id: pr
+        run: echo "number=${{ github.event.pull_request.number || inputs.pr }}" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ steps.pr.outputs.number }}/head
+          fetch-depth: 0
+
+      - name: Saml PR-kontekst
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ steps.pr.outputs.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          mkdir -p pr-context
+
+          BASE_BRANCH=$(gh pr view "$PR" --repo "$REPO" --json baseRefName --jq .baseRefName)
+          git fetch --no-tags origin "$BASE_BRANCH"
+          BASE_SHA=$(git merge-base "origin/$BASE_BRANCH" HEAD)
+          echo "Base: $BASE_BRANCH ($BASE_SHA)"
+
+          {
+            gh pr view "$PR" --repo "$REPO" --json number,title,author,baseRefName,headRefName,additions,deletions,changedFiles \
+              --jq '"# PR #\(.number) - \(.title)\n\n- Forfatter: \(.author.login)\n- Branch: `\(.headRefName)` -> `\(.baseRefName)`\n- Omfang: \(.changedFiles) filer, +\(.additions) / -\(.deletions)\n"'
+            echo
+            echo "## Beskrivelse"
+            echo
+            gh pr view "$PR" --repo "$REPO" --json body --jq '.body // "(ingen beskrivelse)"'
+            echo
+            echo "## Aendrede filer"
+            echo
+            echo '```'
+            git diff --stat "$BASE_SHA...HEAD"
+            echo '```'
+          } > pr-context/pr-meta.md
+
+          git diff --name-status "$BASE_SHA...HEAD" > pr-context/changed-files.txt
+          git diff "$BASE_SHA...HEAD" > pr-context/pr.diff
+
+          # Et kaempe diff braender kontekstvinduet uden at give bedre review.
+          SIZE=$(wc -c < pr-context/pr.diff)
+          if [ "$SIZE" -gt 700000 ]; then
+            head -c 700000 pr-context/pr.diff > pr-context/pr.diff.trimmed
+            printf '\n\n[AFKORTET: diffet fylder %s bytes. Laes filerne direkte i repoet for resten.]\n' "$SIZE" >> pr-context/pr.diff.trimmed
+            mv pr-context/pr.diff.trimmed pr-context/pr.diff
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pr-context
+          path: pr-context/
+          retention-days: 14
+
+  # ---------------------------------------------------------------- checks --
+  # De deterministiske tjek. Billige, sikre, og de giver agenterne fakta at
+  # laene sig op ad i stedet for at gaette paa om testene koerer.
+  checks:
+    runs-on: ubuntu-latest
+    needs: context
+    timeout-minutes: 20
+    outputs:
+      npm_test: ${{ steps.run.outcome }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ needs.context.outputs.pr }}/head
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - id: run
+        continue-on-error: true
+        run: npm test 2>&1 | tee npm-test.log
+
+      # Agenterne bliver bedt om at laene sig op ad testresultatet, saa de
+      # skal ogsaa have det. Det koster de ~40 sekunder, checks tager.
+      - name: Skriv testresultatet til agenterne
+        if: always()
+        run: |
+          mkdir -p checks-context
+          {
+            echo "# Automatiske tjek"
+            echo
+            echo "- npm test: ${{ steps.run.outcome }}"
+            echo
+            if [ "${{ steps.run.outcome }}" != "success" ] && [ -s npm-test.log ]; then
+              echo "De sidste 60 linjer af loggen:"
+              echo
+              echo '```'
+              tail -60 npm-test.log
+              echo '```'
+            else
+              echo "Fuld log ligger i artifact npm-test-log paa denne workflow-koersel."
+            fi
+          } > checks-context/checks.md
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: checks-context
+          path: checks-context/
+          retention-days: 14
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: npm-test-log
+          path: npm-test.log
+          retention-days: 14
+
+  # ---------------------------------------------------------------- review --
+  # En agent pr. mandat. fail-fast: false, saa en agent der fejler ikke
+  # tager de syv andre med sig.
+  review:
+    runs-on: ubuntu-latest
+    needs: [context, checks]
+    # always(), saa et faldet checks-job ikke aflyser hele reviewet - det er
+    # netop der, en agent har mest at sige.
+    if: always() && needs.context.outputs.has_credentials == 'true'
+    permissions:
+      contents: read
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      # Fire ad gangen, ikke otte. Et abonnements-token deler forbrugsgraense
+      # med din egen Claude Code, og otte samtidige sessioner er den
+      # hurtigste vej til at blive rate-limited midt i et review. Koerslen
+      # tager ca. dobbelt saa lang tid og bliver til gengaeld faerdig.
+      # Betaler du med en API-noegle i stedet, kan den saettes op til 8.
+      max-parallel: 4
+      matrix:
+        agent:
+          - quality-assurance
+          - testing
+          - security
+          - architecture
+          - code-design
+          - performance
+          - ui-usability
+          - design
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ needs.context.outputs.pr }}/head
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: pr-context
+          path: pr-context
+
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: checks-context
+          path: pr-context
+
+      - run: mkdir -p reports
+
+      - uses: anthropics/claude-code-action@v1
+        continue-on-error: true
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          prompt: |
+            Du er PR-review-agenten "${{ matrix.agent }}" for dette repository.
+
+            1. Laes `.github/review-agents/_shared.md`. Den indeholder de faelles
+               regler, alvorlighedsskalaen og det praecise rapportformat.
+            2. Laes `.github/review-agents/${{ matrix.agent }}.md`. Det er dit
+               mandat. Hold dig strengt inden for det - syv andre agenter
+               daekker resten, og overlap goer den samlede rapport ubrugelig.
+            3. Laes `pr-context/pr-meta.md`, `pr-context/checks.md` (resultatet
+               af `npm test` for denne PR) og `pr-context/pr.diff`.
+            4. Aabn de aendrede filer i repoet, naar diffet ikke er nok til at
+               afgoere om noget er en fejl. Laes ogsaa den naermeste
+               `AGENTS.md` for de mapper aendringen roerer.
+            5. Skriv rapporten til `reports/${{ matrix.agent }}.md` i praecis
+               det format `_shared.md` beskriver.
+
+            Skriv kun den ene fil. Ret ikke i kildekoden, og opret ikke commits.
+          claude_args: |
+            --model ${{ env.REVIEW_MODEL }}
+            --max-turns 40
+            --allowedTools "Read,Glob,Grep,Write,Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(ls:*),Bash(wc:*),Bash(mkdir:*)"
+
+      - name: Sikr at der findes en rapport
+        if: always()
+        run: |
+          REPORT="reports/${{ matrix.agent }}.md"
+          if [ ! -s "$REPORT" ]; then
+            printf '# %s\n\n**Status:** agenten afleverede ingen rapport. Se workflow-loggen for aarsagen.\n' "${{ matrix.agent }}" > "$REPORT"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: review-${{ matrix.agent }}
+          path: reports/${{ matrix.agent }}.md
+          retention-days: 14
+
+  # ------------------------------------------------------------- aggregate --
+  # Den samlende agent. Laeser alle otte rapporter, fjerner dubletter og
+  # stoej, prioriterer, og skriver den ene rapport du faktisk laeser.
+  aggregate:
+    runs-on: ubuntu-latest
+    needs: [context, checks, review]
+    if: always() && needs.context.outputs.has_credentials == 'true'
+    # Det eneste job der skriver noget udadtil.
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ needs.context.outputs.pr }}/head
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: pr-context
+          path: pr-context
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: review-*
+          path: reports
+          merge-multiple: true
+
+      # Samme fil som agenterne fik, saa rapporten og de otte rapporter ikke
+      # kan komme til at sige noget forskelligt om den samme testkoersel.
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: checks-context
+          path: pr-context
+
+      - name: Sikr at der findes en status for de automatiske tjek
+        env:
+          CHECKS_JOB: ${{ needs.checks.result }}
+        run: |
+          if [ ! -s pr-context/checks.md ]; then
+            printf '# Automatiske tjek\n\n- npm test: ikke koert (job-status: %s)\n' "$CHECKS_JOB" \
+              > pr-context/checks.md
+          fi
+
+      - uses: anthropics/claude-code-action@v1
+        continue-on-error: true
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          prompt: |
+            Du er den samlende agent. Otte review-agenter har laest den samme
+            pull request, og deres rapporter ligger i `reports/`.
+
+            1. Laes `.github/review-agents/aggregate.md`. Det er dit mandat og
+               det praecise format for den samlede rapport.
+            2. Laes alle filer i `reports/`, samt `pr-context/pr-meta.md` og
+               `pr-context/checks.md`.
+            3. Verificer stikproevevis: aabn filen og slaa paastanden efter,
+               foer du loefter et fund op som blokerende. En agent der tager
+               fejl skal ikke ende oeverst i rapporten.
+            4. Skriv den samlede rapport til `final-report.md`.
+
+            Rapporten skal vaere paa dansk og under 25000 tegn. Ret ikke i
+            kildekoden.
+          claude_args: |
+            --model ${{ env.SUMMARY_MODEL }}
+            --max-turns 40
+            --allowedTools "Read,Glob,Grep,Write,Bash(ls:*),Bash(wc:*)"
+
+      - name: Post samlet rapport som kommentar
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR: ${{ needs.context.outputs.pr }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          MARKER: ${{ env.COMMENT_MARKER }}
+        run: |
+          set -euo pipefail
+
+          if [ ! -s final-report.md ]; then
+            printf '## AI-review kunne ikke fuldfoeres\n\nDen samlende agent afleverede ingen rapport. De enkelte agentrapporter ligger som artifacts paa koerslen.\n' > final-report.md
+          fi
+
+          # GitHub afviser kommentarer over 65536 tegn.
+          head -c 60000 final-report.md > body.md
+          {
+            printf '\n\n---\n'
+            printf '<sub>Genereret af 8 review-agenter og en samlende agent. '
+            printf '<a href="%s">Workflow-koersel</a> - enkeltrapporterne ligger som artifacts der.</sub>\n' "$RUN_URL"
+          } >> body.md
+
+          { printf '%s\n' "$MARKER"; cat body.md; } > comment.md
+
+          # --paginate koerer jq-filteret pr. side, saa der kan komme et id
+          # pr. side. Den aeldste er den, vi har skrevet i foerste omgang.
+          EXISTING=$(gh api "repos/$REPO/issues/$PR/comments" --paginate \
+            --jq "map(select(.body | startswith(\"$MARKER\"))) | .[0].id // empty" \
+            | head -1 || true)
+
+          if [ -n "$EXISTING" ]; then
+            gh api -X PATCH "repos/$REPO/issues/comments/$EXISTING" -F body=@comment.md > /dev/null
+            echo "Opdaterede kommentar $EXISTING."
+          else
+            gh api -X POST "repos/$REPO/issues/$PR/comments" -F body=@comment.md > /dev/null
+            echo "Oprettede ny kommentar."
+          fi
+
+          cat final-report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: review-samlet
+          path: |
+            final-report.md
+            reports/
+          retention-days: 30
