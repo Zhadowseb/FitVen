@@ -23,6 +23,7 @@ import {
   deleteLocalWorkoutHierarchy,
   createParentCloudIdCache,
   ensureDayCloudIdentity,
+  ensureWorkoutTypeInstanceCloudIdentity,
   getAuthenticatedUserId,
   getComparableWorkoutTypeInstanceSnapshot,
   isCloudSnapshotDeleted,
@@ -73,7 +74,7 @@ export async function processQueuedWorkoutTypeInstanceDeletes(db, userId) {
 export async function uploadDirtyWorkoutTypeInstances(
   db,
   userId,
-  { allowParentRepair = true } = {}
+  { allowParentRepair = true, workoutId = null } = {}
 ) {
   const [localWorkouts, localDays] = await Promise.all([
     programRepository.getWorkoutsForCloudSync(db, { dirtyOnly: true }),
@@ -87,6 +88,12 @@ export async function uploadDirtyWorkoutTypeInstances(
   let requiresDayRepair = false;
 
   for (const localWorkout of localWorkouts) {
+    if (
+      workoutId !== null &&
+      Number(localWorkout.workout_id) !== Number(workoutId)
+    ) {
+      continue;
+    }
     if (Number(localWorkout.needs_sync) !== 1) {
       continue;
     }
@@ -165,10 +172,35 @@ export async function uploadDirtyWorkoutTypeInstances(
     await syncDaysWithCloud(db);
     uploadedCount += await uploadDirtyWorkoutTypeInstances(db, userId, {
       allowParentRepair: false,
+      workoutId,
     });
   }
 
   return uploadedCount;
+}
+
+// Called inside the shared sync queue by the posting service. Existing cloud
+// identities need no upload, and a new workout never uploads its siblings.
+export async function prepareWorkoutForSummaryPost(db, workoutId) {
+  const userId = await getAuthenticatedUserId();
+  if (!userId) {
+    return;
+  }
+
+  const workouts = await programRepository.getWorkoutsForCloudSync(db);
+  const workout = workouts.find(
+    (row) => Number(row.workout_id) === Number(workoutId)
+  );
+  if (!workout || workout.deleted_at || Number(workout.done) !== 1) {
+    return;
+  }
+
+  const cloudId = await ensureWorkoutTypeInstanceCloudIdentity(db, userId, workout);
+  if (cloudId !== null) {
+    return;
+  }
+
+  await uploadDirtyWorkoutTypeInstances(db, userId, { workoutId });
 }
 
 async function reconcileWorkoutTypeInstancesFromCloud(db, userId) {

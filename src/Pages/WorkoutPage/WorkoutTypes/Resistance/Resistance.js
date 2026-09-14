@@ -22,7 +22,7 @@ import {
   ThemedTextInput,
   ThemedView,
   ThemedText,
-} from "../../../../Resources/ThemedComponents";
+} from "@resources/ThemedComponents";
 import {
   formatElapsedTime,
   getCurrentStoredTimestampSeconds,
@@ -38,7 +38,7 @@ import {
   socialPostService,
   weightliftingService,
   workoutService,
-} from "../../../../Services";
+} from "@services";
 import { useAuth } from "../../../../Contexts/AuthContext";
 import { useExerciseViewSettings } from "../../../../Contexts/ExerciseViewSettingsContext";
 
@@ -78,6 +78,7 @@ const Resistance = ({
   const [postConfirmVisible, setPostConfirmVisible] = useState(false);
   const [postNote, setPostNote] = useState("");
   const [isPostingSummary, setIsPostingSummary] = useState(false);
+  const [postError, setPostError] = useState("");
   useEffect(() => {
     if (collapsedExerciseCardLayout === "classic") {
       setShowCollapsedSets(true);
@@ -453,6 +454,7 @@ const Resistance = ({
       }
 
       setPostNote("");
+      setPostError("");
       setPostConfirmVisible(true);
       return true;
     } catch (error) {
@@ -468,6 +470,7 @@ const Resistance = ({
 
     try {
       setIsPostingSummary(true);
+      setPostError("");
       await workoutService.repostWorkoutSummaryPost(db, {
         workoutId: workout_id,
         note: postNote,
@@ -475,7 +478,9 @@ const Resistance = ({
       setPostConfirmVisible(false);
     } catch (error) {
       console.error("Could not post the workout summary:", error);
-      setPostConfirmVisible(false);
+      setPostError(
+        error?.message ?? "The workout could not be posted. Please try again."
+      );
     } finally {
       setIsPostingSummary(false);
     }
@@ -952,7 +957,9 @@ const Resistance = ({
         message={`${summaryLine(
           finishedSummary
         )}. Post it to your feed so the people who follow you can see it?`}
-        confirmLabel={isPostingSummary ? "Posting..." : "Post it"}
+        confirmLabel={
+          isPostingSummary ? "Posting..." : postError ? "Try again" : "Post it"
+        }
         cancelLabel="Keep it private"
         tone="positive"
         isWorking={isPostingSummary}
@@ -963,6 +970,11 @@ const Resistance = ({
           }
         }}
       >
+        {postError ? (
+          <ThemedText accessibilityRole="alert" setColor={theme.danger}>
+            {postError}
+          </ThemedText>
+        ) : null}
         <ThemedTextInput
           value={postNote}
           onChangeText={setPostNote}

@@ -1,8 +1,12 @@
 # Changelog
 
 ## [1.1.1] - Unreleased
-### Changed
-- Describe pending changes here.
+### Fixed
+- Posting a workout no longer waits for a full workout sync. Only a missing source workout is repaired, inside the shared sync queue, so another workout's invalid type cannot block an existing summary or a new workout upload.
+- A failed post after finishing a workout keeps the dialog and note open, shows the error, and offers Try again.
+- Published status survives unrelated profile/settings lookup failures. An unavailable post lookup shows an unknown status instead of falsely marking workouts unposted; newly posted cards retain the returned post id for editing.
+- Supabase permission and constraint errors retain their real messages instead of being reported as missing social tables.
+- Applied a separate, repeatable Supabase migration to restore missing built-in and legacy workout types, preserving existing catalog settings and read-only client access. The live catalog contained only Resistance and Run; Walk, Upperbody, Legs and StrengthTraining were added on 2026-09-15.
 
 ---
 ## [1.1.0] - 2026-09-16
