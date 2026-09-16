@@ -46,6 +46,7 @@ behind by accident.
 | `20260906091500_fix-watcher-trigger-permissions.sql` | yes |
 | `20260907110000_exercise-favourites.sql` | yes |
 | `20260912220000_ugc-safety.sql` | yes |
+| `20260916140000_terms-of-use.sql` | no |
 
 `20260905113510_drop-unused-template-tables.sql` is optional: it drops the seven
 `*_template` tables, and only if they are genuinely empty. Run it or delete it.
@@ -108,6 +109,12 @@ see another user's report:
 ```sql
 select * from public.user_reports where status = 'open' order by created_at;
 ```
+
+`20260916140000_terms-of-use.sql` has **not** been run. It adds the two columns
+the consent gate writes the terms acceptance to, and the trigger that raises an
+automatic report when somebody blocks an account. Both come from an App Review
+rejection under guideline 1.2; without the columns the gate cannot record an
+answer and asks again on every launch.
 
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to

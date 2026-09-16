@@ -25,6 +25,7 @@ import WorkoutPostsPage from './src/Pages/WorkoutPostsPage/WorkoutPostsPage';
 import MicrocyclePage from './src/Pages/MicrocyclePage/MicrocyclePage';
 import SearchPage from "./src/Pages/SearchPage/SearchPage";
 import PrivacyPolicyPage from "./src/Pages/PrivacyPolicyPage/PrivacyPolicyPage";
+import TermsOfUsePage from "./src/Pages/TermsOfUsePage/TermsOfUsePage";
 import SocialUserListPage from "./src/Pages/SocialUserListPage/SocialUserListPage";
 import WeekPage from './src/Pages/WeekPage/WeekPage';
 import WorkoutPage from './src/Pages/WorkoutPage/WorkoutPage';
@@ -290,6 +291,7 @@ function RootNavigator() {
                 <Stack.Screen name="OneRepMaxCalculatorPage" component={OneRepMaxCalculatorPage} options={{ headerShown: false }} />
                 <Stack.Screen name="WorkoutTypesSettingsPage" component={WorkoutTypesSettingsPage} options={{ headerShown: false }} />
                 <Stack.Screen name="PrivacyPolicyPage" component={PrivacyPolicyPage} options={{ headerShown: false }} />
+                <Stack.Screen name="TermsOfUsePage" component={TermsOfUsePage} options={{ headerShown: false }} />
                 <Stack.Screen
                   name={RUN_HEART_RATE_CHART_ROUTE}
                   component={RunHeartRateChartPage}
@@ -312,6 +314,7 @@ function RootNavigator() {
                     able to read this before they hand over an email address,
                     not only after they are signed in. */}
                 <Stack.Screen name="PrivacyPolicyPage" component={PrivacyPolicyPage} options={{ headerShown: false }} />
+                <Stack.Screen name="TermsOfUsePage" component={TermsOfUsePage} options={{ headerShown: false }} />
               </>
             )}
           </Stack.Navigator>

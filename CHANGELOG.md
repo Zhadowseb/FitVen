@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.1.0] - Unreleased
+### Added
+- **Terms of use, agreed to before an account can be created.** App Review rejected the app under guideline 1.2 with filtering, reporting, blocking and a published contact address all already in place, and named the missing piece: *"require that users agree to terms (EULA) and these terms must make it clear that there is no tolerance for objectionable content or abusive users"*. The zero-tolerance wording is therefore load-bearing, not decoration.
+- The register screen carries a required, unticked checkbox and a link to the full terms; the form refuses to submit without it. A pre-ticked box is not an agreement.
+- The consent gate now asks for both documents on one screen and records both in one write. Both or neither — somebody who has accepted one and not the other is a state nothing downstream knows how to read.
+- `web/terms/index.html` is generated from `src/Resources/Legal/termsOfUse.js` the same way the privacy page is, and `npm test` fails if the two have drifted. Two copies of an agreement drift, and which one a user accepted then becomes an open question.
+- **Blocking now tells the developer.** Apple asked for that too: a block raises an automatic report, marked `source = 'block'` so it can be told from one somebody actually tapped. Removing the blocked account from the feed instantly was already true — the block severs the follow in both directions, and everything a follower sees is gated on that row.
+- `scripts/test-terms-of-use.js` holds the clause in place: the no-tolerance wording in both the full text and the one line beside the checkbox, the register screen refusing to submit, the checkbox starting unticked, the gate comparing versions, and the block notification being wrapped so a failure cannot roll the block back.
+
+### Notes
+- **`supabase/migrations/20260916140000_terms-of-use.sql` has to be run before the next submission.** Without the two columns the gate cannot record an answer and asks again on every launch.
+- The block notification is wrapped in its own exception handler. An `after insert` trigger that raises rolls the statement back with it, and somebody asking to be left alone must not be refused because a notification failed — the lost notification is the smaller harm, and the block is still on record.
+- Apple reviewed on an iPad Air 11-inch (M3) despite `supportsTablet: false`. It drew no comment, but it is worth knowing that the declaration does not stop them.
+
+---
 ## [1.0.2] - 2026-09-13
 ### Added
 - **Reporting.** A Report action beside Block on the followers and following lists, with five reasons and an optional note. Reports land in `public.user_reports`, readable only by the person who filed them — the reported account cannot learn that it was reported or by whom, which is the difference between a report and the next round of the argument. There is no update or delete policy: a report is a record.

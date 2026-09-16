@@ -1372,7 +1372,9 @@ export async function getPrivacyConsent({ user }) {
 
   const { data, error } = await supabase
     .from(PROFILE_PRIVATE_TABLE)
-    .select("privacy_policy_version, privacy_policy_accepted_at")
+    .select(
+      "privacy_policy_version, privacy_policy_accepted_at, terms_version, terms_accepted_at"
+    )
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -1383,15 +1385,24 @@ export async function getPrivacyConsent({ user }) {
   return {
     version: data?.privacy_policy_version ?? null,
     acceptedAt: data?.privacy_policy_accepted_at ?? null,
+    termsVersion: data?.terms_version ?? null,
+    termsAcceptedAt: data?.terms_accepted_at ?? null,
   };
 }
 
-export async function acceptPrivacyPolicy({ user, version }) {
+/**
+ * Records acceptance of the privacy policy, the terms of use, or both.
+ *
+ * Both in one call because the gate asks for both on one screen: two writes
+ * would leave a window where somebody has agreed to one and not the other, and
+ * nothing in the app knows what to do with that state.
+ */
+export async function acceptPrivacyPolicy({ user, version, termsVersion }) {
   if (!user?.id) {
     throw new Error("You need to be signed in to accept the privacy policy.");
   }
 
-  if (!version) {
+  if (!version && !termsVersion) {
     throw new Error("Missing privacy policy version.");
   }
 
@@ -1401,19 +1412,28 @@ export async function acceptPrivacyPolicy({ user, version }) {
   await ensureOwnProfile(user);
 
   const acceptedAt = new Date().toISOString();
-  const { error } = await supabase.from(PROFILE_PRIVATE_TABLE).upsert(
-    {
-      user_id: user.id,
-      privacy_policy_version: version,
-      privacy_policy_accepted_at: acceptedAt,
-      updated_at: acceptedAt,
-    },
-    { onConflict: "user_id" }
-  );
+  const row = {
+    user_id: user.id,
+    updated_at: acceptedAt,
+  };
+
+  if (version) {
+    row.privacy_policy_version = version;
+    row.privacy_policy_accepted_at = acceptedAt;
+  }
+
+  if (termsVersion) {
+    row.terms_version = termsVersion;
+    row.terms_accepted_at = acceptedAt;
+  }
+
+  const { error } = await supabase
+    .from(PROFILE_PRIVATE_TABLE)
+    .upsert(row, { onConflict: "user_id" });
 
   if (error) {
     throw normalizeSocialError(error);
   }
 
-  return { version, acceptedAt };
+  return { version, termsVersion, acceptedAt };
 }
