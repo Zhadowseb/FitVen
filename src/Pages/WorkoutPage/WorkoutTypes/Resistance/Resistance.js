@@ -54,7 +54,6 @@ const Resistance = ({
   workout_id,
   date,
   workoutLabel,
-  workoutSubtitle,
   autoNamedLabel = null,
   workoutInstanceLabel,
   restartRequestKey,
@@ -655,16 +654,14 @@ const Resistance = ({
 
           {/* SPM-1: a strength workout names itself after the exercises put
               into it, so a session started as "Resistance" turns into "Push"
-              while the user is looking at it. That is intended, and now says
-              so - in this header, because this is the one a resistance workout
-              actually draws. */}
+              while the user is looking at it. That is intended, and says so
+              here, because this is the header a resistance workout draws.
+              The weekday and date used to sit in this slot when there was
+              nothing to announce. They are gone: you know what day you are
+              training, and the workout's name is the thing worth the space. */}
           {autoNamedLabel ? (
             <ThemedText style={styles.navDate} setColor={primaryTextColor} numberOfLines={1}>
               {`Named ${autoNamedLabel} after your exercises`}
-            </ThemedText>
-          ) : !!workoutSubtitle ? (
-            <ThemedText style={styles.navDate} setColor={quietText} numberOfLines={1}>
-              {workoutSubtitle}
             </ThemedText>
           ) : null}
 

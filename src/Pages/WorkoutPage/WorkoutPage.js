@@ -471,7 +471,6 @@ const WorkoutPage = ({ route }) => {
           workout_id={workout_id}
           date={workoutDate}
           workoutLabel={workoutLabel}
-          workoutSubtitle={workoutSubtitle}
           autoNamedLabel={autoNamedLabel}
           workoutInstanceLabel={workoutInstanceLabel}
           restartRequestKey={restartRequestKey}
