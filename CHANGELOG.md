@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.1.3] - Unreleased
+### Changed
+- `eas submit --platform ios` carries the App Store Connect app id in `eas.json`. Without it the command stops and asks, which a non-interactive run cannot answer, so every submission had to be driven by hand.
+
+---
 ## [1.1.2] - Unreleased
 ### Fixed
 - Posting a workout no longer waits for a full workout sync. Only a missing source workout is repaired, inside the shared sync queue, so another workout's invalid type cannot block an existing summary or a new workout upload.
