@@ -6,6 +6,7 @@ import { useNavigation } from "@react-navigation/native";
 import styles from "./RegisterPageStyle";
 import { Colors } from "../../Resources/GlobalStyling/colors";
 import { authService } from "../../Services";
+import { TERMS_SUMMARY } from "../../Resources/Legal/termsOfUse";
 import Checkmark from "../../Resources/Icons/UI-icons/Checkmark";
 import Cross from "../../Resources/Icons/UI-icons/Cross";
 import Eye from "../../Resources/Icons/UI-icons/Eye";
@@ -37,6 +38,7 @@ export default function RegisterPage() {
   const [retypePassword, setRetypePassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
+  const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
   const [createdAccount, setCreatedAccount] = useState(null);
   const [submitState, setSubmitState] = useState({
     status: "idle",
@@ -88,6 +90,13 @@ export default function RegisterPage() {
       errors.retypePassword = "Type the password again.";
     } else if (password !== retypePassword) {
       errors.retypePassword = "The two passwords are not the same.";
+    }
+
+    // Required, and deliberately not pre-ticked. App Review asks for the terms
+    // to be agreed to before registering, and an agreement nobody had to make
+    // is not one.
+    if (!hasAcceptedTerms) {
+      errors.terms = "You have to accept the terms to create an account.";
     }
 
     return errors;
@@ -323,6 +332,62 @@ export default function RegisterPage() {
               </ThemedCard>
 
               <View style={styles.actions}>
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: hasAcceptedTerms }}
+                  accessibilityLabel="I agree to the terms of use"
+                  onPress={() => setHasAcceptedTerms((accepted) => !accepted)}
+                  style={styles.termsRow}
+                >
+                  <View
+                    style={[
+                      styles.termsBox,
+                      {
+                        borderColor: fieldErrors.terms
+                          ? theme.danger
+                          : hasAcceptedTerms
+                            ? theme.primary
+                            : cardBorder,
+                        backgroundColor: hasAcceptedTerms
+                          ? theme.primary
+                          : "transparent",
+                      },
+                    ]}
+                  >
+                    {hasAcceptedTerms ? (
+                      <Checkmark width={13} height={13} color={theme.background} />
+                    ) : null}
+                  </View>
+
+                  <ThemedText style={styles.termsText} setColor={quietText}>
+                    I agree to the terms of use. {TERMS_SUMMARY}
+                  </ThemedText>
+                </TouchableOpacity>
+
+                {fieldErrors.terms ? (
+                  <View style={styles.errorRow}>
+                    <Cross width={15} height={15} color={theme.danger} />
+                    <ThemedText style={styles.errorText} setColor={theme.danger}>
+                      {fieldErrors.terms}
+                    </ThemedText>
+                  </View>
+                ) : null}
+
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  accessibilityRole="link"
+                  onPress={() => navigation.navigate("TermsOfUsePage")}
+                  style={styles.privacyLink}
+                >
+                  <ThemedText
+                    style={styles.privacyLinkText}
+                    setColor={quietText}
+                  >
+                    Read the full terms of use
+                  </ThemedText>
+                </TouchableOpacity>
+
                 <ThemedButton
                   title={isRegistering ? "Creating account..." : "Create account"}
                   onPress={handleRegister}
