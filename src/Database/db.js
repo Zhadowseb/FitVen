@@ -1457,7 +1457,20 @@ function applyOptInColumnDefaults(serializedColumns) {
   return JSON.stringify(nextColumns);
 }
 
+// Turns note, RPE and 1RM% off on rows written before they became opt-in.
+//
+// Once, not on every launch. It used to run unguarded, which made the three
+// columns impossible to keep rather than off by default: turn one on, and the
+// next start turned it off again. Worse, it fought the sync - the cloud copy
+// still said note was on, the pull wrote that back, and the next start stripped
+// it, forever. The columns kept reappearing, which is how this was found.
 async function migrateLegacyVisibleColumnDefaults(db) {
+  const metadataKey = "opt_in_visible_columns_v1";
+
+  if ((await getAppMetadataValue(db, metadataKey)) === "done") {
+    return;
+  }
+
   const targets = [
     { table: "Exercise_Instance", idColumn: "exercise_instance_id" },
     {
@@ -1488,6 +1501,8 @@ async function migrateLegacyVisibleColumnDefaults(db) {
       );
     }
   }
+
+  await setAppMetadataValue(db, metadataKey, "done");
 }
 
 async function migrateSetDeleteQueueSchema(db) {
