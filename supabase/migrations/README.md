@@ -47,7 +47,7 @@ behind by accident.
 | `20260907110000_exercise-favourites.sql` | yes |
 | `20260912220000_ugc-safety.sql` | yes |
 | `20260916140000_terms-of-use.sql` | yes |
-| `20260916210000_opt-in-column-defaults.sql` | no |
+| `20260916210000_opt-in-column-defaults.sql` | yes |
 
 `20260905113510_drop-unused-template-tables.sql` is optional: it drops the seven
 `*_template` tables, and only if they are genuinely empty. Run it or delete it.
@@ -121,7 +121,7 @@ Verified over the REST API with the anon key: `user_reports?select=source` and
 empty array rather than an unknown-column error, so the columns are there and
 row-level security is hiding the rows.
 
-`20260916210000_opt-in-column-defaults.sql` has **not** been run. It turns note,
+`20260916210000_opt-in-column-defaults.sql` was run on 2026-09-16. It turns note,
 RPE and 1RM% off in the saved column preferences, which the app's own repair has
 been doing locally for a while without the cloud copy ever being corrected. The
 preference table syncs both ways, so the device was cleaned and the next sync
