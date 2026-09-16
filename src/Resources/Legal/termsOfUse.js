@@ -35,7 +35,9 @@ export const TERMS_SUMMARY =
 export const TERMS_SECTIONS = [
   {
     title: "Who you are agreeing with",
-    body: `FitVen is run by a private individual rather than a company, so there is no CVR number.
+    body: `These terms of use are the end user licence agreement (EULA) between you and FitVen. You accept them when you create an account, and you cannot create one without accepting them.
+
+FitVen is run by a private individual rather than a company, so there is no CVR number.
 
 Sebastian Dalbjørn
 Ørnegårdsvej 61, 1. th.
