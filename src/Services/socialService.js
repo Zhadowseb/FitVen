@@ -443,10 +443,24 @@ function isMissingPrivateMaxHeartRateSourceError(error) {
 // cannot quietly stop covering everything if that string ever gains a field or
 // an operator. Letters and digits are unicode, so a name in any alphabet still
 // searches.
-function buildSearchFilter(query) {
+/**
+ * Cleans a search box into something search_profiles can use.
+ *
+ * `#` survives, because a username is `base#1234` and the four digits are the
+ * whole point of them: two people can both be `sebastian`, and the code is what
+ * tells them apart. Stripping it turned "sebastian#4471" into "sebastian 4471",
+ * which the server then closed up to "sebastian4471" - matching nobody, while
+ * the same search without the digits worked. Searching for exactly the person
+ * you were given failed, and searching vaguely succeeded.
+ *
+ * Everything else still becomes a space, which is only about keeping the two
+ * halves apart on the way over: search_profiles strips whitespace as well, so
+ * "anna.b" reaches the query as "annab" either way.
+ */
+export function buildSearchFilter(query) {
   return String(query ?? "")
     .replace(/^@+/, "")
-    .replace(/[^\p{L}\p{N} _-]/gu, " ")
+    .replace(/[^\p{L}\p{N}# _-]/gu, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
