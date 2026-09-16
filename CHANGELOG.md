@@ -1,12 +1,22 @@
 # Changelog
 
-## [1.1.1] - Unreleased
+## [1.1.2] - Unreleased
 ### Fixed
 - Posting a workout no longer waits for a full workout sync. Only a missing source workout is repaired, inside the shared sync queue, so another workout's invalid type cannot block an existing summary or a new workout upload.
 - A failed post after finishing a workout keeps the dialog and note open, shows the error, and offers Try again.
 - Published status survives unrelated profile/settings lookup failures. An unavailable post lookup shows an unknown status instead of falsely marking workouts unposted; newly posted cards retain the returned post id for editing.
 - Supabase permission and constraint errors retain their real messages instead of being reported as missing social tables.
 - Applied a separate, repeatable Supabase migration to restore missing built-in and legacy workout types, preserving existing catalog settings and read-only client access. The live catalog contained only Resistance and Run; Walk, Upperbody, Legs and StrengthTraining were added on 2026-09-15.
+
+---
+## [1.1.1] - Unreleased
+### Changed
+- **Run and Walk are gone from every list that offers a workout type**, rather than shown greyed out under a COMING SOON stamp. App Store review guideline 2.1 treats a control that announces a feature and then refuses it as an unfinished app, and it was not a control anyone could use in the meantime. Three places: the cards in the start sheet, the type list in Workout types settings, and the type filter in Your workouts.
+- **Workouts already recorded as Run or Walk are untouched.** They are the user's history, not an offer - this account has twenty of them - so those rows still appear in the calendar and the workout library, still carry the badge and still refuse to open.
+- `filterReleasedWorkoutTypes` in `workoutTypeAvailability.js` is the one way a list drops them, so shipping Run means editing `COMING_SOON_TYPES` and nothing else. The Run settings block in Workout types settings stays where it is for that day; it is simply unreachable until then.
+
+### Notes
+- Not verified on a device: the phone was disconnected when this was written. In particular the start sheet now has a single fresh-start card where it had three, and `freshCard` has `flex: 1`, so Resistance will stretch to the full width of the row. That is the layout doing what it was told, but nobody has looked at it.
 
 ---
 ## [1.1.0] - 2026-09-16
