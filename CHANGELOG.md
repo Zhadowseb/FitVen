@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.1.1] - Unreleased
+### Changed
+- Describe pending changes here.
+
+---
 ## [1.1.0] - 2026-09-16
 ### Added
 - **Terms of use, agreed to before an account can be created.** App Review rejected the app under guideline 1.2 with filtering, reporting, blocking and a published contact address all already in place, and named the missing piece: *"require that users agree to terms (EULA) and these terms must make it clear that there is no tolerance for objectionable content or abusive users"*. The zero-tolerance wording is therefore load-bearing, not decoration.
