@@ -54,43 +54,9 @@ export async function syncWorkoutTypesWithCloud(db) {
     throw error;
   }
 
-  let cloudRows = data ?? [];
-
-  // App-required types (e.g. Walk) must exist in the cloud catalog too:
-  // workout_type_instance.workout_type carries an FK to workout_type, so a
-  // type that only exists locally makes every instance push fail with 23503.
-  const cloudTypeNames = new Set(
-    cloudRows.map((row) => normalizeWorkoutType(row?.type)).filter(Boolean)
-  );
-  const missingRequiredTypes = REQUIRED_LOCAL_WORKOUT_TYPES.filter(
-    (workoutType) => !cloudTypeNames.has(workoutType.name)
-  );
-
-  if (missingRequiredTypes.length > 0) {
-    const { data: insertedRows, error: insertError } = await supabase
-      .from(WORKOUT_TYPE_CLOUD_TABLE)
-      .upsert(
-        missingRequiredTypes.map((workoutType) => ({
-          type: workoutType.name,
-          display_name: workoutType.displayName ?? workoutType.name,
-          is_active: Boolean(workoutType.isActive),
-        })),
-        { onConflict: "type" }
-      )
-      .select(WORKOUT_TYPE_CLOUD_SELECT);
-
-    if (insertError) {
-      // RLS may forbid catalog writes from the client. The local catalog
-      // still works, but instance pushes for these types keep failing until
-      // the rows are added server-side.
-      console.warn(
-        "Could not add required workout types to the cloud catalog:",
-        insertError
-      );
-    } else {
-      cloudRows = cloudRows.concat(insertedRows ?? []);
-    }
-  }
+  // The shared catalog is read-only for app users. Required and legacy types
+  // are seeded by migrations; a client upsert is rejected by its RLS policies.
+  const cloudRows = data ?? [];
 
   const workoutTypes = cloudRows
     .map(normalizeWorkoutTypeCatalogRow)

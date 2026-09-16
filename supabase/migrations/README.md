@@ -46,8 +46,17 @@ behind by accident.
 | `20260906091500_fix-watcher-trigger-permissions.sql` | yes |
 | `20260907110000_exercise-favourites.sql` | yes |
 | `20260912220000_ugc-safety.sql` | yes |
+| `20260915120000_repair-workout-type-catalog.sql` | yes |
 | `20260916140000_terms-of-use.sql` | yes |
 | `20260916210000_opt-in-column-defaults.sql` | yes |
+
+`20260915120000_repair-workout-type-catalog.sql` restores missing built-in and
+legacy workout types without changing existing rows or granting catalog writes
+to app users. Applied to FitVen on 2026-09-15: before the repair, only Resistance
+and Run existed. It added Walk, Upperbody, Legs and StrengthTraining.
+If a device still reports an unknown workout type afterwards, inspect that
+type's exact value; this migration intentionally does not invent catalog entries
+from arbitrary client input.
 
 `20260905113510_drop-unused-template-tables.sql` is optional: it drops the seven
 `*_template` tables, and only if they are genuinely empty. Run it or delete it.

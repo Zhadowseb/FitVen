@@ -480,13 +480,15 @@ export default function WorkoutSummaryCard({
               style={styles.postedBadgeText}
               setColor={post.isPosted ? theme.secondary : quietText}
             >
-              {post.isPosted ? "Posted" : "Not posted"}
+              {post.isPosted == null
+                ? "Status unavailable"
+                : post.isPosted ? "Posted" : "Not posted"}
             </ThemedText>
           </View>
 
           <View style={styles.footerSpacer} />
 
-          {!post.isPosted && onPost ? (
+          {post.isPosted === false && onPost ? (
             <TouchableOpacity
               activeOpacity={0.84}
               accessibilityRole="button"

@@ -34,7 +34,7 @@ import {
   ownWorkoutPostService,
   socialPostService,
   workoutService,
-} from "../../Services";
+} from "@services";
 
 const FILTERS = [
   { key: "ALL", label: "All" },
@@ -82,6 +82,9 @@ export default function WorkoutPostsPage() {
         user,
       });
       setPosts(nextPosts);
+      if (nextPosts.some((post) => post.isPosted === null)) {
+        setErrorMessage("Post status is unavailable. Pull down to try again.");
+      }
     } catch (error) {
       console.error("Could not load own workout posts:", error);
       setErrorMessage("Your workouts could not be loaded.");
@@ -110,13 +113,20 @@ export default function WorkoutPostsPage() {
 
       try {
         setPostingWorkoutId(post.workoutId);
-        await workoutService.repostWorkoutSummaryPost(db, {
+        setErrorMessage("");
+        const publishedPost = await workoutService.repostWorkoutSummaryPost(db, {
           workoutId: post.workoutId,
         });
         setPosts((currentPosts) =>
           currentPosts.map((currentPost) =>
             currentPost.workoutId === post.workoutId
-              ? { ...currentPost, isPosted: true }
+              ? {
+                  ...currentPost,
+                  isPosted: true,
+                  postId: publishedPost.id,
+                  body: publishedPost.body,
+                  visibility: publishedPost.visibility,
+                }
               : currentPost
           )
         );
@@ -209,7 +219,7 @@ export default function WorkoutPostsPage() {
     }
 
     if (filter === "UNPOSTED") {
-      return posts.filter((post) => !post.isPosted);
+      return posts.filter((post) => post.isPosted === false);
     }
 
     return posts;
@@ -262,7 +272,9 @@ export default function WorkoutPostsPage() {
             size={12}
             style={[styles.pageHeaderTitleEyebrow, { color: quietText }]}
           >
-            {`${postedCount} of ${posts.length} posted`}
+            {posts.some((post) => post.isPosted === null)
+              ? "Post status unavailable"
+              : `${postedCount} of ${posts.length} posted`}
           </ThemedText>
 
           <ThemedTitle
@@ -360,12 +372,14 @@ export default function WorkoutPostsPage() {
             {managedPost?.title ?? "Workout"}
           </ThemedText>
           <ThemedText style={styles.sheetSubtitleText} setColor={quietText}>
-            {managedPost?.isPosted ? "Posted to your feed" : "Not posted yet"}
+            {managedPost?.isPosted == null
+              ? "Post status is unavailable"
+              : managedPost.isPosted ? "Posted to your feed" : "Not posted yet"}
           </ThemedText>
         </View>
 
         <View style={styles.sheetBody}>
-          {managedPost?.isPosted ? null : (
+          {managedPost?.isPosted === false ? (
             <TouchableOpacity
               style={styles.sheetOption}
               activeOpacity={0.75}
@@ -379,7 +393,7 @@ export default function WorkoutPostsPage() {
                 Post to feed
               </ThemedText>
             </TouchableOpacity>
-          )}
+          ) : null}
 
           {managedPost?.isPosted ? (
             <>

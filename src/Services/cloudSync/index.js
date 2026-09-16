@@ -37,6 +37,7 @@ export {
 } from "./setSync";
 
 export {
+  prepareWorkoutForSummaryPost,
   syncWorkoutTypeInstancesWithCloud,
 } from "./workoutTypeInstanceSync";
 

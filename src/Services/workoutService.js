@@ -1,7 +1,7 @@
 import { workoutRepository } from "../Repository";
 import * as notificationService from "./notificationService";
 import { withTransaction } from "./shared";
-import { startBackgroundSync } from "./syncScheduler";
+import { enqueueSync, startBackgroundSync } from "./syncScheduler";
 
 let dirtyWorkoutHierarchyPushScheduled = false;
 let dirtyWorkoutHierarchyPushNeedsRerun = false;
@@ -32,33 +32,30 @@ function pushDirtyWorkoutHierarchyInBackground(db) {
 async function createCompletedWorkoutPost(
   db,
   workoutId,
-  { repairCloudIdentity = false, source = "automatic", note = null } = {}
+  { source = "automatic", note = null } = {}
 ) {
-  const programServiceModule = await import("./programService");
-
-  if (repairCloudIdentity) {
-    await programServiceModule.syncWorkoutTypeInstancesWithCloud(db);
-  } else {
-    await programServiceModule.pushDirtyStrengthHierarchyWithCloud(db);
-  }
-
-  const socialPostServiceModule = await import("./socialPostService");
-  let result =
-    await socialPostServiceModule.createWorkoutSummaryPostForCompletedWorkout(
-      db,
-      { workoutId, source, note }
-    );
-
-  if (result?.skipped && result.reason === "missing_cloud_workout_id") {
-    await programServiceModule.syncWorkoutTypeInstancesWithCloud(db);
-    result =
+  return enqueueSync(async () => {
+    const socialPostServiceModule = await import("./socialPostService");
+    // A published summary uses local sets. Only its owning cloud workout must
+    // exist; uploading every other workout makes unrelated FK errors block Post.
+    let result =
       await socialPostServiceModule.createWorkoutSummaryPostForCompletedWorkout(
         db,
         { workoutId, source, note }
       );
-  }
 
-  return result;
+    if (result?.skipped && result.reason === "missing_cloud_workout_id") {
+      const programServiceModule = await import("./programService");
+      await programServiceModule.prepareWorkoutForSummaryPost(db, workoutId);
+      result =
+        await socialPostServiceModule.createWorkoutSummaryPostForCompletedWorkout(
+          db,
+          { workoutId, source, note }
+        );
+    }
+
+    return result;
+  });
 }
 
 async function createCompletedWorkoutPostBestEffort(
@@ -316,7 +313,6 @@ function getWorkoutSummaryRepostErrorMessage(result) {
 
 export async function repostWorkoutSummaryPost(db, { workoutId, note = null }) {
   const result = await createCompletedWorkoutPost(db, workoutId, {
-    repairCloudIdentity: true,
     source: "manual",
     note,
   });
@@ -333,12 +329,11 @@ export async function syncWorkoutSummaryPostForCompletionState(
   { workoutId, done, createPost = true }
 ) {
   if (done && createPost) {
-    await createCompletedWorkoutPostBestEffort(db, workoutId, {
-      repairCloudIdentity: true,
-    });
-  } else {
-    syncWorkoutTypeInstancesInBackground(db);
+    await createCompletedWorkoutPostBestEffort(db, workoutId);
   }
+  // Completion must still sync when posting is skipped or fails, including
+  // workout types without summaries. It must not gate the post attempt.
+  syncWorkoutTypeInstancesInBackground(db);
 }
 
 export async function resetWorkoutState(db, workoutId) {
