@@ -94,7 +94,17 @@ export default function PrivacyConsentGate({ children }) {
 
   return (
     <ThemedView safe={["top", "left", "right", "bottom"]} style={styles.container}>
-      <View style={styles.header}>
+      {/* The heading scrolls with everything else rather than sitting pinned
+          above it. Two legal documents are a long read by nature, and a fixed
+          header spent the top of every screen restating that - it made the
+          screen look like a form with a banner stuck to it. The button stays
+          pinned, because having to reach the bottom of two documents before
+          you can accept is a different thing entirely. */}
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator
+      >
         <ThemedTitle type="h2">Before you continue</ThemedTitle>
         <ThemedText style={styles.headerBody} setColor={quietText}>
           Two things to agree to. The terms of use set out what is and is not
@@ -105,13 +115,7 @@ export default function PrivacyConsentGate({ children }) {
           permission for. Read both and tap Accept to carry on, or close the app
           if you would rather not.
         </ThemedText>
-      </View>
 
-      <ScrollView
-        style={styles.content}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator
-      >
         <ThemedTitle type="h3" style={styles.sectionHeading}>
           Terms of use
         </ThemedTitle>
