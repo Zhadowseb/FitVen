@@ -12,7 +12,7 @@ const loadAppModule = require("./lib/loadAppModule");
 const root = path.resolve(__dirname, "..");
 const gymUtils = loadAppModule("src/Utils/gymUtils.js");
 const activityUtils = loadAppModule("src/Utils/friendsActivityUtils.js");
-const { deriveShortName, normalizeGym } = require("./import-gyms/normalizeGym");
+const { deriveShortName, disambiguateShortNames, normalizeGym } = require("./import-gyms/normalizeGym");
 
 /* ---------------------------------------------------------- best set -- */
 
@@ -91,13 +91,32 @@ assert.strictEqual(deriveShortName({ chain: "LOOP Fitness", name: "LOOP Dragør"
 assert.strictEqual(deriveShortName({ chain: "Fit&Sund", name: "Fit&Sund Stevns" }), "Stevns");
 assert.strictEqual(deriveShortName({ chain: "SATS", name: "KBH - Adelgade", short_name: "Adelgade" }), "Adelgade");
 assert.strictEqual(deriveShortName({ chain: "SATS", name: "KBH - Field's" }), "Field's");
+assert.strictEqual(deriveShortName({ chain: "SATS", name: "Lyngby – Kanalvej" }), "Kanalvej", "an en dash separates like a hyphen");
+assert.strictEqual(deriveShortName({ chain: "SATS", name: "Køge - Strædet", short_name: "Køge - Strædet" }), "Strædet", "an explicit short name that is just the name again does not stop the rules");
+assert.strictEqual(deriveShortName({ chain: "LOOP Fitness", name: "LOOP Amager, Strandlodsvej" }), "Strandlodsvej", "the rules apply in turn, not first match");
 assert.strictEqual(deriveShortName({ chain: "FitnessX", name: "Ballerup" }), "Ballerup");
 
+const colliding = disambiguateShortNames([
+  { chain: "PureGym", name: "Odense C., Dannebrogsgade", short_name: "Dannebrogsgade", city: "Odense C" },
+  { chain: "PureGym", name: "Aalborg, Dannebrogsgade", short_name: "Dannebrogsgade", city: "Aalborg" },
+  { chain: "SATS", name: "KBH - Adelgade", short_name: "Adelgade", city: "København K" },
+  { chain: "PureGym", name: "Skanderborg, Adelgade", short_name: "Adelgade", city: "Skanderborg" },
+]);
+
+assert.deepStrictEqual(
+  colliding.map((row) => row.short_name),
+  ["Dannebrogsgade, Odense C.", "Dannebrogsgade, Aalborg", "Adelgade", "Adelgade"],
+  "a clash inside one chain gets the city; the same name in two chains is left alone"
+);
+
 // Over the real data, when it is there: every centre gets a non-empty short
-// name and a row, and no two centres in a chain end up with the same name.
+// name and a row, and after disambiguation no two centres in a chain share
+// a short name.
 const dataDir = path.join(root, "data", "gyms");
 
 if (fs.existsSync(dataDir)) {
+  const allRows = [];
+
   for (const chainFolder of fs.readdirSync(dataDir, { withFileTypes: true })) {
     if (!chainFolder.isDirectory()) continue;
 
@@ -117,7 +136,19 @@ if (fs.existsSync(dataDir)) {
       assert.ok(row.short_name.length > 0, `${infoPath} needs a short name`);
       assert.ok(!names.has(row.name), `${chainFolder.name} has two centres named ${row.name}`);
       names.add(row.name);
+      allRows.push(row);
     }
+  }
+
+  disambiguateShortNames(allRows);
+
+  const shortNames = new Set();
+
+  for (const row of allRows) {
+    const key = `${row.chain}|${row.short_name.toLowerCase()}`;
+
+    assert.ok(!shortNames.has(key), `${row.chain} has two centres shown as ${row.short_name}`);
+    shortNames.add(key);
   }
 }
 

@@ -22,7 +22,12 @@ const fs = require("fs");
 const path = require("path");
 const { createClient } = require("@supabase/supabase-js");
 
-const { CHAIN_FOLDERS, imageObjectPath, normalizeGym } = require("./normalizeGym");
+const {
+  CHAIN_FOLDERS,
+  disambiguateShortNames,
+  imageObjectPath,
+  normalizeGym,
+} = require("./normalizeGym");
 
 const IMAGE_BUCKET = "gym-images";
 const BATCH_SIZE = 50;
@@ -89,6 +94,8 @@ function readCentres(rootDir, onlyChain) {
       centres.push({ row, imagePath, folderName: entry.name, chainFolder: chainFolder.name });
     }
   }
+
+  disambiguateShortNames(centres.map((centre) => centre.row));
 
   return centres;
 }

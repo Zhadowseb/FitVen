@@ -22,15 +22,16 @@ function clean(value) {
 
 /**
  * The name the app shows on a tile: "Bruuns Galleri", not "Aarhus Bruuns
- * Galleri". The chains name centres differently, so this is a stack of rules,
- * first match wins:
- *   1. an explicit short_name in the file (SATS and Fit&Sund write one),
- *      unless it is just the full name again - the SATS scraper does that
- *      for "Køge - Strædet", and then the rules below still apply
- *   2. the chain's first word as a prefix goes: "LOOP Dragør" -> "Dragør"
- *   3. "City, Place" keeps the place: "Gentofte, Kildeskovshallen"
- *   4. "REGION - Place" keeps the place: "KBH - Adelgade"
- *   5. the name as it is: "Ballerup"
+ * Galleri". An explicit short_name in the file wins (SATS and Fit&Sund write
+ * one) unless it is just the full name again - the SATS scraper does that for
+ * "Køge - Strædet". Otherwise the chains' naming habits are peeled off in
+ * turn, each rule working on what the one before left:
+ *   1. the chain (or its first word) as a prefix: "LOOP Dragør" -> "Dragør"
+ *   2. "City, Place" keeps the place: "Gentofte, Kildeskovshallen"
+ *   3. "REGION - Place" keeps the place: "KBH - Adelgade", "Lyngby – Kanalvej"
+ * so "LOOP Amager, Strandlodsvej" ends as "Strandlodsvej", and "Ballerup" is
+ * left alone. Two centres in one chain that end with the same short name are
+ * told apart afterwards by disambiguateShortNames.
  */
 function deriveShortName(info) {
   const explicit = clean(info?.short_name);
@@ -39,29 +40,82 @@ function deriveShortName(info) {
   if (explicit && explicit !== name) {
     return explicit;
   }
+
   const chain = clean(info?.chain) ?? "";
   const chainFirstWord = chain.split(/\s+/)[0] ?? "";
-  const lowerName = name.toLowerCase();
+  let result = name;
 
   for (const prefix of [chain, chainFirstWord].filter(Boolean)) {
-    if (lowerName.startsWith(`${prefix.toLowerCase()} `) && name.length > prefix.length + 1) {
-      return name.slice(prefix.length).trim();
+    if (
+      result.toLowerCase().startsWith(`${prefix.toLowerCase()} `) &&
+      result.length > prefix.length + 1
+    ) {
+      result = result.slice(prefix.length).trim();
+      break;
     }
   }
 
-  const commaIndex = name.lastIndexOf(",");
+  const commaIndex = result.lastIndexOf(",");
 
-  if (commaIndex > 0 && commaIndex < name.length - 1) {
-    return name.slice(commaIndex + 1).trim();
+  if (commaIndex > 0 && commaIndex < result.length - 1) {
+    result = result.slice(commaIndex + 1).trim();
   }
 
-  const dashIndex = name.indexOf(" - ");
+  const dash = result.match(/\s[-–]\s/);
 
-  if (dashIndex > 0 && dashIndex < name.length - 3) {
-    return name.slice(dashIndex + 3).trim();
+  if (dash && dash.index > 0 && dash.index + dash[0].length < result.length) {
+    result = result.slice(dash.index + dash[0].length).trim();
   }
 
-  return name;
+  return result || name;
+}
+
+/** "Odense C., Dannebrogsgade" -> "Odense C."; otherwise the address city. */
+function cityLabel(row) {
+  const name = clean(row?.name) ?? "";
+  const commaIndex = name.indexOf(",");
+
+  if (commaIndex > 0) {
+    return name.slice(0, commaIndex).trim();
+  }
+
+  return clean(row?.city);
+}
+
+/**
+ * Two centres of one chain must not share a short name - a tile saying
+ * "Dannebrogsgade" would mean Odense to one person and Aalborg to another.
+ * Colliding rows get their city appended: "Dannebrogsgade, Odense C.".
+ * Mutates and returns the rows.
+ */
+function disambiguateShortNames(rows) {
+  const groups = new Map();
+
+  for (const row of rows) {
+    const key = `${row.chain}|${row.short_name.toLowerCase()}`;
+
+    if (!groups.has(key)) {
+      groups.set(key, []);
+    }
+
+    groups.get(key).push(row);
+  }
+
+  for (const group of groups.values()) {
+    if (group.length < 2) {
+      continue;
+    }
+
+    for (const row of group) {
+      const city = cityLabel(row);
+
+      if (city && city.toLowerCase() !== row.short_name.toLowerCase()) {
+        row.short_name = `${row.short_name}, ${city}`;
+      }
+    }
+  }
+
+  return rows;
 }
 
 function toCoordinate(value) {
@@ -155,6 +209,7 @@ module.exports = {
   CHAIN_FOLDERS,
   chainForFolder,
   deriveShortName,
+  disambiguateShortNames,
   imageObjectPath,
   normalizeGym,
 };
