@@ -88,6 +88,9 @@ export default function GymsPage() {
   const [strongest, setStrongest] = useState([]);
   const [gymCount, setGymCount] = useState(null);
   const [homeGym, setHomeGym] = useState(null);
+  // The centres the viewer has actually trained in, most often first. Empty
+  // until a workout has been matched to one, and then the card is hidden.
+  const [myGyms, setMyGyms] = useState([]);
   const [query, setQuery] = useState("");
   const [searchResults, setSearchResults] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
@@ -119,12 +122,14 @@ export default function GymsPage() {
 
       setPosition(currentPosition);
 
-      const [nearbyResult, strongestResult, countResult, homeResult] = await Promise.allSettled([
-        gymService.getNearbyGyms({ latitude: origin.latitude, longitude: origin.longitude, limit: 30 }),
-        gymService.getNationalStrongest(),
-        gymService.getGymCount(),
-        gymService.getMyHomeGym(),
-      ]);
+      const [nearbyResult, strongestResult, countResult, homeResult, myGymsResult] =
+        await Promise.allSettled([
+          gymService.getNearbyGyms({ latitude: origin.latitude, longitude: origin.longitude, limit: 30 }),
+          gymService.getNationalStrongest(),
+          gymService.getGymCount(),
+          gymService.getMyHomeGym(),
+          gymService.getMyGyms(),
+        ]);
 
       if (nearbyResult.status === "rejected") {
         throw nearbyResult.reason;
@@ -135,6 +140,7 @@ export default function GymsPage() {
       setStrongest(strongestResult.status === "fulfilled" ? strongestResult.value : []);
       setGymCount(countResult.status === "fulfilled" ? countResult.value : null);
       setHomeGym(homeResult.status === "fulfilled" ? homeResult.value : null);
+      setMyGyms(myGymsResult.status === "fulfilled" ? myGymsResult.value : []);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : t("gyms.list.loadFailed"));
     } finally {
@@ -234,11 +240,17 @@ export default function GymsPage() {
   }, [homeGymId, listSource, searchResults, showAllNearby]);
   const featuredStrongest = strongest.filter((entry) => entry.top);
 
-  const renderGymRow = (gym, index, total) => {
+  // One row, used by both lists. The nearest list shows how far away a centre
+  // is and how many people train there; the viewer's own centres show the
+  // chain and how many workouts they have done there, so those two come in
+  // as overrides rather than as a second copy of the row.
+  const renderGymRow = (gym, index, total, { meta: metaOverride = null, trailing = null } = {}) => {
     const isHome = gym.id === homeGymId;
-    const meta = [gym.chain, gym.distanceM !== null && gym.distanceM !== undefined ? formatDistance(gym.distanceM) : gym.city]
-      .filter(Boolean)
-      .join(" · ");
+    const meta =
+      metaOverride ??
+      [gym.chain, gym.distanceM !== null && gym.distanceM !== undefined ? formatDistance(gym.distanceM) : gym.city]
+        .filter(Boolean)
+        .join(" · ");
 
     return (
       <View key={gym.id}>
@@ -272,7 +284,7 @@ export default function GymsPage() {
             </ThemedText>
           </View>
           <ThemedText style={styles.gymCount} setColor={mutedStrong}>
-            {gym.memberCount ? String(gym.memberCount) : ""}
+            {trailing ?? (gym.memberCount ? String(gym.memberCount) : "")}
           </ThemedText>
           <ChevronRight width={18} height={18} color={isLight ? "#A8ACB6" : "#4A4F5A"} />
         </TouchableOpacity>
@@ -451,6 +463,25 @@ export default function GymsPage() {
                 {t("gyms.strongest.seeAll")}
               </ThemedText>
             </TouchableOpacity>
+          </View>
+        ) : null}
+
+        {!searchResults && myGyms.length > 0 ? (
+          <View style={[styles.card, { backgroundColor: cardSurface, borderColor: cardBorder }]}>
+            <View style={styles.cardHeader}>
+              <ThemedText style={styles.cardTitle} setColor={theme.title}>
+                {t("gyms.change.trainedHere")}
+              </ThemedText>
+              <ThemedText style={styles.cardEyebrow} setColor={quietText}>
+                {t("gyms.list.trainedEyebrow")}
+              </ThemedText>
+            </View>
+            {myGyms.map((gym, index) =>
+              renderGymRow(gym, index, myGyms.length, {
+                meta: t("gyms.change.gymMeta", { chain: gym.chain, count: gym.workoutCount }),
+                trailing: String(gym.workoutCount),
+              })
+            )}
           </View>
         ) : null}
 

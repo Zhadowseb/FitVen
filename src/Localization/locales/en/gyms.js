@@ -54,6 +54,7 @@ export default {
     nearest: "Nearest",
     foundCount: "{count} found",
     membersEyebrow: "members · 90 days",
+    trainedEyebrow: "workouts · 90 days",
     noMatchTitle: "No centres match",
     noMatchBody: "Try the chain, the city or part of the centre's name.",
     noCentresTitle: "No centres yet",

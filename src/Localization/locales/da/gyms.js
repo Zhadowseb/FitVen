@@ -47,6 +47,7 @@ export default {
     nearest: "Nærmeste",
     foundCount: "{count} fundet",
     membersEyebrow: "medlemmer · 90 dage",
+    trainedEyebrow: "træninger · 90 dage",
     noMatchTitle: "Ingen centre matcher",
     noMatchBody: "Prøv kæden, byen eller en del af centerets navn.",
     noCentresTitle: "Ingen centre endnu",
