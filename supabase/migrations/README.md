@@ -67,11 +67,13 @@ After the first one, run `npm run gyms:import -- --dry-run` and then
 `data/gyms/README.md`. Without it the `gym` table is empty, and an empty
 table is a Centres screen with nothing on it, not an error.
 
-Both were run on 2026-09-17, in that order. Verify over the REST API with the
-anon key: `gym_lift?select=id` and `workout_music?select=id` should each
-answer with an empty array (own or followed rows only, none yet), and
-`rpc/national_strongest` should answer `[]` rather than a missing-function
-error. The `gym` table is empty until `npm run gyms:import` has been run.
+Both were run on 2026-09-17, in that order, and `npm run gyms:import` was run
+the same day: 365 centres in `gym`, 326 of them with a photograph in the
+`gym-images` bucket (the 39 Fit&Sund centres have none on their site). Verify
+over the REST API with the anon key: `gym_lift?select=id` and
+`workout_music?select=id` should each answer with an empty array (own or
+followed rows only, none yet), and `rpc/national_strongest` should answer
+`[]` rather than a missing-function error.
 
 `20260915120000_repair-workout-type-catalog.sql` restores missing built-in and
 legacy workout types without changing existing rows or granting catalog writes
