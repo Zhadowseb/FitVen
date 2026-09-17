@@ -18,6 +18,7 @@ import { useAuth } from "../../Contexts/AuthContext";
 import { gymService } from "../../Services";
 import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
 import ChevronRight from "../../Resources/Icons/UI-icons/ChevronRight";
+import Crosshair from "../../Resources/Icons/UI-icons/Crosshair";
 import Expand from "../../Resources/Icons/UI-icons/Expand";
 import Search from "../../Resources/Icons/UI-icons/Search";
 import LiftStatusPill from "../../Resources/Components/GymLeaderboard/LiftStatusPill";
@@ -105,6 +106,8 @@ export default function GymsPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [showAllNearby, setShowAllNearby] = useState(false);
   const [isMapExpanded, setIsMapExpanded] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
+  const [locationNotice, setLocationNotice] = useState("");
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const cardSurface = theme.cardBackground ?? theme.background;
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor;
@@ -242,6 +245,52 @@ export default function GymsPage() {
     } catch {
       // The pins already on the map are still right; nothing to tell the user.
     }
+  };
+
+  // Centre the map on the phone. A fresh fix every time, because the one
+  // taken when the screen opened can be minutes old by now; the position
+  // already in hand moves the map first so the button never feels dead while
+  // the fix is being taken.
+  const goToMyLocation = async () => {
+    if (isLocating) {
+      return;
+    }
+
+    setIsLocating(true);
+    setLocationNotice("");
+
+    if (position) {
+      centreMapOn(position);
+    }
+
+    try {
+      const currentPosition = await gymService.getCurrentPosition({ requestPermission: true });
+
+      if (currentPosition) {
+        setPosition(currentPosition);
+        centreMapOn(currentPosition);
+      } else if (!position) {
+        setLocationNotice(t("gyms.list.locationUnavailable"));
+      }
+    } catch {
+      if (!position) {
+        setLocationNotice(t("gyms.list.locationUnavailable"));
+      }
+    } finally {
+      setIsLocating(false);
+    }
+  };
+
+  const centreMapOn = ({ latitude, longitude }) => {
+    mapRef.current?.animateToRegion(
+      {
+        latitude,
+        longitude,
+        latitudeDelta: NEARBY_REGION_DELTA,
+        longitudeDelta: NEARBY_REGION_DELTA,
+      },
+      450
+    );
   };
 
   const openGym = (gym) => {
@@ -429,7 +478,27 @@ export default function GymsPage() {
           >
             <Expand width={16} height={16} color="#FFFFFF" />
           </TouchableOpacity>
+
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={t("gyms.list.locateMe")}
+            onPress={goToMyLocation}
+            disabled={isLocating}
+            style={[styles.mapLocateButton, { backgroundColor: "rgba(8, 9, 12, 0.62)" }]}
+          >
+            {isLocating ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Crosshair width={17} height={17} color="#FFFFFF" thickness={2} />
+            )}
+          </TouchableOpacity>
         </View>
+
+        {locationNotice ? (
+          <ThemedText style={styles.mapNotice} setColor={quietText}>
+            {locationNotice}
+          </ThemedText>
+        ) : null}
 
         {visibleChains.length > 1 ? (
           <View style={styles.legendRow}>

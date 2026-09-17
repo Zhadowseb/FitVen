@@ -83,6 +83,25 @@ export default StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  // Directly under the expand button, same size and treatment, so the two
+  // read as one column of map controls.
+  mapLocateButton: {
+    position: "absolute",
+    top: 52,
+    right: 12,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  mapNotice: {
+    paddingHorizontal: 4,
+    marginTop: -4,
+    fontSize: 11.5,
+    fontWeight: "600",
+    lineHeight: 16,
+  },
   // The colour key under the map. Wraps rather than scrolls: five chains fit
   // on two lines at phone width, and a row you have to drag is a row nobody
   // reads.

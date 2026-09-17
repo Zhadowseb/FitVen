@@ -46,6 +46,8 @@ export default {
     nearbyCount: { one: "{count} centre nearby", other: "{count} centres nearby" },
     expandMap: "Expand map",
     shrinkMap: "Shrink map",
+    locateMe: "Centre the map on your location",
+    locationUnavailable: "Could not find your location. Check that location is on for FitVen.",
     yoursBadge: "YOURS",
     unavailableTitle: "Centres unavailable",
     signInToSee: "Sign in to see centres.",

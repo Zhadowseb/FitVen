@@ -39,6 +39,8 @@ export default {
     nearbyCount: { one: "{count} center i nærheden", other: "{count} centre i nærheden" },
     expandMap: "Udvid kortet",
     shrinkMap: "Formindsk kortet",
+    locateMe: "Centrér kortet om din position",
+    locationUnavailable: "Din position kunne ikke findes. Tjek at placering er slået til for FitVen.",
     yoursBadge: "DIT",
     unavailableTitle: "Centrene er ikke tilgængelige",
     signInToSee: "Log ind for at se centre.",
