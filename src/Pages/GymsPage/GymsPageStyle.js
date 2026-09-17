@@ -83,6 +83,31 @@ export default StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  // The colour key under the map. Wraps rather than scrolls: five chains fit
+  // on two lines at phone width, and a row you have to drag is a row nobody
+  // reads.
+  legendRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 12,
+    paddingHorizontal: 4,
+    marginTop: -4,
+  },
+  legendItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  legendDot: {
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+  },
+  legendText: {
+    fontSize: 11.5,
+    fontWeight: "700",
+  },
   pin: {
     borderRadius: 999,
     borderWidth: 2,

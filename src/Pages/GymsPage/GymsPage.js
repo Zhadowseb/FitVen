@@ -30,7 +30,12 @@ import {
   ThemedView,
   UserAvatar,
 } from "../../Resources/ThemedComponents";
-import { formatDistance, formatWeightKg, getChainInitials } from "../../Utils/gymUtils";
+import {
+  formatDistance,
+  formatWeightKg,
+  getChainColor,
+  getChainInitials,
+} from "../../Utils/gymUtils";
 
 // Denmark, when the phone will not say where it is.
 const FALLBACK_REGION = {
@@ -58,7 +63,9 @@ const DARK_MAP_STYLE = [
   { featureType: "administrative", elementType: "geometry.stroke", stylers: [{ color: "#2b2f38" }] },
 ];
 
-function HomeGymPin({ theme }) {
+// Your own centre pulses in the accent and keeps its chain colour in the
+// middle, so the pin says both "yours" and which chain it is.
+function HomeGymPin({ theme, chainColor }) {
   const { scale, opacity } = usePulseAnimation(true);
 
   return (
@@ -69,7 +76,7 @@ function HomeGymPin({ theme }) {
           { backgroundColor: withAlpha(theme.primary, 0.45), opacity, transform: [{ scale }] },
         ]}
       />
-      <View style={[styles.pin, styles.pinHome, { backgroundColor: theme.primary, borderColor: theme.uiBackground }]} />
+      <View style={[styles.pin, styles.pinHome, { backgroundColor: chainColor, borderColor: theme.primary }]} />
     </View>
   );
 }
@@ -103,7 +110,6 @@ export default function GymsPage() {
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor;
   const isLight = colorScheme === "light";
   const mutedStrong = isLight ? "#3F4550" : "#C4C7CF";
-  const chainTileSurface = isLight ? "#E9EBF0" : "#242830";
   const goldRingColor = theme.record;
 
   const load = useCallback(async () => {
@@ -206,6 +212,23 @@ export default function GymsPage() {
     return FALLBACK_REGION;
   }, [homeGym, position]);
 
+  // The chains actually on screen, so the legend explains the pins in front
+  // of the user rather than every chain in the country. One chain alone needs
+  // no legend, and the row hides itself.
+  const visibleChains = useMemo(() => {
+    const colorByChain = new Map();
+
+    for (const gym of visibleGyms) {
+      if (gym.chain && !colorByChain.has(gym.chain)) {
+        colorByChain.set(gym.chain, getChainColor(gym.chain));
+      }
+    }
+
+    return [...colorByChain.entries()]
+      .map(([chain, color]) => ({ chain, color }))
+      .sort((left, right) => left.chain.localeCompare(right.chain));
+  }, [visibleGyms]);
+
   const handleRegionChange = async (region) => {
     try {
       const gyms = await gymService.getGymsInBounds({
@@ -261,7 +284,12 @@ export default function GymsPage() {
           onPress={() => openGym(gym)}
           style={[styles.gymRow, isHome ? [styles.gymRowHome, { borderLeftColor: theme.primary }] : null]}
         >
-          <View style={[styles.chainTile, { backgroundColor: chainTileSurface }]}>
+          {/* Tinted with the chain's map colour, so a row and its pin are
+              recognisably the same chain. The initials keep the neutral ink:
+              the colours are picked to be told apart, not to be read on. */}
+          <View
+            style={[styles.chainTile, { backgroundColor: withAlpha(getChainColor(gym.chain), 0.16) }]}
+          >
             <ThemedText style={styles.chainTileText} setColor={mutedStrong}>
               {getChainInitials(gym.chain)}
             </ThemedText>
@@ -352,20 +380,27 @@ export default function GymsPage() {
           >
             {visibleGyms.map((gym) => {
               const isHome = gym.id === homeGymId;
+              const chainColor = getChainColor(gym.chain);
 
               return (
                 <Marker
                   key={gym.id}
                   coordinate={{ latitude: gym.latitude, longitude: gym.longitude }}
-                  title={isHome ? gym.shortName : undefined}
+                  title={isHome ? gym.shortName : gym.chain}
                   anchor={{ x: 0.5, y: 0.5 }}
                   tracksViewChanges={isHome}
                   onPress={() => openGym(gym)}
                 >
                   {isHome ? (
-                    <HomeGymPin theme={theme} />
+                    <HomeGymPin theme={theme} chainColor={chainColor} />
                   ) : (
-                    <View style={[styles.pin, styles.pinOther, { backgroundColor: "#C4C7CF", borderColor: theme.uiBackground }]} />
+                    <View
+                      style={[
+                        styles.pin,
+                        styles.pinOther,
+                        { backgroundColor: chainColor, borderColor: theme.uiBackground },
+                      ]}
+                    />
                   )}
                 </Marker>
               );
@@ -395,6 +430,19 @@ export default function GymsPage() {
             <Expand width={16} height={16} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
+
+        {visibleChains.length > 1 ? (
+          <View style={styles.legendRow}>
+            {visibleChains.map((entry) => (
+              <View key={entry.chain} style={styles.legendItem}>
+                <View style={[styles.legendDot, { backgroundColor: entry.color }]} />
+                <ThemedText style={styles.legendText} setColor={quietText}>
+                  {entry.chain}
+                </ThemedText>
+              </View>
+            ))}
+          </View>
+        ) : null}
 
         {errorMessage ? (
           <View style={[styles.card, { backgroundColor: cardSurface, borderColor: cardBorder }]}>

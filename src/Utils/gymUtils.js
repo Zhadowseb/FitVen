@@ -13,6 +13,32 @@ const CHAIN_INITIALS = {
   independent: "IN",
 };
 
+// One colour per chain, so a map full of pins can be read at a glance.
+//
+// These are not the chains' brand colours. Three of the app's own colours
+// already mean something on this map - the accent is your centre, green is
+// where you are standing, gold is a record - so a chain that happens to be
+// orange or green would say the wrong thing. These are picked to be told
+// apart from each other and from those three, in both light and dark mode,
+// leaning towards each chain's brand only where that was free.
+const CHAIN_COLORS = {
+  puregym: "#E4362F",
+  sats: "#4C8DFF",
+  "loop fitness": "#A855F7",
+  loop: "#A855F7",
+  fitnessx: "#22D3EE",
+  "fit&sund": "#EC4899",
+  "fitness world": "#F4B740",
+};
+const UNKNOWN_CHAIN_COLOR = "#C4C7CF";
+
+/** The pin colour for a chain. An unknown chain stays neutral grey. */
+export function getChainColor(chain) {
+  const key = String(chain ?? "").trim().toLowerCase();
+
+  return CHAIN_COLORS[key] ?? UNKNOWN_CHAIN_COLOR;
+}
+
 /**
  * Two letters for the chain tile: a known chain gets its fixed pair, anything
  * else the first letter of its first two words, or its first two letters.
