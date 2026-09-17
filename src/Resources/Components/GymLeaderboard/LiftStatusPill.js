@@ -1,4 +1,5 @@
 import { StyleSheet, View, useColorScheme } from "react-native";
+import { useTranslation } from "@localization";
 
 import { Colors, withAlpha } from "../../GlobalStyling/colors";
 import VideoVerified from "../../Icons/UI-icons/VideoVerified";
@@ -16,6 +17,7 @@ import { APPROVALS_REQUIRED } from "../../../Utils/gymUtils";
 export default function LiftStatusPill({ status = "none", approvals = 0, compact = false, style }) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const { t } = useTranslation();
   const isLight = colorScheme === "light";
 
   if (status === "verified") {
@@ -25,7 +27,7 @@ export default function LiftStatusPill({ status = "none", approvals = 0, compact
       <View style={[styles.pill, { backgroundColor: theme.secondary }, style]}>
         <VideoVerified width={11} height={11} color={ink} thickness={2.4} />
         <ThemedText style={styles.text} setColor={ink}>
-          {compact ? String(approvals) : `Video verified · ${approvals}`}
+          {compact ? String(approvals) : t("gyms.status.verified", { count: approvals })}
         </ThemedText>
       </View>
     );
@@ -45,7 +47,7 @@ export default function LiftStatusPill({ status = "none", approvals = 0, compact
         <ThemedText style={styles.text} setColor={theme.planned}>
           {compact
             ? `${approvals}/${APPROVALS_REQUIRED}`
-            : `Video pending · ${approvals}/${APPROVALS_REQUIRED}`}
+            : t("gyms.status.pending", { count: approvals, required: APPROVALS_REQUIRED })}
         </ThemedText>
       </View>
     );
@@ -62,7 +64,7 @@ export default function LiftStatusPill({ status = "none", approvals = 0, compact
       ]}
     >
       <ThemedText style={styles.text} setColor={theme.quietText}>
-        No video
+        {t("gyms.status.noVideo")}
       </ThemedText>
     </View>
   );
@@ -70,10 +72,12 @@ export default function LiftStatusPill({ status = "none", approvals = 0, compact
 
 /** "REJECTED 2" - shown to the lifter only; everyone else never sees the row. */
 export function RejectedBadge({ rejections = 0, style }) {
+  const { t } = useTranslation();
+
   return (
     <View style={[styles.pill, styles.rejected, style]}>
       <ThemedText style={[styles.text, styles.rejectedText]} setColor="#FF7A7A">
-        {`Rejected ${rejections}`}
+        {t("gyms.status.rejected", { count: rejections })}
       </ThemedText>
     </View>
   );

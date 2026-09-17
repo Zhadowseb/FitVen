@@ -11,6 +11,7 @@ import {
   parseCustomDate,
 } from "@utils/dateUtils";
 import { getProgramEndDate } from "@utils/programUtils";
+import { t } from "@localization";
 import {
   programRepository,
   runningRepository,
@@ -578,7 +579,7 @@ export async function getTodayActivitySummary(db, { date, snapshots }) {
   if (!todaysWorkouts.length) {
     return {
       activityState: "rest",
-      detail: "Rest day",
+      detail: t("friends.status.restDay"),
       workoutType: null,
       workoutLabel: null,
       workoutId: null,
@@ -608,7 +609,10 @@ export async function getTodayActivitySummary(db, { date, snapshots }) {
 
     return {
       activityState: "planned",
-      detail: plannedWorkouts.length > 1 ? `${plannedWorkouts.length} planned` : "Planned",
+      detail:
+        plannedWorkouts.length > 1
+          ? t("friends.status.plannedCount", { count: plannedWorkouts.length })
+          : t("friends.status.planned"),
       workoutType: nextPlannedWorkout.workout_type ?? null,
       workoutLabel:
         nextPlannedWorkout.label ?? nextPlannedWorkout.workout_type ?? null,
@@ -621,7 +625,10 @@ export async function getTodayActivitySummary(db, { date, snapshots }) {
 
   return {
     activityState: "done",
-    detail: todaysWorkouts.length > 1 ? `${todaysWorkouts.length} done` : "Done today",
+    detail:
+      todaysWorkouts.length > 1
+        ? t("friends.status.doneCount", { count: todaysWorkouts.length })
+        : t("friends.status.doneToday"),
     workoutType: completedWorkout?.workout_type ?? null,
     workoutLabel: completedWorkout?.label ?? completedWorkout?.workout_type ?? null,
     workoutId: completedWorkout?.workout_id ?? null,

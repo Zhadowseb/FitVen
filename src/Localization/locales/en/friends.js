@@ -23,6 +23,7 @@ export default {
     doneToday: "Done today",
     doneCount: "{count} done",
     planned: "Planned",
+    plannedCount: "{count} planned",
     labelPlanned: "{label} · Planned",
     restDay: "Rest day",
     noActivity: "No activity",

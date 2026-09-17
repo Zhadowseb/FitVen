@@ -20,6 +20,7 @@ export default {
     doneToday: "Færdig i dag",
     doneCount: "{count} færdige",
     planned: "Planlagt",
+    plannedCount: "{count} planlagte",
     labelPlanned: "{label} · Planlagt",
     restDay: "Hviledag",
     noActivity: "Ingen aktivitet",

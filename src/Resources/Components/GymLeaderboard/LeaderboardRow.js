@@ -1,4 +1,5 @@
 import { StyleSheet, TouchableOpacity, View, useColorScheme } from "react-native";
+import { formatDate, useTranslation } from "@localization";
 
 import { Colors, withAlpha } from "../../GlobalStyling/colors";
 import CameraPlus from "../../Icons/UI-icons/CameraPlus";
@@ -8,17 +9,7 @@ import LiftStatusPill, { RejectedBadge } from "./LiftStatusPill";
 import { formatWeightKg } from "../../../Utils/gymUtils";
 
 function formatLiftDate(value) {
-  if (!value) {
-    return "";
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
-  return date.toLocaleDateString(undefined, { day: "numeric", month: "short" });
+  return value ? formatDate(value, { day: "numeric", month: "short" }) : "";
 }
 
 /**
@@ -37,6 +28,7 @@ export default function LeaderboardRow({
 }) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const { t } = useTranslation();
   const isMe = Boolean(lift?.isMe);
   const isRejected = lift?.videoStatus === "rejected";
   const isPending = lift?.videoStatus === "pending";
@@ -44,7 +36,7 @@ export default function LeaderboardRow({
   const value =
     unit === "bw" && lift?.ratio !== null && lift?.ratio !== undefined
       ? `${Number(lift.ratio).toFixed(2)}×`
-      : `${formatWeightKg(lift?.weightKg)} kg`;
+      : t("gyms.weightKg", { weight: formatWeightKg(lift?.weightKg) });
   const gymLine = showGym && lift?.gym?.shortName
     ? [lift.gym.shortName, lift.gym.city].filter(Boolean).join(" · ")
     : null;
@@ -81,7 +73,7 @@ export default function LeaderboardRow({
 
       <View style={styles.copy}>
         <ThemedText style={styles.name} setColor={theme.text} numberOfLines={1}>
-          {isMe ? "You" : lift?.displayName ?? "Member"}
+          {isMe ? t("common.you") : lift?.displayName ?? t("common.member")}
         </ThemedText>
         <View style={styles.metaRow}>
           {isRejected ? (
@@ -94,7 +86,7 @@ export default function LeaderboardRow({
           </ThemedText>
           {gymLine && lift?.isHomeGym ? (
             <ThemedText style={styles.meta} setColor={theme.primary} numberOfLines={1}>
-              · your centre
+              {t("gyms.row.yourCentre")}
             </ThemedText>
           ) : null}
         </View>
@@ -111,7 +103,7 @@ export default function LeaderboardRow({
       {isPending && onPressReview && !isMe ? (
         <TouchableOpacity
           accessibilityRole="button"
-          accessibilityLabel="Review this lift's video"
+          accessibilityLabel={t("gyms.row.reviewA11y")}
           activeOpacity={0.8}
           onPress={() => onPressReview(lift)}
           style={[
@@ -130,7 +122,7 @@ export default function LeaderboardRow({
       {isMe && lift?.videoStatus === "none" && onPressAttach ? (
         <TouchableOpacity
           accessibilityRole="button"
-          accessibilityLabel="Attach a video to your lift"
+          accessibilityLabel={t("gyms.video.attachA11y")}
           activeOpacity={0.8}
           onPress={() => onPressAttach(lift)}
           style={[styles.iconButton, { backgroundColor: theme.primary }]}

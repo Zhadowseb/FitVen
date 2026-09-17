@@ -8,6 +8,7 @@ import {
   useColorScheme,
 } from "react-native";
 import { useEvent } from "expo";
+import { formatDate, formatTime, useTranslation } from "@localization";
 
 import { useAuth } from "../../../Contexts/AuthContext";
 import { gymService } from "../../../Services";
@@ -41,13 +42,9 @@ function formatDateTime(value) {
     return "";
   }
 
-  const date = new Date(value);
+  const date = formatDate(value, { day: "numeric", month: "short" });
 
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
-  return `${date.toLocaleDateString(undefined, { day: "numeric", month: "short" })} ${date.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}`;
+  return date ? `${date} ${formatTime(value, { hour: "2-digit", minute: "2-digit" })}` : "";
 }
 
 function formatClock(seconds) {
@@ -85,6 +82,7 @@ function LiftVideo({ uri, overlayLabel, theme }) {
 }
 
 function NativeLiftVideo({ video, uri, overlayLabel, theme }) {
+  const { t } = useTranslation();
   const { VideoView, useVideoPlayer } = video;
   const player = useVideoPlayer(uri ? { uri } : null, (instance) => {
     instance.loop = true;
@@ -106,7 +104,7 @@ function NativeLiftVideo({ video, uri, overlayLabel, theme }) {
     <Pressable
       onPress={() => (isPlaying ? player.pause() : player.play())}
       accessibilityRole="button"
-      accessibilityLabel={isPlaying ? "Pause video" : "Play video"}
+      accessibilityLabel={isPlaying ? t("gyms.review.pauseVideo") : t("gyms.review.playVideo")}
       style={[styles.video, { backgroundColor: theme.uiBackground }]}
     >
       {uri ? (
@@ -119,7 +117,7 @@ function NativeLiftVideo({ video, uri, overlayLabel, theme }) {
       ) : (
         <View style={[StyleSheet.absoluteFill, styles.videoMissing]}>
           <ThemedText style={styles.videoMissingText} setColor={theme.quietText}>
-            Video unavailable
+            {t("gyms.review.videoUnavailable")}
           </ThemedText>
         </View>
       )}
@@ -161,6 +159,7 @@ export default function LiftVerificationSheet({
 }) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [queue, setQueue] = useState([]);
   const [index, setIndex] = useState(0);
@@ -190,11 +189,11 @@ export default function LiftVerificationSheet({
       setIndex(startIndex);
       setShowReasons(false);
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Could not load lifts to review.");
+      setErrorMessage(error instanceof Error ? error.message : t("gyms.review.loadFailed"));
     } finally {
       setIsLoading(false);
     }
-  }, [gymId, initialLiftId, ownLift, visible]);
+  }, [gymId, initialLiftId, ownLift, t, visible]);
 
   useEffect(() => {
     loadQueue();
@@ -226,7 +225,7 @@ export default function LiftVerificationSheet({
       return;
     }
 
-    setFinishedMessage("Thanks, you have seen them all.");
+    setFinishedMessage(t("gyms.review.allSeen"));
     setTimeout(() => onClose?.(), 900);
   };
 
@@ -243,7 +242,7 @@ export default function LiftVerificationSheet({
       onVoted?.({ liftId: current.liftId, approve });
       advance();
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Could not record your vote.");
+      setErrorMessage(error instanceof Error ? error.message : t("gyms.review.voteFailed"));
     } finally {
       setIsVoting(false);
     }
@@ -257,9 +256,12 @@ export default function LiftVerificationSheet({
   const metaParts = current
     ? [
         current.previousWeightKg !== null && current.previousWeightKg !== undefined
-          ? `From ${formatWeightKg(current.previousWeightKg)} kg · +${formatWeightKg(current.weightKg - current.previousWeightKg)} kg`
+          ? t("gyms.review.fromPrevious", {
+              previous: formatWeightKg(current.previousWeightKg),
+              gain: formatWeightKg(current.weightKg - current.previousWeightKg),
+            })
           : null,
-        current.rankIfVerified ? `becomes #${current.rankIfVerified} at the centre` : null,
+        current.rankIfVerified ? t("gyms.review.becomesRank", { rank: current.rankIfVerified }) : null,
       ].filter(Boolean)
     : [];
 
@@ -268,7 +270,7 @@ export default function LiftVerificationSheet({
       <View style={styles.header}>
         <TouchableOpacity
           accessibilityRole="button"
-          accessibilityLabel="Close"
+          accessibilityLabel={t("common.close")}
           onPress={onClose}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
@@ -276,14 +278,19 @@ export default function LiftVerificationSheet({
         </TouchableOpacity>
         <View style={styles.headerCopy}>
           <ThemedText style={styles.eyebrow} setColor={theme.primary}>
-            VERIFY LIFT
+            {t("gyms.review.eyebrow")}
           </ThemedText>
           <ThemedText style={styles.title} setColor={theme.title} numberOfLines={1}>
-            {current ? `${current.exerciseName} · ${formatWeightKg(current.weightKg)} kg` : "Lifts to review"}
+            {current
+              ? t("gyms.review.title", {
+                  exercise: current.exerciseName,
+                  weight: formatWeightKg(current.weightKg),
+                })
+              : t("gyms.review.queueTitle")}
           </ThemedText>
         </View>
         <ThemedText style={styles.counter} setColor={theme.quietText}>
-          {total > 0 ? `${Math.min(index + 1, total)} of ${total}` : ""}
+          {total > 0 ? t("gyms.review.counter", { index: Math.min(index + 1, total), total }) : ""}
         </ThemedText>
       </View>
 
@@ -300,10 +307,10 @@ export default function LiftVerificationSheet({
       ) : !current ? (
         <View style={styles.loading}>
           <ThemedText style={styles.finished} setColor={theme.title}>
-            Nothing waiting for review
+            {t("gyms.review.emptyTitle")}
           </ThemedText>
           <ThemedText style={styles.footnote} setColor={theme.quietText}>
-            {errorMessage || "When somebody at this centre attaches a video to a lift, it shows up here."}
+            {errorMessage || t("gyms.review.emptyBody")}
           </ThemedText>
         </View>
       ) : (
@@ -315,7 +322,7 @@ export default function LiftVerificationSheet({
               <UserAvatar uri={current.avatarUrl} size={42} iconSize={20} />
               <View style={styles.lifterCopy}>
                 <ThemedText style={styles.lifterName} setColor={theme.title} numberOfLines={1}>
-                  {current.isMe ? "You" : current.displayName}
+                  {current.isMe ? t("common.you") : current.displayName}
                 </ThemedText>
                 {metaParts.length ? (
                   <ThemedText style={styles.lifterMeta} setColor={theme.quietText} numberOfLines={2}>
@@ -327,14 +334,14 @@ export default function LiftVerificationSheet({
 
             <View style={styles.voteStatusRow}>
               <ThemedText style={styles.voteStatusStrong} setColor={recordColor}>
-                {`${current.approvals} approved`}
+                {t("gyms.review.approvedCount", { count: current.approvals })}
               </ThemedText>
               <ThemedText style={styles.voteStatus} setColor={theme.quietText}>
-                {`· ${current.rejections} rejected`}
+                {t("gyms.review.rejectedCount", { count: current.rejections })}
               </ThemedText>
               <View style={styles.spacer} />
               <ThemedText style={styles.voteStatus} setColor="#C4C7CF">
-                {`${missing} to go`}
+                {t("gyms.review.toGo", { count: missing })}
               </ThemedText>
             </View>
             <View style={styles.segments}>
@@ -358,16 +365,16 @@ export default function LiftVerificationSheet({
 
           {ownLift || current.isMe ? (
             <ThemedText style={styles.footnote} setColor={theme.quietText}>
-              {`Your lift is waiting for ${missing} more ${missing === 1 ? "approval" : "approvals"}.`}
+              {t("gyms.review.ownLiftWaiting", { count: missing })}
             </ThemedText>
           ) : !canVote ? (
             <ThemedText style={styles.footnote} setColor={theme.quietText}>
-              Only people who have trained at this centre in the last 90 days can vote.
+              {t("gyms.review.cannotVote")}
             </ThemedText>
           ) : showReasons ? (
             <View style={styles.reasons}>
               <ThemedText style={styles.reasonsTitle} setColor={theme.title}>
-                Why reject it?
+                {t("gyms.review.whyReject")}
               </ThemedText>
               {gymService.REJECTION_REASONS.map((reason) => (
                 <TouchableOpacity
@@ -379,13 +386,13 @@ export default function LiftVerificationSheet({
                   style={[styles.reasonRow, { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder }]}
                 >
                   <ThemedText style={styles.reasonText} setColor={theme.title}>
-                    {reason.label}
+                    {t(reason.labelKey)}
                   </ThemedText>
                 </TouchableOpacity>
               ))}
               <TouchableOpacity onPress={() => setShowReasons(false)} style={styles.skip}>
                 <ThemedText style={styles.skipText} setColor={theme.quietText}>
-                  Back
+                  {t("common.back")}
                 </ThemedText>
               </TouchableOpacity>
             </View>
@@ -405,7 +412,7 @@ export default function LiftVerificationSheet({
                 >
                   <Cross width={18} height={18} color="#FF7A7A" />
                   <ThemedText style={styles.buttonText} setColor="#FF7A7A">
-                    Reject
+                    {t("gyms.review.reject")}
                   </ThemedText>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -421,7 +428,7 @@ export default function LiftVerificationSheet({
                     <>
                       <Checkmark width={18} height={18} color={theme.textInverted} thickness={2.6} />
                       <ThemedText style={styles.buttonText} setColor={theme.textInverted}>
-                        Approve lift
+                        {t("gyms.review.approve")}
                       </ThemedText>
                     </>
                   )}
@@ -430,14 +437,14 @@ export default function LiftVerificationSheet({
 
               <TouchableOpacity onPress={advance} style={styles.skip} disabled={isVoting}>
                 <ThemedText style={styles.skipText} setColor={theme.quietText}>
-                  Skip
+                  {t("common.skip")}
                 </ThemedText>
               </TouchableOpacity>
             </>
           )}
 
           <ThemedText style={styles.footnote} setColor={theme.quietText}>
-            {`${APPROVALS_REQUIRED} approvals from other members verify a lift. ${REJECTIONS_TO_REMOVE} rejections remove it from the ranking. You cannot vote on your own lifts.`}
+            {t("gyms.review.rules", { approvals: APPROVALS_REQUIRED, rejections: REJECTIONS_TO_REMOVE })}
           </ThemedText>
         </View>
       )}

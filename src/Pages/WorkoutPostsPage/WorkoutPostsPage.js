@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
+import { useTranslation } from "@localization";
 
 import styles from "./WorkoutPostsPageStyle";
 import { Colors } from "../../Resources/GlobalStyling/colors";
@@ -36,10 +37,12 @@ import {
   workoutService,
 } from "@services";
 
+// Labels are keys, not text: a constant built at module load would be frozen
+// in whatever language the app started in.
 const FILTERS = [
-  { key: "ALL", label: "All" },
-  { key: "POSTED", label: "Posted" },
-  { key: "UNPOSTED", label: "Not posted" },
+  { key: "ALL", labelKey: "social.posts.filters.all" },
+  { key: "POSTED", labelKey: "social.posts.filters.posted" },
+  { key: "UNPOSTED", labelKey: "social.posts.filters.notPosted" },
 ];
 
 /**
@@ -48,6 +51,7 @@ const FILTERS = [
  * connection; only the posted badge needs the cloud.
  */
 export default function WorkoutPostsPage() {
+  const { t } = useTranslation();
   const db = useSQLiteContext();
   const navigation = useNavigation();
   const { user } = useAuth();
@@ -83,15 +87,15 @@ export default function WorkoutPostsPage() {
       });
       setPosts(nextPosts);
       if (nextPosts.some((post) => post.isPosted === null)) {
-        setErrorMessage("Post status is unavailable. Pull down to try again.");
+        setErrorMessage(t("social.posts.statusUnavailablePull"));
       }
     } catch (error) {
       console.error("Could not load own workout posts:", error);
-      setErrorMessage("Your workouts could not be loaded.");
+      setErrorMessage(t("social.posts.loadFailed"));
     } finally {
       setIsLoading(false);
     }
-  }, [db, user]);
+  }, [db, t, user]);
 
   useFocusEffect(
     useCallback(() => {
@@ -132,12 +136,12 @@ export default function WorkoutPostsPage() {
         );
       } catch (error) {
         console.error("Could not post the workout summary:", error);
-        setErrorMessage(error?.message ?? "The workout could not be posted.");
+        setErrorMessage(error?.message ?? t("social.posts.postFailed"));
       } finally {
         setPostingWorkoutId(null);
       }
     },
-    [db, postingWorkoutId]
+    [db, postingWorkoutId, t]
   );
 
   const closeSheet = useCallback(() => setManagedPost(null), []);
@@ -206,12 +210,12 @@ export default function WorkoutPostsPage() {
       setDeleteTarget(null);
     } catch (error) {
       console.error("Could not delete the workout post:", error);
-      setErrorMessage(error?.message ?? "The post could not be deleted.");
+      setErrorMessage(error?.message ?? t("social.posts.deleteFailed"));
       setDeleteTarget(null);
     } finally {
       setIsDeleting(false);
     }
-  }, [db, deleteTarget, isDeleting]);
+  }, [db, deleteTarget, isDeleting, t]);
 
   const visiblePosts = useMemo(() => {
     if (filter === "POSTED") {
@@ -250,19 +254,19 @@ export default function WorkoutPostsPage() {
       <View style={styles.stateBlock}>
         <ThemedText style={styles.stateTitle} setColor={titleColor}>
           {posts.length === 0
-            ? "No finished workouts yet"
-            : `No ${
-                filter === "POSTED" ? "posted" : "unposted"
-              } workouts`}
+            ? t("social.posts.emptyTitle")
+            : filter === "POSTED"
+              ? t("social.posts.noPostedWorkouts")
+              : t("social.posts.noUnpostedWorkouts")}
         </ThemedText>
         <ThemedText style={styles.stateText} setColor={quietText}>
           {posts.length === 0
-            ? "Finish a strength workout and it shows up here, ready to post."
-            : "Switch the filter to see the rest."}
+            ? t("social.posts.emptyBody")
+            : t("social.posts.switchFilter")}
         </ThemedText>
       </View>
     );
-  }, [filter, isLoading, posts.length, quietText, theme.primary, titleColor]);
+  }, [filter, isLoading, posts.length, quietText, t, titleColor]);
 
   return (
     <ThemedView safe={["top", "left", "right"]}>
@@ -273,8 +277,11 @@ export default function WorkoutPostsPage() {
             style={[styles.pageHeaderTitleEyebrow, { color: quietText }]}
           >
             {posts.some((post) => post.isPosted === null)
-              ? "Post status unavailable"
-              : `${postedCount} of ${posts.length} posted`}
+              ? t("social.posts.statusUnavailable")
+              : t("social.posts.postedOf", {
+                  posted: postedCount,
+                  total: posts.length,
+                })}
           </ThemedText>
 
           <ThemedTitle
@@ -282,7 +289,7 @@ export default function WorkoutPostsPage() {
             style={styles.pageHeaderTitleMain}
             numberOfLines={1}
           >
-            Your workouts
+            {t("social.posts.title")}
           </ThemedTitle>
         </View>
       </ThemedHeader>
@@ -331,7 +338,7 @@ export default function WorkoutPostsPage() {
                       style={styles.filterChipText}
                       setColor={isSelected ? theme.ink : theme.text}
                     >
-                      {option.label}
+                      {t(option.labelKey)}
                     </ThemedText>
                   </TouchableOpacity>
                 );
@@ -369,12 +376,14 @@ export default function WorkoutPostsPage() {
           style={[styles.sheetTitle, { borderBottomColor: theme.cardBorder }]}
         >
           <ThemedText style={styles.sheetTitleText} setColor={titleColor}>
-            {managedPost?.title ?? "Workout"}
+            {managedPost?.title ?? t("social.posts.workoutFallback")}
           </ThemedText>
           <ThemedText style={styles.sheetSubtitleText} setColor={quietText}>
             {managedPost?.isPosted == null
-              ? "Post status is unavailable"
-              : managedPost.isPosted ? "Posted to your feed" : "Not posted yet"}
+              ? t("social.posts.statusIsUnavailable")
+              : managedPost.isPosted
+                ? t("social.posts.postedToFeed")
+                : t("social.posts.notPostedYet")}
           </ThemedText>
         </View>
 
@@ -390,7 +399,7 @@ export default function WorkoutPostsPage() {
                 style={styles.sheetOptionText}
                 setColor={primaryTextColor}
               >
-                Post to feed
+                {t("social.posts.postToFeed")}
               </ThemedText>
             </TouchableOpacity>
           ) : null}
@@ -412,7 +421,7 @@ export default function WorkoutPostsPage() {
                   style={styles.sheetOptionText}
                   setColor={titleColor}
                 >
-                  Edit note
+                  {t("social.posts.editNote")}
                 </ThemedText>
               </TouchableOpacity>
 
@@ -426,7 +435,7 @@ export default function WorkoutPostsPage() {
                   style={styles.sheetOptionText}
                   setColor={titleColor}
                 >
-                  Update post data
+                  {t("social.posts.updatePostData")}
                 </ThemedText>
               </TouchableOpacity>
             </>
@@ -444,7 +453,7 @@ export default function WorkoutPostsPage() {
               stroke={theme.iconColor}
             />
             <ThemedText style={styles.sheetOptionText} setColor={titleColor}>
-              Open workout
+              {t("social.posts.openWorkout")}
             </ThemedText>
           </TouchableOpacity>
 
@@ -463,7 +472,7 @@ export default function WorkoutPostsPage() {
                 style={styles.sheetOptionText}
                 setColor={theme.danger}
               >
-                Remove from feed
+                {t("social.posts.removeFromFeed")}
               </ThemedText>
             </TouchableOpacity>
           ) : null}
@@ -472,9 +481,13 @@ export default function WorkoutPostsPage() {
 
       <ThemedConfirmModal
         visible={Boolean(deleteTarget)}
-        title="Remove from feed?"
-        message="The workout stays in your log. Only the post is removed."
-        confirmLabel={isDeleting ? "Removing..." : "Remove post"}
+        title={t("social.posts.removeConfirm.title")}
+        message={t("social.posts.removeConfirm.message")}
+        confirmLabel={
+          isDeleting
+            ? t("social.posts.removeConfirm.removing")
+            : t("social.posts.removeConfirm.confirm")
+        }
         tone="danger"
         isWorking={isDeleting}
         onConfirm={handleDeletePost}

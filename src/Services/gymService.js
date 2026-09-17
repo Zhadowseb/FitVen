@@ -7,6 +7,7 @@
 // supabase/migrations/20260917120000_gyms-and-lift-verification.sql explains
 // why the table itself only answers for your own rows.
 import * as Location from "expo-location";
+import { t } from "@localization";
 
 import { getCurrentUserId, supabase } from "../Database/supaBaseClient";
 import { weightliftingRepository, workoutRepository } from "../Repository";
@@ -34,14 +35,16 @@ export const LIFT_UNIT_BODYWEIGHT = "bw";
 
 /**
  * The reasons the reject step offers. The values are what the column check
- * accepts, so a new one here without one there fails the insert.
+ * accepts, so a new one here without one there fails the insert. The sheet
+ * shows t(labelKey); `label` is the English text for anything reading the
+ * list outside a component.
  */
 export const REJECTION_REASONS = [
-  { value: "depth", label: "Not deep enough" },
-  { value: "lockout", label: "No lockout" },
-  { value: "assist", label: "Assisted or spotted" },
-  { value: "weight", label: "Weight does not match" },
-  { value: "other", label: "Something else" },
+  { value: "depth", label: "Not deep enough", labelKey: "gyms.rejectReasons.depth" },
+  { value: "lockout", label: "No lockout", labelKey: "gyms.rejectReasons.lockout" },
+  { value: "assist", label: "Assisted or spotted", labelKey: "gyms.rejectReasons.assist" },
+  { value: "weight", label: "Weight does not match", labelKey: "gyms.rejectReasons.weight" },
+  { value: "other", label: "Something else", labelKey: "gyms.rejectReasons.other" },
 ];
 
 const GYM_SETUP_MESSAGE =
@@ -79,7 +82,7 @@ function normalizeGymError(error) {
     return error;
   }
 
-  return new Error(String(error?.message ?? "Something went wrong with centres."));
+  return new Error(String(error?.message ?? t("gyms.errors.generic")));
 }
 
 async function getAuthenticatedUserId() {
@@ -137,7 +140,7 @@ function mapLiftRow(row) {
     liftId: toNumber(row.lift_id ?? row.id),
     rank: toNumber(row.rank),
     userId: row.user_id ?? null,
-    displayName: row.display_name ?? "Member",
+    displayName: row.display_name ?? t("common.member"),
     avatarPath: row.avatar_path ?? null,
     avatarUpdatedAt: null,
     avatarUrl: null,
@@ -699,7 +702,7 @@ export async function getMyGyms() {
 /** `gymId` null goes back to automatic. */
 export async function setHomeGym({ userId, gymId }) {
   if (!userId) {
-    throw new Error("You need to be signed in to choose a centre.");
+    throw new Error(t("gyms.errors.signInToChoose"));
   }
 
   const { error } = await supabase.from(PROFILE_PRIVATE_TABLE).upsert(
@@ -789,7 +792,7 @@ export async function getVerificationQueue({ gymId }) {
  */
 export async function voteOnLift({ userId, liftId, approve, reason = null }) {
   if (!userId) {
-    throw new Error("You need to be signed in to vote.");
+    throw new Error(t("gyms.errors.signInToVote"));
   }
 
   const { error } = await supabase.from(GYM_LIFT_VOTE_TABLE).insert({
@@ -812,38 +815,38 @@ export async function voteOnLift({ userId, liftId, approve, reason = null }) {
  */
 export async function attachLiftVideo({ userId, liftId, asset }) {
   if (!userId) {
-    throw new Error("You need to be signed in to attach a video.");
+    throw new Error(t("gyms.errors.signInToAttach"));
   }
 
   if (!asset?.uri) {
-    throw new Error("Pick a video first.");
+    throw new Error(t("gyms.errors.pickVideoFirst"));
   }
 
   const durationSeconds = toNumber(asset.duration);
 
   // expo-image-picker reports duration in milliseconds on both platforms.
   if (durationSeconds !== null && durationSeconds / 1000 > LIFT_VIDEO_MAX_DURATION_SECONDS + 1) {
-    throw new Error(`Keep the video under ${LIFT_VIDEO_MAX_DURATION_SECONDS} seconds.`);
+    throw new Error(t("gyms.errors.videoTooLong", { seconds: LIFT_VIDEO_MAX_DURATION_SECONDS }));
   }
 
   if (asset.fileSize && asset.fileSize > LIFT_VIDEO_MAX_BYTES) {
-    throw new Error("The video must stay under 50 MB.");
+    throw new Error(t("gyms.errors.videoTooLarge"));
   }
 
   const response = await fetch(asset.uri);
 
   if (!response.ok) {
-    throw new Error("Could not read the selected video.");
+    throw new Error(t("gyms.errors.videoUnreadable"));
   }
 
   const buffer = await response.arrayBuffer();
 
   if (!buffer.byteLength) {
-    throw new Error("The selected video was empty.");
+    throw new Error(t("gyms.errors.videoEmpty"));
   }
 
   if (buffer.byteLength > LIFT_VIDEO_MAX_BYTES) {
-    throw new Error("The video must stay under 50 MB.");
+    throw new Error(t("gyms.errors.videoTooLarge"));
   }
 
   const isQuickTime = /\.mov$/i.test(asset.fileName ?? asset.uri ?? "");
@@ -890,7 +893,7 @@ export async function attachLiftVideo({ userId, liftId, asset }) {
 
 export async function removeLiftVideo({ userId, liftId, videoPath }) {
   if (!userId) {
-    throw new Error("You need to be signed in.");
+    throw new Error(t("common.signInRequired"));
   }
 
   const { error } = await supabase

@@ -1,5 +1,6 @@
 // Pure helpers for centres and centre leaderboards. No database, no network,
 // so scripts/test-gym-leaderboard.js can load this file on its own.
+import { t } from "@localization";
 
 const CHAIN_INITIALS = {
   puregym: "PG",
@@ -172,7 +173,7 @@ export function shortenDisplayName(displayName) {
     .filter(Boolean);
 
   if (parts.length === 0) {
-    return "Member";
+    return t("common.member");
   }
 
   if (parts.length === 1) {

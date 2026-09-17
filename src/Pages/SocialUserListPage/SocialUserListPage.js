@@ -6,6 +6,7 @@ import {
 } from "react-native";
 import { useCallback, useEffect, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
+import { useTranslation } from "@localization";
 
 import styles from "./SocialUserListPageStyle";
 import { Colors } from "../../Resources/GlobalStyling/colors";
@@ -25,6 +26,7 @@ import {
 } from "../../Resources/ThemedComponents";
 
 const SocialUserListPage = () => {
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const { user } = useAuth();
@@ -51,7 +53,7 @@ const SocialUserListPage = () => {
     if (!user?.id) {
       setIsLoading(false);
       setResults([]);
-      setErrorMessage("Sign in to search for other users.");
+      setErrorMessage(t("social.search.signInToSearch"));
       return;
     }
 
@@ -76,7 +78,7 @@ const SocialUserListPage = () => {
           setErrorMessage(
             error instanceof Error
               ? error.message
-              : "Could not load user search right now."
+              : t("social.search.loadFailed")
           );
         }
       } finally {
@@ -90,7 +92,7 @@ const SocialUserListPage = () => {
       isCancelled = true;
       clearTimeout(timeoutId);
     };
-  }, [query, refreshKey, user]);
+  }, [query, refreshKey, t, user]);
 
   const requestToggleFollow = (profile) => {
     if (profile?.isFollowing) {
@@ -149,7 +151,7 @@ const SocialUserListPage = () => {
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "Could not update follow status."
+          : t("social.errors.updateFollowFailed")
       );
     } finally {
       setBusyUserId(null);
@@ -163,11 +165,13 @@ const SocialUserListPage = () => {
   // what the search function was tightened to stop; below the minimum there is
   // nothing to show and the screen has to say why rather than look broken.
   const emptyStateTitle = isSearching
-    ? `No match for "${trimmedQuery}"`
-    : "Search for someone";
+    ? t("social.search.noMatch", { query: trimmedQuery })
+    : t("social.search.emptyTitle");
   const emptyStateBody = isSearching
-    ? "Check the spelling, or search for their username instead."
-    : `Type at least ${socialService.USER_SEARCH_MIN_LENGTH} characters of a name or username. Usernames look like name#1234.`;
+    ? t("social.search.noMatchBody")
+    : t("social.search.emptyBody", {
+        count: socialService.USER_SEARCH_MIN_LENGTH,
+      });
 
   return (
     <ThemedView safe={["top", "left", "right"]} style={styles.container}>
@@ -180,7 +184,7 @@ const SocialUserListPage = () => {
               { color: quietText },
             ]}
           >
-            Discover
+            {t("social.discover")}
           </ThemedText>
 
           <ThemedTitle
@@ -188,7 +192,7 @@ const SocialUserListPage = () => {
             style={styles.pageHeaderTitleMain}
             numberOfLines={1}
           >
-            Find Friends
+            {t("social.findFriends")}
           </ThemedTitle>
         </View>
       </ThemedHeader>
@@ -203,7 +207,7 @@ const SocialUserListPage = () => {
           <ThemedTextInput
             value={query}
             onChangeText={setQuery}
-            placeholder="Search by name or username"
+            placeholder={t("social.search.placeholder")}
             autoCapitalize="none"
             autoCorrect={false}
             style={styles.searchInputWrapper}
@@ -221,7 +225,7 @@ const SocialUserListPage = () => {
             ]}
           >
             <ThemedText style={styles.noticeTitle} setColor={titleColor}>
-              Search unavailable
+              {t("social.search.unavailable")}
             </ThemedText>
             <ThemedText style={styles.noticeBody} setColor={quietText}>
               {errorMessage}
@@ -232,7 +236,7 @@ const SocialUserListPage = () => {
         {isLoading ? (
           <ThemedStateBlock
             style={styles.loadingState}
-            message="Loading people..."
+            message={t("social.search.loadingPeople")}
           />
         ) : results.length > 0 ? (
           <View style={styles.resultsList}>
@@ -276,10 +280,10 @@ const SocialUserListPage = () => {
                 <ThemedButton
                   title={
                     busyUserId === profile.id
-                      ? "Saving..."
+                      ? t("social.saving")
                       : profile.isFollowing
-                        ? "Following \u2713"
-                        : "Follow"
+                        ? t("social.followingCheck")
+                        : t("social.follow")
                   }
                   onPress={() => requestToggleFollow(profile)}
                   width={112}
@@ -314,14 +318,15 @@ const SocialUserListPage = () => {
 
       <ThemedConfirmModal
         visible={Boolean(unfollowTarget)}
-        title="Stop following?"
-        message={`${
-          unfollowTarget?.displayName ??
-          unfollowTarget?.username ??
-          "This person"
-        } will no longer appear in your feed. You can follow them again later.`}
-        confirmLabel="Stop following"
-        cancelLabel="Keep following"
+        title={t("social.unfollowConfirm.title")}
+        message={t("social.unfollowConfirm.message", {
+          name:
+            unfollowTarget?.displayName ??
+            unfollowTarget?.username ??
+            t("social.thisPersonSubject"),
+        })}
+        confirmLabel={t("social.unfollowConfirm.confirm")}
+        cancelLabel={t("social.unfollowConfirm.cancel")}
         tone="danger"
         isWorking={Boolean(busyUserId)}
         onConfirm={confirmUnfollow}

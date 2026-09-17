@@ -10,6 +10,7 @@ import {
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
+import { useTranslation } from "@localization";
 
 import styles from "./GymExerciseLeaderboardPageStyle";
 import { useAuth } from "../../Contexts/AuthContext";
@@ -33,10 +34,6 @@ import {
 } from "../../Resources/ThemedComponents";
 import { formatWeightKg, shortenDisplayName } from "../../Utils/gymUtils";
 
-const UNIT_OPTIONS = [
-  { value: gymService.LIFT_UNIT_KG, label: "kg" },
-  { value: gymService.LIFT_UNIT_BODYWEIGHT, label: "×BW" },
-];
 const PODIUM_ORDER = [1, 0, 2];
 const PODIUM_AVATAR = [58, 48, 48];
 const PODIUM_PLINTH = [64, 44, 30];
@@ -51,6 +48,7 @@ function formatValue(lift, unit) {
 }
 
 function Podium({ rows, unit, theme, colorScheme }) {
+  const { t } = useTranslation();
   const isLight = colorScheme === "light";
   const ringColors = [theme.record, "#B8BEC9", "#C98F5A"];
   const top = rows.slice(0, 3);
@@ -89,7 +87,7 @@ function Podium({ rows, unit, theme, colorScheme }) {
                 setColor={theme.title}
                 numberOfLines={1}
               >
-                {lift.isMe ? "You" : shortenDisplayName(lift.displayName)}
+                {lift.isMe ? t("common.you") : shortenDisplayName(lift.displayName)}
               </ThemedText>
               <View style={styles.podiumWeightGroup}>
                 <ThemedText
@@ -99,12 +97,12 @@ function Podium({ rows, unit, theme, colorScheme }) {
                   {formatValue(lift, unit)}
                 </ThemedText>
                 <ThemedText style={styles.podiumUnit} setColor={theme.quietText}>
-                  {unit === gymService.LIFT_UNIT_BODYWEIGHT ? "×" : "kg"}
+                  {unit === gymService.LIFT_UNIT_BODYWEIGHT ? "×" : t("common.kg")}
                 </ThemedText>
               </View>
               {lift.videoStatus === "none" ? (
                 <ThemedText style={styles.podiumNoVideo} setColor={theme.quietText}>
-                  No video
+                  {t("gyms.status.noVideo")}
                 </ThemedText>
               ) : (
                 <LiftStatusPill status={lift.videoStatus} approvals={lift.approvals} compact />
@@ -142,6 +140,7 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const { t } = useTranslation();
   const { user } = useAuth();
   const national = nationalProp || Boolean(route.params?.national);
   const gymId = national ? null : Number(route.params?.gym_id ?? route.params?.gymId);
@@ -163,6 +162,10 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
   const [notice, setNotice] = useState("");
   const quietText = theme.quietText ?? theme.text;
   const isLight = colorScheme === "light";
+  const unitOptions = [
+    { value: gymService.LIFT_UNIT_KG, label: t("common.kg") },
+    { value: gymService.LIFT_UNIT_BODYWEIGHT, label: t("gyms.unit.bodyweight") },
+  ];
 
   const load = useCallback(
     async ({ silent = false } = {}) => {
@@ -178,11 +181,11 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
               return;
             }
           } catch (error) {
-            setErrorMessage(error instanceof Error ? error.message : "Could not load the ranking.");
+            setErrorMessage(error instanceof Error ? error.message : t("gyms.exercise.loadFailed"));
           }
         }
 
-        setErrorMessage("Pick an exercise.");
+        setErrorMessage(t("gyms.exercise.pickExercise"));
         setIsLoading(false);
         return;
       }
@@ -232,12 +235,12 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
           setChips(list);
         }
       } catch (error) {
-        setErrorMessage(error instanceof Error ? error.message : "Could not load the ranking.");
+        setErrorMessage(error instanceof Error ? error.message : t("gyms.exercise.loadFailed"));
       } finally {
         setIsLoading(false);
       }
     },
-    [chips.length, exerciseId, gymId, national, scope, unit]
+    [chips.length, exerciseId, gymId, national, scope, t, unit]
   );
 
   useFocusEffect(
@@ -273,7 +276,7 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
         me: current?.me ?? next.me,
       }));
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Could not load more.");
+      setErrorMessage(error instanceof Error ? error.message : t("gyms.exercise.loadMoreFailed"));
     } finally {
       setIsLoadingMore(false);
     }
@@ -292,14 +295,20 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
     return [
       {
         value: gymService.GYM_SCOPE_GYM,
-        label: gymTotal !== null && gymTotal !== undefined ? `Centre · ${gymTotal}` : "Centre",
+        label:
+          gymTotal !== null && gymTotal !== undefined
+            ? t("gyms.scope.centreWithCount", { count: gymTotal })
+            : t("gyms.scope.centre"),
       },
       {
         value: gymService.GYM_SCOPE_FRIENDS,
-        label: friendsTotal !== null && friendsTotal !== undefined ? `Friends · ${friendsTotal}` : "Friends",
+        label:
+          friendsTotal !== null && friendsTotal !== undefined
+            ? t("gyms.scope.friendsWithCount", { count: friendsTotal })
+            : t("gyms.scope.friends"),
       },
     ];
-  }, [board?.total, otherScopeTotal, scope]);
+  }, [board?.total, otherScopeTotal, scope, t]);
 
   const openReview = (lift) => {
     if (lift.isMe) {
@@ -322,7 +331,7 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
         : await ImagePicker.requestMediaLibraryPermissionsAsync();
 
       if (!permission.granted) {
-        setNotice(fromCamera ? "Camera access is needed to record a video." : "Photo library access is needed to pick a video.");
+        setNotice(fromCamera ? t("gyms.video.cameraPermission") : t("gyms.video.libraryPermission"));
         return;
       }
 
@@ -345,7 +354,7 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
 
       setPendingAsset(result.assets[0]);
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : "Could not open the video picker.");
+      setNotice(error instanceof Error ? error.message : t("gyms.video.pickerFailed"));
     }
   };
 
@@ -363,26 +372,26 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
       setPendingAsset(null);
       setNotice(
         notified > 0
-          ? `Video attached. ${notified} ${notified === 1 ? "member has" : "members have"} been asked to verify it.`
-          : "Video attached. Members of the centre can now verify it."
+          ? t("gyms.video.attachedNotified", { count: notified })
+          : t("gyms.video.attached")
       );
       await load({ silent: true });
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : "Could not attach the video.");
+      setNotice(error instanceof Error ? error.message : t("gyms.video.attachFailed"));
     } finally {
       setIsUploading(false);
     }
   };
 
-  const eyebrow = national ? "All centres · Denmark" : board?.gym?.shortName ?? " ";
-  const title = board?.exercise?.name ?? (isLoading ? "Loading…" : "Exercise");
+  const eyebrow = national ? t("gyms.exercise.nationalEyebrow") : board?.gym?.shortName ?? " ";
+  const title = board?.exercise?.name ?? (isLoading ? t("common.loading") : t("gyms.exercise.titleFallback"));
   const pendingSeconds = pendingAsset?.duration ? Math.round(pendingAsset.duration / 1000) : null;
 
   return (
     <ThemedView safe={["top", "left", "right"]} style={styles.container}>
       <ThemedHeader
         rightWidth={104}
-        right={<ScopeToggle compact options={UNIT_OPTIONS} value={unit} onChange={setUnit} />}
+        right={<ScopeToggle compact options={unitOptions} value={unit} onChange={setUnit} />}
       >
         <View style={styles.pageHeaderTitleGroup}>
           <ThemedText size={12} style={[styles.pageHeaderTitleEyebrow, { color: quietText }]} numberOfLines={1}>
@@ -436,7 +445,7 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
             <View style={styles.infoRow}>
               <LiftStatusPill status="verified" approvals={3} compact />
               <ThemedText style={styles.infoText} setColor={quietText}>
-                Across centres a lift needs an approved video to count.
+                {t("gyms.exercise.nationalNote")}
               </ThemedText>
             </View>
           </>
@@ -447,9 +456,9 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
         {errorMessage ? (
           <ThemedStateBlock
             variant="error"
-            title="Ranking unavailable"
+            title={t("gyms.exercise.unavailableTitle")}
             message={errorMessage}
-            actionLabel="Try again"
+            actionLabel={t("common.retry")}
             onAction={() => load()}
           />
         ) : isLoading && !board ? (
@@ -459,19 +468,19 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
             <View style={styles.emptyRow}>
               <ThemedText style={styles.emptyTitle} setColor={theme.title}>
                 {unit === gymService.LIFT_UNIT_BODYWEIGHT
-                  ? "No bodyweight on record"
+                  ? t("gyms.exercise.empty.noBodyweightTitle")
                   : scope === gymService.GYM_SCOPE_FRIENDS && !national
-                    ? "None of your friends lift here yet"
+                    ? t("gyms.exercise.empty.noFriendsTitle")
                     : national
-                      ? "No verified lifts yet"
-                      : "No lifts yet"}
+                      ? t("gyms.exercise.empty.noVerifiedTitle")
+                      : t("gyms.noLiftsYet")}
               </ThemedText>
               <ThemedText style={styles.emptyBody} setColor={quietText}>
                 {unit === gymService.LIFT_UNIT_BODYWEIGHT
-                  ? "Ranking by bodyweight needs a bodyweight on the lift, which nobody here has recorded."
+                  ? t("gyms.exercise.empty.noBodyweightBody")
                   : national
-                    ? "Attach a video to a lift and have three members of your centre approve it."
-                    : "Finish a workout with this exercise inside the centre and the first lift is yours."}
+                    ? t("gyms.exercise.empty.noVerifiedBody")
+                    : t("gyms.exercise.empty.noLiftsBody")}
               </ThemedText>
             </View>
           </View>
@@ -507,7 +516,7 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
                       <ActivityIndicator size="small" color={theme.primaryText ?? theme.primary} />
                     ) : (
                       <ThemedText style={styles.footerText} setColor={theme.primary}>
-                        Load more
+                        {t("common.loadMore")}
                       </ThemedText>
                     )}
                   </TouchableOpacity>
@@ -524,8 +533,7 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
         ) : null}
 
         <ThemedText style={styles.footnote} setColor={quietText}>
-          Video verified: three members of the centre approved the video. Video pending: a video is attached and
-          waiting for votes. No video: the lift counts at the centre but not across Denmark.
+          {t("gyms.exercise.legend")}
         </ThemedText>
       </ScrollView>
 
@@ -540,16 +548,21 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
             <View style={styles.pinnedNote}>
               <View style={styles.pinnedNoteCopy}>
                 <ThemedText style={styles.pinnedNoteTitle} setColor={theme.title}>
-                  {me.videoStatus === "pending" ? "Not ranked · your video is waiting for votes" : "Not ranked · your lift needs a video"}
+                  {me.videoStatus === "pending"
+                    ? t("gyms.exercise.pinned.pendingTitle")
+                    : t("gyms.exercise.pinned.noVideoTitle")}
                 </ThemedText>
                 <ThemedText style={styles.pinnedNoteBody} setColor={quietText}>
-                  {`${formatWeightKg(me.weightKg)} kg at ${me.gym?.shortName ?? "your centre"}`}
+                  {t("gyms.exercise.pinned.body", {
+                    weight: formatWeightKg(me.weightKg),
+                    gym: me.gym?.shortName ?? t("gyms.yourCentre"),
+                  })}
                 </ThemedText>
               </View>
               {me.videoStatus === "none" ? (
                 <TouchableOpacity
                   accessibilityRole="button"
-                  accessibilityLabel="Attach a video to your lift"
+                  accessibilityLabel={t("gyms.video.attachA11y")}
                   onPress={() => setIsAttachSheetOpen(true)}
                   style={[styles.attachButton, { backgroundColor: theme.primary }]}
                 >
@@ -572,15 +585,25 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
       <ThemedBottomSheet visible={isAttachSheetOpen} onClose={() => setIsAttachSheetOpen(false)}>
         <View style={styles.sheetHeader}>
           <ThemedText style={styles.sheetTitle} setColor={theme.title}>
-            Attach a video
+            {t("gyms.video.attachTitle")}
           </ThemedText>
           <ThemedText style={styles.sheetBody} setColor={quietText}>
-            {`Up to ${gymService.LIFT_VIDEO_MAX_DURATION_SECONDS} seconds. Members of the centre watch it and vote; three approvals verify the lift.`}
+            {t("gyms.video.attachBody", { seconds: gymService.LIFT_VIDEO_MAX_DURATION_SECONDS })}
           </ThemedText>
         </View>
         {[
-          { key: "camera", title: "Record now", body: "Open the camera.", fromCamera: true },
-          { key: "library", title: "Choose from library", body: "A video you already have.", fromCamera: false },
+          {
+            key: "camera",
+            title: t("gyms.video.recordNow"),
+            body: t("gyms.video.recordNowBody"),
+            fromCamera: true,
+          },
+          {
+            key: "library",
+            title: t("gyms.video.chooseLibrary"),
+            body: t("gyms.video.chooseLibraryBody"),
+            fromCamera: false,
+          },
         ].map((option) => (
           <TouchableOpacity
             key={option.key}
@@ -604,14 +627,14 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
 
       <ThemedConfirmModal
         visible={Boolean(pendingAsset)}
-        title="Use this video?"
+        title={t("gyms.video.confirmTitle")}
         message={
           pendingSeconds !== null
-            ? `${pendingSeconds} ${pendingSeconds === 1 ? "second" : "seconds"}. It replaces any video already on this lift and resets its votes.`
-            : "It replaces any video already on this lift and resets its votes."
+            ? t("gyms.video.confirmBodyWithDuration", { count: pendingSeconds })
+            : t("gyms.video.confirmBody")
         }
-        confirmLabel="Use"
-        cancelLabel="Cancel"
+        confirmLabel={t("gyms.video.use")}
+        cancelLabel={t("common.cancel")}
         isWorking={isUploading}
         onConfirm={uploadPendingVideo}
         onClose={() => (isUploading ? null : setPendingAsset(null))}

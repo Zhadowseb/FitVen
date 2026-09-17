@@ -1,3 +1,4 @@
+import { t } from "@localization";
 import { supabase } from "../Database/supaBaseClient";
 import {
   AVATAR_BUCKET,
@@ -161,7 +162,7 @@ function formatCloudWorkoutElapsedDetail(workout) {
   const totalElapsedSeconds = storedElapsedSeconds + runningElapsedSeconds;
   const totalElapsedMinutes = Math.max(1, Math.floor(totalElapsedSeconds / 60));
 
-  return `${totalElapsedMinutes} min in`;
+  return t("friends.status.minutesIn", { count: totalElapsedMinutes });
 }
 
 function normalizeCloudTimeString(value) {
@@ -227,7 +228,7 @@ function getCloudWorkoutTimerStartSeconds(workout) {
 function createRestActivityPreview() {
   return {
     activityState: "rest",
-    activityDetail: "Rest day",
+    activityDetail: t("friends.status.restDay"),
     workoutType: null,
     workoutLabel: null,
     workoutId: null,
@@ -322,8 +323,8 @@ function buildCloudActivityPreview(workouts) {
       activityState: "planned",
       activityDetail:
         plannedWorkouts.length > 1
-          ? `${plannedWorkouts.length} planned`
-          : "Planned",
+          ? t("friends.status.plannedCount", { count: plannedWorkouts.length })
+          : t("friends.status.planned"),
       workoutType: nextPlannedWorkout.workout_type ?? null,
       workoutLabel: getCloudWorkoutDisplayLabel(nextPlannedWorkout),
       workoutId: nextPlannedWorkout.id ?? null,
@@ -340,7 +341,9 @@ function buildCloudActivityPreview(workouts) {
   return {
     activityState: "done",
     activityDetail:
-      workouts.length > 1 ? `${workouts.length} done` : "Done today",
+      workouts.length > 1
+        ? t("friends.status.doneCount", { count: workouts.length })
+        : t("friends.status.doneToday"),
     workoutType: completedWorkout?.workout_type ?? null,
     workoutLabel: getCloudWorkoutDisplayLabel(completedWorkout),
     workoutId: completedWorkout?.id ?? null,
@@ -568,18 +571,18 @@ function normalizeBirthDateValue(birthDate) {
 
 function validateBirthDate(birthDate, normalizedBirthDate) {
   if (birthDate && !normalizedBirthDate) {
-    throw new Error("Birth date is invalid.");
+    throw new Error(t("social.errors.birthDateInvalid"));
   }
 
   if (
     normalizedBirthDate &&
     normalizedBirthDate > new Date().toISOString().slice(0, 10)
   ) {
-    throw new Error("Birth date cannot be in the future.");
+    throw new Error(t("social.errors.birthDateFuture"));
   }
 
   if (normalizedBirthDate && normalizedBirthDate < "1900-01-01") {
-    throw new Error("Birth date must be on or after 01.01.1900.");
+    throw new Error(t("social.errors.birthDateTooEarly"));
   }
 }
 
@@ -706,7 +709,7 @@ async function mapOwnProfileRow(row, userId) {
       privateSettingsError:
         error instanceof Error
           ? error.message
-          : "Private profile settings are unavailable.",
+          : t("social.errors.privateSettingsUnavailable"),
     };
   }
 }
@@ -789,7 +792,7 @@ async function findAvailableUsernameCode(usernameBase) {
   const normalizedUsernameBase = normalizeUsernameBaseInput(usernameBase);
 
   if (!USERNAME_BASE_PATTERN.test(normalizedUsernameBase)) {
-    throw new Error("Username base is invalid.");
+    throw new Error(t("social.errors.usernameBaseInvalid"));
   }
 
   // This used to read every profile sharing the base and pick a code that was
@@ -809,7 +812,9 @@ async function findAvailableUsernameCode(usernameBase) {
 
   if (typeof claimedCode !== "string" || !claimedCode) {
     throw new Error(
-      `Username base "${normalizedUsernameBase}" has no remaining 4-digit tags.`
+      t("social.errors.usernameBaseExhausted", {
+        usernameBase: normalizedUsernameBase,
+      })
     );
   }
 
@@ -818,7 +823,7 @@ async function findAvailableUsernameCode(usernameBase) {
 
 export async function ensureOwnProfile(user) {
   if (!user?.id) {
-    throw new Error("You need to be signed in to load social data.");
+    throw new Error(t("social.errors.signInToLoadSocial"));
   }
 
   const { data: existingProfile, error: fetchError } = await supabase
@@ -880,14 +885,12 @@ export async function ensureOwnProfile(user) {
     }
   }
 
-  throw new Error(
-    "Could not reserve a username tag right now. Please try again."
-  );
+  throw new Error(t("social.errors.usernameTagUnavailable"));
 }
 
 export async function updateOwnProfile({ user, displayName, bio, birthDate }) {
   if (!user?.id) {
-    throw new Error("You need to be signed in to update your profile.");
+    throw new Error(t("social.errors.signInToUpdateProfile"));
   }
 
   const normalizedProfile = normalizeProfileValues({
@@ -899,20 +902,22 @@ export async function updateOwnProfile({ user, displayName, bio, birthDate }) {
   validateBirthDate(birthDate, normalizedProfile.birthDate);
 
   if (!normalizedProfile.displayName) {
-    throw new Error("Display name cannot be empty.");
+    throw new Error(t("social.errors.displayNameEmpty"));
   }
 
   if (
     normalizedProfile.displayName.length > PROFILE_DISPLAY_NAME_MAX_LENGTH
   ) {
     throw new Error(
-      `Display name must stay within ${PROFILE_DISPLAY_NAME_MAX_LENGTH} characters.`
+      t("social.errors.displayNameTooLong", {
+        count: PROFILE_DISPLAY_NAME_MAX_LENGTH,
+      })
     );
   }
 
   if (normalizedProfile.bio.length > PROFILE_BIO_MAX_LENGTH) {
     throw new Error(
-      `Bio must stay within ${PROFILE_BIO_MAX_LENGTH} characters.`
+      t("social.errors.bioTooLong", { count: PROFILE_BIO_MAX_LENGTH })
     );
   }
 
@@ -974,13 +979,13 @@ export async function updateOwnProfile({ user, displayName, bio, birthDate }) {
     privateSettingsError:
       privateSettingsError instanceof Error
         ? privateSettingsError.message
-        : "Private profile settings could not be saved.",
+        : t("social.errors.privateSettingsSaveFailed"),
   };
 }
 
 export async function updateOwnBirthDate({ user, birthDate }) {
   if (!user?.id) {
-    throw new Error("You need to be signed in to update your birth date.");
+    throw new Error(t("social.errors.signInToUpdateBirthDate"));
   }
 
   const normalizedBirthDate = normalizeBirthDateValue(birthDate);
@@ -996,7 +1001,7 @@ export async function updateOwnManualMaxHeartRate({
   maxHeartRate,
 }) {
   if (!user?.id) {
-    throw new Error("You need to be signed in to update max heart rate.");
+    throw new Error(t("social.errors.signInToUpdateMaxHeartRate"));
   }
 
   const normalizedMaxHeartRate = normalizeMaxHeartRate(maxHeartRate);
@@ -1007,7 +1012,7 @@ export async function updateOwnManualMaxHeartRate({
     maxHeartRate !== "" &&
     normalizedMaxHeartRate === null
   ) {
-    throw new Error("Max heart rate must be a whole number from 60 to 250.");
+    throw new Error(t("social.errors.maxHeartRateRange"));
   }
 
   await ensureOwnProfile(user);
@@ -1035,13 +1040,13 @@ export async function updateOwnMaxHeartRateSource({
   preferredSource,
 }) {
   if (!user?.id) {
-    throw new Error("You need to be signed in to update max heart rate.");
+    throw new Error(t("social.errors.signInToUpdateMaxHeartRate"));
   }
 
   const normalizedSource = normalizeMaxHeartRateSource(preferredSource);
 
   if (normalizedSource !== preferredSource) {
-    throw new Error("Choose a valid max heart rate source.");
+    throw new Error(t("social.errors.maxHeartRateSourceInvalid"));
   }
 
   await ensureOwnProfile(user);
@@ -1066,15 +1071,15 @@ export async function updateOwnMaxHeartRateSource({
 
 export async function uploadOwnAvatar({ user, asset }) {
   if (!user?.id) {
-    throw new Error("You need to be signed in to update your profile photo.");
+    throw new Error(t("social.errors.signInToUpdatePhoto"));
   }
 
   if (!asset?.uri) {
-    throw new Error("Pick an image before uploading a profile photo.");
+    throw new Error(t("social.errors.pickImageFirst"));
   }
 
   if (asset.fileSize && asset.fileSize > PROFILE_AVATAR_MAX_BYTES) {
-    throw new Error("Profile photo must stay within 3 MB.");
+    throw new Error(t("social.errors.photoTooLarge"));
   }
 
   await ensureOwnProfile(user);
@@ -1082,13 +1087,13 @@ export async function uploadOwnAvatar({ user, asset }) {
   const response = await fetch(asset.uri);
 
   if (!response.ok) {
-    throw new Error("Could not read the selected image.");
+    throw new Error(t("social.errors.imageReadFailed"));
   }
 
   const avatarBuffer = await response.arrayBuffer();
 
   if (!avatarBuffer.byteLength) {
-    throw new Error("The selected image was empty.");
+    throw new Error(t("social.errors.imageEmpty"));
   }
 
   const avatarPath = getAvatarObjectPath(user.id);
@@ -1129,7 +1134,7 @@ export async function uploadOwnAvatar({ user, asset }) {
 
 export async function searchUsers({ query, currentUserId, limit = 20 }) {
   if (!currentUserId) {
-    throw new Error("You need to be signed in to search for users.");
+    throw new Error(t("social.errors.signInToSearch"));
   }
 
   const normalizedQuery = buildSearchFilter(query ?? "");
@@ -1172,7 +1177,7 @@ export async function searchUsers({ query, currentUserId, limit = 20 }) {
 
 export async function getFollowCounts({ userId }) {
   if (!userId) {
-    throw new Error("Missing user information for follow counts.");
+    throw new Error(t("social.errors.missingUserFollowCounts"));
   }
 
   const [
@@ -1209,7 +1214,7 @@ export async function getFollowers({
   limit = 50,
 }) {
   if (!userId) {
-    throw new Error("Missing user information for followers.");
+    throw new Error(t("social.errors.missingUserFollowers"));
   }
 
   const { data: followRows, error } = await supabase
@@ -1235,7 +1240,7 @@ export async function getFollowing({
   limit = 50,
 }) {
   if (!userId) {
-    throw new Error("Missing user information for following.");
+    throw new Error(t("social.errors.missingUserFollowing"));
   }
 
   const { data: followRows, error } = await supabase
@@ -1257,7 +1262,7 @@ export async function getFollowing({
 
 export async function getCirclePreview({ user, limit = 12, date = null }) {
   if (!user?.id) {
-    throw new Error("You need to be signed in to load your circle.");
+    throw new Error(t("social.errors.signInToLoadCircle"));
   }
 
   // The viewer's own centre is what marks a friend's centre line orange. It
@@ -1302,11 +1307,11 @@ export async function getCirclePreview({ user, limit = 12, date = null }) {
 
 export async function followUser({ userId, targetUserId }) {
   if (!userId || !targetUserId) {
-    throw new Error("Missing user information for follow.");
+    throw new Error(t("social.errors.missingUserFollow"));
   }
 
   if (userId === targetUserId) {
-    throw new Error("You cannot follow yourself.");
+    throw new Error(t("social.errors.followSelf"));
   }
 
   const { error } = await supabase.from(USER_FOLLOWS_TABLE).insert({
@@ -1321,7 +1326,7 @@ export async function followUser({ userId, targetUserId }) {
 
 export async function unfollowUser({ userId, targetUserId }) {
   if (!userId || !targetUserId) {
-    throw new Error("Missing user information for unfollow.");
+    throw new Error(t("social.errors.missingUserUnfollow"));
   }
 
   const { error } = await supabase
@@ -1339,11 +1344,11 @@ export async function unfollowUser({ userId, targetUserId }) {
 
 export async function blockUser({ userId, targetUserId }) {
   if (!userId || !targetUserId) {
-    throw new Error("Missing user information for block.");
+    throw new Error(t("social.errors.missingUserBlock"));
   }
 
   if (userId === targetUserId) {
-    throw new Error("You cannot block yourself.");
+    throw new Error(t("social.errors.blockSelf"));
   }
 
   // The follow rows in both directions are cut by a trigger on this insert, not
@@ -1368,11 +1373,11 @@ export async function blockUser({ userId, targetUserId }) {
  * insert rather than storing something nobody will recognise later.
  */
 export const REPORT_REASONS = [
-  { value: "spam", label: "Spam or advertising" },
-  { value: "harassment", label: "Harassment or bullying" },
-  { value: "inappropriate", label: "Inappropriate content" },
-  { value: "impersonation", label: "Pretending to be someone else" },
-  { value: "other", label: "Something else" },
+  { value: "spam", labelKey: "social.report.reasons.spam", label: "Spam or advertising" },
+  { value: "harassment", labelKey: "social.report.reasons.harassment", label: "Harassment or bullying" },
+  { value: "inappropriate", labelKey: "social.report.reasons.inappropriate", label: "Inappropriate content" },
+  { value: "impersonation", labelKey: "social.report.reasons.impersonation", label: "Pretending to be someone else" },
+  { value: "other", labelKey: "social.report.reasons.other", label: "Something else" },
 ];
 
 export const REPORT_NOTE_MAX_LENGTH = 1000;
@@ -1397,15 +1402,15 @@ export async function reportUser({
   postId = null,
 }) {
   if (!userId || !targetUserId) {
-    throw new Error("Missing user information for report.");
+    throw new Error(t("social.errors.missingUserReport"));
   }
 
   if (userId === targetUserId) {
-    throw new Error("You cannot report yourself.");
+    throw new Error(t("social.errors.reportSelf"));
   }
 
   if (!REPORT_REASON_VALUES.has(reason)) {
-    throw new Error("Choose a reason for the report.");
+    throw new Error(t("social.errors.reportReasonRequired"));
   }
 
   const trimmedNote = String(note ?? "")
@@ -1427,7 +1432,7 @@ export async function reportUser({
 
 export async function unblockUser({ userId, targetUserId }) {
   if (!userId || !targetUserId) {
-    throw new Error("Missing user information for unblock.");
+    throw new Error(t("social.errors.missingUserUnblock"));
   }
 
   const { error } = await supabase
@@ -1443,7 +1448,7 @@ export async function unblockUser({ userId, targetUserId }) {
 
 export async function getBlockedProfiles({ userId }) {
   if (!userId) {
-    throw new Error("You need to be signed in to see who you have blocked.");
+    throw new Error(t("social.errors.signInToSeeBlocked"));
   }
 
   // Through a function, because once the follow is gone the blocked profile is
@@ -1508,11 +1513,11 @@ export async function getPrivacyConsent({ user }) {
  */
 export async function acceptPrivacyPolicy({ user, version, termsVersion }) {
   if (!user?.id) {
-    throw new Error("You need to be signed in to accept the privacy policy.");
+    throw new Error(t("social.errors.signInToAcceptPrivacy"));
   }
 
   if (!version && !termsVersion) {
-    throw new Error("Missing privacy policy version.");
+    throw new Error(t("social.errors.missingPrivacyVersion"));
   }
 
   // The profile row has to exist first: profile_private is keyed on it, and a

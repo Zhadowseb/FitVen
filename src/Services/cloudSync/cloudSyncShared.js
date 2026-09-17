@@ -2,6 +2,7 @@
 // building and the watcher/cascade bookkeeping every entity needs.
 //
 // Nothing here calls a sync pipeline, which is what keeps the modules acyclic.
+import { t } from "@localization";
 import {
   formatDate,
   normalizeIsoDateString,
@@ -178,7 +179,7 @@ export function formatElapsedWorkoutDetail(workout) {
   const totalElapsedSeconds = storedElapsedSeconds + runningElapsedSeconds;
   const totalElapsedMinutes = Math.max(1, Math.floor(totalElapsedSeconds / 60));
 
-  return `${totalElapsedMinutes} min in`;
+  return t("friends.status.minutesIn", { count: totalElapsedMinutes });
 }
 
 export function parseCloudProgramId(value) {
