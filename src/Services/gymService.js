@@ -50,6 +50,7 @@ export const REJECTION_REASONS = [
 const GYM_SETUP_MESSAGE =
   "Centres are not set up in Supabase yet. Run supabase/migrations/20260917120000_gyms-and-lift-verification.sql in the Supabase SQL editor first.";
 const POSITION_TIMEOUT_MS = 12000;
+const LAST_KNOWN_MAX_AGE_MS = 10 * 60 * 1000;
 const SIGNED_VIDEO_TTL_SECONDS = 60 * 60;
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -237,7 +238,17 @@ export async function getGymById(gymId) {
  * services off, no fix in time - because a workout must finish whether or not
  * the phone knows where it is.
  */
-export async function getCurrentPosition({ requestPermission = true } = {}) {
+/**
+ * `allowLastKnown` falls back to the phone's last remembered fix when a fresh
+ * one does not arrive in time - indoors, which is where a gym is, that is
+ * common. Only for showing where you are on a map. Never for matching a
+ * workout to a centre: a fix from an hour ago would credit the workout to
+ * wherever you were then.
+ */
+export async function getCurrentPosition({
+  requestPermission = true,
+  allowLastKnown = false,
+} = {}) {
   try {
     let permission = await Location.getForegroundPermissionsAsync();
 
@@ -257,10 +268,17 @@ export async function getCurrentPosition({ requestPermission = true } = {}) {
       return null;
     }
 
-    const position = await Promise.race([
+    let position = await Promise.race([
       Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }),
       new Promise((resolve) => setTimeout(() => resolve(null), POSITION_TIMEOUT_MS)),
     ]);
+
+    if (!position && allowLastKnown) {
+      position = await Location.getLastKnownPositionAsync({
+        maxAge: LAST_KNOWN_MAX_AGE_MS,
+      });
+    }
+
     const latitude = toNumber(position?.coords?.latitude);
     const longitude = toNumber(position?.coords?.longitude);
 

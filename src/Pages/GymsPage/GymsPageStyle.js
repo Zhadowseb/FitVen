@@ -155,6 +155,20 @@ export default StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  // Wider than the dot so the halo has room; the marker is anchored on its
+  // centre, so the extra space does not shift where it points.
+  mePinShell: {
+    width: 34,
+    height: 34,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  mePinHalo: {
+    position: "absolute",
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+  },
   card: {
     borderRadius: 20,
     borderWidth: 1,

@@ -82,6 +82,42 @@ function HomeGymPin({ theme, chainColor }) {
   );
 }
 
+/**
+ * Where you are standing: a green dot in a white ring, inside a soft halo,
+ * drawn above the centre pins.
+ *
+ * react-native-maps takes one snapshot of a marker's custom child and then
+ * stops watching it. With tracksViewChanges false from the very first render
+ * that snapshot can be taken before the dot has laid out, and the marker then
+ * stays invisible for good - which is what happened here. It tracks for a
+ * moment, stops (tracking every frame for one marker forever is what the flag
+ * exists to prevent), and starts again when the position moves.
+ */
+function MyLocationMarker({ position, theme }) {
+  const [tracksViewChanges, setTracksViewChanges] = useState(true);
+
+  useEffect(() => {
+    setTracksViewChanges(true);
+    const timeout = setTimeout(() => setTracksViewChanges(false), 1200);
+
+    return () => clearTimeout(timeout);
+  }, [position.latitude, position.longitude]);
+
+  return (
+    <Marker
+      coordinate={{ latitude: position.latitude, longitude: position.longitude }}
+      anchor={{ x: 0.5, y: 0.5 }}
+      tracksViewChanges={tracksViewChanges}
+      zIndex={20}
+    >
+      <View style={styles.mePinShell}>
+        <View style={[styles.mePinHalo, { backgroundColor: withAlpha(theme.secondary, 0.24) }]} />
+        <View style={[styles.pin, styles.pinMe, { backgroundColor: theme.secondary, borderColor: "#FFFFFF" }]} />
+      </View>
+    </Marker>
+  );
+}
+
 export default function GymsPage() {
   const navigation = useNavigation();
   const colorScheme = useColorScheme();
@@ -126,7 +162,12 @@ export default function GymsPage() {
     setErrorMessage("");
 
     try {
-      const currentPosition = await gymService.getCurrentPosition({ requestPermission: true });
+      // A map may show a slightly old fix; matching a workout to a centre may
+      // not, which is why only this screen asks for the fallback.
+      const currentPosition = await gymService.getCurrentPosition({
+        requestPermission: true,
+        allowLastKnown: true,
+      });
       const origin = currentPosition ?? { latitude: FALLBACK_REGION.latitude, longitude: FALLBACK_REGION.longitude };
 
       setPosition(currentPosition);
@@ -264,7 +305,10 @@ export default function GymsPage() {
     }
 
     try {
-      const currentPosition = await gymService.getCurrentPosition({ requestPermission: true });
+      const currentPosition = await gymService.getCurrentPosition({
+        requestPermission: true,
+        allowLastKnown: true,
+      });
 
       if (currentPosition) {
         setPosition(currentPosition);
@@ -454,15 +498,7 @@ export default function GymsPage() {
                 </Marker>
               );
             })}
-            {position ? (
-              <Marker
-                coordinate={{ latitude: position.latitude, longitude: position.longitude }}
-                anchor={{ x: 0.5, y: 0.5 }}
-                tracksViewChanges={false}
-              >
-                <View style={[styles.pin, styles.pinMe, { backgroundColor: theme.secondary, borderColor: theme.uiBackground }]} />
-              </Marker>
-            ) : null}
+            {position ? <MyLocationMarker position={position} theme={theme} /> : null}
           </MapView>
 
           <View style={[styles.mapPill, { backgroundColor: "rgba(8, 9, 12, 0.62)" }]}>
