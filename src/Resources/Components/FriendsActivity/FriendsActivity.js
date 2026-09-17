@@ -16,6 +16,7 @@ import Svg, {
   Rect,
   Stop,
 } from "react-native-svg";
+import { useTranslation } from "@localization";
 
 import styles, { TILE_GAP, TILE_WIDTH } from "./FriendsActivityStyle";
 import { Colors, withAlpha } from "../../GlobalStyling/colors";
@@ -308,6 +309,7 @@ function BandTicker({ text, color, animate, fadeColor }) {
 }
 
 function MusicBand({ theme, colorScheme, music, activityState, animate }) {
+  const { t } = useTranslation();
   const state = resolveMusicBandState(music, activityState);
   const isLight = colorScheme === "light";
   const quietBandFrom = isLight ? "rgba(15, 17, 22, 0.05)" : "rgba(255, 255, 255, 0.08)";
@@ -326,7 +328,11 @@ function MusicBand({ theme, colorScheme, music, activityState, animate }) {
   return (
     <View
       style={styles.band}
-      accessibilityLabel={`${isPlaying ? "Playing" : "Last played"}: ${line}`}
+      accessibilityLabel={
+        isPlaying
+          ? t("friends.music.playing", { track: line })
+          : t("friends.music.lastPlayed", { track: line })
+      }
     >
       <BandGradient
         from={isPlaying ? theme.musicBandFrom : quietBandFrom}
@@ -429,6 +435,8 @@ function StatusFact({ meta, label, animate }) {
 }
 
 function GymFact({ gym, theme, otherGymColor, onPress }) {
+  const { t } = useTranslation();
+
   if (!gym?.shortName) {
     return <View style={styles.factSpacer} />;
   }
@@ -451,7 +459,7 @@ function GymFact({ gym, theme, otherGymColor, onPress }) {
       activeOpacity={0.7}
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`Open ${gym.shortName} leaderboard`}
+      accessibilityLabel={t("friends.openGymLeaderboard", { gym: gym.shortName })}
       hitSlop={{ top: 4, bottom: 6, left: 6, right: 6 }}
     >
       {row}
@@ -475,6 +483,7 @@ function ActivityTile({
   onPress,
   onOpenGym,
 }) {
+  const { t } = useTranslation();
   const isLight = colorScheme === "light";
   const restDotColor = isLight ? "#B7BAC3" : "#4A4F5A";
   const otherGymColor = isLight ? "#5C6270" : "#B8BCC6";
@@ -487,7 +496,11 @@ function ActivityTile({
       activeOpacity={0.9}
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${title}. ${statusLabel}${gym?.shortName ? `. At ${gym.shortName}` : ""}`}
+      accessibilityLabel={
+        gym?.shortName
+          ? t("friends.tileLabelAtGym", { name: title, status: statusLabel, gym: gym.shortName })
+          : t("friends.tileLabel", { name: title, status: statusLabel })
+      }
       style={[
         styles.tile,
         {
@@ -537,6 +550,7 @@ function ActivityTile({
 }
 
 function AddFriendTile({ theme, colorScheme, onPress }) {
+  const { t } = useTranslation();
   const dashColor =
     colorScheme === "light" ? "rgba(15, 17, 22, 0.14)" : "rgba(255, 255, 255, 0.14)";
 
@@ -545,14 +559,14 @@ function AddFriendTile({ theme, colorScheme, onPress }) {
       activeOpacity={0.85}
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel="Add friends"
+      accessibilityLabel={t("friends.addFriends")}
       style={[styles.addTile, { borderColor: dashColor }]}
     >
       <View style={[styles.addCircle, { borderColor: dashColor }]}>
         <Plus width={20} height={20} color={theme.quietText} thickness={1.8} />
       </View>
       <ThemedText style={styles.addLabel} setColor={theme.quietText}>
-        Add friends
+        {t("friends.addFriends")}
       </ThemedText>
     </TouchableOpacity>
   );
@@ -590,6 +604,7 @@ export default function FriendsActivity({
   onAddFriend,
   onOpenGym,
 }) {
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const { animate } = useAnimationsEnabled();
@@ -605,8 +620,8 @@ export default function FriendsActivity({
   const ownStatusLabel = currentUser?.displayName
     ? buildActivityStatusLabel(currentUser, { isCurrentUser: true })
     : isLoading
-      ? "Loading..."
-      : "Set up profile";
+      ? t("common.loading")
+      : t("friends.setUpProfile");
   const orderedPeople = sortActivityTiles(people ?? []);
   const liveCount =
     (ownIsLive ? 1 : 0) +
@@ -617,7 +632,7 @@ export default function FriendsActivity({
       {showHeader ? (
         <View style={styles.headerRow}>
           <ThemedText style={[styles.headerEyebrow, { color: quietText }]}>
-            FRIENDS ACTIVITY
+            {t("friends.eyebrow")}
           </ThemedText>
 
           {liveCount > 0 ? (
@@ -629,7 +644,7 @@ export default function FriendsActivity({
             >
               <LivePillDot color={theme.secondary} animate={animate} />
               <ThemedText style={[styles.livePillText, { color: theme.secondary }]}>
-                {`${liveCount} LIVE`}
+                {t("friends.liveCount", { count: liveCount })}
               </ThemedText>
             </View>
           ) : null}
@@ -637,7 +652,9 @@ export default function FriendsActivity({
           <View style={styles.headerSpacer} />
 
           <TouchableOpacity activeOpacity={0.75} onPress={onSeeAll}>
-            <ThemedText style={[styles.seeAllText, { color: theme.primary }]}>See all</ThemedText>
+            <ThemedText style={[styles.seeAllText, { color: theme.primary }]}>
+              {t("common.seeAll")}
+            </ThemedText>
           </TouchableOpacity>
         </View>
       ) : null}
@@ -653,7 +670,7 @@ export default function FriendsActivity({
           ]}
         >
           <ThemedText style={styles.noticeTitle} setColor={titleColor}>
-            Social circle unavailable
+            {t("friends.circleUnavailable")}
           </ThemedText>
           <ThemedText style={styles.noticeBody} setColor={quietText}>
             {errorMessage}
@@ -671,7 +688,7 @@ export default function FriendsActivity({
           <ActivityTile
             theme={theme}
             colorScheme={colorScheme}
-            title="You"
+            title={t("common.you")}
             statusLabel={ownStatusLabel}
             activityState={currentUser?.activityState}
             avatarUrl={currentUser?.avatarUrl}
@@ -693,7 +710,7 @@ export default function FriendsActivity({
                 key={person.id}
                 theme={theme}
                 colorScheme={colorScheme}
-                title={person.displayName || person.usernameBase || "Member"}
+                title={person.displayName || person.usernameBase || t("common.member")}
                 statusLabel={buildActivityStatusLabel(person)}
                 activityState={person.activityState}
                 avatarUrl={person.avatarUrl}
@@ -717,10 +734,10 @@ export default function FriendsActivity({
             >
               <Male width={24} height={24} color={iconColor} />
               <ThemedText style={styles.emptyTitle} setColor={titleColor}>
-                No crew yet
+                {t("friends.emptyTitle")}
               </ThemedText>
               <ThemedText style={styles.emptyBody} setColor={quietText}>
-                Start following people from search to fill this strip.
+                {t("friends.emptyBody")}
               </ThemedText>
             </View>
           )}

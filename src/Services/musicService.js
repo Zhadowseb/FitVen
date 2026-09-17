@@ -11,6 +11,7 @@
 import Constants from "expo-constants";
 import * as SecureStore from "expo-secure-store";
 
+import { t } from "@localization";
 import { supabase } from "../Database/supaBaseClient";
 import { workoutRepository } from "../Repository";
 
@@ -40,9 +41,6 @@ function getNativeAuth() {
 export function isSpotifyAvailableInThisBuild() {
   return getNativeAuth() !== null;
 }
-
-export const SPOTIFY_NOT_IN_BUILD_MESSAGE =
-  "This build of the app does not include the modules Spotify needs. Install the 2.0 development build.";
 
 export const MUSIC_PROVIDER_SPOTIFY = "spotify";
 export const NOW_PLAYING_POLL_MS = 30000;
@@ -77,7 +75,9 @@ function normalizeMusicError(error) {
     return new Error(WORKOUT_MUSIC_SETUP_MESSAGE);
   }
 
-  return error instanceof Error ? error : new Error(String(error?.message ?? "Music failed."));
+  return error instanceof Error
+    ? error
+    : new Error(String(error?.message ?? t("music.errors.failed")));
 }
 
 /* -------------------------------------------------------- configuration -- */
@@ -201,7 +201,10 @@ export async function connectSpotify() {
   const native = getNativeAuth();
 
   if (!native) {
-    throw new Error(SPOTIFY_NOT_IN_BUILD_MESSAGE);
+    // Translated here, at the moment it is thrown, so the settings screen can
+    // show error.message as it is. The same key is what that screen prints
+    // when it finds the build unavailable before anyone taps Connect.
+    throw new Error(t("music.errors.notInBuild"));
   }
 
   const clientId = getSpotifyClientId();
@@ -408,7 +411,7 @@ async function getCachedSharingSettings(user) {
  */
 export async function setMusicSharingEnabled({ user, enabled }) {
   if (!user?.id) {
-    throw new Error("You need to be signed in to change music sharing.");
+    throw new Error(t("music.errors.signInToChangeSharing"));
   }
 
   const { error } = await supabase.from(PROFILE_PRIVATE_TABLE).upsert(

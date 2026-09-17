@@ -9,6 +9,7 @@ import {
   useColorScheme,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTranslation } from "@localization";
 
 import { Colors, withAlpha } from "../GlobalStyling/colors";
 import ThemedSheetHandle from "../ThemedComponents/ThemedSheetHandle";
@@ -29,39 +30,54 @@ import {
 
 const noop = () => {};
 
-const freshStarts = filterReleasedWorkoutTypes(
-  [
-    {
-      id: "Resistance",
-      title: "Resistance",
-      type: "resistance",
-    },
-    {
-      id: "Run",
-      title: "Run",
-      type: "run",
-    },
-    {
-      id: "Walk",
-      title: "Walk",
-      type: "walk",
-    },
-  ],
-  (item) => item.type
-);
+// The ids are what a workout row stores; the titles are what the user reads.
+// Built per render rather than once at module load, because the language can
+// change while the app is open.
+function buildFreshStarts(t) {
+  return filterReleasedWorkoutTypes(
+    [
+      {
+        id: "Resistance",
+        title: t("workoutStart.types.resistance"),
+        type: "resistance",
+      },
+      {
+        id: "Run",
+        title: t("workoutStart.types.run"),
+        type: "run",
+      },
+      {
+        id: "Walk",
+        title: t("workoutStart.types.walk"),
+        type: "walk",
+      },
+    ],
+    (item) => item.type
+  );
+}
+
+// Stored type ids to their translation keys. A type not listed here is shown
+// as stored, as it was before.
+const WORKOUT_TYPE_LABEL_KEYS = {
+  Resistance: "workoutStart.types.resistance",
+  StrengthTraining: "workoutStart.types.resistance",
+  Run: "workoutStart.types.run",
+  Walk: "workoutStart.types.walk",
+};
 
 function getWorkoutType(workout) {
   return workout?.workout_type ?? workout?.label ?? null;
 }
 
-function getWorkoutTypeLabel(workout) {
+function getWorkoutTypeLabel(workout, t) {
   const workoutType = getWorkoutType(workout);
+  const labelKey = WORKOUT_TYPE_LABEL_KEYS[workoutType];
 
-  if (workoutType === "StrengthTraining") {
-    return "Resistance";
+  if (labelKey) {
+    return t(labelKey);
   }
 
-  return workoutType ?? "Workout";
+  return workoutType ?? t("workoutStart.types.workout");
 }
 
 function getWorkoutIconType(workout) {
@@ -78,24 +94,27 @@ function getWorkoutIconType(workout) {
   return "resistance";
 }
 
-function getWorkoutTitle(workout) {
-  return workout?.label ?? getWorkoutTypeLabel(workout);
+function getWorkoutTitle(workout, t) {
+  return workout?.label ?? getWorkoutTypeLabel(workout, t);
 }
 
-function getWorkoutDetail(plannedWorkout) {
+function getWorkoutDetail(plannedWorkout, t) {
   const workout = plannedWorkout?.workout;
-  const programName = plannedWorkout?.programName ?? "Workout calendar";
+  const programName =
+    plannedWorkout?.programName ?? t("workoutStart.workoutCalendar");
   const exerciseCount = workout?.previewItems?.length ?? 0;
 
   if (exerciseCount > 0) {
-    const exerciseLabel = exerciseCount === 1 ? "exercise" : "exercises";
-    return `${programName} - ${exerciseCount} ${exerciseLabel}`;
+    return t("workoutStart.planned.detailWithExercises", {
+      programName,
+      count: exerciseCount,
+    });
   }
 
-  return `${programName} - Ready`;
+  return t("workoutStart.planned.detailReady", { programName });
 }
 
-function getRecentWorkoutDetail(workout) {
+function getRecentWorkoutDetail(workout, t) {
   const previewItems = workout?.previewItems ?? [];
 
   if (getWorkoutType(workout) === "Run" && previewItems.length > 0) {
@@ -104,15 +123,14 @@ function getRecentWorkoutDetail(workout) {
       .filter(Boolean)
       .join(", ");
 
-    return setSummary || "Run";
+    return setSummary || t("workoutStart.types.run");
   }
 
   if (previewItems.length > 0) {
-    const exerciseLabel = previewItems.length === 1 ? "exercise" : "exercises";
-    return `${previewItems.length} ${exerciseLabel}`;
+    return t("common.exercises", { count: previewItems.length });
   }
 
-  return "Ready";
+  return t("workoutStart.ready");
 }
 
 function parseWorkoutDate(workout) {
@@ -132,11 +150,11 @@ function parseWorkoutDate(workout) {
   return null;
 }
 
-function getRecentWorkoutMeta(workout) {
+function getRecentWorkoutMeta(workout, t) {
   const workoutDate = parseWorkoutDate(workout);
 
   if (!workoutDate || Number.isNaN(workoutDate.getTime())) {
-    return workout?.date ?? "Recent";
+    return workout?.date ?? t("workoutStart.recent");
   }
 
   const today = new Date();
@@ -148,36 +166,38 @@ function getRecentWorkoutMeta(workout) {
   );
 
   if (dayDifference <= 0) {
-    return "Today";
+    return t("time.today");
   }
 
   if (dayDifference === 1) {
-    return "Yesterday";
+    return t("time.yesterday");
   }
 
   if (dayDifference <= 6) {
-    return `${dayDifference} days ago`;
+    return t("time.daysAgo", { count: dayDifference });
   }
 
-  return workout?.date ?? "Recent";
+  return workout?.date ?? t("workoutStart.recent");
 }
 
-function getUsualWorkoutDetail(workout) {
+function getUsualWorkoutDetail(workout, t) {
   const exerciseCount = Number(workout?.exerciseCount) || 0;
 
   if (exerciseCount > 0) {
-    const exerciseLabel = exerciseCount === 1 ? "exercise" : "exercises";
-    return `${exerciseCount} ${exerciseLabel}`;
+    return t("common.exercises", { count: exerciseCount });
   }
 
-  return "Workout";
+  return t("workoutStart.types.workout");
 }
 
-function getUsualWorkoutMeta(workout) {
-  return getRecentWorkoutMeta({
-    date: workout?.latestDate,
-    date_iso: workout?.latestDateIso,
-  });
+function getUsualWorkoutMeta(workout, t) {
+  return getRecentWorkoutMeta(
+    {
+      date: workout?.latestDate,
+      date_iso: workout?.latestDateIso,
+    },
+    t
+  );
 }
 
 function WorkoutGlyph({ type, size = 26, color }) {
@@ -332,6 +352,7 @@ function SectionHeader({
 }
 
 function PlannedTodaySection({ isToday, shortcut, onOpen, theme, styles }) {
+  const { t } = useTranslation();
   const [showChoices, setShowChoices] = useState(false);
   const plannedWorkouts = shortcut?.workouts ?? [];
   const primaryWorkout = plannedWorkouts[0] ?? null;
@@ -350,8 +371,12 @@ function PlannedTodaySection({ isToday, shortcut, onOpen, theme, styles }) {
     <View style={styles.plannedTodaySection}>
       <ThemedText style={styles.plannedTodayPrompt}>
         {hasMultipleWorkouts
-          ? `You have multiple workouts planned ${isToday ? "today" : "on this day"}.`
-          : `You have a workout planned ${isToday ? "today" : "on this day"}.`}
+          ? isToday
+            ? t("workoutStart.planned.promptMultipleToday")
+            : t("workoutStart.planned.promptMultipleOnDay")
+          : isToday
+            ? t("workoutStart.planned.promptSingleToday")
+            : t("workoutStart.planned.promptSingleOnDay")}
       </ThemedText>
 
       <TouchableOpacity
@@ -375,17 +400,23 @@ function PlannedTodaySection({ isToday, shortcut, onOpen, theme, styles }) {
         />
         <View style={styles.todayShortcutCopy}>
           <ThemedText style={styles.todayShortcutLabel}>
-            {isToday ? "PLANNED TODAY" : "PLANNED"}
+            {isToday
+              ? t("workoutStart.planned.eyebrowToday")
+              : t("workoutStart.planned.eyebrow")}
           </ThemedText>
           <ThemedText style={styles.cardTitle} numberOfLines={1}>
             {hasMultipleWorkouts
-              ? `${plannedWorkouts.length} workouts planned`
-              : getWorkoutTitle(workout)}
+              ? t("workoutStart.planned.workoutsPlanned", {
+                  count: plannedWorkouts.length,
+                })
+              : getWorkoutTitle(workout, t)}
           </ThemedText>
           <ThemedText style={styles.cardDetails} numberOfLines={1}>
             {hasMultipleWorkouts
-              ? `${plannedWorkouts.length} ready`
-              : getWorkoutDetail(primaryWorkout)}
+              ? t("workoutStart.planned.countReady", {
+                  count: plannedWorkouts.length,
+                })
+              : getWorkoutDetail(primaryWorkout, t)}
           </ThemedText>
         </View>
         <View style={styles.expandIcon}>
@@ -413,10 +444,10 @@ function PlannedTodaySection({ isToday, shortcut, onOpen, theme, styles }) {
               />
               <View style={styles.recentCopy}>
                 <ThemedText style={styles.cardTitle} numberOfLines={1}>
-                  {getWorkoutTitle(plannedWorkout.workout)}
+                  {getWorkoutTitle(plannedWorkout.workout, t)}
                 </ThemedText>
                 <ThemedText style={styles.cardDetails} numberOfLines={1}>
-                  {getWorkoutDetail(plannedWorkout)}
+                  {getWorkoutDetail(plannedWorkout, t)}
                 </ThemedText>
               </View>
               <ThemedText style={styles.chevron}>{">"}</ThemedText>
@@ -429,6 +460,8 @@ function PlannedTodaySection({ isToday, shortcut, onOpen, theme, styles }) {
 }
 
 function UsualWorkoutCard({ workout, theme, styles }) {
+  const { t } = useTranslation();
+
   return (
     <TouchableOpacity
       activeOpacity={0.84}
@@ -446,7 +479,7 @@ function UsualWorkoutCard({ workout, theme, styles }) {
         />
         {workout.suggested ? (
           <View style={styles.suggestedBadge}>
-            <ThemedText style={styles.suggestedText}>SUGGESTED</ThemedText>
+            <ThemedText style={styles.suggestedText}>{t("workoutStart.suggested")}</ThemedText>
           </View>
         ) : null}
       </View>
@@ -454,34 +487,40 @@ function UsualWorkoutCard({ workout, theme, styles }) {
         {workout.title}
       </ThemedText>
       <ThemedText style={styles.cardDetails} numberOfLines={1}>
-        {getUsualWorkoutDetail(workout)}
+        {getUsualWorkoutDetail(workout, t)}
       </ThemedText>
       <View style={styles.cardMetaRow}>
         <View style={styles.inlineMeta}>
           <MiniClock styles={styles} />
           <ThemedText style={styles.metaText} numberOfLines={1}>
-            {getUsualWorkoutMeta(workout)}
+            {getUsualWorkoutMeta(workout, t)}
           </ThemedText>
         </View>
-        <ThemedText style={styles.metaText}>{workout.occurrenceCount}x</ThemedText>
+        <ThemedText style={styles.metaText}>
+          {t("workoutStart.timesCount", { count: workout.occurrenceCount })}
+        </ThemedText>
       </View>
     </TouchableOpacity>
   );
 }
 
 function UsualWorkoutSection({ isLoading, workouts, theme, styles }) {
+  const { t } = useTranslation();
+
   return (
     <View style={styles.section}>
       <SectionHeader
-        title="YOUR USUAL WORKOUTS"
-        action="Manage"
+        title={t("workoutStart.usual.title")}
+        action={t("workoutStart.usual.manage")}
         theme={theme}
         styles={styles}
         showRotationIcon
       />
       {isLoading ? (
         <View style={styles.usualStateRow}>
-          <ThemedText style={styles.recentStateText}>Finding usual workouts...</ThemedText>
+          <ThemedText style={styles.recentStateText}>
+            {t("workoutStart.usual.loading")}
+          </ThemedText>
         </View>
       ) : workouts.length > 0 ? (
         <View style={styles.usualGrid}>
@@ -497,7 +536,7 @@ function UsualWorkoutSection({ isLoading, workouts, theme, styles }) {
       ) : (
         <View style={styles.usualStateRow}>
           <ThemedText style={styles.recentStateText}>
-            Repeat a workout twice to see it here.
+            {t("workoutStart.usual.empty")}
           </ThemedText>
         </View>
       )}
@@ -506,12 +545,13 @@ function UsualWorkoutSection({ isLoading, workouts, theme, styles }) {
 }
 
 function RecentWorkoutRow({ workout, disabled, onPress, theme, styles }) {
+  const { t } = useTranslation();
   const [showExercises, setShowExercises] = useState(false);
   const isSuggested = Boolean(workout?.suggested);
   const occurrenceCount = Number(workout?.occurrenceCount) || 0;
   const detail = workout?.exerciseCount
-    ? getUsualWorkoutDetail(workout)
-    : getRecentWorkoutDetail(workout);
+    ? getUsualWorkoutDetail(workout, t)
+    : getRecentWorkoutDetail(workout, t);
   const previewItems = Array.isArray(workout?.previewItems)
     ? workout.previewItems
     : [];
@@ -534,11 +574,11 @@ function RecentWorkoutRow({ workout, disabled, onPress, theme, styles }) {
           <View style={styles.recentCopy}>
             <View style={styles.repeatTitleRow}>
               <ThemedText style={styles.cardTitle} numberOfLines={1}>
-                {getWorkoutTitle(workout)}
+                {getWorkoutTitle(workout, t)}
               </ThemedText>
               {isSuggested ? (
                 <View style={styles.suggestedBadge}>
-                  <ThemedText style={styles.suggestedText}>SUGGESTED</ThemedText>
+                  <ThemedText style={styles.suggestedText}>{t("workoutStart.suggested")}</ThemedText>
                 </View>
               ) : null}
             </View>
@@ -549,12 +589,14 @@ function RecentWorkoutRow({ workout, disabled, onPress, theme, styles }) {
           <View style={styles.repeatMetaColumn}>
             <ThemedText style={styles.metaText} numberOfLines={1}>
               {isSuggested
-                ? getUsualWorkoutMeta(workout)
-                : getRecentWorkoutMeta(workout)}
+                ? getUsualWorkoutMeta(workout, t)
+                : getRecentWorkoutMeta(workout, t)}
             </ThemedText>
             {occurrenceCount > 0 ? (
               <View style={styles.repeatCountChip}>
-                <ThemedText style={styles.repeatCountText}>{occurrenceCount}x</ThemedText>
+                <ThemedText style={styles.repeatCountText}>
+                  {t("workoutStart.timesCount", { count: occurrenceCount })}
+                </ThemedText>
               </View>
             ) : null}
           </View>
@@ -565,8 +607,12 @@ function RecentWorkoutRow({ workout, disabled, onPress, theme, styles }) {
           accessibilityRole="button"
           accessibilityLabel={
             showExercises
-              ? `Hide exercises in ${getWorkoutTitle(workout)}`
-              : `Show exercises in ${getWorkoutTitle(workout)}`
+              ? t("workoutStart.repeat.hideExercises", {
+                  title: getWorkoutTitle(workout, t),
+                })
+              : t("workoutStart.repeat.showExercises", {
+                  title: getWorkoutTitle(workout, t),
+                })
           }
           onPress={() => setShowExercises((isOpen) => !isOpen)}
           style={[styles.eyeButton, showExercises ? styles.eyeButtonOpen : null]}
@@ -595,7 +641,9 @@ function RecentWorkoutRow({ workout, disabled, onPress, theme, styles }) {
               </View>
             ))
           ) : (
-            <ThemedText style={styles.exerciseDetail}>No exercises on this workout.</ThemedText>
+            <ThemedText style={styles.exerciseDetail}>
+              {t("workoutStart.repeat.noExercises")}
+            </ThemedText>
           )}
         </View>
       ) : null}
@@ -615,6 +663,7 @@ function RecentWorkoutSection({
   theme,
   styles,
 }) {
+  const { t } = useTranslation();
   const repeatWorkouts = [...usualWorkouts, ...workouts].filter(
     (workout) =>
       !isWorkoutTypeComingSoon(getWorkoutIconType(workout)) &&
@@ -634,7 +683,9 @@ function RecentWorkoutSection({
       ))}
       {isLoadingMore ? (
         <View style={styles.recentStateRow}>
-          <ThemedText style={styles.recentStateText}>Loading more workouts...</ThemedText>
+          <ThemedText style={styles.recentStateText}>
+            {t("workoutStart.repeat.loadingMore")}
+          </ThemedText>
         </View>
       ) : null}
     </>
@@ -656,7 +707,7 @@ function RecentWorkoutSection({
   return (
     <View style={styles.section}>
       <SectionHeader
-        title="REPEAT A WORKOUT"
+        title={t("workoutStart.repeat.title")}
         theme={theme}
         styles={styles}
         showRotationIcon
@@ -664,7 +715,9 @@ function RecentWorkoutSection({
       />
       {isLoading || isLoadingUsual ? (
         <View style={styles.recentStateRow}>
-          <ThemedText style={styles.recentStateText}>Loading recent workouts...</ThemedText>
+          <ThemedText style={styles.recentStateText}>
+            {t("workoutStart.repeat.loading")}
+          </ThemedText>
         </View>
       ) : repeatWorkouts.length > 0 ? (
         <ScrollView
@@ -680,7 +733,7 @@ function RecentWorkoutSection({
       ) : (
         <View style={styles.recentStateRow}>
           <ThemedText style={styles.recentStateText}>
-            Repeat a workout twice to see it here.
+            {t("workoutStart.repeat.empty")}
           </ThemedText>
         </View>
       )}
@@ -754,7 +807,9 @@ export default function StartWorkoutSheet({
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const freshStarts = useMemo(() => buildFreshStarts(t), [t]);
   const isToday = !targetDate || targetDate === getTodaysDate();
   const targetDateLabel = targetDate?.slice(0, 5);
 
@@ -780,7 +835,7 @@ export default function StartWorkoutSheet({
 
           <TouchableOpacity
             activeOpacity={0.72}
-            accessibilityLabel="Close workout starter"
+            accessibilityLabel={t("workoutStart.closeSheet")}
             accessibilityRole="button"
             hitSlop={6}
             onPress={onClose}
@@ -799,8 +854,8 @@ export default function StartWorkoutSheet({
             <View style={styles.header}>
               <ThemedText style={styles.title}>
                 {isToday
-                  ? "START NEW WORKOUT"
-                  : `What are you doing on ${targetDateLabel}?`}
+                  ? t("workoutStart.title")
+                  : t("workoutStart.titleForDate", { date: targetDateLabel })}
               </ThemedText>
             </View>
 

@@ -6,6 +6,7 @@ import {
   View,
   useColorScheme,
 } from "react-native";
+import { useTranslation } from "@localization";
 
 import { Colors } from "../GlobalStyling/colors";
 import { useAuth } from "../../Contexts/AuthContext";
@@ -27,6 +28,7 @@ export const MAX_POST_NOTE_LENGTH = 220;
  * `post` carries { id, title, note } and doubles as the visible flag.
  */
 export default function EditPostNoteSheet({ post, onClose, onSaved }) {
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const primaryTextColor = theme.primaryText ?? theme.primary;
@@ -50,7 +52,7 @@ export default function EditPostNoteSheet({ post, onClose, onSaved }) {
     setErrorMessage("");
 
     if (!user?.id) {
-      setErrorMessage("Sign in to edit this post.");
+      setErrorMessage(t("home.editNote.signInRequired"));
       return undefined;
     }
 
@@ -68,7 +70,7 @@ export default function EditPostNoteSheet({ post, onClose, onSaved }) {
       } catch (error) {
         if (!cancelled) {
           setErrorMessage(
-            error instanceof Error ? error.message : "Could not load this post."
+            error instanceof Error ? error.message : t("home.editNote.loadFailed")
           );
         }
       } finally {
@@ -85,7 +87,7 @@ export default function EditPostNoteSheet({ post, onClose, onSaved }) {
     };
     // The seed note is only for the first paint of a given post.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [postId, user]);
+  }, [postId, t, user]);
 
   const savePost = useCallback(async () => {
     if (saving || !postId || !user?.id) {
@@ -103,15 +105,15 @@ export default function EditPostNoteSheet({ post, onClose, onSaved }) {
       onClose?.();
     } catch (error) {
       Alert.alert(
-        "Could not save post",
+        t("home.editNote.saveFailedTitle"),
         error instanceof Error
           ? error.message
-          : "The post note could not be updated."
+          : t("home.editNote.saveFailedMessage")
       );
     } finally {
       setSaving(false);
     }
-  }, [note, onClose, onSaved, postId, saving, user]);
+  }, [note, onClose, onSaved, postId, saving, t, user]);
 
   return (
     <ThemedBottomSheet
@@ -120,14 +122,14 @@ export default function EditPostNoteSheet({ post, onClose, onSaved }) {
       footer={
         <View style={styles.footer}>
           <ThemedButton
-            title="Cancel"
+            title={t("common.cancel")}
             variant="secondary"
             onPress={onClose}
             style={styles.footerButton}
             disabled={saving}
           />
           <ThemedButton
-            title={saving ? "Saving..." : "Save"}
+            title={saving ? t("home.editNote.saving") : t("common.save")}
             onPress={savePost}
             style={styles.footerButton}
             disabled={saving || loading || Boolean(errorMessage)}
@@ -136,11 +138,11 @@ export default function EditPostNoteSheet({ post, onClose, onSaved }) {
       }
     >
       <ThemedText style={styles.eyebrow} setColor={quietText}>
-        Editing note on
+        {t("home.editNote.eyebrow")}
       </ThemedText>
 
       <ThemedTitle type="h3" style={styles.postTitle} numberOfLines={2}>
-        {post?.title ?? "Workout summary"}
+        {post?.title ?? t("home.summary.workoutSummary")}
       </ThemedTitle>
 
       {loading ? (
@@ -158,7 +160,7 @@ export default function EditPostNoteSheet({ post, onClose, onSaved }) {
           <ThemedTextInput
             value={note}
             onChangeText={setNote}
-            placeholder="Write a note..."
+            placeholder={t("home.editNote.placeholder")}
             multiline
             maxLength={MAX_POST_NOTE_LENGTH}
             textAlignVertical="top"

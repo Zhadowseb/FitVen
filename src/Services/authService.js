@@ -1,5 +1,6 @@
 import * as SQLite from "expo-sqlite";
 
+import { t } from "@localization";
 import {
   loginWithEmail,
   logout as logoutFromSupabase,
@@ -47,7 +48,7 @@ async function describeDeleteError(error) {
   if (typeof response?.text !== "function") {
     return error instanceof Error
       ? error
-      : new Error("Could not delete the account.");
+      : new Error(t("auth.errors.couldNotDeleteAccount"));
   }
 
   try {
@@ -99,7 +100,7 @@ async function deleteLocalDatabaseForUser(userId) {
  */
 export async function deleteAccount({ user } = {}) {
   if (!user?.id) {
-    throw new Error("You need to be signed in to delete your account.");
+    throw new Error(t("auth.errors.signInToDeleteAccount"));
   }
 
   const userId = user.id;
@@ -140,7 +141,7 @@ export async function requestPasswordReset({ email }) {
   const normalizedEmail = String(email ?? "").trim().toLowerCase();
 
   if (!normalizedEmail) {
-    throw new Error("Enter your email address first.");
+    throw new Error(t("auth.errors.enterEmailFirst"));
   }
 
   const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {

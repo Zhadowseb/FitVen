@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import MapView, { Marker } from "react-native-maps";
+import { useTranslation } from "@localization";
 
 import styles from "./GymsPageStyle";
 import { useAuth } from "../../Contexts/AuthContext";
@@ -77,6 +78,7 @@ export default function GymsPage() {
   const navigation = useNavigation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const { t } = useTranslation();
   const { user } = useAuth();
   const mapRef = useRef(null);
   const searchTimeoutRef = useRef(null);
@@ -104,7 +106,7 @@ export default function GymsPage() {
   const load = useCallback(async () => {
     if (!user?.id) {
       setIsLoading(false);
-      setErrorMessage("Sign in to see centres.");
+      setErrorMessage(t("gyms.list.signInToSee"));
       return;
     }
 
@@ -134,11 +136,11 @@ export default function GymsPage() {
       setGymCount(countResult.status === "fulfilled" ? countResult.value : null);
       setHomeGym(homeResult.status === "fulfilled" ? homeResult.value : null);
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Could not load centres.");
+      setErrorMessage(error instanceof Error ? error.message : t("gyms.list.loadFailed"));
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [t, user]);
 
   useFocusEffect(
     useCallback(() => {
@@ -167,14 +169,14 @@ export default function GymsPage() {
         setSearchResults(results);
       } catch (error) {
         setSearchResults([]);
-        setErrorMessage(error instanceof Error ? error.message : "Search failed.");
+        setErrorMessage(error instanceof Error ? error.message : t("gyms.searchFailed"));
       } finally {
         setIsSearching(false);
       }
     }, SEARCH_DEBOUNCE_MS);
 
     return () => clearTimeout(searchTimeoutRef.current);
-  }, [query]);
+  }, [query, t]);
 
   const initialRegion = useMemo(() => {
     if (position) {
@@ -260,7 +262,7 @@ export default function GymsPage() {
               {isHome ? (
                 <View style={[styles.gymBadge, { backgroundColor: withAlpha(theme.primary, 0.16) }]}>
                   <ThemedText style={styles.gymBadgeText} setColor={theme.primary}>
-                    YOURS
+                    {t("gyms.list.yoursBadge")}
                   </ThemedText>
                 </View>
               ) : null}
@@ -286,17 +288,17 @@ export default function GymsPage() {
         right={
           gymCount !== null ? (
             <ThemedText style={styles.headerCount} setColor={quietText}>
-              {`${gymCount} centres`}
+              {t("gyms.list.centreCount", { count: gymCount })}
             </ThemedText>
           ) : null
         }
       >
         <View style={styles.pageHeaderTitleGroup}>
           <ThemedText size={12} style={[styles.pageHeaderTitleEyebrow, { color: quietText }]}>
-            Social
+            {t("gyms.list.eyebrow")}
           </ThemedText>
           <ThemedTitle type="pageTitle" style={styles.pageHeaderTitleMain} numberOfLines={1}>
-            Centres
+            {t("gyms.list.title")}
           </ThemedTitle>
         </View>
       </ThemedHeader>
@@ -312,12 +314,12 @@ export default function GymsPage() {
           <TextInput
             value={query}
             onChangeText={setQuery}
-            placeholder="Search centre, chain or city"
+            placeholder={t("gyms.list.searchPlaceholder")}
             placeholderTextColor={isLight ? "#8C909B" : "#6E7480"}
             style={[styles.searchInput, { color: theme.title }]}
             autoCorrect={false}
             returnKeyType="search"
-            accessibilityLabel="Search centres"
+            accessibilityLabel={t("gyms.searchCentresA11y")}
           />
           {isSearching ? <ActivityIndicator size="small" color={theme.primaryText ?? theme.primary} /> : null}
         </View>
@@ -369,12 +371,12 @@ export default function GymsPage() {
 
           <View style={[styles.mapPill, { backgroundColor: "rgba(8, 9, 12, 0.62)" }]}>
             <ThemedText style={styles.mapPillText} setColor="#FFFFFF">
-              {`${visibleGyms.length} ${visibleGyms.length === 1 ? "centre" : "centres"} nearby`}
+              {t("gyms.list.nearbyCount", { count: visibleGyms.length })}
             </ThemedText>
           </View>
           <TouchableOpacity
             accessibilityRole="button"
-            accessibilityLabel={isMapExpanded ? "Shrink map" : "Expand map"}
+            accessibilityLabel={isMapExpanded ? t("gyms.list.shrinkMap") : t("gyms.list.expandMap")}
             onPress={() => setIsMapExpanded((value) => !value)}
             style={[styles.mapExpandButton, { backgroundColor: "rgba(8, 9, 12, 0.62)" }]}
           >
@@ -386,7 +388,7 @@ export default function GymsPage() {
           <View style={[styles.card, { backgroundColor: cardSurface, borderColor: cardBorder }]}>
             <View style={styles.emptyRow}>
               <ThemedText style={styles.emptyTitle} setColor={theme.title}>
-                Centres unavailable
+                {t("gyms.list.unavailableTitle")}
               </ThemedText>
               <ThemedText style={styles.emptyBody} setColor={quietText}>
                 {errorMessage}
@@ -400,10 +402,10 @@ export default function GymsPage() {
             <RadialGlow color={theme.record} />
             <View style={styles.cardHeader}>
               <ThemedText style={styles.cardTitle} setColor={theme.title}>
-                Strongest in Denmark
+                {t("gyms.strongest.title")}
               </ThemedText>
               <ThemedText style={styles.cardEyebrow} setColor={quietText}>
-                Verified only
+                {t("gyms.strongest.verifiedOnly")}
               </ThemedText>
             </View>
             {featuredStrongest.map((entry) => {
@@ -426,10 +428,10 @@ export default function GymsPage() {
                   </View>
                   <View style={styles.strongestCopy}>
                     <ThemedText style={styles.strongestName} setColor={theme.title} numberOfLines={1}>
-                      {top.isMe ? "You" : top.displayName}
+                      {top.isMe ? t("common.you") : top.displayName}
                     </ThemedText>
                     <ThemedText style={styles.strongestMeta} setColor={top.isHomeGym ? theme.primary : quietText} numberOfLines={1}>
-                      {top.isHomeGym ? `${gymLine} · your centre` : gymLine}
+                      {top.isHomeGym ? t("gyms.gymLineYourCentre", { gym: gymLine }) : gymLine}
                     </ThemedText>
                   </View>
                   <LiftStatusPill status="verified" approvals={top.approvals} compact />
@@ -446,7 +448,7 @@ export default function GymsPage() {
               style={[styles.cardFooter, { borderTopColor: theme.hairline }]}
             >
               <ThemedText style={styles.cardFooterText} setColor={theme.primary}>
-                See all of Denmark
+                {t("gyms.strongest.seeAll")}
               </ThemedText>
             </TouchableOpacity>
           </View>
@@ -455,10 +457,12 @@ export default function GymsPage() {
         <View style={[styles.card, { backgroundColor: cardSurface, borderColor: cardBorder }]}>
           <View style={styles.cardHeader}>
             <ThemedText style={styles.cardTitle} setColor={theme.title}>
-              {searchResults ? "Results" : "Nearest"}
+              {searchResults ? t("gyms.list.results") : t("gyms.list.nearest")}
             </ThemedText>
             <ThemedText style={styles.cardEyebrow} setColor={quietText}>
-              {searchResults ? `${searchResults.length} found` : "members · 90 days"}
+              {searchResults
+                ? t("gyms.list.foundCount", { count: searchResults.length })
+                : t("gyms.list.membersEyebrow")}
             </ThemedText>
           </View>
 
@@ -469,12 +473,10 @@ export default function GymsPage() {
           ) : orderedNearby.length === 0 ? (
             <View style={styles.emptyRow}>
               <ThemedText style={styles.emptyTitle} setColor={theme.title}>
-                {searchResults ? "No centres match" : "No centres yet"}
+                {searchResults ? t("gyms.list.noMatchTitle") : t("gyms.list.noCentresTitle")}
               </ThemedText>
               <ThemedText style={styles.emptyBody} setColor={quietText}>
-                {searchResults
-                  ? "Try the chain, the city or part of the centre's name."
-                  : "Centres appear here once they have been imported."}
+                {searchResults ? t("gyms.list.noMatchBody") : t("gyms.list.noCentresBody")}
               </ThemedText>
             </View>
           ) : (
@@ -489,7 +491,7 @@ export default function GymsPage() {
               style={[styles.cardFooter, { borderTopColor: theme.hairline }]}
             >
               <ThemedText style={styles.cardFooterText} setColor={theme.primary}>
-                {showAllNearby ? "Show fewer" : "Show all nearby"}
+                {showAllNearby ? t("common.showFewer") : t("gyms.list.showAllNearby")}
               </ThemedText>
             </TouchableOpacity>
           ) : null}

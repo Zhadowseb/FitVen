@@ -1,4 +1,5 @@
 import { Image, TouchableOpacity, View, useColorScheme } from "react-native";
+import { useTranslation } from "@localization";
 
 import styles from "./TodayHeroCardStyle";
 import { ThemedText } from "../../../../Resources/ThemedComponents";
@@ -20,6 +21,7 @@ export default function TodayHeroCard({
   onOpenNextWorkout,
   onQuickStart,
 }) {
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const isLight = colorScheme === "light";
@@ -43,20 +45,20 @@ export default function TodayHeroCard({
             style={[styles.emptyTitle, { color: theme.title }]}
             numberOfLines={1}
           >
-            Nothing scheduled today
+            {t("home.hero.nothingScheduled")}
           </ThemedText>
 
           <ThemedText
             style={[styles.emptySubtitle, { color: theme.quietText }]}
             numberOfLines={2}
           >
-            Rest up, or start a workout.
+            {t("home.hero.restOrStart")}
           </ThemedText>
 
           <TouchableOpacity
             activeOpacity={0.88}
             accessibilityRole="button"
-            accessibilityLabel="Quick start workout"
+            accessibilityLabel={t("home.hero.quickStartWorkout")}
             onPress={onQuickStart}
             style={[
               styles.emptyStartButton,
@@ -69,7 +71,7 @@ export default function TodayHeroCard({
                 { color: theme.textInverted },
               ]}
             >
-              Quick start
+              {t("home.hero.quickStart")}
             </ThemedText>
           </TouchableOpacity>
         </View>
@@ -100,10 +102,10 @@ export default function TodayHeroCard({
   const coverImage = getWorkoutCoverImage(workout.workoutType);
   // "Open" says nothing about what happens; the play icon promises a start.
   const primaryActionLabel = workout.isRunning
-    ? "Continue"
+    ? t("home.hero.continueWorkout")
     : workout.isStarted
-      ? "Resume workout"
-      : "Start workout";
+      ? t("home.hero.resumeWorkout")
+      : t("home.hero.startWorkout");
 
   return (
     <View
@@ -131,7 +133,7 @@ export default function TodayHeroCard({
         >
           <View style={[styles.chipDot, { backgroundColor: theme.primary }]} />
           <ThemedText style={[styles.chipLabel, { color: theme.title }]}>
-            Today's workout
+            {t("home.hero.todaysWorkout")}
           </ThemedText>
         </View>
 
@@ -203,10 +205,13 @@ function CompletedWorkoutCard({
   onOpenWorkout,
   theme,
 }) {
+  const { t } = useTranslation();
   const coverImage = getWorkoutCoverImage(workout.workoutType);
   const completionColor = theme.secondary;
   const completionMeta = [
-    workout.completedAt ? `Finished ${workout.completedAt}` : "Finished",
+    workout.completedAt
+      ? t("home.hero.finishedAt", { time: workout.completedAt })
+      : t("home.hero.finished"),
     workout.durationLabel,
   ].filter(Boolean);
 
@@ -214,7 +219,7 @@ function CompletedWorkoutCard({
     <TouchableOpacity
       activeOpacity={0.88}
       accessibilityRole="button"
-      accessibilityLabel={`Open completed workout ${workout.title}`}
+      accessibilityLabel={t("home.hero.openCompletedWorkout", { title: workout.title })}
       onPress={onOpenWorkout}
       style={[
         styles.card,
@@ -248,7 +253,9 @@ function CompletedWorkoutCard({
           ]}
         >
           <Checkmark width={14} height={14} color={completionColor} thickness={2.8} />
-          <ThemedText style={[styles.chipLabel, { color: completionColor }]}>Completed</ThemedText>
+          <ThemedText style={[styles.chipLabel, { color: completionColor }]}>
+            {t("home.hero.completed")}
+          </ThemedText>
         </View>
 
         <View style={styles.overlayText}>
@@ -297,6 +304,7 @@ function UpNextRow({
   bare = false,
   interactive = true,
 }) {
+  const { t } = useTranslation();
   const Container = interactive ? TouchableOpacity : View;
 
   return (
@@ -305,7 +313,9 @@ function UpNextRow({
         ? {
             activeOpacity: 0.84,
             accessibilityRole: "button",
-            accessibilityLabel: `Open planned workout ${nextWorkout.title}`,
+            accessibilityLabel: t("home.hero.openPlannedWorkout", {
+              title: nextWorkout.title,
+            }),
             onPress,
           }
         : {})}
@@ -329,7 +339,9 @@ function UpNextRow({
       </View>
 
       <View style={styles.upNextTextColumn}>
-        <ThemedText style={[styles.upNextEyebrow, { color: theme.quietText }]}>UP NEXT</ThemedText>
+        <ThemedText style={[styles.upNextEyebrow, { color: theme.quietText }]}>
+          {t("home.hero.upNext")}
+        </ThemedText>
         <ThemedText style={[styles.upNextTitle, { color: theme.title }]} numberOfLines={1}>
           {nextWorkout.title}
         </ThemedText>

@@ -1,5 +1,6 @@
 import { TouchableOpacity, View, useColorScheme } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
+import { useTranslation } from "@localization";
 
 import styles from "./WorkoutSummaryCardStyle";
 import PostHeaderGlow from "./PostHeaderGlow";
@@ -16,25 +17,28 @@ const GOLD_BAR_FROM = "#C98F2C";
 const GOLD_BAR_TO = "#F0C868";
 
 /** 81 min reads as "1 hour 21 min", not "81 min". */
-function buildDurationParts(durationSeconds) {
+function buildDurationParts(durationSeconds, t) {
   const numericValue = Number(durationSeconds);
+  const minutesUnit = t("home.summary.minutesUnit");
 
   if (!Number.isFinite(numericValue) || numericValue <= 0) {
-    return [{ value: "0", unit: "min" }];
+    return [{ value: "0", unit: minutesUnit }];
   }
 
   const totalMinutes = Math.max(1, Math.round(numericValue / 60));
 
   if (totalMinutes < 60) {
-    return [{ value: `${totalMinutes}`, unit: "min" }];
+    return [{ value: `${totalMinutes}`, unit: minutesUnit }];
   }
 
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
-  const parts = [{ value: `${hours}`, unit: hours === 1 ? "hour" : "hours" }];
+  const parts = [
+    { value: `${hours}`, unit: t("home.summary.hoursUnit", { count: hours }) },
+  ];
 
   if (minutes > 0) {
-    parts.push({ value: `${minutes}`, unit: "min" });
+    parts.push({ value: `${minutes}`, unit: minutesUnit });
   }
 
   return parts;
@@ -59,7 +63,7 @@ function getPersonalRecordExerciseNames(records) {
   );
 }
 
-function normalizeTopSet(record, personalRecordExerciseNames) {
+function normalizeTopSet(record, personalRecordExerciseNames, t) {
   const exercise = String(
     record?.exerciseName ?? record?.exercise_name ?? record?.exercise ?? "",
   ).trim();
@@ -93,7 +97,7 @@ function normalizeTopSet(record, personalRecordExerciseNames) {
     exercise,
     weightDisplay:
       record?.weightDisplay ??
-      (weight !== null ? `${weight} ${record?.unit ?? "kg"}` : ""),
+      (weight !== null ? `${weight} ${record?.unit ?? t("common.kg")}` : ""),
     reps: normalizeNumber(record?.reps),
     weight,
     hasBaseline,
@@ -118,6 +122,7 @@ export default function WorkoutSummaryCard({
   showPostedState = false,
   showFooter = true,
 }) {
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
 
@@ -131,12 +136,12 @@ export default function WorkoutSummaryCard({
   );
   const topSets = Array.isArray(payload.topSets)
     ? payload.topSets
-        .map((record) => normalizeTopSet(record, personalRecordExerciseNames))
+        .map((record) => normalizeTopSet(record, personalRecordExerciseNames, t))
         .filter((record) => record.exercise)
     : [];
   const prCount = topSets.filter((record) => record.isRecord).length;
 
-  const authorName = post?.author?.displayName ?? "FitVen athlete";
+  const authorName = post?.author?.displayName ?? t("home.summary.defaultAuthor");
   const createdAtLabel = formatTimeAgo(post?.createdAt);
   const postTitle = String(post?.title ?? "").trim();
   const workoutType = String(post?.workoutType ?? "").trim();
@@ -144,7 +149,7 @@ export default function WorkoutSummaryCard({
   const showTitle =
     postTitle.length > 0 &&
     postTitle.toLowerCase() !== workoutType.toLowerCase();
-  const durationParts = buildDurationParts(payload.durationSeconds);
+  const durationParts = buildDurationParts(payload.durationSeconds, t);
   const setsCount = Number(payload.setsCount) || 0;
   const exerciseCount = Number(payload.exerciseCount) || 0;
 
@@ -219,7 +224,7 @@ export default function WorkoutSummaryCard({
                 style={styles.optionsButton}
                 activeOpacity={0.75}
                 accessibilityRole="button"
-                accessibilityLabel="Post options"
+                accessibilityLabel={t("home.summary.postOptions")}
                 onPress={() => onOpenOptions(post)}
               >
                 <ThreeDots width={18} height={18} color={quietText} />
@@ -251,7 +256,7 @@ export default function WorkoutSummaryCard({
                 >
                   <Star width={11} height={11} color={gold} roundness={1} />
                   <ThemedText style={styles.prBadgeText} setColor={gold}>
-                    {`${prCount} PR`}
+                    {t("home.summary.prCount", { count: prCount })}
                   </ThemedText>
                 </View>
               ) : null}
@@ -296,13 +301,13 @@ export default function WorkoutSummaryCard({
                 {setsCount}
               </ThemedText>
               <ThemedText style={styles.statsUnit} setColor={quietText}>
-                sets across
+                {t("home.summary.setsAcross")}
               </ThemedText>
               <ThemedText style={styles.volumeValue} setColor={noteColor}>
                 {exerciseCount}
               </ThemedText>
               <ThemedText style={styles.statsUnit} setColor={quietText}>
-                {exerciseCount === 1 ? "exercise" : "exercises"}
+                {t("home.summary.exercisesUnit", { count: exerciseCount })}
               </ThemedText>
             </View>
           </View>
@@ -315,13 +320,13 @@ export default function WorkoutSummaryCard({
             <View style={styles.topSetsHeader}>
               <View style={styles.starColumn} />
               <ThemedText style={styles.topSetsLabel} setColor={quietText}>
-                Top sets
+                {t("home.summary.topSets")}
               </ThemedText>
               <ThemedText
                 style={styles.topSetsCompareLabel}
                 setColor={withAlpha(quietText, 0.8)}
               >
-                vs. personal best
+                {t("home.summary.vsPersonalBest")}
               </ThemedText>
             </View>
 
@@ -356,7 +361,7 @@ export default function WorkoutSummaryCard({
                         style={styles.topSetReps}
                         setColor={quietText}
                       >
-                        {`${record.reps} reps`}
+                        {t("common.reps", { count: record.reps })}
                       </ThemedText>
                     ) : null}
 
@@ -393,7 +398,9 @@ export default function WorkoutSummaryCard({
               style={styles.footerAction}
               activeOpacity={0.75}
               accessibilityRole="button"
-              accessibilityLabel={post.isLiked ? "Unlike post" : "Like post"}
+              accessibilityLabel={
+                post.isLiked ? t("home.summary.unlikePost") : t("home.summary.likePost")
+              }
               disabled={isLikeBusy}
               onPress={() => onToggleLike?.(post)}
             >
@@ -408,7 +415,7 @@ export default function WorkoutSummaryCard({
                 style={styles.footerAction}
                 activeOpacity={0.75}
                 accessibilityRole="button"
-                accessibilityLabel="Comments"
+                accessibilityLabel={t("home.summary.comments")}
                 onPress={() => onOpenComments(post)}
               >
                 <Feather name="message-circle" size={19} color={quietText} />
@@ -425,7 +432,7 @@ export default function WorkoutSummaryCard({
                 style={styles.footerAction}
                 activeOpacity={0.75}
                 accessibilityRole="button"
-                accessibilityLabel="Share post"
+                accessibilityLabel={t("home.summary.sharePost")}
                 onPress={() => onShare(post)}
               >
                 <Feather name="share-2" size={19} color={quietText} />
@@ -481,8 +488,10 @@ export default function WorkoutSummaryCard({
               setColor={post.isPosted ? theme.secondary : quietText}
             >
               {post.isPosted == null
-                ? "Status unavailable"
-                : post.isPosted ? "Posted" : "Not posted"}
+                ? t("home.summary.statusUnavailable")
+                : post.isPosted
+                  ? t("home.summary.posted")
+                  : t("home.summary.notPosted")}
             </ThemedText>
           </View>
 
@@ -492,7 +501,7 @@ export default function WorkoutSummaryCard({
             <TouchableOpacity
               activeOpacity={0.84}
               accessibilityRole="button"
-              accessibilityLabel="Post this workout"
+              accessibilityLabel={t("home.summary.postThisWorkout")}
               disabled={isPostBusy}
               onPress={() => onPost(post)}
               style={[
@@ -505,7 +514,7 @@ export default function WorkoutSummaryCard({
               ]}
             >
               <ThemedText style={styles.postActionText} setColor={accent}>
-                {isPostBusy ? "Posting..." : "Post"}
+                {isPostBusy ? t("home.summary.posting") : t("home.summary.post")}
               </ThemedText>
             </TouchableOpacity>
           ) : null}
@@ -514,7 +523,7 @@ export default function WorkoutSummaryCard({
             <TouchableOpacity
               activeOpacity={0.75}
               accessibilityRole="button"
-              accessibilityLabel="Post options"
+              accessibilityLabel={t("home.summary.postOptions")}
               hitSlop={10}
               onPress={() => onManage(post)}
               style={[styles.manageButton, { borderColor: cardBorder }]}

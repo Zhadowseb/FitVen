@@ -11,6 +11,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import styles from "./MusicSettingsPageStyle";
 import { useAuth } from "../../Contexts/AuthContext";
 import { musicService } from "../../Services";
+import { useTranslation } from "@localization";
 import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
 import MusicNote from "../../Resources/Icons/UI-icons/MusicNote";
 import Social from "../../Resources/Icons/UI-icons/Social";
@@ -30,6 +31,7 @@ import {
 export default function MusicSettingsPage() {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [settings, setSettings] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -52,11 +54,13 @@ export default function MusicSettingsPage() {
       setSettings(await musicService.getMusicSharingSettings({ user }));
       showFeedback("");
     } catch (error) {
-      showFeedback(error instanceof Error ? error.message : "Could not load music settings.");
+      showFeedback(
+        error instanceof Error ? error.message : t("music.settings.couldNotLoad")
+      );
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [t, user]);
 
   useFocusEffect(
     useCallback(() => {
@@ -73,13 +77,17 @@ export default function MusicSettingsPage() {
 
       if (result.connected) {
         showFeedback(
-          result.accountName ? `Connected to Spotify as ${result.accountName}.` : "Connected to Spotify.",
+          result.accountName
+            ? t("music.connection.connectedAs", { name: result.accountName })
+            : t("music.connection.connected"),
           "success"
         );
         await load();
       }
     } catch (error) {
-      showFeedback(error instanceof Error ? error.message : "Could not connect Spotify.");
+      showFeedback(
+        error instanceof Error ? error.message : t("music.connection.couldNotConnect")
+      );
     } finally {
       setIsConnecting(false);
     }
@@ -91,10 +99,14 @@ export default function MusicSettingsPage() {
 
     try {
       await musicService.disconnectMusic({ user });
-      showFeedback("Spotify disconnected. Nothing more is shared.", "success");
+      showFeedback(t("music.connection.disconnected"), "success");
       await load();
     } catch (error) {
-      showFeedback(error instanceof Error ? error.message : "Could not disconnect Spotify.");
+      showFeedback(
+        error instanceof Error
+          ? error.message
+          : t("music.connection.couldNotDisconnect")
+      );
     } finally {
       setIsConnecting(false);
     }
@@ -102,7 +114,7 @@ export default function MusicSettingsPage() {
 
   const toggleSharing = async (enabled) => {
     if (!user?.id) {
-      showFeedback("Sign in to share music.");
+      showFeedback(t("music.shareWithFriends.signInToShare"));
       return;
     }
 
@@ -114,13 +126,17 @@ export default function MusicSettingsPage() {
       await musicService.setMusicSharingEnabled({ user, enabled });
       showFeedback(
         enabled
-          ? "Followers now see what is playing while you train."
-          : "Sharing is off and what was shared has been removed.",
+          ? t("music.shareWithFriends.turnedOn")
+          : t("music.shareWithFriends.turnedOff"),
         "success"
       );
     } catch (error) {
       setSettings((current) => (current ? { ...current, shareWithFriends: !enabled } : current));
-      showFeedback(error instanceof Error ? error.message : "Could not change music sharing.");
+      showFeedback(
+        error instanceof Error
+          ? error.message
+          : t("music.shareWithFriends.couldNotChange")
+      );
     } finally {
       setIsSaving(false);
     }
@@ -129,16 +145,25 @@ export default function MusicSettingsPage() {
   const connection = settings?.connection ?? null;
   const isAvailable = settings?.isAvailable ?? false;
   const isConfigured = (settings?.isConfigured ?? false) && isAvailable;
+  const connectionStatus = isLoading
+    ? t("music.status.checking")
+    : connection
+      ? connection.accountName
+        ? t("music.status.connectedAs", { name: connection.accountName })
+        : t("music.status.connected")
+      : isConfigured
+        ? t("music.status.notConnected")
+        : t("music.status.notAvailable");
 
   return (
     <ThemedView safe={["top", "left", "right"]} style={styles.container}>
       <ThemedHeader>
         <View style={styles.pageHeaderTitleGroup}>
           <ThemedText size={12} style={[styles.pageHeaderTitleEyebrow, { color: quietText }]}>
-            Settings
+            {t("music.settings.eyebrow")}
           </ThemedText>
           <ThemedTitle type="pageTitle" style={styles.pageHeaderTitleMain} numberOfLines={1}>
-            Music
+            {t("music.settings.title")}
           </ThemedTitle>
         </View>
       </ThemedHeader>
@@ -154,15 +179,7 @@ export default function MusicSettingsPage() {
                 Spotify
               </ThemedText>
               <ThemedText style={styles.rowBody} setColor={quietText} numberOfLines={2}>
-                {isLoading
-                  ? "Checking…"
-                  : connection
-                    ? connection.accountName
-                      ? `Connected as ${connection.accountName}`
-                      : "Connected"
-                    : isConfigured
-                      ? "Not connected"
-                      : "Not available in this build"}
+                {connectionStatus}
               </ThemedText>
             </View>
             {isLoading || isConnecting ? (
@@ -175,7 +192,7 @@ export default function MusicSettingsPage() {
                 style={[styles.actionButton, { borderWidth: 1, borderColor: withAlpha(theme.title, 0.28) }]}
               >
                 <ThemedText style={styles.actionText} setColor={theme.title}>
-                  Disconnect
+                  {t("music.disconnect")}
                 </ThemedText>
               </TouchableOpacity>
             ) : (
@@ -187,7 +204,7 @@ export default function MusicSettingsPage() {
                 style={[styles.actionButton, { backgroundColor: theme.primary, opacity: isConfigured ? 1 : 0.5 }]}
               >
                 <ThemedText style={styles.actionText} setColor={theme.textInverted}>
-                  Connect
+                  {t("music.connect")}
                 </ThemedText>
               </TouchableOpacity>
             )}
@@ -201,11 +218,10 @@ export default function MusicSettingsPage() {
             </View>
             <View style={styles.rowCopy}>
               <ThemedText style={styles.rowTitle} setColor={theme.title}>
-                Share music with friends
+                {t("music.shareWithFriends.title")}
               </ThemedText>
               <ThemedText style={styles.rowBody} setColor={quietText} numberOfLines={3}>
-                People you follow back see the track that is playing while you train, and the last one
-                after. Off removes what was shared.
+                {t("music.shareWithFriends.body")}
               </ThemedText>
             </View>
             {isSaving ? (
@@ -215,7 +231,7 @@ export default function MusicSettingsPage() {
                 value={Boolean(settings?.shareWithFriends)}
                 onValueChange={toggleSharing}
                 disabled={isLoading || !connection}
-                accessibilityLabel="Share music with friends"
+                accessibilityLabel={t("music.shareWithFriends.title")}
               />
             )}
           </View>
@@ -228,15 +244,17 @@ export default function MusicSettingsPage() {
         ) : null}
 
         <ThemedText style={styles.note} setColor={quietText}>
-          Your Spotify login stays on this phone. Only track and artist names leave it, and only while a workout
-          is running.
+          {t("music.settings.note")}
         </ThemedText>
 
         {!isLoading && !isAvailable ? (
           <ThemedText style={styles.note} setColor={quietText}>
-            {musicService.SPOTIFY_NOT_IN_BUILD_MESSAGE}
+            {t("music.errors.notInBuild")}
           </ThemedText>
         ) : !isLoading && !isConfigured ? (
+          // Developer-facing, like SPOTIFY_NOT_CONFIGURED_MESSAGE in the
+          // service: it names the app config and the Spotify dashboard, and
+          // only shows on a build somebody is setting up. Not translated.
           <ThemedText style={styles.note} setColor={quietText}>
             {`Spotify needs a client id in the app config and this redirect URI registered in the Spotify dashboard: `}
             <ThemedText style={[styles.note, styles.code]} setColor={theme.title}>

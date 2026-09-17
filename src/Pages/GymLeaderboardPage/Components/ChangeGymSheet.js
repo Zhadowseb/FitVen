@@ -7,6 +7,7 @@ import {
   View,
   useColorScheme,
 } from "react-native";
+import { useTranslation } from "@localization";
 
 import styles from "../GymLeaderboardPageStyle";
 import { useAuth } from "../../../Contexts/AuthContext";
@@ -27,6 +28,7 @@ const SEARCH_DEBOUNCE_MS = 250;
 export default function ChangeGymSheet({ visible, onClose, currentHomeGymId, isAutomatic, onChanged }) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const { t } = useTranslation();
   const { user } = useAuth();
   const searchTimeoutRef = useRef(null);
   const [myGyms, setMyGyms] = useState([]);
@@ -51,11 +53,11 @@ export default function ChangeGymSheet({ visible, onClose, currentHomeGymId, isA
     try {
       setMyGyms(await gymService.getMyGyms());
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Could not load your centres.");
+      setErrorMessage(error instanceof Error ? error.message : t("gyms.change.loadFailed"));
     } finally {
       setIsLoading(false);
     }
-  }, [visible]);
+  }, [t, visible]);
 
   useEffect(() => {
     load();
@@ -87,14 +89,14 @@ export default function ChangeGymSheet({ visible, onClose, currentHomeGymId, isA
         setResults(await gymService.searchGyms({ query: trimmed }));
       } catch (error) {
         setResults([]);
-        setErrorMessage(error instanceof Error ? error.message : "Search failed.");
+        setErrorMessage(error instanceof Error ? error.message : t("gyms.searchFailed"));
       } finally {
         setIsSearching(false);
       }
     }, SEARCH_DEBOUNCE_MS);
 
     return () => clearTimeout(searchTimeoutRef.current);
-  }, [query]);
+  }, [query, t]);
 
   const choose = async (gymId) => {
     if (!user?.id || savingId !== null) {
@@ -109,7 +111,7 @@ export default function ChangeGymSheet({ visible, onClose, currentHomeGymId, isA
       onChanged?.(gymId);
       onClose?.();
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Could not change your centre.");
+      setErrorMessage(error instanceof Error ? error.message : t("gyms.change.saveFailed"));
     } finally {
       setSavingId(null);
     }
@@ -154,10 +156,10 @@ export default function ChangeGymSheet({ visible, onClose, currentHomeGymId, isA
     <ThemedBottomSheet visible={visible} onClose={onClose}>
       <View style={styles.sheetHeader}>
         <ThemedText style={styles.sheetTitle} setColor={theme.title}>
-          Change centre
+          {t("gyms.overview.changeCentre")}
         </ThemedText>
         <ThemedText style={styles.sheetBody} setColor={quietText}>
-          Your centre is where you have trained most in the last 90 days, unless you pick one here.
+          {t("gyms.change.body")}
         </ThemedText>
       </View>
 
@@ -166,11 +168,11 @@ export default function ChangeGymSheet({ visible, onClose, currentHomeGymId, isA
         <TextInput
           value={query}
           onChangeText={setQuery}
-          placeholder="Search every centre"
+          placeholder={t("gyms.change.searchPlaceholder")}
           placeholderTextColor={isLight ? "#8C909B" : "#6E7480"}
           style={[styles.sheetSearchInput, { color: theme.title }]}
           autoCorrect={false}
-          accessibilityLabel="Search centres"
+          accessibilityLabel={t("gyms.searchCentresA11y")}
         />
         {isSearching ? <ActivityIndicator size="small" color={theme.primaryText ?? theme.primary} /> : null}
       </View>
@@ -185,7 +187,7 @@ export default function ChangeGymSheet({ visible, onClose, currentHomeGymId, isA
         {results ? (
           <>
             <ThemedText style={styles.sheetSection} setColor={quietText}>
-              {`${results.length} ${results.length === 1 ? "result" : "results"}`}
+              {t("gyms.change.resultCount", { count: results.length })}
             </ThemedText>
             {results.map((gym) =>
               renderRow({
@@ -203,15 +205,15 @@ export default function ChangeGymSheet({ visible, onClose, currentHomeGymId, isA
           <>
             {renderRow({
               key: "auto",
-              title: "Automatic",
-              meta: "Where you train most",
-              initials: "A",
+              title: t("gyms.change.automatic"),
+              meta: t("gyms.change.automaticMeta"),
+              initials: t("gyms.change.automatic").slice(0, 1).toUpperCase(),
               selected: Boolean(isAutomatic),
               onPress: () => choose(null),
               saving: savingId === "auto",
             })}
             <ThemedText style={styles.sheetSection} setColor={quietText}>
-              Where you have trained
+              {t("gyms.change.trainedHere")}
             </ThemedText>
             {isLoading ? (
               <View style={{ paddingVertical: 16, alignItems: "center" }}>
@@ -219,14 +221,14 @@ export default function ChangeGymSheet({ visible, onClose, currentHomeGymId, isA
               </View>
             ) : myGyms.length === 0 ? (
               <ThemedText style={[styles.sheetBody, { paddingHorizontal: 16, paddingBottom: 12 }]} setColor={quietText}>
-                Finish a workout inside a centre and it shows up here. Or search above.
+                {t("gyms.change.emptyBody")}
               </ThemedText>
             ) : (
               myGyms.map((gym) =>
                 renderRow({
                   key: gym.id,
                   title: gym.shortName,
-                  meta: `${gym.chain} · ${gym.workoutCount} ${gym.workoutCount === 1 ? "workout" : "workouts"}`,
+                  meta: t("gyms.change.gymMeta", { chain: gym.chain, count: gym.workoutCount }),
                   initials: getChainInitials(gym.chain),
                   selected: !isAutomatic && gym.id === currentHomeGymId,
                   onPress: () => choose(gym.id),

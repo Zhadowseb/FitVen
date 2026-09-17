@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTranslation } from "@localization";
 
 import styles, { HERO_HEIGHT } from "./GymLeaderboardPageStyle";
 import ChangeGymSheet from "./Components/ChangeGymSheet";
@@ -31,12 +32,8 @@ import {
 } from "../../Resources/ThemedComponents";
 import { formatWeightKg, getChainInitials } from "../../Utils/gymUtils";
 
-const SCOPE_OPTIONS = [
-  { value: gymService.GYM_SCOPE_GYM, label: "Centre" },
-  { value: gymService.GYM_SCOPE_FRIENDS, label: "Friends" },
-];
-
 function FeaturedCard({ entry, theme, colorScheme, onPress }) {
+  const { t } = useTranslation();
   const top = entry.top;
   const me = entry.me;
   const quietText = theme.quietText;
@@ -52,7 +49,7 @@ function FeaturedCard({ entry, theme, colorScheme, onPress }) {
     <TouchableOpacity
       activeOpacity={0.9}
       accessibilityRole="button"
-      accessibilityLabel={`${entry.exerciseName} leaderboard`}
+      accessibilityLabel={t("gyms.overview.exerciseLeaderboardA11y", { exercise: entry.exerciseName })}
       onPress={onPress}
       style={[styles.featuredCard, { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder }]}
     >
@@ -64,7 +61,7 @@ function FeaturedCard({ entry, theme, colorScheme, onPress }) {
             {entry.exerciseName}
           </ThemedText>
           <ThemedText style={styles.featuredCount} setColor={quietText}>
-            {`${entry.lifterCount} ${entry.lifterCount === 1 ? "person has" : "people have"} a record here`}
+            {t("gyms.overview.recordHolders", { count: entry.lifterCount })}
           </ThemedText>
         </View>
         <ChevronRight width={18} height={18} color={isLight ? "#A8ACB6" : "#4A4F5A"} />
@@ -77,7 +74,7 @@ function FeaturedCard({ entry, theme, colorScheme, onPress }) {
           </View>
           <View style={styles.topCopy}>
             <ThemedText style={styles.topName} setColor={theme.title} numberOfLines={1}>
-              {top.isMe ? "You" : top.displayName}
+              {top.isMe ? t("common.you") : top.displayName}
             </ThemedText>
             <View style={styles.topMetaRow}>
               <ThemedText style={styles.topRank} setColor={quietText}>
@@ -91,14 +88,14 @@ function FeaturedCard({ entry, theme, colorScheme, onPress }) {
               {formatWeightKg(top.weightKg)}
             </ThemedText>
             <ThemedText style={styles.topUnit} setColor={quietText}>
-              kg
+              {t("common.kg")}
             </ThemedText>
           </View>
         </View>
       ) : (
         <View style={styles.emptyTop}>
           <ThemedText style={styles.emptyTopText} setColor={quietText}>
-            Nobody has a record here yet. Finish a workout with this exercise inside the centre and yours is first.
+            {t("gyms.overview.noRecordYet")}
           </ThemedText>
         </View>
       )}
@@ -110,18 +107,20 @@ function FeaturedCard({ entry, theme, colorScheme, onPress }) {
           <>
             <View style={styles.meLine}>
               <ThemedText style={styles.meLabel} setColor={theme.primary}>
-                You
+                {t("common.you")}
               </ThemedText>
               <ThemedText style={styles.meRank} setColor={mutedStrong}>
-                {me.rank ? `· #${me.rank} of ${entry.lifterCount}` : "· not ranked"}
+                {me.rank
+                  ? t("gyms.overview.myRank", { rank: me.rank, total: entry.lifterCount })
+                  : t("gyms.overview.notRanked")}
               </ThemedText>
               <View style={styles.meSpacer} />
               <ThemedText style={styles.meWeight} setColor={theme.title}>
-                {`${formatWeightKg(me.weightKg)} kg`}
+                {t("gyms.weightKg", { weight: formatWeightKg(me.weightKg) })}
               </ThemedText>
               {me.gapToTop !== null && me.gapToTop !== undefined && me.gapToTop > 0 ? (
                 <ThemedText style={styles.meGap} setColor={quietText}>
-                  {`${formatWeightKg(me.gapToTop)} to #1`}
+                  {t("gyms.overview.gapToTop", { gap: formatWeightKg(me.gapToTop) })}
                 </ThemedText>
               ) : null}
             </View>
@@ -137,7 +136,7 @@ function FeaturedCard({ entry, theme, colorScheme, onPress }) {
         ) : (
           <View style={styles.meLine}>
             <ThemedText style={styles.meLabel} setColor={quietText}>
-              You · not on the list
+              {t("gyms.overview.notOnList")}
             </ThemedText>
           </View>
         )}
@@ -156,6 +155,7 @@ export default function GymLeaderboardPage() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const { t } = useTranslation();
   const { user } = useAuth();
   const gymId = Number(route.params?.gym_id ?? route.params?.gymId);
   const [scope, setScope] = useState(route.params?.scope ?? gymService.GYM_SCOPE_GYM);
@@ -173,11 +173,15 @@ export default function GymLeaderboardPage() {
   const isLight = colorScheme === "light";
   const mutedStrong = isLight ? "#3F4550" : "#C4C7CF";
   const scrimColor = isLight ? "rgba(8, 9, 12, 0.65)" : "rgba(8, 9, 12, 0.55)";
+  const scopeOptions = [
+    { value: gymService.GYM_SCOPE_GYM, label: t("gyms.scope.centre") },
+    { value: gymService.GYM_SCOPE_FRIENDS, label: t("gyms.scope.friends") },
+  ];
 
   const load = useCallback(
     async ({ silent = false } = {}) => {
       if (!Number.isFinite(gymId)) {
-        setErrorMessage("That centre could not be found.");
+        setErrorMessage(t("gyms.overview.notFound"));
         setIsLoading(false);
         return;
       }
@@ -199,18 +203,18 @@ export default function GymLeaderboardPage() {
         }
 
         if (!overviewResult.value) {
-          throw new Error("That centre could not be found.");
+          throw new Error(t("gyms.overview.notFound"));
         }
 
         setOverview(overviewResult.value);
         setQueue(queueResult.status === "fulfilled" ? queueResult.value : []);
       } catch (error) {
-        setErrorMessage(error instanceof Error ? error.message : "Could not load the centre.");
+        setErrorMessage(error instanceof Error ? error.message : t("gyms.overview.loadFailed"));
       } finally {
         setIsLoading(false);
       }
     },
-    [gymId, scope, showAllMore]
+    [gymId, scope, showAllMore, t]
   );
 
   useFocusEffect(
@@ -228,8 +232,10 @@ export default function GymLeaderboardPage() {
   const gym = overview?.gym ?? null;
   const memberLine = gym
     ? [
-        `${gym.memberCount} ${gym.memberCount === 1 ? "person trains" : "people train"} here`,
-        gym.followedMemberCount > 0 ? `you follow ${gym.followedMemberCount} of them` : null,
+        t("gyms.overview.membersTrainHere", { count: gym.memberCount }),
+        gym.followedMemberCount > 0
+          ? t("gyms.overview.youFollow", { count: gym.followedMemberCount })
+          : null,
       ].filter(Boolean)
     : [];
 
@@ -275,7 +281,7 @@ export default function GymLeaderboardPage() {
           <View style={[styles.heroTopBar, { top: insets.top + 8 }]}>
             <TouchableOpacity
               accessibilityRole="button"
-              accessibilityLabel="Go back"
+              accessibilityLabel={t("common.goBack")}
               onPress={() => navigation.goBack()}
               style={[styles.heroButton, { backgroundColor: scrimColor }]}
             >
@@ -283,13 +289,13 @@ export default function GymLeaderboardPage() {
             </TouchableOpacity>
             <TouchableOpacity
               accessibilityRole="button"
-              accessibilityLabel="Change centre"
+              accessibilityLabel={t("gyms.overview.changeCentre")}
               onPress={() => setIsChangeSheetOpen(true)}
               style={[styles.heroPill, { backgroundColor: scrimColor }]}
             >
               <MapPin width={12} height={12} color={theme.primary} thickness={2.4} />
               <ThemedText style={styles.heroPillText} setColor="#FFFFFF">
-                {gym?.isHomeGym ? "Your centre" : "Change centre"}
+                {gym?.isHomeGym ? t("gyms.overview.yourCentre") : t("gyms.overview.changeCentre")}
               </ThemedText>
             </TouchableOpacity>
           </View>
@@ -299,7 +305,7 @@ export default function GymLeaderboardPage() {
               {gym?.chain ?? " "}
             </ThemedText>
             <ThemedText style={styles.heroTitle} setColor={isLight ? "#FFFFFF" : theme.title} numberOfLines={2}>
-              {gym?.name ?? (isLoading ? "Loading…" : "Centre")}
+              {gym?.name ?? (isLoading ? t("common.loading") : t("gyms.centre"))}
             </ThemedText>
             {memberLine.length ? (
               <View style={styles.heroMetaRow}>
@@ -320,16 +326,16 @@ export default function GymLeaderboardPage() {
           <ThemedStateBlock
             variant="error"
             style={styles.stateBlock}
-            title="Centre unavailable"
+            title={t("gyms.overview.unavailableTitle")}
             message={errorMessage}
-            actionLabel="Try again"
+            actionLabel={t("common.retry")}
             onAction={() => load()}
           />
         ) : isLoading && !overview ? (
           <ThemedStateBlock variant="loading" style={styles.stateBlock} />
         ) : (
           <View style={styles.body}>
-            <ScopeToggle options={SCOPE_OPTIONS} value={scope} onChange={setScope} />
+            <ScopeToggle options={scopeOptions} value={scope} onChange={setScope} />
 
             {queue.length > 0 ? (
               <TouchableOpacity
@@ -349,10 +355,10 @@ export default function GymLeaderboardPage() {
                 </View>
                 <View style={styles.reviewCopy}>
                   <ThemedText style={styles.reviewTitle} setColor={theme.title}>
-                    {`${queue.length} ${queue.length === 1 ? "lift is" : "lifts are"} waiting for a verdict`}
+                    {t("gyms.overview.reviewQueue", { count: queue.length })}
                   </ThemedText>
                   <ThemedText style={styles.reviewBody} setColor={quietText}>
-                    Watch the video and approve or reject it.
+                    {t("gyms.overview.reviewHint")}
                   </ThemedText>
                 </View>
                 <ChevronRight width={18} height={18} color={isLight ? "#A8ACB6" : "#4A4F5A"} />
@@ -373,10 +379,10 @@ export default function GymLeaderboardPage() {
               <>
                 <View style={styles.sectionLabelRow}>
                   <ThemedText style={styles.sectionLabel} setColor={quietText}>
-                    More exercises
+                    {t("gyms.overview.moreExercises")}
                   </ThemedText>
                   <ThemedText style={styles.sectionHint} setColor="#6E7480">
-                    #1 at the centre · your place
+                    {t("gyms.overview.moreHint")}
                   </ThemedText>
                 </View>
                 <View style={[styles.listCard, { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder }]}>
@@ -393,7 +399,12 @@ export default function GymLeaderboardPage() {
                             {entry.exerciseName}
                           </ThemedText>
                           <ThemedText style={styles.moreTop} setColor={quietText} numberOfLines={1}>
-                            {entry.topName ? `${entry.topName} · ${formatWeightKg(entry.topWeightKg)} kg` : "No lifts yet"}
+                            {entry.topName
+                              ? t("gyms.overview.topLine", {
+                                  name: entry.topName,
+                                  weight: formatWeightKg(entry.topWeightKg),
+                                })
+                              : t("gyms.noLiftsYet")}
                           </ThemedText>
                         </View>
                         <ThemedText style={styles.moreRank} setColor={entry.myRank ? mutedStrong : "#6E7480"}>
@@ -414,7 +425,9 @@ export default function GymLeaderboardPage() {
                       style={[styles.footerRow, { borderTopColor: theme.hairline }]}
                     >
                       <ThemedText style={styles.footerText} setColor={theme.primary}>
-                        {showAllMore ? "Show fewer" : `Show all ${overview.moreTotal} exercises`}
+                        {showAllMore
+                          ? t("common.showFewer")
+                          : t("gyms.overview.showAllExercises", { count: overview.moreTotal })}
                       </ThemedText>
                     </TouchableOpacity>
                   ) : null}

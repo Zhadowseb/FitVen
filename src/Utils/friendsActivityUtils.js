@@ -1,5 +1,6 @@
 // Pure helpers for the Friends activity tiles: the text on the status row,
 // the tile order, the music band state, and whether the band should scroll.
+import { t } from "@localization";
 
 const ACTIVITY_TILE_ORDER = {
   live: 0,
@@ -47,16 +48,16 @@ export function formatHoursAgo(value, now = Date.now()) {
   const minutes = Math.max(0, Math.round((now - timestamp) / 60000));
 
   if (minutes < 60) {
-    return `${Math.max(1, minutes)}m`;
+    return t("time.minutesShort", { count: Math.max(1, minutes) });
   }
 
   const hours = Math.round(minutes / 60);
 
   if (hours < 48) {
-    return `${hours}h`;
+    return t("time.hoursShort", { count: hours });
   }
 
-  return `${Math.round(hours / 24)}d`;
+  return t("time.daysShort", { count: Math.round(hours / 24) });
 }
 
 /**
@@ -69,7 +70,9 @@ export function buildActivityStatusLabel(person, { isCurrentUser = false, now = 
 
   switch (state) {
     case "live":
-      return isCurrentUser ? "Training now" : person?.activityDetail ?? "Training now";
+      return isCurrentUser
+        ? t("friends.status.trainingNow")
+        : person?.activityDetail ?? t("friends.status.trainingNow");
     case "done": {
       const ago = formatHoursAgo(person?.activityAt, now);
 
@@ -77,7 +80,7 @@ export function buildActivityStatusLabel(person, { isCurrentUser = false, now = 
         return `${label} · ${ago}`;
       }
 
-      return label ?? person?.activityDetail ?? "Done today";
+      return label ?? person?.activityDetail ?? t("friends.status.doneToday");
     }
     case "planned": {
       const time = person?.plannedTime ?? null;
@@ -86,10 +89,12 @@ export function buildActivityStatusLabel(person, { isCurrentUser = false, now = 
         return `${label} · ${time}`;
       }
 
-      return label ? `${label} · Planned` : person?.activityDetail ?? "Planned";
+      return label
+        ? t("friends.status.labelPlanned", { label })
+        : person?.activityDetail ?? t("friends.status.planned");
     }
     default:
-      return "No activity";
+      return t("friends.status.noActivity");
   }
 }
 

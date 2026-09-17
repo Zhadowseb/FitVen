@@ -6,6 +6,7 @@ import { useState } from "react";
 import styles from "./LoginPageStyle";
 import { Colors } from "../../Resources/GlobalStyling/colors";
 import { authService } from "../../Services";
+import { useTranslation } from "@localization";
 import Checkmark from "../../Resources/Icons/UI-icons/Checkmark";
 import Cross from "../../Resources/Icons/UI-icons/Cross";
 import Eye from "../../Resources/Icons/UI-icons/Eye";
@@ -22,6 +23,7 @@ export default function LoginPage() {
   const navigation = useNavigation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -52,11 +54,11 @@ export default function LoginPage() {
     const errors = {};
 
     if (!normalizedEmail) {
-      errors.email = "Enter your email address.";
+      errors.email = t("auth.errors.enterEmail");
     }
 
     if (!password) {
-      errors.password = "Enter your password.";
+      errors.password = t("auth.errors.enterPassword");
     }
 
     return errors;
@@ -74,7 +76,7 @@ export default function LoginPage() {
 
     if (!normalizedEmail) {
       setFieldErrors({
-        email: "Enter your email address, then tap this again.",
+        email: t("auth.login.enterEmailThenTapAgain"),
       });
       setSubmitState({ status: "idle", message: "" });
       return;
@@ -87,8 +89,7 @@ export default function LoginPage() {
       await authService.requestPasswordReset({ email: normalizedEmail });
       setSubmitState({
         status: "sent",
-        message:
-          "If that address has an account, a link to set a new password is on its way. It expires, and it only works once.",
+        message: t("auth.login.resetLinkSent"),
       });
     } catch (error) {
       setSubmitState({
@@ -96,7 +97,7 @@ export default function LoginPage() {
         message:
           error instanceof Error
             ? error.message
-            : "Could not send the email. Try again.",
+            : t("auth.login.couldNotSendEmail"),
       });
     } finally {
       setIsSendingReset(false);
@@ -134,7 +135,9 @@ export default function LoginPage() {
       setSubmitState({
         status: "error",
         message:
-          error instanceof Error ? error.message : "Could not sign in.",
+          error instanceof Error
+            ? error.message
+            : t("auth.login.couldNotSignIn"),
       });
     }
   };
@@ -166,10 +169,10 @@ export default function LoginPage() {
               FitVen
             </ThemedText>
             <ThemedText style={styles.title} setColor={titleColor}>
-              Login
+              {t("auth.login.title")}
             </ThemedText>
             <ThemedText style={styles.subtitle} setColor={quietText}>
-              Sign in to load your programs and workouts.
+              {t("auth.login.subtitle")}
             </ThemedText>
           </View>
 
@@ -184,7 +187,7 @@ export default function LoginPage() {
           >
             <View style={styles.formSection}>
               <ThemedText style={styles.inputLabel} setColor={titleColor}>
-                Email
+                {t("auth.fields.email")}
               </ThemedText>
               <ThemedTextInput
                 value={email}
@@ -192,7 +195,7 @@ export default function LoginPage() {
                   setEmail(nextEmail);
                   clearErrors();
                 }}
-                placeholder="you@example.com"
+                placeholder={t("auth.fields.emailPlaceholder")}
                 autoCapitalize="none"
                 autoCorrect={false}
                 keyboardType="email-address"
@@ -203,7 +206,7 @@ export default function LoginPage() {
 
             <View style={styles.formSection}>
               <ThemedText style={styles.inputLabel} setColor={titleColor}>
-                Password
+                {t("auth.fields.password")}
               </ThemedText>
               <ThemedTextInput
                 value={password}
@@ -211,14 +214,16 @@ export default function LoginPage() {
                   setPassword(nextPassword);
                   clearErrors();
                 }}
-                placeholder="Enter password"
+                placeholder={t("auth.fields.passwordPlaceholder")}
                 secureTextEntry={!isPasswordVisible}
                 autoCapitalize="none"
                 autoCorrect={false}
                 error={fieldErrors.password}
                 style={styles.inputWrapper}
                 action={{
-                  label: isPasswordVisible ? "Hide password" : "Show password",
+                  label: isPasswordVisible
+                    ? t("auth.fields.hidePassword")
+                    : t("auth.fields.showPassword"),
                   onPress: () => setIsPasswordVisible((shown) => !shown),
                   icon: (
                     <Eye
@@ -234,7 +239,9 @@ export default function LoginPage() {
 
           <View style={styles.actions}>
             <ThemedButton
-              title={isSigningIn ? "Signing in..." : "Login"}
+              title={
+                isSigningIn ? t("auth.login.signingIn") : t("auth.login.submit")
+              }
               onPress={handleLogin}
               fullWidth
               style={styles.primaryButton}
@@ -271,19 +278,21 @@ export default function LoginPage() {
                   people who need it, not something to draw the eye away from
                   the field they were about to fill in. */}
               <ThemedText style={styles.forgotLinkText} setColor={quietText}>
-                {isSendingReset ? "Sending..." : "Forgot password?"}
+                {isSendingReset
+                  ? t("auth.login.sending")
+                  : t("auth.login.forgotPassword")}
               </ThemedText>
             </Pressable>
 
             <View style={styles.alternativeBlock}>
               <ThemedText style={styles.alternativeLabel} setColor={quietText}>
-                New here?
+                {t("auth.login.newHere")}
               </ThemedText>
               {/* An outline, not a second orange button. Two identical fills
                   stacked on top of each other said nothing about which one was
                   the thing you came here to do. */}
               <ThemedButton
-                title="Create account"
+                title={t("auth.createAccount")}
                 variant="secondary"
                 onPress={() => navigation.navigate("RegisterPage")}
                 fullWidth

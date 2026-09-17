@@ -13,6 +13,7 @@
 const assert = require("assert");
 const fs = require("fs");
 const path = require("path");
+const loadAppModule = require("./lib/loadAppModule");
 
 const root = path.resolve(__dirname, "..");
 
@@ -56,9 +57,35 @@ async function run() {
 
   // The summary is what somebody actually reads next to the checkbox. The full
   // document being correct is no help if the one line beside the tick is not.
+  //
+  // The register screen shows it in the user's language, from the locale
+  // files, so that is where the line is checked: the English one is the same
+  // text as TERMS_SUMMARY (the document it summarises), and the Danish one
+  // says the same thing in Danish.
+  const enAuth = loadAppModule("src/Localization/locales/en/auth.js").default;
+  const daAuth = loadAppModule("src/Localization/locales/da/auth.js").default;
+  const enSummary = String(enAuth?.register?.termsSummary ?? "");
+  const daSummary = String(daAuth?.register?.termsSummary ?? "");
+
   assert.ok(
     /no tolerance|zero tolerance/.test(String(terms.TERMS_SUMMARY).toLowerCase()),
-    "TERMS_SUMMARY is the line shown beside the checkbox and no longer carries the no-tolerance wording"
+    "TERMS_SUMMARY no longer carries the no-tolerance wording"
+  );
+
+  assert.strictEqual(
+    enSummary,
+    terms.TERMS_SUMMARY,
+    "auth.register.termsSummary is the line shown beside the checkbox and has drifted from TERMS_SUMMARY in Legal/termsOfUse.js"
+  );
+
+  assert.ok(
+    /no tolerance|zero tolerance/.test(enSummary.toLowerCase()),
+    "auth.register.termsSummary is the line shown beside the checkbox and no longer carries the no-tolerance wording"
+  );
+
+  assert.ok(
+    /nultolerance|ingen tolerance|nul tolerance/.test(daSummary.toLowerCase()),
+    "the Danish line beside the checkbox (da auth.register.termsSummary) no longer carries the no-tolerance wording"
   );
 
   assert.ok(terms.TERMS_VERSION, "TERMS_VERSION is missing");
@@ -70,6 +97,11 @@ async function run() {
   /* ---------------------------------------- the register screen enforces it -- */
 
   const register = read("src/Pages/RegisterPage/RegisterPage.js");
+
+  assert.ok(
+    register.includes('t("auth.register.termsSummary")'),
+    "the register screen no longer shows the no-tolerance summary beside the checkbox"
+  );
 
   assert.ok(
     /if \(!hasAcceptedTerms\) \{\s*errors\.terms/.test(register),

@@ -6,7 +6,7 @@ import { useNavigation } from "@react-navigation/native";
 import styles from "./RegisterPageStyle";
 import { Colors } from "../../Resources/GlobalStyling/colors";
 import { authService } from "../../Services";
-import { TERMS_SUMMARY } from "../../Resources/Legal/termsOfUse";
+import { useTranslation } from "@localization";
 import Checkmark from "../../Resources/Icons/UI-icons/Checkmark";
 import Cross from "../../Resources/Icons/UI-icons/Cross";
 import Eye from "../../Resources/Icons/UI-icons/Eye";
@@ -32,6 +32,7 @@ export default function RegisterPage() {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const navigation = useNavigation();
+  const { t } = useTranslation();
   const [usernameBase, setUsernameBase] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -52,7 +53,7 @@ export default function RegisterPage() {
   const usernamePreview =
     normalizedUsername && isValidUsernameBase(normalizedUsername)
       ? buildFullUsername(normalizedUsername, "1234")
-      : "your_name#1234";
+      : t("auth.register.usernamePreviewExample");
   const isRegistering = submitState.status === "loading";
 
   const clearErrors = () => {
@@ -70,33 +71,34 @@ export default function RegisterPage() {
     const errors = {};
 
     if (!normalizedUsername) {
-      errors.username = "Pick a username.";
+      errors.username = t("auth.register.errors.pickUsername");
     } else if (!isValidUsernameBase(normalizedUsername)) {
-      errors.username =
-        "Use 3-20 lowercase letters, numbers or underscores.";
+      errors.username = t("auth.register.errors.usernameRules");
     }
 
     if (!normalizedEmail) {
-      errors.email = "Enter your email address.";
+      errors.email = t("auth.errors.enterEmail");
     }
 
     if (!password) {
-      errors.password = "Choose a password.";
+      errors.password = t("auth.register.errors.choosePassword");
     } else if (password.length < MINIMUM_PASSWORD_LENGTH) {
-      errors.password = `At least ${MINIMUM_PASSWORD_LENGTH} characters.`;
+      errors.password = t("auth.register.passwordMinLength", {
+        count: MINIMUM_PASSWORD_LENGTH,
+      });
     }
 
     if (!retypePassword) {
-      errors.retypePassword = "Type the password again.";
+      errors.retypePassword = t("auth.register.errors.repeatPassword");
     } else if (password !== retypePassword) {
-      errors.retypePassword = "The two passwords are not the same.";
+      errors.retypePassword = t("auth.register.errors.passwordsDiffer");
     }
 
     // Required, and deliberately not pre-ticked. App Review asks for the terms
     // to be agreed to before registering, and an agreement nobody had to make
     // is not one.
     if (!hasAcceptedTerms) {
-      errors.terms = "You have to accept the terms to create an account.";
+      errors.terms = t("auth.register.errors.acceptTerms");
     }
 
     return errors;
@@ -139,7 +141,9 @@ export default function RegisterPage() {
       setSubmitState({
         status: "error",
         message:
-          error instanceof Error ? error.message : "Could not create account.",
+          error instanceof Error
+            ? error.message
+            : t("auth.register.errors.couldNotCreate"),
       });
     }
   };
@@ -151,7 +155,7 @@ export default function RegisterPage() {
       {/* The bar used to be a back arrow alone in an empty band. */}
       <ThemedHeader>
         <ThemedTitle type="h3" numberOfLines={1}>
-          Create account
+          {t("auth.createAccount")}
         </ThemedTitle>
       </ThemedHeader>
 
@@ -191,18 +195,20 @@ export default function RegisterPage() {
 
               <ThemedText style={styles.doneTitle} setColor={titleColor}>
                 {createdAccount.needsEmailConfirmation
-                  ? "Confirm your email"
-                  : "Account created"}
+                  ? t("auth.register.done.confirmEmailTitle")
+                  : t("auth.register.done.accountCreatedTitle")}
               </ThemedText>
 
               <ThemedText style={styles.doneBody} setColor={quietText}>
                 {createdAccount.needsEmailConfirmation
-                  ? `We sent a link to ${createdAccount.email}. Open it to confirm the address, then sign in.`
-                  : "Your account is ready. Sign in to start."}
+                  ? t("auth.register.done.confirmEmailBody", {
+                      email: createdAccount.email,
+                    })
+                  : t("auth.register.done.accountCreatedBody")}
               </ThemedText>
 
               <ThemedButton
-                title="Go to login"
+                title={t("auth.register.done.goToLogin")}
                 onPress={goToLogin}
                 fullWidth
                 style={[styles.primaryButton, styles.doneButton]}
@@ -215,7 +221,7 @@ export default function RegisterPage() {
                   FitVen
                 </ThemedText>
                 <ThemedText style={styles.subtitle} setColor={quietText}>
-                  An account syncs your programs and workouts across devices.
+                  {t("auth.register.subtitle")}
                 </ThemedText>
               </View>
 
@@ -230,7 +236,7 @@ export default function RegisterPage() {
               >
                 <View style={styles.formSection}>
                   <ThemedText style={styles.inputLabel} setColor={titleColor}>
-                    Username
+                    {t("auth.register.username")}
                   </ThemedText>
                   <ThemedTextInput
                     value={usernameBase}
@@ -238,7 +244,7 @@ export default function RegisterPage() {
                       setUsernameBase(next);
                       clearErrors();
                     }}
-                    placeholder="your_name"
+                    placeholder={t("auth.register.usernamePlaceholder")}
                     autoCapitalize="none"
                     autoCorrect={false}
                     error={fieldErrors.username}
@@ -246,15 +252,16 @@ export default function RegisterPage() {
                   />
                   {fieldErrors.username ? null : (
                     <ThemedText style={styles.fieldHint} setColor={quietText}>
-                      FitVen adds a 4-digit tag, so it shows up as{" "}
-                      {usernamePreview}. The tag cannot be changed later.
+                      {t("auth.register.usernameHint", {
+                        preview: usernamePreview,
+                      })}
                     </ThemedText>
                   )}
                 </View>
 
                 <View style={styles.formSection}>
                   <ThemedText style={styles.inputLabel} setColor={titleColor}>
-                    Email
+                    {t("auth.fields.email")}
                   </ThemedText>
                   <ThemedTextInput
                     value={email}
@@ -262,7 +269,7 @@ export default function RegisterPage() {
                       setEmail(next);
                       clearErrors();
                     }}
-                    placeholder="you@example.com"
+                    placeholder={t("auth.fields.emailPlaceholder")}
                     autoCapitalize="none"
                     autoCorrect={false}
                     keyboardType="email-address"
@@ -273,7 +280,7 @@ export default function RegisterPage() {
 
                 <View style={styles.formSection}>
                   <ThemedText style={styles.inputLabel} setColor={titleColor}>
-                    Password
+                    {t("auth.fields.password")}
                   </ThemedText>
                   <ThemedTextInput
                     value={password}
@@ -281,7 +288,7 @@ export default function RegisterPage() {
                       setPassword(next);
                       clearErrors();
                     }}
-                    placeholder="Enter password"
+                    placeholder={t("auth.fields.passwordPlaceholder")}
                     secureTextEntry={!isPasswordVisible}
                     autoCapitalize="none"
                     autoCorrect={false}
@@ -289,8 +296,8 @@ export default function RegisterPage() {
                     style={styles.inputWrapper}
                     action={{
                       label: isPasswordVisible
-                        ? "Hide password"
-                        : "Show password",
+                        ? t("auth.fields.hidePassword")
+                        : t("auth.fields.showPassword"),
                       onPress: () => setIsPasswordVisible((shown) => !shown),
                       icon: (
                         <Eye
@@ -306,14 +313,16 @@ export default function RegisterPage() {
                   {/* The rule, before it is broken rather than after. */}
                   {fieldErrors.password ? null : (
                     <ThemedText style={styles.fieldHint} setColor={quietText}>
-                      At least {MINIMUM_PASSWORD_LENGTH} characters.
+                      {t("auth.register.passwordMinLength", {
+                        count: MINIMUM_PASSWORD_LENGTH,
+                      })}
                     </ThemedText>
                   )}
                 </View>
 
                 <View style={styles.formSection}>
                   <ThemedText style={styles.inputLabel} setColor={titleColor}>
-                    Repeat password
+                    {t("auth.register.repeatPassword")}
                   </ThemedText>
                   <ThemedTextInput
                     value={retypePassword}
@@ -321,7 +330,7 @@ export default function RegisterPage() {
                       setRetypePassword(next);
                       clearErrors();
                     }}
-                    placeholder="Repeat password"
+                    placeholder={t("auth.register.repeatPassword")}
                     secureTextEntry={!isPasswordVisible}
                     autoCapitalize="none"
                     autoCorrect={false}
@@ -336,7 +345,7 @@ export default function RegisterPage() {
                   activeOpacity={0.7}
                   accessibilityRole="checkbox"
                   accessibilityState={{ checked: hasAcceptedTerms }}
-                  accessibilityLabel="I agree to the terms of use"
+                  accessibilityLabel={t("auth.register.termsCheckboxAccessibility")}
                   onPress={() => setHasAcceptedTerms((accepted) => !accepted)}
                   style={styles.termsRow}
                 >
@@ -360,8 +369,12 @@ export default function RegisterPage() {
                     ) : null}
                   </View>
 
+                  {/* The second sentence is the no-tolerance line App Review
+                      asked for, in the user's language. scripts/test-terms-of-use.js
+                      keeps it in step with TERMS_SUMMARY in Legal/termsOfUse.js. */}
                   <ThemedText style={styles.termsText} setColor={quietText}>
-                    I agree to the terms of use. {TERMS_SUMMARY}
+                    {t("auth.register.termsCheckbox")}{" "}
+                    {t("auth.register.termsSummary")}
                   </ThemedText>
                 </TouchableOpacity>
 
@@ -384,12 +397,16 @@ export default function RegisterPage() {
                     style={styles.privacyLinkText}
                     setColor={quietText}
                   >
-                    Read the full terms of use
+                    {t("auth.register.readFullTerms")}
                   </ThemedText>
                 </TouchableOpacity>
 
                 <ThemedButton
-                  title={isRegistering ? "Creating account..." : "Create account"}
+                  title={
+                    isRegistering
+                      ? t("auth.register.creating")
+                      : t("auth.createAccount")
+                  }
                   onPress={handleRegister}
                   fullWidth
                   style={styles.primaryButton}
@@ -418,7 +435,7 @@ export default function RegisterPage() {
                     style={styles.privacyLinkText}
                     setColor={quietText}
                   >
-                    How FitVen handles your data
+                    {t("auth.register.howDataIsHandled")}
                   </ThemedText>
                 </TouchableOpacity>
               </View>

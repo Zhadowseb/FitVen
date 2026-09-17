@@ -1,9 +1,127 @@
-// Profile page, and its settings rows.
+// Profile page, its settings rows, and the feedback sheet it opens.
 export default {
   language: {
     label: "Language",
     system: "System",
     en: "English",
     da: "Dansk",
+  },
+  sections: {
+    publicProfile: "Public profile",
+    settings: "Settings",
+    appearance: "Appearance",
+    feedback: "Feedback",
+    account: "Account",
+  },
+  avatar: {
+    uploading: "Uploading...",
+    changePhoto: "Change photo",
+    uploadPhoto: "Upload photo",
+    hint: "Square images work best · up to {maxMb} MB",
+  },
+  username: "Username",
+  birthYear: {
+    label: "Birth year",
+    select: "Select birth year",
+    hint: "Only the year is stored, for your heart rate zones",
+    age: { one: "{count} year", other: "{count} years" },
+    clear: "Clear",
+    clearAccessibility: "Clear birth year",
+  },
+  displayName: {
+    label: "Display name",
+    placeholder: "How your name appears",
+    hint: "Visible in people search",
+    empty: "Display name cannot be empty.",
+  },
+  bio: {
+    label: "Bio",
+    placeholder: "Tell people a little about your training.",
+  },
+  loadingProfile: "Loading profile...",
+  saveProfile: "Save profile",
+  saving: "Saving...",
+  feedback: {
+    signInToView: "Sign in to view your profile.",
+    couldNotLoad: "Could not load your profile.",
+    signInToUpdate: "Sign in to update your profile.",
+    publicProfileUpdatedWithWarning: "Public profile updated. {warning}",
+    profileUpdated: "Profile updated.",
+    couldNotUpdate: "Could not update your profile.",
+    signInToUpdatePhoto: "Sign in to update your profile photo.",
+    photoPermissionRequired:
+      "Photo library permission is required to choose a profile picture.",
+    noImageSelected: "No image was selected.",
+    photoUpdated: "Profile photo updated.",
+    couldNotUploadPhoto: "Could not upload your profile photo.",
+    couldNotLogOut: "Could not log out.",
+    couldNotDeleteAccount: "Could not delete the account. Nothing was removed.",
+  },
+  settings: {
+    workoutTypes: "Workout types",
+    notifications: "Notifications",
+    socialPosts: "Social posts",
+    music: "Music",
+  },
+  appearance: {
+    theme: "Theme",
+    dark: "Dark",
+    light: "Light",
+    auto: "Auto",
+    colour: "Colour",
+    accent: {
+      ember: "Ember",
+      volt: "Volt",
+      ultraviolet: "Ultraviolet",
+      coral: "Coral",
+    },
+  },
+  feedbackCard: {
+    title: "Send feedback",
+    subtitle: "Report bugs, odd behavior or ideas.",
+    bugs: "Bugs",
+    ideas: "Ideas",
+    missing: "Missing",
+  },
+  account: {
+    loggedInAs: "Logged in as",
+    unknownAccount: "Unknown account",
+    logOut: "Log out",
+    loggingOut: "Logging out...",
+    app: "App",
+    version: "Version",
+    unknownVersion: "Unknown",
+    privacy: "Privacy",
+    privacyHint: "What FitVen stores about you, and what you agreed to.",
+    deleteAccount: "Delete account",
+    deleteAccountHint:
+      "Removes your programs, workouts and profile everywhere. This cannot be undone.",
+  },
+  logoutConfirm: {
+    title: "Log out of FitVen?",
+    message:
+      "Your workouts are saved. You will need your password to sign back in.",
+    staySignedIn: "Stay signed in",
+  },
+  deleteModal: {
+    title: "Delete your account",
+    body:
+      "Your programs, workouts, personal records, posts, profile and photo are removed from FitVen and from this phone. People who follow you stop following you. There is no way to get any of it back.",
+    typeToConfirm: "Type {word} to confirm",
+    deleting: "Deleting...",
+    confirm: "Delete my account",
+  },
+  feedbackModal: {
+    title: "Send us feedback",
+    inputLabel: "What should we know?",
+    placeholder:
+      "Tell us what happened, what you expected, or what would make the app better.",
+    signedIn: "Signed in",
+    noUserLinked: "No user linked",
+    writeNoteFirst: "Write a short note first.",
+    sent: "Feedback sent. Thank you.",
+    couldNotSend: "Could not send feedback right now. Please try again.",
+    sending: "Sending...",
+    send: "Send Feedback",
   },
 };

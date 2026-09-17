@@ -1,4 +1,5 @@
 import { TouchableOpacity, View, useColorScheme } from "react-native";
+import { formatDate, useTranslation } from "@localization";
 
 import styles from "./GreetingHeaderStyle";
 import { ThemedText } from "../../../../Resources/ThemedComponents";
@@ -6,9 +7,9 @@ import { Colors, withAlpha } from "../../../../Resources/GlobalStyling/colors";
 import Bell from "../../../../Resources/Icons/UI-icons/Bell";
 import Layers from "../../../../Resources/Icons/UI-icons/Layers";
 
-// Builds "SATURDAY · 04.07.2026" from a Date.
+// Builds "SATURDAY · 04.07.2026" from a Date; the style uppercases the weekday.
 function getDateEyebrow(date) {
-  const weekday = date.toLocaleDateString("en-US", { weekday: "long" });
+  const weekday = formatDate(date, { weekday: "long" });
   const day = String(date.getDate()).padStart(2, "0");
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const year = date.getFullYear();
@@ -17,20 +18,20 @@ function getDateEyebrow(date) {
 }
 
 // Time of day, so the largest type on the screen says something that changes.
-function getGreeting(hour) {
+function getGreeting(hour, t) {
   if (hour < 10) {
-    return "Good morning";
+    return t("home.greeting.morning");
   }
 
   if (hour < 17) {
-    return "Good afternoon";
+    return t("home.greeting.afternoon");
   }
 
   if (hour < 22) {
-    return "Good evening";
+    return t("home.greeting.evening");
   }
 
-  return "Good night";
+  return t("home.greeting.night");
 }
 
 function getFirstName(displayName) {
@@ -51,12 +52,15 @@ export default function GreetingHeader({
   onOpenActiveProgram,
   displayName = null,
 }) {
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const dateEyebrow = getDateEyebrow(today);
   const firstName = getFirstName(displayName);
-  const greeting = getGreeting(new Date().getHours());
-  const greetingTitle = firstName ? `${greeting}, ${firstName}` : greeting;
+  const greeting = getGreeting(new Date().getHours(), t);
+  const greetingTitle = firstName
+    ? t("home.greeting.withName", { greeting, name: firstName })
+    : greeting;
   const badgeCount =
     unreadNotificationCount > 99 ? "99+" : String(unreadNotificationCount);
   const hasActiveProgram = Boolean(activeProgramName);
@@ -76,8 +80,8 @@ export default function GreetingHeader({
           activeOpacity={0.82}
           accessibilityLabel={
             hasActiveProgram
-              ? `Open active program ${activeProgramName}`
-              : "No active program. Open workout calendar"
+              ? t("home.greeting.openActiveProgram", { name: activeProgramName })
+              : t("home.greeting.noActiveProgram")
           }
           accessibilityRole="button"
           onPress={onOpenActiveProgram}
@@ -104,7 +108,7 @@ export default function GreetingHeader({
 
         <TouchableOpacity
           activeOpacity={0.82}
-          accessibilityLabel="Open notifications"
+          accessibilityLabel={t("home.greeting.openNotifications")}
           accessibilityRole="button"
           onPress={onOpenNotifications}
           style={[
