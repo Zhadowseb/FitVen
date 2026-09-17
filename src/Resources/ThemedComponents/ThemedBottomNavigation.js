@@ -83,8 +83,18 @@ const PROFILE_ROUTES = new Set([
   "SocialPostSettingsPage",
   "ExerciseSocialPostSettingsPage",
   "WorkoutTypesSettingsPage",
+  "MusicSettingsPage",
 ]);
-const SOCIAL_ROUTES = new Set(["SearchPage", "SocialUserListPage"]);
+// Centres are reached from Social and stay under it, however deep you go:
+// the list, one centre, one exercise there, and the whole country.
+const SOCIAL_ROUTES = new Set([
+  "SearchPage",
+  "SocialUserListPage",
+  "GymsPage",
+  "GymLeaderboardPage",
+  "GymExerciseLeaderboardPage",
+  "NationalExerciseLeaderboardPage",
+]);
 const LIBRARY_ROUTES = new Set([
   "ExerciseLibraryPage",
   "ExerciseCatalogPage",
