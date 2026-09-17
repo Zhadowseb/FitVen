@@ -118,6 +118,75 @@ function disambiguateShortNames(rows) {
   return rows;
 }
 
+/** "649" -> 649, "519,20" -> 519.2, "1.299" -> 1299. Danish decimal comma. */
+function parseDanishAmount(value) {
+  const match = String(value ?? "").match(/(\d[\d.]*(?:,\d+)?)/);
+
+  if (!match) {
+    return null;
+  }
+
+  const numeric = Number(match[1].replace(/\./g, "").replace(",", "."));
+
+  return Number.isFinite(numeric) ? Math.round(numeric * 100) / 100 : null;
+}
+
+/**
+ * The monthly price of a membership that covers this one centre and no other
+ * - what the chains call a home or favourite centre. Returns null when the
+ * scrape has nothing that honestly means that, which is most of them:
+ *
+ *   PureGym  the normal price, which is per centre and varies between them.
+ *            Deliberately not `price_from`, which is whatever campaign was
+ *            running the day of the scrape.
+ *   SATS     "Basic" for an adult, described on their own site as access to
+ *            your favourite centre. Priced per centre.
+ *   LOOP     nothing. A LOOP membership covers every LOOP centre, so there is
+ *            no single-centre price to show.
+ *   FitnessX nothing but a bring-a-friend teaser.
+ *   Fit&Sund no prices on the site at all.
+ */
+function deriveSingleCentrePrice(info) {
+  const chain = clean(info?.chain)?.toLowerCase() ?? "";
+
+  if (chain === "puregym") {
+    const note = clean(info?.price_note);
+    const amount = parseDanishAmount(note);
+
+    if (amount === null) {
+      return null;
+    }
+
+    return {
+      price_kr: amount,
+      price_is_from: /\bfra\b/i.test(note),
+      price_note: note.replace(/^\*+/, "").trim(),
+    };
+  }
+
+  if (chain === "sats") {
+    const adultBasic = (info?.memberships ?? []).find(
+      (membership) =>
+        membership?.name === "Basic" &&
+        membership?.member_type === "Voksen" &&
+        membership?.age_group === "over-30"
+    );
+    const amount = parseDanishAmount(adultBasic?.price);
+
+    if (amount === null) {
+      return null;
+    }
+
+    return {
+      price_kr: amount,
+      price_is_from: false,
+      price_note: clean(adultBasic?.description),
+    };
+  }
+
+  return null;
+}
+
 function toCoordinate(value) {
   const numeric = Number(value);
 
@@ -202,6 +271,14 @@ function normalizeGym(info, { folderName = null, chainFolder = null } = {}) {
     opening_hours: info?.opening_hours_schema ?? info?.opening_hours ?? null,
     description: clean(info?.meta_description) ?? clean(info?.description)?.slice(0, 600) ?? null,
     is_public: true,
+    // A price is only as current as the scrape it came from, so the date it
+    // was read travels with it and the app says so.
+    ...(deriveSingleCentrePrice(info) ?? {
+      price_kr: null,
+      price_is_from: false,
+      price_note: null,
+    }),
+    price_checked_on: clean(info?.scraped_at),
   };
 }
 
@@ -209,6 +286,7 @@ module.exports = {
   CHAIN_FOLDERS,
   chainForFolder,
   deriveShortName,
+  deriveSingleCentrePrice,
   disambiguateShortNames,
   imageObjectPath,
   normalizeGym,

@@ -51,6 +51,7 @@ behind by accident.
 | `20260916210000_opt-in-column-defaults.sql` | yes |
 | `20260917120000_gyms-and-lift-verification.sql` | yes |
 | `20260917120100_workout-music.sql` | yes |
+| `20260918010000_gym-single-centre-price.sql` | no |
 
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
@@ -66,6 +67,13 @@ After the first one, run `npm run gyms:import -- --dry-run` and then
 `npm run gyms:import` with the service role in the environment - see
 `data/gyms/README.md`. Without it the `gym` table is empty, and an empty
 table is a Centres screen with nothing on it, not an error.
+
+`20260918010000_gym-single-centre-price.sql` adds the single-centre price the
+map's centre card shows, and rebuilds `gyms_nearby` to return it. **Run it and
+then `npm run gyms:import` again**, which is what fills the columns; until
+both are done the card simply shows no price. It has not been run yet. Only
+PureGym and SATS publish a price that means one centre, so 155 of the 365 rows
+get one and the rest stay null on purpose.
 
 Both were run on 2026-09-17, in that order, and `npm run gyms:import` was run
 the same day: 365 centres in `gym`, 326 of them with a photograph in the
