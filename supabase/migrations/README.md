@@ -50,7 +50,7 @@ behind by accident.
 | `20260916140000_terms-of-use.sql` | yes |
 | `20260916210000_opt-in-column-defaults.sql` | yes |
 | `20260917120000_gyms-and-lift-verification.sql` | yes |
-| `20260917120100_workout-music.sql` | no |
+| `20260917120100_workout-music.sql` | yes |
 
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
@@ -67,10 +67,11 @@ After the first one, run `npm run gyms:import -- --dry-run` and then
 `data/gyms/README.md`. Without it the `gym` table is empty, and an empty
 table is a Centres screen with nothing on it, not an error.
 
-The first was run on 2026-09-17. The second has not been run yet. Verify the
-first over the REST API with the anon key: `gym_lift?select=id` should answer
-with an empty array (own rows only, none yet), and `rpc/national_strongest`
-should answer `[]` rather than a missing-function error.
+Both were run on 2026-09-17, in that order. Verify over the REST API with the
+anon key: `gym_lift?select=id` and `workout_music?select=id` should each
+answer with an empty array (own or followed rows only, none yet), and
+`rpc/national_strongest` should answer `[]` rather than a missing-function
+error. The `gym` table is empty until `npm run gyms:import` has been run.
 
 `20260915120000_repair-workout-type-catalog.sql` restores missing built-in and
 legacy workout types without changing existing rows or granting catalog writes
