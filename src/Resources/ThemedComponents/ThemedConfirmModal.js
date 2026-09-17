@@ -1,5 +1,6 @@
 import { StyleSheet, TouchableOpacity, View, useColorScheme } from "react-native";
 
+import { useTranslation } from "@localization";
 import { Colors, withAlpha } from "../GlobalStyling/colors";
 import ThemedModal from "./ThemedModal";
 import ThemedText from "./ThemedText";
@@ -12,8 +13,8 @@ export default function ThemedConfirmModal({
   visible,
   title,
   message,
-  confirmLabel = "Confirm",
-  cancelLabel = "Cancel",
+  confirmLabel,
+  cancelLabel,
   tone = "default", // "default" | "danger" | "positive"
   isWorking = false,
   onConfirm,
@@ -22,6 +23,12 @@ export default function ThemedConfirmModal({
 }) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const { t } = useTranslation();
+  // Defaults in the user's language. `cancelLabel={null}` still means "no
+  // cancel button"; only leaving it out gets the default.
+  const resolvedConfirmLabel = confirmLabel ?? t("common.confirm");
+  const resolvedCancelLabel =
+    cancelLabel === undefined ? t("common.cancel") : cancelLabel;
 
   const confirmColor =
     tone === "danger"
@@ -50,7 +57,7 @@ export default function ThemedConfirmModal({
       <View style={styles.actions}>
         {/* An acknowledgement has nothing to cancel, so an empty label drops
             the button rather than drawing a blank one. */}
-        {cancelLabel ? (
+        {resolvedCancelLabel ? (
           <TouchableOpacity
             activeOpacity={0.84}
             accessibilityRole="button"
@@ -65,7 +72,7 @@ export default function ThemedConfirmModal({
             ]}
           >
             <ThemedText style={styles.buttonText} setColor={theme.title}>
-              {cancelLabel}
+              {resolvedCancelLabel}
             </ThemedText>
           </TouchableOpacity>
         ) : null}
@@ -85,7 +92,7 @@ export default function ThemedConfirmModal({
           ]}
         >
           <ThemedText style={styles.buttonText} setColor={confirmColor}>
-            {confirmLabel}
+            {resolvedConfirmLabel}
           </ThemedText>
         </TouchableOpacity>
       </View>

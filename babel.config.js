@@ -25,6 +25,7 @@ module.exports = function (api) {
           alias: {
             "@contexts": "./src/Contexts",
             "@database": "./src/Database",
+            "@localization": "./src/Localization",
             "@repository": "./src/Repository",
             "@resources": "./src/Resources",
             "@services": "./src/Services",

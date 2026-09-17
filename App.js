@@ -64,6 +64,7 @@ import { notificationService } from "./src/Services";
 import "./src/Services/locationBackgroundTask";
 import { AuthProvider, useAuth } from './src/Contexts/AuthContext';
 import { ThemeModeProvider, useThemeMode } from './src/Contexts/ThemeContext';
+import { LocalizationProvider, useTranslation } from './src/Localization';
 import { ExerciseViewSettingsProvider } from './src/Contexts/ExerciseViewSettingsContext';
 import PrivacyConsentGate from "./src/Resources/Components/PrivacyConsentGate/PrivacyConsentGate";
 import ExerciseLibrarySync from "./src/Sync/ExerciseLibrarySync";
@@ -350,6 +351,7 @@ function UserScopedDatabaseApp() {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const { accentTheme, isThemeLoading } = useThemeMode();
+  const { language, isLanguageLoading, t } = useTranslation();
   const { user, isAuthLoading } = useAuth();
   const userId = user?.id ?? null;
   const databaseName = getDatabaseNameForUserId(userId);
@@ -371,12 +373,13 @@ function UserScopedDatabaseApp() {
   // one has been read means throwing the whole screen tree away and building
   // it again a tick later - with every loader on the home screen running
   // twice. Waiting costs one AsyncStorage read on a screen that was already
-  // waiting for auth.
-  if (isAuthLoading || isThemeLoading) {
+  // waiting for auth. The language is the same story: without the wait the
+  // first screen is painted in English and repainted in Danish a tick later.
+  if (isAuthLoading || isThemeLoading || isLanguageLoading) {
     return (
       <ThemedView style={{ alignItems: "center", justifyContent: "center" }}>
         <ThemedText setColor={theme.quietText ?? theme.iconColor}>
-          Restoring session...
+          {t("common.restoringSession")}
         </ThemedText>
       </ThemedView>
     );
@@ -394,7 +397,9 @@ function UserScopedDatabaseApp() {
       <PushNotificationRegistrationSync />
       <WorkoutMusicSync />
       <PrivacyConsentGate>
-        <RootNavigator key={`accent-${accentTheme}`} />
+        {/* Keyed on the language too: a screen's header options and anything
+            else the navigator captured at mount are rebuilt in the new one. */}
+        <RootNavigator key={`accent-${accentTheme}-${language}`} />
       </PrivacyConsentGate>
     </SQLiteProvider>
   );
@@ -406,7 +411,9 @@ export default function App() {
       <ThemeModeProvider>
         <ExerciseViewSettingsProvider>
           <AuthProvider>
-            <UserScopedDatabaseApp />
+            <LocalizationProvider>
+              <UserScopedDatabaseApp />
+            </LocalizationProvider>
           </AuthProvider>
         </ExerciseViewSettingsProvider>
       </ThemeModeProvider>

@@ -14,12 +14,14 @@ import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
 import { authService } from "../../Services";
 import { useAuth } from "../../Contexts/AuthContext";
 import { useThemeMode } from "../../Contexts/ThemeContext";
+import { useTranslation } from "@localization";
 import { notificationService, socialService } from "../../Services";
 import Bell from "../../Resources/Icons/UI-icons/Bell";
 import Dumbbell from "../../Resources/Icons/UI-icons/Dumbbell";
 import Pencil from "../../Resources/Icons/UI-icons/Pencil";
 import Moon from "../../Resources/Icons/UI-icons/Moon";
 import MusicNote from "../../Resources/Icons/UI-icons/MusicNote";
+import Social from "../../Resources/Icons/UI-icons/Social";
 import ChevronRight from "../../Resources/Icons/UI-icons/ChevronRight";
 import FeedbackModal from "../../Resources/Components/FeedbackModal/FeedbackModal";
 import Lock from "../../Resources/Icons/UI-icons/Lock";
@@ -91,6 +93,14 @@ export default function ProfilePage() {
   const { user } = useAuth();
   const { themeMode, setThemeMode, accentTheme, setAccentTheme } =
     useThemeMode();
+  const { t, languageMode, setLanguageMode } = useTranslation();
+  // Built per render, not at module load: the labels themselves change with
+  // the language they pick.
+  const languageOptions = [
+    { value: "system", label: t("profile.language.system") },
+    { value: "da", label: t("profile.language.da") },
+    { value: "en", label: t("profile.language.en") },
+  ];
   const [profile, setProfile] = useState(null);
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
@@ -902,6 +912,22 @@ export default function ProfilePage() {
                   options={APPEARANCE_OPTIONS}
                   value={themeMode}
                   onChange={setThemeMode}
+                />
+              </View>
+
+              <InsetDivider />
+
+              <View style={styles.settingsControlRow}>
+                <SettingsIconTile backgroundColor={withAlpha(theme.primary, 0.12)}>
+                  <Social width={18} height={18} color={primaryTextColor} thickness={1.7} />
+                </SettingsIconTile>
+                <ThemedText style={styles.settingsRowLabel} setColor={theme.title}>
+                  {t("profile.language.label")}
+                </ThemedText>
+                <ThemedSegmentedControl
+                  options={languageOptions}
+                  value={languageMode}
+                  onChange={setLanguageMode}
                 />
               </View>
 
