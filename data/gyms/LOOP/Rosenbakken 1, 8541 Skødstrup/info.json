@@ -1,0 +1,197 @@
+{
+  "chain": "LOOP Fitness",
+  "name": "LOOP Skødstrup",
+  "loop_id": 201,
+  "center_type": "lite",
+  "address": {
+    "street": "Rosenbakken 1",
+    "postal_code": "8541",
+    "city": "Skødstrup",
+    "country": "DK",
+    "full": "Rosenbakken 1, 8541 Skødstrup"
+  },
+  "location": {
+    "latitude": 56.27027,
+    "longitude": 10.30975
+  },
+  "url": "https://loopfitness.dk/centre/loop-fitness-skoedstrup/",
+  "membership_url": "https://loopfitness.dk/medlemskab/bliv-medlem/",
+  "phone": "41746311",
+  "email": "skoedstrup@loopfitness.dk",
+  "facebook_url": null,
+  "google_review_url": "https://g.page/r/CVG7JGY7kR4fEB0/review",
+  "cvr": "41421908",
+  "manager_name": "Charlotte",
+  "opened": "2018-11-10",
+  "has_classes": true,
+  "only_open_when_staffed": false,
+  "max_visitor_capacity": 20,
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "06:00 - 22:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "06:00 - 22:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "06:00 - 22:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "06:00 - 22:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "06:00 - 22:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "06:00 - 22:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "06:00 - 22:00"
+    }
+  ],
+  "staffed_hours": [
+    {
+      "day": "Mandag",
+      "periods": [
+        "09:00 - 12:00"
+      ]
+    },
+    {
+      "day": "Tirsdag",
+      "periods": [
+        "09:00 - 12:00"
+      ]
+    },
+    {
+      "day": "Onsdag",
+      "periods": [
+        "15:30 - 18:30"
+      ]
+    },
+    {
+      "day": "Torsdag",
+      "periods": [
+        "16:00 - 19:00"
+      ]
+    },
+    {
+      "day": "Fredag",
+      "periods": [
+        "07:30 - 10:30"
+      ]
+    },
+    {
+      "day": "Lørdag",
+      "periods": [
+        "Ikke bemandet"
+      ]
+    },
+    {
+      "day": "Søndag",
+      "periods": [
+        "09:00 - 11:00"
+      ]
+    }
+  ],
+  "staffed_hours_dates": [
+    {
+      "date": "2026-09-19",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-10-01",
+      "open": "17:00 - 19:00"
+    },
+    {
+      "date": "2026-10-12",
+      "open": "16:15 - 18:15"
+    },
+    {
+      "date": "2026-10-13",
+      "open": "16:15 - 18:15"
+    },
+    {
+      "date": "2026-10-14",
+      "open": "16:15 - 18:15"
+    },
+    {
+      "date": "2026-10-15",
+      "open": "16:00 - 18:00"
+    },
+    {
+      "date": "2026-10-16",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-12-25",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-12-30",
+      "open": "09:00 - 11:00"
+    },
+    {
+      "date": "2026-12-31",
+      "open": "09:00 - 11:00"
+    },
+    {
+      "date": "2027-01-01",
+      "open": "None - None"
+    }
+  ],
+  "meta_description": "Hos LOOP Fitness Skødstrup træner du styrke og kondition på blot 24 minutter i vores cirkeltræning. Enkel og effektiv træning! Kom i gang her »",
+  "description": "Kom indenfor og mærk energien. Hos LOOP får du afslappet stemning og effektiv træning på den bedste måde. Uanset niveau er der plads til dig, og træningen er enkel: Start med opvarmning, træn hele kroppen i træningscirklen, og afslut med udstrækning i vores LOOP Ekstra område. Efter din træning kan du nyde en gratis kop kaffe eller the i vores café.",
+  "quote_by": "Charlotte, centerleder",
+  "facilities": [
+    "1 cirkel",
+    "Cardio-område",
+    "Gratis kaffe"
+  ],
+  "memberships": [
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr",
+      "price_per_month": 289.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 319,
+      "family_members": 0,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    },
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr. - familie",
+      "price_per_month": 589.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 619,
+      "family_members": 9,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    }
+  ],
+  "images": {
+    "hero": "https://loopfitness.dk/wp-content/uploads/2019/11/Skoedstrup_2026.png",
+    "og_image": "https://loopfitness.dk/wp-content/uploads/2019/11/Skødstrup_centerleder-scaled.jpg"
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

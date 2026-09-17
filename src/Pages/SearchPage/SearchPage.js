@@ -13,7 +13,9 @@ import { useSQLiteContext } from "expo-sqlite";
 
 import styles from "./SearchPageStyle";
 import FriendsActivity from "../../Resources/Components/FriendsActivity/FriendsActivity";
-import { Colors } from "../../Resources/GlobalStyling/colors";
+import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
+import ChevronRight from "../../Resources/Icons/UI-icons/ChevronRight";
+import MapPin from "../../Resources/Icons/UI-icons/MapPin";
 import TailArrowUpRight from "../../Resources/Icons/UI-icons/TailArrowUpRight";
 import { useAuth } from "../../Contexts/AuthContext";
 import { programService, socialService } from "../../Services";
@@ -106,6 +108,8 @@ const SearchPage = () => {
           }),
         ]);
 
+      const homeGym = nextCirclePreview.currentUser?.homeGym ?? null;
+
       setCirclePreview({
         ...nextCirclePreview,
         currentUser: nextCirclePreview.currentUser
@@ -115,6 +119,9 @@ const SearchPage = () => {
               activityDetail: todayActivitySummary.detail,
               workoutType: todayActivitySummary.workoutType,
               workoutLabel: todayActivitySummary.workoutLabel,
+              gym: homeGym
+                ? { id: homeGym.id, shortName: homeGym.shortName, isHomeGym: true }
+                : null,
             }
           : null,
       });
@@ -353,6 +360,7 @@ const SearchPage = () => {
               isLoading={isLoadingFollowCounts}
               onSeeAll={handleOpenUserList}
               onOpenProfile={() => navigation.navigate("ProfilePage")}
+              onOpenGym={(gymId) => navigation.navigate("GymLeaderboardPage", { gym_id: gymId })}
             />
           </View>
 
@@ -370,6 +378,29 @@ const SearchPage = () => {
             )}
           </View>
         </View>
+
+        <TouchableOpacity
+          activeOpacity={0.88}
+          accessibilityRole="button"
+          accessibilityLabel="Centres and leaderboards"
+          onPress={() => navigation.navigate("GymsPage")}
+          style={[styles.centresCard, { backgroundColor: cardSurface, borderColor: cardBorder }]}
+        >
+          <View style={[styles.centresIcon, { backgroundColor: withAlpha(theme.primary, 0.14) }]}>
+            <MapPin width={20} height={20} color={theme.primaryText ?? theme.primary} thickness={2.2} />
+          </View>
+          <View style={styles.centresCopy}>
+            <ThemedText style={styles.centresEyebrow} setColor={quietText}>
+              Centres
+            </ThemedText>
+            <ThemedTitle type="h3" style={styles.centresTitle} numberOfLines={1}>
+              {circlePreview.currentUser?.homeGym?.shortName
+                ? `Leaderboards · ${circlePreview.currentUser.homeGym.shortName}`
+                : "Leaderboards where you train"}
+            </ThemedTitle>
+          </View>
+          <ChevronRight width={20} height={20} color={quietText} />
+        </TouchableOpacity>
 
         <TouchableOpacity
           activeOpacity={0.92}

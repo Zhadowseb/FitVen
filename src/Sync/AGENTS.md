@@ -17,9 +17,13 @@ below never executes — no matter how complete it looks.
 | `SetSync` | yes | **the whole strength hierarchy**, parent first: program, block, week, day, workout type instance, exercise instance, set |
 | `WorkoutTypeInstanceSync` | yes | workout-level fields |
 | `PushNotificationRegistrationSync` | yes | the device's push token |
+| `WorkoutMusicSync` | yes | what is playing during a live workout, to `workout_music`, every 30 s while sharing is on |
 
 `syncQueue.js` is not a component. It is the entry point every one of them goes
-through, and it serialises everything onto a single promise chain.
+through, and it serialises everything onto a single promise chain. The one that
+does not use it is `WorkoutMusicSync`: it reconciles nothing local, it only
+polls a music provider and writes a cloud row, so there is no parent-first
+order for it to break.
 
 ## Rules
 

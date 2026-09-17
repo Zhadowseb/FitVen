@@ -1,0 +1,193 @@
+{
+  "chain": "LOOP Fitness",
+  "name": "LOOP Hellerup",
+  "loop_id": 252,
+  "center_type": "lite",
+  "address": {
+    "street": "Strandvejen 209",
+    "postal_code": "2900",
+    "city": "Hellerup",
+    "country": "DK",
+    "full": "Strandvejen 209, 2900 Hellerup"
+  },
+  "location": {
+    "latitude": 55.7399511,
+    "longitude": 12.5741431
+  },
+  "url": "https://loopfitness.dk/centre/loop-hellerup/",
+  "membership_url": "https://loopfitness.dk/medlemskab/bliv-medlem/",
+  "phone": "31757477",
+  "email": "hellerup@loopfitness.dk",
+  "facebook_url": "https://www.facebook.com/profile.php?id=61571474204284",
+  "google_review_url": "",
+  "cvr": "38282166",
+  "manager_name": "Tanja",
+  "opened": "2025-02-08",
+  "has_classes": false,
+  "only_open_when_staffed": false,
+  "max_visitor_capacity": 40,
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 22:00"
+    }
+  ],
+  "staffed_hours": [
+    {
+      "day": "Mandag",
+      "periods": [
+        "14:30 - 18:15"
+      ]
+    },
+    {
+      "day": "Tirsdag",
+      "periods": [
+        "09:00 - 14:00"
+      ]
+    },
+    {
+      "day": "Onsdag",
+      "periods": [
+        "09:00 - 15:00"
+      ]
+    },
+    {
+      "day": "Torsdag",
+      "periods": [
+        "09:00 - 13:00"
+      ]
+    },
+    {
+      "day": "Fredag",
+      "periods": [
+        "09:00 - 14:00"
+      ]
+    },
+    {
+      "day": "Lørdag",
+      "periods": [
+        "09:00 - 12:00"
+      ]
+    },
+    {
+      "day": "Søndag",
+      "periods": [
+        "09:00 - 12:00"
+      ]
+    }
+  ],
+  "staffed_hours_dates": [
+    {
+      "date": "2026-02-03",
+      "open": "09:00 - 14:00"
+    },
+    {
+      "date": "2026-02-03",
+      "open": "16:00 - 19:00"
+    },
+    {
+      "date": "2026-02-05",
+      "open": "09:00 - 15:00"
+    },
+    {
+      "date": "2026-02-05",
+      "open": "15:30 - 18:30"
+    },
+    {
+      "date": "2026-03-02",
+      "open": "09:00 - 13:00"
+    },
+    {
+      "date": "2026-03-02",
+      "open": "15:00 - 18:00"
+    },
+    {
+      "date": "2026-03-04",
+      "open": "09:00 - 12:00"
+    },
+    {
+      "date": "2026-03-06",
+      "open": "09:00 - 12:00"
+    },
+    {
+      "date": "2026-03-07",
+      "open": "09:00 - 12:00"
+    },
+    {
+      "date": "2026-03-08",
+      "open": "09:00 - 12:00"
+    }
+  ],
+  "meta_description": "Hos LOOP Fitness Hellerup får du enkel og effektiv træning af hele kroppen på kun 24 minutter. Vi tilbyder cirkeltræning ✓ Gratis prøvetime ✓",
+  "description": "Kom indenfor og mærk energien. Hos LOOP får du afslappet stemning og effektiv træning på den bedste måde. Uanset niveau er der plads til dig, og træningen er enkel: Start med opvarmning, træn hele kroppen i træningscirklen, og afslut med udstrækning i vores LOOP Ekstra område. Efter din træning kan du nyde en gratis kop kaffe eller the i vores café.",
+  "quote_by": "Tanja, centerleder",
+  "facilities": [
+    "1 cirkel",
+    "Cardio-område",
+    "Gratis kaffe"
+  ],
+  "memberships": [
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr",
+      "price_per_month": 289.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 319,
+      "family_members": 0,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    },
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr. - familie",
+      "price_per_month": 589.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 619,
+      "family_members": 9,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    }
+  ],
+  "images": {
+    "hero": "https://loopfitness.dk/wp-content/uploads/2025/01/Hellerup_2026.png",
+    "og_image": "https://loopfitness.dk/wp-content/uploads/2025/01/Hellerup.jpeg"
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

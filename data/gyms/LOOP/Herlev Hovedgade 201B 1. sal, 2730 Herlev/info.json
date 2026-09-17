@@ -1,0 +1,210 @@
+{
+  "chain": "LOOP Fitness",
+  "name": "LOOP Herlev",
+  "loop_id": 172,
+  "center_type": "family",
+  "address": {
+    "street": "Herlev Hovedgade 201B 1. sal",
+    "postal_code": "2730",
+    "city": "Herlev",
+    "country": "DK",
+    "full": "Herlev Hovedgade 201B 1. sal, 2730 Herlev"
+  },
+  "location": {
+    "latitude": 55.725089,
+    "longitude": 12.421926
+  },
+  "url": "https://loopfitness.dk/centre/loop-fitness-herlev/",
+  "membership_url": "https://loopfitness.dk/medlemskab/bliv-medlem/",
+  "phone": "41746272",
+  "email": "herlev@loopfitness.dk",
+  "facebook_url": null,
+  "google_review_url": "https://g.page/r/CeVVt9byV29HEB0/review",
+  "cvr": "38387464",
+  "manager_name": "Janni",
+  "opened": "2017-03-25",
+  "has_classes": false,
+  "only_open_when_staffed": false,
+  "max_visitor_capacity": 40,
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 22:00"
+    }
+  ],
+  "staffed_hours": [
+    {
+      "day": "Mandag",
+      "periods": [
+        "08:00 - 19:00"
+      ]
+    },
+    {
+      "day": "Tirsdag",
+      "periods": [
+        "08:00 - 19:00"
+      ]
+    },
+    {
+      "day": "Onsdag",
+      "periods": [
+        "08:00 - 15:00"
+      ]
+    },
+    {
+      "day": "Torsdag",
+      "periods": [
+        "10:00 - 16:00"
+      ]
+    },
+    {
+      "day": "Fredag",
+      "periods": [
+        "08:00 - 13:00"
+      ]
+    },
+    {
+      "day": "Lørdag",
+      "periods": [
+        "09:00 - 12:00"
+      ]
+    },
+    {
+      "day": "Søndag",
+      "periods": [
+        "09:00 - 12:00"
+      ]
+    }
+  ],
+  "staffed_hours_dates": [
+    {
+      "date": "2025-12-24",
+      "open": "None - None"
+    },
+    {
+      "date": "2025-12-25",
+      "open": "None - None"
+    },
+    {
+      "date": "2025-12-26",
+      "open": "None - None"
+    },
+    {
+      "date": "2025-12-31",
+      "open": "09:00 - 12:00"
+    },
+    {
+      "date": "2026-01-01",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-04-02",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-04-03",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-04-05",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-04-06",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-06-04",
+      "open": "10:00 - 17:00"
+    },
+    {
+      "date": "2026-07-03",
+      "open": "09:00 - 19:00"
+    },
+    {
+      "date": "2026-07-13",
+      "open": "09:00 - 12:00"
+    },
+    {
+      "date": "2026-07-14",
+      "open": "09:00 - 12:00"
+    },
+    {
+      "date": "2026-07-15",
+      "open": "09:00 - 13:00"
+    }
+  ],
+  "meta_description": "Hos LOOP Fitness Herlev får du enkel og effektiv træning af hele kroppen på kun 24 minutter. Vi tilbyder træning for børn og unge ✓ Gratis prøvetime ✓",
+  "description": "Kom indenfor og mærk energien. Hos LOOP får du afslappet stemning og effektiv træning på den bedste måde. Uanset niveau er der plads til dig, og træningen er enkel: Start med opvarmning, træn hele kroppen i træningscirklen, og afslut med udstrækning i vores LOOP Ekstra område. Efter din træning kan du nyde en gratis kop kaffe eller the i vores café.",
+  "quote_by": "Janni, centerleder",
+  "facilities": [
+    "3 cirkler",
+    "Cardio-område",
+    "LOOP Kids",
+    "Gratis kaffe"
+  ],
+  "memberships": [
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr",
+      "price_per_month": 289.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 319,
+      "family_members": 0,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    },
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr. - familie",
+      "price_per_month": 589.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 619,
+      "family_members": 9,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    }
+  ],
+  "images": {
+    "hero": "https://loopfitness.dk/wp-content/uploads/2019/11/Herlev_2026.png",
+    "og_image": "https://loopfitness.dk/wp-content/uploads/2019/11/Janni_Frederiksberg-e1635332561919.png"
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

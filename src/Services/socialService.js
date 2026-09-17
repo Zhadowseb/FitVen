@@ -28,6 +28,11 @@ import {
   normalizeMaxHeartRateSource,
   resolveMaxHeartRate,
 } from "../Utils/heartRateUtils";
+import {
+  classifyMusicRow,
+  sortActivityTiles,
+} from "../Utils/friendsActivityUtils";
+import * as gymService from "./gymService";
 
 const PROFILES_TABLE = "profiles";
 const PROFILE_PRIVATE_TABLE = "profile_private";
@@ -39,6 +44,10 @@ const PROFILE_SELECT_FIELDS =
   "id, username, username_base, username_code, display_name, bio, avatar_path, created_at, updated_at";
 const WORKOUT_ACTIVITY_SELECT_FIELDS =
   "id, user_id, workout_type, date, label, done, is_active, timer_start, elapsed_time, deleted_at, workout_catalog:workout_type!workout_type_instance_workout_type_fkey(display_name)";
+// The same rows with the centre and the newest track joined in, one request
+// for everyone. Falls back to the plain select when the centre migration has
+// not been run, so Home keeps working in the meantime.
+const WORKOUT_ACTIVITY_WITH_GYM_SELECT_FIELDS = `${WORKOUT_ACTIVITY_SELECT_FIELDS}, gym_id, last_updated, gym:gym!workout_type_instance_gym_id_fkey(id, short_name), workout_music(track, artist, art_url, provider, played_at)`;
 const SOCIAL_SETUP_MESSAGE =
   "User search and follows are not set up in Supabase yet. Run supabase/migrations/20260424004053_social-search.sql in the Supabase SQL editor first.";
 const WORKOUT_TYPE_SETUP_MESSAGE =
@@ -221,32 +230,51 @@ function createRestActivityPreview() {
     activityDetail: "Rest day",
     workoutType: null,
     workoutLabel: null,
+    workoutId: null,
+    activityAt: null,
+    gym: null,
+    music: null,
   };
 }
 
-const ACTIVITY_PREVIEW_SORT_PRIORITY = {
-  live: 0,
-  planned: 1,
-  done: 2,
-  rest: 3,
-};
-
-function getActivityPreviewSortPriority(profile) {
-  return ACTIVITY_PREVIEW_SORT_PRIORITY[profile?.activityState] ?? 3;
+// live -> done -> planned -> rest, newest first inside a group. The order the
+// tiles want; the strip used to put planned before done.
+function sortCirclePreviewPeople(people) {
+  return sortActivityTiles(people);
 }
 
-function sortCirclePreviewPeople(people) {
-  return [...people].sort((left, right) => {
-    const priorityDelta =
-      getActivityPreviewSortPriority(left) -
-      getActivityPreviewSortPriority(right);
+function mapCloudWorkoutGym(workout) {
+  const gym = Array.isArray(workout?.gym) ? workout.gym[0] : workout?.gym;
+  const gymId = Number(gym?.id ?? workout?.gym_id);
 
-    if (priorityDelta !== 0) {
-      return priorityDelta;
-    }
+  if (!Number.isFinite(gymId) || gymId <= 0) {
+    return null;
+  }
 
-    return 0;
-  });
+  return {
+    id: gymId,
+    shortName: gym?.short_name ?? null,
+    isHomeGym: false,
+  };
+}
+
+function mapCloudWorkoutMusic(workout, activityState) {
+  const rows = Array.isArray(workout?.workout_music)
+    ? workout.workout_music
+    : workout?.workout_music
+      ? [workout.workout_music]
+      : [];
+  const newest = [...rows].sort(
+    (left, right) =>
+      new Date(right?.played_at ?? 0).getTime() -
+      new Date(left?.played_at ?? 0).getTime()
+  )[0];
+
+  return classifyMusicRow(newest, { activityState });
+}
+
+function getCloudWorkoutActivityAt(workout) {
+  return workout?.last_updated ?? null;
 }
 
 function getCloudWorkoutDisplayLabel(workout) {
@@ -276,6 +304,10 @@ function buildCloudActivityPreview(workouts) {
       activityDetail: formatCloudWorkoutElapsedDetail(liveWorkout),
       workoutType: liveWorkout.workout_type ?? null,
       workoutLabel: getCloudWorkoutDisplayLabel(liveWorkout),
+      workoutId: liveWorkout.id ?? null,
+      activityAt: getCloudWorkoutActivityAt(liveWorkout),
+      gym: mapCloudWorkoutGym(liveWorkout),
+      music: mapCloudWorkoutMusic(liveWorkout, "live"),
     };
   }
 
@@ -294,6 +326,12 @@ function buildCloudActivityPreview(workouts) {
           : "Planned",
       workoutType: nextPlannedWorkout.workout_type ?? null,
       workoutLabel: getCloudWorkoutDisplayLabel(nextPlannedWorkout),
+      workoutId: nextPlannedWorkout.id ?? null,
+      activityAt: getCloudWorkoutActivityAt(nextPlannedWorkout),
+      // A planned workout normally has no position yet; the tile falls back
+      // to the person's own centre, which getCirclePreview fills in.
+      gym: mapCloudWorkoutGym(nextPlannedWorkout),
+      music: null,
     };
   }
 
@@ -305,7 +343,57 @@ function buildCloudActivityPreview(workouts) {
       workouts.length > 1 ? `${workouts.length} done` : "Done today",
     workoutType: completedWorkout?.workout_type ?? null,
     workoutLabel: getCloudWorkoutDisplayLabel(completedWorkout),
+    workoutId: completedWorkout?.id ?? null,
+    activityAt: getCloudWorkoutActivityAt(completedWorkout),
+    gym: mapCloudWorkoutGym(completedWorkout),
+    music: mapCloudWorkoutMusic(completedWorkout, "done"),
   };
+}
+
+function isMissingGymJoinError(error) {
+  const message = `${error?.message ?? ""} ${error?.details ?? ""} ${error?.hint ?? ""}`.toLowerCase();
+
+  return (
+    message.includes("gym") ||
+    message.includes("workout_music") ||
+    message.includes("last_updated")
+  );
+}
+
+async function fetchActivityWorkouts({ userIds, activityDate }) {
+  const { data, error } = await supabase
+    .from(WORKOUT_TYPE_INSTANCE_TABLE)
+    .select(WORKOUT_ACTIVITY_WITH_GYM_SELECT_FIELDS)
+    .in("user_id", userIds)
+    .eq("date", activityDate)
+    .is("deleted_at", null)
+    .order("user_id", { ascending: true })
+    .order("id", { ascending: true })
+    .order("played_at", { referencedTable: "workout_music", ascending: false })
+    .limit(1, { referencedTable: "workout_music" });
+
+  if (!error) {
+    return data ?? [];
+  }
+
+  if (!isMissingGymJoinError(error)) {
+    throw normalizeSocialError(error);
+  }
+
+  const { data: plainData, error: plainError } = await supabase
+    .from(WORKOUT_TYPE_INSTANCE_TABLE)
+    .select(WORKOUT_ACTIVITY_SELECT_FIELDS)
+    .in("user_id", userIds)
+    .eq("date", activityDate)
+    .is("deleted_at", null)
+    .order("user_id", { ascending: true })
+    .order("id", { ascending: true });
+
+  if (plainError) {
+    throw normalizeSocialError(plainError);
+  }
+
+  return plainData ?? [];
 }
 
 async function fetchActivityPreviewByUserId({ userIds, date }) {
@@ -316,18 +404,10 @@ async function fetchActivityPreviewByUserId({ userIds, date }) {
     return new Map();
   }
 
-  const { data: workouts, error } = await supabase
-    .from(WORKOUT_TYPE_INSTANCE_TABLE)
-    .select(WORKOUT_ACTIVITY_SELECT_FIELDS)
-    .in("user_id", uniqueUserIds)
-    .eq("date", activityDate)
-    .is("deleted_at", null)
-    .order("user_id", { ascending: true })
-    .order("id", { ascending: true });
-
-  if (error) {
-    throw normalizeSocialError(error);
-  }
+  const workouts = await fetchActivityWorkouts({
+    userIds: uniqueUserIds,
+    activityDate,
+  });
 
   const workoutsByUserId = new Map();
 
@@ -1180,27 +1260,42 @@ export async function getCirclePreview({ user, limit = 12, date = null }) {
     throw new Error("You need to be signed in to load your circle.");
   }
 
-  const [currentUserProfile, followingProfiles] = await Promise.all([
+  // The viewer's own centre is what marks a friend's centre line orange. It
+  // is fetched alongside the rest and is allowed to fail: without it every
+  // centre simply reads as somebody else's.
+  const [currentUserProfile, followingProfiles, homeGym] = await Promise.all([
     ensureOwnProfile(user),
     getFollowing({
       userId: user.id,
       currentUserId: user.id,
       limit,
     }),
+    gymService.getMyHomeGym().catch(() => null),
   ]);
   const activityPreviewByUserId = await fetchActivityPreviewByUserId({
     userIds: followingProfiles.map((profile) => profile.id),
     date,
   });
+  const homeGymId = homeGym?.id ?? null;
 
-  const people = followingProfiles.map((profile) => ({
-    ...profile,
-    relationshipType: "following",
-    ...(activityPreviewByUserId.get(profile.id) ?? createRestActivityPreview()),
-  }));
+  const people = followingProfiles.map((profile) => {
+    const preview =
+      activityPreviewByUserId.get(profile.id) ?? createRestActivityPreview();
+
+    return {
+      ...profile,
+      relationshipType: "following",
+      ...preview,
+      gym: preview.gym
+        ? { ...preview.gym, isHomeGym: homeGymId !== null && preview.gym.id === homeGymId }
+        : null,
+    };
+  });
 
   return {
-    currentUser: currentUserProfile,
+    currentUser: currentUserProfile
+      ? { ...currentUserProfile, homeGymId, homeGym }
+      : currentUserProfile,
     people: sortCirclePreviewPeople(people),
   };
 }

@@ -1,5 +1,15 @@
 import { StyleSheet } from "react-native";
 
+// Tile geometry. 148 wide, 8 apart, so the slider snaps every 156. The band
+// is 58 high with the 56 avatar sunk 30 into it, which puts every avatar on
+// the same horizontal line whether or not a tile has music.
+export const TILE_WIDTH = 148;
+export const TILE_GAP = 8;
+export const BAND_HEIGHT = 58;
+export const AVATAR_SIZE = 56;
+export const AVATAR_OVERLAP = 30;
+export const TILE_MIN_HEIGHT = 165;
+
 export default StyleSheet.create({
   section: {
     marginTop: 18,
@@ -45,23 +55,101 @@ export default StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 2,
     paddingBottom: 4,
-    gap: 18,
+    gap: TILE_GAP,
+    alignItems: "stretch",
   },
-  circleCard: {
-    width: 72,
+
+  /* ------------------------------------------------------------- tile -- */
+  tile: {
+    width: TILE_WIDTH,
+    minHeight: TILE_MIN_HEIGHT,
+    borderRadius: 20,
+    borderWidth: 1,
+    overflow: "hidden",
+  },
+  band: {
+    height: BAND_HEIGHT,
+    width: "100%",
+    overflow: "hidden",
+  },
+  bandTextRow: {
+    position: "absolute",
+    top: 8,
+    left: 0,
+    right: 0,
+    height: 14,
+    flexDirection: "row",
     alignItems: "center",
-    gap: 7,
+    gap: 5,
+    paddingLeft: 10,
+    paddingRight: 10,
   },
-  youDivider: {
-    width: 1,
-    height: 68,
+  bandIconSlot: {
+    width: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  bandTextClip: {
+    flex: 1,
+    height: 14,
+    overflow: "hidden",
+    justifyContent: "center",
+  },
+  bandText: {
+    fontSize: 9.5,
+    fontWeight: "800",
+    lineHeight: 12,
+  },
+  tickerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  tickerCopy: {
+    paddingRight: 18,
+  },
+  tickerMeasure: {
+    position: "absolute",
+    opacity: 0,
+    left: 0,
+    top: 0,
+  },
+  edgeFadeLeft: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 8,
+  },
+  edgeFadeRight: {
+    position: "absolute",
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 10,
+  },
+  equalizer: {
+    width: 12,
+    height: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 1.5,
+  },
+  equalizerBar: {
+    width: 2,
     borderRadius: 1,
-    alignSelf: "flex-start",
+  },
+
+  avatarSlot: {
+    position: "absolute",
+    top: BAND_HEIGHT - AVATAR_OVERLAP,
+    left: 0,
+    right: 0,
+    alignItems: "center",
   },
   avatarShell: {
-    position: "relative",
-    width: 68,
-    height: 68,
+    width: AVATAR_SIZE,
+    height: AVATAR_SIZE,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -74,55 +162,111 @@ export default StyleSheet.create({
     borderRadius: 999,
   },
   avatarRing: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
+    width: AVATAR_SIZE,
+    height: AVATAR_SIZE,
+    borderRadius: AVATAR_SIZE / 2,
     borderWidth: 2.5,
     alignItems: "center",
     justifyContent: "center",
-    padding: 3,
-  },
-  addRing: {
-    borderStyle: "dashed",
   },
   avatarInner: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+
+  tileBody: {
+    paddingTop: AVATAR_SIZE - AVATAR_OVERLAP + 6,
+    paddingHorizontal: 12,
+    paddingBottom: 12,
+  },
+  tileName: {
+    fontSize: 13,
+    fontWeight: "800",
+    lineHeight: 16,
+    textAlign: "center",
+  },
+  factBlock: {
+    marginTop: 7,
+    paddingTop: 6,
+    borderTopWidth: 1,
+    gap: 3,
     width: "100%",
-    height: "100%",
-    borderRadius: 999,
+  },
+  factRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    height: 13,
+  },
+  factIconSlot: {
+    width: 12,
     alignItems: "center",
     justifyContent: "center",
   },
-  nameStatusColumn: {
-    alignItems: "center",
-    gap: 1,
-  },
-  circleName: {
-    maxWidth: 72,
-    fontSize: 12,
-    fontWeight: "700",
-    lineHeight: 15,
-    textAlign: "center",
-  },
-  statusRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  statusDot: {
+  factDot: {
     width: 5,
     height: 5,
     borderRadius: 3,
   },
-  statusText: {
-    fontSize: 11,
+  factStatusText: {
+    flex: 1,
+    fontSize: 10.5,
     fontWeight: "700",
+    lineHeight: 13,
+  },
+  factGymText: {
+    flex: 1,
+    fontSize: 10,
+    fontWeight: "800",
+    lineHeight: 13,
+  },
+  factSpacer: {
+    height: 13,
+  },
+
+  /* ------------------------------------------------------- add friends -- */
+  addTile: {
+    width: TILE_WIDTH,
+    minHeight: TILE_MIN_HEIGHT,
+    alignSelf: "stretch",
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderStyle: "dashed",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+  },
+  addCircle: {
+    width: AVATAR_SIZE,
+    height: AVATAR_SIZE,
+    borderRadius: AVATAR_SIZE / 2,
+    borderWidth: 1.5,
+    borderStyle: "dashed",
+    alignItems: "center",
+    justifyContent: "center",
   },
   addLabel: {
     fontSize: 12,
     fontWeight: "700",
   },
+
+  /* ---------------------------------------------- loading, empty, error -- */
+  loadingTile: {
+    width: TILE_WIDTH,
+    minHeight: TILE_MIN_HEIGHT,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ringLoadingShell: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
   emptyCard: {
-    minHeight: 116,
+    minHeight: TILE_MIN_HEIGHT,
     width: 172,
     borderWidth: 1,
     borderRadius: 22,
@@ -138,16 +282,6 @@ export default StyleSheet.create({
   emptyBody: {
     fontSize: 12,
     lineHeight: 18,
-  },
-  loadingSlot: {
-    minHeight: 116,
-    width: 172,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  ringLoadingShell: {
-    alignItems: "center",
-    justifyContent: "center",
   },
   noticeCard: {
     marginHorizontal: 20,

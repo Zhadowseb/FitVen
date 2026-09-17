@@ -1,0 +1,120 @@
+{
+  "chain": "FitnessX",
+  "name": "Aarhus C, Prismet",
+  "label": "Fitnesscenter",
+  "address": {
+    "street": "Viborgvej 3",
+    "postal_code": "8000",
+    "city": "Aarhus C",
+    "country": "DK",
+    "full": "Viborgvej 3, 8000 Aarhus C"
+  },
+  "location": {
+    "latitude": 56.15801,
+    "longitude": 10.19168
+  },
+  "url": "https://fitnessx.dk/fitness/fitness-aarhus/fitness-aarhus-c-prismet-viborgvej-3/",
+  "google_maps_url": "https://goo.gl/maps/jRwUVaybHRNe4pXZA",
+  "membership_url": "https://fitnessx.dk/medlemskaber/",
+  "campaign": false,
+  "campaign_headline": "NY LAV PRIS I AARHUS",
+  "price_teaser": "Træn med en Træningsven fra kun 250 kr./md. pr. person.",
+  "opening_hours": [
+    {
+      "days": "Mandag - torsdag",
+      "open": "05:00 - 23:00",
+      "staffed": "09:00 - 19:00"
+    },
+    {
+      "days": "Fredag",
+      "open": "05:00 - 23:00",
+      "staffed": "09:00 - 17:00"
+    },
+    {
+      "days": "Lørdag",
+      "open": "06:00 - 23:00",
+      "staffed": "09:00 - 12:00"
+    },
+    {
+      "days": "Søndag",
+      "open": "06:00 - 23:00",
+      "staffed": "09:00 - 12:00"
+    },
+    {
+      "days": "Helligdage",
+      "open": "Åbent som normalt",
+      "staffed": "09:00 - 12:00"
+    }
+  ],
+  "special_days_text": "Særlige åbningsdage:\n24/12 og 31/12: Åbent som normalt - lukker kl. 17.00.\n25/12 og 1/1: Åbent som normalt - ingen bemanding.",
+  "meta_description": "Fitness og forskellige hold i dit lokale FitnessX i Aarhus C. Find os på Viborgvej 3. Træn i gode faciliteter, se åbningstider og find vej.",
+  "description": "Dette center ligger på en af vores bedste lokationer og giver dig lidt ekstra at glæde dig over i hverdagen. Det er FitnessX, som du kender det - bare med flere detaljer, der gør en forskel.\nNår du træder ind, mærker du hurtigt, at oplevelsen er skruet op: mere gennemført indretning, et større udvalg af udstyr, bedre plads og åbningstider.\nOg fordi behov og byer ikke er ens, er hvert center lokalt tilpasset. Derfor finder du ikke to centre, der er helt ens - men du finder altid et sted, der gør din træning både nemmere og bedre.",
+  "features": [
+    "Fitness og cardio",
+    "HYROX",
+    "Hold",
+    "Reformer"
+  ],
+  "features_detail": [
+    {
+      "title": "Åbningstid",
+      "text": "I weekenden åbner vi en time tidligere. Så kan du træne (næsten) alene før byen vågner."
+    },
+    {
+      "title": "Bodytracker",
+      "text": "Muskelmasse, fedtprocent (og hvor det sidder), stofskifte, body age og meget mere. Få styr på, hvordan det ser ud med de ting, du ikke kan se i spejlet og følg din udvikling. Uden det koster ekstra."
+    },
+    {
+      "title": "Udstyr",
+      "text": "Udover vores normale maskiner og udstyr har vi særligt udvalgt udstyr i dit center, som er baseret på jeres lokale behov og ønsker. Kort sagt har vi mere, af det du kender, og noget af det du skal lære at kende."
+    },
+    {
+      "title": "Bikesal",
+      "text": "Bike som du kender det. Men opgraderet. Store skærme, lys og et design du ikke har set før. Vi har en særligt variant af Intelligent Cycling (”The Journey”), som er en virtuel oplevelse, der gør din træning sjovere og mere intens. Velkommen til en lidt sjovere, og lidt bedre, biketime."
+    }
+  ],
+  "parking": "Gratis parkering i to timer i Prismets parkeringsanlæg. Registrér din nummerplade på tablet i centeret. P-kælderen kan tilgås ved brug af FitnessX appen.",
+  "manager": {
+    "name": "Julia",
+    "title": "Manager",
+    "image": "https://fitnessx.dk/wp-content/uploads/Club-Manager-Julia-scaled-e1760941718517.jpg"
+  },
+  "tags": [],
+  "images": {
+    "hero": "https://fitnessx.dk/wp-content/uploads/Medier-7-1.jpg",
+    "gallery": [
+      "https://fitnessx.dk/wp-content/uploads/Medier-7-1.jpg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_2890-2-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_2876-2-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_3026-2-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_3003-2-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_2990-2-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_2980-2-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_2914-2-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_2948-2-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_2951-2-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/FitnessX-AG_08189.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Desktop-header-imagesort_hvid.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Mobile-header-imagesort_hvid.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Aarhus-Soender-Alle-310x150x2.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Aarhus-Soender-Alle-130x115-1.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Aarhus-N-PMVx3.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Aarhus-N-PMV.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Mobile-header-image-SH.jpg",
+      "https://fitnessx.dk/wp-content/uploads/20251022_092844713_iOS-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Koebenhavn-S-Amager-Strand-310x150x3.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Koebenhavn-S-Amager-Strand-130x115-1.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Lyngby-Jernbanepladsen-310x150x3.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Lyngby-Jernbanepladsen-130x115-1.jpg",
+      "https://fitnessx.dk/wp-content/uploads/1000007045.jpg",
+      "https://fitnessx.dk/wp-content/uploads/HKP-color-desk.jpg",
+      "https://fitnessx.dk/wp-content/uploads/HKP-color-mobil.jpg",
+      "https://fitnessx.dk/wp-content/uploads/20220407_150911086_iOS-conv-1-scaled.jpeg",
+      "https://fitnessx.dk/wp-content/uploads/20230302_113104920_iOS-conv-scaled.jpeg",
+      "https://fitnessx.dk/wp-content/uploads/117930415_135581561555137_7931730547770655436_o.jpg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_0599-scaled-e1721632871633.jpg"
+    ]
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

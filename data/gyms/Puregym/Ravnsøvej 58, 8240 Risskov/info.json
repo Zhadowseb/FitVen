@@ -1,0 +1,329 @@
+{
+  "chain": "PureGym",
+  "name": "Risskov, Ravnsøvej",
+  "puregym_id": "159",
+  "address": {
+    "street": "Ravnsøvej 58",
+    "postal_code": "8240",
+    "city": "Risskov",
+    "country": "DK",
+    "full": "Ravnsøvej 58, 8240 Risskov"
+  },
+  "location": {
+    "latitude": 56.201947,
+    "longitude": 10.2458917
+  },
+  "url": "https://www.puregym.dk/find-center/risskov-ravnsoevej",
+  "membership_url": "https://www.puregym.dk/bliv-medlem/158/medlemskab",
+  "price_from": "Priser fra 246,75 DKK/md.",
+  "price_note": "*Normalpris fra 299 DKK/md.",
+  "today_notice": "Vi lukker i dag kl. 00:00",
+  "opening_hours": [
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "09:00 - 20:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 17:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Mandag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    }
+  ],
+  "opening_hours_schema": [
+    {
+      "day": "Monday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Tuesday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Wednesday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Thursday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Friday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Saturday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Sunday",
+      "opens": "05:00",
+      "closes": "00:00"
+    }
+  ],
+  "special_days": [
+    {
+      "date": "2027-01-01",
+      "opens": "08:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-02",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-03",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-05",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-06",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-14",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-24",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-25",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-06-05",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-24",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-25",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-26",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-31",
+      "opens": "05:00",
+      "closes": "18:00"
+    }
+  ],
+  "meta_description": "Velkommen hos PureGym i PureGym Risskov, Ravnsøvej. Glæd dig til at træne i et fitnesscenter, hvor der er plads til alle, og hvor du altid kan få hjælp til din træning.",
+  "description": "PureGym Risskov\nBeliggende tæt på både motorvej, Grenåvej og store boligområder i Risskov finder du et nyrenoveret, rummeligt og hyggeligt PureGym-center. Alle vores faciliteter er placeret på én etage, hvilket gør det nemt og overskueligt at finde rundt.\nHos os finder du et stort cardioområde, et populært funktionelt område, en stor holdsal og en stor bikesal, helt nye Matrix-maskiner samt et stort frivægtsområde.\nHos os er der altid plads til en snak over en kop kaffe. Centrets ansatte og medlemmer kender hinanden på kryds og tværs, og der er altid garanti for en hyggelig stund hos PureGym Risskov.\nVi glæder os til at se dig!\nMere udstyr i PureGym Risskov\nVi er så glade for at byde dig velkommen i vores center, der har fået en stor opgradering med masser af nyt og forbedret træningsudstyr.\nHer er en oversigt over, hvad du bl.a. kan se frem til at prøve:\nNye vægtskiver\nNyt udstyr til funktionelt område\nNyt udstyr til holdsale\nNyt udstyr til udstræksområde\nNye greb\nDet siger personalet om PureGym Risskov\nGym Manager Alexia siger: Alle hilser på hinanden i PureGym Risskov. Vi har et fællesskab på tværs af medlemmer og medarbejdere. Der er altid god stemning, når man kommer ind i centret.\nPersonlig træning i PureGym Risskov\nVi lægger stor vægt på personlig træning i PureGym Risskov, og vi har nogle dygtige personlige trænere med mange års erfaring. Vores mål er at vise, at personlig træning er for alle.Vi tilbyder også en uforpligtende samtale med en personlig træner til 0,-:\nBook samtale her\nHoldtræning i PureGym Risskov\nVi har en stor holdsal med plads til 42 holddeltagere. Vi tilbyder mange hold hver uge, og vores holdplan rummer både Styrke, Yoga, Dans og Seniortræning. Vi har tilmed en stor bikesal med 50 helt nye cykler. Vi kører ofte med fyldte bikehold og har derfor også et stort udbud af både Bike Power og Bike Standard.\nHvornår træner folk her i centret?\nVi har god plads til vores medlemmer. I vores app kan du se, hvornår der er flest og færrest mennesker i centret.\nBliv medlem her\nHvornår kan jeg møde personalet her i centret?\nNår du ankommer til centret, finder du en hvid kontakt til venstre på væggen. Det er vores klokke. Når du ringer på klokken, kommer vi og hjælper dig. Du bliver mødt af vores smilende og servicemindede personale, der står klar til at hjælpe dig. Du kan se vores bemandingstider i oversigten her på siden. Du er altid velkommen til at komme forbi i vores bemandingstid, hvis du har spørgsmål. Vi står klar til at hjælpe dig.\nKan jeg parkere ved PureGym Risskov?\nLige uden for centret finder du en stor parkeringsplads, som går hele vejen rundt om bygningen. Her er gratis parkering, dog maks. 1 times parkering foran Lidl og hele vejen hen til Sunset i den anden ende. Du skal derfor ikke bekymre dig om at sætte p-skiven eller føle dig begrænset af tid, hvis du holder ud mod Grenåvej eller ude foran vores indgang til centret. På Grenåvej, lige uden for centret, kører flere busser både i retning ind og ud af Aarhus.\nFølg os på Facebook\nSe vores lokaler her\n\n<div",
+  "notice": null,
+  "facilities": [
+    {
+      "name": "App",
+      "description": "PureGym appen kan hentes til både iOS- og Android-telefoner. Appen er fyldt med fede features og lækkert design:\nBook og afmeld hold inkl. reminder, så du husker dine hold\nMere end 50 træningsprogrammer\nBodytracker-måling\nTræningsstatistik\nAdgang til challenges\nTeam up med din træningsmakker\nDownload appen og få mere ud af dit medlemskab.\nLæs mere",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-04/CTA%20App%20grafik.jpg?itok=489La2Vs"
+    },
+    {
+      "name": "Bikesal",
+      "description": "Deltag på Bike, og deltag samtidigt i et uforpligtende fællesskab. Som Danmarks største fitnesscenter har vi de helt rigtige rammer for at skabe Danmarks fedeste holdtræning – og det er vi og mange hundrede tusinde medlemmer også overbeviste om at vi har.\nLæs mere om vores forskellige bikehold her og bliv inspireret.\nBook dit bikehold via vores holdbooking.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-09/bike-vi-tilbyder-puregym.jpg?itok=-bdz_Ijq"
+    },
+    {
+      "name": "Bodytracker+",
+      "description": "Bodytrackeren er en avanceret vægt, der giver en pålidelig analyse af din kropssammensætning. Med bodytracker+ får du dybere indblik i din træningsudvikling. Udover de gratis parametre kropsvægt, BMI, muskelmasse og fedtprocent får du med bodytracker+ også indsigt i fedtmasse, fedtfri masse, talje/hofte forhold, kropsvand samt hvilestofskifte. Parametre som er interessante, hvad enten du har personlige mål om at øge din vægt, højere muskelmasse, vægttab mv.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/facilities/bplusny-ny-ny_1.png?itok=3ubbpEkC"
+    },
+    {
+      "name": "Cardiotræning",
+      "description": "Kunne du godt tænke dig at forbedre din kondition eller få varmet kroppen op inden din styrketræning, så er Cardio et godt sted at gå hen.\nI dette område har vi et bredt udvalgt af kredsløbsmaskiner. Her vil du blandt andet kunne finde løbebånd, motionscykler samt ro, step -og trappemaskiner. Disse maskine er designet til at kunne forbedre dit kredsløb bedre kendt som ”kondition”. Samtlige maskiner kan indstilles og tilpasses, så de netop passer til den intensitet som ønsker på dagen.\nSå om du er til en let og kort opvarmning på motionscyklen, en tur op af Eiffeltårnet med din yndlingspodcast i ørene på trappemaskinen, eller en god løbetur i tørvejr på løbebåndet, så vil du kunne gøre dette i Cardio.\nEr du i tvivl om hvordan en maskine i Cardio virker, kan du altid spørge vores personale.\nØnsker du hjælp til hvordan du kan forbedre din kondition, så kan du også booke en uforpligtende samtale til 0 kr med en personlig træner her.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-09/CORE-slider-cta-core-medlemskab_0.jpg?itok=hEEf98nO"
+    },
+    {
+      "name": "Funktionelt træningsområde",
+      "description": "Er du til en træningsform, der har fokus på konditions- og styrketræning, så er vores funktionelle træningsområde et område for dig. Vores funktionelle område kan hjælpe dig med at blive hurtigere, stærkere men også mere udholdende og eksplosiv.\nOmrådet er udstyret med forskellige redskaber såsom; medicinbolde, kettlebells og sjippetove. Derudover finder du naturligvis også racks i alle vores funktionelle områder.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Funtionelt-traeningsomraade-1-1.jpg?itok=PDOLgNJB"
+    },
+    {
+      "name": "Glutebuilder",
+      "description": "Glutebuilderen er en multifunktionel træningsmaskine, som giver mulighed for at lave mange forskellige øvelser - perfekt til træning af ben, baller og lår. Du kan bruge maskinen som den er, med en vægtstang, vægtskiver og elastikker, som du kan låne i centeret. Kun fantasien sætter grænser.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Glute-skal-ikke-beskaeres.jpg?itok=iFSaL_IN"
+    },
+    {
+      "name": "Holdtræning",
+      "description": "Deltag på vores hold, og deltag samtidigt i et uforpligtende fællesskab. Som Danmarks største fitnesscenter har vi de helt rigtige rammer for at skabe Danmarks fedeste holdtræning – og det er vi og mange hundrede tusinde medlemmer også overbeviste om at vi har. Du kan læse om alle vores forskellige hold her, og derefter booke dem fra vores holdbooking.\nHvis du aldrig har deltaget på vores hold før, eller er ny inden for holdtræning, har du muligheden for at få en introduktion med vores \"Get started - introhold\" hold. Vi vil sørge for store sale med god plads, det helt rigtige udstyr og så vil vores instruktører vil sørge for god stemning så din holdoplevelse bliver så god som muligt.\nBook her",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2026-08/Vi-tilbyder-holdtraening.jpg?itok=Xf48xmWA"
+    },
+    {
+      "name": "Parkering",
+      "description": "Er du i bil til din træning, vil der være parkeringsmuligheder ved næsten alle vores centre. PureGym har parkeringsmuligheder i form af egen parkeringsplads, eller som en del af bygningens parkeringsplads eller parkeringshus. Hvis du er i tvivl kan du altid spørge vores søde personale i centrene.",
+      "image": null
+    },
+    {
+      "name": "Personlig træner",
+      "description": "Med en personlig træner får du hjælp og sparring til at nå dine mål - altid med udgangspunkt i dig og dine behov.\nVores personlige trænere sørger for trygge rammer, mens du er i centret.\nDe sikrer fortsat, at alt udstyr er sprittet af både før og efter brug, samt at I holder god afstand til de øvrige medlemmer, mens I træner.\nLæs mere om Personlig træning her!",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Book-samtale-med-en-personlig-traener-1-1.jpg?itok=a7i9C-9t"
+    },
+    {
+      "name": "Styrketræning",
+      "description": "Vi har masser af udstyr til din styrketræning, så du kan lave alle de styrkeøvelser du kunne tænke dig. Vi har maskiner til træning af ryg, arme, mave, lår, bagdel, skuldre, bryst osv. Du kan derved træne dine muskelgrupper på flere måder og skifte imellem maskiner og finde de maskiner og øvelser, du bedst kan lide og får mest ud af.\nNogle af maskinerne er multifunktionelle, så du kan træne flere muskelgrupper på samme maskine.\nStyrketræning er din vej til sundhed, en stærkere krop, funktionalitet i hverdagen og større muskelmasse.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Styrketraening-skal-ikke-beskaeres.jpg?itok=2qQsiE_f"
+    },
+    {
+      "name": "TRX",
+      "description": "TRX er en effektiv træningsform, hvor alle øvelser udføres med egen kropsvægt som modstand i den såkaldte TRX slynge eller sele. TRX udfordrer dig på din styrke, balance, og stabilitet.\nOm du gerne vil træne din styrke, core, kondition eller udholdenhedstræning så er TRX et rigtig godt redskab, og vi har et TRX træningsområde her i centret.\nGod træning!",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2021-09/Fitness_World_TRX.jpg?itok=Rr9k6rW7"
+    },
+    {
+      "name": "Udstrækningsområde",
+      "description": "Vi vil gerne opfylde dine træningsbehov, og en nedkøling efter træning, eller en opvarmning før træning skal der være plads til.\nDer hvor din træning starter eller slutter har vi et udstrækningsområde til dig med masser af udstyr.\nI udstrækningsområdet finder du ribber, måtter, pilatesbolde, små vægte, mavehjul, Bosu bolde, forskellige slags elastikker og foamrollere.\nHvis der er noget du mangler, kan du altid spørge vores receptionister om de har det liggende et andet sted i centeret.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Udstraekningsomraade-skal-ikke-beskaeres.jpg?itok=24s5m_W_"
+    },
+    {
+      "name": "Watt-cykler & Intelligent Cycling",
+      "description": "Vores nye BODY BIKE® Smart+ watt-cykler giver dig mulighed for at få tal på din træning, når du deltager på vores Bike-hold. Således kan du måle dine fremskridt, følge din udvikling på cyklen og opnå ekstra motivation. Designet på cyklen er desuden forbedret, så du opnår en mere ergonomisk sidestilling.\nVia bluetooth kan du connecte din smartphone til cyklen og dermed følge med i din træning undervejs. BODY BIKE® app’en monitorerer din træning live og viser dig bl.a. watt-zoner, kadence, distance, kalorieforbrænding og meget mere.\nI samspil med watt-cyklerne, bruger instruktørerne det visuelle system Intelligent Cycling.\nMed Intelligent Cycling kan du følge med i programmet og se hvad denne times udfordring byder på. Du kan bl.a. se nuværende intensitet (watt-zoner), kadence, tid og position, samtidig med at du kigger frem mod næste pause.\nDet visuelle univers på storskærmene, tillader dig at koncentrere dig 100% om din træning og performance. Det online program giver dig tryghed og klarhed omkring programmet, så du kan nyde timen, instruktøren og musikken.\nLæs mere",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2018-07/watt-cykler-intelleigent-cycling.jpg?itok=wwmG9e3G"
+    }
+  ],
+  "facility_names": [
+    "App",
+    "Bikesal",
+    "Bodytracker+",
+    "Cardiotræning",
+    "Funktionelt træningsområde",
+    "Glutebuilder",
+    "Holdtræning",
+    "Parkering",
+    "Personlig træner",
+    "Styrketræning",
+    "TRX",
+    "Udstrækningsområde",
+    "Watt-cykler & Intelligent Cycling"
+  ],
+  "facility_ids": [
+    "17",
+    "355",
+    "14",
+    "24",
+    "27",
+    "349",
+    "12",
+    "28",
+    "434",
+    "350",
+    "474",
+    "26",
+    "333"
+  ],
+  "plan_ids": [
+    "667",
+    "656"
+  ],
+  "team_ids": [
+    "312",
+    "741",
+    "326",
+    "498",
+    "318",
+    "834",
+    "358",
+    "735",
+    "737",
+    "802",
+    "806",
+    "739",
+    "363",
+    "807",
+    "637"
+  ],
+  "classes": [
+    "Bike Power",
+    "Bike Standard",
+    "Body Fit",
+    "Core & Glutes",
+    "Dans - Event",
+    "Functional Express",
+    "Functional Training",
+    "Get Started - Introhold",
+    "Jam",
+    "Latin",
+    "Seniortræning",
+    "Stram Op",
+    "Styrke & Funktionelt – Event",
+    "Yang Yoga",
+    "Yin Yoga"
+  ],
+  "images": {
+    "hero": "https://www.puregym.dk/files/2025-10/_6_29863-HDR.jpg",
+    "hero_2500": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-10/_6_29863-HDR.jpg?itok=UNBGH7-y",
+    "teaser": "https://www.puregym.dk/files/styles/center_teaser/public/2025-10/_6_29863-HDR.jpg?itok=me3K_6Zm",
+    "gallery": [
+      "https://mit.puregym.dk/images/centers/731/6-20020-hdr.webp",
+      "https://mit.puregym.dk/images/centers/731/6-20036-hdr.webp",
+      "https://mit.puregym.dk/images/centers/731/6-20051-hdr.webp",
+      "https://mit.puregym.dk/images/centers/731/6-20064-hdr.webp",
+      "https://mit.puregym.dk/images/centers/731/6-20068-hdr.webp",
+      "https://mit.puregym.dk/images/centers/731/6-20081-hdr.webp",
+      "https://mit.puregym.dk/images/centers/731/6-29819-hdr.webp",
+      "https://mit.puregym.dk/images/centers/731/6-29823-hdr.webp",
+      "https://mit.puregym.dk/images/centers/731/6-29835-hdr.webp",
+      "https://mit.puregym.dk/images/centers/731/6-29863-hdr.webp",
+      "https://mit.puregym.dk/images/centers/731/6-29871-hdr.webp",
+      "https://mit.puregym.dk/images/centers/731/6-29891-hdr.webp",
+      "https://mit.puregym.dk/images/centers/731/6-29903-hdr.webp",
+      "https://mit.puregym.dk/images/centers/731/6-29911-hdr.webp",
+      "https://mit.puregym.dk/images/centers/731/6-29923-hdr.webp",
+      "https://mit.puregym.dk/images/centers/731/6-29935-hdr.webp",
+      "https://mit.puregym.dk/images/centers/731/6-29947-hdr.webp",
+      "https://mit.puregym.dk/images/centers/731/6-29955-hdr.webp",
+      "https://mit.puregym.dk/images/centers/731/6-29963-hdr.webp",
+      "https://mit.puregym.dk/images/centers/731/6-29979-hdr.webp"
+    ]
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

@@ -25,6 +25,8 @@ import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
 import Delete from "../../Resources/Icons/UI-icons/Delete";
 import EditSocialPost from "../../Resources/Icons/UI-icons/EditSocialPost";
 import {
+  gymService,
+  musicService,
   notificationService,
   programService,
   socialPostService,
@@ -130,6 +132,13 @@ export default function App() {
   });
   const [isLoadingCirclePreview, setIsLoadingCirclePreview] = useState(true);
   const [circlePreviewError, setCirclePreviewError] = useState("");
+  // What the viewer's own music poller last saw, for their own tile. Module
+  // state in musicService, mirrored here so a change re-renders the strip.
+  const [ownNowPlaying, setOwnNowPlaying] = useState(() =>
+    musicService.getCurrentNowPlaying()
+  );
+
+  useEffect(() => musicService.subscribeNowPlaying(setOwnNowPlaying), []);
   const [workoutSummaryPosts, setWorkoutSummaryPosts] = useState([]);
   const [hasLoadedWorkoutSummaryFeed, setHasLoadedWorkoutSummaryFeed] =
     useState(false);
@@ -210,6 +219,19 @@ export default function App() {
         ),
       ]);
 
+      // The viewer's own centre line comes from the local workout, not the
+      // cloud: the workout the summary points at, or for a planned one with
+      // no position yet, the viewer's own centre.
+      const homeGym = nextCirclePreview.currentUser?.homeGym ?? null;
+      let ownGym = await gymService.getGymForActivityTile(
+        todayActivitySummary.gymId,
+        homeGym?.id ?? null
+      );
+
+      if (!ownGym && todayActivitySummary.activityState === "planned" && homeGym) {
+        ownGym = { id: homeGym.id, shortName: homeGym.shortName, isHomeGym: true };
+      }
+
       setCirclePreview({
         ...nextCirclePreview,
         currentUser: nextCirclePreview.currentUser
@@ -219,6 +241,8 @@ export default function App() {
               activityDetail: todayActivitySummary.detail,
               workoutType: todayActivitySummary.workoutType,
               workoutLabel: todayActivitySummary.workoutLabel,
+              workoutId: todayActivitySummary.workoutId,
+              gym: ownGym,
             }
           : null,
       });
@@ -828,12 +852,26 @@ export default function App() {
         )}
 
         <FriendsActivity
-          currentUser={circlePreview.currentUser}
+          currentUser={
+            circlePreview.currentUser
+              ? {
+                  ...circlePreview.currentUser,
+                  music: ownNowPlaying?.track
+                    ? {
+                        track: ownNowPlaying.track,
+                        artist: ownNowPlaying.artist,
+                        state: ownNowPlaying.state,
+                      }
+                    : null,
+                }
+              : null
+          }
           people={circlePreview.people}
           errorMessage={circlePreviewError}
           isLoading={isLoadingCirclePreview}
           onSeeAll={() => navigation.navigate("SearchPage")}
           onOpenProfile={() => navigation.navigate("ProfilePage")}
+          onOpenGym={(gymId) => navigation.navigate("GymLeaderboardPage", { gym_id: gymId })}
           showHeader
         />
 
@@ -843,6 +881,7 @@ export default function App() {
       activeProgramSnapshot,
       circlePreview,
       circlePreviewError,
+      ownNowPlaying,
       heroWorkout,
       isLoadingCirclePreview,
       navigation,

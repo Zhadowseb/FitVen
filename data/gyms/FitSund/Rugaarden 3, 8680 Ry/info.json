@@ -1,0 +1,399 @@
+{
+  "chain": "Fit&Sund",
+  "name": "Fit&Sund Ry",
+  "short_name": "Ry",
+  "address": {
+    "street": "Rugaarden 3",
+    "postal_code": "8680",
+    "city": "Ry",
+    "country": "DK",
+    "full": "Rugaarden 3, 8680 Ry"
+  },
+  "location": {
+    "latitude": 56.09081678,
+    "longitude": 9.78736743
+  },
+  "geocode": {
+    "latitude": 56.09081678,
+    "longitude": 9.78736743,
+    "matched_address": "Rugaarden 3, 8680 Ry",
+    "exact": true,
+    "source": "DAWA"
+  },
+  "url": "https://fitogsund.dk/c/huse/ry",
+  "membership_url": "https://fitogsund.dk/p/bliv-medlem",
+  "class_schedule_url": "https://fitogsund.goactivebooking.com/class-web-categories/34/classes?facility=27",
+  "google_maps_url": "https://www.google.com/maps/dir/?api=1&destination=Rugaarden-3+8680+Ry",
+  "phone": "+45 40 68 13 13",
+  "email": "ry@fitogsund.dk",
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 23:00"
+    }
+  ],
+  "reception_hours": [
+    {
+      "day": "Mandag",
+      "open": "08:00 - 12:00 & 16:00 - 19:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "08:00 - 12:00 & 16:00 - 19:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "08:00 - 12:00 & 16:00 - 19:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "08:00 - 12:00 & 16:00 - 19:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "08:00 - 17:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "08:30 - 12:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "08:30 - 12:00"
+    }
+  ],
+  "meta_description": "Træn hos Fit & Sund Ry i vores moderne fitness og træningscenter. Fitness | Holdtræning | Personlig træning",
+  "description": "Velkommen til Fit&Sund Ry. Vi er meget mere end et fitnesscenter. Vi er dit lokale fitness- og sundhedshus.\nØnsker du et Medical Fitness, bedes du henvende dig i receptionen, i receptionens åbningstid.\nBootcamps og events i huset\nHer kan du læse mere om vores bootcamps og se hvad der sker i huset.\nSUND Senior\nTræningsforløb for seniorer\n5 ugers forløb med træning 2 gange om ugen\nStærk fællesskab med andre seniorer på et lukket hold kun for jer\nLæs mere\nVi er klar til at hjælpe dig med din behov\nHos Fit&Sund har vi et kompetent trænings- og sundhedsfagligt team, som hjælper dig på vej uanset alder, baggrund eller trænings- og sundhedstilstand. Vores mål er din sundhed.\nVi tilbyder inspirerende og motiverende træningsoplevelser, som giver dig overskud, velvære og livskvalitet. Har du behov for hjælp til at blive en skade kvit eller komme i bedre form, har Fit&Sund fysioterapeuter og personlige trænere, der er klar til at hjælpe dig.\nFlot nyt fitnesshus\nI vores velkomstområde er alle velkomne, og her kan man opleve den magi, der opstår, når medlemmer hygger sig med en kop kaffe under vores flotte træ og skaber et levende fællesskab i huset . Vores udstyr er nyt og lækkert - de to holdsale byder på masser af plads, lækre reformer pilates maskiner og den smukkeste udsigt ud over Himmelbjerget.",
+  "facilities": [
+    "Fitness",
+    "Fysioterapeuter",
+    "Personlig træning",
+    "Lyse lokaler",
+    "Træning på 2 lokationer i Ry",
+    "Hygge i caféen",
+    "Nyrenoveret styrketræningsområde"
+  ],
+  "service_categories": [
+    "Personlig træning",
+    "Hold",
+    "Camps",
+    "Event",
+    "Fællesskab",
+    "Yoga/Reformer",
+    "Juniorer",
+    "Fysioterapi",
+    "Diætist",
+    "OUTDOOR",
+    "Seniorer",
+    "Muskelopbyggende Træning",
+    "Body & Mind",
+    "Dance",
+    "Junior Træning",
+    "Core Træning",
+    "Funktionel Træning",
+    "Konditionsfremmende Træning",
+    "Outdoor Træning",
+    "Senior Træning"
+  ],
+  "services": [
+    {
+      "name": "2026 You-Go-I-Go Skanderborg og Ry",
+      "room": null,
+      "categories": [
+        "camps",
+        "hold",
+        "personlig-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/2026-you-go-i-go-skanderborg-og-ry"
+    },
+    {
+      "name": "Aktiv Forældregruppe",
+      "room": null,
+      "categories": [
+        "camps"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/aktiv-foraeldregruppe"
+    },
+    {
+      "name": "Aktiv Mødregruppe",
+      "room": null,
+      "categories": [
+        "camps"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/aktiv-moedregruppe-3"
+    },
+    {
+      "name": "BODYBALANCE®",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bodybalance-les-mills"
+    },
+    {
+      "name": "BODYPUMP®",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bodypump"
+    },
+    {
+      "name": "DanceFit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/dance"
+    },
+    {
+      "name": "Events i Fit&Sund Ry",
+      "room": null,
+      "categories": [
+        "event",
+        "faellesskab"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/events-i-fitsund-ry"
+    },
+    {
+      "name": "Hatha Yoga",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/hatha-yoga"
+    },
+    {
+      "name": "Juniortræning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-junior",
+        "juniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/juniortraening"
+    },
+    {
+      "name": "Mindful Stretch",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/mindful-stretch"
+    },
+    {
+      "name": "MobileFit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/mobilefit"
+    },
+    {
+      "name": "OPSTARTSPAKKER",
+      "room": null,
+      "categories": [
+        "diaetist",
+        "event",
+        "fysioterapi",
+        "personlig-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/2026-opstartspakker-7"
+    },
+    {
+      "name": "OUTDOOR MobileFit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/mobilefit-2"
+    },
+    {
+      "name": "Outdoor træning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-funktionel-traening",
+        "hold-outdoor",
+        "outdoor"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/outdoor-traening"
+    },
+    {
+      "name": "Pilates",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/pilates"
+    },
+    {
+      "name": "Puls Styrke",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/puls--styrke"
+    },
+    {
+      "name": "RawFit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-funktionel-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/rawfit"
+    },
+    {
+      "name": "Reformer Basic",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/reformer-basic-2"
+    },
+    {
+      "name": "Reformer Classic",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/reformer-classic"
+    },
+    {
+      "name": "Reformer Fit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/reformer-fit-2"
+    },
+    {
+      "name": "Reformer Power",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "hold-core",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/reformer-power"
+    },
+    {
+      "name": "Senior Træning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/seniortraening"
+    },
+    {
+      "name": "Stram Op",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/stramop"
+    },
+    {
+      "name": "SUND Senior",
+      "room": null,
+      "categories": [
+        "camps",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/sund-senior"
+    },
+    {
+      "name": "Tabata",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/tabata"
+    },
+    {
+      "name": "YIN YOGA",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/yin-yoga"
+    },
+    {
+      "name": "Yoga",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/yoga"
+    },
+    {
+      "name": "ZUMBA® GOLD",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/zumba-gold"
+    }
+  ],
+  "manager": {
+    "name": "Janne Eskildsen",
+    "title": "Husleder",
+    "image": "https://fitogsund.dk/f/thumb?src=/f/blog/article/338f730998f93d1f0d9169cd6c066e98d5739230_thumb.jpg&w=300&h=380"
+  },
+  "images": {
+    "hero": null,
+    "fallback": "../fitogsund-logo.png"
+  },
+  "hero_image_file": "hero.png",
+  "hero_is_placeholder": true,
+  "scraped_at": "2026-09-17"
+}

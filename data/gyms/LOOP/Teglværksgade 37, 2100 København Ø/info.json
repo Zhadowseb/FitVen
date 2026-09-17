@@ -1,0 +1,164 @@
+{
+  "chain": "LOOP Fitness",
+  "name": "LOOP Østerbro",
+  "loop_id": 219,
+  "center_type": "family",
+  "address": {
+    "street": "Teglværksgade 37",
+    "postal_code": "2100",
+    "city": "København Ø",
+    "country": "DK",
+    "full": "Teglværksgade 37, 2100 København Ø"
+  },
+  "location": {
+    "latitude": 55.7082895,
+    "longitude": 12.5584002
+  },
+  "url": "https://loopfitness.dk/centre/loop-fitness-oesterbro/",
+  "membership_url": "https://loopfitness.dk/medlemskab/bliv-medlem/",
+  "phone": "41746327",
+  "email": "oesterbro@loopfitness.dk",
+  "facebook_url": null,
+  "google_review_url": "https://g.page/r/Ce2YYxi5ijfGEB0/review",
+  "cvr": "38282166",
+  "manager_name": "Beila",
+  "opened": "2019-09-14",
+  "has_classes": true,
+  "only_open_when_staffed": false,
+  "max_visitor_capacity": 40,
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 22:00"
+    }
+  ],
+  "staffed_hours": [
+    {
+      "day": "Mandag",
+      "periods": [
+        "09:00 - 19:00"
+      ]
+    },
+    {
+      "day": "Tirsdag",
+      "periods": [
+        "09:00 - 19:00"
+      ]
+    },
+    {
+      "day": "Onsdag",
+      "periods": [
+        "09:00 - 12:30",
+        "14:30 - 19:00"
+      ]
+    },
+    {
+      "day": "Torsdag",
+      "periods": [
+        "09:00 - 16:00",
+        "16:30 - 19:30"
+      ]
+    },
+    {
+      "day": "Fredag",
+      "periods": [
+        "09:00 - 15:30"
+      ]
+    },
+    {
+      "day": "Lørdag",
+      "periods": [
+        "09:00 - 12:00"
+      ]
+    },
+    {
+      "day": "Søndag",
+      "periods": [
+        "09:00 - 12:00"
+      ]
+    }
+  ],
+  "staffed_hours_dates": [
+    {
+      "date": "2026-05-24",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-05-25",
+      "open": "None - None"
+    }
+  ],
+  "meta_description": "Hos LOOP Fitness Østerbro får du enkel og effektiv træning af hele kroppen på kun 24 minutter og i afslappede rammer. Book en gratis prøvetime nu »",
+  "description": "Kom indenfor og mærk energien. Hos LOOP får du afslappet stemning og effektiv træning på den bedste måde. Uanset niveau er der plads til dig, og træningen er enkel: Start med opvarmning, træn hele kroppen i træningscirklen, og afslut med udstrækning i vores LOOP Ekstra område. Efter din træning kan du nyde en gratis kop kaffe eller the i vores café.",
+  "quote_by": "Beila, centerleder",
+  "facilities": [
+    "3 cirkler",
+    "Cardio-område",
+    "LOOP Kids",
+    "Gratis kaffe"
+  ],
+  "memberships": [
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr",
+      "price_per_month": 289.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 319,
+      "family_members": 0,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    },
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr. - familie",
+      "price_per_month": 589.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 619,
+      "family_members": 9,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    }
+  ],
+  "images": {
+    "hero": "https://loopfitness.dk/wp-content/uploads/2019/11/Farum_2026-1.png",
+    "og_image": "https://loopfitness.dk/wp-content/uploads/2019/11/denice.jpeg"
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

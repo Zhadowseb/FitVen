@@ -1064,6 +1064,7 @@ export async function getWorkoutsByDayId(db, dayId) {
         w.original_start_time,
         w.timer_start,
         w.elapsed_time,
+        w.gym_id,
         ${workoutHasPersonalRecordSql("w")} AS has_personal_record
      FROM Workout_Type_Instance w
      LEFT JOIN Workout_Type wt ON wt.name = w.workout_type
@@ -1194,6 +1195,7 @@ export async function getWorkoutsBetweenDates(db, { startIsoDate, endIsoDate }) 
         w.original_start_time,
         w.timer_start,
         w.elapsed_time,
+        w.gym_id,
         d.Weekday AS weekday,
         d.program_id,
         p.program_name,
@@ -2621,6 +2623,9 @@ export async function getWorkoutsForCloudSync(db, { dirtyOnly = false } = {}) {
         original_start_time,
         timer_start,
         elapsed_time,
+        gym_id,
+        start_latitude,
+        start_longitude,
         needs_sync
      FROM Workout_Type_Instance
      ${dirtyOnly ? "WHERE needs_sync = 1" : ""}
@@ -2645,6 +2650,9 @@ export async function createWorkoutFromCloud(
     originalStartTime,
     timerStart,
     elapsedTime,
+    gymId = null,
+    startLatitude = null,
+    startLongitude = null,
   }
 ) {
   return db.runAsync(
@@ -2663,8 +2671,11 @@ export async function createWorkoutFromCloud(
       is_active,
       original_start_time,
       timer_start,
-      elapsed_time
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?);`,
+      elapsed_time,
+      gym_id,
+      start_latitude,
+      start_longitude
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?);`,
     sqliteParams([
       cloudWorkoutTypeInstanceId,
       remoteLocalWorkoutTypeInstanceId,
@@ -2680,6 +2691,9 @@ export async function createWorkoutFromCloud(
       originalStartTime,
       timerStart,
       elapsedTime,
+      gymId,
+      startLatitude,
+      startLongitude,
     ])
   );
 }
@@ -2702,6 +2716,9 @@ export async function updateWorkoutFromCloud(
     originalStartTime,
     timerStart,
     elapsedTime,
+    gymId = null,
+    startLatitude = null,
+    startLongitude = null,
   }
 ) {
   await db.runAsync(
@@ -2720,6 +2737,9 @@ export async function updateWorkoutFromCloud(
          original_start_time = ?,
          timer_start = ?,
          elapsed_time = ?,
+         gym_id = ?,
+         start_latitude = ?,
+         start_longitude = ?,
          needs_sync = 0
      WHERE workout_id = ?;`,
     sqliteParams([
@@ -2737,6 +2757,9 @@ export async function updateWorkoutFromCloud(
       originalStartTime,
       timerStart,
       elapsedTime,
+      gymId,
+      startLatitude,
+      startLongitude,
       workoutId,
     ])
   );
@@ -3022,6 +3045,7 @@ export async function getWorkoutsByDayIds(db, dayIds) {
         w.original_start_time,
         w.timer_start,
         w.elapsed_time,
+        w.gym_id,
         ${workoutHasPersonalRecordSql("w")} AS has_personal_record
      FROM Workout_Type_Instance w
      LEFT JOIN Workout_Type wt ON wt.name = w.workout_type

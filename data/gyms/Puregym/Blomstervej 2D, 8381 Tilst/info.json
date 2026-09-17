@@ -1,0 +1,248 @@
+{
+  "chain": "PureGym",
+  "name": "Tilst, Blomstervej",
+  "puregym_id": "293",
+  "address": {
+    "street": "Blomstervej 2D",
+    "postal_code": "8381",
+    "city": "Tilst",
+    "country": "DK",
+    "full": "Blomstervej 2D, 8381 Tilst"
+  },
+  "location": {
+    "latitude": 56.18254192059554,
+    "longitude": 10.124002964417928
+  },
+  "url": "https://www.puregym.dk/find-center/tilst-blomstervej",
+  "membership_url": "https://www.puregym.dk/bliv-medlem/430/medlemskab",
+  "price_from": "Priser fra 246,75 DKK/md.",
+  "price_note": "*Normalpris fra 269 DKK/md.",
+  "today_notice": "Vi lukker i dag kl. 00:00",
+  "opening_hours": [
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "09:00 - 20:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 17:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Mandag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    }
+  ],
+  "opening_hours_schema": [
+    {
+      "day": "Monday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Tuesday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Wednesday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Thursday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Friday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Saturday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Sunday",
+      "opens": "05:00",
+      "closes": "00:00"
+    }
+  ],
+  "special_days": [
+    {
+      "date": "2027-01-01",
+      "opens": "08:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-02",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-03",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-05",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-06",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-14",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-24",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-25",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-06-05",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-24",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-25",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-26",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-31",
+      "opens": "05:00",
+      "closes": "18:00"
+    }
+  ],
+  "meta_description": "Velkommen hos PureGym i Tilst i Aarhus. Glæd dig til at træne i et fitnesscenter, hvor der er plads til alle, og hvor du altid kan få hjælp til din træning.",
+  "description": "PureGym Blomstervej\nPureGym Tilst er et populært center placeret i Tilst. Centret byder på de bedste faciliteter til din træning, hvad end du er til holdtræning eller træner på egen hånd.\nCentret er udstyret med masser af fitness-, styrke- og konditionsfaciliteter, et stort funktionelt område, en holdsal med masser af svedige og sjove hold samt bike-timer i vores bikesal. Centret er desuden i ét plan og har højt til loft.\nHer vil du altid få et ”velkommen” og et stort smil fra vores dedikerede team, der vil gøre deres bedste for, at din træningsoplevelse bliver så vellykket som overhovedet muligt.\nVi glæder os til at se dig!\nMere udstyr i PureGym Tilst\nVores center har fået en opgradering med endnu mere træningsudstyr.\n- Her er en oversigt over, hvad du bl.a. kan se frem til:\n- Nyt udstyr til funktionelt område\n- Nyt udstyr til udstræksområde\nDet siger personalet om PureGym Tilst\nHer i Tilst er der plads til alle. Vi bestræber os på at give vores medlemmer de bedste forudsætninger for deres træning. Og så synes vi, at det er superhyggeligt at snakke med og lære vores medlemmer at kende. Det er nemlig med til at skabe en god atmosfære og et stærkt sammenhold blandt medlemmer og personale.\nPersonlig træning i PureGym Tilst\nHar du brug for en snak om din træning, står vi altid klar og tilbyder ud over gode råd også programlægning og personlig træning ved vores certificerede personlige trænere. Derudover tilbyder vi en gratis, uforpligtende samtale med en personlig træner.\nVi tilbyder også en uforpligtende samtale med en personlig træner til 0,-:\nBook samtale her\nHoldtræning i PureGym Tilst\nPureGym Tilst har et bredt udvalg af hold, så hvad end du er til styrke, dans eller bike, har vi et hold, der passer til dig. Vi har to store holdsale med højt til loft. Vores instruktører tager godt imod dig på timen, så du kan deltage uanset niveau.\nHvornår træner folk her i centret?\nVi har god plads til vores medlemmer. I vores app kan du se, hvornår der er flest og færrest mennesker i centret.\nBliv medlem her\nHvornår kan jeg møde personalet her i centret?\nSe vores bemandede tider i oversigten her på siden. Du er altid velkommen til at komme forbi i vores bemandede åbningstid.Vi tager os tid til at svare på alle dine spørgsmål og giver gerne en rundvisning i centret.\nKan jeg parkere ved PureGym Tilst ?\nDer er gratis parkering på parkeringspladserne foran centret. Bemærk, at der er 3 timers parkering, og du skal derfor huske at stille p-skive ved ankomst.\nFølg os på Facebook\nSe vores lokaler her\nBliv medlem af PureGym og få adgang til:\nApp\nHer kan du få et trænings-program, følge din træning, booke hold, deltage i challenges og meget mere.\nPersonlig træning\nHar du brug for hjælp til at nå dine mål? Book en samtale hos en af vores certificerede personlige trænere til 0 kr.\nHoldtræning\nBliv en del af et stærkt fællesskab på vores hold. Vores dedikerede instruktører guider dig igennem og sikrer højt humør.\nBodytracker\nFor kun ekstra 9 kr./md. kan du få adgang til en avanceret vægt, der giver dig en kropsanalyse med flere forskellige parametre.\nEr du klar til at starte?\nVælg dit medlemskab her\nOg bliv en del af Danmarks største fitness-fælleskab.\nGenerelt\nLog ind på Mit PureGym\nPriser og medlemskabstyper\nTil/afmeld nyhedsbrev\nOm PureGym\nPresse\nKarriere\nHjerteforeningen\nStudierabat\nInformation\nFAQ & Kontakt\nVelkomst og information\nHusets regler\nMedlems­betingelser\nDatapolitik\nCookies\nTilgængelighed\nKonkurrencevindere\nSafespace\nVores fitness centre\nFind center\nAlle større byer\nKøbenhavn\nAarhus\nOdense\nAalborg\nRanders\nValby\nDownload vores app\nHold dig informeret\nTorveporten 2,\n2500 Valby\nCVR. 25652991\nPureGym © 2026\nLog ind\nNyt eller glemt kodeord?\nIkke medlem endnu?\nMeld dig ind",
+  "notice": null,
+  "facilities": [],
+  "facility_names": [
+    "App",
+    "Bikesal",
+    "Cardiotræning",
+    "Funktionelt træningsområde",
+    "Holdtræning",
+    "Parkering",
+    "Personlig træner",
+    "Styrketræning",
+    "Udstrækningsområde",
+    "Watt-cykler & Intelligent Cycling"
+  ],
+  "facility_ids": [
+    "434",
+    "349",
+    "355",
+    "12",
+    "14",
+    "24",
+    "27",
+    "28",
+    "17",
+    "350"
+  ],
+  "plan_ids": [
+    "671",
+    "666"
+  ],
+  "team_ids": [
+    "312",
+    "332",
+    "807",
+    "318",
+    "834",
+    "358",
+    "735",
+    "802",
+    "806",
+    "739",
+    "822"
+  ],
+  "classes": [
+    "Bike Power",
+    "Body Fit",
+    "Functional Express",
+    "Functional Training",
+    "Get Started - Introhold",
+    "Lokale Events",
+    "Seniortræning",
+    "Stram Op",
+    "Yang Yoga",
+    "Yin Yoga",
+    "Zumba"
+  ],
+  "images": {
+    "hero": "https://www.puregym.dk/files/2022-11/Fitness%20World%20Blomstervej.jpg",
+    "hero_2500": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2022-11/Fitness%20World%20Blomstervej.jpg?itok=Ss2OsBv7",
+    "teaser": "https://www.puregym.dk/files/styles/center_teaser/public/2022-11/Fitness%20World%20Blomstervej.jpg?itok=O1c-NPhw",
+    "gallery": [
+      "https://mit.puregym.dk/images/centers/886/6-20101-hdr.webp",
+      "https://mit.puregym.dk/images/centers/886/6-20117-hdr.webp",
+      "https://mit.puregym.dk/images/centers/886/6-20125-hdr.webp",
+      "https://mit.puregym.dk/images/centers/886/6-20133-hdr.webp",
+      "https://mit.puregym.dk/images/centers/886/6-20149-hdr.webp",
+      "https://mit.puregym.dk/images/centers/886/6-20169-hdr.webp",
+      "https://mit.puregym.dk/images/centers/886/6-20173-hdr.webp",
+      "https://mit.puregym.dk/images/centers/886/6-20189-hdr.webp",
+      "https://mit.puregym.dk/images/centers/886/6-20197-hdr.webp",
+      "https://mit.puregym.dk/images/centers/886/6-20201-hdr.webp",
+      "https://mit.puregym.dk/images/centers/886/6-20209-hdr.webp",
+      "https://mit.puregym.dk/images/centers/886/6-20217-hdr.webp",
+      "https://mit.puregym.dk/images/centers/886/6-20225-hdr.webp",
+      "https://mit.puregym.dk/images/centers/886/6-20241-hdr.webp",
+      "https://mit.puregym.dk/images/centers/886/6-20257-hdr.webp",
+      "https://mit.puregym.dk/images/centers/886/6-20261-hdr.webp",
+      "https://mit.puregym.dk/images/centers/886/6-20265-hdr.webp",
+      "https://mit.puregym.dk/images/centers/886/6-20273-hdr.webp",
+      "https://mit.puregym.dk/images/centers/886/6-20293-hdr.webp"
+    ]
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

@@ -118,15 +118,35 @@ export default function NotificationHistoryPage() {
 
   // A card with an avatar and an unread dot reads as something you can open,
   // and nothing happened when you did. There is no screen for another user's
-  // profile in this app, but every notification here is someone starting a
-  // workout, and that is what Social shows - so that is where a row goes.
+  // profile in this app, but most notifications here are someone starting a
+  // workout, and that is what Social shows - so that is where a row goes. A
+  // request to verify a lift goes to that centre, with the review sheet open.
+  const openNotification = (item) => {
+    const gymId = Number(item?.data?.gym_id);
+
+    if (item?.eventType === "lift_verification_requested" && Number.isFinite(gymId)) {
+      navigation.navigate("GymLeaderboardPage", {
+        gym_id: gymId,
+        open_verification: true,
+        lift_id: item?.data?.lift_id ?? null,
+      });
+      return;
+    }
+
+    navigation.navigate("SearchPage");
+  };
+
   const renderNotification = ({ item }) => (
     <TouchableOpacity
       activeOpacity={0.85}
       accessibilityRole="button"
       accessibilityLabel={`${item.title}. ${item.body}`}
-      accessibilityHint="Opens today's activity"
-      onPress={() => navigation.navigate("SearchPage")}
+      accessibilityHint={
+        item.eventType === "lift_verification_requested"
+          ? "Opens the centre's lifts waiting for review"
+          : "Opens today's activity"
+      }
+      onPress={() => openNotification(item)}
       style={[
         styles.notificationCard,
         {

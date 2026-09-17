@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "1.1.3-chore-eas-submit-asc-app-id.1",
+  "version": "2.0.0-breaking-center-leaderboard-friends-tiles.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",
@@ -10,7 +10,7 @@
     "android:dev": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "test": "node scripts/check-agent-docs.js && node scripts/check-imports.js && node scripts/check-undeclared.js && node scripts/check-privacy-policy.js && node scripts/build-privacy-policy-page.js --check && node scripts/build-terms-page.js --check && npm run test:cloud-sync-fields && npm run test:secure-session && npm run test:set-carry-over && npm run test:pr-index && npm run test:microcycle-days && npm run test:next-workout && npm run test:sync-upload && npm run test:sync-watchers && npm run test:delete-sticks && npm run test:db-repairs && npm run test:recent-exercises && npm run test:custom-exercise && npm run test:location && npm run test:run-intervals && npm run test:run-display && npm run test:program-progress && npm run test:workout-finish && npm run test:profile-birthdate && npm run test:heart-rate-settings && npm run test:ble-heart-rate && npm run test:notifications && npm run test:exercise-map && npm run test:ugc-safety && npm run test:terms && npm run test:expanded-height && npm run test:records-insights && npm run test:social-posts",
+    "test": "node scripts/check-agent-docs.js && node scripts/check-imports.js && node scripts/check-undeclared.js && node scripts/check-privacy-policy.js && node scripts/build-privacy-policy-page.js --check && node scripts/build-terms-page.js --check && npm run test:cloud-sync-fields && npm run test:secure-session && npm run test:set-carry-over && npm run test:pr-index && npm run test:microcycle-days && npm run test:next-workout && npm run test:sync-upload && npm run test:sync-watchers && npm run test:delete-sticks && npm run test:db-repairs && npm run test:recent-exercises && npm run test:custom-exercise && npm run test:location && npm run test:run-intervals && npm run test:run-display && npm run test:program-progress && npm run test:workout-finish && npm run test:profile-birthdate && npm run test:heart-rate-settings && npm run test:ble-heart-rate && npm run test:notifications && npm run test:exercise-map && npm run test:ugc-safety && npm run test:terms && npm run test:expanded-height && npm run test:records-insights && npm run test:social-posts && npm run test:gym-leaderboard",
     "docs:check": "node scripts/check-agent-docs.js",
     "version:auto": "node scripts/version.js auto",
     "version:branch": "node scripts/version.js branch",
@@ -52,7 +52,10 @@
     "test:ugc-safety": "node scripts/test-ugc-safety.js",
     "test:exercise-map": "node scripts/test-exercise-map.js",
     "test:records-insights": "node scripts/test-records-insights.js",
-    "test:social-posts": "node scripts/test-social-post-reliability.js"
+    "test:social-posts": "node scripts/test-social-post-reliability.js",
+    "test:gym-leaderboard": "node scripts/test-gym-leaderboard.js",
+    "gyms:import": "node scripts/import-gyms/index.js",
+    "gyms:import:dry-run": "node scripts/import-gyms/index.js --dry-run"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -63,8 +66,10 @@
     "@react-navigation/native-stack": "^7.8.0",
     "@supabase/supabase-js": "^2.100.0",
     "expo": "~54.0.25",
+    "expo-auth-session": "~7.0.11",
     "expo-checkbox": "~5.0.8",
     "expo-constants": "~18.0.13",
+    "expo-crypto": "~15.0.9",
     "expo-dev-client": "~6.0.20",
     "expo-document-picker": "~14.0.8",
     "expo-file-system": "~19.0.23",
@@ -77,6 +82,8 @@
     "expo-sqlite": "^16.0.9",
     "expo-status-bar": "~3.0.8",
     "expo-task-manager": "~14.0.9",
+    "expo-video": "~3.0.16",
+    "expo-web-browser": "~15.0.11",
     "react": "19.1.0",
     "react-native": "0.81.5",
     "react-native-ble-plx": "^3.5.1",

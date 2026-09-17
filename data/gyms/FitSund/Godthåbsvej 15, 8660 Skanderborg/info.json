@@ -1,0 +1,438 @@
+{
+  "chain": "Fit&Sund",
+  "name": "Fit&Sund Skanderborg",
+  "short_name": "Skanderborg",
+  "address": {
+    "street": "Godthåbsvej 15",
+    "postal_code": "8660",
+    "city": "Skanderborg",
+    "country": "DK",
+    "full": "Godthåbsvej 15, 8660 Skanderborg"
+  },
+  "location": {
+    "latitude": 56.04716777,
+    "longitude": 9.91929679
+  },
+  "geocode": {
+    "latitude": 56.04716777,
+    "longitude": 9.91929679,
+    "matched_address": "Godthåbsvej 15, 8660 Skanderborg",
+    "exact": true,
+    "source": "DAWA"
+  },
+  "url": "https://fitogsund.dk/c/huse/skanderborg",
+  "membership_url": "https://fitogsund.dk/p/bliv-medlem",
+  "class_schedule_url": "https://fitogsund.goactivebooking.com/class-web-categories/34/classes?facility=28",
+  "google_maps_url": "https://www.google.com/maps/dir/?api=1&destination=Godthåbsvej-15+8660+Skanderborg",
+  "phone": "+45 86 52 31 55",
+  "email": "kontakt@skanderborg-fys.dk",
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "04:00 - 23:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "04:00 - 23:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "04:00 - 23:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "04:00 - 23:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "04:00 - 23:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "04:00 - 23:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "04:00 - 23:00"
+    }
+  ],
+  "reception_hours": [
+    {
+      "day": "Mandag",
+      "open": "08:00 - 20:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "08:00 - 20:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "08:00 - 20:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "08:00 - 20:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "08:00 - 14:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "08:00 - 12:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "08:00 - 12:00"
+    }
+  ],
+  "meta_description": "Træn hos Fit & Sund Skanderborg i vores moderne fitness og træningscenter. Fitness | Holdtræning | Personlig træning",
+  "description": "Drejer din henvendelse sig om fysioterapi , kiropraktik, eller personlig træning , så kontakt os på:\n+45 8652 3155\nkontakt@skanderborg-fys.dk\nVi er meget mere end bare et fitnesscenter. Vi er dit lokale fitness- og sundhedshus, og vi arbejder ud fra vores 3 værdier: sundhed, viden og nærvær. Sundhed er bl.a. varieret træning. Derfor tilbyder vi styrke- og holdtræning, programlægning og målrettet træning på dine præmisser.\nSUND Senior\nTræningsforløb for seniorer\n5 ugers forløb med træning 2 gange om ugen\nStærk fællesskab med andre seniorer på et lukket hold kun for jer\nLæs mere\nBootCamps\nNå dine træningsmål i et motiverende fællesskab\nLæs mere\nBredt sundhedsfagligt team\nHos Fit&Sund har vi et kompetent trænings- og sundhedsfagligt team bestående af bl.a. psykologer, fod-fysioterapeut, motorikspecialist, idrætsklinik, fysioterapeut, personlig træner mfl., som gerne hjælper dig på vej uanset din alder, baggrund eller trænings- og sundhedstilstand.\nI vores velkomstområde er alle velkomne, og her kan man opleve den magi, der opstår, når medlemmerne hygger sig med en kop kaffe og skaber et levende fællesskab i huset.\nTopmoderne hus med masser af træningsmuligheder\nFit&Sunds mål er at tilbyde en inspirerende og motiverende træningsoplevelse, som giver dig overskud, velvære og livskvalitet.\nFit&Sund Skanderborg er et topmoderne fitnesshus på 1700 m2, fordelt på flere etager. Lokalerne er store og lyse, hvilket giver god plads og luft mellem maskinerne. I huset finder du vores store ExerciseLab, der danner en perfekt ramme for funktionel træning.",
+  "facilities": [
+    "Fitness",
+    "Fysioterapeuter",
+    "Personlig træning",
+    "Mere end 60 hold hver uge",
+    "1700 m2",
+    "Store og lyse lokaler",
+    "Fri parkering"
+  ],
+  "service_categories": [
+    "Personlig træning",
+    "Hold",
+    "Camps",
+    "Yoga/Reformer",
+    "Fysioterapi",
+    "Diætist",
+    "Event",
+    "Seniorer",
+    "Fællesskab",
+    "Muskelopbyggende Træning",
+    "Body & Mind",
+    "Konditionsfremmende Træning",
+    "Core Træning",
+    "Dance",
+    "Indoor Cycling",
+    "Funktionel Træning",
+    "Senior Træning"
+  ],
+  "services": [
+    {
+      "name": "2026 You-Go-I-Go Skanderborg og Ry",
+      "room": null,
+      "categories": [
+        "camps",
+        "hold",
+        "personlig-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/2026-you-go-i-go-skanderborg-og-ry"
+    },
+    {
+      "name": "AktivMødregruppe",
+      "room": null,
+      "categories": [
+        "camps"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/aktivmoedregruppe"
+    },
+    {
+      "name": "BODYBALANCE®",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bodybalance-les-mills"
+    },
+    {
+      "name": "BODYPUMP®",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bodypump"
+    },
+    {
+      "name": "BODYSTEP®",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bodystep"
+    },
+    {
+      "name": "Boldtræning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/boldtraening"
+    },
+    {
+      "name": "Cirkeltræning",
+      "room": "Holdsal",
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/cirkel-traening"
+    },
+    {
+      "name": "Core",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/core"
+    },
+    {
+      "name": "DanceFit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/dance"
+    },
+    {
+      "name": "Hatha Yoga",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/hatha-yoga"
+    },
+    {
+      "name": "Indoor Cycling",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-indoor-cycling"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/indoor-cycling"
+    },
+    {
+      "name": "Indoor Cycling Basis",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-indoor-cycling"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/indoor-cycling-basis"
+    },
+    {
+      "name": "MobileFit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/mobilefit"
+    },
+    {
+      "name": "OPSTARTSPAKKER",
+      "room": null,
+      "categories": [
+        "diaetist",
+        "event",
+        "fysioterapi",
+        "personlig-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/2026-opstartspakker-20"
+    },
+    {
+      "name": "Pilates",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/pilates"
+    },
+    {
+      "name": "Puls Styrke",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/puls--styrke"
+    },
+    {
+      "name": "RawFit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-funktionel-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/rawfit"
+    },
+    {
+      "name": "Reformer Basic",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/reformer-basic-2"
+    },
+    {
+      "name": "Reformer Classic",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/reformer-classic"
+    },
+    {
+      "name": "Reformer Efterfødselstræning",
+      "room": null,
+      "categories": [
+        "camps",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/reformer-efterfoedselstraening"
+    },
+    {
+      "name": "Reformer Fit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/reformer-fit-2"
+    },
+    {
+      "name": "Reformer Power",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "hold-core",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/reformer-power"
+    },
+    {
+      "name": "Senior Cirkeltræning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/senior-cirkeltraening"
+    },
+    {
+      "name": "Seniorklub",
+      "room": null,
+      "categories": [
+        "faellesskab",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/seniorklub"
+    },
+    {
+      "name": "Stram Op",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/stramop"
+    },
+    {
+      "name": "SUND Senior",
+      "room": null,
+      "categories": [
+        "camps",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/sund-senior"
+    },
+    {
+      "name": "Tabata",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/tabata"
+    },
+    {
+      "name": "Triotræning",
+      "room": null,
+      "categories": [
+        "camps",
+        "faellesskab"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/triotraening"
+    },
+    {
+      "name": "Virtuel Cycling",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-indoor-cycling"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/virtuel-cycling"
+    },
+    {
+      "name": "YIN YOGA",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/yin-yoga"
+    },
+    {
+      "name": "Yoga Flow",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/yoga-flow"
+    },
+    {
+      "name": "ZUMBA®",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/zumba"
+    },
+    {
+      "name": "ZUMBA® GOLD",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/zumba-gold"
+    }
+  ],
+  "manager": {
+    "name": "Iben Lund Person",
+    "title": "Husleder",
+    "image": "https://fitogsund.dk/f/thumb?src=/f/blog/article/2bccd7dfe1f22017fa0854b7942256e8bc3aa319_thumb.jpg&w=300&h=380"
+  },
+  "images": {
+    "hero": null,
+    "fallback": "../fitogsund-logo.png"
+  },
+  "hero_image_file": "hero.png",
+  "hero_is_placeholder": true,
+  "scraped_at": "2026-09-17"
+}

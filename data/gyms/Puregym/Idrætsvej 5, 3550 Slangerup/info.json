@@ -1,0 +1,297 @@
+{
+  "chain": "PureGym",
+  "name": "Slangerup, Idrætsvej",
+  "puregym_id": "237",
+  "address": {
+    "street": "Idrætsvej 5",
+    "postal_code": "3550",
+    "city": "Slangerup",
+    "country": "DK",
+    "full": "Idrætsvej 5, 3550 Slangerup"
+  },
+  "location": {
+    "latitude": 55.8508622,
+    "longitude": 12.1643066
+  },
+  "url": "https://www.puregym.dk/find-center/slangerup-idraetsvej",
+  "membership_url": "https://www.puregym.dk/bliv-medlem/168/medlemskab",
+  "price_from": "Priser fra 261,75 DKK/md.",
+  "price_note": "*Normalpris fra 279 DKK/md.",
+  "today_notice": "Vi lukker i dag kl. 00:00",
+  "opening_hours": [
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "09:00 - 20:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 17:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Mandag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    }
+  ],
+  "opening_hours_schema": [
+    {
+      "day": "Monday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Tuesday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Wednesday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Thursday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Friday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Saturday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Sunday",
+      "opens": "05:00",
+      "closes": "00:00"
+    }
+  ],
+  "special_days": [
+    {
+      "date": "2027-01-01",
+      "opens": "08:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-02",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-03",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-05",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-06",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-14",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-24",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-25",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-06-05",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-24",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-25",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-26",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-31",
+      "opens": "05:00",
+      "closes": "18:00"
+    }
+  ],
+  "meta_description": "Velkommen hos PureGym i Slangerup. Glæd dig til at træne i et fitnesscenter, hvor der er plads til alle, og hvor du altid kan få hjælp til din træning.",
+  "description": "PureGym Slangerup\nPureGym Slangerup finder du inde midt i Idrætshuset, på anden sal.\nCentret er meget lyst og har store vinduer, hvor man kan nyde udsigten, uanset om man løber på løbebåndet, cykler eller bruger crosstrainere. Centret er meget lokalt og repræsentere alle aldre.\nNår du træder ind i centret bliver du mødt af det venlige perosnale, som byder dig \"Velkommen\". Der er altid kaffe og the på kanden, og tid til en hyggelig snak med medlemmer.\nVi glæder os til at se dig!\nNYT UDSTYR I PUREGYM SLANGERUP\nVi er så glade for at byde dig velkommen i vores center, der har fået en stor opgradering med masser nyt og forbedret træningsudstyr.\nHer er en oversigt over, hvad du kan glæde dig til:\nNyt og forbedret cardio-område\nForbedret kabel- og styrketræningsområde, inkl. nye maskiner og kabler, herunder functional trainers\nNyt og forbedret frivægtsområde, inkl. nye platforme, vægtskiver, håndvægte og maskiner, herunder perfect squat, glutebuilder og hacksquat\nNyt og forbedret funktionelt område, inkl. nye romaskiner, SkiErgs og BikeErgs\nNyt og forbedret udstrækningsområde, inkl. nyt udstyr, herunder yoga bolde\nDET SIGER PERSONALET OM PUREGYM SLANGERUP\n\"Her i Slangerup er stemningen hyggelig blandt alle vores medlemmer, uanset alder. Der er en god blanding af unge og ældre medlemmer, som på tværs af hinanden har det godt sammen.\nDerudover er der en fin udsigt ved vores cardio udstyr direkte ned til udendørsanlægget, som er fantastisk til at bruge om sommeren. I dit abonnement er der inkluderet gratis adgang til Slangerup svømmehal og du har gratis parkering hele dagen.\"\nPERSONLIG TRÆNING I PUREGYM SLANGERUP\nHar du et ønske om få hjælp til en træningsplan, kostplan eller bare høre hvad/ hvordan vi kan hjælpe dig, så står vores certeficerede Personlige Træner klar til at hjælpe dig.\nVi tilbyder også en uforpligtende samtale til 0,-:\nBOOK SAMTALE HER\nHOLDTRÆNING I PUREGYM SLANGERUP\nI holdsalen finder du Zumba, Bike og Functional Training.\nHVORNÅR TRÆNER FOLK HER I CENTRET?\nVi har god plads til vores medlemmer. I vores app kan du se, hvornår der er flest og færrest mennesker i centret.\nBLIV MEDLEM HER\nHVORNÅR KAN JEG MØDE PERSONALET I CENTRET?\nPå anden sal for enden af trappen, finder du receptionen, hvor du bliver mødt af vores team som står klar til at hjælpe og vise dig alle vores unikke muligheder du har, når du træner her.\nSe vores bemandede tider i oversigten her på siden.\nDu er altid velkommen til at kigge forbi i vores bemandede åbnigstider.\nVi tager os tid til at svare på alle dine spøgsmål og giver gerne en kop kaffe / kakao /the\nKAN JEG PARKERE VED PUREGYM SLANGERUP?\nVi har gratis parkering hele dagen og kun 10 minutters gågang fra offentlig transport.\nFølg os på Facebook\nSe vores lokaler her\n\n<div",
+  "notice": {
+    "title": "Nyt udstyr",
+    "text": "Vi er glade for at kunne fortælle, at vi har fået en masse spritnyt og virkelig lækkert udstyr her i centret - læs om alle detaljerne længere nede her på siden.\nKom og oplev de nye faciliteter og få en fantastisk træning.\nVi glæder os til at byde dig velkommen!\n.center-hero-168--7293 {\nbackground-image: url('https://www.puregym.dk/files/styles/hero_750x750/public/2025-05/Puregym_fitness_cardio_Slangerup.jpg?itok=GjjZcfJ_');\n}\n@media (min-width: 700px){.center-hero-168--7293 {\nbackground-image: url('https://www.puregym.dk/files/styles/hero_800x800/public/2025-05/Puregym_fitness_cardio_Slangerup.jpg?itok=hqc_zhDX');\n}\n}@media (min-width: 1200px){.center-hero-168--7293 {\nbackground-image: url('https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-05/Puregym_fitness_cardio_Slangerup.jpg?itok=ql_4Uxxk');\n}\n}"
+  },
+  "facilities": [
+    {
+      "name": "App",
+      "description": "PureGym appen kan hentes til både iOS- og Android-telefoner. Appen er fyldt med fede features og lækkert design:\nBook og afmeld hold inkl. reminder, så du husker dine hold\nMere end 50 træningsprogrammer\nBodytracker-måling\nTræningsstatistik\nAdgang til challenges\nTeam up med din træningsmakker\nDownload appen og få mere ud af dit medlemskab.\nLæs mere",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-04/CTA%20App%20grafik.jpg?itok=489La2Vs"
+    },
+    {
+      "name": "Bodytracker+",
+      "description": "Bodytrackeren er en avanceret vægt, der giver en pålidelig analyse af din kropssammensætning. Med bodytracker+ får du dybere indblik i din træningsudvikling. Udover de gratis parametre kropsvægt, BMI, muskelmasse og fedtprocent får du med bodytracker+ også indsigt i fedtmasse, fedtfri masse, talje/hofte forhold, kropsvand samt hvilestofskifte. Parametre som er interessante, hvad enten du har personlige mål om at øge din vægt, højere muskelmasse, vægttab mv.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/facilities/bplusny-ny-ny_1.png?itok=3ubbpEkC"
+    },
+    {
+      "name": "Cardiotræning",
+      "description": "Kunne du godt tænke dig at forbedre din kondition eller få varmet kroppen op inden din styrketræning, så er Cardio et godt sted at gå hen.\nI dette område har vi et bredt udvalgt af kredsløbsmaskiner. Her vil du blandt andet kunne finde løbebånd, motionscykler samt ro, step -og trappemaskiner. Disse maskine er designet til at kunne forbedre dit kredsløb bedre kendt som ”kondition”. Samtlige maskiner kan indstilles og tilpasses, så de netop passer til den intensitet som ønsker på dagen.\nSå om du er til en let og kort opvarmning på motionscyklen, en tur op af Eiffeltårnet med din yndlingspodcast i ørene på trappemaskinen, eller en god løbetur i tørvejr på løbebåndet, så vil du kunne gøre dette i Cardio.\nEr du i tvivl om hvordan en maskine i Cardio virker, kan du altid spørge vores personale.\nØnsker du hjælp til hvordan du kan forbedre din kondition, så kan du også booke en uforpligtende samtale til 0 kr med en personlig træner her.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-09/CORE-slider-cta-core-medlemskab_0.jpg?itok=hEEf98nO"
+    },
+    {
+      "name": "Funktionelt træningsområde",
+      "description": "Er du til en træningsform, der har fokus på konditions- og styrketræning, så er vores funktionelle træningsområde et område for dig. Vores funktionelle område kan hjælpe dig med at blive hurtigere, stærkere men også mere udholdende og eksplosiv.\nOmrådet er udstyret med forskellige redskaber såsom; medicinbolde, kettlebells og sjippetove. Derudover finder du naturligvis også racks i alle vores funktionelle områder.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Funtionelt-traeningsomraade-1-1.jpg?itok=PDOLgNJB"
+    },
+    {
+      "name": "Holdtræning",
+      "description": "Deltag på vores hold, og deltag samtidigt i et uforpligtende fællesskab. Som Danmarks største fitnesscenter har vi de helt rigtige rammer for at skabe Danmarks fedeste holdtræning – og det er vi og mange hundrede tusinde medlemmer også overbeviste om at vi har. Du kan læse om alle vores forskellige hold her, og derefter booke dem fra vores holdbooking.\nHvis du aldrig har deltaget på vores hold før, eller er ny inden for holdtræning, har du muligheden for at få en introduktion med vores \"Get started - introhold\" hold. Vi vil sørge for store sale med god plads, det helt rigtige udstyr og så vil vores instruktører vil sørge for god stemning så din holdoplevelse bliver så god som muligt.\nBook her",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2026-08/Vi-tilbyder-holdtraening.jpg?itok=Xf48xmWA"
+    },
+    {
+      "name": "Parkering",
+      "description": "Er du i bil til din træning, vil der være parkeringsmuligheder ved næsten alle vores centre. PureGym har parkeringsmuligheder i form af egen parkeringsplads, eller som en del af bygningens parkeringsplads eller parkeringshus. Hvis du er i tvivl kan du altid spørge vores søde personale i centrene.",
+      "image": null
+    },
+    {
+      "name": "Personlig træner",
+      "description": "Med en personlig træner får du hjælp og sparring til at nå dine mål - altid med udgangspunkt i dig og dine behov.\nVores personlige trænere sørger for trygge rammer, mens du er i centret.\nDe sikrer fortsat, at alt udstyr er sprittet af både før og efter brug, samt at I holder god afstand til de øvrige medlemmer, mens I træner.\nLæs mere om Personlig træning her!",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Book-samtale-med-en-personlig-traener-1-1.jpg?itok=a7i9C-9t"
+    },
+    {
+      "name": "Styrketræning",
+      "description": "Vi har masser af udstyr til din styrketræning, så du kan lave alle de styrkeøvelser du kunne tænke dig. Vi har maskiner til træning af ryg, arme, mave, lår, bagdel, skuldre, bryst osv. Du kan derved træne dine muskelgrupper på flere måder og skifte imellem maskiner og finde de maskiner og øvelser, du bedst kan lide og får mest ud af.\nNogle af maskinerne er multifunktionelle, så du kan træne flere muskelgrupper på samme maskine.\nStyrketræning er din vej til sundhed, en stærkere krop, funktionalitet i hverdagen og større muskelmasse.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Styrketraening-skal-ikke-beskaeres.jpg?itok=2qQsiE_f"
+    },
+    {
+      "name": "Svømmehal",
+      "description": "En forfriskende svømmetur er en af de mest effektive træningsformer, der findes. Når du svømmer bruger du alle kroppens store muskler, og du træner samtidigt din kondition og koordinationsevne. Du vil ofte også opleve en større smidighed. Og du vil hurtigt mærke resultater, hvilket er motiverende. Svømmetræning kan også være skånende for kroppen, hvis du døjer med skader, fordi du ikke får hårde stød gennem ben og ryg.\nSå der er ingen undskyldninger for ikke at kaste dig ud i de blå bølger.\nDe centre, hvor vi har en aftale med svømmehallen, kan du gå i svømmehallen gratis eller til nedsat pris i svømmehallernes åbningstid. Her gælder samme betingelser og medlemskab og priser som for holdbooking.\nLæs mere",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2018-01/Svoemmehal_fitness-world_1900x640_0.jpg?itok=wylGqFgZ"
+    },
+    {
+      "name": "Udstrækningsområde",
+      "description": "Vi vil gerne opfylde dine træningsbehov, og en nedkøling efter træning, eller en opvarmning før træning skal der være plads til.\nDer hvor din træning starter eller slutter har vi et udstrækningsområde til dig med masser af udstyr.\nI udstrækningsområdet finder du ribber, måtter, pilatesbolde, små vægte, mavehjul, Bosu bolde, forskellige slags elastikker og foamrollere.\nHvis der er noget du mangler, kan du altid spørge vores receptionister om de har det liggende et andet sted i centeret.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Udstraekningsomraade-skal-ikke-beskaeres.jpg?itok=24s5m_W_"
+    }
+  ],
+  "facility_names": [
+    "App",
+    "Bodytracker+",
+    "Cardiotræning",
+    "Funktionelt træningsområde",
+    "Holdtræning",
+    "Parkering",
+    "Personlig træner",
+    "Styrketræning",
+    "Svømmehal",
+    "Udstrækningsområde"
+  ],
+  "facility_ids": [
+    "17",
+    "355",
+    "14",
+    "24",
+    "27",
+    "25",
+    "12",
+    "434",
+    "350",
+    "474"
+  ],
+  "plan_ids": [
+    "670",
+    "662"
+  ],
+  "team_ids": [
+    "332",
+    "498",
+    "807",
+    "318",
+    "735",
+    "739",
+    "363",
+    "822"
+  ],
+  "classes": [
+    "Bike Power",
+    "Bike Standard",
+    "Functional Training",
+    "Get Started - Introhold",
+    "Lokale Events",
+    "Stram Op",
+    "Styrke & Funktionelt – Event",
+    "Zumba"
+  ],
+  "images": {
+    "hero": "https://www.puregym.dk/files/2025-05/Puregym_fitness_cardio_Slangerup.jpg",
+    "hero_2500": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-05/Puregym_fitness_cardio_Slangerup.jpg?itok=ql_4Uxxk",
+    "teaser": "https://www.puregym.dk/files/styles/center_teaser/public/2025-05/Puregym_fitness_cardio_Slangerup.jpg?itok=0JEN3NKv",
+    "gallery": [
+      "https://mit.puregym.dk/images/centers/804/pg-slangerup-idraetsvej-5-3-2-01-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/804/pg-slangerup-idraetsvej-5-3-2-02-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/804/pg-slangerup-idraetsvej-5-3-2-03-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/804/pg-slangerup-idraetsvej-5-3-2-04-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/804/pg-slangerup-idraetsvej-5-3-2-05-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/804/pg-slangerup-idraetsvej-5-3-2-06-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/804/pg-slangerup-idraetsvej-5-3-2-07-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/804/pg-slangerup-idraetsvej-5-3-2-08-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/804/pg-slangerup-idraetsvej-5-3-2-09-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/804/pg-slangerup-idraetsvej-5-3-2-10-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/804/pg-slangerup-idraetsvej-5-3-2-11-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/804/pg-slangerup-idraetsvej-5-3-2-12-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/804/pg-slangerup-idraetsvej-5-3-2-13-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/804/pg-slangerup-idraetsvej-5-3-2-14-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/804/pg-slangerup-idraetsvej-5-3-2-15-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/804/pg-slangerup-idraetsvej-5-3-2-16-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/804/pg-slangerup-idraetsvej-5-3-2-17-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/804/pg-slangerup-idraetsvej-5-3-2-18-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/804/pg-slangerup-idraetsvej-5-3-2-19-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/804/pg-slangerup-idraetsvej-5-3-2-20-1090x727.webp"
+    ]
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

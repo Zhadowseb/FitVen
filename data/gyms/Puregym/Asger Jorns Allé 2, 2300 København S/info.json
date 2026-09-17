@@ -1,0 +1,284 @@
+{
+  "chain": "PureGym",
+  "name": "Kbh S., Asger Jorns Allé",
+  "puregym_id": "283",
+  "address": {
+    "street": "Asger Jorns Allé 2",
+    "postal_code": "2300",
+    "city": "København S",
+    "country": "DK",
+    "full": "Asger Jorns Allé 2, 2300 København S"
+  },
+  "location": {
+    "latitude": 55.61962,
+    "longitude": 12.57477
+  },
+  "url": "https://www.puregym.dk/find-center/oerestad",
+  "membership_url": "https://www.puregym.dk/bliv-medlem/373/medlemskab",
+  "price_from": "Priser fra 284,25 DKK/md.",
+  "price_note": "*Normalpris fra 349 DKK/md.",
+  "today_notice": "Vi lukker i dag kl. 04:59",
+  "opening_hours": [
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 04:59",
+      "staffed": "09:00 - 20:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 04:59",
+      "staffed": "08:00 - 17:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 04:59",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 04:59",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Mandag",
+      "open": "05:00 - 04:59",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 04:59",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 04:59",
+      "staffed": "08:00 - 20:00"
+    }
+  ],
+  "opening_hours_schema": [
+    {
+      "day": "Monday",
+      "opens": "05:00",
+      "closes": "04:59"
+    },
+    {
+      "day": "Tuesday",
+      "opens": "05:00",
+      "closes": "04:59"
+    },
+    {
+      "day": "Wednesday",
+      "opens": "05:00",
+      "closes": "04:59"
+    },
+    {
+      "day": "Thursday",
+      "opens": "05:00",
+      "closes": "04:59"
+    },
+    {
+      "day": "Friday",
+      "opens": "05:00",
+      "closes": "04:59"
+    },
+    {
+      "day": "Saturday",
+      "opens": "05:00",
+      "closes": "04:59"
+    },
+    {
+      "day": "Sunday",
+      "opens": "05:00",
+      "closes": "04:59"
+    }
+  ],
+  "special_days": [
+    {
+      "date": "2027-01-01",
+      "opens": "08:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-02",
+      "opens": "05:00",
+      "closes": "04:59"
+    },
+    {
+      "date": "2027-04-03",
+      "opens": "05:00",
+      "closes": "04:59"
+    },
+    {
+      "date": "2027-04-05",
+      "opens": "05:00",
+      "closes": "04:59"
+    },
+    {
+      "date": "2027-04-06",
+      "opens": "05:00",
+      "closes": "04:59"
+    },
+    {
+      "date": "2027-05-14",
+      "opens": "05:00",
+      "closes": "04:59"
+    },
+    {
+      "date": "2027-05-24",
+      "opens": "05:00",
+      "closes": "04:59"
+    },
+    {
+      "date": "2027-05-25",
+      "opens": "05:00",
+      "closes": "04:59"
+    },
+    {
+      "date": "2027-06-05",
+      "opens": "05:00",
+      "closes": "04:59"
+    },
+    {
+      "date": "2026-12-24",
+      "opens": "05:00",
+      "closes": "04:59"
+    },
+    {
+      "date": "2026-12-25",
+      "opens": "05:00",
+      "closes": "04:59"
+    },
+    {
+      "date": "2026-12-26",
+      "opens": "05:00",
+      "closes": "04:59"
+    },
+    {
+      "date": "2026-12-31",
+      "opens": "05:00",
+      "closes": "18:00"
+    }
+  ],
+  "meta_description": "Velkommen hos PureGym i Ørestad. Glæd dig til at træne i et fitnesscenter, hvor der er plads til alle, og hvor du altid kan få hjælp til din træning.",
+  "description": "PureGym Asger Jorns Allé\nLige ved Vestamager St. finder du vores lille center. Der er plads til mangfoldighed og træningsniveau i alle genrer. Vi går altid op i, at du bliver lagt mærke til, når du møder os i receptionen eller når du er på vej hjem fra din træning. Vi vægter højt, at dette skal føles som dit andet hjem, så vi sørger dagligt for, at her er rent og pænt, og at vi har det træningsudstyr, der passer til en basic træning.\nVi glæder os til at se dig!\nNyhed: åbent 24/7\nNu kan du træne her i centret døgnet rundt, vi holder nemlig åbent 24/7. Alle faciliteter er tilgængelige hele døgnet - også på de tidspunkter, hvor der ikke er personale i centret. Hvis du har brug for at tale med personalet, kan du finde centrets bemandingstider herover.\nTræn når det passer dig!\nNyt udstyr er landet\nVores center har fået en stor opgradering med masser af nyt og forbedret træningsudstyr.\nHer er en oversigt over, hvad du kan opleve i centret:\nNyt og forbedret cardio-område\nNyt og forbedret styrketræningsområde\nNye frivægte\nBootyBuilder\nPerfect Squat\nDet siger personalet om PureGym Asger Jorns Allé - Ørestad\nEmma siger: Som gym staff synes jeg, det er skønt at arbejde i et center, hvor medlemmerne er så gode til at hjælpe både os, men også hinanden. Samtidig synes jeg, der er en fordel ved at arbejde i et mindre center, da man har bedre chance for at lære medlemmerne at kende, og det gør også, at de har nemmere ved at gå op og spørge om hjælp eller hvis de har nogle ideer til, hvordan vi kan forbedre vores center.\nPersonlig træning i PureGym Asger Jorns Allé - Ørestad\nAksel siger: I et forløb hos mig giver jeg dig alle værktøjer og nødvendig viden til at nå dine mål indenfor træning og sundhed. Med flere års erfaring og stor passion indenfor træning kan jeg med sikkerhed give dig velvære og en ny styrke i dagligdagen.\nVi tilbyder også en uforpligtende samtale med en personlig træner til 0,-:\nBOOK SAMTALE HER\nHoldtræning i PureGym Asger Jorns Allé - Ørestad\nVores center tilbyder desværre ikke hold. Men du skal ikke søge særligt langt væk for at finde et, der har. Kastrup (Ugandavej) og Rued Langgardsvej.\nHvornår træner folk her i centret?\nVi har god plads til vores medlemmer. I vores app kan du se, hvornår der er flest og færrest mennesker i centret.\nBLIV MEDLEM HER\nHvornår kan jeg møde personalet i centret?\nVores team af medarbejdere og personlige trænere er altid klar til at hjælpe dig med den gode medlemsoplevelse. Hvad end det er spørgsmål, en hyggelig og informativ rundvisning eller om det er med at opnå dine fitnessmål.\nDu kan finde vores bemandede tider i oversigten her på siden.\nKan jeg parkere ved PureGym Asger Jorns Allé - Ørestad?\nVi tilbyder desværre ikke parkering til din bil. Vi har god cykelparkering og en metro, der kører lige til centret ved Vestamager St.\nFølg os på Facebook\nSe vores lokaler her\n\n<div",
+  "notice": {
+    "title": "Åbent hus",
+    "text": "Vi er glade for at kunne invitere til åbent hus i alle 7 centre på Amager fra mandag d. 7. september t.o.m. søndag 20. september.\nDer er fri træning hele ugen – og rig mulighed for at komme ned og prøve vores centre af indenfor den bemandede åbningstid.\nVi glæder os til at se dig!\n.center-hero-373--6090 {\nbackground-image: url('https://www.puregym.dk/files/styles/hero_750x750/public/2025-11/DSC08687-HDR.jpg?itok=toWQc8VX');\n}\n@media (min-width: 700px){.center-hero-373--6090 {\nbackground-image: url('https://www.puregym.dk/files/styles/hero_800x800/public/2025-11/DSC08687-HDR.jpg?itok=q5YF8jad');\n}\n}@media (min-width: 1200px){.center-hero-373--6090 {\nbackground-image: url('https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-11/DSC08687-HDR.jpg?itok=7Ga95041');\n}\n}"
+  },
+  "facilities": [
+    {
+      "name": "App",
+      "description": "PureGym appen kan hentes til både iOS- og Android-telefoner. Appen er fyldt med fede features og lækkert design:\nBook og afmeld hold inkl. reminder, så du husker dine hold\nMere end 50 træningsprogrammer\nBodytracker-måling\nTræningsstatistik\nAdgang til challenges\nTeam up med din træningsmakker\nDownload appen og få mere ud af dit medlemskab.\nLæs mere",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-04/CTA%20App%20grafik.jpg?itok=489La2Vs"
+    },
+    {
+      "name": "Bodytracker+",
+      "description": "Bodytrackeren er en avanceret vægt, der giver en pålidelig analyse af din kropssammensætning. Med bodytracker+ får du dybere indblik i din træningsudvikling. Udover de gratis parametre kropsvægt, BMI, muskelmasse og fedtprocent får du med bodytracker+ også indsigt i fedtmasse, fedtfri masse, talje/hofte forhold, kropsvand samt hvilestofskifte. Parametre som er interessante, hvad enten du har personlige mål om at øge din vægt, højere muskelmasse, vægttab mv.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/facilities/bplusny-ny-ny_1.png?itok=3ubbpEkC"
+    },
+    {
+      "name": "Cardiotræning",
+      "description": "Kunne du godt tænke dig at forbedre din kondition eller få varmet kroppen op inden din styrketræning, så er Cardio et godt sted at gå hen.\nI dette område har vi et bredt udvalgt af kredsløbsmaskiner. Her vil du blandt andet kunne finde løbebånd, motionscykler samt ro, step -og trappemaskiner. Disse maskine er designet til at kunne forbedre dit kredsløb bedre kendt som ”kondition”. Samtlige maskiner kan indstilles og tilpasses, så de netop passer til den intensitet som ønsker på dagen.\nSå om du er til en let og kort opvarmning på motionscyklen, en tur op af Eiffeltårnet med din yndlingspodcast i ørene på trappemaskinen, eller en god løbetur i tørvejr på løbebåndet, så vil du kunne gøre dette i Cardio.\nEr du i tvivl om hvordan en maskine i Cardio virker, kan du altid spørge vores personale.\nØnsker du hjælp til hvordan du kan forbedre din kondition, så kan du også booke en uforpligtende samtale til 0 kr med en personlig træner her.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-09/CORE-slider-cta-core-medlemskab_0.jpg?itok=hEEf98nO"
+    },
+    {
+      "name": "Funktionelt træningsområde",
+      "description": "Er du til en træningsform, der har fokus på konditions- og styrketræning, så er vores funktionelle træningsområde et område for dig. Vores funktionelle område kan hjælpe dig med at blive hurtigere, stærkere men også mere udholdende og eksplosiv.\nOmrådet er udstyret med forskellige redskaber såsom; medicinbolde, kettlebells og sjippetove. Derudover finder du naturligvis også racks i alle vores funktionelle områder.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Funtionelt-traeningsomraade-1-1.jpg?itok=PDOLgNJB"
+    },
+    {
+      "name": "Glutebuilder",
+      "description": "Glutebuilderen er en multifunktionel træningsmaskine, som giver mulighed for at lave mange forskellige øvelser - perfekt til træning af ben, baller og lår. Du kan bruge maskinen som den er, med en vægtstang, vægtskiver og elastikker, som du kan låne i centeret. Kun fantasien sætter grænser.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Glute-skal-ikke-beskaeres.jpg?itok=iFSaL_IN"
+    },
+    {
+      "name": "Personlig træner",
+      "description": "Med en personlig træner får du hjælp og sparring til at nå dine mål - altid med udgangspunkt i dig og dine behov.\nVores personlige trænere sørger for trygge rammer, mens du er i centret.\nDe sikrer fortsat, at alt udstyr er sprittet af både før og efter brug, samt at I holder god afstand til de øvrige medlemmer, mens I træner.\nLæs mere om Personlig træning her!",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Book-samtale-med-en-personlig-traener-1-1.jpg?itok=a7i9C-9t"
+    },
+    {
+      "name": "Styrketræning",
+      "description": "Vi har masser af udstyr til din styrketræning, så du kan lave alle de styrkeøvelser du kunne tænke dig. Vi har maskiner til træning af ryg, arme, mave, lår, bagdel, skuldre, bryst osv. Du kan derved træne dine muskelgrupper på flere måder og skifte imellem maskiner og finde de maskiner og øvelser, du bedst kan lide og får mest ud af.\nNogle af maskinerne er multifunktionelle, så du kan træne flere muskelgrupper på samme maskine.\nStyrketræning er din vej til sundhed, en stærkere krop, funktionalitet i hverdagen og større muskelmasse.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Styrketraening-skal-ikke-beskaeres.jpg?itok=2qQsiE_f"
+    },
+    {
+      "name": "Udstrækningsområde",
+      "description": "Vi vil gerne opfylde dine træningsbehov, og en nedkøling efter træning, eller en opvarmning før træning skal der være plads til.\nDer hvor din træning starter eller slutter har vi et udstrækningsområde til dig med masser af udstyr.\nI udstrækningsområdet finder du ribber, måtter, pilatesbolde, små vægte, mavehjul, Bosu bolde, forskellige slags elastikker og foamrollere.\nHvis der er noget du mangler, kan du altid spørge vores receptionister om de har det liggende et andet sted i centeret.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Udstraekningsomraade-skal-ikke-beskaeres.jpg?itok=24s5m_W_"
+    },
+    {
+      "name": "Åbent 24/7",
+      "description": "Nu kan du træne i udvalgte centre døgnet rundt, vi holder nemlig åbent 24/7.\nAlle faciliteter er tilgængelige hele døgnet - også på de tidspunkter, hvor der ikke er personale i centret.\nHvis du har brug for at tale med personalet, kan du finde centrets bemandingstider herunder.\nVi glæder os til at se dig til træning - lige når det passer dig!",
+      "image": null
+    }
+  ],
+  "facility_names": [
+    "App",
+    "Bodytracker+",
+    "Cardiotræning",
+    "Funktionelt træningsområde",
+    "Glutebuilder",
+    "Personlig træner",
+    "Styrketræning",
+    "Udstrækningsområde",
+    "Åbent 24/7"
+  ],
+  "facility_ids": [
+    "355",
+    "24",
+    "27",
+    "434",
+    "12",
+    "474",
+    "333",
+    "665",
+    "350"
+  ],
+  "plan_ids": [
+    "651",
+    "635"
+  ],
+  "team_ids": [],
+  "classes": [],
+  "images": {
+    "hero": "https://www.puregym.dk/files/2025-11/DSC08687-HDR.jpg",
+    "hero_2500": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-11/DSC08687-HDR.jpg?itok=7Ga95041",
+    "teaser": "https://www.puregym.dk/files/styles/center_teaser/public/2025-11/DSC08687-HDR.jpg?itok=PJhMJqRO",
+    "gallery": [
+      "https://mit.puregym.dk/images/centers/872/dsc08600-hdr.webp",
+      "https://mit.puregym.dk/images/centers/872/dsc08620-hdr.webp",
+      "https://mit.puregym.dk/images/centers/872/dsc08635-hdr.webp",
+      "https://mit.puregym.dk/images/centers/872/dsc08639-hdr.webp",
+      "https://mit.puregym.dk/images/centers/872/dsc08667-hdr.webp",
+      "https://mit.puregym.dk/images/centers/872/dsc08680-hdr.webp",
+      "https://mit.puregym.dk/images/centers/872/dsc08687-hdr.webp",
+      "https://mit.puregym.dk/images/centers/872/dsc08694-hdr.webp",
+      "https://mit.puregym.dk/images/centers/872/dsc08709-hdr.webp",
+      "https://mit.puregym.dk/images/centers/872/dsc08723-hdr.webp",
+      "https://mit.puregym.dk/images/centers/872/dsc08738-hdr.webp",
+      "https://mit.puregym.dk/images/centers/872/dsc08748-hdr.webp",
+      "https://mit.puregym.dk/images/centers/872/dsc08768-hdr.webp",
+      "https://mit.puregym.dk/images/centers/872/dsc08773-hdr.webp",
+      "https://mit.puregym.dk/images/centers/872/dsc08780.webp",
+      "https://mit.puregym.dk/images/centers/872/dsc08788-hdr.webp",
+      "https://mit.puregym.dk/images/centers/872/dsc08801-hdr.webp",
+      "https://mit.puregym.dk/images/centers/872/dsc08806-hdr.webp",
+      "https://mit.puregym.dk/images/centers/872/dsc08820-hdr.webp",
+      "https://mit.puregym.dk/images/centers/872/dsc08823-hdr.webp",
+      "https://mit.puregym.dk/images/centers/872/dsc08840-hdr.webp",
+      "https://mit.puregym.dk/images/centers/872/dsc08861-hdr.webp",
+      "https://mit.puregym.dk/images/centers/872/dsc08867-hdr.webp",
+      "https://mit.puregym.dk/images/centers/872/dsc08883-hdr.webp",
+      "https://mit.puregym.dk/images/centers/872/dsc08888-hdr.webp",
+      "https://mit.puregym.dk/images/centers/872/dsc08913-hdr.webp",
+      "https://mit.puregym.dk/images/centers/872/dsc08918-hdr.webp",
+      "https://mit.puregym.dk/images/centers/872/dsc08937-hdr.webp",
+      "https://mit.puregym.dk/images/centers/872/dsc08942-hdr.webp",
+      "https://mit.puregym.dk/images/centers/872/dsc08950-hdr.webp",
+      "https://mit.puregym.dk/images/centers/872/dsc08957-hdr.webp",
+      "https://mit.puregym.dk/images/centers/872/dsc08973-hdr.webp"
+    ]
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

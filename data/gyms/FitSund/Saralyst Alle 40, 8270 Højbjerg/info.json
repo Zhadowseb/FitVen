@@ -1,0 +1,200 @@
+{
+  "chain": "Fit&Sund",
+  "name": "Fit&Sund Højbjerg",
+  "short_name": "Højbjerg",
+  "address": {
+    "street": "Saralyst Alle 40",
+    "postal_code": "8270",
+    "city": "Højbjerg",
+    "country": "DK",
+    "full": "Saralyst Alle 40, 8270 Højbjerg"
+  },
+  "location": {
+    "latitude": 56.11877043,
+    "longitude": 10.1909754
+  },
+  "geocode": {
+    "latitude": 56.11877043,
+    "longitude": 10.1909754,
+    "matched_address": "Saralyst Allé 40, 8270 Højbjerg",
+    "exact": true,
+    "source": "DAWA"
+  },
+  "url": "https://fitogsund.dk/c/huse/hoejbjerg",
+  "membership_url": "https://fitogsund.dk/p/bliv-medlem",
+  "class_schedule_url": "https://fitogsund.goactivebooking.com/class-web-categories/34/classes?facility=18",
+  "google_maps_url": "https://www.google.com/maps/dir/?api=1&destination=Saralyst-Alle-40+8270+Højbjerg",
+  "phone": "+45 86 14 90 89",
+  "email": "hojbjerg@fitogsund.dk",
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 22:00"
+    }
+  ],
+  "reception_hours": [
+    {
+      "day": "Mandag",
+      "open": "08:00 - 18:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "08:00 - 18:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "08:00 - 18:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "08:00 - 18:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "08:00 - 16:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "lukket"
+    },
+    {
+      "day": "Søndag",
+      "open": "lukket"
+    }
+  ],
+  "meta_description": "Træn hos Fit & Sund Højbjerg i vores moderne fitness og træningscenter. Fitness | Holdtræning | Personlig træning",
+  "description": "Fit&Sund Højbjerg er for dig, der ønsker adgang til et fitness- og sundhedshus i hjertet af Højbjerg - tæt på\nskov og strand.\nPassionerede personlige trænere og fysioterapeuter\nVi kan tilbyde effektiv træning i trygge rammer, hvor der altid er fokus på fællesskab, nærvær og højt humør. Vores team består af passionerede personlige trænere og fysioterapeuter med højt fagligt niveau. Derfor kan vi tilbyde dig kompetent behandling og rådgivning om din fysik og sundhed. Vi står altid klar til at hjælpe dig med at opnå præcis de resultater, du ønsker.\nExerciseLab\nHos Fit&Sund Højbjerg har du mulighed for at træne i vores ExerciseLab, der er husets område til funktionel træning, personlig træning og avanceret styrketræning. Lokalet fungerer som en træningslegeplads, men også en ramme, som giver effektive træningsmuligheder for mindre øvede medlemmer. Vi tilbyder småholdstræning og bootcamps i ExerciseLab, så du kan lære de mere komplicerede øvelser under en af vores erfarne træneres kyndige vejledning.\nVi har moderne udstyr i topkvalitet og tilbyder holdtræning i sikre rammer. Så kig endelig forbi til en gratis kop kaffe og hils på Højbjergs nye fitness-og sundhedshus! For os er træning og sundhed vejen til øget livskvalitet og livsglæde - vi håber, at du vil være med!",
+  "facilities": [
+    "Fitness",
+    "Personlig træning",
+    "Træningsudstyr af høj kvalitet",
+    "Exerciselab",
+    "Hyggelig atmosfære",
+    "Højt fagligt niveau"
+  ],
+  "service_categories": [
+    "Personlig træning",
+    "Event",
+    "Hold",
+    "Yoga/Reformer",
+    "Fællesskab",
+    "Seniorer",
+    "Muskelopbyggende Træning",
+    "Core Træning",
+    "Body & Mind",
+    "Funktionel Træning",
+    "Konditionsfremmende Træning",
+    "Senior Træning"
+  ],
+  "services": [
+    {
+      "name": "2026 OPSTARTSPAKKER",
+      "room": null,
+      "categories": [
+        "event",
+        "personlig-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/2026-opstartspakker-23"
+    },
+    {
+      "name": "Cirkelhold",
+      "room": "Maskiner",
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/cirkelhold"
+    },
+    {
+      "name": "Core",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/core"
+    },
+    {
+      "name": "Hatha Yoga",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/hatha-yoga"
+    },
+    {
+      "name": "MOTION for livet",
+      "room": "5 ugers gratis træningsforløb",
+      "categories": [
+        "faellesskab",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/motion-for-livet"
+    },
+    {
+      "name": "RawFit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-funktionel-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/rawfit"
+    },
+    {
+      "name": "Senior Rawfit",
+      "room": null,
+      "categories": [
+        "hold",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/senior-rawfit"
+    },
+    {
+      "name": "Senior Træning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/seniortraening"
+    }
+  ],
+  "manager": {
+    "name": "Sune Poulsen",
+    "title": "Husleder",
+    "image": "https://fitogsund.dk/f/thumb?src=/f/blog/article/fe2afd32987601804c76e60ed01b99bcddff84e3_thumb.jpg&w=300&h=380"
+  },
+  "images": {
+    "hero": null,
+    "fallback": "../fitogsund-logo.png"
+  },
+  "hero_image_file": "hero.png",
+  "hero_is_placeholder": true,
+  "scraped_at": "2026-09-17"
+}

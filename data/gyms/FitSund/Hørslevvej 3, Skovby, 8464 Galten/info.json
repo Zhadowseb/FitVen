@@ -1,0 +1,341 @@
+{
+  "chain": "Fit&Sund",
+  "name": "Fit&Sund Galten",
+  "short_name": "Galten",
+  "address": {
+    "street": "Hørslevvej 3, Skovby",
+    "postal_code": "8464",
+    "city": "Galten",
+    "country": "DK",
+    "full": "Hørslevvej 3, Skovby, 8464 Galten"
+  },
+  "location": {
+    "latitude": 56.15825434,
+    "longitude": 9.94520526
+  },
+  "geocode": {
+    "latitude": 56.15825434,
+    "longitude": 9.94520526,
+    "matched_address": "Hørslevvej 3, Skovby, 8464 Galten",
+    "exact": true,
+    "source": "DAWA"
+  },
+  "url": "https://fitogsund.dk/c/huse/galten",
+  "membership_url": "https://fitogsund.dk/p/bliv-medlem",
+  "class_schedule_url": "https://fitogsund.goactivebooking.com/class-web-categories/34/classes?facility=12",
+  "google_maps_url": "https://www.google.com/maps/dir/?api=1&destination=Hørslevvej-3,-Skovby+8464+Galten",
+  "phone": "+45 73 70 89 93",
+  "email": "galten@fitogsund.dk",
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 23:00"
+    }
+  ],
+  "reception_hours": [
+    {
+      "day": "Mandag",
+      "open": "08:00 - 16:00 & Telefon: 08:00 - 15:45"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "08:00 - 15:30 & Telefon: 14:00 - 15:45"
+    },
+    {
+      "day": "Onsdag",
+      "open": "08:00 - 14:30 & Telefon: 14:00 - 14:30"
+    },
+    {
+      "day": "Torsdag",
+      "open": "08:00 - 16:00 & Telefon: 14:00 - 15:45"
+    },
+    {
+      "day": "Fredag",
+      "open": "08:00 - 15:00 & Telefon: 08:00 - 14:45"
+    },
+    {
+      "day": "Lørdag",
+      "open": "ingen bemanding"
+    },
+    {
+      "day": "Søndag",
+      "open": "ingen bemanding"
+    }
+  ],
+  "meta_description": "Træn hos Fit & Sund Galten i vores moderne fitness og træningscenter. Fitness | Holdtræning | Personlig træning",
+  "description": "Velkommen til Fit&Sund Galten. Vi er meget mere end bare et fitnesscenter. Vi er dit lokale trænings- og\nsundhedshus hele livet igennem.\nDin sundhed er vores vigtigste opgave\nHer er din sundhed vores vigtigste opgave, og faglig viden er vores vigtigste redskab til at hjælpe dig i mål.\nNærvær er omdrejningspunktet for de gode oplevelser med træning og sundhed, vi ønsker, du skal have, når du besøger Fit&Sund Galten.\nVores personale med receptionister og eksperter fra fitness- og sundhedssektoren står klar til at hjælpe dig, så du i en travl hverdag kan finde et fristed til at pleje din sundhed og dit velvære.\nTræning med højt til loftet og udstyr i høj kvalitet!\nI marts 2020 åbnede vi vores nyeste træningslokaler på Hørslevvej nr. 10.\nDerfor finder du os nu på både Hørslevvej nr. 3 og nr. 10 lige overfor hinanden!\nI nr. 3 har vi hele fysioterapien, en holdsal og maskiner til både cirkeltræning og selvtræning. I nr. 10 kan du styrketræne i kvalitetsudstyr fra Cybex, og i vores funktionelle område, er der plads og muligheder til spændende og varierende træning med blandt andet rack, vægte, slam balls og TRX. I begge huse er der selvfølgelig masser af kredsløbsudstyr.\nBegge afdelinger tilbyder hyggelige caféområder, hvor du kan nyde kvalitetskaffe og te sammen med dit hold eller din træningsmakker efter træning.",
+  "facilities": [
+    "Fitness",
+    "Fysioterapeuter",
+    "Diætister",
+    "Personlig træning",
+    "Træning i to huse",
+    "Spændende hold",
+    "Hyggelige velkomstområder",
+    "Kvalitetskaffe"
+  ],
+  "service_categories": [
+    "Personlig træning",
+    "Event",
+    "Hold",
+    "Camps",
+    "Yoga/Reformer",
+    "Juniorer",
+    "Fællesskab",
+    "Seniorer",
+    "Diætist",
+    "Body & Mind",
+    "Core Træning",
+    "Dance",
+    "Konditionsfremmende Træning",
+    "Muskelopbyggende Træning",
+    "Funktionel Træning",
+    "Senior Træning"
+  ],
+  "services": [
+    {
+      "name": "2026 OPSTARTSPAKKER",
+      "room": null,
+      "categories": [
+        "event",
+        "personlig-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/2026-opstartspakker-9"
+    },
+    {
+      "name": "Babytummel",
+      "room": null,
+      "categories": [
+        "camps",
+        "hold",
+        "hold-body-mind"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/babytummel"
+    },
+    {
+      "name": "Body Fit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/body-fit"
+    },
+    {
+      "name": "Core",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/core"
+    },
+    {
+      "name": "DanceFit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/dance"
+    },
+    {
+      "name": "Det sunde åndedræt",
+      "room": "Galten",
+      "categories": [
+        "hold",
+        "hold-body-mind"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/det-sunde-aandedraet"
+    },
+    {
+      "name": "FitCamp Galten",
+      "room": "For alle",
+      "categories": [
+        "camps"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/fitcamp-galten"
+    },
+    {
+      "name": "Hatha Yoga",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/hatha-yoga"
+    },
+    {
+      "name": "HIIT",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/hiit"
+    },
+    {
+      "name": "Junior træning",
+      "room": "Galten",
+      "categories": [
+        "juniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/junior-traening"
+    },
+    {
+      "name": "Mama 'fortsætter' Camp",
+      "room": null,
+      "categories": [
+        "camps"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/mama-fortsaetter-camp"
+    },
+    {
+      "name": "MamaCamp",
+      "room": "Mor-tion = Mor-tid!",
+      "categories": [
+        "camps"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/mamacamp-2"
+    },
+    {
+      "name": "Massage",
+      "room": null,
+      "categories": [
+        "event"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/massage"
+    },
+    {
+      "name": "MOTION for livet",
+      "room": "5 ugers gratis træningsforløb",
+      "categories": [
+        "faellesskab",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/motion-for-livet"
+    },
+    {
+      "name": "RawFit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-funktionel-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/rawfit"
+    },
+    {
+      "name": "Senior Cirkel Hold",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/senior-cirkel-hold"
+    },
+    {
+      "name": "Senior Træning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/seniortraening"
+    },
+    {
+      "name": "Senior Yogaflow",
+      "room": null,
+      "categories": [
+        "hold",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/senior-yogaflow"
+    },
+    {
+      "name": "Seniorklub",
+      "room": null,
+      "categories": [
+        "faellesskab",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/seniorklub"
+    },
+    {
+      "name": "Stram Op",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/stramop"
+    },
+    {
+      "name": "Sundhedstjek",
+      "room": "Galten",
+      "categories": [
+        "camps",
+        "diaetist",
+        "event",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/sundhedstjek"
+    },
+    {
+      "name": "Vinyasa Yoga",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/vinyasa-yoga"
+    },
+    {
+      "name": "YIN YOGA",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/yin-yoga"
+    }
+  ],
+  "manager": {
+    "name": "Mikkel Hallager Frostholm",
+    "title": "Husleder",
+    "image": "https://fitogsund.dk/f/thumb?src=/f/blog/article/26a0df9e0abfa8f696934bd7fc603581481a911d_thumb.png&w=300&h=380"
+  },
+  "images": {
+    "hero": null,
+    "fallback": "../fitogsund-logo.png"
+  },
+  "hero_image_file": "hero.png",
+  "hero_is_placeholder": true,
+  "scraped_at": "2026-09-17"
+}

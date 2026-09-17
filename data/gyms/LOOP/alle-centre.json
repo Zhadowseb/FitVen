@@ -1,0 +1,2387 @@
+[
+  {
+    "name": "LOOP Dragør",
+    "address": "A.P. Møllers Allé 13, 2791 Dragør",
+    "folder": "A.P. Møllers Allé 13, 2791 Dragør",
+    "url": "https://loopfitness.dk/centre/loop-fitness-dragoer/",
+    "latitude": 55.602257,
+    "longitude": 12.659576,
+    "loop_id": 107,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "A.P. Møllers Allé 13, 2791 Dragør/info.json",
+    "hero_image": "A.P. Møllers Allé 13, 2791 Dragør/hero.jpg"
+  },
+  {
+    "name": "LOOP Hobro",
+    "address": "Adelgade 40E, 9500 Hobro",
+    "folder": "Adelgade 40E, 9500 Hobro",
+    "url": "https://loopfitness.dk/centre/loop-fitness-hobro/",
+    "latitude": 56.637544,
+    "longitude": 9.793332,
+    "loop_id": 171,
+    "center_type": "lite_kl",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Adelgade 40E, 9500 Hobro/info.json",
+    "hero_image": "Adelgade 40E, 9500 Hobro/hero.jpg"
+  },
+  {
+    "name": "LOOP Kolding",
+    "address": "Albuen 5, 6000 Kolding",
+    "folder": "Albuen 5, 6000 Kolding",
+    "url": "https://loopfitness.dk/centre/loop-fitness-kolding/",
+    "latitude": 55.516283,
+    "longitude": 9.457317,
+    "loop_id": 167,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Albuen 5, 6000 Kolding/info.json",
+    "hero_image": "Albuen 5, 6000 Kolding/hero.jpg"
+  },
+  {
+    "name": "LOOP Korsør",
+    "address": "Algade 29, 4220 Korsør",
+    "folder": "Algade 29, 4220 Korsør",
+    "url": "https://loopfitness.dk/centre/loop-fitness-korsoer/",
+    "latitude": 55.3283483,
+    "longitude": 11.1366009,
+    "loop_id": 222,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Algade 29, 4220 Korsør/info.json",
+    "hero_image": "Algade 29, 4220 Korsør/hero.jpg"
+  },
+  {
+    "name": "LOOP Kastrup",
+    "address": "Amager Landevej 233, 2770 Kastrup",
+    "folder": "Amager Landevej 233, 2770 Kastrup",
+    "url": "https://loopfitness.dk/centre/loop-fitness-kastrup/",
+    "latitude": 55.61929,
+    "longitude": 12.629558,
+    "loop_id": 253,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Amager Landevej 233, 2770 Kastrup/info.json",
+    "hero_image": "Amager Landevej 233, 2770 Kastrup/hero.jpg"
+  },
+  {
+    "name": "LOOP Hvidovre",
+    "address": "Arnold Nielsens Boulevard 144, 2650 Hvidovre",
+    "folder": "Arnold Nielsens Boulevard 144, 2650 Hvidovre",
+    "url": "https://loopfitness.dk/centre/loop-fitness-hvidovre/",
+    "latitude": 55.6359108,
+    "longitude": 12.4672252,
+    "loop_id": 224,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Arnold Nielsens Boulevard 144, 2650 Hvidovre/info.json",
+    "hero_image": "Arnold Nielsens Boulevard 144, 2650 Hvidovre/hero.jpg"
+  },
+  {
+    "name": "LOOP Ballerup",
+    "address": "Ballerup Centret  Banetoften 30, 2750 Ballerup",
+    "folder": "Ballerup Centret Banetoften 30, 2750 Ballerup",
+    "url": "https://loopfitness.dk/centre/loop-fitness-ballerup/",
+    "latitude": 55.729501,
+    "longitude": 12.3554834,
+    "loop_id": 232,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Ballerup Centret Banetoften 30, 2750 Ballerup/info.json",
+    "hero_image": "Ballerup Centret Banetoften 30, 2750 Ballerup/hero.jpg"
+  },
+  {
+    "name": "LOOP Helsingør",
+    "address": "Blichersvej 57, 3000 Helsingør",
+    "folder": "Blichersvej 57, 3000 Helsingør",
+    "url": "https://loopfitness.dk/centre/loop-fitness-helsingoer/",
+    "latitude": 56.0380621,
+    "longitude": 12.5768253,
+    "loop_id": 237,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Blichersvej 57, 3000 Helsingør/info.json",
+    "hero_image": "Blichersvej 57, 3000 Helsingør/hero.jpg"
+  },
+  {
+    "name": "LOOP Aarhus V",
+    "address": "Bredskiftevej 20A, 8210 Århus V",
+    "folder": "Bredskiftevej 20A, 8210 Århus V",
+    "url": "https://loopfitness.dk/centre/loop-fitness-aarhus-v/",
+    "latitude": 56.177632,
+    "longitude": 10.138932,
+    "loop_id": 119,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Bredskiftevej 20A, 8210 Århus V/info.json",
+    "hero_image": "Bredskiftevej 20A, 8210 Århus V/hero.jpg"
+  },
+  {
+    "name": "LOOP Bjerringbro",
+    "address": "Brogade 49, 8850 Bjerringbro",
+    "folder": "Brogade 49, 8850 Bjerringbro",
+    "url": "https://loopfitness.dk/centre/loop-fitness-bjerringbro/",
+    "latitude": 56.369867,
+    "longitude": 9.660947,
+    "loop_id": 186,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Brogade 49, 8850 Bjerringbro/info.json",
+    "hero_image": "Brogade 49, 8850 Bjerringbro/hero.jpg"
+  },
+  {
+    "name": "LOOP Kjellerup",
+    "address": "Bryggerstræde 9, 1. sal, 8620 Kjellerup",
+    "folder": "Bryggerstræde 9, 1. sal, 8620 Kjellerup",
+    "url": "https://loopfitness.dk/centre/loop-fitness-kjellerup/",
+    "latitude": 56.288525,
+    "longitude": 9.43162,
+    "loop_id": 158,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Bryggerstræde 9, 1. sal, 8620 Kjellerup/info.json",
+    "hero_image": "Bryggerstræde 9, 1. sal, 8620 Kjellerup/hero.jpg"
+  },
+  {
+    "name": "LOOP Skagen",
+    "address": "Buttervej 33 B, 9990 Skagen",
+    "folder": "Buttervej 33 B, 9990 Skagen",
+    "url": "https://loopfitness.dk/centre/loop-fitness-skagen/",
+    "latitude": 57.727321,
+    "longitude": 10.568311,
+    "loop_id": 114,
+    "center_type": "loop",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Buttervej 33 B, 9990 Skagen/info.json",
+    "hero_image": "Buttervej 33 B, 9990 Skagen/hero.jpg"
+  },
+  {
+    "name": "LOOP Skovlunde",
+    "address": "Bybjergvej 6D, 2740 Skovlunde",
+    "folder": "Bybjergvej 6D, 2740 Skovlunde",
+    "url": "https://loopfitness.dk/centre/loop-fitness-skovlunde/",
+    "latitude": 55.718996,
+    "longitude": 12.401722,
+    "loop_id": 156,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Bybjergvej 6D, 2740 Skovlunde/info.json",
+    "hero_image": "Bybjergvej 6D, 2740 Skovlunde/hero.jpg"
+  },
+  {
+    "name": "LOOP Munkebo",
+    "address": "Bycentret 101A, 5330 Munkebo",
+    "folder": "Bycentret 101A, 5330 Munkebo",
+    "url": "https://loopfitness.dk/centre/loop-fitness-munkebo/",
+    "latitude": 55.45974,
+    "longitude": 10.558631,
+    "loop_id": 173,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Bycentret 101A, 5330 Munkebo/info.json",
+    "hero_image": "Bycentret 101A, 5330 Munkebo/hero.jpg"
+  },
+  {
+    "name": "LOOP Ringe",
+    "address": "Bygmestervej 23, 5750 Ringe",
+    "folder": "Bygmestervej 23, 5750 Ringe",
+    "url": "https://loopfitness.dk/centre/loop-fitness-ringe/",
+    "latitude": 55.241137,
+    "longitude": 10.487255,
+    "loop_id": 193,
+    "center_type": "lite_kl",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Bygmestervej 23, 5750 Ringe/info.json",
+    "hero_image": "Bygmestervej 23, 5750 Ringe/hero.jpg"
+  },
+  {
+    "name": "LOOP Roskilde",
+    "address": "Byleddet 1, 4000 Roskilde",
+    "folder": "Byleddet 1, 4000 Roskilde",
+    "url": "https://loopfitness.dk/centre/loop-fitness-roskilde/",
+    "latitude": 55.643638,
+    "longitude": 12.109879,
+    "loop_id": 128,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Byleddet 1, 4000 Roskilde/info.json",
+    "hero_image": "Byleddet 1, 4000 Roskilde/hero.jpg"
+  },
+  {
+    "name": "LOOP Tranbjerg J",
+    "address": "Børupvej 3, 8310 Tranbjerg J",
+    "folder": "Børupvej 3, 8310 Tranbjerg J",
+    "url": "https://loopfitness.dk/centre/loop-fitness-tranbjerg-j/",
+    "latitude": 56.094998,
+    "longitude": 10.129001,
+    "loop_id": 160,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Børupvej 3, 8310 Tranbjerg J/info.json",
+    "hero_image": "Børupvej 3, 8310 Tranbjerg J/hero.jpg"
+  },
+  {
+    "name": "LOOP Brande",
+    "address": "Chr Bergs Vej 5, 7330 Brande",
+    "folder": "Chr Bergs Vej 5, 7330 Brande",
+    "url": "https://loopfitness.dk/centre/loop-fitness-brande/",
+    "latitude": 55.938602,
+    "longitude": 9.136038,
+    "loop_id": 184,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Chr Bergs Vej 5, 7330 Brande/info.json",
+    "hero_image": "Chr Bergs Vej 5, 7330 Brande/hero.jpg"
+  },
+  {
+    "name": "LOOP Fredensborg",
+    "address": "Christopher Boecksvej 17, 3480 Fredensborg",
+    "folder": "Christopher Boecksvej 17, 3480 Fredensborg",
+    "url": "https://loopfitness.dk/centre/loop-fitness-fredensborg/",
+    "latitude": 55.978801,
+    "longitude": 12.399691,
+    "loop_id": 188,
+    "center_type": "lite_kl",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Christopher Boecksvej 17, 3480 Fredensborg/info.json",
+    "hero_image": "Christopher Boecksvej 17, 3480 Fredensborg/hero.jpg"
+  },
+  {
+    "name": "LOOP Dalum",
+    "address": "Dalumvej 43, 5250 Odense SV",
+    "folder": "Dalumvej 43, 5250 Odense SV",
+    "url": "https://loopfitness.dk/centre/loop-fitness-dalum/",
+    "latitude": 55.370536,
+    "longitude": 10.370804,
+    "loop_id": 182,
+    "center_type": "loop",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Dalumvej 43, 5250 Odense SV/info.json",
+    "hero_image": "Dalumvej 43, 5250 Odense SV/hero.jpg"
+  },
+  {
+    "name": "LOOP Stenløse",
+    "address": "Damgårdsvej 15, 3660 Stenløse",
+    "folder": "Damgårdsvej 15, 3660 Stenløse",
+    "url": "https://loopfitness.dk/centre/loop-fitness-stenloese/ ",
+    "latitude": 55.769703,
+    "longitude": 12.194211,
+    "loop_id": 254,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Damgårdsvej 15, 3660 Stenløse/info.json",
+    "hero_image": "Damgårdsvej 15, 3660 Stenløse/hero.jpg"
+  },
+  {
+    "name": "LOOP Jyderup",
+    "address": "Drivsåtsvej 1, 4450 Jyderup",
+    "folder": "Drivsåtsvej 1, 4450 Jyderup",
+    "url": "https://loopfitness.dk/centre/loop-fitness-jyderup/",
+    "latitude": 55.659419,
+    "longitude": 11.401596,
+    "loop_id": 150,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Drivsåtsvej 1, 4450 Jyderup/info.json",
+    "hero_image": "Drivsåtsvej 1, 4450 Jyderup/hero.jpg"
+  },
+  {
+    "name": "LOOP Nyborg",
+    "address": "Dronningensvej 5, 5800 Nyborg",
+    "folder": "Dronningensvej 5, 5800 Nyborg",
+    "url": "https://loopfitness.dk/centre/loop-fitness-nyborg/",
+    "latitude": 55.31025,
+    "longitude": 10.78796,
+    "loop_id": 207,
+    "center_type": "lite_kl",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Dronningensvej 5, 5800 Nyborg/info.json",
+    "hero_image": "Dronningensvej 5, 5800 Nyborg/hero.jpg"
+  },
+  {
+    "name": "LOOP Støvring",
+    "address": "Elme Allé 1 A, 9530 Støvring",
+    "folder": "Elme Allé 1 A, 9530 Støvring",
+    "url": "https://loopfitness.dk/centre/loop-fitness-stoevring/",
+    "latitude": 56.891933,
+    "longitude": 9.840284,
+    "loop_id": 161,
+    "center_type": "lite_kl",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Elme Allé 1 A, 9530 Støvring/info.json",
+    "hero_image": "Elme Allé 1 A, 9530 Støvring/hero.jpg"
+  },
+  {
+    "name": "LOOP Svenstrup J",
+    "address": "Fabriksparken 1, 9230 Svenstrup J",
+    "folder": "Fabriksparken 1, 9230 Svenstrup J",
+    "url": "https://loopfitness.dk/centre/loop-fitness-svenstrup-j/",
+    "latitude": 56.978498,
+    "longitude": 9.852878,
+    "loop_id": 181,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Fabriksparken 1, 9230 Svenstrup J/info.json",
+    "hero_image": "Fabriksparken 1, 9230 Svenstrup J/hero.jpg"
+  },
+  {
+    "name": "LOOP Viborg",
+    "address": "Falkevej 19, 8800 Viborg",
+    "folder": "Falkevej 19, 8800 Viborg",
+    "url": "https://loopfitness.dk/centre/loop-fitness-viborg/",
+    "latitude": 56.446151,
+    "longitude": 9.389234,
+    "loop_id": 1,
+    "center_type": "loop",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Falkevej 19, 8800 Viborg/info.json",
+    "hero_image": "Falkevej 19, 8800 Viborg/hero.jpg"
+  },
+  {
+    "name": "LOOP Farum",
+    "address": "Frederiksborgvej 17, 3520 Farum",
+    "folder": "Frederiksborgvej 17, 3520 Farum",
+    "url": "https://loopfitness.dk/centre/loop-fitness-farum/",
+    "latitude": 55.812144,
+    "longitude": 12.376816,
+    "loop_id": 197,
+    "center_type": "loop",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Frederiksborgvej 17, 3520 Farum/info.json",
+    "hero_image": "Frederiksborgvej 17, 3520 Farum/hero.jpg"
+  },
+  {
+    "name": "LOOP Brønshøj",
+    "address": "Frederikssundsvej 266, 2700 Brønshøj",
+    "folder": "Frederikssundsvej 266, 2700 Brønshøj",
+    "url": "https://loopfitness.dk/centre/loop-fitness-broenshoej/",
+    "latitude": 55.709932,
+    "longitude": 12.480973,
+    "loop_id": 187,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Frederikssundsvej 266, 2700 Brønshøj/info.json",
+    "hero_image": "Frederikssundsvej 266, 2700 Brønshøj/hero.jpg"
+  },
+  {
+    "name": "LOOP Randers SV",
+    "address": "Gamle Stationsvej 3, 8940 Randers SV",
+    "folder": "Gamle Stationsvej 3, 8940 Randers SV",
+    "url": "https://loopfitness.dk/centre/loop-fitness-randers-sv/",
+    "latitude": 56.454382,
+    "longitude": 10.040494,
+    "loop_id": 169,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Gamle Stationsvej 3, 8940 Randers SV/info.json",
+    "hero_image": "Gamle Stationsvej 3, 8940 Randers SV/hero.jpg"
+  },
+  {
+    "name": "LOOP Hadsten",
+    "address": "Gammel Sellingvej 1, 8370 Hadsten",
+    "folder": "Gammel Sellingvej 1, 8370 Hadsten",
+    "url": "https://loopfitness.dk/centre/loop-fitness-hadsten/",
+    "latitude": 56.3216964,
+    "longitude": 10.0409769,
+    "loop_id": 231,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Gammel Sellingvej 1, 8370 Hadsten/info.json",
+    "hero_image": "Gammel Sellingvej 1, 8370 Hadsten/hero.jpg"
+  },
+  {
+    "name": "LOOP Virum",
+    "address": "Geels Plads 2, st, 2830 Virum",
+    "folder": "Geels Plads 2, st, 2830 Virum",
+    "url": "https://loopfitness.dk/centre/loop-fitness-virum/",
+    "latitude": 55.79515,
+    "longitude": 12.4743739,
+    "loop_id": 247,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Geels Plads 2, st, 2830 Virum/info.json",
+    "hero_image": "Geels Plads 2, st, 2830 Virum/hero.jpg"
+  },
+  {
+    "name": "LOOP Gilleleje",
+    "address": "Gilleleje hovedgave 24, 3250 Gilleleje",
+    "folder": "Gilleleje hovedgave 24, 3250 Gilleleje",
+    "url": "https://loopfitness.dk/centre/loop-fitness-gilleleje/",
+    "latitude": 56.1244893,
+    "longitude": 12.3032179,
+    "loop_id": 221,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Gilleleje hovedgave 24, 3250 Gilleleje/info.json",
+    "hero_image": "Gilleleje hovedgave 24, 3250 Gilleleje/hero.jpg"
+  },
+  {
+    "name": "LOOP Skanderborg",
+    "address": "Godthåbsvej 29, 8660 Skanderborg",
+    "folder": "Godthåbsvej 29, 8660 Skanderborg",
+    "url": "https://loopfitness.dk/centre/loop-fitness-skanderborg/",
+    "latitude": 56.046247,
+    "longitude": 9.91926,
+    "loop_id": 106,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Godthåbsvej 29, 8660 Skanderborg/info.json",
+    "hero_image": "Godthåbsvej 29, 8660 Skanderborg/hero.jpg"
+  },
+  {
+    "name": "LOOP Sønderborg",
+    "address": "Grundtvigs Allé 198, 6400 Sønderborg",
+    "folder": "Grundtvigs Allé 198, 6400 Sønderborg",
+    "url": "https://loopfitness.dk/centre/loop-fitness-soenderborg/",
+    "latitude": 54.922808,
+    "longitude": 9.808771,
+    "loop_id": 138,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Grundtvigs Allé 198, 6400 Sønderborg/info.json",
+    "hero_image": "Grundtvigs Allé 198, 6400 Sønderborg/hero.jpg"
+  },
+  {
+    "name": "LOOP Haslev",
+    "address": "Grønlandsgade 1-3, 4690 Haslev",
+    "folder": "Grønlandsgade 1-3, 4690 Haslev",
+    "url": "https://loopfitness.dk/centre/loop-fitness-haslev/",
+    "latitude": 55.329584,
+    "longitude": 11.938491,
+    "loop_id": 110,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Grønlandsgade 1-3, 4690 Haslev/info.json",
+    "hero_image": "Grønlandsgade 1-3, 4690 Haslev/hero.jpg"
+  },
+  {
+    "name": "LOOP Frederikshavn",
+    "address": "Grønlandsvej 12, 9900 Frederikshavn",
+    "folder": "Grønlandsvej 12, 9900 Frederikshavn",
+    "url": "https://loopfitness.dk/centre/loop-fitness-frederikshavn/",
+    "latitude": 57.4452941,
+    "longitude": 10.5035682,
+    "loop_id": 113,
+    "center_type": "loop",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Grønlandsvej 12, 9900 Frederikshavn/info.json",
+    "hero_image": "Grønlandsvej 12, 9900 Frederikshavn/hero.jpg"
+  },
+  {
+    "name": "LOOP Nykøbing Mors",
+    "address": "Grønnegade 29, 7900 Nykøbing M",
+    "folder": "Grønnegade 29, 7900 Nykøbing M",
+    "url": "https://loopfitness.dk/centre/loop-fitness-nykoebing-mors/",
+    "latitude": 56.794947,
+    "longitude": 8.855929,
+    "loop_id": 132,
+    "center_type": "loop",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Grønnegade 29, 7900 Nykøbing M/info.json",
+    "hero_image": "Grønnegade 29, 7900 Nykøbing M/hero.jpg"
+  },
+  {
+    "name": "LOOP Aalborg SØ",
+    "address": "Gugvej 217, 9210 Aalborg SØ",
+    "folder": "Gugvej 217, 9210 Aalborg SØ",
+    "url": "https://loopfitness.dk/centre/loop-fitness-aalborg-soe/",
+    "latitude": 57.008309,
+    "longitude": 9.926696,
+    "loop_id": 122,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Gugvej 217, 9210 Aalborg SØ/info.json",
+    "hero_image": "Gugvej 217, 9210 Aalborg SØ/hero.jpg"
+  },
+  {
+    "name": "LOOP Frederiksværk",
+    "address": "Havtornvej 6, 3300 Frederiksværk",
+    "folder": "Havtornvej 6, 3300 Frederiksværk",
+    "url": "https://loopfitness.dk/centre/loop-fitness-frederiksvaerk/",
+    "latitude": 55.96808,
+    "longitude": 12.0313,
+    "loop_id": 202,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Havtornvej 6, 3300 Frederiksværk/info.json",
+    "hero_image": "Havtornvej 6, 3300 Frederiksværk/hero.jpg"
+  },
+  {
+    "name": "LOOP Herlev",
+    "address": "Herlev Hovedgade 201B 1. sal, 2730 Herlev",
+    "folder": "Herlev Hovedgade 201B 1. sal, 2730 Herlev",
+    "url": "https://loopfitness.dk/centre/loop-fitness-herlev/",
+    "latitude": 55.725089,
+    "longitude": 12.421926,
+    "loop_id": 172,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Herlev Hovedgade 201B 1. sal, 2730 Herlev/info.json",
+    "hero_image": "Herlev Hovedgade 201B 1. sal, 2730 Herlev/hero.jpg"
+  },
+  {
+    "name": "LOOP Glostrup",
+    "address": "Hermods Alle 6, 2600 Glostrup",
+    "folder": "Hermods Alle 6, 2600 Glostrup",
+    "url": "https://loopfitness.dk/centre/loop-fitness-glostrup/",
+    "latitude": 55.66385,
+    "longitude": 12.37797,
+    "loop_id": 203,
+    "center_type": "loop",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Hermods Alle 6, 2600 Glostrup/info.json",
+    "hero_image": "Hermods Alle 6, 2600 Glostrup/hero.jpg"
+  },
+  {
+    "name": "LOOP Herning",
+    "address": "Herning Centret, Merkurvej 163, 7400 Herning",
+    "folder": "Herning Centret, Merkurvej 163, 7400 Herning",
+    "url": "https://loopfitness.dk/centre/loop-fitness-herning/",
+    "latitude": 56.136165,
+    "longitude": 8.996923,
+    "loop_id": 115,
+    "center_type": "loop",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Herning Centret, Merkurvej 163, 7400 Herning/info.json",
+    "hero_image": "Herning Centret, Merkurvej 163, 7400 Herning/hero.jpg"
+  },
+  {
+    "name": "LOOP Faaborg",
+    "address": "Herregårdscentret 15A, 5600 Faaborg",
+    "folder": "Herregårdscentret 15A, 5600 Faaborg",
+    "url": "https://loopfitness.dk/centre/loop-fitness-faaborg/",
+    "latitude": 55.100904,
+    "longitude": 10.241178,
+    "loop_id": 174,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Herregårdscentret 15A, 5600 Faaborg/info.json",
+    "hero_image": "Herregårdscentret 15A, 5600 Faaborg/hero.jpg"
+  },
+  {
+    "name": "LOOP Aars",
+    "address": "Himmerlandsgade 116, 9600 Aars",
+    "folder": "Himmerlandsgade 116, 9600 Aars",
+    "url": "https://loopfitness.dk/centre/loop-fitness-aars/",
+    "latitude": 56.803305,
+    "longitude": 9.516134,
+    "loop_id": 196,
+    "center_type": "lite_kl",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Himmerlandsgade 116, 9600 Aars/info.json",
+    "hero_image": "Himmerlandsgade 116, 9600 Aars/hero.jpg"
+  },
+  {
+    "name": "LOOP Sorø",
+    "address": "Holberg Arkaden 9B, 4180 Sorø",
+    "folder": "Holberg Arkaden 9B, 4180 Sorø",
+    "url": "https://loopfitness.dk/centre/loop-fitness-soroe/",
+    "latitude": 55.432838,
+    "longitude": 11.558284,
+    "loop_id": 189,
+    "center_type": "lite_kl",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Holberg Arkaden 9B, 4180 Sorø/info.json",
+    "hero_image": "Holberg Arkaden 9B, 4180 Sorø/hero.jpg"
+  },
+  {
+    "name": "LOOP Vejle",
+    "address": "Horsensvej 72C, 7100 Vejle",
+    "folder": "Horsensvej 72C, 7100 Vejle",
+    "url": "https://loopfitness.dk/centre/loop-fitness-vejle/",
+    "latitude": 55.718653,
+    "longitude": 9.560901,
+    "loop_id": 147,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Horsensvej 72C, 7100 Vejle/info.json",
+    "hero_image": "Horsensvej 72C, 7100 Vejle/hero.jpg"
+  },
+  {
+    "name": "LOOP Birkerød",
+    "address": "Hovedgaden 38, 3460 Birkerød",
+    "folder": "Hovedgaden 38, 3460 Birkerød",
+    "url": "https://loopfitness.dk/centre/loop-fitness-birkeroed/",
+    "latitude": 55.840779,
+    "longitude": 12.43129,
+    "loop_id": 175,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Hovedgaden 38, 3460 Birkerød/info.json",
+    "hero_image": "Hovedgaden 38, 3460 Birkerød/hero.jpg"
+  },
+  {
+    "name": "LOOP Hedehusene",
+    "address": "Hovedgaden 451b, 2640 Hedehusene",
+    "folder": "Hovedgaden 451b, 2640 Hedehusene",
+    "url": "https://loopfitness.dk/centre/loop-fitness-hedehusene/",
+    "latitude": 55.648516,
+    "longitude": 12.1879433,
+    "loop_id": 246,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Hovedgaden 451b, 2640 Hedehusene/info.json",
+    "hero_image": "Hovedgaden 451b, 2640 Hedehusene/hero.jpg"
+  },
+  {
+    "name": "LOOP Ringsted",
+    "address": "Huginsvej 2, 4100 Ringsted",
+    "folder": "Huginsvej 2, 4100 Ringsted",
+    "url": "https://loopfitness.dk/centre/loop-fitness-ringsted/",
+    "latitude": 55.428373,
+    "longitude": 11.789938,
+    "loop_id": 140,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Huginsvej 2, 4100 Ringsted/info.json",
+    "hero_image": "Huginsvej 2, 4100 Ringsted/hero.jpg"
+  },
+  {
+    "name": "LOOP Hjørring",
+    "address": "Hvidevold 2A, 9800 Hjørring",
+    "folder": "Hvidevold 2A, 9800 Hjørring",
+    "url": "https://loopfitness.dk/centre/loop-fitness-hjoerring/",
+    "latitude": 57.456948,
+    "longitude": 10.018265,
+    "loop_id": 108,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Hvidevold 2A, 9800 Hjørring/info.json",
+    "hero_image": "Hvidevold 2A, 9800 Hjørring/hero.jpg"
+  },
+  {
+    "name": "LOOP Greve",
+    "address": "Håndværkerbyen 36, 2670 Greve",
+    "folder": "Håndværkerbyen 36, 2670 Greve",
+    "url": "https://loopfitness.dk/centre/loop-fitness-greve/",
+    "latitude": 55.589579,
+    "longitude": 12.294733,
+    "loop_id": 144,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Håndværkerbyen 36, 2670 Greve/info.json",
+    "hero_image": "Håndværkerbyen 36, 2670 Greve/hero.jpg"
+  },
+  {
+    "name": "LOOP Brønderslev",
+    "address": "Håndværkervej 1, 9700 Brønderslev",
+    "folder": "Håndværkervej 1, 9700 Brønderslev",
+    "url": "https://loopfitness.dk/centre/loop-fitness-broenderslev/",
+    "latitude": 57.254894,
+    "longitude": 9.967142,
+    "loop_id": 117,
+    "center_type": "loop",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Håndværkervej 1, 9700 Brønderslev/info.json",
+    "hero_image": "Håndværkervej 1, 9700 Brønderslev/hero.jpg"
+  },
+  {
+    "name": "LOOP Horsens",
+    "address": "Høegh Guldbergsgade 36, 8700 Horsens",
+    "folder": "Høegh Guldbergsgade 36, 8700 Horsens",
+    "url": "https://loopfitness.dk/centre/loop-fitness-horsens/",
+    "latitude": 55.854398,
+    "longitude": 9.849439,
+    "loop_id": 136,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Høegh Guldbergsgade 36, 8700 Horsens/info.json",
+    "hero_image": "Høegh Guldbergsgade 36, 8700 Horsens/hero.jpg"
+  },
+  {
+    "name": "LOOP Vanløse",
+    "address": "Jernbane Allé 42A, 2720 Vanløse",
+    "folder": "Jernbane Allé 42A, 2720 Vanløse",
+    "url": "https://loopfitness.dk/centre/loop-fitness-vanloese/",
+    "latitude": 55.686729,
+    "longitude": 12.4888793,
+    "loop_id": 225,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Jernbane Allé 42A, 2720 Vanløse/info.json",
+    "hero_image": "Jernbane Allé 42A, 2720 Vanløse/hero.jpg"
+  },
+  {
+    "name": "LOOP Værløse",
+    "address": "Kirke Værløsevej 14, 3500 Værløse",
+    "folder": "Kirke Værløsevej 14, 3500 Værløse",
+    "url": "https://loopfitness.dk/centre/loop-fitness-vaerloese/",
+    "latitude": 55.782221,
+    "longitude": 12.366638,
+    "loop_id": 166,
+    "center_type": "lite_kl",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Kirke Værløsevej 14, 3500 Værløse/info.json",
+    "hero_image": "Kirke Værløsevej 14, 3500 Værløse/hero.jpg"
+  },
+  {
+    "name": "LOOP Beder",
+    "address": "Kirkebakken 4, 8330 Beder",
+    "folder": "Kirkebakken 4, 8330 Beder",
+    "url": "https://loopfitness.dk/centre/loop-fitness-beder/",
+    "latitude": 56.058694,
+    "longitude": 10.205967,
+    "loop_id": 141,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Kirkebakken 4, 8330 Beder/info.json",
+    "hero_image": "Kirkebakken 4, 8330 Beder/hero.jpg"
+  },
+  {
+    "name": "LOOP Klarup",
+    "address": "Klarupvej 68, 9270 Klarup",
+    "folder": "Klarupvej 68, 9270 Klarup",
+    "url": "https://loopfitness.dk/centre/loop-fitness-klarup/",
+    "latitude": 57.012729,
+    "longitude": 10.041112,
+    "loop_id": 157,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Klarupvej 68, 9270 Klarup/info.json",
+    "hero_image": "Klarupvej 68, 9270 Klarup/hero.jpg"
+  },
+  {
+    "name": "LOOP Slangerup",
+    "address": "Kongensgade 1, 3550 Slangerup",
+    "folder": "Kongensgade 1, 3550 Slangerup",
+    "url": "https://loopfitness.dk/centre/loop-fitness-slangerup/",
+    "latitude": 55.844632,
+    "longitude": 12.172108,
+    "loop_id": 195,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Kongensgade 1, 3550 Slangerup/info.json",
+    "hero_image": "Kongensgade 1, 3550 Slangerup/hero.jpg"
+  },
+  {
+    "name": "LOOP Slagelse",
+    "address": "Kongstedsvej 2, 4200 Slagelse",
+    "folder": "Kongstedsvej 2, 4200 Slagelse",
+    "url": "https://loopfitness.dk/centre/loop-fitness-slagelse/",
+    "latitude": 55.394634,
+    "longitude": 11.33719,
+    "loop_id": 111,
+    "center_type": "loop",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Kongstedsvej 2, 4200 Slagelse/info.json",
+    "hero_image": "Kongstedsvej 2, 4200 Slagelse/hero.jpg"
+  },
+  {
+    "name": "LOOP Randers",
+    "address": "Mariagervej 67, 8920 Randers NV",
+    "folder": "Mariagervej 67, 8920 Randers NV",
+    "url": "https://loopfitness.dk/centre/loop-fitness-randers/",
+    "latitude": 56.471269,
+    "longitude": 10.030326,
+    "loop_id": 134,
+    "center_type": "loop",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Mariagervej 67, 8920 Randers NV/info.json",
+    "hero_image": "Mariagervej 67, 8920 Randers NV/hero.jpg"
+  },
+  {
+    "name": "LOOP Køge",
+    "address": "Marksvinget 19, 4600 Køge",
+    "folder": "Marksvinget 19, 4600 Køge",
+    "url": "https://loopfitness.dk/centre/loop-fitness-koege/",
+    "latitude": 55.447855,
+    "longitude": 12.166261,
+    "loop_id": 139,
+    "center_type": "loop",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Marksvinget 19, 4600 Køge/info.json",
+    "hero_image": "Marksvinget 19, 4600 Køge/hero.jpg"
+  },
+  {
+    "name": "LOOP Hadsund",
+    "address": "Mejerigade 4, 9560 Hadsund",
+    "folder": "Mejerigade 4, 9560 Hadsund",
+    "url": "https://loopfitness.dk/centre/loop-fitness-hadsund/",
+    "latitude": 56.716022,
+    "longitude": 10.114902,
+    "loop_id": 185,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Mejerigade 4, 9560 Hadsund/info.json",
+    "hero_image": "Mejerigade 4, 9560 Hadsund/hero.jpg"
+  },
+  {
+    "name": "LOOP Næstved",
+    "address": "Merkurvej 6, 4700 Næstved",
+    "folder": "Merkurvej 6, 4700 Næstved",
+    "url": "https://loopfitness.dk/centre/loop-fitness-naestved/",
+    "latitude": 55.255153,
+    "longitude": 11.787257,
+    "loop_id": 131,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Merkurvej 6, 4700 Næstved/info.json",
+    "hero_image": "Merkurvej 6, 4700 Næstved/hero.jpg"
+  },
+  {
+    "name": "LOOP Odense V",
+    "address": "Middelfartvej 131, 5200 Odense",
+    "folder": "Middelfartvej 131, 5200 Odense",
+    "url": "https://loopfitness.dk/centre/loop-fitness-odense-v/",
+    "latitude": 55.39402,
+    "longitude": 10.345716,
+    "loop_id": 176,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Middelfartvej 131, 5200 Odense/info.json",
+    "hero_image": "Middelfartvej 131, 5200 Odense/hero.jpg"
+  },
+  {
+    "name": "LOOP Måløv",
+    "address": "Måløv Stationsplads 7, 2760 Måløv",
+    "folder": "Måløv Stationsplads 7, 2760 Måløv",
+    "url": "https://loopfitness.dk/centre/loop-fitness-maaloev/",
+    "latitude": 55.7462249,
+    "longitude": 12.3205912,
+    "loop_id": 228,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Måløv Stationsplads 7, 2760 Måløv/info.json",
+    "hero_image": "Måløv Stationsplads 7, 2760 Måløv/hero.jpg"
+  },
+  {
+    "name": "LOOP Lystrup",
+    "address": "Møgelgårdsvej 8, 8520 Lystrup",
+    "folder": "Møgelgårdsvej 8, 8520 Lystrup",
+    "url": "https://loopfitness.dk/centre/loop-fitness-lystrup/",
+    "latitude": 56.2311449,
+    "longitude": 10.2389078,
+    "loop_id": 238,
+    "center_type": "lite_kl",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Møgelgårdsvej 8, 8520 Lystrup/info.json",
+    "hero_image": "Møgelgårdsvej 8, 8520 Lystrup/hero.jpg"
+  },
+  {
+    "name": "LOOP Aabenraa",
+    "address": "Møllemærsk 24, 6200 Aabenraa",
+    "folder": "Møllemærsk 24, 6200 Aabenraa",
+    "url": "https://loopfitness.dk/centre/loop-fitness-aabenraa/",
+    "latitude": 55.039541,
+    "longitude": 9.420585,
+    "loop_id": 145,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Møllemærsk 24, 6200 Aabenraa/info.json",
+    "hero_image": "Møllemærsk 24, 6200 Aabenraa/hero.jpg"
+  },
+  {
+    "name": "LOOP Frederiksberg",
+    "address": "Nordre Fasanvej 43, 2000 Frederiksberg",
+    "folder": "Nordre Fasanvej 43, 2000 Frederiksberg",
+    "url": "https://loopfitness.dk/centre/loop-fitness-frederiksberg/",
+    "latitude": 55.6842,
+    "longitude": 12.52256,
+    "loop_id": 209,
+    "center_type": "loop",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Nordre Fasanvej 43, 2000 Frederiksberg/info.json",
+    "hero_image": "Nordre Fasanvej 43, 2000 Frederiksberg/hero.jpg"
+  },
+  {
+    "name": "LOOP Asnæs",
+    "address": "Nygade 1, 4550 Asnæs",
+    "folder": "Nygade 1, 4550 Asnæs",
+    "url": "https://loopfitness.dk/centre/loop-fitness-asnaes/",
+    "latitude": 55.80801,
+    "longitude": 11.50083,
+    "loop_id": 206,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Nygade 1, 4550 Asnæs/info.json",
+    "hero_image": "Nygade 1, 4550 Asnæs/hero.jpg"
+  },
+  {
+    "name": "LOOP Nykøbing Falster",
+    "address": "Nygade 25, 4800 Nykøbing F",
+    "folder": "Nygade 25, 4800 Nykøbing F",
+    "url": "https://loopfitness.dk/centre/loop-fitness-nykoebing-falster/",
+    "latitude": 54.7654839,
+    "longitude": 11.8715684,
+    "loop_id": 216,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Nygade 25, 4800 Nykøbing F/info.json",
+    "hero_image": "Nygade 25, 4800 Nykøbing F/hero.jpg"
+  },
+  {
+    "name": "LOOP Kalundborg",
+    "address": "Nytorv 6, 4400 Kalundborg",
+    "folder": "Nytorv 6, 4400 Kalundborg",
+    "url": "https://loopfitness.dk/centre/loop-fitness-kalundborg/",
+    "latitude": 55.67844,
+    "longitude": 11.095677,
+    "loop_id": 130,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Nytorv 6, 4400 Kalundborg/info.json",
+    "hero_image": "Nytorv 6, 4400 Kalundborg/hero.jpg"
+  },
+  {
+    "name": "LOOP Nærum",
+    "address": "Nærumvænge Torv 18, 2850 Nærum",
+    "folder": "Nærumvænge Torv 18, 2850 Nærum",
+    "url": "https://loopfitness.dk/centre/loop-fitness-naerum/",
+    "latitude": 55.814396,
+    "longitude": 12.530048,
+    "loop_id": 165,
+    "center_type": "loop",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Nærumvænge Torv 18, 2850 Nærum/info.json",
+    "hero_image": "Nærumvænge Torv 18, 2850 Nærum/hero.jpg"
+  },
+  {
+    "name": "LOOP Sindal",
+    "address": "Nørre Torv 6A, 9870 Sindal",
+    "folder": "Nørre Torv 6A, 9870 Sindal",
+    "url": "https://loopfitness.dk/centre/loop-fitness-sindal/",
+    "latitude": 57.472187,
+    "longitude": 10.202276,
+    "loop_id": 149,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Nørre Torv 6A, 9870 Sindal/info.json",
+    "hero_image": "Nørre Torv 6A, 9870 Sindal/hero.jpg"
+  },
+  {
+    "name": "LOOP Tønder",
+    "address": "Nørremarksvej 31, 6270 Tønder",
+    "folder": "Nørremarksvej 31, 6270 Tønder",
+    "url": "https://loopfitness.dk/centre/loop-fitness-toender/",
+    "latitude": 54.9459999,
+    "longitude": 8.8594695,
+    "loop_id": 226,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Nørremarksvej 31, 6270 Tønder/info.json",
+    "hero_image": "Nørremarksvej 31, 6270 Tønder/hero.jpg"
+  },
+  {
+    "name": "LOOP Thisted",
+    "address": "Nørretorv 6B, 7700 Thisted",
+    "folder": "Nørretorv 6B, 7700 Thisted",
+    "url": "https://loopfitness.dk/centre/loop-fitness-thisted/",
+    "latitude": 56.956376,
+    "longitude": 8.692058,
+    "loop_id": 125,
+    "center_type": "loop",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Nørretorv 6B, 7700 Thisted/info.json",
+    "hero_image": "Nørretorv 6B, 7700 Thisted/hero.jpg"
+  },
+  {
+    "name": "LOOP Silkeborg",
+    "address": "Nørrevænget 5D, 8600 Silkeborg",
+    "folder": "Nørrevænget 5D, 8600 Silkeborg",
+    "url": "https://loopfitness.dk/centre/loop-fitness-silkeborg/",
+    "latitude": 56.182791,
+    "longitude": 9.539663,
+    "loop_id": 129,
+    "center_type": "loop",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Nørrevænget 5D, 8600 Silkeborg/info.json",
+    "hero_image": "Nørrevænget 5D, 8600 Silkeborg/hero.jpg"
+  },
+  {
+    "name": "LOOP Peter Bangs Vej",
+    "address": "Peter Bangs Vej 39a, 2000 Frederiksberg",
+    "folder": "Peter Bangs Vej 39a, 2000 Frederiksberg",
+    "url": "https://loopfitness.dk/centre/loop-fitness-peter-bangs-vej/",
+    "latitude": 55.6787603,
+    "longitude": 12.5111862,
+    "loop_id": 244,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Peter Bangs Vej 39a, 2000 Frederiksberg/info.json",
+    "hero_image": "Peter Bangs Vej 39a, 2000 Frederiksberg/hero.jpg"
+  },
+  {
+    "name": "LOOP Overlund",
+    "address": "Randersvej 68, 8800 Viborg",
+    "folder": "Randersvej 68, 8800 Viborg",
+    "url": "https://loopfitness.dk/centre/loop-fitness-overlund/",
+    "latitude": 56.452436,
+    "longitude": 9.450023,
+    "loop_id": 102,
+    "center_type": "loop",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Randersvej 68, 8800 Viborg/info.json",
+    "hero_image": "Randersvej 68, 8800 Viborg/hero.jpg"
+  },
+  {
+    "name": "LOOP Risskov",
+    "address": "Ravnsøvej 15, 1. sal, 8240 Risskov",
+    "folder": "Ravnsøvej 15, 1. sal, 8240 Risskov",
+    "url": "https://loopfitness.dk/centre/loop-fitness-risskov/",
+    "latitude": 56.202456,
+    "longitude": 10.2450243,
+    "loop_id": 223,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Ravnsøvej 15, 1. sal, 8240 Risskov/info.json",
+    "hero_image": "Ravnsøvej 15, 1. sal, 8240 Risskov/hero.jpg"
+  },
+  {
+    "name": "LOOP Varde",
+    "address": "Ribevej 1, 6800 Varde",
+    "folder": "Ribevej 1, 6800 Varde",
+    "url": "https://loopfitness.dk/centre/loop-fitness-varde/",
+    "latitude": 55.613091,
+    "longitude": 8.4888995,
+    "loop_id": 179,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Ribevej 1, 6800 Varde/info.json",
+    "hero_image": "Ribevej 1, 6800 Varde/hero.jpg"
+  },
+  {
+    "name": "LOOP Skødstrup",
+    "address": "Rosenbakken 1, 8541 Skødstrup",
+    "folder": "Rosenbakken 1, 8541 Skødstrup",
+    "url": "https://loopfitness.dk/centre/loop-fitness-skoedstrup/",
+    "latitude": 56.27027,
+    "longitude": 10.30975,
+    "loop_id": 201,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Rosenbakken 1, 8541 Skødstrup/info.json",
+    "hero_image": "Rosenbakken 1, 8541 Skødstrup/hero.jpg"
+  },
+  {
+    "name": "LOOP Grenaa",
+    "address": "Rugvænget 2C, 8500 Grenaa",
+    "folder": "Rugvænget 2C, 8500 Grenaa",
+    "url": "https://loopfitness.dk/centre/loop-fitness-grenaa/",
+    "latitude": 56.395242,
+    "longitude": 10.876456,
+    "loop_id": 135,
+    "center_type": "loop",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Rugvænget 2C, 8500 Grenaa/info.json",
+    "hero_image": "Rugvænget 2C, 8500 Grenaa/hero.jpg"
+  },
+  {
+    "name": "LOOP Odder",
+    "address": "Rådhusgade 96, 8300 Odder",
+    "folder": "Rådhusgade 96, 8300 Odder",
+    "url": "https://loopfitness.dk/centre/loop-fitness-odder/",
+    "latitude": 55.98309,
+    "longitude": 10.152796,
+    "loop_id": 142,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Rådhusgade 96, 8300 Odder/info.json",
+    "hero_image": "Rådhusgade 96, 8300 Odder/hero.jpg"
+  },
+  {
+    "name": "LOOP Hørning",
+    "address": "Rådhuspladsen 2A, st, 8362 Hørning",
+    "folder": "Rådhuspladsen 2A, st, 8362 Hørning",
+    "url": "https://loopfitness.dk/centre/loop-fitness-hoerning/",
+    "latitude": 56.085694,
+    "longitude": 10.036295,
+    "loop_id": 250,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Rådhuspladsen 2A, st, 8362 Hørning/info.json",
+    "hero_image": "Rådhuspladsen 2A, st, 8362 Hørning/hero.jpg"
+  },
+  {
+    "name": "LOOP Vordingborg",
+    "address": "Rådhustorvet 4D, 4760 Vordingborg",
+    "folder": "Rådhustorvet 4D, 4760 Vordingborg",
+    "url": "https://loopfitness.dk/centre/loop-fitness-vordingborg/",
+    "latitude": 55.011888,
+    "longitude": 11.908168,
+    "loop_id": 194,
+    "center_type": "lite_kl",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Rådhustorvet 4D, 4760 Vordingborg/info.json",
+    "hero_image": "Rådhustorvet 4D, 4760 Vordingborg/hero.jpg"
+  },
+  {
+    "name": "LOOP Rødekro",
+    "address": "Rødekro Midt 7, 6230 Rødekro",
+    "folder": "Rødekro Midt 7, 6230 Rødekro",
+    "url": "https://loopfitness.dk/centre/loop-fitness-roedekro/",
+    "latitude": 55.070957,
+    "longitude": 9.335022,
+    "loop_id": 162,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Rødekro Midt 7, 6230 Rødekro/info.json",
+    "hero_image": "Rødekro Midt 7, 6230 Rødekro/hero.jpg"
+  },
+  {
+    "name": "LOOP Rødovre",
+    "address": "Rødovre Centrum, Højnæsvej 73, 2610 Rødovre",
+    "folder": "Rødovre Centrum, Højnæsvej 73, 2610 Rødovre",
+    "url": "https://loopfitness.dk/centre/loop-fitness-roedovre/",
+    "latitude": 55.67784,
+    "longitude": 12.459103,
+    "loop_id": 116,
+    "center_type": "loop",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Rødovre Centrum, Højnæsvej 73, 2610 Rødovre/info.json",
+    "hero_image": "Rødovre Centrum, Højnæsvej 73, 2610 Rødovre/hero.jpg"
+  },
+  {
+    "name": "LOOP Allerød",
+    "address": "Rørmosevej 2B, 3450 Allerød",
+    "folder": "Rørmosevej 2B, 3450 Allerød",
+    "url": "https://loopfitness.dk/centre/loop-fitness-alleroed/",
+    "latitude": 55.866125,
+    "longitude": 12.327717,
+    "loop_id": 198,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Rørmosevej 2B, 3450 Allerød/info.json",
+    "hero_image": "Rørmosevej 2B, 3450 Allerød/hero.jpg"
+  },
+  {
+    "name": "LOOP Fredericia",
+    "address": "Sanddal Bakke 21, 7000 Fredericia",
+    "folder": "Sanddal Bakke 21, 7000 Fredericia",
+    "url": "https://loopfitness.dk/centre/loop-fitness-fredericia/",
+    "latitude": 55.530516,
+    "longitude": 9.715755,
+    "loop_id": 123,
+    "center_type": "loop",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Sanddal Bakke 21, 7000 Fredericia/info.json",
+    "hero_image": "Sanddal Bakke 21, 7000 Fredericia/hero.jpg"
+  },
+  {
+    "name": "LOOP Ikast C",
+    "address": "Saturnvej 4, 7430 Ikast",
+    "folder": "Saturnvej 4, 7430 Ikast",
+    "url": "https://loopfitness.dk/centre/loop-fitness-ikast-c/",
+    "latitude": 56.137097,
+    "longitude": 9.144863,
+    "loop_id": 3,
+    "center_type": "loop",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Saturnvej 4, 7430 Ikast/info.json",
+    "hero_image": "Saturnvej 4, 7430 Ikast/hero.jpg"
+  },
+  {
+    "name": "LOOP Nykøbing Sj",
+    "address": "Siriusvej 6, 4500 Nykøbing Sj",
+    "folder": "Siriusvej 6, 4500 Nykøbing Sj",
+    "url": "https://loopfitness.dk/centre/loop-fitness-nykoebing-sjaelland/",
+    "latitude": 55.928986,
+    "longitude": 11.657862,
+    "loop_id": 151,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Siriusvej 6, 4500 Nykøbing Sj/info.json",
+    "hero_image": "Siriusvej 6, 4500 Nykøbing Sj/hero.jpg"
+  },
+  {
+    "name": "LOOP Aalborg C",
+    "address": "Sjællandsgade 16-22, 9000 Aalborg",
+    "folder": "Sjællandsgade 16-22, 9000 Aalborg",
+    "url": "https://loopfitness.dk/centre/loop-fitness-aalborg-c/",
+    "latitude": 57.0401,
+    "longitude": 9.93621,
+    "loop_id": 200,
+    "center_type": "loop",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Sjællandsgade 16-22, 9000 Aalborg/info.json",
+    "hero_image": "Sjællandsgade 16-22, 9000 Aalborg/hero.jpg"
+  },
+  {
+    "name": "LOOP Viby",
+    "address": "Skanderborgvej 224B, 8260 Viby J",
+    "folder": "Skanderborgvej 224B, 8260 Viby J",
+    "url": "https://loopfitness.dk/centre/loop-fitness-viby/",
+    "latitude": 56.1261964,
+    "longitude": 10.1548638,
+    "loop_id": 215,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Skanderborgvej 224B, 8260 Viby J/info.json",
+    "hero_image": "Skanderborgvej 224B, 8260 Viby J/hero.jpg"
+  },
+  {
+    "name": "LOOP Nørresundby",
+    "address": "Skrågade 10, 9400 Nørresundby",
+    "folder": "Skrågade 10, 9400 Nørresundby",
+    "url": "https://loopfitness.dk/centre/loop-fitness-noerresundby/",
+    "latitude": 57.058494,
+    "longitude": 9.924412,
+    "loop_id": 127,
+    "center_type": "loop",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Skrågade 10, 9400 Nørresundby/info.json",
+    "hero_image": "Skrågade 10, 9400 Nørresundby/hero.jpg"
+  },
+  {
+    "name": "LOOP Snekkersten",
+    "address": "Snekkersten Stationsvej 25, 3070 Snekkersten",
+    "folder": "Snekkersten Stationsvej 25, 3070 Snekkersten",
+    "url": "https://loopfitness.dk/centre/loop-fitness-snekkersten/",
+    "latitude": 56.0081848,
+    "longitude": 12.5816269,
+    "loop_id": 240,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Snekkersten Stationsvej 25, 3070 Snekkersten/info.json",
+    "hero_image": "Snekkersten Stationsvej 25, 3070 Snekkersten/hero.jpg"
+  },
+  {
+    "name": "LOOP Strib",
+    "address": "Sofiendalvej 10, Strib, 5500 Middelfart",
+    "folder": "Sofiendalvej 10, Strib, 5500 Middelfart",
+    "url": "https://loopfitness.dk/centre/loop-fitness-strib/",
+    "latitude": 55.532201,
+    "longitude": 9.776481,
+    "loop_id": 163,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Sofiendalvej 10, Strib, 5500 Middelfart/info.json",
+    "hero_image": "Sofiendalvej 10, Strib, 5500 Middelfart/hero.jpg"
+  },
+  {
+    "name": "LOOP Sæby",
+    "address": "Sophus Falcksvej 1, 9300 Sæby",
+    "folder": "Sophus Falcksvej 1, 9300 Sæby",
+    "url": "https://loopfitness.dk/centre/loop-fitness-saeby/",
+    "latitude": 57.331519,
+    "longitude": 10.504469,
+    "loop_id": 109,
+    "center_type": "loop",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Sophus Falcksvej 1, 9300 Sæby/info.json",
+    "hero_image": "Sophus Falcksvej 1, 9300 Sæby/hero.jpg"
+  },
+  {
+    "name": "LOOP Dronninglund",
+    "address": "Stationsvej 20-22, 9330 Dronninglund",
+    "folder": "Stationsvej 20-22, 9330 Dronninglund",
+    "url": "https://loopfitness.dk/centre/loop-fitness-dronninglund/",
+    "latitude": 57.162206,
+    "longitude": 10.297585,
+    "loop_id": 153,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Stationsvej 20-22, 9330 Dronninglund/info.json",
+    "hero_image": "Stationsvej 20-22, 9330 Dronninglund/hero.jpg"
+  },
+  {
+    "name": "LOOP Flintholm",
+    "address": "Stig Lommers Plads 1, 2000 Frederiksberg",
+    "folder": "Stig Lommers Plads 1, 2000 Frederiksberg",
+    "url": "https://loopfitness.dk/centre/loop-fitness-flintholm/",
+    "latitude": 55.68538833,
+    "longitude": 12.49924138,
+    "loop_id": 258,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Stig Lommers Plads 1, 2000 Frederiksberg/info.json",
+    "hero_image": "Stig Lommers Plads 1, 2000 Frederiksberg/hero.jpg"
+  },
+  {
+    "name": "LOOP Hinnerup",
+    "address": "Storegade 11, 8382 Hinnerup",
+    "folder": "Storegade 11, 8382 Hinnerup",
+    "url": "https://loopfitness.dk/centre/loop-hinnerup/",
+    "latitude": 56.2651326,
+    "longitude": 10.0597371,
+    "loop_id": 236,
+    "center_type": "lite_kl",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Storegade 11, 8382 Hinnerup/info.json",
+    "hero_image": "Storegade 11, 8382 Hinnerup/hero.jpg"
+  },
+  {
+    "name": "LOOP Amager, Strandlodsvej",
+    "address": "Strandlodsvej 9 R, 2300 København S",
+    "folder": "Strandlodsvej 9 R, 2300 København S",
+    "url": "https://loopfitness.dk/centre/loop-fitness-amager-strandlodsvej/",
+    "latitude": 55.66649,
+    "longitude": 12.621089,
+    "loop_id": 255,
+    "center_type": "loop",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Strandlodsvej 9 R, 2300 København S/info.json",
+    "hero_image": "Strandlodsvej 9 R, 2300 København S/hero.jpg"
+  },
+  {
+    "name": "LOOP Hellerup",
+    "address": "Strandvejen 209, 2900 Hellerup",
+    "folder": "Strandvejen 209, 2900 Hellerup",
+    "url": "https://loopfitness.dk/centre/loop-hellerup/",
+    "latitude": 55.7399511,
+    "longitude": 12.5741431,
+    "loop_id": 252,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Strandvejen 209, 2900 Hellerup/info.json",
+    "hero_image": "Strandvejen 209, 2900 Hellerup/hero.jpg"
+  },
+  {
+    "name": "LOOP Sydhavns Plads",
+    "address": "Sydhavns Plads 12, 2450 København SV",
+    "folder": "Sydhavns Plads 12, 2450 København SV",
+    "url": "https://loopfitness.dk/centre/loop-fitness-sydhavns-plads/",
+    "latitude": 55.6538318,
+    "longitude": 12.5388851,
+    "loop_id": 243,
+    "center_type": "loop",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Sydhavns Plads 12, 2450 København SV/info.json",
+    "hero_image": "Sydhavns Plads 12, 2450 København SV/hero.jpg"
+  },
+  {
+    "name": "LOOP Assens",
+    "address": "Søndre Ringvej 12, 5610 Assens",
+    "folder": "Søndre Ringvej 12, 5610 Assens",
+    "url": "https://loopfitness.dk/centre/loop-fitness-assens/",
+    "latitude": 55.2663796,
+    "longitude": 9.8881688,
+    "loop_id": 214,
+    "center_type": "lite_kl",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Søndre Ringvej 12, 5610 Assens/info.json",
+    "hero_image": "Søndre Ringvej 12, 5610 Assens/hero.jpg"
+  },
+  {
+    "name": "LOOP Aarhus C",
+    "address": "Søren Frichs Vej 44, 8230 Åbyhøj",
+    "folder": "Søren Frichs Vej 44, 8230 Åbyhøj",
+    "url": "https://loopfitness.dk/centre/loop-fitness-aarhus-c/",
+    "latitude": 56.151598,
+    "longitude": 10.173361,
+    "loop_id": 118,
+    "center_type": "loop",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Søren Frichs Vej 44, 8230 Åbyhøj/info.json",
+    "hero_image": "Søren Frichs Vej 44, 8230 Åbyhøj/hero.jpg"
+  },
+  {
+    "name": "LOOP Hammel",
+    "address": "TEMA Centret, Østergade 8A, 8450 Hammel",
+    "folder": "TEMA Centret, Østergade 8A, 8450 Hammel",
+    "url": "https://loopfitness.dk/centre/loop-fitness-hammel/",
+    "latitude": 56.255756,
+    "longitude": 9.867071,
+    "loop_id": 152,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "TEMA Centret, Østergade 8A, 8450 Hammel/info.json",
+    "hero_image": "TEMA Centret, Østergade 8A, 8450 Hammel/hero.jpg"
+  },
+  {
+    "name": "LOOP Østerbro",
+    "address": "Teglværksgade 37, 2100 København Ø",
+    "folder": "Teglværksgade 37, 2100 København Ø",
+    "url": "https://loopfitness.dk/centre/loop-fitness-oesterbro/",
+    "latitude": 55.7082895,
+    "longitude": 12.5584002,
+    "loop_id": 219,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Teglværksgade 37, 2100 København Ø/info.json",
+    "hero_image": "Teglværksgade 37, 2100 København Ø/hero.jpg"
+  },
+  {
+    "name": "LOOP Hornslet",
+    "address": "Tingvej 41, 8543 Hornslet",
+    "folder": "Tingvej 41, 8543 Hornslet",
+    "url": "https://loopfitness.dk/centre/loop-fitness-hornslet/",
+    "latitude": 56.319423,
+    "longitude": 10.313825,
+    "loop_id": 159,
+    "center_type": "lite_kl",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Tingvej 41, 8543 Hornslet/info.json",
+    "hero_image": "Tingvej 41, 8543 Hornslet/hero.jpg"
+  },
+  {
+    "name": "LOOP Søborg",
+    "address": "Tobaksvejen 20, 2860 Søborg",
+    "folder": "Tobaksvejen 20, 2860 Søborg",
+    "url": "https://loopfitness.dk/centre/loop-fitness-soeborg/",
+    "latitude": 55.7403398,
+    "longitude": 12.4775568,
+    "loop_id": 218,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Tobaksvejen 20, 2860 Søborg/info.json",
+    "hero_image": "Tobaksvejen 20, 2860 Søborg/hero.jpg"
+  },
+  {
+    "name": "LOOP Valby",
+    "address": "Toftegårds Allé 9A, 2500 Valby",
+    "folder": "Toftegårds Allé 9A, 2500 Valby",
+    "url": "https://loopfitness.dk/centre/loop-fitness-valby/",
+    "latitude": 55.6659212,
+    "longitude": 12.5173782,
+    "loop_id": 220,
+    "center_type": "loop",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Toftegårds Allé 9A, 2500 Valby/info.json",
+    "hero_image": "Toftegårds Allé 9A, 2500 Valby/hero.jpg"
+  },
+  {
+    "name": "LOOP Nibe",
+    "address": "Toften 3.B, 9240 Nibe",
+    "folder": "Toften 3.B, 9240 Nibe",
+    "url": "https://loopfitness.dk/centre/loop-fitness-nibe/",
+    "latitude": 56.985058,
+    "longitude": 9.640243,
+    "loop_id": 143,
+    "center_type": "lite_kl",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Toften 3.B, 9240 Nibe/info.json",
+    "hero_image": "Toften 3.B, 9240 Nibe/hero.jpg"
+  },
+  {
+    "name": "LOOP Esbjerg",
+    "address": "Tordenskjoldsgade 9, 6700 Esbjerg",
+    "folder": "Tordenskjoldsgade 9, 6700 Esbjerg",
+    "url": "https://loopfitness.dk/centre/loop-fitness-esbjerg/",
+    "latitude": 55.468395,
+    "longitude": 8.43888,
+    "loop_id": 217,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Tordenskjoldsgade 9, 6700 Esbjerg/info.json",
+    "hero_image": "Tordenskjoldsgade 9, 6700 Esbjerg/hero.jpg"
+  },
+  {
+    "name": "LOOP Løgstør",
+    "address": "Torvegade 3, 9670 Løgstør",
+    "folder": "Torvegade 3, 9670 Løgstør",
+    "url": "https://loopfitness.dk/centre/loop-fitness-loegstoer/",
+    "latitude": 56.967504,
+    "longitude": 9.251994,
+    "loop_id": 191,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Torvegade 3, 9670 Løgstør/info.json",
+    "hero_image": "Torvegade 3, 9670 Løgstør/hero.jpg"
+  },
+  {
+    "name": "LOOP Dianalund",
+    "address": "Torvet 2, 4293 Dianalund",
+    "folder": "Torvet 2, 4293 Dianalund",
+    "url": "https://loopfitness.dk/centre/loop-fitness-dianalund/",
+    "latitude": 55.52675,
+    "longitude": 11.4938576,
+    "loop_id": 227,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Torvet 2, 4293 Dianalund/info.json",
+    "hero_image": "Torvet 2, 4293 Dianalund/hero.jpg"
+  },
+  {
+    "name": "LOOP Galten",
+    "address": "Torvet 2B, 8464 Galten",
+    "folder": "Torvet 2B, 8464 Galten",
+    "url": "https://loopfitness.dk/centre/loop-fitness-galten/",
+    "latitude": 56.155127,
+    "longitude": 9.903324,
+    "loop_id": 155,
+    "center_type": "lite_kl",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Torvet 2B, 8464 Galten/info.json",
+    "hero_image": "Torvet 2B, 8464 Galten/hero.jpg"
+  },
+  {
+    "name": "LOOP Holbæk",
+    "address": "Tåstrup Møllevej 5, 4300 Holbæk",
+    "folder": "Tåstrup Møllevej 5, 4300 Holbæk",
+    "url": "https://loopfitness.dk/centre/loop-fitness-holbaek/",
+    "latitude": 55.703774,
+    "longitude": 11.708155,
+    "loop_id": 112,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Tåstrup Møllevej 5, 4300 Holbæk/info.json",
+    "hero_image": "Tåstrup Møllevej 5, 4300 Holbæk/hero.jpg"
+  },
+  {
+    "name": "LOOP Odense SØ",
+    "address": "Unsbjergvej 4, 5220 Odense SØ",
+    "folder": "Unsbjergvej 4, 5220 Odense SØ",
+    "url": "https://loopfitness.dk/centre/loop-fitness-odense-soe/",
+    "latitude": 55.365515,
+    "longitude": 10.459006,
+    "loop_id": 124,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Unsbjergvej 4, 5220 Odense SØ/info.json",
+    "hero_image": "Unsbjergvej 4, 5220 Odense SØ/hero.jpg"
+  },
+  {
+    "name": "LOOP Hørsholm",
+    "address": "Usserød Kongevej 99, 2970 Hørsholm",
+    "folder": "Usserød Kongevej 99, 2970 Hørsholm",
+    "url": "https://loopfitness.dk/centre/loop-fitness-hoersholm/",
+    "latitude": 55.89212,
+    "longitude": 12.49523,
+    "loop_id": 208,
+    "center_type": "loop",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Usserød Kongevej 99, 2970 Hørsholm/info.json",
+    "hero_image": "Usserød Kongevej 99, 2970 Hørsholm/hero.jpg"
+  },
+  {
+    "name": "LOOP Bagsværd",
+    "address": "Vadstrupvej 41, 2880 Bagsværd",
+    "folder": "Vadstrupvej 41, 2880 Bagsværd",
+    "url": "https://loopfitness.dk/centre/loop-fitness-bagsvaerd/",
+    "latitude": 55.758791,
+    "longitude": 12.4463832,
+    "loop_id": 234,
+    "center_type": "loop",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Vadstrupvej 41, 2880 Bagsværd/info.json",
+    "hero_image": "Vadstrupvej 41, 2880 Bagsværd/hero.jpg"
+  },
+  {
+    "name": "LOOP Holstebro",
+    "address": "Ved Enghavens Parkering. Magnus Kjærs Gade 4, 7500 Holstebro",
+    "folder": "Ved Enghavens Parkering. Magnus Kjærs Gade 4, 7500 Holstebro",
+    "url": "https://loopfitness.dk/centre/loop-fitness-holstebro/",
+    "latitude": 56.358632,
+    "longitude": 8.621084,
+    "loop_id": 8,
+    "center_type": "loop",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Ved Enghavens Parkering. Magnus Kjærs Gade 4, 7500 Holstebro/info.json",
+    "hero_image": "Ved Enghavens Parkering. Magnus Kjærs Gade 4, 7500 Holstebro/hero.jpg"
+  },
+  {
+    "name": "LOOP Struer",
+    "address": "Ved Fjorden 6B, 7600 Struer",
+    "folder": "Ved Fjorden 6B, 7600 Struer",
+    "url": "https://loopfitness.dk/centre/loop-fitness-struer/",
+    "latitude": 56.493804,
+    "longitude": 8.59266,
+    "loop_id": 148,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Ved Fjorden 6B, 7600 Struer/info.json",
+    "hero_image": "Ved Fjorden 6B, 7600 Struer/hero.jpg"
+  },
+  {
+    "name": "LOOP Maribo",
+    "address": "Ved Åen 1, 4930 Maribo",
+    "folder": "Ved Åen 1, 4930 Maribo",
+    "url": "https://loopfitness.dk/centre/loop-fitness-maribo/",
+    "latitude": 54.7754225,
+    "longitude": 11.4930309,
+    "loop_id": 213,
+    "center_type": "lite_kl",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Ved Åen 1, 4930 Maribo/info.json",
+    "hero_image": "Ved Åen 1, 4930 Maribo/hero.jpg"
+  },
+  {
+    "name": "LOOP Ringkøbing",
+    "address": "Vellingvej 49, 6950 Ringkøbing",
+    "folder": "Vellingvej 49, 6950 Ringkøbing",
+    "url": "https://loopfitness.dk/centre/loop-fitness-ringkoebing/",
+    "latitude": 56.078494,
+    "longitude": 8.267226,
+    "loop_id": 170,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Vellingvej 49, 6950 Ringkøbing/info.json",
+    "hero_image": "Vellingvej 49, 6950 Ringkøbing/hero.jpg"
+  },
+  {
+    "name": "LOOP Odense C Vesterbro",
+    "address": "Vesterbro 39, 5000 Odense C",
+    "folder": "Vesterbro 39, 5000 Odense C",
+    "url": "https://loopfitness.dk/centre/loop-fitness-odense-vesterbro/",
+    "latitude": 55.39501,
+    "longitude": 10.37649,
+    "loop_id": 251,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Vesterbro 39, 5000 Odense C/info.json",
+    "hero_image": "Vesterbro 39, 5000 Odense C/hero.jpg"
+  },
+  {
+    "name": "LOOP Hedensted",
+    "address": "Vesterbrogade 5, 8722 Hedensted",
+    "folder": "Vesterbrogade 5, 8722 Hedensted",
+    "url": "https://loopfitness.dk/centre/loop-fitness-hedensted/",
+    "latitude": 55.769052,
+    "longitude": 9.69813,
+    "loop_id": 146,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Vesterbrogade 5, 8722 Hedensted/info.json",
+    "hero_image": "Vesterbrogade 5, 8722 Hedensted/hero.jpg"
+  },
+  {
+    "name": "LOOP Hirtshals",
+    "address": "Vestergade 17, 9850 Hirtshals",
+    "folder": "Vestergade 17, 9850 Hirtshals",
+    "url": "https://loopfitness.dk/centre/loop-fitness-hirtshals/",
+    "latitude": 57.588134,
+    "longitude": 9.95464,
+    "loop_id": 154,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Vestergade 17, 9850 Hirtshals/info.json",
+    "hero_image": "Vestergade 17, 9850 Hirtshals/hero.jpg"
+  },
+  {
+    "name": "LOOP Tølløse",
+    "address": "Vestergade 62, 4340 Tølløse",
+    "folder": "Vestergade 62, 4340 Tølløse",
+    "url": "https://loopfitness.dk/centre/loop-fitness-toelloese/",
+    "latitude": 55.612607,
+    "longitude": 11.7624693,
+    "loop_id": 233,
+    "center_type": "lite_kl",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Vestergade 62, 4340 Tølløse/info.json",
+    "hero_image": "Vestergade 62, 4340 Tølløse/hero.jpg"
+  },
+  {
+    "name": "LOOP Søndersø",
+    "address": "Vesterled 16, 5471 Søndersø",
+    "folder": "Vesterled 16, 5471 Søndersø",
+    "url": "https://loopfitness.dk/centre/loop-fitness-soendersoe/",
+    "latitude": 55.4844256,
+    "longitude": 10.2437542,
+    "loop_id": 230,
+    "center_type": "lite_kl",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Vesterled 16, 5471 Søndersø/info.json",
+    "hero_image": "Vesterled 16, 5471 Søndersø/hero.jpg"
+  },
+  {
+    "name": "LOOP Haderslev",
+    "address": "Vinkelvej 3B, 6100 Haderslev",
+    "folder": "Vinkelvej 3B, 6100 Haderslev",
+    "url": "https://loopfitness.dk/centre/loop-fitness-haderslev/",
+    "latitude": 55.25234,
+    "longitude": 9.50232,
+    "loop_id": 205,
+    "center_type": "loop",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Vinkelvej 3B, 6100 Haderslev/info.json",
+    "hero_image": "Vinkelvej 3B, 6100 Haderslev/hero.jpg"
+  },
+  {
+    "name": "LOOP Vodskov",
+    "address": "Vodskovvej 57, 9310 Vodskov",
+    "folder": "Vodskovvej 57, 9310 Vodskov",
+    "url": "https://loopfitness.dk/centre/loop-fitness-vodskov/",
+    "latitude": 57.1055599,
+    "longitude": 10.0295345,
+    "loop_id": 235,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Vodskovvej 57, 9310 Vodskov/info.json",
+    "hero_image": "Vodskovvej 57, 9310 Vodskov/hero.jpg"
+  },
+  {
+    "name": "LOOP Hillerød",
+    "address": "Vølundsvej 9. 1, 3400 Hillerød",
+    "folder": "Vølundsvej 9. 1, 3400 Hillerød",
+    "url": "https://loopfitness.dk/centre/loop-fitness-hilleroed/",
+    "latitude": 55.932024,
+    "longitude": 12.269256,
+    "loop_id": 126,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Vølundsvej 9. 1, 3400 Hillerød/info.json",
+    "hero_image": "Vølundsvej 9. 1, 3400 Hillerød/hero.jpg"
+  },
+  {
+    "name": "LOOP Skive",
+    "address": "Ågade 1A, 7800 Skive",
+    "folder": "Ågade 1A, 7800 Skive",
+    "url": "https://loopfitness.dk/centre/loop-fitness-skive/",
+    "latitude": 56.565439,
+    "longitude": 9.030901,
+    "loop_id": 121,
+    "center_type": "loop",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Ågade 1A, 7800 Skive/info.json",
+    "hero_image": "Ågade 1A, 7800 Skive/hero.jpg"
+  },
+  {
+    "name": "LOOP Svendborg",
+    "address": "Ørbækvej 3, 5700 Svendborg",
+    "folder": "Ørbækvej 3, 5700 Svendborg",
+    "url": "https://loopfitness.dk/centre/loop-fitness-svendborg/",
+    "latitude": 55.070657,
+    "longitude": 10.630137,
+    "loop_id": 168,
+    "center_type": "lite_kl",
+    "facilities": [
+      "2 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Ørbækvej 3, 5700 Svendborg/info.json",
+    "hero_image": "Ørbækvej 3, 5700 Svendborg/hero.jpg"
+  },
+  {
+    "name": "LOOP Ølstykke",
+    "address": "Ørnebjergvej 1, 3650 Ølstykke",
+    "folder": "Ørnebjergvej 1, 3650 Ølstykke",
+    "url": "https://loopfitness.dk/centre/loop-fitness-oelstykke/",
+    "latitude": 55.793826,
+    "longitude": 12.157032,
+    "loop_id": 183,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Ørnebjergvej 1, 3650 Ølstykke/info.json",
+    "hero_image": "Ørnebjergvej 1, 3650 Ølstykke/hero.jpg"
+  },
+  {
+    "name": "LOOP Odense C Østerbro",
+    "address": "Østerbro 20, 5000 Odense C",
+    "folder": "Østerbro 20, 5000 Odense C",
+    "url": "https://loopfitness.dk/centre/loop-fitness-odense-c/",
+    "latitude": 55.4024049,
+    "longitude": 10.4059036,
+    "loop_id": 177,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Østerbro 20, 5000 Odense C/info.json",
+    "hero_image": "Østerbro 20, 5000 Odense C/hero.jpg"
+  },
+  {
+    "name": "LOOP Frederikssund",
+    "address": "Østergade 1R, 3600 Frederikssund",
+    "folder": "Østergade 1R, 3600 Frederikssund",
+    "url": "https://loopfitness.dk/centre/loop-fitness-frederikssund/",
+    "latitude": 55.839875,
+    "longitude": 12.057855,
+    "loop_id": 137,
+    "center_type": "family",
+    "facilities": [
+      "3 cirkler",
+      "Cardio-område",
+      "LOOP Kids",
+      "Gratis kaffe"
+    ],
+    "info_file": "Østergade 1R, 3600 Frederikssund/info.json",
+    "hero_image": "Østergade 1R, 3600 Frederikssund/hero.jpg"
+  },
+  {
+    "name": "LOOP Aabybro",
+    "address": "Østergade 30 B, 9440 Aabybro",
+    "folder": "Østergade 30 B, 9440 Aabybro",
+    "url": "https://loopfitness.dk/centre/loop-fitness-aabybro/",
+    "latitude": 57.159864,
+    "longitude": 9.731662,
+    "loop_id": 164,
+    "center_type": "lite",
+    "facilities": [
+      "1 cirkel",
+      "Cardio-område",
+      "Gratis kaffe"
+    ],
+    "info_file": "Østergade 30 B, 9440 Aabybro/info.json",
+    "hero_image": "Østergade 30 B, 9440 Aabybro/hero.jpg"
+  }
+]

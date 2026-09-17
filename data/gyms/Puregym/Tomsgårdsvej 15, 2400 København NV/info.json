@@ -1,0 +1,267 @@
+{
+  "chain": "PureGym",
+  "name": "Kbh NV., Tomsgårdsvej",
+  "puregym_id": "223",
+  "address": {
+    "street": "Tomsgårdsvej 15",
+    "postal_code": "2400",
+    "city": "København NV",
+    "country": "DK",
+    "full": "Tomsgårdsvej 15, 2400 København NV"
+  },
+  "location": {
+    "latitude": 55.707603,
+    "longitude": 12.5223724
+  },
+  "url": "https://www.puregym.dk/find-center/kbh-nv-tomsgaardsvej",
+  "membership_url": "https://www.puregym.dk/bliv-medlem/117/medlemskab",
+  "price_from": "Priser fra 261,75 DKK/md.",
+  "price_note": "*Normalpris fra 279 DKK/md.",
+  "today_notice": "Vi lukker i dag kl. 00:00",
+  "opening_hours": [
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "09:00 - 20:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 17:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Mandag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    }
+  ],
+  "opening_hours_schema": [
+    {
+      "day": "Monday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Tuesday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Wednesday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Thursday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Friday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Saturday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Sunday",
+      "opens": "05:00",
+      "closes": "00:00"
+    }
+  ],
+  "special_days": [
+    {
+      "date": "2027-01-01",
+      "opens": "08:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-02",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-03",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-05",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-06",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-14",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-24",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-25",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-06-05",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-24",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-25",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-26",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-31",
+      "opens": "05:00",
+      "closes": "18:00"
+    }
+  ],
+  "meta_description": "Hos PureGym på Tomgårdsvej i København tilbyder vi både styrke-, cardio- og fitnesstræning. Oplev et trænings-fællesskab med plads til alle i dag.",
+  "description": "PureGym Tomsgårdsvej\nPureGym Tomsgårdsvej, beliggende i Københavns Nordvestkvarter. tilbyder en indbydende og energisk atmosfære.\nCentret strækker sig over tre etager med omfattende udvalg af udstyr. Her finder ud et stort frivægtsområde, et cirkeltræningsområde med maskiner, der træner hele kroppen, samt plads til funktionel træning og udstrækning.\nVores cardioområde giver mulighed for effektiv træning med løbebånd, crosstrainers, cykler, stairmasters og meget mere. Du vil altid blive mødt af vores venlige og imødekommende team, som er klar til at sikre, at din træningsoplevelse bliver vellykket.\nENDNU BEDRE UDSTYR I PUREGYM TOMGÅRDSVEJ\nVi er så glade for at byde dig velkommen i vores center, der har fået en stor opgradering med masser af nyt og forbedret træningsudstyr.\nHer er en oversigt over, hvad du kan glæde dig til:\nNyt og forbedret cardio-område\nNyt og forbedret kabel- og styrketræningsområde, inkl. en ny seated legcurl\nNyt og forbedret frivægtsområde, inkl. en ny hacksquat\nNyt funktionelt område\nNyt og forbedret udstrækningsområde\nDET SIGER PERSONALET OM PUREGYM TOMSGÅRDSVEJ\n\"Hos 'Toms' har vi unikt fællesskab både blandt vores personale og med vores medlemmer. Vi ser det som vores mission at støtte og hjælpe så mange som muligt i centret.\nVores mål er at opbygge stærke relationer med medlemmerne og skabe et træningsmiljø, der tilbyder de bedste rammer for både træning og velvære.\nPERSONLIG TRÆNING I PUREGYM TOMSGÅRDSVEJ\nHar du brug for en snak om din træning, står vi altid klar og tilbyder udover gode råd også programlægning og personlig træning af vores certificerede personlige trænere. Du kan skrive dig op til en gratis og uforpligtende konsultation i vores center, hvorefter du vil blive kontaktet.\nVi tilbyder også en uforpligtende samtale med en personlig træner til 0,-:\nBOOK SAMTALE HER\nHVORNÅR TRÆNER FOLK HER I CENTRET?\nVi har god plads til vores medlemmer. I vores app kan du se, hvornår der er flest og færrest mennesker i centret.\nBLIV MEDLEM HER\nHVORNÅR KAN JEG MØDE PERSONALET I CENTRET?\nVed indgangen ligger receptionen, hvor du bliver mødt af vores smilende og servicemindede team, der står klar til at hjælpe dig.\nSe vores bemandede tider i oversigten her på siden.\nDu er altid velkommen til at komme forbi i vores bemandede åbningstid. Vi tager os tid til at svare på alle dine spørgsmål og giver gerne en rundvisning i centret.\nKAN JEG PARKERE VED PUREGYM TOMSGÅRDSVEJ?\nVi er placeret tæt på offentlig transport, hvilket gør det nemt at komme til.\nFølg os på Facebook\nSe vores lokaler her\n\n<div",
+  "notice": null,
+  "facilities": [
+    {
+      "name": "App",
+      "description": "PureGym appen kan hentes til både iOS- og Android-telefoner. Appen er fyldt med fede features og lækkert design:\nBook og afmeld hold inkl. reminder, så du husker dine hold\nMere end 50 træningsprogrammer\nBodytracker-måling\nTræningsstatistik\nAdgang til challenges\nTeam up med din træningsmakker\nDownload appen og få mere ud af dit medlemskab.\nLæs mere",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-04/CTA%20App%20grafik.jpg?itok=489La2Vs"
+    },
+    {
+      "name": "Cardiotræning",
+      "description": "Kunne du godt tænke dig at forbedre din kondition eller få varmet kroppen op inden din styrketræning, så er Cardio et godt sted at gå hen.\nI dette område har vi et bredt udvalgt af kredsløbsmaskiner. Her vil du blandt andet kunne finde løbebånd, motionscykler samt ro, step -og trappemaskiner. Disse maskine er designet til at kunne forbedre dit kredsløb bedre kendt som ”kondition”. Samtlige maskiner kan indstilles og tilpasses, så de netop passer til den intensitet som ønsker på dagen.\nSå om du er til en let og kort opvarmning på motionscyklen, en tur op af Eiffeltårnet med din yndlingspodcast i ørene på trappemaskinen, eller en god løbetur i tørvejr på løbebåndet, så vil du kunne gøre dette i Cardio.\nEr du i tvivl om hvordan en maskine i Cardio virker, kan du altid spørge vores personale.\nØnsker du hjælp til hvordan du kan forbedre din kondition, så kan du også booke en uforpligtende samtale til 0 kr med en personlig træner her.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-09/CORE-slider-cta-core-medlemskab_0.jpg?itok=hEEf98nO"
+    },
+    {
+      "name": "Funktionelt træningsområde",
+      "description": "Er du til en træningsform, der har fokus på konditions- og styrketræning, så er vores funktionelle træningsområde et område for dig. Vores funktionelle område kan hjælpe dig med at blive hurtigere, stærkere men også mere udholdende og eksplosiv.\nOmrådet er udstyret med forskellige redskaber såsom; medicinbolde, kettlebells og sjippetove. Derudover finder du naturligvis også racks i alle vores funktionelle områder.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Funtionelt-traeningsomraade-1-1.jpg?itok=PDOLgNJB"
+    },
+    {
+      "name": "Parkering",
+      "description": "Er du i bil til din træning, vil der være parkeringsmuligheder ved næsten alle vores centre. PureGym har parkeringsmuligheder i form af egen parkeringsplads, eller som en del af bygningens parkeringsplads eller parkeringshus. Hvis du er i tvivl kan du altid spørge vores søde personale i centrene.",
+      "image": null
+    },
+    {
+      "name": "Personlig træner",
+      "description": "Med en personlig træner får du hjælp og sparring til at nå dine mål - altid med udgangspunkt i dig og dine behov.\nVores personlige trænere sørger for trygge rammer, mens du er i centret.\nDe sikrer fortsat, at alt udstyr er sprittet af både før og efter brug, samt at I holder god afstand til de øvrige medlemmer, mens I træner.\nLæs mere om Personlig træning her!",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Book-samtale-med-en-personlig-traener-1-1.jpg?itok=a7i9C-9t"
+    },
+    {
+      "name": "Styrketræning",
+      "description": "Vi har masser af udstyr til din styrketræning, så du kan lave alle de styrkeøvelser du kunne tænke dig. Vi har maskiner til træning af ryg, arme, mave, lår, bagdel, skuldre, bryst osv. Du kan derved træne dine muskelgrupper på flere måder og skifte imellem maskiner og finde de maskiner og øvelser, du bedst kan lide og får mest ud af.\nNogle af maskinerne er multifunktionelle, så du kan træne flere muskelgrupper på samme maskine.\nStyrketræning er din vej til sundhed, en stærkere krop, funktionalitet i hverdagen og større muskelmasse.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Styrketraening-skal-ikke-beskaeres.jpg?itok=2qQsiE_f"
+    },
+    {
+      "name": "Udstrækningsområde",
+      "description": "Vi vil gerne opfylde dine træningsbehov, og en nedkøling efter træning, eller en opvarmning før træning skal der være plads til.\nDer hvor din træning starter eller slutter har vi et udstrækningsområde til dig med masser af udstyr.\nI udstrækningsområdet finder du ribber, måtter, pilatesbolde, små vægte, mavehjul, Bosu bolde, forskellige slags elastikker og foamrollere.\nHvis der er noget du mangler, kan du altid spørge vores receptionister om de har det liggende et andet sted i centeret.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Udstraekningsomraade-skal-ikke-beskaeres.jpg?itok=24s5m_W_"
+    }
+  ],
+  "facility_names": [
+    "App",
+    "Cardiotræning",
+    "Funktionelt træningsområde",
+    "Parkering",
+    "Personlig træner",
+    "Styrketræning",
+    "Udstrækningsområde"
+  ],
+  "facility_ids": [
+    "17",
+    "355",
+    "24",
+    "27",
+    "12",
+    "350",
+    "434"
+  ],
+  "plan_ids": [
+    "670",
+    "662"
+  ],
+  "team_ids": [
+    "807",
+    "834"
+  ],
+  "classes": [
+    "Functional Express",
+    "Get Started - Introhold"
+  ],
+  "images": {
+    "hero": "https://www.puregym.dk/files/2025-07/223_Tomsga%CC%8Ardsvej_-11.jpg",
+    "hero_2500": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-07/223_Tomsga%CC%8Ardsvej_-11.jpg?itok=IuY4LeNq",
+    "teaser": "https://www.puregym.dk/files/styles/center_teaser/public/2025-07/223_Tomsga%CC%8Ardsvej_-11.jpg?itok=O_6puzPi",
+    "gallery": [
+      "https://mit.puregym.dk/images/centers/789/223-tomsgardsvej-10.webp",
+      "https://mit.puregym.dk/images/centers/789/223-tomsgardsvej-11.webp",
+      "https://mit.puregym.dk/images/centers/789/223-tomsgardsvej-12.webp",
+      "https://mit.puregym.dk/images/centers/789/223-tomsgardsvej-13.webp",
+      "https://mit.puregym.dk/images/centers/789/223-tomsgardsvej-14.webp",
+      "https://mit.puregym.dk/images/centers/789/223-tomsgardsvej-15.webp",
+      "https://mit.puregym.dk/images/centers/789/223-tomsgardsvej-16.webp",
+      "https://mit.puregym.dk/images/centers/789/223-tomsgardsvej-17.webp",
+      "https://mit.puregym.dk/images/centers/789/223-tomsgardsvej-18.webp",
+      "https://mit.puregym.dk/images/centers/789/223-tomsgardsvej-19.webp",
+      "https://mit.puregym.dk/images/centers/789/223-tomsgardsvej-2.webp",
+      "https://mit.puregym.dk/images/centers/789/223-tomsgardsvej-20.webp",
+      "https://mit.puregym.dk/images/centers/789/223-tomsgardsvej-21.webp",
+      "https://mit.puregym.dk/images/centers/789/223-tomsgardsvej-22.webp",
+      "https://mit.puregym.dk/images/centers/789/223-tomsgardsvej-23.webp",
+      "https://mit.puregym.dk/images/centers/789/223-tomsgardsvej-24.webp",
+      "https://mit.puregym.dk/images/centers/789/223-tomsgardsvej-25.webp",
+      "https://mit.puregym.dk/images/centers/789/223-tomsgardsvej-26.webp",
+      "https://mit.puregym.dk/images/centers/789/223-tomsgardsvej-3.webp",
+      "https://mit.puregym.dk/images/centers/789/223-tomsgardsvej-4.webp",
+      "https://mit.puregym.dk/images/centers/789/223-tomsgardsvej-5.webp",
+      "https://mit.puregym.dk/images/centers/789/223-tomsgardsvej-6.webp",
+      "https://mit.puregym.dk/images/centers/789/223-tomsgardsvej-7.webp",
+      "https://mit.puregym.dk/images/centers/789/223-tomsgardsvej-8.webp",
+      "https://mit.puregym.dk/images/centers/789/223-tomsgardsvej-9.webp",
+      "https://mit.puregym.dk/images/centers/789/223-tomsgardsvej.webp"
+    ]
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

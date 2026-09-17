@@ -1,0 +1,147 @@
+{
+  "chain": "LOOP Fitness",
+  "name": "LOOP Odense C Vesterbro",
+  "loop_id": 251,
+  "center_type": "lite",
+  "address": {
+    "street": "Vesterbro 39",
+    "postal_code": "5000",
+    "city": "Odense C",
+    "country": "DK",
+    "full": "Vesterbro 39, 5000 Odense C"
+  },
+  "location": {
+    "latitude": 55.39501,
+    "longitude": 10.37649
+  },
+  "url": "https://loopfitness.dk/centre/loop-fitness-odense-vesterbro/",
+  "membership_url": "https://loopfitness.dk/medlemskab/bliv-medlem/",
+  "phone": "31438020",
+  "email": "odensevesterbro@loopfitness.dk",
+  "facebook_url": null,
+  "google_review_url": "",
+  "cvr": "38282166",
+  "manager_name": "Signe ",
+  "opened": "2024-08-24",
+  "has_classes": false,
+  "only_open_when_staffed": false,
+  "max_visitor_capacity": 40,
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 22:00"
+    }
+  ],
+  "staffed_hours": [
+    {
+      "day": "Mandag",
+      "periods": [
+        "09:00 - 13:00"
+      ]
+    },
+    {
+      "day": "Tirsdag",
+      "periods": [
+        "09:00 - 09:30",
+        "16:00 - 18:00"
+      ]
+    },
+    {
+      "day": "Onsdag",
+      "periods": [
+        "12:30 - 15:00"
+      ]
+    },
+    {
+      "day": "Torsdag",
+      "periods": [
+        "11:00 - 13:00"
+      ]
+    },
+    {
+      "day": "Fredag",
+      "periods": [
+        "09:00 - 10:00"
+      ]
+    },
+    {
+      "day": "Søndag",
+      "periods": [
+        "09:00 - 12:00"
+      ]
+    }
+  ],
+  "staffed_hours_dates": [],
+  "meta_description": "Hos LOOP Fitness Odense C Vesterbro får du enkel og effektiv træning af hele kroppen på kun 24 minutter. Vi tilbyder cirkeltræning ✓ Gratis prøvetime ✓",
+  "description": "Kom indenfor og mærk energien. Hos LOOP får du afslappet stemning og effektiv træning på den bedste måde. Uanset niveau er der plads til dig, og træningen er enkel: Start med opvarmning, træn hele kroppen i træningscirklen, og afslut med udstrækning i vores LOOP Ekstra område. Efter din træning kan du nyde en gratis kop kaffe eller the i vores café.",
+  "quote_by": "Signe, centerleder",
+  "facilities": [
+    "1 cirkel",
+    "Cardio-område",
+    "Gratis kaffe"
+  ],
+  "memberships": [
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr",
+      "price_per_month": 289.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 319,
+      "family_members": 0,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    },
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr. - familie",
+      "price_per_month": 589.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 619,
+      "family_members": 9,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    }
+  ],
+  "images": {
+    "hero": "https://loopfitness.dk/wp-content/uploads/2024/08/OdenseVesterbro_2026.png",
+    "og_image": "https://loopfitness.dk/wp-content/uploads/2019/11/20250930_163823-scaled.jpg"
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

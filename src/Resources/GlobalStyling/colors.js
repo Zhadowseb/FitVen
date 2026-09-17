@@ -27,6 +27,16 @@ export const Colors = {
         planned: "#F2C14E",
         plannedDark: "rgb(201, 174, 0)",
 
+        // Music is purple on purpose: it must not be mistaken for a status
+        // (orange live, green done, yellow planned). Used only by the band on
+        // the Friends activity tiles, and it does not follow the accent.
+        music: "#B48CFF",
+        musicText: "#F2EBFF",
+        musicBandFrom: "rgba(180, 140, 255, 0.45)",
+        musicBandTo: "rgba(91, 63, 191, 0.25)",
+        musicQuietText: "#9DA2AD",
+        musicQuietIcon: "#8A8F9B",
+
         text: "#A4A8B3",
         textStrong: "#ECEDF1",
         textDisabled: "#3A3D46",
@@ -94,6 +104,13 @@ export const Colors = {
         dangerDark: "rgb(150, 40, 26)",
         planned: "#C08A12",
         plannedDark: "rgb(201, 174, 0)",
+
+        music: "#6E5CF0",
+        musicText: "#4A3AB8",
+        musicBandFrom: "rgba(110, 92, 240, 0.22)",
+        musicBandTo: "rgba(110, 92, 240, 0.08)",
+        musicQuietText: "#5C6270",
+        musicQuietIcon: "#676B76",
 
         text: "#5C6270",
         textStrong: "#22252C",

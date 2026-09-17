@@ -1,0 +1,350 @@
+{
+  "chain": "Fit&Sund",
+  "name": "Fit&Sund Hørsholm",
+  "short_name": "Hørsholm",
+  "address": {
+    "street": "Christianshusvej 4B",
+    "postal_code": "2970",
+    "city": "Hørsholm",
+    "country": "DK",
+    "full": "Christianshusvej 4B, 2970 Hørsholm"
+  },
+  "location": {
+    "latitude": 55.90257049,
+    "longitude": 12.47672792
+  },
+  "geocode": {
+    "latitude": 55.90257049,
+    "longitude": 12.47672792,
+    "matched_address": "Christianshusvej 4B, 2970 Hørsholm",
+    "exact": true,
+    "source": "DAWA"
+  },
+  "url": "https://fitogsund.dk/c/huse/hoersholm",
+  "membership_url": "https://fitogsund.dk/p/bliv-medlem",
+  "class_schedule_url": "https://fitogsund.goactivebooking.com/class-web-categories/34/classes?facility=19",
+  "google_maps_url": "https://www.google.com/maps/dir/?api=1&destination=Christianshusvej-4B+2970+Hørsholm",
+  "phone": "+45 45 86 64 66",
+  "email": "horsholm@fitogsund.dk",
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 23:00"
+    }
+  ],
+  "reception_hours": [
+    {
+      "day": "Mandag",
+      "open": "09:00 - 12:00 & 16:00 - 19:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "09:00 - 12:00 & 16:00 - 19:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "09:00 - 12:00 & 16:00 - 19:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "09:00 - 12:00 & 16:00 - 19:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "09:00 - 14:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "09:00 - 12:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "09:00 - 12:00"
+    }
+  ],
+  "meta_description": "Træn hos Fit & Sund Hørsholm i vores moderne fitness og træningscenter. Fitness | Holdtræning | Personlig træning",
+  "description": "Fit&Sund Hørsholm er meget mere end et moderne fitnesscenter. Vores hus er et indbydende \"tredje hjem\" efter hjem og arbejde eller studie - og et motiverende træningsmiljø med plads til alle typer af trænende i alle aldre.\nBIOCIRCIUT i FIT&SUND HØRSHOLM\nCIRKELTRÆNING I MASKINER\nBliv effektivt coachet af vores virtuelle træner\nFå den optimale træning på 30 min\nUdstyr der husker og tilpasser specifik til den enkelte bruger\nKom og prøv vores Biocirciut\nLæs mere\nDin generelle sundhed er i fokus\nHer er din generelle sundhed vores målsætning og faglig viden vores vigtigste redskab til at hjælpe dig frem mod målet. Nærvær er omdrejningspunktet for de gode oplevelser med træning og sundhed, vi ønsker, du skal have, når du besøger Fit&Sund Hørsholm.\nVi glæder os til at hjælpe dig frem mod dine mål!\nVelkommen til Fit&Sund Hørsholm! Husk, at vores team er på arbejde for dine gode oplevelser med træning og sundhed - vi glæder os til at hjælpe dig frem mod dine mål!",
+  "facilities": [
+    "Fitness",
+    "Personlig træning",
+    "Stor holdsal",
+    "Bikesal",
+    "Stort frivægtsområde",
+    "Camps"
+  ],
+  "service_categories": [
+    "Personlig træning",
+    "Event",
+    "Hold",
+    "Yoga/Reformer",
+    "Juniorer",
+    "Seniorer",
+    "Camps",
+    "Konditionsfremmende Træning",
+    "Body & Mind",
+    "Muskelopbyggende Træning",
+    "Core Træning",
+    "Dance",
+    "Funktionel Træning",
+    "Indoor Cycling",
+    "Senior Træning"
+  ],
+  "services": [
+    {
+      "name": "2026 OPSTARTSPAKKER",
+      "room": null,
+      "categories": [
+        "event",
+        "personlig-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/2026-opstartspakker-8"
+    },
+    {
+      "name": "Biocircuit Cirkeltræning",
+      "room": "Hørsholm",
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/biocircuit-cirkeltraening"
+    },
+    {
+      "name": "BODYATTACK®",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bodyattack-les-mills"
+    },
+    {
+      "name": "BODYBALANCE®",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bodybalance-les-mills"
+    },
+    {
+      "name": "BODYPUMP®",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bodypump"
+    },
+    {
+      "name": "BODYSTEP®",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bodystep"
+    },
+    {
+      "name": "Core",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/core"
+    },
+    {
+      "name": "DanceFit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/dance"
+    },
+    {
+      "name": "Funktionel Træning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-funktionel-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/funktionel-traening"
+    },
+    {
+      "name": "Hatha Yoga",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/hatha-yoga"
+    },
+    {
+      "name": "Indoor Cycling",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-indoor-cycling"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/indoor-cycling"
+    },
+    {
+      "name": "Indoor Cycling Basis",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-indoor-cycling"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/indoor-cycling-basis"
+    },
+    {
+      "name": "Junior medlemskab",
+      "room": "Hørsholm",
+      "categories": [
+        "juniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/junior-medlemskab"
+    },
+    {
+      "name": "Mor/barn fitness",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/mor-barn-fitness"
+    },
+    {
+      "name": "Puls Styrke",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/puls--styrke"
+    },
+    {
+      "name": "RawFit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-funktionel-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/rawfit"
+    },
+    {
+      "name": "RawFit - ExerciseLab",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-funktionel-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/rawfit-exerciselab"
+    },
+    {
+      "name": "Senior Indoor Cycling",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-indoor-cycling",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/senior-indoor-cycling"
+    },
+    {
+      "name": "Senior Træning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/seniortraening"
+    },
+    {
+      "name": "Step Styrke",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/step-styrke"
+    },
+    {
+      "name": "Stram Op",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/stramop"
+    },
+    {
+      "name": "SUND Senior Infomøde - Hørsholm",
+      "room": null,
+      "categories": [
+        "camps",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/sund-senior-infomoede-hoersholm"
+    },
+    {
+      "name": "Virtuel Cycling",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-indoor-cycling"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/virtuel-cycling"
+    },
+    {
+      "name": "YIN YOGA",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/yin-yoga"
+    },
+    {
+      "name": "ZUMBA®",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/zumba"
+    }
+  ],
+  "manager": {
+    "name": "Trine Winther",
+    "title": "Husleder",
+    "image": "https://fitogsund.dk/f/thumb?src=/f/blog/article/5ca3bb247491c43b50f3e096bd98ab934fe6ed68_thumb.jpeg&w=300&h=380"
+  },
+  "images": {
+    "hero": null,
+    "fallback": "../fitogsund-logo.png"
+  },
+  "hero_image_file": "hero.png",
+  "hero_is_placeholder": true,
+  "scraped_at": "2026-09-17"
+}

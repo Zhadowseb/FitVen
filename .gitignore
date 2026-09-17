@@ -56,3 +56,9 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Center hero images: 29 MB of scraped JPEGs. They are uploaded to the
+# gym-images storage bucket by `npm run gyms:import`; the JSON beside them is
+# what is versioned. Re-scrape with the Python scripts in the same folders.
+data/gyms/**/hero.jpg
+data/gyms/**/hero.png

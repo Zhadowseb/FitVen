@@ -1,0 +1,129 @@
+{
+  "chain": "FitnessX",
+  "name": "Lyngby",
+  "label": "Fitnesscenter med Reformer",
+  "address": {
+    "street": "Jernbanepladsen 6",
+    "postal_code": "2800",
+    "city": "Lyngby",
+    "country": "DK",
+    "full": "Jernbanepladsen 6, 2800 Lyngby"
+  },
+  "location": {
+    "latitude": 55.768520080772845,
+    "longitude": 12.505129633060042
+  },
+  "url": "https://fitnessx.dk/fitness/fitness-lyngby/lyngby-jernbanepladsen/",
+  "google_maps_url": "https://maps.app.goo.gl/RESixb7deqhWHgHH7",
+  "membership_url": "https://fitnessx.dk/medlemskaber/",
+  "campaign": false,
+  "campaign_headline": "NY LAV PRIS I AARHUS",
+  "price_teaser": "Træn med en Træningsven fra kun 250 kr./md. pr. person.",
+  "opening_hours": [
+    {
+      "days": "Mandag - torsdag",
+      "open": "05:00 - 23:00",
+      "staffed": "09:00 - 12:00 & 15:00 - 18:30"
+    },
+    {
+      "days": "Fredag",
+      "open": "05:00 - 23:00",
+      "staffed": "09:00 - 12:00"
+    },
+    {
+      "days": "Lørdag",
+      "open": "06:00 - 23:00",
+      "staffed": "Ingen"
+    },
+    {
+      "days": "Søndag",
+      "open": "06:00 - 23:00",
+      "staffed": "Ingen"
+    },
+    {
+      "days": "Helligdage",
+      "open": "Åbent som normalt",
+      "staffed": "Ingen"
+    }
+  ],
+  "special_days_text": "Særlige åbningsdage:\n24/12 og 31/12: Åbent som normalt - lukker kl. 17.00.\n25/12 og 1/1: Åbent som normalt - ingen bemanding.",
+  "meta_description": "Fitness, Reformer og forskellige hold i dit lokale FitnessX i Lyngby. Find os på Jernbanepladsen 6. Træn i gode faciliteter, se åbningstider og find vej.",
+  "description": "Dette center ligger på en af vores bedste lokationer og giver dig lidt ekstra at glæde dig over i hverdagen. Det er FitnessX, som du kender det - bare med flere detaljer, der gør en forskel.\nNår du træder ind, mærker du hurtigt, at oplevelsen er skruet op: mere gennemført indretning, et større udvalg af udstyr, bedre plads og åbningstider.\nOg fordi behov og byer ikke er ens, er hvert center lokalt tilpasset. Derfor finder du ikke to centre, der er helt ens - men du finder altid et sted, der gør din træning både nemmere og bedre.",
+  "features": [
+    "Fitness og cardio",
+    "HYROX",
+    "Hold",
+    "Reformer"
+  ],
+  "features_detail": [
+    {
+      "title": "Åbningstid",
+      "text": "I weekenden åbner vi en time tidligere. Så kan du træne (næsten) alene før byen vågner."
+    },
+    {
+      "title": "Bodytracker",
+      "text": "Muskelmasse, fedtprocent (og hvor det sidder), stofskifte, body age og meget mere. Få styr på, hvordan det ser ud med de ting, du ikke kan se i spejlet og følg din udvikling. Uden det koster ekstra."
+    },
+    {
+      "title": "Udstyr",
+      "text": "Udover vores normale maskiner og udstyr har vi særligt udvalgt udstyr i dit center, som er baseret på jeres lokale behov og ønsker. Kort sagt har vi mere, af det du kender, og noget af det du skal lære at kende."
+    },
+    {
+      "title": "Bikesal",
+      "text": "Bike som du kender det. Men opgraderet. Store skærme, lys og et design du ikke har set før. Vi har en særligt variant af Intelligent Cycling (”The Journey”), som er en virtuel oplevelse, der gør din træning sjovere og mere intens. Velkommen til en lidt sjovere, og lidt bedre, biketime."
+    },
+    {
+      "title": "TRÆN REFORMER MED OS",
+      "text": "Hos FitnessX i Lyngby har vi en lækker, ny reformersal.\nFitness. reformer. ét medlemskab.\n“Begge dele” betyder ikke “dobbelt pris”\nHos FitnessX kan du tilføje fri reformer til dit medlemskab for kun:\n+150 kr./md. under 30 år\n+200 kr./md. over 30 år\nog få fri adgang til fitness, holdtræning og reformer i ét medlemskab.\nVil du hellere betale per gang? Vælg mellem:\nReformer Pass. 10 klip. brug dem når det passer dig.\nEnkeltbooking. Betal per gang uden at binde dig til noget.\nDu kan læse mere om, hvilke hold vi tilbyder her"
+    }
+  ],
+  "parking": "Gratis 2 timers parkering i p-kælder - gratis parkering hele søndagen",
+  "manager": {
+    "name": "Oskar",
+    "title": "Manager"
+  },
+  "tags": [
+    "reformer"
+  ],
+  "images": {
+    "hero": "https://fitnessx.dk/wp-content/uploads/PXL_20231026_130415739-1-scaled.jpg",
+    "gallery": [
+      "https://fitnessx.dk/wp-content/uploads/PXL_20231026_130415739-1-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_4343-scaled.jpeg",
+      "https://fitnessx.dk/wp-content/uploads/20260415_071331451_iOS-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/20260520_072651134_iOS-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/20260520_072756061_iOS-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/20260520_075506042_iOS-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/20260520_075757140_iOS-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/20260615_074026961_iOS-1-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/20260615_081228049_iOS-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/20260615_131839774_iOS-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/20260617_070639953_iOS-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_7090.jpg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_7094.jpg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_7096.jpg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_7100.jpg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_7448-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_7450-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/20260415_072522575_iOS-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/virum-cardio-2-1.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Desktop-header-imagesort_hvid.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Mobile-header-imagesort_hvid.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Aarhus-Soender-Alle-310x150x2.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Aarhus-Soender-Alle-130x115-1.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Aarhus-N-PMVx3.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Aarhus-N-PMV.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Mobile-header-image-SH.jpg",
+      "https://fitnessx.dk/wp-content/uploads/20251022_092844713_iOS-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Koebenhavn-S-Amager-Strand-310x150x3.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Koebenhavn-S-Amager-Strand-130x115-1.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Lyngby-Jernbanepladsen-310x150x3.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Lyngby-Jernbanepladsen-130x115-1.jpg",
+      "https://fitnessx.dk/wp-content/uploads/1000007045.jpg",
+      "https://fitnessx.dk/wp-content/uploads/HKP-color-desk.jpg",
+      "https://fitnessx.dk/wp-content/uploads/HKP-color-mobil.jpg"
+    ]
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

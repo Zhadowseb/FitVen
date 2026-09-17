@@ -1,0 +1,281 @@
+{
+  "chain": "LOOP Fitness",
+  "name": "LOOP Asnæs",
+  "loop_id": 206,
+  "center_type": "lite",
+  "address": {
+    "street": "Nygade 1",
+    "postal_code": "4550",
+    "city": "Asnæs",
+    "country": "DK",
+    "full": "Nygade 1, 4550 Asnæs"
+  },
+  "location": {
+    "latitude": 55.80801,
+    "longitude": 11.50083
+  },
+  "url": "https://loopfitness.dk/centre/loop-fitness-asnaes/",
+  "membership_url": "https://loopfitness.dk/medlemskab/bliv-medlem/",
+  "phone": "41746316",
+  "email": "asnaes@loopfitness.dk",
+  "facebook_url": null,
+  "google_review_url": "https://g.page/r/CY3iL3e5NRHfEB0/review",
+  "cvr": "39980878",
+  "manager_name": "Camilla ",
+  "opened": "2019-01-19",
+  "has_classes": false,
+  "only_open_when_staffed": false,
+  "max_visitor_capacity": 20,
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 22:00"
+    }
+  ],
+  "staffed_hours": [
+    {
+      "day": "Mandag",
+      "periods": [
+        "08:00 - 11:00",
+        "15:00 - 18:00"
+      ]
+    },
+    {
+      "day": "Tirsdag",
+      "periods": [
+        "08:00 - 11:00"
+      ]
+    },
+    {
+      "day": "Onsdag",
+      "periods": [
+        "08:00 - 11:00",
+        "15:00 - 18:00"
+      ]
+    },
+    {
+      "day": "Torsdag",
+      "periods": [
+        "08:00 - 11:00"
+      ]
+    },
+    {
+      "day": "Fredag",
+      "periods": [
+        "08:00 - 11:00"
+      ]
+    },
+    {
+      "day": "Lørdag",
+      "periods": [
+        "10:00 - 12:00"
+      ]
+    }
+  ],
+  "staffed_hours_dates": [
+    {
+      "date": "2025-06-28",
+      "open": "None - None"
+    },
+    {
+      "date": "2025-12-22",
+      "open": "08:00 - 10:00"
+    },
+    {
+      "date": "2025-12-22",
+      "open": "15:00 - 18:00"
+    },
+    {
+      "date": "2025-12-26",
+      "open": "10:00 - 11:00"
+    },
+    {
+      "date": "2026-04-02",
+      "open": "00:00 - 00:15"
+    },
+    {
+      "date": "2026-04-03",
+      "open": "00:00 - 00:15"
+    },
+    {
+      "date": "2026-04-05",
+      "open": "00:00 - 00:15"
+    },
+    {
+      "date": "2026-04-06",
+      "open": "00:00 - 00:15"
+    },
+    {
+      "date": "2026-05-01",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-05-02",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-05-20",
+      "open": "09:00 - 19:00"
+    },
+    {
+      "date": "2026-05-21",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-05-25",
+      "open": "None - None"
+    }
+  ],
+  "meta_description": "Hos LOOP Fitness Asnæs får du effektiv og veldokumenteret træning af hele kroppen på kun 24 minutter. I LOOP er der plads til alle - kvinder og mænd.",
+  "description": "Kom indenfor og mærk energien. Hos LOOP får du afslappet stemning og effektiv træning på den bedste måde. Uanset niveau er der plads til dig, og træningen er enkel: Start med opvarmning, træn hele kroppen i træningscirklen, og afslut med udstrækning i vores LOOP Ekstra område. Efter din træning kan du nyde en gratis kop kaffe eller the i vores café.",
+  "quote_by": "Camilla, centerleder",
+  "facilities": [
+    "1 cirkel",
+    "Cardio-område",
+    "Gratis kaffe"
+  ],
+  "memberships": [
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr",
+      "price_per_month": 289.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 319,
+      "family_members": 0,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    },
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr. - familie",
+      "price_per_month": 589.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 619,
+      "family_members": 9,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    },
+    {
+      "name": "1 dags feriepas",
+      "price_per_month": 75.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 0.0,
+      "intro_months": 0,
+      "minimum_price": "75.0",
+      "family_members": 0,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    },
+    {
+      "name": "3 dages feriepas",
+      "price_per_month": 99.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 0.0,
+      "intro_months": 0,
+      "minimum_price": "99.0",
+      "family_members": 0,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    },
+    {
+      "name": "1 uges feriepas",
+      "price_per_month": 129.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 0.0,
+      "intro_months": 0,
+      "minimum_price": "129.0",
+      "family_members": 0,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    },
+    {
+      "name": "2 ugers feriepas ",
+      "price_per_month": 169.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 0.0,
+      "intro_months": 0,
+      "minimum_price": "169.0",
+      "family_members": 0,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    },
+    {
+      "name": "4 ugers feriepas",
+      "price_per_month": 329.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 0.0,
+      "intro_months": 0,
+      "minimum_price": "329.0",
+      "family_members": 0,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    }
+  ],
+  "images": {
+    "hero": "https://loopfitness.dk/wp-content/uploads/2019/11/Asnaes_2026.png",
+    "og_image": "https://loopfitness.dk/wp-content/uploads/2024/01/Billeder_Hjemmesiden_1024x768px_Hvorfor-skal-jeg-traene_8-1.jpg"
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

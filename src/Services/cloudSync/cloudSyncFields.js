@@ -167,6 +167,12 @@ export const SYNCED_FIELDS = {
       cloudRead: (row) => row?.timer_start,
     }),
     field("elapsed_time", (value) => normalizeElapsedDurationSeconds(value, 0)),
+    // Where the workout happened. Set by the client at start or finish from
+    // one position fix and match_gym; null when there was no permission or
+    // no centre within range.
+    field("gym_id", int()),
+    field("start_latitude", normalizeOptionalCoordinate),
+    field("start_longitude", normalizeOptionalCoordinate),
   ],
   ExerciseInstance: [
     field("local_exercise_instance_id", int(), {
@@ -389,6 +395,22 @@ export function normalizeOptionalText(value) {
 
   const trimmedValue = value.trim();
   return trimmedValue.length > 0 ? trimmedValue : null;
+}
+
+// A latitude or longitude, to six decimals (about 10 cm), so the local REAL
+// and the cloud double precision compare equal after a round trip.
+export function normalizeOptionalCoordinate(value) {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+
+  const numericValue = Number(value);
+
+  if (!Number.isFinite(numericValue)) {
+    return null;
+  }
+
+  return Math.round(numericValue * 1e6) / 1e6;
 }
 
 export function normalizeOptionalInteger(value, fallbackValue = 0) {

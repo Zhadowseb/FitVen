@@ -149,7 +149,12 @@ export const programSchemaSql = `
       is_active INTEGER DEFAULT 0,
       original_start_time INTEGER,
       timer_start INTEGER,
-      elapsed_time INTEGER DEFAULT 0
+      elapsed_time INTEGER DEFAULT 0,
+
+      /*======Centre match=======*/
+      gym_id INTEGER,
+      start_latitude REAL,
+      start_longitude REAL
   );
 
   CREATE TABLE IF NOT EXISTS Workout_Type_Instance_Sync_Delete (

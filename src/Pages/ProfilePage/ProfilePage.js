@@ -19,6 +19,7 @@ import Bell from "../../Resources/Icons/UI-icons/Bell";
 import Dumbbell from "../../Resources/Icons/UI-icons/Dumbbell";
 import Pencil from "../../Resources/Icons/UI-icons/Pencil";
 import Moon from "../../Resources/Icons/UI-icons/Moon";
+import MusicNote from "../../Resources/Icons/UI-icons/MusicNote";
 import ChevronRight from "../../Resources/Icons/UI-icons/ChevronRight";
 import FeedbackModal from "../../Resources/Components/FeedbackModal/FeedbackModal";
 import Lock from "../../Resources/Icons/UI-icons/Lock";
@@ -859,6 +860,22 @@ export default function ProfilePage() {
                 </SettingsIconTile>
                 <ThemedText style={styles.settingsRowLabel} setColor={theme.title}>
                   Social posts
+                </ThemedText>
+                <ChevronRight width={18} height={18} color={theme.quietText} />
+              </TouchableOpacity>
+
+              <InsetDivider />
+
+              <TouchableOpacity
+                activeOpacity={0.82}
+                onPress={() => navigation.navigate("MusicSettingsPage")}
+                style={styles.settingsRow}
+              >
+                <SettingsIconTile backgroundColor={withAlpha(theme.primary, 0.12)}>
+                  <MusicNote width={18} height={18} color={primaryTextColor} thickness={2} />
+                </SettingsIconTile>
+                <ThemedText style={styles.settingsRowLabel} setColor={theme.title}>
+                  Music
                 </ThemedText>
                 <ChevronRight width={18} height={18} color={theme.quietText} />
               </TouchableOpacity>

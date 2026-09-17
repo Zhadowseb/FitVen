@@ -1,0 +1,356 @@
+{
+  "chain": "Fit&Sund",
+  "name": "Fit&Sund Brønshøj",
+  "short_name": "Brønshøj",
+  "address": {
+    "street": "Kobbelvænget 74",
+    "postal_code": "2700",
+    "city": "Brønshøj",
+    "country": "DK",
+    "full": "Kobbelvænget 74, 2700 Brønshøj"
+  },
+  "location": {
+    "latitude": 55.71047926,
+    "longitude": 12.48042426
+  },
+  "geocode": {
+    "latitude": 55.71047926,
+    "longitude": 12.48042426,
+    "matched_address": "Kobbelvænget 74, 2700 Brønshøj",
+    "exact": true,
+    "source": "DAWA"
+  },
+  "url": "https://fitogsund.dk/c/huse/broenshoej",
+  "membership_url": "https://fitogsund.dk/p/bliv-medlem",
+  "class_schedule_url": "https://fitogsund.goactivebooking.com/class-web-categories/34/classes?facility=56",
+  "google_maps_url": "https://www.google.com/maps/dir/?api=1&destination=Kobbelvænget-74+2700+Brønshøj",
+  "phone": "Kontaktes på e-mail eller i huset",
+  "email": "bronshoj@fitogsund.dk",
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 23:00"
+    }
+  ],
+  "reception_hours": [
+    {
+      "day": "Mandag",
+      "open": "08:00 - 20:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "08:00 - 20:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "08:00 - 20:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "08:00 - 20:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "08:00 - 18:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "09:00 - 13:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "09:00 - 13:00"
+    }
+  ],
+  "meta_description": "Bliv medlem hos Fit&Sund Brønshøj. Fitness- og sundhedshus med nye faciliteter, stort udvalg af holdtræning, fysioterapi og personlig træning.",
+  "description": "Velkommen til Fit&Sund Brønshøj, Københavns nye sundhedshus.\nI vores hus på Kobbelvænget 74 i Brønshøj har Brønshøj Fysioterapi en fantastisk klinik med moderne fysioterapi i lækre lokaler. Du kan komme til behandling med henvisning fra egen læge eller direkte uden henvisning.\nI Fit&Sund Brønshøj har vi også et meget flot fitnesscenter. Vi tilbyder hele 1.200 m2 stor legeplads med alt det udstyr, man kan ønske sig. Her har vi personlige trænere, diætist og instruktører, der alle vil hjælpe dig med at nå dine mål. Vi møder DIG hvor DU er og sørger for, at du få en rigtig positiv oplevelse med træning og motion.\nHos Fit&Sund har vi tre kerneværdier:\nSundhed - Viden - Nærvær\nSundhed:\nVores mission er at gøre danskerne mere sunde og dermed få en bedre livskvalitet.\nViden:\nVi er alle uddannede fagpersoner, og vi vil meget gerne give råd og vejledning. Derfor kan du trygt spørge os om gode råd og hjælp til din træning. Vi vil gøre vores for, at du finder sikkerhed og tryghed i træningen.\nNærvær:\nVi tror på, at med gode rammer for nærhed og sociale relationer er chancen for succes meget større. Det er simpelthen mere sandsynligt, at du kommer og træner, når personalet kender dig, og du føler dig velkommen.",
+  "facilities": [
+    "Fitness",
+    "Fysioterapeuter",
+    "Personlig træning"
+  ],
+  "service_categories": [
+    "Hold",
+    "Yoga/Reformer",
+    "Juniorer",
+    "Fællesskab",
+    "Seniorer",
+    "Konditionsfremmende Træning",
+    "Body & Mind",
+    "Muskelopbyggende Træning",
+    "Dance",
+    "Junior Træning",
+    "Core Træning",
+    "Funktionel Træning",
+    "Senior Træning"
+  ],
+  "services": [
+    {
+      "name": "BODYATTACK®",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bodyattack-les-mills"
+    },
+    {
+      "name": "BODYBALANCE®",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bodybalance-les-mills"
+    },
+    {
+      "name": "BODYCOMBAT®",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bodycombat---les-mills"
+    },
+    {
+      "name": "BODYPUMP®",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bodypump"
+    },
+    {
+      "name": "Boksning",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/boksning"
+    },
+    {
+      "name": "BootyBurn",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bootyburn"
+    },
+    {
+      "name": "Cirkelhold",
+      "room": "Maskiner",
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/cirkelhold"
+    },
+    {
+      "name": "DanceFit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/dance"
+    },
+    {
+      "name": "Golf Fitness",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/golf-fitness"
+    },
+    {
+      "name": "Hatha Yoga",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/hatha-yoga"
+    },
+    {
+      "name": "Juniortræning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-junior",
+        "juniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/juniortraening"
+    },
+    {
+      "name": "Løbehold",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/loebehold"
+    },
+    {
+      "name": "MOTION for livet",
+      "room": "5 ugers gratis træningsforløb",
+      "categories": [
+        "faellesskab",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/motion-for-livet"
+    },
+    {
+      "name": "Pilates",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/pilates"
+    },
+    {
+      "name": "Puls Styrke",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/puls--styrke"
+    },
+    {
+      "name": "RawFit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-funktionel-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/rawfit"
+    },
+    {
+      "name": "RawFit - ExerciseLab",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-funktionel-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/rawfit-exerciselab"
+    },
+    {
+      "name": "Reformer Basic",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/reformer-basic-2"
+    },
+    {
+      "name": "Reformer Classic",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/reformer-classic"
+    },
+    {
+      "name": "Senior Træning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/seniortraening"
+    },
+    {
+      "name": "Step Puls",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/step-puls"
+    },
+    {
+      "name": "Stram Op",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/stramop"
+    },
+    {
+      "name": "Vinyasa Yoga",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/vinyasa-yoga"
+    },
+    {
+      "name": "YIN YOGA",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/yin-yoga"
+    },
+    {
+      "name": "Yoga",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/yoga"
+    },
+    {
+      "name": "ZUMBA®",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/zumba"
+    }
+  ],
+  "manager": {
+    "name": "Ann-Marie Ringheim",
+    "title": "Husleder",
+    "image": "https://fitogsund.dk/f/thumb?src=/f/blog/article/fa9e785c4729a1a84a8c3774b0840e843f8cd20b_thumb.png&w=300&h=380"
+  },
+  "images": {
+    "hero": null,
+    "fallback": "../fitogsund-logo.png"
+  },
+  "hero_image_file": "hero.png",
+  "hero_is_placeholder": true,
+  "scraped_at": "2026-09-17"
+}

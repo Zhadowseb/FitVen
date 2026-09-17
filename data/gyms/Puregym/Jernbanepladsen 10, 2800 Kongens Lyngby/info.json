@@ -1,0 +1,254 @@
+{
+  "chain": "PureGym",
+  "name": "Lyngby, Jernbanepladsen",
+  "puregym_id": "163",
+  "address": {
+    "street": "Jernbanepladsen 10",
+    "postal_code": "2800",
+    "city": "Kongens Lyngby",
+    "country": "DK",
+    "full": "Jernbanepladsen 10, 2800 Kongens Lyngby"
+  },
+  "location": {
+    "latitude": 55.768911,
+    "longitude": 12.5038889
+  },
+  "url": "https://www.puregym.dk/find-center/lyngby-jernbanepladsen",
+  "membership_url": "https://www.puregym.dk/bliv-medlem/134/medlemskab",
+  "price_from": "Priser fra 139,50 DKK/md.",
+  "price_note": "*Normalpris fra 279 DKK/md.",
+  "today_notice": "Vi lukker i dag kl. 00:00",
+  "opening_hours": [
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "09:00 - 20:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 17:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Mandag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    }
+  ],
+  "opening_hours_schema": [
+    {
+      "day": "Monday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Tuesday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Wednesday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Thursday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Friday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Saturday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Sunday",
+      "opens": "05:00",
+      "closes": "00:00"
+    }
+  ],
+  "special_days": [
+    {
+      "date": "2027-01-01",
+      "opens": "08:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-02",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-03",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-05",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-06",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-14",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-24",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-25",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-06-05",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-24",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-25",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-26",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-31",
+      "opens": "05:00",
+      "closes": "18:00"
+    }
+  ],
+  "meta_description": "Velkommen hos PureGym på Jernbanepladsen i Lyngby. Find dit lokale center her, og oplev et trænings-fællesskab med plads til alle.",
+  "description": "PureGym Lyngby\nLige ved stationen i hjertet af Lyngby finder du Jernbanepladsen, som med sine tre etager er et yderst populært center.\nVi tilbyder blandt andet fitness, styrke- og konditionsfaciliteter, en stor og varierende holdplan og bike i vores fede bikesal.\nHer vil du altid få et ”Velkommen” og et stort smil fra vores dedikerede team, der vil gøre deres bedste for, at din træningsoplevelse bliver så vellykket som overhovedet muligt.\nVi glæder os til at se dig!\nEndnu mere nyt udstyr i PureGym Lyngby, Jernbanepladsen\nVi er så glade for at byde dig velkommen i vores center, der har fået endnu en opgradering med masser af nyt og forbedret træningsudstyr.\nHer er en oversigt over, hvad du kan se frem til:\nNyt og forbedret cardio-område\nNyt og forbedret kabel- og styrketræningsområde, inkl. nye maskiner og kabler, herunder Functional Trainers, Seated Leg Curl og Leg Extension\nNyt og forbedret frivægtsområde, inkl. nye håndvægte og maskiner, herunder en ny Glutebuilder, Perfect Squat og Hacksquat\nNyt og forbedret funktionelt område, inkl. nye romaskiner, SkiErgs og BikeErgs\nForbedret udstrækningsområde, inkl. nyt udstyr\nDet siger personalet om PureGym Jernbanepladsen\nI vores center går engagement og imødekommenhed hånd i hånd. Det sikrer, at du ALTID bliver mødt af et smil - vi er lokale, og elsker at gøre medlemmerne til en del af familien.\nPersonlig træning i PureGym Jernbanepladsen\nHar du brug for en snak om din træning, står vi altid klar og tilbyder udover gode råd også programlægning og personlig træning af vores certificerede personlige trænere.\nVi tilbyder også en uforpligtende samtale med en personlig træner til 0,-:\nBook samtale\nHoldtræning i PureGym Jernbanepladsen\nVi tilbyder en stor lys holdsal med masser af hold på holdplanen og en rummelig bikesal.\nHerudover har centret en rummelig holdsal, hvor der blandt andet afholdes Yoga, Stram Op og seniortræning og en masse mere samt en flot bikesal.\nHvornår træner folk her i centret?\nI vores center har vi altid plads til vores medlemmer. I vores app kan du se, hvornår der er flest og færrest mennesker i centret.\nBliv medlem\nHvornår kan jeg møde personalet i centret?\nVed indgangen ligger receptionen, hvor du bliver mødt af vores smilende og servicemindede team, der står klar til at hjælpe dig. Se vores bemandede tider i oversigten her på siden. Du er altid velkommen til at komme forbi i vores bemandede åbningstid. Vi tager os tid til at svare på alle dine spørgsmål og giver gerne en rundvisning i centret.\nKan jeg parkere ved PureGym Jernbanepladsen?\nVi har 3 timers gratis parkering tilknyttet, hvilket gør det nemt og tilgængeligt. Du skal blot huske at registrere din nummerplade, når du kommer ind i centret. Vi er også placeret tæt på offentlig transport, hvilket gør det nemt at komme til.\nFølg os på Facebook\nSe vores lokaler her\nBliv medlem af PureGym og få adgang til:\nApp\nHer kan du få et trænings-program, følge din træning, booke hold, deltage i challenges og meget mere.\nPersonlig træning\nHar du brug for hjælp til at nå dine mål? Book en samtale hos en af vores certificerede personlige trænere til 0 kr.\nHoldtræning\nBliv en del af et stærkt fællesskab på vores hold. Vores dedikerede instruktører guider dig igennem og sikrer højt humør.\nBodytracker\nFor kun ekstra 9 kr./md. kan du få adgang til en avanceret vægt, der giver dig en kropsanalyse med flere forskellige parametre.\nEr du klar til at starte?\nVælg dit medlemskab her\nOg bliv en del af Danmarks største fitness-fælleskab.\nGenerelt\nLog ind på Mit PureGym\nPriser og medlemskabstyper\nTil/afmeld nyhedsbrev\nOm PureGym\nPresse\nKarriere\nHjerteforeningen\nStudierabat\nInformation\nFAQ & Kontakt\nVelkomst og information\nHusets regler\nMedlems­betingelser\nDatapolitik\nCookies\nTilgængelighed\nKonkurrencevindere\nSafespace\nVores fitness centre\nFind center\nAlle større byer\nKøbenhavn\nAarhus\nOdense\nAalborg\nRanders\nValby\nDownload vores app\nHold dig informeret\nTorveporten 2,\n2500 Valby\nCVR. 25652991\nPureGym © 2026\nLog ind\nNyt eller glemt kodeord?\nIkke medlem endnu?\nMeld dig ind",
+  "notice": null,
+  "facilities": [],
+  "facility_names": [
+    "App",
+    "Bikesal",
+    "Bodytracker+",
+    "Cardiotræning",
+    "Funktionelt træningsområde",
+    "Glutebuilder",
+    "Holdtræning",
+    "Parkering",
+    "Personlig træner",
+    "Styrketræning",
+    "Udstrækningsområde",
+    "Watt-cykler & Intelligent Cycling"
+  ],
+  "facility_ids": [
+    "17",
+    "355",
+    "14",
+    "24",
+    "27",
+    "349",
+    "12",
+    "28",
+    "434",
+    "333",
+    "350",
+    "474"
+  ],
+  "plan_ids": [
+    "670",
+    "662"
+  ],
+  "team_ids": [
+    "312",
+    "741",
+    "332",
+    "807",
+    "318",
+    "834",
+    "338",
+    "737",
+    "806",
+    "344",
+    "739",
+    "822"
+  ],
+  "classes": [
+    "Bike Power",
+    "Boksning",
+    "Core & Glutes",
+    "Functional Express",
+    "Get Started - Introhold",
+    "Jam",
+    "Lokale Events",
+    "Pilates",
+    "Seniortræning",
+    "Stram Op",
+    "Yin Yoga",
+    "Zumba"
+  ],
+  "images": {
+    "hero": "https://www.puregym.dk/files/2025-05/Puregym_fitness_cardio_Lyngby.jpg",
+    "hero_2500": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-05/Puregym_fitness_cardio_Lyngby.jpg?itok=-FzQPFgm",
+    "teaser": "https://www.puregym.dk/files/styles/center_teaser/public/2025-05/Puregym_fitness_cardio_Lyngby.jpg?itok=9ux1-VaM",
+    "gallery": [
+      "https://mit.puregym.dk/images/centers/747/pg-163-lyngby-jernbanepladsen-3-2-01-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/747/pg-163-lyngby-jernbanepladsen-3-2-02-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/747/pg-163-lyngby-jernbanepladsen-3-2-03-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/747/pg-163-lyngby-jernbanepladsen-3-2-04-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/747/pg-163-lyngby-jernbanepladsen-3-2-05-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/747/pg-163-lyngby-jernbanepladsen-3-2-06-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/747/pg-163-lyngby-jernbanepladsen-3-2-07-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/747/pg-163-lyngby-jernbanepladsen-3-2-08-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/747/pg-163-lyngby-jernbanepladsen-3-2-09-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/747/pg-163-lyngby-jernbanepladsen-3-2-10-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/747/pg-163-lyngby-jernbanepladsen-3-2-11-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/747/pg-163-lyngby-jernbanepladsen-3-2-12-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/747/pg-163-lyngby-jernbanepladsen-3-2-13-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/747/pg-163-lyngby-jernbanepladsen-3-2-14-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/747/pg-163-lyngby-jernbanepladsen-3-2-15-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/747/pg-163-lyngby-jernbanepladsen-3-2-16-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/747/pg-163-lyngby-jernbanepladsen-3-2-17-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/747/pg-163-lyngby-jernbanepladsen-3-2-18-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/747/pg-163-lyngby-jernbanepladsen-3-2-19-1090x727.webp"
+    ]
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

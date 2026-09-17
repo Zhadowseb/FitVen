@@ -1,0 +1,271 @@
+{
+  "chain": "PureGym",
+  "name": "Århus N, Trøjborg",
+  "puregym_id": "289",
+  "address": {
+    "street": "Niels Juels Gade 84",
+    "postal_code": "8200",
+    "city": "Århus N",
+    "country": "DK",
+    "full": "Niels Juels Gade 84, 8200 Århus N"
+  },
+  "location": {
+    "latitude": 56.170736143422154,
+    "longitude": 10.212447565359488
+  },
+  "url": "https://www.puregym.dk/find-center/aarhus-n-troejborg",
+  "membership_url": "https://www.puregym.dk/bliv-medlem/386/medlemskab",
+  "price_from": "Priser fra 139,50 DKK/md.",
+  "price_note": "*Normalpris fra 279 DKK/md.",
+  "today_notice": "Vi lukker i dag kl. 00:00",
+  "opening_hours": [
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "09:00 - 20:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 17:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Mandag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    }
+  ],
+  "opening_hours_schema": [
+    {
+      "day": "Monday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Tuesday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Wednesday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Thursday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Friday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Saturday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Sunday",
+      "opens": "05:00",
+      "closes": "00:00"
+    }
+  ],
+  "special_days": [
+    {
+      "date": "2027-01-01",
+      "opens": "08:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-02",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-03",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-05",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-06",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-14",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-24",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-25",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-06-05",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-24",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-25",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-26",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-31",
+      "opens": "05:00",
+      "closes": "18:00"
+    }
+  ],
+  "meta_description": "Hos PureGym på Trøjborg i Aarhus tilbyder vi både hold-, styrke-, cardio- og fitnesstræning. Find dit center her, og oplev træning med plads til alle.",
+  "description": "PureGym Trøjborg\nPure Gym Trøjborg er et lyst og åbent træningscenter i hjertet af Trøjborg. Centret åbnede i januar 2022 og har derfor nyere, lækre træningsfaciliteter. Vi tilbyder blandt andet masser af fitness-, styrke- og konditionsfaciliteter, et stort funktionelt område, to holdsale med masser af svedige og sjove hold samt biketimer i vores bikesal. I centret vil du møde smilende personale, der vil gøre deres bedste for, at din træningsoplevelse bliver så vellykket som overhovedet muligt.\nVi glæder os til at se dig!\nMERE UDSTYR I PUREGYM TRØJBORG\nVi er så glade for at byde dig velkommen i vores center, der har fået en opgradering med nyt og forbedret træningsudstyr.\nHer er en oversigt over, hvad du bl.a. kan se frem til at prøve:\nPerfect Squat\nBootyBuilder\nNye vægtskiver\nNyt udstyr til funktionelt område\nNyt udstyr til udstræksområde\nDET SIGER PERSONALET OM PUREGYM TRØJBORG\nHer på Trøjborg gør vi en dyd ud af, at medlemmerne føler sig godt tilpas i centret. Personalet har et rigtig godt sammenhold og gør sit bedste for at danne rammerne til, at du får en god træning. Noget af det særlige ved Trøjborg er, at vi har en meget stor holdplan. Du kan derfor tage på både styrke-, puls-, yoga- og bikehold.\nPERSONLIG TRÆNING I PUREGYM TRØJBORG\nHar du brug for en snak om din træning, står vi altid klar og tilbyder udover gode råd også programlægning og personlig træning af vores certificerede personlige trænere.\nVi tilbyder også en uforpligtende samtale med en personlig træner til 0,-:\nBOOK SAMTALE HER\nHOLDTRÆNING I PUREGYM TRØJBORG\nPå Trøjborg har vi to holdsale; en stor og en lille. Vi har en masse hold på planen med alle slags holdtyper fordelt ud i de forskellige holdsale. I store holdsal får du primært styrke-, danse- og pulshold, hvor den lille holdsal kører yoga og pilates. Herudover kan du få sved på panden i vores flotte bikesal. Der er altså rig mulighed for at deltage på et hold, som passer netop dig!\nHVORNÅR TRÆNER FOLK HER I CENTRET?\nVi har god plads til vores medlemmer. I vores app kan du se, hvornår der er flest og færrest mennesker i centret.\nBLIV MEDLEM HER\nHVORNÅR KAN JEG MØDE PERSONALET I CENTRET?\nNår du kommer ind af indgangen, kan du se receptionen et par meter længere fremme, hvor vores smilende fitness team står klar til at hjælpe dig. Se vores bemandede tider i oversigten her på siden. Du er altid velkommen til at komme forbi i vores bemandede åbningstid. Vi tager os tid til at svare på alle dine spørgsmål og giver gerne en rundvisning i centret.\nKAN JEG PARKERE VED PUREGYM TRØJBORG?\nVi har ikke parkeringspladser tilknyttet centret. Der er mulighed for at parkere (mod betaling) på Trøjborg ud fra gældende parkeringsregler i området.\nFølg os på Facebook\nSe vores lokaler her\nBliv medlem af PureGym og få adgang til:\nApp\nHer kan du få et trænings-program, følge din træning, booke hold, deltage i challenges og meget mere.\nPersonlig træning\nHar du brug for hjælp til at nå dine mål? Book en samtale hos en af vores certificerede personlige trænere til 0 kr.\nHoldtræning\nBliv en del af et stærkt fællesskab på vores hold. Vores dedikerede instruktører guider dig igennem og sikrer højt humør.\nBodytracker\nFor kun ekstra 9 kr./md. kan du få adgang til en avanceret vægt, der giver dig en kropsanalyse med flere forskellige parametre.\nEr du klar til at starte?\nVælg dit medlemskab her\nOg bliv en del af Danmarks største fitness-fælleskab.\nGenerelt\nLog ind på Mit PureGym\nPriser og medlemskabstyper\nTil/afmeld nyhedsbrev\nOm PureGym\nPresse\nKarriere\nHjerteforeningen\nStudierabat\nInformation\nFAQ & Kontakt\nVelkomst og information\nHusets regler\nMedlems­betingelser\nDatapolitik\nCookies\nTilgængelighed\nKonkurrencevindere\nSafespace\nVores fitness centre\nFind center\nAlle større byer\nKøbenhavn\nAarhus\nOdense\nAalborg\nRanders\nValby\nDownload vores app\nHold dig informeret\nTorveporten 2,\n2500 Valby\nCVR. 25652991\nPureGym © 2026\nLog ind\nNyt eller glemt kodeord?\nIkke medlem endnu?\nMeld dig ind",
+  "notice": null,
+  "facilities": [],
+  "facility_names": [
+    "App",
+    "Bikesal",
+    "Bodytracker+",
+    "Cardiotræning",
+    "Funktionelt træningsområde",
+    "Holdtræning",
+    "Personlig træner",
+    "Styrketræning",
+    "Udstrækningsområde",
+    "Watt-cykler & Intelligent Cycling"
+  ],
+  "facility_ids": [
+    "349",
+    "474",
+    "355",
+    "12",
+    "14",
+    "24",
+    "27",
+    "434",
+    "28",
+    "350"
+  ],
+  "plan_ids": [
+    "670",
+    "662"
+  ],
+  "team_ids": [
+    "312",
+    "822",
+    "741",
+    "757",
+    "498",
+    "334",
+    "742",
+    "807",
+    "318",
+    "358",
+    "737",
+    "802",
+    "806",
+    "344",
+    "739",
+    "803",
+    "837",
+    "836",
+    "835",
+    "363"
+  ],
+  "classes": [
+    "Bike Power",
+    "Bike Standard",
+    "Bike – Event",
+    "Body Fit",
+    "Cardio Express",
+    "Core & Glutes",
+    "Core Express",
+    "Get Started - Introhold",
+    "Glute Express",
+    "Jam",
+    "Lokale Events",
+    "Pilates",
+    "Seniortræning",
+    "Step Standard",
+    "Stram Op",
+    "Styrke & Funktionelt – Event",
+    "Tabata Træning",
+    "Thai Bo",
+    "Yang Yoga",
+    "Yin Yoga"
+  ],
+  "images": {
+    "hero": "https://www.puregym.dk/files/2025-10/_6_29639-HDR.jpg",
+    "hero_2500": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-10/_6_29639-HDR.jpg?itok=9tBvQZoY",
+    "teaser": "https://www.puregym.dk/files/styles/center_teaser/public/2025-10/_6_29639-HDR.jpg?itok=6A4_fuRO",
+    "gallery": [
+      "https://mit.puregym.dk/images/centers/882/6-29611-hdr.webp",
+      "https://mit.puregym.dk/images/centers/882/6-29619-hdr.webp",
+      "https://mit.puregym.dk/images/centers/882/6-29635-hdr.webp",
+      "https://mit.puregym.dk/images/centers/882/6-29639-hdr.webp",
+      "https://mit.puregym.dk/images/centers/882/6-29647-hdr.webp",
+      "https://mit.puregym.dk/images/centers/882/6-29651-hdr.webp",
+      "https://mit.puregym.dk/images/centers/882/6-29663-hdr.webp",
+      "https://mit.puregym.dk/images/centers/882/6-29683-hdr.webp",
+      "https://mit.puregym.dk/images/centers/882/6-29687-hdr.webp",
+      "https://mit.puregym.dk/images/centers/882/6-29691-hdr.webp",
+      "https://mit.puregym.dk/images/centers/882/6-29703-hdr.webp",
+      "https://mit.puregym.dk/images/centers/882/6-29707-hdr.webp",
+      "https://mit.puregym.dk/images/centers/882/6-29715-hdr.webp",
+      "https://mit.puregym.dk/images/centers/882/6-29727-hdr.webp",
+      "https://mit.puregym.dk/images/centers/882/6-29731-hdr.webp",
+      "https://mit.puregym.dk/images/centers/882/6-29739-hdr.webp",
+      "https://mit.puregym.dk/images/centers/882/6-29743-hdr.webp",
+      "https://mit.puregym.dk/images/centers/882/6-29751-hdr.webp",
+      "https://mit.puregym.dk/images/centers/882/6-29779-hdr.webp",
+      "https://mit.puregym.dk/images/centers/882/6-29783-hdr.webp",
+      "https://mit.puregym.dk/images/centers/882/6-29791-hdr.webp",
+      "https://mit.puregym.dk/images/centers/882/6-29795-hdr.webp",
+      "https://mit.puregym.dk/images/centers/882/6-29803-hdr.webp",
+      "https://mit.puregym.dk/images/centers/882/6-29811-hdr.webp"
+    ]
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

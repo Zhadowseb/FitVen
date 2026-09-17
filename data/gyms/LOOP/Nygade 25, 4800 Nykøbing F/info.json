@@ -1,0 +1,292 @@
+{
+  "chain": "LOOP Fitness",
+  "name": "LOOP Nykøbing Falster",
+  "loop_id": 216,
+  "center_type": "family",
+  "address": {
+    "street": "Nygade 25",
+    "postal_code": "4800",
+    "city": "Nykøbing F",
+    "country": "DK",
+    "full": "Nygade 25, 4800 Nykøbing F"
+  },
+  "location": {
+    "latitude": 54.7654839,
+    "longitude": 11.8715684
+  },
+  "url": "https://loopfitness.dk/centre/loop-fitness-nykoebing-falster/",
+  "membership_url": "https://loopfitness.dk/medlemskab/bliv-medlem/",
+  "phone": "41746324",
+  "email": "nykoebingf@loopfitness.dk",
+  "facebook_url": null,
+  "google_review_url": "https://g.page/r/CcSGnjmLzgkSEB0/review",
+  "cvr": "40503218",
+  "manager_name": "Lasse Overgaard",
+  "opened": "2019-09-14",
+  "has_classes": false,
+  "only_open_when_staffed": false,
+  "max_visitor_capacity": 40,
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 22:00"
+    }
+  ],
+  "staffed_hours": [
+    {
+      "day": "Mandag",
+      "periods": [
+        "08:30 - 18:00"
+      ]
+    },
+    {
+      "day": "Tirsdag",
+      "periods": [
+        "08:30 - 13:30"
+      ]
+    },
+    {
+      "day": "Onsdag",
+      "periods": [
+        "08:30 - 14:00",
+        "15:30 - 18:00"
+      ]
+    },
+    {
+      "day": "Torsdag",
+      "periods": [
+        "08:30 - 11:30",
+        "12:30 - 17:00"
+      ]
+    },
+    {
+      "day": "Fredag",
+      "periods": [
+        "08:30 - 13:30"
+      ]
+    },
+    {
+      "day": "Lørdag",
+      "periods": [
+        "08:30 - 11:30"
+      ]
+    },
+    {
+      "day": "Søndag",
+      "periods": [
+        "08:30 - 11:30"
+      ]
+    }
+  ],
+  "staffed_hours_dates": [
+    {
+      "date": "2025-02-11",
+      "open": "08:30 - 13:30"
+    },
+    {
+      "date": "2025-02-12",
+      "open": "08:30 - 14:00"
+    },
+    {
+      "date": "2025-02-13",
+      "open": "08:30 - 13:30"
+    },
+    {
+      "date": "2025-04-16",
+      "open": "08:30 - 13:30"
+    },
+    {
+      "date": "2025-04-17",
+      "open": "None - None"
+    },
+    {
+      "date": "2025-04-18",
+      "open": "None - None"
+    },
+    {
+      "date": "2025-04-20",
+      "open": "None - None"
+    },
+    {
+      "date": "2025-04-21",
+      "open": "None - None"
+    },
+    {
+      "date": "2025-10-16",
+      "open": "14:00 - 17:00"
+    },
+    {
+      "date": "2025-12-23",
+      "open": "09:00 - 12:00"
+    },
+    {
+      "date": "2025-12-24",
+      "open": "None - None"
+    },
+    {
+      "date": "2025-12-25",
+      "open": "None - None"
+    },
+    {
+      "date": "2025-12-26",
+      "open": "09:00 - 11:00"
+    },
+    {
+      "date": "2025-12-27",
+      "open": "09:00 - 11:00"
+    },
+    {
+      "date": "2025-12-28",
+      "open": "None - None"
+    },
+    {
+      "date": "2025-12-31",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-02-12",
+      "open": "12:30 - 17:00"
+    },
+    {
+      "date": "2026-02-15",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-04-02",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-04-03",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-04-05",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-04-06",
+      "open": "09:30 - 11:30"
+    },
+    {
+      "date": "2026-04-24",
+      "open": "15:00 - 17:30"
+    },
+    {
+      "date": "2026-04-27",
+      "open": "09:00 - 12:00"
+    },
+    {
+      "date": "2026-04-27",
+      "open": "15:00 - 17:30"
+    },
+    {
+      "date": "2026-04-28",
+      "open": "09:00 - 12:00"
+    },
+    {
+      "date": "2026-04-29",
+      "open": "09:00 - 12:00"
+    },
+    {
+      "date": "2026-04-30",
+      "open": "08:30 - 11:30"
+    },
+    {
+      "date": "2026-05-01",
+      "open": "09:00 - 11:30"
+    },
+    {
+      "date": "2026-05-04",
+      "open": "09:00 - 12:00"
+    },
+    {
+      "date": "2026-05-14",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-05-25",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-08-12",
+      "open": "08:30 - 11:00"
+    },
+    {
+      "date": "2026-08-20",
+      "open": "14:30 - 17:30"
+    }
+  ],
+  "meta_description": "Hos LOOP Fitness Nykøbing Falster får du enkel og effektiv træning af hele kroppen på kun 24 minutter. Træning for børn og unge ✓ Gratis prøvetime ✓",
+  "description": "Kom indenfor og mærk energien. Hos LOOP får du afslappet stemning og effektiv træning på den bedste måde. Uanset niveau er der plads til dig, og træningen er enkel: Start med opvarmning, træn hele kroppen i træningscirklen, og afslut med udstrækning i vores LOOP Ekstra område. Efter din træning kan du nyde en gratis kop kaffe eller the i vores café.",
+  "quote_by": "Lasse, centerleder",
+  "facilities": [
+    "3 cirkler",
+    "Cardio-område",
+    "LOOP Kids",
+    "Gratis kaffe"
+  ],
+  "memberships": [
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr",
+      "price_per_month": 289.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 319,
+      "family_members": 0,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    },
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr. - familie",
+      "price_per_month": 589.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 619,
+      "family_members": 9,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    }
+  ],
+  "images": {
+    "hero": "https://loopfitness.dk/wp-content/uploads/2019/11/NykoebingF_2026.png",
+    "og_image": "https://loopfitness.dk/wp-content/uploads/2019/11/image0-10-scaled.jpeg"
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

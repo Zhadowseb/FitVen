@@ -1,0 +1,284 @@
+{
+  "chain": "Fit&Sund",
+  "name": "Fit&Sund Køge",
+  "short_name": "Køge",
+  "address": {
+    "street": "Torvet 22",
+    "postal_code": "4600",
+    "city": "Køge",
+    "country": "DK",
+    "full": "Torvet 22, 4600 Køge"
+  },
+  "location": {
+    "latitude": 55.45711619,
+    "longitude": 12.18059976
+  },
+  "geocode": {
+    "latitude": 55.45711619,
+    "longitude": 12.18059976,
+    "matched_address": "Torvet 22B, 4600 Køge",
+    "exact": false,
+    "source": "DAWA"
+  },
+  "url": "https://fitogsund.dk/c/huse/koege",
+  "membership_url": "https://fitogsund.dk/p/bliv-medlem",
+  "class_schedule_url": "https://fitogsund.goactivebooking.com/class-web-categories/34/classes?facility=21",
+  "google_maps_url": "https://www.google.com/maps/dir/?api=1&destination=Torvet-22+4600+Køge",
+  "phone": "+45 56 76 73 66",
+  "email": "koege@fitogsund.dk",
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "04:00 - 24:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "04:00 - 24:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "04:00 - 24:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "04:00 - 24:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "04:00 - 24:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "04:00 - 24:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "04:00 - 24:00"
+    }
+  ],
+  "reception_hours": [
+    {
+      "day": "Mandag",
+      "open": "08:00 - 12:00 & 16:00 - 20:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "08:00 - 12:00 & 16:00 - 20:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "08:00 - 12:00 & 16:00 - 20:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "08:00 - 12:00 & 16:00 - 20:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "08:00 - 12:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "08:00 - 12:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "ingen bemanding"
+    }
+  ],
+  "meta_description": "Træn hos Fit & Sund Køge i vores moderne fitness og træningscenter. Fitness | Holdtræning | Personlig træning",
+  "description": "Hos Fit&Sund Køge arbejder vi ud fra vores 3 kærneværdier: sundhed, viden og nærvær. Sundhed er bl.a. varieret træning. Derfor tilbyder vi styrke- og holdtræning, programlægning og målrettet træning på dine præmisser.\nVelkomstområdet er husets hjerte og samlingspunkt for medlemmerne\nHos Fit&Sund Køge har vi et kompetent trænings- og sundhedsfagligt team med en bred viden, som gerne hjælper dig på vej uanset din alder, baggrund eller trænings- og sundhedstilstand. I vores hus er nærvær i højsædet, og alle er velkomne. Her kan man opleve et stort fællesskab, der rummer mangfoldigheden. I vores velkomstområde, som er husets hjerte og samlingspunkt for vores medlemmer, byder vi på en dejlig kop kaffe og hyggeligt samvær.\nSundhedsfagligt team står klar til dig\nFit&Sunds mål er at tilbyde en inspirerende og motiverende træningsoplevelse, som giver dig overskud, velvære og livskvalitet.\nHos Fit&Sund Køge finder du vores fysioterapeut, som tilbyder fysioterapi uden for sygesikringen. Dette giver dig som medlem mulighed for 10 min. gratis konsultation med en autoriserede fysioterapeut.\nLigeledes står vores personlige trænere klar til at hjælpe dig med dine specifikke mål enten med individuel træning, partræning eller på vores bootcamps. Alle vores personlige trænere tilbyder ligesom vores fysioterapeut en uforpligtende samtale\nI huset finder du også vores kliniske diætist. Diætisten går op i kvalitet og høj faglighed, og at du får et godt forløb i huset. Der bliver kigget på dine behov, fundet holdbare løsninger og sørget for, at fagligheden er i top. Hos diætisten får du håndgribelige værktøjer og hjælp til en sundere hverdag. Her har du som medlem også mulighed for at få 10 min. gratis konsultation.",
+  "facilities": [
+    "Fitness",
+    "Personlig træning",
+    "Velkvalificeret personale",
+    "ExerciseLab",
+    "Stort holdudvalg",
+    "Sundhedsfagligt team",
+    "Indoor Cycling"
+  ],
+  "service_categories": [
+    "Personlig træning",
+    "Fysioterapi",
+    "Event",
+    "Hold",
+    "Camps",
+    "Yoga/Reformer",
+    "Fællesskab",
+    "Seniorer",
+    "Body & Mind",
+    "Konditionsfremmende Træning",
+    "Muskelopbyggende Træning",
+    "Indoor Cycling",
+    "Core Træning",
+    "Funktionel Træning",
+    "Senior Træning",
+    "Dance"
+  ],
+  "services": [
+    {
+      "name": "2026 OPSTARTSPAKKER",
+      "room": null,
+      "categories": [
+        "event",
+        "fysioterapi",
+        "personlig-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/2026-opstartspakker-14"
+    },
+    {
+      "name": "BODYBALANCE®",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bodybalance-les-mills"
+    },
+    {
+      "name": "BODYCOMBAT®",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bodycombat---les-mills"
+    },
+    {
+      "name": "BootyBurn",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bootyburn"
+    },
+    {
+      "name": "BootyCamp",
+      "room": null,
+      "categories": [
+        "camps",
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bootycamp"
+    },
+    {
+      "name": "Hatha Yoga",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/hatha-yoga"
+    },
+    {
+      "name": "Indoor Cycling",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-indoor-cycling"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/indoor-cycling"
+    },
+    {
+      "name": "LES MILLS CORE™",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/les-mills-core"
+    },
+    {
+      "name": "MOTION for livet",
+      "room": "5 ugers gratis træningsforløb",
+      "categories": [
+        "faellesskab",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/motion-for-livet"
+    },
+    {
+      "name": "Pilates",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/pilates"
+    },
+    {
+      "name": "PoleFitness",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/polefitness"
+    },
+    {
+      "name": "Puls Styrke",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/puls--styrke"
+    },
+    {
+      "name": "RawFit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-funktionel-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/rawfit"
+    },
+    {
+      "name": "RPM®",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-indoor-cycling"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/rpm"
+    },
+    {
+      "name": "Senior Træning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/seniortraening"
+    },
+    {
+      "name": "Stram Op",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/stramop"
+    },
+    {
+      "name": "ZUMBA®",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/zumba"
+    }
+  ],
+  "manager": {
+    "name": "Natasja",
+    "title": "Husleder",
+    "image": "https://fitogsund.dk/f/thumb?src=/f/blog/article/adb9d10d1a0b595e1b38ca1d3277603cf74f8ac8_thumb.jpeg&w=300&h=380"
+  },
+  "images": {
+    "hero": null,
+    "fallback": "../fitogsund-logo.png"
+  },
+  "hero_image_file": "hero.png",
+  "hero_is_placeholder": true,
+  "scraped_at": "2026-09-17"
+}

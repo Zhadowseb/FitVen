@@ -1,0 +1,258 @@
+{
+  "chain": "Fit&Sund",
+  "name": "Fit&Sund Brædstrup",
+  "short_name": "Brædstrup",
+  "address": {
+    "street": "Søndergade 11",
+    "postal_code": "8740",
+    "city": "Brædstrup",
+    "country": "DK",
+    "full": "Søndergade 11, 8740 Brædstrup"
+  },
+  "location": {
+    "latitude": 55.97122964,
+    "longitude": 9.61156448
+  },
+  "geocode": {
+    "latitude": 55.97122964,
+    "longitude": 9.61156448,
+    "matched_address": "Søndergade 11, 8740 Brædstrup",
+    "exact": true,
+    "source": "DAWA"
+  },
+  "url": "https://fitogsund.dk/c/huse/braedstrup",
+  "membership_url": "https://fitogsund.dk/p/bliv-medlem",
+  "class_schedule_url": "https://fitogsund.goactivebooking.com/class-web-categories/34/classes?facility=7",
+  "google_maps_url": "https://www.google.com/maps/dir/?api=1&destination=Søndergade-11+8740+Brædstrup",
+  "phone": "+45 75 75 30 77",
+  "email": "bradstrup@fitogsund.dk",
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 23:00"
+    }
+  ],
+  "reception_hours": [
+    {
+      "day": "Mandag",
+      "open": "08:00 - 12:00 / 15:00 - 18:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "08:00 - 12:00 / 15:00 - 18:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "08:00 - 12:00 / 15:00 - 18:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "08:00 - 12:00 / 15:00 - 18:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "08:00 - 12:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "ingen bemanding"
+    },
+    {
+      "day": "Søndag",
+      "open": "ingen bemanding"
+    }
+  ],
+  "meta_description": "Træn hos Fit & Sund Brædstrup i vores moderne fitness og træningscenter. Fitness | Holdtræning | Personlig træning",
+  "description": "Velkommen til Fit&Sund Brædstrup\nSundhed, viden og nærvær er hvad du møder, når du træder ind i vores hus i Søndergade. Hver dag arbejder vi for at give dig den bedste trænings- og behandlingsoplevelse. Vores autoriserede behandlere og dedikerede instruktører byder dig velkommen til vores hus med det nyeste træningsudstyr, moderne klinikfaciliteter og en hyggelig atmosfære .\nVi har et kompetent trænings- og sundhedsfagligt team\nVi er meget mere end bare et fitnesscenter, vi er dit lokale fitness og sundhedshus. Vi har 3 kerneværdier, som vi vægter meget højt: sundhed, viden og nærvær.\nSundhed er bl.a. varieret træning, vi tilbyder styrketræning og forskellig holdtræning, vi har programlægninger og målrettet træning på dine præmisser.\nHos Fit&Sund har vi et kompetent trænings- og sundhedsfagligt team, som gerne hjælper dig på vej uanset din alder, baggrund eller trænings- og sundhedstilstand.\nFit&Sunds mål er at tilbyde en inspirerende og motiverende træningsoplevelse, som giver dig overskud, velvære og livskvalitet.\nOplev magien\nI vores velkomstområde er alle velkomne, og her kan man opleve den magi, der opstår, når medlemmerne hygger sig med en kop kaffe og skaber et levende fællesskab i huset.\nI det daglige arbejder vi tæt sammen med vores fysioterapeuter. Det betyder, at du altid kan bestille tid til behandling, til udarbejdelse af specialiseret genoptræningsprogram eller få 10 min. gratis konsultation. Og du behøver ingen lægehenvisning. Det vil glæde os at se dig her hos os i Fit&Sund Brædstrup.",
+  "facilities": [
+    "Fitness",
+    "Fysioterapeuter",
+    "Personlig træning",
+    "Seniorklub",
+    "Holdsal",
+    "Reformer",
+    "Åbent fra 05-23",
+    "Fysioterapi",
+    "Te/kaffe i velkomstområdet"
+  ],
+  "service_categories": [
+    "Personlig træning",
+    "Fysioterapi",
+    "Event",
+    "Hold",
+    "Reformer",
+    "Fællesskab",
+    "Seniorer",
+    "Yoga/Reformer",
+    "Muskelopbyggende Træning",
+    "Core Træning",
+    "Body & Mind",
+    "Senior Træning",
+    "Konditionsfremmende Træning"
+  ],
+  "services": [
+    {
+      "name": "2026 OPSTARTSPAKKER",
+      "room": null,
+      "categories": [
+        "event",
+        "fysioterapi",
+        "personlig-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/2026-opstartspakker-17"
+    },
+    {
+      "name": "Babymotorik",
+      "room": "Babymotorik",
+      "categories": [
+        "event",
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/babymotorik-2"
+    },
+    {
+      "name": "BODYPUMP®",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bodypump"
+    },
+    {
+      "name": "Boldtræning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/boldtraening"
+    },
+    {
+      "name": "Core",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/core"
+    },
+    {
+      "name": "Mamareformer",
+      "room": "Trygt og skånsomt træningsforløb for nybagte mødre",
+      "categories": [
+        "event",
+        "hold",
+        "hold-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/mamareformer"
+    },
+    {
+      "name": "Mindful Stretch",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/mindful-stretch"
+    },
+    {
+      "name": "MOTION for livet",
+      "room": "5 ugers gratis træningsforløb",
+      "categories": [
+        "faellesskab",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/motion-for-livet"
+    },
+    {
+      "name": "Reformer Basic",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/reformer-basic-2"
+    },
+    {
+      "name": "Reformer Classic",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/reformer-classic"
+    },
+    {
+      "name": "Senior Træning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/seniortraening"
+    },
+    {
+      "name": "Stram Op",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/stramop"
+    },
+    {
+      "name": "Tabata",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/tabata"
+    },
+    {
+      "name": "Walk",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/walk"
+    }
+  ],
+  "manager": {
+    "name": "Liza Johnsen",
+    "title": "Husleder",
+    "image": "https://fitogsund.dk/f/thumb?src=/f/blog/article/0fbf3a3af0c37c40a681a220994b3b1f0ef60154_thumb.jpg&w=300&h=380"
+  },
+  "images": {
+    "hero": null,
+    "fallback": "../fitogsund-logo.png"
+  },
+  "hero_image_file": "hero.png",
+  "hero_is_placeholder": true,
+  "scraped_at": "2026-09-17"
+}

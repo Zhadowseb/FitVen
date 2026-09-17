@@ -581,6 +581,8 @@ export async function getTodayActivitySummary(db, { date, snapshots }) {
       detail: "Rest day",
       workoutType: null,
       workoutLabel: null,
+      workoutId: null,
+      gymId: null,
     };
   }
 
@@ -592,6 +594,8 @@ export async function getTodayActivitySummary(db, { date, snapshots }) {
       detail: formatElapsedWorkoutDetail(liveWorkout),
       workoutType: liveWorkout.workout_type ?? null,
       workoutLabel: liveWorkout.label ?? liveWorkout.workout_type ?? null,
+      workoutId: liveWorkout.workout_id ?? null,
+      gymId: liveWorkout.gym_id ?? null,
     };
   }
 
@@ -608,6 +612,8 @@ export async function getTodayActivitySummary(db, { date, snapshots }) {
       workoutType: nextPlannedWorkout.workout_type ?? null,
       workoutLabel:
         nextPlannedWorkout.label ?? nextPlannedWorkout.workout_type ?? null,
+      workoutId: nextPlannedWorkout.workout_id ?? null,
+      gymId: nextPlannedWorkout.gym_id ?? null,
     };
   }
 
@@ -618,6 +624,8 @@ export async function getTodayActivitySummary(db, { date, snapshots }) {
     detail: todaysWorkouts.length > 1 ? `${todaysWorkouts.length} done` : "Done today",
     workoutType: completedWorkout?.workout_type ?? null,
     workoutLabel: completedWorkout?.label ?? completedWorkout?.workout_type ?? null,
+    workoutId: completedWorkout?.workout_id ?? null,
+    gymId: completedWorkout?.gym_id ?? null,
   };
 }
 

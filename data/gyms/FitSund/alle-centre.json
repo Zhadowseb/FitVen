@@ -1,0 +1,797 @@
+[
+  {
+    "name": "Fit&Sund Stevns",
+    "address": "Algade 12A, 4660 Store Heddinge",
+    "folder": "Algade 12A, 4660 Store Heddinge",
+    "url": "https://fitogsund.dk/c/huse/stevns",
+    "latitude": 55.30997943,
+    "longitude": 12.38930389,
+    "geocode_exact": true,
+    "facilities": [
+      "Fitness",
+      "Personlig træning",
+      "Bikesal",
+      "Fagligt velkvalificeret personale i receptionen",
+      "ExerciseLab",
+      "Varieret holdplan",
+      "Sundhedsfagligt team"
+    ],
+    "info_file": "Algade 12A, 4660 Store Heddinge/info.json",
+    "hero_image": "Algade 12A, 4660 Store Heddinge/hero.png"
+  },
+  {
+    "name": "Fit&Sund Ejby",
+    "address": "Algade 45, 5592 Ejby",
+    "folder": "Algade 45, 5592 Ejby",
+    "url": "https://fitogsund.dk/c/huse/ejby",
+    "latitude": 55.42659838,
+    "longitude": 9.92466259,
+    "geocode_exact": false,
+    "facilities": [
+      "Fitness",
+      "Fysioterapeuter",
+      "Personlig træning",
+      "Stort træningsområde",
+      "Lyse lokaler",
+      "Hyggelig stemning",
+      "Sundhedsfagligt team",
+      "Gratis parkering"
+    ],
+    "info_file": "Algade 45, 5592 Ejby/info.json",
+    "hero_image": "Algade 45, 5592 Ejby/hero.png"
+  },
+  {
+    "name": "Fit&Sund Ballerup",
+    "address": "Borupvang 3C, 2750 Ballerup",
+    "folder": "Borupvang 3C, 2750 Ballerup",
+    "url": "https://fitogsund.dk/c/huse/ballerup",
+    "latitude": 55.73254965,
+    "longitude": 12.38322152,
+    "geocode_exact": false,
+    "facilities": [
+      "Fitness",
+      "Personlig træning",
+      "Lyse lokaler",
+      "Nyt udstyr",
+      "Stor holdsal",
+      "Hyggelig atmosfære"
+    ],
+    "info_file": "Borupvang 3C, 2750 Ballerup/info.json",
+    "hero_image": "Borupvang 3C, 2750 Ballerup/hero.png"
+  },
+  {
+    "name": "Fit&Sund Hedensted",
+    "address": "Bytorvet 25-27, 8722 Hedensted",
+    "folder": "Bytorvet 25-27, 8722 Hedensted",
+    "url": "https://fitogsund.dk/c/huse/hedensted",
+    "latitude": 55.76882634,
+    "longitude": 9.69964665,
+    "geocode_exact": false,
+    "facilities": [
+      "Fitness",
+      "Fysioterapeuter",
+      "Personlig træning",
+      "Yoga",
+      "Tre store holdsale",
+      "Nye maskiner",
+      "Central placering",
+      "Les Mills BodyPump"
+    ],
+    "info_file": "Bytorvet 25-27, 8722 Hedensted/info.json",
+    "hero_image": "Bytorvet 25-27, 8722 Hedensted/hero.png"
+  },
+  {
+    "name": "Fit&Sund Hørsholm",
+    "address": "Christianshusvej 4B, 2970 Hørsholm",
+    "folder": "Christianshusvej 4B, 2970 Hørsholm",
+    "url": "https://fitogsund.dk/c/huse/hoersholm",
+    "latitude": 55.90257049,
+    "longitude": 12.47672792,
+    "geocode_exact": true,
+    "facilities": [
+      "Fitness",
+      "Personlig træning",
+      "Stor holdsal",
+      "Bikesal",
+      "Stort frivægtsområde",
+      "Camps"
+    ],
+    "info_file": "Christianshusvej 4B, 2970 Hørsholm/info.json",
+    "hero_image": "Christianshusvej 4B, 2970 Hørsholm/hero.png"
+  },
+  {
+    "name": "Fit&Sund Nyborg",
+    "address": "Frisengårdsvej 5a, 5800 Nyborg",
+    "folder": "Frisengårdsvej 5a, 5800 Nyborg",
+    "url": "https://fitogsund.dk/c/huse/nyborg",
+    "latitude": 55.3173578,
+    "longitude": 10.78981373,
+    "geocode_exact": true,
+    "facilities": [
+      "Fitness",
+      "F-fitness",
+      "Reformer",
+      "Holdtræning",
+      "Styrketræning med TECHNOGYM udstyr",
+      "Caféområde",
+      "Gratis og lettilgængelig parkering"
+    ],
+    "info_file": "Frisengårdsvej 5a, 5800 Nyborg/info.json",
+    "hero_image": "Frisengårdsvej 5a, 5800 Nyborg/hero.png"
+  },
+  {
+    "name": "Fit&Sund Skanderborg",
+    "address": "Godthåbsvej 15, 8660 Skanderborg",
+    "folder": "Godthåbsvej 15, 8660 Skanderborg",
+    "url": "https://fitogsund.dk/c/huse/skanderborg",
+    "latitude": 56.04716777,
+    "longitude": 9.91929679,
+    "geocode_exact": true,
+    "facilities": [
+      "Fitness",
+      "Fysioterapeuter",
+      "Personlig træning",
+      "Mere end 60 hold hver uge",
+      "1700 m2",
+      "Store og lyse lokaler",
+      "Fri parkering"
+    ],
+    "info_file": "Godthåbsvej 15, 8660 Skanderborg/info.json",
+    "hero_image": "Godthåbsvej 15, 8660 Skanderborg/hero.png"
+  },
+  {
+    "name": "Fit&Sund Haslev",
+    "address": "Grønlandsgade 3C, 4690 Haslev",
+    "folder": "Grønlandsgade 3C, 4690 Haslev",
+    "url": "https://fitogsund.dk/c/huse/haslev",
+    "latitude": 55.32999208,
+    "longitude": 11.93842136,
+    "geocode_exact": true,
+    "facilities": [
+      "Fitness",
+      "Diætister",
+      "Personlig træning",
+      "ExerciseLab",
+      "Bikesal",
+      "Stor holdsal",
+      "Yoga holdsal",
+      "Cirkeltræningsmaskiner",
+      "Stort velkomstområde"
+    ],
+    "info_file": "Grønlandsgade 3C, 4690 Haslev/info.json",
+    "hero_image": "Grønlandsgade 3C, 4690 Haslev/hero.png"
+  },
+  {
+    "name": "Fit&Sund Hjerting / Esbjerg",
+    "address": "Havborgvej 8, 6710 Esbjerg",
+    "folder": "Havborgvej 8, 6710 Esbjerg",
+    "url": "https://fitogsund.dk/c/huse/hjerting-esbjerg",
+    "latitude": 55.51819381,
+    "longitude": 8.36859004,
+    "geocode_exact": false,
+    "facilities": [
+      "Fitness",
+      "Hyggeligt hus",
+      "Stort funktionelt træningsområde",
+      "Gode P-forhold"
+    ],
+    "info_file": "Havborgvej 8, 6710 Esbjerg/info.json",
+    "hero_image": "Havborgvej 8, 6710 Esbjerg/hero.png"
+  },
+  {
+    "name": "Fit&Sund Faxe",
+    "address": "Hovbygade 1, 4640 Faxe",
+    "folder": "Hovbygade 1, 4640 Faxe",
+    "url": "https://fitogsund.dk/c/huse/faxe",
+    "latitude": 55.24495337,
+    "longitude": 12.1039535,
+    "geocode_exact": false,
+    "facilities": [
+      "Fitness",
+      "Personlig træning",
+      "Bikesal",
+      "ExerciseLab",
+      "Holdsal",
+      "Lyse lokaler",
+      "Stort udvalg af styrke- og cardiomaskiner"
+    ],
+    "info_file": "Hovbygade 1, 4640 Faxe/info.json",
+    "hero_image": "Hovbygade 1, 4640 Faxe/hero.png"
+  },
+  {
+    "name": "Fit&Sund Bredballe",
+    "address": "Hældagervej 165, 7120 Vejle",
+    "folder": "Hældagervej 165, 7120 Vejle",
+    "url": "https://fitogsund.dk/c/huse/bredballe",
+    "latitude": 55.72302197,
+    "longitude": 9.59609915,
+    "geocode_exact": false,
+    "facilities": [
+      "Fitness",
+      "Personlig træning",
+      "Gratis parkering",
+      "Hyggelige omgivelser",
+      "Lokalt hus",
+      "Gratis kaffe",
+      "ExerciseLab"
+    ],
+    "info_file": "Hældagervej 165, 7120 Vejle/info.json",
+    "hero_image": "Hældagervej 165, 7120 Vejle/hero.png"
+  },
+  {
+    "name": "Fit&Sund Horsens / Centrum",
+    "address": "Høegh Guldbergs Gade 36B, 8700 Horsens",
+    "folder": "Høegh Guldbergs Gade 36B, 8700 Horsens",
+    "url": "https://fitogsund.dk/c/huse/horsens-centrum",
+    "latitude": 55.85418144,
+    "longitude": 9.84919247,
+    "geocode_exact": true,
+    "facilities": [
+      "Fitness",
+      "Personlig træning",
+      "Lyse omgivelser",
+      "Centralt beliggende",
+      "Adgang til byens 4 huse",
+      "Trygge rammer"
+    ],
+    "info_file": "Høegh Guldbergs Gade 36B, 8700 Horsens/info.json",
+    "hero_image": "Høegh Guldbergs Gade 36B, 8700 Horsens/hero.png"
+  },
+  {
+    "name": "Fit&Sund Galten",
+    "address": "Hørslevvej 3, Skovby, 8464 Galten",
+    "folder": "Hørslevvej 3, Skovby, 8464 Galten",
+    "url": "https://fitogsund.dk/c/huse/galten",
+    "latitude": 56.15825434,
+    "longitude": 9.94520526,
+    "geocode_exact": true,
+    "facilities": [
+      "Fitness",
+      "Fysioterapeuter",
+      "Diætister",
+      "Personlig træning",
+      "Træning i to huse",
+      "Spændende hold",
+      "Hyggelige velkomstområder",
+      "Kvalitetskaffe"
+    ],
+    "info_file": "Hørslevvej 3, Skovby, 8464 Galten/info.json",
+    "hero_image": "Hørslevvej 3, Skovby, 8464 Galten/hero.png"
+  },
+  {
+    "name": "Fit&Sund Horsens/Recharge City",
+    "address": "Kai Lindbergs Vej 8B, 8700 Horsens",
+    "folder": "Kai Lindbergs Vej 8B, 8700 Horsens",
+    "url": "https://fitogsund.dk/c/huse/horsens-recharge-city",
+    "latitude": 55.84670328,
+    "longitude": 9.73604147,
+    "geocode_exact": true,
+    "facilities": [
+      "Fitness",
+      "Fysioterapeuter",
+      "Personlig træning",
+      "Nyindrettet fitnessområde",
+      "Nye maskiner",
+      "Indgang via Four Points Flex"
+    ],
+    "info_file": "Kai Lindbergs Vej 8B, 8700 Horsens/info.json",
+    "hero_image": "Kai Lindbergs Vej 8B, 8700 Horsens/hero.png"
+  },
+  {
+    "name": "Fit&Sund Aarhus C / Karupvej",
+    "address": "Karupvej 2C, 8000 Aarhus C",
+    "folder": "Karupvej 2C, 8000 Aarhus C",
+    "url": "https://fitogsund.dk/c/huse/aarhus-c-karupvej",
+    "latitude": 56.1558913,
+    "longitude": 10.17953818,
+    "geocode_exact": true,
+    "facilities": [
+      "Fitness",
+      "Fysioterapeuter",
+      "Diætister",
+      "Personlig træning",
+      "I centrum af Aarhus",
+      "ExerciseLab",
+      "Stor holdsal",
+      "Gode P-forhold"
+    ],
+    "info_file": "Karupvej 2C, 8000 Aarhus C/info.json",
+    "hero_image": "Karupvej 2C, 8000 Aarhus C/hero.png"
+  },
+  {
+    "name": "Fit&Sund Holbæk",
+    "address": "Kasernevej 77, 4300 Holbæk",
+    "folder": "Kasernevej 77, 4300 Holbæk",
+    "url": "https://fitogsund.dk/c/huse/holbaek",
+    "latitude": 55.71487763,
+    "longitude": 11.72387704,
+    "geocode_exact": true,
+    "facilities": [
+      "Fitness",
+      "Personlig træning",
+      "Exerciselab",
+      "holdtræning",
+      "bootcamps",
+      "seniortræning",
+      "Hammerstrength"
+    ],
+    "info_file": "Kasernevej 77, 4300 Holbæk/info.json",
+    "hero_image": "Kasernevej 77, 4300 Holbæk/hero.png"
+  },
+  {
+    "name": "Fit&Sund Brønshøj",
+    "address": "Kobbelvænget 74, 2700 Brønshøj",
+    "folder": "Kobbelvænget 74, 2700 Brønshøj",
+    "url": "https://fitogsund.dk/c/huse/broenshoej",
+    "latitude": 55.71047926,
+    "longitude": 12.48042426,
+    "geocode_exact": true,
+    "facilities": [
+      "Fitness",
+      "Fysioterapeuter",
+      "Personlig træning"
+    ],
+    "info_file": "Kobbelvænget 74, 2700 Brønshøj/info.json",
+    "hero_image": "Kobbelvænget 74, 2700 Brønshøj/hero.png"
+  },
+  {
+    "name": "Fit&Sund Horsens / Nord",
+    "address": "Langmarksvej 34, 8700 Horsens",
+    "folder": "Langmarksvej 34, 8700 Horsens",
+    "url": "https://fitogsund.dk/c/huse/horsens-nord",
+    "latitude": 55.87101431,
+    "longitude": 9.85090444,
+    "geocode_exact": true,
+    "facilities": [
+      "Fitness",
+      "Fysioterapeuter",
+      "Personlig træning",
+      "Moderne hus på 2200 m2",
+      "Stort styrketræningsområde",
+      "Mange hold",
+      "BootCamps",
+      "Infrarød Sauna",
+      "Gode P-forhold",
+      "Nær svømmehal"
+    ],
+    "info_file": "Langmarksvej 34, 8700 Horsens/info.json",
+    "hero_image": "Langmarksvej 34, 8700 Horsens/hero.png"
+  },
+  {
+    "name": "Fit&Sund Skive",
+    "address": "Marius Jensens Vej 4, 7800 Skive",
+    "folder": "Marius Jensens Vej 4, 7800 Skive",
+    "url": "https://fitogsund.dk/c/huse/skive",
+    "latitude": 56.56277162,
+    "longitude": 9.02897582,
+    "geocode_exact": true,
+    "facilities": [
+      "Fitness",
+      "Fysioterapeuter",
+      "Fysioterapeuter på gulvet",
+      "Exerciselab",
+      "Åbent 24/7",
+      "Gratis kaffe",
+      "Dejlig atmosfære"
+    ],
+    "info_file": "Marius Jensens Vej 4, 7800 Skive/info.json",
+    "hero_image": "Marius Jensens Vej 4, 7800 Skive/hero.png"
+  },
+  {
+    "name": "Fit&Sund Odense",
+    "address": "Nyborgvej 341B, 5220 Odense SØ",
+    "folder": "Nyborgvej 341B, 5220 Odense SØ",
+    "url": "https://fitogsund.dk/c/huse/odense",
+    "latitude": 55.39124055,
+    "longitude": 10.43621958,
+    "geocode_exact": true,
+    "facilities": [
+      "Fitness",
+      "Fysioterapeuter",
+      "Fysioterapi",
+      "Personlig træning",
+      "HotYoga",
+      "Gratis parkering ved døren",
+      "Lyse lokaler",
+      "Trygge rammer",
+      "Holdtræning",
+      "Hyggelig Cafe"
+    ],
+    "info_file": "Nyborgvej 341B, 5220 Odense SØ/info.json",
+    "hero_image": "Nyborgvej 341B, 5220 Odense SØ/hero.png"
+  },
+  {
+    "name": "Fit&Sund Hornsyld",
+    "address": "Nørremarksvej 3, 8783 Hornsyld",
+    "folder": "Nørremarksvej 3, 8783 Hornsyld",
+    "url": "https://fitogsund.dk/c/huse/hornsyld",
+    "latitude": 55.75876961,
+    "longitude": 9.8460173,
+    "geocode_exact": true,
+    "facilities": [
+      "Fitness",
+      "I Hornsyld idrætscenter",
+      "Styrkeområde",
+      "Holdsal",
+      "Fysioterapi",
+      "Gode P-forhold"
+    ],
+    "info_file": "Nørremarksvej 3, 8783 Hornsyld/info.json",
+    "hero_image": "Nørremarksvej 3, 8783 Hornsyld/hero.png"
+  },
+  {
+    "name": "Fit&Sund Middelfart / Odensevej",
+    "address": "Odensevej 192, 5500 Middelfart",
+    "folder": "Odensevej 192, 5500 Middelfart",
+    "url": "https://fitogsund.dk/c/huse/middelfart-odensevej",
+    "latitude": 55.49834095,
+    "longitude": 9.75970104,
+    "geocode_exact": true,
+    "facilities": [
+      "Fitness",
+      "Fysioterapeuter",
+      "Personlig træning",
+      "Funktionelt træningsområde",
+      "Lyse lokaler",
+      "Mange hold",
+      "Bike sal",
+      "God stemning",
+      "Et kompetent sundhedsfagligt team"
+    ],
+    "info_file": "Odensevej 192, 5500 Middelfart/info.json",
+    "hero_image": "Odensevej 192, 5500 Middelfart/hero.png"
+  },
+  {
+    "name": "Fit&Sund Kjellerup",
+    "address": "Parallelvej 2E, 8620 Kjellerup",
+    "folder": "Parallelvej 2E, 8620 Kjellerup",
+    "url": "https://fitogsund.dk/c/huse/kjellerup",
+    "latitude": 56.28565241,
+    "longitude": 9.41491334,
+    "geocode_exact": true,
+    "facilities": [
+      "Fitness",
+      "Fysioterapeuter"
+    ],
+    "info_file": "Parallelvej 2E, 8620 Kjellerup/info.json",
+    "hero_image": "Parallelvej 2E, 8620 Kjellerup/hero.png"
+  },
+  {
+    "name": "Fit&Sund Fredericia",
+    "address": "Prangervej 109, 7000 Fredericia",
+    "folder": "Prangervej 109, 7000 Fredericia",
+    "url": "https://fitogsund.dk/c/huse/fredericia",
+    "latitude": 55.56214964,
+    "longitude": 9.72336307,
+    "geocode_exact": true,
+    "facilities": [
+      "Fitness",
+      "Fysioterapeuter",
+      "Personlig træning",
+      "Funktionelt træningsområde",
+      "Stort udvalg af maskiner",
+      "Styrketrænings område",
+      "E-fitness",
+      "Stor lys holdsal",
+      "Infrarød Sauna",
+      "Masser af senior hold",
+      "Fysioterapi",
+      "Gratis parkering"
+    ],
+    "info_file": "Prangervej 109, 7000 Fredericia/info.json",
+    "hero_image": "Prangervej 109, 7000 Fredericia/hero.png"
+  },
+  {
+    "name": "Fit&Sund Ry",
+    "address": "Rugaarden 3, 8680 Ry",
+    "folder": "Rugaarden 3, 8680 Ry",
+    "url": "https://fitogsund.dk/c/huse/ry",
+    "latitude": 56.09081678,
+    "longitude": 9.78736743,
+    "geocode_exact": true,
+    "facilities": [
+      "Fitness",
+      "Fysioterapeuter",
+      "Personlig træning",
+      "Lyse lokaler",
+      "Træning på 2 lokationer i Ry",
+      "Hygge i caféen",
+      "Nyrenoveret styrketræningsområde"
+    ],
+    "info_file": "Rugaarden 3, 8680 Ry/info.json",
+    "hero_image": "Rugaarden 3, 8680 Ry/hero.png"
+  },
+  {
+    "name": "Fit&Sund Albertslund",
+    "address": "Rørvang 4, 2620 Albertslund",
+    "folder": "Rørvang 4, 2620 Albertslund",
+    "url": "https://fitogsund.dk/c/huse/albertslund",
+    "latitude": 55.66518395,
+    "longitude": 12.36334484,
+    "geocode_exact": true,
+    "facilities": [
+      "Fitness",
+      "Fysioterapeuter",
+      "Personlig træning",
+      "Holdtræning",
+      "Reformer / Yoga",
+      "Biocircuit",
+      "Over 2200 m2 træningshus"
+    ],
+    "info_file": "Rørvang 4, 2620 Albertslund/info.json",
+    "hero_image": "Rørvang 4, 2620 Albertslund/hero.png"
+  },
+  {
+    "name": "Fit&Sund Højbjerg",
+    "address": "Saralyst Alle 40, 8270 Højbjerg",
+    "folder": "Saralyst Alle 40, 8270 Højbjerg",
+    "url": "https://fitogsund.dk/c/huse/hoejbjerg",
+    "latitude": 56.11877043,
+    "longitude": 10.1909754,
+    "geocode_exact": true,
+    "facilities": [
+      "Fitness",
+      "Personlig træning",
+      "Træningsudstyr af høj kvalitet",
+      "Exerciselab",
+      "Hyggelig atmosfære",
+      "Højt fagligt niveau"
+    ],
+    "info_file": "Saralyst Alle 40, 8270 Højbjerg/info.json",
+    "hero_image": "Saralyst Alle 40, 8270 Højbjerg/hero.png"
+  },
+  {
+    "name": "Fit&Sund Solbjerg",
+    "address": "Solbjerg Hovedgade 90B, 8355 Solbjerg",
+    "folder": "Solbjerg Hovedgade 90B, 8355 Solbjerg",
+    "url": "https://fitogsund.dk/c/huse/solbjerg",
+    "latitude": 56.03817306,
+    "longitude": 10.07981001,
+    "geocode_exact": true,
+    "facilities": [
+      "Fitness",
+      "Fysioterapeuter",
+      "Personlig træning",
+      "Mange hold hver uge",
+      "Nyindrettede lokaler",
+      "Nyt udstyr",
+      "Fri parkering",
+      "Hyggelig cafe"
+    ],
+    "info_file": "Solbjerg Hovedgade 90B, 8355 Solbjerg/info.json",
+    "hero_image": "Solbjerg Hovedgade 90B, 8355 Solbjerg/hero.png"
+  },
+  {
+    "name": "Fit&Sund Horsens / Dagnæs",
+    "address": "Strandkærvej 87, 8700 Horsens",
+    "folder": "Strandkærvej 87, 8700 Horsens",
+    "url": "https://fitogsund.dk/c/huse/horsens-dagnaes",
+    "latitude": 55.84324945,
+    "longitude": 9.8432107,
+    "geocode_exact": false,
+    "facilities": [
+      "Fitness",
+      "Fysioterapeuter",
+      "Personlig træning",
+      "Sauna",
+      "Saunagus",
+      "Squash",
+      "Børnepasning",
+      "ExerciseLab",
+      "Seniorklub",
+      "Yoga/reformer",
+      "Byens største fitnesshus"
+    ],
+    "info_file": "Strandkærvej 87, 8700 Horsens/info.json",
+    "hero_image": "Strandkærvej 87, 8700 Horsens/hero.png"
+  },
+  {
+    "name": "Fit&Sund Juelsminde",
+    "address": "Strandvejen 31, 7130 Juelsminde",
+    "folder": "Strandvejen 31, 7130 Juelsminde",
+    "url": "https://fitogsund.dk/c/huse/juelsminde",
+    "latitude": 55.71538441,
+    "longitude": 10.01076348,
+    "geocode_exact": true,
+    "facilities": [
+      "Fitness",
+      "Fysioterapeuter",
+      "Central Placering",
+      "Lyse og flotte lokaler",
+      "Kvalitetskaffe i Caféen",
+      "Plads til alle"
+    ],
+    "info_file": "Strandvejen 31, 7130 Juelsminde/info.json",
+    "hero_image": "Strandvejen 31, 7130 Juelsminde/hero.png"
+  },
+  {
+    "name": "Fit&Sund Brædstrup",
+    "address": "Søndergade 11, 8740 Brædstrup",
+    "folder": "Søndergade 11, 8740 Brædstrup",
+    "url": "https://fitogsund.dk/c/huse/braedstrup",
+    "latitude": 55.97122964,
+    "longitude": 9.61156448,
+    "geocode_exact": true,
+    "facilities": [
+      "Fitness",
+      "Fysioterapeuter",
+      "Personlig træning",
+      "Seniorklub",
+      "Holdsal",
+      "Reformer",
+      "Åbent fra 05-23",
+      "Fysioterapi",
+      "Te/kaffe i velkomstområdet"
+    ],
+    "info_file": "Søndergade 11, 8740 Brædstrup/info.json",
+    "hero_image": "Søndergade 11, 8740 Brædstrup/hero.png"
+  },
+  {
+    "name": "Fit&Sund Horsens / Torsted",
+    "address": "Torstedalle 90, 8700 Horsens",
+    "folder": "Torstedalle 90, 8700 Horsens",
+    "url": "https://fitogsund.dk/c/huse/horsens-torsted",
+    "latitude": 55.84250448,
+    "longitude": 9.8109359,
+    "geocode_exact": true,
+    "facilities": [
+      "Fitness",
+      "Fysioterapeuter",
+      "Personlig træning",
+      "Træne i 5 huse",
+      "Nem adgang til fysioterapi",
+      "I hjertet af dit lokalsamfund",
+      "ExerciseLab",
+      "BootCamps"
+    ],
+    "info_file": "Torstedalle 90, 8700 Horsens/info.json",
+    "hero_image": "Torstedalle 90, 8700 Horsens/hero.png"
+  },
+  {
+    "name": "Fit&Sund Køge",
+    "address": "Torvet 22, 4600 Køge",
+    "folder": "Torvet 22, 4600 Køge",
+    "url": "https://fitogsund.dk/c/huse/koege",
+    "latitude": 55.45711619,
+    "longitude": 12.18059976,
+    "geocode_exact": false,
+    "facilities": [
+      "Fitness",
+      "Personlig træning",
+      "Velkvalificeret personale",
+      "ExerciseLab",
+      "Stort holdudvalg",
+      "Sundhedsfagligt team",
+      "Indoor Cycling"
+    ],
+    "info_file": "Torvet 22, 4600 Køge/info.json",
+    "hero_image": "Torvet 22, 4600 Køge/hero.png"
+  },
+  {
+    "name": "Fit&Sund Ringsted",
+    "address": "Vestervej 2E, 4100 Ringsted",
+    "folder": "Vestervej 2E, 4100 Ringsted",
+    "url": "https://fitogsund.dk/c/huse/ringsted",
+    "latitude": 55.4391692,
+    "longitude": 11.78591252,
+    "geocode_exact": true,
+    "facilities": [
+      "Fitness",
+      "Fysioterapeuter",
+      "Personlig træning",
+      "Hold- og spinningsal",
+      "ExerciseLab",
+      "Varieret holdplan",
+      "Veluddannet og venligt personale",
+      "Dygtige behandlere"
+    ],
+    "info_file": "Vestervej 2E, 4100 Ringsted/info.json",
+    "hero_image": "Vestervej 2E, 4100 Ringsted/hero.png"
+  },
+  {
+    "name": "Fit&Sund Haderslev",
+    "address": "Vinkelvej 15, 6100 Haderslev",
+    "folder": "Vinkelvej 15, 6100 Haderslev",
+    "url": "https://fitogsund.dk/c/huse/haderslev",
+    "latitude": 55.25405394,
+    "longitude": 9.50334402,
+    "geocode_exact": true,
+    "facilities": [
+      "Fitness",
+      "Personlig træning",
+      "Fysioterapi",
+      "2 lyse holdsale",
+      "ExerciseLab",
+      "Seniorclub",
+      "Massage",
+      "Babylounge",
+      "Gratis parkering",
+      "E-fitness",
+      "Reformer"
+    ],
+    "info_file": "Vinkelvej 15, 6100 Haderslev/info.json",
+    "hero_image": "Vinkelvej 15, 6100 Haderslev/hero.png"
+  },
+  {
+    "name": "Fit&Sund Grenå",
+    "address": "Ydesvej 2, 8500 Grenå",
+    "folder": "Ydesvej 2, 8500 Grenå",
+    "url": "https://fitogsund.dk/c/huse/grenaa",
+    "latitude": 56.40485182,
+    "longitude": 10.88677308,
+    "geocode_exact": false,
+    "facilities": [
+      "Fitness",
+      "Personlig træning",
+      "Topmoderne styrke- og cardiotræning",
+      "Indoor cycling og holdtræning",
+      "Uddannede instruktører",
+      "Gode p-forhold"
+    ],
+    "info_file": "Ydesvej 2, 8500 Grenå/info.json",
+    "hero_image": "Ydesvej 2, 8500 Grenå/hero.png"
+  },
+  {
+    "name": "Fit&Sund Risskov / Egå",
+    "address": "Ådalsvej 27, 8240 Risskov",
+    "folder": "Ådalsvej 27, 8240 Risskov",
+    "url": "https://fitogsund.dk/c/huse/risskov-egaa",
+    "latitude": 56.20325675,
+    "longitude": 10.25496671,
+    "geocode_exact": true,
+    "facilities": [
+      "Fitness",
+      "Fysioterapeuter",
+      "Personlig træning",
+      "Stort og lyst træningscenter",
+      "ExerciseLab",
+      "Stor holdsal",
+      "Indoor Cycling-sal",
+      "Sauna",
+      "Gode parkeringsmuligheder"
+    ],
+    "info_file": "Ådalsvej 27, 8240 Risskov/info.json",
+    "hero_image": "Ådalsvej 27, 8240 Risskov/hero.png"
+  },
+  {
+    "name": "Fit&Sund Hadsten",
+    "address": "Ågade 97, st., 8370 Hadsten",
+    "folder": "Ågade 97, st., 8370 Hadsten",
+    "url": "https://fitogsund.dk/c/huse/hadsten",
+    "latitude": 56.32745826,
+    "longitude": 10.04262528,
+    "geocode_exact": false,
+    "facilities": [
+      "Fitness",
+      "Personlig træning",
+      "Venlig atmosfære",
+      "Fleksible åbningstider",
+      "Altid gratis kaffe",
+      "Plads til alle",
+      "Plads til både fordybelse og tung træning"
+    ],
+    "info_file": "Ågade 97, st., 8370 Hadsten/info.json",
+    "hero_image": "Ågade 97, st., 8370 Hadsten/hero.png"
+  },
+  {
+    "name": "Fit&Sund Silkeborg",
+    "address": "Århusvej 45, 8600 Silkeborg",
+    "folder": "Århusvej 45, 8600 Silkeborg",
+    "url": "https://fitogsund.dk/c/huse/silkeborg",
+    "latitude": 56.17010325,
+    "longitude": 9.5686565,
+    "geocode_exact": true,
+    "facilities": [
+      "Fitness",
+      "Fysioterapeuter",
+      "Personlig træning",
+      "Nyt træningsudstyr",
+      "Stor holdsal",
+      "Mange seniorhold",
+      "Fri parkering lige ved døren",
+      "Idrætshal"
+    ],
+    "info_file": "Århusvej 45, 8600 Silkeborg/info.json",
+    "hero_image": "Århusvej 45, 8600 Silkeborg/hero.png"
+  }
+]

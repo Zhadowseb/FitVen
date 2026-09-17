@@ -1,0 +1,264 @@
+{
+  "chain": "PureGym",
+  "name": "Århus C., Scandinavian",
+  "puregym_id": "152",
+  "address": {
+    "street": "Margrethepladsen 4",
+    "postal_code": "8000",
+    "city": "Århus C",
+    "country": "DK",
+    "full": "Margrethepladsen 4, 8000 Århus C"
+  },
+  "location": {
+    "latitude": 56.1527586,
+    "longitude": 10.195402400000035
+  },
+  "url": "https://www.puregym.dk/find-center/aarhus-c-scandinavian",
+  "membership_url": "https://www.puregym.dk/bliv-medlem/45/medlemskab",
+  "price_from": "Priser fra 134,50 DKK/md.",
+  "price_note": "*Normalpris fra 269 DKK/md.",
+  "today_notice": "Vi lukker i dag kl. 23:00",
+  "opening_hours": [
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 23:00",
+      "staffed": "09:00 - 20:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 23:00",
+      "staffed": "08:00 - 17:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "07:30 - 23:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "07:30 - 23:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Mandag",
+      "open": "05:00 - 23:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 23:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 23:00",
+      "staffed": "08:00 - 20:00"
+    }
+  ],
+  "opening_hours_schema": [
+    {
+      "day": "Monday",
+      "opens": "05:00",
+      "closes": "23:00"
+    },
+    {
+      "day": "Tuesday",
+      "opens": "05:00",
+      "closes": "23:00"
+    },
+    {
+      "day": "Wednesday",
+      "opens": "05:00",
+      "closes": "23:00"
+    },
+    {
+      "day": "Thursday",
+      "opens": "05:00",
+      "closes": "23:00"
+    },
+    {
+      "day": "Friday",
+      "opens": "05:00",
+      "closes": "23:00"
+    },
+    {
+      "day": "Saturday",
+      "opens": "07:30",
+      "closes": "23:00"
+    },
+    {
+      "day": "Sunday",
+      "opens": "07:30",
+      "closes": "23:00"
+    }
+  ],
+  "special_days": [
+    {
+      "date": "2027-01-01",
+      "opens": "Lukket",
+      "closes": "Lukket"
+    },
+    {
+      "date": "2027-04-02",
+      "opens": "07:30",
+      "closes": "23:00"
+    },
+    {
+      "date": "2027-04-03",
+      "opens": "07:30",
+      "closes": "23:00"
+    },
+    {
+      "date": "2027-04-05",
+      "opens": "07:30",
+      "closes": "23:00"
+    },
+    {
+      "date": "2027-04-06",
+      "opens": "07:30",
+      "closes": "23:00"
+    },
+    {
+      "date": "2027-05-14",
+      "opens": "07:30",
+      "closes": "23:00"
+    },
+    {
+      "date": "2027-05-24",
+      "opens": "07:30",
+      "closes": "23:00"
+    },
+    {
+      "date": "2027-05-25",
+      "opens": "07:30",
+      "closes": "23:00"
+    },
+    {
+      "date": "2027-06-05",
+      "opens": "07:30",
+      "closes": "23:00"
+    },
+    {
+      "date": "2026-12-24",
+      "opens": "07:30",
+      "closes": "23:00"
+    },
+    {
+      "date": "2026-12-25",
+      "opens": "07:30",
+      "closes": "23:00"
+    },
+    {
+      "date": "2026-12-26",
+      "opens": "07:30",
+      "closes": "23:00"
+    },
+    {
+      "date": "2026-12-31",
+      "opens": "05:00",
+      "closes": "15:00"
+    }
+  ],
+  "meta_description": "Hos PureGym i Scandinavian i Aarhus tilbyder vi både styrke-, cardio- og fitnesstræning. Find center her, og oplev træning med plads til alle.",
+  "description": "PureGym Scandinavian\nVelkommen til PureGym Scandinavian Center – midt i hjertet af Aarhus. Centralt placeret ved ARoS og Musikhuset finder du vores moderne træningscenter i to etager, fyldt med styrke-, konditions- og funktionelle træningsfaciliteter. Uanset om du er til holdtræning som Yoga, Styrke og Bike – eller foretrækker at træne på egen hånd – har vi noget for dig.\nDu bliver mødt af et smil og et dedikeret team, der brænder for at give dig den bedste træningsoplevelse.\nVi glæder os til at se dig!\nDet siger personalet om PureGym i Scandinavian Center\nPureGym Scandinavian Center – træning med fællesskab i hjertet af Aarhus. Hos os handler det ikke kun om træning – det handler om fællesskab, trivsel og tryghed. I Scandinavian Center har vi et helt særligt sammenhold mellem ansatte og medlemmer, og her er der plads til alle – uanset niveau og erfaring.\nVi ønsker, at alle får en positiv oplevelse – hvad enten du træner alene eller deltager på et af vores mange hold. Vi har en stor og varieret holdplan, der rummer alt fra styrke og kondition til Yoga og Bike.\nVores mål er at skabe et trygt og inspirerende træningsmiljø, hvor du føler dig hjemme og motiveret – hver gang du træder ind ad døren.\nPersonlig træning i PureGym i Scandinavian Center\nPersonlig træning – målrettet hjælp til din udvikling. Hos PureGym Scandinavian Center tilbyder vi personlig træning med vores dygtige og certificerede trænere, der har forskellige baggrunde og kompetencer.\nUanset om dit mål er vægttab, øget styrke, bedre teknik eller motivation til at komme i gang, står vores trænere klar til at støtte og guide dig hele vejen. Vi hjælper dig med at nå dine mål – på den måde, der passer bedst til dig.\nVi tilbyder også en uforpligtende samtale med en personlig træner til 0,-:\nBook samtale\nHoldtræning i PureGym i Scandinavian Center\nI Scandinavian Center har vi et stort udvalg af hold – og hold til enhver smag. Centret har to holdsale og en bikesal, som alle bliver brugt flere gange dagligt. I vores store bikesal kører vi både standard og Power Bike. Vores dygtige holdinstruktører står klar til at give dig den bedste træningsoplevelse og hjælper dig gerne på vej, hvis du er ny i holdsalen. Når du deltager på hold, er der rig mulighed for at få trænet og styrket hele kroppen.\nHvornår træner folk her i centret?\nVi har god plads til vores medlemmer. I vores app kan du se, hvornår der er flest og færrest mennesker i centret.\nBliv medlem\nHvornår kan jeg møde personalet i centret?\nVed indgangen ligger receptionen, hvor du bliver mødt af et smilende og servicemindet team, der står klar til at hjælpe dig. Se vores bemandingstider på oversigten her på siden. Du er altid velkommen til at komme forbi i vores bemandede åbningstid. Vi tager os tid til at svare på alle dine spørgsmål og giver gerne en rundvisning i centret.\nKan jeg parkere ved PureGym i Scandinavian Center?\nVi har to timers gratis parkering tilknyttet, hvilket gør det nemt og tilgængeligt. Du skal blot huske at registrere din nummerplade, når du kommer ind i centret. Vores parkering gælder kun, hvis du parkerer i kælderen. Vi er tæt placeret på offentlig transport, da vi ligger 5 min. gang fra banegården.\nFølg os på Facebook\nSe vores lokaler her\nBliv medlem af PureGym og få adgang til:\nApp\nHer kan du få et trænings-program, følge din træning, booke hold, deltage i challenges og meget mere.\nPersonlig træning\nHar du brug for hjælp til at nå dine mål? Book en samtale hos en af vores certificerede personlige trænere til 0 kr.\nHoldtræning\nBliv en del af et stærkt fællesskab på vores hold. Vores dedikerede instruktører guider dig igennem og sikrer højt humør.\nBodytracker\nFor kun ekstra 9 kr./md. kan du få adgang til en avanceret vægt, der giver dig en kropsanalyse med flere forskellige parametre.\nEr du klar til at starte?\nVælg dit medlemskab her\nOg bliv en del af Danmarks største fitness-fælleskab.\nGenerelt\nLog ind på Mit PureGym\nPriser og medlemskabstyper\nTil/afmeld nyhedsbrev\nOm PureGym\nPresse\nKarriere\nHjerteforeningen\nStudierabat\nInformation\nFAQ & Kontakt\nVelkomst og information\nHusets regler\nMedlems­betingelser\nDatapolitik\nCookies\nTilgængelighed\nKonkurrencevindere\nSafespace\nVores fitness centre\nFind center\nAlle større byer\nKøbenhavn\nAarhus\nOdense\nAalborg\nRanders\nValby\nDownload vores app\nHold dig informeret\nTorveporten 2,\n2500 Valby\nCVR. 25652991\nPureGym © 2026\nLog ind\nNyt eller glemt kodeord?\nIkke medlem endnu?\nMeld dig ind",
+  "notice": null,
+  "facilities": [],
+  "facility_names": [
+    "App",
+    "Bikesal",
+    "Cardiotræning",
+    "Funktionelt træningsområde",
+    "Holdtræning",
+    "Parkering",
+    "Personlig træner",
+    "Styrketræning",
+    "Udstrækningsområde",
+    "Watt-cykler & Intelligent Cycling"
+  ],
+  "facility_ids": [
+    "17",
+    "355",
+    "14",
+    "24",
+    "27",
+    "349",
+    "12",
+    "28",
+    "434",
+    "350"
+  ],
+  "plan_ids": [
+    "671",
+    "666"
+  ],
+  "team_ids": [
+    "741",
+    "498",
+    "736",
+    "742",
+    "807",
+    "318",
+    "834",
+    "338",
+    "358",
+    "735",
+    "737",
+    "802",
+    "806",
+    "344",
+    "739",
+    "387",
+    "757"
+  ],
+  "classes": [
+    "Bike Power",
+    "Bike Standard",
+    "Bike – Event",
+    "Body Fit",
+    "Boksning",
+    "Core & Glutes",
+    "Functional Express",
+    "Functional Training",
+    "Get Started - Introhold",
+    "Jam",
+    "Pilates",
+    "Puls & Cardio - Event",
+    "Step Power",
+    "Step Standard",
+    "Stram Op",
+    "Yang Yoga",
+    "Yin Yoga"
+  ],
+  "images": {
+    "hero": "https://www.puregym.dk/files/2025-10/_6_20418-HDR.jpg",
+    "hero_2500": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-10/_6_20418-HDR.jpg?itok=-kaxDLRd",
+    "teaser": "https://www.puregym.dk/files/styles/center_teaser/public/2025-10/_6_20418-HDR.jpg?itok=XOQkQDWr",
+    "gallery": [
+      "https://mit.puregym.dk/images/centers/726/6-20302-hdr.webp",
+      "https://mit.puregym.dk/images/centers/726/6-20306-hdr.webp",
+      "https://mit.puregym.dk/images/centers/726/6-20314-hdr.webp",
+      "https://mit.puregym.dk/images/centers/726/6-20326-hdr.webp",
+      "https://mit.puregym.dk/images/centers/726/6-20330-hdr.webp",
+      "https://mit.puregym.dk/images/centers/726/6-20334-hdr.webp",
+      "https://mit.puregym.dk/images/centers/726/6-20346-hdr.webp",
+      "https://mit.puregym.dk/images/centers/726/6-20350-hdr.webp",
+      "https://mit.puregym.dk/images/centers/726/6-20366-hdr.webp",
+      "https://mit.puregym.dk/images/centers/726/6-20378-hdr.webp",
+      "https://mit.puregym.dk/images/centers/726/6-20386-hdr.webp",
+      "https://mit.puregym.dk/images/centers/726/6-20402-hdr.webp",
+      "https://mit.puregym.dk/images/centers/726/6-20410-hdr.webp",
+      "https://mit.puregym.dk/images/centers/726/6-20418-hdr.webp",
+      "https://mit.puregym.dk/images/centers/726/6-20434-hdr.webp",
+      "https://mit.puregym.dk/images/centers/726/6-20450-hdr.webp",
+      "https://mit.puregym.dk/images/centers/726/6-20458-hdr.webp",
+      "https://mit.puregym.dk/images/centers/726/6-20466-hdr.webp",
+      "https://mit.puregym.dk/images/centers/726/6-20474-hdr.webp",
+      "https://mit.puregym.dk/images/centers/726/6-20482-hdr.webp",
+      "https://mit.puregym.dk/images/centers/726/6-20486-hdr.webp",
+      "https://mit.puregym.dk/images/centers/726/6-20498-hdr.webp",
+      "https://mit.puregym.dk/images/centers/726/6-20506-hdr.webp"
+    ]
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

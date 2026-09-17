@@ -1,0 +1,350 @@
+{
+  "chain": "LOOP Fitness",
+  "name": "LOOP Lystrup",
+  "loop_id": 238,
+  "center_type": "lite_kl",
+  "address": {
+    "street": "Møgelgårdsvej 8",
+    "postal_code": "8520",
+    "city": "Lystrup",
+    "country": "DK",
+    "full": "Møgelgårdsvej 8, 8520 Lystrup"
+  },
+  "location": {
+    "latitude": 56.2311449,
+    "longitude": 10.2389078
+  },
+  "url": "https://loopfitness.dk/centre/loop-fitness-lystrup/",
+  "membership_url": "https://loopfitness.dk/medlemskab/bliv-medlem/",
+  "phone": "31438006",
+  "email": "lystrup@loopfitness.dk",
+  "facebook_url": null,
+  "google_review_url": "https://g.page/r/CeOYrk5a3wrrEB0/review",
+  "cvr": "41855029",
+  "manager_name": "Bo",
+  "opened": "2021-05-07",
+  "has_classes": false,
+  "only_open_when_staffed": false,
+  "max_visitor_capacity": 20,
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 24:00"
+    }
+  ],
+  "staffed_hours": [
+    {
+      "day": "Mandag",
+      "periods": [
+        "08:00 - 11:00"
+      ]
+    },
+    {
+      "day": "Tirsdag",
+      "periods": [
+        "15:00 - 18:00"
+      ]
+    },
+    {
+      "day": "Onsdag",
+      "periods": [
+        "15:00 - 18:00"
+      ]
+    },
+    {
+      "day": "Torsdag",
+      "periods": [
+        "15:00 - 18:00"
+      ]
+    },
+    {
+      "day": "Fredag",
+      "periods": [
+        "09:00 - 12:00"
+      ]
+    },
+    {
+      "day": "Lørdag",
+      "periods": [
+        "10:00 - 12:00"
+      ]
+    },
+    {
+      "day": "Søndag",
+      "periods": [
+        "10:00 - 12:00"
+      ]
+    }
+  ],
+  "staffed_hours_dates": [
+    {
+      "date": "2023-05-05",
+      "open": "None - None"
+    },
+    {
+      "date": "2023-05-18",
+      "open": "None - None"
+    },
+    {
+      "date": "2023-05-29",
+      "open": "None - None"
+    },
+    {
+      "date": "2023-10-22",
+      "open": "None - None"
+    },
+    {
+      "date": "2023-11-11",
+      "open": "None - None"
+    },
+    {
+      "date": "2023-11-12",
+      "open": "None - None"
+    },
+    {
+      "date": "2023-11-15",
+      "open": "14:00 - 15:30"
+    },
+    {
+      "date": "2023-11-19",
+      "open": "None - None"
+    },
+    {
+      "date": "2023-12-05",
+      "open": "None - None"
+    },
+    {
+      "date": "2023-12-07",
+      "open": "None - None"
+    },
+    {
+      "date": "2023-12-24",
+      "open": "None - None"
+    },
+    {
+      "date": "2023-12-25",
+      "open": "None - None"
+    },
+    {
+      "date": "2023-12-26",
+      "open": "None - None"
+    },
+    {
+      "date": "2023-12-28",
+      "open": "None - None"
+    },
+    {
+      "date": "2023-12-31",
+      "open": "None - None"
+    },
+    {
+      "date": "2024-01-01",
+      "open": "None - None"
+    },
+    {
+      "date": "2024-03-28",
+      "open": "None - None"
+    },
+    {
+      "date": "2024-03-29",
+      "open": "None - None"
+    },
+    {
+      "date": "2024-04-01",
+      "open": "None - None"
+    },
+    {
+      "date": "2024-04-06",
+      "open": "None - None"
+    },
+    {
+      "date": "2024-04-26",
+      "open": "None - None"
+    },
+    {
+      "date": "2024-04-30",
+      "open": "None - None"
+    },
+    {
+      "date": "2024-05-20",
+      "open": "None - None"
+    },
+    {
+      "date": "2024-12-31",
+      "open": "None - None"
+    },
+    {
+      "date": "2025-01-01",
+      "open": "None - None"
+    },
+    {
+      "date": "2025-04-17",
+      "open": "None - None"
+    },
+    {
+      "date": "2025-04-18",
+      "open": "None - None"
+    },
+    {
+      "date": "2025-04-21",
+      "open": "None - None"
+    },
+    {
+      "date": "2025-05-10",
+      "open": "None - None"
+    },
+    {
+      "date": "2025-05-16",
+      "open": "None - None"
+    },
+    {
+      "date": "2025-05-29",
+      "open": "None - None"
+    },
+    {
+      "date": "2025-06-09",
+      "open": "None - None"
+    },
+    {
+      "date": "2025-06-12",
+      "open": "None - None"
+    },
+    {
+      "date": "2025-09-27",
+      "open": "None - None"
+    },
+    {
+      "date": "2025-10-18",
+      "open": "None - None"
+    },
+    {
+      "date": "2025-12-24",
+      "open": "None - None"
+    },
+    {
+      "date": "2025-12-25",
+      "open": "None - None"
+    },
+    {
+      "date": "2025-12-26",
+      "open": "None - None"
+    },
+    {
+      "date": "2025-12-27",
+      "open": "None - None"
+    },
+    {
+      "date": "2025-12-31",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-01-01",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-04-02",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-04-03",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-04-05",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-04-06",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-05-01",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-05-14",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-05-24",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-05-25",
+      "open": "None - None"
+    }
+  ],
+  "meta_description": "Hos LOOP Fitness Lystrup får du effektiv og veldokumenteret træning af hele kroppen på kun 24 minutter. I LOOP er der plads til alle.",
+  "description": "Kom indenfor og mærk energien. Hos LOOP får du afslappet stemning og effektiv træning på den bedste måde. Uanset niveau er der plads til dig, og træningen er enkel: Start med opvarmning, træn hele kroppen i træningscirklen, og afslut med udstrækning i vores LOOP Ekstra område. Efter din træning kan du nyde en gratis kop kaffe eller the i vores café.",
+  "quote_by": "Bo, centerleder",
+  "facilities": [
+    "2 cirkler",
+    "Cardio-område",
+    "LOOP Kids",
+    "Gratis kaffe"
+  ],
+  "memberships": [
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr",
+      "price_per_month": 289.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 319,
+      "family_members": 0,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    },
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr. - familie",
+      "price_per_month": 589.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 619,
+      "family_members": 9,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    }
+  ],
+  "images": {
+    "hero": "https://loopfitness.dk/wp-content/uploads/2021/01/Lystrup.png",
+    "og_image": "https://loopfitness.dk/wp-content/uploads/2021/01/image0-scaled.jpeg"
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

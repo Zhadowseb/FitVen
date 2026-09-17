@@ -1,0 +1,169 @@
+{
+  "chain": "LOOP Fitness",
+  "name": "LOOP Hammel",
+  "loop_id": 152,
+  "center_type": "lite",
+  "address": {
+    "street": "TEMA Centret, Østergade 8A",
+    "postal_code": "8450",
+    "city": "Hammel",
+    "country": "DK",
+    "full": "TEMA Centret, Østergade 8A, 8450 Hammel"
+  },
+  "location": {
+    "latitude": 56.255756,
+    "longitude": 9.867071
+  },
+  "url": "https://loopfitness.dk/centre/loop-fitness-hammel/",
+  "membership_url": "https://loopfitness.dk/medlemskab/bliv-medlem/",
+  "phone": "41746251",
+  "email": "hammel@loopfitness.dk",
+  "facebook_url": null,
+  "google_review_url": "https://g.page/r/Cb_4VF3jvf2ZEB0/review",
+  "cvr": "36950358",
+  "manager_name": "Pernille Ryge Koch",
+  "opened": "2016-01-16",
+  "has_classes": true,
+  "only_open_when_staffed": false,
+  "max_visitor_capacity": 20,
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 22:00"
+    }
+  ],
+  "staffed_hours": [
+    {
+      "day": "Mandag",
+      "periods": [
+        "08:30 - 11:30"
+      ]
+    },
+    {
+      "day": "Tirsdag",
+      "periods": [
+        "16:00 - 19:00"
+      ]
+    },
+    {
+      "day": "Onsdag",
+      "periods": [
+        "08:30 - 11:30"
+      ]
+    },
+    {
+      "day": "Torsdag",
+      "periods": [
+        "16:00 - 19:00"
+      ]
+    },
+    {
+      "day": "Fredag",
+      "periods": [
+        "08:00 - 11:00"
+      ]
+    },
+    {
+      "day": "Lørdag",
+      "periods": [
+        "09:00 - 11:00"
+      ]
+    },
+    {
+      "day": "Søndag",
+      "periods": [
+        "09:00 - 11:00"
+      ]
+    }
+  ],
+  "staffed_hours_dates": [
+    {
+      "date": "2026-09-26",
+      "open": "09:00 - 10:45"
+    },
+    {
+      "date": "2026-09-27",
+      "open": "09:00 - 10:45"
+    },
+    {
+      "date": "2026-09-29",
+      "open": "08:30 - 11:30"
+    },
+    {
+      "date": "2026-09-30",
+      "open": "15:00 - 18:00"
+    }
+  ],
+  "meta_description": "Hos LOOP Fitness Hammel får du effektiv og veldokumenteret træning af hele kroppen på kun 24 minutter. I LOOP er der plads til alle - kvinder og mænd.",
+  "description": "Kom indenfor og mærk energien. Hos LOOP får du afslappet stemning og effektiv træning på den bedste måde. Uanset niveau er der plads til dig, og træningen er enkel: Start med opvarmning, træn hele kroppen i træningscirklen, og afslut med udstrækning i vores LOOP Ekstra område. Efter din træning kan du nyde en gratis kop kaffe eller the i vores café.",
+  "quote_by": "Pernille, centerleder",
+  "facilities": [
+    "1 cirkel",
+    "Cardio-område",
+    "Gratis kaffe"
+  ],
+  "memberships": [
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr",
+      "price_per_month": 289.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 319,
+      "family_members": 0,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    },
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr. - familie",
+      "price_per_month": 589.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 619,
+      "family_members": 9,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    }
+  ],
+  "images": {
+    "hero": "https://loopfitness.dk/wp-content/uploads/2019/11/Hammel_2026.png",
+    "og_image": "https://loopfitness.dk/wp-content/uploads/2019/11/Hadsten_Centerleder-scaled-e1680179370444.jpg"
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

@@ -940,6 +940,37 @@ export async function getSetsByWorkout(db, workoutId) {
   );
 }
 
+// Every completed, non-failed set with a weight and reps, joined to the shared
+// catalog so the centre leaderboard gets the cloud exercise id. Which set is
+// "best" is decided in Utils/gymUtils.js, where it can be tested.
+export async function getCompletedSetsForGymLifts(db, workoutId) {
+  return db.getAllAsync(
+    `SELECT
+        s.sets_id,
+        s.sync_id,
+        s.weight,
+        s.reps,
+        e.exercise_instance_id,
+        e.exercise_name,
+        catalog.cloud_exercise_id
+     FROM "Set" s
+     JOIN Exercise_Instance e ON e.exercise_instance_id = s.exercise_instance_id
+     LEFT JOIN Exercise catalog
+       ON catalog.name = e.exercise_name COLLATE NOCASE
+     WHERE e.workout_type_instance_id = ?
+       AND s.done = 1
+       AND COALESCE(s.failed, 0) = 0
+       AND s.weight IS NOT NULL
+       AND s.reps IS NOT NULL
+       AND CAST(s.weight AS REAL) > 0
+       AND CAST(s.reps AS INTEGER) > 0
+       AND COALESCE(s.deleted_at, '') = ''
+       AND COALESCE(e.deleted_at, '') = ''
+     ORDER BY e.exercise_instance_id ASC, s.set_number ASC, s.sets_id ASC;`,
+    [workoutId]
+  );
+}
+
 export async function getExercisesByWorkoutId(db, workoutId) {
   await ensureExerciseOrderColumn(db);
 

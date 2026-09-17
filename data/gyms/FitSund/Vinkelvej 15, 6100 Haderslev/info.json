@@ -1,0 +1,367 @@
+{
+  "chain": "Fit&Sund",
+  "name": "Fit&Sund Haderslev",
+  "short_name": "Haderslev",
+  "address": {
+    "street": "Vinkelvej 15",
+    "postal_code": "6100",
+    "city": "Haderslev",
+    "country": "DK",
+    "full": "Vinkelvej 15, 6100 Haderslev"
+  },
+  "location": {
+    "latitude": 55.25405394,
+    "longitude": 9.50334402
+  },
+  "geocode": {
+    "latitude": 55.25405394,
+    "longitude": 9.50334402,
+    "matched_address": "Vinkelvej 15, 6100 Haderslev",
+    "exact": true,
+    "source": "DAWA"
+  },
+  "url": "https://fitogsund.dk/c/huse/haderslev",
+  "membership_url": "https://fitogsund.dk/p/bliv-medlem",
+  "class_schedule_url": "https://fitogsund.goactivebooking.com/class-web-categories/34/classes?facility=197",
+  "google_maps_url": "https://www.google.com/maps/dir/?api=1&destination=Vinkelvej-15+6100+Haderslev",
+  "phone": "+45 24 41 10 14",
+  "email": "haderslev@fitogsund.dk",
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "04:30 - 23:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "04:30 - 23:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "04:30 - 23:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "04:30 - 23:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "04:30 - 23:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "04:30 - 23:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "04:30 - 23:00"
+    }
+  ],
+  "reception_hours": [
+    {
+      "day": "Mandag",
+      "open": "08:00 - 12:30 & 15:30 - 19:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "09:00 - 12:30 & 15:30 - 19:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "08:00 - 12:30 & 15:30 - 19:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "09:00 - 12:30 & 15:30 - 19:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "08:00 - 13:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "09:00 - 12:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "09:00 - 12:00"
+    }
+  ],
+  "meta_description": "Velkommen til Haderslevs nyeste fitness- og sundhedshus.Vi har telefontid mandag - fredag kl. 09:00 - 12:00.   Husets 1600 kvm består af 2 lyse holdsale, styrke- og kredsløbsområde, et posing room samt Sønderjyllands største funktionelle område “ExerciseLab”. Der er cirkeltræning i smarte og digitale maskiner - kaldet E-fitness, som sikrer, at du træner korrekt og effektivt hver gang.    Du træner i maskiner fra de kendte brands som Life Fitness og Hammer Strength - huset er udn�...",
+  "description": "Velkommen til Haderslevs nyeste fitness- og sundhedshus.\nVi har telefontid mandag - fredag kl. 09:00 - 12:00.\nHusets 1600 kvm består af 2 lyse holdsale, styrke- og kredsløbsområde, et posing room samt Sønderjyllands største funktionelle område “ExerciseLab”. Der er cirkeltræning i smarte og digitale maskiner - kaldet E-fitness , som sikrer, at du træner korrekt og effektivt hver gang.\nDu træner i maskiner fra de kendte brands som Life Fitness og Hammer Strength - huset er udnævnt som et “Official Hammer Strength Training Center”\nVi favner alle!\nHuset danner rammen om et stort udbud af holdtræning, events og særlige arrangementer . Der er højt til loftet og plads til alle uanset, om du er nybegynder, erfaren eller atlet. Huset har stort caféområde og små hyggekroge, der giver dig mulighed for at nyde en kop kaffe i fællesskab med andre. Der er desuden indrettet en særlig baby lounge hvor du og din baby kan pusle og amme uden forstyrrelser.\nHos er baby mere end velkommen.",
+  "facilities": [
+    "Fitness",
+    "Personlig træning",
+    "Fysioterapi",
+    "2 lyse holdsale",
+    "ExerciseLab",
+    "Seniorclub",
+    "Massage",
+    "Babylounge",
+    "Gratis parkering",
+    "E-fitness",
+    "Reformer"
+  ],
+  "service_categories": [
+    "Fællesskab",
+    "Hold",
+    "Camps",
+    "Personlig træning",
+    "Event",
+    "Seniorer",
+    "Yoga/Reformer",
+    "Core Træning",
+    "Konditionsfremmende Træning",
+    "Muskelopbyggende Træning",
+    "Dance",
+    "Funktionel Træning",
+    "Senior Træning",
+    "Body & Mind"
+  ],
+  "services": [
+    {
+      "name": "2025 PRØV VORES HUS GRATIS EN DAG",
+      "room": "Haderslev",
+      "categories": [],
+      "url": "https://fitogsund.dk/c/ydelser/2025-proev-vores-hus-gratis-en-dag"
+    },
+    {
+      "name": "2025 SUND START - 5 UGER",
+      "room": "Kickstart din træning",
+      "categories": [
+        "camps",
+        "faellesskab",
+        "hold",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/2025-sund-start-5-uger"
+    },
+    {
+      "name": "2026 OPSTARTSPAKKER",
+      "room": null,
+      "categories": [
+        "event",
+        "personlig-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/2026-opstartspakker-19"
+    },
+    {
+      "name": "DanceFit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/dance"
+    },
+    {
+      "name": "E-FITNESS CIRKELTRÆNING",
+      "room": null,
+      "categories": [
+        "event",
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/e-fitness-cirkeltraening"
+    },
+    {
+      "name": "Funktionel - STYRKE",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-funktionel-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/funktionel-styrke"
+    },
+    {
+      "name": "MamaCamp Haderslev",
+      "room": "Haderslev",
+      "categories": [
+        "camps"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/mamacamp-4"
+    },
+    {
+      "name": "Maskinvisning",
+      "room": "Haderslev",
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/maskinvisning-2"
+    },
+    {
+      "name": "Mini QCamp 40+",
+      "room": null,
+      "categories": [
+        "camps"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/mini-qcamp-40"
+    },
+    {
+      "name": "Mobility",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-funktionel-traening",
+        "hold-senior"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/mobility"
+    },
+    {
+      "name": "MOTION for livet",
+      "room": "5 ugers gratis træningsforløb",
+      "categories": [
+        "faellesskab",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/motion-for-livet"
+    },
+    {
+      "name": "Pilates",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/pilates"
+    },
+    {
+      "name": "RawFit - ExerciseLab",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-funktionel-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/rawfit-exerciselab"
+    },
+    {
+      "name": "Reformer Basic",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/reformer-basic-2"
+    },
+    {
+      "name": "Retro DANCE",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/retro-dance"
+    },
+    {
+      "name": "Senior DanceFit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/senior-dancefit"
+    },
+    {
+      "name": "Senior Stram Op",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/senior-stramp-op"
+    },
+    {
+      "name": "Senior Træning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/seniortraening"
+    },
+    {
+      "name": "Stations træning - HIIT",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/stations-traening-hiit"
+    },
+    {
+      "name": "Tabata",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/tabata"
+    },
+    {
+      "name": "Tabata DANCE",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/tabata-dance"
+    },
+    {
+      "name": "Thai Bo",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/thai-bo"
+    },
+    {
+      "name": "TONE to the Beat",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/tone-to-the-beat"
+    },
+    {
+      "name": "TRX Basis",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-funktionel-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/trx-basis"
+    },
+    {
+      "name": "TRX®",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/trx-"
+    },
+    {
+      "name": "Yoga Flow",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/yoga-flow"
+    }
+  ],
+  "manager": {
+    "name": "Britt Rømer Ohlsen",
+    "title": "Husleder",
+    "image": "https://fitogsund.dk/f/thumb?src=/f/blog/article/c8db1f54ff07968da0a6bf339d5231f851cacbd8_thumb.png&w=300&h=380"
+  },
+  "images": {
+    "hero": null,
+    "fallback": "../fitogsund-logo.png"
+  },
+  "hero_image_file": "hero.png",
+  "hero_is_placeholder": true,
+  "scraped_at": "2026-09-17"
+}

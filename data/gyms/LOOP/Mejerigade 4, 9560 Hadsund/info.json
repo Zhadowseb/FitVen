@@ -1,0 +1,173 @@
+{
+  "chain": "LOOP Fitness",
+  "name": "LOOP Hadsund",
+  "loop_id": 185,
+  "center_type": "lite",
+  "address": {
+    "street": "Mejerigade 4",
+    "postal_code": "9560",
+    "city": "Hadsund",
+    "country": "DK",
+    "full": "Mejerigade 4, 9560 Hadsund"
+  },
+  "location": {
+    "latitude": 56.716022,
+    "longitude": 10.114902
+  },
+  "url": "https://loopfitness.dk/centre/loop-fitness-hadsund/",
+  "membership_url": "https://loopfitness.dk/medlemskab/bliv-medlem/",
+  "phone": "41746285",
+  "email": "hadsund@loopfitness.dk",
+  "facebook_url": null,
+  "google_review_url": "https://g.page/r/CRN4R0KakO2REB0/review",
+  "cvr": "38357387",
+  "manager_name": "Louise",
+  "opened": "2017-12-02",
+  "has_classes": false,
+  "only_open_when_staffed": false,
+  "max_visitor_capacity": 25,
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 22:00"
+    }
+  ],
+  "staffed_hours": [
+    {
+      "day": "Mandag",
+      "periods": [
+        "16:00 - 19:00"
+      ]
+    },
+    {
+      "day": "Tirsdag",
+      "periods": [
+        "09:00 - 12:00"
+      ]
+    },
+    {
+      "day": "Onsdag",
+      "periods": [
+        "16:00 - 19:00"
+      ]
+    },
+    {
+      "day": "Torsdag",
+      "periods": [
+        "09:00 - 12:00"
+      ]
+    },
+    {
+      "day": "Fredag",
+      "periods": [
+        "Ikke bemandet"
+      ]
+    },
+    {
+      "day": "Lørdag",
+      "periods": [
+        "09:00 - 11:00"
+      ]
+    },
+    {
+      "day": "Søndag",
+      "periods": [
+        "09:00 - 11:00"
+      ]
+    }
+  ],
+  "staffed_hours_dates": [
+    {
+      "date": "2026-04-02",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-04-03",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-04-05",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-04-06",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-09-18",
+      "open": "None - None"
+    }
+  ],
+  "meta_description": "Hos LOOP Fitness Hadsund får du enkel og effektiv træning af hele kroppen på kun 24 minutter og i afslappede rammer. Book en gratis prøvetime nu »",
+  "description": "Kom indenfor og mærk energien. Hos LOOP får du afslappet stemning og effektiv træning på den bedste måde. Uanset niveau er der plads til dig, og træningen er enkel: Start med opvarmning, træn hele kroppen i træningscirklen, og afslut med udstrækning i vores LOOP Ekstra område. Efter din træning kan du nyde en gratis kop kaffe eller the i vores café.",
+  "quote_by": "Louise, centerleder",
+  "facilities": [
+    "1 cirkel",
+    "Cardio-område",
+    "Gratis kaffe"
+  ],
+  "memberships": [
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr",
+      "price_per_month": 289.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 319,
+      "family_members": 0,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    },
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr. - familie",
+      "price_per_month": 589.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 619,
+      "family_members": 9,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    }
+  ],
+  "images": {
+    "hero": "https://loopfitness.dk/wp-content/uploads/2019/11/Hadsund.png",
+    "og_image": "https://loopfitness.dk/wp-content/uploads/2024/02/Topbillede_mobil_1080x1080px_99-kr.-Tracking-armbaand_2024-1024x1024.png"
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

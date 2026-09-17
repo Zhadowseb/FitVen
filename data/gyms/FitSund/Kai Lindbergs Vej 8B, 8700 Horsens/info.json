@@ -1,0 +1,89 @@
+{
+  "chain": "Fit&Sund",
+  "name": "Fit&Sund Horsens/Recharge City",
+  "short_name": "Horsens/Recharge City",
+  "address": {
+    "street": "Kai Lindbergs Vej 8B",
+    "postal_code": "8700",
+    "city": "Horsens",
+    "country": "DK",
+    "full": "Kai Lindbergs Vej 8B, 8700 Horsens"
+  },
+  "location": {
+    "latitude": 55.84670328,
+    "longitude": 9.73604147
+  },
+  "geocode": {
+    "latitude": 55.84670328,
+    "longitude": 9.73604147,
+    "matched_address": "Kai Lindbergs Vej 8B, 8700 Horsens",
+    "exact": true,
+    "source": "DAWA"
+  },
+  "url": "https://fitogsund.dk/c/huse/horsens-recharge-city",
+  "membership_url": "https://fitogsund.dk/p/bliv-medlem",
+  "class_schedule_url": null,
+  "google_maps_url": "https://www.google.com/maps/dir/?api=1&destination=Kai-Lindbergs-Vej-8B+8700+Horsens",
+  "phone": "+45 75 62 63 11",
+  "email": "horsens@fitogsund.dk",
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "04:00 - 00:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "04:00 - 00:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "04:00 - 00:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "04:00 - 00:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "04:00 - 00:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "04:00 - 00:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "04:00 - 00:00"
+    }
+  ],
+  "reception_hours": [
+    {
+      "day": "Mandag",
+      "open": "Vi henviser til receptionerne i & Horsens Dagnæs eller Nord"
+    }
+  ],
+  "meta_description": "Træn i en af vores 6 lokationer i Horsens/Hedensted: Centrum, Dagnæs, Langmarksvej, Torsted, Hedensted og nu Recharge city. Dit lokale fitness- og sundhedshus Fit&Sund er meget mere end et fitnesscenter. Vi er dit lokale fitness- og sundhedshus i Recharge City, og vi arbejder ud fra vores tre værdier: sundhed, viden og nærvær. Sundhed er bl.a. varieret træning, og derfor tilbyder vi styrke- og holdtræning, programlægning og målrettet træning på dine præmisser. Inspirerende og motiver...",
+  "description": "Træn i en af vores 6 lokationer i Horsens/Hedensted: Centrum, Dagnæs, Langmarksvej, Torsted, Hedensted og nu Recharge city.\nDit lokale fitness- og sundhedshus\nFit&Sund er meget mere end et fitnesscenter. Vi er dit lokale fitness- og sundhedshus i Recharge City, og vi arbejder ud fra vores tre værdier: sundhed, viden og nærvær. Sundhed er bl.a. varieret træning, og derfor tilbyder vi styrke- og holdtræning, programlægning og målrettet træning på dine præmisser.\nInspirerende og motiverende træningsoplevelse.\nHos Fit&Sund i Recharge City har vi et komplet hus, med nye og spændene træningsformer, som gerne hjælper dig på vej uanset din alder, baggrund eller trænings- og sundhedstilstand.\nFit&Sunds mål er at tilbyde en inspirerende og motiverende træningsoplevelse, som giver dig overskud, velvære og livskvalitet.",
+  "facilities": [
+    "Fitness",
+    "Fysioterapeuter",
+    "Personlig træning",
+    "Nyindrettet fitnessområde",
+    "Nye maskiner",
+    "Indgang via Four Points Flex"
+  ],
+  "service_categories": [],
+  "services": [],
+  "manager": {
+    "name": "Pia Popp",
+    "title": "Husleder",
+    "image": "https://fitogsund.dk/f/thumb?src=/f/blog/article/fd184f0e623c1d100925b686f6d7b6a1c38a2a0b_thumb.jpg&w=300&h=380"
+  },
+  "images": {
+    "hero": null,
+    "fallback": "../fitogsund-logo.png"
+  },
+  "hero_image_file": "hero.png",
+  "hero_is_placeholder": true,
+  "scraped_at": "2026-09-17"
+}

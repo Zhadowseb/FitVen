@@ -1,0 +1,373 @@
+{
+  "chain": "Fit&Sund",
+  "name": "Fit&Sund Albertslund",
+  "short_name": "Albertslund",
+  "address": {
+    "street": "Rørvang 4",
+    "postal_code": "2620",
+    "city": "Albertslund",
+    "country": "DK",
+    "full": "Rørvang 4, 2620 Albertslund"
+  },
+  "location": {
+    "latitude": 55.66518395,
+    "longitude": 12.36334484
+  },
+  "geocode": {
+    "latitude": 55.66518395,
+    "longitude": 12.36334484,
+    "matched_address": "Rørvang 4, 2620 Albertslund",
+    "exact": true,
+    "source": "DAWA"
+  },
+  "url": "https://fitogsund.dk/c/huse/albertslund",
+  "membership_url": "https://fitogsund.dk/p/bliv-medlem",
+  "class_schedule_url": "https://fitogsund.goactivebooking.com/class-web-categories/34/classes?facility=1",
+  "google_maps_url": "https://www.google.com/maps/dir/?api=1&destination=Rørvang-4+2620+Albertslund",
+  "phone": "+45 43 40 41 40",
+  "email": "albertslund@fitogsund.dk",
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 24:00"
+    }
+  ],
+  "reception_hours": [
+    {
+      "day": "Mandag",
+      "open": "08:00 - 20:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "08:00 - 20:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "08:00 - 20:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "08:00 - 20:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "08:00 - 18:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "09:00 - 13:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "09:00 - 13:00"
+    }
+  ],
+  "meta_description": "Træn alle dage fra hos Fit & Sund Albertslund i vores moderne fitness og træningscenter. Fitness | Holdtræning | Personlig træning",
+  "description": "Fit&Sund Albertslund\nHos Fit&Sund Albertslund er din sundhed vores højeste prioritet. Vores kompetente team bestående af bl.a. fysioterapeuter, personlige trænere og kvalificerede instruktører tilbyder individuel vejledning, målrettet træning og faglig rådgivning, så du når dine mål. Nærvær er omdrejningspunktet for de gode oplevelser med træning og sundhed, vi ønsker, du skal have, når du besøger Fit&Sund Albertslund.\nUdvidet og nye maskiner i 2026\nFit&Sund Alberslund er med over 2200m2 byens største sundhedshus. Her finder du noget for alle hele livet igennem - fra ung til senior og alt der imellem!\nDer er udstyr fra de bedste brands på markedet som Life Fitness og Hammer Strength. Som noget nyt kan du træne i Biocircuit, der er intelligente cirkeltræningsmaskiner, som gør din træning nem og effektiv. Derudover finder du holdsale med en masse forskellige hold samt en helt ny Krop&Sind afdeling med reformer, yoga, massagestol og lounge, som indbyder til ro og fordybelse.\nVi glæder os til at byde dig velkommen!",
+  "facilities": [
+    "Fitness",
+    "Fysioterapeuter",
+    "Personlig træning",
+    "Holdtræning",
+    "Reformer / Yoga",
+    "Biocircuit",
+    "Over 2200 m2 træningshus"
+  ],
+  "service_categories": [
+    "Hold",
+    "Event",
+    "Yoga/Reformer",
+    "Camps",
+    "Fællesskab",
+    "Seniorer",
+    "Juniorer",
+    "Konditionsfremmende Træning",
+    "Body & Mind",
+    "Muskelopbyggende Træning",
+    "Dance",
+    "Core Træning",
+    "Senior Træning"
+  ],
+  "services": [
+    {
+      "name": "BODYATTACK®",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bodyattack-les-mills"
+    },
+    {
+      "name": "BODYBALANCE®",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bodybalance-les-mills"
+    },
+    {
+      "name": "BODYCOMBAT®",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bodycombat---les-mills"
+    },
+    {
+      "name": "BODYPUMP®",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bodypump"
+    },
+    {
+      "name": "BODYSTEP®",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bodystep"
+    },
+    {
+      "name": "Boksning",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/boksning"
+    },
+    {
+      "name": "Cirkelhold",
+      "room": "Maskiner",
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/cirkelhold"
+    },
+    {
+      "name": "Cirkeltræning",
+      "room": "Holdsal",
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/cirkel-traening"
+    },
+    {
+      "name": "DanceFit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/dance"
+    },
+    {
+      "name": "FASCIA",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/fascia"
+    },
+    {
+      "name": "FASCIA WORKSHOP",
+      "room": null,
+      "categories": [
+        "event"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/fascia-workshop"
+    },
+    {
+      "name": "FASCIA WORKSHOP-level 2",
+      "room": null,
+      "categories": [
+        "event"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/fascia-workshop-level-2"
+    },
+    {
+      "name": "Hatha Yoga",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/hatha-yoga-2"
+    },
+    {
+      "name": "LES MILLS CORE™",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/les-mills-core"
+    },
+    {
+      "name": "MiniFit-Albertslund",
+      "room": null,
+      "categories": [
+        "camps"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/minifit-albertslund"
+    },
+    {
+      "name": "MOTION for livet",
+      "room": "5 ugers gratis træningsforløb",
+      "categories": [
+        "faellesskab",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/motion-for-livet"
+    },
+    {
+      "name": "Reformer Basic",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/reformer-basic-2"
+    },
+    {
+      "name": "Reformer Classic",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/reformer-classic"
+    },
+    {
+      "name": "Reformer Fit",
+      "room": "Albertslund",
+      "categories": [
+        "camps",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/reformer-fit"
+    },
+    {
+      "name": "Reformer Power",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "hold-core",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/reformer-power"
+    },
+    {
+      "name": "senior aerobic",
+      "room": "Albertslund",
+      "categories": [
+        "faellesskab",
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/senior-aerobic"
+    },
+    {
+      "name": "Senior Pilates",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/senior-pilates"
+    },
+    {
+      "name": "Senior Træning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/seniortraening"
+    },
+    {
+      "name": "Senior Yoga",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "hold-senior",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/senior-yoga"
+    },
+    {
+      "name": "Tabata",
+      "room": "Albertslund",
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/tabata-2"
+    },
+    {
+      "name": "Vores regler for juniortræning",
+      "room": "Albertslund",
+      "categories": [
+        "juniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/vores-regler-for-juniortraening-2"
+    },
+    {
+      "name": "YIN YOGA",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/yin-yoga"
+    }
+  ],
+  "manager": {
+    "name": "Mette Sandholt",
+    "title": "Husleder",
+    "image": "https://fitogsund.dk/f/thumb?src=/f/blog/article/5c0445f552f9ef50aafa31384db0564c0564196c_thumb.jpg&w=300&h=380"
+  },
+  "images": {
+    "hero": null,
+    "fallback": "../fitogsund-logo.png"
+  },
+  "hero_image_file": "hero.png",
+  "hero_is_placeholder": true,
+  "scraped_at": "2026-09-17"
+}
