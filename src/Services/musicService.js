@@ -8,15 +8,41 @@
 //
 // Apple Music (MusicKit) has no Expo module and would need a native module of
 // its own; the provider field and the table are ready for it.
-import * as AuthSession from "expo-auth-session";
 import Constants from "expo-constants";
 import * as SecureStore from "expo-secure-store";
-import * as WebBrowser from "expo-web-browser";
 
 import { supabase } from "../Database/supaBaseClient";
 import { workoutRepository } from "../Repository";
 
-WebBrowser.maybeCompleteAuthSession();
+// expo-auth-session pulls in expo-web-browser and expo-crypto, and both throw
+// at import time on a client whose native build predates them. Loaded on
+// demand, so a development client built before 2.0 still runs the rest of
+// the app and Spotify simply reports itself unavailable.
+let nativeAuth;
+
+function getNativeAuth() {
+  if (nativeAuth === undefined) {
+    try {
+      nativeAuth = {
+        AuthSession: require("expo-auth-session"),
+        WebBrowser: require("expo-web-browser"),
+      };
+    } catch (error) {
+      console.warn("Spotify is unavailable in this build:", error?.message ?? error);
+      nativeAuth = null;
+    }
+  }
+
+  return nativeAuth;
+}
+
+/** False on a client built without expo-web-browser and expo-crypto. */
+export function isSpotifyAvailableInThisBuild() {
+  return getNativeAuth() !== null;
+}
+
+export const SPOTIFY_NOT_IN_BUILD_MESSAGE =
+  "This build of the app does not include the modules Spotify needs. Install the 2.0 development build.";
 
 export const MUSIC_PROVIDER_SPOTIFY = "spotify";
 export const NOW_PLAYING_POLL_MS = 30000;
@@ -69,7 +95,11 @@ export function isSpotifyConfigured() {
 }
 
 export function getSpotifyRedirectUri() {
-  return AuthSession.makeRedirectUri({ scheme: "fitven", path: "spotify-auth" });
+  const native = getNativeAuth();
+
+  return native
+    ? native.AuthSession.makeRedirectUri({ scheme: "fitven", path: "spotify-auth" })
+    : "fitven://spotify-auth";
 }
 
 /* --------------------------------------------------------------- tokens -- */
@@ -123,13 +153,14 @@ async function getValidAccessToken() {
   }
 
   const clientId = getSpotifyClientId();
+  const native = getNativeAuth();
 
-  if (!clientId) {
+  if (!clientId || !native) {
     return null;
   }
 
   try {
-    const refreshed = await AuthSession.refreshAsync(
+    const refreshed = await native.AuthSession.refreshAsync(
       { clientId, refreshToken: tokens.refreshToken },
       SPOTIFY_DISCOVERY
     );
@@ -167,11 +198,21 @@ export async function getMusicConnection() {
  * settings screen can stay quiet about it.
  */
 export async function connectSpotify() {
+  const native = getNativeAuth();
+
+  if (!native) {
+    throw new Error(SPOTIFY_NOT_IN_BUILD_MESSAGE);
+  }
+
   const clientId = getSpotifyClientId();
 
   if (!clientId) {
     throw new Error(SPOTIFY_NOT_CONFIGURED_MESSAGE);
   }
+
+  const { AuthSession, WebBrowser } = native;
+
+  WebBrowser.maybeCompleteAuthSession();
 
   const redirectUri = getSpotifyRedirectUri();
   const request = new AuthSession.AuthRequest({
@@ -339,6 +380,7 @@ export async function getMusicSharingSettings({ user }) {
     connection,
     shareWithFriends,
     isConfigured: isSpotifyConfigured(),
+    isAvailable: isSpotifyAvailableInThisBuild(),
     redirectUri: getSpotifyRedirectUri(),
   };
 }

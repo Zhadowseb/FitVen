@@ -127,7 +127,8 @@ export default function MusicSettingsPage() {
   };
 
   const connection = settings?.connection ?? null;
-  const isConfigured = settings?.isConfigured ?? false;
+  const isAvailable = settings?.isAvailable ?? false;
+  const isConfigured = (settings?.isConfigured ?? false) && isAvailable;
 
   return (
     <ThemedView safe={["top", "left", "right"]} style={styles.container}>
@@ -231,7 +232,11 @@ export default function MusicSettingsPage() {
           is running.
         </ThemedText>
 
-        {!isLoading && !isConfigured ? (
+        {!isLoading && !isAvailable ? (
+          <ThemedText style={styles.note} setColor={quietText}>
+            {musicService.SPOTIFY_NOT_IN_BUILD_MESSAGE}
+          </ThemedText>
+        ) : !isLoading && !isConfigured ? (
           <ThemedText style={styles.note} setColor={quietText}>
             {`Spotify needs a client id in the app config and this redirect URI registered in the Spotify dashboard: `}
             <ThemedText style={[styles.note, styles.code]} setColor={theme.title}>

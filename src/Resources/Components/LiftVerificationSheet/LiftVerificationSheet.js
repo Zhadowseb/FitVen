@@ -8,7 +8,6 @@ import {
   useColorScheme,
 } from "react-native";
 import { useEvent } from "expo";
-import { VideoView, useVideoPlayer } from "expo-video";
 
 import { useAuth } from "../../../Contexts/AuthContext";
 import { gymService } from "../../../Services";
@@ -18,6 +17,24 @@ import Cross from "../../Icons/UI-icons/Cross";
 import MapPin from "../../Icons/UI-icons/MapPin";
 import { ThemedBottomSheet, ThemedText, UserAvatar } from "../../ThemedComponents";
 import { APPROVALS_REQUIRED, REJECTIONS_TO_REMOVE, formatWeightKg } from "../../../Utils/gymUtils";
+
+// expo-video throws at import time on a client built before it was added.
+// Loaded on demand: the sheet then shows the lift without its video instead
+// of taking the whole app down at startup.
+let videoModule;
+
+function getVideoModule() {
+  if (videoModule === undefined) {
+    try {
+      videoModule = require("expo-video");
+    } catch (error) {
+      console.warn("Video playback is unavailable in this build:", error?.message ?? error);
+      videoModule = null;
+    }
+  }
+
+  return videoModule;
+}
 
 function formatDateTime(value) {
   if (!value) {
@@ -39,9 +56,36 @@ function formatClock(seconds) {
   return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, "0")}`;
 }
 
+function LiftVideoUnavailable({ theme, message }) {
+  return (
+    <View style={[styles.video, styles.videoMissing, { backgroundColor: theme.uiBackground }]}>
+      <ThemedText style={styles.videoMissingText} setColor={theme.quietText}>
+        {message}
+      </ThemedText>
+    </View>
+  );
+}
+
 // The video itself: autoplay, muted, looping, tap to pause. Its own component
-// so the player is created per lift and torn down with it.
+// so the player is created per lift and torn down with it. Rendered only when
+// expo-video is in the build; the hooks below come from that module.
 function LiftVideo({ uri, overlayLabel, theme }) {
+  const video = getVideoModule();
+
+  if (!video) {
+    return (
+      <LiftVideoUnavailable
+        theme={theme}
+        message="Video playback needs the 2.0 development build"
+      />
+    );
+  }
+
+  return <NativeLiftVideo video={video} uri={uri} overlayLabel={overlayLabel} theme={theme} />;
+}
+
+function NativeLiftVideo({ video, uri, overlayLabel, theme }) {
+  const { VideoView, useVideoPlayer } = video;
   const player = useVideoPlayer(uri ? { uri } : null, (instance) => {
     instance.loop = true;
     instance.muted = true;
@@ -73,7 +117,7 @@ function LiftVideo({ uri, overlayLabel, theme }) {
           nativeControls={false}
         />
       ) : (
-        <View style={styles.videoMissing}>
+        <View style={[StyleSheet.absoluteFill, styles.videoMissing]}>
           <ThemedText style={styles.videoMissingText} setColor={theme.quietText}>
             Video unavailable
           </ThemedText>
@@ -456,7 +500,6 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   videoMissing: {
-    ...StyleSheet.absoluteFillObject,
     alignItems: "center",
     justifyContent: "center",
   },
