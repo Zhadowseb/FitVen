@@ -22,13 +22,19 @@ const CHAIN_INITIALS = {
 // apart from each other and from those three, in both light and dark mode,
 // leaning towards each chain's brand only where that was free.
 const CHAIN_COLORS = {
-  puregym: "#E4362F",
-  sats: "#4C8DFF",
+  // Cyan rather than a true green: green already marks where you are
+  // standing, and two greens on one map is one green too many.
+  puregym: "#22D3EE",
+  sats: "#E4362F",
   "loop fitness": "#A855F7",
   loop: "#A855F7",
-  fitnessx: "#22D3EE",
+  // Brighter and more saturated than the gold a record is drawn in, which
+  // never appears on the map anyway.
+  fitnessx: "#FACC15",
   "fit&sund": "#EC4899",
-  "fitness world": "#F4B740",
+  // No centres of this chain are imported; the colour is here so a future
+  // scrape does not land on somebody else's.
+  "fitness world": "#0D9488",
 };
 const UNKNOWN_CHAIN_COLOR = "#C4C7CF";
 
