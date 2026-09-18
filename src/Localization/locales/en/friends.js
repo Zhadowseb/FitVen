@@ -26,6 +26,7 @@ export default {
     plannedCount: "{count} planned",
     labelPlanned: "{label} · Planned",
     restDay: "Rest day",
+    nextWorkout: "Next workout · {date}",
     noActivity: "No activity",
   },
 };

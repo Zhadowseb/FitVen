@@ -1,29 +1,71 @@
 // Pure helpers for the Friends activity tiles: the text on the status row,
 // the tile order, the music band state, and whether the band should scroll.
-import { t } from "@localization";
+import { formatDate, t } from "@localization";
+import { calendarDaysBetween, formatRelativeDay } from "./dateUtils";
 
 const ACTIVITY_TILE_ORDER = {
   live: 0,
   done: 1,
   planned: 2,
-  rest: 3,
 };
 
-/** live -> done -> planned -> rest, and inside a group the most recent first. */
+const TODAY_BAND = 0;
+const UPCOMING_BAND = 1;
+const PAST_BAND = 2;
+const EMPTY_BAND = 3;
+
+function getTileBand(person) {
+  if (ACTIVITY_TILE_ORDER[person?.activityState] !== undefined) {
+    return TODAY_BAND;
+  }
+
+  if (person?.nextWorkoutAt) {
+    return UPCOMING_BAND;
+  }
+
+  if (person?.lastWorkoutAt) {
+    return PAST_BAND;
+  }
+
+  return EMPTY_BAND;
+}
+
+/**
+ * Today first, then what is coming, then what has been.
+ *
+ *   1. anyone with a workout today - live, then done, then planned, and
+ *      inside each the most recent first
+ *   2. anyone with one planned ahead, the soonest first
+ *   3. everyone else by how recently they trained, the freshest first
+ *   4. anyone with no workout either side of today
+ *
+ * The strip is read left to right and rarely past the third tile, so the
+ * people worth a glance have to be the ones that fit on screen.
+ */
 export function sortActivityTiles(people) {
   return [...(people ?? [])].sort((left, right) => {
-    const orderDelta =
-      (ACTIVITY_TILE_ORDER[left?.activityState] ?? 3) -
-      (ACTIVITY_TILE_ORDER[right?.activityState] ?? 3);
+    const bandDelta = getTileBand(left) - getTileBand(right);
 
-    if (orderDelta !== 0) {
-      return orderDelta;
+    if (bandDelta !== 0) {
+      return bandDelta;
     }
 
-    const leftAt = toTimestamp(left?.activityAt);
-    const rightAt = toTimestamp(right?.activityAt);
+    switch (getTileBand(left)) {
+      case TODAY_BAND: {
+        const stateDelta =
+          ACTIVITY_TILE_ORDER[left.activityState] - ACTIVITY_TILE_ORDER[right.activityState];
 
-    return rightAt - leftAt;
+        return stateDelta !== 0
+          ? stateDelta
+          : toTimestamp(right?.activityAt) - toTimestamp(left?.activityAt);
+      }
+      case UPCOMING_BAND:
+        return toTimestamp(left.nextWorkoutAt) - toTimestamp(right.nextWorkoutAt);
+      case PAST_BAND:
+        return toTimestamp(right.lastWorkoutAt) - toTimestamp(left.lastWorkoutAt);
+      default:
+        return 0;
+    }
   });
 }
 
@@ -93,9 +135,46 @@ export function buildActivityStatusLabel(person, { isCurrentUser = false, now = 
         ? t("friends.status.labelPlanned", { label })
         : person?.activityDetail ?? t("friends.status.planned");
     }
-    default:
+    default: {
+      // Resting. "No activity" says nothing anyone can use, so the tile
+      // carries whichever workout is nearest in time: the one coming, if
+      // there is one, otherwise the last one done.
+      if (person?.nextWorkoutAt) {
+        return t("friends.status.nextWorkout", {
+          date: formatWorkoutDay(person.nextWorkoutAt, now),
+        });
+      }
+
+      if (person?.lastWorkoutAt) {
+        return formatRelativeDay(person.lastWorkoutAt, now);
+      }
+
       return t("friends.status.noActivity");
+    }
   }
+}
+
+/**
+ * The day a planned workout falls on, as short as the tile allows: tomorrow
+ * by name, anything further out as a date. A weekday name would be shorter
+ * still, but "Tuesday" is ambiguous once it is more than a week away.
+ */
+export function formatWorkoutDay(value, now = Date.now()) {
+  const days = calendarDaysBetween(now, value);
+
+  if (days === null) {
+    return "";
+  }
+
+  if (days <= 0) {
+    return t("time.today");
+  }
+
+  if (days === 1) {
+    return t("time.tomorrow");
+  }
+
+  return formatDate(value);
 }
 
 /**

@@ -235,7 +235,87 @@ function createRestActivityPreview() {
     activityAt: null,
     gym: null,
     music: null,
+    lastWorkoutAt: null,
+    nextWorkoutAt: null,
   };
+}
+
+// How far either side of today the tiles look for a last or a next workout.
+// Far enough to cover a holiday and a training plan, close enough that the
+// two requests stay small.
+const SURROUNDING_ACTIVITY_PAST_DAYS = 180;
+const SURROUNDING_ACTIVITY_FUTURE_DAYS = 60;
+const SURROUNDING_ACTIVITY_ROW_LIMIT = 300;
+
+function shiftIsoDate(isoDate, days) {
+  const date = new Date(`${isoDate}T00:00:00Z`);
+
+  if (Number.isNaN(date.getTime())) {
+    return isoDate;
+  }
+
+  date.setUTCDate(date.getUTCDate() + days);
+
+  return date.toISOString().slice(0, 10);
+}
+
+/**
+ * The last day each person finished a workout and the next day they have one
+ * planned, for the tiles of everybody who has nothing on today.
+ *
+ * Two requests rather than one range, each ordered outwards from today, so
+ * that if the row cap is ever reached it is the far end that falls off and
+ * the nearest workout - the one the tile shows - always survives.
+ */
+async function fetchSurroundingActivityByUserId({ userIds, activityDate }) {
+  const surrounding = new Map(
+    userIds.map((userId) => [userId, { lastWorkoutAt: null, nextWorkoutAt: null }])
+  );
+
+  const [pastResult, futureResult] = await Promise.allSettled([
+    supabase
+      .from(WORKOUT_TYPE_INSTANCE_TABLE)
+      .select("user_id, date, done")
+      .in("user_id", userIds)
+      .is("deleted_at", null)
+      .lt("date", activityDate)
+      .gte("date", shiftIsoDate(activityDate, -SURROUNDING_ACTIVITY_PAST_DAYS))
+      .order("date", { ascending: false })
+      .limit(SURROUNDING_ACTIVITY_ROW_LIMIT),
+    supabase
+      .from(WORKOUT_TYPE_INSTANCE_TABLE)
+      .select("user_id, date, done")
+      .in("user_id", userIds)
+      .is("deleted_at", null)
+      .gt("date", activityDate)
+      .lte("date", shiftIsoDate(activityDate, SURROUNDING_ACTIVITY_FUTURE_DAYS))
+      .order("date", { ascending: true })
+      .limit(SURROUNDING_ACTIVITY_ROW_LIMIT),
+  ]);
+
+  // Rows arrive nearest-first, so the first one seen per person is the one
+  // wanted and the rest are skipped.
+  if (pastResult.status === "fulfilled" && !pastResult.value.error) {
+    for (const workout of pastResult.value.data ?? []) {
+      const entry = surrounding.get(workout.user_id);
+
+      if (entry && !entry.lastWorkoutAt && Number(workout.done) === 1) {
+        entry.lastWorkoutAt = workout.date;
+      }
+    }
+  }
+
+  if (futureResult.status === "fulfilled" && !futureResult.value.error) {
+    for (const workout of futureResult.value.data ?? []) {
+      const entry = surrounding.get(workout.user_id);
+
+      if (entry && !entry.nextWorkoutAt && Number(workout.done) !== 1) {
+        entry.nextWorkoutAt = workout.date;
+      }
+    }
+  }
+
+  return surrounding;
 }
 
 // live -> done -> planned -> rest, newest first inside a group. The order the
@@ -407,10 +487,10 @@ async function fetchActivityPreviewByUserId({ userIds, date }) {
     return new Map();
   }
 
-  const workouts = await fetchActivityWorkouts({
-    userIds: uniqueUserIds,
-    activityDate,
-  });
+  const [workouts, surrounding] = await Promise.all([
+    fetchActivityWorkouts({ userIds: uniqueUserIds, activityDate }),
+    fetchSurroundingActivityByUserId({ userIds: uniqueUserIds, activityDate }),
+  ]);
 
   const workoutsByUserId = new Map();
 
@@ -425,7 +505,12 @@ async function fetchActivityPreviewByUserId({ userIds, date }) {
   return new Map(
     uniqueUserIds.map((userId) => [
       userId,
-      buildCloudActivityPreview(workoutsByUserId.get(userId) ?? []),
+      {
+        ...buildCloudActivityPreview(workoutsByUserId.get(userId) ?? []),
+        // Carried for everybody, not just the people resting: the strip is
+        // sorted on them, and a tile that is quiet today still has a story.
+        ...(surrounding.get(userId) ?? { lastWorkoutAt: null, nextWorkoutAt: null }),
+      },
     ])
   );
 }

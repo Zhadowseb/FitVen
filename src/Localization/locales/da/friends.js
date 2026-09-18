@@ -23,6 +23,7 @@ export default {
     plannedCount: "{count} planlagte",
     labelPlanned: "{label} · Planlagt",
     restDay: "Hviledag",
+    nextWorkout: "Næste træning · {date}",
     noActivity: "Ingen aktivitet",
   },
 };

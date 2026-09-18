@@ -4,6 +4,7 @@ export default {
   minutesAgoShort: "{count}m ago",
   hoursAgoShort: "{count}h ago",
   today: "Today",
+  tomorrow: "Tomorrow",
   yesterday: "Yesterday",
   daysAgo: { one: "{count} day ago", other: "{count} days ago" },
   weeksAgo: { one: "{count} week ago", other: "{count} weeks ago" },

@@ -222,17 +222,35 @@ if (fs.existsSync(dataDir)) {
 /* ------------------------------------------------------------- tiles -- */
 
 const ordered = activityUtils.sortActivityTiles([
-  { id: "rest", activityState: "rest" },
+  { id: "nothing", activityState: "rest" },
+  { id: "trained-long-ago", activityState: "rest", lastWorkoutAt: "2026-08-20" },
+  { id: "planned-far", activityState: "rest", nextWorkoutAt: "2026-09-30" },
   { id: "planned", activityState: "planned" },
   { id: "done-old", activityState: "done", activityAt: "2026-09-17T08:00:00Z" },
+  { id: "trained-recently", activityState: "rest", lastWorkoutAt: "2026-09-16" },
   { id: "live", activityState: "live" },
+  { id: "planned-soon", activityState: "rest", nextWorkoutAt: "2026-09-19" },
   { id: "done-new", activityState: "done", activityAt: "2026-09-17T11:00:00Z" },
 ]);
 
 assert.deepStrictEqual(
   ordered.map((tile) => tile.id),
-  ["live", "done-new", "done-old", "planned", "rest"],
-  "live, then done newest first, then planned, then rest"
+  [
+    // Today: live, then done newest first, then planned.
+    "live",
+    "done-new",
+    "done-old",
+    "planned",
+    // Then what is coming, soonest first.
+    "planned-soon",
+    "planned-far",
+    // Then how recently they trained, freshest first.
+    "trained-recently",
+    "trained-long-ago",
+    // Then whoever has nothing either side of today.
+    "nothing",
+  ],
+  "today, then upcoming soonest first, then most recently trained"
 );
 
 const now = Date.parse("2026-09-17T12:00:00Z");
@@ -244,7 +262,24 @@ assert.strictEqual(
 assert.strictEqual(activityUtils.buildActivityStatusLabel({ activityState: "live", activityDetail: "12 min in" }), "12 min in");
 assert.strictEqual(activityUtils.buildActivityStatusLabel({ activityState: "live" }, { isCurrentUser: true }), "Training now");
 assert.strictEqual(activityUtils.buildActivityStatusLabel({ activityState: "planned", workoutLabel: "Run", plannedTime: "18:30" }), "Run · 18:30");
-assert.strictEqual(activityUtils.buildActivityStatusLabel({ activityState: "rest" }), "No activity");
+// Resting: what is coming beats what has been, and "No activity" is only for
+// somebody with neither.
+assert.strictEqual(
+  activityUtils.buildActivityStatusLabel(
+    { activityState: "rest", nextWorkoutAt: "2026-09-18", lastWorkoutAt: "2026-09-15" },
+    { now }
+  ),
+  "Next workout · Tomorrow"
+);
+assert.strictEqual(
+  activityUtils.buildActivityStatusLabel({ activityState: "rest", lastWorkoutAt: "2026-09-15" }, { now }),
+  "2 days ago"
+);
+assert.strictEqual(
+  activityUtils.buildActivityStatusLabel({ activityState: "rest", lastWorkoutAt: "2026-09-16" }, { now }),
+  "Yesterday"
+);
+assert.strictEqual(activityUtils.buildActivityStatusLabel({ activityState: "rest" }, { now }), "No activity");
 
 const playing = activityUtils.classifyMusicRow(
   { track: "Blinding Lights", artist: "The Weeknd", played_at: new Date(now - 30000).toISOString() },
