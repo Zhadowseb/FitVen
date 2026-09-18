@@ -24,6 +24,42 @@ const GYM_LIFT_VOTE_TABLE = "gym_lift_vote";
 const PROFILE_PRIVATE_TABLE = "profile_private";
 const GYM_SELECT_FIELDS =
   "id, chain, name, short_name, address, postal_code, city, latitude, longitude, match_radius_m, image_url";
+// The price columns arrive with 20260918010000_gym-single-centre-price.sql.
+// Until that has been run the select below fails on them, so every read that
+// wants them falls back to the set above and the app simply shows no price.
+const GYM_PRICE_FIELDS = "price_kr, price_is_from, price_note, price_checked_on";
+const GYM_SELECT_FIELDS_WITH_PRICE = `${GYM_SELECT_FIELDS}, ${GYM_PRICE_FIELDS}`;
+
+function isMissingPriceColumnError(error) {
+  const message = `${error?.message ?? ""} ${error?.details ?? ""}`.toLowerCase();
+
+  return message.includes("price_kr") || message.includes("price_is_from");
+}
+
+/**
+ * Runs a gym query with the price columns and again without them if the
+ * migration that adds them has not been applied yet. `build` takes the column
+ * list and returns the query.
+ */
+async function selectGymsWithOptionalPrice(build) {
+  const { data, error } = await build(GYM_SELECT_FIELDS_WITH_PRICE);
+
+  if (!error) {
+    return data ?? [];
+  }
+
+  if (!isMissingPriceColumnError(error)) {
+    throw normalizeGymError(error);
+  }
+
+  const { data: plainData, error: plainError } = await build(GYM_SELECT_FIELDS);
+
+  if (plainError) {
+    throw normalizeGymError(plainError);
+  }
+
+  return plainData ?? [];
+}
 
 export const LIFT_VIDEO_BUCKET = "lift-videos";
 export const LIFT_VIDEO_MAX_BYTES = 50 * 1024 * 1024;
@@ -129,6 +165,12 @@ export function mapGym(row) {
     isHomeGym: Boolean(row.is_home_gym),
     distanceM: toNumber(row.distance_m),
     workoutCount: toNumber(row.workout_count) ?? 0,
+    // Only ever the price of training at this one centre. Null is the normal
+    // answer: most chains publish nothing that means that.
+    priceKr: toNumber(row.price_kr),
+    priceIsFrom: Boolean(row.price_is_from),
+    priceNote: row.price_note ?? null,
+    priceCheckedOn: row.price_checked_on ?? null,
   };
 }
 
@@ -638,20 +680,18 @@ export async function getGymsInBounds({
   maxLongitude,
   limit = 300,
 }) {
-  const { data, error } = await supabase
-    .from(GYM_TABLE)
-    .select(GYM_SELECT_FIELDS)
-    .gte("latitude", minLatitude)
-    .lte("latitude", maxLatitude)
-    .gte("longitude", minLongitude)
-    .lte("longitude", maxLongitude)
-    .limit(limit);
+  const rows = await selectGymsWithOptionalPrice((columns) =>
+    supabase
+      .from(GYM_TABLE)
+      .select(columns)
+      .gte("latitude", minLatitude)
+      .lte("latitude", maxLatitude)
+      .gte("longitude", minLongitude)
+      .lte("longitude", maxLongitude)
+      .limit(limit)
+  );
 
-  if (error) {
-    throw normalizeGymError(error);
-  }
-
-  return (data ?? []).map(mapGym).filter(Boolean);
+  return rows.map(mapGym).filter(Boolean);
 }
 
 export async function getGymCount() {
@@ -677,20 +717,18 @@ export async function searchGyms({ query, limit = 40 }) {
   }
 
   const pattern = `%${cleaned}%`;
-  const { data, error } = await supabase
-    .from(GYM_TABLE)
-    .select(GYM_SELECT_FIELDS)
-    .or(
-      `name.ilike.${pattern},short_name.ilike.${pattern},chain.ilike.${pattern},city.ilike.${pattern}`
-    )
-    .order("short_name", { ascending: true })
-    .limit(limit);
+  const rows = await selectGymsWithOptionalPrice((columns) =>
+    supabase
+      .from(GYM_TABLE)
+      .select(columns)
+      .or(
+        `name.ilike.${pattern},short_name.ilike.${pattern},chain.ilike.${pattern},city.ilike.${pattern}`
+      )
+      .order("short_name", { ascending: true })
+      .limit(limit)
+  );
 
-  if (error) {
-    throw normalizeGymError(error);
-  }
-
-  return (data ?? []).map(mapGym).filter(Boolean);
+  return rows.map(mapGym).filter(Boolean);
 }
 
 /* ------------------------------------------------------ the user's centre -- */

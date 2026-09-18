@@ -127,6 +127,73 @@ export default StyleSheet.create({
     fontSize: 11.5,
     fontWeight: "700",
   },
+  // The card over a pin. Fixed width: a callout has no parent to size itself
+  // against, and one that grows with the centre's name would be a different
+  // shape on every pin.
+  calloutWrap: {
+    width: 232,
+    alignItems: "stretch",
+  },
+  calloutCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingTop: 11,
+    paddingBottom: 9,
+  },
+  calloutEyebrow: {
+    fontSize: 9.5,
+    fontWeight: "800",
+    letterSpacing: 1.4,
+    textTransform: "uppercase",
+  },
+  calloutTitle: {
+    fontSize: 15.5,
+    fontWeight: "800",
+    lineHeight: 19,
+    marginTop: 1,
+  },
+  calloutMeta: {
+    fontSize: 11.5,
+    fontWeight: "700",
+    lineHeight: 15,
+    marginTop: 2,
+  },
+  calloutDivider: {
+    height: 1,
+    marginVertical: 9,
+  },
+  calloutPrice: {
+    fontSize: 17,
+    fontWeight: "800",
+    letterSpacing: -0.3,
+  },
+  calloutPriceNote: {
+    fontSize: 10,
+    fontWeight: "600",
+    lineHeight: 14,
+    marginTop: 1,
+  },
+  calloutAction: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  calloutActionText: {
+    fontSize: 13,
+    fontWeight: "800",
+  },
+  calloutArrow: {
+    alignSelf: "center",
+    width: 0,
+    height: 0,
+    marginTop: -1,
+    borderLeftWidth: 7,
+    borderRightWidth: 7,
+    borderTopWidth: 8,
+    borderLeftColor: "transparent",
+    borderRightColor: "transparent",
+  },
   pin: {
     borderRadius: 999,
     borderWidth: 2,

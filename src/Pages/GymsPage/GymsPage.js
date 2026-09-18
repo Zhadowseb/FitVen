@@ -10,8 +10,8 @@ import {
   useColorScheme,
 } from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import MapView, { Marker } from "react-native-maps";
-import { useTranslation } from "@localization";
+import MapView, { Callout, Marker } from "react-native-maps";
+import { formatDate, formatNumber, useTranslation } from "@localization";
 
 import styles from "./GymsPageStyle";
 import { useAuth } from "../../Contexts/AuthContext";
@@ -115,6 +115,101 @@ function MyLocationMarker({ position, theme }) {
         <View style={[styles.pin, styles.pinMe, { backgroundColor: theme.secondary, borderColor: "#FFFFFF" }]} />
       </View>
     </Marker>
+  );
+}
+
+/**
+ * The card that opens over a pin. Quick facts, the price of training at that
+ * one centre when the chain publishes one, and a way on to the centre itself.
+ *
+ * Android does not deliver touches to a callout's children, only to the
+ * callout, so the last row is a button to look at and the whole card is what
+ * you press. That is also why it is a callout rather than a sheet: it points
+ * at the pin it belongs to.
+ */
+function GymCallout({ gym, onOpen }) {
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme] ?? Colors.light;
+  const { t } = useTranslation();
+  const quietText = theme.quietText ?? theme.text;
+  const isLight = colorScheme === "light";
+  const chainColor = getChainColor(gym.chain);
+  const meta = [
+    gym.city,
+    gym.distanceM !== null && gym.distanceM !== undefined ? formatDistance(gym.distanceM) : null,
+    gym.memberCount ? t("gyms.callout.memberCount", { count: gym.memberCount }) : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  const priceLine =
+    gym.priceKr === null || gym.priceKr === undefined
+      ? null
+      : t(gym.priceIsFrom ? "gyms.price.fromPerMonth" : "gyms.price.perMonth", {
+          amount: formatNumber(gym.priceKr, { maximumFractionDigits: 2 }),
+        });
+  const priceNote = [
+    t("gyms.price.oneCentre"),
+    gym.priceCheckedOn ? t("gyms.price.checked", { date: formatDate(gym.priceCheckedOn) }) : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  return (
+    <Callout tooltip onPress={onOpen}>
+      <View style={styles.calloutWrap}>
+        <View
+          style={[
+            styles.calloutCard,
+            { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder },
+          ]}
+        >
+          <ThemedText style={styles.calloutEyebrow} setColor={chainColor} numberOfLines={1}>
+            {gym.chain}
+          </ThemedText>
+          <ThemedText style={styles.calloutTitle} setColor={theme.title} numberOfLines={2}>
+            {gym.shortName}
+          </ThemedText>
+          {meta ? (
+            <ThemedText style={styles.calloutMeta} setColor={quietText} numberOfLines={2}>
+              {meta}
+            </ThemedText>
+          ) : null}
+
+          <View style={[styles.calloutDivider, { backgroundColor: theme.hairline }]} />
+
+          {priceLine ? (
+            <>
+              <ThemedText style={styles.calloutPrice} setColor={theme.title}>
+                {priceLine}
+              </ThemedText>
+              <ThemedText style={styles.calloutPriceNote} setColor={quietText} numberOfLines={2}>
+                {priceNote}
+              </ThemedText>
+            </>
+          ) : (
+            <ThemedText style={styles.calloutPriceNote} setColor={quietText} numberOfLines={2}>
+              {t("gyms.price.none")}
+            </ThemedText>
+          )}
+
+          <View style={[styles.calloutDivider, { backgroundColor: theme.hairline }]} />
+
+          <View style={styles.calloutAction}>
+            <ThemedText style={styles.calloutActionText} setColor={theme.primary}>
+              {t("gyms.callout.openCentre")}
+            </ThemedText>
+            <ChevronRight width={15} height={15} color={theme.primary} />
+          </View>
+        </View>
+
+        <View
+          style={[
+            styles.calloutArrow,
+            { borderTopColor: isLight ? theme.cardBackground : theme.cardBorder },
+          ]}
+        />
+      </View>
+    </Callout>
   );
 }
 
@@ -479,10 +574,9 @@ export default function GymsPage() {
                 <Marker
                   key={gym.id}
                   coordinate={{ latitude: gym.latitude, longitude: gym.longitude }}
-                  title={isHome ? gym.shortName : gym.chain}
                   anchor={{ x: 0.5, y: 0.5 }}
+                  calloutAnchor={{ x: 0.5, y: 0 }}
                   tracksViewChanges={isHome}
-                  onPress={() => openGym(gym)}
                 >
                   {isHome ? (
                     <HomeGymPin theme={theme} chainColor={chainColor} />
@@ -495,6 +589,7 @@ export default function GymsPage() {
                       ]}
                     />
                   )}
+                  <GymCallout gym={gym} onOpen={() => openGym(gym)} />
                 </Marker>
               );
             })}

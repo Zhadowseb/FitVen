@@ -37,6 +37,21 @@ export default {
     reviewA11y: "Review this lift's video",
   },
 
+  // The card that opens over a pin on the map.
+  callout: {
+    openCentre: "Open centre",
+    memberCount: { one: "{count} trains here", other: "{count} train here" },
+  },
+
+  // Only ever the price of a membership covering this one centre.
+  price: {
+    perMonth: "{amount} kr./mo.",
+    fromPerMonth: "from {amount} kr./mo.",
+    oneCentre: "This centre only",
+    checked: "checked {date}",
+    none: "No single-centre price published",
+  },
+
   // The Centres screen: map, search, strongest in Denmark, nearest.
   list: {
     eyebrow: "Social",

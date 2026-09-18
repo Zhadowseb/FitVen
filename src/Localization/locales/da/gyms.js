@@ -31,6 +31,21 @@ export default {
     reviewA11y: "Se videoen af dette løft",
   },
 
+  // The card that opens over a pin on the map.
+  callout: {
+    openCentre: "Se centeret",
+    memberCount: { one: "{count} træner her", other: "{count} træner her" },
+  },
+
+  // Only ever the price of a membership covering this one centre.
+  price: {
+    perMonth: "{amount} kr./md.",
+    fromPerMonth: "fra {amount} kr./md.",
+    oneCentre: "Kun dette center",
+    checked: "tjekket {date}",
+    none: "Ingen pris for ét center oplyst",
+  },
+
   list: {
     eyebrow: "Socialt",
     title: "Centre",
