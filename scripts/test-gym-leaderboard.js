@@ -12,12 +12,7 @@ const loadAppModule = require("./lib/loadAppModule");
 const root = path.resolve(__dirname, "..");
 const gymUtils = loadAppModule("src/Utils/gymUtils.js");
 const activityUtils = loadAppModule("src/Utils/friendsActivityUtils.js");
-const {
-  deriveShortName,
-  deriveSingleCentrePrice,
-  disambiguateShortNames,
-  normalizeGym,
-} = require("./import-gyms/normalizeGym");
+const { deriveShortName, disambiguateShortNames, normalizeGym } = require("./import-gyms/normalizeGym");
 
 /* ---------------------------------------------------------- best set -- */
 
@@ -118,50 +113,6 @@ assert.strictEqual(deriveShortName({ chain: "SATS", name: "Lyngby – Kanalvej" 
 assert.strictEqual(deriveShortName({ chain: "SATS", name: "Køge - Strædet", short_name: "Køge - Strædet" }), "Strædet", "an explicit short name that is just the name again does not stop the rules");
 assert.strictEqual(deriveShortName({ chain: "LOOP Fitness", name: "LOOP Amager, Strandlodsvej" }), "Strandlodsvej", "the rules apply in turn, not first match");
 assert.strictEqual(deriveShortName({ chain: "FitnessX", name: "Ballerup" }), "Ballerup");
-
-/* ------------------------------------------ the single-centre price -- */
-
-// PureGym's normal price, not the campaign one beside it: a campaign is gone
-// by the time somebody reads the card.
-assert.deepStrictEqual(
-  deriveSingleCentrePrice({
-    chain: "PureGym",
-    price_from: "Priser fra 169,50 DKK/md.",
-    price_note: "*Normalpris fra 339 DKK/md.",
-  }),
-  { price_kr: 339, price_is_from: true, price_note: "Normalpris fra 339 DKK/md." }
-);
-
-// SATS Basic for an adult, which their own site calls access to one centre.
-assert.deepStrictEqual(
-  deriveSingleCentrePrice({
-    chain: "SATS",
-    memberships: [
-      { name: "Basic", member_type: "Voksen", age_group: "under-30", price: "549" },
-      { name: "Premium", member_type: "Voksen", age_group: "over-30", price: "799" },
-      {
-        name: "Basic",
-        member_type: "Voksen",
-        age_group: "over-30",
-        price: "649",
-        description: "Adgang til dit favoritcenter",
-      },
-    ],
-  }),
-  { price_kr: 649, price_is_from: false, price_note: "Adgang til dit favoritcenter" }
-);
-
-// A LOOP membership covers every LOOP centre, so there is no single-centre
-// price and the card must show none rather than the all-centre one.
-assert.strictEqual(
-  deriveSingleCentrePrice({
-    chain: "LOOP Fitness",
-    memberships: [{ name: "Kampagne", price_per_month: 289, local_gym_only: false }],
-  }),
-  null
-);
-assert.strictEqual(deriveSingleCentrePrice({ chain: "FitnessX", price_teaser: "fra kun 250 kr./md." }), null);
-assert.strictEqual(deriveSingleCentrePrice({ chain: "Fit&Sund" }), null);
 
 const colliding = disambiguateShortNames([
   { chain: "PureGym", name: "Odense C., Dannebrogsgade", short_name: "Dannebrogsgade", city: "Odense C" },

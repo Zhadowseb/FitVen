@@ -163,17 +163,6 @@ export default StyleSheet.create({
     height: 1,
     marginVertical: 9,
   },
-  calloutPrice: {
-    fontSize: 17,
-    fontWeight: "800",
-    letterSpacing: -0.3,
-  },
-  calloutPriceNote: {
-    fontSize: 10,
-    fontWeight: "600",
-    lineHeight: 14,
-    marginTop: 1,
-  },
   calloutAction: {
     flexDirection: "row",
     alignItems: "center",

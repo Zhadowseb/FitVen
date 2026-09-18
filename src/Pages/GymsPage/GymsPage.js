@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import MapView, { Callout, Marker } from "react-native-maps";
-import { formatDate, formatNumber, useTranslation } from "@localization";
+import { useTranslation } from "@localization";
 
 import styles from "./GymsPageStyle";
 import { useAuth } from "../../Contexts/AuthContext";
@@ -119,8 +119,8 @@ function MyLocationMarker({ position, theme }) {
 }
 
 /**
- * The card that opens over a pin. Quick facts, the price of training at that
- * one centre when the chain publishes one, and a way on to the centre itself.
+ * The card that opens over a pin: quick facts about the centre and a way on
+ * to the centre itself.
  *
  * Android does not deliver touches to a callout's children, only to the
  * callout, so the last row is a button to look at and the whole card is what
@@ -138,18 +138,6 @@ function GymCallout({ gym, onOpen }) {
     gym.city,
     gym.distanceM !== null && gym.distanceM !== undefined ? formatDistance(gym.distanceM) : null,
     gym.memberCount ? t("gyms.callout.memberCount", { count: gym.memberCount }) : null,
-  ]
-    .filter(Boolean)
-    .join(" · ");
-  const priceLine =
-    gym.priceKr === null || gym.priceKr === undefined
-      ? null
-      : t(gym.priceIsFrom ? "gyms.price.fromPerMonth" : "gyms.price.perMonth", {
-          amount: formatNumber(gym.priceKr, { maximumFractionDigits: 2 }),
-        });
-  const priceNote = [
-    t("gyms.price.oneCentre"),
-    gym.priceCheckedOn ? t("gyms.price.checked", { date: formatDate(gym.priceCheckedOn) }) : null,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -174,23 +162,6 @@ function GymCallout({ gym, onOpen }) {
               {meta}
             </ThemedText>
           ) : null}
-
-          <View style={[styles.calloutDivider, { backgroundColor: theme.hairline }]} />
-
-          {priceLine ? (
-            <>
-              <ThemedText style={styles.calloutPrice} setColor={theme.title}>
-                {priceLine}
-              </ThemedText>
-              <ThemedText style={styles.calloutPriceNote} setColor={quietText} numberOfLines={2}>
-                {priceNote}
-              </ThemedText>
-            </>
-          ) : (
-            <ThemedText style={styles.calloutPriceNote} setColor={quietText} numberOfLines={2}>
-              {t("gyms.price.none")}
-            </ThemedText>
-          )}
 
           <View style={[styles.calloutDivider, { backgroundColor: theme.hairline }]} />
 
