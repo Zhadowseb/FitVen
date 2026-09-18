@@ -10,7 +10,7 @@ import * as Location from "expo-location";
 import { t } from "@localization";
 
 import { getCurrentUserId, supabase } from "../Database/supaBaseClient";
-import { weightliftingRepository, workoutRepository } from "../Repository";
+import { programRepository, weightliftingRepository, workoutRepository } from "../Repository";
 import { attachAvatarUrls } from "./avatarUrls";
 import { LOCATION_WORKOUT_TYPES } from "./cloudSync/workoutTypes";
 import {
@@ -50,7 +50,16 @@ export const REJECTION_REASONS = [
 const GYM_SETUP_MESSAGE =
   "Centres are not set up in Supabase yet. Run supabase/migrations/20260917120000_gyms-and-lift-verification.sql in the Supabase SQL editor first.";
 const POSITION_TIMEOUT_MS = 12000;
-const LAST_KNOWN_MAX_AGE_MS = 10 * 60 * 1000;
+// A map can show a fix from ten minutes ago without lying about much.
+export const MAP_LAST_KNOWN_MAX_AGE_MS = 10 * 60 * 1000;
+// Matching cannot: the answer is a place, and the radius is 120 m. Two
+// minutes is short enough that you are still inside the centre you were in,
+// and long enough to rescue a workout whose fresh fix never arrived.
+const MATCH_LAST_KNOWN_MAX_AGE_MS = 2 * 60 * 1000;
+// How far back the retry looks, and how many workouts it will touch in one
+// pass, so a long-dormant install does not open into a hundred requests.
+const MATCH_RETRY_DAYS = 7;
+const MATCH_RETRY_LIMIT = 20;
 const SIGNED_VIDEO_TTL_SECONDS = 60 * 60;
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -239,15 +248,16 @@ export async function getGymById(gymId) {
  * the phone knows where it is.
  */
 /**
- * `allowLastKnown` falls back to the phone's last remembered fix when a fresh
- * one does not arrive in time - indoors, which is where a gym is, that is
- * common. Only for showing where you are on a map. Never for matching a
- * workout to a centre: a fix from an hour ago would credit the workout to
- * wherever you were then.
+ * `lastKnownMaxAgeMs` falls back to the phone's last remembered fix when a
+ * fresh one does not arrive in time - indoors, which is where a gym is, that
+ * is common. How old a fix may be is the caller's call, because it means two
+ * different things: a map can live with one from ten minutes ago, while
+ * matching a workout to a centre cannot, since the answer is a place. Zero,
+ * the default, never falls back.
  */
 export async function getCurrentPosition({
   requestPermission = true,
-  allowLastKnown = false,
+  lastKnownMaxAgeMs = 0,
 } = {}) {
   try {
     let permission = await Location.getForegroundPermissionsAsync();
@@ -273,9 +283,9 @@ export async function getCurrentPosition({
       new Promise((resolve) => setTimeout(() => resolve(null), POSITION_TIMEOUT_MS)),
     ]);
 
-    if (!position && allowLastKnown) {
+    if (!position && lastKnownMaxAgeMs > 0) {
       position = await Location.getLastKnownPositionAsync({
-        maxAge: LAST_KNOWN_MAX_AGE_MS,
+        maxAge: lastKnownMaxAgeMs,
       });
     }
 
@@ -309,7 +319,7 @@ export async function getCurrentPosition({
 export async function matchWorkoutToGym(
   db,
   workoutId,
-  { requestPermission = true, force = false } = {}
+  { requestPermission = true, force = false, position: knownPosition = null } = {}
 ) {
   const workout = await workoutRepository.getWorkoutGymMatch(db, workoutId);
 
@@ -325,7 +335,15 @@ export async function matchWorkoutToGym(
     return { gymId: existingGymId, gym, matched: true, reason: "already_matched" };
   }
 
-  const position = await getCurrentPosition({ requestPermission });
+  // `knownPosition` is the workout's own recorded start, handed over by the
+  // retry. Asking the phone again days later would answer where the phone is
+  // now, which is a different place.
+  const position =
+    knownPosition ??
+    (await getCurrentPosition({
+      requestPermission,
+      lastKnownMaxAgeMs: MATCH_LAST_KNOWN_MAX_AGE_MS,
+    }));
 
   if (!position) {
     return { gymId: existingGymId, gym: null, matched: false, reason: "no_position" };
@@ -448,6 +466,82 @@ export async function syncWorkoutLifts(db, workoutId) {
   }
 
   return { uploaded: rows.length, gymId };
+}
+
+/**
+ * Picks up what the finish could not: workouts from the last week that are
+ * done but have no centre, and workouts that have one but whose lifts may
+ * never have reached the cloud - finishing without a signal is the ordinary
+ * case in a basement gym.
+ *
+ * A workout with recorded coordinates is matched from those, not from a new
+ * fix, because by now the phone is somewhere else. A workout with no
+ * coordinates at all cannot be rescued, and is deliberately left alone: the
+ * only position available would be a different place, and a wrong centre on a
+ * leaderboard is worse than a missing one.
+ */
+export async function retryMissingGymMatches(db) {
+  const userId = await getAuthenticatedUserId();
+
+  if (!userId) {
+    return { matched: 0, uploaded: 0, skipped: "signed_out" };
+  }
+
+  const since = new Date();
+
+  since.setDate(since.getDate() - MATCH_RETRY_DAYS);
+
+  const workouts = await programRepository.getRecentFinishedWorkoutsForGymRetry(db, {
+    sinceIsoDate: since.toISOString().slice(0, 10),
+    limit: MATCH_RETRY_LIMIT,
+  });
+  let matched = 0;
+  let uploaded = 0;
+
+  for (const workout of workouts) {
+    if (LOCATION_WORKOUT_TYPES.has(workout.workout_type)) {
+      continue;
+    }
+
+    let gymId = toNumber(workout.gym_id);
+
+    if (gymId === null) {
+      const latitude = toNumber(workout.start_latitude);
+      const longitude = toNumber(workout.start_longitude);
+
+      if (latitude === null || longitude === null) {
+        continue;
+      }
+
+      try {
+        const result = await matchWorkoutToGym(db, workout.workout_id, {
+          position: { latitude, longitude },
+        });
+
+        gymId = result.gymId;
+        matched += result.matched ? 1 : 0;
+      } catch (error) {
+        console.warn("Centre match retry failed:", error);
+        continue;
+      }
+    }
+
+    if (gymId === null) {
+      continue;
+    }
+
+    try {
+      // An upsert, so a workout whose lifts did land is written again with
+      // the same values rather than twice.
+      const result = await syncWorkoutLifts(db, workout.workout_id);
+
+      uploaded += result.uploaded ?? 0;
+    } catch (error) {
+      console.warn("Centre lift retry failed:", error);
+    }
+  }
+
+  return { matched, uploaded };
 }
 
 /**

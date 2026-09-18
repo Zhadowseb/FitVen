@@ -1218,6 +1218,35 @@ export async function getWorkoutsBetweenDates(db, { startIsoDate, endIsoDate }) 
   );
 }
 
+/**
+ * Finished workouts from the last few days that the centre match has not
+ * settled: either no centre was found, or lifts may never have been uploaded.
+ * The retry decides which is which from the start coordinates.
+ */
+export async function getRecentFinishedWorkoutsForGymRetry(
+  db,
+  { sinceIsoDate, limit = 20 }
+) {
+  const workoutIsoDateSql = localDateToIsoSql("w.date");
+
+  return db.getAllAsync(
+    `SELECT
+        w.workout_id,
+        w.workout_type,
+        w.date,
+        w.gym_id,
+        w.start_latitude,
+        w.start_longitude
+     FROM Workout_Type_Instance w
+     WHERE w.done = 1
+       AND w.deleted_at IS NULL
+       AND date(${workoutIsoDateSql}) >= date(?)
+     ORDER BY date(${workoutIsoDateSql}) DESC, w.workout_id DESC
+     LIMIT ?;`,
+    [sinceIsoDate, limit]
+  );
+}
+
 export async function getRecentWorkouts(
   db,
   { maxIsoDate, limit = 2, offset = 0 }

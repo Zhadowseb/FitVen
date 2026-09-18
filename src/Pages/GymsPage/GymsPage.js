@@ -232,7 +232,7 @@ export default function GymsPage() {
       // not, which is why only this screen asks for the fallback.
       const currentPosition = await gymService.getCurrentPosition({
         requestPermission: true,
-        allowLastKnown: true,
+        lastKnownMaxAgeMs: gymService.MAP_LAST_KNOWN_MAX_AGE_MS,
       });
       const origin = currentPosition ?? { latitude: FALLBACK_REGION.latitude, longitude: FALLBACK_REGION.longitude };
 
@@ -373,7 +373,7 @@ export default function GymsPage() {
     try {
       const currentPosition = await gymService.getCurrentPosition({
         requestPermission: true,
-        allowLastKnown: true,
+        lastKnownMaxAgeMs: gymService.MAP_LAST_KNOWN_MAX_AGE_MS,
       });
 
       if (currentPosition) {

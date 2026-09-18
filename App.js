@@ -73,6 +73,7 @@ import SetSync from "./src/Sync/SetSync";
 import WorkoutTypeCatalogSync from "./src/Sync/WorkoutTypeCatalogSync";
 import WorkoutTypeInstanceSync from "./src/Sync/WorkoutTypeInstanceSync";
 import WorkoutMusicSync from "./src/Sync/WorkoutMusicSync";
+import GymMatchSync from "./src/Sync/GymMatchSync";
 
 const Stack = createNativeStackNavigator();
 const navigationRef = createNavigationContainerRef();
@@ -396,6 +397,7 @@ function UserScopedDatabaseApp() {
       <WorkoutTypeInstanceSync />
       <PushNotificationRegistrationSync />
       <WorkoutMusicSync />
+      <GymMatchSync />
       <PrivacyConsentGate>
         {/* Keyed on the language too: a screen's header options and anything
             else the navigator captured at mount are rebuilt in the new one. */}

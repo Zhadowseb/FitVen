@@ -18,6 +18,7 @@ below never executes — no matter how complete it looks.
 | `WorkoutTypeInstanceSync` | yes | workout-level fields |
 | `PushNotificationRegistrationSync` | yes | the device's push token |
 | `WorkoutMusicSync` | yes | what is playing during a live workout, to `workout_music`, every 30 s while sharing is on |
+| `GymMatchSync` | yes | the centre match and the leaderboard lifts a finished workout could not complete, retried on launch and on return to the foreground |
 
 `syncQueue.js` is not a component. It is the entry point every one of them goes
 through, and it serialises everything onto a single promise chain. The one that
