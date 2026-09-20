@@ -51,7 +51,7 @@ behind by accident.
 | `20260916210000_opt-in-column-defaults.sql` | yes |
 | `20260917120000_gyms-and-lift-verification.sql` | yes |
 | `20260917120100_workout-music.sql` | yes |
-| `20260921140000_lift-videos-stay-in-the-centre.sql` | no |
+| `20260921140000_lift-videos-stay-in-the-centre.sql` | yes |
 
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
@@ -163,12 +163,13 @@ preference table syncs both ways, so the device was cleaned and the next sync
 put it back - and every exercise added to a workout came with a NOTE column. Run
 it together with the app change that guards that repair to run once.
 
-`20260921140000_lift-videos-stay-in-the-centre.sql` **has not been run, and
-should be.** It closes three holes the review agents found in the migration
-above, which is already live: any signed-in user could read any centre's
-verification videos, `gym_lift.video_path` accepted a path belonging to
-somebody else, and `request_lift_verification` could be called in a loop. The
-first of those is open in production until this runs.
+`20260921140000_lift-videos-stay-in-the-centre.sql` was run on 2026-09-21. It
+closes three holes the review agents found in the migration above, which was
+already live: any signed-in user could read any centre's verification videos,
+`gym_lift.video_path` accepted a path belonging to somebody else, and
+`request_lift_verification` could be called in a loop. Its three functions are
+copied from that file verbatim with one change each, so a diff between the two
+shows exactly what moved.
 
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to
