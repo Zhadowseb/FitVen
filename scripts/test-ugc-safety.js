@@ -180,6 +180,31 @@ async function run() {
     "the hide is not security definer, so the reporter cannot write the column"
   );
 
+  // Without the lock the whole thing is decoration: social-posts.sql grants
+  // update on the whole table to authenticated, and the update policy only
+  // asks whether the row is yours - so the author of a reported post could
+  // send hidden_at: null and put it back in the feed themselves.
+  assert.ok(
+    /before update of hidden_at on public\.social_post/.test(hideSql),
+    "nothing guards hidden_at against a plain update from the client"
+  );
+
+  assert.ok(
+    /create or replace function private\.reject_manual_post_hide[\s\S]*?raise exception/.test(
+      hideSql
+    ),
+    "the guard on hidden_at no longer refuses anything"
+  );
+
+  // The guard has to refuse everyone and let the trigger announce itself, the
+  // way the gym_lift recount does. A guard that trusted the definer would be
+  // no guard at all.
+  assert.ok(
+    /set_config\('fitven\.social_post_hide', 'on', true\)/.test(hideSql) &&
+      /current_setting\('fitven\.social_post_hide', true\)/.test(hideSql),
+    "the hide and its guard no longer agree on how the trigger announces itself"
+  );
+
   // The author keeps seeing their own post. One that vanishes for the person
   // who wrote it reads as a bug, and they are the one person the hiding is not
   // protecting.

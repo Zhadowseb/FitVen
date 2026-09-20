@@ -17,7 +17,17 @@ import ThemedKeyboardSheet, {
   useSheetKeyboardHeight,
 } from "./ThemedKeyboardSheet";
 
-const ThemedBottomSheet = ({ visible, onClose, children, footer = null }) => {
+// onDismiss fires once the sheet has actually left the screen. Anything that
+// opens another modal has to wait for it: on iOS a second modal presented
+// while the first is still up is dropped by UIKit without an error, so the
+// button reads as dead. ThemedModal carries the same prop for the same reason.
+const ThemedBottomSheet = ({
+  visible,
+  onClose,
+  onDismiss,
+  children,
+  footer = null,
+}) => {
   const scheme = useColorScheme();
   const theme = Colors[scheme] ?? Colors.light;
   const insets = useSafeAreaInsets();
@@ -79,6 +89,7 @@ const ThemedBottomSheet = ({ visible, onClose, children, footer = null }) => {
       transparent
       animationType="fade"
       visible={visible}
+      onDismiss={onDismiss}
       onRequestClose={dismissThenClose(onClose)}
     >
       {/* Overlay */}

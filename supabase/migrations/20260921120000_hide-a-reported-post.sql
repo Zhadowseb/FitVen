@@ -56,10 +56,17 @@ begin
   where report.reported_post_id = new.reported_post_id;
 
   if reporter_count >= 2 then
+    -- Announced to the guard below, the way the gym_lift recount does it. The
+    -- guard has to refuse everyone, including this function: it runs as the
+    -- definer, but so would anything else somebody talked into calling it.
+    perform set_config('fitven.social_post_hide', 'on', true);
+
     update public.social_post
        set hidden_at = timezone('utc', now())
      where id = new.reported_post_id
        and hidden_at is null;
+
+    perform set_config('fitven.social_post_hide', 'off', true);
   end if;
 
   return new;
@@ -76,6 +83,47 @@ create trigger on_user_report_hide_post
 after insert on public.user_reports
 for each row
 execute function private.hide_post_when_reported();
+
+/* ------------------------------------------- only the trigger may hide -- */
+
+-- Without this the whole thing is decoration. 20260525142801_social-posts.sql
+-- grants `update` on the entire table to `authenticated`, and the update
+-- policy asks only whether the row is yours - so the author of a post two
+-- people reported could send `{ hidden_at: null }` from their own session and
+-- put it straight back in the feed. The person the hiding is aimed at was the
+-- one person who could undo it.
+--
+-- A column-level grant would be the other way, but `grant update (...)` means
+-- naming every column the client does write, and a column added later without
+-- a matching grant fails at runtime in the app rather than here. This refuses
+-- one column instead, and says so.
+create or replace function private.reject_manual_post_hide()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if new.hidden_at is distinct from old.hidden_at
+     and current_setting('fitven.social_post_hide', true) is distinct from 'on' then
+    raise exception 'hidden_at is set by report review, not by the client.'
+      using errcode = '42501';
+  end if;
+
+  return new;
+end;
+$$;
+
+revoke all on function private.reject_manual_post_hide() from public;
+revoke all on function private.reject_manual_post_hide() from anon;
+revoke all on function private.reject_manual_post_hide() from authenticated;
+
+drop trigger if exists on_social_post_reject_manual_hide on public.social_post;
+
+create trigger on_social_post_reject_manual_hide
+before update of hidden_at on public.social_post
+for each row
+execute function private.reject_manual_post_hide();
 
 /* ------------------------------------------------- hidden from the feed -- */
 

@@ -148,6 +148,10 @@ export default function App() {
     useState(null);
   const [deletingPostId, setDeletingPostId] = useState(null);
   const [reportingPost, setReportingPost] = useState(null);
+  // Held while the options sheet is on its way out. Opening the dialog in the
+  // same render that closes the sheet puts two native modals up at once, and
+  // iOS drops the second without an error.
+  const [postPendingReport, setPostPendingReport] = useState(null);
   const [reportReason, setReportReason] = useState(null);
   const [reportNote, setReportNote] = useState("");
   const [isReportWorking, setIsReportWorking] = useState(false);
@@ -694,15 +698,22 @@ export default function App() {
       return;
     }
 
-    // The sheet closes and the dialog opens in its place. Two sheets at once
-    // is the thing that broke reporting on iOS once already - see the comment
-    // on the report dialog in SearchPage.
-    const post = selectedWorkoutSummaryPost;
+    // Close the sheet and hold the intent. The dialog opens from the sheet's
+    // onDismiss, once it has actually left the screen.
+    setPostPendingReport(selectedWorkoutSummaryPost);
     setSelectedWorkoutSummaryPost(null);
+  }, [selectedWorkoutSummaryPost]);
+
+  const openPendingReport = useCallback(() => {
+    if (!postPendingReport) {
+      return;
+    }
+
     setReportReason(null);
     setReportNote("");
-    setReportingPost(post);
-  }, [selectedWorkoutSummaryPost]);
+    setReportingPost(postPendingReport);
+    setPostPendingReport(null);
+  }, [postPendingReport]);
 
   const closeReportWorkoutSummaryPost = useCallback(() => {
     setReportingPost(null);
@@ -1041,6 +1052,7 @@ export default function App() {
       <ThemedBottomSheet
         visible={!!selectedWorkoutSummaryPost}
         onClose={() => setSelectedWorkoutSummaryPost(null)}
+        onDismiss={openPendingReport}
       >
         <View
           style={[styles.postOptionsTitle, { borderBottomColor: theme.hairline }]}
@@ -1111,6 +1123,7 @@ export default function App() {
         cancelLabel="Cancel"
         tone="danger"
         isWorking={isReportWorking}
+        confirmDisabled={!reportReason}
         onConfirm={submitWorkoutSummaryPostReport}
         onClose={closeReportWorkoutSummaryPost}
       >
