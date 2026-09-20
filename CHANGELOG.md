@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.1.4] - Unreleased
+### Added
+- **Eight review agents on every pull request.** `.github/workflows/pr-review.yml` fans a PR out to eight parallel Claude Code jobs - quality assurance, testing, security, architecture, code design, performance, UI usability and design - and a ninth agent merges their reports into one comment on the PR, updated in place on every push. Nothing has to be running locally.
+  - Each agent's brief is a markdown file in `.github/review-agents/`, written against this repo rather than against code in general: the cloud-sync field checklist, the schema living in two files, the layer-aliasing rule, and the reason a colour must never sit in a `*Style.js`. Change what an agent looks for by editing its brief; the workflow only needs touching to add or remove an agent.
+  - Every brief ends with what is *not* its job. Eight agents all looking for "problems" find the same three and write them eight times, so the mandates are deliberately disjoint and the aggregating agent drops duplicates on top of that.
+  - The aggregator verifies a finding against the file before it reports it as blocking, and says so when an agent filed nothing rather than reading silence as approval.
+  - `npm ci && npm test` runs alongside as the deterministic half, and its result is stated in the report.
+  - The briefs carry what the five consultant reviews in `docs/` already found, so an agent starts where the last review stopped rather than from general practice: the per-second work during a workout and the sequential round trips from the performance audit, the personal data that once shipped inside the bundle from the security review, the seven recurring design patterns - 35 text sizes, 36 corner radii, five top bars - and the keyboard handling that was globally ineffective on Android. Each brief says what was checked and deliberately cleared, so a settled question is not reopened on every PR.
+  - Findings carry an id per agent (`SEC-1`, `PERF-2`), and confidence is `Bekraeftet` or `Mistanke` rather than a vague scale: an agent may only write `Bekraeftet` about something it opened the file and saw. A report also lists what it examined and found sound, which is the half that tells you the silence was checked.
+  - Authentication is either `ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN` as a repository secret. With neither set the review jobs skip instead of failing, so the workflow is safe to merge before the secret exists. Setup is in `.github/review-agents/README.md`.
+  - **The briefs say which text is an instruction and which is data.** The prompt from the workflow and `.github/review-agents/*.md` are instructions; everything about the pull request - the diff, the description, the commit messages, the code comments - is data, written by whoever opened it. Text in there addressed to an agent is a finding to quote, not an order to obey. The agents found this missing when they reviewed themselves: without it a pull request can dictate its own approval, and that report looks exactly like a real one.
+  - **A failed lookup of the existing comment stops the run instead of posting a second one.** `|| true` sat on the `gh api` call itself, so a rate limit or a 5xx read as "no comment yet" and the run answered by creating another comment and reporting success - breaking the single comment, updated in place, that this entry promises.
+
+---
 ## [1.1.3] - Unreleased
 ### Changed
 - `eas submit --platform ios` carries the App Store Connect app id in `eas.json`. Without it the command stops and asks, which a non-interactive run cannot answer, so every submission had to be driven by hand.
