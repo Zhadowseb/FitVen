@@ -95,4 +95,25 @@ export default StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
   },
+  // The same measurements as the report dialog on the search page. Two
+  // dialogs that ask the same question should not look like two dialogs.
+  reportReasonList: {
+    gap: 8,
+    marginTop: 4,
+  },
+  reportReason: {
+    minHeight: 44,
+    paddingHorizontal: 14,
+    justifyContent: "center",
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  reportReasonText: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  reportNote: {
+    marginTop: 12,
+    minHeight: 80,
+  },
 });

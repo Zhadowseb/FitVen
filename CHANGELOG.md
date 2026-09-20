@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.1.5] - Unreleased
+### Added
+- **Report a post from the feed.** The menu on a workout post used to open only on your own; it now opens on everybody's, and on somebody else's it offers **Report post** instead of Edit and Delete. Same five reasons and the same optional note as reporting an account, and it writes the same `user_reports` row - `reported_post_id` has been there since 1.0.2 with nothing filling it in. Your own post keeps Edit and Delete exactly as before.
+- **A post two different people report leaves the feed straight away**, and is read by a person afterwards. `social_post.hidden_at` is set by a trigger on the second report from a different account, and the read policy drops a hidden post for everyone except its author - a post that vanishes for the person who wrote it reads as a bug, and they are the one person the hiding is not protecting. Distinct reporters, not reports: reporting the same post five times is still one person's opinion.
+- The support page answers "Reporting a post or an account": where the two ways in are, that reports are read within a day, that two reports withdraw a post immediately, and that the person reported is never told who reported them.
+
+### Notes
+- **`supabase/migrations/20260921120000_hide-a-reported-post.sql` has to be run before this ships.** Until it does, the report itself works and lands in `user_reports`, but nothing hides a post and the support page's promise is not true. It is the only file in `supabase/migrations/` that has not been run.
+- This is the part of the abandoned `major/content-moderation` branch that never reached master. The rest of that branch - the reports table, the term filter, the triggers - shipped in 1.0.2 as `20260912220000_ugc-safety.sql` under different names, so only these three pieces were missing.
+
+---
 ## [1.1.4] - Unreleased
 ### Added
 - **Eight review agents on every pull request.** `.github/workflows/pr-review.yml` fans a PR out to eight parallel Claude Code jobs - quality assurance, testing, security, architecture, code design, performance, UI usability and design - and a ninth agent merges their reports into one comment on the PR, updated in place on every push. Nothing has to be running locally.

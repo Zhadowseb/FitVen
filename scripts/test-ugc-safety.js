@@ -21,6 +21,14 @@ const migrationPath = path.join(
   "20260912220000_ugc-safety.sql"
 );
 const servicePath = path.join(rootDir, "src", "Services", "socialService.js");
+const hidePath = path.join(
+  rootDir,
+  "supabase",
+  "migrations",
+  "20260921120000_hide-a-reported-post.sql"
+);
+const homePath = path.join(rootDir, "src", "Pages", "HomePage", "HomePage.js");
+const supportPath = path.join(rootDir, "web", "support", "index.html");
 
 run().catch((error) => {
   console.error(error);
@@ -142,5 +150,92 @@ async function run() {
     "the term check is not security definer, so it cannot read the list"
   );
 
-  console.log("UGC safety: report reasons, privacy and filter wiring passed.");
+  /* ----------------------------------------- a reported post is hidden ---- */
+
+  // The support page promises that a post reported by two different people
+  // leaves the feed straight away. These are the things that promise rests on.
+  // A published promise that quietly stops being true is worse than one never
+  // made.
+  const hideSql = fs.readFileSync(hidePath, "utf8");
+
+  assert.ok(
+    /add column if not exists hidden_at timestamptz/.test(hideSql),
+    "social_post no longer gains hidden_at"
+  );
+
+  assert.ok(
+    /count\(distinct report\.reporter_id\)/.test(hideSql),
+    "the hide counts reports rather than reporters, so one person can hide any post"
+  );
+
+  assert.ok(
+    /reporter_count >= 2/.test(hideSql),
+    "the threshold for hiding a post is no longer two reporters"
+  );
+
+  assert.ok(
+    /create or replace function private\.hide_post_when_reported[\s\S]*?security definer/.test(
+      hideSql
+    ),
+    "the hide is not security definer, so the reporter cannot write the column"
+  );
+
+  // The author keeps seeing their own post. One that vanishes for the person
+  // who wrote it reads as a bug, and they are the one person the hiding is not
+  // protecting.
+  const policyMatch = hideSql.match(
+    /create policy "Social posts are viewable by owners and allowed audience"[\s\S]*?\n\);/
+  );
+
+  assert.ok(policyMatch, "the read policy is no longer restated with the column");
+
+  assert.ok(
+    /author_id = \(select auth\.uid\(\)\)/.test(policyMatch[0]),
+    "the read policy stopped letting an author see their own post"
+  );
+
+  assert.ok(
+    /hidden_at is null/.test(policyMatch[0]),
+    "the read policy does not hide a hidden post from anybody"
+  );
+
+  /* ------------------------------------------ the report can be reached ---- */
+
+  // A report nobody can file is not a reporting feature. Guideline 1.2 asks
+  // for the way in, not for the table behind it.
+  const home = fs.readFileSync(homePath, "utf8");
+
+  assert.ok(
+    /Report post/.test(home) && /socialService\.reportUser/.test(home),
+    "the feed no longer offers to report a post"
+  );
+
+  assert.ok(
+    /postId: post\.id/.test(home),
+    "the feed reports the account rather than the post"
+  );
+
+  // The menu used to open only on the author's own post. Opening it for
+  // everybody is what made the report reachable, and the author's two actions
+  // have to survive it.
+  assert.ok(
+    /onOpenOptions=\{handleOpenWorkoutSummaryOptions\}/.test(home),
+    "the post menu is conditional again, so somebody else's post has no menu"
+  );
+
+  for (const label of ["Edit post", "Delete post"]) {
+    assert.ok(
+      home.includes(label),
+      `the author lost "${label}" when the report was added`
+    );
+  }
+
+  assert.ok(
+    /Reporting a post or an account/.test(fs.readFileSync(supportPath, "utf8")),
+    "the support page no longer explains how to report"
+  );
+
+  console.log(
+    "UGC safety: report reasons, privacy, filter wiring, hiding and the way in passed."
+  );
 }
