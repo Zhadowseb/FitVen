@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  FlatList,
   Platform,
   ScrollView,
   TouchableOpacity,
@@ -289,6 +290,36 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
   const me = board?.me ?? null;
   const podiumRows = rows.slice(0, 3);
   const listRows = rows.slice(3);
+  const hasMoreRow = Boolean(board?.nextCursor);
+
+  const renderLeaderboardRow = useCallback(
+    ({ item: lift, index }) => {
+      const isLast = index === listRows.length - 1;
+
+      return (
+        <View
+          style={[
+            styles.listRowCard,
+            index === 0 ? styles.listRowCardFirst : null,
+            isLast && !hasMoreRow ? styles.listRowCardLast : null,
+            { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder },
+          ]}
+        >
+          <LeaderboardRow
+            lift={lift}
+            unit={unit}
+            showGym={national}
+            onPressReview={openReview}
+            onPressAttach={() => setIsAttachSheetOpen(true)}
+          />
+          {!isLast ? (
+            <View style={[styles.rowDivider, { backgroundColor: theme.hairline }]} />
+          ) : null}
+        </View>
+      );
+    },
+    [hasMoreRow, listRows.length, national, openReview, theme, unit]
+  );
   const meInPage = me ? rows.some((row) => row.liftId === me.liftId) : false;
   const showPinnedMe = Boolean(me) && !meInPage;
   const scopeOptions = useMemo(() => {
@@ -410,139 +441,134 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
         </View>
       </ThemedHeader>
 
-      <ScrollView
+      <FlatList
         style={styles.content}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
-        onMomentumScrollEnd={({ nativeEvent }) => {
-          const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+        data={listRows}
+        keyExtractor={(lift) => String(lift.liftId)}
+        renderItem={renderLeaderboardRow}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.4}
+        ListHeaderComponent={
+          <View style={[styles.listHeader, listRows.length > 0 ? styles.listHeaderSpaced : null]}>
+            {national ? (
+              <>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
+                  {chips.map((chip) => {
+                    const isActive = chip.id === exerciseId;
 
-          if (layoutMeasurement.height + contentOffset.y >= contentSize.height - 200) {
-            loadMore();
-          }
-        }}
-      >
-        {national ? (
-          <>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
-              {chips.map((chip) => {
-                const isActive = chip.id === exerciseId;
+                    return (
+                      <TouchableOpacity
+                        key={chip.id}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: isActive }}
+                        activeOpacity={0.85}
+                        onPress={() => setExerciseId(chip.id)}
+                        style={[
+                          styles.chip,
+                          isActive
+                            ? { backgroundColor: theme.primary, borderColor: theme.primary }
+                            : { backgroundColor: theme.cardBackground, borderColor: isLight ? "rgba(15, 17, 22, 0.09)" : "rgba(255, 255, 255, 0.09)" },
+                        ]}
+                      >
+                        <ThemedText style={styles.chipText} setColor={isActive ? theme.textInverted : theme.title}>
+                          {chip.name}
+                        </ThemedText>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+                <View style={styles.infoRow}>
+                  <LiftStatusPill status="verified" approvals={3} compact />
+                  <ThemedText style={styles.infoText} setColor={quietText}>
+                    {t("gyms.exercise.nationalNote")}
+                  </ThemedText>
+                </View>
+              </>
+            ) : (
+              <ScopeToggle options={scopeOptions} value={scope} onChange={setScope} />
+            )}
 
-                return (
-                  <TouchableOpacity
-                    key={chip.id}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: isActive }}
-                    activeOpacity={0.85}
-                    onPress={() => setExerciseId(chip.id)}
-                    style={[
-                      styles.chip,
-                      isActive
-                        ? { backgroundColor: theme.primary, borderColor: theme.primary }
-                        : { backgroundColor: theme.cardBackground, borderColor: isLight ? "rgba(15, 17, 22, 0.09)" : "rgba(255, 255, 255, 0.09)" },
-                    ]}
-                  >
-                    <ThemedText style={styles.chipText} setColor={isActive ? theme.textInverted : theme.title}>
-                      {chip.name}
-                    </ThemedText>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-            <View style={styles.infoRow}>
-              <LiftStatusPill status="verified" approvals={3} compact />
-              <ThemedText style={styles.infoText} setColor={quietText}>
-                {t("gyms.exercise.nationalNote")}
-              </ThemedText>
-            </View>
-          </>
-        ) : (
-          <ScopeToggle options={scopeOptions} value={scope} onChange={setScope} />
-        )}
-
-        {errorMessage ? (
-          <ThemedStateBlock
-            variant="error"
-            title={t("gyms.exercise.unavailableTitle")}
-            message={errorMessage}
-            actionLabel={t("common.retry")}
-            onAction={() => load()}
-          />
-        ) : isLoading && !board ? (
-          <ThemedStateBlock variant="loading" />
-        ) : rows.length === 0 ? (
-          <View style={[styles.listCard, { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder }]}>
-            <View style={styles.emptyRow}>
-              <ThemedText style={styles.emptyTitle} setColor={theme.title}>
-                {unit === gymService.LIFT_UNIT_BODYWEIGHT
-                  ? t("gyms.exercise.empty.noBodyweightTitle")
-                  : scope === gymService.GYM_SCOPE_FRIENDS && !national
-                    ? t("gyms.exercise.empty.noFriendsTitle")
-                    : national
-                      ? t("gyms.exercise.empty.noVerifiedTitle")
-                      : t("gyms.noLiftsYet")}
-              </ThemedText>
-              <ThemedText style={styles.emptyBody} setColor={quietText}>
-                {unit === gymService.LIFT_UNIT_BODYWEIGHT
-                  ? t("gyms.exercise.empty.noBodyweightBody")
-                  : national
-                    ? t("gyms.exercise.empty.noVerifiedBody")
-                    : t("gyms.exercise.empty.noLiftsBody")}
-              </ThemedText>
-            </View>
-          </View>
-        ) : (
-          <>
-            <Podium rows={podiumRows} unit={unit} theme={theme} colorScheme={colorScheme} />
-
-            {listRows.length > 0 || isLoadingMore ? (
+            {errorMessage ? (
+              <ThemedStateBlock
+                variant="error"
+                title={t("gyms.exercise.unavailableTitle")}
+                message={errorMessage}
+                actionLabel={t("common.retry")}
+                onAction={() => load()}
+              />
+            ) : isLoading && !board ? (
+              <ThemedStateBlock variant="loading" />
+            ) : rows.length === 0 ? (
               <View style={[styles.listCard, { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder }]}>
-                {listRows.map((lift, index) => (
-                  <View key={lift.liftId}>
-                    <LeaderboardRow
-                      lift={lift}
-                      unit={unit}
-                      showGym={national}
-                      onPressReview={openReview}
-                      onPressAttach={() => setIsAttachSheetOpen(true)}
-                    />
-                    {index < listRows.length - 1 ? (
-                      <View style={[styles.rowDivider, { backgroundColor: theme.hairline }]} />
-                    ) : null}
-                  </View>
-                ))}
-                {board?.nextCursor ? (
-                  <TouchableOpacity
-                    accessibilityRole="button"
-                    activeOpacity={0.8}
-                    onPress={loadMore}
-                    disabled={isLoadingMore}
-                    style={[styles.footerRow, { borderTopColor: theme.hairline }]}
-                  >
-                    {isLoadingMore ? (
-                      <ActivityIndicator size="small" color={theme.primaryText ?? theme.primary} />
-                    ) : (
-                      <ThemedText style={styles.footerText} setColor={theme.primary}>
-                        {t("common.loadMore")}
-                      </ThemedText>
-                    )}
-                  </TouchableOpacity>
-                ) : null}
+                <View style={styles.emptyRow}>
+                  <ThemedText style={styles.emptyTitle} setColor={theme.title}>
+                    {unit === gymService.LIFT_UNIT_BODYWEIGHT
+                      ? t("gyms.exercise.empty.noBodyweightTitle")
+                      : scope === gymService.GYM_SCOPE_FRIENDS && !national
+                        ? t("gyms.exercise.empty.noFriendsTitle")
+                        : national
+                          ? t("gyms.exercise.empty.noVerifiedTitle")
+                          : t("gyms.noLiftsYet")}
+                  </ThemedText>
+                  <ThemedText style={styles.emptyBody} setColor={quietText}>
+                    {unit === gymService.LIFT_UNIT_BODYWEIGHT
+                      ? t("gyms.exercise.empty.noBodyweightBody")
+                      : national
+                        ? t("gyms.exercise.empty.noVerifiedBody")
+                        : t("gyms.exercise.empty.noLiftsBody")}
+                  </ThemedText>
+                </View>
               </View>
+            ) : (
+              <Podium rows={podiumRows} unit={unit} theme={theme} colorScheme={colorScheme} />
+            )}
+          </View>
+        }
+        ListFooterComponent={
+          <>
+            {listRows.length > 0 && hasMoreRow ? (
+              <TouchableOpacity
+                accessibilityRole="button"
+                activeOpacity={0.8}
+                onPress={loadMore}
+                disabled={isLoadingMore}
+                style={[
+                  styles.footerRow,
+                  styles.listRowCard,
+                  styles.listRowCardLast,
+                  {
+                    backgroundColor: theme.cardBackground,
+                    borderColor: theme.cardBorder,
+                    borderTopColor: theme.hairline,
+                  },
+                ]}
+              >
+                {isLoadingMore ? (
+                  <ActivityIndicator size="small" color={theme.primaryText ?? theme.primary} />
+                ) : (
+                  <ThemedText style={styles.footerText} setColor={theme.primary}>
+                    {t("common.loadMore")}
+                  </ThemedText>
+                )}
+              </TouchableOpacity>
             ) : null}
+
+            <View style={styles.listFootnotes}>
+              {notice ? (
+                <ThemedText style={styles.footnote} setColor={theme.title}>
+                  {notice}
+                </ThemedText>
+              ) : null}
+
+              <ThemedText style={styles.footnote} setColor={quietText}>
+                {t("gyms.exercise.legend")}
+              </ThemedText>
+            </View>
           </>
-        )}
-
-        {notice ? (
-          <ThemedText style={styles.footnote} setColor={theme.title}>
-            {notice}
-          </ThemedText>
-        ) : null}
-
-        <ThemedText style={styles.footnote} setColor={quietText}>
-          {t("gyms.exercise.legend")}
-        </ThemedText>
-      </ScrollView>
+        }
+      />
 
       {showPinnedMe ? (
         <View

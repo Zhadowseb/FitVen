@@ -300,6 +300,84 @@ const acceptedReasons = migration.match(/reason in \(([^)]+)\)/)[1].match(/'([a-
 
 assert.deepStrictEqual(offeredReasons.sort(), acceptedReasons.sort(), "rejection reasons in the app and the column check must match");
 
+/* ------------------------------- the tiles' fallback state machine ------ */
+
+// What a tile shows when the cloud cannot answer in the 2.0 shape - which is
+// every client whose database has not had the migrations yet, so it is what
+// most people see. It used to live inside socialService, where a test could
+// not reach it because that module pulls in the Supabase client.
+const cloudActivity = loadAppModule("src/Utils/cloudActivityUtils.js");
+
+assert.strictEqual(
+  cloudActivity.buildCloudActivityPreview([]).activityState,
+  "rest",
+  "no workouts is a rest day"
+);
+
+// live beats done beats planned, whatever order the rows arrive in.
+const mixed = [
+  { id: 1, done: 1, workout_type: "Resistance" },
+  { id: 2, done: 0, workout_type: "Resistance", is_active: 1 },
+  { id: 3, done: 0, workout_type: "Resistance" },
+];
+
+assert.strictEqual(
+  cloudActivity.buildCloudActivityPreview(mixed).activityState,
+  "live",
+  "a live workout wins over a finished and a planned one"
+);
+assert.strictEqual(
+  cloudActivity.buildCloudActivityPreview(mixed).workoutId,
+  2,
+  "the live workout is the one reported"
+);
+assert.strictEqual(
+  cloudActivity.buildCloudActivityPreview(mixed.filter((row) => row.id !== 2))
+    .activityState,
+  "planned",
+  "with nothing live, a planned workout wins over a finished one"
+);
+assert.strictEqual(
+  cloudActivity.buildCloudActivityPreview([{ id: 9, done: 1 }]).activityState,
+  "done",
+  "only finished workouts is done"
+);
+
+// A row whose timer_start is a wall clock, not a timestamp: the workout is
+// live even though is_active says nothing.
+assert.ok(
+  cloudActivity.isCloudWorkoutLive({
+    done: 0,
+    date: "01.01.2026",
+    timer_start: "07:30",
+  }),
+  "a workout with a start time and no is_active flag is still live"
+);
+
+assert.strictEqual(
+  cloudActivity.getCloudWorkoutTimerStartSeconds({
+    date: "01.01.2026",
+    timer_start: "07:30",
+  }),
+  Math.trunc(new Date(2026, 0, 1, 7, 30, 0).getTime() / 1000),
+  "HH:MM plus a dd.mm.yyyy date resolves to that local instant"
+);
+
+// The parser validates ranges, so a nonsense time reads as no time at all
+// rather than as a date somewhere else.
+assert.strictEqual(cloudActivity.normalizeCloudTimeString("25:00"), null, "hour 25");
+assert.strictEqual(cloudActivity.normalizeCloudTimeString("07:99"), null, "minute 99");
+assert.strictEqual(cloudActivity.normalizeCloudTimeString("7:30"), null, "one-digit hour");
+assert.strictEqual(cloudActivity.normalizeCloudTimeString(730), null, "not a string");
+assert.strictEqual(cloudActivity.normalizeCloudTimeString(" 07:30 "), "07:30:00");
+assert.strictEqual(cloudActivity.normalizeCloudTimeString("07:30:15"), "07:30:15");
+
+assert.strictEqual(
+  cloudActivity.isCloudWorkoutLive({ done: 0, date: "01.01.2026", timer_start: "25:00" }),
+  false,
+  "an invalid time does not make a workout live"
+);
+
 /* ------------------------------------------- the midnight rule holds ---- */
 
 // calendarDaysBetween exists because elapsed milliseconds gave the wrong

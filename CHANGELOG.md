@@ -19,6 +19,7 @@
 - New palette tokens `music`, `musicText`, `musicBandFrom`, `musicBandTo` in both schemes. Purple on purpose: a track must not read as a status.
 - `app.json` gains `scheme: "fitven"` (the OAuth redirect needs a stable one) and camera and microphone permission strings for recording a lift. `expo-video`, `expo-auth-session`, `expo-web-browser` and `expo-crypto` are new native dependencies - **a new development build is required.**
 - The chain colours are the chains' own rather than a palette: SATS red, PureGym cyan, FitnessX yellow.
+- **The tiles' fallback state machine moved to `src/Utils/cloudActivityUtils.js`.** `buildCloudActivityPreview` and the four functions under it decide live, done, planned or rest, and parse a workout's start time; they sat in `socialService`, which imports the Supabase client and therefore react-native, so no test could load them. They are pure functions over a row, the same as `gymUtils` and `friendsActivityUtils`, and `npm test` now drives them: the order of the four states, a workout that is live only because it has a start time, `dd.mm.yyyy` plus `HH:MM` resolving to the right instant, and `25:00` reading as no time rather than as a time somewhere else. This is the path every client sees until its database has the 2.0 migrations.
 
 ### Fixed
 - **A set value survives the keyboard being put away.** Typing a weight or a number of reps and then pressing the keyboard's checkmark, or its hide-keyboard button, dropped what had just been typed: neither moves focus, and the cell only committed on blur. The cell now commits when the keyboard hides and when the done key is pressed, once per distinct value, so the three ways of leaving a field all save.
@@ -31,6 +32,7 @@
 - The now-playing poll stops asking Supabase every minute for people with no music service connected. Connecting, disconnecting and the sharing toggle all clear the cache by hand, so nothing else can change that answer from this device.
 - The play, camera, back and locate buttons take a tap at the edge. All four are under 44 pt on purpose and now carry the hit slop to match.
 - The last hardcoded English string in the verification sheet is a translation key.
+- **An exercise's leaderboard is a `FlatList`.** It was a `ScrollView` with every row mapped into it, 50 at a time - on the national list that meant hundreds of rows, each with its own avatar, mounted and never recycled. The card around them is drawn by the rows themselves now, because a recycling list cannot have one View holding all of them.
 
 ### Security
 - **A verification video is for the centre it was lifted in.** `gym_lift_verification_queue` worked out centre membership, put it in the payload as `can_vote`, and handed `video_path` to everybody anyway; the storage policy on `lift-videos` was `bucket_id = 'lift-videos'` and nothing else. Centres are public and searchable, so any signed-in user could open any centre's leaderboard and watch strangers' videos. The queue now answers an empty list to somebody who does not train there, and the bucket goes through a `security definer` membership check.

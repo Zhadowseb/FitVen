@@ -7,12 +7,6 @@ export default StyleSheet.create({
   content: {
     flex: 1,
   },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 14,
-    paddingBottom: 100,
-    gap: 14,
-  },
   pageHeaderTitleGroup: {
     alignItems: "center",
     justifyContent: "center",
@@ -122,6 +116,41 @@ export default StyleSheet.create({
   listCard: {
     borderRadius: 20,
     borderWidth: 1,
+    overflow: "hidden",
+  },
+  // The list is the page's scroller now, so the card cannot be one View around
+  // every row - that is the thing a recycling list exists to avoid. Each row
+  // draws the sides, the first draws the top, and the last one on screen draws
+  // the bottom. Same 20 px radius and 1 px border as listCard above.
+  listContent: {
+    paddingHorizontal: 20,
+    paddingTop: 14,
+    paddingBottom: 100,
+  },
+  listHeader: {
+    gap: 14,
+  },
+  listHeaderSpaced: {
+    marginBottom: 14,
+  },
+  listFootnotes: {
+    marginTop: 14,
+    gap: 14,
+  },
+  listRowCard: {
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+  },
+  listRowCardFirst: {
+    borderTopWidth: 1,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    overflow: "hidden",
+  },
+  listRowCardLast: {
+    borderBottomWidth: 1,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
     overflow: "hidden",
   },
   rowDivider: {
