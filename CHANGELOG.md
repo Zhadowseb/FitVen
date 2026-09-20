@@ -26,6 +26,17 @@
 - The bottom navigation keeps SOCIAL selected on the centre and music screens. They sit under Social but were showing Home.
 - The Spotify and video native modules load on demand. A development build without them failed at startup (`Cannot find native module 'ExpoWebBrowser'`); now the features that need them report themselves unavailable and the rest of the app runs.
 - `npm run gyms:import` peels its naming rules in turn, and appends the city when two centres in the same chain would otherwise carry the same short name.
+- A failed video upload says so in the dialog it leaves open. The error went to the page's notice, which is drawn behind the modal's overlay, so the buttons came back enabled with nothing explaining why.
+- The centre-match retry no longer reads twenty workouts on every launch to throw most of them away. Workouts with no centre and no coordinates, and the types that record a route rather than a place, are filtered in SQL instead of in JavaScript afterwards.
+- The now-playing poll stops asking Supabase every minute for people with no music service connected. Connecting, disconnecting and the sharing toggle all clear the cache by hand, so nothing else can change that answer from this device.
+- The play, camera, back and locate buttons take a tap at the edge. All four are under 44 pt on purpose and now carry the hit slop to match.
+- The last hardcoded English string in the verification sheet is a translation key.
+
+### Security
+- **A verification video is for the centre it was lifted in.** `gym_lift_verification_queue` worked out centre membership, put it in the payload as `can_vote`, and handed `video_path` to everybody anyway; the storage policy on `lift-videos` was `bucket_id = 'lift-videos'` and nothing else. Centres are public and searchable, so any signed-in user could open any centre's leaderboard and watch strangers' videos. The queue now answers an empty list to somebody who does not train there, and the bucket goes through a `security definer` membership check.
+- **A lift video has to be your own upload.** `video_path` accepted any string. The client always writes `<user_id>/<lift_id>.<ext>`, but PostgREST does not have to, so a lift could be pointed at somebody else's real video and voted through. Both the insert and the update now refuse a path outside the lifter's own folder - the rule the upload policy already enforced.
+- **`request_lift_verification` answers once per lift per ten minutes.** The epoch second in its event key made every call a new event, so a loop could fill ten inboxes as fast as it ran.
+- All three were found by the review agents on the pull request, and all three are fixed in `supabase/migrations/20260921140000_lift-videos-stay-in-the-centre.sql` - a follow-up, because the migration that carried them is already applied. The three functions in it are copied from the original verbatim with one change each.
 
 ### Notes
 - **Both migrations are applied to the live project**, on 2026-09-17, and `npm run gyms:import` has run for real: 365 centres and their photographs are in Supabase, recorded in the ledger. Any other environment has to run them first, in order: `supabase/migrations/20260917120000_gyms-and-lift-verification.sql` and `supabase/migrations/20260917120100_workout-music.sql`. The first adds the three columns every 2.0 workout upload now carries; a 2.0 client against a database without them fails every workout sync. Then `npm run gyms:import`. Details in `supabase/migrations/README.md`.

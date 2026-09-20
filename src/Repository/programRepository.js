@@ -1225,9 +1225,17 @@ export async function getWorkoutsBetweenDates(db, { startIsoDate, endIsoDate }) 
  */
 export async function getRecentFinishedWorkoutsForGymRetry(
   db,
-  { sinceIsoDate, limit = 20 }
+  { sinceIsoDate, limit = 20, skipWorkoutTypes = [] }
 ) {
   const workoutIsoDateSql = localDateToIsoSql("w.date");
+
+  // A workout with no centre and no coordinates can never be matched, and the
+  // types that record a route rather than a place are not matched at all. Both
+  // were filtered in JavaScript after the rows had already been read, which
+  // meant the limit was spent on rows that were then thrown away.
+  const skipTypesSql = skipWorkoutTypes.length
+    ? `AND w.workout_type NOT IN (${skipWorkoutTypes.map(() => "?").join(", ")})`
+    : "";
 
   return db.getAllAsync(
     `SELECT
@@ -1241,9 +1249,14 @@ export async function getRecentFinishedWorkoutsForGymRetry(
      WHERE w.done = 1
        AND w.deleted_at IS NULL
        AND date(${workoutIsoDateSql}) >= date(?)
+       ${skipTypesSql}
+       AND (
+         w.gym_id IS NOT NULL
+         OR (w.start_latitude IS NOT NULL AND w.start_longitude IS NOT NULL)
+       )
      ORDER BY date(${workoutIsoDateSql}) DESC, w.workout_id DESC
      LIMIT ?;`,
-    [sinceIsoDate, limit]
+    [sinceIsoDate, ...skipWorkoutTypes, limit]
   );
 }
 

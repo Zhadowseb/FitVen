@@ -64,6 +64,13 @@ const WORKOUT_MUSIC_TABLE = "workout_music";
 const WORKOUT_MUSIC_SETUP_MESSAGE =
   "Music sharing is not set up in Supabase yet. Run supabase/migrations/20260917120100_workout-music.sql in the Supabase SQL editor first.";
 const SETTINGS_CACHE_MS = 60000;
+// Nobody without a music service connected has settings that can change from
+// this device: connecting, disconnecting and the sharing toggle all clear the
+// cache by hand. Without this the poll read profile_private from Supabase
+// every minute, for every signed-in user in the foreground, forever - and
+// most of them will never connect Spotify at all. Not indefinite, because a
+// second device can connect the account while this one is open.
+const SETTINGS_CACHE_DISCONNECTED_MS = 30 * 60 * 1000;
 
 function normalizeMusicError(error) {
   const message = `${error?.message ?? ""} ${error?.details ?? ""}`.toLowerCase();
@@ -389,12 +396,14 @@ export async function getMusicSharingSettings({ user }) {
 }
 
 async function getCachedSharingSettings(user) {
-  if (
-    settingsCache &&
-    settingsCache.userId === user.id &&
-    Date.now() - settingsCache.fetchedAt < SETTINGS_CACHE_MS
-  ) {
-    return settingsCache.value;
+  if (settingsCache && settingsCache.userId === user.id) {
+    const ttl = settingsCache.value?.connection
+      ? SETTINGS_CACHE_MS
+      : SETTINGS_CACHE_DISCONNECTED_MS;
+
+    if (Date.now() - settingsCache.fetchedAt < ttl) {
+      return settingsCache.value;
+    }
   }
 
   const value = await getMusicSharingSettings({ user });

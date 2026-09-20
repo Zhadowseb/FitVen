@@ -190,6 +190,7 @@ export default {
     playVideo: "Play video",
     pauseVideo: "Pause video",
     videoUnavailable: "Video unavailable",
+    videoNeedsBuild: "Video playback needs the 2.0 development build",
     fromPrevious: "From {previous} kg · +{gain} kg",
     becomesRank: "becomes #{rank} at the centre",
     approvedCount: "{count} approved",

@@ -178,6 +178,7 @@ export default {
     playVideo: "Afspil video",
     pauseVideo: "Sæt videoen på pause",
     videoUnavailable: "Videoen er ikke tilgængelig",
+    videoNeedsBuild: "Afspilning af video kræver 2.0-udviklingsbuildet",
     fromPrevious: "Fra {previous} kg · +{gain} kg",
     becomesRank: "bliver #{rank} i centeret",
     approvedCount: "{count} godkendt",

@@ -105,6 +105,7 @@ export default function LeaderboardRow({
           accessibilityRole="button"
           accessibilityLabel={t("gyms.row.reviewA11y")}
           activeOpacity={0.8}
+          hitSlop={6}
           onPress={() => onPressReview(lift)}
           style={[
             styles.iconButton,
@@ -124,6 +125,7 @@ export default function LeaderboardRow({
           accessibilityRole="button"
           accessibilityLabel={t("gyms.video.attachA11y")}
           activeOpacity={0.8}
+          hitSlop={6}
           onPress={() => onPressAttach(lift)}
           style={[styles.iconButton, { backgroundColor: theme.primary }]}
         >

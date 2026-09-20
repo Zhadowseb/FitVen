@@ -159,6 +159,9 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
   const [isAttachSheetOpen, setIsAttachSheetOpen] = useState(false);
   const [pendingAsset, setPendingAsset] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  // Separate from the page's notice: the modal stays open when the upload
+  // fails, and the notice is drawn behind its overlay.
+  const [uploadError, setUploadError] = useState("");
   const [notice, setNotice] = useState("");
   const quietText = theme.quietText ?? theme.text;
   const isLight = colorScheme === "light";
@@ -352,6 +355,7 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
         return;
       }
 
+      setUploadError("");
       setPendingAsset(result.assets[0]);
     } catch (error) {
       setNotice(error instanceof Error ? error.message : t("gyms.video.pickerFailed"));
@@ -365,6 +369,7 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
 
     setIsUploading(true);
     setNotice("");
+    setUploadError("");
 
     try {
       const { notified } = await gymService.attachLiftVideo({ userId: user.id, liftId: me.liftId, asset: pendingAsset });
@@ -377,7 +382,9 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
       );
       await load({ silent: true });
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : t("gyms.video.attachFailed"));
+      setUploadError(
+        error instanceof Error ? error.message : t("gyms.video.attachFailed")
+      );
     } finally {
       setIsUploading(false);
     }
@@ -629,15 +636,24 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
         visible={Boolean(pendingAsset)}
         title={t("gyms.video.confirmTitle")}
         message={
-          pendingSeconds !== null
-            ? t("gyms.video.confirmBodyWithDuration", { count: pendingSeconds })
-            : t("gyms.video.confirmBody")
+          uploadError
+            ? uploadError
+            : pendingSeconds !== null
+              ? t("gyms.video.confirmBodyWithDuration", { count: pendingSeconds })
+              : t("gyms.video.confirmBody")
         }
         confirmLabel={t("gyms.video.use")}
         cancelLabel={t("common.cancel")}
         isWorking={isUploading}
         onConfirm={uploadPendingVideo}
-        onClose={() => (isUploading ? null : setPendingAsset(null))}
+        onClose={() => {
+          if (isUploading) {
+            return;
+          }
+
+          setUploadError("");
+          setPendingAsset(null);
+        }}
       />
 
       <LiftVerificationSheet

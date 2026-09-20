@@ -67,13 +67,17 @@ function LiftVideoUnavailable({ theme, message }) {
 // so the player is created per lift and torn down with it. Rendered only when
 // expo-video is in the build; the hooks below come from that module.
 function LiftVideo({ uri, overlayLabel, theme }) {
+  // Before the early return, so the hook order is the same on every render of
+  // a given build - getVideoModule() answers the same thing for the life of
+  // the app.
+  const { t } = useTranslation();
   const video = getVideoModule();
 
   if (!video) {
     return (
       <LiftVideoUnavailable
         theme={theme}
-        message="Video playback needs the 2.0 development build"
+        message={t("gyms.review.videoNeedsBuild")}
       />
     );
   }

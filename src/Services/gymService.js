@@ -494,15 +494,12 @@ export async function retryMissingGymMatches(db) {
   const workouts = await programRepository.getRecentFinishedWorkoutsForGymRetry(db, {
     sinceIsoDate: since.toISOString().slice(0, 10),
     limit: MATCH_RETRY_LIMIT,
+    skipWorkoutTypes: [...LOCATION_WORKOUT_TYPES],
   });
   let matched = 0;
   let uploaded = 0;
 
   for (const workout of workouts) {
-    if (LOCATION_WORKOUT_TYPES.has(workout.workout_type)) {
-      continue;
-    }
-
     let gymId = toNumber(workout.gym_id);
 
     if (gymId === null) {

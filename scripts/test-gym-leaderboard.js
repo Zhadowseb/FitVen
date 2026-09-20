@@ -300,4 +300,72 @@ const acceptedReasons = migration.match(/reason in \(([^)]+)\)/)[1].match(/'([a-
 
 assert.deepStrictEqual(offeredReasons.sort(), acceptedReasons.sort(), "rejection reasons in the app and the column check must match");
 
+/* ------------------------------------------- the midnight rule holds ---- */
+
+// calendarDaysBetween exists because elapsed milliseconds gave the wrong
+// answer for "yesterday". The only coverage it had passed plain date strings,
+// where a millisecond count would agree with it - so the bug it was written
+// against would not have been caught. Two instants on the same day is the case
+// that tells them apart.
+const dateUtils = loadAppModule("src/Utils/dateUtils.js");
+
+assert.strictEqual(
+  dateUtils.calendarDaysBetween(
+    new Date(2026, 0, 1, 7, 0, 0),
+    new Date(2026, 0, 1, 23, 30, 0)
+  ),
+  0,
+  "sixteen hours inside one day is still the same calendar day"
+);
+
+assert.strictEqual(
+  dateUtils.calendarDaysBetween(
+    new Date(2026, 0, 1, 23, 30, 0),
+    new Date(2026, 0, 2, 0, 30, 0)
+  ),
+  1,
+  "an hour that crosses midnight is one calendar day"
+);
+
+/* ------------------------------- a lift video stays inside its centre ---- */
+
+// The follow-up migration. The original shipped these three open and is
+// already live, so the checks belong here rather than in a diff nobody reads.
+const videoFollowUp = fs.readFileSync(
+  path.join(root, "supabase", "migrations", "20260921140000_lift-videos-stay-in-the-centre.sql"),
+  "utf8"
+);
+
+assert.ok(
+  /create policy "Centre members can read lift videos"[\s\S]*?private\.can_watch_lift_video\(name\)/.test(
+    videoFollowUp
+  ),
+  "the lift-videos read policy no longer goes through the membership check"
+);
+
+assert.ok(
+  /create or replace function private\.can_watch_lift_video[\s\S]*?security definer/.test(
+    videoFollowUp
+  ),
+  "the membership check is not security definer, so it cannot read gym_lift"
+);
+
+assert.ok(
+  /and private\.trains_at_gym\(\(select id from viewer\), target_gym_id\);/.test(videoFollowUp),
+  "the verification queue hands out video paths without checking membership"
+);
+
+assert.strictEqual(
+  (videoFollowUp.match(/A lift video has to be your own upload\./g) ?? []).length,
+  2,
+  "the own-upload rule has to guard both the insert and the update of video_path"
+);
+
+assert.ok(
+  /event_type = 'lift_verification_requested'[\s\S]*?interval '10 minutes'[\s\S]*?return 0;/.test(
+    videoFollowUp
+  ),
+  "request_lift_verification can be called in a loop again"
+);
+
 console.log("Gym leaderboard checks passed.");

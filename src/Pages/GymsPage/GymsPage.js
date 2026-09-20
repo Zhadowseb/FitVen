@@ -576,6 +576,7 @@ export default function GymsPage() {
             accessibilityRole="button"
             accessibilityLabel={isMapExpanded ? t("gyms.list.shrinkMap") : t("gyms.list.expandMap")}
             onPress={() => setIsMapExpanded((value) => !value)}
+            hitSlop={8}
             style={[styles.mapExpandButton, { backgroundColor: "rgba(8, 9, 12, 0.62)" }]}
           >
             <Expand width={16} height={16} color="#FFFFFF" />
@@ -586,6 +587,7 @@ export default function GymsPage() {
             accessibilityLabel={t("gyms.list.locateMe")}
             onPress={goToMyLocation}
             disabled={isLocating}
+            hitSlop={8}
             style={[styles.mapLocateButton, { backgroundColor: "rgba(8, 9, 12, 0.62)" }]}
           >
             {isLocating ? (

@@ -283,6 +283,7 @@ export default function GymLeaderboardPage() {
               accessibilityRole="button"
               accessibilityLabel={t("common.goBack")}
               onPress={() => navigation.goBack()}
+              hitSlop={6}
               style={[styles.heroButton, { backgroundColor: scrimColor }]}
             >
               <ArrowLeft width={22} height={22} color="#FFFFFF" />
