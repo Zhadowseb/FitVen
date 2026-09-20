@@ -102,10 +102,13 @@ jobs:
           git diff "$BASE_SHA...HEAD" > pr-context/pr.diff
 
           # Et kaempe diff braender kontekstvinduet uden at give bedre review.
+          # 400 KB frem for 700: en agent der loeber toer for ture midtvejs
+          # afleverer ingenting, og et afkortet diff plus filerne i repoet er
+          # mere vaerd end et helt diff ingen naar igennem.
           SIZE=$(wc -c < pr-context/pr.diff)
-          if [ "$SIZE" -gt 700000 ]; then
-            head -c 700000 pr-context/pr.diff > pr-context/pr.diff.trimmed
-            printf '\n\n[AFKORTET: diffet fylder %s bytes. Laes filerne direkte i repoet for resten.]\n' "$SIZE" >> pr-context/pr.diff.trimmed
+          if [ "$SIZE" -gt 400000 ]; then
+            head -c 400000 pr-context/pr.diff > pr-context/pr.diff.trimmed
+            printf '\n\n[AFKORTET: diffet fylder %s bytes, og kun de foerste 400000 staar ovenfor. Resten ligger i repoet, og pr-context/changed-files.txt siger hvilke filer det er.]\n' "$SIZE" >> pr-context/pr.diff.trimmed
             mv pr-context/pr.diff.trimmed pr-context/pr.diff
           fi
 
@@ -184,7 +187,7 @@ jobs:
     if: always() && needs.context.outputs.has_credentials == 'true'
     permissions:
       contents: read
-    timeout-minutes: 25
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       # Fire ad gangen, ikke otte. Et abonnements-token deler forbrugsgraense
@@ -247,7 +250,7 @@ jobs:
             Skriv kun den ene fil. Ret ikke i kildekoden, og opret ikke commits.
           claude_args: |
             --model ${{ env.REVIEW_MODEL }}
-            --max-turns 40
+            --max-turns 120
             --allowedTools "Read,Glob,Grep,Write,Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(ls:*),Bash(wc:*),Bash(mkdir:*)"
 
       - name: Sikr at der findes en rapport
@@ -334,7 +337,7 @@ jobs:
             kildekoden.
           claude_args: |
             --model ${{ env.SUMMARY_MODEL }}
-            --max-turns 40
+            --max-turns 120
             --allowedTools "Read,Glob,Grep,Write,Bash(ls:*),Bash(wc:*)"
 
       - name: Post samlet rapport som kommentar
