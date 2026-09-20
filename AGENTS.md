@@ -130,6 +130,19 @@ make them worthless is to change the code and leave them behind.
 - Do not add a second set of guides. `CLAUDE.md` is a pointer to `AGENTS.md`,
   never a copy.
 
+## Automated PR Review
+
+Every pull request is read by eight review agents in parallel - quality
+assurance, testing, security, architecture, code design, performance, UI
+usability and design - and a ninth agent merges their reports into a single
+comment on the PR. The workflow is `.github/workflows/pr-review.yml` and each
+agent's brief is a markdown file in `.github/review-agents/`.
+
+The agents read these guides. A rule written down here is a rule they will
+enforce, which is one more reason to keep them true. To change what an agent
+looks for, edit its brief, not the workflow. See
+`.github/review-agents/README.md`.
+
 ## Local Guides
 
 - `src/AGENTS.md`: source structure and layering
