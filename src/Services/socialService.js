@@ -229,12 +229,6 @@ async function fetchSurroundingActivityByUserId({ userIds, activityDate }) {
   return surrounding;
 }
 
-// live -> done -> planned -> rest, newest first inside a group. The order the
-// tiles want; the strip used to put planned before done.
-function sortCirclePreviewPeople(people) {
-  return sortActivityTiles(people);
-}
-
 
 
 
@@ -1198,7 +1192,9 @@ export async function getCirclePreview({ user, limit = 12, date = null }) {
     currentUser: currentUserProfile
       ? { ...currentUserProfile, homeGymId, homeGym }
       : currentUserProfile,
-    people: sortCirclePreviewPeople(people),
+    // live -> done -> planned -> rest, newest first inside a group. The order
+    // the tiles want; the strip used to put planned before done.
+    people: sortActivityTiles(people),
   };
 }
 
@@ -1269,6 +1265,9 @@ export async function blockUser({ userId, targetUserId }) {
  * constraint accepts, so adding one here without adding it there fails the
  * insert rather than storing something nobody will recognise later.
  */
+// `labelKey` is what a translated screen shows. `label` is the English
+// wording for the screens that have not been through the localization pass
+// yet - the same reason REJECTION_REASONS in gymService carries both.
 export const REPORT_REASONS = [
   { value: "spam", labelKey: "social.report.reasons.spam", label: "Spam or advertising" },
   { value: "harassment", labelKey: "social.report.reasons.harassment", label: "Harassment or bullying" },

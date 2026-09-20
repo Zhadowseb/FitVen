@@ -16,6 +16,7 @@ import { useTranslation } from "@localization";
 import styles from "./GymsPageStyle";
 import { useAuth } from "../../Contexts/AuthContext";
 import { gymService } from "../../Services";
+import { useGymSearch } from "../../Resources/Components/useGymSearch";
 import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
 import ChevronRight from "../../Resources/Icons/UI-icons/ChevronRight";
 import Crosshair from "../../Resources/Icons/UI-icons/Crosshair";
@@ -46,7 +47,6 @@ const FALLBACK_REGION = {
   longitudeDelta: 4.2,
 };
 const NEARBY_REGION_DELTA = 0.08;
-const SEARCH_DEBOUNCE_MS = 250;
 
 // Google Maps (Android) style: inverted and desaturated, so the pins carry
 // the colour. iOS uses Apple Maps and follows userInterfaceStyle instead.
@@ -191,7 +191,6 @@ export default function GymsPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const mapRef = useRef(null);
-  const searchTimeoutRef = useRef(null);
   const [position, setPosition] = useState(null);
   const [nearby, setNearby] = useState([]);
   const [visibleGyms, setVisibleGyms] = useState([]);
@@ -202,8 +201,7 @@ export default function GymsPage() {
   // until a workout has been matched to one, and then the card is hidden.
   const [myGyms, setMyGyms] = useState([]);
   const [query, setQuery] = useState("");
-  const [searchResults, setSearchResults] = useState(null);
-  const [isSearching, setIsSearching] = useState(false);
+  const { results: searchResults, isSearching } = useGymSearch(query, setErrorMessage);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [showAllNearby, setShowAllNearby] = useState(false);
@@ -269,36 +267,6 @@ export default function GymsPage() {
       load();
     }, [load])
   );
-
-  useEffect(() => {
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
-
-    const trimmed = query.trim();
-
-    if (trimmed.length < 2) {
-      setSearchResults(null);
-      setIsSearching(false);
-      return undefined;
-    }
-
-    setIsSearching(true);
-    searchTimeoutRef.current = setTimeout(async () => {
-      try {
-        const results = await gymService.searchGyms({ query: trimmed });
-
-        setSearchResults(results);
-      } catch (error) {
-        setSearchResults([]);
-        setErrorMessage(error instanceof Error ? error.message : t("gyms.searchFailed"));
-      } finally {
-        setIsSearching(false);
-      }
-    }, SEARCH_DEBOUNCE_MS);
-
-    return () => clearTimeout(searchTimeoutRef.current);
-  }, [query, t]);
 
   const initialRegion = useMemo(() => {
     if (position) {

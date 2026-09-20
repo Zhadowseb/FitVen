@@ -56,10 +56,20 @@ assert.deepStrictEqual(
 
 /* ------------------------------------------------------- vote status -- */
 
-assert.strictEqual(gymUtils.deriveVideoStatus({ hasVideo: false, approvals: 5 }), "none");
+// Driven from the constants, not from the numbers they happen to hold today.
+// Hardcoded 3s and 2s here are what let the function drift away from them
+// without the test noticing.
+const { APPROVALS_REQUIRED, REJECTIONS_TO_REMOVE } = gymUtils;
+
+assert.strictEqual(gymUtils.deriveVideoStatus({ hasVideo: false, approvals: APPROVALS_REQUIRED + 2 }), "none");
 assert.strictEqual(gymUtils.deriveVideoStatus({ hasVideo: true, approvals: 0 }), "pending");
-assert.strictEqual(gymUtils.deriveVideoStatus({ hasVideo: true, approvals: 3 }), "verified");
-assert.strictEqual(gymUtils.deriveVideoStatus({ hasVideo: true, approvals: 3, rejections: 2 }), "rejected", "two rejections beat three approvals");
+assert.strictEqual(gymUtils.deriveVideoStatus({ hasVideo: true, approvals: APPROVALS_REQUIRED - 1 }), "pending", "one short is still pending");
+assert.strictEqual(gymUtils.deriveVideoStatus({ hasVideo: true, approvals: APPROVALS_REQUIRED }), "verified");
+assert.strictEqual(
+  gymUtils.deriveVideoStatus({ hasVideo: true, approvals: APPROVALS_REQUIRED, rejections: REJECTIONS_TO_REMOVE }),
+  "rejected",
+  "enough rejections beat enough approvals"
+);
 
 /* ---------------------------------------------------------- matching -- */
 

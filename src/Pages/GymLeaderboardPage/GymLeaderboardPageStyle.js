@@ -304,6 +304,20 @@ export default StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  // The chain's initials beside a centre in the Change centre sheet: the same
+  // 32 px box as reviewIcon above, squared off rather than round.
+  chainTile: {
+    width: 32,
+    height: 32,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  chainTileText: {
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+  },
   reviewCopy: {
     flex: 1,
     minWidth: 0,

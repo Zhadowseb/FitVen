@@ -59,15 +59,6 @@ const RELATIONSHIP_COPY = {
   },
 };
 
-// The report sheet's reasons, keyed by the value the database accepts.
-const REPORT_REASON_LABEL_KEYS = {
-  spam: "social.report.reasons.spam",
-  harassment: "social.report.reasons.harassment",
-  inappropriate: "social.report.reasons.inappropriate",
-  impersonation: "social.report.reasons.impersonation",
-  other: "social.report.reasons.other",
-};
-
 const SearchPage = () => {
   const { t } = useTranslation();
   const db = useSQLiteContext();
@@ -736,9 +727,7 @@ const SearchPage = () => {
           <View style={styles.reportReasonList}>
             {socialService.REPORT_REASONS.map((option) => {
               const selected = reportReason === option.value;
-              const label = t(
-                REPORT_REASON_LABEL_KEYS[option.value] ?? option.labelKey,
-              );
+              const label = t(option.labelKey);
 
               return (
                 <Pressable

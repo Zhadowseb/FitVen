@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   ScrollView,
@@ -12,13 +12,13 @@ import { useTranslation } from "@localization";
 import styles from "../GymLeaderboardPageStyle";
 import { useAuth } from "../../../Contexts/AuthContext";
 import { gymService } from "../../../Services";
+import { useGymSearch } from "../../../Resources/Components/useGymSearch";
 import { Colors, withAlpha } from "../../../Resources/GlobalStyling/colors";
 import Checkmark from "../../../Resources/Icons/UI-icons/Checkmark";
 import Search from "../../../Resources/Icons/UI-icons/Search";
 import { ThemedBottomSheet, ThemedText } from "../../../Resources/ThemedComponents";
 import { getChainInitials } from "../../../Utils/gymUtils";
 
-const SEARCH_DEBOUNCE_MS = 250;
 
 /**
  * "Change centre": the centres the viewer has trained in (most often first),
@@ -30,12 +30,10 @@ export default function ChangeGymSheet({ visible, onClose, currentHomeGymId, isA
   const theme = Colors[colorScheme] ?? Colors.light;
   const { t } = useTranslation();
   const { user } = useAuth();
-  const searchTimeoutRef = useRef(null);
   const [myGyms, setMyGyms] = useState([]);
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState(null);
+  const { results, isSearching } = useGymSearch(query, setErrorMessage);
   const [isLoading, setIsLoading] = useState(false);
-  const [isSearching, setIsSearching] = useState(false);
   const [savingId, setSavingId] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const quietText = theme.quietText ?? theme.text;
@@ -63,40 +61,13 @@ export default function ChangeGymSheet({ visible, onClose, currentHomeGymId, isA
     load();
   }, [load]);
 
+  // Clearing the query is enough: useGymSearch drops its results as soon as
+  // the query falls under the minimum length.
   useEffect(() => {
     if (!visible) {
       setQuery("");
-      setResults(null);
     }
   }, [visible]);
-
-  useEffect(() => {
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
-
-    const trimmed = query.trim();
-
-    if (trimmed.length < 2) {
-      setResults(null);
-      setIsSearching(false);
-      return undefined;
-    }
-
-    setIsSearching(true);
-    searchTimeoutRef.current = setTimeout(async () => {
-      try {
-        setResults(await gymService.searchGyms({ query: trimmed }));
-      } catch (error) {
-        setResults([]);
-        setErrorMessage(error instanceof Error ? error.message : t("gyms.searchFailed"));
-      } finally {
-        setIsSearching(false);
-      }
-    }, SEARCH_DEBOUNCE_MS);
-
-    return () => clearTimeout(searchTimeoutRef.current);
-  }, [query, t]);
 
   const choose = async (gymId) => {
     if (!user?.id || savingId !== null) {
@@ -127,8 +98,8 @@ export default function ChangeGymSheet({ visible, onClose, currentHomeGymId, isA
       disabled={savingId !== null}
       style={[styles.sheetRow, selected ? { backgroundColor: withAlpha(theme.primary, 0.08) } : null]}
     >
-      <View style={[styles.reviewIcon, { backgroundColor: chainTileSurface, borderRadius: 12 }]}>
-        <ThemedText style={{ fontSize: 12, fontWeight: "800", letterSpacing: 0.5 }} setColor={isLight ? "#3F4550" : "#C4C7CF"}>
+      <View style={[styles.chainTile, { backgroundColor: chainTileSurface }]}>
+        <ThemedText style={styles.chainTileText} setColor={isLight ? "#3F4550" : "#C4C7CF"}>
           {initials}
         </ThemedText>
       </View>

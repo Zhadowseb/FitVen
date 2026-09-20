@@ -174,28 +174,33 @@ export function selectLiftsToUpsert(bestLifts, existingLifts) {
   });
 }
 
+export const APPROVALS_REQUIRED = 3;
+export const REJECTIONS_TO_REMOVE = 2;
+
 /**
  * The same rule the vote trigger applies, for showing the pill before the
  * server answers: two rejections beat everything, then three approvals.
+ *
+ * It reads the two constants above rather than repeating their values. It
+ * used to hardcode them, two lines apart, so changing the rule in one place
+ * moved the pill and the review sheet and left this behind - and the test
+ * asserted the old numbers, so it kept passing.
  */
 export function deriveVideoStatus({ hasVideo, approvals = 0, rejections = 0 }) {
   if (!hasVideo) {
     return "none";
   }
 
-  if (Number(rejections) >= 2) {
+  if (Number(rejections) >= REJECTIONS_TO_REMOVE) {
     return "rejected";
   }
 
-  if (Number(approvals) >= 3) {
+  if (Number(approvals) >= APPROVALS_REQUIRED) {
     return "verified";
   }
 
   return "pending";
 }
-
-export const APPROVALS_REQUIRED = 3;
-export const REJECTIONS_TO_REMOVE = 2;
 
 /** "Mikkel R." - first name and the initial of the last, for the podium. */
 export function shortenDisplayName(displayName) {

@@ -386,13 +386,6 @@ export async function matchWorkoutToGym(
   };
 }
 
-/** Fire and forget, for the start of a workout. */
-export function matchWorkoutToGymInBackground(db, workoutId, options) {
-  void matchWorkoutToGym(db, workoutId, options).catch((error) => {
-    console.warn("Centre match failed:", error);
-  });
-}
-
 /* ---------------------------------------------------------------- lifts -- */
 
 /**
@@ -757,11 +750,28 @@ export async function getGymCount() {
   return count ?? 0;
 }
 
-/** Name, short name, chain or city. Commas and parentheses would break the filter, so they go. */
-export async function searchGyms({ query, limit = 40 }) {
-  const cleaned = String(query ?? "")
-    .replace(/[(),.*%]/g, " ")
+/**
+ * What a centre's name, short name, chain or city may contain, for a search
+ * that is pasted into a PostgREST `.or(...)` string below.
+ *
+ * An allowlist, the same shape as `buildSearchFilter` in socialService and
+ * for the same reason: a list of the characters that break the filter today
+ * stops covering it the moment that filter gains a field or an operator, and
+ * nothing fails loudly when it does. Letters, digits, spaces, `&` and the two
+ * dashes survive - "Fit&Sund", "Nørrebro", "Fitness World" - and everything
+ * else becomes a space, exactly as the denylist before it did with the full
+ * stop in "K.B. Hallen".
+ */
+export function buildGymSearchFilter(query) {
+  return String(query ?? "")
+    .replace(/[^\p{L}\p{N}&_ -]/gu, " ")
+    .replace(/\s+/g, " ")
     .trim();
+}
+
+/** Name, short name, chain or city. */
+export async function searchGyms({ query, limit = 40 }) {
+  const cleaned = buildGymSearchFilter(query);
 
   if (cleaned.length < 2) {
     return [];

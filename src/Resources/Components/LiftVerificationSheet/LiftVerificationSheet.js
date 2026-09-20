@@ -18,6 +18,7 @@ import Cross from "../../Icons/UI-icons/Cross";
 import MapPin from "../../Icons/UI-icons/MapPin";
 import { ThemedBottomSheet, ThemedText, UserAvatar } from "../../ThemedComponents";
 import { APPROVALS_REQUIRED, REJECTIONS_TO_REMOVE, formatWeightKg } from "../../../Utils/gymUtils";
+import { formatCountdownTime } from "../../../Utils/timeUtils";
 
 // expo-video throws at import time on a client built before it was added.
 // Loaded on demand: the sheet then shows the lift without its video instead
@@ -45,12 +46,6 @@ function formatDateTime(value) {
   const date = formatDate(value, { day: "numeric", month: "short" });
 
   return date ? `${date} ${formatTime(value, { hour: "2-digit", minute: "2-digit" })}` : "";
-}
-
-function formatClock(seconds) {
-  const whole = Math.max(0, Math.floor(Number(seconds) || 0));
-
-  return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, "0")}`;
 }
 
 function LiftVideoUnavailable({ theme, message }) {
@@ -136,7 +131,7 @@ function NativeLiftVideo({ video, uri, overlayLabel, theme }) {
       ) : null}
 
       <ThemedText style={styles.videoDuration} setColor="#C4C7CF">
-        {formatClock(duration)}
+        {formatCountdownTime(duration)}
       </ThemedText>
 
       <View style={styles.videoProgressTrack}>

@@ -289,6 +289,41 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
   const rows = board?.rows ?? [];
   const me = board?.me ?? null;
   const podiumRows = rows.slice(0, 3);
+  // Four reasons a list can be empty, and the wording for each. As nested
+  // ternaries in the markup you had to read the whole expression outwards to
+  // know which pair a given combination produced - and the friends case, which
+  // has a title of its own but no body, looked like drift rather than the
+  // deliberate choice it is.
+  const emptyState = useMemo(() => {
+    if (unit === gymService.LIFT_UNIT_BODYWEIGHT) {
+      return {
+        titleKey: "gyms.exercise.empty.noBodyweightTitle",
+        bodyKey: "gyms.exercise.empty.noBodyweightBody",
+      };
+    }
+
+    if (national) {
+      return {
+        titleKey: "gyms.exercise.empty.noVerifiedTitle",
+        bodyKey: "gyms.exercise.empty.noVerifiedBody",
+      };
+    }
+
+    if (scope === gymService.GYM_SCOPE_FRIENDS) {
+      // There is no noFriendsBody: "nobody you follow has lifted this here"
+      // needs no second sentence that the empty one does not already say.
+      return {
+        titleKey: "gyms.exercise.empty.noFriendsTitle",
+        bodyKey: "gyms.exercise.empty.noLiftsBody",
+      };
+    }
+
+    return {
+      titleKey: "gyms.noLiftsYet",
+      bodyKey: "gyms.exercise.empty.noLiftsBody",
+    };
+  }, [national, scope, unit]);
+
   const listRows = rows.slice(3);
   const hasMoreRow = Boolean(board?.nextCursor);
 
@@ -504,20 +539,10 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
               <View style={[styles.listCard, { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder }]}>
                 <View style={styles.emptyRow}>
                   <ThemedText style={styles.emptyTitle} setColor={theme.title}>
-                    {unit === gymService.LIFT_UNIT_BODYWEIGHT
-                      ? t("gyms.exercise.empty.noBodyweightTitle")
-                      : scope === gymService.GYM_SCOPE_FRIENDS && !national
-                        ? t("gyms.exercise.empty.noFriendsTitle")
-                        : national
-                          ? t("gyms.exercise.empty.noVerifiedTitle")
-                          : t("gyms.noLiftsYet")}
+                    {t(emptyState.titleKey)}
                   </ThemedText>
                   <ThemedText style={styles.emptyBody} setColor={quietText}>
-                    {unit === gymService.LIFT_UNIT_BODYWEIGHT
-                      ? t("gyms.exercise.empty.noBodyweightBody")
-                      : national
-                        ? t("gyms.exercise.empty.noVerifiedBody")
-                        : t("gyms.exercise.empty.noLiftsBody")}
+                    {t(emptyState.bodyKey)}
                   </ThemedText>
                 </View>
               </View>
