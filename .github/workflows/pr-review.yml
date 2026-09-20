@@ -364,9 +364,17 @@ jobs:
 
           # --paginate koerer jq-filteret pr. side, saa der kan komme et id
           # pr. side. Den aeldste er den, vi har skrevet i foerste omgang.
-          EXISTING=$(gh api "repos/$REPO/issues/$PR/comments" --paginate \
-            --jq "map(select(.body | startswith(\"$MARKER\"))) | .[0].id // empty" \
-            | head -1 || true)
+          # `|| true` maa ikke staa paa selve kaldet. Det fangede ogsaa en
+          # fejl fra gh api, saa en rate limit eller en 5xx saa ud praecis
+          # som "ingen kommentar endnu" - og koerslen svarede med at oprette
+          # endnu en kommentar og melde succes.
+          if ! FOUND=$(gh api "repos/$REPO/issues/$PR/comments" --paginate \
+            --jq "map(select(.body | startswith(\"$MARKER\"))) | .[0].id // empty"); then
+            echo "::error::Kunne ikke laese kommentarerne paa PR #$PR. Stopper hellere end at oprette en dublet."
+            exit 1
+          fi
+
+          EXISTING=$(printf '%s\n' "$FOUND" | head -1)
 
           if [ -n "$EXISTING" ]; then
             gh api -X PATCH "repos/$REPO/issues/comments/$EXISTING" -F body=@comment.md > /dev/null
