@@ -12,6 +12,22 @@
 [build]
   publish = "web"
   command = ""
+  # Build only when something that actually gets published has changed.
+  #
+  # Netlify rebuilds on every push to the production branch by default, and
+  # almost every push here is app code that never reaches this site - four
+  # static HTML files. Those builds cost credits and produce an identical
+  # deploy, and the free allowance ran out that way.
+  #
+  # The direction is counter-intuitive and worth stating: this command runs on
+  # every push, and Netlify CANCELS the build when it exits 0. `git diff
+  # --quiet` exits 0 when there is no difference, so "no changes under web/"
+  # means "do not build". Invert it by accident and the site stops deploying
+  # entirely, silently.
+  #
+  # netlify.toml itself is in the list: a change to the redirect or to this
+  # rule has to reach production too.
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF ./web ./netlify.toml"
 
 [[redirects]]
   from = "/"

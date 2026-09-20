@@ -30,6 +30,7 @@ const COLUMN_CONFIG = [
 export default function PanelSettingsModal({
   visible,
   onClose,
+  onDismiss,
   onDelete,
   onOpenRestUnit,
   currentColumns,
@@ -64,6 +65,7 @@ export default function PanelSettingsModal({
     <ThemedModal
       visible={visible}
       onClose={handleClose}
+      onDismiss={onDismiss}
       title="Exercise settings"
       showCloseButton
       bottomOffset={0}

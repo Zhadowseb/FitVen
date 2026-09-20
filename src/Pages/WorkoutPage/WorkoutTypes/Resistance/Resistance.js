@@ -22,7 +22,7 @@ import {
   ThemedTextInput,
   ThemedView,
   ThemedText,
-} from "../../../../Resources/ThemedComponents";
+} from "@resources/ThemedComponents";
 import {
   formatElapsedTime,
   getCurrentStoredTimestampSeconds,
@@ -38,7 +38,7 @@ import {
   socialPostService,
   weightliftingService,
   workoutService,
-} from "../../../../Services";
+} from "@services";
 import { useAuth } from "../../../../Contexts/AuthContext";
 import { useExerciseViewSettings } from "../../../../Contexts/ExerciseViewSettingsContext";
 
@@ -54,7 +54,6 @@ const Resistance = ({
   workout_id,
   date,
   workoutLabel,
-  workoutSubtitle,
   autoNamedLabel = null,
   workoutInstanceLabel,
   restartRequestKey,
@@ -79,6 +78,7 @@ const Resistance = ({
   const [postConfirmVisible, setPostConfirmVisible] = useState(false);
   const [postNote, setPostNote] = useState("");
   const [isPostingSummary, setIsPostingSummary] = useState(false);
+  const [postError, setPostError] = useState("");
   useEffect(() => {
     if (collapsedExerciseCardLayout === "classic") {
       setShowCollapsedSets(true);
@@ -454,6 +454,7 @@ const Resistance = ({
       }
 
       setPostNote("");
+      setPostError("");
       setPostConfirmVisible(true);
       return true;
     } catch (error) {
@@ -469,6 +470,7 @@ const Resistance = ({
 
     try {
       setIsPostingSummary(true);
+      setPostError("");
       await workoutService.repostWorkoutSummaryPost(db, {
         workoutId: workout_id,
         note: postNote,
@@ -476,7 +478,9 @@ const Resistance = ({
       setPostConfirmVisible(false);
     } catch (error) {
       console.error("Could not post the workout summary:", error);
-      setPostConfirmVisible(false);
+      setPostError(
+        error?.message ?? "The workout could not be posted. Please try again."
+      );
     } finally {
       setIsPostingSummary(false);
     }
@@ -655,16 +659,14 @@ const Resistance = ({
 
           {/* SPM-1: a strength workout names itself after the exercises put
               into it, so a session started as "Resistance" turns into "Push"
-              while the user is looking at it. That is intended, and now says
-              so - in this header, because this is the one a resistance workout
-              actually draws. */}
+              while the user is looking at it. That is intended, and says so
+              here, because this is the header a resistance workout draws.
+              The weekday and date used to sit in this slot when there was
+              nothing to announce. They are gone: you know what day you are
+              training, and the workout's name is the thing worth the space. */}
           {autoNamedLabel ? (
             <ThemedText style={styles.navDate} setColor={primaryTextColor} numberOfLines={1}>
               {`Named ${autoNamedLabel} after your exercises`}
-            </ThemedText>
-          ) : !!workoutSubtitle ? (
-            <ThemedText style={styles.navDate} setColor={quietText} numberOfLines={1}>
-              {workoutSubtitle}
             </ThemedText>
           ) : null}
 
@@ -955,7 +957,9 @@ const Resistance = ({
         message={`${summaryLine(
           finishedSummary
         )}. Post it to your feed so the people who follow you can see it?`}
-        confirmLabel={isPostingSummary ? "Posting..." : "Post it"}
+        confirmLabel={
+          isPostingSummary ? "Posting..." : postError ? "Try again" : "Post it"
+        }
         cancelLabel="Keep it private"
         tone="positive"
         isWorking={isPostingSummary}
@@ -966,6 +970,11 @@ const Resistance = ({
           }
         }}
       >
+        {postError ? (
+          <ThemedText accessibilityRole="alert" setColor={theme.danger}>
+            {postError}
+          </ThemedText>
+        ) : null}
         <ThemedTextInput
           value={postNote}
           onChangeText={setPostNote}

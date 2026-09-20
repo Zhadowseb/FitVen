@@ -91,6 +91,8 @@ const ExerciseLibraryPage = () => {
 
       setQuickAccessStats({
         programCount: programs.length,
+        // Still read by the "N active" chip on the programs card further down.
+        // It came off the summary at the top, not out of the page.
         activeProgramCount: programs.filter(
           (program) => program.status === "ACTIVE"
         ).length,
@@ -204,35 +206,12 @@ const ExerciseLibraryPage = () => {
       >
         <PageSummary
           eyebrow="Train"
-          // Not "Your training": that is the heading of the section further
-          // down, and a summary that repeats a heading says nothing.
-          title={
-            weekSummary.planned === null
-              ? "Loading..."
-              : weekSummary.planned === 0
-                ? "Nothing planned this week"
-                : weekSummary.completed >= weekSummary.planned
-                  ? "Week complete"
-                  : `${
-                      weekSummary.planned - weekSummary.completed
-                    } left this week`
-          }
-          badge={
-            quickAccessStats.activeProgramCount > 0
-              ? {
-                  label: `${quickAccessStats.activeProgramCount} active`,
-                  tone: "primary",
-                }
-              : null
-          }
+          title="Your training summarised"
           stats={[
             {
-              key: "week",
-              value:
-                weekSummary.planned === null
-                  ? null
-                  : `${weekSummary.completed}/${weekSummary.planned}`,
-              label: "This week",
+              key: "programs",
+              value: quickAccessStats.programCount,
+              label: "Programs",
               tone: "primary",
             },
             {

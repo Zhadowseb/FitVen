@@ -33,6 +33,7 @@ const PROFILES_TABLE = "profiles";
 const PROFILE_PRIVATE_TABLE = "profile_private";
 const USER_FOLLOWS_TABLE = "user_follows";
 const USER_BLOCKS_TABLE = "user_blocks";
+const USER_REPORTS_TABLE = "user_reports";
 const WORKOUT_TYPE_INSTANCE_TABLE = "workout_type_instance";
 const PROFILE_SELECT_FIELDS =
   "id, username, username_base, username_code, display_name, bio, avatar_path, created_at, updated_at";
@@ -46,6 +47,8 @@ const SOCIAL_AVATAR_SETUP_MESSAGE =
   "Profile photos are not set up in Supabase yet. Make sure the avatars bucket exists and rerun the updated supabase/migrations/20260424004053_social-search.sql script first.";
 const SOCIAL_BLOCK_SETUP_MESSAGE =
   "Blocking and the new user search are not set up in Supabase yet. Run supabase/migrations/20260905143000_user-blocks.sql in the Supabase SQL editor first.";
+const SOCIAL_REPORT_SETUP_MESSAGE =
+  "Reporting is not set up in Supabase yet. Run supabase/migrations/20260912220000_ugc-safety.sql in the Supabase SQL editor first.";
 const PROFILE_BIRTH_DATE_SETUP_MESSAGE =
   "Birth date settings are not set up in Supabase yet. Run supabase/migrations/20260628211540_profile-birthdate.sql in the Supabase SQL editor first.";
 export const PROFILE_DISPLAY_NAME_MAX_LENGTH = 40;
@@ -367,6 +370,16 @@ function normalizeSocialError(error) {
     return new Error(PROFILE_BIRTH_DATE_SETUP_MESSAGE);
   }
 
+  // Checked before the generic one, for the same reason as the block message
+  // below it: a missing reports table arrives as a 404 that the generic message
+  // would blame on the wrong migration.
+  if (
+    message.includes(USER_REPORTS_TABLE) &&
+    (message.includes("does not exist") || message.includes("schema cache"))
+  ) {
+    return new Error(SOCIAL_REPORT_SETUP_MESSAGE);
+  }
+
   // Checked before the generic one: these three arrive as a 404 or a
   // missing-function error, and the generic message names the wrong file.
   if (
@@ -430,10 +443,24 @@ function isMissingPrivateMaxHeartRateSourceError(error) {
 // cannot quietly stop covering everything if that string ever gains a field or
 // an operator. Letters and digits are unicode, so a name in any alphabet still
 // searches.
-function buildSearchFilter(query) {
+/**
+ * Cleans a search box into something search_profiles can use.
+ *
+ * `#` survives, because a username is `base#1234` and the four digits are the
+ * whole point of them: two people can both be `sebastian`, and the code is what
+ * tells them apart. Stripping it turned "sebastian#4471" into "sebastian 4471",
+ * which the server then closed up to "sebastian4471" - matching nobody, while
+ * the same search without the digits worked. Searching for exactly the person
+ * you were given failed, and searching vaguely succeeded.
+ *
+ * Everything else still becomes a space, which is only about keeping the two
+ * halves apart on the way over: search_profiles strips whitespace as well, so
+ * "anna.b" reaches the query as "annab" either way.
+ */
+export function buildSearchFilter(query) {
   return String(query ?? "")
     .replace(/^@+/, "")
-    .replace(/[^\p{L}\p{N} _-]/gu, " ")
+    .replace(/[^\p{L}\p{N}# _-]/gu, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -1238,6 +1265,71 @@ export async function blockUser({ userId, targetUserId }) {
   }
 }
 
+/* -------------------------------------------------------------- reports -- */
+
+/**
+ * The reasons the report sheet offers. The values are the ones the database
+ * constraint accepts, so adding one here without adding it there fails the
+ * insert rather than storing something nobody will recognise later.
+ */
+export const REPORT_REASONS = [
+  { value: "spam", label: "Spam or advertising" },
+  { value: "harassment", label: "Harassment or bullying" },
+  { value: "inappropriate", label: "Inappropriate content" },
+  { value: "impersonation", label: "Pretending to be someone else" },
+  { value: "other", label: "Something else" },
+];
+
+export const REPORT_NOTE_MAX_LENGTH = 1000;
+
+const REPORT_REASON_VALUES = new Set(
+  REPORT_REASONS.map((reason) => reason.value)
+);
+
+/**
+ * Report an account, or one post on it.
+ *
+ * `postId` is optional: without it the report is about the account, with it the
+ * report is about that post. The post id is stored loose rather than as a
+ * foreign key, so deleting the post does not delete the report - a report about
+ * something that has since been taken down is the one worth keeping.
+ */
+export async function reportUser({
+  userId,
+  targetUserId,
+  reason,
+  note = "",
+  postId = null,
+}) {
+  if (!userId || !targetUserId) {
+    throw new Error("Missing user information for report.");
+  }
+
+  if (userId === targetUserId) {
+    throw new Error("You cannot report yourself.");
+  }
+
+  if (!REPORT_REASON_VALUES.has(reason)) {
+    throw new Error("Choose a reason for the report.");
+  }
+
+  const trimmedNote = String(note ?? "")
+    .trim()
+    .slice(0, REPORT_NOTE_MAX_LENGTH);
+
+  const { error } = await supabase.from(USER_REPORTS_TABLE).insert({
+    reporter_id: userId,
+    reported_user_id: targetUserId,
+    reported_post_id: postId ?? null,
+    reason,
+    note: trimmedNote,
+  });
+
+  if (error) {
+    throw normalizeSocialError(error);
+  }
+}
+
 export async function unblockUser({ userId, targetUserId }) {
   if (!userId || !targetUserId) {
     throw new Error("Missing user information for unblock.");
@@ -1294,7 +1386,9 @@ export async function getPrivacyConsent({ user }) {
 
   const { data, error } = await supabase
     .from(PROFILE_PRIVATE_TABLE)
-    .select("privacy_policy_version, privacy_policy_accepted_at")
+    .select(
+      "privacy_policy_version, privacy_policy_accepted_at, terms_version, terms_accepted_at"
+    )
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -1305,15 +1399,24 @@ export async function getPrivacyConsent({ user }) {
   return {
     version: data?.privacy_policy_version ?? null,
     acceptedAt: data?.privacy_policy_accepted_at ?? null,
+    termsVersion: data?.terms_version ?? null,
+    termsAcceptedAt: data?.terms_accepted_at ?? null,
   };
 }
 
-export async function acceptPrivacyPolicy({ user, version }) {
+/**
+ * Records acceptance of the privacy policy, the terms of use, or both.
+ *
+ * Both in one call because the gate asks for both on one screen: two writes
+ * would leave a window where somebody has agreed to one and not the other, and
+ * nothing in the app knows what to do with that state.
+ */
+export async function acceptPrivacyPolicy({ user, version, termsVersion }) {
   if (!user?.id) {
     throw new Error("You need to be signed in to accept the privacy policy.");
   }
 
-  if (!version) {
+  if (!version && !termsVersion) {
     throw new Error("Missing privacy policy version.");
   }
 
@@ -1323,19 +1426,28 @@ export async function acceptPrivacyPolicy({ user, version }) {
   await ensureOwnProfile(user);
 
   const acceptedAt = new Date().toISOString();
-  const { error } = await supabase.from(PROFILE_PRIVATE_TABLE).upsert(
-    {
-      user_id: user.id,
-      privacy_policy_version: version,
-      privacy_policy_accepted_at: acceptedAt,
-      updated_at: acceptedAt,
-    },
-    { onConflict: "user_id" }
-  );
+  const row = {
+    user_id: user.id,
+    updated_at: acceptedAt,
+  };
+
+  if (version) {
+    row.privacy_policy_version = version;
+    row.privacy_policy_accepted_at = acceptedAt;
+  }
+
+  if (termsVersion) {
+    row.terms_version = termsVersion;
+    row.terms_accepted_at = acceptedAt;
+  }
+
+  const { error } = await supabase
+    .from(PROFILE_PRIVATE_TABLE)
+    .upsert(row, { onConflict: "user_id" });
 
   if (error) {
     throw normalizeSocialError(error);
   }
 
-  return { version, acceptedAt };
+  return { version, termsVersion, acceptedAt };
 }

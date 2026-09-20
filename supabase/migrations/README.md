@@ -45,6 +45,18 @@ behind by accident.
 | `20260905190000_rpc-hardening.sql` | yes |
 | `20260906091500_fix-watcher-trigger-permissions.sql` | yes |
 | `20260907110000_exercise-favourites.sql` | yes |
+| `20260912220000_ugc-safety.sql` | yes |
+| `20260915120000_repair-workout-type-catalog.sql` | yes |
+| `20260916140000_terms-of-use.sql` | yes |
+| `20260916210000_opt-in-column-defaults.sql` | yes |
+
+`20260915120000_repair-workout-type-catalog.sql` restores missing built-in and
+legacy workout types without changing existing rows or granting catalog writes
+to app users. Applied to FitVen on 2026-09-15: before the repair, only Resistance
+and Run existed. It added Walk, Upperbody, Legs and StrengthTraining.
+If a device still reports an unknown workout type afterwards, inspect that
+type's exact value; this migration intentionally does not invent catalog entries
+from arbitrary client input.
 
 `20260905113510_drop-unused-template-tables.sql` is optional: it drops the seven
 `*_template` tables, and only if they are genuinely empty. Run it or delete it.
@@ -82,6 +94,48 @@ above. It had been committed a ledger entry short, and the table turned out not
 to exist — favourites were being starred locally and refused on every sync. This
 is exactly the drift the ledger is meant to catch, and it did: `npm test` was
 failing on the missing entry the whole time.
+
+`20260912220000_ugc-safety.sql` was run on 2026-09-12. It carries reporting and
+the term filter, the two halves of Apple's guideline 1.2 the app was missing.
+
+Verified afterwards over the REST API with the anon key: `user_reports` answers
+with an empty array, so the table is there and row-level security is hiding
+everyone's rows, and `blocked_terms` answers `42501 permission denied`. That
+second one is the check worth keeping — an empty array there would have meant
+the revoke had not taken and the app could read the word list.
+
+It also seeds `public.blocked_terms`. That table has row-level security on and
+no policy, which is deliberate: only the security definer function reads it. To
+add a term afterwards, use the service role:
+
+```sql
+insert into public.blocked_terms (term, language) values ('<term>', 'da')
+on conflict (term) do nothing;
+```
+
+Reports are read the same way — there is no policy that lets anyone in the app
+see another user's report:
+
+```sql
+select * from public.user_reports where status = 'open' order by created_at;
+```
+
+`20260916140000_terms-of-use.sql` was run on 2026-09-16. It adds the two columns
+the consent gate writes the terms acceptance to, and the trigger that raises an
+automatic report when somebody blocks an account. Both come from an App Review
+rejection under guideline 1.2.
+
+Verified over the REST API with the anon key: `user_reports?select=source` and
+`profile_private?select=terms_version,terms_accepted_at` both answer with an
+empty array rather than an unknown-column error, so the columns are there and
+row-level security is hiding the rows.
+
+`20260916210000_opt-in-column-defaults.sql` was run on 2026-09-16. It turns note,
+RPE and 1RM% off in the saved column preferences, which the app's own repair has
+been doing locally for a while without the cloud copy ever being corrected. The
+preference table syncs both ways, so the device was cleaned and the next sync
+put it back - and every exercise added to a workout came with a NOTE column. Run
+it together with the app change that guards that repair to run once.
 
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to

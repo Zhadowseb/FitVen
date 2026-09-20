@@ -19,6 +19,7 @@ import { Colors } from "../../GlobalStyling/colors";
 import { useAuth } from "../../../Contexts/AuthContext";
 import { socialService } from "../../../Services";
 import { PRIVACY_POLICY_VERSION } from "../../Legal/privacyPolicy";
+import { TERMS_SECTIONS, TERMS_VERSION } from "../../Legal/termsOfUse";
 import {
   ThemedButton,
   ThemedText,
@@ -43,8 +44,14 @@ export default function PrivacyConsentGate({ children }) {
     try {
       const consent = await socialService.getPrivacyConsent({ user });
 
+      // Both, or neither. Somebody who has accepted one and not the other is
+      // a state nothing downstream knows how to read, so the gate asks again
+      // until it holds a current answer to both.
       setConsentState(
-        consent.version === PRIVACY_POLICY_VERSION ? "granted" : "needed"
+        consent.version === PRIVACY_POLICY_VERSION &&
+          consent.termsVersion === TERMS_VERSION
+          ? "granted"
+          : "needed"
       );
     } catch (error) {
       console.warn("Could not read privacy consent:", error);
@@ -65,6 +72,7 @@ export default function PrivacyConsentGate({ children }) {
       await socialService.acceptPrivacyPolicy({
         user,
         version: PRIVACY_POLICY_VERSION,
+        termsVersion: TERMS_VERSION,
       });
       setConsentState("granted");
     } catch (error) {
@@ -86,21 +94,45 @@ export default function PrivacyConsentGate({ children }) {
 
   return (
     <ThemedView safe={["top", "left", "right", "bottom"]} style={styles.container}>
-      <View style={styles.header}>
-        <ThemedTitle type="h2">Before you continue</ThemedTitle>
-        <ThemedText style={styles.headerBody} setColor={quietText}>
-          FitVen stores your training, and — through sickness entries, heart
-          rate and tracked runs — health data about you. European law needs your
-          explicit permission for that. Read this and tap Accept to carry on, or
-          close the app if you would rather not.
-        </ThemedText>
-      </View>
-
+      {/* The heading scrolls with everything else rather than sitting pinned
+          above it. Two legal documents are a long read by nature, and a fixed
+          header spent the top of every screen restating that - it made the
+          screen look like a form with a banner stuck to it. The button stays
+          pinned, because having to reach the bottom of two documents before
+          you can accept is a different thing entirely. */}
       <ScrollView
         style={styles.content}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator
       >
+        <ThemedTitle type="h2">Before you continue</ThemedTitle>
+        <ThemedText style={styles.headerBody} setColor={quietText}>
+          Two things to agree to. The terms of use set out what is and is not
+          allowed on FitVen — there is no tolerance for objectionable content or
+          abusive behaviour. The privacy policy covers your data: FitVen stores
+          your training, and through sickness entries, heart rate and tracked
+          runs, health data about you, which European law needs your explicit
+          permission for. Read both and tap Accept to carry on, or close the app
+          if you would rather not.
+        </ThemedText>
+
+        <ThemedTitle type="h3" style={styles.sectionHeading}>
+          Terms of use
+        </ThemedTitle>
+
+        {TERMS_SECTIONS.map((section) => (
+          <View key={section.title} style={styles.termsSection}>
+            <ThemedText style={styles.termsTitle}>{section.title}</ThemedText>
+            <ThemedText style={styles.termsBody} setColor={quietText}>
+              {section.body}
+            </ThemedText>
+          </View>
+        ))}
+
+        <ThemedTitle type="h3" style={styles.sectionHeading}>
+          Privacy policy
+        </ThemedTitle>
+
         <PrivacyPolicyBody />
       </ScrollView>
 
@@ -113,7 +145,9 @@ export default function PrivacyConsentGate({ children }) {
 
         <ThemedButton
           title={
-            consentState === "saving" ? "Saving..." : "Accept and continue"
+            consentState === "saving"
+              ? "Saving..."
+              : "Accept both and continue"
           }
           onPress={handleAccept}
           disabled={consentState === "saving"}

@@ -227,6 +227,7 @@ for (const [file, what] of [
   ["web/privacy/index.html", "the privacy policy Play requires"],
   ["web/delete-account/index.html", "the account deletion page Play links to"],
   ["web/support/index.html", "the Support URL App Store Connect requires"],
+  ["web/terms/index.html", "the terms App Review requires users to agree to"],
 ]) {
   if (read(file) === null) {
     problems.push(`${file} is missing - ${what}`);
@@ -237,6 +238,7 @@ for (const [file, what] of [
 for (const file of [
   "web/delete-account/index.html",
   "web/support/index.html",
+  "web/terms/index.html",
 ]) {
   const page = read(file);
 

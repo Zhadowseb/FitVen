@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.0.1] - Unreleased
+## [1.1.4] - Unreleased
 ### Added
 - **Eight review agents on every pull request.** `.github/workflows/pr-review.yml` fans a PR out to eight parallel Claude Code jobs - quality assurance, testing, security, architecture, code design, performance, UI usability and design - and a ninth agent merges their reports into one comment on the PR, updated in place on every push. Nothing has to be running locally.
   - Each agent's brief is a markdown file in `.github/review-agents/`, written against this repo rather than against code in general: the cloud-sync field checklist, the schema living in two files, the layer-aliasing rule, and the reason a colour must never sit in a `*Style.js`. Change what an agent looks for by editing its brief; the workflow only needs touching to add or remove an agent.
@@ -10,6 +10,76 @@
   - The briefs carry what the five consultant reviews in `docs/` already found, so an agent starts where the last review stopped rather than from general practice: the per-second work during a workout and the sequential round trips from the performance audit, the personal data that once shipped inside the bundle from the security review, the seven recurring design patterns - 35 text sizes, 36 corner radii, five top bars - and the keyboard handling that was globally ineffective on Android. Each brief says what was checked and deliberately cleared, so a settled question is not reopened on every PR.
   - Findings carry an id per agent (`SEC-1`, `PERF-2`), and confidence is `Bekraeftet` or `Mistanke` rather than a vague scale: an agent may only write `Bekraeftet` about something it opened the file and saw. A report also lists what it examined and found sound, which is the half that tells you the silence was checked.
   - Authentication is either `ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN` as a repository secret. With neither set the review jobs skip instead of failing, so the workflow is safe to merge before the secret exists. Setup is in `.github/review-agents/README.md`.
+
+---
+## [1.1.3] - Unreleased
+### Changed
+- `eas submit --platform ios` carries the App Store Connect app id in `eas.json`. Without it the command stops and asks, which a non-interactive run cannot answer, so every submission had to be driven by hand.
+
+---
+## [1.1.2] - Unreleased
+### Fixed
+- Posting a workout no longer waits for a full workout sync. Only a missing source workout is repaired, inside the shared sync queue, so another workout's invalid type cannot block an existing summary or a new workout upload.
+- A failed post after finishing a workout keeps the dialog and note open, shows the error, and offers Try again.
+- Published status survives unrelated profile/settings lookup failures. An unavailable post lookup shows an unknown status instead of falsely marking workouts unposted; newly posted cards retain the returned post id for editing.
+- Supabase permission and constraint errors retain their real messages instead of being reported as missing social tables.
+- Applied a separate, repeatable Supabase migration to restore missing built-in and legacy workout types, preserving existing catalog settings and read-only client access. The live catalog contained only Resistance and Run; Walk, Upperbody, Legs and StrengthTraining were added on 2026-09-15.
+
+---
+## [1.1.1] - Unreleased
+### Changed
+- **Run and Walk are gone from every list that offers a workout type**, rather than shown greyed out under a COMING SOON stamp. App Store review guideline 2.1 treats a control that announces a feature and then refuses it as an unfinished app, and it was not a control anyone could use in the meantime. Three places: the cards in the start sheet, the type list in Workout types settings, and the type filter in Your workouts.
+- **Workouts already recorded as Run or Walk are untouched.** They are the user's history, not an offer - this account has twenty of them - so those rows still appear in the calendar and the workout library, still carry the badge and still refuse to open.
+- `filterReleasedWorkoutTypes` in `workoutTypeAvailability.js` is the one way a list drops them, so shipping Run means editing `COMING_SOON_TYPES` and nothing else. The Run settings block in Workout types settings stays where it is for that day; it is simply unreachable until then.
+
+### Notes
+- Not verified on a device: the phone was disconnected when this was written. In particular the start sheet now has a single fresh-start card where it had three, and `freshCard` has `flex: 1`, so Resistance will stretch to the full width of the row. That is the layout doing what it was told, but nobody has looked at it.
+
+---
+## [1.1.0] - 2026-09-16
+### Added
+- **Terms of use, agreed to before an account can be created.** App Review rejected the app under guideline 1.2 with filtering, reporting, blocking and a published contact address all already in place, and named the missing piece: *"require that users agree to terms (EULA) and these terms must make it clear that there is no tolerance for objectionable content or abusive users"*. The zero-tolerance wording is therefore load-bearing, not decoration.
+- The register screen carries a required, unticked checkbox and a link to the full terms; the form refuses to submit without it. A pre-ticked box is not an agreement.
+- The consent gate now asks for both documents on one screen and records both in one write. Both or neither — somebody who has accepted one and not the other is a state nothing downstream knows how to read.
+- `web/terms/index.html` is generated from `src/Resources/Legal/termsOfUse.js` the same way the privacy page is, and `npm test` fails if the two have drifted. Two copies of an agreement drift, and which one a user accepted then becomes an open question.
+- **Blocking now tells the developer.** Apple asked for that too: a block raises an automatic report, marked `source = 'block'` so it can be told from one somebody actually tapped. Removing the blocked account from the feed instantly was already true — the block severs the follow in both directions, and everything a follower sees is gated on that row.
+- `scripts/test-terms-of-use.js` holds the clause in place: the no-tolerance wording in both the full text and the one line beside the checkbox, the register screen refusing to submit, the checkbox starting unticked, the gate comparing versions, and the block notification being wrapped so a failure cannot roll the block back.
+
+### Notes
+- **`supabase/migrations/20260916140000_terms-of-use.sql` has to be run before the next submission.** Without the two columns the gate cannot record an answer and asks again on every launch.
+- The block notification is wrapped in its own exception handler. An `after insert` trigger that raises rolls the statement back with it, and somebody asking to be left alone must not be refused because a notification failed — the lost notification is the smaller harm, and the block is still on record.
+- Apple reviewed on an iPad Air 11-inch (M3) despite `supportsTablet: false`. It drew no comment, but it is worth knowing that the declaration does not stop them.
+
+---
+## [1.0.2] - 2026-09-13
+### Added
+- **Reporting.** A Report action beside Block on the followers and following lists, with five reasons and an optional note. Reports land in `public.user_reports`, readable only by the person who filed them — the reported account cannot learn that it was reported or by whom, which is the difference between a report and the next round of the argument. There is no update or delete policy: a report is a record.
+- **A term filter on everything a user can type that someone else reads** — a post's title and body, and a profile's display name and bio. It runs as a `before insert or update` trigger, not in the app: a rule that only runs in the client is a suggestion, because the same API answers an HTTP client holding the anon key.
+- The list lives in `public.blocked_terms` with row-level security on and no policy at all, so only the security definer function reads it. Publishing the list would hand every user the exact set of strings to route around. Terms can be added with the service role without shipping an app release, which on iOS means without waiting for review.
+- Matching is lowercased, whole-word, and collapses non-letters first, so "s p a m" and "s.p.a.m" do not walk past a list holding "spam" — while "assessment" and "Scunthorpe" still get through. A filter that fires on ordinary words gets worked around rather than respected.
+- `scripts/test-ugc-safety.js` guards the seam nothing else does: the reasons the client offers and the reasons the column accepts, the note length on both sides, that the select policy is still scoped to the reporter, that no update or delete policy appeared, and that the filter still watches every free-text column. Add a reason to one side only and the insert fails in production, on the path a user reaches when something has already gone wrong for them.
+
+### Fixed
+- **An exercise card grew when a set was added and never came back down when it was deleted**, leaving an empty strip under the last row until the card was collapsed and reopened. On both platforms — this one was never a modal problem.
+- The expand animation interpolates towards a stored height, and the rule for replacing it only ever let it grow. That was guarding something real: during a collapse the section is still mounted and reports its way down to nothing, and storing that would leave the target at zero so the row could never open again. It guarded too much — the stored value became a high-water mark. Shrinking is now accepted while the row is open and ignored while it is closing, which is the same protection without the side effect.
+- The rule moved out of the component into `expandedHeightRule.js` with `scripts/test-expanded-height.js` on it. It is four lines that look obviously right in two different ways, and the first version shipped.
+- **Deleting a set, deleting an exercise, and the rest-unit picker were dead on iPhone**, for the same reason blocking was: each opens a second modal while the first is still up, and UIKit drops the presentation without an error. React Native leaves a full-screen view behind when that happens, so every touch afterwards went nowhere — the symptom reported from the device was "nothing happened, then no button worked".
+- The set confirmation is now nested inside the options sheet, where the sheet presents it. The exercise panel could not nest: the rest-unit modal lives in a different component, so the panel closes first and the intent runs from `onDismiss`, which is the callback iOS fires once the dismissal has finished. `ThemedModal` forwards `onDismiss` for this.
+- **Blocking worked on Android and did nothing on iPhone.** The followers list is a modal, the confirmation was a sibling of it, and both were visible at once. Android renders a Modal as a view and shows both; iOS presents one at a time and silently drops the second, so the button looked dead. The confirmations now sit inside the list modal, where the outer one presents them. This was not cosmetic: blocking is one of the four things Apple's guideline 1.2 requires of an app with user-generated content.
+
+### Notes
+- `supabase/migrations/20260912220000_ugc-safety.sql` was run on 2026-09-12. Verified over the REST API with the anon key: `user_reports` answers with an empty array, and `blocked_terms` answers `42501 permission denied` — the second is the one worth checking, because an empty array there would have meant the app could read the word list.
+- Guideline 1.2 asks for four things. Blocking and published contact information were already there; this adds reporting and filtering. The fourth part of the reporting requirement is "timely responses to concerns", which is a process, not code — reports are read with the service role, and `supabase/migrations/README.md` carries the query.
+- The same bug turned out to be live in three more places, all now fixed: deleting a set, deleting an exercise, and the rest-unit picker. The pattern still exists wherever a modal opens another one, and the durable repair is a shared overlay host rather than a patch per site - but the four flows that were actually broken are closed.
+- The filter does not cover `username_base`. Usernames are claimed through `public.claim_username_code`, which is a different path with its own rules, and reaching into it from here would have split the validation across two places.
+
+---
+## [1.0.1] - Released with 1.0.2
+### Changed
+- **The Train summary says what it is again.** Its title is "Your training this week" rather than a count that changed as the week went, and the first stat is labelled Workouts rather than "This week" - the title carries the period, so the number under it does not have to repeat it.
+
+### Removed
+- **The summary bar on Personal Records.** It was a fourth thing to read before the screen's own first section, on a screen that already opens with Biggest movers and a Statistics block of its own. Its data went with it; nothing else used it.
 
 ---
 ## [1.0.0] - 2026-09-12

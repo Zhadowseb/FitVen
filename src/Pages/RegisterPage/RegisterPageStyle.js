@@ -126,6 +126,31 @@ export default StyleSheet.create({
     marginTop: 20,
   },
 
+  // Required agreement, so it sits above the button rather than under it as a
+  // footnote. 44 px of target because it is the one thing that can stop the
+  // form going through.
+  termsRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+    minHeight: 44,
+    paddingVertical: 4,
+  },
+  termsBox: {
+    width: 20,
+    height: 20,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 1,
+  },
+  termsText: {
+    flex: 1,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+
   privacyLink: {
     minHeight: 44,
     alignItems: "center",

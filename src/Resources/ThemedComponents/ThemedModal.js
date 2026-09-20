@@ -29,6 +29,12 @@ const ThemedModal = ({
   scroll = true,
   bottomOffset = 24,
   onShow,
+  // Fires after iOS has finished dismissing this modal. It exists because
+  // presenting a second modal while the first is still on screen is dropped
+  // by UIKit without an error - so anything that opens another modal has to
+  // wait for this rather than setting both flags in the same render.
+  // Android calls it too, right after the view is removed.
+  onDismiss,
   showCloseButton = false,
 }) => {
   const colorScheme = useColorScheme();
@@ -45,6 +51,7 @@ const ThemedModal = ({
       animationType="fade"
       onRequestClose={onClose}
       onShow={onShow}
+      onDismiss={onDismiss}
     >
       <View
         style={[

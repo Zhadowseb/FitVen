@@ -244,13 +244,12 @@ export async function setWorkoutSummaryExerciseHidden({
 }
 
 function isMissingSocialPostSchemaError(error) {
-  const message = `${error?.message ?? ""} ${error?.details ?? ""}`.toLowerCase();
-
   return (
     error?.code === "42P01" ||
     error?.code === "42703" ||
-    message.includes("social_post") ||
-    message.includes("social_post_like")
+    error?.code === "PGRST200" ||
+    error?.code === "PGRST204" ||
+    error?.code === "PGRST205"
   );
 }
 
@@ -932,7 +931,13 @@ export async function getOwnPostedWorkoutSummaries({ user }) {
  */
 export async function buildLocalWorkoutSummaryPost(
   db,
-  { workout, author, publishedPost = null, hiddenExerciseIds = [] }
+  {
+    workout,
+    author,
+    publishedPost = null,
+    hiddenExerciseIds = [],
+    postStatusKnown = true,
+  }
 ) {
   // Same hidden-exercise filter the publish path uses, so the preview matches
   // what would actually go out.
@@ -966,7 +971,7 @@ export async function buildLocalWorkoutSummaryPost(
     // This view shows the workout, not its engagement.
     likeCount: 0,
     isLiked: false,
-    isPosted: Boolean(publishedPost),
+    isPosted: postStatusKnown ? Boolean(publishedPost) : null,
   };
 }
 

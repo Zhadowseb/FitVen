@@ -31,8 +31,8 @@ import {
 import { programService } from "../../Services";
 import { getTodaysDate } from "../../Utils/dateUtils";
 import {
+  filterReleasedWorkoutTypes,
   isWorkoutComingSoon,
-  isWorkoutTypeComingSoon,
 } from "../../Utils/workoutTypeAvailability";
 import ComingSoonBadge from "../../Resources/Components/ComingSoonBadge";
 
@@ -201,20 +201,19 @@ function OptionSheet({
         {title}
       </ThemedText>
 
-      {options.map((option) => {
+      {/* An unreleased type is left out entirely rather than shown refusing
+          the tap: this sheet is a list of choices, and one that cannot be
+          chosen is not a choice. */}
+      {filterReleasedWorkoutTypes(options, (option) => option.key).map(
+        (option) => {
         const isSelected = option.key === selectedKey;
-        const isComingSoon = isWorkoutTypeComingSoon(option.key);
 
         return (
           <TouchableOpacity
             key={option.key}
             activeOpacity={0.82}
             accessibilityRole="button"
-            disabled={isComingSoon}
-            accessibilityState={{
-              selected: isSelected,
-              disabled: isComingSoon,
-            }}
+            accessibilityState={{ selected: isSelected }}
             onPress={() => onSelect(option.key)}
             style={[
               styles.optionSheetRow,
@@ -225,24 +224,17 @@ function OptionSheet({
           >
             <ThemedText
               style={styles.optionSheetLabel}
-              setColor={
-                isComingSoon
-                  ? theme.quietText
-                  : isSelected
-                    ? theme.primary
-                    : theme.title
-              }
+              setColor={isSelected ? theme.primary : theme.title}
             >
               {option.label}
             </ThemedText>
-            {isComingSoon ? (
-              <ComingSoonBadge size="small" inline angle={-8} />
-            ) : isSelected ? (
+            {isSelected ? (
               <Checkmark width={15} height={15} color={primaryTextColor} />
             ) : null}
           </TouchableOpacity>
         );
-      })}
+        }
+      )}
     </ThemedBottomSheet>
   );
 }

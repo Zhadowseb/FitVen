@@ -66,21 +66,20 @@ export async function getOwnWorkoutPosts(db, { user, limit = null } = {}) {
     return [];
   }
 
-  let profile = null;
-  let publishedByCloudId = new Map();
-  let hiddenExerciseIds = [];
-
-  // The list still renders without a connection; it just cannot say which
-  // workouts are already published.
-  try {
-    [profile, publishedByCloudId, hiddenExerciseIds] = await Promise.all([
-      ensureOwnProfile(user),
-      getOwnPostedWorkoutSummaries({ user }),
-      getHiddenWorkoutSummaryExerciseIds({ user }),
-    ]);
-  } catch (error) {
-    console.warn("Could not read own post state:", error);
+  const results = await Promise.allSettled([
+    ensureOwnProfile(user),
+    getOwnPostedWorkoutSummaries({ user }),
+    getHiddenWorkoutSummaryExerciseIds({ user }),
+  ]);
+  for (const result of results) {
+    if (result.status === "rejected") {
+      console.warn("Could not read own post state:", result.reason);
+    }
   }
+  const profile = results[0].status === "fulfilled" ? results[0].value : null;
+  const postStatusKnown = results[1].status === "fulfilled";
+  const publishedByCloudId = postStatusKnown ? results[1].value : new Map();
+  const hiddenExerciseIds = results[2].status === "fulfilled" ? results[2].value : [];
 
   const author = {
     id: user.id,
@@ -98,6 +97,7 @@ export async function getOwnWorkoutPosts(db, { user, limit = null } = {}) {
           workout,
           author,
           hiddenExerciseIds,
+          postStatusKnown,
           publishedPost:
             publishedByCloudId.get(
               Number(workout.cloud_workout_type_instance_id)
