@@ -1,4 +1,5 @@
-import { workoutRepository } from "../Repository";
+import { weightliftingRepository, workoutRepository } from "../Repository";
+import { guessSplitGroups } from "@utils/splitGuess";
 import * as gymService from "./gymService";
 import * as notificationService from "./notificationService";
 import { withTransaction } from "./shared";
@@ -367,4 +368,106 @@ export async function resetWorkoutState(db, workoutId) {
   });
 
   syncWorkoutTypeInstancesInBackground(db);
+}
+
+/* ------------------------------------------------------ home, at a glance -- */
+
+// The split is read out of the last sixty days: far enough back that a holiday
+// does not erase it, close enough that a split somebody has moved on from
+// stops counting.
+const SPLIT_GUESS_DAYS = 60;
+const SPLIT_GUESS_WORKOUT_LIMIT = 200;
+
+// The types that are strength training. The same set weightliftingService
+// classifies by; a run has no exercises to compare.
+const SPLIT_GUESS_WORKOUT_TYPES = [
+  "Resistance",
+  "StrengthTraining",
+  "Upperbody",
+  "Legs",
+];
+
+function isoDateDaysAgo(days, now = Date.now()) {
+  const date = new Date(now);
+
+  date.setDate(date.getDate() - days);
+
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
+    date.getDate()
+  ).padStart(2, "0")}`;
+}
+
+function startOfLocalDay(isoDate) {
+  const [year, month, day] = String(isoDate ?? "")
+    .split("-")
+    .map(Number);
+
+  if (!year || !month || !day) {
+    return null;
+  }
+
+  return new Date(year, month - 1, day).getTime();
+}
+
+/**
+ * Whole days since the last finished workout of any type, or null when there
+ * has never been one.
+ *
+ * Calendar days, not elapsed milliseconds: a workout finished yesterday
+ * evening is one day ago at nine this morning, not zero.
+ */
+export async function getDaysSinceLastWorkout(db, { now = Date.now() } = {}) {
+  const lastDate = await weightliftingRepository.getLastCompletedWorkoutDate(db);
+  const lastAt = startOfLocalDay(lastDate);
+
+  if (lastAt === null) {
+    return null;
+  }
+
+  const today = new Date(now);
+
+  today.setHours(0, 0, 0, 0);
+
+  return Math.max(0, Math.round((today.getTime() - lastAt) / 86400000));
+}
+
+/**
+ * The split the person is actually running, as far as their history shows one.
+ *
+ * Empty when there is no recognisable split - Home then offers an empty
+ * workout and leaves the row out rather than filling it with a guess.
+ */
+export async function getSplitGroups(db, { now = Date.now() } = {}) {
+  const rows = await weightliftingRepository.getCompletedStrengthWorkoutsWithExercises(
+    db,
+    {
+      sinceIsoDate: isoDateDaysAgo(SPLIT_GUESS_DAYS, now),
+      workoutTypes: SPLIT_GUESS_WORKOUT_TYPES,
+      limit: SPLIT_GUESS_WORKOUT_LIMIT,
+    }
+  );
+
+  const workouts = rows
+    .map((row) => {
+      const at = startOfLocalDay(row?.performed_date_sort);
+
+      if (at === null) {
+        return null;
+      }
+
+      return {
+        workoutId: row.workout_id,
+        name: row.label ?? "",
+        at,
+        exerciseIds: String(row.exercise_names ?? "")
+          .split(",")
+          .map((name) => name.trim())
+          .filter(Boolean),
+        exerciseCount: Number(row.exercise_count) || 0,
+        setCount: Number(row.set_count) || 0,
+      };
+    })
+    .filter(Boolean);
+
+  return guessSplitGroups(workouts, { now });
 }

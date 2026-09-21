@@ -2179,3 +2179,74 @@ export async function getSetsByExercise(db, exerciseId) {
     [exerciseId]
   );
 }
+
+/**
+ * Finished strength workouts with the exercises they contained, for the split
+ * guess on Home.
+ *
+ * One row per workout. The exercises come back as a lowercased,
+ * newline-separated list rather than a join, because the caller compares whole
+ * sets of them against each other and a row per exercise would mean stitching
+ * them back together in JavaScript.
+ *
+ * The identity is the exercise name: `Exercise_Instance` carries no reference
+ * to the catalog, so the name is the only thing two workouts can be compared
+ * on. The design document asked for `exercise_id`; there is not one to use.
+ */
+export async function getCompletedStrengthWorkoutsWithExercises(
+  db,
+  { sinceIsoDate, workoutTypes = [], limit = 200 }
+) {
+  if (!workoutTypes.length) {
+    return [];
+  }
+
+  const typePlaceholders = workoutTypes.map(() => "?").join(", ");
+  const workoutIsoDateSql = `
+    CASE
+      WHEN w.date LIKE '__.__.____'
+      THEN substr(w.date, 7, 4) || '-' || substr(w.date, 4, 2) || '-' || substr(w.date, 1, 2)
+      ELSE w.date
+    END`;
+
+  return db.getAllAsync(
+    `SELECT
+        w.workout_id,
+        w.label,
+        w.workout_type,
+        ${workoutIsoDateSql} AS performed_date_sort,
+        COUNT(DISTINCT e.exercise_instance_id) AS exercise_count,
+        COALESCE(SUM(e.sets), 0) AS set_count,
+        group_concat(DISTINCT lower(trim(e.exercise_name))) AS exercise_names
+     FROM Workout_Type_Instance w
+     JOIN Exercise_Instance e ON e.workout_type_instance_id = w.workout_id
+     WHERE COALESCE(w.done, 0) = 1
+       AND COALESCE(w.deleted_at, '') = ''
+       AND COALESCE(e.deleted_at, '') = ''
+       AND w.workout_type IN (${typePlaceholders})
+       AND ${workoutIsoDateSql} >= ?
+     GROUP BY w.workout_id
+     HAVING exercise_count > 0
+     ORDER BY performed_date_sort DESC, w.workout_id DESC
+     LIMIT ?;`,
+    [...workoutTypes, sinceIsoDate, Math.max(1, Math.trunc(Number(limit) || 200))]
+  );
+}
+
+/** The most recent day any workout was finished, as an ISO date, or null. */
+export async function getLastCompletedWorkoutDate(db) {
+  const row = await db.getFirstAsync(
+    `SELECT MAX(
+        CASE
+          WHEN w.date LIKE '__.__.____'
+          THEN substr(w.date, 7, 4) || '-' || substr(w.date, 4, 2) || '-' || substr(w.date, 1, 2)
+          ELSE w.date
+        END
+     ) AS last_date
+     FROM Workout_Type_Instance w
+     WHERE COALESCE(w.done, 0) = 1
+       AND COALESCE(w.deleted_at, '') = '';`
+  );
+
+  return row?.last_date ?? null;
+}

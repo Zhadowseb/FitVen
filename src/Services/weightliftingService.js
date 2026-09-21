@@ -30,6 +30,8 @@ import {
   calculateBrzyckiOneRepMax,
   MAX_ESTIMATE_REPS,
 } from "../Utils/oneRepMaxUtils";
+import { buildMuscleGroupDeltas } from "@utils/muscleGlance";
+import { normalizeRecordRows } from "@utils/recordsInsights";
 import {
   clampSetValue,
   isClampedSetField,
@@ -4444,4 +4446,25 @@ export async function updateExerciseDone(db, { exerciseId, done }) {
   });
 
   syncExerciseInstancesInBackground(db);
+}
+
+/**
+ * "Last month" on Home: one entry per muscle group, most improved first.
+ *
+ * Built on getRecordsSourceData so Home and Records read the same sets through
+ * the same muscle-group mapping. Two screens disagreeing about whether
+ * somebody's chest went up is worse than one of them staying quiet.
+ *
+ * Empty when the exercise library has not synced: the mapping lives in that
+ * catalog, not in a `muscle_group` column on the exercise, and a partial
+ * answer here reads as "you trained nothing".
+ */
+export async function getMuscleGroupDeltas(db, { now = Date.now(), days = 30 } = {}) {
+  const { rows, groupsByExercise } = await getRecordsSourceData(db);
+
+  return buildMuscleGroupDeltas(normalizeRecordRows(rows), {
+    groupsByExercise,
+    now,
+    days,
+  });
 }
