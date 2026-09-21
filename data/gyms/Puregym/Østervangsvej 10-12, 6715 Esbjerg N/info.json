@@ -1,0 +1,305 @@
+{
+  "chain": "PureGym",
+  "name": "Esbjerg, Stormgade",
+  "puregym_id": "234",
+  "address": {
+    "street": "Østervangsvej 10-12",
+    "postal_code": "6715",
+    "city": "Esbjerg N",
+    "country": "DK",
+    "full": "Østervangsvej 10-12, 6715 Esbjerg N"
+  },
+  "location": {
+    "latitude": 55.501763810646786,
+    "longitude": 8.455421200060927
+  },
+  "url": "https://www.puregym.dk/find-center/esbjerg-stormgade",
+  "membership_url": "https://www.puregym.dk/bliv-medlem/63/medlemskab",
+  "price_from": "Priser fra 246,75 DKK/md.",
+  "price_note": "*Normalpris fra 299 DKK/md.",
+  "today_notice": "Vi lukker i dag kl. 00:00",
+  "opening_hours": [
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "09:00 - 20:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 17:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Mandag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    }
+  ],
+  "opening_hours_schema": [
+    {
+      "day": "Monday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Tuesday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Wednesday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Thursday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Friday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Saturday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Sunday",
+      "opens": "05:00",
+      "closes": "00:00"
+    }
+  ],
+  "special_days": [
+    {
+      "date": "2027-01-01",
+      "opens": "08:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-02",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-03",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-05",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-06",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-14",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-24",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-25",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-06-05",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-24",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-25",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-26",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-31",
+      "opens": "05:00",
+      "closes": "18:00"
+    }
+  ],
+  "meta_description": "Hos PureGym på Østervangsvej i Esbjerg tilbyder vi styrke-, cardio- og fitnesstræning. Oplev et trænings-fællesskab med plads til alle i dag.",
+  "description": "PureGym Stormgade\nI Gjesing, Esbjerg finder du PureGym Stormgade.\nVi tilbyder blandt andet masser af fitness, styrke- og konditionsfaciliteter, et stort funktionelt område, samt en stor holdsal. Vi tilbyder gratis kaffe, te og kakao alle ugens dage og fredage fra kl. 07.00 tilbyder vi lækre rundstykker i vores hyggelige caféområde.\nVi glæder os til at se dig!\nNYT UDSTYR I PUREGYM STORMGADE\nVi er så glade for at byde dig velkommen i vores center, der har fået en stor opgradering med masser af nyt og forbedret træningsudstyr.\nHer er en oversigt over, hvad du kan glæde dig til:\nNyt og forbedret cardio-område\nForbedret kabel- og styrketræningsområde, inkl. nye maskiner og kabler, herunder functional trainers\nNyt og forbedret frivægtsområde, inkl. nye platforme, vægtskiver, håndvægte og maskiner, herunder perfect squat, glutebuilder og hacksquat\nNyt og forbedret funktionelt område, inkl. nye romaskiner, SkiErgs og BikeErgs\nNyt og forbedret udstrækningsområde, inkl. nyt udstyr, herunder yoga bolde\nDET SIGER PERSONALET OM PUREGYM STORMGADE\n\"Humor er noget vi sætter stor pris på her i centret. Det er vigtigt for os at være medvirkende til at vores medlemmer får et smil på læben, når de besøger vores center.\nVi går meget op i at skabe de bedste og tryggeste rammer for dig som medlem her i centret!\"\nPERSONLIG TRÆNING I PUREGYM STORMGADE\nHar du brug for en snak om din træning, står vi altid klar og tilbyder udover gode råd også programlægning og personlig træning af vores certificerede personlige trænere.\nVi tilbyder også en uforpligtende samtale med en personlig træner til 0,-:\nBOOK SAMTALE HER\nHOLDTRÆNING I PUREGYM STORMGADE\nVi har en stor flot holdsal, hvor vi tilbyder de mest populære holdkoncepter: Functional Training, Stram Op, Step Power, Core & Glutes, Yin Yoga og Yang Yoga.\nHVORNÅR TRÆNER FOLK HER I CENTRET?\nVi har god plads til vores medlemmer. I vores app kan du se, hvornår der er flest og færrest mennesker i centret.\nBLIV MEDLEM HER\nHVORNÅR KAN JEG MØDE PERSONALET I CENTRET?\nVed indgangen ligger receptionen, hvor du bliver mødt af vores smilende og servicemindede team, der står klar til at hjælpe dig.\nSe vores bemandede tider i oversigten her på siden.\nDu er altid velkommen til at komme forbi i vores bemandede åbningstid. Vi tager os tid til at svare på alle dine spørgsmål og giver gerne en rundvisning i centret.\nKAN JEG PARKERE VED PUREGYM STORMGADE?\nVi har fine gratis parkeringsmuligheder placeret tæt ved indgangen til centret, hvilket gør det nemt og tilgængeligt.\nVi er også placeret tæt på offentlig transport, hvilket gør det nemt at komme til.\nDU KAN TRÆNE I 3 PUREGYM CENTRE I ESBJERG\nSe alle vores  centre i Esbjerg her.\nFølg os på Facebook\nSe vores lokaler her\n\n<div",
+  "notice": null,
+  "facilities": [
+    {
+      "name": "App",
+      "description": "PureGym appen kan hentes til både iOS- og Android-telefoner. Appen er fyldt med fede features og lækkert design:\nBook og afmeld hold inkl. reminder, så du husker dine hold\nMere end 50 træningsprogrammer\nBodytracker-måling\nTræningsstatistik\nAdgang til challenges\nTeam up med din træningsmakker\nDownload appen og få mere ud af dit medlemskab.\nLæs mere",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-04/CTA%20App%20grafik.jpg?itok=489La2Vs"
+    },
+    {
+      "name": "Cardiotræning",
+      "description": "Kunne du godt tænke dig at forbedre din kondition eller få varmet kroppen op inden din styrketræning, så er Cardio et godt sted at gå hen.\nI dette område har vi et bredt udvalgt af kredsløbsmaskiner. Her vil du blandt andet kunne finde løbebånd, motionscykler samt ro, step -og trappemaskiner. Disse maskine er designet til at kunne forbedre dit kredsløb bedre kendt som ”kondition”. Samtlige maskiner kan indstilles og tilpasses, så de netop passer til den intensitet som ønsker på dagen.\nSå om du er til en let og kort opvarmning på motionscyklen, en tur op af Eiffeltårnet med din yndlingspodcast i ørene på trappemaskinen, eller en god løbetur i tørvejr på løbebåndet, så vil du kunne gøre dette i Cardio.\nEr du i tvivl om hvordan en maskine i Cardio virker, kan du altid spørge vores personale.\nØnsker du hjælp til hvordan du kan forbedre din kondition, så kan du også booke en uforpligtende samtale til 0 kr med en personlig træner her.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-09/CORE-slider-cta-core-medlemskab_0.jpg?itok=hEEf98nO"
+    },
+    {
+      "name": "Funktionelt træningsområde",
+      "description": "Er du til en træningsform, der har fokus på konditions- og styrketræning, så er vores funktionelle træningsområde et område for dig. Vores funktionelle område kan hjælpe dig med at blive hurtigere, stærkere men også mere udholdende og eksplosiv.\nOmrådet er udstyret med forskellige redskaber såsom; medicinbolde, kettlebells og sjippetove. Derudover finder du naturligvis også racks i alle vores funktionelle områder.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Funtionelt-traeningsomraade-1-1.jpg?itok=PDOLgNJB"
+    },
+    {
+      "name": "Glutebuilder",
+      "description": "Glutebuilderen er en multifunktionel træningsmaskine, som giver mulighed for at lave mange forskellige øvelser - perfekt til træning af ben, baller og lår. Du kan bruge maskinen som den er, med en vægtstang, vægtskiver og elastikker, som du kan låne i centeret. Kun fantasien sætter grænser.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Glute-skal-ikke-beskaeres.jpg?itok=iFSaL_IN"
+    },
+    {
+      "name": "Holdtræning",
+      "description": "Deltag på vores hold, og deltag samtidigt i et uforpligtende fællesskab. Som Danmarks største fitnesscenter har vi de helt rigtige rammer for at skabe Danmarks fedeste holdtræning – og det er vi og mange hundrede tusinde medlemmer også overbeviste om at vi har. Du kan læse om alle vores forskellige hold her, og derefter booke dem fra vores holdbooking.\nHvis du aldrig har deltaget på vores hold før, eller er ny inden for holdtræning, har du muligheden for at få en introduktion med vores \"Get started - introhold\" hold. Vi vil sørge for store sale med god plads, det helt rigtige udstyr og så vil vores instruktører vil sørge for god stemning så din holdoplevelse bliver så god som muligt.\nBook her",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2026-08/Vi-tilbyder-holdtraening.jpg?itok=Xf48xmWA"
+    },
+    {
+      "name": "Parkering",
+      "description": "Er du i bil til din træning, vil der være parkeringsmuligheder ved næsten alle vores centre. PureGym har parkeringsmuligheder i form af egen parkeringsplads, eller som en del af bygningens parkeringsplads eller parkeringshus. Hvis du er i tvivl kan du altid spørge vores søde personale i centrene.",
+      "image": null
+    },
+    {
+      "name": "Personlig træner",
+      "description": "Med en personlig træner får du hjælp og sparring til at nå dine mål - altid med udgangspunkt i dig og dine behov.\nVores personlige trænere sørger for trygge rammer, mens du er i centret.\nDe sikrer fortsat, at alt udstyr er sprittet af både før og efter brug, samt at I holder god afstand til de øvrige medlemmer, mens I træner.\nLæs mere om Personlig træning her!",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Book-samtale-med-en-personlig-traener-1-1.jpg?itok=a7i9C-9t"
+    },
+    {
+      "name": "Styrketræning",
+      "description": "Vi har masser af udstyr til din styrketræning, så du kan lave alle de styrkeøvelser du kunne tænke dig. Vi har maskiner til træning af ryg, arme, mave, lår, bagdel, skuldre, bryst osv. Du kan derved træne dine muskelgrupper på flere måder og skifte imellem maskiner og finde de maskiner og øvelser, du bedst kan lide og får mest ud af.\nNogle af maskinerne er multifunktionelle, så du kan træne flere muskelgrupper på samme maskine.\nStyrketræning er din vej til sundhed, en stærkere krop, funktionalitet i hverdagen og større muskelmasse.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Styrketraening-skal-ikke-beskaeres.jpg?itok=2qQsiE_f"
+    },
+    {
+      "name": "TRX",
+      "description": "TRX er en effektiv træningsform, hvor alle øvelser udføres med egen kropsvægt som modstand i den såkaldte TRX slynge eller sele. TRX udfordrer dig på din styrke, balance, og stabilitet.\nOm du gerne vil træne din styrke, core, kondition eller udholdenhedstræning så er TRX et rigtig godt redskab, og vi har et TRX træningsområde her i centret.\nGod træning!",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2021-09/Fitness_World_TRX.jpg?itok=Rr9k6rW7"
+    },
+    {
+      "name": "Udstrækningsområde",
+      "description": "Vi vil gerne opfylde dine træningsbehov, og en nedkøling efter træning, eller en opvarmning før træning skal der være plads til.\nDer hvor din træning starter eller slutter har vi et udstrækningsområde til dig med masser af udstyr.\nI udstrækningsområdet finder du ribber, måtter, pilatesbolde, små vægte, mavehjul, Bosu bolde, forskellige slags elastikker og foamrollere.\nHvis der er noget du mangler, kan du altid spørge vores receptionister om de har det liggende et andet sted i centeret.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Udstraekningsomraade-skal-ikke-beskaeres.jpg?itok=24s5m_W_"
+    },
+    {
+      "name": "Watt-cykler & Intelligent Cycling",
+      "description": "Vores nye BODY BIKE® Smart+ watt-cykler giver dig mulighed for at få tal på din træning, når du deltager på vores Bike-hold. Således kan du måle dine fremskridt, følge din udvikling på cyklen og opnå ekstra motivation. Designet på cyklen er desuden forbedret, så du opnår en mere ergonomisk sidestilling.\nVia bluetooth kan du connecte din smartphone til cyklen og dermed følge med i din træning undervejs. BODY BIKE® app’en monitorerer din træning live og viser dig bl.a. watt-zoner, kadence, distance, kalorieforbrænding og meget mere.\nI samspil med watt-cyklerne, bruger instruktørerne det visuelle system Intelligent Cycling.\nMed Intelligent Cycling kan du følge med i programmet og se hvad denne times udfordring byder på. Du kan bl.a. se nuværende intensitet (watt-zoner), kadence, tid og position, samtidig med at du kigger frem mod næste pause.\nDet visuelle univers på storskærmene, tillader dig at koncentrere dig 100% om din træning og performance. Det online program giver dig tryghed og klarhed omkring programmet, så du kan nyde timen, instruktøren og musikken.\nLæs mere",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2018-07/watt-cykler-intelleigent-cycling.jpg?itok=wwmG9e3G"
+    }
+  ],
+  "facility_names": [
+    "App",
+    "Cardiotræning",
+    "Funktionelt træningsområde",
+    "Glutebuilder",
+    "Holdtræning",
+    "Parkering",
+    "Personlig træner",
+    "Styrketræning",
+    "TRX",
+    "Udstrækningsområde",
+    "Watt-cykler & Intelligent Cycling"
+  ],
+  "facility_ids": [
+    "17",
+    "14",
+    "24",
+    "27",
+    "12",
+    "434",
+    "333",
+    "350",
+    "26",
+    "28",
+    "355"
+  ],
+  "plan_ids": [
+    "667",
+    "656"
+  ],
+  "team_ids": [
+    "807",
+    "318",
+    "834",
+    "358",
+    "735",
+    "737",
+    "806",
+    "822",
+    "830"
+  ],
+  "classes": [
+    "Body Fit",
+    "Core & Glutes",
+    "Functional Express",
+    "Functional Training",
+    "Get Started - Introhold",
+    "HYROX (+ 30 kr)",
+    "Lokale Events",
+    "Stram Op",
+    "Yin Yoga"
+  ],
+  "images": {
+    "hero": "https://www.puregym.dk/files/2025-05/Puregym_fitness_cardio_Esbjerg_Stormgade.jpg",
+    "hero_2500": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-05/Puregym_fitness_cardio_Esbjerg_Stormgade.jpg?itok=73IgMWJ9",
+    "teaser": "https://www.puregym.dk/files/styles/center_teaser/public/2025-05/Puregym_fitness_cardio_Esbjerg_Stormgade.jpg?itok=14Rf0ssG",
+    "gallery": [
+      "https://mit.puregym.dk/images/centers/807/cardio-i-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/807/cardio-ii-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/807/cardio-iii-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/807/cardio-iiiii-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/807/frivaegte-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/807/funktionel-i-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/807/funktionel-ii-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/807/funktionel-iii-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/807/funktionel-iiii-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/807/funktionel-iiiii-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/807/holdsal-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/807/indgang-i-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/807/indgang-ii-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/807/maskiner-i-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/807/maskiner-ii-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/807/maskiner-iii-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/807/maskiner-iiii-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/807/reception-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/807/styrke-i-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/807/styrke-ii-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/807/udstraek-i-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/807/udstraek-ii-1090x727.webp"
+    ]
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

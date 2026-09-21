@@ -1,0 +1,195 @@
+{
+  "chain": "LOOP Fitness",
+  "name": "LOOP Løgstør",
+  "loop_id": 191,
+  "center_type": "lite",
+  "address": {
+    "street": "Torvegade 3",
+    "postal_code": "9670",
+    "city": "Løgstør",
+    "country": "DK",
+    "full": "Torvegade 3, 9670 Løgstør"
+  },
+  "location": {
+    "latitude": 56.967504,
+    "longitude": 9.251994
+  },
+  "url": "https://loopfitness.dk/centre/loop-fitness-loegstoer/",
+  "membership_url": "https://loopfitness.dk/medlemskab/bliv-medlem/",
+  "phone": "41746301",
+  "email": "Loegstoer@loopfitness.dk",
+  "facebook_url": null,
+  "google_review_url": "https://g.page/r/CZQHqqQ8H0GBEB0/review",
+  "cvr": "39349604",
+  "manager_name": "Janne",
+  "opened": "2018-04-21",
+  "has_classes": false,
+  "only_open_when_staffed": false,
+  "max_visitor_capacity": 25,
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "05:00 - 21:59"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 21:59"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 21:59"
+    },
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 21:59"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 21:59"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 21:59"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 21:59"
+    }
+  ],
+  "staffed_hours": [
+    {
+      "day": "Mandag",
+      "periods": [
+        "08:30 - 11:30"
+      ]
+    },
+    {
+      "day": "Tirsdag",
+      "periods": [
+        "15:00 - 18:00"
+      ]
+    },
+    {
+      "day": "Onsdag",
+      "periods": [
+        "08:00 - 11:00"
+      ]
+    },
+    {
+      "day": "Torsdag",
+      "periods": [
+        "15:30 - 18:30"
+      ]
+    },
+    {
+      "day": "Fredag",
+      "periods": [
+        "08:30 - 11:30"
+      ]
+    },
+    {
+      "day": "Søndag",
+      "periods": [
+        "09:00 - 11:30"
+      ]
+    }
+  ],
+  "staffed_hours_dates": [
+    {
+      "date": "2025-12-09",
+      "open": "None - None"
+    },
+    {
+      "date": "2025-12-17",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-01-13",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-05-26",
+      "open": "15:00 - 18:00"
+    },
+    {
+      "date": "2026-06-04",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-06-04",
+      "open": "09:00 - 19:00"
+    },
+    {
+      "date": "2026-07-05",
+      "open": "15:00 - 17:30"
+    },
+    {
+      "date": "2026-07-14",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-07-23",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-07-27",
+      "open": "12:00 - 15:00"
+    },
+    {
+      "date": "2026-08-25",
+      "open": "15:30 - 18:30"
+    },
+    {
+      "date": "2026-10-06",
+      "open": "11:00 - 14:00"
+    }
+  ],
+  "meta_description": "Hos LOOP Fitness Løgstør får du enkel og effektiv træning af hele kroppen på kun 24 minutter og i afslappede rammer. Book en gratis prøvetime nu »",
+  "description": "Kom indenfor og mærk energien. Hos LOOP får du afslappet stemning og effektiv træning på den bedste måde. Uanset niveau er der plads til dig, og træningen er enkel: Start med opvarmning, træn hele kroppen i træningscirklen, og afslut med udstrækning i vores LOOP Ekstra område. Efter din træning kan du nyde en gratis kop kaffe eller the i vores café.",
+  "quote_by": "Heidi, centerleder",
+  "facilities": [
+    "1 cirkel",
+    "Cardio-område",
+    "Gratis kaffe"
+  ],
+  "memberships": [
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr",
+      "price_per_month": 289.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 319,
+      "family_members": 0,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    },
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr. - familie",
+      "price_per_month": 589.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 619,
+      "family_members": 9,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    }
+  ],
+  "images": {
+    "hero": "https://loopfitness.dk/wp-content/uploads/2019/11/Loegstoer_2026.png",
+    "og_image": "https://loopfitness.dk/wp-content/uploads/2019/11/Aars_centerleder2.jpg"
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

@@ -1,4 +1,5 @@
 import { workoutRepository } from "../Repository";
+import * as gymService from "./gymService";
 import * as notificationService from "./notificationService";
 import { withTransaction } from "./shared";
 import { enqueueSync, startBackgroundSync } from "./syncScheduler";
@@ -223,6 +224,21 @@ export async function setWorkoutOriginalStartTime(
   });
 
   syncWorkoutTypeInstancesInBackground(db);
+
+  // The first start is when the phone is most likely to be inside the centre.
+  // One position fix, matched against the centre list; the row is synced
+  // again once it has an answer, because the sync above has already gone.
+  void enqueueSync(() =>
+    gymService.matchWorkoutToGym(db, workoutId, { requestPermission: true })
+  )
+    .then((result) => {
+      if (result?.position) {
+        syncWorkoutTypeInstancesInBackground(db);
+      }
+    })
+    .catch((error) => {
+      console.warn("Centre match at workout start failed:", error);
+    });
 }
 
 export async function getWorkoutStartTimestamp(db, workoutId) {
@@ -290,6 +306,14 @@ export async function finishWorkout(
     done: true,
     createPost,
   });
+
+  // Centre match (if the start did not get one) and the best set per exercise
+  // to the centre leaderboard. Not awaited: a position fix can take seconds
+  // and the finish screen must not wait for it. Never throws.
+  void enqueueSync(() => gymService.finishWorkoutGymSyncBestEffort(db, workoutId))
+    .finally(() => {
+      syncWorkoutTypeInstancesInBackground(db);
+    });
 }
 
 const WORKOUT_SUMMARY_REPOST_SKIP_MESSAGES = {

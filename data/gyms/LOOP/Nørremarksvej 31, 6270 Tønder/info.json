@@ -1,0 +1,209 @@
+{
+  "chain": "LOOP Fitness",
+  "name": "LOOP Tønder",
+  "loop_id": 226,
+  "center_type": "lite",
+  "address": {
+    "street": "Nørremarksvej 31",
+    "postal_code": "6270",
+    "city": "Tønder",
+    "country": "DK",
+    "full": "Nørremarksvej 31, 6270 Tønder"
+  },
+  "location": {
+    "latitude": 54.9459999,
+    "longitude": 8.8594695
+  },
+  "url": "https://loopfitness.dk/centre/loop-fitness-toender/",
+  "membership_url": "https://loopfitness.dk/medlemskab/bliv-medlem/",
+  "phone": "41746333",
+  "email": "toender@loopfitness.dk",
+  "facebook_url": null,
+  "google_review_url": "https://g.page/r/CYvUHurZx9xlEB0/review",
+  "cvr": "44776014",
+  "manager_name": "Anitta Stege Jensen",
+  "opened": "2020-01-04",
+  "has_classes": false,
+  "only_open_when_staffed": false,
+  "max_visitor_capacity": 20,
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 23:00"
+    }
+  ],
+  "staffed_hours": [
+    {
+      "day": "Mandag",
+      "periods": [
+        "08:00 - 11:00"
+      ]
+    },
+    {
+      "day": "Tirsdag",
+      "periods": [
+        "15:15 - 18:00"
+      ]
+    },
+    {
+      "day": "Onsdag",
+      "periods": [
+        "08:00 - 11:00"
+      ]
+    },
+    {
+      "day": "Torsdag",
+      "periods": [
+        "15:15 - 17:15"
+      ]
+    },
+    {
+      "day": "Fredag",
+      "periods": [
+        "08:00 - 11:00"
+      ]
+    },
+    {
+      "day": "Lørdag",
+      "periods": [
+        "09:00 - 11:00"
+      ]
+    },
+    {
+      "day": "Søndag",
+      "periods": [
+        "09:00 - 11:00"
+      ]
+    }
+  ],
+  "staffed_hours_dates": [
+    {
+      "date": "2026-02-03",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-07-04",
+      "open": "10:00 - 12:00"
+    },
+    {
+      "date": "2026-07-07",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-07-09",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-07-14",
+      "open": "08:00 - 11:00"
+    },
+    {
+      "date": "2026-07-16",
+      "open": "08:00 - 10:00"
+    },
+    {
+      "date": "2026-07-17",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-07-18",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-07-29",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-08-05",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-08-11",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-08-28",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-09-06",
+      "open": "14:00 - 16:00"
+    },
+    {
+      "date": "2026-09-15",
+      "open": "13:30 - 16:30"
+    }
+  ],
+  "meta_description": "Hos LOOP Fitness Tønder får du effektiv og veldokumenteret træning af hele kroppen på kun 24 minutter. I LOOP er der plads til alle - kvinder og mænd.",
+  "description": "Kom indenfor og mærk energien. Hos LOOP får du afslappet stemning og effektiv træning på den bedste måde. Uanset niveau er der plads til dig, og træningen er enkel: Start med opvarmning, træn hele kroppen i træningscirklen, og afslut med udstrækning i vores LOOP Ekstra område. Efter din træning kan du nyde en gratis kop kaffe eller the i vores café.",
+  "quote_by": "Rasmus, centerleder",
+  "facilities": [
+    "1 cirkel",
+    "Cardio-område",
+    "Gratis kaffe"
+  ],
+  "memberships": [
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr",
+      "price_per_month": 289.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 319,
+      "family_members": 0,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    },
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr. - familie",
+      "price_per_month": 589.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 619,
+      "family_members": 9,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    }
+  ],
+  "images": {
+    "hero": "https://loopfitness.dk/wp-content/uploads/2019/12/Toender.png",
+    "og_image": "https://loopfitness.dk/wp-content/uploads/2025/02/Billeder_Nyhedsbrev_1920x1080px_December_20243-1024x576-1.jpg"
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

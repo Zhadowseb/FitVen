@@ -1,0 +1,271 @@
+{
+  "chain": "Fit&Sund",
+  "name": "Fit&Sund Stevns",
+  "short_name": "Stevns",
+  "address": {
+    "street": "Algade 12A",
+    "postal_code": "4660",
+    "city": "Store Heddinge",
+    "country": "DK",
+    "full": "Algade 12A, 4660 Store Heddinge"
+  },
+  "location": {
+    "latitude": 55.30997943,
+    "longitude": 12.38930389
+  },
+  "geocode": {
+    "latitude": 55.30997943,
+    "longitude": 12.38930389,
+    "matched_address": "Algade 12A, 4660 Store Heddinge",
+    "exact": true,
+    "source": "DAWA"
+  },
+  "url": "https://fitogsund.dk/c/huse/stevns",
+  "membership_url": "https://fitogsund.dk/p/bliv-medlem",
+  "class_schedule_url": "https://fitogsund.goactivebooking.com/class-web-categories/34/classes?facility=32",
+  "google_maps_url": "https://www.google.com/maps/dir/?api=1&destination=Algade-12A+4660+Store-Heddinge",
+  "phone": "+45 56 76 73 66",
+  "email": "stevns@fitogsund.dk",
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "00:00 - 24:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "00:00 - 24:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "00:00 - 24:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "00:00 - 24:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "00:00 - 24:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "00:00 - 24:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "00:00 - 24:00"
+    }
+  ],
+  "reception_hours": [
+    {
+      "day": "Mandag",
+      "open": "08:00 - 12:00 & 14:00 - 18:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "08:00 - 12:00 & 14:00 - 18:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "08:00 - 12:00 & 14:00 - 18:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "08:00 - 12:00 & 14:00 - 18:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "08:00 - 12:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "09:00 - 12:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "ingen bemanding"
+    }
+  ],
+  "meta_description": "Træn hos Fit & Sund Stevns i vores moderne fitness og træningscenter. Fitness | Holdtræning | Personlig træning",
+  "description": "Hos Fit&Sund Stevns arbejder vi ud fra vores 3 værdier: sundhed, viden og nærvær. Sundhed er bl.a. varieret træning. Derfor tilbyder vi styrke- og holdtræning, programlægning og målrettet træning på dine præmisser.\nKaffe og fællesskab\nHos Fit&Sund har vi et kompetent trænings- og sundhedsfagligt team med en bred viden, som gerne hjælper dig på vej uanset din alder, baggrund eller trænings- og sundhedstilstand.\nI vores velkomstområde er nærværet i højsædet, og alle er velkomne. Her kan man opleve den magi, der opstår, når medlemmerne hygger sig med en kop kaffe og skaber et levende fællesskab i huset.\nInspirerende og motiverende træningsoplevelse\nFit&Sunds mål er at tilbyde en inspirerende og motiverende træningsoplevelse, som giver dig overskud, velvære og livskvalitet. Hos Fit&Sund finder du også F&S Fysioterapi, som tilbyder fysioterapi uden for sygesikringen. Det giver dig som medlem mulighed for 10 min. gratis konsultation, træning eller behandling af autoriserede fysioterapeuter.\nLigeledes står vores personlige trænere klar til at hjælpe dig med dit specifikke mål med individuel træning samt bootcamps. Den personlige træner kan guide dig med kost i forhold til alt fra vægttab og øgning af muskelmasse. Alle vores personlige trænere tilbyder ligesom vores fysioterapeut en uforpligtende samtale.",
+  "facilities": [
+    "Fitness",
+    "Personlig træning",
+    "Bikesal",
+    "Fagligt velkvalificeret personale i receptionen",
+    "ExerciseLab",
+    "Varieret holdplan",
+    "Sundhedsfagligt team"
+  ],
+  "service_categories": [
+    "Personlig træning",
+    "Fysioterapi",
+    "Event",
+    "Hold",
+    "Yoga/Reformer",
+    "Fællesskab",
+    "Seniorer",
+    "Camps",
+    "Core Træning",
+    "Body & Mind",
+    "Indoor Cycling",
+    "Konditionsfremmende Træning",
+    "Muskelopbyggende Træning",
+    "Funktionel Træning",
+    "Senior Træning",
+    "Dance"
+  ],
+  "services": [
+    {
+      "name": "2026 OPSTARTSPAKKER",
+      "room": null,
+      "categories": [
+        "event",
+        "fysioterapi",
+        "personlig-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/2026-opstartspakker-3"
+    },
+    {
+      "name": "Core",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/core"
+    },
+    {
+      "name": "Hatha Yoga",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/hatha-yoga"
+    },
+    {
+      "name": "Indoor Cycling",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-indoor-cycling"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/indoor-cycling"
+    },
+    {
+      "name": "MOTION for livet",
+      "room": "5 ugers gratis træningsforløb",
+      "categories": [
+        "faellesskab",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/motion-for-livet"
+    },
+    {
+      "name": "Personal Fitness",
+      "room": null,
+      "categories": [
+        "personlig-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/personal-fitness"
+    },
+    {
+      "name": "Pilates",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/pilates"
+    },
+    {
+      "name": "Puls Styrke",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/puls--styrke"
+    },
+    {
+      "name": "RawFit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-funktionel-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/rawfit"
+    },
+    {
+      "name": "Senior Træning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/seniortraening"
+    },
+    {
+      "name": "Stram Op",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/stramop"
+    },
+    {
+      "name": "TRX-BOOTCAMP",
+      "room": null,
+      "categories": [
+        "camps",
+        "fysioterapi",
+        "hold",
+        "hold-funktionel-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/trx-bootcamp"
+    },
+    {
+      "name": "Vinyasa Yoga",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/vinyasa-yoga"
+    },
+    {
+      "name": "Yoga",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/yoga"
+    },
+    {
+      "name": "ZUMBA®",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/zumba"
+    }
+  ],
+  "manager": {
+    "name": "Christina Apel Johansen",
+    "title": "Husleder",
+    "image": "https://fitogsund.dk/f/thumb?src=/f/blog/article/3adf801cdc0c9538e6cb9dc628af144844ea556e_thumb.png&w=300&h=380"
+  },
+  "images": {
+    "hero": null,
+    "fallback": "../fitogsund-logo.png"
+  },
+  "hero_image_file": "hero.png",
+  "hero_is_placeholder": true,
+  "scraped_at": "2026-09-17"
+}

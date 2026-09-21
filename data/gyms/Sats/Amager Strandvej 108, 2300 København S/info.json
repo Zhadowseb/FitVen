@@ -1,0 +1,368 @@
+{
+  "chain": "SATS",
+  "name": "KBH - Amager Strand",
+  "short_name": "Amager Strand",
+  "sats_id": "428",
+  "region": "kobenhavn",
+  "address": {
+    "street": "Amager Strandvej 108",
+    "postal_code": "2300",
+    "city": "København S",
+    "country": "DK",
+    "full": "Amager Strandvej 108, 2300 København S"
+  },
+  "location": {
+    "latitude": 55.660992,
+    "longitude": 12.631526
+  },
+  "url": "https://www.sats.dk/traeningscenter/kobenhavn/kbh-amager-strand",
+  "membership_url": "https://www.sats.dk/bliv-medlem-sats",
+  "opening_hours": [
+    {
+      "days": "Man- Søn",
+      "open": "05:00 - 23:00"
+    }
+  ],
+  "opening_hours_schema": [
+    "Mo-Su 05:00-23:00"
+  ],
+  "special_days": [
+    {
+      "date": "2026-12-24",
+      "title": "Juleaften",
+      "open": "07:00 - 14:00"
+    },
+    {
+      "date": "2026-12-25",
+      "title": "1. juledag",
+      "open": "07:00 - 18:00"
+    },
+    {
+      "date": "2026-12-26",
+      "title": "2. juledag",
+      "open": "07:00 - 18:00"
+    },
+    {
+      "date": "2026-12-31",
+      "title": "Nytårsaften",
+      "open": "07:00 - 14:00"
+    },
+    {
+      "date": "2027-01-01",
+      "title": "Nytårsdag",
+      "open": "10:00 - 21:00"
+    }
+  ],
+  "meta_description": "Hos SATS Amager Strand finder du et bredt udvalg af unikke holdkoncepter og træningsmuligheder med kvalitetsudstyr, sauna og dampbad samt et hyggeligt caféområde.",
+  "description": "Velkommen til SATS Amager Strand! Unikt center med udsigt over Amager Strandpark. Her finder du populære holdkoncepter som Indoor Running og Performance, motiverende personlige trænere og sauna.",
+  "parking": "Der er 4 timers gratis parkering på Amager Strandvej i tidsrummet kl. 08-22 - husk korrekt indstillet p-skive.",
+  "facilities": [
+    "Cykelstudie",
+    "Holdsal",
+    "Hyrox Zone",
+    "Lifting Zone",
+    "Performance Zone",
+    "Løbe område",
+    "Sauna"
+  ],
+  "services": [
+    "Holdtræning",
+    "Personlig træning",
+    "Boot Camps",
+    "Kropsanalyse",
+    "Shop",
+    "Leje af håndklæder"
+  ],
+  "filters": [
+    "facility-cykelstudie",
+    "facility-holdsal",
+    "facility-hyrox-zone",
+    "facility-lifting-zone",
+    "facility-lobe-omrade",
+    "facility-performance-zone",
+    "facility-sauna",
+    "region-all-regions",
+    "region-kobenhavn",
+    "services-boot-camps",
+    "services-holdtraening",
+    "services-kropsanalyse",
+    "services-leje-af-handklaeder",
+    "services-personlig-traening",
+    "services-shop"
+  ],
+  "memberships": [
+    {
+      "age_group": "under-30",
+      "member_type": "Voksen",
+      "name": "Basic",
+      "price": "549",
+      "unit": "kr./md.",
+      "description": "Adgang til dit favoritcenter",
+      "benefits": [
+        "Gratis prøvetime med en personlig træner (Værdi op til 1.299 kr.)",
+        "Adgang til dit favoritcenter",
+        "Adgang til holdtræning i dit favoritcenter (Book 1 uge frem)"
+      ]
+    },
+    {
+      "age_group": "under-30",
+      "member_type": "Voksen",
+      "name": "Flexible",
+      "price": "599",
+      "unit": "kr./md.",
+      "description": "Adgang til alle vores centre i Danmark",
+      "benefits": [
+        "Gratis prøvetime med en personlig træner (Værdi op til 1.299 kr.)",
+        "Adgang til alle vores centre i Danmark",
+        "Fri adgang til SATS Online",
+        "Vælg mellem mere end 55 forskellige hold (Book 1 uge frem)"
+      ]
+    },
+    {
+      "age_group": "under-30",
+      "member_type": "Voksen",
+      "name": "Premium",
+      "price": "699",
+      "unit": "kr./md.",
+      "description": "Adgang til alle vores centre i Norden",
+      "benefits": [
+        "Gratis prøvetime med en personlig træner (Værdi op til 1.299 kr.)",
+        "Adgang til alle vores centre i Norden",
+        "Vælg mellem mere end 130 forskellige hold",
+        "Fri adgang til SATS Online",
+        "1 måneds gratis medlemskabsbero",
+        "Udvidet holdbooking (3 uger frem)",
+        "Velkomstgave – taske, drikkedunk og håndklæde fra SATS"
+      ]
+    },
+    {
+      "age_group": "under-30",
+      "member_type": "Studerende og unge",
+      "name": "Basic",
+      "price": "439,20",
+      "unit": "kr./md.",
+      "description": "Adgang til dit favoritcenter",
+      "benefits": [
+        "Gratis prøvetime med en personlig træner (Værdi op til 1.299 kr.)",
+        "Adgang til dit favoritcenter",
+        "Adgang til holdtræning i dit favoritcenter (Book 1 uge frem)"
+      ]
+    },
+    {
+      "age_group": "under-30",
+      "member_type": "Studerende og unge",
+      "name": "Flexible",
+      "price": "479,20",
+      "unit": "kr./md.",
+      "description": "Adgang til alle vores centre i Danmark",
+      "benefits": [
+        "Gratis prøvetime med en personlig træner (Værdi op til 1.299 kr.)",
+        "Adgang til alle vores centre i Danmark",
+        "Fri adgang til SATS Online",
+        "Vælg mellem mere end 55 forskellige hold (Book 1 uge frem)"
+      ]
+    },
+    {
+      "age_group": "under-30",
+      "member_type": "Studerende og unge",
+      "name": "Premium",
+      "price": "559,20",
+      "unit": "kr./md.",
+      "description": "Adgang til alle vores centre i Norden",
+      "benefits": [
+        "Gratis prøvetime med en personlig træner (Værdi op til 1.299 kr.)",
+        "Adgang til alle vores centre i Norden",
+        "Vælg mellem mere end 130 forskellige hold",
+        "Fri adgang til SATS Online",
+        "1 måneds gratis medlemskabsbero",
+        "Udvidet holdbooking (3 uger frem)",
+        "Velkomstgave – taske, drikkedunk og håndklæde fra SATS"
+      ]
+    },
+    {
+      "age_group": "over-30",
+      "member_type": "Voksen",
+      "name": "Basic",
+      "price": "649",
+      "unit": "kr./md.",
+      "description": "Adgang til dit favoritcenter",
+      "benefits": [
+        "Gratis prøvetime med en personlig træner (Værdi op til 1.299 kr.)",
+        "Adgang til dit favoritcenter",
+        "Adgang til holdtræning i dit favoritcenter (Book 1 uge frem)"
+      ]
+    },
+    {
+      "age_group": "over-30",
+      "member_type": "Voksen",
+      "name": "Flexible",
+      "price": "699",
+      "unit": "kr./md.",
+      "description": "Adgang til alle vores centre i Danmark",
+      "benefits": [
+        "Gratis prøvetime med en personlig træner (Værdi op til 1.299 kr.)",
+        "Adgang til alle vores centre i Danmark",
+        "Fri adgang til SATS Online",
+        "Vælg mellem mere end 55 forskellige hold (Book 1 uge frem)"
+      ]
+    },
+    {
+      "age_group": "over-30",
+      "member_type": "Voksen",
+      "name": "Premium",
+      "price": "799",
+      "unit": "kr./md.",
+      "description": "Adgang til alle vores centre i Norden",
+      "benefits": [
+        "Gratis prøvetime med en personlig træner (Værdi op til 1.299 kr.)",
+        "Adgang til alle vores centre i Norden",
+        "Vælg mellem mere end 130 forskellige hold",
+        "Fri adgang til SATS Online",
+        "1 måneds gratis medlemskabsbero",
+        "Udvidet holdbooking (3 uger frem)",
+        "Velkomstgave – taske, drikkedunk og håndklæde fra SATS"
+      ]
+    },
+    {
+      "age_group": "over-30",
+      "member_type": "Senior",
+      "name": "Basic",
+      "price": "519,20",
+      "unit": "kr./md.",
+      "description": "Adgang til dit favoritcenter",
+      "benefits": [
+        "Gratis prøvetime med en personlig træner (Værdi op til 1.299 kr.)",
+        "Adgang til dit favoritcenter",
+        "Adgang til holdtræning i dit favoritcenter (Book 1 uge frem)"
+      ]
+    },
+    {
+      "age_group": "over-30",
+      "member_type": "Senior",
+      "name": "Flexible",
+      "price": "559,20",
+      "unit": "kr./md.",
+      "description": "Adgang til alle vores centre i Danmark",
+      "benefits": [
+        "Gratis prøvetime med en personlig træner (Værdi op til 1.299 kr.)",
+        "Adgang til alle vores centre i Danmark",
+        "Fri adgang til SATS Online",
+        "Vælg mellem mere end 55 forskellige hold (Book 1 uge frem)"
+      ]
+    },
+    {
+      "age_group": "over-30",
+      "member_type": "Senior",
+      "name": "Premium",
+      "price": "639,20",
+      "unit": "kr./md.",
+      "description": "Adgang til alle vores centre i Norden",
+      "benefits": [
+        "Gratis prøvetime med en personlig træner (Værdi op til 1.299 kr.)",
+        "Adgang til alle vores centre i Norden",
+        "Vælg mellem mere end 130 forskellige hold",
+        "Fri adgang til SATS Online",
+        "1 måneds gratis medlemskabsbero",
+        "Udvidet holdbooking (3 uger frem)",
+        "Velkomstgave – taske, drikkedunk og håndklæde fra SATS"
+      ]
+    },
+    {
+      "age_group": "over-30",
+      "member_type": "Studerende og unge",
+      "name": "Basic",
+      "price": "519,20",
+      "unit": "kr./md.",
+      "description": "Adgang til dit favoritcenter",
+      "benefits": [
+        "Gratis prøvetime med en personlig træner (Værdi op til 1.299 kr.)",
+        "Adgang til dit favoritcenter",
+        "Adgang til holdtræning i dit favoritcenter (Book 1 uge frem)"
+      ]
+    },
+    {
+      "age_group": "over-30",
+      "member_type": "Studerende og unge",
+      "name": "Flexible",
+      "price": "559,20",
+      "unit": "kr./md.",
+      "description": "Adgang til alle vores centre i Danmark",
+      "benefits": [
+        "Gratis prøvetime med en personlig træner (Værdi op til 1.299 kr.)",
+        "Adgang til alle vores centre i Danmark",
+        "Fri adgang til SATS Online",
+        "Vælg mellem mere end 55 forskellige hold (Book 1 uge frem)"
+      ]
+    },
+    {
+      "age_group": "over-30",
+      "member_type": "Studerende og unge",
+      "name": "Premium",
+      "price": "639,20",
+      "unit": "kr./md.",
+      "description": "Adgang til alle vores centre i Norden",
+      "benefits": [
+        "Gratis prøvetime med en personlig træner (Værdi op til 1.299 kr.)",
+        "Adgang til alle vores centre i Norden",
+        "Vælg mellem mere end 130 forskellige hold",
+        "Fri adgang til SATS Online",
+        "1 måneds gratis medlemskabsbero",
+        "Udvidet holdbooking (3 uger frem)",
+        "Velkomstgave – taske, drikkedunk og håndklæde fra SATS"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "question": "Hvad er nummeret til centeret?",
+      "answer": "Det er ikke muligt at ringe direkte til centrene. Ønsker du at komme i kontakt med det lokale center, skal du tage forbi receptionen, hvor de kan hjælpe dig. Alternativt kan du kontakte Kundeservice."
+    },
+    {
+      "question": "Hvad gør jeg, hvis jeg har glemt noget i centeret?",
+      "answer": "Du skal kontakte receptionen, hvis du har glemt noget i vores center. Opbevaring af personlige ejendele sker altid på eget ansvar - og du er selv ansvarlig for at medbringe en lås til skabene. SATS har ret til at klippe låse op efter lukketid. Vi opbevarer glemte sager i 30 dage. SATS kan ikke holdes ansvarlig for eventuelle tab - heller ikke inden for de første 30 dage."
+    },
+    {
+      "question": "Hvilket udstyr er tilgængeligt i centeret?",
+      "answer": "Alle vores centre er godt udstyret med et bredt udvalg af basisudstyr som håndvægte, racks, kettlebells og meget mere, så du kan få en varieret træning uanset, hvilket center du besøger. Hvis du leder efter en specifik maskine eller type udstyr, anbefaler vi, at du spørger personalet i receptionen under dit besøg. De hjælper dig gerne 💙"
+    },
+    {
+      "question": "Har SATS drop-in?",
+      "answer": "Ja, selvfølgelig! Det koster 149 kr. for et drop-in, og det giver dig adgang til: Træning i fitnesscentret hele dagen Hold med ledige pladser Du kan betale for et drop-in i receptionen direkte i centeret (gældende for den aktuelle dag). undefined"
+    }
+  ],
+  "nearby": [
+    {
+      "name": "Blox",
+      "url": "https://www.sats.dk/traeningscenter/kobenhavn/kbh-blox",
+      "distance": "3.5 km fra Amager Strand"
+    },
+    {
+      "name": "Adelgade",
+      "url": "https://www.sats.dk/traeningscenter/kobenhavn/kbh-adelgade",
+      "distance": "3.9 km fra Amager Strand"
+    },
+    {
+      "name": "Fisketorvet",
+      "url": "https://www.sats.dk/traeningscenter/kobenhavn/kbh-fisketorvet",
+      "distance": "4.3 km fra Amager Strand"
+    }
+  ],
+  "images": {
+    "hero": "https://images.ctfassets.net/bton54gi9dnn/4eIaMUcDvsh0QTzDbGBvNJ/9e619bf83b07cd9a94a309496c11b798/SATS_Amager_12.jpg",
+    "teaser": "https://images.ctfassets.net/bton54gi9dnn/4eIaMUcDvsh0QTzDbGBvNJ/9e619bf83b07cd9a94a309496c11b798/SATS_Amager_12.jpg",
+    "gallery": [
+      "https://images.ctfassets.net/bton54gi9dnn/4eIaMUcDvsh0QTzDbGBvNJ/9e619bf83b07cd9a94a309496c11b798/SATS_Amager_12.jpg",
+      "https://images.ctfassets.net/bton54gi9dnn/2RFCYp4PnbJ2656hZbUc4a/39005a0e88930957fc56af8989e7174d/SATS_Amager_14.jpg",
+      "https://images.ctfassets.net/bton54gi9dnn/52Bw25yr25xW58Vl7MgLr8/fc9705072810a95f14f57380f4161679/SATS_Amager_8.jpg",
+      "https://images.ctfassets.net/bton54gi9dnn/4mQziQ5rCeYJjdOQ4ipOyL/bfb5a60f7ed0cd225158185df44c6902/SATS_Amager_9.jpg",
+      "https://images.ctfassets.net/bton54gi9dnn/1j2ZwP0aKun0zJX7UYRC33/3a1571a11374f2eec10cadab80373c95/SATS_Amager_22.jpg",
+      "https://images.ctfassets.net/bton54gi9dnn/7cpLWtdScfycuweM3P0h9L/98424709f0e58bd47d9d755c6b6674d4/SATS_Amager_1.jpg",
+      "https://images.ctfassets.net/bton54gi9dnn/cYYeDgI4OG2YG2ndFJQrS/101aa0451c532063a5537851125a711b/SATS_Amager_19.jpg",
+      "https://images.ctfassets.net/bton54gi9dnn/5ZAU9DhA1Wzlx1wYMj38sz/67a80cfe80da147ec74742665dd5ea86/SATS_Amager_5.jpg",
+      "https://images.ctfassets.net/bton54gi9dnn/3kbyDFvWlL0N0simw1unB0/d7056cb368558cb45e4b54ef875c6027/SATS_Amager_15.jpg",
+      "https://images.ctfassets.net/bton54gi9dnn/6lbplvPHjsPqRwKyTeQzkl/1cb0ac6aaa1f9caed69aaea8adb7d74e/Amager_Strand_12.jpg"
+    ]
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

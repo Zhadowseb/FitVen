@@ -1,0 +1,247 @@
+{
+  "chain": "PureGym",
+  "name": "Århus C., Nørreport",
+  "puregym_id": "216",
+  "address": {
+    "street": "Knudrisgade 4-6",
+    "postal_code": "8000",
+    "city": "Århus C",
+    "country": "DK",
+    "full": "Knudrisgade 4-6, 8000 Århus C"
+  },
+  "location": {
+    "latitude": 56.1624178,
+    "longitude": 10.2121858
+  },
+  "url": "https://www.puregym.dk/find-center/aarhus-c-noerreport",
+  "membership_url": "https://www.puregym.dk/bliv-medlem/44/medlemskab",
+  "price_from": "Priser fra 134,50 DKK/md.",
+  "price_note": "*Normalpris fra 269 DKK/md.",
+  "today_notice": "Vi lukker i dag kl. 00:00",
+  "opening_hours": [
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "09:00 - 20:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 17:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Mandag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    }
+  ],
+  "opening_hours_schema": [
+    {
+      "day": "Monday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Tuesday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Wednesday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Thursday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Friday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Saturday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Sunday",
+      "opens": "05:00",
+      "closes": "00:00"
+    }
+  ],
+  "special_days": [
+    {
+      "date": "2027-01-01",
+      "opens": "08:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-02",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-03",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-05",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-06",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-18",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-24",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-25",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-06-05",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-24",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-25",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-26",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-31",
+      "opens": "05:00",
+      "closes": "18:00"
+    }
+  ],
+  "meta_description": "Hos PureGym ved Nørreport i Aarhus tilbyder vi både styrke-, cardio- og fitnesstræning. Find center her, og oplev træning med plads til alle.",
+  "description": "PureGym Nørreport\nCentralt i Aarhus, med kort afstand fra både Mejlgade, Øgaderne og Universitetsparken, finder du PureGym Nørreport. Centret er fordelt over fire etager, og fra de øverste etager kan du nyde en smuk udsigt over byens tage. Centret byder på alt, hvad du skal bruge til din træning. Vi tilbyder blandt andet masser af fitness-, styrke- og konditionsfaciliteter og et funktionelt område.\nSom det eneste center i landet tilbyder vi desuden indendørs interval-løb på hold. I vores center bliver du altid mødt med et ”velkommen” og et stort smil fra vores dedikerede team, der gør deres bedste for, at din træningsoplevelse bliver så god som overhovedet muligt.\nVi glæder os til at se dig!\nDet siger personalet om PureGym Nørreport\nNørreport har noget for alle. Her kan du træne og hygge dig med vennerne, eller du kan træne uforstyrret for dig selv på en af vores mange etager. Vi har byens bedste udsigt fra stort set hele centret. Vi går meget op i, at vores medlemmer er glade for at besøge os, og at centret altid står skarpt.\nPersonlig træning i PureGym Nørreport\nHar du brug for en snak om din træning, står vi altid klar og tilbyder - ud over gode råd - en gratis uforpligtende samtale med én af vores certificerede personlige trænere.\nVi tilbyder også en uforpligtende samtale med en personlig træner til 0,-:\nBook samtale her\nHvornår træner folk her i centret?\nVi har god plads til vores medlemmer. I vores app kan du se, hvornår der er flest og færrest mennesker i centret.\nBliv medlem her\nHvornår kan jeg møde personalet her i centret?\nVi er bemandet hver dag og er altid klar til at snakke, guide og hjælpe. Hvis vi ikke lige er i receptionen, går vi rundt i centret for at sikre, at alt er rent og pænt, men vi er kun et tryk på klokken væk. Se vores bemandingstider her på siden.\nKan jeg parkere ved PureGym Nørreport?\nVed Nørreport er der mulighed for parkering i begge gårde ved siden af centret. Husk at registrere din bil på skærmen inde i centret – personalet hjælper gerne, hvis du er i tvivl. Der er desuden letbane og busser lige til døren samt masser af plads til cykelparkering.\nFølg os på Facebook\nSe vores lokaler her\nBliv medlem af PureGym og få adgang til:\nApp\nHer kan du få et trænings-program, følge din træning, booke hold, deltage i challenges og meget mere.\nPersonlig træning\nHar du brug for hjælp til at nå dine mål? Book en samtale hos en af vores certificerede personlige trænere til 0 kr.\nHoldtræning\nBliv en del af et stærkt fællesskab på vores hold. Vores dedikerede instruktører guider dig igennem og sikrer højt humør.\nBodytracker\nFor kun ekstra 9 kr./md. kan du få adgang til en avanceret vægt, der giver dig en kropsanalyse med flere forskellige parametre.\nEr du klar til at starte?\nVælg dit medlemskab her\nOg bliv en del af Danmarks største fitness-fælleskab.\nGenerelt\nLog ind på Mit PureGym\nPriser og medlemskabstyper\nTil/afmeld nyhedsbrev\nOm PureGym\nPresse\nKarriere\nHjerteforeningen\nStudierabat\nInformation\nFAQ & Kontakt\nVelkomst og information\nHusets regler\nMedlems­betingelser\nDatapolitik\nCookies\nTilgængelighed\nKonkurrencevindere\nSafespace\nVores fitness centre\nFind center\nAlle større byer\nKøbenhavn\nAarhus\nOdense\nAalborg\nRanders\nValby\nDownload vores app\nHold dig informeret\nTorveporten 2,\n2500 Valby\nCVR. 25652991\nPureGym © 2026\nLog ind\nNyt eller glemt kodeord?\nIkke medlem endnu?\nMeld dig ind",
+  "notice": {
+    "title": "Nu kan du gå til Reformer her i centret",
+    "text": "I har ventet. Vi har ventet. Nu er det her.\nTilmeld dig, og opdag, hvorfor det er én af verdens mest hypede træningsformer.\nLæs mere her\nVi glæder os til at se dig!\n.center-hero-44--8295 {\nbackground-image: url('https://www.puregym.dk/files/styles/hero_750x750/public/2025-05/Puregym_fitness_cardio_Aarhus_N%C3%B8rreport.jpg?itok=q5nUGocQ');\n}\n@media (min-width: 700px){.center-hero-44--8295 {\nbackground-image: url('https://www.puregym.dk/files/styles/hero_800x800/public/2025-05/Puregym_fitness_cardio_Aarhus_N%C3%B8rreport.jpg?itok=sBq164Sr');\n}\n}@media (min-width: 1200px){.center-hero-44--8295 {\nbackground-image: url('https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-05/Puregym_fitness_cardio_Aarhus_N%C3%B8rreport.jpg?itok=Fn4Bknfb');\n}\n}"
+  },
+  "facilities": [],
+  "facility_names": [
+    "App",
+    "Bodytracker+",
+    "Cardiotræning",
+    "Funktionelt træningsområde",
+    "Glutebuilder",
+    "Holdtræning",
+    "Parkering",
+    "Personlig træner",
+    "Reformer",
+    "Styrketræning",
+    "Udstrækningsområde"
+  ],
+  "facility_ids": [
+    "355",
+    "14",
+    "24",
+    "27",
+    "12",
+    "350",
+    "434",
+    "17",
+    "474",
+    "333",
+    "710"
+  ],
+  "plan_ids": [
+    "671",
+    "666"
+  ],
+  "team_ids": [
+    "360",
+    "807",
+    "834",
+    "829",
+    "827",
+    "825"
+  ],
+  "classes": [
+    "Functional Express",
+    "Get Started - Introhold",
+    "Løbetræning (indendørs) 25",
+    "Reformer - Pilates (+50kr)",
+    "Reformer - Power (+50kr)",
+    "Reformer Intro"
+  ],
+  "images": {
+    "hero": "https://www.puregym.dk/files/2025-05/Puregym_fitness_cardio_Aarhus_N%C3%B8rreport.jpg",
+    "hero_2500": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-05/Puregym_fitness_cardio_Aarhus_N%C3%B8rreport.jpg?itok=Fn4Bknfb",
+    "teaser": "https://www.puregym.dk/files/styles/center_teaser/public/2025-05/Puregym_fitness_cardio_Aarhus_N%C3%B8rreport.jpg?itok=8VGZI3Yj",
+    "gallery": [
+      "https://mit.puregym.dk/images/centers/790/a-noerreport-aarhus-reformer-web.jpg",
+      "https://mit.puregym.dk/images/centers/790/pg-knudrisgade-4-5-3-2-highres-01-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/790/pg-knudrisgade-4-5-3-2-highres-02-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/790/pg-knudrisgade-4-5-3-2-highres-03-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/790/pg-knudrisgade-4-5-3-2-highres-04-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/790/pg-knudrisgade-4-5-3-2-highres-05-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/790/pg-knudrisgade-4-5-3-2-highres-06-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/790/pg-knudrisgade-4-5-3-2-highres-07-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/790/pg-knudrisgade-4-5-3-2-highres-08-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/790/pg-knudrisgade-4-5-3-2-highres-09-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/790/pg-knudrisgade-4-5-3-2-highres-10-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/790/pg-knudrisgade-4-5-3-2-highres-11-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/790/pg-knudrisgade-4-5-3-2-highres-12-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/790/pg-knudrisgade-4-5-3-2-highres-13-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/790/pg-knudrisgade-4-5-3-2-highres-14-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/790/pg-knudrisgade-4-5-3-2-highres-15-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/790/pg-knudrisgade-4-5-3-2-highres-16-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/790/pg-knudrisgade-4-5-3-2-highres-17-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/790/pg-knudrisgade-4-5-3-2-highres-18-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/790/pg-knudrisgade-4-5-3-2-highres-19-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/790/pg-knudrisgade-4-5-3-2-highres-22-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/790/pg-knudrisgade-4-5-3-2-highres-26-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/790/pg-knudrisgade-4-5-3-2-highres-27-1090x727.webp"
+    ]
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

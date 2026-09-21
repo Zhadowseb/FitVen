@@ -1,0 +1,84 @@
+{
+  "chain": "Fit&Sund",
+  "name": "Fit&Sund Hornsyld",
+  "short_name": "Hornsyld",
+  "address": {
+    "street": "Nørremarksvej 3",
+    "postal_code": "8783",
+    "city": "Hornsyld",
+    "country": "DK",
+    "full": "Nørremarksvej 3, 8783 Hornsyld"
+  },
+  "location": {
+    "latitude": 55.75876961,
+    "longitude": 9.8460173
+  },
+  "geocode": {
+    "latitude": 55.75876961,
+    "longitude": 9.8460173,
+    "matched_address": "Nørremarksvej 3, 8783 Hornsyld",
+    "exact": true,
+    "source": "DAWA"
+  },
+  "url": "https://fitogsund.dk/c/huse/hornsyld",
+  "membership_url": "https://fitogsund.dk/p/bliv-medlem",
+  "class_schedule_url": null,
+  "google_maps_url": "https://www.google.com/maps/dir/?api=1&destination=Nørremarksvej-3-+8783+Hornsyld",
+  "phone": "+45 75 62 29 19",
+  "email": "hornsyld@fitogsund.dk",
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "05:00 - 21:45"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 21:45"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 21:45"
+    },
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 21:45"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 18:45"
+    },
+    {
+      "day": "Lørdag",
+      "open": "06:00 - 16:45"
+    },
+    {
+      "day": "Søndag",
+      "open": "06:00 - 16:45"
+    }
+  ],
+  "reception_hours": [],
+  "meta_description": "Dit lokale fitness- og sundhedshus Fit&Sund er meget mere end et fitnesscenter. Vi er dit lokale fitness- og sundhedshus i Hornsyld, og vi arbejder ud fra vores tre værdier: sundhed, viden og nærvær. Sundhed er bl.a. varieret træning, og derfor tilbyder vi styrke- og holdtræning, programlægning og målrettet træning på dine præmisser. Inspirerende og motiverende træningsoplevelse. Hos Fit&Sund i Hornsyld har vi et komplet hus, med nye og spændene træningsformer, som gerne hjælper di...",
+  "description": "Dit lokale fitness- og sundhedshus\nFit&Sund er meget mere end et fitnesscenter. Vi er dit lokale fitness- og sundhedshus i Hornsyld, og vi arbejder ud fra vores tre værdier: sundhed, viden og nærvær. Sundhed er bl.a. varieret træning, og derfor tilbyder vi styrke- og holdtræning, programlægning og målrettet træning på dine præmisser.\nInspirerende og motiverende træningsoplevelse.\nHos Fit&Sund i Hornsyld har vi et komplet hus, med nye og spændene træningsformer, som gerne hjælper dig på vej uanset din alder, baggrund eller trænings- og sundhedstilstand.\nFit&Sunds mål er at tilbyde en inspirerende og motiverende træningsoplevelse, som giver dig overskud, velvære og livskvalitet.",
+  "facilities": [
+    "Fitness",
+    "I Hornsyld idrætscenter",
+    "Styrkeområde",
+    "Holdsal",
+    "Fysioterapi",
+    "Gode P-forhold"
+  ],
+  "service_categories": [],
+  "services": [],
+  "manager": {
+    "name": "Michael Seiger Kristiansen",
+    "title": "Husleder",
+    "image": "https://fitogsund.dk/f/thumb?src=/f/blog/article/d0fd35845a8c6857dc9fe8d0323f42e551ff70fa_thumb.jpg&w=300&h=380"
+  },
+  "images": {
+    "hero": null,
+    "fallback": "../fitogsund-logo.png"
+  },
+  "hero_image_file": "hero.png",
+  "hero_is_placeholder": true,
+  "scraped_at": "2026-09-17"
+}

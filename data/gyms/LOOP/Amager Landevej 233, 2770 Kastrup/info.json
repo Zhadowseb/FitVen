@@ -1,0 +1,394 @@
+{
+  "chain": "LOOP Fitness",
+  "name": "LOOP Kastrup",
+  "loop_id": 253,
+  "center_type": "family",
+  "address": {
+    "street": "Amager Landevej 233",
+    "postal_code": "2770",
+    "city": "Kastrup",
+    "country": "DK",
+    "full": "Amager Landevej 233, 2770 Kastrup"
+  },
+  "location": {
+    "latitude": 55.61929,
+    "longitude": 12.629558
+  },
+  "url": "https://loopfitness.dk/centre/loop-fitness-kastrup/",
+  "membership_url": "https://loopfitness.dk/medlemskab/bliv-medlem/",
+  "phone": "31273729",
+  "email": "kastrup@loopfitness.dk",
+  "facebook_url": null,
+  "google_review_url": "https://search.google.com/local/writereview?placeid=ChIJ-45iIKyrU0YRt_j0lvMncb8",
+  "cvr": "38983393",
+  "manager_name": "Mette ",
+  "opened": "2025-09-13",
+  "has_classes": false,
+  "only_open_when_staffed": false,
+  "max_visitor_capacity": 40,
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 24:00"
+    }
+  ],
+  "staffed_hours": [
+    {
+      "day": "Mandag",
+      "periods": [
+        "08:00 - 14:00",
+        "16:00 - 20:00"
+      ]
+    },
+    {
+      "day": "Tirsdag",
+      "periods": [
+        "08:00 - 14:00",
+        "16:00 - 20:00"
+      ]
+    },
+    {
+      "day": "Onsdag",
+      "periods": [
+        "08:00 - 14:00",
+        "16:00 - 20:00"
+      ]
+    },
+    {
+      "day": "Torsdag",
+      "periods": [
+        "08:00 - 14:00",
+        "16:00 - 20:00"
+      ]
+    },
+    {
+      "day": "Fredag",
+      "periods": [
+        "08:00 - 14:00"
+      ]
+    },
+    {
+      "day": "Lørdag",
+      "periods": [
+        "08:00 - 13:00"
+      ]
+    },
+    {
+      "day": "Søndag",
+      "periods": [
+        "08:00 - 13:00"
+      ]
+    }
+  ],
+  "staffed_hours_dates": [
+    {
+      "date": "2026-05-14",
+      "open": "08:00 - 14:00"
+    },
+    {
+      "date": "2026-05-25",
+      "open": "08:00 - 13:00"
+    },
+    {
+      "date": "2026-05-27",
+      "open": "08:00 - 11:00"
+    },
+    {
+      "date": "2026-06-05",
+      "open": "08:00 - 13:00"
+    },
+    {
+      "date": "2026-06-22",
+      "open": "08:00 - 14:00"
+    },
+    {
+      "date": "2026-06-23",
+      "open": "08:00 - 11:00"
+    },
+    {
+      "date": "2026-06-24",
+      "open": "08:00 - 14:00"
+    },
+    {
+      "date": "2026-06-25",
+      "open": "08:00 - 11:00"
+    },
+    {
+      "date": "2026-06-25",
+      "open": "16:00 - 19:00"
+    },
+    {
+      "date": "2026-06-26",
+      "open": "08:00 - 12:00"
+    },
+    {
+      "date": "2026-06-26",
+      "open": "08:00 - 14:00"
+    },
+    {
+      "date": "2026-06-27",
+      "open": "09:00 - 12:00"
+    },
+    {
+      "date": "2026-06-28",
+      "open": "09:00 - 12:00"
+    },
+    {
+      "date": "2026-06-29",
+      "open": "08:00 - 14:00"
+    },
+    {
+      "date": "2026-06-30",
+      "open": "08:00 - 12:00"
+    },
+    {
+      "date": "2026-06-30",
+      "open": "16:00 - 19:00"
+    },
+    {
+      "date": "2026-07-01",
+      "open": "08:00 - 13:00"
+    },
+    {
+      "date": "2026-07-02",
+      "open": "08:00 - 12:00"
+    },
+    {
+      "date": "2026-07-02",
+      "open": "16:00 - 19:00"
+    },
+    {
+      "date": "2026-07-03",
+      "open": "08:00 - 12:00"
+    },
+    {
+      "date": "2026-07-04",
+      "open": "09:00 - 12:00"
+    },
+    {
+      "date": "2026-07-05",
+      "open": "09:00 - 12:00"
+    },
+    {
+      "date": "2026-07-06",
+      "open": "08:00 - 14:00"
+    },
+    {
+      "date": "2026-07-07",
+      "open": "08:00 - 11:00"
+    },
+    {
+      "date": "2026-07-07",
+      "open": "16:00 - 19:00"
+    },
+    {
+      "date": "2026-07-08",
+      "open": "08:00 - 14:00"
+    },
+    {
+      "date": "2026-07-09",
+      "open": "08:00 - 12:00"
+    },
+    {
+      "date": "2026-07-09",
+      "open": "16:00 - 19:00"
+    },
+    {
+      "date": "2026-07-10",
+      "open": "08:00 - 12:00"
+    },
+    {
+      "date": "2026-07-11",
+      "open": "09:00 - 12:00"
+    },
+    {
+      "date": "2026-07-12",
+      "open": "09:00 - 12:00"
+    },
+    {
+      "date": "2026-07-13",
+      "open": "08:00 - 14:00"
+    },
+    {
+      "date": "2026-07-14",
+      "open": "08:00 - 12:00"
+    },
+    {
+      "date": "2026-07-14",
+      "open": "16:00 - 19:00"
+    },
+    {
+      "date": "2026-07-15",
+      "open": "08:00 - 14:00"
+    },
+    {
+      "date": "2026-07-16",
+      "open": "08:00 - 12:00"
+    },
+    {
+      "date": "2026-07-16",
+      "open": "16:00 - 19:00"
+    },
+    {
+      "date": "2026-07-17",
+      "open": "08:00 - 12:00"
+    },
+    {
+      "date": "2026-07-18",
+      "open": "09:00 - 12:00"
+    },
+    {
+      "date": "2026-07-19",
+      "open": "09:00 - 12:00"
+    },
+    {
+      "date": "2026-07-20",
+      "open": "08:00 - 14:00"
+    },
+    {
+      "date": "2026-07-21",
+      "open": "08:00 - 12:00"
+    },
+    {
+      "date": "2026-07-21",
+      "open": "16:00 - 19:00"
+    },
+    {
+      "date": "2026-07-22",
+      "open": "16:00 - 19:00"
+    },
+    {
+      "date": "2026-07-23",
+      "open": "08:00 - 12:00"
+    },
+    {
+      "date": "2026-07-23",
+      "open": "16:00 - 19:00"
+    },
+    {
+      "date": "2026-07-24",
+      "open": "08:00 - 12:00"
+    },
+    {
+      "date": "2026-07-25",
+      "open": "09:00 - 12:00"
+    },
+    {
+      "date": "2026-07-26",
+      "open": "09:00 - 12:00"
+    },
+    {
+      "date": "2026-07-27",
+      "open": "08:00 - 14:00"
+    },
+    {
+      "date": "2026-07-28",
+      "open": "08:00 - 12:00"
+    },
+    {
+      "date": "2026-07-28",
+      "open": "16:00 - 19:00"
+    },
+    {
+      "date": "2026-07-29",
+      "open": "08:00 - 14:00"
+    },
+    {
+      "date": "2026-07-30",
+      "open": "08:00 - 12:00"
+    },
+    {
+      "date": "2026-07-30",
+      "open": "16:00 - 19:00"
+    },
+    {
+      "date": "2026-07-31",
+      "open": "08:00 - 12:00"
+    },
+    {
+      "date": "2026-08-01",
+      "open": "09:00 - 12:00"
+    },
+    {
+      "date": "2026-08-02",
+      "open": "09:00 - 12:00"
+    },
+    {
+      "date": "2026-08-20",
+      "open": "11:00 - 14:00"
+    }
+  ],
+  "meta_description": "Hos LOOP Fitness Kastrup får du enkel og effektiv træning af hele kroppen på kun 24 minutter. Vi tilbyder cirkeltræning ✓ Gratis prøvetime ✓",
+  "description": "Kom indenfor og mærk energien. Hos LOOP får du afslappet stemning og effektiv træning på den bedste måde. Uanset niveau er der plads til dig, og træningen er enkel: Start med opvarmning, træn hele kroppen i træningscirklen, og afslut med udstrækning i vores LOOP Ekstra område. Efter din træning kan du nyde en gratis kop kaffe eller the i vores café.",
+  "quote_by": "Mette, centerleder",
+  "facilities": [
+    "3 cirkler",
+    "Cardio-område",
+    "LOOP Kids",
+    "Gratis kaffe"
+  ],
+  "memberships": [
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr",
+      "price_per_month": 289.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 319,
+      "family_members": 0,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    },
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr. - familie",
+      "price_per_month": 589.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 619,
+      "family_members": 9,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    }
+  ],
+  "images": {
+    "hero": "https://loopfitness.dk/wp-content/uploads/2025/08/Kastrup-1.png",
+    "og_image": "https://loopfitness.dk/wp-content/uploads/2025/08/Kastrup-1.png"
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

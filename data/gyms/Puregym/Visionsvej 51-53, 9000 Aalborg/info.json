@@ -1,0 +1,291 @@
+{
+  "chain": "PureGym",
+  "name": "Aalborg, Eternitten",
+  "puregym_id": "200",
+  "address": {
+    "street": "Visionsvej 51-53",
+    "postal_code": "9000",
+    "city": "Aalborg",
+    "country": "DK",
+    "full": "Visionsvej 51-53, 9000 Aalborg"
+  },
+  "location": {
+    "latitude": 57.036533,
+    "longitude": 9.934741
+  },
+  "url": "https://www.puregym.dk/find-center/aalborg-eternitten",
+  "membership_url": "https://www.puregym.dk/bliv-medlem/32/medlemskab",
+  "price_from": "Priser fra 246,75 DKK/md.",
+  "price_note": "*Normalpris fra 319 DKK/md.",
+  "today_notice": "Vi lukker i dag kl. 00:00",
+  "opening_hours": [
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "09:00 - 20:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 17:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Mandag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    }
+  ],
+  "opening_hours_schema": [
+    {
+      "day": "Monday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Tuesday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Wednesday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Thursday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Friday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Saturday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Sunday",
+      "opens": "05:00",
+      "closes": "00:00"
+    }
+  ],
+  "special_days": [
+    {
+      "date": "2027-01-01",
+      "opens": "08:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-02",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-03",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-05",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-06",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-14",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-24",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-25",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-06-05",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-24",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-25",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-26",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-31",
+      "opens": "05:00",
+      "closes": "18:00"
+    }
+  ],
+  "meta_description": "Hos PureGym på Eternitten i Aalborg tilbyder vi både styrke-, cardio- og fitnesstræning. Find center her, og oplev træning med plads til alle.",
+  "description": "PureGym Eternitten\nVelkommen til PureGym Eternitten. Her oplever du lyse og lækre lokaler, fordelt på tre plan. Hos os er der liv i holdsalene og ude i centret, og vi har et godt sammenhold mellem personale og medlemmer. Vi tilbyder både styrke-, bike-, puls-, dans- og yogahold, men vi har også lækre træningsfaciliteter til dig, der ønsker at løfte tunge vægte eller dyrke cardio. Hos os vil du altid blive mødt af et dedikeret personale, som altid vil gøre sit bedste for, at DU får din bedst mulige træningsoplevelse. Vi glæder os til at se dig!\nDET SIGER PERSONALET OM PUREGYM ETERNITTEN\nSom vores Gym staff Chakri siger: \"Her på Eternitten har vi et stærkt sammenhold i personalegruppen og med vores medlemmer. Vi tager os altid tid til hinanden, og det gode humør kommer altid i første række. Derudover har vi et mega fedt caféområde, hvor der er plads til at arbejde eller til en god kop kaffe\".\nPERSONLIG TRÆNING I PUREGYM ETERNITTEN\nHar du brug for en snak om din træning, står vi altid klar og tilbyder en gratis konsultation med en af vores dygtige personlige trænere. Vi sikrer et uddannet personale, som altid vil hjælpe dig videre i dine trænings- eller livsstilsmål.\nVi tilbyder også en uforpligtende samtale med en personlig træner til 0,-:\nBOOK SAMTALE HER\nHOLDTRÆNING I PUREGYM ETERNITTEN\nI PureGym Eternitten har vi en holdsal, hvor vi udbyder både styrke-, puls-, dans- og yogahold, men også en stor bikesal, hvor vi udbyder bike standard og bike power. Vores holdtræninger ligger spredt udover dagen, så der altid er et hold, som passer til det tidspunkt, hvor du vil træne.\nHVORNÅR TRÆNER FOLK HER I CENTRET?\nVi har god plads til vores medlemmer. I vores app kan du se, hvornår der er flest og færrest mennesker i centret.\nBLIV MEDLEM HER\nHVORNÅR KAN JEG MØDE PERSONALET I CENTRET?\nVed indgangen ligger receptionen, hvor du bliver mødt af vores smilende og servicemindede team, der står klar til at hjælpe dig.\nSe vores bemandede tider i oversigten her på siden.\nDu er altid velkommen til at komme forbi i vores bemandede åbningstid. Vi tager os tid til at svare på alle dine spørgsmål og giver gerne en rundvisning i centret.\nKAN JEG PARKERE VED PUREGYM ETERNITTEN?\nVi tilbyder 3 timers gratis parkering til vores medlemmer, hvilket gør vores center nemt og tilgængeligt. Du skal blot registrere din nummerplade på vores parkeringstablet i caféområdet.\nFølg os på Facebook\nSe vores lokaler her\n\n<div",
+  "notice": null,
+  "facilities": [
+    {
+      "name": "App",
+      "description": "PureGym appen kan hentes til både iOS- og Android-telefoner. Appen er fyldt med fede features og lækkert design:\nBook og afmeld hold inkl. reminder, så du husker dine hold\nMere end 50 træningsprogrammer\nBodytracker-måling\nTræningsstatistik\nAdgang til challenges\nTeam up med din træningsmakker\nDownload appen og få mere ud af dit medlemskab.\nLæs mere",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-04/CTA%20App%20grafik.jpg?itok=489La2Vs"
+    },
+    {
+      "name": "Bikesal",
+      "description": "Deltag på Bike, og deltag samtidigt i et uforpligtende fællesskab. Som Danmarks største fitnesscenter har vi de helt rigtige rammer for at skabe Danmarks fedeste holdtræning – og det er vi og mange hundrede tusinde medlemmer også overbeviste om at vi har.\nLæs mere om vores forskellige bikehold her og bliv inspireret.\nBook dit bikehold via vores holdbooking.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-09/bike-vi-tilbyder-puregym.jpg?itok=-bdz_Ijq"
+    },
+    {
+      "name": "Bodytracker+",
+      "description": "Bodytrackeren er en avanceret vægt, der giver en pålidelig analyse af din kropssammensætning. Med bodytracker+ får du dybere indblik i din træningsudvikling. Udover de gratis parametre kropsvægt, BMI, muskelmasse og fedtprocent får du med bodytracker+ også indsigt i fedtmasse, fedtfri masse, talje/hofte forhold, kropsvand samt hvilestofskifte. Parametre som er interessante, hvad enten du har personlige mål om at øge din vægt, højere muskelmasse, vægttab mv.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/facilities/bplusny-ny-ny_1.png?itok=3ubbpEkC"
+    },
+    {
+      "name": "Cardiotræning",
+      "description": "Kunne du godt tænke dig at forbedre din kondition eller få varmet kroppen op inden din styrketræning, så er Cardio et godt sted at gå hen.\nI dette område har vi et bredt udvalgt af kredsløbsmaskiner. Her vil du blandt andet kunne finde løbebånd, motionscykler samt ro, step -og trappemaskiner. Disse maskine er designet til at kunne forbedre dit kredsløb bedre kendt som ”kondition”. Samtlige maskiner kan indstilles og tilpasses, så de netop passer til den intensitet som ønsker på dagen.\nSå om du er til en let og kort opvarmning på motionscyklen, en tur op af Eiffeltårnet med din yndlingspodcast i ørene på trappemaskinen, eller en god løbetur i tørvejr på løbebåndet, så vil du kunne gøre dette i Cardio.\nEr du i tvivl om hvordan en maskine i Cardio virker, kan du altid spørge vores personale.\nØnsker du hjælp til hvordan du kan forbedre din kondition, så kan du også booke en uforpligtende samtale til 0 kr med en personlig træner her.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-09/CORE-slider-cta-core-medlemskab_0.jpg?itok=hEEf98nO"
+    },
+    {
+      "name": "Holdtræning",
+      "description": "Deltag på vores hold, og deltag samtidigt i et uforpligtende fællesskab. Som Danmarks største fitnesscenter har vi de helt rigtige rammer for at skabe Danmarks fedeste holdtræning – og det er vi og mange hundrede tusinde medlemmer også overbeviste om at vi har. Du kan læse om alle vores forskellige hold her, og derefter booke dem fra vores holdbooking.\nHvis du aldrig har deltaget på vores hold før, eller er ny inden for holdtræning, har du muligheden for at få en introduktion med vores \"Get started - introhold\" hold. Vi vil sørge for store sale med god plads, det helt rigtige udstyr og så vil vores instruktører vil sørge for god stemning så din holdoplevelse bliver så god som muligt.\nBook her",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2026-08/Vi-tilbyder-holdtraening.jpg?itok=Xf48xmWA"
+    },
+    {
+      "name": "Parkering",
+      "description": "Er du i bil til din træning, vil der være parkeringsmuligheder ved næsten alle vores centre. PureGym har parkeringsmuligheder i form af egen parkeringsplads, eller som en del af bygningens parkeringsplads eller parkeringshus. Hvis du er i tvivl kan du altid spørge vores søde personale i centrene.",
+      "image": null
+    },
+    {
+      "name": "Personlig træner",
+      "description": "Med en personlig træner får du hjælp og sparring til at nå dine mål - altid med udgangspunkt i dig og dine behov.\nVores personlige trænere sørger for trygge rammer, mens du er i centret.\nDe sikrer fortsat, at alt udstyr er sprittet af både før og efter brug, samt at I holder god afstand til de øvrige medlemmer, mens I træner.\nLæs mere om Personlig træning her!",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Book-samtale-med-en-personlig-traener-1-1.jpg?itok=a7i9C-9t"
+    },
+    {
+      "name": "Styrketræning",
+      "description": "Vi har masser af udstyr til din styrketræning, så du kan lave alle de styrkeøvelser du kunne tænke dig. Vi har maskiner til træning af ryg, arme, mave, lår, bagdel, skuldre, bryst osv. Du kan derved træne dine muskelgrupper på flere måder og skifte imellem maskiner og finde de maskiner og øvelser, du bedst kan lide og får mest ud af.\nNogle af maskinerne er multifunktionelle, så du kan træne flere muskelgrupper på samme maskine.\nStyrketræning er din vej til sundhed, en stærkere krop, funktionalitet i hverdagen og større muskelmasse.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Styrketraening-skal-ikke-beskaeres.jpg?itok=2qQsiE_f"
+    },
+    {
+      "name": "TRX",
+      "description": "TRX er en effektiv træningsform, hvor alle øvelser udføres med egen kropsvægt som modstand i den såkaldte TRX slynge eller sele. TRX udfordrer dig på din styrke, balance, og stabilitet.\nOm du gerne vil træne din styrke, core, kondition eller udholdenhedstræning så er TRX et rigtig godt redskab, og vi har et TRX træningsområde her i centret.\nGod træning!",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2021-09/Fitness_World_TRX.jpg?itok=Rr9k6rW7"
+    },
+    {
+      "name": "Udstrækningsområde",
+      "description": "Vi vil gerne opfylde dine træningsbehov, og en nedkøling efter træning, eller en opvarmning før træning skal der være plads til.\nDer hvor din træning starter eller slutter har vi et udstrækningsområde til dig med masser af udstyr.\nI udstrækningsområdet finder du ribber, måtter, pilatesbolde, små vægte, mavehjul, Bosu bolde, forskellige slags elastikker og foamrollere.\nHvis der er noget du mangler, kan du altid spørge vores receptionister om de har det liggende et andet sted i centeret.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Udstraekningsomraade-skal-ikke-beskaeres.jpg?itok=24s5m_W_"
+    },
+    {
+      "name": "Watt-cykler & Intelligent Cycling",
+      "description": "Vores nye BODY BIKE® Smart+ watt-cykler giver dig mulighed for at få tal på din træning, når du deltager på vores Bike-hold. Således kan du måle dine fremskridt, følge din udvikling på cyklen og opnå ekstra motivation. Designet på cyklen er desuden forbedret, så du opnår en mere ergonomisk sidestilling.\nVia bluetooth kan du connecte din smartphone til cyklen og dermed følge med i din træning undervejs. BODY BIKE® app’en monitorerer din træning live og viser dig bl.a. watt-zoner, kadence, distance, kalorieforbrænding og meget mere.\nI samspil med watt-cyklerne, bruger instruktørerne det visuelle system Intelligent Cycling.\nMed Intelligent Cycling kan du følge med i programmet og se hvad denne times udfordring byder på. Du kan bl.a. se nuværende intensitet (watt-zoner), kadence, tid og position, samtidig med at du kigger frem mod næste pause.\nDet visuelle univers på storskærmene, tillader dig at koncentrere dig 100% om din træning og performance. Det online program giver dig tryghed og klarhed omkring programmet, så du kan nyde timen, instruktøren og musikken.\nLæs mere",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2018-07/watt-cykler-intelleigent-cycling.jpg?itok=wwmG9e3G"
+    }
+  ],
+  "facility_names": [
+    "App",
+    "Bikesal",
+    "Bodytracker+",
+    "Cardiotræning",
+    "Holdtræning",
+    "Parkering",
+    "Personlig træner",
+    "Styrketræning",
+    "TRX",
+    "Udstrækningsområde",
+    "Watt-cykler & Intelligent Cycling"
+  ],
+  "facility_ids": [
+    "355",
+    "14",
+    "24",
+    "27",
+    "349",
+    "26",
+    "28",
+    "350",
+    "434",
+    "17",
+    "474"
+  ],
+  "plan_ids": [
+    "661",
+    "649"
+  ],
+  "team_ids": [
+    "498",
+    "834",
+    "739",
+    "807",
+    "830"
+  ],
+  "classes": [
+    "Bike Power",
+    "Bike Standard",
+    "Functional Express",
+    "Get Started - Introhold",
+    "HYROX (+ 30 kr)"
+  ],
+  "images": {
+    "hero": "https://www.puregym.dk/files/2025-05/PureGym_cardio_fitness_Eternitten.jpg",
+    "hero_2500": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-05/PureGym_cardio_fitness_Eternitten.jpg?itok=rWLrXgc_",
+    "teaser": "https://www.puregym.dk/files/styles/center_teaser/public/2025-05/PureGym_cardio_fitness_Eternitten.jpg?itok=s_k16pzj",
+    "gallery": [
+      "https://mit.puregym.dk/images/centers/775/cardio-i-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/775/cardio-ii-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/775/frivaegte-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/775/funktionel-i-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/775/funktionel-ii-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/775/funktionel-iii-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/775/funktionel-iiii-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/775/holdsal-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/775/indgang-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/775/maskiner-i-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/775/maskiner-ii-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/775/maskiner-iii-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/775/reception-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/775/styrke-i-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/775/styrke-ii-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/775/udstraekning-1090x727.webp"
+    ]
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

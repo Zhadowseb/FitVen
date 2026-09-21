@@ -1,0 +1,114 @@
+{
+  "chain": "FitnessX",
+  "name": "Esbjerg, Strandbytorv",
+  "label": "Fitnesscenter",
+  "address": {
+    "street": "Strandbygade 20",
+    "postal_code": "6700",
+    "city": "Esbjerg",
+    "country": "DK",
+    "full": "Strandbygade 20, 6700 Esbjerg"
+  },
+  "location": {
+    "latitude": 55.46834,
+    "longitude": 8.44008
+  },
+  "url": "https://fitnessx.dk/fitness/fitness-esbjerg/fitness-esbjerg-strandbytorv-strandbygade-20/",
+  "google_maps_url": "https://goo.gl/maps/Bda27iKNiPRbuWEGA",
+  "membership_url": "https://fitnessx.dk/medlemskaber/",
+  "campaign": false,
+  "campaign_headline": "NY LAV PRIS I AARHUS",
+  "price_teaser": "Træn med en Træningsven fra kun 250 kr./md. pr. person.",
+  "opening_hours": [
+    {
+      "days": "Mandag - torsdag",
+      "open": "05:00 - 23:00",
+      "staffed": "09:00 - 12:00 & 15:00 - 18:30"
+    },
+    {
+      "days": "Fredag",
+      "open": "05:00 - 23:00",
+      "staffed": "09:00 - 12:00"
+    },
+    {
+      "days": "Lørdag",
+      "open": "06:00 - 23:00",
+      "staffed": "Ingen"
+    },
+    {
+      "days": "Søndag",
+      "open": "06:00 - 23:00",
+      "staffed": "Ingen"
+    },
+    {
+      "days": "Helligdage",
+      "open": "Åbent som normalt",
+      "staffed": "Ingen"
+    }
+  ],
+  "special_days_text": "Særlige åbningsdage:\n24/12 og 31/12: Åbent som normalt - lukker kl. 17.00.\n25/12 og 1/1: Åbent som normalt - ingen bemanding.",
+  "meta_description": "Fitness og forskellige hold i dit lokale FitnessX i Esbjerg. Find os på Strandbygade 20. Træn i gode faciliteter, se åbningstider og find vej.",
+  "description": "Dette center ligger på en af vores bedste lokationer og giver dig lidt ekstra at glæde dig over i hverdagen. Det er FitnessX, som du kender det - bare med flere detaljer, der gør en forskel.\nNår du træder ind, mærker du hurtigt, at oplevelsen er skruet op: mere gennemført indretning, et større udvalg af udstyr, bedre plads og åbningstider.\nOg fordi behov og byer ikke er ens, er hvert center lokalt tilpasset. Derfor finder du ikke to centre, der er helt ens - men du finder altid et sted, der gør din træning både nemmere og bedre.",
+  "features": [
+    "Fitness og cardio",
+    "HYROX",
+    "Hold",
+    "Reformer"
+  ],
+  "features_detail": [
+    {
+      "title": "Åbningstid",
+      "text": "I weekenden åbner vi en time tidligere. Så kan du træne (næsten) alene før byen vågner."
+    },
+    {
+      "title": "Bodytracker",
+      "text": "Muskelmasse, fedtprocent (og hvor det sidder), stofskifte, body age og meget mere. Få styr på, hvordan det ser ud med de ting, du ikke kan se i spejlet og følg din udvikling. Uden det koster ekstra."
+    },
+    {
+      "title": "Udstyr",
+      "text": "Udover vores normale maskiner og udstyr har vi særligt udvalgt udstyr i dit center, som er baseret på jeres lokale behov og ønsker. Kort sagt har vi mere, af det du kender, og noget af det du skal lære at kende."
+    },
+    {
+      "title": "Bikesal",
+      "text": "Bike som du kender det. Men opgraderet. Store skærme, lys og et design du ikke har set før. Vi har en særligt variant af Intelligent Cycling (”The Journey”), som er en virtuel oplevelse, der gør din træning sjovere og mere intens. Velkommen til en lidt sjovere, og lidt bedre, biketime."
+    }
+  ],
+  "parking": "Gratis parkering i gaderne omkring centret. Betalingsparkering i p-kælderen under centret",
+  "manager": {
+    "name": "Thomas",
+    "title": "Manager"
+  },
+  "tags": [],
+  "images": {
+    "hero": "https://fitnessx.dk/wp-content/uploads/3-Kopi-scaled.jpg",
+    "gallery": [
+      "https://fitnessx.dk/wp-content/uploads/3-Kopi-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Thomas-100523.jpg",
+      "https://fitnessx.dk/wp-content/uploads/20210419_095804617_iOS-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/7-Kopi-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/20210419_095435434_iOS-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Bike-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/omkaedning-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/6-Kopi-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/4-Kopi-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Centerside-topbillede-Jagtvej.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Desktop-header-imagesort_hvid.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Mobile-header-imagesort_hvid.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Aarhus-Soender-Alle-310x150x2.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Aarhus-Soender-Alle-130x115-1.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Aarhus-N-PMVx3.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Aarhus-N-PMV.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Mobile-header-image-SH.jpg",
+      "https://fitnessx.dk/wp-content/uploads/20251022_092844713_iOS-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Koebenhavn-S-Amager-Strand-310x150x3.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Koebenhavn-S-Amager-Strand-130x115-1.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Lyngby-Jernbanepladsen-310x150x3.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Lyngby-Jernbanepladsen-130x115-1.jpg",
+      "https://fitnessx.dk/wp-content/uploads/1000007045.jpg",
+      "https://fitnessx.dk/wp-content/uploads/HKP-color-desk.jpg",
+      "https://fitnessx.dk/wp-content/uploads/HKP-color-mobil.jpg"
+    ]
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

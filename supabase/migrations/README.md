@@ -49,7 +49,39 @@ behind by accident.
 | `20260915120000_repair-workout-type-catalog.sql` | yes |
 | `20260916140000_terms-of-use.sql` | yes |
 | `20260916210000_opt-in-column-defaults.sql` | yes |
+| `20260917120000_gyms-and-lift-verification.sql` | yes |
+| `20260917120100_workout-music.sql` | yes |
 | `20260921120000_hide-a-reported-post.sql` | yes |
+| `20260921140000_lift-videos-stay-in-the-centre.sql` | yes |
+| `20260921150000_drop-workout-start-coordinates.sql` | yes |
+| `20260921160000_friends-surrounding-activity.sql` | yes |
+| `20260921170000_blocked-members-cannot-watch.sql` | yes |
+| `20260921180000_music-opt-in.sql` | yes |
+| `20260921180100_lift-video-index.sql` | yes |
+| `20260921190000_one-verification-request-per-window.sql` | yes |
+
+`20260917120000_gyms-and-lift-verification.sql` and
+`20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
+centre match, per-centre lift leaderboards with video verification, and what
+was playing during a workout. **Both have to be run before 2.0 ships**, in
+that order, and the first one before the app: it adds three columns to
+`workout_type_instance` that the 2.0 client puts in every workout upload, so a
+2.0 client against a database without them fails every workout sync with an
+unknown-column error. The client reads (Home, Centres) degrade quietly without
+them; the writes do not.
+
+After the first one, run `npm run gyms:import -- --dry-run` and then
+`npm run gyms:import` with the service role in the environment - see
+`data/gyms/README.md`. Without it the `gym` table is empty, and an empty
+table is a Centres screen with nothing on it, not an error.
+
+Both were run on 2026-09-17, in that order, and `npm run gyms:import` was run
+the same day: 365 centres in `gym`, 326 of them with a photograph in the
+`gym-images` bucket (the 39 Fit&Sund centres have none on their site). Verify
+over the REST API with the anon key: `gym_lift?select=id` and
+`workout_music?select=id` should each answer with an empty array (own or
+followed rows only, none yet), and `rpc/national_strongest` should answer
+`[]` rather than a missing-function error.
 
 `20260915120000_repair-workout-type-catalog.sql` restores missing built-in and
 legacy workout types without changing existing rows or granting catalog writes
@@ -143,6 +175,67 @@ it together with the app change that guards that repair to run once.
 refuses a report that names a post its author did not write, and locks the
 column so only the hide itself can write it. The support page's promise - a
 post two people report leaves the feed straight away - is true from this date.
+
+`20260921140000_lift-videos-stay-in-the-centre.sql` was run on 2026-09-21. It
+closes three holes the review agents found in the migration above, which was
+already live: any signed-in user could read any centre's verification videos,
+`gym_lift.video_path` accepted a path belonging to somebody else, and
+`request_lift_verification` could be called in a loop. Its three functions are
+copied from that file verbatim with one change each, so a diff between the two
+shows exactly what moved.
+
+`20260921150000_drop-workout-start-coordinates.sql` was run on 2026-09-21.
+Row-level security on `workout_type_instance` is row-based, so the
+follower policy that shows yesterday, today and tomorrow was also showing the
+start coordinates the centre migration added - and following needs no approval.
+Ten centimetres of accuracy on where somebody starts their workout is their
+home address. The app never read them from the cloud; the retry that needs them
+reads the device's own copy, which stays. The 2.0 client stops writing them in
+the same change.
+
+`20260921160000_friends-surrounding-activity.sql` was run on 2026-09-21. The
+friends tiles ask how long ago somebody trained, and the follower policy on
+`workout_type_instance` only shows yesterday, today and tomorrow - so the
+answer for a friend was always empty and every tile fell into the "no activity"
+band. Widening that policy would have handed a follower the whole training
+history to produce two dates, so this is a security definer function that
+returns the two dates and nothing else, for people the viewer actually follows,
+with blocks dropped.
+
+`20260921170000_blocked-members-cannot-watch.sql` was run on 2026-09-21.
+`private.can_watch_lift_video`, from the migration two rows above,
+was the one function in that clean-up that did not ask about blocks - every
+other path does. A leaderboard row carries the lifter's id and the lift id, and
+the object path is `<user_id>/<lift_id>.<ext>`, so somebody who had seen a row
+before blocking could still ask for a signed URL and get one. The function here
+is the applied one with that single clause added.
+
+`20260921180000_music-opt-in.sql` and `20260921180100_lift-video-index.sql`
+were both run on 2026-09-21. They were one file first, and that file
+deadlocked: it held the lock a policy swap needs on `workout_music` while
+asking for the one `create index` needs on `gym_lift`, against a live app
+session holding them the other way round, and Postgres killed it. Two tables in
+one transaction for two unrelated changes. Split into one table each, the index
+as `create index concurrently` - which takes no lock that stops writes, and
+which therefore has to be run on its own, outside a transaction block. The
+policy file sets a `lock_timeout` so a busy moment makes it give up rather than
+queue. **Worth copying next time a migration touches two tables.**
+
+The change itself: the insert policy on `workout_music` asked whether the row
+was yours and whether the workout was yours, but not whether you had turned
+sharing on - only the client did, and the select policy shows the table to
+every follower. And `private.can_watch_lift_video` filters on
+`gym_lift.video_path`, which no index covered, so every signed video URL was a
+sequential scan and the client signs a whole queue at once.
+
+`20260921190000_one-verification-request-per-window.sql` was run on 2026-09-21.
+The ten-minute limit added in `20260921140000` was a select followed by an
+insert: two calls a second apart both passed the select, because neither sees
+the other's uncommitted row under read committed, and both filled ten inboxes.
+The unique index on `event_key` would have stopped them, except the key carried
+the epoch second and so only caught calls inside the same second. The key now
+names a ten-minute bucket and the insert is `on conflict do nothing`, so the
+index is the limit and nothing sits between deciding and writing.
 
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to

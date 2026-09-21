@@ -1,0 +1,334 @@
+{
+  "chain": "Fit&Sund",
+  "name": "Fit&Sund Aarhus C / Karupvej",
+  "short_name": "Aarhus C / Karupvej",
+  "address": {
+    "street": "Karupvej 2C",
+    "postal_code": "8000",
+    "city": "Aarhus C",
+    "country": "DK",
+    "full": "Karupvej 2C, 8000 Aarhus C"
+  },
+  "location": {
+    "latitude": 56.1558913,
+    "longitude": 10.17953818
+  },
+  "geocode": {
+    "latitude": 56.1558913,
+    "longitude": 10.17953818,
+    "matched_address": "Karupvej 2C, 8000 Aarhus C",
+    "exact": true,
+    "source": "DAWA"
+  },
+  "url": "https://fitogsund.dk/c/huse/aarhus-c-karupvej",
+  "membership_url": "https://fitogsund.dk/p/bliv-medlem",
+  "class_schedule_url": "https://fitogsund.goactivebooking.com/class-web-categories/34/classes?facility=34",
+  "google_maps_url": "https://www.google.com/maps/dir/?api=1&destination=Karupvej-2C+8000+Aarhus-C",
+  "phone": "+45 86 18 33 13",
+  "email": "aarhus@fitogsund.dk",
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 24:00"
+    }
+  ],
+  "reception_hours": [
+    {
+      "day": "Mandag",
+      "open": "08:30 - 14:00 & 15:30 - 20:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "08:30 - 14:00 & 15:30 - 20:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "08:30 - 14:00 & 15:30 - 20:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "08:30 - 14:00 & 15:30 - 20:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "08:30 - 14:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "09:00 - 12:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "09:00 - 12:00"
+    }
+  ],
+  "meta_description": "Træn alle dage hos Fit&Sund Aarhus i vores moderne fitness- og træningscenter. Fitness | Holdtræning | Personlig træning",
+  "description": "Fit&Sund Aarhus C er både et fitness- og sundhedshus, hvor du kan træne individuelt sammen med vennerne og på vores mange forskellige hold. Du kan også få hjælp til at optimere din sundhed hos vores sundhedsfaglige eksperter.\nVi gør en forskel!\nI Fit&Sund ønsker vi ganske enkelt at gøre en forskel for alle mennesker - med vægt på mental og fysisk sundhed og aktivitet. Du er altid velkommen til at kigge forbi til et uforpligtende besøg.\nDu kan træne i det nyeste udstyr, som vi har placeret i hyggelige omgivelser, hvor vi omgås hinanden i en afslappet uformel tone.\nSundhedsfagligt team\nHos diætisterne kan du fx få råd og støtte til at ændre dine spisevaner, hvilket foregår glidende og uden forbud mod den mad, du holder af.\nFysioterapeuterne kan hjælpe dig med skavanker i muskler, led og knogler. Vores fysioterapeuter er oven i købet rygspecialister og dermed godt klædt på til problemer med især nakke, ryg og lænd.\nVil du gerne have helt styr på din træning? Vores personlige trænere (PT) har et meget omfattende udvalg af øvelser, som hver især kan udføres på forskellige måder. Den personlige træner screener din krop, og sammen laver I et program, som er tilpasset lige nøjagtigt til dig og dit mål.",
+  "facilities": [
+    "Fitness",
+    "Fysioterapeuter",
+    "Diætister",
+    "Personlig træning",
+    "I centrum af Aarhus",
+    "ExerciseLab",
+    "Stor holdsal",
+    "Gode P-forhold"
+  ],
+  "service_categories": [
+    "Hold",
+    "Yoga/Reformer",
+    "Personlig træning",
+    "Fysioterapi",
+    "Diætist",
+    "Event",
+    "Seniorer",
+    "Fællesskab",
+    "Camps",
+    "Juniorer",
+    "Muskelopbyggende Træning",
+    "Senior Træning",
+    "Konditionsfremmende Træning",
+    "Core Træning",
+    "Funktionel Træning",
+    "Body & Mind",
+    "Dance"
+  ],
+  "services": [
+    {
+      "name": "Blid Morgenyoga",
+      "room": null,
+      "categories": [
+        "hold",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/-blid-morgenyoga"
+    },
+    {
+      "name": "2026 OPSTARTSPAKKER",
+      "room": null,
+      "categories": [
+        "diaetist",
+        "event",
+        "fysioterapi",
+        "personlig-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/2026-opstartspakker-4"
+    },
+    {
+      "name": "BalanceFit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/balancefit"
+    },
+    {
+      "name": "BalanceFit Level 2",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/balancefit-level-2"
+    },
+    {
+      "name": "Calorie Burn",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/calorie-burn"
+    },
+    {
+      "name": "Cirkeltræning",
+      "room": "Holdsal",
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/cirkel-traening"
+    },
+    {
+      "name": "Core",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/core"
+    },
+    {
+      "name": "Fit&Sund Aarhus C tilbyder medlemskab til studerende",
+      "room": "Århus C, Karupvej",
+      "categories": [
+        "event",
+        "faellesskab",
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/aarhus-c-tilbyder-medlemskab-til-studerende"
+    },
+    {
+      "name": "FitCamp",
+      "room": "En bootcamp for alle",
+      "categories": [
+        "camps"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/fitcamp"
+    },
+    {
+      "name": "Funktionel Træning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-funktionel-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/funktionel-traening"
+    },
+    {
+      "name": "Hatha Yoga",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/hatha-yoga"
+    },
+    {
+      "name": "Mindful Stretch",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/mindful-stretch"
+    },
+    {
+      "name": "MOTION for livet",
+      "room": "5 ugers gratis træningsforløb",
+      "categories": [
+        "faellesskab",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/motion-for-livet"
+    },
+    {
+      "name": "Patanjali Yoga",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/patanjali-yoga-"
+    },
+    {
+      "name": "Puls Styrke",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/puls--styrke"
+    },
+    {
+      "name": "RawFit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-funktionel-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/rawfit"
+    },
+    {
+      "name": "Salsation",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/salsation"
+    },
+    {
+      "name": "Senior Cirkel Hold",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/senior-cirkel-hold"
+    },
+    {
+      "name": "Senior Træning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/seniortraening"
+    },
+    {
+      "name": "Stram Op",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/stramop"
+    },
+    {
+      "name": "Stræk & Afspænding",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/straek--afspaending"
+    },
+    {
+      "name": "Vores regler for juniortræning",
+      "room": "Århus C, Karupvej",
+      "categories": [
+        "juniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/vores-regler-for-juniortraening"
+    }
+  ],
+  "manager": {
+    "name": "Jane Boilesen",
+    "title": "Husleder",
+    "image": "https://fitogsund.dk/f/thumb?src=/f/blog/article/494b782eed68cd1f10ea1a98cb8bde4ad48c11bf_thumb.png&w=300&h=380"
+  },
+  "images": {
+    "hero": null,
+    "fallback": "../fitogsund-logo.png"
+  },
+  "hero_image_file": "hero.png",
+  "hero_is_placeholder": true,
+  "scraped_at": "2026-09-17"
+}

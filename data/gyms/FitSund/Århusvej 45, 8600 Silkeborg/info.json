@@ -1,0 +1,298 @@
+{
+  "chain": "Fit&Sund",
+  "name": "Fit&Sund Silkeborg",
+  "short_name": "Silkeborg",
+  "address": {
+    "street": "Århusvej 45",
+    "postal_code": "8600",
+    "city": "Silkeborg",
+    "country": "DK",
+    "full": "Århusvej 45, 8600 Silkeborg"
+  },
+  "location": {
+    "latitude": 56.17010325,
+    "longitude": 9.5686565
+  },
+  "geocode": {
+    "latitude": 56.17010325,
+    "longitude": 9.5686565,
+    "matched_address": "Århusvej 45, 8600 Silkeborg",
+    "exact": true,
+    "source": "DAWA"
+  },
+  "url": "https://fitogsund.dk/c/huse/silkeborg",
+  "membership_url": "https://fitogsund.dk/p/bliv-medlem",
+  "class_schedule_url": "https://fitogsund.goactivebooking.com/class-web-categories/34/classes?facility=30",
+  "google_maps_url": "https://www.google.com/maps/dir/?api=1&destination=Århusvej-45+8600+Silkeborg",
+  "phone": "+45 42 80 74 45",
+  "email": "silkeborg@fitogsund.dk",
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "05:30 - 22:30"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:30 - 22:30"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:30 - 22:30"
+    },
+    {
+      "day": "Torsdag",
+      "open": "05:30 - 22:30"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:30 - 22:30"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:30 - 17:30"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:30 - 22:30"
+    }
+  ],
+  "reception_hours": [
+    {
+      "day": "Mandag",
+      "open": "08:00 - 19:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "08:00 - 16:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "08:00 - 19:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "08:00 - 16:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "08:00 - 13:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "09:00 - 11:30"
+    },
+    {
+      "day": "Søndag",
+      "open": "Ingen bemanding"
+    }
+  ],
+  "meta_description": "Træn hos Fit&Sund Silkeborg i vores moderne fitness og træningscenter. Fitness | Holdtræning | Personlig træning",
+  "description": "Vi er meget mere end bare et fitnesscenter. Vi er dit lokale fitness- og sundhedshus, og vi arbejder ud fra vores 3 værdier: sundhed, viden og nærvær.\nSundhed er den varierede træning, vi tilbyder dig, fx styrke-, kredsløbs- og holdtræning, programlægning og målrettet træning på dine præmisser.\nViden er vores medarbejderes høje faglighed, som du kan bruge til fx at træne mere effektivt, få behandling mod en skavank, eller professionel kostrådgivning til en sundere livsstil.\nNærvær oplever du hos vores imødekommende personale med et smil, når du har spørgsmål eller blot har lyst til en snak. Især i vores caféområde kan du opleve den behagelige atmosfære, der opstår, når medlemmerne hygger sig med en kop kaffe og taler om stort og småt.\nVi hjælper dig på vej uanset alder, baggrund eller trænings- og sundhedstilstand\nAlle er velkomne i Fit&Sund. Vores mål er at tilbyde dig en inspirerende og motiverende træningsoplevelse, som giver overskud, velvære og livskvalitet. Til dette formål har vi et kompetent trænings- og sundhedsfagligt team, som gerne hjælper dig på vej uanset din alder, baggrund eller trænings- og sundhedstilstand.\nDu kan få 10 minutters gratis samtale hos en personlig træner eller autoriseret fysioterapeut eller online konsultation ved diætist, så du kan afgøre med dig selv, om et forløb med målrettet træning, behandling eller kostrådgivning er noget for dig. Du kan også kombinere fx personlig træning med et online diætistforløb.\nHyggelig stemning hvor alle kender alle\nVores hus ligger ved Silkeborg Sportscenter på Århusbakken med over 400 gratis parkeringspladser lige ved døren. Her er en afslappet stemning og hyggelig atmosfære, hvor alle kender alle og kommer, som de er.",
+  "facilities": [
+    "Fitness",
+    "Fysioterapeuter",
+    "Personlig træning",
+    "Nyt træningsudstyr",
+    "Stor holdsal",
+    "Mange seniorhold",
+    "Fri parkering lige ved døren",
+    "Idrætshal"
+  ],
+  "service_categories": [
+    "Personlig træning",
+    "Fysioterapi",
+    "Diætist",
+    "Event",
+    "Hold",
+    "Yoga/Reformer",
+    "Fællesskab",
+    "Seniorer",
+    "Juniorer",
+    "Core Træning",
+    "Muskelopbyggende Træning",
+    "Funktionel Træning",
+    "Body & Mind",
+    "Konditionsfremmende Træning",
+    "Senior Træning",
+    "Dance"
+  ],
+  "services": [
+    {
+      "name": "2026 OPSTARTSPAKKER",
+      "room": null,
+      "categories": [
+        "diaetist",
+        "event",
+        "fysioterapi",
+        "personlig-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/2026-opstartspakker-21"
+    },
+    {
+      "name": "Boldtræning i Fit&Sund Silkeborg",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/boldtraening-i-fitsund-silkeborg"
+    },
+    {
+      "name": "Cirkeltræning",
+      "room": "Holdsal",
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/cirkel-traening"
+    },
+    {
+      "name": "Core",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/core"
+    },
+    {
+      "name": "Funktionel Træning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-funktionel-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/funktionel-traening"
+    },
+    {
+      "name": "Hatha + Yin yoga",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/hatha-yin-yoga"
+    },
+    {
+      "name": "Hatha Yoga",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/hatha-yoga"
+    },
+    {
+      "name": "MOTION for livet",
+      "room": "5 ugers gratis træningsforløb",
+      "categories": [
+        "faellesskab",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/motion-for-livet"
+    },
+    {
+      "name": "Pilates",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/pilates"
+    },
+    {
+      "name": "Puls Styrke",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/puls--styrke"
+    },
+    {
+      "name": "Senior Cirkel Hold",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/senior-cirkel-hold"
+    },
+    {
+      "name": "Senior Stram Op",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/senior-stramp-op"
+    },
+    {
+      "name": "Senior Træning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/seniortraening"
+    },
+    {
+      "name": "Stram Op",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/stramop"
+    },
+    {
+      "name": "Stræk & Afspænding",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/straek--afspaending"
+    },
+    {
+      "name": "Styrke Yoga",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/styrke-yoga"
+    },
+    {
+      "name": "Vores regler for juniortræning",
+      "room": "Silkeborg",
+      "categories": [
+        "juniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/vores-regler-for-juniortraening-silkeborg"
+    },
+    {
+      "name": "ZUMBA®",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/zumba"
+    }
+  ],
+  "manager": {
+    "name": "Anne Sofie Bonnevie",
+    "title": "Husleder",
+    "image": "https://fitogsund.dk/f/thumb?src=/f/blog/article/d779eaecb92a1b128f89278d139c6d5f14dbb461_thumb.jpg&w=300&h=380"
+  },
+  "images": {
+    "hero": null,
+    "fallback": "../fitogsund-logo.png"
+  },
+  "hero_image_file": "hero.png",
+  "hero_is_placeholder": true,
+  "scraped_at": "2026-09-17"
+}

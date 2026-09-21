@@ -1,0 +1,253 @@
+{
+  "chain": "PureGym",
+  "name": "Viby, Lykkesholms Allé",
+  "puregym_id": "153",
+  "address": {
+    "street": "Lykkesholms Allé 106",
+    "postal_code": "8260",
+    "city": "Viby J",
+    "country": "DK",
+    "full": "Lykkesholms Allé 106, 8260 Viby J"
+  },
+  "location": {
+    "latitude": 56.131874,
+    "longitude": 10.1584109
+  },
+  "url": "https://www.puregym.dk/find-center/viby-lykkesholms-alle-aarhus",
+  "membership_url": "https://www.puregym.dk/bliv-medlem/186/medlemskab",
+  "price_from": "Priser fra 134,50 DKK/md.",
+  "price_note": "*Normalpris fra 269 DKK/md.",
+  "today_notice": "Vi lukker i dag kl. 00:00",
+  "opening_hours": [
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "09:00 - 20:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 17:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Mandag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    }
+  ],
+  "opening_hours_schema": [
+    {
+      "day": "Monday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Tuesday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Wednesday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Thursday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Friday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Saturday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Sunday",
+      "opens": "05:00",
+      "closes": "00:00"
+    }
+  ],
+  "special_days": [
+    {
+      "date": "2027-01-01",
+      "opens": "08:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-02",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-03",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-05",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-06",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-14",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-24",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-25",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-06-05",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-24",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-25",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-26",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-31",
+      "opens": "05:00",
+      "closes": "18:00"
+    }
+  ],
+  "meta_description": "Velkommen hos PureGym i Viby ved Århus. Glæd dig til at træne i et fitnesscenter, hvor der er plads til alle, og hvor du altid kan få hjælp til din træning.",
+  "description": "PureGym Viby\nMidt i Viby tæt på Viby Torv og Viby Centeret finder du PureGym Lykkesholm Allé. Det er et stort flot og nyrenoveret center med alt hvad hjertet begærer af træningsudstyr. Vi har en stor cardioafdeling og bag den et stort funktionelt område med lækkert udstyr og en masse fri gulvplads. Desuden har centeret en stor maskinpark samt stort frivægts- og kabelområde. Vi tilbyder både holdtræning og bike. Centeret har en stor flot holdsal og ligeledes en fin bikesal. Vi lægger i PureGym Lykkesholm Allé vægt på den gode oplevelse og en god og hyggelig atmosfære, hvor alle medlemmer føler sig velkomne og taget godt imod af vores personale.\nVi glæder os til at se dig!\nMere udstyr i PureGym Lykkesholm Allé\nSnart vil vores center få en opgradering med endnu mere træningsudstyr. Her er en oversigt over, hvad du bl.a. kan se frem til:\nVægtskiver\nNye greb\nOpdatering af udstyr til udstræksområde\nOpdatering af udstyr til funktionelt område\nBootyBuilder\nNye romaskiner\nPerfect Squat\nDet siger personalet om PureGym Lykkesholms Allé\nDet helt unikke ved vores center er den atmosfære, der er blandt vores medlemmer og teamet. Der er plads til alle - nye som gamle. Vi sætter en stor ære i at centeret altid fremstår rent og pænt og at vores medlemmer får en god oplevelse, når de kommer her hos os.\nPersonlig træning i PureGym Lykkesholms Allé\nVi har i centeret flere dygtige, certificerede personlige trænere, der står klar til at hjælpe dig i mål med din træning. Vil du høre nærmere omkring forløb og indhold, har du altid mulighed for at få en gratis og uforpligtende snak med en træner i centeret.\nVi tilbyder også en uforpligtende samtale med en personlig træner til 0,-:\nBook samtale\nHoldtræning i PureGym Lykkesholms Allé\nVi tilbyder et stort udvalg af holdtræning i centeret. Vi har alt fra Stram Op, Yoga, Dans, Bike og meget andet. Vores dygtige instruktører sørger for, at du får god træning, sved på panden og smil på læben. Vi kører også funktionelle hold i vores store funktionelle område.\nHvornår træner folk her i centret?\nVi har god plads til vores medlemmer. I vores app kan du se, hvornår der er flest og færrest mennesker i centret.\nBliv medlem\nHvornår kan jeg møde personalet i centret?\nDu kan fange vores dygtige og imødekommende personale ved receptionen i centeret. Du kan se vores bemandede tider i oversigten her på siden. Du er altid velkommen til at kigge ind, når centeret er bemandet. Så er vores personale klar til at hjælpe dig ind i centeret og svare på de spørgsmål, du måtte have.\nKan jeg parkere ved PureGym Lykkesholms Allé?\nVi har tre timers gratis parkering lige uden for centeret. Du skal blot huske at registrere din nummerplade i receptionen, når du ankommer. Centeret er desuden placeret tæt på offentlig trafik, så det er nemt at komme til med bus.\nFølg os på Facebook\nSe vores lokaler her\nBliv medlem af PureGym og få adgang til:\nApp\nHer kan du få et trænings-program, følge din træning, booke hold, deltage i challenges og meget mere.\nPersonlig træning\nHar du brug for hjælp til at nå dine mål? Book en samtale hos en af vores certificerede personlige trænere til 0 kr.\nHoldtræning\nBliv en del af et stærkt fællesskab på vores hold. Vores dedikerede instruktører guider dig igennem og sikrer højt humør.\nBodytracker\nFor kun ekstra 9 kr./md. kan du få adgang til en avanceret vægt, der giver dig en kropsanalyse med flere forskellige parametre.\nEr du klar til at starte?\nVælg dit medlemskab her\nOg bliv en del af Danmarks største fitness-fælleskab.\nGenerelt\nLog ind på Mit PureGym\nPriser og medlemskabstyper\nTil/afmeld nyhedsbrev\nOm PureGym\nPresse\nKarriere\nHjerteforeningen\nStudierabat\nInformation\nFAQ & Kontakt\nVelkomst og information\nHusets regler\nMedlems­betingelser\nDatapolitik\nCookies\nTilgængelighed\nKonkurrencevindere\nSafespace\nVores fitness centre\nFind center\nAlle større byer\nKøbenhavn\nAarhus\nOdense\nAalborg\nRanders\nValby\nDownload vores app\nHold dig informeret\nTorveporten 2,\n2500 Valby\nCVR. 25652991\nPureGym © 2026\nLog ind\nNyt eller glemt kodeord?\nIkke medlem endnu?\nMeld dig ind",
+  "notice": null,
+  "facilities": [],
+  "facility_names": [
+    "App",
+    "Bikesal",
+    "Cardiotræning",
+    "Funktionelt træningsområde",
+    "Holdtræning",
+    "Parkering",
+    "Personlig træner",
+    "Styrketræning",
+    "Udstrækningsområde",
+    "Watt-cykler & Intelligent Cycling"
+  ],
+  "facility_ids": [
+    "17",
+    "355",
+    "14",
+    "24",
+    "27",
+    "349",
+    "12",
+    "28",
+    "434",
+    "350"
+  ],
+  "plan_ids": [
+    "671",
+    "666"
+  ],
+  "team_ids": [
+    "332",
+    "498",
+    "387",
+    "742",
+    "807",
+    "834",
+    "358",
+    "735",
+    "802",
+    "739",
+    "637",
+    "806",
+    "757"
+  ],
+  "classes": [
+    "Bike Power",
+    "Bike Standard",
+    "Bike – Event",
+    "Body Fit",
+    "Dans - Event",
+    "Functional Express",
+    "Functional Training",
+    "Get Started - Introhold",
+    "Puls & Cardio - Event",
+    "Step Standard",
+    "Yang Yoga",
+    "Yin Yoga",
+    "Zumba"
+  ],
+  "images": {
+    "hero": "https://www.puregym.dk/files/2025-10/_6_20547-HDR.jpg",
+    "hero_2500": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-10/_6_20547-HDR.jpg?itok=HZw95ZRO",
+    "teaser": "https://www.puregym.dk/files/styles/center_teaser/public/2025-10/_6_20547-HDR.jpg?itok=2BYvjY_v",
+    "gallery": [
+      "https://mit.puregym.dk/images/centers/727/6-20519-hdr.webp",
+      "https://mit.puregym.dk/images/centers/727/6-20523-hdr.webp",
+      "https://mit.puregym.dk/images/centers/727/6-20531-hdr.webp",
+      "https://mit.puregym.dk/images/centers/727/6-20539-hdr.webp",
+      "https://mit.puregym.dk/images/centers/727/6-20543-hdr.webp",
+      "https://mit.puregym.dk/images/centers/727/6-20547-hdr.webp",
+      "https://mit.puregym.dk/images/centers/727/6-20583-hdr.webp",
+      "https://mit.puregym.dk/images/centers/727/6-20591-hdr.webp",
+      "https://mit.puregym.dk/images/centers/727/6-20603-hdr.webp",
+      "https://mit.puregym.dk/images/centers/727/6-20619-hdr.webp",
+      "https://mit.puregym.dk/images/centers/727/6-20631-hdr.webp",
+      "https://mit.puregym.dk/images/centers/727/6-20647-hdr.webp",
+      "https://mit.puregym.dk/images/centers/727/6-20651-hdr.webp",
+      "https://mit.puregym.dk/images/centers/727/6-20683-hdr.webp",
+      "https://mit.puregym.dk/images/centers/727/6-20703-hdr.webp",
+      "https://mit.puregym.dk/images/centers/727/6-20715-hdr.webp",
+      "https://mit.puregym.dk/images/centers/727/6-20719-hdr.webp",
+      "https://mit.puregym.dk/images/centers/727/6-20723-hdr.webp",
+      "https://mit.puregym.dk/images/centers/727/6-20740-hdr.webp",
+      "https://mit.puregym.dk/images/centers/727/6-20752-hdr.webp"
+    ]
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

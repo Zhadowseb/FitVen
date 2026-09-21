@@ -1,0 +1,348 @@
+{
+  "chain": "LOOP Fitness",
+  "name": "LOOP Skagen",
+  "loop_id": 114,
+  "center_type": "loop",
+  "address": {
+    "street": "Buttervej 33 B",
+    "postal_code": "9990",
+    "city": "Skagen",
+    "country": "DK",
+    "full": "Buttervej 33 B, 9990 Skagen"
+  },
+  "location": {
+    "latitude": 57.727321,
+    "longitude": 10.568311
+  },
+  "url": "https://loopfitness.dk/centre/loop-fitness-skagen/",
+  "membership_url": "https://loopfitness.dk/medlemskab/bliv-medlem/",
+  "phone": "41746214",
+  "email": "skagen@loopfitness.dk",
+  "facebook_url": null,
+  "google_review_url": "https://g.page/r/Cb_hm1mhk6gQEB0/review",
+  "cvr": "43675230",
+  "manager_name": "Helle",
+  "opened": "2010-08-22",
+  "has_classes": true,
+  "only_open_when_staffed": false,
+  "max_visitor_capacity": 40,
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "04:00 - 24:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "04:00 - 24:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "04:00 - 24:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "04:00 - 24:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "04:00 - 24:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "04:00 - 24:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "04:00 - 24:00"
+    }
+  ],
+  "staffed_hours": [
+    {
+      "day": "Mandag",
+      "periods": [
+        "07:00 - 12:00",
+        "16:00 - 19:00"
+      ]
+    },
+    {
+      "day": "Tirsdag",
+      "periods": [
+        "07:00 - 12:00",
+        "16:00 - 19:00"
+      ]
+    },
+    {
+      "day": "Onsdag",
+      "periods": [
+        "07:00 - 12:00",
+        "16:00 - 19:00"
+      ]
+    },
+    {
+      "day": "Torsdag",
+      "periods": [
+        "07:00 - 12:00",
+        "16:00 - 19:00"
+      ]
+    },
+    {
+      "day": "Fredag",
+      "periods": [
+        "07:00 - 12:00",
+        "16:00 - 18:00"
+      ]
+    },
+    {
+      "day": "Lørdag",
+      "periods": [
+        "11:00 - 14:00"
+      ]
+    }
+  ],
+  "staffed_hours_dates": [
+    {
+      "date": "2025-12-23",
+      "open": "10:00 - 16:00"
+    },
+    {
+      "date": "2025-12-24",
+      "open": "00:00 - 00:15"
+    },
+    {
+      "date": "2025-12-25",
+      "open": "10:00 - 14:00"
+    },
+    {
+      "date": "2025-12-26",
+      "open": "00:00 - 00:15"
+    },
+    {
+      "date": "2025-12-28",
+      "open": "11:00 - 13:00"
+    },
+    {
+      "date": "2025-12-29",
+      "open": "10:00 - 14:00"
+    },
+    {
+      "date": "2025-12-30",
+      "open": "10:00 - 14:00"
+    },
+    {
+      "date": "2025-12-31",
+      "open": "09:00 - 12:00"
+    },
+    {
+      "date": "2026-01-01",
+      "open": "00:00 - 00:15"
+    },
+    {
+      "date": "2026-01-02",
+      "open": "10:00 - 14:00"
+    },
+    {
+      "date": "2026-01-16",
+      "open": "15:00 - 17:00"
+    },
+    {
+      "date": "2026-01-23",
+      "open": "07:00 - 12:00"
+    },
+    {
+      "date": "2026-02-04",
+      "open": "08:00 - 12:00"
+    },
+    {
+      "date": "2026-02-04",
+      "open": "15:00 - 19:00"
+    },
+    {
+      "date": "2026-03-27",
+      "open": "07:00 - 12:00"
+    },
+    {
+      "date": "2026-03-28",
+      "open": "00:00 - 00:15"
+    },
+    {
+      "date": "2026-03-31",
+      "open": "15:00 - 19:00"
+    },
+    {
+      "date": "2026-04-02",
+      "open": "09:00 - 13:00"
+    },
+    {
+      "date": "2026-04-03",
+      "open": "09:00 - 13:00"
+    },
+    {
+      "date": "2026-04-06",
+      "open": "00:00 - 00:15"
+    },
+    {
+      "date": "2026-04-15",
+      "open": "07:00 - 12:00"
+    },
+    {
+      "date": "2026-04-15",
+      "open": "15:00 - 18:00"
+    },
+    {
+      "date": "2026-04-23",
+      "open": "07:00 - 12:00"
+    },
+    {
+      "date": "2026-04-25",
+      "open": "08:00 - 11:00"
+    },
+    {
+      "date": "2026-05-14",
+      "open": "08:00 - 10:00"
+    }
+  ],
+  "meta_description": "Hos LOOP Fitness Skagen får du enkel og effektiv træning af hele kroppen på kun 24 minutter. Vi tilbyder træning for børn og unge ✓ Gratis prøvetime ✓",
+  "description": "Kom indenfor og mærk energien. Hos LOOP får du afslappet stemning og effektiv træning på den bedste måde. Uanset niveau er der plads til dig, og træningen er enkel: Start med opvarmning, træn hele kroppen i træningscirklen, og afslut med udstrækning i vores LOOP Ekstra område. Efter din træning kan du nyde en gratis kop kaffe eller the i vores café.",
+  "quote_by": "Helle, centerleder",
+  "facilities": [
+    "2 cirkler",
+    "Cardio-område",
+    "Gratis kaffe"
+  ],
+  "memberships": [
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr",
+      "price_per_month": 289.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 319,
+      "family_members": 0,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    },
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr. - familie",
+      "price_per_month": 589.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 619,
+      "family_members": 9,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    },
+    {
+      "name": "ALL IN (DS, LOOP & HOLD)",
+      "price_per_month": 349.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 349.0,
+      "intro_months": 1,
+      "minimum_price": 708,
+      "family_members": 0,
+      "campaign": false,
+      "includes_classes": true,
+      "includes_weights": true,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    },
+    {
+      "name": "ALL IN FAMILY (DS, LOOP & HOLD)",
+      "price_per_month": 649.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 649.0,
+      "intro_months": 1,
+      "minimum_price": 1308,
+      "family_members": 5,
+      "campaign": false,
+      "includes_classes": true,
+      "includes_weights": true,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    },
+    {
+      "name": "Destination Skagen",
+      "price_per_month": 289.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 269.0,
+      "intro_months": 1,
+      "minimum_price": 568,
+      "family_members": 0,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": true,
+      "loop24": true,
+      "local_gym_only": true,
+      "cancellation_notice_days": 30
+    },
+    {
+      "name": "Dagspas/Gæstetræning",
+      "price_per_month": 0.0,
+      "signup_fee": 75.0,
+      "admin_fee": 10.0,
+      "intro_price": 0.0,
+      "intro_months": 0,
+      "minimum_price": "75.0",
+      "family_members": 0,
+      "campaign": false,
+      "includes_classes": true,
+      "includes_weights": true,
+      "loop24": true,
+      "local_gym_only": true,
+      "cancellation_notice_days": 30
+    },
+    {
+      "name": "Gæstetræning 1 uge  (7 sammenhængende dage)",
+      "price_per_month": 0.0,
+      "signup_fee": 249.0,
+      "admin_fee": 10.0,
+      "intro_price": 0.0,
+      "intro_months": 0,
+      "minimum_price": "249.0",
+      "family_members": 0,
+      "campaign": false,
+      "includes_classes": true,
+      "includes_weights": true,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    },
+    {
+      "name": "Gæstetræning 2 uger (14 sammenhængende dage)",
+      "price_per_month": 0.0,
+      "signup_fee": 349.0,
+      "admin_fee": 10.0,
+      "intro_price": 0.0,
+      "intro_months": 0,
+      "minimum_price": "349.0",
+      "family_members": 0,
+      "campaign": false,
+      "includes_classes": true,
+      "includes_weights": true,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    }
+  ],
+  "images": {
+    "hero": "https://loopfitness.dk/wp-content/uploads/2019/11/Skagen_2026.png",
+    "og_image": "https://loopfitness.dk/wp-content/uploads/2019/11/Skagen_centerleder-scaled.jpeg"
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

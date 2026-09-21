@@ -1,0 +1,255 @@
+{
+  "chain": "PureGym",
+  "name": "Vanløse, Skalbakken",
+  "puregym_id": "217",
+  "address": {
+    "street": "Skalbakken 10",
+    "postal_code": "2720",
+    "city": "Vanløse",
+    "country": "DK",
+    "full": "Skalbakken 10, 2720 Vanløse"
+  },
+  "location": {
+    "latitude": 55.693364,
+    "longitude": 12.484656
+  },
+  "url": "https://www.puregym.dk/find-center/vanloese-skalbakken",
+  "membership_url": "https://www.puregym.dk/bliv-medlem/180/medlemskab",
+  "price_from": "Priser fra 261,75 DKK/md.",
+  "price_note": "*Normalpris fra 319 DKK/md.",
+  "today_notice": "Vi lukker i dag kl. 00:00",
+  "opening_hours": [
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "09:00 - 20:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 17:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Mandag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    }
+  ],
+  "opening_hours_schema": [
+    {
+      "day": "Monday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Tuesday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Wednesday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Thursday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Friday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Saturday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Sunday",
+      "opens": "05:00",
+      "closes": "00:00"
+    }
+  ],
+  "special_days": [
+    {
+      "date": "2027-01-01",
+      "opens": "08:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-02",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-03",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-05",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-06",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-14",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-24",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-25",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-06-05",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-24",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-25",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-26",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-31",
+      "opens": "05:00",
+      "closes": "18:00"
+    }
+  ],
+  "meta_description": "Velkommen hos PureGym på Skalbakken i Vanløse. Find dit lokale center her, og oplev et suverænt trænings-fællesskab med plads til alle.",
+  "description": "PureGym Skalbakken\nI udkanten af Vanløse finder du PureGym, Skalbakken. Her er atmosfæren i højsædet, omend du kun er kommet for at træne, eller også gerne lige vil have den daglige sludder over en kop kaffe – der er på Skalbakken rig mulighed for begge dele. Vi lægger stor vægt på atmosfæren i centret, og her er plads til alle aldre. Vi huser både faciliteter til holdtræning, styrke- samt konditionstræning og mulighed for udstræk.\nVi glæder os til at se dig!\nENDNU BEDRE UDSTYR I PUREGYM VANLØSE, SKALBAKKEN\nVi er så glade for at byde dig velkommen i vores center, der har fået en stor opgradering med masser af nyt og forbedret træningsudstyr.\nHer er en oversigt over, hvad du kan glæde dig til:\nNyt og forbedret cardio-område\nNyt og forbedret kabel- og styrketræningsområde, inkl. en ny seated leg curl\nNyt og forbedret frivægtsområde, inkl. nye platforme, smith racks, måtter og maskiner, herunder en ny glutebuilder\nForbedret funktionelt område, inkl. en ny prowler\nNyt og forbedret udstrækningsområde, inkl. nyt udstyr, herunder nye yogabolde\nNy og forbedret holdsal\nDET SIGER PERSONALET OM PUREGYM VANLØSE, SKALBAKKEN\nDet helt særlige ved PureGym, Skalbakken, er sammenholdet. Vi lægger en enorm dyd i at tage os tid til vores medlemmer, hvilket har resulteret i en hyggelig og motiverende stemning i centret. Derudover nyder vores medlemmer at sidde i caféområdet efter dagens træning med en lille snack og en kop kaffe. Alle er velkomne til at tage en stol og få pusten igen efter en god træning.\nPERSONLIG TRÆNING I PUREGYM VANLØSE, SKALBAKKEN\nPå Skalbakken tilbyder vi personlig træning. Så har du brug for hjælp til at komme i gang, eller ønsker du at tage din træning til et helt nyt niveau? Så står vi klar til at hjælpe dig.\nVi tilbyder også en uforpligtende samtale med en personlig træner til 0,-:\nBOOK SAMTALE HER\nHOLDTRÆNING I PUREGYM VANLØSE, SKALBAKKEN\nPå vores første sal finder man vores store, lyse holdsal med dejligt meget plads.\nHer har man mulighed for at deltage på vores mange forskellige hold såsom Yoga, Pilates, Functional Training, Core & Glutes, Seniortræning, Stram Op m.m.\nHVORNÅR TRÆNER FOLK HER I CENTRET?\nVi har god plads til vores medlemmer. I vores app kan du se, hvornår der er flest og færrest mennesker i centret.\nBLIV MEDLEM HER\nHVORNÅR KAN JEG MØDE PERSONALET I CENTRET?\nDet første, du møder, når du træder ind på Skalbakken, er vores reception, hvor Fitness Teamet står klar til at hjælpe dig. Man kan se vores bemandingstider på vores hjemmeside. Hos os strækker vi os langt for vores medlemmer. Om du har brug for hjælp til vores holdunivers, spørgsmål angående vores produkter eller noget helt tredje – så vil vi altid hjælpe.\nKAN JEG PARKERE VED PUREGYM VANLØSE, SKALBAKKEN?\nKommer du i bil? Skalbakken har gratis, ubegrænset parkering foran vores bygning samt inde i vores gård, som kan tilgås fra venstre side af bygningen. Kommer du med offentlig transport? Intet problem, 2 min på gåben fra Skalbakken stopper 9A.\nDer er fri cykelparkering på venstre side af bygningen samt ved vores cykelstativ, der findes lige ved vores hovedindgang.\nFølg os på Facebook\nSe vores lokaler her\nBliv medlem af PureGym og få adgang til:\nApp\nHer kan du få et trænings-program, følge din træning, booke hold, deltage i challenges og meget mere.\nPersonlig træning\nHar du brug for hjælp til at nå dine mål? Book en samtale hos en af vores certificerede personlige trænere til 0 kr.\nHoldtræning\nBliv en del af et stærkt fællesskab på vores hold. Vores dedikerede instruktører guider dig igennem og sikrer højt humør.\nBodytracker\nFor kun ekstra 9 kr./md. kan du få adgang til en avanceret vægt, der giver dig en kropsanalyse med flere forskellige parametre.\nEr du klar til at starte?\nVælg dit medlemskab her\nOg bliv en del af Danmarks største fitness-fælleskab.\nGenerelt\nLog ind på Mit PureGym\nPriser og medlemskabstyper\nTil/afmeld nyhedsbrev\nOm PureGym\nPresse\nKarriere\nHjerteforeningen\nStudierabat\nInformation\nFAQ & Kontakt\nVelkomst og information\nHusets regler\nMedlems­betingelser\nDatapolitik\nCookies\nTilgængelighed\nKonkurrencevindere\nSafespace\nVores fitness centre\nFind center\nAlle større byer\nKøbenhavn\nAarhus\nOdense\nAalborg\nRanders\nValby\nDownload vores app\nHold dig informeret\nTorveporten 2,\n2500 Valby\nCVR. 25652991\nPureGym © 2026\nLog ind\nNyt eller glemt kodeord?\nIkke medlem endnu?\nMeld dig ind",
+  "notice": null,
+  "facilities": [],
+  "facility_names": [
+    "App",
+    "Bodytracker+",
+    "Cardiotræning",
+    "Funktionelt træningsområde",
+    "Glutebuilder",
+    "Holdtræning",
+    "Parkering",
+    "Personlig træner",
+    "Styrketræning",
+    "TRX",
+    "Udstrækningsområde"
+  ],
+  "facility_ids": [
+    "17",
+    "355",
+    "14",
+    "24",
+    "27",
+    "12",
+    "350",
+    "434",
+    "474",
+    "333",
+    "26"
+  ],
+  "plan_ids": [
+    "661",
+    "649"
+  ],
+  "team_ids": [
+    "312",
+    "318",
+    "358",
+    "735",
+    "802",
+    "806",
+    "344",
+    "834",
+    "835",
+    "837"
+  ],
+  "classes": [
+    "Body Fit",
+    "Core Express",
+    "Functional Express",
+    "Functional Training",
+    "Glute Express",
+    "Pilates",
+    "Seniortræning",
+    "Stram Op",
+    "Yang Yoga",
+    "Yin Yoga"
+  ],
+  "images": {
+    "hero": "https://www.puregym.dk/files/2025-07/217_Vanl%C3%B8se_.jpg",
+    "hero_2500": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-07/217_Vanl%C3%B8se_.jpg?itok=njlh1neU",
+    "teaser": "https://www.puregym.dk/files/styles/center_teaser/public/2025-07/217_Vanl%C3%B8se_.jpg?itok=xbxXcC5B",
+    "gallery": [
+      "https://mit.puregym.dk/images/centers/791/217-vanlose-10.webp",
+      "https://mit.puregym.dk/images/centers/791/217-vanlose-11.webp",
+      "https://mit.puregym.dk/images/centers/791/217-vanlose-12.webp",
+      "https://mit.puregym.dk/images/centers/791/217-vanlose-13.webp",
+      "https://mit.puregym.dk/images/centers/791/217-vanlose-14.webp",
+      "https://mit.puregym.dk/images/centers/791/217-vanlose-15.webp",
+      "https://mit.puregym.dk/images/centers/791/217-vanlose-16.webp",
+      "https://mit.puregym.dk/images/centers/791/217-vanlose-17.webp",
+      "https://mit.puregym.dk/images/centers/791/217-vanlose-18.webp",
+      "https://mit.puregym.dk/images/centers/791/217-vanlose-19.webp",
+      "https://mit.puregym.dk/images/centers/791/217-vanlose-2.webp",
+      "https://mit.puregym.dk/images/centers/791/217-vanlose-20.webp",
+      "https://mit.puregym.dk/images/centers/791/217-vanlose-21.webp",
+      "https://mit.puregym.dk/images/centers/791/217-vanlose-22.webp",
+      "https://mit.puregym.dk/images/centers/791/217-vanlose-23.webp",
+      "https://mit.puregym.dk/images/centers/791/217-vanlose-24.webp",
+      "https://mit.puregym.dk/images/centers/791/217-vanlose-25.webp",
+      "https://mit.puregym.dk/images/centers/791/217-vanlose-26.webp",
+      "https://mit.puregym.dk/images/centers/791/217-vanlose-3.webp",
+      "https://mit.puregym.dk/images/centers/791/217-vanlose-4.webp",
+      "https://mit.puregym.dk/images/centers/791/217-vanlose-5.webp",
+      "https://mit.puregym.dk/images/centers/791/217-vanlose-6.webp",
+      "https://mit.puregym.dk/images/centers/791/217-vanlose-7.webp",
+      "https://mit.puregym.dk/images/centers/791/217-vanlose-8.webp",
+      "https://mit.puregym.dk/images/centers/791/217-vanlose-9.webp",
+      "https://mit.puregym.dk/images/centers/791/217-vanlose.webp"
+    ]
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

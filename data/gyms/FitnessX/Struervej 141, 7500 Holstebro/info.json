@@ -1,0 +1,118 @@
+{
+  "chain": "FitnessX",
+  "name": "Holstebro, Struervej",
+  "label": "Fitnesscenter med Reformer",
+  "address": {
+    "street": "Struervej 141",
+    "postal_code": "7500",
+    "city": "Holstebro",
+    "country": "DK",
+    "full": "Struervej 141, 7500 Holstebro"
+  },
+  "location": {
+    "latitude": 56.37515,
+    "longitude": 8.61333
+  },
+  "url": "https://fitnessx.dk/fitness/fitness-holstebro/fitness-holstebro-struervej-141/",
+  "google_maps_url": "https://goo.gl/maps/98Vc9P5eATMZMpxNA",
+  "membership_url": "https://fitnessx.dk/medlemskaber/",
+  "campaign": false,
+  "campaign_headline": "NY LAV PRIS I AARHUS",
+  "price_teaser": "Træn med en Træningsven fra kun 250 kr./md. pr. person.",
+  "opening_hours": [
+    {
+      "days": "Mandag - torsdag",
+      "open": "05:00 - 23:00",
+      "staffed": "09:00 - 12:00 & 15:00 - 18:30"
+    },
+    {
+      "days": "Fredag",
+      "open": "05:00 - 23:00",
+      "staffed": "09:00 - 12:00"
+    },
+    {
+      "days": "Lørdag",
+      "open": "06:00 - 23:00",
+      "staffed": "09:00 - 12:00"
+    },
+    {
+      "days": "Søndag",
+      "open": "06:00 - 23:00",
+      "staffed": "Ingen"
+    },
+    {
+      "days": "Helligdage",
+      "open": "Åbent som normalt",
+      "staffed": "Ingen"
+    }
+  ],
+  "special_days_text": "Særlige åbningsdage:\n24/12 og 31/12: Åbent som normalt - lukker kl. 17.00.\n25/12 og 1/1: Åbent som normalt - ingen bemanding.",
+  "meta_description": "Fitness, reformer og forskellige hold i dit lokale FitnessX i Holstebro. Find os på Struervej 141. Træn i gode faciliteter, se åbningstider og find vej.",
+  "description": "Dette center ligger på en af vores bedste lokationer og giver dig lidt ekstra at glæde dig over i hverdagen. Det er FitnessX, som du kender det - bare med flere detaljer, der gør en forskel.\nNår du træder ind, mærker du hurtigt, at oplevelsen er skruet op: mere gennemført indretning, et større udvalg af udstyr, bedre plads og åbningstider.\nOg fordi behov og byer ikke er ens, er hvert center lokalt tilpasset. Derfor finder du ikke to centre, der er helt ens - men du finder altid et sted, der gør din træning både nemmere og bedre.",
+  "features": [
+    "Fitness og cardio",
+    "HYROX",
+    "Hold",
+    "Reformer"
+  ],
+  "features_detail": [
+    {
+      "title": "Åbningstid",
+      "text": "I weekenden åbner vi en time tidligere. Så kan du træne (næsten) alene før byen vågner."
+    },
+    {
+      "title": "Bodytracker",
+      "text": "Muskelmasse, fedtprocent (og hvor det sidder), stofskifte, body age og meget mere. Få styr på, hvordan det ser ud med de ting, du ikke kan se i spejlet og følg din udvikling. Uden det koster ekstra."
+    },
+    {
+      "title": "Udstyr",
+      "text": "Udover vores normale maskiner og udstyr har vi særligt udvalgt udstyr i dit center, som er baseret på jeres lokale behov og ønsker. Kort sagt har vi mere, af det du kender, og noget af det du skal lære at kende."
+    },
+    {
+      "title": "Bikesal",
+      "text": "Bike som du kender det. Men opgraderet. Store skærme, lys og et design du ikke har set før. Vi har en særligt variant af Intelligent Cycling (”The Journey”), som er en virtuel oplevelse, der gør din træning sjovere og mere intens. Velkommen til en lidt sjovere, og lidt bedre, biketime."
+    },
+    {
+      "title": "TRÆN REFORMER MED OS",
+      "text": "Hos FitnessX på Struervej har vi en lækker, ny reformersal.\nFitness. reformer. ét medlemskab.\n“Begge dele” betyder ikke “dobbelt pris”\nHos FitnessX kan du tilføje fri reformer til dit medlemskab for kun:\n+150 kr./md. under 30 år\n+200 kr./md. over 30 år\nog få fri adgang til fitness, holdtræning og reformer i ét medlemskab.\nVil du hellere betale per gang? Vælg mellem:\nReformer Pass. 10 klip. brug dem når det passer dig.\nEnkeltbooking. Betal per gang uden at binde dig til noget.\nDu kan læse mere om, hvilke hold vi tilbyder her"
+    }
+  ],
+  "parking": "Gratis parkering på FitnessX-markerede p-pladser",
+  "manager": {
+    "name": null,
+    "title": "Manager"
+  },
+  "tags": [
+    "reformer"
+  ],
+  "images": {
+    "hero": "https://fitnessx.dk/wp-content/uploads/IMG_6755-rotated.jpeg",
+    "gallery": [
+      "https://fitnessx.dk/wp-content/uploads/IMG_6755-rotated.jpeg",
+      "https://fitnessx.dk/wp-content/uploads/Struervej-1.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Struervej-1.jpeg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_6754.jpeg",
+      "https://fitnessx.dk/wp-content/uploads/9DD24529-28B1-4F59-9CDE-C8356663B48B-scaled.jpeg",
+      "https://fitnessx.dk/wp-content/uploads/10F6C512-1AD7-4847-9F47-B76CF8712CE2-scaled.jpeg",
+      "https://fitnessx.dk/wp-content/uploads/6DCF7F6E-7BC7-49B6-8CE1-0A9D7D1F5BAF-scaled.jpeg",
+      "https://fitnessx.dk/wp-content/uploads/processed-6BB09B5D-5CA1-4DE0-8305-3018028D0B3F35-scaled.jpeg",
+      "https://fitnessx.dk/wp-content/uploads/Desktop-header-imagesort_hvid.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Mobile-header-imagesort_hvid.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Aarhus-Soender-Alle-310x150x2.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Aarhus-Soender-Alle-130x115-1.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Aarhus-N-PMVx3.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Aarhus-N-PMV.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Mobile-header-image-SH.jpg",
+      "https://fitnessx.dk/wp-content/uploads/20251022_092844713_iOS-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Koebenhavn-S-Amager-Strand-310x150x3.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Koebenhavn-S-Amager-Strand-130x115-1.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Lyngby-Jernbanepladsen-310x150x3.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Lyngby-Jernbanepladsen-130x115-1.jpg",
+      "https://fitnessx.dk/wp-content/uploads/1000007045.jpg",
+      "https://fitnessx.dk/wp-content/uploads/HKP-color-desk.jpg",
+      "https://fitnessx.dk/wp-content/uploads/HKP-color-mobil.jpg"
+    ]
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

@@ -113,7 +113,8 @@ db.exec(`
     is_active INTEGER DEFAULT 0,
     original_start_time TEXT,
     timer_start TEXT,
-    elapsed_time INTEGER
+    elapsed_time INTEGER,
+    gym_id INTEGER
   );
   CREATE TABLE Exercise_Instance (
     exercise_instance_id INTEGER PRIMARY KEY AUTOINCREMENT,

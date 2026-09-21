@@ -55,6 +55,42 @@ export default StyleSheet.create({
   // cropping anything away.
   // One shared set for both hero cards on this page. Only the aspect ratio is
   // per card, because the two images have different proportions.
+  // The way into Centres. A row rather than a third photograph: two hero
+  // images already carry the page, and a third would make none of them read.
+  centresCard: {
+    marginTop: 14,
+    borderRadius: 20,
+    borderWidth: 1,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  centresIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  centresCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 1,
+  },
+  centresEyebrow: {
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 1.4,
+    textTransform: "uppercase",
+  },
+  centresTitle: {
+    padding: 0,
+    fontSize: 16,
+    lineHeight: 21,
+    fontWeight: "800",
+  },
   heroCard: {
     width: "100%",
     borderRadius: 24,

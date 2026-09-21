@@ -1,0 +1,216 @@
+{
+  "chain": "Fit&Sund",
+  "name": "Fit&Sund Nyborg",
+  "short_name": "Nyborg",
+  "address": {
+    "street": "Frisengårdsvej 5a",
+    "postal_code": "5800",
+    "city": "Nyborg",
+    "country": "DK",
+    "full": "Frisengårdsvej 5a, 5800 Nyborg"
+  },
+  "location": {
+    "latitude": 55.3173578,
+    "longitude": 10.78981373
+  },
+  "geocode": {
+    "latitude": 55.3173578,
+    "longitude": 10.78981373,
+    "matched_address": "Frisengårdsvej 5A, 5800 Nyborg",
+    "exact": true,
+    "source": "DAWA"
+  },
+  "url": "https://fitogsund.dk/c/huse/nyborg",
+  "membership_url": "https://fitogsund.dk/p/bliv-medlem",
+  "class_schedule_url": "https://fitogsund.goactivebooking.com/class-web-categories/34/classes?_gl=1%2A1mmjprh%2A_gcl_au%2AMTAwODY4ODIzOS4xNzU3OTQ0MDQy%2A_ga%2ANjEwNjc0NzI2LjE3MDU1OTE2MTM.%2A_ga_0SKNKSSC6F%2AczE3NjQyNDYxOTckbzIxMCRnMSR0MTc2NDI0NjIwOSRqNDgkbDAkaDA.&facility=548",
+  "google_maps_url": "https://www.google.com/maps/dir/?api=1&destination=Frisengårdsvej-5a+5800+Nyborg",
+  "phone": "+45 54 58 55 66",
+  "email": "nyborg@fitogsund.dk",
+  "opening_hours": [
+    {
+      "day": "Alle dage",
+      "open": "04 - 00"
+    }
+  ],
+  "reception_hours": [
+    {
+      "day": "Mandag",
+      "open": "08:00 - 18:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "08:00 - 12:00 & 16:00 - 18:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "08:00 - 18:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "08:00 - 12:00 & 16:00 - 18:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "08:00 - 14:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "08:00 - 12:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "Ingen bemanding"
+    }
+  ],
+  "meta_description": "Et skridt nærmere dit næste mål  Vores faciliteter er rummelige og lyse, og du vil opleve en afslappet, men også inspirerende atmosfære. Her er indrettet, så alle kan føle sig velkommen - uanset om du er nybegynder, erfaren eller senior. Vores mål er at tilbyde et sted, hvor alle kan nå deres mål uanset alder, træningsniveau og ambitioner.    Hos os handler træning ikke om, hvordan du ser ud, men om, at du opnår følelsen af øget styrke, energi og velvære i hverdagen. Vi øns...",
+  "description": "Et skridt nærmere dit næste mål\nVores faciliteter er rummelige og lyse , og du vil opleve en afslappet , men også inspirerende atmosfære. Her er indrettet , så alle kan føle sig velkommen - uanset om du er nybegynder, erfaren eller senior. Vores mål er at tilbyde et sted, hvor alle kan nå deres mål uanset alder, træningsniveau og ambitioner.\nHos os handler træning ikke om, hvordan du ser ud, men om , at du opnår følelsen af øget styrke, energi og velvære i hverdagen. Vi ønsker at skabe et rum, hvor du kan opdage glæden ved bevægelse, føle dig hjemme og tage ansvar for din egen sundhed.",
+  "facilities": [
+    "Fitness",
+    "F-fitness",
+    "Reformer",
+    "Holdtræning",
+    "Styrketræning med TECHNOGYM udstyr",
+    "Caféområde",
+    "Gratis og lettilgængelig parkering"
+  ],
+  "service_categories": [
+    "Hold",
+    "Fællesskab",
+    "Seniorer",
+    "Reformer",
+    "Body & Mind",
+    "Muskelopbyggende Træning",
+    "Dance",
+    "Senior Træning",
+    "Funktionel Træning",
+    "Konditionsfremmende Træning"
+  ],
+  "services": [
+    {
+      "name": "BODYBALANCE®",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bodybalance-les-mills"
+    },
+    {
+      "name": "BODYPUMP®",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bodypump"
+    },
+    {
+      "name": "CROSSDANCE™ BASIC",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/crossdance-basic"
+    },
+    {
+      "name": "DanceFit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/dance"
+    },
+    {
+      "name": "E-fitness",
+      "room": null,
+      "categories": [],
+      "url": "https://fitogsund.dk/c/ydelser/e-fitness-2"
+    },
+    {
+      "name": "HIIT SKILL",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/hiit-skill-"
+    },
+    {
+      "name": "MOTION for livet",
+      "room": "5 ugers gratis træningsforløb",
+      "categories": [
+        "faellesskab",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/motion-for-livet"
+    },
+    {
+      "name": "Reformer",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/reformer"
+    },
+    {
+      "name": "Salsation",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/salsation"
+    },
+    {
+      "name": "Senior Cirkeltræning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/senior-cirkeltraening"
+    },
+    {
+      "name": "Senior Træning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/seniortraening"
+    },
+    {
+      "name": "SKILLS",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-funktionel-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/skills"
+    },
+    {
+      "name": "Stræk & Afspænding",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/straek--afspaending"
+    }
+  ],
+  "manager": {
+    "name": "Sebastian Ebbelin",
+    "title": "Husleder",
+    "image": "https://fitogsund.dk/f/thumb?src=/f/blog/article/f7077465a360f7a1dca3b5d7c6f4f2630a27a2ae_thumb.png&w=300&h=380"
+  },
+  "images": {
+    "hero": null,
+    "fallback": "../fitogsund-logo.png"
+  },
+  "hero_image_file": "hero.png",
+  "hero_is_placeholder": true,
+  "scraped_at": "2026-09-17"
+}

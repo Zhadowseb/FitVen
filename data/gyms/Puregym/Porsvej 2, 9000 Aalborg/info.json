@@ -1,0 +1,234 @@
+{
+  "chain": "PureGym",
+  "name": "Aalborg, Porsvej",
+  "puregym_id": "284",
+  "address": {
+    "street": "Porsvej 2",
+    "postal_code": "9000",
+    "city": "Aalborg",
+    "country": "DK",
+    "full": "Porsvej 2, 9000 Aalborg"
+  },
+  "location": {
+    "latitude": 57.02412,
+    "longitude": 9.89284
+  },
+  "url": "https://www.puregym.dk/find-center/aalborg-porsvej",
+  "membership_url": "https://www.puregym.dk/bliv-medlem/378/medlemskab",
+  "price_from": "Priser fra 134,50 DKK/md.",
+  "price_note": "*Normalpris fra 269 DKK/md.",
+  "today_notice": "Vi lukker i dag kl. 00:00",
+  "opening_hours": [
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "09:00 - 20:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 17:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Mandag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    }
+  ],
+  "opening_hours_schema": [
+    {
+      "day": "Monday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Tuesday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Wednesday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Thursday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Friday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Saturday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Sunday",
+      "opens": "05:00",
+      "closes": "00:00"
+    }
+  ],
+  "special_days": [
+    {
+      "date": "2027-01-01",
+      "opens": "08:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-02",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-03",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-05",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-06",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-14",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-24",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-25",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-06-05",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-24",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-25",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-26",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-31",
+      "opens": "05:00",
+      "closes": "18:00"
+    }
+  ],
+  "meta_description": "Hos PureGym på Porsvej i Aalborg tilbyder vi både styrke-, cardio- og fitnesstræning. Find dit center her, og oplev træning med plads til alle.",
+  "description": "PureGym Porsvej\nVelkommen til PureGym Porsvej!\nI Nordens Paris med udsigt til Hasseris finder du områdets hyggeligste center med indbydende rammer, hvor man kan mærke glæden for træning både blandt medlemmer og personale. Her vil du altid få et ”velkommen” og et stort smil fra vores dedikerede team, der vil gøre deres bedste for at sikre den bedst mulige træningsoplevelse for dig.\nVi tilbyder en bred vifte af forskellige faciliteter, så uanset om du er til styrke-, kondition-, hold- eller personlig træning, så finder du det hos os.\nVi glæder os til at se dig!\nDet siger personalet om PureGym Porsvej\nGym Manager Ea:\nDet særlige ved PureGym Porsvej er fælleskabet mellem alle vores skønne medlemmer og ikke mindst i teamet. Det er netop det, som er med til at danne fundamentet for vores center her på Porsvej. Der er tid og plads til snak hvilket skaber et trygt og positivt miljø, hvor der er plads til alle.\nPersonlig træning i PureGym Porsvej\nHar du brug for hjælp til at nå dine mål i din træningsrejse, så kan du komme i forløb hos vores dygtige personlige træner. Her får du både gode råd og vejledning, programlægning og ikke mindst en sparringspartner.\nVi tilbyder også en uforpligtende samtale med en personlig træner til 0,-:\nBook samtale her\nHoldtræning i PureGym Porsvej\nDu finder et udvalg af hold hos os. Vores dygtige og engagerede instruktører står klar til at skabe sjove og motiverende oplevelser for både begyndere og erfarne holddeltagere. Så uanset om du er til styrke, funktionel træning eller Bike, har vi noget for dig.\nHvornår træner folk her i centret?\nVi har god plads til vores medlemmer. I vores app kan du se, hvornår der er flest og færrest mennesker i centret.\nBliv medlem her\nHvornår kan jeg møde personalet i centret?\nVed indgangen ligger receptionen, hvor du bliver mødt af vores smilende og servicemindede team, der står klar til at hjælpe dig. Se vores bemandede tider i oversigten her på siden.\nDu er altid velkommen til at komme forbi i vores bemandede åbningstider, hvor vi kan hjælpe dig med dine spørgsmål, og hvor vi gerne giver en rundvisning rundt i centret.\nKan jeg parkere ved PureGym Porsvej?\nDer er rig mulighed for gratis parkering ved centret, hvilket gør det let og tilgængeligt. Vi er også placeret tæt på offentlig transport med bus, som stopper lige foran centret.\nFølg os på Facebook\nSe vores lokaler her\nSE VORES CENTER HER:\nBliv medlem af PureGym og få adgang til:\nApp\nHer kan du få et trænings-program, følge din træning, booke hold, deltage i challenges og meget mere.\nPersonlig træning\nHar du brug for hjælp til at nå dine mål? Book en samtale hos en af vores certificerede personlige trænere til 0 kr.\nHoldtræning\nBliv en del af et stærkt fællesskab på vores hold. Vores dedikerede instruktører guider dig igennem og sikrer højt humør.\nBodytracker\nFor kun ekstra 9 kr./md. kan du få adgang til en avanceret vægt, der giver dig en kropsanalyse med flere forskellige parametre.\nEr du klar til at starte?\nVælg dit medlemskab her\nOg bliv en del af Danmarks største fitness-fælleskab.\nGenerelt\nLog ind på Mit PureGym\nPriser og medlemskabstyper\nTil/afmeld nyhedsbrev\nOm PureGym\nPresse\nKarriere\nHjerteforeningen\nStudierabat\nInformation\nFAQ & Kontakt\nVelkomst og information\nHusets regler\nMedlems­betingelser\nDatapolitik\nCookies\nTilgængelighed\nKonkurrencevindere\nSafespace\nVores fitness centre\nFind center\nAlle større byer\nKøbenhavn\nAarhus\nOdense\nAalborg\nRanders\nValby\nDownload vores app\nHold dig informeret\nTorveporten 2,\n2500 Valby\nCVR. 25652991\nPureGym © 2026\nLog ind\nNyt eller glemt kodeord?\nIkke medlem endnu?\nMeld dig ind",
+  "notice": null,
+  "facilities": [],
+  "facility_names": [
+    "App",
+    "Bikesal",
+    "Cardiotræning",
+    "Funktionelt træningsområde",
+    "Holdtræning",
+    "Parkering",
+    "Personlig træner",
+    "Styrketræning",
+    "Udstrækningsområde",
+    "Watt-cykler & Intelligent Cycling"
+  ],
+  "facility_ids": [
+    "349",
+    "355",
+    "14",
+    "24",
+    "27",
+    "17",
+    "350",
+    "28",
+    "434",
+    "12"
+  ],
+  "plan_ids": [
+    "671",
+    "666"
+  ],
+  "team_ids": [
+    "498",
+    "807",
+    "834",
+    "735",
+    "739",
+    "822"
+  ],
+  "classes": [
+    "Bike Power",
+    "Bike Standard",
+    "Functional Express",
+    "Functional Training",
+    "Get Started - Introhold",
+    "Lokale Events"
+  ],
+  "images": {
+    "hero": "https://www.puregym.dk/files/2025-05/Puregym_fitness_cardio_Porsvej.jpg",
+    "hero_2500": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-05/Puregym_fitness_cardio_Porsvej.jpg?itok=nzlkbcOY",
+    "teaser": "https://www.puregym.dk/files/styles/center_teaser/public/2025-05/Puregym_fitness_cardio_Porsvej.jpg?itok=LY4iAnNj",
+    "gallery": [
+      "https://mit.puregym.dk/images/centers/879/pg-aalborg-porsvej-3-2-01-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/879/pg-aalborg-porsvej-3-2-02-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/879/pg-aalborg-porsvej-3-2-03-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/879/pg-aalborg-porsvej-3-2-04-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/879/pg-aalborg-porsvej-3-2-05-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/879/pg-aalborg-porsvej-3-2-06-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/879/pg-aalborg-porsvej-3-2-07-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/879/pg-aalborg-porsvej-3-2-08-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/879/pg-aalborg-porsvej-3-2-09-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/879/pg-aalborg-porsvej-3-2-10-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/879/pg-aalborg-porsvej-3-2-11-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/879/pg-aalborg-porsvej-3-2-12-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/879/pg-aalborg-porsvej-3-2-13-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/879/pg-aalborg-porsvej-3-2-14-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/879/pg-aalborg-porsvej-3-2-15-1090x727.webp"
+    ]
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

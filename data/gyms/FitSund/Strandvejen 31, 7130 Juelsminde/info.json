@@ -1,0 +1,250 @@
+{
+  "chain": "Fit&Sund",
+  "name": "Fit&Sund Juelsminde",
+  "short_name": "Juelsminde",
+  "address": {
+    "street": "Strandvejen 31",
+    "postal_code": "7130",
+    "city": "Juelsminde",
+    "country": "DK",
+    "full": "Strandvejen 31, 7130 Juelsminde"
+  },
+  "location": {
+    "latitude": 55.71538441,
+    "longitude": 10.01076348
+  },
+  "geocode": {
+    "latitude": 55.71538441,
+    "longitude": 10.01076348,
+    "matched_address": "Strandvejen 31, 7130 Juelsminde",
+    "exact": true,
+    "source": "DAWA"
+  },
+  "url": "https://fitogsund.dk/c/huse/juelsminde",
+  "membership_url": "https://fitogsund.dk/p/bliv-medlem",
+  "class_schedule_url": "https://fitogsund.goactivebooking.com/class-web-categories/34/classes?facility=20",
+  "google_maps_url": "https://www.google.com/maps/dir/?api=1&destination=Strandvejen-31+7130+Juelsminde",
+  "phone": "+45 75 69 32 99",
+  "email": "juelsminde@fitogsund.dk",
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 23:00"
+    }
+  ],
+  "reception_hours": [
+    {
+      "day": "Mandag",
+      "open": "08:00 - 14:00 & 16:30 - 18:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "08:00 - 14:00 & 16:30 - 18:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "08:00 - 14:00 & 16:30 - 18:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "08:00 - 14:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "08:00 - 12:00 & 16:30 - 18:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "09:00 - 13:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "ingen bemanding"
+    }
+  ],
+  "meta_description": "Træn hos Fit&Sund Juelsminde i vores moderne fitness og træningscenter. Fitness | Holdtræning | Personlig træning",
+  "description": "Velkommen til Fit&Sund Juelsminde.\nVi er meget mere end bare et fitnesscenter, vi er dit lokale fitness- og sundhedshus hele livet.\nLyse lokaler og nyt topmoderne udstyr. Fit&Sund Juelsminde ligger i et fuldstændig nyistandsat hus med dejlige lyse lokaler med helt nye maskiner.\nFitness- og sundhedshus i øjenhøjde.\nVi har 3 kerneværdier, som vi vægter meget højt: sundhed, viden og nærvær.\nFor at styrke din sundhed tilbyder vi styrketræning og forskellig holdtræning, og vi kan også tilbyde målrettet træning ud fra dine præmisser.\nUanset din alder, baggrund eller trænings- og sundhedstilstand vil vores kompetente trænings- og sundhedsfaglige team yde en kvalificeret indsats for at hjælpe dig.\nNærvær er omdrejningspunktet for at skabe den gode oplevelse med træning og sundhed, når du træder ind hos Fit&Sund Juelsminde.\nFællesskab og hygge.\nI velkomstområdet er alle velkomne, og her kan du sammen med dit hold eller din træningsmakker nyde kvalitetskaffe og -te samt opleve den magi, der opstår, når medlemmerne hygger sig i fællesskab.\nVi glæder os til at se dig.",
+  "facilities": [
+    "Fitness",
+    "Fysioterapeuter",
+    "Central Placering",
+    "Lyse og flotte lokaler",
+    "Kvalitetskaffe i Caféen",
+    "Plads til alle"
+  ],
+  "service_categories": [
+    "Fysioterapi",
+    "Event",
+    "Hold",
+    "Yoga/Reformer",
+    "Fællesskab",
+    "Seniorer",
+    "OUTDOOR",
+    "Core Træning",
+    "Dance",
+    "Body & Mind",
+    "Funktionel Træning",
+    "Konditionsfremmende Træning",
+    "Muskelopbyggende Træning",
+    "Outdoor Træning",
+    "Senior Træning"
+  ],
+  "services": [
+    {
+      "name": "2026 OPSTARTSPAKKER",
+      "room": null,
+      "categories": [
+        "event",
+        "fysioterapi"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/2026-opstartspakker-13"
+    },
+    {
+      "name": "Boldtræning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/boldtraening"
+    },
+    {
+      "name": "DanceFit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/dance"
+    },
+    {
+      "name": "Hatha Yoga",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/hatha-yoga"
+    },
+    {
+      "name": "Mindful Stretch",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/mindful-stretch"
+    },
+    {
+      "name": "MOTION for livet",
+      "room": "5 ugers gratis træningsforløb",
+      "categories": [
+        "faellesskab",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/motion-for-livet"
+    },
+    {
+      "name": "Outdoor træning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-funktionel-traening",
+        "hold-outdoor",
+        "outdoor"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/outdoor-traening"
+    },
+    {
+      "name": "Pilates",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/pilates"
+    },
+    {
+      "name": "Puls Styrke",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/puls--styrke"
+    },
+    {
+      "name": "Senior Træning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/seniortraening"
+    },
+    {
+      "name": "Step Styrke",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/step-styrke"
+    },
+    {
+      "name": "Stram Op",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/stramop"
+    },
+    {
+      "name": "YIN YOGA",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/yin-yoga"
+    }
+  ],
+  "manager": {
+    "name": "Mette Lauridsen",
+    "title": "Husleder",
+    "image": "https://fitogsund.dk/f/thumb?src=/f/blog/article/50a30cc5c4df2653e831fe58bae94c355fa3108e_thumb.jpg&w=300&h=380"
+  },
+  "images": {
+    "hero": null,
+    "fallback": "../fitogsund-logo.png"
+  },
+  "hero_image_file": "hero.png",
+  "hero_is_placeholder": true,
+  "scraped_at": "2026-09-17"
+}

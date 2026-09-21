@@ -1,3 +1,4 @@
+import { t } from "@localization";
 import { supabase } from "../Database/supaBaseClient";
 import {
   AVATAR_BUCKET,
@@ -8,7 +9,6 @@ import {
 import {
   calculateAgeFromBirthDate,
   normalizeIsoDateString,
-  normalizeLocalDateString,
 } from "../Utils/dateUtils";
 import {
   buildFullUsername,
@@ -19,15 +19,22 @@ import {
   USERNAME_BASE_PATTERN,
 } from "../Utils/socialUsername";
 import {
-  normalizeElapsedDurationSeconds,
-  normalizeStoredTimestampSeconds,
-} from "../Utils/timeUtils";
-import {
   MAX_HEART_RATE_SOURCE_AUTO,
   normalizeMaxHeartRate,
   normalizeMaxHeartRateSource,
   resolveMaxHeartRate,
 } from "../Utils/heartRateUtils";
+import {
+  buildCloudActivityPreview,
+  isMissingGymJoinError,
+  createRestActivityPreview,
+  getCloudWorkoutActivityAt,
+  getCloudWorkoutDisplayLabel,
+  isCloudWorkoutLive,
+  mapCloudWorkoutGym,
+  mapCloudWorkoutMusic,
+} from "../Utils/cloudActivityUtils";
+import * as gymService from "./gymService";
 
 const PROFILES_TABLE = "profiles";
 const PROFILE_PRIVATE_TABLE = "profile_private";
@@ -38,7 +45,11 @@ const WORKOUT_TYPE_INSTANCE_TABLE = "workout_type_instance";
 const PROFILE_SELECT_FIELDS =
   "id, username, username_base, username_code, display_name, bio, avatar_path, created_at, updated_at";
 const WORKOUT_ACTIVITY_SELECT_FIELDS =
-  "id, user_id, workout_type, date, label, done, is_active, timer_start, elapsed_time, deleted_at, workout_catalog:workout_type!workout_type_instance_workout_type_fkey(display_name)";
+  "id, user_id, workout_type, date, label, done, is_active, timer_start, elapsed_time, deleted_at, last_updated, workout_catalog:workout_type!workout_type_instance_workout_type_fkey(display_name)";
+// The same rows with the centre and the newest track joined in, one request
+// for everyone. Falls back to the plain select when the centre migration has
+// not been run, so Home keeps working in the meantime.
+const WORKOUT_ACTIVITY_WITH_GYM_SELECT_FIELDS = `${WORKOUT_ACTIVITY_SELECT_FIELDS}, gym_id, gym:gym!workout_type_instance_gym_id_fkey(id, short_name), workout_music(track, artist, art_url, provider, played_at)`;
 const SOCIAL_SETUP_MESSAGE =
   "User search and follows are not set up in Supabase yet. Run supabase/migrations/20260424004053_social-search.sql in the Supabase SQL editor first.";
 const WORKOUT_TYPE_SETUP_MESSAGE =
@@ -130,182 +141,107 @@ function mapProfileRow(
   };
 }
 
-function isCloudWorkoutLive(workout) {
-  const timerStartSeconds = getCloudWorkoutTimerStartSeconds(workout);
 
-  return (
-    Number(workout?.done) !== 1 &&
-    (Number(workout?.is_active) === 1 || timerStartSeconds !== null)
-  );
-}
 
-function formatCloudWorkoutElapsedDetail(workout) {
-  const storedElapsedSeconds = normalizeElapsedDurationSeconds(
-    workout?.elapsed_time,
-    0
-  );
-  const timerStartSeconds = getCloudWorkoutTimerStartSeconds(workout);
-  const runningElapsedSeconds =
-    timerStartSeconds !== null
-      ? Math.max(0, Math.trunc(Date.now() / 1000) - timerStartSeconds)
-      : 0;
-  const totalElapsedSeconds = storedElapsedSeconds + runningElapsedSeconds;
-  const totalElapsedMinutes = Math.max(1, Math.floor(totalElapsedSeconds / 60));
 
-  return `${totalElapsedMinutes} min in`;
-}
 
-function normalizeCloudTimeString(value) {
-  if (typeof value !== "string") {
-    return null;
-  }
 
-  const trimmedValue = value.trim();
-  const match = trimmedValue.match(/^(\d{2}):(\d{2})(?::(\d{2}))?/);
 
-  if (!match) {
-    return null;
-  }
 
-  const hours = Number(match[1]);
-  const minutes = Number(match[2]);
-  const seconds = Number(match[3] ?? "00");
 
-  if (
-    !Number.isInteger(hours) ||
-    !Number.isInteger(minutes) ||
-    !Number.isInteger(seconds) ||
-    hours < 0 ||
-    hours > 23 ||
-    minutes < 0 ||
-    minutes > 59 ||
-    seconds < 0 ||
-    seconds > 59
-  ) {
-    return null;
-  }
 
-  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
-    2,
-    "0"
-  )}:${String(seconds).padStart(2, "0")}`;
-}
 
-function getCloudWorkoutTimerStartSeconds(workout) {
-  const storedTimerStartSeconds = normalizeStoredTimestampSeconds(
-    workout?.timer_start
+// How far either side of today the tiles look for a last or a next workout.
+// Far enough to cover a holiday and a training plan; the database does the
+// looking, so the window costs one index scan rather than a page of rows.
+const SURROUNDING_ACTIVITY_PAST_DAYS = 180;
+const SURROUNDING_ACTIVITY_FUTURE_DAYS = 60;
+/**
+ * The last day each person finished a workout and the next day they have one
+ * planned, for the tiles of everybody who has nothing on today.
+ *
+ * Through an RPC rather than a select. The follower policy on
+ * `workout_type_instance` only lets a follower see yesterday, today and
+ * tomorrow, so reading the table directly answered null for every friend and
+ * the tiles said nothing instead of "3 days ago". Widening that policy would
+ * hand a follower the whole training history to produce two dates;
+ * `friends_surrounding_activity` is a security definer function that returns
+ * the two dates and nothing else, for people the viewer actually follows.
+ */
+async function fetchSurroundingActivityByUserId({ userIds }) {
+  const surrounding = new Map(
+    userIds.map((userId) => [userId, { lastWorkoutAt: null, nextWorkoutAt: null }])
   );
 
-  if (storedTimerStartSeconds !== null) {
-    return storedTimerStartSeconds;
-  }
-
-  const normalizedDate = normalizeLocalDateString(workout?.date);
-  const normalizedTime = normalizeCloudTimeString(workout?.timer_start);
-
-  if (!normalizedDate || !normalizedTime) {
-    return null;
-  }
-
-  const [day, month, year] = normalizedDate.split(".").map(Number);
-  const [hours, minutes, seconds] = normalizedTime.split(":").map(Number);
-  const date = new Date(year, month - 1, day, hours, minutes, seconds, 0);
-  const timestampMs = date.getTime();
-
-  return Number.isNaN(timestampMs) ? null : Math.trunc(timestampMs / 1000);
-}
-
-function createRestActivityPreview() {
-  return {
-    activityState: "rest",
-    activityDetail: "Rest day",
-    workoutType: null,
-    workoutLabel: null,
-  };
-}
-
-const ACTIVITY_PREVIEW_SORT_PRIORITY = {
-  live: 0,
-  planned: 1,
-  done: 2,
-  rest: 3,
-};
-
-function getActivityPreviewSortPriority(profile) {
-  return ACTIVITY_PREVIEW_SORT_PRIORITY[profile?.activityState] ?? 3;
-}
-
-function sortCirclePreviewPeople(people) {
-  return [...people].sort((left, right) => {
-    const priorityDelta =
-      getActivityPreviewSortPriority(left) -
-      getActivityPreviewSortPriority(right);
-
-    if (priorityDelta !== 0) {
-      return priorityDelta;
-    }
-
-    return 0;
+  const { data, error } = await supabase.rpc("friends_surrounding_activity", {
+    target_ids: userIds,
+    past_days: SURROUNDING_ACTIVITY_PAST_DAYS,
+    future_days: SURROUNDING_ACTIVITY_FUTURE_DAYS,
   });
+
+  // A database without the function is a client running ahead of its
+  // migrations: the tiles lose "last trained" and keep everything else.
+  if (error) {
+    console.warn("Could not read surrounding activity:", error.message ?? error);
+    return surrounding;
+  }
+
+  for (const row of data ?? []) {
+    const entry = surrounding.get(row.user_id);
+
+    if (entry) {
+      entry.lastWorkoutAt = row.last_workout_at ?? null;
+      entry.nextWorkoutAt = row.next_workout_at ?? null;
+    }
+  }
+
+  return surrounding;
 }
 
-function getCloudWorkoutDisplayLabel(workout) {
-  const workoutType = workout?.workout_type?.trim?.() ?? workout?.workout_type;
-  const label = workout?.label?.trim?.() ?? workout?.label;
-  const displayName =
-    workout?.workout_catalog?.display_name?.trim?.() ??
-    workout?.workout_catalog?.display_name;
 
-  if (label && label !== workoutType) {
-    return label;
+
+
+
+
+
+
+
+
+
+async function fetchActivityWorkouts({ userIds, activityDate }) {
+  const { data, error } = await supabase
+    .from(WORKOUT_TYPE_INSTANCE_TABLE)
+    .select(WORKOUT_ACTIVITY_WITH_GYM_SELECT_FIELDS)
+    .in("user_id", userIds)
+    .eq("date", activityDate)
+    .is("deleted_at", null)
+    .order("user_id", { ascending: true })
+    .order("id", { ascending: true })
+    .order("played_at", { referencedTable: "workout_music", ascending: false })
+    .limit(1, { referencedTable: "workout_music" });
+
+  if (!error) {
+    return data ?? [];
   }
 
-  return displayName || label || workoutType || null;
-}
-
-function buildCloudActivityPreview(workouts) {
-  if (!workouts.length) {
-    return createRestActivityPreview();
+  if (!isMissingGymJoinError(error)) {
+    throw normalizeSocialError(error);
   }
 
-  const liveWorkout = workouts.find((workout) => isCloudWorkoutLive(workout));
+  const { data: plainData, error: plainError } = await supabase
+    .from(WORKOUT_TYPE_INSTANCE_TABLE)
+    .select(WORKOUT_ACTIVITY_SELECT_FIELDS)
+    .in("user_id", userIds)
+    .eq("date", activityDate)
+    .is("deleted_at", null)
+    .order("user_id", { ascending: true })
+    .order("id", { ascending: true });
 
-  if (liveWorkout) {
-    return {
-      activityState: "live",
-      activityDetail: formatCloudWorkoutElapsedDetail(liveWorkout),
-      workoutType: liveWorkout.workout_type ?? null,
-      workoutLabel: getCloudWorkoutDisplayLabel(liveWorkout),
-    };
+  if (plainError) {
+    throw normalizeSocialError(plainError);
   }
 
-  const plannedWorkouts = workouts.filter(
-    (workout) => Number(workout.done) !== 1
-  );
-
-  if (plannedWorkouts.length > 0) {
-    const nextPlannedWorkout = plannedWorkouts[0];
-
-    return {
-      activityState: "planned",
-      activityDetail:
-        plannedWorkouts.length > 1
-          ? `${plannedWorkouts.length} planned`
-          : "Planned",
-      workoutType: nextPlannedWorkout.workout_type ?? null,
-      workoutLabel: getCloudWorkoutDisplayLabel(nextPlannedWorkout),
-    };
-  }
-
-  const completedWorkout = workouts[workouts.length - 1];
-
-  return {
-    activityState: "done",
-    activityDetail:
-      workouts.length > 1 ? `${workouts.length} done` : "Done today",
-    workoutType: completedWorkout?.workout_type ?? null,
-    workoutLabel: getCloudWorkoutDisplayLabel(completedWorkout),
-  };
+  return plainData ?? [];
 }
 
 async function fetchActivityPreviewByUserId({ userIds, date }) {
@@ -316,18 +252,10 @@ async function fetchActivityPreviewByUserId({ userIds, date }) {
     return new Map();
   }
 
-  const { data: workouts, error } = await supabase
-    .from(WORKOUT_TYPE_INSTANCE_TABLE)
-    .select(WORKOUT_ACTIVITY_SELECT_FIELDS)
-    .in("user_id", uniqueUserIds)
-    .eq("date", activityDate)
-    .is("deleted_at", null)
-    .order("user_id", { ascending: true })
-    .order("id", { ascending: true });
-
-  if (error) {
-    throw normalizeSocialError(error);
-  }
+  const [workouts, surrounding] = await Promise.all([
+    fetchActivityWorkouts({ userIds: uniqueUserIds, activityDate }),
+    fetchSurroundingActivityByUserId({ userIds: uniqueUserIds }),
+  ]);
 
   const workoutsByUserId = new Map();
 
@@ -342,7 +270,12 @@ async function fetchActivityPreviewByUserId({ userIds, date }) {
   return new Map(
     uniqueUserIds.map((userId) => [
       userId,
-      buildCloudActivityPreview(workoutsByUserId.get(userId) ?? []),
+      {
+        ...buildCloudActivityPreview(workoutsByUserId.get(userId) ?? []),
+        // Carried for everybody, not just the people resting: the strip is
+        // sorted on them, and a tile that is quiet today still has a story.
+        ...(surrounding.get(userId) ?? { lastWorkoutAt: null, nextWorkoutAt: null }),
+      },
     ])
   );
 }
@@ -488,18 +421,18 @@ function normalizeBirthDateValue(birthDate) {
 
 function validateBirthDate(birthDate, normalizedBirthDate) {
   if (birthDate && !normalizedBirthDate) {
-    throw new Error("Birth date is invalid.");
+    throw new Error(t("social.errors.birthDateInvalid"));
   }
 
   if (
     normalizedBirthDate &&
     normalizedBirthDate > new Date().toISOString().slice(0, 10)
   ) {
-    throw new Error("Birth date cannot be in the future.");
+    throw new Error(t("social.errors.birthDateFuture"));
   }
 
   if (normalizedBirthDate && normalizedBirthDate < "1900-01-01") {
-    throw new Error("Birth date must be on or after 01.01.1900.");
+    throw new Error(t("social.errors.birthDateTooEarly"));
   }
 }
 
@@ -626,7 +559,7 @@ async function mapOwnProfileRow(row, userId) {
       privateSettingsError:
         error instanceof Error
           ? error.message
-          : "Private profile settings are unavailable.",
+          : t("social.errors.privateSettingsUnavailable"),
     };
   }
 }
@@ -709,7 +642,7 @@ async function findAvailableUsernameCode(usernameBase) {
   const normalizedUsernameBase = normalizeUsernameBaseInput(usernameBase);
 
   if (!USERNAME_BASE_PATTERN.test(normalizedUsernameBase)) {
-    throw new Error("Username base is invalid.");
+    throw new Error(t("social.errors.usernameBaseInvalid"));
   }
 
   // This used to read every profile sharing the base and pick a code that was
@@ -729,7 +662,9 @@ async function findAvailableUsernameCode(usernameBase) {
 
   if (typeof claimedCode !== "string" || !claimedCode) {
     throw new Error(
-      `Username base "${normalizedUsernameBase}" has no remaining 4-digit tags.`
+      t("social.errors.usernameBaseExhausted", {
+        usernameBase: normalizedUsernameBase,
+      })
     );
   }
 
@@ -738,7 +673,7 @@ async function findAvailableUsernameCode(usernameBase) {
 
 export async function ensureOwnProfile(user) {
   if (!user?.id) {
-    throw new Error("You need to be signed in to load social data.");
+    throw new Error(t("social.errors.signInToLoadSocial"));
   }
 
   const { data: existingProfile, error: fetchError } = await supabase
@@ -800,14 +735,12 @@ export async function ensureOwnProfile(user) {
     }
   }
 
-  throw new Error(
-    "Could not reserve a username tag right now. Please try again."
-  );
+  throw new Error(t("social.errors.usernameTagUnavailable"));
 }
 
 export async function updateOwnProfile({ user, displayName, bio, birthDate }) {
   if (!user?.id) {
-    throw new Error("You need to be signed in to update your profile.");
+    throw new Error(t("social.errors.signInToUpdateProfile"));
   }
 
   const normalizedProfile = normalizeProfileValues({
@@ -819,20 +752,22 @@ export async function updateOwnProfile({ user, displayName, bio, birthDate }) {
   validateBirthDate(birthDate, normalizedProfile.birthDate);
 
   if (!normalizedProfile.displayName) {
-    throw new Error("Display name cannot be empty.");
+    throw new Error(t("social.errors.displayNameEmpty"));
   }
 
   if (
     normalizedProfile.displayName.length > PROFILE_DISPLAY_NAME_MAX_LENGTH
   ) {
     throw new Error(
-      `Display name must stay within ${PROFILE_DISPLAY_NAME_MAX_LENGTH} characters.`
+      t("social.errors.displayNameTooLong", {
+        count: PROFILE_DISPLAY_NAME_MAX_LENGTH,
+      })
     );
   }
 
   if (normalizedProfile.bio.length > PROFILE_BIO_MAX_LENGTH) {
     throw new Error(
-      `Bio must stay within ${PROFILE_BIO_MAX_LENGTH} characters.`
+      t("social.errors.bioTooLong", { count: PROFILE_BIO_MAX_LENGTH })
     );
   }
 
@@ -894,13 +829,13 @@ export async function updateOwnProfile({ user, displayName, bio, birthDate }) {
     privateSettingsError:
       privateSettingsError instanceof Error
         ? privateSettingsError.message
-        : "Private profile settings could not be saved.",
+        : t("social.errors.privateSettingsSaveFailed"),
   };
 }
 
 export async function updateOwnBirthDate({ user, birthDate }) {
   if (!user?.id) {
-    throw new Error("You need to be signed in to update your birth date.");
+    throw new Error(t("social.errors.signInToUpdateBirthDate"));
   }
 
   const normalizedBirthDate = normalizeBirthDateValue(birthDate);
@@ -916,7 +851,7 @@ export async function updateOwnManualMaxHeartRate({
   maxHeartRate,
 }) {
   if (!user?.id) {
-    throw new Error("You need to be signed in to update max heart rate.");
+    throw new Error(t("social.errors.signInToUpdateMaxHeartRate"));
   }
 
   const normalizedMaxHeartRate = normalizeMaxHeartRate(maxHeartRate);
@@ -927,7 +862,7 @@ export async function updateOwnManualMaxHeartRate({
     maxHeartRate !== "" &&
     normalizedMaxHeartRate === null
   ) {
-    throw new Error("Max heart rate must be a whole number from 60 to 250.");
+    throw new Error(t("social.errors.maxHeartRateRange"));
   }
 
   await ensureOwnProfile(user);
@@ -955,13 +890,13 @@ export async function updateOwnMaxHeartRateSource({
   preferredSource,
 }) {
   if (!user?.id) {
-    throw new Error("You need to be signed in to update max heart rate.");
+    throw new Error(t("social.errors.signInToUpdateMaxHeartRate"));
   }
 
   const normalizedSource = normalizeMaxHeartRateSource(preferredSource);
 
   if (normalizedSource !== preferredSource) {
-    throw new Error("Choose a valid max heart rate source.");
+    throw new Error(t("social.errors.maxHeartRateSourceInvalid"));
   }
 
   await ensureOwnProfile(user);
@@ -986,15 +921,15 @@ export async function updateOwnMaxHeartRateSource({
 
 export async function uploadOwnAvatar({ user, asset }) {
   if (!user?.id) {
-    throw new Error("You need to be signed in to update your profile photo.");
+    throw new Error(t("social.errors.signInToUpdatePhoto"));
   }
 
   if (!asset?.uri) {
-    throw new Error("Pick an image before uploading a profile photo.");
+    throw new Error(t("social.errors.pickImageFirst"));
   }
 
   if (asset.fileSize && asset.fileSize > PROFILE_AVATAR_MAX_BYTES) {
-    throw new Error("Profile photo must stay within 3 MB.");
+    throw new Error(t("social.errors.photoTooLarge"));
   }
 
   await ensureOwnProfile(user);
@@ -1002,13 +937,13 @@ export async function uploadOwnAvatar({ user, asset }) {
   const response = await fetch(asset.uri);
 
   if (!response.ok) {
-    throw new Error("Could not read the selected image.");
+    throw new Error(t("social.errors.imageReadFailed"));
   }
 
   const avatarBuffer = await response.arrayBuffer();
 
   if (!avatarBuffer.byteLength) {
-    throw new Error("The selected image was empty.");
+    throw new Error(t("social.errors.imageEmpty"));
   }
 
   const avatarPath = getAvatarObjectPath(user.id);
@@ -1049,7 +984,7 @@ export async function uploadOwnAvatar({ user, asset }) {
 
 export async function searchUsers({ query, currentUserId, limit = 20 }) {
   if (!currentUserId) {
-    throw new Error("You need to be signed in to search for users.");
+    throw new Error(t("social.errors.signInToSearch"));
   }
 
   const normalizedQuery = buildSearchFilter(query ?? "");
@@ -1092,7 +1027,7 @@ export async function searchUsers({ query, currentUserId, limit = 20 }) {
 
 export async function getFollowCounts({ userId }) {
   if (!userId) {
-    throw new Error("Missing user information for follow counts.");
+    throw new Error(t("social.errors.missingUserFollowCounts"));
   }
 
   const [
@@ -1129,7 +1064,7 @@ export async function getFollowers({
   limit = 50,
 }) {
   if (!userId) {
-    throw new Error("Missing user information for followers.");
+    throw new Error(t("social.errors.missingUserFollowers"));
   }
 
   const { data: followRows, error } = await supabase
@@ -1155,7 +1090,7 @@ export async function getFollowing({
   limit = 50,
 }) {
   if (!userId) {
-    throw new Error("Missing user information for following.");
+    throw new Error(t("social.errors.missingUserFollowing"));
   }
 
   const { data: followRows, error } = await supabase
@@ -1177,41 +1112,58 @@ export async function getFollowing({
 
 export async function getCirclePreview({ user, limit = 12, date = null }) {
   if (!user?.id) {
-    throw new Error("You need to be signed in to load your circle.");
+    throw new Error(t("social.errors.signInToLoadCircle"));
   }
 
-  const [currentUserProfile, followingProfiles] = await Promise.all([
+  // The viewer's own centre is what marks a friend's centre line orange. It
+  // is fetched alongside the rest and is allowed to fail: without it every
+  // centre simply reads as somebody else's.
+  const [currentUserProfile, followingProfiles, homeGym] = await Promise.all([
     ensureOwnProfile(user),
     getFollowing({
       userId: user.id,
       currentUserId: user.id,
       limit,
     }),
+    gymService.getMyHomeGym().catch(() => null),
   ]);
   const activityPreviewByUserId = await fetchActivityPreviewByUserId({
     userIds: followingProfiles.map((profile) => profile.id),
     date,
   });
+  const homeGymId = homeGym?.id ?? null;
 
-  const people = followingProfiles.map((profile) => ({
-    ...profile,
-    relationshipType: "following",
-    ...(activityPreviewByUserId.get(profile.id) ?? createRestActivityPreview()),
-  }));
+  const people = followingProfiles.map((profile) => {
+    const preview =
+      activityPreviewByUserId.get(profile.id) ?? createRestActivityPreview();
+
+    return {
+      ...profile,
+      relationshipType: "following",
+      ...preview,
+      gym: preview.gym
+        ? { ...preview.gym, isHomeGym: homeGymId !== null && preview.gym.id === homeGymId }
+        : null,
+    };
+  });
 
   return {
-    currentUser: currentUserProfile,
-    people: sortCirclePreviewPeople(people),
+    currentUser: currentUserProfile
+      ? { ...currentUserProfile, homeGymId, homeGym }
+      : currentUserProfile,
+    // Unordered: FriendsActivity sorts, because the order is what the strip
+    // wants rather than what the request produced.
+    people,
   };
 }
 
 export async function followUser({ userId, targetUserId }) {
   if (!userId || !targetUserId) {
-    throw new Error("Missing user information for follow.");
+    throw new Error(t("social.errors.missingUserFollow"));
   }
 
   if (userId === targetUserId) {
-    throw new Error("You cannot follow yourself.");
+    throw new Error(t("social.errors.followSelf"));
   }
 
   const { error } = await supabase.from(USER_FOLLOWS_TABLE).insert({
@@ -1226,7 +1178,7 @@ export async function followUser({ userId, targetUserId }) {
 
 export async function unfollowUser({ userId, targetUserId }) {
   if (!userId || !targetUserId) {
-    throw new Error("Missing user information for unfollow.");
+    throw new Error(t("social.errors.missingUserUnfollow"));
   }
 
   const { error } = await supabase
@@ -1244,11 +1196,11 @@ export async function unfollowUser({ userId, targetUserId }) {
 
 export async function blockUser({ userId, targetUserId }) {
   if (!userId || !targetUserId) {
-    throw new Error("Missing user information for block.");
+    throw new Error(t("social.errors.missingUserBlock"));
   }
 
   if (userId === targetUserId) {
-    throw new Error("You cannot block yourself.");
+    throw new Error(t("social.errors.blockSelf"));
   }
 
   // The follow rows in both directions are cut by a trigger on this insert, not
@@ -1272,12 +1224,15 @@ export async function blockUser({ userId, targetUserId }) {
  * constraint accepts, so adding one here without adding it there fails the
  * insert rather than storing something nobody will recognise later.
  */
+// `labelKey` is what a translated screen shows. `label` is the English
+// wording for the screens that have not been through the localization pass
+// yet - the same reason REJECTION_REASONS in gymService carries both.
 export const REPORT_REASONS = [
-  { value: "spam", label: "Spam or advertising" },
-  { value: "harassment", label: "Harassment or bullying" },
-  { value: "inappropriate", label: "Inappropriate content" },
-  { value: "impersonation", label: "Pretending to be someone else" },
-  { value: "other", label: "Something else" },
+  { value: "spam", labelKey: "social.report.reasons.spam", label: "Spam or advertising" },
+  { value: "harassment", labelKey: "social.report.reasons.harassment", label: "Harassment or bullying" },
+  { value: "inappropriate", labelKey: "social.report.reasons.inappropriate", label: "Inappropriate content" },
+  { value: "impersonation", labelKey: "social.report.reasons.impersonation", label: "Pretending to be someone else" },
+  { value: "other", labelKey: "social.report.reasons.other", label: "Something else" },
 ];
 
 export const REPORT_NOTE_MAX_LENGTH = 1000;
@@ -1302,15 +1257,15 @@ export async function reportUser({
   postId = null,
 }) {
   if (!userId || !targetUserId) {
-    throw new Error("Missing user information for report.");
+    throw new Error(t("social.errors.missingUserReport"));
   }
 
   if (userId === targetUserId) {
-    throw new Error("You cannot report yourself.");
+    throw new Error(t("social.errors.reportSelf"));
   }
 
   if (!REPORT_REASON_VALUES.has(reason)) {
-    throw new Error("Choose a reason for the report.");
+    throw new Error(t("social.errors.reportReasonRequired"));
   }
 
   const trimmedNote = String(note ?? "")
@@ -1332,7 +1287,7 @@ export async function reportUser({
 
 export async function unblockUser({ userId, targetUserId }) {
   if (!userId || !targetUserId) {
-    throw new Error("Missing user information for unblock.");
+    throw new Error(t("social.errors.missingUserUnblock"));
   }
 
   const { error } = await supabase
@@ -1348,7 +1303,7 @@ export async function unblockUser({ userId, targetUserId }) {
 
 export async function getBlockedProfiles({ userId }) {
   if (!userId) {
-    throw new Error("You need to be signed in to see who you have blocked.");
+    throw new Error(t("social.errors.signInToSeeBlocked"));
   }
 
   // Through a function, because once the follow is gone the blocked profile is
@@ -1413,11 +1368,11 @@ export async function getPrivacyConsent({ user }) {
  */
 export async function acceptPrivacyPolicy({ user, version, termsVersion }) {
   if (!user?.id) {
-    throw new Error("You need to be signed in to accept the privacy policy.");
+    throw new Error(t("social.errors.signInToAcceptPrivacy"));
   }
 
   if (!version && !termsVersion) {
-    throw new Error("Missing privacy policy version.");
+    throw new Error(t("social.errors.missingPrivacyVersion"));
   }
 
   // The profile row has to exist first: profile_private is keyed on it, and a

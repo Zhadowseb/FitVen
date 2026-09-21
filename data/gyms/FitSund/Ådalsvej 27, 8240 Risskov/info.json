@@ -1,0 +1,333 @@
+{
+  "chain": "Fit&Sund",
+  "name": "Fit&Sund Risskov / Egå",
+  "short_name": "Risskov / Egå",
+  "address": {
+    "street": "Ådalsvej 27",
+    "postal_code": "8240",
+    "city": "Risskov",
+    "country": "DK",
+    "full": "Ådalsvej 27, 8240 Risskov"
+  },
+  "location": {
+    "latitude": 56.20325675,
+    "longitude": 10.25496671
+  },
+  "geocode": {
+    "latitude": 56.20325675,
+    "longitude": 10.25496671,
+    "matched_address": "Ådalsvej 27, 8240 Risskov",
+    "exact": true,
+    "source": "DAWA"
+  },
+  "url": "https://fitogsund.dk/c/huse/risskov-egaa",
+  "membership_url": "https://fitogsund.dk/p/bliv-medlem",
+  "class_schedule_url": "https://fitogsund.goactivebooking.com/class-web-categories/34/classes?facility=26",
+  "google_maps_url": "https://www.google.com/maps/dir/?api=1&destination=Ådalsvej-27+8240+Risskov",
+  "phone": "+45 86 22 22 10",
+  "email": "risskov@fitogsund.dk",
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 23:00"
+    }
+  ],
+  "reception_hours": [
+    {
+      "day": "Mandag",
+      "open": "07:30 - 18:30"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "07:30 - 18:30"
+    },
+    {
+      "day": "Onsdag",
+      "open": "07:30 - 18:30"
+    },
+    {
+      "day": "Torsdag",
+      "open": "07:30 - 18:30"
+    },
+    {
+      "day": "Fredag",
+      "open": "07:30 - 14:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "09:00 - 12:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "09:00 - 12:00"
+    }
+  ],
+  "meta_description": "Træn hos Fit&Sund Risskov / Egå i vores moderne fitness og træningscenter. Fitness | Holdtræning | Personlig træning",
+  "description": "Vi har et meget alsidigt fitness- og sundhedshus. Personlig service er vigtigt for os - du kan altid booke en tid ved fx en personlig træner eller fysioterapeut, som kan hjælpe dig med at optimere din sundhed.\nAfslappet og uformel tone\nDu kan træne alene eller på et eller flere af vores mange hold. Vi har selvfølgelig det nyeste udstyr, og maskinerne er placeret i hyggelige omgivelser, hvor vi omgås hinanden i en afslappet uformel tone.\nVi har fokus på mental og fysisk sundhed\nVi ønsker ganske enkelt at gøre en forskel for alle mennesker med vægt på mental og fysisk sundhed og aktivitet. Du er altid velkommen til at kigge forbi til et uforpligtende besøg i vores hus.",
+  "facilities": [
+    "Fitness",
+    "Fysioterapeuter",
+    "Personlig træning",
+    "Stort og lyst træningscenter",
+    "ExerciseLab",
+    "Stor holdsal",
+    "Indoor Cycling-sal",
+    "Sauna",
+    "Gode parkeringsmuligheder"
+  ],
+  "service_categories": [
+    "Personlig træning",
+    "Fysioterapi",
+    "Hold",
+    "Seniorer",
+    "Camps",
+    "Yoga/Reformer",
+    "Fællesskab",
+    "Juniorer",
+    "Muskelopbyggende Træning",
+    "Senior Træning",
+    "Dance",
+    "Body & Mind",
+    "Indoor Cycling",
+    "Konditionsfremmende Træning",
+    "Junior Træning"
+  ],
+  "services": [
+    {
+      "name": "2026 OPSTARTSPAKKER",
+      "room": null,
+      "categories": [
+        "fysioterapi",
+        "personlig-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/2026-opstartspakker-11"
+    },
+    {
+      "name": "BalanceFit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/balancefit"
+    },
+    {
+      "name": "Cirkelhold",
+      "room": "Maskiner",
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/cirkelhold"
+    },
+    {
+      "name": "Core Yoga for mænd",
+      "room": "Risskov/Egaa",
+      "categories": [
+        "camps"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/core-yoga-for-maend"
+    },
+    {
+      "name": "CROSSDANCE™ BASIC",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/crossdance-basic"
+    },
+    {
+      "name": "CROSSDANCE™ SOFT",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/crossdance-soft"
+    },
+    {
+      "name": "FitCamp",
+      "room": "En bootcamp for alle",
+      "categories": [
+        "camps"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/fitcamp-4"
+    },
+    {
+      "name": "Hatha Yoga",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/hatha-yoga"
+    },
+    {
+      "name": "Indoor Cycling",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-indoor-cycling"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/indoor-cycling"
+    },
+    {
+      "name": "Indoor Cycling Tabata",
+      "room": "Risskov/Egaa",
+      "categories": [
+        "hold",
+        "hold-indoor-cycling"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/indoor-cycling-tabata"
+    },
+    {
+      "name": "Mindful Stretch",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/mindful-stretch"
+    },
+    {
+      "name": "MOTION for livet",
+      "room": "5 ugers gratis træningsforløb",
+      "categories": [
+        "faellesskab",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/motion-for-livet"
+    },
+    {
+      "name": "Puls Styrke",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/puls--styrke"
+    },
+    {
+      "name": "Ryg - Mave - Stræk",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/ryg-mave-straek"
+    },
+    {
+      "name": "Senior Træning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/seniortraening"
+    },
+    {
+      "name": "Seniorklub",
+      "room": null,
+      "categories": [
+        "faellesskab",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/seniorklub"
+    },
+    {
+      "name": "Seniortræning herrer",
+      "room": "Risskov/Egaa",
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/seniortraening-herrer"
+    },
+    {
+      "name": "Stram Op",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/stramop"
+    },
+    {
+      "name": "Stræk & Afspænding",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/straek--afspaending"
+    },
+    {
+      "name": "Vinyasa Yoga",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/vinyasa-yoga"
+    },
+    {
+      "name": "Virtuel Cycling",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-indoor-cycling"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/virtuel-cycling"
+    },
+    {
+      "name": "Vores regler for juniortræning",
+      "room": "Risskov",
+      "categories": [
+        "hold",
+        "hold-junior",
+        "juniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/vores-regler-for-juniortraening-4"
+    }
+  ],
+  "manager": {
+    "name": "Jane Boilesen",
+    "title": "Husleder",
+    "image": "https://fitogsund.dk/f/thumb?src=/f/blog/article/494b782eed68cd1f10ea1a98cb8bde4ad48c11bf_thumb.png&w=300&h=380"
+  },
+  "images": {
+    "hero": null,
+    "fallback": "../fitogsund-logo.png"
+  },
+  "hero_image_file": "hero.png",
+  "hero_is_placeholder": true,
+  "scraped_at": "2026-09-17"
+}

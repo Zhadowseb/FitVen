@@ -1,0 +1,289 @@
+{
+  "chain": "Fit&Sund",
+  "name": "Fit&Sund Solbjerg",
+  "short_name": "Solbjerg",
+  "address": {
+    "street": "Solbjerg Hovedgade 90B",
+    "postal_code": "8355",
+    "city": "Solbjerg",
+    "country": "DK",
+    "full": "Solbjerg Hovedgade 90B, 8355 Solbjerg"
+  },
+  "location": {
+    "latitude": 56.03817306,
+    "longitude": 10.07981001
+  },
+  "geocode": {
+    "latitude": 56.03817306,
+    "longitude": 10.07981001,
+    "matched_address": "Solbjerg Hovedgade 90B, 8355 Solbjerg",
+    "exact": true,
+    "source": "DAWA"
+  },
+  "url": "https://fitogsund.dk/c/huse/solbjerg",
+  "membership_url": "https://fitogsund.dk/p/bliv-medlem",
+  "class_schedule_url": "https://fitogsund.goactivebooking.com/class-web-categories/34/classes?facility=31",
+  "google_maps_url": "https://www.google.com/maps/dir/?api=1&destination=Solbjerg-Hovedgade-90B+8355+Solbjerg",
+  "phone": "+45 31 77 21 33",
+  "email": "solbjerg@fitogsund.dk",
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "04:30 - 23:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "04:30 - 23:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "04:30 - 23:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "04:30 - 23:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "04:30 - 23:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "04:30 - 23:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "04:30 - 23:00"
+    }
+  ],
+  "reception_hours": [
+    {
+      "day": "Mandag",
+      "open": "18:00 - 20:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "ingen bemanding"
+    },
+    {
+      "day": "Onsdag",
+      "open": "ingen bemanding"
+    },
+    {
+      "day": "Torsdag",
+      "open": "18:00 - 20:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "ingen bemanding"
+    },
+    {
+      "day": "Lørdag",
+      "open": "ingen bemanding"
+    },
+    {
+      "day": "Søndag",
+      "open": "ingen bemanding"
+    }
+  ],
+  "meta_description": "Bliv medlem hos Fit&Sund Solbjerg. Fitness- og sundhedshus med nye faciliteter, stort udvalg af holdtræning, fysioterapi og personlig træning.",
+  "description": "Ønsker du et Medical Fitness eller Junior medlemsskab, bedes du henvende dig i receptionen, i receptionens åbningstid.\nHos Fit&Sund Solbjerg tilbyder vi et fitness- og sundhedshus, hvor der er fokus på sundhed, viden og nærvær. I huset har vi Fitness, styrketræning og over 30 hold om ugen. Du kan få lagt et personligt program og få fysioterapi og diætisten med i dit abonnement.\nVi har tre fysioterapeuter, to personlige trænere og en ernærings og sundhedsfaglig, der står klar til at hjæle dig til en god træningsstart, også efter skadespause. Vi hjælper dig godt på vej uanset din alder, baggrund, trænings- og sundhedstilstand.\nEfter træningen er der mulighed for gratis kaffe/te i caféen.",
+  "facilities": [
+    "Fitness",
+    "Fysioterapeuter",
+    "Personlig træning",
+    "Mange hold hver uge",
+    "Nyindrettede lokaler",
+    "Nyt udstyr",
+    "Fri parkering",
+    "Hyggelig cafe"
+  ],
+  "service_categories": [
+    "Personlig træning",
+    "Fysioterapi",
+    "Diætist",
+    "Event",
+    "Camps",
+    "Hold",
+    "Seniorer",
+    "Yoga/Reformer",
+    "OUTDOOR",
+    "Muskelopbyggende Træning",
+    "Senior Træning",
+    "Core Træning",
+    "Dance",
+    "Funktionel Træning",
+    "Body & Mind",
+    "Konditionsfremmende Træning",
+    "Outdoor Træning"
+  ],
+  "services": [
+    {
+      "name": "2026 OPSTARTSPAKKER",
+      "room": null,
+      "categories": [
+        "diaetist",
+        "event",
+        "fysioterapi",
+        "personlig-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/2026-opstartspakker-18"
+    },
+    {
+      "name": "8-ugers BootCamp",
+      "room": null,
+      "categories": [
+        "camps"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/8-ugers-bootcamp"
+    },
+    {
+      "name": "Aktiv Mødregruppe",
+      "room": "6 ugers forløb",
+      "categories": [
+        "camps",
+        "event",
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/aktiv-moedregruppe-2"
+    },
+    {
+      "name": "Babymotorik",
+      "room": "6 ugers forløb",
+      "categories": [
+        "camps",
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/babymotorik"
+    },
+    {
+      "name": "BalanceFit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/balancefit"
+    },
+    {
+      "name": "Boldtræning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/boldtraening"
+    },
+    {
+      "name": "Cirkeltræning",
+      "room": "Holdsal",
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/cirkel-traening"
+    },
+    {
+      "name": "DanceFit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/dance"
+    },
+    {
+      "name": "Funktionel - STYRKE",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-funktionel-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/funktionel-styrke"
+    },
+    {
+      "name": "Hatha Yoga",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/hatha-yoga"
+    },
+    {
+      "name": "HIIT",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/hiit"
+    },
+    {
+      "name": "Mindful Stretch",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/mindful-stretch"
+    },
+    {
+      "name": "Outdoor træning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-funktionel-traening",
+        "hold-outdoor",
+        "outdoor"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/outdoor-traening"
+    },
+    {
+      "name": "Puls Styrke",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/puls--styrke"
+    },
+    {
+      "name": "Senior Cirkel Hold",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/senior-cirkel-hold"
+    },
+    {
+      "name": "Stram Op",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/stramop"
+    },
+    {
+      "name": "Tabata",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/tabata"
+    }
+  ],
+  "manager": {
+    "name": "Helle Fejrskov",
+    "title": "Husleder",
+    "image": "https://fitogsund.dk/f/thumb?src=/f/blog/article/2a61691fba186a928ae4b26cc8d3f08ac4d47748_thumb.jpg&w=300&h=380"
+  },
+  "images": {
+    "hero": null,
+    "fallback": "../fitogsund-logo.png"
+  },
+  "hero_image_file": "hero.png",
+  "hero_is_placeholder": true,
+  "scraped_at": "2026-09-17"
+}

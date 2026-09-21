@@ -1,0 +1,109 @@
+{
+  "chain": "Fit&Sund",
+  "name": "Fit&Sund Kjellerup",
+  "short_name": "Kjellerup",
+  "address": {
+    "street": "Parallelvej 2E",
+    "postal_code": "8620",
+    "city": "Kjellerup",
+    "country": "DK",
+    "full": "Parallelvej 2E, 8620 Kjellerup"
+  },
+  "location": {
+    "latitude": 56.28565241,
+    "longitude": 9.41491334
+  },
+  "geocode": {
+    "latitude": 56.28565241,
+    "longitude": 9.41491334,
+    "matched_address": "Parallelvej 2E, 8620 Kjellerup",
+    "exact": true,
+    "source": "DAWA"
+  },
+  "url": "https://fitogsund.dk/c/huse/kjellerup",
+  "membership_url": "https://fitogsund.dk/p/bliv-medlem",
+  "class_schedule_url": null,
+  "google_maps_url": "https://www.google.com/maps/dir/?api=1&destination=Parallelvej-2E+8620+Kjellerup",
+  "phone": "+45 86 88 07 46",
+  "email": "Kjellerup@fitogsund.dk",
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "04:00 - 23:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "04:00 - 23:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "04:00 - 23:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "04:00 - 23:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "04:00 - 23:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "04:00 - 23:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "04:00 - 23:00"
+    }
+  ],
+  "reception_hours": [
+    {
+      "day": "Mandag",
+      "open": "08:00 - 20:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "08:00 - 20:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "08:00 - 20:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "08:00 - 20:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "08:00 - 14:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "08:00 - 12:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "08:00 - 12:00"
+    }
+  ],
+  "meta_description": "Træn hos Fit & Sund Kjellerup i vores moderne fitness og træningscenter. Fitness | Holdtræning | Personlig træning",
+  "description": "Snart åbner vi dørene til Fit&Sund Kjellerup - et helt nyt fitness- og sundhedshus, hvor fællesskab, træningsglæde og sundhed går hånd i hånd.\nTræn i moderne og inspirerende omgivelser\nHos Fit&Sund Kjellerup møder du et træningsmiljø, der indbyder til både energi, motivation og velvære. Centret er nyrenoveret med lyse, indbydende lokaler og et fantastisk lysindfald fra de store vinduespartier, som skaber en behagelig atmosfære til din træning.\nVi tilbyder den nyeste Technogym Biocircuit - et intelligent og brugervenligt træningskoncept, der automatisk tilpasser maskinerne til dig og dit niveau. Biocircuit guider dig sikkert gennem træningen, registrerer dine fremskridt og gør det nemt at komme i gang, uanset om du er nybegynder eller erfaren motionist.\nDerudover finder du et stort udvalg af moderne cardiomaskiner , et veludstyret frivægtsområde og funktionelle træningszoner, hvor du kan udfordre styrke, kondition og bevægelighed på dine egne præmisser.\nVores flotte holdsal danner rammen om et bredt udvalg af holdtræning, hvor fællesskab, træningsglæde og variation er i fokus. Her er der plads til både sved på panden, smil på læben og nye træningsoplevelser.\nHos Fit&Sund Kjellerup er der træning for alle. Uanset om du er helt ny eller har mange års erfaring, står vores dygtige fysioterapeuter klar til at hjælpe dig godt i gang med et individuelt træningsprogram, så du kan træne trygt og målrettet mod dine mål.\nNår træningen er overstået, er du altid velkommen til at nyde en god kop kaffe i vores hyggelige café - det perfekte sted at slappe af og samle ny energi.\nTechnogym BioCircuit - intelligent træning gjort enkelt\nBio c ircuit er den nyeste generation af styrketræning, hvor teknologi og træningsoplevelse går hånd i hånd. Systemet er udviklet af Technogym og gør det nemt, sikkert og effektivt at træne - uanset om du er nybegynder eller erfaren.\nNår du starter på Biocircuit , bliver dit personlige træningsprogram lagt ind i systemet. Maskinerne indstiller automatisk sæde, modstand og træningsparametre til dig, så du kan fokusere på selve træningen frem for indstillinger og teknik.\nBiocircuit guider dig gennem hele træningsforløbet på en overskuelig måde og sikrer, at du træner de rigtige muskelgrupper med den rette belastning. Samtidig registrerer systemet dine resultater og følger din udvikling, så du løbende kan se dine fremskridt.\nFordelene ved Biocircuit er blandt andet:\nHurtig og effektiv træning\nAutomatisk indstilling af maskiner\nIndividuelt tilpasset træningsprogram\nSikker og brugervenlig træning\nLøbende registrering af dine resultater\nPerfekt til både begyndere og øvede\nMed Biocircuit får du en moderne træningsoplevelse, hvor det er nemt at komme i gang og motiverende at fortsætte.",
+  "facilities": [
+    "Fitness",
+    "Fysioterapeuter"
+  ],
+  "service_categories": [],
+  "services": [],
+  "manager": {
+    "name": "Janne Eskildsen",
+    "title": "Husleder",
+    "image": "https://fitogsund.dk/f/thumb?src=/f/blog/article/338f730998f93d1f0d9169cd6c066e98d5739230_thumb.jpg&w=300&h=380"
+  },
+  "images": {
+    "hero": null,
+    "fallback": "../fitogsund-logo.png"
+  },
+  "hero_image_file": "hero.png",
+  "hero_is_placeholder": true,
+  "scraped_at": "2026-09-17"
+}

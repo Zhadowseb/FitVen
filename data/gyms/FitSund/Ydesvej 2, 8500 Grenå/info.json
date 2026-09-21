@@ -1,0 +1,235 @@
+{
+  "chain": "Fit&Sund",
+  "name": "Fit&Sund Grenå",
+  "short_name": "Grenå",
+  "address": {
+    "street": "Ydesvej 2",
+    "postal_code": "8500",
+    "city": "Grenå",
+    "country": "DK",
+    "full": "Ydesvej 2, 8500 Grenå"
+  },
+  "location": {
+    "latitude": 56.40485182,
+    "longitude": 10.88677308
+  },
+  "geocode": {
+    "latitude": 56.40485182,
+    "longitude": 10.88677308,
+    "matched_address": "Ydesvej 2, 8500 Grenaa",
+    "exact": false,
+    "source": "DAWA"
+  },
+  "url": "https://fitogsund.dk/c/huse/grenaa",
+  "membership_url": "https://fitogsund.dk/p/bliv-medlem",
+  "class_schedule_url": "https://fitogsund.goactivebooking.com/class-web-categories/34/classes?facility=11",
+  "google_maps_url": "https://www.google.com/maps/dir/?api=1&destination=Ydesvej-2+8500+Grenå",
+  "phone": "+45 89 59 11 25",
+  "email": "grenaa@fitogsund.dk",
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "04:00 - 23:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "04:00 - 23:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "04:00 - 23:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "04:00 - 23:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "04:00 - 23:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "04:00 - 23:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "04:00 - 23:00"
+    }
+  ],
+  "reception_hours": [
+    {
+      "day": "Mandag",
+      "open": "08:00 - 12:00 & 15:00 - 19:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "14:00 - 19:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "14:00 - 19:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "14:00 - 19:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "08:00 - 12:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "08:00 - 11:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "ingen bemanding"
+    }
+  ],
+  "meta_description": "Træn hos Fit & Sund Grenå i vores moderne fitness og træningscenter. Fitness | Holdtræning | Personlig træning",
+  "description": "Fit&Sund Grenås fitness- og sundhedshus er placeret ved idrætscenteret og svømmehallen i Grenå og er et hus, hvor alle er velkomne.\nEn god kop kaffe\nI huset tilbyder vi både træning på egen hånd, i kyndigt samarbejde med vores personlige trænere samt holdtræning. Vores nye velkomstområde indbyder til en god kop kaffe i hyggelige omgivelser.",
+  "facilities": [
+    "Fitness",
+    "Personlig træning",
+    "Topmoderne styrke- og cardiotræning",
+    "Indoor cycling og holdtræning",
+    "Uddannede instruktører",
+    "Gode p-forhold"
+  ],
+  "service_categories": [
+    "Personlig træning",
+    "Event",
+    "Hold",
+    "Seniorer",
+    "Fællesskab",
+    "Body & Mind",
+    "Muskelopbyggende Træning",
+    "Indoor Cycling",
+    "Konditionsfremmende Træning",
+    "Core Træning",
+    "Funktionel Træning",
+    "Senior Træning"
+  ],
+  "services": [
+    {
+      "name": "2026 OPSTARTSPAKKER",
+      "room": null,
+      "categories": [
+        "event",
+        "personlig-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/2026-opstartspakker-25"
+    },
+    {
+      "name": "BODYBALANCE®",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bodybalance-les-mills"
+    },
+    {
+      "name": "BODYPUMP®",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bodypump"
+    },
+    {
+      "name": "Indoor Cycling",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-indoor-cycling"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/indoor-cycling"
+    },
+    {
+      "name": "Indoor Cycling - HIIT",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-indoor-cycling"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/indoor-cycling---hiit"
+    },
+    {
+      "name": "Indoor Cycling Basis",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-indoor-cycling"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/indoor-cycling-basis"
+    },
+    {
+      "name": "LES MILLS CORE™",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/les-mills-core"
+    },
+    {
+      "name": "RawFit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-funktionel-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/rawfit"
+    },
+    {
+      "name": "Senior Cirkel Hold",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/senior-cirkel-hold"
+    },
+    {
+      "name": "Senior Træning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/seniortraening"
+    },
+    {
+      "name": "Seniorklub",
+      "room": null,
+      "categories": [
+        "faellesskab",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/seniorklub"
+    },
+    {
+      "name": "Tabata",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/tabata"
+    }
+  ],
+  "manager": {
+    "name": "Kasper Skjødt",
+    "title": "Husleder",
+    "image": "https://fitogsund.dk/f/thumb?src=/f/blog/article/04e500d39564bbf7456e6f8d6a7488189ad34e2a_thumb.jpg&w=300&h=380"
+  },
+  "images": {
+    "hero": null,
+    "fallback": "../fitogsund-logo.png"
+  },
+  "hero_image_file": "hero.png",
+  "hero_is_placeholder": true,
+  "scraped_at": "2026-09-17"
+}

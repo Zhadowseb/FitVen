@@ -1,0 +1,107 @@
+{
+  "chain": "Fit&Sund",
+  "name": "Fit&Sund Hjerting / Esbjerg",
+  "short_name": "Hjerting / Esbjerg",
+  "address": {
+    "street": "Havborgvej 8",
+    "postal_code": "6710",
+    "city": "Esbjerg",
+    "country": "DK",
+    "full": "Havborgvej 8, 6710 Esbjerg"
+  },
+  "location": {
+    "latitude": 55.51819381,
+    "longitude": 8.36859004
+  },
+  "geocode": {
+    "latitude": 55.51819381,
+    "longitude": 8.36859004,
+    "matched_address": "Havborgvej 8, Hjerting, 6710 Esbjerg V",
+    "exact": false,
+    "source": "DAWA"
+  },
+  "url": "https://fitogsund.dk/c/huse/hjerting-esbjerg",
+  "membership_url": "https://fitogsund.dk/p/bliv-medlem",
+  "class_schedule_url": null,
+  "google_maps_url": "https://www.google.com/maps/dir/?api=1&destination=Havborgvej-8+6710+Esbjerg",
+  "phone": "+45 21 46 64 74",
+  "email": "hjerting@fitogsund.dk",
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "05:00 - 21:30"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 21:30"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 21:30"
+    },
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 21:30"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 21:30"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 21:30"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 21:30"
+    }
+  ],
+  "reception_hours": [
+    {
+      "day": "Mandag",
+      "open": "ingen bemanding"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "ingen bemanding"
+    },
+    {
+      "day": "Onsdag",
+      "open": "ingen bemanding"
+    },
+    {
+      "day": "Torsdag",
+      "open": "ingen bemanding"
+    },
+    {
+      "day": "Fredag",
+      "open": "ingen bemanding"
+    },
+    {
+      "day": "Lørdag",
+      "open": "ingen bemanding"
+    },
+    {
+      "day": "Søndag",
+      "open": "ingen bemanding"
+    }
+  ],
+  "meta_description": "Træn hos Fit & Sund Hjerting i vores moderne fitness og træningscenter. Fitness | Holdtræning | Personlig træning",
+  "description": "Fit&Sund Hjerting/Esbjerg er centralt beliggende i Hjerting. Vi er dit lokale fitness- og sundhedshus, og vi arbejder ud fra vores 3 værdier: sundhed, viden og nærvær. Vi tilbyder individuel træning og det er vores mål at tilbyde en inspirerende og motiverende træningsoplevelse, som giver dig overskud, velvære og livskvalitet.\nStort funktionelt træningsområde\nI huset har vi et stort funktionelt træningsområde, og vores maskiner er topmoderne.\nTæt på naturen\nHuset ligger i dejlige omgivelser tæt på naturen, hvor en løbetur ved stranden nemt kan kombineres med træningen.\nDu er altid velkommen til at kigge forbi til en snak om netop dine forventninger. I vores hyggelige velkomstområde byder vi gerne på en kop kaffe.",
+  "facilities": [
+    "Fitness",
+    "Hyggeligt hus",
+    "Stort funktionelt træningsområde",
+    "Gode P-forhold"
+  ],
+  "service_categories": [],
+  "services": [],
+  "manager": null,
+  "images": {
+    "hero": null,
+    "fallback": "../fitogsund-logo.png"
+  },
+  "hero_image_file": "hero.png",
+  "hero_is_placeholder": true,
+  "scraped_at": "2026-09-17"
+}

@@ -10,10 +10,13 @@ import {
 import { useCallback, useState } from "react";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
+import { useTranslation } from "@localization";
 
 import styles from "./SearchPageStyle";
 import FriendsActivity from "../../Resources/Components/FriendsActivity/FriendsActivity";
-import { Colors } from "../../Resources/GlobalStyling/colors";
+import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
+import ChevronRight from "../../Resources/Icons/UI-icons/ChevronRight";
+import MapPin from "../../Resources/Icons/UI-icons/MapPin";
 import TailArrowUpRight from "../../Resources/Icons/UI-icons/TailArrowUpRight";
 import { useAuth } from "../../Contexts/AuthContext";
 import { programService, socialService } from "../../Services";
@@ -32,7 +35,32 @@ import {
 const findFriendsImage = require("../../Resources/Images/DarkVersion/Find_friends.jpg");
 const ownPostsImage = require("../../Resources/Images/DarkVersion/Social_posts_edit.jpg");
 
+// The three lists the relationship modal can show, with the keys for each of
+// their states. A map of literal keys rather than keys built from the type,
+// so the parity test can see every one of them.
+const RELATIONSHIP_COPY = {
+  followers: {
+    title: "social.relationship.followers",
+    loading: "social.relationship.loadingFollowers",
+    loadFailed: "social.relationship.loadFollowersFailed",
+    empty: "social.relationship.noFollowers",
+  },
+  following: {
+    title: "social.relationship.following",
+    loading: "social.relationship.loadingFollowing",
+    loadFailed: "social.relationship.loadFollowingFailed",
+    empty: "social.relationship.noFollowing",
+  },
+  blocked: {
+    title: "social.relationship.blocked",
+    loading: "social.relationship.loadingBlocked",
+    loadFailed: "social.relationship.loadBlockedFailed",
+    empty: "social.relationship.noBlocked",
+  },
+};
+
 const SearchPage = () => {
+  const { t } = useTranslation();
   const db = useSQLiteContext();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -65,12 +93,9 @@ const SearchPage = () => {
   const titleColor = theme.title ?? theme.text;
   const cardSurface = theme.cardBackground ?? theme.background;
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor;
-  const relationshipTitle =
-    activeRelationshipType === "following"
-      ? "Following"
-      : activeRelationshipType === "blocked"
-        ? "Blocked"
-        : "Followers";
+  const relationshipCopy =
+    RELATIONSHIP_COPY[activeRelationshipType] ?? RELATIONSHIP_COPY.followers;
+  const relationshipTitle = t(relationshipCopy.title);
 
   const loadCirclePreview = useCallback(async () => {
     if (!user?.id) {
@@ -106,6 +131,8 @@ const SearchPage = () => {
           }),
         ]);
 
+      const homeGym = nextCirclePreview.currentUser?.homeGym ?? null;
+
       setCirclePreview({
         ...nextCirclePreview,
         currentUser: nextCirclePreview.currentUser
@@ -115,6 +142,9 @@ const SearchPage = () => {
               activityDetail: todayActivitySummary.detail,
               workoutType: todayActivitySummary.workoutType,
               workoutLabel: todayActivitySummary.workoutLabel,
+              gym: homeGym
+                ? { id: homeGym.id, shortName: homeGym.shortName, isHomeGym: true }
+                : null,
             }
           : null,
       });
@@ -131,12 +161,12 @@ const SearchPage = () => {
       setCirclePreviewError(
         error instanceof Error
           ? error.message
-          : "Could not load today's activity.",
+          : t("social.errors.loadActivityFailed"),
       );
     } finally {
       setIsLoadingFollowCounts(false);
     }
-  }, [db, todayDate, user]);
+  }, [db, t, todayDate, user]);
 
   useFocusEffect(
     useCallback(() => {
@@ -198,7 +228,10 @@ const SearchPage = () => {
       setRelationshipError(
         error instanceof Error
           ? error.message
-          : `Could not load ${relationshipType}.`,
+          : t(
+              (RELATIONSHIP_COPY[relationshipType] ?? RELATIONSHIP_COPY.followers)
+                .loadFailed,
+            ),
       );
     } finally {
       setIsLoadingRelationships(false);
@@ -223,7 +256,7 @@ const SearchPage = () => {
       );
     } catch (error) {
       setRelationshipError(
-        error instanceof Error ? error.message : "Could not update the block.",
+        error instanceof Error ? error.message : t("social.errors.updateBlockFailed"),
       );
     } finally {
       setIsBlockWorking(false);
@@ -282,10 +315,12 @@ const SearchPage = () => {
       });
 
       closeReport();
-      setReportSentFor(profile.displayName ?? profile.username ?? "that account");
+      setReportSentFor(
+        profile.displayName ?? profile.username ?? t("social.report.thatAccount"),
+      );
     } catch (error) {
       setRelationshipError(
-        error instanceof Error ? error.message : "Could not send the report.",
+        error instanceof Error ? error.message : t("social.errors.sendReportFailed"),
       );
     } finally {
       setIsReportWorking(false);
@@ -295,22 +330,16 @@ const SearchPage = () => {
   // These open a list, so they are buttons with a real 44 px target on their
   // own row - as a chip beside the heading they were a 30 px strip that did not
   // look tappable.
-  // "1 followers" was string concatenation. "following" has no plural form, so
-  // each caller says what its singular and plural are.
-  const renderRelationshipButton = (
-    relationshipType,
-    label,
-    value,
-    singularLabel = label
-  ) => (
+  // The number is rendered bold on its own, so the word after it comes from a
+  // key of its own too; the plural forms live in the locale, where "following"
+  // has one form and "follower(s)" has two.
+  const renderRelationshipButton = (relationshipType, value, labelKey, countKey) => (
     <Pressable
       key={relationshipType}
       onPress={() => handleOpenRelationshipModal(relationshipType)}
       disabled={!user?.id}
       accessibilityRole="button"
-      accessibilityLabel={`${value} ${
-        value === 1 ? singularLabel : label
-      }`}
+      accessibilityLabel={t(countKey, { count: value })}
       style={({ pressed }) => [
         styles.relationshipStat,
         {
@@ -327,7 +356,7 @@ const SearchPage = () => {
         >
           {isLoadingFollowCounts ? "..." : value}
         </ThemedText>
-        {` ${value === 1 && !isLoadingFollowCounts ? singularLabel : label}`}
+        {` ${t(labelKey, { count: isLoadingFollowCounts ? 0 : value })}`}
       </ThemedText>
     </Pressable>
   );
@@ -342,7 +371,7 @@ const SearchPage = () => {
       >
         <View style={styles.storiesSection}>
           <ThemedTitle type="h3" style={styles.sectionTitle}>
-            Today&apos;s activity
+            {t("social.todaysActivity")}
           </ThemedTitle>
 
           <View style={styles.storiesRail}>
@@ -353,28 +382,55 @@ const SearchPage = () => {
               isLoading={isLoadingFollowCounts}
               onSeeAll={handleOpenUserList}
               onOpenProfile={() => navigation.navigate("ProfilePage")}
+              onOpenGym={(gymId) => navigation.navigate("GymLeaderboardPage", { gym_id: gymId })}
             />
           </View>
 
           <View style={styles.relationshipStats}>
             {renderRelationshipButton(
               "followers",
-              "followers",
               followCounts.followers,
-              "follower",
+              "social.followersLabel",
+              "social.followersCount",
             )}
             {renderRelationshipButton(
               "following",
-              "following",
               followCounts.following,
+              "social.followingLabel",
+              "social.followingCount",
             )}
           </View>
         </View>
 
         <TouchableOpacity
+          activeOpacity={0.88}
+          accessibilityRole="button"
+          accessibilityLabel={t("social.centresAndLeaderboards")}
+          onPress={() => navigation.navigate("GymsPage")}
+          style={[styles.centresCard, { backgroundColor: cardSurface, borderColor: cardBorder }]}
+        >
+          <View style={[styles.centresIcon, { backgroundColor: withAlpha(theme.primary, 0.14) }]}>
+            <MapPin width={20} height={20} color={theme.primaryText ?? theme.primary} thickness={2.2} />
+          </View>
+          <View style={styles.centresCopy}>
+            <ThemedText style={styles.centresEyebrow} setColor={quietText}>
+              {t("social.centres")}
+            </ThemedText>
+            <ThemedTitle type="h3" style={styles.centresTitle} numberOfLines={1}>
+              {circlePreview.currentUser?.homeGym?.shortName
+                ? t("social.leaderboardsAt", {
+                    gym: circlePreview.currentUser.homeGym.shortName,
+                  })
+                : t("social.leaderboardsWhereYouTrain")}
+            </ThemedTitle>
+          </View>
+          <ChevronRight width={20} height={20} color={quietText} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
           activeOpacity={0.92}
           accessibilityRole="button"
-          accessibilityLabel="Your workout posts"
+          accessibilityLabel={t("social.yourWorkoutPosts")}
           onPress={() => navigation.navigate("WorkoutPostsPage")}
           style={[styles.heroCard, styles.heroCardPosts]}
         >
@@ -399,14 +455,14 @@ const SearchPage = () => {
 
               <View style={styles.heroCopy}>
                 <ThemedText style={styles.heroEyebrow} setColor="#ffffff">
-                  Your Workout
+                  {t("social.heroPosts.eyebrow")}
                 </ThemedText>
                 <ThemedTitle
                   type="h3"
                   style={styles.heroTitle}
                   numberOfLines={1}
                 >
-                  Posts
+                  {t("social.heroPosts.title")}
                 </ThemedTitle>
               </View>
             </View>
@@ -416,7 +472,7 @@ const SearchPage = () => {
         <TouchableOpacity
           activeOpacity={0.92}
           accessibilityRole="button"
-          accessibilityLabel="Search for friends"
+          accessibilityLabel={t("social.searchForFriends")}
           onPress={handleOpenUserList}
           style={[styles.heroCard, styles.heroCardFriends]}
         >
@@ -441,14 +497,14 @@ const SearchPage = () => {
 
               <View style={styles.heroCopy}>
                 <ThemedText style={styles.heroEyebrow} setColor="#ffffff">
-                  Discover
+                  {t("social.discover")}
                 </ThemedText>
                 <ThemedTitle
                   type="h3"
                   style={styles.heroTitle}
                   numberOfLines={1}
                 >
-                  Find Friends
+                  {t("social.findFriends")}
                 </ThemedTitle>
               </View>
             </View>
@@ -466,13 +522,15 @@ const SearchPage = () => {
         title={
           isLoadingRelationships
             ? relationshipTitle
-            : `${relationshipTitle} (${
-                activeRelationshipType === "blocked"
-                  ? relationshipProfiles.length
-                  : activeRelationshipType === "following"
-                    ? followCounts.following
-                    : followCounts.followers
-              })`
+            : t("social.relationship.titleWithCount", {
+                title: relationshipTitle,
+                count:
+                  activeRelationshipType === "blocked"
+                    ? relationshipProfiles.length
+                    : activeRelationshipType === "following"
+                      ? followCounts.following
+                      : followCounts.followers,
+              })
         }
         style={[
           styles.relationshipModal,
@@ -484,7 +542,7 @@ const SearchPage = () => {
       >
         {isLoadingRelationships ? (
           <ThemedText style={styles.relationshipStateText} setColor={quietText}>
-            Loading {relationshipTitle.toLowerCase()}...
+            {t(relationshipCopy.loading)}
           </ThemedText>
         ) : relationshipError ? (
           <ThemedText
@@ -543,9 +601,11 @@ const SearchPage = () => {
                   }
                   disabled={isBlockWorking}
                   accessibilityRole="button"
-                  accessibilityLabel={`${
-                    activeRelationshipType === "blocked" ? "Unblock" : "Block"
-                  } ${relationshipProfile.displayName}`}
+                  accessibilityLabel={
+                    activeRelationshipType === "blocked"
+                      ? t("social.unblockNamed", { name: relationshipProfile.displayName })
+                      : t("social.blockNamed", { name: relationshipProfile.displayName })
+                  }
                   style={({ pressed }) => [
                     styles.relationshipAction,
                     {
@@ -564,8 +624,8 @@ const SearchPage = () => {
                     }
                   >
                     {activeRelationshipType === "blocked"
-                      ? "Unblock"
-                      : "Block"}
+                      ? t("social.unblock")
+                      : t("social.block")}
                   </ThemedText>
                 </Pressable>
 
@@ -577,7 +637,9 @@ const SearchPage = () => {
                     onPress={() => setReportTarget(relationshipProfile)}
                     disabled={isBlockWorking || isReportWorking}
                     accessibilityRole="button"
-                    accessibilityLabel={`Report ${relationshipProfile.displayName}`}
+                    accessibilityLabel={t("social.report.reportNamed", {
+                      name: relationshipProfile.displayName,
+                    })}
                     style={({ pressed }) => [
                       styles.relationshipAction,
                       {
@@ -591,7 +653,7 @@ const SearchPage = () => {
                       style={styles.relationshipActionText}
                       setColor={quietText}
                     >
-                      Report
+                      {t("social.report.action")}
                     </ThemedText>
                   </Pressable>
                 ) : null}
@@ -600,11 +662,7 @@ const SearchPage = () => {
           </ScrollView>
         ) : (
           <ThemedText style={styles.relationshipStateText} setColor={quietText}>
-            {activeRelationshipType === "following"
-              ? "You are not following anyone yet."
-              : activeRelationshipType === "blocked"
-                ? "You have not blocked anyone."
-                : "No one is following you yet."}
+            {t(relationshipCopy.empty)}
           </ThemedText>
         )}
 
@@ -627,14 +685,14 @@ const SearchPage = () => {
               setColor={theme.primaryText ?? titleColor}
             >
               {activeRelationshipType === "blocked"
-                ? "Back to followers"
-                : "Blocked accounts"}
+                ? t("social.relationship.backToFollowers")
+                : t("social.relationship.blockedAccounts")}
             </ThemedText>
           </Pressable>
         </View>
 
         <ThemedButton
-          title="Close"
+          title={t("common.close")}
           variant="secondary"
           onPress={closeRelationshipModal}
           fullWidth
@@ -652,12 +710,15 @@ const SearchPage = () => {
             cosmetic bug. */}
         <ThemedConfirmModal
           visible={Boolean(reportTarget)}
-          title={`Report ${
-            reportTarget?.displayName ?? reportTarget?.username ?? "this person"
-          }?`}
-          message="Tell us what is wrong. Reports are read by the developer and are not shown to the person you are reporting."
-          confirmLabel="Send report"
-          cancelLabel="Cancel"
+          title={t("social.report.title", {
+            name:
+              reportTarget?.displayName ??
+              reportTarget?.username ??
+              t("social.thisPerson"),
+          })}
+          message={t("social.report.message")}
+          confirmLabel={t("social.report.send")}
+          cancelLabel={t("common.cancel")}
           tone="danger"
           isWorking={isReportWorking}
           onConfirm={submitReport}
@@ -666,6 +727,7 @@ const SearchPage = () => {
           <View style={styles.reportReasonList}>
             {socialService.REPORT_REASONS.map((option) => {
               const selected = reportReason === option.value;
+              const label = t(option.labelKey);
 
               return (
                 <Pressable
@@ -673,7 +735,7 @@ const SearchPage = () => {
                   onPress={() => setReportReason(option.value)}
                   accessibilityRole="radio"
                   accessibilityState={{ selected }}
-                  accessibilityLabel={option.label}
+                  accessibilityLabel={label}
                   style={({ pressed }) => [
                     styles.reportReason,
                     {
@@ -687,7 +749,7 @@ const SearchPage = () => {
                     style={styles.reportReasonText}
                     setColor={selected ? theme.danger : titleColor}
                   >
-                    {option.label}
+                    {label}
                   </ThemedText>
                 </Pressable>
               );
@@ -697,7 +759,7 @@ const SearchPage = () => {
           <ThemedTextInput
             value={reportNote}
             onChangeText={setReportNote}
-            placeholder="Anything else we should know? (optional)"
+            placeholder={t("social.report.notePlaceholder")}
             multiline
             maxLength={socialService.REPORT_NOTE_MAX_LENGTH}
             style={styles.reportNote}
@@ -706,22 +768,25 @@ const SearchPage = () => {
 
         <ThemedConfirmModal
           visible={Boolean(reportSentFor)}
-          title="Report sent"
-          message={`Thanks. We will look at ${reportSentFor}. If you would rather not see them at all, block them as well — a report does not do that on its own.`}
-          confirmLabel="Done"
-          cancelLabel="Close"
+          title={t("social.report.sentTitle")}
+          message={t("social.report.sentMessage", { name: reportSentFor })}
+          confirmLabel={t("common.done")}
+          cancelLabel={t("common.close")}
           onConfirm={() => setReportSentFor(null)}
           onClose={() => setReportSentFor(null)}
         />
 
         <ThemedConfirmModal
           visible={Boolean(blockTarget)}
-          title="Block this person?"
-          message={`${
-            blockTarget?.displayName ?? blockTarget?.username ?? "This person"
-          } will stop following you and you will stop following them. They will not be told, and they will not be able to follow you again or find you in search.`}
-          confirmLabel="Block"
-          cancelLabel="Cancel"
+          title={t("social.blockConfirm.title")}
+          message={t("social.blockConfirm.message", {
+            name:
+              blockTarget?.displayName ??
+              blockTarget?.username ??
+              t("social.thisPersonSubject"),
+          })}
+          confirmLabel={t("social.block")}
+          cancelLabel={t("common.cancel")}
           tone="danger"
           isWorking={isBlockWorking}
           onConfirm={confirmBlock}
@@ -730,12 +795,15 @@ const SearchPage = () => {
 
         <ThemedConfirmModal
           visible={Boolean(unblockTarget)}
-          title="Unblock this person?"
-          message={`${
-            unblockTarget?.displayName ?? unblockTarget?.username ?? "This person"
-          } will be able to find you and follow you again. Neither of you starts following the other.`}
-          confirmLabel="Unblock"
-          cancelLabel="Cancel"
+          title={t("social.unblockConfirm.title")}
+          message={t("social.unblockConfirm.message", {
+            name:
+              unblockTarget?.displayName ??
+              unblockTarget?.username ??
+              t("social.thisPersonSubject"),
+          })}
+          confirmLabel={t("social.unblock")}
+          cancelLabel={t("common.cancel")}
           isWorking={isBlockWorking}
           onConfirm={confirmUnblock}
           onClose={() => setUnblockTarget(null)}

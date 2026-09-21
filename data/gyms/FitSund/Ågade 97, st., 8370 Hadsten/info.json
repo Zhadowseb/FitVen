@@ -1,0 +1,273 @@
+{
+  "chain": "Fit&Sund",
+  "name": "Fit&Sund Hadsten",
+  "short_name": "Hadsten",
+  "address": {
+    "street": "Ågade 97, st.",
+    "postal_code": "8370",
+    "city": "Hadsten",
+    "country": "DK",
+    "full": "Ågade 97, st., 8370 Hadsten"
+  },
+  "location": {
+    "latitude": 56.32745826,
+    "longitude": 10.04262528
+  },
+  "geocode": {
+    "latitude": 56.32745826,
+    "longitude": 10.04262528,
+    "matched_address": "Ågade 97, 8370 Hadsten",
+    "exact": false,
+    "source": "DAWA"
+  },
+  "url": "https://fitogsund.dk/c/huse/hadsten",
+  "membership_url": "https://fitogsund.dk/p/bliv-medlem",
+  "class_schedule_url": "https://fitogsund.goactivebooking.com/class-web-categories/34/classes?facility=13",
+  "google_maps_url": "https://www.google.com/maps/dir/?api=1&destination=Ågade-97,-st.+8370+Hadsten",
+  "phone": "+45 86 91 50 44",
+  "email": "hadsten@fitogsund.dk",
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 23:00"
+    }
+  ],
+  "reception_hours": [
+    {
+      "day": "Mandag",
+      "open": "08:00 - 20:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "08:00 - 20:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "08:00 - 20:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "08:00 - 20:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "08:00 - 17:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "ingen bemanding"
+    },
+    {
+      "day": "Søndag",
+      "open": "09:00 - 13:00"
+    }
+  ],
+  "meta_description": "Træn hos Fit & Sund Hadsten i vores moderne fitness og træningscenter. Fitness | Holdtræning | Personlig træning",
+  "description": "Fit&Sund Hadsten er mere end et fitnesscenter, vi er dit lokale sundhedshus og dit lokale sundheds-tilholdssted. Her former vi hinanden, vi støtter hinanden, når træningen er hård - vi jubler, når træningen og målene lykkes.\nSundhed behøver ikke være en sur pligt\nSundhed kommer primært gennem bevægelse og træning; men sundhed behøver ikke være en sur pligt. Hos os må det gerne være sjovt, når man passer på sin krop og sit sind. For os er latter og glæde i høj grad med til at øge\nvores sundhed.\nVi sætter en ære i, at vores behandlere og trænere/instruktører har den nyeste evidensbaserede viden som muligt og er så kompetente som muligt inden for hvert deres område. Lige fra den personlige træner til fysioterapeuten og til receptionen.\nHold for enhver smag\nVi ønsker, at du får mest muligt ud af tiden, du bruger hos os. Derfor tilbyder vi blandt andet personlig træning, programplanlægning, smallgroup bootcamps samt et væld af forskellige hold, hvor der er noget for enhver smag.\nVores mål er at blive dit tredje sted efter arbejde og hjem.\nHar du fået lyst til at se og høre mere om Fit&Sund Hadsten, så kig ind forbi til en kop kaffe og en uforpligtende snak.",
+  "facilities": [
+    "Fitness",
+    "Personlig træning",
+    "Venlig atmosfære",
+    "Fleksible åbningstider",
+    "Altid gratis kaffe",
+    "Plads til alle",
+    "Plads til både fordybelse og tung træning"
+  ],
+  "service_categories": [
+    "Personlig træning",
+    "Event",
+    "Fællesskab",
+    "Camps",
+    "Hold",
+    "Fysioterapi",
+    "Yoga/Reformer",
+    "Reformer",
+    "Seniorer",
+    "Konditionsfremmende Træning",
+    "Core Træning",
+    "Muskelopbyggende Træning",
+    "Body & Mind",
+    "Funktionel Træning",
+    "Senior Træning"
+  ],
+  "services": [
+    {
+      "name": "2026 OPSTARTSPAKKE MED PERSONLIG TRÆNER",
+      "room": "GRATIS",
+      "categories": [
+        "event",
+        "personlig-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/2026-opstartspakke-med-personlig-traener"
+    },
+    {
+      "name": "Babytummel",
+      "room": null,
+      "categories": [
+        "camps",
+        "faellesskab",
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/babytummel-2"
+    },
+    {
+      "name": "Core",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/core"
+    },
+    {
+      "name": "Efterfødselstræningen",
+      "room": null,
+      "categories": [
+        "camps",
+        "faellesskab",
+        "fysioterapi",
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/efterfoedselstraeningen"
+    },
+    {
+      "name": "Hatha Yoga",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/hatha-yoga"
+    },
+    {
+      "name": "Mama hold",
+      "room": "Efterfødsels- og graviditetstræning for mor og barn",
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/mama-hold"
+    },
+    {
+      "name": "Mama Reformer",
+      "room": null,
+      "categories": [
+        "camps",
+        "hold-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/mama-reformer-2"
+    },
+    {
+      "name": "Mindful Stretch",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/mindful-stretch"
+    },
+    {
+      "name": "MOTION for livet",
+      "room": "5 ugers gratis træningsforløb",
+      "categories": [
+        "faellesskab",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/motion-for-livet"
+    },
+    {
+      "name": "Pilates",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/pilates"
+    },
+    {
+      "name": "RawFit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-funktionel-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/rawfit"
+    },
+    {
+      "name": "Senior Træning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/seniortraening"
+    },
+    {
+      "name": "Seniorklub",
+      "room": null,
+      "categories": [
+        "faellesskab",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/seniorklub"
+    },
+    {
+      "name": "Vinyasa Yoga",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/vinyasa-yoga"
+    },
+    {
+      "name": "YIN YOGA",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/yin-yoga"
+    }
+  ],
+  "manager": {
+    "name": "Peter Lund",
+    "title": "Husleder",
+    "image": "https://fitogsund.dk/f/thumb?src=/f/blog/article/db36e1e0d75c6e634f5f86452cea964b66433337_thumb.png&w=300&h=380"
+  },
+  "images": {
+    "hero": null,
+    "fallback": "../fitogsund-logo.png"
+  },
+  "hero_image_file": "hero.png",
+  "hero_is_placeholder": true,
+  "scraped_at": "2026-09-17"
+}

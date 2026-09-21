@@ -1,9 +1,5 @@
 const assert = require("assert");
-const fs = require("fs");
-const path = require("path");
-
-const rootDir = path.resolve(__dirname, "..");
-const dateUtilsPath = path.join(rootDir, "src", "Utils", "dateUtils.js");
+const loadAppModule = require("./lib/loadAppModule");
 
 run().catch((error) => {
   console.error(error);
@@ -11,15 +7,14 @@ run().catch((error) => {
 });
 
 async function run() {
-  const source = fs.readFileSync(dateUtilsPath, "utf8");
-  const moduleUrl = `data:text/javascript;base64,${Buffer.from(source).toString(
-    "base64"
-  )}`;
+  // Through the project's Babel setup rather than a data: URL: dateUtils now
+  // imports the translations for its relative-time words, and a data: URL
+  // cannot resolve an import.
   const {
     calculateAgeFromBirthDate,
     dateToIsoDate,
     isoDateToLocalDate,
-  } = await import(moduleUrl);
+  } = loadAppModule("src/Utils/dateUtils.js");
 
   assert.strictEqual(
     calculateAgeFromBirthDate("2000-06-28", new Date(2026, 5, 28)),

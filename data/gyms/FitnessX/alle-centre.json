@@ -1,0 +1,563 @@
+[
+  {
+    "name": "København S, Amager Strand",
+    "address": "Amager strandvej 112a, 2300 København S",
+    "folder": "Amager strandvej 112a, 2300 København S",
+    "url": "https://fitnessx.dk/fitness/fitness-koebenhavn/fitness-kobenhavn-s-amager-strandvej-112a/",
+    "latitude": 55.66056196921087,
+    "longitude": 12.632918926985115,
+    "label": "Fitnesscenter",
+    "features": [
+      "Fitness og cardio",
+      "HYROX",
+      "Hold",
+      "Reformer"
+    ],
+    "info_file": "Amager strandvej 112a, 2300 København S/info.json",
+    "hero_image": "Amager strandvej 112a, 2300 København S/hero.jpg"
+  },
+  {
+    "name": "Aarhus C, Ankersgade",
+    "address": "Ankersgade 12, 8000 Aarhus C",
+    "folder": "Ankersgade 12, 8000 Aarhus C",
+    "url": "https://fitnessx.dk/fitness/fitness-aarhus/fitness-aarhus-c-ankersgade-12/",
+    "latitude": 56.14823,
+    "longitude": 10.1912,
+    "label": "Fitnesscenter med Reformer",
+    "features": [
+      "Fitness og cardio",
+      "HYROX",
+      "Hold",
+      "Reformer"
+    ],
+    "info_file": "Ankersgade 12, 8000 Aarhus C/info.json",
+    "hero_image": "Ankersgade 12, 8000 Aarhus C/hero.jpg"
+  },
+  {
+    "name": "Valby, Vigerslevvej",
+    "address": "Centerparken 34, 2500 Valby",
+    "folder": "Centerparken 34, 2500 Valby",
+    "url": "https://fitnessx.dk/fitness/fitness-valby/fitness-valby-centerparken-24/",
+    "latitude": 55.65452,
+    "longitude": 12.48864,
+    "label": "Fitnesscenter",
+    "features": [
+      "Fitness og cardio",
+      "HYROX",
+      "Hold",
+      "Reformer"
+    ],
+    "info_file": "Centerparken 34, 2500 Valby/info.json",
+    "hero_image": "Centerparken 34, 2500 Valby/hero.jpg"
+  },
+  {
+    "name": "Aarhus C, Frisko",
+    "address": "Daugbjergvej 26C, 8000 Aarhus C",
+    "folder": "Daugbjergvej 26C, 8000 Aarhus C",
+    "url": "https://fitnessx.dk/fitness/fitness-aarhus/fitness-aarhus-c-frisko-daugbjergvej-26c/",
+    "latitude": 56.15609,
+    "longitude": 10.18308,
+    "label": "Fitnesscenter",
+    "features": [
+      "Fitness og cardio",
+      "HYROX",
+      "Hold",
+      "Reformer"
+    ],
+    "info_file": "Daugbjergvej 26C, 8000 Aarhus C/info.json",
+    "hero_image": "Daugbjergvej 26C, 8000 Aarhus C/hero.jpg"
+  },
+  {
+    "name": "Aarhus, Brabrand",
+    "address": "Edwin Rahrs Vej 32, 8220 Brabrand",
+    "folder": "Edwin Rahrs Vej 32, 8220 Brabrand",
+    "url": "https://fitnessx.dk/fitness/fitness-aarhus/fitness-aarhus-brabrand-bazar-vest-edwin-rahrs-vej-32/",
+    "latitude": 56.16546,
+    "longitude": 10.13322,
+    "label": "Fitnesscenter",
+    "features": [
+      "Fitness og cardio",
+      "HYROX",
+      "Hold",
+      "Reformer"
+    ],
+    "info_file": "Edwin Rahrs Vej 32, 8220 Brabrand/info.json",
+    "hero_image": "Edwin Rahrs Vej 32, 8220 Brabrand/hero.jpg"
+  },
+  {
+    "name": "Horsens, Emil Møllers Gade",
+    "address": "Emil Møllers Gade 30, 8700 Horsens",
+    "folder": "Emil Møllers Gade 30, 8700 Horsens",
+    "url": "https://fitnessx.dk/fitness/fitness-horsens/fitness-horsens-emil-mollers-gade-30/",
+    "latitude": 55.86612420753908,
+    "longitude": 9.840732756624522,
+    "label": "Fitnesscenter",
+    "features": [
+      "Fitness og cardio",
+      "HYROX",
+      "Hold",
+      "Reformer"
+    ],
+    "info_file": "Emil Møllers Gade 30, 8700 Horsens/info.json",
+    "hero_image": "Emil Møllers Gade 30, 8700 Horsens/hero.jpg"
+  },
+  {
+    "name": "København S, Femøren",
+    "address": "Engvej 163, 2300 København S",
+    "folder": "Engvej 163, 2300 København S",
+    "url": "https://fitnessx.dk/fitness/fitness-koebenhavn/fitness-kobenhavn-s-femoren-engvej-163/",
+    "latitude": 55.64595,
+    "longitude": 12.63606,
+    "label": "Fitnesscenter",
+    "features": [
+      "Fitness og cardio",
+      "HYROX",
+      "Hold",
+      "Reformer"
+    ],
+    "info_file": "Engvej 163, 2300 København S/info.json",
+    "hero_image": "Engvej 163, 2300 København S/hero.jpg"
+  },
+  {
+    "name": "Valby, Grønttorvet",
+    "address": "Gammel Køge Landevej 70, 2500 Valby",
+    "folder": "Gammel Køge Landevej 70, 2500 Valby",
+    "url": "https://fitnessx.dk/fitness/fitness-valby/fitness-valby-groenttorvet-gammel-koege-landevej/",
+    "latitude": 55.654431009310315,
+    "longitude": 12.510456398116483,
+    "label": "Fitnesscenter",
+    "features": [
+      "Fitness og cardio",
+      "HYROX",
+      "Hold",
+      "Reformer"
+    ],
+    "info_file": "Gammel Køge Landevej 70, 2500 Valby/info.json",
+    "hero_image": "Gammel Køge Landevej 70, 2500 Valby/hero.jpg"
+  },
+  {
+    "name": "Randers, Haraldsvej",
+    "address": "Haraldsvej 60, 8960 Randers SØ",
+    "folder": "Haraldsvej 60, 8960 Randers SØ",
+    "url": "https://fitnessx.dk/fitness/fitness-randers/fitness-randers-so-haraldsvej-60/",
+    "latitude": 56.43737,
+    "longitude": 10.05244,
+    "label": "Fitnesscenter",
+    "features": [
+      "Fitness og cardio",
+      "HYROX",
+      "Hold",
+      "Reformer"
+    ],
+    "info_file": "Haraldsvej 60, 8960 Randers SØ/info.json",
+    "hero_image": "Haraldsvej 60, 8960 Randers SØ/hero.jpg"
+  },
+  {
+    "name": "Ballerup",
+    "address": "Hedeparken 9b, 2750 Ballerup",
+    "folder": "Hedeparken 9b, 2750 Ballerup",
+    "url": "https://fitnessx.dk/fitness/fitness-ballerup/fitness-ballerup-hedeparken/",
+    "latitude": 55.71891808263984,
+    "longitude": 12.357742499668918,
+    "label": "Fitnesscenter",
+    "features": [
+      "Fitness og cardio",
+      "HYROX",
+      "Hold",
+      "Reformer"
+    ],
+    "info_file": "Hedeparken 9b, 2750 Ballerup/info.json",
+    "hero_image": "Hedeparken 9b, 2750 Ballerup/hero.jpg"
+  },
+  {
+    "name": "Roskilde, Holbækvej",
+    "address": "Holbækvej 7, 4000 Roskilde",
+    "folder": "Holbækvej 7, 4000 Roskilde",
+    "url": "https://fitnessx.dk/fitness/fitness-roskilde/fitness-roskilde-holbaekvej/",
+    "latitude": 55.63376306756124,
+    "longitude": 12.06985119154711,
+    "label": "Fitnesscenter",
+    "features": [
+      "Fitness og cardio",
+      "HYROX",
+      "Hold",
+      "Reformer"
+    ],
+    "info_file": "Holbækvej 7, 4000 Roskilde/info.json",
+    "hero_image": "Holbækvej 7, 4000 Roskilde/hero.jpg"
+  },
+  {
+    "name": "Horsens, Høegh Guldbergs Gade",
+    "address": "Høegh Guldbergs Gade 1, 8700 Horsens",
+    "folder": "Høegh Guldbergs Gade 1, 8700 Horsens",
+    "url": "https://fitnessx.dk/fitness/fitness-horsens/fitness-horsens-hoegh-guldbergs-gade-1/",
+    "latitude": 55.859185024123235,
+    "longitude": 9.854974649461015,
+    "label": "Fitnesscenter",
+    "features": [
+      "Fitness og cardio",
+      "HYROX",
+      "Hold",
+      "Reformer"
+    ],
+    "info_file": "Høegh Guldbergs Gade 1, 8700 Horsens/info.json",
+    "hero_image": "Høegh Guldbergs Gade 1, 8700 Horsens/hero.jpg"
+  },
+  {
+    "name": "Esbjerg, Jagtvej",
+    "address": "Jagtvej 53, 6705 Esbjerg Ø",
+    "folder": "Jagtvej 53, 6705 Esbjerg Ø",
+    "url": "https://fitnessx.dk/fitness/fitness-esbjerg/fitness-esbjerg-jagtvej-53/",
+    "latitude": 55.480223976760506,
+    "longitude": 8.47895444903909,
+    "label": "Fitnesscenter",
+    "features": [
+      "Fitness og cardio",
+      "HYROX",
+      "Hold",
+      "Reformer"
+    ],
+    "info_file": "Jagtvej 53, 6705 Esbjerg Ø/info.json",
+    "hero_image": "Jagtvej 53, 6705 Esbjerg Ø/hero.jpg"
+  },
+  {
+    "name": "Lyngby",
+    "address": "Jernbanepladsen 6, 2800 Lyngby",
+    "folder": "Jernbanepladsen 6, 2800 Lyngby",
+    "url": "https://fitnessx.dk/fitness/fitness-lyngby/lyngby-jernbanepladsen/",
+    "latitude": 55.768520080772845,
+    "longitude": 12.505129633060042,
+    "label": "Fitnesscenter med Reformer",
+    "features": [
+      "Fitness og cardio",
+      "HYROX",
+      "Hold",
+      "Reformer"
+    ],
+    "info_file": "Jernbanepladsen 6, 2800 Lyngby/info.json",
+    "hero_image": "Jernbanepladsen 6, 2800 Lyngby/hero.jpg"
+  },
+  {
+    "name": "Hasselager",
+    "address": "Kolt Østervej 25, 8361 Hasselager",
+    "folder": "Kolt Østervej 25, 8361 Hasselager",
+    "url": "https://fitnessx.dk/fitness/fitness-aarhus/fitness-aarhus-hasselager-kolt-ostervej-25/",
+    "latitude": 56.10931,
+    "longitude": 10.07824,
+    "label": "Fitnesscenter",
+    "features": [
+      "Fitness og cardio",
+      "HYROX",
+      "Hold",
+      "Reformer"
+    ],
+    "info_file": "Kolt Østervej 25, 8361 Hasselager/info.json",
+    "hero_image": "Kolt Østervej 25, 8361 Hasselager/hero.jpg"
+  },
+  {
+    "name": "København S, Lindgreens Allé",
+    "address": "Lindgreens Allé 9, 2300 København S",
+    "folder": "Lindgreens Allé 9, 2300 København S",
+    "url": "https://fitnessx.dk/fitness/fitness-koebenhavn/fitness-kobenhavn-s-lindgreens-alle-9/",
+    "latitude": 55.66791404109884,
+    "longitude": 12.622712754067456,
+    "label": "Fitnesscenter med Reformer",
+    "features": [
+      "Fitness og cardio",
+      "HYROX",
+      "Funktionelle hold",
+      "Reformer"
+    ],
+    "info_file": "Lindgreens Allé 9, 2300 København S/info.json",
+    "hero_image": "Lindgreens Allé 9, 2300 København S/hero.jpg"
+  },
+  {
+    "name": "København Ø, Hans Knudsens Plads",
+    "address": "Lyngbyvej 62, 2100 København Ø",
+    "folder": "Lyngbyvej 62, 2100 København Ø",
+    "url": "https://fitnessx.dk/fitness/fitness-koebenhavn/fitness-koebenhavn-oe-hans-knudsens-plads/",
+    "latitude": 55.71160465619408,
+    "longitude": 12.560458705340057,
+    "label": "Fitnesscenter med Reformer",
+    "features": [
+      "Fitness og cardio",
+      "HYROX",
+      "Hold",
+      "Reformer"
+    ],
+    "info_file": "Lyngbyvej 62, 2100 København Ø/info.json",
+    "hero_image": "Lyngbyvej 62, 2100 København Ø/hero.jpg"
+  },
+  {
+    "name": "Slagelse, Fabrikken",
+    "address": "Ndr. Ringgade 59, 4200 Slagelse",
+    "folder": "Ndr. Ringgade 59, 4200 Slagelse",
+    "url": "https://fitnessx.dk/fitness/fitness-slagelse/fitness-slagelse-nordre-ringgade/",
+    "latitude": 55.413013038167314,
+    "longitude": 11.348128985448783,
+    "label": "Fitnesscenter",
+    "features": [
+      "Fitness og cardio",
+      "HYROX",
+      "Hold",
+      "Reformer"
+    ],
+    "info_file": "Ndr. Ringgade 59, 4200 Slagelse/info.json",
+    "hero_image": "Ndr. Ringgade 59, 4200 Slagelse/hero.jpg"
+  },
+  {
+    "name": "Frederiksberg, Fasanvej",
+    "address": "Nordre Fasanvej 27, 2000 Frederiksberg",
+    "folder": "Nordre Fasanvej 27, 2000 Frederiksberg",
+    "url": "https://fitnessx.dk/fitness/fitness-frederiksberg/fitness-frederiksberg-nordre-fasanvej-27/",
+    "latitude": 55.68199,
+    "longitude": 12.52264,
+    "label": "Fitnesscenter med Reformer",
+    "features": [
+      "Fitness og cardio",
+      "HYROX",
+      "Hold",
+      "Reformer"
+    ],
+    "info_file": "Nordre Fasanvej 27, 2000 Frederiksberg/info.json",
+    "hero_image": "Nordre Fasanvej 27, 2000 Frederiksberg/hero.jpg"
+  },
+  {
+    "name": "Aarhus C, Nørrebrogade",
+    "address": "Nørrebrogade 28, 8000 Aarhus C",
+    "folder": "Nørrebrogade 28, 8000 Aarhus C",
+    "url": "https://fitnessx.dk/fitness/fitness-aarhus/fitness-aarhus-c-noerrebrogade/",
+    "latitude": 56.163852228839104,
+    "longitude": 10.210918035581825,
+    "label": "Fitnesscenter",
+    "features": [
+      "Fitness og cardio",
+      "HYROX",
+      "Hold",
+      "Reformer"
+    ],
+    "info_file": "Nørrebrogade 28, 8000 Aarhus C/info.json",
+    "hero_image": "Nørrebrogade 28, 8000 Aarhus C/hero.jpg"
+  },
+  {
+    "name": "Aarhus N, Paludan-Müllers Vej",
+    "address": "Paludan-Müllers Vej 82, 8200 Aarhus N",
+    "folder": "Paludan-Müllers Vej 82, 8200 Aarhus N",
+    "url": "https://fitnessx.dk/fitness/fitness-aarhus/fitness-aarhus-paludan-mullers-vej/",
+    "latitude": 56.17581772562273,
+    "longitude": 10.18048015905516,
+    "label": "Fitnesscenter med Reformer",
+    "features": [
+      "Fitness og cardio",
+      "HYROX",
+      "Hold",
+      "Reformer"
+    ],
+    "info_file": "Paludan-Müllers Vej 82, 8200 Aarhus N/info.json",
+    "hero_image": "Paludan-Müllers Vej 82, 8200 Aarhus N/hero.jpg"
+  },
+  {
+    "name": "Roskilde, Skomagergade",
+    "address": "Skomagergade 32B, 4000 Roskilde",
+    "folder": "Skomagergade 32B, 4000 Roskilde",
+    "url": "https://fitnessx.dk/fitness/fitness-roskilde/roskilde-skomagergade/",
+    "latitude": 55.641032350759566,
+    "longitude": 12.077298996393333,
+    "label": "Fitnesscenter",
+    "features": [
+      "Fitness og cardio",
+      "HYROX",
+      "Funktionelle hold",
+      "Reformer"
+    ],
+    "info_file": "Skomagergade 32B, 4000 Roskilde/info.json",
+    "hero_image": "Skomagergade 32B, 4000 Roskilde/hero.jpg"
+  },
+  {
+    "name": "Esbjerg, Strandbytorv",
+    "address": "Strandbygade 20, 6700 Esbjerg",
+    "folder": "Strandbygade 20, 6700 Esbjerg",
+    "url": "https://fitnessx.dk/fitness/fitness-esbjerg/fitness-esbjerg-strandbytorv-strandbygade-20/",
+    "latitude": 55.46834,
+    "longitude": 8.44008,
+    "label": "Fitnesscenter",
+    "features": [
+      "Fitness og cardio",
+      "HYROX",
+      "Hold",
+      "Reformer"
+    ],
+    "info_file": "Strandbygade 20, 6700 Esbjerg/info.json",
+    "hero_image": "Strandbygade 20, 6700 Esbjerg/hero.jpg"
+  },
+  {
+    "name": "Holstebro, Struervej",
+    "address": "Struervej 141, 7500 Holstebro",
+    "folder": "Struervej 141, 7500 Holstebro",
+    "url": "https://fitnessx.dk/fitness/fitness-holstebro/fitness-holstebro-struervej-141/",
+    "latitude": 56.37515,
+    "longitude": 8.61333,
+    "label": "Fitnesscenter med Reformer",
+    "features": [
+      "Fitness og cardio",
+      "HYROX",
+      "Hold",
+      "Reformer"
+    ],
+    "info_file": "Struervej 141, 7500 Holstebro/info.json",
+    "hero_image": "Struervej 141, 7500 Holstebro/hero.jpg"
+  },
+  {
+    "name": "Aarhus C, Sønder Allé",
+    "address": "Sønder Allé 11, 8000 Aarhus C",
+    "folder": "Sønder Allé 11, 8000 Aarhus C",
+    "url": "https://fitnessx.dk/fitness/fitness-aarhus/aarhus-c-soender-alle/",
+    "latitude": 56.15302362206425,
+    "longitude": 10.206274989271355,
+    "label": "Fitnesscenter",
+    "features": [
+      "Fitness og cardio",
+      "HYROX",
+      "Hold",
+      "Reformer"
+    ],
+    "info_file": "Sønder Allé 11, 8000 Aarhus C/info.json",
+    "hero_image": "Sønder Allé 11, 8000 Aarhus C/hero.jpg"
+  },
+  {
+    "name": "København V, Carlsberg Byen",
+    "address": "Thorvald Bindesbølls Pl. 1, 1799 København V",
+    "folder": "Thorvald Bindesbølls Pl. 1, 1799 København V",
+    "url": "https://fitnessx.dk/fitness/fitness-koebenhavn/fitness-kobenhavn-v-carlsberg-byen-torvald-bindesboells-pl-1/",
+    "latitude": 55.66855,
+    "longitude": 12.53541,
+    "label": "Fitnesscenter",
+    "features": [
+      "Fitness og cardio",
+      "HYROX",
+      "Hold",
+      "Reformer"
+    ],
+    "info_file": "Thorvald Bindesbølls Pl. 1, 1799 København V/info.json",
+    "hero_image": "Thorvald Bindesbølls Pl. 1, 1799 København V/hero.jpg"
+  },
+  {
+    "name": "Viborg",
+    "address": "Tingvej 7, 8800 Viborg",
+    "folder": "Tingvej 7, 8800 Viborg",
+    "url": "https://fitnessx.dk/fitness/fitness-viborg/fitness-viborg-tingvej/",
+    "latitude": 56.45512941118191,
+    "longitude": 9.402475098967916,
+    "label": "Fitnesscenter",
+    "features": [
+      "Fitness og cardio",
+      "HYROX",
+      "Hold",
+      "Reformer"
+    ],
+    "info_file": "Tingvej 7, 8800 Viborg/info.json",
+    "hero_image": "Tingvej 7, 8800 Viborg/hero.jpg"
+  },
+  {
+    "name": "Holstebro, Vestergade",
+    "address": "Vestergade 16, 7500 Holstebro",
+    "folder": "Vestergade 16, 7500 Holstebro",
+    "url": "https://fitnessx.dk/fitness/fitness-holstebro/fitness-holstebro-vestergade-16/",
+    "latitude": 56.35879,
+    "longitude": 8.61469,
+    "label": "Fitnesscenter",
+    "features": [
+      "Fitness og cardio",
+      "HYROX",
+      "Hold",
+      "Reformer"
+    ],
+    "info_file": "Vestergade 16, 7500 Holstebro/info.json",
+    "hero_image": "Vestergade 16, 7500 Holstebro/hero.jpg"
+  },
+  {
+    "name": "Randers, Vestergrave",
+    "address": "Vestergrave 2, 8900 Randers C",
+    "folder": "Vestergrave 2, 8900 Randers C",
+    "url": "https://fitnessx.dk/fitness/fitness-randers/fitness-randers-c-vestergrave-2/",
+    "latitude": 56.45908,
+    "longitude": 10.03393,
+    "label": "Fitnesscenter",
+    "features": [
+      "Fitness og cardio",
+      "HYROX",
+      "Hold",
+      "Reformer"
+    ],
+    "info_file": "Vestergrave 2, 8900 Randers C/info.json",
+    "hero_image": "Vestergrave 2, 8900 Randers C/hero.jpg"
+  },
+  {
+    "name": "Aarhus C, Prismet",
+    "address": "Viborgvej 3, 8000 Aarhus C",
+    "folder": "Viborgvej 3, 8000 Aarhus C",
+    "url": "https://fitnessx.dk/fitness/fitness-aarhus/fitness-aarhus-c-prismet-viborgvej-3/",
+    "latitude": 56.15801,
+    "longitude": 10.19168,
+    "label": "Fitnesscenter",
+    "features": [
+      "Fitness og cardio",
+      "HYROX",
+      "Hold",
+      "Reformer"
+    ],
+    "info_file": "Viborgvej 3, 8000 Aarhus C/info.json",
+    "hero_image": "Viborgvej 3, 8000 Aarhus C/hero.jpg"
+  },
+  {
+    "name": "Aarhus, Viby",
+    "address": "Viby Ringvej 10, 8260 Viby",
+    "folder": "Viby Ringvej 10, 8260 Viby",
+    "url": "https://fitnessx.dk/fitness/fitness-aarhus/fitness-aarhus-viby-ringvej-10/",
+    "latitude": 56.129735,
+    "longitude": 10.161511,
+    "label": "Fitnesscenter",
+    "features": [
+      "Fitness og cardio",
+      "HYROX",
+      "Hold",
+      "Reformer"
+    ],
+    "info_file": "Viby Ringvej 10, 8260 Viby/info.json",
+    "hero_image": "Viby Ringvej 10, 8260 Viby/hero.jpg"
+  },
+  {
+    "name": "Virum",
+    "address": "Virumvej 96, 2830 Virum",
+    "folder": "Virumvej 96, 2830 Virum",
+    "url": "https://fitnessx.dk/fitness/fitness-virum/fitness-virum-virumvej/",
+    "latitude": 55.78877051608628,
+    "longitude": 12.466747068265391,
+    "label": "Fitnesscenter",
+    "features": [
+      "Fitness og cardio",
+      "HYROX",
+      "Hold",
+      "Reformer"
+    ],
+    "info_file": "Virumvej 96, 2830 Virum/info.json",
+    "hero_image": "Virumvej 96, 2830 Virum/hero.jpg"
+  },
+  {
+    "name": "Hjørring",
+    "address": "Østergade 30, 9800 Hjørring",
+    "folder": "Østergade 30, 9800 Hjørring",
+    "url": "https://fitnessx.dk/fitness/fitness-hjoerring/fitness-hjorring-oestergade/",
+    "latitude": 57.45752,
+    "longitude": 9.99105,
+    "label": "Fitnesscenter",
+    "features": [
+      "Fitness og cardio",
+      "HYROX",
+      "Hold",
+      "Reformer"
+    ],
+    "info_file": "Østergade 30, 9800 Hjørring/info.json",
+    "hero_image": "Østergade 30, 9800 Hjørring/hero.jpg"
+  }
+]

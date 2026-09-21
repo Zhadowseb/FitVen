@@ -2,7 +2,8 @@
   "expo": {
     "name": "FitVen",
     "slug": "programapp",
-    "version": "1.1.6",
+    "version": "2.0.0",
+    "scheme": "fitven",
     "orientation": "default",
     "icon": "./assets/icon_v1.0.png",
     "userInterfaceStyle": "dark",
@@ -17,12 +18,14 @@
       "supportsTablet": false,
       "requireFullScreen": true,
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "We use your location to track workout distance.",
+        "NSLocationWhenInUseUsageDescription": "We use your location to track workout distance and to match a workout to the fitness centre you are in.",
         "ITSAppUsesNonExemptEncryption": false
-      }
+      },
+      "buildNumber": "18"
     },
     "android": {
       "googleServicesFile": "./google-services.json",
+      "versionCode": 18,
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyBzhic_QC-cV-3qKnqR1a87D8D8jMX4xI4"
@@ -70,7 +73,7 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "FitVen uses your precise location to track run distance.",
+          "locationWhenInUsePermission": "FitVen uses your precise location to track run distance and to match a workout to the fitness centre you are in.",
           "isIosBackgroundLocationEnabled": false,
           "isAndroidBackgroundLocationEnabled": false,
           "isAndroidForegroundServiceEnabled": true
@@ -79,12 +82,14 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "FitVen uses your photos so you can upload a profile picture.",
-          "cameraPermission": false,
-          "microphonePermission": false
+          "photosPermission": "FitVen uses your photos so you can upload a profile picture or a video of a lift.",
+          "cameraPermission": "FitVen uses the camera so you can record a video of a lift for verification.",
+          "microphonePermission": "FitVen uses the microphone when you record a video of a lift."
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-video",
+      "expo-web-browser"
     ],
     "extra": {
       "eas": {

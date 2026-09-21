@@ -8,6 +8,7 @@ import {
   useColorScheme,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTranslation } from "@localization";
 import { Colors } from "../GlobalStyling/colors";
 import ThemedText from "./ThemedText";
 import Cross from "../Icons/UI-icons/Cross";
@@ -39,6 +40,7 @@ const ThemedModal = ({
 }) => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const availableHeight = useAvailableSheetHeight();
   const keyboardHeight = useSheetKeyboardHeight();
@@ -96,7 +98,7 @@ const ThemedModal = ({
           {showCloseButton ? (
             <TouchableOpacity
               accessibilityRole="button"
-              accessibilityLabel="Close"
+              accessibilityLabel={t("common.close")}
               hitSlop={8}
               onPress={dismissThenClose(onClose)}
               style={styles.closeButton}

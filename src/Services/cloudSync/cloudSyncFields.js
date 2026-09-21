@@ -4,6 +4,8 @@
 // It is deliberately pure - no supabase, no repositories, nothing async - so it
 // can be loaded and tested on its own. scripts/test-cloud-sync-fields.js does
 // exactly that, which is the only automated coverage the sync engine has.
+// One copy of the wall-clock parser, in the pure module a test can load.
+import { normalizeCloudTimeString } from "@utils/cloudActivityUtils";
 import {
   formatDate,
   normalizeIsoDateString,
@@ -167,6 +169,18 @@ export const SYNCED_FIELDS = {
       cloudRead: (row) => row?.timer_start,
     }),
     field("elapsed_time", (value) => normalizeElapsedDurationSeconds(value, 0)),
+    // Where the workout happened. Set by the client at start or finish from
+    // one position fix and match_gym; null when there was no permission or
+    // no centre within range.
+    //
+    // The centre id travels; the coordinates it was derived from do not. RLS
+    // on workout_type_instance is row-based, and the follower policy lets
+    // anyone who follows you read yesterday, today and tomorrow in full - so
+    // a column on this table is a column your followers can read. For someone
+    // who starts the timer at home that is their address, rounded to 10 cm.
+    // The retry that needs the raw fix reads it from the device's own SQLite,
+    // where it stays.
+    field("gym_id", int()),
   ],
   ExerciseInstance: [
     field("local_exercise_instance_id", int(), {
@@ -525,42 +539,6 @@ export function normalizeWorkoutDateForCloud(value) {
   return normalizeIsoDateString(value);
 }
 
-export function normalizeCloudTimeString(value) {
-  if (typeof value !== "string") {
-    return null;
-  }
-
-  const trimmedValue = value.trim();
-  const match = trimmedValue.match(/^(\d{2}):(\d{2})(?::(\d{2}))?/);
-
-  if (!match) {
-    return null;
-  }
-
-  const hours = Number(match[1]);
-  const minutes = Number(match[2]);
-  const seconds = Number(match[3] ?? "00");
-
-  if (
-    !Number.isInteger(hours) ||
-    !Number.isInteger(minutes) ||
-    !Number.isInteger(seconds) ||
-    hours < 0 ||
-    hours > 23 ||
-    minutes < 0 ||
-    minutes > 59 ||
-    seconds < 0 ||
-    seconds > 59
-  ) {
-    return null;
-  }
-
-  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
-    2,
-    "0"
-  )}:${String(seconds).padStart(2, "0")}`;
-}
-
 export function timestampToCloudTimeString(value) {
   const normalizedTimestampMs = storedTimestampSecondsToMilliseconds(value);
 
@@ -645,3 +623,5 @@ export function resolveSetCloudLocalId(set) {
 
 
 
+
+export { normalizeCloudTimeString };

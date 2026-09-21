@@ -11,6 +11,8 @@ This file applies to everything inside `src/`.
 - `Repository/`: data access functions close to persistence concerns
 - `Services/`: business logic and multi-step app flows
 - `Contexts/`: React context and app-level state
+- `Localization/`: the translations (`locales/en`, `locales/da`), the `t()`
+  function and the provider behind `useTranslation()`
 - `Resources/`: shared UI components, theme, icons, and design primitives
 - `Sync/`: sync-related flows
 - `Utils/`: reusable helpers with minimal side effects
@@ -53,10 +55,10 @@ This file applies to everything inside `src/`.
   screen gets it with `useSQLiteContext()` and passes it down.
 - Import through the barrel: `from "@services"`, not
   `from "@services/programService"`. Same for `@resources/ThemedComponents`.
-- Use a path alias instead of climbing out of the folder. The six are
-  `@contexts`, `@database`, `@repository`, `@resources`, `@services` and
-  `@utils`, defined in `babel.config.js` and mirrored in `tsconfig.json` so
-  editor navigation follows. `./` and `../` stay for a file's own neighbours.
+- Use a path alias instead of climbing out of the folder. The seven are
+  `@contexts`, `@database`, `@localization`, `@repository`, `@resources`,
+  `@services` and `@utils`, defined in `babel.config.js` and mirrored in
+  `tsconfig.json` so editor navigation follows. `./` and `../` stay for a file's own neighbours.
   The 149 older deep imports were deliberately left alone; convert one when a
   change is already touching its file.
 - Never alias one layer to another layer's name. 45 function names exist in
@@ -67,6 +69,25 @@ This file applies to everything inside `src/`.
   files are camelCase.
 - `Utils/` is for helpers with minimal side effects. A helper that opens the
   database belongs in a service.
+
+## Text The User Reads
+
+- Every string a user sees goes through `Localization/`: in a component
+  `const { t } = useTranslation()` from `@localization`, anywhere else
+  `import { t } from "@localization"`. A literal English string in JSX is a
+  string Danish users read in English.
+- Keys are `<area>.<name>`, one file per area under `locales/en` and
+  `locales/da`, and the two files carry the same keys. `npm test` runs
+  `scripts/test-localization.js`, which fails on a key in one language and
+  not the other, and on a `t("...")` in `src/` whose key exists in neither.
+- Plurals are an object with `one` and `other` (and `zero` when it reads
+  differently), chosen by `count`: `t("common.sets", { count })`.
+- A label computed at module load (a constant array of options, say) is
+  frozen in whatever language the app started in. Build it inside the
+  component, or make it a function of `t`.
+- Dates and numbers go through `formatDate`, `formatTime` and
+  `formatNumber` from `@localization`, which use the chosen language's
+  locale rather than the device's.
 
 ## What "Exercise" Means
 

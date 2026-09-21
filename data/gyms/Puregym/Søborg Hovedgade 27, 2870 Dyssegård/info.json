@@ -1,0 +1,254 @@
+{
+  "chain": "PureGym",
+  "name": "Søborg, Søborg Hovedgade",
+  "puregym_id": "215",
+  "address": {
+    "street": "Søborg Hovedgade 27",
+    "postal_code": "2870",
+    "city": "Dyssegård ",
+    "country": "DK",
+    "full": "Søborg Hovedgade 27, 2870 Dyssegård"
+  },
+  "location": {
+    "latitude": 55.73013358227772,
+    "longitude": 12.521651343377416
+  },
+  "url": "https://www.puregym.dk/find-center/soeborg-soeborg-hovedgade",
+  "membership_url": "https://www.puregym.dk/bliv-medlem/170/medlemskab",
+  "price_from": "Priser fra 261,75 DKK/md.",
+  "price_note": "*Normalpris fra 279 DKK/md.",
+  "today_notice": "Vi lukker i dag kl. 00:00",
+  "opening_hours": [
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "09:00 - 20:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 17:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Mandag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    }
+  ],
+  "opening_hours_schema": [
+    {
+      "day": "Monday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Tuesday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Wednesday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Thursday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Friday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Saturday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Sunday",
+      "opens": "05:00",
+      "closes": "00:00"
+    }
+  ],
+  "special_days": [
+    {
+      "date": "2027-01-01",
+      "opens": "08:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-02",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-03",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-05",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-06",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-14",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-24",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-06-05",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-24",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-25",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-26",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-31",
+      "opens": "05:00",
+      "closes": "18:00"
+    }
+  ],
+  "meta_description": "Velkommen hos PureGym på Søborg Hovedgade. Find dit lokale center her, og oplev et trænings-fællesskab med plads til alle.",
+  "description": "PureGym Søborg Hovedgade\nPå \"Hovedgaden\" finder du et kæmpe udvalg af muligheder til at tilfredsstille dit træningsbehov. Vi tilbyder blandt andet fitness-, styrke- og konditionsfaciliteter, en stor og varieret holdplan, masser af bike-hold i bikesalen samt mulighed for selvtræning og hold i vores kronjuvel – vores funktionelle sal.\nVi glæder os til at se dig!\nDet siger personalet om PureGym Søborg Hovedgade\nHer i centret har vi et særligt sammenhold i vores personalegruppe og sammen med vores skønne medlemmer. Selvom vi altid er at finde ude i centret med en klud eller støvsuger i hånden, er vi altid klar til at tale med vores medlemmer. Det vigtigste for os er, at du får den bedste træningsoplevelse. Det unikke hos os, udover personalet, er vores store funktionelle sal, hvor vi kører hold om eftermiddagen, og hvis der ikke er hold, kan du benytte den til egen træning.\nPersonlig træning i PureGym Søborg Hovedgade\nHar du brug for en snak om din træning?\nVi står altid klar til at hjælpe dig – uanset om du har brug for gode råd, et skræddersyet træningsprogram eller personlig træning. Vores certificerede personlige trænere tilbyder ikke kun faglig sparring, men bringer også mange års erfaring og flere tusind timer på gulvet med sig. Vi har nogle af branchens mest professionelle og engagerede trænere, som brænder for at hjælpe dig med at nå dine mål.\nVi tilbyder også en uforpligtende samtale med en personlig træner til 0,-:\nBook samtale her\nHoldtræning i PureGym Søborg Hovedgade\nVi tilbyder en stor, lys holdsal med et bredt udvalg af hold på planen, en moderne bikesal og en rummelig funktionel træningssal. Vores holdsal danner rammen om populære hold som Yoga, Stram Op, Zumba og Seniortræning, mens bikesalen byder på inspirerende cykeltimer. I den funktionelle sal finder du energifyldte hold som Cross og Boxing – perfekt til dig, der ønsker en udfordrende og varieret træning.\nPrøv vores Bike-hold som du aldrig har prøvet dem før\nVi har skiftet næsten alle cyklerne i bikesalen ud. Det er stadig Body Bike Smart+ modeller, som kobler til din smartphone, så du kan følge med i din træning, mens den sker. Kalorier. Distance. Puls. Modstand. Det hele står på din egen smartphone og kan uploades til Strava bagefter. Prøv det én gang. Og mærk på egen krop, hvorfor du aldrig får lyst til at gå tilbage.\nHvornår træner folk her i centret?\nVi har god plads til vores medlemmer. I vores app kan du se, hvornår der er flest og færrest mennesker i centret.\nBliv medlem her\nHvornår kan jeg møde personalet i centret?\nVed indgangen ligger receptionen, hvor du bliver mødt af vores smilende og servicemindede team, der står klar til at hjælpe dig.\nSe vores bemandede tider i oversigten her på siden.\nDu er altid velkommen til at komme forbi i vores bemandede åbningstid. Vi tager os tid til at svare på alle dine spørgsmål og giver gerne en rundvisning i centret.\nKan jeg parkere ved PureGym Søborg Hovedgade?\nCentret ligger centralt på Søborg Hovedgade, hvor der er mulighed for 2 timers gratis parkering både langs hovedgaden og på de omkringliggende sideveje.\nDerudover kan du parkere på Rema 1000’s parkeringsplads, hvor der er 1 times gratis parkering, samt i parkeringskælderen under centret, hvor du har 2 timers gratis parkering – dog skal du være opmærksom på, at pladsen i kælderen kan være lidt snæver.\nVi ligger også tæt på offentlig transport, hvilket gør det nemt og bekvemt at komme til centret – uanset om du er i bil, på cykel eller med bus.\nFølg os på Facebook\nSe vores lokaler her\nFå en samtale med en personlig træner\nMødet med en personlig træner kan hjælpe dig til at finde motivationen til at nå dine mål.\nBook din uforpligtende samtale i dag til 0 kr. og bliv klogere på, hvordan et personligt træningsforløb ville forme sig for dig, så du når lige derhen hvor du gerne vil.\nBook din samtale her\nBliv medlem af PureGym og få adgang til:\nApp\nHer kan du få et trænings-program, følge din træning, booke hold, deltage i challenges og meget mere.\nPersonlig træning\nHar du brug for hjælp til at nå dine mål? Book en samtale hos en af vores certificerede personlige trænere til 0 kr.\nHoldtræning\nBliv en del af et stærkt fællesskab på vores hold. Vores dedikerede instruktører guider dig igennem og sikrer højt humør.\nBodytracker\nFor kun ekstra 9 kr./md. kan du få adgang til en avanceret vægt, der giver dig en kropsanalyse med flere forskellige parametre.\nEr du klar til at starte?\nVælg dit medlemskab her\nOg bliv en del af Danmarks største fitness-fælleskab.\nGenerelt\nLog ind på Mit PureGym\nPriser og medlemskabstyper\nTil/afmeld nyhedsbrev\nOm PureGym\nPresse\nKarriere\nHjerteforeningen\nStudierabat\nInformation\nFAQ & Kontakt\nVelkomst og information\nHusets regler\nMedlems­betingelser\nDatapolitik\nCookies\nTilgængelighed\nKonkurrencevindere\nSafespace\nVores fitness centre\nFind center\nAlle større byer\nKøbenhavn\nAarhus\nOdense\nAalborg\nRanders\nValby\nDownload vores app\nHold dig informeret\nTorveporten 2,\n2500 Valby\nCVR. 25652991\nPureGym © 2026\nLog ind\nNyt eller glemt kodeord?\nIkke medlem endnu?\nMeld dig ind",
+  "notice": null,
+  "facilities": [],
+  "facility_names": [
+    "App",
+    "Bikesal",
+    "Bodytracker+",
+    "Cardiotræning",
+    "Funktionelt træningsområde",
+    "Glutebuilder",
+    "Holdtræning",
+    "Parkering",
+    "Personlig træner",
+    "Styrketræning",
+    "TRX",
+    "Udstrækningsområde",
+    "Watt-cykler & Intelligent Cycling"
+  ],
+  "facility_ids": [
+    "355",
+    "14",
+    "24",
+    "27",
+    "349",
+    "26",
+    "12",
+    "28",
+    "333",
+    "350",
+    "434",
+    "17",
+    "474"
+  ],
+  "plan_ids": [
+    "670",
+    "662"
+  ],
+  "team_ids": [
+    "312",
+    "332",
+    "498",
+    "318",
+    "834",
+    "338",
+    "735",
+    "802",
+    "806",
+    "344",
+    "739",
+    "807"
+  ],
+  "classes": [
+    "Bike Power",
+    "Bike Standard",
+    "Boksning",
+    "Functional Express",
+    "Functional Training",
+    "Get Started - Introhold",
+    "Pilates",
+    "Seniortræning",
+    "Stram Op",
+    "Yang Yoga",
+    "Yin Yoga",
+    "Zumba"
+  ],
+  "images": {
+    "hero": "https://www.puregym.dk/files/2025-07/PG_215_S%C3%B8borg-Hovedgade_3x2-08.jpg",
+    "hero_2500": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-07/PG_215_S%C3%B8borg-Hovedgade_3x2-08.jpg?itok=ly2Ellns",
+    "teaser": "https://www.puregym.dk/files/styles/center_teaser/public/2025-07/PG_215_S%C3%B8borg-Hovedgade_3x2-08.jpg?itok=Xl6M2mwQ",
+    "gallery": [
+      "https://mit.puregym.dk/images/centers/797/pg-215-soborg-hovedgade-3x2-01-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/797/pg-215-soborg-hovedgade-3x2-02-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/797/pg-215-soborg-hovedgade-3x2-03-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/797/pg-215-soborg-hovedgade-3x2-04-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/797/pg-215-soborg-hovedgade-3x2-05-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/797/pg-215-soborg-hovedgade-3x2-06-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/797/pg-215-soborg-hovedgade-3x2-07-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/797/pg-215-soborg-hovedgade-3x2-08-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/797/pg-215-soborg-hovedgade-3x2-09-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/797/pg-215-soborg-hovedgade-3x2-10-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/797/pg-215-soborg-hovedgade-3x2-11-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/797/pg-215-soborg-hovedgade-3x2-12-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/797/pg-215-soborg-hovedgade-3x2-13-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/797/pg-215-soborg-hovedgade-3x2-14-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/797/pg-215-soborg-hovedgade-3x2-15-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/797/pg-215-soborg-hovedgade-3x2-16-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/797/pg-215-soborg-hovedgade-3x2-17-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/797/pg-215-soborg-hovedgade-3x2-18-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/797/pg-215-soborg-hovedgade-3x2-19-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/797/pg-215-soborg-hovedgade-3x2-20-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/797/pg-215-soborg-hovedgade-3x2-21-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/797/pg-215-soborg-hovedgade-3x2-22-1090x727.webp"
+    ]
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

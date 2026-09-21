@@ -1,0 +1,181 @@
+{
+  "chain": "LOOP Fitness",
+  "name": "LOOP Kjellerup",
+  "loop_id": 158,
+  "center_type": "lite",
+  "address": {
+    "street": "Bryggerstræde 9, 1. sal",
+    "postal_code": "8620",
+    "city": "Kjellerup",
+    "country": "DK",
+    "full": "Bryggerstræde 9, 1. sal, 8620 Kjellerup"
+  },
+  "location": {
+    "latitude": 56.288525,
+    "longitude": 9.43162
+  },
+  "url": "https://loopfitness.dk/centre/loop-fitness-kjellerup/",
+  "membership_url": "https://loopfitness.dk/medlemskab/bliv-medlem/",
+  "phone": "41746258",
+  "email": "kjellerup@loopfitness.dk",
+  "facebook_url": null,
+  "google_review_url": "https://g.page/r/CfkmaWDWHm3aEB0/review",
+  "cvr": "37770604",
+  "manager_name": "Lene",
+  "opened": "2016-06-13",
+  "has_classes": false,
+  "only_open_when_staffed": false,
+  "max_visitor_capacity": 25,
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 24:00"
+    }
+  ],
+  "staffed_hours": [
+    {
+      "day": "Mandag",
+      "periods": [
+        "08:00 - 11:00"
+      ]
+    },
+    {
+      "day": "Tirsdag",
+      "periods": [
+        "16:00 - 19:00"
+      ]
+    },
+    {
+      "day": "Onsdag",
+      "periods": [
+        "08:00 - 11:00"
+      ]
+    },
+    {
+      "day": "Torsdag",
+      "periods": [
+        "16:00 - 19:00"
+      ]
+    },
+    {
+      "day": "Fredag",
+      "periods": [
+        "08:00 - 11:00"
+      ]
+    },
+    {
+      "day": "Lørdag",
+      "periods": [
+        "09:00 - 11:00"
+      ]
+    },
+    {
+      "day": "Søndag",
+      "periods": [
+        "09:00 - 11:00"
+      ]
+    }
+  ],
+  "staffed_hours_dates": [
+    {
+      "date": "2022-07-09",
+      "open": "None - None"
+    },
+    {
+      "date": "2022-07-16",
+      "open": "None - None"
+    },
+    {
+      "date": "2022-07-23",
+      "open": "None - None"
+    },
+    {
+      "date": "2022-07-30",
+      "open": "None - None"
+    },
+    {
+      "date": "2022-08-06",
+      "open": "None - None"
+    },
+    {
+      "date": "2022-12-25",
+      "open": "None - None"
+    },
+    {
+      "date": "2025-01-08",
+      "open": "None - None"
+    }
+  ],
+  "meta_description": "Hos LOOP Fitness Kjellerup træner du styrke og kondition på blot 24 minutter i vores cirkeltræning. Enkel og effektiv træning! Kom i gang her »",
+  "description": "Kom indenfor og mærk energien. Hos LOOP får du afslappet stemning og effektiv træning på den bedste måde. Uanset niveau er der plads til dig, og træningen er enkel: Start med opvarmning, træn hele kroppen i træningscirklen, og afslut med udstrækning i vores LOOP Ekstra område. Efter din træning kan du nyde en gratis kop kaffe eller the i vores café.",
+  "quote_by": "Lene, centerleder",
+  "facilities": [
+    "1 cirkel",
+    "Cardio-område",
+    "Gratis kaffe"
+  ],
+  "memberships": [
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr",
+      "price_per_month": 289.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 319,
+      "family_members": 0,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    },
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr. - familie",
+      "price_per_month": 589.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 619,
+      "family_members": 9,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    }
+  ],
+  "images": {
+    "hero": "https://loopfitness.dk/wp-content/uploads/2019/11/Kjellerup.png",
+    "og_image": "https://loopfitness.dk/wp-content/uploads/2019/11/lene-nyt-scaled.jpg"
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

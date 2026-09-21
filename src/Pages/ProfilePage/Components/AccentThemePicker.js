@@ -6,17 +6,30 @@ import {
   withAlpha,
 } from "../../../Resources/GlobalStyling/colors";
 import ThemedText from "../../../Resources/ThemedComponents/ThemedText";
+import { useTranslation } from "@localization";
+
+// Spelled out rather than built from the key, so the localization test can see
+// every key. An accent added to colors.js without a translation keeps the name
+// it has there.
+const ACCENT_NAME_KEYS = {
+  ember: "profile.appearance.accent.ember",
+  volt: "profile.appearance.accent.volt",
+  ultraviolet: "profile.appearance.accent.ultraviolet",
+  coral: "profile.appearance.accent.coral",
+};
 
 // 2x2 grid of accent-theme options (Ember/Volt/Ultraviolet/Coral). Each shows
 // the combo's brand primary+secondary as overlapping swatch dots.
 export default function AccentThemePicker({ value, onChange }) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const { t } = useTranslation();
 
   return (
     <View style={styles.grid}>
       {Object.entries(AccentThemes).map(([accentKey, accent]) => {
         const isSelected = value === accentKey;
+        const nameKey = ACCENT_NAME_KEYS[accentKey];
 
         return (
           <TouchableOpacity
@@ -59,7 +72,7 @@ export default function AccentThemePicker({ value, onChange }) {
               setColor={isSelected ? theme.title : theme.text}
               numberOfLines={1}
             >
-              {accent.name}
+              {nameKey ? t(nameKey) : accent.name}
             </ThemedText>
           </TouchableOpacity>
         );

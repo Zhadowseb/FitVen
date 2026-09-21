@@ -1,0 +1,211 @@
+{
+  "chain": "Fit&Sund",
+  "name": "Fit&Sund Middelfart / Odensevej",
+  "short_name": "Middelfart / Odensevej",
+  "address": {
+    "street": "Odensevej 192",
+    "postal_code": "5500",
+    "city": "Middelfart",
+    "country": "DK",
+    "full": "Odensevej 192, 5500 Middelfart"
+  },
+  "location": {
+    "latitude": 55.49834095,
+    "longitude": 9.75970104
+  },
+  "geocode": {
+    "latitude": 55.49834095,
+    "longitude": 9.75970104,
+    "matched_address": "Odensevej 192, 5500 Middelfart",
+    "exact": true,
+    "source": "DAWA"
+  },
+  "url": "https://fitogsund.dk/c/huse/middelfart-odensevej",
+  "membership_url": "https://fitogsund.dk/p/bliv-medlem",
+  "class_schedule_url": "https://fitogsund.goactivebooking.com/class-web-categories/34/classes?facility=23",
+  "google_maps_url": "https://www.google.com/maps/dir/?api=1&destination=Odensevej-192+5500+Middelfart",
+  "phone": "+45 75 62 63 11",
+  "email": "middelfart@fitogsund.dk",
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "04:00 - 24:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "04:00 - 24:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "04:00 - 24:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "04:00 - 24:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "04:00 - 24:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "04:00 - 24:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "04:00 - 24:00"
+    }
+  ],
+  "reception_hours": [
+    {
+      "day": "Mandag",
+      "open": "08:00 - 20:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "08:00 - 20:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "08:00 - 18:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "08:00 - 18:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "08:00 - 13:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "09:00 - 12:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "09:00 - 12:00"
+    }
+  ],
+  "meta_description": "Træn hos Fit & Sund Middelfart i vores moderne fitness og træningscenter. Fitness | Holdtræning | Personlig træning | Fysioterapi",
+  "description": "Velkommen til Fit&Sund Middelfart Odensevej. Vi er meget mere end bare et fitnesscenter. Vi er dit lokale fitness- og sundhedshus, og vi arbejder ud fra vores 3 værdier: sundhed, viden og nærvær.\nMålrettet træning og et levende fællesskab\nSundhed er bl.a. varieret træning. Derfor tilbyder vi styrke- og holdtræning, programlægning og målrettet træning på dine præmisser.\nHos Fit&Sund har vi et kompetent trænings- og sundhedsfagligt team, som gerne hjælper dig på vej uanset din alder, baggrund eller trænings- og sundhedstilstand.\nI vores velkomstområde er alle velkomne, og her kan man opleve den magi, der opstår, når medlemmerne hygger sig med en kop kaffe og skaber et levende fællesskab i huset. Fit&Sunds mål er at tilbyde en inspirerende og motiverende træningsoplevelse, som giver dig overskud, velvære og livskvalitet.\nSundhedsfagligt team er klar\nLokalerne er store og lyse med topmoderne udstyr. Huset har et ExerciseLab, der skaber perfekte rammer til udfordrende funktionel træning.\nHos Fit&Sund Middelfart på Odensevej finder du også Fit&Sund Fysioterapi , som tilbyder fysioterapi uden for sygesikringen. Dette giver dig som medlem mulighed for 10 min. gratis konsultation, træning eller behandling af autoriserede fysioterapeuter.",
+  "facilities": [
+    "Fitness",
+    "Fysioterapeuter",
+    "Personlig træning",
+    "Funktionelt træningsområde",
+    "Lyse lokaler",
+    "Mange hold",
+    "Bike sal",
+    "God stemning",
+    "Et kompetent sundhedsfagligt team"
+  ],
+  "service_categories": [
+    "Personlig træning",
+    "Fysioterapi",
+    "Event",
+    "Hold",
+    "Fællesskab",
+    "Seniorer",
+    "Dance",
+    "Indoor Cycling",
+    "Konditionsfremmende Træning",
+    "Muskelopbyggende Træning",
+    "Senior Træning"
+  ],
+  "services": [
+    {
+      "name": "2026 OPSTARTSPAKKER",
+      "room": null,
+      "categories": [
+        "event",
+        "fysioterapi",
+        "personlig-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/2026-opstartspakker-15"
+    },
+    {
+      "name": "DanceFit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/dance"
+    },
+    {
+      "name": "Indoor Cycling",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-indoor-cycling"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/indoor-cycling"
+    },
+    {
+      "name": "MOTION for livet",
+      "room": "5 ugers gratis træningsforløb",
+      "categories": [
+        "faellesskab",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/motion-for-livet"
+    },
+    {
+      "name": "POWER DANCE",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/power-dance"
+    },
+    {
+      "name": "Puls Styrke",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/puls--styrke"
+    },
+    {
+      "name": "Senior Stram Op",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/senior-stramp-op"
+    },
+    {
+      "name": "YOU-GO-I-GO Middelfart",
+      "room": null,
+      "categories": [
+        "faellesskab",
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/you-go-i-go-middelfart"
+    },
+    {
+      "name": "ZUMBA®",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/zumba"
+    }
+  ],
+  "manager": {
+    "name": "Nichlas Guld",
+    "title": "Husleder",
+    "image": "https://fitogsund.dk/f/thumb?src=/f/blog/article/57fe041926acaa5ade190ec8528808460a661f9f_thumb.jpeg&w=300&h=380"
+  },
+  "images": {
+    "hero": null,
+    "fallback": "../fitogsund-logo.png"
+  },
+  "hero_image_file": "hero.png",
+  "hero_is_placeholder": true,
+  "scraped_at": "2026-09-17"
+}

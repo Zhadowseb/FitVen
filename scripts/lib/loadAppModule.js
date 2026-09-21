@@ -54,6 +54,10 @@ function compile(file) {
     plugins: [
       moduleResolver,
       projectRequire.resolve("@babel/plugin-transform-modules-commonjs"),
+      // A pure module may sit behind a barrel that also exports a component -
+      // Utils/dateUtils.js imports from @localization, whose index re-exports
+      // the provider. The JSX has to parse; it never renders here.
+      projectRequire.resolve("@babel/plugin-transform-react-jsx"),
     ],
   });
 

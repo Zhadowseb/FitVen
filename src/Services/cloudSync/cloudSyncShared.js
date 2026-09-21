@@ -2,6 +2,7 @@
 // building and the watcher/cascade bookkeeping every entity needs.
 //
 // Nothing here calls a sync pipeline, which is what keeps the modules acyclic.
+import { t } from "@localization";
 import {
   formatDate,
   normalizeIsoDateString,
@@ -111,7 +112,7 @@ export const DAY_CLOUD_SYNC_SELECT =
 export const WORKOUT_TYPE_INSTANCE_CLOUD_TABLE = "workout_type_instance";
 
 export const WORKOUT_TYPE_INSTANCE_CLOUD_SYNC_SELECT =
-  "id, user_id, local_workout_type_instance_id, sync_id, sync_version, deleted_at, last_updated, is_deleting, delete_requested_at, local_watchers, cloud_day_id, workout_type, date, label, done, is_active, original_start_time, timer_start, elapsed_time";
+  "id, user_id, local_workout_type_instance_id, sync_id, sync_version, deleted_at, last_updated, is_deleting, delete_requested_at, local_watchers, cloud_day_id, workout_type, date, label, done, is_active, original_start_time, timer_start, elapsed_time, gym_id";
 
 export const EXERCISE_INSTANCE_CLOUD_TABLE = "exercise_instance";
 
@@ -178,7 +179,7 @@ export function formatElapsedWorkoutDetail(workout) {
   const totalElapsedSeconds = storedElapsedSeconds + runningElapsedSeconds;
   const totalElapsedMinutes = Math.max(1, Math.floor(totalElapsedSeconds / 60));
 
-  return `${totalElapsedMinutes} min in`;
+  return t("friends.status.minutesIn", { count: totalElapsedMinutes });
 }
 
 export function parseCloudProgramId(value) {

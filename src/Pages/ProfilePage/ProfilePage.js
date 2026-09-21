@@ -14,11 +14,14 @@ import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
 import { authService } from "../../Services";
 import { useAuth } from "../../Contexts/AuthContext";
 import { useThemeMode } from "../../Contexts/ThemeContext";
+import { useTranslation } from "@localization";
 import { notificationService, socialService } from "../../Services";
 import Bell from "../../Resources/Icons/UI-icons/Bell";
 import Dumbbell from "../../Resources/Icons/UI-icons/Dumbbell";
 import Pencil from "../../Resources/Icons/UI-icons/Pencil";
 import Moon from "../../Resources/Icons/UI-icons/Moon";
+import MusicNote from "../../Resources/Icons/UI-icons/MusicNote";
+import Social from "../../Resources/Icons/UI-icons/Social";
 import ChevronRight from "../../Resources/Icons/UI-icons/ChevronRight";
 import FeedbackModal from "../../Resources/Components/FeedbackModal/FeedbackModal";
 import Lock from "../../Resources/Icons/UI-icons/Lock";
@@ -50,12 +53,6 @@ import {
 // Not localised on purpose: the word the user types has to match exactly, and
 // a translated one is a different word on a phone in a different language.
 const DELETE_CONFIRMATION_WORD = "DELETE";
-
-const APPEARANCE_OPTIONS = [
-  { value: "dark", label: "Dark" },
-  { value: "light", label: "Light" },
-  { value: "auto", label: "Auto" },
-];
 
 function getNormalizedString(value) {
   if (value === null || value === undefined) {
@@ -90,6 +87,19 @@ export default function ProfilePage() {
   const { user } = useAuth();
   const { themeMode, setThemeMode, accentTheme, setAccentTheme } =
     useThemeMode();
+  const { t, languageMode, setLanguageMode } = useTranslation();
+  // Built per render, not at module load: the labels themselves change with
+  // the language they pick.
+  const languageOptions = [
+    { value: "system", label: t("profile.language.system") },
+    { value: "da", label: t("profile.language.da") },
+    { value: "en", label: t("profile.language.en") },
+  ];
+  const appearanceOptions = [
+    { value: "dark", label: t("profile.appearance.dark") },
+    { value: "light", label: t("profile.appearance.light") },
+    { value: "auto", label: t("profile.appearance.auto") },
+  ];
   const [profile, setProfile] = useState(null);
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
@@ -131,23 +141,24 @@ export default function ProfilePage() {
   const birthYearDisplay = birthDate ? String(birthDate).slice(0, 4) : null;
   const displayNameError = normalizedDisplayName
     ? undefined
-    : "Display name cannot be empty.";
+    : t("profile.displayName.empty");
   const hasUnsavedChanges = profile
     ? normalizedDisplayName !== profile.displayName ||
       normalizedBio !== (profile.bio ?? "") ||
       birthDate !== (profile.birthDate ?? "")
     : false;
   const avatarButtonLabel = isUploadingAvatar
-    ? "Uploading..."
+    ? t("profile.avatar.uploading")
     : profile?.avatarUrl
-      ? "Change photo"
-      : "Upload photo";
+      ? t("profile.avatar.changePhoto")
+      : t("profile.avatar.uploadPhoto");
   const avatarMaxMb = Math.round(
     socialService.PROFILE_AVATAR_MAX_BYTES / (1024 * 1024)
   );
   const appName = getNormalizedString(appConfig?.expo?.name) ?? "FitVen";
   const appVersion =
-    getNormalizedString(appConfig?.expo?.version) ?? "Unknown";
+    getNormalizedString(appConfig?.expo?.version) ??
+    t("profile.account.unknownVersion");
 
   useFocusEffect(
     useCallback(() => {
@@ -162,7 +173,7 @@ export default function ProfilePage() {
           setIsLoadingProfile(false);
           setProfileFeedback({
             status: "error",
-            message: "Sign in to view your profile.",
+            message: t("profile.feedback.signInToView"),
           });
           return;
         }
@@ -239,7 +250,7 @@ export default function ProfilePage() {
             message:
               error instanceof Error
                 ? error.message
-                : "Could not load your profile.",
+                : t("profile.feedback.couldNotLoad"),
           });
         } finally {
           if (!isCancelled) {
@@ -269,7 +280,7 @@ export default function ProfilePage() {
     if (!user?.id) {
       setProfileFeedback({
         status: "error",
-        message: "Sign in to update your profile.",
+        message: t("profile.feedback.signInToUpdate"),
       });
       return;
     }
@@ -277,7 +288,7 @@ export default function ProfilePage() {
     if (!normalizedDisplayName) {
       setProfileFeedback({
         status: "error",
-        message: "Display name cannot be empty.",
+        message: t("profile.displayName.empty"),
       });
       return;
     }
@@ -313,8 +324,10 @@ export default function ProfilePage() {
       setProfileFeedback({
         status: updatedProfile.privateSettingsError ? "error" : "success",
         message: updatedProfile.privateSettingsError
-          ? `Public profile updated. ${updatedProfile.privateSettingsError}`
-          : "Profile updated.",
+          ? t("profile.feedback.publicProfileUpdatedWithWarning", {
+              warning: updatedProfile.privateSettingsError,
+            })
+          : t("profile.feedback.profileUpdated"),
       });
     } catch (error) {
       setProfileFeedback({
@@ -322,7 +335,7 @@ export default function ProfilePage() {
         message:
           error instanceof Error
             ? error.message
-            : "Could not update your profile.",
+            : t("profile.feedback.couldNotUpdate"),
       });
     } finally {
       setIsSavingProfile(false);
@@ -333,7 +346,7 @@ export default function ProfilePage() {
     if (!user?.id) {
       setProfileFeedback({
         status: "error",
-        message: "Sign in to update your profile photo.",
+        message: t("profile.feedback.signInToUpdatePhoto"),
       });
       return;
     }
@@ -349,9 +362,7 @@ export default function ProfilePage() {
         await ImagePicker.requestMediaLibraryPermissionsAsync();
 
       if (!permissionResponse.granted) {
-        throw new Error(
-          "Photo library permission is required to choose a profile picture."
-        );
+        throw new Error(t("profile.feedback.photoPermissionRequired"));
       }
 
       const pickerResult = await ImagePicker.launchImageLibraryAsync({
@@ -368,7 +379,7 @@ export default function ProfilePage() {
       const selectedAsset = pickerResult.assets?.[0];
 
       if (!selectedAsset) {
-        throw new Error("No image was selected.");
+        throw new Error(t("profile.feedback.noImageSelected"));
       }
 
       const updatedProfile = await socialService.uploadOwnAvatar({
@@ -379,7 +390,7 @@ export default function ProfilePage() {
       setProfile(updatedProfile);
       setProfileFeedback({
         status: "success",
-        message: "Profile photo updated.",
+        message: t("profile.feedback.photoUpdated"),
       });
     } catch (error) {
       setProfileFeedback({
@@ -387,7 +398,7 @@ export default function ProfilePage() {
         message:
           error instanceof Error
             ? error.message
-            : "Could not upload your profile photo.",
+            : t("profile.feedback.couldNotUploadPhoto"),
       });
     } finally {
       setIsUploadingAvatar(false);
@@ -440,7 +451,9 @@ export default function ProfilePage() {
       await authService.logout();
     } catch (error) {
       setLogoutError(
-        error instanceof Error ? error.message : "Could not log out."
+        error instanceof Error
+          ? error.message
+          : t("profile.feedback.couldNotLogOut")
       );
     } finally {
       setIsLoggingOut(false);
@@ -485,7 +498,7 @@ export default function ProfilePage() {
       setDeleteError(
         error instanceof Error
           ? error.message
-          : "Could not delete the account. Nothing was removed."
+          : t("profile.feedback.couldNotDeleteAccount")
       );
       setIsDeletingAccount(false);
     }
@@ -501,7 +514,7 @@ export default function ProfilePage() {
         >
           {/* Public profile */}
           <View style={styles.section}>
-            <SectionEyebrow>Public profile</SectionEyebrow>
+            <SectionEyebrow>{t("profile.sections.publicProfile")}</SectionEyebrow>
             <ThemedCard style={styles.card}>
               <View style={styles.avatarRow}>
                 <View style={[styles.avatarRing, { borderColor: theme.primary }]}>
@@ -541,7 +554,7 @@ export default function ProfilePage() {
                     style={styles.avatarHelperText}
                     setColor={theme.quietText}
                   >
-                    Square images work best · up to {avatarMaxMb} MB
+                    {t("profile.avatar.hint", { maxMb: avatarMaxMb })}
                   </ThemedText>
                 </View>
               </View>
@@ -550,7 +563,7 @@ export default function ProfilePage() {
 
               <View style={styles.fieldRow}>
                 <ThemedText style={styles.fieldLabel} setColor={theme.quietText}>
-                  Username
+                  {t("profile.username")}
                 </ThemedText>
                 <ThemedText
                   style={styles.fieldValue}
@@ -584,20 +597,20 @@ export default function ProfilePage() {
                 style={styles.birthDateRow}
               >
                 <ThemedText style={styles.fieldLabel} setColor={theme.quietText}>
-                  Birth year
+                  {t("profile.birthYear.label")}
                 </ThemedText>
                 <View style={styles.birthDateCopy}>
                   <ThemedText
                     style={styles.birthDateValue}
                     setColor={birthYearDisplay ? theme.title : theme.quietText}
                   >
-                    {birthYearDisplay ?? "Select birth year"}
+                    {birthYearDisplay ?? t("profile.birthYear.select")}
                   </ThemedText>
                   <ThemedText
                     style={styles.birthDateSubline}
                     setColor={theme.quietText}
                   >
-                    Only the year is stored, for your heart rate zones
+                    {t("profile.birthYear.hint")}
                   </ThemedText>
                 </View>
                 {calculatedAge !== null ? (
@@ -611,7 +624,7 @@ export default function ProfilePage() {
                       style={styles.agePillText}
                       setColor={primaryTextColor}
                     >
-                      {calculatedAge} years
+                      {t("profile.birthYear.age", { count: calculatedAge })}
                     </ThemedText>
                   </View>
                 ) : null}
@@ -624,7 +637,7 @@ export default function ProfilePage() {
                     accessibilityRole="button"
                     // BUG-18: "Clear" on its own says nothing about what it
                     // clears, which is the birth year above it.
-                    accessibilityLabel="Clear birth year"
+                    accessibilityLabel={t("profile.birthYear.clearAccessibility")}
                     onPress={() => {
                       clearProfileFeedback();
                       setBirthDate("");
@@ -639,7 +652,7 @@ export default function ProfilePage() {
                       style={styles.clearBirthDateText}
                       setColor={primaryTextColor}
                     >
-                      Clear
+                      {t("profile.birthYear.clear")}
                     </ThemedText>
                   </TouchableOpacity>
                 </View>
@@ -652,7 +665,7 @@ export default function ProfilePage() {
                   style={styles.fieldSectionLabel}
                   setColor={theme.text}
                 >
-                  Display name
+                  {t("profile.displayName.label")}
                 </ThemedText>
                 <View
                   style={[
@@ -674,7 +687,7 @@ export default function ProfilePage() {
                         birthDate,
                       });
                     }}
-                    placeholder="How your name appears"
+                    placeholder={t("profile.displayName.placeholder")}
                     placeholderTextColor={theme.quietText}
                     autoCapitalize="words"
                     autoCorrect={false}
@@ -702,7 +715,7 @@ export default function ProfilePage() {
                     style={styles.fieldHelperText}
                     setColor={theme.quietText}
                   >
-                    Visible in people search
+                    {t("profile.displayName.hint")}
                   </ThemedText>
                 )}
               </View>
@@ -712,7 +725,7 @@ export default function ProfilePage() {
                   style={styles.fieldSectionLabel}
                   setColor={theme.text}
                 >
-                  Bio
+                  {t("profile.bio.label")}
                 </ThemedText>
                 <View
                   style={[
@@ -734,7 +747,7 @@ export default function ProfilePage() {
                         birthDate,
                       });
                     }}
-                    placeholder="Tell people a little about your training."
+                    placeholder={t("profile.bio.placeholder")}
                     placeholderTextColor={theme.quietText}
                     autoCapitalize="sentences"
                     autoCorrect
@@ -757,14 +770,14 @@ export default function ProfilePage() {
                 visible={birthDatePickerVisible}
                 value={getBirthDatePickerValue()}
                 minYear={1900}
-                title="Birth year"
+                title={t("profile.birthYear.label")}
                 onClose={() => setBirthDatePickerVisible(false)}
                 onConfirm={handleBirthDateConfirm}
               />
 
               {isLoadingProfile ? (
                 <ThemedText style={styles.loadingText} setColor={theme.quietText}>
-                  Loading profile...
+                  {t("profile.loadingProfile")}
                 </ThemedText>
               ) : null}
 
@@ -795,7 +808,9 @@ export default function ProfilePage() {
 
               <View style={styles.saveButtonWrapper}>
                 <ThemedButton
-                  title={isSavingProfile ? "Saving..." : "Save profile"}
+                  title={
+                    isSavingProfile ? t("profile.saving") : t("profile.saveProfile")
+                  }
                   onPress={handleSaveProfile}
                   fullWidth
                   height={50}
@@ -815,7 +830,7 @@ export default function ProfilePage() {
 
           {/* Settings */}
           <View style={styles.section}>
-            <SectionEyebrow>Settings</SectionEyebrow>
+            <SectionEyebrow>{t("profile.sections.settings")}</SectionEyebrow>
             <ThemedCard style={styles.card}>
               <TouchableOpacity
                 activeOpacity={0.82}
@@ -826,7 +841,7 @@ export default function ProfilePage() {
                   <Dumbbell width={18} height={18} color={primaryTextColor} thickness={1.6} />
                 </SettingsIconTile>
                 <ThemedText style={styles.settingsRowLabel} setColor={theme.title}>
-                  Workout types
+                  {t("profile.settings.workoutTypes")}
                 </ThemedText>
                 <ChevronRight width={18} height={18} color={theme.quietText} />
               </TouchableOpacity>
@@ -842,7 +857,7 @@ export default function ProfilePage() {
                   <Bell width={18} height={18} color={primaryTextColor} thickness={1.7} />
                 </SettingsIconTile>
                 <ThemedText style={styles.settingsRowLabel} setColor={theme.title}>
-                  Notifications
+                  {t("profile.settings.notifications")}
                 </ThemedText>
                 <ChevronRight width={18} height={18} color={theme.quietText} />
               </TouchableOpacity>
@@ -858,7 +873,23 @@ export default function ProfilePage() {
                   <Pencil width={18} height={18} color={primaryTextColor} thickness={1.7} />
                 </SettingsIconTile>
                 <ThemedText style={styles.settingsRowLabel} setColor={theme.title}>
-                  Social posts
+                  {t("profile.settings.socialPosts")}
+                </ThemedText>
+                <ChevronRight width={18} height={18} color={theme.quietText} />
+              </TouchableOpacity>
+
+              <InsetDivider />
+
+              <TouchableOpacity
+                activeOpacity={0.82}
+                onPress={() => navigation.navigate("MusicSettingsPage")}
+                style={styles.settingsRow}
+              >
+                <SettingsIconTile backgroundColor={withAlpha(theme.primary, 0.12)}>
+                  <MusicNote width={18} height={18} color={primaryTextColor} thickness={2} />
+                </SettingsIconTile>
+                <ThemedText style={styles.settingsRowLabel} setColor={theme.title}>
+                  {t("profile.settings.music")}
                 </ThemedText>
                 <ChevronRight width={18} height={18} color={theme.quietText} />
               </TouchableOpacity>
@@ -872,19 +903,35 @@ export default function ProfilePage() {
               the rows that navigate away, and the only way to tell which kind a
               row was, was to press it. */}
           <View style={styles.section}>
-            <SectionEyebrow>Appearance</SectionEyebrow>
+            <SectionEyebrow>{t("profile.sections.appearance")}</SectionEyebrow>
             <ThemedCard style={styles.card}>
               <View style={styles.settingsControlRow}>
                 <SettingsIconTile backgroundColor={withAlpha(theme.primary, 0.12)}>
                   <Moon width={18} height={18} color={primaryTextColor} thickness={1.7} />
                 </SettingsIconTile>
                 <ThemedText style={styles.settingsRowLabel} setColor={theme.title}>
-                  Theme
+                  {t("profile.appearance.theme")}
                 </ThemedText>
                 <ThemedSegmentedControl
-                  options={APPEARANCE_OPTIONS}
+                  options={appearanceOptions}
                   value={themeMode}
                   onChange={setThemeMode}
+                />
+              </View>
+
+              <InsetDivider />
+
+              <View style={styles.settingsControlRow}>
+                <SettingsIconTile backgroundColor={withAlpha(theme.primary, 0.12)}>
+                  <Social width={18} height={18} color={primaryTextColor} thickness={1.7} />
+                </SettingsIconTile>
+                <ThemedText style={styles.settingsRowLabel} setColor={theme.title}>
+                  {t("profile.language.label")}
+                </ThemedText>
+                <ThemedSegmentedControl
+                  options={languageOptions}
+                  value={languageMode}
+                  onChange={setLanguageMode}
                 />
               </View>
 
@@ -895,7 +942,7 @@ export default function ProfilePage() {
                   <Star width={18} height={18} color={primaryTextColor} filled />
                 </SettingsIconTile>
                 <ThemedText style={styles.settingsRowLabel} setColor={theme.title}>
-                  Colour
+                  {t("profile.appearance.colour")}
                 </ThemedText>
               </View>
 
@@ -910,7 +957,7 @@ export default function ProfilePage() {
 
           {/* Feedback */}
           <View style={styles.section}>
-            <SectionEyebrow>Feedback</SectionEyebrow>
+            <SectionEyebrow>{t("profile.sections.feedback")}</SectionEyebrow>
             <TouchableOpacity
               activeOpacity={0.9}
               onPress={() => setFeedbackModalVisible(true)}
@@ -934,16 +981,20 @@ export default function ProfilePage() {
                 </SettingsIconTile>
                 <View style={styles.feedbackTextColumn}>
                   <ThemedText style={styles.feedbackTitle} setColor={theme.title}>
-                    Send feedback
+                    {t("profile.feedbackCard.title")}
                   </ThemedText>
                   <ThemedText style={styles.feedbackSubtitle} setColor={theme.text}>
-                    Report bugs, odd behavior or ideas.
+                    {t("profile.feedbackCard.subtitle")}
                   </ThemedText>
                 </View>
               </View>
 
               <View style={styles.feedbackChipRow}>
-                {["Bugs", "Ideas", "Missing"].map((label) => (
+                {[
+                  t("profile.feedbackCard.bugs"),
+                  t("profile.feedbackCard.ideas"),
+                  t("profile.feedbackCard.missing"),
+                ].map((label) => (
                   <View
                     key={label}
                     style={[
@@ -968,19 +1019,19 @@ export default function ProfilePage() {
 
           {/* Account */}
           <View style={styles.section}>
-            <SectionEyebrow>Account</SectionEyebrow>
+            <SectionEyebrow>{t("profile.sections.account")}</SectionEyebrow>
             <ThemedCard style={styles.card}>
               <View style={styles.accountRow}>
                 <View style={styles.accountInfo}>
                   <ThemedText style={styles.accountLabel} setColor={theme.quietText}>
-                    Logged in as
+                    {t("profile.account.loggedInAs")}
                   </ThemedText>
                   <ThemedText
                     style={styles.accountValue}
                     setColor={theme.title}
                     numberOfLines={1}
                   >
-                    {user?.email ?? "Unknown account"}
+                    {user?.email ?? t("profile.account.unknownAccount")}
                   </ThemedText>
                 </View>
 
@@ -1004,7 +1055,9 @@ export default function ProfilePage() {
                     style={styles.logoutButtonText}
                     setColor={theme.danger}
                   >
-                    {isLoggingOut ? "Logging out..." : "Log out"}
+                    {isLoggingOut
+                      ? t("profile.account.loggingOut")
+                      : t("profile.account.logOut")}
                   </ThemedText>
                 </TouchableOpacity>
               </View>
@@ -1019,7 +1072,7 @@ export default function ProfilePage() {
 
               <View style={styles.metaRow}>
                 <ThemedText style={styles.metaRowLabel} setColor={theme.quietText}>
-                  App
+                  {t("profile.account.app")}
                 </ThemedText>
                 <ThemedText style={styles.metaRowValue} setColor={theme.title}>
                   {appName}
@@ -1030,7 +1083,7 @@ export default function ProfilePage() {
 
               <View style={styles.metaRow}>
                 <ThemedText style={styles.metaRowLabel} setColor={theme.quietText}>
-                  Version
+                  {t("profile.account.version")}
                 </ThemedText>
                 <ThemedText
                   style={[styles.metaRowValue, { fontVariant: ["tabular-nums"] }]}
@@ -1045,19 +1098,19 @@ export default function ProfilePage() {
               <TouchableOpacity
                 activeOpacity={0.85}
                 accessibilityRole="button"
-                accessibilityLabel="Privacy"
+                accessibilityLabel={t("profile.account.privacy")}
                 onPress={() => navigation.navigate("PrivacyPolicyPage")}
                 style={styles.deleteAccountRow}
               >
                 <View style={styles.accountInfo}>
                   <ThemedText style={styles.accountValue} setColor={theme.title}>
-                    Privacy
+                    {t("profile.account.privacy")}
                   </ThemedText>
                   <ThemedText
                     style={styles.deleteAccountHint}
                     setColor={theme.quietText}
                   >
-                    What FitVen stores about you, and what you agreed to.
+                    {t("profile.account.privacyHint")}
                   </ThemedText>
                 </View>
 
@@ -1074,7 +1127,7 @@ export default function ProfilePage() {
               <TouchableOpacity
                 activeOpacity={0.85}
                 accessibilityRole="button"
-                accessibilityLabel="Delete account"
+                accessibilityLabel={t("profile.account.deleteAccount")}
                 onPress={() => setDeleteModalVisible(true)}
                 style={styles.deleteAccountRow}
               >
@@ -1083,14 +1136,13 @@ export default function ProfilePage() {
                     style={styles.accountValue}
                     setColor={theme.danger}
                   >
-                    Delete account
+                    {t("profile.account.deleteAccount")}
                   </ThemedText>
                   <ThemedText
                     style={styles.deleteAccountHint}
                     setColor={theme.quietText}
                   >
-                    Removes your programs, workouts and profile everywhere. This
-                    cannot be undone.
+                    {t("profile.account.deleteAccountHint")}
                   </ThemedText>
                 </View>
 
@@ -1114,10 +1166,10 @@ export default function ProfilePage() {
 
       <ThemedConfirmModal
         visible={logoutConfirmVisible}
-        title="Log out of FitVen?"
-        message="Your workouts are saved. You will need your password to sign back in."
-        confirmLabel="Log out"
-        cancelLabel="Stay signed in"
+        title={t("profile.logoutConfirm.title")}
+        message={t("profile.logoutConfirm.message")}
+        confirmLabel={t("profile.account.logOut")}
+        cancelLabel={t("profile.logoutConfirm.staySignedIn")}
         tone="danger"
         isWorking={isLoggingOut}
         onConfirm={handleLogout}
@@ -1127,19 +1179,19 @@ export default function ProfilePage() {
       <ThemedModal
         visible={deleteModalVisible}
         onClose={closeDeleteModal}
-        title="Delete your account"
+        title={t("profile.deleteModal.title")}
       >
         <ThemedText style={styles.deleteModalBody} setColor={theme.quietText}>
-          Your programs, workouts, personal records, posts, profile and photo
-          are removed from FitVen and from this phone. People who follow you
-          stop following you. There is no way to get any of it back.
+          {t("profile.deleteModal.body")}
         </ThemedText>
 
         <ThemedText
           style={styles.deleteModalPrompt}
           setColor={theme.title}
         >
-          Type {DELETE_CONFIRMATION_WORD} to confirm
+          {t("profile.deleteModal.typeToConfirm", {
+            word: DELETE_CONFIRMATION_WORD,
+          })}
         </ThemedText>
 
         <ThemedTextInput
@@ -1158,7 +1210,11 @@ export default function ProfilePage() {
         ) : null}
 
         <ThemedButton
-          title={isDeletingAccount ? "Deleting..." : "Delete my account"}
+          title={
+            isDeletingAccount
+              ? t("profile.deleteModal.deleting")
+              : t("profile.deleteModal.confirm")
+          }
           variant="danger"
           onPress={handleDeleteAccount}
           disabled={!canConfirmDelete || isDeletingAccount}
@@ -1168,7 +1224,7 @@ export default function ProfilePage() {
         />
 
         <ThemedButton
-          title="Cancel"
+          title={t("common.cancel")}
           variant="secondary"
           onPress={closeDeleteModal}
           disabled={isDeletingAccount}

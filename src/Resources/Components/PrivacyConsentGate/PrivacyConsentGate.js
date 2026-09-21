@@ -18,6 +18,7 @@ import PrivacyPolicyBody from "../PrivacyPolicyBody/PrivacyPolicyBody";
 import { Colors } from "../../GlobalStyling/colors";
 import { useAuth } from "../../../Contexts/AuthContext";
 import { socialService } from "../../../Services";
+import { useTranslation } from "@localization";
 import { PRIVACY_POLICY_VERSION } from "../../Legal/privacyPolicy";
 import { TERMS_SECTIONS, TERMS_VERSION } from "../../Legal/termsOfUse";
 import {
@@ -30,6 +31,7 @@ import {
 export default function PrivacyConsentGate({ children }) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [consentState, setConsentState] = useState("checking");
   const [errorMessage, setErrorMessage] = useState("");
@@ -79,7 +81,7 @@ export default function PrivacyConsentGate({ children }) {
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "Could not save your answer. Try again."
+          : t("auth.consent.couldNotSave")
       );
       setConsentState("needed");
     }
@@ -105,21 +107,18 @@ export default function PrivacyConsentGate({ children }) {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator
       >
-        <ThemedTitle type="h2">Before you continue</ThemedTitle>
+        <ThemedTitle type="h2">{t("auth.consent.title")}</ThemedTitle>
         <ThemedText style={styles.headerBody} setColor={quietText}>
-          Two things to agree to. The terms of use set out what is and is not
-          allowed on FitVen — there is no tolerance for objectionable content or
-          abusive behaviour. The privacy policy covers your data: FitVen stores
-          your training, and through sickness entries, heart rate and tracked
-          runs, health data about you, which European law needs your explicit
-          permission for. Read both and tap Accept to carry on, or close the app
-          if you would rather not.
+          {t("auth.consent.body")}
         </ThemedText>
 
         <ThemedTitle type="h3" style={styles.sectionHeading}>
-          Terms of use
+          {t("auth.consent.termsHeading")}
         </ThemedTitle>
 
+        {/* The legal texts themselves are not translated: they are the
+            documents the person is agreeing to, and the published copies at
+            fitven.dk are built from the same source. */}
         {TERMS_SECTIONS.map((section) => (
           <View key={section.title} style={styles.termsSection}>
             <ThemedText style={styles.termsTitle}>{section.title}</ThemedText>
@@ -130,7 +129,7 @@ export default function PrivacyConsentGate({ children }) {
         ))}
 
         <ThemedTitle type="h3" style={styles.sectionHeading}>
-          Privacy policy
+          {t("auth.consent.privacyHeading")}
         </ThemedTitle>
 
         <PrivacyPolicyBody />
@@ -146,8 +145,8 @@ export default function PrivacyConsentGate({ children }) {
         <ThemedButton
           title={
             consentState === "saving"
-              ? "Saving..."
-              : "Accept both and continue"
+              ? t("auth.consent.saving")
+              : t("auth.consent.accept")
           }
           onPress={handleAccept}
           disabled={consentState === "saving"}

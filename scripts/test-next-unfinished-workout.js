@@ -102,6 +102,7 @@ db.exec(`
     original_start_time TEXT,
     timer_start TEXT,
     elapsed_time INTEGER,
+    gym_id INTEGER,
     deleted_at TEXT
   );
   CREATE TABLE Exercise_Instance (

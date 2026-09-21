@@ -1,0 +1,133 @@
+{
+  "chain": "FitnessX",
+  "name": "Frederiksberg, Fasanvej",
+  "label": "Fitnesscenter med Reformer",
+  "address": {
+    "street": "Nordre Fasanvej 27",
+    "postal_code": "2000",
+    "city": "Frederiksberg",
+    "country": "DK",
+    "full": "Nordre Fasanvej 27, 2000 Frederiksberg"
+  },
+  "location": {
+    "latitude": 55.68199,
+    "longitude": 12.52264
+  },
+  "url": "https://fitnessx.dk/fitness/fitness-frederiksberg/fitness-frederiksberg-nordre-fasanvej-27/",
+  "google_maps_url": "https://goo.gl/maps/8zdQBqt5b1WQxAJd9",
+  "membership_url": "https://fitnessx.dk/medlemskaber/",
+  "campaign": false,
+  "campaign_headline": "NY LAV PRIS I AARHUS",
+  "price_teaser": "Træn med en Træningsven fra kun 250 kr./md. pr. person.",
+  "opening_hours": [
+    {
+      "days": "Mandag - torsdag",
+      "open": "05:00 - 23:00",
+      "staffed": "09:00 - 19:00"
+    },
+    {
+      "days": "Fredag",
+      "open": "05:00 - 23:00",
+      "staffed": "09:00 - 17:00"
+    },
+    {
+      "days": "Lørdag",
+      "open": "06:00 - 23:00",
+      "staffed": "09:00 - 12:00"
+    },
+    {
+      "days": "Søndag",
+      "open": "06:00 - 23:00",
+      "staffed": "09:00 - 12:00"
+    },
+    {
+      "days": "Helligdage",
+      "open": "Åbent som normalt",
+      "staffed": "09:00 - 12:00"
+    }
+  ],
+  "special_days_text": "Særlige åbningsdage:\n24/12 og 31/12: Åbent som normalt - lukker kl. 17.00.\n25/12 og 1/1: Åbent som normalt - ingen bemanding.",
+  "meta_description": "Træn fitness, Reformer, HYROX eller gå på hold i Frederiksbergs fedeste fitnesscenter. Vi ligger på Nordre Fasanvej 27. Træningsven. Træn To. Træn billigst.",
+  "description": "Dette center ligger på en af vores bedste lokationer og giver dig lidt ekstra at glæde dig over i hverdagen. Det er FitnessX, som du kender det - bare med flere detaljer, der gør en forskel.\nNår du træder ind, mærker du hurtigt, at oplevelsen er skruet op: mere gennemført indretning, et større udvalg af udstyr, bedre plads og åbningstider.\nOg fordi behov og byer ikke er ens, er hvert center lokalt tilpasset. Derfor finder du ikke to centre, der er helt ens - men du finder altid et sted, der gør din træning både nemmere og bedre.",
+  "features": [
+    "Fitness og cardio",
+    "HYROX",
+    "Hold",
+    "Reformer"
+  ],
+  "features_detail": [
+    {
+      "title": "Åbningstid",
+      "text": "I weekenden åbner vi en time tidligere. Så kan du træne (næsten) alene før byen vågner."
+    },
+    {
+      "title": "Bodytracker",
+      "text": "Muskelmasse, fedtprocent (og hvor det sidder), stofskifte, body age og meget mere. Få styr på, hvordan det ser ud med de ting, du ikke kan se i spejlet og følg din udvikling. Uden det koster ekstra."
+    },
+    {
+      "title": "Udstyr",
+      "text": "Udover vores normale maskiner og udstyr har vi særligt udvalgt udstyr i dit center, som er baseret på jeres lokale behov og ønsker. Kort sagt har vi mere, af det du kender, og noget af det du skal lære at kende."
+    },
+    {
+      "title": "Bikesal",
+      "text": "Bike som du kender det. Men opgraderet. Store skærme, lys og et design du ikke har set før. Vi har en særligt variant af Intelligent Cycling (”The Journey”), som er en virtuel oplevelse, der gør din træning sjovere og mere intens. Velkommen til en lidt sjovere, og lidt bedre, biketime."
+    },
+    {
+      "title": "TRÆN REFORMER MED OS",
+      "text": "Hos FitnessX Fasanvej har vi en lækker, ny reformersal.\nFitness. reformer. ét medlemskab.\n“Begge dele” betyder ikke “dobbelt pris”\nHos FitnessX kan du tilføje fri reformer til dit medlemskab for kun:\n+150 kr./md. under 30 år\n+200 kr./md. over 30 år\nog få fri adgang til fitness, holdtræning og reformer i ét medlemskab.\nVil du hellere betale per gang? Vælg mellem:\nReformer Pass. 10 klip. brug dem når det passer dig.\nEnkeltbooking. Betal per gang uden at binde dig til noget.\nDu kan læse mere om, hvilke hold vi tilbyder her"
+    }
+  ],
+  "parking": "Du kan parkere gratis to steder ved centeret.\nLige foran centeret: Gratis i en time med korrekt indstillet p-skive.\nLidls parkeringsplads: Gratis i en time med p-skive. Hvis du registrerer din parkering på centerets tablet får du to timer. Du kan kombinere p-skive og tablet og opnå op til næsten 3 timers gratis parkering.",
+  "manager": {
+    "name": "Martin",
+    "title": "Manager"
+  },
+  "tags": [
+    "reformer"
+  ],
+  "images": {
+    "hero": "https://fitnessx.dk/wp-content/uploads/20200124_162348336_iOS-scaled.jpg",
+    "gallery": [
+      "https://fitnessx.dk/wp-content/uploads/20200124_162348336_iOS-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Billede-af-CM-Martin.jpg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_7093-scaled.jpeg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_7104-scaled.jpeg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_7075-scaled.jpeg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_4641-scaled.jpeg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_7069-scaled.jpeg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_0203-scaled.jpeg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_3785-scaled.jpeg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_7517-scaled.jpeg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_3794-scaled.jpeg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_3797-scaled.jpeg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_7064-scaled.jpeg",
+      "https://fitnessx.dk/wp-content/uploads/Screenshot-2025-02-27-at-15.01.10.jpeg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_0191-scaled.jpeg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_0174-scaled.jpeg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_0165-scaled.jpeg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_7068-scaled.jpeg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_7113-1-scaled.jpeg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_7520-scaled.jpeg",
+      "https://fitnessx.dk/wp-content/uploads/vaegte.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Desktop-header-imagesort_hvid.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Mobile-header-imagesort_hvid.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Aarhus-Soender-Alle-310x150x2.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Aarhus-Soender-Alle-130x115-1.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Aarhus-N-PMVx3.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Aarhus-N-PMV.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Mobile-header-image-SH.jpg",
+      "https://fitnessx.dk/wp-content/uploads/20251022_092844713_iOS-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Koebenhavn-S-Amager-Strand-310x150x3.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Koebenhavn-S-Amager-Strand-130x115-1.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Lyngby-Jernbanepladsen-310x150x3.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Lyngby-Jernbanepladsen-130x115-1.jpg",
+      "https://fitnessx.dk/wp-content/uploads/1000007045.jpg",
+      "https://fitnessx.dk/wp-content/uploads/HKP-color-desk.jpg",
+      "https://fitnessx.dk/wp-content/uploads/HKP-color-mobil.jpg",
+      "https://fitnessx.dk/wp-content/uploads/image00041-scaled.jpeg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_3539-scaled.jpeg"
+    ]
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

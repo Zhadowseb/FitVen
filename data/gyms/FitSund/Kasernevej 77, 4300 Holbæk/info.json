@@ -1,0 +1,146 @@
+{
+  "chain": "Fit&Sund",
+  "name": "Fit&Sund Holbæk",
+  "short_name": "Holbæk",
+  "address": {
+    "street": "Kasernevej 77",
+    "postal_code": "4300",
+    "city": "Holbæk",
+    "country": "DK",
+    "full": "Kasernevej 77, 4300 Holbæk"
+  },
+  "location": {
+    "latitude": 55.71487763,
+    "longitude": 11.72387704
+  },
+  "geocode": {
+    "latitude": 55.71487763,
+    "longitude": 11.72387704,
+    "matched_address": "Kasernevej 77, 4300 Holbæk",
+    "exact": true,
+    "source": "DAWA"
+  },
+  "url": "https://fitogsund.dk/c/huse/holbaek",
+  "membership_url": "https://fitogsund.dk/p/bliv-medlem",
+  "class_schedule_url": "https://fitogsund.goactivebooking.com/class-web-categories/34/classes?facility=530",
+  "google_maps_url": "https://www.google.com/maps/dir/?api=1&destination=Kasernevej-77+4300+Holbæk",
+  "phone": "+45 59 43 60 00",
+  "email": "holbaek@fitogsund.dk",
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "00:00 - 24:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "00:00 - 24:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "00:00 - 24:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "00:00 - 24:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "00:00 - 24:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "00:00 - 24:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "00:00 - 24:00"
+    }
+  ],
+  "reception_hours": [
+    {
+      "day": "Mandag",
+      "open": "08:00 - 20:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "08:00 - 20:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "08:00 - 20:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "08:00 - 20:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "08:00 - 14:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "09:00 - 13:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "09:00 - 13:00"
+    }
+  ],
+  "meta_description": "Byens største sundhedshus Vi har det største sundhedshus i byen med behandlinger indenfor de fleste områder. Vi står altid klar til at hjælpe dig bedst og mest effektivt på vej igennem sundhedsverdenen. Vores personale er veluddannet og fagligt opdateret på nyeste viden. Vi samler på eksperter, så din træning eller behandling kan blive på højeste niveau. Nærvær er vigtigt for os Nærværet er noget af det vigtigste. Vi bruger meget tid og energi på at være nærværende i dagli...",
+  "description": "Byens største sundhedshus\nVi har det største sundhedshus i byen med behandlinger indenfor de fleste områder. Vi står altid klar til at hjælpe dig bedst og mest effektivt på vej igennem sundhedsverdenen. Vores personale er veluddannet og fagligt opdateret på nyeste viden. Vi samler på eksperter, så din træning eller behandling kan blive på højeste niveau.\nNærvær er vigtigt for os\nNærværet er noget af det vigtigste. Vi bruger meget tid og energi på at være nærværende i dagligdagen og\nlægger stor vægt på at gøre din dag lidt bedre.",
+  "facilities": [
+    "Fitness",
+    "Personlig træning",
+    "Exerciselab",
+    "holdtræning",
+    "bootcamps",
+    "seniortræning",
+    "Hammerstrength"
+  ],
+  "service_categories": [
+    "Hold",
+    "Yoga/Reformer",
+    "Core Træning",
+    "Muskelopbyggende Træning"
+  ],
+  "services": [
+    {
+      "name": "2026 OPSTARTSPAKKER",
+      "room": null,
+      "categories": [],
+      "url": "https://fitogsund.dk/c/ydelser/2026-opstartspakker-10"
+    },
+    {
+      "name": "Reformer Basic",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/reformer-basic-2"
+    },
+    {
+      "name": "Reformer Classic",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/reformer-classic"
+    }
+  ],
+  "manager": {
+    "name": "Patrick Brøndum",
+    "title": "Husleder",
+    "image": "https://fitogsund.dk/f/thumb?src=/f/blog/article/3c2f11cafb15263f252577b5ff4a2d56dd5a6fca_thumb.png&w=300&h=380"
+  },
+  "images": {
+    "hero": null,
+    "fallback": "../fitogsund-logo.png"
+  },
+  "hero_image_file": "hero.png",
+  "hero_is_placeholder": true,
+  "scraped_at": "2026-09-17"
+}

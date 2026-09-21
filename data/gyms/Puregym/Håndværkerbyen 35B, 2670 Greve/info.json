@@ -1,0 +1,258 @@
+{
+  "chain": "PureGym",
+  "name": "Greve, Håndværkerbyen",
+  "puregym_id": "136",
+  "address": {
+    "street": "Håndværkerbyen 35B",
+    "postal_code": "2670",
+    "city": "Greve",
+    "country": "DK",
+    "full": "Håndværkerbyen 35B, 2670 Greve"
+  },
+  "location": {
+    "latitude": 55.5905648,
+    "longitude": 12.2984612
+  },
+  "url": "https://www.puregym.dk/find-center/greve-haandvaerkerbyen",
+  "membership_url": "https://www.puregym.dk/bliv-medlem/80/medlemskab",
+  "price_from": "Priser fra 261,75 DKK/md.",
+  "price_note": "*Normalpris fra 269 DKK/md.",
+  "today_notice": "Vi lukker i dag kl. 00:00",
+  "opening_hours": [
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "09:00 - 20:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 17:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Mandag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    }
+  ],
+  "opening_hours_schema": [
+    {
+      "day": "Monday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Tuesday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Wednesday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Thursday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Friday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Saturday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Sunday",
+      "opens": "05:00",
+      "closes": "00:00"
+    }
+  ],
+  "special_days": [
+    {
+      "date": "2027-01-01",
+      "opens": "08:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-02",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-03",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-05",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-06",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-14",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-24",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-25",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-06-05",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-24",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-25",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-26",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-31",
+      "opens": "05:00",
+      "closes": "18:00"
+    }
+  ],
+  "meta_description": "Hos PureGym i Håndværkerbyen i Greve tilbyder vi både styrke-, cardio- og fitnesstræning. Oplev et trænings-fællesskab med plads til alle i dag.",
+  "description": "PureGym Greve\nPureGym i Håndværkerbyen er et mindre, men helt unikt center. Her finder du en atmosfære, som du ikke finder andre steder.\nCentret tilbyder en rummelig sal med et godt udvalg af småredskaber samt masser af plads til dagens udstrækning. Centret fik helt nyt udstyr i april 2024.\nAlle passer på hinanden og tager ansvar for deres træning, så de rydder op efter træningen. Her er en gensidig respekt mellem personale og medlemmer, som ikke ses i mange centre, så hvis du vil være en del af et fællesskab kombineret med god træning, så skal du prøve at træne i Håndværkerbyen.\nVi glæder os til at se dig! Vi glæder os til at se dig!\nDet siger personalet om PureGym Greve\nI Håndværkerbyen har vi et meget særligt samarbejde og fællesskab. Her er en hyggelig stemning og plads til alle uanset træningsniveau. Vi har et meget specielt center, som på mange måder ikke oser af fitness udefra, men når du træder ind, bliver du omfavnet af god energi og masser af motivation fra både ansatte og medlemmer.\nPersonlig træning i PureGym Greve\nVi har en personlig træner tilknyttet, som i den grad har masser af erfaring at dele ud af. Tager du springet, får du kyndig vejledning og den største tilfredshed ved at nå dine mål. Vi tilbyder også en uforpligtende samtale med en personlig træner til 0,-:\nVi tilbyder også en uforpligtende samtale med en personlig træner til 0,-:\nBook samtale her\nHoldtræning i PureGym Greve\nVi tilbyder vores medlemmer vores Get Started hold, der er designet til at tilbyde nybegyndere en tryg velkomst til træningscenteret. Holdet inkluderer en rundvisning af centret, introduktion til de tilgængelige maskiner og en præsentation af vores personale. Det giver medlemmerne mulighed for at få indsigt i de muligheder, PureGym tilbyder, og hjælper med at integrere træningen i deres dagligdag. Holdet er ideelt til dem, der er ny til træning eller ønsker at finde inspiration til deres træningsplan.\nHvornår træner folk her i centret?\nVi har god plads til vores medlemmer. I vores app kan du se, hvornår der er flest og færrest mennesker i centret.\nBliv medlem her\nHvornår kan jeg møde personalet her i centret?\nVed indgangen ligger receptionen, hvor du bliver mødt af vores smilende og servicemindede team, der står klar til at hjælpe dig. Se vores bemandede tider i oversigten her på siden. Du er altid velkommen til at komme forbi i vores bemandede åbningstid.Vi tager os tid til at svare på alle dine spørgsmål og giver gerne en rundvisning i centret.\nKan jeg parkere ved PureGym Greve?\nVi er så heldige, at du kan parkere lige uden for centret, men det er vigtigt, at du både sætter p-skiven og registrerer dig på vores tablet i centret. Så har du 3 timers parkering. Vi ligger også tæt på offentlig transport, hvilket gør det nemt at komme hertil.\nFølg os på Facebook\nSe vores lokaler her\n\n<div",
+  "notice": null,
+  "facilities": [
+    {
+      "name": "App",
+      "description": "PureGym appen kan hentes til både iOS- og Android-telefoner. Appen er fyldt med fede features og lækkert design:\nBook og afmeld hold inkl. reminder, så du husker dine hold\nMere end 50 træningsprogrammer\nBodytracker-måling\nTræningsstatistik\nAdgang til challenges\nTeam up med din træningsmakker\nDownload appen og få mere ud af dit medlemskab.\nLæs mere",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-04/CTA%20App%20grafik.jpg?itok=489La2Vs"
+    },
+    {
+      "name": "Bodytracker+",
+      "description": "Bodytrackeren er en avanceret vægt, der giver en pålidelig analyse af din kropssammensætning. Med bodytracker+ får du dybere indblik i din træningsudvikling. Udover de gratis parametre kropsvægt, BMI, muskelmasse og fedtprocent får du med bodytracker+ også indsigt i fedtmasse, fedtfri masse, talje/hofte forhold, kropsvand samt hvilestofskifte. Parametre som er interessante, hvad enten du har personlige mål om at øge din vægt, højere muskelmasse, vægttab mv.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/facilities/bplusny-ny-ny_1.png?itok=3ubbpEkC"
+    },
+    {
+      "name": "Cardiotræning",
+      "description": "Kunne du godt tænke dig at forbedre din kondition eller få varmet kroppen op inden din styrketræning, så er Cardio et godt sted at gå hen.\nI dette område har vi et bredt udvalgt af kredsløbsmaskiner. Her vil du blandt andet kunne finde løbebånd, motionscykler samt ro, step -og trappemaskiner. Disse maskine er designet til at kunne forbedre dit kredsløb bedre kendt som ”kondition”. Samtlige maskiner kan indstilles og tilpasses, så de netop passer til den intensitet som ønsker på dagen.\nSå om du er til en let og kort opvarmning på motionscyklen, en tur op af Eiffeltårnet med din yndlingspodcast i ørene på trappemaskinen, eller en god løbetur i tørvejr på løbebåndet, så vil du kunne gøre dette i Cardio.\nEr du i tvivl om hvordan en maskine i Cardio virker, kan du altid spørge vores personale.\nØnsker du hjælp til hvordan du kan forbedre din kondition, så kan du også booke en uforpligtende samtale til 0 kr med en personlig træner her.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-09/CORE-slider-cta-core-medlemskab_0.jpg?itok=hEEf98nO"
+    },
+    {
+      "name": "Glutebuilder",
+      "description": "Glutebuilderen er en multifunktionel træningsmaskine, som giver mulighed for at lave mange forskellige øvelser - perfekt til træning af ben, baller og lår. Du kan bruge maskinen som den er, med en vægtstang, vægtskiver og elastikker, som du kan låne i centeret. Kun fantasien sætter grænser.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Glute-skal-ikke-beskaeres.jpg?itok=iFSaL_IN"
+    },
+    {
+      "name": "Parkering",
+      "description": "Er du i bil til din træning, vil der være parkeringsmuligheder ved næsten alle vores centre. PureGym har parkeringsmuligheder i form af egen parkeringsplads, eller som en del af bygningens parkeringsplads eller parkeringshus. Hvis du er i tvivl kan du altid spørge vores søde personale i centrene.",
+      "image": null
+    },
+    {
+      "name": "Personlig træner",
+      "description": "Med en personlig træner får du hjælp og sparring til at nå dine mål - altid med udgangspunkt i dig og dine behov.\nVores personlige trænere sørger for trygge rammer, mens du er i centret.\nDe sikrer fortsat, at alt udstyr er sprittet af både før og efter brug, samt at I holder god afstand til de øvrige medlemmer, mens I træner.\nLæs mere om Personlig træning her!",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Book-samtale-med-en-personlig-traener-1-1.jpg?itok=a7i9C-9t"
+    },
+    {
+      "name": "Styrketræning",
+      "description": "Vi har masser af udstyr til din styrketræning, så du kan lave alle de styrkeøvelser du kunne tænke dig. Vi har maskiner til træning af ryg, arme, mave, lår, bagdel, skuldre, bryst osv. Du kan derved træne dine muskelgrupper på flere måder og skifte imellem maskiner og finde de maskiner og øvelser, du bedst kan lide og får mest ud af.\nNogle af maskinerne er multifunktionelle, så du kan træne flere muskelgrupper på samme maskine.\nStyrketræning er din vej til sundhed, en stærkere krop, funktionalitet i hverdagen og større muskelmasse.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Styrketraening-skal-ikke-beskaeres.jpg?itok=2qQsiE_f"
+    },
+    {
+      "name": "Udstrækningsområde",
+      "description": "Vi vil gerne opfylde dine træningsbehov, og en nedkøling efter træning, eller en opvarmning før træning skal der være plads til.\nDer hvor din træning starter eller slutter har vi et udstrækningsområde til dig med masser af udstyr.\nI udstrækningsområdet finder du ribber, måtter, pilatesbolde, små vægte, mavehjul, Bosu bolde, forskellige slags elastikker og foamrollere.\nHvis der er noget du mangler, kan du altid spørge vores receptionister om de har det liggende et andet sted i centeret.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Udstraekningsomraade-skal-ikke-beskaeres.jpg?itok=24s5m_W_"
+    }
+  ],
+  "facility_names": [
+    "App",
+    "Bodytracker+",
+    "Cardiotræning",
+    "Glutebuilder",
+    "Parkering",
+    "Personlig træner",
+    "Styrketræning",
+    "Udstrækningsområde"
+  ],
+  "facility_ids": [
+    "333",
+    "355",
+    "24",
+    "27",
+    "434",
+    "474",
+    "17",
+    "350"
+  ],
+  "plan_ids": [
+    "671",
+    "666"
+  ],
+  "team_ids": [
+    "807"
+  ],
+  "classes": [
+    "Get Started - Introhold"
+  ],
+  "images": {
+    "hero": "https://www.puregym.dk/files/2025-05/Puregym_fitness_cardio_Greve.jpg",
+    "hero_2500": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-05/Puregym_fitness_cardio_Greve.jpg?itok=DWIZKc1R",
+    "teaser": "https://www.puregym.dk/files/styles/center_teaser/public/2025-05/Puregym_fitness_cardio_Greve.jpg?itok=_3Q_NMMa",
+    "gallery": [
+      "https://mit.puregym.dk/images/centers/711/cardio-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/711/cardio-2-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/711/frivaegt-1-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/711/frivaegt-2-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/711/frivaegt-3-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/711/frivaegt-4-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/711/indgang-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/711/reception-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/711/styrke-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/711/styrke-2-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/711/styrke-3-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/711/udstraek-1090x727.webp"
+    ]
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

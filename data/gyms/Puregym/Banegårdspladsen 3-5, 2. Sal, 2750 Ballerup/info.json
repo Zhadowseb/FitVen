@@ -1,0 +1,254 @@
+{
+  "chain": "PureGym",
+  "name": "Ballerup, Banegårdspladsen",
+  "puregym_id": "147",
+  "address": {
+    "street": "Banegårdspladsen 3-5, 2. Sal",
+    "postal_code": "2750",
+    "city": "Ballerup",
+    "country": "DK",
+    "full": "Banegårdspladsen 3-5, 2. Sal, 2750 Ballerup"
+  },
+  "location": {
+    "latitude": 55.7296653,
+    "longitude": 12.3589539
+  },
+  "url": "https://www.puregym.dk/find-center/ballerup-banegaardspladsen",
+  "membership_url": "https://www.puregym.dk/bliv-medlem/50/medlemskab",
+  "price_from": "Priser fra 261,75 DKK/md.",
+  "price_note": "*Normalpris fra 299 DKK/md.",
+  "today_notice": "Vi lukker i dag kl. 22:00",
+  "opening_hours": [
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 22:00",
+      "staffed": "09:00 - 20:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 22:00",
+      "staffed": "08:00 - 17:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 22:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 22:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Mandag",
+      "open": "05:00 - 22:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 22:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 22:00",
+      "staffed": "08:00 - 20:00"
+    }
+  ],
+  "opening_hours_schema": [
+    {
+      "day": "Monday",
+      "opens": "05:00",
+      "closes": "22:00"
+    },
+    {
+      "day": "Tuesday",
+      "opens": "05:00",
+      "closes": "22:00"
+    },
+    {
+      "day": "Wednesday",
+      "opens": "05:00",
+      "closes": "22:00"
+    },
+    {
+      "day": "Thursday",
+      "opens": "05:00",
+      "closes": "22:00"
+    },
+    {
+      "day": "Friday",
+      "opens": "05:00",
+      "closes": "22:00"
+    },
+    {
+      "day": "Saturday",
+      "opens": "05:00",
+      "closes": "22:00"
+    },
+    {
+      "day": "Sunday",
+      "opens": "05:00",
+      "closes": "22:00"
+    }
+  ],
+  "special_days": [
+    {
+      "date": "2027-01-01",
+      "opens": "08:00",
+      "closes": "22:00"
+    },
+    {
+      "date": "2027-04-02",
+      "opens": "05:00",
+      "closes": "22:00"
+    },
+    {
+      "date": "2027-04-03",
+      "opens": "05:00",
+      "closes": "22:00"
+    },
+    {
+      "date": "2027-04-05",
+      "opens": "05:00",
+      "closes": "22:00"
+    },
+    {
+      "date": "2027-04-06",
+      "opens": "05:00",
+      "closes": "22:00"
+    },
+    {
+      "date": "2027-05-14",
+      "opens": "05:00",
+      "closes": "22:00"
+    },
+    {
+      "date": "2027-05-24",
+      "opens": "05:00",
+      "closes": "22:00"
+    },
+    {
+      "date": "2027-05-25",
+      "opens": "05:00",
+      "closes": "22:00"
+    },
+    {
+      "date": "2027-06-05",
+      "opens": "05:00",
+      "closes": "22:00"
+    },
+    {
+      "date": "2026-12-24",
+      "opens": "05:00",
+      "closes": "22:00"
+    },
+    {
+      "date": "2026-12-25",
+      "opens": "05:00",
+      "closes": "22:00"
+    },
+    {
+      "date": "2026-12-26",
+      "opens": "05:00",
+      "closes": "22:00"
+    },
+    {
+      "date": "2026-12-31",
+      "opens": "05:00",
+      "closes": "18:00"
+    }
+  ],
+  "meta_description": "Hos PureGym i Ballerup tilbyder vi både styrke-, cardio- og fitnesstræning. Oplev et trænings-fællesskab med plads til alle i dag.",
+  "description": "PureGym Ballerup\nPureGym Ballerup - Træning og fællesskab i topklasse\nPureGym Ballerup er et moderne træningscenter, der tilbyder en bred vifte af muligheder for træning og velvære. Centret er udstyret med alt, hvad medlemmerne har brug for, fra topmoderne maskiner og frie vægte til spændende holdtræning ledet af passionerede instruktører.\nVi glæder os til at se dig!\nDet siger personalet om PureGym Ballerup\nPureGym Ballerup er kendt for sin unikke atmosfære, hvor fællesskabet blandt medarbejdere og medlemmer skinner igennem. Det stærke team arbejder dedikeret for at skabe et imødekommende og energisk miljø, hvor alle føler sig velkomne - uanset træningsniveau.\n\"Med høj kvalitet i udstyr, holdtræning og service er PureGym Ballerup et sted, hvor både ansatte og medlemmer trives og motiveres. Det er denne kombination af dedikation, sammenhold, og en positiv kultur, der gør centret til noget helt særligt.\"\nPersonlig træning i PureGym Ballerup\nHar du brug for en snak om din træning, står vi altid klar og tilbyder udover gode råd også programlægning og personlig træning af vores certificerede personlige trænere.\nVi tilbyder også en uforpligtende samtale med en personlig træner til 0,-:\nBook samtale\nHoldtræning i PureGym Ballerup\nVi tilbyder en stor lys og rummelig holdsal med mange forskellige hold, der er en bikesal samt et funktionelt område. Her er hold for alle, det sværeste er at vælge hvilket et af de fede hold du skal deltage på.\nHvornår træner folk her i centret?\nVi har god plads til vores medlemmer. I vores app kan du se, hvornår der er flest og færrest mennesker i centret.\nBliv medlem\nHvornår kan jeg møde personalet i centret?\nI centrets reception bliver du mødt af smilende og servicemindet personale, som står klar til at hjælpe dig uanset graden. Vi er bemandet 10-18 mandag - fredag og fra 9-12 lørdag - søndag.\nVi står klar med assistance hvis du har spørgsmål til din regning, eller dit medlemskab eller bare en snak om løst og fast, så glæder vi os til at se dig.\nKan jeg parkere ved PureGym Ballerup?\nVi har 2 timers gratis parkering tilknyttet, hvilket gør det nemt og tilgængeligt. Da vi er en del af et center, skal du huske at registrere din nummerplade i Ballerup-centret, inden du forlader centret.\nEr du med offentlig transport, stopper S-toget lige uden for døren. Nemt og enkelt.\nFølg os på Facebook\nSe vores lokaler her\nFå en samtale med en personlig træner\nMødet med en personlig træner kan hjælpe dig til at finde motivationen til at nå dine mål.\nBook din uforpligtende samtale i dag til 0 kr. og bliv klogere på, hvordan et personligt træningsforløb ville forme sig for dig, så du når lige derhen hvor du gerne vil.\nBook din samtale her\nBliv medlem af PureGym og få adgang til:\nApp\nHer kan du få et trænings-program, følge din træning, booke hold, deltage i challenges og meget mere.\nPersonlig træning\nHar du brug for hjælp til at nå dine mål? Book en samtale hos en af vores certificerede personlige trænere til 0 kr.\nHoldtræning\nBliv en del af et stærkt fællesskab på vores hold. Vores dedikerede instruktører guider dig igennem og sikrer højt humør.\nBodytracker\nFor kun ekstra 9 kr./md. kan du få adgang til en avanceret vægt, der giver dig en kropsanalyse med flere forskellige parametre.\nEr du klar til at starte?\nVælg dit medlemskab her\nOg bliv en del af Danmarks største fitness-fælleskab.\nGenerelt\nLog ind på Mit PureGym\nPriser og medlemskabstyper\nTil/afmeld nyhedsbrev\nOm PureGym\nPresse\nKarriere\nHjerteforeningen\nStudierabat\nInformation\nFAQ & Kontakt\nVelkomst og information\nHusets regler\nMedlems­betingelser\nDatapolitik\nCookies\nTilgængelighed\nKonkurrencevindere\nSafespace\nVores fitness centre\nFind center\nAlle større byer\nKøbenhavn\nAarhus\nOdense\nAalborg\nRanders\nValby\nDownload vores app\nHold dig informeret\nTorveporten 2,\n2500 Valby\nCVR. 25652991\nPureGym © 2026\nLog ind\nNyt eller glemt kodeord?\nIkke medlem endnu?\nMeld dig ind",
+  "notice": null,
+  "facilities": [],
+  "facility_names": [
+    "App",
+    "Bikesal",
+    "Cardiotræning",
+    "Funktionelt træningsområde",
+    "Glutebuilder",
+    "Holdtræning",
+    "Parkering",
+    "Personlig træner",
+    "Styrketræning",
+    "Udstrækningsområde",
+    "Watt-cykler & Intelligent Cycling"
+  ],
+  "facility_ids": [
+    "355",
+    "14",
+    "24",
+    "27",
+    "349",
+    "12",
+    "333",
+    "350",
+    "434",
+    "17",
+    "28"
+  ],
+  "plan_ids": [
+    "667",
+    "656"
+  ],
+  "team_ids": [
+    "741",
+    "637",
+    "498",
+    "736",
+    "742",
+    "807",
+    "318",
+    "834",
+    "358",
+    "739"
+  ],
+  "classes": [
+    "Bike Power",
+    "Bike Standard",
+    "Body Fit",
+    "Dans - Event",
+    "Functional Express",
+    "Get Started - Introhold",
+    "Jam",
+    "Step Power",
+    "Step Standard",
+    "Stram Op"
+  ],
+  "images": {
+    "hero": "https://www.puregym.dk/files/2025-05/Puregym_fitness_cardio_Ballerup%20%282%29.jpg",
+    "hero_2500": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-05/Puregym_fitness_cardio_Ballerup%20%282%29.jpg?itok=AeHimqHG",
+    "teaser": "https://www.puregym.dk/files/styles/center_teaser/public/2025-05/Puregym_fitness_cardio_Ballerup%20%282%29.jpg?itok=dvSsb7Ga",
+    "gallery": [
+      "https://mit.puregym.dk/images/centers/735/dsc06975-hdr-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/735/dsc07004-hdr-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/735/dsc07020-hdr-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/735/dsc07040-hdr-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/735/dsc07050-hdr-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/735/dsc07070-hdr-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/735/dsc07090-hdr-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/735/dsc07110-hdr-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/735/dsc07135-hdr-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/735/dsc07150-hdr-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/735/dsc07170-hdr-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/735/dsc07195-hdr-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/735/dsc07225-hdr-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/735/dsc07230-hdr-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/735/dsc07240-hdr-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/735/dsc07255-hdr-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/735/dsc07260-hdr-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/735/dsc07280-hdr-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/735/dsc07295-hdr-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/735/dsc07305-hdr-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/735/dsc07310-hdr-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/735/dsc07315-hdr-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/735/dsc07320-hdr-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/735/dsc07325-hdr-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/735/dsc07350-hdr-1090x727.webp"
+    ]
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

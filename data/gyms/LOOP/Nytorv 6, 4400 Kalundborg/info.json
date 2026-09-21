@@ -1,0 +1,182 @@
+{
+  "chain": "LOOP Fitness",
+  "name": "LOOP Kalundborg",
+  "loop_id": 130,
+  "center_type": "family",
+  "address": {
+    "street": "Nytorv 6",
+    "postal_code": "4400",
+    "city": "Kalundborg",
+    "country": "DK",
+    "full": "Nytorv 6, 4400 Kalundborg"
+  },
+  "location": {
+    "latitude": 55.67844,
+    "longitude": 11.095677
+  },
+  "url": "https://loopfitness.dk/centre/loop-fitness-kalundborg/",
+  "membership_url": "https://loopfitness.dk/medlemskab/bliv-medlem/",
+  "phone": "41746230",
+  "email": "kalundborg@loopfitness.dk",
+  "facebook_url": null,
+  "google_review_url": "https://g.page/r/CTELrAlXVQfREB0/review",
+  "cvr": "34730040",
+  "manager_name": "Klaudia",
+  "opened": "2012-12-28",
+  "has_classes": false,
+  "only_open_when_staffed": false,
+  "max_visitor_capacity": 40,
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 24:00"
+    }
+  ],
+  "staffed_hours": [
+    {
+      "day": "Mandag",
+      "periods": [
+        "07:00 - 19:00"
+      ]
+    },
+    {
+      "day": "Tirsdag",
+      "periods": [
+        "07:00 - 19:00"
+      ]
+    },
+    {
+      "day": "Onsdag",
+      "periods": [
+        "07:00 - 19:00"
+      ]
+    },
+    {
+      "day": "Torsdag",
+      "periods": [
+        "07:00 - 19:00"
+      ]
+    },
+    {
+      "day": "Fredag",
+      "periods": [
+        "07:00 - 16:00"
+      ]
+    },
+    {
+      "day": "Lørdag",
+      "periods": [
+        "09:00 - 12:00"
+      ]
+    },
+    {
+      "day": "Søndag",
+      "periods": [
+        "09:00 - 12:00"
+      ]
+    }
+  ],
+  "staffed_hours_dates": [
+    {
+      "date": "2025-12-23",
+      "open": "07:00 - 12:00"
+    },
+    {
+      "date": "2025-12-24",
+      "open": "None - None"
+    },
+    {
+      "date": "2025-12-25",
+      "open": "None - None"
+    },
+    {
+      "date": "2025-12-26",
+      "open": "None - None"
+    },
+    {
+      "date": "2025-12-30",
+      "open": "07:00 - 12:00"
+    },
+    {
+      "date": "2025-12-31",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-01-01",
+      "open": "None - None"
+    }
+  ],
+  "meta_description": "Hos LOOP Fitness Kalundborg får du enkel og effektiv træning af hele kroppen på kun 24 minutter. Vi tilbyder træning for børn og unge ✓ Gratis prøvetime ✓",
+  "description": "Kom indenfor og mærk energien. Hos LOOP får du afslappet stemning og effektiv træning på den bedste måde. Uanset niveau er der plads til dig, og træningen er enkel: Start med opvarmning, træn hele kroppen i træningscirklen, og afslut med udstrækning i vores LOOP Ekstra område. Efter din træning kan du nyde en gratis kop kaffe eller the i vores café.",
+  "quote_by": "Klaudia, centerleder",
+  "facilities": [
+    "3 cirkler",
+    "Cardio-område",
+    "LOOP Kids",
+    "Gratis kaffe"
+  ],
+  "memberships": [
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr",
+      "price_per_month": 289.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 319,
+      "family_members": 0,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    },
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr. - familie",
+      "price_per_month": 589.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 619,
+      "family_members": 9,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    }
+  ],
+  "images": {
+    "hero": "https://loopfitness.dk/wp-content/uploads/2019/11/Kalundborg_2026.png",
+    "og_image": "https://loopfitness.dk/wp-content/uploads/2019/11/Klaudia.jpg"
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

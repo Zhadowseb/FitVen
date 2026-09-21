@@ -1,0 +1,217 @@
+{
+  "chain": "PureGym",
+  "name": "Kbh N., Esromgade",
+  "puregym_id": "601",
+  "address": {
+    "street": "Esromgade 15",
+    "postal_code": "2200",
+    "city": "København N",
+    "country": "DK",
+    "full": "Esromgade 15, 2200 København N"
+  },
+  "location": {
+    "latitude": 55.69754403025497,
+    "longitude": 12.540402865456953
+  },
+  "url": "https://www.puregym.dk/find-center/kbh-n-esromgade",
+  "membership_url": "https://www.puregym.dk/bliv-medlem/111/medlemskab",
+  "price_from": "Priser fra 139,50 DKK/md.",
+  "price_note": "*Normalpris fra 279 DKK/md.",
+  "today_notice": "Vi lukker i dag kl. 00:00",
+  "opening_hours": [
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "09:00 - 20:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 17:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Mandag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    }
+  ],
+  "opening_hours_schema": [
+    {
+      "day": "Monday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Tuesday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Wednesday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Thursday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Friday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Saturday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Sunday",
+      "opens": "05:00",
+      "closes": "00:00"
+    }
+  ],
+  "special_days": [
+    {
+      "date": "2027-01-01",
+      "opens": "08:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-02",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-03",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-05",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-06",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-14",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-24",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-25",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-06-05",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-24",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-25",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-26",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-31",
+      "opens": "05:00",
+      "closes": "18:00"
+    }
+  ],
+  "meta_description": "Hos PureGym på Esromgade i København tilbyder vi styrke-, cardio- og fitnesstræning. Oplev et trænings-fællesskab med plads til alle i dag.",
+  "description": "PureGym Esromgade\nI hjertet af Nørrebro, lige ved Nørrebroparken, ligger PureGym Esromgade.\nHos os mangler du ikke muligheder. Vi har samlet alt, hvad du skal bruge til din styrketræning i kælderplan og konditionstræning på stueetagen.\nNogle af de ting, der karakteriserer vores center bedst, er blandt andet vores lyse cardio-område, som med et stort vinduesparti lader dig nyde udsigten over Nørrebroparken, mens du får pulsen op. Vi har flere muligheder for styrketræning med et væld af både håndvægte og squatracks og et stort funktionelt område med plads til alle, hvor du kan lave netop den øvelse, der passer til dig.\nVi glæder os til at se dig!\nDET SIGER PERSONALET OM PUREGYM ESROMGADE\nGym staff Karim siger: \"På Esrom har vi samlet alt det, du skal bruge til din stykretræning - fra maskiner til vægte, vi har det hele. I vores rummelige funktionelle område er der plads til alle. Vi stræber altid efter at skabe en god stemning i centret og give den bedste service til vores medlemmer. Teamet og jeg står altid klar til at tage imod dig med et smil og vil gøre alt for at give dig den bedste træningsoplevelse. Det bedste træningsråd, jeg har fået, er nemlig: 'Den bedste træning er den, der bliver lavet', så vi er bare glade for at se dig hernede.\"\nPERSONLIG TRÆNING I PUREGYM ESROMGADE\nHar du brug for hjælp til at nå dine mål? eller skal du igang med din træning og have finpudset teknikken? Så er vores Personlige Trænere klar til at hjælpe dig med råd, vejledning og programplanlægning. Skriv dig op på listen i centret eller på hjemmesiden og få en gratis konsultation med en af vores dygtige trænere.\nVi tilbyder også en uforpligtende samtale med en personlig træner til 0,-:\nBOOK SAMTALE HER\nHVORNÅR TRÆNER FOLK HER I CENTRET?\nVi har god plads til vores medlemmer. I vores app kan du se, hvornår der er flest og færrest mennesker i centret.\nBLIV MEDLEM HER\nHVORNÅR KAN JEG MØDE PERSONALET I CENTRET?\nDu er altid velkommen til at svinge forbi receptionen i vores bemandede åbningstid. Vi står klar med et smil og svarer på alle spørgsmål. Vores bemandede åbningstid kan du finde på hjemmesiden eller i vores app. Kan du ikke finde os i receptionen, er vi ude og gøre centret lækkert at træne i. Ring blot på klokken - så kommer vi løbende.\nKAN JEG PARKERE VED PUREGYM ESROMGADE?\nVi ligger et lille stenkast fra både metro, tog og bus. Vi er nemlig placeret ca 5 min. gågang fra Nørrebro Station. Rundt om hjørnet på Farumgade har APCOA en parkeringskælder, hvor du kan holde. Se efter gældende skiltning på adressen.\nFølg os på Facebook\nSe vores lokaler her\nFå en samtale med en personlig træner\nMødet med en personlig træner kan hjælpe dig til at finde motivationen til at nå dine mål.\nBook din uforpligtende samtale i dag til 0 kr. og bliv klogere på, hvordan et personligt træningsforløb ville forme sig for dig, så du når lige derhen hvor du gerne vil.\nBook din samtale her\nBliv medlem af PureGym og få adgang til:\nApp\nHer kan du få et trænings-program, følge din træning, booke hold, deltage i challenges og meget mere.\nPersonlig træning\nHar du brug for hjælp til at nå dine mål? Book en samtale hos en af vores certificerede personlige trænere til 0 kr.\nHoldtræning\nBliv en del af et stærkt fællesskab på vores hold. Vores dedikerede instruktører guider dig igennem og sikrer højt humør.\nBodytracker\nFor kun ekstra 9 kr./md. kan du få adgang til en avanceret vægt, der giver dig en kropsanalyse med flere forskellige parametre.\nEr du klar til at starte?\nVælg dit medlemskab her\nOg bliv en del af Danmarks største fitness-fælleskab.\nGenerelt\nLog ind på Mit PureGym\nPriser og medlemskabstyper\nTil/afmeld nyhedsbrev\nOm PureGym\nPresse\nKarriere\nHjerteforeningen\nStudierabat\nInformation\nFAQ & Kontakt\nVelkomst og information\nHusets regler\nMedlems­betingelser\nDatapolitik\nCookies\nTilgængelighed\nKonkurrencevindere\nSafespace\nVores fitness centre\nFind center\nAlle større byer\nKøbenhavn\nAarhus\nOdense\nAalborg\nRanders\nValby\nDownload vores app\nHold dig informeret\nTorveporten 2,\n2500 Valby\nCVR. 25652991\nPureGym © 2026\nLog ind\nNyt eller glemt kodeord?\nIkke medlem endnu?\nMeld dig ind",
+  "notice": null,
+  "facilities": [],
+  "facility_names": [
+    "App",
+    "Bodytracker+",
+    "Cardiotræning",
+    "Funktionelt træningsområde",
+    "Personlig træner",
+    "Styrketræning",
+    "Udstrækningsområde",
+    "Watt-cykler & Intelligent Cycling"
+  ],
+  "facility_ids": [
+    "355",
+    "24",
+    "27",
+    "12",
+    "434",
+    "474",
+    "350",
+    "28"
+  ],
+  "plan_ids": [
+    "670",
+    "662"
+  ],
+  "team_ids": [
+    "830",
+    "834"
+  ],
+  "classes": [
+    "Functional Express",
+    "HYROX (+ 30 kr)"
+  ],
+  "images": {
+    "hero": "https://www.puregym.dk/files/2025-02/Esromgade%20Koebenhavn%20N%20PureGym%20fitness.jpg",
+    "hero_2500": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-02/Esromgade%20Koebenhavn%20N%20PureGym%20fitness.jpg?itok=Z_wGOg3j",
+    "teaser": "https://www.puregym.dk/files/styles/center_teaser/public/2025-02/Esromgade%20Koebenhavn%20N%20PureGym%20fitness.jpg?itok=1S0yDCIe",
+    "gallery": [
+      "https://mit.puregym.dk/images/centers/696/1-cardio-1-601-esromgade-puregym.webp",
+      "https://mit.puregym.dk/images/centers/696/11-cardio-2-601-esromgade-puregym.webp",
+      "https://mit.puregym.dk/images/centers/696/2-funktionel-4-601-esromgade-puregym.webp",
+      "https://mit.puregym.dk/images/centers/696/3-funktionel-2-601-esromgade-puregym.webp",
+      "https://mit.puregym.dk/images/centers/696/5-frivaegt-1-601-esromgade-puregym.webp",
+      "https://mit.puregym.dk/images/centers/696/6-styrke-601-esromgade-puregym.webp",
+      "https://mit.puregym.dk/images/centers/696/71-funktionel-1-601-esromgade-puregym.webp",
+      "https://mit.puregym.dk/images/centers/696/8-udstraek-2-601-esromgade-puregym.webp",
+      "https://mit.puregym.dk/images/centers/696/9-reception-601-esromgade-puregym.webp",
+      "https://mit.puregym.dk/images/centers/696/91-indgang-601-esromgade-puregym.webp"
+    ]
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

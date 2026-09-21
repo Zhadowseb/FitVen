@@ -1,0 +1,379 @@
+{
+  "chain": "SATS",
+  "name": "KBH - Valby",
+  "short_name": "Valby",
+  "sats_id": "431",
+  "region": "kobenhavn",
+  "address": {
+    "street": "Torvegade 17",
+    "postal_code": "2500",
+    "city": "Valby",
+    "country": "DK",
+    "full": "Torvegade 17, 2500 Valby"
+  },
+  "location": {
+    "latitude": 55.664751,
+    "longitude": 12.511503
+  },
+  "url": "https://www.sats.dk/traeningscenter/kobenhavn/kbh-valby",
+  "membership_url": "https://www.sats.dk/bliv-medlem-sats",
+  "opening_hours": [
+    {
+      "days": "Man- Søn",
+      "open": "05:00 - 23:00"
+    }
+  ],
+  "opening_hours_schema": [
+    "Mo-Su 05:00-23:00"
+  ],
+  "special_days": [
+    {
+      "date": "2026-12-24",
+      "title": "24. december",
+      "open": "07:00 - 14:00"
+    },
+    {
+      "date": "2026-12-25",
+      "title": "25. december",
+      "open": "07:00 - 18:00"
+    },
+    {
+      "date": "2026-12-26",
+      "title": "26. december",
+      "open": "07:00 - 18:00"
+    },
+    {
+      "date": "2026-12-31",
+      "title": "31. december",
+      "open": "07:00 - 14:00"
+    },
+    {
+      "date": "2027-01-01",
+      "title": "1. Januar",
+      "open": "10:00 - 21:00"
+    }
+  ],
+  "meta_description": "SATS Valby tilbyder fitness med et utal af træningsmuligheder, bl.a. stort funktionelt område, unikke holdkoncepter, samt sauna.",
+  "description": "Velkommen til SATS Valby! Moderne center tæt på Valby Station. Unikke holdkoncepter som Reformer Gravity, Hot Yoga, HIIT Zone, Performance og Indoor Running, motiverende personlige trænere og sauna.",
+  "parking": "Du kan parkere gratis i 2 timer i Spinderiet parkeringshus.",
+  "facilities": [
+    "Gravity Zone",
+    "Neutral garderobe",
+    "Holdsal",
+    "HIIT Zone",
+    "Hot Studio",
+    "Kettlebell Zone",
+    "Lifting Zone",
+    "Lounge område",
+    "Performance Zone",
+    "Løbe område",
+    "Sauna",
+    "Kørestolsvenlig"
+  ],
+  "services": [
+    "Holdtræning",
+    "Personlig træning",
+    "Boot Camps",
+    "Kropsanalyse",
+    "Shop",
+    "Leje af håndklæder"
+  ],
+  "filters": [
+    "facility-gravity-zone",
+    "facility-hiit-zone",
+    "facility-holdsal",
+    "facility-hot-studio",
+    "facility-kettlebell-zone",
+    "facility-korestolsvenlig",
+    "facility-lifting-zone",
+    "facility-lobe-omrade",
+    "facility-lounge-omrade",
+    "facility-neutral-garderobe",
+    "facility-performance-zone",
+    "facility-sauna",
+    "region-all-regions",
+    "region-kobenhavn",
+    "services-boot-camps",
+    "services-holdtraening",
+    "services-kropsanalyse",
+    "services-leje-af-handklaeder",
+    "services-personlig-traening",
+    "services-shop"
+  ],
+  "memberships": [
+    {
+      "age_group": "under-30",
+      "member_type": "Voksen",
+      "name": "Basic",
+      "price": "549",
+      "unit": "kr./md.",
+      "description": "Adgang til dit favoritcenter",
+      "benefits": [
+        "Gratis prøvetime med en personlig træner (Værdi op til 1.299 kr.)",
+        "Adgang til dit favoritcenter",
+        "Adgang til holdtræning i dit favoritcenter (Book 1 uge frem)"
+      ]
+    },
+    {
+      "age_group": "under-30",
+      "member_type": "Voksen",
+      "name": "Flexible",
+      "price": "599",
+      "unit": "kr./md.",
+      "description": "Adgang til alle vores centre i Danmark",
+      "benefits": [
+        "Gratis prøvetime med en personlig træner (Værdi op til 1.299 kr.)",
+        "Adgang til alle vores centre i Danmark",
+        "Fri adgang til SATS Online",
+        "Vælg mellem mere end 55 forskellige hold (Book 1 uge frem)"
+      ]
+    },
+    {
+      "age_group": "under-30",
+      "member_type": "Voksen",
+      "name": "Premium",
+      "price": "699",
+      "unit": "kr./md.",
+      "description": "Adgang til alle vores centre i Norden",
+      "benefits": [
+        "Gratis prøvetime med en personlig træner (Værdi op til 1.299 kr.)",
+        "Adgang til alle vores centre i Norden",
+        "Vælg mellem mere end 130 forskellige hold",
+        "Fri adgang til SATS Online",
+        "1 måneds gratis medlemskabsbero",
+        "Udvidet holdbooking (3 uger frem)",
+        "Velkomstgave – taske, drikkedunk og håndklæde fra SATS"
+      ]
+    },
+    {
+      "age_group": "under-30",
+      "member_type": "Studerende og unge",
+      "name": "Basic",
+      "price": "439,20",
+      "unit": "kr./md.",
+      "description": "Adgang til dit favoritcenter",
+      "benefits": [
+        "Gratis prøvetime med en personlig træner (Værdi op til 1.299 kr.)",
+        "Adgang til dit favoritcenter",
+        "Adgang til holdtræning i dit favoritcenter (Book 1 uge frem)"
+      ]
+    },
+    {
+      "age_group": "under-30",
+      "member_type": "Studerende og unge",
+      "name": "Flexible",
+      "price": "479,20",
+      "unit": "kr./md.",
+      "description": "Adgang til alle vores centre i Danmark",
+      "benefits": [
+        "Gratis prøvetime med en personlig træner (Værdi op til 1.299 kr.)",
+        "Adgang til alle vores centre i Danmark",
+        "Fri adgang til SATS Online",
+        "Vælg mellem mere end 55 forskellige hold (Book 1 uge frem)"
+      ]
+    },
+    {
+      "age_group": "under-30",
+      "member_type": "Studerende og unge",
+      "name": "Premium",
+      "price": "559,20",
+      "unit": "kr./md.",
+      "description": "Adgang til alle vores centre i Norden",
+      "benefits": [
+        "Gratis prøvetime med en personlig træner (Værdi op til 1.299 kr.)",
+        "Adgang til alle vores centre i Norden",
+        "Vælg mellem mere end 130 forskellige hold",
+        "Fri adgang til SATS Online",
+        "1 måneds gratis medlemskabsbero",
+        "Udvidet holdbooking (3 uger frem)",
+        "Velkomstgave – taske, drikkedunk og håndklæde fra SATS"
+      ]
+    },
+    {
+      "age_group": "over-30",
+      "member_type": "Voksen",
+      "name": "Basic",
+      "price": "649",
+      "unit": "kr./md.",
+      "description": "Adgang til dit favoritcenter",
+      "benefits": [
+        "Gratis prøvetime med en personlig træner (Værdi op til 1.299 kr.)",
+        "Adgang til dit favoritcenter",
+        "Adgang til holdtræning i dit favoritcenter (Book 1 uge frem)"
+      ]
+    },
+    {
+      "age_group": "over-30",
+      "member_type": "Voksen",
+      "name": "Flexible",
+      "price": "699",
+      "unit": "kr./md.",
+      "description": "Adgang til alle vores centre i Danmark",
+      "benefits": [
+        "Gratis prøvetime med en personlig træner (Værdi op til 1.299 kr.)",
+        "Adgang til alle vores centre i Danmark",
+        "Fri adgang til SATS Online",
+        "Vælg mellem mere end 55 forskellige hold (Book 1 uge frem)"
+      ]
+    },
+    {
+      "age_group": "over-30",
+      "member_type": "Voksen",
+      "name": "Premium",
+      "price": "799",
+      "unit": "kr./md.",
+      "description": "Adgang til alle vores centre i Norden",
+      "benefits": [
+        "Gratis prøvetime med en personlig træner (Værdi op til 1.299 kr.)",
+        "Adgang til alle vores centre i Norden",
+        "Vælg mellem mere end 130 forskellige hold",
+        "Fri adgang til SATS Online",
+        "1 måneds gratis medlemskabsbero",
+        "Udvidet holdbooking (3 uger frem)",
+        "Velkomstgave – taske, drikkedunk og håndklæde fra SATS"
+      ]
+    },
+    {
+      "age_group": "over-30",
+      "member_type": "Senior",
+      "name": "Basic",
+      "price": "519,20",
+      "unit": "kr./md.",
+      "description": "Adgang til dit favoritcenter",
+      "benefits": [
+        "Gratis prøvetime med en personlig træner (Værdi op til 1.299 kr.)",
+        "Adgang til dit favoritcenter",
+        "Adgang til holdtræning i dit favoritcenter (Book 1 uge frem)"
+      ]
+    },
+    {
+      "age_group": "over-30",
+      "member_type": "Senior",
+      "name": "Flexible",
+      "price": "559,20",
+      "unit": "kr./md.",
+      "description": "Adgang til alle vores centre i Danmark",
+      "benefits": [
+        "Gratis prøvetime med en personlig træner (Værdi op til 1.299 kr.)",
+        "Adgang til alle vores centre i Danmark",
+        "Fri adgang til SATS Online",
+        "Vælg mellem mere end 55 forskellige hold (Book 1 uge frem)"
+      ]
+    },
+    {
+      "age_group": "over-30",
+      "member_type": "Senior",
+      "name": "Premium",
+      "price": "639,20",
+      "unit": "kr./md.",
+      "description": "Adgang til alle vores centre i Norden",
+      "benefits": [
+        "Gratis prøvetime med en personlig træner (Værdi op til 1.299 kr.)",
+        "Adgang til alle vores centre i Norden",
+        "Vælg mellem mere end 130 forskellige hold",
+        "Fri adgang til SATS Online",
+        "1 måneds gratis medlemskabsbero",
+        "Udvidet holdbooking (3 uger frem)",
+        "Velkomstgave – taske, drikkedunk og håndklæde fra SATS"
+      ]
+    },
+    {
+      "age_group": "over-30",
+      "member_type": "Studerende og unge",
+      "name": "Basic",
+      "price": "519,20",
+      "unit": "kr./md.",
+      "description": "Adgang til dit favoritcenter",
+      "benefits": [
+        "Gratis prøvetime med en personlig træner (Værdi op til 1.299 kr.)",
+        "Adgang til dit favoritcenter",
+        "Adgang til holdtræning i dit favoritcenter (Book 1 uge frem)"
+      ]
+    },
+    {
+      "age_group": "over-30",
+      "member_type": "Studerende og unge",
+      "name": "Flexible",
+      "price": "559,20",
+      "unit": "kr./md.",
+      "description": "Adgang til alle vores centre i Danmark",
+      "benefits": [
+        "Gratis prøvetime med en personlig træner (Værdi op til 1.299 kr.)",
+        "Adgang til alle vores centre i Danmark",
+        "Fri adgang til SATS Online",
+        "Vælg mellem mere end 55 forskellige hold (Book 1 uge frem)"
+      ]
+    },
+    {
+      "age_group": "over-30",
+      "member_type": "Studerende og unge",
+      "name": "Premium",
+      "price": "639,20",
+      "unit": "kr./md.",
+      "description": "Adgang til alle vores centre i Norden",
+      "benefits": [
+        "Gratis prøvetime med en personlig træner (Værdi op til 1.299 kr.)",
+        "Adgang til alle vores centre i Norden",
+        "Vælg mellem mere end 130 forskellige hold",
+        "Fri adgang til SATS Online",
+        "1 måneds gratis medlemskabsbero",
+        "Udvidet holdbooking (3 uger frem)",
+        "Velkomstgave – taske, drikkedunk og håndklæde fra SATS"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "question": "Hvad er nummeret til centeret?",
+      "answer": "Det er ikke muligt at ringe direkte til centrene. Ønsker du at komme i kontakt med det lokale center, skal du tage forbi receptionen, hvor de kan hjælpe dig. Alternativt kan du kontakte Kundeservice."
+    },
+    {
+      "question": "Hvad gør jeg, hvis jeg har glemt noget i centeret?",
+      "answer": "Du skal kontakte receptionen, hvis du har glemt noget i vores center. Opbevaring af personlige ejendele sker altid på eget ansvar - og du er selv ansvarlig for at medbringe en lås til skabene. SATS har ret til at klippe låse op efter lukketid. Vi opbevarer glemte sager i 30 dage. SATS kan ikke holdes ansvarlig for eventuelle tab - heller ikke inden for de første 30 dage."
+    },
+    {
+      "question": "Hvilket udstyr er tilgængeligt i centeret?",
+      "answer": "Alle vores centre er godt udstyret med et bredt udvalg af basisudstyr som håndvægte, racks, kettlebells og meget mere, så du kan få en varieret træning uanset, hvilket center du besøger. Hvis du leder efter en specifik maskine eller type udstyr, anbefaler vi, at du spørger personalet i receptionen under dit besøg. De hjælper dig gerne 💙"
+    },
+    {
+      "question": "Har SATS drop-in?",
+      "answer": "Ja, selvfølgelig! Det koster 149 kr. for et drop-in, og det giver dig adgang til: Træning i fitnesscentret hele dagen Hold med ledige pladser Du kan betale for et drop-in i receptionen direkte i centeret (gældende for den aktuelle dag). undefined"
+    }
+  ],
+  "nearby": [
+    {
+      "name": "FRB - ABC",
+      "url": "https://www.sats.dk/traeningscenter/kobenhavn/frb-abc",
+      "distance": "1.8 km fra Valby"
+    },
+    {
+      "name": "FRB - Falkoner",
+      "url": "https://www.sats.dk/traeningscenter/kobenhavn/frb-falkoner",
+      "distance": "2.1 km fra Valby"
+    },
+    {
+      "name": "Sydhavn",
+      "url": "https://www.sats.dk/traeningscenter/kobenhavn/kbh-sydhavn",
+      "distance": "2.3 km fra Valby"
+    }
+  ],
+  "images": {
+    "hero": "https://images.ctfassets.net/bton54gi9dnn/7Ka9pXB43aVvuMj6rFbRag/1259ee2259d5eb1b617bbaebd0293c6d/Valby.png",
+    "teaser": "https://images.ctfassets.net/bton54gi9dnn/7Ka9pXB43aVvuMj6rFbRag/1259ee2259d5eb1b617bbaebd0293c6d/Valby.png",
+    "gallery": [
+      "https://images.ctfassets.net/bton54gi9dnn/7Ka9pXB43aVvuMj6rFbRag/1259ee2259d5eb1b617bbaebd0293c6d/Valby.png",
+      "https://images.ctfassets.net/bton54gi9dnn/62UQoWHcJ6jhqBhKUAFnlu/b034b9ad6f0024017d083e56e3f19798/Valby5.png",
+      "https://images.ctfassets.net/bton54gi9dnn/64TTfGE9NhvHKfzYlTxvyY/6e71335c9696ec1fc3c5b831adfcb2ca/Valby4.png",
+      "https://images.ctfassets.net/bton54gi9dnn/2QOgm3qh1KbO0jORyI5g8j/8078bd88bc9c2fc7938e382efee4e26f/Valby1.png",
+      "https://images.ctfassets.net/bton54gi9dnn/6UBcCWOgspzS0D8mUvjKQc/6f8af118cf9fff3b5ee406c9ce3ebde1/Valby2.png",
+      "https://images.ctfassets.net/bton54gi9dnn/64TTfGE9NhvHKfzYlTxvyY/6e71335c9696ec1fc3c5b831adfcb2ca/Valby4.png",
+      "https://images.ctfassets.net/bton54gi9dnn/31rjttLzjMgvtmntMYAYLK/b303046105ca117beeae8a06be377cc5/IMG_8196.jpeg",
+      "https://images.ctfassets.net/bton54gi9dnn/1pQIcnvgyrRfkDpCi8rNPi/d169ea0f67e268919b4a649364907330/IMG_8201.jpeg",
+      "https://images.ctfassets.net/bton54gi9dnn/1LBjtfdM1hTYT5yDCrJWPG/014c49417849decb8704464a75d1eb33/IMG_8190.jpeg",
+      "https://images.ctfassets.net/bton54gi9dnn/1ksikl4ii2zPLYS0U3mGre/c4092902f0ecf8e44e82ef288ceab24d/IMG_8213.jpeg",
+      "https://images.ctfassets.net/bton54gi9dnn/4TOFeFpqiMz9irMwCpwVia/33f568f58148f6e06c50a6ce2871bde9/Valby7.png"
+    ]
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

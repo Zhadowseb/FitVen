@@ -1,0 +1,195 @@
+{
+  "chain": "LOOP Fitness",
+  "name": "LOOP Svenstrup J",
+  "loop_id": 181,
+  "center_type": "lite",
+  "address": {
+    "street": "Fabriksparken 1",
+    "postal_code": "9230",
+    "city": "Svenstrup J",
+    "country": "DK",
+    "full": "Fabriksparken 1, 9230 Svenstrup J"
+  },
+  "location": {
+    "latitude": 56.978498,
+    "longitude": 9.852878
+  },
+  "url": "https://loopfitness.dk/centre/loop-fitness-svenstrup-j/",
+  "membership_url": "https://loopfitness.dk/medlemskab/bliv-medlem/",
+  "phone": "41746279",
+  "email": "svenstrupj@loopfitness.dk",
+  "facebook_url": null,
+  "google_review_url": "https://g.page/r/CQEbuiWInKoKEB0/review",
+  "cvr": "39349604",
+  "manager_name": "Lukas Sølbeck",
+  "opened": "2017-11-11",
+  "has_classes": false,
+  "only_open_when_staffed": false,
+  "max_visitor_capacity": 25,
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 22:00"
+    }
+  ],
+  "staffed_hours": [
+    {
+      "day": "Mandag",
+      "periods": [
+        "17:00 - 20:00"
+      ]
+    },
+    {
+      "day": "Tirsdag",
+      "periods": [
+        "08:30 - 11:30"
+      ]
+    },
+    {
+      "day": "Onsdag",
+      "periods": [
+        "17:00 - 20:00"
+      ]
+    },
+    {
+      "day": "Torsdag",
+      "periods": [
+        "17:00 - 20:00"
+      ]
+    },
+    {
+      "day": "Fredag",
+      "periods": [
+        "08:30 - 11:30"
+      ]
+    },
+    {
+      "day": "Lørdag",
+      "periods": [
+        "12:00 - 15:00"
+      ]
+    }
+  ],
+  "staffed_hours_dates": [
+    {
+      "date": "2026-09-01",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-09-10",
+      "open": "17:00 - 18:00"
+    },
+    {
+      "date": "2026-09-15",
+      "open": "08:00 - 11:00"
+    },
+    {
+      "date": "2026-09-16",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-09-19",
+      "open": "12:00 - 15:00"
+    },
+    {
+      "date": "2026-09-24",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-09-27",
+      "open": "12:00 - 14:00"
+    },
+    {
+      "date": "2026-10-03",
+      "open": "10:00 - 12:00"
+    },
+    {
+      "date": "2026-10-10",
+      "open": "11:30 - 14:30"
+    },
+    {
+      "date": "2026-10-18",
+      "open": "12:00 - 14:00"
+    },
+    {
+      "date": "2026-10-21",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-10-25",
+      "open": "12:00 - 15:00"
+    }
+  ],
+  "meta_description": "Hos LOOP Fitness Svenstrup J træner du styrke og kondition på blot 24 minutter i vores cirkeltræning. Enkel og effektiv træning! Kom i gang her »",
+  "description": "Kom indenfor og mærk energien. Hos LOOP får du afslappet stemning og effektiv træning på den bedste måde. Uanset niveau er der plads til dig, og træningen er enkel: Start med opvarmning, træn hele kroppen i træningscirklen, og afslut med udstrækning i vores LOOP Ekstra område. Efter din træning kan du nyde en gratis kop kaffe eller the i vores café.",
+  "quote_by": "Lukas, centerleder",
+  "facilities": [
+    "1 cirkel",
+    "Cardio-område",
+    "Gratis kaffe"
+  ],
+  "memberships": [
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr",
+      "price_per_month": 289.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 319,
+      "family_members": 0,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    },
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr. - familie",
+      "price_per_month": 589.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 619,
+      "family_members": 9,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    }
+  ],
+  "images": {
+    "hero": "https://loopfitness.dk/wp-content/uploads/2019/11/Svenstrup_2026.png",
+    "og_image": "https://loopfitness.dk/wp-content/uploads/2019/11/Lukas-Svenstrup-e1715582673225.jpg"
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

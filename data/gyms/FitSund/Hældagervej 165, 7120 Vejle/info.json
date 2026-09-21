@@ -1,0 +1,258 @@
+{
+  "chain": "Fit&Sund",
+  "name": "Fit&Sund Bredballe",
+  "short_name": "Bredballe",
+  "address": {
+    "street": "Hældagervej 165",
+    "postal_code": "7120",
+    "city": "Vejle",
+    "country": "DK",
+    "full": "Hældagervej 165, 7120 Vejle"
+  },
+  "location": {
+    "latitude": 55.72302197,
+    "longitude": 9.59609915
+  },
+  "geocode": {
+    "latitude": 55.72302197,
+    "longitude": 9.59609915,
+    "matched_address": "Hældagervej 165, 7120 Vejle Øst",
+    "exact": false,
+    "source": "DAWA"
+  },
+  "url": "https://fitogsund.dk/c/huse/bredballe",
+  "membership_url": "https://fitogsund.dk/p/bliv-medlem",
+  "class_schedule_url": "https://fitogsund.goactivebooking.com/class-web-categories/34/classes?facility=8",
+  "google_maps_url": "https://www.google.com/maps/dir/?api=1&destination=Hældagervej-165+7120+Vejle",
+  "phone": "+45 75 62 63 11",
+  "email": "bredballe@fitogsund.dk",
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 23:00"
+    }
+  ],
+  "reception_hours": [
+    {
+      "day": "Mandag",
+      "open": "08:00 - 12:00 & 16:00 - 19:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "08:00 - 12:00 & 16:00 - 19:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "08:00 - 12:00 & 16:00 - 19:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "08:00 - 12:00 & 16:00 - 19:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "08:00 - 12:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "08:00 - 12:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "08:00 - 12:00"
+    }
+  ],
+  "meta_description": "Bliv medlem hos Fit&Sund Bredballe. Fitness- og sundhedshus med nye faciliteter, stort udvalg af holdtræning, fysioterapi og personlig træning.",
+  "description": "Dit lokale fitness- og sundhedshus\nVi er dit lokale fitness- og sundhedshus, og vi arbejder ud fra vores kerneværdier: sundhed, viden og nærvær, derfor finder du både fysioterapeuter, personlige trænere og fitnessinstruktører i vores hus.\nVi har en tilgang til, at det altid skal være hyggeligt at komme i vores hus, og vi står altid klar til at tage imod spørgsmål. Vores ønske er, at vores hus bliver dit 3. hjem.\nLokal stemning i Bredballe\nHuset ligger i Bredballe og har en lokal stemning, hvor der er plads til alle. Vi har det nyeste udstyr indenfor fitness, vores cardiomaskiner er fra Sportsart og er med entertainment-skærm, og styrketræningsudstyret er fra Cybex.\nVi tilbyder en forskellige former for styrke- og holdtræning, og vi tilbyder programlægning, så du kan opnå dine mål.",
+  "facilities": [
+    "Fitness",
+    "Personlig træning",
+    "Gratis parkering",
+    "Hyggelige omgivelser",
+    "Lokalt hus",
+    "Gratis kaffe",
+    "ExerciseLab"
+  ],
+  "service_categories": [
+    "Personlig træning",
+    "Event",
+    "Hold",
+    "Seniorer",
+    "Fællesskab",
+    "Camps",
+    "Body & Mind",
+    "Muskelopbyggende Træning",
+    "Core Træning",
+    "Dance",
+    "Funktionel Træning",
+    "Konditionsfremmende Træning",
+    "Senior Træning"
+  ],
+  "services": [
+    {
+      "name": "2026 OPSTARTSPAKKER",
+      "room": null,
+      "categories": [
+        "event",
+        "personlig-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/2026-opstartspakker-6"
+    },
+    {
+      "name": "BODYBALANCE®",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bodybalance-les-mills"
+    },
+    {
+      "name": "BODYPUMP®",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bodypump"
+    },
+    {
+      "name": "Cirkelhold",
+      "room": "Maskiner",
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/cirkelhold"
+    },
+    {
+      "name": "Core",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/core"
+    },
+    {
+      "name": "DanceFit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/dance"
+    },
+    {
+      "name": "E-FITNESS",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-funktionel-traening",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/e-fitness"
+    },
+    {
+      "name": "MOTION for livet",
+      "room": "5 ugers gratis træningsforløb",
+      "categories": [
+        "faellesskab",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/motion-for-livet"
+    },
+    {
+      "name": "Senior Træning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/seniortraening"
+    },
+    {
+      "name": "Seniorklub",
+      "room": null,
+      "categories": [
+        "faellesskab",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/seniorklub"
+    },
+    {
+      "name": "SOMMERKLAR Bredballe",
+      "room": null,
+      "categories": [
+        "camps"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/sommerklar-bredballe"
+    },
+    {
+      "name": "Stram Op",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/stramop"
+    },
+    {
+      "name": "Stræk & Afspænding",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/straek--afspaending"
+    },
+    {
+      "name": "You-Go-I-Go Bredballe",
+      "room": null,
+      "categories": [
+        "faellesskab",
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/you-go-i-go-bredballe"
+    },
+    {
+      "name": "ZUMBA®",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/zumba"
+    }
+  ],
+  "manager": null,
+  "images": {
+    "hero": null,
+    "fallback": "../fitogsund-logo.png"
+  },
+  "hero_image_file": "hero.png",
+  "hero_is_placeholder": true,
+  "scraped_at": "2026-09-17"
+}

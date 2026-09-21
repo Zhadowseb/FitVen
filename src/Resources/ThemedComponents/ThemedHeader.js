@@ -1,6 +1,7 @@
 import { View, TouchableOpacity, useColorScheme } from "react-native";
 import { Colors } from "../GlobalStyling/colors";
 import { useNavigation } from "@react-navigation/native";
+import { useTranslation } from "@localization";
 import ArrowLeft from "../Icons/UI-icons/ArrowLeft";
 
 const HEADER_HEIGHT = 64;
@@ -16,6 +17,7 @@ const ThemedHeader = ({
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const navigation = useNavigation();
+  const { t } = useTranslation();
 
   return (
     <View
@@ -40,7 +42,7 @@ const ThemedHeader = ({
           showBack && (
             <TouchableOpacity
               accessibilityRole="button"
-              accessibilityLabel="Go back"
+              accessibilityLabel={t("common.goBack")}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               onPress={() => navigation.goBack()}
             >

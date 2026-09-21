@@ -71,6 +71,49 @@ export async function getWorkoutTimerState(db, workoutId) {
   );
 }
 
+// What the centre match needs to know about a workout, and what it wrote.
+export async function getWorkoutGymMatch(db, workoutId) {
+  return db.getFirstAsync(
+    `SELECT
+        workout_id,
+        cloud_workout_type_instance_id,
+        workout_type,
+        date,
+        done,
+        gym_id,
+        start_latitude,
+        start_longitude
+     FROM Workout_Type_Instance
+     WHERE workout_id = ?;`,
+    [workoutId]
+  );
+}
+
+export async function setWorkoutGymMatch(
+  db,
+  { workoutId, gymId, startLatitude, startLongitude }
+) {
+  const syncVersion = createNextSyncVersion();
+  await db.runAsync(
+    `UPDATE Workout_Type_Instance
+     SET gym_id = ?,
+         start_latitude = ?,
+         start_longitude = ?,
+         sync_id = COALESCE(sync_id, ${SQLITE_UUID_SQL}),
+         sync_version = ?,
+         deleted_at = NULL,
+         needs_sync = 1
+     WHERE workout_id = ?;`,
+    [
+      gymId ?? null,
+      startLatitude ?? null,
+      startLongitude ?? null,
+      syncVersion,
+      workoutId,
+    ]
+  );
+}
+
 export async function updateWorkoutRunFocusType(
   db,
   { workoutId, runFocusType }

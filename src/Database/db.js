@@ -1728,6 +1728,9 @@ export async function initializeDatabase(db) {
     ["original_start_time", "INTEGER"],
     ["timer_start", "INTEGER"],
     ["elapsed_time", "INTEGER DEFAULT 0"],
+    ["gym_id", "INTEGER"],
+    ["start_latitude", "REAL"],
+    ["start_longitude", "REAL"],
   ]);
   await restoreLocalWorkoutTypeCatalogSchema(db);
   await ensureTableColumns(db, "Workout_Type", [

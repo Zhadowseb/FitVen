@@ -6,6 +6,7 @@ import {
   useColorScheme,
 } from "react-native";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
+import { useTranslation } from "@localization";
 
 import styles from "./NotificationHistoryPageStyle";
 import { useAuth } from "../../Contexts/AuthContext";
@@ -24,6 +25,7 @@ import {
 } from "../../Resources/ThemedComponents";
 
 export default function NotificationHistoryPage() {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const route = useRoute();
   const colorScheme = useColorScheme();
@@ -52,7 +54,7 @@ export default function NotificationHistoryPage() {
         setNotifications([]);
         setLoading(false);
         setRefreshing(false);
-        setErrorMessage("Sign in to view notifications.");
+        setErrorMessage(t("notifications.signInToView"));
         return;
       }
 
@@ -95,14 +97,14 @@ export default function NotificationHistoryPage() {
         setErrorMessage(
           error instanceof Error
             ? error.message
-            : "Could not load notifications."
+            : t("notifications.loadFailed")
         );
       } finally {
         setLoading(false);
         setRefreshing(false);
       }
     },
-    [markReadRequestId, user]
+    [markReadRequestId, t, user]
   );
 
   useFocusEffect(
@@ -118,15 +120,38 @@ export default function NotificationHistoryPage() {
 
   // A card with an avatar and an unread dot reads as something you can open,
   // and nothing happened when you did. There is no screen for another user's
-  // profile in this app, but every notification here is someone starting a
-  // workout, and that is what Social shows - so that is where a row goes.
+  // profile in this app, but most notifications here are someone starting a
+  // workout, and that is what Social shows - so that is where a row goes. A
+  // request to verify a lift goes to that centre, with the review sheet open.
+  const openNotification = (item) => {
+    const gymId = Number(item?.data?.gym_id);
+
+    if (item?.eventType === "lift_verification_requested" && Number.isFinite(gymId)) {
+      navigation.navigate("GymLeaderboardPage", {
+        gym_id: gymId,
+        open_verification: true,
+        lift_id: item?.data?.lift_id ?? null,
+      });
+      return;
+    }
+
+    navigation.navigate("SearchPage");
+  };
+
   const renderNotification = ({ item }) => (
     <TouchableOpacity
       activeOpacity={0.85}
       accessibilityRole="button"
-      accessibilityLabel={`${item.title}. ${item.body}`}
-      accessibilityHint="Opens today's activity"
-      onPress={() => navigation.navigate("SearchPage")}
+      accessibilityLabel={t("notifications.itemLabel", {
+        title: item.title,
+        body: item.body,
+      })}
+      accessibilityHint={
+        item.eventType === "lift_verification_requested"
+          ? t("notifications.hints.openVerification")
+          : t("notifications.hints.openActivity")
+      }
+      onPress={() => openNotification(item)}
       style={[
         styles.notificationCard,
         {
@@ -167,7 +192,7 @@ export default function NotificationHistoryPage() {
           </ThemedText>
           {!item.readAt ? (
             <View
-              accessibilityLabel="Unread"
+              accessibilityLabel={t("notifications.unread")}
               style={[
                 styles.unreadDot,
                 { backgroundColor: secondaryColor },
@@ -201,8 +226,8 @@ export default function NotificationHistoryPage() {
           <Bell width={29} height={29} color={quietText} thickness={1.7} />
         </View>
       }
-      title="You're all caught up"
-      message="Workout starts and future activity updates will appear here."
+      title={t("notifications.emptyTitle")}
+      message={t("notifications.emptyBody")}
     />
   );
 
@@ -212,7 +237,7 @@ export default function NotificationHistoryPage() {
         right={
           <TouchableOpacity
             activeOpacity={0.76}
-            accessibilityLabel="Open notification settings"
+            accessibilityLabel={t("notifications.openSettings")}
             accessibilityRole="button"
             onPress={() => navigation.navigate("NotificationSettingsPage")}
             style={[
@@ -234,20 +259,20 @@ export default function NotificationHistoryPage() {
             style={styles.headerTitle}
             numberOfLines={1}
           >
-            Notifications
+            {t("notifications.title")}
           </ThemedTitle>
         </View>
       </ThemedHeader>
 
       {loading ? (
-        <ThemedStateBlock fill variant="loading" message="Loading notifications..." />
+        <ThemedStateBlock fill variant="loading" message={t("notifications.loading")} />
       ) : errorMessage ? (
         <ThemedStateBlock
           fill
           variant="error"
-          title="Notifications unavailable"
+          title={t("notifications.unavailable")}
           message={errorMessage}
-          actionLabel="Try again"
+          actionLabel={t("common.retry")}
           onAction={() => loadNotifications({ showLoader: true })}
         />
       ) : (

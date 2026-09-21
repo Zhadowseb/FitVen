@@ -1,0 +1,161 @@
+{
+  "chain": "LOOP Fitness",
+  "name": "LOOP Ballerup",
+  "loop_id": 232,
+  "center_type": "lite",
+  "address": {
+    "street": "Ballerup Centret  Banetoften 30",
+    "postal_code": "2750",
+    "city": "Ballerup",
+    "country": "DK",
+    "full": "Ballerup Centret  Banetoften 30, 2750 Ballerup"
+  },
+  "location": {
+    "latitude": 55.729501,
+    "longitude": 12.3554834
+  },
+  "url": "https://loopfitness.dk/centre/loop-fitness-ballerup/",
+  "membership_url": "https://loopfitness.dk/medlemskab/bliv-medlem/",
+  "phone": "41746339",
+  "email": "ballerup@loopfitness.dk",
+  "facebook_url": null,
+  "google_review_url": "https://g.page/r/CYLT8-wRR-AYEB0/review",
+  "cvr": "37474797",
+  "manager_name": "Karina",
+  "opened": "2020-08-29",
+  "has_classes": false,
+  "only_open_when_staffed": false,
+  "max_visitor_capacity": 20,
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 22:00"
+    }
+  ],
+  "staffed_hours": [
+    {
+      "day": "Mandag",
+      "periods": [
+        "15:00 - 18:00"
+      ]
+    },
+    {
+      "day": "Tirsdag",
+      "periods": [
+        "10:00 - 13:00"
+      ]
+    },
+    {
+      "day": "Onsdag",
+      "periods": [
+        "15:00 - 18:00"
+      ]
+    },
+    {
+      "day": "Torsdag",
+      "periods": [
+        "09:00 - 12:00"
+      ]
+    },
+    {
+      "day": "Fredag",
+      "periods": [
+        "09:00 - 12:00"
+      ]
+    },
+    {
+      "day": "Lørdag",
+      "periods": [
+        "12:00 - 14:00"
+      ]
+    },
+    {
+      "day": "Søndag",
+      "periods": [
+        "09:00 - 11:00"
+      ]
+    }
+  ],
+  "staffed_hours_dates": [
+    {
+      "date": "2026-09-15",
+      "open": "10:00 - 13:00"
+    },
+    {
+      "date": "2026-09-22",
+      "open": "10:00 - 13:00"
+    }
+  ],
+  "meta_description": "Hos LOOP Fitness Ballerup træner du styrke og kondition på blot 24 minutter i vores cirkeltræning. Enkel og effektiv træning! Kom i gang her »",
+  "description": "Kom indenfor og mærk energien. Hos LOOP får du afslappet stemning og effektiv træning på den bedste måde. Uanset niveau er der plads til dig, og træningen er enkel: Start med opvarmning, træn hele kroppen i træningscirklen, og afslut med udstrækning i vores LOOP Ekstra område. Efter din træning kan du nyde en gratis kop kaffe eller the i vores café.",
+  "quote_by": "Karina, centerleder",
+  "facilities": [
+    "1 cirkel",
+    "Cardio-område",
+    "Gratis kaffe"
+  ],
+  "memberships": [
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr",
+      "price_per_month": 289.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 319,
+      "family_members": 0,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    },
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr. - familie",
+      "price_per_month": 589.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 619,
+      "family_members": 9,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    }
+  ],
+  "images": {
+    "hero": "https://loopfitness.dk/wp-content/uploads/2020/01/Ballerup_2026.png",
+    "og_image": "https://loopfitness.dk/wp-content/uploads/2025/11/380x560_Template.jpg"
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

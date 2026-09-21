@@ -1,0 +1,287 @@
+{
+  "chain": "PureGym",
+  "name": "Kolding, Slotssøbadet",
+  "puregym_id": "276",
+  "address": {
+    "street": "Hospitalsgade 16",
+    "postal_code": "6000",
+    "city": "Kolding",
+    "country": "DK",
+    "full": "Hospitalsgade 16, 6000 Kolding"
+  },
+  "location": {
+    "latitude": 55.494185,
+    "longitude": 9.470741
+  },
+  "url": "https://www.puregym.dk/find-center/kolding-slotsoebadet",
+  "membership_url": "https://www.puregym.dk/bliv-medlem/345/medlemskab",
+  "price_from": "Priser fra 124,50 DKK/md.",
+  "price_note": "*Normalpris fra 249 DKK/md.",
+  "today_notice": "Vi lukker i dag kl. 22:00",
+  "opening_hours": [
+    {
+      "day": "Torsdag",
+      "open": "05:30 - 22:00",
+      "staffed": "10:00 - 18:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:30 - 18:00",
+      "staffed": "10:00 - 18:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "09:00 - 18:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "09:00 - 18:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Mandag",
+      "open": "05:30 - 21:00",
+      "staffed": "10:00 - 18:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:30 - 22:00",
+      "staffed": "10:00 - 18:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:30 - 21:00",
+      "staffed": "10:00 - 18:00"
+    }
+  ],
+  "opening_hours_schema": [
+    {
+      "day": "Monday",
+      "opens": "05:30",
+      "closes": "21:00"
+    },
+    {
+      "day": "Tuesday",
+      "opens": "05:30",
+      "closes": "22:00"
+    },
+    {
+      "day": "Wednesday",
+      "opens": "05:30",
+      "closes": "21:00"
+    },
+    {
+      "day": "Thursday",
+      "opens": "05:30",
+      "closes": "22:00"
+    },
+    {
+      "day": "Friday",
+      "opens": "05:30",
+      "closes": "18:00"
+    },
+    {
+      "day": "Saturday",
+      "opens": "09:00",
+      "closes": "18:00"
+    },
+    {
+      "day": "Sunday",
+      "opens": "09:00",
+      "closes": "18:00"
+    }
+  ],
+  "special_days": [
+    {
+      "date": "2027-01-01",
+      "opens": "Lukket",
+      "closes": "Lukket"
+    },
+    {
+      "date": "2027-04-02",
+      "opens": "09:00",
+      "closes": "18:00"
+    },
+    {
+      "date": "2027-04-03",
+      "opens": "09:00",
+      "closes": "18:00"
+    },
+    {
+      "date": "2027-04-05",
+      "opens": "09:00",
+      "closes": "18:00"
+    },
+    {
+      "date": "2027-04-06",
+      "opens": "09:00",
+      "closes": "18:00"
+    },
+    {
+      "date": "2027-05-14",
+      "opens": "09:00",
+      "closes": "18:00"
+    },
+    {
+      "date": "2027-05-24",
+      "opens": "09:00",
+      "closes": "18:00"
+    },
+    {
+      "date": "2027-05-25",
+      "opens": "09:00",
+      "closes": "18:00"
+    },
+    {
+      "date": "2027-06-05",
+      "opens": "09:00",
+      "closes": "18:00"
+    },
+    {
+      "date": "2026-12-23",
+      "opens": "09:00",
+      "closes": "22:00"
+    },
+    {
+      "date": "2026-12-24",
+      "opens": "09:00",
+      "closes": "15:00"
+    },
+    {
+      "date": "2026-12-25",
+      "opens": "Lukket",
+      "closes": "Lukket"
+    },
+    {
+      "date": "2026-12-26",
+      "opens": "09:00",
+      "closes": "18:00"
+    },
+    {
+      "date": "2026-12-31",
+      "opens": "09:00",
+      "closes": "15:00"
+    }
+  ],
+  "meta_description": "Velkommen hos PureGym ved SlotssøBadet i Kolding. Find dit lokale center her, og oplev et trænings-fællesskab med plads til alle.",
+  "description": "PureGym Slotssøbadet\nMidt i hjertet af Kolding finder du PureGym Slotssøbadet, som – på trods af vores størrelse – har masser at byde på!\nVi tilbyder hyggelige omgivelser med en smuk udsigt over Slotssøbadet, masser af fitness-, styrke- og konditionsfaciliteter samt et funktionelt område med prowlerbane.\nHer vil du altid få et \"Velkommen\" og et stort smil fra vores dedikerede team, der vil gøre deres bedste for, at din træningsoplevelse bliver så vellykket som overhovedet muligt.\nVi glæder os til at se dig!\nNYT UDSTYR I PUREGYM SLOTSSØBADET\nVi er så glade for at byde dig velkommen i vores center, der har fået en stor opgradering med masser af nyt og forbedret træningsudstyr.\nHer er en oversigt over, hvad du kan glæde dig til:\nNyt og forbedret cardio-område\nNyt og forbedret kabel- og styrketræningsområde\nNyt og forbedret frivægtsområde\nForbedret udstræksområde\nDET SIGER PERSONALET OM PUREGYM SLOTSSØBADET\nHer i Slotssøbadet kan du nyde en kop kaffe, te eller kakao på vores dejlige altan med udsigt over Slotssøen og Koldinghus.\nVi lægger stor vægt på, at der skal være plads til alle, og her i centret er der et stærkt fællesskab.\nUnikt er det også, at vi ligger side om side med svømmehallen og tilbyder dig som medlem at kunne tilkøbe et add-on til dit almindelige medlemskab, som giver dig ubegrænset adgang til svømmehallen for 135 kr. om måneden.\nPERSONLIG TRÆNING I PUREGYM SLOTSSØBADET\nHar du brug for en snak om din træning, står vi altid klar og tilbyder – udover gode råd – også programlægning og personlig træning med vores certificerede personlige trænere.\nVi tilbyder også en uforpligtende samtale med en personlig træner til 0,-:\nBOOK SAMTALE HER\nHVORNÅR TRÆNER FOLK I CENTRET?\nVi har god plads til vores medlemmer. I vores app kan du se, hvornår der er flest og færrest mennesker i centret.\nBLIV MEDLEM HER\nDU KAN TRÆNE I TRE CENTRE I KOLDING\nSe alle vores centre i Kolding her.\nHVORNÅR KAN JEG MØDE PERSONALET I CENTRET?\nVed indgangen ligger receptionen, hvor du bliver mødt af vores smilende og servicemindede team, der står klar til at hjælpe dig.\nSe vores bemandede tider i oversigten her på siden. Du er selvfølgelig altid velkommen til at komme forbi i vores bemandede åbningstid.\nVi tager os tid til at svare på alle dine spørgsmål og giver gerne en rundvisning i centret.\nKAN JEG PARKERE VED PUREGYM SLOTSSØBADET?\nStor parkeringsplads lige ved indgangen, hvor du kan holde gratis i 4 timer – husk at sætte p-skiven!\nFølg os på Facebook\nSe vores lokaler her\n\n<div",
+  "notice": null,
+  "facilities": [
+    {
+      "name": "App",
+      "description": "PureGym appen kan hentes til både iOS- og Android-telefoner. Appen er fyldt med fede features og lækkert design:\nBook og afmeld hold inkl. reminder, så du husker dine hold\nMere end 50 træningsprogrammer\nBodytracker-måling\nTræningsstatistik\nAdgang til challenges\nTeam up med din træningsmakker\nDownload appen og få mere ud af dit medlemskab.\nLæs mere",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-04/CTA%20App%20grafik.jpg?itok=489La2Vs"
+    },
+    {
+      "name": "Bodytracker+",
+      "description": "Bodytrackeren er en avanceret vægt, der giver en pålidelig analyse af din kropssammensætning. Med bodytracker+ får du dybere indblik i din træningsudvikling. Udover de gratis parametre kropsvægt, BMI, muskelmasse og fedtprocent får du med bodytracker+ også indsigt i fedtmasse, fedtfri masse, talje/hofte forhold, kropsvand samt hvilestofskifte. Parametre som er interessante, hvad enten du har personlige mål om at øge din vægt, højere muskelmasse, vægttab mv.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/facilities/bplusny-ny-ny_1.png?itok=3ubbpEkC"
+    },
+    {
+      "name": "Cardiotræning",
+      "description": "Kunne du godt tænke dig at forbedre din kondition eller få varmet kroppen op inden din styrketræning, så er Cardio et godt sted at gå hen.\nI dette område har vi et bredt udvalgt af kredsløbsmaskiner. Her vil du blandt andet kunne finde løbebånd, motionscykler samt ro, step -og trappemaskiner. Disse maskine er designet til at kunne forbedre dit kredsløb bedre kendt som ”kondition”. Samtlige maskiner kan indstilles og tilpasses, så de netop passer til den intensitet som ønsker på dagen.\nSå om du er til en let og kort opvarmning på motionscyklen, en tur op af Eiffeltårnet med din yndlingspodcast i ørene på trappemaskinen, eller en god løbetur i tørvejr på løbebåndet, så vil du kunne gøre dette i Cardio.\nEr du i tvivl om hvordan en maskine i Cardio virker, kan du altid spørge vores personale.\nØnsker du hjælp til hvordan du kan forbedre din kondition, så kan du også booke en uforpligtende samtale til 0 kr med en personlig træner her.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-09/CORE-slider-cta-core-medlemskab_0.jpg?itok=hEEf98nO"
+    },
+    {
+      "name": "Funktionelt træningsområde",
+      "description": "Er du til en træningsform, der har fokus på konditions- og styrketræning, så er vores funktionelle træningsområde et område for dig. Vores funktionelle område kan hjælpe dig med at blive hurtigere, stærkere men også mere udholdende og eksplosiv.\nOmrådet er udstyret med forskellige redskaber såsom; medicinbolde, kettlebells og sjippetove. Derudover finder du naturligvis også racks i alle vores funktionelle områder.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Funtionelt-traeningsomraade-1-1.jpg?itok=PDOLgNJB"
+    },
+    {
+      "name": "Glutebuilder",
+      "description": "Glutebuilderen er en multifunktionel træningsmaskine, som giver mulighed for at lave mange forskellige øvelser - perfekt til træning af ben, baller og lår. Du kan bruge maskinen som den er, med en vægtstang, vægtskiver og elastikker, som du kan låne i centeret. Kun fantasien sætter grænser.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Glute-skal-ikke-beskaeres.jpg?itok=iFSaL_IN"
+    },
+    {
+      "name": "Parkering",
+      "description": "Er du i bil til din træning, vil der være parkeringsmuligheder ved næsten alle vores centre. PureGym har parkeringsmuligheder i form af egen parkeringsplads, eller som en del af bygningens parkeringsplads eller parkeringshus. Hvis du er i tvivl kan du altid spørge vores søde personale i centrene.",
+      "image": null
+    },
+    {
+      "name": "Personlig træner",
+      "description": "Med en personlig træner får du hjælp og sparring til at nå dine mål - altid med udgangspunkt i dig og dine behov.\nVores personlige trænere sørger for trygge rammer, mens du er i centret.\nDe sikrer fortsat, at alt udstyr er sprittet af både før og efter brug, samt at I holder god afstand til de øvrige medlemmer, mens I træner.\nLæs mere om Personlig træning her!",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Book-samtale-med-en-personlig-traener-1-1.jpg?itok=a7i9C-9t"
+    },
+    {
+      "name": "Styrketræning",
+      "description": "Vi har masser af udstyr til din styrketræning, så du kan lave alle de styrkeøvelser du kunne tænke dig. Vi har maskiner til træning af ryg, arme, mave, lår, bagdel, skuldre, bryst osv. Du kan derved træne dine muskelgrupper på flere måder og skifte imellem maskiner og finde de maskiner og øvelser, du bedst kan lide og får mest ud af.\nNogle af maskinerne er multifunktionelle, så du kan træne flere muskelgrupper på samme maskine.\nStyrketræning er din vej til sundhed, en stærkere krop, funktionalitet i hverdagen og større muskelmasse.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Styrketraening-skal-ikke-beskaeres.jpg?itok=2qQsiE_f"
+    },
+    {
+      "name": "Svømmehal",
+      "description": "En forfriskende svømmetur er en af de mest effektive træningsformer, der findes. Når du svømmer bruger du alle kroppens store muskler, og du træner samtidigt din kondition og koordinationsevne. Du vil ofte også opleve en større smidighed. Og du vil hurtigt mærke resultater, hvilket er motiverende. Svømmetræning kan også være skånende for kroppen, hvis du døjer med skader, fordi du ikke får hårde stød gennem ben og ryg.\nSå der er ingen undskyldninger for ikke at kaste dig ud i de blå bølger.\nDe centre, hvor vi har en aftale med svømmehallen, kan du gå i svømmehallen gratis eller til nedsat pris i svømmehallernes åbningstid. Her gælder samme betingelser og medlemskab og priser som for holdbooking.\nLæs mere",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2018-01/Svoemmehal_fitness-world_1900x640_0.jpg?itok=wylGqFgZ"
+    },
+    {
+      "name": "Udstrækningsområde",
+      "description": "Vi vil gerne opfylde dine træningsbehov, og en nedkøling efter træning, eller en opvarmning før træning skal der være plads til.\nDer hvor din træning starter eller slutter har vi et udstrækningsområde til dig med masser af udstyr.\nI udstrækningsområdet finder du ribber, måtter, pilatesbolde, små vægte, mavehjul, Bosu bolde, forskellige slags elastikker og foamrollere.\nHvis der er noget du mangler, kan du altid spørge vores receptionister om de har det liggende et andet sted i centeret.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Udstraekningsomraade-skal-ikke-beskaeres.jpg?itok=24s5m_W_"
+    },
+    {
+      "name": "Watt-cykler & Intelligent Cycling",
+      "description": "Vores nye BODY BIKE® Smart+ watt-cykler giver dig mulighed for at få tal på din træning, når du deltager på vores Bike-hold. Således kan du måle dine fremskridt, følge din udvikling på cyklen og opnå ekstra motivation. Designet på cyklen er desuden forbedret, så du opnår en mere ergonomisk sidestilling.\nVia bluetooth kan du connecte din smartphone til cyklen og dermed følge med i din træning undervejs. BODY BIKE® app’en monitorerer din træning live og viser dig bl.a. watt-zoner, kadence, distance, kalorieforbrænding og meget mere.\nI samspil med watt-cyklerne, bruger instruktørerne det visuelle system Intelligent Cycling.\nMed Intelligent Cycling kan du følge med i programmet og se hvad denne times udfordring byder på. Du kan bl.a. se nuværende intensitet (watt-zoner), kadence, tid og position, samtidig med at du kigger frem mod næste pause.\nDet visuelle univers på storskærmene, tillader dig at koncentrere dig 100% om din træning og performance. Det online program giver dig tryghed og klarhed omkring programmet, så du kan nyde timen, instruktøren og musikken.\nLæs mere",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2018-07/watt-cykler-intelleigent-cycling.jpg?itok=wwmG9e3G"
+    }
+  ],
+  "facility_names": [
+    "App",
+    "Bodytracker+",
+    "Cardiotræning",
+    "Funktionelt træningsområde",
+    "Glutebuilder",
+    "Parkering",
+    "Personlig træner",
+    "Styrketræning",
+    "Svømmehal",
+    "Udstrækningsområde",
+    "Watt-cykler & Intelligent Cycling"
+  ],
+  "facility_ids": [
+    "474",
+    "355",
+    "12",
+    "17",
+    "24",
+    "25",
+    "27",
+    "434",
+    "350",
+    "333",
+    "28"
+  ],
+  "plan_ids": [
+    "672",
+    "669"
+  ],
+  "team_ids": [
+    "807",
+    "832"
+  ],
+  "classes": [
+    "Get Started - Introhold",
+    "Personlig træning events"
+  ],
+  "images": {
+    "hero": "https://www.puregym.dk/files/2025-05/Puregym_fitness_cardio_Kolding_Slots%C3%B8badet.jpg",
+    "hero_2500": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-05/Puregym_fitness_cardio_Kolding_Slots%C3%B8badet.jpg?itok=sg4twxO8",
+    "teaser": "https://www.puregym.dk/files/styles/center_teaser/public/2025-05/Puregym_fitness_cardio_Kolding_Slots%C3%B8badet.jpg?itok=0FdCB9Zx",
+    "gallery": [
+      "https://mit.puregym.dk/images/centers/871/pg-kolding-slotsobadet-3-2-01-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/871/pg-kolding-slotsobadet-3-2-02-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/871/pg-kolding-slotsobadet-3-2-03-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/871/pg-kolding-slotsobadet-3-2-04-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/871/pg-kolding-slotsobadet-3-2-05-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/871/pg-kolding-slotsobadet-3-2-06-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/871/pg-kolding-slotsobadet-3-2-07-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/871/pg-kolding-slotsobadet-3-2-08-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/871/pg-kolding-slotsobadet-3-2-09-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/871/pg-kolding-slotsobadet-3-2-10-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/871/pg-kolding-slotsobadet-3-2-11-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/871/pg-kolding-slotsobadet-3-2-12-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/871/pg-kolding-slotsobadet-3-2-13-1090x727.webp"
+    ]
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

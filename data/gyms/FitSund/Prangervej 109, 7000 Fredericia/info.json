@@ -1,0 +1,342 @@
+{
+  "chain": "Fit&Sund",
+  "name": "Fit&Sund Fredericia",
+  "short_name": "Fredericia",
+  "address": {
+    "street": "Prangervej 109",
+    "postal_code": "7000",
+    "city": "Fredericia",
+    "country": "DK",
+    "full": "Prangervej 109, 7000 Fredericia"
+  },
+  "location": {
+    "latitude": 55.56214964,
+    "longitude": 9.72336307
+  },
+  "geocode": {
+    "latitude": 55.56214964,
+    "longitude": 9.72336307,
+    "matched_address": "Prangervej 109, 7000 Fredericia",
+    "exact": true,
+    "source": "DAWA"
+  },
+  "url": "https://fitogsund.dk/c/huse/fredericia",
+  "membership_url": "https://fitogsund.dk/p/bliv-medlem",
+  "class_schedule_url": "https://fitogsund.goactivebooking.com/class-web-categories/34/classes?facility=57",
+  "google_maps_url": "https://www.google.com/maps/dir/?api=1&destination=Prangervej-109+7000+Fredericia",
+  "phone": "+45 75 62 63 11",
+  "email": "fredericia@fitogsund.dk",
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "04:00 - 24:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "04:00 - 24:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "04:00 - 24:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "04:00 - 24:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "04:00 - 24:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "04:00 - 24:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "04:00 - 24:00"
+    }
+  ],
+  "reception_hours": [
+    {
+      "day": "Mandag",
+      "open": "08:00 - 20:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "08:00 - 20:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "08:00 - 19:30"
+    },
+    {
+      "day": "Torsdag",
+      "open": "08:00 - 20:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "08:00 - 13:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "08:00 - 13:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "08:00 - 13:00"
+    }
+  ],
+  "meta_description": "Træn hos Fit&Sund Fredericia i vores moderne fitness og træningscenter. Fitness | Holdtræning | Personlig træning",
+  "description": "Velkommen til dit Fit&Sund hus i Fredericia\nVi er meget mere end bare et fitnesscenter. Vi er et sundhedshus, hvor du kan få hjælp fra både fysioterapeut og personlig træner til genoptræning og performens.\nHos Fit&Sund har vi tre kerneværdier: Sundhed - Viden - Nærvær\nSundhed:\nVores mission er at gøre danskerne mere sunde og dermed få en bedre livskvalitet. Sundhed er bl.a. varieret træning. Derfor tilbyder vi styrke- og holdtræning, programlægning og målrettet træning på dine præmisser.\nViden:\nVi er flere uddannede fagpersoner, og vi vil meget gerne give råd og vejledning. Derfor kan du trygt spørge os om gode råd og hjælp til din træning. Vi vil gøre vores for, at du finder sikkerhed og tryghed i træningen.\nNærvær:\nVi tror på, at med gode rammer for nærhed og sociale relationer er chancen for succes meget større. Det er simpelthen mere sandsynligt, at du kommer og træner, når personalet kender dig, og du føler dig velkommen. Derfor har vi i Fredericia et stort lækkert café område hvor du kan nyde en kop gratis kaffe efter din træning.\nOplev magien\nIsær i vores caféområde kan du opleve den behagelige atmosfære, der opstår, når medlemmerne hygger sig med en kop kaffe og taler om stort og småt.\nVi ligger stor vægt på at det er hyggeligt at komme hos os i vores hus, og du vil derfor altid blive mødt med vores imødekommende og smilende personale, som altid står klar til en snak eller at hjælpe dig. Vores ønske er, at vores hus bliver dit 3. hjem.\nDesuden har vi det højteknologiske udstyr fra EGYM som vi kalder for E-Fitness, her biver maskinerne indstillet så de passer til dig og når du møder op til din træning, så ligger du dit armbånd på skærmen og maskinen indstiller sig til dig både højde og vægt, nemmere bliver det ikke - din træning bliver en leg.\nVi hjælper dig på vej uanset alder, baggrund eller trænings- og sundhedstilstand\nAlle er velkomne i Fit&Sund Fredericia, og vil glæder os til at se dig også.",
+  "facilities": [
+    "Fitness",
+    "Fysioterapeuter",
+    "Personlig træning",
+    "Funktionelt træningsområde",
+    "Stort udvalg af maskiner",
+    "Styrketrænings område",
+    "E-fitness",
+    "Stor lys holdsal",
+    "Infrarød Sauna",
+    "Masser af senior hold",
+    "Fysioterapi",
+    "Gratis parkering"
+  ],
+  "service_categories": [
+    "Personlig træning",
+    "Fysioterapi",
+    "Event",
+    "Hold",
+    "Seniorer",
+    "Yoga/Reformer",
+    "Fællesskab",
+    "Muskelopbyggende Træning",
+    "Dance",
+    "Funktionel Træning",
+    "Konditionsfremmende Træning",
+    "Body & Mind",
+    "Core Træning",
+    "Senior Træning"
+  ],
+  "services": [
+    {
+      "name": "2026 OPSTARTSPAKKER",
+      "room": null,
+      "categories": [
+        "event",
+        "fysioterapi",
+        "personlig-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/2026-opstartspakker-22"
+    },
+    {
+      "name": "BodyFit",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bodyfit"
+    },
+    {
+      "name": "DanceFit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/dance"
+    },
+    {
+      "name": "E-FITNESS",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-funktionel-traening",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/e-fitness"
+    },
+    {
+      "name": "Hatha Yoga",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/hatha-yoga"
+    },
+    {
+      "name": "Mindful Stretch",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/mindful-stretch"
+    },
+    {
+      "name": "MOTION for livet",
+      "room": "5 ugers gratis træningsforløb",
+      "categories": [
+        "faellesskab",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/motion-for-livet"
+    },
+    {
+      "name": "Pilates",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/pilates"
+    },
+    {
+      "name": "RawFit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-funktionel-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/rawfit"
+    },
+    {
+      "name": "Salsation",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/salsation"
+    },
+    {
+      "name": "Senior Cirkel Hold",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/senior-cirkel-hold"
+    },
+    {
+      "name": "Senior Rawfit",
+      "room": null,
+      "categories": [
+        "hold",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/senior-rawfit"
+    },
+    {
+      "name": "Senior Stram Op",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/senior-stramp-op"
+    },
+    {
+      "name": "Senior Træning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/seniortraening"
+    },
+    {
+      "name": "Step Puls",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/step-puls"
+    },
+    {
+      "name": "Stram Op",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/stramop"
+    },
+    {
+      "name": "Stræk & Afspænding",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/straek--afspaending"
+    },
+    {
+      "name": "Tabata",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/tabata"
+    },
+    {
+      "name": "Teknik -og styrketræning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-funktionel-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/teknik-og-styrketraening"
+    },
+    {
+      "name": "TRX®",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/trx-"
+    },
+    {
+      "name": "YIN YOGA",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/yin-yoga"
+    },
+    {
+      "name": "Yoga",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/yoga"
+    },
+    {
+      "name": "You-Go-I-Go Fredericia",
+      "room": null,
+      "categories": [
+        "faellesskab",
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/you-go-i-go-fredericia"
+    }
+  ],
+  "manager": null,
+  "images": {
+    "hero": null,
+    "fallback": "../fitogsund-logo.png"
+  },
+  "hero_image_file": "hero.png",
+  "hero_is_placeholder": true,
+  "scraped_at": "2026-09-17"
+}

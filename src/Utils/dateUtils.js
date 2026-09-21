@@ -1,3 +1,5 @@
+import { t } from "@localization";
+
 export function parseCustomDate(dateString) {
   const [day, month, year] = dateString.split(".").map(Number);
   return new Date(year, month - 1, day);
@@ -204,6 +206,13 @@ export function formatCount(count, singular, plural) {
 // 0.9 days old, which rounded to 1 and read as "Yesterday" on the day it was
 // set. Midnight is the boundary people mean.
 export function calendarDaysBetween(from, to) {
+  // new Date(null) is the epoch, not an invalid date, so the NaN check below
+  // does not catch it: without this, a missing date reads as 1970 and comes
+  // back as "674 months ago" rather than nothing.
+  if (from === null || from === undefined || to === null || to === undefined) {
+    return null;
+  }
+
   const start = new Date(from);
   const end = new Date(to);
 
@@ -217,7 +226,8 @@ export function calendarDaysBetween(from, to) {
   return Math.round((end.getTime() - start.getTime()) / 86400000);
 }
 
-// The app's one way of saying how long ago a day was.
+// The app's one way of saying how long ago a day was. The words come from
+// Localization/locales/*/time.js in the language the user chose.
 export function formatRelativeDay(at, now = Date.now()) {
   const days = calendarDaysBetween(at, now);
 
@@ -226,49 +236,47 @@ export function formatRelativeDay(at, now = Date.now()) {
   }
 
   if (days <= 0) {
-    return "Today";
+    return t("time.today");
   }
 
   if (days === 1) {
-    return "Yesterday";
+    return t("time.yesterday");
   }
 
   if (days < 7) {
-    return `${days} days ago`;
+    return t("time.daysAgo", { count: days });
   }
 
   if (days < 31) {
-    const weeks = Math.floor(days / 7);
-    return `${weeks} ${pluralize(weeks, "week")} ago`;
+    return t("time.weeksAgo", { count: Math.floor(days / 7) });
   }
 
-  const months = Math.max(1, Math.floor(days / 30));
-  return `${months} ${pluralize(months, "month")} ago`;
+  return t("time.monthsAgo", { count: Math.max(1, Math.floor(days / 30)) });
 }
 
 export function formatTimeAgo(value) {
   const timestamp = value ? new Date(value).getTime() : NaN;
 
   if (!Number.isFinite(timestamp)) {
-    return "Just now";
+    return t("time.justNow");
   }
 
   const elapsedSeconds = Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
 
   if (elapsedSeconds < 60) {
-    return "Just now";
+    return t("time.justNow");
   }
 
   const elapsedMinutes = Math.floor(elapsedSeconds / 60);
 
   if (elapsedMinutes < 60) {
-    return `${elapsedMinutes}m ago`;
+    return t("time.minutesAgoShort", { count: elapsedMinutes });
   }
 
   const elapsedHours = Math.floor(elapsedMinutes / 60);
 
   if (elapsedHours < 24) {
-    return `${elapsedHours}h ago`;
+    return t("time.hoursAgoShort", { count: elapsedHours });
   }
 
   // BUG-20: past a day this used to say "1d ago" while the records screen said

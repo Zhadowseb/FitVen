@@ -1,0 +1,291 @@
+{
+  "chain": "Fit&Sund",
+  "name": "Fit&Sund Haslev",
+  "short_name": "Haslev",
+  "address": {
+    "street": "Grønlandsgade 3C",
+    "postal_code": "4690",
+    "city": "Haslev",
+    "country": "DK",
+    "full": "Grønlandsgade 3C, 4690 Haslev"
+  },
+  "location": {
+    "latitude": 55.32999208,
+    "longitude": 11.93842136
+  },
+  "geocode": {
+    "latitude": 55.32999208,
+    "longitude": 11.93842136,
+    "matched_address": "Grønlandsgade 3C, 4690 Haslev",
+    "exact": true,
+    "source": "DAWA"
+  },
+  "url": "https://fitogsund.dk/c/huse/haslev",
+  "membership_url": "https://fitogsund.dk/p/bliv-medlem",
+  "class_schedule_url": "https://fitogsund.goactivebooking.com/class-web-categories/34/classes?facility=14",
+  "google_maps_url": "https://www.google.com/maps/dir/?api=1&destination=Grønlandsgade-3C+4690+Haslev",
+  "phone": "+45 56 76 73 66",
+  "email": "haslev@fitogsund.dk",
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "00:00 - 24:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "00:00 - 24:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "00:00 - 24:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "00:00 - 24:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "00:00 - 24:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "00:00 - 24:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "00:00 - 24:00"
+    }
+  ],
+  "reception_hours": [
+    {
+      "day": "Mandag",
+      "open": "08:00 - 12:00 & 16:00 - 20:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "08:00 - 12:00 & 16:00 - 20:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "08:00 - 12:00 & 16:00 - 20:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "08:00 - 12:00 & 16:00 - 20:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "08:00 - 12:00 & 15:00 - 18:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "08:00 - 12:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "Ingen bemanding"
+    }
+  ],
+  "meta_description": "Træn hos Fit & Sund Haslev i vores moderne fitness og træningscenter. Fitness | Holdtræning | Personlig træning",
+  "description": "Hos Fit&Sund arbejder vi ud fra vores 3 værdier: sundhed, viden og nærvær.\nByens største sundhedshus\nVi har det største sundhedshus i byen med behandlinger indenfor de fleste områder. Vi står altid klar til at hjælpe dig bedst og mest effektivt på vej igennem sundhedsverdenen. Vores personale er veluddannet og fagligt opdateret på nyeste viden. Vi samler på eksperter, så din træning eller behandling kan blive på højeste niveau.\nNærvær er vigtigt for os\nNærværet er noget af det vigtigste. Vi bruger meget tid og energi på at være nærværende i dagligdagen og\nlægger stor vægt på at gøre din dag lidt bedre.",
+  "facilities": [
+    "Fitness",
+    "Diætister",
+    "Personlig træning",
+    "ExerciseLab",
+    "Bikesal",
+    "Stor holdsal",
+    "Yoga holdsal",
+    "Cirkeltræningsmaskiner",
+    "Stort velkomstområde"
+  ],
+  "service_categories": [
+    "Personlig træning",
+    "Fysioterapi",
+    "Diætist",
+    "Event",
+    "Hold",
+    "Fællesskab",
+    "Seniorer",
+    "Konditionsfremmende Træning",
+    "Muskelopbyggende Træning",
+    "Core Træning",
+    "Dance",
+    "Indoor Cycling",
+    "Outdoor Træning",
+    "Funktionel Træning",
+    "Senior Træning",
+    "Body & Mind"
+  ],
+  "services": [
+    {
+      "name": "2026 OPSTARTSPAKKER",
+      "room": null,
+      "categories": [
+        "diaetist",
+        "event",
+        "fysioterapi",
+        "personlig-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/2026-opstartspakker-24"
+    },
+    {
+      "name": "BODYATTACK®",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bodyattack-les-mills"
+    },
+    {
+      "name": "BODYCOMBAT®",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bodycombat---les-mills"
+    },
+    {
+      "name": "BODYPUMP®",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bodypump"
+    },
+    {
+      "name": "Core",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/core"
+    },
+    {
+      "name": "DanceFit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/dance"
+    },
+    {
+      "name": "Indoor Cycling",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-indoor-cycling"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/indoor-cycling"
+    },
+    {
+      "name": "Indoor Cycling Basis",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-indoor-cycling"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/indoor-cycling-basis"
+    },
+    {
+      "name": "MOTION for livet",
+      "room": "5 ugers gratis træningsforløb",
+      "categories": [
+        "faellesskab",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/motion-for-livet"
+    },
+    {
+      "name": "Outdoor Cycling",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-outdoor"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/outdoor-cycling"
+    },
+    {
+      "name": "Prisoversigt på sundhedsydelser",
+      "room": "Ernæring og Personlig træning",
+      "categories": [
+        "diaetist",
+        "event",
+        "faellesskab",
+        "personlig-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/prisoversigt-paa-sundhedsydelser"
+    },
+    {
+      "name": "RawFit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-funktionel-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/rawfit"
+    },
+    {
+      "name": "Senior Cirkel",
+      "room": "Maskiner",
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/senior-cirkel"
+    },
+    {
+      "name": "Senior Indoor Cycling",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-indoor-cycling",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/senior-indoor-cycling"
+    },
+    {
+      "name": "Senior Træning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/seniortraening"
+    },
+    {
+      "name": "Yoga",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/yoga"
+    },
+    {
+      "name": "ZUMBA®",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/zumba"
+    }
+  ],
+  "manager": {
+    "name": "Sune Andersen",
+    "title": "Husleder",
+    "image": "https://fitogsund.dk/f/thumb?src=/f/blog/article/5bc9b56bf10726ea1fd8439e6484bb829fd5a005_thumb.png&w=300&h=380"
+  },
+  "images": {
+    "hero": null,
+    "fallback": "../fitogsund-logo.png"
+  },
+  "hero_image_file": "hero.png",
+  "hero_is_placeholder": true,
+  "scraped_at": "2026-09-17"
+}

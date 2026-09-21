@@ -267,7 +267,8 @@ async function run() {
   const home = fs.readFileSync(homePath, "utf8");
 
   assert.ok(
-    /Report post/.test(home) && /socialService\.reportUser/.test(home),
+    /Report post|home\.summary\.reportPost/.test(home) &&
+      /socialService\.reportUser/.test(home),
     "the feed no longer offers to report a post"
   );
 
@@ -284,9 +285,14 @@ async function run() {
     "the post menu is conditional again, so somebody else's post has no menu"
   );
 
-  for (const label of ["Edit post", "Delete post"]) {
+  // A literal on a screen that has not been through the localization pass, a
+  // key on one that has. Either way the author still has the action.
+  for (const [label, key] of [
+    ["Edit post", "home.summary.editPost"],
+    ["Delete post", "home.summary.deletePost"],
+  ]) {
     assert.ok(
-      home.includes(label),
+      home.includes(label) || home.includes(key),
       `the author lost "${label}" when the report was added`
     );
   }

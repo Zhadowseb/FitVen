@@ -1,0 +1,315 @@
+{
+  "chain": "LOOP Fitness",
+  "name": "LOOP Munkebo",
+  "loop_id": 173,
+  "center_type": "lite",
+  "address": {
+    "street": "Bycentret 101A",
+    "postal_code": "5330",
+    "city": "Munkebo",
+    "country": "DK",
+    "full": "Bycentret 101A, 5330 Munkebo"
+  },
+  "location": {
+    "latitude": 55.45974,
+    "longitude": 10.558631
+  },
+  "url": "https://loopfitness.dk/centre/loop-fitness-munkebo/",
+  "membership_url": "https://loopfitness.dk/medlemskab/bliv-medlem/",
+  "phone": "41746273",
+  "email": "munkebo@loopfitness.dk",
+  "facebook_url": null,
+  "google_review_url": "https://g.page/r/CVL1nwnMINVdEB0/review",
+  "cvr": "35473297",
+  "manager_name": "Kristina Overkær Hansen",
+  "opened": "2017-09-09",
+  "has_classes": false,
+  "only_open_when_staffed": false,
+  "max_visitor_capacity": 25,
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 22:00"
+    }
+  ],
+  "staffed_hours": [
+    {
+      "day": "Mandag",
+      "periods": [
+        "08:30 - 11:30"
+      ]
+    },
+    {
+      "day": "Tirsdag",
+      "periods": [
+        "08:30 - 11:30"
+      ]
+    },
+    {
+      "day": "Onsdag",
+      "periods": [
+        "08:30 - 11:30"
+      ]
+    },
+    {
+      "day": "Torsdag",
+      "periods": [
+        "15:00 - 17:30"
+      ]
+    },
+    {
+      "day": "Fredag",
+      "periods": [
+        "09:00 - 12:00"
+      ]
+    },
+    {
+      "day": "Lørdag",
+      "periods": [
+        "09:00 - 12:00"
+      ]
+    }
+  ],
+  "staffed_hours_dates": [
+    {
+      "date": "2025-12-23",
+      "open": "08:30 - 11:30"
+    },
+    {
+      "date": "2025-12-24",
+      "open": "None - None"
+    },
+    {
+      "date": "2025-12-25",
+      "open": "12:00 - 15:00"
+    },
+    {
+      "date": "2025-12-26",
+      "open": "None - None"
+    },
+    {
+      "date": "2025-12-30",
+      "open": "09:00 - 12:00"
+    },
+    {
+      "date": "2025-12-31",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-01-01",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-01-06",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-01-08",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-03-02",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-04-02",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-04-03",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-04-06",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-05-14",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-05-16",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-05-25",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-05-31",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-06-07",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-06-14",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-06-20",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-06-21",
+      "open": "10:00 - 12:00"
+    },
+    {
+      "date": "2026-06-23",
+      "open": "09:00 - 19:00"
+    },
+    {
+      "date": "2026-06-26",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-07-03",
+      "open": "12:00 - 15:00"
+    },
+    {
+      "date": "2026-07-17",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-07-25",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-07-29",
+      "open": "09:00 - 19:00"
+    },
+    {
+      "date": "2026-07-30",
+      "open": "08:30 - 10:30"
+    },
+    {
+      "date": "2026-08-01",
+      "open": "12:00 - 13:30"
+    },
+    {
+      "date": "2026-08-07",
+      "open": "14:00 - 17:00"
+    },
+    {
+      "date": "2026-08-15",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-08-15",
+      "open": "09:00 - 19:00"
+    },
+    {
+      "date": "2026-08-15",
+      "open": "09:00 - 19:00"
+    },
+    {
+      "date": "2026-08-16",
+      "open": "10:00 - 12:00"
+    },
+    {
+      "date": "2026-08-22",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-08-23",
+      "open": "09:30 - 12:00"
+    },
+    {
+      "date": "2026-08-25",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-08-25",
+      "open": "15:30 - 18:00"
+    }
+  ],
+  "meta_description": "Hos LOOP Fitness Munkebo får du enkel og effektiv træning af hele kroppen på kun 24 minutter og i afslappede rammer. Book en gratis prøvetime nu »",
+  "description": "Kom indenfor og mærk energien. Hos LOOP får du afslappet stemning og effektiv træning på den bedste måde. Uanset niveau er der plads til dig, og træningen er enkel: Start med opvarmning, træn hele kroppen i træningscirklen, og afslut med udstrækning i vores LOOP Ekstra område. Efter din træning kan du nyde en gratis kop kaffe eller the i vores café.",
+  "quote_by": "Kristina, centerleder",
+  "facilities": [
+    "1 cirkel",
+    "Cardio-område",
+    "Gratis kaffe"
+  ],
+  "memberships": [
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr",
+      "price_per_month": 289.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 319,
+      "family_members": 0,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    },
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr. - familie",
+      "price_per_month": 589.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 619,
+      "family_members": 9,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    },
+    {
+      "name": "1 uges feriepas",
+      "price_per_month": 139.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 0.0,
+      "intro_months": 0,
+      "minimum_price": "139.0",
+      "family_members": 0,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    }
+  ],
+  "images": {
+    "hero": "https://loopfitness.dk/wp-content/uploads/2019/11/Munkebo-2.png",
+    "og_image": "https://loopfitness.dk/wp-content/uploads/2020/02/LOOP_run_06.jpg"
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

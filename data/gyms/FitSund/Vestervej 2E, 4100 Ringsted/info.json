@@ -1,0 +1,310 @@
+{
+  "chain": "Fit&Sund",
+  "name": "Fit&Sund Ringsted",
+  "short_name": "Ringsted",
+  "address": {
+    "street": "Vestervej 2E",
+    "postal_code": "4100",
+    "city": "Ringsted",
+    "country": "DK",
+    "full": "Vestervej 2E, 4100 Ringsted"
+  },
+  "location": {
+    "latitude": 55.4391692,
+    "longitude": 11.78591252
+  },
+  "geocode": {
+    "latitude": 55.4391692,
+    "longitude": 11.78591252,
+    "matched_address": "Vestervej 2E, 4100 Ringsted",
+    "exact": true,
+    "source": "DAWA"
+  },
+  "url": "https://fitogsund.dk/c/huse/ringsted",
+  "membership_url": "https://fitogsund.dk/p/bliv-medlem",
+  "class_schedule_url": "https://fitogsund.goactivebooking.com/class-web-categories/34/classes?facility=25",
+  "google_maps_url": "https://www.google.com/maps/dir/?api=1&destination=Vestervej-2E+4100+Ringsted",
+  "phone": "+45 56 76 73 66",
+  "email": "ringsted@fitogsund.dk",
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "00:00 - 24:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "00:00 - 24:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "00:00 - 24:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "00:00 - 24:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "00:00 - 24:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "00:00 - 24:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "00:00 - 24:00"
+    }
+  ],
+  "reception_hours": [
+    {
+      "day": "Mandag",
+      "open": "08:00 - 20:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "08:00 - 20:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "08:00 - 20:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "08:00 - 20:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "08:00 - 13:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "09:00 - 13:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "Ingen bemanding"
+    }
+  ],
+  "meta_description": "Træn hos Fit & Sund Ringsted i vores moderne fitness og træningscenter. Fitness | Holdtræning | Personlig træning",
+  "description": "Hos Fit&Sund Ringsted arbejder vi ud fra de 3 kerneværdier, du vil møde i ethvert Fit&Sund hus: sundhed, viden og nærvær.\nNørder, eksperter og træningsentusiaster under ét tag\nFor dig betyder det masser af sundhedsfagligt personale under ét tag. Vi tilbyder hjælp fra diætister, personlige trænere og fysioterapeuter. Dette giver os en unik mulighed for at hjælpe dig i mål uanset dit udgangspunkt.\nEt af vores mål er at samle så mange nørder, eksperter og træningsentusiaster under samme tag som muligt. Derfor holder vi vores personale og instruktører fagligt opdateret gennem løbende uddannelser.\nNærvær er ekstremt vigtigt\nVi bestræber os på at blive dit ”tredje hjem”. Derfor er nærvær ekstremt vigtigt for os, og vi bruger meget energi på at kunne gøre din dag bare lidt bedre.",
+  "facilities": [
+    "Fitness",
+    "Fysioterapeuter",
+    "Personlig træning",
+    "Hold- og spinningsal",
+    "ExerciseLab",
+    "Varieret holdplan",
+    "Veluddannet og venligt personale",
+    "Dygtige behandlere"
+  ],
+  "service_categories": [
+    "Personlig træning",
+    "Fysioterapi",
+    "Event",
+    "Hold",
+    "Fællesskab",
+    "Seniorer",
+    "Body & Mind",
+    "Konditionsfremmende Træning",
+    "Muskelopbyggende Træning",
+    "Dance",
+    "Indoor Cycling",
+    "Core Træning",
+    "Funktionel Træning",
+    "Senior Træning"
+  ],
+  "services": [
+    {
+      "name": "2026 OPSTARTSPAKKER",
+      "room": null,
+      "categories": [
+        "event",
+        "fysioterapi",
+        "personlig-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/2026-opstartspakker-5"
+    },
+    {
+      "name": "BODYBALANCE®",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bodybalance-les-mills"
+    },
+    {
+      "name": "BODYCOMBAT®",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bodycombat---les-mills"
+    },
+    {
+      "name": "BODYPUMP®",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bodypump"
+    },
+    {
+      "name": "DanceFit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/dance"
+    },
+    {
+      "name": "Indoor Cycling",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-indoor-cycling"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/indoor-cycling"
+    },
+    {
+      "name": "Indoor Cycling - HIIT",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-indoor-cycling"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/indoor-cycling---hiit"
+    },
+    {
+      "name": "Indoor Cycling Basis",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-indoor-cycling"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/indoor-cycling-basis"
+    },
+    {
+      "name": "Intelligent cycling ITC®",
+      "room": "Ringsted",
+      "categories": [
+        "hold",
+        "hold-indoor-cycling"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/intelligent-cycling-itc"
+    },
+    {
+      "name": "LES MILLS CORE™",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/les-mills-core"
+    },
+    {
+      "name": "LES MILLS TONE™",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/les-mills-tone"
+    },
+    {
+      "name": "MOTION for livet",
+      "room": "5 ugers gratis træningsforløb",
+      "categories": [
+        "faellesskab",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/motion-for-livet"
+    },
+    {
+      "name": "RawFit",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-funktionel-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/rawfit"
+    },
+    {
+      "name": "Senior Cirkel Hold",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/senior-cirkel-hold"
+    },
+    {
+      "name": "Senior Indoor Cycling",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-indoor-cycling",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/senior-indoor-cycling"
+    },
+    {
+      "name": "Senior Træning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/seniortraening"
+    },
+    {
+      "name": "Stram Op",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/stramop"
+    },
+    {
+      "name": "Strong by Zumba™",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/strong-by-zumba"
+    },
+    {
+      "name": "Yoga",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/yoga"
+    },
+    {
+      "name": "ZUMBA®",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/zumba"
+    }
+  ],
+  "manager": {
+    "name": "Valdemar Maintz",
+    "title": "Husleder",
+    "image": "https://fitogsund.dk/f/thumb?src=/f/blog/article/fed3370835c59f75da597bfe3d85dc51d44fd6e7_thumb.png&w=300&h=380"
+  },
+  "images": {
+    "hero": null,
+    "fallback": "../fitogsund-logo.png"
+  },
+  "hero_image_file": "hero.png",
+  "hero_is_placeholder": true,
+  "scraped_at": "2026-09-17"
+}

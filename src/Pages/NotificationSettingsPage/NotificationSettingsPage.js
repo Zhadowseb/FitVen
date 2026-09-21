@@ -7,6 +7,7 @@ import {
   useColorScheme,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
+import { useTranslation } from "@localization";
 
 import styles from "./NotificationSettingsPageStyle";
 import { useAuth } from "../../Contexts/AuthContext";
@@ -24,23 +25,32 @@ import {
 ThemedCard,
 } from "../../Resources/ThemedComponents";
 
+// Keys rather than text: a constant built at module load would be frozen in
+// whatever language the app started in. The screen translates them.
 const WORKOUT_START_OPTIONS = [
   {
     value: notificationService.WORKOUT_START_NOTIFICATION_MODES.NONE,
-    title: "No notifications",
-    body: "No notifications when someone starts a workout.",
+    titleKey: "notifications.settings.modes.none.title",
+    bodyKey: "notifications.settings.modes.none.body",
   },
   {
     value: notificationService.WORKOUT_START_NOTIFICATION_MODES.FOLLOWING,
-    title: "Everyone I follow",
-    body: "Get notified when any followed user starts a workout.",
+    titleKey: "notifications.settings.modes.following.title",
+    bodyKey: "notifications.settings.modes.following.body",
   },
   {
     value: notificationService.WORKOUT_START_NOTIFICATION_MODES.CUSTOM,
-    title: "Pick specific people",
-    body: "Only the people you choose below.",
+    titleKey: "notifications.settings.modes.custom.title",
+    bodyKey: "notifications.settings.modes.custom.body",
   },
 ];
+
+// Why a saved choice may still not reach this device, by the reason the
+// service gives back.
+const REGISTRATION_WARNING_KEYS = {
+  permission_denied: "notifications.settings.savedPermissionDenied",
+  blocked_by_active_owner: "notifications.settings.savedBlockedByOwner",
+};
 
 function getInitials(profile) {
   const name = profile?.displayName || profile?.usernameBase || profile?.username;
@@ -73,6 +83,7 @@ function matchesProfileQuery(profile, query) {
 }
 
 export default function NotificationSettingsPage() {
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const { user } = useAuth();
@@ -119,7 +130,7 @@ export default function NotificationSettingsPage() {
 
   const loadSettings = useCallback(async () => {
     if (!user?.id) {
-      showFeedback("Sign in to manage notification settings.");
+      showFeedback(t("notifications.settings.signInToManage"));
       setIsLoading(false);
       return;
     }
@@ -144,12 +155,12 @@ export default function NotificationSettingsPage() {
       showFeedback(
         error instanceof Error
           ? error.message
-          : "Could not load notification settings."
+          : t("notifications.settings.loadFailed")
       );
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [t, user]);
 
   useFocusEffect(
     useCallback(() => {
@@ -178,16 +189,11 @@ export default function NotificationSettingsPage() {
       setSelectedSourceIds(nextSettings.selectedSourceIds ?? selectedSourceIds);
 
       if (nextSettings?.skipped) {
-        const warnings = {
-          permission_denied:
-            "Saved. Notification permission was not granted on this device.",
-          blocked_by_active_owner:
-            "Saved. Another account is still signed in to notifications on this device, so this one will not receive them yet. Sign out of the other account, or wait a week for it to be released.",
-        };
-
         showFeedback(
-          warnings[nextSettings.reason] ??
-            "Saved. This device could not register for push notifications, so it may not receive them yet.",
+          t(
+            REGISTRATION_WARNING_KEYS[nextSettings.reason] ??
+              "notifications.settings.savedRegistrationFailed"
+          ),
           "warning"
         );
       }
@@ -196,7 +202,7 @@ export default function NotificationSettingsPage() {
       showFeedback(
         error instanceof Error
           ? error.message
-          : "Could not save notification settings."
+          : t("notifications.settings.saveFailed")
       );
     } finally {
       setSavingMode(null);
@@ -231,7 +237,7 @@ export default function NotificationSettingsPage() {
       showFeedback(
         error instanceof Error
           ? error.message
-          : "Could not update custom notification list."
+          : t("notifications.settings.updateSourcesFailed")
       );
     } finally {
       setSavingSourceId(null);
@@ -246,14 +252,14 @@ export default function NotificationSettingsPage() {
             size={12}
             style={[styles.pageHeaderTitleEyebrow, { color: quietText }]}
           >
-            Settings
+            {t("notifications.settings.eyebrow")}
           </ThemedText>
           <ThemedTitle
             type="pageTitle"
             style={styles.pageHeaderTitleMain}
             numberOfLines={1}
           >
-            Notifications
+            {t("notifications.title")}
           </ThemedTitle>
         </View>
       </ThemedHeader>
@@ -278,10 +284,10 @@ export default function NotificationSettingsPage() {
         >
           <View style={styles.cardHeader}>
             <ThemedText style={styles.cardTitleText} setColor={titleColor}>
-              When a workout starts
+              {t("notifications.settings.workoutStartTitle")}
             </ThemedText>
             <ThemedText style={styles.cardBodyText} setColor={quietText}>
-              Choose who triggers a notification when they start training.
+              {t("notifications.settings.workoutStartBody")}
             </ThemedText>
           </View>
 
@@ -333,10 +339,10 @@ export default function NotificationSettingsPage() {
                         style={styles.optionTitle}
                         setColor={selected ? primaryColor : titleColor}
                       >
-                        {option.title}
+                        {t(option.titleKey)}
                       </ThemedText>
                       <ThemedText style={styles.optionBody} setColor={quietText}>
-                        {option.body}
+                        {t(option.bodyKey)}
                       </ThemedText>
                     </View>
 
@@ -362,7 +368,9 @@ export default function NotificationSettingsPage() {
             >
               <View style={styles.selectedBlock}>
                 <ThemedText style={styles.selectedLabel} setColor={quietText}>
-                  SELECTED ({selectedProfiles.length})
+                  {t("notifications.settings.selectedCount", {
+                    count: selectedProfiles.length,
+                  })}
                 </ThemedText>
 
                 {selectedProfiles.length ? (
@@ -371,9 +379,12 @@ export default function NotificationSettingsPage() {
                       <Pressable
                         key={profile.id}
                         accessibilityRole="button"
-                        accessibilityLabel={`Remove ${
-                          profile.displayName ?? profile.username ?? "person"
-                        }`}
+                        accessibilityLabel={t("notifications.settings.removeNamed", {
+                          name:
+                            profile.displayName ??
+                            profile.username ??
+                            t("notifications.settings.personFallback"),
+                        })}
                         disabled={Boolean(savingSourceId)}
                         onPress={() => toggleSource(profile)}
                         style={({ pressed }) => [
@@ -406,7 +417,7 @@ export default function NotificationSettingsPage() {
                   </View>
                 ) : (
                   <ThemedText style={styles.chipHint} setColor={quietText}>
-                    Nobody selected yet. Pick people from the list below.
+                    {t("notifications.settings.nobodySelected")}
                   </ThemedText>
                 )}
               </View>
@@ -424,7 +435,7 @@ export default function NotificationSettingsPage() {
                 <TextInput
                   value={searchQuery}
                   onChangeText={setSearchQuery}
-                  placeholder="Search people you follow"
+                  placeholder={t("notifications.settings.searchPlaceholder")}
                   placeholderTextColor={quietText}
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -516,7 +527,7 @@ export default function NotificationSettingsPage() {
                       style={styles.emptyPeopleText}
                       setColor={quietText}
                     >
-                      No followed people matched.
+                      {t("notifications.settings.noMatches")}
                     </ThemedText>
                   </View>
                 )}

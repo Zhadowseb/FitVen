@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useSQLiteContext } from "expo-sqlite";
+import { useTranslation } from "@localization";
 
 import styles from './HomePageStyle';
 import GreetingHeader from './Components/GreetingHeader/GreetingHeader';
@@ -27,6 +28,8 @@ import Delete from "../../Resources/Icons/UI-icons/Delete";
 import EditSocialPost from "../../Resources/Icons/UI-icons/EditSocialPost";
 import Flag from "../../Resources/Icons/UI-icons/Flag";
 import {
+  gymService,
+  musicService,
   notificationService,
   programService,
   socialPostService,
@@ -58,7 +61,6 @@ import {
 import { useAuth } from '../../Contexts/AuthContext';
 
 const WORKOUT_SUMMARY_FEED_PAGE_SIZE = 6;
-const WEEKDAY_LABELS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 const MINUTES_PER_SET_ESTIMATE = 2.5;
 const MINUTES_ROUNDING_STEP = 5;
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -71,23 +73,29 @@ function getLocalDateIndex(date) {
   );
 }
 
-function getWorkoutSummaryDisplayTitle(post) {
+function getWorkoutSummaryDisplayTitle(post, t) {
   const title = String(post?.title ?? "").trim();
   const workoutType = String(post?.workoutType ?? "").trim();
 
   if (!title || title.toLowerCase() === workoutType.toLowerCase()) {
-    return "Workout summary";
+    return t("home.summary.workoutSummary");
   }
 
   return title;
 }
 
-function getWorkoutTypeLabel(workoutType) {
+function getWorkoutTypeLabel(workoutType, t) {
   if (workoutType === "StrengthTraining") {
-    return "Resistance";
+    return t("home.workoutType.resistance");
   }
 
-  return workoutType ?? "Workout";
+  return workoutType ?? t("home.workoutType.workout");
+}
+
+// Monday-based index into the translated weekday labels, so the label is
+// looked up at render time and follows a language change.
+function getMondayBasedWeekdayIndex(date) {
+  return (date.getDay() + 6) % 7;
 }
 
 function getNextWorkoutDateParts(workout) {
@@ -99,9 +107,7 @@ function getNextWorkoutDateParts(workout) {
 
   return {
     day: String(workoutDate.getDate()).padStart(2, "0"),
-    weekday: workoutDate
-      .toLocaleDateString("en-US", { weekday: "short" })
-      .toUpperCase(),
+    weekdayIndex: getMondayBasedWeekdayIndex(workoutDate),
   };
 }
 
@@ -117,12 +123,44 @@ function getCompletedWorkoutDetails(workout) {
 
   return {
     completedAt,
+    durationMinutes:
+      elapsedSeconds > 0 ? Math.max(1, Math.round(elapsedSeconds / 60)) : 0,
+  };
+}
+
+// The hero state holds numbers and raw labels; the text the card shows is
+// built here, at render time, so it is never frozen in the language the
+// snapshot was loaded in.
+function buildHeroCardWorkout(hero, t) {
+  const typeLabel = getWorkoutTypeLabel(hero.workoutType, t);
+  const metaItems = [];
+
+  if (hero.exerciseCount > 0) {
+    metaItems.push(t("common.exercises", { count: hero.exerciseCount }));
+  }
+
+  if (hero.totalSets > 0) {
+    metaItems.push(t("common.sets", { count: hero.totalSets }));
+
+    if (hero.estimatedMinutes > 0) {
+      metaItems.push(t("home.hero.estimatedMinutes", { count: hero.estimatedMinutes }));
+    }
+  }
+
+  return {
+    ...hero,
+    typeLabel,
+    title: hero.label ?? typeLabel,
+    metaItems,
     durationLabel:
-      elapsedSeconds > 0 ? `${Math.max(1, Math.round(elapsedSeconds / 60))} min` : "",
+      hero.durationMinutes > 0
+        ? t("home.hero.minutesShort", { count: hero.durationMinutes })
+        : "",
   };
 }
 
 export default function App() {
+  const { t } = useTranslation();
   const db = useSQLiteContext();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -134,6 +172,13 @@ export default function App() {
   });
   const [isLoadingCirclePreview, setIsLoadingCirclePreview] = useState(true);
   const [circlePreviewError, setCirclePreviewError] = useState("");
+  // What the viewer's own music poller last saw, for their own tile. Module
+  // state in musicService, mirrored here so a change re-renders the strip.
+  const [ownNowPlaying, setOwnNowPlaying] = useState(() =>
+    musicService.getCurrentNowPlaying()
+  );
+
+  useEffect(() => musicService.subscribeNowPlaying(setOwnNowPlaying), []);
   const [workoutSummaryPosts, setWorkoutSummaryPosts] = useState([]);
   const [hasLoadedWorkoutSummaryFeed, setHasLoadedWorkoutSummaryFeed] =
     useState(false);
@@ -222,6 +267,19 @@ export default function App() {
         ),
       ]);
 
+      // The viewer's own centre line comes from the local workout, not the
+      // cloud: the workout the summary points at, or for a planned one with
+      // no position yet, the viewer's own centre.
+      const homeGym = nextCirclePreview.currentUser?.homeGym ?? null;
+      let ownGym = await gymService.getGymForActivityTile(
+        todayActivitySummary.gymId,
+        homeGym?.id ?? null
+      );
+
+      if (!ownGym && todayActivitySummary.activityState === "planned" && homeGym) {
+        ownGym = { id: homeGym.id, shortName: homeGym.shortName, isHomeGym: true };
+      }
+
       setCirclePreview({
         ...nextCirclePreview,
         currentUser: nextCirclePreview.currentUser
@@ -231,6 +289,8 @@ export default function App() {
               activityDetail: todayActivitySummary.detail,
               workoutType: todayActivitySummary.workoutType,
               workoutLabel: todayActivitySummary.workoutLabel,
+              workoutId: todayActivitySummary.workoutId,
+              gym: ownGym,
             }
           : null,
       });
@@ -240,12 +300,12 @@ export default function App() {
         people: [],
       });
       setCirclePreviewError(
-        error instanceof Error ? error.message : "Could not load your circle."
+        error instanceof Error ? error.message : t("home.circleLoadFailed")
       );
     } finally {
       setIsLoadingCirclePreview(false);
     }
-  }, [db, fetchTodaySnapshots, todayDate, user]);
+  }, [db, fetchTodaySnapshots, t, todayDate, user]);
 
   const loadHomeSnapshot = useCallback(async () => {
     try {
@@ -289,7 +349,7 @@ export default function App() {
         const cellIso = normalizeIsoDateString(formatDate(cellDate));
         return {
           dateIso: cellIso,
-          weekday: WEEKDAY_LABELS[index],
+          weekdayIndex: index,
           day: String(cellDate.getDate()).padStart(2, "0"),
           done: doneIsoDates.has(cellIso),
           isToday: cellIso === todayIso,
@@ -315,14 +375,6 @@ export default function App() {
       if (targetWorkout) {
         const isCompleted = Number(targetWorkout.done) === 1;
         const exerciseCount = targetWorkout.previewItems?.length ?? 0;
-        const metaItems = [];
-
-        if (exerciseCount > 0) {
-          metaItems.push(
-            `${exerciseCount} ${exerciseCount === 1 ? "exercise" : "exercises"}`
-          );
-        }
-
         let totalSets = 0;
 
         if (!isCompleted && targetWorkout.workout_type === "StrengthTraining") {
@@ -337,24 +389,17 @@ export default function App() {
           }
         }
 
-        if (totalSets > 0) {
-          metaItems.push(`${totalSets} ${totalSets === 1 ? "set" : "sets"}`);
-
-          const estimatedMinutes =
-            Math.round((totalSets * MINUTES_PER_SET_ESTIMATE) / MINUTES_ROUNDING_STEP) *
-            MINUTES_ROUNDING_STEP;
-
-          if (estimatedMinutes > 0) {
-            metaItems.push(`~${estimatedMinutes} min`);
-          }
-        }
+        const estimatedMinutes =
+          Math.round((totalSets * MINUTES_PER_SET_ESTIMATE) / MINUTES_ROUNDING_STEP) *
+          MINUTES_ROUNDING_STEP;
 
         setHeroWorkout({
           workoutId: targetWorkout.workout_id,
           workoutType: targetWorkout.workout_type,
-          typeLabel: getWorkoutTypeLabel(targetWorkout.workout_type),
-          title: targetWorkout.label ?? getWorkoutTypeLabel(targetWorkout.workout_type),
-          metaItems,
+          label: targetWorkout.label ?? null,
+          exerciseCount,
+          totalSets,
+          estimatedMinutes,
           weekday: targetWorkout.day?.Weekday,
           programId: targetWorkout.program_id ?? null,
           isCompleted,
@@ -375,9 +420,8 @@ export default function App() {
         nextWorkout && nextWorkoutDateParts
           ? {
               ...nextWorkout,
-              weekday: nextWorkoutDateParts.weekday,
+              weekdayIndex: nextWorkoutDateParts.weekdayIndex,
               day: nextWorkoutDateParts.day,
-              title: nextWorkout.label ?? getWorkoutTypeLabel(nextWorkout.workout_type),
               rawWeekday: nextWorkout.weekday,
             }
           : null
@@ -423,13 +467,50 @@ export default function App() {
       setUnreadNotificationCount(unreadCount);
     } catch (error) {
       console.error("Could not load the home snapshot:", error);
-      setHomeSnapshotError(
-        "Today's workout could not be loaded. Check your connection and try again."
-      );
+      setHomeSnapshotError(t("home.snapshotLoadFailed"));
     } finally {
       setHasLoadedHomeSnapshot(true);
     }
-  }, [db, fetchTodaySnapshots, todayDate, user]);
+  }, [db, fetchTodaySnapshots, t, todayDate, user]);
+
+  // Translated at render, not when the snapshot loaded: see buildHeroCardWorkout.
+  const weekdayLabels = useMemo(
+    () => [
+      t("home.weekdays.mon"),
+      t("home.weekdays.tue"),
+      t("home.weekdays.wed"),
+      t("home.weekdays.thu"),
+      t("home.weekdays.fri"),
+      t("home.weekdays.sat"),
+      t("home.weekdays.sun"),
+    ],
+    [t]
+  );
+  const weekStripDays = useMemo(
+    () =>
+      weekDays.map((cell) => ({
+        ...cell,
+        weekday: weekdayLabels[cell.weekdayIndex],
+      })),
+    [weekDays, weekdayLabels]
+  );
+  const heroCardWorkout = useMemo(
+    () => (heroWorkout ? buildHeroCardWorkout(heroWorkout, t) : null),
+    [heroWorkout, t]
+  );
+  const nextWorkoutCard = useMemo(
+    () =>
+      nextWorkoutInfo
+        ? {
+            ...nextWorkoutInfo,
+            weekday: weekdayLabels[nextWorkoutInfo.weekdayIndex],
+            title:
+              nextWorkoutInfo.label ??
+              getWorkoutTypeLabel(nextWorkoutInfo.workout_type, t),
+          }
+        : null,
+    [nextWorkoutInfo, t, weekdayLabels]
+  );
 
   const resetWorkoutSummaryFeed = useCallback(() => {
     workoutSummaryFeedOffsetRef.current = 0;
@@ -657,10 +738,10 @@ export default function App() {
     setSelectedWorkoutSummaryPost(null);
     setEditingPostNote({
       id: post.id,
-      title: getWorkoutSummaryDisplayTitle(post),
+      title: getWorkoutSummaryDisplayTitle(post, t),
       note: post.body ?? "",
     });
-  }, [selectedWorkoutSummaryPost]);
+  }, [selectedWorkoutSummaryPost, t]);
 
   const deleteWorkoutSummaryPost = useCallback(
     async (post) => {
@@ -681,16 +762,16 @@ export default function App() {
         setSelectedWorkoutSummaryPost(null);
       } catch (error) {
         Alert.alert(
-          "Could not delete post",
+          t("home.summary.deleteFailedTitle"),
           error instanceof Error
             ? error.message
-            : "The post could not be deleted."
+            : t("home.summary.deleteFailedMessage")
         );
       } finally {
         setDeletingPostId(null);
       }
     },
-    [deletingPostId, user]
+    [deletingPostId, t, user]
   );
 
   const handleReportWorkoutSummaryPost = useCallback(() => {
@@ -762,15 +843,15 @@ export default function App() {
     const post = selectedWorkoutSummaryPost;
 
     Alert.alert(
-      "Delete post?",
-      "This only deletes the social post. The workout stays saved.",
+      t("home.summary.deleteConfirmTitle"),
+      t("home.summary.deleteConfirmMessage"),
       [
         {
-          text: "Cancel",
+          text: t("common.cancel"),
           style: "cancel",
         },
         {
-          text: "Delete post",
+          text: t("home.summary.deletePost"),
           style: "destructive",
           onPress: () => deleteWorkoutSummaryPost(post),
         },
@@ -780,6 +861,7 @@ export default function App() {
     deleteWorkoutSummaryPost,
     deletingPostId,
     selectedWorkoutSummaryPost,
+    t,
   ]);
 
   const openNotificationHistory = useCallback(() => {
@@ -790,19 +872,19 @@ export default function App() {
   }, [navigation]);
 
   const openHeroWorkout = useCallback(() => {
-    if (!heroWorkout) {
+    if (!heroCardWorkout) {
       return;
     }
 
     navigation.navigate("WorkoutPage", {
-      workout_id: heroWorkout.workoutId,
-      workout_label: heroWorkout.title,
-      workout_type: heroWorkout.workoutType,
-      day: heroWorkout.weekday,
+      workout_id: heroCardWorkout.workoutId,
+      workout_label: heroCardWorkout.title,
+      workout_type: heroCardWorkout.workoutType,
+      day: heroCardWorkout.weekday,
       date: todayDate,
-      program_id: heroWorkout.programId,
+      program_id: heroCardWorkout.programId,
     });
-  }, [heroWorkout, navigation, todayDate]);
+  }, [heroCardWorkout, navigation, todayDate]);
 
   const openNextWorkout = useCallback(() => {
     if (!nextWorkoutInfo) {
@@ -878,7 +960,7 @@ export default function App() {
                 style={styles.errorBannerAction}
                 setColor={theme.danger}
               >
-                Try again
+                {t("common.retry")}
               </ThemedText>
             </TouchableOpacity>
           </View>
@@ -886,12 +968,12 @@ export default function App() {
 
         {hasLoadedHomeSnapshot ? (
           <>
-            <WeekStrip days={weekDays} />
+            <WeekStrip days={weekStripDays} />
 
             <TodayHeroCard
-              workout={heroWorkout}
+              workout={heroCardWorkout}
               onStartWorkout={openHeroWorkout}
-              nextWorkout={nextWorkoutInfo}
+              nextWorkout={nextWorkoutCard}
               onOpenNextWorkout={openNextWorkout}
               onQuickStart={() => requestOpenQuickWorkoutMenu()}
             />
@@ -901,12 +983,26 @@ export default function App() {
         )}
 
         <FriendsActivity
-          currentUser={circlePreview.currentUser}
+          currentUser={
+            circlePreview.currentUser
+              ? {
+                  ...circlePreview.currentUser,
+                  music: ownNowPlaying?.track
+                    ? {
+                        track: ownNowPlaying.track,
+                        artist: ownNowPlaying.artist,
+                        state: ownNowPlaying.state,
+                      }
+                    : null,
+                }
+              : null
+          }
           people={circlePreview.people}
           errorMessage={circlePreviewError}
           isLoading={isLoadingCirclePreview}
           onSeeAll={() => navigation.navigate("SearchPage")}
           onOpenProfile={() => navigation.navigate("ProfilePage")}
+          onOpenGym={(gymId) => navigation.navigate("GymLeaderboardPage", { gym_id: gymId })}
           showHeader
         />
 
@@ -916,10 +1012,11 @@ export default function App() {
       activeProgramSnapshot,
       circlePreview,
       circlePreviewError,
-      heroWorkout,
+      ownNowPlaying,
+      heroCardWorkout,
       isLoadingCirclePreview,
       navigation,
-      nextWorkoutInfo,
+      nextWorkoutCard,
       openActiveProgram,
       openHeroWorkout,
       openNextWorkout,
@@ -927,9 +1024,10 @@ export default function App() {
       homeSnapshotError,
       loadHomeSnapshot,
       openNotificationHistory,
+      t,
       todayDate,
       unreadNotificationCount,
-      weekDays,
+      weekStripDays,
     ]
   );
 
@@ -977,13 +1075,11 @@ export default function App() {
         ]}
       >
         <ThemedText style={styles.feedEmptyTitle} setColor={theme.title}>
-          {followsNobody ? "No workouts to show yet" : "Nothing shared yet"}
+          {followsNobody ? t("home.feed.emptyTitleNoFollows") : t("home.feed.emptyTitle")}
         </ThemedText>
 
         <ThemedText style={styles.feedEmptyBody} setColor={theme.quietText}>
-          {followsNobody
-            ? "Follow someone to see their workouts here, or finish a workout to share your own."
-            : "Finish a workout and it shows up here for the people who follow you."}
+          {followsNobody ? t("home.feed.emptyBodyNoFollows") : t("home.feed.emptyBody")}
         </ThemedText>
 
         <TouchableOpacity
@@ -1006,7 +1102,7 @@ export default function App() {
             style={styles.feedEmptyActionText}
             setColor={primaryTextColor}
           >
-            {followsNobody ? "Find people to follow" : "Start a workout"}
+            {followsNobody ? t("home.feed.findPeople") : t("home.feed.startWorkout")}
           </ThemedText>
         </TouchableOpacity>
       </View>
@@ -1015,6 +1111,8 @@ export default function App() {
     circlePreview.people,
     hasLoadedWorkoutSummaryFeed,
     navigation,
+    primaryTextColor,
+    t,
     theme,
   ]);
 
@@ -1058,7 +1156,7 @@ export default function App() {
           style={[styles.postOptionsTitle, { borderBottomColor: theme.hairline }]}
         >
           <ThemedText style={styles.postOptionsTitleText}>
-            {getWorkoutSummaryDisplayTitle(selectedWorkoutSummaryPost)}
+            {getWorkoutSummaryDisplayTitle(selectedWorkoutSummaryPost, t)}
           </ThemedText>
         </View>
 
@@ -1070,7 +1168,9 @@ export default function App() {
               onPress={handleReportWorkoutSummaryPost}
             >
               <Flag width={22} height={22} color={theme.iconColor} />
-              <ThemedText style={styles.postOptionText}>Report post</ThemedText>
+              <ThemedText style={styles.postOptionText}>
+                {t("home.summary.reportPost")}
+              </ThemedText>
             </TouchableOpacity>
           )}
 
@@ -1086,7 +1186,9 @@ export default function App() {
               color={theme.iconColor}
               stroke={theme.iconColor}
             />
-            <ThemedText style={styles.postOptionText}>Edit post</ThemedText>
+            <ThemedText style={styles.postOptionText}>
+              {t("home.summary.editPost")}
+            </ThemedText>
           </TouchableOpacity>
           )}
 
@@ -1107,8 +1209,8 @@ export default function App() {
               setColor={theme.danger ?? theme.text}
             >
               {deletingPostId === selectedWorkoutSummaryPost?.id
-                ? "Deleting..."
-                : "Delete post"}
+                ? t("home.summary.deleting")
+                : t("home.summary.deletePost")}
             </ThemedText>
           </TouchableOpacity>
           )}

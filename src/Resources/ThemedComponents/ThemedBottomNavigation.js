@@ -13,6 +13,7 @@ import {
 import Svg, { Circle } from "react-native-svg";
 import { useSQLiteContext } from "expo-sqlite";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTranslation } from "@localization";
 
 import { Colors, withAlpha } from "../GlobalStyling/colors";
 import StartWorkoutSheet from "../Components/StartWorkoutSheet";
@@ -68,7 +69,8 @@ function getPlannedShortcut(snapshots, date) {
         date,
         day: snapshot.day,
         programId: snapshot.program?.program_id ?? null,
-        programName: snapshot.program?.program_name ?? "Workout calendar",
+        // No program: the sheet shows its translated "Workout calendar".
+        programName: snapshot.program?.program_name ?? null,
         workout,
       }))
   );
@@ -81,8 +83,18 @@ const PROFILE_ROUTES = new Set([
   "SocialPostSettingsPage",
   "ExerciseSocialPostSettingsPage",
   "WorkoutTypesSettingsPage",
+  "MusicSettingsPage",
 ]);
-const SOCIAL_ROUTES = new Set(["SearchPage", "SocialUserListPage"]);
+// Centres are reached from Social and stay under it, however deep you go:
+// the list, one centre, one exercise there, and the whole country.
+const SOCIAL_ROUTES = new Set([
+  "SearchPage",
+  "SocialUserListPage",
+  "GymsPage",
+  "GymLeaderboardPage",
+  "GymExerciseLeaderboardPage",
+  "NationalExerciseLeaderboardPage",
+]);
 const LIBRARY_ROUTES = new Set([
   "ExerciseLibraryPage",
   "ExerciseCatalogPage",
@@ -105,6 +117,7 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const [quickWorkoutModalVisible, setQuickWorkoutModalVisible] =
     useState(false);
   const [isCreatingQuickWorkout, setIsCreatingQuickWorkout] = useState(false);
@@ -593,7 +606,7 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     });
 
     if (!day?.day_id) {
-      throw new Error("The selected program day could not be found.");
+      throw new Error(t("nav.quickWorkout.programDayNotFound"));
     }
 
     const resolvedTarget = {
@@ -658,7 +671,10 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
       });
     } catch (error) {
       console.error("Failed to create quick workout:", error);
-      Alert.alert("Could not create workout", "Please try again.");
+      Alert.alert(
+        t("nav.quickWorkout.createFailedTitle"),
+        t("nav.quickWorkout.pleaseTryAgain")
+      );
     } finally {
       setIsCreatingQuickWorkout(false);
     }
@@ -726,7 +742,7 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
       }
 
       if (!copiedWorkout) {
-        throw new Error("The recent workout could not be copied.");
+        throw new Error(t("nav.quickWorkout.recentCopyFailed"));
       }
 
       navigationRef.navigate("WorkoutPage", {
@@ -740,8 +756,10 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     } catch (error) {
       console.error("Failed to copy recent workout:", error);
       Alert.alert(
-        "Could not copy workout",
-        error instanceof Error ? error.message : "Please try again."
+        t("nav.quickWorkout.copyFailedTitle"),
+        error instanceof Error
+          ? error.message
+          : t("nav.quickWorkout.pleaseTryAgain")
       );
     } finally {
       setIsCreatingQuickWorkout(false);
@@ -777,7 +795,7 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
                 { color: isHomeActive ? activeColor : inactiveColor },
               ]}
             >
-              HOME
+              {t("nav.tabs.home")}
             </Text>
             <View
               style={[
@@ -805,7 +823,7 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
                 { color: isLibraryActive ? activeColor : inactiveColor },
               ]}
             >
-              TRAIN
+              {t("nav.tabs.train")}
             </Text>
             <View
               style={[
@@ -835,8 +853,12 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
                   activeOpacity={0.86}
                   accessibilityLabel={
                     isRestTimerActive
-                      ? `Active rest timer ${centerTimerText}`
-                      : `Active workout timer ${centerTimerText}`
+                      ? t("nav.centerButton.activeRestTimer", {
+                          time: centerTimerText,
+                        })
+                      : t("nav.centerButton.activeWorkoutTimer", {
+                          time: centerTimerText,
+                        })
                   }
                   accessibilityRole="button"
                   disabled={isCreatingQuickWorkout}
@@ -911,9 +933,10 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
             ) : startableWorkout ? (
               <TouchableOpacity
                 activeOpacity={0.86}
-                accessibilityLabel={`Start workout ${
-                  startableWorkout.label ?? startableWorkout.workout_type
-                }`}
+                accessibilityLabel={t("nav.centerButton.startWorkout", {
+                  workout:
+                    startableWorkout.label ?? startableWorkout.workout_type,
+                })}
                 accessibilityRole="button"
                 disabled={isStartingWorkoutTimer}
                 onPress={handleStartWorkoutTimer}
@@ -934,7 +957,7 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
             ) : (
               <TouchableOpacity
                 activeOpacity={0.86}
-                accessibilityLabel="Create workout"
+                accessibilityLabel={t("nav.centerButton.createWorkout")}
                 accessibilityRole="button"
                 disabled={isCreatingQuickWorkout}
                 onPress={handleCenterButtonPress}
@@ -974,7 +997,7 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
                 { color: isSocialActive ? activeColor : inactiveColor },
               ]}
             >
-              SOCIAL
+              {t("nav.tabs.social")}
             </Text>
             <View
               style={[
@@ -1002,7 +1025,7 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
                 { color: isProfileActive ? activeColor : inactiveColor },
               ]}
             >
-              PROFILE
+              {t("nav.tabs.profile")}
             </Text>
             <View
               style={[

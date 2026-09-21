@@ -1,0 +1,238 @@
+{
+  "chain": "LOOP Fitness",
+  "name": "LOOP Flintholm",
+  "loop_id": 258,
+  "center_type": "lite",
+  "address": {
+    "street": "Stig Lommers Plads 1",
+    "postal_code": "2000",
+    "city": "Frederiksberg",
+    "country": "DK",
+    "full": "Stig Lommers Plads 1, 2000 Frederiksberg"
+  },
+  "location": {
+    "latitude": 55.68538833,
+    "longitude": 12.49924138
+  },
+  "url": "https://loopfitness.dk/centre/loop-fitness-flintholm/",
+  "membership_url": "https://loopfitness.dk/medlemskab/bliv-medlem/",
+  "phone": "41746131",
+  "email": "flintholm@loopfitness.dk",
+  "facebook_url": null,
+  "google_review_url": "",
+  "cvr": "38282166",
+  "manager_name": "Louise",
+  "opened": "2026-04-18",
+  "has_classes": false,
+  "only_open_when_staffed": false,
+  "max_visitor_capacity": 40,
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 22:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 22:00"
+    }
+  ],
+  "staffed_hours": [
+    {
+      "day": "Mandag",
+      "periods": [
+        "16:00 - 19:00"
+      ]
+    },
+    {
+      "day": "Tirsdag",
+      "periods": [
+        "09:00 - 14:00"
+      ]
+    },
+    {
+      "day": "Onsdag",
+      "periods": [
+        "09:00 - 14:00"
+      ]
+    },
+    {
+      "day": "Torsdag",
+      "periods": [
+        "09:00 - 12:00",
+        "16:00 - 19:00"
+      ]
+    },
+    {
+      "day": "Fredag",
+      "periods": [
+        "09:00 - 14:00"
+      ]
+    },
+    {
+      "day": "Lørdag",
+      "periods": [
+        "09:00 - 12:00"
+      ]
+    },
+    {
+      "day": "Søndag",
+      "periods": [
+        "09:00 - 12:00"
+      ]
+    }
+  ],
+  "staffed_hours_dates": [
+    {
+      "date": "2026-08-01",
+      "open": "11:15 - 12:30"
+    },
+    {
+      "date": "2026-08-02",
+      "open": "11:15 - 12:30"
+    },
+    {
+      "date": "2026-08-04",
+      "open": "09:00 - 12:00"
+    },
+    {
+      "date": "2026-08-05",
+      "open": "09:00 - 13:00"
+    },
+    {
+      "date": "2026-08-08",
+      "open": "09:00 - 10:45"
+    },
+    {
+      "date": "2026-08-09",
+      "open": "11:15 - 12:30"
+    },
+    {
+      "date": "2026-08-12",
+      "open": "11:30 - 14:30"
+    },
+    {
+      "date": "2026-08-14",
+      "open": "09:00 - 12:00"
+    },
+    {
+      "date": "2026-08-15",
+      "open": "11:00 - 13:00"
+    },
+    {
+      "date": "2026-08-17",
+      "open": "09:00 - 19:00"
+    },
+    {
+      "date": "2026-08-19",
+      "open": "09:00 - 12:00"
+    },
+    {
+      "date": "2026-08-20",
+      "open": "09:00 - 11:30"
+    },
+    {
+      "date": "2026-08-20",
+      "open": "16:00 - 19:00"
+    },
+    {
+      "date": "2026-08-30",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-09-08",
+      "open": "09:00 - 12:00"
+    },
+    {
+      "date": "2026-09-11",
+      "open": "10:00 - 13:00"
+    },
+    {
+      "date": "2026-09-12",
+      "open": "12:15 - 14:15"
+    },
+    {
+      "date": "2026-09-13",
+      "open": "12:15 - 14:15"
+    },
+    {
+      "date": "2026-09-15",
+      "open": "11:00 - 14:00"
+    },
+    {
+      "date": "2026-09-17",
+      "open": "09:00 - 12:00"
+    },
+    {
+      "date": "2026-09-17",
+      "open": "16:00 - 19:00"
+    }
+  ],
+  "meta_description": null,
+  "description": "Kom indenfor og mærk energien. Hos LOOP får du afslappet stemning og effektiv træning på den bedste måde. Uanset niveau er der plads til dig, og træningen er enkel.\nDet tager kun 24 minutter få fornyet energi og overskud i en travl hverdag. Vi glæder os til at se dig.",
+  "quote_by": "Louise, centerleder",
+  "facilities": [
+    "1 cirkel",
+    "Cardio-område",
+    "Gratis kaffe"
+  ],
+  "memberships": [
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr",
+      "price_per_month": 289.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 319,
+      "family_members": 0,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    },
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr. - familie",
+      "price_per_month": 589.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 619,
+      "family_members": 9,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    }
+  ],
+  "images": {
+    "hero": "https://loopfitness.dk/wp-content/uploads/2026/03/Flintholm_2026.png",
+    "og_image": "https://loopfitness.dk/wp-content/uploads/2026/03/Flintholm_2026.png"
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

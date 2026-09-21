@@ -365,6 +365,7 @@ async function reconcileWorkoutTypeInstancesFromCloud(db, userId) {
             comparableCloudWorkout.timer_start
           ),
           elapsedTime: comparableCloudWorkout.elapsed_time,
+          gymId: comparableCloudWorkout.gym_id,
         });
 
         const createdWorkout = {
@@ -426,6 +427,7 @@ async function reconcileWorkoutTypeInstancesFromCloud(db, userId) {
               comparableCloudWorkout.timer_start
             ),
             elapsedTime: comparableCloudWorkout.elapsed_time,
+            gymId: comparableCloudWorkout.gym_id,
           });
           downloadedCount += 1;
         } else if (
@@ -516,6 +518,7 @@ async function reconcileWorkoutTypeInstancesFromCloud(db, userId) {
           comparableCloudWorkout.timer_start
         ),
         elapsedTime: comparableCloudWorkout.elapsed_time,
+        gymId: comparableCloudWorkout.gym_id,
       });
 
       const updatedWorkout = {

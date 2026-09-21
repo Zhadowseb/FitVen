@@ -10,12 +10,14 @@ import {
   ThemedTextInput,
 } from "../../ThemedComponents";
 import { feedbackService } from "../../../Services";
+import { useTranslation } from "@localization";
 
 const MAX_FEEDBACK_LENGTH = 1000;
 
 export default function FeedbackModal({ visible, onClose, userId }) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const { t } = useTranslation();
   const [message, setMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -39,7 +41,7 @@ export default function FeedbackModal({ visible, onClose, userId }) {
     const trimmedMessage = message.trim();
 
     if (!trimmedMessage) {
-      setErrorMessage("Write a short note first.");
+      setErrorMessage(t("profile.feedbackModal.writeNoteFirst"));
       setSuccessMessage("");
       return;
     }
@@ -55,10 +57,10 @@ export default function FeedbackModal({ visible, onClose, userId }) {
       });
 
       setMessage("");
-      setSuccessMessage("Feedback sent. Thank you.");
+      setSuccessMessage(t("profile.feedbackModal.sent"));
     } catch (error) {
       console.error("Failed to submit feedback:", error);
-      setErrorMessage("Could not send feedback right now. Please try again.");
+      setErrorMessage(t("profile.feedbackModal.couldNotSend"));
     } finally {
       setIsSubmitting(false);
     }
@@ -68,7 +70,7 @@ export default function FeedbackModal({ visible, onClose, userId }) {
     <ThemedModal
       visible={visible}
       onClose={onClose}
-      title="Send us feedback"
+      title={t("profile.feedbackModal.title")}
       style={styles.modal}
       contentStyle={styles.content}
     >
@@ -82,7 +84,7 @@ export default function FeedbackModal({ visible, onClose, userId }) {
         ]}
       >
         <ThemedText style={styles.inputLabel} setColor={quietText}>
-          What should we know?
+          {t("profile.feedbackModal.inputLabel")}
         </ThemedText>
 
         <ThemedTextInput
@@ -93,7 +95,7 @@ export default function FeedbackModal({ visible, onClose, userId }) {
               setErrorMessage("");
             }
           }}
-          placeholder="Tell us what happened, what you expected, or what would make the app better."
+          placeholder={t("profile.feedbackModal.placeholder")}
           multiline
           textAlignVertical="top"
           inputStyle={styles.input}
@@ -106,7 +108,9 @@ export default function FeedbackModal({ visible, onClose, userId }) {
         </ThemedText>
 
         <ThemedText style={styles.metaText} setColor={quietText}>
-          {userId ? "Signed in" : "No user linked"}
+          {userId
+            ? t("profile.feedbackModal.signedIn")
+            : t("profile.feedbackModal.noUserLinked")}
         </ThemedText>
       </View>
 
@@ -151,14 +155,18 @@ export default function FeedbackModal({ visible, onClose, userId }) {
 
       <View style={styles.buttonRow}>
         <ThemedButton
-          title="Close"
+          title={t("common.close")}
           variant="secondary"
           onPress={onClose}
           style={styles.secondaryButton}
         />
 
         <ThemedButton
-          title={isSubmitting ? "Sending..." : "Send Feedback"}
+          title={
+            isSubmitting
+              ? t("profile.feedbackModal.sending")
+              : t("profile.feedbackModal.send")
+          }
           variant="primary"
           onPress={handleSubmit}
           disabled={isSubmitting || trimmedLength === 0}

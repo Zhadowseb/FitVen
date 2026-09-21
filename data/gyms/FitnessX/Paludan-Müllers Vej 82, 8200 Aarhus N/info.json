@@ -1,0 +1,127 @@
+{
+  "chain": "FitnessX",
+  "name": "Aarhus N, Paludan-Müllers Vej",
+  "label": "Fitnesscenter med Reformer",
+  "address": {
+    "street": "Paludan-Müllers Vej 82",
+    "postal_code": "8200",
+    "city": "Aarhus N",
+    "country": "DK",
+    "full": "Paludan-Müllers Vej 82, 8200 Aarhus N"
+  },
+  "location": {
+    "latitude": 56.17581772562273,
+    "longitude": 10.18048015905516
+  },
+  "url": "https://fitnessx.dk/fitness/fitness-aarhus/fitness-aarhus-paludan-mullers-vej/",
+  "google_maps_url": "https://maps.app.goo.gl/rVNx9K6nTTkBkuCY6",
+  "membership_url": "https://fitnessx.dk/medlemskaber/",
+  "campaign": false,
+  "campaign_headline": "NY LAV PRIS I AARHUS",
+  "price_teaser": "Træn med en Træningsven fra kun 250 kr./md. pr. person.",
+  "opening_hours": [
+    {
+      "days": "Mandag - torsdag",
+      "open": "05:00 - 23:00",
+      "staffed": "09:00 - 12:00 & 15:00 - 19:00"
+    },
+    {
+      "days": "Fredag",
+      "open": "05:00 - 23:00",
+      "staffed": "09:00 - 12:00"
+    },
+    {
+      "days": "Lørdag",
+      "open": "06:00 - 23:00",
+      "staffed": "09:00 - 12:00"
+    },
+    {
+      "days": "Søndag",
+      "open": "06:00 - 23:00",
+      "staffed": "Ingen"
+    },
+    {
+      "days": "Helligdage",
+      "open": "Åbent som normalt",
+      "staffed": "Ingen"
+    }
+  ],
+  "special_days_text": "Særlige åbningsdage:\n24/12 og 31/12: Åbent som normalt - lukker kl. 17.00.\n25/12 og 1/1: Åbent som normalt - ingen bemanding.",
+  "meta_description": "Fitness, Reformer og forskellige hold i dit lokale FitnessX i Aarhus N. Find os på Paludan-Müllers Vej 82. Træn i gode faciliteter, se åbningstider og find vej.",
+  "description": "Dette center ligger på en af vores bedste lokationer og giver dig lidt ekstra at glæde dig over i hverdagen. Det er FitnessX, som du kender det - bare med flere detaljer, der gør en forskel.\nNår du træder ind, mærker du hurtigt, at oplevelsen er skruet op: mere gennemført indretning, et større udvalg af udstyr, bedre plads og åbningstider.\nOg fordi behov og byer ikke er ens, er hvert center lokalt tilpasset. Derfor finder du ikke to centre, der er helt ens - men du finder altid et sted, der gør din træning både nemmere og bedre.",
+  "features": [
+    "Fitness og cardio",
+    "HYROX",
+    "Hold",
+    "Reformer"
+  ],
+  "features_detail": [
+    {
+      "title": "Åbningstid",
+      "text": "I weekenden åbner vi en time tidligere. Så kan du træne (næsten) alene før byen vågner."
+    },
+    {
+      "title": "Bodytracker",
+      "text": "Muskelmasse, fedtprocent (og hvor det sidder), stofskifte, body age og meget mere. Få styr på, hvordan det ser ud med de ting, du ikke kan se i spejlet og følg din udvikling. Uden det koster ekstra."
+    },
+    {
+      "title": "Udstyr",
+      "text": "Udover vores normale maskiner og udstyr har vi særligt udvalgt udstyr i dit center, som er baseret på jeres lokale behov og ønsker. Kort sagt har vi mere, af det du kender, og noget af det du skal lære at kende."
+    },
+    {
+      "title": "Bikesal",
+      "text": "Bike som du kender det. Men opgraderet. Store skærme, lys og et design du ikke har set før. Vi har en særligt variant af Intelligent Cycling (”The Journey”), som er en virtuel oplevelse, der gør din træning sjovere og mere intens. Velkommen til en lidt sjovere, og lidt bedre, biketime."
+    },
+    {
+      "title": "NYHED!\nDIT CENTER VOKSER",
+      "text": "VI UDVIDER - OG JA DET BLIVER RET FEDT. MED BÅDE REFORMER OG BIKE.\nVi har lyttet til jer. Og d. 7. september åbner vi dørene til et helt nyt træningsunivers\nmed Reformer og Bike\nDerudover udvider vi centeret, så du får endnu mere plads og endnu bedre træning. Glæd dig til en større og opgraderet holdsal, en spritny bikesal og en Reformersal, så du kan springe med på en af tidens helt store træningstrends.\nPå gulvet betyder det flere maskiner, mere plads til frivægte og endnu kortere ventetid på det udstyr, du bruger allermest.\nKort sagt: Dit center får en seriøs upgrade."
+    }
+  ],
+  "parking": "2 timer gratis ved korrekt registrering på tablet i centeret. Parkering kan ske på pladser markeret med FitnessX i hele åbningstiden, eller Laros fra 16-22. Registreringen er korrekt, når du har modtaget en bekræftelsesmail.",
+  "manager": {
+    "name": "Laura",
+    "title": "Manager"
+  },
+  "tags": [
+    "reformer"
+  ],
+  "images": {
+    "hero": "https://fitnessx.dk/wp-content/uploads/FX_PMV_01287.jpg",
+    "gallery": [
+      "https://fitnessx.dk/wp-content/uploads/FX_PMV_01287.jpg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_2468-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/FX_PMV_01275.jpg",
+      "https://fitnessx.dk/wp-content/uploads/FX_PMV_01318.jpg",
+      "https://fitnessx.dk/wp-content/uploads/FX_PMV_01261.jpg",
+      "https://fitnessx.dk/wp-content/uploads/FX_PMV_01325.jpg",
+      "https://fitnessx.dk/wp-content/uploads/FX_PMV_01315.jpg",
+      "https://fitnessx.dk/wp-content/uploads/FX_PMV_01290.jpg",
+      "https://fitnessx.dk/wp-content/uploads/FX_PMV_01300.jpg",
+      "https://fitnessx.dk/wp-content/uploads/FX_PMV_01296.jpg",
+      "https://fitnessx.dk/wp-content/uploads/FitnessX-AG_08189.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Desktop-header-imagesort_hvid.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Mobile-header-imagesort_hvid.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Aarhus-Soender-Alle-310x150x2.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Aarhus-Soender-Alle-130x115-1.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Aarhus-N-PMVx3.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Aarhus-N-PMV.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Mobile-header-image-SH.jpg",
+      "https://fitnessx.dk/wp-content/uploads/20251022_092844713_iOS-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Koebenhavn-S-Amager-Strand-310x150x3.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Koebenhavn-S-Amager-Strand-130x115-1.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Lyngby-Jernbanepladsen-310x150x3.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Lyngby-Jernbanepladsen-130x115-1.jpg",
+      "https://fitnessx.dk/wp-content/uploads/1000007045.jpg",
+      "https://fitnessx.dk/wp-content/uploads/HKP-color-desk.jpg",
+      "https://fitnessx.dk/wp-content/uploads/HKP-color-mobil.jpg",
+      "https://fitnessx.dk/wp-content/uploads/20220407_150911086_iOS-conv-1-scaled.jpeg",
+      "https://fitnessx.dk/wp-content/uploads/20230302_113104920_iOS-conv-scaled.jpeg",
+      "https://fitnessx.dk/wp-content/uploads/Medier-7-1.jpg",
+      "https://fitnessx.dk/wp-content/uploads/117930415_135581561555137_7931730547770655436_o.jpg",
+      "https://fitnessx.dk/wp-content/uploads/IMG_0599-scaled-e1721632871633.jpg",
+      "https://fitnessx.dk/wp-content/uploads/20220108_140458637_iOS-scaled.jpg"
+    ]
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

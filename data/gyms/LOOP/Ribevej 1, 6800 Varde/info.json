@@ -1,0 +1,269 @@
+{
+  "chain": "LOOP Fitness",
+  "name": "LOOP Varde",
+  "loop_id": 179,
+  "center_type": "lite",
+  "address": {
+    "street": "Ribevej 1",
+    "postal_code": "6800",
+    "city": "Varde",
+    "country": "DK",
+    "full": "Ribevej 1, 6800 Varde"
+  },
+  "location": {
+    "latitude": 55.613091,
+    "longitude": 8.4888995
+  },
+  "url": "https://loopfitness.dk/centre/loop-fitness-varde/",
+  "membership_url": "https://loopfitness.dk/medlemskab/bliv-medlem/",
+  "phone": "41746278",
+  "email": "varde@loopfitness.dk",
+  "facebook_url": null,
+  "google_review_url": "https://g.page/r/CbZOD2KL6WK2EB0/review",
+  "cvr": "38983393",
+  "manager_name": "Britt",
+  "opened": "2017-09-30",
+  "has_classes": false,
+  "only_open_when_staffed": false,
+  "max_visitor_capacity": 25,
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 24:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 24:00"
+    }
+  ],
+  "staffed_hours": [
+    {
+      "day": "Mandag",
+      "periods": [
+        "08:00 - 10:00",
+        "15:00 - 18:00"
+      ]
+    },
+    {
+      "day": "Tirsdag",
+      "periods": [
+        "08:00 - 11:00",
+        "15:30 - 18:30"
+      ]
+    },
+    {
+      "day": "Onsdag",
+      "periods": [
+        "08:00 - 11:00",
+        "15:30 - 18:30"
+      ]
+    },
+    {
+      "day": "Torsdag",
+      "periods": [
+        "08:00 - 11:00",
+        "15:30 - 18:30"
+      ]
+    },
+    {
+      "day": "Fredag",
+      "periods": [
+        "08:00 - 11:00"
+      ]
+    },
+    {
+      "day": "Lørdag",
+      "periods": [
+        "09:00 - 11:00"
+      ]
+    },
+    {
+      "day": "Søndag",
+      "periods": [
+        "09:30 - 12:15"
+      ]
+    }
+  ],
+  "staffed_hours_dates": [
+    {
+      "date": "2026-07-05",
+      "open": "10:30 - 12:15"
+    },
+    {
+      "date": "2026-07-08",
+      "open": "08:00 - 11:00"
+    },
+    {
+      "date": "2026-07-13",
+      "open": "08:00 - 10:00"
+    },
+    {
+      "date": "2026-07-13",
+      "open": "15:00 - 18:00"
+    },
+    {
+      "date": "2026-07-14",
+      "open": "15:00 - 18:00"
+    },
+    {
+      "date": "2026-07-15",
+      "open": "08:00 - 11:00"
+    },
+    {
+      "date": "2026-07-16",
+      "open": "08:00 - 11:00"
+    },
+    {
+      "date": "2026-07-17",
+      "open": "08:00 - 11:00"
+    },
+    {
+      "date": "2026-07-20",
+      "open": "08:00 - 10:00"
+    },
+    {
+      "date": "2026-07-21",
+      "open": "15:00 - 18:00"
+    },
+    {
+      "date": "2026-07-22",
+      "open": "08:00 - 11:00"
+    },
+    {
+      "date": "2026-07-23",
+      "open": "08:00 - 11:00"
+    },
+    {
+      "date": "2026-07-25",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-07-26",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-07-27",
+      "open": "08:00 - 10:00"
+    },
+    {
+      "date": "2026-07-28",
+      "open": "15:00 - 18:00"
+    },
+    {
+      "date": "2026-07-29",
+      "open": "08:00 - 11:00"
+    },
+    {
+      "date": "2026-07-30",
+      "open": "08:00 - 11:00"
+    },
+    {
+      "date": "2026-07-31",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-08-01",
+      "open": "None - None"
+    },
+    {
+      "date": "2026-08-03",
+      "open": "08:00 - 10:00"
+    },
+    {
+      "date": "2026-08-04",
+      "open": "08:00 - 11:00"
+    },
+    {
+      "date": "2026-08-05",
+      "open": "08:00 - 11:00"
+    },
+    {
+      "date": "2026-08-05",
+      "open": "15:00 - 18:00"
+    },
+    {
+      "date": "2026-08-06",
+      "open": "15:30 - 18:30"
+    },
+    {
+      "date": "2026-08-08",
+      "open": "08:30 - 10:30"
+    },
+    {
+      "date": "2026-08-20",
+      "open": "08:00 - 11:00"
+    },
+    {
+      "date": "2026-09-10",
+      "open": "08:00 - 11:00"
+    }
+  ],
+  "meta_description": "Hos LOOP Fitness Varde får du effektiv og veldokumenteret træning af hele kroppen på kun 24 minutter. I LOOP er der plads til alle - kvinder og mænd.",
+  "description": "Kom indenfor og mærk energien. Hos LOOP får du afslappet stemning og effektiv træning på den bedste måde. Uanset niveau er der plads til dig, og træningen er enkel: Start med opvarmning, træn hele kroppen i træningscirklen, og afslut med udstrækning i vores LOOP Ekstra område. Efter din træning kan du nyde en gratis kop kaffe eller the i vores café.",
+  "quote_by": "Britt, centerleder",
+  "facilities": [
+    "1 cirkel",
+    "Cardio-område",
+    "Gratis kaffe"
+  ],
+  "memberships": [
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr",
+      "price_per_month": 289.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 319,
+      "family_members": 0,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    },
+    {
+      "name": "Kampagne: LOOPilæum - 20 kr. - familie",
+      "price_per_month": 589.0,
+      "signup_fee": 0.0,
+      "admin_fee": 10.0,
+      "intro_price": 20.0,
+      "intro_months": 1,
+      "minimum_price": 619,
+      "family_members": 9,
+      "campaign": false,
+      "includes_classes": false,
+      "includes_weights": false,
+      "loop24": true,
+      "local_gym_only": false,
+      "cancellation_notice_days": 30
+    }
+  ],
+  "images": {
+    "hero": "https://loopfitness.dk/wp-content/uploads/2019/11/Varde.png",
+    "og_image": "https://loopfitness.dk/wp-content/uploads/2019/11/Britt-881x1024.png"
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

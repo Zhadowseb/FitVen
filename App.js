@@ -42,6 +42,11 @@ import ExerciseSocialPostSettingsPage from "./src/Pages/ExerciseSocialPostSettin
 import OneRepMaxCalculatorPage from "./src/Pages/OneRepMaxCalculatorPage/OneRepMaxCalculatorPage";
 import WorkoutTypesSettingsPage from "./src/Pages/WorkoutTypesSettingsPage/WorkoutTypesSettingsPage";
 import RunHeartRateChartPage from "./src/Pages/WorkoutPage/WorkoutTypes/Run/RunHeartRateChartPage";
+import GymsPage from "./src/Pages/GymsPage/GymsPage";
+import GymLeaderboardPage from "./src/Pages/GymLeaderboardPage/GymLeaderboardPage";
+import GymExerciseLeaderboardPage from "./src/Pages/GymExerciseLeaderboardPage/GymExerciseLeaderboardPage";
+import NationalExerciseLeaderboardPage from "./src/Pages/NationalExerciseLeaderboardPage/NationalExerciseLeaderboardPage";
+import MusicSettingsPage from "./src/Pages/MusicSettingsPage/MusicSettingsPage";
 
 import { Colors } from './src/Resources/GlobalStyling/colors';
 import {
@@ -59,6 +64,7 @@ import { notificationService } from "./src/Services";
 import "./src/Services/locationBackgroundTask";
 import { AuthProvider, useAuth } from './src/Contexts/AuthContext';
 import { ThemeModeProvider, useThemeMode } from './src/Contexts/ThemeContext';
+import { LocalizationProvider, useTranslation } from './src/Localization';
 import { ExerciseViewSettingsProvider } from './src/Contexts/ExerciseViewSettingsContext';
 import PrivacyConsentGate from "./src/Resources/Components/PrivacyConsentGate/PrivacyConsentGate";
 import ExerciseLibrarySync from "./src/Sync/ExerciseLibrarySync";
@@ -66,6 +72,8 @@ import PushNotificationRegistrationSync from "./src/Sync/PushNotificationRegistr
 import SetSync from "./src/Sync/SetSync";
 import WorkoutTypeCatalogSync from "./src/Sync/WorkoutTypeCatalogSync";
 import WorkoutTypeInstanceSync from "./src/Sync/WorkoutTypeInstanceSync";
+import WorkoutMusicSync from "./src/Sync/WorkoutMusicSync";
+import GymMatchSync from "./src/Sync/GymMatchSync";
 
 const Stack = createNativeStackNavigator();
 const navigationRef = createNavigationContainerRef();
@@ -290,6 +298,11 @@ function RootNavigator() {
                 <Stack.Screen name="ExerciseSocialPostSettingsPage" component={ExerciseSocialPostSettingsPage} options={{ headerShown: false }} />
                 <Stack.Screen name="OneRepMaxCalculatorPage" component={OneRepMaxCalculatorPage} options={{ headerShown: false }} />
                 <Stack.Screen name="WorkoutTypesSettingsPage" component={WorkoutTypesSettingsPage} options={{ headerShown: false }} />
+                <Stack.Screen name="MusicSettingsPage" component={MusicSettingsPage} options={{ headerShown: false }} />
+                <Stack.Screen name="GymsPage" component={GymsPage} options={{ headerShown: false }} />
+                <Stack.Screen name="GymLeaderboardPage" component={GymLeaderboardPage} options={{ headerShown: false }} />
+                <Stack.Screen name="GymExerciseLeaderboardPage" component={GymExerciseLeaderboardPage} options={{ headerShown: false }} />
+                <Stack.Screen name="NationalExerciseLeaderboardPage" component={NationalExerciseLeaderboardPage} options={{ headerShown: false }} />
                 <Stack.Screen name="PrivacyPolicyPage" component={PrivacyPolicyPage} options={{ headerShown: false }} />
                 <Stack.Screen name="TermsOfUsePage" component={TermsOfUsePage} options={{ headerShown: false }} />
                 <Stack.Screen
@@ -339,6 +352,7 @@ function UserScopedDatabaseApp() {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const { accentTheme, isThemeLoading } = useThemeMode();
+  const { language, isLanguageLoading, t } = useTranslation();
   const { user, isAuthLoading } = useAuth();
   const userId = user?.id ?? null;
   const databaseName = getDatabaseNameForUserId(userId);
@@ -360,12 +374,13 @@ function UserScopedDatabaseApp() {
   // one has been read means throwing the whole screen tree away and building
   // it again a tick later - with every loader on the home screen running
   // twice. Waiting costs one AsyncStorage read on a screen that was already
-  // waiting for auth.
-  if (isAuthLoading || isThemeLoading) {
+  // waiting for auth. The language is the same story: without the wait the
+  // first screen is painted in English and repainted in Danish a tick later.
+  if (isAuthLoading || isThemeLoading || isLanguageLoading) {
     return (
       <ThemedView style={{ alignItems: "center", justifyContent: "center" }}>
         <ThemedText setColor={theme.quietText ?? theme.iconColor}>
-          Restoring session...
+          {t("common.restoringSession")}
         </ThemedText>
       </ThemedView>
     );
@@ -381,8 +396,12 @@ function UserScopedDatabaseApp() {
       <SetSync />
       <WorkoutTypeInstanceSync />
       <PushNotificationRegistrationSync />
+      <WorkoutMusicSync />
+      <GymMatchSync />
       <PrivacyConsentGate>
-        <RootNavigator key={`accent-${accentTheme}`} />
+        {/* Keyed on the language too: a screen's header options and anything
+            else the navigator captured at mount are rebuilt in the new one. */}
+        <RootNavigator key={`accent-${accentTheme}-${language}`} />
       </PrivacyConsentGate>
     </SQLiteProvider>
   );
@@ -394,7 +413,9 @@ export default function App() {
       <ThemeModeProvider>
         <ExerciseViewSettingsProvider>
           <AuthProvider>
-            <UserScopedDatabaseApp />
+            <LocalizationProvider>
+              <UserScopedDatabaseApp />
+            </LocalizationProvider>
           </AuthProvider>
         </ExerciseViewSettingsProvider>
       </ThemeModeProvider>

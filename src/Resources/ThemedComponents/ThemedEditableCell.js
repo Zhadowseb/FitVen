@@ -1,4 +1,4 @@
-import { Pressable, TextInput, StyleSheet } from "react-native";
+import { Keyboard, Pressable, TextInput, StyleSheet } from "react-native";
 import { useColorScheme } from "react-native";
 import { useEffect, useRef, useState } from "react";
 import { Colors } from "../GlobalStyling/colors";
@@ -27,9 +27,50 @@ const ThemedEditableCell = ({
   const [localValue, setLocalValue] = useState(value);
   const [focused, setFocused] = useState(false);
 
+  // What the parent has already been told. The value is committed from three
+  // places now, so this keeps it to one write per distinct value rather than
+  // one per way of leaving the field.
+  const committedValueRef = useRef(value);
+  const localValueRef = useRef(localValue);
+
+  localValueRef.current = localValue;
+
+  // Rebuilt every render and called through the ref, so the keyboard listener
+  // below never commits through a stale onCommit - the call sites pass an
+  // inline arrow, which is a new function on every render.
+  const commitRef = useRef(null);
+
+  commitRef.current = () => {
+    const nextValue = localValueRef.current;
+
+    if (nextValue === committedValueRef.current) {
+      return;
+    }
+
+    committedValueRef.current = nextValue;
+    onCommit?.(nextValue);
+  };
+
   useEffect(() => {
     setLocalValue(value);
+    committedValueRef.current = value;
   }, [value]);
+
+  // Android's hide-keyboard button puts the keyboard away without moving
+  // focus, so onBlur never fired and what had just been typed was dropped.
+  // The keyboard going away is the same intent as tapping off the field.
+  useEffect(() => {
+    if (!focused) {
+      return undefined;
+    }
+
+    const subscription = Keyboard.addListener("keyboardDidHide", () => {
+      commitRef.current?.();
+      inputRef.current?.blur();
+    });
+
+    return () => subscription.remove();
+  }, [focused]);
 
   const displayValue =
     focused || !displayFormatter
@@ -63,11 +104,13 @@ const ThemedEditableCell = ({
         }}
         onBlur={() => {
           setFocused(false);
-          if (localValue !== value) {
-            onCommit?.(localValue);
-          }
+          commitRef.current?.();
           onBlur?.();
         }}
+        // The checkmark or done key on the keyboard. It normally blurs as
+        // well, and the commit above is then a no-op, but on a numeric keypad
+        // it does not always.
+        onSubmitEditing={() => commitRef.current?.()}
         onChangeText={setLocalValue}
         keyboardType={keyboardType}
         style={[

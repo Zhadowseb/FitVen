@@ -1,6 +1,7 @@
 import { Platform } from "react-native";
 import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
+import { t } from "@localization";
 
 import { supabase } from "../Database/supaBaseClient";
 import { attachAvatarUrls } from "./avatarUrls";
@@ -542,7 +543,7 @@ export async function notifyWorkoutStarted({ workout, startedAt } = {}) {
 
 export async function getPushNotificationSettings({ user } = {}) {
   if (!user?.id) {
-    throw new Error("You need to be signed in to load notification settings.");
+    throw new Error(t("notifications.errors.signInToLoadSettings"));
   }
 
   const [permission, pushTokens, preference, sourceUserIds] = await Promise.all([
@@ -565,7 +566,7 @@ export async function setPushNotificationsEnabled({
   enabled,
 } = {}) {
   if (!user?.id) {
-    throw new Error("You need to be signed in to update notification settings.");
+    throw new Error(t("notifications.errors.signInToUpdateSettings"));
   }
 
   return setWorkoutStartNotificationMode({
@@ -581,7 +582,7 @@ export async function setWorkoutStartNotificationMode({
   mode,
 } = {}) {
   if (!user?.id) {
-    throw new Error("You need to be signed in to update notification settings.");
+    throw new Error(t("notifications.errors.signInToUpdateSettings"));
   }
 
   const nextMode = normalizeWorkoutStartNotificationMode(mode);
@@ -641,7 +642,7 @@ export async function setWorkoutStartNotificationSources({
   sourceUserIds,
 } = {}) {
   if (!user?.id) {
-    throw new Error("You need to be signed in to update notification settings.");
+    throw new Error(t("notifications.errors.signInToUpdateSettings"));
   }
 
   const uniqueSourceUserIds = [...new Set(sourceUserIds ?? [])].filter(
@@ -678,7 +679,7 @@ export async function setWorkoutStartNotificationSources({
 
 export async function getNotificationHistory({ user, limit = 50 } = {}) {
   if (!user?.id) {
-    throw new Error("You need to be signed in to load notifications.");
+    throw new Error(t("notifications.errors.signInToLoad"));
   }
 
   const normalizedLimit = Math.min(Math.max(Math.trunc(Number(limit)) || 50, 1), 100);

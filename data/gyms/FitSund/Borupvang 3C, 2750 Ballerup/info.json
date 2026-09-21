@@ -1,0 +1,340 @@
+{
+  "chain": "Fit&Sund",
+  "name": "Fit&Sund Ballerup",
+  "short_name": "Ballerup",
+  "address": {
+    "street": "Borupvang 3C",
+    "postal_code": "2750",
+    "city": "Ballerup",
+    "country": "DK",
+    "full": "Borupvang 3C, 2750 Ballerup"
+  },
+  "location": {
+    "latitude": 55.73254965,
+    "longitude": 12.38322152
+  },
+  "geocode": {
+    "latitude": 55.73254965,
+    "longitude": 12.38322152,
+    "matched_address": "Borupvang 3, 2750 Ballerup",
+    "exact": false,
+    "source": "DAWA"
+  },
+  "url": "https://fitogsund.dk/c/huse/ballerup",
+  "membership_url": "https://fitogsund.dk/p/bliv-medlem",
+  "class_schedule_url": "https://fitogsund.goactivebooking.com/class-web-categories/34/classes?facility=33",
+  "google_maps_url": "https://www.google.com/maps/dir/?api=1&destination=Borupvang-3C+2750+Ballerup",
+  "phone": "+45 72 20 03 22",
+  "email": "ballerup@fitogsund.dk",
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 23:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 23:00"
+    }
+  ],
+  "reception_hours": [
+    {
+      "day": "Mandag",
+      "open": "08:00 - 14:00 & 16:00 - 19:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "08:00 - 14:00 & 16:00 - 19:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "08:00 - 14:00 & 16:00 - 19:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "08:00 - 14:00 & 16:00 - 19:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "08:00 - 14:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "09:00 - 13:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "Ingen bemanding"
+    }
+  ],
+  "meta_description": "Træn alle dage hos Fit & Sund Ballerup i vores moderne fitness og træningscenter. Fitness | Holdtræning | Personlig træning",
+  "description": "Velkommen til Fit&Sund Ballerup. Vi er meget mere end bare et fitnesscenter. Vi er dit lokale fitness- og sundhedshus, og vi arbejder ud fra vores 3 værdier: sundhed, viden og nærvær. Sundhed er bl.a. varieret træning. Derfor tilbyder vi styrke- og holdtræning, programlægning og målrettet træning på dine præmisser.\nKompetent team\nHos Fit&Sund Ballerup har vi et kompetent trænings- og sundhedsfagligt team, som består af personlige trænere og fysioterapeut. Personalet er veluddannet og arbejder på et højt fagligt niveau.\nLokalerne er store og lyse med topmoderne lækkert udstyr. Personalet er smilende og hjælpsomt og står altid klar til at hjælpe. I en hyggelig og afslappet atmosfære har vi plads til alle, uanset om du er trænet eller nybegynder. Er du til holdtræning, kan du vælge mellem mange forskellige hold, for vi har noget for enhver smag.\nInspirende og motiverende træningsoplevelse\nFit&Sunds mål er at tilbyde en inspirerende og motiverende træningsoplevelse, som giver dig overskud, velvære og livskvalitet.\nVores medlemmer og deres sundhed/træningsoplevelse ligger os meget på sinde. I vores velkomstområde er alle velkomne, og her kan man opleve den magi, der opstår, når medlemmerne hygger sig med en kop kaffe og skaber et levende fællesskab i huset.\nFit&Sund Ballerup har åbent alle dage 05-23.",
+  "facilities": [
+    "Fitness",
+    "Personlig træning",
+    "Lyse lokaler",
+    "Nyt udstyr",
+    "Stor holdsal",
+    "Hyggelig atmosfære"
+  ],
+  "service_categories": [
+    "Hold",
+    "Yoga/Reformer",
+    "Personlig træning",
+    "Fysioterapi",
+    "Event",
+    "Camps",
+    "Seniorer",
+    "Fællesskab",
+    "Juniorer",
+    "Funktionel Træning",
+    "Muskelopbyggende Træning",
+    "Konditionsfremmende Træning",
+    "Dance",
+    "Body & Mind",
+    "Core Træning",
+    "Senior Træning"
+  ],
+  "services": [
+    {
+      "name": "Blid Morgenyoga",
+      "room": null,
+      "categories": [
+        "hold",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/-blid-morgenyoga"
+    },
+    {
+      "name": "2026 OPSTARTSPAKKER",
+      "room": null,
+      "categories": [
+        "event",
+        "fysioterapi",
+        "personlig-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/2026-opstartspakker-26"
+    },
+    {
+      "name": "Body SDS Grundtræning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-funktionel-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/body-sds-grundtraening"
+    },
+    {
+      "name": "Bootcamp medlemskab/X-Camp med Jean",
+      "room": null,
+      "categories": [
+        "camps",
+        "hold",
+        "hold-funktionel-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/bootcamp-medlemskab-x-camp-med-jean"
+    },
+    {
+      "name": "Cirkeltræning",
+      "room": "Holdsal",
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/cirkel-traening"
+    },
+    {
+      "name": "CrossCardio",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/crosscardio"
+    },
+    {
+      "name": "Funktionel Træning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-funktionel-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/funktionel-traening"
+    },
+    {
+      "name": "G:LAD træning",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/glad-traening"
+    },
+    {
+      "name": "Groove dans",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/groove-dans"
+    },
+    {
+      "name": "Hatha Yoga",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/hatha-yoga"
+    },
+    {
+      "name": "Jumping Fitness",
+      "room": null,
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/jumping-fitness"
+    },
+    {
+      "name": "Maskinvisning",
+      "room": "Ballerup",
+      "categories": [
+        "hold-funktionel-traening",
+        "personlig-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/maskinvisning"
+    },
+    {
+      "name": "Padel-Camp",
+      "room": null,
+      "categories": [
+        "camps",
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/padel-camp"
+    },
+    {
+      "name": "Pilates",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/pilates"
+    },
+    {
+      "name": "RawFit - ExerciseLab",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-funktionel-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/rawfit-exerciselab"
+    },
+    {
+      "name": "Senior Træning",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-senior",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/seniortraening"
+    },
+    {
+      "name": "SENIOR-BOOTCAMP",
+      "room": null,
+      "categories": [
+        "camps",
+        "hold",
+        "hold-senior"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/senior-bootcamp"
+    },
+    {
+      "name": "Seniorklub",
+      "room": null,
+      "categories": [
+        "faellesskab",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/seniorklub-2"
+    },
+    {
+      "name": "TRX Basis",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-funktionel-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/trx-basis"
+    },
+    {
+      "name": "TRX®",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-core"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/trx-"
+    },
+    {
+      "name": "Vores regler for juniortræning",
+      "room": null,
+      "categories": [
+        "juniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/vores-regler-for-juniortraening-7"
+    },
+    {
+      "name": "YIN YOGA",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-body-mind",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/yin-yoga"
+    },
+    {
+      "name": "ZUMBA®",
+      "room": null,
+      "categories": [
+        "hold",
+        "hold-dance"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/zumba"
+    }
+  ],
+  "manager": {
+    "name": "Tanja Nadia Nyhuus Sørensen",
+    "title": "Husleder",
+    "image": "https://fitogsund.dk/f/thumb?src=/f/blog/article/290c84b7d167c781735ecb853e5169185fd491d5_thumb.jpg&w=300&h=380"
+  },
+  "images": {
+    "hero": null,
+    "fallback": "../fitogsund-logo.png"
+  },
+  "hero_image_file": "hero.png",
+  "hero_is_placeholder": true,
+  "scraped_at": "2026-09-17"
+}

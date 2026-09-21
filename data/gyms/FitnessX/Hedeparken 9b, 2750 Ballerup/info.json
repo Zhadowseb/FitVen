@@ -1,0 +1,113 @@
+{
+  "chain": "FitnessX",
+  "name": "Ballerup",
+  "label": "Fitnesscenter",
+  "address": {
+    "street": "Hedeparken 9b",
+    "postal_code": "2750",
+    "city": "Ballerup",
+    "country": "DK",
+    "full": "Hedeparken 9b, 2750 Ballerup"
+  },
+  "location": {
+    "latitude": 55.71891808263984,
+    "longitude": 12.357742499668918
+  },
+  "url": "https://fitnessx.dk/fitness/fitness-ballerup/fitness-ballerup-hedeparken/",
+  "google_maps_url": "https://www.google.com/maps/place/Hedeparken+9,+2750+Ballerup/@55.7188652,12.3566482,18z/data=!3m1!4b1!4m6!3m5!1s0x46525a86598d08cf:0x2526f2dd24495703!8m2!3d55.7188637!4d12.3577425!16s%2Fg%2F11b8yz08gy?coh=164777&entry=tt",
+  "membership_url": "https://fitnessx.dk/medlemskaber/",
+  "campaign": false,
+  "campaign_headline": "NY LAV PRIS I AARHUS",
+  "price_teaser": "Træn med en Træningsven fra kun 250 kr./md. pr. person.",
+  "opening_hours": [
+    {
+      "days": "Mandag - torsdag",
+      "open": "05:00 - 23:00",
+      "staffed": "Mandag/Onsdag 09:00 - 12:00 & 15:00 - 18:30: Tirsdag/Torsdag 15:00 - 18:30"
+    },
+    {
+      "days": "Fredag",
+      "open": "05:00 - 23:00",
+      "staffed": "09:00 - 12:00"
+    },
+    {
+      "days": "Lørdag",
+      "open": "06:00 - 23:00",
+      "staffed": "Ingen"
+    },
+    {
+      "days": "Søndag",
+      "open": "06:00 - 23:00",
+      "staffed": "Ingen"
+    },
+    {
+      "days": "Helligdage",
+      "open": "Åbent som normalt",
+      "staffed": "Ingen"
+    }
+  ],
+  "special_days_text": "Særlige åbningsdage:\n24/12 og 31/12: Åbent som normalt - lukker kl. 17.00.\n25/12 og 1/1: Åbent som normalt - ingen bemanding.",
+  "meta_description": "Fitness og hold i dit lokale FitnessX i Ballerup. Find os på Hedeparken 9b. Se centerets faciliteter, læs om parkering, se åbningstider og find vej.",
+  "description": "Dette center ligger på en af vores bedste lokationer og giver dig lidt ekstra at glæde dig over i hverdagen. Det er FitnessX, som du kender det - bare med flere detaljer, der gør en forskel.\nNår du træder ind, mærker du hurtigt, at oplevelsen er skruet op: mere gennemført indretning, et større udvalg af udstyr, bedre plads og åbningstider.\nOg fordi behov og byer ikke er ens, er hvert center lokalt tilpasset. Derfor finder du ikke to centre, der er helt ens - men du finder altid et sted, der gør din træning både nemmere og bedre.",
+  "features": [
+    "Fitness og cardio",
+    "HYROX",
+    "Hold",
+    "Reformer"
+  ],
+  "features_detail": [
+    {
+      "title": "Åbningstid",
+      "text": "I weekenden åbner vi en time tidligere. Så kan du træne (næsten) alene før byen vågner."
+    },
+    {
+      "title": "Bodytracker",
+      "text": "Muskelmasse, fedtprocent (og hvor det sidder), stofskifte, body age og meget mere. Få styr på, hvordan det ser ud med de ting, du ikke kan se i spejlet og følg din udvikling. Uden det koster ekstra."
+    },
+    {
+      "title": "Udstyr",
+      "text": "Udover vores normale maskiner og udstyr har vi særligt udvalgt udstyr i dit center, som er baseret på jeres lokale behov og ønsker. Kort sagt har vi mere, af det du kender, og noget af det du skal lære at kende."
+    },
+    {
+      "title": "Bikesal",
+      "text": "Bike som du kender det. Men opgraderet. Store skærme, lys og et design du ikke har set før. Vi har en særligt variant af Intelligent Cycling (”The Journey”), som er en virtuel oplevelse, der gør din træning sjovere og mere intens. Velkommen til en lidt sjovere, og lidt bedre, biketime."
+    }
+  ],
+  "parking": "Gratis parkering uden tidsbegrænsning på de seks pladser ved indgangen til centeret. Desuden gratis parkering i to timer ved Nettos og Remas p-plads",
+  "manager": {
+    "name": "Mahmoud",
+    "title": "Manager",
+    "image": "https://fitnessx.dk/wp-content/uploads/Manager-Mo-e1756899996979-scaled-e1756900218156.jpeg"
+  },
+  "tags": [],
+  "images": {
+    "hero": "https://fitnessx.dk/wp-content/uploads/20230309_142640-scaled-e1678433556362.jpg",
+    "gallery": [
+      "https://fitnessx.dk/wp-content/uploads/20230309_142640-scaled-e1678433556362.jpg",
+      "https://fitnessx.dk/wp-content/uploads/20230309_142252-scaled-e1678433624719.jpg",
+      "https://fitnessx.dk/wp-content/uploads/20230309_142430-scaled-e1678433607182.jpg",
+      "https://fitnessx.dk/wp-content/uploads/20230309_155110-scaled-e1678433591946.jpg",
+      "https://fitnessx.dk/wp-content/uploads/20230309_142713-scaled-e1678433575865.jpg",
+      "https://fitnessx.dk/wp-content/uploads/20230309_141349-scaled-e1678433496171.jpg",
+      "https://fitnessx.dk/wp-content/uploads/20230309_142302-scaled-e1678433519566.jpg",
+      "https://fitnessx.dk/wp-content/uploads/20230309_142237-scaled-e1678433539881.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Mobile-header-image-SH.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Desktop-header-imagesort_hvid.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Mobile-header-imagesort_hvid.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Aarhus-Soender-Alle-310x150x2.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Aarhus-Soender-Alle-130x115-1.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Aarhus-N-PMVx3.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Aarhus-N-PMV.jpg",
+      "https://fitnessx.dk/wp-content/uploads/20251022_092844713_iOS-scaled.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Koebenhavn-S-Amager-Strand-310x150x3.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Koebenhavn-S-Amager-Strand-130x115-1.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Lyngby-Jernbanepladsen-310x150x3.jpg",
+      "https://fitnessx.dk/wp-content/uploads/Lyngby-Jernbanepladsen-130x115-1.jpg",
+      "https://fitnessx.dk/wp-content/uploads/1000007045.jpg",
+      "https://fitnessx.dk/wp-content/uploads/HKP-color-desk.jpg",
+      "https://fitnessx.dk/wp-content/uploads/HKP-color-mobil.jpg"
+    ]
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

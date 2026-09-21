@@ -1,0 +1,351 @@
+{
+  "chain": "PureGym",
+  "name": "Århus N., Jens Baggesens vej",
+  "puregym_id": "113",
+  "address": {
+    "street": "Jens Baggesens Vej 90",
+    "postal_code": "8200",
+    "city": "Århus N",
+    "country": "DK",
+    "full": "Jens Baggesens Vej 90, 8200 Århus N"
+  },
+  "location": {
+    "latitude": 56.169852,
+    "longitude": 10.192948
+  },
+  "url": "https://www.puregym.dk/find-center/aarhus-n-jens-baggesens-vej",
+  "membership_url": "https://www.puregym.dk/bliv-medlem/46/medlemskab",
+  "price_from": "Priser fra 139,50 DKK/md.",
+  "price_note": "*Normalpris fra 279 DKK/md.",
+  "today_notice": "Vi lukker i dag kl. 00:00",
+  "opening_hours": [
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "09:00 - 20:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 17:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Mandag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    }
+  ],
+  "opening_hours_schema": [
+    {
+      "day": "Monday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Tuesday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Wednesday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Thursday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Friday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Saturday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Sunday",
+      "opens": "05:00",
+      "closes": "00:00"
+    }
+  ],
+  "special_days": [
+    {
+      "date": "2027-01-01",
+      "opens": "08:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-02",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-03",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-05",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-06",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-14",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-24",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-06-05",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-24",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-25",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-26",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-31",
+      "opens": "05:00",
+      "closes": "18:00"
+    }
+  ],
+  "meta_description": "Hos PureGym på Jens Baggesens Vej tilbyder vi både styrke-, cardio- og fitnesstræning. Find center her, og oplev træning med plads til alle.",
+  "description": "PureGym Jens Baggesens Vej\nMidt i universitetsbyen finder du PureGym Jens Baggesens Vej. Som et af Nordens største fitnesscentre tilbyder vi topmoderne træningsfaciliteter og alt, du behøver for at nå dine mål.\nVi tilbyder et stort udvalg af fitness-, styrke- og konditionsfaciliteter, et rummeligt funktionelt område samt fem sale til sjove og svedige hold for enhver smag.\nHer bliver du altid mødt med et \"velkommen\" og et stort smil fra vores engagerede team, som gør alt for, at din træningsoplevelse bliver så vellykket som muligt.\nVi glæder os til at se dig!\nEndnu mere udstyr landet i PureGym Jens Baggesens Vej\nHer er en oversigt over, hvilket nyt udstyr vi har fået:\nBedre frivægtsområde\nBedre funktionelt område\nEndnu flere maskiner\nNye udstræksområder\nNye håndvægte i holdsalene\nDet siger personalet om Jens Baggesens Vej\nHer på Jens Baggesens Vej tilbyder vi et stort center med styrke-, hold- og konditionsfaciliteter ud over det sædvanlige. Vi går altid den ekstra mil for at sikre den bedste medlemsoplevelse for alle, der besøger centret. Jens Baggesens Vej er et rummeligt, lokalt fællesskab med plads til alle – uanset alder og træningserfaring.\nPersonlig træning i Jens Baggesens Vej\nHar du brug for en snak om din træning? Vi står altid klar – ud over gode råd tilbyder vi også personlig træning hos vores certificerede trænere. Vores team består af trænere med forskellige kompetencer og faglige baggrunde, så vi kan skræddersy et forløb, der passer præcis til dig. Derudover tilbyder vi en gratis, uforpligtende samtale med en personlig træner.\nVi tilbyder også en uforpligtende samtale med en personlig træner til 0,-:\nBook samtale her\nHoldtræning i Jens Baggesens Vej\nHos PureGym Jens Baggesens Vej tilbyder vi hele fem områder, hvor du kan udfolde dig i vores holdunivers. Vi har en reformersal, en bikesal, et funktionelt område samt to holdsale. Vi tilbyder alt fra de klassiske holdkoncepter til Reformer og meget andet.Derudover tilbyder vi som noget særligt en række Les Mills-hold, herunder BodyPump, BodyCombat og BodyAttack. Vores energiske og professionelle instruktører underviser alle ugens syv dage – 365 dage om året.\nHvornår træner folk her i centret?\nVi har god plads til vores medlemmer. I vores app kan du se, hvornår der er flest og færrest mennesker i centret.\nBliv medlem her\nHvornår kan jeg møde personalet her i centret?\nSe vores bemandede tider i oversigten her på siden. Du er altid velkommen til at komme forbi i vores bemandede åbningstid.\nVi tager os tid til at svare på alle dine spørgsmål og giver gerne en rundvisning i centret.\nKan jeg parkere ved Jens Baggesens Vej?\nVi tilbyder 3 timers gratis parkering på vores PureGym-pladser – husk blot at registrere din nummerplade ved ankomst. Alternativt kan du parkere på Jens Baggesens Vej, hvor du skal bruge p-skive på hverdage indtil kl. 18. Vi ligger desuden tæt på offentlig transport, så det er nemt at komme til os.\nFølg os på Facebook\nSe vores lokaler her\n\n<div",
+  "notice": {
+    "title": "Endnu mere nyt udstyr landet!",
+    "text": "Vi er glade for at kunne fortælle, at vi har fået endnu mere spritnyt og virkelig lækkert udstyr her i centret - læs om alle detaljerne længere nede her på siden.\nKom og oplev de nye faciliteter og få en fantastisk træning.\nVi glæder os til at byde dig velkommen!\n.center-hero-46--4969 {\nbackground-image: url('https://www.puregym.dk/files/styles/hero_750x750/public/2025-05/Puregym_fitness_cardio_JBV.jpg?itok=Elq6bIb8');\n}\n@media (min-width: 700px){.center-hero-46--4969 {\nbackground-image: url('https://www.puregym.dk/files/styles/hero_800x800/public/2025-05/Puregym_fitness_cardio_JBV.jpg?itok=fg1nIz9I');\n}\n}@media (min-width: 1200px){.center-hero-46--4969 {\nbackground-image: url('https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-05/Puregym_fitness_cardio_JBV.jpg?itok=J64IgQbQ');\n}\n}"
+  },
+  "facilities": [
+    {
+      "name": "App",
+      "description": "PureGym appen kan hentes til både iOS- og Android-telefoner. Appen er fyldt med fede features og lækkert design:\nBook og afmeld hold inkl. reminder, så du husker dine hold\nMere end 50 træningsprogrammer\nBodytracker-måling\nTræningsstatistik\nAdgang til challenges\nTeam up med din træningsmakker\nDownload appen og få mere ud af dit medlemskab.\nLæs mere",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-04/CTA%20App%20grafik.jpg?itok=489La2Vs"
+    },
+    {
+      "name": "Bikesal",
+      "description": "Deltag på Bike, og deltag samtidigt i et uforpligtende fællesskab. Som Danmarks største fitnesscenter har vi de helt rigtige rammer for at skabe Danmarks fedeste holdtræning – og det er vi og mange hundrede tusinde medlemmer også overbeviste om at vi har.\nLæs mere om vores forskellige bikehold her og bliv inspireret.\nBook dit bikehold via vores holdbooking.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-09/bike-vi-tilbyder-puregym.jpg?itok=-bdz_Ijq"
+    },
+    {
+      "name": "Bodytracker+",
+      "description": "Bodytrackeren er en avanceret vægt, der giver en pålidelig analyse af din kropssammensætning. Med bodytracker+ får du dybere indblik i din træningsudvikling. Udover de gratis parametre kropsvægt, BMI, muskelmasse og fedtprocent får du med bodytracker+ også indsigt i fedtmasse, fedtfri masse, talje/hofte forhold, kropsvand samt hvilestofskifte. Parametre som er interessante, hvad enten du har personlige mål om at øge din vægt, højere muskelmasse, vægttab mv.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/facilities/bplusny-ny-ny_1.png?itok=3ubbpEkC"
+    },
+    {
+      "name": "Cardiotræning",
+      "description": "Kunne du godt tænke dig at forbedre din kondition eller få varmet kroppen op inden din styrketræning, så er Cardio et godt sted at gå hen.\nI dette område har vi et bredt udvalgt af kredsløbsmaskiner. Her vil du blandt andet kunne finde løbebånd, motionscykler samt ro, step -og trappemaskiner. Disse maskine er designet til at kunne forbedre dit kredsløb bedre kendt som ”kondition”. Samtlige maskiner kan indstilles og tilpasses, så de netop passer til den intensitet som ønsker på dagen.\nSå om du er til en let og kort opvarmning på motionscyklen, en tur op af Eiffeltårnet med din yndlingspodcast i ørene på trappemaskinen, eller en god løbetur i tørvejr på løbebåndet, så vil du kunne gøre dette i Cardio.\nEr du i tvivl om hvordan en maskine i Cardio virker, kan du altid spørge vores personale.\nØnsker du hjælp til hvordan du kan forbedre din kondition, så kan du også booke en uforpligtende samtale til 0 kr med en personlig træner her.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-09/CORE-slider-cta-core-medlemskab_0.jpg?itok=hEEf98nO"
+    },
+    {
+      "name": "Funktionelt træningsområde",
+      "description": "Er du til en træningsform, der har fokus på konditions- og styrketræning, så er vores funktionelle træningsområde et område for dig. Vores funktionelle område kan hjælpe dig med at blive hurtigere, stærkere men også mere udholdende og eksplosiv.\nOmrådet er udstyret med forskellige redskaber såsom; medicinbolde, kettlebells og sjippetove. Derudover finder du naturligvis også racks i alle vores funktionelle områder.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Funtionelt-traeningsomraade-1-1.jpg?itok=PDOLgNJB"
+    },
+    {
+      "name": "Glutebuilder",
+      "description": "Glutebuilderen er en multifunktionel træningsmaskine, som giver mulighed for at lave mange forskellige øvelser - perfekt til træning af ben, baller og lår. Du kan bruge maskinen som den er, med en vægtstang, vægtskiver og elastikker, som du kan låne i centeret. Kun fantasien sætter grænser.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Glute-skal-ikke-beskaeres.jpg?itok=iFSaL_IN"
+    },
+    {
+      "name": "Holdtræning",
+      "description": "Deltag på vores hold, og deltag samtidigt i et uforpligtende fællesskab. Som Danmarks største fitnesscenter har vi de helt rigtige rammer for at skabe Danmarks fedeste holdtræning – og det er vi og mange hundrede tusinde medlemmer også overbeviste om at vi har. Du kan læse om alle vores forskellige hold her, og derefter booke dem fra vores holdbooking.\nHvis du aldrig har deltaget på vores hold før, eller er ny inden for holdtræning, har du muligheden for at få en introduktion med vores \"Get started - introhold\" hold. Vi vil sørge for store sale med god plads, det helt rigtige udstyr og så vil vores instruktører vil sørge for god stemning så din holdoplevelse bliver så god som muligt.\nBook her",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2026-08/Vi-tilbyder-holdtraening.jpg?itok=Xf48xmWA"
+    },
+    {
+      "name": "Parkering",
+      "description": "Er du i bil til din træning, vil der være parkeringsmuligheder ved næsten alle vores centre. PureGym har parkeringsmuligheder i form af egen parkeringsplads, eller som en del af bygningens parkeringsplads eller parkeringshus. Hvis du er i tvivl kan du altid spørge vores søde personale i centrene.",
+      "image": null
+    },
+    {
+      "name": "Personlig træner",
+      "description": "Med en personlig træner får du hjælp og sparring til at nå dine mål - altid med udgangspunkt i dig og dine behov.\nVores personlige trænere sørger for trygge rammer, mens du er i centret.\nDe sikrer fortsat, at alt udstyr er sprittet af både før og efter brug, samt at I holder god afstand til de øvrige medlemmer, mens I træner.\nLæs mere om Personlig træning her!",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Book-samtale-med-en-personlig-traener-1-1.jpg?itok=a7i9C-9t"
+    },
+    {
+      "name": "Reformer",
+      "description": "Reformer er en form for pilates, der udføres på en rullende vogn kaldet en reformer. Selve træningen består af en masse kontrollerede øvelser, der sætter hele kroppen på prøve.",
+      "image": null
+    },
+    {
+      "name": "Styrketræning",
+      "description": "Vi har masser af udstyr til din styrketræning, så du kan lave alle de styrkeøvelser du kunne tænke dig. Vi har maskiner til træning af ryg, arme, mave, lår, bagdel, skuldre, bryst osv. Du kan derved træne dine muskelgrupper på flere måder og skifte imellem maskiner og finde de maskiner og øvelser, du bedst kan lide og får mest ud af.\nNogle af maskinerne er multifunktionelle, så du kan træne flere muskelgrupper på samme maskine.\nStyrketræning er din vej til sundhed, en stærkere krop, funktionalitet i hverdagen og større muskelmasse.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Styrketraening-skal-ikke-beskaeres.jpg?itok=2qQsiE_f"
+    },
+    {
+      "name": "Udstrækningsområde",
+      "description": "Vi vil gerne opfylde dine træningsbehov, og en nedkøling efter træning, eller en opvarmning før træning skal der være plads til.\nDer hvor din træning starter eller slutter har vi et udstrækningsområde til dig med masser af udstyr.\nI udstrækningsområdet finder du ribber, måtter, pilatesbolde, små vægte, mavehjul, Bosu bolde, forskellige slags elastikker og foamrollere.\nHvis der er noget du mangler, kan du altid spørge vores receptionister om de har det liggende et andet sted i centeret.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Udstraekningsomraade-skal-ikke-beskaeres.jpg?itok=24s5m_W_"
+    },
+    {
+      "name": "Watt-cykler & Intelligent Cycling",
+      "description": "Vores nye BODY BIKE® Smart+ watt-cykler giver dig mulighed for at få tal på din træning, når du deltager på vores Bike-hold. Således kan du måle dine fremskridt, følge din udvikling på cyklen og opnå ekstra motivation. Designet på cyklen er desuden forbedret, så du opnår en mere ergonomisk sidestilling.\nVia bluetooth kan du connecte din smartphone til cyklen og dermed følge med i din træning undervejs. BODY BIKE® app’en monitorerer din træning live og viser dig bl.a. watt-zoner, kadence, distance, kalorieforbrænding og meget mere.\nI samspil med watt-cyklerne, bruger instruktørerne det visuelle system Intelligent Cycling.\nMed Intelligent Cycling kan du følge med i programmet og se hvad denne times udfordring byder på. Du kan bl.a. se nuværende intensitet (watt-zoner), kadence, tid og position, samtidig med at du kigger frem mod næste pause.\nDet visuelle univers på storskærmene, tillader dig at koncentrere dig 100% om din træning og performance. Det online program giver dig tryghed og klarhed omkring programmet, så du kan nyde timen, instruktøren og musikken.\nLæs mere",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2018-07/watt-cykler-intelleigent-cycling.jpg?itok=wwmG9e3G"
+    }
+  ],
+  "facility_names": [
+    "App",
+    "Bikesal",
+    "Bodytracker+",
+    "Cardiotræning",
+    "Funktionelt træningsområde",
+    "Glutebuilder",
+    "Holdtræning",
+    "Parkering",
+    "Personlig træner",
+    "Reformer",
+    "Styrketræning",
+    "Udstrækningsområde",
+    "Watt-cykler & Intelligent Cycling"
+  ],
+  "facility_ids": [
+    "17",
+    "355",
+    "14",
+    "24",
+    "27",
+    "349",
+    "12",
+    "28",
+    "350",
+    "434",
+    "474",
+    "333",
+    "710"
+  ],
+  "plan_ids": [
+    "670",
+    "662"
+  ],
+  "team_ids": [
+    "741",
+    "332",
+    "326",
+    "757",
+    "498",
+    "408",
+    "736",
+    "742",
+    "807",
+    "318",
+    "834",
+    "338",
+    "358",
+    "397",
+    "438",
+    "444",
+    "802",
+    "806",
+    "344",
+    "739",
+    "829",
+    "827",
+    "825",
+    "635",
+    "433",
+    "445",
+    "430",
+    "363"
+  ],
+  "classes": [
+    "Bike Power",
+    "Bike Standard",
+    "Bike – Event",
+    "Body Fit",
+    "BodyAttack",
+    "BodyAttack Release",
+    "BodyCombat",
+    "BodyCombat Release",
+    "BodyPump",
+    "BodyPump Release",
+    "Boksning",
+    "Cross",
+    "Functional Express",
+    "Get Started - Introhold",
+    "Jam",
+    "Latin",
+    "Pilates",
+    "Reformer - Pilates (+50kr)",
+    "Reformer - Power (+50kr)",
+    "Reformer Intro",
+    "Step Power",
+    "Step Standard",
+    "Stram Op",
+    "Styrke & Funktionelt – Event",
+    "Yang Yoga",
+    "Yin Yoga",
+    "Yoga & Pilates - Event",
+    "Zumba"
+  ],
+  "images": {
+    "hero": "https://www.puregym.dk/files/2025-05/Puregym_fitness_cardio_JBV.jpg",
+    "hero_2500": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-05/Puregym_fitness_cardio_JBV.jpg?itok=J64IgQbQ",
+    "teaser": "https://www.puregym.dk/files/styles/center_teaser/public/2025-05/Puregym_fitness_cardio_JBV.jpg?itok=ffaBntpJ",
+    "gallery": [
+      "https://mit.puregym.dk/images/centers/694/pg-aarhus-jens-baggesens-vej-90-3-2-01-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/694/pg-aarhus-jens-baggesens-vej-90-3-2-02-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/694/pg-aarhus-jens-baggesens-vej-90-3-2-03-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/694/pg-aarhus-jens-baggesens-vej-90-3-2-04-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/694/pg-aarhus-jens-baggesens-vej-90-3-2-05-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/694/pg-aarhus-jens-baggesens-vej-90-3-2-06-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/694/pg-aarhus-jens-baggesens-vej-90-3-2-07-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/694/pg-aarhus-jens-baggesens-vej-90-3-2-08-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/694/pg-aarhus-jens-baggesens-vej-90-3-2-09-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/694/pg-aarhus-jens-baggesens-vej-90-3-2-10-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/694/pg-aarhus-jens-baggesens-vej-90-3-2-11-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/694/pg-aarhus-jens-baggesens-vej-90-3-2-12-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/694/pg-aarhus-jens-baggesens-vej-90-3-2-13-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/694/pg-aarhus-jens-baggesens-vej-90-3-2-14-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/694/pg-aarhus-jens-baggesens-vej-90-3-2-15-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/694/pg-aarhus-jens-baggesens-vej-90-3-2-16-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/694/pg-aarhus-jens-baggesens-vej-90-3-2-17-1090x727.webp",
+      "https://mit.puregym.dk/images/centers/694/pg-aarhus-jens-baggesens-vej-90-3-2-18-1090x727.webp"
+    ]
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

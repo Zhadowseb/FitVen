@@ -1,0 +1,228 @@
+{
+  "chain": "PureGym",
+  "name": "Gentofte, Lyngbyvej",
+  "puregym_id": "119",
+  "address": {
+    "street": "Lyngbyvej 317",
+    "postal_code": "2820",
+    "city": "Gentofte",
+    "country": "DK",
+    "full": "Lyngbyvej 317, 2820 Gentofte"
+  },
+  "location": {
+    "latitude": 55.738437,
+    "longitude": 12.53834
+  },
+  "url": "https://www.puregym.dk/find-center/gentofte-lyngbyvej",
+  "membership_url": "https://www.puregym.dk/bliv-medlem/76/medlemskab",
+  "price_from": "Priser fra 149,50 DKK/md.",
+  "price_note": "*Normalpris fra 299 DKK/md.",
+  "today_notice": "Vi lukker i dag kl. 00:00",
+  "opening_hours": [
+    {
+      "day": "Torsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "09:00 - 20:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 17:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Mandag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "05:00 - 00:00",
+      "staffed": "08:00 - 20:00"
+    }
+  ],
+  "opening_hours_schema": [
+    {
+      "day": "Monday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Tuesday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Wednesday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Thursday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Friday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Saturday",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "day": "Sunday",
+      "opens": "05:00",
+      "closes": "00:00"
+    }
+  ],
+  "special_days": [
+    {
+      "date": "2027-01-01",
+      "opens": "08:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-02",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-03",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-05",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-04-06",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-14",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-24",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-05-25",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2027-06-05",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-24",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-25",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-26",
+      "opens": "05:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-31",
+      "opens": "05:00",
+      "closes": "18:00"
+    }
+  ],
+  "meta_description": "Hos PureGym på Lyngbyvej i Gentofte tilbyder vi både styrke-, cardio- og fitnesstræning. Oplev et trænings-fællesskab med plads til alle i dag.",
+  "description": "PureGym Gentofte\nLige ved motorvejen finder du PureGym Gentofte Lyngbyvej, som er et af de hyggeligste centre i Gentofte.\nVi tilbyder blandt andet en masse fitness, styrke- og konditionsfaciliteter, og en stor holdplan med mange forskellige hold i holdsalen, samt bikehold i bikesalen.\nHer vil du altid få et ”Velkommen” og et stort smil fra vores dedikerede team, der vil gøre deres bedste for, at din træningsoplevelse bliver så vellykket som overhovedet muligt.\nVi glæder os til at se dig!\nDet siger personalet om PureGym Gentofte Lyngbyvej\n\"I PureGym Gentofte Lyngbyvej er der plads til alle. Vi går op i, at alle føler sig velkommen i vores center. Selvom at vi altid er at finde igang med at gøre centret rent, så er vi altid klar til en snak med vores fantastiske medlemmer.\"\nPersonlig træning i PureGym Gentofte Lyngbyvej\nHar du brug for en snak om din træning, så står vi altid klar og tilbyder udover gode råd, også programlægning og personlig træning af vores certificerede personlige træner.\nVi tilbyder også en uforpligtende samtale med en personlig træner til 0,-:\nBook samtale\nHoldtræning i PureGym Gentofte Lyngbyvej\nVi tilbyder en stor lysholdsal med masser af hold på holdplanen og en flot bikesal.\nHerudover har centret en rummelig holdsal, hvor der blandt andet afholdes Yin og Yang Yoga, Stram Op og Seniortræning og Functional Training samt en stor bikesal.\nHvornår træner folk her i centret?\nVi har god plads til vores medlemmer. I vores app kan du se, hvornår der er flest og færrest mennesker i centret.\nBliv medlem\nHvornår kan jeg møde personalet i centret?\nVed indgangen ligger receptionen, hvor du bliver mødt af vores smilende og servicemindede team, der står klar til at hjælpe dig.\nSe vores bemandede tider i oversigten her på siden.\nDu er altid velkommen til at komme forbi i vores bemandede åbningstid. Vi tager os tid til at svare på alle dine spørgsmål og giver gerne en rundvisning i centret.\nKan jeg parkere ved PureGym Gentofte Lyngbyvej?\nDer er parkeringspladser rundt om centret, som er gratis at benytte mellem 6:00-18:00. Udenfor det tidsrum er det også gratis, men man kan maks. holde der 3 timer. Du skal blot huske at stille parkeringsskiven.\nVi er også placeret tæt på offentlig transport, hvilket gør det nemt at komme til.\nFølg os på Facebook\nBliv medlem af PureGym og få adgang til:\nApp\nHer kan du få et trænings-program, følge din træning, booke hold, deltage i challenges og meget mere.\nPersonlig træning\nHar du brug for hjælp til at nå dine mål? Book en samtale hos en af vores certificerede personlige trænere til 0 kr.\nHoldtræning\nBliv en del af et stærkt fællesskab på vores hold. Vores dedikerede instruktører guider dig igennem og sikrer højt humør.\nBodytracker\nFor kun ekstra 9 kr./md. kan du få adgang til en avanceret vægt, der giver dig en kropsanalyse med flere forskellige parametre.\nEr du klar til at starte?\nVælg dit medlemskab her\nOg bliv en del af Danmarks største fitness-fælleskab.\nGenerelt\nLog ind på Mit PureGym\nPriser og medlemskabstyper\nTil/afmeld nyhedsbrev\nOm PureGym\nPresse\nKarriere\nHjerteforeningen\nStudierabat\nInformation\nFAQ & Kontakt\nVelkomst og information\nHusets regler\nMedlems­betingelser\nDatapolitik\nCookies\nTilgængelighed\nKonkurrencevindere\nSafespace\nVores fitness centre\nFind center\nAlle større byer\nKøbenhavn\nAarhus\nOdense\nAalborg\nRanders\nValby\nDownload vores app\nHold dig informeret\nTorveporten 2,\n2500 Valby\nCVR. 25652991\nPureGym © 2026\nLog ind\nNyt eller glemt kodeord?\nIkke medlem endnu?\nMeld dig ind",
+  "notice": null,
+  "facilities": [],
+  "facility_names": [
+    "App",
+    "Bikesal",
+    "Bodytracker+",
+    "Cardiotræning",
+    "Funktionelt træningsområde",
+    "Glutebuilder",
+    "Holdtræning",
+    "Parkering",
+    "Personlig træner",
+    "Styrketræning",
+    "Udstrækningsområde",
+    "Watt-cykler & Intelligent Cycling"
+  ],
+  "facility_ids": [
+    "17",
+    "355",
+    "14",
+    "24",
+    "27",
+    "349",
+    "28",
+    "350",
+    "434",
+    "474",
+    "333",
+    "12"
+  ],
+  "plan_ids": [
+    "667",
+    "656"
+  ],
+  "team_ids": [
+    "312",
+    "498",
+    "318",
+    "735",
+    "802",
+    "806",
+    "344",
+    "739",
+    "834"
+  ],
+  "classes": [
+    "Bike Power",
+    "Bike Standard",
+    "Functional Express",
+    "Functional Training",
+    "Pilates",
+    "Seniortræning",
+    "Stram Op",
+    "Yang Yoga",
+    "Yin Yoga"
+  ],
+  "images": {
+    "hero": "https://www.puregym.dk/files/2026-03/Hero_0.jpg",
+    "hero_2500": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2026-03/Hero_1.jpg?itok=SfWnT6hR",
+    "teaser": "https://www.puregym.dk/files/styles/center_teaser/public/2026-03/Hero_0.jpg?itok=4ltfEMHW",
+    "gallery": []
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

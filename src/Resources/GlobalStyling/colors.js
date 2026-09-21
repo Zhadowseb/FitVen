@@ -27,11 +27,28 @@ export const Colors = {
         planned: "#F2C14E",
         plannedDark: "rgb(201, 174, 0)",
 
+        // Music is purple on purpose: it must not be mistaken for a status
+        // (orange live, green done, yellow planned). Used only by the band on
+        // the Friends activity tiles, and it does not follow the accent.
+        music: "#B48CFF",
+        musicText: "#F2EBFF",
+        musicBandFrom: "rgba(180, 140, 255, 0.45)",
+        musicBandTo: "rgba(91, 63, 191, 0.25)",
+        musicQuietText: "#9DA2AD",
+        musicQuietIcon: "#8A8F9B",
+
         text: "#A4A8B3",
         textStrong: "#ECEDF1",
         textDisabled: "#3A3D46",
         textInverted: "#14100C",
         quietText: "#868C99",
+        // Between text and quietText: a label that has to stay readable at a
+        // small size without competing with the title next to it.
+        mutedStrong: "#C4C7CF",
+        // The chevron that says a row opens: present without competing.
+        chevron: "#4A4F5A",
+        // One step up from the card: a chain tile, a selected toggle.
+        raisedSurface: "#242830",
         title: "#F2F3F5",
 
         background: "#0A0B0F",
@@ -95,11 +112,21 @@ export const Colors = {
         planned: "#C08A12",
         plannedDark: "rgb(201, 174, 0)",
 
+        music: "#6E5CF0",
+        musicText: "#4A3AB8",
+        musicBandFrom: "rgba(110, 92, 240, 0.22)",
+        musicBandTo: "rgba(110, 92, 240, 0.08)",
+        musicQuietText: "#5C6270",
+        musicQuietIcon: "#676B76",
+
         text: "#5C6270",
         textStrong: "#22252C",
         textDisabled: "#C9CDD5",
         textInverted: "#14100C",
         quietText: "#676B76",
+        mutedStrong: "#3F4550",
+        chevron: "#A8ACB6",
+        raisedSurface: "#E9EBF0",
         title: "#16191F",
 
         background: "#F4F5F7",

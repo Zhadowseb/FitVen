@@ -1,0 +1,304 @@
+{
+  "chain": "PureGym",
+  "name": "Frb., Frederiksberg Svømmehal",
+  "puregym_id": "211",
+  "address": {
+    "street": "Helgesvej 29",
+    "postal_code": "2000",
+    "city": "Frederiksberg",
+    "country": "DK",
+    "full": "Helgesvej 29, 2000 Frederiksberg"
+  },
+  "location": {
+    "latitude": 55.6845223,
+    "longitude": 12.532236300000022
+  },
+  "url": "https://www.puregym.dk/find-center/frb-frederiksberg-svoemmehal",
+  "membership_url": "https://www.puregym.dk/bliv-medlem/539/medlemskab",
+  "price_from": "Priser fra 299,25 DKK/md.",
+  "price_note": "*Normalpris fra 319 DKK/md.",
+  "today_notice": "Vi lukker i dag kl. 20:55",
+  "opening_hours": [
+    {
+      "day": "Torsdag",
+      "open": "06:15 - 20:55",
+      "staffed": "09:00 - 20:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "06:15 - 20:55",
+      "staffed": "08:00 - 17:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "07:45 - 18:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "07:45 - 18:00",
+      "staffed": "08:00 - 13:00"
+    },
+    {
+      "day": "Mandag",
+      "open": "06:15 - 20:55",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "06:15 - 20:55",
+      "staffed": "08:00 - 20:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "06:15 - 20:55",
+      "staffed": "08:00 - 20:00"
+    }
+  ],
+  "opening_hours_schema": [
+    {
+      "day": "Monday",
+      "opens": "06:15",
+      "closes": "20:55"
+    },
+    {
+      "day": "Tuesday",
+      "opens": "06:15",
+      "closes": "20:55"
+    },
+    {
+      "day": "Wednesday",
+      "opens": "06:15",
+      "closes": "20:55"
+    },
+    {
+      "day": "Thursday",
+      "opens": "06:15",
+      "closes": "20:55"
+    },
+    {
+      "day": "Friday",
+      "opens": "06:15",
+      "closes": "20:55"
+    },
+    {
+      "day": "Saturday",
+      "opens": "07:45",
+      "closes": "18:00"
+    },
+    {
+      "day": "Sunday",
+      "opens": "07:45",
+      "closes": "18:00"
+    }
+  ],
+  "special_days": [
+    {
+      "date": "2027-01-01",
+      "opens": "Lukket",
+      "closes": "Lukket"
+    },
+    {
+      "date": "2027-04-02",
+      "opens": "07:45",
+      "closes": "18:00"
+    },
+    {
+      "date": "2027-04-03",
+      "opens": "07:45",
+      "closes": "18:00"
+    },
+    {
+      "date": "2027-04-05",
+      "opens": "07:45",
+      "closes": "18:00"
+    },
+    {
+      "date": "2027-04-06",
+      "opens": "07:45",
+      "closes": "18:00"
+    },
+    {
+      "date": "2027-05-14",
+      "opens": "07:45",
+      "closes": "18:00"
+    },
+    {
+      "date": "2027-05-17",
+      "opens": "07:45",
+      "closes": "18:00"
+    },
+    {
+      "date": "2027-06-09",
+      "opens": "07:45",
+      "closes": "18:00"
+    },
+    {
+      "date": "2026-12-24",
+      "opens": "00:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-25",
+      "opens": "00:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-26",
+      "opens": "00:00",
+      "closes": "00:00"
+    },
+    {
+      "date": "2026-12-31",
+      "opens": "00:00",
+      "closes": "00:00"
+    }
+  ],
+  "meta_description": "Et af PureGyms mest populære fitnesscentre ligger i Frederiksberg Svømmehal. Her kan du gå til styrketræning, fitness, cardio og holdtræning.",
+  "description": "PureGym Frederiksberg Svømmehal\nBeliggende i Svømmehalskvarteret i den ikoniske Frederiksberg Svømmehal finder du vores center på 2. og 3. sal, som er i skønne, lyse lokaler med kig til svømmehallen.\nHer er et udpluk af, hvad du kan glæde dig til:\n• Lys og flot holdsal\n• Stort og lækkert funktionelt område\n• Styrketræningsområde med kabler og håndvægte op til 50 kg.\n• Bikesal med Body BikeSmart+\n• Cardio-udstyr i høj kvalitet\n• 50% rabat på svømmehallens almindelige voksenbillet (fysisk køb i receptionen)\nVi glæder os til at se dig!\nDET SIGER PERSONALET OM PUREGYM FREDERIKSBERG SVØMMEHAL\nDe skønne lyse lokaler, fedt udstyr fra Matrix. Hele 13 racks og masser af bænke. Lys og lækker holdsal. Skønt caféområde, hvor personalet altid er klar med en lille snack. Dygtige personlige trænere, der hjælper med at guide. Instruktører, der sørger for smil på læben og sved på panden.\nPERSONLIG TRÆNING I PUREGYM FREDERIKSBERG SVØMMEHAL\nHar du brug for vejledning, støtte eller ønsker du et træningsprogram der er skræddersyet til dig og dit behov, så kom og tag fat i vores dygtige og certificerede personlige træner.\nVi tilbyder også en uforpligtende samtale med en personlig træner til 0,-:\nBOOK SAMTALE HER\nHOLDTRÆNING I PUREGYM FREDERIKSBERG SVØMMEHAL\nI centret vil du finde en ny, lys og stor holdsal og bikesal. Vi tilbyder alt fra Bike Power, Bike Standard, Zumba, Core & Glutes, Seniortræning, Pilates, Yoga & Stram op.\nHVORNÅR TRÆNER FOLK HER I CENTRET?\nVi har god plads til vores medlemmer. I vores app kan du se, hvornår der er flest og færrest mennesker i centret.\nBLIV MEDLEM HER\nHVORNÅR KAN JEG MØDE PERSONALET I CENTRET?\nI vores bemandingstid bliver du mødt af vores smilende og servicemindede team, der står klar til at hjælpe dig. Vores bemandingstider kan du finde i oversigten her på siden eller ved at scanne vores QR-koder ved vores gates indgang. Har du spørgsmål, er du altid velkommen til at komme forbi i vores bemandingstid. Vi tager os tid til at svare på dine spørgsmål og giver gerne en rundvisning i centret.\nKAN JEG PARKERE VED PUREGYM FREDERIKSBERG SVØMMEHAL?\nDet er nemt at komme til centret på cykel, og vi har cykelparkering ude foran. Er du med bus, stopper 2A på Aksel Møllers Have st., kun 100 m fra centret, og metroen M3 stopper også der. Er du med M1 eller M2, er det nærmeste stop 400 m væk på Fasanvej st. Er du i bil, er der mulighed for at parkere mod betaling på pladserne hele vejen rundt om bygningen.\nFølg os på Facebook\nSe vores lokaler her\n\n<div",
+  "notice": null,
+  "facilities": [
+    {
+      "name": "App",
+      "description": "PureGym appen kan hentes til både iOS- og Android-telefoner. Appen er fyldt med fede features og lækkert design:\nBook og afmeld hold inkl. reminder, så du husker dine hold\nMere end 50 træningsprogrammer\nBodytracker-måling\nTræningsstatistik\nAdgang til challenges\nTeam up med din træningsmakker\nDownload appen og få mere ud af dit medlemskab.\nLæs mere",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-04/CTA%20App%20grafik.jpg?itok=489La2Vs"
+    },
+    {
+      "name": "Bikesal",
+      "description": "Deltag på Bike, og deltag samtidigt i et uforpligtende fællesskab. Som Danmarks største fitnesscenter har vi de helt rigtige rammer for at skabe Danmarks fedeste holdtræning – og det er vi og mange hundrede tusinde medlemmer også overbeviste om at vi har.\nLæs mere om vores forskellige bikehold her og bliv inspireret.\nBook dit bikehold via vores holdbooking.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-09/bike-vi-tilbyder-puregym.jpg?itok=-bdz_Ijq"
+    },
+    {
+      "name": "Cardiotræning",
+      "description": "Kunne du godt tænke dig at forbedre din kondition eller få varmet kroppen op inden din styrketræning, så er Cardio et godt sted at gå hen.\nI dette område har vi et bredt udvalgt af kredsløbsmaskiner. Her vil du blandt andet kunne finde løbebånd, motionscykler samt ro, step -og trappemaskiner. Disse maskine er designet til at kunne forbedre dit kredsløb bedre kendt som ”kondition”. Samtlige maskiner kan indstilles og tilpasses, så de netop passer til den intensitet som ønsker på dagen.\nSå om du er til en let og kort opvarmning på motionscyklen, en tur op af Eiffeltårnet med din yndlingspodcast i ørene på trappemaskinen, eller en god løbetur i tørvejr på løbebåndet, så vil du kunne gøre dette i Cardio.\nEr du i tvivl om hvordan en maskine i Cardio virker, kan du altid spørge vores personale.\nØnsker du hjælp til hvordan du kan forbedre din kondition, så kan du også booke en uforpligtende samtale til 0 kr med en personlig træner her.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-09/CORE-slider-cta-core-medlemskab_0.jpg?itok=hEEf98nO"
+    },
+    {
+      "name": "Funktionelt træningsområde",
+      "description": "Er du til en træningsform, der har fokus på konditions- og styrketræning, så er vores funktionelle træningsområde et område for dig. Vores funktionelle område kan hjælpe dig med at blive hurtigere, stærkere men også mere udholdende og eksplosiv.\nOmrådet er udstyret med forskellige redskaber såsom; medicinbolde, kettlebells og sjippetove. Derudover finder du naturligvis også racks i alle vores funktionelle områder.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Funtionelt-traeningsomraade-1-1.jpg?itok=PDOLgNJB"
+    },
+    {
+      "name": "Glutebuilder",
+      "description": "Glutebuilderen er en multifunktionel træningsmaskine, som giver mulighed for at lave mange forskellige øvelser - perfekt til træning af ben, baller og lår. Du kan bruge maskinen som den er, med en vægtstang, vægtskiver og elastikker, som du kan låne i centeret. Kun fantasien sætter grænser.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Glute-skal-ikke-beskaeres.jpg?itok=iFSaL_IN"
+    },
+    {
+      "name": "Holdtræning",
+      "description": "Deltag på vores hold, og deltag samtidigt i et uforpligtende fællesskab. Som Danmarks største fitnesscenter har vi de helt rigtige rammer for at skabe Danmarks fedeste holdtræning – og det er vi og mange hundrede tusinde medlemmer også overbeviste om at vi har. Du kan læse om alle vores forskellige hold her, og derefter booke dem fra vores holdbooking.\nHvis du aldrig har deltaget på vores hold før, eller er ny inden for holdtræning, har du muligheden for at få en introduktion med vores \"Get started - introhold\" hold. Vi vil sørge for store sale med god plads, det helt rigtige udstyr og så vil vores instruktører vil sørge for god stemning så din holdoplevelse bliver så god som muligt.\nBook her",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2026-08/Vi-tilbyder-holdtraening.jpg?itok=Xf48xmWA"
+    },
+    {
+      "name": "Parkering",
+      "description": "Er du i bil til din træning, vil der være parkeringsmuligheder ved næsten alle vores centre. PureGym har parkeringsmuligheder i form af egen parkeringsplads, eller som en del af bygningens parkeringsplads eller parkeringshus. Hvis du er i tvivl kan du altid spørge vores søde personale i centrene.",
+      "image": null
+    },
+    {
+      "name": "Personlig træner",
+      "description": "Med en personlig træner får du hjælp og sparring til at nå dine mål - altid med udgangspunkt i dig og dine behov.\nVores personlige trænere sørger for trygge rammer, mens du er i centret.\nDe sikrer fortsat, at alt udstyr er sprittet af både før og efter brug, samt at I holder god afstand til de øvrige medlemmer, mens I træner.\nLæs mere om Personlig træning her!",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Book-samtale-med-en-personlig-traener-1-1.jpg?itok=a7i9C-9t"
+    },
+    {
+      "name": "Sauna",
+      "description": "Forkæl din krop med en tur i sauna, som er en oplagt måde at restituere på efter træning. Husk at drikke godt med vand både under træning, inden og efter sauna, da kroppen taber meget væske i form af sved.",
+      "image": null
+    },
+    {
+      "name": "Styrketræning",
+      "description": "Vi har masser af udstyr til din styrketræning, så du kan lave alle de styrkeøvelser du kunne tænke dig. Vi har maskiner til træning af ryg, arme, mave, lår, bagdel, skuldre, bryst osv. Du kan derved træne dine muskelgrupper på flere måder og skifte imellem maskiner og finde de maskiner og øvelser, du bedst kan lide og får mest ud af.\nNogle af maskinerne er multifunktionelle, så du kan træne flere muskelgrupper på samme maskine.\nStyrketræning er din vej til sundhed, en stærkere krop, funktionalitet i hverdagen og større muskelmasse.",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2023-03/Styrketraening-skal-ikke-beskaeres.jpg?itok=2qQsiE_f"
+    },
+    {
+      "name": "Svømmehal",
+      "description": "En forfriskende svømmetur er en af de mest effektive træningsformer, der findes. Når du svømmer bruger du alle kroppens store muskler, og du træner samtidigt din kondition og koordinationsevne. Du vil ofte også opleve en større smidighed. Og du vil hurtigt mærke resultater, hvilket er motiverende. Svømmetræning kan også være skånende for kroppen, hvis du døjer med skader, fordi du ikke får hårde stød gennem ben og ryg.\nSå der er ingen undskyldninger for ikke at kaste dig ud i de blå bølger.\nDe centre, hvor vi har en aftale med svømmehallen, kan du gå i svømmehallen gratis eller til nedsat pris i svømmehallernes åbningstid. Her gælder samme betingelser og medlemskab og priser som for holdbooking.\nLæs mere",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2018-01/Svoemmehal_fitness-world_1900x640_0.jpg?itok=wylGqFgZ"
+    },
+    {
+      "name": "Watt-cykler & Intelligent Cycling",
+      "description": "Vores nye BODY BIKE® Smart+ watt-cykler giver dig mulighed for at få tal på din træning, når du deltager på vores Bike-hold. Således kan du måle dine fremskridt, følge din udvikling på cyklen og opnå ekstra motivation. Designet på cyklen er desuden forbedret, så du opnår en mere ergonomisk sidestilling.\nVia bluetooth kan du connecte din smartphone til cyklen og dermed følge med i din træning undervejs. BODY BIKE® app’en monitorerer din træning live og viser dig bl.a. watt-zoner, kadence, distance, kalorieforbrænding og meget mere.\nI samspil med watt-cyklerne, bruger instruktørerne det visuelle system Intelligent Cycling.\nMed Intelligent Cycling kan du følge med i programmet og se hvad denne times udfordring byder på. Du kan bl.a. se nuværende intensitet (watt-zoner), kadence, tid og position, samtidig med at du kigger frem mod næste pause.\nDet visuelle univers på storskærmene, tillader dig at koncentrere dig 100% om din træning og performance. Det online program giver dig tryghed og klarhed omkring programmet, så du kan nyde timen, instruktøren og musikken.\nLæs mere",
+      "image": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2018-07/watt-cykler-intelleigent-cycling.jpg?itok=wwmG9e3G"
+    }
+  ],
+  "facility_names": [
+    "App",
+    "Bikesal",
+    "Cardiotræning",
+    "Funktionelt træningsområde",
+    "Glutebuilder",
+    "Holdtræning",
+    "Parkering",
+    "Personlig træner",
+    "Sauna",
+    "Styrketræning",
+    "Svømmehal",
+    "Watt-cykler & Intelligent Cycling"
+  ],
+  "facility_ids": [
+    "333",
+    "17",
+    "502",
+    "28",
+    "434",
+    "349",
+    "355",
+    "12",
+    "14",
+    "24",
+    "350",
+    "25"
+  ],
+  "plan_ids": [
+    "661",
+    "649"
+  ],
+  "team_ids": [
+    "312",
+    "741",
+    "332",
+    "807",
+    "318",
+    "834",
+    "737",
+    "802",
+    "806",
+    "344",
+    "739",
+    "498"
+  ],
+  "classes": [
+    "Bike Power",
+    "Bike Standard",
+    "Core & Glutes",
+    "Functional Express",
+    "Get Started - Introhold",
+    "Jam",
+    "Pilates",
+    "Seniortræning",
+    "Stram Op",
+    "Yang Yoga",
+    "Yin Yoga",
+    "Zumba"
+  ],
+  "images": {
+    "hero": "https://www.puregym.dk/files/2025-02/Frederiksberg%20svoemmehal%20PureGym%20Fitness.jpg",
+    "hero_2500": "https://www.puregym.dk/files/styles/hero_2500x2500/public/2025-02/Frederiksberg%20svoemmehal%20PureGym%20Fitness.jpg?itok=YeICNHLd",
+    "teaser": "https://www.puregym.dk/files/styles/center_teaser/public/2025-02/Frederiksberg%20svoemmehal%20PureGym%20Fitness.jpg?itok=PUyQCmFx",
+    "gallery": [
+      "https://mit.puregym.dk/images/centers/801/1-cardio-2-211-frederiksberg-svommehal-puregym.webp",
+      "https://mit.puregym.dk/images/centers/801/11-cardio-211-frederiksberg-svommehal-puregym.webp",
+      "https://mit.puregym.dk/images/centers/801/2-frivaegt-2-211-frederiksberg-svommehal-puregym.webp",
+      "https://mit.puregym.dk/images/centers/801/22-frivaegt-211-frederiksberg-svommehal-puregym.webp",
+      "https://mit.puregym.dk/images/centers/801/3-frivaegt-3-211-frederiksberg-svommehal-puregym.webp",
+      "https://mit.puregym.dk/images/centers/801/4-funktionel-211-frederiksberg-svommehal-puregym.webp",
+      "https://mit.puregym.dk/images/centers/801/41-funktionel-2-211-frederiksberg-svommehal-puregym.webp",
+      "https://mit.puregym.dk/images/centers/801/5-holdsal-211-frederiksberg-svommehal-puregym.webp",
+      "https://mit.puregym.dk/images/centers/801/6-bikesal-211-frederiksberg-svommehal-puregym.webp",
+      "https://mit.puregym.dk/images/centers/801/7-styrke-211-frederiksberg-svommehal-puregym.webp",
+      "https://mit.puregym.dk/images/centers/801/71-styrke-2-211-frederiksberg-svommehal-puregym.webp",
+      "https://mit.puregym.dk/images/centers/801/8-reception-2-211-frederiksberg-svommehal-puregym.webp",
+      "https://mit.puregym.dk/images/centers/801/9-indgang-211-frederiksberg-svommehal-puregym.webp"
+    ]
+  },
+  "hero_image_file": "hero.jpg",
+  "scraped_at": "2026-09-17"
+}

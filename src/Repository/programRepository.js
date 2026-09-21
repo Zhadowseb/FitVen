@@ -1064,6 +1064,7 @@ export async function getWorkoutsByDayId(db, dayId) {
         w.original_start_time,
         w.timer_start,
         w.elapsed_time,
+        w.gym_id,
         ${workoutHasPersonalRecordSql("w")} AS has_personal_record
      FROM Workout_Type_Instance w
      LEFT JOIN Workout_Type wt ON wt.name = w.workout_type
@@ -1194,6 +1195,7 @@ export async function getWorkoutsBetweenDates(db, { startIsoDate, endIsoDate }) 
         w.original_start_time,
         w.timer_start,
         w.elapsed_time,
+        w.gym_id,
         d.Weekday AS weekday,
         d.program_id,
         p.program_name,
@@ -1213,6 +1215,48 @@ export async function getWorkoutsBetweenDates(db, { startIsoDate, endIsoDate }) 
        AND date(${workoutIsoDateSql}) BETWEEN date(?) AND date(?)
       ORDER BY date_iso ASC, COALESCE(p.program_name, '') COLLATE NOCASE ASC, w.workout_id ASC;`,
     [startIsoDate, endIsoDate]
+  );
+}
+
+/**
+ * Finished workouts from the last few days that the centre match has not
+ * settled: either no centre was found, or lifts may never have been uploaded.
+ * The retry decides which is which from the start coordinates.
+ */
+export async function getRecentFinishedWorkoutsForGymRetry(
+  db,
+  { sinceIsoDate, limit = 20, skipWorkoutTypes = [] }
+) {
+  const workoutIsoDateSql = localDateToIsoSql("w.date");
+
+  // A workout with no centre and no coordinates can never be matched, and the
+  // types that record a route rather than a place are not matched at all. Both
+  // were filtered in JavaScript after the rows had already been read, which
+  // meant the limit was spent on rows that were then thrown away.
+  const skipTypesSql = skipWorkoutTypes.length
+    ? `AND w.workout_type NOT IN (${skipWorkoutTypes.map(() => "?").join(", ")})`
+    : "";
+
+  return db.getAllAsync(
+    `SELECT
+        w.workout_id,
+        w.workout_type,
+        w.date,
+        w.gym_id,
+        w.start_latitude,
+        w.start_longitude
+     FROM Workout_Type_Instance w
+     WHERE w.done = 1
+       AND w.deleted_at IS NULL
+       AND date(${workoutIsoDateSql}) >= date(?)
+       ${skipTypesSql}
+       AND (
+         w.gym_id IS NOT NULL
+         OR (w.start_latitude IS NOT NULL AND w.start_longitude IS NOT NULL)
+       )
+     ORDER BY date(${workoutIsoDateSql}) DESC, w.workout_id DESC
+     LIMIT ?;`,
+    [sinceIsoDate, ...skipWorkoutTypes, limit]
   );
 }
 
@@ -2621,6 +2665,9 @@ export async function getWorkoutsForCloudSync(db, { dirtyOnly = false } = {}) {
         original_start_time,
         timer_start,
         elapsed_time,
+        gym_id,
+        start_latitude,
+        start_longitude,
         needs_sync
      FROM Workout_Type_Instance
      ${dirtyOnly ? "WHERE needs_sync = 1" : ""}
@@ -2645,6 +2692,9 @@ export async function createWorkoutFromCloud(
     originalStartTime,
     timerStart,
     elapsedTime,
+    gymId = null,
+    startLatitude = null,
+    startLongitude = null,
   }
 ) {
   return db.runAsync(
@@ -2663,8 +2713,11 @@ export async function createWorkoutFromCloud(
       is_active,
       original_start_time,
       timer_start,
-      elapsed_time
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?);`,
+      elapsed_time,
+      gym_id,
+      start_latitude,
+      start_longitude
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?);`,
     sqliteParams([
       cloudWorkoutTypeInstanceId,
       remoteLocalWorkoutTypeInstanceId,
@@ -2680,6 +2733,9 @@ export async function createWorkoutFromCloud(
       originalStartTime,
       timerStart,
       elapsedTime,
+      gymId,
+      startLatitude,
+      startLongitude,
     ])
   );
 }
@@ -2702,6 +2758,9 @@ export async function updateWorkoutFromCloud(
     originalStartTime,
     timerStart,
     elapsedTime,
+    gymId = null,
+    startLatitude = null,
+    startLongitude = null,
   }
 ) {
   await db.runAsync(
@@ -2720,6 +2779,9 @@ export async function updateWorkoutFromCloud(
          original_start_time = ?,
          timer_start = ?,
          elapsed_time = ?,
+         gym_id = ?,
+         start_latitude = ?,
+         start_longitude = ?,
          needs_sync = 0
      WHERE workout_id = ?;`,
     sqliteParams([
@@ -2737,6 +2799,9 @@ export async function updateWorkoutFromCloud(
       originalStartTime,
       timerStart,
       elapsedTime,
+      gymId,
+      startLatitude,
+      startLongitude,
       workoutId,
     ])
   );
@@ -3022,6 +3087,7 @@ export async function getWorkoutsByDayIds(db, dayIds) {
         w.original_start_time,
         w.timer_start,
         w.elapsed_time,
+        w.gym_id,
         ${workoutHasPersonalRecordSql("w")} AS has_personal_record
      FROM Workout_Type_Instance w
      LEFT JOIN Workout_Type wt ON wt.name = w.workout_type

@@ -1,0 +1,258 @@
+{
+  "chain": "Fit&Sund",
+  "name": "Fit&Sund Horsens / Torsted",
+  "short_name": "Horsens / Torsted",
+  "address": {
+    "street": "Torstedalle 90",
+    "postal_code": "8700",
+    "city": "Horsens",
+    "country": "DK",
+    "full": "Torstedalle 90, 8700 Horsens"
+  },
+  "location": {
+    "latitude": 55.84250448,
+    "longitude": 9.8109359
+  },
+  "geocode": {
+    "latitude": 55.84250448,
+    "longitude": 9.8109359,
+    "matched_address": "Torstedalle 90, 8700 Horsens",
+    "exact": true,
+    "source": "DAWA"
+  },
+  "url": "https://fitogsund.dk/c/huse/horsens-torsted",
+  "membership_url": "https://fitogsund.dk/p/bliv-medlem",
+  "class_schedule_url": null,
+  "google_maps_url": "https://www.google.com/maps/dir/?api=1&destination=Torstedalle-90+8700+Horsens",
+  "phone": "+45 75 62 63 11",
+  "email": "horsens@fitogsund.dk",
+  "opening_hours": [
+    {
+      "day": "Mandag",
+      "open": "04:00 - 00:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "04:00 - 00:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "04:00 - 00:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "04:00 - 00:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "04:00 - 00:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "04:00 - 00:00"
+    },
+    {
+      "day": "Søndag",
+      "open": "04:00 - 00:00"
+    }
+  ],
+  "reception_hours": [
+    {
+      "day": "Mandag",
+      "open": "08:00 - 11:00 & 15:00 - 18:00"
+    },
+    {
+      "day": "Tirsdag",
+      "open": "08:00 - 11:00 & 15:00 - 18:00"
+    },
+    {
+      "day": "Onsdag",
+      "open": "08:00 - 11:00 & 15:00 - 18:00"
+    },
+    {
+      "day": "Torsdag",
+      "open": "08:00 - 11:00 & 15:00 - 18:00"
+    },
+    {
+      "day": "Fredag",
+      "open": "08:00 - 11:00 & 15:00 - 18:00"
+    },
+    {
+      "day": "Lørdag",
+      "open": "Ingen bemanding"
+    },
+    {
+      "day": "Søndag",
+      "open": "Ingen bemanding"
+    }
+  ],
+  "meta_description": "Træn hos Fit & Sund Torsted i vores moderne fitness og træningscenter. Fitness | Holdtræning | Personlig træning",
+  "description": "Hos os kan du træne på 5 lokationer i Horsens: Centrum, Dagnæs, Nord, Recharge City og Torsted. Vi har byens største holdplan og over 8.000 m2 fitness til dig.\nOverskud, velvære og livskvalitet\nFit&Sund er mere end bare et fitnesscenter. Vi er dit lokale fitness- og sundhedshus, og vi arbejder ud fra vores kerneværdier: sundhed, viden og nærvær.\nHos os finder du en helhedsorienteret tilgang til sundhed og træning. Derfor finder du også fysioterapeuter og personlige trænere i huset. Vores mål er at tilbyde en inspirerende og motiverende træningsoplevelse, som giver dig overskud, velvære og livskvalitet. Vores ønske er, at vores hus bliver dit 3. hjem.\nFunktionel og alternativ træning\nHuset ligger i hjertet af Torsted og har en meget lokal og familiær stemning. Her er cardio- og styrketræningsudstyr fra Cybex samt et ExerciseLab-område, der skaber en perfekt ramme om muligheden for funktionel og alternativ træning. På grund af husets placering i et parcelhusområde vil man se en meget bred spredning aldersmæssigt blandt vores medlemmer. Her er plads til alle! Det lokale idrætsliv har også glæde af huset.",
+  "facilities": [
+    "Fitness",
+    "Fysioterapeuter",
+    "Personlig træning",
+    "Træne i 5 huse",
+    "Nem adgang til fysioterapi",
+    "I hjertet af dit lokalsamfund",
+    "ExerciseLab",
+    "BootCamps"
+  ],
+  "service_categories": [
+    "Personlig træning",
+    "Event",
+    "Hold",
+    "Camps",
+    "Fysioterapi",
+    "Yoga/Reformer",
+    "Fællesskab",
+    "Seniorer",
+    "Saunagus",
+    "Body & Mind"
+  ],
+  "services": [
+    {
+      "name": "2026 OPSTARTSPAKKER",
+      "room": null,
+      "categories": [
+        "event",
+        "personlig-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/2026-opstartspakker-2"
+    },
+    {
+      "name": "5 huse i Horsens",
+      "room": "TRÆN PÅ TVÆRS AF ALLE HUSE I HORSENS",
+      "categories": [
+        "hold"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/5-huse-i-horsens"
+    },
+    {
+      "name": "AftenCamp med Marianne Westman",
+      "room": null,
+      "categories": [
+        "camps",
+        "event"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/aftencamp-med-marianne-westman"
+    },
+    {
+      "name": "FitCamp Horsens med Marianne Westman",
+      "room": "Træning- og kostforløb med Marianne Westman",
+      "categories": [
+        "camps"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/fitcamp-horsens-med-marianne-westman"
+    },
+    {
+      "name": "Go'morgen Camp i Dagnæs",
+      "room": "Spark dagen i gang med fokus på dine målsætninger",
+      "categories": [
+        "camps"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/gomorgen-camp-2"
+    },
+    {
+      "name": "Mama Reformer",
+      "room": null,
+      "categories": [
+        "camps",
+        "event"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/mama-reformer"
+    },
+    {
+      "name": "MediYoga Horsens",
+      "room": "Et åndehul i hverdagens stress",
+      "categories": [
+        "camps",
+        "event",
+        "hold-body-mind",
+        "personlig-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/mediyoga-horsens"
+    },
+    {
+      "name": "Mor & Barn Aktiviteter Horsens",
+      "room": "Mor & Barn træning",
+      "categories": [
+        "fysioterapi",
+        "hold",
+        "personlig-traening",
+        "yoga-reformer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/mor--barn-aktiviteter-horsens"
+    },
+    {
+      "name": "MOTION for livet",
+      "room": "5 ugers gratis træningsforløb",
+      "categories": [
+        "faellesskab",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/motion-for-livet"
+    },
+    {
+      "name": "Q-Camp - Styrketræning for kvinder",
+      "room": null,
+      "categories": [
+        "camps",
+        "event"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/q-camp---styrketraening-for-kvinder"
+    },
+    {
+      "name": "Saunagus",
+      "room": "Din vej til selvforkælelse",
+      "categories": [
+        "faellesskab",
+        "hold",
+        "saunagus"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/saunagus"
+    },
+    {
+      "name": "Seniorklub",
+      "room": null,
+      "categories": [
+        "faellesskab",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/seniorklub"
+    },
+    {
+      "name": "Stærk Senior BootCamp",
+      "room": null,
+      "categories": [
+        "camps",
+        "event",
+        "seniorer"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/staerk-senior-bootcamp"
+    },
+    {
+      "name": "Sund Start Horsens",
+      "room": "5 ugers træning kr. 299,-",
+      "categories": [
+        "camps",
+        "event",
+        "faellesskab",
+        "personlig-traening"
+      ],
+      "url": "https://fitogsund.dk/c/ydelser/sund-start-horsens"
+    }
+  ],
+  "manager": {
+    "name": "Pia Popp",
+    "title": "Husleder",
+    "image": "https://fitogsund.dk/f/thumb?src=/f/blog/article/fd184f0e623c1d100925b686f6d7b6a1c38a2a0b_thumb.jpg&w=300&h=380"
+  },
+  "images": {
+    "hero": null,
+    "fallback": "../fitogsund-logo.png"
+  },
+  "hero_image_file": "hero.png",
+  "hero_is_placeholder": true,
+  "scraped_at": "2026-09-17"
+}
