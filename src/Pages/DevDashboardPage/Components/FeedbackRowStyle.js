@@ -46,4 +46,24 @@ export default StyleSheet.create({
     fontSize: 10,
     fontWeight: "700",
   },
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    gap: 5,
+    marginTop: 8,
+  },
+  statusChip: {
+    flex: 1,
+    minWidth: 0,
+    paddingVertical: 5,
+    paddingHorizontal: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  statusChipText: {
+    fontSize: 10,
+    fontWeight: "800",
+  },
 });

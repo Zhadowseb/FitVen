@@ -77,6 +77,7 @@ export default function HomePage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   const [homeError, setHomeError] = useState("");
+  const [openToday, setOpenToday] = useState(null);
 
   useEffect(() => musicService.subscribeNowPlaying(setOwnNowPlaying), []);
 
@@ -87,12 +88,13 @@ export default function HomePage() {
   // gets. That is the one thing this screen must not get wrong.
   const loadHome = useCallback(async () => {
     try {
-      const [days, groups, muscles] = await Promise.allSettled([
+      const [days, groups, muscles, today] = await Promise.allSettled([
         workoutService.getDaysSinceLastWorkout(db),
         workoutService.getSplitGroups(db),
         weightliftingService.getMuscleGroupDeltas(db),
+        workoutService.getOpenWorkoutsToday(db),
       ]);
-      const failures = [days, groups, muscles].filter(
+      const failures = [days, groups, muscles, today].filter(
         (result) => result.status === "rejected"
       );
 
@@ -106,6 +108,10 @@ export default function HomePage() {
 
       if (muscles.status === "fulfilled") {
         setMuscleGroups(muscles.value);
+      }
+
+      if (today.status === "fulfilled") {
+        setOpenToday(today.value);
       }
 
       for (const failure of failures) {
@@ -257,6 +263,23 @@ export default function HomePage() {
     );
   }, [db, startWorkout]);
 
+  // Nothing is created here - the workout is already there, so this only
+  // navigates. startWorkout is for the two buttons that make one.
+  const continueToday = useCallback(
+    (workout) => {
+      if (!workout?.workoutId) {
+        return;
+      }
+
+      navigation.navigate("WorkoutPage", {
+        workout_id: workout.workoutId,
+        workout_label: workout.name ?? null,
+        workout_type: workout.workoutType ?? null,
+      });
+    },
+    [navigation]
+  );
+
   const upNext = splitGroups.find((group) => group.isUpNext) ?? null;
 
   return (
@@ -325,7 +348,9 @@ export default function HomePage() {
               <DaysSinceCard days={daysSinceLastWorkout} />
 
               <QuickStartCard
+                openToday={openToday}
                 upNext={upNext}
+                onContinueToday={continueToday}
                 onStartSplit={openWorkoutFromSplit}
                 onStartEmpty={openEmptyWorkout}
               />

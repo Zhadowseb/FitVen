@@ -240,23 +240,27 @@ export default StyleSheet.create({
   },
   // A row you work here rather than one that takes you somewhere. Taller,
   // because it holds a control instead of a chevron.
-  settingsControlRow: {
-    paddingVertical: 12,
-    paddingHorizontal: 18,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    minHeight: 64,
-  },
   settingsRowLabel: {
     flex: 1,
     fontSize: 13,
     fontWeight: "700",
   },
+  settingsStackedHeader: {
+    paddingTop: 14,
+    paddingHorizontal: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  settingsStackedControl: {
+    paddingHorizontal: 18,
+    paddingTop: 10,
+    paddingBottom: 14,
+  },
   accentPickerWrap: {
     paddingHorizontal: 18,
     paddingBottom: 16,
-    paddingTop: 2,
+    paddingTop: 10,
   },
 
   // 4. Feedback card

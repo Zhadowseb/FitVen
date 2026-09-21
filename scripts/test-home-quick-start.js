@@ -411,6 +411,49 @@ assert.ok(
   "posts are back on Home"
 );
 
+/* --------------------------------------------- today before a suggestion -- */
+
+// Somebody who planned a session this morning, or left one half-done at lunch,
+// wants that one back. Offering to start a second one beside it is almost
+// never what was meant, so an unfinished workout on today outranks the split's
+// suggestion. The empty workout stays either way.
+const quickStartSource = fs.readFileSync(
+  path.join(root, "src", "Pages", "HomePage", "Components", "QuickStartCard", "QuickStartCard.js"),
+  "utf8"
+);
+
+assert.ok(
+  /const primary = todayWorkout[\s\S]*?: upNext/.test(quickStartSource),
+  "the split's suggestion is offered before an unfinished workout already on today"
+);
+
+assert.ok(
+  /home\.quickStart\.emptyWorkout/.test(quickStartSource) &&
+    !/primary \? null : null/.test(quickStartSource),
+  "the empty workout is no longer always there"
+);
+
+// The outline went: every button inside already draws one, and the block is
+// the screen's main action rather than a widget sitting on it.
+const quickStartStyle = fs.readFileSync(
+  path.join(root, "src", "Pages", "HomePage", "Components", "QuickStartCard", "QuickStartCardStyle.js"),
+  "utf8"
+);
+const cardStyle = quickStartStyle.slice(
+  quickStartStyle.indexOf("card: {"),
+  quickStartStyle.indexOf("eyebrow: {")
+);
+
+assert.ok(
+  !/borderWidth|borderRadius|padding:/.test(cardStyle),
+  "the quick start block has its box back"
+);
+
+assert.ok(
+  /getOpenWorkoutsToday/.test(homeSource),
+  "Home no longer asks what is already open today"
+);
+
 /* ------------------------------------------------- a failure looks like one */
 
 // The other finding. loadHome caught, logged to the console and set

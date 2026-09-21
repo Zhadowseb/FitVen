@@ -34,6 +34,9 @@ export default {
     neverValue: "—",
   },
   quickStart: {
+    continueEyebrow: "Continue",
+    continueNamed: "Continue {name}",
+    todaysWorkout: "Today's workout",
     eyebrow: "Quick start",
     emptyWorkout: "Empty workout",
     startNamed: "Start {name}",

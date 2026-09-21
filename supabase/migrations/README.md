@@ -62,6 +62,7 @@ behind by accident.
 | `20260921200000_let-the-policy-call-its-own-check.sql` | yes |
 | `20260921220000_dev-dashboard.sql` | yes |
 | `20260921230000_the-admin-guard-asks-who-is-asking.sql` | yes |
+| `20260922090000_a-feedback-message-has-a-status.sql` | no |
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
 centre match, per-centre lift leaderboards with video verification, and what
@@ -277,6 +278,15 @@ update public.profile_private set is_admin = true where user_id = '<uuid>';
 
 That statement has to be run as the service role or from the SQL editor - the
 guard trigger refuses it from an app connection, which is the point.
+`20260922090000_a-feedback-message-has-a-status.sql` has **not** been run yet.
+It gives a feedback message one of four states - `new`, `planned`, `fixed`,
+`not_fixed` - so the dev dashboard can say what was decided about a message
+rather than only that it was read. A trigger forces every new row to `new`:
+the insert policy lets any signed-in account write its own row, and without it
+somebody could post a suggestion already marked `fixed`. Column grants cannot
+do that job, because Postgres ignores a column-level revoke when the role holds
+the privilege on the table.
+
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to
 re-apply all of it. Most of these files are written idempotently

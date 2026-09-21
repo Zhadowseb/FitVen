@@ -8,44 +8,72 @@ import Resistance from "@resources/Icons/WorkoutLabels/Resistance";
 import { ThemedText } from "@resources/ThemedComponents";
 
 /**
- * Two buttons: the session that is next in the split, and an empty workout.
+ * The one thing to press on Home.
  *
- * Both open the workout straight away. There is no sheet in between, because
- * the whole point of the box is that somebody who already knows what they are
- * doing does not have to answer a question first.
+ * No box around it. The outline was a border around a border - every button
+ * inside it already has one - and it made the block read as a widget rather
+ * than as the screen's main action.
  *
- * `upNext` is null when there is no recognisable split, and then the empty
- * workout takes the whole box rather than leaving a gap where a guess would go.
+ * The top button is whichever of these is true first:
+ *
+ *   1. Something unfinished is already on today. Continue that.
+ *   2. The split says whose turn it is. Start that.
+ *   3. Neither, and the empty workout is the only button, filling the block.
+ *
+ * Today's workout wins over the split deliberately. Somebody who planned a
+ * session this morning, or left one half-done at lunch, wants that one back;
+ * offering to start a second one beside it is almost never what was meant.
+ * The empty workout is always there, because sometimes it is.
  */
-export default function QuickStartCard({ upNext = null, onStartSplit, onStartEmpty }) {
+export default function QuickStartCard({
+  openToday = null,
+  upNext = null,
+  onContinueToday,
+  onStartSplit,
+  onStartEmpty,
+}) {
   const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const isLight = colorScheme === "light";
+
   // The same fallback SplitCards uses. pickGroupName returns null when nobody
-  // named the session - which is exactly what a session started from this
-  // button ends up as - and without it the main button on Home draws no text
-  // at all, while the screen reader reads the placeholder out literally.
+  // named the session - which is what a session started from this button ends
+  // up as - and without it the button draws no text at all, while the screen
+  // reader reads the placeholder out literally.
   const upNextName =
     upNext?.name ?? t("home.split.unnamed", { number: (upNext?.historyOrder ?? 0) + 1 });
 
+  const todayWorkout = openToday?.first ?? null;
+  const todayName = todayWorkout?.name ?? t("home.quickStart.todaysWorkout");
+  const primary = todayWorkout
+    ? {
+        label: todayName,
+        eyebrow: t("home.quickStart.continueEyebrow"),
+        accessibilityLabel: t("home.quickStart.continueNamed", { name: todayName }),
+        onPress: () => onContinueToday?.(todayWorkout),
+      }
+    : upNext
+      ? {
+          label: upNextName,
+          eyebrow: t("home.quickStart.eyebrow"),
+          accessibilityLabel: t("home.quickStart.startNamed", { name: upNextName }),
+          onPress: () => onStartSplit?.(upNext),
+        }
+      : null;
+
   return (
-    <View
-      style={[
-        styles.card,
-        { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder },
-      ]}
-    >
+    <View style={styles.card}>
       <ThemedText style={styles.eyebrow} setColor={theme.primaryText}>
-        {t("home.quickStart.eyebrow")}
+        {primary ? primary.eyebrow : t("home.quickStart.eyebrow")}
       </ThemedText>
 
-      {upNext ? (
+      {primary ? (
         <TouchableOpacity
           accessibilityRole="button"
-          accessibilityLabel={t("home.quickStart.startNamed", { name: upNextName })}
+          accessibilityLabel={primary.accessibilityLabel}
           activeOpacity={0.85}
-          onPress={() => onStartSplit?.(upNext)}
+          onPress={primary.onPress}
           style={[
             styles.primaryButton,
             {
@@ -61,7 +89,7 @@ export default function QuickStartCard({ upNext = null, onStartSplit, onStartEmp
             setColor={theme.primaryText}
             numberOfLines={1}
           >
-            {upNextName}
+            {primary.label}
           </ThemedText>
 
           <View
@@ -80,9 +108,9 @@ export default function QuickStartCard({ upNext = null, onStartSplit, onStartEmp
         onPress={onStartEmpty}
         style={[
           styles.secondaryButton,
-          // With nothing above it, the empty workout fills the box rather than
-          // sitting at the bottom of an oddly tall card.
-          upNext ? null : styles.secondaryButtonAlone,
+          // With nothing above it, the empty workout fills the block rather
+          // than sitting at the bottom of an oddly tall one.
+          primary ? null : styles.secondaryButtonAlone,
           {
             backgroundColor: withAlpha(theme.title, isLight ? 0.04 : 0.05),
             borderColor: withAlpha(theme.title, isLight ? 0.08 : 0.1),

@@ -180,6 +180,37 @@ export default function DevDashboardPage() {
     setUnreadCount((current) => Math.max(0, current - 1));
   }, []);
 
+  // Written straight onto the row that was tapped rather than by reloading:
+  // the list is sorted by date, so a reload would not move anything, but it
+  // would blink the whole page for one chip.
+  const setStatus = useCallback(async (message, status) => {
+    if (message.status === status) {
+      return;
+    }
+
+    try {
+      await adminService.setFeedbackStatus(message.id, status);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Kunne ikke sætte status."
+      );
+      return;
+    }
+
+    const readAt = message.readAt ?? new Date().toISOString();
+
+    setFeedback((current) => ({
+      ...current,
+      rows: current.rows.map((row) =>
+        row.id === message.id ? { ...row, status, readAt } : row
+      ),
+    }));
+
+    if (!message.readAt) {
+      setUnreadCount((current) => Math.max(0, current - 1));
+    }
+  }, []);
+
   const loadMoreFeedback = useCallback(async () => {
     if (!feedback.nextCursor) {
       return;
@@ -327,6 +358,7 @@ export default function DevDashboardPage() {
                       key={message.id}
                       feedback={message}
                       onPress={openFeedback}
+                      onSetStatus={setStatus}
                     />
                   ))}
                 </View>

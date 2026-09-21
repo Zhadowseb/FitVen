@@ -416,6 +416,35 @@ function startOfLocalDay(isoDate) {
  * Calendar days, not elapsed milliseconds: a workout finished yesterday
  * evening is one day ago at nine this morning, not zero.
  */
+/**
+ * What is already on today, unfinished.
+ *
+ * Home leads with this rather than with a suggestion from the split: somebody
+ * who planned a session this morning, or left one half-done, wants that one
+ * open. Starting a second workout beside it is almost never what was meant.
+ *
+ * The first entry is the one to open - a running timer first, then the most
+ * recently made - and `count` is how many are open in total, so the screen can
+ * say whether there is more than one.
+ */
+export async function getOpenWorkoutsToday(db, { now = Date.now() } = {}) {
+  const rows = await workoutRepository.getOpenWorkoutsForDate(db, {
+    isoDate: isoDateDaysAgo(0, now),
+  });
+
+  return {
+    count: rows.length,
+    first: rows.length
+      ? {
+          workoutId: rows[0].workout_id,
+          name: rows[0].label ?? rows[0].workout_type ?? null,
+          workoutType: rows[0].workout_type ?? null,
+          isRunning: rows[0].timer_start !== null,
+        }
+      : null,
+  };
+}
+
 export async function getDaysSinceLastWorkout(db, { now = Date.now() } = {}) {
   const lastDate = await weightliftingRepository.getLastCompletedWorkoutDate(db);
   const lastAt = startOfLocalDay(lastDate);

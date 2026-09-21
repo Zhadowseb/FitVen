@@ -3,7 +3,7 @@ import { TouchableOpacity, View, useColorScheme } from "react-native";
 import styles from "./FeedbackRowStyle";
 import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
 import { ThemedText } from "@resources/ThemedComponents";
-import { formatAge, formatMeta } from "@utils/devDashboard";
+import { FEEDBACK_STATUSES, formatAge, formatMeta } from "@utils/devDashboard";
 
 const LABELS = {
   bug: "FEJL",
@@ -11,6 +11,30 @@ const LABELS = {
   praise: "ROS",
   other: "ANDET",
 };
+
+const STATUS_LABELS = {
+  new: "Ny",
+  planned: "Planlagt",
+  fixed: "Rettet",
+  not_fixed: "Ikke rettet",
+};
+
+/** The colour a decision is drawn in. `new` is quiet: it is the absence of one. */
+function getStatusColor(status, theme) {
+  if (status === "fixed") {
+    return theme.secondary;
+  }
+
+  if (status === "planned") {
+    return theme.planned;
+  }
+
+  if (status === "not_fixed") {
+    return theme.danger;
+  }
+
+  return theme.quietText;
+}
 
 /** The colour a type is drawn in, read off the theme so both schemes work. */
 function getKindColor(kind, theme) {
@@ -36,7 +60,12 @@ function getKindColor(kind, theme) {
  * contrast. Unread are not floated to the top: a list that reorders itself as
  * it is read cannot be worked through.
  */
-export default function FeedbackRow({ feedback, onPress, now = Date.now() }) {
+export default function FeedbackRow({
+  feedback,
+  onPress,
+  onSetStatus,
+  now = Date.now(),
+}) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const isRead = Boolean(feedback.readAt);
@@ -113,6 +142,48 @@ export default function FeedbackRow({ feedback, onPress, now = Date.now() }) {
           {meta}
         </ThemedText>
       ) : null}
+
+      {/* One tap per decision, on the row itself. A sheet would be one tap
+          more for every message, and the whole point of this screen is
+          working through a list. */}
+      <View style={styles.statusRow}>
+        {FEEDBACK_STATUSES.map((status) => {
+          const isCurrent = feedback.status === status;
+          const color = getStatusColor(status, theme);
+
+          return (
+            <TouchableOpacity
+              key={status}
+              accessibilityRole="button"
+              accessibilityState={{ selected: isCurrent }}
+              accessibilityLabel={STATUS_LABELS[status]}
+              activeOpacity={0.8}
+              hitSlop={{ top: 6, bottom: 6, left: 2, right: 2 }}
+              onPress={() => onSetStatus?.(feedback, status)}
+              style={[
+                styles.statusChip,
+                isCurrent
+                  ? {
+                      backgroundColor: withAlpha(color, 0.16),
+                      borderColor: withAlpha(color, 0.5),
+                    }
+                  : {
+                      backgroundColor: "transparent",
+                      borderColor: withAlpha(theme.title, 0.12),
+                    },
+              ]}
+            >
+              <ThemedText
+                style={styles.statusChipText}
+                setColor={isCurrent ? color : theme.quietText}
+                numberOfLines={1}
+              >
+                {STATUS_LABELS[status]}
+              </ThemedText>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
     </TouchableOpacity>
   );
 }

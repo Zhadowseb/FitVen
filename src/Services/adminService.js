@@ -13,6 +13,7 @@
 import { supabase } from "@database/supaBaseClient";
 import {
   DEFAULT_DEV_DASHBOARD_PERIOD,
+  FEEDBACK_STATUSES,
   buildStoreStats,
   getPeriodDays,
 } from "@utils/devDashboard";
@@ -126,7 +127,9 @@ async function getActiveUsers() {
 export async function getFeedback({ limit = 20, cursor = null } = {}) {
   let query = supabase
     .from(FEEDBACK_TABLE)
-    .select("id, user_id, message, kind, os, device, app_version, read_at, created_at")
+    .select(
+      "id, user_id, message, kind, os, device, app_version, read_at, status, status_changed_at, created_at"
+    )
     .order("created_at", { ascending: false })
     .order("id", { ascending: false })
     .limit(limit);
@@ -162,6 +165,9 @@ export async function getFeedback({ limit = 20, cursor = null } = {}) {
       os: row.os ?? null,
       device: row.device ?? null,
       readAt: row.read_at ?? null,
+      // A row written before the status migration has no value; it has not
+      // been decided about, which is what `new` means.
+      status: FEEDBACK_STATUSES.includes(row.status) ? row.status : "new",
       createdAt: row.created_at ?? null,
       senderName: senderNames.get(row.user_id) ?? null,
     })),
@@ -225,6 +231,32 @@ export async function getUnreadFeedbackCount() {
   }
 
   return count ?? 0;
+}
+
+/**
+ * What was decided about a message.
+ *
+ * Setting a status also marks the message read: deciding about something you
+ * have not looked at is not a thing, and leaving it unread would keep it in
+ * the header's count after it had been dealt with.
+ */
+export async function setFeedbackStatus(id, status) {
+  if (!FEEDBACK_STATUSES.includes(status)) {
+    throw new Error(`Unknown feedback status: ${status}`);
+  }
+
+  const { error } = await supabase
+    .from(FEEDBACK_TABLE)
+    .update({
+      status,
+      status_changed_at: new Date().toISOString(),
+      read_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+
+  if (error) {
+    throw error;
+  }
 }
 
 export async function markFeedbackRead(id) {

@@ -944,13 +944,21 @@ export default function ProfilePage() {
           <View style={styles.section}>
             <SectionEyebrow>{t("profile.sections.appearance")}</SectionEyebrow>
             <ThemedCard style={styles.card}>
-              <View style={styles.settingsControlRow}>
+              {/* Label over control, not beside it. Three language names -
+                  System, Dansk, English - and a label all competing for one
+                  row left the word "Language" squeezed to nothing. Both
+                  controls are stacked so the card reads as one thing, the way
+                  the colour picker below already does. */}
+              <View style={styles.settingsStackedHeader}>
                 <SettingsIconTile backgroundColor={withAlpha(theme.primary, 0.12)}>
                   <Moon width={18} height={18} color={primaryTextColor} thickness={1.7} />
                 </SettingsIconTile>
                 <ThemedText style={styles.settingsRowLabel} setColor={theme.title}>
                   {t("profile.appearance.theme")}
                 </ThemedText>
+              </View>
+
+              <View style={styles.settingsStackedControl}>
                 <ThemedSegmentedControl
                   options={appearanceOptions}
                   value={themeMode}
@@ -960,13 +968,16 @@ export default function ProfilePage() {
 
               <InsetDivider />
 
-              <View style={styles.settingsControlRow}>
+              <View style={styles.settingsStackedHeader}>
                 <SettingsIconTile backgroundColor={withAlpha(theme.primary, 0.12)}>
                   <Social width={18} height={18} color={primaryTextColor} thickness={1.7} />
                 </SettingsIconTile>
                 <ThemedText style={styles.settingsRowLabel} setColor={theme.title}>
                   {t("profile.language.label")}
                 </ThemedText>
+              </View>
+
+              <View style={styles.settingsStackedControl}>
                 <ThemedSegmentedControl
                   options={languageOptions}
                   value={languageMode}
@@ -976,7 +987,7 @@ export default function ProfilePage() {
 
               <InsetDivider />
 
-              <View style={styles.settingsControlRow}>
+              <View style={styles.settingsStackedHeader}>
                 <SettingsIconTile backgroundColor={withAlpha(theme.primary, 0.12)}>
                   <Star width={18} height={18} color={primaryTextColor} filled />
                 </SettingsIconTile>

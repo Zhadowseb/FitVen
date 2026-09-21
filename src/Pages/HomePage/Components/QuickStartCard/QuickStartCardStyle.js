@@ -1,13 +1,14 @@
 import { StyleSheet } from "react-native";
 
 export default StyleSheet.create({
+  // No surface and no outline. Every button in here draws its own border, so
+  // the card's was a border around a border, and it made the screen's main
+  // action read as a widget sitting on the page rather than as part of it.
   card: {
     flex: 1,
     flexDirection: "column",
+    justifyContent: "flex-end",
     gap: 8,
-    padding: 12,
-    borderRadius: 18,
-    borderWidth: 1,
   },
   eyebrow: {
     fontSize: 9.5,

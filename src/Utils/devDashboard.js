@@ -17,6 +17,20 @@ export const DEV_DASHBOARD_PERIODS = [
 
 export const DEFAULT_DEV_DASHBOARD_PERIOD = "90d";
 
+/**
+ * What has been decided about a message, in the order the chips are drawn.
+ *
+ * `new` is where every message arrives. `not_fixed` is one state rather than
+ * two: "won't fix" and "can't reproduce" read differently to somebody writing
+ * a bug tracker and identically to the one person reading this screen.
+ */
+export const FEEDBACK_STATUSES = ["new", "planned", "fixed", "not_fixed"];
+
+/** Everything except `new` counts as triaged - that is what the header shows. */
+export function isTriaged(status) {
+  return FEEDBACK_STATUSES.includes(status) && status !== "new";
+}
+
 /** Below this the crash-free box turns red. */
 export const CRASH_FREE_FLOOR = 99;
 
