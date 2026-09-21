@@ -56,7 +56,8 @@ behind by accident.
 | `20260921150000_drop-workout-start-coordinates.sql` | yes |
 | `20260921160000_friends-surrounding-activity.sql` | yes |
 | `20260921170000_blocked-members-cannot-watch.sql` | yes |
-| `20260921180000_music-opt-in-and-video-index.sql` | no |
+| `20260921180000_music-opt-in.sql` | no |
+| `20260921180100_lift-video-index.sql` | no |
 
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
@@ -208,14 +209,22 @@ the object path is `<user_id>/<lift_id>.<ext>`, so somebody who had seen a row
 before blocking could still ask for a signed URL and get one. The function here
 is the applied one with that single clause added.
 
-`20260921180000_music-opt-in-and-video-index.sql` **has not been run.** Two
-things from the review. The insert policy on `workout_music` asked whether the
-row was yours and whether the workout was yours, but not whether you had turned
+`20260921180000_music-opt-in.sql` and `20260921180100_lift-video-index.sql`
+**have not been run.** They were one file, and that file deadlocked: it held
+the lock a policy swap needs on `workout_music` while asking for the one
+`create index` needs on `gym_lift`, against a live app session holding them
+the other way round. Postgres killed it. Two files now, one table each, and
+the index is `create index concurrently`, which takes no lock that stops
+writes - **so it has to be run on its own, as the only statement in the
+editor.** The first file also sets a `lock_timeout`, so a busy moment makes it
+give up rather than queue.
+
+The change itself: the insert policy on `workout_music` asked whether the row
+was yours and whether the workout was yours, but not whether you had turned
 sharing on - only the client did, and the select policy shows the table to
-every follower, so the toggle had no counterpart in the database. And
-`private.can_watch_lift_video` filters on `gym_lift.video_path`, which no index
-covered, so every signed video URL was a sequential scan and the client signs a
-whole queue at once.
+every follower. And `private.can_watch_lift_video` filters on
+`gym_lift.video_path`, which no index covered, so every signed video URL was a
+sequential scan and the client signs a whole queue at once.
 
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to
