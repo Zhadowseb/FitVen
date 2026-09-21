@@ -54,7 +54,7 @@ behind by accident.
 | `20260921140000_lift-videos-stay-in-the-centre.sql` | yes |
 | `20260921150000_drop-workout-start-coordinates.sql` | yes |
 | `20260921160000_friends-surrounding-activity.sql` | yes |
-| `20260921170000_blocked-members-cannot-watch.sql` | no |
+| `20260921170000_blocked-members-cannot-watch.sql` | yes |
 
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
@@ -192,8 +192,8 @@ history to produce two dates, so this is a security definer function that
 returns the two dates and nothing else, for people the viewer actually follows,
 with blocks dropped.
 
-`20260921170000_blocked-members-cannot-watch.sql` **has not been run, and
-should be.** `private.can_watch_lift_video`, from the migration two rows above,
+`20260921170000_blocked-members-cannot-watch.sql` was run on 2026-09-21.
+`private.can_watch_lift_video`, from the migration two rows above,
 was the one function in that clean-up that did not ask about blocks - every
 other path does. A leaderboard row carries the lifter's id and the lift id, and
 the object path is `<user_id>/<lift_id>.<ext>`, so somebody who had seen a row
