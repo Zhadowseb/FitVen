@@ -89,7 +89,10 @@ function SplitCard({ group, theme, width, onPress, t, formatDate }) {
  * it is the same session the quick-start button opens. Tapping any of them
  * opens that session directly.
  *
- * Nothing is drawn when there is no split: an empty row is worse than no row.
+ * With no split yet the block says what it will become rather than vanishing.
+ * A row that appears weeks later cannot be looked forward to, and somebody who
+ * has just installed the app should not meet a Home with a hole in it. It only
+ * names the section here: a card carries its own name once there is one.
  */
 export default function SplitCards({ groups = [], onOpenGroup, onOpenAll }) {
   const { t, formatDate } = useTranslation();
@@ -97,7 +100,29 @@ export default function SplitCards({ groups = [], onOpenGroup, onOpenAll }) {
   const theme = Colors[colorScheme] ?? Colors.light;
 
   if (!groups.length) {
-    return null;
+    return (
+      <View style={styles.row}>
+        <View
+          style={[
+            styles.card,
+            styles.cardFlex,
+            styles.emptyCard,
+            {
+              backgroundColor: withAlpha(theme.title, 0.05),
+              borderColor: withAlpha(theme.title, 0.08),
+            },
+          ]}
+        >
+          <ThemedText style={styles.emptyTitle} setColor={theme.quietText}>
+            {t("home.split.title")}
+          </ThemedText>
+
+          <ThemedText style={styles.emptyMessage} setColor={theme.title}>
+            {t("home.split.empty")}
+          </ThemedText>
+        </View>
+      </View>
+    );
   }
 
   if (groups.length < SCROLL_FROM_GROUPS) {

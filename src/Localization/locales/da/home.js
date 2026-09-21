@@ -38,6 +38,8 @@ export default {
     startFailedBody: "Prøv igen.",
   },
   split: {
+    title: "Træningssplit",
+    empty: "Kom i gang med at træne, så viser vi dit split her.",
     meta: "{exercises} øvelser · {sets} sæt",
     allCount: "Alle {count}",
     openAll: "Åbn alle dine træninger",

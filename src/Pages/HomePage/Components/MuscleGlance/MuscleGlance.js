@@ -7,6 +7,16 @@ import { ThemedText } from "@resources/ThemedComponents";
 
 const TRACK_HEIGHT = 38;
 
+// Nothing gained is "0%", not "+0%". The plus is a claim, and a row of them on
+// an account that has not trained yet would be the block's first lie.
+function formatDelta(deltaPercent, t) {
+  if (deltaPercent === null) {
+    return t("home.muscleGlance.noData");
+  }
+
+  return deltaPercent > 0 ? `+${deltaPercent}%` : `${deltaPercent}%`;
+}
+
 /**
  * Last month against the month before, one bar per muscle group.
  *
@@ -57,9 +67,7 @@ export default function MuscleGlance({ groups = [], headline = null, onOpen }) {
               style={styles.value}
               setColor={group.isGain ? theme.secondary : theme.quietText}
             >
-              {group.deltaPercent === null
-                ? t("home.muscleGlance.noData")
-                : `+${group.deltaPercent}%`}
+              {formatDelta(group.deltaPercent, t)}
             </ThemedText>
 
             <View

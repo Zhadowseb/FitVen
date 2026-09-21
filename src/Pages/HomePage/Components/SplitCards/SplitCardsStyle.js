@@ -32,6 +32,19 @@ export default StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  emptyCard: {
+    gap: 5,
+  },
+  emptyTitle: {
+    fontSize: 10.5,
+    fontWeight: "800",
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+  },
+  emptyMessage: {
+    fontSize: 13,
+    fontWeight: "700",
+  },
   name: {
     fontSize: 14.5,
     fontWeight: "800",

@@ -9,6 +9,7 @@
 // document asked for Epley "the same as Records"; Records is not Epley, and a
 // second formula would make the same number mean two things on two screens -
 // which is the mistake `recordsInsights.js` already carries a comment about.
+import { EXERCISE_MUSCLE_GROUPS } from "./exerciseMuscleGroups";
 import { calculateBrzyckiOneRepMax } from "./oneRepMaxUtils";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -21,6 +22,37 @@ export const MUSCLE_GLANCE_MAX_GROUPS = 5;
 
 /** A group with no comparable data still draws this much, so no column is empty. */
 export const MUSCLE_GLANCE_EMPTY_FILL = 0.08;
+
+/**
+ * The five drawn for somebody who has not logged anything yet.
+ *
+ * Somebody opening the app for the first time otherwise met a Home with a hole
+ * in it, and a block that appears weeks later cannot be looked forward to. The
+ * row of zeroes says what the block will become. The labels are taken from the
+ * real group list rather than written here, so they cannot drift from the ones
+ * a trained account sees.
+ */
+export const MUSCLE_GLANCE_PLACEHOLDER_KEYS = [
+  "chest",
+  "lats",
+  "quads",
+  "shoulders",
+  "biceps",
+];
+
+function buildPlaceholderGroups() {
+  return MUSCLE_GLANCE_PLACEHOLDER_KEYS.map((key) =>
+    EXERCISE_MUSCLE_GROUPS.find((group) => group.key === key)
+  )
+    .filter(Boolean)
+    .map((group) => ({
+      label: group.label,
+      deltaPercent: 0,
+      fill: MUSCLE_GLANCE_EMPTY_FILL,
+      isGain: false,
+      isPlaceholder: true,
+    }));
+}
 
 function bestOneRepMax(sets) {
   let best = 0;
@@ -52,12 +84,22 @@ export function buildMuscleGroupDeltas(
   sets = [],
   { groupsByExercise, now = Date.now(), days = 30 } = {}
 ) {
-  if (!groupsByExercise || groupsByExercise.size === 0) {
-    return [];
-  }
-
   const currentFrom = now - days * DAY_MS;
   const previousFrom = now - 2 * days * DAY_MS;
+
+  // Counted before anything is grouped, because it separates the two ways this
+  // block can come back empty. Nothing logged in either window is a person who
+  // has not started, and they get the row of zeroes. Sets that exist but map to
+  // no group is the exercise library not having arrived, and drawing 0% there
+  // would tell somebody who has been training that they gained nothing.
+  const hasSetsInWindow = sets.some(
+    (set) => Number.isFinite(set?.at) && set.at >= previousFrom
+  );
+
+  if (!groupsByExercise || groupsByExercise.size === 0) {
+    return hasSetsInWindow ? [] : buildPlaceholderGroups();
+  }
+
   const byGroup = new Map();
 
   for (const set of sets) {
@@ -113,6 +155,10 @@ export function buildMuscleGroupDeltas(
 
     return byDelta !== 0 ? byDelta : right.setCount - left.setCount;
   });
+
+  if (!entries.length) {
+    return hasSetsInWindow ? [] : buildPlaceholderGroups();
+  }
 
   const shown = entries.slice(0, MUSCLE_GLANCE_MAX_GROUPS);
   const maxDelta = shown.reduce(

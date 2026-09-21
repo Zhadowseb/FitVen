@@ -324,6 +324,90 @@ assert.ok(
   "posts are back on Home"
 );
 
+/* ------------------------------------------------- the first day ------- */
+
+// Somebody who has just installed the app has no split and no sets, and used
+// to meet a Home with two holes in it. Both blocks now say what they will
+// become. A block that only appears weeks later cannot be looked forward to.
+
+const firstDay = muscleGlance.buildMuscleGroupDeltas([], { groupsByExercise, now });
+
+assert.strictEqual(
+  firstDay.length,
+  muscleGlance.MUSCLE_GLANCE_PLACEHOLDER_KEYS.length,
+  "an account with nothing logged draws no bars at all"
+);
+
+assert.ok(
+  firstDay.every(
+    (entry) =>
+      entry.deltaPercent === 0 &&
+      entry.isGain === false &&
+      entry.fill === muscleGlance.MUSCLE_GLANCE_EMPTY_FILL &&
+      entry.isPlaceholder === true
+  ),
+  "the first-day row is not a flat row of zeroes"
+);
+
+// The labels have to be the ones a trained account sees, or the block changes
+// its vocabulary the moment somebody starts training.
+const realGroupLabels = new Set(
+  loadAppModule("src/Utils/exerciseMuscleGroups.js").EXERCISE_MUSCLE_GROUPS.map(
+    (group) => group.label
+  )
+);
+
+assert.ok(
+  firstDay.every((entry) => realGroupLabels.has(entry.label)),
+  "the first-day row names muscle groups the rest of the app does not have"
+);
+
+assert.strictEqual(
+  muscleGlance.pickMuscleGlanceHeadline(firstDay),
+  null,
+  "the first day claims a muscle group is gaining"
+);
+
+// The one case that must NOT get zeroes: sets exist but the exercise catalog
+// has not arrived. Telling somebody who has been training that they gained
+// nothing is worse than telling them nothing.
+assert.deepStrictEqual(
+  muscleGlance.buildMuscleGroupDeltas([set("bench press", 100, 5, 5)], {
+    groupsByExercise: new Map(),
+    now,
+  }),
+  [],
+  "a missing catalog now reads as a month of no progress"
+);
+
+// A plus in front of a zero is a claim. The block would open on a row of
+// "+0%" for somebody who has never trained.
+const glanceComponentSource = fs.readFileSync(
+  path.join(root, "src", "Pages", "HomePage", "Components", "MuscleGlance", "MuscleGlance.js"),
+  "utf8"
+);
+
+assert.ok(
+  !/`\+\$\{group\.deltaPercent\}%`/.test(glanceComponentSource) &&
+    /deltaPercent > 0 \? `\+\$\{deltaPercent\}%`/.test(glanceComponentSource),
+  "the glance puts a plus in front of every number again, including zero"
+);
+
+const splitSource = fs.readFileSync(
+  path.join(root, "src", "Pages", "HomePage", "Components", "SplitCards", "SplitCards.js"),
+  "utf8"
+);
+
+assert.ok(
+  !/if \(!groups\.length\) \{\s*return null;/.test(splitSource),
+  "the split block vanishes again for somebody who has not trained yet"
+);
+
+assert.ok(
+  /home\.split\.empty/.test(splitSource) && /home\.split\.title/.test(splitSource),
+  "the empty split says nothing about what the block is for"
+);
+
 console.log(
   "Home quick start: the split guess, the weekday rule, last month, and the wiring passed."
 );

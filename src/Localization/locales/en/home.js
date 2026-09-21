@@ -40,6 +40,8 @@ export default {
     startFailedBody: "Please try again.",
   },
   split: {
+    title: "Workout split",
+    empty: "Start training to have your split shown here.",
     meta: "{exercises} exercises · {sets} sets",
     allCount: "All {count}",
     openAll: "Open all your workouts",
