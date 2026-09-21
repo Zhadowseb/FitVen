@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.0.1] - Unreleased
+### Fixed
+- **Exercises that never left the device now go up.** An upload pass skips an exercise whose workout cannot be given a cloud id at that moment, and the only code that recovers from that sits behind `allowParentRepair` - which the pass `SetSync` mounts turned off. One skipped pass and the row stayed on the phone for good, while its workout went on syncing as an empty shell: on one install three months of training exists only where it was typed, and every other device shows the workouts with no exercises in them. The hierarchy push now re-marks exercises and sets that have no cloud id under a parent that does (`markUnsyncedStrengthDataForRetry`), and lets the two lowest levels repair their parent instead of giving up. The pass asks about both cloud id columns and leaves deleted rows alone, so an install that has finished syncing is not touched again - `npm run test:stuck-strength` holds both halves of that.
+- This is what was behind the split cards not appearing, a quick start that carried no values, and a workout copied in the calendar arriving without its exercises: none of them were about the screens, they were about data that was never there. **The rows only exist on the install that holds them**, so the account with the missing history has to run a build with this fix on *that* phone before anything can be recovered.
+
+---
 ## [2.0.0] - Unreleased
 ### Added
 - **Centres.** A public fitness centre is now a thing the app knows: chain, name, address, coordinates and a hero photograph, 365 of them across PureGym, LOOP Fitness, Fit&Sund, FitnessX and SATS. The source is `data/gyms/` - the scraped folder that used to sit on the desktop, moved into the repository with its five Python scrapers and JSON, the photographs gitignored - and `npm run gyms:import` puts it in Supabase: rows to `public.gym`, photographs to the public `gym-images` bucket. Run it with `--dry-run` first; it prints the short name every centre will carry on the tiles, and the rule that derives them is a guess about five chains' naming habits.

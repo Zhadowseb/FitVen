@@ -2179,3 +2179,61 @@ export async function getSetsByExercise(db, exerciseId) {
     [exerciseId]
   );
 }
+
+/**
+ * Marks for upload the exercises and sets that the cloud never received.
+ *
+ * An exercise whose workout has a cloud id but which has none of its own was
+ * skipped by an upload pass and never picked up again: the only code that
+ * recovers from that sits behind `allowParentRepair`, which the pass SetSync
+ * runs turns off. One skipped pass and the row stays on the device for good,
+ * while its workout syncs on as an empty shell - which is what happened to
+ * three months of training on at least one install.
+ *
+ * Returns how many rows were re-marked, so a caller can say whether there was
+ * anything to repair.
+ */
+export async function markUnsyncedStrengthDataForRetry(db) {
+  // Both cloud id columns are asked about on every level. resolveSideBySideCloudId
+  // reads cloud_id first and falls back to the named column, so a row carrying
+  // only one of the two is synced - and a repair that looked at one column
+  // alone would re-mark half the table on every pass, forever.
+  const exercises = await db.runAsync(
+    `UPDATE Exercise_Instance
+        SET needs_sync = 1
+      WHERE needs_sync <> 1
+        AND cloud_id IS NULL
+        AND cloud_exercise_instance_id IS NULL
+        AND COALESCE(deleted_at, '') = ''
+        AND workout_type_instance_id IN (
+          SELECT workout_id
+          FROM Workout_Type_Instance
+          WHERE (
+              cloud_id IS NOT NULL
+              OR cloud_workout_type_instance_id IS NOT NULL
+            )
+            AND COALESCE(deleted_at, '') = ''
+        );`
+  );
+
+  // Same shape one level down: a set whose exercise made it up but which did
+  // not. Left behind, its reps and weight are only on the device.
+  const sets = await db.runAsync(
+    `UPDATE "Set"
+        SET needs_sync = 1
+      WHERE needs_sync <> 1
+        AND cloud_id IS NULL
+        AND cloud_set_id IS NULL
+        AND COALESCE(deleted_at, '') = ''
+        AND exercise_instance_id IN (
+          SELECT exercise_instance_id
+          FROM Exercise_Instance
+          WHERE COALESCE(deleted_at, '') = ''
+        );`
+  );
+
+  return {
+    exercises: exercises?.changes ?? 0,
+    sets: sets?.changes ?? 0,
+  };
+}
