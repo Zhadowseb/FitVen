@@ -394,6 +394,31 @@ assert.ok(
   "Profile is back in the bar, where it was reached by nobody"
 );
 
+// The running timer is the plus with a countdown in it, so it has to be the
+// same shape. It used to turn back into a circle the moment a workout started,
+// which read as a different control appearing mid-session - and the ring
+// around it was a circle drawn around a square button.
+assert.ok(
+  !/borderRadius: 999/.test(navSource),
+  "the running timer is a circle again, while the plus beside it is a rounded square"
+);
+
+assert.ok(
+  !/<Circle|AnimatedCircle/.test(navSource),
+  "the timer ring is a circle again"
+);
+
+// The countdown depletes a dash the length of the outline. A rounded rect's
+// outline is its four straight runs plus four corner quarters - one full
+// circle of the corner radius - and getting that wrong leaves the rest timer
+// finishing early or never.
+assert.ok(
+  /4 \* \(LIVE_RING_SIDE - 2 \* LIVE_RING_CORNER\) \+ 2 \* Math\.PI \* LIVE_RING_CORNER/.test(
+    navSource
+  ),
+  "the ring length is not the rounded rect's outline, so the rest countdown does not match it"
+);
+
 // The indicator holds its space when transparent, or the active tab's icon
 // sits above the others.
 assert.ok(

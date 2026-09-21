@@ -10,7 +10,7 @@ import {
   View,
   useColorScheme,
 } from "react-native";
-import Svg, { Circle } from "react-native-svg";
+import Svg, { Rect } from "react-native-svg";
 import { useSQLiteContext } from "expo-sqlite";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "@localization";
@@ -52,11 +52,21 @@ const RECENT_WORKOUT_PREVIEW_LIMIT = 2;
 const RECENT_WORKOUT_PAGE_SIZE = 10;
 
 const LIVE_TIMER_SIZE = 66;
-const LIVE_RING_RADIUS = 30;
 const LIVE_RING_STROKE = 3;
-const LIVE_RING_CIRCUMFERENCE = 2 * Math.PI * LIVE_RING_RADIUS;
+// The running timer is the plus with a countdown in it, so it is the same
+// shape as the plus: a rounded square, not a circle. The ring around it is a
+// rounded rect for the same reason - a circular ring around a square button
+// read as a different control appearing mid-workout.
+const LIVE_RING_CORNER = 16;
+const LIVE_RING_INSET = LIVE_RING_STROKE / 2 + 3;
+const LIVE_RING_SIDE = LIVE_TIMER_SIZE - 2 * LIVE_RING_INSET;
+// A rounded rect's outline: the four straight runs plus the four corner
+// quarters, which together are one full circle of the corner radius. The rest
+// countdown depletes this the same way it depleted the circumference.
+const LIVE_RING_CIRCUMFERENCE =
+  4 * (LIVE_RING_SIDE - 2 * LIVE_RING_CORNER) + 2 * Math.PI * LIVE_RING_CORNER;
 
-const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+const AnimatedRect = Animated.createAnimatedComponent(Rect);
 
 function getWorkoutType(workout) {
   return workout?.workout_type ?? workout?.label ?? null;
@@ -845,7 +855,8 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
               <Home
                 width={23}
                 height={23}
-                color={isHomeActive ? activeColor : inactiveColor}
+                color={isHomeActive ? activeColor : inactiveColor}
+
                 thickness={1.8}
               />
             </View>
@@ -877,7 +888,8 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
               <UpwardGraf
                 width={23}
                 height={23}
-                color={isLibraryActive ? activeColor : inactiveColor}
+                color={isLibraryActive ? activeColor : inactiveColor}
+
                 thickness={1.6}
               />
             </View>
@@ -944,20 +956,24 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
                     width={LIVE_TIMER_SIZE}
                     height={LIVE_TIMER_SIZE}
                     viewBox={`0 0 ${LIVE_TIMER_SIZE} ${LIVE_TIMER_SIZE}`}
-                    style={[styles.liveTimerRing, styles.liveTimerRingStart]}
+                    style={styles.liveTimerRing}
                   >
-                    <Circle
-                      cx={LIVE_TIMER_SIZE / 2}
-                      cy={LIVE_TIMER_SIZE / 2}
-                      r={LIVE_RING_RADIUS}
+                    <Rect
+                      x={LIVE_RING_INSET}
+                      y={LIVE_RING_INSET}
+                      width={LIVE_RING_SIDE}
+                      height={LIVE_RING_SIDE}
+                      rx={LIVE_RING_CORNER}
                       fill="none"
                       stroke={withAlpha(plusBackground, 0.25)}
                       strokeWidth={LIVE_RING_STROKE}
                     />
-                    <AnimatedCircle
-                      cx={LIVE_TIMER_SIZE / 2}
-                      cy={LIVE_TIMER_SIZE / 2}
-                      r={LIVE_RING_RADIUS}
+                    <AnimatedRect
+                      x={LIVE_RING_INSET}
+                      y={LIVE_RING_INSET}
+                      width={LIVE_RING_SIDE}
+                      height={LIVE_RING_SIDE}
+                      rx={LIVE_RING_CORNER}
                       fill="none"
                       stroke={plusBackground}
                       strokeWidth={LIVE_RING_STROKE}
@@ -974,12 +990,14 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
                     viewBox={`0 0 ${LIVE_TIMER_SIZE} ${LIVE_TIMER_SIZE}`}
                     style={styles.liveTimerRing}
                   >
-                    {/* Workout running: a full ring. Rest counts down as a
-                        depleting arc in the branch above. */}
-                    <Circle
-                      cx={LIVE_TIMER_SIZE / 2}
-                      cy={LIVE_TIMER_SIZE / 2}
-                      r={LIVE_RING_RADIUS}
+                    {/* Workout running: the whole outline. Rest counts down
+                        as a depleting one in the branch above. */}
+                    <Rect
+                      x={LIVE_RING_INSET}
+                      y={LIVE_RING_INSET}
+                      width={LIVE_RING_SIDE}
+                      height={LIVE_RING_SIDE}
+                      rx={LIVE_RING_CORNER}
                       fill="none"
                       stroke={plusBackground}
                       strokeWidth={LIVE_RING_STROKE}
@@ -1096,7 +1114,8 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
               <Social
                 width={23}
                 height={23}
-                color={isSocialActive ? activeColor : inactiveColor}
+                color={isSocialActive ? activeColor : inactiveColor}
+
                 thickness={1.6}
               />
             </View>
@@ -1202,7 +1221,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 8,
+    marginTop: -4,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.5,
     shadowRadius: 20,
@@ -1221,7 +1240,7 @@ const styles = StyleSheet.create({
   liveTimerWrap: {
     width: LIVE_TIMER_SIZE,
     height: LIVE_TIMER_SIZE,
-    marginTop: -31,
+    marginTop: -13,
   },
   liveTimerPulse: {
     position: "absolute",
@@ -1229,7 +1248,7 @@ const styles = StyleSheet.create({
     left: 3,
     right: 3,
     bottom: 3,
-    borderRadius: 999,
+    borderRadius: LIVE_RING_CORNER,
   },
   liveTimerButton: {
     position: "absolute",
@@ -1237,7 +1256,7 @@ const styles = StyleSheet.create({
     left: 3,
     right: 3,
     bottom: 3,
-    borderRadius: 999,
+    borderRadius: LIVE_RING_CORNER,
     borderWidth: 4,
     alignItems: "center",
     justifyContent: "center",
@@ -1262,8 +1281,5 @@ const styles = StyleSheet.create({
     left: 0,
     width: LIVE_TIMER_SIZE,
     height: LIVE_TIMER_SIZE,
-  },
-  liveTimerRingStart: {
-    transform: [{ rotate: "-90deg" }],
   },
 });
