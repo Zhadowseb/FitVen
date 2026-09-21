@@ -104,7 +104,11 @@ export default function HomePage() {
     }
 
     try {
-      const preview = await socialService.getCirclePreview({ user });
+      const preview = await socialService.getCirclePreview({
+        user,
+        limit: 12,
+        date: getTodaysDate(),
+      });
 
       setCirclePreview(preview);
       setCirclePreviewError("");
