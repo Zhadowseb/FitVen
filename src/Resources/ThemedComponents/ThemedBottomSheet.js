@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useMemo } from "react";
 import {
   Modal,
+  Platform,
   View,
   StyleSheet,
   Pressable,
@@ -17,12 +18,49 @@ import ThemedKeyboardSheet, {
   useSheetKeyboardHeight,
 } from "./ThemedKeyboardSheet";
 
-const ThemedBottomSheet = ({ visible, onClose, children, footer = null }) => {
+// iOS drops a modal presented while another is still on screen, without an
+// error, so anything that opens a second one has to wait for this sheet to be
+// gone. Modal's own onDismiss cannot carry it: React Native only fires that on
+// iOS, and this component returns null before the Modal when it closes, so the
+// subtree unmounts rather than dismissing. The effect below watches the flag
+// instead, which is true on both platforms, and waits out the fade on iOS.
+const IOS_DISMISS_SETTLE_MS = 320;
+
+const ThemedBottomSheet = ({
+  visible,
+  onClose,
+  onDismiss,
+  children,
+  footer = null,
+}) => {
   const scheme = useColorScheme();
   const theme = Colors[scheme] ?? Colors.light;
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
   const keyboardHeight = useSheetKeyboardHeight();
+
+  const wasVisibleRef = useRef(visible);
+  const onDismissRef = useRef(onDismiss);
+
+  onDismissRef.current = onDismiss;
+
+  useEffect(() => {
+    const wasVisible = wasVisibleRef.current;
+
+    wasVisibleRef.current = visible;
+
+    if (!wasVisible || visible) {
+      return undefined;
+    }
+
+    const timer = setTimeout(
+      () => onDismissRef.current?.(),
+      Platform.OS === "ios" ? IOS_DISMISS_SETTLE_MS : 0
+    );
+
+    return () => clearTimeout(timer);
+  }, [visible]);
+
 
   // Height follows the content up to a cap, so a sheet with two options is not
   // padded out to 60% of the screen. Measured per render so folds, display-zoom
