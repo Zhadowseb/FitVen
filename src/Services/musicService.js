@@ -269,6 +269,18 @@ export async function connectSpotify() {
   return { connected: true, accountName: tokens.accountName };
 }
 
+/**
+ * Everything this module remembers about whoever was signed in: the track on
+ * the tile, the last row written, the settings cache and the provider tokens.
+ * Called on sign-out, where none of it belongs to the next person.
+ */
+export async function forgetSignedInUser() {
+  publishNowPlaying(null);
+  lastRecorded = null;
+  invalidateSettingsCache();
+  await clearTokens();
+}
+
 /** Forgets the tokens and switches sharing off, so nothing keeps being written. */
 export async function disconnectMusic({ user } = {}) {
   await clearTokens();

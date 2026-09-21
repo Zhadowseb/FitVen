@@ -324,7 +324,10 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
     };
   }, [national, scope, unit]);
 
-  const listRows = rows.slice(3);
+  // The podium takes the first three; the list is the rest. Memoised because
+  // it is FlatList's data prop, and a new array on every render re-renders
+  // every mounted row.
+  const listRows = useMemo(() => rows.slice(3), [rows]);
   const hasMoreRow = Boolean(board?.nextCursor);
 
   const openReview = useCallback((lift) => {
@@ -337,6 +340,8 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
 
     setIsReviewOpen(true);
   }, []);
+
+  const openAttachSheet = useCallback(() => setIsAttachSheetOpen(true), []);
 
   const renderLeaderboardRow = useCallback(
     ({ item: lift, index }) => {
@@ -356,7 +361,7 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
             unit={unit}
             showGym={national}
             onPressReview={openReview}
-            onPressAttach={() => setIsAttachSheetOpen(true)}
+            onPressAttach={openAttachSheet}
           />
           {!isLast ? (
             <View style={[styles.rowDivider, { backgroundColor: theme.hairline }]} />
@@ -364,7 +369,7 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
         </View>
       );
     },
-    [hasMoreRow, listRows.length, national, openReview, theme, unit]
+    [hasMoreRow, listRows.length, national, openAttachSheet, openReview, theme, unit]
   );
   const meInPage = me ? rows.some((row) => row.liftId === me.liftId) : false;
   const showPinnedMe = Boolean(me) && !meInPage;

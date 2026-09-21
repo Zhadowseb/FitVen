@@ -45,11 +45,11 @@ const WORKOUT_TYPE_INSTANCE_TABLE = "workout_type_instance";
 const PROFILE_SELECT_FIELDS =
   "id, username, username_base, username_code, display_name, bio, avatar_path, created_at, updated_at";
 const WORKOUT_ACTIVITY_SELECT_FIELDS =
-  "id, user_id, workout_type, date, label, done, is_active, timer_start, elapsed_time, deleted_at, workout_catalog:workout_type!workout_type_instance_workout_type_fkey(display_name)";
+  "id, user_id, workout_type, date, label, done, is_active, timer_start, elapsed_time, deleted_at, last_updated, workout_catalog:workout_type!workout_type_instance_workout_type_fkey(display_name)";
 // The same rows with the centre and the newest track joined in, one request
 // for everyone. Falls back to the plain select when the centre migration has
 // not been run, so Home keeps working in the meantime.
-const WORKOUT_ACTIVITY_WITH_GYM_SELECT_FIELDS = `${WORKOUT_ACTIVITY_SELECT_FIELDS}, gym_id, last_updated, gym:gym!workout_type_instance_gym_id_fkey(id, short_name), workout_music(track, artist, art_url, provider, played_at)`;
+const WORKOUT_ACTIVITY_WITH_GYM_SELECT_FIELDS = `${WORKOUT_ACTIVITY_SELECT_FIELDS}, gym_id, gym:gym!workout_type_instance_gym_id_fkey(id, short_name), workout_music(track, artist, art_url, provider, played_at)`;
 const SOCIAL_SETUP_MESSAGE =
   "User search and follows are not set up in Supabase yet. Run supabase/migrations/20260424004053_social-search.sql in the Supabase SQL editor first.";
 const WORKOUT_TYPE_SETUP_MESSAGE =

@@ -58,6 +58,7 @@ behind by accident.
 | `20260921170000_blocked-members-cannot-watch.sql` | yes |
 | `20260921180000_music-opt-in.sql` | yes |
 | `20260921180100_lift-video-index.sql` | yes |
+| `20260921190000_one-verification-request-per-window.sql` | no |
 
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
@@ -226,6 +227,15 @@ sharing on - only the client did, and the select policy shows the table to
 every follower. And `private.can_watch_lift_video` filters on
 `gym_lift.video_path`, which no index covered, so every signed video URL was a
 sequential scan and the client signs a whole queue at once.
+
+`20260921190000_one-verification-request-per-window.sql` **has not been run.**
+The ten-minute limit added in `20260921140000` was a select followed by an
+insert: two calls a second apart both passed the select, because neither sees
+the other's uncommitted row under read committed, and both filled ten inboxes.
+The unique index on `event_key` would have stopped them, except the key carried
+the epoch second and so only caught calls inside the same second. The key now
+names a ten-minute bucket and the insert is `on conflict do nothing`, so the
+index is the limit and nothing sits between deciding and writing.
 
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to

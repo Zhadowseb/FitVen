@@ -128,6 +128,18 @@ export async function logout() {
   if (error) {
     throw error;
   }
+
+  // The music module keeps the track, the tokens and the settings cache in
+  // module and secure-store state, none of which signing out touches. Loaded
+  // on demand: this file is imported by everything, and musicService pulls in
+  // the native auth modules.
+  try {
+    const { forgetSignedInUser } = require("../Services/musicService");
+
+    await forgetSignedInUser();
+  } catch (moduleError) {
+    console.warn("Could not clear the music session:", moduleError);
+  }
 }
 
 /* ------------------------------------------------ the signed-in user's id -- */

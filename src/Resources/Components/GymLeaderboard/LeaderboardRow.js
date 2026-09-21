@@ -1,3 +1,4 @@
+import React from "react";
 import { StyleSheet, TouchableOpacity, View, useColorScheme } from "react-native";
 import { formatDate, useTranslation } from "@localization";
 
@@ -18,7 +19,7 @@ function formatLiftDate(value) {
  * that opens the review sheet; a rejected row (only ever the viewer's own)
  * strikes the weight through and says so.
  */
-export default function LeaderboardRow({
+function LeaderboardRow({
   lift,
   unit = "kg",
   showGym = false,
@@ -188,3 +189,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 });
+
+export default React.memo(LeaderboardRow);

@@ -377,15 +377,17 @@ for (const file of [
   "src/Resources/Components/GymLeaderboard/LiftStatusPill.js",
   "src/Resources/Components/GymLeaderboard/LeaderboardRow.js",
 ]) {
+  // Top-level function declarations, whether the export sits on them or at the
+  // bottom - LeaderboardRow is `function X` plus `export default React.memo(X)`.
   const source = fs.readFileSync(path.join(root, file), "utf8");
-  const componentCount = (source.match(/^export (default )?function /gm) ?? []).length;
+  const componentCount = (source.match(/^(?:export )?(?:default )?function /gm) ?? []).length;
   const themeDeclarations = (source.match(/const theme = Colors\[/g) ?? []).length;
   const componentsUsingTheme = source
-    .split(/^export (?:default )?function /m)
+    .split(/^(?:export )?(?:default )?function /m)
     .slice(1)
     .filter((piece) => piece.includes("theme.")).length;
 
-  assert.ok(componentCount >= 1, `${file} exports no component any more`);
+  assert.ok(componentCount >= 1, `${file} declares no component any more`);
   assert.ok(
     themeDeclarations >= componentsUsingTheme,
     `${file} has ${componentsUsingTheme} components reading theme but only ${themeDeclarations} declaring it`
