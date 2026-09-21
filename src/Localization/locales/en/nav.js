@@ -4,6 +4,7 @@ export default {
   tabs: {
     home: "HOME",
     train: "TRAIN",
+    feed: "Feed",
     social: "SOCIAL",
     profile: "PROFILE",
   },

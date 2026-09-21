@@ -17,6 +17,7 @@ import * as ScreenOrientation from "expo-screen-orientation";
 import LoginPage from './src/Pages/LoginPage/LoginPage';
 import RegisterPage from './src/Pages/RegisterPage/RegisterPage';
 import HomePage from './src/Pages/HomePage/HomePage';
+import FeedPage from './src/Pages/FeedPage/FeedPage';
 import ProfilePage from './src/Pages/ProfilePage/ProfilePage';
 import ProgramPage from './src/Pages/ProgramPage/ProgramPage';
 import ProgramOverviewPage from './src/Pages/ProgramOverviewPage/ProgramOverviewPage';
@@ -277,6 +278,7 @@ function RootNavigator() {
             {isAuthenticated ? (
               <>
                 <Stack.Screen name="HomePage" component={HomePage} options={{ headerShown: false }} />
+                <Stack.Screen name="FeedPage" component={FeedPage} options={{ headerShown: false }} />
                 <Stack.Screen name="SearchPage" component={SearchPage} options={{ headerShown: false }} />
                 <Stack.Screen name="SocialUserListPage" component={SocialUserListPage} options={{ headerShown: false }} />
                 <Stack.Screen name="ProfilePage" component={ProfilePage} options={{ headerShown: false }} />
