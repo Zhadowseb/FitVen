@@ -63,6 +63,7 @@ behind by accident.
 | `20260921220000_dev-dashboard.sql` | yes |
 | `20260921230000_the-admin-guard-asks-who-is-asking.sql` | yes |
 | `20260922090000_a-feedback-message-has-a-status.sql` | no |
+| `20260922100000_the-note-column-leaves-the-old-exercises.sql` | no |
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
 centre match, per-centre lift leaderboards with video verification, and what
@@ -286,6 +287,16 @@ the insert policy lets any signed-in account write its own row, and without it
 somebody could post a suggestion already marked `fixed`. Column grants cannot
 do that job, because Postgres ignores a column-level revoke when the role holds
 the privilege on the table.
+
+`20260922100000_the-note-column-leaves-the-old-exercises.sql` has **not** been
+run yet. `20260916210000` corrected `exercise_column_preferences` and stopped
+there; `exercise_instance` still held 26 rows with note on. Copying a workout
+clones `visible_columns` verbatim - correctly, a copy should look like what it
+came from - so every copy of an old session carried the NOTE column into a
+brand new exercise, and the copy became another legacy row. The fix is the
+data, not the copy. The app's matching half runs under
+`opt_in_visible_columns_v2`, so the device cleans its own rows once more and
+both sides land on the same answer.
 
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to

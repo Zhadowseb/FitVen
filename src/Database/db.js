@@ -1465,7 +1465,15 @@ function applyOptInColumnDefaults(serializedColumns) {
 // still said note was on, the pull wrote that back, and the next start stripped
 // it, forever. The columns kept reappearing, which is how this was found.
 async function migrateLegacyVisibleColumnDefaults(db) {
-  const metadataKey = "opt_in_visible_columns_v1";
+  // _v2, not _v1. The first pass cleaned this device and then the cloud handed
+  // the old values straight back: `20260916210000` corrected
+  // `exercise_column_preferences` up there and never touched `exercise_instance`,
+  // which still held 26 rows with note on. Those sync down, and copying a
+  // workout clones `visible_columns` verbatim - so every copy of an old session
+  // carried the NOTE column into a brand new exercise, months after the default
+  // changed. The key moves so the pass runs once more, against rows that are
+  // now cleaned on both sides.
+  const metadataKey = "opt_in_visible_columns_v2";
 
   if ((await getAppMetadataValue(db, metadataKey)) === "done") {
     return;

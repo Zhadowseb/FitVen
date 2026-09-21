@@ -75,6 +75,30 @@ for (const [label, statements] of [
   );
 }
 
+// The pass that turns the three opt-in columns off runs once per key, and the
+// key is what decides whether it ever runs again. It was left at _v1 after the
+// cloud handed the old values straight back, which is how the NOTE column
+// survived six months past the default changing. If somebody cleans the data
+// again, the key has to move again - a fixed key means the pass is shut.
+{
+  const key = source.match(/const metadataKey = "(opt_in_visible_columns_v\d+)"/);
+
+  assert.ok(key, "the opt-in column pass no longer guards itself with a key");
+  assert.ok(
+    Number(key[1].replace(/\D/g, "")) >= 2,
+    "the opt-in column pass is back on its first key, so a device cleaned before the cloud was will never be cleaned again"
+  );
+
+  // Both tables, or the preferences get corrected and the exercises keep
+  // carrying note into every copy of an old workout.
+  for (const table of ["Exercise_Instance", "Exercise_Column_Preference"]) {
+    assert.ok(
+      new RegExp(`table: "${table}"`).test(source),
+      `the opt-in column pass stopped cleaning ${table}`
+    );
+  }
+}
+
 /* --------------------------------------------------------------- fixture -- */
 
 function createDatabase() {
