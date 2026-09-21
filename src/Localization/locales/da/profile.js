@@ -57,6 +57,7 @@ export default {
     couldNotDeleteAccount: "Kunne ikke slette kontoen. Intet blev fjernet.",
   },
   settings: {
+    dev: "Dev",
     workoutTypes: "Træningstyper",
     notifications: "Notifikationer",
     socialPosts: "Opslag",
@@ -111,6 +112,9 @@ export default {
     confirm: "Slet min konto",
   },
   feedbackModal: {
+    kindBug: "Fejl",
+    kindIdea: "Idé",
+    kindPraise: "Ros",
     title: "Send os feedback",
     inputLabel: "Hvad skal vi vide?",
     placeholder:

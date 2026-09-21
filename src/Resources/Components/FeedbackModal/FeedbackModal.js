@@ -6,6 +6,7 @@ import { Colors } from "../../GlobalStyling/colors";
 import {
   ThemedButton,
   ThemedModal,
+  ThemedSegmentedControl,
   ThemedText,
   ThemedTextInput,
 } from "../../ThemedComponents";
@@ -19,6 +20,7 @@ export default function FeedbackModal({ visible, onClose, userId }) {
   const theme = Colors[colorScheme] ?? Colors.light;
   const { t } = useTranslation();
   const [message, setMessage] = useState("");
+  const [kind, setKind] = useState("bug");
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -54,6 +56,7 @@ export default function FeedbackModal({ visible, onClose, userId }) {
       await feedbackService.submitFeedback({
         message: trimmedMessage,
         userId,
+        kind,
       });
 
       setMessage("");
@@ -74,6 +77,19 @@ export default function FeedbackModal({ visible, onClose, userId }) {
       style={styles.modal}
       contentStyle={styles.content}
     >
+      {/* Above the field on purpose: it is one tap, and it is what decides
+          which pile the message lands in on the other side. */}
+      <ThemedSegmentedControl
+        options={[
+          { value: "bug", label: t("profile.feedbackModal.kindBug") },
+          { value: "idea", label: t("profile.feedbackModal.kindIdea") },
+          { value: "praise", label: t("profile.feedbackModal.kindPraise") },
+        ]}
+        value={kind}
+        onChange={setKind}
+        style={styles.kindPicker}
+      />
+
       <View
         style={[
           styles.inputShell,

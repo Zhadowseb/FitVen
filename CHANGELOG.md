@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.1.0] - Unreleased
+### Added
+- **A dev dashboard, for one account.** Profile -> Dev, shown only when `profile_private.is_admin` is set by hand in the database. Three things on one read-only screen: downloads per store with the week-by-week chart, three numbers saying whether the app is running, and the feedback people have sent from inside it. The period picker (7 dage / 90 dage / Alt) moves the boxes, the chart and the numbers; the feedback list stays newest-first whatever it is set to, because a list that reorders itself as it is read cannot be worked through. Tapping a message marks it read in place - it does not jump.
+- **Feedback can be read, and it says what kind it is.** The messages were already being sent and stored; nothing could look at them. `Feedback` gains `kind`, `read_at` and a `created_at`, RLS, and the form gains a Fejl / Idé / Ros picker above the field. The kinds the app writes and the kinds the column accepts are checked against each other by `npm run test:dev-dashboard`, because a fifth one added on one side only fails the insert in production, on the screen somebody reaches when something has already gone wrong for them.
+- `store_stats`, a table a scheduled server function fills from the App Store Connect and Google Play APIs. **Nothing here is built yet** - the function, the cron and the keys are still to come, and the keys never go in the bundle. Until then every store number on the screen is an em dash and the chart says why. An em dash and a zero are different answers and the dashboard keeps them apart.
+
+### Security
+- **`is_admin` is not writable from the app.** `profile_private` already carried an update policy and an insert policy scoped to the row's owner, and neither says anything about columns - so putting the flag on that table would otherwise have handed every signed-in account a way to make itself an admin with one PATCH. The migration revokes the two column privileges and adds a trigger that refuses the write a second time, in case a later migration re-runs the blanket grant from `20260628211540`. `npm run test:dev-dashboard` fails if either guard goes. Reading feedback and the store numbers is refused by policy, not by the row being hidden in the profile.
+
+### Notes
+- Two things in the design document were not followed, and both were decisions already taken in this repository.
+- **No `os` or `device` on a feedback row.** The document asks the client to fill them from `expo-device`. `feedbackService` removed exactly those fields once already because together they fingerprint a device, and the published privacy policy does not list them - adding a data category means raising `PRIVACY_POLICY_VERSION`, which asks every user to accept again on their next launch. The columns exist so the decision can be revisited without another migration; the client leaves them empty and the meta line shows the app version alone.
+- **No crash-free percentage.** The document offers Sentry or Crashlytics. The privacy policy says in as many words that there is no crash reporting, so the box shows an em dash - which is what the document itself asks for when the number does not exist.
+- The feedback lives in the `Feedback` table the app has always written to rather than the new `app_feedback` the document describes. A second table would have left every message sent so far unreadable on the screen built to read them.
+- The screen is not translated. It is reached by one account, and a key in `locales/` is two languages for everybody who edits it afterwards. The row in the profile that opens it goes through `t()` like the rest of that screen.
+
+---
 ## [2.0.0] - Unreleased
 ### Added
 - **Centres.** A public fitness centre is now a thing the app knows: chain, name, address, coordinates and a hero photograph, 365 of them across PureGym, LOOP Fitness, Fit&Sund, FitnessX and SATS. The source is `data/gyms/` - the scraped folder that used to sit on the desktop, moved into the repository with its five Python scrapers and JSON, the photographs gitignored - and `npm run gyms:import` puts it in Supabase: rows to `public.gym`, photographs to the public `gym-images` bucket. Run it with `--dry-run` first; it prints the short name every centre will carry on the tiles, and the rule that derives them is a guess about five chains' naming habits.

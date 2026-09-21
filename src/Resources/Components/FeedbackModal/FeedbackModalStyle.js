@@ -1,6 +1,9 @@
 import { StyleSheet } from "react-native";
 
 export default StyleSheet.create({
+  kindPicker: {
+    marginBottom: 12,
+  },
   modal: {
     width: "94%",
     maxHeight: 520,

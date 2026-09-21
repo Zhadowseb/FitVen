@@ -59,6 +59,7 @@ behind by accident.
 | `20260921180000_music-opt-in.sql` | yes |
 | `20260921180100_lift-video-index.sql` | yes |
 | `20260921190000_one-verification-request-per-window.sql` | yes |
+| `20260921220000_dev-dashboard.sql` | no |
 
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
@@ -236,6 +237,21 @@ The unique index on `event_key` would have stopped them, except the key carried
 the epoch second and so only caught calls inside the same second. The key now
 names a ten-minute bucket and the insert is `on conflict do nothing`, so the
 index is the limit and nothing sits between deciding and writing.
+
+`20260921220000_dev-dashboard.sql` has **not** been run yet. It adds
+`profile_private.is_admin`, gives the existing `Feedback` table the columns and
+the policies the dev dashboard reads, and creates `store_stats`. The one part
+to read before running it is the pair of column revokes on `is_admin`: that
+table's update policy is scoped to the row and says nothing about columns, so
+without them every signed-in account can make itself an admin with one PATCH.
+The flag itself is set by hand afterwards:
+
+```sql
+update public.profile_private set is_admin = true where user_id = '<uuid>';
+```
+
+That statement has to be run as the service role or from the SQL editor - the
+guard trigger refuses it from an app connection, which is the point.
 
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to

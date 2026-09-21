@@ -58,6 +58,7 @@ export default {
     couldNotDeleteAccount: "Could not delete the account. Nothing was removed.",
   },
   settings: {
+    dev: "Dev",
     workoutTypes: "Workout types",
     notifications: "Notifications",
     socialPosts: "Social posts",
@@ -112,6 +113,9 @@ export default {
     confirm: "Delete my account",
   },
   feedbackModal: {
+    kindBug: "Bug",
+    kindIdea: "Idea",
+    kindPraise: "Praise",
     title: "Send us feedback",
     inputLabel: "What should we know?",
     placeholder:
