@@ -30,7 +30,11 @@ export default StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    paddingBottom: 120,
+    // The bottom bar is a sibling in the layout, not something floating over
+    // the content, so nothing here has to make room for it. 120 was that
+    // clearance written down anyway, and it left about ninety points of empty
+    // scroll under the last block. 28 is what the feed uses.
+    paddingBottom: 28,
   },
   // The counter and the quick start share a row and the same height, so the
   // number lines up with the buttons beside it rather than floating above them.
