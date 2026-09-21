@@ -36,6 +36,8 @@ export default {
     emptyWorkout: "Empty workout",
     startNamed: "Start {name}",
     startEmpty: "Start an empty workout",
+    startFailedTitle: "Could not start the workout",
+    startFailedBody: "Please try again.",
   },
   split: {
     meta: "{exercises} exercises · {sets} sets",
@@ -73,6 +75,7 @@ export default {
     minutesShort: "{count} min",
   },
   feed: {
+    title: "Feed",
     emptyTitleNoFollows: "No workouts to show yet",
     emptyTitle: "Nothing shared yet",
     emptyBodyNoFollows:

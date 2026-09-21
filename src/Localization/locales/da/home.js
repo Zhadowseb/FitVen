@@ -34,6 +34,8 @@ export default {
     emptyWorkout: "Tom træning",
     startNamed: "Start {name}",
     startEmpty: "Start en tom træning",
+    startFailedTitle: "Kunne ikke starte træningen",
+    startFailedBody: "Prøv igen.",
   },
   split: {
     meta: "{exercises} øvelser · {sets} sæt",
@@ -71,6 +73,7 @@ export default {
     minutesShort: "{count} min",
   },
   feed: {
+    title: "Feed",
     emptyTitleNoFollows: "Ingen træninger at vise endnu",
     emptyTitle: "Intet delt endnu",
     emptyBodyNoFollows:
