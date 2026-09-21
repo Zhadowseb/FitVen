@@ -47,6 +47,10 @@ const FALLBACK_REGION = {
   longitudeDelta: 4.2,
 };
 const NEARBY_REGION_DELTA = 0.08;
+// A pan is a series of small movements, and onRegionChangeComplete reports
+// every one of them. Long enough to collapse a drag, short enough that the
+// pins follow the map rather than trailing it.
+const MAP_REGION_DEBOUNCE_MS = 320;
 
 // Google Maps (Android) style: inverted and desaturated, so the pins carry
 // the colour. iOS uses Apple Maps and follows userInterfaceStyle instead.
@@ -307,20 +311,41 @@ export default function GymsPage() {
       .sort((left, right) => left.chain.localeCompare(right.chain));
   }, [visibleGyms]);
 
-  const handleRegionChange = async (region) => {
-    try {
-      const gyms = await gymService.getGymsInBounds({
-        minLatitude: region.latitude - region.latitudeDelta / 2,
-        maxLatitude: region.latitude + region.latitudeDelta / 2,
-        minLongitude: region.longitude - region.longitudeDelta / 2,
-        maxLongitude: region.longitude + region.longitudeDelta / 2,
-      });
+  // onRegionChangeComplete fires for every nudge, and each one was a request.
+  // A short wait collapses a series of small pans into one, and only the last
+  // answer is allowed to write - the same rule the centre search follows, for
+  // the same reason.
+  const regionRequestRef = useRef(0);
+  const regionTimeoutRef = useRef(null);
 
-      setVisibleGyms(gyms);
-    } catch {
-      // The pins already on the map are still right; nothing to tell the user.
+  const handleRegionChange = (region) => {
+    if (regionTimeoutRef.current) {
+      clearTimeout(regionTimeoutRef.current);
     }
+
+    regionTimeoutRef.current = setTimeout(async () => {
+      regionRequestRef.current += 1;
+
+      const request = regionRequestRef.current;
+
+      try {
+        const gyms = await gymService.getGymsInBounds({
+          minLatitude: region.latitude - region.latitudeDelta / 2,
+          maxLatitude: region.latitude + region.latitudeDelta / 2,
+          minLongitude: region.longitude - region.longitudeDelta / 2,
+          maxLongitude: region.longitude + region.longitudeDelta / 2,
+        });
+
+        if (request === regionRequestRef.current) {
+          setVisibleGyms(gyms);
+        }
+      } catch {
+        // The pins already on the map are still right; nothing to tell the user.
+      }
+    }, MAP_REGION_DEBOUNCE_MS);
   };
+
+  useEffect(() => () => clearTimeout(regionTimeoutRef.current), []);
 
   // Centre the map on the phone. A fresh fix every time, because the one
   // taken when the screen opened can be minutes old by now; the position
@@ -441,7 +466,7 @@ export default function GymsPage() {
           <ThemedText style={styles.gymCount} setColor={mutedStrong}>
             {trailing ?? (gym.memberCount ? String(gym.memberCount) : "")}
           </ThemedText>
-          <ChevronRight width={18} height={18} color={isLight ? "#A8ACB6" : "#4A4F5A"} />
+          <ChevronRight width={18} height={18} color={theme.chevron} />
         </TouchableOpacity>
         {index < total - 1 ? <View style={[styles.divider, { backgroundColor: theme.hairline }]} /> : null}
       </View>

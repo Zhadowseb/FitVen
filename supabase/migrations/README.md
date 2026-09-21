@@ -56,6 +56,7 @@ behind by accident.
 | `20260921150000_drop-workout-start-coordinates.sql` | yes |
 | `20260921160000_friends-surrounding-activity.sql` | yes |
 | `20260921170000_blocked-members-cannot-watch.sql` | yes |
+| `20260921180000_music-opt-in-and-video-index.sql` | no |
 
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
@@ -206,6 +207,15 @@ other path does. A leaderboard row carries the lifter's id and the lift id, and
 the object path is `<user_id>/<lift_id>.<ext>`, so somebody who had seen a row
 before blocking could still ask for a signed URL and get one. The function here
 is the applied one with that single clause added.
+
+`20260921180000_music-opt-in-and-video-index.sql` **has not been run.** Two
+things from the review. The insert policy on `workout_music` asked whether the
+row was yours and whether the workout was yours, but not whether you had turned
+sharing on - only the client did, and the select policy shows the table to
+every follower, so the toggle had no counterpart in the database. And
+`private.can_watch_lift_video` filters on `gym_lift.video_path`, which no index
+covered, so every signed video URL was a sequential scan and the client signs a
+whole queue at once.
 
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to

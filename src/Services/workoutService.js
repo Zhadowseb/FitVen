@@ -228,8 +228,9 @@ export async function setWorkoutOriginalStartTime(
   // The first start is when the phone is most likely to be inside the centre.
   // One position fix, matched against the centre list; the row is synced
   // again once it has an answer, because the sync above has already gone.
-  void gymService
-    .matchWorkoutToGym(db, workoutId, { requestPermission: true })
+  void enqueueSync(() =>
+    gymService.matchWorkoutToGym(db, workoutId, { requestPermission: true })
+  )
     .then((result) => {
       if (result?.position) {
         syncWorkoutTypeInstancesInBackground(db);
@@ -309,8 +310,7 @@ export async function finishWorkout(
   // Centre match (if the start did not get one) and the best set per exercise
   // to the centre leaderboard. Not awaited: a position fix can take seconds
   // and the finish screen must not wait for it. Never throws.
-  void gymService
-    .finishWorkoutGymSyncBestEffort(db, workoutId)
+  void enqueueSync(() => gymService.finishWorkoutGymSyncBestEffort(db, workoutId))
     .finally(() => {
       syncWorkoutTypeInstancesInBackground(db);
     });

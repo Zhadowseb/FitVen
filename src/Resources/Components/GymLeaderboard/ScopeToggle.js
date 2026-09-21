@@ -12,7 +12,7 @@ import { ThemedText } from "../../ThemedComponents";
 export default function ScopeToggle({ options = [], value, onChange, compact = false, style }) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
-  const activeSurface = colorScheme === "light" ? "#E9EBF0" : "#242830";
+  const activeSurface = theme.raisedSurface;
 
   return (
     <View

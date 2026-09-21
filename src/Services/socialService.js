@@ -24,9 +24,9 @@ import {
   normalizeMaxHeartRateSource,
   resolveMaxHeartRate,
 } from "../Utils/heartRateUtils";
-import { sortActivityTiles } from "../Utils/friendsActivityUtils";
 import {
   buildCloudActivityPreview,
+  isMissingGymJoinError,
   createRestActivityPreview,
   getCloudWorkoutActivityAt,
   getCloudWorkoutDisplayLabel,
@@ -207,16 +207,6 @@ async function fetchSurroundingActivityByUserId({ userIds }) {
 
 
 
-
-function isMissingGymJoinError(error) {
-  const message = `${error?.message ?? ""} ${error?.details ?? ""} ${error?.hint ?? ""}`.toLowerCase();
-
-  return (
-    message.includes("gym") ||
-    message.includes("workout_music") ||
-    message.includes("last_updated")
-  );
-}
 
 async function fetchActivityWorkouts({ userIds, activityDate }) {
   const { data, error } = await supabase
@@ -1161,9 +1151,9 @@ export async function getCirclePreview({ user, limit = 12, date = null }) {
     currentUser: currentUserProfile
       ? { ...currentUserProfile, homeGymId, homeGym }
       : currentUserProfile,
-    // live -> done -> planned -> rest, newest first inside a group. The order
-    // the tiles want; the strip used to put planned before done.
-    people: sortActivityTiles(people),
+    // Unordered: FriendsActivity sorts, because the order is what the strip
+    // wants rather than what the request produced.
+    people,
   };
 }
 

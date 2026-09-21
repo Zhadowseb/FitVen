@@ -473,6 +473,30 @@ export async function syncWorkoutLifts(db, workoutId) {
  * only position available would be a different place, and a wrong centre on a
  * leaderboard is worse than a missing one.
  */
+// A handful at a time, not all twenty at once: this is best-effort background
+// work and it should not take the whole connection while somebody is using the
+// app. One failure never stops the others - the next foreground tries again.
+const RETRY_BATCH_SIZE = 4;
+
+async function runInBatches(items, run, warning) {
+  const results = [];
+
+  for (let start = 0; start < items.length; start += RETRY_BATCH_SIZE) {
+    const batch = items.slice(start, start + RETRY_BATCH_SIZE);
+    const settled = await Promise.allSettled(batch.map((item) => run(item)));
+
+    for (const outcome of settled) {
+      if (outcome.status === "rejected") {
+        console.warn(warning, outcome.reason);
+      } else {
+        results.push(outcome.value);
+      }
+    }
+  }
+
+  return results;
+}
+
 export async function retryMissingGymMatches(db) {
   const userId = await getAuthenticatedUserId();
 
@@ -492,44 +516,48 @@ export async function retryMissingGymMatches(db) {
   let matched = 0;
   let uploaded = 0;
 
-  for (const workout of workouts) {
-    let gymId = toNumber(workout.gym_id);
+  // Two passes rather than one workout at a time. This runs on every return to
+  // the foreground, and a week of training was up to twenty round trips taken
+  // one after another - the queue behind it stayed busy for as long as that
+  // took. The workouts are independent of each other, so the only ordering
+  // that matters is that a workout is matched before its lifts are sent.
+  const needMatch = workouts.filter((workout) => toNumber(workout.gym_id) === null);
+  const readyToUpload = workouts.filter((workout) => toNumber(workout.gym_id) !== null);
 
-    if (gymId === null) {
-      const latitude = toNumber(workout.start_latitude);
-      const longitude = toNumber(workout.start_longitude);
+  const matchResults = await runInBatches(needMatch, async (workout) => {
+    const latitude = toNumber(workout.start_latitude);
+    const longitude = toNumber(workout.start_longitude);
 
-      if (latitude === null || longitude === null) {
-        continue;
-      }
-
-      try {
-        const result = await matchWorkoutToGym(db, workout.workout_id, {
-          position: { latitude, longitude },
-        });
-
-        gymId = result.gymId;
-        matched += result.matched ? 1 : 0;
-      } catch (error) {
-        console.warn("Centre match retry failed:", error);
-        continue;
-      }
+    if (latitude === null || longitude === null) {
+      return null;
     }
 
-    if (gymId === null) {
-      continue;
+    const result = await matchWorkoutToGym(db, workout.workout_id, {
+      position: { latitude, longitude },
+    });
+
+    if (result.matched) {
+      matched += 1;
     }
 
-    try {
-      // An upsert, so a workout whose lifts did land is written again with
-      // the same values rather than twice.
-      const result = await syncWorkoutLifts(db, workout.workout_id);
+    return result.gymId === null ? null : workout;
+  }, "Centre match retry failed:");
 
-      uploaded += result.uploaded ?? 0;
-    } catch (error) {
-      console.warn("Centre lift retry failed:", error);
+  for (const workout of matchResults) {
+    if (workout) {
+      readyToUpload.push(workout);
     }
   }
+
+  await runInBatches(readyToUpload, async (workout) => {
+    // An upsert, so a workout whose lifts did land is written again with
+    // the same values rather than twice.
+    const result = await syncWorkoutLifts(db, workout.workout_id);
+
+    uploaded += result.uploaded ?? 0;
+
+    return null;
+  }, "Centre lift retry failed:");
 
   return { matched, uploaded };
 }
@@ -551,31 +579,6 @@ export async function finishWorkoutGymSyncBestEffort(db, workoutId) {
     console.warn("Centre lift sync failed:", error);
     return { skipped: "error", uploaded: 0 };
   }
-}
-
-export async function getMyLifts({ userId, gymId = null }) {
-  if (!userId) {
-    return [];
-  }
-
-  let query = supabase
-    .from(GYM_LIFT_TABLE)
-    .select(
-      "id, gym_id, exercise_id, exercise_name, weight_kg, reps, performed_at, video_path, video_status, approvals, rejections, previous_weight_kg"
-    )
-    .eq("user_id", userId);
-
-  if (gymId !== null) {
-    query = query.eq("gym_id", gymId);
-  }
-
-  const { data, error } = await query.order("performed_at", { ascending: false });
-
-  if (error) {
-    throw normalizeGymError(error);
-  }
-
-  return (data ?? []).map((row) => mapLiftRow({ ...row, lift_id: row.id, is_me: true }));
 }
 
 /* ---------------------------------------------------------- leaderboards -- */
@@ -871,22 +874,6 @@ async function signVideoUrls(lifts) {
   return lifts;
 }
 
-export async function getLiftVideoUrl(videoPath) {
-  if (!videoPath) {
-    return null;
-  }
-
-  const { data, error } = await supabase.storage
-    .from(LIFT_VIDEO_BUCKET)
-    .createSignedUrl(videoPath, SIGNED_VIDEO_TTL_SECONDS);
-
-  if (error) {
-    throw normalizeGymError(error);
-  }
-
-  return data?.signedUrl ?? null;
-}
-
 /** Lifts in a centre waiting for the viewer's verdict, with playable URLs. */
 export async function getVerificationQueue({ gymId }) {
   const { data, error } = await supabase.rpc("gym_lift_verification_queue", {
@@ -1008,32 +995,6 @@ export async function attachLiftVideo({ userId, liftId, asset }) {
   }
 
   return { videoPath, notified };
-}
-
-export async function removeLiftVideo({ userId, liftId, videoPath }) {
-  if (!userId) {
-    throw new Error(t("common.signInRequired"));
-  }
-
-  const { error } = await supabase
-    .from(GYM_LIFT_TABLE)
-    .update({ video_path: null, updated_at: new Date().toISOString() })
-    .eq("id", liftId)
-    .eq("user_id", userId);
-
-  if (error) {
-    throw normalizeGymError(error);
-  }
-
-  if (videoPath) {
-    const { error: removeError } = await supabase.storage
-      .from(LIFT_VIDEO_BUCKET)
-      .remove([videoPath]);
-
-    if (removeError) {
-      console.warn("Could not delete the lift video:", removeError);
-    }
-  }
 }
 
 /* -------------------------------------------------------- activity tiles -- */

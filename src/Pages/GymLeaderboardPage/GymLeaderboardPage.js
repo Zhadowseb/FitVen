@@ -64,7 +64,7 @@ function FeaturedCard({ entry, theme, colorScheme, onPress }) {
             {t("gyms.overview.recordHolders", { count: entry.lifterCount })}
           </ThemedText>
         </View>
-        <ChevronRight width={18} height={18} color={isLight ? "#A8ACB6" : "#4A4F5A"} />
+        <ChevronRight width={18} height={18} color={theme.chevron} />
       </View>
 
       {top ? (
@@ -362,7 +362,7 @@ export default function GymLeaderboardPage() {
                     {t("gyms.overview.reviewHint")}
                   </ThemedText>
                 </View>
-                <ChevronRight width={18} height={18} color={isLight ? "#A8ACB6" : "#4A4F5A"} />
+                <ChevronRight width={18} height={18} color={theme.chevron} />
               </TouchableOpacity>
             ) : null}
 
@@ -411,7 +411,7 @@ export default function GymLeaderboardPage() {
                         <ThemedText style={styles.moreRank} setColor={entry.myRank ? mutedStrong : "#6E7480"}>
                           {entry.myRank ? `#${entry.myRank}` : "—"}
                         </ThemedText>
-                        <ChevronRight width={18} height={18} color={isLight ? "#A8ACB6" : "#4A4F5A"} />
+                        <ChevronRight width={18} height={18} color={theme.chevron} />
                       </TouchableOpacity>
                       {index < overview.more.length - 1 ? (
                         <View style={[styles.rowDivider, { backgroundColor: theme.hairline }]} />

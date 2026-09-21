@@ -38,7 +38,7 @@ export default function ChangeGymSheet({ visible, onClose, currentHomeGymId, isA
   const { results, isSearching } = useGymSearch(query, setErrorMessage);
   const quietText = theme.quietText ?? theme.text;
   const isLight = colorScheme === "light";
-  const chainTileSurface = isLight ? "#E9EBF0" : "#242830";
+  const chainTileSurface = theme.raisedSurface;
 
   const load = useCallback(async () => {
     if (!visible) {

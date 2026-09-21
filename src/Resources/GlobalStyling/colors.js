@@ -45,6 +45,10 @@ export const Colors = {
         // Between text and quietText: a label that has to stay readable at a
         // small size without competing with the title next to it.
         mutedStrong: "#C4C7CF",
+        // The chevron that says a row opens: present without competing.
+        chevron: "#4A4F5A",
+        // One step up from the card: a chain tile, a selected toggle.
+        raisedSurface: "#242830",
         title: "#F2F3F5",
 
         background: "#0A0B0F",
@@ -121,6 +125,8 @@ export const Colors = {
         textInverted: "#14100C",
         quietText: "#676B76",
         mutedStrong: "#3F4550",
+        chevron: "#A8ACB6",
+        raisedSurface: "#E9EBF0",
         title: "#16191F",
 
         background: "#F4F5F7",

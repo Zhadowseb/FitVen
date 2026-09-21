@@ -622,6 +622,9 @@ export default function FriendsActivity({
     : isLoading
       ? t("common.loading")
       : t("friends.setUpProfile");
+  // live -> done -> planned -> rest, newest first inside a group. The order
+  // the tiles want; the strip used to put planned before done. The one place
+  // it happens - the service hands the list over unordered.
   const orderedPeople = sortActivityTiles(people ?? []);
   const liveCount =
     (ownIsLive ? 1 : 0) +

@@ -327,7 +327,7 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
   const listRows = rows.slice(3);
   const hasMoreRow = Boolean(board?.nextCursor);
 
-  const openReview = (lift) => {
+  const openReview = useCallback((lift) => {
     if (lift.isMe) {
       setOwnPendingLift(lift);
     } else {
@@ -336,7 +336,7 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
     }
 
     setIsReviewOpen(true);
-  };
+  }, []);
 
   const renderLeaderboardRow = useCallback(
     ({ item: lift, index }) => {

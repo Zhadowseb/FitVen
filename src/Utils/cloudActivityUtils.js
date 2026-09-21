@@ -229,3 +229,22 @@ export function buildCloudActivityPreview(workouts) {
     music: mapCloudWorkoutMusic(completedWorkout, "done"),
   };
 }
+
+/**
+ * Whether a failed request means "this database has not had the 2.0
+ * migrations yet" - in which case Home quietly falls back to the flat select -
+ * or a real failure to pass on.
+ *
+ * It reads the error text, which is Supabase's to change, so it is here rather
+ * than inside the service: the fallback is the path most clients take until
+ * their database has caught up, and a test can reach it here.
+ */
+export function isMissingGymJoinError(error) {
+  const message = `${error?.message ?? ""} ${error?.details ?? ""} ${error?.hint ?? ""}`.toLowerCase();
+
+  return (
+    message.includes("gym") ||
+    message.includes("workout_music") ||
+    message.includes("last_updated")
+  );
+}

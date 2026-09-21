@@ -12,6 +12,7 @@ const loadAppModule = require("./lib/loadAppModule");
 const root = path.resolve(__dirname, "..");
 const gymUtils = loadAppModule("src/Utils/gymUtils.js");
 const dateUtils = loadAppModule("src/Utils/dateUtils.js");
+const cloudActivity = loadAppModule("src/Utils/cloudActivityUtils.js");
 const activityUtils = loadAppModule("src/Utils/friendsActivityUtils.js");
 const gymServiceSource = fs.readFileSync(
   path.join(root, "src", "Services", "gymService.js"),
@@ -319,6 +320,53 @@ const acceptedReasons = migration.match(/reason in \(([^)]+)\)/)[1].match(/'([a-
 
 assert.deepStrictEqual(offeredReasons.sort(), acceptedReasons.sort(), "rejection reasons in the app and the column check must match");
 
+/* ------------------------------------ the music band, and the fallback -- */
+
+// The two negative branches were covered and the positive one was not, which
+// is the branch a live workout actually takes.
+assert.strictEqual(activityUtils.resolveMusicBandState(null, "live"), "none");
+assert.strictEqual(
+  activityUtils.resolveMusicBandState({ track: "Song", state: "playing" }, "live"),
+  "playing",
+  "playing during a live workout is the animated band"
+);
+assert.strictEqual(
+  activityUtils.resolveMusicBandState({ track: "Song", state: "playing" }, "done"),
+  "last",
+  "the same track after the workout is the quiet band"
+);
+assert.strictEqual(
+  activityUtils.resolveMusicBandState({ track: "Song", state: "paused" }, "live"),
+  "last",
+  "paused is not playing, even live"
+);
+
+// isMissingGymJoinError decides whether Home falls back to the flat select or
+// throws, and it decides it by reading Supabase's error text - which is
+// Supabase's to change.
+assert.ok(
+  cloudActivity.isMissingGymJoinError({
+    message: "column workout_type_instance.gym_id does not exist",
+  }),
+  "a missing gym column has to read as a database behind the client"
+);
+assert.ok(
+  cloudActivity.isMissingGymJoinError({ details: "relation workout_music does not exist" }),
+  "the music table is part of the same fallback"
+);
+assert.ok(
+  cloudActivity.isMissingGymJoinError({ hint: "perhaps you meant last_updated" }),
+  "the hint field counts too"
+);
+assert.ok(
+  !cloudActivity.isMissingGymJoinError({ message: "JWT expired" }),
+  "a real failure must not be swallowed as a missing migration"
+);
+assert.ok(
+  !cloudActivity.isMissingGymJoinError(null),
+  "no error is not a missing migration"
+);
+
 /* ------------------------- a component that uses the theme declares it -- */
 
 // A file can hold more than one component, and the second does not inherit the
@@ -396,7 +444,6 @@ for (const file of [
 // every client whose database has not had the migrations yet, so it is what
 // most people see. It used to live inside socialService, where a test could
 // not reach it because that module pulls in the Supabase client.
-const cloudActivity = loadAppModule("src/Utils/cloudActivityUtils.js");
 
 assert.strictEqual(
   cloudActivity.buildCloudActivityPreview([]).activityState,
