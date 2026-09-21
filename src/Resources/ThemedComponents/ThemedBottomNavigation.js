@@ -10,7 +10,7 @@ import {
   View,
   useColorScheme,
 } from "react-native";
-import Svg, { Circle } from "react-native-svg";
+import Svg, { Rect } from "react-native-svg";
 import { useSQLiteContext } from "expo-sqlite";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "@localization";
@@ -23,11 +23,12 @@ import {
 } from "../../Utils/workoutTypeAvailability";
 import { usePulseAnimation } from "../Components/animationHooks";
 import Home from "../Icons/UI-icons/Home";
-import Male from "../Icons/UI-icons/Male";
+import Note from "../Icons/UI-icons/Note";
 import Plus from "../Icons/UI-icons/Plus";
 import Social from "../Icons/UI-icons/Social";
 import UpwardGraf from "../Icons/UI-icons/UpwardGraf";
-import { programService, workoutService } from "../../Services";
+import { notificationService, programService, workoutService } from "../../Services";
+import { useAuth } from "../../Contexts/AuthContext";
 import {
   getTodaysDate,
   normalizeLocalDateString,
@@ -51,11 +52,21 @@ const RECENT_WORKOUT_PREVIEW_LIMIT = 2;
 const RECENT_WORKOUT_PAGE_SIZE = 10;
 
 const LIVE_TIMER_SIZE = 66;
-const LIVE_RING_RADIUS = 30;
 const LIVE_RING_STROKE = 3;
-const LIVE_RING_CIRCUMFERENCE = 2 * Math.PI * LIVE_RING_RADIUS;
+// The running timer is the plus with a countdown in it, so it is the same
+// shape as the plus: a rounded square, not a circle. The ring around it is a
+// rounded rect for the same reason - a circular ring around a square button
+// read as a different control appearing mid-workout.
+const LIVE_RING_CORNER = 16;
+const LIVE_RING_INSET = LIVE_RING_STROKE / 2 + 3;
+const LIVE_RING_SIDE = LIVE_TIMER_SIZE - 2 * LIVE_RING_INSET;
+// A rounded rect's outline: the four straight runs plus the four corner
+// quarters, which together are one full circle of the corner radius. The rest
+// countdown depletes this the same way it depleted the circumference.
+const LIVE_RING_CIRCUMFERENCE =
+  4 * (LIVE_RING_SIDE - 2 * LIVE_RING_CORNER) + 2 * Math.PI * LIVE_RING_CORNER;
 
-const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+const AnimatedRect = Animated.createAnimatedComponent(Rect);
 
 function getWorkoutType(workout) {
   return workout?.workout_type ?? workout?.label ?? null;
@@ -95,6 +106,10 @@ const SOCIAL_ROUTES = new Set([
   "GymExerciseLeaderboardPage",
   "NationalExerciseLeaderboardPage",
 ]);
+const FEED_ROUTES = new Set([
+  "FeedPage",
+  "WorkoutPostsPage",
+]);
 const LIBRARY_ROUTES = new Set([
   "ExerciseLibraryPage",
   "ExerciseCatalogPage",
@@ -122,6 +137,8 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     useState(false);
   const [isCreatingQuickWorkout, setIsCreatingQuickWorkout] = useState(false);
   const [plannedTodayShortcut, setPlannedTodayShortcut] = useState(null);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
+  const { user } = useAuth();
   const [usualWorkouts, setUsualWorkouts] = useState([]);
   const [isLoadingUsualWorkouts, setIsLoadingUsualWorkouts] = useState(false);
   const [recentWorkouts, setRecentWorkouts] = useState([]);
@@ -159,26 +176,33 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
   const isLibraryActive =
     inheritedTab === "library" ||
     (!inheritedTab && LIBRARY_ROUTES.has(currentRouteName));
-  const isHomeActive = !isProfileActive && !isSocialActive && !isLibraryActive;
+  const isFeedActive =
+    inheritedTab === "feed" ||
+    (!inheritedTab && FEED_ROUTES.has(currentRouteName));
+  const isHomeActive =
+    !isProfileActive && !isSocialActive && !isLibraryActive && !isFeedActive;
   const resolvedTab = isProfileActive
     ? "profile"
-    : isSocialActive
-      ? "social"
-      : isLibraryActive
-        ? "library"
-        : "home";
+    : isFeedActive
+      ? "feed"
+      : isSocialActive
+        ? "social"
+        : isLibraryActive
+          ? "library"
+          : "home";
 
   useEffect(() => {
     if (!INHERIT_TAB_ROUTES.has(currentRouteName)) {
       lastResolvedTabRef.current = resolvedTab;
     }
   }, [currentRouteName, resolvedTab]);
-  // theme.primary is #F7742E, which is only 2.8:1 on the light nav bar - worse
-  // than the inactive grey. primaryDark clears 4.5:1.
-  const activeColor =
-    colorScheme === "light"
-      ? theme.primaryDark ?? theme.primary
-      : theme.iconColorFocused ?? theme.primary ?? theme.title ?? theme.text;
+  // The active tab is the theme's title colour, not the accent: the accent is
+  // now only the rule above it and the plus. Contrast comes for free, which
+  // the accent never had on the light bar - #F7742E is 2.8:1 there, worse than
+  // the inactive grey it is meant to stand out from.
+  const activeColor = theme.title ?? theme.text;
+  const indicatorColor =
+    colorScheme === "light" ? theme.primaryDark ?? theme.primary : theme.primary;
   const inactiveColor = theme.iconColor ?? theme.quietText ?? theme.text;
   const barBackground =
     theme.navBackground ?? theme.cardBackground ?? theme.background;
@@ -257,6 +281,41 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     }
 
     navigationRef.navigate("ProfilePage");
+  };
+
+  const refreshUnreadNotificationCount = useCallback(async () => {
+    if (!user?.id) {
+      setUnreadNotificationCount(0);
+      return;
+    }
+
+    try {
+      setUnreadNotificationCount(
+        await notificationService.getUnreadNotificationCount({ user })
+      );
+    } catch {
+      // No dot is the honest version of not knowing.
+    }
+  }, [user]);
+
+  useEffect(() => {
+    refreshUnreadNotificationCount();
+
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      if (nextAppState === "active") {
+        refreshUnreadNotificationCount();
+      }
+    });
+
+    return () => subscription.remove();
+  }, [refreshUnreadNotificationCount, currentRouteName]);
+
+  const handleFeedPress = () => {
+    if (!navigationRef?.isReady?.() || currentRouteName === "FeedPage") {
+      return;
+    }
+
+    navigationRef.navigate("FeedPage");
   };
 
   const handleSocialPress = () => {
@@ -784,27 +843,32 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
             onPress={handleHomePress}
             style={styles.tab}
           >
-            <Home
-              width={23}
-              height={23}
-              color={isHomeActive ? activeColor : inactiveColor}
+            <View
+              style={[
+                styles.tabIndicator,
+                {
+                  backgroundColor: isHomeActive ? indicatorColor : "transparent",
+                },
+              ]}
             />
+            <View style={styles.tabIcon}>
+              <Home
+                width={23}
+                height={23}
+                color={isHomeActive ? activeColor : inactiveColor}
+
+                thickness={1.8}
+              />
+            </View>
             <Text
               style={[
                 styles.tabLabel,
+                styles.tabLabelSpacing,
                 { color: isHomeActive ? activeColor : inactiveColor },
               ]}
             >
               {t("nav.tabs.home")}
             </Text>
-            <View
-              style={[
-                styles.tabIndicator,
-                {
-                  backgroundColor: isHomeActive ? activeColor : "transparent",
-                },
-              ]}
-            />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -812,27 +876,32 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
             onPress={handleLibraryPress}
             style={styles.tab}
           >
-            <UpwardGraf
-              width={23}
-              height={23}
-              color={isLibraryActive ? activeColor : inactiveColor}
+            <View
+              style={[
+                styles.tabIndicator,
+                {
+                  backgroundColor: isLibraryActive ? indicatorColor : "transparent",
+                },
+              ]}
             />
+            <View style={styles.tabIcon}>
+              <UpwardGraf
+                width={23}
+                height={23}
+                color={isLibraryActive ? activeColor : inactiveColor}
+
+                thickness={1.6}
+              />
+            </View>
             <Text
               style={[
                 styles.tabLabel,
+                styles.tabLabelSpacing,
                 { color: isLibraryActive ? activeColor : inactiveColor },
               ]}
             >
               {t("nav.tabs.train")}
             </Text>
-            <View
-              style={[
-                styles.tabIndicator,
-                {
-                  backgroundColor: isLibraryActive ? activeColor : "transparent",
-                },
-              ]}
-            />
           </TouchableOpacity>
 
           <View style={styles.plusSlot}>
@@ -887,20 +956,24 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
                     width={LIVE_TIMER_SIZE}
                     height={LIVE_TIMER_SIZE}
                     viewBox={`0 0 ${LIVE_TIMER_SIZE} ${LIVE_TIMER_SIZE}`}
-                    style={[styles.liveTimerRing, styles.liveTimerRingStart]}
+                    style={styles.liveTimerRing}
                   >
-                    <Circle
-                      cx={LIVE_TIMER_SIZE / 2}
-                      cy={LIVE_TIMER_SIZE / 2}
-                      r={LIVE_RING_RADIUS}
+                    <Rect
+                      x={LIVE_RING_INSET}
+                      y={LIVE_RING_INSET}
+                      width={LIVE_RING_SIDE}
+                      height={LIVE_RING_SIDE}
+                      rx={LIVE_RING_CORNER}
                       fill="none"
                       stroke={withAlpha(plusBackground, 0.25)}
                       strokeWidth={LIVE_RING_STROKE}
                     />
-                    <AnimatedCircle
-                      cx={LIVE_TIMER_SIZE / 2}
-                      cy={LIVE_TIMER_SIZE / 2}
-                      r={LIVE_RING_RADIUS}
+                    <AnimatedRect
+                      x={LIVE_RING_INSET}
+                      y={LIVE_RING_INSET}
+                      width={LIVE_RING_SIDE}
+                      height={LIVE_RING_SIDE}
+                      rx={LIVE_RING_CORNER}
                       fill="none"
                       stroke={plusBackground}
                       strokeWidth={LIVE_RING_STROKE}
@@ -917,12 +990,14 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
                     viewBox={`0 0 ${LIVE_TIMER_SIZE} ${LIVE_TIMER_SIZE}`}
                     style={styles.liveTimerRing}
                   >
-                    {/* Workout running: a full ring. Rest counts down as a
-                        depleting arc in the branch above. */}
-                    <Circle
-                      cx={LIVE_TIMER_SIZE / 2}
-                      cy={LIVE_TIMER_SIZE / 2}
-                      r={LIVE_RING_RADIUS}
+                    {/* Workout running: the whole outline. Rest counts down
+                        as a depleting one in the branch above. */}
+                    <Rect
+                      x={LIVE_RING_INSET}
+                      y={LIVE_RING_INSET}
+                      width={LIVE_RING_SIDE}
+                      height={LIVE_RING_SIDE}
+                      rx={LIVE_RING_CORNER}
                       fill="none"
                       stroke={plusBackground}
                       strokeWidth={LIVE_RING_STROKE}
@@ -983,59 +1058,78 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
 
           <TouchableOpacity
             activeOpacity={0.82}
-            onPress={handleSocialPress}
+            onPress={handleFeedPress}
             style={styles.tab}
           >
-            <Social
-              width={23}
-              height={23}
-              color={isSocialActive ? activeColor : inactiveColor}
+            <View
+              style={[
+                styles.tabIndicator,
+                {
+                  backgroundColor: isFeedActive ? indicatorColor : "transparent",
+                },
+              ]}
             />
+            <View style={styles.tabIcon}>
+              <Note
+                width={23}
+                height={23}
+                color={isFeedActive ? activeColor : inactiveColor}
+                thickness={1.5}
+              />
+
+              {unreadNotificationCount > 0 ? (
+                <View
+                  style={[
+                    styles.tabDot,
+                    { backgroundColor: theme.primary, borderColor: barBackground },
+                  ]}
+                />
+              ) : null}
+            </View>
             <Text
               style={[
                 styles.tabLabel,
+                styles.tabLabelSpacing,
+                { color: isFeedActive ? activeColor : inactiveColor },
+              ]}
+            >
+              {t("nav.tabs.feed")}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.82}
+            onPress={handleSocialPress}
+            style={styles.tab}
+          >
+            <View
+              style={[
+                styles.tabIndicator,
+                {
+                  backgroundColor: isSocialActive ? indicatorColor : "transparent",
+                },
+              ]}
+            />
+            <View style={styles.tabIcon}>
+              <Social
+                width={23}
+                height={23}
+                color={isSocialActive ? activeColor : inactiveColor}
+
+                thickness={1.6}
+              />
+            </View>
+            <Text
+              style={[
+                styles.tabLabel,
+                styles.tabLabelSpacing,
                 { color: isSocialActive ? activeColor : inactiveColor },
               ]}
             >
               {t("nav.tabs.social")}
             </Text>
-            <View
-              style={[
-                styles.tabIndicator,
-                {
-                  backgroundColor: isSocialActive ? activeColor : "transparent",
-                },
-              ]}
-            />
           </TouchableOpacity>
 
-          <TouchableOpacity
-            activeOpacity={0.82}
-            onPress={handleProfilePress}
-            style={styles.tab}
-          >
-            <Male
-              width={23}
-              height={23}
-              color={isProfileActive ? activeColor : inactiveColor}
-            />
-            <Text
-              style={[
-                styles.tabLabel,
-                { color: isProfileActive ? activeColor : inactiveColor },
-              ]}
-            >
-              {t("nav.tabs.profile")}
-            </Text>
-            <View
-              style={[
-                styles.tabIndicator,
-                {
-                  backgroundColor: isProfileActive ? activeColor : "transparent",
-                },
-              ]}
-            />
-          </TouchableOpacity>
         </View>
       </View>
 
@@ -1079,12 +1173,30 @@ const styles = StyleSheet.create({
     minHeight: 44,
     alignItems: "center",
     justifyContent: "flex-start",
-    gap: 3,
+    gap: 0,
   },
+  // Always drawn, transparent when the tab is not active. Without the space it
+  // holds, the active tab's icon sits 2 dp higher than the rest.
   tabIndicator: {
-    width: 14,
+    width: 22,
     height: 2,
     borderRadius: 1,
+  },
+  tabIcon: {
+    marginTop: 9,
+  },
+  // Eight across, on the icon rather than the column, so it sits against the
+  // glyph and not against whatever the label's width happens to be.
+  tabDot: {
+    position: "absolute",
+    top: -2,
+    right: -4,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    borderWidth: 2,
+  },
+  tabLabelSpacing: {
     marginTop: 3,
   },
   tabLabel: {
@@ -1099,18 +1211,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "flex-start",
   },
+  // In the line, not over it. It used to be 56 dp with a 5 dp cut-out in the
+  // bar's top edge, which made the bar look broken on a screen where nothing
+  // else breaks a line. 48 dp, square-ish, sitting where the icons sit, with
+  // the top padding that lines it up with them.
   plusButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    borderWidth: 5,
+    width: 48,
+    height: 48,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: -26,
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.35,
-    shadowRadius: 26,
-    elevation: 12,
+    marginTop: -4,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 10,
   },
   playIcon: {
     width: 0,
@@ -1125,7 +1240,7 @@ const styles = StyleSheet.create({
   liveTimerWrap: {
     width: LIVE_TIMER_SIZE,
     height: LIVE_TIMER_SIZE,
-    marginTop: -31,
+    marginTop: -13,
   },
   liveTimerPulse: {
     position: "absolute",
@@ -1133,7 +1248,7 @@ const styles = StyleSheet.create({
     left: 3,
     right: 3,
     bottom: 3,
-    borderRadius: 999,
+    borderRadius: LIVE_RING_CORNER,
   },
   liveTimerButton: {
     position: "absolute",
@@ -1141,7 +1256,7 @@ const styles = StyleSheet.create({
     left: 3,
     right: 3,
     bottom: 3,
-    borderRadius: 999,
+    borderRadius: LIVE_RING_CORNER,
     borderWidth: 4,
     alignItems: "center",
     justifyContent: "center",
@@ -1166,8 +1281,5 @@ const styles = StyleSheet.create({
     left: 0,
     width: LIVE_TIMER_SIZE,
     height: LIVE_TIMER_SIZE,
-  },
-  liveTimerRingStart: {
-    transform: [{ rotate: "-90deg" }],
   },
 });

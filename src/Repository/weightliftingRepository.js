@@ -2179,3 +2179,131 @@ export async function getSetsByExercise(db, exerciseId) {
     [exerciseId]
   );
 }
+
+/**
+ * Finished strength workouts with the exercises they contained, for the split
+ * guess on Home.
+ *
+ * One row per workout. The exercises come back as a lowercased,
+ * newline-separated list rather than a join, because the caller compares whole
+ * sets of them against each other and a row per exercise would mean stitching
+ * them back together in JavaScript.
+ *
+ * The identity is the exercise name: `Exercise_Instance` carries no reference
+ * to the catalog, so the name is the only thing two workouts can be compared
+ * on. The design document asked for `exercise_id`; there is not one to use.
+ */
+export async function getCompletedStrengthWorkoutsWithExercises(
+  db,
+  { sinceIsoDate, workoutTypes = [], limit = 200 }
+) {
+  if (!workoutTypes.length) {
+    return [];
+  }
+
+  const typePlaceholders = workoutTypes.map(() => "?").join(", ");
+  const workoutIsoDateSql = `
+    CASE
+      WHEN w.date LIKE '__.__.____'
+      THEN substr(w.date, 7, 4) || '-' || substr(w.date, 4, 2) || '-' || substr(w.date, 1, 2)
+      ELSE w.date
+    END`;
+
+  return db.getAllAsync(
+    `SELECT
+        w.workout_id,
+        w.label,
+        w.workout_type,
+        ${workoutIsoDateSql} AS performed_date_sort,
+        COUNT(DISTINCT e.exercise_instance_id) AS exercise_count,
+        COALESCE(SUM(e.sets), 0) AS set_count,
+        group_concat(DISTINCT lower(trim(e.exercise_name))) AS exercise_names
+     FROM Workout_Type_Instance w
+     JOIN Exercise_Instance e ON e.workout_type_instance_id = w.workout_id
+     WHERE COALESCE(w.done, 0) = 1
+       AND COALESCE(w.deleted_at, '') = ''
+       AND COALESCE(e.deleted_at, '') = ''
+       AND w.workout_type IN (${typePlaceholders})
+       AND ${workoutIsoDateSql} >= ?
+     GROUP BY w.workout_id
+     HAVING exercise_count > 0
+     ORDER BY performed_date_sort DESC, w.workout_id DESC
+     LIMIT ?;`,
+    [...workoutTypes, sinceIsoDate, Math.max(1, Math.trunc(Number(limit) || 200))]
+  );
+}
+
+/** The most recent day any workout was finished, as an ISO date, or null. */
+export async function getLastCompletedWorkoutDate(db) {
+  const row = await db.getFirstAsync(
+    `SELECT MAX(
+        CASE
+          WHEN w.date LIKE '__.__.____'
+          THEN substr(w.date, 7, 4) || '-' || substr(w.date, 4, 2) || '-' || substr(w.date, 1, 2)
+          ELSE w.date
+        END
+     ) AS last_date
+     FROM Workout_Type_Instance w
+     WHERE COALESCE(w.done, 0) = 1
+       AND COALESCE(w.deleted_at, '') = '';`
+  );
+
+  return row?.last_date ?? null;
+}
+
+/**
+ * Marks for upload the exercises and sets that the cloud never received.
+ *
+ * An exercise whose workout has a cloud id but which has none of its own was
+ * skipped by an upload pass and never picked up again: the only code that
+ * recovers from that sits behind `allowParentRepair`, which the pass SetSync
+ * runs turns off. One skipped pass and the row stays on the device for good,
+ * while its workout syncs on as an empty shell - which is what happened to
+ * three months of training on at least one install.
+ *
+ * Returns how many rows were re-marked, so a caller can say whether there was
+ * anything to repair.
+ */
+export async function markUnsyncedStrengthDataForRetry(db) {
+  // Both cloud id columns are asked about on every level. resolveSideBySideCloudId
+  // reads cloud_id first and falls back to the named column, so a row carrying
+  // only one of the two is synced - and a repair that looked at one column
+  // alone would re-mark half the table on every pass, forever.
+  const exercises = await db.runAsync(
+    `UPDATE Exercise_Instance
+        SET needs_sync = 1
+      WHERE needs_sync <> 1
+        AND cloud_id IS NULL
+        AND cloud_exercise_instance_id IS NULL
+        AND COALESCE(deleted_at, '') = ''
+        AND workout_type_instance_id IN (
+          SELECT workout_id
+          FROM Workout_Type_Instance
+          WHERE (
+              cloud_id IS NOT NULL
+              OR cloud_workout_type_instance_id IS NOT NULL
+            )
+            AND COALESCE(deleted_at, '') = ''
+        );`
+  );
+
+  // Same shape one level down: a set whose exercise made it up but which did
+  // not. Left behind, its reps and weight are only on the device.
+  const sets = await db.runAsync(
+    `UPDATE "Set"
+        SET needs_sync = 1
+      WHERE needs_sync <> 1
+        AND cloud_id IS NULL
+        AND cloud_set_id IS NULL
+        AND COALESCE(deleted_at, '') = ''
+        AND exercise_instance_id IN (
+          SELECT exercise_instance_id
+          FROM Exercise_Instance
+          WHERE COALESCE(deleted_at, '') = ''
+        );`
+  );
+
+  return {
+    exercises: exercises?.changes ?? 0,
+    sets: sets?.changes ?? 0,
+  };}

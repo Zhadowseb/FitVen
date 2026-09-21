@@ -1,14 +1,25 @@
-name: PR Review Agents
+name: Review Agents
 
-# Otte review-agenter laeser den samme PR parallelt, hver med sit eget mandat.
-# En niende agent samler rapporterne til en enkelt kommentar paa PR'en.
+# Otte review-agenter laeser den samme aendring parallelt, hver med sit eget
+# mandat. En niende agent samler rapporterne til en enkelt kommentar.
 #
 # Mandaterne ligger i .github/review-agents/*.md. Rediger dem der - denne fil
 # skal kun roeres, naar en agent skal tilfoejes eller fjernes.
+#
+# De koerer paa master, efter et merge, og ikke paa hver eneste push til et
+# PR. Et review af en branch, der stadig bliver skubbet til, bliver laest af
+# ingen og koster penge hver gang. Det, der bliver bygget, er master - saa det
+# er master, agenterne laeser, og rapporten lander som en kommentar paa det PR,
+# der bragte aendringen ind.
+#
+# `/qa` paa et PR og en manuel koersel virker stadig, for de gange man vil have
+# dem til at se paa noget, foer det bliver merget.
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches: [master]
+  issue_comment:
+    types: [created]
   workflow_dispatch:
     inputs:
       pr:
@@ -17,14 +28,15 @@ on:
         type: string
 
 concurrency:
-  group: pr-review-${{ github.event.pull_request.number || inputs.pr }}
+  group: review-${{ github.event.issue.number || inputs.pr || github.sha }}
   cancel-in-progress: true
 
 # Laveste faellesnaevner. Kun aggregate skriver noget, og den haever selv
-# sine rettigheder. Isaer checks koerer vilkaarlig kode fra PR'en via
+# sine rettigheder. Isaer checks koerer vilkaarlig kode fra aendringen via
 # npm ci og npm test og skal ikke kunne skrive nogen steder.
 permissions:
   contents: read
+  checks: write
 
 env:
   REVIEW_MODEL: claude-sonnet-5
@@ -37,9 +49,22 @@ jobs:
   # det samme og ingen af dem bruger tid paa at grave det frem selv.
   context:
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false
+    # The author check is not decoration. `issue_comment` is not covered by
+    # GitHub's fork protection the way `pull_request` is: it always runs in the
+    # base repository's context with full secrets, and the jobs below check out
+    # the PR's own head and run `npm ci` on it. On a public repository that is
+    # a postinstall script away from reading ANTHROPIC_API_KEY. Only somebody
+    # who already has write access may ask for a run.
+    if: >-
+      github.event_name == 'push' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.issue.pull_request != null &&
+       startsWith(github.event.comment.body, '/qa') &&
+       contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'),
+                github.event.comment.author_association))
     outputs:
-      pr: ${{ steps.pr.outputs.number }}
+      pr: ${{ steps.target.outputs.pr }}
+      ref: ${{ steps.target.outputs.ref }}
       has_credentials: ${{ steps.creds.outputs.has_credentials }}
     steps:
       - id: creds
@@ -61,35 +86,86 @@ jobs:
             echo "::warning::Hverken ANTHROPIC_API_KEY eller CLAUDE_CODE_OAUTH_TOKEN har en vaerdi. Enten er secret'en ikke sat, eller ogsaa blev den sat til en tom streng. Review-agenterne springes over."
           fi
 
-      - id: pr
-        run: echo "number=${{ github.event.pull_request.number || inputs.pr }}" >> "$GITHUB_OUTPUT"
+      # Hvad skal laeses, og hvor skal svaret hen. De to ting falder ikke
+      # sammen mere: paa en push til master er der ingen PR at tjekke ud, men
+      # der er som regel et PR at svare paa - det, som merge-committen kom fra.
+      # Findes der ikke et, staar rapporten i koerslens opsummering, og det
+      # siger aggregate-jobbet ogsaa hoejt.
+      - id: target
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          EVENT: ${{ github.event_name }}
+          SHA: ${{ github.sha }}
+          PR_NUMBER: ${{ github.event.issue.number || inputs.pr }}
+        run: |
+          set -euo pipefail
+
+          if [ "$EVENT" = "push" ]; then
+            # `|| true` hoerer til her og ikke paa kaldet: et commit uden et
+            # PR er en normal tilstand, ikke en fejl.
+            PR=$(gh api "repos/$REPO/commits/$SHA/pulls" \
+              -H "Accept: application/vnd.github+json" \
+              --jq '.[0].number // empty' 2>/dev/null || true)
+
+            echo "pr=$PR" >> "$GITHUB_OUTPUT"
+            echo "ref=$SHA" >> "$GITHUB_OUTPUT"
+            echo "Laeser master paa $SHA${PR:+, svarer paa #$PR}"
+          else
+            echo "pr=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+            echo "ref=refs/pull/$PR_NUMBER/head" >> "$GITHUB_OUTPUT"
+            echo "Laeser PR #$PR_NUMBER"
+          fi
 
       - uses: actions/checkout@v4
         with:
-          ref: refs/pull/${{ steps.pr.outputs.number }}/head
+          ref: ${{ steps.target.outputs.ref }}
           fetch-depth: 0
 
-      - name: Saml PR-kontekst
+      - name: Saml kontekst
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR: ${{ steps.pr.outputs.number }}
+          PR: ${{ steps.target.outputs.pr }}
           REPO: ${{ github.repository }}
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
         run: |
           set -euo pipefail
           mkdir -p pr-context
 
-          BASE_BRANCH=$(gh pr view "$PR" --repo "$REPO" --json baseRefName --jq .baseRefName)
-          git fetch --no-tags origin "$BASE_BRANCH"
-          BASE_SHA=$(git merge-base "origin/$BASE_BRANCH" HEAD)
-          echo "Base: $BASE_BRANCH ($BASE_SHA)"
+          if [ "$EVENT" = "push" ]; then
+            # Hvad dette push foerte ind i master. En foerste push og en
+            # force-push efterlader BEFORE som lutter nuller, og saa er der
+            # ingen forgaenger at sammenligne med; committens egen foerste
+            # foraelder er det svar, der altid findes.
+            if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+              BASE_SHA=$(git rev-parse HEAD^1)
+            else
+              BASE_SHA="$BEFORE"
+            fi
+            echo "Base: $BASE_SHA (forrige master)"
+          else
+            BASE_BRANCH=$(gh pr view "$PR" --repo "$REPO" --json baseRefName --jq .baseRefName)
+            git fetch --no-tags origin "$BASE_BRANCH"
+            BASE_SHA=$(git merge-base "origin/$BASE_BRANCH" HEAD)
+            echo "Base: $BASE_BRANCH ($BASE_SHA)"
+          fi
 
           {
-            gh pr view "$PR" --repo "$REPO" --json number,title,author,baseRefName,headRefName,additions,deletions,changedFiles \
-              --jq '"# PR #\(.number) - \(.title)\n\n- Forfatter: \(.author.login)\n- Branch: `\(.headRefName)` -> `\(.baseRefName)`\n- Omfang: \(.changedFiles) filer, +\(.additions) / -\(.deletions)\n"'
-            echo
-            echo "## Beskrivelse"
-            echo
-            gh pr view "$PR" --repo "$REPO" --json body --jq '.body // "(ingen beskrivelse)"'
+            if [ -z "$PR" ]; then
+              # Ingen PR hoerer til denne commit. Commit-beskeden er det, der
+              # er, og den er bedre end en tom overskrift.
+              echo "# master $(git rev-parse --short HEAD)"
+              echo
+              git log -1 --format='%B'
+            else
+              gh pr view "$PR" --repo "$REPO" --json number,title,author,baseRefName,headRefName,additions,deletions,changedFiles \
+                --jq '"# PR #\(.number) - \(.title)\n\n- Forfatter: \(.author.login)\n- Branch: `\(.headRefName)` -> `\(.baseRefName)`\n- Omfang: \(.changedFiles) filer, +\(.additions) / -\(.deletions)\n"'
+              echo
+              echo "## Beskrivelse"
+              echo
+              gh pr view "$PR" --repo "$REPO" --json body --jq '.body // "(ingen beskrivelse)"'
+            fi
             echo
             echo "## Aendrede filer"
             echo
@@ -130,7 +206,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: refs/pull/${{ needs.context.outputs.pr }}/head
+          ref: ${{ needs.context.outputs.ref }}
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
@@ -216,8 +292,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: refs/pull/${{ needs.context.outputs.pr }}/head
+          ref: ${{ needs.context.outputs.ref }}
           fetch-depth: 0
+
+      # The mandates come from master, never from the ref being reviewed. They
+      # are the instructions the agent follows, and a branch that could rewrite
+      # them could tell the reviewer what to conclude about it.
+      - uses: actions/checkout@v4
+        with:
+          ref: master
+          path: .review-mandates
+          sparse-checkout: .github/review-agents
+          sparse-checkout-cone-mode: false
+
+      - name: Brug mandaterne fra master
+        run: |
+          set -euo pipefail
+          rm -rf .github/review-agents
+          cp -r .review-mandates/.github/review-agents .github/review-agents
+          rm -rf .review-mandates
 
       - uses: actions/download-artifact@v4
         with:
@@ -247,7 +340,7 @@ jobs:
                mandat. Hold dig strengt inden for det - syv andre agenter
                daekker resten, og overlap goer den samlede rapport ubrugelig.
             3. Laes `pr-context/pr-meta.md`, `pr-context/checks.md` (resultatet
-               af `npm test` for denne PR) og `pr-context/pr.diff`.
+               af `npm test` for denne aendring) og `pr-context/pr.diff`.
             4. Aabn de aendrede filer i repoet, naar diffet ikke er nok til at
                afgoere om noget er en fejl. Laes ogsaa den naermeste
                `AGENTS.md` for de mapper aendringen roerer.
@@ -291,7 +384,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: refs/pull/${{ needs.context.outputs.pr }}/head
+          ref: ${{ needs.context.outputs.ref }}
+
+      # As in the review job: the mandate comes from master. This one also
+      # holds write on pull requests and issues, so a branch that could edit
+      # aggregate.md could steer what gets posted under the repository's name.
+      - uses: actions/checkout@v4
+        with:
+          ref: master
+          path: .review-mandates
+          sparse-checkout: .github/review-agents
+          sparse-checkout-cone-mode: false
+
+      - name: Brug mandaterne fra master
+        run: |
+          set -euo pipefail
+          rm -rf .github/review-agents
+          cp -r .review-mandates/.github/review-agents .github/review-agents
+          rm -rf .review-mandates
 
       - uses: actions/download-artifact@v4
         with:
@@ -329,7 +439,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           prompt: |
             Du er den samlende agent. Otte review-agenter har laest den samme
-            pull request, og deres rapporter ligger i `reports/`.
+            aendring, og deres rapporter ligger i `reports/`.
 
             1. Laes `.github/review-agents/aggregate.md`. Det er dit mandat og
                det praecise format for den samlede rapport.
@@ -372,6 +482,16 @@ jobs:
 
           { printf '%s\n' "$MARKER"; cat body.md; } > comment.md
 
+          # Rapporten staar altid i opsummeringen. Kommentaren er et ekstra
+          # sted at laegge den, ikke det eneste - og paa en commit uden et PR
+          # er der ikke noget at kommentere paa.
+          cat final-report.md >> "$GITHUB_STEP_SUMMARY"
+
+          if [ -z "$PR" ]; then
+            echo "::notice::Ingen pull request hoerer til denne commit. Rapporten staar i koerslens opsummering."
+            exit 0
+          fi
+
           # --paginate koerer jq-filteret pr. side, saa der kan komme et id
           # pr. side. Den aeldste er den, vi har skrevet i foerste omgang.
           # `|| true` maa ikke staa paa selve kaldet. Det fangede ogsaa en
@@ -393,8 +513,6 @@ jobs:
             gh api -X POST "repos/$REPO/issues/$PR/comments" -F body=@comment.md > /dev/null
             echo "Oprettede ny kommentar."
           fi
-
-          cat final-report.md >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-artifact@v4
         if: always()

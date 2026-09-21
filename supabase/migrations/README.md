@@ -59,7 +59,11 @@ behind by accident.
 | `20260921180000_music-opt-in.sql` | yes |
 | `20260921180100_lift-video-index.sql` | yes |
 | `20260921190000_one-verification-request-per-window.sql` | yes |
-
+| `20260921200000_let-the-policy-call-its-own-check.sql` | yes |
+| `20260921220000_dev-dashboard.sql` | yes |
+| `20260921230000_the-admin-guard-asks-who-is-asking.sql` | yes |
+| `20260922090000_a-feedback-message-has-a-status.sql` | yes |
+| `20260922100000_the-note-column-leaves-the-old-exercises.sql` | yes |
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
 centre match, per-centre lift leaderboards with video verification, and what
@@ -236,6 +240,63 @@ The unique index on `event_key` would have stopped them, except the key carried
 the epoch second and so only caught calls inside the same second. The key now
 names a ten-minute bucket and the insert is `on conflict do nothing`, so the
 index is the limit and nothing sits between deciding and writing.
+
+`20260921200000_let-the-policy-call-its-own-check.sql` was run on 2026-09-21.
+`20260921140000` put `private.can_watch_lift_video` behind the
+select policy on `storage.objects` and revoked execute on it from
+`authenticated` in the same file. A policy expression runs as the querying
+user - `security definer` says what the body may read, not who may call it -
+so every signed-in read of `storage.objects` fails with "permission denied for
+function can_watch_lift_video". That is the whole table, so avatars stopped
+signing and the Friends tiles said "no activity" for everybody.
+
+The revokes were copied from `private.contains_blocked_term`, where they are
+right because it is called from a trigger and a trigger does not check execute.
+A policy does. **Anything used from inside a policy needs execute granted to
+`authenticated`, however definer it is.**
+`20260921220000_dev-dashboard.sql` was run on 2026-09-21. It adds
+`profile_private.is_admin`, gives the existing `Feedback` table the columns and
+the policies the dev dashboard reads, and creates `store_stats`. The one part
+to read is the pair of column revokes on `is_admin`: that table's update policy
+is scoped to the row and says nothing about columns, so without them every
+signed-in account can make itself an admin with one PATCH.
+
+`20260921230000_the-admin-guard-asks-who-is-asking.sql` was run on 2026-09-21.
+The guard trigger in the file above asked whether the caller was
+`pg_catalog.current_user`; `current_user` is a keyword rather than a function
+in a schema, so the parser read it as a column on a table called `pg_catalog`
+and the trigger failed on every write to the column it guards - including the
+one that grants the flag. It failed closed, which is the right way round.
+The same file also drops a `timezone('utc', now())` from
+`admin_active_users`, which compared a `timestamp` against a `timestamptz` and
+so answered differently depending on the caller's own time zone.
+
+The flag is set by hand:
+
+```sql
+update public.profile_private set is_admin = true where user_id = '<uuid>';
+```
+
+That statement has to be run as the service role or from the SQL editor - the
+guard trigger refuses it from an app connection, which is the point.
+`20260922090000_a-feedback-message-has-a-status.sql` was run on 2026-09-22.
+It gives a feedback message one of four states - `new`, `planned`, `fixed`,
+`not_fixed` - so the dev dashboard can say what was decided about a message
+rather than only that it was read. A trigger forces every new row to `new`:
+the insert policy lets any signed-in account write its own row, and without it
+somebody could post a suggestion already marked `fixed`. Column grants cannot
+do that job, because Postgres ignores a column-level revoke when the role holds
+the privilege on the table.
+
+`20260922100000_the-note-column-leaves-the-old-exercises.sql` was run on
+2026-09-22. `20260916210000` corrected `exercise_column_preferences` and stopped
+there; `exercise_instance` still held 26 rows with note on. Copying a workout
+clones `visible_columns` verbatim - correctly, a copy should look like what it
+came from - so every copy of an old session carried the NOTE column into a
+brand new exercise, and the copy became another legacy row. The fix is the
+data, not the copy. The app's matching half runs under
+`opt_in_visible_columns_v2`, so the device cleans its own rows once more and
+both sides land on the same answer.
 
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to

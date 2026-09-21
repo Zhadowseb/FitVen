@@ -322,6 +322,33 @@ if (resetPage === null) {
   }
 }
 
+// The same for the address a confirmation link lands on.
+//
+// This one has already gone wrong once. The signup carried no emailRedirectTo
+// at all, so Supabase fell back to the project's Site URL - and that field was
+// still pointing at the old netlify.app host after the pages moved. Everybody
+// confirming an address was shown "Site not found" and concluded that signing
+// up had failed, which it had not. Naming the address in the code only helps
+// while the page it names is actually there.
+const confirmedPage = read("web/confirmed/index.html");
+const confirmedRedirect = client?.match(
+  /EMAIL_CONFIRMED_REDIRECT = "([^"]+)"/
+)?.[1];
+
+if (!confirmedRedirect) {
+  problems.push(
+    "supaBaseClient.js no longer names an EMAIL_CONFIRMED_REDIRECT - signup falls back to the Supabase Site URL, which is how this broke the first time"
+  );
+} else if (!confirmedRedirect.includes("/confirmed/")) {
+  problems.push(
+    `EMAIL_CONFIRMED_REDIRECT is ${confirmedRedirect}, which is not the confirmation page`
+  );
+} else if (confirmedPage === null) {
+  problems.push(
+    "web/confirmed/index.html is missing - a confirmation link would land on a 404 and read as a failed signup"
+  );
+}
+
 // The public site serves exactly one directory.
 //
 // web/README.md promises this, and the promise is the whole reason the privacy
@@ -341,6 +368,39 @@ if (netlify === null) {
     problems.push(
       `netlify.toml publishes "${publishDirectory ?? "nothing declared"}" - it has to be "web", the only directory meant to be public`
     );
+  }
+}
+
+// ------------------------------------------------ who may ask for a review ---
+//
+// `issue_comment` is not covered by GitHub's fork protection the way
+// `pull_request` is: it always runs in the base repository's context with full
+// secrets, and the review workflow checks out the commented-on PR's own head
+// and runs `npm ci` on it. This repository is public, so without a check on
+// who wrote the comment, a stranger's postinstall script reads
+// ANTHROPIC_API_KEY. The agents' mandates have to come from master for the
+// same reason: they are the instructions the reviewer follows.
+{
+  const workflow = read(".github/workflows/pr-review.yml");
+
+  if (workflow === null) {
+    problems.push(".github/workflows/pr-review.yml is gone");
+  } else if (/issue_comment:/.test(workflow)) {
+    if (!/author_association/.test(workflow)) {
+      problems.push(
+        "pr-review.yml takes a /qa comment from anybody - issue_comment runs in this repository's context with its secrets, and the job checks out the PR's own head"
+      );
+    }
+
+    const mandateCheckouts = (
+      workflow.match(/\.review-mandates\/\.github\/review-agents/g) ?? []
+    ).length;
+
+    if (mandateCheckouts < 2) {
+      problems.push(
+        "the review agents read their mandate from the ref they are reviewing - a branch could tell the reviewer what to conclude about it"
+      );
+    }
   }
 }
 

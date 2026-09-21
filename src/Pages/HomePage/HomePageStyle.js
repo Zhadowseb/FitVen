@@ -1,6 +1,28 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet } from "react-native";
 
 export default StyleSheet.create({
+  errorBanner: {
+    marginHorizontal: 20,
+    marginTop: 10,
+    paddingVertical: 11,
+    paddingHorizontal: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  errorText: {
+    fontSize: 12.5,
+    fontWeight: "700",
+    flexShrink: 1,
+  },
+  errorRetry: {
+    fontSize: 12.5,
+    fontWeight: "800",
+    textDecorationLine: "underline",
+  },
   container: {
     flex: 1,
   },
@@ -8,112 +30,19 @@ export default StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
+    // The bottom bar is a sibling in the layout, not something floating over
+    // the content, so nothing here has to make room for it. 120 was that
+    // clearance written down anyway, and it left about ninety points of empty
+    // scroll under the last block. 28 is what the feed uses.
     paddingBottom: 28,
   },
-  errorBanner: {
-    marginTop: 12,
-    marginHorizontal: 20,
-    borderRadius: 10,
-    borderWidth: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 11,
+  // The counter and the quick start share a row and the same height, so the
+  // number lines up with the buttons beside it rather than floating above them.
+  quickRow: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  errorBannerText: {
-    flex: 1,
-    minWidth: 0,
-    fontSize: 12,
-    lineHeight: 17,
-    fontWeight: "700",
-  },
-  errorBannerAction: {
-    fontSize: 12,
-    fontWeight: "900",
-    textDecorationLine: "underline",
-  },
-
-  feedEmptyCard: {
-    marginTop: 12,
-    marginHorizontal: 20,
-    borderRadius: 14,
-    borderWidth: 1,
-    padding: 18,
-    gap: 8,
-    alignItems: "center",
-  },
-  feedEmptyTitle: {
-    fontSize: 15,
-    fontWeight: "800",
-    textAlign: "center",
-  },
-  feedEmptyBody: {
-    fontSize: 12,
-    lineHeight: 17,
-    fontWeight: "600",
-    textAlign: "center",
-  },
-  feedEmptyAction: {
-    marginTop: 4,
-    height: 40,
-    borderRadius: 10,
-    borderWidth: 1,
-    paddingHorizontal: 18,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  feedEmptyActionText: {
-    fontSize: 13,
-    fontWeight: "800",
-  },
-
-  feedFooter: {
-    paddingVertical: 18,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  postOptionsTitle: {
-    alignItems: "center",
-    borderBottomWidth: 1,
-    paddingBottom: 18,
-  },
-  postOptionsTitleText: {
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  postOptionsBody: {
-    paddingVertical: 18,
-  },
-  postOption: {
-    paddingVertical: 12,
-    flexDirection: "row",
-    alignItems: "center",
+    alignItems: "stretch",
     gap: 10,
-  },
-  postOptionText: {
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  // The same measurements as the report dialog on the search page. Two
-  // dialogs that ask the same question should not look like two dialogs.
-  reportReasonList: {
-    gap: 8,
-    marginTop: 4,
-  },
-  reportReason: {
-    minHeight: 44,
-    paddingHorizontal: 14,
-    justifyContent: "center",
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  reportReasonText: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  reportNote: {
-    marginTop: 12,
-    minHeight: 80,
+    marginTop: 16,
+    marginHorizontal: 20,
   },
 });

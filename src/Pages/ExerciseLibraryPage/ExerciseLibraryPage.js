@@ -191,8 +191,10 @@ const ExerciseLibraryPage = () => {
         ? weekSummary.nextLabel
           ? `Nothing planned this week. Next up: ${weekSummary.nextLabel}.`
           : "Nothing planned this week."
+        // Nothing when the week is finished. The line said so and said
+        // nothing else - the stats above it already carry the same number.
         : weekSummary.completed >= weekSummary.planned
-          ? "Every session this week is done."
+          ? null
           : weekSummary.nextLabel
             ? `Next up: ${weekSummary.nextLabel}.`
             : null;

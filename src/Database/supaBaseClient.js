@@ -16,6 +16,10 @@ import {
 const supabaseUrl = 'https://tgfeedchhogerswntuvy.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRnZmVlZGNoaG9nZXJzd250dXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzODAwMjcsImV4cCI6MjA4OTk1NjAyN30.yKXLdHRx64c_TqY9dmZPFjG2tYRlOx_t4QDrlBc9WfQ';
 
+// web/confirmed/index.html, served from the project's own domain. Kept in step
+// with that page by npm test, the same way the password reset address is.
+const EMAIL_CONFIRMED_REDIRECT = "https://fitven.dk/confirmed/";
+
 const NETWORK_RETRYABLE_MESSAGES = [
   "Network request failed",
   "Failed to fetch",
@@ -92,6 +96,17 @@ export async function registerWithEmail({ email, password, usernameBase }) {
     email: normalizedEmail,
     password,
     options: {
+      // Named here rather than left to the project's Site URL. That field sat
+      // pointing at the old netlify.app address for a while after the pages
+      // moved to fitven.dk, so every confirmation link landed on "Site not
+      // found" - and somebody who has just confirmed an address and is shown a
+      // 404 concludes that signing up failed. It had not: Supabase spends the
+      // token and confirms the account before it redirects anywhere.
+      //
+      // Supabase still has to allow this address under Authentication -> URL
+      // Configuration -> Redirect URLs, or it refuses it and falls back to the
+      // Site URL, which is the failure this line exists to stop.
+      emailRedirectTo: EMAIL_CONFIRMED_REDIRECT,
       data: {
         username_base: normalizedUsernameBase,
         username: normalizedUsernameBase,

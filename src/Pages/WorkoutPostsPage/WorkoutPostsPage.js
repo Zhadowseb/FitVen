@@ -20,7 +20,7 @@ import EditSocialPost from "../../Resources/Icons/UI-icons/EditSocialPost";
 import Reload from "../../Resources/Icons/UI-icons/Reload";
 import Social from "../../Resources/Icons/UI-icons/Social";
 import TailArrowUpRight from "../../Resources/Icons/UI-icons/TailArrowUpRight";
-import WorkoutSummaryCard from "../HomePage/Components/WorkoutSummaryCard/WorkoutSummaryCard";
+import WorkoutSummaryCard from "../FeedPage/Components/WorkoutSummaryCard/WorkoutSummaryCard";
 import {
   ThemedBottomSheet,
   ThemedConfirmModal,

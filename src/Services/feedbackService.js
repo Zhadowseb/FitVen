@@ -5,6 +5,12 @@ import { supabase } from "../Database/supaBaseClient";
 
 const FEEDBACK_TABLE = "Feedback";
 
+// What the dev dashboard sorts on. The column has the same four and a check
+// constraint behind them, so a fifth one added on one side only fails the
+// insert - in production, on the screen somebody reaches when something has
+// already gone wrong for them.
+export const FEEDBACK_KINDS = ["bug", "idea", "praise", "other"];
+
 function getNormalizedString(value) {
   if (value === null || value === undefined) {
     return null;
@@ -34,7 +40,7 @@ function getAppVersion() {
   return parts.length > 0 ? parts.join(" | ") : null;
 }
 
-export async function submitFeedback({ message, userId = null }) {
+export async function submitFeedback({ message, userId = null, kind = "other" }) {
   const normalizedMessage = getNormalizedString(message);
 
   if (!normalizedMessage) {
@@ -42,10 +48,13 @@ export async function submitFeedback({ message, userId = null }) {
   }
 
   // device_info used to carry brand, model and OS version. None of it is
-  // needed to read a message, and together they fingerprint the device.
+  // needed to read a message, and together they fingerprint the device. The
+  // dev dashboard has columns for the OS and the model, and they stay empty
+  // for the same reason: the published privacy policy does not list them.
   const payload = {
     message: normalizedMessage,
     app_version: getAppVersion(),
+    kind: FEEDBACK_KINDS.includes(kind) ? kind : "other",
   };
 
   if (userId) {

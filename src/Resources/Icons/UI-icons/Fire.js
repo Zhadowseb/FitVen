@@ -1,16 +1,21 @@
 import * as React from "react"
 import Svg, { Path } from "react-native-svg"
 
-function SvgComponent(props) {
+// `color` has to reach the stroke. It used to set only the SVG's own `color`
+// attribute while the stroke stayed at the hardcoded #141B34, so the flame on
+// Home's days-since box drew near-black on a dark card and read as missing.
+// RunSetList had already worked around it by passing `stroke` as well, which
+// still wins through the spread below.
+function SvgComponent({ width = 24, height = 24, color, ...props }) {
   return (
     <Svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
-      width={24}
-      height={24}
-      color="#da1212"
+      width={width}
+      height={height}
+      color={color ?? "#da1212"}
       fill="none"
-      stroke="#141B34"
+      stroke={color ?? "#141B34"}
       strokeWidth={1.5}
       strokeLinejoin="round"
       {...props}

@@ -8,6 +8,7 @@ import {
 } from "./avatarUrls";
 import {
   calculateAgeFromBirthDate,
+  getTodaysDate,
   normalizeIsoDateString,
 } from "../Utils/dateUtils";
 import {
@@ -246,7 +247,10 @@ async function fetchActivityWorkouts({ userIds, activityDate }) {
 
 async function fetchActivityPreviewByUserId({ userIds, date }) {
   const uniqueUserIds = [...new Set(userIds.filter(Boolean))];
-  const activityDate = normalizeIsoDateString(date);
+  // Today when the caller does not say. A missing date used to return an empty
+  // map, which made every tile read "no activity" - the feature switched off
+  // by an omitted argument, with nothing anywhere saying so.
+  const activityDate = normalizeIsoDateString(date ?? getTodaysDate());
 
   if (!uniqueUserIds.length || !activityDate) {
     return new Map();

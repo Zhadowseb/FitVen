@@ -17,6 +17,7 @@ import * as ScreenOrientation from "expo-screen-orientation";
 import LoginPage from './src/Pages/LoginPage/LoginPage';
 import RegisterPage from './src/Pages/RegisterPage/RegisterPage';
 import HomePage from './src/Pages/HomePage/HomePage';
+import FeedPage from './src/Pages/FeedPage/FeedPage';
 import ProfilePage from './src/Pages/ProfilePage/ProfilePage';
 import ProgramPage from './src/Pages/ProgramPage/ProgramPage';
 import ProgramOverviewPage from './src/Pages/ProgramOverviewPage/ProgramOverviewPage';
@@ -47,6 +48,7 @@ import GymLeaderboardPage from "./src/Pages/GymLeaderboardPage/GymLeaderboardPag
 import GymExerciseLeaderboardPage from "./src/Pages/GymExerciseLeaderboardPage/GymExerciseLeaderboardPage";
 import NationalExerciseLeaderboardPage from "./src/Pages/NationalExerciseLeaderboardPage/NationalExerciseLeaderboardPage";
 import MusicSettingsPage from "./src/Pages/MusicSettingsPage/MusicSettingsPage";
+import DevDashboardPage from "./src/Pages/DevDashboardPage/DevDashboardPage";
 
 import { Colors } from './src/Resources/GlobalStyling/colors';
 import {
@@ -277,6 +279,7 @@ function RootNavigator() {
             {isAuthenticated ? (
               <>
                 <Stack.Screen name="HomePage" component={HomePage} options={{ headerShown: false }} />
+                <Stack.Screen name="FeedPage" component={FeedPage} options={{ headerShown: false }} />
                 <Stack.Screen name="SearchPage" component={SearchPage} options={{ headerShown: false }} />
                 <Stack.Screen name="SocialUserListPage" component={SocialUserListPage} options={{ headerShown: false }} />
                 <Stack.Screen name="ProfilePage" component={ProfilePage} options={{ headerShown: false }} />
@@ -299,6 +302,7 @@ function RootNavigator() {
                 <Stack.Screen name="OneRepMaxCalculatorPage" component={OneRepMaxCalculatorPage} options={{ headerShown: false }} />
                 <Stack.Screen name="WorkoutTypesSettingsPage" component={WorkoutTypesSettingsPage} options={{ headerShown: false }} />
                 <Stack.Screen name="MusicSettingsPage" component={MusicSettingsPage} options={{ headerShown: false }} />
+                <Stack.Screen name="DevDashboardPage" component={DevDashboardPage} options={{ headerShown: false }} />
                 <Stack.Screen name="GymsPage" component={GymsPage} options={{ headerShown: false }} />
                 <Stack.Screen name="GymLeaderboardPage" component={GymLeaderboardPage} options={{ headerShown: false }} />
                 <Stack.Screen name="GymExerciseLeaderboardPage" component={GymExerciseLeaderboardPage} options={{ headerShown: false }} />

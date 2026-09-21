@@ -15,7 +15,7 @@ import { authService } from "../../Services";
 import { useAuth } from "../../Contexts/AuthContext";
 import { useThemeMode } from "../../Contexts/ThemeContext";
 import { useTranslation } from "@localization";
-import { notificationService, socialService } from "../../Services";
+import { adminService, notificationService, socialService } from "../../Services";
 import Bell from "../../Resources/Icons/UI-icons/Bell";
 import Dumbbell from "../../Resources/Icons/UI-icons/Dumbbell";
 import Pencil from "../../Resources/Icons/UI-icons/Pencil";
@@ -25,6 +25,7 @@ import Social from "../../Resources/Icons/UI-icons/Social";
 import ChevronRight from "../../Resources/Icons/UI-icons/ChevronRight";
 import FeedbackModal from "../../Resources/Components/FeedbackModal/FeedbackModal";
 import Lock from "../../Resources/Icons/UI-icons/Lock";
+import Cogwheel from "../../Resources/Icons/UI-icons/Cogwheel";
 import MessageCircle from "../../Resources/Icons/UI-icons/MessageCircle";
 import SectionEyebrow from "./Components/SectionEyebrow";
 import InsetDivider from "./Components/InsetDivider";
@@ -114,6 +115,7 @@ export default function ProfilePage() {
   const [birthDatePickerVisible, setBirthDatePickerVisible] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [feedbackModalVisible, setFeedbackModalVisible] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [profileFeedback, setProfileFeedback] = useState({
@@ -259,12 +261,25 @@ export default function ProfilePage() {
         }
       };
 
+      // Its own read, and never in the way: the flag decides whether one row
+      // is drawn, so a failure here is the row not appearing, not the profile
+      // failing to load. The row is not the access control either - the
+      // policies behind every query the screen makes are.
+      const loadIsAdmin = async () => {
+        const admin = await adminService.getIsAdmin({ user });
+
+        if (!isCancelled) {
+          setIsAdmin(admin);
+        }
+      };
+
       loadProfile();
+      loadIsAdmin();
 
       return () => {
         isCancelled = true;
       };
-    }, [user?.email, user?.id])
+    }, [user, user?.email, user?.id])
   );
 
   const clearProfileFeedback = () => {
@@ -894,6 +909,30 @@ export default function ProfilePage() {
                 <ChevronRight width={18} height={18} color={theme.quietText} />
               </TouchableOpacity>
 
+              {/* Last, and only for an account whose is_admin is set by hand in
+                  the database. Hiding it is not what keeps the data private -
+                  the policies behind every query the screen makes are - so it
+                  sits with the other rows rather than behind a gesture. */}
+              {isAdmin ? (
+                <>
+                  <InsetDivider />
+
+                  <TouchableOpacity
+                    activeOpacity={0.82}
+                    onPress={() => navigation.navigate("DevDashboardPage")}
+                    style={styles.settingsRow}
+                  >
+                    <SettingsIconTile backgroundColor={withAlpha(theme.primary, 0.12)}>
+                      <Cogwheel width={18} height={18} color={primaryTextColor} />
+                    </SettingsIconTile>
+                    <ThemedText style={styles.settingsRowLabel} setColor={theme.title}>
+                      {t("profile.settings.dev")}
+                    </ThemedText>
+                    <ChevronRight width={18} height={18} color={theme.quietText} />
+                  </TouchableOpacity>
+                </>
+              ) : null}
+
             </ThemedCard>
           </View>
 
@@ -905,13 +944,21 @@ export default function ProfilePage() {
           <View style={styles.section}>
             <SectionEyebrow>{t("profile.sections.appearance")}</SectionEyebrow>
             <ThemedCard style={styles.card}>
-              <View style={styles.settingsControlRow}>
+              {/* Label over control, not beside it. Three language names -
+                  System, Dansk, English - and a label all competing for one
+                  row left the word "Language" squeezed to nothing. Both
+                  controls are stacked so the card reads as one thing, the way
+                  the colour picker below already does. */}
+              <View style={styles.settingsStackedHeader}>
                 <SettingsIconTile backgroundColor={withAlpha(theme.primary, 0.12)}>
                   <Moon width={18} height={18} color={primaryTextColor} thickness={1.7} />
                 </SettingsIconTile>
                 <ThemedText style={styles.settingsRowLabel} setColor={theme.title}>
                   {t("profile.appearance.theme")}
                 </ThemedText>
+              </View>
+
+              <View style={styles.settingsStackedControl}>
                 <ThemedSegmentedControl
                   options={appearanceOptions}
                   value={themeMode}
@@ -921,13 +968,16 @@ export default function ProfilePage() {
 
               <InsetDivider />
 
-              <View style={styles.settingsControlRow}>
+              <View style={styles.settingsStackedHeader}>
                 <SettingsIconTile backgroundColor={withAlpha(theme.primary, 0.12)}>
                   <Social width={18} height={18} color={primaryTextColor} thickness={1.7} />
                 </SettingsIconTile>
                 <ThemedText style={styles.settingsRowLabel} setColor={theme.title}>
                   {t("profile.language.label")}
                 </ThemedText>
+              </View>
+
+              <View style={styles.settingsStackedControl}>
                 <ThemedSegmentedControl
                   options={languageOptions}
                   value={languageMode}
@@ -937,7 +987,7 @@ export default function ProfilePage() {
 
               <InsetDivider />
 
-              <View style={styles.settingsControlRow}>
+              <View style={styles.settingsStackedHeader}>
                 <SettingsIconTile backgroundColor={withAlpha(theme.primary, 0.12)}>
                   <Star width={18} height={18} color={primaryTextColor} filled />
                 </SettingsIconTile>

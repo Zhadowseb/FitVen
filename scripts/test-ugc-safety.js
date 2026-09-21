@@ -27,7 +27,8 @@ const hidePath = path.join(
   "migrations",
   "20260921120000_hide-a-reported-post.sql"
 );
-const homePath = path.join(rootDir, "src", "Pages", "HomePage", "HomePage.js");
+// The feed moved to its own tab in 2.1; the report action went with it.
+const homePath = path.join(rootDir, "src", "Pages", "FeedPage", "FeedPage.js");
 const supportPath = path.join(rootDir, "web", "support", "index.html");
 const sheetPath = path.join(
   rootDir,

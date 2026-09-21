@@ -20,28 +20,11 @@ const MONTH_LABELS = [
   "dec",
 ];
 
-// A month cell is under 50 px wide, so it carries one dot per workout instead
-// of the week view's icon cards. Same colour language, no 8 px text.
-const MAX_MONTH_MARKERS = 6;
-
-const getWorkoutMarkerColor = (workoutCard, palette) => {
-  if (
-    workoutCard.sickOverdue ||
-    (workoutCard.completed && workoutCard.sickCompleted)
-  ) {
-    return palette.sick;
-  }
-
-  if (workoutCard.overdue) {
-    return palette.danger;
-  }
-
-  if (workoutCard.completed) {
-    return workoutCard.hasPersonalRecord ? palette.record : palette.completed;
-  }
-
-  return palette.planned;
-};
+// The month cell used to carry a row of coloured dots under the date, one per
+// workout. Nobody could tell what they meant: six colours, no legend, and a
+// "+2" when there were more. The date number already carries the day's state,
+// which is the part that reads. The week view still has its icon cards, where
+// there is room to say what each one is.
 
 const getMonthLabel = (monthNumber) => {
   const monthIndex = Number(monthNumber);
@@ -229,40 +212,6 @@ const WeekdayIndicator = ({
           </View>
         )}
 
-        {hasWorkoutCards && compact && (
-          <View style={styles.markerRow}>
-            {workoutCards
-              .slice(
-                0,
-                workoutCards.length > MAX_MONTH_MARKERS
-                  ? MAX_MONTH_MARKERS - 1
-                  : MAX_MONTH_MARKERS
-              )
-              .map((workoutCard, index) => (
-                <View
-                  key={workoutCard.key ?? `${workoutCard.iconLabel}-${index}`}
-                  style={[
-                    styles.marker,
-                    {
-                      backgroundColor: getWorkoutMarkerColor(workoutCard, {
-                        sick: sickColor,
-                        danger: dangerColor,
-                        record: recordColor,
-                        completed: theme.secondary,
-                        planned: theme.primary,
-                      }),
-                    },
-                  ]}
-                />
-              ))}
-
-            {workoutCards.length > MAX_MONTH_MARKERS && (
-              <ThemedText style={[styles.markerOverflow, { color: quietText }]}>
-                +{workoutCards.length - (MAX_MONTH_MARKERS - 1)}
-              </ThemedText>
-            )}
-          </View>
-        )}
       </Pressable>
 
       {hasWorkoutCards && !compact && (
@@ -560,23 +509,6 @@ const styles = StyleSheet.create({
     lineHeight: 10,
     opacity: 0.8,
     textTransform: "lowercase",
-  },
-  markerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 2,
-    marginTop: 3,
-  },
-  marker: {
-    width: 3,
-    height: 3,
-    borderRadius: 2,
-  },
-  markerOverflow: {
-    fontSize: 11,
-    fontWeight: "800",
-    lineHeight: 12,
   },
   circle: {
     width: 40,

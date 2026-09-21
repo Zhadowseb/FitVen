@@ -487,3 +487,41 @@ export async function updateMesocycleDoneFromMicrocycles(db, mesocycleId) {
     [syncVersion, mesocycleId]
   );
 }
+
+/**
+ * The workouts already sitting on a given day and not finished.
+ *
+ * Home offers these before it offers to start anything new: somebody who
+ * planned a session this morning, or left one half-done at lunch, wants that
+ * one back, not a second one beside it.
+ *
+ * Ordered so the first row is the one to open - a running timer first, then
+ * the most recently made. The date is matched on its ISO form because the
+ * column holds both spellings, the same way the split guess reads it.
+ */
+export async function getOpenWorkoutsForDate(db, { isoDate, limit = 5 }) {
+  const workoutIsoDateSql = `
+    CASE
+      WHEN w.date LIKE '__.__.____'
+      THEN substr(w.date, 7, 4) || '-' || substr(w.date, 4, 2) || '-' || substr(w.date, 1, 2)
+      ELSE w.date
+    END`;
+
+  return db.getAllAsync(
+    `SELECT
+        w.workout_id,
+        w.workout_type,
+        w.label,
+        w.date,
+        w.timer_start,
+        w.elapsed_time,
+        w.is_active
+     FROM Workout_Type_Instance w
+     WHERE COALESCE(w.done, 0) = 0
+       AND COALESCE(w.deleted_at, '') = ''
+       AND ${workoutIsoDateSql} = ?
+     ORDER BY (w.timer_start IS NOT NULL) DESC, w.workout_id DESC
+     LIMIT ?;`,
+    [isoDate, Math.max(1, Math.trunc(Number(limit) || 5))]
+  );
+}

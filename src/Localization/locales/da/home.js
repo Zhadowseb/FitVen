@@ -1,5 +1,7 @@
 // Keep in step with ../en/home.js.
 export default {
+  couldNotLoad: "Kunne ikke hente din træning.",
+  retry: "Prøv igen",
   weekdays: {
     mon: "MAN",
     tue: "TIR",
@@ -21,6 +23,39 @@ export default {
     openActiveProgram: "Åbn det aktive program {name}",
     noActiveProgram: "Intet aktivt program. Åbn træningskalenderen",
     openNotifications: "Åbn notifikationer",
+    openProfile: "Åbn din profil",
+  },
+  daysSince: {
+    days: "Dage\nsiden sidst",
+    today: "Trænet\ni dag",
+    never: "Ingen træninger\nendnu",
+    neverValue: "—",
+  },
+  quickStart: {
+    continueNamed: "Fortsæt {name}",
+    todaysWorkout: "Dagens træning",
+    eyebrow: "Hurtig start",
+    emptyWorkout: "Tom træning",
+    startNamed: "Start {name}",
+    startEmpty: "Start en tom træning",
+    startFailedTitle: "Kunne ikke starte træningen",
+    startFailedBody: "Prøv igen.",
+  },
+  split: {
+    unnamed: "Træning {number}",
+    title: "Træningssplit",
+    empty: "Kom i gang med at træne, så viser vi dit split her.",
+    meta: "{exercises} øvelser · {sets} sæt",
+    allCount: "Alle {count}",
+    openAll: "Åbn alle dine træninger",
+    upNext: "{name}, næste i dit split",
+  },
+  muscleGlance: {
+    title: "Sidste måned",
+    gaining: "{group} i fremgang",
+    noGain: "Ingen fremgang endnu",
+    noData: "—",
+    open: "Åbn personlige rekorder",
   },
   workoutType: {
     resistance: "Styrke",
@@ -45,6 +80,7 @@ export default {
     minutesShort: "{count} min",
   },
   feed: {
+    title: "Feed",
     emptyTitleNoFollows: "Ingen træninger at vise endnu",
     emptyTitle: "Intet delt endnu",
     emptyBodyNoFollows:

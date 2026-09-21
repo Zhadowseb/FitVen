@@ -1,6 +1,8 @@
 // Home screen: greeting, week strip, today's hero card, the workout summary
 // feed and the post-note editor it opens. Keep in step with ../da/home.js.
 export default {
+  couldNotLoad: "Could not load your training.",
+  retry: "Try again",
   // Literal uppercase: the week strip style does not transform case.
   weekdays: {
     mon: "MON",
@@ -23,6 +25,39 @@ export default {
     openActiveProgram: "Open active program {name}",
     noActiveProgram: "No active program. Open workout calendar",
     openNotifications: "Open notifications",
+    openProfile: "Open your profile",
+  },
+  daysSince: {
+    days: "Days\nsince last",
+    today: "Trained\ntoday",
+    never: "No workouts\nyet",
+    neverValue: "—",
+  },
+  quickStart: {
+    continueNamed: "Continue {name}",
+    todaysWorkout: "Today's workout",
+    eyebrow: "Quick start",
+    emptyWorkout: "Empty workout",
+    startNamed: "Start {name}",
+    startEmpty: "Start an empty workout",
+    startFailedTitle: "Could not start the workout",
+    startFailedBody: "Please try again.",
+  },
+  split: {
+    unnamed: "Session {number}",
+    title: "Workout split",
+    empty: "Start training to have your split shown here.",
+    meta: "{exercises} exercises · {sets} sets",
+    allCount: "All {count}",
+    openAll: "Open all your workouts",
+    upNext: "{name}, next in your split",
+  },
+  muscleGlance: {
+    title: "Last month",
+    gaining: "{group} gaining",
+    noGain: "No gains yet",
+    noData: "—",
+    open: "Open personal records",
   },
   workoutType: {
     resistance: "Resistance",
@@ -47,6 +82,7 @@ export default {
     minutesShort: "{count} min",
   },
   feed: {
+    title: "Feed",
     emptyTitleNoFollows: "No workouts to show yet",
     emptyTitle: "Nothing shared yet",
     emptyBodyNoFollows:
