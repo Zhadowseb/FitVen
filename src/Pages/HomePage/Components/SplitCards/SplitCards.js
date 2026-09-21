@@ -39,14 +39,18 @@ function formatWeekdays(weekdays, formatDate) {
 
 function SplitCard({ group, theme, width, onPress, t, formatDate }) {
   const weekdayLine = formatWeekdays(group.weekdays, formatDate);
+  // A session started from the quick-start button was never named, so the
+  // guess has no name to show. Numbered by where it sits in the history
+  // rather than by the row order, which sorts by who has waited longest and
+  // would renumber the cards under the finger.
+  const name =
+    group.name ?? t("home.split.unnamed", { number: (group.historyOrder ?? 0) + 1 });
 
   return (
     <TouchableOpacity
       accessibilityRole="button"
       accessibilityLabel={
-        group.isUpNext
-          ? t("home.split.upNext", { name: group.name })
-          : group.name
+        group.isUpNext ? t("home.split.upNext", { name }) : name
       }
       activeOpacity={0.85}
       onPress={() => onPress?.(group)}
@@ -63,7 +67,7 @@ function SplitCard({ group, theme, width, onPress, t, formatDate }) {
       ]}
     >
       <ThemedText style={styles.name} setColor={theme.title} numberOfLines={1}>
-        {group.name}
+        {name}
       </ThemedText>
 
       {weekdayLine ? (

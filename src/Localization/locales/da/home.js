@@ -1,5 +1,7 @@
 // Keep in step with ../en/home.js.
 export default {
+  couldNotLoad: "Kunne ikke hente din træning.",
+  retry: "Prøv igen",
   weekdays: {
     mon: "MAN",
     tue: "TIR",
@@ -38,6 +40,7 @@ export default {
     startFailedBody: "Prøv igen.",
   },
   split: {
+    unnamed: "Træning {number}",
     title: "Træningssplit",
     empty: "Kom i gang med at træne, så viser vi dit split her.",
     meta: "{exercises} øvelser · {sets} sæt",

@@ -5,6 +5,7 @@ import {
   AppState,
   RefreshControl,
   ScrollView,
+  TouchableOpacity,
   View,
   useColorScheme,
 } from "react-native";
@@ -20,8 +21,8 @@ import QuickStartCard from "./Components/QuickStartCard/QuickStartCard";
 import SplitCards from "./Components/SplitCards/SplitCards";
 import MuscleGlance from "./Components/MuscleGlance/MuscleGlance";
 import FriendsActivity from "@resources/Components/FriendsActivity/FriendsActivity";
-import { Colors } from "@resources/GlobalStyling/colors";
-import { ThemedView } from "@resources/ThemedComponents";
+import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
+import { ThemedText, ThemedView } from "@resources/ThemedComponents";
 import {
   musicService,
   notificationService,
@@ -75,26 +76,50 @@ export default function HomePage() {
   const [hasLoadedHome, setHasLoadedHome] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
+  const [homeError, setHomeError] = useState("");
 
   useEffect(() => musicService.subscribeNowPlaying(setOwnNowPlaying), []);
 
+  // Settled, not all: the three questions are independent, and one of them
+  // failing is no reason to blank the other two. A rejection used to empty all
+  // three at once and say nothing, so a person with months of history was told
+  // she had never trained - which is the same sentence a real empty account
+  // gets. That is the one thing this screen must not get wrong.
   const loadHome = useCallback(async () => {
     try {
-      const [days, groups, muscles] = await Promise.all([
+      const [days, groups, muscles] = await Promise.allSettled([
         workoutService.getDaysSinceLastWorkout(db),
         workoutService.getSplitGroups(db),
         weightliftingService.getMuscleGroupDeltas(db),
       ]);
+      const failures = [days, groups, muscles].filter(
+        (result) => result.status === "rejected"
+      );
 
-      setDaysSinceLastWorkout(days);
-      setSplitGroups(groups);
-      setMuscleGroups(muscles);
+      if (days.status === "fulfilled") {
+        setDaysSinceLastWorkout(days.value);
+      }
+
+      if (groups.status === "fulfilled") {
+        setSplitGroups(groups.value);
+      }
+
+      if (muscles.status === "fulfilled") {
+        setMuscleGroups(muscles.value);
+      }
+
+      for (const failure of failures) {
+        console.error("Failed to load part of the home screen:", failure.reason);
+      }
+
+      setHomeError(failures.length > 0 ? t("home.couldNotLoad") : "");
     } catch (error) {
       console.error("Failed to load the home screen:", error);
+      setHomeError(t("home.couldNotLoad"));
     } finally {
       setHasLoadedHome(true);
     }
-  }, [db]);
+  }, [db, t]);
 
   const loadCirclePreview = useCallback(async () => {
     if (!user?.id) {
@@ -267,6 +292,32 @@ export default function HomePage() {
           }
           avatarUrl={circlePreview.currentUser?.avatarUrl ?? null}
         />
+
+        {/* Pull-to-refresh already retried this, but nothing on the screen
+            said so. Without a line here a failed load is indistinguishable
+            from an account that has never trained. */}
+        {homeError ? (
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={t("home.retry")}
+            activeOpacity={0.85}
+            onPress={loadHome}
+            style={[
+              styles.errorBanner,
+              {
+                backgroundColor: withAlpha(theme.danger, 0.12),
+                borderColor: withAlpha(theme.danger, 0.4),
+              },
+            ]}
+          >
+            <ThemedText style={styles.errorText} setColor={theme.danger}>
+              {homeError}
+            </ThemedText>
+            <ThemedText style={styles.errorRetry} setColor={theme.danger}>
+              {t("home.retry")}
+            </ThemedText>
+          </TouchableOpacity>
+        ) : null}
 
         {hasLoadedHome ? (
           <>

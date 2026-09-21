@@ -458,6 +458,9 @@ export async function getSplitGroups(db, { now = Date.now() } = {}) {
       return {
         workoutId: row.workout_id,
         name: row.label ?? "",
+        // Carried so the guess can tell a name somebody chose from the one the
+        // insert fell back to. See splitWorkoutName.
+        workoutType: row.workout_type ?? "",
         at,
         exerciseIds: String(row.exercise_names ?? "")
           .split(",")

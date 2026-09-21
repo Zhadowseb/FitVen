@@ -18,6 +18,78 @@ const DAY_MS = 86400000;
 
 /* ---------------------------------------------------- reading the split -- */
 
+// The finding this file did not cover. A workout started from the quick-start
+// button carries no label, so the insert falls back to the workout type and
+// stores the literal string "Resistance". Treating that as a name matched
+// every unnamed session against every other one on the first check, before the
+// exercise overlap was ever looked at - an upper-body day and a leg day became
+// one card, for exactly the person Home was rebuilt for.
+{
+  const now = new Date(2026, 8, 22, 12, 0, 0).getTime();
+  const unnamed = (id, daysAgo, exercises) => ({
+    workoutId: id,
+    name: "Resistance",
+    workoutType: "Resistance",
+    at: now - daysAgo * DAY_MS,
+    exerciseIds: exercises,
+    exerciseCount: exercises.length,
+    setCount: exercises.length * 3,
+  });
+
+  assert.strictEqual(
+    splitGuess.splitWorkoutName(unnamed(1, 0, [])),
+    "",
+    "a label that is only the workout type is being read as a name"
+  );
+  assert.strictEqual(
+    splitGuess.splitWorkoutName({ name: "Push A", workoutType: "Resistance" }),
+    "push a",
+    "a real name stopped counting as one"
+  );
+
+  const upperDay = ["bench press", "row", "overhead press", "curl"];
+  const lowerDay = ["squat", "deadlift", "leg curl"];
+  const twoUnnamed = splitGuess.guessSplitGroups(
+    [
+      unnamed(10, 2, upperDay),
+      unnamed(9, 4, lowerDay),
+      unnamed(8, 9, upperDay),
+      unnamed(7, 11, lowerDay),
+      unnamed(6, 16, upperDay),
+      unnamed(5, 18, lowerDay),
+    ],
+    { now }
+  );
+
+  assert.strictEqual(
+    twoUnnamed.length,
+    2,
+    "two unnamed sessions with different exercises collapsed into one group"
+  );
+
+  // With no name to show, the cards have to be told apart some other way, and
+  // the number has to be stable - the row sorts by who has waited longest.
+  assert.ok(
+    twoUnnamed.every((group) => group.name === null),
+    "an unnamed group is being given a name it was never told"
+  );
+  assert.deepStrictEqual(
+    twoUnnamed.map((group) => group.historyOrder).sort(),
+    [0, 1],
+    "the groups have no stable number for the card to fall back on"
+  );
+
+  const splitCards = fs.readFileSync(
+    path.join(root, "src", "Pages", "HomePage", "Components", "SplitCards", "SplitCards.js"),
+    "utf8"
+  );
+
+  assert.ok(
+    /home\.split\.unnamed/.test(splitCards) && /historyOrder/.test(splitCards),
+    "a group with no name draws a card with an empty title"
+  );
+}
+
 // A Tuesday, so the weekday arithmetic below is checkable by hand.
 const now = new Date(2026, 8, 22, 12, 0, 0).getTime();
 const workout = (id, name, daysAgo, exercises) => ({
@@ -322,6 +394,28 @@ const homeSource = fs.readFileSync(
 assert.ok(
   !/WorkoutSummaryCard|workoutSummaryPosts/.test(homeSource),
   "posts are back on Home"
+);
+
+/* ------------------------------------------------- a failure looks like one */
+
+// The other finding. loadHome caught, logged to the console and set
+// hasLoadedHome either way, and the three reads sat in one Promise.all - so
+// one rejection emptied all three fields and told somebody with months of
+// history that she had never trained. That is the same screen a real empty
+// account gets, which is the one thing this page must not get wrong.
+assert.ok(
+  /Promise\.allSettled/.test(homeSource),
+  "the three reads are back in one Promise.all, so one failure blanks all three"
+);
+
+assert.ok(
+  /setHomeError/.test(homeSource) && /home\.couldNotLoad/.test(homeSource),
+  "a failed load leaves no trace on the screen again"
+);
+
+assert.ok(
+  /home\.retry/.test(homeSource),
+  "the error says something went wrong but offers no way to try again"
 );
 
 /* ------------------------------------------------- the first day ------- */

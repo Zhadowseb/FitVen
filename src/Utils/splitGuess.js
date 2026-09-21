@@ -41,6 +41,26 @@ export function normalizeSplitName(value) {
     .trim();
 }
 
+/**
+ * The name somebody actually gave a session, or "" when they gave it none.
+ *
+ * A workout started from the quick-start button carries no label, and the
+ * insert falls back to the workout type - so it is stored as the literal
+ * string "Resistance". That is not a name, and treating it as one made every
+ * unnamed session match every other one on the very first check, before the
+ * exercise overlap was ever looked at: an upper-body day and a leg day
+ * collapsed into one card, for exactly the person this screen was rebuilt for.
+ *
+ * Reading it here rather than fixing the insert also repairs the history that
+ * is already stored that way.
+ */
+export function splitWorkoutName(workout) {
+  const name = normalizeSplitName(workout?.name);
+  const type = normalizeSplitName(workout?.workoutType);
+
+  return name && name === type ? "" : name;
+}
+
 /** Shared exercises over the union of both. 1 is identical, 0 is nothing in common. */
 export function exerciseOverlap(left = [], right = []) {
   const a = new Set(left);
@@ -62,10 +82,10 @@ export function exerciseOverlap(left = [], right = []) {
 }
 
 function belongsToGroup(workout, group) {
-  const name = normalizeSplitName(workout.name);
+  const name = splitWorkoutName(workout);
 
   for (const member of group.workouts) {
-    if (name && name === normalizeSplitName(member.name)) {
+    if (name && name === splitWorkoutName(member)) {
       return true;
     }
 
@@ -81,7 +101,8 @@ function pickGroupName(group) {
   const counts = new Map();
 
   for (const workout of group.workouts) {
-    const name = String(workout.name ?? "").trim();
+    // The spelling as she wrote it, but only when it is a name at all.
+    const name = splitWorkoutName(workout) ? String(workout.name ?? "").trim() : "";
 
     if (name) {
       counts.set(name, (counts.get(name) ?? 0) + 1);

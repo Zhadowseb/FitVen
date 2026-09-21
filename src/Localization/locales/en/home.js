@@ -1,6 +1,8 @@
 // Home screen: greeting, week strip, today's hero card, the workout summary
 // feed and the post-note editor it opens. Keep in step with ../da/home.js.
 export default {
+  couldNotLoad: "Could not load your training.",
+  retry: "Try again",
   // Literal uppercase: the week strip style does not transform case.
   weekdays: {
     mon: "MON",
@@ -40,6 +42,7 @@ export default {
     startFailedBody: "Please try again.",
   },
   split: {
+    unnamed: "Session {number}",
     title: "Workout split",
     empty: "Start training to have your split shown here.",
     meta: "{exercises} exercises · {sets} sets",
