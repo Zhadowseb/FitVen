@@ -327,6 +327,17 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
   const listRows = rows.slice(3);
   const hasMoreRow = Boolean(board?.nextCursor);
 
+  const openReview = (lift) => {
+    if (lift.isMe) {
+      setOwnPendingLift(lift);
+    } else {
+      setOwnPendingLift(null);
+      setReviewLiftId(lift.liftId);
+    }
+
+    setIsReviewOpen(true);
+  };
+
   const renderLeaderboardRow = useCallback(
     ({ item: lift, index }) => {
       const isLast = index === listRows.length - 1;
@@ -378,17 +389,6 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
       },
     ];
   }, [board?.total, otherScopeTotal, scope, t]);
-
-  const openReview = (lift) => {
-    if (lift.isMe) {
-      setOwnPendingLift(lift);
-    } else {
-      setOwnPendingLift(null);
-      setReviewLiftId(lift.liftId);
-    }
-
-    setIsReviewOpen(true);
-  };
 
   const pickVideo = async (fromCamera) => {
     setIsAttachSheetOpen(false);

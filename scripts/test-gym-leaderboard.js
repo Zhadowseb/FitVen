@@ -325,6 +325,29 @@ assert.deepStrictEqual(offeredReasons.sort(), acceptedReasons.sort(), "rejection
 // two lines above that state's own const, which throws a ReferenceError on
 // every render - the Centres tab could not be opened at all, and nothing in
 // the suite renders a screen, so it passed. Cheap to keep honest by reading.
+// A dependency array is evaluated as the component body runs, so a const named
+// in one but declared further down throws on every render. This happened twice
+// in this branch, both times in code that had just been refactored, and both
+// times npm test stayed green because nothing here renders a screen. The rule
+// is cheap to read for.
+{
+  const declaredAfterUse = [
+    ["src/Pages/GymExerciseLeaderboardPage/GymExerciseLeaderboardPage.js", "openReview"],
+  ];
+
+  for (const [file, name] of declaredAfterUse) {
+    const lines = fs.readFileSync(path.join(root, file), "utf8").split(/\r?\n/);
+    const declared = lines.findIndex((line) => line.includes(`const ${name} = `));
+    const inDeps = lines.findIndex((line) => /^s*[.*]$/.test(line) && line.includes(name));
+
+    assert.ok(declared >= 0, `${file} no longer declares ${name}`);
+    assert.ok(
+      inDeps === -1 || declared < inDeps,
+      `${file} names ${name} in a dependency array before declaring it`
+    );
+  }
+}
+
 for (const file of [
   "src/Pages/GymsPage/GymsPage.js",
   "src/Pages/GymLeaderboardPage/Components/ChangeGymSheet.js",
