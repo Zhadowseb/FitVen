@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>FitVen — Email confirmed</title>
+<!--
+  Where the "confirm your email" link lands once Supabase has done the work.
+
+  Nothing happens on this page. By the time a browser gets here, the token in
+  the link has already been spent against /auth/v1/verify and the address is
+  confirmed; this is only the sentence that says so. That is also why it is
+  safe for it to be a plain static page with no key in it.
+
+  It exists because the alternative is worse. Supabase falls back to the
+  project's Site URL when a signup carries no emailRedirectTo, and that field
+  sat pointing at fitven.netlify.app for a while after the pages moved to
+  fitven.dk - so everybody who confirmed an address was thrown onto a Netlify
+  "Site not found" screen and reasonably concluded that signing up had failed.
+  It had not. The account was already made.
+
+  registerWithEmail names this address explicitly now, so it no longer depends
+  on a dashboard field nobody looks at. Supabase still has to allow the address
+  under Authentication -> URL Configuration -> Redirect URLs, or it refuses the
+  redirect and falls back to the Site URL again.
+-->
+<style>
+  :root {
+    color-scheme: light dark;
+    --ink: #16181d;
+    --quiet: #5c626e;
+    --ground: #ffffff;
+    --panel: #f6f7f9;
+    --rule: #e3e6eb;
+    --accent: #F7742E;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #edeff3;
+      --quiet: #a2a9b6;
+      --ground: #121419;
+      --panel: #1b1f26;
+      --rule: #2a2e37;
+    }
+  }
+  body {
+    margin: 0;
+    padding: 40px 20px 64px;
+    background: var(--ground);
+    color: var(--ink);
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 620px; margin: 0 auto; }
+  h1 { font-size: 28px; margin: 0 0 4px; }
+  p { margin: 0 0 14px; }
+  .eyebrow {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 10px;
+  }
+  .lede { color: var(--quiet); margin-bottom: 32px; }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 20px;
+  }
+  .panel p:last-child { margin-bottom: 0; }
+  .quiet { color: var(--quiet); font-size: 14px; }
+</style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">FitVen</p>
+  <h1>Your email is confirmed</h1>
+  <p class="lede">That is the whole of it. Nothing else is needed here.</p>
+
+  <div class="panel">
+    <p>Open FitVen and sign in with the address and password you just used.</p>
+    <p class="quiet">
+      If signing in says the address is not confirmed, close the app fully and
+      open it again — it may still be holding the answer it got before you
+      opened this link.
+    </p>
+  </div>
+</main>
+</body>
+</html>

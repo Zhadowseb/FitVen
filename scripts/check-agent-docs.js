@@ -322,6 +322,33 @@ if (resetPage === null) {
   }
 }
 
+// The same for the address a confirmation link lands on.
+//
+// This one has already gone wrong once. The signup carried no emailRedirectTo
+// at all, so Supabase fell back to the project's Site URL - and that field was
+// still pointing at the old netlify.app host after the pages moved. Everybody
+// confirming an address was shown "Site not found" and concluded that signing
+// up had failed, which it had not. Naming the address in the code only helps
+// while the page it names is actually there.
+const confirmedPage = read("web/confirmed/index.html");
+const confirmedRedirect = client?.match(
+  /EMAIL_CONFIRMED_REDIRECT = "([^"]+)"/
+)?.[1];
+
+if (!confirmedRedirect) {
+  problems.push(
+    "supaBaseClient.js no longer names an EMAIL_CONFIRMED_REDIRECT - signup falls back to the Supabase Site URL, which is how this broke the first time"
+  );
+} else if (!confirmedRedirect.includes("/confirmed/")) {
+  problems.push(
+    `EMAIL_CONFIRMED_REDIRECT is ${confirmedRedirect}, which is not the confirmation page`
+  );
+} else if (confirmedPage === null) {
+  problems.push(
+    "web/confirmed/index.html is missing - a confirmation link would land on a 404 and read as a failed signup"
+  );
+}
+
 // The public site serves exactly one directory.
 //
 // web/README.md promises this, and the promise is the whole reason the privacy
