@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.0.1] - Unreleased
+### Changed
+- Describe pending changes here.
+
+---
 ## [2.0.0] - Unreleased
 ### Added
 - **Centres.** A public fitness centre is now a thing the app knows: chain, name, address, coordinates and a hero photograph, 365 of them across PureGym, LOOP Fitness, Fit&Sund, FitnessX and SATS. The source is `data/gyms/` - the scraped folder that used to sit on the desktop, moved into the repository with its five Python scrapers and JSON, the photographs gitignored - and `npm run gyms:import` puts it in Supabase: rows to `public.gym`, photographs to the public `gym-images` bucket. Run it with `--dry-run` first; it prints the short name every centre will carry on the tiles, and the rule that derives them is a guess about five chains' naming habits.
