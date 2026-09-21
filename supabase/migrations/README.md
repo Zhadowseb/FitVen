@@ -52,7 +52,7 @@ behind by accident.
 | `20260917120000_gyms-and-lift-verification.sql` | yes |
 | `20260917120100_workout-music.sql` | yes |
 | `20260921140000_lift-videos-stay-in-the-centre.sql` | yes |
-| `20260921150000_drop-workout-start-coordinates.sql` | no |
+| `20260921150000_drop-workout-start-coordinates.sql` | yes |
 
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
@@ -172,14 +172,14 @@ already live: any signed-in user could read any centre's verification videos,
 copied from that file verbatim with one change each, so a diff between the two
 shows exactly what moved.
 
-`20260921150000_drop-workout-start-coordinates.sql` **has not been run, and
-should be.** Row-level security on `workout_type_instance` is row-based, so the
+`20260921150000_drop-workout-start-coordinates.sql` was run on 2026-09-21.
+Row-level security on `workout_type_instance` is row-based, so the
 follower policy that shows yesterday, today and tomorrow was also showing the
 start coordinates the centre migration added - and following needs no approval.
 Ten centimetres of accuracy on where somebody starts their workout is their
 home address. The app never read them from the cloud; the retry that needs them
-reads the device's own copy, which stays. Run it together with the 2.0 client
-that stops writing them.
+reads the device's own copy, which stays. The 2.0 client stops writing them in
+the same change.
 
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to
