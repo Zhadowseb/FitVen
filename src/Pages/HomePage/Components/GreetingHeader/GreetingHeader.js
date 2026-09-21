@@ -1,21 +1,10 @@
 import { TouchableOpacity, View, useColorScheme } from "react-native";
-import { formatDate, useTranslation } from "@localization";
+import { useTranslation } from "@localization";
 
 import styles from "./GreetingHeaderStyle";
-import { ThemedText } from "../../../../Resources/ThemedComponents";
-import { Colors, withAlpha } from "../../../../Resources/GlobalStyling/colors";
-import Bell from "../../../../Resources/Icons/UI-icons/Bell";
-import Layers from "../../../../Resources/Icons/UI-icons/Layers";
-
-// Builds "SATURDAY · 04.07.2026" from a Date; the style uppercases the weekday.
-function getDateEyebrow(date) {
-  const weekday = formatDate(date, { weekday: "long" });
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const year = date.getFullYear();
-
-  return `${weekday} · ${day}.${month}.${year}`;
-}
+import { ThemedText, UserAvatar } from "@resources/ThemedComponents";
+import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
+import Bell from "@resources/Icons/UI-icons/Bell";
 
 // Time of day, so the largest type on the screen says something that changes.
 function getGreeting(hour, t) {
@@ -44,105 +33,91 @@ function getFirstName(displayName) {
   return trimmedName.split(/\s+/)[0];
 }
 
+/**
+ * The greeting, the bell and the way into your own profile.
+ *
+ * The date line is gone: a phone already shows the date, and the row it took
+ * was the one thing on the screen nobody needed. The greeting is two lines
+ * instead, so the name can be the size it deserves.
+ *
+ * The avatar is how you reach your profile now that it is not a tab.
+ */
 export default function GreetingHeader({
-  today = new Date(),
   unreadNotificationCount = 0,
   onOpenNotifications,
-  activeProgramName = null,
-  onOpenActiveProgram,
+  onOpenProfile,
   displayName = null,
+  avatarUrl = null,
 }) {
   const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
-  const dateEyebrow = getDateEyebrow(today);
   const firstName = getFirstName(displayName);
   const greeting = getGreeting(new Date().getHours(), t);
-  const greetingTitle = firstName
-    ? t("home.greeting.withName", { greeting, name: firstName })
-    : greeting;
   const badgeCount =
     unreadNotificationCount > 99 ? "99+" : String(unreadNotificationCount);
-  const hasActiveProgram = Boolean(activeProgramName);
 
   return (
     <View style={styles.container}>
-      <View style={styles.topRow}>
-        <ThemedText
-          style={[styles.eyebrow, { color: theme.quietText }]}
-          numberOfLines={1}
-        >
-          {dateEyebrow}
-        </ThemedText>
+      <View style={styles.row}>
+        <View style={styles.copy}>
+          <ThemedText style={styles.greeting} setColor={theme.quietText} numberOfLines={1}>
+            {`${greeting},`}
+          </ThemedText>
+
+          {firstName ? (
+            <ThemedText style={styles.name} setColor={theme.title} numberOfLines={2}>
+              {firstName}
+            </ThemedText>
+          ) : null}
+        </View>
 
         <View style={styles.actions}>
-        <TouchableOpacity
-          activeOpacity={0.82}
-          accessibilityLabel={
-            hasActiveProgram
-              ? t("home.greeting.openActiveProgram", { name: activeProgramName })
-              : t("home.greeting.noActiveProgram")
-          }
-          accessibilityRole="button"
-          onPress={onOpenActiveProgram}
-          style={[
-            styles.iconButton,
-            hasActiveProgram
-              ? {
-                  backgroundColor: withAlpha(theme.primary, 0.12),
-                  borderColor: withAlpha(theme.primary, 0.45),
-                }
-              : {
-                  backgroundColor: theme.cardBackground,
-                  borderColor: theme.cardBorder,
-                },
-          ]}
-        >
-          <Layers
-            width={20}
-            height={20}
-            color={hasActiveProgram ? theme.primary : theme.quietText}
-            thickness={1.7}
-          />
-        </TouchableOpacity>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={t("home.greeting.openNotifications")}
+            activeOpacity={0.82}
+            onPress={onOpenNotifications}
+            style={[
+              styles.iconButton,
+              {
+                backgroundColor: theme.cardBackground,
+                borderColor: theme.cardBorder,
+              },
+            ]}
+          >
+            <Bell width={21} height={21} color={theme.title} thickness={1.7} />
 
-        <TouchableOpacity
-          activeOpacity={0.82}
-          accessibilityLabel={t("home.greeting.openNotifications")}
-          accessibilityRole="button"
-          onPress={onOpenNotifications}
-          style={[
-            styles.iconButton,
-            {
-              backgroundColor: theme.cardBackground,
-              borderColor: theme.cardBorder,
-            },
-          ]}
-        >
-          <Bell width={21} height={21} color={theme.title} thickness={1.7} />
+            {unreadNotificationCount > 0 ? (
+              <View
+                style={[
+                  styles.badge,
+                  { backgroundColor: theme.primary, borderColor: theme.uiBackground },
+                ]}
+              >
+                <ThemedText style={styles.badgeText} setColor={theme.textInverted}>
+                  {badgeCount}
+                </ThemedText>
+              </View>
+            ) : null}
+          </TouchableOpacity>
 
-          {unreadNotificationCount > 0 ? (
-            <View
-              style={[
-                styles.badge,
-                {
-                  backgroundColor: theme.primary,
-                  borderColor: theme.background,
-                },
-              ]}
-            >
-              <ThemedText style={[styles.badgeText, { color: theme.textInverted }]}>
-                {badgeCount}
-              </ThemedText>
-            </View>
-          ) : null}
-        </TouchableOpacity>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={t("home.greeting.openProfile")}
+            activeOpacity={0.82}
+            onPress={onOpenProfile}
+          >
+            <UserAvatar
+              uri={avatarUrl}
+              size={44}
+              iconSize={22}
+              borderColor={withAlpha(theme.title, 0.12)}
+              borderWidth={1.5}
+            />
+          </TouchableOpacity>
         </View>
       </View>
-
-      <ThemedText style={[styles.title, { color: theme.title }]} numberOfLines={1}>
-        {greetingTitle}
-      </ThemedText>
     </View>
   );
 }

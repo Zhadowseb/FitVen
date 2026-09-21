@@ -23,6 +23,32 @@ export default {
     openActiveProgram: "Open active program {name}",
     noActiveProgram: "No active program. Open workout calendar",
     openNotifications: "Open notifications",
+    openProfile: "Open your profile",
+  },
+  daysSince: {
+    days: "Days\nsince last",
+    today: "Trained\ntoday",
+    never: "No workouts\nyet",
+    neverValue: "—",
+  },
+  quickStart: {
+    eyebrow: "Quick start",
+    emptyWorkout: "Empty workout",
+    startNamed: "Start {name}",
+    startEmpty: "Start an empty workout",
+  },
+  split: {
+    meta: "{exercises} exercises · {sets} sets",
+    allCount: "All {count}",
+    openAll: "Open all your workouts",
+    upNext: "{name}, next in your split",
+  },
+  muscleGlance: {
+    title: "Last month",
+    gaining: "{group} gaining",
+    noGain: "No gains yet",
+    noData: "—",
+    open: "Open personal records",
   },
   workoutType: {
     resistance: "Resistance",

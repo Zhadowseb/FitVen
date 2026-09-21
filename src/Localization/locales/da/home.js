@@ -21,6 +21,32 @@ export default {
     openActiveProgram: "Åbn det aktive program {name}",
     noActiveProgram: "Intet aktivt program. Åbn træningskalenderen",
     openNotifications: "Åbn notifikationer",
+    openProfile: "Åbn din profil",
+  },
+  daysSince: {
+    days: "Dage\nsiden sidst",
+    today: "Trænet\ni dag",
+    never: "Ingen træninger\nendnu",
+    neverValue: "—",
+  },
+  quickStart: {
+    eyebrow: "Hurtig start",
+    emptyWorkout: "Tom træning",
+    startNamed: "Start {name}",
+    startEmpty: "Start en tom træning",
+  },
+  split: {
+    meta: "{exercises} øvelser · {sets} sæt",
+    allCount: "Alle {count}",
+    openAll: "Åbn alle dine træninger",
+    upNext: "{name}, næste i dit split",
+  },
+  muscleGlance: {
+    title: "Sidste måned",
+    gaining: "{group} i fremgang",
+    noGain: "Ingen fremgang endnu",
+    noData: "—",
+    open: "Åbn personlige rekorder",
   },
   workoutType: {
     resistance: "Styrke",
