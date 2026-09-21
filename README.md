@@ -225,8 +225,6 @@ Examples:
   Updates:
   - `package.json > version`
   - `app.json > expo.version`
-  - `app.json > expo.android.versionCode`
-  - `app.json > expo.ios.buildNumber`
   - the release section in `CHANGELOG.md`
   - older pending sections that were shipped together, which are marked `Released with x.y.z`
 

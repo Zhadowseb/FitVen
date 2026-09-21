@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.1.6] - Unreleased
+### Fixed
+- **`npm test` has been failing in CI, and the run said it passed.** Two things hid it. The workflow ran Node 20, which has no `node:sqlite`, so the seventh test script died and the twenty-two after it never ran. And the step was written as `npm test | tee npm-test.log`, which makes the exit code `tee`'s, and `tee` never fails. The step therefore reported success on every pull request, and the eight review agents were handed "npm test: success" as a fact each time.
+- The Node version is pinned in `.nvmrc` and read from there by both workflows, so it cannot drift from the one the tests are written for again. `engines` says the same thing to anyone installing.
+
+### Added
+- **A blocking test gate.** `.github/workflows/ci.yml` runs `npm ci && npm test` on every pull request and push to `master` and `release/*`, with no pipe and no `continue-on-error`. It is a required status check, so a red suite stops the merge. The existing review workflow keeps its own non-blocking run, because a failed test is exactly where a review has most to say, but it now reports the real outcome.
+
+### Changed
+- **EAS owns the build numbers, and `app.json` no longer pretends to.** `eas.json` has said `appVersionSource: "remote"` for a while, which means EAS keeps `versionCode` and `buildNumber` on its side and ignores the ones in the app config. The release script kept incrementing the ignored copies anyway, so they drifted: `app.json` reached 18 while EAS was at 24 for iOS and 49 for Android. The fields are gone from `app.json`, the release script no longer writes them, and `docs/VERSIONING.md` says which number has which owner.
+- **Feedback reports the build the phone is actually running.** It read the build number out of `app.json`, so a report from a build 24 device said "build 18". It comes from `expo-constants` now, which reads it from the binary.
+
+---
 ## [1.1.5] - Unreleased
 ### Added
 - **Report a post from the feed.** The menu on a workout post used to open only on your own; it now opens on everybody's, and on somebody else's it offers **Report post** instead of Edit and Delete. Same five reasons and the same optional note as reporting an account, and it writes the same `user_reports` row - `reported_post_id` has been there since 1.0.2 with nothing filling it in. Your own post keeps Edit and Delete exactly as before.

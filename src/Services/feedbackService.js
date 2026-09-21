@@ -1,4 +1,4 @@
-import { Platform } from "react-native";
+import Constants from "expo-constants";
 
 import appConfig from "../../app.json";
 import { supabase } from "../Database/supaBaseClient";
@@ -14,14 +14,21 @@ function getNormalizedString(value) {
   return normalizedValue.length > 0 ? normalizedValue : null;
 }
 
+// Fra binaeren, ikke fra app.json. EAS taeller build-numret op paa sin side
+// (appVersionSource: "remote"), saa app.json har ikke laengere et - og dengang
+// det havde, var det holdt op med at foelge med: en rapport fra en telefon med
+// build 24 sagde "build 18". nativeBuildVersion er det tal, der faktisk staar
+// i den installerede app. I en dev-klient uden native build er de to null, og
+// saa er app.json's version stadig bedre end ingenting.
 function getAppVersion() {
-  const appVersion = getNormalizedString(appConfig?.expo?.version);
-  const androidVersionCode =
-    Platform.OS === "android" ? appConfig?.expo?.android?.versionCode : null;
+  const appVersion = getNormalizedString(
+    Constants.nativeApplicationVersion ?? appConfig?.expo?.version
+  );
+  const buildVersion = getNormalizedString(Constants.nativeBuildVersion);
 
   const parts = [
     appVersion ? `v${appVersion}` : null,
-    androidVersionCode ? `build ${androidVersionCode}` : null,
+    buildVersion ? `build ${buildVersion}` : null,
   ].filter(Boolean);
 
   return parts.length > 0 ? parts.join(" | ") : null;
