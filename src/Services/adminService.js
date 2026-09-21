@@ -126,18 +126,25 @@ async function getActiveUsers() {
 export async function getFeedback({ limit = 20, cursor = null } = {}) {
   let query = supabase
     .from(FEEDBACK_TABLE)
-    .select("id, user_id, message, kind, os, device, app_version, read_at, created_at", {
-      count: "exact",
-    })
+    .select("id, user_id, message, kind, os, device, app_version, read_at, created_at")
     .order("created_at", { ascending: false })
     .order("id", { ascending: false })
     .limit(limit);
 
-  if (cursor) {
-    query = query.lt("created_at", cursor);
+  // The cursor is (created_at, id), not the timestamp alone. `created_at` was
+  // added to a table that already had rows, and Postgres evaluates the default
+  // once for the whole `alter table` - so every message sent before that
+  // migration carries the same instant. A `lt` on the timestamp alone returns
+  // nothing for the second page, because the rest are equal to the cursor
+  // rather than less than it, and the history becomes unreachable at row 20.
+  if (cursor?.createdAt) {
+    query = query.or(
+      `created_at.lt.${cursor.createdAt},` +
+        `and(created_at.eq.${cursor.createdAt},id.lt.${cursor.id})`
+    );
   }
 
-  const { data, error, count } = await query;
+  const { data, error } = await query;
 
   if (error) {
     throw error;
@@ -158,9 +165,26 @@ export async function getFeedback({ limit = 20, cursor = null } = {}) {
       createdAt: row.created_at ?? null,
       senderName: senderNames.get(row.user_id) ?? null,
     })),
-    total: typeof count === "number" ? count : rows.length,
-    nextCursor: rows.length === limit ? rows[rows.length - 1]?.created_at ?? null : null,
+    // Counted over the whole table, not over the page's own filter. The count
+    // used to ride along on the same filtered request, so paging turned
+    // "47 in all" into "0 in all" on the second page.
+    total: await countFeedback(),
+    nextCursor:
+      rows.length === limit && rows[rows.length - 1]
+        ? {
+            createdAt: rows[rows.length - 1].created_at,
+            id: rows[rows.length - 1].id,
+          }
+        : null,
   };
+}
+
+async function countFeedback() {
+  const { count, error } = await supabase
+    .from(FEEDBACK_TABLE)
+    .select("id", { count: "exact", head: true });
+
+  return error ? 0 : count ?? 0;
 }
 
 // One request for every name on the page rather than an embedded join: the

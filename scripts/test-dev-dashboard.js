@@ -302,6 +302,28 @@ assert.ok(
   "the dashboard has a crash-free number, and the privacy policy says there is no crash reporting"
 );
 
+/* ------------------------------------------------ paging the feedback ---- */
+
+// `created_at` was added to a table that already had rows, and Postgres
+// evaluates the default once for the whole `alter table` - so every message
+// sent before that migration carries the same instant. A cursor on the
+// timestamp alone returns nothing for page two, because the rest are equal to
+// it rather than less than it, and the history stops being reachable at row 20.
+assert.ok(
+  /and\(created_at\.eq\.\$\{cursor\.createdAt\},id\.lt\.\$\{cursor\.id\}\)/.test(
+    adminService
+  ),
+  "the feedback cursor is the timestamp alone again, so a page of equal timestamps ends the list"
+);
+
+// The count used to ride along on the page's own filtered request, so paging
+// turned "47 in all" into "0 in all" while the rest became unreachable.
+assert.ok(
+  /async function countFeedback/.test(adminService) &&
+    !/\.select\("id, user_id[^)]*\{\s*count: "exact"/.test(adminService),
+  "the feedback total is counted over the page's own filter again"
+);
+
 console.log(
-  "Dev dashboard: the buckets, the empty state, the weighted rating, the ages and the access guards passed."
+  "Dev dashboard: the buckets, the empty state, the weighted rating, the ages, the paging and the access guards passed."
 );

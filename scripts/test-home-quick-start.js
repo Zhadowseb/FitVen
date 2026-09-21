@@ -88,6 +88,21 @@ const DAY_MS = 86400000;
     /home\.split\.unnamed/.test(splitCards) && /historyOrder/.test(splitCards),
     "a group with no name draws a card with an empty title"
   );
+
+  // The same hole, one component over. The quick-start button is the main
+  // action on Home for the person who never names a session, and React drops
+  // a null child silently - so the button drew no text at all, while
+  // interpolate left the placeholder standing and the screen reader said
+  // "Start {name}" out loud.
+  const quickStart = fs.readFileSync(
+    path.join(root, "src", "Pages", "HomePage", "Components", "QuickStartCard", "QuickStartCard.js"),
+    "utf8"
+  );
+
+  assert.ok(
+    !/\{upNext\.name\}/.test(quickStart) && /home\.split\.unnamed/.test(quickStart),
+    "the quick start button prints an unnamed split straight out, which draws nothing"
+  );
 }
 
 // A Tuesday, so the weekday arithmetic below is checkable by hand.

@@ -22,6 +22,12 @@ export default function QuickStartCard({ upNext = null, onStartSplit, onStartEmp
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const isLight = colorScheme === "light";
+  // The same fallback SplitCards uses. pickGroupName returns null when nobody
+  // named the session - which is exactly what a session started from this
+  // button ends up as - and without it the main button on Home draws no text
+  // at all, while the screen reader reads the placeholder out literally.
+  const upNextName =
+    upNext?.name ?? t("home.split.unnamed", { number: (upNext?.historyOrder ?? 0) + 1 });
 
   return (
     <View
@@ -37,7 +43,7 @@ export default function QuickStartCard({ upNext = null, onStartSplit, onStartEmp
       {upNext ? (
         <TouchableOpacity
           accessibilityRole="button"
-          accessibilityLabel={t("home.quickStart.startNamed", { name: upNext.name })}
+          accessibilityLabel={t("home.quickStart.startNamed", { name: upNextName })}
           activeOpacity={0.85}
           onPress={() => onStartSplit?.(upNext)}
           style={[
@@ -55,7 +61,7 @@ export default function QuickStartCard({ upNext = null, onStartSplit, onStartEmp
             setColor={theme.primaryText}
             numberOfLines={1}
           >
-            {upNext.name}
+            {upNextName}
           </ThemedText>
 
           <View

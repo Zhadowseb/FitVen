@@ -49,11 +49,19 @@ jobs:
   # det samme og ingen af dem bruger tid paa at grave det frem selv.
   context:
     runs-on: ubuntu-latest
+    # The author check is not decoration. `issue_comment` is not covered by
+    # GitHub's fork protection the way `pull_request` is: it always runs in the
+    # base repository's context with full secrets, and the jobs below check out
+    # the PR's own head and run `npm ci` on it. On a public repository that is
+    # a postinstall script away from reading ANTHROPIC_API_KEY. Only somebody
+    # who already has write access may ask for a run.
     if: >-
       github.event_name == 'push' ||
       github.event_name == 'workflow_dispatch' ||
       (github.event.issue.pull_request != null &&
-       startsWith(github.event.comment.body, '/qa'))
+       startsWith(github.event.comment.body, '/qa') &&
+       contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'),
+                github.event.comment.author_association))
     outputs:
       pr: ${{ steps.target.outputs.pr }}
       ref: ${{ steps.target.outputs.ref }}
@@ -287,6 +295,23 @@ jobs:
           ref: ${{ needs.context.outputs.ref }}
           fetch-depth: 0
 
+      # The mandates come from master, never from the ref being reviewed. They
+      # are the instructions the agent follows, and a branch that could rewrite
+      # them could tell the reviewer what to conclude about it.
+      - uses: actions/checkout@v4
+        with:
+          ref: master
+          path: .review-mandates
+          sparse-checkout: .github/review-agents
+          sparse-checkout-cone-mode: false
+
+      - name: Brug mandaterne fra master
+        run: |
+          set -euo pipefail
+          rm -rf .github/review-agents
+          cp -r .review-mandates/.github/review-agents .github/review-agents
+          rm -rf .review-mandates
+
       - uses: actions/download-artifact@v4
         with:
           name: pr-context
@@ -360,6 +385,23 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ needs.context.outputs.ref }}
+
+      # As in the review job: the mandate comes from master. This one also
+      # holds write on pull requests and issues, so a branch that could edit
+      # aggregate.md could steer what gets posted under the repository's name.
+      - uses: actions/checkout@v4
+        with:
+          ref: master
+          path: .review-mandates
+          sparse-checkout: .github/review-agents
+          sparse-checkout-cone-mode: false
+
+      - name: Brug mandaterne fra master
+        run: |
+          set -euo pipefail
+          rm -rf .github/review-agents
+          cp -r .review-mandates/.github/review-agents .github/review-agents
+          rm -rf .review-mandates
 
       - uses: actions/download-artifact@v4
         with:
