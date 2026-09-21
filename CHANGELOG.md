@@ -8,6 +8,8 @@
 ### Added
 - **A blocking test gate.** `.github/workflows/ci.yml` runs `npm ci && npm test` on every pull request and push to `master` and `release/*`, with no pipe and no `continue-on-error`. It is a required status check, so a red suite stops the merge. The existing review workflow keeps its own non-blocking run, because a failed test is exactly where a review has most to say, but it now reports the real outcome.
 
+- **A tag per platform for what is actually in the store**, `ios/1.1.2` and `android/1.0.2`, on the commits those builds came from. The repository had no tags at all, so nothing recorded which code users were running, and a hotfix had nowhere to branch from except `master` - which is several versions ahead and has not been through review. `docs/VERSIONING.md` says to tag at submission, and how to recover a missing one from `eas build:list`.
+
 ### Changed
 - **EAS owns the build numbers, and `app.json` no longer pretends to.** `eas.json` has said `appVersionSource: "remote"` for a while, which means EAS keeps `versionCode` and `buildNumber` on its side and ignores the ones in the app config. The release script kept incrementing the ignored copies anyway, so they drifted: `app.json` reached 18 while EAS was at 24 for iOS and 49 for Android. The fields are gone from `app.json`, the release script no longer writes them, and `docs/VERSIONING.md` says which number has which owner.
 - **Feedback reports the build the phone is actually running.** It read the build number out of `app.json`, so a report from a build 24 device said "build 18". It comes from `expo-constants` now, which reads it from the binary.

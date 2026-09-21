@@ -22,6 +22,32 @@ A build started with `expo run:android` outside EAS has no remote counter to ask
 and gets whatever Expo defaults to. That is fine for a development build and is
 not how anything is released.
 
+## What Is In The Store
+
+A tag per platform, on the commit that build came from:
+
+```
+ios/1.1.2       App Store, build 24
+android/1.0.2   Google Play, build 49
+```
+
+Two tags rather than one, because the platforms are not on the same version.
+Android trails iOS by three versions today, and a single `v1.1.2` would be a
+claim about Play that is not true.
+
+**This is the branch point for a hotfix**, and it is the whole reason the tags
+exist. `master` is where work is integrated, not what users have: it is
+routinely several versions ahead, and none of that has been through review.
+Branching a fix from `master` ships everything else with it.
+
+```bash
+git switch -c fix/whatever ios/1.1.2
+```
+
+Tag at the moment a build is submitted, not when a branch is merged. If you
+forget, `eas build:list --json` carries `gitCommitHash` for every build, which
+is how these two were recovered after the fact.
+
 ## Goals
 
 - Keep app versioning predictable across branches.
