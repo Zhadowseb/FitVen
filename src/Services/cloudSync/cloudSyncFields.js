@@ -170,9 +170,15 @@ export const SYNCED_FIELDS = {
     // Where the workout happened. Set by the client at start or finish from
     // one position fix and match_gym; null when there was no permission or
     // no centre within range.
+    //
+    // The centre id travels; the coordinates it was derived from do not. RLS
+    // on workout_type_instance is row-based, and the follower policy lets
+    // anyone who follows you read yesterday, today and tomorrow in full - so
+    // a column on this table is a column your followers can read. For someone
+    // who starts the timer at home that is their address, rounded to 10 cm.
+    // The retry that needs the raw fix reads it from the device's own SQLite,
+    // where it stays.
     field("gym_id", int()),
-    field("start_latitude", normalizeOptionalCoordinate),
-    field("start_longitude", normalizeOptionalCoordinate),
   ],
   ExerciseInstance: [
     field("local_exercise_instance_id", int(), {

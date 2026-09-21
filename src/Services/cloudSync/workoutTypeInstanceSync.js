@@ -366,8 +366,6 @@ async function reconcileWorkoutTypeInstancesFromCloud(db, userId) {
           ),
           elapsedTime: comparableCloudWorkout.elapsed_time,
           gymId: comparableCloudWorkout.gym_id,
-          startLatitude: comparableCloudWorkout.start_latitude,
-          startLongitude: comparableCloudWorkout.start_longitude,
         });
 
         const createdWorkout = {
@@ -430,8 +428,6 @@ async function reconcileWorkoutTypeInstancesFromCloud(db, userId) {
             ),
             elapsedTime: comparableCloudWorkout.elapsed_time,
             gymId: comparableCloudWorkout.gym_id,
-            startLatitude: comparableCloudWorkout.start_latitude,
-            startLongitude: comparableCloudWorkout.start_longitude,
           });
           downloadedCount += 1;
         } else if (
@@ -523,8 +519,6 @@ async function reconcileWorkoutTypeInstancesFromCloud(db, userId) {
         ),
         elapsedTime: comparableCloudWorkout.elapsed_time,
         gymId: comparableCloudWorkout.gym_id,
-        startLatitude: comparableCloudWorkout.start_latitude,
-        startLongitude: comparableCloudWorkout.start_longitude,
       });
 
       const updatedWorkout = {

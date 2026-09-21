@@ -310,6 +310,29 @@ const acceptedReasons = migration.match(/reason in \(([^)]+)\)/)[1].match(/'([a-
 
 assert.deepStrictEqual(offeredReasons.sort(), acceptedReasons.sort(), "rejection reasons in the app and the column check must match");
 
+/* --------------------------- nothing is used before it is declared ------ */
+
+// useGymSearch takes the screen's setErrorMessage. Both screens once called it
+// two lines above that state's own const, which throws a ReferenceError on
+// every render - the Centres tab could not be opened at all, and nothing in
+// the suite renders a screen, so it passed. Cheap to keep honest by reading.
+for (const file of [
+  "src/Pages/GymsPage/GymsPage.js",
+  "src/Pages/GymLeaderboardPage/Components/ChangeGymSheet.js",
+]) {
+  const lines = fs.readFileSync(path.join(root, file), "utf8").split(/\r?\n/);
+  const declared = lines.findIndex((line) =>
+    line.includes("const [errorMessage, setErrorMessage]")
+  );
+  const used = lines.findIndex((line) => line.includes("useGymSearch("));
+
+  assert.ok(declared >= 0 && used >= 0, `${file} no longer has both lines`);
+  assert.ok(
+    declared < used,
+    `${file} passes setErrorMessage to useGymSearch before declaring it`
+  );
+}
+
 /* ------------------------------- the tiles' fallback state machine ------ */
 
 // What a tile shows when the cloud cannot answer in the 2.0 shape - which is

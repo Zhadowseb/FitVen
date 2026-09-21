@@ -201,9 +201,9 @@ export default function GymsPage() {
   // until a workout has been matched to one, and then the card is hidden.
   const [myGyms, setMyGyms] = useState([]);
   const [query, setQuery] = useState("");
-  const { results: searchResults, isSearching } = useGymSearch(query, setErrorMessage);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const { results: searchResults, isSearching } = useGymSearch(query, setErrorMessage);
   const [showAllNearby, setShowAllNearby] = useState(false);
   const [isMapExpanded, setIsMapExpanded] = useState(false);
   const [isLocating, setIsLocating] = useState(false);

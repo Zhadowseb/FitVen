@@ -32,10 +32,10 @@ export default function ChangeGymSheet({ visible, onClose, currentHomeGymId, isA
   const { user } = useAuth();
   const [myGyms, setMyGyms] = useState([]);
   const [query, setQuery] = useState("");
-  const { results, isSearching } = useGymSearch(query, setErrorMessage);
   const [isLoading, setIsLoading] = useState(false);
   const [savingId, setSavingId] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const { results, isSearching } = useGymSearch(query, setErrorMessage);
   const quietText = theme.quietText ?? theme.text;
   const isLight = colorScheme === "light";
   const chainTileSurface = isLight ? "#E9EBF0" : "#242830";
