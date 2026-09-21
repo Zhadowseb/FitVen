@@ -49,14 +49,12 @@ export default function QuickStartCard({
   const primary = todayWorkout
     ? {
         label: todayName,
-        eyebrow: t("home.quickStart.continueEyebrow"),
         accessibilityLabel: t("home.quickStart.continueNamed", { name: todayName }),
         onPress: () => onContinueToday?.(todayWorkout),
       }
     : upNext
       ? {
           label: upNextName,
-          eyebrow: t("home.quickStart.eyebrow"),
           accessibilityLabel: t("home.quickStart.startNamed", { name: upNextName }),
           onPress: () => onStartSplit?.(upNext),
         }
@@ -64,8 +62,12 @@ export default function QuickStartCard({
 
   return (
     <View style={styles.card}>
+      {/* The eyebrow names the block, not the button under it. It stays
+          QUICK START whether that button continues today's workout or starts
+          the one the split is due - what changed is which workout, and the
+          button already says which. */}
       <ThemedText style={styles.eyebrow} setColor={theme.primaryText}>
-        {primary ? primary.eyebrow : t("home.quickStart.eyebrow")}
+        {t("home.quickStart.eyebrow")}
       </ThemedText>
 
       {primary ? (
