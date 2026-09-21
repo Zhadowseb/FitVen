@@ -1,10 +1,57 @@
 # Versioning
 
+## Who Owns Which Number
+
+Two of them, and they have two different owners.
+
+- **The version** (`1.1.6`) is what the store shows. It lives in
+  `package.json > version` and `app.json > expo.version`, and the scripts here
+  own it.
+- **The build number** (`versionCode` on Android, `buildNumber` on iOS) is what
+  the store uses to tell two uploads of the same version apart. **EAS owns it.**
+  `eas.json` has `appVersionSource: "remote"`, so EAS keeps the counter on its
+  own side and increments it for every production build. It is deliberately not
+  in `app.json`.
+
+They used to count separately, which is exactly as good as it sounds: `app.json`
+reached 18 while EAS was at 24 for iOS and 49 for Android, and `app.json` was the
+one being ignored. Do not add the fields back. To see the current numbers, use
+`eas build:list`.
+
+A build started with `expo run:android` outside EAS has no remote counter to ask
+and gets whatever Expo defaults to. That is fine for a development build and is
+not how anything is released.
+
+## What Is In The Store
+
+A tag per platform, on the commit that build came from:
+
+```
+ios/1.1.2       App Store, build 24
+android/1.0.2   Google Play, build 49
+```
+
+Two tags rather than one, because the platforms are not on the same version.
+Android trails iOS by three versions today, and a single `v1.1.2` would be a
+claim about Play that is not true.
+
+**This is the branch point for a hotfix**, and it is the whole reason the tags
+exist. `master` is where work is integrated, not what users have: it is
+routinely several versions ahead, and none of that has been through review.
+Branching a fix from `master` ships everything else with it.
+
+```bash
+git switch -c fix/whatever ios/1.1.2
+```
+
+Tag at the moment a build is submitted, not when a branch is merged. If you
+forget, `eas build:list --json` carries `gitCommitHash` for every build, which
+is how these two were recovered after the fact.
+
 ## Goals
 
 - Keep app versioning predictable across branches.
 - Keep `package.json` and `app.json` aligned.
-- Reserve build number increments for real releases.
 - Keep `CHANGELOG.md` stable with versioned sections, where pending versions use an `Unreleased` tag until they ship.
 - Make versioning mostly automatic from the active branch.
 - Derive prerelease bumps from the committed base version of the current work branch.
@@ -75,15 +122,11 @@ npm run version:sync -- 0.4.0 skip-changelog
 - Updates `app.json > expo.version`
 - Ensures `CHANGELOG.md` contains a section like `## [x.y.z] - Unreleased` for the branch's stable target version
 - Uses committed `HEAD` as the default base ref unless `--base-ref <ref>` is supplied
-- Does not increment `android.versionCode`
-- Does not increment `ios.buildNumber`
 
 `npm run release:prepare -- <version>`
 
 - Updates `package.json > version`
 - Updates `app.json > expo.version`
-- Increments `app.json > expo.android.versionCode`
-- Sets `app.json > expo.ios.buildNumber` to the same incremented build number
 - Converts `## [x.y.z] - Unreleased` into a dated release entry in `CHANGELOG.md`
 - Marks any older pending sections below that version as `Released with x.y.z`
 
