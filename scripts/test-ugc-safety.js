@@ -29,6 +29,13 @@ const hidePath = path.join(
 );
 const homePath = path.join(rootDir, "src", "Pages", "HomePage", "HomePage.js");
 const supportPath = path.join(rootDir, "web", "support", "index.html");
+const sheetPath = path.join(
+  rootDir,
+  "src",
+  "Resources",
+  "ThemedComponents",
+  "ThemedBottomSheet.js"
+);
 
 run().catch((error) => {
   console.error(error);
@@ -222,6 +229,35 @@ async function run() {
   assert.ok(
     /hidden_at is null/.test(policyMatch[0]),
     "the read policy does not hide a hidden post from anybody"
+  );
+
+  // Two accounts could otherwise hide any post by anyone: reported_post_id is
+  // deliberately not a foreign key, so without this nothing ever checked that
+  // the post named belongs to the account named.
+  assert.ok(
+    /post\.author_id = report\.reported_user_id/.test(hideSql),
+    "the hide counts reports that name somebody else's post"
+  );
+
+  assert.ok(
+    /create or replace function private\.reject_mismatched_post_report[\s\S]*?raise exception/.test(
+      hideSql
+    ),
+    "a report naming a post its author did not write is accepted again"
+  );
+
+  // The wait for the sheet to go cannot hang on Modal.onDismiss: React Native
+  // fires that on iOS only, and the report would be a dead button on Android.
+  const sheet = fs.readFileSync(sheetPath, "utf8");
+
+  assert.ok(
+    !/<Modal[\s\S]*?onDismiss=/.test(sheet),
+    "the sheet is back to signalling dismissal through an iOS-only prop"
+  );
+
+  assert.ok(
+    /wasVisibleRef/.test(sheet) && /onDismissRef\.current\?\.\(\)/.test(sheet),
+    "the sheet no longer tells anybody when it has gone"
   );
 
   /* ------------------------------------------ the report can be reached ---- */

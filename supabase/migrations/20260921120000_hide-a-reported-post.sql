@@ -53,7 +53,9 @@ begin
   select count(distinct report.reporter_id)
     into reporter_count
   from public.user_reports report
-  where report.reported_post_id = new.reported_post_id;
+  join public.social_post post on post.id = report.reported_post_id
+  where report.reported_post_id = new.reported_post_id
+    and post.author_id = report.reported_user_id;
 
   if reporter_count >= 2 then
     -- Announced to the guard below, the way the gym_lift recount does it. The
@@ -83,6 +85,47 @@ create trigger on_user_report_hide_post
 after insert on public.user_reports
 for each row
 execute function private.hide_post_when_reported();
+
+/* -------------------------------- a post report names the post's author -- */
+
+-- The insert policy in 20260912220000_ugc-safety.sql checks that the reporter
+-- is you and is not the person reported. It does not check that
+-- reported_post_id belongs to reported_user_id, and the column is not a
+-- foreign key, so nothing did. The API answers an HTTP client holding the
+-- anon key - which is the reason that migration gives for putting the rules in
+-- the database - so the app always sending the right pair is not a guard.
+create or replace function private.reject_mismatched_post_report()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if new.reported_post_id is not null
+     and not exists (
+       select 1
+       from public.social_post post
+       where post.id = new.reported_post_id
+         and post.author_id = new.reported_user_id
+     ) then
+    raise exception 'That post is not the account you are reporting.'
+      using errcode = '23514';
+  end if;
+
+  return new;
+end;
+$$;
+
+revoke all on function private.reject_mismatched_post_report() from public;
+revoke all on function private.reject_mismatched_post_report() from anon;
+revoke all on function private.reject_mismatched_post_report() from authenticated;
+
+drop trigger if exists on_user_report_check_post on public.user_reports;
+
+create trigger on_user_report_check_post
+before insert on public.user_reports
+for each row
+execute function private.reject_mismatched_post_report();
 
 /* ------------------------------------------- only the trigger may hide -- */
 
