@@ -133,12 +133,19 @@ jobs:
           ref: refs/pull/${{ needs.context.outputs.pr }}/head
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version-file: .nvmrc
           cache: npm
       - run: npm ci --no-audit --no-fund
       - id: run
         continue-on-error: true
-        run: npm test 2>&1 | tee npm-test.log
+        # pipefail, ellers er exitkoden tee's, og tee fejler aldrig. Uden den
+        # var `steps.run.outcome` altid "success", og agenterne fik at vide at
+        # testen bestod hver eneste gang - ogsaa de gange, hvor den stoppede
+        # paa test nummer syv. continue-on-error bliver staaende: en faldet
+        # test er netop der, et review har mest at sige.
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee npm-test.log
 
       # Agenterne bliver bedt om at laene sig op ad testresultatet, saa de
       # skal ogsaa have det. Det koster de ~40 sekunder, checks tager.

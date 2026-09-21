@@ -288,15 +288,12 @@ function buildVersioningSummary({ mode, branchName, targetVersion, changelogMode
   nextAppJson.expo = nextAppJson.expo || {};
   nextAppJson.expo.version = targetAppVersion;
 
-  let nextBuildNumber = null;
-
-  if (mode === "release") {
-    nextBuildNumber = getNextBuildNumber(nextAppJson.expo);
-    nextAppJson.expo.android = nextAppJson.expo.android || {};
-    nextAppJson.expo.ios = nextAppJson.expo.ios || {};
-    nextAppJson.expo.android.versionCode = nextBuildNumber;
-    nextAppJson.expo.ios.buildNumber = String(nextBuildNumber);
-  }
+  // Build-numre staar ikke her. eas.json har appVersionSource: "remote", saa
+  // EAS ejer versionCode og buildNumber og taeller dem op selv ved hvert
+  // production-build. Da de to talte hver for sig, naaede app.json 18 mens
+  // EAS var paa 24 for iOS og 49 for Android - og det var app.json, der blev
+  // ignoreret. Marketing-versionen (expo.version) staar stadig her, for den
+  // laeser EAS fra app-konfigurationen.
 
   const changelogContent = fs.existsSync(changelogPath)
     ? fs.readFileSync(changelogPath, "utf8")
@@ -313,7 +310,6 @@ function buildVersioningSummary({ mode, branchName, targetVersion, changelogMode
     targetVersion,
     targetAppVersion,
     changelogMode,
-    nextBuildNumber,
     packageJson,
     nextPackageJson,
     appJson,
@@ -349,10 +345,6 @@ function printSummary(summary, dryRun) {
   console.log(`${prefix}Version: ${summary.targetVersion}`);
   if (summary.targetAppVersion !== summary.targetVersion) {
     console.log(`${prefix}Expo app version: ${summary.targetAppVersion}`);
-  }
-
-  if (summary.mode === "release" && summary.nextBuildNumber !== null) {
-    console.log(`${prefix}Android versionCode / iOS buildNumber: ${summary.nextBuildNumber}`);
   }
 
   if (summary.changelogMode === "unreleased") {
@@ -523,11 +515,6 @@ function getCurrentBranchName() {
   return "";
 }
 
-function getNextBuildNumber(expoConfig) {
-  const currentAndroidVersionCode = Number(expoConfig?.android?.versionCode || 0);
-  const currentIosBuildNumber = Number(expoConfig?.ios?.buildNumber || 0);
-  return Math.max(currentAndroidVersionCode, currentIosBuildNumber) + 1;
-}
 
 function normalizeStableVersion(version) {
   const match = String(version).trim().match(/^(\d+)\.(\d+)\.(\d+)(?:[-+].+)?$/);

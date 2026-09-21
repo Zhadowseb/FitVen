@@ -1,0 +1,45 @@
+name: CI
+
+# Porten. Den her er den eneste, der staar mellem en braekket commit og master.
+#
+# pr-review.yml koerer ogsaa `npm test`, men kun for at give review-agenterne et
+# faktum at laene sig op ad, og den er continue-on-error med vilje, saa
+# agenterne stadig naar at sige noget naar testen fejler. Den maa altsaa ikke
+# vaere den, der blokerer. Derfor denne, som er kedelig og kort og ikke maa
+# roeres for at goere en koersel groen.
+
+on:
+  pull_request:
+    branches: [master, "release/**"]
+  push:
+    branches: [master, "release/**"]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: npm test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      # .nvmrc frem for et tal her. Testene bruger node:sqlite, som ikke findes
+      # foer Node 24, og CI koerte 20 - hvilket betoed at 23 af 29 testscripts
+      # aldrig naaede at koere. En version, ét sted.
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci --no-audit --no-fund
+
+      # Ingen pipe. `npm test | tee` goer exitkoden til tee's, og tee fejler
+      # aldrig. Det er den anden halvdel af grunden til, at en faldet test saa
+      # groen ud.
+      - run: npm test
