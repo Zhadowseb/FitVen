@@ -9,6 +9,10 @@
 ### Security
 - **`is_admin` is not writable from the app.** `profile_private` already carried an update policy and an insert policy scoped to the row's owner, and neither says anything about columns - so putting the flag on that table would otherwise have handed every signed-in account a way to make itself an admin with one PATCH. The migration revokes the two column privileges and adds a trigger that refuses the write a second time, in case a later migration re-runs the blanket grant from `20260628211540`. `npm run test:dev-dashboard` fails if either guard goes. Reading feedback and the store numbers is refused by policy, not by the row being hidden in the profile.
 
+### Fixed
+- The guard on `is_admin` asked whether the caller was `pg_catalog.current_user`. That is a keyword, not a function in a schema, so the parser read it as a column on a table called `pg_catalog` and the trigger failed on every write to the column it guards - including the one that grants the flag. It failed closed: the flag could not be set by anybody rather than by everybody. `20260921230000` is the follow-up.
+- `admin_active_users` compared `last_updated`, a `timestamptz`, against `timezone('utc', now())`, a `timestamp`. Postgres casts the plain one using the session's own time zone, so the same query answered differently depending on who asked and from where.
+
 ### Notes
 - Two things in the design document were not followed, and both were decisions already taken in this repository.
 - **No `os` or `device` on a feedback row.** The document asks the client to fill them from `expo-device`. `feedbackService` removed exactly those fields once already because together they fingerprint a device, and the published privacy policy does not list them - adding a data category means raising `PRIVACY_POLICY_VERSION`, which asks every user to accept again on their next launch. The columns exist so the decision can be revisited without another migration; the client leaves them empty and the meta line shows the app version alone.
