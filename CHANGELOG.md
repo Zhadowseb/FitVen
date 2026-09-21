@@ -1,8 +1,22 @@
 # Changelog
 
 ## [2.1.0] - Unreleased
+### Added
+- **Home is built for the person with no programme.** She runs the same two or three sessions on a loop and wants the next one open, so that is what the screen is now: how many days since she last trained, the session that is due with a button that opens it, the rest of her split as cards, her friends, and whether last month moved anything. No calendar strip and no posts.
+- **The split is read out of the history, not typed in.** Sixty days of finished strength workouts, grouped by name after normalisation or by a 60% overlap in exercises, kept when a group has happened three times. Whose turn it is is whoever has waited longest. The card with the orange edge and the quick-start button are the same session, and both open it directly - the exercises and the set structure from last time, with last time's numbers as placeholders. Fewer than two repeating groups and there is no split: Home offers an empty workout and leaves the row out, because half a guess fills the row somebody taps without reading.
+- **Weekdays under a session** when at least half of it lands on the same day over eight weeks. Nothing qualifies, the line goes, and the cards stay the same height.
+- **"Last month"**, one bar per muscle group: the best estimated one-rep max over the last 30 days against the 30 before. Brzycki, the app's one formula - the design document asked for Epley "the same as Records", and Records is not Epley. Going backwards reads as 0% and a grey bar; Home is not where somebody is told they have lost ground. Too few sets in either window is a dash and a low bar, never an empty column. The whole block opens Records.
+- **Feed is its own tab**, carrying the posts that used to sit under Home along with the post menu, the report action and the rest of it. It moved whole rather than being rewritten.
+
 ### Changed
-- Describe pending changes here.
+- **The bottom bar is Home, Train, +, Feed, Social.** Profile leaves it: the avatar in the header opens it, as do the You tile, your own row on a leaderboard and your name on a post. The active tab is the theme's own ink with a 2 dp orange rule above the icon - two oranges on one bar meant the plus stopped reading as the thing that does something - and the rule holds its space when transparent, so the icons stay on one line. The plus is 48 dp and sits in the line instead of cutting a notch in it. The notification dot moves to Feed.
+- The greeting is two lines and the date line is gone: the phone already shows the date, and the row it took was the one thing on the screen nobody needed.
+- `WeekStrip` and `TodayHeroCard` are deleted. A week of empty squares is not what somebody without a programme needs to look at.
+
+### Notes
+- Three things in the design document do not match the code, and the code won each time. The Feed icon is `UI-icons/Note.js`, not `WorkoutLabels/Note.js`. The muscle-group mapping is not a `muscle_group` column on the exercise - it comes from the synced exercise catalog's body-map keys through `EXERCISE_MUSCLE_GROUPS`, which `getRecordsSourceData` already assembles, so Home and Records cannot disagree. And the split cannot be grouped on `exercise_id`: `Exercise_Instance` has no reference to the catalog, so the exercise name is the only identity two workouts share.
+- **Feed has only the Following segment.** "My gym" needs a `security definer` function that does not exist yet; it follows.
+- No migrations. Both new questions are answered from the device's own SQLite.
 
 ---
 ## [2.0.0] - Unreleased
