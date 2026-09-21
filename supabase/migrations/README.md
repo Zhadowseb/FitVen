@@ -62,8 +62,8 @@ behind by accident.
 | `20260921200000_let-the-policy-call-its-own-check.sql` | yes |
 | `20260921220000_dev-dashboard.sql` | yes |
 | `20260921230000_the-admin-guard-asks-who-is-asking.sql` | yes |
-| `20260922090000_a-feedback-message-has-a-status.sql` | no |
-| `20260922100000_the-note-column-leaves-the-old-exercises.sql` | no |
+| `20260922090000_a-feedback-message-has-a-status.sql` | yes |
+| `20260922100000_the-note-column-leaves-the-old-exercises.sql` | yes |
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
 centre match, per-centre lift leaderboards with video verification, and what
@@ -279,7 +279,7 @@ update public.profile_private set is_admin = true where user_id = '<uuid>';
 
 That statement has to be run as the service role or from the SQL editor - the
 guard trigger refuses it from an app connection, which is the point.
-`20260922090000_a-feedback-message-has-a-status.sql` has **not** been run yet.
+`20260922090000_a-feedback-message-has-a-status.sql` was run on 2026-09-22.
 It gives a feedback message one of four states - `new`, `planned`, `fixed`,
 `not_fixed` - so the dev dashboard can say what was decided about a message
 rather than only that it was read. A trigger forces every new row to `new`:
@@ -288,8 +288,8 @@ somebody could post a suggestion already marked `fixed`. Column grants cannot
 do that job, because Postgres ignores a column-level revoke when the role holds
 the privilege on the table.
 
-`20260922100000_the-note-column-leaves-the-old-exercises.sql` has **not** been
-run yet. `20260916210000` corrected `exercise_column_preferences` and stopped
+`20260922100000_the-note-column-leaves-the-old-exercises.sql` was run on
+2026-09-22. `20260916210000` corrected `exercise_column_preferences` and stopped
 there; `exercise_instance` still held 26 rows with note on. Copying a workout
 clones `visible_columns` verbatim - correctly, a copy should look like what it
 came from - so every copy of an old session carried the NOTE column into a
