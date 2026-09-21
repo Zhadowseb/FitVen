@@ -51,6 +51,7 @@ behind by accident.
 | `20260916210000_opt-in-column-defaults.sql` | yes |
 | `20260917120000_gyms-and-lift-verification.sql` | yes |
 | `20260917120100_workout-music.sql` | yes |
+| `20260921120000_hide-a-reported-post.sql` | yes |
 | `20260921140000_lift-videos-stay-in-the-centre.sql` | yes |
 | `20260921150000_drop-workout-start-coordinates.sql` | yes |
 | `20260921160000_friends-surrounding-activity.sql` | yes |
@@ -165,6 +166,12 @@ been doing locally for a while without the cloud copy ever being corrected. The
 preference table syncs both ways, so the device was cleaned and the next sync
 put it back - and every exercise added to a workout came with a NOTE column. Run
 it together with the app change that guards that repair to run once.
+
+`20260921120000_hide-a-reported-post.sql` was run on 2026-09-21. It adds
+`social_post.hidden_at`, hides a post two different accounts have reported,
+refuses a report that names a post its author did not write, and locks the
+column so only the hide itself can write it. The support page's promise - a
+post two people report leaves the feed straight away - is true from this date.
 
 `20260921140000_lift-videos-stay-in-the-centre.sql` was run on 2026-09-21. It
 closes three holes the review agents found in the migration above, which was

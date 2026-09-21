@@ -5,6 +5,7 @@ import {
   Alert,
   AppState,
   FlatList,
+  Pressable,
   RefreshControl,
   TouchableOpacity,
   View,
@@ -25,6 +26,7 @@ import FriendsActivity from "../../Resources/Components/FriendsActivity/FriendsA
 import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
 import Delete from "../../Resources/Icons/UI-icons/Delete";
 import EditSocialPost from "../../Resources/Icons/UI-icons/EditSocialPost";
+import Flag from "../../Resources/Icons/UI-icons/Flag";
 import {
   gymService,
   musicService,
@@ -51,7 +53,9 @@ import { requestOpenQuickWorkoutMenu } from "../../Utils/quickWorkoutMenuEvents"
 
 import {
   ThemedBottomSheet,
+  ThemedConfirmModal,
   ThemedText,
+  ThemedTextInput,
   ThemedView,
 } from "../../Resources/ThemedComponents";
 import { useAuth } from '../../Contexts/AuthContext';
@@ -188,6 +192,14 @@ export default function App() {
   const [selectedWorkoutSummaryPost, setSelectedWorkoutSummaryPost] =
     useState(null);
   const [deletingPostId, setDeletingPostId] = useState(null);
+  const [reportingPost, setReportingPost] = useState(null);
+  // Held while the options sheet is on its way out. Opening the dialog in the
+  // same render that closes the sheet puts two native modals up at once, and
+  // iOS drops the second without an error.
+  const [postPendingReport, setPostPendingReport] = useState(null);
+  const [reportReason, setReportReason] = useState(null);
+  const [reportNote, setReportNote] = useState("");
+  const [isReportWorking, setIsReportWorking] = useState(false);
   const [weekDays, setWeekDays] = useState([]);
   const [heroWorkout, setHeroWorkout] = useState(null);
   const [nextWorkoutInfo, setNextWorkoutInfo] = useState(null);
@@ -762,6 +774,67 @@ export default function App() {
     [deletingPostId, t, user]
   );
 
+  const handleReportWorkoutSummaryPost = useCallback(() => {
+    if (!selectedWorkoutSummaryPost?.id) {
+      return;
+    }
+
+    // Close the sheet and hold the intent. The dialog opens from the sheet's
+    // onDismiss, once it has actually left the screen.
+    setPostPendingReport(selectedWorkoutSummaryPost);
+    setSelectedWorkoutSummaryPost(null);
+  }, [selectedWorkoutSummaryPost]);
+
+  const openPendingReport = useCallback(() => {
+    if (!postPendingReport) {
+      return;
+    }
+
+    setReportReason(null);
+    setReportNote("");
+    setReportingPost(postPendingReport);
+    setPostPendingReport(null);
+  }, [postPendingReport]);
+
+  const closeReportWorkoutSummaryPost = useCallback(() => {
+    setReportingPost(null);
+    setReportReason(null);
+    setReportNote("");
+  }, []);
+
+  const submitWorkoutSummaryPostReport = useCallback(async () => {
+    const post = reportingPost;
+
+    if (!post?.id || !post.author?.id || !reportReason || !user?.id) {
+      return;
+    }
+
+    setIsReportWorking(true);
+
+    try {
+      await socialService.reportUser({
+        userId: user.id,
+        targetUserId: post.author.id,
+        postId: post.id,
+        reason: reportReason,
+        note: reportNote,
+      });
+
+      closeReportWorkoutSummaryPost();
+      Alert.alert(
+        "Report sent",
+        "Thank you. Reports are read within a day, and a post reported by two different people leaves the feed straight away."
+      );
+    } catch (error) {
+      Alert.alert(
+        "Could not send the report",
+        error instanceof Error ? error.message : "The report was not sent."
+      );
+    } finally {
+      setIsReportWorking(false);
+    }
+  }, [closeReportWorkoutSummaryPost, reportNote, reportReason, reportingPost, user]);
+
   const handleDeleteWorkoutSummaryPost = useCallback(() => {
     if (!selectedWorkoutSummaryPost?.id || deletingPostId) {
       return;
@@ -963,13 +1036,11 @@ export default function App() {
       <WorkoutSummaryCard
         post={post}
         onToggleLike={handleToggleWorkoutPostLike}
-        onOpenOptions={
-          post.author?.id === user?.id ? handleOpenWorkoutSummaryOptions : undefined
-        }
+        onOpenOptions={handleOpenWorkoutSummaryOptions}
         isLikeBusy={updatingLikePostId === post.id}
       />
     ),
-    [handleOpenWorkoutSummaryOptions, handleToggleWorkoutPostLike, updatingLikePostId, user]
+    [handleOpenWorkoutSummaryOptions, handleToggleWorkoutPostLike, updatingLikePostId]
   );
 
   const renderWorkoutSummaryFooter = useCallback(() => {
@@ -1079,6 +1150,7 @@ export default function App() {
       <ThemedBottomSheet
         visible={!!selectedWorkoutSummaryPost}
         onClose={() => setSelectedWorkoutSummaryPost(null)}
+        onDismiss={openPendingReport}
       >
         <View
           style={[styles.postOptionsTitle, { borderBottomColor: theme.hairline }]}
@@ -1089,6 +1161,20 @@ export default function App() {
         </View>
 
         <View style={styles.postOptionsBody}>
+          {selectedWorkoutSummaryPost?.author?.id !== user?.id && (
+            <TouchableOpacity
+              style={styles.postOption}
+              activeOpacity={0.75}
+              onPress={handleReportWorkoutSummaryPost}
+            >
+              <Flag width={22} height={22} color={theme.iconColor} />
+              <ThemedText style={styles.postOptionText}>
+                {t("home.summary.reportPost")}
+              </ThemedText>
+            </TouchableOpacity>
+          )}
+
+          {selectedWorkoutSummaryPost?.author?.id === user?.id && (
           <TouchableOpacity
             style={styles.postOption}
             activeOpacity={0.75}
@@ -1104,7 +1190,9 @@ export default function App() {
               {t("home.summary.editPost")}
             </ThemedText>
           </TouchableOpacity>
+          )}
 
+          {selectedWorkoutSummaryPost?.author?.id === user?.id && (
           <TouchableOpacity
             style={styles.postOption}
             activeOpacity={0.75}
@@ -1125,8 +1213,61 @@ export default function App() {
                 : t("home.summary.deletePost")}
             </ThemedText>
           </TouchableOpacity>
+          )}
         </View>
       </ThemedBottomSheet>
+
+      <ThemedConfirmModal
+        visible={Boolean(reportingPost)}
+        title="Report this post?"
+        message="Tell us what is wrong. Reports are read by the developer and are not shown to the person you are reporting."
+        confirmLabel="Send report"
+        cancelLabel="Cancel"
+        tone="danger"
+        isWorking={isReportWorking}
+        confirmDisabled={!reportReason}
+        onConfirm={submitWorkoutSummaryPostReport}
+        onClose={closeReportWorkoutSummaryPost}
+      >
+        <View style={styles.reportReasonList}>
+          {socialService.REPORT_REASONS.map((option) => {
+            const selected = reportReason === option.value;
+
+            return (
+              <Pressable
+                key={option.value}
+                onPress={() => setReportReason(option.value)}
+                accessibilityRole="radio"
+                accessibilityState={{ selected }}
+                accessibilityLabel={option.label}
+                style={[
+                  styles.reportReason,
+                  {
+                    borderColor: selected ? theme.danger : theme.hairline,
+                    backgroundColor: theme.chipBackground,
+                  },
+                ]}
+              >
+                <ThemedText
+                  style={styles.reportReasonText}
+                  setColor={selected ? theme.danger : theme.text}
+                >
+                  {option.label}
+                </ThemedText>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        <ThemedTextInput
+          value={reportNote}
+          onChangeText={setReportNote}
+          placeholder="Anything else we should know? (optional)"
+          multiline
+          maxLength={socialService.REPORT_NOTE_MAX_LENGTH}
+          style={styles.reportNote}
+        />
+      </ThemedConfirmModal>
 
       <StatusBar style="auto" />
     </ThemedView>

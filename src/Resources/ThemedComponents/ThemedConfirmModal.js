@@ -17,6 +17,10 @@ export default function ThemedConfirmModal({
   cancelLabel,
   tone = "default", // "default" | "danger" | "positive"
   isWorking = false,
+  // Greys out the confirm button alone. isWorking would do it too, but it also
+  // disables Cancel and the backdrop, which is right while something is in
+  // flight and wrong when the dialog is simply waiting for an answer.
+  confirmDisabled = false,
   onConfirm,
   onClose,
   children, // optional extra content between the message and the buttons
@@ -80,14 +84,15 @@ export default function ThemedConfirmModal({
         <TouchableOpacity
           activeOpacity={0.84}
           accessibilityRole="button"
-          disabled={isWorking}
+          accessibilityState={{ disabled: isWorking || confirmDisabled }}
+          disabled={isWorking || confirmDisabled}
           onPress={onConfirm}
           style={[
             styles.button,
             {
               backgroundColor: withAlpha(confirmColor, 0.16),
               borderColor: withAlpha(confirmColor, 0.5),
-              opacity: isWorking ? 0.6 : 1,
+              opacity: isWorking || confirmDisabled ? 0.6 : 1,
             },
           ]}
         >

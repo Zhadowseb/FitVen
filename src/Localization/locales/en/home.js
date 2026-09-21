@@ -77,6 +77,7 @@ export default {
     post: "Post",
     posting: "Posting...",
     editPost: "Edit post",
+    reportPost: "Report post",
     deletePost: "Delete post",
     deleting: "Deleting...",
     deleteConfirmTitle: "Delete post?",

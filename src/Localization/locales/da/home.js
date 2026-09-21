@@ -75,6 +75,7 @@ export default {
     post: "Del",
     posting: "Deler...",
     editPost: "Rediger opslag",
+    reportPost: "Rapportér opslag",
     deletePost: "Slet opslag",
     deleting: "Sletter...",
     deleteConfirmTitle: "Slet opslag?",
