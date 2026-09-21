@@ -12,25 +12,25 @@ import { useTranslation } from "@localization";
 
 import styles, { HERO_HEIGHT } from "./GymLeaderboardPageStyle";
 import ChangeGymSheet from "./Components/ChangeGymSheet";
-import { useAuth } from "../../Contexts/AuthContext";
-import { gymService } from "../../Services";
-import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
-import ArrowLeft from "../../Resources/Icons/UI-icons/ArrowLeft";
-import ChevronRight from "../../Resources/Icons/UI-icons/ChevronRight";
-import MapPin from "../../Resources/Icons/UI-icons/MapPin";
-import Play from "../../Resources/Icons/UI-icons/Play";
-import CoverGradient from "../../Resources/Components/CoverGradient";
-import LiftStatusPill from "../../Resources/Components/GymLeaderboard/LiftStatusPill";
-import RadialGlow from "../../Resources/Components/GymLeaderboard/RadialGlow";
-import ScopeToggle from "../../Resources/Components/GymLeaderboard/ScopeToggle";
-import LiftVerificationSheet from "../../Resources/Components/LiftVerificationSheet/LiftVerificationSheet";
+import { useAuth } from "@contexts/AuthContext";
+import { gymService } from "@services";
+import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
+import ArrowLeft from "@resources/Icons/UI-icons/ArrowLeft";
+import ChevronRight from "@resources/Icons/UI-icons/ChevronRight";
+import MapPin from "@resources/Icons/UI-icons/MapPin";
+import Play from "@resources/Icons/UI-icons/Play";
+import CoverGradient from "@resources/Components/CoverGradient";
+import LiftStatusPill from "@resources/Components/GymLeaderboard/LiftStatusPill";
+import RadialGlow from "@resources/Components/GymLeaderboard/RadialGlow";
+import ScopeToggle from "@resources/Components/GymLeaderboard/ScopeToggle";
+import LiftVerificationSheet from "@resources/Components/LiftVerificationSheet/LiftVerificationSheet";
 import {
   ThemedStateBlock,
   ThemedText,
   ThemedView,
   UserAvatar,
-} from "../../Resources/ThemedComponents";
-import { formatWeightKg, getChainInitials } from "../../Utils/gymUtils";
+} from "@resources/ThemedComponents";
+import { formatWeightKg, getChainInitials } from "@utils/gymUtils";
 
 function FeaturedCard({ entry, theme, colorScheme, onPress }) {
   const { t } = useTranslation();
@@ -38,7 +38,7 @@ function FeaturedCard({ entry, theme, colorScheme, onPress }) {
   const me = entry.me;
   const quietText = theme.quietText;
   const isLight = colorScheme === "light";
-  const mutedStrong = isLight ? "#3F4550" : "#C4C7CF";
+  const mutedStrong = theme.mutedStrong;
   const isVerified = top?.videoStatus === "verified";
   const glowColor = isVerified ? theme.record : theme.primary;
   const ringColor = isVerified ? theme.record : isLight ? "#C9CDD5" : "#33383F";
@@ -106,7 +106,7 @@ function FeaturedCard({ entry, theme, colorScheme, onPress }) {
         {me ? (
           <>
             <View style={styles.meLine}>
-              <ThemedText style={styles.meLabel} setColor={theme.primary}>
+              <ThemedText style={styles.meLabel} setColor={theme.primaryText}>
                 {t("common.you")}
               </ThemedText>
               <ThemedText style={styles.meRank} setColor={mutedStrong}>
@@ -171,7 +171,7 @@ export default function GymLeaderboardPage() {
   );
   const quietText = theme.quietText ?? theme.text;
   const isLight = colorScheme === "light";
-  const mutedStrong = isLight ? "#3F4550" : "#C4C7CF";
+  const mutedStrong = theme.mutedStrong;
   const scrimColor = isLight ? "rgba(8, 9, 12, 0.65)" : "rgba(8, 9, 12, 0.55)";
   const scopeOptions = [
     { value: gymService.GYM_SCOPE_GYM, label: t("gyms.scope.centre") },
@@ -425,7 +425,7 @@ export default function GymLeaderboardPage() {
                       onPress={() => setShowAllMore((value) => !value)}
                       style={[styles.footerRow, { borderTopColor: theme.hairline }]}
                     >
-                      <ThemedText style={styles.footerText} setColor={theme.primary}>
+                      <ThemedText style={styles.footerText} setColor={theme.primaryText}>
                         {showAllMore
                           ? t("common.showFewer")
                           : t("gyms.overview.showAllExercises", { count: overview.moreTotal })}

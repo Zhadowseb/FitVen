@@ -2,8 +2,8 @@ import { AppState } from "react-native";
 import { useEffect, useRef } from "react";
 import { useSQLiteContext } from "expo-sqlite";
 
-import { useAuth } from "../Contexts/AuthContext";
-import { musicService } from "../Services";
+import { useAuth } from "@contexts/AuthContext";
+import { musicService } from "@services";
 
 // The now-playing poller. Every 30 s while the app is in the foreground and
 // somebody is signed in, it asks the connected music provider what is on and

@@ -14,15 +14,15 @@ import * as ImagePicker from "expo-image-picker";
 import { useTranslation } from "@localization";
 
 import styles from "./GymExerciseLeaderboardPageStyle";
-import { useAuth } from "../../Contexts/AuthContext";
-import { gymService } from "../../Services";
-import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
-import CameraPlus from "../../Resources/Icons/UI-icons/CameraPlus";
-import LeaderboardRow from "../../Resources/Components/GymLeaderboard/LeaderboardRow";
-import LiftStatusPill from "../../Resources/Components/GymLeaderboard/LiftStatusPill";
-import RadialGlow from "../../Resources/Components/GymLeaderboard/RadialGlow";
-import ScopeToggle from "../../Resources/Components/GymLeaderboard/ScopeToggle";
-import LiftVerificationSheet from "../../Resources/Components/LiftVerificationSheet/LiftVerificationSheet";
+import { useAuth } from "@contexts/AuthContext";
+import { gymService } from "@services";
+import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
+import CameraPlus from "@resources/Icons/UI-icons/CameraPlus";
+import LeaderboardRow from "@resources/Components/GymLeaderboard/LeaderboardRow";
+import LiftStatusPill from "@resources/Components/GymLeaderboard/LiftStatusPill";
+import RadialGlow from "@resources/Components/GymLeaderboard/RadialGlow";
+import ScopeToggle from "@resources/Components/GymLeaderboard/ScopeToggle";
+import LiftVerificationSheet from "@resources/Components/LiftVerificationSheet/LiftVerificationSheet";
 import {
   ThemedBottomSheet,
   ThemedConfirmModal,
@@ -32,8 +32,8 @@ import {
   ThemedTitle,
   ThemedView,
   UserAvatar,
-} from "../../Resources/ThemedComponents";
-import { formatWeightKg, shortenDisplayName } from "../../Utils/gymUtils";
+} from "@resources/ThemedComponents";
+import { formatWeightKg, shortenDisplayName } from "@utils/gymUtils";
 
 const PODIUM_ORDER = [1, 0, 2];
 const PODIUM_AVATAR = [58, 48, 48];
@@ -573,7 +573,7 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
                 {isLoadingMore ? (
                   <ActivityIndicator size="small" color={theme.primaryText ?? theme.primary} />
                 ) : (
-                  <ThemedText style={styles.footerText} setColor={theme.primary}>
+                  <ThemedText style={styles.footerText} setColor={theme.primaryText}>
                     {t("common.loadMore")}
                   </ThemedText>
                 )}

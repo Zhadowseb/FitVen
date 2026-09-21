@@ -4,7 +4,7 @@ import { useTranslation } from "@localization";
 import { Colors, withAlpha } from "../../GlobalStyling/colors";
 import VideoVerified from "../../Icons/UI-icons/VideoVerified";
 import { ThemedText } from "../../ThemedComponents";
-import { APPROVALS_REQUIRED } from "../../../Utils/gymUtils";
+import { APPROVALS_REQUIRED } from "@utils/gymUtils";
 
 /**
  * The three states a lift's video can be in, as a 20 dp pill:

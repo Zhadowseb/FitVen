@@ -9,19 +9,19 @@ import {
 import { useFocusEffect } from "@react-navigation/native";
 
 import styles from "./MusicSettingsPageStyle";
-import { useAuth } from "../../Contexts/AuthContext";
-import { musicService } from "../../Services";
+import { useAuth } from "@contexts/AuthContext";
+import { musicService } from "@services";
 import { useTranslation } from "@localization";
-import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
-import MusicNote from "../../Resources/Icons/UI-icons/MusicNote";
-import Social from "../../Resources/Icons/UI-icons/Social";
+import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
+import MusicNote from "@resources/Icons/UI-icons/MusicNote";
+import Social from "@resources/Icons/UI-icons/Social";
 import {
   ThemedHeader,
   ThemedSwitch,
   ThemedText,
   ThemedTitle,
   ThemedView,
-} from "../../Resources/ThemedComponents";
+} from "@resources/ThemedComponents";
 
 /**
  * Profile -> Settings -> Music. Connect Spotify, and choose whether what is

@@ -42,6 +42,9 @@ export const Colors = {
         textDisabled: "#3A3D46",
         textInverted: "#14100C",
         quietText: "#868C99",
+        // Between text and quietText: a label that has to stay readable at a
+        // small size without competing with the title next to it.
+        mutedStrong: "#C4C7CF",
         title: "#F2F3F5",
 
         background: "#0A0B0F",
@@ -117,6 +120,7 @@ export const Colors = {
         textDisabled: "#C9CDD5",
         textInverted: "#14100C",
         quietText: "#676B76",
+        mutedStrong: "#3F4550",
         title: "#16191F",
 
         background: "#F4F5F7",

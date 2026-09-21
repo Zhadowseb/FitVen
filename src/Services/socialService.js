@@ -152,77 +152,46 @@ function mapProfileRow(
 
 
 // How far either side of today the tiles look for a last or a next workout.
-// Far enough to cover a holiday and a training plan, close enough that the
-// two requests stay small.
+// Far enough to cover a holiday and a training plan; the database does the
+// looking, so the window costs one index scan rather than a page of rows.
 const SURROUNDING_ACTIVITY_PAST_DAYS = 180;
 const SURROUNDING_ACTIVITY_FUTURE_DAYS = 60;
-const SURROUNDING_ACTIVITY_ROW_LIMIT = 300;
-
-function shiftIsoDate(isoDate, days) {
-  const date = new Date(`${isoDate}T00:00:00Z`);
-
-  if (Number.isNaN(date.getTime())) {
-    return isoDate;
-  }
-
-  date.setUTCDate(date.getUTCDate() + days);
-
-  return date.toISOString().slice(0, 10);
-}
-
 /**
  * The last day each person finished a workout and the next day they have one
  * planned, for the tiles of everybody who has nothing on today.
  *
- * Two requests rather than one range, each ordered outwards from today, so
- * that if the row cap is ever reached it is the far end that falls off and
- * the nearest workout - the one the tile shows - always survives.
+ * Through an RPC rather than a select. The follower policy on
+ * `workout_type_instance` only lets a follower see yesterday, today and
+ * tomorrow, so reading the table directly answered null for every friend and
+ * the tiles said nothing instead of "3 days ago". Widening that policy would
+ * hand a follower the whole training history to produce two dates;
+ * `friends_surrounding_activity` is a security definer function that returns
+ * the two dates and nothing else, for people the viewer actually follows.
  */
-async function fetchSurroundingActivityByUserId({ userIds, activityDate }) {
+async function fetchSurroundingActivityByUserId({ userIds }) {
   const surrounding = new Map(
     userIds.map((userId) => [userId, { lastWorkoutAt: null, nextWorkoutAt: null }])
   );
 
-  const [pastResult, futureResult] = await Promise.allSettled([
-    supabase
-      .from(WORKOUT_TYPE_INSTANCE_TABLE)
-      .select("user_id, date, done")
-      .in("user_id", userIds)
-      .is("deleted_at", null)
-      .lt("date", activityDate)
-      .gte("date", shiftIsoDate(activityDate, -SURROUNDING_ACTIVITY_PAST_DAYS))
-      .order("date", { ascending: false })
-      .limit(SURROUNDING_ACTIVITY_ROW_LIMIT),
-    supabase
-      .from(WORKOUT_TYPE_INSTANCE_TABLE)
-      .select("user_id, date, done")
-      .in("user_id", userIds)
-      .is("deleted_at", null)
-      .gt("date", activityDate)
-      .lte("date", shiftIsoDate(activityDate, SURROUNDING_ACTIVITY_FUTURE_DAYS))
-      .order("date", { ascending: true })
-      .limit(SURROUNDING_ACTIVITY_ROW_LIMIT),
-  ]);
+  const { data, error } = await supabase.rpc("friends_surrounding_activity", {
+    target_ids: userIds,
+    past_days: SURROUNDING_ACTIVITY_PAST_DAYS,
+    future_days: SURROUNDING_ACTIVITY_FUTURE_DAYS,
+  });
 
-  // Rows arrive nearest-first, so the first one seen per person is the one
-  // wanted and the rest are skipped.
-  if (pastResult.status === "fulfilled" && !pastResult.value.error) {
-    for (const workout of pastResult.value.data ?? []) {
-      const entry = surrounding.get(workout.user_id);
-
-      if (entry && !entry.lastWorkoutAt && Number(workout.done) === 1) {
-        entry.lastWorkoutAt = workout.date;
-      }
-    }
+  // A database without the function is a client running ahead of its
+  // migrations: the tiles lose "last trained" and keep everything else.
+  if (error) {
+    console.warn("Could not read surrounding activity:", error.message ?? error);
+    return surrounding;
   }
 
-  if (futureResult.status === "fulfilled" && !futureResult.value.error) {
-    for (const workout of futureResult.value.data ?? []) {
-      const entry = surrounding.get(workout.user_id);
+  for (const row of data ?? []) {
+    const entry = surrounding.get(row.user_id);
 
-      if (entry && !entry.nextWorkoutAt && Number(workout.done) !== 1) {
-        entry.nextWorkoutAt = workout.date;
-      }
+    if (entry) {
+      entry.lastWorkoutAt = row.last_workout_at ?? null;
+      entry.nextWorkoutAt = row.next_workout_at ?? null;
     }
   }
 
@@ -295,7 +264,7 @@ async function fetchActivityPreviewByUserId({ userIds, date }) {
 
   const [workouts, surrounding] = await Promise.all([
     fetchActivityWorkouts({ userIds: uniqueUserIds, activityDate }),
-    fetchSurroundingActivityByUserId({ userIds: uniqueUserIds, activityDate }),
+    fetchSurroundingActivityByUserId({ userIds: uniqueUserIds }),
   ]);
 
   const workoutsByUserId = new Map();

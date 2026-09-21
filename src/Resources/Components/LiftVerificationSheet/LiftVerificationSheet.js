@@ -10,15 +10,15 @@ import {
 import { useEvent } from "expo";
 import { formatDate, formatTime, useTranslation } from "@localization";
 
-import { useAuth } from "../../../Contexts/AuthContext";
-import { gymService } from "../../../Services";
+import { useAuth } from "@contexts/AuthContext";
+import { gymService } from "@services";
 import { Colors, withAlpha } from "../../GlobalStyling/colors";
 import Checkmark from "../../Icons/UI-icons/Checkmark";
 import Cross from "../../Icons/UI-icons/Cross";
 import MapPin from "../../Icons/UI-icons/MapPin";
 import { ThemedBottomSheet, ThemedText, UserAvatar } from "../../ThemedComponents";
-import { APPROVALS_REQUIRED, REJECTIONS_TO_REMOVE, formatWeightKg } from "../../../Utils/gymUtils";
-import { formatCountdownTime } from "../../../Utils/timeUtils";
+import { APPROVALS_REQUIRED, REJECTIONS_TO_REMOVE, formatWeightKg } from "@utils/gymUtils";
+import { formatCountdownTime } from "@utils/timeUtils";
 
 // expo-video throws at import time on a client built before it was added.
 // Loaded on demand: the sheet then shows the lift without its video instead
@@ -273,10 +273,10 @@ export default function LiftVerificationSheet({
           onPress={onClose}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <Cross width={24} height={24} color="#C4C7CF" />
+          <Cross width={24} height={24} color={theme.quietText} />
         </TouchableOpacity>
         <View style={styles.headerCopy}>
-          <ThemedText style={styles.eyebrow} setColor={theme.primary}>
+          <ThemedText style={styles.eyebrow} setColor={theme.primaryText}>
             {t("gyms.review.eyebrow")}
           </ThemedText>
           <ThemedText style={styles.title} setColor={theme.title} numberOfLines={1}>
@@ -339,7 +339,7 @@ export default function LiftVerificationSheet({
                 {t("gyms.review.rejectedCount", { count: current.rejections })}
               </ThemedText>
               <View style={styles.spacer} />
-              <ThemedText style={styles.voteStatus} setColor="#C4C7CF">
+              <ThemedText style={styles.voteStatus} setColor={theme.quietText}>
                 {t("gyms.review.toGo", { count: missing })}
               </ThemedText>
             </View>

@@ -11,8 +11,18 @@ const loadAppModule = require("./lib/loadAppModule");
 
 const root = path.resolve(__dirname, "..");
 const gymUtils = loadAppModule("src/Utils/gymUtils.js");
+const dateUtils = loadAppModule("src/Utils/dateUtils.js");
 const activityUtils = loadAppModule("src/Utils/friendsActivityUtils.js");
-const { deriveShortName, disambiguateShortNames, normalizeGym } = require("./import-gyms/normalizeGym");
+const gymServiceSource = fs.readFileSync(
+  path.join(root, "src", "Services", "gymService.js"),
+  "utf8"
+);
+const {
+  deriveShortName,
+  disambiguateShortNames,
+  imageObjectPath,
+  normalizeGym,
+} = require("./import-gyms/normalizeGym");
 
 /* ---------------------------------------------------------- best set -- */
 
@@ -304,7 +314,6 @@ assert.ok(
 );
 
 // The reasons the reject step offers have to be the ones the column accepts.
-const gymServiceSource = fs.readFileSync(path.join(root, "src", "Services", "gymService.js"), "utf8");
 const offeredReasons = [...gymServiceSource.matchAll(/\{ value: "([a-z]+)", label:/g)].map((match) => match[1]);
 const acceptedReasons = migration.match(/reason in \(([^)]+)\)/)[1].match(/'([a-z]+)'/g).map((value) => value.replace(/'/g, ""));
 
@@ -411,6 +420,97 @@ assert.strictEqual(
   "an invalid time does not make a workout live"
 );
 
+/* --------------------------------------- the day boundaries hold -------- */
+
+// formatRelativeDay is what a friend's tile says when they have nothing on
+// today, and the comment above it points at BUG-20, which was a mistake at
+// exactly one of these edges. Nothing tested them.
+{
+  const dayMs = 86400000;
+  const now = new Date(2026, 5, 15, 12, 0, 0).getTime();
+  const ago = (days) => dateUtils.formatRelativeDay(now - days * dayMs, now);
+
+  assert.strictEqual(ago(0), "Today");
+  assert.strictEqual(ago(1), "Yesterday");
+  assert.strictEqual(ago(2), "2 days ago");
+  assert.strictEqual(ago(6), "6 days ago", "six days is still counted in days");
+  assert.strictEqual(ago(7), "1 week ago", "seven days is the first week");
+  assert.strictEqual(ago(30), "4 weeks ago", "thirty days is still weeks");
+  assert.strictEqual(ago(31), "1 month ago", "thirty-one days is the first month");
+  assert.strictEqual(ago(365), "12 months ago");
+
+  // A day in the future is today's business, not "in -1 days".
+  assert.strictEqual(ago(-3), "Today", "a future day does not count backwards");
+  assert.strictEqual(dateUtils.formatRelativeDay(null), "", "no date, no words");
+}
+
+{
+  const now = Date.now();
+
+  assert.strictEqual(dateUtils.formatTimeAgo(null), "Just now", "nothing reads as just now");
+  assert.strictEqual(dateUtils.formatTimeAgo("not a date"), "Just now");
+  assert.strictEqual(dateUtils.formatTimeAgo(now - 30 * 1000), "Just now", "under a minute");
+  assert.strictEqual(dateUtils.formatTimeAgo(now - 5 * 60 * 1000), "5m ago");
+  assert.strictEqual(dateUtils.formatTimeAgo(now - 2 * 3600 * 1000), "2h ago");
+}
+
+/* ------------------------------------ the two search filters are tested -- */
+
+// buildSearchFilter in socialService has scripts/test-username-search.js,
+// written after a real bug. The centre search's copy had nothing.
+{
+  // The function lives in gymService, which pulls in the Supabase client and
+  // cannot be loaded here, so the rule is lifted out of the source and run -
+  // the same regex the app uses, not a copy of it.
+  const match = gymServiceSource.match(
+    /export function buildGymSearchFilter\(query\) \{[\s\S]*?\n\}/
+  );
+
+  assert.ok(match, "gymService no longer exports buildGymSearchFilter");
+
+  const allowList = match[0].match(/\.replace\((\/\[\^[^/]+\/gu), " "\)/);
+
+  assert.ok(allowList, "the centre search filter is not an allowlist any more");
+
+  const filter = (query) =>
+    String(query ?? "")
+      .replace(new RegExp(allowList[1].slice(1, -3), "gu"), " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+  // The characters that delimit a PostgREST .or(...) filter have to go, or a
+  // search box becomes a query editor.
+  for (const dangerous of ["(", ")", ",", "*", "%", ".", "'"]) {
+    assert.ok(
+      !filter(`a${dangerous}b`).includes(dangerous),
+      `the centre search lets ${dangerous} through into the filter string`
+    );
+  }
+
+  // And the characters a Danish centre name actually uses have to stay.
+  assert.strictEqual(filter("Fit&Sund"), "Fit&Sund");
+  assert.strictEqual(filter("Nørrebro"), "Nørrebro");
+  assert.strictEqual(filter("Fitness World"), "Fitness World");
+  assert.strictEqual(filter("  K.B.  Hallen "), "K B Hallen", "gaps collapse");
+}
+
+/* ---------------------------------- an image lands where it is expected -- */
+
+// A wrong slug is an image that never shows, with nothing to say so.
+assert.strictEqual(
+  imageObjectPath("PureGym", "Adolphsvej 25, 2820 Gentofte", ".jpg"),
+  "puregym/adolphsvej-25-2820-gentofte.jpg"
+);
+assert.strictEqual(
+  imageObjectPath("Fit&Sund", "Nørrebrogade 4, 2200 København N", "PNG"),
+  "fit-sund/norrebrogade-4-2200-kobenhavn-n.png",
+  "Danish letters and the extension are folded down"
+);
+assert.strictEqual(
+  imageObjectPath("LOOP", "Åboulevarden 1, 8000 Århus C", "jpg"),
+  "loop/aboulevarden-1-8000-arhus-c.jpg"
+);
+
 /* ------------------------------------------- the midnight rule holds ---- */
 
 // calendarDaysBetween exists because elapsed milliseconds gave the wrong
@@ -418,8 +518,6 @@ assert.strictEqual(
 // where a millisecond count would agree with it - so the bug it was written
 // against would not have been caught. Two instants on the same day is the case
 // that tells them apart.
-const dateUtils = loadAppModule("src/Utils/dateUtils.js");
-
 assert.strictEqual(
   dateUtils.calendarDaysBetween(
     new Date(2026, 0, 1, 7, 0, 0),

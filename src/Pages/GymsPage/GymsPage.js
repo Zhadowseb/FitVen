@@ -14,30 +14,30 @@ import MapView, { Callout, Marker } from "react-native-maps";
 import { useTranslation } from "@localization";
 
 import styles from "./GymsPageStyle";
-import { useAuth } from "../../Contexts/AuthContext";
-import { gymService } from "../../Services";
-import { useGymSearch } from "../../Resources/Components/useGymSearch";
-import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
-import ChevronRight from "../../Resources/Icons/UI-icons/ChevronRight";
-import Crosshair from "../../Resources/Icons/UI-icons/Crosshair";
-import Expand from "../../Resources/Icons/UI-icons/Expand";
-import Search from "../../Resources/Icons/UI-icons/Search";
-import LiftStatusPill from "../../Resources/Components/GymLeaderboard/LiftStatusPill";
-import RadialGlow from "../../Resources/Components/GymLeaderboard/RadialGlow";
-import { usePulseAnimation } from "../../Resources/Components/animationHooks";
+import { useAuth } from "@contexts/AuthContext";
+import { gymService } from "@services";
+import { useGymSearch } from "@resources/Components/useGymSearch";
+import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
+import ChevronRight from "@resources/Icons/UI-icons/ChevronRight";
+import Crosshair from "@resources/Icons/UI-icons/Crosshair";
+import Expand from "@resources/Icons/UI-icons/Expand";
+import Search from "@resources/Icons/UI-icons/Search";
+import LiftStatusPill from "@resources/Components/GymLeaderboard/LiftStatusPill";
+import RadialGlow from "@resources/Components/GymLeaderboard/RadialGlow";
+import { usePulseAnimation } from "@resources/Components/animationHooks";
 import {
   ThemedHeader,
   ThemedText,
   ThemedTitle,
   ThemedView,
   UserAvatar,
-} from "../../Resources/ThemedComponents";
+} from "@resources/ThemedComponents";
 import {
   formatDistance,
   formatWeightKg,
   getChainColor,
   getChainInitials,
-} from "../../Utils/gymUtils";
+} from "@utils/gymUtils";
 
 // Denmark, when the phone will not say where it is.
 const FALLBACK_REGION = {
@@ -166,10 +166,10 @@ function GymCallout({ gym, onOpen }) {
           <View style={[styles.calloutDivider, { backgroundColor: theme.hairline }]} />
 
           <View style={styles.calloutAction}>
-            <ThemedText style={styles.calloutActionText} setColor={theme.primary}>
+            <ThemedText style={styles.calloutActionText} setColor={theme.primaryText}>
               {t("gyms.callout.openCentre")}
             </ThemedText>
-            <ChevronRight width={15} height={15} color={theme.primary} />
+            <ChevronRight width={15} height={15} color={theme.primaryText} />
           </View>
         </View>
 
@@ -212,7 +212,7 @@ export default function GymsPage() {
   const cardSurface = theme.cardBackground ?? theme.background;
   const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor;
   const isLight = colorScheme === "light";
-  const mutedStrong = isLight ? "#3F4550" : "#C4C7CF";
+  const mutedStrong = theme.mutedStrong;
   const goldRingColor = theme.record;
 
   const load = useCallback(async () => {
@@ -428,7 +428,7 @@ export default function GymsPage() {
               </ThemedText>
               {isHome ? (
                 <View style={[styles.gymBadge, { backgroundColor: withAlpha(theme.primary, 0.16) }]}>
-                  <ThemedText style={styles.gymBadgeText} setColor={theme.primary}>
+                  <ThemedText style={styles.gymBadgeText} setColor={theme.primaryText}>
                     {t("gyms.list.yoursBadge")}
                   </ThemedText>
                 </View>
@@ -648,7 +648,7 @@ export default function GymsPage() {
               onPress={() => navigation.navigate("NationalExerciseLeaderboardPage", { exercise_id: featuredStrongest[0].exerciseId })}
               style={[styles.cardFooter, { borderTopColor: theme.hairline }]}
             >
-              <ThemedText style={styles.cardFooterText} setColor={theme.primary}>
+              <ThemedText style={styles.cardFooterText} setColor={theme.primaryText}>
                 {t("gyms.strongest.seeAll")}
               </ThemedText>
             </TouchableOpacity>
@@ -710,7 +710,7 @@ export default function GymsPage() {
               onPress={() => setShowAllNearby((value) => !value)}
               style={[styles.cardFooter, { borderTopColor: theme.hairline }]}
             >
-              <ThemedText style={styles.cardFooterText} setColor={theme.primary}>
+              <ThemedText style={styles.cardFooterText} setColor={theme.primaryText}>
                 {showAllNearby ? t("common.showFewer") : t("gyms.list.showAllNearby")}
               </ThemedText>
             </TouchableOpacity>

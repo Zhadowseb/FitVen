@@ -10,14 +10,14 @@ import {
 import { useTranslation } from "@localization";
 
 import styles from "../GymLeaderboardPageStyle";
-import { useAuth } from "../../../Contexts/AuthContext";
-import { gymService } from "../../../Services";
-import { useGymSearch } from "../../../Resources/Components/useGymSearch";
-import { Colors, withAlpha } from "../../../Resources/GlobalStyling/colors";
-import Checkmark from "../../../Resources/Icons/UI-icons/Checkmark";
-import Search from "../../../Resources/Icons/UI-icons/Search";
-import { ThemedBottomSheet, ThemedText } from "../../../Resources/ThemedComponents";
-import { getChainInitials } from "../../../Utils/gymUtils";
+import { useAuth } from "@contexts/AuthContext";
+import { gymService } from "@services";
+import { useGymSearch } from "@resources/Components/useGymSearch";
+import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
+import Checkmark from "@resources/Icons/UI-icons/Checkmark";
+import Search from "@resources/Icons/UI-icons/Search";
+import { ThemedBottomSheet, ThemedText } from "@resources/ThemedComponents";
+import { getChainInitials } from "@utils/gymUtils";
 
 
 /**
@@ -99,7 +99,7 @@ export default function ChangeGymSheet({ visible, onClose, currentHomeGymId, isA
       style={[styles.sheetRow, selected ? { backgroundColor: withAlpha(theme.primary, 0.08) } : null]}
     >
       <View style={[styles.chainTile, { backgroundColor: chainTileSurface }]}>
-        <ThemedText style={styles.chainTileText} setColor={isLight ? "#3F4550" : "#C4C7CF"}>
+        <ThemedText style={styles.chainTileText} setColor={theme.mutedStrong}>
           {initials}
         </ThemedText>
       </View>
@@ -117,7 +117,7 @@ export default function ChangeGymSheet({ visible, onClose, currentHomeGymId, isA
         {saving ? (
           <ActivityIndicator size="small" color={theme.primaryText ?? theme.primary} />
         ) : selected ? (
-          <Checkmark width={16} height={16} color={theme.primary} thickness={2.6} />
+          <Checkmark width={16} height={16} color={theme.primaryText} thickness={2.6} />
         ) : null}
       </View>
     </TouchableOpacity>

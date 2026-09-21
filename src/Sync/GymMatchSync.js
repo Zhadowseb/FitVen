@@ -2,8 +2,8 @@ import { AppState } from "react-native";
 import { useEffect, useRef } from "react";
 import { useSQLiteContext } from "expo-sqlite";
 
-import { useAuth } from "../Contexts/AuthContext";
-import { gymService } from "../Services";
+import { useAuth } from "@contexts/AuthContext";
+import { gymService } from "@services";
 import { enqueueSync } from "./syncQueue";
 
 // Finishing a workout matches it to a centre and sends its best sets to that

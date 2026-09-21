@@ -53,6 +53,7 @@ behind by accident.
 | `20260917120100_workout-music.sql` | yes |
 | `20260921140000_lift-videos-stay-in-the-centre.sql` | yes |
 | `20260921150000_drop-workout-start-coordinates.sql` | yes |
+| `20260921160000_friends-surrounding-activity.sql` | no |
 
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
@@ -180,6 +181,15 @@ Ten centimetres of accuracy on where somebody starts their workout is their
 home address. The app never read them from the cloud; the retry that needs them
 reads the device's own copy, which stays. The 2.0 client stops writing them in
 the same change.
+
+`20260921160000_friends-surrounding-activity.sql` **has not been run.** The
+friends tiles ask how long ago somebody trained, and the follower policy on
+`workout_type_instance` only shows yesterday, today and tomorrow - so the
+answer for a friend was always empty and every tile fell into the "no activity"
+band. Widening that policy would hand a follower the whole training history to
+produce two dates, so this is a security definer function that returns the two
+dates and nothing else, for people the viewer actually follows. Until it runs,
+the tiles behave as they do today.
 
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to

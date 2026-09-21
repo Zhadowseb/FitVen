@@ -6,7 +6,7 @@ import CameraPlus from "../../Icons/UI-icons/CameraPlus";
 import Play from "../../Icons/UI-icons/Play";
 import { ThemedText, UserAvatar } from "../../ThemedComponents";
 import LiftStatusPill, { RejectedBadge } from "./LiftStatusPill";
-import { formatWeightKg } from "../../../Utils/gymUtils";
+import { formatWeightKg } from "@utils/gymUtils";
 
 function formatLiftDate(value) {
   return value ? formatDate(value, { day: "numeric", month: "short" }) : "";
@@ -85,7 +85,7 @@ export default function LeaderboardRow({
             {gymLine ?? formatLiftDate(lift?.performedAt)}
           </ThemedText>
           {gymLine && lift?.isHomeGym ? (
-            <ThemedText style={styles.meta} setColor={theme.primary} numberOfLines={1}>
+            <ThemedText style={styles.meta} setColor={theme.primaryText} numberOfLines={1}>
               {t("gyms.row.yourCentre")}
             </ThemedText>
           ) : null}

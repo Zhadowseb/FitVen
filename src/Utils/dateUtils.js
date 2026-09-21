@@ -206,6 +206,13 @@ export function formatCount(count, singular, plural) {
 // 0.9 days old, which rounded to 1 and read as "Yesterday" on the day it was
 // set. Midnight is the boundary people mean.
 export function calendarDaysBetween(from, to) {
+  // new Date(null) is the epoch, not an invalid date, so the NaN check below
+  // does not catch it: without this, a missing date reads as 1970 and comes
+  // back as "674 months ago" rather than nothing.
+  if (from === null || from === undefined || to === null || to === undefined) {
+    return null;
+  }
+
   const start = new Date(from);
   const end = new Date(to);
 

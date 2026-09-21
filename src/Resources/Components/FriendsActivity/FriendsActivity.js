@@ -38,7 +38,7 @@ import {
   formatMusicLine,
   resolveMusicBandState,
   sortActivityTiles,
-} from "../../../Utils/friendsActivityUtils";
+} from "@utils/friendsActivityUtils";
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const TICKER_COPY_PADDING = 18;

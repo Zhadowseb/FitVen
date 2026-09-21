@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { t } from "@localization";
-import { gymService } from "../../Services";
+import { gymService } from "@services";
 
 // Two screens search the centre list: the Centres screen and the Change centre
 // sheet. They had the same effect written out twice with the setters renamed,
@@ -26,6 +26,13 @@ export function useGymSearch(query, onError) {
   const [isSearching, setIsSearching] = useState(false);
   const timeoutRef = useRef(null);
 
+  // The debounce cancels a search that has not started; it cannot cancel one
+  // already in flight. Typing "puregym" then "puregym aarhus" leaves two
+  // requests out, and the slower one wins whenever it answers last - the list
+  // goes back to the wrong results with the field untouched. Every search
+  // takes a number, and only the newest may write.
+  const requestRef = useRef(0);
+
   // Held in a ref so a screen passing an inline arrow - all of them do - does
   // not restart the debounce on every render.
   const onErrorRef = useRef(onError);
@@ -40,6 +47,7 @@ export function useGymSearch(query, onError) {
     const trimmed = query.trim();
 
     if (trimmed.length < GYM_SEARCH_MIN_LENGTH) {
+      requestRef.current += 1;
       setResults(null);
       setIsSearching(false);
       return undefined;
@@ -47,15 +55,27 @@ export function useGymSearch(query, onError) {
 
     setIsSearching(true);
     timeoutRef.current = setTimeout(async () => {
+      requestRef.current += 1;
+
+      const request = requestRef.current;
+
       try {
-        setResults(await gymService.searchGyms({ query: trimmed }));
+        const found = await gymService.searchGyms({ query: trimmed });
+
+        if (request === requestRef.current) {
+          setResults(found);
+        }
       } catch (error) {
-        setResults([]);
-        onErrorRef.current?.(
-          error instanceof Error ? error.message : t("gyms.searchFailed")
-        );
+        if (request === requestRef.current) {
+          setResults([]);
+          onErrorRef.current?.(
+            error instanceof Error ? error.message : t("gyms.searchFailed")
+          );
+        }
       } finally {
-        setIsSearching(false);
+        if (request === requestRef.current) {
+          setIsSearching(false);
+        }
       }
     }, GYM_SEARCH_DEBOUNCE_MS);
 
