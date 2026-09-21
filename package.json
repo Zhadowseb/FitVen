@@ -1,7 +1,7 @@
 {
   "name": "programapp",
-  "version": "2.1.0-feature-home-quick-start.1",  "main": "index.js",
-  "scripts": {
+  "version": "2.1.0-feature-home-quick-start.1",
+  "main": "index.js",  "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",
     "start:dev": "expo start --dev-client --scheme exp+programapp-dev",
     "start:go": "expo start --go",
