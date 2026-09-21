@@ -13,7 +13,7 @@
 - **The review agents get far enough to write something.** 40 turns and 25 minutes were set against an ordinary pull request. Against the 2.0 branch - a hundred code files behind a 700 kB diff - seven of the eight agents ran out of turns and left nothing behind, twice, and the run reported success because the step is `continue-on-error`. Silence that reads as approval is the one failure this thing exists to prevent. Now 120 turns and 45 minutes, and the diff is cut at 400 kB rather than 700: an agent that dies halfway through a complete diff is worth less than one that reads a trimmed diff and opens the files it needs. It was not the token - `security` came through on the same one in the same matrix, all three times.
 
 ### Notes
-- **`supabase/migrations/20260921120000_hide-a-reported-post.sql` has to be run before this ships.** Until it does, the report itself works and lands in `user_reports`, but nothing hides a post and the support page's promise is not true. It is the only file in `supabase/migrations/` that has not been run.
+- **`supabase/migrations/20260921120000_hide-a-reported-post.sql` was run on 2026-09-21**, so everything above is live in the database and waiting for the client that uses it.
 - This is the part of the abandoned `major/content-moderation` branch that never reached master. The rest of that branch - the reports table, the term filter, the triggers - shipped in 1.0.2 as `20260912220000_ugc-safety.sql` under different names, so only these three pieces were missing.
 
 ---

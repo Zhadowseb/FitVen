@@ -49,7 +49,7 @@ behind by accident.
 | `20260915120000_repair-workout-type-catalog.sql` | yes |
 | `20260916140000_terms-of-use.sql` | yes |
 | `20260916210000_opt-in-column-defaults.sql` | yes |
-| `20260921120000_hide-a-reported-post.sql` | no |
+| `20260921120000_hide-a-reported-post.sql` | yes |
 
 `20260915120000_repair-workout-type-catalog.sql` restores missing built-in and
 legacy workout types without changing existing rows or granting catalog writes
@@ -138,13 +138,11 @@ preference table syncs both ways, so the device was cleaned and the next sync
 put it back - and every exercise added to a workout came with a NOTE column. Run
 it together with the app change that guards that repair to run once.
 
-`20260921120000_hide-a-reported-post.sql` **has not been run.** It is the only
-file in this folder that has not, and rule 4 below says why that is worse than
-no file at all: it adds `social_post.hidden_at`, and the read policy it
-restates refers to that column, so the app's feed keeps working either way but
-the promise on the support page - a post two people report leaves the feed
-straight away - is not true until it runs. Run it before the release that
-carries the Report post action.
+`20260921120000_hide-a-reported-post.sql` was run on 2026-09-21. It adds
+`social_post.hidden_at`, hides a post two different accounts have reported,
+refuses a report that names a post its author did not write, and locks the
+column so only the hide itself can write it. The support page's promise - a
+post two people report leaves the feed straight away - is true from this date.
 
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to
