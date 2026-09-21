@@ -59,6 +59,7 @@ behind by accident.
 | `20260921180000_music-opt-in.sql` | yes |
 | `20260921180100_lift-video-index.sql` | yes |
 | `20260921190000_one-verification-request-per-window.sql` | yes |
+| `20260921200000_let-the-policy-call-its-own-check.sql` | no |
 
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
@@ -236,6 +237,20 @@ The unique index on `event_key` would have stopped them, except the key carried
 the epoch second and so only caught calls inside the same second. The key now
 names a ten-minute bucket and the insert is `on conflict do nothing`, so the
 index is the limit and nothing sits between deciding and writing.
+
+`20260921200000_let-the-policy-call-its-own-check.sql` **has not been run, and
+is urgent.** `20260921140000` put `private.can_watch_lift_video` behind the
+select policy on `storage.objects` and revoked execute on it from
+`authenticated` in the same file. A policy expression runs as the querying
+user - `security definer` says what the body may read, not who may call it -
+so every signed-in read of `storage.objects` fails with "permission denied for
+function can_watch_lift_video". That is the whole table, so avatars stopped
+signing and the Friends tiles said "no activity" for everybody.
+
+The revokes were copied from `private.contains_blocked_term`, where they are
+right because it is called from a trigger and a trigger does not check execute.
+A policy does. **Anything used from inside a policy needs execute granted to
+`authenticated`, however definer it is.**
 
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to
