@@ -409,8 +409,8 @@ export default function LiftVerificationSheet({
                     { backgroundColor: theme.cardBackground, borderColor: "rgba(255, 122, 122, 0.34)" },
                   ]}
                 >
-                  <Cross width={18} height={18} color="#FF7A7A" />
-                  <ThemedText style={styles.buttonText} setColor="#FF7A7A">
+                  <Cross width={18} height={18} color={theme.danger} />
+                  <ThemedText style={styles.buttonText} setColor={theme.danger}>
                     {t("gyms.review.reject")}
                   </ThemedText>
                 </TouchableOpacity>

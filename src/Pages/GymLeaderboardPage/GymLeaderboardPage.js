@@ -302,10 +302,10 @@ export default function GymLeaderboardPage() {
           </View>
 
           <View style={styles.heroCopy}>
-            <ThemedText style={styles.heroEyebrow} setColor={theme.primary}>
+            <ThemedText style={styles.heroEyebrow} setColor={theme.primaryText}>
               {gym?.chain ?? " "}
             </ThemedText>
-            <ThemedText style={styles.heroTitle} setColor={isLight ? "#FFFFFF" : theme.title} numberOfLines={2}>
+            <ThemedText style={styles.heroTitle} setColor={theme.title} numberOfLines={2}>
               {gym?.name ?? (isLoading ? t("common.loading") : t("gyms.centre"))}
             </ThemedText>
             {memberLine.length ? (
@@ -313,7 +313,7 @@ export default function GymLeaderboardPage() {
                 {memberLine.map((part, index) => (
                   <View key={part} style={styles.heroMetaRow}>
                     {index > 0 ? <View style={[styles.heroMetaDot, { backgroundColor: "#6E7480" }]} /> : null}
-                    <ThemedText style={styles.heroMeta} setColor={isLight ? "#E9EBF0" : "#C4C7CF"}>
+                    <ThemedText style={styles.heroMeta} setColor={theme.mutedStrong}>
                       {part}
                     </ThemedText>
                   </View>

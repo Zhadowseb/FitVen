@@ -319,6 +319,31 @@ const acceptedReasons = migration.match(/reason in \(([^)]+)\)/)[1].match(/'([a-
 
 assert.deepStrictEqual(offeredReasons.sort(), acceptedReasons.sort(), "rejection reasons in the app and the column check must match");
 
+/* ------------------------- a component that uses the theme declares it -- */
+
+// A file can hold more than one component, and the second does not inherit the
+// first one's hooks. Babel compiles a missing `theme` happily and it throws at
+// render - the same shape as the dead-zone crashes below, and just as invisible
+// to a suite that renders nothing. RejectedBadge was exactly this.
+for (const file of [
+  "src/Resources/Components/GymLeaderboard/LiftStatusPill.js",
+  "src/Resources/Components/GymLeaderboard/LeaderboardRow.js",
+]) {
+  const source = fs.readFileSync(path.join(root, file), "utf8");
+  const componentCount = (source.match(/^export (default )?function /gm) ?? []).length;
+  const themeDeclarations = (source.match(/const theme = Colors\[/g) ?? []).length;
+  const componentsUsingTheme = source
+    .split(/^export (?:default )?function /m)
+    .slice(1)
+    .filter((piece) => piece.includes("theme.")).length;
+
+  assert.ok(componentCount >= 1, `${file} exports no component any more`);
+  assert.ok(
+    themeDeclarations >= componentsUsingTheme,
+    `${file} has ${componentsUsingTheme} components reading theme but only ${themeDeclarations} declaring it`
+  );
+}
+
 /* --------------------------- nothing is used before it is declared ------ */
 
 // useGymSearch takes the screen's setErrorMessage. Both screens once called it

@@ -73,10 +73,12 @@ export default function LiftStatusPill({ status = "none", approvals = 0, compact
 /** "REJECTED 2" - shown to the lifter only; everyone else never sees the row. */
 export function RejectedBadge({ rejections = 0, style }) {
   const { t } = useTranslation();
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme] ?? Colors.light;
 
   return (
     <View style={[styles.pill, styles.rejected, style]}>
-      <ThemedText style={[styles.text, styles.rejectedText]} setColor="#FF7A7A">
+      <ThemedText style={[styles.text, styles.rejectedText]} setColor={theme.danger}>
         {t("gyms.status.rejected", { count: rejections })}
       </ThemedText>
     </View>
