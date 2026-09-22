@@ -353,10 +353,21 @@ const weightliftingSource = fs.readFileSync(
 );
 
 assert.ok(
-  /export async function getMuscleGroupDeltas[\s\S]*?getRecordsSourceData\(db\)/.test(
+  /export async function getMuscleGroupDeltas[\s\S]*?getRecordsSourceData\(db[,)]/.test(
     weightliftingSource
   ),
   "Home stopped reading the muscle groups through the same source as Records"
+);
+
+// Same source, but not the whole of it. The glance compares two thirty-day
+// windows, and it used to pull every set ever logged on every return to Home
+// to throw nine tenths of it away - on a phone with three months of history
+// that was most of the two seconds before anything showed.
+assert.ok(
+  /export async function getMuscleGroupDeltas[\s\S]*?getRecordsSourceData\(db, \{ sinceIsoDate \}\)/.test(
+    weightliftingSource
+  ),
+  "Home's muscle glance reads the whole training history again instead of its two windows"
 );
 
 // One formula in the app. The design document asked for Epley "the same as
@@ -418,6 +429,39 @@ assert.ok(
   ),
   "the ring length is not the rounded rect's outline, so the rest countdown does not match it"
 );
+
+// Switching tabs must not rebuild Home. handleHomePress used to call
+// resetRoot, which threw the stack away and mounted a new Home from nothing -
+// skeleton, every query cold, friends and avatar fetched again. Measured on a
+// phone with three months of history: 2.3 s before anything showed, 4.1 s
+// before it was all there, on every tap. Handing the existing Home route
+// back through reset() keeps its key, so the instance and what it drew
+// survive.
+const homeHandler = navSource.slice(
+  navSource.indexOf("const handleHomePress = () => {"),
+  navSource.indexOf("};", navSource.indexOf("const handleHomePress = () => {"))
+);
+
+assert.ok(
+  !/resetRoot/.test(homeHandler),
+  "the Home tab rebuilds Home from scratch on every press again"
+);
+
+assert.ok(
+  /routes: \[home\]/.test(navSource) && /routes: \[home, existing \?\? \{ name: routeName \}\]/.test(navSource),
+  "the tabs no longer hand the existing Home route back, so Home is remounted"
+);
+
+// In React Navigation 7, navigate() to a screen that is not on top pushes a
+// new copy of it. Tabs that use it stack up duplicates, each mounted from
+// nothing: Train -> Feed -> Train was two Trains.
+for (const route of ["FeedPage", "SearchPage", "ExerciseLibraryPage"]) {
+  assert.ok(
+    navSource.includes(`goToTab("${route}")`) &&
+      !navSource.includes(`navigationRef.navigate("${route}")`),
+    `the ${route} tab pushes a new copy of itself onto the stack again`
+  );
+}
 
 // The indicator holds its space when transparent, or the active tab's icon
 // sits above the others.
