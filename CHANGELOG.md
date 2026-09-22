@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.1.1] - Unreleased
+### Fixed
+- **2.1.0 crashed on launch for anybody with a real split.** `SplitCards` took `formatDate` from `useTranslation()`, which has never returned one - it is a module export from `@localization` - so it came back `undefined` and calling it threw "undefined is not a function" during Home's first render. `formatWeekdays` returns early for a group with no settled weekday, so it only fired for an account with months of history behind a split: every device this was tried on before release had too little data to reach that line, and the first place it failed was the Play build, on the one phone holding the exercises that release was meant to rescue. Nothing was lost - a render crash does not touch the database. `npm test` now checks every destructure of `useTranslation()` in the app against what the context actually provides, which `check-undeclared` cannot see: the name is declared, it is the object that lacks it.
+
+---
 ## [2.1.0] - Unreleased
 ### Added
 - **A feedback message can be triaged, not just read.** Each one carries one of four states - `new`, `planned`, `fixed`, `not_fixed` - set from a chip row on the message itself, one tap per decision. `read_at` said the message had been looked at and nothing about what was decided, and an inbox where everything is "read" is the same inbox as one where nothing is. Setting a state marks the message read too. A trigger forces every new row to `new`: the insert policy lets any signed-in account write its own row, and column grants cannot stop it - Postgres ignores a column-level revoke when the role holds the privilege on the table. **Needs `20260922090000_a-feedback-message-has-a-status.sql`.**
