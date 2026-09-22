@@ -385,10 +385,27 @@ if (netlify === null) {
 
   if (workflow === null) {
     problems.push(".github/workflows/pr-review.yml is gone");
+  } else if (/^\s*push:/m.test(workflow)) {
+    // `claude-code-action` refuses a push event outright - "Unsupported event
+    // type: push". A workflow that triggers on one runs every agent for under
+    // a second, reports success because each step is continue-on-error, and
+    // then posts its empty result over whatever report was already on the
+    // pull request. `pull_request: closed` fires at the same moment, carries
+    // the pull request, and is an event the action accepts.
+    problems.push(
+      "pr-review.yml triggers on push - the review action rejects that event, so every agent fails instantly while the run still goes green"
+    );
   } else if (/issue_comment:/.test(workflow)) {
     if (!/author_association/.test(workflow)) {
       problems.push(
         "pr-review.yml takes a /qa comment from anybody - issue_comment runs in this repository's context with its secrets, and the job checks out the PR's own head"
+      );
+    }
+
+    // A run with nothing to say must not overwrite a run that had something.
+    if (!/if \[ ! -s final-report\.md \][\s\S]{0,600}exit 1/.test(workflow)) {
+      problems.push(
+        "pr-review.yml posts its comment even with no report - that is how a finished review was replaced by 'kunne ikke fuldfoeres'"
       );
     }
 

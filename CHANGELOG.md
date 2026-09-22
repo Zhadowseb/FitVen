@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.1.1] - Unreleased
+### Fixed
+- **The review agents run again.** Moving them to master was built on a `push` trigger, and `claude-code-action` refuses that event outright - "Unsupported event type: push". All eight agents died in under a second, every step is `continue-on-error` so the run still went green, and the aggregate then wrote its "kunne ikke fuldfoeres" over the finished twenty-finding report on the pull request. The report was only recoverable from the earlier run's artifact. The trigger is now `pull_request: closed`, which fires at the same moment, carries the pull request the merge came from, and is an event the action accepts. `npm test` fails if the push trigger comes back.
+- **A run with nothing to say no longer speaks.** With no report the aggregate leaves the comment alone, writes the failure to the run summary and goes red, instead of replacing whatever was there. `npm test` holds that too.
+
+---
 ## [2.1.0] - Unreleased
 ### Added
 - **A feedback message can be triaged, not just read.** Each one carries one of four states - `new`, `planned`, `fixed`, `not_fixed` - set from a chip row on the message itself, one tap per decision. `read_at` said the message had been looked at and nothing about what was decided, and an inbox where everything is "read" is the same inbox as one where nothing is. Setting a state marks the message read too. A trigger forces every new row to `new`: the insert policy lets any signed-in account write its own row, and column grants cannot stop it - Postgres ignores a column-level revoke when the role holds the privilege on the table. **Needs `20260922090000_a-feedback-message-has-a-status.sql`.**
