@@ -91,7 +91,7 @@ export async function getExerciseCatalogEntryByName(db, exerciseName) {
 
 export async function getCompletedStrengthSetsForPersonalRecords(
   db,
-  { exerciseName = null } = {}
+  { exerciseName = null, sinceIsoDate = null } = {}
 ) {
   const params = [];
   const exerciseFilter =
@@ -101,6 +101,22 @@ export async function getCompletedStrengthSetsForPersonalRecords(
 
   if (exerciseFilter) {
     params.push(exerciseName);
+  }
+
+  // Records wants every set there has ever been. Home's muscle glance wants
+  // the last sixty days, and was reading the whole history on every return to
+  // the screen to throw nine tenths of it away in JavaScript. Optional, so no
+  // other caller changes.
+  const sinceFilter = sinceIsoDate
+    ? `AND (CASE
+         WHEN d.date LIKE '__.__.____'
+         THEN substr(d.date, 7, 4) || '-' || substr(d.date, 4, 2) || '-' || substr(d.date, 1, 2)
+         ELSE d.date
+       END) >= ?`
+    : "";
+
+  if (sinceFilter) {
+    params.push(sinceIsoDate);
   }
 
   return db.getAllAsync(
@@ -135,6 +151,7 @@ export async function getCompletedStrengthSetsForPersonalRecords(
        AND COALESCE(w.deleted_at, '') = ''
        AND COALESCE(d.deleted_at, '') = ''
        ${exerciseFilter}
+       ${sinceFilter}
      ORDER BY
        e.exercise_name COLLATE NOCASE ASC,
        CAST(s.reps AS INTEGER) ASC,

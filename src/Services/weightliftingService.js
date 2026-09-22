@@ -2357,9 +2357,11 @@ export async function createCustomExercise(
  * returns an empty map offline and the section that needs it shows nothing
  * rather than a wrong total.
  */
-export async function getRecordsSourceData(db) {
+export async function getRecordsSourceData(db, { sinceIsoDate = null } = {}) {
   const rows =
-    await weightliftingRepository.getCompletedStrengthSetsForPersonalRecords(db);
+    await weightliftingRepository.getCompletedStrengthSetsForPersonalRecords(db, {
+      sinceIsoDate,
+    });
   const groupsByExercise = new Map();
 
   try {
@@ -4460,7 +4462,19 @@ export async function updateExerciseDone(db, { exerciseId, done }) {
  * answer here reads as "you trained nothing".
  */
 export async function getMuscleGroupDeltas(db, { now = Date.now(), days = 30 } = {}) {
-  const { rows, groupsByExercise } = await getRecordsSourceData(db);
+  // Two windows back and nothing earlier - that is all buildMuscleGroupDeltas
+  // ever looks at.
+  const since = new Date(now);
+
+  since.setDate(since.getDate() - 2 * days);
+
+  const sinceIsoDate = [
+    since.getFullYear(),
+    String(since.getMonth() + 1).padStart(2, "0"),
+    String(since.getDate()).padStart(2, "0"),
+  ].join("-");
+
+  const { rows, groupsByExercise } = await getRecordsSourceData(db, { sinceIsoDate });
 
   return buildMuscleGroupDeltas(normalizeRecordRows(rows), {
     groupsByExercise,
