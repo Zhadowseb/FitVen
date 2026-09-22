@@ -1,5 +1,10 @@
 import { ScrollView, TouchableOpacity, View, useColorScheme } from "react-native";
-import { useTranslation } from "@localization";
+// formatDate is a module export, not part of what useTranslation() returns.
+// Taking it from the hook gave `undefined`, and calling that crashed Home on
+// launch - but only for an account with a real split that has settled
+// weekdays, which is to say only on a phone with months of history. Every
+// device this was tried on before release had too little data to reach it.
+import { formatDate, useTranslation } from "@localization";
 
 import styles from "./SplitCardsStyle";
 import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
@@ -99,7 +104,7 @@ function SplitCard({ group, theme, width, onPress, t, formatDate }) {
  * names the section here: a card carries its own name once there is one.
  */
 export default function SplitCards({ groups = [], onOpenGroup, onOpenAll }) {
-  const { t, formatDate } = useTranslation();
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
 
