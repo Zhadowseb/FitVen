@@ -1,3 +1,4 @@
+import { amrapFlagFor, resolveSetType } from "@utils/setTypes";
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
@@ -343,6 +344,8 @@ async function getProgramExportTables(db, programId) {
           s.done,
           s.failed,
           s.amrap,
+          s.set_type,
+          s.amrap_target,
           s.note
        FROM "Set" s
        JOIN Exercise_Instance e ON e.exercise_instance_id = s.exercise_instance_id
@@ -756,9 +759,11 @@ async function insertImportedProgram(db, payload) {
           done,
           failed,
           amrap,
+          set_type,
+          amrap_target,
           note,
           needs_sync
-        ) VALUES (NULL, NULL, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1);`,
+        ) VALUES (NULL, NULL, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1);`,
         sqliteParams([
           createLocalUuid(),
           createNextSyncVersion(),
@@ -776,7 +781,9 @@ async function insertImportedProgram(db, payload) {
           toIntegerOrNull(set.reps),
           toBooleanInt(set.done),
           toBooleanInt(set.failed),
-          toBooleanInt(set.amrap),
+          amrapFlagFor(resolveSetType(set)),
+          resolveSetType(set),
+          resolveSetType(set) === "amrap" ? toIntegerOrNull(set.amrap_target) : null,
           normalizeText(set.note),
         ])
       );

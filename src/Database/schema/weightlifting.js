@@ -73,6 +73,10 @@ export const weightliftingSchemaSql = `
       done INTEGER NOT NULL DEFAULT 0,
       failed INTEGER NOT NULL DEFAULT 0,
       amrap INTEGER NOT NULL DEFAULT 0,
+      -- 'warmup' | 'working' | 'drop' | 'amrap'. The one truth for what kind of
+      -- set this is; amrap above is kept as its mirror for older app versions.
+      set_type TEXT NOT NULL DEFAULT 'working',
+      amrap_target INTEGER,
       note TEXT,
       needs_sync INTEGER NOT NULL DEFAULT 1
   );

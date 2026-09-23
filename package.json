@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "2.1.2-fix-tabs-rebuild-home-on-every-switch.1",
+  "version": "2.2.0-feature-exercise-card-set-types.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",
@@ -10,7 +10,7 @@
     "android:dev": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "test": "node scripts/check-agent-docs.js && node scripts/check-imports.js && node scripts/check-undeclared.js && node scripts/check-privacy-policy.js && node scripts/build-privacy-policy-page.js --check && node scripts/build-terms-page.js --check && npm run test:cloud-sync-fields && npm run test:secure-session && npm run test:set-carry-over && npm run test:pr-index && npm run test:microcycle-days && npm run test:next-workout && npm run test:sync-upload && npm run test:sync-watchers && npm run test:delete-sticks && npm run test:db-repairs && npm run test:stuck-strength && npm run test:dev-dashboard && npm run test:recent-exercises && npm run test:custom-exercise && npm run test:location && npm run test:run-intervals && npm run test:run-display && npm run test:program-progress && npm run test:workout-finish && npm run test:profile-birthdate && npm run test:heart-rate-settings && npm run test:ble-heart-rate && npm run test:notifications && npm run test:exercise-map && npm run test:ugc-safety && npm run test:terms && npm run test:expanded-height && npm run test:records-insights && npm run test:social-posts && npm run test:home-quick-start && npm run test:gym-leaderboard && npm run test:localization && npm run test:translation-hook && npm run test:glance-window",
+    "test": "node scripts/check-agent-docs.js && node scripts/check-imports.js && node scripts/check-undeclared.js && node scripts/check-privacy-policy.js && node scripts/build-privacy-policy-page.js --check && node scripts/build-terms-page.js --check && npm run test:cloud-sync-fields && npm run test:secure-session && npm run test:set-carry-over && npm run test:pr-index && npm run test:microcycle-days && npm run test:next-workout && npm run test:sync-upload && npm run test:sync-watchers && npm run test:delete-sticks && npm run test:db-repairs && npm run test:stuck-strength && npm run test:dev-dashboard && npm run test:recent-exercises && npm run test:custom-exercise && npm run test:location && npm run test:run-intervals && npm run test:run-display && npm run test:program-progress && npm run test:workout-finish && npm run test:profile-birthdate && npm run test:heart-rate-settings && npm run test:ble-heart-rate && npm run test:notifications && npm run test:exercise-map && npm run test:ugc-safety && npm run test:terms && npm run test:expanded-height && npm run test:records-insights && npm run test:social-posts && npm run test:home-quick-start && npm run test:gym-leaderboard && npm run test:localization && npm run test:translation-hook && npm run test:glance-window && npm run test:set-types && npm run test:exercise-card-data",
     "docs:check": "node scripts/check-agent-docs.js",
     "version:auto": "node scripts/version.js auto",
     "version:branch": "node scripts/version.js branch",
@@ -59,6 +59,8 @@
     "test:localization": "node scripts/test-localization.js",
     "test:translation-hook": "node scripts/test-translation-hook-fields.js",
     "test:glance-window": "node scripts/test-muscle-glance-window.js",
+    "test:set-types": "node scripts/test-set-types.js",
+    "test:exercise-card-data": "node scripts/test-exercise-card-data.js",
     "gyms:import": "node scripts/import-gyms/index.js",
     "gyms:import:dry-run": "node scripts/import-gyms/index.js --dry-run",
     "test:home-quick-start": "node scripts/test-home-quick-start.js"

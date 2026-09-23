@@ -5,6 +5,7 @@
 // can be loaded and tested on its own. scripts/test-cloud-sync-fields.js does
 // exactly that, which is the only automated coverage the sync engine has.
 // One copy of the wall-clock parser, in the pure module a test can load.
+import { normalizeSetType } from "@utils/setTypes";
 import { normalizeCloudTimeString } from "@utils/cloudActivityUtils";
 import {
   formatDate,
@@ -94,6 +95,10 @@ export function resolveProgramCloudLocalId(program) {
 const int = (fallback = null) => (value) => normalizeOptionalInteger(value, fallback);
 const flag = () => normalizeBooleanFlag;
 const text = () => normalizeOptionalText;
+
+// A set's kind. The rules live in @utils/setTypes, where the repository reads
+// them too - a value this client does not recognise becomes a working set.
+const setType = () => normalizeSetType;
 
 function field(key, local, options = {}) {
   const read = options.read ?? ((row) => row?.[key]);
@@ -208,6 +213,8 @@ export const SYNCED_FIELDS = {
     field("done", flag()),
     field("failed", flag()),
     field("amrap", flag()),
+    field("set_type", setType()),
+    field("amrap_target", int()),
     field("note", text()),
   ],
 };

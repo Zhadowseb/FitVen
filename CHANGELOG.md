@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.2.0] - Unreleased
+### Changed
+- Describe pending changes here.
+
+---
 ## [2.1.2] - Unreleased
 ### Fixed
 - **Switching tabs no longer rebuilds Home.** The Home tab called `resetRoot`, which threw the whole stack away and mounted a new Home from nothing - skeleton, every query cold, the friends strip and the avatar fetched again. Measured on a phone with three months of history, driving the taps over adb: **2.3 s before anything showed and 4.1 s before it was all there**, on every press. The frame times were fine throughout (99th percentile 30 ms); the wait was the JavaScript thread mounting the screen and running its loads, which is why it read as the app being slow rather than as it stuttering. Tabs now keep the stack at `[Home]` or `[Home, that tab]` through `reset`, handing the existing Home route back with its key - the instance and what it last drew survive, and its focus effect refreshes it in the background.
