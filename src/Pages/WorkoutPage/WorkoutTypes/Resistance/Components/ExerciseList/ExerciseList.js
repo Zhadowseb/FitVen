@@ -787,6 +787,7 @@ const ExerciseList = ({
 
       <ExerciseRow 
         exercise={item}
+        workoutId={workout_id}
         isExpanded={Boolean(expandedExercises[item.exercise_id])}
         onToggleExpanded={() => toggleExpanded(item.exercise_id)}
         updateUI={updateUI}

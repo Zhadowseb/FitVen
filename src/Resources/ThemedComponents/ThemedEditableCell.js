@@ -13,6 +13,11 @@ const ThemedEditableCell = ({
   suffixFormatter,
   displayFormatter,
   showSuffixWhenEmpty = false,
+  // Drawn over the default suffix look - an AMRAP target is its own colour.
+  suffixStyle,
+  // Shown after the suffix while the field is not being edited: a drop set's
+  // difference to the set above sits here.
+  trailing = null,
   textAlign = "center",
   placeholder = "",
   placeholderTextColor,
@@ -151,11 +156,14 @@ const ThemedEditableCell = ({
           style={[
             styles.suffix,
             { color: theme.text },
+            suffixStyle,
           ]}
         >
           {displaySuffix}
         </ThemedText>
       )}
+
+      {!focused && trailing}
     </Pressable>
   );
 

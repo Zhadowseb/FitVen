@@ -122,7 +122,7 @@ export const EXERCISE_INSTANCE_CLOUD_SYNC_SELECT =
 export const SET_CLOUD_TABLE = "set";
 
 export const SET_CLOUD_SYNC_SELECT =
-  "id, user_id, local_set_id, sync_id, sync_version, deleted_at, last_updated, is_deleting, delete_requested_at, local_watchers, cloud_exercise_instance_id, set_number, personal_record, pause, rpe, weight, rm_percentage, reps, done, failed, amrap, note";
+  "id, user_id, local_set_id, sync_id, sync_version, deleted_at, last_updated, is_deleting, delete_requested_at, local_watchers, cloud_exercise_instance_id, set_number, personal_record, pause, rpe, weight, rm_percentage, reps, done, failed, amrap, set_type, amrap_target, note";
 
 const SYNC_WATCHERS_CLOUD_TABLE = "sync_local_watchers";
 

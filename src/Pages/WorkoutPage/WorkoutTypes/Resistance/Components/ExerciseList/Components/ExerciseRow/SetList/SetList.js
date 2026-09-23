@@ -16,26 +16,40 @@ import styles from "./SetListStyle.js";
 import Title from "./Title";
 
 import {
-  ThemedBottomSheet,
   ThemedBouncyCheckbox,
   ThemedCard,
-  ThemedConfirmModal,
   ThemedEditableCell,
   ThemedModal,
   ThemedText,
-  ThemedTextInput,
 } from "@resources/ThemedComponents";
-import Delete from "@resources/Icons/UI-icons/Delete";
 import Note from "@resources/Icons/UI-icons/Note";
 import Amrap from "@resources/Icons/UI-icons/Amrap";
+import Expand from "@resources/Icons/UI-icons/Expand";
 import Plus from "@resources/Icons/UI-icons/Plus";
 import Cogwheel from "@resources/Icons/UI-icons/Cogwheel";
 import Star from "@resources/Icons/UI-icons/Star";
 import { weightliftingService } from "@services";
+import { formatNumber, useTranslation } from "@localization";
+import ReanimatedAnimated, {
+  Easing,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import {
   clampSetValue,
   isClampedSetField,
 } from "@utils/setValueLimits";
+import {
+  canBePersonalRecord,
+  dropParentWeight,
+  labelSets,
+  orderSetsForDisplay,
+  resolveSetType,
+} from "@utils/setTypes";
+import SetTypeSheet from "./SetTypeSheet";
+import { isToneRow, setTypeColor } from "./setTypeColors";
 
 const SET_LIST_COLUMN_KEYS = [
   "note",
@@ -58,6 +72,60 @@ const SET_LIST_DEFAULT_VISIBLE_COLUMNS = SET_LIST_COLUMN_KEYS.reduce(
 const REST_UNIT_MINUTES = "minutes";
 const REST_UNIT_SECONDS = "seconds";
 const REST_DIVIDER_BUBBLE_SIZE = 32;
+
+// Two or more warm-ups can be folded into one row at any time, by hand. They
+// also fold by themselves once every one is ticked off: after a beat, so the
+// last tick is seen landing, and animated the way the card itself opens.
+const WARMUP_FOLD_DELAY_MS = 450;
+const WARMUP_FOLD_DURATION_MS = 260;
+const WARMUP_FADE_DURATION_MS = 180;
+const WARMUP_FOLD_EASING = Easing.bezier(0.2, 0.8, 0.2, 1);
+
+// How long a deleted set can still be brought back.
+const UNDO_DELETE_MS = 4000;
+
+// What the person last did by hand to an exercise's warm-ups, "open" or
+// "folded", kept for the session. Opened by hand, they no longer fold by
+// themselves. Module state rather than a ref: folding the card unmounts this
+// list, and the choice has to outlive that.
+const warmupFoldChoice = new Map();
+
+// One warm-up folded into one row is the same row with a chevron on it.
+const MIN_WARMUPS_TO_FOLD = 2;
+
+function countWarmups(orderedSets) {
+  return orderedSets.filter((set) => resolveSetType(set) === "warmup").length;
+}
+
+function warmupsAllDone(orderedSets) {
+  const warmups = orderedSets.filter((set) => resolveSetType(set) === "warmup");
+
+  return (
+    warmups.length >= MIN_WARMUPS_TO_FOLD &&
+    warmups.every((set) => Number(set?.done) === 1)
+  );
+}
+
+function initialWarmupsFolded(sets, foldKey) {
+  const choice = warmupFoldChoice.get(foldKey);
+
+  if (choice) {
+    return choice === "folded";
+  }
+
+  // Already all done when the card opens: start folded, without playing it.
+  return warmupsAllDone(orderSetsForDisplay(sets ?? []));
+}
+
+function parseWeight(value) {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+
+  const numeric = Number(value);
+
+  return Number.isFinite(numeric) ? numeric : null;
+}
 
 const resolveSetListVisibleColumns = (visibleColumns) => {
   let parsedColumns = visibleColumns;
@@ -97,6 +165,7 @@ const resolveSetListVisibleColumns = (visibleColumns) => {
 
 const SetList = ({
   sets,
+  exerciseId = null,
   exerciseName,
   visibleColumns,
   restUnitRequestKey = 0,
@@ -113,6 +182,7 @@ const SetList = ({
 }) => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const { t } = useTranslation();
   const isDark = colorScheme === "dark";
   const tableSurface = isDark ? "rgba(16, 17, 24, 0.58)" : "#f5f4fa";
   const tableBorder = isDark
@@ -156,13 +226,23 @@ const SetList = ({
 
   const db = useSQLiteContext();
   const [localSets, setLocalSets] = useState(sets);
+  // A deleted set, while it can still be brought back: { setId, label }.
+  const [pendingDelete, setPendingDelete] = useState(null);
+  const pendingDeleteRef = useRef(null);
+  // Deletes that have reached the database. Hidden for good, so the set does
+  // not flash back in the moment before the parent's refresh arrives.
+  const deletedSetIdsRef = useRef(new Set());
+  const updateUIRef = useRef(updateUI);
+  const onWorkoutMetadataChangeRef = useRef(onWorkoutMetadataChange);
+
+  updateUIRef.current = updateUI;
+  onWorkoutMetadataChangeRef.current = onWorkoutMetadataChange;
   const resolvedVisibleColumns = resolveSetListVisibleColumns(visibleColumns);
 
   const [setOptionsVisible, setSetOptionsVisible] = useState(false);
   const [selectedSet, set_selectedSet] = useState(null);
   const [selectedSetNote, setSelectedSetNote] = useState("");
   const [noteModalVisible, setNoteModalVisible] = useState(false);
-  const [deleteSetConfirmVisible, setDeleteSetConfirmVisible] = useState(false);
   const [noteModalText, setNoteModalText] = useState("");
   const [activeEditableCell, setActiveEditableCell] = useState(null);
   const [restUnit, setRestUnit] = useState(REST_UNIT_MINUTES);
@@ -241,8 +321,130 @@ const SetList = ({
     return () => clearInterval(interval);
   }, [activeRestTimer]);
 
-  const displayedSets = localSets ?? [];
+  // A deleted set leaves the list at once and the database only when its undo
+  // runs out, so it is filtered here rather than dropped from state - a
+  // refresh from the parent in the meantime must not bring it back.
+  const displayedSets = orderSetsForDisplay(
+    (localSets ?? []).filter(
+      (set) =>
+        set.sets_id !== pendingDelete?.setId &&
+        !deletedSetIdsRef.current.has(set.sets_id)
+    )
+  );
+  const setLabels = labelSets(displayedSets);
+  const labelBySetId = new Map(
+    displayedSets.map((set, index) => [set.sets_id, setLabels[index]])
+  );
   const hasSets = displayedSets.length > 0;
+
+  // Warm-ups sort first, so they are the head of the list.
+  const warmupSets = displayedSets.filter(
+    (set) => resolveSetType(set) === "warmup"
+  );
+  const canFoldWarmups = warmupSets.length >= MIN_WARMUPS_TO_FOLD;
+  const allWarmupsDone = warmupsAllDone(displayedSets);
+  const foldKey = exerciseId ?? exerciseName ?? null;
+  const [warmupsFolded, setWarmupsFolded] = useState(() =>
+    initialWarmupsFolded(sets, foldKey)
+  );
+  const warmupsShownFolded = warmupsFolded && canFoldWarmups;
+  const [warmupsAnimating, setWarmupsAnimating] = useState(false);
+  const [warmupBlockY, setWarmupBlockY] = useState(0);
+  const [warmupContentHeight, setWarmupContentHeight] = useState(0);
+  const [foldedRowHeight, setFoldedRowHeight] = useState(0);
+  const warmupFold = useSharedValue(warmupsShownFolded ? 1 : 0);
+  const warmupFade = useSharedValue(warmupsShownFolded ? 1 : 0);
+  const warmupFoldMountedRef = useRef(false);
+  const previousAllWarmupsDoneRef = useRef(allWarmupsDone);
+  const previousWarmupCountRef = useRef(warmupSets.length);
+
+  // A tick taken back opens them again straight away. Only the change counts:
+  // warm-ups folded by hand before they were done stay folded.
+  useEffect(() => {
+    const wasAllDone = previousAllWarmupsDoneRef.current;
+
+    previousAllWarmupsDoneRef.current = allWarmupsDone;
+
+    if (wasAllDone && !allWarmupsDone) {
+      setWarmupsFolded(false);
+    }
+  }, [allWarmupsDone]);
+
+  // A set just turned into a warm-up is shown, not folded away out of sight.
+  useEffect(() => {
+    const previousCount = previousWarmupCountRef.current;
+
+    previousWarmupCountRef.current = warmupSets.length;
+
+    if (warmupSets.length > previousCount) {
+      setWarmupsFolded(false);
+    }
+  }, [warmupSets.length]);
+
+  useEffect(() => {
+    if (
+      !allWarmupsDone ||
+      warmupsFolded ||
+      warmupFoldChoice.get(foldKey) === "open"
+    ) {
+      return undefined;
+    }
+
+    const timer = setTimeout(() => setWarmupsFolded(true), WARMUP_FOLD_DELAY_MS);
+
+    return () => clearTimeout(timer);
+  }, [allWarmupsDone, foldKey, warmupsFolded]);
+
+  useEffect(() => {
+    if (!warmupFoldMountedRef.current) {
+      warmupFoldMountedRef.current = true;
+      return;
+    }
+
+    const target = warmupsShownFolded ? 1 : 0;
+
+    // The rest bubbles are placed from measured rows, which are moving; they
+    // are hidden until the rows have settled.
+    setWarmupsAnimating(true);
+    warmupFade.value = withTiming(target, { duration: WARMUP_FADE_DURATION_MS });
+    warmupFold.value = withTiming(
+      target,
+      { duration: WARMUP_FOLD_DURATION_MS, easing: WARMUP_FOLD_EASING },
+      (finished) => {
+        if (finished) {
+          runOnJS(setWarmupsAnimating)(false);
+        }
+      }
+    );
+  }, [warmupFade, warmupFold, warmupsShownFolded]);
+
+  const warmupBlockStyle = useAnimatedStyle(() => {
+    if (!(warmupContentHeight > 0) || !(foldedRowHeight > 0)) {
+      return {};
+    }
+
+    return {
+      height:
+        warmupContentHeight -
+        (warmupContentHeight - foldedRowHeight) * warmupFold.value,
+    };
+  });
+  const warmupRowsStyle = useAnimatedStyle(() => ({
+    opacity: 1 - warmupFade.value,
+  }));
+  const foldedWarmupsStyle = useAnimatedStyle(() => ({
+    opacity: warmupFade.value,
+  }));
+
+  const openWarmupsByHand = () => {
+    warmupFoldChoice.set(foldKey, "open");
+    setWarmupsFolded(false);
+  };
+
+  const foldWarmupsByHand = () => {
+    warmupFoldChoice.set(foldKey, "folded");
+    setWarmupsFolded(true);
+  };
   const isPersonalRecordSet = (set) =>
     Number(set?.personal_record) === 1 &&
     Number(set?.done) === 1 &&
@@ -319,7 +521,7 @@ const SetList = ({
     : activeColumns[activeColumns.length - 1]?.key;
 
   const getRenderedColumns = (set) => {
-    if (set.amrap !== 1 || !renderedVisibleColumns.reps) {
+    if (resolveSetType(set) !== "amrap" || !renderedVisibleColumns.reps) {
       return activeColumns;
     }
 
@@ -392,22 +594,147 @@ const SetList = ({
   // every write is held back until it does.
   const isPersistedSet = (setId) => Number.isFinite(Number(setId));
 
-  const deleteSet = async (setId) => {
-    if (!isPersistedSet(setId)) {
+  // The delete itself, once the undo has run out. Everything it touches is
+  // read through a ref: the timer that calls it was set renders ago.
+  const commitPendingDelete = async () => {
+    const pending = pendingDeleteRef.current;
+
+    if (!pending) {
       return;
     }
 
-    await weightliftingService.deleteSet(db, setId);
-    await updateUI?.();
-    await onWorkoutMetadataChange?.();
+    clearTimeout(pending.timer);
+    pendingDeleteRef.current = null;
+
+    try {
+      await weightliftingService.deleteSet(db, pending.setId);
+      deletedSetIdsRef.current.add(pending.setId);
+      await updateUIRef.current?.();
+      await onWorkoutMetadataChangeRef.current?.();
+    } catch (error) {
+      console.error("Error deleting set", error);
+    } finally {
+      setPendingDelete((current) =>
+        current?.setId === pending.setId ? null : current
+      );
+    }
   };
 
-  const confirmDeleteSelectedSet = () => {
-    if (!selectedSet) {
+  const undoPendingDelete = () => {
+    const pending = pendingDeleteRef.current;
+
+    if (!pending) {
       return;
     }
 
-    setDeleteSetConfirmVisible(true);
+    clearTimeout(pending.timer);
+    pendingDeleteRef.current = null;
+    setPendingDelete(null);
+  };
+
+  // No question first: the set goes from the list at once and stays
+  // recoverable for a few seconds, which costs less than a dialog every time.
+  const deleteSelectedSet = () => {
+    const set = selectedSet;
+
+    setSetOptionsVisible(false);
+
+    if (!set || !isPersistedSet(set.sets_id)) {
+      return;
+    }
+
+    // One undo at a time: a second delete makes the first one final.
+    commitPendingDelete();
+
+    pendingDeleteRef.current = {
+      setId: set.sets_id,
+      timer: setTimeout(commitPendingDelete, UNDO_DELETE_MS),
+    };
+    setPendingDelete({
+      setId: set.sets_id,
+      label: labelBySetId.get(set.sets_id)?.label ?? String(set.set_number ?? ""),
+    });
+  };
+
+  // Leaving - the card folding, the workout closing - ends the undo, and the
+  // set is deleted then rather than lost track of.
+  useEffect(
+    () => () => {
+      const pending = pendingDeleteRef.current;
+
+      if (!pending) {
+        return;
+      }
+
+      clearTimeout(pending.timer);
+      pendingDeleteRef.current = null;
+      weightliftingService
+        .deleteSet(db, pending.setId)
+        .then(() => updateUIRef.current?.())
+        .then(() => onWorkoutMetadataChangeRef.current?.())
+        .catch((error) => console.error("Error deleting set", error));
+    },
+    [db]
+  );
+
+  const applySetType = async (setId, setType, amrapTarget = null) => {
+    const current = localSets.find((set) => set.sets_id === setId);
+    // Same rule as the service: an unticked set turned warm-up drops the
+    // numbers it copied from the set above.
+    const clearsLoad = setType === "warmup" && Number(current?.done) !== 1;
+    const patch = {
+      ...(clearsLoad ? { reps: null, weight: null, rm_percentage: null } : {}),
+      set_type: setType,
+      amrap: setType === "amrap" ? 1 : 0,
+      amrap_target: setType === "amrap" ? amrapTarget : null,
+      // A warm-up or a drop set loses its record at once; the service
+      // recomputes the rest.
+      ...(canBePersonalRecord(setType) ? {} : { personal_record: 0 }),
+    };
+
+    setLocalSets((prev) =>
+      prev.map((set) => (set.sets_id === setId ? { ...set, ...patch } : set))
+    );
+    set_selectedSet((prev) =>
+      prev?.sets_id === setId ? { ...prev, ...patch } : prev
+    );
+
+    try {
+      const result = await weightliftingService.setSetType(db, {
+        setId,
+        setType,
+        amrapTarget: patch.amrap_target,
+      });
+
+      applyPersonalRecordSetIds(result?.personalRecordSetIds);
+    } catch (error) {
+      console.error("Error changing set type", error);
+    }
+
+    updateUI?.();
+  };
+
+  const changeSelectedSetType = async (setType) => {
+    const set = selectedSet;
+
+    if (!set || !isPersistedSet(set.sets_id) || resolveSetType(set) === setType) {
+      return;
+    }
+
+    const keptTarget =
+      Number(set.amrap_target) > 0 ? Number(set.amrap_target) : null;
+
+    await applySetType(set.sets_id, setType, keptTarget);
+  };
+
+  const changeSelectedAmrapTarget = async (amrapTarget) => {
+    const set = selectedSet;
+
+    if (!set || !isPersistedSet(set.sets_id)) {
+      return;
+    }
+
+    await applySetType(set.sets_id, "amrap", amrapTarget);
   };
 
   const updateField = async (field, value, setId) => {
@@ -617,7 +944,10 @@ const SetList = ({
     );
   };
 
-  const renderCellContent = (key, set) => {
+  const renderCellContent = (key, set, rowIndex) => {
+    const setType = labelBySetId.get(set.sets_id)?.type ?? resolveSetType(set);
+    const typeColor = setTypeColor(setType, theme);
+
     switch (key) {
       case "note":
         return set.note ? (
@@ -634,25 +964,44 @@ const SetList = ({
         ) : null;
 
       case "rest":
-        return null;
+        // A drop set continues the set above it: a line joins the two where
+        // the rest between them would otherwise sit.
+        return setType === "drop" && rowIndex > 0 ? (
+          <View
+            pointerEvents="none"
+            style={[styles.dropConnector, { backgroundColor: theme.dropSet }]}
+          />
+        ) : null;
 
       case "set": {
         const isPersonalRecord = isPersonalRecordSet(set);
+        const isTyped = isToneRow(setType);
+        const label =
+          labelBySetId.get(set.sets_id)?.label ?? String(set.set_number ?? "");
 
         return (
           <TouchableOpacity
             activeOpacity={0.82}
+            accessibilityRole="button"
+            accessibilityLabel={t("workout.setType.badge", { label })}
             hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
             style={[
               styles.set_chip,
               isPersonalRecord
                 ? styles.set_chip_record
-                : {
-                    backgroundColor: setChipBackground,
-                    borderColor: cellBorder,
-                  },
+                : isTyped
+                  ? {
+                      backgroundColor: withAlpha(typeColor, 0.16),
+                      borderColor: withAlpha(typeColor, 0.45),
+                    }
+                  : {
+                      backgroundColor: setChipBackground,
+                      borderColor: cellBorder,
+                    },
             ]}
             onPress={() => handleOpenSetOptions(set)}
+            onLongPress={() => handleOpenSetOptions(set)}
+            delayLongPress={300}
           >
             {isPersonalRecord ? (
               <View style={styles.set_chip_star} pointerEvents="none">
@@ -674,23 +1023,40 @@ const SetList = ({
               setColor={
                 isPersonalRecord
                   ? personalRecordStarTextColor
-                  : setChipTextColor
+                  : isTyped
+                    ? typeColor
+                    : setChipTextColor
               }
             >
-              {set.set_number}
+              {label}
             </ThemedText>
+
+            {setType === "amrap" && !isPersonalRecord ? (
+              <View style={styles.set_chip_amrap} pointerEvents="none">
+                <Amrap width={11} height={11} color={typeColor} />
+              </View>
+            ) : null}
           </TouchableOpacity>
         );
       }
 
-      case "reps":
+      case "reps": {
+        const isAmrap = setType === "amrap";
+        const target =
+          Number(set.amrap_target) > 0 ? Number(set.amrap_target) : null;
+
         return renderEditableValue({
           cellKey: `${set.sets_id}:reps`,
           value: set.reps?.toString() ?? "",
-          suffix: set.amrap === 1 ? "AMRAP" : "",
-          showSuffixWhenEmpty: set.amrap === 1,
+          // "9/6+": nine done against a target of six or more.
+          suffix: isAmrap ? (target ? `/${target}+` : "AMRAP") : "",
+          suffixStyle: isAmrap
+            ? [styles.typeNote, { color: theme.amrap }]
+            : undefined,
+          showSuffixWhenEmpty: isAmrap,
           onCommit: (value) => updateField("reps", value, set.sets_id),
         });
+      }
 
       case "rpe":
         return renderEditableValue({
@@ -707,13 +1073,30 @@ const SetList = ({
           onCommit: (value) => updateRmPercentage(value, set.sets_id),
         });
 
-      case "weight":
+      case "weight": {
+        const parentWeight = dropParentWeight(displayedSets, rowIndex);
+        const weight = parseWeight(set.weight);
+        const drop =
+          parentWeight !== null && weight !== null ? parentWeight - weight : null;
+
         return renderEditableValue({
           cellKey: `${set.sets_id}:weight`,
           value: set.weight?.toString() ?? "",
           suffix: "kg",
+          // How far it dropped from the set above: "70 kg -17,5".
+          trailing:
+            drop > 0 ? (
+              <ThemedText
+                style={[styles.typeNote, styles.dropDifference]}
+                setColor={theme.dropSet}
+                numberOfLines={1}
+              >
+                {`\u2212${formatNumber(drop, { maximumFractionDigits: 2 })}`}
+              </ThemedText>
+            ) : null,
           onCommit: (value) => updateWeight(value, set.sets_id),
         });
+      }
 
       case "done": {
         const isPersonalRecord = isPersonalRecordSet(set);
@@ -735,7 +1118,9 @@ const SetList = ({
                 ? theme.danger
                 : isPersonalRecord
                   ? personalRecordControlFill
-                  : undefined
+                  : setType === "warmup"
+                    ? theme.warmup
+                    : undefined
             }
           />
         );
@@ -817,11 +1202,36 @@ const SetList = ({
     };
   };
 
-  const renderRestDivider = (set, renderedColumns) => {
+  const renderRestDivider = (set, renderedColumns, rowIndex) => {
     const rowLayout = setRowLayouts[set.sets_id];
 
     if (!rowLayout) {
       return null;
+    }
+
+    // Straight into a drop set there is no rest; the connector stands in.
+    if (
+      rowIndex + 1 < displayedSets.length &&
+      resolveSetType(displayedSets[rowIndex + 1]) === "drop"
+    ) {
+      return null;
+    }
+
+    // Warm-up rows are measured inside their own block, so they are placed
+    // from its top. Folded, only the rest after the last one is left, under
+    // the single row that stands for them all.
+    let rowBottom = rowLayout.y + rowLayout.height;
+
+    if (rowIndex < warmupSets.length) {
+      if (warmupsShownFolded) {
+        if (rowIndex !== warmupSets.length - 1) {
+          return null;
+        }
+
+        rowBottom = warmupBlockY + foldedRowHeight;
+      } else {
+        rowBottom += warmupBlockY;
+      }
     }
 
     return (
@@ -833,7 +1243,7 @@ const SetList = ({
           styles.restDividerOverlayRow,
           {
             height: REST_DIVIDER_BUBBLE_SIZE,
-            top: rowLayout.y + rowLayout.height - REST_DIVIDER_BUBBLE_SIZE / 2,
+            top: rowBottom - REST_DIVIDER_BUBBLE_SIZE / 2,
           },
         ]}
       >
@@ -901,6 +1311,215 @@ const SetList = ({
     );
   };
 
+  const renderSetRow = (set, rowIndex) => {
+    const renderedColumns = getRenderedColumns(set);
+    const setType = labelBySetId.get(set.sets_id)?.type ?? "working";
+    const toneColor = isToneRow(setType) ? setTypeColor(setType, theme) : null;
+
+    return (
+      <View
+        key={set.sets_id}
+        onLayout={(event) => handleSetRowLayout(set.sets_id, event)}
+        style={[
+          styles.container,
+          styles.setRow,
+          {
+            borderBottomColor: tableBorder,
+          },
+          rowIndex === displayedSets.length - 1 && styles.lastGrid,
+        ]}
+      >
+        {toneColor ? (
+          <View
+            pointerEvents="none"
+            style={[
+              styles.rowTone,
+              {
+                backgroundColor: withAlpha(toneColor, 0.055),
+                borderLeftColor: toneColor,
+              },
+            ]}
+          />
+        ) : null}
+
+        {renderedColumns.map((col, colIndex) => {
+          const isLast = colIndex === renderedColumns.length - 1;
+
+          return (
+            <View
+              key={col.key}
+              style={[
+                styles.editable_cell,
+                styles.padding,
+                col.style,
+                col.mergedStyle,
+                {
+                  borderColor: tableBorder,
+                },
+                isLast && { borderRightWidth: 0 },
+              ]}
+            >
+              {renderCellContent(col.key, set, rowIndex)}
+            </View>
+          );
+        })}
+      </View>
+    );
+  };
+
+  // The one row the warm-ups fold into: the last of them, a stacked badge to
+  // say there are more, and a chevron where the tick was.
+  const renderFoldedWarmupCell = (key, set, label) => {
+    const warmupColor = theme.warmup;
+
+    if (key === "set") {
+      return (
+        <View style={styles.foldedBadgeStack}>
+          <View
+            style={[
+              styles.set_chip,
+              styles.foldedBadgeBehind,
+              {
+                backgroundColor: withAlpha(warmupColor, 0.1),
+                borderColor: withAlpha(warmupColor, 0.25),
+              },
+            ]}
+          />
+          <View
+            style={[
+              styles.set_chip,
+              {
+                backgroundColor: withAlpha(warmupColor, 0.16),
+                borderColor: withAlpha(warmupColor, 0.45),
+              },
+            ]}
+          >
+            <ThemedText style={styles.set_chip_text} setColor={warmupColor}>
+              {label}
+            </ThemedText>
+          </View>
+        </View>
+      );
+    }
+
+    if (key === "reps") {
+      const reps = parseWeight(set?.reps);
+
+      return reps === null ? null : (
+        <ThemedText style={styles.foldedValue} setColor={theme.title}>
+          {reps}
+        </ThemedText>
+      );
+    }
+
+    if (key === "weight") {
+      const weight = parseWeight(set?.weight);
+
+      return weight === null ? null : (
+        <ThemedText style={styles.foldedValue} setColor={theme.title} numberOfLines={1}>
+          {formatNumber(weight, { maximumFractionDigits: 2 })}
+          <ThemedText style={styles.foldedUnit} setColor={theme.quietText}>
+            {" kg"}
+          </ThemedText>
+        </ThemedText>
+      );
+    }
+
+    if (key === "done") {
+      return <Expand width={16} height={16} color={warmupColor} />;
+    }
+
+    return null;
+  };
+
+  // Above the open warm-ups: what they are, and the way to fold them.
+  const renderWarmupHeader = () => (
+    <TouchableOpacity
+      activeOpacity={0.85}
+      accessibilityRole="button"
+      accessibilityLabel={t("workout.setType.foldWarmups")}
+      onPress={foldWarmupsByHand}
+      style={[styles.warmupHeader, { borderBottomColor: tableBorder }]}
+    >
+      <View
+        pointerEvents="none"
+        style={[
+          styles.rowTone,
+          {
+            backgroundColor: withAlpha(theme.warmup, 0.055),
+            borderLeftColor: theme.warmup,
+          },
+        ]}
+      />
+      <ThemedText style={styles.warmupHeaderText} setColor={theme.warmup} numberOfLines={1}>
+        {t("workout.setType.warmupCount", { count: warmupSets.length })}
+      </ThemedText>
+      <View style={styles.warmupHeaderChevron}>
+        <Expand width={14} height={14} color={theme.warmup} />
+      </View>
+    </TouchableOpacity>
+  );
+
+  const renderFoldedWarmups = () => {
+    const lastWarmup = warmupSets[warmupSets.length - 1];
+    const label = labelBySetId.get(lastWarmup?.sets_id)?.label ?? "";
+    const warmupsAreEverything = warmupSets.length === displayedSets.length;
+
+    return (
+      <ReanimatedAnimated.View
+        onLayout={(event) => setFoldedRowHeight(event.nativeEvent.layout.height)}
+        pointerEvents={warmupsShownFolded ? "auto" : "none"}
+        style={[styles.foldedWarmups, foldedWarmupsStyle]}
+      >
+        <TouchableOpacity
+          activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel={t("workout.setType.warmupsFolded", {
+            count: warmupSets.length,
+          })}
+          onPress={openWarmupsByHand}
+          style={[
+            styles.container,
+            styles.setRow,
+            { borderBottomColor: tableBorder },
+            warmupsAreEverything && styles.lastGrid,
+          ]}
+        >
+          <View
+            pointerEvents="none"
+            style={[
+              styles.rowTone,
+              {
+                backgroundColor: withAlpha(theme.warmup, 0.055),
+                borderLeftColor: theme.warmup,
+              },
+            ]}
+          />
+
+          {activeColumns.map((col, colIndex) => (
+            <View
+              key={col.key}
+              style={[
+                styles.editable_cell,
+                styles.padding,
+                col.style,
+                { borderColor: tableBorder },
+                colIndex === activeColumns.length - 1 && { borderRightWidth: 0 },
+              ]}
+            >
+              {renderFoldedWarmupCell(col.key, lastWarmup, label)}
+            </View>
+          ))}
+        </TouchableOpacity>
+      </ReanimatedAnimated.View>
+    );
+  };
+
+  const selectedLabel = selectedSet
+    ? labelBySetId.get(selectedSet.sets_id)?.label ??
+      String(selectedSet.set_number ?? "")
+    : "";
+
   return (
     <>
       <ThemedCard
@@ -919,46 +1538,29 @@ const SetList = ({
           />
         )}
 
-        {displayedSets.map((set, rowIndex) => {
-          const renderedColumns = getRenderedColumns(set);
-
-          return (
-            <View
-              key={set.sets_id}
-              onLayout={(event) => handleSetRowLayout(set.sets_id, event)}
-              style={[
-                styles.container,
-                styles.setRow,
-                {
-                  borderBottomColor: tableBorder,
-                },
-                rowIndex === displayedSets.length - 1 && styles.lastGrid,
-              ]}
+        {warmupSets.length > 0 ? (
+          <ReanimatedAnimated.View
+            onLayout={(event) => setWarmupBlockY(event.nativeEvent.layout.y)}
+            style={[styles.warmupBlock, warmupBlockStyle]}
+          >
+            <ReanimatedAnimated.View
+              onLayout={(event) =>
+                setWarmupContentHeight(event.nativeEvent.layout.height)
+              }
+              pointerEvents={warmupsShownFolded ? "none" : "auto"}
+              style={warmupRowsStyle}
             >
-              {renderedColumns.map((col, colIndex) => {
-                const isLast = colIndex === renderedColumns.length - 1;
+              {canFoldWarmups ? renderWarmupHeader() : null}
+              {warmupSets.map((set, rowIndex) => renderSetRow(set, rowIndex))}
+            </ReanimatedAnimated.View>
 
-                return (
-                  <View
-                    key={col.key}
-                    style={[
-                      styles.editable_cell,
-                      styles.padding,
-                      col.style,
-                      col.mergedStyle,
-                      {
-                        borderColor: tableBorder,
-                      },
-                      isLast && { borderRightWidth: 0 },
-                    ]}
-                  >
-                    {renderCellContent(col.key, set)}
-                  </View>
-                );
-              })}
-            </View>
-          );
-        })}
+            {canFoldWarmups ? renderFoldedWarmups() : null}
+          </ReanimatedAnimated.View>
+        ) : null}
+
+        {displayedSets
+          .slice(warmupSets.length)
+          .map((set, index) => renderSetRow(set, warmupSets.length + index))}
 
         <View
           style={[
@@ -993,183 +1595,60 @@ const SetList = ({
         </View>
 
         {showRestForSets &&
-          displayedSets.map((set) =>
-            renderRestDivider(set, getRenderedColumns(set))
+          !warmupsAnimating &&
+          displayedSets.map((set, rowIndex) =>
+            renderRestDivider(set, getRenderedColumns(set), rowIndex)
           )}
       </ThemedCard>
 
-      <ThemedBottomSheet
+      {pendingDelete ? (
+        <View
+          style={[
+            styles.undoToast,
+            {
+              backgroundColor: theme.cardBackground ?? cellSurface,
+              borderColor: tableBorder,
+            },
+          ]}
+        >
+          <ThemedText
+            style={styles.undoToastText}
+            setColor={theme.title}
+            numberOfLines={1}
+          >
+            {t("workout.setType.deleted", { label: pendingDelete.label })}
+          </ThemedText>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            hitSlop={10}
+            onPress={undoPendingDelete}
+          >
+            <ThemedText style={styles.undoToastAction} setColor={primaryTextColor}>
+              {t("workout.setType.undo")}
+            </ThemedText>
+          </TouchableOpacity>
+        </View>
+      ) : null}
+
+      <SetTypeSheet
         visible={setOptionsVisible}
         onClose={handleCloseSetOptions}
-      >
-        <View style={styles.setOptionsHeader}>
-          <View
-            style={[
-              styles.setOptionsBadge,
-              { backgroundColor: setChipBackground },
-            ]}
-          >
-            <ThemedText
-              style={styles.setOptionsBadgeText}
-              setColor={primaryTextColor}
-            >
-              {selectedSet?.set_number}
-            </ThemedText>
-          </View>
-
-          <View style={styles.setOptionsHeaderCopy}>
-            <ThemedText
-              style={styles.setOptionsEyebrow}
-              setColor={theme.quietText}
-            >
-              Set {selectedSet?.set_number}
-            </ThemedText>
-            <ThemedText
-              style={styles.setOptionsTitle}
-              setColor={theme.title}
-              numberOfLines={1}
-            >
-              {exerciseName}
-            </ThemedText>
-          </View>
-        </View>
-
-        <View style={styles.setOptionsBody}>
-          <View style={styles.setOptionsSection}>
-            <ThemedText
-              style={styles.setOptionsLabel}
-              setColor={theme.quietText}
-            >
-              Actions
-            </ThemedText>
-
-            <TouchableOpacity
-              activeOpacity={0.84}
-              accessibilityRole="button"
-              style={[
-                styles.setOptionsAction,
-                {
-                  backgroundColor: restSettingsFieldSurface,
-                  borderColor:
-                    selectedSet?.amrap === 1
-                      ? withAlpha(theme.primary, 0.45)
-                      : restUnitBorderColor,
-                },
-              ]}
-              onPress={async () => {
-                if (!selectedSet) {
-                  return;
-                }
-
-                await updateField(
-                  "amrap",
-                  selectedSet.amrap === 1 ? 0 : 1,
-                  selectedSet.sets_id
-                );
-                setSetOptionsVisible(false);
-              }}
-            >
-              <View
-                style={[
-                  styles.setOptionsActionIcon,
-                  { backgroundColor: withAlpha(theme.primary, 0.14) },
-                ]}
-              >
-                <Amrap width={19} height={19} color={primaryTextColor} />
-              </View>
-
-              <View style={styles.setOptionsActionCopy}>
-                <ThemedText
-                  style={styles.setOptionsActionTitle}
-                  setColor={theme.title}
-                >
-                  {selectedSet?.amrap === 1 ? "Remove AMRAP" : "Mark as AMRAP"}
-                </ThemedText>
-                <ThemedText
-                  style={styles.setOptionsActionDetail}
-                  setColor={theme.quietText}
-                >
-                  As many reps as possible
-                </ThemedText>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              activeOpacity={0.84}
-              accessibilityRole="button"
-              style={[
-                styles.setOptionsAction,
-                {
-                  backgroundColor: restSettingsFieldSurface,
-                  borderColor: withAlpha(theme.danger, 0.35),
-                },
-              ]}
-              onPress={confirmDeleteSelectedSet}
-            >
-              <View
-                style={[
-                  styles.setOptionsActionIcon,
-                  { backgroundColor: withAlpha(theme.danger, 0.14) },
-                ]}
-              >
-                <Delete width={19} height={19} color={theme.danger} />
-              </View>
-
-              <View style={styles.setOptionsActionCopy}>
-                <ThemedText
-                  style={styles.setOptionsActionTitle}
-                  setColor={theme.danger}
-                >
-                  Delete set
-                </ThemedText>
-                <ThemedText
-                  style={styles.setOptionsActionDetail}
-                  setColor={theme.quietText}
-                >
-                  Removes the set and its values
-                </ThemedText>
-              </View>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.setOptionsSection}>
-            <ThemedText
-              style={styles.setOptionsLabel}
-              setColor={theme.quietText}
-            >
-              Note
-            </ThemedText>
-
-            <ThemedTextInput
-              value={selectedSetNote}
-              onChangeText={setSelectedSetNote}
-              onEndEditing={persistSelectedSetNote}
-              placeholder="Add note"
-              multiline
-              inputStyle={styles.note_input}
-            />
-          </View>
-        </View>
-
-        {/* Inside the sheet, not beside it. The delete button is in here, and
-            on iOS a modal presented while this one is up is dropped by UIKit
-            without an error - the button looked dead and the view left behind
-            swallowed every touch afterwards. Nested, the sheet presents it. */}
-        <ThemedConfirmModal
-          visible={deleteSetConfirmVisible}
-          title="Delete set?"
-          message="This removes the set and its saved values."
-          confirmLabel="Delete set"
-          tone="danger"
-          onConfirm={async () => {
-            setDeleteSetConfirmVisible(false);
-            await deleteSet(selectedSet?.sets_id);
-            setSetOptionsVisible(false);
-          }}
-          onClose={() => setDeleteSetConfirmVisible(false)}
-        />
-
-      </ThemedBottomSheet>
+        label={selectedLabel}
+        exerciseName={exerciseName}
+        setType={selectedSet ? resolveSetType(selectedSet) : "working"}
+        amrapTarget={
+          Number(selectedSet?.amrap_target) > 0
+            ? Number(selectedSet.amrap_target)
+            : null
+        }
+        onSelectType={changeSelectedSetType}
+        onChangeAmrapTarget={changeSelectedAmrapTarget}
+        onDelete={deleteSelectedSet}
+        note={selectedSetNote}
+        onChangeNote={setSelectedSetNote}
+        onEndEditingNote={persistSelectedSetNote}
+      />
 
       <ThemedModal
         visible={noteModalVisible}

@@ -1,3 +1,4 @@
+import { amrapFlagFor, normalizeSetType, resolveSetType } from "@utils/setTypes";
 import { withTransaction } from "../Database/transaction";
 import { createNextSyncVersion, SQLITE_UUID_SQL } from "../Utils/syncUtils";
 
@@ -125,6 +126,8 @@ export async function getCompletedStrengthSetsForPersonalRecords(
         s.weight,
         s.reps,
         s.personal_record,
+        s.set_type,
+        s.amrap,
         e.exercise_name,
         w.workout_id,
         w.label AS workout_label,
@@ -150,6 +153,10 @@ export async function getCompletedStrengthSetsForPersonalRecords(
        AND COALESCE(e.deleted_at, '') = ''
        AND COALESCE(w.deleted_at, '') = ''
        AND COALESCE(d.deleted_at, '') = ''
+       -- A warm-up is preparation: it is in no record, no volume, no trend.
+       -- Drop sets stay - they count toward volume - and are held back from
+       -- the record calculations by the service instead.
+       AND COALESCE(s.set_type, 'working') <> 'warmup'
        ${exerciseFilter}
        ${sinceFilter}
      ORDER BY
@@ -226,6 +233,8 @@ export async function getCompletedExerciseHistorySets(
         s.reps,
         s.weight,
         s.amrap,
+        s.set_type,
+        s.amrap_target,
         s.personal_record
      FROM history_exercises he
      JOIN "Set" s
@@ -247,15 +256,98 @@ export async function getCompletedExerciseHistorySets(
 }
 
 /**
+ * The note on the previous session of this exercise, for the "last time" box.
+ *
+ * The previous session, not the most recent one that happens to have a note:
+ * a note from three sessions back, shown as "last time", would be something
+ * the person wrote about a different day. So this returns that one session
+ * and the caller shows the box only when it has something in it.
+ *
+ * "Previous" is relative to the workout being looked at, so opening an old
+ * workout shows what came before it rather than what came after.
+ */
+export async function getPreviousExerciseSession(
+  db,
+  { exerciseName, beforeWorkoutId }
+) {
+  const isoDateSql = (column) => `
+    CASE
+      WHEN ${column} LIKE '__.__.____'
+      THEN substr(${column}, 7, 4) || '-' || substr(${column}, 4, 2) || '-' || substr(${column}, 1, 2)
+      ELSE ${column}
+    END`;
+
+  return db.getFirstAsync(
+    `WITH current_workout AS (
+        SELECT ${isoDateSql("COALESCE(cd.date, cw.date)")} AS current_date_sort
+        FROM Workout_Type_Instance cw
+        LEFT JOIN Day cd ON cd.day_id = cw.day_id
+        WHERE cw.workout_id = ?
+      )
+     SELECT
+        e.exercise_instance_id,
+        e.note,
+        COALESCE(d.date, w.date) AS performed_date,
+        ${isoDateSql("COALESCE(d.date, w.date)")} AS performed_date_sort
+     FROM Exercise_Instance e
+     JOIN Workout_Type_Instance w ON w.workout_id = e.workout_type_instance_id
+     LEFT JOIN Day d ON d.day_id = w.day_id
+     WHERE e.exercise_name = ? COLLATE NOCASE
+       AND e.workout_type_instance_id <> ?
+       AND COALESCE(w.done, 0) = 1
+       AND COALESCE(e.deleted_at, '') = ''
+       AND COALESCE(w.deleted_at, '') = ''
+       AND COALESCE(d.deleted_at, '') = ''
+       AND ${isoDateSql("COALESCE(d.date, w.date)")} <= COALESCE(
+         (SELECT current_date_sort FROM current_workout),
+         '9999-12-31'
+       )
+     ORDER BY performed_date_sort DESC, e.exercise_instance_id DESC
+     LIMIT 1;`,
+    [beforeWorkoutId ?? -1, exerciseName, beforeWorkoutId ?? -1]
+  );
+}
+
+/**
+ * The heaviest set ever done of an exercise, for the records shortcut.
+ *
+ * Only what may hold a record: working and AMRAP sets. On a tie in weight the
+ * one with more reps, which is the better lift of the two.
+ */
+export async function getHeaviestLiftForExercise(db, exerciseName) {
+  return db.getFirstAsync(
+    `SELECT
+        CAST(s.weight AS REAL) AS weight,
+        CAST(s.reps AS INTEGER) AS reps
+     FROM "Set" s
+     JOIN Exercise_Instance e ON e.exercise_instance_id = s.exercise_instance_id
+     WHERE e.exercise_name = ? COLLATE NOCASE
+       AND s.done = 1
+       AND COALESCE(s.failed, 0) = 0
+       AND CAST(s.weight AS REAL) > 0
+       AND CAST(s.reps AS INTEGER) > 0
+       AND COALESCE(s.set_type, 'working') IN ('working', 'amrap')
+       AND COALESCE(s.deleted_at, '') = ''
+       AND COALESCE(e.deleted_at, '') = ''
+     ORDER BY CAST(s.weight AS REAL) DESC, CAST(s.reps AS INTEGER) DESC
+     LIMIT 1;`,
+    [exerciseName]
+  );
+}
+
+/**
  * The last set already logged against this exercise instance, so the next one
  * can start from it instead of from four empty fields.
  */
+// A warm-up is not where the work left off, so neither of these copies one:
+// a set added after two warm-ups starts empty rather than at warm-up weight.
 export async function getLastSetValuesForExercise(db, exerciseId) {
   return db.getFirstAsync(
     `SELECT pause, reps, weight
      FROM "Set"
      WHERE exercise_instance_id = ?
        AND COALESCE(deleted_at, '') = ''
+       AND COALESCE(set_type, 'working') <> 'warmup'
      ORDER BY set_number DESC, sets_id DESC
      LIMIT 1;`,
     [exerciseId]
@@ -300,6 +392,7 @@ export async function getLastSetValuesForExerciseName(
        AND COALESCE(e.deleted_at, '') = ''
        AND COALESCE(w.deleted_at, '') = ''
        AND COALESCE(d.deleted_at, '') = ''
+       AND COALESCE(s.set_type, 'working') <> 'warmup'
        AND (s.pause IS NOT NULL OR s.reps IS NOT NULL OR s.weight IS NOT NULL)
      ORDER BY
        performed_date_sort DESC,
@@ -983,6 +1076,10 @@ export async function getCompletedSetsForGymLifts(db, workoutId) {
        AND CAST(s.reps AS INTEGER) > 0
        AND COALESCE(s.deleted_at, '') = ''
        AND COALESCE(e.deleted_at, '') = ''
+       -- A leaderboard row is a public record, so it takes only what a record
+       -- may: working and AMRAP sets. Heaviest-wins would usually keep a
+       -- warm-up out on its own, but not on a day nothing else was done.
+       AND COALESCE(s.set_type, 'working') IN ('working', 'amrap')
      ORDER BY e.exercise_instance_id ASC, s.set_number ASC, s.sets_id ASC;`,
     [workoutId]
   );
@@ -1428,9 +1525,14 @@ export async function createSet(
     done = 0,
     failed = 0,
     amrap = 0,
+    setType = null,
+    amrapTarget = null,
     note = null,
   }
 ) {
+  // set_type is the truth and amrap its mirror. A caller that only knows the
+  // old flag - a copy, an import - still gets a correct type from it.
+  const resolvedType = resolveSetType({ set_type: setType, amrap });
   const syncVersion = createNextSyncVersion();
   return db.runAsync(
     `INSERT INTO "Set" (
@@ -1447,9 +1549,11 @@ export async function createSet(
       done,
       failed,
       amrap,
+      set_type,
+      amrap_target,
       note,
       needs_sync
-    ) VALUES (?, ?, ${SQLITE_UUID_SQL}, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1);`,
+    ) VALUES (?, ?, ${SQLITE_UUID_SQL}, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1);`,
     [
       setNumber,
       exerciseId,
@@ -1462,7 +1566,9 @@ export async function createSet(
       reps,
       done,
       failed,
-      amrap,
+      amrapFlagFor(resolvedType),
+      resolvedType,
+      resolvedType === "amrap" ? amrapTarget : null,
       note,
     ]
   );
@@ -1496,6 +1602,8 @@ export async function getSetsForCloudSync(db, { dirtyOnly = false } = {}) {
         done,
         failed,
         amrap,
+        set_type,
+        amrap_target,
         note,
         needs_sync
      FROM "Set"
@@ -1523,9 +1631,12 @@ export async function createSetFromCloud(
     done,
     failed,
     amrap,
+    setType,
+    amrapTarget,
     note,
   }
 ) {
+  const resolvedType = resolveSetType({ set_type: setType, amrap });
   return db.runAsync(
     `INSERT INTO "Set" (
       cloud_set_id,
@@ -1544,9 +1655,11 @@ export async function createSetFromCloud(
       done,
       failed,
       amrap,
+      set_type,
+      amrap_target,
       note,
       needs_sync
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0);`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0);`,
     sqliteParams([
       cloudSetId,
       remoteLocalSetId,
@@ -1563,7 +1676,9 @@ export async function createSetFromCloud(
       reps,
       done ? 1 : 0,
       failed ? 1 : 0,
-      amrap ? 1 : 0,
+      amrapFlagFor(resolvedType),
+      resolvedType,
+      resolvedType === "amrap" ? amrapTarget ?? null : null,
       note,
     ])
   );
@@ -1589,9 +1704,12 @@ export async function updateSetFromCloud(
     done,
     failed,
     amrap,
+    setType,
+    amrapTarget,
     note,
   }
 ) {
+  const resolvedType = resolveSetType({ set_type: setType, amrap });
   await db.runAsync(
     `UPDATE "Set"
      SET cloud_set_id = ?,
@@ -1610,6 +1728,8 @@ export async function updateSetFromCloud(
          done = ?,
          failed = ?,
          amrap = ?,
+         set_type = ?,
+         amrap_target = ?,
          note = ?,
          needs_sync = 0
      WHERE sets_id = ?;`,
@@ -1629,7 +1749,9 @@ export async function updateSetFromCloud(
       reps,
       done ? 1 : 0,
       failed ? 1 : 0,
-      amrap ? 1 : 0,
+      amrapFlagFor(resolvedType),
+      resolvedType,
+      resolvedType === "amrap" ? amrapTarget ?? null : null,
       note,
       setId,
     ])
@@ -2059,6 +2181,52 @@ export async function updateSetField(db, { field, value, setId }) {
   );
 }
 
+/**
+ * A set's type, with its mirror and its target in the same statement.
+ *
+ * Separate from updateSetField on purpose. That one writes a single column,
+ * and set_type and amrap written apart are two truths the moment one of them
+ * changes alone. The target only means anything on an AMRAP set, so it is
+ * cleared whenever the set becomes anything else.
+ *
+ * `clearUnfinishedLoad` empties reps, weight and 1RM % in the same statement,
+ * but only on a set that is not ticked off: an unticked set's numbers were
+ * copied forward from the set above, a ticked one's are what was lifted.
+ */
+export async function updateSetType(
+  db,
+  { setId, setType, amrapTarget = null, clearUnfinishedLoad = false }
+) {
+  const resolvedType = normalizeSetType(setType);
+  const syncVersion = createNextSyncVersion();
+  const clear = clearUnfinishedLoad ? 1 : 0;
+
+  await db.runAsync(
+    `UPDATE "Set"
+     SET set_type = ?,
+         amrap = ?,
+         amrap_target = ?,
+         reps = CASE WHEN ? = 1 AND COALESCE(done, 0) <> 1 THEN NULL ELSE reps END,
+         weight = CASE WHEN ? = 1 AND COALESCE(done, 0) <> 1 THEN NULL ELSE weight END,
+         rm_percentage = CASE WHEN ? = 1 AND COALESCE(done, 0) <> 1 THEN NULL ELSE rm_percentage END,
+         sync_id = COALESCE(sync_id, ${SQLITE_UUID_SQL}),
+         sync_version = ?,
+         deleted_at = NULL,
+         needs_sync = 1
+     WHERE sets_id = ?;`,
+    [
+      resolvedType,
+      amrapFlagFor(resolvedType),
+      resolvedType === "amrap" ? amrapTarget : null,
+      clear,
+      clear,
+      clear,
+      syncVersion,
+      setId,
+    ]
+  );
+}
+
 export async function getPersonalRecordFlagsByExerciseName(db, exerciseName) {
   return db.getAllAsync(
     `SELECT s.sets_id, COALESCE(s.personal_record, 0) AS personal_record
@@ -2087,7 +2255,7 @@ export async function updateSetPersonalRecord(db, { setId, personalRecord }) {
 
 export async function getExerciseSets(db, exerciseId) {
   return db.getAllAsync(
-    `SELECT set_number, exercise_instance_id, pause, rpe, weight, rm_percentage, reps, done, failed, amrap, note
+    `SELECT set_number, exercise_instance_id, pause, rpe, weight, rm_percentage, reps, done, failed, amrap, set_type, amrap_target, note
      FROM "Set"
      WHERE exercise_instance_id = ?;`,
     [exerciseId]
@@ -2116,9 +2284,14 @@ export async function updateSetByExerciseAndNumber(
     done,
     failed,
     amrap,
+    setType = null,
+    amrapTarget = null,
     note,
   }
 ) {
+  // Written together, or the flag and the type disagree the moment either
+  // changes on its own.
+  const resolvedType = resolveSetType({ set_type: setType, amrap });
   const syncVersion = createNextSyncVersion();
   await db.runAsync(
     `UPDATE "Set"
@@ -2130,6 +2303,8 @@ export async function updateSetByExerciseAndNumber(
          done = ?,
          failed = ?,
          amrap = ?,
+         set_type = ?,
+         amrap_target = ?,
          note = ?,
          sync_id = COALESCE(sync_id, ${SQLITE_UUID_SQL}),
          sync_version = ?,
@@ -2145,7 +2320,9 @@ export async function updateSetByExerciseAndNumber(
       reps,
       done,
       failed,
-      amrap,
+      amrapFlagFor(resolvedType),
+      resolvedType,
+      resolvedType === "amrap" ? amrapTarget : null,
       note,
       syncVersion,
       exerciseId,
@@ -2251,6 +2428,39 @@ export async function getCompletedStrengthWorkoutsWithExercises(
 }
 
 /** The most recent day any workout was finished, as an ISO date, or null. */
+/**
+ * How many personal records were set on one day (`isoDate`, yyyy-mm-dd), in
+ * sets that were done and not failed. The day is read in both spellings the
+ * schema holds, dd.mm.yyyy and ISO, from the workout's day where it has one.
+ */
+export async function countPersonalRecordsOnDate(db, isoDate) {
+  const row = await db.getFirstAsync(
+    `SELECT COUNT(*) AS records
+     FROM "Set" s
+     JOIN Exercise_Instance e ON e.exercise_instance_id = s.exercise_instance_id
+     JOIN Workout_Type_Instance w ON w.workout_id = e.workout_type_instance_id
+     LEFT JOIN Day d ON d.day_id = w.day_id
+     WHERE COALESCE(s.personal_record, 0) = 1
+       AND COALESCE(s.done, 0) = 1
+       AND COALESCE(s.failed, 0) <> 1
+       AND COALESCE(s.deleted_at, '') = ''
+       AND COALESCE(e.deleted_at, '') = ''
+       AND COALESCE(w.deleted_at, '') = ''
+       AND (
+         CASE
+           WHEN COALESCE(d.date, w.date) LIKE '__.__.____'
+           THEN substr(COALESCE(d.date, w.date), 7, 4) || '-' ||
+                substr(COALESCE(d.date, w.date), 4, 2) || '-' ||
+                substr(COALESCE(d.date, w.date), 1, 2)
+           ELSE COALESCE(d.date, w.date)
+         END
+       ) = ?;`,
+    [isoDate]
+  );
+
+  return Number(row?.records) || 0;
+}
+
 export async function getLastCompletedWorkoutDate(db) {
   const row = await db.getFirstAsync(
     `SELECT MAX(

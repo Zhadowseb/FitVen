@@ -71,6 +71,7 @@ export default function HomePage() {
   );
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const [daysSinceLastWorkout, setDaysSinceLastWorkout] = useState(null);
+  const [ownRecordsToday, setOwnRecordsToday] = useState(0);
   const [splitGroups, setSplitGroups] = useState([]);
   const [muscleGroups, setMuscleGroups] = useState([]);
   const [hasLoadedHome, setHasLoadedHome] = useState(false);
@@ -88,12 +89,17 @@ export default function HomePage() {
   // gets. That is the one thing this screen must not get wrong.
   const loadHome = useCallback(async () => {
     try {
-      const [days, groups, muscles, today] = await Promise.allSettled([
+      const [days, groups, muscles, today, records] = await Promise.allSettled([
         workoutService.getDaysSinceLastWorkout(db),
         workoutService.getSplitGroups(db),
         weightliftingService.getMuscleGroupDeltas(db),
         workoutService.getOpenWorkoutsToday(db),
+        weightliftingService.getPersonalRecordsToday(db),
       ]);
+
+      // Only a crown on your own tile rides on this; it is not one of the
+      // loads the screen reports failing.
+      setOwnRecordsToday(records.status === "fulfilled" ? records.value : 0);
       const failures = [days, groups, muscles, today].filter(
         (result) => result.status === "rejected"
       );
@@ -345,7 +351,11 @@ export default function HomePage() {
         {hasLoadedHome ? (
           <>
             <View style={styles.quickRow}>
-              <DaysSinceCard days={daysSinceLastWorkout} />
+              <DaysSinceCard
+                days={daysSinceLastWorkout}
+                isTraining={Boolean(openToday?.first?.isRunning)}
+                recordsToday={ownRecordsToday}
+              />
 
               <QuickStartCard
                 openToday={openToday}
@@ -371,6 +381,9 @@ export default function HomePage() {
             circlePreview.currentUser
               ? {
                   ...circlePreview.currentUser,
+                  // From the phone, so your own tile is right before a sync.
+                  daysSinceLastWorkout,
+                  recordsToday: ownRecordsToday,
                   music: ownNowPlaying?.track
                     ? {
                         track: ownNowPlaying.track,

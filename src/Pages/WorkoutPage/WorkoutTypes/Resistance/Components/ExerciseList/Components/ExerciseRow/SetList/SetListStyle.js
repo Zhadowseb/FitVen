@@ -118,81 +118,6 @@ export default StyleSheet.create({
         textAlign: "center",
     },
 
-    setOptionsHeader: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 12,
-        paddingBottom: 18,
-    },
-    setOptionsBadge: {
-        width: 38,
-        height: 38,
-        borderRadius: 6,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    setOptionsBadgeText: {
-        fontSize: 15,
-        fontWeight: "900",
-        fontVariant: ["tabular-nums"],
-    },
-    setOptionsHeaderCopy: {
-        flex: 1,
-        minWidth: 0,
-        gap: 2,
-    },
-    setOptionsEyebrow: {
-        fontSize: 11,
-        fontWeight: "800",
-        letterSpacing: 1.6,
-        textTransform: "uppercase",
-    },
-    setOptionsTitle: {
-        fontSize: 17,
-        fontWeight: "900",
-    },
-    setOptionsBody: {
-        gap: 18,
-        paddingBottom: 24,
-    },
-    setOptionsSection: {
-        gap: 8,
-    },
-    setOptionsLabel: {
-        fontSize: 11,
-        fontWeight: "800",
-        letterSpacing: 1.6,
-        textTransform: "uppercase",
-    },
-    setOptionsAction: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 12,
-        borderRadius: 6,
-        borderWidth: 1,
-        paddingHorizontal: 12,
-        paddingVertical: 11,
-    },
-    setOptionsActionIcon: {
-        width: 34,
-        height: 34,
-        borderRadius: 6,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    setOptionsActionCopy: {
-        flex: 1,
-        minWidth: 0,
-        gap: 1,
-    },
-    setOptionsActionTitle: {
-        fontSize: 15,
-        fontWeight: "800",
-    },
-    setOptionsActionDetail: {
-        fontSize: 11,
-        fontWeight: "600",
-    },
     note_button: {
         justifyContent: "center",
         alignItems: "center",
@@ -207,6 +132,111 @@ export default StyleSheet.create({
         borderWidth: 1,
         justifyContent: "center",
         alignItems: "center",
+    },
+    // A set's type, behind its row: a tint to the card's edges and a 3 dp
+    // stripe down the left. Reaches past the table's 8 dp padding, which the
+    // card's rounded, clipped edge then trims.
+    rowTone: {
+        position: "absolute",
+        top: 0,
+        bottom: 0,
+        left: -8,
+        right: -8,
+        borderLeftWidth: 3,
+    },
+    set_chip_amrap: {
+        position: "absolute",
+        top: -5,
+        right: -6,
+    },
+    // AMRAP's "/6+" and a drop set's "-17,5".
+    typeNote: {
+        fontSize: 9.5,
+        fontWeight: "800",
+    },
+    dropDifference: {
+        marginLeft: 3,
+    },
+    // Joins a drop set to the set above it, through the rest column.
+    dropConnector: {
+        position: "absolute",
+        top: "-50%",
+        bottom: "50%",
+        left: "50%",
+        width: 2,
+        marginLeft: -1,
+        borderRadius: 1,
+    },
+    // Same inset as the table, so a row's tint can still reach the edges.
+    warmupBlock: {
+        overflow: "hidden",
+        marginHorizontal: -8,
+        paddingHorizontal: 8,
+    },
+    warmupHeader: {
+        height: 28,
+        borderBottomWidth: 1,
+        flexDirection: "row",
+        alignItems: "center",
+        paddingLeft: 6,
+        position: "relative",
+    },
+    warmupHeaderText: {
+        flex: 1,
+        fontSize: 9.5,
+        fontWeight: "800",
+        letterSpacing: 1.4,
+        textTransform: "uppercase",
+    },
+    // Expand points down; this folds them up, so it points up. Sits over the
+    // done column, where the folded row's chevron will be.
+    warmupHeaderChevron: {
+        width: 33,
+        alignItems: "center",
+        transform: [{ rotate: "180deg" }],
+    },
+    foldedWarmups: {
+        position: "absolute",
+        top: 0,
+        left: 8,
+        right: 8,
+    },
+    foldedBadgeStack: {
+        width: 28,
+        height: 30,
+    },
+    // The card behind: there is more than the one row shows.
+    foldedBadgeBehind: {
+        position: "absolute",
+        top: -4,
+        left: 4,
+    },
+    foldedValue: {
+        fontSize: 13,
+        fontWeight: "700",
+    },
+    foldedUnit: {
+        fontSize: 11,
+        fontWeight: "600",
+    },
+    undoToast: {
+        marginTop: 8,
+        minHeight: 42,
+        borderRadius: 10,
+        borderWidth: 1,
+        paddingHorizontal: 14,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+    },
+    undoToastText: {
+        flex: 1,
+        fontSize: 13,
+        fontWeight: "700",
+    },
+    undoToastAction: {
+        fontSize: 13,
+        fontWeight: "900",
     },
     set_chip_record: {
         backgroundColor: "transparent",
@@ -244,10 +274,6 @@ export default StyleSheet.create({
         flexDirection: "row",
         justifyContent: "center",
         alignItems: "center",
-    },
-    note_input: {
-        minHeight: 100,
-        textAlignVertical: "top",
     },
     restUnitModal: {
         width: "82%",

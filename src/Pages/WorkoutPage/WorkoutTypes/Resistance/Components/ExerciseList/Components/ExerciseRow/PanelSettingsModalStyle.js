@@ -60,8 +60,4 @@ export default StyleSheet.create({
     lineHeight: 15,
     fontWeight: "600",
   },
-  noteInput: {
-    minHeight: 96,
-    textAlignVertical: "top",
-  },
 });

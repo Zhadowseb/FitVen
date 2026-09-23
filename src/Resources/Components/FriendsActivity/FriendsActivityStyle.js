@@ -8,7 +8,11 @@ export const TILE_GAP = 8;
 export const BAND_HEIGHT = 58;
 export const AVATAR_SIZE = 56;
 export const AVATAR_OVERLAP = 30;
+export const AVATAR_RING_WIDTH = 2.5;
 export const TILE_MIN_HEIGHT = 165;
+// The fire and ice drawn around the avatar: wider than it, centred on it, and
+// outside the layout - nothing moves to make room.
+export const AURA_SIZE = 92;
 
 export default StyleSheet.create({
   section: {
@@ -161,11 +165,18 @@ export default StyleSheet.create({
     bottom: 2,
     borderRadius: 999,
   },
+  aura: {
+    position: "absolute",
+    width: AURA_SIZE,
+    height: AURA_SIZE,
+    left: (AVATAR_SIZE - AURA_SIZE) / 2,
+    top: (AVATAR_SIZE - AURA_SIZE) / 2,
+  },
   avatarRing: {
     width: AVATAR_SIZE,
     height: AVATAR_SIZE,
     borderRadius: AVATAR_SIZE / 2,
-    borderWidth: 2.5,
+    borderWidth: AVATAR_RING_WIDTH,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -226,6 +237,24 @@ export default StyleSheet.create({
   },
   factSpacer: {
     height: 13,
+  },
+
+  /* --------------------------------------------------------- wallpaper -- */
+  // The days since the last workout, big enough to be a texture rather than
+  // a label, and pushed past the bottom-right corner so the tile crops it.
+  wallpaperMark: {
+    position: "absolute",
+    right: 6,
+    bottom: -26,
+    fontSize: 96,
+    lineHeight: 110,
+    fontWeight: "900",
+    letterSpacing: -4,
+    includeFontPadding: false,
+  },
+  wallpaperUnit: {
+    fontSize: 34,
+    letterSpacing: 0,
   },
 
   /* ------------------------------------------------------- add friends -- */

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { AccessibilityInfo, Animated, Easing } from "react-native";
+import { AccessibilityInfo, Animated, AppState, Easing } from "react-native";
+import { useIsFocused } from "@react-navigation/native";
 
 // Whether the OS asks for reduced motion. Read once and then followed, so a
 // change in Settings takes effect without a restart.
@@ -253,4 +254,111 @@ export function useSpinAnimation(enabled = true, periodMs = 2000) {
     inputRange: [0, 1],
     outputRange: ["0deg", "360deg"],
   });
+}
+
+// A shine crossing a tile: progress 0 -> 1 over `sweepMs`, then a pause of
+// `gapMs`, forever. `headStartMs` holds the first sweep back, so a row of
+// tiles does not flash in step. Disabled -> parked at 0, off the tile.
+// `linear` for something that should move at one speed, like falling snow.
+export function useSheenAnimation(
+  enabled = true,
+  { sweepMs = 1300, gapMs = 4000, headStartMs = 0, linear = false } = {}
+) {
+  const progress = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (!enabled) {
+      progress.setValue(0);
+      return undefined;
+    }
+
+    const animation = Animated.sequence([
+      Animated.delay(headStartMs),
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(progress, {
+            toValue: 1,
+            duration: sweepMs,
+            easing: linear ? Easing.linear : Easing.inOut(Easing.cubic),
+            useNativeDriver: true,
+          }),
+          Animated.delay(gapMs),
+          Animated.timing(progress, {
+            toValue: 0,
+            duration: 0,
+            useNativeDriver: true,
+          }),
+        ])
+      ),
+    ]);
+
+    animation.start();
+
+    return () => {
+      animation.stop();
+      progress.setValue(0);
+    };
+  }, [enabled, gapMs, headStartMs, linear, progress, sweepMs]);
+
+  return progress;
+}
+
+// A slow breath: opacity `low` <-> 1 over `periodMs`, ease-in-out.
+// Disabled -> fully there.
+export function useBreathAnimation(enabled = true, { periodMs = 2600, low = 0.6 } = {}) {
+  const opacity = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (!enabled) {
+      opacity.setValue(1);
+      return undefined;
+    }
+
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, {
+          toValue: low,
+          duration: periodMs / 2,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: periodMs / 2,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    loop.start();
+
+    return () => {
+      loop.stop();
+      opacity.setValue(1);
+    };
+  }, [enabled, low, opacity, periodMs]);
+
+  return opacity;
+}
+
+// Whether the loops may run: on screen, app in the foreground, and the OS not
+// asking for reduced motion. Everything that loops on Home reads this - the
+// friends strip and the days-since card alike.
+export function useAnimationsEnabled() {
+  const isFocused = useIsFocused();
+  const reduceMotion = useReduceMotion();
+  const [isAppActive, setIsAppActive] = useState(
+    AppState.currentState === "active" || AppState.currentState == null
+  );
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      setIsAppActive(nextState === "active");
+    });
+
+    return () => subscription.remove();
+  }, []);
+
+  return { animate: isFocused && isAppActive && !reduceMotion, reduceMotion };
 }

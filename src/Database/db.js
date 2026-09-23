@@ -614,6 +614,8 @@ async function migrateSetSchema(db) {
         done INTEGER NOT NULL DEFAULT 0,
         failed INTEGER NOT NULL DEFAULT 0,
         amrap INTEGER NOT NULL DEFAULT 0,
+        set_type TEXT NOT NULL DEFAULT 'working',
+        amrap_target INTEGER,
         note TEXT,
         needs_sync INTEGER NOT NULL DEFAULT 1
       );
@@ -636,6 +638,8 @@ async function migrateSetSchema(db) {
         done,
         failed,
         amrap,
+        set_type,
+        amrap_target,
         note,
         needs_sync
       )
@@ -657,6 +661,8 @@ async function migrateSetSchema(db) {
         ${hasColumn(sourceColumns, "done") ? "COALESCE(done, 0)" : "0"},
         ${hasColumn(sourceColumns, "failed") ? "COALESCE(failed, 0)" : "0"},
         ${hasColumn(sourceColumns, "amrap") ? "COALESCE(amrap, 0)" : "0"},
+        ${hasColumn(sourceColumns, "set_type") ? "COALESCE(set_type, 'working')" : "'working'"},
+        ${hasColumn(sourceColumns, "amrap_target") ? "amrap_target" : "NULL"},
         ${hasColumn(sourceColumns, "note") ? "note" : "NULL"},
         ${hasColumn(sourceColumns, "needs_sync") ? "COALESCE(needs_sync, 1)" : "1"}
       FROM ${quoteIdentifier(sourceTable)};
@@ -1821,9 +1827,20 @@ export async function initializeDatabase(db) {
     ["done", "INTEGER NOT NULL DEFAULT 0"],
     ["failed", "INTEGER NOT NULL DEFAULT 0"],
     ["amrap", "INTEGER NOT NULL DEFAULT 0"],
+    ["set_type", "TEXT NOT NULL DEFAULT 'working'"],
+    ["amrap_target", "INTEGER"],
     ["note", "TEXT"],
     ["needs_sync", "INTEGER NOT NULL DEFAULT 1"],
   ]);
+  // A set marked AMRAP before set_type existed carries only the flag. Same rule
+  // as the cloud migration applies, so both sides land on the same answer
+  // without a single row needing to be re-uploaded. Idempotent: once a row is
+  // 'amrap' it is no longer 'working', and the WHERE skips it.
+  await db.execAsync(`
+    UPDATE "Set"
+    SET set_type = 'amrap'
+    WHERE amrap = 1 AND set_type = 'working';
+  `);
   await migrateSetDeleteQueueSchema(db);
   await ensureTableColumns(db, "Set_Sync_Delete", [
     ["sync_id", "TEXT"],

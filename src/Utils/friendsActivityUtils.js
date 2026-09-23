@@ -1,6 +1,7 @@
 // Pure helpers for the Friends activity tiles: the text on the status row,
 // the tile order, the music band state, and whether the band should scroll.
 import { formatDate, t } from "@localization";
+import { mixHexColors } from "./colorMix";
 import { calendarDaysBetween, formatRelativeDay } from "./dateUtils";
 
 const ACTIVITY_TILE_ORDER = {
@@ -152,6 +153,194 @@ export function buildActivityStatusLabel(person, { isCurrentUser = false, now = 
       return t("friends.status.noActivity");
     }
   }
+}
+
+// How long since somebody trained, as a temperature: the longer it has been,
+// the colder the tile. Upper bounds in days, inclusive.
+const WALLPAPER_TONE_STEPS = [
+  { tone: "fresh", upTo: 1 },
+  { tone: "warm", upTo: 3 },
+  { tone: "cooling", upTo: 7 },
+];
+const WALLPAPER_MAX_DAYS = 99;
+
+// The days the wallpaper's colour is pinned to. Every day between two of them
+// is its own blend, so a tile two days out and one three days out are not the
+// same colour - the number and the shade move together.
+export const WALLPAPER_COLOR_DAYS = [0, 2, 5, 9];
+
+// Up to a week the tile moves; after that it has gone still.
+export const WALLPAPER_MOTION_DAYS = 7;
+
+/**
+ * The wallpaper colour for a number of days, from one colour per entry in
+ * WALLPAPER_COLOR_DAYS. Past the last day it stays at the last colour.
+ */
+export function wallpaperColorForDays(days, colors) {
+  const count = Math.min(WALLPAPER_COLOR_DAYS.length, colors?.length ?? 0);
+
+  if (count === 0) {
+    return null;
+  }
+
+  const value = Math.max(0, Number(days) || 0);
+
+  for (let index = 1; index < count; index += 1) {
+    const upper = WALLPAPER_COLOR_DAYS[index];
+
+    if (value <= upper) {
+      const lower = WALLPAPER_COLOR_DAYS[index - 1];
+
+      return mixHexColors(
+        colors[index - 1],
+        colors[index],
+        (value - lower) / (upper - lower)
+      );
+    }
+  }
+
+  return colors[count - 1];
+}
+
+/**
+ * Whole days since somebody last trained, or null when they never have.
+ * `daysSinceLastWorkout` wins over `lastWorkoutAt`: the viewer's own tile
+ * knows it from the phone, which is right before the cloud has caught up.
+ */
+export function resolveDaysSinceLastWorkout(person, now = Date.now()) {
+  const known = Number(person?.daysSinceLastWorkout);
+
+  if (
+    person?.daysSinceLastWorkout !== null &&
+    person?.daysSinceLastWorkout !== undefined &&
+    Number.isFinite(known)
+  ) {
+    return Math.max(0, Math.trunc(known));
+  }
+
+  if (!person?.lastWorkoutAt) {
+    return null;
+  }
+
+  const between = calendarDaysBetween(person.lastWorkoutAt, now);
+
+  return between === null ? null : Math.max(0, between);
+}
+
+// A tile's mood follows where the person is in their week:
+//
+//   training right now      -> embers: a fire under the tile, sparks rising
+//   done for the day         -> steam coming off it
+//   trained in the last 5    -> charged: a glow and little bolts, fewer as
+//                               the days pass
+//   a month or more gone     -> cobwebs
+//
+// Everything in between has only the wallpaper.
+export const CHARGED_WITHIN_DAYS = 5;
+export const COBWEB_FROM_DAYS = 30;
+
+/**
+ * The mood of a tile: "embers", "steam", "charged", "cobweb" or null.
+ *
+ * A workout today counts as done whether the cloud says "done" or the phone
+ * says zero days - the viewer's own tile knows it first. Somebody who has
+ * never trained gathers no cobwebs: there was nothing to leave.
+ */
+export function buildTileMood(person, now = Date.now()) {
+  const state = person?.activityState;
+
+  if (state === "live") {
+    return "embers";
+  }
+
+  if (state === "done") {
+    return "steam";
+  }
+
+  const days = resolveDaysSinceLastWorkout(person, now);
+
+  if (days === null) {
+    return null;
+  }
+
+  if (days === 0) {
+    return "steam";
+  }
+
+  if (days <= CHARGED_WITHIN_DAYS) {
+    return "charged";
+  }
+
+  return days >= COBWEB_FROM_DAYS ? "cobweb" : null;
+}
+
+/**
+ * The crown on a tile: somebody who set a personal record in the workout
+ * they finished today wears one over their steam, with a ruby for each
+ * record - two at the least, so it reads as a crown, three at the most, so
+ * it fits. Null for everybody else, including somebody still training: the
+ * crown is for a workout that is over.
+ */
+export function buildTileCrown(person, now = Date.now()) {
+  const records = Math.trunc(Number(person?.recordsToday) || 0);
+
+  if (records <= 0 || buildTileMood(person, now) !== "steam") {
+    return null;
+  }
+
+  return { records, rubies: Math.max(2, Math.min(3, records)) };
+}
+
+/**
+ * How charged a "charged" tile still is, 3 to 1, running down evenly over
+ * the charged days: 3 for the first two, 2 for the next two, 1 on the last.
+ */
+export function chargeLevelFor(person, now = Date.now()) {
+  const days = resolveDaysSinceLastWorkout(person, now);
+
+  if (days === null) {
+    return 1;
+  }
+
+  const left = (CHARGED_WITHIN_DAYS + 1 - days) / CHARGED_WITHIN_DAYS;
+
+  return Math.max(1, Math.min(3, Math.ceil(left * 3)));
+}
+
+/**
+ * The background of a resting tile: how many days since the person last
+ * trained, and the tone that goes with it. Null for a tile with something on
+ * today - live, done and planned already have a colour of their own.
+ *
+ * `daysSinceLastWorkout` wins over `lastWorkoutAt` when both are there: the
+ * viewer's own tile knows the number from the phone, which is right before
+ * the cloud has caught up.
+ *
+ * Nobody who has never trained is shown a zero, which would read as having
+ * trained today: they get the "new" tone and no number.
+ */
+export function buildRestWallpaper(person, now = Date.now()) {
+  if (ACTIVITY_TILE_ORDER[person?.activityState] !== undefined) {
+    return null;
+  }
+
+  const days = resolveDaysSinceLastWorkout(person, now);
+
+  if (days === null) {
+    return { tone: "new", days: null, label: null, energy: 0 };
+  }
+
+  const step = WALLPAPER_TONE_STEPS.find((entry) => days <= entry.upTo);
+
+  return {
+    tone: step?.tone ?? "cold",
+    days,
+    label: days > WALLPAPER_MAX_DAYS ? `${WALLPAPER_MAX_DAYS}+` : String(days),
+    // How lively the tile is: 1 today, falling to 0 once a week has passed.
+    // Zero means it does not move at all.
+    energy:
+      days > WALLPAPER_MOTION_DAYS ? 0 : 1 - days / (WALLPAPER_MOTION_DAYS + 1),
+  };
 }
 
 /**

@@ -16,23 +16,16 @@ const { DatabaseSync } = require("node:sqlite");
 const loadAppModule = require("./lib/loadAppModule");
 
 const repository = loadAppModule("src/Repository/weightliftingRepository.js");
+const { programSchemaSql } = loadAppModule("src/Database/schema/program.js");
+const { weightliftingSchemaSql } = loadAppModule("src/Database/schema/weightlifting.js");
+
+// The real schema, not a copy of the columns this query happens to read today.
+// The copy this file started with broke the day a column was added to "Set",
+// which is the exact moment a test like this is supposed to keep working.
 const raw = new DatabaseSync(":memory:");
 
-raw.exec(`
-  CREATE TABLE Program (program_id INTEGER PRIMARY KEY, program_name TEXT);
-  CREATE TABLE Day (day_id INTEGER PRIMARY KEY, date TEXT, program_id INTEGER, deleted_at TEXT);
-  CREATE TABLE Workout_Type_Instance (
-    workout_id INTEGER PRIMARY KEY, day_id INTEGER, label TEXT, deleted_at TEXT
-  );
-  CREATE TABLE Exercise_Instance (
-    exercise_instance_id INTEGER PRIMARY KEY, workout_type_instance_id INTEGER,
-    exercise_name TEXT, deleted_at TEXT
-  );
-  CREATE TABLE "Set" (
-    sets_id INTEGER PRIMARY KEY, exercise_instance_id INTEGER, weight REAL,
-    reps INTEGER, done INTEGER, failed INTEGER, personal_record INTEGER, deleted_at TEXT
-  );
-`);
+raw.exec(programSchemaSql);
+raw.exec(weightliftingSchemaSql);
 
 // One set per day, in both spellings the column is known to hold.
 const DAYS = [
@@ -46,11 +39,43 @@ const DAYS = [
 DAYS.forEach((day, index) => {
   const id = index + 1;
 
-  raw.prepare("INSERT INTO Day VALUES (?, ?, NULL, NULL)").run(id, day.date);
-  raw.prepare("INSERT INTO Workout_Type_Instance VALUES (?, ?, 'W', NULL)").run(id, id);
-  raw.prepare("INSERT INTO Exercise_Instance VALUES (?, ?, 'Squat', NULL)").run(id, id);
-  raw.prepare('INSERT INTO "Set" VALUES (?, ?, 100, 5, 1, 0, 0, NULL)').run(id, id);
+  raw.prepare("INSERT INTO Day (day_id, date, Weekday) VALUES (?, ?, 'Monday')").run(id, day.date);
+  raw
+    .prepare(
+      "INSERT INTO Workout_Type_Instance (workout_id, day_id, date, label) VALUES (?, ?, ?, 'W')"
+    )
+    .run(id, id, day.date);
+  raw
+    .prepare(
+      "INSERT INTO Exercise_Instance (exercise_instance_id, workout_type_instance_id, exercise_name) VALUES (?, ?, 'Squat')"
+    )
+    .run(id, id);
+  raw
+    .prepare(
+      'INSERT INTO "Set" (sets_id, exercise_instance_id, set_number, weight, reps, done) VALUES (?, ?, 1, 100, 5, 1)'
+    )
+    .run(id, id);
 });
+
+// And one warm-up inside the window, which must never come back: it is in no
+// record and no volume.
+raw.prepare("INSERT INTO Day (day_id, date, Weekday) VALUES (99, '2026-09-21', 'Monday')").run();
+raw
+  .prepare(
+    "INSERT INTO Workout_Type_Instance (workout_id, day_id, date, label) VALUES (99, 99, '2026-09-21', 'W')"
+  )
+  .run();
+raw
+  .prepare(
+    "INSERT INTO Exercise_Instance (exercise_instance_id, workout_type_instance_id, exercise_name) VALUES (99, 99, 'Squat')"
+  )
+  .run();
+raw
+  .prepare(
+    `INSERT INTO "Set" (sets_id, exercise_instance_id, set_number, weight, reps, done, set_type)
+     VALUES (99, 99, 1, 40, 10, 1, 'warmup')`
+  )
+  .run();
 
 const db = {
   getAllAsync: async (sql, params = []) => raw.prepare(sql).all(...params),
@@ -71,6 +96,11 @@ const db = {
     sinceIsoDate: "2026-07-24",
   });
   const returned = new Set(bounded.map((row) => row.performed_date));
+
+  assert.ok(
+    !everything.some((row) => Number(row.sets_id) === 99),
+    "a warm-up came back from the records query - it would count in records and volume"
+  );
 
   for (const day of DAYS) {
     assert.strictEqual(
