@@ -108,12 +108,77 @@ async function run() {
   // Bench b1/b2/b3, Squat s1/s2/s3 and Curl c1 all fall inside four weeks.
   assert.equal(stats.current.workouts, 7, 'Seven distinct sessions in the last four weeks');
   assert.equal(stats.current.records, 2);
-  assert.ok(stats.current.workoutsPerRecord > 0);
   assert.equal(
-    insights.buildStats([], { now, days: 28 }).current.workoutsPerRecord,
-    null,
-    'No records is an absent rate, not a zero'
+    stats.current.volume,
+    110 * 5 + 112.5 * 5 + 115 * 5 + 150 * 5 + 150 * 5 + 152.5 * 5 + 20 * 10,
+    'Volume is every set\'s weight times reps inside the period'
   );
+  assert.equal(stats.previous.workouts, 0, 'Nothing in the four weeks before');
+  assert.equal(
+    insights.buildStats(sets, { now, days: null }).previous,
+    null,
+    'The whole history has no period before it to compare with'
+  );
+  assert.ok(
+    !('workoutsPerRecord' in stats.current),
+    '"A record every nth workout" is gone from the numbers'
+  );
+
+  // Every period on the overview has a number of days, or none for all.
+  assert.deepEqual(
+    insights.RECORDS_PERIODS.map((entry) => entry.key),
+    ['4w', '3m', '1y', 'all']
+  );
+
+  // Strength: the average change across what can be measured, and how many
+  // went up. Bench rose and squat fell against their pre-window bests.
+  const strength = insights.buildStrengthSummary(sets, { now, days: 84 });
+  assert.equal(strength.measured, 2, 'Curl is new in the window and has no change to measure');
+  assert.equal(strength.improving, 1);
+  const benchPct = (insights.buildExerciseGains(sets, { now, windowDays: 84 }).find((g) => g.name === 'Bench')).gainPct;
+  const squatPct = (insights.buildExerciseGains(sets, { now, windowDays: 84 }).find((g) => g.name === 'Squat')).gainPct;
+  assert.ok(Math.abs(strength.averagePct - (benchPct + squatPct) / 2) < 1e-9);
+  assert.equal(insights.buildStrengthSummary([], { now, days: 84 }), null, 'Nothing to measure is no line, not a zero');
+
+  // The whole history measures from each exercise's first session.
+  const sinceStart = insights.buildExerciseGains(sets, { now, windowDays: null });
+  const benchSinceStart = sinceStart.find((gain) => gain.name === 'Bench');
+  assert.ok(benchSinceStart.bestBefore < benchSinceStart.bestNow, 'Bench has come on since its first session');
+  assert.equal(
+    sinceStart.find((gain) => gain.name === 'Curl'),
+    undefined,
+    'One session ever has nothing to compare with, so it is not in the gains'
+  );
+
+  // Volume charts weekly up to three months, monthly beyond.
+  const weekly = insights.buildVolumeBuckets(sets, { now, days: 28 });
+  assert.equal(weekly.unit, 'week');
+  assert.equal(weekly.buckets.length, 4, 'Four weeks is four bars');
+  const quarterly = insights.buildVolumeBuckets(sets, { now, days: 91 });
+  assert.equal(quarterly.buckets.length, 13, 'Three months is thirteen weekly bars');
+  const yearly = insights.buildVolumeBuckets(sets, { now, days: 365 });
+  assert.equal(yearly.unit, 'month');
+  assert.equal(yearly.buckets.length, 12, 'A year is twelve monthly bars');
+  assert.equal(
+    yearly.buckets.reduce((sum, bucket) => sum + bucket.volume, 0),
+    sets.reduce((sum, set) => sum + set.volume, 0),
+    'Every set of the last year lands in some month'
+  );
+  const everything = insights.buildVolumeBuckets(sets, { now, days: null });
+  assert.equal(everything.unit, 'month');
+  assert.ok(everything.buckets.length >= 7 && everything.buckets.length <= 24);
+
+  // The exercise list: heaviest lift, most recent first, a direction only
+  // when there is enough recent training to say.
+  const list = insights.buildExerciseList(sets, { now });
+  assert.deepEqual(
+    list.map((entry) => entry.name),
+    ['Squat', 'Bench', 'Curl'],
+    'Most recently trained first'
+  );
+  assert.deepEqual(list.find((entry) => entry.name === 'Squat').heaviest, { weight: 160, reps: 5 });
+  assert.equal(list.find((entry) => entry.name === 'Bench').direction, 'up');
+  assert.equal(list.find((entry) => entry.name === 'Curl').direction, null, 'One session says nothing about direction');
 
   // Muscle groups need a mapping the local database does not carry.
   assert.deepEqual(
@@ -180,7 +245,7 @@ async function run() {
 
   console.log('Records exercise page: session points, gap splitting, same-day sessions, rep ladder holes and recent sessions passed.');
 
-  console.log('Records insights: junk rows, gains and declines, qualification, empty-week averages, rate comparison and muscle grouping passed.');
+  console.log('Records insights: junk rows, gains and declines, qualification, empty-week averages, the three numbers, strength, volume buckets, the exercise list and muscle grouping passed.');
 }
 
 run().catch((error) => {

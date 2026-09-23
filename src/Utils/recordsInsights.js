@@ -10,11 +10,20 @@ import {
   MAX_ESTIMATE_REPS,
 } from "./oneRepMaxUtils";
 
+// The one period the overview is read in. Everything on it follows the
+// choice - the numbers, the gains, the volume chart and the muscle groups -
+// because a selector that moves half a page reads as broken. Labels live in
+// the "records.periods" translations.
 export const RECORDS_PERIODS = [
-  { key: "3m", label: "3 months", days: 91 },
-  { key: "1y", label: "1 year", days: 365 },
-  { key: "all", label: "All", days: null },
+  { key: "4w", days: 28 },
+  { key: "3m", days: 91 },
+  { key: "1y", days: 365 },
+  { key: "all", days: null },
 ];
+
+// Up to this long a period is charted week by week; longer, month by month.
+const WEEKLY_UP_TO_DAYS = 91;
+const MAX_MONTH_BUCKETS = 24;
 
 // Section 7: an exercise has to have been logged with weight this many times,
 // and recently enough, before it can be called improving or declining. One
@@ -117,14 +126,32 @@ function countSessions(sets) {
  * rather than hidden.
  */
 export function buildExerciseGains(sets, { now, windowDays = 84 } = {}) {
-  const windowStart = now - windowDays * DAY_MS;
   const byExercise = new Map();
 
-  for (const set of sets) {
-    const bucket = byExercise.get(set.name) ?? { before: [], inside: [] };
+  if (windowDays === null) {
+    // The whole history has no "before", so it is measured from each
+    // exercise's first session: how far it has come since you started it.
+    const firstSession = new Map();
 
-    (set.at < windowStart ? bucket.before : bucket.inside).push(set);
-    byExercise.set(set.name, bucket);
+    for (const set of sets) {
+      if (!firstSession.has(set.name)) {
+        firstSession.set(set.name, set.sessionKey);
+      }
+
+      const bucket = byExercise.get(set.name) ?? { before: [], inside: [] };
+
+      (set.sessionKey === firstSession.get(set.name) ? bucket.before : bucket.inside).push(set);
+      byExercise.set(set.name, bucket);
+    }
+  } else {
+    const windowStart = now - windowDays * DAY_MS;
+
+    for (const set of sets) {
+      const bucket = byExercise.get(set.name) ?? { before: [], inside: [] };
+
+      (set.at < windowStart ? bucket.before : bucket.inside).push(set);
+      byExercise.set(set.name, bucket);
+    }
   }
 
   const gains = [];
@@ -270,9 +297,13 @@ export function buildWeeklyVolume(sets, { now, weeks = 12 } = {}) {
 }
 
 /**
- * Section 3.3. Rates rather than totals, each against the same length of time
- * immediately before the period, because "a record every 2-3 workouts" says
- * nothing until you know it used to be every 4.
+ * The three numbers at the top: workouts, records and kilos lifted in the
+ * period, each against the same length of time just before it. `previous` is
+ * null for the whole history, which has nothing before it.
+ *
+ * Counts, not rates. "A record every 1st-2nd workout" was the old headline
+ * and took a moment to read every time; three plain numbers and whether they
+ * went up is what the top of the page is for.
  */
 export function buildStats(sets, { now, days }) {
   const windowDays = days ?? null;
@@ -285,26 +316,165 @@ export function buildStats(sets, { now, days }) {
       ? (sets[0]?.at ?? now) - 1
       : now - windowDays * DAY_MS;
   const current = slice(currentFrom, now + DAY_MS);
-  const previous =
-    windowDays === null
-      ? []
-      : slice(currentFrom - windowDays * DAY_MS, currentFrom);
 
-  const summarise = (windowSets) => {
-    const workouts = new Set(windowSets.map((set) => set.sessionKey)).size;
-    const records = windowSets.filter((set) => set.isRecord).length;
+  const summarise = (windowSets) => ({
+    workouts: new Set(windowSets.map((set) => set.sessionKey)).size,
+    records: windowSets.filter((set) => set.isRecord).length,
+    volume: windowSets.reduce((total, set) => total + set.volume, 0),
+  });
+
+  return {
+    current: summarise(current),
+    previous:
+      windowDays === null
+        ? null
+        : summarise(slice(currentFrom - windowDays * DAY_MS, currentFrom)),
+  };
+}
+
+/**
+ * The strength line under the numbers: across every exercise with a change
+ * to measure in the period, the average change in best estimated 1RM, and
+ * how many of them went up. Null with nothing to measure.
+ */
+export function buildStrengthSummary(sets, { now, days }) {
+  const measured = buildExerciseGains(sets, { now, windowDays: days ?? null }).filter(
+    (gain) => gain.gainPct !== null
+  );
+
+  if (measured.length === 0) {
+    return null;
+  }
+
+  return {
+    measured: measured.length,
+    improving: measured.filter((gain) => gain.gainPct > DIRECTION_THRESHOLD).length,
+    averagePct: measured.reduce((total, gain) => total + gain.gainPct, 0) / measured.length,
+  };
+}
+
+function startOfMonth(timestampMs) {
+  const date = new Date(timestampMs);
+
+  return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1);
+}
+
+function addMonths(monthStart, count) {
+  const date = new Date(monthStart);
+
+  return Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + count, 1);
+}
+
+/**
+ * The volume chart for the period: a bar a week up to three months, a bar a
+ * month beyond - a year of weekly bars is too thin to read - with a moving
+ * average over the last four weeks or three months. The average counts empty
+ * buckets as zero, so the line does not climb through a break.
+ */
+export function buildVolumeBuckets(sets, { now, days }) {
+  if (days !== null && days !== undefined && days <= WEEKLY_UP_TO_DAYS) {
+    const weeks = Math.max(1, Math.ceil(days / 7));
 
     return {
-      workouts,
-      records,
-      perWorkout: workouts === 0 ? null : records / workouts,
-      // "every n-th workout": the inverse of records per workout. Undefined
-      // with no records, which is a real state and not a zero.
-      workoutsPerRecord: records === 0 ? null : workouts / records,
+      unit: "week",
+      buckets: buildWeeklyVolume(sets, { now, weeks }).map((week) => ({
+        start: week.weekStart,
+        volume: week.volume,
+        isEmpty: week.isEmpty,
+        average: week.average,
+      })),
     };
-  };
+  }
 
-  return { current: summarise(current), previous: summarise(previous) };
+  const lastMonth = startOfMonth(now);
+  let firstMonth;
+
+  if (days === null || days === undefined) {
+    firstMonth = sets.length ? startOfMonth(sets[0].at) : lastMonth;
+    const span = Math.round((lastMonth - firstMonth) / (30.44 * DAY_MS));
+
+    if (span >= MAX_MONTH_BUCKETS) {
+      firstMonth = addMonths(lastMonth, -(MAX_MONTH_BUCKETS - 1));
+    }
+  } else {
+    firstMonth = addMonths(lastMonth, -(Math.round(days / 30.44) - 1));
+  }
+
+  const totals = new Map();
+
+  for (const set of sets) {
+    const month = startOfMonth(set.at);
+
+    if (month >= firstMonth && month <= lastMonth) {
+      totals.set(month, (totals.get(month) ?? 0) + set.volume);
+    }
+  }
+
+  const buckets = [];
+
+  for (let month = firstMonth, index = 0; month <= lastMonth; month = addMonths(month, 1), index += 1) {
+    const volume = totals.get(month) ?? 0;
+    const windowValues = [];
+
+    for (let step = Math.max(0, index - 2); step <= index; step += 1) {
+      windowValues.push(totals.get(addMonths(firstMonth, step)) ?? 0);
+    }
+
+    buckets.push({
+      start: month,
+      volume,
+      isEmpty: volume === 0,
+      average: windowValues.reduce((sum, value) => sum + value, 0) / windowValues.length,
+    });
+  }
+
+  return { unit: "month", buckets };
+}
+
+/**
+ * Every exercise, for the list at the bottom: the heaviest lift ever (the
+ * most weight, and the most reps at it), when it was last trained, and which
+ * way it is going - null when there is too little recent training to say.
+ * Most recently trained first.
+ */
+export function buildExerciseList(sets, { now }) {
+  const directions = new Map(
+    buildDirections(sets, { now })
+      .filter((entry) => entry.qualifies)
+      .map((entry) => [entry.name, entry.direction])
+  );
+  const byExercise = new Map();
+
+  for (const set of sets) {
+    const entry = byExercise.get(set.name) ?? {
+      name: set.name,
+      heaviest: null,
+      lastAt: null,
+      sessions: new Set(),
+    };
+
+    if (
+      !entry.heaviest ||
+      set.weight > entry.heaviest.weight ||
+      (set.weight === entry.heaviest.weight && set.reps > entry.heaviest.reps)
+    ) {
+      entry.heaviest = { weight: set.weight, reps: set.reps };
+    }
+
+    entry.lastAt = entry.lastAt === null ? set.at : Math.max(entry.lastAt, set.at);
+    entry.sessions.add(set.sessionKey);
+    byExercise.set(set.name, entry);
+  }
+
+  return [...byExercise.values()]
+    .map((entry) => ({
+      name: entry.name,
+      heaviest: entry.heaviest,
+      lastAt: entry.lastAt,
+      sessionCount: entry.sessions.size,
+      direction: directions.get(entry.name) ?? null,
+    }))
+    .sort((left, right) => right.lastAt - left.lastAt);
 }
 
 /**

@@ -19,6 +19,7 @@ import Svg, {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
+import { useTranslation } from "@localization";
 
 import styles from "./PersonalRecordsPageStyle";
 import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
@@ -260,6 +261,7 @@ function buildMuscleLoadRadarGeometry(points = []) {
 
 const PersonalRecordsPage = () => {
   const db = useSQLiteContext();
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const route = useRoute();
   // Opened from an exercise card's history, the page lands on that exercise,
@@ -1370,14 +1372,14 @@ const PersonalRecordsPage = () => {
       <ThemedHeader>
         <View style={styles.pageHeaderTitleGroup}>
           <ThemedText size={12} style={styles.pageHeaderTitleEyebrow} setColor={quietText}>
-            Library
+            {t("records.eyebrow")}
           </ThemedText>
           <ThemedTitle
             type="pageTitle"
             style={styles.pageHeaderTitleMain}
             numberOfLines={1}
           >
-            Personal Records
+            {t("records.title")}
           </ThemedTitle>
         </View>
       </ThemedHeader>

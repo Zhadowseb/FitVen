@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.3.0] - Unreleased
+### Changed
+- **Records is one page read in one period.** The period selector sat halfway down and moved only some of what was under it - the biggest movers and the volume chart were always twelve weeks whatever it said - so it read as broken. It is at the top now (4 weeks / 3 months / 1 year / All) and everything on the page follows it, with a line under it saying what the period is compared with.
+- **Three plain numbers lead**: workouts, records and tonnes lifted in the period, each with how it changed against the same length of time before it. They replace "Record every 1st-2nd workout", which took a moment to read every time, and the "Per workout" and "Improving 3 of 7" tiles, which needed explaining.
+- **One line says whether you are getting stronger**: the average change in best estimated 1RM across every exercise with a change to measure in the period, and how many of them went up. "All" measures from each exercise's first session.
+- **Biggest gains** follow the period, as a bar and a kilo change per exercise; the biggest decline stays in the list so a slip is not hidden. **Volume** is a bar a week up to three months and a bar a month beyond it, since a year of weekly bars is too thin to read, with the moving average over the last four weeks or three months.
+- **Every exercise, in one list** - new. Most recently trained first, with the heaviest lift, when it was last done and which way it is going, and a tap opens it. There used to be no way to reach an exercise that was neither a mover nor a recent record.
+- **Records speaks Danish.** The page was the one screen never translated - headings in English, the exercise detail half in Danish - and is now in both languages, dates included (`records.js` in the locales).
+
+---
 ## [2.2.0] - Unreleased
 ### Added
 - **A set has a type: warm-up, working, drop or AMRAP.** `Set.set_type` is the truth and `amrap` stays as its mirror, because older versions in the field read and write only the flag - a working set with the flag up is read as AMRAP, since only a client that did not know `set_type` could have written that. Warm-ups count toward neither volume nor records; drop sets count toward volume but not records; an AMRAP set can carry a target (`amrap_target`). **Needs `20260923100000_a-set-has-a-type.sql` before any phone on 2.2.0 syncs** - the set sync names the two new columns, and PostgREST refuses a select on a column that does not exist.

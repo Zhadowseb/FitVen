@@ -10,6 +10,7 @@ import music from "./music";
 import nav from "./nav";
 import notifications from "./notifications";
 import profile from "./profile";
+import records from "./records";
 import social from "./social";
 import time from "./time";
 import workout from "./workout";
@@ -25,6 +26,7 @@ export default {
   nav,
   notifications,
   profile,
+  records,
   social,
   time,
   workout,
