@@ -258,9 +258,10 @@ export function useSpinAnimation(enabled = true, periodMs = 2000) {
 // A shine crossing a tile: progress 0 -> 1 over `sweepMs`, then a pause of
 // `gapMs`, forever. `headStartMs` holds the first sweep back, so a row of
 // tiles does not flash in step. Disabled -> parked at 0, off the tile.
+// `linear` for something that should move at one speed, like falling snow.
 export function useSheenAnimation(
   enabled = true,
-  { sweepMs = 1300, gapMs = 4000, headStartMs = 0 } = {}
+  { sweepMs = 1300, gapMs = 4000, headStartMs = 0, linear = false } = {}
 ) {
   const progress = useRef(new Animated.Value(0)).current;
 
@@ -277,7 +278,7 @@ export function useSheenAnimation(
           Animated.timing(progress, {
             toValue: 1,
             duration: sweepMs,
-            easing: Easing.inOut(Easing.cubic),
+            easing: linear ? Easing.linear : Easing.inOut(Easing.cubic),
             useNativeDriver: true,
           }),
           Animated.delay(gapMs),
@@ -296,7 +297,7 @@ export function useSheenAnimation(
       animation.stop();
       progress.setValue(0);
     };
-  }, [enabled, gapMs, headStartMs, progress, sweepMs]);
+  }, [enabled, gapMs, headStartMs, linear, progress, sweepMs]);
 
   return progress;
 }

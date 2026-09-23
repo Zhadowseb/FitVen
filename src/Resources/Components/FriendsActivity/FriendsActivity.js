@@ -22,6 +22,7 @@ import Svg, {
 } from "react-native-svg";
 import { useTranslation } from "@localization";
 
+import FrozenFrame from "./FrozenFrame";
 import styles, {
   AURA_SIZE,
   AVATAR_SIZE,
@@ -701,11 +702,21 @@ function IceAura({ theme, animate, seed }) {
       <Svg style={StyleSheet.absoluteFill} viewBox="0 0 100 100">
         <Defs>
           <RadialGradient id={glowId} cx="50%" cy="50%" r="50%">
-            <Stop offset="0.6" stopColor={theme.ice} stopOpacity={0.32} />
+            <Stop offset="0.6" stopColor={theme.ice} stopOpacity={0.45} />
             <Stop offset="1" stopColor={theme.ice} stopOpacity={0} />
           </RadialGradient>
         </Defs>
         <Circle cx="50" cy="50" r="50" fill={`url(#${glowId})`} />
+        {/* A bright frosted edge just outside the ring. */}
+        <Circle
+          cx="50"
+          cy="50"
+          r={AURA_AVATAR_RADIUS + 1.5}
+          fill="none"
+          stroke="#F2FAFF"
+          strokeOpacity={0.55}
+          strokeWidth={1.4}
+        />
       </Svg>
       <Animated.View style={[StyleSheet.absoluteFill, { opacity: first }]}>
         <IceCrystals color={theme.ice} group={0} />
@@ -870,6 +881,7 @@ function ActivityTile({
   const meta = getActivityMeta(theme, activityState, restDotColor);
   const isLive = activityState === "live";
   const isRest = !activityState || activityState === "rest";
+  const isFrozen = aura === "ice";
 
   return (
     <TouchableOpacity
@@ -885,7 +897,11 @@ function ActivityTile({
         styles.tile,
         {
           backgroundColor: theme.cardBackground,
-          borderColor: isLive ? withAlpha(theme.primary, 0.45) : theme.cardBorder,
+          borderColor: isLive
+            ? withAlpha(theme.primary, 0.45)
+            : isFrozen
+              ? withAlpha(theme.ice, 0.5)
+              : theme.cardBorder,
         },
       ]}
     >
@@ -896,6 +912,15 @@ function ActivityTile({
           colorScheme={colorScheme}
           animate={animate}
           seed={motionSeed}
+        />
+      ) : null}
+
+      {isFrozen ? (
+        <FrozenFrame
+          theme={theme}
+          colorScheme={colorScheme}
+          seed={motionSeed + 1}
+          animate={animate}
         />
       ) : null}
 

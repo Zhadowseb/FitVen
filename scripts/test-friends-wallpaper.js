@@ -137,4 +137,82 @@ assert.strictEqual(
   "somebody who has never trained was frozen - they were never warm"
 );
 
+/* ------------------------------------------------------ the ice block -- */
+
+const {
+  buildFrostGeometry,
+  iciclePath,
+  FROST_RIM,
+  ICICLE_MAX_LENGTH,
+  SNOWFLAKE_COUNT,
+} = loadAppModule("src/Utils/frostGeometry.js");
+
+assert.strictEqual(buildFrostGeometry({ width: 0, height: 170 }), null, "an unmeasured tile drew frost");
+
+const TILE = { width: 148, height: 170, cornerRadius: 20 };
+const frost = buildFrostGeometry({ ...TILE, seed: 3 });
+
+/** Every coordinate pair in a path string. */
+function pointsOf(path) {
+  const numbers = path.match(/-?\d+(\.\d+)?/g).map(Number);
+  const points = [];
+
+  for (let index = 0; index + 1 < numbers.length; index += 2) {
+    points.push([numbers[index], numbers[index + 1]]);
+  }
+
+  return points;
+}
+
+const insideTile = ([x, y]) => x >= 0 && x <= TILE.width && y >= 0 && y <= TILE.height;
+const allFrostPaths = [
+  frost.crystals,
+  ...frost.ferns.flatMap((group) => [group.stems, group.shoots]),
+];
+
+for (const path of allFrostPaths) {
+  assert.ok(path.length > 0, "a frost layer came out empty");
+  assert.ok(pointsOf(path).every(insideTile), "frost reached past the edge of the tile");
+}
+
+assert.ok(
+  frost.ferns[0].stems.split("M").length > 8 && frost.ferns[1].stems.split("M").length > 8,
+  "too few ferns to read as frost on every side"
+);
+
+// Icicles hang from under the rim, stay short, and keep out of the corners
+// the tile's rounding has cut away.
+assert.ok(frost.icicles.length >= 6, "the top edge has almost no icicles");
+
+for (const icicle of frost.icicles) {
+  assert.strictEqual(icicle.top, FROST_RIM - 1);
+  assert.ok(icicle.length <= ICICLE_MAX_LENGTH, "an icicle hangs down over the music line");
+  assert.ok(
+    icicle.x >= TILE.cornerRadius && icicle.x <= TILE.width - TILE.cornerRadius,
+    "an icicle hangs where the corner is rounded away"
+  );
+  assert.ok(pointsOf(iciclePath(icicle)).every(insideTile));
+}
+
+// Sparkles sit in the rim; snow falls inside it.
+for (const sparkle of frost.sparkles) {
+  const fromEdge = Math.min(sparkle.x, sparkle.y, TILE.width - sparkle.x, TILE.height - sparkle.y);
+
+  assert.ok(fromEdge <= FROST_RIM, "a sparkle drifted off the rim into the tile");
+}
+
+assert.strictEqual(frost.snow.length, SNOWFLAKE_COUNT);
+assert.ok(
+  frost.snow.every((flake) => flake.x > FROST_RIM && flake.x < TILE.width - FROST_RIM),
+  "a snowflake falls through the rim"
+);
+
+// The same tile keeps its frost; another tile has its own.
+assert.deepStrictEqual(buildFrostGeometry({ ...TILE, seed: 3 }), frost, "the frost changed between renders");
+assert.notDeepStrictEqual(
+  buildFrostGeometry({ ...TILE, seed: 4 }).icicles,
+  frost.icicles,
+  "two frozen friends got the same icicles"
+);
+
 console.log("Friends tile wallpaper checks passed.");
