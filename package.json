@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "2.1.2-fix-tabs-rebuild-home-on-every-switch.1",
+  "version": "2.1.3-fix-privacy-policy-cvr.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",

@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.1.3] - Unreleased
+### Changed
+- **FitVen is published by Spiral Technologies now, and every page that named who is responsible says so.** The privacy policy and the terms of use both said *"FitVen is run by a private individual rather than a company, so there is no CVR number"*, which stopped being true on 14 September 2026 when Spiral Technologies was registered (CVR 41755970). Both now name the business, its CVR and its address, and so do the support page and the deletion page Play and App Store Connect link to. `web/privacy/` and `web/terms/` are regenerated from the sources, not edited.
+- Spiral Technologies is a sole proprietorship (*enkeltmandsvirksomhed*, registered as *Personligt ejet Mindre Virksomhed*), which is not a separate legal entity. The policy says so in plain words: the person responsible for the data is still Sebastian Dalbjørn-Winblad personally. The owner is named as the CVR register names him, which is also how the Play developer account names him.
+
+### Notes
+- **Neither `PRIVACY_POLICY_VERSION` nor `TERMS_VERSION` was raised, on purpose.** Both files say to raise the version when what somebody is agreeing to changes. It has not: a sole proprietorship is its owner, so the data controller and the party to the EULA are the same person as before, processing the same data for the same reasons. What changed is a factual statement that had become false. Raising the versions would have sent every existing user back through both consent screens for a change that alters nothing they agreed to.
+- That call reverses if the business ever becomes an ApS or another separate legal entity. Then the controller genuinely changes, and both versions have to go up.
+
+---
 ## [2.1.2] - Unreleased
 ### Fixed
 - **Switching tabs no longer rebuilds Home.** The Home tab called `resetRoot`, which threw the whole stack away and mounted a new Home from nothing - skeleton, every query cold, the friends strip and the avatar fetched again. Measured on a phone with three months of history, driving the taps over adb: **2.3 s before anything showed and 4.1 s before it was all there**, on every press. The frame times were fine throughout (99th percentile 30 ms); the wait was the JavaScript thread mounting the screen and running its loads, which is why it read as the app being slow rather than as it stuttering. Tabs now keep the stack at `[Home]` or `[Home, that tab]` through `reset`, handing the existing Home route back with its key - the instance and what it last drew survive, and its focus effect refreshes it in the background.

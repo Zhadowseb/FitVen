@@ -29,9 +29,10 @@ export const PRIVACY_POLICY_LAST_UPDATED = "5 September 2026";
 export const PRIVACY_POLICY_SECTIONS = [
   {
     title: "Who is responsible",
-    body: `FitVen is run by a private individual rather than a company, so there is no CVR number.
+    body: `FitVen is published by Spiral Technologies, a sole proprietorship (enkeltmandsvirksomhed) owned and run by Sebastian Dalbjørn-Winblad. A sole proprietorship is not a separate legal entity, so the person responsible is Sebastian Dalbjørn-Winblad personally.
 
-Sebastian Dalbjørn
+Spiral Technologies
+CVR 41755970
 Ørnegårdsvej 61, 1. th.
 2820 Gentofte
 Denmark

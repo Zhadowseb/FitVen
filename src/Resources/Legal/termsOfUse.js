@@ -37,9 +37,10 @@ export const TERMS_SECTIONS = [
     title: "Who you are agreeing with",
     body: `These terms of use are the end user licence agreement (EULA) between you and FitVen. You accept them when you create an account, and you cannot create one without accepting them.
 
-FitVen is run by a private individual rather than a company, so there is no CVR number.
+FitVen is published by Spiral Technologies, a sole proprietorship (enkeltmandsvirksomhed) owned and run by Sebastian Dalbjørn-Winblad. A sole proprietorship is not a separate legal entity, so the person responsible is Sebastian Dalbjørn-Winblad personally.
 
-Sebastian Dalbjørn
+Spiral Technologies
+CVR 41755970
 Ørnegårdsvej 61, 1. th.
 2820 Gentofte
 Denmark
