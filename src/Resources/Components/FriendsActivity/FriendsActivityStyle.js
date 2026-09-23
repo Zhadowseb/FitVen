@@ -8,6 +8,7 @@ export const TILE_GAP = 8;
 export const BAND_HEIGHT = 58;
 export const AVATAR_SIZE = 56;
 export const AVATAR_OVERLAP = 30;
+export const AVATAR_RING_WIDTH = 2.5;
 export const TILE_MIN_HEIGHT = 165;
 // The fire and ice drawn around the avatar: wider than it, centred on it, and
 // outside the layout - nothing moves to make room.
@@ -175,7 +176,7 @@ export default StyleSheet.create({
     width: AVATAR_SIZE,
     height: AVATAR_SIZE,
     borderRadius: AVATAR_SIZE / 2,
-    borderWidth: 2.5,
+    borderWidth: AVATAR_RING_WIDTH,
     alignItems: "center",
     justifyContent: "center",
   },

@@ -64,8 +64,8 @@ behind by accident.
 | `20260921230000_the-admin-guard-asks-who-is-asking.sql` | yes |
 | `20260922090000_a-feedback-message-has-a-status.sql` | yes |
 | `20260922100000_the-note-column-leaves-the-old-exercises.sql` | yes |
-| `20260923100000_a-set-has-a-type.sql` | no |
-| `20260924090000_a-friend-can-see-a-record-was-set-today.sql` | no |
+| `20260923100000_a-set-has-a-type.sql` | yes |
+| `20260924090000_a-friend-can-see-a-record-was-set-today.sql` | yes |
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
 centre match, per-centre lift leaderboards with video verification, and what
@@ -300,8 +300,8 @@ data, not the copy. The app's matching half runs under
 `opt_in_visible_columns_v2`, so the device cleans its own rows once more and
 both sides land on the same answer.
 
-`20260923100000_a-set-has-a-type.sql` has **not** been run yet, and **it has
-to be run before any phone runs 2.2.0.** The app now names `set_type` and
+`20260923100000_a-set-has-a-type.sql` was run on 2026-09-24, before any phone
+ran 2.2.0 - which it had to be. The app now names `set_type` and
 `amrap_target` when it reads sets, and PostgREST refuses a select that names a
 column which does not exist - on a project without them, every set pull fails
 and no set reaches any device. It adds both columns, a check on the four
@@ -309,11 +309,12 @@ values, and backfills `set_type = 'amrap'` from the old `amrap` flag with the
 same rule the app applies locally, so the two sides agree without a row being
 re-uploaded. `amrap` stays as a mirror for older app versions.
 
-`20260924090000_a-friend-can-see-a-record-was-set-today.sql` has **not** been
-run yet. It adds `workout_record_counts`, a function that tells the friends
+`20260924090000_a-friend-can-see-a-record-was-set-today.sql` was run on
+2026-09-24. It adds `workout_record_counts`, a function that tells the friends
 strip how many personal records a workout it can already see holds - the
 count only, never the sets - so a tile can wear a crown. Nothing depends on
-it: until it runs the app gets "function does not exist" and shows no crowns.
+it: on a project without it the app gets "function does not exist" and shows
+no crowns.
 
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to

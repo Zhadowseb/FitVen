@@ -163,6 +163,37 @@ assert.strictEqual(
   "yesterday's record still wears today's crown"
 );
 
+// Where it sits: tilted, both bottom corners exactly on the ring.
+{
+  const { placeCrownOnRing } = loadAppModule("src/Utils/crownPlacement.js");
+  const box = { width: 44, height: 30 };
+  const corners = [
+    [6, 27],
+    [38, 27],
+  ];
+  const angleDeg = -8;
+  const ringCentre = [28, 28];
+  const ringRadius = 26.75;
+  const placement = placeCrownOnRing({ box, corners, angleDeg, ringCentre, ringRadius });
+  const angle = (angleDeg * Math.PI) / 180;
+
+  for (const [x, y] of corners) {
+    const dx = x - box.width / 2;
+    const dy = y - box.height / 2;
+    const onScreen = [
+      placement.left + box.width / 2 + dx * Math.cos(angle) - dy * Math.sin(angle),
+      placement.top + box.height / 2 + dx * Math.sin(angle) + dy * Math.cos(angle),
+    ];
+    const fromCentre = Math.hypot(onScreen[0] - ringCentre[0], onScreen[1] - ringCentre[1]);
+
+    assert.ok(
+      Math.abs(fromCentre - ringRadius) < 0.05,
+      `a bottom corner of the crown sits ${fromCentre.toFixed(2)} from the ring's centre, not on the ring`
+    );
+    assert.ok(onScreen[1] < ringCentre[1], "the crown sits under the avatar instead of on it");
+  }
+}
+
 /* ------------------------------------------------ embers, steam, charge -- */
 
 const {

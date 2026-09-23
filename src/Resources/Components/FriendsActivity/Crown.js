@@ -14,6 +14,8 @@ import Svg, {
 } from "react-native-svg";
 
 import { useBreathAnimation, useSheenAnimation } from "../animationHooks";
+import { placeCrownOnRing } from "@utils/crownPlacement";
+import { AVATAR_RING_WIDTH, AVATAR_SIZE } from "./FriendsActivityStyle";
 
 const AnimatedRect = Animated.createAnimatedComponent(Rect);
 
@@ -29,7 +31,22 @@ const CROWN_BALLS = [
   [22, 1.9],
   [35.5, 5.4],
 ];
+const CROWN_BOX = { width: 44, height: 30 };
+const CROWN_TILT_DEG = -8;
 const RUBY_Y = 24;
+
+// Tilted, with both bottom corners - (6, 27) and (38, 27) in the drawing -
+// resting on the middle of the ring's stroke.
+const CROWN_PLACEMENT = placeCrownOnRing({
+  box: CROWN_BOX,
+  corners: [
+    [6, 27],
+    [38, 27],
+  ],
+  angleDeg: CROWN_TILT_DEG,
+  ringCentre: [AVATAR_SIZE / 2, AVATAR_SIZE / 2],
+  ringRadius: AVATAR_SIZE / 2 - AVATAR_RING_WIDTH / 2,
+});
 const RUBY_SPOTS = { 2: [16.5, 27.5], 3: [13, 22, 31] };
 const GOLD_EDGE = "#8A5A12";
 
@@ -210,14 +227,13 @@ export default function Crown({ rubies = 2, animate = false, seed = 0 }) {
 }
 
 const styles = StyleSheet.create({
-  // Centred on a 56 dp avatar, sitting down over the top of its ring.
   crown: {
     position: "absolute",
-    left: 6,
-    top: -20,
-    width: 44,
-    height: 30,
-    transform: [{ rotate: "-8deg" }],
+    left: CROWN_PLACEMENT.left,
+    top: CROWN_PLACEMENT.top,
+    width: CROWN_BOX.width,
+    height: CROWN_BOX.height,
+    transform: [{ rotate: `${CROWN_TILT_DEG}deg` }],
   },
   glint: {
     position: "absolute",
