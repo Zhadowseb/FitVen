@@ -10,11 +10,12 @@ const assert = require("assert");
 const loadAppModule = require("./lib/loadAppModule");
 
 const {
-  buildAvatarAura,
   buildRestWallpaper,
+  buildTileMood,
+  chargeLevelFor,
   wallpaperColorForDays,
+  CHARGED_WITHIN_DAYS,
   COBWEB_FROM_DAYS,
-  FIRE_WITHIN_DAYS,
   WALLPAPER_MOTION_DAYS,
 } = loadAppModule("src/Utils/friendsActivityUtils.js");
 const { mixHexColors } = loadAppModule("src/Utils/colorMix.js");
@@ -105,31 +106,81 @@ assert.ok(energyAt(0) > energyAt(3), "a tile from today was no livelier than one
 assert.ok(energyAt(WALLPAPER_MOTION_DAYS) > 0, "a workout exactly a week ago stopped moving");
 assert.strictEqual(energyAt(WALLPAPER_MOTION_DAYS + 1), 0, "a tile older than a week still moves");
 
-// Fire for anyone active - training now, done today, or trained within the
-// last three days - and cobwebs from a month.
-const auraAt = (days) => buildAvatarAura({ activityState: "rest", daysSinceLastWorkout: days }, now);
+// The mood follows the week: embers while training, steam once done for the
+// day, charged for three days after, nothing, then cobwebs from a month.
+const moodAt = (days) => buildTileMood({ activityState: "rest", daysSinceLastWorkout: days }, now);
 
-assert.strictEqual(FIRE_WITHIN_DAYS, 3, "active is trained within the last three days");
-assert.strictEqual(auraAt(0), "fire");
-assert.strictEqual(auraAt(3), "fire", "three days ago no longer counted as active");
-assert.strictEqual(auraAt(4), null, "four days ago was still on fire");
-assert.strictEqual(auraAt(29), null, "a friend gathered cobwebs before a month was up");
-assert.strictEqual(auraAt(COBWEB_FROM_DAYS), "cobweb");
+assert.strictEqual(buildTileMood({ activityState: "live" }, now), "embers", "somebody training now is not on fire");
 assert.strictEqual(
-  buildAvatarAura({ activityState: "live" }, now),
-  "fire",
-  "somebody training right now was not on fire"
+  buildTileMood({ activityState: "done", lastWorkoutAt: daysAgo(60) }, now),
+  "steam",
+  "a workout finished today lost to a stale date"
 );
+assert.strictEqual(moodAt(0), "steam", "a workout today from the phone did not steam");
+assert.strictEqual(moodAt(1), "charged");
+assert.strictEqual(CHARGED_WITHIN_DAYS, 3, "charged is trained within the last three days");
+assert.strictEqual(moodAt(3), "charged", "three days ago lost its charge");
+assert.strictEqual(moodAt(4), null, "four days ago was still charged");
+assert.strictEqual(moodAt(29), null, "a friend gathered cobwebs before a month was up");
+assert.strictEqual(moodAt(COBWEB_FROM_DAYS), "cobweb");
 assert.strictEqual(
-  buildAvatarAura({ activityState: "done", lastWorkoutAt: daysAgo(60) }, now),
-  "fire",
-  "a workout finished today lost to a stale date and gathered cobwebs"
-);
-assert.strictEqual(
-  buildAvatarAura({ activityState: "rest" }, now),
+  buildTileMood({ activityState: "rest" }, now),
   null,
   "somebody who has never trained gathered cobwebs - there was nothing to leave"
 );
+
+// The charge runs down, a level a day.
+assert.deepStrictEqual(
+  [1, 2, 3].map((days) => chargeLevelFor({ daysSinceLastWorkout: days }, now)),
+  [3, 2, 1],
+  "the charge does not run down a level a day"
+);
+
+/* ------------------------------------------------ embers, steam, charge -- */
+
+const {
+  buildCharge,
+  buildEmbers,
+  buildSteam,
+  EMBER_COUNT,
+  MOTES_PER_LEVEL,
+  STEAM_PUFF_COUNT,
+} = loadAppModule("src/Utils/tileMoodGeometry.js");
+
+{
+  const width = 148;
+  const height = 170;
+  const embers = buildEmbers({ width, seed: 2 });
+
+  assert.strictEqual(embers.length, EMBER_COUNT);
+  assert.ok(embers.every((ember) => ember.x > 0 && ember.x < width), "an ember starts outside the tile");
+  assert.deepStrictEqual(buildEmbers({ width, seed: 2 }), embers, "the embers moved between renders");
+
+  const puffs = buildSteam({ width, height, seed: 2 });
+
+  assert.strictEqual(puffs.length, STEAM_PUFF_COUNT);
+  assert.ok(
+    puffs.every((puff) => puff.y > height * 0.5 && puff.y - puff.rise < height * 0.4),
+    "steam does not well up from low in the tile and rise"
+  );
+
+  // Fewer motes as the charge runs down, and all of them wander inside.
+  for (const level of [3, 2, 1]) {
+    const charge = buildCharge({ width, height, seed: 2, level });
+
+    assert.strictEqual(charge.motes.length, level * MOTES_PER_LEVEL, `level ${level} has the wrong number of motes`);
+
+    for (const mote of charge.motes) {
+      assert.ok(
+        mote.x - mote.rangeX > 0 && mote.x + mote.rangeX < width &&
+          mote.y - mote.rangeY > 0 && mote.y + mote.rangeY < height,
+        "a mote of energy wanders out of the tile"
+      );
+    }
+  }
+
+  assert.strictEqual(buildCharge({ width: 0, height, level: 3 }), null);
+}
 
 /* ----------------------------------------------------------- cobwebs -- */
 

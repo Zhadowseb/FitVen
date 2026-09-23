@@ -227,22 +227,34 @@ export function resolveDaysSinceLastWorkout(person, now = Date.now()) {
   return between === null ? null : Math.max(0, between);
 }
 
-// Fire for anyone active: training now, done today, or trained within the
-// last three days. Cobwebs once a month has passed.
-export const FIRE_WITHIN_DAYS = 3;
+// A tile's mood follows where the person is in their week:
+//
+//   training right now      -> embers: a fire under the tile, sparks rising
+//   done for the day         -> steam coming off it
+//   trained in the last 3    -> charged: arcs crackling round the edge, fewer
+//                               each day
+//   a month or more gone     -> cobwebs
+//
+// Everything in between has only the wallpaper.
+export const CHARGED_WITHIN_DAYS = 3;
 export const COBWEB_FROM_DAYS = 30;
 
 /**
- * What a tile's avatar wears: "fire", "cobweb" or null.
+ * The mood of a tile: "embers", "steam", "charged", "cobweb" or null.
  *
- * Somebody who has never trained gets neither - cobwebs say "left unused",
- * and there was nothing to leave.
+ * A workout today counts as done whether the cloud says "done" or the phone
+ * says zero days - the viewer's own tile knows it first. Somebody who has
+ * never trained gathers no cobwebs: there was nothing to leave.
  */
-export function buildAvatarAura(person, now = Date.now()) {
+export function buildTileMood(person, now = Date.now()) {
   const state = person?.activityState;
 
-  if (state === "live" || state === "done") {
-    return "fire";
+  if (state === "live") {
+    return "embers";
+  }
+
+  if (state === "done") {
+    return "steam";
   }
 
   const days = resolveDaysSinceLastWorkout(person, now);
@@ -251,11 +263,29 @@ export function buildAvatarAura(person, now = Date.now()) {
     return null;
   }
 
-  if (days <= FIRE_WITHIN_DAYS) {
-    return "fire";
+  if (days === 0) {
+    return "steam";
+  }
+
+  if (days <= CHARGED_WITHIN_DAYS) {
+    return "charged";
   }
 
   return days >= COBWEB_FROM_DAYS ? "cobweb" : null;
+}
+
+/**
+ * How charged a "charged" tile still is: 3 the day after a workout, 2 the
+ * day after that, 1 on the third day.
+ */
+export function chargeLevelFor(person, now = Date.now()) {
+  const days = resolveDaysSinceLastWorkout(person, now);
+
+  if (days === null) {
+    return 1;
+  }
+
+  return Math.max(1, Math.min(3, CHARGED_WITHIN_DAYS + 1 - days));
 }
 
 /**

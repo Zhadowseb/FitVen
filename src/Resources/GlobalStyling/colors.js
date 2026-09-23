@@ -39,13 +39,18 @@ export const Colors = {
         // pink, cool blue, then grey. Its own set rather than borrowed, so it
         // stays clear of the status colours (orange, green, yellow) and of
         // music's purple, which shares the tile. fire and fireCore are the
-        // flames around an active friend's avatar; cobweb and spider are the
+        // embers under a friend training right now; steam is what comes off
+        // somebody done for the day; charge and chargeCore the arcs round
+        // somebody who trained in the last three days; cobweb and spider the
         // silk and the spider on a friend gone a month.
         heatHot: "#FF7A7A",
         heatWarm: "#FF8FD2",
         heatCool: "#7FA6CC",
         fire: "#FF7A2E",
         fireCore: "#FFC94D",
+        steam: "#F2F4F8",
+        charge: "#8FD3FF",
+        chargeCore: "#E6F7FF",
         cobweb: "#D9DCE3",
         spider: "#07080B",
 
@@ -144,6 +149,9 @@ export const Colors = {
         heatCool: "#3F6E9C",
         fire: "#E0561B",
         fireCore: "#E0A100",
+        steam: "#8A93A6",
+        charge: "#2F7FD6",
+        chargeCore: "#7FC0FF",
         cobweb: "#7A7F8C",
         spider: "#2A2D35",
 

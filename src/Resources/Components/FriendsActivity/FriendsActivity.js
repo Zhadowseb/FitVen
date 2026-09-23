@@ -20,7 +20,10 @@ import Svg, {
 } from "react-native-svg";
 import { useTranslation } from "@localization";
 
+import ChargeFrame from "./ChargeFrame";
 import CobwebFrame from "./CobwebFrame";
+import EmberFrame from "./EmberFrame";
+import SteamFrame from "./SteamFrame";
 import styles, {
   AURA_SIZE,
   AVATAR_SIZE,
@@ -45,8 +48,9 @@ import {
 } from "../animationHooks";
 import {
   buildActivityStatusLabel,
-  buildAvatarAura,
   buildRestWallpaper,
+  buildTileMood,
+  chargeLevelFor,
   formatMusicLine,
   resolveMusicBandState,
   sortActivityTiles,
@@ -616,18 +620,19 @@ function CobwebAura({ theme, animate, seed }) {
 
 /* ------------------------------------------------------------- avatar -- */
 
-function TileAvatar({ theme, meta, activityState, avatarUrl, iconColor, animate, aura, seed }) {
+function TileAvatar({ theme, meta, activityState, avatarUrl, iconColor, animate, mood, seed }) {
   const isLive = activityState === "live";
   // Flames already say "going"; the pulse under them would only blur it.
-  const { scale, opacity } = usePulseAnimation(isLive && animate && aura !== "fire");
+  const onFire = mood === "embers";
+  const { scale, opacity } = usePulseAnimation(isLive && animate && !onFire);
   // A month gone: the picture has gathered dust, and a web.
-  const isDusty = aura === "cobweb";
+  const isDusty = mood === "cobweb";
 
   return (
     <View style={styles.avatarSlot} pointerEvents="none">
       <View style={styles.avatarShell}>
-        {aura === "fire" ? <FireAura theme={theme} animate={animate} seed={seed} /> : null}
-        {isLive && aura !== "fire" ? (
+        {onFire ? <FireAura theme={theme} animate={animate} seed={seed} /> : null}
+        {isLive && !onFire ? (
           <Animated.View
             style={[
               styles.pulseRing,
@@ -761,7 +766,8 @@ function ActivityTile({
   onPress,
   onOpenGym,
   wallpaper = null,
-  aura = null,
+  mood = null,
+  chargeLevel = 1,
   motionSeed = 0,
 }) {
   const { t } = useTranslation();
@@ -771,7 +777,7 @@ function ActivityTile({
   const meta = getActivityMeta(theme, activityState, restDotColor);
   const isLive = activityState === "live";
   const isRest = !activityState || activityState === "rest";
-  const isDusty = aura === "cobweb";
+  const frameSeed = motionSeed + 1;
 
   return (
     <TouchableOpacity
@@ -787,7 +793,11 @@ function ActivityTile({
         styles.tile,
         {
           backgroundColor: theme.cardBackground,
-          borderColor: isLive ? withAlpha(theme.primary, 0.45) : theme.cardBorder,
+          borderColor: isLive
+            ? withAlpha(theme.primary, 0.45)
+            : mood === "charged"
+              ? withAlpha(theme.charge, 0.3)
+              : theme.cardBorder,
         },
       ]}
     >
@@ -801,7 +811,13 @@ function ActivityTile({
         />
       ) : null}
 
-      {isDusty ? <CobwebFrame theme={theme} seed={motionSeed + 1} animate={animate} /> : null}
+      {/* The tile's mood: where the person is in their week. */}
+      {mood === "embers" ? <EmberFrame theme={theme} seed={frameSeed} animate={animate} /> : null}
+      {mood === "steam" ? <SteamFrame theme={theme} seed={frameSeed} animate={animate} /> : null}
+      {mood === "charged" ? (
+        <ChargeFrame theme={theme} seed={frameSeed} level={chargeLevel} animate={animate} />
+      ) : null}
+      {mood === "cobweb" ? <CobwebFrame theme={theme} seed={frameSeed} animate={animate} /> : null}
 
       <MusicBand
         theme={theme}
@@ -839,7 +855,7 @@ function ActivityTile({
         avatarUrl={avatarUrl}
         iconColor={isRest ? theme.quietText : iconColor}
         animate={animate}
-        aura={aura}
+        mood={mood}
         seed={motionSeed}
       />
     </TouchableOpacity>
@@ -999,7 +1015,8 @@ export default function FriendsActivity({
             onPress={onOpenProfile}
             onOpenGym={onOpenGym}
             wallpaper={currentUser ? buildRestWallpaper(currentUser) : null}
-            aura={currentUser ? buildAvatarAura(currentUser) : null}
+            mood={currentUser ? buildTileMood(currentUser) : null}
+            chargeLevel={currentUser ? chargeLevelFor(currentUser) : 1}
           />
 
           {isLoading ? (
@@ -1023,7 +1040,8 @@ export default function FriendsActivity({
                 onPress={onSeeAll}
                 onOpenGym={onOpenGym}
                 wallpaper={buildRestWallpaper(person)}
-                aura={buildAvatarAura(person)}
+                mood={buildTileMood(person)}
+                chargeLevel={chargeLevelFor(person)}
                 motionSeed={index + 1}
               />
             ))
