@@ -120,7 +120,8 @@ export function buildCharge({ width, height, seed = 1, level = 3 }) {
       y: round(y),
       size: round(7 + random() * 5),
       rotate: Math.round((random() - 0.5) * 50),
-      gapMs: Math.round((1400 + random() * 2200) * (4 - clampedLevel) * 0.6 + 600),
+      // Rarer than it could be: a bolt means more when it is not constant.
+      gapMs: Math.round(((1400 + random() * 2200) * (4 - clampedLevel) * 0.6 + 600) * 1.6),
       delayMs: Math.round(random() * 3000),
     });
   }
@@ -130,18 +131,19 @@ export function buildCharge({ width, height, seed = 1, level = 3 }) {
 
 /**
  * A small lightning bolt, point down, in a `size` tall box centred on
- * (0, 0): the zig, the zag and the tail of the familiar sign.
+ * (0, 0): the zig, the zag and the tail of the familiar sign, kept slim so it
+ * reads as a spark rather than an icon.
  */
 export function boltPath(size) {
   const unit = size / 10;
   const points = [
+    [0.8, -5],
+    [-1.6, 0.6],
+    [-0.1, 0.6],
+    [-0.9, 5],
+    [1.7, -1.2],
+    [0.25, -1.2],
     [1.2, -5],
-    [-2.6, 0.6],
-    [-0.2, 0.6],
-    [-1.4, 5],
-    [2.8, -1.2],
-    [0.4, -1.2],
-    [1.8, -5],
   ];
 
   return (

@@ -1,17 +1,58 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, StyleSheet, View } from "react-native";
-import Svg, { Circle, Defs, G, Path, RadialGradient, Stop } from "react-native-svg";
+import Svg, { Circle, Defs, Path, RadialGradient, Stop } from "react-native-svg";
 
-import { useBreathAnimation, useSheenAnimation } from "../animationHooks";
+import { useBreathAnimation } from "../animationHooks";
 import { boltPath, buildCharge } from "@utils/tileMoodGeometry";
 
 let chargeInstanceCounter = 0;
 
-const GLOW_SIZE = 130;
-const POP_MS = 460;
+const GLOW_SIZE = 190;
+
+// A strike, the way current moves: no build-up, on at once, a stutter of
+// flashes over a fifth of a second, gone. [opacity, how long it holds]
+const STRIKE = [
+  [1, 45],
+  [0.15, 30],
+  [1, 35],
+  [0.4, 25],
+  [0.95, 40],
+  [0, 0],
+];
+
+function useStrike(enabled, { gapMs, headStartMs }) {
+  const opacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (!enabled) {
+      opacity.setValue(0);
+      return undefined;
+    }
+
+    const step = ([value, holdMs]) =>
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: value, duration: 0, useNativeDriver: true }),
+        Animated.delay(holdMs),
+      ]);
+    const animation = Animated.sequence([
+      Animated.delay(headStartMs),
+      Animated.loop(Animated.sequence([...STRIKE.map(step), Animated.delay(gapMs)])),
+    ]);
+
+    animation.start();
+
+    return () => {
+      animation.stop();
+      opacity.setValue(0);
+    };
+  }, [enabled, gapMs, headStartMs, opacity]);
+
+  return opacity;
+}
 
 // The glow behind the avatar: steady, pulsing, the charge that is there
-// whether or not a bolt is showing.
+// whether or not a bolt is showing. Wide and soft rather than bright at the
+// heart, so it reads as a charge in the air and not as a lamp.
 function CentreGlow({ centre, theme, animate }) {
   const gradientId = useRef(`charge-glow-${++chargeInstanceCounter}`).current;
   const pulse = useBreathAnimation(animate, { periodMs: 2200, low: 0.5 });
@@ -32,8 +73,8 @@ function CentreGlow({ centre, theme, animate }) {
       <Svg width="100%" height="100%" viewBox="0 0 100 100">
         <Defs>
           <RadialGradient id={gradientId} cx="50%" cy="50%" r="50%">
-            <Stop offset="0" stopColor={theme.chargeCore} stopOpacity={0.4} />
-            <Stop offset="0.5" stopColor={theme.charge} stopOpacity={0.16} />
+            <Stop offset="0" stopColor={theme.chargeCore} stopOpacity={0.2} />
+            <Stop offset="0.55" stopColor={theme.charge} stopOpacity={0.1} />
             <Stop offset="1" stopColor={theme.charge} stopOpacity={0} />
           </RadialGradient>
         </Defs>
@@ -43,23 +84,11 @@ function CentreGlow({ centre, theme, animate }) {
   );
 }
 
-// One little bolt: pops up with a flash, holds for a blink, and goes, then
-// waits its turn in the same spot.
-function PopBolt({ bolt, theme, animate }) {
-  const progress = useSheenAnimation(animate, {
-    sweepMs: POP_MS,
-    gapMs: bolt.gapMs,
-    headStartMs: bolt.delayMs,
-  });
-  const opacity = progress.interpolate({
-    inputRange: [0, 0.15, 0.6, 1],
-    outputRange: [0, 1, 1, 0],
-  });
-  const scale = progress.interpolate({
-    inputRange: [0, 0.18, 0.4, 1],
-    outputRange: [0.3, 1.2, 1, 0.85],
-  });
-  const box = bolt.size * 2.4;
+// One little bolt: strikes - on at once, flickers, gone - then waits its
+// turn in the same spot.
+function StrikeBolt({ bolt, theme, animate }) {
+  const opacity = useStrike(animate, { gapMs: bolt.gapMs, headStartMs: bolt.delayMs });
+  const box = bolt.size * 2;
   const d = boltPath(bolt.size);
 
   return (
@@ -72,17 +101,14 @@ function PopBolt({ bolt, theme, animate }) {
           width: box,
           height: box,
           opacity,
-          transform: [{ scale }, { rotate: `${bolt.rotate}deg` }],
+          transform: [{ rotate: `${bolt.rotate}deg` }],
         },
       ]}
     >
       <Svg width={box} height={box} viewBox={`${-box / 2} ${-box / 2} ${box} ${box}`}>
-        <G>
-          {/* A soft flash round it, then the bolt itself. */}
-          <Circle cx="0" cy="0" r={bolt.size * 0.9} fill={theme.charge} fillOpacity={0.14} />
-          <Path d={d} fill="none" stroke={theme.charge} strokeOpacity={0.45} strokeWidth={2.2} strokeLinejoin="round" />
-          <Path d={d} fill={theme.chargeCore} stroke={theme.charge} strokeWidth={0.5} strokeLinejoin="round" />
-        </G>
+        {/* A thin halo round the stroke, then the bolt itself. */}
+        <Path d={d} fill="none" stroke={theme.charge} strokeOpacity={0.35} strokeWidth={1.1} strokeLinejoin="round" />
+        <Path d={d} fill={theme.chargeCore} />
       </Svg>
     </Animated.View>
   );
@@ -90,8 +116,9 @@ function PopBolt({ bolt, theme, animate }) {
 
 /**
  * The tile of somebody who trained in the last three days, charged and ready
- * to go again: a glow pulsing steadily behind the avatar, and tiny yellow
- * bolts popping up here and there around it. More bolts, more often, the day
+ * to go again: a wide, soft glow pulsing steadily behind the avatar, and
+ * tiny yellow bolts striking here and there around it - on at once and
+ * flickering out, the way current moves. More bolts, more often, the day
  * after; the odd one by the third day.
  *
  * Behind the text and outside the layout. Off screen and under reduced
@@ -124,7 +151,7 @@ export default function ChargeFrame({ theme, seed = 0, level = 3, animate = fals
           <CentreGlow centre={geometry.centre} theme={theme} animate={animate} />
           {animate
             ? geometry.bolts.map((bolt, index) => (
-                <PopBolt key={index} bolt={bolt} theme={theme} animate={animate} />
+                <StrikeBolt key={index} bolt={bolt} theme={theme} animate={animate} />
               ))
             : null}
         </>
