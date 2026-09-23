@@ -1,6 +1,5 @@
 import {
   Animated,
-  AppState,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
@@ -8,7 +7,6 @@ import {
   useColorScheme,
 } from "react-native";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useIsFocused } from "@react-navigation/native";
 import Svg, {
   Circle,
   Defs,
@@ -39,6 +37,7 @@ import MusicNote from "../../Icons/UI-icons/MusicNote";
 import Plus from "../../Icons/UI-icons/Plus";
 import { ThemedText, UserAvatar } from "../../ThemedComponents";
 import {
+  useAnimationsEnabled,
   useBlinkAnimation,
   useBreathAnimation,
   useEqualizerAnimation,
@@ -64,26 +63,6 @@ const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const TICKER_COPY_PADDING = 18;
 
 let gradientInstanceCounter = 0;
-
-// Whether the loops may run: on screen, app in the foreground, and the OS not
-// asking for reduced motion. Everything animated in this file reads this.
-function useAnimationsEnabled() {
-  const isFocused = useIsFocused();
-  const reduceMotion = useReduceMotion();
-  const [isAppActive, setIsAppActive] = useState(
-    AppState.currentState === "active" || AppState.currentState == null
-  );
-
-  useEffect(() => {
-    const subscription = AppState.addEventListener("change", (nextState) => {
-      setIsAppActive(nextState === "active");
-    });
-
-    return () => subscription.remove();
-  }, []);
-
-  return { animate: isFocused && isAppActive && !reduceMotion, reduceMotion };
-}
 
 function RingLoading({ color, mutedColor, size = 52 }) {
   const firstProgress = useRef(new Animated.Value(0)).current;

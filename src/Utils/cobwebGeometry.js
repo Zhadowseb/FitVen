@@ -48,10 +48,14 @@ function cornerFrame(corner, width, height, inset) {
  * threads hanging loose, and a thin sheet of matted silk close to the corner
  * where the spider walked most.
  */
+// Webs are drawn for a 148 dp friend tile; a narrower box gets smaller ones.
+const WEB_REFERENCE_WIDTH = 148;
+
 function buildWeb(corner, width, height, cornerRadius, random) {
   const inset = cornerRadius * 0.32;
   const { anchor, from, to } = cornerFrame(corner, width, height, inset);
-  const size = (corner === "bottomRight" ? 30 : 38) + random() * 12;
+  const scale = Math.min(1, width / WEB_REFERENCE_WIDTH);
+  const size = ((corner === "bottomRight" ? 30 : 38) + random() * 12) * scale;
   const spokeCount = 7 + Math.floor(random() * 2);
   const spokes = Array.from({ length: spokeCount }, (_, index) => {
     const isWall = index === 0 || index === spokeCount - 1;

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { AccessibilityInfo, Animated, Easing } from "react-native";
+import { AccessibilityInfo, Animated, AppState, Easing } from "react-native";
+import { useIsFocused } from "@react-navigation/native";
 
 // Whether the OS asks for reduced motion. Read once and then followed, so a
 // change in Settings takes effect without a restart.
@@ -339,4 +340,25 @@ export function useBreathAnimation(enabled = true, { periodMs = 2600, low = 0.6 
   }, [enabled, low, opacity, periodMs]);
 
   return opacity;
+}
+
+// Whether the loops may run: on screen, app in the foreground, and the OS not
+// asking for reduced motion. Everything that loops on Home reads this - the
+// friends strip and the days-since card alike.
+export function useAnimationsEnabled() {
+  const isFocused = useIsFocused();
+  const reduceMotion = useReduceMotion();
+  const [isAppActive, setIsAppActive] = useState(
+    AppState.currentState === "active" || AppState.currentState == null
+  );
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      setIsAppActive(nextState === "active");
+    });
+
+    return () => subscription.remove();
+  }, []);
+
+  return { animate: isFocused && isAppActive && !reduceMotion, reduceMotion };
 }

@@ -135,9 +135,10 @@ function useGoldShine(enabled, seed) {
  * The crown on somebody who set a personal record in the workout they
  * finished today: gold, three points, a ruby for each record - two or three -
  * that glint in turn, and a shine running across the gold now and then.
- * It sits tilted on the top of the avatar's ring, outside the layout.
+ * It sits tilted on the top of the avatar's ring, outside the layout, unless
+ * `style` puts it somewhere else - on the days-since card's number.
  */
-export default function Crown({ rubies = 2, animate = false, seed = 0 }) {
+export default function Crown({ rubies = 2, animate = false, seed = 0, style = null }) {
   const ids = useRef(
     (() => {
       const id = ++crownInstanceCounter;
@@ -156,7 +157,7 @@ export default function Crown({ rubies = 2, animate = false, seed = 0 }) {
   const rubyGlow = useBreathAnimation(animate, { periodMs: 1800, low: 0.25 });
 
   return (
-    <View style={styles.crown} pointerEvents="none">
+    <View style={[styles.crown, style]} pointerEvents="none">
       <Svg width={44} height={30} viewBox="0 0 44 30">
         <Defs>
           <LinearGradient id={ids.gold} x1="0" y1="0" x2="0" y2="1">

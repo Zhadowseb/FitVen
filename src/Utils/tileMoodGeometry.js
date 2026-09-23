@@ -91,7 +91,16 @@ export function buildSteam({ width, height, seed = 1 }) {
  * many bolts there are and how often they pop - a lot and often the day
  * after, the odd one by the third.
  */
-export function buildCharge({ width, height, seed = 1, level = 3 }) {
+export function buildCharge({
+  width,
+  height,
+  seed = 1,
+  level = 3,
+  // What the glow sits behind and the bolts keep clear of: a friend tile's
+  // avatar by default, the number on the days-since card.
+  centre = null,
+  clearance = AVATAR_CLEARANCE,
+}) {
   if (!(width > 0) || !(height > 0)) {
     return null;
   }
@@ -99,7 +108,7 @@ export function buildCharge({ width, height, seed = 1, level = 3 }) {
   const random = seededRandom(seed);
   const clampedLevel = Math.max(1, Math.min(3, Math.round(level)));
   const count = clampedLevel * BOLTS_PER_LEVEL + 1;
-  const centre = { x: round(width / 2), y: AVATAR_CENTRE_Y };
+  const focus = centre ?? { x: round(width / 2), y: AVATAR_CENTRE_Y };
   const bolts = [];
   let attempts = 0;
 
@@ -108,7 +117,7 @@ export function buildCharge({ width, height, seed = 1, level = 3 }) {
 
     const x = 12 + random() * (width - 24);
     const y = 12 + random() * (height - 24);
-    const nearAvatar = Math.hypot(x - centre.x, y - centre.y) < AVATAR_CLEARANCE;
+    const nearAvatar = Math.hypot(x - focus.x, y - focus.y) < clearance;
     const nearAnother = bolts.some((bolt) => Math.hypot(bolt.x - x, bolt.y - y) < 22);
 
     if (nearAvatar || nearAnother) {
@@ -126,7 +135,7 @@ export function buildCharge({ width, height, seed = 1, level = 3 }) {
     });
   }
 
-  return { width, height, centre, bolts };
+  return { width, height, centre: focus, bolts };
 }
 
 /**

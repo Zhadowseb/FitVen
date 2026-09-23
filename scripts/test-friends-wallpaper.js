@@ -264,6 +264,23 @@ const tileStyle = Object.fromEntries(
   }
 
   assert.ok(gaps[3] < gaps[2] && gaps[2] < gaps[1], "the bolts do not slow down as the charge runs down");
+
+  // On the days-since card the glow sits behind the number instead, and the
+  // bolts keep clear of it.
+  const card = buildCharge({
+    width: 104,
+    height: 120,
+    seed: 7,
+    level: 3,
+    centre: { x: 52, y: 60 },
+    clearance: 26,
+  });
+
+  assert.deepStrictEqual(card.centre, { x: 52, y: 60 });
+  assert.ok(
+    card.bolts.every((bolt) => Math.hypot(bolt.x - 52, bolt.y - 60) >= 26),
+    "a bolt pops on the days-since number"
+  );
   assert.ok(boltPath(10).endsWith("Z"), "a bolt is not a closed shape");
 
   assert.strictEqual(buildCharge({ width: 0, height, level: 3 }), null);
@@ -323,6 +340,18 @@ for (const web of dusty.webs) {
 assert.ok(dusty.spider.x > TILE.width * 0.7, "the spider dangles in front of the face");
 assert.ok(dusty.spider.maxDrop > dusty.spider.restDrop, "the spider has nowhere to climb");
 assert.strictEqual(dusty.dust.length, DUST_COUNT);
+
+// A narrower box - the days-since card - gets smaller webs, so the two top
+// ones do not meet over the middle.
+{
+  const narrow = buildCobwebGeometry({ width: 104, height: 120, seed: 7, cornerRadius: 18 });
+  const [topLeft, topRight] = narrow.webs;
+
+  assert.ok(
+    topLeft.anchor[0] + topLeft.reach < topRight.anchor[0] - topRight.reach + 20,
+    "the two top webs on the narrow card run into each other"
+  );
+}
 
 // The same tile keeps its webs; another tile has its own.
 assert.deepStrictEqual(buildCobwebGeometry({ ...TILE, seed: 3 }), dusty, "the webs changed between renders");

@@ -351,7 +351,11 @@ export default function HomePage() {
         {hasLoadedHome ? (
           <>
             <View style={styles.quickRow}>
-              <DaysSinceCard days={daysSinceLastWorkout} />
+              <DaysSinceCard
+                days={daysSinceLastWorkout}
+                isTraining={Boolean(openToday?.first?.isRunning)}
+                recordsToday={ownRecordsToday}
+              />
 
               <QuickStartCard
                 openToday={openToday}

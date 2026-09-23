@@ -124,12 +124,22 @@ function StrikeBolt({ bolt, theme, animate }) {
  * Behind the text and outside the layout. Off screen and under reduced
  * motion only the glow stays, still.
  */
-export default function ChargeFrame({ theme, seed = 0, level = 3, animate = false }) {
+export default function ChargeFrame({ theme, seed = 0, level = 3, animate = false, focus = "avatar" }) {
   const [size, setSize] = useState(null);
-  const geometry = useMemo(
-    () => (size ? buildCharge({ ...size, seed, level }) : null),
-    [level, seed, size]
-  );
+  const geometry = useMemo(() => {
+    if (!size) {
+      return null;
+    }
+
+    // "middle": the glow behind whatever sits in the middle of the box - the
+    // number on the days-since card - with room kept round it.
+    const middle =
+      focus === "middle"
+        ? { centre: { x: size.width / 2, y: size.height / 2 }, clearance: 26 }
+        : {};
+
+    return buildCharge({ ...size, seed, level, ...middle });
+  }, [focus, level, seed, size]);
 
   return (
     <View
