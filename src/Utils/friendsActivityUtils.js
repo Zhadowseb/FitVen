@@ -154,6 +154,60 @@ export function buildActivityStatusLabel(person, { isCurrentUser = false, now = 
   }
 }
 
+// How long since somebody trained, as a temperature: the longer it has been,
+// the colder the tile. Upper bounds in days, inclusive.
+const WALLPAPER_TONE_STEPS = [
+  { tone: "fresh", upTo: 1 },
+  { tone: "warm", upTo: 3 },
+  { tone: "cooling", upTo: 7 },
+];
+const WALLPAPER_MAX_DAYS = 99;
+
+/**
+ * The background of a resting tile: how many days since the person last
+ * trained, and the tone that goes with it. Null for a tile with something on
+ * today - live, done and planned already have a colour of their own.
+ *
+ * `daysSinceLastWorkout` wins over `lastWorkoutAt` when both are there: the
+ * viewer's own tile knows the number from the phone, which is right before
+ * the cloud has caught up.
+ *
+ * Nobody who has never trained is shown a zero, which would read as having
+ * trained today: they get the "new" tone and no number.
+ */
+export function buildRestWallpaper(person, now = Date.now()) {
+  if (ACTIVITY_TILE_ORDER[person?.activityState] !== undefined) {
+    return null;
+  }
+
+  let days = null;
+  const known = Number(person?.daysSinceLastWorkout);
+
+  if (
+    person?.daysSinceLastWorkout !== null &&
+    person?.daysSinceLastWorkout !== undefined &&
+    Number.isFinite(known)
+  ) {
+    days = Math.max(0, Math.trunc(known));
+  } else if (person?.lastWorkoutAt) {
+    const between = calendarDaysBetween(person.lastWorkoutAt, now);
+
+    days = between === null ? null : Math.max(0, between);
+  }
+
+  if (days === null) {
+    return { tone: "new", days: null, label: null };
+  }
+
+  const step = WALLPAPER_TONE_STEPS.find((entry) => days <= entry.upTo);
+
+  return {
+    tone: step?.tone ?? "cold",
+    days,
+    label: days > WALLPAPER_MAX_DAYS ? `${WALLPAPER_MAX_DAYS}+` : String(days),
+  };
+}
+
 /**
  * The day a planned workout falls on, as short as the tile allows: tomorrow
  * by name, anything further out as a date. A weekday name would be shorter

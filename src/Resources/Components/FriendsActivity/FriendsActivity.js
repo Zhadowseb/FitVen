@@ -35,6 +35,7 @@ import {
 } from "../animationHooks";
 import {
   buildActivityStatusLabel,
+  buildRestWallpaper,
   formatMusicLine,
   resolveMusicBandState,
   sortActivityTiles,
@@ -308,7 +309,7 @@ function BandTicker({ text, color, animate, fadeColor }) {
   );
 }
 
-function MusicBand({ theme, colorScheme, music, activityState, animate }) {
+function MusicBand({ theme, colorScheme, music, activityState, animate, hasWallpaper }) {
   const { t } = useTranslation();
   const state = resolveMusicBandState(music, activityState);
   const isLight = colorScheme === "light";
@@ -318,7 +319,13 @@ function MusicBand({ theme, colorScheme, music, activityState, animate }) {
   const equalizerColor = isLight ? theme.musicText : "#EADDFF";
 
   if (state === "none") {
-    return <View style={[styles.band, { backgroundColor: emptyBand }]} />;
+    // Over a wallpaper the empty band steps aside, so the tile reads as one
+    // surface rather than a grey strip on top of a coloured one.
+    return (
+      <View
+        style={[styles.band, { backgroundColor: hasWallpaper ? "transparent" : emptyBand }]}
+      />
+    );
   }
 
   const isPlaying = state === "playing";
@@ -353,6 +360,78 @@ function MusicBand({ theme, colorScheme, music, activityState, animate }) {
           fadeColor={theme.cardBackground}
         />
       </View>
+    </View>
+  );
+}
+
+/* ---------------------------------------------------------- wallpaper -- */
+
+function wallpaperColor(tone, theme) {
+  switch (tone) {
+    case "fresh":
+      return theme.secondary;
+    case "warm":
+      return theme.primary;
+    case "cooling":
+      return theme.planned;
+    case "cold":
+      return theme.warmup ?? theme.quietText;
+    default:
+      return theme.dropSet ?? theme.primary;
+  }
+}
+
+// A corner of colour fading out across the tile.
+function WallpaperGradient({ color, strength }) {
+  const gradientId = useRef(`tile-wallpaper-${++gradientInstanceCounter}`).current;
+
+  return (
+    <Svg
+      style={StyleSheet.absoluteFill}
+      pointerEvents="none"
+      preserveAspectRatio="none"
+      viewBox="0 0 1 1"
+    >
+      <Defs>
+        <LinearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
+          <Stop offset="0" stopColor={color} stopOpacity={strength} />
+          <Stop offset="0.55" stopColor={color} stopOpacity={strength * 0.35} />
+          <Stop offset="1" stopColor={color} stopOpacity={0.02} />
+        </LinearGradient>
+      </Defs>
+      <Rect x="0" y="0" width="1" height="1" fill={`url(#${gradientId})`} />
+    </Svg>
+  );
+}
+
+/**
+ * Behind a resting tile: a wash in the colour of how long it has been, and
+ * the number of days itself, large and faint, cut off by the tile's corner.
+ * Decoration only - the status row already says it in words - so it is
+ * hidden from screen readers.
+ */
+function TileWallpaper({ wallpaper, theme, colorScheme }) {
+  const { t } = useTranslation();
+  const isLight = colorScheme === "light";
+  const color = wallpaperColor(wallpaper.tone, theme);
+  const markColor = withAlpha(color, isLight ? 0.13 : 0.15);
+
+  return (
+    <View
+      style={StyleSheet.absoluteFill}
+      pointerEvents="none"
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+    >
+      <WallpaperGradient color={color} strength={isLight ? 0.18 : 0.26} />
+      <ThemedText style={styles.wallpaperMark} setColor={markColor} numberOfLines={1}>
+        {wallpaper.label ?? t("friends.wallpaper.new")}
+        {wallpaper.label ? (
+          <ThemedText style={styles.wallpaperUnit} setColor={markColor}>
+            {t("friends.wallpaper.daysUnit")}
+          </ThemedText>
+        ) : null}
+      </ThemedText>
     </View>
   );
 }
@@ -482,6 +561,7 @@ function ActivityTile({
   animate,
   onPress,
   onOpenGym,
+  wallpaper = null,
 }) {
   const { t } = useTranslation();
   const isLight = colorScheme === "light";
@@ -509,12 +589,17 @@ function ActivityTile({
         },
       ]}
     >
+      {wallpaper ? (
+        <TileWallpaper wallpaper={wallpaper} theme={theme} colorScheme={colorScheme} />
+      ) : null}
+
       <MusicBand
         theme={theme}
         colorScheme={colorScheme}
         music={music}
         activityState={activityState}
         animate={animate}
+        hasWallpaper={Boolean(wallpaper)}
       />
 
       <View style={styles.tileBody}>
@@ -701,6 +786,7 @@ export default function FriendsActivity({
             animate={animate}
             onPress={onOpenProfile}
             onOpenGym={onOpenGym}
+            wallpaper={currentUser ? buildRestWallpaper(currentUser) : null}
           />
 
           {isLoading ? (
@@ -723,6 +809,7 @@ export default function FriendsActivity({
                 animate={animate}
                 onPress={onSeeAll}
                 onOpenGym={onOpenGym}
+                wallpaper={buildRestWallpaper(person)}
               />
             ))
           ) : (

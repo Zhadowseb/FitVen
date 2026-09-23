@@ -228,6 +228,24 @@ export default StyleSheet.create({
     height: 13,
   },
 
+  /* --------------------------------------------------------- wallpaper -- */
+  // The days since the last workout, big enough to be a texture rather than
+  // a label, and pushed past the bottom-right corner so the tile crops it.
+  wallpaperMark: {
+    position: "absolute",
+    right: 6,
+    bottom: -26,
+    fontSize: 96,
+    lineHeight: 110,
+    fontWeight: "900",
+    letterSpacing: -4,
+    includeFontPadding: false,
+  },
+  wallpaperUnit: {
+    fontSize: 34,
+    letterSpacing: 0,
+  },
+
   /* ------------------------------------------------------- add friends -- */
   addTile: {
     width: TILE_WIDTH,

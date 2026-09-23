@@ -17,6 +17,12 @@ export default {
   },
   // Utils/friendsActivityUtils.js and the activity previews built in
   // Services/socialService.js.
+  wallpaper: {
+    // After the number of days, in the tile's background.
+    daysUnit: "d",
+    // Somebody with no workout at all yet.
+    new: "NEW",
+  },
   status: {
     trainingNow: "Training now",
     minutesIn: "{count} min in",

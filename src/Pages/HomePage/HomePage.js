@@ -371,6 +371,8 @@ export default function HomePage() {
             circlePreview.currentUser
               ? {
                   ...circlePreview.currentUser,
+                  // From the phone, so your own tile is right before a sync.
+                  daysSinceLastWorkout,
                   music: ownNowPlaying?.track
                     ? {
                         track: ownNowPlaying.track,
