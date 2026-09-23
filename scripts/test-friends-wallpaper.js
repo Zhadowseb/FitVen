@@ -139,13 +139,24 @@ assert.deepStrictEqual(
 /* ------------------------------------------------ embers, steam, charge -- */
 
 const {
+  boltPath,
   buildCharge,
   buildEmbers,
   buildSteam,
+  AVATAR_CENTRE_Y,
+  AVATAR_CLEARANCE,
+  BOLTS_PER_LEVEL,
   EMBER_COUNT,
-  MOTES_PER_LEVEL,
   STEAM_PUFF_COUNT,
 } = loadAppModule("src/Utils/tileMoodGeometry.js");
+// The style file needs react-native, so its numbers are read out of the source.
+const tileStyleSource = require("fs").readFileSync(
+  require("path").join(__dirname, "..", "src", "Resources", "Components", "FriendsActivity", "FriendsActivityStyle.js"),
+  "utf8"
+);
+const tileStyle = Object.fromEntries(
+  [...tileStyleSource.matchAll(/export const (\w+) = (\d+);/g)].map((match) => [match[1], Number(match[2])])
+);
 
 {
   const width = 148;
@@ -164,20 +175,38 @@ const {
     "steam does not well up from low in the tile and rise"
   );
 
-  // Fewer motes as the charge runs down, and all of them wander inside.
+  // The glow sits behind the avatar, wherever the tile style puts it.
+  assert.strictEqual(
+    AVATAR_CENTRE_Y,
+    tileStyle.BAND_HEIGHT - tileStyle.AVATAR_OVERLAP + tileStyle.AVATAR_SIZE / 2,
+    "the charge glow no longer sits behind the avatar"
+  );
+
+  // Fewer bolts, less often, as the charge runs down; none on the face.
+  const gaps = {};
+
   for (const level of [3, 2, 1]) {
     const charge = buildCharge({ width, height, seed: 2, level });
 
-    assert.strictEqual(charge.motes.length, level * MOTES_PER_LEVEL, `level ${level} has the wrong number of motes`);
+    assert.strictEqual(
+      charge.bolts.length,
+      level * BOLTS_PER_LEVEL + 1,
+      `level ${level} has the wrong number of bolts`
+    );
 
-    for (const mote of charge.motes) {
+    for (const bolt of charge.bolts) {
+      assert.ok(bolt.x > 0 && bolt.x < width && bolt.y > 0 && bolt.y < height, "a bolt pops outside the tile");
       assert.ok(
-        mote.x - mote.rangeX > 0 && mote.x + mote.rangeX < width &&
-          mote.y - mote.rangeY > 0 && mote.y + mote.rangeY < height,
-        "a mote of energy wanders out of the tile"
+        Math.hypot(bolt.x - charge.centre.x, bolt.y - charge.centre.y) >= AVATAR_CLEARANCE,
+        "a bolt pops on the avatar"
       );
     }
+
+    gaps[level] = charge.bolts.reduce((sum, bolt) => sum + bolt.gapMs, 0) / charge.bolts.length;
   }
+
+  assert.ok(gaps[3] < gaps[2] && gaps[2] < gaps[1], "the bolts do not slow down as the charge runs down");
+  assert.ok(boltPath(10).endsWith("Z"), "a bolt is not a closed shape");
 
   assert.strictEqual(buildCharge({ width: 0, height, level: 3 }), null);
 }

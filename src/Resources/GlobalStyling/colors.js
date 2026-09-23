@@ -40,8 +40,8 @@ export const Colors = {
         // stays clear of the status colours (orange, green, yellow) and of
         // music's purple, which shares the tile. fire and fireCore are the
         // embers under a friend training right now; steam is what comes off
-        // somebody done for the day; charge and chargeCore the arcs round
-        // somebody who trained in the last three days; cobweb and spider the
+        // somebody done for the day; charge and chargeCore the glow and the
+        // little bolts on somebody who trained in the last three days; cobweb and spider the
         // silk and the spider on a friend gone a month.
         heatHot: "#FF7A7A",
         heatWarm: "#FF8FD2",
@@ -49,8 +49,8 @@ export const Colors = {
         fire: "#FF7A2E",
         fireCore: "#FFC94D",
         steam: "#F2F4F8",
-        charge: "#8FD3FF",
-        chargeCore: "#E6F7FF",
+        charge: "#FFD84D",
+        chargeCore: "#FFF6C2",
         cobweb: "#D9DCE3",
         spider: "#07080B",
 
@@ -150,8 +150,8 @@ export const Colors = {
         fire: "#E0561B",
         fireCore: "#E0A100",
         steam: "#8A93A6",
-        charge: "#2F7FD6",
-        chargeCore: "#7FC0FF",
+        charge: "#D9A400",
+        chargeCore: "#FFD84D",
         cobweb: "#7A7F8C",
         spider: "#2A2D35",
 

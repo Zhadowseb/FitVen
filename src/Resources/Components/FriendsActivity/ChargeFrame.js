@@ -1,80 +1,101 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Animated, StyleSheet, View } from "react-native";
+import Svg, { Circle, Defs, G, Path, RadialGradient, Stop } from "react-native-svg";
 
-import { withAlpha } from "../../GlobalStyling/colors";
-import { useBreathAnimation } from "../animationHooks";
-import { buildCharge } from "@utils/tileMoodGeometry";
-import TileGlow from "./TileGlow";
+import { useBreathAnimation, useSheenAnimation } from "../animationHooks";
+import { boltPath, buildCharge } from "@utils/tileMoodGeometry";
 
-// One mote of energy: a small bright core in a soft halo, wandering a slow
-// loop - two breaths out of step, one sideways and one up and down - and
-// glowing up and down on a third.
-function Mote({ mote, theme, animate }) {
-  const alongX = useBreathAnimation(animate, { periodMs: mote.periodXMs, low: 0 });
-  const alongY = useBreathAnimation(animate, { periodMs: mote.periodYMs, low: 0 });
-  const pulse = useBreathAnimation(animate, { periodMs: mote.pulseMs, low: 0.35 });
-  const translateX = alongX.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-mote.rangeX, mote.rangeX],
-  });
-  const translateY = alongY.interpolate({
-    inputRange: [0, 1],
-    outputRange: [mote.rangeY, -mote.rangeY],
-  });
-  const haloSize = mote.size * 6;
+let chargeInstanceCounter = 0;
+
+const GLOW_SIZE = 130;
+const POP_MS = 460;
+
+// The glow behind the avatar: steady, pulsing, the charge that is there
+// whether or not a bolt is showing.
+function CentreGlow({ centre, theme, animate }) {
+  const gradientId = useRef(`charge-glow-${++chargeInstanceCounter}`).current;
+  const pulse = useBreathAnimation(animate, { periodMs: 2200, low: 0.5 });
+  const scale = pulse.interpolate({ inputRange: [0.5, 1], outputRange: [0.9, 1.06] });
 
   return (
     <Animated.View
       style={[
-        styles.mote,
+        styles.glow,
         {
-          left: mote.x - haloSize / 2,
-          top: mote.y - haloSize / 2,
-          width: haloSize,
-          height: haloSize,
+          left: centre.x - GLOW_SIZE / 2,
+          top: centre.y - GLOW_SIZE / 2,
           opacity: pulse,
-          transform: [{ translateX }, { translateY }],
+          transform: [{ scale }],
         },
       ]}
     >
-      <View
-        style={[
-          StyleSheet.absoluteFill,
-          { borderRadius: haloSize / 2, backgroundColor: withAlpha(theme.charge, 0.12) },
-        ]}
-      />
-      <View
-        style={{
-          width: mote.size * 2.4,
-          height: mote.size * 2.4,
-          borderRadius: mote.size * 1.2,
-          backgroundColor: withAlpha(theme.charge, 0.35),
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <View
-          style={{
-            width: mote.size,
-            height: mote.size,
-            borderRadius: mote.size / 2,
-            backgroundColor: theme.chargeCore,
-          }}
-        />
-      </View>
+      <Svg width="100%" height="100%" viewBox="0 0 100 100">
+        <Defs>
+          <RadialGradient id={gradientId} cx="50%" cy="50%" r="50%">
+            <Stop offset="0" stopColor={theme.chargeCore} stopOpacity={0.4} />
+            <Stop offset="0.5" stopColor={theme.charge} stopOpacity={0.16} />
+            <Stop offset="1" stopColor={theme.charge} stopOpacity={0} />
+          </RadialGradient>
+        </Defs>
+        <Circle cx="50" cy="50" r="50" fill={`url(#${gradientId})`} />
+      </Svg>
+    </Animated.View>
+  );
+}
+
+// One little bolt: pops up with a flash, holds for a blink, and goes, then
+// waits its turn in the same spot.
+function PopBolt({ bolt, theme, animate }) {
+  const progress = useSheenAnimation(animate, {
+    sweepMs: POP_MS,
+    gapMs: bolt.gapMs,
+    headStartMs: bolt.delayMs,
+  });
+  const opacity = progress.interpolate({
+    inputRange: [0, 0.15, 0.6, 1],
+    outputRange: [0, 1, 1, 0],
+  });
+  const scale = progress.interpolate({
+    inputRange: [0, 0.18, 0.4, 1],
+    outputRange: [0.3, 1.2, 1, 0.85],
+  });
+  const box = bolt.size * 2.4;
+  const d = boltPath(bolt.size);
+
+  return (
+    <Animated.View
+      style={[
+        styles.bolt,
+        {
+          left: bolt.x - box / 2,
+          top: bolt.y - box / 2,
+          width: box,
+          height: box,
+          opacity,
+          transform: [{ scale }, { rotate: `${bolt.rotate}deg` }],
+        },
+      ]}
+    >
+      <Svg width={box} height={box} viewBox={`${-box / 2} ${-box / 2} ${box} ${box}`}>
+        <G>
+          {/* A soft flash round it, then the bolt itself. */}
+          <Circle cx="0" cy="0" r={bolt.size * 0.9} fill={theme.charge} fillOpacity={0.14} />
+          <Path d={d} fill="none" stroke={theme.charge} strokeOpacity={0.45} strokeWidth={2.2} strokeLinejoin="round" />
+          <Path d={d} fill={theme.chargeCore} stroke={theme.charge} strokeWidth={0.5} strokeLinejoin="round" />
+        </G>
+      </Svg>
     </Animated.View>
   );
 }
 
 /**
- * The tile of somebody who trained in the last three days, with energy in
- * reserve: a cool glow resting along the bottom, breathing slowly, and a few
- * motes of light drifting lazily about the tile. Calm on purpose - it is
- * energy ready, not energy going off. The motes thin out as the days pass:
- * six the day after, two by the third day.
+ * The tile of somebody who trained in the last three days, charged and ready
+ * to go again: a glow pulsing steadily behind the avatar, and tiny yellow
+ * bolts popping up here and there around it. More bolts, more often, the day
+ * after; the odd one by the third day.
  *
  * Behind the text and outside the layout. Off screen and under reduced
- * motion the glow and the motes stay, still.
+ * motion only the glow stays, still.
  */
 export default function ChargeFrame({ theme, seed = 0, level = 3, animate = false }) {
   const [size, setSize] = useState(null);
@@ -98,29 +119,27 @@ export default function ChargeFrame({ theme, seed = 0, level = 3, animate = fals
         );
       }}
     >
-      <TileGlow
-        inner={theme.chargeCore}
-        outer={theme.charge}
-        strength={0.42}
-        height={100}
-        periodMs={3600 + (seed % 3) * 400}
-        low={0.5}
-        animate={animate}
-      />
-
-      {geometry
-        ? geometry.motes.map((mote, index) => (
-            <Mote key={index} mote={mote} theme={theme} animate={animate} />
-          ))
-        : null}
+      {geometry ? (
+        <>
+          <CentreGlow centre={geometry.centre} theme={theme} animate={animate} />
+          {animate
+            ? geometry.bolts.map((bolt, index) => (
+                <PopBolt key={index} bolt={bolt} theme={theme} animate={animate} />
+              ))
+            : null}
+        </>
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  mote: {
+  glow: {
     position: "absolute",
-    alignItems: "center",
-    justifyContent: "center",
+    width: GLOW_SIZE,
+    height: GLOW_SIZE,
+  },
+  bolt: {
+    position: "absolute",
   },
 });

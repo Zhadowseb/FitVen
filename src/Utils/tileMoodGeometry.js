@@ -1,8 +1,7 @@
 // Where the moving parts of an active friend's tile go: the embers rising off
 // somebody training right now, the steam coming off somebody done for the
-// day, and the motes of energy drifting round somebody who trained in the
-// last three days. (Cobwebs, for a friend gone a month, are in
-// cobwebGeometry.js.)
+// day, and the little bolts popping round somebody who trained in the last
+// three days. (Cobwebs, for a friend gone a month, are in cobwebGeometry.js.)
 //
 // Pure geometry, in the tile's own pixels, so it can be checked without a
 // phone. Seeded, so every tile has its own and keeps it between renders.
@@ -23,8 +22,12 @@ function seededRandom(seed) {
 
 export const EMBER_COUNT = 12;
 export const STEAM_PUFF_COUNT = 7;
-// Motes of energy per charge level: 3 the day after a workout, 1 by the third.
-export const MOTES_PER_LEVEL = 2;
+// Little bolts per charge level: 3 the day after a workout, 1 by the third.
+export const BOLTS_PER_LEVEL = 2;
+// The avatar's centre and the room kept round it, so no bolt pops on a face.
+// 56 is BAND_HEIGHT - AVATAR_OVERLAP + AVATAR_SIZE / 2 in FriendsActivityStyle.
+export const AVATAR_CENTRE_Y = 56;
+export const AVATAR_CLEARANCE = 36;
 
 const round = (value) => Math.round(value * 100) / 100;
 
@@ -80,11 +83,13 @@ export function buildSteam({ width, height, seed = 1 }) {
 /* ------------------------------------------------------------- charge -- */
 
 /**
- * The energy on somebody who trained in the last three days: a few motes of
- * light drifting lazily about the tile, each wandering its own slow loop
- * and glowing up and down. Calm on purpose - energy kept in reserve, not
- * going off. `level` is 3 the day after a workout, 1 on the third day, and
- * sets how many motes there are.
+ * The charge on somebody who trained in the last three days, ready to go
+ * again: a glow pulsing steadily behind the avatar, and tiny bolts popping
+ * up here and there around it, each in its own spot on its own timing.
+ *
+ * `level` is 3 the day after a workout and 1 on the third day. It sets how
+ * many bolts there are and how often they pop - a lot and often the day
+ * after, the odd one by the third.
  */
 export function buildCharge({ width, height, seed = 1, level = 3 }) {
   if (!(width > 0) || !(height > 0)) {
@@ -92,20 +97,56 @@ export function buildCharge({ width, height, seed = 1, level = 3 }) {
   }
 
   const random = seededRandom(seed);
-  const count = Math.max(1, Math.min(3, Math.round(level))) * MOTES_PER_LEVEL;
+  const clampedLevel = Math.max(1, Math.min(3, Math.round(level)));
+  const count = clampedLevel * BOLTS_PER_LEVEL + 1;
+  const centre = { x: round(width / 2), y: AVATAR_CENTRE_Y };
+  const bolts = [];
+  let attempts = 0;
 
-  return {
-    width,
-    height,
-    motes: Array.from({ length: count }, () => ({
-      x: round(18 + random() * (width - 36)),
-      y: round(22 + random() * (height - 44)),
-      rangeX: round(10 + random() * 14),
-      rangeY: round(8 + random() * 12),
-      periodXMs: Math.round(5200 + random() * 3600),
-      periodYMs: Math.round(6400 + random() * 4200),
-      pulseMs: Math.round(2600 + random() * 1800),
-      size: round(1.6 + random() * 1.4),
-    })),
-  };
+  while (bolts.length < count && attempts < 400) {
+    attempts += 1;
+
+    const x = 12 + random() * (width - 24);
+    const y = 12 + random() * (height - 24);
+    const nearAvatar = Math.hypot(x - centre.x, y - centre.y) < AVATAR_CLEARANCE;
+    const nearAnother = bolts.some((bolt) => Math.hypot(bolt.x - x, bolt.y - y) < 22);
+
+    if (nearAvatar || nearAnother) {
+      continue;
+    }
+
+    bolts.push({
+      x: round(x),
+      y: round(y),
+      size: round(7 + random() * 5),
+      rotate: Math.round((random() - 0.5) * 50),
+      gapMs: Math.round((1400 + random() * 2200) * (4 - clampedLevel) * 0.6 + 600),
+      delayMs: Math.round(random() * 3000),
+    });
+  }
+
+  return { width, height, centre, bolts };
+}
+
+/**
+ * A small lightning bolt, point down, in a `size` tall box centred on
+ * (0, 0): the zig, the zag and the tail of the familiar sign.
+ */
+export function boltPath(size) {
+  const unit = size / 10;
+  const points = [
+    [1.2, -5],
+    [-2.6, 0.6],
+    [-0.2, 0.6],
+    [-1.4, 5],
+    [2.8, -1.2],
+    [0.4, -1.2],
+    [1.8, -5],
+  ];
+
+  return (
+    points
+      .map(([x, y], index) => `${index === 0 ? "M" : "L"} ${round(x * unit)} ${round(y * unit)}`)
+      .join(" ") + " Z"
+  );
 }
