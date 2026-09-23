@@ -115,11 +115,11 @@ function StrikeBolt({ bolt, theme, animate }) {
 }
 
 /**
- * The tile of somebody who trained in the last three days, charged and ready
+ * The tile of somebody who trained in the last five days, charged and ready
  * to go again: a wide, soft glow pulsing steadily behind the avatar, and
  * tiny yellow bolts striking here and there around it - on at once and
  * flickering out, the way current moves. More bolts, more often, the day
- * after; the odd one by the third day.
+ * after; the odd one by the fifth day.
  *
  * Behind the text and outside the layout. Off screen and under reduced
  * motion only the glow stays, still.

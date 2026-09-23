@@ -41,7 +41,7 @@ export const Colors = {
         // music's purple, which shares the tile. fire and fireCore are the
         // embers under a friend training right now; steam is what comes off
         // somebody done for the day; charge and chargeCore the glow and the
-        // little bolts on somebody who trained in the last three days; cobweb and spider the
+        // little bolts on somebody who trained in the last five days; cobweb and spider the
         // silk and the spider on a friend gone a month.
         heatHot: "#FF7A7A",
         heatWarm: "#FF8FD2",

@@ -231,12 +231,12 @@ export function resolveDaysSinceLastWorkout(person, now = Date.now()) {
 //
 //   training right now      -> embers: a fire under the tile, sparks rising
 //   done for the day         -> steam coming off it
-//   trained in the last 3    -> charged: arcs crackling round the edge, fewer
-//                               each day
+//   trained in the last 5    -> charged: a glow and little bolts, fewer as
+//                               the days pass
 //   a month or more gone     -> cobwebs
 //
 // Everything in between has only the wallpaper.
-export const CHARGED_WITHIN_DAYS = 3;
+export const CHARGED_WITHIN_DAYS = 5;
 export const COBWEB_FROM_DAYS = 30;
 
 /**
@@ -292,8 +292,8 @@ export function buildTileCrown(person, now = Date.now()) {
 }
 
 /**
- * How charged a "charged" tile still is: 3 the day after a workout, 2 the
- * day after that, 1 on the third day.
+ * How charged a "charged" tile still is, 3 to 1, running down evenly over
+ * the charged days: 3 for the first two, 2 for the next two, 1 on the last.
  */
 export function chargeLevelFor(person, now = Date.now()) {
   const days = resolveDaysSinceLastWorkout(person, now);
@@ -302,7 +302,9 @@ export function chargeLevelFor(person, now = Date.now()) {
     return 1;
   }
 
-  return Math.max(1, Math.min(3, CHARGED_WITHIN_DAYS + 1 - days));
+  const left = (CHARGED_WITHIN_DAYS + 1 - days) / CHARGED_WITHIN_DAYS;
+
+  return Math.max(1, Math.min(3, Math.ceil(left * 3)));
 }
 
 /**

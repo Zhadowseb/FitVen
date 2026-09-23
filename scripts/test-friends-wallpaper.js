@@ -108,7 +108,7 @@ assert.ok(energyAt(WALLPAPER_MOTION_DAYS) > 0, "a workout exactly a week ago sto
 assert.strictEqual(energyAt(WALLPAPER_MOTION_DAYS + 1), 0, "a tile older than a week still moves");
 
 // The mood follows the week: embers while training, steam once done for the
-// day, charged for three days after, nothing, then cobwebs from a month.
+// day, charged for five days after, nothing, then cobwebs from a month.
 const moodAt = (days) => buildTileMood({ activityState: "rest", daysSinceLastWorkout: days }, now);
 
 assert.strictEqual(buildTileMood({ activityState: "live" }, now), "embers", "somebody training now is not on fire");
@@ -119,9 +119,9 @@ assert.strictEqual(
 );
 assert.strictEqual(moodAt(0), "steam", "a workout today from the phone did not steam");
 assert.strictEqual(moodAt(1), "charged");
-assert.strictEqual(CHARGED_WITHIN_DAYS, 3, "charged is trained within the last three days");
-assert.strictEqual(moodAt(3), "charged", "three days ago lost its charge");
-assert.strictEqual(moodAt(4), null, "four days ago was still charged");
+assert.strictEqual(CHARGED_WITHIN_DAYS, 5, "charged is trained within the last five days");
+assert.strictEqual(moodAt(5), "charged", "five days ago lost its charge");
+assert.strictEqual(moodAt(6), null, "six days ago was still charged");
 assert.strictEqual(moodAt(29), null, "a friend gathered cobwebs before a month was up");
 assert.strictEqual(moodAt(COBWEB_FROM_DAYS), "cobweb");
 assert.strictEqual(
@@ -130,11 +130,11 @@ assert.strictEqual(
   "somebody who has never trained gathered cobwebs - there was nothing to leave"
 );
 
-// The charge runs down, a level a day.
+// The charge runs down evenly over the five days.
 assert.deepStrictEqual(
-  [1, 2, 3].map((days) => chargeLevelFor({ daysSinceLastWorkout: days }, now)),
-  [3, 2, 1],
-  "the charge does not run down a level a day"
+  [1, 2, 3, 4, 5].map((days) => chargeLevelFor({ daysSinceLastWorkout: days }, now)),
+  [3, 3, 2, 2, 1],
+  "the charge does not run down evenly over the charged days"
 );
 
 // The crown: a record in the workout finished today, over the steam - a ruby

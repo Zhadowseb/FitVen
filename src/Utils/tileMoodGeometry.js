@@ -1,7 +1,7 @@
 // Where the moving parts of an active friend's tile go: the embers rising off
 // somebody training right now, the steam coming off somebody done for the
 // day, and the little bolts popping round somebody who trained in the last
-// three days. (Cobwebs, for a friend gone a month, are in cobwebGeometry.js.)
+// five days. (Cobwebs, for a friend gone a month, are in cobwebGeometry.js.)
 //
 // Pure geometry, in the tile's own pixels, so it can be checked without a
 // phone. Seeded, so every tile has its own and keeps it between renders.
@@ -22,7 +22,7 @@ function seededRandom(seed) {
 
 export const EMBER_COUNT = 12;
 export const STEAM_PUFF_COUNT = 7;
-// Little bolts per charge level: 3 the day after a workout, 1 by the third.
+// Little bolts per charge level: 3 just after a workout, 1 by the fifth day.
 export const BOLTS_PER_LEVEL = 2;
 // The avatar's centre and the room kept round it, so no bolt pops on a face.
 // 56 is BAND_HEIGHT - AVATAR_OVERLAP + AVATAR_SIZE / 2 in FriendsActivityStyle.
@@ -83,13 +83,13 @@ export function buildSteam({ width, height, seed = 1 }) {
 /* ------------------------------------------------------------- charge -- */
 
 /**
- * The charge on somebody who trained in the last three days, ready to go
+ * The charge on somebody who trained in the last five days, ready to go
  * again: a glow pulsing steadily behind the avatar, and tiny bolts popping
  * up here and there around it, each in its own spot on its own timing.
  *
- * `level` is 3 the day after a workout and 1 on the third day. It sets how
- * many bolts there are and how often they pop - a lot and often the day
- * after, the odd one by the third.
+ * `level` is 3 just after a workout and 1 on the fifth day (chargeLevelFor).
+ * It sets how many bolts there are and how often they pop - a lot and often
+ * at first, the odd one by the end.
  */
 export function buildCharge({
   width,

@@ -83,7 +83,7 @@ function BoltIcon({ theme }) {
  * The card wears the same mood as your tile in the friends strip, so the
  * number is never just a number: on a fire while a workout is running,
  * steaming once one is done today - with the crown if it held a record -
- * charged for three days after, the day's colour after that, cobwebs from a
+ * charged for five days after, the day's colour after that, cobwebs from a
  * month. Layout untouched; the moods are drawn behind the content.
  */
 export default function DaysSinceCard({ days = null, isTraining = false, recordsToday = 0 }) {
