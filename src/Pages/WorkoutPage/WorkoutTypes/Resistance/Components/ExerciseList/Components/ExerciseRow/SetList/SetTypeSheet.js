@@ -7,6 +7,7 @@ import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
 import Amrap from "@resources/Icons/UI-icons/Amrap";
 import Checkmark from "@resources/Icons/UI-icons/Checkmark";
 import Delete from "@resources/Icons/UI-icons/Delete";
+import Note from "@resources/Icons/UI-icons/Note";
 import {
   ThemedBottomSheet,
   ThemedText,
@@ -35,6 +36,10 @@ function parseTarget(value) {
  * is visible - and so an AMRAP set can be given its target straight after.
  * Delete sits in the corner and asks nothing: the list offers an undo for a
  * few seconds instead, which is cheaper than a question every time.
+ *
+ * The set's note is behind the button beside it rather than always open
+ * under the types: most sets have none, and an empty field on every sheet
+ * pushed the choice the sheet is for down the screen.
  */
 export default function SetTypeSheet({
   visible,
@@ -54,10 +59,29 @@ export default function SetTypeSheet({
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const [targetDraft, setTargetDraft] = useState("");
+  const [noteOpen, setNoteOpen] = useState(false);
+  const hasNote = String(note ?? "").trim().length > 0;
+  const primaryText = theme.primaryText ?? theme.primary;
 
   useEffect(() => {
     setTargetDraft(amrapTarget ? String(amrapTarget) : "");
   }, [amrapTarget, visible]);
+
+  // Every sheet opens on the types; the note is one tap away.
+  useEffect(() => {
+    if (visible) {
+      setNoteOpen(false);
+    }
+  }, [visible]);
+
+  const toggleNote = () => {
+    if (noteOpen) {
+      // Closing the field is a way out of it, so it saves like the others.
+      onEndEditingNote?.();
+    }
+
+    setNoteOpen((open) => !open);
+  };
 
   const commitTarget = () => {
     const next = parseTarget(targetDraft);
@@ -79,26 +103,76 @@ export default function SetTypeSheet({
           </ThemedText>
         </View>
 
-        <TouchableOpacity
-          activeOpacity={0.84}
-          accessibilityRole="button"
-          accessibilityLabel={t("workout.setType.deleteSet", { label: label ?? "" })}
-          hitSlop={8}
-          onPress={onDelete}
-          style={[
-            styles.deleteButton,
-            {
-              backgroundColor: withAlpha(theme.danger, 0.12),
-              borderColor: withAlpha(theme.danger, 0.35),
-            },
-          ]}
-        >
-          <Delete width={15} height={15} color={theme.danger} />
-          <ThemedText style={styles.deleteText} setColor={theme.danger}>
-            {t("workout.setType.delete")}
-          </ThemedText>
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          {/* Tinted when the set already has a note, so it is not hidden. */}
+          <TouchableOpacity
+            activeOpacity={0.84}
+            accessibilityRole="button"
+            accessibilityLabel={t("workout.setType.note")}
+            accessibilityState={{ expanded: noteOpen }}
+            hitSlop={8}
+            onPress={toggleNote}
+            style={[
+              styles.headerButton,
+              hasNote || noteOpen
+                ? {
+                    backgroundColor: withAlpha(theme.primary, 0.14),
+                    borderColor: withAlpha(theme.primary, 0.45),
+                  }
+                : {
+                    backgroundColor: theme.fields ?? theme.uiBackground,
+                    borderColor: theme.cardBorder,
+                  },
+            ]}
+          >
+            <Note
+              width={15}
+              height={15}
+              color={hasNote || noteOpen ? primaryText : theme.quietText}
+            />
+            <ThemedText
+              style={styles.headerButtonText}
+              setColor={hasNote || noteOpen ? primaryText : theme.quietText}
+            >
+              {t("workout.setType.note")}
+            </ThemedText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.84}
+            accessibilityRole="button"
+            accessibilityLabel={t("workout.setType.deleteSet", { label: label ?? "" })}
+            hitSlop={8}
+            onPress={onDelete}
+            style={[
+              styles.headerButton,
+              {
+                backgroundColor: withAlpha(theme.danger, 0.12),
+                borderColor: withAlpha(theme.danger, 0.35),
+              },
+            ]}
+          >
+            <Delete width={15} height={15} color={theme.danger} />
+            <ThemedText style={styles.headerButtonText} setColor={theme.danger}>
+              {t("workout.setType.delete")}
+            </ThemedText>
+          </TouchableOpacity>
+        </View>
       </View>
+
+      {noteOpen ? (
+        <View style={styles.noteSection}>
+          <ThemedTextInput
+            value={note}
+            onChangeText={onChangeNote}
+            onEndEditing={onEndEditingNote}
+            placeholder={t("workout.setType.notePlaceholder")}
+            multiline
+            autoFocus
+            inputStyle={styles.noteInput}
+          />
+        </View>
+      ) : null}
 
       <View style={styles.rows}>
         {TYPE_ROWS.map(({ type, mark }) => {
@@ -195,20 +269,7 @@ export default function SetTypeSheet({
         </View>
       ) : null}
 
-      <View style={[styles.section, styles.lastSection]}>
-        <ThemedText style={styles.label} setColor={theme.quietText}>
-          {t("workout.setType.note")}
-        </ThemedText>
-
-        <ThemedTextInput
-          value={note}
-          onChangeText={onChangeNote}
-          onEndEditing={onEndEditingNote}
-          placeholder={t("workout.setType.notePlaceholder")}
-          multiline
-          inputStyle={styles.noteInput}
-        />
-      </View>
+      <View style={styles.bottomSpace} />
     </ThemedBottomSheet>
   );
 }

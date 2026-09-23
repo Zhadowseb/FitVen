@@ -22,7 +22,13 @@ export default StyleSheet.create({
     fontSize: 20,
     fontWeight: "900",
   },
-  deleteButton: {
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  // Note and Delete, side by side in the corner.
+  headerButton: {
     height: 32,
     paddingHorizontal: 10,
     borderRadius: 8,
@@ -31,9 +37,12 @@ export default StyleSheet.create({
     alignItems: "center",
     gap: 6,
   },
-  deleteText: {
+  headerButtonText: {
     fontSize: 12.5,
     fontWeight: "800",
+  },
+  noteSection: {
+    paddingBottom: 16,
   },
   rows: {
     gap: 8,
@@ -87,8 +96,8 @@ export default StyleSheet.create({
     gap: 8,
     paddingTop: 18,
   },
-  lastSection: {
-    paddingBottom: 24,
+  bottomSpace: {
+    height: 24,
   },
   targetRow: {
     flexDirection: "row",
@@ -101,12 +110,6 @@ export default StyleSheet.create({
   targetInput: {
     textAlign: "center",
     fontWeight: "800",
-  },
-  label: {
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 1.6,
-    textTransform: "uppercase",
   },
   noteInput: {
     minHeight: 100,
