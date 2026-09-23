@@ -1,6 +1,7 @@
 // Pure helpers for the Friends activity tiles: the text on the status row,
 // the tile order, the music band state, and whether the band should scroll.
 import { formatDate, t } from "@localization";
+import { mixHexColors } from "./colorMix";
 import { calendarDaysBetween, formatRelativeDay } from "./dateUtils";
 
 const ACTIVITY_TILE_ORDER = {
@@ -163,6 +164,44 @@ const WALLPAPER_TONE_STEPS = [
 ];
 const WALLPAPER_MAX_DAYS = 99;
 
+// The days the wallpaper's colour is pinned to. Every day between two of them
+// is its own blend, so a tile two days out and one three days out are not the
+// same colour - the number and the shade move together.
+export const WALLPAPER_COLOR_DAYS = [0, 2, 5, 9];
+
+// Up to a week the tile moves; after that it has gone still.
+export const WALLPAPER_MOTION_DAYS = 7;
+
+/**
+ * The wallpaper colour for a number of days, from one colour per entry in
+ * WALLPAPER_COLOR_DAYS. Past the last day it stays at the last colour.
+ */
+export function wallpaperColorForDays(days, colors) {
+  const count = Math.min(WALLPAPER_COLOR_DAYS.length, colors?.length ?? 0);
+
+  if (count === 0) {
+    return null;
+  }
+
+  const value = Math.max(0, Number(days) || 0);
+
+  for (let index = 1; index < count; index += 1) {
+    const upper = WALLPAPER_COLOR_DAYS[index];
+
+    if (value <= upper) {
+      const lower = WALLPAPER_COLOR_DAYS[index - 1];
+
+      return mixHexColors(
+        colors[index - 1],
+        colors[index],
+        (value - lower) / (upper - lower)
+      );
+    }
+  }
+
+  return colors[count - 1];
+}
+
 /**
  * The background of a resting tile: how many days since the person last
  * trained, and the tone that goes with it. Null for a tile with something on
@@ -196,7 +235,7 @@ export function buildRestWallpaper(person, now = Date.now()) {
   }
 
   if (days === null) {
-    return { tone: "new", days: null, label: null };
+    return { tone: "new", days: null, label: null, energy: 0 };
   }
 
   const step = WALLPAPER_TONE_STEPS.find((entry) => days <= entry.upTo);
@@ -205,6 +244,10 @@ export function buildRestWallpaper(person, now = Date.now()) {
     tone: step?.tone ?? "cold",
     days,
     label: days > WALLPAPER_MAX_DAYS ? `${WALLPAPER_MAX_DAYS}+` : String(days),
+    // How lively the tile is: 1 today, falling to 0 once a week has passed.
+    // Zero means it does not move at all.
+    energy:
+      days > WALLPAPER_MOTION_DAYS ? 0 : 1 - days / (WALLPAPER_MOTION_DAYS + 1),
   };
 }
 

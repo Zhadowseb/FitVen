@@ -28,9 +28,11 @@ import Plus from "../../Icons/UI-icons/Plus";
 import { ThemedText, UserAvatar } from "../../ThemedComponents";
 import {
   useBlinkAnimation,
+  useBreathAnimation,
   useEqualizerAnimation,
   usePulseAnimation,
   useReduceMotion,
+  useSheenAnimation,
   useTickerAnimation,
 } from "../animationHooks";
 import {
@@ -39,6 +41,7 @@ import {
   formatMusicLine,
   resolveMusicBandState,
   sortActivityTiles,
+  wallpaperColorForDays,
 } from "@utils/friendsActivityUtils";
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
@@ -367,21 +370,62 @@ function MusicBand({ theme, colorScheme, music, activityState, animate, hasWallp
 /* ---------------------------------------------------------- wallpaper -- */
 
 // A heat scale that stays clear of the status colours - orange live, green
-// done, yellow planned - so a resting tile is never mistaken for one of them:
-// coral while it is fresh, purple, then blue, then drained to grey.
-function wallpaperColor(tone, theme) {
-  switch (tone) {
-    case "fresh":
-      return theme.amrap ?? theme.danger;
-    case "warm":
-      return theme.dropSet ?? theme.primary;
-    case "cooling":
-      return theme.warmup ?? theme.quietText;
-    case "cold":
-      return theme.quietText;
-    default:
-      return theme.dropSet ?? theme.primary;
+// done, yellow planned - so a resting tile is never mistaken for one of them.
+// Coral today, purple at two days, blue at five, drained to grey by nine, and
+// every day in between its own blend of the two either side.
+function wallpaperColor(wallpaper, theme) {
+  if (wallpaper.days === null) {
+    return theme.dropSet ?? theme.primary;
   }
+
+  return (
+    wallpaperColorForDays(wallpaper.days, [
+      theme.amrap ?? theme.danger,
+      theme.dropSet ?? theme.primary,
+      theme.warmup ?? theme.quietText,
+      theme.quietText,
+    ]) ?? theme.quietText
+  );
+}
+
+// The shine that crosses a tile somebody trained on this week. The fresher,
+// the more often it comes round.
+const SHEEN_WIDTH = 46;
+const SHEEN_GAP_FRESH_MS = 2400;
+const SHEEN_GAP_STALE_MS = 7600;
+
+function WallpaperSheen({ color, energy, seed, animate }) {
+  const gradientId = useRef(`tile-sheen-${++gradientInstanceCounter}`).current;
+  const gapMs = Math.round(
+    SHEEN_GAP_STALE_MS - (SHEEN_GAP_STALE_MS - SHEEN_GAP_FRESH_MS) * energy
+  );
+  const progress = useSheenAnimation(animate, {
+    gapMs,
+    // Tiles further along the row start later, so a strip of fresh ones
+    // shines one after the other instead of all at once.
+    headStartMs: (seed * 850) % (gapMs + 1300),
+  });
+  const translateX = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-SHEEN_WIDTH * 2, TILE_WIDTH + SHEEN_WIDTH],
+  });
+
+  return (
+    <Animated.View
+      style={[styles.wallpaperSheen, { transform: [{ translateX }, { rotate: "18deg" }] }]}
+    >
+      <Svg width="100%" height="100%" preserveAspectRatio="none" viewBox="0 0 1 1">
+        <Defs>
+          <LinearGradient id={gradientId} x1="0" y1="0" x2="1" y2="0">
+            <Stop offset="0" stopColor={color} stopOpacity={0} />
+            <Stop offset="0.5" stopColor={color} stopOpacity={0.32} />
+            <Stop offset="1" stopColor={color} stopOpacity={0} />
+          </LinearGradient>
+        </Defs>
+        <Rect x="0" y="0" width="1" height="1" fill={`url(#${gradientId})`} />
+      </Svg>
+    </Animated.View>
+  );
 }
 
 // A corner of colour fading out across the tile.
@@ -413,11 +457,19 @@ function WallpaperGradient({ color, strength }) {
  * Decoration only - the status row already says it in words - so it is
  * hidden from screen readers.
  */
-function TileWallpaper({ wallpaper, theme, colorScheme }) {
+function TileWallpaper({ wallpaper, theme, colorScheme, animate, seed }) {
   const { t } = useTranslation();
   const isLight = colorScheme === "light";
-  const color = wallpaperColor(wallpaper.tone, theme);
+  const color = wallpaperColor(wallpaper, theme);
   const markColor = withAlpha(color, isLight ? 0.13 : 0.15);
+  // Trained this week: the wash breathes and a shine crosses the tile. The
+  // same checks as every other loop in the strip - on screen, app in front,
+  // reduced motion off - arrive in `animate`.
+  const moves = animate && wallpaper.energy > 0;
+  const washOpacity = useBreathAnimation(moves, {
+    periodMs: 3200 - 1000 * wallpaper.energy,
+    low: 0.55,
+  });
 
   return (
     <View
@@ -426,7 +478,12 @@ function TileWallpaper({ wallpaper, theme, colorScheme }) {
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
     >
-      <WallpaperGradient color={color} strength={isLight ? 0.18 : 0.26} />
+      <Animated.View style={[StyleSheet.absoluteFill, { opacity: washOpacity }]}>
+        <WallpaperGradient color={color} strength={isLight ? 0.18 : 0.26} />
+      </Animated.View>
+      {moves ? (
+        <WallpaperSheen color={color} energy={wallpaper.energy} seed={seed} animate={moves} />
+      ) : null}
       <ThemedText style={styles.wallpaperMark} setColor={markColor} numberOfLines={1}>
         {wallpaper.label ?? t("friends.wallpaper.new")}
         {wallpaper.label ? (
@@ -565,6 +622,7 @@ function ActivityTile({
   onPress,
   onOpenGym,
   wallpaper = null,
+  motionSeed = 0,
 }) {
   const { t } = useTranslation();
   const isLight = colorScheme === "light";
@@ -593,7 +651,13 @@ function ActivityTile({
       ]}
     >
       {wallpaper ? (
-        <TileWallpaper wallpaper={wallpaper} theme={theme} colorScheme={colorScheme} />
+        <TileWallpaper
+          wallpaper={wallpaper}
+          theme={theme}
+          colorScheme={colorScheme}
+          animate={animate}
+          seed={motionSeed}
+        />
       ) : null}
 
       <MusicBand
@@ -797,7 +861,7 @@ export default function FriendsActivity({
               <RingLoading color={theme.primary ?? iconColor} mutedColor={cardBorder} size={58} />
             </View>
           ) : orderedPeople.length ? (
-            orderedPeople.map((person) => (
+            orderedPeople.map((person, index) => (
               <ActivityTile
                 key={person.id}
                 theme={theme}
@@ -813,6 +877,7 @@ export default function FriendsActivity({
                 onPress={onSeeAll}
                 onOpenGym={onOpenGym}
                 wallpaper={buildRestWallpaper(person)}
+                motionSeed={index + 1}
               />
             ))
           ) : (

@@ -9,7 +9,12 @@
 const assert = require("assert");
 const loadAppModule = require("./lib/loadAppModule");
 
-const { buildRestWallpaper } = loadAppModule("src/Utils/friendsActivityUtils.js");
+const {
+  buildRestWallpaper,
+  wallpaperColorForDays,
+  WALLPAPER_MOTION_DAYS,
+} = loadAppModule("src/Utils/friendsActivityUtils.js");
+const { mixHexColors } = loadAppModule("src/Utils/colorMix.js");
 
 const now = new Date(2026, 8, 23, 12, 0, 0).getTime();
 const daysAgo = (days) => new Date(2026, 8, 23 - days, 9, 0, 0).toISOString();
@@ -43,7 +48,7 @@ assert.strictEqual(
 // Never trained: no number, so nothing that reads as "0 days".
 assert.deepStrictEqual(
   buildRestWallpaper({ activityState: "rest" }, now),
-  { tone: "new", days: null, label: null },
+  { tone: "new", days: null, label: null, energy: 0 },
   "somebody with no workout was shown a day count"
 );
 
@@ -70,5 +75,31 @@ assert.strictEqual(
   buildRestWallpaper({ lastWorkoutAt: daysAgo(240) }, now).label,
   "99+"
 );
+
+// The colour follows the day, not a step: pinned at 0, 2, 5 and 9 days and
+// blended in between, so two tiles a day apart are two shades.
+const COLORS = ["#ff0000", "#0000ff", "#00ff00", "#808080"];
+
+assert.strictEqual(wallpaperColorForDays(0, COLORS), "#ff0000");
+assert.strictEqual(wallpaperColorForDays(1, COLORS), "#800080", "day 1 is not halfway from 0 to 2");
+assert.strictEqual(wallpaperColorForDays(2, COLORS), "#0000ff");
+assert.strictEqual(wallpaperColorForDays(9, COLORS), "#808080");
+assert.strictEqual(wallpaperColorForDays(40, COLORS), "#808080", "a long gap left the scale");
+assert.notStrictEqual(
+  wallpaperColorForDays(3, COLORS),
+  wallpaperColorForDays(4, COLORS),
+  "two days in a row came out the same colour"
+);
+
+// A colour that cannot be read is handed back, not turned into black.
+assert.strictEqual(mixHexColors("#ffffff", "rgba(0,0,0,1)", 0.2), "#ffffff");
+assert.strictEqual(mixHexColors("#fff", "#000", 0.5), "#808080");
+
+// It moves within a week and not after, and fresher moves more.
+const energyAt = (days) => buildRestWallpaper({ daysSinceLastWorkout: days }, now).energy;
+
+assert.ok(energyAt(0) > energyAt(3), "a tile from today was no livelier than one from three days ago");
+assert.ok(energyAt(WALLPAPER_MOTION_DAYS) > 0, "a workout exactly a week ago stopped moving");
+assert.strictEqual(energyAt(WALLPAPER_MOTION_DAYS + 1), 0, "a tile older than a week still moves");
 
 console.log("Friends tile wallpaper checks passed.");
