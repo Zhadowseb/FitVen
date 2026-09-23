@@ -284,6 +284,44 @@ function assertConsistent(id, expectedType, label) {
   assertConsistent(typed.lastInsertRowId, "amrap", "updateSetType back to AMRAP");
   assert.strictEqual(read(typed.lastInsertRowId).amrap_target, 8);
 
+  // Turned into a warm-up, an unticked set drops the numbers it copied from
+  // the set above; a ticked one keeps what was lifted.
+  const readLoad = (id) =>
+    raw.prepare('SELECT reps, weight FROM "Set" WHERE sets_id = ?').get(id);
+  const unticked = await repository.createSet(db, {
+    setNumber: 9,
+    exerciseId: 1,
+    reps: 8,
+    weight: 80,
+  });
+  const ticked = await repository.createSet(db, {
+    setNumber: 10,
+    exerciseId: 1,
+    reps: 8,
+    weight: 80,
+  });
+
+  raw.prepare('UPDATE "Set" SET done = 1 WHERE sets_id = ?').run(ticked.lastInsertRowId);
+
+  for (const id of [unticked.lastInsertRowId, ticked.lastInsertRowId]) {
+    await repository.updateSetType(db, {
+      setId: id,
+      setType: "warmup",
+      clearUnfinishedLoad: true,
+    });
+  }
+
+  assert.deepStrictEqual(
+    { ...readLoad(unticked.lastInsertRowId) },
+    { reps: null, weight: null },
+    "a set turned into a warm-up kept the working numbers it had copied"
+  );
+  assert.deepStrictEqual(
+    { ...readLoad(ticked.lastInsertRowId) },
+    { reps: 8, weight: 80 },
+    "a ticked set lost what was actually lifted when it became a warm-up"
+  );
+
   await repository.updateSetType(db, { setId: typed.lastInsertRowId, setType: "nonsense" });
   assertConsistent(
     typed.lastInsertRowId,

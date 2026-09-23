@@ -173,6 +173,28 @@ export default StyleSheet.create({
         marginHorizontal: -8,
         paddingHorizontal: 8,
     },
+    warmupHeader: {
+        height: 28,
+        borderBottomWidth: 1,
+        flexDirection: "row",
+        alignItems: "center",
+        paddingLeft: 6,
+        position: "relative",
+    },
+    warmupHeaderText: {
+        flex: 1,
+        fontSize: 9.5,
+        fontWeight: "800",
+        letterSpacing: 1.4,
+        textTransform: "uppercase",
+    },
+    // Expand points down; this folds them up, so it points up. Sits over the
+    // done column, where the folded row's chevron will be.
+    warmupHeaderChevron: {
+        width: 33,
+        alignItems: "center",
+        transform: [{ rotate: "180deg" }],
+    },
     foldedWarmups: {
         position: "absolute",
         top: 0,

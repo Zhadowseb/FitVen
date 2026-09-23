@@ -339,12 +339,15 @@ export async function getHeaviestLiftForExercise(db, exerciseName) {
  * The last set already logged against this exercise instance, so the next one
  * can start from it instead of from four empty fields.
  */
+// A warm-up is not where the work left off, so neither of these copies one:
+// a set added after two warm-ups starts empty rather than at warm-up weight.
 export async function getLastSetValuesForExercise(db, exerciseId) {
   return db.getFirstAsync(
     `SELECT pause, reps, weight
      FROM "Set"
      WHERE exercise_instance_id = ?
        AND COALESCE(deleted_at, '') = ''
+       AND COALESCE(set_type, 'working') <> 'warmup'
      ORDER BY set_number DESC, sets_id DESC
      LIMIT 1;`,
     [exerciseId]
@@ -389,6 +392,7 @@ export async function getLastSetValuesForExerciseName(
        AND COALESCE(e.deleted_at, '') = ''
        AND COALESCE(w.deleted_at, '') = ''
        AND COALESCE(d.deleted_at, '') = ''
+       AND COALESCE(s.set_type, 'working') <> 'warmup'
        AND (s.pause IS NOT NULL OR s.reps IS NOT NULL OR s.weight IS NOT NULL)
      ORDER BY
        performed_date_sort DESC,
@@ -2184,16 +2188,27 @@ export async function updateSetField(db, { field, value, setId }) {
  * and set_type and amrap written apart are two truths the moment one of them
  * changes alone. The target only means anything on an AMRAP set, so it is
  * cleared whenever the set becomes anything else.
+ *
+ * `clearUnfinishedLoad` empties reps, weight and 1RM % in the same statement,
+ * but only on a set that is not ticked off: an unticked set's numbers were
+ * copied forward from the set above, a ticked one's are what was lifted.
  */
-export async function updateSetType(db, { setId, setType, amrapTarget = null }) {
+export async function updateSetType(
+  db,
+  { setId, setType, amrapTarget = null, clearUnfinishedLoad = false }
+) {
   const resolvedType = normalizeSetType(setType);
   const syncVersion = createNextSyncVersion();
+  const clear = clearUnfinishedLoad ? 1 : 0;
 
   await db.runAsync(
     `UPDATE "Set"
      SET set_type = ?,
          amrap = ?,
          amrap_target = ?,
+         reps = CASE WHEN ? = 1 AND COALESCE(done, 0) <> 1 THEN NULL ELSE reps END,
+         weight = CASE WHEN ? = 1 AND COALESCE(done, 0) <> 1 THEN NULL ELSE weight END,
+         rm_percentage = CASE WHEN ? = 1 AND COALESCE(done, 0) <> 1 THEN NULL ELSE rm_percentage END,
          sync_id = COALESCE(sync_id, ${SQLITE_UUID_SQL}),
          sync_version = ?,
          deleted_at = NULL,
@@ -2203,6 +2218,9 @@ export async function updateSetType(db, { setId, setType, amrapTarget = null }) 
       resolvedType,
       amrapFlagFor(resolvedType),
       resolvedType === "amrap" ? amrapTarget : null,
+      clear,
+      clear,
+      clear,
       syncVersion,
       setId,
     ]

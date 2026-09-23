@@ -57,9 +57,14 @@ export default {
     notePlaceholder: "Tilføj note",
     deleted: "Sæt {label} slettet",
     undo: "Fortryd",
+    warmupCount: {
+      one: "{count} opvarmningssæt",
+      other: "{count} opvarmningssæt",
+    },
+    foldWarmups: "Fold opvarmningen sammen",
     warmupsFolded: {
-      one: "{count} opvarmningssæt færdigt. Tryk for at vise",
-      other: "{count} opvarmningssæt færdige. Tryk for at vise",
+      one: "{count} opvarmningssæt. Tryk for at vise",
+      other: "{count} opvarmningssæt. Tryk for at vise",
     },
   },
 };

@@ -73,8 +73,9 @@ const REST_UNIT_MINUTES = "minutes";
 const REST_UNIT_SECONDS = "seconds";
 const REST_DIVIDER_BUBBLE_SIZE = 32;
 
-// Warm-ups fold away once every one is ticked off: after a beat, so the last
-// tick is seen landing, and animated the way the card itself opens.
+// Two or more warm-ups can be folded into one row at any time, by hand. They
+// also fold by themselves once every one is ticked off: after a beat, so the
+// last tick is seen landing, and animated the way the card itself opens.
 const WARMUP_FOLD_DELAY_MS = 450;
 const WARMUP_FOLD_DURATION_MS = 260;
 const WARMUP_FADE_DURATION_MS = 180;
@@ -83,16 +84,37 @@ const WARMUP_FOLD_EASING = Easing.bezier(0.2, 0.8, 0.2, 1);
 // How long a deleted set can still be brought back.
 const UNDO_DELETE_MS = 4000;
 
-// Exercises whose warm-ups were opened by hand, which then stay open for the
-// rest of the session. Module state rather than a ref: folding the card
-// unmounts this list, and the choice has to outlive that.
-const warmupsOpenedByHand = new Set();
+// What the person last did by hand to an exercise's warm-ups, "open" or
+// "folded", kept for the session. Opened by hand, they no longer fold by
+// themselves. Module state rather than a ref: folding the card unmounts this
+// list, and the choice has to outlive that.
+const warmupFoldChoice = new Map();
 
-function warmupsReadyToFold(orderedSets) {
+// One warm-up folded into one row is the same row with a chevron on it.
+const MIN_WARMUPS_TO_FOLD = 2;
+
+function countWarmups(orderedSets) {
+  return orderedSets.filter((set) => resolveSetType(set) === "warmup").length;
+}
+
+function warmupsAllDone(orderedSets) {
   const warmups = orderedSets.filter((set) => resolveSetType(set) === "warmup");
 
-  // One warm-up folded into one row is the same row with a chevron on it.
-  return warmups.length >= 2 && warmups.every((set) => Number(set?.done) === 1);
+  return (
+    warmups.length >= MIN_WARMUPS_TO_FOLD &&
+    warmups.every((set) => Number(set?.done) === 1)
+  );
+}
+
+function initialWarmupsFolded(sets, foldKey) {
+  const choice = warmupFoldChoice.get(foldKey);
+
+  if (choice) {
+    return choice === "folded";
+  }
+
+  // Already all done when the card opens: start folded, without playing it.
+  return warmupsAllDone(orderSetsForDisplay(sets ?? []));
 }
 
 function parseWeight(value) {
@@ -319,15 +341,13 @@ const SetList = ({
   const warmupSets = displayedSets.filter(
     (set) => resolveSetType(set) === "warmup"
   );
-  const readyToFold = warmupsReadyToFold(displayedSets);
+  const canFoldWarmups = warmupSets.length >= MIN_WARMUPS_TO_FOLD;
+  const allWarmupsDone = warmupsAllDone(displayedSets);
   const foldKey = exerciseId ?? exerciseName ?? null;
-  // Already all done when the card opens: start folded, without playing it.
-  const [warmupsFolded, setWarmupsFolded] = useState(
-    () =>
-      warmupsReadyToFold(orderSetsForDisplay(sets ?? [])) &&
-      !warmupsOpenedByHand.has(foldKey)
+  const [warmupsFolded, setWarmupsFolded] = useState(() =>
+    initialWarmupsFolded(sets, foldKey)
   );
-  const warmupsShownFolded = warmupsFolded && readyToFold;
+  const warmupsShownFolded = warmupsFolded && canFoldWarmups;
   const [warmupsAnimating, setWarmupsAnimating] = useState(false);
   const [warmupBlockY, setWarmupBlockY] = useState(0);
   const [warmupContentHeight, setWarmupContentHeight] = useState(0);
@@ -335,22 +355,45 @@ const SetList = ({
   const warmupFold = useSharedValue(warmupsShownFolded ? 1 : 0);
   const warmupFade = useSharedValue(warmupsShownFolded ? 1 : 0);
   const warmupFoldMountedRef = useRef(false);
+  const previousAllWarmupsDoneRef = useRef(allWarmupsDone);
+  const previousWarmupCountRef = useRef(warmupSets.length);
+
+  // A tick taken back opens them again straight away. Only the change counts:
+  // warm-ups folded by hand before they were done stay folded.
+  useEffect(() => {
+    const wasAllDone = previousAllWarmupsDoneRef.current;
+
+    previousAllWarmupsDoneRef.current = allWarmupsDone;
+
+    if (wasAllDone && !allWarmupsDone) {
+      setWarmupsFolded(false);
+    }
+  }, [allWarmupsDone]);
+
+  // A set just turned into a warm-up is shown, not folded away out of sight.
+  useEffect(() => {
+    const previousCount = previousWarmupCountRef.current;
+
+    previousWarmupCountRef.current = warmupSets.length;
+
+    if (warmupSets.length > previousCount) {
+      setWarmupsFolded(false);
+    }
+  }, [warmupSets.length]);
 
   useEffect(() => {
-    if (!readyToFold) {
-      // A tick taken back, or a new warm-up: open again straight away.
-      setWarmupsFolded(false);
-      return undefined;
-    }
-
-    if (warmupsFolded || warmupsOpenedByHand.has(foldKey)) {
+    if (
+      !allWarmupsDone ||
+      warmupsFolded ||
+      warmupFoldChoice.get(foldKey) === "open"
+    ) {
       return undefined;
     }
 
     const timer = setTimeout(() => setWarmupsFolded(true), WARMUP_FOLD_DELAY_MS);
 
     return () => clearTimeout(timer);
-  }, [foldKey, readyToFold, warmupsFolded]);
+  }, [allWarmupsDone, foldKey, warmupsFolded]);
 
   useEffect(() => {
     if (!warmupFoldMountedRef.current) {
@@ -394,8 +437,13 @@ const SetList = ({
   }));
 
   const openWarmupsByHand = () => {
-    warmupsOpenedByHand.add(foldKey);
+    warmupFoldChoice.set(foldKey, "open");
     setWarmupsFolded(false);
+  };
+
+  const foldWarmupsByHand = () => {
+    warmupFoldChoice.set(foldKey, "folded");
+    setWarmupsFolded(true);
   };
   const isPersonalRecordSet = (set) =>
     Number(set?.personal_record) === 1 &&
@@ -630,7 +678,12 @@ const SetList = ({
   );
 
   const applySetType = async (setId, setType, amrapTarget = null) => {
+    const current = localSets.find((set) => set.sets_id === setId);
+    // Same rule as the service: an unticked set turned warm-up drops the
+    // numbers it copied from the set above.
+    const clearsLoad = setType === "warmup" && Number(current?.done) !== 1;
     const patch = {
+      ...(clearsLoad ? { reps: null, weight: null, rm_percentage: null } : {}),
       set_type: setType,
       amrap: setType === "amrap" ? 1 : 0,
       amrap_target: setType === "amrap" ? amrapTarget : null,
@@ -1350,9 +1403,11 @@ const SetList = ({
     }
 
     if (key === "reps") {
-      return (
+      const reps = parseWeight(set?.reps);
+
+      return reps === null ? null : (
         <ThemedText style={styles.foldedValue} setColor={theme.title}>
-          {set?.reps ?? "-"}
+          {reps}
         </ThemedText>
       );
     }
@@ -1376,6 +1431,34 @@ const SetList = ({
 
     return null;
   };
+
+  // Above the open warm-ups: what they are, and the way to fold them.
+  const renderWarmupHeader = () => (
+    <TouchableOpacity
+      activeOpacity={0.85}
+      accessibilityRole="button"
+      accessibilityLabel={t("workout.setType.foldWarmups")}
+      onPress={foldWarmupsByHand}
+      style={[styles.warmupHeader, { borderBottomColor: tableBorder }]}
+    >
+      <View
+        pointerEvents="none"
+        style={[
+          styles.rowTone,
+          {
+            backgroundColor: withAlpha(theme.warmup, 0.055),
+            borderLeftColor: theme.warmup,
+          },
+        ]}
+      />
+      <ThemedText style={styles.warmupHeaderText} setColor={theme.warmup} numberOfLines={1}>
+        {t("workout.setType.warmupCount", { count: warmupSets.length })}
+      </ThemedText>
+      <View style={styles.warmupHeaderChevron}>
+        <Expand width={14} height={14} color={theme.warmup} />
+      </View>
+    </TouchableOpacity>
+  );
 
   const renderFoldedWarmups = () => {
     const lastWarmup = warmupSets[warmupSets.length - 1];
@@ -1467,10 +1550,11 @@ const SetList = ({
               pointerEvents={warmupsShownFolded ? "none" : "auto"}
               style={warmupRowsStyle}
             >
+              {canFoldWarmups ? renderWarmupHeader() : null}
               {warmupSets.map((set, rowIndex) => renderSetRow(set, rowIndex))}
             </ReanimatedAnimated.View>
 
-            {readyToFold ? renderFoldedWarmups() : null}
+            {canFoldWarmups ? renderFoldedWarmups() : null}
           </ReanimatedAnimated.View>
         ) : null}
 

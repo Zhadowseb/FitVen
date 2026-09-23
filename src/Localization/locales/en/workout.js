@@ -57,9 +57,14 @@ export default {
     notePlaceholder: "Add note",
     deleted: "Set {label} deleted",
     undo: "Undo",
+    warmupCount: {
+      one: "{count} warm-up",
+      other: "{count} warm-ups",
+    },
+    foldWarmups: "Fold the warm-ups",
     warmupsFolded: {
-      one: "{count} warm-up done. Tap to show",
-      other: "{count} warm-ups done. Tap to show",
+      one: "{count} warm-up. Tap to show",
+      other: "{count} warm-ups. Tap to show",
     },
   },
 };

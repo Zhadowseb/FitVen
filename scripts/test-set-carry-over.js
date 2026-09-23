@@ -47,6 +47,7 @@ db.exec(`
     set_number INTEGER NOT NULL,
     exercise_instance_id INTEGER NOT NULL,
     pause INTEGER, reps INTEGER, weight INTEGER,
+    set_type TEXT NOT NULL DEFAULT 'working',
     deleted_at TEXT
   );
   CREATE TABLE Exercise_Instance (
@@ -93,14 +94,15 @@ function session({ date, name, sets, dayDate = null, deleted = null }) {
 
   sets.forEach((set, index) => {
     db.prepare(
-      `INSERT INTO "Set" (set_number, exercise_instance_id, pause, reps, weight, deleted_at)
-       VALUES (?, ?, ?, ?, ?, ?)`
+      `INSERT INTO "Set" (set_number, exercise_instance_id, pause, reps, weight, set_type, deleted_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`
     ).run(
       index + 1,
       exerciseId,
       set.pause ?? null,
       set.reps ?? null,
       set.weight ?? null,
+      set.set_type ?? "working",
       set.deleted_at ?? null
     );
   });
@@ -295,5 +297,46 @@ assert.strictEqual(
   60,
   "the exercise asking the question is not part of the answer"
 );
+
+// A warm-up is not where the work left off. After working sets, the next set
+// copies the last working one; after nothing but warm-ups, it starts empty
+// rather than at warm-up weight.
+{
+  const warmedUp = session({
+    date: "01.07.2026",
+    name: "Deadlift",
+    sets: [
+      { pause: 120, reps: 5, weight: 140 },
+      { pause: 60, reps: 8, weight: 60, set_type: "warmup" },
+    ],
+  });
+
+  assert.strictEqual(
+    lastForExercise(warmedUp).weight,
+    140,
+    "a new set copied the warm-up below the working set instead of the work"
+  );
+
+  const onlyWarmups = session({
+    date: "02.07.2026",
+    name: "Row",
+    sets: [
+      { pause: 60, reps: 10, weight: 40, set_type: "warmup" },
+      { pause: 60, reps: 8, weight: 50, set_type: "warmup" },
+    ],
+  });
+
+  assert.strictEqual(
+    lastForExercise(onlyWarmups),
+    undefined,
+    "the first working set after warm-ups started at warm-up weight"
+  );
+
+  assert.strictEqual(
+    lastForName("Deadlift").weight,
+    140,
+    "a new exercise was seeded from last time's warm-up"
+  );
+}
 
 console.log("Set carry-over checks passed.");

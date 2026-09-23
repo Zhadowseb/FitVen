@@ -4170,7 +4170,15 @@ export async function deleteSet(db, setId) {
  */
 export async function setSetType(db, { setId, setType, amrapTarget = null }) {
   const result = await withTransaction(db, async () => {
-    await weightliftingRepository.updateSetType(db, { setId, setType, amrapTarget });
+    await weightliftingRepository.updateSetType(db, {
+      setId,
+      setType,
+      amrapTarget,
+      // A warm-up starts empty: the numbers a new set copies from the one
+      // above are working weights, and a warm-up is not done at those. What
+      // the person types in afterwards stays.
+      clearUnfinishedLoad: setType === "warmup",
+    });
 
     return {
       personalRecordSetIds: await refreshPersonalRecordsForSet(db, setId),
