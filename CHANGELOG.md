@@ -1,8 +1,17 @@
 # Changelog
 
 ## [2.2.0] - Unreleased
+### Added
+- **A set has a type: warm-up, working, drop or AMRAP.** `Set.set_type` is the truth and `amrap` stays as its mirror, because older versions in the field read and write only the flag - a working set with the flag up is read as AMRAP, since only a client that did not know `set_type` could have written that. Warm-ups count toward neither volume nor records; drop sets count toward volume but not records; an AMRAP set can carry a target (`amrap_target`). **Needs `20260923100000_a-set-has-a-type.sql` before any phone on 2.2.0 syncs** - the set sync names the two new columns, and PostgREST refuses a select on a column that does not exist.
+- **The badge says what kind of set it is.** Warm-ups count on their own (W1, W2) so adding one does not renumber the work, drop sets count from the set above them (D1, D2), and working and AMRAP sets share the main count. A typed row has a stripe and a tint in its colour, a drop set shows how far it fell from its parent ("70 kg -17,5") with a line joining the two where the rest would be, and an AMRAP set with a target shows "9/6+". Warm-ups always sort first.
+- **Holding a badge opens the type sheet.** Four rows, the chosen one filled, and the set's note underneath as before. Delete is in the corner and asks nothing: the set leaves the list at once, and "Set 1 deleted - Undo" holds it back from the database for four seconds. Leaving the workout or folding the card ends the undo and the delete goes through.
+- **Warm-ups fold away when they are all done** - after 450 ms, into one row showing the last of them with a stacked badge. Tapping it opens them again, and they then stay open for the session. Taking a tick back opens them straight away.
+- **History is a table.** The last three sessions, one row each and one column per set, dates fixed on the left and every set column scrolling together so set 4 of each day lines up. Warm-ups are left out; records, AMRAP and drop sets are tinted. At the bottom, the heaviest lift and a way into that exercise's records, whose back button then returns to the workout.
+- **The note is edited where it is read.** The note icon is always on an open card, and opens the note in place of a modal: tap it to write, and it saves on Done, when the keyboard goes and when the panel closes. Under it, last session's note for the same exercise, when there was one. The note field is gone from the settings sheet, so there is one place to change it.
+
 ### Changed
-- Describe pending changes here.
+- **The LAST bar is gone.** With neither panel open, the sets follow the title directly. The note and history icons share one area under the title, one at a time, and the open one sits on a tinted square.
+- **Personal records ignore warm-ups and drop sets**, and Home's muscle glance leaves warm-ups out of the lifts it compares.
 
 ---
 ## [2.1.2] - Unreleased

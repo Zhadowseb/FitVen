@@ -19,11 +19,13 @@ import ReplayHistory from "@resources/Icons/UI-icons/ReplayHistory";
 
 import {
   ThemedConfirmModal,
-  ThemedModal,
   ThemedText,
   ThemedTitle,
 } from "@resources/ThemedComponents";
+import { useTranslation } from "@localization";
 import PanelSettingsModal from "./PanelSettingsModal";
+import ExerciseHistoryPanel from "./ExerciseHistoryPanel";
+import ExerciseNotePanel from "./ExerciseNotePanel";
 import { shouldStoreExpandedHeight } from "./expandedHeightRule";
 import { weightliftingService } from "@services";
 import { useExerciseViewSettings } from "@contexts/ExerciseViewSettingsContext";
@@ -46,6 +48,9 @@ const PRESS_SUPPRESSION_MS = 250;
 
 const ExerciseRow = ({
   exercise,
+  // The workout this card is shown in, so "last time" means the session
+  // before this one - not the most recent one overall.
+  workoutId = null,
   isExpanded,
   onToggleExpanded,
   onAddSet,
@@ -61,14 +66,18 @@ const ExerciseRow = ({
 }) => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const { t } = useTranslation();
 
   const [visibleColumns, setVisibleColumns] = useState(exercise.visibleColumns);
   const [exerciseNote, setExerciseNote] = useState(exercise.note ?? "");
   const [panelModalVisible, setPanelModalVisible] = useState(false);
-  const [noteModalVisible, setNoteModalVisible] = useState(false);
-  const [historyVisible, setHistoryVisible] = useState(false);
-  const [historyDetailsExpanded, setHistoryDetailsExpanded] = useState(false);
+  // One area under the title, shared by the note and the history, and only
+  // one of them at a time. Pressing the open one's icon closes it. With both
+  // shut there is nothing between the header and the sets.
+  const [openPanel, setOpenPanel] = useState(null); // null | "note" | "history"
   const [exerciseHistory, setExerciseHistory] = useState(null);
+  const [heaviestLift, setHeaviestLift] = useState(null);
+  const [previousNote, setPreviousNote] = useState(null);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyLoadError, setHistoryLoadError] = useState(false);
   const [addingSet, setAddingSet] = useState(false);
@@ -277,11 +286,20 @@ const ExerciseRow = ({
   }, [exercise.note]);
 
   useEffect(() => {
-    setHistoryVisible(false);
-    setHistoryDetailsExpanded(false);
+    setOpenPanel(null);
     setExerciseHistory(null);
+    setHeaviestLift(null);
+    setPreviousNote(null);
     setHistoryLoadError(false);
   }, [exercise.exercise_id, exercise.exercise_name]);
+
+  // The panels belong to the open card. Folding it shuts them - the note
+  // panel saves on the way out.
+  useEffect(() => {
+    if (!isExpanded) {
+      setOpenPanel(null);
+    }
+  }, [isExpanded]);
 
   const deleteExercise = async (exerciseId) => {
     try {
@@ -392,18 +410,28 @@ const ExerciseRow = ({
     await addSet();
   };
 
-  const saveExerciseSettings = async ({ columns, note }) => {
+  const saveExerciseSettings = async ({ columns }) => {
     await weightliftingService.updateExerciseVisibleColumns(db, {
       exerciseId: exercise.exercise_id,
       columns,
     });
-    await weightliftingService.updateExerciseNote(db, {
-      exerciseId: exercise.exercise_id,
-      note,
-    });
 
     setVisibleColumns(columns);
+  };
+
+  // The note is written from the note panel only now. It used to have a field
+  // in the settings sheet as well, which made two places to edit one thing.
+  const saveExerciseNote = async (note) => {
     setExerciseNote(note);
+
+    try {
+      await weightliftingService.updateExerciseNote(db, {
+        exerciseId: exercise.exercise_id,
+        note,
+      });
+    } catch (error) {
+      console.error("Error saving exercise note", error);
+    }
   };
 
   const loadExerciseHistory = async () => {
@@ -415,13 +443,17 @@ const ExerciseRow = ({
       setHistoryLoading(true);
       setHistoryLoadError(false);
 
-      const history = await weightliftingService.getExerciseHistory(db, {
-        exerciseId: exercise.exercise_id,
-        exerciseName: exercise.exercise_name,
-        limit: 3,
-      });
+      const [history, heaviest] = await Promise.all([
+        weightliftingService.getExerciseHistoryTable(db, {
+          exerciseId: exercise.exercise_id,
+          exerciseName: exercise.exercise_name,
+          limit: 3,
+        }),
+        weightliftingService.getHeaviestLift(db, exercise.exercise_name),
+      ]);
 
       setExerciseHistory(history);
+      setHeaviestLift(heaviest);
     } catch (error) {
       console.error("Error loading exercise history", error);
       setHistoryLoadError(true);
@@ -431,21 +463,41 @@ const ExerciseRow = ({
     }
   };
 
-  const toggleExerciseHistory = () => {
-    const nextValue = !historyVisible;
-    setHistoryVisible(nextValue);
-
-    if (nextValue && !exerciseHistory && !historyLoading) {
-      loadExerciseHistory();
-    }
-
-    if (!nextValue) {
-      setHistoryDetailsExpanded(false);
+  const loadPreviousNote = async () => {
+    try {
+      setPreviousNote(
+        await weightliftingService.getPreviousExerciseNote(db, {
+          exerciseName: exercise.exercise_name,
+          beforeWorkoutId: workoutId,
+        })
+      );
+    } catch (error) {
+      // No "last time" box is the honest version of not knowing.
+      console.error("Error loading the previous note", error);
+      setPreviousNote(null);
     }
   };
 
-  const toggleHistoryDetails = () => {
-    setHistoryDetailsExpanded((currentValue) => !currentValue);
+  const togglePanel = (panel) => {
+    const next = openPanel === panel ? null : panel;
+
+    if (next === "history" && !exerciseHistory && !historyLoading) {
+      loadExerciseHistory();
+    }
+
+    if (next === "note") {
+      loadPreviousNote();
+    }
+
+    setOpenPanel(next);
+  };
+
+  // On a folded card the note icon opens the card on its note, since the
+  // panel only lives inside the open card.
+  const openNoteFromCollapsed = () => {
+    onToggleExpanded?.();
+    loadPreviousNote();
+    setOpenPanel("note");
   };
 
   const isDone = Number(exercise.done) === 1;
@@ -464,6 +516,7 @@ const ExerciseRow = ({
   const addSetColor = theme.iconColor ?? quietText;
   const titleColor = theme.title ?? theme.text;
   const replayIconColor = theme.primary;
+  const activeIconSurface = withAlpha(theme.primary, 0.14);
   const recordColor = theme.record ?? primaryColor;
   const recordLightColor =
     theme.recordLight ??
@@ -480,16 +533,6 @@ const ExerciseRow = ({
   const isRecordExercise = hasPersonalRecord;
   const recordExerciseTextColor =
     isRecordExercise && colorScheme === "light" ? recordLightColor : titleColor;
-  const repeatBadgeBackground =
-    withAlpha(theme.primary, colorScheme === "dark" ? 0.24 : 0.14);
-  const repeatBadgeBorder =
-    withAlpha(theme.primary, colorScheme === "dark" ? 0.36 : 0.24);
-  const historyPanelSurface =
-    colorScheme === "dark" ? "rgba(13, 15, 22, 0.78)" : "rgba(255, 255, 255, 0.72)";
-  const historyChipSurface =
-    colorScheme === "dark" ? "rgba(36, 41, 56, 0.92)" : "rgba(255, 255, 255, 0.88)";
-  const historyChipBorder =
-    colorScheme === "dark" ? "rgba(255, 255, 255, 0.08)" : "rgba(32, 30, 43, 0.12)";
   const summaryBubbleBorderColor =
     colorScheme === "dark" ? "rgba(255, 255, 255, 0.24)" : "rgba(32, 30, 43, 0.2)";
   const exerciseIsDone = exercise.sets.length > 0 && exercise.sets.every((set) => Number(set?.done) === 1);
@@ -560,136 +603,6 @@ const ExerciseRow = ({
     };
   });
 
-  const historySessions = exerciseHistory?.sessions ?? [];
-  const historySummaryText = historyLoading
-    ? "Loading history"
-    : exerciseHistory?.summaryText ?? "No previous sets";
-
-  const renderHistoryContent = () => {
-    if (historyLoading) {
-      return (
-        <View style={styles.historyStateRow}>
-          <ActivityIndicator size="small" color={replayIconColor} />
-          <ThemedText
-            size={12}
-            style={styles.historyStateText}
-            setColor={quietText}
-          >
-            Loading history
-          </ThemedText>
-        </View>
-      );
-    }
-
-    if (historyLoadError) {
-      return (
-        <ThemedText
-          size={12}
-          style={styles.historyEmptyText}
-          setColor={quietText}
-        >
-          Could not load previous sets.
-        </ThemedText>
-      );
-    }
-
-    if (historySessions.length === 0) {
-      return (
-        <ThemedText
-          size={12}
-          style={styles.historyEmptyText}
-          setColor={quietText}
-        >
-          No previous completed sets for this exercise.
-        </ThemedText>
-      );
-    }
-
-    return historySessions.map((session, sessionIndex) => (
-      <View
-        key={session.id}
-        style={[
-          styles.historySessionRow,
-          sessionIndex === historySessions.length - 1 &&
-            styles.historySessionRowLast,
-        ]}
-      >
-        <View style={styles.historyDateColumn}>
-          <ThemedText
-            size={12}
-            style={styles.historyRelativeDate}
-            setColor={titleColor}
-          >
-            {session.relativeDateLabel ?? "--"}
-          </ThemedText>
-          <ThemedText
-            size={9}
-            style={styles.historyDate}
-            setColor={quietText}
-          >
-            {session.dateDisplay}
-          </ThemedText>
-        </View>
-
-        <View style={styles.historySetChips}>
-          {session.sets.map((set) => (
-            <View
-              key={set.id}
-              style={[
-                styles.historySetChip,
-                {
-                  backgroundColor: historyChipSurface,
-                  borderColor: historyChipBorder,
-                },
-              ]}
-            >
-              <ThemedText
-                size={12}
-                style={styles.historySetChipText}
-                setColor={titleColor}
-              >
-                {set.reps}
-              </ThemedText>
-              <ThemedText
-                size={11}
-                style={styles.historySetChipSeparator}
-                setColor={quietText}
-              >
-                x
-              </ThemedText>
-              <ThemedText
-                size={12}
-                style={styles.historySetChipText}
-                setColor={titleColor}
-              >
-                {set.weightDisplay ?? `${set.weight} kg`}
-              </ThemedText>
-              {set.count > 1 && (
-                <View
-                  style={[
-                    styles.historySetChipCount,
-                    {
-                      backgroundColor: repeatBadgeBackground,
-                      borderColor: repeatBadgeBorder,
-                    },
-                  ]}
-                >
-                  <ThemedText
-                    size={8}
-                    style={styles.historySetChipCountText}
-                    setColor={replayIconColor}
-                  >
-                    {set.count}
-                  </ThemedText>
-                </View>
-              )}
-            </View>
-          ))}
-        </View>
-      </View>
-    ));
-  };
-
   return (
     <>
       <View style={styles.exerciseCardFrame}>
@@ -754,14 +667,28 @@ const ExerciseRow = ({
               isExpanded && styles.actionsRowExpanded,
             ]}
           >
-            {hasNote && (
+            {/* Open, the note icon is always there - it is also how a note
+                gets written. Folded, it shows only when there is one to read. */}
+            {(isExpanded || hasNote) && (
               <TouchableOpacity
                 activeOpacity={0.88}
-                hitSlop={10}
-                style={styles.actionButton}
-                onPress={() => setNoteModalVisible(true)}
+                accessibilityRole="button"
+                accessibilityLabel={t("workout.note.title")}
+                accessibilityState={{ expanded: openPanel === "note" }}
+                hitSlop={6}
+                style={[
+                  styles.actionButton,
+                  openPanel === "note" && { backgroundColor: activeIconSurface },
+                ]}
+                onPress={() =>
+                  handleCardPress(isExpanded ? () => togglePanel("note") : openNoteFromCollapsed)
+                }
               >
-                <Note width={18} height={18} color={primaryTextColor} />
+                <Note
+                  width={18}
+                  height={18}
+                  color={hasNote || openPanel === "note" ? primaryTextColor : quietText}
+                />
               </TouchableOpacity>
             )}
 
@@ -769,10 +696,14 @@ const ExerciseRow = ({
               <TouchableOpacity
                 activeOpacity={0.88}
                 accessibilityRole="button"
-                accessibilityLabel="Toggle exercise history summary"
-                hitSlop={10}
-                style={styles.actionButton}
-                onPress={toggleExerciseHistory}
+                accessibilityLabel={t("workout.history.title")}
+                accessibilityState={{ expanded: openPanel === "history" }}
+                hitSlop={6}
+                style={[
+                  styles.actionButton,
+                  openPanel === "history" && { backgroundColor: activeIconSurface },
+                ]}
+                onPress={() => handleCardPress(() => togglePanel("history"))}
               >
                 <ReplayHistory width={18} height={18} color={replayIconColor} />
               </TouchableOpacity>
@@ -820,75 +751,32 @@ const ExerciseRow = ({
           </View>
         </View>
 
-        {historyVisible && (
-          <View style={styles.historySection}>
-            <TouchableOpacity
-              activeOpacity={0.9}
-              accessibilityRole="button"
-              accessibilityLabel="Toggle exercise history details"
-              onPress={() => handleCardPress(toggleHistoryDetails)}
-              style={[
-                styles.historySummaryBar,
-                {
-                  backgroundColor: setListSurface,
-                  borderColor: cardBorder,
-                },
-              ]}
-            >
-              <View style={styles.historySummaryMain}>
-                <ReplayHistory width={14} height={14} color={replayIconColor} />
-                <ThemedText
-                  size={10}
-                  style={styles.historySummaryLabel}
-                  setColor={quietText}
-                >
-                  LAST
-                </ThemedText>
-                <ThemedText
-                  size={12}
-                  style={styles.historySummaryValue}
-                  setColor={titleColor}
-                  numberOfLines={1}
-                >
-                  {historySummaryText}
-                </ThemedText>
-              </View>
+        {/* Nothing sits between the header and the sets unless one of the
+            two icons has opened its panel. */}
+        {isExpanded && openPanel === "history" && (
+          <View onTouchStart={stopCardDragPropagation}>
+            <ExerciseHistoryPanel
+              history={exerciseHistory}
+              heaviestLift={heaviestLift}
+              isLoading={historyLoading}
+              hasError={historyLoadError}
+              exerciseName={exercise.exercise_name}
+              onClose={() => setOpenPanel(null)}
+              surface={setListSurface}
+              border={cardBorder}
+            />
+          </View>
+        )}
 
-              <View style={styles.historySummaryMeta}>
-                {exerciseHistory?.latestRelativeDateLabel && (
-                  <ThemedText
-                    size={10}
-                    style={styles.historySummaryDate}
-                    setColor={quietText}
-                  >
-                    {exerciseHistory.latestRelativeDateLabel}
-                  </ThemedText>
-                )}
-
-                <View
-                  style={[
-                    styles.historyChevron,
-                    historyDetailsExpanded && styles.historyChevronExpanded,
-                  ]}
-                >
-                  <Expand width={14} height={14} color={quietText} />
-                </View>
-              </View>
-            </TouchableOpacity>
-
-            {historyDetailsExpanded && (
-              <View
-                style={[
-                  styles.historyPanel,
-                  {
-                    backgroundColor: historyPanelSurface,
-                    borderColor: cardBorder,
-                  },
-                ]}
-              >
-                {renderHistoryContent()}
-              </View>
-            )}
+        {isExpanded && openPanel === "note" && (
+          <View onTouchStart={stopCardDragPropagation}>
+            <ExerciseNotePanel
+              note={exerciseNote}
+              previousNote={previousNote}
+              onSave={saveExerciseNote}
+              surface={setListSurface}
+              border={cardBorder}
+            />
           </View>
         )}
 
@@ -1045,6 +933,7 @@ const ExerciseRow = ({
             >
             <SetList
               sets={exercise.sets}
+              exerciseId={exercise.exercise_id}
               exerciseName={exercise.exercise_name}
               visibleColumns={visibleColumns}
               restUnitRequestKey={restUnitRequestKey}
@@ -1069,23 +958,14 @@ const ExerciseRow = ({
       <PanelSettingsModal
         visible={panelModalVisible}
         currentColumns={visibleColumns}
-        currentNote={exerciseNote}
         onDismiss={runPendingPanelAction}
         onDelete={confirmDeleteExercise}
         onOpenRestUnit={() => closePanelThen("restUnit")}
-        onClose={async ({ columns, note }) => {
-          await saveExerciseSettings({ columns, note });
+        onClose={async ({ columns }) => {
+          await saveExerciseSettings({ columns });
           setPanelModalVisible(false);
         }}
       />
-
-      <ThemedModal
-        visible={noteModalVisible}
-        onClose={() => setNoteModalVisible(false)}
-        title="Note"
-      >
-        <ThemedText>{exerciseNote}</ThemedText>
-      </ThemedModal>
       <ThemedConfirmModal
         visible={deleteConfirmVisible}
         title="Delete exercise?"

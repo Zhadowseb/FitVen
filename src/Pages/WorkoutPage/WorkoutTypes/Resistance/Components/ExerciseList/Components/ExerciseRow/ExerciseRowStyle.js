@@ -40,8 +40,9 @@ export default StyleSheet.create({
     paddingRight: 10,
   },
 
+  // As wide as the actions on the right, so the title stays centred.
   headerMainExpanded: {
-    paddingLeft: 76,
+    paddingLeft: 88,
     paddingRight: 0,
   },
 
@@ -72,8 +73,9 @@ export default StyleSheet.create({
     alignItems: "center",
   },
 
+  // Two 40 dp icons and their 4 dp gaps.
   actionsRowExpanded: {
-    width: 76,
+    width: 88,
     minHeight: 32,
     justifyContent: "flex-end",
   },
@@ -86,166 +88,14 @@ export default StyleSheet.create({
     justifyContent: "center",
   },
 
+  // 40 x 40 with a radius, so the open panel's icon can sit on a surface.
   actionButton: {
     width: 40,
     height: 40,
+    borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
-    marginLeft: 6,
-  },
-
-  historySection: {
-    marginTop: 10,
-  },
-
-  historySummaryBar: {
-    minHeight: 36,
-    borderWidth: 1,
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  historySummaryMain: {
-    flex: 1,
-    minWidth: 0,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  historySummaryLabel: {
-    marginLeft: 6,
-    fontWeight: "700",
-    letterSpacing: 0.8,
-  },
-
-  historySummaryValue: {
-    flex: 1,
-    minWidth: 0,
-    marginLeft: 8,
-    fontWeight: "800",
-  },
-
-  historySummaryMeta: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginLeft: 8,
-  },
-
-  historySummaryDate: {
-    marginLeft: 8,
-    fontWeight: "700",
-  },
-
-  historyChevron: {
-    marginLeft: 6,
-  },
-
-  historyChevronExpanded: {
-    transform: [{ rotate: "180deg" }],
-  },
-
-  historyPanel: {
-    borderWidth: 1,
-    borderRadius: 6,
-    marginTop: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-  },
-
-  historySessionRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    marginBottom: 16,
-  },
-
-  historySessionRowLast: {
-    marginBottom: 0,
-  },
-
-  historyDateColumn: {
-    width: 78,
-    paddingTop: 3,
-  },
-
-  historyRelativeDate: {
-    fontWeight: "800",
-  },
-
-  historyDate: {
-    marginTop: 2,
-    fontWeight: "700",
-    letterSpacing: 0.8,
-  },
-
-  historySetChips: {
-    flex: 1,
-    minWidth: 0,
-    flexDirection: "row",
-    flexWrap: "wrap",
-  },
-
-  historySetChip: {
-    minHeight: 26,
-    borderWidth: 1,
-    borderRadius: 6,
-    paddingHorizontal: 9,
-    paddingVertical: 4,
-    marginRight: 5,
-    marginBottom: 5,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    position: "relative",
-  },
-
-  historySetChipText: {
-    fontWeight: "800",
-  },
-
-  historySetChipSeparator: {
-    marginHorizontal: 4,
-    fontWeight: "700",
-    opacity: 0.48,
-  },
-
-  historySetChipCount: {
-    position: "absolute",
-    top: -7,
-    right: -5,
-    minWidth: 15,
-    height: 15,
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 3,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  historySetChipCountText: {
-    fontWeight: "900",
-    lineHeight: 10,
-  },
-
-  historyStateRow: {
-    minHeight: 42,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  historyStateText: {
-    marginLeft: 8,
-    fontWeight: "700",
-  },
-
-  historyEmptyText: {
-    minHeight: 36,
-    textAlign: "center",
-    textAlignVertical: "center",
-    fontWeight: "700",
+    marginLeft: 4,
   },
 
   summaryCollapsedRow: {

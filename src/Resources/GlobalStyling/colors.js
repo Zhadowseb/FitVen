@@ -27,6 +27,14 @@ export const Colors = {
         planned: "#F2C14E",
         plannedDark: "rgb(201, 174, 0)",
 
+        // What kind of set a set is. Each has its own colour so a warm-up, a
+        // drop set and an AMRAP set read apart at a glance on the card, and
+        // none of them follow the accent - they mean a type, not a brand.
+        // dropSet shares music's purple; the two never meet on one screen.
+        warmup: "#7FA6CC",
+        dropSet: "#B48CFF",
+        amrap: "#FF7A7A",
+
         // Music is purple on purpose: it must not be mistaken for a status
         // (orange live, green done, yellow planned). Used only by the band on
         // the Friends activity tiles, and it does not follow the accent.
@@ -111,6 +119,11 @@ export const Colors = {
         dangerDark: "rgb(150, 40, 26)",
         planned: "#C08A12",
         plannedDark: "rgb(201, 174, 0)",
+
+        // Darker than the dark theme's, to hold contrast against white.
+        warmup: "#3F6E9C",
+        dropSet: "#7A4FD6",
+        amrap: "#C4342F",
 
         music: "#6E5CF0",
         musicText: "#4A3AB8",

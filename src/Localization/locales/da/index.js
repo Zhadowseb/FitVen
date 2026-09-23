@@ -11,6 +11,7 @@ import notifications from "./notifications";
 import profile from "./profile";
 import social from "./social";
 import time from "./time";
+import workout from "./workout";
 import workoutStart from "./workoutStart";
 
 export default {
@@ -25,5 +26,6 @@ export default {
   profile,
   social,
   time,
+  workout,
   workoutStart,
 };
