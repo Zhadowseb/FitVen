@@ -256,15 +256,6 @@ export default StyleSheet.create({
     fontSize: 34,
     letterSpacing: 0,
   },
-  // Taller than the tile and tilted, so the shine crosses it as a slanted
-  // band with no ends showing.
-  wallpaperSheen: {
-    position: "absolute",
-    top: -60,
-    bottom: -60,
-    left: 0,
-    width: 46,
-  },
 
   /* ------------------------------------------------------- add friends -- */
   addTile: {

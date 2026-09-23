@@ -43,7 +43,6 @@ import {
   useEqualizerAnimation,
   usePulseAnimation,
   useReduceMotion,
-  useSheenAnimation,
   useTickerAnimation,
 } from "../animationHooks";
 import {
@@ -383,46 +382,6 @@ function wallpaperColor(wallpaper, theme) {
   );
 }
 
-// The shine that crosses a tile somebody trained on this week. The fresher,
-// the more often it comes round.
-const SHEEN_WIDTH = 46;
-const SHEEN_GAP_FRESH_MS = 2400;
-const SHEEN_GAP_STALE_MS = 7600;
-
-function WallpaperSheen({ color, energy, seed, animate }) {
-  const gradientId = useRef(`tile-sheen-${++gradientInstanceCounter}`).current;
-  const gapMs = Math.round(
-    SHEEN_GAP_STALE_MS - (SHEEN_GAP_STALE_MS - SHEEN_GAP_FRESH_MS) * energy
-  );
-  const progress = useSheenAnimation(animate, {
-    gapMs,
-    // Tiles further along the row start later, so a strip of fresh ones
-    // shines one after the other instead of all at once.
-    headStartMs: (seed * 850) % (gapMs + 1300),
-  });
-  const translateX = progress.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-SHEEN_WIDTH * 2, TILE_WIDTH + SHEEN_WIDTH],
-  });
-
-  return (
-    <Animated.View
-      style={[styles.wallpaperSheen, { transform: [{ translateX }, { rotate: "18deg" }] }]}
-    >
-      <Svg width="100%" height="100%" preserveAspectRatio="none" viewBox="0 0 1 1">
-        <Defs>
-          <LinearGradient id={gradientId} x1="0" y1="0" x2="1" y2="0">
-            <Stop offset="0" stopColor={color} stopOpacity={0} />
-            <Stop offset="0.5" stopColor={color} stopOpacity={0.32} />
-            <Stop offset="1" stopColor={color} stopOpacity={0} />
-          </LinearGradient>
-        </Defs>
-        <Rect x="0" y="0" width="1" height="1" fill={`url(#${gradientId})`} />
-      </Svg>
-    </Animated.View>
-  );
-}
-
 // A corner of colour fading out across the tile.
 function WallpaperGradient({ color, strength }) {
   const gradientId = useRef(`tile-wallpaper-${++gradientInstanceCounter}`).current;
@@ -452,13 +411,14 @@ function WallpaperGradient({ color, strength }) {
  * Decoration only - the status row already says it in words - so it is
  * hidden from screen readers.
  */
-function TileWallpaper({ wallpaper, theme, colorScheme, animate, seed }) {
+function TileWallpaper({ wallpaper, theme, colorScheme, animate }) {
   const { t } = useTranslation();
   const isLight = colorScheme === "light";
   const color = wallpaperColor(wallpaper, theme);
   const markColor = withAlpha(color, isLight ? 0.13 : 0.15);
-  // Trained this week: the wash breathes and a shine crosses the tile. The
-  // same checks as every other loop in the strip - on screen, app in front,
+  // Trained this week: the wash breathes. A shine used to cross the tile as
+  // well, and a slanted bar sweeping over the pictures was too much. The same
+  // checks as every other loop in the strip - on screen, app in front,
   // reduced motion off - arrive in `animate`.
   const moves = animate && wallpaper.energy > 0;
   const washOpacity = useBreathAnimation(moves, {
@@ -476,9 +436,6 @@ function TileWallpaper({ wallpaper, theme, colorScheme, animate, seed }) {
       <Animated.View style={[StyleSheet.absoluteFill, { opacity: washOpacity }]}>
         <WallpaperGradient color={color} strength={isLight ? 0.18 : 0.26} />
       </Animated.View>
-      {moves ? (
-        <WallpaperSheen color={color} energy={wallpaper.energy} seed={seed} animate={moves} />
-      ) : null}
       <ThemedText style={styles.wallpaperMark} setColor={markColor} numberOfLines={1}>
         {wallpaper.label ?? t("friends.wallpaper.new")}
         {wallpaper.label ? (
@@ -790,7 +747,6 @@ function ActivityTile({
           theme={theme}
           colorScheme={colorScheme}
           animate={animate}
-          seed={motionSeed}
         />
       ) : null}
 
