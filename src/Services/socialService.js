@@ -245,6 +245,37 @@ async function fetchActivityWorkouts({ userIds, activityDate }) {
   return plainData ?? [];
 }
 
+/**
+ * How many personal records each of these workouts holds, by workout id.
+ *
+ * Friends' sets are private, so this goes through workout_record_counts,
+ * which hands out the count for a workout the caller can already see and
+ * nothing else. It only decorates a tile, so every failure - the function not
+ * there yet included - is an empty answer rather than an error: a strip
+ * without crowns is fine, a strip that failed to load is not.
+ */
+async function fetchWorkoutRecordCounts(workoutIds) {
+  const ids = [...new Set(workoutIds.filter((id) => Number.isFinite(Number(id))))];
+
+  if (!ids.length) {
+    return new Map();
+  }
+
+  try {
+    const { data, error } = await supabase.rpc("workout_record_counts", { workout_ids: ids });
+
+    if (error) {
+      return new Map();
+    }
+
+    return new Map(
+      (data ?? []).map((row) => [Number(row.workout_id), Number(row.records) || 0])
+    );
+  } catch {
+    return new Map();
+  }
+}
+
 async function fetchActivityPreviewByUserId({ userIds, date }) {
   const uniqueUserIds = [...new Set(userIds.filter(Boolean))];
   // Today when the caller does not say. A missing date used to return an empty
@@ -260,6 +291,10 @@ async function fetchActivityPreviewByUserId({ userIds, date }) {
     fetchActivityWorkouts({ userIds: uniqueUserIds, activityDate }),
     fetchSurroundingActivityByUserId({ userIds: uniqueUserIds }),
   ]);
+  // Only a finished workout's records crown a tile.
+  const recordCounts = await fetchWorkoutRecordCounts(
+    (workouts ?? []).filter((workout) => Number(workout.done) === 1).map((workout) => workout.id)
+  );
 
   const workoutsByUserId = new Map();
 
@@ -279,6 +314,10 @@ async function fetchActivityPreviewByUserId({ userIds, date }) {
         // Carried for everybody, not just the people resting: the strip is
         // sorted on them, and a tile that is quiet today still has a story.
         ...(surrounding.get(userId) ?? { lastWorkoutAt: null, nextWorkoutAt: null }),
+        recordsToday: (workoutsByUserId.get(userId) ?? []).reduce(
+          (total, workout) => total + (recordCounts.get(Number(workout.id)) ?? 0),
+          0
+        ),
       },
     ])
   );

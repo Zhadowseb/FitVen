@@ -168,8 +168,37 @@ function session({ date, done = 1, note = null, sets = [] }) {
     "the records shortcut shows a warm-up or a drop set as the heaviest lift"
   );
 
+  // The crown on your own tile counts today's records: done, not failed, in
+  // either date spelling, and nothing from another day.
+  const crownDay = session({
+    date: "24.09.2026",
+    sets: [
+      { weight: 100, reps: 5 },
+      { weight: 102.5, reps: 5 },
+      { weight: 105, reps: 3 },
+    ],
+  });
+  const crownSets = raw
+    .prepare('SELECT sets_id FROM "Set" WHERE exercise_instance_id = ? ORDER BY set_number')
+    .all(crownDay)
+    .map((row) => row.sets_id);
+
+  raw.prepare('UPDATE "Set" SET personal_record = 1 WHERE sets_id IN (?, ?, ?)').run(...crownSets);
+  raw.prepare('UPDATE "Set" SET failed = 1 WHERE sets_id = ?').run(crownSets[2]);
+
+  const otherDay = session({ date: "2026-09-23", sets: [{ weight: 140, reps: 1 }] });
+
+  raw.prepare('UPDATE "Set" SET personal_record = 1 WHERE exercise_instance_id = ?').run(otherDay);
+
+  assert.strictEqual(
+    await repository.countPersonalRecordsOnDate(db, "2026-09-24"),
+    2,
+    "today's records were miscounted - a failed set, or another day's, got in"
+  );
+  assert.strictEqual(await repository.countPersonalRecordsOnDate(db, "2026-09-20"), 0);
+
   console.log(
-    "Exercise card data: the history table, 'last time', and the heaviest lift passed."
+    "Exercise card data: the history table, 'last time', the heaviest lift and today's records passed."
   );
 })().catch((error) => {
   console.error(error);

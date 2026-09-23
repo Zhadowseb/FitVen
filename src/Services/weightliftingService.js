@@ -1,5 +1,5 @@
 import { buildExerciseHistoryTable } from "@utils/exerciseHistoryTable";
-import { formatRelativeDay } from "@utils/dateUtils";
+import { formatRelativeDay, getTodaysDate, normalizeIsoDateString } from "@utils/dateUtils";
 import { formatDate } from "@localization";
 import { canBePersonalRecord, resolveSetType } from "@utils/setTypes";
 import {
@@ -2333,6 +2333,19 @@ export async function getPersonalRecordExerciseDetail(db, exerciseName) {
   }
 
   return buildPersonalRecordExerciseDetail(normalizedExerciseName, rows);
+}
+
+/**
+ * How many personal records the person set today, for the crown on their own
+ * friends tile. Read from the phone, so it is right the moment the set is
+ * ticked, before any sync.
+ */
+export async function getPersonalRecordsToday(db) {
+  // getTodaysDate() writes dd.mm.yyyy; the query compares ISO.
+  return weightliftingRepository.countPersonalRecordsOnDate(
+    db,
+    normalizeIsoDateString(getTodaysDate())
+  );
 }
 
 /**

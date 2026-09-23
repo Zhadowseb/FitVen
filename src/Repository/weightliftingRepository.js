@@ -2428,6 +2428,39 @@ export async function getCompletedStrengthWorkoutsWithExercises(
 }
 
 /** The most recent day any workout was finished, as an ISO date, or null. */
+/**
+ * How many personal records were set on one day (`isoDate`, yyyy-mm-dd), in
+ * sets that were done and not failed. The day is read in both spellings the
+ * schema holds, dd.mm.yyyy and ISO, from the workout's day where it has one.
+ */
+export async function countPersonalRecordsOnDate(db, isoDate) {
+  const row = await db.getFirstAsync(
+    `SELECT COUNT(*) AS records
+     FROM "Set" s
+     JOIN Exercise_Instance e ON e.exercise_instance_id = s.exercise_instance_id
+     JOIN Workout_Type_Instance w ON w.workout_id = e.workout_type_instance_id
+     LEFT JOIN Day d ON d.day_id = w.day_id
+     WHERE COALESCE(s.personal_record, 0) = 1
+       AND COALESCE(s.done, 0) = 1
+       AND COALESCE(s.failed, 0) <> 1
+       AND COALESCE(s.deleted_at, '') = ''
+       AND COALESCE(e.deleted_at, '') = ''
+       AND COALESCE(w.deleted_at, '') = ''
+       AND (
+         CASE
+           WHEN COALESCE(d.date, w.date) LIKE '__.__.____'
+           THEN substr(COALESCE(d.date, w.date), 7, 4) || '-' ||
+                substr(COALESCE(d.date, w.date), 4, 2) || '-' ||
+                substr(COALESCE(d.date, w.date), 1, 2)
+           ELSE COALESCE(d.date, w.date)
+         END
+       ) = ?;`,
+    [isoDate]
+  );
+
+  return Number(row?.records) || 0;
+}
+
 export async function getLastCompletedWorkoutDate(db) {
   const row = await db.getFirstAsync(
     `SELECT MAX(

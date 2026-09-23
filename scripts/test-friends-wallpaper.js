@@ -11,6 +11,7 @@ const loadAppModule = require("./lib/loadAppModule");
 
 const {
   buildRestWallpaper,
+  buildTileCrown,
   buildTileMood,
   chargeLevelFor,
   wallpaperColorForDays,
@@ -134,6 +135,32 @@ assert.deepStrictEqual(
   [1, 2, 3].map((days) => chargeLevelFor({ daysSinceLastWorkout: days }, now)),
   [3, 2, 1],
   "the charge does not run down a level a day"
+);
+
+// The crown: a record in the workout finished today, over the steam - a ruby
+// a record, two to three.
+assert.deepStrictEqual(
+  buildTileCrown({ activityState: "done", recordsToday: 1 }, now),
+  { records: 1, rubies: 2 },
+  "one record did not make a two-ruby crown"
+);
+assert.strictEqual(buildTileCrown({ activityState: "done", recordsToday: 3 }, now).rubies, 3);
+assert.strictEqual(buildTileCrown({ activityState: "done", recordsToday: 7 }, now).rubies, 3, "the crown outgrew three rubies");
+assert.strictEqual(
+  buildTileCrown({ daysSinceLastWorkout: 0, recordsToday: 2 }, now).rubies,
+  2,
+  "your own tile's record today, known from the phone, got no crown"
+);
+assert.strictEqual(buildTileCrown({ activityState: "done", recordsToday: 0 }, now), null);
+assert.strictEqual(
+  buildTileCrown({ activityState: "live", recordsToday: 2 }, now),
+  null,
+  "somebody still training got the crown before the workout was over"
+);
+assert.strictEqual(
+  buildTileCrown({ activityState: "rest", daysSinceLastWorkout: 1, recordsToday: 2 }, now),
+  null,
+  "yesterday's record still wears today's crown"
 );
 
 /* ------------------------------------------------ embers, steam, charge -- */

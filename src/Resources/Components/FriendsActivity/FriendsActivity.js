@@ -22,6 +22,7 @@ import { useTranslation } from "@localization";
 
 import ChargeFrame from "./ChargeFrame";
 import CobwebFrame from "./CobwebFrame";
+import Crown from "./Crown";
 import EmberFrame from "./EmberFrame";
 import SteamFrame from "./SteamFrame";
 import styles, {
@@ -49,6 +50,7 @@ import {
 import {
   buildActivityStatusLabel,
   buildRestWallpaper,
+  buildTileCrown,
   buildTileMood,
   chargeLevelFor,
   formatMusicLine,
@@ -620,7 +622,7 @@ function CobwebAura({ theme, animate, seed }) {
 
 /* ------------------------------------------------------------- avatar -- */
 
-function TileAvatar({ theme, meta, activityState, avatarUrl, iconColor, animate, mood, seed }) {
+function TileAvatar({ theme, meta, activityState, avatarUrl, iconColor, animate, mood, crown, seed }) {
   const isLive = activityState === "live";
   // Flames already say "going"; the pulse under them would only blur it.
   const onFire = mood === "embers";
@@ -672,6 +674,7 @@ function TileAvatar({ theme, meta, activityState, avatarUrl, iconColor, animate,
           </View>
         </View>
         {isDusty ? <CobwebAura theme={theme} animate={animate} seed={seed} /> : null}
+        {crown ? <Crown rubies={crown.rubies} animate={animate} seed={seed} /> : null}
       </View>
     </View>
   );
@@ -768,6 +771,7 @@ function ActivityTile({
   wallpaper = null,
   mood = null,
   chargeLevel = 1,
+  crown = null,
   motionSeed = 0,
 }) {
   const { t } = useTranslation();
@@ -856,6 +860,7 @@ function ActivityTile({
         iconColor={isRest ? theme.quietText : iconColor}
         animate={animate}
         mood={mood}
+        crown={crown}
         seed={motionSeed}
       />
     </TouchableOpacity>
@@ -1017,6 +1022,7 @@ export default function FriendsActivity({
             wallpaper={currentUser ? buildRestWallpaper(currentUser) : null}
             mood={currentUser ? buildTileMood(currentUser) : null}
             chargeLevel={currentUser ? chargeLevelFor(currentUser) : 1}
+            crown={currentUser ? buildTileCrown(currentUser) : null}
           />
 
           {isLoading ? (
@@ -1042,6 +1048,7 @@ export default function FriendsActivity({
                 wallpaper={buildRestWallpaper(person)}
                 mood={buildTileMood(person)}
                 chargeLevel={chargeLevelFor(person)}
+                crown={buildTileCrown(person)}
                 motionSeed={index + 1}
               />
             ))

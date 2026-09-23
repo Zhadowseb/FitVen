@@ -275,6 +275,23 @@ export function buildTileMood(person, now = Date.now()) {
 }
 
 /**
+ * The crown on a tile: somebody who set a personal record in the workout
+ * they finished today wears one over their steam, with a ruby for each
+ * record - two at the least, so it reads as a crown, three at the most, so
+ * it fits. Null for everybody else, including somebody still training: the
+ * crown is for a workout that is over.
+ */
+export function buildTileCrown(person, now = Date.now()) {
+  const records = Math.trunc(Number(person?.recordsToday) || 0);
+
+  if (records <= 0 || buildTileMood(person, now) !== "steam") {
+    return null;
+  }
+
+  return { records, rubies: Math.max(2, Math.min(3, records)) };
+}
+
+/**
  * How charged a "charged" tile still is: 3 the day after a workout, 2 the
  * day after that, 1 on the third day.
  */
