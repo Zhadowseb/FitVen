@@ -10,8 +10,11 @@ const assert = require("assert");
 const loadAppModule = require("./lib/loadAppModule");
 
 const {
+  buildAvatarAura,
   buildRestWallpaper,
   wallpaperColorForDays,
+  FIRE_WITHIN_DAYS,
+  ICE_FROM_DAYS,
   WALLPAPER_MOTION_DAYS,
 } = loadAppModule("src/Utils/friendsActivityUtils.js");
 const { mixHexColors } = loadAppModule("src/Utils/colorMix.js");
@@ -101,5 +104,37 @@ const energyAt = (days) => buildRestWallpaper({ daysSinceLastWorkout: days }, no
 assert.ok(energyAt(0) > energyAt(3), "a tile from today was no livelier than one from three days ago");
 assert.ok(energyAt(WALLPAPER_MOTION_DAYS) > 0, "a workout exactly a week ago stopped moving");
 assert.strictEqual(energyAt(WALLPAPER_MOTION_DAYS + 1), 0, "a tile older than a week still moves");
+
+// A month out, the scale ends frozen rather than grey.
+const FIVE = ["#ff0000", "#0000ff", "#00ff00", "#808080", "#00ffff"];
+
+assert.strictEqual(wallpaperColorForDays(ICE_FROM_DAYS, FIVE), "#00ffff");
+assert.strictEqual(wallpaperColorForDays(200, FIVE), "#00ffff", "a long gap thawed back out");
+
+// Fire for anyone active - training now, done today, or trained within the
+// last three days - and ice from a month.
+const auraAt = (days) => buildAvatarAura({ activityState: "rest", daysSinceLastWorkout: days }, now);
+
+assert.strictEqual(FIRE_WITHIN_DAYS, 3, "active is trained within the last three days");
+assert.strictEqual(auraAt(0), "fire");
+assert.strictEqual(auraAt(3), "fire", "three days ago no longer counted as active");
+assert.strictEqual(auraAt(4), null, "four days ago was still on fire");
+assert.strictEqual(auraAt(29), null, "a friend froze before a month was up");
+assert.strictEqual(auraAt(30), "ice");
+assert.strictEqual(
+  buildAvatarAura({ activityState: "live" }, now),
+  "fire",
+  "somebody training right now was not on fire"
+);
+assert.strictEqual(
+  buildAvatarAura({ activityState: "done", lastWorkoutAt: daysAgo(60) }, now),
+  "fire",
+  "a workout finished today lost to a stale date and froze"
+);
+assert.strictEqual(
+  buildAvatarAura({ activityState: "rest" }, now),
+  null,
+  "somebody who has never trained was frozen - they were never warm"
+);
 
 console.log("Friends tile wallpaper checks passed.");

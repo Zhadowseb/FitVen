@@ -12,13 +12,22 @@ import { useIsFocused } from "@react-navigation/native";
 import Svg, {
   Circle,
   Defs,
+  G,
   LinearGradient,
+  Line,
+  Path,
+  RadialGradient,
   Rect,
   Stop,
 } from "react-native-svg";
 import { useTranslation } from "@localization";
 
-import styles, { TILE_GAP, TILE_WIDTH } from "./FriendsActivityStyle";
+import styles, {
+  AURA_SIZE,
+  AVATAR_SIZE,
+  TILE_GAP,
+  TILE_WIDTH,
+} from "./FriendsActivityStyle";
 import { Colors, withAlpha } from "../../GlobalStyling/colors";
 import Checkmark from "../../Icons/UI-icons/Checkmark";
 import Male from "../../Icons/UI-icons/Male";
@@ -37,6 +46,7 @@ import {
 } from "../animationHooks";
 import {
   buildActivityStatusLabel,
+  buildAvatarAura,
   buildRestWallpaper,
   formatMusicLine,
   resolveMusicBandState,
@@ -369,21 +379,22 @@ function MusicBand({ theme, colorScheme, music, activityState, animate, hasWallp
 
 /* ---------------------------------------------------------- wallpaper -- */
 
-// A heat scale that stays clear of the status colours - orange live, green
-// done, yellow planned - so a resting tile is never mistaken for one of them.
-// Coral today, purple at two days, blue at five, drained to grey by nine, and
-// every day in between its own blend of the two either side.
+// A heat scale in colours of its own (see heatHot in colors.js), clear of the
+// status colours and of music's purple. Coral today, pink at two days, blue at
+// five, drained to grey by nine and frozen by thirty, and every day in between
+// its own blend of the two either side.
 function wallpaperColor(wallpaper, theme) {
   if (wallpaper.days === null) {
-    return theme.dropSet ?? theme.primary;
+    return theme.heatWarm;
   }
 
   return (
     wallpaperColorForDays(wallpaper.days, [
-      theme.amrap ?? theme.danger,
-      theme.dropSet ?? theme.primary,
-      theme.warmup ?? theme.quietText,
+      theme.heatHot,
+      theme.heatWarm,
+      theme.heatCool,
       theme.quietText,
+      theme.ice,
     ]) ?? theme.quietText
   );
 }
@@ -496,16 +507,229 @@ function TileWallpaper({ wallpaper, theme, colorScheme, animate, seed }) {
   );
 }
 
+/* -------------------------------------------------------------- auras -- */
+
+// Both auras are drawn in a 100 x 100 box centred on the avatar, whose edge
+// sits at this radius in those units.
+const AURA_AVATAR_RADIUS = (AVATAR_SIZE / AURA_SIZE) * 50;
+
+// Only the upper part of the circle: below the avatar is the name, and a
+// flame or a crystal across it would make it harder to read.
+function arcPoints(count, fromDeg, toDeg) {
+  return Array.from({ length: count }, (_, index) => {
+    const deg = fromDeg + ((toDeg - fromDeg) * index) / Math.max(1, count - 1);
+
+    return { deg, rad: (deg * Math.PI) / 180 };
+  });
+}
+
+// A flame tongue standing on (0, 0), tip up at (0, -height).
+function flamePath(width, height) {
+  const half = width / 2;
+
+  return [
+    `M ${-half} 0`,
+    `C ${-half} ${-height * 0.42} ${-width * 0.12} ${-height * 0.62} 0 ${-height}`,
+    `C ${width * 0.16} ${-height * 0.56} ${half} ${-height * 0.38} ${half} 0`,
+    "Z",
+  ].join(" ");
+}
+
+// Tongues around the top of the avatar, tallest at the top, each leaning up
+// rather than straight out so it reads as fire rising, not a sun.
+function FlameRing({ color, count, reach, width, fromDeg, toDeg, lean = 0.55 }) {
+  return (
+    <Svg width="100%" height="100%" viewBox="0 0 100 100">
+      {arcPoints(count, fromDeg, toDeg).map(({ deg, rad }, index) => {
+        const fromTop = Math.abs(deg + 90) / 90;
+        const height = reach * (1 - 0.45 * Math.min(1, fromTop)) * (index % 2 ? 0.82 : 1);
+        const x = 50 + (AURA_AVATAR_RADIUS - 2) * Math.cos(rad);
+        const y = 50 + (AURA_AVATAR_RADIUS - 2) * Math.sin(rad);
+
+        return (
+          <Path
+            key={index}
+            d={flamePath(width, height)}
+            fill={color}
+            transform={`translate(${x} ${y}) rotate(${(deg + 90) * lean})`}
+          />
+        );
+      })}
+    </Svg>
+  );
+}
+
+/**
+ * Flames around the avatar of somebody who is going: two rings of tongues,
+ * orange outside and yellow in, flickering out of step, over a warm glow.
+ */
+function FireAura({ theme, animate, seed }) {
+  const glowId = useRef(`fire-glow-${++gradientInstanceCounter}`).current;
+  const outer = useBreathAnimation(animate, { periodMs: 760 + (seed % 3) * 110, low: 0.5 });
+  const inner = useBreathAnimation(animate, { periodMs: 540 + (seed % 4) * 70, low: 0.35 });
+  const outerScale = outer.interpolate({ inputRange: [0.5, 1], outputRange: [1.07, 1] });
+  const innerScale = inner.interpolate({ inputRange: [0.35, 1], outputRange: [0.94, 1.02] });
+
+  return (
+    <View style={styles.aura} pointerEvents="none">
+      <Svg style={StyleSheet.absoluteFill} viewBox="0 0 100 100">
+        <Defs>
+          <RadialGradient id={glowId} cx="50%" cy="46%" r="50%">
+            <Stop offset="0.55" stopColor={theme.fire} stopOpacity={0.4} />
+            <Stop offset="1" stopColor={theme.fire} stopOpacity={0} />
+          </RadialGradient>
+        </Defs>
+        <Circle cx="50" cy="50" r="50" fill={`url(#${glowId})`} />
+      </Svg>
+      <Animated.View
+        style={[StyleSheet.absoluteFill, { opacity: outer, transform: [{ scale: outerScale }] }]}
+      >
+        <FlameRing color={theme.fire} count={11} reach={17} width={9} fromDeg={-215} toDeg={35} />
+      </Animated.View>
+      <Animated.View
+        style={[StyleSheet.absoluteFill, { opacity: inner, transform: [{ scale: innerScale }] }]}
+      >
+        <FlameRing color={theme.fireCore} count={8} reach={10} width={7} fromDeg={-200} toDeg={20} />
+      </Animated.View>
+    </View>
+  );
+}
+
+// A six-armed crystal centred on (0, 0): three lines through the middle, each
+// with a small V near both ends.
+function Snowflake({ x, y, size, color, strokeWidth = 1.1 }) {
+  const arm = size / 2;
+  const branch = arm * 0.38;
+
+  return (
+    <G transform={`translate(${x} ${y})`}>
+      {[0, 60, 120].map((angle) => (
+        <G key={angle} transform={`rotate(${angle})`}>
+          <Line x1={-arm} y1="0" x2={arm} y2="0" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+          {[-1, 1].map((side) => (
+            <G key={side}>
+              <Line
+                x1={side * arm * 0.55}
+                y1="0"
+                x2={side * (arm * 0.55 + branch * 0.7)}
+                y2={-branch * 0.7}
+                stroke={color}
+                strokeWidth={strokeWidth * 0.8}
+                strokeLinecap="round"
+              />
+              <Line
+                x1={side * arm * 0.55}
+                y1="0"
+                x2={side * (arm * 0.55 + branch * 0.7)}
+                y2={branch * 0.7}
+                stroke={color}
+                strokeWidth={strokeWidth * 0.8}
+                strokeLinecap="round"
+              />
+            </G>
+          ))}
+        </G>
+      ))}
+    </G>
+  );
+}
+
+// Crystals around the top of the avatar, in two groups that twinkle out of
+// step, and shards growing out from the rim like frost on glass.
+const ICE_CRYSTALS = [
+  { deg: -200, size: 9, group: 0 },
+  { deg: -160, size: 13, group: 1 },
+  { deg: -122, size: 8, group: 0 },
+  { deg: -90, size: 12, group: 1 },
+  { deg: -58, size: 9, group: 0 },
+  { deg: -20, size: 13, group: 1 },
+  { deg: 18, size: 8, group: 0 },
+];
+const ICE_SHARDS = [-180, -140, -105, -75, -40, 0];
+
+function IceCrystals({ color, group }) {
+  return (
+    <Svg width="100%" height="100%" viewBox="0 0 100 100">
+      {group === 0
+        ? ICE_SHARDS.map((deg) => {
+            const rad = (deg * Math.PI) / 180;
+            const x = 50 + (AURA_AVATAR_RADIUS - 1) * Math.cos(rad);
+            const y = 50 + (AURA_AVATAR_RADIUS - 1) * Math.sin(rad);
+            const length = deg % 20 === 0 ? 9 : 6.5;
+
+            return (
+              <Path
+                key={deg}
+                d={`M 0 0 L -1.8 ${-length * 0.45} L 0 ${-length} L 1.8 ${-length * 0.45} Z`}
+                fill={color}
+                opacity={0.85}
+                transform={`translate(${x} ${y}) rotate(${deg + 90})`}
+              />
+            );
+          })
+        : null}
+      {ICE_CRYSTALS.filter((crystal) => crystal.group === group).map((crystal) => {
+        const rad = (crystal.deg * Math.PI) / 180;
+        const distance = AURA_AVATAR_RADIUS + 9 + (crystal.size > 10 ? 2 : 0);
+
+        return (
+          <Snowflake
+            key={crystal.deg}
+            x={50 + distance * Math.cos(rad)}
+            y={50 + distance * Math.sin(rad)}
+            size={crystal.size}
+            color={color}
+          />
+        );
+      })}
+    </Svg>
+  );
+}
+
+/**
+ * Frost around the avatar of somebody who has not trained in a month:
+ * crystals and shards over a cold glow. The avatar itself is tinted in
+ * TileAvatar, so even the photo looks frozen over.
+ */
+function IceAura({ theme, animate, seed }) {
+  const glowId = useRef(`ice-glow-${++gradientInstanceCounter}`).current;
+  const first = useBreathAnimation(animate, { periodMs: 2600 + (seed % 3) * 300, low: 0.3 });
+  const second = useBreathAnimation(animate, { periodMs: 3400 + (seed % 2) * 400, low: 0.3 });
+
+  return (
+    <View style={styles.aura} pointerEvents="none">
+      <Svg style={StyleSheet.absoluteFill} viewBox="0 0 100 100">
+        <Defs>
+          <RadialGradient id={glowId} cx="50%" cy="50%" r="50%">
+            <Stop offset="0.6" stopColor={theme.ice} stopOpacity={0.32} />
+            <Stop offset="1" stopColor={theme.ice} stopOpacity={0} />
+          </RadialGradient>
+        </Defs>
+        <Circle cx="50" cy="50" r="50" fill={`url(#${glowId})`} />
+      </Svg>
+      <Animated.View style={[StyleSheet.absoluteFill, { opacity: first }]}>
+        <IceCrystals color={theme.ice} group={0} />
+      </Animated.View>
+      <Animated.View style={[StyleSheet.absoluteFill, { opacity: second }]}>
+        <IceCrystals color={theme.ice} group={1} />
+      </Animated.View>
+    </View>
+  );
+}
+
 /* ------------------------------------------------------------- avatar -- */
 
-function TileAvatar({ theme, meta, activityState, avatarUrl, iconColor, animate }) {
+function TileAvatar({ theme, meta, activityState, avatarUrl, iconColor, animate, aura, seed }) {
   const isLive = activityState === "live";
-  const { scale, opacity } = usePulseAnimation(isLive && animate);
+  // Flames already say "going"; the pulse under them would only blur it.
+  const { scale, opacity } = usePulseAnimation(isLive && animate && aura !== "fire");
+  const isIce = aura === "ice";
 
   return (
     <View style={styles.avatarSlot} pointerEvents="none">
       <View style={styles.avatarShell}>
-        {isLive ? (
+        {aura === "fire" ? <FireAura theme={theme} animate={animate} seed={seed} /> : null}
+        {isLive && aura !== "fire" ? (
           <Animated.View
             style={[
               styles.pulseRing,
@@ -517,17 +741,31 @@ function TileAvatar({ theme, meta, activityState, avatarUrl, iconColor, animate 
             ]}
           />
         ) : null}
-        <View style={[styles.avatarRing, { borderColor: meta.ringColor, backgroundColor: theme.cardBackground }]}>
+        <View
+          style={[
+            styles.avatarRing,
+            {
+              borderColor: isIce ? theme.ice : meta.ringColor,
+              backgroundColor: theme.cardBackground,
+            },
+          ]}
+        >
           <View style={[styles.avatarInner, { backgroundColor: theme.cardBackground }]}>
             <UserAvatar
               uri={avatarUrl}
               size={48}
               iconSize={24}
-              iconColor={iconColor}
+              iconColor={isIce ? theme.ice : iconColor}
               backgroundColor={theme.cardBackground}
             />
+            {isIce ? (
+              <View
+                style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(theme.ice, 0.22) }]}
+              />
+            ) : null}
           </View>
         </View>
+        {isIce ? <IceAura theme={theme} animate={animate} seed={seed} /> : null}
       </View>
     </View>
   );
@@ -622,6 +860,7 @@ function ActivityTile({
   onPress,
   onOpenGym,
   wallpaper = null,
+  aura = null,
   motionSeed = 0,
 }) {
   const { t } = useTranslation();
@@ -696,6 +935,8 @@ function ActivityTile({
         avatarUrl={avatarUrl}
         iconColor={isRest ? theme.quietText : iconColor}
         animate={animate}
+        aura={aura}
+        seed={motionSeed}
       />
     </TouchableOpacity>
   );
@@ -854,6 +1095,7 @@ export default function FriendsActivity({
             onPress={onOpenProfile}
             onOpenGym={onOpenGym}
             wallpaper={currentUser ? buildRestWallpaper(currentUser) : null}
+            aura={currentUser ? buildAvatarAura(currentUser) : null}
           />
 
           {isLoading ? (
@@ -877,6 +1119,7 @@ export default function FriendsActivity({
                 onPress={onSeeAll}
                 onOpenGym={onOpenGym}
                 wallpaper={buildRestWallpaper(person)}
+                aura={buildAvatarAura(person)}
                 motionSeed={index + 1}
               />
             ))

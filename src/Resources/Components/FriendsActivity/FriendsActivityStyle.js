@@ -9,6 +9,9 @@ export const BAND_HEIGHT = 58;
 export const AVATAR_SIZE = 56;
 export const AVATAR_OVERLAP = 30;
 export const TILE_MIN_HEIGHT = 165;
+// The fire and ice drawn around the avatar: wider than it, centred on it, and
+// outside the layout - nothing moves to make room.
+export const AURA_SIZE = 92;
 
 export default StyleSheet.create({
   section: {
@@ -160,6 +163,13 @@ export default StyleSheet.create({
     right: 2,
     bottom: 2,
     borderRadius: 999,
+  },
+  aura: {
+    position: "absolute",
+    width: AURA_SIZE,
+    height: AURA_SIZE,
+    left: (AVATAR_SIZE - AURA_SIZE) / 2,
+    top: (AVATAR_SIZE - AURA_SIZE) / 2,
   },
   avatarRing: {
     width: AVATAR_SIZE,

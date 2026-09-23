@@ -167,7 +167,7 @@ const WALLPAPER_MAX_DAYS = 99;
 // The days the wallpaper's colour is pinned to. Every day between two of them
 // is its own blend, so a tile two days out and one three days out are not the
 // same colour - the number and the shade move together.
-export const WALLPAPER_COLOR_DAYS = [0, 2, 5, 9];
+export const WALLPAPER_COLOR_DAYS = [0, 2, 5, 9, 30];
 
 // Up to a week the tile moves; after that it has gone still.
 export const WALLPAPER_MOTION_DAYS = 7;
@@ -203,6 +203,62 @@ export function wallpaperColorForDays(days, colors) {
 }
 
 /**
+ * Whole days since somebody last trained, or null when they never have.
+ * `daysSinceLastWorkout` wins over `lastWorkoutAt`: the viewer's own tile
+ * knows it from the phone, which is right before the cloud has caught up.
+ */
+export function resolveDaysSinceLastWorkout(person, now = Date.now()) {
+  const known = Number(person?.daysSinceLastWorkout);
+
+  if (
+    person?.daysSinceLastWorkout !== null &&
+    person?.daysSinceLastWorkout !== undefined &&
+    Number.isFinite(known)
+  ) {
+    return Math.max(0, Math.trunc(known));
+  }
+
+  if (!person?.lastWorkoutAt) {
+    return null;
+  }
+
+  const between = calendarDaysBetween(person.lastWorkoutAt, now);
+
+  return between === null ? null : Math.max(0, between);
+}
+
+// Fire for anyone active: training now, done today, or trained within the
+// last three days. Ice once a month has passed.
+export const FIRE_WITHIN_DAYS = 3;
+export const ICE_FROM_DAYS = 30;
+
+/**
+ * What surrounds a tile's avatar: "fire", "ice" or null.
+ *
+ * Somebody who has never trained gets neither - ice says "gone cold", and
+ * they were never warm.
+ */
+export function buildAvatarAura(person, now = Date.now()) {
+  const state = person?.activityState;
+
+  if (state === "live" || state === "done") {
+    return "fire";
+  }
+
+  const days = resolveDaysSinceLastWorkout(person, now);
+
+  if (days === null) {
+    return null;
+  }
+
+  if (days <= FIRE_WITHIN_DAYS) {
+    return "fire";
+  }
+
+  return days >= ICE_FROM_DAYS ? "ice" : null;
+}
+
+/**
  * The background of a resting tile: how many days since the person last
  * trained, and the tone that goes with it. Null for a tile with something on
  * today - live, done and planned already have a colour of their own.
@@ -219,20 +275,7 @@ export function buildRestWallpaper(person, now = Date.now()) {
     return null;
   }
 
-  let days = null;
-  const known = Number(person?.daysSinceLastWorkout);
-
-  if (
-    person?.daysSinceLastWorkout !== null &&
-    person?.daysSinceLastWorkout !== undefined &&
-    Number.isFinite(known)
-  ) {
-    days = Math.max(0, Math.trunc(known));
-  } else if (person?.lastWorkoutAt) {
-    const between = calendarDaysBetween(person.lastWorkoutAt, now);
-
-    days = between === null ? null : Math.max(0, between);
-  }
+  const days = resolveDaysSinceLastWorkout(person, now);
 
   if (days === null) {
     return { tone: "new", days: null, label: null, energy: 0 };
