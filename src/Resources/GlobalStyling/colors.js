@@ -36,16 +36,18 @@ export const Colors = {
         amrap: "#FF7A7A",
 
         // How long since a friend trained, on their resting tile: hot coral,
-        // pink, cool blue, then frozen. Its own set rather than borrowed, so
-        // it stays clear of the status colours (orange, green, yellow) and of
+        // pink, cool blue, then grey. Its own set rather than borrowed, so it
+        // stays clear of the status colours (orange, green, yellow) and of
         // music's purple, which shares the tile. fire and fireCore are the
-        // flames around an active friend's avatar.
+        // flames around an active friend's avatar; cobweb and spider are the
+        // silk and the spider on a friend gone a month.
         heatHot: "#FF7A7A",
         heatWarm: "#FF8FD2",
         heatCool: "#7FA6CC",
-        ice: "#A9DCFF",
         fire: "#FF7A2E",
         fireCore: "#FFC94D",
+        cobweb: "#D9DCE3",
+        spider: "#07080B",
 
         // Music is purple on purpose: it must not be mistaken for a status
         // (orange live, green done, yellow planned). Used only by the band on
@@ -140,9 +142,10 @@ export const Colors = {
         heatHot: "#C4342F",
         heatWarm: "#C23B8E",
         heatCool: "#3F6E9C",
-        ice: "#2F7FB5",
         fire: "#E0561B",
         fireCore: "#E0A100",
+        cobweb: "#7A7F8C",
+        spider: "#2A2D35",
 
         music: "#6E5CF0",
         musicText: "#4A3AB8",

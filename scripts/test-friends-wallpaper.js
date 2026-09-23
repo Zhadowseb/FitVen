@@ -13,8 +13,8 @@ const {
   buildAvatarAura,
   buildRestWallpaper,
   wallpaperColorForDays,
+  COBWEB_FROM_DAYS,
   FIRE_WITHIN_DAYS,
-  ICE_FROM_DAYS,
   WALLPAPER_MOTION_DAYS,
 } = loadAppModule("src/Utils/friendsActivityUtils.js");
 const { mixHexColors } = loadAppModule("src/Utils/colorMix.js");
@@ -105,22 +105,16 @@ assert.ok(energyAt(0) > energyAt(3), "a tile from today was no livelier than one
 assert.ok(energyAt(WALLPAPER_MOTION_DAYS) > 0, "a workout exactly a week ago stopped moving");
 assert.strictEqual(energyAt(WALLPAPER_MOTION_DAYS + 1), 0, "a tile older than a week still moves");
 
-// A month out, the scale ends frozen rather than grey.
-const FIVE = ["#ff0000", "#0000ff", "#00ff00", "#808080", "#00ffff"];
-
-assert.strictEqual(wallpaperColorForDays(ICE_FROM_DAYS, FIVE), "#00ffff");
-assert.strictEqual(wallpaperColorForDays(200, FIVE), "#00ffff", "a long gap thawed back out");
-
 // Fire for anyone active - training now, done today, or trained within the
-// last three days - and ice from a month.
+// last three days - and cobwebs from a month.
 const auraAt = (days) => buildAvatarAura({ activityState: "rest", daysSinceLastWorkout: days }, now);
 
 assert.strictEqual(FIRE_WITHIN_DAYS, 3, "active is trained within the last three days");
 assert.strictEqual(auraAt(0), "fire");
 assert.strictEqual(auraAt(3), "fire", "three days ago no longer counted as active");
 assert.strictEqual(auraAt(4), null, "four days ago was still on fire");
-assert.strictEqual(auraAt(29), null, "a friend froze before a month was up");
-assert.strictEqual(auraAt(30), "ice");
+assert.strictEqual(auraAt(29), null, "a friend gathered cobwebs before a month was up");
+assert.strictEqual(auraAt(COBWEB_FROM_DAYS), "cobweb");
 assert.strictEqual(
   buildAvatarAura({ activityState: "live" }, now),
   "fire",
@@ -129,69 +123,85 @@ assert.strictEqual(
 assert.strictEqual(
   buildAvatarAura({ activityState: "done", lastWorkoutAt: daysAgo(60) }, now),
   "fire",
-  "a workout finished today lost to a stale date and froze"
+  "a workout finished today lost to a stale date and gathered cobwebs"
 );
 assert.strictEqual(
   buildAvatarAura({ activityState: "rest" }, now),
   null,
-  "somebody who has never trained was frozen - they were never warm"
+  "somebody who has never trained gathered cobwebs - there was nothing to leave"
 );
 
-/* ------------------------------------------------------ the ice block -- */
+/* ----------------------------------------------------------- cobwebs -- */
 
-const fs = require("fs");
-const path = require("path");
 const {
-  buildFrostGeometry,
-  FROST_RIM,
-  SNOWFLAKE_COUNT,
-} = loadAppModule("src/Utils/frostGeometry.js");
+  buildAvatarWeb,
+  buildCobwebGeometry,
+  COBWEB_CORNERS,
+  DUST_COUNT,
+} = loadAppModule("src/Utils/cobwebGeometry.js");
 
-assert.strictEqual(buildFrostGeometry({ width: 0, height: 170 }), null, "an unmeasured tile drew frost");
+assert.strictEqual(buildCobwebGeometry({ width: 0, height: 170 }), null, "an unmeasured tile drew cobwebs");
 
 const TILE = { width: 148, height: 170, cornerRadius: 20 };
-const frost = buildFrostGeometry({ ...TILE, seed: 3 });
+const dusty = buildCobwebGeometry({ ...TILE, seed: 3 });
 
-// Sparkles sit in the rim and out of the rounded corners; snow falls inside.
-for (const sparkle of frost.sparkles) {
-  const fromEdge = Math.min(sparkle.x, sparkle.y, TILE.width - sparkle.x, TILE.height - sparkle.y);
+/** Every coordinate pair in a path string. */
+function pointsOf(path) {
+  const numbers = (path.match(/-?\d+(\.\d+)?/g) ?? []).map(Number);
+  const points = [];
 
-  assert.ok(fromEdge <= FROST_RIM, "a sparkle drifted off the rim into the tile");
-  assert.ok(
-    (sparkle.x >= TILE.cornerRadius && sparkle.x <= TILE.width - TILE.cornerRadius) ||
-      (sparkle.y >= TILE.cornerRadius && sparkle.y <= TILE.height - TILE.cornerRadius),
-    "a sparkle sits where the corner is rounded away"
-  );
+  for (let index = 0; index + 1 < numbers.length; index += 2) {
+    points.push([numbers[index], numbers[index + 1]]);
+  }
+
+  return points;
 }
 
-assert.strictEqual(frost.snow.length, SNOWFLAKE_COUNT);
-assert.ok(
-  frost.snow.every((flake) => flake.x > FROST_RIM && flake.x < TILE.width - FROST_RIM),
-  "a snowflake falls through the rim"
+// The bottom left is where the status line starts; nothing hangs there.
+assert.deepStrictEqual(
+  dusty.webs.map((web) => web.corner),
+  COBWEB_CORNERS,
+  "the webs are not in the corners they are meant for"
 );
+assert.ok(!COBWEB_CORNERS.includes("bottomLeft"), "a web covers the start of the status line");
 
-// The same tile keeps its sparkles; another tile has its own.
-assert.deepStrictEqual(buildFrostGeometry({ ...TILE, seed: 3 }), frost, "the sparkles moved between renders");
+for (const web of dusty.webs) {
+  assert.ok(web.spokes.length > 0 && web.rings.length > 0, `the ${web.corner} web is empty`);
+
+  const points = [web.spokes, web.rings, web.doubled, web.loose, web.sheets].flatMap(pointsOf);
+  const [anchorX, anchorY] = web.anchor;
+
+  for (const [x, y] of points) {
+    // A web stays near its corner - it may sway, but it may not reach the
+    // name or the avatar in the middle.
+    assert.ok(
+      Math.hypot(x - anchorX, y - anchorY) <= web.reach + 16,
+      `a thread of the ${web.corner} web reaches ${Math.round(Math.hypot(x - anchorX, y - anchorY))} px from its corner`
+    );
+  }
+}
+
+// The spider hangs right of the avatar, which sits across the middle.
+assert.ok(dusty.spider.x > TILE.width * 0.7, "the spider dangles in front of the face");
+assert.ok(dusty.spider.maxDrop > dusty.spider.restDrop, "the spider has nowhere to climb");
+assert.strictEqual(dusty.dust.length, DUST_COUNT);
+
+// The same tile keeps its webs; another tile has its own.
+assert.deepStrictEqual(buildCobwebGeometry({ ...TILE, seed: 3 }), dusty, "the webs changed between renders");
 assert.notDeepStrictEqual(
-  buildFrostGeometry({ ...TILE, seed: 4 }).sparkles,
-  frost.sparkles,
-  "two frozen friends sparkle in the same places"
+  buildCobwebGeometry({ ...TILE, seed: 4 }).webs,
+  dusty.webs,
+  "two dusty friends wear the same webs"
 );
 
-// The frost pictures the tile requires are there. A missing one is not an
-// error Metro shows until the bundle is built.
-const frameSource = fs.readFileSync(
-  path.join(__dirname, "..", "src", "Resources", "Components", "FriendsActivity", "FrozenFrame.js"),
-  "utf8"
+// The avatar's web stays inside the box the auras are drawn in.
+const avatarWeb = buildAvatarWeb(30);
+
+assert.ok(
+  [avatarWeb.spokes, avatarWeb.rings]
+    .flatMap(pointsOf)
+    .every(([x, y]) => x >= 0 && x <= 100 && y >= 0 && y <= 100),
+  "the avatar's web spills out of its box"
 );
-const textures = [...frameSource.matchAll(/require\("([^"]+\.png)"\)/g)].map((match) => match[1]);
-
-assert.ok(textures.length >= 2, "the frozen tile no longer loads its frost pictures");
-
-for (const texture of textures) {
-  const file = path.join(__dirname, "..", "src", "Resources", "Components", "FriendsActivity", texture);
-
-  assert.ok(fs.existsSync(file), `${texture} is missing - run scripts/art/generate-frost-texture.py`);
-}
 
 console.log("Friends tile wallpaper checks passed.");

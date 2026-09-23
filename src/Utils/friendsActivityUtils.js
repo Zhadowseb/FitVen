@@ -167,7 +167,7 @@ const WALLPAPER_MAX_DAYS = 99;
 // The days the wallpaper's colour is pinned to. Every day between two of them
 // is its own blend, so a tile two days out and one three days out are not the
 // same colour - the number and the shade move together.
-export const WALLPAPER_COLOR_DAYS = [0, 2, 5, 9, 30];
+export const WALLPAPER_COLOR_DAYS = [0, 2, 5, 9];
 
 // Up to a week the tile moves; after that it has gone still.
 export const WALLPAPER_MOTION_DAYS = 7;
@@ -228,15 +228,15 @@ export function resolveDaysSinceLastWorkout(person, now = Date.now()) {
 }
 
 // Fire for anyone active: training now, done today, or trained within the
-// last three days. Ice once a month has passed.
+// last three days. Cobwebs once a month has passed.
 export const FIRE_WITHIN_DAYS = 3;
-export const ICE_FROM_DAYS = 30;
+export const COBWEB_FROM_DAYS = 30;
 
 /**
- * What surrounds a tile's avatar: "fire", "ice" or null.
+ * What a tile's avatar wears: "fire", "cobweb" or null.
  *
- * Somebody who has never trained gets neither - ice says "gone cold", and
- * they were never warm.
+ * Somebody who has never trained gets neither - cobwebs say "left unused",
+ * and there was nothing to leave.
  */
 export function buildAvatarAura(person, now = Date.now()) {
   const state = person?.activityState;
@@ -255,7 +255,7 @@ export function buildAvatarAura(person, now = Date.now()) {
     return "fire";
   }
 
-  return days >= ICE_FROM_DAYS ? "ice" : null;
+  return days >= COBWEB_FROM_DAYS ? "cobweb" : null;
 }
 
 /**

@@ -7,14 +7,12 @@ import {
   View,
   useColorScheme,
 } from "react-native";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useIsFocused } from "@react-navigation/native";
 import Svg, {
   Circle,
   Defs,
-  G,
   LinearGradient,
-  Line,
   Path,
   RadialGradient,
   Rect,
@@ -22,7 +20,7 @@ import Svg, {
 } from "react-native-svg";
 import { useTranslation } from "@localization";
 
-import FrozenFrame from "./FrozenFrame";
+import CobwebFrame from "./CobwebFrame";
 import styles, {
   AURA_SIZE,
   AVATAR_SIZE,
@@ -54,6 +52,7 @@ import {
   sortActivityTiles,
   wallpaperColorForDays,
 } from "@utils/friendsActivityUtils";
+import { buildAvatarWeb } from "@utils/cobwebGeometry";
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const TICKER_COPY_PADDING = 18;
@@ -382,8 +381,8 @@ function MusicBand({ theme, colorScheme, music, activityState, animate, hasWallp
 
 // A heat scale in colours of its own (see heatHot in colors.js), clear of the
 // status colours and of music's purple. Coral today, pink at two days, blue at
-// five, drained to grey by nine and frozen by thirty, and every day in between
-// its own blend of the two either side.
+// five and drained to grey by nine, and every day in between its own blend of
+// the two either side.
 function wallpaperColor(wallpaper, theme) {
   if (wallpaper.days === null) {
     return theme.heatWarm;
@@ -395,7 +394,6 @@ function wallpaperColor(wallpaper, theme) {
       theme.heatWarm,
       theme.heatCool,
       theme.quietText,
-      theme.ice,
     ]) ?? theme.quietText
   );
 }
@@ -596,135 +594,23 @@ function FireAura({ theme, animate, seed }) {
   );
 }
 
-// A six-armed crystal centred on (0, 0): three lines through the middle, each
-// with a small V near both ends.
-function Snowflake({ x, y, size, color, strokeWidth = 1.1 }) {
-  const arm = size / 2;
-  const branch = arm * 0.38;
-
-  return (
-    <G transform={`translate(${x} ${y})`}>
-      {[0, 60, 120].map((angle) => (
-        <G key={angle} transform={`rotate(${angle})`}>
-          <Line x1={-arm} y1="0" x2={arm} y2="0" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
-          {[-1, 1].map((side) => (
-            <G key={side}>
-              <Line
-                x1={side * arm * 0.55}
-                y1="0"
-                x2={side * (arm * 0.55 + branch * 0.7)}
-                y2={-branch * 0.7}
-                stroke={color}
-                strokeWidth={strokeWidth * 0.8}
-                strokeLinecap="round"
-              />
-              <Line
-                x1={side * arm * 0.55}
-                y1="0"
-                x2={side * (arm * 0.55 + branch * 0.7)}
-                y2={branch * 0.7}
-                stroke={color}
-                strokeWidth={strokeWidth * 0.8}
-                strokeLinecap="round"
-              />
-            </G>
-          ))}
-        </G>
-      ))}
-    </G>
-  );
-}
-
-// Crystals around the top of the avatar, in two groups that twinkle out of
-// step, and shards growing out from the rim like frost on glass.
-const ICE_CRYSTALS = [
-  { deg: -200, size: 9, group: 0 },
-  { deg: -160, size: 13, group: 1 },
-  { deg: -122, size: 8, group: 0 },
-  { deg: -90, size: 12, group: 1 },
-  { deg: -58, size: 9, group: 0 },
-  { deg: -20, size: 13, group: 1 },
-  { deg: 18, size: 8, group: 0 },
-];
-const ICE_SHARDS = [-180, -140, -105, -75, -40, 0];
-
-function IceCrystals({ color, group }) {
-  return (
-    <Svg width="100%" height="100%" viewBox="0 0 100 100">
-      {group === 0
-        ? ICE_SHARDS.map((deg) => {
-            const rad = (deg * Math.PI) / 180;
-            const x = 50 + (AURA_AVATAR_RADIUS - 1) * Math.cos(rad);
-            const y = 50 + (AURA_AVATAR_RADIUS - 1) * Math.sin(rad);
-            const length = deg % 20 === 0 ? 9 : 6.5;
-
-            return (
-              <Path
-                key={deg}
-                d={`M 0 0 L -1.8 ${-length * 0.45} L 0 ${-length} L 1.8 ${-length * 0.45} Z`}
-                fill={color}
-                opacity={0.85}
-                transform={`translate(${x} ${y}) rotate(${deg + 90})`}
-              />
-            );
-          })
-        : null}
-      {ICE_CRYSTALS.filter((crystal) => crystal.group === group).map((crystal) => {
-        const rad = (crystal.deg * Math.PI) / 180;
-        const distance = AURA_AVATAR_RADIUS + 9 + (crystal.size > 10 ? 2 : 0);
-
-        return (
-          <Snowflake
-            key={crystal.deg}
-            x={50 + distance * Math.cos(rad)}
-            y={50 + distance * Math.sin(rad)}
-            size={crystal.size}
-            color={color}
-          />
-        );
-      })}
-    </Svg>
-  );
-}
-
 /**
- * Frost around the avatar of somebody who has not trained in a month:
- * crystals and shards over a cold glow. The avatar itself is tinted in
- * TileAvatar, so even the photo looks frozen over.
+ * A cobweb strung across the upper left of a dusty avatar, over the picture,
+ * swaying a little on the corner it hangs from.
  */
-function IceAura({ theme, animate, seed }) {
-  const glowId = useRef(`ice-glow-${++gradientInstanceCounter}`).current;
-  const first = useBreathAnimation(animate, { periodMs: 2600 + (seed % 3) * 300, low: 0.3 });
-  const second = useBreathAnimation(animate, { periodMs: 3400 + (seed % 2) * 400, low: 0.3 });
+function CobwebAura({ theme, animate, seed }) {
+  const web = useMemo(() => buildAvatarWeb(AURA_AVATAR_RADIUS), []);
+  const breath = useBreathAnimation(animate, { periodMs: 3800 + (seed % 3) * 500, low: 0 });
+  const rotate = breath.interpolate({ inputRange: [0, 1], outputRange: ["-2deg", "2deg"] });
 
   return (
-    <View style={styles.aura} pointerEvents="none">
-      <Svg style={StyleSheet.absoluteFill} viewBox="0 0 100 100">
-        <Defs>
-          <RadialGradient id={glowId} cx="50%" cy="50%" r="50%">
-            <Stop offset="0.6" stopColor={theme.ice} stopOpacity={0.45} />
-            <Stop offset="1" stopColor={theme.ice} stopOpacity={0} />
-          </RadialGradient>
-        </Defs>
-        <Circle cx="50" cy="50" r="50" fill={`url(#${glowId})`} />
-        {/* A bright frosted edge just outside the ring. */}
-        <Circle
-          cx="50"
-          cy="50"
-          r={AURA_AVATAR_RADIUS + 1.5}
-          fill="none"
-          stroke="#F2FAFF"
-          strokeOpacity={0.55}
-          strokeWidth={1.4}
-        />
+    <Animated.View style={[styles.aura, { transform: [{ rotate }] }]} pointerEvents="none">
+      <Svg width="100%" height="100%" viewBox="0 0 100 100">
+        <Path d={`${web.spokes} ${web.rings}`} stroke={theme.cobweb} strokeOpacity={0.12} strokeWidth={1.8} fill="none" />
+        <Path d={web.spokes} stroke={theme.cobweb} strokeOpacity={0.55} strokeWidth={0.6} strokeLinecap="round" fill="none" />
+        <Path d={web.rings} stroke={theme.cobweb} strokeOpacity={0.45} strokeWidth={0.45} strokeLinecap="round" fill="none" />
       </Svg>
-      <Animated.View style={[StyleSheet.absoluteFill, { opacity: first }]}>
-        <IceCrystals color={theme.ice} group={0} />
-      </Animated.View>
-      <Animated.View style={[StyleSheet.absoluteFill, { opacity: second }]}>
-        <IceCrystals color={theme.ice} group={1} />
-      </Animated.View>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -734,7 +620,8 @@ function TileAvatar({ theme, meta, activityState, avatarUrl, iconColor, animate,
   const isLive = activityState === "live";
   // Flames already say "going"; the pulse under them would only blur it.
   const { scale, opacity } = usePulseAnimation(isLive && animate && aura !== "fire");
-  const isIce = aura === "ice";
+  // A month gone: the picture has gathered dust, and a web.
+  const isDusty = aura === "cobweb";
 
   return (
     <View style={styles.avatarSlot} pointerEvents="none">
@@ -756,7 +643,7 @@ function TileAvatar({ theme, meta, activityState, avatarUrl, iconColor, animate,
           style={[
             styles.avatarRing,
             {
-              borderColor: isIce ? theme.ice : meta.ringColor,
+              borderColor: meta.ringColor,
               backgroundColor: theme.cardBackground,
             },
           ]}
@@ -766,17 +653,20 @@ function TileAvatar({ theme, meta, activityState, avatarUrl, iconColor, animate,
               uri={avatarUrl}
               size={48}
               iconSize={24}
-              iconColor={isIce ? theme.ice : iconColor}
+              iconColor={iconColor}
               backgroundColor={theme.cardBackground}
             />
-            {isIce ? (
+            {isDusty ? (
               <View
-                style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(theme.ice, 0.22) }]}
+                style={[
+                  StyleSheet.absoluteFill,
+                  { backgroundColor: withAlpha(theme.cardBackground, 0.35) },
+                ]}
               />
             ) : null}
           </View>
         </View>
-        {isIce ? <IceAura theme={theme} animate={animate} seed={seed} /> : null}
+        {isDusty ? <CobwebAura theme={theme} animate={animate} seed={seed} /> : null}
       </View>
     </View>
   );
@@ -881,7 +771,7 @@ function ActivityTile({
   const meta = getActivityMeta(theme, activityState, restDotColor);
   const isLive = activityState === "live";
   const isRest = !activityState || activityState === "rest";
-  const isFrozen = aura === "ice";
+  const isDusty = aura === "cobweb";
 
   return (
     <TouchableOpacity
@@ -897,11 +787,7 @@ function ActivityTile({
         styles.tile,
         {
           backgroundColor: theme.cardBackground,
-          borderColor: isLive
-            ? withAlpha(theme.primary, 0.45)
-            : isFrozen
-              ? withAlpha(theme.ice, 0.5)
-              : theme.cardBorder,
+          borderColor: isLive ? withAlpha(theme.primary, 0.45) : theme.cardBorder,
         },
       ]}
     >
@@ -915,14 +801,7 @@ function ActivityTile({
         />
       ) : null}
 
-      {isFrozen ? (
-        <FrozenFrame
-          theme={theme}
-          colorScheme={colorScheme}
-          seed={motionSeed + 1}
-          animate={animate}
-        />
-      ) : null}
+      {isDusty ? <CobwebFrame theme={theme} seed={motionSeed + 1} animate={animate} /> : null}
 
       <MusicBand
         theme={theme}
