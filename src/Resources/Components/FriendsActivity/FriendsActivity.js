@@ -366,16 +366,19 @@ function MusicBand({ theme, colorScheme, music, activityState, animate, hasWallp
 
 /* ---------------------------------------------------------- wallpaper -- */
 
+// A heat scale that stays clear of the status colours - orange live, green
+// done, yellow planned - so a resting tile is never mistaken for one of them:
+// coral while it is fresh, purple, then blue, then drained to grey.
 function wallpaperColor(tone, theme) {
   switch (tone) {
     case "fresh":
-      return theme.secondary;
+      return theme.amrap ?? theme.danger;
     case "warm":
-      return theme.primary;
+      return theme.dropSet ?? theme.primary;
     case "cooling":
-      return theme.planned;
-    case "cold":
       return theme.warmup ?? theme.quietText;
+    case "cold":
+      return theme.quietText;
     default:
       return theme.dropSet ?? theme.primary;
   }
