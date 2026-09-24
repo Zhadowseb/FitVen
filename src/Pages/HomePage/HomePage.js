@@ -16,6 +16,7 @@ import { useTranslation } from "@localization";
 import styles from "./HomePageStyle";
 import GreetingHeader from "./Components/GreetingHeader/GreetingHeader";
 import HomeSkeleton from "./Components/HomeSkeleton/HomeSkeleton";
+import BackgroundPostBar from "./Components/BackgroundPostBar/BackgroundPostBar";
 import DaysSinceCard from "./Components/DaysSinceCard/DaysSinceCard";
 import QuickStartCard from "./Components/QuickStartCard/QuickStartCard";
 import SplitCards from "./Components/SplitCards/SplitCards";
@@ -321,6 +322,10 @@ export default function HomePage() {
           }
           avatarUrl={circlePreview.currentUser?.avatarUrl ?? null}
         />
+
+        {/* A workout post that went out in the background from the finish
+            sheet: how it is getting on, and a retry if it failed. */}
+        <BackgroundPostBar />
 
         {/* Pull-to-refresh already retried this, but nothing on the screen
             said so. Without a line here a failed load is indistinguishable

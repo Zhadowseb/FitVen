@@ -14,6 +14,13 @@ export default {
   snapshotLoadFailed:
     "Dagens træning kunne ikke hentes. Tjek din forbindelse, og prøv igen.",
   circleLoadFailed: "Dine venner kunne ikke hentes.",
+  backgroundPost: {
+    posting: "Din træning bliver postet i baggrunden…",
+    posted: "Din træning er postet",
+    failed: "Din træning kunne ikke postes.",
+    retry: "Prøv igen",
+    dismiss: "Luk",
+  },
   greeting: {
     morning: "Godmorgen",
     afternoon: "God eftermiddag",
