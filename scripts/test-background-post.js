@@ -75,4 +75,20 @@ events.clearWorkoutPostStatus();
   assert.deepStrictEqual(calls, [["navigate", "HomePage"]], "without a Home on the stack it did not navigate to one");
 }
 
-console.log("Background post: status store, stale posts, clearing, and going Home with the existing route passed.");
+{
+  // The status is module state and outlives a sign-out; the next account on
+  // the phone must not get the bar, the note and "Try again" for it. AuthContext
+  // pulls in react-native, so this reads the source.
+  const source = require("fs").readFileSync(
+    require("path").join(__dirname, "..", "src/Contexts/AuthContext.js"),
+    "utf8"
+  );
+
+  assert.match(
+    source,
+    /useEffect\(\(\) => \{\s*clearWorkoutPostStatus\(\);\s*\}, \[userId\]\)/,
+    "the background post's status is not cleared when the signed-in user changes"
+  );
+}
+
+console.log("Background post: status store, stale posts, clearing, going Home with the existing route, and clearing on sign-out passed.");
