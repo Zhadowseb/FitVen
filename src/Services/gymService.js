@@ -36,15 +36,15 @@ export const LIFT_UNIT_BODYWEIGHT = "bw";
 /**
  * The reasons the reject step offers. The values are what the column check
  * accepts, so a new one here without one there fails the insert. The sheet
- * shows t(labelKey); `label` is the English text for anything reading the
- * list outside a component.
+ * shows t(labelKey); `label` translates the same key when it is read, for
+ * anything reading the list outside a component.
  */
 export const REJECTION_REASONS = [
-  { value: "depth", label: "Not deep enough", labelKey: "gyms.rejectReasons.depth" },
-  { value: "lockout", label: "No lockout", labelKey: "gyms.rejectReasons.lockout" },
-  { value: "assist", label: "Assisted or spotted", labelKey: "gyms.rejectReasons.assist" },
-  { value: "weight", label: "Weight does not match", labelKey: "gyms.rejectReasons.weight" },
-  { value: "other", label: "Something else", labelKey: "gyms.rejectReasons.other" },
+  { value: "depth", labelKey: "gyms.rejectReasons.depth", get label() { return t(this.labelKey); } },
+  { value: "lockout", labelKey: "gyms.rejectReasons.lockout", get label() { return t(this.labelKey); } },
+  { value: "assist", labelKey: "gyms.rejectReasons.assist", get label() { return t(this.labelKey); } },
+  { value: "weight", labelKey: "gyms.rejectReasons.weight", get label() { return t(this.labelKey); } },
+  { value: "other", labelKey: "gyms.rejectReasons.other", get label() { return t(this.labelKey); } },
 ];
 
 const GYM_SETUP_MESSAGE =

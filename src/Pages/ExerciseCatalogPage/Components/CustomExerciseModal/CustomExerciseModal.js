@@ -5,6 +5,7 @@ import {
   View,
   useColorScheme,
 } from "react-native";
+import { useTranslation } from "@localization";
 
 import BodyMapPreview from "../../../../Resources/Components/BodyMapPreview/BodyMapPreview";
 import { Colors, withAlpha } from "../../../../Resources/GlobalStyling/colors";
@@ -18,6 +19,7 @@ import {
 import {
   buildCustomExerciseMuscleMetadata,
   EXERCISE_MUSCLE_GROUPS,
+  muscleGroupLabel,
 } from "../../../../Utils/exerciseMuscleGroups";
 import styles from "./CustomExerciseModalStyle";
 
@@ -25,6 +27,7 @@ const NAME_STEP = 1;
 const MUSCLE_STEP = 2;
 
 export default function CustomExerciseModal({ visible, onClose, onCreate }) {
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const primaryColor = theme.primary;
@@ -71,7 +74,7 @@ export default function CustomExerciseModal({ visible, onClose, onCreate }) {
 
   const handleNext = () => {
     if (normalizedExerciseName.length < 2) {
-      setError("Exercise name must contain at least 2 characters.");
+      setError(t("exercises.customModal.nameTooShort"));
       return;
     }
 
@@ -103,7 +106,7 @@ export default function CustomExerciseModal({ visible, onClose, onCreate }) {
 
   const handleCreate = async () => {
     if (primaryMuscleKeys.length === 0 || isSubmitting) {
-      setError("Select at least one primary muscle group.");
+      setError(t("exercises.customModal.selectPrimary"));
       return;
     }
 
@@ -120,7 +123,7 @@ export default function CustomExerciseModal({ visible, onClose, onCreate }) {
       onClose?.();
     } catch (createError) {
       setError(
-        createError?.message || "The custom exercise could not be created."
+        createError?.message || t("exercises.customModal.createFailed")
       );
     } finally {
       setIsSubmitting(false);
@@ -135,22 +138,23 @@ export default function CustomExerciseModal({ visible, onClose, onCreate }) {
       // the modal has measured itself and the lift is computed against a
       // layout that does not exist yet.
       onShow={() => nameInputRef.current?.focus()}
-      title="Add custom exercise"
+      title={t("exercises.customModal.title")}
       dismissOnBackdropPress={!isSubmitting}
       style={styles.modal}
       contentStyle={styles.modalContent}
     >
       <ThemedText style={styles.stepLabel} setColor={primaryTextColor}>
-        STEP {step} OF 2
+        {t("exercises.customModal.step", { step, total: 2 })}
       </ThemedText>
 
       {step === NAME_STEP ? (
         <View style={styles.stepContent}>
           <View style={styles.copy}>
-            <ThemedTitle type="h3">Name your exercise</ThemedTitle>
+            <ThemedTitle type="h3">
+              {t("exercises.customModal.nameTitle")}
+            </ThemedTitle>
             <ThemedText style={styles.description} setColor={quietText}>
-              Choose a clear name that you will recognize in workouts and
-              history.
+              {t("exercises.customModal.nameBody")}
             </ThemedText>
           </View>
 
@@ -160,7 +164,7 @@ export default function CustomExerciseModal({ visible, onClose, onCreate }) {
               setExerciseName(value);
               setError("");
             }}
-            placeholder="Exercise name"
+            placeholder={t("exercises.customModal.namePlaceholder")}
             innerRef={nameInputRef}
             autoCapitalize="words"
             maxLength={80}
@@ -177,17 +181,18 @@ export default function CustomExerciseModal({ visible, onClose, onCreate }) {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.copy}>
-            <ThemedTitle type="h3">Select muscle groups</ThemedTitle>
+            <ThemedTitle type="h3">
+              {t("exercises.customModal.musclesTitle")}
+            </ThemedTitle>
             <ThemedText style={styles.description} setColor={quietText}>
-              Tap once for a primary muscle, twice for a secondary — tap again
-              to remove it.
+              {t("exercises.customModal.musclesBody")}
             </ThemedText>
           </View>
 
           <View style={styles.bodyMapRow}>
             <View style={styles.bodyMapFigure}>
               <ThemedText style={styles.bodyMapLabel} setColor={quietText}>
-                Front
+                {t("exercises.front")}
               </ThemedText>
               <BodyMapPreview
                 bodyView="front"
@@ -202,7 +207,7 @@ export default function CustomExerciseModal({ visible, onClose, onCreate }) {
             </View>
             <View style={styles.bodyMapFigure}>
               <ThemedText style={styles.bodyMapLabel} setColor={quietText}>
-                Back
+                {t("exercises.back")}
               </ThemedText>
               <BodyMapPreview
                 bodyView="back"
@@ -223,7 +228,7 @@ export default function CustomExerciseModal({ visible, onClose, onCreate }) {
                 style={[styles.legendDot, { backgroundColor: primaryColor }]}
               />
               <ThemedText style={styles.legendText} setColor={quietText}>
-                Primary
+                {t("exercises.primary")}
               </ThemedText>
             </View>
             <View style={styles.legendItem}>
@@ -238,7 +243,7 @@ export default function CustomExerciseModal({ visible, onClose, onCreate }) {
                 ]}
               />
               <ThemedText style={styles.legendText} setColor={quietText}>
-                Secondary
+                {t("exercises.secondary")}
               </ThemedText>
             </View>
           </View>
@@ -249,6 +254,7 @@ export default function CustomExerciseModal({ visible, onClose, onCreate }) {
               const isSecondary = secondaryMuscleKeys.includes(
                 muscleGroup.key
               );
+              const muscleName = muscleGroupLabel(muscleGroup.key, t);
 
               return (
                 <Pressable
@@ -257,10 +263,14 @@ export default function CustomExerciseModal({ visible, onClose, onCreate }) {
                   accessibilityState={{ selected: isPrimary || isSecondary }}
                   accessibilityLabel={
                     isPrimary
-                      ? `${muscleGroup.label}, primary muscle`
+                      ? t("exercises.customModal.primaryMuscleA11y", {
+                          muscle: muscleName,
+                        })
                       : isSecondary
-                        ? `${muscleGroup.label}, secondary muscle`
-                        : muscleGroup.label
+                        ? t("exercises.customModal.secondaryMuscleA11y", {
+                            muscle: muscleName,
+                          })
+                        : muscleName
                   }
                   onPress={() => cycleMuscleGroup(muscleGroup.key)}
                   style={[
@@ -286,7 +296,7 @@ export default function CustomExerciseModal({ visible, onClose, onCreate }) {
                           : theme.text
                     }
                   >
-                    {muscleGroup.label}
+                    {muscleName}
                   </ThemedText>
                 </Pressable>
               );
@@ -303,7 +313,7 @@ export default function CustomExerciseModal({ visible, onClose, onCreate }) {
 
       <View style={styles.actions}>
         <ThemedButton
-          title={step === NAME_STEP ? "Cancel" : "Back"}
+          title={step === NAME_STEP ? t("common.cancel") : t("common.back")}
           variant="secondary"
           disabled={isSubmitting}
           onPress={step === NAME_STEP ? handleClose : () => setStep(NAME_STEP)}
@@ -312,10 +322,10 @@ export default function CustomExerciseModal({ visible, onClose, onCreate }) {
         <ThemedButton
           title={
             step === NAME_STEP
-              ? "Next"
+              ? t("common.next")
               : isSubmitting
-                ? "Creating..."
-                : "Create exercise"
+                ? t("exercises.customModal.creating")
+                : t("exercises.customModal.create")
           }
           disabled={
             step === NAME_STEP

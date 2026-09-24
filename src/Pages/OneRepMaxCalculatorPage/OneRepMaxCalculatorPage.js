@@ -6,6 +6,7 @@ import {
   View,
   useColorScheme,
 } from "react-native";
+import { useTranslation } from "@localization";
 
 import styles from "./OneRepMaxCalculatorPageStyle";
 import { Colors } from "../../Resources/GlobalStyling/colors";
@@ -35,6 +36,7 @@ function parseDecimal(value) {
 }
 
 export default function OneRepMaxCalculatorPage() {
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const [weight, setWeight] = useState("");
@@ -61,7 +63,7 @@ export default function OneRepMaxCalculatorPage() {
     const nextErrors = {};
 
     if (parsedWeight === null || parsedWeight <= 0) {
-      nextErrors.weight = "Enter a weight above 0.";
+      nextErrors.weight = t("settings.oneRepMax.errors.weight");
     }
 
     if (
@@ -70,7 +72,9 @@ export default function OneRepMaxCalculatorPage() {
       parsedReps < 1 ||
       parsedReps > MAX_ESTIMATE_REPS
     ) {
-      nextErrors.reps = `Enter a whole number between 1 and ${MAX_ESTIMATE_REPS}.`;
+      nextErrors.reps = t("settings.oneRepMax.errors.reps", {
+        max: MAX_ESTIMATE_REPS,
+      });
     }
 
     if (Object.keys(nextErrors).length > 0) {
@@ -100,14 +104,14 @@ export default function OneRepMaxCalculatorPage() {
             style={styles.pageHeaderTitleEyebrow}
             setColor={quietText}
           >
-            Train
+            {t("settings.oneRepMax.eyebrow")}
           </ThemedText>
           <ThemedTitle
             type="pageTitle"
             style={styles.pageHeaderTitleMain}
             numberOfLines={1}
           >
-            1RM Calculator
+            {t("settings.oneRepMax.title")}
           </ThemedTitle>
         </View>
       </ThemedHeader>
@@ -130,7 +134,7 @@ export default function OneRepMaxCalculatorPage() {
           <View style={styles.inputRow}>
             <View style={styles.inputColumn}>
               <ThemedText style={styles.inputLabel} setColor={quietText}>
-                Weight
+                {t("settings.oneRepMax.weight")}
               </ThemedText>
               <ThemedTextInput
                 value={weight}
@@ -139,11 +143,11 @@ export default function OneRepMaxCalculatorPage() {
                   setEstimatedOneRepMax(null);
                   setErrors((current) => ({ ...current, weight: null }));
                 }}
-                placeholder="e.g. 100"
+                placeholder={t("settings.oneRepMax.weightPlaceholder")}
                 keyboardType="decimal-pad"
                 returnKeyType="next"
                 error={errors.weight}
-                suffix="kg"
+                suffix={t("common.kg")}
                 inputStyle={[
                   styles.input,
                   {
@@ -156,7 +160,7 @@ export default function OneRepMaxCalculatorPage() {
 
             <View style={styles.inputColumn}>
               <ThemedText style={styles.inputLabel} setColor={quietText}>
-                Reps
+                {t("settings.oneRepMax.reps")}
               </ThemedText>
               <ThemedTextInput
                 value={reps}
@@ -165,12 +169,12 @@ export default function OneRepMaxCalculatorPage() {
                   setEstimatedOneRepMax(null);
                   setErrors((current) => ({ ...current, reps: null }));
                 }}
-                placeholder="e.g. 5"
+                placeholder={t("settings.oneRepMax.repsPlaceholder")}
                 keyboardType="number-pad"
                 returnKeyType="done"
                 error={errors.reps}
                 onSubmitEditing={calculate}
-                suffix="reps"
+                suffix={t("settings.oneRepMax.repsSuffix")}
                 inputStyle={[
                   styles.input,
                   {
@@ -193,24 +197,24 @@ export default function OneRepMaxCalculatorPage() {
               ]}
             >
               <ThemedText style={styles.resultLabel} setColor={secondaryColor}>
-                ESTIMATED 1RM
+                {t("settings.oneRepMax.resultLabel")}
               </ThemedText>
               <View style={styles.resultValueRow}>
                 <ThemedText style={styles.resultValue} setColor={titleColor}>
                   {formatDisplayNumber(estimatedOneRepMax)}
                 </ThemedText>
                 <ThemedText style={styles.resultUnit} setColor={quietText}>
-                  kg
+                  {t("common.kg")}
                 </ThemedText>
               </View>
               <ThemedText style={styles.resultNote} setColor={quietText}>
-                Rounded to the nearest 0.5 kg.
+                {t("settings.oneRepMax.roundedNote")}
               </ThemedText>
             </View>
           ) : null}
 
           <ThemedButton
-            title="Calculate estimated 1RM"
+            title={t("settings.oneRepMax.calculate")}
             onPress={calculate}
             fullWidth
             style={[styles.calculateButton, { backgroundColor: primaryColor }]}
@@ -233,10 +237,10 @@ export default function OneRepMaxCalculatorPage() {
                   style={styles.percentageEyebrow}
                   setColor={primaryTextColor}
                 >
-                  TRAINING LOADS
+                  {t("settings.oneRepMax.loadsEyebrow")}
                 </ThemedText>
                 <ThemedTitle type="h3" style={styles.percentageTitle}>
-                  Percent of estimated 1RM
+                  {t("settings.oneRepMax.loadsTitle")}
                 </ThemedTitle>
               </View>
             </View>
@@ -265,7 +269,7 @@ export default function OneRepMaxCalculatorPage() {
                       {percentage}%
                     </ThemedText>
                     <ThemedText style={styles.loadValue} setColor={titleColor}>
-                      {formatDisplayNumber(load)} kg
+                      {`${formatDisplayNumber(load)} ${t("common.kg")}`}
                     </ThemedText>
                   </View>
                 );
@@ -284,14 +288,10 @@ export default function OneRepMaxCalculatorPage() {
           ]}
         >
           <ThemedText style={styles.infoTitle} setColor={titleColor}>
-            About the estimate
+            {t("settings.oneRepMax.aboutTitle")}
           </ThemedText>
           <ThemedText style={styles.infoText} setColor={quietText}>
-            The result uses the same Brzycki formula as your automatic personal
-            records, and takes the same 1-{MAX_ESTIMATE_REPS} rep range those
-            records are kept over. Beyond that the formula drifts far from what
-            anyone actually lifts. Fatigue, technique and exercise choice change
-            the result too, so treat it as an estimate.
+            {t("settings.oneRepMax.aboutBody", { max: MAX_ESTIMATE_REPS })}
           </ThemedText>
         </View>
 
@@ -302,7 +302,7 @@ export default function OneRepMaxCalculatorPage() {
             style={[styles.resetButton, { borderColor: cardBorder }]}
           >
             <ThemedText style={styles.resetButtonText} setColor={primaryTextColor}>
-              Reset calculator
+              {t("settings.oneRepMax.reset")}
             </ThemedText>
           </TouchableOpacity>
         )}

@@ -19,6 +19,7 @@ import ReplayHistory from "../../../../../../Resources/Icons/UI-icons/ReplayHist
 import ThemedText from "../../../../../../Resources/ThemedComponents/ThemedText";
 import { Colors } from "../../../../../../Resources/GlobalStyling/colors";
 import { EXERCISE_COLLAPSE_DURATION_MS } from "./exerciseCollapseAnimation";
+import { useTranslation } from "@localization";
 
 const ExerciseList = ({
   workout_id,
@@ -43,6 +44,7 @@ const ExerciseList = ({
 
   const db = useSQLiteContext();
   const navigation = useNavigation();
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
@@ -818,8 +820,8 @@ const ExerciseList = ({
       <View style={styles.emptyExercises}>
         <ThemedText style={styles.emptyExercisesText} setColor={quietText}>
           {isWorkoutDone
-            ? "This workout was finished without any exercises."
-            : "No exercises yet. Add one to get started."}
+            ? t("workout.exerciseList.emptyFinished")
+            : t("workout.exerciseList.empty")}
         </ThemedText>
       </View>
     )}
@@ -832,7 +834,7 @@ const ExerciseList = ({
         <TouchableOpacity
           activeOpacity={0.86}
           accessibilityRole="button"
-          accessibilityLabel="Add an exercise used in the last four workouts"
+          accessibilityLabel={t("workout.exerciseList.addRecentLabel")}
           style={[styles.addExerciseButton, { borderColor: quietText }]}
           onPress={() => {
             navigation.navigate("ExerciseCatalogPage", {
@@ -843,14 +845,14 @@ const ExerciseList = ({
         >
           <ReplayHistory width={17} height={17} color={quietText} />
           <ThemedText style={styles.addExerciseButtonText} setColor={quietText}>
-            Recent
+            {t("workout.exerciseList.recent")}
           </ThemedText>
         </TouchableOpacity>
 
         <TouchableOpacity
           activeOpacity={0.86}
           accessibilityRole="button"
-          accessibilityLabel="Add an exercise from the catalog"
+          accessibilityLabel={t("workout.exerciseList.addFromCatalogLabel")}
           style={[styles.addExerciseButton, { borderColor: quietText }]}
           onPress={() => {
             navigation.navigate("ExerciseCatalogPage", {
@@ -860,7 +862,7 @@ const ExerciseList = ({
         >
           <PlusCircled width={17} height={17} color={quietText} />
           <ThemedText style={styles.addExerciseButtonText} setColor={quietText}>
-            All exercises
+            {t("workout.exerciseList.allExercises")}
           </ThemedText>
         </TouchableOpacity>
       </View>

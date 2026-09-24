@@ -18,6 +18,7 @@ import {
   buildVolumeBuckets,
 } from "@utils/recordsInsights";
 import { formatRelativeDay } from "@utils/dateUtils";
+import { muscleGroupLabel } from "@utils/exerciseMuscleGroups";
 
 const CHART_WIDTH = 340;
 const CHART_HEIGHT = 132;
@@ -350,7 +351,7 @@ export default function RecordsOverview({
                       {mover.name}
                     </ThemedText>
                     <ThemedText style={styles.caption} setColor={quiet} numberOfLines={1}>
-                      {`${formatKg(mover.bestNow)} kg`}
+                      {`${formatKg(mover.bestNow)} ${t("common.kg")}`}
                     </ThemedText>
                   </View>
                   <View style={[styles.gainTrack, { backgroundColor: withAlpha(title, 0.06) }]}>
@@ -459,7 +460,7 @@ export default function RecordsOverview({
                     {formatKg(record.weight)}
                   </ThemedText>
                   <ThemedText style={styles.recordWeightMeta} setColor={quiet}>
-                    {`kg × ${record.reps}`}
+                    {`${t("common.kg")} × ${record.reps}`}
                   </ThemedText>
                 </View>
                 <ThemedText style={styles.caption} setColor={quiet} numberOfLines={1}>
@@ -544,7 +545,7 @@ export default function RecordsOverview({
               return (
                 <View key={group.label} style={[styles.muscleRow, { marginBottom: 10 }]}>
                   <ThemedText style={styles.muscleName} setColor={quiet} numberOfLines={1}>
-                    {group.label}
+                    {muscleGroupLabel(group.label, t)}
                   </ThemedText>
                   <View style={[styles.muscleTrack, { backgroundColor: withAlpha(title, 0.06) }]}>
                     <View
@@ -566,7 +567,7 @@ export default function RecordsOverview({
 
             {leastGroup ? (
               <ThemedText style={styles.caption} setColor={quiet}>
-                {t("records.muscles.summary", { group: leastGroup.label, count: totalMuscleSets })}
+                {t("records.muscles.summary", { group: muscleGroupLabel(leastGroup.label, t), count: totalMuscleSets })}
               </ThemedText>
             ) : null}
           </View>

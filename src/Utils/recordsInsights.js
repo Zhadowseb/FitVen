@@ -526,12 +526,13 @@ export function buildLatestRecords(sets, { limit = 8 } = {}) {
 export const SERIES_GAP_DAYS = 14;
 export const REP_LADDER_SLOTS = MAX_ESTIMATE_REPS;
 
+// Labels in the "records.exercise.periods" translations.
 export const EXERCISE_PERIODS = [
-  { key: "1m", label: "1M", days: 30 },
-  { key: "3m", label: "3M", days: 91 },
-  { key: "6m", label: "6M", days: 182 },
-  { key: "1y", label: "1Y", days: 365 },
-  { key: "all", label: "All", days: null },
+  { key: "1m", days: 30 },
+  { key: "3m", days: 91 },
+  { key: "6m", days: 182 },
+  { key: "1y", days: 365 },
+  { key: "all", days: null },
 ];
 
 function forExercise(sets, name) {

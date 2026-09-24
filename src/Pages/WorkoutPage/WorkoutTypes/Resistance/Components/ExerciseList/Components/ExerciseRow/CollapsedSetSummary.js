@@ -2,6 +2,7 @@ import { View } from "react-native";
 import { ThemedText } from "@resources/ThemedComponents";
 import { withAlpha } from "@resources/GlobalStyling/colors";
 import Star from "@resources/Icons/UI-icons/Star";
+import { useTranslation } from "@localization";
 import styles from "./CollapsedSetSummaryStyle";
 
 function value(value) {
@@ -37,6 +38,7 @@ export function SetProgressDots({ sets = [], theme, style }) {
 }
 
 export function ClassicSetSummary({ sets = [], theme }) {
+  const { t } = useTranslation();
   if (!sets.length) return null;
 
   return (
@@ -72,7 +74,7 @@ export function ClassicSetSummary({ sets = [], theme }) {
                 {personalRecord ? "★ " : ""}{value(set?.weight)}
               </ThemedText>
               <ThemedText size={9} style={styles.classicUnit} setColor={theme.quietText}>
-                kg
+                {t("common.kg")}
               </ThemedText>
             </View>
             {index < sets.length - 1 ? (
@@ -91,13 +93,14 @@ export function ClassicSetSummary({ sets = [], theme }) {
 }
 
 function SetCell({ set, theme, compact = false, multiple }) {
+  const { t } = useTranslation();
   const failed = Number(set?.failed) === 1;
   const done = Number(set?.done) === 1;
   const pr = isPersonalRecordSet(set);
   const statusColor = failed ? theme.danger : pr ? theme.planned : done ? theme.secondary : theme.text;
   const backgroundColor = failed ? withAlpha(theme.danger, 0.1) : pr ? withAlpha(theme.planned, 0.12) : done ? withAlpha(theme.secondary, 0.1) : theme.tableRowAltSurface;
-  const weight = <ThemedText size={compact ? 13.5 : 13.5} style={[styles.weight, failed && styles.struck]} setColor={statusColor}>{pr && "★ "}{value(set?.weight)}<ThemedText size={compact ? 9 : 9} setColor={theme.quietText}> kg</ThemedText></ThemedText>;
-  const reps = <ThemedText size={compact ? 13.5 : 9.5} style={styles.reps} setColor={compact ? theme.title : theme.title}>{value(set?.reps)}<ThemedText size={compact ? 8.5 : 8.5} setColor={theme.quietText}>{multiple ? " ×" : " reps"}</ThemedText></ThemedText>;
+  const weight = <ThemedText size={compact ? 13.5 : 13.5} style={[styles.weight, failed && styles.struck]} setColor={statusColor}>{pr && "★ "}{value(set?.weight)}<ThemedText size={compact ? 9 : 9} setColor={theme.quietText}>{` ${t("common.kg")}`}</ThemedText></ThemedText>;
+  const reps = <ThemedText size={compact ? 13.5 : 9.5} style={styles.reps} setColor={compact ? theme.title : theme.title}>{value(set?.reps)}<ThemedText size={compact ? 8.5 : 8.5} setColor={theme.quietText}>{multiple ? " ×" : ` ${t("workout.setList.repsUnit")}`}</ThemedText></ThemedText>;
   return <View style={[compact ? styles.compactCell : styles.cell, { backgroundColor }, compact ? { borderRightColor: theme.tableGridline } : null]}>{compact ? <View style={styles.inline}>{weight}{reps}</View> : <>{weight}{reps}</>}</View>;
 }
 

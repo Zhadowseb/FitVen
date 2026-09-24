@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.4.0] - Unreleased
+### Changed
+- **The whole app speaks Danish.** Only some screens used to follow the language setting; the rest were written into the code in English, and a few in Danish. About 850 texts in 75 files now go through `t()`: the run and strength workouts, the exercise library and catalog, programs, blocks and weeks, the calendar and library, sickness, the settings pages, the 1RM calculator, Records and the errors the services show. Six new locale areas: `calendar`, `errors`, `exercises`, `programs`, `run` and `settings`. The privacy policy and the terms of use stay in English until a Danish version has been read by a person.
+- **What is stored stays as it was.** Muscle groups, sickness types, run flows, program focus, weekdays, set types and workout types are still saved in English and shown translated, so nothing already in SQLite or the cloud changes meaning. Lists that were built once at import now keep keys and translate when drawn, so they follow a language switch. The location errors now carry a code; the run screen used to tell them apart by their English text.
+- **Dates follow the language**: the date wheel, the copy modal, week ranges and program dates ("MAJ", "OKT"), and the weekday initials over the block grid (M T O T F L S).
+- **`npm test` fails on a new hard-coded text.** `scripts/check-hardcoded-strings.js --check` finds text a person sees that does not go through `t()` - JSX text, text props, `Alert.alert`, `{ label: ... }` options and the services' thrown errors - with a short allow list for brand names and units.
+
+---
 ## [2.3.0] - Unreleased
 ### Changed
 - **Records is one page read in one period.** The period selector sat halfway down and moved only some of what was under it - the biggest movers and the volume chart were always twelve weeks whatever it said - so it read as broken. It is at the top now (4 weeks / 3 months / 1 year / All) and everything on the page follows it, with a line under it saying what the period is compared with.

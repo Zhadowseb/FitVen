@@ -157,7 +157,90 @@ async function cloneWorkoutContents(
 }
 
 function formatSetCountLabel(count) {
-  return count === 1 ? "1 set" : `${count} sets`;
+  return t("common.sets", { count });
+}
+
+// Focus values as stored in Mesocycle.focus and Microcycle.focus, including
+// the two defaults the schema writes. They stay English in the database and
+// the cloud; what is shown is the translation. A focus typed by hand has no
+// key and is shown as typed.
+const FOCUS_LABEL_KEYS = {
+  "No focus set": "programs.focus.noFocusSet",
+  "No focus": "programs.focus.noFocus",
+  Strength: "programs.focus.strength",
+  Bodybuilding: "programs.focus.bodybuilding",
+  Technique: "programs.focus.technique",
+  "Speed / Power": "programs.focus.speedPower",
+  "Easy / Recovery": "programs.focus.easyRecovery",
+  "Max Test": "programs.focus.maxTest",
+  "Progressive Overload": "programs.focus.progressiveOverload",
+  Volume: "programs.focus.volume",
+  Intensity: "programs.focus.intensity",
+  Deload: "programs.focus.deload",
+};
+
+/** The focus values a block can be given from the picker (stored values). */
+export const BLOCK_FOCUS_OPTIONS = [
+  "Strength",
+  "Bodybuilding",
+  "Technique",
+  "Speed / Power",
+  "Easy / Recovery",
+  "Max Test",
+];
+
+/** The focus values a week can be given from the picker (stored values). */
+export const WEEK_FOCUS_OPTIONS = [
+  "Progressive Overload",
+  "Volume",
+  "Intensity",
+  "Technique",
+  "Speed / Power",
+  "Easy / Recovery",
+  "Deload",
+  "Max Test",
+];
+
+/** True for an empty focus or one of the stored "no focus" defaults. */
+export function isDefaultFocus(focus) {
+  const value = String(focus ?? "").trim();
+
+  return value === "" || value === "No focus set" || value === "No focus";
+}
+
+/** A stored focus as it should read on screen, in the current language. */
+export function getFocusLabel(focus, translate = t) {
+  const value = String(focus ?? "").trim();
+  const key = FOCUS_LABEL_KEYS[value];
+
+  return key ? translate(key) : value;
+}
+
+// Day.Weekday is stored as the English name ("Monday") and compared on, so it
+// stays that way; this is only what is shown.
+const WEEKDAY_NAME_KEYS = {
+  Monday: "programs.weekdays.monday",
+  Tuesday: "programs.weekdays.tuesday",
+  Wednesday: "programs.weekdays.wednesday",
+  Thursday: "programs.weekdays.thursday",
+  Friday: "programs.weekdays.friday",
+  Saturday: "programs.weekdays.saturday",
+  Sunday: "programs.weekdays.sunday",
+};
+
+/** A stored weekday name ("Monday") in the current language. */
+export function getWeekdayName(weekday, translate = t) {
+  const key = WEEKDAY_NAME_KEYS[weekday];
+
+  return key ? translate(key) : weekday ?? "";
+}
+
+/** Picker items for a list of stored focus values: shown translated, saved as is. */
+export function getFocusPickerItems(values, translate = t) {
+  return values.map((value) => ({
+    value,
+    label: getFocusLabel(value, translate),
+  }));
 }
 
 function formatExerciseRepSummary(exercise, exerciseSets) {
@@ -214,7 +297,7 @@ function buildRunPreviewItems(runSets) {
 
   if (activeCounts.WARMUP > 0) {
     previewItems.push({
-      label: "Warmup",
+      label: t("programs.preview.warmup"),
       detail: formatSetCountLabel(activeCounts.WARMUP),
       done: activeDoneCounts.WARMUP === activeCounts.WARMUP,
     });
@@ -222,7 +305,7 @@ function buildRunPreviewItems(runSets) {
 
   if (activeCounts.WORKING_SET > 0) {
     previewItems.push({
-      label: "Working sets",
+      label: t("programs.preview.workingSets"),
       detail: formatSetCountLabel(activeCounts.WORKING_SET),
       done: activeDoneCounts.WORKING_SET === activeCounts.WORKING_SET,
     });
@@ -230,7 +313,7 @@ function buildRunPreviewItems(runSets) {
 
   if (activeCounts.COOLDOWN > 0) {
     previewItems.push({
-      label: "Cooldown",
+      label: t("programs.preview.cooldown"),
       detail: formatSetCountLabel(activeCounts.COOLDOWN),
       done: activeDoneCounts.COOLDOWN === activeCounts.COOLDOWN,
     });
@@ -243,7 +326,7 @@ function buildRunPreviewItems(runSets) {
   if (runSets.length > 0) {
     return [
       {
-        label: "Running session",
+        label: t("programs.preview.runningSession"),
         detail: formatSetCountLabel(runSets.length),
         done: runSets.every((runSet) => Number(runSet.done) === 1),
       },
@@ -434,7 +517,7 @@ export async function startProgram(db, { programId, startDate }) {
   const normalizedStartDate = normalizeLocalDateString(startDate);
 
   if (!normalizedStartDate) {
-    throw new Error("A valid program start date is required.");
+    throw new Error(t("programs.errors.startDateRequired"));
   }
 
   const blockingProgram = await getBlockingActiveProgram(db, {
@@ -443,9 +526,10 @@ export async function startProgram(db, { programId, startDate }) {
 
   if (blockingProgram) {
     throw new Error(
-      `"${
-        blockingProgram.program_name ?? "Another program"
-      }" is still running. Finish it before starting this one.`
+      t("programs.errors.anotherProgramRunning", {
+        name:
+          blockingProgram.program_name ?? t("programs.errors.anotherProgram"),
+      })
     );
   }
 
@@ -459,17 +543,17 @@ export async function startProgram(db, { programId, startDate }) {
     );
 
     if (normalizeProgramStatus(programMetadata?.status) !== "NOT_STARTED") {
-      throw new Error("Only draft programs can be started.");
+      throw new Error(t("programs.errors.onlyDraftsCanStart"));
     }
 
     if (!previousStartDate) {
-      throw new Error("The program does not have a valid draft start date.");
+      throw new Error(t("programs.errors.invalidDraftStartDate"));
     }
 
     const previousStart = parseCustomDate(previousStartDate);
     const nextStart = parseCustomDate(normalizedStartDate);
     if (nextStart.getDay() !== 1) {
-      throw new Error("Programs must start on a Monday.");
+      throw new Error(t("programs.errors.mustStartOnMonday"));
     }
 
     const dayOffset = Math.round(
@@ -763,11 +847,19 @@ function normalizeUsualExerciseName(exerciseName) {
 }
 
 function buildWorkoutTypeLabel(workoutType) {
-  if (workoutType === "StrengthTraining") {
-    return "Resistance";
+  if (workoutType === "StrengthTraining" || workoutType === "Resistance") {
+    return t("workoutStart.types.resistance");
   }
 
-  return workoutType ?? "Workout";
+  if (workoutType === "Run") {
+    return t("workoutStart.types.run");
+  }
+
+  if (workoutType === "Walk") {
+    return t("workoutStart.types.walk");
+  }
+
+  return workoutType ?? t("workoutStart.types.workout");
 }
 
 function compareUsualWorkoutGroups(left, right, todayWeekday) {
@@ -1218,11 +1310,11 @@ export async function addWeekToMesocycle(db, { mesocycleId, programId }) {
         : 0;
 
     if (!lastDay?.date && !mesocycleMetadata) {
-      throw new Error("Block not found for new week.");
+      throw new Error(t("programs.errors.blockNotFound"));
     }
 
     if (!lastDay?.date && !programMetadata?.start_date) {
-      throw new Error("Program start date not found for new block week.");
+      throw new Error(t("programs.errors.startDateNotFound"));
     }
 
     const microcycleResult = await programRepository.insertMicrocycle(db, {
@@ -1314,7 +1406,7 @@ export async function getGlobalWeekIndexFromMicrocycle(
   );
 
   if (!microcycle) {
-    throw new Error("Microcycle not found");
+    throw new Error(t("programs.errors.weekNotFound"));
   }
 
   const weeksBefore = await getWeeksBeforeMesocycle(db, {
@@ -2092,7 +2184,7 @@ export async function copyWorkoutToProgramDay(db, { workoutId, dayId, date }) {
     date instanceof Date ? formatDate(date) : normalizeLocalDateString(date);
 
   if (!normalizedDate) {
-    throw new Error("A valid workout date is required.");
+    throw new Error(t("programs.errors.workoutDateRequired"));
   }
 
   const copiedWorkoutId = await withTransaction(db, async () => {
@@ -2138,7 +2230,7 @@ export async function copyWorkoutToDate(
     date instanceof Date ? formatDate(date) : normalizeLocalDateString(date);
 
   if (!normalizedDate) {
-    throw new Error("A valid workout date is required.");
+    throw new Error(t("programs.errors.workoutDateRequired"));
   }
 
   if (!programId) {
@@ -2195,7 +2287,7 @@ export async function copyWorkoutToStandaloneDate(
     date instanceof Date ? formatDate(date) : normalizeLocalDateString(date);
 
   if (!normalizedDate) {
-    throw new Error("A valid workout date is required.");
+    throw new Error(t("programs.errors.workoutDateRequired"));
   }
 
   const workoutDate = parseCustomDate(normalizedDate);
@@ -2206,7 +2298,7 @@ export async function copyWorkoutToStandaloneDate(
   );
 
   if (!sourceMetadata) {
-    throw new Error("The recent workout could not be found.");
+    throw new Error(t("programs.errors.recentWorkoutNotFound"));
   }
 
   if (!LOCATION_WORKOUT_TYPES.has(sourceMetadata.workout_type)) {
@@ -2267,7 +2359,7 @@ export async function copyWorkoutToStandaloneDate(
     });
 
     if (!workoutResult.changes) {
-      throw new Error("The recent workout could not be copied.");
+      throw new Error(t("programs.errors.recentWorkoutCopyFailed"));
     }
 
     await cloneWorkoutContents(db, {
@@ -2283,7 +2375,7 @@ export async function copyWorkoutToStandaloneDate(
     const copiedSetCount = Number(copiedSetCountRow?.count) || 0;
 
     if (copiedSetCount !== sourceSetCount) {
-      throw new Error("The recent workout sets could not be copied completely.");
+      throw new Error(t("programs.errors.recentWorkoutSetsCopyFailed"));
     }
 
     const hierarchy = await workoutRepository.getDayHierarchyIds(db, dayId);

@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { t } from "@localization";
 
 import {
   getCurrentUserId,
@@ -91,7 +92,7 @@ export async function getWorkoutSummaryPostMode({ user } = {}) {
 
 export async function setWorkoutSummaryPostMode({ user, mode }) {
   if (!user?.id) {
-    throw new Error("You need to be signed in to update social post settings.");
+    throw new Error(t("errors.socialPost.signInToUpdatePostSettings"));
   }
 
   const nextMode = normalizeWorkoutSummaryPostMode(mode);
@@ -117,7 +118,7 @@ export async function getWorkoutSummaryPostVisibility({ user } = {}) {
 
 export async function setWorkoutSummaryPostVisibility({ user, visibility }) {
   if (!user?.id) {
-    throw new Error("You need to be signed in to update social post settings.");
+    throw new Error(t("errors.socialPost.signInToUpdatePostSettings"));
   }
 
   const nextVisibility = normalizeWorkoutSummaryPostVisibility(visibility);
@@ -199,13 +200,13 @@ export async function setWorkoutSummaryExerciseHidden({
   hidden,
 }) {
   if (!user?.id) {
-    throw new Error("You need to be signed in to update exercise settings.");
+    throw new Error(t("errors.socialPost.signInToUpdateExerciseSettings"));
   }
 
   const normalizedExerciseId = normalizePositiveInteger(exerciseId);
 
   if (normalizedExerciseId === null) {
-    throw new Error("This exercise has not synced to Supabase yet.");
+    throw new Error(t("errors.socialPost.exerciseNotSynced"));
   }
 
   await ensureOwnProfile(user);
@@ -1274,7 +1275,7 @@ export async function getWorkoutSummaryFeed({ user, limit = 10, offset = 0 }) {
 
 export async function getWorkoutSummaryPostById({ user, postId }) {
   if (!user?.id || !postId) {
-    throw new Error("You need to be signed in to edit workout posts.");
+    throw new Error(t("errors.socialPost.signInToEditPosts"));
   }
 
   await ensureOwnProfile(user);
@@ -1297,7 +1298,7 @@ export async function getWorkoutSummaryPostById({ user, postId }) {
 
 export async function updateWorkoutSummaryPostNote({ user, postId, note }) {
   if (!user?.id || !postId) {
-    throw new Error("You need to be signed in to edit workout posts.");
+    throw new Error(t("errors.socialPost.signInToEditPosts"));
   }
 
   await ensureOwnProfile(user);
@@ -1324,7 +1325,7 @@ export async function updateWorkoutSummaryPostNote({ user, postId, note }) {
 
 export async function deleteWorkoutSummaryPost({ user, postId }) {
   if (!user?.id || !postId) {
-    throw new Error("You need to be signed in to delete workout posts.");
+    throw new Error(t("errors.socialPost.signInToDeletePosts"));
   }
 
   await ensureOwnProfile(user);
@@ -1345,7 +1346,7 @@ export async function deleteWorkoutSummaryPost({ user, postId }) {
 
 export async function toggleWorkoutSummaryPostLike({ user, postId, shouldLike }) {
   if (!user?.id || !postId) {
-    throw new Error("You need to be signed in to like workout posts.");
+    throw new Error(t("errors.socialPost.signInToLikePosts"));
   }
 
   await ensureOwnProfile(user);

@@ -27,9 +27,11 @@ import {
 } from "../../Resources/ThemedComponents";
 
 import styles from './ProgramPageStyle';
+import { useTranslation } from "@localization";
 
 
 export default function App() {
+  const { t } = useTranslation();
   const db = useSQLiteContext();
   const navigation = useNavigation();
   const colorScheme = useColorScheme();
@@ -80,14 +82,14 @@ export default function App() {
       });
 
       Alert.alert(
-        "Program imported",
-        `${result.programName} has been added to your programs.`
+        t("programs.list.importedTitle"),
+        t("programs.list.importedMessage", { name: result.programName })
       );
     } catch (error) {
       console.error("Program import failed:", error);
       Alert.alert(
-        "Import failed",
-        error?.message ?? "The program file could not be imported."
+        t("programs.list.importFailedTitle"),
+        error?.message ?? t("programs.list.importFailedMessage")
       );
     } finally {
       setIsImportingProgram(false);
@@ -108,7 +110,7 @@ export default function App() {
               { backgroundColor: theme.primary, shadowColor: theme.primary },
             ]}
             accessibilityRole="button"
-            accessibilityLabel="Program options"
+            accessibilityLabel={t("programs.list.options")}
             hitSlop={8}
             onPress={() => setOptionsBottomSheetVisible(true)}
           >
@@ -122,10 +124,10 @@ export default function App() {
             style={styles.headerEyebrow}
             setColor={theme.quietText}
           >
-            Train
+            {t("programs.list.eyebrow")}
           </ThemedText>
           <ThemedTitle type="pageTitle" numberOfLines={1}>
-            Programs
+            {t("programs.list.title")}
           </ThemedTitle>
         </View>
       </ThemedHeader>
@@ -148,7 +150,7 @@ export default function App() {
 
       <View style={styles.bottomsheet_title}>
         <ThemedTitle type="h3" style={{ flex: 10 }}>
-          Program options
+          {t("programs.list.options")}
         </ThemedTitle>
       </View>
 
@@ -169,7 +171,7 @@ export default function App() {
             <ArrowDown width={24} height={24} />
           )}
           <ThemedText style={styles.option_text}>
-            {isImportingProgram ? "Importing program..." : "Import program"}
+            {isImportingProgram ? t("programs.list.importing") : t("programs.list.import")}
           </ThemedText>
         </TouchableOpacity>
 
@@ -181,7 +183,7 @@ export default function App() {
           }}>
           <PlusCircled width={24} height={24} />
           <ThemedText style={styles.option_text}>
-            Create new program
+            {t("programs.list.createNew")}
           </ThemedText>
         </TouchableOpacity>
       </View>

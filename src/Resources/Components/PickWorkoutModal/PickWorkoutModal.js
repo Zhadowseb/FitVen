@@ -3,13 +3,15 @@ import { ScrollView, TouchableOpacity, useColorScheme } from "react-native";
 import styles from "./PickWorkoutModalStyle";
 import { Colors } from "../../GlobalStyling/colors";
 import { ThemedModal, ThemedText } from "../../ThemedComponents";
+import { useTranslation } from "@localization";
 
 const PickWorkoutModal = ({ workouts = [], visible, onClose, onSubmit }) => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const { t } = useTranslation();
 
   return (
-    <ThemedModal visible={visible} title="Pick a workout" onClose={onClose}>
+    <ThemedModal visible={visible} title={t("workout.pick.title")} onClose={onClose}>
       <ScrollView>
         {workouts.map((item) => (
           <TouchableOpacity
@@ -23,7 +25,7 @@ const PickWorkoutModal = ({ workouts = [], visible, onClose, onSubmit }) => {
             <ThemedText
               setColor={item.done === 1 ? theme.secondary : undefined}
             >
-              Workout #{item.workout_id}
+              {t("workout.pick.workoutNumber", { id: item.workout_id })}
             </ThemedText>
 
             <ThemedText>{item.label}</ThemedText>

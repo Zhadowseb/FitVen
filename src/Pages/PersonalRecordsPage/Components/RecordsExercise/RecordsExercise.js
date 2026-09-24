@@ -259,7 +259,7 @@ export default function RecordsExercise({
             {kg(series.best)}
           </ThemedText>
           <ThemedText style={styles.chartUnit} setColor={quiet}>
-            kg
+            {t("common.kg")}
           </ThemedText>
           {change !== null ? (
             <View
@@ -503,7 +503,7 @@ export default function RecordsExercise({
                   </ThemedText>
                   {empty ? null : (
                     <ThemedText style={styles.tileUnit} setColor={quiet}>
-                      kg
+                      {t("common.kg")}
                     </ThemedText>
                   )}
                 </View>

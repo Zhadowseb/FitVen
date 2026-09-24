@@ -3,6 +3,7 @@
 // These sat in the middle of Run.js between a component and a constant, which
 // is how they ended up swept into the wrong file when the screen was first
 // split. Pure, and covered by scripts/test-run-display-utils.js.
+import { t } from "@localization";
 import { normalizeElapsedDurationSeconds } from "@utils/timeUtils";
 
 export const parsePaceToMinutes = (value) => {
@@ -103,16 +104,30 @@ export const formatRunDistance = (distanceKm) => {
   return safeDistance.toFixed(2);
 };
 
-export const getRunTrackingStartMessage = (error, activityLabel = "run") => {
+// The codes match LOCATION_ERROR_CODES in Services/locationService.js; the
+// English message check stays as a fallback for errors without a code.
+export const getRunTrackingStartMessage = (
+  error,
+  activityLabel = t("run.activity.run.lower")
+) => {
+  const code = error?.code;
   const message = String(error?.message ?? "");
 
-  if (message.includes("Precise location permission")) {
-    return `FitVen needs Precise/Fine location permission to track ${activityLabel} distance accurately. Enable precise location for FitVen and try again.`;
+  if (
+    code === "location-precise-permission-required" ||
+    message.includes("Precise location permission")
+  ) {
+    return t("run.location.startMessages.precisePermission", {
+      activity: activityLabel,
+    });
   }
 
-  if (message.includes("Background location permission")) {
-    return "FitVen needs background location permission so distance continues tracking while the app is not in front.";
+  if (
+    code === "location-background-permission-denied" ||
+    message.includes("Background location permission")
+  ) {
+    return t("run.location.startMessages.backgroundPermission");
   }
 
-  return "Check that location is allowed and turned on, then try again.";
+  return t("run.location.startMessages.generic");
 };

@@ -12,6 +12,7 @@ import {
   ThemedText,
   ThemedTextInput,
 } from "../../../../../../Resources/ThemedComponents";
+import { useTranslation } from "@localization";
 
 export default function AddEstimatedSet({
   visible,
@@ -19,6 +20,7 @@ export default function AddEstimatedSet({
   onSubmit,
   programExerciseBestMap = {},
 }) {
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
 
@@ -32,7 +34,7 @@ export default function AddEstimatedSet({
   const suggestedWeightDisplay =
     suggestedWeight === null
       ? null
-      : `${formatDisplayNumber(suggestedWeight)} kg`;
+      : `${formatDisplayNumber(suggestedWeight)} ${t("common.kg")}`;
   const canSubmit =
     selectedExerciseName.trim() !== "" && estimated_weight.trim() !== "";
   const surfaceColor = theme.uiBackground;
@@ -61,7 +63,7 @@ export default function AddEstimatedSet({
     <ThemedModal
       visible={visible}
       onClose={handleClose}
-      title="Add estimated 1 RM"
+      title={t("programs.rm.addTitle")}
       style={styles.modal}
       contentStyle={styles.content}
     >
@@ -75,7 +77,7 @@ export default function AddEstimatedSet({
         ]}
       >
         <ThemedText size={12} style={styles.sectionLabel} setColor={theme.text}>
-          Exercise
+          {t("programs.rm.exercise")}
         </ThemedText>
         <ExerciseDropdown
           selectedExerciseName={selectedExerciseName}
@@ -105,7 +107,7 @@ export default function AddEstimatedSet({
               style={styles.sectionLabel}
               setColor={theme.text}
             >
-              Program best
+              {t("programs.rm.programBest")}
             </ThemedText>
             {selectedProgramBest?.isEstimated && (
               <View
@@ -119,7 +121,7 @@ export default function AddEstimatedSet({
                   style={styles.estimatedBadgeText}
                   setColor={badgeTextColor}
                 >
-                  estimated
+                  {t("programs.rm.estimatedBadge")}
                 </ThemedText>
               </View>
             )}
@@ -131,15 +133,15 @@ export default function AddEstimatedSet({
                 {suggestedWeightDisplay}
               </ThemedText>
               <ThemedText size={12} setColor={theme.quietText}>
-                Best set: {selectedProgramBest.setDisplayValue}
+                {t("programs.rm.bestSet", { set: selectedProgramBest.setDisplayValue })}
               </ThemedText>
               {selectedProgramBest.performedDate && (
                 <ThemedText size={12} setColor={theme.quietText}>
-                  Achieved on {selectedProgramBest.performedDate}
+                  {t("programs.rm.achievedOn", { date: selectedProgramBest.performedDate })}
                 </ThemedText>
               )}
               <ThemedButton
-                title={`Use ${suggestedWeightDisplay}`}
+                title={t("programs.rm.useWeight", { weight: suggestedWeightDisplay })}
                 onPress={() => set_estimated_weight(String(suggestedWeight))}
                 fullWidth
                 style={styles.useBestButton}
@@ -147,7 +149,7 @@ export default function AddEstimatedSet({
             </>
           ) : (
             <ThemedText size={12} setColor={theme.quietText}>
-              Select an exercise with a Program best to prefill the 1 RM value.
+              {t("programs.rm.addNoBestHint")}
             </ThemedText>
           )}
         </View>
@@ -166,11 +168,11 @@ export default function AddEstimatedSet({
             style={styles.sectionLabel}
             setColor={theme.text}
           >
-            Estimated 1 RM
+            {t("programs.rm.estimatedLabel")}
           </ThemedText>
           <View style={styles.inputRow}>
             <ThemedTextInput
-              placeholder="Enter weight"
+              placeholder={t("programs.rm.weightPlaceholder")}
               keyboardType="numeric"
               value={estimated_weight}
               onChangeText={set_estimated_weight}
@@ -186,20 +188,20 @@ export default function AddEstimatedSet({
                 },
               ]}
             >
-              <ThemedText size={12}>kg</ThemedText>
+              <ThemedText size={12}>{t("common.kg")}</ThemedText>
             </View>
           </View>
         </View>
 
         <View style={styles.actions}>
           <ThemedButton
-            title="Close"
+            title={t("common.close")}
             variant="secondary"
             onPress={handleClose}
             style={styles.actionButton}
           />
           <ThemedButton
-            title="Add 1 RM"
+            title={t("programs.rm.addButton")}
             onPress={handleSubmit}
             disabled={!canSubmit}
             style={styles.actionButton}

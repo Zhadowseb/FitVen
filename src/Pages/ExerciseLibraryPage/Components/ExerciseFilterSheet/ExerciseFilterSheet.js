@@ -9,6 +9,7 @@ import {
   useColorScheme,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTranslation } from "@localization";
 
 import { Colors, withAlpha } from "../../../../Resources/GlobalStyling/colors";
 import {
@@ -18,28 +19,32 @@ import {
 import Checkmark from "../../../../Resources/Icons/UI-icons/Checkmark";
 import Cross from "../../../../Resources/Icons/UI-icons/Cross";
 import Filter from "../../../../Resources/Icons/UI-icons/Filter";
-import { EXERCISE_MUSCLE_GROUPS } from "../../../../Utils/exerciseMuscleGroups";
+import {
+  EXERCISE_MUSCLE_GROUPS,
+  muscleGroupLabel,
+} from "../../../../Utils/exerciseMuscleGroups";
 
+// Translated at render time, so the labels follow a language switch.
 const GROUP_FILTERS = [
-  { key: "all", label: "All" },
-  { key: "push", label: "Push" },
-  { key: "pull", label: "Pull" },
-  { key: "legs", label: "Legs" },
-  { key: "core", label: "Core" },
-  { key: "mobility", label: "Mobility" },
+  { key: "all", labelKey: "exercises.trainingGroups.all" },
+  { key: "push", labelKey: "exercises.trainingGroups.push" },
+  { key: "pull", labelKey: "exercises.trainingGroups.pull" },
+  { key: "legs", labelKey: "exercises.trainingGroups.legs" },
+  { key: "core", labelKey: "exercises.trainingGroups.core" },
+  { key: "mobility", labelKey: "exercises.trainingGroups.mobility" },
 ];
 
 const TYPE_FILTERS = [
-  { key: "all", label: "All" },
-  { key: "builtin", label: "Built-in" },
-  { key: "custom", label: "Custom" },
+  { key: "all", labelKey: "exercises.types.all" },
+  { key: "builtin", labelKey: "exercises.types.builtin" },
+  { key: "custom", labelKey: "exercises.types.custom" },
 ];
 
 const MUSCLE_GROUP_SECTIONS = [
-  { key: "push", label: "Push" },
-  { key: "pull", label: "Pull" },
-  { key: "legs", label: "Legs" },
-  { key: "core", label: "Core" },
+  { key: "push", labelKey: "exercises.trainingGroups.push" },
+  { key: "pull", labelKey: "exercises.trainingGroups.pull" },
+  { key: "legs", labelKey: "exercises.trainingGroups.legs" },
+  { key: "core", labelKey: "exercises.trainingGroups.core" },
 ];
 
 function getFocusColor(sectionKey, theme) {
@@ -79,6 +84,7 @@ export default function ExerciseFilterSheet({
   resultCount,
   onReset,
 }) {
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const insets = useSafeAreaInsets();
@@ -115,7 +121,7 @@ export default function ExerciseFilterSheet({
           <TouchableOpacity
             activeOpacity={0.72}
             accessibilityRole="button"
-            accessibilityLabel="Close exercise filters"
+            accessibilityLabel={t("exercises.filterSheet.closeA11y")}
             onPress={onClose}
             style={styles.closeButton}
           >
@@ -131,13 +137,19 @@ export default function ExerciseFilterSheet({
                 <Filter width={19} height={19} color={theme.primaryText} />
               </View>
               <View style={styles.headerCopy}>
-                <ThemedText style={styles.eyebrow}>REFINE</ThemedText>
-                <ThemedText style={styles.title}>Filter exercises</ThemedText>
+                <ThemedText style={styles.eyebrow}>
+                  {t("exercises.filterSheet.eyebrow")}
+                </ThemedText>
+                <ThemedText style={styles.title}>
+                  {t("exercises.filterSheet.title")}
+                </ThemedText>
               </View>
             </View>
 
             <View style={styles.section}>
-              <SectionLabel styles={styles}>Training focus</SectionLabel>
+              <SectionLabel styles={styles}>
+                {t("exercises.filterSheet.trainingFocus")}
+              </SectionLabel>
               <View style={styles.chipWrap}>
                 {GROUP_FILTERS.map((filter) => {
                   const isSelected = selectedGroupKey === filter.key;
@@ -167,7 +179,7 @@ export default function ExerciseFilterSheet({
                           isSelected ? styles.chipTextActive : null,
                         ]}
                       >
-                        {filter.label}
+                        {t(filter.labelKey)}
                       </ThemedText>
                     </Pressable>
                   );
@@ -178,9 +190,11 @@ export default function ExerciseFilterSheet({
             <View style={styles.section}>
               <SectionLabel
                 styles={styles}
-                meta={`${selectedMuscleCount} selected`}
+                meta={t("exercises.filterSheet.selected", {
+                  count: selectedMuscleCount,
+                })}
               >
-                Muscle groups
+                {t("exercises.filterSheet.muscleGroups")}
               </SectionLabel>
 
               <View style={styles.muscleSections}>
@@ -193,7 +207,7 @@ export default function ExerciseFilterSheet({
                   return (
                     <View key={section.key} style={styles.muscleSection}>
                       <ThemedText style={[styles.muscleSectionLabel, { color: sectionColor }]}>
-                        {section.label}
+                        {t(section.labelKey)}
                       </ThemedText>
                       <View style={styles.chipWrap}>
                         {muscleGroups.map((group) => {
@@ -227,7 +241,7 @@ export default function ExerciseFilterSheet({
                                   isSelected ? styles.chipTextActive : null,
                                 ]}
                               >
-                                {group.label}
+                                {muscleGroupLabel(group.key, t)}
                               </ThemedText>
                               {isSelected ? (
                                 <Checkmark
@@ -248,7 +262,9 @@ export default function ExerciseFilterSheet({
             </View>
 
             <View style={styles.section}>
-              <SectionLabel styles={styles}>Exercise type</SectionLabel>
+              <SectionLabel styles={styles}>
+                {t("exercises.filterSheet.exerciseType")}
+              </SectionLabel>
               <View style={styles.segmentControl}>
                 {TYPE_FILTERS.map((filter) => {
                   const isSelected = exerciseTypeFilter === filter.key;
@@ -271,7 +287,7 @@ export default function ExerciseFilterSheet({
                           isSelected ? styles.segmentTextActive : null,
                         ]}
                       >
-                        {filter.label}
+                        {t(filter.labelKey)}
                       </ThemedText>
                     </Pressable>
                   );
@@ -287,7 +303,9 @@ export default function ExerciseFilterSheet({
               onPress={onReset}
               style={styles.resetButton}
             >
-              <ThemedText style={styles.resetButtonText}>Reset</ThemedText>
+              <ThemedText style={styles.resetButtonText}>
+                {t("exercises.filterSheet.reset")}
+              </ThemedText>
             </TouchableOpacity>
             <TouchableOpacity
               activeOpacity={0.88}
@@ -296,7 +314,7 @@ export default function ExerciseFilterSheet({
               style={styles.showButton}
             >
               <ThemedText style={styles.showButtonText}>
-                Show {resultCount} exercises
+                {t("exercises.filterSheet.show", { count: resultCount })}
               </ThemedText>
             </TouchableOpacity>
           </View>

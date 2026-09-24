@@ -73,6 +73,7 @@ import {
 } from "./RunHeartRateChartConfig";
 import { buildHeartRateZones } from "../../../../Utils/heartRateUtils";
 import { useAuth } from "../../../../Contexts/AuthContext";
+import { useTranslation } from "@localization";
 
 import {
   getCurrentStoredTimestampSeconds,
@@ -98,6 +99,12 @@ const RUN_HEART_RATE_ZONES = [1, 2, 3, 4, 5];
 const RUN_ZONE_POPOVER_WIDTH = 238;
 const RUN_ZONE_POPOVER_HEIGHT = 40;
 const RUN_ZONE_POPOVER_MARGIN = 12;
+// The activity label is passed in English ("Run", "Walk"); only its display is
+// translated. Anything else falls back to the raw label.
+const RUN_ACTIVITY_LABEL_KEYS = {
+  run: "run.activity.run",
+  walk: "run.activity.walk",
+};
 const Run = ({
   workout_id,
   restartRequestKey,
@@ -111,7 +118,15 @@ const Run = ({
     typeof activityLabel === "string" && activityLabel.trim()
       ? activityLabel.trim()
       : "Run";
-  const activityLabelLower = normalizedActivityLabel.toLowerCase();
+  const { t } = useTranslation();
+  const activityLabelKey =
+    RUN_ACTIVITY_LABEL_KEYS[normalizedActivityLabel.toLowerCase()] ?? null;
+  const activityNameLower = activityLabelKey
+    ? t(`${activityLabelKey}.lower`)
+    : normalizedActivityLabel.toLowerCase();
+  const activitySubject = activityLabelKey
+    ? t(`${activityLabelKey}.subject`)
+    : normalizedActivityLabel;
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const db = useSQLiteContext();
@@ -225,13 +240,13 @@ const Run = ({
 
   useEffect(() => {
     onHeaderTitleChange?.(
-      selectedRunFlow === "endurance-base" ? "Endurance Run" : null
+      selectedRunFlow === "endurance-base" ? t("run.enduranceHeaderTitle") : null
     );
 
     return () => {
       onHeaderTitleChange?.(null);
     };
-  }, [onHeaderTitleChange, selectedRunFlow]);
+  }, [onHeaderTitleChange, selectedRunFlow, t]);
 
   const currentElapsed =
     normalizeElapsedDurationSeconds(elapsed_time, 0) +
@@ -322,8 +337,7 @@ const Run = ({
             setCurrentHeartRate(null);
             setHeartRateStatus("error");
             setHeartRateError(
-              error?.message ||
-                "The heart rate monitor disconnected. Put it on and reconnect."
+              error?.message || t("run.heartRate.errors.disconnected")
             );
           },
         });
@@ -350,11 +364,11 @@ const Run = ({
         setCurrentHeartRate(null);
         setHeartRateStatus("error");
         setHeartRateError(
-          error?.message || "FitVen could not connect to the heart rate monitor."
+          error?.message || t("run.heartRate.errors.connectFailed")
         );
       }
     },
-    [stopHeartRateScan]
+    [stopHeartRateScan, t]
   );
 
   const startHeartRateScan = useCallback(async () => {
@@ -368,9 +382,7 @@ const Run = ({
 
       if (!hasPermission) {
         setHeartRateStatus("error");
-        setHeartRateError(
-          "Allow nearby device access so FitVen can find your HRM-Pro."
-        );
+        setHeartRateError(t("run.heartRate.errors.nearbyPermission"));
         return;
       }
 
@@ -398,7 +410,7 @@ const Run = ({
             stopHeartRateScan();
             setHeartRateStatus("error");
             setHeartRateError(
-              error?.message || "FitVen could not scan for heart rate monitors."
+              error?.message || t("run.heartRate.errors.scanFailed")
             );
           },
         });
@@ -410,10 +422,10 @@ const Run = ({
     } catch (error) {
       setHeartRateStatus("error");
       setHeartRateError(
-        error?.message || "FitVen could not start the Bluetooth scan."
+        error?.message || t("run.heartRate.errors.scanStartFailed")
       );
     }
-  }, [stopHeartRateScan]);
+  }, [stopHeartRateScan, t]);
 
   const openHeartRateSetup = useCallback(() => {
     setHeartRateModalVisible(true);
@@ -1055,8 +1067,8 @@ const Run = ({
     } catch (error) {
       console.error("Failed to start run tracking:", error);
       Alert.alert(
-        "Location tracking could not start",
-        getRunTrackingStartMessage(error, activityLabelLower)
+        t("run.alerts.trackingStartFailedTitle"),
+        getRunTrackingStartMessage(error, activityNameLower)
       );
     } finally {
       set_isControlBusy(false);
@@ -1084,8 +1096,8 @@ const Run = ({
     } catch (error) {
       console.error("Failed to pause run:", error);
       Alert.alert(
-        `${normalizedActivityLabel} could not be paused`,
-        "The timer state will be refreshed so you can try again."
+        t("run.alerts.pauseFailedTitle", { activity: activitySubject }),
+        t("run.alerts.timerRefreshMessage")
       );
       await loadWorkoutState();
     } finally {
@@ -1121,8 +1133,8 @@ const Run = ({
     } catch (error) {
       console.error("Failed to finish run:", error);
       Alert.alert(
-        `${normalizedActivityLabel} could not be finished`,
-        "The timer state will be refreshed so you can try again."
+        t("run.alerts.finishFailedTitle", { activity: activitySubject }),
+        t("run.alerts.timerRefreshMessage")
       );
       await loadWorkoutState();
     } finally {
@@ -1157,8 +1169,8 @@ const Run = ({
     } catch (error) {
       console.error("Failed to restart run:", error);
       Alert.alert(
-        `${normalizedActivityLabel} could not be restarted`,
-        "The timer state will be refreshed so you can try again."
+        t("run.alerts.restartFailedTitle", { activity: activitySubject }),
+        t("run.alerts.timerRefreshMessage")
       );
       await loadWorkoutState();
     } finally {
@@ -1330,11 +1342,11 @@ const Run = ({
       (band) => band.zone === enduranceHeartRateZone
     )?.color ?? secondaryColor;
   const enduranceZonePercentLabels = {
-    1: "<65% HRmax",
-    2: "66-81% HRmax",
-    3: "82-89% HRmax",
-    4: "90-97% HRmax",
-    5: "98%+ HRmax",
+    1: t("run.heartRate.zonePercent", { range: "<65%" }),
+    2: t("run.heartRate.zonePercent", { range: "66-81%" }),
+    3: t("run.heartRate.zonePercent", { range: "82-89%" }),
+    4: t("run.heartRate.zonePercent", { range: "90-97%" }),
+    5: t("run.heartRate.zonePercent", { range: "98%+" }),
   };
   const enduranceWarmupSets = runPlanSets.filter(
     (set) =>
@@ -1453,26 +1465,26 @@ const Run = ({
         : secondaryColor;
   const paceComparisonLabel =
     paceDeltaSeconds === null
-      ? "WAITING FOR DATA"
+      ? t("run.paceComparison.waiting")
       : paceDeltaSeconds > 5
-        ? "BEHIND PLAN"
+        ? t("run.paceComparison.behind")
         : paceDeltaSeconds < -5
-          ? "AHEAD OF PLAN"
-          : "ON PLAN";
+          ? t("run.paceComparison.ahead")
+          : t("run.paceComparison.onPlan");
   const paceComparisonSubtitle =
     paceDeltaSeconds === null
-      ? "Your live pace will be compared with the plan."
+      ? t("run.paceComparison.waitingSubtitle")
       : paceDeltaSeconds > 5
-        ? "Current average pace is behind the planned pace."
+        ? t("run.paceComparison.behindSubtitle")
         : paceDeltaSeconds < -5
-          ? "Current average pace is ahead of the planned pace."
-          : "Current average pace matches the plan.";
+          ? t("run.paceComparison.aheadSubtitle")
+          : t("run.paceComparison.onPlanSubtitle");
   const enduranceHeartRateBand = heartRateZoneBands.find(
     (band) => band.zone === enduranceHeartRateZone
   );
   const enduranceHeartRateRange = enduranceHeartRateBand
     ? `${enduranceHeartRateBand.min}-${enduranceHeartRateBand.max} bpm`
-    : "No target zone";
+    : t("run.heartRate.noTargetZone");
   const enduranceHeartRateUsesDistance = plannedEnduranceDistance > 0;
   const enduranceHeartRateDomainMaxX = Math.max(
     enduranceHeartRateUsesDistance
@@ -1616,10 +1628,10 @@ const Run = ({
   const shouldShowFinishRunPill =
     original_start_time !== null && !isRunning && !isDone;
   const primaryActionLabel = isRunning
-    ? "Pause"
+    ? t("run.actions.pause")
     : original_start_time !== null
-      ? `Continue ${activityLabelLower}`
-      : `Start ${activityLabelLower}`;
+      ? t("run.actions.continueActivity", { activity: activityNameLower })
+      : t("run.actions.startActivity", { activity: activityNameLower });
   const canUsePrimaryAction = !isDone && !isControlBusy;
   const handlePrimaryAction = shouldShowRunFlowSuggestions
     ? () => selectRunFlow("custom")
@@ -1628,25 +1640,25 @@ const Run = ({
       : startWorkout;
   const metricCards = [
     {
-      label: "TIME",
+      label: t("run.stats.time"),
       Icon: Time,
       value: elapsedDisplay,
       unit: null,
     },
     {
-      label: "DIST",
+      label: t("run.stats.distShort"),
       Icon: Distance,
       value: formattedTotalDistance,
       unit: "km",
     },
     {
-      label: "PACE",
+      label: t("run.stats.pace"),
       Icon: Speed,
       value: avgPaceDisplay,
       unit: "/km",
     },
     {
-      label: "HR",
+      label: t("run.stats.hr"),
       value: currentHeartRate ?? "--",
       unit: "bpm",
     },
@@ -1659,8 +1671,8 @@ const Run = ({
       : formatRunClock(activeRunSegment?.remainingSeconds ?? 0);
   const speedStructureCountdownLabel =
     activeRunSegment?.completionMode === "distance"
-      ? "DISTANCE LEFT"
-      : "TIME LEFT";
+      ? t("run.stats.distanceLeft")
+      : t("run.stats.timeLeft");
   const currentPaceDisplay = formatPaceDisplay(currentPaceMinutes);
   const pulseDisplay = activeRunSegment?.heartrate
     ? `Z${activeRunSegment.heartrate}`
@@ -1688,7 +1700,7 @@ const Run = ({
     segment?.heartrate ? `Z${segment.heartrate}` : "--";
   const getSegmentPlanTitle = (segment) => {
     if (!segment) {
-      return "No active set";
+      return t("run.segments.noActiveSet");
     }
 
     const label = segment.actionLabel ?? getRunSegmentLabel(segment);
@@ -1836,7 +1848,7 @@ const Run = ({
       Array.isArray(xAxisTicks) && xAxisTicks.length > 0
         ? xAxisTicks
         : [
-            { value: 0, label: "START" },
+            { value: 0, label: t("run.charts.start") },
             { value: domainMaxX, label: elapsedDisplay },
           ];
     const xAxisTickPositions = resolvedXAxisTicks.map((tick) => {
@@ -1856,7 +1868,9 @@ const Run = ({
         {renderActiveCardTitle(sectionTitle, chartTextColor ?? quietText)}
         <TouchableOpacity
           accessibilityRole={onPress ? "button" : undefined}
-          accessibilityLabel={onPress ? `Open ${title} chart fullscreen` : undefined}
+          accessibilityLabel={
+            onPress ? t("run.charts.openFullscreen", { title }) : undefined
+          }
           activeOpacity={onPress ? 0.82 : 1}
           disabled={!onPress}
           onPress={onPress}
@@ -2070,22 +2084,22 @@ const Run = ({
   const renderRunPlanStatRow = (segment) => {
     const metrics = [
       {
-        label: "DISTANCE",
+        label: t("run.stats.distance"),
         value: formatSegmentPlanDistance(segment),
         icon: "map-pin",
       },
       {
-        label: "PACE",
+        label: t("run.stats.pace"),
         value: formatSegmentPlanPace(segment),
         icon: "activity",
       },
       {
-        label: "TIME",
+        label: t("run.stats.time"),
         value: formatSegmentPlanTime(segment),
         icon: "clock",
       },
       {
-        label: "HR",
+        label: t("run.stats.hr"),
         value: formatSegmentPlanHeartRate(segment),
         icon: "heart",
       },
@@ -2130,7 +2144,10 @@ const Run = ({
         </View>
         {Number(segment?.actual_duration_seconds) > 0 ? (
           <ThemedText style={styles.activeSetActualResult} setColor={secondaryColor}>
-            Actual {formatRunClock(segment.actual_duration_seconds)} · {formatPaceDisplay(Number(segment.actual_pace))} /km
+            {t("run.plan.actualResult", {
+              time: formatRunClock(segment.actual_duration_seconds),
+              pace: formatPaceDisplay(Number(segment.actual_pace)),
+            })}
           </ThemedText>
         ) : null}
       </>
@@ -2176,7 +2193,7 @@ const Run = ({
           adjustsFontSizeToFit
           minimumFontScale={0.78}
         >
-          {selectedRunFlowOption.title}
+          {t(selectedRunFlowOption.titleKey)}
         </ThemedText>
       </TouchableOpacity>
     );
@@ -2186,10 +2203,10 @@ const Run = ({
     <View style={styles.runFlowShell}>
       <View style={styles.runFlowHeader}>
         <ThemedText style={styles.runFlowTitle} setColor={titleColor}>
-          Choose your run focus
+          {t("run.flows.chooseTitle")}
         </ThemedText>
         <ThemedText style={styles.runFlowSubtitle} setColor={theme.text}>
-          Pick a structure — you can adjust every set afterwards.
+          {t("run.flows.chooseSubtitle")}
         </ThemedText>
       </View>
 
@@ -2216,14 +2233,14 @@ const Run = ({
                 setColor={titleColor}
                 numberOfLines={2}
               >
-                {option.gridTitle ?? option.title}
+                {t(option.gridTitleKey ?? option.titleKey)}
               </ThemedText>
               <ThemedText
                 style={styles.runFlowCardSubtitle}
                 setColor={quietText}
                 numberOfLines={2}
               >
-                {option.subtitle}
+                {t(option.subtitleKey)}
               </ThemedText>
             </View>
           </TouchableOpacity>
@@ -2270,7 +2287,9 @@ const Run = ({
         activeOpacity={0.78}
         disabled={!canFinishRun}
         accessibilityRole="button"
-        accessibilityLabel={`Finish ${activityLabelLower}`}
+        accessibilityLabel={t("run.actions.finishActivity", {
+          activity: activityNameLower,
+        })}
         onPress={endWorkout}
         style={[
           styles.activeTimerIconButton,
@@ -2287,7 +2306,7 @@ const Run = ({
 
   const renderActiveSummaryCard = () => (
     <View style={styles.activeTitledCardShell}>
-      {renderActiveCardTitle("Workout totals")}
+      {renderActiveCardTitle(t("run.cards.workoutTotals"))}
       <ThemedCard
         style={[
           styles.activeSummaryCard,
@@ -2308,7 +2327,7 @@ const Run = ({
           </View>
           <View style={styles.activeSummaryCopy}>
             <ThemedText style={styles.activeSummaryLabel} setColor={quietText}>
-              TOTAL TIME
+              {t("run.stats.totalTime")}
             </ThemedText>
             <ThemedText
               style={styles.activeSummaryValue}
@@ -2335,7 +2354,7 @@ const Run = ({
           </View>
           <View style={styles.activeSummaryCopy}>
             <ThemedText style={styles.activeSummaryLabel} setColor={quietText}>
-              TOTAL DISTANCE
+              {t("run.stats.totalDistance")}
             </ThemedText>
             <ThemedText
               style={styles.activeSummaryValue}
@@ -2344,7 +2363,7 @@ const Run = ({
               adjustsFontSizeToFit
               minimumFontScale={0.58}
             >
-              {formattedTotalDistance} km
+              {formattedTotalDistance} {t("run.units.km")}
             </ThemedText>
           </View>
         </View>
@@ -2354,7 +2373,7 @@ const Run = ({
 
   const renderCurrentSetCard = () => (
     <View style={styles.activeTitledCardShell}>
-      {renderActiveCardTitle("Current set")}
+      {renderActiveCardTitle(t("run.cards.currentSet"))}
       <ThemedCard
         style={[
           styles.activeCurrentSetCard,
@@ -2368,7 +2387,7 @@ const Run = ({
           <View style={styles.currentSetActionWrap}>
             {renderActiveTimerPrimaryButton()}
             <ThemedText style={styles.currentSetActionLabel} setColor={quietText}>
-              {isRunning ? "PAUSE" : "START"}
+              {isRunning ? t("run.controls.pause") : t("run.controls.start")}
             </ThemedText>
           </View>
 
@@ -2390,7 +2409,7 @@ const Run = ({
           <View style={styles.currentSetActionWrap}>
             {renderActiveTimerFinishButton()}
             <ThemedText style={styles.currentSetActionLabel} setColor={quietText}>
-              FINISH
+              {t("run.controls.finish")}
             </ThemedText>
           </View>
         </View>
@@ -2402,7 +2421,7 @@ const Run = ({
 
   const renderActiveEffortCard = () => (
     <View style={styles.activeTitledCardShell}>
-      {renderActiveCardTitle("Live stats")}
+      {renderActiveCardTitle(t("run.cards.liveStats"))}
       <ThemedCard
         style={[
           styles.activeEffortCard,
@@ -2423,7 +2442,7 @@ const Run = ({
           </View>
           <View style={styles.activeEffortCopy}>
             <ThemedText style={styles.activeEffortLabel} setColor={secondaryColor}>
-              Current pace
+              {t("run.stats.currentPaceLabel")}
             </ThemedText>
             <View style={styles.speedTimerValueLine}>
               <ThemedText
@@ -2436,7 +2455,7 @@ const Run = ({
                 {currentPaceDisplay}
               </ThemedText>
               <ThemedText style={styles.speedTimerUnitInline} setColor={quietText}>
-                /km
+                {t("run.units.perKm")}
               </ThemedText>
             </View>
           </View>
@@ -2455,7 +2474,7 @@ const Run = ({
           </View>
           <View style={styles.activeEffortCopy}>
             <ThemedText style={styles.activeEffortLabel} setColor={primaryColor}>
-              Heart rate (HR)
+              {t("run.stats.heartRateLabel")}
             </ThemedText>
             <View style={styles.speedTimerValueLine}>
               <ThemedText
@@ -2468,7 +2487,7 @@ const Run = ({
                 {pulseDisplay}
               </ThemedText>
               <ThemedText style={styles.speedTimerUnitInline} setColor={quietText}>
-                bpm/zone
+                {t("run.units.bpmPerZone")}
               </ThemedText>
             </View>
           </View>
@@ -2479,7 +2498,7 @@ const Run = ({
 
   const renderNextIntervalCard = () => (
     <View style={styles.activeTitledCardShell}>
-      {renderActiveCardTitle("Next interval")}
+      {renderActiveCardTitle(t("run.cards.nextInterval"))}
       <ThemedCard
         style={[
           styles.nextIntervalCard,
@@ -2497,7 +2516,9 @@ const Run = ({
             adjustsFontSizeToFit
             minimumFontScale={0.64}
           >
-            {nextRunSegment ? getSegmentPlanTitle(nextRunSegment) : "No next set"}
+            {nextRunSegment
+              ? getSegmentPlanTitle(nextRunSegment)
+              : t("run.segments.noNextSet")}
           </ThemedText>
         </View>
 
@@ -2509,17 +2530,17 @@ const Run = ({
   const renderCompletedSummaryCard = () => {
     const summaryStats = [
       {
-        label: "TOTAL TIME",
+        label: t("run.stats.totalTime"),
         value: elapsedDisplay,
         icon: "clock",
       },
       {
-        label: "AVG PACE",
+        label: t("run.stats.avgPace"),
         value: `${avgPaceDisplay} /km`,
         icon: "activity",
       },
       {
-        label: "SETS",
+        label: t("run.stats.sets"),
         value: completedSetDisplay,
         icon: "check-circle",
       },
@@ -2527,7 +2548,7 @@ const Run = ({
 
     return (
       <View style={styles.activeTitledCardShell}>
-        {renderActiveCardTitle("Workout summary")}
+        {renderActiveCardTitle(t("run.cards.workoutSummary"))}
         <ThemedCard
           style={[
             styles.completedSummaryCard,
@@ -2551,7 +2572,7 @@ const Run = ({
               style={styles.completedDistanceUnit}
               setColor={quietText}
             >
-              km
+              {t("run.units.km")}
             </ThemedText>
           </View>
 
@@ -2606,13 +2627,14 @@ const Run = ({
     // here incorrectly hides maps that are correctly configured natively.
     const canRenderRouteMap = routeRegion !== null;
     const routeEmptyTitle =
-      routeRegion === null ? "No route recorded" : "Map unavailable";
-    const routeEmptyText =
-      "GPS points from the run will appear here.";
+      routeRegion === null
+        ? t("run.route.noRouteRecorded")
+        : t("run.route.mapUnavailable");
+    const routeEmptyText = t("run.route.emptyText");
 
     return (
       <View style={styles.activeTitledCardShell}>
-        {renderActiveCardTitle("Route")}
+        {renderActiveCardTitle(t("run.route.title"))}
         <ThemedCard
           style={[
             styles.completedRouteCard,
@@ -2649,14 +2671,14 @@ const Run = ({
                 <Marker
                   coordinate={startCoordinate}
                   pinColor={secondaryColor}
-                  title="Start"
+                  title={t("run.route.startMarker")}
                 />
               ) : null}
               {finishCoordinate ? (
                 <Marker
                   coordinate={finishCoordinate}
                   pinColor={primaryColor}
-                  title="Finish"
+                  title={t("run.route.finishMarker")}
                 />
               ) : null}
             </MapView>
@@ -2697,14 +2719,14 @@ const Run = ({
                 style={styles.completedRouteFooterValue}
                 setColor={titleColor}
               >
-                {formattedTotalDistance} km
+                {formattedTotalDistance} {t("run.units.km")}
               </ThemedText>
             </View>
             <ThemedText
               style={styles.completedRouteFooterMeta}
               setColor={quietText}
             >
-              {routeCoordinates.length} GPS points
+              {t("run.route.gpsPoints", { count: routeCoordinates.length })}
             </ThemedText>
           </View>
         </ThemedCard>
@@ -2716,26 +2738,26 @@ const Run = ({
     <View style={styles.completedRunDashboard}>
       {renderCompletedSummaryCard()}
       {renderCompletionChart({
-        sectionTitle: "Pace over time",
-        title: "Pace",
-        subtitle: "GPS pace throughout the workout",
+        sectionTitle: t("run.charts.paceOverTime"),
+        title: t("run.charts.pace"),
+        subtitle: t("run.charts.paceSubtitle"),
         icon: "activity",
         data: paceHistory,
         color: primaryColor,
         value: avgPaceDisplay,
-        valueLabel: "AVG /KM",
+        valueLabel: t("run.charts.avgPerKm"),
         invert: true,
       })}
       {renderCompletionChart({
-        sectionTitle: "Heart rate over time",
-        title: "Heart rate",
-        subtitle: "Actual and planned heart rate",
+        sectionTitle: t("run.charts.heartRateOverTime"),
+        title: t("run.charts.heartRate"),
+        subtitle: t("run.charts.heartRateSubtitle"),
         icon: "heart",
         data: actualHeartRateHistory,
         plannedData: targetHeartRateHistory,
         color: secondaryColor,
         value: targetHeartRateDisplay,
-        valueLabel: "TARGET",
+        valueLabel: t("run.charts.target"),
         plannedStepped: true,
         strokeWidth: 2,
         colorByHeartRateZone: true,
@@ -2759,7 +2781,7 @@ const Run = ({
         <View style={styles.completedPlanHeading}>
           <Feather name="list" size={16} color={primaryColor} />
           <ThemedText style={styles.completedPlanTitle} setColor={titleColor}>
-            Workout plan
+            {t("run.plan.workoutPlan")}
           </ThemedText>
         </View>
       ) : null}
@@ -3013,13 +3035,15 @@ const Run = ({
         ? `${formatRunDistance(plannedEnduranceDistance)} km`
         : expectedDistanceDisplay;
     const plannedDistanceMeta =
-      plannedEnduranceDistance > 0 ? "Planned" : "Estimated";
+      plannedEnduranceDistance > 0
+        ? t("run.endurance.planned")
+        : t("run.endurance.estimated");
     const EnduranceZoneStat = editable ? TouchableOpacity : View;
     const enduranceZoneStatProps = editable
       ? {
           ref: enduranceZoneTriggerRef,
           accessibilityRole: "button",
-          accessibilityLabel: "Change planned heart rate zone",
+          accessibilityLabel: t("run.endurance.changeZone"),
           activeOpacity: 0.78,
           onPress: handleEnduranceZonePress,
         }
@@ -3029,7 +3053,7 @@ const Run = ({
 
     return (
       <View key={key} style={styles.activeTitledCardShell}>
-        {!showControls ? renderActiveCardTitle("Planned") : null}
+        {!showControls ? renderActiveCardTitle(t("run.endurance.planned")) : null}
         <ThemedCard
           style={[
             styles.endurancePlanCard,
@@ -3048,7 +3072,7 @@ const Run = ({
                       style={styles.enduranceControlLabel}
                       setColor={quietText}
                     >
-                      {isRunning ? "PAUSE" : "RESUME"}
+                      {isRunning ? t("run.controls.pause") : t("run.controls.resume")}
                     </ThemedText>
                   </View>
 
@@ -3058,7 +3082,7 @@ const Run = ({
                       style={styles.enduranceControlLabel}
                       setColor={quietText}
                     >
-                      FINISH
+                      {t("run.controls.finish")}
                     </ThemedText>
                   </View>
                 </View>
@@ -3085,7 +3109,7 @@ const Run = ({
                     style={styles.endurancePlanStatLabel}
                     setColor={quietText}
                   >
-                    DURATION
+                    {t("run.stats.duration")}
                   </ThemedText>
                 </View>
                 {editable ? (
@@ -3130,7 +3154,7 @@ const Run = ({
                   style={styles.endurancePlanStatMeta}
                   setColor={quietText}
                 >
-                  Total time
+                  {t("run.endurance.totalTime")}
                 </ThemedText>
               </View>
 
@@ -3153,7 +3177,7 @@ const Run = ({
                     style={styles.endurancePlanStatLabel}
                     setColor={quietText}
                   >
-                    DISTANCE
+                    {t("run.stats.distance")}
                   </ThemedText>
                 </View>
                 {editable ? (
@@ -3224,7 +3248,7 @@ const Run = ({
                     style={styles.endurancePlanStatLabel}
                     setColor={quietText}
                   >
-                    PACE
+                    {t("run.stats.pace")}
                   </ThemedText>
                 </View>
                 {editable ? (
@@ -3268,7 +3292,7 @@ const Run = ({
                   style={styles.endurancePlanStatMeta}
                   setColor={quietText}
                 >
-                  Planned /km
+                  {t("run.endurance.plannedPerKm")}
                 </ThemedText>
               </View>
 
@@ -3296,7 +3320,7 @@ const Run = ({
                     style={styles.endurancePlanStatLabel}
                     setColor={quietText}
                   >
-                    ZONE
+                    {t("run.stats.zone")}
                   </ThemedText>
                 </View>
                 <ThemedText
@@ -3304,7 +3328,7 @@ const Run = ({
                   setColor={enduranceHeartRateColor}
                 >
                   {enduranceHeartRateZone
-                    ? `Zone ${enduranceHeartRateZone}`
+                    ? t("run.heartRate.zoneNumber", { zone: enduranceHeartRateZone })
                     : "--"}
                 </ThemedText>
                 <ThemedText
@@ -3314,7 +3338,8 @@ const Run = ({
                   adjustsFontSizeToFit
                   minimumFontScale={0.72}
                 >
-                  {enduranceZonePercentLabels[enduranceHeartRateZone] ?? "HRmax"}
+                  {enduranceZonePercentLabels[enduranceHeartRateZone] ??
+                    t("run.heartRate.hrMax")}
                 </ThemedText>
                 </EnduranceZoneStat>
               </View>
@@ -3326,7 +3351,7 @@ const Run = ({
         original_start_time === null &&
         visibleEnduranceStatPriority.length > 0 ? (
           <View style={styles.statPrioritySection}>
-            {renderActiveCardTitle("Stat priority")}
+            {renderActiveCardTitle(t("run.priority.sectionTitle"))}
             <ThemedCard
               style={[
                 styles.statPriorityCard,
@@ -3342,13 +3367,13 @@ const Run = ({
                     style={styles.statPriorityTitle}
                     setColor={titleColor}
                   >
-                    Priority
+                    {t("run.priority.title")}
                   </ThemedText>
                   <ThemedText
                     style={styles.statPriorityDescription}
                     setColor={quietText}
                   >
-                    Drag the handle to change the order.
+                    {t("run.priority.description")}
                   </ThemedText>
                 </View>
                 <Feather name="sliders" size={19} color={quietText} />
@@ -3399,19 +3424,19 @@ const Run = ({
               style={styles.enduranceRoutesEyebrow}
               setColor={quietText}
             >
-              ROUTES
+              {t("run.routes.eyebrow")}
             </ThemedText>
             <ThemedText
               style={styles.enduranceRoutesTitle}
               setColor={titleColor}
             >
-              Previous routes
+              {t("run.routes.title")}
             </ThemedText>
             <ThemedText
               style={styles.enduranceRoutesDescription}
               setColor={quietText}
             >
-              Reuse saved routes and compare earlier runs.
+              {t("run.routes.description")}
             </ThemedText>
           </View>
 
@@ -3425,7 +3450,7 @@ const Run = ({
               style={styles.enduranceRoutesBadgeText}
               setColor={primaryColor}
             >
-              COMING SOON
+              {t("run.routes.comingSoon")}
             </ThemedText>
           </View>
           </ThemedCard>
@@ -3493,7 +3518,7 @@ const Run = ({
                 { order: getActiveStatCardOrder("distance-time") },
               ]}
             >
-              {renderActiveCardTitle("Distance & time")}
+              {renderActiveCardTitle(t("run.endurance.distanceAndTime"))}
               <ThemedCard
                 style={[
                   styles.enduranceProgressCard,
@@ -3509,7 +3534,7 @@ const Run = ({
                       style={styles.enduranceProgressLabel}
                       setColor={quietText}
                     >
-                      TIME
+                      {t("run.stats.time")}
                     </ThemedText>
                     <ThemedText
                       style={styles.enduranceProgressValue}
@@ -3540,7 +3565,7 @@ const Run = ({
                       style={styles.enduranceProgressLabel}
                       setColor={quietText}
                     >
-                      DISTANCE
+                      {t("run.stats.distance")}
                     </ThemedText>
                     <ThemedText
                       style={styles.enduranceProgressValue}
@@ -3571,7 +3596,7 @@ const Run = ({
                       style={styles.enduranceProgressLabel}
                       setColor={quietText}
                     >
-                      AVG PACE
+                      {t("run.stats.avgPace")}
                     </ThemedText>
                     <ThemedText
                       style={styles.enduranceProgressValue}
@@ -3586,7 +3611,7 @@ const Run = ({
                       style={styles.enduranceProgressMeta}
                       setColor={quietText}
                     >
-                      min/km
+                      {t("run.units.minPerKm")}
                     </ThemedText>
                   </View>
 
@@ -3603,7 +3628,7 @@ const Run = ({
                       setColor={quietText}
                       numberOfLines={2}
                     >
-                      EXPECTED DIST.
+                      {t("run.endurance.expectedDistShort")}
                     </ThemedText>
                     <ThemedText
                       style={styles.enduranceProgressValue}
@@ -3619,7 +3644,9 @@ const Run = ({
                       setColor={quietText}
                       numberOfLines={1}
                     >
-                      at {plannedDurationDisplay}
+                      {t("run.endurance.atDuration", {
+                        duration: plannedDurationDisplay,
+                      })}
                     </ThemedText>
                   </View>
                 </View>
@@ -3650,8 +3677,8 @@ const Run = ({
             </View>
 
             {renderCompletionChart({
-              sectionTitle: "Pace vs. plan",
-              title: "Pace comparison",
+              sectionTitle: t("run.paceComparison.sectionTitle"),
+              title: t("run.paceComparison.title"),
               subtitle: paceComparisonSubtitle,
               icon: "activity",
               data: paceHistory,
@@ -3668,7 +3695,7 @@ const Run = ({
               strokeWidth: 2.25,
               showPlannedLine: false,
               chartTextColor: "#FFFFFF",
-              yAxisLabel: "PACE",
+              yAxisLabel: t("run.stats.pace"),
               containerStyle: {
                 order: getActiveStatCardOrder("pace"),
               },
@@ -3676,21 +3703,23 @@ const Run = ({
 
             {renderCompletionChart({
               sectionTitle: enduranceHeartRateZone
-                ? `Heart rate - Zone ${enduranceHeartRateZone}`
-                : "Heart rate",
+                ? t("run.heartRate.sectionTitleWithZone", {
+                    zone: enduranceHeartRateZone,
+                  })
+                : t("run.charts.heartRate"),
               title: enduranceHeartRateZone
-                ? `Zone ${enduranceHeartRateZone}`
-                : "Heart rate",
+                ? t("run.heartRate.zoneNumber", { zone: enduranceHeartRateZone })
+                : t("run.charts.heartRate"),
               subtitle:
                 enduranceActualHeartRateHistory.length > 0
-                  ? "Live heart rate compared with the planned zone."
-                  : "Planned heart-rate zone; waiting for live data.",
+                  ? t("run.heartRate.liveComparedSubtitle")
+                  : t("run.heartRate.waitingSubtitle"),
               icon: "heart",
               data: enduranceActualHeartRateHistory,
               plannedData: enduranceTargetHeartRateHistory,
               color: enduranceHeartRateColor,
               value: enduranceHeartRateZone
-                ? `Zone ${enduranceHeartRateZone}`
+                ? t("run.heartRate.zoneNumber", { zone: enduranceHeartRateZone })
                 : "--",
               valueLabel: enduranceHeartRateRange,
               plannedStepped: true,
@@ -3738,22 +3767,22 @@ const Run = ({
   const renderCustomRunDashboard = () => {
     const customMetrics = [
       {
-        label: "TIME",
+        label: t("run.stats.time"),
         value: elapsedDisplay,
         meta: "mm:ss",
       },
       {
-        label: "DISTANCE",
+        label: t("run.stats.distance"),
         value: formattedTotalDistance,
         meta: "km",
       },
       {
-        label: "AVG PACE",
+        label: t("run.stats.avgPace"),
         value: avgPaceDisplay,
         meta: "min/km",
       },
       {
-        label: "CURRENT PACE",
+        label: t("run.stats.currentPace"),
         value: formatPaceDisplay(currentPaceMinutes),
         meta: "min/km",
       },
@@ -3822,10 +3851,10 @@ const Run = ({
                 setColor={quietText}
               >
                 {isRunning
-                  ? "PAUSE"
+                  ? t("run.controls.pause")
                   : original_start_time === null
-                    ? "START"
-                    : "RESUME"}
+                    ? t("run.controls.start")
+                    : t("run.controls.resume")}
               </ThemedText>
             </View>
             {original_start_time !== null ? (
@@ -3835,7 +3864,7 @@ const Run = ({
                   style={styles.enduranceControlLabel}
                   setColor={quietText}
                 >
-                  FINISH
+                  {t("run.controls.finish")}
                 </ThemedText>
               </View>
             ) : null}
@@ -3843,7 +3872,7 @@ const Run = ({
         </ThemedCard>
 
         <View style={styles.activeTitledCardShell}>
-          {renderActiveCardTitle("Heart rate")}
+          {renderActiveCardTitle(t("run.charts.heartRate"))}
           <ThemedCard
             style={[
               styles.customHeartRateCard,
@@ -3864,7 +3893,7 @@ const Run = ({
                     style={styles.customHeartRateUnit}
                     setColor={quietText}
                   >
-                    {" "}bpm
+                    {" "}{t("run.units.bpm")}
                   </ThemedText>
                 </ThemedText>
                 <ThemedText
@@ -3872,8 +3901,8 @@ const Run = ({
                   setColor={currentHeartRateBand?.color ?? quietText}
                 >
                   {currentHeartRateBand
-                    ? `Zone ${currentHeartRateBand.zone}`
-                    : "Waiting for heart rate"}
+                    ? t("run.heartRate.zoneNumber", { zone: currentHeartRateBand.zone })
+                    : t("run.heartRate.waiting")}
                 </ThemedText>
               </View>
               <Feather
@@ -3941,7 +3970,7 @@ const Run = ({
                           setColor={band.color}
                           numberOfLines={1}
                         >
-                          ZONE {band.zone}
+                          {t("run.heartRate.zoneBandLabel", { zone: band.zone })}
                         </ThemedText>
                       </View>
                     );
@@ -3966,7 +3995,7 @@ const Run = ({
                         setColor="#FFFFFF"
                         numberOfLines={1}
                       >
-                        {band.max} bpm
+                        {band.max} {t("run.units.bpm")}
                       </ThemedText>
                     </View>
                   ))}
@@ -3998,7 +4027,7 @@ const Run = ({
               <View style={styles.customHeartRateRecenterRow}>
                 <TouchableOpacity
                   accessibilityRole="button"
-                  accessibilityLabel="Recenter heart rate zones"
+                  accessibilityLabel={t("run.heartRate.recenterLabel")}
                   activeOpacity={0.78}
                   onPress={() => setIsCustomHeartRateFollowing(true)}
                   style={[
@@ -4011,7 +4040,7 @@ const Run = ({
                     style={styles.customHeartRateRecenterText}
                     setColor={titleColor}
                   >
-                    RECENTER
+                    {t("run.heartRate.recenter")}
                   </ThemedText>
                 </TouchableOpacity>
               </View>
@@ -4021,19 +4050,19 @@ const Run = ({
                 style={styles.customHeartRateScaleText}
                 setColor={quietText}
               >
-                LOWER
+                {t("run.heartRate.scaleLower")}
               </ThemedText>
               <ThemedText
                 style={styles.customHeartRateScaleText}
                 setColor={quietText}
               >
-                CURRENT
+                {t("run.heartRate.scaleCurrent")}
               </ThemedText>
               <ThemedText
                 style={styles.customHeartRateScaleText}
                 setColor={quietText}
               >
-                HIGHER
+                {t("run.heartRate.scaleHigher")}
               </ThemedText>
             </View>
           </ThemedCard>
@@ -4056,7 +4085,9 @@ const Run = ({
     <TouchableOpacity
       accessibilityRole="button"
       accessibilityLabel={
-        isWorkoutPlanExpanded ? "Hide workout plan" : "Show workout plan"
+        isWorkoutPlanExpanded
+          ? t("run.plan.hideWorkoutPlan")
+          : t("run.plan.showWorkoutPlan")
       }
       activeOpacity={0.78}
       onPress={() => set_isWorkoutPlanExpanded((isExpanded) => !isExpanded)}
@@ -4071,13 +4102,13 @@ const Run = ({
       <View style={styles.workoutPlanToggleCopy}>
         <Feather name="list" size={17} color={primaryColor} />
         <ThemedText style={styles.workoutPlanToggleTitle} setColor={titleColor}>
-          Workout plan
+          {t("run.plan.workoutPlan")}
         </ThemedText>
       </View>
 
       <View style={styles.workoutPlanToggleAction}>
         <ThemedText style={styles.workoutPlanToggleLabel} setColor={primaryColor}>
-          {isWorkoutPlanExpanded ? "Hide plan" : "Show plan"}
+          {isWorkoutPlanExpanded ? t("run.plan.hidePlan") : t("run.plan.showPlan")}
         </ThemedText>
         <Feather
           name={isWorkoutPlanExpanded ? "chevron-up" : "chevron-down"}
@@ -4098,25 +4129,26 @@ const Run = ({
         ? primaryColor
         : quietText;
     const statusTitle = isConnected
-      ? heartRateDevice?.name || "Heart rate monitor"
+      ? heartRateDevice?.name || t("run.heartRate.monitorFallbackName")
       : heartRateStatus === "connecting"
-        ? "Connecting to heart rate monitor"
+        ? t("run.heartRate.status.connecting")
         : heartRateStatus === "scanning"
-          ? "Looking for your HRM-Pro"
+          ? t("run.heartRate.status.scanning")
           : heartRateStatus === "error"
-            ? "Heart rate monitor disconnected"
-            : "Connect HRM-Pro";
+            ? t("run.heartRate.status.disconnected")
+            : t("run.heartRate.status.connect");
     const statusDetail = isConnected
       ? currentHeartRate === null
-        ? "Connected · waiting for pulse"
-        : `Live · ${currentHeartRate} bpm${
-            currentHeartRateBand
-              ? ` · Zone ${currentHeartRateBand.zone}`
-              : ""
-          }`
+        ? t("run.heartRate.status.waitingForPulse")
+        : currentHeartRateBand
+          ? t("run.heartRate.status.liveWithZone", {
+              bpm: currentHeartRate,
+              zone: currentHeartRateBand.zone,
+            })
+          : t("run.heartRate.status.live", { bpm: currentHeartRate })
       : heartRateStatus === "error"
-        ? "Tap to reconnect"
-        : "Show live heart rate during this workout";
+        ? t("run.heartRate.status.tapToReconnect")
+        : t("run.heartRate.status.showLive");
 
     return (
       <TouchableOpacity
@@ -4241,7 +4273,7 @@ const Run = ({
               style={styles.heroSecondaryButtonText}
               setColor={invertedText}
             >
-              FINISH
+              {t("run.controls.finish")}
             </ThemedText>
           </TouchableOpacity>
         ) : null}
@@ -4281,32 +4313,32 @@ const Run = ({
     {
       type: "WARMUP",
       variant: "segment",
-      title: "Warmup",
-      eyebrow: "WARMUP",
-      emptySummary: "Add warmup",
+      title: t("run.sections.warmup.title"),
+      eyebrow: t("run.sections.warmup.eyebrow"),
+      emptySummary: t("run.sections.warmup.empty"),
     },
     {
       type: "WORKING_SET",
       variant: "intervals",
       title:
         selectedRunFlow === "endurance-base"
-          ? "Main activity"
-          : "Intervals",
+          ? t("run.sections.mainActivity.title")
+          : t("run.sections.intervals.title"),
       eyebrow:
         selectedRunFlow === "endurance-base"
-          ? "MAIN ACTIVITY"
-          : "INTERVALS",
+          ? t("run.sections.mainActivity.eyebrow")
+          : t("run.sections.intervals.eyebrow"),
       emptySummary:
         selectedRunFlow === "endurance-base"
-          ? "Add the main run"
-          : "Add intervals to build this run",
+          ? t("run.sections.mainActivity.empty")
+          : t("run.sections.intervals.empty"),
     },
     {
       type: "COOLDOWN",
       variant: "segment",
-      title: "Cooldown",
-      eyebrow: "COOLDOWN",
-      emptySummary: "Add cooldown",
+      title: t("run.sections.cooldown.title"),
+      eyebrow: t("run.sections.cooldown.eyebrow"),
+      emptySummary: t("run.sections.cooldown.empty"),
     },
   ];
   const visibleSectionConfigs = sectionConfigs.filter((section) => {

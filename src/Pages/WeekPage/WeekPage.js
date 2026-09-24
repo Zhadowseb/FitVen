@@ -7,6 +7,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import styles from "./WeekPageStyle";
 import { Colors } from "../../Resources/GlobalStyling/colors";
 import { programService } from "../../Services";
+import { useTranslation } from "@localization";
 
 import Day from "./Components/Day/Day";
 
@@ -29,6 +30,7 @@ const WEEK_DAYS = [
 ];
 
 const WeekPage = ({ route }) => {
+  const { t } = useTranslation();
   const db = useSQLiteContext();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -70,14 +72,14 @@ const WeekPage = ({ route }) => {
       } catch (error) {
         setDayCount(null);
         setErrorMessage(
-          error instanceof Error ? error.message : "Could not load this week."
+          error instanceof Error ? error.message : t("programs.weeks.loadFailed")
         );
       } finally {
         setLoading(false);
         setRefreshing(false);
       }
     },
-    [db, microcycle_id]
+    [db, microcycle_id, t]
   );
 
   useFocusEffect(
@@ -104,19 +106,19 @@ const WeekPage = ({ route }) => {
             {period_start} - {period_end}
           </ThemedText>
           <ThemedTitle type="pageTitle" numberOfLines={1}>
-            Week {week_number}
+            {t("programs.weekNumber", { number: week_number })}
           </ThemedTitle>
         </View>
       </ThemedHeader>
 
       {loading ? (
-        <ThemedStateBlock variant="loading" message="Loading this week..." />
+        <ThemedStateBlock variant="loading" message={t("programs.weeks.loading")} />
       ) : errorMessage ? (
         <ThemedStateBlock
           variant="error"
-          title="Week unavailable"
+          title={t("programs.weeks.unavailableTitle")}
           message={errorMessage}
-          actionLabel="Try again"
+          actionLabel={t("common.retry")}
           onAction={() => loadWeek({ showLoader: true })}
         />
       ) : (
@@ -137,8 +139,8 @@ const WeekPage = ({ route }) => {
           {dayCount === 0 ? (
             <ThemedStateBlock
               variant="empty"
-              title="No days in this week"
-              message="This week has no days yet. Add them from the block overview."
+              title={t("programs.weeks.emptyTitle")}
+              message={t("programs.weeks.emptyMessage")}
             />
           ) : (
             WEEK_DAYS.map((day) => (

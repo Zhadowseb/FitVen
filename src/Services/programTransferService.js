@@ -3,6 +3,8 @@ import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 
+import { t } from "@localization";
+
 import { withTransaction } from "./shared";
 import { createNextSyncVersion } from "../Utils/syncUtils";
 
@@ -133,7 +135,9 @@ function requireMappedId(map, oldId, label) {
   const mappedId = map.get(toIntegerOrNull(oldId));
 
   if (!mappedId) {
-    throw new Error(`Missing imported parent for ${label} ${oldId}.`);
+    throw new Error(
+      t("programs.transfer.missingParent", { label, id: oldId })
+    );
   }
 
   return mappedId;
@@ -191,7 +195,7 @@ function getTransferDirectory() {
   const baseDirectory = FileSystem.cacheDirectory ?? FileSystem.documentDirectory;
 
   if (!baseDirectory) {
-    throw new Error("No local file directory is available for program export.");
+    throw new Error(t("programs.transfer.noDirectory"));
   }
 
   return `${baseDirectory}program-exports/`;
@@ -232,7 +236,7 @@ async function getProgramExportTables(db, programId) {
   );
 
   if (!program?.id) {
-    throw new Error("Programmet blev ikke fundet.");
+    throw new Error(t("programs.transfer.programNotFound"));
   }
 
   const [
@@ -463,7 +467,7 @@ export async function exportProgramToFile(db, programId) {
     await Sharing.shareAsync(fileUri, {
       mimeType: EXPORT_MIME_TYPE,
       UTI: "public.json",
-      dialogTitle: "Export program",
+      dialogTitle: t("programs.settings.exportProgram"),
     });
   }
 
@@ -481,13 +485,13 @@ function validateProgramImportPayload(payload) {
   const exportVersion = payload?.export_version ?? payload?.exportVersion;
 
   if (exportType !== EXPORT_TYPE || Number(exportVersion) !== EXPORT_VERSION) {
-    throw new Error("The file is not a valid FitVen program export.");
+    throw new Error(t("programs.transfer.invalidFile"));
   }
 
   const programs = getTable(payload, "Program");
 
   if (programs.length !== 1) {
-    throw new Error("The program file must contain exactly one program.");
+    throw new Error(t("programs.transfer.exactlyOneProgram"));
   }
 
   return payload;
@@ -497,7 +501,7 @@ function parseProgramImportPayload(rawFileContents) {
   const trimmedContents = rawFileContents.replace(/^\uFEFF/, "").trim();
 
   if (!trimmedContents) {
-    throw new Error("Program-filen er tom.");
+    throw new Error(t("programs.transfer.emptyFile"));
   }
 
   return validateProgramImportPayload(JSON.parse(trimmedContents));
@@ -509,7 +513,7 @@ async function readPickedFile(asset) {
   }
 
   if (!asset?.uri) {
-    throw new Error("The selected file could not be read.");
+    throw new Error(t("programs.transfer.readFailed"));
   }
 
   return FileSystem.readAsStringAsync(asset.uri, {
@@ -571,7 +575,7 @@ async function insertImportedProgram(db, payload) {
       sqliteParams([
         createLocalUuid(),
         createNextSyncVersion(),
-        normalizeText(program.program_name, "Imported program"),
+        normalizeText(program.program_name, t("programs.transfer.importedProgramName")),
         normalizeText(program.start_date, "01.01.1970"),
         normalizeStatus(program.status),
       ])
@@ -870,7 +874,7 @@ async function insertImportedProgram(db, payload) {
 
   return {
     programId: importedProgramId,
-    programName: normalizeText(program.program_name, "Imported program"),
+    programName: normalizeText(program.program_name, t("programs.transfer.importedProgramName")),
     counts: {
       ...countRows(tables),
       Program: 1,

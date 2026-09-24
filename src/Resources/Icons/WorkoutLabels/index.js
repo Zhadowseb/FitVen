@@ -1,3 +1,5 @@
+import { t } from "@localization";
+
 import Run from "./Run";
 import Resistance from "./Resistance";
 
@@ -9,60 +11,60 @@ import Resistance from "./Resistance";
 export const WORKOUT_ICONS = [
   {
     id: "Resistance",
-    short: "Resist...",
+    shortKey: "calendar.workoutShort.resistance",
     Icon: Resistance,
     selectable: true,
   },
   {
     id: "Upperbody",
-    short: "Upper",
+    shortKey: "calendar.workoutShort.upperbody",
     Icon: Resistance,
     selectable: false,
   },
   {
     id: "Legs",
-    short: "Legs",
+    shortKey: "calendar.workoutShort.legs",
     Icon: Resistance,
     selectable: false,
   },
   {
     id: "StrengthTraining",
-    short: "Resist...",
+    shortKey: "calendar.workoutShort.resistance",
     Icon: Resistance,
     selectable: false,
   },
   {
     id: "Push",
-    short: "Push",
+    shortKey: "calendar.workoutShort.push",
     Icon: Resistance,
     selectable: false,
   },
   {
     id: "Pull",
-    short: "Pull",
+    shortKey: "calendar.workoutShort.pull",
     Icon: Resistance,
     selectable: false,
   },
   {
     id: "Core",
-    short: "Core",
+    shortKey: "calendar.workoutShort.core",
     Icon: Resistance,
     selectable: false,
   },
   {
     id: "Mobility",
-    short: "Mobility",
+    shortKey: "calendar.workoutShort.mobility",
     Icon: Resistance,
     selectable: false,
   },
   {
     id: "Lowerbody",
-    short: "Lower",
+    shortKey: "calendar.workoutShort.lowerbody",
     Icon: Resistance,
     selectable: false,
   },
   { id: "Run",
-    short: "Run",
+    shortKey: "calendar.workoutShort.run",
     Icon: Run,
     selectable: true,
   },
@@ -74,4 +76,9 @@ export const SELECTABLE_WORKOUT_ICONS = WORKOUT_ICONS.filter(
 
 export function getWorkoutIconConfig(label) {
   return WORKOUT_ICONS.find((workoutIcon) => workoutIcon.id === label) ?? null;
+}
+
+/** The short name under a workout's icon, in the app's language. */
+export function getWorkoutIconShortLabel(config) {
+  return config?.shortKey ? t(config.shortKey) : null;
 }

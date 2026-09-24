@@ -7,8 +7,10 @@ import {
   ThemedStateBlock,
   ThemedText,
 } from "../../ThemedComponents";
+import { useTranslation } from "@localization";
 
 const Workout = ({ program_id, visible, close }) => {
+  const { t } = useTranslation();
   const db = useSQLiteContext();
   const [workouts, set_workouts] = useState([]);
   const [loading, set_Loading] = useState(false);
@@ -34,7 +36,7 @@ const Workout = ({ program_id, visible, close }) => {
   if (loading) return <ThemedStateBlock />;
 
   if (workouts.length === 0) {
-    return <ThemedText>No workouts</ThemedText>;
+    return <ThemedText>{t("programs.picker.noWorkouts")}</ThemedText>;
   }
 
   return (
@@ -42,7 +44,7 @@ const Workout = ({ program_id, visible, close }) => {
       <ThemedModal
         visible={visible}
         onClose={() => close()}
-        title="Pick a Workout">
+        title={t("programs.picker.pickWorkout")}>
 
         {workouts.map(workout => (
           <Pressable
@@ -53,7 +55,10 @@ const Workout = ({ program_id, visible, close }) => {
             style={{ paddingVertical: 12 }}
           >
             <ThemedText>
-              Workout {workout.workout_id}, Date: {workout.date}
+              {t("programs.picker.workoutOption", {
+                id: workout.workout_id,
+                date: workout.date,
+              })}
             </ThemedText>
           </Pressable>
         ))}

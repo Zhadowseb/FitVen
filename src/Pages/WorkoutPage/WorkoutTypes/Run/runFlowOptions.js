@@ -1,32 +1,34 @@
 // The four run workout flows offered on the empty run screen.
+// The id is stored (run_focus_type); the texts are translation keys, looked up
+// when the screen renders so they follow a language switch.
 
 export const RUN_WORKOUT_FLOW_OPTIONS = [
   {
     id: "endurance-base",
-    title: "Endurance & Base",
-    gridTitle: "Endurance & Base",
-    subtitle: "Base Run · Long Run · Recovery Run",
+    titleKey: "run.flows.enduranceBase.title",
+    gridTitleKey: "run.flows.enduranceBase.gridTitle",
+    subtitleKey: "run.flows.enduranceBase.subtitle",
     image: require("./Assets/Endurance&base.jpg"),
   },
   {
     id: "speed-structure",
-    title: "Speed & Structure",
-    gridTitle: "Speed & Structure",
-    subtitle: "Interval · Fartlek · Hill Repeats",
+    titleKey: "run.flows.speedStructure.title",
+    gridTitleKey: "run.flows.speedStructure.gridTitle",
+    subtitleKey: "run.flows.speedStructure.subtitle",
     image: require("./Assets/Speed&structure.jpg"),
   },
   {
     id: "performance-threshold",
-    title: "Performance & Threshold",
-    gridTitle: "Performance",
-    subtitle: "Tempo Run · Progression Run",
+    titleKey: "run.flows.performanceThreshold.title",
+    gridTitleKey: "run.flows.performanceThreshold.gridTitle",
+    subtitleKey: "run.flows.performanceThreshold.subtitle",
     image: require("./Assets/Performance&threshold.jpg"),
   },
   {
     id: "custom",
-    title: "Custom",
-    gridTitle: "Custom",
-    subtitle: "Build from blank",
+    titleKey: "run.flows.custom.title",
+    gridTitleKey: "run.flows.custom.gridTitle",
+    subtitleKey: "run.flows.custom.subtitle",
     image: require("./Assets/Custom.jpg"),
   },
 ];

@@ -29,6 +29,8 @@ export default {
   signInRequired: "Du skal være logget ind.",
   restoringSession: "Genopretter session...",
   kg: "kg",
+  // ThemedPicker, when the screen gives it no text of its own.
+  picker: { placeholder: "Vælg", title: "Vælg" },
   reps: { one: "{count} gentagelse", other: "{count} gentagelser" },
   sets: { one: "{count} sæt", other: "{count} sæt" },
   exercises: { one: "{count} øvelse", other: "{count} øvelser" },

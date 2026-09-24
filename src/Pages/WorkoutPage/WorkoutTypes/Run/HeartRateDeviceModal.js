@@ -14,6 +14,7 @@ import {
   ThemedText,
 } from "../../../../Resources/ThemedComponents";
 import styles from "./HeartRateDeviceModalStyle";
+import { useTranslation } from "@localization";
 
 export default function HeartRateDeviceModal({
   visible,
@@ -27,6 +28,7 @@ export default function HeartRateDeviceModal({
   onSelectDevice,
   onDisconnect,
 }) {
+  const { t } = useTranslation();
   const titleColor = theme.title ?? theme.text;
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const primaryColor = theme.primary;
@@ -57,19 +59,19 @@ export default function HeartRateDeviceModal({
           <View style={styles.header}>
             <View style={styles.headerCopy}>
               <ThemedText style={styles.eyebrow} setColor={secondaryColor}>
-                BLUETOOTH HEART RATE
+                {t("run.heartRate.modal.eyebrow")}
               </ThemedText>
               <ThemedText style={styles.title} setColor={titleColor}>
-                Connect your HRM-Pro
+                {t("run.heartRate.modal.title")}
               </ThemedText>
               <ThemedText style={styles.subtitle} setColor={quietText}>
-                Wear the strap while FitVen searches for nearby monitors.
+                {t("run.heartRate.modal.subtitle")}
               </ThemedText>
             </View>
 
             <TouchableOpacity
               accessibilityRole="button"
-              accessibilityLabel="Close heart rate monitor setup"
+              accessibilityLabel={t("run.heartRate.modal.closeLabel")}
               onPress={onClose}
               style={[styles.closeButton, { backgroundColor: innerSurface }]}
             >
@@ -101,13 +103,13 @@ export default function HeartRateDeviceModal({
                     {connectedDevice.name}
                   </ThemedText>
                   <ThemedText style={styles.deviceMeta} setColor={secondaryColor}>
-                    Connected and receiving live heart rate
+                    {t("run.heartRate.modal.connectedMeta")}
                   </ThemedText>
                 </View>
               </View>
               <TouchableOpacity onPress={onDisconnect} style={styles.textButton}>
                 <ThemedText style={styles.textButtonLabel} setColor={primaryColor}>
-                  Disconnect
+                  {t("run.heartRate.modal.disconnect")}
                 </ThemedText>
               </TouchableOpacity>
             </View>
@@ -126,7 +128,7 @@ export default function HeartRateDeviceModal({
             <>
               <View style={styles.listHeader}>
                 <ThemedText style={styles.listTitle} setColor={titleColor}>
-                  Nearby monitors
+                  {t("run.heartRate.modal.nearbyMonitors")}
                 </ThemedText>
                 <TouchableOpacity
                   disabled={isConnecting}
@@ -142,7 +144,7 @@ export default function HeartRateDeviceModal({
                     style={styles.refreshLabel}
                     setColor={secondaryColor}
                   >
-                    {isScanning ? "Searching" : "Search"}
+                    {isScanning ? t("run.heartRate.modal.searching") : t("common.search")}
                   </ThemedText>
                 </TouchableOpacity>
               </View>
@@ -178,8 +180,8 @@ export default function HeartRateDeviceModal({
                         </ThemedText>
                         <ThemedText style={styles.deviceMeta} setColor={quietText}>
                           {device.rssi === null
-                            ? "Bluetooth heart rate monitor"
-                            : `Signal ${device.rssi} dBm`}
+                            ? t("run.heartRate.modal.genericDevice")
+                            : t("run.heartRate.modal.signal", { rssi: device.rssi })}
                         </ThemedText>
                       </View>
                     </View>
@@ -199,11 +201,12 @@ export default function HeartRateDeviceModal({
                       <Feather name="bluetooth" size={25} color={quietText} />
                     )}
                     <ThemedText style={styles.emptyTitle} setColor={titleColor}>
-                      {isScanning ? "Looking for your HRM-Pro" : "No monitor found"}
+                      {isScanning
+                        ? t("run.heartRate.status.scanning")
+                        : t("run.heartRate.modal.noMonitorFound")}
                     </ThemedText>
                     <ThemedText style={styles.emptyText} setColor={quietText}>
-                      Wet the electrodes, put the strap on, and keep it close to
-                      your phone.
+                      {t("run.heartRate.modal.emptyHint")}
                     </ThemedText>
                   </View>
                 ) : null}

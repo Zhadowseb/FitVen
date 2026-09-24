@@ -22,6 +22,7 @@ import Plus from "../../../../Resources/Icons/UI-icons/Plus";
 import ChevronRight from "../../../../Resources/Icons/UI-icons/ChevronRight";
 import { parseCustomDate, formatDate } from "../../../../Utils/dateUtils";
 import styles from "./MesocycleListStyle";
+import { useTranslation } from "@localization";
 
 function getCompletedWorkoutCount(item) {
   const total = Number(item.workout_count) || 0;
@@ -83,6 +84,7 @@ const MesocycleList = ({
   refreshKey,
   refresh,
 }) => {
+  const { t } = useTranslation();
   const db = useSQLiteContext();
   const navigation = useNavigation();
 
@@ -247,7 +249,7 @@ const MesocycleList = ({
     <View style={styles.section}>
       <View style={styles.header}>
         <ThemedText style={styles.headerEyebrow} setColor={quietText}>
-          Blocks
+          {t("programs.blocks.title")}
         </ThemedText>
         <View
           style={[
@@ -269,7 +271,11 @@ const MesocycleList = ({
           const completedWorkoutCount = getCompletedWorkoutCount(item);
           const workoutCount = Number(item.workout_count) || 0;
           const progressPercent = getProgressPercent(item);
-          const focusTitle = item.focus || `Block ${item.mesocycle_number}`;
+          // The stored focus is shown translated; an empty one falls back to
+          // the block number, as before.
+          const focusTitle = item.focus
+            ? programService.getFocusLabel(item.focus, t)
+            : t("programs.blocks.blockNumber", { number: item.mesocycle_number });
           const dateRangeLabel = formatBlockDateRange(
             item.period_start,
             item.period_end
@@ -379,15 +385,16 @@ const MesocycleList = ({
                     setColor={quietText}
                     numberOfLines={1}
                   >
-                    {`Block ${item.mesocycle_number} · ${weekCount} ${
-                      weekCount === 1 ? "week" : "weeks"
-                    }`}
+                    {t("programs.blocks.eyebrow", {
+                      number: item.mesocycle_number,
+                      count: weekCount,
+                    })}
                   </ThemedText>
 
                   {isActive ? (
                     <StatusPill
                       style={styles.activeStatusPill}
-                      label="Active"
+                      label={t("programs.status.active")}
                       color={accentColor}
                       backgroundColor={activePillBackground}
                       dotSize={5}
@@ -395,7 +402,7 @@ const MesocycleList = ({
                   ) : isCompleted ? (
                     <StatusPill
                       style={styles.activeStatusPill}
-                      label="Complete"
+                      label={t("programs.status.complete")}
                       color={theme.secondary}
                       backgroundColor={withAlpha(theme.secondary, 0.12)}
                       dotSize={5}
@@ -411,7 +418,7 @@ const MesocycleList = ({
                         style={styles.statusPillNotStartedText}
                         setColor={theme.text}
                       >
-                        Not started
+                        {t("programs.status.notStarted")}
                       </ThemedText>
                     </View>
                   )}
@@ -459,9 +466,7 @@ const MesocycleList = ({
                         >
                           {completedWorkoutCount}
                         </ThemedText>
-                        {` of ${workoutCount} ${
-                          workoutCount === 1 ? "workout" : "workouts"
-                        }`}
+                        {` ${t("programs.blocks.ofWorkouts", { count: workoutCount })}`}
                       </ThemedText>
                       <ThemedText
                         style={styles.progressPercent}
@@ -487,7 +492,7 @@ const MesocycleList = ({
                       setColor={quietText}
                       numberOfLines={1}
                     >
-                      {dateRangeLabel ?? "No weeks yet"}
+                      {dateRangeLabel ?? t("programs.blocks.noWeeksYet")}
                     </ThemedText>
                     <ThemedText
                       style={styles.footerText}
@@ -495,10 +500,13 @@ const MesocycleList = ({
                       numberOfLines={1}
                     >
                       {isActive
-                        ? `${item.average_weekly_workouts.toFixed(1)} workouts/week`
-                        : `${workoutCount} workouts · ${item.average_weekly_workouts.toFixed(
-                            1
-                          )}/week`}
+                        ? t("programs.blocks.workoutsPerWeek", {
+                            average: item.average_weekly_workouts.toFixed(1),
+                          })
+                        : t("programs.blocks.workoutsSummary", {
+                            count: workoutCount,
+                            average: item.average_weekly_workouts.toFixed(1),
+                          })}
                     </ThemedText>
                   </View>
                 ) : (
@@ -534,14 +542,14 @@ const MesocycleList = ({
                         setColor={titleColor}
                         numberOfLines={1}
                       >
-                        Add week
+                        {t("programs.blocks.addWeek")}
                       </ThemedText>
                       <ThemedText
                         style={styles.addWeekSubtitle}
                         setColor={quietText}
                         numberOfLines={1}
                       >
-                        Create the first week in this block.
+                        {t("programs.blocks.addWeekHint")}
                       </ThemedText>
                     </View>
                   </TouchableOpacity>
@@ -567,10 +575,10 @@ const MesocycleList = ({
           >
             <View style={styles.addCopy}>
               <ThemedText style={styles.addTitle} setColor={addTitleColor}>
-                Add block
+                {t("programs.blocks.add")}
               </ThemedText>
               <ThemedText style={styles.addSubtitle} setColor={quietText}>
-                Plan the next mesocycle
+                {t("programs.blocks.addHint")}
               </ThemedText>
             </View>
             <ChevronRight width={18} height={18} color={quietText} thickness={2} />

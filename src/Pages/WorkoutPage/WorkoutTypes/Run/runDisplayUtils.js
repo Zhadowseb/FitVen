@@ -9,6 +9,7 @@ import {
   getHeartRateZoneColor,
   getHeartRateZoneThresholds,
 } from "./RunHeartRateChartConfig";
+import { t } from "@localization";
 import { calculateTrackedDistanceSummary } from "@utils/locationUtils";
 
 export const EMPTY_RUN_SECTION_COUNTS = {
@@ -50,18 +51,18 @@ export function getRunSegmentLabel(set) {
   const type = normalizeRunSectionType(set?.type);
 
   if (Number(set?.is_pause) === 1) {
-    return "Rest";
+    return t("run.segments.rest");
   }
 
   if (type === "WARMUP") {
-    return "Warmup";
+    return t("run.segments.warmup");
   }
 
   if (type === "COOLDOWN") {
-    return "Cooldown";
+    return t("run.segments.cooldown");
   }
 
-  return "Sprint";
+  return t("run.segments.sprint");
 }
 
 export function getWorkingSetPosition(sets, targetIndex) {

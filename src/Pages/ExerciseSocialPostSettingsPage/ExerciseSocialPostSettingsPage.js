@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
+import { useTranslation } from "@localization";
 
 import styles from "./ExerciseSocialPostSettingsPageStyle";
 import { useAuth } from "../../Contexts/AuthContext";
@@ -34,6 +35,7 @@ function getExerciseCloudId(exercise) {
 }
 
 export default function ExerciseSocialPostSettingsPage() {
+  const { t } = useTranslation();
   const db = useSQLiteContext();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -79,7 +81,7 @@ export default function ExerciseSocialPostSettingsPage() {
           setExercises([]);
           setHiddenExerciseIds(new Set());
           setLoading(false);
-          setErrorMessage("Sign in to update exercise settings.");
+          setErrorMessage(t("exercises.socialSettings.signIn"));
           return;
         }
 
@@ -102,7 +104,7 @@ export default function ExerciseSocialPostSettingsPage() {
             setErrorMessage(
               error instanceof Error
                 ? error.message
-                : "Could not load exercise settings."
+                : t("exercises.socialSettings.loadFailed")
             );
           }
         } finally {
@@ -117,7 +119,7 @@ export default function ExerciseSocialPostSettingsPage() {
       return () => {
         isCancelled = true;
       };
-    }, [db, user])
+    }, [db, t, user])
   );
 
   const toggleExerciseVisibility = useCallback(
@@ -153,19 +155,19 @@ export default function ExerciseSocialPostSettingsPage() {
         setErrorMessage(
           error instanceof Error
             ? error.message
-            : "Could not save exercise setting."
+            : t("exercises.socialSettings.saveFailed")
         );
       } finally {
         setSavingExerciseId(null);
       }
     },
-    [hiddenExerciseIds, savingExerciseId, user]
+    [hiddenExerciseIds, savingExerciseId, t, user]
   );
 
   const renderHeader = () => (
     <View style={styles.listHeader}>
       <ThemedText style={styles.scopeNote} setColor={quietText}>
-        Applies to individual exercises
+        {t("exercises.socialSettings.scopeNote")}
       </ThemedText>
 
       <ThemedCard
@@ -192,11 +194,10 @@ export default function ExerciseSocialPostSettingsPage() {
 
           <View style={styles.heroCopy}>
             <ThemedTitle type="h3" style={styles.cardTitle}>
-              Social post exercises
+              {t("exercises.socialSettings.cardTitle")}
             </ThemedTitle>
             <ThemedText style={styles.cardBody} setColor={quietText}>
-              Choose which exercises can appear in top sets and PR badges on
-              future workout summary posts.
+              {t("exercises.socialSettings.cardBody")}
             </ThemedText>
           </View>
         </View>
@@ -214,7 +215,7 @@ export default function ExerciseSocialPostSettingsPage() {
           <TextInput
             value={searchQuery}
             onChangeText={setSearchQuery}
-            placeholder="Search exercises..."
+            placeholder={t("exercises.searchPlaceholder")}
             placeholderTextColor={quietText}
             autoCorrect={false}
             style={[styles.searchInput, { color: titleColor }]}
@@ -223,10 +224,10 @@ export default function ExerciseSocialPostSettingsPage() {
 
         <View style={styles.summaryRow}>
           <ThemedText style={styles.summaryText} setColor={quietText}>
-            {exercises.length} exercises
+            {t("exercises.socialSettings.exerciseCount", { count: exercises.length })}
           </ThemedText>
           <ThemedText style={styles.summaryText} setColor={quietText}>
-            {hiddenCount} hidden
+            {t("exercises.socialSettings.hiddenCount", { count: hiddenCount })}
           </ThemedText>
         </View>
       </ThemedCard>
@@ -263,10 +264,10 @@ export default function ExerciseSocialPostSettingsPage() {
           </ThemedText>
           <ThemedText style={styles.exerciseStatus} setColor={quietText}>
             {exerciseId === null
-              ? "Sync pending"
+              ? t("exercises.socialSettings.syncPending")
               : isHidden
-                ? "Hidden from social posts"
-                : "Shown in social posts"}
+                ? t("exercises.socialSettings.hidden")
+                : t("exercises.socialSettings.shown")}
           </ThemedText>
         </View>
 
@@ -295,20 +296,20 @@ export default function ExerciseSocialPostSettingsPage() {
             size={12}
             style={[styles.pageHeaderTitleEyebrow, { color: quietText }]}
           >
-            Settings
+            {t("exercises.socialSettings.eyebrow")}
           </ThemedText>
           <ThemedTitle
             type="pageTitle"
             style={styles.pageHeaderTitleMain}
             numberOfLines={1}
           >
-            Exercises
+            {t("exercises.socialSettings.title")}
           </ThemedTitle>
         </View>
       </ThemedHeader>
 
       {loading ? (
-        <ThemedStateBlock fill variant="loading" message="Loading exercises..." />
+        <ThemedStateBlock fill variant="loading" message={t("exercises.loading")} />
       ) : (
         <FlatList
           data={filteredExercises}
@@ -320,8 +321,8 @@ export default function ExerciseSocialPostSettingsPage() {
           ListEmptyComponent={
             <ThemedStateBlock
               variant="empty"
-              title="No exercises found"
-              message="Try another search or sync the exercise catalog."
+              title={t("exercises.socialSettings.emptyTitle")}
+              message={t("exercises.socialSettings.emptyBody")}
             />
           }
           contentContainerStyle={styles.listContent}

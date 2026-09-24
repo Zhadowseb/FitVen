@@ -7,10 +7,12 @@ import {ThemedText}
   from "@resources/ThemedComponents";
 
 import styles from "./SetListStyle.js";
+import { useTranslation } from "@localization";
 
 const Title = ({ visibleColumns }) => {
 
     const colorScheme = useColorScheme();
+    const { t } = useTranslation();
     const theme = Colors[colorScheme] ?? Colors.light;
     const headerTextColor =
       colorScheme === "dark" ? "#8f96b3" : theme.quietText ?? theme.text;
@@ -25,13 +27,13 @@ const Title = ({ visibleColumns }) => {
 
         {visibleColumns.note && (
             <View style={[styles.note, styles.titleCell, titleCellStyle]}>
-            <ThemedText style={[styles.titleText, {color: headerTextColor}]}>NOTE</ThemedText>
+            <ThemedText style={[styles.titleText, {color: headerTextColor}]}>{t("workout.setList.headers.note")}</ThemedText>
             </View>
         )}
 
         {visibleColumns.rest && (
             <View style={[styles.pause, styles.titleCell, titleCellStyle]}>
-            <ThemedText style={[styles.titleText, {color: headerTextColor}]}>REST</ThemedText>
+            <ThemedText style={[styles.titleText, {color: headerTextColor}]}>{t("workout.setList.headers.rest")}</ThemedText>
             </View>
         )}
 
@@ -43,7 +45,7 @@ const Title = ({ visibleColumns }) => {
 
         {visibleColumns.reps && (
             <View style={[styles.reps, styles.titleCell, titleCellStyle]}>
-            <ThemedText style={[styles.titleText, {color: headerTextColor}]}>REPS</ThemedText>
+            <ThemedText style={[styles.titleText, {color: headerTextColor}]}>{t("workout.setList.headers.reps")}</ThemedText>
             </View>
         )}
 
@@ -55,13 +57,13 @@ const Title = ({ visibleColumns }) => {
 
         {visibleColumns.rm_percentage && (
             <View style={[styles.rm_percentage, styles.titleCell, titleCellStyle]}>
-            <ThemedText style={[styles.titleText, {color: headerTextColor}]}>1RM%</ThemedText>
+            <ThemedText style={[styles.titleText, {color: headerTextColor}]}>{t("workout.setList.headers.rmPercentage")}</ThemedText>
             </View>
         )}
 
         {visibleColumns.weight && (
             <View style={[styles.weight, styles.titleCell, titleCellStyle]}>
-            <ThemedText style={[styles.titleText, {color: headerTextColor}]}>WEIGHT</ThemedText>
+            <ThemedText style={[styles.titleText, {color: headerTextColor}]}>{t("workout.setList.headers.weight")}</ThemedText>
             </View>
         )}
 

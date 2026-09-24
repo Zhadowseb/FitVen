@@ -31,6 +31,7 @@ import { ThemedTitle,
 import Cogwheel from '../../Resources/Icons/UI-icons/Cogwheel';
 import { formatDate, parseCustomDate } from '../../Utils/dateUtils';
 import { getProgramDateRange, getProgramEndDate } from '../../Utils/programUtils';
+import { useTranslation } from "@localization";
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -101,6 +102,7 @@ function getProgramTimeline(startDate, totalDays) {
 }
 
 const ProgramOverviewPage = ( {route} ) => {
+    const { t } = useTranslation();
     const db = useSQLiteContext();
     const navigation = useNavigation();
     const insets = useSafeAreaInsets();
@@ -251,10 +253,10 @@ const ProgramOverviewPage = ( {route} ) => {
             // now, and the reason names the one in the way. Swallowed into the
             // console, the button would simply have done nothing.
             Alert.alert(
-                "Could not start the program",
+                t("programs.start.failedTitle"),
                 error instanceof Error
                     ? error.message
-                    : "The program could not be started."
+                    : t("programs.start.failedMessage")
             );
         } finally {
             setIsStartingProgram(false);
@@ -305,7 +307,7 @@ const ProgramOverviewPage = ( {route} ) => {
         programExerciseBests.map((best) => [best.exercise_name, best])
     );
 
-    const headerTitle = (program_name ?? "").trim() || "Program";
+    const headerTitle = (program_name ?? "").trim() || t("programs.fallbackName");
     const programTimeline = getProgramTimeline(start_date, programDayCount);
     // SPM-5: this was weeks elapsed, printed as a bare percentage right beside
     // "Week 5 of 5" - so a program with six workouts left showed 100% here and
@@ -331,7 +333,7 @@ const ProgramOverviewPage = ( {route} ) => {
                         },
                     ]}
                     accessibilityRole="button"
-                    accessibilityLabel="Program settings"
+                    accessibilityLabel={t("programs.settings.title")}
                     hitSlop={8}
                     onPress={() =>
                         navigation.navigate("ProgramSettingsPage", {
@@ -346,7 +348,7 @@ const ProgramOverviewPage = ( {route} ) => {
             {/* Navigation label only - the program name is the card heading
                 below, and repeating it here read as a duplicate. */}
             <ThemedTitle type="pageTitle" numberOfLines={1}>
-                Program
+                {t("programs.overview.title")}
             </ThemedTitle>
         </ThemedHeader>
 
@@ -395,12 +397,12 @@ const ProgramOverviewPage = ( {route} ) => {
                     <ThemedText
                         style={styles.section_header_eyebrow}
                         setColor={theme.text}>
-                        Program bests
+                        {t("programs.overview.programBests")}
                     </ThemedText>
 
                     <TouchableOpacity
                         accessibilityRole="button"
-                        accessibilityLabel="Select exercises"
+                        accessibilityLabel={t("programs.overview.selectExercises")}
                         hitSlop={12}
                         style={styles.section_header_icon}
                         onPress={() => set_prSettingsBottomsheet_visible(true)}>
@@ -419,7 +421,7 @@ const ProgramOverviewPage = ( {route} ) => {
                     {programExercises.length === 0 && (
                         <View style={styles.pr_empty}>
                             <ThemedText setColor={theme.quietText}>
-                                No exercises in this program yet.
+                                {t("programs.overview.noExercises")}
                             </ThemedText>
                         </View>
                     )}
@@ -427,7 +429,7 @@ const ProgramOverviewPage = ( {route} ) => {
                     {programExercises.length > 0 && selectedProgramBestExercises.length === 0 && (
                         <View style={styles.pr_empty}>
                             <ThemedText setColor={theme.quietText}>
-                                No exercises selected.
+                                {t("programs.overview.noExercisesSelected")}
                             </ThemedText>
                         </View>
                     )}
@@ -471,8 +473,11 @@ const ProgramOverviewPage = ( {route} ) => {
                                             setColor={theme.quietText}
                                             numberOfLines={1}>
                                             {hasCompletedSet
-                                                ? `Best set ${setDisplay} · ${programBest.performedDate}`
-                                                : "No completed sets."}
+                                                ? t("programs.overview.bestSetSummary", {
+                                                      set: setDisplay,
+                                                      date: programBest.performedDate,
+                                                  })
+                                                : t("programs.overview.noCompletedSets")}
                                         </ThemedText>
                                     </View>
 
@@ -485,7 +490,7 @@ const ProgramOverviewPage = ( {route} ) => {
                                         <ThemedText
                                             style={styles.pr_value_label}
                                             setColor={theme.quietText}>
-                                            Est. 1RM
+                                            {t("programs.overview.estimated1RmShort")}
                                         </ThemedText>
                                     </View>
                                 </View>
@@ -500,7 +505,7 @@ const ProgramOverviewPage = ( {route} ) => {
                 <ThemedText
                     style={styles.section_header_eyebrow}
                     setColor={theme.text}>
-                    Estimated 1RMs
+                    {t("programs.overview.estimated1Rms")}
                 </ThemedText>
 
                 <View
@@ -552,14 +557,14 @@ const ProgramOverviewPage = ( {route} ) => {
               ]}
             >
                 <ThemedTitle type={"h3"} style={{flex: 10}}>
-                    Select exercises
+                    {t("programs.overview.selectExercises")}
                 </ThemedTitle>
             </View>
 
             <View style={styles.bottomsheet_body}>
                 {programExercises.length === 0 && (
                     <ThemedText>
-                        No exercises in this program yet.
+                        {t("programs.overview.noExercises")}
                     </ThemedText>
                 )}
 

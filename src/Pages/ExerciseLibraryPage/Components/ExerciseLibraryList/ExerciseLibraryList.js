@@ -15,6 +15,7 @@ import { VirtualizedListContextResetter } from "react-native/Libraries/Lists/Vir
 import { useSQLiteContext } from "expo-sqlite";
 import { useNavigation } from "@react-navigation/native";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "@localization";
 
 import styles, {
   EXERCISE_PREVIEW_WIDTH,
@@ -36,6 +37,7 @@ import ReplayHistory from "../../../../Resources/Icons/UI-icons/ReplayHistory";
 import {
   EXERCISE_MUSCLE_GROUPS,
   EXERCISE_MUSCLE_FILTERS,
+  muscleGroupLabel,
   toggleExerciseMuscleFilterKey,
 } from "../../../../Utils/exerciseMuscleGroups";
 import {
@@ -45,13 +47,14 @@ import {
   ThemedTitle,
 } from "../../../../Resources/ThemedComponents";
 
+// Translated at render time, so the labels follow a language switch.
 const GROUP_FILTERS = [
-  { key: "all", label: "All" },
-  { key: "push", label: "Push" },
-  { key: "pull", label: "Pull" },
-  { key: "legs", label: "Legs" },
-  { key: "core", label: "Core" },
-  { key: "mobility", label: "Mobility" },
+  { key: "all", labelKey: "exercises.trainingGroups.all" },
+  { key: "push", labelKey: "exercises.trainingGroups.push" },
+  { key: "pull", labelKey: "exercises.trainingGroups.pull" },
+  { key: "legs", labelKey: "exercises.trainingGroups.legs" },
+  { key: "core", labelKey: "exercises.trainingGroups.core" },
+  { key: "mobility", labelKey: "exercises.trainingGroups.mobility" },
 ];
 
 const MUSCLE_FILTERS = EXERCISE_MUSCLE_FILTERS;
@@ -82,15 +85,22 @@ const CatalogExerciseRow = memo(function CatalogExerciseRow({
   onPress,
   onToggleFavourite,
 }) {
+  const { t } = useTranslation();
+
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={
         isWorkoutPicker
-          ? `${isAdded ? "Add another" : "Add"} ${
-              exercise.exercise_name
-            } to workout`
-          : `Show ${exercise.exercise_name} muscles`
+          ? t(
+              isAdded
+                ? "exercises.library.addAnotherToWorkoutA11y"
+                : "exercises.library.addToWorkoutA11y",
+              { name: exercise.exercise_name }
+            )
+          : t("exercises.library.showMusclesA11y", {
+              name: exercise.exercise_name,
+            })
       }
       disabled={isSelectionBusy}
       onPress={() => onPress(exercise)}
@@ -139,7 +149,7 @@ const CatalogExerciseRow = memo(function CatalogExerciseRow({
                 style={styles.exerciseStatusBadgeText}
                 setColor={colors.activeFilterText}
               >
-                Custom
+                {t("exercises.library.customBadge")}
               </ThemedText>
             </View>
           ) : null}
@@ -157,7 +167,7 @@ const CatalogExerciseRow = memo(function CatalogExerciseRow({
                 style={styles.exerciseStatusBadgeText}
                 setColor={colors.activeFilterText}
               >
-                Added
+                {t("exercises.library.addedBadge")}
               </ThemedText>
             </View>
           ) : null}
@@ -171,8 +181,12 @@ const CatalogExerciseRow = memo(function CatalogExerciseRow({
         accessibilityState={{ selected: isFavourite }}
         accessibilityLabel={
           isFavourite
-            ? `Remove ${exercise.exercise_name} from favourites`
-            : `Add ${exercise.exercise_name} to favourites`
+            ? t("exercises.library.removeFavouriteA11y", {
+                name: exercise.exercise_name,
+              })
+            : t("exercises.library.addFavouriteA11y", {
+                name: exercise.exercise_name,
+              })
         }
         onPress={(event) => {
           event.stopPropagation?.();
@@ -317,6 +331,7 @@ const ExerciseMuscleBadges = ({
   secondaryCount,
   style,
 }) => {
+  const { t } = useTranslation();
   const shouldShowSecondaryBadge = Number(secondaryCount) > 0;
 
   return (
@@ -334,7 +349,10 @@ const ExerciseMuscleBadges = ({
           numberOfLines={1}
           ellipsizeMode="clip"
         >
-          {formatMuscleBadgeLabel(primaryCount, "PRIMARY")}
+          {formatMuscleBadgeLabel(
+            primaryCount,
+            t("exercises.library.badgePrimary")
+          )}
         </ThemedText>
       </View>
 
@@ -352,7 +370,10 @@ const ExerciseMuscleBadges = ({
             numberOfLines={1}
             ellipsizeMode="clip"
           >
-            {formatMuscleBadgeLabel(secondaryCount, "SECONDARY")}
+            {formatMuscleBadgeLabel(
+              secondaryCount,
+              t("exercises.library.badgeSecondary")
+            )}
           </ThemedText>
         </View>
       )}
@@ -370,6 +391,7 @@ const ExerciseLibraryList = ({
   workoutPicker = null,
   initialFilter = null,
 }) => {
+  const { t } = useTranslation();
   const db = useSQLiteContext();
   const navigation = useNavigation();
   const colorScheme = useColorScheme();
@@ -495,7 +517,7 @@ const ExerciseLibraryList = ({
 
   const muscleFilterLabels = isAllMusclesSelected
     ? []
-    : selectedMuscleFilters.map((filter) => filter.label);
+    : selectedMuscleFilters.map((filter) => muscleGroupLabel(filter.key, t));
 
   /**
    * Turns the group a muscle belongs to on or off, from the figure.
@@ -572,9 +594,13 @@ const ExerciseLibraryList = ({
   if (selectedGroupKey !== "all") {
     activeFilterChips.push({
       key: `group-${selectedGroupKey}`,
-      label:
-        GROUP_FILTERS.find((filter) => filter.key === selectedGroupKey)?.label ??
-        selectedGroupKey,
+      label: (() => {
+        const labelKey = GROUP_FILTERS.find(
+          (filter) => filter.key === selectedGroupKey
+        )?.labelKey;
+
+        return labelKey ? t(labelKey) : selectedGroupKey;
+      })(),
       onRemove: () => setSelectedGroupKey("all"),
     });
   }
@@ -585,7 +611,10 @@ const ExerciseLibraryList = ({
   if (exerciseTypeFilter !== "all") {
     activeFilterChips.push({
       key: `type-${exerciseTypeFilter}`,
-      label: exerciseTypeFilter === "custom" ? "Custom" : "Built-in",
+      label:
+        exerciseTypeFilter === "custom"
+          ? t("exercises.types.custom")
+          : t("exercises.types.builtin"),
       onRemove: () => setExerciseTypeFilter("all"),
     });
   }
@@ -593,7 +622,7 @@ const ExerciseLibraryList = ({
   if (showFavouritesOnly) {
     activeFilterChips.push({
       key: "favourites",
-      label: "Favourites",
+      label: t("exercises.library.favourites"),
       onRemove: () => setShowFavouritesOnly(false),
     });
   }
@@ -601,7 +630,7 @@ const ExerciseLibraryList = ({
   if (showRecentOnly) {
     activeFilterChips.push({
       key: "recent",
-      label: "Last 4 workouts",
+      label: t("exercises.library.lastFourWorkouts"),
       onRemove: () => setShowRecentOnly(false),
     });
   }
@@ -747,7 +776,7 @@ const ExerciseLibraryList = ({
 
   if (isWorkoutPicker) {
     const workoutName = getWorkoutPickerName(workoutPicker);
-    const workoutTargetLabel = workoutName || "workout";
+    const workoutTargetLabel = workoutName || t("exercises.workoutFallback");
     const selectedPrimaryMuscleLabels = selectedExercise
       ? getExerciseMuscleLabels(selectedExercise, "primary")
       : [];
@@ -772,7 +801,7 @@ const ExerciseLibraryList = ({
             <TextInput
               value={searchQuery}
               onChangeText={setSearchQuery}
-              placeholder="Search exercises..."
+              placeholder={t("exercises.searchPlaceholder")}
               placeholderTextColor={quietText}
               style={[styles.pickerSearchInput, { color: titleColor }]}
               autoCorrect={false}
@@ -782,7 +811,7 @@ const ExerciseLibraryList = ({
           <TouchableOpacity
             activeOpacity={0.86}
             accessibilityRole="button"
-            accessibilityLabel="Open exercise filters"
+            accessibilityLabel={t("exercises.library.openFiltersA11y")}
             onPress={() => setIsFilterSheetVisible(true)}
             style={[
               styles.pickerFilterButton,
@@ -823,7 +852,7 @@ const ExerciseLibraryList = ({
           <Pressable
             accessibilityRole="button"
             accessibilityState={{ selected: showFavouritesOnly }}
-            accessibilityLabel="Show only favourite exercises"
+            accessibilityLabel={t("exercises.library.favouritesOnlyA11y")}
             onPress={() => setShowFavouritesOnly((current) => !current)}
             style={[
               styles.pickerFocusChip,
@@ -850,14 +879,14 @@ const ExerciseLibraryList = ({
               ]}
               setColor={showFavouritesOnly ? theme.planned : theme.text}
             >
-              Favourites
+              {t("exercises.library.favourites")}
             </ThemedText>
           </Pressable>
 
           <Pressable
             accessibilityRole="button"
             accessibilityState={{ selected: showRecentOnly }}
-            accessibilityLabel="Show only exercises from the last four workouts"
+            accessibilityLabel={t("exercises.library.recentOnlyA11y")}
             onPress={() => setShowRecentOnly((current) => !current)}
             style={[
               styles.pickerFocusChip,
@@ -882,7 +911,7 @@ const ExerciseLibraryList = ({
               ]}
               setColor={showRecentOnly ? secondaryColor : theme.text}
             >
-              Recent
+              {t("exercises.library.recent")}
             </ThemedText>
           </Pressable>
 
@@ -910,7 +939,7 @@ const ExerciseLibraryList = ({
                   ]}
                   setColor={isSelected ? primaryColor : theme.text}
                 >
-                  {filter.label}
+                  {t(filter.labelKey)}
                 </ThemedText>
               </Pressable>
             );
@@ -928,7 +957,7 @@ const ExerciseLibraryList = ({
             >
               {visibleCount}
             </ThemedText>
-            {visibleCount === 1 ? " exercise" : " exercises"}
+            {` ${t("exercises.library.countSuffix", { count: visibleCount })}`}
           </ThemedText>
 
           <View style={styles.pickerLegend}>
@@ -940,7 +969,7 @@ const ExerciseLibraryList = ({
                 ]}
               />
               <ThemedText style={styles.pickerLegendText} setColor={quietText}>
-                Primary
+                {t("exercises.primary")}
               </ThemedText>
             </View>
             <View style={styles.pickerLegendItem}>
@@ -951,7 +980,7 @@ const ExerciseLibraryList = ({
                 ]}
               />
               <ThemedText style={styles.pickerLegendText} setColor={quietText}>
-                Secondary
+                {t("exercises.secondary")}
               </ThemedText>
             </View>
           </View>
@@ -982,25 +1011,25 @@ const ExerciseLibraryList = ({
               <View style={styles.pickerEmptyState}>
                 <ActivityIndicator color={primaryTextColor} />
                 <ThemedText style={styles.emptyBody} setColor={quietText}>
-                  Loading exercises...
+                  {t("exercises.loading")}
                 </ThemedText>
               </View>
             ) : exercises.length === 0 ? (
               <View style={styles.pickerEmptyState}>
                 <ThemedTitle type="h3" style={styles.emptyTitle}>
-                  No exercises yet
+                  {t("exercises.library.emptyTitle")}
                 </ThemedTitle>
                 <ThemedText style={styles.emptyBody} setColor={quietText}>
-                  No exercise names were found in the shared cloud library yet.
+                  {t("exercises.library.emptyBody")}
                 </ThemedText>
               </View>
             ) : (
               <View style={styles.pickerEmptyState}>
                 <ThemedTitle type="h3" style={styles.emptyTitle}>
-                  No matches
+                  {t("exercises.library.noMatchesTitle")}
                 </ThemedTitle>
                 <ThemedText style={styles.emptyBody} setColor={quietText}>
-                  Try another search or reset the active filter.
+                  {t("exercises.library.noMatchesBody")}
                 </ThemedText>
               </View>
             )
@@ -1013,11 +1042,12 @@ const ExerciseLibraryList = ({
               return (
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel={`${
+                  accessibilityLabel={t(
                     addedNameSet.has(exercise.exercise_name)
-                      ? "Add another"
-                      : "Add"
-                  } ${exercise.exercise_name} to workout`}
+                      ? "exercises.library.addAnotherToWorkoutA11y"
+                      : "exercises.library.addToWorkoutA11y",
+                    { name: exercise.exercise_name }
+                  )}
                   disabled={isSelectionBusy}
                   onPress={() => onSelectExercise?.(exercise)}
                   style={[
@@ -1029,7 +1059,9 @@ const ExerciseLibraryList = ({
                 >
                   <Pressable
                     accessibilityRole="button"
-                    accessibilityLabel={`Show ${exercise.exercise_name} muscles`}
+                    accessibilityLabel={t("exercises.library.showMusclesA11y", {
+                      name: exercise.exercise_name,
+                    })}
                     onPress={(event) => {
                       event.stopPropagation?.();
                       setSelectedExercise(exercise);
@@ -1077,7 +1109,7 @@ const ExerciseLibraryList = ({
                             style={styles.pickerCustomBadgeText}
                             setColor={primaryTextColor}
                           >
-                            Custom
+                            {t("exercises.library.customBadge")}
                           </ThemedText>
                         </View>
                       ) : null}
@@ -1093,7 +1125,9 @@ const ExerciseLibraryList = ({
                         setColor={secondaryColor}
                         numberOfLines={1}
                       >
-                        Added to {workoutTargetLabel}
+                        {t("exercises.library.addedTo", {
+                          name: workoutTargetLabel,
+                        })}
                       </ThemedText>
                     ) : (
                       // The muscles are on the row's own figure. Naming them
@@ -1110,8 +1144,12 @@ const ExerciseLibraryList = ({
                     accessibilityState={{ selected: isFavouriteExercise(exercise) }}
                     accessibilityLabel={
                       isFavouriteExercise(exercise)
-                        ? `Remove ${exercise.exercise_name} from favourites`
-                        : `Add ${exercise.exercise_name} to favourites`
+                        ? t("exercises.library.removeFavouriteA11y", {
+                            name: exercise.exercise_name,
+                          })
+                        : t("exercises.library.addFavouriteA11y", {
+                            name: exercise.exercise_name,
+                          })
                     }
                     onPress={(event) => {
                       event.stopPropagation?.();
@@ -1133,7 +1171,9 @@ const ExerciseLibraryList = ({
                   <TouchableOpacity
                     activeOpacity={0.86}
                     accessibilityRole="button"
-                    accessibilityLabel={`Add ${exercise.exercise_name} to workout`}
+                    accessibilityLabel={t("exercises.library.addToWorkoutA11y", {
+                      name: exercise.exercise_name,
+                    })}
                     disabled={isSelectionBusy}
                     onPress={(event) => {
                       event.stopPropagation?.();
@@ -1210,7 +1250,7 @@ const ExerciseLibraryList = ({
                 style={styles.pickerCustomButtonText}
                 setColor={theme.text}
               >
-                Create custom exercise
+                {t("exercises.library.createCustom")}
               </ThemedText>
             </TouchableOpacity>
           </View>
@@ -1242,7 +1282,7 @@ const ExerciseLibraryList = ({
                   style={styles.exerciseBodyMapModalFigureLabel}
                   setColor={quietText}
                 >
-                  Front
+                  {t("exercises.front")}
                 </ThemedText>
                 <BodyMapPreview
                   bodyView="front"
@@ -1264,7 +1304,7 @@ const ExerciseLibraryList = ({
                   style={styles.exerciseBodyMapModalFigureLabel}
                   setColor={quietText}
                 >
-                  Back
+                  {t("exercises.back")}
                 </ThemedText>
                 <BodyMapPreview
                   bodyView="back"
@@ -1295,7 +1335,7 @@ const ExerciseLibraryList = ({
                 style={styles.pickerModalMusclesTitle}
                 setColor={quietText}
               >
-                Muscle groups involved
+                {t("exercises.library.musclesInvolved")}
               </ThemedText>
 
               <View style={styles.pickerModalMuscleRole}>
@@ -1310,7 +1350,7 @@ const ExerciseLibraryList = ({
                     style={styles.pickerModalMuscleRoleTitle}
                     setColor={primaryBadgeText}
                   >
-                    Primary
+                    {t("exercises.primary")}
                   </ThemedText>
                 </View>
                 <View style={styles.pickerModalMuscleChips}>
@@ -1327,7 +1367,7 @@ const ExerciseLibraryList = ({
                           style={styles.pickerModalMuscleChipText}
                           setColor={primaryBadgeText}
                         >
-                          {label}
+                          {muscleGroupLabel(label, t)}
                         </ThemedText>
                       </View>
                     ))
@@ -1336,7 +1376,7 @@ const ExerciseLibraryList = ({
                       style={styles.pickerModalMuscleEmptyText}
                       setColor={quietText}
                     >
-                      No primary muscle groups listed
+                      {t("exercises.library.noPrimaryMuscles")}
                     </ThemedText>
                   )}
                 </View>
@@ -1354,7 +1394,7 @@ const ExerciseLibraryList = ({
                     style={styles.pickerModalMuscleRoleTitle}
                     setColor={secondaryBadgeText}
                   >
-                    Secondary
+                    {t("exercises.secondary")}
                   </ThemedText>
                 </View>
                 <View style={styles.pickerModalMuscleChips}>
@@ -1371,7 +1411,7 @@ const ExerciseLibraryList = ({
                           style={styles.pickerModalMuscleChipText}
                           setColor={secondaryBadgeText}
                         >
-                          {label}
+                          {muscleGroupLabel(label, t)}
                         </ThemedText>
                       </View>
                     ))
@@ -1380,7 +1420,7 @@ const ExerciseLibraryList = ({
                       style={styles.pickerModalMuscleEmptyText}
                       setColor={quietText}
                     >
-                      No secondary muscle groups listed
+                      {t("exercises.library.noSecondaryMuscles")}
                     </ThemedText>
                   )}
                 </View>
@@ -1390,7 +1430,9 @@ const ExerciseLibraryList = ({
             <TouchableOpacity
               activeOpacity={0.88}
               accessibilityRole="button"
-              accessibilityLabel={`Add ${selectedExercise.exercise_name} to workout`}
+              accessibilityLabel={t("exercises.library.addToWorkoutA11y", {
+                name: selectedExercise.exercise_name,
+              })}
               disabled={isSelectionBusy}
               onPress={() => onSelectExercise?.(selectedExercise)}
               style={[
@@ -1421,8 +1463,8 @@ const ExerciseLibraryList = ({
                 setColor={theme.textInverted}
               >
                 {selectingExerciseName === selectedExercise.exercise_name
-                  ? "Adding..."
-                  : `Add to ${workoutTargetLabel}`}
+                  ? t("exercises.library.adding")
+                  : t("exercises.addTo", { name: workoutTargetLabel })}
               </ThemedText>
             </TouchableOpacity>
           </>
@@ -1462,17 +1504,21 @@ const ExerciseLibraryList = ({
 
         <View style={styles.headerCopy}>
           <ThemedText size={11} style={styles.eyebrow} setColor={primaryTextColor}>
-            {isWorkoutPicker ? "Workout" : "Train"}
+            {isWorkoutPicker
+              ? t("exercises.library.eyebrowWorkout")
+              : t("exercises.library.eyebrowTrain")}
           </ThemedText>
           <ThemedTitle
             type="h3"
             style={[styles.title, { color: titleColor }]}
           >
-            {isWorkoutPicker ? "Add exercise" : "Exercise library"}
+            {isWorkoutPicker
+              ? t("exercises.addExercise")
+              : t("exercises.library.title")}
           </ThemedTitle>
           {isWorkoutPicker ? (
             <ThemedText style={styles.description} setColor={quietText}>
-              Workout exercise
+              {t("exercises.library.workoutExercise")}
             </ThemedText>
           ) : null}
         </View>
@@ -1500,7 +1546,7 @@ const ExerciseLibraryList = ({
           <TextInput
             value={searchQuery}
             onChangeText={setSearchQuery}
-            placeholder="Search exercises..."
+            placeholder={t("exercises.searchPlaceholder")}
             placeholderTextColor={quietText}
             style={[styles.searchInput, { color: titleColor }]}
             autoCorrect={false}
@@ -1511,7 +1557,7 @@ const ExerciseLibraryList = ({
           activeOpacity={0.86}
           accessibilityRole="button"
           accessibilityState={{ selected: showFavouritesOnly }}
-          accessibilityLabel="Show only favourite exercises"
+          accessibilityLabel={t("exercises.library.favouritesOnlyA11y")}
           onPress={() => setShowFavouritesOnly((current) => !current)}
           style={[
             styles.filterButton,
@@ -1537,8 +1583,10 @@ const ExerciseLibraryList = ({
           accessibilityRole="button"
           accessibilityLabel={
             activeFilterCount > 0
-              ? `Open exercise filters, ${activeFilterCount} active`
-              : "Open exercise filters"
+              ? t("exercises.library.openFiltersActiveA11y", {
+                  count: activeFilterCount,
+                })
+              : t("exercises.library.openFiltersA11y")
           }
           onPress={() => setIsFilterSheetVisible(true)}
           style={[
@@ -1575,7 +1623,9 @@ const ExerciseLibraryList = ({
               key={chip.key}
               activeOpacity={0.84}
               accessibilityRole="button"
-              accessibilityLabel={`Remove filter ${chip.label}`}
+              accessibilityLabel={t("exercises.library.removeFilterA11y", {
+                label: chip.label,
+              })}
               onPress={chip.onRemove}
               style={[
                 styles.activeFilterChip,
@@ -1606,7 +1656,7 @@ const ExerciseLibraryList = ({
                 style={styles.activeFilterClearAllText}
                 setColor={quietText}
               >
-                Clear all
+                {t("exercises.library.clearAll")}
               </ThemedText>
             </TouchableOpacity>
           ) : null}
@@ -1636,14 +1686,16 @@ const ExerciseLibraryList = ({
 
         <ThemedText style={styles.catalogMapHint} setColor={quietText}>
           {highlightedRegionKeys.length === 0
-            ? "Tap a muscle to filter the list"
-            : `Showing exercises that use ${
-                muscleFilterLabels.length === 1
-                  ? muscleFilterLabels[0]
-                  : `${muscleFilterLabels
-                      .slice(0, -1)
-                      .join(", ")} or ${muscleFilterLabels.at(-1)}`
-              }`}
+            ? t("exercises.library.mapHint")
+            : t("exercises.library.mapShowing", {
+                muscles:
+                  muscleFilterLabels.length === 1
+                    ? muscleFilterLabels[0]
+                    : t("exercises.library.mapOr", {
+                        list: muscleFilterLabels.slice(0, -1).join(", "),
+                        last: muscleFilterLabels.at(-1),
+                      }),
+              })}
         </ThemedText>
       </View>
 
@@ -1656,7 +1708,7 @@ const ExerciseLibraryList = ({
           >
             {visibleCount}
           </ThemedText>
-          {visibleCount === 1 ? " exercise" : " exercises"}
+          {` ${t("exercises.library.countSuffix", { count: visibleCount })}`}
         </ThemedText>
       </View>
 
@@ -1664,16 +1716,16 @@ const ExerciseLibraryList = ({
         <View style={styles.emptyState}>
           <ActivityIndicator color={primaryTextColor} />
           <ThemedText style={styles.emptyBody} setColor={quietText}>
-            Loading exercises...
+            {t("exercises.loading")}
           </ThemedText>
         </View>
       ) : exercises.length === 0 ? (
         <View style={styles.emptyState}>
           <ThemedTitle type="h3" style={styles.emptyTitle}>
-            No exercises yet
+            {t("exercises.library.emptyTitle")}
           </ThemedTitle>
           <ThemedText style={styles.emptyBody} setColor={quietText}>
-            No exercise names were found in the shared cloud library yet.
+            {t("exercises.library.emptyBody")}
           </ThemedText>
         </View>
       ) : filteredExercises.length === 0 ? (
@@ -1683,18 +1735,18 @@ const ExerciseLibraryList = ({
         // inside the filter sheet, which is not visible from the list.
         <View style={styles.emptyState}>
           <ThemedTitle type="h3" style={styles.emptyTitle}>
-            No matches
+            {t("exercises.library.noMatchesTitle")}
           </ThemedTitle>
           <ThemedText style={styles.emptyBody} setColor={quietText}>
             {activeFilterCount > 0
-              ? "No exercise matches every filter you have set."
-              : "Try another search."}
+              ? t("exercises.library.noMatchEveryFilter")
+              : t("exercises.library.tryAnotherSearch")}
           </ThemedText>
 
           {activeFilterCount > 0 ? (
             <TouchableOpacity
               accessibilityRole="button"
-              accessibilityLabel="Clear all filters"
+              accessibilityLabel={t("exercises.library.clearAllFiltersA11y")}
               activeOpacity={0.85}
               onPress={resetFilters}
               style={[styles.emptyResetButton, { borderColor: cardBorder }]}
@@ -1703,7 +1755,7 @@ const ExerciseLibraryList = ({
                 style={styles.emptyResetText}
                 setColor={primaryTextColor}
               >
-                {`Clear ${activeFilterCount === 1 ? "filter" : "all filters"}`}
+                {t("exercises.library.clearFilters", { count: activeFilterCount })}
               </ThemedText>
             </TouchableOpacity>
           ) : null}
@@ -1782,7 +1834,7 @@ const ExerciseLibraryList = ({
                   style={styles.exerciseBodyMapModalFigureLabel}
                   setColor={quietText}
                 >
-                  Front
+                  {t("exercises.front")}
                 </ThemedText>
                 <BodyMapPreview
                   bodyView="front"
@@ -1804,7 +1856,7 @@ const ExerciseLibraryList = ({
                   style={styles.exerciseBodyMapModalFigureLabel}
                   setColor={quietText}
                 >
-                  Back
+                  {t("exercises.back")}
                 </ThemedText>
                 <BodyMapPreview
                   bodyView="back"

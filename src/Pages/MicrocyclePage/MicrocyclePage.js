@@ -20,8 +20,10 @@ import {
 } from "../../Resources/ThemedComponents";
 
 import { programService } from "../../Services";
+import { useTranslation } from "@localization";
 
 const MicrocyclePage = ({ route }) => {
+  const { t } = useTranslation();
   const db = useSQLiteContext();
   const navigation = useNavigation();
   const colorScheme = useColorScheme();
@@ -35,7 +37,9 @@ const MicrocyclePage = ({ route }) => {
     period_start,
     period_end,
   } = route.params;
-  const headerTitle = `Block ${mesocycle_number}`;
+  const headerTitle = t("programs.blocks.blockNumber", {
+    number: mesocycle_number,
+  });
 
   const [refreshing, set_refreshing] = useState(0);
   const [OptionsBottomsheet_visible, set_OptionsBottomsheet_visible] =
@@ -60,12 +64,12 @@ const MicrocyclePage = ({ route }) => {
 
   const confirmDeleteMesocycle = () => {
     Alert.alert(
-      "Delete block?",
-      "This removes the block and all weeks and workouts inside it.",
+      t("programs.blocks.deleteConfirmTitle"),
+      t("programs.blocks.deleteConfirmMessage"),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("common.cancel"), style: "cancel" },
         {
-          text: "Delete block",
+          text: t("programs.blocks.delete"),
           style: "destructive",
           onPress: () => {
             void deleteMesocycle();
@@ -109,7 +113,7 @@ const MicrocyclePage = ({ route }) => {
           right={
             <TouchableOpacity
               accessibilityRole="button"
-              accessibilityLabel="Block options"
+              accessibilityLabel={t("programs.blocks.options")}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               onPress={() => {
                 set_focus(mesocycle_focus);
@@ -149,11 +153,11 @@ const MicrocyclePage = ({ route }) => {
           style={[styles.bottomsheet_title, { borderBottomColor: theme.hairline }]}
         >
           <ThemedTitle type={"h3"} style={{ flex: 10 }}>
-            Block {mesocycle_number}
+            {headerTitle}
           </ThemedTitle>
 
           <View style={styles.focus}>
-            <ThemedText> Change Focus </ThemedText>
+            <ThemedText> {t("programs.focus.change")} </ThemedText>
 
             <ThemedPicker
               value={focus}
@@ -161,16 +165,12 @@ const MicrocyclePage = ({ route }) => {
                 set_focus(newFocus);
                 updateFocus(newFocus);
               }}
-              placeholder={focus}
-              title="Select block focus"
-              items={[
-                "Strength",
-                "Bodybuilding",
-                "Technique",
-                "Speed / Power",
-                "Easy / Recovery",
-                "Max Test",
-              ]}
+              placeholder={focus ? programService.getFocusLabel(focus, t) : undefined}
+              title={t("programs.focus.selectBlockFocus")}
+              items={programService.getFocusPickerItems(
+                programService.BLOCK_FOCUS_OPTIONS,
+                t
+              )}
             />
           </View>
         </View>
@@ -184,7 +184,7 @@ const MicrocyclePage = ({ route }) => {
           >
             <PlusCircled width={24} height={24} />
             <ThemedText style={styles.option_text}>
-              Add week
+              {t("programs.blocks.addWeek")}
             </ThemedText>
           </TouchableOpacity>
 
@@ -194,7 +194,7 @@ const MicrocyclePage = ({ route }) => {
           >
             <Delete width={24} height={24} />
             <ThemedText style={styles.option_text}>
-              Delete block
+              {t("programs.blocks.delete")}
             </ThemedText>
           </TouchableOpacity>
         </View>

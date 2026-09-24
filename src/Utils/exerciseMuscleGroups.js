@@ -122,6 +122,38 @@ const MUSCLE_GROUP_BY_KEY = new Map(
   EXERCISE_MUSCLE_GROUPS.map((group) => [group.key, group])
 );
 
+// What a person reads. `label` above stays the English name, because other
+// code keys on it (the Home glance, the records grouping) and it is the
+// fallback; the screen shows it through this. It takes the caller's `t`
+// rather than importing one, so the file stays free of imports and the tests
+// can load it on its own.
+const MUSCLE_GROUP_BY_LABEL = new Map(
+  EXERCISE_MUSCLE_GROUPS.map((group) => [group.label.toLowerCase(), group])
+);
+
+const toLabelKeyPart = (key) =>
+  key.replace(/-([a-z])/g, (_match, letter) => letter.toUpperCase());
+
+export function muscleGroupLabel(value, translate) {
+  const raw = typeof value === "string" ? value : String(value ?? "");
+  const normalized = raw.trim().toLowerCase();
+
+  if (typeof translate !== "function") {
+    return raw;
+  }
+
+  if (normalized === "all" || normalized === "all muscles") {
+    return translate("exercises.muscleGroups.all");
+  }
+
+  const group =
+    MUSCLE_GROUP_BY_KEY.get(normalized) ?? MUSCLE_GROUP_BY_LABEL.get(normalized);
+
+  return group
+    ? translate(`exercises.muscleGroups.${toLabelKeyPart(group.key)}`)
+    : raw;
+}
+
 const TRAINING_GROUP_LABELS = {
   push: "Push",
   pull: "Pull",

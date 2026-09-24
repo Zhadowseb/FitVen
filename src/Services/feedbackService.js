@@ -1,4 +1,5 @@
 import Constants from "expo-constants";
+import { t } from "@localization";
 
 import appConfig from "../../app.json";
 import { supabase } from "../Database/supaBaseClient";
@@ -44,7 +45,7 @@ export async function submitFeedback({ message, userId = null, kind = "other" })
   const normalizedMessage = getNormalizedString(message);
 
   if (!normalizedMessage) {
-    throw new Error("Feedback message is required.");
+    throw new Error(t("errors.feedback.messageRequired"));
   }
 
   // device_info used to carry brand, model and OS version. None of it is

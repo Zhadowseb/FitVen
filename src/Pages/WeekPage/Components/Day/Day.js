@@ -27,8 +27,14 @@ import { ThemedCard,
 import { formatDate } from '../../../../Utils/dateUtils';
 import { requestOpenQuickWorkoutMenu } from "../../../../Utils/quickWorkoutMenuEvents";
 import { programService } from "../../../../Services";
+import { useTranslation } from "@localization";
+
+// focusText holds "Rest" for an empty day: it is also the icon lookup key, so
+// it stays English and only its display is translated.
+const REST_FOCUS = "Rest";
 
 const Day = ( {day, program_id, microcycle_id, refreshKey = 0} ) => {
+    const { t } = useTranslation();
     const colorScheme = useColorScheme();
     const theme = Colors[colorScheme] ?? Colors.light;
     
@@ -41,7 +47,7 @@ const Day = ( {day, program_id, microcycle_id, refreshKey = 0} ) => {
     const [day_id, setDay_id] = useState(0);
     const [date, setDate] = useState("");
     const [done, set_done] = useState(false);
-    const [focusText, setFocusText] = useState("Rest");
+    const [focusText, setFocusText] = useState(REST_FOCUS);
     const [globalWeeks, set_globalWeeks] = useState(0);
 
     //Copy workout to different day option.
@@ -90,7 +96,7 @@ const Day = ( {day, program_id, microcycle_id, refreshKey = 0} ) => {
             set_done(dayRow.done);
             set_workouts(dayRow.workouts);
 
-            if (dayRow.workouts.length === 0) {setFocusText("Rest"); } 
+            if (dayRow.workouts.length === 0) {setFocusText(REST_FOCUS); } 
             else if (dayRow.workouts.length === 1) {
 
                 setFocusText(dayRow.workouts[0].label);
@@ -136,12 +142,12 @@ const Day = ( {day, program_id, microcycle_id, refreshKey = 0} ) => {
 
     const confirmDeleteWorkout = (workoutId) => {
         Alert.alert(
-            "Delete workout?",
-            "This removes the workout and all sets saved inside it.",
+            t("programs.days.deleteWorkoutConfirmTitle"),
+            t("programs.days.deleteWorkoutConfirmMessage"),
             [
-                { text: "Cancel", style: "cancel" },
+                { text: t("common.cancel"), style: "cancel" },
                 {
-                    text: "Delete workout",
+                    text: t("programs.days.deleteWorkout"),
                     style: "destructive",
                     onPress: () => {
                         void deleteWorkout(workoutId);
@@ -205,7 +211,7 @@ const Day = ( {day, program_id, microcycle_id, refreshKey = 0} ) => {
 
                         <View style={styles.text}>
                             <ThemedText style={[workouts_done]}>
-                                {day.slice(0, 3)}
+                                {programService.getWeekdayName(day, t).slice(0, 3)}
                             </ThemedText>
 
                             <ThemedText>
@@ -227,7 +233,7 @@ const Day = ( {day, program_id, microcycle_id, refreshKey = 0} ) => {
                     </View>
 
                     <ThemedText style={{color: theme.quietText}} size={10}> 
-                        {focusText} 
+                        {focusText === REST_FOCUS ? t("programs.days.rest") : focusText}
                     </ThemedText>
 
                     </View> )}
@@ -250,7 +256,7 @@ const Day = ( {day, program_id, microcycle_id, refreshKey = 0} ) => {
                         workoutExercises.map((workout, wIndex) => (
                             <View key={workout.workout_id} style={{ marginBottom: 6 }}>
                             <ThemedText style={{ fontWeight: "600", opacity: 0.8 }}>
-                                Workout {wIndex + 1}:
+                                {t("programs.days.workoutNumber", { number: wIndex + 1 })}
                             </ThemedText>
 
                             {workout.exercises.map((ex, i) => (
@@ -281,7 +287,7 @@ const Day = ( {day, program_id, microcycle_id, refreshKey = 0} ) => {
                             )}
                         </View>
 
-                        <ThemedText style={{paddingTop: 7}}> {focusText} </ThemedText>
+                        <ThemedText style={{paddingTop: 7}}> {focusText === REST_FOCUS ? t("programs.days.rest") : focusText} </ThemedText>
 
                         </View>
                     )}
@@ -316,7 +322,7 @@ const Day = ( {day, program_id, microcycle_id, refreshKey = 0} ) => {
                 { borderBottomColor: theme.hairline },
               ]}
             >
-                <ThemedText> {day} </ThemedText>
+                <ThemedText> {programService.getWeekdayName(day, t)} </ThemedText>
                 <ThemedText> {date} </ThemedText>
             </View>
 
@@ -339,7 +345,7 @@ const Day = ( {day, program_id, microcycle_id, refreshKey = 0} ) => {
                         width={24}
                         height={24}/>
                     <ThemedText style={styles.option_text}> 
-                        Add new workout
+                        {t("programs.days.addWorkout")}
                     </ThemedText>
                 </TouchableOpacity>
 
@@ -355,7 +361,7 @@ const Day = ( {day, program_id, microcycle_id, refreshKey = 0} ) => {
                         width={24}
                         height={24}/>
                     <ThemedText style={styles.option_text}> 
-                        Delete Workout
+                        {t("programs.days.deleteWorkoutOption")}
                     </ThemedText>
                 </TouchableOpacity>
 
@@ -373,7 +379,7 @@ const Day = ( {day, program_id, microcycle_id, refreshKey = 0} ) => {
                         width={24}
                         height={24}/>
                     <ThemedText style={styles.option_text}> 
-                        Copy workout to a different day
+                        {t("programs.days.copyWorkout")}
                     </ThemedText>
                 </TouchableOpacity>
 

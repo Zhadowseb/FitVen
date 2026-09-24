@@ -1,18 +1,20 @@
+import { t } from "@localization";
+
 import { formatDate, parseCustomDate } from "./dateUtils";
 
-const MONTH_LABELS = [
-  "JAN",
-  "FEB",
-  "MAR",
-  "APR",
-  "MAY",
-  "JUN",
-  "JUL",
-  "AUG",
-  "SEP",
-  "OCT",
-  "NOV",
-  "DEC",
+const MONTH_KEYS = [
+  "jan",
+  "feb",
+  "mar",
+  "apr",
+  "may",
+  "jun",
+  "jul",
+  "aug",
+  "sep",
+  "oct",
+  "nov",
+  "dec",
 ];
 
 // BUG-20: the same program showed "25 MAY - 28 JUN 2026" on the list and
@@ -30,7 +32,8 @@ export function formatProgramDateLabel(value, { includeYear = false } = {}) {
   }
 
   const day = String(date.getDate()).padStart(2, "0");
-  const month = MONTH_LABELS[date.getMonth()] ?? "";
+  const monthKey = MONTH_KEYS[date.getMonth()];
+  const month = monthKey ? t(`programs.monthsShort.${monthKey}`).toUpperCase() : "";
   const year = date.getFullYear();
 
   return `${day} ${month}${includeYear ? ` ${year}` : ""}`.trim();

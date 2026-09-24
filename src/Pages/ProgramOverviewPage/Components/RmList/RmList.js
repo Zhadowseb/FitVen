@@ -18,6 +18,7 @@ import {
 } from "../../../../Resources/ThemedComponents";
 import Pencil from "../../../../Resources/Icons/UI-icons/Pencil";
 import Plus from "../../../../Resources/Icons/UI-icons/Plus";
+import { useTranslation } from "@localization";
 
 const RmList = ({
   program_id,
@@ -26,6 +27,7 @@ const RmList = ({
   programExerciseBestMap = {},
   onAddPress,
 }) => {
+  const { t } = useTranslation();
   const db = useSQLiteContext();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -92,12 +94,10 @@ const RmList = ({
         <>
           <View style={styles.metaRow}>
             <ThemedText style={styles.metaLeft} setColor={theme.text}>
-              {`${estimated_sets.length} estimated ${
-                estimated_sets.length === 1 ? "lift" : "lifts"
-              }`}
+              {t("programs.rm.estimatedLifts", { count: estimated_sets.length })}
             </ThemedText>
             <ThemedText style={styles.metaHint} setColor={quietText}>
-              Tap a row to edit
+              {t("programs.rm.tapToEdit")}
             </ThemedText>
           </View>
           <View style={[styles.dividerFull, { backgroundColor: theme.hairline }]} />
@@ -107,10 +107,10 @@ const RmList = ({
       {estimated_sets.length === 0 && (
         <View style={styles.emptyState}>
           <ThemedText style={styles.emptyText} setColor={titleColor}>
-            No 1 RM have been set.
+            {t("programs.rm.emptyTitle")}
           </ThemedText>
           <ThemedText style={styles.emptyHint} setColor={quietText}>
-            Add your first estimate below to start using weight targets.
+            {t("programs.rm.emptyHint")}
           </ThemedText>
         </View>
       )}
@@ -139,7 +139,7 @@ const RmList = ({
                 {formatDisplayNumber(item.estimated_weight)}
               </ThemedText>
               <ThemedText style={styles.rowUnit} setColor={quietText}>
-                {" kg"}
+                {` ${t("common.kg")}`}
               </ThemedText>
             </View>
 
@@ -162,7 +162,7 @@ const RmList = ({
         >
           <Plus width={15} height={15} color={theme.title} thickness={2.2} />
           <ThemedText style={styles.addButtonText} setColor={theme.title}>
-            Add 1RM
+            {t("programs.rm.addShort")}
           </ThemedText>
         </TouchableOpacity>
       </View>

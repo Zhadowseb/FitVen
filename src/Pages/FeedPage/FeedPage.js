@@ -817,18 +817,18 @@ export default function FeedPage() {
 
       closeReportWorkoutSummaryPost();
       Alert.alert(
-        "Report sent",
-        "Thank you. Reports are read within a day, and a post reported by two different people leaves the feed straight away."
+        t("social.report.sentTitle"),
+        t("calendar.feed.reportSentMessage")
       );
     } catch (error) {
       Alert.alert(
-        "Could not send the report",
-        error instanceof Error ? error.message : "The report was not sent."
+        t("calendar.feed.reportFailedTitle"),
+        error instanceof Error ? error.message : t("calendar.feed.reportNotSent")
       );
     } finally {
       setIsReportWorking(false);
     }
-  }, [closeReportWorkoutSummaryPost, reportNote, reportReason, reportingPost, user]);
+  }, [closeReportWorkoutSummaryPost, reportNote, reportReason, reportingPost, t, user]);
 
   const handleDeleteWorkoutSummaryPost = useCallback(() => {
     if (!selectedWorkoutSummaryPost?.id || deletingPostId) {
@@ -1111,10 +1111,10 @@ export default function FeedPage() {
 
       <ThemedConfirmModal
         visible={Boolean(reportingPost)}
-        title="Report this post?"
-        message="Tell us what is wrong. Reports are read by the developer and are not shown to the person you are reporting."
-        confirmLabel="Send report"
-        cancelLabel="Cancel"
+        title={t("calendar.feed.reportPostTitle")}
+        message={t("social.report.message")}
+        confirmLabel={t("social.report.send")}
+        cancelLabel={t("common.cancel")}
         tone="danger"
         isWorking={isReportWorking}
         confirmDisabled={!reportReason}
@@ -1131,7 +1131,7 @@ export default function FeedPage() {
                 onPress={() => setReportReason(option.value)}
                 accessibilityRole="radio"
                 accessibilityState={{ selected }}
-                accessibilityLabel={option.label}
+                accessibilityLabel={t(option.labelKey)}
                 style={[
                   styles.reportReason,
                   {
@@ -1144,7 +1144,7 @@ export default function FeedPage() {
                   style={styles.reportReasonText}
                   setColor={selected ? theme.danger : theme.text}
                 >
-                  {option.label}
+                  {t(option.labelKey)}
                 </ThemedText>
               </Pressable>
             );
@@ -1154,7 +1154,7 @@ export default function FeedPage() {
         <ThemedTextInput
           value={reportNote}
           onChangeText={setReportNote}
-          placeholder="Anything else we should know? (optional)"
+          placeholder={t("social.report.notePlaceholder")}
           multiline
           maxLength={socialService.REPORT_NOTE_MAX_LENGTH}
           style={styles.reportNote}

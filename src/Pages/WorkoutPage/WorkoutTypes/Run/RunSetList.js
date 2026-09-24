@@ -30,6 +30,7 @@ import ListHeader from "./ListHeader";
 import { runningService } from "../../../../Services";
 import { getRunSetCompletionMode } from "../../../../Utils/runIntervalUtils";
 import { getZoneColor } from "../../../../Utils/heartRateUtils";
+import { useTranslation } from "@localization";
 
 const ZONES = [
   { label: "1", value: 1 },
@@ -220,7 +221,7 @@ const buildRunInputFallbacks = (sets = []) =>
     return fallbacks;
   }, {});
 
-const getIntervalsSummary = (sets, emptySummary) => {
+const getIntervalsSummary = (sets, emptySummary, t) => {
   const workingSets = sets.filter((set) => !set.is_pause);
   const totalDistance = workingSets.reduce(
     (sum, set) => sum + (Number(set.distance) || 0),
@@ -237,10 +238,14 @@ const getIntervalsSummary = (sets, emptySummary) => {
 
   const distanceText =
     totalDistance > 0
-      ? `${formatKilometersDisplay(totalDistance)} km total`
-      : "Distance not set";
+      ? t("run.sets.distanceTotal", {
+          distance: formatKilometersDisplay(totalDistance),
+        })
+      : t("run.sets.distanceNotSet");
   const timeText =
-    totalMinutes > 0 ? `~${Math.round(totalMinutes)} min` : "Time not set";
+    totalMinutes > 0
+      ? t("run.sets.timeApprox", { minutes: Math.round(totalMinutes) })
+      : t("run.sets.timeNotSet");
 
   return `${distanceText} - ${timeText}`;
 };
@@ -256,12 +261,14 @@ const RunSetList = ({
   variant = "intervals",
   sectionTitle,
   sectionEyebrow,
-  emptySummary = "No sets",
+  emptySummary: emptySummaryProp = null,
   onAddSet,
   workoutStarted = false,
   hidePauseRows = false,
   maxSets = null,
 }) => {
+  const { t } = useTranslation();
+  const emptySummary = emptySummaryProp ?? t("run.sets.noSets");
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const db = useSQLiteContext();
@@ -862,7 +869,9 @@ const RunSetList = ({
           })}
           {Number(set.done) === 1 && formatActualPace(set.actual_pace) ? (
             <ThemedText style={styles.actualIntervalResult} setColor={secondaryColor}>
-              Actual {formatActualPace(set.actual_pace)}
+              {t("run.sets.actualValue", {
+                value: formatActualPace(set.actual_pace),
+              })}
             </ThemedText>
           ) : null}
         </View>
@@ -897,7 +906,9 @@ const RunSetList = ({
           )}
           {Number(set.done) === 1 && Number(set.actual_duration_seconds) > 0 ? (
             <ThemedText style={styles.actualIntervalResult} setColor={secondaryColor}>
-              Actual {formatSecondsClock(set.actual_duration_seconds)}
+              {t("run.sets.actualValue", {
+                value: formatSecondsClock(set.actual_duration_seconds),
+              })}
             </ThemedText>
           ) : null}
         </View>
@@ -1175,7 +1186,7 @@ const RunSetList = ({
   const renderIntervalsCard = () => {
     const workingSets = sets.filter((set) => !set.is_pause);
     const completedSets = workingSets.filter((set) => Number(set.done) === 1);
-    const summary = getIntervalsSummary(sets, emptySummary);
+    const summary = getIntervalsSummary(sets, emptySummary, t);
     const canAddSet =
       !Number.isInteger(maxSets) || workingSets.length < maxSets;
 
@@ -1201,7 +1212,10 @@ const RunSetList = ({
             </View>
 
             <ThemedText style={styles.intervalsSetCount} setColor={quietText}>
-              {completedSets.length} / {workingSets.length} sets
+              {t("run.sets.completedCount", {
+                done: completedSets.length,
+                total: workingSets.length,
+              })}
             </ThemedText>
           </View>
 
@@ -1250,12 +1264,12 @@ const RunSetList = ({
   };
 
   const selectedSetTitle = selectedSet?.is_pause
-    ? "Rest"
+    ? t("run.segments.rest")
     : type === "WARMUP"
-      ? "Warmup"
+      ? t("run.segments.warmup")
       : type === "COOLDOWN"
-        ? "Cooldown"
-        : `Set ${selectedSet?.set_number ?? ""}`;
+        ? t("run.segments.cooldown")
+        : t("run.sets.setNumber", { number: selectedSet?.set_number ?? "" });
 
   return (
     <>
@@ -1293,23 +1307,23 @@ const RunSetList = ({
               style={styles.completionTargetSectionLabel}
               setColor={quietText}
             >
-              AUTO-ADVANCE TARGET
+              {t("run.sets.autoAdvanceTarget")}
             </ThemedText>
             <View style={styles.completionTargetOptions}>
               {[
                 {
                   value: null,
-                  label: "Automatic",
+                  label: t("run.sets.targetAutomatic"),
                   enabled: true,
                 },
                 {
                   value: "distance",
-                  label: "Distance",
+                  label: t("run.sets.targetDistance"),
                   enabled: Number(selectedSet.distance) > 0,
                 },
                 {
                   value: "time",
-                  label: "Time",
+                  label: t("run.sets.targetTime"),
                   enabled: Number(selectedSet.time) > 0,
                 },
               ].map((option) => {
@@ -1320,7 +1334,7 @@ const RunSetList = ({
 
                 return (
                   <TouchableOpacity
-                    key={option.label}
+                    key={option.value ?? "automatic"}
                     activeOpacity={0.78}
                     disabled={!option.enabled}
                     onPress={() =>
@@ -1359,7 +1373,7 @@ const RunSetList = ({
               style={styles.completionTargetHint}
               setColor={quietText}
             >
-              The marked field decides when this interval moves to the next set.
+              {t("run.sets.autoAdvanceHint")}
             </ThemedText>
           </View>
         ) : null}
@@ -1371,7 +1385,7 @@ const RunSetList = ({
               onPress={toggleDistanceUnit}
             >
               <ThemedText style={styles.bottomsheetFieldLabel} setColor={quietText}>
-                DIST {distanceUnit}
+                {t("run.stats.distShort")} {distanceUnit}
               </ThemedText>
             </TouchableOpacity>
             <View
@@ -1396,7 +1410,7 @@ const RunSetList = ({
 
           <View style={styles.bottomsheetField}>
             <ThemedText style={styles.bottomsheetFieldLabel} setColor={quietText}>
-              PACE
+              {t("run.stats.pace")}
             </ThemedText>
             <View
               style={[
@@ -1421,7 +1435,7 @@ const RunSetList = ({
 
           <View style={styles.bottomsheetField}>
             <ThemedText style={styles.bottomsheetFieldLabel} setColor={quietText}>
-              TIME
+              {t("run.stats.time")}
             </ThemedText>
             <View
               style={[
@@ -1458,7 +1472,7 @@ const RunSetList = ({
             onPress={() => updateSelectedSetField("heartrate", null)}
           >
             <ThemedText style={styles.zoneChipText} setColor={quietText}>
-              NO ZONE
+              {t("run.sets.noZone")}
             </ThemedText>
           </TouchableOpacity>
 
@@ -1500,7 +1514,9 @@ const RunSetList = ({
               onPress={togglePause}
             >
               <ThemedText style={styles.bottomsheetActionText} setColor={titleColor}>
-                {selectedSet?.is_pause ? "Make interval" : "Make rest"}
+                {selectedSet?.is_pause
+                  ? t("run.sets.makeInterval")
+                  : t("run.sets.makeRest")}
               </ThemedText>
             </TouchableOpacity>
           )}
@@ -1521,7 +1537,7 @@ const RunSetList = ({
               style={styles.bottomsheetActionText}
               setColor={theme.danger ?? primaryColor}
             >
-              Delete
+              {t("common.delete")}
             </ThemedText>
           </TouchableOpacity>
         </View>

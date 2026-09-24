@@ -18,23 +18,25 @@ import {
   ThemedSheetHandle,
   ThemedText,
 } from "../ThemedComponents";
+import { useTranslation } from "@localization";
 
 const SINGLE_WORKOUT_KEY = "single-workout";
-const SHORT_MONTHS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
+// Keys under workout.copyTarget, in Date#getMonth / Date#getDay order.
+const SHORT_MONTH_KEYS = [
+  "jan",
+  "feb",
+  "mar",
+  "apr",
+  "may",
+  "jun",
+  "jul",
+  "aug",
+  "sep",
+  "oct",
+  "nov",
+  "dec",
 ];
-const SHORT_WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const SHORT_WEEKDAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 
 function getTargetKey(target) {
   return `program-${target?.program_id ?? "unknown"}-${target?.day_id ?? "day"}`;
@@ -55,22 +57,29 @@ function parseLocalDate(dateLabel) {
   return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
 }
 
-function formatConflictDate(dateLabel) {
+function formatConflictDate(dateLabel, t) {
   const parsedDate = parseLocalDate(dateLabel);
 
   if (!parsedDate) {
-    return dateLabel || "This date";
+    return dateLabel || t("workout.copyTarget.thisDate");
   }
 
-  return `${SHORT_WEEKDAYS[parsedDate.getDay()]} ${String(
-    parsedDate.getDate()
-  ).padStart(2, "0")} ${SHORT_MONTHS[parsedDate.getMonth()]} ${parsedDate.getFullYear()}`;
+  return t("workout.copyTarget.date", {
+    weekday: t(`workout.copyTarget.weekdays.${SHORT_WEEKDAY_KEYS[parsedDate.getDay()]}`),
+    day: String(parsedDate.getDate()).padStart(2, "0"),
+    month: t(`workout.copyTarget.months.${SHORT_MONTH_KEYS[parsedDate.getMonth()]}`),
+    year: parsedDate.getFullYear(),
+  });
 }
 
-function getBlockWeekLabel(target) {
+function getBlockWeekLabel(target, t) {
   return [
-    target?.mesocycle_number ? `Block ${target.mesocycle_number}` : null,
-    target?.microcycle_number ? `Week ${target.microcycle_number}` : null,
+    target?.mesocycle_number
+      ? t("workout.program.block", { number: target.mesocycle_number })
+      : null,
+    target?.microcycle_number
+      ? t("workout.program.week", { number: target.microcycle_number })
+      : null,
   ]
     .filter(Boolean)
     .join(" - ");
@@ -81,9 +90,9 @@ function getProgramSubtitle(target) {
   return [dayLabel, target?.program_name].filter(Boolean).join(" - ");
 }
 
-function getProgramMeta(target) {
-  const blockWeek = getBlockWeekLabel(target);
-  return blockWeek ? blockWeek.toUpperCase() : "PROGRAM";
+function getProgramMeta(target, t) {
+  const blockWeek = getBlockWeekLabel(target, t);
+  return blockWeek ? blockWeek.toUpperCase() : t("workout.copyTarget.programFallback");
 }
 
 function WorkoutCopyTargetModal({
@@ -97,6 +106,7 @@ function WorkoutCopyTargetModal({
 }) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const { t } = useTranslation();
   const [selectedKey, setSelectedKey] = useState(SINGLE_WORKOUT_KEY);
   const titleColor = theme.title ?? theme.text;
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
@@ -165,16 +175,16 @@ function WorkoutCopyTargetModal({
 
         <View style={styles.headerText}>
           <ThemedText style={styles.eyebrow} setColor={warningColor}>
-            DATE CONFLICT
+            {t("workout.copyTarget.eyebrow")}
           </ThemedText>
           <ThemedText style={styles.title} setColor={titleColor}>
-            Where should this workout live?
+            {t("workout.copyTarget.title")}
           </ThemedText>
         </View>
 
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Close"
+          accessibilityLabel={t("common.close")}
           disabled={isSubmitting}
           onPress={onClose}
           style={styles.closeButton}
@@ -191,7 +201,9 @@ function WorkoutCopyTargetModal({
       >
         <Calender width={18} height={18} color={mutedText} />
         <ThemedText style={styles.conflictText} setColor={titleColor}>
-          {formatConflictDate(dateLabel)} already has a program session scheduled.
+          {t("workout.copyTarget.conflict", {
+            date: formatConflictDate(dateLabel, t),
+          })}
         </ThemedText>
       </View>
 
@@ -232,7 +244,7 @@ function WorkoutCopyTargetModal({
               <View style={styles.optionText}>
                 <View style={styles.optionEyebrowRow}>
                   <ThemedText style={styles.optionEyebrow} setColor={primaryTextColor}>
-                    {getProgramMeta(target)}
+                    {getProgramMeta(target, t)}
                   </ThemedText>
                   {index === 0 ? (
                     <View
@@ -245,19 +257,19 @@ function WorkoutCopyTargetModal({
                         style={styles.recommendedText}
                         setColor={primaryTextColor}
                       >
-                        RECOMMENDED
+                        {t("workout.copyTarget.recommended")}
                       </ThemedText>
                     </View>
                   ) : null}
                 </View>
                 <ThemedText style={styles.optionTitle} setColor={titleColor}>
-                  Add to program
+                  {t("workout.copyTarget.addToProgram")}
                 </ThemedText>
                 <ThemedText style={styles.optionSubtitle} setColor={mutedText}>
                   {getProgramSubtitle(target)}
                 </ThemedText>
                 <ThemedText style={styles.optionDescription} setColor={quietText}>
-                  Keeps your plan intact and tracks volume.
+                  {t("workout.copyTarget.addToProgramDetail")}
                 </ThemedText>
               </View>
 
@@ -309,16 +321,16 @@ function WorkoutCopyTargetModal({
 
           <View style={styles.optionText}>
             <ThemedText style={styles.optionEyebrow} setColor={secondaryColor}>
-              STANDALONE
+              {t("workout.copyTarget.standalone")}
             </ThemedText>
             <ThemedText style={styles.optionTitle} setColor={titleColor}>
-              Single workout
+              {t("workout.copyTarget.singleWorkout")}
             </ThemedText>
             <ThemedText style={styles.optionSubtitle} setColor={mutedText}>
-              Lives only in the calendar.
+              {t("workout.copyTarget.singleWorkoutSubtitle")}
             </ThemedText>
             <ThemedText style={styles.optionDescription} setColor={quietText}>
-              Won't affect program progression.
+              {t("workout.copyTarget.singleWorkoutDetail")}
             </ThemedText>
           </View>
 
@@ -358,7 +370,7 @@ function WorkoutCopyTargetModal({
           ]}
         >
           <ThemedText style={styles.cancelText} setColor={mutedText}>
-            CANCEL
+            {t("workout.copyTarget.cancel")}
           </ThemedText>
         </Pressable>
 
@@ -378,7 +390,7 @@ function WorkoutCopyTargetModal({
             style={styles.confirmText}
             setColor={confirmTextColor}
           >
-            CONFIRM &gt;
+            {t("workout.copyTarget.confirm")}
           </ThemedText>
         </Pressable>
       </View>

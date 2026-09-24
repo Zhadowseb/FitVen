@@ -265,7 +265,10 @@ export default function ExerciseHistoryPanel({
         </ThemedText>
         {heaviestLift ? (
           <ThemedText style={styles.recordsValue} setColor={theme.quietText} numberOfLines={1}>
-            {`${formatWeight(heaviestLift.weight)} kg × ${heaviestLift.reps}`}
+            {t("workout.history.heaviestLift", {
+              weight: formatWeight(heaviestLift.weight),
+              reps: heaviestLift.reps,
+            })}
           </ThemedText>
         ) : null}
         <ChevronRight width={16} height={16} color={theme.quietText} />

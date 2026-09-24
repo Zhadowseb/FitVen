@@ -18,6 +18,7 @@ import {
   normalizeMaxHeartRate,
 } from "../../../../Utils/heartRateUtils";
 import styles from "./RunHeartRateChartPageStyle";
+import { useTranslation } from "@localization";
 
 const CHART_BOUNDS = {
   left: 58,
@@ -148,6 +149,7 @@ function buildActualHeartRateSegments(
 }
 
 const RunHeartRateChartPage = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const route = useRoute();
   const colorScheme = useColorScheme();
@@ -213,7 +215,7 @@ const RunHeartRateChartPage = () => {
       <View style={styles.header}>
         <TouchableOpacity
           accessibilityRole="button"
-          accessibilityLabel="Close heart rate chart"
+          accessibilityLabel={t("run.heartRateChart.closeLabel")}
           activeOpacity={0.72}
           onPress={() => navigation.goBack()}
           style={[styles.closeButton, { borderColor: cardBorder }]}
@@ -223,10 +225,10 @@ const RunHeartRateChartPage = () => {
 
         <View style={styles.heading}>
           <ThemedText style={styles.eyebrow} setColor={heartRateColor}>
-            HEART RATE
+            {t("run.heartRateChart.eyebrow")}
           </ThemedText>
           <ThemedText style={styles.title} setColor={titleColor}>
-            Heart rate over time
+            {t("run.charts.heartRateOverTime")}
           </ThemedText>
           <View style={styles.legend}>
             <View style={styles.legendItem}>
@@ -242,7 +244,7 @@ const RunHeartRateChartPage = () => {
                 ))}
               </View>
               <ThemedText style={styles.legendLabel} setColor={quietText}>
-                ACTUAL
+                {t("run.heartRateChart.actual")}
               </ThemedText>
             </View>
             <View style={styles.legendItem}>
@@ -253,7 +255,7 @@ const RunHeartRateChartPage = () => {
                 ]}
               />
               <ThemedText style={styles.legendLabel} setColor={quietText}>
-                PLANNED
+                {t("run.heartRateChart.planned")}
               </ThemedText>
             </View>
           </View>
@@ -264,7 +266,7 @@ const RunHeartRateChartPage = () => {
             {targetDisplay}
           </ThemedText>
           <ThemedText style={styles.summaryLabel} setColor={quietText}>
-            TARGET
+            {t("run.charts.target")}
           </ThemedText>
         </View>
       </View>

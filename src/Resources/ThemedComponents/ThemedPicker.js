@@ -6,16 +6,20 @@ import { Colors } from "../GlobalStyling/colors";
 import ChevronRight from "../Icons/UI-icons/ChevronRight";
 import ThemedText from "./ThemedText";
 import ThemedModal from "./ThemedModal";
+import { useTranslation } from "@localization";
 
 const ThemedPicker = ({
   value,
   items = [],
   onChange,
-  placeholder = "Select",
-  title = "Pick",
+  placeholder,
+  title,
   style,
 }) => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+  const placeholderText = placeholder ?? t("common.picker.placeholder");
+  const titleText = title ?? t("common.picker.title");
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
 
@@ -34,7 +38,7 @@ const ThemedPicker = ({
   );
 
   const selectedLabel =
-    normalizedItems.find(i => i.value === value)?.label ?? placeholder;
+    normalizedItems.find(i => i.value === value)?.label ?? placeholderText;
 
   return (
     <>
@@ -71,7 +75,7 @@ const ThemedPicker = ({
       <ThemedModal
         visible={open}
         onClose={() => setOpen(false)}
-        title={title}
+        title={titleText}
       >
         <ScrollView style={styles.scrollview}>
           {normalizedItems.map(item => (

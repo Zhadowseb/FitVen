@@ -6,11 +6,13 @@ import StatusPill from "../../../Resources/Components/StatusPill";
 import ProgressBar from "../../../Resources/Components/ProgressBar";
 import Calender from "../../../Resources/Icons/UI-icons/Calender";
 import styles from "./ProgramOverviewHeaderStyle";
+import { useTranslation } from "@localization";
 
-const STATUS_LABELS = {
-  NOT_STARTED: "Draft",
-  ACTIVE: "Active",
-  COMPLETE: "Complete",
+// Stored statuses to their display keys.
+const STATUS_LABEL_KEYS = {
+  NOT_STARTED: "programs.status.draft",
+  ACTIVE: "programs.status.active",
+  COMPLETE: "programs.status.complete",
 };
 
 const ProgramOverviewHeader = ({
@@ -27,6 +29,7 @@ const ProgramOverviewHeader = ({
   avgSessionMinutes,
   onStart,
 }) => {
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const primaryTextColor = theme.primaryText ?? theme.primary;
@@ -57,14 +60,14 @@ const ProgramOverviewHeader = ({
           <View style={styles.dateRow}>
             <Calender width={13} height={13} color={theme.quietText} thickness={1.8} />
             <ThemedText style={styles.dateText} setColor={theme.quietText}>
-              {isNotStarted ? "Not scheduled" : period}
+              {isNotStarted ? t("programs.settings.notScheduled") : period}
             </ThemedText>
           </View>
         </View>
 
         <StatusPill
           style={styles.statusPill}
-          label={STATUS_LABELS[status] ?? STATUS_LABELS.NOT_STARTED}
+          label={t(STATUS_LABEL_KEYS[status] ?? STATUS_LABEL_KEYS.NOT_STARTED)}
           color={statusColor}
           backgroundColor={statusBackground}
           dotSize={5}
@@ -75,7 +78,7 @@ const ProgramOverviewHeader = ({
         <Pressable
           onPress={onStart}
           accessibilityRole="button"
-          accessibilityLabel="Start program"
+          accessibilityLabel={t("programs.start.action")}
           style={({ pressed }) => [
             styles.startButton,
             {
@@ -88,7 +91,7 @@ const ProgramOverviewHeader = ({
             style={styles.startButtonText}
             setColor={theme.textInverted}
           >
-            Start program
+            {t("programs.start.action")}
           </ThemedText>
         </Pressable>
       ) : null}
@@ -97,11 +100,13 @@ const ProgramOverviewHeader = ({
         <View style={styles.progressHeader}>
           <View style={styles.progressLeft}>
             <ThemedText style={styles.weekLabel} setColor={theme.title}>
-              {totalWeeks > 0 ? `Week ${currentWeek} ` : "No weeks"}
+              {totalWeeks > 0
+                ? t("programs.overview.currentWeek", { week: currentWeek })
+                : t("programs.overview.noWeeks")}
             </ThemedText>
             {totalWeeks > 0 && (
               <ThemedText style={styles.weekOfLabel} setColor={theme.quietText}>
-                {`of ${totalWeeks}`}
+                {t("programs.overview.weekOf", { total: totalWeeks })}
               </ThemedText>
             )}
           </View>
@@ -113,7 +118,10 @@ const ProgramOverviewHeader = ({
         <ProgressBar progress={safePercent / 100} height={6} />
 
         <ThemedText style={styles.caption} setColor={theme.quietText}>
-          {`${completedWorkouts} of ${totalWorkouts} workouts completed`}
+          {t("programs.overview.workoutsCompleted", {
+            completed: completedWorkouts,
+            count: totalWorkouts,
+          })}
         </ThemedText>
       </View>
 
@@ -128,7 +136,7 @@ const ProgramOverviewHeader = ({
           ]}
         >
           <ThemedText style={styles.statLabel} setColor={theme.quietText}>
-            Total volume
+            {t("programs.overview.totalVolume")}
           </ThemedText>
           <View style={styles.statValueRow}>
             <ThemedText style={styles.statValue} setColor={theme.title}>
@@ -136,7 +144,7 @@ const ProgramOverviewHeader = ({
             </ThemedText>
             <ThemedText style={styles.statUnit} setColor={theme.quietText}>
               {totalVolumeLabel === null || totalVolumeLabel === undefined
-                ? " not logged"
+                ? ` ${t("programs.overview.notLogged")}`
                 : ` ${totalVolumeUnit}`}
             </ThemedText>
           </View>
@@ -152,7 +160,7 @@ const ProgramOverviewHeader = ({
           ]}
         >
           <ThemedText style={styles.statLabel} setColor={theme.quietText}>
-            Avg session
+            {t("programs.overview.avgSession")}
           </ThemedText>
           <View style={styles.statValueRow}>
             <ThemedText style={styles.statValue} setColor={theme.title}>
@@ -160,8 +168,8 @@ const ProgramOverviewHeader = ({
             </ThemedText>
             <ThemedText style={styles.statUnit} setColor={theme.quietText}>
               {avgSessionMinutes === null || avgSessionMinutes === undefined
-                ? " not timed"
-                : " min"}
+                ? ` ${t("programs.overview.notTimed")}`
+                : ` ${t("programs.overview.minutesUnit")}`}
             </ThemedText>
           </View>
         </View>

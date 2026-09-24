@@ -11,6 +11,7 @@ import {
   ThemedText,
   ThemedTextInput,
 } from "../../../../../../Resources/ThemedComponents";
+import { useTranslation } from "@localization";
 
 export default function EditEstimatedSet({
   visible,
@@ -20,6 +21,7 @@ export default function EditEstimatedSet({
   estimatedSet,
   programBest,
 }) {
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
 
@@ -35,7 +37,7 @@ export default function EditEstimatedSet({
   const suggestedWeightDisplay =
     suggestedWeight === null
       ? null
-      : `${formatDisplayNumber(suggestedWeight)} kg`;
+      : `${formatDisplayNumber(suggestedWeight)} ${t("common.kg")}`;
   const surfaceColor = theme.uiBackground;
   const borderColor = theme.cardBorder ?? theme.iconColor;
   const badgeBackground = theme.primary;
@@ -77,12 +79,12 @@ export default function EditEstimatedSet({
 
   const confirmDelete = () => {
     Alert.alert(
-      "Delete estimated 1 RM?",
-      "This removes the saved estimate for this exercise.",
+      t("programs.rm.deleteConfirmTitle"),
+      t("programs.rm.deleteConfirmMessage"),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("common.cancel"), style: "cancel" },
         {
-          text: "Delete 1 RM",
+          text: t("programs.rm.deleteButton"),
           style: "destructive",
           onPress: () => {
             void handleDelete();
@@ -96,7 +98,7 @@ export default function EditEstimatedSet({
     <ThemedModal
       visible={visible}
       onClose={handleClose}
-      title="Edit estimated 1 RM"
+      title={t("programs.rm.editTitle")}
       style={styles.modal}
       contentStyle={styles.content}
     >
@@ -110,13 +112,13 @@ export default function EditEstimatedSet({
         ]}
       >
         <ThemedText size={12} style={styles.sectionLabel} setColor={theme.text}>
-          Exercise
+          {t("programs.rm.exercise")}
         </ThemedText>
         <ThemedText size={20} style={styles.exerciseName}>
           {estimatedSet?.exercise_name ?? "--"}
         </ThemedText>
         <ThemedText size={12} setColor={theme.quietText}>
-          Close the modal to save changes.
+          {t("programs.rm.closeToSave")}
         </ThemedText>
       </View>
 
@@ -142,7 +144,7 @@ export default function EditEstimatedSet({
               style={styles.sectionLabel}
               setColor={theme.text}
             >
-              Program best
+              {t("programs.rm.programBest")}
             </ThemedText>
             {programBest?.isEstimated && (
               <View
@@ -156,7 +158,7 @@ export default function EditEstimatedSet({
                   style={styles.estimatedBadgeText}
                   setColor={badgeTextColor}
                 >
-                  estimated
+                  {t("programs.rm.estimatedBadge")}
                 </ThemedText>
               </View>
             )}
@@ -168,15 +170,15 @@ export default function EditEstimatedSet({
                 {suggestedWeightDisplay}
               </ThemedText>
               <ThemedText size={12} setColor={theme.quietText}>
-                Best set: {programBest.setDisplayValue}
+                {t("programs.rm.bestSet", { set: programBest.setDisplayValue })}
               </ThemedText>
               {programBest.performedDate && (
                 <ThemedText size={12} setColor={theme.quietText}>
-                  Achieved on {programBest.performedDate}
+                  {t("programs.rm.achievedOn", { date: programBest.performedDate })}
                 </ThemedText>
               )}
               <ThemedButton
-                title={`Use ${suggestedWeightDisplay}`}
+                title={t("programs.rm.useWeight", { weight: suggestedWeightDisplay })}
                 onPress={() => set_estimated_weight(String(suggestedWeight))}
                 fullWidth
                 style={styles.useBestButton}
@@ -184,7 +186,7 @@ export default function EditEstimatedSet({
             </>
           ) : (
             <ThemedText size={12} setColor={theme.quietText}>
-              No Program best is available for this exercise yet.
+              {t("programs.rm.editNoBestHint")}
             </ThemedText>
           )}
         </View>
@@ -203,11 +205,11 @@ export default function EditEstimatedSet({
             style={styles.sectionLabel}
             setColor={theme.text}
           >
-            Estimated 1 RM
+            {t("programs.rm.estimatedLabel")}
           </ThemedText>
           <View style={styles.inputRow}>
             <ThemedTextInput
-              placeholder="Enter weight"
+              placeholder={t("programs.rm.weightPlaceholder")}
               keyboardType="numeric"
               value={estimated_weight}
               onChangeText={set_estimated_weight}
@@ -223,20 +225,20 @@ export default function EditEstimatedSet({
                 },
               ]}
             >
-              <ThemedText size={12}>kg</ThemedText>
+              <ThemedText size={12}>{t("common.kg")}</ThemedText>
             </View>
           </View>
         </View>
 
         <View style={styles.actions}>
           <ThemedButton
-            title="Close"
+            title={t("common.close")}
             variant="secondary"
             onPress={handleClose}
             style={styles.actionButton}
           />
           <ThemedButton
-            title="Delete 1 RM"
+            title={t("programs.rm.deleteButton")}
             variant="danger"
             onPress={confirmDelete}
             style={styles.actionButton}

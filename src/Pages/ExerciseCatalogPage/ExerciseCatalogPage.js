@@ -9,6 +9,7 @@ import {
 import { useCallback, useState } from "react";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
+import { useTranslation } from "@localization";
 
 import ExerciseLibraryList from "../ExerciseLibraryPage/Components/ExerciseLibraryList/ExerciseLibraryList";
 import CustomExerciseModal from "./Components/CustomExerciseModal/CustomExerciseModal";
@@ -24,6 +25,7 @@ import {
 import { weightliftingService } from "../../Services";
 
 const ExerciseCatalogPage = ({ route }) => {
+  const { t } = useTranslation();
   const db = useSQLiteContext();
   const navigation = useNavigation();
   const colorScheme = useColorScheme();
@@ -46,7 +48,7 @@ const ExerciseCatalogPage = ({ route }) => {
     workoutPicker?.name ??
     workoutPicker?.title ??
     workoutPicker?.workoutTitle ??
-    "workout";
+    t("exercises.workoutFallback");
 
   useFocusEffect(
     useCallback(() => {
@@ -83,14 +85,14 @@ const ExerciseCatalogPage = ({ route }) => {
       } catch (error) {
         console.error("Failed to add exercise to workout:", error);
         Alert.alert(
-          "Exercise could not be added",
-          "Please try again from the exercise catalog."
+          t("exercises.catalog.addFailedTitle"),
+          t("exercises.catalog.addFailedBody")
         );
       } finally {
         setSelectingExerciseName(null);
       }
     },
-    [db, isWorkoutPicker, selectingExerciseName, workoutPickerId]
+    [db, isWorkoutPicker, selectingExerciseName, t, workoutPickerId]
   );
 
   const handleCreateCustomExercise = useCallback(
@@ -137,7 +139,7 @@ const ExerciseCatalogPage = ({ route }) => {
               setColor={primaryTextColor}
               numberOfLines={1}
             >
-              {`Add to ${workoutTargetLabel}`}
+              {t("exercises.addTo", { name: workoutTargetLabel })}
             </ThemedText>
           ) : null}
 
@@ -146,7 +148,9 @@ const ExerciseCatalogPage = ({ route }) => {
             style={styles.headerTitle}
             numberOfLines={1}
           >
-            {isWorkoutPicker ? "Add exercise" : "Exercises"}
+            {isWorkoutPicker
+              ? t("exercises.addExercise")
+              : t("exercises.catalog.title")}
           </ThemedTitle>
         </View>
 
@@ -158,8 +162,10 @@ const ExerciseCatalogPage = ({ route }) => {
             accessibilityRole="button"
             accessibilityLabel={
               addedExerciseNames.length > 0
-                ? `Done, ${addedExerciseNames.length} added`
-                : "Done"
+                ? t("exercises.catalog.doneA11y", {
+                    count: addedExerciseNames.length,
+                  })
+                : t("common.done")
             }
             onPress={() => navigation.goBack()}
             style={[
@@ -177,8 +183,10 @@ const ExerciseCatalogPage = ({ route }) => {
               numberOfLines={1}
             >
               {addedExerciseNames.length > 0
-                ? `Done (${addedExerciseNames.length})`
-                : "Done"}
+                ? t("exercises.catalog.doneCount", {
+                    count: addedExerciseNames.length,
+                  })
+                : t("common.done")}
             </ThemedText>
           </TouchableOpacity>
         ) : null}
@@ -189,7 +197,7 @@ const ExerciseCatalogPage = ({ route }) => {
           <TouchableOpacity
             activeOpacity={0.86}
             accessibilityRole="button"
-            accessibilityLabel="Add a custom exercise"
+            accessibilityLabel={t("exercises.catalog.addCustomA11y")}
             onPress={() => setIsCustomExerciseModalVisible(true)}
             style={[
               styles.headerAction,

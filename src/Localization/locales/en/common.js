@@ -30,6 +30,8 @@ export default {
   signInRequired: "You need to be signed in.",
   restoringSession: "Restoring session...",
   kg: "kg",
+  // ThemedPicker, when the screen gives it no text of its own.
+  picker: { placeholder: "Select", title: "Pick" },
   reps: { one: "{count} rep", other: "{count} reps" },
   sets: { one: "{count} set", other: "{count} sets" },
   exercises: { one: "{count} exercise", other: "{count} exercises" },
