@@ -6,18 +6,24 @@ name: Review Agents
 # Mandaterne ligger i .github/review-agents/*.md. Rediger dem der - denne fil
 # skal kun roeres, naar en agent skal tilfoejes eller fjernes.
 #
-# De koerer paa master, efter et merge, og ikke paa hver eneste push til et
-# PR. Et review af en branch, der stadig bliver skubbet til, bliver laest af
+# De koerer naar et PR er merget til master, og ikke paa hver eneste push til
+# det. Et review af en branch, der stadig bliver skubbet til, bliver laest af
 # ingen og koster penge hver gang. Det, der bliver bygget, er master - saa det
-# er master, agenterne laeser, og rapporten lander som en kommentar paa det PR,
-# der bragte aendringen ind.
+# er det, der lige er landet der, agenterne laeser, og rapporten lander som en
+# kommentar paa det PR, der bragte det ind.
 #
 # `/qa` paa et PR og en manuel koersel virker stadig, for de gange man vil have
 # dem til at se paa noget, foer det bliver merget.
 
 on:
-  push:
-    branches: [master]
+  # A merged pull request, not a push. `claude-code-action` refuses a `push`
+  # event outright - "Unsupported event type: push" - so the version of this
+  # that triggered on master ran eight agents that each failed in under a
+  # second while the jobs still reported success. `pull_request: closed` fires
+  # at the same moment, carries the pull request the merge came from, and is an
+  # event the action accepts.
+  pull_request:
+    types: [closed]
   issue_comment:
     types: [created]
   workflow_dispatch:
@@ -56,7 +62,9 @@ jobs:
     # a postinstall script away from reading ANTHROPIC_API_KEY. Only somebody
     # who already has write access may ask for a run.
     if: >-
-      github.event_name == 'push' ||
+      (github.event_name == 'pull_request' &&
+       github.event.pull_request.merged == true &&
+       github.event.pull_request.base.ref == 'master') ||
       github.event_name == 'workflow_dispatch' ||
       (github.event.issue.pull_request != null &&
        startsWith(github.event.comment.body, '/qa') &&
@@ -86,36 +94,27 @@ jobs:
             echo "::warning::Hverken ANTHROPIC_API_KEY eller CLAUDE_CODE_OAUTH_TOKEN har en vaerdi. Enten er secret'en ikke sat, eller ogsaa blev den sat til en tom streng. Review-agenterne springes over."
           fi
 
-      # Hvad skal laeses, og hvor skal svaret hen. De to ting falder ikke
-      # sammen mere: paa en push til master er der ingen PR at tjekke ud, men
-      # der er som regel et PR at svare paa - det, som merge-committen kom fra.
-      # Findes der ikke et, staar rapporten i koerslens opsummering, og det
-      # siger aggregate-jobbet ogsaa hoejt.
+      # Every path ends at a pull request number, and the ref is that pull
+      # request's head. On a merge that is exactly what landed on master, which
+      # is what the agents are here to read - and it is a ref the action will
+      # accept, which `push` was not.
       - id: target
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPO: ${{ github.repository }}
-          EVENT: ${{ github.event_name }}
-          SHA: ${{ github.sha }}
-          PR_NUMBER: ${{ github.event.issue.number || inputs.pr }}
+          PR_NUMBER: >-
+            ${{ github.event.pull_request.number
+                || github.event.issue.number
+                || inputs.pr }}
         run: |
           set -euo pipefail
 
-          if [ "$EVENT" = "push" ]; then
-            # `|| true` hoerer til her og ikke paa kaldet: et commit uden et
-            # PR er en normal tilstand, ikke en fejl.
-            PR=$(gh api "repos/$REPO/commits/$SHA/pulls" \
-              -H "Accept: application/vnd.github+json" \
-              --jq '.[0].number // empty' 2>/dev/null || true)
-
-            echo "pr=$PR" >> "$GITHUB_OUTPUT"
-            echo "ref=$SHA" >> "$GITHUB_OUTPUT"
-            echo "Laeser master paa $SHA${PR:+, svarer paa #$PR}"
-          else
-            echo "pr=$PR_NUMBER" >> "$GITHUB_OUTPUT"
-            echo "ref=refs/pull/$PR_NUMBER/head" >> "$GITHUB_OUTPUT"
-            echo "Laeser PR #$PR_NUMBER"
+          if [ -z "$PR_NUMBER" ]; then
+            echo "::error::Ingen PR at laese. Den her workflow koerer kun paa et merget PR, paa /qa, eller paa en manuel koersel med et nummer."
+            exit 1
           fi
+
+          echo "pr=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "ref=refs/pull/$PR_NUMBER/head" >> "$GITHUB_OUTPUT"
+          echo "Laeser PR #$PR_NUMBER"
 
       - uses: actions/checkout@v4
         with:
@@ -127,45 +126,22 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR: ${{ steps.target.outputs.pr }}
           REPO: ${{ github.repository }}
-          EVENT: ${{ github.event_name }}
-          BEFORE: ${{ github.event.before }}
         run: |
           set -euo pipefail
           mkdir -p pr-context
 
-          if [ "$EVENT" = "push" ]; then
-            # Hvad dette push foerte ind i master. En foerste push og en
-            # force-push efterlader BEFORE som lutter nuller, og saa er der
-            # ingen forgaenger at sammenligne med; committens egen foerste
-            # foraelder er det svar, der altid findes.
-            if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
-              BASE_SHA=$(git rev-parse HEAD^1)
-            else
-              BASE_SHA="$BEFORE"
-            fi
-            echo "Base: $BASE_SHA (forrige master)"
-          else
-            BASE_BRANCH=$(gh pr view "$PR" --repo "$REPO" --json baseRefName --jq .baseRefName)
-            git fetch --no-tags origin "$BASE_BRANCH"
-            BASE_SHA=$(git merge-base "origin/$BASE_BRANCH" HEAD)
-            echo "Base: $BASE_BRANCH ($BASE_SHA)"
-          fi
+          BASE_BRANCH=$(gh pr view "$PR" --repo "$REPO" --json baseRefName --jq .baseRefName)
+          git fetch --no-tags origin "$BASE_BRANCH"
+          BASE_SHA=$(git merge-base "origin/$BASE_BRANCH" HEAD)
+          echo "Base: $BASE_BRANCH ($BASE_SHA)"
 
           {
-            if [ -z "$PR" ]; then
-              # Ingen PR hoerer til denne commit. Commit-beskeden er det, der
-              # er, og den er bedre end en tom overskrift.
-              echo "# master $(git rev-parse --short HEAD)"
-              echo
-              git log -1 --format='%B'
-            else
-              gh pr view "$PR" --repo "$REPO" --json number,title,author,baseRefName,headRefName,additions,deletions,changedFiles \
-                --jq '"# PR #\(.number) - \(.title)\n\n- Forfatter: \(.author.login)\n- Branch: `\(.headRefName)` -> `\(.baseRefName)`\n- Omfang: \(.changedFiles) filer, +\(.additions) / -\(.deletions)\n"'
-              echo
-              echo "## Beskrivelse"
-              echo
-              gh pr view "$PR" --repo "$REPO" --json body --jq '.body // "(ingen beskrivelse)"'
-            fi
+            gh pr view "$PR" --repo "$REPO" --json number,title,author,baseRefName,headRefName,additions,deletions,changedFiles \
+              --jq '"# PR #\(.number) - \(.title)\n\n- Forfatter: \(.author.login)\n- Branch: `\(.headRefName)` -> `\(.baseRefName)`\n- Omfang: \(.changedFiles) filer, +\(.additions) / -\(.deletions)\n"'
+            echo
+            echo "## Beskrivelse"
+            echo
+            gh pr view "$PR" --repo "$REPO" --json body --jq '.body // "(ingen beskrivelse)"'
             echo
             echo "## Aendrede filer"
             echo
@@ -468,8 +444,25 @@ jobs:
         run: |
           set -euo pipefail
 
+          # A run that produced nothing must not speak. This used to write
+          # "AI-review kunne ikke fuldfoeres" over whatever was already there,
+          # and when the agents all failed at once - `claude-code-action`
+          # refuses a `push` event, so eight of them died in under a second -
+          # it replaced a finished twenty-finding report with that sentence.
+          # The report was only recoverable from the earlier run's artifact.
+          #
+          # So: no report, no comment. The failure goes to the run summary and
+          # the job goes red, which is the honest place for it.
           if [ ! -s final-report.md ]; then
-            printf '## AI-review kunne ikke fuldfoeres\n\nDen samlende agent afleverede ingen rapport. De enkelte agentrapporter ligger som artifacts paa koerslen.\n' > final-report.md
+            {
+              printf '## AI-review kunne ikke fuldfoeres\n\n'
+              printf 'Den samlende agent afleverede ingen rapport. '
+              printf 'De enkelte agentrapporter ligger som artifacts paa koerslen.\n\n'
+              printf 'Kommentaren paa PR-et er ikke roert, saa en tidligere rapport staar der stadig.\n'
+            } >> "$GITHUB_STEP_SUMMARY"
+
+            echo "::error::Ingen samlet rapport. Kommentaren er ikke opdateret."
+            exit 1
           fi
 
           # GitHub afviser kommentarer over 65536 tegn.
