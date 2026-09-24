@@ -244,7 +244,6 @@ export default function RecordsOverview({
           : null;
 
   const leastGroup = muscles[muscles.length - 1];
-  const totalMuscleSets = muscles.reduce((sum, group) => sum + group.setCount, 0);
 
   return (
     <View style={styles.screen}>
@@ -372,7 +371,7 @@ export default function RecordsOverview({
             })
           )}
 
-          {measured.length > 5 || showAllMovers ? (
+          {movers.length < measured.length || showAllMovers ? (
             <TouchableOpacity
               accessibilityRole="button"
               activeOpacity={0.85}
@@ -566,7 +565,7 @@ export default function RecordsOverview({
 
             {leastGroup ? (
               <ThemedText style={styles.caption} setColor={quiet}>
-                {t("records.muscles.summary", { group: leastGroup.label, count: totalMuscleSets })}
+                {t("records.muscles.summary", { group: leastGroup.label, count: leastGroup.setCount })}
               </ThemedText>
             ) : null}
           </View>

@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.3.1] - Unreleased
+### Fixed
+- **"Show all" shows up whenever an exercise is hidden.** Biggest gains shows the four largest gains and the one largest decline, but the button to see the rest only came when more than five exercises had a change - so five gains, or two declines, left an exercise out with no way to reach it. It now comes whenever fewer are shown than were measured.
+- **The least-trained muscle group gets its own count.** "Hamstrings get the least · 340 sets in the period" put every group's sets next to one group's name; it is that group's sets now.
+- **`npm test` runs the background-post test again.** Merging master into the Records branch kept that branch's `package.json`, which had never heard of `test:background-post`, and the test dropped out of the chain.
+- **A background post's bar no longer outlives a sign-out.** Its status is module state and a sign-out does not end the process, so the next account on the phone got the bar - the note and "Try again" included - for someone else's workout. It is cleared whenever the signed-in user changes; `npm run test:background-post` checks it.
+- **A crowned tile's gold edge follows the theme.** It was the dark theme's gold in both, the tone the light theme darkens because it cannot be read on white.
+
+---
 ## [2.3.0] - Unreleased
 ### Changed
 - **Records is one page read in one period.** The period selector sat halfway down and moved only some of what was under it - the biggest movers and the volume chart were always twelve weeks whatever it said - so it read as broken. It is at the top now (4 weeks / 3 months / 1 year / All) and everything on the page follows it, with a line under it saying what the period is compared with.
