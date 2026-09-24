@@ -8,6 +8,7 @@ import {
 } from "react";
 
 import { supabase } from "../Database/supaBaseClient";
+import { clearWorkoutPostStatus } from "../Utils/workoutPostEvents";
 
 const AuthContext = createContext({
   session: null,
@@ -79,6 +80,15 @@ export function AuthProvider({ children }) {
       supabase.auth.stopAutoRefresh();
     };
   }, []);
+
+  // The background post's status lives in module state, which a sign-out does
+  // not end. Left alone, the next account to sign in on this phone would get
+  // the bar - the note and "Try again" included - for someone else's workout.
+  const userId = session?.user?.id ?? null;
+
+  useEffect(() => {
+    clearWorkoutPostStatus();
+  }, [userId]);
 
   const value = useMemo(
     () => ({

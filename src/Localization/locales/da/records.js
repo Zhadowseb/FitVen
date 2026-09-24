@@ -9,14 +9,6 @@ export default {
     "1y": "1 år",
     all: "Alt",
   },
-  // "sammenlignet med de {period} før"
-  periodsBefore: {
-    "4w": "4 uger",
-    "3m": "3 måneder",
-    "1y": "12 måneder",
-  },
-  periodNote: "Alt på siden følger perioden · sammenlignet med de {period} før",
-  periodNoteAll: "Hele din historik · udvikling siden din første gang",
   kpi: {
     workouts: "Træninger",
     records: "Rekorder",

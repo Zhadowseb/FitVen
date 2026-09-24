@@ -9,14 +9,6 @@ export default {
     "1y": "1 year",
     all: "All",
   },
-  // "compared with the {period} before"
-  periodsBefore: {
-    "4w": "4 weeks",
-    "3m": "3 months",
-    "1y": "12 months",
-  },
-  periodNote: "Everything follows the period · compared with the {period} before",
-  periodNoteAll: "Your whole history · progress since your first session",
   kpi: {
     workouts: "Workouts",
     records: "Records",

@@ -593,7 +593,8 @@ function tileBorderFor({ mood, crown, wallpaper, chargeLevel, theme }) {
   }
 
   if (crown) {
-    return { stops: chasingStops("#B7791F", "#E8B44A", "#FFF1B0"), periodMs: 4200 };
+    // The record golds, so light mode gets the darker gold it can be read on.
+    return { stops: chasingStops(theme.recordDark, theme.record, theme.recordLight), periodMs: 4200 };
   }
 
   if (mood === "steam") {

@@ -245,7 +245,6 @@ export default function RecordsOverview({
           : null;
 
   const leastGroup = muscles[muscles.length - 1];
-  const totalMuscleSets = muscles.reduce((sum, group) => sum + group.setCount, 0);
 
   return (
     <View style={styles.screen}>
@@ -259,11 +258,6 @@ export default function RecordsOverview({
           value={period.key}
           onChange={onChangePeriod}
         />
-        <ThemedText style={styles.caption} setColor={quiet}>
-          {days === null
-            ? t("records.periodNoteAll")
-            : t("records.periodNote", { period: t(`records.periodsBefore.${period.key}`) })}
-        </ThemedText>
       </View>
 
       {/* Three numbers, each against the period before. */}
@@ -373,7 +367,7 @@ export default function RecordsOverview({
             })
           )}
 
-          {measured.length > 5 || showAllMovers ? (
+          {movers.length < measured.length || showAllMovers ? (
             <TouchableOpacity
               accessibilityRole="button"
               activeOpacity={0.85}
@@ -567,7 +561,7 @@ export default function RecordsOverview({
 
             {leastGroup ? (
               <ThemedText style={styles.caption} setColor={quiet}>
-                {t("records.muscles.summary", { group: muscleGroupLabel(leastGroup.label, t), count: totalMuscleSets })}
+                {t("records.muscles.summary", { group: muscleGroupLabel(leastGroup.label, t), count: leastGroup.setCount })}
               </ThemedText>
             ) : null}
           </View>
