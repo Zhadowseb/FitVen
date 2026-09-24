@@ -21,20 +21,22 @@ import {
   ThemedStateBlock,
   ThemedText,
 } from "../../ThemedComponents";
+import { useTranslation } from "@localization";
 
-const SHORT_MONTHS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
+// Translated at render, so the dates follow a language switch.
+const SHORT_MONTH_KEYS = [
+  "programs.monthsShort.jan",
+  "programs.monthsShort.feb",
+  "programs.monthsShort.mar",
+  "programs.monthsShort.apr",
+  "programs.monthsShort.may",
+  "programs.monthsShort.jun",
+  "programs.monthsShort.jul",
+  "programs.monthsShort.aug",
+  "programs.monthsShort.sep",
+  "programs.monthsShort.oct",
+  "programs.monthsShort.nov",
+  "programs.monthsShort.dec",
 ];
 
 function parseLocalDate(dateLabel) {
@@ -52,37 +54,37 @@ function parseLocalDate(dateLabel) {
   return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
 }
 
-function formatShortDate(dateLabel) {
+function formatShortDate(dateLabel, t) {
   const parsedDate = parseLocalDate(dateLabel);
 
   if (!parsedDate) {
     return dateLabel || "";
   }
 
-  return `${String(parsedDate.getDate()).padStart(2, "0")} ${
-    SHORT_MONTHS[parsedDate.getMonth()]
-  }`;
+  return `${String(parsedDate.getDate()).padStart(2, "0")} ${t(
+    SHORT_MONTH_KEYS[parsedDate.getMonth()]
+  )}`;
 }
 
-function formatWeekRange(startDate, endDate) {
-  const start = formatShortDate(startDate);
-  const end = formatShortDate(endDate);
+function formatWeekRange(startDate, endDate, t) {
+  const start = formatShortDate(startDate, t);
+  const end = formatShortDate(endDate, t);
 
   if (start && end) {
     return `${start} - ${end}`;
   }
 
-  return start || end || "No dates";
+  return start || end || t("programs.picker.noDates");
 }
 
-function getWeekCountLabel(count) {
+function getWeekCountLabel(count, t) {
   const weekCount = Number(count) || 0;
-  return `${weekCount} ${weekCount === 1 ? "week" : "weeks"}`;
+  return t("programs.picker.weekCount", { count: weekCount });
 }
 
-function getWorkoutCountLabel(count) {
+function getWorkoutCountLabel(count, t) {
   const workoutCount = Number(count) || 0;
-  return `${workoutCount} ${workoutCount === 1 ? "workout" : "workouts"}`;
+  return t("common.workouts", { count: workoutCount });
 }
 
 const Microcycle = ({
@@ -91,6 +93,7 @@ const Microcycle = ({
   close,
   source_microcycle_id,
 }) => {
+  const { t } = useTranslation();
   const db = useSQLiteContext();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -207,21 +210,23 @@ const Microcycle = ({
 
         <View style={styles.headerCopy}>
           <ThemedText style={styles.eyebrow} setColor={mutedText}>
-            COPY WEEK
+            {t("programs.picker.copyWeekEyebrow")}
           </ThemedText>
           <ThemedText style={styles.title} setColor={titleColor}>
-            {selectedGroup ? "Pick a week" : "Pick a block"}
+            {selectedGroup
+              ? t("programs.picker.pickWeek")
+              : t("programs.picker.pickBlock")}
           </ThemedText>
           <ThemedText style={styles.subtitle} setColor={mutedText}>
             {selectedGroup
-              ? "Choose the week this week should be copied into."
-              : "Choose the block inside your program first."}
+              ? t("programs.picker.pickWeekHint")
+              : t("programs.picker.pickBlockHint")}
           </ThemedText>
         </View>
 
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Close"
+          accessibilityLabel={t("common.close")}
           onPress={() => close()}
           style={styles.closeButton}
         >
@@ -239,10 +244,10 @@ const Microcycle = ({
           ]}
         >
           <ThemedText style={styles.emptyTitle} setColor={titleColor}>
-            No blocks found
+            {t("programs.picker.noBlocksFound")}
           </ThemedText>
           <ThemedText style={styles.emptyText} setColor={mutedText}>
-            Add a block and week before copying workouts.
+            {t("programs.picker.noBlocksFoundHint")}
           </ThemedText>
         </View>
       ) : (
@@ -272,19 +277,24 @@ const Microcycle = ({
                     ]}
                   />
                   <ThemedText style={styles.blockEyebrow} setColor={titleColor}>
-                    MESO {selectedGroup.mesocycle_number}
+                    {t("programs.picker.mesoLabel", {
+                      number: selectedGroup.mesocycle_number,
+                    })}
                   </ThemedText>
                 </View>
                 <ThemedText style={styles.blockSubtitle} setColor={mutedText}>
-                  {selectedGroup.focus || "No focus set"} -{" "}
+                  {selectedGroup.focus
+                    ? programService.getFocusLabel(selectedGroup.focus, t)
+                    : t("programs.focus.noFocusSet")} -{" "}
                   {getWeekCountLabel(
-                    selectedGroup.weeks ?? selectedGroup.microcycles.length
+                    selectedGroup.weeks ?? selectedGroup.microcycles.length,
+                    t
                   )}
                 </ThemedText>
               </View>
 
               <ThemedText style={styles.changeLabel} setColor={primaryTextColor}>
-                Change
+                {t("programs.picker.change")}
               </ThemedText>
             </TouchableOpacity>
           ) : (
@@ -333,15 +343,22 @@ const Microcycle = ({
                           style={styles.blockEyebrow}
                           setColor={titleColor}
                         >
-                          MESO {group.mesocycle_number}
+                          {t("programs.picker.mesoLabel", {
+                            number: group.mesocycle_number,
+                          })}
                         </ThemedText>
                       </View>
                       <ThemedText style={styles.blockTitle} setColor={titleColor}>
-                        {group.focus || `Block ${group.mesocycle_number}`}
+                        {group.focus
+                          ? programService.getFocusLabel(group.focus, t)
+                          : t("programs.blocks.blockNumber", {
+                              number: group.mesocycle_number,
+                            })}
                       </ThemedText>
                       <ThemedText style={styles.blockSubtitle} setColor={mutedText}>
                         {getWeekCountLabel(
-                          group.weeks ?? group.microcycles.length
+                          group.weeks ?? group.microcycles.length,
+                          t
                         )}
                       </ThemedText>
                     </View>
@@ -398,7 +415,7 @@ const Microcycle = ({
                         ]}
                       >
                         <ThemedText style={styles.weekBadgeLabel} setColor={mutedText}>
-                          WK
+                          {t("programs.picker.weekBadge")}
                         </ThemedText>
                         <ThemedText style={styles.weekBadgeNumber} setColor={titleColor}>
                           {String(microcycle.microcycle_number).padStart(2, "0")}
@@ -408,7 +425,9 @@ const Microcycle = ({
                       <View style={styles.weekCopy}>
                         <View style={styles.weekTitleRow}>
                           <ThemedText style={styles.weekTitle} setColor={titleColor}>
-                            Week {microcycle.microcycle_number}
+                            {t("programs.weekNumber", {
+                              number: microcycle.microcycle_number,
+                            })}
                           </ThemedText>
 
                           {isCurrent ? (
@@ -428,7 +447,7 @@ const Microcycle = ({
                                 style={styles.statusText}
                                 setColor={primaryTextColor}
                               >
-                                COPIED
+                                {t("programs.picker.copiedBadge")}
                               </ThemedText>
                             </View>
                           ) : hasWorkouts ? (
@@ -442,7 +461,7 @@ const Microcycle = ({
                                 style={styles.statusText}
                                 setColor={warningColor}
                               >
-                                HAS WORKOUTS
+                                {t("programs.picker.hasWorkoutsBadge")}
                               </ThemedText>
                             </View>
                           ) : null}
@@ -451,9 +470,10 @@ const Microcycle = ({
                         <ThemedText style={styles.weekMeta} setColor={mutedText}>
                           {formatWeekRange(
                             microcycle.period_start,
-                            microcycle.period_end
+                            microcycle.period_end,
+                            t
                           )}{" "}
-                          - {getWorkoutCountLabel(workoutCount)}
+                          - {getWorkoutCountLabel(workoutCount, t)}
                         </ThemedText>
                       </View>
 
@@ -486,8 +506,8 @@ const Microcycle = ({
             >
               <ThemedText style={styles.footerText} setColor={mutedText}>
                 {selectedGroup
-                  ? "SELECT A WEEK TO CONTINUE"
-                  : "SELECT A BLOCK TO CONTINUE"}
+                  ? t("programs.picker.selectWeekFooter")
+                  : t("programs.picker.selectBlockFooter")}
               </ThemedText>
             </View>
           </View>

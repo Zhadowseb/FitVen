@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { View, ActivityIndicator, useColorScheme } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
+import { useTranslation } from "@localization";
 
 import styles from "./ExerciseDropdownStyle";
 import { Colors } from "../../GlobalStyling/colors";
@@ -8,6 +9,7 @@ import { weightliftingService } from "../../../Services";
 import { ThemedPicker, ThemedText } from "../../ThemedComponents";
 
 const ExerciseDropdown = ({ selectedExerciseName, onChange }) => {
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const [exercises, setExercises] = useState([]);
@@ -46,7 +48,7 @@ const ExerciseDropdown = ({ selectedExerciseName, onChange }) => {
   }
 
   if (exercises.length === 0) {
-    return <ThemedText>Ingen øvelser fundet.</ThemedText>;
+    return <ThemedText>{t("exercises.dropdown.empty")}</ThemedText>;
   }
 
   return (
@@ -54,7 +56,7 @@ const ExerciseDropdown = ({ selectedExerciseName, onChange }) => {
       <ThemedPicker
         value={selectedExerciseName}
         onChange={onChange}
-        placeholder="Select exercise"
+        placeholder={t("exercises.dropdown.placeholder")}
         items={exercises.map(ex => ({
           label: ex.exercise_name,
           value: ex.exercise_name,

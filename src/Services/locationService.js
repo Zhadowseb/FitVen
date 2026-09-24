@@ -1,5 +1,6 @@
 import * as Location from "expo-location";
 import { Platform } from "react-native";
+import { t } from "@localization";
 
 import { locationRepository, workoutRepository } from "../Repository";
 import {
@@ -10,6 +11,22 @@ import {
 import { withTransaction } from "./shared";
 
 export const RUN_LOCATION_TASK = "background-location-task";
+
+// The message is shown to the person, so it is translated; the code is what
+// callers compare (see getRunTrackingStartMessage in the run screen).
+export const LOCATION_ERROR_CODES = {
+  PERMISSION_DENIED: "location-permission-denied",
+  PRECISE_PERMISSION_REQUIRED: "location-precise-permission-required",
+  BACKGROUND_UNAVAILABLE: "location-background-unavailable",
+  BACKGROUND_PERMISSION_DENIED: "location-background-permission-denied",
+  SERVICES_DISABLED: "location-services-disabled",
+};
+
+function createLocationError(code, messageKey) {
+  const error = new Error(t(messageKey));
+  error.code = code;
+  return error;
+}
 
 function normalizeExpoLocationObject(location) {
   return normalizeLocationPoint({
@@ -32,8 +49,8 @@ function getLocationTrackingOptions() {
     activityType: Location.ActivityType.Fitness,
     showsBackgroundLocationIndicator: true,
     foregroundService: {
-      notificationTitle: "FitVen is tracking your run",
-      notificationBody: "Distance and pace update while your workout is running.",
+      notificationTitle: t("run.location.notificationTitle"),
+      notificationBody: t("run.location.notificationBody"),
       notificationColor: "#d97706",
       killServiceOnDestroy: false,
     },
@@ -61,11 +78,17 @@ async function ensureForegroundLocationPermission() {
   }
 
   if (!foregroundPermission.granted) {
-    throw new Error("Location permission was not granted.");
+    throw createLocationError(
+      LOCATION_ERROR_CODES.PERMISSION_DENIED,
+      "run.location.errors.permissionDenied"
+    );
   }
 
   if (!hasPreciseForegroundPermission(foregroundPermission)) {
-    throw new Error("Precise location permission is required for run tracking.");
+    throw createLocationError(
+      LOCATION_ERROR_CODES.PRECISE_PERMISSION_REQUIRED,
+      "run.location.errors.precisePermissionRequired"
+    );
   }
 }
 
@@ -74,7 +97,10 @@ async function ensureBackgroundLocationPermission({ requestIfMissing = true } = 
     await Location.isBackgroundLocationAvailableAsync();
 
   if (!backgroundLocationAvailable) {
-    throw new Error("Background location is not available on this device.");
+    throw createLocationError(
+      LOCATION_ERROR_CODES.BACKGROUND_UNAVAILABLE,
+      "run.location.errors.backgroundUnavailable"
+    );
   }
 
   let backgroundPermission = await Location.getBackgroundPermissionsAsync();
@@ -84,7 +110,10 @@ async function ensureBackgroundLocationPermission({ requestIfMissing = true } = 
   }
 
   if (!backgroundPermission.granted) {
-    throw new Error("Background location permission was not granted.");
+    throw createLocationError(
+      LOCATION_ERROR_CODES.BACKGROUND_PERMISSION_DENIED,
+      "run.location.errors.backgroundPermissionDenied"
+    );
   }
 }
 
@@ -102,7 +131,10 @@ async function ensureLocationServicesEnabled() {
   }
 
   if (!servicesEnabled) {
-    throw new Error("Location services are turned off.");
+    throw createLocationError(
+      LOCATION_ERROR_CODES.SERVICES_DISABLED,
+      "run.location.errors.servicesDisabled"
+    );
   }
 }
 

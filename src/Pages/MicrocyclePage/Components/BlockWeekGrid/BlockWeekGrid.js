@@ -1,11 +1,21 @@
 import { View, useColorScheme } from "react-native";
 
+import { useTranslation } from "@localization";
+
 import styles from "./BlockWeekGridStyle";
 import { Colors, withAlpha } from "../../../../Resources/GlobalStyling/colors";
 import { ThemedText } from "../../../../Resources/ThemedComponents";
 import Dumbbell from "../../../../Resources/Icons/UI-icons/Dumbbell";
 
-export const WEEKDAY_INITIALS = ["M", "T", "W", "T", "F", "S", "S"];
+const WEEKDAY_KEYS = [
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+];
 
 // The grid's own palette, mapped onto theme tokens so light mode and the
 // accent themes keep working.
@@ -40,7 +50,9 @@ export function useGridPalette() {
 
 /** The weekday initials. One row for the whole block, so it can stay put. */
 export function WeekdayHeader() {
+  const { t } = useTranslation();
   const palette = useGridPalette();
+  const initials = WEEKDAY_KEYS.map((key) => t(`programs.weekdayInitials.${key}`));
 
   return (
     <View
@@ -49,7 +61,7 @@ export function WeekdayHeader() {
         { backgroundColor: palette.theme.background },
       ]}
     >
-      {WEEKDAY_INITIALS.map((initial, index) => (
+      {initials.map((initial, index) => (
         <View key={`${initial}-${index}`} style={styles.weekdayCell}>
           <ThemedText
             style={styles.weekdayInitial}

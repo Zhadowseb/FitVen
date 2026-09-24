@@ -1267,15 +1267,15 @@ export async function blockUser({ userId, targetUserId }) {
  * constraint accepts, so adding one here without adding it there fails the
  * insert rather than storing something nobody will recognise later.
  */
-// `labelKey` is what a translated screen shows. `label` is the English
-// wording for the screens that have not been through the localization pass
-// yet - the same reason REJECTION_REASONS in gymService carries both.
+// `labelKey` is what a translated screen shows. `label` translates the same
+// key when it is read, for screens that print option.label - the same reason
+// REJECTION_REASONS in gymService carries both.
 export const REPORT_REASONS = [
-  { value: "spam", labelKey: "social.report.reasons.spam", label: "Spam or advertising" },
-  { value: "harassment", labelKey: "social.report.reasons.harassment", label: "Harassment or bullying" },
-  { value: "inappropriate", labelKey: "social.report.reasons.inappropriate", label: "Inappropriate content" },
-  { value: "impersonation", labelKey: "social.report.reasons.impersonation", label: "Pretending to be someone else" },
-  { value: "other", labelKey: "social.report.reasons.other", label: "Something else" },
+  { value: "spam", labelKey: "social.report.reasons.spam", get label() { return t(this.labelKey); } },
+  { value: "harassment", labelKey: "social.report.reasons.harassment", get label() { return t(this.labelKey); } },
+  { value: "inappropriate", labelKey: "social.report.reasons.inappropriate", get label() { return t(this.labelKey); } },
+  { value: "impersonation", labelKey: "social.report.reasons.impersonation", get label() { return t(this.labelKey); } },
+  { value: "other", labelKey: "social.report.reasons.other", get label() { return t(this.labelKey); } },
 ];
 
 export const REPORT_NOTE_MAX_LENGTH = 1000;

@@ -75,7 +75,7 @@ function formatTrendAxisValue(value) {
     : roundedValue.toFixed(1);
 }
 
-function buildTrendChartGeometry(points = []) {
+function buildTrendChartGeometry(points = [], t) {
   const validPoints = points.filter((point) =>
     Number.isFinite(Number(point?.estimatedOneRepMax))
   );
@@ -158,11 +158,12 @@ function buildTrendChartGeometry(points = []) {
     singlePointLine,
     gridLines,
     baselineY,
-    firstLabel: chartPoints[0]?.dateDisplay ?? "Workout 1",
+    firstLabel:
+      chartPoints[0]?.dateDisplay ?? t("records.detail.workoutFallback", { number: 1 }),
     lastLabel:
       chartPoints.length > 1
         ? chartPoints[chartPoints.length - 1]?.dateDisplay ??
-          `Workout ${chartPoints.length}`
+          t("records.detail.workoutFallback", { number: chartPoints.length })
         : null,
   };
 }
@@ -301,10 +302,10 @@ const PersonalRecordsPage = () => {
           typeof program?.program_name === "string" &&
           program.program_name.trim() !== ""
             ? program.program_name.trim()
-            : `Program ${program.program_id}`,
+            : t("records.muscleLoad.programFallback", { id: program.program_id }),
         value: program.program_id,
       })),
-    [muscleLoadPrograms]
+    [muscleLoadPrograms, t]
   );
 
   const primaryColor = theme.primary;
@@ -507,7 +508,7 @@ const PersonalRecordsPage = () => {
               style={styles.muscleLoadRestingTitle}
               setColor={titleColor}
             >
-              Weekly muscle load
+              {t("records.muscleLoad.title")}
             </ThemedText>
             <ThemedText
               style={styles.muscleLoadRestingMeta}
@@ -515,8 +516,8 @@ const PersonalRecordsPage = () => {
               numberOfLines={2}
             >
               {hasPrograms
-                ? "Log strength sets in a program and the balance across muscle groups appears here."
-                : "Start a program and the balance across muscle groups appears here."}
+                ? t("records.muscleLoad.restingWithPrograms")
+                : t("records.muscleLoad.restingNoPrograms")}
             </ThemedText>
           </View>
         </View>
@@ -536,10 +537,10 @@ const PersonalRecordsPage = () => {
         <View style={styles.muscleLoadHeader}>
           <View style={styles.muscleLoadHeaderText}>
             <ThemedText style={styles.muscleLoadEyebrow} setColor={primaryTextColor}>
-              PERSONAL RECORDS
+              {t("records.muscleLoad.eyebrow")}
             </ThemedText>
             <ThemedText style={styles.muscleLoadTitle} setColor={titleColor}>
-              Weekly muscle load
+              {t("records.muscleLoad.title")}
             </ThemedText>
           </View>
 
@@ -548,8 +549,8 @@ const PersonalRecordsPage = () => {
               value={selectedProgramId}
               items={muscleLoadProgramItems}
               onChange={handleChangeMuscleLoadProgram}
-              placeholder="Select program"
-              title="Select program"
+              placeholder={t("records.muscleLoad.selectProgram")}
+              title={t("records.muscleLoad.selectProgram")}
               style={styles.muscleLoadPicker}
             />
           )}
@@ -639,10 +640,10 @@ const PersonalRecordsPage = () => {
           ) : (
             <View style={styles.muscleLoadEmptyState}>
               <ThemedText style={styles.muscleLoadEmptyTitle} setColor={titleColor}>
-                No muscle load yet
+                {t("records.muscleLoad.emptyTitle")}
               </ThemedText>
               <ThemedText style={styles.muscleLoadEmptyText} setColor={quietText}>
-                Program strength sets will appear here.
+                {t("records.muscleLoad.emptyBody")}
               </ThemedText>
             </View>
           )}
@@ -693,16 +694,16 @@ const PersonalRecordsPage = () => {
     }
 
     const stats = [
-      { key: "exercises", value: `${overview.exerciseCount}`, label: "exercises" },
+      { key: "exercises", value: `${overview.exerciseCount}`, label: t("records.list.exercises") },
       {
         key: "records",
         value: `${overview.filled}`,
-        label: `of ${overview.slots} records`,
+        label: t("records.list.ofRecords", { count: overview.slots }),
       },
       {
         key: "heaviest",
         value: overview.heaviestDisplay,
-        label: overview.heaviestExerciseName ?? "heaviest",
+        label: overview.heaviestExerciseName ?? t("records.list.heaviest"),
       },
     ];
 
@@ -760,10 +761,10 @@ const PersonalRecordsPage = () => {
           ]}
         >
           <ThemedText style={styles.emptyStateTitle} setColor={titleColor}>
-            No records yet
+            {t("records.list.emptyTitle")}
           </ThemedText>
           <ThemedText style={styles.emptyStateText} setColor={quietText}>
-            Completed strength sets will appear here when they have weight and reps.
+            {t("records.list.emptyBody")}
           </ThemedText>
         </View>
       )}
@@ -805,10 +806,11 @@ const PersonalRecordsPage = () => {
                   setColor={quietText}
                   numberOfLines={1}
                 >
-                  {`Last PR ${
-                    summary.latestRecordRelativeDateLabel ||
-                    summary.latestRecordDateDisplay
-                  }`}
+                  {t("records.list.lastPr", {
+                    when:
+                      summary.latestRecordRelativeDateLabel ||
+                      summary.latestRecordDateDisplay,
+                  })}
                 </ThemedText>
 
                 <View style={styles.exerciseListCoverage}>
@@ -832,7 +834,7 @@ const PersonalRecordsPage = () => {
                     style={styles.exerciseListCoverageLabel}
                     setColor={quietText}
                   >
-                    {`${filled}/${slots} rep ranges`}
+                    {t("records.list.repRanges", { filled, slots })}
                   </ThemedText>
                 </View>
               </View>
@@ -853,7 +855,7 @@ const PersonalRecordsPage = () => {
                   style={styles.exerciseListStatLabel}
                   setColor={quietText}
                 >
-                  best
+                  {t("records.list.best")}
                 </ThemedText>
               </View>
             </TouchableOpacity>
@@ -885,7 +887,7 @@ const PersonalRecordsPage = () => {
           ]}
         >
           <ThemedText style={styles.emptyStateTitle} setColor={titleColor}>
-            No records found
+            {t("records.detail.notFound")}
           </ThemedText>
           <TouchableOpacity
             activeOpacity={0.86}
@@ -893,7 +895,7 @@ const PersonalRecordsPage = () => {
             style={[styles.backToListButton, { borderColor: cardBorder }]}
           >
             <ThemedText style={styles.backToListText} setColor={primaryTextColor}>
-              All records
+              {t("records.detail.allRecords")}
             </ThemedText>
           </TouchableOpacity>
         </View>
@@ -902,7 +904,7 @@ const PersonalRecordsPage = () => {
 
     const renderOneRepMaxTrend = () => {
       const trend = detail.oneRepMaxTrend;
-      const chartGeometry = buildTrendChartGeometry(trend?.points ?? []);
+      const chartGeometry = buildTrendChartGeometry(trend?.points ?? [], t);
       const hasTrend = !!chartGeometry;
       const bestPoint = trend?.bestPoint ?? null;
       const latestPoint = trend?.latestPoint ?? null;
@@ -920,10 +922,10 @@ const PersonalRecordsPage = () => {
           <View style={styles.trendHeader}>
             <View style={styles.trendHeaderText}>
               <ThemedText style={styles.trendEyebrow} setColor={primaryTextColor}>
-                ESTIMATED 1RM
+                {t("records.detail.estimatedEyebrow")}
               </ThemedText>
               <ThemedText style={styles.trendTitle} setColor={titleColor}>
-                Progression
+                {t("records.detail.progression")}
               </ThemedText>
             </View>
 
@@ -940,7 +942,7 @@ const PersonalRecordsPage = () => {
                 {trend?.pointCount ?? 0}
               </ThemedText>
               <ThemedText style={styles.trendCountLabel} setColor={quietText}>
-                workouts
+                {t("records.detail.workouts")}
               </ThemedText>
             </View>
           </View>
@@ -948,7 +950,7 @@ const PersonalRecordsPage = () => {
           <View style={styles.trendMetrics}>
             <View style={styles.trendMetric}>
               <ThemedText style={styles.trendMetricLabel} setColor={quietText}>
-                BEST
+                {t("records.detail.best")}
               </ThemedText>
               <ThemedText style={styles.trendMetricValue} setColor={titleColor}>
                 {bestPoint?.estimatedOneRepMaxDisplay ?? EMPTY_VALUE}
@@ -964,7 +966,7 @@ const PersonalRecordsPage = () => {
 
             <View style={styles.trendMetric}>
               <ThemedText style={styles.trendMetricLabel} setColor={quietText}>
-                LATEST
+                {t("records.detail.latest")}
               </ThemedText>
               <ThemedText style={styles.trendMetricValue} setColor={titleColor}>
                 {latestPoint?.estimatedOneRepMaxDisplay ?? EMPTY_VALUE}
@@ -1113,10 +1115,10 @@ const PersonalRecordsPage = () => {
             ) : (
               <View style={styles.trendEmptyState}>
                 <ThemedText style={styles.trendEmptyTitle} setColor={titleColor}>
-                  No trend yet
+                  {t("records.detail.noTrend")}
                 </ThemedText>
                 <ThemedText style={styles.trendEmptyText} setColor={quietText}>
-                  Complete weighted sets to build your progression.
+                  {t("records.detail.noTrendBody")}
                 </ThemedText>
               </View>
             )}
@@ -1125,7 +1127,7 @@ const PersonalRecordsPage = () => {
           {!!latestPoint && (
             <View style={styles.trendFooter}>
               <ThemedText style={styles.trendFooterLabel} setColor={quietText}>
-                LATEST SET
+                {t("records.detail.latestSet")}
               </ThemedText>
               <ThemedText
                 style={styles.trendFooterValue}
@@ -1149,7 +1151,7 @@ const PersonalRecordsPage = () => {
             style={[styles.backToListButton, { borderColor: cardBorder }]}
           >
             <ThemedText style={styles.backToListText} setColor={primaryTextColor}>
-              All records
+              {t("records.detail.allRecords")}
             </ThemedText>
           </TouchableOpacity>
 
@@ -1159,10 +1161,10 @@ const PersonalRecordsPage = () => {
               setColor={quietText}
               numberOfLines={1}
             >
-              Hide empty rep ranges
+              {t("records.detail.hideEmpty")}
             </ThemedText>
             <ThemedSwitch
-              accessibilityLabel="Hide empty rep ranges"
+              accessibilityLabel={t("records.detail.hideEmpty")}
               value={hideEmptyRepRanges}
               onValueChange={setHideEmptyRepRanges}
             />
@@ -1200,7 +1202,7 @@ const PersonalRecordsPage = () => {
 
             <View style={styles.recordHeaderText}>
               <ThemedText style={styles.recordEyebrow} setColor={primaryTextColor}>
-                PERSONAL RECORDS
+                {t("records.detail.eyebrow")}
               </ThemedText>
               <ThemedTitle
                 type="h3"
@@ -1214,19 +1216,19 @@ const PersonalRecordsPage = () => {
 
           <View style={[styles.tableHeader, { backgroundColor: backgroundColor }]}>
             <ThemedText style={styles.tableHeaderText} setColor={quietText}>
-              REPS
+              {t("records.detail.reps")}
             </ThemedText>
             <ThemedText
               style={[styles.tableHeaderText, styles.tableHeaderWeight]}
               setColor={quietText}
             >
-              WEIGHT
+              {t("records.detail.weight")}
             </ThemedText>
             <ThemedText
               style={[styles.tableHeaderText, styles.tableHeaderDate]}
               setColor={quietText}
             >
-              DATE
+              {t("records.detail.date")}
             </ThemedText>
           </View>
 
@@ -1278,7 +1280,7 @@ const PersonalRecordsPage = () => {
                   </ThemedText>
                   {row.hasRecord && (
                     <ThemedText style={styles.recordWeightUnit} setColor={quietText}>
-                      KG
+                      {t("common.kg").toUpperCase()}
                     </ThemedText>
                   )}
                   {!!row.gainDisplay && (
@@ -1301,7 +1303,7 @@ const PersonalRecordsPage = () => {
                       ]}
                     >
                       <ThemedText style={styles.newBadgeText} setColor={primaryTextColor}>
-                        NEW
+                        {t("records.detail.new")}
                       </ThemedText>
                     </View>
                   )}
@@ -1357,7 +1359,7 @@ const PersonalRecordsPage = () => {
               style={[styles.tableFootnote, { borderTopColor: cardBorder }]}
               setColor={quietText}
             >
-              {EMPTY_VALUE} No record in this rep range yet.
+              {EMPTY_VALUE} {t("records.detail.noRecordInRange")}
             </ThemedText>
           ) : null}
         </View>

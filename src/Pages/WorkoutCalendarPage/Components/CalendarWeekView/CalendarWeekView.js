@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { Pressable, TouchableOpacity, View } from "react-native";
+import { useTranslation } from "@localization";
 
 import styles, { TILE_GAP, TILE_SIZE } from "./CalendarWeekViewStyle";
 import ChevronLeft from "../../../../Resources/Icons/UI-icons/ChevronLeft";
 import ChevronRight from "../../../../Resources/Icons/UI-icons/ChevronRight";
 import { ThemedText } from "../../../../Resources/ThemedComponents";
 
-const WEEKDAY_LABELS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
+// Keys under home.weekdays, Monday first.
+const WEEKDAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 
 /**
  * How many tiles fit, worked out from the row's real width rather than a fixed
@@ -26,6 +28,7 @@ function getVisibleTileCount(availableWidth, workoutCount) {
 }
 
 function DayRow({ day, index, isLast, contentWidth, onMeasure, palette, onOpenWorkout, onOpenDay }) {
+  const { t } = useTranslation();
   const workouts = day.workouts ?? [];
   const cards = day.workoutCards ?? [];
   const isRest = workouts.length === 0;
@@ -72,7 +75,7 @@ function DayRow({ day, index, isLast, contentWidth, onMeasure, palette, onOpenWo
           style={styles.weekdayLabel}
           setColor={isToday ? palette.primaryText : palette.quietText}
         >
-          {WEEKDAY_LABELS[index]}
+          {t(`home.weekdays.${WEEKDAY_KEYS[index]}`)}
         </ThemedText>
 
         <ThemedText
@@ -94,7 +97,7 @@ function DayRow({ day, index, isLast, contentWidth, onMeasure, palette, onOpenWo
       {isRest ? (
         <View style={[styles.restStrip, { borderColor: palette.cellRest }]}>
           <ThemedText style={styles.restText} setColor={palette.quietText}>
-            Rest day / nothing planned
+            {t("calendar.weekView.restDay")}
           </ThemedText>
         </View>
       ) : workouts.length === 1 ? (
@@ -128,14 +131,20 @@ function DayRow({ day, index, isLast, contentWidth, onMeasure, palette, onOpenWo
               setColor={single?.completed ? palette.title : palette.bodyText}
               numberOfLines={1}
             >
-              {single?.workout?.label ?? single?.iconLabel ?? "Workout"}
+              {single?.workout?.label ??
+                single?.iconLabel ??
+                t("calendar.weekView.workout")}
             </ThemedText>
             <ThemedText
               style={styles.workoutMeta}
               setColor={contentColorFor(single?.completed)}
               numberOfLines={1}
             >
-              {single?.completed ? "Completed" : isToday ? "Today" : "Planned"}
+              {single?.completed
+                ? t("calendar.weekView.completed")
+                : isToday
+                  ? t("calendar.weekView.today")
+                  : t("calendar.weekView.planned")}
             </ThemedText>
           </View>
 
@@ -184,7 +193,9 @@ function DayRow({ day, index, isLast, contentWidth, onMeasure, palette, onOpenWo
           {cards.length > visibleTiles ? (
             <TouchableOpacity
               accessibilityRole="button"
-              accessibilityLabel={`Show all ${cards.length} workouts`}
+              accessibilityLabel={t("calendar.weekView.showAllWorkouts", {
+                count: cards.length,
+              })}
               activeOpacity={0.82}
               style={[styles.tile, { backgroundColor: palette.cellIdle }]}
               onPress={() => onOpenDay(day)}
@@ -212,6 +223,7 @@ export default function CalendarWeekView({
   onOpenDay,
   palette,
 }) {
+  const { t } = useTranslation();
   const [contentWidth, setContentWidth] = useState(0);
   const days = week?.days ?? [];
   const workouts = days.flatMap((day) => day.workouts ?? []);
@@ -224,7 +236,7 @@ export default function CalendarWeekView({
       <View style={styles.weekNav}>
         <TouchableOpacity
           accessibilityRole="button"
-          accessibilityLabel="Previous week"
+          accessibilityLabel={t("calendar.weekView.previousWeek")}
           disabled={!canGoBack}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           onPress={onPrevious}
@@ -244,7 +256,7 @@ export default function CalendarWeekView({
 
         <TouchableOpacity
           accessibilityRole="button"
-          accessibilityLabel="Next week"
+          accessibilityLabel={t("calendar.weekView.nextWeek")}
           disabled={!canGoForward}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           onPress={onNext}
@@ -267,11 +279,11 @@ export default function CalendarWeekView({
 
           <View style={styles.progressCopy}>
             <ThemedText style={styles.progressDone} setColor={palette.secondary}>
-              {`${done} of ${total} done`}
+              {t("calendar.weekView.doneOfTotal", { done, total })}
             </ThemedText>
             {total - done > 0 ? (
               <ThemedText style={styles.progressLeft} setColor={palette.quietText}>
-                {`· ${total - done} left this week`}
+                {t("calendar.weekView.leftThisWeek", { count: total - done })}
               </ThemedText>
             ) : null}
           </View>

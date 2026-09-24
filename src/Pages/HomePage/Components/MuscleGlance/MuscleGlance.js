@@ -4,6 +4,7 @@ import { useTranslation } from "@localization";
 import styles from "./MuscleGlanceStyle";
 import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
 import { ThemedText } from "@resources/ThemedComponents";
+import { muscleGroupLabel } from "@utils/exerciseMuscleGroups";
 
 const TRACK_HEIGHT = 38;
 
@@ -55,7 +56,7 @@ export default function MuscleGlance({ groups = [], headline = null, onOpen }) {
           numberOfLines={1}
         >
           {headline
-            ? t("home.muscleGlance.gaining", { group: headline })
+            ? t("home.muscleGlance.gaining", { group: muscleGroupLabel(headline, t) })
             : t("home.muscleGlance.noGain")}
         </ThemedText>
       </View>
@@ -94,7 +95,7 @@ export default function MuscleGlance({ groups = [], headline = null, onOpen }) {
               setColor={theme.quietText}
               numberOfLines={1}
             >
-              {group.label}
+              {muscleGroupLabel(group.label, t)}
             </ThemedText>
           </View>
         ))}

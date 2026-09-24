@@ -11,8 +11,10 @@ import {
   ThemedTextInput,
   ThemedTitle,
 } from "../../../../Resources/ThemedComponents";
+import { useTranslation } from "@localization";
 
 export default function AddProgram({ visible, onClose, onSubmit }) {
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const [programName, setProgramName] = useState("");
@@ -53,26 +55,25 @@ export default function AddProgram({ visible, onClose, onSubmit }) {
     >
       <View style={styles.hero}>
         <ThemedText style={styles.eyebrow} setColor={accentColor}>
-          New program
+          {t("programs.add.eyebrow")}
         </ThemedText>
 
         <ThemedTitle type="h3" style={styles.title}>
-          Create a training plan
+          {t("programs.add.title")}
         </ThemedTitle>
 
         <ThemedText style={styles.description} setColor={quietText}>
-          Create a draft to plan it first, or start it immediately in the
-          current week.
+          {t("programs.add.description")}
         </ThemedText>
       </View>
 
       <View style={styles.fieldGroup}>
         <ThemedText style={styles.label} setColor={quietText}>
-          Program name
+          {t("programs.fields.name")}
         </ThemedText>
 
         <ThemedTextInput
-          placeholder="Example: Spring strength block"
+          placeholder={t("programs.add.namePlaceholder")}
           value={programName}
           onChangeText={setProgramName}
           inputStyle={[styles.input, { backgroundColor: innerSurface }]}
@@ -81,7 +82,7 @@ export default function AddProgram({ visible, onClose, onSubmit }) {
 
       <View style={styles.actions}>
         <ThemedButton
-          title="Start now"
+          title={t("programs.add.startNow")}
           variant="primary"
           disabled={!canCreate}
           onPress={() => handleSubmit("ACTIVE")}
@@ -102,13 +103,13 @@ export default function AddProgram({ visible, onClose, onSubmit }) {
           ]}
         >
           <ThemedText style={styles.secondaryActionText} setColor={titleColor}>
-            Create draft
+            {t("programs.add.createDraft")}
           </ThemedText>
         </Pressable>
 
         <Pressable onPress={resetAndClose} style={styles.cancelAction}>
           <ThemedText style={styles.cancelActionText} setColor={quietText}>
-            Cancel
+            {t("common.cancel")}
           </ThemedText>
         </Pressable>
       </View>

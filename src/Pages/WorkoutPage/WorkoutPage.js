@@ -26,6 +26,7 @@ import Social from "../../Resources/Icons/UI-icons/Social";
 import WorkoutCopyTargetModal from "../../Resources/Components/WorkoutCopyTargetModal";
 import { programService, workoutService } from "../../Services";
 import { formatDate } from "../../Utils/dateUtils";
+import { useTranslation } from "@localization";
 
 import Run from "./WorkoutTypes/Run/Run";
 import Walk from "./WorkoutTypes/Walk/Walk";
@@ -36,6 +37,7 @@ const WorkoutPage = ({ route }) => {
   const navigation = useNavigation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const { t } = useTranslation();
 
   const {
     workout_id,
@@ -90,7 +92,7 @@ const WorkoutPage = ({ route }) => {
   const workoutType =
     metadata?.workout_type ?? initialWorkoutType ?? initialWorkoutLabel ?? null;
   const workoutLabel =
-    metadata?.workout_label ?? initialWorkoutLabel ?? workoutType ?? "Workout";
+    metadata?.workout_label ?? initialWorkoutLabel ?? workoutType ?? t("workout.page.fallbackTitle");
   const workoutInstanceLabel = metadata?.workout_instance_label ?? null;
   const workoutDay = metadata?.day ?? initialDay ?? "";
   const workoutDate = metadata?.date ?? initialDate ?? "";
@@ -214,7 +216,7 @@ const WorkoutPage = ({ route }) => {
       setPendingCopyTarget(null);
     } catch (error) {
       console.error("Copy workout failed:", error);
-      Alert.alert("Could not copy workout", "Please try again.");
+      Alert.alert(t("workout.page.copyFailedTitle"), t("workout.page.tryAgain"));
     } finally {
       setIsCopyingWorkout(false);
     }
@@ -234,7 +236,7 @@ const WorkoutPage = ({ route }) => {
       setPendingCopyTarget(null);
     } catch (error) {
       console.error("Copy standalone workout failed:", error);
-      Alert.alert("Could not copy workout", "Please try again.");
+      Alert.alert(t("workout.page.copyFailedTitle"), t("workout.page.tryAgain"));
     } finally {
       setIsCopyingWorkout(false);
     }
@@ -268,7 +270,7 @@ const WorkoutPage = ({ route }) => {
       });
     } catch (error) {
       console.error("Copy workout target lookup failed:", error);
-      Alert.alert("Could not copy workout", "Please try again.");
+      Alert.alert(t("workout.page.copyFailedTitle"), t("workout.page.tryAgain"));
     }
   };
 
@@ -284,13 +286,13 @@ const WorkoutPage = ({ route }) => {
       await workoutService.repostWorkoutSummaryPost(db, {
         workoutId: workout_id,
       });
-      Alert.alert("Summary reposted", "The workout summary has been regenerated.");
+      Alert.alert(t("workout.page.repostedTitle"), t("workout.page.repostedMessage"));
     } catch (error) {
       Alert.alert(
-        "Could not repost summary",
+        t("workout.page.repostFailedTitle"),
         error instanceof Error
           ? error.message
-          : "The workout summary could not be regenerated."
+          : t("workout.page.repostFailedMessage")
       );
     } finally {
       setIsRepostingWorkoutPost(false);
@@ -301,9 +303,9 @@ const WorkoutPage = ({ route }) => {
     <>
       <ThemedConfirmModal
         visible={deleteWorkoutConfirmVisible}
-        title="Delete workout?"
-        message="This removes the workout and all sets saved inside it."
-        confirmLabel="Delete workout"
+        title={t("workout.page.deleteTitle")}
+        message={t("workout.page.deleteMessage")}
+        confirmLabel={t("workout.page.deleteConfirm")}
         tone="danger"
         onConfirm={() => {
           setDeleteWorkoutConfirmVisible(false);
@@ -314,9 +316,9 @@ const WorkoutPage = ({ route }) => {
 
       <ThemedConfirmModal
         visible={restartConfirmVisible}
-        title="Restart workout?"
-        message="This clears the timer, completion state, and workout progress for this workout."
-        confirmLabel="Restart workout"
+        title={t("workout.page.restartTitle")}
+        message={t("workout.page.restartMessage")}
+        confirmLabel={t("workout.page.restartConfirm")}
         tone="danger"
         onConfirm={() => {
           setRestartConfirmVisible(false);
@@ -341,7 +343,7 @@ const WorkoutPage = ({ route }) => {
         onPress={openLabelModal}
       >
         <Name width={24} height={24} color={theme.iconColor} />
-        <ThemedText style={styles.optionText}>Change name</ThemedText>
+        <ThemedText style={styles.optionText}>{t("workout.page.options.changeName")}</ThemedText>
       </TouchableOpacity>
 
       {supportsTimerRestart && (
@@ -350,7 +352,7 @@ const WorkoutPage = ({ route }) => {
           onPress={confirmRestartWorkout}
         >
           <Reload width={24} height={24} />
-          <ThemedText style={styles.optionText}>Restart Workout</ThemedText>
+          <ThemedText style={styles.optionText}>{t("workout.page.options.restart")}</ThemedText>
         </TouchableOpacity>
       )}
 
@@ -366,7 +368,9 @@ const WorkoutPage = ({ route }) => {
       >
         <Social width={24} height={24} color={theme.iconColor} />
         <ThemedText style={styles.optionText}>
-          {isRepostingWorkoutPost ? "Reposting summary..." : "Repost summary"}
+          {isRepostingWorkoutPost
+            ? t("workout.page.options.reposting")
+            : t("workout.page.options.repost")}
         </ThemedText>
       </TouchableOpacity>
 
@@ -382,7 +386,7 @@ const WorkoutPage = ({ route }) => {
       >
         <Copy width={24} height={24} />
         <ThemedText style={styles.optionText}>
-          Copy workout to a different day
+          {t("workout.page.options.copyToDay")}
         </ThemedText>
       </TouchableOpacity>
 
@@ -391,7 +395,7 @@ const WorkoutPage = ({ route }) => {
         onPress={confirmDeleteWorkout}
       >
         <Delete width={24} height={24} />
-        <ThemedText style={styles.optionText}>Delete Workout</ThemedText>
+        <ThemedText style={styles.optionText}>{t("workout.page.options.delete")}</ThemedText>
       </TouchableOpacity>
     </View>
   </ThemedBottomSheet>
@@ -430,14 +434,14 @@ const WorkoutPage = ({ route }) => {
 
   <ThemedModal
     visible={labelModalVisible}
-    title="Workout name"
+    title={t("workout.page.nameModal.title")}
     onClose={() => setLabelModalVisible(false)}
     onShow={() => labelInputRef.current?.focus()}
   >
     <ThemedTextInput
       value={nextWorkoutLabel}
       onChangeText={setNextWorkoutLabel}
-      placeholder="Workout label"
+      placeholder={t("workout.page.nameModal.placeholder")}
       innerRef={labelInputRef}
       maxLength={40}
       returnKeyType="done"
@@ -446,13 +450,13 @@ const WorkoutPage = ({ route }) => {
 
     <View style={styles.modalActions}>
       <ThemedButton
-        title="Cancel"
+        title={t("common.cancel")}
         variant="danger"
         onPress={() => setLabelModalVisible(false)}
         style={styles.modalAction}
       />
       <ThemedButton
-        title={isSavingLabel ? "Saving..." : "Save"}
+        title={isSavingLabel ? t("workout.page.nameModal.saving") : t("common.save")}
         onPress={saveWorkoutLabel}
         disabled={isSavingLabel}
         style={styles.modalAction}
@@ -504,7 +508,7 @@ const WorkoutPage = ({ route }) => {
               { color: headerEyebrowColor },
             ]}
           >
-            Workout
+            {t("workout.page.fallbackTitle")}
           </ThemedText>
 
           <ThemedTitle

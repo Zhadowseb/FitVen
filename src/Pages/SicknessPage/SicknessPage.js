@@ -11,6 +11,7 @@ import {
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useFocusEffect } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
+import { useTranslation } from "@localization";
 
 import styles from "./SicknessPageStyle";
 import { Colors } from "../../Resources/GlobalStyling/colors";
@@ -33,6 +34,7 @@ import {
 import {
   DEFAULT_SICKNESS_TYPE,
   SICKNESS_TYPES,
+  getSicknessTypeLabelKey,
 } from "../../Resources/Images/sicknessTypes";
 
 function getTodayLabel() {
@@ -50,13 +52,13 @@ function mapSicknessRecord(record) {
 }
 
 function getSicknessTypeImage(sicknessType) {
-  const foundType = SICKNESS_TYPES.find((type) => type.label === sicknessType);
+  const foundType = SICKNESS_TYPES.find((type) => type.value === sicknessType);
   return (foundType ?? SICKNESS_TYPES[0]).image;
 }
 
-function getSicknessDateRange(record) {
+function getSicknessDateRange(record, t) {
   if (!record.endDate) {
-    return `${record.startDate} - Ongoing`;
+    return t("calendar.sickness.ongoingRange", { start: record.startDate });
   }
 
   if (record.endDate === record.startDate) {
@@ -71,6 +73,7 @@ function isEndDateBeforeStartDate(startDate, endDate) {
 }
 
 export default function SicknessPage() {
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const db = useSQLiteContext();
@@ -104,7 +107,7 @@ export default function SicknessPage() {
     normalizedStartDate &&
     normalizedEndDate &&
     isEndDateBeforeStartDate(normalizedStartDate, normalizedEndDate)
-      ? "End date must be after start date"
+      ? t("calendar.sickness.endBeforeStart")
       : null;
   const canSave = Boolean(normalizedStartDate) && !endDateError && !saving;
   const isEditing = Boolean(selectedRecord);
@@ -229,12 +232,12 @@ export default function SicknessPage() {
     }
 
     Alert.alert(
-      "Delete sickness?",
-      "This removes it from history and clears the sick marking for the period.",
+      t("calendar.sickness.deleteTitle"),
+      t("calendar.sickness.deleteMessage"),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("common.cancel"), style: "cancel" },
         {
-          text: "Delete",
+          text: t("common.delete"),
           style: "destructive",
           onPress: async () => {
             try {
@@ -264,14 +267,14 @@ export default function SicknessPage() {
             style={styles.pageHeaderTitleEyebrow}
             setColor={quietText}
           >
-            Library
+            {t("calendar.sickness.eyebrow")}
           </ThemedText>
           <ThemedTitle
             type="pageTitle"
             style={styles.pageHeaderTitleMain}
             numberOfLines={1}
           >
-            Sickness
+            {t("calendar.sickness.title")}
           </ThemedTitle>
         </View>
       </ThemedHeader>
@@ -284,17 +287,17 @@ export default function SicknessPage() {
       >
         <View style={styles.sectionHeader}>
           <ThemedText style={styles.sectionEyebrow} setColor={primaryTextColor}>
-            HISTORY
+            {t("calendar.sickness.historyEyebrow")}
           </ThemedText>
           <ThemedText style={styles.sectionTitle} setColor={titleColor}>
-            Previous sickness
+            {t("calendar.sickness.historyTitle")}
           </ThemedText>
         </View>
 
         {historyLoading && records.length === 0 && (
           <ThemedStateBlock
             style={styles.loadingState}
-            message="Loading sickness history..."
+            message={t("calendar.sickness.loadingHistory")}
           />
         )}
 
@@ -309,7 +312,7 @@ export default function SicknessPage() {
             ]}
           >
             <ThemedText style={styles.emptyHistoryText} setColor={quietText}>
-              No sickness periods yet.
+              {t("calendar.sickness.empty")}
             </ThemedText>
           </View>
         )}
@@ -331,10 +334,10 @@ export default function SicknessPage() {
             <View style={styles.historyTopRow}>
               <View style={styles.historyDetails}>
                 <ThemedText style={styles.historyDate} setColor={titleColor}>
-                  {getSicknessDateRange(record)}
+                  {getSicknessDateRange(record, t)}
                 </ThemedText>
                 <ThemedText style={styles.historyNote} setColor={quietText}>
-                  {record.note || "No note added."}
+                  {record.note || t("calendar.sickness.noNote")}
                 </ThemedText>
               </View>
 
@@ -346,7 +349,11 @@ export default function SicknessPage() {
                   },
                 ]}
                 accessible
-                accessibilityLabel={record.sicknessType}
+                accessibilityLabel={
+                  getSicknessTypeLabelKey(record.sicknessType)
+                    ? t(getSicknessTypeLabelKey(record.sicknessType))
+                    : record.sicknessType
+                }
               >
                 <Image
                   source={getSicknessTypeImage(record.sicknessType)}
@@ -361,7 +368,7 @@ export default function SicknessPage() {
 
       <View style={[styles.footer, { borderTopColor: cardBorder }]}>
         <ThemedButton
-          title="New sickness period"
+          title={t("calendar.sickness.newPeriod")}
           variant="primary"
           onPress={openRegisterModal}
           fullWidth
@@ -371,7 +378,11 @@ export default function SicknessPage() {
       <ThemedModal
         visible={registerModalVisible}
         onClose={closeRegisterModal}
-        title={isEditing ? "Edit sickness period" : "New sickness period"}
+        title={
+          isEditing
+            ? t("calendar.sickness.editPeriod")
+            : t("calendar.sickness.newPeriod")
+        }
         style={[
           styles.registerModal,
           {
@@ -388,7 +399,7 @@ export default function SicknessPage() {
           <View style={styles.dateRow}>
             <View style={styles.dateField}>
               <ThemedText style={styles.fieldLabel} setColor={quietText}>
-                Start date
+                {t("calendar.sickness.startDate")}
               </ThemedText>
               <TouchableOpacity
                 activeOpacity={0.82}
@@ -412,7 +423,7 @@ export default function SicknessPage() {
 
             <View style={styles.dateField}>
               <ThemedText style={styles.fieldLabel} setColor={quietText}>
-                End date
+                {t("calendar.sickness.endDate")}
               </ThemedText>
               <TouchableOpacity
                 activeOpacity={0.82}
@@ -429,7 +440,7 @@ export default function SicknessPage() {
                   style={styles.datePickerText}
                   setColor={endDate ? titleColor : quietText}
                 >
-                  {endDate || "Optional"}
+                  {endDate || t("calendar.sickness.optional")}
                 </ThemedText>
               </TouchableOpacity>
 
@@ -443,7 +454,7 @@ export default function SicknessPage() {
                     style={styles.clearEndDateText}
                     setColor={quietText}
                   >
-                    Clear end date
+                    {t("calendar.sickness.clearEndDate")}
                   </ThemedText>
                 </TouchableOpacity>
               )}
@@ -461,13 +472,13 @@ export default function SicknessPage() {
 
           <View style={styles.sicknessTypeGrid}>
             {SICKNESS_TYPES.map((type) => {
-              const selected = sicknessType === type.label;
+              const selected = sicknessType === type.value;
 
               return (
                 <TouchableOpacity
-                  key={type.label}
+                  key={type.value}
                   activeOpacity={0.84}
-                  onPress={() => setSicknessType(type.label)}
+                  onPress={() => setSicknessType(type.value)}
                   style={styles.sicknessTypeOption}
                 >
                   <View
@@ -489,7 +500,7 @@ export default function SicknessPage() {
                     setColor={selected ? sicknessColor : titleColor}
                     numberOfLines={2}
                   >
-                    {type.label}
+                    {t(type.labelKey)}
                   </ThemedText>
                 </TouchableOpacity>
               );
@@ -498,12 +509,12 @@ export default function SicknessPage() {
 
           <View>
             <ThemedText style={styles.fieldLabel} setColor={quietText}>
-              Note
+              {t("calendar.sickness.note")}
             </ThemedText>
             <ThemedTextInput
               value={note}
               onChangeText={setNote}
-              placeholder="What are you dealing with?"
+              placeholder={t("calendar.sickness.notePlaceholder")}
               multiline
               textAlignVertical="top"
               inputStyle={styles.noteInput}
@@ -525,7 +536,7 @@ export default function SicknessPage() {
             ]}
           >
             <ThemedText style={styles.deleteButtonText} setColor={dangerColor}>
-              Delete sickness
+              {t("calendar.sickness.deleteButton")}
             </ThemedText>
           </TouchableOpacity>
         )}
@@ -545,7 +556,7 @@ export default function SicknessPage() {
               style={styles.registerModalButtonText}
               setColor={titleColor}
             >
-              Cancel
+              {t("common.cancel")}
             </ThemedText>
           </TouchableOpacity>
 
@@ -566,7 +577,11 @@ export default function SicknessPage() {
               style={styles.registerModalButtonText}
               setColor={invertedText}
             >
-              {saving ? "Saving..." : isEditing ? "Save changes" : "Save"}
+              {saving
+                ? t("calendar.sickness.saving")
+                : isEditing
+                  ? t("calendar.sickness.saveChanges")
+                  : t("common.save")}
             </ThemedText>
           </TouchableOpacity>
         </View>

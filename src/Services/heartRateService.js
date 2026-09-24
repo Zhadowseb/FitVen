@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { PermissionsAndroid, Platform } from "react-native";
 import { BleManager, State } from "react-native-ble-plx";
+import { t } from "@localization";
 import { parseHeartRateMeasurement } from "../Utils/bleHeartRateUtils";
 
 export const HEART_RATE_SERVICE_UUID =
@@ -10,6 +11,11 @@ export const HEART_RATE_MEASUREMENT_UUID =
 
 const SAVED_DEVICE_KEY = "@fitven/heart-rate-device";
 const BLUETOOTH_READY_TIMEOUT_MS = 10000;
+
+// The message is shown on the run screen, so it is translated when thrown.
+function createHeartRateError(messageKey) {
+  return new Error(t(messageKey));
+}
 
 let manager = null;
 let activeScanStop = null;
@@ -74,18 +80,18 @@ async function waitForBluetoothReady() {
   }
 
   if (currentState === State.Unauthorized) {
-    throw new Error("Bluetooth permission is not available for FitVen.");
+    throw createHeartRateError("run.heartRate.errors.bluetoothPermission");
   }
 
   if (currentState === State.Unsupported) {
-    throw new Error("Bluetooth Low Energy is not supported on this device.");
+    throw createHeartRateError("run.heartRate.errors.bleUnsupported");
   }
 
   await new Promise((resolve, reject) => {
     let stateSubscription;
     const timeout = setTimeout(() => {
       stateSubscription?.remove();
-      reject(new Error("Turn on Bluetooth to connect your heart rate monitor."));
+      reject(createHeartRateError("run.heartRate.errors.bluetoothOff"));
     }, BLUETOOTH_READY_TIMEOUT_MS);
 
     stateSubscription = bleManager.onStateChange((nextState) => {
@@ -96,13 +102,11 @@ async function waitForBluetoothReady() {
       } else if (nextState === State.Unauthorized) {
         clearTimeout(timeout);
         stateSubscription?.remove();
-        reject(new Error("Bluetooth permission is not available for FitVen."));
+        reject(createHeartRateError("run.heartRate.errors.bluetoothPermission"));
       } else if (nextState === State.Unsupported) {
         clearTimeout(timeout);
         stateSubscription?.remove();
-        reject(
-          new Error("Bluetooth Low Energy is not supported on this device.")
-        );
+        reject(createHeartRateError("run.heartRate.errors.bleUnsupported"));
       }
     }, true);
   });
@@ -163,7 +167,7 @@ export async function connectToHeartRateDevice(
   { onMeasurement, onDisconnected }
 ) {
   if (!savedDevice?.id) {
-    throw new Error("Choose a heart rate monitor first.");
+    throw createHeartRateError("run.heartRate.errors.chooseMonitorFirst");
   }
 
   await waitForBluetoothReady();
@@ -286,7 +290,7 @@ export async function saveHeartRateDevice(device) {
   const normalizedDevice = normalizeHeartRateDevice(device) ?? device;
 
   if (!normalizedDevice?.id) {
-    throw new Error("The heart rate monitor could not be saved.");
+    throw createHeartRateError("run.heartRate.errors.saveFailed");
   }
 
   await AsyncStorage.setItem(

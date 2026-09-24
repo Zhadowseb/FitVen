@@ -716,7 +716,7 @@ const ExerciseRow = ({
                   <TouchableOpacity
                     activeOpacity={0.88}
                     accessibilityRole="button"
-                    accessibilityLabel="Add first set"
+                    accessibilityLabel={t("workout.exercise.addFirstSet")}
                     disabled={addingSet}
                     onPress={() => handleCardPress(addFirstSetAndExpand)}
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -737,7 +737,7 @@ const ExerciseRow = ({
                   <TouchableOpacity
                     activeOpacity={0.88}
                     accessibilityRole="button"
-                    accessibilityLabel="Expand exercise"
+                    accessibilityLabel={t("workout.exercise.expand")}
                     onPress={() => handleCardPress(onToggleExpanded)}
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     style={styles.collapsedExpandButton}
@@ -809,7 +809,7 @@ const ExerciseRow = ({
                 <TouchableOpacity
                   activeOpacity={0.72}
                   accessibilityRole="button"
-                  accessibilityLabel="Add first set"
+                  accessibilityLabel={t("workout.exercise.addFirstSet")}
                   disabled={addingSet}
                   onPress={addSet}
                   style={[
@@ -827,7 +827,7 @@ const ExerciseRow = ({
                         style={styles.firstSetButtonText}
                         setColor={addSetColor}
                       >
-                        Add first set
+                        {t("workout.exercise.addFirstSet")}
                       </ThemedText>
                     </>
                   )}
@@ -873,7 +873,7 @@ const ExerciseRow = ({
                                 style={styles.summaryUnitText}
                                 setColor={quietText}
                               >
-                                kg
+                                {t("common.kg")}
                               </ThemedText>
                             )}
                           </View>
@@ -968,9 +968,9 @@ const ExerciseRow = ({
       />
       <ThemedConfirmModal
         visible={deleteConfirmVisible}
-        title="Delete exercise?"
-        message="This removes the exercise and all sets saved inside it."
-        confirmLabel="Delete exercise"
+        title={t("workout.exercise.deleteTitle")}
+        message={t("workout.exercise.deleteMessage")}
+        confirmLabel={t("workout.exercise.deleteConfirm")}
         tone="danger"
         onConfirm={async () => {
           setDeleteConfirmVisible(false);

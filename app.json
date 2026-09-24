@@ -2,7 +2,7 @@
   "expo": {
     "name": "FitVen",
     "slug": "programapp",
-    "version": "2.3.1",
+    "version": "2.4.0",
     "scheme": "fitven",
     "orientation": "default",
     "icon": "./assets/icon_v1.0.png",

@@ -3,6 +3,7 @@ import { useColorScheme } from "react-native";
 import { Colors } from "../../../../Resources/GlobalStyling/colors";
 import Checkmark from "../../../../Resources/Icons/UI-icons/Checkmark";
 import { ThemedText } from "../../../../Resources/ThemedComponents";
+import { useTranslation } from "@localization";
 
 const ListHeader = ({
   styles,
@@ -10,6 +11,7 @@ const ListHeader = ({
   distanceUnit = "m",
   onDistanceUnitPress,
 }) => {
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const headerTextColor =
@@ -19,7 +21,7 @@ const ListHeader = ({
     <View style={[styles.runTableHeaderRow, { borderColor: dividerColor }]}>
       <View style={[styles.runTableHeaderCell, styles.runSetColumn]}>
         <ThemedText style={styles.runTableHeaderLabel} setColor={headerTextColor}>
-          SET
+          {t("run.table.set")}
         </ThemedText>
       </View>
 
@@ -29,7 +31,7 @@ const ListHeader = ({
         style={[styles.runTableHeaderCell, styles.runDistanceColumn]}
       >
         <ThemedText style={styles.runTableHeaderLabel} setColor={headerTextColor}>
-          DIST
+          {t("run.stats.distShort")}
         </ThemedText>
         <ThemedText style={styles.runTableHeaderUnit} setColor={headerTextColor}>
           {distanceUnit}
@@ -38,28 +40,28 @@ const ListHeader = ({
 
       <View style={[styles.runTableHeaderCell, styles.runPaceColumn]}>
         <ThemedText style={styles.runTableHeaderLabel} setColor={headerTextColor}>
-          PACE
+          {t("run.stats.pace")}
         </ThemedText>
         <ThemedText style={styles.runTableHeaderUnit} setColor={headerTextColor}>
-          min/km
+          {t("run.units.minPerKm")}
         </ThemedText>
       </View>
 
       <View style={[styles.runTableHeaderCell, styles.runTimeColumn]}>
         <ThemedText style={styles.runTableHeaderLabel} setColor={headerTextColor}>
-          TIME
+          {t("run.stats.time")}
         </ThemedText>
         <ThemedText style={styles.runTableHeaderUnit} setColor={headerTextColor}>
-          min
+          {t("run.units.min")}
         </ThemedText>
       </View>
 
       <View style={[styles.runTableHeaderCell, styles.runZoneColumn]}>
         <ThemedText style={styles.runTableHeaderLabel} setColor={headerTextColor}>
-          ZONE
+          {t("run.stats.zone")}
         </ThemedText>
         <ThemedText style={styles.runTableHeaderUnit} setColor={headerTextColor}>
-          bpm/zone
+          {t("run.units.bpmPerZone")}
         </ThemedText>
       </View>
 

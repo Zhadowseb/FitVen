@@ -8,6 +8,7 @@ import {
 import { useCallback, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import Feather from "@expo/vector-icons/Feather";
+import { useTranslation } from "@localization";
 
 import styles from "./WorkoutTypesSettingsPageStyle";
 import { Colors } from "../../Resources/GlobalStyling/colors";
@@ -49,16 +50,12 @@ import {
 const WORKOUT_TYPES = [
   {
     id: "strength-training",
-    title: "Strength Training",
-    category: "STRENGTH",
-    metrics: "SETS  /  REPS  /  WEIGHT",
+    textKey: "settings.workoutTypes.types.strength",
     Icon: ResistanceIcon,
   },
   {
     id: "run",
-    title: "Run",
-    category: "CARDIO",
-    metrics: "DISTANCE  /  PACE  /  TIME",
+    textKey: "settings.workoutTypes.types.run",
     Icon: RunIcon,
   },
 ];
@@ -71,15 +68,18 @@ const RELEASED_WORKOUT_TYPES = filterReleasedWorkoutTypes(
 );
 
 const EXERCISE_VIEW_OPTIONS = [
-  { value: "cells", title: "Standard" },
-  { value: "compact", title: "Compact" },
-  { value: "progressOnly", title: "Progress only" },
+  { value: "cells", titleKey: "settings.workoutTypes.views.cells" },
+  { value: "compact", titleKey: "settings.workoutTypes.views.compact" },
+  { value: "progressOnly", titleKey: "settings.workoutTypes.views.progressOnly" },
 ];
 
 const EXERCISE_CARD_LAYOUT_OPTIONS = [
-  { value: "compact", title: "Compact layout" },
-  { value: "classic", title: "Classic layout" },
+  { value: "compact", titleKey: "settings.workoutTypes.cardLayouts.compact" },
+  { value: "classic", titleKey: "settings.workoutTypes.cardLayouts.classic" },
 ];
+
+// The max heart rate sources the badge and the options can name.
+const MAX_HEART_RATE_SOURCE_KEYS = ["auto", "manual", "calculated", "measured"];
 
 // One sample for every preview on this screen, so an option shows what it will
 // actually look like rather than a sentence describing it.
@@ -109,6 +109,7 @@ function LayoutOptionPreview({ cardLayout, view, theme }) {
 }
 
 export default function WorkoutTypesSettingsPage() {
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const { user } = useAuth();
@@ -147,7 +148,10 @@ export default function WorkoutTypesSettingsPage() {
   const normalizedMaxHeartRateInput = normalizeMaxHeartRate(maxHeartRateInput);
   const maxHeartRateInputError =
     maxHeartRateInput.trim() && normalizedMaxHeartRateInput === null
-      ? `Use a whole number from ${MIN_MAX_HEART_RATE} to ${MAX_MAX_HEART_RATE}.`
+      ? t("settings.workoutTypes.wholeNumberError", {
+          min: MIN_MAX_HEART_RATE,
+          max: MAX_MAX_HEART_RATE,
+        })
       : "";
   const maxHeartRateSourceColor =
     maxHeartRateSource === "measured"
@@ -165,35 +169,37 @@ export default function WorkoutTypesSettingsPage() {
   const maxHeartRateSourceOptions = [
     {
       id: MAX_HEART_RATE_SOURCE_AUTO,
-      title: "Auto",
-      detail: "Manual, then calculated, then measured",
+      title: t("settings.workoutTypes.sources.auto.title"),
+      detail: t("settings.workoutTypes.sources.auto.detail"),
       available: true,
     },
     {
       id: "manual",
-      title: "Manual",
+      title: t("settings.workoutTypes.sources.manual.title"),
       detail:
         manualMaxHeartRate === null
-          ? "Enter and save a manual value first"
-          : `${manualMaxHeartRate} bpm`,
+          ? t("settings.workoutTypes.sources.manual.missing")
+          : t("settings.workoutTypes.bpm", { value: manualMaxHeartRate }),
       available: manualMaxHeartRate !== null,
     },
     {
       id: "calculated",
-      title: "Calculated",
+      title: t("settings.workoutTypes.sources.calculated.title"),
       detail:
         calculatedAge === null
-          ? "Set your birth date first"
-          : `${220 - calculatedAge} bpm from age`,
+          ? t("settings.workoutTypes.sources.calculated.missing")
+          : t("settings.workoutTypes.sources.calculated.fromAge", {
+              value: 220 - calculatedAge,
+            }),
       available: calculatedAge !== null,
     },
     {
       id: "measured",
-      title: "Measured",
+      title: t("settings.workoutTypes.sources.measured.title"),
       detail:
         measuredMaxHeartRate === null
-          ? "No measured value available"
-          : `${measuredMaxHeartRate} bpm`,
+          ? t("settings.workoutTypes.sources.measured.missing")
+          : t("settings.workoutTypes.bpm", { value: measuredMaxHeartRate }),
       available: measuredMaxHeartRate !== null,
     },
   ];
@@ -216,7 +222,7 @@ export default function WorkoutTypesSettingsPage() {
       const loadBirthDate = async () => {
         if (!user?.id) {
           setBirthDate("");
-          setBirthDateError("Sign in to manage Run settings.");
+          setBirthDateError(t("settings.workoutTypes.errors.signIn"));
           setIsLoadingBirthDate(false);
           return;
         }
@@ -235,7 +241,7 @@ export default function WorkoutTypesSettingsPage() {
             setBirthDateError(
               error instanceof Error
                 ? error.message
-                : "Could not load Run settings."
+                : t("settings.workoutTypes.errors.load")
             );
           }
         } finally {
@@ -250,7 +256,7 @@ export default function WorkoutTypesSettingsPage() {
       return () => {
         isCancelled = true;
       };
-    }, [applyRunProfileSettings, user])
+    }, [applyRunProfileSettings, t, user])
   );
 
   const getBirthDatePickerValue = () => {
@@ -285,7 +291,9 @@ export default function WorkoutTypesSettingsPage() {
       setBirthDatePickerVisible(false);
     } catch (error) {
       setBirthDateError(
-        error instanceof Error ? error.message : "Could not save birth date."
+        error instanceof Error
+          ? error.message
+          : t("settings.workoutTypes.errors.saveBirthDate")
       );
     } finally {
       setIsSavingBirthDate(false);
@@ -326,7 +334,7 @@ export default function WorkoutTypesSettingsPage() {
       setBirthDateError(
         error instanceof Error
           ? error.message
-          : "Could not save max heart rate."
+          : t("settings.workoutTypes.errors.saveMaxHeartRate")
       );
     } finally {
       setIsSavingMaxHeartRate(false);
@@ -355,7 +363,7 @@ export default function WorkoutTypesSettingsPage() {
       setBirthDateError(
         error instanceof Error
           ? error.message
-          : "Could not save max heart rate source."
+          : t("settings.workoutTypes.errors.saveSource")
       );
     } finally {
       setIsSavingMaxHeartRate(false);
@@ -370,14 +378,14 @@ export default function WorkoutTypesSettingsPage() {
             size={12}
             style={[styles.pageHeaderTitleEyebrow, { color: quietText }]}
           >
-            Settings
+            {t("settings.eyebrow")}
           </ThemedText>
           <ThemedTitle
             type="pageTitle"
             style={styles.pageHeaderTitleMain}
             numberOfLines={1}
           >
-            Workout Types
+            {t("settings.workoutTypes.title")}
           </ThemedTitle>
         </View>
       </ThemedHeader>
@@ -390,14 +398,16 @@ export default function WorkoutTypesSettingsPage() {
         <View style={styles.sectionHeader}>
           <View>
             <ThemedText style={styles.sectionEyebrow} setColor={primaryTextColor}>
-              AVAILABLE
+              {t("settings.workoutTypes.availableEyebrow")}
             </ThemedText>
             <ThemedText style={styles.sectionTitle} setColor={titleColor}>
-              Workout types
+              {t("settings.workoutTypes.sectionTitle")}
             </ThemedText>
           </View>
           <ThemedText style={styles.sectionCount} setColor={quietText}>
-            {RELEASED_WORKOUT_TYPES.length} TYPES
+            {t("settings.workoutTypes.typesCount", {
+              count: RELEASED_WORKOUT_TYPES.length,
+            })}
           </ThemedText>
         </View>
 
@@ -448,22 +458,22 @@ export default function WorkoutTypesSettingsPage() {
                       style={styles.typeCategory}
                       setColor={accentColor}
                     >
-                      {workoutType.category}
+                      {t(`${workoutType.textKey}.category`)}
                     </ThemedText>
                     <ThemedText
                       style={styles.typeTitle}
                       setColor={titleColor}
                     >
-                      {workoutType.title}
+                      {t(`${workoutType.textKey}.title`)}
                     </ThemedText>
                     <ThemedText style={styles.typeMetrics} setColor={quietText}>
-                      {workoutType.metrics}
+                      {t(`${workoutType.textKey}.metrics`)}
                     </ThemedText>
                   </View>
 
                   <View
                     accessible
-                    accessibilityLabel="Available"
+                    accessibilityLabel={t("settings.workoutTypes.available")}
                     style={styles.availableStatus}
                   >
                     <Feather
@@ -482,16 +492,16 @@ export default function WorkoutTypesSettingsPage() {
                       <View style={styles.typeSettingCopy}>
                         <Library width={20} height={20} color={titleColor} />
                         <ThemedText style={styles.typeSettingTitle} setColor={titleColor}>
-                          Exercise cards
+                          {t("settings.workoutTypes.exerciseCards")}
                         </ThemedText>
                       </View>
                       <ThemedText style={styles.exerciseViewSubtitle} setColor={quietText}>
-                        Choose the layout and set details for collapsed exercises
+                        {t("settings.workoutTypes.exerciseCardsSubtitle")}
                       </ThemedText>
                     </View>
 
                     <ThemedText style={styles.exerciseViewPreviewLabel} setColor={quietText}>
-                      Card layout
+                      {t("settings.workoutTypes.cardLayout")}
                     </ThemedText>
                     {EXERCISE_CARD_LAYOUT_OPTIONS.map((option) => (
                       <TouchableOpacity
@@ -522,7 +532,7 @@ export default function WorkoutTypesSettingsPage() {
                         </View>
                         <View style={styles.exerciseViewOptionText}>
                           <ThemedText style={styles.exerciseViewOptionTitle} setColor={titleColor}>
-                            {option.title}
+                            {t(option.titleKey)}
                           </ThemedText>
                           <View
                             style={[
@@ -541,7 +551,7 @@ export default function WorkoutTypesSettingsPage() {
                     ))}
 
                     <ThemedText style={styles.exerciseViewPreviewLabel} setColor={quietText}>
-                      Set summary
+                      {t("settings.workoutTypes.setSummary")}
                     </ThemedText>
                     {EXERCISE_VIEW_OPTIONS.map((option) => (
                       <TouchableOpacity
@@ -572,7 +582,7 @@ export default function WorkoutTypesSettingsPage() {
                         </View>
                         <View style={styles.exerciseViewOptionText}>
                           <ThemedText style={styles.exerciseViewOptionTitle} setColor={titleColor}>
-                            {option.title}
+                            {t(option.titleKey)}
                           </ThemedText>
                           <View
                             style={[
@@ -591,7 +601,7 @@ export default function WorkoutTypesSettingsPage() {
                     ))}
 
                     <ThemedText style={styles.exerciseViewPreviewLabel} setColor={quietText}>
-                      Preview
+                      {t("settings.workoutTypes.preview")}
                     </ThemedText>
                     <View
                       style={[
@@ -601,7 +611,7 @@ export default function WorkoutTypesSettingsPage() {
                     >
                       <View style={styles.exerciseViewPreviewHeader}>
                         <ThemedText style={styles.exerciseViewPreviewName} setColor={titleColor}>
-                          Bench Press
+                          {t("settings.workoutTypes.previewExercise")}
                         </ThemedText>
                         <ThemedText setColor={quietText}>● ★ ● ●</ThemedText>
                       </View>
@@ -636,15 +646,18 @@ export default function WorkoutTypesSettingsPage() {
                             style={styles.typeSettingTitle}
                             setColor={titleColor}
                           >
-                            Birth date
+                            {t("settings.workoutTypes.birthDate")}
                           </ThemedText>
                           <ThemedText
                             style={styles.typeSettingMeta}
                             setColor={quietText}
                           >
                             {birthDateDisplay
-                              ? `${birthDateDisplay}  /  Age ${calculatedAge}`
-                              : "Set birth date"}
+                              ? t("settings.workoutTypes.birthDateWithAge", {
+                                  date: birthDateDisplay,
+                                  age: calculatedAge,
+                                })
+                              : t("settings.workoutTypes.setBirthDate")}
                           </ThemedText>
                         </View>
                       </View>
@@ -683,15 +696,17 @@ export default function WorkoutTypesSettingsPage() {
                             style={styles.typeSettingTitle}
                             setColor={titleColor}
                           >
-                            Max heart rate
+                            {t("settings.workoutTypes.maxHeartRate")}
                           </ThemedText>
                           <ThemedText
                             style={styles.typeSettingMeta}
                             setColor={quietText}
                           >
                             {maxHeartRate === null
-                              ? "Set birth date or enter manually"
-                              : `${maxHeartRate} bpm`}
+                              ? t("settings.workoutTypes.maxHeartRateEmpty")
+                              : t("settings.workoutTypes.bpm", {
+                                  value: maxHeartRate,
+                                })}
                           </ThemedText>
                         </View>
                       </View>
@@ -707,7 +722,11 @@ export default function WorkoutTypesSettingsPage() {
                             style={styles.maxHeartRateBadgeText}
                             setColor={maxHeartRateSourceColor}
                           >
-                            {maxHeartRateSource}
+                            {MAX_HEART_RATE_SOURCE_KEYS.includes(maxHeartRateSource)
+                              ? t(
+                                  `settings.workoutTypes.sources.${maxHeartRateSource}.title`
+                                )
+                              : maxHeartRateSource}
                           </ThemedText>
                         </View>
                         <TailArrowUpRight
@@ -736,7 +755,7 @@ export default function WorkoutTypesSettingsPage() {
         visible={birthDatePickerVisible}
         value={getBirthDatePickerValue()}
         minYear={1900}
-        title="Run birth date"
+        title={t("settings.workoutTypes.birthDatePickerTitle")}
         isConfirming={isSavingBirthDate}
         onClose={() => {
           if (!isSavingBirthDate) {
@@ -748,7 +767,7 @@ export default function WorkoutTypesSettingsPage() {
 
       <ThemedModal
         visible={maxHeartRateModalVisible}
-        title="Max heart rate"
+        title={t("settings.workoutTypes.maxHeartRate")}
         dismissOnBackdropPress={!isSavingMaxHeartRate}
         onClose={() => {
           if (!isSavingMaxHeartRate) {
@@ -757,7 +776,7 @@ export default function WorkoutTypesSettingsPage() {
         }}
       >
         <ThemedText style={styles.modalSectionLabel} setColor={quietText}>
-          How it is worked out
+          {t("settings.workoutTypes.howWorkedOut")}
         </ThemedText>
 
         <View style={styles.maxHeartRateSourceList}>
@@ -811,7 +830,7 @@ export default function WorkoutTypesSettingsPage() {
         {showManualMaxHeartRateField ? (
           <>
             <ThemedText style={styles.modalSectionLabel} setColor={quietText}>
-              Manual value
+              {t("settings.workoutTypes.manualValue")}
             </ThemedText>
 
             <ThemedTextInput
@@ -821,8 +840,10 @@ export default function WorkoutTypesSettingsPage() {
               }
               placeholder={
                 maxHeartRate === null
-                  ? "Max bpm"
-                  : `Current ${maxHeartRate} bpm`
+                  ? t("settings.workoutTypes.maxBpmPlaceholder")
+                  : t("settings.workoutTypes.currentBpmPlaceholder", {
+                      value: maxHeartRate,
+                    })
               }
               keyboardType="number-pad"
               editable={!isSavingMaxHeartRate}
@@ -845,21 +866,25 @@ export default function WorkoutTypesSettingsPage() {
                   style={styles.clearManualButtonText}
                   setColor={secondaryColor}
                 >
-                  Clear manual value
+                  {t("settings.workoutTypes.clearManualValue")}
                 </ThemedText>
               </TouchableOpacity>
             ) : null}
 
             <View style={styles.modalActions}>
               <ThemedButton
-                title="Cancel"
+                title={t("common.cancel")}
                 variant="secondary"
                 disabled={isSavingMaxHeartRate}
                 onPress={() => setMaxHeartRateModalVisible(false)}
                 style={styles.modalAction}
               />
               <ThemedButton
-                title={isSavingMaxHeartRate ? "Saving..." : "Save"}
+                title={
+                  isSavingMaxHeartRate
+                    ? t("settings.workoutTypes.saving")
+                    : t("common.save")
+                }
                 disabled={
                   isSavingMaxHeartRate ||
                   !maxHeartRateInput.trim() ||
@@ -874,7 +899,7 @@ export default function WorkoutTypesSettingsPage() {
           // Nothing to save here: the source choice is written the moment it is
           // tapped, so a Save button would sit permanently disabled.
           <ThemedButton
-            title="Done"
+            title={t("common.done")}
             variant="secondary"
             disabled={isSavingMaxHeartRate}
             onPress={() => setMaxHeartRateModalVisible(false)}

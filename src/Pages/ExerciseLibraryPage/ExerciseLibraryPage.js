@@ -9,6 +9,7 @@ import {
 import { useState, useCallback } from "react";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
+import { useTranslation } from "@localization";
 
 import styles from "./ExerciseLibraryPageStyle";
 import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
@@ -42,6 +43,7 @@ const emptyWeekSummary = {
 };
 
 const ExerciseLibraryPage = () => {
+  const { t } = useTranslation();
   const db = useSQLiteContext();
   const navigation = useNavigation();
   const colorScheme = useColorScheme();
@@ -139,16 +141,21 @@ const ExerciseLibraryPage = () => {
   const toolRows = [
     {
       key: "records",
-      label: "Personal records",
-      detail: `${quickAccessStats.recordExerciseCount} exercises · ${quickAccessStats.recordSlotCount} records`,
+      label: t("exercises.train.recordsTool"),
+      detail: t("exercises.train.recordsDetail", {
+        exercises: quickAccessStats.recordExerciseCount,
+        records: quickAccessStats.recordSlotCount,
+      }),
       icon: <Star width={18} height={18} color={theme.planned} filled />,
       iconBackground: "rgba(242, 193, 78, 0.12)",
       onPress: () => navigation.navigate("PersonalRecordsPage"),
     },
     {
       key: "library",
-      label: "Exercise library",
-      detail: `${quickAccessStats.exerciseCount} exercises`,
+      label: t("exercises.train.libraryTool"),
+      detail: t("exercises.train.libraryDetail", {
+        count: quickAccessStats.exerciseCount,
+      }),
       icon: (
         <Dumbbell width={18} height={18} color={primaryTextColor} thickness={1.6} />
       ),
@@ -157,16 +164,16 @@ const ExerciseLibraryPage = () => {
     },
     {
       key: "calculator",
-      label: "1RM calculator",
-      detail: "Estimate your one rep max",
+      label: t("exercises.train.calculatorTool"),
+      detail: t("exercises.train.calculatorDetail"),
       icon: <TradeUp width={18} height={18} color={theme.secondary} />,
       iconBackground: withAlpha(theme.secondary, 0.12),
       onPress: () => navigation.navigate("OneRepMaxCalculatorPage"),
     },
     {
       key: "sickness",
-      label: "Sickness log",
-      detail: "Register days you were ill",
+      label: t("exercises.train.sicknessTool"),
+      detail: t("exercises.train.sicknessDetail"),
       icon: (
         <Thermostat width={18} height={18} stroke={theme.danger} color={theme.danger} />
       ),
@@ -189,14 +196,16 @@ const ExerciseLibraryPage = () => {
       ? null
       : weekSummary.planned === 0
         ? weekSummary.nextLabel
-          ? `Nothing planned this week. Next up: ${weekSummary.nextLabel}.`
-          : "Nothing planned this week."
+          ? t("exercises.train.nothingPlannedNext", {
+              name: weekSummary.nextLabel,
+            })
+          : t("exercises.train.nothingPlanned")
         // Nothing when the week is finished. The line said so and said
         // nothing else - the stats above it already carry the same number.
         : weekSummary.completed >= weekSummary.planned
           ? null
           : weekSummary.nextLabel
-            ? `Next up: ${weekSummary.nextLabel}.`
+            ? t("exercises.train.nextUp", { name: weekSummary.nextLabel })
             : null;
 
   return (
@@ -207,24 +216,24 @@ const ExerciseLibraryPage = () => {
         showsVerticalScrollIndicator={false}
       >
         <PageSummary
-          eyebrow="Train"
-          title="Your training summarised"
+          eyebrow={t("exercises.train.eyebrow")}
+          title={t("exercises.train.title")}
           stats={[
             {
               key: "programs",
               value: quickAccessStats.programCount,
-              label: "Programs",
+              label: t("exercises.train.statPrograms"),
               tone: "primary",
             },
             {
               key: "completed",
               value: quickAccessStats.completedWorkoutCount,
-              label: "Completed",
+              label: t("exercises.train.statCompleted"),
             },
             {
               key: "records",
               value: quickAccessStats.recordSlotCount,
-              label: "Records",
+              label: t("exercises.train.statRecords"),
               tone: "record",
             },
           ]}
@@ -234,7 +243,7 @@ const ExerciseLibraryPage = () => {
         <TouchableOpacity
           activeOpacity={0.92}
           accessibilityRole="button"
-          accessibilityLabel="Calendar, plan and review your weeks"
+          accessibilityLabel={t("exercises.train.calendarA11y")}
           onPress={() => navigation.navigate("WorkoutCalendarPage")}
           style={[
             styles.programsCard,
@@ -277,7 +286,7 @@ const ExerciseLibraryPage = () => {
                 color={primaryTextColor}
               />
               <ThemedText style={styles.programsPillText} setColor={theme.title}>
-                CALENDAR
+                {t("exercises.train.calendarPill")}
               </ThemedText>
             </View>
           </View>
@@ -286,10 +295,10 @@ const ExerciseLibraryPage = () => {
             <View style={styles.cardTitleRow}>
               <View style={styles.cardTitleColumn}>
                 <ThemedText style={styles.cardTitle} setColor={theme.title}>
-                  Plan and review your weeks
+                  {t("exercises.train.calendarTitle")}
                 </ThemedText>
                 <ThemedText style={styles.cardSubtitle} setColor={theme.text}>
-                  Every day you have trained, planned or been ill.
+                  {t("exercises.train.calendarSubtitle")}
                 </ThemedText>
               </View>
               <ChevronRight
@@ -308,7 +317,7 @@ const ExerciseLibraryPage = () => {
                   <ThemedText style={styles.chipText} setColor={theme.title}>
                     {weekSummary.planned === null ? "–" : weekSummary.planned}
                   </ThemedText>{" "}
-                  this week
+                  {t("exercises.train.thisWeek")}
                 </ThemedText>
               </View>
 
@@ -317,7 +326,7 @@ const ExerciseLibraryPage = () => {
                   style={[styles.chip, { backgroundColor: orangeChipBackground }]}
                 >
                   <ThemedText style={styles.chipText} setColor={primaryTextColor}>
-                    {weekSummary.completed} done
+                    {t("exercises.train.done", { count: weekSummary.completed })}
                   </ThemedText>
                 </View>
               ) : null}
@@ -327,7 +336,7 @@ const ExerciseLibraryPage = () => {
 
         <View style={styles.section}>
           <ThemedText style={styles.sectionEyebrow} setColor={theme.text}>
-            Tools
+            {t("exercises.train.tools")}
           </ThemedText>
 
           {toolRows.map((tool) => (
@@ -377,7 +386,7 @@ const ExerciseLibraryPage = () => {
         </View>
         <View style={styles.section}>
           <ThemedText style={styles.sectionEyebrow} setColor={theme.text}>
-            Your training
+            {t("exercises.train.yourTraining")}
           </ThemedText>
 
           <TouchableOpacity
@@ -417,7 +426,7 @@ const ExerciseLibraryPage = () => {
               >
                 <Layers width={12} height={12} color={primaryTextColor} thickness={1.8} />
                 <ThemedText style={styles.programsPillText} setColor={theme.title}>
-                  PROGRAMS
+                  {t("exercises.train.programsPill")}
                 </ThemedText>
               </View>
             </View>
@@ -426,10 +435,10 @@ const ExerciseLibraryPage = () => {
               <View style={styles.cardTitleRow}>
                 <View style={styles.cardTitleColumn}>
                   <ThemedText style={styles.cardTitle} setColor={theme.title}>
-                    Manage your programs
+                    {t("exercises.train.programsTitle")}
                   </ThemedText>
                   <ThemedText style={styles.cardSubtitle} setColor={theme.text}>
-                    Plan blocks, weeks and workouts.
+                    {t("exercises.train.programsSubtitle")}
                   </ThemedText>
                 </View>
                 <ChevronRight
@@ -448,7 +457,7 @@ const ExerciseLibraryPage = () => {
                     <ThemedText style={styles.chipText} setColor={theme.title}>
                       {quickAccessStats.programCount}
                     </ThemedText>{" "}
-                    total
+                    {t("exercises.train.total")}
                   </ThemedText>
                 </View>
 
@@ -457,7 +466,9 @@ const ExerciseLibraryPage = () => {
                     style={[styles.chip, { backgroundColor: orangeChipBackground }]}
                   >
                     <ThemedText style={styles.chipText} setColor={primaryTextColor}>
-                      {quickAccessStats.activeProgramCount} active
+                      {t("exercises.train.active", {
+                        count: quickAccessStats.activeProgramCount,
+                      })}
                     </ThemedText>
                   </View>
                 ) : null}
@@ -507,7 +518,7 @@ const ExerciseLibraryPage = () => {
                   thickness={1.8}
                 />
                 <ThemedText style={styles.programsPillText} setColor={theme.title}>
-                  WORKOUTS
+                  {t("exercises.train.workoutsPill")}
                 </ThemedText>
               </View>
             </View>
@@ -516,10 +527,10 @@ const ExerciseLibraryPage = () => {
               <View style={styles.cardTitleRow}>
                 <View style={styles.cardTitleColumn}>
                   <ThemedText style={styles.cardTitle} setColor={theme.title}>
-                    Your workouts
+                    {t("exercises.train.workoutsTitle")}
                   </ThemedText>
                   <ThemedText style={styles.cardSubtitle} setColor={theme.text}>
-                    Every workout you have planned or finished.
+                    {t("exercises.train.workoutsSubtitle")}
                   </ThemedText>
                 </View>
                 <ChevronRight
@@ -538,7 +549,7 @@ const ExerciseLibraryPage = () => {
                     <ThemedText style={styles.chipText} setColor={theme.title}>
                       {quickAccessStats.workoutCount}
                     </ThemedText>{" "}
-                    total
+                    {t("exercises.train.total")}
                   </ThemedText>
                 </View>
 
@@ -547,7 +558,9 @@ const ExerciseLibraryPage = () => {
                     style={[styles.chip, { backgroundColor: orangeChipBackground }]}
                   >
                     <ThemedText style={styles.chipText} setColor={primaryTextColor}>
-                      {quickAccessStats.completedWorkoutCount} completed
+                      {t("exercises.train.completed", {
+                        count: quickAccessStats.completedWorkoutCount,
+                      })}
                     </ThemedText>
                   </View>
                 ) : null}

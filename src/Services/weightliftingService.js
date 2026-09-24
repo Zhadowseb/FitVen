@@ -1,6 +1,6 @@
 import { buildExerciseHistoryTable } from "@utils/exerciseHistoryTable";
 import { formatRelativeDay, getTodaysDate, normalizeIsoDateString } from "@utils/dateUtils";
-import { formatDate } from "@localization";
+import { formatDate, t } from "@localization";
 import { canBePersonalRecord, resolveSetType } from "@utils/setTypes";
 import {
   programRepository,
@@ -125,13 +125,15 @@ const CLASSIFIABLE_WORKOUT_TYPES = new Set([
 ]);
 const MUSCLE_LOAD_PRIMARY_POINTS = 8;
 const MUSCLE_LOAD_SECONDARY_POINTS = 1;
+// The label is translated when the chart's points are built, so it follows
+// the language; the key is what the totals are stored under.
 const MUSCLE_LOAD_GROUPS = [
-  { key: "chest", label: "Chest" },
-  { key: "shoulder", label: "Shoulder" },
-  { key: "back", label: "Back" },
-  { key: "arms", label: "Arms" },
-  { key: "legs", label: "Legs" },
-  { key: "core", label: "Core" },
+  { key: "chest", labelKey: "workout.muscleLoad.chest" },
+  { key: "shoulder", labelKey: "workout.muscleLoad.shoulder" },
+  { key: "back", labelKey: "workout.muscleLoad.back" },
+  { key: "arms", labelKey: "workout.muscleLoad.arms" },
+  { key: "legs", labelKey: "workout.muscleLoad.legs" },
+  { key: "core", labelKey: "workout.muscleLoad.core" },
 ];
 const MUSCLE_LOAD_CATEGORY_BY_GROUP_KEY = {
   chest: "chest",
@@ -854,7 +856,7 @@ function normalizeRequiredId(value, label) {
   const numericValue = Number(value);
 
   if (!Number.isFinite(numericValue)) {
-    throw new Error(`${label} is required.`);
+    throw new Error(t("workout.errors.required", { label }));
   }
 
   return Math.trunc(numericValue);
@@ -1334,7 +1336,7 @@ function buildProgramWeeklyMuscleLoadSummary({
 
     return {
       key: group.key,
-      label: group.label,
+      label: t(group.labelKey),
       totalScore,
       averageScore,
       value: averageScore,
@@ -2180,15 +2182,15 @@ export async function createCustomExercise(
   const { primaryKeys } = normalizeExerciseMuscleSelection(normalizedSelection);
 
   if (normalizedExerciseName.length < 2) {
-    throw new Error("Exercise name must contain at least 2 characters.");
+    throw new Error(t("workout.errors.exerciseNameTooShort"));
   }
 
   if (normalizedExerciseName.length > 80) {
-    throw new Error("Exercise name cannot contain more than 80 characters.");
+    throw new Error(t("workout.errors.exerciseNameTooLong"));
   }
 
   if (primaryKeys.length === 0) {
-    throw new Error("Select at least one primary muscle group.");
+    throw new Error(t("workout.errors.primaryMuscleRequired"));
   }
 
   const existingExercise =
@@ -2198,7 +2200,7 @@ export async function createCustomExercise(
     );
 
   if (existingExercise) {
-    throw new Error("An exercise with this name already exists.");
+    throw new Error(t("workout.errors.exerciseExists"));
   }
 
   const exercise = await weightliftingRepository.createCustomExerciseStorage(db, {
@@ -3664,11 +3666,13 @@ export async function hydrateStrengthWorkoutDataForWorkout(
   if (shouldHydrateWorkoutExerciseData(exercises)) {
     if (targetedHydrationError || syncError) {
       throw new Error(
-        `Targeted workout hydration failed: ${
-          targetedHydrationError?.message ?? "unknown targeted hydration error"
-        }. Global strength sync failed: ${
-          syncError?.message ?? "unknown global sync error"
-        }.`
+        t("workout.errors.hydrationFailed", {
+          targeted:
+            targetedHydrationError?.message ??
+            t("workout.errors.unknownTargetedHydration"),
+          global:
+            syncError?.message ?? t("workout.errors.unknownGlobalSync"),
+        })
       );
     }
 
@@ -3895,7 +3899,7 @@ export async function reorderWorkoutExercises(db, { workoutId, exerciseIds }) {
   let didChange = false;
 
   if (orderedExerciseIds.length !== (exerciseIds ?? []).length) {
-    throw new Error("Exercise reorder payload contains an invalid exercise id.");
+    throw new Error(t("workout.errors.reorderInvalidId"));
   }
 
   await withTransaction(db, async () => {
@@ -3915,7 +3919,7 @@ export async function reorderWorkoutExercises(db, { workoutId, exerciseIds }) {
         (exerciseId) => !currentExerciseIdSet.has(exerciseId)
       )
     ) {
-      throw new Error("Exercise reorder payload does not match this workout.");
+      throw new Error(t("workout.errors.reorderMismatch"));
     }
 
     const currentOrdersById = new Map(

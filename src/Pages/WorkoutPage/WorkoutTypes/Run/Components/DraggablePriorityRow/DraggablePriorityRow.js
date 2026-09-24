@@ -4,8 +4,9 @@ import { useEffect, useRef } from "react";
 import { Animated, PanResponder, View } from "react-native";
 
 import styles from "../../RunStyle";
-import { ENDURANCE_STAT_LABELS } from "../../runEnduranceStats";
+import { ENDURANCE_STAT_LABEL_KEYS } from "../../runEnduranceStats";
 import { ThemedText } from "@resources/ThemedComponents";
+import { useTranslation } from "@localization";
 
 const STAT_PRIORITY_ROW_HEIGHT = 48;
 
@@ -18,6 +19,9 @@ const DraggablePriorityRow = ({
   quietText,
   titleColor,
 }) => {
+  const { t } = useTranslation();
+  const statKey = ENDURANCE_STAT_LABEL_KEYS[itemKey];
+  const statLabel = statKey ? t(statKey) : itemKey;
   const translateY = useRef(new Animated.Value(0)).current;
   const indexRef = useRef(index);
   const itemCountRef = useRef(itemCount);
@@ -79,11 +83,11 @@ const DraggablePriorityRow = ({
         </ThemedText>
       </View>
       <ThemedText style={styles.statPriorityLabel} setColor={titleColor}>
-        {ENDURANCE_STAT_LABELS[itemKey]}
+        {statLabel}
       </ThemedText>
       <View
         accessibilityRole="adjustable"
-        accessibilityLabel={`Reorder ${ENDURANCE_STAT_LABELS[itemKey]}`}
+        accessibilityLabel={t("run.priority.reorder", { stat: statLabel })}
         style={styles.statPriorityDragHandle}
         {...panResponder.panHandlers}
       >

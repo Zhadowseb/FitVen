@@ -10,15 +10,18 @@ import Delete from "@resources/Icons/UI-icons/Delete";
 import Time from "@resources/Icons/UI-icons/Time";
 
 import { ThemedModal, ThemedText } from "@resources/ThemedComponents";
+import { useTranslation } from "@localization";
 import styles from "./PanelSettingsModalStyle";
 
+// A labelKey is translated when the chip is drawn; RPE and 1RM % read the
+// same in every language.
 const COLUMN_CONFIG = [
-  { key: "set", label: "Set" },
-  { key: "rest", label: "Rest" },
-  { key: "reps", label: "Reps" },
-  { key: "weight", label: "Weight" },
-  { key: "done", label: "Done" },
-  { key: "note", label: "Note" },
+  { key: "set", labelKey: "workout.exercise.columns.set" },
+  { key: "rest", labelKey: "workout.exercise.columns.rest" },
+  { key: "reps", labelKey: "workout.exercise.columns.reps" },
+  { key: "weight", labelKey: "workout.exercise.columns.weight" },
+  { key: "done", labelKey: "workout.exercise.columns.done" },
+  { key: "note", labelKey: "workout.exercise.columns.note" },
   { key: "rpe", label: "RPE" },
   { key: "rm_percentage", label: "1RM %" },
 ];
@@ -33,6 +36,7 @@ export default function PanelSettingsModal({
 }) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const { t } = useTranslation();
   const primaryTextColor = theme.primaryText ?? theme.primary;
 
   const [columns, setColumns] = useState(currentColumns);
@@ -59,14 +63,14 @@ export default function PanelSettingsModal({
       visible={visible}
       onClose={handleClose}
       onDismiss={onDismiss}
-      title="Exercise settings"
+      title={t("workout.exercise.settingsTitle")}
       showCloseButton
       bottomOffset={0}
       style={styles.modal}
     >
       <View style={styles.section}>
         <ThemedText style={styles.sectionLabel} setColor={theme.text}>
-          Visible columns
+          {t("workout.exercise.visibleColumns")}
         </ThemedText>
 
         <View style={styles.chipGrid}>
@@ -97,7 +101,7 @@ export default function PanelSettingsModal({
                   style={styles.chipText}
                   setColor={isActive ? theme.primary : theme.quietText}
                 >
-                  {column.label}
+                  {column.labelKey ? t(column.labelKey) : column.label}
                 </ThemedText>
               </TouchableOpacity>
             );
@@ -107,7 +111,7 @@ export default function PanelSettingsModal({
 
       <View style={styles.section}>
         <ThemedText style={styles.sectionLabel} setColor={theme.text}>
-          Rest
+          {t("workout.exercise.rest")}
         </ThemedText>
 
         <TouchableOpacity
@@ -136,10 +140,10 @@ export default function PanelSettingsModal({
 
           <View style={styles.rowCopy}>
             <ThemedText style={styles.rowTitle} setColor={theme.title}>
-              Rest input unit
+              {t("workout.exercise.restUnit")}
             </ThemedText>
             <ThemedText style={styles.rowDetail} setColor={theme.quietText}>
-              Minutes or seconds, and whether it applies to every set
+              {t("workout.exercise.restUnitDetail")}
             </ThemedText>
           </View>
 
@@ -175,10 +179,10 @@ export default function PanelSettingsModal({
 
         <View style={styles.rowCopy}>
           <ThemedText style={styles.rowTitle} setColor={theme.danger}>
-            Delete exercise
+            {t("workout.exercise.deleteConfirm")}
           </ThemedText>
           <ThemedText style={styles.rowDetail} setColor={theme.quietText}>
-            Removes the exercise and all its sets
+            {t("workout.exercise.deleteDetail")}
           </ThemedText>
         </View>
       </TouchableOpacity>

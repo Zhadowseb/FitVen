@@ -7,11 +7,13 @@ export const DEFAULT_ENDURANCE_STAT_PRIORITY = [
   "distance",
   "pace",
 ];
-export const ENDURANCE_STAT_LABELS = {
-  time: "Time",
-  zone: "Zone",
-  distance: "Distance",
-  pace: "Pace",
+// Translation keys, looked up when the row renders. The object keys are stored
+// (stat_priority) and must stay as they are.
+export const ENDURANCE_STAT_LABEL_KEYS = {
+  time: "run.priority.stats.time",
+  zone: "run.priority.stats.zone",
+  distance: "run.priority.stats.distance",
+  pace: "run.priority.stats.pace",
 };
 
 export const normalizeEnduranceStatPriority = (value) => {

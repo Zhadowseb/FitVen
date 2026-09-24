@@ -36,6 +36,7 @@ import {
   parseCustomDate,
 } from "../../../../Utils/dateUtils";
 import StartProgramModal from "../../../ProgramOverviewPage/Components/StartProgramModal";
+import { useTranslation } from "@localization";
 
 // "Dark glass" type pill — alpha-tinted one-offs with no shared token.
 const TYPE_PILL_GLASS = {
@@ -50,12 +51,32 @@ const RESISTANCE_WORKOUT_TYPES = new Set([
   "Legs",
 ]);
 
+// Labels are keys, translated at render so they follow a language switch.
 const STATUS_FILTERS = [
-  { key: "ALL", label: "All" },
-  { key: "ACTIVE", label: "Active" },
-  { key: "COMPLETE", label: "Complete" },
-  { key: "NOT_STARTED", label: "Draft" },
+  { key: "ALL", labelKey: "programs.list.filters.all" },
+  {
+    key: "ACTIVE",
+    labelKey: "programs.list.filters.active",
+    emptyKey: "programs.list.filteredEmpty.active",
+  },
+  {
+    key: "COMPLETE",
+    labelKey: "programs.list.filters.complete",
+    emptyKey: "programs.list.filteredEmpty.complete",
+  },
+  {
+    key: "NOT_STARTED",
+    labelKey: "programs.list.filters.draft",
+    emptyKey: "programs.list.filteredEmpty.draft",
+  },
 ];
+
+// Stored workout types to their display keys; anything else shows as stored.
+const WORKOUT_TYPE_LABEL_KEYS = {
+  Resistance: "workoutStart.types.resistance",
+  Run: "workoutStart.types.run",
+  Walk: "workoutStart.types.walk",
+};
 
 function normalizeWorkoutType(type) {
   return RESISTANCE_WORKOUT_TYPES.has(type) ? "Resistance" : type;
@@ -82,6 +103,7 @@ function parseWorkoutTypes(value) {
 }
 
 const ProgramList = ({ refreshKey, onCreateProgram }) => {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const db = useSQLiteContext();
   const colorScheme = useColorScheme();
@@ -154,13 +176,13 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
       setErrorMessage(
         error instanceof Error && error.message
           ? error.message
-          : "Your programs could not be loaded."
+          : t("programs.list.loadFailed")
       );
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [db]);
+  }, [db, t]);
 
   const refreshPrograms = () => {
     setRefreshing(true);
@@ -224,10 +246,10 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
       // SPM-3: only one program runs at a time now, and the refusal names the
       // one still going. Logged to the console, the button did nothing.
       Alert.alert(
-        "Could not start the program",
+        t("programs.start.failedTitle"),
         error instanceof Error
           ? error.message
-          : "The program could not be started."
+          : t("programs.start.failedMessage")
       );
     } finally {
       setIsStartingProgram(false);
@@ -240,8 +262,9 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
     statusFilter === "ALL"
       ? programs
       : programs.filter((program) => program.status === statusFilter);
-  const activeFilterLabel =
-    STATUS_FILTERS.find((filter) => filter.key === statusFilter)?.label ?? "";
+  const activeFilterEmptyKey =
+    STATUS_FILTERS.find((filter) => filter.key === statusFilter)?.emptyKey ??
+    null;
 
   return (
     <ScrollView
@@ -298,7 +321,7 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
                   ]}
                   setColor={isSelected ? theme.ink : theme.text}
                 >
-                  {filter.label}
+                  {t(filter.labelKey)}
                 </ThemedText>
               </TouchableOpacity>
             );
@@ -308,7 +331,7 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
 
       <View style={styles.listHeader}>
         <ThemedText style={styles.listHeaderLabel} setColor={theme.quietText}>
-          Your programs
+          {t("programs.list.yourPrograms")}
         </ThemedText>
         <View
           style={[styles.countBadge, { backgroundColor: theme.chipBackground }]}
@@ -323,7 +346,7 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
         <ThemedCard style={styles.errorCard}>
           <View style={styles.errorContent}>
             <ThemedTitle type="h3" style={styles.errorTitle}>
-              Programs unavailable
+              {t("programs.list.unavailableTitle")}
             </ThemedTitle>
 
             <ThemedText style={styles.errorText} setColor={theme.quietText}>
@@ -341,7 +364,7 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
                 style={styles.errorActionText}
                 setColor={theme.textInverted ?? theme.cardBackground}
               >
-                Try again
+                {t("common.retry")}
               </ThemedText>
             </TouchableOpacity>
           </View>
@@ -418,7 +441,7 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
             )
           : 0;
         const dateRange = isDraft
-          ? "DRAFT"
+          ? t("programs.status.draftUpper")
           : getProgramDateRange(item.start_date, item.end_date);
         const workoutTypes = parseWorkoutTypes(item.workout_types);
         const primaryWorkoutType = workoutTypes[0] ?? null;
@@ -462,7 +485,7 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
 
                 {isDraft ? (
                   <StatusPill
-                    label="DRAFT"
+                    label={t("programs.status.draftUpper")}
                     color={theme.quietText}
                     backgroundColor={theme.chipBackground}
                     style={styles.statusPill}
@@ -485,12 +508,12 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
                       style={styles.statusPillLabel}
                       setColor={theme.inkOnSecondary}
                     >
-                      COMPLETE
+                      {t("programs.status.completeUpper")}
                     </ThemedText>
                   </View>
                 ) : (
                   <StatusPill
-                    label="ACTIVE"
+                    label={t("programs.status.activeUpper")}
                     color={theme.ink}
                     backgroundColor={withAlpha(theme.primary, 0.95)}
                     dotSize={5}
@@ -521,7 +544,9 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
                       setColor={cardIconColor}
                       numberOfLines={1}
                     >
-                      {primaryWorkoutType}
+                      {WORKOUT_TYPE_LABEL_KEYS[primaryWorkoutType]
+                        ? t(WORKOUT_TYPE_LABEL_KEYS[primaryWorkoutType])
+                        : primaryWorkoutType}
                     </ThemedText>
                   </View>
                 ) : null}
@@ -544,7 +569,7 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
                     setColor={theme.title}
                     numberOfLines={2}
                   >
-                    {item.program_name || "Untitled program"}
+                    {item.program_name || t("programs.list.untitled")}
                   </ThemedText>
                 </View>
 
@@ -556,7 +581,7 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
                     >
                       {item.mesocycle_count}
                     </ThemedText>{" "}
-                    {item.mesocycle_count === 1 ? "block" : "blocks"}
+                    {t("programs.list.blocksUnit", { count: item.mesocycle_count })}
                   </ThemedText>
                   <View
                     style={[
@@ -571,7 +596,7 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
                     >
                       {item.week_count}
                     </ThemedText>{" "}
-                    {item.week_count === 1 ? "week" : "weeks"}
+                    {t("programs.list.weeksUnit", { count: item.week_count })}
                   </ThemedText>
                   <View
                     style={[
@@ -587,7 +612,7 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
                       {completedWorkouts}
                     </ThemedText>
                     /{totalWorkouts}{" "}
-                    {totalWorkouts === 1 ? "workout" : "workouts"}
+                    {t("programs.list.workoutsUnit", { count: totalWorkouts })}
                   </ThemedText>
                 </View>
 
@@ -597,7 +622,7 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
                       style={styles.progressLabel}
                       setColor={theme.quietText}
                     >
-                      Progress
+                      {t("programs.list.progress")}
                     </ThemedText>
 
                     {isCompleted ? (
@@ -653,7 +678,7 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
                     style={styles.cardActionText}
                     setColor={primaryTextColor}
                   >
-                    Start program
+                    {t("programs.start.action")}
                   </ThemedText>
                 </TouchableOpacity>
               </View>
@@ -676,8 +701,8 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
                     setColor={theme.ink}
                   >
                     {todayWorkoutByProgramId[item.program_id]
-                      ? "Continue training"
-                      : "Open program"}
+                      ? t("programs.list.continueTraining")
+                      : t("programs.list.openProgram")}
                   </ThemedText>
                 </TouchableOpacity>
               </View>
@@ -697,15 +722,15 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
         <ThemedCard style={styles.emptyCard}>
           <View style={styles.emptyContent}>
             <ThemedText style={styles.emptyText} setColor={theme.quietText}>
-              No programs found.
+              {t("programs.list.emptyTitle")}
             </ThemedText>
 
             <ThemedText style={styles.emptySubtext} setColor={theme.title}>
-              Start by creating your first program.
+              {t("programs.list.emptyMessage")}
             </ThemedText>
 
             <ThemedButton
-              title="Create first program"
+              title={t("programs.list.createFirst")}
               onPress={onCreateProgram}
               fullWidth
             />
@@ -730,7 +755,7 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
             style={styles.filteredEmptyText}
             setColor={theme.quietText}
           >
-            No {activeFilterLabel.toLowerCase()} programs
+            {activeFilterEmptyKey ? t(activeFilterEmptyKey) : null}
           </ThemedText>
 
           {/* Without this the filter is a dead end: nothing on screen says how
@@ -751,7 +776,7 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
               style={styles.filteredEmptyActionText}
               setColor={primaryTextColor}
             >
-              Show all programs
+              {t("programs.list.showAll")}
             </ThemedText>
           </TouchableOpacity>
         </View>

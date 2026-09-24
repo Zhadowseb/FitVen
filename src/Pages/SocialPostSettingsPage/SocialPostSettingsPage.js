@@ -7,6 +7,7 @@ import {
   useColorScheme,
 } from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { useTranslation } from "@localization";
 
 import styles from "./SocialPostSettingsPageStyle";
 import { useAuth } from "../../Contexts/AuthContext";
@@ -25,29 +26,38 @@ import {
   ThemedView,
 } from "../../Resources/ThemedComponents";
 
+// The preview text is translated when it is drawn; the lists hold keys.
+const PREVIEW_STATS = [
+  { key: "duration", textKey: "settings.socialPosts.preview.duration" },
+  { key: "volume", text: "4 200 kg" },
+  { key: "exercises", textKey: "common.exercises", params: { count: 5 } },
+];
+
+const PREVIEW_TOP_SETS = [
+  { key: "bench", nameKey: "settings.socialPosts.preview.benchPress", set: "5 x 90 kg", record: true },
+  { key: "row", nameKey: "settings.socialPosts.preview.barbellRow", set: "8 x 70 kg", record: false },
+];
+
 const POST_MODE_OPTIONS = [
   {
     value: socialPostService.WORKOUT_SUMMARY_POST_MODES.FULL_INFO,
-    title: "Full info",
+    titleKey: "settings.socialPosts.modes.fullInfo",
     preview: {
-      stats: ["48 min", "4 200 kg", "5 exercises"],
-      topSets: [
-        { name: "Bench Press", set: "5 x 90 kg", record: true },
-        { name: "Barbell Row", set: "8 x 70 kg", record: false },
-      ],
+      stats: PREVIEW_STATS,
+      topSets: PREVIEW_TOP_SETS,
     },
   },
   {
     value: socialPostService.WORKOUT_SUMMARY_POST_MODES.SUMMARY_ONLY,
-    title: "Summary only",
+    titleKey: "settings.socialPosts.modes.summaryOnly",
     preview: {
-      stats: ["48 min", "4 200 kg", "5 exercises"],
+      stats: PREVIEW_STATS,
       topSets: [],
     },
   },
   {
     value: socialPostService.WORKOUT_SUMMARY_POST_MODES.OFF,
-    title: "Off",
+    titleKey: "settings.socialPosts.modes.off",
     preview: null,
   },
 ];
@@ -55,30 +65,28 @@ const POST_MODE_OPTIONS = [
 const POST_VISIBILITY_OPTIONS = [
   {
     value: socialPostService.WORKOUT_SUMMARY_POST_VISIBILITIES.EVERYONE,
-    title: "Everyone",
+    titleKey: "settings.socialPosts.visibility.everyone",
   },
   {
     value: socialPostService.WORKOUT_SUMMARY_POST_VISIBILITIES.FOLLOWING,
-    title: "People I follow",
+    titleKey: "settings.socialPosts.visibility.following",
   },
   {
     value: socialPostService.WORKOUT_SUMMARY_POST_VISIBILITIES.PRIVATE,
-    title: "Only me",
+    titleKey: "settings.socialPosts.visibility.private",
   },
 ];
 
-const POST_VISIBILITY_NOTE =
-  "Decides who can see your workout summary posts. Only me keeps them out of every other feed.";
-
 // A sample of the post itself, so the choice is not a word to be interpreted.
 function PostModePreview({ preview, theme }) {
+  const { t } = useTranslation();
   const quietText = theme.quietText ?? theme.text;
   const titleColor = theme.title ?? theme.text;
 
   if (!preview) {
     return (
       <ThemedText style={styles.previewEmptyText} setColor={quietText}>
-        Nothing is posted.
+        {t("settings.socialPosts.nothingPosted")}
       </ThemedText>
     );
   }
@@ -88,17 +96,17 @@ function PostModePreview({ preview, theme }) {
       <View style={styles.previewStatRow}>
         {preview.stats.map((stat) => (
           <ThemedText
-            key={stat}
+            key={stat.key}
             style={styles.previewStat}
             setColor={titleColor}
           >
-            {stat}
+            {stat.textKey ? t(stat.textKey, stat.params) : stat.text}
           </ThemedText>
         ))}
       </View>
 
       {preview.topSets.map((topSet) => (
-        <View key={topSet.name} style={styles.previewTopSetRow}>
+        <View key={topSet.key} style={styles.previewTopSetRow}>
           <View style={styles.previewStarSlot}>
             {topSet.record ? (
               <Star
@@ -114,7 +122,7 @@ function PostModePreview({ preview, theme }) {
             setColor={quietText}
             numberOfLines={1}
           >
-            {topSet.name}
+            {t(topSet.nameKey)}
           </ThemedText>
           <ThemedText style={styles.previewTopSetValue} setColor={titleColor}>
             {topSet.set}
@@ -126,6 +134,7 @@ function PostModePreview({ preview, theme }) {
 }
 
 export default function SocialPostSettingsPage() {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -182,7 +191,7 @@ export default function SocialPostSettingsPage() {
             setModeError(
               error instanceof Error
                 ? error.message
-                : "Could not load social post settings."
+                : t("settings.socialPosts.errors.load")
             );
           }
         } finally {
@@ -197,7 +206,7 @@ export default function SocialPostSettingsPage() {
       return () => {
         isCancelled = true;
       };
-    }, [user])
+    }, [t, user])
   );
 
   const selectPostMode = useCallback(
@@ -222,13 +231,13 @@ export default function SocialPostSettingsPage() {
         setModeError(
           error instanceof Error
             ? error.message
-            : "Could not save social post settings."
+            : t("settings.socialPosts.errors.save")
         );
       } finally {
         setSavingMode(null);
       }
     },
-    [savingMode, selectedMode, user]
+    [savingMode, selectedMode, t, user]
   );
 
   const selectPostVisibility = useCallback(
@@ -258,13 +267,13 @@ export default function SocialPostSettingsPage() {
         setVisibilityError(
           error instanceof Error
             ? error.message
-            : "Could not save post visibility."
+            : t("settings.socialPosts.errors.saveVisibility")
         );
       } finally {
         setSavingVisibility(null);
       }
     },
-    [savingVisibility, selectedVisibility, user]
+    [savingVisibility, selectedVisibility, t, user]
   );
 
   return (
@@ -275,14 +284,14 @@ export default function SocialPostSettingsPage() {
             size={12}
             style={[styles.pageHeaderTitleEyebrow, { color: quietText }]}
           >
-            Settings
+            {t("settings.eyebrow")}
           </ThemedText>
           <ThemedTitle
             type="pageTitle"
             style={styles.pageHeaderTitleMain}
             numberOfLines={1}
           >
-            Social posts
+            {t("settings.socialPosts.title")}
           </ThemedTitle>
         </View>
       </ThemedHeader>
@@ -293,7 +302,7 @@ export default function SocialPostSettingsPage() {
         showsVerticalScrollIndicator={false}
       >
         <ThemedText style={styles.scopeNote} setColor={quietText}>
-          Applies to all workouts
+          {t("settings.socialPosts.scopeNote")}
         </ThemedText>
 
         <ThemedCard
@@ -320,10 +329,10 @@ export default function SocialPostSettingsPage() {
 
             <View style={styles.heroCopy}>
               <ThemedTitle type="h3" style={styles.cardTitle}>
-                Workout summaries
+                {t("settings.socialPosts.summariesTitle")}
               </ThemedTitle>
               <ThemedText style={styles.cardBody} setColor={quietText}>
-                Current posting behavior for completed workouts.
+                {t("settings.socialPosts.summariesBody")}
               </ThemedText>
             </View>
           </View>
@@ -356,7 +365,7 @@ export default function SocialPostSettingsPage() {
                   >
                     <View style={styles.choiceCopy}>
                       <ThemedText style={styles.choiceTitle} setColor={titleColor}>
-                        {option.title}
+                        {t(option.titleKey)}
                       </ThemedText>
                       <View
                         style={[
@@ -420,7 +429,7 @@ export default function SocialPostSettingsPage() {
             style={styles.cardEyebrow}
             setColor={quietText}
           >
-            Visibility
+            {t("settings.socialPosts.visibilityEyebrow")}
           </ThemedText>
 
           {loadingMode ? (
@@ -451,7 +460,7 @@ export default function SocialPostSettingsPage() {
                   >
                     <View style={styles.choiceCopy}>
                       <ThemedText style={styles.choiceTitle} setColor={titleColor}>
-                        {option.title}
+                        {t(option.titleKey)}
                       </ThemedText>
                     </View>
 
@@ -484,7 +493,7 @@ export default function SocialPostSettingsPage() {
           )}
 
           <ThemedText style={styles.groupNote} setColor={quietText}>
-            {POST_VISIBILITY_NOTE}
+            {t("settings.socialPosts.visibilityNote")}
           </ThemedText>
 
           {visibilityError ? (
@@ -508,7 +517,7 @@ export default function SocialPostSettingsPage() {
             style={styles.cardEyebrow}
             setColor={quietText}
           >
-            Exercises
+            {t("settings.socialPosts.exercisesEyebrow")}
           </ThemedText>
 
           <TouchableOpacity
@@ -529,13 +538,13 @@ export default function SocialPostSettingsPage() {
                   style={styles.settingsButtonTitle}
                   setColor={titleColor}
                 >
-                  Exercise visibility
+                  {t("settings.socialPosts.exerciseVisibility")}
                 </ThemedText>
                 <ThemedText
                   style={styles.settingsButtonBody}
                   setColor={quietText}
                 >
-                  Choose which exercises can appear in top sets and PR badges.
+                  {t("settings.socialPosts.exerciseVisibilityBody")}
                 </ThemedText>
               </View>
             </View>

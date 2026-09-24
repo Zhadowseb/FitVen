@@ -20,6 +20,7 @@ import {
   getWeekStart,
 } from "../../../Utils/weekUtils";
 import styles from "./StartProgramModalStyle";
+import { useTranslation } from "@localization";
 
 function isSameDate(left, right) {
   return (
@@ -35,6 +36,7 @@ const StartProgramModal = ({
   onStart,
   isStarting = false,
 }) => {
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const currentWeek = getWeekStart(new Date());
@@ -90,13 +92,13 @@ const StartProgramModal = ({
     >
       <View style={styles.hero}>
         <ThemedText style={styles.eyebrow} setColor={accentColor}>
-          Start program
+          {t("programs.start.action")}
         </ThemedText>
         <ThemedTitle type="h3" style={styles.title}>
-          Choose a start week
+          {t("programs.start.chooseWeek")}
         </ThemedTitle>
         <ThemedText style={styles.description} setColor={quietText}>
-          The full program schedule will move to the selected week.
+          {t("programs.start.description")}
         </ThemedText>
       </View>
 
@@ -112,7 +114,7 @@ const StartProgramModal = ({
           ]}
         >
           <ThemedText style={styles.yearButtonText} setColor={accentColor}>
-            Previous
+            {t("programs.start.previousYear")}
           </ThemedText>
         </Pressable>
 
@@ -131,7 +133,7 @@ const StartProgramModal = ({
           ]}
         >
           <ThemedText style={styles.yearButtonText} setColor={accentColor}>
-            Next
+            {t("common.next")}
           </ThemedText>
         </Pressable>
       </View>
@@ -160,7 +162,7 @@ const StartProgramModal = ({
                     style={styles.weekOptionTitle}
                     setColor={selected ? accentColor : titleColor}
                   >
-                    Week {option.weekNumber}
+                    {t("programs.weekNumber", { number: option.weekNumber })}
                   </ThemedText>
 
                   {isCurrentWeek && (
@@ -174,7 +176,7 @@ const StartProgramModal = ({
                         style={styles.currentWeekBadgeText}
                         setColor={accentColor}
                       >
-                        This week
+                        {t("programs.start.thisWeek")}
                       </ThemedText>
                     </View>
                   )}
@@ -204,10 +206,13 @@ const StartProgramModal = ({
 
       <View style={styles.selectionSummary}>
         <ThemedText style={styles.selectionLabel} setColor={quietText}>
-          Selected
+          {t("programs.start.selected")}
         </ThemedText>
         <ThemedText style={styles.selectionValue} setColor={titleColor}>
-          Week {selectedWeekInfo.weekNumber}, {selectedWeekInfo.weekYear}
+          {t("programs.start.selectedWeek", {
+            number: selectedWeekInfo.weekNumber,
+            year: selectedWeekInfo.weekYear,
+          })}
         </ThemedText>
       </View>
 
@@ -225,12 +230,12 @@ const StartProgramModal = ({
           ]}
         >
           <ThemedText style={styles.cancelButtonText} setColor={titleColor}>
-            Cancel
+            {t("common.cancel")}
           </ThemedText>
         </Pressable>
 
         <ThemedButton
-          title={isStarting ? "Starting..." : "Start program"}
+          title={isStarting ? t("programs.start.starting") : t("programs.start.action")}
           disabled={isStarting}
           onPress={() => onStart(selectedWeek)}
           style={[styles.startButton, { backgroundColor: accentColor }]}

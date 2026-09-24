@@ -59,9 +59,11 @@ async function describeDeleteError(error) {
     }
 
     return new Error(
-      `${DELETE_ACCOUNT_FUNCTION} failed (${
-        response.status ?? "error"
-      }): ${body.slice(0, 300)}`
+      t("errors.auth.functionFailed", {
+        name: DELETE_ACCOUNT_FUNCTION,
+        status: response.status ?? "error",
+        body: body.slice(0, 300),
+      })
     );
   } catch {
     return error;

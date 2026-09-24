@@ -21,22 +21,24 @@ import {
 import { programService, programTransferService } from "../../Services";
 import { formatDate } from "../../Utils/dateUtils";
 import { getProgramEndDate } from "../../Utils/programUtils";
+import { useTranslation } from "@localization";
 
+// Labels are keys, translated at render so they follow a language switch.
 const STATUS_OPTIONS = [
     {
         value: "NOT_STARTED",
-        label: "Draft",
-        description: "Build the program without a start date.",
+        labelKey: "programs.status.draft",
+        descriptionKey: "programs.settings.statusDraftDescription",
     },
     {
         value: "ACTIVE",
-        label: "Active",
-        description: "Use while the program is running.",
+        labelKey: "programs.status.active",
+        descriptionKey: "programs.settings.statusActiveDescription",
     },
     {
         value: "COMPLETE",
-        label: "Complete",
-        description: "Mark the cycle finished after the final week.",
+        labelKey: "programs.status.complete",
+        descriptionKey: "programs.settings.statusCompleteDescription",
     },
 ];
 
@@ -46,6 +48,7 @@ const STATUS_OPTIONS = [
  * from putting an active program back into draft.
  */
 const ProgramSettingsPage = ({ route }) => {
+    const { t } = useTranslation();
     const db = useSQLiteContext();
     const navigation = useNavigation();
     const insets = useSafeAreaInsets();
@@ -164,10 +167,10 @@ const ProgramSettingsPage = ({ route }) => {
             // now, and the reason names the one in the way. Swallowed into the
             // console, the button would simply have done nothing.
             Alert.alert(
-                "Could not start the program",
+                t("programs.start.failedTitle"),
                 error instanceof Error
                     ? error.message
-                    : "The program could not be started."
+                    : t("programs.start.failedMessage")
             );
         } finally {
             setIsStartingProgram(false);
@@ -187,16 +190,16 @@ const ProgramSettingsPage = ({ route }) => {
             );
 
             Alert.alert(
-                "Program exported",
+                t("programs.settings.exportedTitle"),
                 result.shared
-                    ? `${result.programName} is ready to share.`
-                    : `${result.fileName} was created on this device.`
+                    ? t("programs.settings.exportedShared", { name: result.programName })
+                    : t("programs.settings.exportedLocal", { fileName: result.fileName })
             );
         } catch (error) {
             console.error("Program export failed:", error);
             Alert.alert(
-                "Export failed",
-                error?.message ?? "The program file could not be created."
+                t("programs.settings.exportFailedTitle"),
+                error?.message ?? t("programs.settings.exportFailedMessage")
             );
         } finally {
             setIsExportingProgram(false);
@@ -230,7 +233,7 @@ const ProgramSettingsPage = ({ route }) => {
                     ]}>
                     <TouchableOpacity
                         accessibilityRole="button"
-                        accessibilityLabel="Go back"
+                        accessibilityLabel={t("common.goBack")}
                         hitSlop={12}
                         style={styles.headerBack}
                         onPress={() => navigation.goBack()}>
@@ -242,7 +245,7 @@ const ProgramSettingsPage = ({ route }) => {
                             style={styles.headerTitle}
                             setColor={theme.title}
                             numberOfLines={1}>
-                            Program settings
+                            {t("programs.settings.title")}
                         </ThemedText>
                     </View>
 
@@ -265,7 +268,7 @@ const ProgramSettingsPage = ({ route }) => {
                             style={styles.section_header_eyebrow}
                             setColor={theme.text}
                             numberOfLines={1}>
-                            {(program_name ?? "").trim() || "Program"}
+                            {(program_name ?? "").trim() || t("programs.fallbackName")}
                         </ThemedText>
 
                         <View
@@ -280,7 +283,7 @@ const ProgramSettingsPage = ({ route }) => {
                                 <ThemedText
                                     style={styles.settings_status_label}
                                     setColor={theme.quietText}>
-                                    Program status
+                                    {t("programs.settings.status")}
                                 </ThemedText>
                             </View>
 
@@ -322,12 +325,12 @@ const ProgramSettingsPage = ({ route }) => {
                                             <ThemedText
                                                 style={styles.settings_status_title}
                                                 setColor={theme.title}>
-                                                {option.label}
+                                                {t(option.labelKey)}
                                             </ThemedText>
                                             <ThemedText
                                                 style={styles.settings_status_description}
                                                 setColor={theme.quietText}>
-                                                {option.description}
+                                                {t(option.descriptionKey)}
                                             </ThemedText>
                                         </View>
                                     </TouchableOpacity>
@@ -345,7 +348,7 @@ const ProgramSettingsPage = ({ route }) => {
                                 <ThemedText
                                     style={styles.settings_name_label}
                                     setColor={theme.quietText}>
-                                    Program name
+                                    {t("programs.fields.name")}
                                 </ThemedText>
 
                                 <View
@@ -390,7 +393,7 @@ const ProgramSettingsPage = ({ route }) => {
                                 <ThemedText
                                     style={styles.settings_name_label}
                                     setColor={theme.quietText}>
-                                    Period
+                                    {t("programs.settings.period")}
                                 </ThemedText>
 
                                 <View
@@ -405,12 +408,12 @@ const ProgramSettingsPage = ({ route }) => {
                                         <ThemedText
                                             style={styles.settings_period_label}
                                             setColor={theme.quietText}>
-                                            Start
+                                            {t("programs.settings.start")}
                                         </ThemedText>
                                         <ThemedText
                                             style={styles.settings_period_value}
                                             setColor={theme.title}>
-                                            {isNotStarted ? "Not scheduled" : start_date}
+                                            {isNotStarted ? t("programs.settings.notScheduled") : start_date}
                                         </ThemedText>
                                     </View>
 
@@ -425,12 +428,12 @@ const ProgramSettingsPage = ({ route }) => {
                                         <ThemedText
                                             style={styles.settings_period_label}
                                             setColor={theme.quietText}>
-                                            End
+                                            {t("programs.settings.end")}
                                         </ThemedText>
                                         <ThemedText
                                             style={styles.settings_period_value}
                                             setColor={theme.title}>
-                                            {isNotStarted ? "Not scheduled" : end_date || "-"}
+                                            {isNotStarted ? t("programs.settings.notScheduled") : end_date || "-"}
                                         </ThemedText>
                                     </View>
                                 </View>
@@ -447,7 +450,7 @@ const ProgramSettingsPage = ({ route }) => {
                                 <ThemedText
                                     style={styles.settings_name_label}
                                     setColor={theme.quietText}>
-                                    Export
+                                    {t("programs.settings.export")}
                                 </ThemedText>
 
                                 <TouchableOpacity
@@ -475,12 +478,12 @@ const ProgramSettingsPage = ({ route }) => {
                                         <ThemedText
                                             style={styles.settings_export_title}
                                             setColor={theme.title}>
-                                            {isExportingProgram ? "Exporting..." : "Export program"}
+                                            {isExportingProgram ? t("programs.settings.exporting") : t("programs.settings.exportProgram")}
                                         </ThemedText>
                                         <ThemedText
                                             style={styles.settings_export_description}
                                             setColor={theme.quietText}>
-                                            FitVen program file
+                                            {t("programs.settings.exportFileDescription")}
                                         </ThemedText>
                                     </View>
                                 </TouchableOpacity>
@@ -492,7 +495,7 @@ const ProgramSettingsPage = ({ route }) => {
                         <ThemedText
                             style={styles.section_header_eyebrow}
                             setColor={theme.danger}>
-                            Danger zone
+                            {t("programs.settings.dangerZone")}
                         </ThemedText>
 
                         <TouchableOpacity
@@ -517,12 +520,12 @@ const ProgramSettingsPage = ({ route }) => {
                                 <ThemedText
                                     style={styles.settings_export_title}
                                     setColor={theme.danger}>
-                                    Delete program
+                                    {t("programs.settings.delete")}
                                 </ThemedText>
                                 <ThemedText
                                     style={styles.settings_export_description}
                                     setColor={theme.quietText}>
-                                    Removes the full program structure
+                                    {t("programs.settings.deleteDescription")}
                                 </ThemedText>
                             </View>
                         </TouchableOpacity>
@@ -533,9 +536,9 @@ const ProgramSettingsPage = ({ route }) => {
 
             <ThemedConfirmModal
                 visible={deleteConfirmModal_visible}
-                title="Delete program?"
-                message="This removes the full program structure and cannot be undone."
-                confirmLabel={isDeletingProgram ? "Deleting..." : "Delete program"}
+                title={t("programs.settings.deleteConfirmTitle")}
+                message={t("programs.settings.deleteConfirmMessage")}
+                confirmLabel={isDeletingProgram ? t("programs.deleting") : t("programs.settings.delete")}
                 tone="danger"
                 isWorking={isDeletingProgram}
                 onConfirm={deleteProgram}

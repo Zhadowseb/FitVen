@@ -21,16 +21,17 @@ import Cross from "../Icons/UI-icons/Cross";
 import ReplayHistory from "../Icons/UI-icons/ReplayHistory";
 import Calender from "../Icons/UI-icons/Calender";
 import { programService } from "../../Services";
+import { useTranslation } from "@localization";
 
 const noop = () => {};
 
 const STEPS = ["program", "block", "week", "day"];
 
-const STEP_LABELS = {
-  program: "Choose a program",
-  block: "Choose a block",
-  week: "Choose a week",
-  day: "Choose a day",
+const STEP_LABEL_KEYS = {
+  program: "workout.repeat.steps.program",
+  block: "workout.repeat.steps.block",
+  week: "workout.repeat.steps.week",
+  day: "workout.repeat.steps.day",
 };
 
 function formatDayDate(date) {
@@ -54,6 +55,7 @@ export default function RepeatWorkoutSheet({
   const theme = Colors[colorScheme] ?? Colors.light;
   const primaryTextColor = theme.primaryText ?? theme.primary;
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
 
   const [mode, setMode] = useState("choice");
   const [step, setStep] = useState("program");
@@ -178,27 +180,32 @@ export default function RepeatWorkoutSheet({
 
   const getOptionLabel = (option) => {
     if (step === "program") {
-      return option.program_name ?? "Untitled program";
+      return option.program_name ?? t("workout.repeat.untitledProgram");
     }
 
     if (step === "block") {
-      return `Block ${option.mesocycle_number}`;
+      return t("workout.program.block", { number: option.mesocycle_number });
     }
 
     if (step === "week") {
-      return `Week ${option.microcycle_number}`;
+      return t("workout.program.week", { number: option.microcycle_number });
     }
 
-    return option.Weekday ?? "Day";
+    return option.Weekday ?? t("workout.repeat.day");
   };
 
   const getOptionDetail = (option) => {
     if (step === "program") {
-      return option.status === "ACTIVE" ? "Active" : option.status ?? "";
+      return option.status === "ACTIVE"
+        ? t("workout.repeat.active")
+        : option.status ?? "";
     }
 
     if (step === "block") {
-      return option.focus ?? `${option.weeks ?? "?"} weeks`;
+      return (
+        option.focus ??
+        t("workout.repeat.weeks", { count: option.weeks ?? "?" })
+      );
     }
 
     if (step === "week") {
@@ -211,8 +218,12 @@ export default function RepeatWorkoutSheet({
   const styles = createStyles(theme);
   const breadcrumb = [
     selection.program?.program_name,
-    selection.block ? `Block ${selection.block.mesocycle_number}` : null,
-    selection.week ? `Week ${selection.week.microcycle_number}` : null,
+    selection.block
+      ? t("workout.program.block", { number: selection.block.mesocycle_number })
+      : null,
+    selection.week
+      ? t("workout.program.week", { number: selection.week.microcycle_number })
+      : null,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -234,7 +245,7 @@ export default function RepeatWorkoutSheet({
             {mode === "plan" ? (
               <TouchableOpacity
                 accessibilityRole="button"
-                accessibilityLabel="Go back"
+                accessibilityLabel={t("common.goBack")}
                 onPress={handleBack}
                 style={styles.headerButton}
               >
@@ -246,16 +257,18 @@ export default function RepeatWorkoutSheet({
 
             <View style={styles.headerCopy}>
               <ThemedText style={styles.eyebrow} numberOfLines={1}>
-                {workout?.label ?? "Workout"}
+                {workout?.label ?? t("workout.page.fallbackTitle")}
               </ThemedText>
               <ThemedText style={styles.title} numberOfLines={1}>
-                {mode === "choice" ? "Repeat workout" : STEP_LABELS[step]}
+                {mode === "choice"
+                  ? t("workout.repeat.title")
+                  : t(STEP_LABEL_KEYS[step])}
               </ThemedText>
             </View>
 
             <TouchableOpacity
               accessibilityRole="button"
-              accessibilityLabel="Close"
+              accessibilityLabel={t("common.close")}
               onPress={onClose}
               style={styles.headerButton}
             >
@@ -276,9 +289,9 @@ export default function RepeatWorkoutSheet({
                   <ReplayHistory width={18} height={18} color={primaryTextColor} />
                 </View>
                 <View style={styles.choiceCopy}>
-                  <ThemedText style={styles.choiceTitle}>Start</ThemedText>
+                  <ThemedText style={styles.choiceTitle}>{t("workout.repeat.start")}</ThemedText>
                   <ThemedText style={styles.choiceSubtitle}>
-                    Copy it to today and open it right away.
+                    {t("workout.repeat.startDetail")}
                   </ThemedText>
                 </View>
                 {isWorking ? (
@@ -304,9 +317,9 @@ export default function RepeatWorkoutSheet({
                   <Calender width={18} height={18} color={theme.quietText} />
                 </View>
                 <View style={styles.choiceCopy}>
-                  <ThemedText style={styles.choiceTitle}>Plan</ThemedText>
+                  <ThemedText style={styles.choiceTitle}>{t("workout.repeat.plan")}</ThemedText>
                   <ThemedText style={styles.choiceSubtitle}>
-                    Pick a program, block, week and day.
+                    {t("workout.repeat.planDetail")}
                   </ThemedText>
                 </View>
                 <ChevronRight
@@ -370,7 +383,7 @@ export default function RepeatWorkoutSheet({
               ) : (
                 <View style={styles.stateBlock}>
                   <ThemedText style={styles.optionDetail}>
-                    Nothing to choose from here.
+                    {t("workout.repeat.empty")}
                   </ThemedText>
                 </View>
               )}

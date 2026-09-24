@@ -42,6 +42,7 @@ import {
 } from "@services";
 import { useAuth } from "../../../../Contexts/AuthContext";
 import { useExerciseViewSettings } from "../../../../Contexts/ExerciseViewSettingsContext";
+import { useTranslation } from "@localization";
 
 //Icons:
 import Checkmark from "../../../../Resources/Icons/UI-icons/Checkmark";
@@ -65,6 +66,7 @@ const Resistance = ({
   const theme = Colors[colorScheme] ?? Colors.light;
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
 
   const db = useSQLiteContext();
   const { user } = useAuth();
@@ -421,11 +423,11 @@ const Resistance = ({
 
   const summaryLine = (summary) =>
     summary
-      ? `${summary.duration} · ${summary.sets} ${
-          summary.sets === 1 ? "set" : "sets"
-        } across ${summary.exercises} ${
-          summary.exercises === 1 ? "exercise" : "exercises"
-        }`
+      ? t("workout.session.summary", {
+          duration: summary.duration,
+          sets: t("common.sets", { count: summary.sets }),
+          exercises: t("common.exercises", { count: summary.exercises }),
+        })
       : "";
 
   // Posting used to happen silently on finish. Now the user is asked, unless
@@ -514,10 +516,10 @@ const Resistance = ({
   const resolvedDoneSets = Math.max(Number(doneSets) || 0, 0);
 
   const primaryActionTitle = isRunning
-    ? "Pause"
+    ? t("workout.session.pause")
     : original_start_time !== null
-      ? "Continue"
-      : "Start";
+      ? t("workout.session.continue")
+      : t("workout.session.start");
   const primaryActionHandler = isRunning ? pauseWorkout : startWorkout;
   const showFinishButton = !isDone && original_start_time !== null;
 
@@ -589,7 +591,9 @@ const Resistance = ({
       : primaryTimerDisplay.length >= 7
         ? 42
         : 52;
-  const secondaryTimerLabel = isResting ? "Total" : "Rest";
+  const secondaryTimerLabel = isResting
+    ? t("workout.session.timerTotal")
+    : t("workout.session.timerRest");
   const secondaryTimerDisplay = isResting ? elapsedDisplay : restDisplay;
 
   const setsProgress =
@@ -630,7 +634,7 @@ const Resistance = ({
         <View style={styles.navRow}>
           <TouchableOpacity
             accessibilityRole="button"
-            accessibilityLabel="Go back"
+            accessibilityLabel={t("common.goBack")}
             hitSlop={10}
             onPress={() => navigation.goBack()}
             style={[styles.navButton, { backgroundColor: navButtonBackground }]}
@@ -643,7 +647,7 @@ const Resistance = ({
             setColor={titleColor}
             numberOfLines={1}
           >
-            {workoutLabel ?? "Workout"}
+            {workoutLabel ?? t("workout.page.fallbackTitle")}
           </ThemedText>
 
           {/* SPM-1: a strength workout names itself after the exercises put
@@ -655,13 +659,13 @@ const Resistance = ({
               training, and the workout's name is the thing worth the space. */}
           {autoNamedLabel ? (
             <ThemedText style={styles.navDate} setColor={primaryTextColor} numberOfLines={1}>
-              {`Named ${autoNamedLabel} after your exercises`}
+              {t("workout.session.autoNamed", { name: autoNamedLabel })}
             </ThemedText>
           ) : null}
 
           <TouchableOpacity
             accessibilityRole="button"
-            accessibilityLabel="Workout options"
+            accessibilityLabel={t("workout.session.options")}
             hitSlop={10}
             onPress={onOpenOptions}
             style={[styles.navButton, { backgroundColor: navButtonBackground }]}
@@ -701,7 +705,7 @@ const Resistance = ({
 
             <View style={styles.timerMetaRow}>
               <ThemedText style={styles.timerMetaLabel} setColor={quietText}>
-                Sets
+                {t("workout.session.sets")}
               </ThemedText>
               <ThemedText style={styles.timerMetaValue} setColor={primaryTextColor}>
                 {resolvedDoneSets}
@@ -748,7 +752,7 @@ const Resistance = ({
                 <TouchableOpacity
                   activeOpacity={0.86}
                   accessibilityRole="button"
-                  accessibilityLabel="Finish workout"
+                  accessibilityLabel={t("workout.session.finish")}
                   onPress={confirmEndWorkout}
                   style={[
                     styles.timerActionButton,
@@ -790,7 +794,7 @@ const Resistance = ({
         <View style={styles.toolbar}>
           <View style={styles.toolbarLabel}>
             <ThemedText style={styles.toolbarLabelText} setColor={quietText}>
-              Exercises:{" "}
+              {t("workout.session.exercisesLabel")}{" "}
               <ThemedText style={styles.toolbarLabelNumber} setColor={primaryTextColor}>
                 {exerciseCount}
               </ThemedText>
@@ -802,7 +806,9 @@ const Resistance = ({
               accessibilityRole="button"
               accessibilityState={{ selected: showCollapsedSets }}
               accessibilityLabel={
-                showCollapsedSets ? "Hide set details" : "Show set details"
+                showCollapsedSets
+                  ? t("workout.session.hideSetDetails")
+                  : t("workout.session.showSetDetails")
               }
               onPress={() => setShowCollapsedSets((current) => !current)}
               style={[
@@ -861,8 +867,8 @@ const Resistance = ({
               accessibilityState={{ selected: showCompletedExercises }}
               accessibilityLabel={
                 showCompletedExercises
-                  ? "Hide finished exercises"
-                  : "Show finished exercises"
+                  ? t("workout.session.hideFinishedExercises")
+                  : t("workout.session.showFinishedExercises")
               }
               onPress={() => setShowCompletedExercises((current) => !current)}
               style={[
@@ -911,9 +917,9 @@ const Resistance = ({
 
       <ThemedConfirmModal
         visible={finishConfirmVisible}
-        title="Finish workout?"
-        message="This will mark the workout as complete."
-        confirmLabel="Finish"
+        title={t("workout.session.finishTitle")}
+        message={t("workout.session.finishMessage")}
+        confirmLabel={t("workout.session.finishConfirm")}
         tone="positive"
         onConfirm={() => {
           setFinishConfirmVisible(false);
@@ -924,14 +930,14 @@ const Resistance = ({
 
       <ThemedConfirmModal
         visible={allSetsDoneConfirmVisible}
-        title="All sets are done"
+        title={t("workout.session.allDoneTitle")}
         message={
           isRunning
-            ? "Stop the timer and finish the workout?"
-            : "Finish the workout?"
+            ? t("workout.session.allDoneStopTimer")
+            : t("workout.session.allDoneFinish")
         }
-        confirmLabel="Finish workout"
-        cancelLabel="Keep going"
+        confirmLabel={t("workout.session.finish")}
+        cancelLabel={t("workout.session.keepGoing")}
         tone="positive"
         onConfirm={() => {
           setAllSetsDoneConfirmVisible(false);
@@ -942,12 +948,12 @@ const Resistance = ({
 
       <ThemedConfirmModal
         visible={postConfirmVisible}
-        title="Workout finished"
-        message={`${summaryLine(
-          finishedSummary
-        )}. Post it to your feed so the people who follow you can see it?`}
-        confirmLabel="Post it"
-        cancelLabel="Keep it private"
+        title={t("workout.session.finishedTitle")}
+        message={t("workout.session.postMessage", {
+          summary: summaryLine(finishedSummary),
+        })}
+        confirmLabel={t("workout.session.postConfirm")}
+        cancelLabel={t("workout.session.keepPrivate")}
         tone="positive"
         onConfirm={postWorkoutSummary}
         onClose={() => setPostConfirmVisible(false)}
@@ -955,7 +961,7 @@ const Resistance = ({
         <ThemedTextInput
           value={postNote}
           onChangeText={setPostNote}
-          placeholder="Add a note (optional)"
+          placeholder={t("workout.session.postNotePlaceholder")}
           multiline
           inputStyle={styles.postNoteInput}
         />
@@ -963,9 +969,9 @@ const Resistance = ({
 
       <ThemedConfirmModal
         visible={finishedSummaryVisible}
-        title="Workout finished"
+        title={t("workout.session.finishedTitle")}
         message={summaryLine(finishedSummary)}
-        confirmLabel="Done"
+        confirmLabel={t("common.done")}
         cancelLabel=""
         tone="positive"
         onConfirm={() => setFinishedSummaryVisible(false)}
@@ -974,10 +980,10 @@ const Resistance = ({
 
       <ThemedConfirmModal
         visible={startTimerConfirmVisible}
-        title="Start the timer?"
-        message="You just completed a set, but the workout timer has not been started."
-        confirmLabel="Start timer"
-        cancelLabel="Not now"
+        title={t("workout.session.startTimerTitle")}
+        message={t("workout.session.startTimerMessage")}
+        confirmLabel={t("workout.session.startTimerConfirm")}
+        cancelLabel={t("workout.session.notNow")}
         tone="positive"
         onConfirm={() => {
           setStartTimerConfirmVisible(false);

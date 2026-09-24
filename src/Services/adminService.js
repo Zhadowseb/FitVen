@@ -10,6 +10,7 @@
 // The sums live in `@utils/devDashboard`, which a test can load; this file
 // imports the Supabase client and therefore react-native, and nothing that
 // does can be driven by `npm test`.
+import { t } from "@localization";
 import { supabase } from "@database/supaBaseClient";
 import {
   DEFAULT_DEV_DASHBOARD_PERIOD,
@@ -242,7 +243,7 @@ export async function getUnreadFeedbackCount() {
  */
 export async function setFeedbackStatus(id, status) {
   if (!FEEDBACK_STATUSES.includes(status)) {
-    throw new Error(`Unknown feedback status: ${status}`);
+    throw new Error(t("errors.admin.unknownFeedbackStatus", { status }));
   }
 
   const { error } = await supabase

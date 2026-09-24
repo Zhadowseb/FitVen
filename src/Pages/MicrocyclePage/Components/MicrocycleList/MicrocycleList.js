@@ -30,11 +30,12 @@ import {
   useGridPalette,
 } from "../BlockWeekGrid/BlockWeekGrid";
 import gridStyles from "../BlockWeekGrid/BlockWeekGridStyle";
-import { getWorkoutIconConfig } from "../../../../Resources/Icons/WorkoutLabels";
+import { getWorkoutIconConfig, getWorkoutIconShortLabel } from "../../../../Resources/Icons/WorkoutLabels";
 import PickWorkoutModal from "../../../../Resources/Components/PickWorkoutModal/PickWorkoutModal";
 
 import styles from "./MicrocycleListStyle";
 import { programService } from "../../../../Services";
+import { useTranslation } from "@localization";
 
 import {
         ThemedText,
@@ -51,19 +52,20 @@ import {
   SICKNESS_TYPES,
 } from "../../../../Resources/Images/sicknessTypes";
 
-const MONTH_SHORT_LABELS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
+// Translated at render, so the range follows a language switch.
+const MONTH_SHORT_KEYS = [
+  "programs.monthsShort.jan",
+  "programs.monthsShort.feb",
+  "programs.monthsShort.mar",
+  "programs.monthsShort.apr",
+  "programs.monthsShort.may",
+  "programs.monthsShort.jun",
+  "programs.monthsShort.jul",
+  "programs.monthsShort.aug",
+  "programs.monthsShort.sep",
+  "programs.monthsShort.oct",
+  "programs.monthsShort.nov",
+  "programs.monthsShort.dec",
 ];
 
 const DROPDOWN_WIDTH = 214;
@@ -71,7 +73,7 @@ const DROPDOWN_SCREEN_MARGIN = 18;
 const DROPDOWN_GAP = 6;
 
 /** "22.06.2026" + "28.06.2026" -> "Jun 22 - 28", across months "Jun 29 - Jul 5". */
-function formatWeekRange(startLabel, endLabel) {
+function formatWeekRange(startLabel, endLabel, t) {
   const start = String(startLabel ?? "").split(".");
   const end = String(endLabel ?? "").split(".");
 
@@ -79,14 +81,25 @@ function formatWeekRange(startLabel, endLabel) {
     return "";
   }
 
-  const startMonth = MONTH_SHORT_LABELS[Number(start[1]) - 1] ?? "";
-  const endMonth = MONTH_SHORT_LABELS[Number(end[1]) - 1] ?? "";
+  const startMonthKey = MONTH_SHORT_KEYS[Number(start[1]) - 1];
+  const endMonthKey = MONTH_SHORT_KEYS[Number(end[1]) - 1];
+  const startMonth = startMonthKey ? t(startMonthKey) : "";
+  const endMonth = endMonthKey ? t(endMonthKey) : "";
   const startDay = Number(start[0]);
   const endDay = Number(end[0]);
 
-  return startMonth === endMonth
-    ? `${startMonth} ${startDay} - ${endDay}`
-    : `${startMonth} ${startDay} - ${endMonth} ${endDay}`;
+  return startMonthKey === endMonthKey
+    ? t("programs.weekRange.sameMonth", {
+        month: startMonth,
+        start: startDay,
+        end: endDay,
+      })
+    : t("programs.weekRange.acrossMonths", {
+        startMonth,
+        start: startDay,
+        endMonth,
+        end: endDay,
+      });
 }
 
 const DAY_CONTEXT_MENU_WIDTH = 266;
@@ -164,6 +177,7 @@ const MicrocycleList = ({
   refreshKey,
   updateui,
 }) => {
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -283,7 +297,7 @@ const MicrocycleList = ({
           return {
             key: workout.workout_id,
             icon: found?.Icon ?? null,
-            iconLabel: found?.short ?? workout.label ?? workoutType,
+            iconLabel: getWorkoutIconShortLabel(found) ?? workout.label ?? workoutType,
             completed: workoutCompleted,
             hasPersonalRecord: Number(workout.has_personal_record) === 1,
             sickCompleted: sick && workoutCompleted,
@@ -445,12 +459,12 @@ const MicrocycleList = ({
 
   const confirmDeleteMicrocycle = (microcycleId) => {
     Alert.alert(
-      "Delete week?",
-      "This removes the week and all workouts inside it.",
+      t("programs.weeks.deleteConfirmTitle"),
+      t("programs.weeks.deleteConfirmMessage"),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("common.cancel"), style: "cancel" },
         {
-          text: "Delete week",
+          text: t("programs.weeks.delete"),
           style: "destructive",
           onPress: () => {
             void deleteMicrocycle(microcycleId);
@@ -588,12 +602,12 @@ const MicrocycleList = ({
 
   const confirmDeleteWorkout = (workoutId) => {
     Alert.alert(
-      "Delete workout?",
-      "This removes the workout and all sets saved inside it.",
+      t("programs.days.deleteWorkoutConfirmTitle"),
+      t("programs.days.deleteWorkoutConfirmMessage"),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("common.cancel"), style: "cancel" },
         {
-          text: "Delete workout",
+          text: t("programs.days.deleteWorkout"),
           style: "destructive",
           onPress: () => {
             void deleteWorkout(workoutId);
@@ -870,24 +884,30 @@ const MicrocycleList = ({
 
   const renderItem = ({ item }) => {
     const days = weekSummaries[item.microcycle_id] ?? buildWeekdayIndicators(item);
-    const focusLabel = (item.focus ?? "").trim();
-    const hasFocus = focusLabel !== "" && focusLabel !== "No focus set";
+    // The stored defaults ("No focus set", "No focus") read as no focus; a
+    // real focus is shown translated when it is one of the picker's values.
+    const hasFocus = !programService.isDefaultFocus(item.focus);
+    const focusLabel = hasFocus
+      ? programService.getFocusLabel(item.focus, t)
+      : t("programs.focus.noFocus");
     const isCurrentWeek = days.some((day) => day.active);
 
     return (
       <View style={gridStyles.weekRow}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`Week ${item.microcycle_number} options`}
+          accessibilityLabel={t("programs.weeks.optionsLabel", {
+            number: item.microcycle_number,
+          })}
           onLongPress={() => {
             set_selectedWeek(item);
             set_OptionsBottomsheet_visible(true);
           }}
         >
           <WeekBand
-            weekLabel={`Week ${item.microcycle_number}`}
-            focusLabel={hasFocus ? focusLabel : "No focus"}
-            dateRange={formatWeekRange(item.period_start, item.period_end)}
+            weekLabel={t("programs.weekNumber", { number: item.microcycle_number })}
+            focusLabel={focusLabel}
+            dateRange={formatWeekRange(item.period_start, item.period_end, t)}
             isCurrentWeek={isCurrentWeek}
             palette={palette}
           />
@@ -904,7 +924,7 @@ const MicrocycleList = ({
             <Pressable
               key={`${item.microcycle_id}-${day.day}`}
               accessibilityRole="button"
-              accessibilityLabel={`${day.day} ${day.dateLabel}`}
+              accessibilityLabel={`${programService.getWeekdayName(day.day, t)} ${day.dateLabel}`}
               hitSlop={{ top: 2, bottom: 2, left: 2, right: 2 }}
               style={gridStyles.cellSlot}
               onPress={(event) => handleDayCellPress(day, event)}
@@ -973,7 +993,9 @@ const MicrocycleList = ({
               style={gridStyles.dropdownCount}
               setColor={palette.quietText}
             >
-              {`${(workoutDropdown?.day?.workouts ?? []).length} workouts`}
+              {t("common.workouts", {
+                count: (workoutDropdown?.day?.workouts ?? []).length,
+              })}
             </ThemedText>
           </View>
 
@@ -1027,7 +1049,9 @@ const MicrocycleList = ({
                       setColor={rowColor}
                       numberOfLines={1}
                     >
-                      {card.completed ? "Completed" : "Planned"}
+                      {card.completed
+                        ? t("programs.days.completed")
+                        : t("programs.days.planned")}
                     </ThemedText>
                   </View>
 
@@ -1053,29 +1077,23 @@ const MicrocycleList = ({
       >
 
           <ThemedTitle type={"h3"} style={{flex: 10}}> 
-            Week {selectedWeek.microcycle_number}
+            {t("programs.weekNumber", { number: selectedWeek.microcycle_number })}
           </ThemedTitle>
 
           <View style={styles.focus}>
-            <ThemedText> Change Focus </ThemedText>
+            <ThemedText> {t("programs.focus.change")} </ThemedText>
 
             <ThemedPicker
               value={selectedWeek.focus}
               onChange={ (newFocus) => {
                 updateFocus(selectedWeek.microcycle_id, newFocus);
               }}
-              placeholder="Focus"
-              title="Select week focus"
-              items={[
-                "Progressive Overload",
-                "Volume",
-                "Intensity",
-                "Technique",
-                "Speed / Power",
-                "Easy / Recovery",
-                "Deload",
-                "Max Test",
-              ]}
+              placeholder={t("programs.focus.placeholder")}
+              title={t("programs.focus.selectWeekFocus")}
+              items={programService.getFocusPickerItems(
+                programService.WEEK_FOCUS_OPTIONS,
+                t
+              )}
             />
           </View>
       </View>
@@ -1093,7 +1111,7 @@ const MicrocycleList = ({
                   width={24}
                   height={24}/>
               <ThemedText style={styles.option_text}>
-                  Copy workouts to another week
+                  {t("programs.weeks.copyToAnotherWeek")}
               </ThemedText>
 
           </TouchableOpacity>
@@ -1109,7 +1127,7 @@ const MicrocycleList = ({
                   width={24}
                   height={24}/>
               <ThemedText style={styles.option_text}>
-                  Delete week
+                  {t("programs.weeks.delete")}
               </ThemedText>
 
           </TouchableOpacity>
@@ -1209,7 +1227,9 @@ const MicrocycleList = ({
               setColor={theme.title ?? theme.text}
               numberOfLines={1}
             >
-              {selectedDay?.day ?? "Day options"}
+              {selectedDay?.day
+                ? programService.getWeekdayName(selectedDay.day, t)
+                : t("programs.days.options")}
             </ThemedText>
           </View>
 
@@ -1217,7 +1237,7 @@ const MicrocycleList = ({
             <DayContextMenuAction
               Icon={MenuAddIcon}
               iconColor={theme.primary}
-              label="Add new workout"
+              label={t("programs.days.addWorkout")}
               onPress={addWorkoutToSelectedDay}
               textColor={theme.primary}
             />
@@ -1225,7 +1245,11 @@ const MicrocycleList = ({
             <DayContextMenuAction
               Icon={Thermostat}
               iconColor={sickColor}
-              label={selectedDay?.isSick ? "Clear sick day" : "Mark as sick"}
+              label={
+                selectedDay?.isSick
+                  ? t("programs.days.clearSick")
+                  : t("programs.days.markSick")
+              }
               onPress={markSelectedDaySick}
               textColor={sickColor}
             />
@@ -1234,7 +1258,7 @@ const MicrocycleList = ({
               <DayContextMenuAction
                 Icon={MenuCopyIcon}
                 iconColor={theme.title ?? theme.text}
-                label="Copy workout to a different day"
+                label={t("programs.days.copyWorkout")}
                 onPress={copySelectedDayWorkout}
                 textColor={theme.title ?? theme.text}
               />
@@ -1244,7 +1268,7 @@ const MicrocycleList = ({
               <DayContextMenuAction
                 Icon={MenuDeleteIcon}
                 iconColor={theme.danger}
-                label="Delete workout"
+                label={t("programs.days.deleteWorkout")}
                 onPress={deleteSelectedDayWorkout}
                 textColor={theme.danger}
               />
@@ -1257,7 +1281,7 @@ const MicrocycleList = ({
     <ThemedModal
       visible={sickContinuationVisible}
       onClose={closeSickContinuationPrompt}
-      title="Continue sickness?"
+      title={t("programs.sickness.continueTitle")}
       style={[
         styles.sickContinuationModal,
         {
@@ -1271,8 +1295,11 @@ const MicrocycleList = ({
         setColor={modalQuietColor}
       >
         {pendingSickDay?.previousSickDate
-          ? `${pendingSickDay.previousSickDate} is already marked as sick. Should ${pendingSickDay.date} belong to the same sickness period?`
-          : "The previous day is already marked as sick. Should this day belong to the same sickness period?"}
+          ? t("programs.sickness.continueMessage", {
+              previousDate: pendingSickDay.previousSickDate,
+              date: pendingSickDay.date,
+            })
+          : t("programs.sickness.continueMessageGeneric")}
       </ThemedText>
 
       <View style={styles.sickContinuationButtonRow}>
@@ -1290,7 +1317,7 @@ const MicrocycleList = ({
             style={styles.sickContinuationButtonText}
             setColor={modalTitleColor}
           >
-            No, new sickness
+            {t("programs.sickness.newPeriod")}
           </ThemedText>
         </TouchableOpacity>
 
@@ -1310,7 +1337,7 @@ const MicrocycleList = ({
             style={styles.sickContinuationButtonText}
             setColor={modalInvertedColor}
           >
-            Yes, continue
+            {t("programs.sickness.continuePeriod")}
           </ThemedText>
         </TouchableOpacity>
       </View>
@@ -1319,7 +1346,7 @@ const MicrocycleList = ({
     <ThemedModal
       visible={sicknessDetailsVisible}
       onClose={closeSicknessDetailsModal}
-      title="Log sickness"
+      title={t("programs.sickness.logTitle")}
       style={[
         styles.sicknessDetailsModal,
         {
@@ -1344,7 +1371,7 @@ const MicrocycleList = ({
             style={styles.sickContinuationButtonText}
             setColor={modalTitleColor}
           >
-            Cancel
+            {t("common.cancel")}
           </ThemedText>
         </TouchableOpacity>
 
@@ -1364,7 +1391,7 @@ const MicrocycleList = ({
             style={styles.sickContinuationButtonText}
             setColor={modalInvertedColor}
           >
-            Save
+            {t("common.save")}
           </ThemedText>
         </TouchableOpacity>
         </View>
@@ -1412,7 +1439,7 @@ const MicrocycleList = ({
                   setColor={selected ? sickColor : modalTitleColor}
                   numberOfLines={2}
                 >
-                  {type.label}
+                  {type.labelKey ? t(type.labelKey) : type.label}
                 </ThemedText>
               </TouchableOpacity>
             );
@@ -1424,12 +1451,12 @@ const MicrocycleList = ({
             style={styles.sicknessNoteLabel}
             setColor={modalQuietColor}
           >
-            Note
+            {t("programs.sickness.note")}
           </ThemedText>
           <ThemedTextInput
             value={sicknessNote}
             onChangeText={setSicknessNote}
-            placeholder="What are you dealing with?"
+            placeholder={t("programs.sickness.notePlaceholder")}
             multiline
             textAlignVertical="top"
             inputStyle={styles.sicknessNoteInput}

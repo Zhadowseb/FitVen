@@ -9,6 +9,7 @@ import {
 import { useCallback, useMemo, useState } from "react";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
+import { useTranslation } from "@localization";
 
 import styles from "./WorkoutLibraryPageStyle";
 import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
@@ -37,33 +38,42 @@ import {
 import ComingSoonBadge from "../../Resources/Components/ComingSoonBadge";
 
 const SORT_OPTIONS = [
-  { key: "newest", label: "Newest first" },
-  { key: "oldest", label: "Oldest first" },
-  { key: "name", label: "Name (A-Z)" },
-  { key: "exercises", label: "Most exercises" },
+  { key: "newest", labelKey: "calendar.library.sort.newest" },
+  { key: "oldest", labelKey: "calendar.library.sort.oldest" },
+  { key: "name", labelKey: "calendar.library.sort.name" },
+  { key: "exercises", labelKey: "calendar.library.sort.exercises" },
 ];
 
 const TYPE_FILTERS = [
-  { key: "all", label: "All types" },
-  { key: "resistance", label: "Resistance" },
-  { key: "run", label: "Run" },
-  { key: "walk", label: "Walk" },
+  { key: "all", labelKey: "calendar.library.allTypes" },
+  { key: "resistance", labelKey: "workoutStart.types.resistance" },
+  { key: "run", labelKey: "workoutStart.types.run" },
+  { key: "walk", labelKey: "workoutStart.types.walk" },
 ];
 
-const MONTH_LABELS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
+// Keys under calendar.monthsShort, by month number - 1.
+const MONTH_KEYS = [
+  "jan",
+  "feb",
+  "mar",
+  "apr",
+  "may",
+  "jun",
+  "jul",
+  "aug",
+  "sep",
+  "oct",
+  "nov",
+  "dec",
 ];
+
+const WEEKDAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+
+// The stored weekday ("Monday") shown in the current language.
+function getWeekdayName(weekday, t) {
+  const key = String(weekday ?? "").trim().slice(0, 3).toLowerCase();
+  return WEEKDAY_KEYS.includes(key) ? t(`calendar.weekdays.${key}`) : weekday;
+}
 
 function getIconType(workout) {
   const workoutType = workout?.workout_type;
@@ -95,19 +105,23 @@ function getIconColors(iconType, theme) {
 }
 
 // "2026-07-12" -> "12 Jul 2026"
-function formatWorkoutDate(isoDate) {
+function formatWorkoutDate(isoDate, t) {
   if (typeof isoDate !== "string" || isoDate.length < 10) {
-    return "No date";
+    return t("calendar.library.noDate");
   }
 
   const [year, month, day] = isoDate.slice(0, 10).split("-");
-  const monthLabel = MONTH_LABELS[Number(month) - 1];
+  const monthKey = MONTH_KEYS[Number(month) - 1];
 
-  if (!monthLabel) {
+  if (!monthKey) {
     return isoDate.slice(0, 10);
   }
 
-  return `${Number(day)} ${monthLabel} ${year}`;
+  return t("calendar.library.date", {
+    day: Number(day),
+    month: t(`calendar.monthsShort.${monthKey}`),
+    year,
+  });
 }
 
 function sortWorkouts(workouts, sortKey) {
@@ -191,6 +205,7 @@ function OptionSheet({
   onClose,
   theme,
 }) {
+  const { t } = useTranslation();
   // Was reaching for a primaryTextColor that only exists in the screen
   // below, so a selected option's checkmark threw as soon as the sheet opened.
   const primaryTextColor = theme.primaryText ?? theme.primary;
@@ -226,7 +241,7 @@ function OptionSheet({
               style={styles.optionSheetLabel}
               setColor={isSelected ? theme.primary : theme.title}
             >
-              {option.label}
+              {t(option.labelKey)}
             </ThemedText>
             {isSelected ? (
               <Checkmark width={15} height={15} color={primaryTextColor} />
@@ -250,6 +265,7 @@ function WorkoutRow({
   onRepeat,
   onOpen,
 }) {
+  const { t } = useTranslation();
   const iconType = getIconType(workout);
   const isComingSoon = isWorkoutComingSoon(workout);
   const iconColors = isComingSoon
@@ -258,7 +274,7 @@ function WorkoutRow({
         backgroundColor: withAlpha(theme.quietText, 0.14),
       }
     : getIconColors(iconType, theme);
-  const programLabel = workout.program_name ?? "No program";
+  const programLabel = workout.program_name ?? t("calendar.library.noProgram");
 
   return (
     <View
@@ -273,8 +289,8 @@ function WorkoutRow({
           accessibilityRole="button"
           accessibilityLabel={
             isComingSoon
-              ? `${workout.label} — coming soon`
-              : `Open workout ${workout.label}`
+              ? t("calendar.library.comingSoonLabel", { name: workout.label })
+              : t("calendar.library.openWorkout", { name: workout.label })
           }
           disabled={isComingSoon}
           accessibilityState={{ disabled: isComingSoon }}
@@ -304,7 +320,7 @@ function WorkoutRow({
               setColor={theme.quietText}
               numberOfLines={1}
             >
-              {`${formatWorkoutDate(workout.date_iso)} · ${programLabel}`}
+              {`${formatWorkoutDate(workout.date_iso, t)} · ${programLabel}`}
             </ThemedText>
 
             <View style={styles.rowChips}>
@@ -312,9 +328,7 @@ function WorkoutRow({
                 style={[styles.rowChip, { backgroundColor: theme.chipBackground }]}
               >
                 <ThemedText style={styles.rowChipText} setColor={theme.text}>
-                  {`${workout.exerciseCount} ${
-                    workout.exerciseCount === 1 ? "exercise" : "exercises"
-                  }`}
+                  {t("common.exercises", { count: workout.exerciseCount })}
                 </ThemedText>
               </View>
 
@@ -322,7 +336,10 @@ function WorkoutRow({
                 style={[styles.rowChip, { backgroundColor: theme.chipBackground }]}
               >
                 <ThemedText style={styles.rowChipText} setColor={theme.text}>
-                  {`${workout.completedSetCount}/${workout.setCount} sets`}
+                  {t("calendar.library.setsDone", {
+                    done: workout.completedSetCount,
+                    total: workout.setCount,
+                  })}
                 </ThemedText>
               </View>
 
@@ -340,7 +357,9 @@ function WorkoutRow({
                   style={styles.rowChipText}
                   setColor={workout.isCompleted ? theme.secondary : theme.primary}
                 >
-                  {workout.isCompleted ? "Completed" : "Planned"}
+                  {workout.isCompleted
+                    ? t("calendar.library.completed")
+                    : t("calendar.library.planned")}
                 </ThemedText>
               </View>
 
@@ -370,8 +389,8 @@ function WorkoutRow({
           accessibilityState={{ selected: workout.isFavorite }}
           accessibilityLabel={
             workout.isFavorite
-              ? `Remove ${workout.label} from favorites`
-              : `Save ${workout.label} to favorites`
+              ? t("calendar.library.removeFavorite", { name: workout.label })
+              : t("calendar.library.saveFavorite", { name: workout.label })
           }
           onPress={() => onToggleFavorite(workout)}
           style={styles.favoriteButton}
@@ -391,8 +410,8 @@ function WorkoutRow({
           accessibilityRole="button"
           accessibilityLabel={
             isExpanded
-              ? `Hide exercises in ${workout.label}`
-              : `Show exercises in ${workout.label}`
+              ? t("calendar.library.hideExercises", { name: workout.label })
+              : t("calendar.library.showExercises", { name: workout.label })
           }
           onPress={() => onToggleExercises(workout)}
           style={[
@@ -414,14 +433,16 @@ function WorkoutRow({
             style={styles.actionButtonText}
             setColor={isExpanded ? theme.primary : theme.quietText}
           >
-            Exercises
+            {t("calendar.library.exercises")}
           </ThemedText>
         </TouchableOpacity>
 
         <TouchableOpacity
           activeOpacity={0.8}
           accessibilityRole="button"
-          accessibilityLabel={`Repeat ${workout.label}`}
+          accessibilityLabel={t("calendar.library.repeatNamed", {
+            name: workout.label,
+          })}
           disabled={isComingSoon}
           accessibilityState={{ disabled: isComingSoon }}
           onPress={() => onRepeat(workout)}
@@ -447,7 +468,7 @@ function WorkoutRow({
             style={styles.actionButtonText}
             setColor={isComingSoon ? theme.quietText : theme.primary}
           >
-            Repeat
+            {t("calendar.library.repeat")}
           </ThemedText>
         </TouchableOpacity>
       </View>
@@ -456,7 +477,7 @@ function WorkoutRow({
         <View style={[styles.exerciseList, { borderTopColor: theme.cardBorder }]}>
           {isLoadingPreview ? (
             <ThemedText style={styles.exerciseDetail} setColor={theme.quietText}>
-              Loading exercises...
+              {t("calendar.library.loadingExercises")}
             </ThemedText>
           ) : previewItems.length > 0 ? (
             previewItems.map((item, index) => (
@@ -481,7 +502,7 @@ function WorkoutRow({
             ))
           ) : (
             <ThemedText style={styles.exerciseDetail} setColor={theme.quietText}>
-              No exercises on this workout.
+              {t("calendar.library.noExercises")}
             </ThemedText>
           )}
         </View>
@@ -491,6 +512,7 @@ function WorkoutRow({
 }
 
 const WorkoutLibraryPage = () => {
+  const { t } = useTranslation();
   const db = useSQLiteContext();
   const navigation = useNavigation();
   const colorScheme = useColorScheme();
@@ -684,11 +706,14 @@ const WorkoutLibraryPage = () => {
       });
     } catch (error) {
       console.error("Failed to start repeated workout:", error);
-      Alert.alert("Could not start", "The workout could not be copied to today.");
+      Alert.alert(
+        t("calendar.library.startFailedTitle"),
+        t("calendar.library.startFailedMessage")
+      );
     } finally {
       setIsRepeating(false);
     }
-  }, [db, isRepeating, navigation, repeatWorkout]);
+  }, [db, isRepeating, navigation, repeatWorkout, t]);
 
   const handlePlanRepeat = useCallback(
     async (target) => {
@@ -712,17 +737,25 @@ const WorkoutLibraryPage = () => {
         setRepeatWorkout(null);
         await loadWorkouts();
         Alert.alert(
-          "Workout planned",
-          `${repeatWorkout.label} was added to ${target.weekday ?? "the day"}.`
+          t("calendar.library.plannedTitle"),
+          t("calendar.library.plannedMessage", {
+            name: repeatWorkout.label,
+            day: target.weekday
+              ? getWeekdayName(target.weekday, t)
+              : t("calendar.library.theDay"),
+          })
         );
       } catch (error) {
         console.error("Failed to plan repeated workout:", error);
-        Alert.alert("Could not plan", "The workout could not be copied there.");
+        Alert.alert(
+          t("calendar.library.planFailedTitle"),
+          t("calendar.library.planFailedMessage")
+        );
       } finally {
         setIsRepeating(false);
       }
     },
-    [db, isRepeating, loadWorkouts, repeatWorkout]
+    [db, isRepeating, loadWorkouts, repeatWorkout, t]
   );
 
   // Sorting cannot empty the list, so only the two real filters are reset.
@@ -745,7 +778,9 @@ const WorkoutLibraryPage = () => {
         accessibilityRole="button"
         accessibilityState={{ selected: favoritesOnly }}
         accessibilityLabel={
-          favoritesOnly ? "Show all workouts" : "Show favorites only"
+          favoritesOnly
+            ? t("calendar.library.showAllWorkouts")
+            : t("calendar.library.showFavoritesOnly")
         }
         onPress={() => setFavoritesOnly((isOn) => !isOn)}
         style={[
@@ -770,14 +805,14 @@ const WorkoutLibraryPage = () => {
       </TouchableOpacity>
 
       <ToolbarPill
-        label={sortOption.label}
+        label={t(sortOption.labelKey)}
         isActive={sortKey !== "newest"}
         onPress={() => setOpenMenu("sort")}
         theme={theme}
       />
 
       <ToolbarPill
-        label={typeOption.label}
+        label={t(typeOption.labelKey)}
         isActive={typeFilter !== "all"}
         onPress={() => setOpenMenu("type")}
         theme={theme}
@@ -793,7 +828,7 @@ const WorkoutLibraryPage = () => {
     <ThemedView safe={["top", "left", "right"]} style={styles.container}>
       <ThemedHeader>
         <ThemedTitle type="h3" numberOfLines={1}>
-          Your workouts
+          {t("calendar.library.title")}
         </ThemedTitle>
       </ThemedHeader>
 
@@ -811,12 +846,14 @@ const WorkoutLibraryPage = () => {
               variant="empty"
               message={
                 !hasActiveFilters
-                  ? "Your finished workouts show up here."
+                  ? t("calendar.library.emptyNoFilters")
                   : favoritesOnly
-                    ? "You have not saved any favorites yet."
-                    : "No workouts match these filters."
+                    ? t("calendar.library.emptyNoFavorites")
+                    : t("calendar.library.emptyNoMatch")
               }
-              actionLabel={hasActiveFilters ? "Reset filters" : undefined}
+              actionLabel={
+                hasActiveFilters ? t("calendar.library.resetFilters") : undefined
+              }
               onAction={hasActiveFilters ? clearFilters : undefined}
             />
           }
@@ -838,7 +875,7 @@ const WorkoutLibraryPage = () => {
 
       <OptionSheet
         visible={openMenu === "sort"}
-        title="SORT BY"
+        title={t("calendar.library.sortBy")}
         options={SORT_OPTIONS}
         selectedKey={sortKey}
         onSelect={(key) => {
@@ -851,7 +888,7 @@ const WorkoutLibraryPage = () => {
 
       <OptionSheet
         visible={openMenu === "type"}
-        title="WORKOUT TYPE"
+        title={t("calendar.library.workoutType")}
         options={TYPE_FILTERS}
         selectedKey={typeFilter}
         onSelect={(key) => {

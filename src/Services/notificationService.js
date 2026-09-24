@@ -125,7 +125,7 @@ function normalizeFunctionError(error, functionName) {
     message.toLowerCase().includes("not found")
   ) {
     return new Error(
-      `Supabase Edge Function "${functionName}" is not deployed yet.`
+      t("errors.notifications.functionNotDeployed", { name: functionName })
     );
   }
 
@@ -150,10 +150,11 @@ async function describeFunctionError(error, functionName) {
     }
 
     return new Error(
-      `${functionName} failed (${response.status ?? "error"}): ${body.slice(
-        0,
-        300
-      )}`
+      t("errors.notifications.functionFailed", {
+        name: functionName,
+        status: response.status ?? "error",
+        body: body.slice(0, 300),
+      })
     );
   } catch {
     return normalized;
@@ -227,7 +228,7 @@ async function getExpoPushToken(devicePushToken = null) {
   const projectId = getProjectId();
 
   if (!projectId) {
-    throw new Error("Expo projectId is missing from app config.");
+    throw new Error(t("errors.notifications.projectIdMissing"));
   }
 
   const tokenResult = await Notifications.getExpoPushTokenAsync({

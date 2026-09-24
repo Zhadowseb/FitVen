@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTranslation } from "@localization";
 
 import { Colors } from "../GlobalStyling/colors";
 import ThemedButton from "./ThemedButton";
@@ -54,6 +55,7 @@ function WheelColumn({
   titleColor,
   quietText,
 }) {
+  const { t } = useTranslation();
   const listRef = useRef(null);
   const scrollY = useRef(new Animated.Value(selectedIndex * ITEM_HEIGHT)).current;
   const currentIndexRef = useRef(selectedIndex);
@@ -111,8 +113,14 @@ function WheelColumn({
         text: String(items[selectedIndex] ?? ""),
       }}
       accessibilityActions={[
-        { name: "increment", label: `Next ${accessibilityLabel}` },
-        { name: "decrement", label: `Previous ${accessibilityLabel}` },
+        {
+          name: "increment",
+          label: t("calendar.datePicker.next", { wheel: accessibilityLabel }),
+        },
+        {
+          name: "decrement",
+          label: t("calendar.datePicker.previous", { wheel: accessibilityLabel }),
+        },
       ]}
       onAccessibilityAction={(event) => {
         if (event.nativeEvent.actionName === "increment") {
@@ -220,10 +228,14 @@ export default function ThemedDateWheelPicker({
   onConfirm,
   minYear = 1900,
   maxDate,
-  locale = "en",
-  title = "Select date",
+  // The app's language unless a caller asks for another one.
+  locale: localeProp,
+  title: titleProp,
   isConfirming = false,
 }) {
+  const { t, locale: appLocale } = useTranslation();
+  const locale = localeProp ?? appLocale;
+  const title = titleProp ?? t("calendar.datePicker.defaultTitle");
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const insets = useSafeAreaInsets();
@@ -319,7 +331,7 @@ export default function ThemedDateWheelPicker({
       <View style={styles.modal}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Close date picker"
+          accessibilityLabel={t("calendar.datePicker.close")}
           onPress={onClose}
           style={styles.backdrop}
         />
@@ -338,7 +350,7 @@ export default function ThemedDateWheelPicker({
           <View style={styles.header}>
             <View>
               <ThemedText style={styles.eyebrow} setColor={primaryTextColor}>
-                DATE
+                {t("calendar.datePicker.eyebrow")}
               </ThemedText>
               <ThemedText style={styles.title} setColor={titleColor}>
                 {title}
@@ -351,13 +363,13 @@ export default function ThemedDateWheelPicker({
 
           <View style={styles.columnLabels}>
             <ThemedText style={styles.dayLabel} setColor={quietText}>
-              DAY
+              {t("calendar.datePicker.day")}
             </ThemedText>
             <ThemedText style={styles.monthLabel} setColor={quietText}>
-              MONTH
+              {t("calendar.datePicker.month")}
             </ThemedText>
             <ThemedText style={styles.yearLabel} setColor={quietText}>
-              YEAR
+              {t("calendar.datePicker.year")}
             </ThemedText>
           </View>
 
@@ -373,7 +385,7 @@ export default function ThemedDateWheelPicker({
               ]}
             />
             <WheelColumn
-              accessibilityLabel="day"
+              accessibilityLabel={t("calendar.datePicker.dayWheel")}
               items={days}
               selectedIndex={dateParts.day - 1}
               onChange={(index) =>
@@ -384,7 +396,7 @@ export default function ThemedDateWheelPicker({
               quietText={quietText}
             />
             <WheelColumn
-              accessibilityLabel="month"
+              accessibilityLabel={t("calendar.datePicker.monthWheel")}
               items={availableMonths}
               selectedIndex={dateParts.month}
               onChange={(index) =>
@@ -395,7 +407,7 @@ export default function ThemedDateWheelPicker({
               quietText={quietText}
             />
             <WheelColumn
-              accessibilityLabel="year"
+              accessibilityLabel={t("calendar.datePicker.yearWheel")}
               items={years}
               selectedIndex={Math.max(0, years.indexOf(dateParts.year))}
               onChange={(index) =>
@@ -412,14 +424,18 @@ export default function ThemedDateWheelPicker({
 
           <View style={styles.actions}>
             <ThemedButton
-              title="Cancel"
+              title={t("common.cancel")}
               variant="secondary"
               onPress={onClose}
               disabled={isConfirming}
               style={styles.action}
             />
             <ThemedButton
-              title={isConfirming ? "Saving..." : "Apply"}
+              title={
+                isConfirming
+                  ? t("calendar.datePicker.saving")
+                  : t("calendar.datePicker.apply")
+              }
               onPress={() => onConfirm(selectedDate)}
               disabled={isConfirming}
               style={styles.action}

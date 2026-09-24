@@ -315,7 +315,7 @@ assert.ok(
 );
 
 // The reasons the reject step offers have to be the ones the column accepts.
-const offeredReasons = [...gymServiceSource.matchAll(/\{ value: "([a-z]+)", label:/g)].map((match) => match[1]);
+const offeredReasons = [...gymServiceSource.matchAll(/\{ value: "([a-z]+)", labelKey:/g)].map((match) => match[1]);
 const acceptedReasons = migration.match(/reason in \(([^)]+)\)/)[1].match(/'([a-z]+)'/g).map((value) => value.replace(/'/g, ""));
 
 assert.deepStrictEqual(offeredReasons.sort(), acceptedReasons.sort(), "rejection reasons in the app and the column check must match");

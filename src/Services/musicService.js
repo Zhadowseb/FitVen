@@ -318,7 +318,7 @@ export async function fetchNowPlaying() {
   }
 
   if (!response.ok) {
-    throw new Error(`Spotify answered ${response.status}.`);
+    throw new Error(t("errors.music.spotifyAnswered", { status: response.status }));
   }
 
   const payload = await response.json();

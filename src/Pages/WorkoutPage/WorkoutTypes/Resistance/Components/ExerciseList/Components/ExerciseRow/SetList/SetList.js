@@ -1103,7 +1103,7 @@ const SetList = ({
 
         return (
           <ThemedBouncyCheckbox
-            accessibilityLabel={`Set ${set.set_number} done`}
+            accessibilityLabel={t("workout.setList.setDone", { number: set.set_number })}
             value={Number(set.done) === 1 || Number(set.failed) === 1}
             onChange={() =>
               onToggleSet(set.sets_id, getNextSetCompletion(set), set)
@@ -1153,7 +1153,7 @@ const SetList = ({
           key="settings"
           activeOpacity={0.72}
           accessibilityRole="button"
-          accessibilityLabel="Open exercise settings"
+          accessibilityLabel={t("workout.exercise.openSettings")}
           style={styles.addSetIconCell}
           onPress={onOpenSettings}
         >
@@ -1419,7 +1419,7 @@ const SetList = ({
         <ThemedText style={styles.foldedValue} setColor={theme.title} numberOfLines={1}>
           {formatNumber(weight, { maximumFractionDigits: 2 })}
           <ThemedText style={styles.foldedUnit} setColor={theme.quietText}>
-            {" kg"}
+            {` ${t("common.kg")}`}
           </ThemedText>
         </ThemedText>
       );
@@ -1653,7 +1653,7 @@ const SetList = ({
       <ThemedModal
         visible={noteModalVisible}
         onClose={() => setNoteModalVisible(false)}
-        title="Note"
+        title={t("workout.note.title")}
       >
         <ThemedText>{noteModalText}</ThemedText>
       </ThemedModal>
@@ -1661,7 +1661,7 @@ const SetList = ({
       <ThemedModal
         visible={restUnitModalVisible}
         onClose={() => setRestUnitModalVisible(false)}
-        title="Rest"
+        title={t("workout.setList.restModal.title")}
         style={styles.restUnitModal}
         contentStyle={styles.restUnitModalContent}
       >
@@ -1670,7 +1670,7 @@ const SetList = ({
             style={styles.restSettingsLabel}
             setColor={theme.quietText}
           >
-            Unit
+            {t("workout.setList.restModal.unit")}
           </ThemedText>
 
           <View
@@ -1683,8 +1683,14 @@ const SetList = ({
             ]}
           >
             {[
-              { unit: REST_UNIT_MINUTES, label: "Minutes" },
-              { unit: REST_UNIT_SECONDS, label: "Seconds" },
+              {
+                unit: REST_UNIT_MINUTES,
+                label: t("workout.setList.restModal.minutes"),
+              },
+              {
+                unit: REST_UNIT_SECONDS,
+                label: t("workout.setList.restModal.seconds"),
+              },
             ].map((option) => {
               const selected = restUnit === option.unit;
 
@@ -1717,7 +1723,7 @@ const SetList = ({
             style={styles.restSettingsLabel}
             setColor={theme.quietText}
           >
-            Apply
+            {t("workout.setList.restModal.apply")}
           </ThemedText>
 
           <TouchableOpacity
@@ -1733,13 +1739,13 @@ const SetList = ({
           >
             <View style={styles.restMirrorTextGroup}>
               <ThemedText style={styles.restMirrorTitle}>
-                Mirror rest fields
+                {t("workout.setList.restModal.mirror")}
               </ThemedText>
               <ThemedText
                 style={styles.restMirrorDescription}
                 setColor={theme.quietText}
               >
-                New rest edits update every set
+                {t("workout.setList.restModal.mirrorDetail")}
               </ThemedText>
             </View>
 

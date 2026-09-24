@@ -7,8 +7,10 @@ import {
   ThemedStateBlock,
   ThemedText,
 } from "../../ThemedComponents";
+import { useTranslation } from "@localization";
 
 const Mesocycle = ({ program_id, visible, close }) => {
+  const { t } = useTranslation();
   const db = useSQLiteContext();
   const [mesocycles, set_Mesocycles] = useState([]);
   const [loading, set_Loading] = useState(false);
@@ -34,7 +36,7 @@ const Mesocycle = ({ program_id, visible, close }) => {
   if (loading) return <ThemedStateBlock />;
 
   if (mesocycles.length === 0) {
-    return <ThemedText>No blocks</ThemedText>;
+    return <ThemedText>{t("programs.picker.noBlocks")}</ThemedText>;
   }
 
   return (
@@ -42,7 +44,7 @@ const Mesocycle = ({ program_id, visible, close }) => {
       <ThemedModal
         visible={visible}
         onClose={() => close()}
-        title="Pick a block">
+        title={t("programs.picker.pickBlock")}>
 
         {mesocycles.map(mc => (
           <Pressable
@@ -53,7 +55,7 @@ const Mesocycle = ({ program_id, visible, close }) => {
             style={{ paddingVertical: 12 }}
           >
             <ThemedText>
-              Block {mc.mesocycle_number}
+              {t("programs.blocks.blockNumber", { number: mc.mesocycle_number })}
             </ThemedText>
           </Pressable>
         ))}
