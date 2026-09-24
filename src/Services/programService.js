@@ -127,6 +127,9 @@ async function cloneWorkoutContents(
         done: 0,
         failed: 0,
         amrap: set.amrap,
+        // A copied warm-up stays a warm-up, the way amrap always travelled.
+        setType: set.set_type ?? null,
+        amrapTarget: set.amrap_target ?? null,
         note: set.note,
       });
     }

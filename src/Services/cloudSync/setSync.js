@@ -301,6 +301,8 @@ async function reconcileSetsFromCloud(db, userId) {
           done: comparableCloudSet.done,
           failed: comparableCloudSet.failed,
           amrap: comparableCloudSet.amrap,
+          setType: comparableCloudSet.set_type,
+          amrapTarget: comparableCloudSet.amrap_target,
           note: comparableCloudSet.note,
         });
 
@@ -356,6 +358,8 @@ async function reconcileSetsFromCloud(db, userId) {
             done: comparableCloudSet.done,
             failed: comparableCloudSet.failed,
             amrap: comparableCloudSet.amrap,
+            setType: comparableCloudSet.set_type,
+            amrapTarget: comparableCloudSet.amrap_target,
             note: comparableCloudSet.note,
           });
           downloadedCount += 1;
@@ -425,6 +429,8 @@ async function reconcileSetsFromCloud(db, userId) {
         done: comparableCloudSet.done,
         failed: comparableCloudSet.failed,
         amrap: comparableCloudSet.amrap,
+        setType: comparableCloudSet.set_type,
+        amrapTarget: comparableCloudSet.amrap_target,
         note: comparableCloudSet.note,
       });
 

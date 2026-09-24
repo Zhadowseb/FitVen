@@ -4,6 +4,12 @@ import * as gymService from "./gymService";
 import * as notificationService from "./notificationService";
 import { withTransaction } from "./shared";
 import { enqueueSync, startBackgroundSync } from "./syncScheduler";
+import {
+  clearWorkoutPostStatus,
+  getWorkoutPostStatus,
+  setWorkoutPostStatus,
+  updateWorkoutPostStatus,
+} from "@utils/workoutPostEvents";
 
 let dirtyWorkoutHierarchyPushScheduled = false;
 let dirtyWorkoutHierarchyPushNeedsRerun = false;
@@ -347,6 +353,63 @@ export async function repostWorkoutSummaryPost(db, { workoutId, note = null }) {
   }
 
   return result;
+}
+
+// How long "posted" stays on Home before the bar goes by itself.
+const POSTED_STATUS_MS = 3500;
+let backgroundPostCounter = 0;
+
+/**
+ * Posts a finished workout's summary without anybody waiting for it.
+ *
+ * A post goes through the same queue as every sync (enqueueSync), and
+ * finishing a workout starts uploading the workout, its exercises and its
+ * sets - so the post waits behind all of that before it has even begun, and
+ * the share sheet used to sit on "Posting..." for as long as that took. Now
+ * the sheet hands the post over and goes, and the progress lives in
+ * workoutPostEvents for the bar on Home: "posting", then "posted" for a
+ * moment, or "failed" with a way to try again.
+ *
+ * Returns the id the status is kept under.
+ */
+export function postWorkoutSummaryInBackground(db, { workoutId, note = null }) {
+  const id = ++backgroundPostCounter;
+
+  setWorkoutPostStatus({ id, workoutId, note, state: "posting", error: null });
+
+  void (async () => {
+    try {
+      await repostWorkoutSummaryPost(db, { workoutId, note });
+      updateWorkoutPostStatus(id, { state: "posted" });
+      setTimeout(() => clearWorkoutPostStatus(id), POSTED_STATUS_MS);
+    } catch (error) {
+      console.error("Could not post the workout summary:", error);
+      updateWorkoutPostStatus(id, {
+        state: "failed",
+        error: error?.message ?? null,
+      });
+    }
+  })();
+
+  return id;
+}
+
+/** Sends the failed post again, with the note it had. */
+export function retryBackgroundWorkoutPost(db) {
+  const status = getWorkoutPostStatus();
+
+  if (status?.state !== "failed") {
+    return null;
+  }
+
+  return postWorkoutSummaryInBackground(db, {
+    workoutId: status.workoutId,
+    note: status.note,
+  });
+}
+
+export function dismissBackgroundWorkoutPost() {
+  clearWorkoutPostStatus();
 }
 
 export async function syncWorkoutSummaryPostForCompletionState(

@@ -1,3 +1,7 @@
+import { buildExerciseHistoryTable } from "@utils/exerciseHistoryTable";
+import { formatRelativeDay, getTodaysDate, normalizeIsoDateString } from "@utils/dateUtils";
+import { formatDate } from "@localization";
+import { canBePersonalRecord, resolveSetType } from "@utils/setTypes";
 import {
   programRepository,
   weightliftingRepository,
@@ -783,6 +787,13 @@ function getPersonalRecordSetIds(rows) {
   return recordSetIds;
 }
 
+// The rows a record may be taken from. A drop set counts toward volume but
+// never holds a record: it is the same effort continued at a lighter weight,
+// and a best recorded there sits on the easier half of one set.
+function keepRecordEligible(rows = []) {
+  return rows.filter((row) => canBePersonalRecord(resolveSetType(row)));
+}
+
 async function refreshPersonalRecordsForExerciseName(db, exerciseName) {
   const normalizedExerciseName =
     typeof exerciseName === "string" ? exerciseName.trim() : "";
@@ -791,10 +802,11 @@ async function refreshPersonalRecordsForExerciseName(db, exerciseName) {
     return [];
   }
 
-  const rows =
+  const rows = keepRecordEligible(
     await weightliftingRepository.getCompletedStrengthSetsForPersonalRecords(db, {
       exerciseName: normalizedExerciseName,
-    });
+    })
+  );
   const recordSetIds = getPersonalRecordSetIds(rows);
   const existingFlags =
     await weightliftingRepository.getPersonalRecordFlagsByExerciseName(
@@ -831,149 +843,6 @@ async function refreshPersonalRecordsForSet(db, setId) {
   );
 
   return refreshPersonalRecordsForExerciseName(db, exercise?.exercise_name);
-}
-
-function formatExerciseHistoryRelativeDate(sortDateValue) {
-  const date = parsePersonalRecordSortDate(sortDateValue);
-
-  if (!date) {
-    return null;
-  }
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const days = Math.max(
-    0,
-    Math.floor((today.getTime() - date.getTime()) / (1000 * 60 * 60 * 24))
-  );
-
-  if (days === 0) {
-    return "today";
-  }
-
-  if (days < 7) {
-    return `${days}d ago`;
-  }
-
-  if (days < 30) {
-    return `${Math.max(1, Math.floor(days / 7))}w ago`;
-  }
-
-  if (days < 365) {
-    return `${Math.max(1, Math.floor(days / 30))}mo ago`;
-  }
-
-  return `${Math.max(1, Math.floor(days / 365))}y ago`;
-}
-
-function formatExerciseHistoryDate(sortDateValue) {
-  const date = parsePersonalRecordSortDate(sortDateValue);
-
-  if (!date) {
-    return "--";
-  }
-
-  const monthLabel = PERSONAL_RECORD_MONTHS[date.getMonth()] ?? "";
-  return `${monthLabel.toUpperCase()} ${date.getDate()}`;
-}
-
-function formatExerciseHistoryNumber(value) {
-  const numericValue = Number(value);
-
-  if (!Number.isFinite(numericValue)) {
-    return "--";
-  }
-
-  return Number.isInteger(numericValue)
-    ? String(numericValue)
-    : numericValue.toFixed(1);
-}
-
-function formatExerciseHistoryWeight(value) {
-  return `${formatExerciseHistoryNumber(value)} kg`;
-}
-
-function buildExerciseHistory(rows) {
-  const sessionsById = new Map();
-
-  for (const row of rows ?? []) {
-    const sessionId = row?.exercise_instance_id;
-
-    if (sessionId === null || sessionId === undefined) {
-      continue;
-    }
-
-    if (!sessionsById.has(sessionId)) {
-      sessionsById.set(sessionId, {
-        id: sessionId,
-        workoutId: row?.workout_id ?? null,
-        performedDate: row?.performed_date ?? null,
-        performedDateSort: row?.performed_date_sort ?? null,
-        relativeDateLabel: formatExerciseHistoryRelativeDate(
-          row?.performed_date_sort
-        ),
-        dateDisplay: formatExerciseHistoryDate(row?.performed_date_sort),
-        topWeight: normalizeOptionalNumber(row?.top_weight),
-        setCount: 0,
-        sets: [],
-      });
-    }
-
-    const session = sessionsById.get(sessionId);
-    const reps = normalizeOptionalInteger(row?.reps);
-    const weight = normalizeOptionalNumber(row?.weight);
-
-    if (!Number.isFinite(reps) || !Number.isFinite(weight)) {
-      continue;
-    }
-
-    const isAmrap = normalizeBooleanFlag(row?.amrap);
-    const signature = [reps, weight, isAmrap ? "amrap" : "standard"].join(":");
-    const existingSet = session.sets.find((set) => set.signature === signature);
-    session.setCount += 1;
-
-    if (existingSet) {
-      existingSet.count += 1;
-      existingSet.personalRecord =
-        existingSet.personalRecord || normalizeBooleanFlag(row?.personal_record);
-      continue;
-    }
-
-    session.sets.push({
-      id: row?.sets_id,
-      signature,
-      setNumber: normalizeOptionalInteger(row?.set_number),
-      reps,
-      weight,
-      weightDisplay: formatExerciseHistoryWeight(weight),
-      isAmrap,
-      personalRecord: normalizeBooleanFlag(row?.personal_record),
-      count: 1,
-      display: `${reps} x ${formatExerciseHistoryWeight(weight)}`,
-    });
-  }
-
-  const sessions = [...sessionsById.values()];
-  const latestSession = sessions[0] ?? null;
-  const latestSetCount = latestSession?.setCount ?? 0;
-  const latestSetCountLabel =
-    latestSetCount === 1 ? "1 set" : `${latestSetCount} sets`;
-  const latestTopWeightDisplay =
-    latestSession?.topWeight === null || latestSession?.topWeight === undefined
-      ? "--"
-      : formatExerciseHistoryWeight(latestSession.topWeight);
-
-  return {
-    sessions,
-    hasHistory: sessions.length > 0,
-    sessionCount: sessions.length,
-    latestSession,
-    summaryText: latestSession
-      ? `${latestSetCountLabel} - top ${latestTopWeightDisplay}`
-      : "No previous sets",
-    latestRelativeDateLabel: latestSession?.relativeDateLabel ?? null,
-  };
 }
 
 function normalizeExerciseOrder(value, fallbackValue = 0) {
@@ -2357,9 +2226,11 @@ export async function createCustomExercise(
  * returns an empty map offline and the section that needs it shows nothing
  * rather than a wrong total.
  */
-export async function getRecordsSourceData(db) {
+export async function getRecordsSourceData(db, { sinceIsoDate = null } = {}) {
   const rows =
-    await weightliftingRepository.getCompletedStrengthSetsForPersonalRecords(db);
+    await weightliftingRepository.getCompletedStrengthSetsForPersonalRecords(db, {
+      sinceIsoDate,
+    });
   const groupsByExercise = new Map();
 
   try {
@@ -2412,8 +2283,9 @@ export async function getRecordsSourceData(db) {
 }
 
 export async function getPersonalRecordExerciseSummaries(db) {
-  const rows =
-    await weightliftingRepository.getCompletedStrengthSetsForPersonalRecords(db);
+  const rows = keepRecordEligible(
+    await weightliftingRepository.getCompletedStrengthSetsForPersonalRecords(db)
+  );
   const rowsByExercise = new Map();
 
   for (const row of rows) {
@@ -2450,10 +2322,11 @@ export async function getPersonalRecordExerciseDetail(db, exerciseName) {
     return null;
   }
 
-  const rows =
+  const rows = keepRecordEligible(
     await weightliftingRepository.getCompletedStrengthSetsForPersonalRecords(db, {
       exerciseName: normalizedExerciseName,
-    });
+    })
+  );
 
   if (rows.length === 0) {
     return null;
@@ -2462,29 +2335,120 @@ export async function getPersonalRecordExerciseDetail(db, exerciseName) {
   return buildPersonalRecordExerciseDetail(normalizedExerciseName, rows);
 }
 
-export async function getExerciseHistory(
+/**
+ * How many personal records the person set today, for the crown on their own
+ * friends tile. Read from the phone, so it is right the moment the set is
+ * ticked, before any sync.
+ */
+export async function getPersonalRecordsToday(db) {
+  // getTodaysDate() writes dd.mm.yyyy; the query compares ISO.
+  return weightliftingRepository.countPersonalRecordsOnDate(
+    db,
+    normalizeIsoDateString(getTodaysDate())
+  );
+}
+
+/**
+ * The history panel: the last three sessions, one column per set.
+ *
+ * Returns the table buildExerciseHistoryTable shapes, with each session's two
+ * date labels - "Tor 18.9" and how long ago - in the language the person chose.
+ */
+export async function getExerciseHistoryTable(
   db,
   { exerciseId, exerciseName, limit = 3 }
 ) {
   const normalizedExerciseName =
     typeof exerciseName === "string" ? exerciseName.trim() : "";
   const normalizedExerciseId = normalizeOptionalInteger(exerciseId);
-  const normalizedLimit = Math.max(1, normalizeOptionalInteger(limit, 3));
 
   if (!normalizedExerciseName || normalizedExerciseId === null) {
-    return buildExerciseHistory([]);
+    return { sessions: [], maxSets: 0 };
   }
 
-  const rows = await weightliftingRepository.getCompletedExerciseHistorySets(
-    db,
-    {
-      exerciseId: normalizedExerciseId,
-      exerciseName: normalizedExerciseName,
-      limit: normalizedLimit,
-    }
-  );
+  const rows = await weightliftingRepository.getCompletedExerciseHistorySets(db, {
+    exerciseId: normalizedExerciseId,
+    exerciseName: normalizedExerciseName,
+    limit: Math.max(1, normalizeOptionalInteger(limit, 3)),
+  });
+  const table = buildExerciseHistoryTable(rows);
 
-  return buildExerciseHistory(rows);
+  return {
+    ...table,
+    sessions: table.sessions.map((session) => ({
+      ...session,
+      ...formatHistorySessionDate(session.performedDateSort),
+    })),
+  };
+}
+
+function formatHistorySessionDate(sortDateValue) {
+  const date = parsePersonalRecordSortDate(sortDateValue);
+
+  if (!date) {
+    return { dateLabel: "--", relativeLabel: "" };
+  }
+
+  const weekday = formatDate(date, { weekday: "short" }).replace(/\.$/, "");
+
+  return {
+    // "Tor 18.9": the weekday the person trained on, then the day and month
+    // the way the app writes them everywhere else.
+    dateLabel: `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)} ${date.getDate()}.${date.getMonth() + 1}`,
+    relativeLabel: formatRelativeDay(date.getTime()),
+  };
+}
+
+/**
+ * The note on the previous session of this exercise, or null.
+ *
+ * Only that one session: a note from further back, shown as "last time", would
+ * be about another day. Null when there is no previous session or its note was
+ * empty, and the box is not drawn.
+ */
+export async function getPreviousExerciseNote(db, { exerciseName, beforeWorkoutId }) {
+  const normalizedExerciseName =
+    typeof exerciseName === "string" ? exerciseName.trim() : "";
+
+  if (!normalizedExerciseName) {
+    return null;
+  }
+
+  const session = await weightliftingRepository.getPreviousExerciseSession(db, {
+    exerciseName: normalizedExerciseName,
+    beforeWorkoutId: normalizeOptionalInteger(beforeWorkoutId),
+  });
+  const note = typeof session?.note === "string" ? session.note.trim() : "";
+
+  if (!note) {
+    return null;
+  }
+
+  return {
+    note,
+    ...formatHistorySessionDate(session.performed_date_sort),
+  };
+}
+
+/** The heaviest working or AMRAP set ever done of an exercise, or null. */
+export async function getHeaviestLift(db, exerciseName) {
+  const normalizedExerciseName =
+    typeof exerciseName === "string" ? exerciseName.trim() : "";
+
+  if (!normalizedExerciseName) {
+    return null;
+  }
+
+  const row = await weightliftingRepository.getHeaviestLiftForExercise(
+    db,
+    normalizedExerciseName
+  );
+  const weight = Number(row?.weight);
+  const reps = Number(row?.reps);
+
+  return Number.isFinite(weight) && weight > 0 && Number.isFinite(reps)
+    ? { weight, reps }
+    : null;
 }
 
 export async function getExerciseLibraryEntries(db) {
@@ -4209,7 +4173,46 @@ export async function deleteSet(db, setId) {
   syncSetsInBackground(db);
 }
 
+/**
+ * Changes what kind of set a set is.
+ *
+ * A type change moves a set in or out of the records - a done set turned into
+ * a warm-up loses its record straight away, and one turned back can win it -
+ * so the records for the exercise are worked out again in the same
+ * transaction, the way a changed weight or rep count does.
+ */
+export async function setSetType(db, { setId, setType, amrapTarget = null }) {
+  const result = await withTransaction(db, async () => {
+    await weightliftingRepository.updateSetType(db, {
+      setId,
+      setType,
+      amrapTarget,
+      // A warm-up starts empty: the numbers a new set copies from the one
+      // above are working weights, and a warm-up is not done at those. What
+      // the person types in afterwards stays.
+      clearUnfinishedLoad: setType === "warmup",
+    });
+
+    return {
+      personalRecordSetIds: await refreshPersonalRecordsForSet(db, setId),
+    };
+  });
+
+  syncSetsInBackground(db);
+  return result;
+}
+
 export async function updateSetField(db, { field, value, setId }) {
+  // set_type and its amrap mirror are written together or not at all, and
+  // this writes one column. Routed, not refused, so the screens that still say
+  // updateField("amrap", 1) keep working while they are moved across.
+  if (field === "amrap" || field === "set_type") {
+    const setType =
+      field === "set_type" ? value : Number(value) === 1 ? "amrap" : "working";
+
+    return { ...(await setSetType(db, { setId, setType })), value };
+  }
+
   // The service is the only way a set reaches the database, so the ceiling
   // sits here rather than on each of the screens that can edit one.
   const storedValue = isClampedSetField(field)
@@ -4403,6 +4406,8 @@ export async function saveExerciseSets(db, { exerciseId, sets }) {
         done: set.done ? 1 : 0,
         failed: set.failed ? 1 : 0,
         amrap: set.amrap ? 1 : 0,
+        setType: set.set_type ?? null,
+        amrapTarget: set.amrap_target ?? null,
         note: set.note,
       });
     }
@@ -4460,7 +4465,19 @@ export async function updateExerciseDone(db, { exerciseId, done }) {
  * answer here reads as "you trained nothing".
  */
 export async function getMuscleGroupDeltas(db, { now = Date.now(), days = 30 } = {}) {
-  const { rows, groupsByExercise } = await getRecordsSourceData(db);
+  // Two windows back and nothing earlier - that is all buildMuscleGroupDeltas
+  // ever looks at.
+  const since = new Date(now);
+
+  since.setDate(since.getDate() - 2 * days);
+
+  const sinceIsoDate = [
+    since.getFullYear(),
+    String(since.getMonth() + 1).padStart(2, "0"),
+    String(since.getDate()).padStart(2, "0"),
+  ].join("-");
+
+  const { rows, groupsByExercise } = await getRecordsSourceData(db, { sinceIsoDate });
 
   return buildMuscleGroupDeltas(normalizeRecordRows(rows), {
     groupsByExercise,

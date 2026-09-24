@@ -16,9 +16,10 @@ import Svg, {
   Stop,
   Text as SvgText,
 } from "react-native-svg";
-import { useCallback, useMemo, useRef, useState } from "react";
-import { useFocusEffect } from "@react-navigation/native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
+import { useTranslation } from "@localization";
 
 import styles from "./PersonalRecordsPageStyle";
 import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
@@ -260,6 +261,13 @@ function buildMuscleLoadRadarGeometry(points = []) {
 
 const PersonalRecordsPage = () => {
   const db = useSQLiteContext();
+  const { t } = useTranslation();
+  const navigation = useNavigation();
+  const route = useRoute();
+  // Opened from an exercise card's history, the page lands on that exercise,
+  // and its back button returns to the workout rather than to the list.
+  const requestedExerciseName = route.params?.exerciseName ?? null;
+  const returnToWorkout = Boolean(route.params?.returnToWorkout);
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const [summaries, setSummaries] = useState([]);
@@ -281,7 +289,7 @@ const PersonalRecordsPage = () => {
   const selectedProgramIdRef = useRef(null);
   const [muscleLoad, setMuscleLoad] = useState(null);
   const [muscleLoadLoading, setMuscleLoadLoading] = useState(false);
-  const [selectedExerciseName, setSelectedExerciseName] = useState(null);
+  const [selectedExerciseName, setSelectedExerciseName] = useState(requestedExerciseName);
   const [selectedDetail, setSelectedDetail] = useState(null);
   const [loading, setLoading] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -412,7 +420,23 @@ const PersonalRecordsPage = () => {
     }
   };
 
+  // A page already on the stack is handed new params rather than rebuilt.
+  useEffect(() => {
+    if (requestedExerciseName) {
+      setSelectedExerciseName(requestedExerciseName);
+    }
+  }, [requestedExerciseName]);
+
   const closeExerciseDetail = () => {
+    if (
+      returnToWorkout &&
+      selectedExerciseName === requestedExerciseName &&
+      navigation.canGoBack()
+    ) {
+      navigation.goBack();
+      return;
+    }
+
     setSelectedExerciseName(null);
     setSelectedDetail(null);
   };
@@ -1348,14 +1372,14 @@ const PersonalRecordsPage = () => {
       <ThemedHeader>
         <View style={styles.pageHeaderTitleGroup}>
           <ThemedText size={12} style={styles.pageHeaderTitleEyebrow} setColor={quietText}>
-            Library
+            {t("records.eyebrow")}
           </ThemedText>
           <ThemedTitle
             type="pageTitle"
             style={styles.pageHeaderTitleMain}
             numberOfLines={1}
           >
-            Personal Records
+            {t("records.title")}
           </ThemedTitle>
         </View>
       </ThemedHeader>
@@ -1377,7 +1401,7 @@ const PersonalRecordsPage = () => {
             now={nowRef.current}
             periodKey={exercisePeriod}
             onChangePeriod={setExercisePeriod}
-            onBack={() => setSelectedExerciseName(null)}
+            onBack={closeExerciseDetail}
           />
         ) : (
           <>

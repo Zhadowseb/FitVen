@@ -14,6 +14,12 @@ export default {
     playing: "Afspiller: {track}",
     lastPlayed: "Sidst afspillet: {track}",
   },
+  wallpaper: {
+    // Efter antallet af dage, i kortets baggrund.
+    daysUnit: "d",
+    // En uden nogen træning endnu.
+    new: "NY",
+  },
   status: {
     trainingNow: "Træner nu",
     minutesIn: "{count} min inde",

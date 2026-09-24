@@ -27,6 +27,33 @@ export const Colors = {
         planned: "#F2C14E",
         plannedDark: "rgb(201, 174, 0)",
 
+        // What kind of set a set is. Each has its own colour so a warm-up, a
+        // drop set and an AMRAP set read apart at a glance on the card, and
+        // none of them follow the accent - they mean a type, not a brand.
+        // dropSet shares music's purple; the two never meet on one screen.
+        warmup: "#7FA6CC",
+        dropSet: "#B48CFF",
+        amrap: "#FF7A7A",
+
+        // How long since a friend trained, on their resting tile: hot coral,
+        // pink, cool blue, then grey. Its own set rather than borrowed, so it
+        // stays clear of the status colours (orange, green, yellow) and of
+        // music's purple, which shares the tile. fire and fireCore are the
+        // embers under a friend training right now; steam is what comes off
+        // somebody done for the day; charge and chargeCore the glow and the
+        // little bolts on somebody who trained in the last five days; cobweb and spider the
+        // silk and the spider on a friend gone a month.
+        heatHot: "#FF7A7A",
+        heatWarm: "#FF8FD2",
+        heatCool: "#7FA6CC",
+        fire: "#FF7A2E",
+        fireCore: "#FFC94D",
+        steam: "#F2F4F8",
+        charge: "#FFD84D",
+        chargeCore: "#FFF6C2",
+        cobweb: "#D9DCE3",
+        spider: "#07080B",
+
         // Music is purple on purpose: it must not be mistaken for a status
         // (orange live, green done, yellow planned). Used only by the band on
         // the Friends activity tiles, and it does not follow the accent.
@@ -111,6 +138,22 @@ export const Colors = {
         dangerDark: "rgb(150, 40, 26)",
         planned: "#C08A12",
         plannedDark: "rgb(201, 174, 0)",
+
+        // Darker than the dark theme's, to hold contrast against white.
+        warmup: "#3F6E9C",
+        dropSet: "#7A4FD6",
+        amrap: "#C4342F",
+
+        heatHot: "#C4342F",
+        heatWarm: "#C23B8E",
+        heatCool: "#3F6E9C",
+        fire: "#E0561B",
+        fireCore: "#E0A100",
+        steam: "#8A93A6",
+        charge: "#D9A400",
+        chargeCore: "#FFD84D",
+        cobweb: "#7A7F8C",
+        spider: "#2A2D35",
 
         music: "#6E5CF0",
         musicText: "#4A3AB8",

@@ -6,15 +6,12 @@ import { StyleSheet } from "react-native";
 export default StyleSheet.create({
   screen: { gap: 22 },
 
-  header: { flexDirection: "row", alignItems: "center", gap: 10 },
-  headerText: { flex: 1, minWidth: 0, gap: 2 },
   overline: {
     fontSize: 12,
     fontWeight: "800",
     letterSpacing: 1.2,
     textTransform: "uppercase",
   },
-  pageTitle: { fontSize: 22, fontWeight: "800", lineHeight: 27 },
 
   sectionHead: { flexDirection: "row", alignItems: "center", gap: 10 },
   sectionRule: { flex: 1, height: StyleSheet.hairlineWidth },
@@ -23,81 +20,85 @@ export default StyleSheet.create({
   section: { gap: 12 },
   card: { borderWidth: 1, borderRadius: 18, padding: 16 },
 
-  // Biggest movers
-  gainRow: { paddingBottom: 11, gap: 6 },
-  gainDivider: { height: StyleSheet.hairlineWidth, marginBottom: 11 },
-  gainTopLine: { flexDirection: "row", alignItems: "center", gap: 8 },
-  gainName: { flex: 1, minWidth: 0, fontSize: 13, lineHeight: 18 },
-  gainBest: { fontSize: 13, fontWeight: "800", fontVariant: ["tabular-nums"] },
-  gainPct: {
-    width: 46,
+  // The period
+  periodBlock: { gap: 8 },
+
+  // The three numbers
+  kpiRow: { flexDirection: "row", gap: 8 },
+  kpi: {
+    flex: 1,
+    minWidth: 0,
+    borderWidth: 1,
+    borderRadius: 15,
+    paddingVertical: 11,
+    paddingHorizontal: 11,
+    gap: 4,
+  },
+  kpiLabel: {
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 1,
+    textTransform: "uppercase",
+  },
+  kpiValueLine: { flexDirection: "row", alignItems: "flex-end", gap: 3 },
+  kpiValue: {
+    fontSize: 22,
+    fontWeight: "800",
+    lineHeight: 27,
+    fontVariant: ["tabular-nums"],
+  },
+  kpiUnit: { fontSize: 12, fontWeight: "700", lineHeight: 20 },
+  chip: {
+    alignSelf: "flex-start",
+    borderRadius: 999,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+  },
+  chipText: { fontSize: 11, fontWeight: "800", fontVariant: ["tabular-nums"] },
+
+  // Strength
+  strengthCard: {
+    borderWidth: 1,
+    borderRadius: 18,
+    padding: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+  },
+  strengthValue: {
+    fontSize: 30,
+    fontWeight: "800",
+    lineHeight: 36,
+    fontVariant: ["tabular-nums"],
+  },
+  strengthCopy: { flex: 1, minWidth: 0, gap: 2 },
+  strengthTitle: { fontSize: 14, fontWeight: "800", lineHeight: 19 },
+
+  // Biggest gains
+  gainRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 10,
+  },
+  gainName: { width: 108, gap: 1 },
+  gainNameText: { fontSize: 13, fontWeight: "700", lineHeight: 18 },
+  gainTrack: { flex: 1, height: 6, borderRadius: 3, overflow: "hidden" },
+  gainFill: { height: 6, borderRadius: 3 },
+  gainDelta: {
+    width: 70,
     textAlign: "right",
     fontSize: 12,
     fontWeight: "800",
     fontVariant: ["tabular-nums"],
   },
-  gainBottomLine: { flexDirection: "row", alignItems: "center", gap: 8 },
-  gainBefore: { width: 58, fontSize: 11, lineHeight: 15 },
-  gainDelta: {
-    width: 48,
-    textAlign: "right",
-    fontSize: 11,
-    fontWeight: "800",
-    fontVariant: ["tabular-nums"],
-  },
-  // The track carries a zero line so a decline has somewhere to go. Without it
-  // a drop would either be invisible or be drawn as if it were progress.
-  gainTrack: { flex: 1, height: 10, borderRadius: 5, overflow: "hidden" },
-  gainZero: { position: "absolute", top: 0, bottom: 0, width: 1 },
-  gainFill: { position: "absolute", top: 0, bottom: 0, borderRadius: 5 },
-
-  legend: { flexDirection: "row", alignItems: "center", gap: 14, flexWrap: "wrap" },
-  legendItem: { flexDirection: "row", alignItems: "center", gap: 6 },
-  legendDot: { width: 8, height: 8, borderRadius: 4 },
-
-  rowAction: {
-    minHeight: 42,
-    borderWidth: 1,
-    borderRadius: 14,
+  moreRow: {
+    borderTopWidth: 1,
+    paddingTop: 12,
+    marginTop: 2,
     alignItems: "center",
-    justifyContent: "center",
   },
-  rowActionText: { fontSize: 15, fontWeight: "600" },
-
-  // Statistics
-  rateCard: { borderWidth: 1, borderRadius: 18, padding: 16, gap: 8, overflow: "hidden" },
-  rateValueLine: { flexDirection: "row", alignItems: "flex-end", gap: 7 },
-  rateValue: { fontSize: 26, fontWeight: "800", lineHeight: 30 },
-  rateUnit: { fontSize: 14, fontWeight: "800", lineHeight: 20 },
-  compareLine: { flexDirection: "row", alignItems: "center", gap: 6 },
-
-  tileGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  tile: {
-    flexGrow: 1,
-    flexBasis: "46%",
-    minHeight: 88,
-    borderWidth: 1,
-    borderRadius: 15,
-    paddingVertical: 11,
-    paddingHorizontal: 12,
-    justifyContent: "center",
-    gap: 4,
-  },
-  tileValueLine: { flexDirection: "row", alignItems: "flex-end", gap: 5 },
-  tileValue: { fontSize: 19, fontWeight: "700", fontVariant: ["tabular-nums"] },
-  tileUnit: { fontSize: 12, fontWeight: "700", lineHeight: 17 },
-
-  // Weekly volume
-  volumeHead: { flexDirection: "row", alignItems: "flex-end", gap: 8 },
-  volumeValue: { fontSize: 26, fontWeight: "800", lineHeight: 30 },
-  volumeUnit: { fontSize: 14, fontWeight: "800", lineHeight: 20 },
-  pill: {
-    borderRadius: 999,
-    paddingHorizontal: 9,
-    paddingVertical: 4,
-    alignSelf: "flex-start",
-  },
-  pillText: { fontSize: 11, fontWeight: "800" },
+  moreText: { fontSize: 13, fontWeight: "700" },
 
   // Latest records
   recordStrip: { gap: 10, paddingRight: 4 },
@@ -112,6 +113,25 @@ export default StyleSheet.create({
   recordWeightLine: { flexDirection: "row", alignItems: "flex-end", gap: 4 },
   recordWeight: { fontSize: 17, fontWeight: "800", lineHeight: 21 },
   recordWeightMeta: { fontSize: 11, lineHeight: 15 },
+
+  // Every exercise
+  listCard: { paddingVertical: 6 },
+  exerciseRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 11,
+  },
+  exerciseCopy: { flex: 1, minWidth: 0, gap: 2 },
+  exerciseName: { fontSize: 14, fontWeight: "700", lineHeight: 19 },
+  directionPill: {
+    width: 26,
+    height: 22,
+    borderRadius: 7,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  directionText: { fontSize: 13, fontWeight: "900", lineHeight: 16 },
 
   // Sets per muscle group
   muscleRow: { flexDirection: "row", alignItems: "center", gap: 10 },

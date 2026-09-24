@@ -1,88 +1,57 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { ScrollView, TouchableOpacity, View, useColorScheme } from "react-native";
 import Svg, { Defs, LinearGradient, Path, Rect, Stop } from "react-native-svg";
+import { formatNumber, useTranslation } from "@localization";
 
 import styles from "./RecordsOverviewStyle";
-import { Colors, withAlpha } from "../../../../Resources/GlobalStyling/colors";
-import {
-  ThemedSegmentedControl,
-  ThemedText,
-} from "../../../../Resources/ThemedComponents";
+import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
+import ChevronRight from "@resources/Icons/UI-icons/ChevronRight";
+import { ThemedSegmentedControl, ThemedText } from "@resources/ThemedComponents";
 import {
   RECORDS_PERIODS,
-  buildDirections,
   buildExerciseGains,
+  buildExerciseList,
   buildLatestRecords,
   buildMuscleGroupSets,
   buildStats,
-  buildWeeklyVolume,
-} from "../../../../Utils/recordsInsights";
-import { formatCount, formatRelativeDay } from "../../../../Utils/dateUtils";
+  buildStrengthSummary,
+  buildVolumeBuckets,
+} from "@utils/recordsInsights";
+import { formatRelativeDay } from "@utils/dateUtils";
 
-const VOLUME_WEEKS = 12;
-// The movers window, in weeks. It was written once as 84 days in the query and
-// again as "12 uger" in the caption, which is exactly how a caption starts
-// lying about the number underneath it.
-const MOVER_WEEKS = 12;
 const CHART_WIDTH = 340;
-const CHART_HEIGHT = 152;
-const BAR_WIDTH = 16;
+const CHART_HEIGHT = 132;
+const CHART_BASELINE = CHART_HEIGHT - 6;
+const EXERCISES_SHOWN = 6;
+// Under a percent either way is noise, not a direction.
+const STEADY_BAND = 0.01;
 
 function formatKg(value) {
   if (!Number.isFinite(value)) {
     return "–";
   }
 
+  return formatNumber(Math.round(value * 2) / 2, { maximumFractionDigits: 1 });
+}
+
+function formatSignedKg(value) {
   const rounded = Math.round(value * 2) / 2;
 
-  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+  return `${rounded > 0 ? "+" : rounded < 0 ? "−" : ""}${formatKg(Math.abs(rounded))} kg`;
 }
 
-function formatSigned(value, digits = 1) {
-  if (!Number.isFinite(value)) {
-    return "–";
-  }
+function formatSignedPercent(fraction) {
+  const rounded = Math.round(fraction * 100);
 
-  const rounded = Number(value.toFixed(digits));
-
-  return `${rounded > 0 ? "+" : ""}${rounded}`;
+  return `${rounded > 0 ? "+" : rounded < 0 ? "−" : ""}${Math.abs(rounded)} %`;
 }
 
-function formatRate(workoutsPerRecord) {
-  if (!Number.isFinite(workoutsPerRecord)) {
-    return null;
-  }
-
-  // More records than workouts rounds down to zero, and "every 0th workout"
-  // is not a thing. The floor is one.
-  const low = Math.max(1, Math.floor(workoutsPerRecord));
-  const high = Math.max(low, Math.ceil(workoutsPerRecord));
-
-  return low === high
-    ? `every ${ordinal(low)}`
-    : `every ${ordinal(low)}-${ordinal(high)}`;
-}
-
-// English ordinals for the record rate: "every 2nd-3rd workout".
-function ordinal(value) {
-  const rest = value % 100;
-
-  if (rest >= 11 && rest <= 13) {
-    return `${value}th`;
-  }
-
-  switch (value % 10) {
-    case 1:
-      return `${value}st`;
-    case 2:
-      return `${value}nd`;
-    case 3:
-      return `${value}rd`;
-    default:
-      return `${value}th`;
-  }
-}
-
+/**
+ * The Records overview, read top to bottom in one period that the selector
+ * at the top sets for all of it: three numbers against the period before,
+ * whether you are getting stronger, the biggest gains, the volume, the latest
+ * records, every exercise, and the sets per muscle group.
+ */
 export default function RecordsOverview({
   sets,
   groupsByExercise,
@@ -93,6 +62,7 @@ export default function RecordsOverview({
   showAllMovers,
   onToggleAllMovers,
 }) {
+  const { t } = useTranslation();
   const scheme = useColorScheme();
   const theme = Colors[scheme] ?? Colors.light;
   const gold = theme.record;
@@ -105,40 +75,37 @@ export default function RecordsOverview({
   const card = theme.cardBackground;
   const border = theme.border;
   const hairline = theme.hairline;
+  const [showAllExercises, setShowAllExercises] = useState(false);
 
   const period =
-    RECORDS_PERIODS.find((entry) => entry.key === periodKey) ??
-    RECORDS_PERIODS[0];
+    RECORDS_PERIODS.find((entry) => entry.key === periodKey) ?? RECORDS_PERIODS[1];
+  const days = period.days;
 
+  const stats = useMemo(() => buildStats(sets, { now, days }), [sets, now, days]);
+  const strength = useMemo(() => buildStrengthSummary(sets, { now, days }), [sets, now, days]);
   const gains = useMemo(
-    () => buildExerciseGains(sets, { now, windowDays: MOVER_WEEKS * 7 }),
-    [sets, now]
+    () => buildExerciseGains(sets, { now, windowDays: days }),
+    [sets, now, days]
   );
-  const directions = useMemo(() => buildDirections(sets, { now }), [sets, now]);
-  const stats = useMemo(
-    () => buildStats(sets, { now, days: period.days }),
-    [sets, now, period.days]
-  );
-  const volume = useMemo(
-    () => buildWeeklyVolume(sets, { now, weeks: VOLUME_WEEKS }),
-    [sets, now]
-  );
+  const volume = useMemo(() => buildVolumeBuckets(sets, { now, days }), [sets, now, days]);
   const latest = useMemo(() => buildLatestRecords(sets, { limit: 8 }), [sets]);
+  const exercises = useMemo(() => buildExerciseList(sets, { now }), [sets, now]);
   const muscles = useMemo(
-    () =>
-      buildMuscleGroupSets(sets, {
-        groupsByExercise,
-        now,
-        days: period.days,
-      }),
-    [sets, groupsByExercise, now, period.days]
+    () => buildMuscleGroupSets(sets, { groupsByExercise, now, days }),
+    [sets, groupsByExercise, now, days]
   );
 
-  // Four biggest gains and the single biggest decline, which is why the
-  // selection has to be named underneath: without it a drop among the five
-  // looks like the sort is broken.
+  // Four biggest gains and the single biggest decline; with "show all",
+  // everything measured, largest change first either way.
+  const measured = useMemo(
+    () => gains.filter((gain) => Number.isFinite(gain.gainKg) && gain.gainKg !== 0),
+    [gains]
+  );
   const movers = useMemo(() => {
-    const measured = gains.filter((gain) => Number.isFinite(gain.gainKg));
+    if (showAllMovers) {
+      return [...measured].sort((left, right) => Math.abs(right.gainKg) - Math.abs(left.gainKg));
+    }
+
     const rising = measured
       .filter((gain) => gain.gainKg > 0)
       .sort((left, right) => right.gainKg - left.gainKg)
@@ -148,51 +115,9 @@ export default function RecordsOverview({
       .sort((left, right) => left.gainKg - right.gainKg)
       .slice(0, 1);
 
-    if (showAllMovers) {
-      // Everything with a measured change, biggest first in both directions,
-      // so the list stays sorted by how much moved rather than by sign.
-      return measured.sort(
-        (left, right) => Math.abs(right.gainKg) - Math.abs(left.gainKg)
-      );
-    }
-
     return [...rising, ...falling];
-  }, [gains, showAllMovers]);
-
-  const measuredCount = useMemo(
-    () => gains.filter((gain) => Number.isFinite(gain.gainKg)).length,
-    [gains]
-  );
-
-  const scale = useMemo(() => {
-    const biggestUp = Math.max(0, ...movers.map((mover) => mover.gainKg));
-    const biggestDown = Math.abs(Math.min(0, ...movers.map((m) => m.gainKg)));
-    const span = biggestUp + biggestDown;
-
-    return {
-      biggestUp,
-      biggestDown,
-      span,
-      // With nothing negative the zero line sits at the left edge and every
-      // bar reads as an ordinary one.
-      zeroRatio: span === 0 ? 0 : biggestDown / span,
-    };
-  }, [movers]);
-
-  const improving = useMemo(() => {
-    const qualified = directions.filter((entry) => entry.qualifies);
-
-    return {
-      qualified: qualified.length,
-      up: qualified.filter((entry) => entry.direction === "up").length,
-    };
-  }, [directions]);
-
-  const thisWeek = volume[volume.length - 1];
-  const volumeMax = Math.max(1, ...volume.map((week) => week.volume));
-  const averageNow = thisWeek?.average ?? 0;
-  const versusAverage =
-    averageNow > 0 ? (thisWeek.volume - averageNow) / averageNow : null;
+  }, [measured, showAllMovers]);
+  const biggestMove = Math.max(0, ...movers.map((mover) => Math.abs(mover.gainKg)));
 
   const sectionHead = (label, note) => (
     <View style={styles.sectionHead}>
@@ -208,290 +133,270 @@ export default function RecordsOverview({
     </View>
   );
 
+  if (sets.length === 0) {
+    return (
+      <View style={[styles.emptyCard, { backgroundColor: card, borderColor: border }]}>
+        <ThemedText style={styles.emptyTitle} setColor={title}>
+          {t("records.empty.title")}
+        </ThemedText>
+        <ThemedText style={styles.emptyBody} setColor={quiet}>
+          {t("records.empty.body")}
+        </ThemedText>
+      </View>
+    );
+  }
+
+  /* ---------------------------------------------------------------- kpis -- */
+
+  // "+3", "−2" or "same" against the period before; a percentage for volume.
+  const countChange = (current, before) => {
+    if (before === null || before === undefined) {
+      return null;
+    }
+
+    const delta = current - before;
+
+    return {
+      text: delta === 0 ? t("records.kpi.same") : `${delta > 0 ? "+" : "−"}${Math.abs(delta)}`,
+      tone: delta > 0 ? up : delta < 0 ? down : quiet,
+    };
+  };
+  const volumeChange = (() => {
+    if (!stats.previous || stats.previous.volume <= 0) {
+      return null;
+    }
+
+    const change = (stats.current.volume - stats.previous.volume) / stats.previous.volume;
+
+    return {
+      text: formatSignedPercent(change),
+      tone: change > STEADY_BAND ? up : change < -STEADY_BAND ? down : quiet,
+    };
+  })();
+  const kpis = [
+    {
+      key: "workouts",
+      label: t("records.kpi.workouts"),
+      value: formatNumber(stats.current.workouts),
+      change: countChange(stats.current.workouts, stats.previous?.workouts),
+    },
+    {
+      key: "records",
+      label: t("records.kpi.records"),
+      value: formatNumber(stats.current.records),
+      tone: gold,
+      change: countChange(stats.current.records, stats.previous?.records),
+    },
+    {
+      key: "volume",
+      label: t("records.kpi.volume"),
+      value: formatNumber(stats.current.volume / 1000, { maximumFractionDigits: 1 }),
+      unit: t("records.kpi.tonnes"),
+      change: volumeChange,
+    },
+  ];
+
+  /* ------------------------------------------------------------ strength -- */
+
+  const strengthTone =
+    strength === null
+      ? quiet
+      : strength.averagePct > STEADY_BAND
+        ? up
+        : strength.averagePct < -STEADY_BAND
+          ? down
+          : quiet;
+  const strengthTitle =
+    strength === null
+      ? null
+      : strength.averagePct > STEADY_BAND
+        ? t("records.strength.up")
+        : strength.averagePct < -STEADY_BAND
+          ? t("records.strength.down")
+          : t("records.strength.flat");
+
+  /* -------------------------------------------------------------- volume -- */
+
+  const buckets = volume.buckets;
+  const volumeMax = Math.max(1, ...buckets.map((bucket) => bucket.volume));
+  const slot = CHART_WIDTH / Math.max(1, buckets.length);
+  const barWidth = Math.min(18, slot * 0.62);
+  const usable = CHART_BASELINE - 8;
+  const averagePath = buckets
+    .map((bucket, index) => {
+      const x = index * slot + slot / 2;
+      const y = CHART_BASELINE - (bucket.average / volumeMax) * usable;
+
+      return `${index === 0 ? "M" : "L"} ${x} ${y}`;
+    })
+    .join(" ");
+
+  /* ----------------------------------------------------------- exercises -- */
+
+  const shownExercises = showAllExercises ? exercises : exercises.slice(0, EXERCISES_SHOWN);
+  const directionMark = (direction) =>
+    direction === "up"
+      ? { glyph: "↑", tone: up, label: t("records.exercises.up") }
+      : direction === "down"
+        ? { glyph: "↓", tone: down, label: t("records.exercises.down") }
+        : direction === "flat"
+          ? { glyph: "→", tone: quiet, label: t("records.exercises.flat") }
+          : null;
+
+  const leastGroup = muscles[muscles.length - 1];
+  const totalMuscleSets = muscles.reduce((sum, group) => sum + group.setCount, 0);
+
   return (
     <View style={styles.screen}>
-      {/* Biggest movers */}
-      <View style={styles.section}>
-        {/* The label is load-bearing: these are estimated 1RMs, not lifted
-            sets, and without saying so they contradict the record strip. */}
-        {sectionHead("Biggest movers", `est. 1RM · ${MOVER_WEEKS} weeks`)}
+      {/* One period for the whole page. */}
+      <View style={styles.periodBlock}>
+        <ThemedSegmentedControl
+          options={RECORDS_PERIODS.map((entry) => ({
+            value: entry.key,
+            label: t(`records.periods.${entry.key}`),
+          }))}
+          value={period.key}
+          onChange={onChangePeriod}
+        />
+        <ThemedText style={styles.caption} setColor={quiet}>
+          {days === null
+            ? t("records.periodNoteAll")
+            : t("records.periodNote", { period: t(`records.periodsBefore.${period.key}`) })}
+        </ThemedText>
+      </View>
 
-        {movers.length === 0 ? (
-          <View style={[styles.emptyCard, { backgroundColor: card, borderColor: border }]}>
-            <ThemedText style={styles.emptyTitle} setColor={title}>
-              Nothing to measure yet
+      {/* Three numbers, each against the period before. */}
+      <View style={styles.kpiRow}>
+        {kpis.map((kpi) => (
+          <View key={kpi.key} style={[styles.kpi, { backgroundColor: card, borderColor: border }]}>
+            <ThemedText style={styles.kpiLabel} setColor={quiet} numberOfLines={1}>
+              {kpi.label}
             </ThemedText>
-            <ThemedText style={styles.emptyBody} setColor={quiet}>
-              Repeat an exercise over a few weeks and we can tell you whether
-              it is going forwards.
-            </ThemedText>
+            <View style={styles.kpiValueLine}>
+              <ThemedText style={styles.kpiValue} setColor={kpi.tone ?? title} numberOfLines={1}>
+                {kpi.value}
+              </ThemedText>
+              {kpi.unit ? (
+                <ThemedText style={styles.kpiUnit} setColor={quiet}>
+                  {kpi.unit}
+                </ThemedText>
+              ) : null}
+            </View>
+            {kpi.change ? (
+              <View style={[styles.chip, { backgroundColor: withAlpha(kpi.change.tone, 0.14) }]}>
+                <ThemedText style={styles.chipText} setColor={kpi.change.tone}>
+                  {kpi.change.text}
+                </ThemedText>
+              </View>
+            ) : null}
           </View>
+        ))}
+      </View>
+
+      {/* Are you getting stronger. */}
+      <View style={[styles.strengthCard, { backgroundColor: card, borderColor: border }]}>
+        {strength ? (
+          <>
+            <ThemedText style={styles.strengthValue} setColor={strengthTone}>
+              {formatSignedPercent(strength.averagePct)}
+            </ThemedText>
+            <View style={styles.strengthCopy}>
+              <ThemedText style={styles.strengthTitle} setColor={title}>
+                {strengthTitle}
+              </ThemedText>
+              <ThemedText style={styles.caption} setColor={quiet}>
+                {t("records.strength.detail", {
+                  improving: strength.improving,
+                  count: strength.measured,
+                })}
+              </ThemedText>
+            </View>
+          </>
         ) : (
-          <View style={[styles.card, { backgroundColor: card, borderColor: border }]}>
-            {movers.map((mover, index) => {
+          <ThemedText style={styles.emptyBody} setColor={quiet}>
+            {t("records.strength.empty")}
+          </ThemedText>
+        )}
+      </View>
+
+      {/* Biggest gains */}
+      <View style={styles.section}>
+        {sectionHead(t("records.gains.title"))}
+
+        <View style={[styles.card, { backgroundColor: card, borderColor: border }]}>
+          {movers.length === 0 ? (
+            <ThemedText style={styles.emptyBody} setColor={quiet}>
+              {t("records.gains.empty")}
+            </ThemedText>
+          ) : (
+            movers.map((mover, index) => {
               const isDown = mover.gainKg < 0;
-              const magnitude = Math.abs(mover.gainKg);
-              const width =
-                scale.span === 0 ? 0 : (magnitude / scale.span) * 100;
-              const zeroLeft = scale.zeroRatio * 100;
+              const tone = isDown ? down : up;
 
               return (
                 <TouchableOpacity
                   key={mover.name}
                   activeOpacity={0.85}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("records.gains.open", { name: mover.name })}
                   onPress={() => onSelectExercise?.(mover.name)}
-                  style={styles.gainRow}
+                  style={[
+                    styles.gainRow,
+                    index > 0 && { borderTopWidth: 1, borderTopColor: hairline },
+                  ]}
                 >
-                  {index > 0 ? (
-                    <View
-                      style={[styles.gainDivider, { backgroundColor: hairline }]}
-                    />
-                  ) : null}
-
-                  <View style={styles.gainTopLine}>
-                    <ThemedText
-                      style={[
-                        styles.gainName,
-                        { fontWeight: index === 0 ? "800" : "700" },
-                      ]}
-                      setColor={title}
-                      numberOfLines={1}
-                    >
+                  <View style={styles.gainName}>
+                    <ThemedText style={styles.gainNameText} setColor={title} numberOfLines={1}>
                       {mover.name}
                     </ThemedText>
-                    <ThemedText style={styles.gainBest} setColor={title}>
+                    <ThemedText style={styles.caption} setColor={quiet} numberOfLines={1}>
                       {`${formatKg(mover.bestNow)} kg`}
                     </ThemedText>
-                    <ThemedText
-                      style={styles.gainPct}
-                      setColor={isDown ? down : up}
-                    >
-                      {mover.gainPct === null
-                        ? "new"
-                        : `${formatSigned(mover.gainPct * 100, 0)} %`}
-                    </ThemedText>
                   </View>
-
-                  <View style={styles.gainBottomLine}>
-                    <ThemedText style={styles.gainBefore} setColor={quiet}>
-                      {mover.bestBefore === null
-                        ? "first time"
-                        : `was ${formatKg(mover.bestBefore)}`}
-                    </ThemedText>
-
+                  <View style={[styles.gainTrack, { backgroundColor: withAlpha(title, 0.06) }]}>
                     <View
                       style={[
-                        styles.gainTrack,
-                        { backgroundColor: withAlpha(title, 0.05) },
+                        styles.gainFill,
+                        {
+                          width: `${biggestMove === 0 ? 0 : (Math.abs(mover.gainKg) / biggestMove) * 100}%`,
+                          backgroundColor: tone,
+                        },
                       ]}
-                    >
-                      <View
-                        style={[
-                          styles.gainZero,
-                          {
-                            left: `${zeroLeft}%`,
-                            backgroundColor: withAlpha(title, 0.22),
-                          },
-                        ]}
-                      />
-                      <View
-                        style={[
-                          styles.gainFill,
-                          isDown
-                            ? {
-                                right: `${100 - zeroLeft}%`,
-                                width: `${width}%`,
-                                backgroundColor: down,
-                              }
-                            : {
-                                left: `${zeroLeft}%`,
-                                width: `${width}%`,
-                                backgroundColor: up,
-                              },
-                        ]}
-                      />
-                    </View>
-
-                    <ThemedText
-                      style={styles.gainDelta}
-                      setColor={isDown ? down : up}
-                    >
-                      {`${formatSigned(mover.gainKg)}`}
-                    </ThemedText>
+                    />
                   </View>
+                  <ThemedText style={styles.gainDelta} setColor={tone}>
+                    {formatSignedKg(mover.gainKg)}
+                  </ThemedText>
                 </TouchableOpacity>
               );
-            })}
+            })
+          )}
 
-            <View style={styles.legend}>
-              <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: up }]} />
-                <ThemedText style={styles.caption} setColor={quiet}>
-                  up
-                </ThemedText>
-              </View>
-              <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: down }]} />
-                <ThemedText style={styles.caption} setColor={quiet}>
-                  down
-                </ThemedText>
-              </View>
-              <ThemedText style={styles.caption} setColor={quiet}>
+          {measured.length > 5 || showAllMovers ? (
+            <TouchableOpacity
+              accessibilityRole="button"
+              activeOpacity={0.85}
+              onPress={onToggleAllMovers}
+              style={[styles.moreRow, { borderTopColor: hairline }]}
+            >
+              <ThemedText style={styles.moreText} setColor={theme.primaryText ?? theme.primary}>
                 {showAllMovers
-                  ? "every exercise with a measured change"
-                  : "4 biggest gains and the biggest decline"}
+                  ? t("records.gains.showFewer")
+                  : t("records.gains.showAll", { count: measured.length })}
               </ThemedText>
-            </View>
-          </View>
+            </TouchableOpacity>
+          ) : null}
+        </View>
+      </View>
+
+      {/* Volume */}
+      <View style={styles.section}>
+        {sectionHead(
+          volume.unit === "week" ? t("records.volume.weekTitle") : t("records.volume.monthTitle")
         )}
 
-        {measuredCount > movers.length || showAllMovers ? (
-          <TouchableOpacity
-            accessibilityRole="button"
-            activeOpacity={0.85}
-            onPress={onToggleAllMovers}
-            style={[styles.rowAction, { borderColor: border }]}
-          >
-            <ThemedText style={styles.rowActionText} setColor={title}>
-              {showAllMovers
-                ? "Show fewer"
-                : `Show all ${measuredCount} exercises`}
-            </ThemedText>
-          </TouchableOpacity>
-        ) : null}
-      </View>
-
-      {/* Statistics */}
-      <View style={styles.section}>
-        {sectionHead("Statistics")}
-
-        <ThemedSegmentedControl
-          options={RECORDS_PERIODS.map((entry) => ({
-            value: entry.key,
-            label: entry.label,
-          }))}
-          value={period.key}
-          onChange={onChangePeriod}
-        />
-
-        <View
-          style={[
-            styles.rateCard,
-            { backgroundColor: card, borderColor: withAlpha(gold, 0.24) },
-          ]}
-        >
-          <ThemedText style={styles.overline} setColor={gold}>
-            Record
-          </ThemedText>
-          <View style={styles.rateValueLine}>
-            <ThemedText style={styles.rateValue} setColor={title}>
-              {formatRate(stats.current.workoutsPerRecord) ?? "none yet"}
-            </ThemedText>
-            {stats.current.workoutsPerRecord ? (
-              <ThemedText style={styles.rateUnit} setColor={quiet}>
-                workout
-              </ThemedText>
-            ) : null}
-          </View>
-          {/* A rate on its own says nothing. The comparison is what turns it
-              into information, so it is part of the card, not an extra. */}
-          <ThemedText style={styles.caption} setColor={quiet}>
-            {formatRate(stats.previous.workoutsPerRecord)
-              ? `was ${formatRate(stats.previous.workoutsPerRecord)}`
-              : "no comparison for the period before"}
-          </ThemedText>
-        </View>
-
-        <View style={styles.tileGrid}>
-          {[
-            { key: "workouts", value: `${stats.current.workouts}`, label: "Workouts" },
-            { key: "records", value: `${stats.current.records}`, label: "Records" },
-            {
-              key: "improving",
-              value:
-                improving.qualified >= 4
-                  ? `${improving.up}`
-                  : `${improving.qualified}`,
-              unit:
-                improving.qualified >= 4
-                  ? `of ${improving.qualified}`
-                  : "tracking",
-              label: "Improving",
-            },
-            {
-              key: "per",
-              value:
-                stats.current.perWorkout === null
-                  ? "–"
-                  : stats.current.perWorkout.toFixed(1),
-              label: "Per workout",
-            },
-          ].map((tile) => (
-            <View
-              key={tile.key}
-              style={[styles.tile, { backgroundColor: card, borderColor: border }]}
-            >
-              <View style={styles.tileValueLine}>
-                <ThemedText style={styles.tileValue} setColor={title}>
-                  {tile.value}
-                </ThemedText>
-                {tile.unit ? (
-                  <ThemedText style={styles.tileUnit} setColor={quiet}>
-                    {tile.unit}
-                  </ThemedText>
-                ) : null}
-              </View>
-              <ThemedText style={styles.overline} setColor={quiet}>
-                {tile.label}
-              </ThemedText>
-            </View>
-          ))}
-        </View>
-
-        <ThemedText style={styles.caption} setColor={quiet}>
-          {period.days === null
-            ? "Your whole history. No earlier period to compare with."
-            : `Compared with the ${Math.round(period.days / 7)} weeks before it`}
-        </ThemedText>
-      </View>
-
-      {/* Weekly volume */}
-      <View style={styles.section}>
-        {sectionHead("Volume per week")}
-
         <View style={[styles.card, { backgroundColor: card, borderColor: border }]}>
-          <ThemedText style={styles.caption} setColor={quiet}>
-            this week
-          </ThemedText>
-          <View style={styles.volumeHead}>
-            <ThemedText style={styles.volumeValue} setColor={title}>
-              {((thisWeek?.volume ?? 0) / 1000).toFixed(1)}
-            </ThemedText>
-            <ThemedText style={styles.volumeUnit} setColor={quiet}>
-              tonnes
-            </ThemedText>
-            {versusAverage !== null ? (
-              <View
-                style={[
-                  styles.pill,
-                  { backgroundColor: withAlpha(versusAverage >= 0 ? up : down, 0.16) },
-                ]}
-              >
-                <ThemedText
-                  style={styles.pillText}
-                  setColor={versusAverage >= 0 ? up : down}
-                >
-                  {`${formatSigned(versusAverage * 100, 0)}% vs average`}
-                </ThemedText>
-              </View>
-            ) : null}
-          </View>
-
-          <Svg
-            width="100%"
-            height={CHART_HEIGHT}
-            viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
-          >
+          <Svg width="100%" height={CHART_HEIGHT} viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}>
             <Defs>
               <LinearGradient id="recordsVolumeBar" x1="0" y1="0" x2="0" y2="1">
                 <Stop offset="0" stopColor={theme.primary} stopOpacity="0.95" />
@@ -499,64 +404,33 @@ export default function RecordsOverview({
               </LinearGradient>
             </Defs>
 
-            {volume.map((week, index) => {
-              const slot = CHART_WIDTH / VOLUME_WEEKS;
-              const x = index * slot + (slot - BAR_WIDTH) / 2;
-              const usable = CHART_HEIGHT - 26;
-              // An empty week keeps a 3 dp stub so the gap reads as "nothing
-              // logged" rather than as a missing column.
-              const height = week.isEmpty
-                ? 3
-                : Math.max(4, (week.volume / volumeMax) * usable);
+            {buckets.map((bucket, index) => {
+              // An empty bucket keeps a 3 dp stub, so the gap reads as nothing
+              // logged rather than as a missing column.
+              const height = bucket.isEmpty ? 3 : Math.max(4, (bucket.volume / volumeMax) * usable);
 
               return (
                 <Rect
-                  key={week.weekStart}
-                  x={x}
-                  y={CHART_HEIGHT - 18 - height}
-                  width={BAR_WIDTH}
+                  key={bucket.start}
+                  x={index * slot + (slot - barWidth) / 2}
+                  y={CHART_BASELINE - height}
+                  width={barWidth}
                   height={height}
-                  rx={4}
-                  fill={
-                    week.isEmpty
-                      ? withAlpha(title, 0.14)
-                      : "url(#recordsVolumeBar)"
-                  }
+                  rx={Math.min(4, barWidth / 3)}
+                  fill={bucket.isEmpty ? withAlpha(title, 0.14) : "url(#recordsVolumeBar)"}
                 />
               );
             })}
 
-            {/* Four-week average, counting the empty weeks. Skipping them
-                would make the line rise through a break. */}
-            <Path
-              d={volume
-                .map((week, index) => {
-                  const slot = CHART_WIDTH / VOLUME_WEEKS;
-                  const x = index * slot + slot / 2;
-                  const usable = CHART_HEIGHT - 26;
-                  const y =
-                    CHART_HEIGHT - 18 - (week.average / volumeMax) * usable;
+            {buckets.length > 1 ? (
+              <Path d={averagePath} stroke={gold} strokeWidth={1.5} strokeDasharray="4 4" fill="none" />
+            ) : null}
 
-                  return `${index === 0 ? "M" : "L"} ${x} ${y}`;
-                })
-                .join(" ")}
-              stroke={gold}
-              strokeWidth={1.5}
-              strokeDasharray="4 4"
-              fill="none"
-            />
-
-            <Rect
-              x={0}
-              y={CHART_HEIGHT - 18}
-              width={CHART_WIDTH}
-              height={1}
-              fill={withAlpha(title, 0.16)}
-            />
+            <Rect x={0} y={CHART_BASELINE} width={CHART_WIDTH} height={1} fill={withAlpha(title, 0.16)} />
           </Svg>
 
           <ThemedText style={styles.caption} setColor={quiet}>
-            {`${VOLUME_WEEKS} weeks · the gold line is the 4-week average`}
+            {volume.unit === "week" ? t("records.volume.weekAverage") : t("records.volume.monthAverage")}
           </ThemedText>
         </View>
       </View>
@@ -564,13 +438,9 @@ export default function RecordsOverview({
       {/* Latest records */}
       {latest.length > 0 ? (
         <View style={styles.section}>
-          {sectionHead("Latest records")}
+          {sectionHead(t("records.latest.title"))}
 
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.recordStrip}
-          >
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.recordStrip}>
             {latest.map((record, index) => (
               <TouchableOpacity
                 key={`${record.name}-${record.at}-${record.reps}-${index}`}
@@ -578,17 +448,10 @@ export default function RecordsOverview({
                 onPress={() => onSelectExercise?.(record.name)}
                 style={[
                   styles.recordCard,
-                  {
-                    backgroundColor: withAlpha(gold, 0.08),
-                    borderColor: withAlpha(gold, 0.3),
-                  },
+                  { backgroundColor: withAlpha(gold, 0.08), borderColor: withAlpha(gold, 0.3) },
                 ]}
               >
-                <ThemedText
-                  style={styles.recordName}
-                  setColor={title}
-                  numberOfLines={1}
-                >
+                <ThemedText style={styles.recordName} setColor={title} numberOfLines={1}>
                   {record.name}
                 </ThemedText>
                 <View style={styles.recordWeightLine}>
@@ -599,7 +462,7 @@ export default function RecordsOverview({
                     {`kg × ${record.reps}`}
                   </ThemedText>
                 </View>
-                <ThemedText style={styles.caption} setColor={quiet}>
+                <ThemedText style={styles.caption} setColor={quiet} numberOfLines={1}>
                   {formatRelativeDay(record.at, now)}
                 </ThemedText>
               </TouchableOpacity>
@@ -608,59 +471,104 @@ export default function RecordsOverview({
         </View>
       ) : null}
 
+      {/* Every exercise */}
+      <View style={styles.section}>
+        {sectionHead(t("records.exercises.title"), formatNumber(exercises.length))}
+
+        <View style={[styles.card, styles.listCard, { backgroundColor: card, borderColor: border }]}>
+          {shownExercises.map((exercise, index) => {
+            const mark = directionMark(exercise.direction);
+
+            return (
+              <TouchableOpacity
+                key={exercise.name}
+                activeOpacity={0.85}
+                accessibilityRole="button"
+                accessibilityLabel={t("records.gains.open", { name: exercise.name })}
+                onPress={() => onSelectExercise?.(exercise.name)}
+                style={[styles.exerciseRow, index > 0 && { borderTopWidth: 1, borderTopColor: hairline }]}
+              >
+                <View style={styles.exerciseCopy}>
+                  <ThemedText style={styles.exerciseName} setColor={title} numberOfLines={1}>
+                    {exercise.name}
+                  </ThemedText>
+                  <ThemedText style={styles.caption} setColor={quiet} numberOfLines={1}>
+                    {t("records.exercises.heaviest", {
+                      lift: `${formatKg(exercise.heaviest.weight)} kg × ${exercise.heaviest.reps}`,
+                    })}
+                    {` · ${formatRelativeDay(exercise.lastAt, now)}`}
+                  </ThemedText>
+                </View>
+                {mark ? (
+                  <View
+                    accessibilityLabel={mark.label}
+                    style={[styles.directionPill, { backgroundColor: withAlpha(mark.tone, 0.14) }]}
+                  >
+                    <ThemedText style={styles.directionText} setColor={mark.tone}>
+                      {mark.glyph}
+                    </ThemedText>
+                  </View>
+                ) : null}
+                <ChevronRight width={15} height={15} color={quiet} />
+              </TouchableOpacity>
+            );
+          })}
+
+          {exercises.length > EXERCISES_SHOWN ? (
+            <TouchableOpacity
+              accessibilityRole="button"
+              activeOpacity={0.85}
+              onPress={() => setShowAllExercises((value) => !value)}
+              style={[styles.moreRow, { borderTopColor: hairline }]}
+            >
+              <ThemedText style={styles.moreText} setColor={theme.primaryText ?? theme.primary}>
+                {showAllExercises
+                  ? t("records.exercises.showFewer")
+                  : t("records.exercises.showAll", { count: exercises.length })}
+              </ThemedText>
+            </TouchableOpacity>
+          ) : null}
+        </View>
+      </View>
+
       {/* Sets per muscle group */}
       {muscles.length > 0 ? (
         <View style={styles.section}>
-          {sectionHead("Sets per muscle group", period.label)}
+          {sectionHead(t("records.muscles.title"))}
 
           <View style={[styles.card, { backgroundColor: card, borderColor: border }]}>
             {muscles.slice(0, 6).map((group, index, list) => {
               const biggest = list[0]?.setCount || 1;
-              const isLowest = index === list.length - 1 && list.length > 1;
+              const isLowest = group === leastGroup && muscles.length > 1;
 
               return (
                 <View key={group.label} style={[styles.muscleRow, { marginBottom: 10 }]}>
-                  <ThemedText
-                    style={styles.muscleName}
-                    setColor={quiet}
-                    numberOfLines={1}
-                  >
+                  <ThemedText style={styles.muscleName} setColor={quiet} numberOfLines={1}>
                     {group.label}
                   </ThemedText>
-                  <View
-                    style={[
-                      styles.muscleTrack,
-                      { backgroundColor: withAlpha(title, 0.06) },
-                    ]}
-                  >
+                  <View style={[styles.muscleTrack, { backgroundColor: withAlpha(title, 0.06) }]}>
                     <View
                       style={[
                         styles.muscleFill,
                         {
                           width: `${(group.setCount / biggest) * 100}%`,
-                          // The lowest group is drawn in a solid muted colour
-                          // rather than a faded one: it is the group the
-                          // caption points at, so it has to be visible.
                           backgroundColor: isLowest ? quiet : theme.primary,
                         },
                       ]}
                     />
                   </View>
                   <ThemedText style={styles.muscleValue} setColor={title}>
-                    {group.setCount}
+                    {formatNumber(group.setCount)}
                   </ThemedText>
                 </View>
               );
             })}
 
-            <ThemedText style={styles.caption} setColor={quiet}>
-              {`${formatCount(
-                muscles.reduce((sum, group) => sum + group.setCount, 0),
-                "logged set"
-              )} in the period · ${
-                muscles[muscles.length - 1]?.label ?? "–"
-              } is trained least`}
-            </ThemedText>
+            {leastGroup ? (
+              <ThemedText style={styles.caption} setColor={quiet}>
+                {t("records.muscles.summary", { group: leastGroup.label, count: totalMuscleSets })}
+              </ThemedText>
+            ) : null}
           </View>
         </View>
       ) : null}

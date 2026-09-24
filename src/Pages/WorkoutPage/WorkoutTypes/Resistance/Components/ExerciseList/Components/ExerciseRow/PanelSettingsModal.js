@@ -9,11 +9,7 @@ import ChevronRight from "@resources/Icons/UI-icons/ChevronRight";
 import Delete from "@resources/Icons/UI-icons/Delete";
 import Time from "@resources/Icons/UI-icons/Time";
 
-import {
-  ThemedModal,
-  ThemedText,
-  ThemedTextInput,
-} from "@resources/ThemedComponents";
+import { ThemedModal, ThemedText } from "@resources/ThemedComponents";
 import styles from "./PanelSettingsModalStyle";
 
 const COLUMN_CONFIG = [
@@ -34,21 +30,18 @@ export default function PanelSettingsModal({
   onDelete,
   onOpenRestUnit,
   currentColumns,
-  currentNote,
 }) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const primaryTextColor = theme.primaryText ?? theme.primary;
 
   const [columns, setColumns] = useState(currentColumns);
-  const [note, setNote] = useState(currentNote ?? "");
 
   useEffect(() => {
     if (visible) {
       setColumns(currentColumns);
-      setNote(currentNote ?? "");
     }
-  }, [visible, currentColumns, currentNote]);
+  }, [visible, currentColumns]);
 
   const toggleColumn = (key) => {
     setColumns((previous) => ({
@@ -58,7 +51,7 @@ export default function PanelSettingsModal({
   };
 
   const handleClose = () => {
-    onClose({ columns, note });
+    onClose({ columns });
   };
 
   return (
@@ -121,7 +114,7 @@ export default function PanelSettingsModal({
           activeOpacity={0.84}
           accessibilityRole="button"
           onPress={() => {
-            onClose({ columns, note });
+            onClose({ columns });
             onOpenRestUnit?.();
           }}
           style={[
@@ -157,20 +150,6 @@ export default function PanelSettingsModal({
             thickness={2}
           />
         </TouchableOpacity>
-      </View>
-
-      <View style={styles.section}>
-        <ThemedText style={styles.sectionLabel} setColor={theme.text}>
-          Exercise note
-        </ThemedText>
-
-        <ThemedTextInput
-          value={note}
-          onChangeText={setNote}
-          placeholder="Add note"
-          multiline
-          inputStyle={styles.noteInput}
-        />
       </View>
 
       <TouchableOpacity
