@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "2.3.0-feature-records-page-overview.1",
+  "version": "2.3.1-fix-the-agents-cannot-run-on-a-push.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",
