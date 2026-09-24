@@ -24,6 +24,7 @@ import {
   buildRepLadder,
 } from "../../../../Utils/recordsInsights";
 import { formatRelativeDay } from "../../../../Utils/dateUtils";
+import { formatDate, useTranslation } from "@localization";
 
 const W = 340;
 const H = 190;
@@ -33,7 +34,6 @@ const H = 190;
 // numbers are whole and the gutter is wide enough for them.
 const GUTTER = 28;
 const PAD = { top: 14, right: 8, bottom: 30 };
-const MONTHS = ["jan", "feb", "mar", "apr", "maj", "jun", "jul", "aug", "sep", "okt", "nov", "dec"];
 
 function kg(value) {
   if (!Number.isFinite(value)) return "–";
@@ -41,9 +41,22 @@ function kg(value) {
   return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
 }
 
-function shortDate(at) {
+// The record dates are UTC midnights. Rebuilt as the same calendar day in the
+// phone's own zone before formatting, so a record set on the 3rd never prints
+// as the 2nd - and without the timeZone option, which is not a thing to rely
+// on in every JS engine the app runs on.
+function calendarDay(at) {
   const date = new Date(at);
-  return `${date.getUTCDate()}. ${MONTHS[date.getUTCMonth()]}`;
+
+  return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+}
+
+function shortDate(at) {
+  return formatDate(calendarDay(at), { day: "numeric", month: "short" });
+}
+
+function shortMonth(at) {
+  return formatDate(calendarDay(at), { month: "short" }).replace(/\.$/, "");
 }
 
 /** Catmull-Rom through the points, emitted as cubic beziers. */
@@ -77,6 +90,7 @@ export default function RecordsExercise({
   onChangePeriod,
   onBack,
 }) {
+  const { t } = useTranslation();
   const scheme = useColorScheme();
   const theme = Colors[scheme] ?? Colors.light;
   const gold = theme.record;
@@ -154,7 +168,7 @@ export default function RecordsExercise({
         const x = plotLeft + ((at - from) / span) * plotWidth;
 
         if (x - lastX > 34) {
-          marks.push({ x, label: MONTHS[cursor.getUTCMonth()] });
+          marks.push({ x, label: shortMonth(at) });
           lastX = x;
         }
       }
@@ -215,7 +229,7 @@ export default function RecordsExercise({
       <View style={styles.header}>
         <TouchableOpacity
           accessibilityRole="button"
-          accessibilityLabel="Tilbage til Records"
+          accessibilityLabel={t("records.exercise.back")}
           onPress={onBack}
           style={[styles.backButton, { backgroundColor: theme.uiBackground }]}
         >
@@ -227,7 +241,7 @@ export default function RecordsExercise({
 
         <View style={styles.headerText}>
           <ThemedText style={styles.overline} setColor={quiet}>
-            Records
+            {t("records.exercise.overline")}
           </ThemedText>
           <ThemedText style={styles.pageTitle} setColor={title} numberOfLines={1}>
             {name}
@@ -237,7 +251,7 @@ export default function RecordsExercise({
 
       <View style={[styles.card, { backgroundColor: card, borderColor: border }]}>
         <ThemedText style={styles.overline} setColor={quiet}>
-          Estimeret 1RM
+          {t("records.exercise.estimate")}
         </ThemedText>
 
         <View style={styles.chartHead}>
@@ -258,7 +272,9 @@ export default function RecordsExercise({
                 style={styles.pillText}
                 setColor={change >= 0 ? up : theme.danger}
               >
-                {`${change >= 0 ? "+" : ""}${(change * 100).toFixed(0)} % i perioden`}
+                {t("records.exercise.changeInPeriod", {
+                  change: `${change >= 0 ? "+" : ""}${(change * 100).toFixed(0)}`,
+                })}
               </ThemedText>
             </View>
           ) : null}
@@ -290,7 +306,7 @@ export default function RecordsExercise({
                   fontSize="9"
                   textAnchor="middle"
                 >
-                  {`${gap.days} days`}
+                  {t("records.exercise.gapDays", { count: gap.days })}
                 </SvgText>
               </React.Fragment>
             ))}
@@ -406,14 +422,14 @@ export default function RecordsExercise({
           </Svg>
         ) : (
           <ThemedText style={styles.caption} setColor={quiet}>
-            No sets with a weight in this period.
+            {t("records.exercise.noSets")}
           </ThemedText>
         )}
 
         <ThemedSegmentedControl
           options={EXERCISE_PERIODS.map((entry) => ({
             value: entry.key,
-            label: entry.label,
+            label: t(`records.exercise.periods.${entry.key}`),
           }))}
           value={period.key}
           onChange={onChangePeriod}
@@ -421,10 +437,10 @@ export default function RecordsExercise({
 
         {last ? (
           <ThemedText style={styles.caption} setColor={quiet}>
-            {`Best set ${formatRelativeDay(
-              last.at,
-              now
-            ).toLowerCase()} · ${kg(last.weight)} × ${last.reps}`}
+            {t("records.exercise.bestSet", {
+              when: formatRelativeDay(last.at, now).toLowerCase(),
+              lift: `${kg(last.weight)} × ${last.reps}`,
+            })}
           </ThemedText>
         ) : null}
       </View>
@@ -437,12 +453,13 @@ export default function RecordsExercise({
           ]}
         >
           <ThemedText style={styles.nextStepTitle} setColor={title}>
-            {`Next step at ${nextStep.reps} reps`}
+            {t("records.exercise.nextStep", { reps: nextStep.reps })}
           </ThemedText>
           <ThemedText style={styles.caption} setColor={quiet}>
-            {`try ${kg(nextStep.target)} × ${nextStep.reps} · you did ${kg(
-              nextStep.current
-            )} × ${nextStep.reps}`}
+            {t("records.exercise.tryNext", {
+              target: `${kg(nextStep.target)} × ${nextStep.reps}`,
+              current: `${kg(nextStep.current)} × ${nextStep.reps}`,
+            })}
           </ThemedText>
         </View>
       ) : null}
@@ -450,7 +467,7 @@ export default function RecordsExercise({
       <View style={{ gap: 12 }}>
         <View style={styles.sectionHead}>
           <ThemedText style={styles.overline} setColor={quiet}>
-            Rekord pr. reps
+            {t("records.exercise.repLadder")}
           </ThemedText>
           <View style={[styles.sectionRule, { backgroundColor: hairline }]} />
         </View>
@@ -475,7 +492,7 @@ export default function RecordsExercise({
                 ]}
               >
                 <ThemedText style={styles.tileReps} setColor={quiet}>
-                  {`${slot.reps} REPS`}
+                  {t("records.exercise.repsShort", { reps: slot.reps })}
                 </ThemedText>
                 <View style={styles.tileValueLine}>
                   <ThemedText
@@ -491,7 +508,7 @@ export default function RecordsExercise({
                   )}
                 </View>
                 <ThemedText style={styles.caption} setColor={quiet}>
-                  {empty ? "no set" : shortDate(slot.at)}
+                  {empty ? t("records.exercise.noSet") : shortDate(slot.at)}
                 </ThemedText>
               </View>
             );
@@ -503,7 +520,7 @@ export default function RecordsExercise({
         <View style={{ gap: 12 }}>
           <View style={styles.sectionHead}>
             <ThemedText style={styles.overline} setColor={quiet}>
-              Latest sets
+              {t("records.exercise.latestSets")}
             </ThemedText>
             <View style={[styles.sectionRule, { backgroundColor: hairline }]} />
           </View>
@@ -525,7 +542,7 @@ export default function RecordsExercise({
                 </ThemedText>
                 {session.hasRecord ? (
                   <ThemedText style={styles.tileReps} setColor={gold}>
-                    PR
+                    {t("records.exercise.pr")}
                   </ThemedText>
                 ) : null}
               </View>

@@ -23,6 +23,7 @@ import CobwebFrame from "./CobwebFrame";
 import Crown from "./Crown";
 import EmberFrame from "./EmberFrame";
 import SteamFrame from "./SteamFrame";
+import TileBorder from "./TileBorder";
 import styles, {
   AURA_SIZE,
   AVATAR_SIZE,
@@ -556,6 +557,71 @@ function CobwebAura({ theme, animate, seed }) {
   );
 }
 
+/* ------------------------------------------------------------- border -- */
+
+// Stops for a turning edge: dim at both ends and bright through the middle,
+// so as the gradient turns two highlights chase each other round the tile.
+function chasingStops(dim, main, bright) {
+  return [
+    [0, dim, 0.55],
+    [0.3, main, 1],
+    [0.5, bright, 1],
+    [0.7, main, 1],
+    [1, dim, 0.55],
+  ];
+}
+
+// Stops for a still edge: the colour strong at one corner, fading to a trace
+// at the other.
+function restingStops(color, strength = 1) {
+  return [
+    [0, color, 0.95 * strength],
+    [0.5, color, 0.45 * strength],
+    [1, color, 0.12 * strength],
+  ];
+}
+
+/**
+ * The edge a tile wears: its mood's colours, turning while there is
+ * something going on - on a fire, steaming, crowned, charged - and still for
+ * the rest. Null keeps the plain grey hairline (planned today, or nothing at
+ * all to say).
+ */
+function tileBorderFor({ mood, crown, wallpaper, chargeLevel, theme }) {
+  if (mood === "embers") {
+    return { stops: chasingStops("#E0341B", theme.fire, theme.fireCore), periodMs: 3200 };
+  }
+
+  if (crown) {
+    return { stops: chasingStops("#B7791F", "#E8B44A", "#FFF1B0"), periodMs: 4200 };
+  }
+
+  if (mood === "steam") {
+    return {
+      stops: chasingStops(withAlpha(theme.secondary, 0.4), theme.secondary, theme.steam),
+      periodMs: 7000,
+    };
+  }
+
+  if (mood === "charged") {
+    return {
+      stops: chasingStops(withAlpha(theme.charge, 0.35), theme.charge, theme.chargeCore),
+      // Slower as the charge runs down.
+      periodMs: 2600 + (3 - chargeLevel) * 900,
+    };
+  }
+
+  if (mood === "cobweb") {
+    return { stops: restingStops(theme.quietText, 0.6), periodMs: null };
+  }
+
+  if (wallpaper) {
+    return { stops: restingStops(wallpaperColor(wallpaper, theme)), periodMs: null };
+  }
+
+  return null;
+}
+
 /* ------------------------------------------------------------- avatar -- */
 
 function TileAvatar({ theme, meta, activityState, avatarUrl, iconColor, animate, mood, crown, seed }) {
@@ -718,6 +784,7 @@ function ActivityTile({
   const isLive = activityState === "live";
   const isRest = !activityState || activityState === "rest";
   const frameSeed = motionSeed + 1;
+  const border = tileBorderFor({ mood, crown, wallpaper, chargeLevel, theme });
 
   return (
     <TouchableOpacity
@@ -731,16 +798,27 @@ function ActivityTile({
       }
       style={[
         styles.tile,
-        {
-          backgroundColor: theme.cardBackground,
-          borderColor: isLive
-            ? withAlpha(theme.primary, 0.45)
-            : mood === "charged"
-              ? withAlpha(theme.charge, 0.3)
-              : theme.cardBorder,
-        },
+        border
+          ? styles.tileFramed
+          : {
+              backgroundColor: theme.cardBackground,
+              borderColor: isLive ? withAlpha(theme.primary, 0.45) : theme.cardBorder,
+            },
       ]}
     >
+      {border ? (
+        <TileBorder stops={border.stops} periodMs={border.periodMs} animate={animate} />
+      ) : null}
+
+      {/* Everything else sits on this, inset by the border's width when there
+          is one, so the coloured edge shows as a ring round it. */}
+      <View
+        style={[
+          styles.tileInner,
+          border ? styles.tileInnerFramed : null,
+          { backgroundColor: theme.cardBackground },
+        ]}
+      >
       {wallpaper ? (
         <TileWallpaper
           wallpaper={wallpaper}
@@ -798,6 +876,7 @@ function ActivityTile({
         crown={crown}
         seed={motionSeed}
       />
+      </View>
     </TouchableOpacity>
   );
 }
