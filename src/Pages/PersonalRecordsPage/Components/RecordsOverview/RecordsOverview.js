@@ -257,11 +257,6 @@ export default function RecordsOverview({
           value={period.key}
           onChange={onChangePeriod}
         />
-        <ThemedText style={styles.caption} setColor={quiet}>
-          {days === null
-            ? t("records.periodNoteAll")
-            : t("records.periodNote", { period: t(`records.periodsBefore.${period.key}`) })}
-        </ThemedText>
       </View>
 
       {/* Three numbers, each against the period before. */}

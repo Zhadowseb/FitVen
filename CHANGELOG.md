@@ -6,6 +6,7 @@
 - **The least-trained muscle group gets its own count.** "Hamstrings get the least · 340 sets in the period" put every group's sets next to one group's name; it is that group's sets now.
 - **`npm test` runs the background-post test again.** Merging master into the Records branch kept that branch's `package.json`, which had never heard of `test:background-post`, and the test dropped out of the chain.
 - **A background post's bar no longer outlives a sign-out.** Its status is module state and a sign-out does not end the process, so the next account on the phone got the bar - the note and "Try again" included - for someone else's workout. It is cleared whenever the signed-in user changes; `npm run test:background-post` checks it.
+- **Records drops the line under the period selector.** "Everything follows the period · compared with the 4 weeks before" said what the page already shows.
 - **A crowned tile's gold edge follows the theme.** It was the dark theme's gold in both, the tone the light theme darkens because it cannot be read on white.
 
 ---
