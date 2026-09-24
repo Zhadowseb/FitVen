@@ -165,33 +165,71 @@ async function statusAndErrors() {
 }
 
 async function postDialog() {
+  // "Post it" hands the post to the background and takes the person Home at
+  // once. It used to await the post, which waits in the sync queue behind the
+  // upload that finishing the workout had just started, and the sheet sat on
+  // "Posting..." for as long as that took.
   const source = read("src/Pages/WorkoutPage/WorkoutTypes/Resistance/Resistance.js");
-  const handler = source.slice(source.indexOf("  const postWorkoutSummary = async"), source.indexOf("  const restartWorkout = async"));
-  let shouldFail = true;
+  const handler = source.slice(source.indexOf("  const postWorkoutSummary = "), source.indexOf("  const restartWorkout = async"));
+  assert.ok(!/await/.test(handler), "The finish sheet waits for the post again");
   let visible = true;
-  let busy = false;
-  let errorMessage = "";
-  const receivedNotes = [];
+  const handedOff = [];
+  const wentHome = [];
   const ui = vm.createContext({
-    console: quietConsole, isPostingSummary: false, db: {}, workout_id: 7, postNote: "Keep this note",
-    workoutService: { repostWorkoutSummaryPost: async (db, args) => {
-      receivedNotes.push(args.note);
-      if (shouldFail) throw new Error("Network request failed");
-    } },
+    console: quietConsole, db: {}, workout_id: 7, postNote: "Keep this note", navigation: { name: "nav" },
+    workoutService: { postWorkoutSummaryInBackground: (db, args) => { handedOff.push(args); return 1; } },
     setPostConfirmVisible: (value) => { visible = value; },
-    setIsPostingSummary: (value) => { busy = value; },
-    setPostError: (value) => { errorMessage = value; },
+    goHome: (navigation) => { wentHome.push(navigation.name); },
   });
   vm.runInContext(handler + "\nglobalThis.runPost = postWorkoutSummary;", ui);
-  await ui.runPost();
-  assert.equal(visible, true);
-  assert.equal(busy, false);
-  assert.equal(errorMessage, "Network request failed");
-  shouldFail = false;
-  await ui.runPost();
-  assert.equal(visible, false);
-  assert.equal(errorMessage, "");
-  assert.deepEqual(receivedNotes, ["Keep this note", "Keep this note"]);
+  ui.runPost();
+  // Fields, not deepEqual: the object was made in the vm's realm.
+  assert.equal(handedOff.length, 1);
+  assert.equal(handedOff[0].workoutId, 7);
+  assert.equal(handedOff[0].note, "Keep this note", "The note did not go with the post");
+  assert.equal(visible, false, "The sheet stays open after Post");
+  assert.deepEqual(wentHome, ["nav"], "Post does not take the person Home");
+}
+
+async function backgroundPost() {
+  // The background post reports through workoutPostEvents: posting, then
+  // posted - or failed, and a retry sends it again with the same note.
+  const events = load("src/Utils/workoutPostEvents.js");
+  let failure = new Error("Network request failed");
+  const notes = [];
+  const service = load("src/Services/workoutService.js", {
+    enqueueSync: (task) => task(),
+    startBackgroundSync: () => {},
+    setTimeout: () => {},
+    getWorkoutPostStatus: events.getWorkoutPostStatus,
+    setWorkoutPostStatus: events.setWorkoutPostStatus,
+    updateWorkoutPostStatus: events.updateWorkoutPostStatus,
+    clearWorkoutPostStatus: events.clearWorkoutPostStatus,
+    postMock: { createWorkoutSummaryPostForCompletedWorkout: async (db, options) => {
+      notes.push(options.note);
+      if (failure) throw failure;
+      return { id: 1 };
+    } },
+    programMock: { prepareWorkoutForSummaryPost: async () => {} },
+  }, [
+    ['import("./programService")', "Promise.resolve(programMock)"],
+    ['import("./socialPostService")', "Promise.resolve(postMock)"],
+  ]);
+  const settle = () => new Promise((resolve) => setImmediate(resolve));
+
+  service.postWorkoutSummaryInBackground({}, { workoutId: 7, note: "Heavy day" });
+  assert.equal(events.getWorkoutPostStatus().state, "posting", "Home is not told the post is under way");
+  await settle();
+  assert.equal(events.getWorkoutPostStatus().state, "failed", "A failed post is not reported");
+
+  failure = null;
+  service.retryBackgroundWorkoutPost({});
+  await settle();
+  assert.equal(events.getWorkoutPostStatus().state, "posted", "The retry did not report the post as done");
+  assert.deepEqual(notes, ["Heavy day", "Heavy day"], "The retry lost the note");
+
+  service.dismissBackgroundWorkoutPost();
+  assert.equal(events.getWorkoutPostStatus(), null);
 }
 
 function catalogRepair() {
@@ -220,6 +258,7 @@ function catalogRepair() {
   await scopedUpload();
   await statusAndErrors();
   await postDialog();
+  await backgroundPost();
   catalogRepair();
   console.log("Social posting: isolated upload, shared queue, retry, post status, error messages and catalog repair passed.");
 })().catch((error) => { console.error(error); process.exitCode = 1; });

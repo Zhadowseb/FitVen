@@ -11,6 +11,11 @@
 - **Records speaks Danish.** The page was the one screen never translated - headings in English, the exercise detail half in Danish - and is now in both languages, dates included (`records.js` in the locales).
 
 ---
+## [2.2.1] - Unreleased
+### Fixed
+- **Posting a finished workout no longer holds you on the sheet.** "Post it" waited for the post, and the post goes through the same queue as every sync (`enqueueSync`) - so it waited behind the upload of the workout, its exercises and its sets that finishing the workout had just started, and the sheet sat on "Posting..." for as long as all of that took. The post now goes on in the background (`postWorkoutSummaryInBackground`) and the sheet takes you straight to Home, the same Home the tab bar returns to rather than a new one. A thin bar at the top of Home says it is being posted, then that it is posted, and goes; if it fails it says so, with "Try again" - which sends it again with the note you wrote - and a close button. `npm run test:social-posts` checks the sheet no longer awaits the post, and that the background post reports posting, failed, and posted on the retry with the note intact.
+
+---
 ## [2.2.0] - Unreleased
 ### Added
 - **A set has a type: warm-up, working, drop or AMRAP.** `Set.set_type` is the truth and `amrap` stays as its mirror, because older versions in the field read and write only the flag - a working set with the flag up is read as AMRAP, since only a client that did not know `set_type` could have written that. Warm-ups count toward neither volume nor records; drop sets count toward volume but not records; an AMRAP set can carry a target (`amrap_target`). **Needs `20260923100000_a-set-has-a-type.sql` before any phone on 2.2.0 syncs** - the set sync names the two new columns, and PostgREST refuses a select on a column that does not exist.

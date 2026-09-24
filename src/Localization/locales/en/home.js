@@ -16,6 +16,13 @@ export default {
   snapshotLoadFailed:
     "Today's workout could not be loaded. Check your connection and try again.",
   circleLoadFailed: "Could not load your circle.",
+  backgroundPost: {
+    posting: "Posting your workout in the background…",
+    posted: "Your workout is posted",
+    failed: "Your workout could not be posted.",
+    retry: "Try again",
+    dismiss: "Dismiss",
+  },
   greeting: {
     morning: "Good morning",
     afternoon: "Good afternoon",

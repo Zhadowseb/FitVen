@@ -1,4 +1,5 @@
 import { StatusBar } from "expo-status-bar";
+import { goHome } from "@utils/goHome";
 import {
   AppState,
   TouchableOpacity,
@@ -77,8 +78,6 @@ const Resistance = ({
     useState(false);
   const [postConfirmVisible, setPostConfirmVisible] = useState(false);
   const [postNote, setPostNote] = useState("");
-  const [isPostingSummary, setIsPostingSummary] = useState(false);
-  const [postError, setPostError] = useState("");
   useEffect(() => {
     if (collapsedExerciseCardLayout === "classic") {
       setShowCollapsedSets(true);
@@ -454,7 +453,6 @@ const Resistance = ({
       }
 
       setPostNote("");
-      setPostError("");
       setPostConfirmVisible(true);
       return true;
     } catch (error) {
@@ -463,27 +461,18 @@ const Resistance = ({
     }
   };
 
-  const postWorkoutSummary = async () => {
-    if (isPostingSummary) {
-      return;
-    }
-
-    try {
-      setIsPostingSummary(true);
-      setPostError("");
-      await workoutService.repostWorkoutSummaryPost(db, {
-        workoutId: workout_id,
-        note: postNote,
-      });
-      setPostConfirmVisible(false);
-    } catch (error) {
-      console.error("Could not post the workout summary:", error);
-      setPostError(
-        error?.message ?? "The workout could not be posted. Please try again."
-      );
-    } finally {
-      setIsPostingSummary(false);
-    }
+  // The post waits in the sync queue behind the upload that finishing the
+  // workout has just started, so waiting for it here kept the sheet on
+  // "Posting..." for as long as all of that took. It goes on in the
+  // background instead, and Home - where this takes you - shows how it is
+  // getting on, with a way to try again if it fails.
+  const postWorkoutSummary = () => {
+    workoutService.postWorkoutSummaryInBackground(db, {
+      workoutId: workout_id,
+      note: postNote,
+    });
+    setPostConfirmVisible(false);
+    goHome(navigation);
   };
 
   const restartWorkout = async () => {
@@ -957,30 +946,17 @@ const Resistance = ({
         message={`${summaryLine(
           finishedSummary
         )}. Post it to your feed so the people who follow you can see it?`}
-        confirmLabel={
-          isPostingSummary ? "Posting..." : postError ? "Try again" : "Post it"
-        }
+        confirmLabel="Post it"
         cancelLabel="Keep it private"
         tone="positive"
-        isWorking={isPostingSummary}
         onConfirm={postWorkoutSummary}
-        onClose={() => {
-          if (!isPostingSummary) {
-            setPostConfirmVisible(false);
-          }
-        }}
+        onClose={() => setPostConfirmVisible(false)}
       >
-        {postError ? (
-          <ThemedText accessibilityRole="alert" setColor={theme.danger}>
-            {postError}
-          </ThemedText>
-        ) : null}
         <ThemedTextInput
           value={postNote}
           onChangeText={setPostNote}
           placeholder="Add a note (optional)"
           multiline
-          editable={!isPostingSummary}
           inputStyle={styles.postNoteInput}
         />
       </ThemedConfirmModal>
