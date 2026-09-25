@@ -22,7 +22,7 @@
   - The phone stores the new fields in 12 new columns on `Exercise`, kept in one list for a fresh install and an existing one (`EXERCISE_EXTRA_COLUMNS`).
   - The old catalog rebuild now carries every custom column. Before, it would have turned custom exercises into catalog rows, for the next catalog sync to delete.
   - The sync (`syncCustomExercisesWithCloud`, planned by the pure `planCustomExerciseSync`) runs after the catalog sync and after creating an exercise. It never deletes anything.
-- **Cloud:** `supabase/migrations/20260928090000_custom-exercises-can-be-shared.sql`, not run yet.
+- **Cloud:** `supabase/migrations/20260928090000_custom-exercises-can-be-shared.sql`, run on 2026-09-26.
   - It adds `custom_exercise`, readable only by its owner, with column grants so the counters, the owner and the name cannot be written by the app.
   - Saving and reporting go through functions only. The numbers are computed on the server and cached for a day (`private.custom_exercise_stats`).
   - Five security definer functions are the only way to read somebody else's exercise. They honour blocks both ways, hide hidden ones, and hand out a fixed set of fields.
