@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "2.9.0-feature-days-since-card.1",
+  "version": "2.9.1-fix-ledger-six-migrations-run.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",
