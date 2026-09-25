@@ -1,5 +1,47 @@
 # Changelog
 
+## [2.11.0] - Unreleased
+### Changed
+- **Custom made exercises: the exercises people make can be shared and found.** Explore's Exercises tile opens a real library (`CustomExercisesPage`, headed "Custom made exercises" in both languages) instead of an empty page:
+  - A search over names and descriptions, and a sort that is also six chips, kept in step: Most used, Newest, In your centre, People you follow, Has video and Saved. There is a muscle group filter and a result line with "Reset filter".
+  - Each row shows the video's first frame with its length, or "No video", then the name, one line on what it is, tags for the muscle group, equipment and weight mode, and who made it, with "your centre" and "{n} users". It pages 30 at a time.
+  - It is built for a library that is still nearly empty. Nothing shared yet gets its own invitation to share one of yours; a short list ends with the same invitation; and every filter that finds nothing says so and offers the way back.
+- **Explore shows them too:** the tile counts the exercises that can be found, and a new row, "New exercises from others", shows the newest six, with Add right on the card. The row is hidden while there are none.
+- **One exercise, with its video** (`CustomExerciseDetailPage`):
+  - The clip plays muted in a loop under the name. Tap it to pause. It pauses off screen, and with reduce motion on it waits for a tap.
+  - Then the maker, with Profile. The three numbers: its users, how many of them train at your centre, and the typical "3 × 10". The maker's steps. And "What others lift": six bars of the weights logged with it, shown only from 20 sets.
+  - **Add to my exercises** copies the name, muscles, equipment, weight mode, description and steps into your own exercises, never the maker's sets or video. It takes you back to where you came from, with a toast (a new `showToast`), and turns into "Added". **Save** puts it on your saved list without copying it.
+  - The menu reports it. Three reports from different people take it out of the library and tell the maker; copies people already have stay.
+- **Your own exercise has a page** (`MyExercisePage`), opened by tapping one of your custom exercises in the exercise library:
+  - its muscles on the body map;
+  - **Share the exercise**, after a confirmation that says exactly what everyone will see and what they never will;
+  - a video of at most 20 seconds, with its first frame taken on the phone as the poster;
+  - what it is, up to five steps, the equipment and the weight mode (total, per side or bodyweight).
+  - Edits are saved on the phone and uploaded later; only sharing and the video need a connection. A copy of somebody else's exercise cannot be shared, and says whose it is.
+- **Custom exercises now have a cloud half.** They go to the cloud, private until you share them, so they come back on a new phone.
+  - The phone stores the new fields in 12 new columns on `Exercise`, kept in one list for a fresh install and an existing one (`EXERCISE_EXTRA_COLUMNS`).
+  - The old catalog rebuild now carries every custom column. Before, it would have turned custom exercises into catalog rows, for the next catalog sync to delete.
+  - The sync (`syncCustomExercisesWithCloud`, planned by the pure `planCustomExerciseSync`) runs after the catalog sync and after creating an exercise. It never deletes anything.
+- **Cloud:** `supabase/migrations/20260928090000_custom-exercises-can-be-shared.sql`, not run yet.
+  - It adds `custom_exercise`, readable only by its owner, with column grants so the counters, the owner and the name cannot be written by the app.
+  - Saving and reporting go through functions only. The numbers are computed on the server and cached for a day (`private.custom_exercise_stats`).
+  - Five security definer functions are the only way to read somebody else's exercise. They honour blocks both ways, hide hidden ones, and hand out a fixed set of fields.
+  - A shared exercise's words go through the blocked-term filter.
+  - The `exercise-videos` bucket is written only in your own folder, and a file is readable by others only while its exercise can be found.
+  - Until it has run, the library and an exercise page say they are not available yet, and custom exercises stay on the phone as before.
+  - `npm run test:shared-exercises` checks the rules, the sync plan, the migration's promises and the wiring.
+- **Account deletion also empties your folder of exercise videos** (`supabase/functions/delete-account`; the function has to be deployed).
+- **New dependency:** `expo-video-thumbnails`, loaded lazily. The first frame is only made by builds that include it; until then a clip is shown without its frame.
+- **The privacy policy and the terms say how sharing works** (both raised to 2026-09-26, so everyone is asked again):
+  - what a shared exercise shows and to whom;
+  - that copies stay with the people who took them;
+  - that your sets with an exercise somebody shared count towards its totals, never with a name;
+  - that three reports hide one.
+- **Smaller changes:**
+  - The confirm dialog's button label holds 4.5:1 in light mode.
+  - A custom exercise in the library says it opens your exercise, not its muscles.
+
+---
 ## [2.10.0] - Unreleased
 ### Changed
 - **Quick start is live while you train.** With a workout running, the block beside the days-since card is one panel that opens it, and "Empty workout" is not offered next to it. On top: a live dot, "I GANG" / "IN PROGRESS", and how long the workout has been going - the same sum as the clock in the middle of the bottom navigation. Under it, only the set that is next: its exercise, one bar per set of that exercise (done filled, the next one glowing), and "8 × 80 kg" large. Every other time the block is exactly as it was. What it shows follows the workout (`LivePanel`, `Utils/liveQuickStart`):

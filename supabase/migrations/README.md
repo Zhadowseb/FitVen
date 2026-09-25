@@ -72,6 +72,7 @@ behind by accident.
 | `20260927090000_a-lifter-can-give-their-sex.sql` | yes |
 | `20260927100000_public-profiles.sql` | yes |
 | `20260927110000_a-block-hides-public-posts-too.sql` | yes |
+| `20260928090000_custom-exercises-can-be-shared.sql` | no |
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
 centre match, per-centre lift leaderboards with video verification, and what

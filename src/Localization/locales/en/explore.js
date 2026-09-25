@@ -11,6 +11,9 @@ export default {
     programsCount: { one: "{value} to choose from", other: "{value} to choose from" },
     exercises: "Exercises",
     exercisesCount: { one: "{value} from users", other: "{value} from users" },
+    // While the count is unknown, and while nothing has been shared.
+    exercisesSub: "Made by users",
+    exercisesFirst: "Share the first one",
     records: "Records",
     recordsSub: "Denmark's top 100",
   },
@@ -20,13 +23,20 @@ export default {
     emptyBody: "Hand-picked programs will be here to follow as they are.",
   },
   customExercises: {
-    title: "Exercises others have made",
+    title: "Custom made exercises",
     emptyTitle: "No shared exercises yet",
     emptyBody: "When people share the exercises they have made, you can find them and add them to your own here.",
   },
   sections: {
     yourGym: "Your centre",
     change: "Change",
+    customExercises: "New exercises from others",
+    all: "All",
+    allCount: { one: "Open the library", other: "All {value}" },
+    allExercisesA11y: {
+      one: "Open the library with {value} exercise",
+      other: "See all {value} exercises",
+    },
     centerPosts: "Posts from centres",
   },
   centerPostLabel: "{name}: {title}, at {gym}",

@@ -1,3 +1,4 @@
+export * as customExerciseRepository from "./customExerciseRepository";
 export * as locationRepository from "./locationRepository";
 export * as programRepository from "./programRepository";
 export * as runningRepository from "./runningRepository";

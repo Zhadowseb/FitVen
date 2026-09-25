@@ -2,8 +2,9 @@
 //
 // Three things have to happen and only one of them is reachable from SQL, which
 // is why this exists rather than an RPC: the rows (purge_user_account), the
-// avatar files in storage, and the auth user itself. The auth user goes last -
-// if anything before it fails the account still exists, and the person can try
+// person's files in storage - their avatar, and the clips and posters of their
+// custom exercises - and the auth user itself. The auth user goes last - if
+// anything before it fails the account still exists, and the person can try
 // again. The other way round leaves orphaned data nobody can reach or erase.
 //
 // The id is never taken from the request body. It comes from the bearer token,
@@ -11,8 +12,18 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 type JsonRecord = Record<string, unknown>;
+type AdminClient = ReturnType<typeof createClient>;
 
 const AVATAR_BUCKET = "avatars";
+// <user id>/<exercise id>.mp4 or .mov, and <exercise id>-poster.jpg - from
+// supabase/migrations/20260928090000_custom-exercises-can-be-shared.sql.
+const EXERCISE_VIDEO_BUCKET = "exercise-videos";
+const LIST_PAGE_SIZE = 100;
+
+// What storage answers for a folder, or a bucket, that is not there: nothing
+// to erase, which is not a failure. The second is a project where the
+// migration that makes the bucket has not been run yet.
+const NOTHING_THERE = new Set(["The resource was not found", "Bucket not found"]);
 
 const jsonHeaders = {
   "Content-Type": "application/json",
@@ -56,6 +67,46 @@ function getBearerToken(req: Request) {
   const match = authorization.match(/^Bearer\s+(.+)$/i);
 
   return match?.[1]?.trim() || null;
+}
+
+// Every file in the person's own folder of a bucket. Listing the folder rather
+// than reading paths from their rows, because the rows are already gone by
+// now, and because a failed upload can leave a file no row ever pointed at.
+// Throws what storage throws; returns how many files went.
+async function emptyUserFolder(supabase: AdminClient, bucket: string, userId: string) {
+  const paths: string[] = [];
+
+  for (let offset = 0; ; offset += LIST_PAGE_SIZE) {
+    const { data: files, error: listError } = await supabase.storage
+      .from(bucket)
+      .list(userId, { limit: LIST_PAGE_SIZE, offset });
+
+    if (listError) {
+      if (NOTHING_THERE.has(listError.message)) {
+        break;
+      }
+
+      throw listError;
+    }
+
+    paths.push(...(files ?? []).map((file) => `${userId}/${file.name}`));
+
+    if (!files || files.length < LIST_PAGE_SIZE) {
+      break;
+    }
+  }
+
+  for (let start = 0; start < paths.length; start += LIST_PAGE_SIZE) {
+    const { error: removeError } = await supabase.storage
+      .from(bucket)
+      .remove(paths.slice(start, start + LIST_PAGE_SIZE));
+
+    if (removeError) {
+      throw removeError;
+    }
+  }
+
+  return paths.length;
 }
 
 Deno.serve(async (req) => {
@@ -107,29 +158,17 @@ Deno.serve(async (req) => {
     return errorResponse(purgeError);
   }
 
-  // Then the avatar. Listing the folder rather than reading avatar_path from
-  // the profile, because the profile row is already gone by now, and because a
-  // failed upload can leave a file the profile never pointed at.
+  // Then the files: the avatar, and the clips and posters of their custom
+  // exercises. The copies other people added of those exercises never had a
+  // clip of their own, so nothing of theirs goes with these.
   let removedFileCount = 0;
-  const { data: avatarFiles, error: listError } = await supabase.storage
-    .from(AVATAR_BUCKET)
-    .list(userId, { limit: 100 });
 
-  if (listError && listError.message !== "The resource was not found") {
-    return errorResponse(listError);
-  }
-
-  if (avatarFiles?.length) {
-    const paths = avatarFiles.map((file) => `${userId}/${file.name}`);
-    const { error: removeError } = await supabase.storage
-      .from(AVATAR_BUCKET)
-      .remove(paths);
-
-    if (removeError) {
-      return errorResponse(removeError);
+  try {
+    for (const bucket of [AVATAR_BUCKET, EXERCISE_VIDEO_BUCKET]) {
+      removedFileCount += await emptyUserFolder(supabase, bucket, userId);
     }
-
-    removedFileCount = paths.length;
+  } catch (error) {
+    return errorResponse(error);
   }
 
   // Last, because everything above is still retryable while the account exists.

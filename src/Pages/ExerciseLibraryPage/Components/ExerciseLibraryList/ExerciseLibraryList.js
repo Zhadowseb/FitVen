@@ -98,9 +98,13 @@ const CatalogExerciseRow = memo(function CatalogExerciseRow({
                 : "exercises.library.addToWorkoutA11y",
               { name: exercise.exercise_name }
             )
-          : t("exercises.library.showMusclesA11y", {
-              name: exercise.exercise_name,
-            })
+          : t(
+              // Your own exercise opens its page; a built-in one its muscles.
+              exercise.is_custom
+                ? "exercises.library.openCustomA11y"
+                : "exercises.library.showMusclesA11y",
+              { name: exercise.exercise_name }
+            )
       }
       disabled={isSelectionBusy}
       onPress={() => onPress(exercise)}
@@ -719,9 +723,18 @@ const ExerciseLibraryList = ({
         return;
       }
 
+      // One you made yourself has a page of its own - what it is, its video,
+      // whether others can find it. The built-in ones keep the muscle modal.
+      if (exercise?.is_custom) {
+        navigation.navigate("MyExercisePage", {
+          exerciseName: exercise.exercise_name,
+        });
+        return;
+      }
+
       setSelectedExercise(exercise);
     },
-    [isWorkoutPicker, onSelectExercise]
+    [isWorkoutPicker, navigation, onSelectExercise]
   );
 
   const lastCatalogIndex = filteredExercises.length - 1;

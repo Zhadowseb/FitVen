@@ -10,6 +10,11 @@ export default {
   hints: {
     openVerification: "Åbner centrets løft, der venter på gennemsyn",
     openActivity: "Åbner dagens aktivitet",
+    openExercise: "Åbner din øvelse",
+  },
+  customExerciseHidden: {
+    title: "Din øvelse er skjult",
+    body: "{name} er blevet anmeldt af flere og vises ikke længere i biblioteket. Kopier, som andre allerede har tilføjet, bliver liggende.",
   },
   emptyTitle: "Du er helt opdateret",
   emptyBody:

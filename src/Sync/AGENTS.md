@@ -13,7 +13,7 @@ below never executes — no matter how complete it looks.
 | Component | Mounted | What it pushes |
 |---|---|---|
 | `WorkoutTypeCatalogSync` | yes | the workout type catalog, cloud to local |
-| `ExerciseLibrarySync` | yes | the shared exercise catalog, cloud to local |
+| `ExerciseLibrarySync` | yes | the shared exercise catalog, cloud to local; then your own custom exercises both ways (`exerciseService.syncCustomExercisesWithCloud`) |
 | `SetSync` | yes | **the whole strength hierarchy**, parent first: program, block, week, day, workout type instance, exercise instance, set |
 | `WorkoutTypeInstanceSync` | yes | workout-level fields |
 | `PushNotificationRegistrationSync` | yes | the device's push token |

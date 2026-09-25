@@ -45,6 +45,17 @@ export default function ThemedConfirmModal({
       : tone === "positive"
         ? theme.secondary
         : theme.primary;
+  // The label sits on a 16 % tint of that colour. In light mode the fill
+  // colours themselves fall under 4.5:1 there, so the label takes their text
+  // variants.
+  const confirmTextColor =
+    tone === "danger"
+      ? colorScheme === "light"
+        ? theme.dangerDark
+        : theme.danger
+      : tone === "positive"
+        ? theme.secondary
+        : theme.primaryText;
 
   return (
     <ThemedModal
@@ -102,7 +113,7 @@ export default function ThemedConfirmModal({
             },
           ]}
         >
-          <ThemedText style={styles.buttonText} setColor={confirmColor}>
+          <ThemedText style={styles.buttonText} setColor={confirmTextColor}>
             {resolvedConfirmLabel}
           </ThemedText>
         </TouchableOpacity>

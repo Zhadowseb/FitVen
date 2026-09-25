@@ -49,6 +49,7 @@ export default {
     addAnotherToWorkoutA11y: "Add another {name} to workout",
     addToWorkoutA11y: "Add {name} to workout",
     showMusclesA11y: "Show {name} muscles",
+    openCustomA11y: "Open your exercise {name}",
     removeFavouriteA11y: "Remove {name} from favourites",
     addFavouriteA11y: "Add {name} to favourites",
     badgePrimary: "PRIMARY",

@@ -21,12 +21,12 @@
 // has already accepted is asked again on their next launch, and the new version
 // is recorded against them. Fixing a typo is not that.
 
-export const TERMS_VERSION = "2026-09-16";
+export const TERMS_VERSION = "2026-09-26";
 
 /** The public copy, linked from the register screen and from the store pages. */
 export const TERMS_URL = "https://fitven.dk/terms/";
 
-export const TERMS_LAST_UPDATED = "16 September 2026";
+export const TERMS_LAST_UPDATED = "26 September 2026";
 
 /** Shown next to the checkbox on the register screen. Keep it to one breath. */
 export const TERMS_SUMMARY =
@@ -70,11 +70,13 @@ There is no appeal process beyond writing to the address above. A decision to en
   },
   {
     title: "The tools you have",
-    body: `Report — every profile in your followers and following lists has a Report button. Choose a reason, add a note if you want to, and it reaches the developer. The person you report is not told who reported them.
+    body: `Report — every profile in your followers and following lists has a Report button. Choose a reason, add a note if you want to, and it reaches the developer. The person you report is not told who reported them. Every shared exercise can be reported the same way, from its menu, and three reports from different people take it out of Explore until it has been looked at.
 
 Block — every profile in those lists has a Block button. Blocking removes the follow in both directions immediately, so their activity leaves your feed at once and yours leaves theirs. They cannot follow you again or find you in search, and they are not told they were blocked. Blocking also tells the developer, so the account can be looked at.
 
 Choose who sees a post — every workout summary is published to everyone, to your followers only, or to nobody, and you choose which exercises are included. Nothing is published unless you publish it.
+
+Choose what you share — an exercise you make is private until you share it, and you can stop sharing it, or remove its video, at any time from the exercise itself.
 
 Delete — any program, workout, exercise, set, sickness entry or post can be deleted on its own. The whole account can be deleted from inside the app, from Profile, and that is immediate and final.`,
   },
@@ -83,6 +85,8 @@ Delete — any program, workout, exercise, set, sickness entry or post can be de
     body: `What you write and upload is yours. You keep it.
 
 By posting, you allow FitVen to store it and to show it to the people you chose to show it to, for as long as you keep it there. That permission ends when you delete the content or the account.
+
+A shared exercise is the one exception to that ending. Anyone signed in may add a copy of it to their own exercises — its name, description, steps, muscles, equipment and weight mode, never your sets or your video — and a copy stays with them after you stop sharing it or delete your account.
 
 Do not post anything you do not have the right to post.`,
   },

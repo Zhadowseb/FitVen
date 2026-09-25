@@ -38,6 +38,14 @@ export const Colors = {
         dropSet: "#B48CFF",
         amrap: "#FF7A7A",
 
+        // The four training groups a muscle belongs to, on a shared
+        // exercise's tags: push, pull, legs and core. Text as well as dot, so
+        // each holds 4.5:1 on a card at 12 % of itself.
+        musclePush: "#F7742E",
+        musclePull: "#7FA6CC",
+        muscleLegs: "#4ED39A",
+        muscleCore: "#B48CFF",
+
         // How long since a friend trained, on their resting tile: hot coral,
         // pink, cool blue, then grey. Its own set rather than borrowed, so it
         // stays clear of the status colours (orange, green, yellow) and of
@@ -150,6 +158,11 @@ export const Colors = {
         warmup: "#3F6E9C",
         dropSet: "#7A4FD6",
         amrap: "#C4342F",
+
+        musclePush: "#B4470B",
+        musclePull: "#39668F",
+        muscleLegs: "#146B47",
+        muscleCore: "#5B47D6",
 
         heatHot: "#C4342F",
         heatWarm: "#C23B8E",
