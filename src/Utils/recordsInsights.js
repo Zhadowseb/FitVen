@@ -92,6 +92,9 @@ function normalizeRow(row) {
     // the design was trying to avoid.
     e1rm: calculateBrzyckiOneRepMax(weight, reps),
     isRecord: Number(row?.personal_record) === 1,
+    // 'working' | 'drop' | 'amrap' - warm-ups never reach this far.
+    setType: typeof row?.set_type === "string" && row.set_type ? row.set_type : "working",
+    rpe: Number.isFinite(Number(row?.rpe)) && Number(row?.rpe) > 0 ? Number(row.rpe) : null,
     workoutKey: row?.workout_id ?? row?.performed_date_sort ?? String(at),
     sessionKey: `${row?.workout_id ?? ""}::${row?.performed_date_sort ?? at}`,
   };

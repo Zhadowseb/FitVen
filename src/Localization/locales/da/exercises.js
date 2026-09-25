@@ -61,6 +61,8 @@ export default {
     tools: "Værktøjer",
     recordsTool: "Personlige rekorder",
     recordsDetail: "{exercises} øvelser · {records} rekorder",
+    statisticsTool: "Statistik",
+    statisticsDetail: "Volumen, frekvens, intensitet og løb",
     libraryTool: "Øvelsesbibliotek",
     libraryDetail: "{count} øvelser",
     calculatorTool: "1RM-beregner",

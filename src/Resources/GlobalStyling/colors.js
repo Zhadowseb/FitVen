@@ -22,6 +22,9 @@ export const Colors = {
         record: "#E8B44A",
         recordLight: "#F4D488",
         recordDark: "#6B4E0A",
+        // The trophy room's podium: gold is `record`, then silver and bronze.
+        medalSilver: "#C9CED6",
+        medalBronze: "#D08A57",
         danger: "#E85C4A",
         dangerDark: "rgb(168, 55, 41)",
         planned: "#F2C14E",
@@ -134,6 +137,9 @@ export const Colors = {
         // gold. It matches `record` now so the title can actually be read.
         recordLight: "#8A6410",
         recordDark: "#5C4208",
+        // Darkened like `record`, so the medal numbers read on white.
+        medalSilver: "#69707C",
+        medalBronze: "#9A5A2B",
         danger: "#D64533",
         dangerDark: "rgb(150, 40, 26)",
         planned: "#C08A12",

@@ -525,3 +525,35 @@ export async function getOpenWorkoutsForDate(db, { isoDate, limit = 5 }) {
     [isoDate, Math.max(1, Math.trunc(Number(limit) || 5))]
   );
 }
+
+// The day's date in its ISO form: the column holds both spellings, and the
+// statistics sort and bucket on it.
+const DAY_ISO_DATE_SQL = `
+  CASE
+    WHEN d.date LIKE '__.__.____'
+    THEN substr(d.date, 7, 4) || '-' || substr(d.date, 4, 2) || '-' || substr(d.date, 1, 2)
+    ELSE d.date
+  END`;
+
+/**
+ * Every finished workout of any kind - strength, run, walk - with its day and
+ * how long it took. The statistics count showing up from this, so a run
+ * counts as a workout the same way a strength session does.
+ */
+export async function getCompletedWorkoutsForStatistics(db) {
+  return db.getAllAsync(
+    `SELECT
+        w.workout_id,
+        w.workout_type,
+        w.label,
+        w.elapsed_time,
+        d.date AS performed_date,
+        ${DAY_ISO_DATE_SQL} AS performed_date_sort
+     FROM Workout_Type_Instance w
+     JOIN Day d ON d.day_id = w.day_id
+     WHERE w.done = 1
+       AND COALESCE(w.deleted_at, '') = ''
+       AND COALESCE(d.deleted_at, '') = ''
+     ORDER BY performed_date_sort ASC, w.workout_id ASC;`
+  );
+}

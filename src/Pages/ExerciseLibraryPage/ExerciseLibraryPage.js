@@ -22,6 +22,7 @@ import Dumbbell from "../../Resources/Icons/UI-icons/Dumbbell";
 import Calender from "../../Resources/Icons/UI-icons/Calender";
 import Thermostat from "../../Resources/Icons/UI-icons/Thermostat";
 import TradeUp from "../../Resources/Icons/UI-icons/TradeUp";
+import UpwardGraf from "../../Resources/Icons/UI-icons/UpwardGraf";
 import { programService, weightliftingService } from "../../Services";
 import {
   addDays,
@@ -149,6 +150,14 @@ const ExerciseLibraryPage = () => {
       icon: <Star width={18} height={18} color={theme.planned} filled />,
       iconBackground: "rgba(242, 193, 78, 0.12)",
       onPress: () => navigation.navigate("PersonalRecordsPage"),
+    },
+    {
+      key: "statistics",
+      label: t("exercises.train.statisticsTool"),
+      detail: t("exercises.train.statisticsDetail"),
+      icon: <UpwardGraf width={18} height={18} color={primaryTextColor} thickness={1.8} />,
+      iconBackground: withAlpha(theme.primary, 0.12),
+      onPress: () => navigation.navigate("StatisticsPage"),
     },
     {
       key: "library",
