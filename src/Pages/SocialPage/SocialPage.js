@@ -7,8 +7,8 @@ import {
   View,
   useColorScheme,
 } from "react-native";
-import { useCallback, useState } from "react";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { useCallback, useEffect, useState } from "react";
+import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { useTranslation } from "@localization";
 
 import styles from "./SocialPageStyle";
@@ -16,7 +16,6 @@ import { Colors } from "../../Resources/GlobalStyling/colors";
 import TailArrowUpRight from "../../Resources/Icons/UI-icons/TailArrowUpRight";
 import { useAuth } from "../../Contexts/AuthContext";
 import { socialService } from "../../Services";
-import { markSeen, socialSeenKey } from "../../Utils/lastSeen";
 import {
   ThemedButton,
   ThemedConfirmModal,
@@ -57,9 +56,8 @@ const RELATIONSHIP_COPY = {
 
 /**
  * Social: who follows you and whom you follow, the lists behind both with
- * block and report, and the way to find people. Reached from the button on
- * Explore, which counts the followers that are new since the last visit
- * here - so opening this page is what marks them seen.
+ * block and report, and the way to find people. Reached from the counts on
+ * your profile and from Home's friends strip.
  */
 const SocialPage = () => {
   const { t } = useTranslation();
@@ -114,12 +112,7 @@ const SocialPage = () => {
   useFocusEffect(
     useCallback(() => {
       loadFollowCounts();
-
-      // Explore's badge counts followers since this moment.
-      if (user?.id) {
-        markSeen(socialSeenKey(user.id));
-      }
-    }, [loadFollowCounts, user?.id]),
+    }, [loadFollowCounts]),
   );
 
   const handleOpenUserList = () => {
@@ -140,6 +133,13 @@ const SocialPage = () => {
     setUnblockTarget(null);
     setReportSentFor(null);
     closeReport();
+  };
+
+  // A follower's or a followed person's name opens their profile. The list
+  // closes first, so the profile is not opened underneath it.
+  const openRelationshipProfile = (relationshipProfile) => {
+    closeRelationshipModal();
+    navigation.navigate("PublicProfilePage", { userId: relationshipProfile.id });
   };
 
   const loadRelationshipProfiles = async (relationshipType) => {
@@ -185,6 +185,19 @@ const SocialPage = () => {
       setIsLoadingRelationships(false);
     }
   };
+
+  // Opened from a count on your profile: straight into that list, once per
+  // arrival - the param is spent so a return to the page does not reopen it.
+  const route = useRoute();
+  const requestedList = route.params?.open;
+
+  useEffect(() => {
+    if ((requestedList === "followers" || requestedList === "following") && user?.id) {
+      navigation.setParams({ open: undefined });
+      handleOpenRelationshipModal(requestedList);
+    }
+    // Only a new request should open the list.
+  }, [requestedList, user?.id]);
 
   // Blocking cuts the follow in both directions, so the counts on the page
   // behind the modal are stale the moment it succeeds.
@@ -436,31 +449,47 @@ const SocialPage = () => {
                   },
                 ]}
               >
-                <UserAvatar
-                  uri={relationshipProfile.avatarUrl}
-                  size={44}
-                  iconSize={22}
-                  iconColor={theme.primary ?? titleColor}
-                  backgroundColor={
-                    theme.fields ?? theme.uiBackground ?? theme.background
+                {/* Not on the blocked list: a blocked profile does not open. */}
+                <Pressable
+                  onPress={() => openRelationshipProfile(relationshipProfile)}
+                  disabled={activeRelationshipType === "blocked"}
+                  accessibilityRole={activeRelationshipType === "blocked" ? undefined : "button"}
+                  accessibilityHint={
+                    activeRelationshipType === "blocked"
+                      ? undefined
+                      : t("publicProfile.opensProfile")
                   }
-                  borderColor={cardBorder}
-                  borderWidth={1}
-                />
-                <View style={styles.relationshipCopy}>
-                  <ThemedText
-                    style={styles.relationshipDisplayName}
-                    setColor={titleColor}
-                  >
-                    {relationshipProfile.displayName}
-                  </ThemedText>
-                  <ThemedText
-                    style={styles.relationshipUsername}
-                    setColor={quietText}
-                  >
-                    {relationshipProfile.username}
-                  </ThemedText>
-                </View>
+                  style={({ pressed }) => [
+                    styles.relationshipPerson,
+                    pressed ? styles.relationshipActionPressed : null,
+                  ]}
+                >
+                  <UserAvatar
+                    uri={relationshipProfile.avatarUrl}
+                    size={44}
+                    iconSize={22}
+                    iconColor={theme.primary ?? titleColor}
+                    backgroundColor={
+                      theme.fields ?? theme.uiBackground ?? theme.background
+                    }
+                    borderColor={cardBorder}
+                    borderWidth={1}
+                  />
+                  <View style={styles.relationshipCopy}>
+                    <ThemedText
+                      style={styles.relationshipDisplayName}
+                      setColor={titleColor}
+                    >
+                      {relationshipProfile.displayName}
+                    </ThemedText>
+                    <ThemedText
+                      style={styles.relationshipUsername}
+                      setColor={quietText}
+                    >
+                      {relationshipProfile.username}
+                    </ThemedText>
+                  </View>
+                </Pressable>
 
                 <Pressable
                   onPress={() =>

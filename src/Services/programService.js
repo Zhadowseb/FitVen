@@ -27,6 +27,7 @@ import {
 } from "@utils/syncUtils";
 import { calculateBrzyckiOneRepMax } from "@utils/oneRepMaxUtils";
 import { formatDisplayNumber } from "@utils/numberUtils";
+import { filterReleasedWorkoutTypes } from "@utils/workoutTypeAvailability";
 import {
   WEEK_DAYS,
   formatElapsedWorkoutDetail,
@@ -69,6 +70,20 @@ export {
   syncWorkoutTypeInstancesWithCloud,
   syncWorkoutTypesWithCloud,
 } from "./cloudSync";
+
+/**
+ * How many workout types can be started today, for the Workout types tile on
+ * Profile: the catalog's active ones, less those not released yet - the same
+ * rule the start sheet offers types by.
+ */
+export async function countActiveWorkoutTypes(db) {
+  const workoutTypes = await programRepository.getSelectableWorkoutTypes(db);
+
+  return filterReleasedWorkoutTypes(
+    workoutTypes,
+    (workoutType) => workoutType.name
+  ).length;
+}
 
 function formatProgramBestDisplay({ weight, reps, estimatedOneRepMax }) {
   const setText = `${reps} x ${formatDisplayNumber(weight)} kg`;

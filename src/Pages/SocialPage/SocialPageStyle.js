@@ -114,6 +114,14 @@ export default StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
   },
+  // The picture and the name, which open the person's profile.
+  relationshipPerson: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
   relationshipCopy: {
     flex: 1,
     gap: 2,

@@ -66,6 +66,13 @@ export default StyleSheet.create({
     alignItems: "center",
     gap: 5,
   },
+  // The picture and the name, which open the lifter's profile. The column's
+  // own spacing, so the podium looks the same with or without the link.
+  podiumLifter: {
+    alignSelf: "stretch",
+    alignItems: "center",
+    gap: 5,
+  },
   podiumAvatarRing: {
     borderRadius: 999,
     borderWidth: 2,

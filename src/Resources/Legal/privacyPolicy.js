@@ -19,12 +19,12 @@
 // counted by scripts/check-privacy-policy.js, which fails the build while the
 // policy claims to be published and is not finished.
 
-export const PRIVACY_POLICY_VERSION = "2026-09-05";
+export const PRIVACY_POLICY_VERSION = "2026-09-25";
 
 /** The public copy. Required by Google Play, and the address in its listing. */
 export const PRIVACY_POLICY_URL = "https://fitven.dk/privacy/";
 
-export const PRIVACY_POLICY_LAST_UPDATED = "5 September 2026";
+export const PRIVACY_POLICY_LAST_UPDATED = "25 September 2026";
 
 export const PRIVACY_POLICY_SECTIONS = [
   {
@@ -42,13 +42,19 @@ Anything about your data — a copy of it, a correction, having it deleted, or a
     title: "What FitVen stores about you",
     body: `Your email address and password, used to sign in.
 
-Your profile: display name, username, an optional short bio, an optional photo, and your birth year.
+Your profile: display name, username, an optional short bio, an optional photo, your birth year, and — if you choose to give it — your sex. Your sex is only used so that records and leaderboards can be split by sex; it is never shown to anyone, and you can clear it at any time in Edit profile.
 
-Your training: programs, workouts, exercises, sets, weights, repetitions, personal records and the notes you write on them.
+Your training: programs, workouts, exercises, sets, weights, repetitions, personal records and the notes you write on them, and the split of workouts you choose to rotate through.
+
+Centres: the centre you choose as yours, or else the one you have trained in most over the last 90 days; the centre each workout was done in; the lifts from those workouts that go on a centre's leaderboard; and a verification video, if you add one to a lift.
 
 Health data: sickness and injury entries you record, heart rate measured from a chest strap or watch, and — if you use the run screen — your location while a run is being tracked, along with the route it produces.
 
-Social: who you follow, who follows you, who you have blocked, the workout posts you publish and the posts you like.
+Social: who you follow, who follows you, who you have blocked, the people and posts you report, the workout posts you publish and the posts you like.
+
+Music: if you connect Spotify and turn on sharing, the name of the track and the artist playing during a workout is saved with that workout.
+
+Feedback: what you write when you send us feedback, and the version of the app it was sent from.
 
 Notifications: the notifications you have been sent, and a push token identifying this device so they can reach it.`,
   },
@@ -64,11 +70,15 @@ You can withdraw that consent at any time by deleting your account, which remove
 
 Push notifications are delivered through Expo's notification service, which means a notification's title and text pass through Expo's servers on the way to your phone.
 
-Location is only read while a run is actively being tracked, and only if you allow it. It is stored with the run.
+Location is only read while a run is actively being tracked, and once when you start a workout to find the centre you are in — both only if you allow it. A run's route is stored with the run. For a centre, your position is sent to FitVen's server to look the centre up and is not kept there: only the centre is stored with the workout. Your phone keeps the position with the workout, so the lookup can be tried again if it failed.
+
+Verification videos are stored on Supabase with the rest of your data.
 
 The map that draws your route is Google Maps. Drawing a route means asking Google for the map of that area, so Google can see roughly where you ran, even though the route itself is never sent to them.
 
-Those three — Supabase, Expo and Google Maps — are the only outside services FitVen uses. There is no analytics, no advertising, no crash reporting, and no mailing list.`,
+If you connect Spotify, the app asks Spotify what is playing while a workout is running. Your Spotify login stays on your phone.
+
+Those four — Supabase, Expo, Google Maps and, if you connect it, Spotify — are the only outside services FitVen uses. There is no analytics, no advertising, no crash reporting, and no mailing list.`,
   },
   {
     title: "How long it is kept",
@@ -82,9 +92,15 @@ There are no database backups today, so nothing survives a deletion anywhere. If
   },
   {
     title: "Who can see your data",
-    body: `People who follow you can see whether you are training today, and the workout posts you choose to publish. Nothing else in your account is visible to other users.
+    body: `Anyone signed in to FitVen can see your profile: your display name, username, photo and bio, the centre you train at, how many people follow you and how many you follow, how many workouts you have finished and how many you did in each of the last twelve weeks, and your best lift in bench press, squat and deadlift. Your email address, your birth year and your sex are never shown to anyone.
 
-Blocking someone removes the follow in both directions and takes you out of each other's search results.
+The workout posts you publish are shown to the audience you choose for each of them, together with the centre the workout was done in.
+
+People who follow you can also see whether you are training today, how many records you set in today's workout, and — if you share music — what you are listening to during a workout.
+
+When a workout is matched to a centre, your best lifts from it go on that centre's leaderboard, where anyone signed in can see them with your name and photo. A lift that has been verified can also appear on the national leaderboard. A verification video can be watched by the people who train at that centre, so that they can vote on it.
+
+Blocking someone removes the follow in both directions, takes you out of each other's search results and leaderboards, and hides your profiles and your posts from each other.
 
 The person responsible for FitVen can read the database directly through the Supabase dashboard. That access exists so the app can be run and repaired, and it is not used to look at individual training data without a reason such as a fault you have reported.`,
   },

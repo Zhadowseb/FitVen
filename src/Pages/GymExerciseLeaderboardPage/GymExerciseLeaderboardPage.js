@@ -48,7 +48,7 @@ function formatValue(lift, unit) {
   return formatWeightKg(lift?.weightKg);
 }
 
-function Podium({ rows, unit, theme, colorScheme }) {
+function Podium({ rows, unit, theme, colorScheme, onOpenLifter }) {
   const { t } = useTranslation();
   const isLight = colorScheme === "light";
   const ringColors = [theme.record, "#B8BEC9", "#C98F5A"];
@@ -72,24 +72,37 @@ function Podium({ rows, unit, theme, colorScheme }) {
           const isFirst = position === 0;
           const ringColor = ringColors[position];
           const avatarSize = PODIUM_AVATAR[position];
+          // Somebody else's picture and name open their profile; yours do not.
+          const canOpen = Boolean(onOpenLifter) && Boolean(lift.userId) && !lift.isMe;
+          const Lifter = canOpen ? TouchableOpacity : View;
+          const lifterProps = canOpen
+            ? {
+                activeOpacity: 0.75,
+                accessibilityRole: "button",
+                accessibilityHint: t("publicProfile.opensProfile"),
+                onPress: () => onOpenLifter(lift),
+              }
+            : {};
 
           return (
             <View key={lift.liftId} style={styles.podiumColumn}>
-              <View
-                style={[
-                  styles.podiumAvatarRing,
-                  { width: avatarSize + 6, height: avatarSize + 6, borderColor: ringColor },
-                ]}
-              >
-                <UserAvatar uri={lift.avatarUrl} size={avatarSize} iconSize={Math.round(avatarSize * 0.4)} />
-              </View>
-              <ThemedText
-                style={[styles.podiumName, isFirst ? styles.podiumNameFirst : null]}
-                setColor={theme.title}
-                numberOfLines={1}
-              >
-                {lift.isMe ? t("common.you") : shortenDisplayName(lift.displayName)}
-              </ThemedText>
+              <Lifter style={styles.podiumLifter} {...lifterProps}>
+                <View
+                  style={[
+                    styles.podiumAvatarRing,
+                    { width: avatarSize + 6, height: avatarSize + 6, borderColor: ringColor },
+                  ]}
+                >
+                  <UserAvatar uri={lift.avatarUrl} size={avatarSize} iconSize={Math.round(avatarSize * 0.4)} />
+                </View>
+                <ThemedText
+                  style={[styles.podiumName, isFirst ? styles.podiumNameFirst : null]}
+                  setColor={theme.title}
+                  numberOfLines={1}
+                >
+                  {lift.isMe ? t("common.you") : shortenDisplayName(lift.displayName)}
+                </ThemedText>
+              </Lifter>
               <View style={styles.podiumWeightGroup}>
                 <ThemedText
                   style={[styles.podiumWeight, isFirst ? styles.podiumWeightFirst : null]}
@@ -343,6 +356,11 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
 
   const openAttachSheet = useCallback(() => setIsAttachSheetOpen(true), []);
 
+  const openLifter = useCallback(
+    (lift) => navigation.navigate("PublicProfilePage", { userId: lift.userId }),
+    [navigation]
+  );
+
   const renderLeaderboardRow = useCallback(
     ({ item: lift, index }) => {
       const isLast = index === listRows.length - 1;
@@ -362,6 +380,7 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
             showGym={national}
             onPressReview={openReview}
             onPressAttach={openAttachSheet}
+            onPressLifter={openLifter}
           />
           {!isLast ? (
             <View style={[styles.rowDivider, { backgroundColor: theme.hairline }]} />
@@ -369,7 +388,7 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
         </View>
       );
     },
-    [hasMoreRow, listRows.length, national, openAttachSheet, openReview, theme, unit]
+    [hasMoreRow, listRows.length, national, openAttachSheet, openLifter, openReview, theme, unit]
   );
   const meInPage = me ? rows.some((row) => row.liftId === me.liftId) : false;
   const showPinnedMe = Boolean(me) && !meInPage;
@@ -552,7 +571,13 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
                 </View>
               </View>
             ) : (
-              <Podium rows={podiumRows} unit={unit} theme={theme} colorScheme={colorScheme} />
+              <Podium
+                rows={podiumRows}
+                unit={unit}
+                theme={theme}
+                colorScheme={colorScheme}
+                onOpenLifter={openLifter}
+              />
             )}
           </View>
         }

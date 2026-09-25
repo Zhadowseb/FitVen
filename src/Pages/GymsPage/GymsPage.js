@@ -637,6 +637,18 @@ export default function GymsPage() {
             {featuredStrongest.map((entry) => {
               const top = entry.top;
               const gymLine = [top.gym?.shortName, top.gym?.city].filter(Boolean).join(" · ");
+              // The row opens the exercise's ranking; the lifter's picture and
+              // name open their profile - unless the lifter is you.
+              const canOpenLifter = Boolean(top.userId) && !top.isMe;
+              const Lifter = canOpenLifter ? TouchableOpacity : View;
+              const lifterProps = canOpenLifter
+                ? {
+                    activeOpacity: 0.75,
+                    accessibilityRole: "button",
+                    accessibilityHint: t("publicProfile.opensProfile"),
+                    onPress: () => navigation.navigate("PublicProfilePage", { userId: top.userId }),
+                  }
+                : {};
 
               return (
                 <TouchableOpacity
@@ -649,17 +661,19 @@ export default function GymsPage() {
                   <ThemedText style={styles.strongestExercise} setColor={quietText} numberOfLines={1}>
                     {entry.exerciseName}
                   </ThemedText>
-                  <View style={[styles.avatarRing, { borderColor: goldRingColor }]}>
-                    <UserAvatar uri={top.avatarUrl} size={34} iconSize={16} />
-                  </View>
-                  <View style={styles.strongestCopy}>
-                    <ThemedText style={styles.strongestName} setColor={theme.title} numberOfLines={1}>
-                      {top.isMe ? t("common.you") : top.displayName}
-                    </ThemedText>
-                    <ThemedText style={styles.strongestMeta} setColor={top.isHomeGym ? theme.primary : quietText} numberOfLines={1}>
-                      {top.isHomeGym ? t("gyms.gymLineYourCentre", { gym: gymLine }) : gymLine}
-                    </ThemedText>
-                  </View>
+                  <Lifter style={styles.strongestLifter} {...lifterProps}>
+                    <View style={[styles.avatarRing, { borderColor: goldRingColor }]}>
+                      <UserAvatar uri={top.avatarUrl} size={34} iconSize={16} />
+                    </View>
+                    <View style={styles.strongestCopy}>
+                      <ThemedText style={styles.strongestName} setColor={theme.title} numberOfLines={1}>
+                        {top.isMe ? t("common.you") : top.displayName}
+                      </ThemedText>
+                      <ThemedText style={styles.strongestMeta} setColor={top.isHomeGym ? theme.primary : quietText} numberOfLines={1}>
+                        {top.isHomeGym ? t("gyms.gymLineYourCentre", { gym: gymLine }) : gymLine}
+                      </ThemedText>
+                    </View>
+                  </Lifter>
                   <LiftStatusPill status="verified" approvals={top.approvals} compact />
                   <ThemedText style={styles.strongestWeight} setColor={theme.record}>
                     {formatWeightKg(top.weightKg)}

@@ -21,7 +21,7 @@ import ChevronRight from "@resources/Icons/UI-icons/ChevronRight";
 import Cross from "@resources/Icons/UI-icons/Cross";
 import MapPin from "@resources/Icons/UI-icons/MapPin";
 import Search from "@resources/Icons/UI-icons/Search";
-import { ThemedText, ThemedView, UserAvatar } from "@resources/ThemedComponents";
+import { ThemedSegmentedControl, ThemedText, ThemedView, UserAvatar } from "@resources/ThemedComponents";
 
 // Both services need two characters before they answer; so does the screen.
 const MIN_QUERY_LENGTH = 2;
@@ -29,11 +29,29 @@ const DEBOUNCE_MS = 220;
 const GYM_LIMIT = 8;
 const PEOPLE_LIMIT = 5;
 
+// What the search looks through: both, or only one of the two.
+const SCOPES = ["all", "gyms", "people"];
+const PLACEHOLDER_KEYS = {
+  all: "explore.search.placeholder.all",
+  gyms: "explore.search.placeholder.gyms",
+  people: "explore.search.placeholder.people",
+};
+const HINT_KEYS = {
+  all: "explore.search.hint.all",
+  gyms: "explore.search.hint.gyms",
+  people: "explore.search.hint.people",
+};
+
+// The last choice, for the next time the search opens - within the session.
+let lastScope = "all";
+
 /**
  * Explore's search, full screen with the keyboard already up: centres and
- * people, as you type. A centre opens its page; a person opens the people
- * list on the same search, where the follow buttons are. Programs and
- * exercises join the search when they can be found.
+ * people as you type - both, or only one of them, by the filter under the
+ * field. A centre opens its page; a person opens their profile,
+ * and "See everyone and follow" the people list on the same search, where the
+ * follow buttons are. Programs and exercises join the search when they can be
+ * found.
  */
 export default function ExploreSearchPage() {
   const { t } = useTranslation();
@@ -42,6 +60,9 @@ export default function ExploreSearchPage() {
   const theme = Colors[colorScheme] ?? Colors.light;
   const { user } = useAuth();
   const [query, setQuery] = useState("");
+  const [scope, setScope] = useState(lastScope);
+  const searchesGyms = scope !== "people";
+  const searchesPeople = scope !== "gyms";
   const [gyms, setGyms] = useState([]);
   const [people, setPeople] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -62,9 +83,10 @@ export default function ExploreSearchPage() {
     const timer = setTimeout(async () => {
       setIsSearching(true);
 
+      // Only what the filter asks for is searched at all.
       const [gymResult, peopleResult] = await Promise.allSettled([
-        gymService.searchGyms({ query: trimmed, limit: GYM_LIMIT }),
-        user?.id
+        searchesGyms ? gymService.searchGyms({ query: trimmed, limit: GYM_LIMIT }) : Promise.resolve([]),
+        searchesPeople && user?.id
           ? socialService.searchUsers({ query: trimmed, currentUserId: user.id, limit: PEOPLE_LIMIT + 1 })
           : Promise.resolve([]),
       ]);
@@ -75,7 +97,10 @@ export default function ExploreSearchPage() {
 
       setGyms(gymResult.status === "fulfilled" ? gymResult.value : []);
       setPeople(peopleResult.status === "fulfilled" ? peopleResult.value : []);
-      setFailed(gymResult.status === "rejected" && peopleResult.status === "rejected");
+      setFailed(
+        (!searchesGyms || gymResult.status === "rejected") &&
+          (!searchesPeople || peopleResult.status === "rejected")
+      );
       setIsSearching(false);
     }, DEBOUNCE_MS);
 
@@ -83,7 +108,16 @@ export default function ExploreSearchPage() {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [canSearch, trimmed, user?.id]);
+  }, [canSearch, searchesGyms, searchesPeople, trimmed, user?.id]);
+
+  const changeScope = (next) => {
+    if (!SCOPES.includes(next)) {
+      return;
+    }
+
+    lastScope = next;
+    setScope(next);
+  };
 
   const quiet = theme.quietText;
   const title = theme.title;
@@ -117,12 +151,12 @@ export default function ExploreSearchPage() {
             autoFocus
             value={query}
             onChangeText={setQuery}
-            placeholder={t("explore.searchPlaceholder")}
+            placeholder={t(PLACEHOLDER_KEYS[scope])}
             placeholderTextColor={quiet}
             returnKeyType="search"
             autoCorrect={false}
             autoCapitalize="none"
-            accessibilityLabel={t("explore.searchPlaceholder")}
+            accessibilityLabel={t(PLACEHOLDER_KEYS[scope])}
             style={[styles.input, { color: title }]}
           />
           {query.length > 0 ? (
@@ -138,6 +172,14 @@ export default function ExploreSearchPage() {
         </View>
       </View>
 
+      <View style={styles.scope}>
+        <ThemedSegmentedControl
+          options={SCOPES.map((value) => ({ value, label: t(`explore.search.scope.${value}`) }))}
+          value={scope}
+          onChange={changeScope}
+        />
+      </View>
+
       <ScrollView
         style={styles.content}
         contentContainerStyle={styles.scrollContent}
@@ -147,7 +189,7 @@ export default function ExploreSearchPage() {
       >
         {!canSearch ? (
           <ThemedText style={styles.hint} setColor={quiet}>
-            {t("explore.search.hint")}
+            {t(HINT_KEYS[scope])}
           </ThemedText>
         ) : null}
 
@@ -210,7 +252,8 @@ export default function ExploreSearchPage() {
                   key={person.id}
                   activeOpacity={0.85}
                   accessibilityRole="button"
-                  onPress={openPeople}
+                  accessibilityHint={t("publicProfile.opensProfile")}
+                  onPress={() => navigation.navigate("PublicProfilePage", { userId: person.id })}
                   style={[styles.row, index > 0 ? { borderTopWidth: 1, borderTopColor: theme.hairline } : null]}
                 >
                   <UserAvatar uri={person.avatarUrl} size={36} iconSize={16} />

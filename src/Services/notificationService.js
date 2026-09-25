@@ -562,6 +562,31 @@ export async function getPushNotificationSettings({ user } = {}) {
   });
 }
 
+/**
+ * On or off, for the Notifications tile on Profile. The same `enabled` the
+ * settings screen works from - permission granted, this device registered, a
+ * mode other than none - without the list of chosen people behind it, which
+ * the tile does not show.
+ */
+export async function getPushNotificationsEnabled({ user } = {}) {
+  if (!user?.id) {
+    return false;
+  }
+
+  const [permission, pushTokens, preference] = await Promise.all([
+    getNotificationPermission(),
+    fetchUserPushTokens(user.id),
+    fetchNotificationPreference(user.id),
+  ]);
+
+  return mapPushNotificationSettings({
+    permission,
+    pushTokens,
+    preference,
+    sourceUserIds: [],
+  }).enabled;
+}
+
 export async function setPushNotificationsEnabled({
   user,
   enabled,

@@ -9,6 +9,7 @@ export * as notificationService from "./notificationService";
 export * as ownWorkoutPostService from "./ownWorkoutPostService";
 export * as programService from "./programService";
 export * as programTransferService from "./programTransferService";
+export * as publicProfileService from "./publicProfileService";
 export * as runningService from "./runningService";
 export * as socialPostService from "./socialPostService";
 export * as socialService from "./socialService";

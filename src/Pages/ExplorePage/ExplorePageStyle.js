@@ -18,27 +18,6 @@ export default StyleSheet.create({
     paddingHorizontal: 20,
   },
   title: { flex: 1, fontSize: 28, fontWeight: "800", letterSpacing: -0.5, lineHeight: 32 },
-  socialButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  badge: {
-    position: "absolute",
-    top: -3,
-    right: -3,
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 2,
-    paddingHorizontal: 4,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  badgeText: { fontSize: 10, fontWeight: "900", lineHeight: 12 },
 
   // Search
   search: {

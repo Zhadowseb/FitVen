@@ -3,8 +3,6 @@
 export default {
   title: "Explore",
   searchPlaceholder: "Search centres and people",
-  openSocial: "Followers and friends",
-  openSocialNew: { one: "Followers and friends, {count} new follower", other: "Followers and friends, {count} new followers" },
   tiles: {
     gyms: "Centres",
     gymsSub: "Find your centre",
@@ -47,7 +45,21 @@ export default {
     pickDetail: "See its records and who trains there",
   },
   search: {
-    hint: "Type at least two letters to search centres and people.",
+    hint: {
+      all: "Type at least two letters to search centres and people.",
+      gyms: "Type at least two letters to search centres.",
+      people: "Type at least two letters to search for people.",
+    },
+    placeholder: {
+      all: "Search centres and people",
+      gyms: "Search centres",
+      people: "Search people",
+    },
+    scope: {
+      all: "Both",
+      gyms: "Centres",
+      people: "People",
+    },
     failed: "The search didn't go through. Try again in a moment.",
     nothing: "Nothing found for “{query}”.",
     clear: "Clear the search",

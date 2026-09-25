@@ -1,373 +1,329 @@
 import { StyleSheet } from "react-native";
 
+// Layout only. Every colour is applied inline from the theme, so light, dark
+// and the accent themes all reach it.
 export default StyleSheet.create({
   container: {
     flex: 1,
   },
 
-  // Header
-
-  // Content
-  content: {
-    flex: 1,
+  // Top bar
+  topBar: {
+    height: 44,
+    paddingHorizontal: 20,
+    flexDirection: "row",
+    alignItems: "center",
   },
+  topBarSide: {
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+  },
+  topBarTitle: {
+    flex: 1,
+    textAlign: "center",
+    fontSize: 17,
+    lineHeight: 22,
+    fontWeight: "800",
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
   scrollContent: {
     paddingHorizontal: 20,
-    paddingTop: 18,
     paddingBottom: 28,
-    gap: 22,
-  },
-  section: {
-    gap: 10,
   },
 
-  // Card shell
-  card: {
+  // Identity
+  identityRow: {
+    paddingTop: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+  },
+  identityCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 3,
+  },
+  displayName: {
+    fontSize: 24,
+    lineHeight: 27,
+    fontWeight: "800",
+    letterSpacing: -0.5,
+  },
+  usernameLine: {
+    fontSize: 12.5,
+    lineHeight: 16,
+    fontWeight: "700",
+  },
+  usernameCode: {
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  gymLine: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  gymName: {
+    flexShrink: 1,
+    fontSize: 11.5,
+    lineHeight: 15,
+    fontWeight: "800",
+  },
+  skeletonName: {
+    width: "72%",
+    height: 22,
+    borderRadius: 7,
+  },
+  skeletonUsername: {
+    width: "46%",
+    height: 12,
+    borderRadius: 5,
+    marginTop: 5,
+  },
+  identityError: {
+    fontSize: 12.5,
+    lineHeight: 17,
+    fontWeight: "700",
+  },
+  retryButton: {
+    alignSelf: "flex-start",
+    minHeight: 32,
+    justifyContent: "center",
+  },
+  retryText: {
+    fontSize: 12.5,
+    lineHeight: 17,
+    fontWeight: "800",
+  },
+  bio: {
+    marginTop: 14,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "600",
+  },
+  banner: {
+    marginTop: 14,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  bannerText: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "700",
+  },
+
+  // Edit profile / View as others
+  actionRow: {
+    marginTop: 14,
+    flexDirection: "row",
+    gap: 9,
+  },
+  actionButton: {
+    height: 44,
+    borderRadius: 14,
+    paddingHorizontal: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+  },
+  editButton: {
+    flex: 1.4,
+  },
+  viewAsOthersButton: {
+    flex: 1,
+    borderWidth: 1,
+  },
+  actionText: {
+    flexShrink: 1,
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: "800",
+  },
+
+  // Followers / Following
+  statsCard: {
+    marginTop: 14,
+    borderRadius: 18,
+    paddingVertical: 12,
+    paddingHorizontal: 6,
+    flexDirection: "row",
+  },
+  statColumn: {
+    flex: 1,
+    minHeight: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 2,
+  },
+  statValue: {
+    fontSize: 17,
+    lineHeight: 21,
+    fontWeight: "800",
+    fontVariant: ["tabular-nums"],
+  },
+  statLabel: {
+    fontSize: 9.5,
+    lineHeight: 12,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+  },
+  statDivider: {
+    width: 1,
+    alignSelf: "stretch",
+  },
+
+  // Sections under the identity: an eyebrow, 9 over what it names
+  section: {
+    marginTop: 24,
+    gap: 9,
+  },
+
+  // Settings tiles
+  tileGrid: {
+    gap: 8,
+  },
+  tileRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+
+  // Appearance
+  appearanceCard: {
+    borderRadius: 18,
+    borderWidth: 1,
+    padding: 14,
+    gap: 14,
+  },
+  appearanceGroup: {
+    gap: 8,
+  },
+  appearanceLabelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  appearanceLabel: {
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: "800",
+    letterSpacing: 1,
+    textTransform: "uppercase",
+  },
+
+  // Feedback
+  feedbackRow: {
+    borderRadius: 16,
+    borderWidth: 1,
+    paddingVertical: 13,
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  feedbackCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 1,
+  },
+  feedbackTitle: {
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: "800",
+  },
+  feedbackSubtitle: {
+    fontSize: 11.5,
+    lineHeight: 15,
+    fontWeight: "700",
+  },
+
+  // Account
+  accountCard: {
     borderRadius: 18,
     borderWidth: 1,
     overflow: "hidden",
   },
-
-  // 2a. Avatar row
-  avatarRow: {
-    padding: 18,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-  },
-  avatarRing: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    borderWidth: 2.5,
-    padding: 3,
-    flexShrink: 0,
-  },
-  avatarInner: {
-    borderRadius: 999,
-  },
-  avatarInfo: {
-    flex: 1,
-    minWidth: 0,
-    gap: 6,
-    alignItems: "flex-start",
-  },
-  changePhotoChip: {
-    height: 44,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  changePhotoChipText: {
-    fontSize: 12,
-    fontWeight: "800",
-  },
-  avatarHelperText: {
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: "500",
-  },
-
-  // 2b/2c. Username & email rows
-  fieldRow: {
-    paddingVertical: 12,
-    paddingHorizontal: 18,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  fieldLabel: {
-    width: 88,
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 0.6,
-    textTransform: "uppercase",
-  },
-  fieldValue: {
-    flex: 1,
-    fontSize: 13,
-    fontWeight: "700",
-  },
-
-  // 2d. Birth date row
-  birthDateRow: {
-    paddingVertical: 12,
-    paddingHorizontal: 18,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  birthDateCopy: {
-    flex: 1,
-    minWidth: 0,
-    gap: 1,
-  },
-  birthDateValue: {
-    fontSize: 13,
-    fontWeight: "700",
-    fontVariant: ["tabular-nums"],
-  },
-  birthDateSubline: {
-    fontSize: 11,
-    fontWeight: "500",
-  },
-  agePill: {
-    borderRadius: 999,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-  },
-  agePillText: {
-    fontSize: 11,
-    fontWeight: "800",
-    flexShrink: 0,
-  },
-  clearBirthDateRow: {
-    paddingHorizontal: 18,
-    paddingBottom: 8,
-    alignItems: "flex-end",
-  },
-  clearBirthDateText: {
-    fontSize: 11,
-    fontWeight: "800",
-  },
-
-  // 2e. Display name section
-  displayNameSection: {
-    padding: 14,
-    paddingHorizontal: 18,
-    gap: 6,
-  },
-  fieldSectionLabel: {
-    fontSize: 12,
-    fontWeight: "800",
-    letterSpacing: 0.6,
-    textTransform: "uppercase",
-  },
-  inputField: {
-    height: 44,
-    borderRadius: 10,
-    borderWidth: 1,
-    paddingHorizontal: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  inputFieldValue: {
-    flex: 1,
-    fontSize: 13,
-    fontWeight: "700",
-    padding: 0,
-  },
-  inputFieldCounter: {
-    fontSize: 11,
-    fontWeight: "700",
-    fontVariant: ["tabular-nums"],
-    flexShrink: 0,
-  },
-  fieldHelperText: {
-    fontSize: 11,
-    fontWeight: "500",
-  },
-
-  // 2f. Bio section
-  bioSection: {
-    paddingHorizontal: 18,
-    paddingBottom: 14,
-    gap: 6,
-  },
-  bioField: {
-    minHeight: 60,
-    borderRadius: 10,
-    borderWidth: 1,
-    paddingVertical: 11,
-    paddingHorizontal: 14,
-    gap: 6,
-  },
-  bioFieldValue: {
-    fontSize: 13,
-    lineHeight: 19,
-    fontWeight: "600",
-    padding: 0,
-    textAlignVertical: "top",
-  },
-  bioFieldCounter: {
-    alignSelf: "flex-end",
-    fontSize: 11,
-    fontWeight: "700",
-    fontVariant: ["tabular-nums"],
-  },
-
-  // Loading / feedback banner
-  loadingText: {
-    paddingHorizontal: 18,
-    paddingTop: 4,
-    fontSize: 12,
-  },
-  feedbackBanner: {
-    marginHorizontal: 18,
-    marginTop: 4,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  feedbackBannerText: {
-    fontSize: 12,
-    lineHeight: 18,
-  },
-
-  // 2g. Save button
-  saveButtonWrapper: {
-    paddingHorizontal: 18,
-    paddingBottom: 18,
-  },
-  saveButton: {
-    height: 50,
-    borderRadius: 14,
-    width: "100%",
-  },
-
-  // 3. Settings rows
-  settingsRow: {
-    paddingVertical: 14,
-    paddingHorizontal: 18,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  // A row you work here rather than one that takes you somewhere. Taller,
-  // because it holds a control instead of a chevron.
-  settingsRowLabel: {
-    flex: 1,
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  settingsStackedHeader: {
-    paddingTop: 14,
-    paddingHorizontal: 18,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  settingsStackedControl: {
-    paddingHorizontal: 18,
-    paddingTop: 10,
-    paddingBottom: 14,
-  },
-  accentPickerWrap: {
-    paddingHorizontal: 18,
-    paddingBottom: 16,
-    paddingTop: 10,
-  },
-
-  // 4. Feedback card
-  feedbackCard: {
-    padding: 18,
-    gap: 10,
-  },
-  feedbackHeaderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  feedbackTextColumn: {
-    flex: 1,
-    gap: 1,
-  },
-  feedbackTitle: {
-    fontSize: 13,
-    fontWeight: "800",
-  },
-  feedbackSubtitle: {
-    fontSize: 11,
-    lineHeight: 16,
-    fontWeight: "500",
-  },
-  feedbackChipRow: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  feedbackChip: {
-    borderRadius: 999,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-  },
-  feedbackChipText: {
-    fontSize: 11,
-    fontWeight: "800",
-  },
-
-  // 5. Account card
   accountRow: {
     paddingVertical: 14,
-    paddingHorizontal: 18,
+    paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 12,
   },
   accountInfo: {
     flex: 1,
     minWidth: 0,
-    gap: 1,
+    gap: 2,
   },
   accountLabel: {
-    fontSize: 11,
+    fontSize: 10,
+    lineHeight: 13,
     fontWeight: "800",
-    letterSpacing: 0.6,
+    letterSpacing: 1,
     textTransform: "uppercase",
   },
-  accountValue: {
+  accountEmail: {
     fontSize: 13,
+    lineHeight: 17,
     fontWeight: "700",
   },
-  logoutButton: {
-    height: 44,
-    borderRadius: 22,
-    paddingHorizontal: 16,
+  logoutPill: {
+    height: 40,
+    borderRadius: 20,
     borderWidth: 1,
+    paddingHorizontal: 16,
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
   },
-  logoutButtonText: {
+  logoutPillText: {
     fontSize: 12,
+    lineHeight: 16,
     fontWeight: "800",
   },
-  metaRow: {
-    paddingVertical: 12,
-    paddingHorizontal: 18,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  metaRowLabel: {
-    flex: 1,
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 0.6,
-    textTransform: "uppercase",
-  },
-  metaRowValue: {
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  errorText: {
-    paddingHorizontal: 18,
+  accountError: {
+    paddingHorizontal: 16,
     paddingBottom: 12,
     fontSize: 12,
+    lineHeight: 17,
   },
-  deleteAccountRow: {
+  accountLinkRow: {
+    minHeight: 48,
     paddingVertical: 14,
-    paddingHorizontal: 18,
+    paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    minHeight: 44,
+    gap: 12,
   },
-  deleteAccountHint: {
+  accountLinkText: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "700",
+  },
+  footer: {
+    marginTop: 14,
+    textAlign: "center",
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "700",
+  },
+
+  // Delete account
+  errorText: {
+    marginTop: 10,
     fontSize: 12,
     lineHeight: 17,
   },

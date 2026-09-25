@@ -23,6 +23,11 @@ export default function ThemedConfirmModal({
   confirmDisabled = false,
   onConfirm,
   onClose,
+  // Fires once the dialog has left the screen - see ThemedModal. For a
+  // confirmation that goes on to close a native modal screen: closing it from
+  // here keeps the two dismissals apart instead of asking UIKit for both at
+  // once.
+  onDismiss,
   children, // optional extra content between the message and the buttons
 }) {
   const colorScheme = useColorScheme();
@@ -45,6 +50,7 @@ export default function ThemedConfirmModal({
     <ThemedModal
       visible={visible}
       onClose={onClose}
+      onDismiss={onDismiss}
       title={title}
       scroll={Boolean(children)}
       dismissOnBackdropPress={!isWorking}

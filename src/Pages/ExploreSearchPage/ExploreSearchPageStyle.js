@@ -27,6 +27,7 @@ export default StyleSheet.create({
     gap: 10,
   },
   input: { flex: 1, fontSize: 14, fontWeight: "600", paddingVertical: 0 },
+  scope: { paddingHorizontal: 20, paddingTop: 10 },
 
   hint: { marginTop: 18, fontSize: 13, fontWeight: "600", lineHeight: 18, textAlign: "center" },
   spinner: { marginTop: 18 },

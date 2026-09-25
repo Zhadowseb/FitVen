@@ -69,6 +69,9 @@ behind by accident.
 | `20260925100000_explore-counts-your-centres-new-records.sql` | no |
 | `20260925110000_a-post-knows-its-centre.sql` | no |
 | `20260926090000_your-split-follows-you.sql` | no |
+| `20260927090000_a-lifter-can-give-their-sex.sql` | no |
+| `20260927100000_public-profiles.sql` | no |
+| `20260927110000_a-block-hides-public-posts-too.sql` | no |
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
 centre match, per-centre lift leaderboards with video verification, and what
@@ -337,6 +340,15 @@ else changes.
 `profile_private` a `split_names` column - the two to six sessions somebody
 chose as their split on the Train tab, by name - so the choice follows them to
 a new phone. Without it the choice is kept on the phone only.
+`20260927090000_a-lifter-can-give-their-sex.sql`,
+`20260927100000_public-profiles.sql` and
+`20260927110000_a-block-hides-public-posts-too.sql` have not been run yet. The
+first gives `profile_private` a `sex` column - private, never on a profile,
+there so records can be split by sex later. The second adds `public_profile`,
+the one way to read a stranger's profile: security definer, a fixed set of
+fields, nothing from `profile_private`, null across a block either way; until it
+runs, a profile opened from a name says it is not available. The third makes a
+block hide public posts as well as followers-only ones.
 
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to

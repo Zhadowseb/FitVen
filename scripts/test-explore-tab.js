@@ -19,6 +19,12 @@ const nav = read("src/Resources/ThemedComponents/ThemedBottomNavigation.js");
 const exploreBlock = nav.match(/const EXPLORE_ROUTES = new Set\(\[([\s\S]*?)\]\);/);
 assert.ok(exploreBlock, "ThemedBottomNavigation no longer has an EXPLORE_ROUTES set");
 const exploreRoutes = new Set([...exploreBlock[1].matchAll(/"([A-Za-z]+)"/g)].map((match) => match[1]));
+const inheritBlock = nav.match(/const INHERIT_TAB_ROUTES = new Set\(\[([\s\S]*?)\]\);/);
+// Pages that keep whichever tab they were opened from - somebody's profile,
+// say - are fine to reach from Explore: the tab stays lit.
+const inheritRoutes = new Set(
+  inheritBlock ? [...inheritBlock[1].matchAll(/"([A-Za-z]+)"/g)].map((match) => match[1]) : []
+);
 
 assert.ok(nav.includes('goToTab("ExplorePage")'), "the Explore tab does not open ExplorePage");
 assert.ok(nav.includes('t("nav.tabs.explore")'), "the tab is not labelled with nav.tabs.explore");
@@ -43,15 +49,22 @@ for (const page of pages) {
   for (const target of targets) {
     assert.ok(registered.has(target), `${page} navigates to ${target}, which App.js does not register`);
     assert.ok(
-      exploreRoutes.has(target) || OTHER_TABS.has(target),
+      exploreRoutes.has(target) || inheritRoutes.has(target) || OTHER_TABS.has(target),
       `${page} navigates to ${target}, which is not in EXPLORE_ROUTES - the tab would switch to Home there`
     );
   }
 }
 
-for (const route of ["ExplorePage", "ExploreSearchPage", "SocialPage"]) {
+for (const route of ["ExplorePage", "ExploreSearchPage"]) {
   assert.ok(exploreRoutes.has(route), `${route} is not under the Explore tab`);
 }
+
+// Social is reached from Explore and from your profile, and keeps the tab it
+// was opened from.
+assert.ok(
+  exploreRoutes.has("SocialPage") || inheritRoutes.has("SocialPage"),
+  "SocialPage lights no tab at all"
+);
 
 // Nothing links to the page that was renamed.
 const sourceFiles = [];

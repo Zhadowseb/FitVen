@@ -1,6 +1,5 @@
 // When somebody last looked at something, kept on the phone: Explore counts
-// what is new since then - followers since the Social page, records since the
-// centre's page. A per-user key, so a second account on the same phone does
+// what is new since then - records since the centre's page. A per-user key, so a second account on the same phone does
 // not inherit the first one's "new".
 //
 // Storage can be missing or refuse (a fresh install, a full disk). Then there
@@ -42,5 +41,4 @@ export async function getLastSeenOrStart(key, now = Date.now()) {
   return now;
 }
 
-export const socialSeenKey = (userId) => `social:${userId}`;
 export const gymSeenKey = (userId, gymId) => `gym:${userId}:${gymId}`;

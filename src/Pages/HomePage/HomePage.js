@@ -404,6 +404,9 @@ export default function HomePage() {
           isLoading={isLoadingCirclePreview}
           onSeeAll={() => navigation.navigate("SocialPage")}
           onOpenProfile={() => navigation.navigate("ProfilePage")}
+          onOpenPerson={(person) =>
+            navigation.navigate("PublicProfilePage", { userId: person.id })
+          }
           onOpenGym={(gymId) =>
             navigation.navigate("GymLeaderboardPage", { gym_id: gymId })
           }

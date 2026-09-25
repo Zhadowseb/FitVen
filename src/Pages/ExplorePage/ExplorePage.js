@@ -6,7 +6,7 @@ import { formatNumber, useTranslation } from "@localization";
 
 import styles from "./ExplorePageStyle";
 import { useAuth } from "@contexts/AuthContext";
-import { gymService, socialPostService, socialService } from "@services";
+import { gymService, socialPostService } from "@services";
 import ChangeGymSheet from "@resources/Components/ChangeGymSheet/ChangeGymSheet";
 import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
 import Calender from "@resources/Icons/UI-icons/Calender";
@@ -14,13 +14,12 @@ import ChevronRight from "@resources/Icons/UI-icons/ChevronRight";
 import Library from "@resources/Icons/UI-icons/Library";
 import MapPin from "@resources/Icons/UI-icons/MapPin";
 import Search from "@resources/Icons/UI-icons/Search";
-import Social from "@resources/Icons/UI-icons/Social";
 import Star from "@resources/Icons/UI-icons/Star";
 import { ThemedText, ThemedView, UserAvatar } from "@resources/ThemedComponents";
 import { formatTimeAgo } from "@utils/dateUtils";
 import { getWorkoutCoverImage } from "@utils/workoutCoverImages";
 import { formatWeightKg } from "@utils/gymUtils";
-import { getLastSeenOrStart, gymSeenKey, socialSeenKey } from "@utils/lastSeen";
+import { getLastSeenOrStart, gymSeenKey } from "@utils/lastSeen";
 
 // What the page last showed, so a return to the tab paints it at once and
 // refreshes underneath - the tab is built again on every visit.
@@ -31,7 +30,7 @@ let lastShown = null;
 const PROGRAM_COUNT = 0;
 const SHARED_EXERCISE_COUNT = 0;
 
-const EMPTY = { gymCount: null, homeGym: null, gymRecords: null, newFollowers: 0, centrePosts: [] };
+const EMPTY = { gymCount: null, homeGym: null, gymRecords: null, centrePosts: [] };
 const CENTRE_POST_LIMIT = 8;
 
 async function loadExplore(user) {
@@ -48,17 +47,12 @@ async function loadExplore(user) {
     ...(myGymsResult.status === "fulfilled" ? myGymsResult.value : []).map((gym) => gym.id),
   ].filter((id) => id !== null && id !== undefined);
 
-  const [gymRecordsResult, newFollowersResult, centrePostsResult] = await Promise.allSettled([
+  const [gymRecordsResult, centrePostsResult] = await Promise.allSettled([
     homeGym && userId
       ? getLastSeenOrStart(gymSeenKey(userId, homeGym.id)).then((since) =>
           gymService.getRecentGymRecords({ gymId: homeGym.id, since })
         )
       : Promise.resolve(null),
-    userId
-      ? getLastSeenOrStart(socialSeenKey(userId)).then((since) =>
-          socialService.countFollowersSince({ userId, since })
-        )
-      : Promise.resolve(0),
     userId && centreIds.length > 0
       ? socialPostService.getCentrePosts({ user, gymIds: centreIds, limit: CENTRE_POST_LIMIT })
       : Promise.resolve([]),
@@ -70,7 +64,6 @@ async function loadExplore(user) {
     ["centre count", gymCountResult],
     ["home centre", homeGymResult],
     ["centre records", gymRecordsResult],
-    ["new followers", newFollowersResult],
     ["centre posts", centrePostsResult],
     ["centres you train in", myGymsResult],
   ]) {
@@ -83,7 +76,6 @@ async function loadExplore(user) {
     gymCount: gymCountResult.status === "fulfilled" ? gymCountResult.value : null,
     homeGym,
     gymRecords: gymRecordsResult.status === "fulfilled" ? gymRecordsResult.value : null,
-    newFollowers: newFollowersResult.status === "fulfilled" ? newFollowersResult.value : 0,
     centrePosts: centrePostsResult.status === "fulfilled" ? centrePostsResult.value : [],
   };
 }
@@ -130,7 +122,7 @@ export default function ExplorePage() {
     }, [refresh])
   );
 
-  const { gymCount, homeGym, gymRecords, newFollowers, centrePosts } = data;
+  const { gymCount, homeGym, gymRecords, centrePosts } = data;
   const latest = gymRecords?.latest ?? null;
   const card = theme.cardBackground;
   const cardBorder = theme.cardBorder;
@@ -184,37 +176,10 @@ export default function ExplorePage() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* The title, and the way to your followers. */}
         <View style={styles.header}>
           <ThemedText style={styles.title} setColor={title} accessibilityRole="header">
             {t("explore.title")}
           </ThemedText>
-
-          <TouchableOpacity
-            activeOpacity={0.85}
-            accessibilityRole="button"
-            accessibilityLabel={
-              newFollowers > 0
-                ? t("explore.openSocialNew", { count: newFollowers })
-                : t("explore.openSocial")
-            }
-            onPress={() => navigation.navigate("SocialPage")}
-            style={[styles.socialButton, { backgroundColor: card, borderColor: cardBorder }]}
-          >
-            <Social width={21} height={21} color={theme.textStrong} thickness={1.6} />
-            {newFollowers > 0 ? (
-              <View
-                style={[
-                  styles.badge,
-                  { backgroundColor: theme.primary, borderColor: theme.background },
-                ]}
-              >
-                <ThemedText style={styles.badgeText} setColor={theme.ink}>
-                  {newFollowers > 99 ? "99+" : formatNumber(newFollowers)}
-                </ThemedText>
-              </View>
-            ) : null}
-          </TouchableOpacity>
         </View>
 
         {/* Not a field here: a tap opens the search, with the keyboard up. */}

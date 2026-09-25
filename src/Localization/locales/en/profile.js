@@ -1,5 +1,7 @@
-// Profile page, its settings rows, and the feedback sheet it opens.
+// Your own profile, Edit profile, the settings tiles, and the feedback sheet
+// the profile opens.
 export default {
+  title: "Profile",
   language: {
     label: "Language",
     system: "System",
@@ -7,19 +9,26 @@ export default {
     da: "Dansk",
   },
   sections: {
-    publicProfile: "Public profile",
     settings: "Settings",
     appearance: "Appearance",
     feedback: "Feedback",
     account: "Account",
   },
+  actions: {
+    edit: "Edit profile",
+    viewAsOthers: "View as others",
+  },
   avatar: {
     uploading: "Uploading...",
     changePhoto: "Change photo",
     uploadPhoto: "Upload photo",
+    changeAccessibility: "Change profile photo",
     hint: "Square images work best · up to {maxMb} MB",
   },
-  username: "Username",
+  username: {
+    label: "Username",
+    locked: "Can't be changed",
+  },
   birthYear: {
     label: "Birth year",
     select: "Select birth year",
@@ -38,15 +47,29 @@ export default {
     label: "Bio",
     placeholder: "Tell people a little about your training.",
   },
+  sex: {
+    label: "Sex",
+    male: "Male",
+    female: "Female",
+    hint: "Not shown on your profile",
+    clear: "Clear",
+    clearAccessibility: "Clear sex",
+    invalid: "Sex has to be male, female or not given.",
+  },
   loadingProfile: "Loading profile...",
-  saveProfile: "Save profile",
   saving: "Saving...",
+  edit: {
+    title: "Edit profile",
+    discardTitle: "Discard changes?",
+    discardMessage: "What you changed here will not be saved.",
+    discard: "Discard",
+    keepEditing: "Keep editing",
+  },
   feedback: {
     signInToView: "Sign in to view your profile.",
     couldNotLoad: "Could not load your profile.",
     signInToUpdate: "Sign in to update your profile.",
     publicProfileUpdatedWithWarning: "Public profile updated. {warning}",
-    profileUpdated: "Profile updated.",
     couldNotUpdate: "Could not update your profile.",
     signInToUpdatePhoto: "Sign in to update your profile photo.",
     photoPermissionRequired:
@@ -63,6 +86,7 @@ export default {
     notifications: "Notifications",
     socialPosts: "Social posts",
     music: "Music",
+    activeCount: { one: "{count} active", other: "{count} active" },
   },
   appearance: {
     theme: "Theme",
@@ -79,25 +103,18 @@ export default {
   },
   feedbackCard: {
     title: "Send feedback",
-    subtitle: "Report bugs, odd behavior or ideas.",
-    bugs: "Bugs",
-    ideas: "Ideas",
-    missing: "Missing",
+    subtitle: "Bugs, ideas or something missing",
   },
   account: {
     loggedInAs: "Logged in as",
     unknownAccount: "Unknown account",
     logOut: "Log out",
     loggingOut: "Logging out...",
-    app: "App",
-    version: "Version",
     unknownVersion: "Unknown",
     privacy: "Privacy",
-    privacyHint: "What FitVen stores about you, and what you agreed to.",
     deleteAccount: "Delete account",
-    deleteAccountHint:
-      "Removes your programs, workouts and profile everywhere. This cannot be undone.",
   },
+  footer: "FitVen · version {version}",
   logoutConfirm: {
     title: "Log out of FitVen?",
     message:

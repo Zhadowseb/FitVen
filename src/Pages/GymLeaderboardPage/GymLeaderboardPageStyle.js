@@ -132,6 +132,14 @@ export default StyleSheet.create({
     alignItems: "center",
     gap: 11,
   },
+  // The record holder's picture and name: one target that opens their profile.
+  topLifter: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 11,
+  },
   topAvatarRing: {
     width: 46,
     height: 46,
