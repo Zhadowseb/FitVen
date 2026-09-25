@@ -11,6 +11,7 @@ import {
   parseCustomDate,
 } from "@utils/dateUtils";
 import { getProgramEndDate } from "@utils/programUtils";
+import { buildProgramCard, pickCardProgram } from "@utils/programCard";
 import { t } from "@localization";
 import {
   programRepository,
@@ -673,6 +674,86 @@ export async function getTodayProgramSnapshot(db, { programId, date, status }) {
  *   builds them for its own hero card in the same pass, and building them is
  *   the expensive part of this function.
  */
+// A strength set takes about this long, rest included, for "~{min} min".
+// The same estimate as the feed's hero card.
+const CARD_MINUTES_PER_SET = 2.5;
+const CARD_MINUTES_STEP = 5;
+
+/**
+ * The Train tab's program card: the active program with a workout today, or
+ * else the one trained in most recently - its block and week, the week's
+ * progress and seven days, and today's next workout to start. Null without an
+ * active program. `activeCount` is how many there are.
+ */
+export async function getActiveProgramCard(db, { date }) {
+  const active = (await programRepository.getProgramsOverview(db)).filter(
+    (program) => normalizeProgramStatus(program.status) === "ACTIVE"
+  );
+
+  if (active.length === 0) {
+    return null;
+  }
+
+  const todayIso = normalizeIsoDateString(date);
+  const candidates = await Promise.all(
+    active.map(async (program) => {
+      const [rows, snapshot] = await Promise.all([
+        programRepository.getProgramCardRows(db, { programId: program.program_id }),
+        getTodayProgramSnapshot(db, {
+          programId: program.program_id,
+          date,
+          status: program.status,
+        }),
+      ]);
+      const card = buildProgramCard(rows, { todayIso });
+
+      return {
+        program,
+        card,
+        snapshot,
+        hasWorkoutToday: (snapshot?.workouts?.length ?? 0) > 0,
+        lastDoneIso: card?.lastDoneIso ?? null,
+      };
+    })
+  );
+  const chosen = pickCardProgram(candidates.filter((candidate) => candidate.card));
+
+  if (!chosen) {
+    return null;
+  }
+
+  // The next workout of today still to do. None left - or none at all - and
+  // the card leaves its Today row out.
+  const next = (chosen.snapshot?.workouts ?? []).find((workout) => Number(workout.done) !== 1) ?? null;
+  let today = null;
+
+  if (next) {
+    const planned = await weightliftingRepository.getTotalPlannedSetsByWorkout(db, next.workout_id);
+    const totalSets = Number(planned?.count) || 0;
+
+    today = {
+      workoutId: next.workout_id,
+      label: next.label ?? next.workout_type ?? null,
+      workoutType: next.workout_type ?? null,
+      weekday: chosen.snapshot?.day?.Weekday ?? null,
+      date,
+      programId: chosen.program.program_id,
+      exerciseCount: next.previewItems?.length ?? 0,
+      estimatedMinutes:
+        Math.round((totalSets * CARD_MINUTES_PER_SET) / CARD_MINUTES_STEP) * CARD_MINUTES_STEP,
+    };
+  }
+
+  return {
+    programId: chosen.program.program_id,
+    programName: chosen.program.program_name ?? null,
+    programStartDate: chosen.program.start_date ?? null,
+    activeCount: active.length,
+    ...chosen.card,
+    today,
+  };
+}
+
 export async function getTodayActivitySummary(db, { date, snapshots }) {
   const todaySnapshots =
     snapshots ?? (await getTodayWorkoutSnapshots(db, { date }));
@@ -2192,6 +2273,49 @@ export async function createQuickWorkout(
   syncWorkoutTypeInstancesInBackground(db);
 
   return createdWorkout;
+}
+
+/**
+ * A workout repeated today: onto today's program day when there is one, as
+ * a workout of its own otherwise. Returns what WorkoutPage opens it with, or
+ * null when nothing could be copied. The Train tab and the workout library
+ * both repeat through here.
+ */
+export async function repeatWorkoutToday(db, { workoutId, label = null, workoutType = null, date }) {
+  const programTargets = await getWorkoutCopyProgramTargets(db, { date });
+  const target = programTargets[0] ?? null;
+
+  if (target?.day_id) {
+    const copiedWorkoutId = await copyWorkoutToProgramDay(db, {
+      workoutId,
+      dayId: target.day_id,
+      date: target.date,
+    });
+
+    return copiedWorkoutId
+      ? {
+          workout_id: copiedWorkoutId,
+          workout_label: label,
+          workout_type: workoutType,
+          day: target.weekday,
+          date: target.date,
+          program_id: target.program_id,
+        }
+      : null;
+  }
+
+  const copied = await copyWorkoutToStandaloneDate(db, { workoutId, date });
+
+  return copied
+    ? {
+        workout_id: copied.workout_id,
+        workout_label: copied.workout_label,
+        workout_type: copied.workout_type,
+        day: copied.day,
+        date: copied.date,
+        program_id: copied.program_id,
+      }
+    : null;
 }
 
 export async function copyWorkoutToProgramDay(db, { workoutId, dayId, date }) {

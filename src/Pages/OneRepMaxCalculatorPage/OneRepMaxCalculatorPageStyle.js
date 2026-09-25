@@ -29,6 +29,12 @@ export default StyleSheet.create({
     padding: 16,
     gap: 16,
   },
+  // The exercise a prefilled set came from, over the form.
+  exerciseName: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "800",
+  },
   inputRow: {
     flexDirection: "row",
     alignItems: "flex-start",

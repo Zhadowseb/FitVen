@@ -49,6 +49,10 @@ export default function RepeatWorkoutSheet({
   onClose = noop,
   onStart = noop,
   onPlan = noop,
+  // Optional: planning without a program. The parent closes the sheet and
+  // asks for the date itself - a picker opened on top of this sheet would be
+  // a second modal, which Android draws beside the first.
+  onPlanOnDate = null,
 }) {
   const db = useSQLiteContext();
   const colorScheme = useColorScheme();
@@ -329,6 +333,32 @@ export default function RepeatWorkoutSheet({
                   thickness={2}
                 />
               </TouchableOpacity>
+
+              {onPlanOnDate ? (
+                <TouchableOpacity
+                  activeOpacity={0.88}
+                  accessibilityRole="button"
+                  disabled={isWorking}
+                  onPress={onPlanOnDate}
+                  style={styles.choiceCard}
+                >
+                  <View style={styles.choiceIcon}>
+                    <Calender width={18} height={18} color={theme.quietText} />
+                  </View>
+                  <View style={styles.choiceCopy}>
+                    <ThemedText style={styles.choiceTitle}>{t("workout.repeat.planOnDate")}</ThemedText>
+                    <ThemedText style={styles.choiceSubtitle}>
+                      {t("workout.repeat.planOnDateDetail")}
+                    </ThemedText>
+                  </View>
+                  <ChevronRight
+                    width={17}
+                    height={17}
+                    color={theme.quietText}
+                    thickness={2}
+                  />
+                </TouchableOpacity>
+              ) : null}
             </View>
           ) : (
             <View style={styles.optionBlock}>

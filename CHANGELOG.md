@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.7.0] - Unreleased
+## [2.8.0] - Unreleased
 ### Changed
 - **Your profile starts with you.** It used to open on the public-profile form. Now it opens on your photo - tap it to change it - your name, @username and code, your centre and bio, then Edit profile and View as others, your followers and following (each opening that list), the settings as four tiles with their current value (workout types, notifications, social posts, music), one appearance card - the accent as four large swatches, then theme and language - a single Send feedback row, the account card, and "FitVen · version" as a footnote.
 - **Edit profile is its own sheet** (`EditProfilePage`): photo, display name, bio, the username (locked), birth year and - new - **sex**, male or female, kept private beside the birth year and never on your profile, so records can be split by sex later (`profile_private.sex`, `supabase/migrations/20260927090000_a-lifter-can-give-their-sex.sql` - not run yet; until it runs the field is hidden). Save stays off until something changed; Cancel asks before throwing changes away; a draft survives closing the sheet. A birth year that could not be read is no longer wiped by the next save.
@@ -11,6 +11,20 @@
 - **The privacy policy says what the app now does** (version 2026-09-25, so everybody is asked to accept it again on their next launch). It said nothing in your account was visible to other users but your training status and posts; since 2.0 that was no longer true, and with public profiles it is further from it. It now lists sex (optional, private, for sex-split records), the split you choose, centres - the one you train at, the centre of each workout, the lifts that go on a leaderboard and verification videos - reports, shared music and feedback; says that your position is read once at the start of a workout to find the centre and is not kept on the server; names Spotify as an outside service when you connect it; and says exactly who sees what: the public profile for anyone signed in, the leaderboards, what followers see, who can watch a verification video, and what a block hides. `web/privacy/index.html` is rebuilt from it.
 - **Explore's search can be narrowed**: under the field, Both, Centres or People - only what is chosen is searched, the field and the hint say which, and the choice holds the next time the search opens. The Social button and its new-followers badge left Explore's header; your followers are on your profile, which opens the lists straight from its counts.
 - Social and the people search keep the tab they were opened from, instead of switching to Explore when opened from your profile.
+
+---
+## [2.7.0] - Unreleased
+### Changed
+- **Train starts with what to do next.** The page opens on your active program, or - without one - on your split, and your library follows below. Which of the two is decided on every visit, so starting or finishing a program shows at once.
+  - **With a program** (`ActiveProgramCard`): its name, block and focus, a segment per week of the block filled by how much of it is done, this week's seven days - done, today, planned, rest - and today's next workout with a Start button. With more than one program active, the one with a workout today is shown, else the one trained in most recently (`programService.getActiveProgramCard`, `Utils/programCard`).
+  - **Without a program** (`SplitCard`): the sessions you rotate through, when each was last done and whether it was this week, the one longest since marked Next, and "Repeat {name}", which copies it to today and opens it. Until you choose a split it is the one Home already reads out of your last workouts; **Edit** lets you choose two to six sessions in order, kept on your profile so it follows you to a new phone (`splitService`, `supabase/migrations/20260926090000_your-split-follows-you.sql` - not run yet; until it runs the choice stays on the phone). Under it, **Repeat also**: favourites outside the split, then the latest workouts, each opening the repeat sheet.
+  - **The repeat sheet can plan on a date** for somebody with no program to plan into (`RepeatWorkoutSheet` `onPlanOnDate`). Repeating today goes through one path, shared with the workout library (`programService.repeatWorkoutToday`).
+  - **Your library**:
+    - **The calendar block** is the calendar's own Workouts section for last week and this week, with how many workouts are done this week (and of how many planned, with a program), opening the calendar (`TrainCalendarBlock`). The calendar's day logic moved to `Utils/calendarDays` so both read days the same way.
+    - **Four tiles**, each opening its page: Workouts (every finished workout, "+n" this week, a bar a week for eight weeks), Records (every record, "+n" this week, the count climbing week by week), Exercises (the catalogue, and the six muscle groups you have trained most in 90 days) and Programs (how many, how many active, a bar per program by the weeks done) (`TrainLibraryGrid`, `Utils/trainLibrary`).
+    - **Your form**, between them: how many weeks in a row you have trained at least three times, counted from last week - this week joins once it gets there, and a week you were ill neither breaks the streak nor counts - your average per week over twelve weeks, and twelve weekly bars.
+    - **Two tools**: the 1RM calculator, with your best estimated 1RM of the last 30 days and the set it came from - a tap opens the calculator with that set filled in - and sick days this year, with a square per month (`TrainTools`).
+- The page's old summary, the image covers and the four tool rows are gone.
 
 ---
 ## [2.6.0] - Unreleased

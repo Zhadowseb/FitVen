@@ -3194,3 +3194,46 @@ export async function getProgramMetadata(db, programId) {
     [programId]
   );
 }
+
+/**
+ * Every week and day of one program, in order, with how many workouts each
+ * day holds and how many of them are done - what the Train tab's program card
+ * reads its block, its week, its progress and its seven days from. A week
+ * with no days yet still comes back, as one row with no day.
+ */
+export async function getProgramCardRows(db, { programId }) {
+  return db.getAllAsync(
+    `SELECT
+        m.mesocycle_id,
+        m.mesocycle_number,
+        m.focus AS mesocycle_focus,
+        mc.microcycle_id,
+        mc.microcycle_number,
+        d.day_id,
+        d.date,
+        CASE
+          WHEN d.date LIKE '__.__.____'
+          THEN substr(d.date, 7, 4) || '-' || substr(d.date, 4, 2) || '-' || substr(d.date, 1, 2)
+          ELSE d.date
+        END AS date_sort,
+        d.Weekday AS weekday,
+        COALESCE(d.is_sick, 0) AS is_sick,
+        COUNT(w.workout_id) AS workout_count,
+        COALESCE(SUM(CASE WHEN w.done = 1 THEN 1 ELSE 0 END), 0) AS done_count
+     FROM Mesocycle m
+     JOIN Microcycle mc
+       ON mc.mesocycle_id = m.mesocycle_id
+      AND COALESCE(mc.deleted_at, '') = ''
+     LEFT JOIN Day d
+       ON d.microcycle_id = mc.microcycle_id
+      AND COALESCE(d.deleted_at, '') = ''
+     LEFT JOIN Workout_Type_Instance w
+       ON w.day_id = d.day_id
+      AND COALESCE(w.deleted_at, '') = ''
+     WHERE m.program_id = ?
+       AND COALESCE(m.deleted_at, '') = ''
+     GROUP BY m.mesocycle_id, mc.microcycle_id, d.day_id
+     ORDER BY m.mesocycle_number ASC, mc.microcycle_number ASC, date_sort ASC;`,
+    [programId]
+  );
+}

@@ -100,7 +100,7 @@ Five names, and they are not interchangeable:
 | table `Exercise` | the catalog of exercise names. Was called `Exercise_storage`; `db.js` still handles the rename for old installs, which is why `getExerciseStorage` has that name. |
 | table `Exercise_Instance` | one exercise inside one concrete workout. Unrelated to the catalog. |
 | `ExerciseCatalogPage` | the screen that shows and picks from the catalog |
-| `ExerciseLibraryPage` | the hub screen with shortcuts to calendar, sickness, personal records and statistics |
+| `ExerciseLibraryPage` | the Train tab: the active program or your split, then your library - calendar, workouts, records, exercises, programs, the 1RM calculator and sick days |
 | `ExerciseLibraryList` | the list itself. It lives under `ExerciseLibraryPage` but **both** screens use it. |
 
 ## Surprising Placements

@@ -68,6 +68,7 @@ behind by accident.
 | `20260924090000_a-friend-can-see-a-record-was-set-today.sql` | yes |
 | `20260925100000_explore-counts-your-centres-new-records.sql` | no |
 | `20260925110000_a-post-knows-its-centre.sql` | no |
+| `20260926090000_your-split-follows-you.sql` | no |
 | `20260927090000_a-lifter-can-give-their-sex.sql` | no |
 | `20260927100000_public-profiles.sql` | no |
 | `20260927110000_a-block-hides-public-posts-too.sql` | no |
@@ -335,6 +336,10 @@ exist, so a card can say where and Explore can show posts from your centres.
 Without it the app shows posts without a centre and no centre posts; nothing
 else changes.
 
+`20260926090000_your-split-follows-you.sql` has not been run yet. It gives
+`profile_private` a `split_names` column - the two to six sessions somebody
+chose as their split on the Train tab, by name - so the choice follows them to
+a new phone. Without it the choice is kept on the phone only.
 `20260927090000_a-lifter-can-give-their-sex.sql`,
 `20260927100000_public-profiles.sql` and
 `20260927110000_a-block-hides-public-posts-too.sql` have not been run yet. The
