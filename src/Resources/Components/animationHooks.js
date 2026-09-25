@@ -344,7 +344,9 @@ export function useBreathAnimation(enabled = true, { periodMs = 2600, low = 0.6 
 
 // Whether the loops may run: on screen, app in the foreground, and the OS not
 // asking for reduced motion. Everything that loops on Home reads this - the
-// friends strip and the days-since card alike.
+// friends strip and the days-since card alike. `visible` is the first two
+// alone, for what has to wait until somebody can see it even when it will
+// not move - the Quick start panel's record, say.
 export function useAnimationsEnabled() {
   const isFocused = useIsFocused();
   const reduceMotion = useReduceMotion();
@@ -360,5 +362,7 @@ export function useAnimationsEnabled() {
     return () => subscription.remove();
   }, []);
 
-  return { animate: isFocused && isAppActive && !reduceMotion, reduceMotion };
+  const visible = isFocused && isAppActive;
+
+  return { animate: visible && !reduceMotion, reduceMotion, visible };
 }

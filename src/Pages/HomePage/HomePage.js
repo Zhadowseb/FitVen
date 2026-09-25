@@ -1,5 +1,5 @@
 import { StatusBar } from "expo-status-bar";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   AppState,
@@ -34,6 +34,7 @@ import {
 } from "@services";
 import { getTodaysDate } from "@utils/dateUtils";
 import { pickMuscleGlanceHeadline } from "@utils/muscleGlance";
+import { subscribeWorkoutSetChanges } from "@utils/workoutSetEvents";
 import { useAuth } from "../../Contexts/AuthContext";
 
 /**
@@ -80,8 +81,78 @@ export default function HomePage() {
   const [isStarting, setIsStarting] = useState(false);
   const [homeError, setHomeError] = useState("");
   const [openToday, setOpenToday] = useState(null);
+  // The running workout's sets, for the Quick start panel while it runs, and
+  // the set the workout screen reported last - so "finished last" is the one
+  // just ticked off, and a record can be celebrated for it.
+  const [liveWorkout, setLiveWorkout] = useState(null);
+  const recentSetRef = useRef({ workoutId: null, setId: null });
+  const liveRequestRef = useRef(0);
 
   useEffect(() => musicService.subscribeNowPlaying(setOwnNowPlaying), []);
+
+  const loadLiveWorkout = useCallback(
+    async (today) => {
+      const requestId = liveRequestRef.current + 1;
+      const running = today?.first?.isRunning ? today.first : null;
+
+      liveRequestRef.current = requestId;
+
+      if (!running) {
+        setLiveWorkout(null);
+        return;
+      }
+
+      const recentSetId =
+        Number(recentSetRef.current.workoutId) === Number(running.workoutId)
+          ? recentSetRef.current.setId
+          : null;
+
+      try {
+        const progress = await weightliftingService.getLiveWorkoutProgress(db, {
+          workoutId: running.workoutId,
+          recentSetId,
+        });
+
+        // Sets can be ticked off faster than this answers; only the newest
+        // question's answer is drawn.
+        if (liveRequestRef.current === requestId) {
+          setLiveWorkout({ workoutId: running.workoutId, progress, recentSetId });
+        }
+      } catch (error) {
+        console.error("Failed to load the running workout's sets:", error);
+      }
+    },
+    [db]
+  );
+
+  // A set ticked off on the workout screen, with Home waiting under it: the
+  // panel is up to date - the next set, the record - by the time it is back.
+  const refreshLiveWorkout = useCallback(async () => {
+    try {
+      const today = await workoutService.getOpenWorkoutsToday(db);
+
+      setOpenToday(today);
+      await loadLiveWorkout(today);
+    } catch (error) {
+      console.error("Failed to refresh the running workout:", error);
+    }
+  }, [db, loadLiveWorkout]);
+
+  useEffect(
+    () =>
+      subscribeWorkoutSetChanges((change) => {
+        if (!change) {
+          return;
+        }
+
+        recentSetRef.current = {
+          workoutId: change.workoutId,
+          setId: change.done ? change.setId : null,
+        };
+        refreshLiveWorkout();
+      }),
+    [refreshLiveWorkout]
+  );
 
   // Settled, not all: the three questions are independent, and one of them
   // failing is no reason to blank the other two. A rejection used to empty all
@@ -119,6 +190,7 @@ export default function HomePage() {
 
       if (today.status === "fulfilled") {
         setOpenToday(today.value);
+        await loadLiveWorkout(today.value);
       }
 
       for (const failure of failures) {
@@ -132,7 +204,7 @@ export default function HomePage() {
     } finally {
       setHasLoadedHome(true);
     }
-  }, [db, t]);
+  }, [db, loadLiveWorkout, t]);
 
   const loadCirclePreview = useCallback(async () => {
     if (!user?.id) {
@@ -365,6 +437,7 @@ export default function HomePage() {
               <QuickStartCard
                 openToday={openToday}
                 upNext={upNext}
+                live={liveWorkout}
                 onContinueToday={continueToday}
                 onStartSplit={openWorkoutFromSplit}
                 onStartEmpty={openEmptyWorkout}
