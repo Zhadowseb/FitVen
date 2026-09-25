@@ -37,6 +37,8 @@ export default {
   daysSince: {
     days: "Days\nsince last",
     today: "Trained\ntoday",
+    // While a workout is running: no number, a fire takes its place.
+    live: "Training\nnow",
     never: "No workouts\nyet",
     neverValue: "—",
   },

@@ -35,6 +35,7 @@ export default {
   daysSince: {
     days: "Dage\nsiden sidst",
     today: "Trænet\ni dag",
+    live: "Træner\nnu",
     never: "Ingen træninger\nendnu",
     neverValue: "—",
   },

@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.7.0] - Unreleased
+### Changed
+- **The days-since card on Home is alive.** It is the first thing on the screen, so it now looks it. Its size and shape are as they were - the same width, corners, padding, icon slot, number and label - and everything new is drawn inside it, from edge to edge:
+  - **The number rolls in like an odometer**: each digit a column of 0-9 that turns to its number, 80 ms after the one before it, with an extra full turn on the way in and a single step when the day ticks over at midnight.
+  - **Training now** has no number. A fire takes its place - it ignites, licks, and flares every three seconds with a burst of sparks - and the label says "Træner nu" / "Training now" (`home.daysSince.live`). Tongues of fire lick along the bottom, embers fly up through the card, a heat glow pulses round it and two comets chase each other round the edge.
+  - **Trained today** rolls the counter down to 0 and stamps it with a ring, the edge draws itself round and pulses, and steam rises. **A record** drops the crown in with a bounce, bursts into confetti as it lands, and glints in gold.
+  - **1-5 days**: the bolt crackles, the number takes the shock, a lightning comet runs round the edge, and the card is filled with energy as far as the charge still reaches. **6-29 days**: the flame shrinks and dims by the day, what is left of the fire glows at the bottom and cools to grey, and a slow ember comet runs round, slower each day. **30 days or more**: a burnt-out flame, cobwebs in two corners, dust, a spider on its thread and an edge that flickers like a dying neon tube. **Never trained**: an unlit flame draws itself again and again, and a flint tries to light it.
+  - It replaces the tiles' ember, steam, charge and cobweb frames on this card only; the friend tiles keep theirs. Everything moves on the UI thread from one clock (Reanimated and react-native-svg): about 35 animated parts while training, the busiest state, and around 40 for the second a record's confetti flies. It moves only while Home is on screen, the app is in front and reduce motion is off; otherwise the card is drawn finished and still, never empty. Its maths - the state, the odometer's columns, the edge's perimeter and dashes, the layouts, and the CSS keyframe timing the design is ported with (`Utils/daysSinceCard`, `Utils/keyframeTimeline`) - is checked by `npm run test:days-since-card`.
+
+---
 ## [2.6.0] - Unreleased
 ### Changed
 - **Social is Explore.** The tab is the place to find things now - UDFORSK / EXPLORE, with the search icon - and its first page is new (`ExplorePage`):
