@@ -66,12 +66,12 @@ behind by accident.
 | `20260922100000_the-note-column-leaves-the-old-exercises.sql` | yes |
 | `20260923100000_a-set-has-a-type.sql` | yes |
 | `20260924090000_a-friend-can-see-a-record-was-set-today.sql` | yes |
-| `20260925100000_explore-counts-your-centres-new-records.sql` | no |
-| `20260925110000_a-post-knows-its-centre.sql` | no |
-| `20260926090000_your-split-follows-you.sql` | no |
-| `20260927090000_a-lifter-can-give-their-sex.sql` | no |
-| `20260927100000_public-profiles.sql` | no |
-| `20260927110000_a-block-hides-public-posts-too.sql` | no |
+| `20260925100000_explore-counts-your-centres-new-records.sql` | yes |
+| `20260925110000_a-post-knows-its-centre.sql` | yes |
+| `20260926090000_your-split-follows-you.sql` | yes |
+| `20260927090000_a-lifter-can-give-their-sex.sql` | yes |
+| `20260927100000_public-profiles.sql` | yes |
+| `20260927110000_a-block-hides-public-posts-too.sql` | yes |
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
 centre match, per-centre lift leaderboards with video verification, and what
@@ -322,28 +322,31 @@ count only, never the sets - so a tile can wear a crown. Nothing depends on
 it: on a project without it the app gets "function does not exist" and shows
 no crowns.
 
-`20260925100000_explore-counts-your-centres-new-records.sql` has not been run
-yet. It adds `gym_recent_records`, which tells Explore's "Your centre" card
+`20260925100000_explore-counts-your-centres-new-records.sql` was run on
+2026-09-25. It adds `gym_recent_records`, which tells Explore's "Your centre" card
 how many of the centre's records - rank 1 on its leaderboard, by the
 leaderboard's own rules - were set since the viewer last opened the centre,
 and which one is newest. Nothing depends on it: without it the app gets
 "function does not exist" and the card shows the centre without its records.
 
-`20260925110000_a-post-knows-its-centre.sql` has not been run yet. It gives
+`20260925110000_a-post-knows-its-centre.sql` was run on 2026-09-25. It gives
 `social_post` a `gym_id` - the centre the post's workout was done in - kept in
 step with the workout by two triggers and filled in once for the posts that
 exist, so a card can say where and Explore can show posts from your centres.
 Without it the app shows posts without a centre and no centre posts; nothing
 else changes.
 
-`20260926090000_your-split-follows-you.sql` has not been run yet. It gives
+`20260926090000_your-split-follows-you.sql` was run on 2026-09-25. It gives
 `profile_private` a `split_names` column - the two to six sessions somebody
 chose as their split on the Train tab, by name - so the choice follows them to
 a new phone. Without it the choice is kept on the phone only.
+
 `20260927090000_a-lifter-can-give-their-sex.sql`,
 `20260927100000_public-profiles.sql` and
-`20260927110000_a-block-hides-public-posts-too.sql` have not been run yet. The
-first gives `profile_private` a `sex` column - private, never on a profile,
+`20260927110000_a-block-hides-public-posts-too.sql` were run on 2026-09-25,
+checked afterwards against what each one creates - the function, column,
+trigger, constraint or policy - and the public profile against its latest
+body. The first gives `profile_private` a `sex` column - private, never on a profile,
 there so records can be split by sex later. The second adds `public_profile`,
 the one way to read a stranger's profile: security definer, a fixed set of
 fields, nothing from `profile_private`, null across a block either way; until it
