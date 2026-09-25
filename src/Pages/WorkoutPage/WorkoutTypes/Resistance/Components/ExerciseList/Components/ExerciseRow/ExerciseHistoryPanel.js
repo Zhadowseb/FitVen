@@ -120,12 +120,8 @@ export default function ExerciseHistoryPanel({
     maxSets * HISTORY_CELL_WIDTH + Math.max(0, maxSets - 1) * HISTORY_CELL_GAP;
   const showFade = scrolls && contentWidth > scrollViewport;
 
-  const openRecords = () =>
-    navigation.navigate("PersonalRecordsPage", {
-      exerciseName,
-      // So the detail page's back button returns here, not to the overview.
-      returnToWorkout: true,
-    });
+  // Pushed, so the back arrow returns to the workout.
+  const openRecords = () => navigation.push("RecordsExercisePage", { exerciseName });
 
   return (
     <View style={[styles.panel, { backgroundColor: surface, borderColor: border }]}>

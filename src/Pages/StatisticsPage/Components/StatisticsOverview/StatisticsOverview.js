@@ -1,29 +1,25 @@
-import { useMemo, useState } from "react";
-import { ScrollView, TouchableOpacity, View, useColorScheme } from "react-native";
+import { useMemo } from "react";
+import { TouchableOpacity, View, useColorScheme } from "react-native";
 import Svg, { Defs, LinearGradient, Path, Rect, Stop } from "react-native-svg";
 import { formatNumber, useTranslation } from "@localization";
 
-import styles from "./RecordsOverviewStyle";
+import styles from "./StatisticsOverviewStyle";
 import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
-import ChevronRight from "@resources/Icons/UI-icons/ChevronRight";
+import RecordStar from "@resources/Components/RecordStar/RecordStar";
 import { ThemedSegmentedControl, ThemedText } from "@resources/ThemedComponents";
 import {
   RECORDS_PERIODS,
   buildExerciseGains,
-  buildExerciseList,
-  buildLatestRecords,
   buildMuscleGroupSets,
   buildStats,
   buildStrengthSummary,
   buildVolumeBuckets,
 } from "@utils/recordsInsights";
-import { formatRelativeDay } from "@utils/dateUtils";
 import { muscleGroupLabel } from "@utils/exerciseMuscleGroups";
 
 const CHART_WIDTH = 340;
 const CHART_HEIGHT = 132;
 const CHART_BASELINE = CHART_HEIGHT - 6;
-const EXERCISES_SHOWN = 6;
 // Under a percent either way is noise, not a direction.
 const STEADY_BAND = 0.01;
 
@@ -48,12 +44,13 @@ function formatSignedPercent(fraction) {
 }
 
 /**
- * The Records overview, read top to bottom in one period that the selector
- * at the top sets for all of it: three numbers against the period before,
- * whether you are getting stronger, the biggest gains, the volume, the latest
- * records, every exercise, and the sets per muscle group.
+ * The top of the Statistics page, read top to bottom in one period that the
+ * selector at the top sets for all of it: three numbers against the period
+ * before, whether you are getting stronger, the biggest gains, the volume and
+ * the sets per muscle group. It was the Records overview; the latest records
+ * went to the trophy room and the list of every exercise became a deep dive.
  */
-export default function RecordsOverview({
+export default function StatisticsOverview({
   sets,
   groupsByExercise,
   now,
@@ -76,7 +73,6 @@ export default function RecordsOverview({
   const card = theme.cardBackground;
   const border = theme.border;
   const hairline = theme.hairline;
-  const [showAllExercises, setShowAllExercises] = useState(false);
 
   const period =
     RECORDS_PERIODS.find((entry) => entry.key === periodKey) ?? RECORDS_PERIODS[1];
@@ -89,8 +85,6 @@ export default function RecordsOverview({
     [sets, now, days]
   );
   const volume = useMemo(() => buildVolumeBuckets(sets, { now, days }), [sets, now, days]);
-  const latest = useMemo(() => buildLatestRecords(sets, { limit: 8 }), [sets]);
-  const exercises = useMemo(() => buildExerciseList(sets, { now }), [sets, now]);
   const muscles = useMemo(
     () => buildMuscleGroupSets(sets, { groupsByExercise, now, days }),
     [sets, groupsByExercise, now, days]
@@ -134,15 +128,35 @@ export default function RecordsOverview({
     </View>
   );
 
+  // One period for the whole page - and for the deep dives under it, which
+  // is why it stays when there is no strength training to show: a runner
+  // still reads the rest of the page in it.
+  const periodSelector = (
+    <View style={styles.periodBlock}>
+      <ThemedSegmentedControl
+        options={RECORDS_PERIODS.map((entry) => ({
+          value: entry.key,
+          label: t(`statistics.periods.${entry.key}`),
+        }))}
+        value={period.key}
+        onChange={onChangePeriod}
+      />
+    </View>
+  );
+
   if (sets.length === 0) {
     return (
-      <View style={[styles.emptyCard, { backgroundColor: card, borderColor: border }]}>
-        <ThemedText style={styles.emptyTitle} setColor={title}>
-          {t("records.empty.title")}
-        </ThemedText>
-        <ThemedText style={styles.emptyBody} setColor={quiet}>
-          {t("records.empty.body")}
-        </ThemedText>
+      <View style={styles.screen}>
+        {periodSelector}
+
+        <View style={[styles.emptyCard, { backgroundColor: card, borderColor: border }]}>
+          <ThemedText style={styles.emptyTitle} setColor={title}>
+            {t("statistics.empty.title")}
+          </ThemedText>
+          <ThemedText style={styles.emptyBody} setColor={quiet}>
+            {t("statistics.empty.body")}
+          </ThemedText>
+        </View>
       </View>
     );
   }
@@ -158,7 +172,7 @@ export default function RecordsOverview({
     const delta = current - before;
 
     return {
-      text: delta === 0 ? t("records.kpi.same") : `${delta > 0 ? "+" : "−"}${Math.abs(delta)}`,
+      text: delta === 0 ? t("statistics.kpi.same") : `${delta > 0 ? "+" : "−"}${Math.abs(delta)}`,
       tone: delta > 0 ? up : delta < 0 ? down : quiet,
     };
   };
@@ -177,22 +191,22 @@ export default function RecordsOverview({
   const kpis = [
     {
       key: "workouts",
-      label: t("records.kpi.workouts"),
+      label: t("statistics.kpi.workouts"),
       value: formatNumber(stats.current.workouts),
       change: countChange(stats.current.workouts, stats.previous?.workouts),
     },
     {
       key: "records",
-      label: t("records.kpi.records"),
+      label: t("statistics.kpi.records"),
       value: formatNumber(stats.current.records),
       tone: gold,
       change: countChange(stats.current.records, stats.previous?.records),
     },
     {
       key: "volume",
-      label: t("records.kpi.volume"),
+      label: t("statistics.kpi.volume"),
       value: formatNumber(stats.current.volume / 1000, { maximumFractionDigits: 1 }),
-      unit: t("records.kpi.tonnes"),
+      unit: t("statistics.kpi.tonnes"),
       change: volumeChange,
     },
   ];
@@ -211,10 +225,10 @@ export default function RecordsOverview({
     strength === null
       ? null
       : strength.averagePct > STEADY_BAND
-        ? t("records.strength.up")
+        ? t("statistics.strength.up")
         : strength.averagePct < -STEADY_BAND
-          ? t("records.strength.down")
-          : t("records.strength.flat");
+          ? t("statistics.strength.down")
+          : t("statistics.strength.flat");
 
   /* -------------------------------------------------------------- volume -- */
 
@@ -232,39 +246,21 @@ export default function RecordsOverview({
     })
     .join(" ");
 
-  /* ----------------------------------------------------------- exercises -- */
-
-  const shownExercises = showAllExercises ? exercises : exercises.slice(0, EXERCISES_SHOWN);
-  const directionMark = (direction) =>
-    direction === "up"
-      ? { glyph: "↑", tone: up, label: t("records.exercises.up") }
-      : direction === "down"
-        ? { glyph: "↓", tone: down, label: t("records.exercises.down") }
-        : direction === "flat"
-          ? { glyph: "→", tone: quiet, label: t("records.exercises.flat") }
-          : null;
-
   const leastGroup = muscles[muscles.length - 1];
 
   return (
     <View style={styles.screen}>
-      {/* One period for the whole page. */}
-      <View style={styles.periodBlock}>
-        <ThemedSegmentedControl
-          options={RECORDS_PERIODS.map((entry) => ({
-            value: entry.key,
-            label: t(`records.periods.${entry.key}`),
-          }))}
-          value={period.key}
-          onChange={onChangePeriod}
-        />
-      </View>
+      {periodSelector}
 
       {/* Three numbers, each against the period before. */}
       <View style={styles.kpiRow}>
         {kpis.map((kpi) => (
           <View key={kpi.key} style={[styles.kpi, { backgroundColor: card, borderColor: border }]}>
-            <ThemedText style={styles.kpiLabel} setColor={quiet} numberOfLines={1}>
+            <ThemedText
+              style={[styles.kpiLabel, kpi.key === "records" && styles.kpiLabelStarred]}
+              setColor={quiet}
+              numberOfLines={1}
+            >
               {kpi.label}
             </ThemedText>
             <View style={styles.kpiValueLine}>
@@ -284,6 +280,7 @@ export default function RecordsOverview({
                 </ThemedText>
               </View>
             ) : null}
+            {kpi.key === "records" ? <RecordStar size={20} index={0} style={styles.kpiStar} /> : null}
           </View>
         ))}
       </View>
@@ -300,7 +297,7 @@ export default function RecordsOverview({
                 {strengthTitle}
               </ThemedText>
               <ThemedText style={styles.caption} setColor={quiet}>
-                {t("records.strength.detail", {
+                {t("statistics.strength.detail", {
                   improving: strength.improving,
                   count: strength.measured,
                 })}
@@ -309,19 +306,19 @@ export default function RecordsOverview({
           </>
         ) : (
           <ThemedText style={styles.emptyBody} setColor={quiet}>
-            {t("records.strength.empty")}
+            {t("statistics.strength.empty")}
           </ThemedText>
         )}
       </View>
 
       {/* Biggest gains */}
       <View style={styles.section}>
-        {sectionHead(t("records.gains.title"))}
+        {sectionHead(t("statistics.gains.title"))}
 
         <View style={[styles.card, { backgroundColor: card, borderColor: border }]}>
           {movers.length === 0 ? (
             <ThemedText style={styles.emptyBody} setColor={quiet}>
-              {t("records.gains.empty")}
+              {t("statistics.gains.empty")}
             </ThemedText>
           ) : (
             movers.map((mover, index) => {
@@ -333,7 +330,7 @@ export default function RecordsOverview({
                   key={mover.name}
                   activeOpacity={0.85}
                   accessibilityRole="button"
-                  accessibilityLabel={t("records.gains.open", { name: mover.name })}
+                  accessibilityLabel={t("statistics.gains.open", { name: mover.name })}
                   onPress={() => onSelectExercise?.(mover.name)}
                   style={[
                     styles.gainRow,
@@ -376,8 +373,8 @@ export default function RecordsOverview({
             >
               <ThemedText style={styles.moreText} setColor={theme.primaryText ?? theme.primary}>
                 {showAllMovers
-                  ? t("records.gains.showFewer")
-                  : t("records.gains.showAll", { count: measured.length })}
+                  ? t("statistics.gains.showFewer")
+                  : t("statistics.gains.showAll", { count: measured.length })}
               </ThemedText>
             </TouchableOpacity>
           ) : null}
@@ -387,7 +384,7 @@ export default function RecordsOverview({
       {/* Volume */}
       <View style={styles.section}>
         {sectionHead(
-          volume.unit === "week" ? t("records.volume.weekTitle") : t("records.volume.monthTitle")
+          volume.unit === "week" ? t("statistics.volume.weekTitle") : t("statistics.volume.monthTitle")
         )}
 
         <View style={[styles.card, { backgroundColor: card, borderColor: border }]}>
@@ -425,111 +422,15 @@ export default function RecordsOverview({
           </Svg>
 
           <ThemedText style={styles.caption} setColor={quiet}>
-            {volume.unit === "week" ? t("records.volume.weekAverage") : t("records.volume.monthAverage")}
+            {volume.unit === "week" ? t("statistics.volume.weekAverage") : t("statistics.volume.monthAverage")}
           </ThemedText>
-        </View>
-      </View>
-
-      {/* Latest records */}
-      {latest.length > 0 ? (
-        <View style={styles.section}>
-          {sectionHead(t("records.latest.title"))}
-
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.recordStrip}>
-            {latest.map((record, index) => (
-              <TouchableOpacity
-                key={`${record.name}-${record.at}-${record.reps}-${index}`}
-                activeOpacity={0.85}
-                onPress={() => onSelectExercise?.(record.name)}
-                style={[
-                  styles.recordCard,
-                  { backgroundColor: withAlpha(gold, 0.08), borderColor: withAlpha(gold, 0.3) },
-                ]}
-              >
-                <ThemedText style={styles.recordName} setColor={title} numberOfLines={1}>
-                  {record.name}
-                </ThemedText>
-                <View style={styles.recordWeightLine}>
-                  <ThemedText style={styles.recordWeight} setColor={gold}>
-                    {formatKg(record.weight)}
-                  </ThemedText>
-                  <ThemedText style={styles.recordWeightMeta} setColor={quiet}>
-                    {`${t("common.kg")} × ${record.reps}`}
-                  </ThemedText>
-                </View>
-                <ThemedText style={styles.caption} setColor={quiet} numberOfLines={1}>
-                  {formatRelativeDay(record.at, now)}
-                </ThemedText>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-      ) : null}
-
-      {/* Every exercise */}
-      <View style={styles.section}>
-        {sectionHead(t("records.exercises.title"), formatNumber(exercises.length))}
-
-        <View style={[styles.card, styles.listCard, { backgroundColor: card, borderColor: border }]}>
-          {shownExercises.map((exercise, index) => {
-            const mark = directionMark(exercise.direction);
-
-            return (
-              <TouchableOpacity
-                key={exercise.name}
-                activeOpacity={0.85}
-                accessibilityRole="button"
-                accessibilityLabel={t("records.gains.open", { name: exercise.name })}
-                onPress={() => onSelectExercise?.(exercise.name)}
-                style={[styles.exerciseRow, index > 0 && { borderTopWidth: 1, borderTopColor: hairline }]}
-              >
-                <View style={styles.exerciseCopy}>
-                  <ThemedText style={styles.exerciseName} setColor={title} numberOfLines={1}>
-                    {exercise.name}
-                  </ThemedText>
-                  <ThemedText style={styles.caption} setColor={quiet} numberOfLines={1}>
-                    {t("records.exercises.heaviest", {
-                      lift: `${formatKg(exercise.heaviest.weight)} kg × ${exercise.heaviest.reps}`,
-                    })}
-                    {` · ${formatRelativeDay(exercise.lastAt, now)}`}
-                  </ThemedText>
-                </View>
-                {mark ? (
-                  <View
-                    accessibilityLabel={mark.label}
-                    style={[styles.directionPill, { backgroundColor: withAlpha(mark.tone, 0.14) }]}
-                  >
-                    <ThemedText style={styles.directionText} setColor={mark.tone}>
-                      {mark.glyph}
-                    </ThemedText>
-                  </View>
-                ) : null}
-                <ChevronRight width={15} height={15} color={quiet} />
-              </TouchableOpacity>
-            );
-          })}
-
-          {exercises.length > EXERCISES_SHOWN ? (
-            <TouchableOpacity
-              accessibilityRole="button"
-              activeOpacity={0.85}
-              onPress={() => setShowAllExercises((value) => !value)}
-              style={[styles.moreRow, { borderTopColor: hairline }]}
-            >
-              <ThemedText style={styles.moreText} setColor={theme.primaryText ?? theme.primary}>
-                {showAllExercises
-                  ? t("records.exercises.showFewer")
-                  : t("records.exercises.showAll", { count: exercises.length })}
-              </ThemedText>
-            </TouchableOpacity>
-          ) : null}
         </View>
       </View>
 
       {/* Sets per muscle group */}
       {muscles.length > 0 ? (
         <View style={styles.section}>
-          {sectionHead(t("records.muscles.title"))}
+          {sectionHead(t("statistics.muscles.title"))}
 
           <View style={[styles.card, { backgroundColor: card, borderColor: border }]}>
             {muscles.slice(0, 6).map((group, index, list) => {
@@ -561,7 +462,7 @@ export default function RecordsOverview({
 
             {leastGroup ? (
               <ThemedText style={styles.caption} setColor={quiet}>
-                {t("records.muscles.summary", { group: muscleGroupLabel(leastGroup.label, t), count: leastGroup.setCount })}
+                {t("statistics.muscles.summary", { group: muscleGroupLabel(leastGroup.label, t), count: leastGroup.setCount })}
               </ThemedText>
             ) : null}
           </View>

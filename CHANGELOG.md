@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.5.0] - Unreleased
+### Changed
+- **Records is a trophy room.** It was a statistics page with a period selector on top, so it read like a report and never felt like a room full of what you have done. It now shows the whole history and nothing to compare it with:
+  - **The trophy and the number.** A gold trophy - a glow that breathes, light across the cup, glints around it - and the number of records you have set, counting up the first time the room opens. Under it, the heaviest lift you have ever made and how long you have been collecting.
+  - **Your strongest lifts** on a podium of gold, silver and bronze, each exercise by its heaviest set, with the next round weight to go for under the strongest.
+  - **New records** on a shelf, one card per exercise and day, each with the animated gold star (`RecordStar`, half a second between cards) and "New" for the last two weeks.
+  - **Milestones**: workouts finished (a run counts), tonnes lifted, records set and the longest streak of weeks in a row - the highest rung reached in gold, and how far it is to the next.
+  - A way through to the statistics. The sections rise into place when the room opens; with reduce motion on nothing moves, and the glints stop while the screen is out of sight.
+- **Statistics is its own page** (`StatisticsPage`), from the Train tab, the room and the muscle card on Home. Everything the Records page had follows a period there - the three numbers (the Records card wears the star), strength, biggest gains, volume and sets per muscle group - and under it you go deeper, each with its number in the same period on the row (`StatisticsDetailPage`, `Utils/statisticsInsights`):
+  - **Intensity**: how heavy the sets are against your best estimated 1RM at the time - the average, five zones and the heavy sets from 85 %, and RPE when you log it.
+  - **Frequency and consistency**: workouts per week, the current and the longest streak of weeks in a row, which weekdays you train, total and average training time, and strength, runs and walks apart.
+  - **Set types**: warm-up, working, drop and AMRAP sets in the set list's colours, how far AMRAP sets go past their target, and the drop sets' share of the volume.
+  - **Runs**: runs, kilometres, time and average pace, the fastest and the longest run, and kilometres per week. Heart rate is not kept after a run, so it is not here.
+  - **Every exercise** trained in the period, each opening its page.
+- **An exercise's page is its own screen** (`RecordsExercisePage`), opened from the room, the statistics and a workout's exercise card, and the back arrow returns to wherever you came from. It used to be a state inside Records, with a second back button of its own.
+- The Records page no longer loads what it stopped drawing: four queries on every visit - the old list, the detail and the weekly muscle-load radar - for about a thousand lines of views nothing showed.
+
+---
 ## [2.4.0] - Unreleased
 ### Changed
 - **The whole app speaks Danish.** Only some screens used to follow the language setting; the rest were written into the code in English, and a few in Danish. About 850 texts in 75 files now go through `t()`: the run and strength workouts, the exercise library and catalog, programs, blocks and weeks, the calendar and library, sickness, the settings pages, the 1RM calculator, Records and the errors the services show. Six new locale areas: `calendar`, `errors`, `exercises`, `programs`, `run` and `settings`. The privacy policy and the terms of use stay in English until a Danish version has been read by a person.

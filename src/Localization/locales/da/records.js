@@ -1,70 +1,44 @@
-// Rekorder-siden: overblikket og én øvelses detaljer. Holdes i trit med
+// Rekorder-siden - pokalrummet - og én øvelses side. Holdes i trit med
 // ../en/records.js.
 export default {
   eyebrow: "Bibliotek",
   title: "Rekorder",
-  periods: {
-    "4w": "4 uger",
-    "3m": "3 mdr",
-    "1y": "1 år",
-    all: "Alt",
-  },
-  kpi: {
-    workouts: "Træninger",
-    records: "Rekorder",
-    volume: "Volumen",
-    tonnes: "t",
-    same: "samme",
-  },
-  strength: {
-    up: "Du er blevet stærkere",
-    flat: "Du holder niveauet",
-    down: "Lidt tilbage",
-    detail: {
-      one: "{improving} af {count} øvelse går frem · estimeret 1RM",
-      other: "{improving} af {count} øvelser går frem · estimeret 1RM",
+  // Pokalrummet: hele historikken, intet at sammenligne med.
+  trophy: {
+    recordCount: { one: "rekord sat", other: "rekorder sat" },
+    heaviest: "Tungeste løft",
+    heaviestValue: "{weight} kg × {reps} · {name}",
+    since: "Siden {date}",
+    emptyTitle: "Din første rekord venter",
+    emptyBody: "Afslut en styrketræning, så begynder din samling her.",
+    podium: {
+      title: "Dine stærkeste løft",
+      meta: "× {reps} · {date}",
+      label: "Nummer {rank}: {name}, {weight} kg × {reps}",
+      nextGoal: "Næste mål: {goal} kg i {name}",
+      toGo: "{value} kg tilbage",
     },
-    empty: "Træn en øvelse et par gange, så kan du se din udvikling her.",
-  },
-  gains: {
-    title: "Største fremskridt",
-    new: "ny",
-    showAll: "Vis alle {count}",
-    showFewer: "Vis færre",
-    empty: "Intet at måle endnu i perioden.",
-    open: "Åbn {name}",
-  },
-  volume: {
-    weekTitle: "Volumen pr. uge",
-    monthTitle: "Volumen pr. måned",
-    weekAverage: "Den stiplede linje er gennemsnittet over 4 uger",
-    monthAverage: "Den stiplede linje er gennemsnittet over 3 måneder",
-  },
-  latest: {
-    title: "Seneste rekorder",
-  },
-  exercises: {
-    title: "Alle øvelser",
-    heaviest: "Tungeste: {lift}",
-    showAll: "Vis alle {count}",
-    showFewer: "Vis færre",
-    up: "Går frem",
-    down: "Går tilbage",
-    flat: "Holder niveauet",
-  },
-  muscles: {
-    title: "Sæt pr. muskelgruppe",
-    summary: {
-      one: "{group} får mindst · {count} sæt i perioden",
-      other: "{group} får mindst · {count} sæt i perioden",
+    recent: {
+      title: "Nye rekorder",
+      new: "Ny",
+      label: "{name}, {weight} kg × {reps}, {when}",
     },
-  },
-  empty: {
-    title: "Ingen rekorder endnu",
-    body: "Afslut en styrketræning, så dukker din udvikling op her.",
+    milestones: {
+      title: "Milepæle",
+      workouts: { one: "{value} træning", other: "{value} træninger" },
+      tonnes: { one: "{value} ton løftet", other: "{value} ton løftet" },
+      records: { one: "{value} rekord", other: "{value} rekorder" },
+      weekStreak: { one: "{value} uge i træk", other: "{value} uger i træk" },
+      nextUp: "Næste: {label}",
+      notYet: "Ikke endnu",
+      maxed: "Øverste trin nået",
+    },
+    statistics: {
+      title: "Se din statistik",
+      body: "Volumen, frekvens, intensitet og løb",
+    },
   },
   exercise: {
-    back: "Tilbage til Rekorder",
     overline: "Rekorder",
     estimate: "Estimeret 1RM",
     changeInPeriod: "{change} % i perioden",
@@ -85,47 +59,5 @@ export default {
       "1y": "1Å",
       all: "Alt",
     },
-  },
-  // De ældre liste-, detalje- og muskelbelastningsvisninger i PersonalRecordsPage.js.
-  muscleLoad: {
-    eyebrow: "PERSONLIGE REKORDER",
-    title: "Ugentlig muskelbelastning",
-    restingWithPrograms:
-      "Log styrkesæt i et program, så vises balancen mellem muskelgrupperne her.",
-    restingNoPrograms: "Start et program, så vises balancen mellem muskelgrupperne her.",
-    selectProgram: "Vælg program",
-    programFallback: "Program {id}",
-    emptyTitle: "Ingen muskelbelastning endnu",
-    emptyBody: "Styrkesæt fra dit program vises her.",
-  },
-  list: {
-    exercises: "øvelser",
-    ofRecords: "af {count} rekorder",
-    heaviest: "tungeste",
-    emptyTitle: "Ingen rekorder endnu",
-    emptyBody: "Gennemførte styrkesæt vises her, når de har vægt og reps.",
-    lastPr: "Seneste PR {when}",
-    repRanges: "{filled}/{slots} rep-intervaller",
-    best: "bedst",
-  },
-  detail: {
-    notFound: "Ingen rekorder fundet",
-    allRecords: "Alle rekorder",
-    estimatedEyebrow: "ESTIMERET 1RM",
-    progression: "Udvikling",
-    workouts: "træninger",
-    best: "BEDSTE",
-    latest: "SENESTE",
-    noTrend: "Ingen udvikling endnu",
-    noTrendBody: "Gennemfør sæt med vægt for at se din udvikling.",
-    latestSet: "SENESTE SÆT",
-    hideEmpty: "Skjul tomme rep-intervaller",
-    eyebrow: "PERSONLIGE REKORDER",
-    reps: "REPS",
-    weight: "VÆGT",
-    date: "DATO",
-    new: "NY",
-    noRecordInRange: "Ingen rekord i dette rep-interval endnu.",
-    workoutFallback: "Træning {number}",
   },
 };

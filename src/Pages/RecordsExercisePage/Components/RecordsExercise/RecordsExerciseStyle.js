@@ -3,22 +3,12 @@ import { StyleSheet } from "react-native";
 export default StyleSheet.create({
   screen: { gap: 20 },
 
-  header: { flexDirection: "row", alignItems: "center", gap: 12 },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 11,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  headerText: { flex: 1, minWidth: 0, gap: 2 },
   overline: {
     fontSize: 12,
     fontWeight: "800",
     letterSpacing: 1.2,
     textTransform: "uppercase",
   },
-  pageTitle: { fontSize: 22, fontWeight: "800", lineHeight: 27 },
   caption: { fontSize: 11, lineHeight: 15 },
 
   card: { borderWidth: 1, borderRadius: 18, padding: 16, gap: 12 },

@@ -413,7 +413,7 @@ export default function HomePage() {
         <MuscleGlance
           groups={muscleGroups}
           headline={pickMuscleGlanceHeadline(muscleGroups)}
-          onOpen={() => navigation.navigate("PersonalRecordsPage")}
+          onOpen={() => navigation.navigate("StatisticsPage")}
         />
       </ScrollView>
 

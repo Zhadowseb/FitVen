@@ -128,6 +128,7 @@ export async function getCompletedStrengthSetsForPersonalRecords(
         s.personal_record,
         s.set_type,
         s.amrap,
+        s.rpe,
         e.exercise_name,
         w.workout_id,
         w.label AS workout_label,
@@ -166,6 +167,41 @@ export async function getCompletedStrengthSetsForPersonalRecords(
        performed_date_sort DESC,
        s.sets_id DESC;`,
     params
+  );
+}
+
+/**
+ * Every finished set's type, warm-ups included - the records query leaves
+ * warm-ups out, and the statistics want to show how much of the training
+ * they are. Nothing but the type, the AMRAP target and reps, and the day -
+ * plus the `amrap` mirror, which is all an older app version sets on an
+ * AMRAP set (resolveSetType in Utils/setTypes.js reads both).
+ */
+export async function getCompletedSetTypesForStatistics(db) {
+  return db.getAllAsync(
+    `SELECT
+        COALESCE(s.set_type, 'working') AS set_type,
+        s.amrap,
+        s.amrap_target,
+        s.reps,
+        w.workout_id,
+        d.date AS performed_date,
+        CASE
+          WHEN d.date LIKE '__.__.____'
+          THEN substr(d.date, 7, 4) || '-' || substr(d.date, 4, 2) || '-' || substr(d.date, 1, 2)
+          ELSE d.date
+        END AS performed_date_sort
+     FROM "Set" s
+     JOIN Exercise_Instance e ON e.exercise_instance_id = s.exercise_instance_id
+     JOIN Workout_Type_Instance w ON w.workout_id = e.workout_type_instance_id
+     JOIN Day d ON d.day_id = w.day_id
+     WHERE s.done = 1
+       AND COALESCE(s.failed, 0) = 0
+       AND COALESCE(s.deleted_at, '') = ''
+       AND COALESCE(e.deleted_at, '') = ''
+       AND COALESCE(w.deleted_at, '') = ''
+       AND COALESCE(d.deleted_at, '') = ''
+     ORDER BY performed_date_sort ASC;`
   );
 }
 
