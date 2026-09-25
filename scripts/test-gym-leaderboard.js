@@ -425,7 +425,7 @@ for (const file of [
 
 for (const file of [
   "src/Pages/GymsPage/GymsPage.js",
-  "src/Pages/GymLeaderboardPage/Components/ChangeGymSheet.js",
+  "src/Resources/Components/ChangeGymSheet/ChangeGymSheet.js",
 ]) {
   const lines = fs.readFileSync(path.join(root, file), "utf8").split(/\r?\n/);
   const declared = lines.findIndex((line) =>

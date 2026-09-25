@@ -1,4 +1,5 @@
 import { ensureOwnProfile } from "./socialService";
+import { getGymsByIds } from "./gymService";
 import {
   buildLocalWorkoutSummaryPost,
   getHiddenWorkoutSummaryExerciseIds,
@@ -36,6 +37,7 @@ export async function getOwnWorkoutPosts(db, { user, limit = null } = {}) {
         w.workout_type,
         w.elapsed_time,
         w.done,
+        w.gym_id,
         d.date,
         COALESCE(
           NULLIF(w.label, w.workout_type),
@@ -70,6 +72,9 @@ export async function getOwnWorkoutPosts(db, { user, limit = null } = {}) {
     ensureOwnProfile(user),
     getOwnPostedWorkoutSummaries({ user }),
     getHiddenWorkoutSummaryExerciseIds({ user }),
+    // Where each workout was done, for the line on its card. The centre is on
+    // the phone's own workout; only its name has to come from the cloud.
+    getGymsByIds(workouts.map((workout) => workout.gym_id).filter(Boolean)),
   ]);
   for (const result of results) {
     if (result.status === "rejected") {
@@ -80,6 +85,7 @@ export async function getOwnWorkoutPosts(db, { user, limit = null } = {}) {
   const postStatusKnown = results[1].status === "fulfilled";
   const publishedByCloudId = postStatusKnown ? results[1].value : new Map();
   const hiddenExerciseIds = results[2].status === "fulfilled" ? results[2].value : [];
+  const gymsById = results[3].status === "fulfilled" ? results[3].value : new Map();
 
   const author = {
     id: user.id,
@@ -92,18 +98,20 @@ export async function getOwnWorkoutPosts(db, { user, limit = null } = {}) {
 
   for (const workout of workouts) {
     try {
-      posts.push(
-        await buildLocalWorkoutSummaryPost(db, {
-          workout,
-          author,
-          hiddenExerciseIds,
-          postStatusKnown,
-          publishedPost:
-            publishedByCloudId.get(
-              Number(workout.cloud_workout_type_instance_id)
-            ) ?? null,
-        })
-      );
+      const gym = gymsById.get(Number(workout.gym_id)) ?? null;
+      const post = await buildLocalWorkoutSummaryPost(db, {
+        workout,
+        author,
+        hiddenExerciseIds,
+        postStatusKnown,
+        publishedPost:
+          publishedByCloudId.get(Number(workout.cloud_workout_type_instance_id)) ?? null,
+      });
+
+      posts.push({
+        ...post,
+        gym: gym ? { id: gym.id, shortName: gym.shortName, city: gym.city } : null,
+      });
     } catch (error) {
       console.warn("Could not build a local workout post:", error);
     }

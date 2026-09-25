@@ -29,6 +29,15 @@ export default {
   sections: {
     yourGym: "Dit center",
     change: "Skift",
+    centerPosts: "Opslag fra centre",
+  },
+  centerPostLabel: "{name}: {title}, i {gym}",
+  centerPosts: {
+    eyebrow: "Opslag fra",
+    fallbackTitle: "Et center",
+    emptyTitle: "Ingen opslag fra dette center endnu",
+    emptyBody: "Når folk, du kan se, deler en træning lavet her, dukker den op her.",
+    failed: "Opslagene kunne ikke hentes. Prøv igen om lidt.",
   },
   yourGym: {
     newRecords: { one: "{value} ny rekord", other: "{value} nye rekorder" },

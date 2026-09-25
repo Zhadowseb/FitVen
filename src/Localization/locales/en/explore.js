@@ -29,6 +29,15 @@ export default {
   sections: {
     yourGym: "Your centre",
     change: "Change",
+    centerPosts: "Posts from centres",
+  },
+  centerPostLabel: "{name}: {title}, at {gym}",
+  centerPosts: {
+    eyebrow: "Posts from",
+    fallbackTitle: "A centre",
+    emptyTitle: "No posts from this centre yet",
+    emptyBody: "When people you can see post a workout done here, it shows up here.",
+    failed: "The posts could not be loaded. Try again in a moment.",
   },
   yourGym: {
     newRecords: { one: "{value} new record", other: "{value} new records" },

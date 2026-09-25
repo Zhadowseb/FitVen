@@ -28,6 +28,7 @@ import ExplorePage from "./src/Pages/ExplorePage/ExplorePage";
 import ExploreSearchPage from "./src/Pages/ExploreSearchPage/ExploreSearchPage";
 import ProgramsBrowsePage from "./src/Pages/ProgramsBrowsePage/ProgramsBrowsePage";
 import CustomExercisesPage from "./src/Pages/CustomExercisesPage/CustomExercisesPage";
+import CenterPostsPage from "./src/Pages/CenterPostsPage/CenterPostsPage";
 import SocialPage from "./src/Pages/SocialPage/SocialPage";
 import PrivacyPolicyPage from "./src/Pages/PrivacyPolicyPage/PrivacyPolicyPage";
 import TermsOfUsePage from "./src/Pages/TermsOfUsePage/TermsOfUsePage";
@@ -288,6 +289,7 @@ function RootNavigator() {
                 <Stack.Screen name="ExploreSearchPage" component={ExploreSearchPage} options={{ headerShown: false }} />
                 <Stack.Screen name="ProgramsBrowsePage" component={ProgramsBrowsePage} options={{ headerShown: false }} />
                 <Stack.Screen name="CustomExercisesPage" component={CustomExercisesPage} options={{ headerShown: false }} />
+                <Stack.Screen name="CenterPostsPage" component={CenterPostsPage} options={{ headerShown: false }} />
                 <Stack.Screen name="SocialPage" component={SocialPage} options={{ headerShown: false }} />
                 <Stack.Screen name="SocialUserListPage" component={SocialUserListPage} options={{ headerShown: false }} />
                 <Stack.Screen name="ProfilePage" component={ProfilePage} options={{ headerShown: false }} />

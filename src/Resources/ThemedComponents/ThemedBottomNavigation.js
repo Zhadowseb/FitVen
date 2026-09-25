@@ -104,6 +104,7 @@ const EXPLORE_ROUTES = new Set([
   "ExploreSearchPage",
   "ProgramsBrowsePage",
   "CustomExercisesPage",
+  "CenterPostsPage",
   "SocialPage",
   "SocialUserListPage",
   "GymsPage",

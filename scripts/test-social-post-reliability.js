@@ -147,6 +147,7 @@ async function statusAndErrors() {
     },
     getHiddenWorkoutSummaryExerciseIds: async () => { throw new Error("Settings unavailable"); },
     buildLocalWorkoutSummaryPost: (unused, args) => social.buildLocalWorkoutSummaryPost(db, args),
+    getGymsByIds: async () => { throw new Error("Centres unavailable"); },
   });
   const ownDb = { getAllAsync: async () => [{ workout_id: 1, cloud_workout_type_instance_id: 101 }] };
   let cards = await own.getOwnWorkoutPosts(ownDb, { user: { id: "user" } });

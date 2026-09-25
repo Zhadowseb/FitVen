@@ -6,7 +6,7 @@ import { formatNumber, useTranslation } from "@localization";
 
 import styles from "./ExplorePageStyle";
 import { useAuth } from "@contexts/AuthContext";
-import { gymService, socialService } from "@services";
+import { gymService, socialPostService, socialService } from "@services";
 import ChangeGymSheet from "@resources/Components/ChangeGymSheet/ChangeGymSheet";
 import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
 import Calender from "@resources/Icons/UI-icons/Calender";
@@ -18,6 +18,7 @@ import Social from "@resources/Icons/UI-icons/Social";
 import Star from "@resources/Icons/UI-icons/Star";
 import { ThemedText, ThemedView, UserAvatar } from "@resources/ThemedComponents";
 import { formatTimeAgo } from "@utils/dateUtils";
+import { getWorkoutCoverImage } from "@utils/workoutCoverImages";
 import { formatWeightKg } from "@utils/gymUtils";
 import { getLastSeenOrStart, gymSeenKey, socialSeenKey } from "@utils/lastSeen";
 
@@ -30,16 +31,24 @@ let lastShown = null;
 const PROGRAM_COUNT = 0;
 const SHARED_EXERCISE_COUNT = 0;
 
-const EMPTY = { gymCount: null, homeGym: null, gymRecords: null, newFollowers: 0 };
+const EMPTY = { gymCount: null, homeGym: null, gymRecords: null, newFollowers: 0, centrePosts: [] };
+const CENTRE_POST_LIMIT = 8;
 
-async function loadExplore(userId) {
-  const [gymCountResult, homeGymResult] = await Promise.allSettled([
+async function loadExplore(user) {
+  const userId = user?.id ?? null;
+  const [gymCountResult, homeGymResult, myGymsResult] = await Promise.allSettled([
     gymService.getGymCount(),
     gymService.getMyHomeGym(),
+    userId ? gymService.getMyGyms() : Promise.resolve([]),
   ]);
   const homeGym = homeGymResult.status === "fulfilled" ? homeGymResult.value : null;
+  // Posts from your centre and from the centres you train in.
+  const centreIds = [
+    homeGym?.id,
+    ...(myGymsResult.status === "fulfilled" ? myGymsResult.value : []).map((gym) => gym.id),
+  ].filter((id) => id !== null && id !== undefined);
 
-  const [gymRecordsResult, newFollowersResult] = await Promise.allSettled([
+  const [gymRecordsResult, newFollowersResult, centrePostsResult] = await Promise.allSettled([
     homeGym && userId
       ? getLastSeenOrStart(gymSeenKey(userId, homeGym.id)).then((since) =>
           gymService.getRecentGymRecords({ gymId: homeGym.id, since })
@@ -50,6 +59,9 @@ async function loadExplore(userId) {
           socialService.countFollowersSince({ userId, since })
         )
       : Promise.resolve(0),
+    userId && centreIds.length > 0
+      ? socialPostService.getCentrePosts({ user, gymIds: centreIds, limit: CENTRE_POST_LIMIT })
+      : Promise.resolve([]),
   ]);
 
   // Each part stands on its own: a centre without its records - before the
@@ -59,6 +71,8 @@ async function loadExplore(userId) {
     ["home centre", homeGymResult],
     ["centre records", gymRecordsResult],
     ["new followers", newFollowersResult],
+    ["centre posts", centrePostsResult],
+    ["centres you train in", myGymsResult],
   ]) {
     if (result.status === "rejected") {
       console.error(`Explore could not load its ${label}:`, result.reason);
@@ -70,14 +84,16 @@ async function loadExplore(userId) {
     homeGym,
     gymRecords: gymRecordsResult.status === "fulfilled" ? gymRecordsResult.value : null,
     newFollowers: newFollowersResult.status === "fulfilled" ? newFollowersResult.value : 0,
+    centrePosts: centrePostsResult.status === "fulfilled" ? centrePostsResult.value : [],
   };
 }
 
 /**
  * Explore, the tab where you find things: centres and the records set in
- * them, programs, exercises others have made, and - through the button in
- * the corner - the people you follow. Programs and shared exercises are
- * zero until they can be shared; knowledge and centre posts join later.
+ * them, the posts from the centres you train in, programs, exercises others
+ * have made, and - through the button in the corner - the people you follow.
+ * Programs and shared exercises are zero until they can be shared; knowledge
+ * joins later.
  */
 export default function ExplorePage() {
   const { t } = useTranslation();
@@ -95,13 +111,13 @@ export default function ExplorePage() {
   const refresh = useCallback(() => {
     const loadId = ++loadIdRef.current;
 
-    loadExplore(user?.id ?? null).then((next) => {
+    loadExplore(user).then((next) => {
       if (loadId === loadIdRef.current) {
         lastShown = next;
         setData(next);
       }
     });
-  }, [user?.id]);
+  }, [user]);
 
   useFocusEffect(
     useCallback(() => {
@@ -114,7 +130,7 @@ export default function ExplorePage() {
     }, [refresh])
   );
 
-  const { gymCount, homeGym, gymRecords, newFollowers } = data;
+  const { gymCount, homeGym, gymRecords, newFollowers, centrePosts } = data;
   const latest = gymRecords?.latest ?? null;
   const card = theme.cardBackground;
   const cardBorder = theme.cardBorder;
@@ -388,6 +404,61 @@ export default function ExplorePage() {
             </TouchableOpacity>
           </>
         )}
+        {/* Posts from centres: workouts done at your centre and the ones you
+            train in, by people whose posts you can see. Gone when there are none. */}
+        {centrePosts.length > 0 ? (
+          <>
+            {sectionHead(t("explore.sections.centerPosts"))}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.rail}
+              style={styles.railScroll}
+            >
+              {centrePosts.map((post) => (
+                <TouchableOpacity
+                  key={post.id}
+                  activeOpacity={0.88}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("explore.centerPostLabel", {
+                    name: post.author?.displayName ?? "",
+                    title: post.title ?? "",
+                    gym: post.gym?.shortName ?? "",
+                  })}
+                  onPress={() =>
+                    navigation.navigate("CenterPostsPage", {
+                      gym_id: post.gym?.id,
+                      gym_name: post.gym?.shortName ?? null,
+                      post_id: post.id,
+                    })
+                  }
+                  style={[styles.postCard, { backgroundColor: card, borderColor: cardBorder }]}
+                >
+                  <Image source={getWorkoutCoverImage(post.workoutType)} style={styles.postImage} />
+                  <View style={styles.postBody}>
+                    <View style={styles.postBadgeRow}>
+                      {post.gym?.shortName ? (
+                        <View style={[styles.postBadge, { backgroundColor: withAlpha(theme.primary, isLight ? 0.12 : 0.14) }]}>
+                          <ThemedText style={styles.postBadgeText} setColor={theme.primaryText} numberOfLines={1}>
+                            {post.gym.shortName}
+                          </ThemedText>
+                        </View>
+                      ) : null}
+                    </View>
+                    <ThemedText style={styles.postTitle} setColor={title} numberOfLines={2}>
+                      {post.title}
+                    </ThemedText>
+                    <ThemedText style={styles.postMeta} setColor={quiet} numberOfLines={1}>
+                      {[post.author?.displayName, post.createdAt ? formatTimeAgo(post.createdAt) : null]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </ThemedText>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </>
+        ) : null}
       </ScrollView>
 
       {/* Your centre, set by hand - or back to the one you train in most. */}

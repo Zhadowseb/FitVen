@@ -140,4 +140,16 @@ export default StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 14,
   },
+
+  // Posts from centres
+  railScroll: { marginTop: 9 },
+  rail: { paddingHorizontal: 20, gap: 9 },
+  postCard: { width: 224, borderRadius: 16, borderWidth: 1, overflow: "hidden" },
+  postImage: { width: "100%", height: 118 },
+  postBody: { paddingTop: 10, paddingHorizontal: 12, paddingBottom: 12, gap: 4 },
+  postBadgeRow: { flexDirection: "row" },
+  postBadge: { height: 17, borderRadius: 5, paddingHorizontal: 6, justifyContent: "center", maxWidth: "100%" },
+  postBadgeText: { fontSize: 9, fontWeight: "800", letterSpacing: 0.6, textTransform: "uppercase" },
+  postTitle: { fontSize: 13, fontWeight: "800", lineHeight: 17 },
+  postMeta: { fontSize: 10, fontWeight: "700", lineHeight: 13 },
 });

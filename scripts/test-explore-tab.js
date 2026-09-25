@@ -74,4 +74,12 @@ for (const file of [...sourceFiles, "App.js"]) {
   );
 }
 
-console.log("Explore tab: the tab, its routes, and every link from Explore, its search and Social passed.");
+// Somebody else's post, wherever it is shown, can be reported: the centre
+// posts show strangers' public posts, so they carry the same report as the feed.
+const centrePosts = read("src/Pages/CenterPostsPage/CenterPostsPage.js");
+assert.ok(
+  centrePosts.includes("<ReportPostModal") && /onOpenOptions=\{/.test(centrePosts),
+  "the centre posts page shows other people's posts without a way to report them"
+);
+
+console.log("Explore tab: the tab, its routes, every link from Explore, its search and Social, and reporting centre posts passed.");
