@@ -19,6 +19,7 @@ import records from "./records";
 import run from "./run";
 import settings from "./settings";
 import social from "./social";
+import statistics from "./statistics";
 import time from "./time";
 import workout from "./workout";
 import workoutStart from "./workoutStart";
@@ -42,6 +43,7 @@ export default {
   run,
   settings,
   social,
+  statistics,
   time,
   workout,
   workoutStart,

@@ -175,3 +175,34 @@ export async function deleteRunSetsByWorkout(db, workoutId) {
     [workoutId]
   );
 }
+
+/**
+ * The finished segments of every finished run or walk - what was actually
+ * covered, not what was planned - with the workout's type and day. Pauses
+ * carry no distance and are left out.
+ */
+export async function getCompletedRunSegmentsForStatistics(db) {
+  return db.getAllAsync(
+    `SELECT
+        r.workout_id,
+        r.type,
+        r.actual_distance,
+        r.actual_duration_seconds,
+        w.workout_type,
+        d.date AS performed_date,
+        CASE
+          WHEN d.date LIKE '__.__.____'
+          THEN substr(d.date, 7, 4) || '-' || substr(d.date, 4, 2) || '-' || substr(d.date, 1, 2)
+          ELSE d.date
+        END AS performed_date_sort
+     FROM Run r
+     JOIN Workout_Type_Instance w ON w.workout_id = r.workout_id
+     JOIN Day d ON d.day_id = w.day_id
+     WHERE r.done = 1
+       AND COALESCE(r.is_pause, 0) = 0
+       AND w.done = 1
+       AND COALESCE(w.deleted_at, '') = ''
+       AND COALESCE(d.deleted_at, '') = ''
+     ORDER BY performed_date_sort ASC, r.workout_id ASC, r.set_number ASC;`
+  );
+}

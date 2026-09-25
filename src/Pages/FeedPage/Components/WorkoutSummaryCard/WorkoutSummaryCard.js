@@ -10,7 +10,7 @@ import Star from "../../../../Resources/Icons/UI-icons/Star";
 import ThreeDots from "../../../../Resources/Icons/UI-icons/ThreeDots";
 import MapPin from "../../../../Resources/Icons/UI-icons/MapPin";
 import { Colors, withAlpha } from "../../../../Resources/GlobalStyling/colors";
-import { formatTimeAgo } from "../../../../Utils/dateUtils";
+import { formatRelativeDay, formatTimeAgo } from "../../../../Utils/dateUtils";
 import { ThemedText, UserAvatar } from "../../../../Resources/ThemedComponents";
 
 // No tokens for these two: the gold bar gradient is specific to this card.
@@ -143,7 +143,14 @@ export default function WorkoutSummaryCard({
   const prCount = topSets.filter((record) => record.isRecord).length;
 
   const authorName = post?.author?.displayName ?? t("home.summary.defaultAuthor");
-  const createdAtLabel = formatTimeAgo(post?.createdAt);
+  // A post says when it went out. A workout not posted yet - on "Your posts" -
+  // has no such moment, so it says which day it was done instead. A post
+  // still on its way to the server has neither, and is "Just now".
+  const createdAtLabel = post?.createdAt
+    ? formatTimeAgo(post.createdAt)
+    : post?.performedAt
+      ? formatRelativeDay(post.performedAt)
+      : formatTimeAgo(null);
   const postTitle = String(post?.title ?? "").trim();
   const workoutType = String(post?.workoutType ?? "").trim();
   const note = String(post?.body ?? "").trim();
@@ -203,15 +210,19 @@ export default function WorkoutSummaryCard({
               </ThemedText>
 
               <View style={styles.metaRow}>
-                <ThemedText style={styles.metaText} setColor={quietText}>
-                  {createdAtLabel}
-                </ThemedText>
+                {createdAtLabel ? (
+                  <ThemedText style={styles.metaText} setColor={quietText}>
+                    {createdAtLabel}
+                  </ThemedText>
+                ) : null}
 
                 {workoutType ? (
                   <>
-                    <View
-                      style={[styles.metaDot, { backgroundColor: quietText }]}
-                    />
+                    {createdAtLabel ? (
+                      <View
+                        style={[styles.metaDot, { backgroundColor: quietText }]}
+                      />
+                    ) : null}
                     <ThemedText style={styles.workoutType} setColor={accent}>
                       {workoutType}
                     </ThemedText>

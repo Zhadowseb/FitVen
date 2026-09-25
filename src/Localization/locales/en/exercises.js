@@ -61,6 +61,8 @@ export default {
     tools: "Tools",
     recordsTool: "Personal records",
     recordsDetail: "{exercises} exercises · {records} records",
+    statisticsTool: "Statistics",
+    statisticsDetail: "Volume, frequency, intensity and runs",
     libraryTool: "Exercise library",
     libraryDetail: "{count} exercises",
     calculatorTool: "1RM calculator",

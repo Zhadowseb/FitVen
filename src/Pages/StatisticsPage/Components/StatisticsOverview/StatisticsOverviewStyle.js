@@ -40,6 +40,10 @@ export default StyleSheet.create({
     letterSpacing: 1,
     textTransform: "uppercase",
   },
+  // The records card carries the gold star in its corner; its label stops
+  // short of it, so a long word is cut off before it runs under the star.
+  kpiLabelStarred: { paddingRight: 22 },
+  kpiStar: { position: "absolute", top: 10, right: 10 },
   kpiValueLine: { flexDirection: "row", alignItems: "flex-end", gap: 3 },
   kpiValue: {
     fontSize: 22,
@@ -99,39 +103,6 @@ export default StyleSheet.create({
     alignItems: "center",
   },
   moreText: { fontSize: 13, fontWeight: "700" },
-
-  // Latest records
-  recordStrip: { gap: 10, paddingRight: 4 },
-  recordCard: {
-    width: 118,
-    borderWidth: 1,
-    borderRadius: 15,
-    padding: 11,
-    gap: 5,
-  },
-  recordName: { fontSize: 12, fontWeight: "800", lineHeight: 16 },
-  recordWeightLine: { flexDirection: "row", alignItems: "flex-end", gap: 4 },
-  recordWeight: { fontSize: 17, fontWeight: "800", lineHeight: 21 },
-  recordWeightMeta: { fontSize: 11, lineHeight: 15 },
-
-  // Every exercise
-  listCard: { paddingVertical: 6 },
-  exerciseRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingVertical: 11,
-  },
-  exerciseCopy: { flex: 1, minWidth: 0, gap: 2 },
-  exerciseName: { fontSize: 14, fontWeight: "700", lineHeight: 19 },
-  directionPill: {
-    width: 26,
-    height: 22,
-    borderRadius: 7,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  directionText: { fontSize: 13, fontWeight: "900", lineHeight: 16 },
 
   // Sets per muscle group
   muscleRow: { flexDirection: "row", alignItems: "center", gap: 10 },

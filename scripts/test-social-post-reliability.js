@@ -143,17 +143,27 @@ async function statusAndErrors() {
     ensureOwnProfile: async () => { if (profileFails) throw new Error("Profile unavailable"); return {}; },
     getOwnPostedWorkoutSummaries: async () => {
       if (postsFail) throw new Error("Network request failed");
-      return new Map([[101, { postId: 900 }]]);
+      return new Map([[101, { postId: 900, createdAt: "2026-09-20T10:15:00.000Z" }]]);
     },
     getHiddenWorkoutSummaryExerciseIds: async () => { throw new Error("Settings unavailable"); },
     buildLocalWorkoutSummaryPost: (unused, args) => social.buildLocalWorkoutSummaryPost(db, args),
     getGymsByIds: async () => { throw new Error("Centres unavailable"); },
   });
-  const ownDb = { getAllAsync: async () => [{ workout_id: 1, cloud_workout_type_instance_id: 101 }] };
+  const ownDb = {
+    getAllAsync: async () => [
+      { workout_id: 1, cloud_workout_type_instance_id: 101, date: "19.09.2026", performed_date_sort: "2026-09-19" },
+      { workout_id: 2, cloud_workout_type_instance_id: 102, date: "17.09.2026" },
+    ],
+  };
   let cards = await own.getOwnWorkoutPosts(ownDb, { user: { id: "user" } });
-  assert.equal(cards.length, 1);
+  assert.equal(cards.length, 2);
   assert.equal(cards[0].isPosted, true, "Profile/settings failures must not discard successful post lookup");
   assert.equal(cards[0].postId, 900);
+  // "Your posts" said "Just now" on every card: the cards carried no time.
+  assert.equal(cards[0].createdAt, "2026-09-20T10:15:00.000Z", "A posted card has lost the moment it was posted");
+  assert.equal(cards[0].performedAt, new Date(2026, 8, 19).getTime(), "A card has lost the day its workout was done");
+  assert.equal(cards[1].createdAt, null, "A workout never posted must not claim a posting time");
+  assert.equal(cards[1].performedAt, new Date(2026, 8, 17).getTime(), "The dotted day spelling is not read");
   profileFails = false;
   postsFail = true;
   cards = await own.getOwnWorkoutPosts(ownDb, { user: { id: "user" } });

@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.5.0] - Unreleased
+## [2.6.0] - Unreleased
 ### Changed
 - **Social is Explore.** The tab is the place to find things now - UDFORSK / EXPLORE, with the search icon - and its first page is new (`ExplorePage`):
   - **A search field** that opens a full-screen search with the keyboard up (`ExploreSearchPage`): centres and people as you type. A centre opens its page; a person opens the people list on the same search, where the follow buttons are.
@@ -13,6 +13,29 @@
 - **A post knows its centre.** The feed card says where the workout was done, under the author, and so does a card on Your posts. The centre was on the workout already; a reader can see a post without seeing the workout under it, so the post now carries a copy (`social_post.gym_id`), kept in step by two triggers - `supabase/migrations/20260925110000_a-post-knows-its-centre.sql`, not run yet. Until it runs, cards show no centre and Explore shows no centre posts; the feed works as before.
 - **Social is a page of its own** (`SocialPage`, the old `SearchPage`): your followers and whom you follow, the lists with block and report, and Find friends. The friends strip left it - it is on Home - and so did the posts card (Feed has them) and the centres row (Explore does). Home's "see all", the empty feed and a follower notification lead where they now belong.
 - Knowledge comes to Explore when it exists. `npm run test:explore-tab` checks that every route Explore links to is registered and keeps the tab lit, and that the centre posts can be reported.
+
+---
+## [2.5.0] - Unreleased
+### Changed
+- **Records is a trophy room.** It was a statistics page with a period selector on top, so it read like a report and never felt like a room full of what you have done. It now shows the whole history and nothing to compare it with:
+  - **The trophy and the number.** A gold trophy - a glow that breathes, light across the cup, glints around it - and the number of records you have set, counting up the first time the room opens. Under it, the heaviest lift you have ever made and how long you have been collecting.
+  - **Your strongest lifts** on a podium of gold, silver and bronze, each exercise by its heaviest set, with the next round weight to go for under the strongest.
+  - **New records** on a shelf, one card per exercise and day, each with the animated gold star (`RecordStar`, half a second between cards) and "New" for the last two weeks.
+  - **Milestones**: workouts finished (a run counts), tonnes lifted, records set and the longest streak of weeks in a row - the highest rung reached in gold, and how far it is to the next.
+  - A way through to the statistics. The sections rise into place when the room opens; with reduce motion on nothing moves, and the glints stop while the screen is out of sight.
+- **Statistics is its own page** (`StatisticsPage`), from the Train tab, the room and the muscle card on Home. Everything the Records page had follows a period there - the three numbers (the Records card wears the star), strength, biggest gains, volume and sets per muscle group - and under it you go deeper, each with its number in the same period on the row (`StatisticsDetailPage`, `Utils/statisticsInsights`):
+  - **Intensity**: how heavy the sets are against your best estimated 1RM at the time - the average, five zones and the heavy sets from 85 %, and RPE when you log it.
+  - **Frequency and consistency**: workouts per week, the current and the longest streak of weeks in a row, which weekdays you train, total and average training time, and strength, runs and walks apart.
+  - **Set types**: warm-up, working, drop and AMRAP sets in the set list's colours, how far AMRAP sets go past their target, and the drop sets' share of the volume.
+  - **Runs**: runs, kilometres, time and average pace, the fastest and the longest run, and kilometres per week. Heart rate is not kept after a run, so it is not here.
+  - **Every exercise** trained in the period, each opening its page.
+- **An exercise's page is its own screen** (`RecordsExercisePage`), opened from the room, the statistics and a workout's exercise card, and the back arrow returns to wherever you came from. It used to be a state inside Records, with a second back button of its own.
+- The Records page no longer loads what it stopped drawing: four queries on every visit - the old list, the detail and the weekly muscle-load radar - for about a thousand lines of views nothing showed.
+
+---
+## [2.4.1] - Unreleased
+### Fixed
+- **"Your posts" says when again.** Every card read "Just now", whatever day it was from: the cards are built from the phone's own workouts, and nothing put a time on them - so the time-ago label got nothing, and said "Just now" for nothing. A posted card now says when it was posted (`created_at`, read with the post), and a workout not posted yet says the day it was done. `npm run test:social-posts` checks that a card carries both.
 
 ---
 ## [2.4.0] - Unreleased

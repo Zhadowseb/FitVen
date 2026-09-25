@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { TouchableOpacity, View, useColorScheme } from "react-native";
+import { View, useColorScheme } from "react-native";
 import Svg, {
   Circle,
   Defs,
@@ -12,7 +12,6 @@ import Svg, {
 
 import styles from "./RecordsExerciseStyle";
 import { Colors, withAlpha } from "../../../../Resources/GlobalStyling/colors";
-import ChevronRight from "../../../../Resources/Icons/UI-icons/ChevronRight";
 import {
   ThemedSegmentedControl,
   ThemedText,
@@ -88,7 +87,6 @@ export default function RecordsExercise({
   now,
   periodKey,
   onChangePeriod,
-  onBack,
 }) {
   const { t } = useTranslation();
   const scheme = useColorScheme();
@@ -226,29 +224,6 @@ export default function RecordsExercise({
 
   return (
     <View style={styles.screen}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          accessibilityRole="button"
-          accessibilityLabel={t("records.exercise.back")}
-          onPress={onBack}
-          style={[styles.backButton, { backgroundColor: theme.uiBackground }]}
-        >
-          {/* Mirrored: the icon set has no left chevron. */}
-          <View style={{ transform: [{ scaleX: -1 }] }}>
-            <ChevronRight width={17} height={17} color={title} thickness={2} />
-          </View>
-        </TouchableOpacity>
-
-        <View style={styles.headerText}>
-          <ThemedText style={styles.overline} setColor={quiet}>
-            {t("records.exercise.overline")}
-          </ThemedText>
-          <ThemedText style={styles.pageTitle} setColor={title} numberOfLines={1}>
-            {name}
-          </ThemedText>
-        </View>
-      </View>
-
       <View style={[styles.card, { backgroundColor: card, borderColor: border }]}>
         <ThemedText style={styles.overline} setColor={quiet}>
           {t("records.exercise.estimate")}

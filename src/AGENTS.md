@@ -98,7 +98,7 @@ Five names, and they are not interchangeable:
 | table `Exercise` | the catalog of exercise names. Was called `Exercise_storage`; `db.js` still handles the rename for old installs, which is why `getExerciseStorage` has that name. |
 | table `Exercise_Instance` | one exercise inside one concrete workout. Unrelated to the catalog. |
 | `ExerciseCatalogPage` | the screen that shows and picks from the catalog |
-| `ExerciseLibraryPage` | the hub screen with shortcuts to calendar, sickness and personal records |
+| `ExerciseLibraryPage` | the hub screen with shortcuts to calendar, sickness, personal records and statistics |
 | `ExerciseLibraryList` | the list itself. It lives under `ExerciseLibraryPage` but **both** screens use it. |
 
 ## Surprising Placements

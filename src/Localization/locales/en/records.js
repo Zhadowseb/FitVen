@@ -1,70 +1,44 @@
-// The Records page: the overview and one exercise's detail. Keep in step with
-// ../da/records.js.
+// The Records page - the trophy room - and one exercise's page. Keep in step
+// with ../da/records.js.
 export default {
   eyebrow: "Library",
   title: "Records",
-  periods: {
-    "4w": "4 weeks",
-    "3m": "3 months",
-    "1y": "1 year",
-    all: "All",
-  },
-  kpi: {
-    workouts: "Workouts",
-    records: "Records",
-    volume: "Volume",
-    tonnes: "t",
-    same: "same",
-  },
-  strength: {
-    up: "You are getting stronger",
-    flat: "Holding steady",
-    down: "A little behind",
-    detail: {
-      one: "{improving} of {count} exercise improving · estimated 1RM",
-      other: "{improving} of {count} exercises improving · estimated 1RM",
+  // The trophy room: the whole history, nothing to compare it with.
+  trophy: {
+    recordCount: { one: "record set", other: "records set" },
+    heaviest: "Heaviest lift",
+    heaviestValue: "{weight} kg × {reps} · {name}",
+    since: "Since {date}",
+    emptyTitle: "Your first record is waiting",
+    emptyBody: "Finish a strength workout and your collection starts here.",
+    podium: {
+      title: "Your strongest lifts",
+      meta: "× {reps} · {date}",
+      label: "Place {rank}: {name}, {weight} kg × {reps}",
+      nextGoal: "Next goal: {goal} kg in {name}",
+      toGo: "{value} kg to go",
     },
-    empty: "Train an exercise a few times and your progress shows up here.",
-  },
-  gains: {
-    title: "Biggest gains",
-    new: "new",
-    showAll: "Show all {count}",
-    showFewer: "Show fewer",
-    empty: "Nothing to measure yet in this period.",
-    open: "Open {name}",
-  },
-  volume: {
-    weekTitle: "Volume per week",
-    monthTitle: "Volume per month",
-    weekAverage: "The dashed line is the 4-week average",
-    monthAverage: "The dashed line is the 3-month average",
-  },
-  latest: {
-    title: "Latest records",
-  },
-  exercises: {
-    title: "All exercises",
-    heaviest: "Heaviest: {lift}",
-    showAll: "Show all {count}",
-    showFewer: "Show fewer",
-    up: "Going up",
-    down: "Going down",
-    flat: "Holding steady",
-  },
-  muscles: {
-    title: "Sets per muscle group",
-    summary: {
-      one: "{group} gets the least · {count} set in the period",
-      other: "{group} gets the least · {count} sets in the period",
+    recent: {
+      title: "New records",
+      new: "New",
+      label: "{name}, {weight} kg × {reps}, {when}",
     },
-  },
-  empty: {
-    title: "No records yet",
-    body: "Finish a strength workout and your progress shows up here.",
+    milestones: {
+      title: "Milestones",
+      workouts: { one: "{value} workout", other: "{value} workouts" },
+      tonnes: { one: "{value} tonne lifted", other: "{value} tonnes lifted" },
+      records: { one: "{value} record", other: "{value} records" },
+      weekStreak: { one: "{value} week in a row", other: "{value} weeks in a row" },
+      nextUp: "Next: {label}",
+      notYet: "Not yet",
+      maxed: "Top of the ladder",
+    },
+    statistics: {
+      title: "See your statistics",
+      body: "Volume, frequency, intensity and runs",
+    },
   },
   exercise: {
-    back: "Back to Records",
     overline: "Records",
     estimate: "Estimated 1RM",
     changeInPeriod: "{change} % in the period",
@@ -85,47 +59,5 @@ export default {
       "1y": "1Y",
       all: "All",
     },
-  },
-  // The older list, detail and muscle-load views in PersonalRecordsPage.js.
-  muscleLoad: {
-    eyebrow: "PERSONAL RECORDS",
-    title: "Weekly muscle load",
-    restingWithPrograms:
-      "Log strength sets in a program and the balance across muscle groups appears here.",
-    restingNoPrograms: "Start a program and the balance across muscle groups appears here.",
-    selectProgram: "Select program",
-    programFallback: "Program {id}",
-    emptyTitle: "No muscle load yet",
-    emptyBody: "Program strength sets will appear here.",
-  },
-  list: {
-    exercises: "exercises",
-    ofRecords: "of {count} records",
-    heaviest: "heaviest",
-    emptyTitle: "No records yet",
-    emptyBody: "Completed strength sets will appear here when they have weight and reps.",
-    lastPr: "Last PR {when}",
-    repRanges: "{filled}/{slots} rep ranges",
-    best: "best",
-  },
-  detail: {
-    notFound: "No records found",
-    allRecords: "All records",
-    estimatedEyebrow: "ESTIMATED 1RM",
-    progression: "Progression",
-    workouts: "workouts",
-    best: "BEST",
-    latest: "LATEST",
-    noTrend: "No trend yet",
-    noTrendBody: "Complete weighted sets to build your progression.",
-    latestSet: "LATEST SET",
-    hideEmpty: "Hide empty rep ranges",
-    eyebrow: "PERSONAL RECORDS",
-    reps: "REPS",
-    weight: "WEIGHT",
-    date: "DATE",
-    new: "NEW",
-    noRecordInRange: "No record in this rep range yet.",
-    workoutFallback: "Workout {number}",
   },
 };
