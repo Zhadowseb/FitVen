@@ -19,6 +19,7 @@ import {
 import { withTransaction } from "./shared";
 import { createNextSyncVersion, normalizeSyncId } from "../Utils/syncUtils";
 import { enqueueSync, startBackgroundSync } from "./syncScheduler";
+import { syncCustomExercisesInBackground } from "./exerciseService";
 import {
   EXERCISE_MUSCLE_GROUPS,
   buildCustomExerciseMuscleMetadata,
@@ -2209,6 +2210,11 @@ export async function createCustomExercise(
     exerciseName: normalizedExerciseName,
     muscleGroupKeys: normalizedSelection,
   });
+
+  // Every custom exercise goes to the cloud, private until its owner shares
+  // it, so it comes back after a reinstall. In the background: the exercise
+  // is usable on this phone already, and offline it goes up on the next sync.
+  syncCustomExercisesInBackground(db);
 
   return mapExerciseCatalogForDisplay([
     {

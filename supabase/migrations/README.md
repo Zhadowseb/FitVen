@@ -72,6 +72,7 @@ behind by accident.
 | `20260927090000_a-lifter-can-give-their-sex.sql` | yes |
 | `20260927100000_public-profiles.sql` | yes |
 | `20260927110000_a-block-hides-public-posts-too.sql` | yes |
+| `20260928090000_custom-exercises-can-be-shared.sql` | yes |
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
 centre match, per-centre lift leaderboards with video verification, and what
@@ -352,6 +353,14 @@ the one way to read a stranger's profile: security definer, a fixed set of
 fields, nothing from `profile_private`, null across a block either way; until it
 runs, a profile opened from a name says it is not available. The third makes a
 block hide public posts as well as followers-only ones.
+
+`20260928090000_custom-exercises-can-be-shared.sql` was run on 2026-09-26. It
+gives custom exercises a cloud half, `custom_exercise` - readable only by its
+owner, private until shared - with the saved list, the reports and a daily
+cache of each exercise's numbers beside it, five security definer functions
+that are the only way to read somebody else's exercise, and the
+`exercise-videos` bucket. Without it the library and an exercise page say they
+are not available yet, and custom exercises stay on the phone.
 
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to

@@ -19,12 +19,12 @@
 // counted by scripts/check-privacy-policy.js, which fails the build while the
 // policy claims to be published and is not finished.
 
-export const PRIVACY_POLICY_VERSION = "2026-09-25";
+export const PRIVACY_POLICY_VERSION = "2026-09-26";
 
 /** The public copy. Required by Google Play, and the address in its listing. */
 export const PRIVACY_POLICY_URL = "https://fitven.dk/privacy/";
 
-export const PRIVACY_POLICY_LAST_UPDATED = "25 September 2026";
+export const PRIVACY_POLICY_LAST_UPDATED = "26 September 2026";
 
 export const PRIVACY_POLICY_SECTIONS = [
   {
@@ -45,6 +45,8 @@ Anything about your data — a copy of it, a correction, having it deleted, or a
 Your profile: display name, username, an optional short bio, an optional photo, your birth year, and — if you choose to give it — your sex. Your sex is only used so that records and leaderboards can be split by sex; it is never shown to anyone, and you can clear it at any time in Edit profile.
 
 Your training: programs, workouts, exercises, sets, weights, repetitions, personal records and the notes you write on them, and the split of workouts you choose to rotate through.
+
+Exercises you make yourself: the name, the muscles, the equipment, the weight mode, a short description, the steps and — if you add one — a video and a still frame taken from it. They are kept with your account, so they come back on a new phone. The shared exercises you save, the ones you add a copy of, and the ones you report are stored too.
 
 Centres: the centre you choose as yours, or else the one you have trained in most over the last 90 days; the centre each workout was done in; the lifts from those workouts that go on a centre's leaderboard; and a verification video, if you add one to a lift.
 
@@ -72,7 +74,7 @@ Push notifications are delivered through Expo's notification service, which mean
 
 Location is only read while a run is actively being tracked, and once when you start a workout to find the centre you are in — both only if you allow it. A run's route is stored with the run. For a centre, your position is sent to FitVen's server to look the centre up and is not kept there: only the centre is stored with the workout. Your phone keeps the position with the workout, so the lookup can be tried again if it failed.
 
-Verification videos are stored on Supabase with the rest of your data.
+Verification videos and exercise videos are stored on Supabase with the rest of your data.
 
 The map that draws your route is Google Maps. Drawing a route means asking Google for the map of that area, so Google can see roughly where you ran, even though the route itself is never sent to them.
 
@@ -100,7 +102,11 @@ People who follow you can also see whether you are training today, how many reco
 
 When a workout is matched to a centre, your best lifts from it go on that centre's leaderboard, where anyone signed in can see them with your name and photo. A lift that has been verified can also appear on the national leaderboard. A verification video can be watched by the people who train at that centre, so that they can vote on it.
 
-Blocking someone removes the follow in both directions, takes you out of each other's search results and leaderboards, and hides your profiles and your posts from each other.
+An exercise you make is private until you choose to share it. A shared exercise — its name, description, steps, muscles, equipment, video, and your name and photo as the person who made it — can be seen by anyone signed in, and they can add a copy of it to their own exercises. A copy never includes your sets, and you can stop sharing at any time; copies already taken stay with the people who took them. Three reports from different people hide a shared exercise until it has been looked at.
+
+A shared exercise shows figures drawn from everyone who uses it: how many use it, how many of them train at the viewer's centre, and the typical sets, repetitions and weights. If you use an exercise somebody shared, your sets with it count towards those figures. They are only ever shown as totals, never with a name, and the spread of weights only once at least 20 sets have been logged.
+
+Blocking someone removes the follow in both directions, takes you out of each other's search results and leaderboards, and hides your profiles, your posts and your shared exercises from each other.
 
 The person responsible for FitVen can read the database directly through the Supabase dashboard. That access exists so the app can be run and repaired, and it is not used to look at individual training data without a reason such as a fault you have reported.`,
   },

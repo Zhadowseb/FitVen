@@ -8,7 +8,25 @@ export const weightliftingSchemaSql = `
       default_visible_columns TEXT,
       official INTEGER NOT NULL DEFAULT 0,
       is_custom INTEGER NOT NULL DEFAULT 0,
-      custom_muscle_group_keys TEXT
+      custom_muscle_group_keys TEXT,
+      -- A custom exercise's cloud half is public.custom_exercise, not the
+      -- catalog: cloud_exercise_id above is the catalog's id and stays null on
+      -- a custom row. No owner column - this database belongs to one user, so
+      -- every custom row in it is theirs; a copy of somebody else's is marked
+      -- by source_exercise_id. The list in db.js (EXERCISE_EXTRA_COLUMNS) is
+      -- the same columns for an existing install.
+      cloud_custom_exercise_id INTEGER,
+      is_public INTEGER NOT NULL DEFAULT 0,
+      source_exercise_id INTEGER,
+      description TEXT,
+      steps TEXT,
+      equipment TEXT,
+      weight_mode TEXT NOT NULL DEFAULT 'total',
+      video_path TEXT,
+      poster_path TEXT,
+      video_duration_ms INTEGER,
+      custom_needs_upload INTEGER NOT NULL DEFAULT 0,
+      cloud_updated_at TEXT
   );
 
   CREATE TABLE IF NOT EXISTS Exercise_Column_Preference (

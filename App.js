@@ -28,6 +28,8 @@ import ExplorePage from "./src/Pages/ExplorePage/ExplorePage";
 import ExploreSearchPage from "./src/Pages/ExploreSearchPage/ExploreSearchPage";
 import ProgramsBrowsePage from "./src/Pages/ProgramsBrowsePage/ProgramsBrowsePage";
 import CustomExercisesPage from "./src/Pages/CustomExercisesPage/CustomExercisesPage";
+import CustomExerciseDetailPage from "./src/Pages/CustomExercisesPage/CustomExerciseDetailPage";
+import MyExercisePage from "./src/Pages/MyExercisePage/MyExercisePage";
 import CenterPostsPage from "./src/Pages/CenterPostsPage/CenterPostsPage";
 import SocialPage from "./src/Pages/SocialPage/SocialPage";
 import PublicProfilePage from "./src/Pages/PublicProfilePage/PublicProfilePage";
@@ -80,6 +82,7 @@ import { ThemeModeProvider, useThemeMode } from './src/Contexts/ThemeContext';
 import { LocalizationProvider, useTranslation } from './src/Localization';
 import { ExerciseViewSettingsProvider } from './src/Contexts/ExerciseViewSettingsContext';
 import PrivacyConsentGate from "./src/Resources/Components/PrivacyConsentGate/PrivacyConsentGate";
+import ToastHost from "./src/Resources/Components/Toast/Toast";
 import ExerciseLibrarySync from "./src/Sync/ExerciseLibrarySync";
 import PushNotificationRegistrationSync from "./src/Sync/PushNotificationRegistrationSync";
 import SetSync from "./src/Sync/SetSync";
@@ -295,6 +298,7 @@ function RootNavigator() {
                 <Stack.Screen name="ExploreSearchPage" component={ExploreSearchPage} options={{ headerShown: false }} />
                 <Stack.Screen name="ProgramsBrowsePage" component={ProgramsBrowsePage} options={{ headerShown: false }} />
                 <Stack.Screen name="CustomExercisesPage" component={CustomExercisesPage} options={{ headerShown: false }} />
+                <Stack.Screen name="CustomExerciseDetailPage" component={CustomExerciseDetailPage} options={{ headerShown: false }} />
                 <Stack.Screen name="CenterPostsPage" component={CenterPostsPage} options={{ headerShown: false }} />
                 <Stack.Screen name="SocialPage" component={SocialPage} options={{ headerShown: false }} />
                 <Stack.Screen name="PublicProfilePage" component={PublicProfilePage} options={{ headerShown: false }} />
@@ -309,6 +313,7 @@ function RootNavigator() {
                 <Stack.Screen name="WeekPage" component={WeekPage} options={{headerShown: false}} />
                 <Stack.Screen name="WorkoutPage" component={WorkoutPage} options={{headerShown: false}} />
                 <Stack.Screen name="ExerciseCatalogPage" component={ExerciseCatalogPage} options={{ headerShown: false }} />
+                <Stack.Screen name="MyExercisePage" component={MyExercisePage} options={{ headerShown: false }} />
                 <Stack.Screen name="ExerciseLibraryPage" component={ExerciseLibraryPage} options={{ headerShown: false }} />
                 <Stack.Screen name="PersonalRecordsPage" component={PersonalRecordsPage} options={{ headerShown: false }} />
                 <Stack.Screen name="RecordsExercisePage" component={RecordsExercisePage} options={{ headerShown: false }} />
@@ -366,6 +371,10 @@ function RootNavigator() {
             navigationRef={navigationRef}
           />
         ) : null}
+
+        {/* Over every screen, the navigation included: "Added to your
+            exercises" on the screen you went back to. */}
+        {isAuthenticated ? <ToastHost /> : null}
       </View>
 
       {/* Gives every field - numeric ones included - a Done button. */}

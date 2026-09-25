@@ -11,6 +11,14 @@ export default {
   hints: {
     openVerification: "Opens the centre's lifts waiting for review",
     openActivity: "Opens today's activity",
+    openExercise: "Opens your exercise",
+  },
+  // The inbox row the server writes when three people have reported one of
+  // your shared exercises. The server's title and body are English; these are
+  // what the page shows instead.
+  customExerciseHidden: {
+    title: "Your exercise was hidden",
+    body: "{name} was reported by several people and no longer shows in the library. Copies people already added stay.",
   },
   emptyTitle: "You're all caught up",
   emptyBody: "Workout starts and future activity updates will appear here.",

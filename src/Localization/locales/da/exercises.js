@@ -49,6 +49,7 @@ export default {
     addAnotherToWorkoutA11y: "Tilføj {name} til træningen igen",
     addToWorkoutA11y: "Tilføj {name} til træningen",
     showMusclesA11y: "Vis muskler for {name}",
+    openCustomA11y: "Åbn din øvelse {name}",
     removeFavouriteA11y: "Fjern {name} fra favoritter",
     addFavouriteA11y: "Føj {name} til favoritter",
     badgePrimary: "PRIMÆR",

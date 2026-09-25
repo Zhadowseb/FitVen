@@ -36,6 +36,14 @@ Nothing in the code connects step 1 to step 7, and nothing fails loudly.
 Synced tables: `Program`, `Mesocycle`, `Microcycle`, `Day`, `Sickness`,
 `Workout_Type_Instance`, `Exercise_Instance`, `Set`.
 
+Custom exercises (`Exercise` rows with `is_custom = 1`) sync on a path of
+their own, not through `cloudSync/`: `syncCustomExercisesWithCloud` in
+`src/Services/exerciseService.js`, planned by `planCustomExerciseSync` in
+`src/Utils/customExercises.js`, against `public.custom_exercise`. A new column
+there goes into `EXERCISE_EXTRA_COLUMNS` in `src/Database/db.js`, the
+`CREATE TABLE Exercise` in `src/Database/schema/weightlifting.js`, the
+repository, and the two field builders in the utils.
+
 Using `Set` as the example:
 
 | # | Where | What |

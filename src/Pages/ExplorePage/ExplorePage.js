@@ -2,12 +2,15 @@ import { StatusBar } from "expo-status-bar";
 import { Image, Pressable, ScrollView, TouchableOpacity, View, useColorScheme } from "react-native";
 import { useCallback, useRef, useState } from "react";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { useSQLiteContext } from "expo-sqlite";
 import { formatNumber, useTranslation } from "@localization";
 
 import styles from "./ExplorePageStyle";
+import ExerciseRailCard from "../CustomExercisesPage/Components/ExerciseRailCard";
 import { useAuth } from "@contexts/AuthContext";
-import { gymService, socialPostService } from "@services";
+import { exerciseService, gymService, socialPostService } from "@services";
 import ChangeGymSheet from "@resources/Components/ChangeGymSheet/ChangeGymSheet";
+import { showToast } from "@resources/Components/Toast/Toast";
 import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
 import Calender from "@resources/Icons/UI-icons/Calender";
 import ChevronRight from "@resources/Icons/UI-icons/ChevronRight";
@@ -25,22 +28,41 @@ import { getLastSeenOrStart, gymSeenKey } from "@utils/lastSeen";
 // refreshes underneath - the tab is built again on every visit.
 let lastShown = null;
 
-// Programs and exercises shared by others do not exist yet: the tiles say so
-// with a zero until public programs and shared exercises are built.
+// Programs shared by others do not exist yet: the tile says so with a zero
+// until public programs are built.
 const PROGRAM_COUNT = 0;
-const SHARED_EXERCISE_COUNT = 0;
 
-const EMPTY = { gymCount: null, homeGym: null, gymRecords: null, centrePosts: [] };
+const EMPTY = {
+  gymCount: null,
+  homeGym: null,
+  gymRecords: null,
+  centrePosts: [],
+  customExerciseCount: null,
+  customExercises: [],
+};
 const CENTRE_POST_LIMIT = 8;
+const CUSTOM_EXERCISE_RAIL_LIMIT = 6;
+
+// "From others": somebody else's first, and your own only after them, so the
+// rail still shows something when all that is shared so far is yours.
+function othersFirst(items) {
+  const list = Array.isArray(items) ? items.filter(Boolean) : [];
+
+  return [...list.filter((item) => !item.isMine), ...list.filter((item) => item.isMine)];
+}
 
 async function loadExplore(user) {
   const userId = user?.id ?? null;
-  const [gymCountResult, homeGymResult, myGymsResult] = await Promise.allSettled([
+  const [gymCountResult, homeGymResult, myGymsResult, sharedResult] = await Promise.allSettled([
     gymService.getGymCount(),
     gymService.getMyHomeGym(),
     userId ? gymService.getMyGyms() : Promise.resolve([]),
+    // The newest shared exercises for the rail, and on the same page the
+    // count of everything that can be found, for the tile.
+    exerciseService.getPublicCustomExercises({ sort: "newest", limit: CUSTOM_EXERCISE_RAIL_LIMIT }),
   ]);
   const homeGym = homeGymResult.status === "fulfilled" ? homeGymResult.value : null;
+  const shared = sharedResult.status === "fulfilled" ? sharedResult.value : null;
   // Posts from your centre and from the centres you train in.
   const centreIds = [
     homeGym?.id,
@@ -66,6 +88,7 @@ async function loadExplore(user) {
     ["centre records", gymRecordsResult],
     ["centre posts", centrePostsResult],
     ["centres you train in", myGymsResult],
+    ["shared exercises", sharedResult],
   ]) {
     if (result.status === "rejected") {
       console.error(`Explore could not load its ${label}:`, result.reason);
@@ -77,18 +100,28 @@ async function loadExplore(user) {
     homeGym,
     gymRecords: gymRecordsResult.status === "fulfilled" ? gymRecordsResult.value : null,
     centrePosts: centrePostsResult.status === "fulfilled" ? centrePostsResult.value : [],
+    // A backend without the migration has nothing shared: zero, not unknown.
+    customExerciseCount: shared
+      ? shared.unavailable
+        ? 0
+        : typeof shared.libraryTotal === "number"
+          ? shared.libraryTotal
+          : null
+      : null,
+    customExercises: shared && !shared.unavailable ? othersFirst(shared.items) : [],
   };
 }
 
 /**
  * Explore, the tab where you find things: centres and the records set in
  * them, the posts from the centres you train in, programs, exercises others
- * have made, and - through the button in the corner - the people you follow.
- * Programs and shared exercises are zero until they can be shared; knowledge
- * joins later.
+ * have made - the newest on a rail you can add from - and, through the
+ * button in the corner, the people you follow. Programs are zero until they
+ * can be shared; knowledge joins later.
  */
 export default function ExplorePage() {
   const { t } = useTranslation();
+  const db = useSQLiteContext();
   const navigation = useNavigation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -96,6 +129,12 @@ export default function ExplorePage() {
   const { user } = useAuth();
   const [data, setData] = useState(lastShown ?? EMPTY);
   const [isChangeGymOpen, setIsChangeGymOpen] = useState(false);
+  // The rail cards whose "Add" is running, so each shows its own spinner.
+  const [addingIds, setAddingIds] = useState([]);
+  const addingRef = useRef(new Set());
+  // Added from here, so a load that set out before the add landed does not
+  // paint "Add" on the card again.
+  const addedIdsRef = useRef(new Set());
   // Only the newest load may paint: a slow one from before a change of centre
   // must not put the old centre back.
   const loadIdRef = useRef(0);
@@ -105,8 +144,19 @@ export default function ExplorePage() {
 
     loadExplore(user).then((next) => {
       if (loadId === loadIdRef.current) {
-        lastShown = next;
-        setData(next);
+        const added = addedIdsRef.current;
+        const shown =
+          added.size > 0
+            ? {
+                ...next,
+                customExercises: next.customExercises.map((item) =>
+                  added.has(item.id) ? { ...item, isAdded: true } : item
+                ),
+              }
+            : next;
+
+        lastShown = shown;
+        setData(shown);
       }
     });
   }, [user]);
@@ -122,7 +172,68 @@ export default function ExplorePage() {
     }, [refresh])
   );
 
-  const { gymCount, homeGym, gymRecords, centrePosts } = data;
+  // One card changed in place - and in what a return to the tab paints first,
+  // so it does not show "Add" again before the refresh arrives.
+  const patchCustomExercise = useCallback((id, patch) => {
+    const apply = (shown) =>
+      shown
+        ? {
+            ...shown,
+            customExercises: (shown.customExercises ?? []).map((item) =>
+              item.id === id ? { ...item, ...patch } : item
+            ),
+          }
+        : shown;
+
+    lastShown = apply(lastShown);
+    setData((previous) => apply(previous));
+  }, []);
+
+  // "Add" on a rail card: a copy in your own exercises, without leaving.
+  const addCustomExercise = useCallback(
+    async (item) => {
+      if (!item?.id || addingRef.current.has(item.id)) {
+        return;
+      }
+
+      addingRef.current.add(item.id);
+      setAddingIds([...addingRef.current]);
+
+      try {
+        const result = await exerciseService.adoptExercise(db, item.id);
+        const name = result?.exerciseName || item.name;
+
+        if (result?.status === "added" || result?.status === "already_added") {
+          addedIdsRef.current.add(item.id);
+          patchCustomExercise(item.id, { isAdded: true });
+
+          if (result.status === "added") {
+            showToast(t("customExercises.addedToast", { name }), { tone: "success" });
+          }
+        } else if (result?.status === "name_taken") {
+          showToast(t("customExercises.nameTaken", { name }), { tone: "info" });
+        } else if (result?.status === "own") {
+          patchCustomExercise(item.id, { isMine: true });
+        }
+      } catch (error) {
+        console.error("Explore could not add a shared exercise:", error);
+        showToast(error?.message || t("customExercises.addFailed"), { tone: "info" });
+      } finally {
+        addingRef.current.delete(item.id);
+        setAddingIds([...addingRef.current]);
+      }
+    },
+    [db, patchCustomExercise, t]
+  );
+
+  const {
+    gymCount,
+    homeGym,
+    gymRecords,
+    centrePosts,
+    customExerciseCount = null,
+    customExercises = [],
+  } = data;
   const latest = gymRecords?.latest ?? null;
   const card = theme.cardBackground;
   const cardBorder = theme.cardBorder;
@@ -130,14 +241,20 @@ export default function ExplorePage() {
   const title = theme.title;
 
   const openGym = () => navigation.navigate("GymLeaderboardPage", { gym_id: homeGym.id });
+  const openCustomExercise = (item) => navigation.navigate("CustomExerciseDetailPage", { exerciseId: item.id });
 
-  const sectionHead = (label, action, onAction) => (
+  const sectionHead = (label, action, onAction, actionLabel) => (
     <View style={styles.sectionHead}>
       <ThemedText style={styles.sectionLabel} setColor={quiet}>
         {label}
       </ThemedText>
       {action ? (
-        <TouchableOpacity accessibilityRole="button" hitSlop={10} onPress={onAction}>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel={actionLabel}
+          hitSlop={10}
+          onPress={onAction}
+        >
           <ThemedText style={styles.sectionAction} setColor={theme.primaryText}>
             {action}
           </ThemedText>
@@ -229,10 +346,16 @@ export default function ExplorePage() {
             {tile({
               key: "exercises",
               label: t("explore.tiles.exercises"),
-              detail: t("explore.tiles.exercisesCount", {
-                count: SHARED_EXERCISE_COUNT,
-                value: formatNumber(SHARED_EXERCISE_COUNT),
-              }),
+              // Nothing shared yet is an invitation rather than a zero.
+              detail:
+                customExerciseCount === null
+                  ? t("explore.tiles.exercisesSub")
+                  : customExerciseCount === 0
+                    ? t("explore.tiles.exercisesFirst")
+                    : t("explore.tiles.exercisesCount", {
+                        count: customExerciseCount,
+                        value: formatNumber(customExerciseCount),
+                      }),
               icon: <Library width={18} height={18} color={theme.music} thickness={1.6} />,
               tone: theme.music,
               onPress: () => navigation.navigate("CustomExercisesPage"),
@@ -369,6 +492,46 @@ export default function ExplorePage() {
             </TouchableOpacity>
           </>
         )}
+
+        {/* The newest exercises people have shared, each one "Add" away.
+            Gone when there are none: the tile above already invites. */}
+        {customExercises.length > 0 ? (
+          <>
+            {sectionHead(
+              t("explore.sections.customExercises"),
+              customExerciseCount > 0
+                ? t("explore.sections.allCount", {
+                    count: customExerciseCount,
+                    value: formatNumber(customExerciseCount),
+                  })
+                : t("explore.sections.all"),
+              () => navigation.navigate("CustomExercisesPage", { sort: "newest" }),
+              customExerciseCount > 0
+                ? t("explore.sections.allExercisesA11y", {
+                    count: customExerciseCount,
+                    value: formatNumber(customExerciseCount),
+                  })
+                : undefined
+            )}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.rail}
+              style={styles.railScroll}
+            >
+              {customExercises.map((item) => (
+                <ExerciseRailCard
+                  key={item.id}
+                  item={item}
+                  isAdding={addingIds.includes(item.id)}
+                  onPress={openCustomExercise}
+                  onAdd={addCustomExercise}
+                />
+              ))}
+            </ScrollView>
+          </>
+        ) : null}
+
         {/* Posts from centres: workouts done at your centre and the ones you
             train in, by people whose posts you can see. Gone when there are none. */}
         {centrePosts.length > 0 ? (

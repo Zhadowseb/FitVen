@@ -310,6 +310,36 @@ async function migrateWorkoutTableName(db) {
   });
 }
 
+// Every column Exercise has beyond the five the rebuild below was first
+// written for: [name, how it is declared, its value when an old table does not
+// have it]. The rebuild carries each one across, and ensureTableColumns adds
+// any that are missing on every start - one list, so a new column cannot be
+// remembered in one of the two and lost in the other. The same columns are in
+// CREATE TABLE Exercise in schema/weightlifting.js for a fresh install, and
+// scripts/test-shared-exercises.js fails if the two part ways.
+//
+// There is no owner column. The database belongs to one user, so every custom
+// row in it is theirs - a copy of somebody else's is marked by
+// source_exercise_id, and the cloud row (public.custom_exercise) carries the
+// owner.
+const EXERCISE_EXTRA_COLUMNS = [
+  ["official", "INTEGER NOT NULL DEFAULT 0", "0"],
+  ["is_custom", "INTEGER NOT NULL DEFAULT 0", "0"],
+  ["custom_muscle_group_keys", "TEXT", "NULL"],
+  ["cloud_custom_exercise_id", "INTEGER", "NULL"],
+  ["is_public", "INTEGER NOT NULL DEFAULT 0", "0"],
+  ["source_exercise_id", "INTEGER", "NULL"],
+  ["description", "TEXT", "NULL"],
+  ["steps", "TEXT", "NULL"],
+  ["equipment", "TEXT", "NULL"],
+  ["weight_mode", "TEXT NOT NULL DEFAULT 'total'", "'total'"],
+  ["video_path", "TEXT", "NULL"],
+  ["poster_path", "TEXT", "NULL"],
+  ["video_duration_ms", "INTEGER", "NULL"],
+  ["custom_needs_upload", "INTEGER NOT NULL DEFAULT 0", "0"],
+  ["cloud_updated_at", "TEXT", "NULL"],
+];
+
 async function migrateExerciseCatalogSchema(db) {
   const exerciseColumns = await getTableColumns(db, "Exercise");
 
@@ -344,6 +374,20 @@ async function migrateExerciseCatalogSchema(db) {
     return;
   }
 
+  // Until 2.11 this copied the five columns above and nothing else, so a
+  // rebuild would have dropped is_custom with the rest: every custom exercise
+  // would have come out of it as an ordinary catalog row, for the next catalog
+  // sync to delete.
+  const extraColumns = EXERCISE_EXTRA_COLUMNS.map(
+    ([columnName, definition, missingValue]) => ({
+      columnName,
+      definition,
+      value: hasColumn(exerciseColumns, columnName)
+        ? `COALESCE(${columnName}, ${missingValue})`
+        : missingValue,
+    })
+  );
+
   await withTransaction(db, async () => {
     await db.execAsync(`
       DROP TABLE IF EXISTS Exercise_next;
@@ -353,7 +397,10 @@ async function migrateExerciseCatalogSchema(db) {
         cloud_exercise_id INTEGER UNIQUE,
         name TEXT NOT NULL UNIQUE,
         nickname TEXT,
-        default_visible_columns TEXT
+        default_visible_columns TEXT,
+        ${extraColumns
+          .map(({ columnName, definition }) => `${columnName} ${definition}`)
+          .join(",\n        ")}
       );
 
       INSERT OR IGNORE INTO Exercise_next (
@@ -361,14 +408,16 @@ async function migrateExerciseCatalogSchema(db) {
         cloud_exercise_id,
         name,
         nickname,
-        default_visible_columns
+        default_visible_columns,
+        ${extraColumns.map(({ columnName }) => columnName).join(",\n        ")}
       )
       SELECT
         exercise_id,
         ${hasCloudExerciseIdColumn ? "cloud_exercise_id" : "NULL"},
         ${nameColumn},
         ${hasNicknameColumn ? "nickname" : "NULL"},
-        ${hasDefaultVisibleColumnsColumn ? "default_visible_columns" : "NULL"}
+        ${hasDefaultVisibleColumnsColumn ? "default_visible_columns" : "NULL"},
+        ${extraColumns.map(({ value }) => value).join(",\n        ")}
       FROM Exercise
       WHERE TRIM(COALESCE(${nameColumn}, '')) <> ''
       ORDER BY exercise_id ASC;
@@ -1768,14 +1817,21 @@ export async function initializeDatabase(db) {
     ["cloud_exercise_id", "INTEGER"],
     ["nickname", "TEXT"],
     ["default_visible_columns", "TEXT"],
-    ["official", "INTEGER NOT NULL DEFAULT 0"],
-    ["is_custom", "INTEGER NOT NULL DEFAULT 0"],
-    ["custom_muscle_group_keys", "TEXT"],
+    ...EXERCISE_EXTRA_COLUMNS.map(([columnName, definition]) => [
+      columnName,
+      definition,
+    ]),
   ]);
+  // One local row per cloud custom exercise: the sync links by this id, and
+  // two rows sharing it would each take the other's edits.
   await db.execAsync(`
     CREATE UNIQUE INDEX IF NOT EXISTS exercise_cloud_exercise_id_idx
     ON Exercise(cloud_exercise_id)
     WHERE cloud_exercise_id IS NOT NULL;
+
+    CREATE UNIQUE INDEX IF NOT EXISTS exercise_cloud_custom_exercise_id_idx
+    ON Exercise(cloud_custom_exercise_id)
+    WHERE cloud_custom_exercise_id IS NOT NULL;
   `);
   await ensureExerciseColumnPreferenceSchema(db);
   await ensureExerciseFavouriteSchema(db);

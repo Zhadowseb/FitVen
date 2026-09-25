@@ -129,6 +129,9 @@ const LIBRARY_ROUTES = new Set([
   "WorkoutCalendarPage",
   "SicknessPage",
   "OneRepMaxCalculatorPage",
+  // Your own exercise - what it is, and whether others can find it - is
+  // opened from your exercise library.
+  "MyExercisePage",
 ]);
 // Somebody's profile and their posts are opened from a name anywhere - the
 // feed, a leaderboard, Explore - and stay under the tab they were opened from.
@@ -141,6 +144,9 @@ const INHERIT_TAB_ROUTES = new Set([
   // the counts on your profile, from Home's friends strip.
   "SocialPage",
   "SocialUserListPage",
+  // One shared exercise: from Explore's library, and from your own exercise
+  // as "see it as others do".
+  "CustomExerciseDetailPage",
 ]);
 
 function ThemedBottomNavigation({ currentRouteName, navigationRef }) {

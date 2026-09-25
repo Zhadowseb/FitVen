@@ -4,13 +4,17 @@
 import auth from "./auth";
 import calendar from "./calendar";
 import common from "./common";
+import customExerciseDetail from "./customExerciseDetail";
+import customExercises from "./customExercises";
 import errors from "./errors";
+import exerciseSharing from "./exerciseSharing";
 import exercises from "./exercises";
 import explore from "./explore";
 import friends from "./friends";
 import gyms from "./gyms";
 import home from "./home";
 import music from "./music";
+import myExercise from "./myExercise";
 import nav from "./nav";
 import notifications from "./notifications";
 import profile from "./profile";
@@ -32,13 +36,17 @@ export default {
   auth,
   calendar,
   common,
+  customExerciseDetail,
+  customExercises,
   errors,
+  exerciseSharing,
   exercises,
   explore,
   friends,
   gyms,
   home,
   music,
+  myExercise,
   nav,
   notifications,
   profile,

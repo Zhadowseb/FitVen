@@ -24,6 +24,34 @@ import {
   UserAvatar,
 } from "../../Resources/ThemedComponents";
 
+const LIFT_VERIFICATION_REQUESTED = "lift_verification_requested";
+// Written by the server when three people have reported one of your shared
+// exercises (supabase/migrations/20260928090000_custom-exercises-can-be-shared.sql).
+const CUSTOM_EXERCISE_HIDDEN = "custom_exercise_hidden";
+
+function hiddenExerciseName(item) {
+  const name = item?.data?.exercise_name;
+
+  return item?.eventType === CUSTOM_EXERCISE_HIDDEN && typeof name === "string" && name
+    ? name
+    : null;
+}
+
+// What a row says. The server writes every title and body in English; the one
+// kind this page has its own words for is shown in the reader's language.
+function describeNotification(item, t) {
+  const exerciseName = hiddenExerciseName(item);
+
+  if (exerciseName) {
+    return {
+      title: t("notifications.customExerciseHidden.title"),
+      body: t("notifications.customExerciseHidden.body", { name: exerciseName }),
+    };
+  }
+
+  return { title: item?.title ?? "", body: item?.body ?? "" };
+}
+
 export default function NotificationHistoryPage() {
   const { t } = useTranslation();
   const navigation = useNavigation();
@@ -122,11 +150,13 @@ export default function NotificationHistoryPage() {
   // and nothing happened when you did. There is no screen for another user's
   // profile in this app, but most notifications here are someone starting a
   // workout, and that is what Social shows - so that is where a row goes. A
-  // request to verify a lift goes to that centre, with the review sheet open.
+  // request to verify a lift goes to that centre, with the review sheet open,
+  // and one of your exercises being hidden goes to that exercise.
   const openNotification = (item) => {
     const gymId = Number(item?.data?.gym_id);
+    const exerciseName = hiddenExerciseName(item);
 
-    if (item?.eventType === "lift_verification_requested" && Number.isFinite(gymId)) {
+    if (item?.eventType === LIFT_VERIFICATION_REQUESTED && Number.isFinite(gymId)) {
       navigation.navigate("GymLeaderboardPage", {
         gym_id: gymId,
         open_verification: true,
@@ -135,81 +165,93 @@ export default function NotificationHistoryPage() {
       return;
     }
 
+    if (exerciseName) {
+      navigation.navigate("MyExercisePage", { exerciseName });
+      return;
+    }
+
     navigation.navigate("SocialPage");
   };
 
-  const renderNotification = ({ item }) => (
-    <TouchableOpacity
-      activeOpacity={0.85}
-      accessibilityRole="button"
-      accessibilityLabel={t("notifications.itemLabel", {
-        title: item.title,
-        body: item.body,
-      })}
-      accessibilityHint={
-        item.eventType === "lift_verification_requested"
-          ? t("notifications.hints.openVerification")
-          : t("notifications.hints.openActivity")
-      }
-      onPress={() => openNotification(item)}
-      style={[
-        styles.notificationCard,
-        {
-          backgroundColor: cardSurface,
-          borderColor: item.readAt ? cardBorder : secondaryColor,
-        },
-      ]}
-    >
-      <View style={styles.avatarSlot}>
-        <UserAvatar
-          uri={item.actor?.avatarUrl}
-          size={46}
-          backgroundColor={avatarSurface}
-          borderColor={cardBorder}
-          borderWidth={1}
-        />
-        <View
-          style={[
-            styles.avatarBadge,
-            {
-              backgroundColor: primaryColor,
-              borderColor: cardSurface,
-            },
-          ]}
-        >
-          <Bell width={11} height={11} color={theme.textInverted} />
-        </View>
-      </View>
+  const hintFor = (item) => {
+    if (item.eventType === LIFT_VERIFICATION_REQUESTED) {
+      return t("notifications.hints.openVerification");
+    }
 
-      <View style={styles.notificationCopy}>
-        <View style={styles.notificationTitleRow}>
-          <ThemedText
-            numberOfLines={1}
-            style={styles.notificationTitle}
-            setColor={titleColor}
+    return hiddenExerciseName(item)
+      ? t("notifications.hints.openExercise")
+      : t("notifications.hints.openActivity");
+  };
+
+  const renderNotification = ({ item }) => {
+    const { title, body } = describeNotification(item, t);
+
+    return (
+      <TouchableOpacity
+        activeOpacity={0.85}
+        accessibilityRole="button"
+        accessibilityLabel={t("notifications.itemLabel", { title, body })}
+        accessibilityHint={hintFor(item)}
+        onPress={() => openNotification(item)}
+        style={[
+          styles.notificationCard,
+          {
+            backgroundColor: cardSurface,
+            borderColor: item.readAt ? cardBorder : secondaryColor,
+          },
+        ]}
+      >
+        <View style={styles.avatarSlot}>
+          <UserAvatar
+            uri={item.actor?.avatarUrl}
+            size={46}
+            backgroundColor={avatarSurface}
+            borderColor={cardBorder}
+            borderWidth={1}
+          />
+          <View
+            style={[
+              styles.avatarBadge,
+              {
+                backgroundColor: primaryColor,
+                borderColor: cardSurface,
+              },
+            ]}
           >
-            {item.title}
-          </ThemedText>
-          {!item.readAt ? (
-            <View
-              accessibilityLabel={t("notifications.unread")}
-              style={[
-                styles.unreadDot,
-                { backgroundColor: secondaryColor },
-              ]}
-            />
-          ) : null}
+            <Bell width={11} height={11} color={theme.textInverted} />
+          </View>
         </View>
 
-        <ThemedText style={styles.notificationBody} setColor={quietText}>
-          {item.body}
-        </ThemedText>
-        <ThemedText style={styles.notificationTime} setColor={quietText}>
-          {formatTimeAgo(item.createdAt)}
-        </ThemedText>
-      </View>
-    </TouchableOpacity>
-  );
+        <View style={styles.notificationCopy}>
+          <View style={styles.notificationTitleRow}>
+            <ThemedText
+              numberOfLines={1}
+              style={styles.notificationTitle}
+              setColor={titleColor}
+            >
+              {title}
+            </ThemedText>
+            {!item.readAt ? (
+              <View
+                accessibilityLabel={t("notifications.unread")}
+                style={[
+                  styles.unreadDot,
+                  { backgroundColor: secondaryColor },
+                ]}
+              />
+            ) : null}
+          </View>
+
+          <ThemedText style={styles.notificationBody} setColor={quietText}>
+            {body}
+          </ThemedText>
+          <ThemedText style={styles.notificationTime} setColor={quietText}>
+            {formatTimeAgo(item.createdAt)}
+          </ThemedText>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   const emptyState = (
     <ThemedStateBlock

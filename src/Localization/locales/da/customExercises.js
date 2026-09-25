@@ -1,0 +1,118 @@
+// Øvelser folk har lavet og delt: Udforsks bibliotek og dets række, plus de
+// ord alle skærme om en delt øvelse bruger - mærkaterne, sorteringerne,
+// "{n} bruger". Hold i trit med ../en/customExercises.js.
+export default {
+  users: { one: "{value} bruger", other: "{value} bruger" },
+  you: "Dig",
+  yourGym: "dit center",
+  noVideo: "Ingen video",
+  equipment: {
+    barbell: "Stang",
+    dumbbell: "Håndvægte",
+    machine: "Maskine",
+    cable: "Kabel",
+    kettlebell: "Kettlebell",
+    band: "Elastik",
+    none: "Uden udstyr",
+    other: "Andet udstyr",
+  },
+  weightMode: {
+    total: "Samlet vægt",
+    perSide: "Pr. side",
+    bodyweight: "Kropsvægt",
+  },
+  sorts: {
+    popular: "Mest brugt",
+    newest: "Nyeste",
+    gym: "I dit center",
+    following: "Folk du følger",
+    video: "Har video",
+    saved: "Gemte",
+  },
+  // Linjen under hver sortering i sorteringsarket.
+  sortHints: {
+    popular: "Flest har tilføjet dem",
+    newest: "Senest delt først",
+    gym: "Det, folk i dit center bruger, først",
+    following: "Kun dem, folk du følger, har lavet",
+    video: "Kun øvelser med en video",
+    saved: "Dem, du har gemt til senere",
+  },
+  someone: "En FitVen-bruger",
+  // Læses op efter navnet, så de starter med lille.
+  madeBy: "lavet af {name}",
+  madeByYou: "lavet af dig",
+  withVideo: "med video",
+  videoSeconds: { one: "video på {value} sekund", other: "video på {value} sekunder" },
+  inYourExercises: "tilføjet til dine øvelser",
+  // "Tilføj" på et kort: en kopi i dine egne øvelser.
+  add: "Tilføj",
+  added: "Tilføjet",
+  addA11y: "Tilføj {name} til dine øvelser",
+  addedA11y: "{name} er i dine øvelser",
+  addedToast: "{name} er tilføjet til dine øvelser",
+  nameTaken: "Du har allerede en øvelse, der hedder “{name}”",
+  addFailed: "Øvelsen kunne ikke tilføjes. Prøv igen.",
+  // Udforsks bibliotek, skærm 1a.
+  library: {
+    searchPlaceholder: { one: "Søg blandt {value} øvelse", other: "Søg blandt {value} øvelser" },
+    searchFallback: "Søg i øvelser",
+    clearSearch: "Ryd søgningen",
+    sortEyebrow: "Sortér",
+    sortTitle: "Vis øvelserne efter",
+    sortA11y: "Sortér efter: {sort}",
+    filter: "Filter",
+    filterTitle: "Muskelgruppe",
+    filterA11y: "Muskelgruppe: {group}",
+    filterNoneA11y: "Filtrér efter muskelgruppe",
+    reset: "Nulstil",
+    resetFilter: "Nulstil filter",
+    resultCount: { one: "{value} øvelse", other: "{value} øvelser" },
+    resultCountInGroup: {
+      one: "{value} øvelse i {group}",
+      other: "{value} øvelser i {group}",
+    },
+    rowHint: "Åbner øvelsen",
+    chooseGym: {
+      title: "Vælg dit center",
+      body: "Så ser du først det, folk i dit center bruger.",
+    },
+    empty: {
+      title: "Vær den første til at dele en øvelse",
+      body: "Her finder du øvelser, som folk selv har lavet – med video og trin. Del en af dine, så andre kan tage den i brug.",
+      cta: "Del en af dine øvelser",
+      note: "Du vælger selv, hvad du deler. Dine sæt deles aldrig.",
+    },
+    noResults: {
+      query: "Ingen øvelser matcher “{query}”",
+      group: "Ingen øvelser i {group} endnu",
+      queryInGroup: "Ingen øvelser i {group} matcher “{query}”",
+      body: "Prøv et andet ord eller en anden muskelgruppe – eller nulstil filteret.",
+    },
+    saved: {
+      title: "Du har ikke gemt nogen øvelser endnu",
+      body: "Tryk på Gem på en øvelse, så venter den her, til du er klar til at prøve den.",
+    },
+    following: {
+      title: "Ingen, du følger, har delt en øvelse endnu",
+      body: "Når de gør, finder du dem her.",
+    },
+    video: {
+      title: "Ingen øvelser har en video endnu",
+      body: "Øvelser med et klip, der viser, hvordan de laves, samles her.",
+    },
+    nothing: {
+      title: "Ingen øvelser her endnu",
+      body: "Prøv en anden sortering, eller kig igen om lidt.",
+    },
+    showPopular: "Se de mest brugte",
+    loadFailed: "Øvelserne kunne ikke hentes",
+    loadFailedBody: "Tjek din forbindelse, og prøv igen.",
+    loadMoreFailed: "Kunne ikke hente flere",
+    refreshFailed: "Listen kunne ikke opdateres",
+    invite: {
+      title: "Har du selv lavet en øvelse?",
+      action: "Del den, så andre kan finde den",
+    },
+  },
+};
