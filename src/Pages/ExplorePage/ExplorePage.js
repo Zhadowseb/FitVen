@@ -1,14 +1,17 @@
 import { StatusBar } from "expo-status-bar";
 import { Image, Pressable, ScrollView, TouchableOpacity, View, useColorScheme } from "react-native";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { formatNumber, useTranslation } from "@localization";
 
 import styles from "./ExplorePageStyle";
 import { useAuth } from "@contexts/AuthContext";
 import { gymService, socialService } from "@services";
+import ChangeGymSheet from "@resources/Components/ChangeGymSheet/ChangeGymSheet";
 import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
+import Calender from "@resources/Icons/UI-icons/Calender";
 import ChevronRight from "@resources/Icons/UI-icons/ChevronRight";
+import Library from "@resources/Icons/UI-icons/Library";
 import MapPin from "@resources/Icons/UI-icons/MapPin";
 import Search from "@resources/Icons/UI-icons/Search";
 import Social from "@resources/Icons/UI-icons/Social";
@@ -21,6 +24,11 @@ import { getLastSeenOrStart, gymSeenKey, socialSeenKey } from "@utils/lastSeen";
 // What the page last showed, so a return to the tab paints it at once and
 // refreshes underneath - the tab is built again on every visit.
 let lastShown = null;
+
+// Programs and exercises shared by others do not exist yet: the tiles say so
+// with a zero until public programs and shared exercises are built.
+const PROGRAM_COUNT = 0;
+const SHARED_EXERCISE_COUNT = 0;
 
 const EMPTY = { gymCount: null, homeGym: null, gymRecords: null, newFollowers: 0 };
 
@@ -67,9 +75,9 @@ async function loadExplore(userId) {
 
 /**
  * Explore, the tab where you find things: centres and the records set in
- * them, and - through the button in the corner - the people you follow.
- * Programs, exercises made by others and knowledge join it later; until they
- * exist the page does not pretend they do.
+ * them, programs, exercises others have made, and - through the button in
+ * the corner - the people you follow. Programs and shared exercises are
+ * zero until they can be shared; knowledge and centre posts join later.
  */
 export default function ExplorePage() {
   const { t } = useTranslation();
@@ -79,22 +87,31 @@ export default function ExplorePage() {
   const isLight = colorScheme === "light";
   const { user } = useAuth();
   const [data, setData] = useState(lastShown ?? EMPTY);
+  const [isChangeGymOpen, setIsChangeGymOpen] = useState(false);
+  // Only the newest load may paint: a slow one from before a change of centre
+  // must not put the old centre back.
+  const loadIdRef = useRef(0);
+
+  const refresh = useCallback(() => {
+    const loadId = ++loadIdRef.current;
+
+    loadExplore(user?.id ?? null).then((next) => {
+      if (loadId === loadIdRef.current) {
+        lastShown = next;
+        setData(next);
+      }
+    });
+  }, [user?.id]);
 
   useFocusEffect(
     useCallback(() => {
-      let cancelled = false;
-
-      loadExplore(user?.id ?? null).then((next) => {
-        if (!cancelled) {
-          lastShown = next;
-          setData(next);
-        }
-      });
+      refresh();
 
       return () => {
-        cancelled = true;
+        // Leaving the screen: whatever is still loading is not painted.
+        loadIdRef.current += 1;
       };
-    }, [user?.id])
+    }, [refresh])
   );
 
   const { gymCount, homeGym, gymRecords, newFollowers } = data;
@@ -201,33 +218,61 @@ export default function ExplorePage() {
           </ThemedText>
         </Pressable>
 
-        {/* The ways in. */}
+        {/* The ways in, two by two. */}
         <View style={styles.tiles}>
-          {tile({
-            key: "gyms",
-            label: t("explore.tiles.gyms"),
-            detail:
-              gymCount === null
-                ? t("explore.tiles.gymsSub")
-                : t("explore.tiles.gymsCount", { count: gymCount, value: formatNumber(gymCount) }),
-            icon: <MapPin width={18} height={18} color={theme.primaryText} thickness={2} />,
-            tone: theme.primary,
-            onPress: () => navigation.navigate("GymsPage"),
-          })}
-          {tile({
-            key: "records",
-            label: t("explore.tiles.records"),
-            detail: t("explore.tiles.recordsSub"),
-            icon: <Star width={18} height={18} color={theme.record} filled />,
-            tone: theme.record,
-            onPress: () => navigation.navigate("NationalExerciseLeaderboardPage"),
-          })}
+          <View style={styles.tileRow}>
+            {tile({
+              key: "gyms",
+              label: t("explore.tiles.gyms"),
+              detail:
+                gymCount === null
+                  ? t("explore.tiles.gymsSub")
+                  : t("explore.tiles.gymsCount", { count: gymCount, value: formatNumber(gymCount) }),
+              icon: <MapPin width={18} height={18} color={theme.primaryText} thickness={2} />,
+              tone: theme.primary,
+              onPress: () => navigation.navigate("GymsPage"),
+            })}
+            {tile({
+              key: "programs",
+              label: t("explore.tiles.programs"),
+              detail: t("explore.tiles.programsCount", {
+                count: PROGRAM_COUNT,
+                value: formatNumber(PROGRAM_COUNT),
+              }),
+              icon: <Calender width={18} height={18} color={theme.secondary} thickness={1.6} />,
+              tone: theme.secondary,
+              onPress: () => navigation.navigate("ProgramsBrowsePage"),
+            })}
+          </View>
+          <View style={styles.tileRow}>
+            {tile({
+              key: "exercises",
+              label: t("explore.tiles.exercises"),
+              detail: t("explore.tiles.exercisesCount", {
+                count: SHARED_EXERCISE_COUNT,
+                value: formatNumber(SHARED_EXERCISE_COUNT),
+              }),
+              icon: <Library width={18} height={18} color={theme.music} thickness={1.6} />,
+              tone: theme.music,
+              onPress: () => navigation.navigate("CustomExercisesPage"),
+            })}
+            {tile({
+              key: "records",
+              label: t("explore.tiles.records"),
+              detail: t("explore.tiles.recordsSub"),
+              icon: <Star width={18} height={18} color={theme.record} filled />,
+              tone: theme.record,
+              onPress: () => navigation.navigate("NationalExerciseLeaderboardPage"),
+            })}
+          </View>
         </View>
 
         {/* Your centre: what happened there since you last looked. */}
         {homeGym ? (
           <>
-            {sectionHead(t("explore.sections.yourGym"), t("explore.sections.open"), openGym)}
+            {sectionHead(t("explore.sections.yourGym"), t("explore.sections.change"), () =>
+              setIsChangeGymOpen(true)
+            )}
 
             <View
               style={[
@@ -325,7 +370,7 @@ export default function ExplorePage() {
             <TouchableOpacity
               activeOpacity={0.85}
               accessibilityRole="button"
-              onPress={() => navigation.navigate("GymsPage")}
+              onPress={() => setIsChangeGymOpen(true)}
               style={[styles.pickGym, { backgroundColor: card, borderColor: cardBorder }]}
             >
               <View style={[styles.tileIcon, { backgroundColor: withAlpha(theme.primary, isLight ? 0.12 : 0.14) }]}>
@@ -344,6 +389,15 @@ export default function ExplorePage() {
           </>
         )}
       </ScrollView>
+
+      {/* Your centre, set by hand - or back to the one you train in most. */}
+      <ChangeGymSheet
+        visible={isChangeGymOpen}
+        onClose={() => setIsChangeGymOpen(false)}
+        currentHomeGymId={homeGym?.id ?? null}
+        isAutomatic={false}
+        onChanged={refresh}
+      />
 
       <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
     </ThemedView>

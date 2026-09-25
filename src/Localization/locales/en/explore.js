@@ -9,12 +9,26 @@ export default {
     gyms: "Centres",
     gymsSub: "Find your centre",
     gymsCount: { one: "{value} in Denmark", other: "{value} in Denmark" },
+    programs: "Programs",
+    programsCount: { one: "{value} to choose from", other: "{value} to choose from" },
+    exercises: "Exercises",
+    exercisesCount: { one: "{value} from users", other: "{value} from users" },
     records: "Records",
     recordsSub: "Denmark's top 100",
   },
+  programs: {
+    title: "Programs",
+    emptyTitle: "No programs to choose from yet",
+    emptyBody: "Hand-picked programs will be here to follow as they are.",
+  },
+  customExercises: {
+    title: "Exercises others have made",
+    emptyTitle: "No shared exercises yet",
+    emptyBody: "When people share the exercises they have made, you can find them and add them to your own here.",
+  },
   sections: {
     yourGym: "Your centre",
-    open: "Open",
+    change: "Change",
   },
   yourGym: {
     newRecords: { one: "{value} new record", other: "{value} new records" },

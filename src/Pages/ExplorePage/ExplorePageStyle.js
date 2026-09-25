@@ -55,7 +55,8 @@ export default StyleSheet.create({
   searchPlaceholder: { flex: 1, fontSize: 13.5, fontWeight: "600" },
 
   // Tiles
-  tiles: { flexDirection: "row", gap: 8, marginTop: 14, marginHorizontal: 20 },
+  tiles: { gap: 8, marginTop: 14, marginHorizontal: 20 },
+  tileRow: { flexDirection: "row", gap: 8 },
   tile: {
     flex: 1,
     minHeight: 88,

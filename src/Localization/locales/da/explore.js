@@ -9,12 +9,26 @@ export default {
     gyms: "Centre",
     gymsSub: "Find dit center",
     gymsCount: { one: "{value} i Danmark", other: "{value} i Danmark" },
+    programs: "Programmer",
+    programsCount: { one: "{value} at vælge imellem", other: "{value} at vælge imellem" },
+    exercises: "Øvelser",
+    exercisesCount: { one: "{value} fra brugere", other: "{value} fra brugere" },
     records: "Rekorder",
     recordsSub: "Danmarks top 100",
   },
+  programs: {
+    title: "Programmer",
+    emptyTitle: "Ingen programmer at vælge imellem endnu",
+    emptyBody: "Udvalgte programmer kommer her, så du kan følge dem, som de er.",
+  },
+  customExercises: {
+    title: "Øvelser andre har lavet",
+    emptyTitle: "Ingen delte øvelser endnu",
+    emptyBody: "Når folk deler de øvelser, de selv har lavet, kan du finde dem her og tilføje dem til dine egne.",
+  },
   sections: {
     yourGym: "Dit center",
-    open: "Åbn",
+    change: "Skift",
   },
   yourGym: {
     newRecords: { one: "{value} ny rekord", other: "{value} nye rekorder" },

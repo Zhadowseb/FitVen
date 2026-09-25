@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { useTranslation } from "@localization";
 
-import styles from "../GymLeaderboardPageStyle";
+import styles from "./ChangeGymSheetStyle";
 import { useAuth } from "@contexts/AuthContext";
 import { gymService } from "@services";
 import { useGymSearch } from "@resources/Components/useGymSearch";
@@ -23,7 +23,8 @@ import { getChainInitials } from "@utils/gymUtils";
 /**
  * "Change centre": the centres the viewer has trained in (most often first),
  * then a search over every centre. Choosing one writes home_gym_id;
- * "Automatic" clears it so the most-trained-in centre wins again.
+ * "Automatic" clears it so the most-trained-in centre wins again. Opened from
+ * a centre's own page and from "Your centre" on Explore.
  */
 export default function ChangeGymSheet({ visible, onClose, currentHomeGymId, isAutomatic, onChanged }) {
   const colorScheme = useColorScheme();

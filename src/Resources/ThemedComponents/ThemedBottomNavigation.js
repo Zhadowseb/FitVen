@@ -102,6 +102,8 @@ const PROFILE_ROUTES = new Set([
 const EXPLORE_ROUTES = new Set([
   "ExplorePage",
   "ExploreSearchPage",
+  "ProgramsBrowsePage",
+  "CustomExercisesPage",
   "SocialPage",
   "SocialUserListPage",
   "GymsPage",

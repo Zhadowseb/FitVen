@@ -11,7 +11,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "@localization";
 
 import styles, { HERO_HEIGHT } from "./GymLeaderboardPageStyle";
-import ChangeGymSheet from "./Components/ChangeGymSheet";
+import ChangeGymSheet from "@resources/Components/ChangeGymSheet/ChangeGymSheet";
 import { useAuth } from "@contexts/AuthContext";
 import { gymService } from "@services";
 import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
