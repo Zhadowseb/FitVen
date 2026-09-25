@@ -16,7 +16,6 @@ import { Colors } from "../../Resources/GlobalStyling/colors";
 import TailArrowUpRight from "../../Resources/Icons/UI-icons/TailArrowUpRight";
 import { useAuth } from "../../Contexts/AuthContext";
 import { socialService } from "../../Services";
-import { markSeen, socialSeenKey } from "../../Utils/lastSeen";
 import {
   ThemedButton,
   ThemedConfirmModal,
@@ -57,9 +56,8 @@ const RELATIONSHIP_COPY = {
 
 /**
  * Social: who follows you and whom you follow, the lists behind both with
- * block and report, and the way to find people. Reached from the button on
- * Explore, which counts the followers that are new since the last visit
- * here - so opening this page is what marks them seen.
+ * block and report, and the way to find people. Reached from the counts on
+ * your profile and from Home's friends strip.
  */
 const SocialPage = () => {
   const { t } = useTranslation();
@@ -114,12 +112,7 @@ const SocialPage = () => {
   useFocusEffect(
     useCallback(() => {
       loadFollowCounts();
-
-      // Explore's badge counts followers since this moment.
-      if (user?.id) {
-        markSeen(socialSeenKey(user.id));
-      }
-    }, [loadFollowCounts, user?.id]),
+    }, [loadFollowCounts]),
   );
 
   const handleOpenUserList = () => {
