@@ -21,6 +21,9 @@ import settings from "./settings";
 import social from "./social";
 import statistics from "./statistics";
 import time from "./time";
+import train from "./train";
+import trainCalendar from "./trainCalendar";
+import trainLibrary from "./trainLibrary";
 import workout from "./workout";
 import workoutStart from "./workoutStart";
 
@@ -45,6 +48,9 @@ export default {
   social,
   statistics,
   time,
+  train,
+  trainCalendar,
+  trainLibrary,
   workout,
   workoutStart,
 };

@@ -68,6 +68,7 @@ behind by accident.
 | `20260924090000_a-friend-can-see-a-record-was-set-today.sql` | yes |
 | `20260925100000_explore-counts-your-centres-new-records.sql` | no |
 | `20260925110000_a-post-knows-its-centre.sql` | no |
+| `20260926090000_your-split-follows-you.sql` | no |
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
 centre match, per-centre lift leaderboards with video verification, and what
@@ -331,6 +332,11 @@ step with the workout by two triggers and filled in once for the posts that
 exist, so a card can say where and Explore can show posts from your centres.
 Without it the app shows posts without a centre and no centre posts; nothing
 else changes.
+
+`20260926090000_your-split-follows-you.sql` has not been run yet. It gives
+`profile_private` a `split_names` column - the two to six sessions somebody
+chose as their split on the Train tab, by name - so the choice follows them to
+a new phone. Without it the choice is kept on the phone only.
 
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to

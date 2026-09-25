@@ -40,9 +40,22 @@ import {
   ThemedModal,
   ThemedView,
 } from "../../Resources/ThemedComponents";
-import { parseCustomDate } from "../../Utils/dateUtils";
+import { addDays, parseCustomDate } from "../../Utils/dateUtils";
 import { isWorkoutComingSoon } from "../../Utils/workoutTypeAvailability";
 import { requestOpenQuickWorkoutMenu } from "../../Utils/quickWorkoutMenuEvents";
+import {
+  WEEKDAY_LABELS,
+  buildCalendarLookups,
+  enrichCalendarDay,
+  formatIsoDate,
+  formatLocalDate,
+  getMondayWeekdayIndex,
+  getWeekPage,
+  getWorkoutIconLabel,
+  getWorkoutType,
+  isProgramDaySick,
+  startOfDay,
+} from "@utils/calendarDays";
 
 const ADJACENT_MONTH_COUNT = 1;
 const INITIAL_VISIBLE_MONTH_OFFSET = 0;
@@ -62,9 +75,6 @@ const MONTH_KEYS = [
   "nov",
   "dec",
 ];
-// Weekday codes: passed on as the day of a new workout, so they stay English.
-// What is shown goes through calendar.weekdays / home.weekdays.
-const WEEKDAY_LABELS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 const CALENDAR_VIEWS = [
   { value: "block", labelKey: "calendar.views.block" },
   { value: "week", labelKey: "calendar.views.week" },
@@ -89,39 +99,9 @@ function getShortMonthName(monthIndex, t) {
   return t(`calendar.monthsShort.${MONTH_KEYS[monthIndex]}`);
 }
 
-function padDatePart(value) {
-  return String(value).padStart(2, "0");
-}
-
-function startOfDay(date) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-}
-
-function addDays(date, days) {
-  const nextDate = new Date(date);
-  nextDate.setDate(nextDate.getDate() + days);
-  return nextDate;
-}
-
-function formatLocalDate(date) {
-  return `${padDatePart(date.getDate())}.${padDatePart(
-    date.getMonth() + 1
-  )}.${date.getFullYear()}`;
-}
-
-function formatIsoDate(date) {
-  return `${date.getFullYear()}-${padDatePart(date.getMonth() + 1)}-${padDatePart(
-    date.getDate()
-  )}`;
-}
-
-function parseIsoDateLocal(isoDate) {
-  const [year, month, day] = String(isoDate).split("-").map(Number);
-  return new Date(year, month - 1, day);
-}
-
+// "2026-09".
 function getMonthKey(date) {
-  return `${date.getFullYear()}-${padDatePart(date.getMonth() + 1)}`;
+  return formatIsoDate(date).slice(0, 7);
 }
 
 function getMonthTitle(date, t) {
@@ -130,12 +110,6 @@ function getMonthTitle(date, t) {
     year: date.getFullYear(),
   });
 }
-
-function getMondayWeekdayIndex(date) {
-  return (date.getDay() + 6) % 7;
-}
-
-
 
 function getMonthPage(baseDate, monthOffset) {
   const monthDate = new Date(
@@ -177,30 +151,6 @@ function getMonthPage(baseDate, monthOffset) {
   };
 }
 
-/** The seven days of one week, `weekOffset` weeks from the week holding today. */
-function getWeekPage(baseDate, weekOffset) {
-  const monday = addDays(
-    startOfDay(baseDate),
-    -getMondayWeekdayIndex(baseDate) + weekOffset * 7
-  );
-
-  return {
-    key: formatIsoDate(monday),
-    weekOffset,
-    days: Array.from({ length: 7 }, (_, index) => {
-      const date = addDays(monday, index);
-
-      return {
-        date,
-        dateLabel: formatLocalDate(date),
-        isoDate: formatIsoDate(date),
-        inMonth: true,
-        label: WEEKDAY_LABELS[index],
-      };
-    }),
-  };
-}
-
 /**
  * Which month a week belongs to, counted from today's month. A week that
  * straddles two months belongs to the one holding its Thursday, the way an ISO
@@ -234,30 +184,15 @@ function hasCalendarRange(range) {
   return Boolean(range?.startIsoDate && range?.endIsoDate);
 }
 
-function getWorkoutType(workout) {
-  return workout?.workout_type ?? workout?.label ?? "Resistance";
-}
+// A workout card's icon and short name, for enrichCalendarDay. Passed in so
+// Utils/calendarDays.js never imports the SVG icons and can run in plain Node.
+function getWorkoutTypeIcon(workoutType) {
+  const iconConfig = getWorkoutIconConfig(workoutType);
 
-function getWorkoutIconLabel(workout) {
-  const label = workout?.label ?? workout?.workout_type ?? "WO";
-  const words = String(label)
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean);
-
-  if (words.length >= 2) {
-    return `${words[0][0]}${words[1][0]}`.toUpperCase();
-  }
-
-  return String(label).slice(0, 2).toUpperCase();
-}
-
-function isProgramDaySick(programDay) {
-  return (
-    programDay?.is_sick === true ||
-    programDay?.is_sick === "true" ||
-    Number(programDay?.is_sick) === 1
-  );
+  return {
+    icon: iconConfig?.Icon,
+    iconLabel: getWorkoutIconShortLabel(iconConfig),
+  };
 }
 
 function getProgramDayLocation(programDay, t) {
@@ -396,94 +331,25 @@ const WorkoutCalendarPage = () => {
     }),
     [monthPages]
   );
-  const workoutsByDate = useMemo(() => {
-    const nextWorkoutsByDate = new Map();
-
-    for (const workout of workouts) {
-      const date = workout?.date;
-
-      if (!date) {
-        continue;
-      }
-
-      const dateWorkouts = nextWorkoutsByDate.get(date) ?? [];
-      dateWorkouts.push(workout);
-      nextWorkoutsByDate.set(date, dateWorkouts);
-    }
-
-    return nextWorkoutsByDate;
-  }, [workouts]);
-  const programsByDate = useMemo(() => {
-    const nextProgramsByDate = new Map();
-
-    for (const programDay of programDays) {
-      const date = programDay?.date;
-
-      if (!date) {
-        continue;
-      }
-
-      const datePrograms = nextProgramsByDate.get(date) ?? [];
-      if (
-        !datePrograms.some(
-          (dateProgram) => dateProgram.program_id === programDay.program_id
-        )
-      ) {
-        datePrograms.push(programDay);
-      }
-      nextProgramsByDate.set(date, datePrograms);
-    }
-
-    return nextProgramsByDate;
-  }, [programDays]);
-  const programDates = useMemo(
-    () => new Set(programsByDate.keys()),
-    [programsByDate]
+  const calendarLookups = useMemo(
+    () =>
+      buildCalendarLookups({
+        workouts,
+        programDays,
+        sicknessPeriods,
+        startIsoDate: calendarRange.startIsoDate,
+        endIsoDate: calendarRange.endIsoDate,
+      }),
+    [
+      calendarRange.endIsoDate,
+      calendarRange.startIsoDate,
+      programDays,
+      sicknessPeriods,
+      workouts,
+    ]
   );
-  const sickDates = useMemo(() => {
-    const nextSickDates = new Set();
-
-    if (!calendarRange.startIsoDate || !calendarRange.endIsoDate) {
-      return nextSickDates;
-    }
-
-    const calendarStartDate = startOfDay(
-      parseIsoDateLocal(calendarRange.startIsoDate)
-    );
-    const calendarEndDate = startOfDay(
-      parseIsoDateLocal(calendarRange.endIsoDate)
-    );
-
-    for (const sicknessPeriod of sicknessPeriods) {
-      if (!sicknessPeriod?.start_date) {
-        continue;
-      }
-
-      let cursor = startOfDay(parseCustomDate(sicknessPeriod.start_date));
-      let sicknessEndDate = sicknessPeriod.end_date
-        ? startOfDay(parseCustomDate(sicknessPeriod.end_date))
-        : calendarEndDate;
-
-      if (sicknessEndDate < calendarStartDate || cursor > calendarEndDate) {
-        continue;
-      }
-
-      if (cursor < calendarStartDate) {
-        cursor = calendarStartDate;
-      }
-
-      if (sicknessEndDate > calendarEndDate) {
-        sicknessEndDate = calendarEndDate;
-      }
-
-      while (cursor <= sicknessEndDate) {
-        nextSickDates.add(formatLocalDate(cursor));
-        cursor = addDays(cursor, 1);
-      }
-    }
-
-    return nextSickDates;
-  }, [calendarRange.endIsoDate, calendarRange.startIsoDate, sicknessPeriods]);
+  const { workoutsByDate, programsByDate, programDates, sickDates } =
+    calendarLookups;
   const visibleMonth = monthPages[visibleMonthIndex] ?? monthPages[0];
   const visibleMonthRange = useMemo(
     () => ({
@@ -507,31 +373,12 @@ const WorkoutCalendarPage = () => {
 
   // One routine for both views: the calendar's lookups turned into the day
   // shape the grid and the week rows both read.
-  const enrichDay = (day, pageKey) => {
-    const dayWorkouts = workoutsByDate.get(day.dateLabel) ?? [];
-    const dayProgramRows = programsByDate.get(day.dateLabel) ?? [];
-
-    return {
-      ...day,
-      microcycleId: pageKey,
-      active: day.dateLabel === todayLabel,
-      hasProgram: programDates.has(day.dateLabel),
-      isSick:
-        sickDates.has(day.dateLabel) || dayProgramRows.some(isProgramDaySick),
-      workouts: dayWorkouts,
-      workoutCards: dayWorkouts.map((workout) => {
-        const iconConfig = getWorkoutIconConfig(getWorkoutType(workout));
-
-        return {
-          key: workout.workout_id,
-          workout,
-          icon: iconConfig?.Icon,
-          iconLabel: getWorkoutIconShortLabel(iconConfig) ?? getWorkoutIconLabel(workout),
-          completed: Number(workout.done) === 1,
-        };
-      }),
-    };
-  };
+  const enrichDay = (day, pageKey) =>
+    enrichCalendarDay(day, calendarLookups, {
+      pageKey,
+      todayLabel,
+      iconFor: getWorkoutTypeIcon,
+    });
 
   const buildMonthWeeks = (monthPage) =>
     (monthPage?.weeks ?? []).map((week) => ({

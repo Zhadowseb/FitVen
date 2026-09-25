@@ -246,6 +246,8 @@ export default {
     startDetail: "Kopiér den til i dag og åbn den med det samme.",
     plan: "Planlæg",
     planDetail: "Vælg program, blok, uge og dag.",
+    planOnDate: "Planlæg på en dato",
+    planOnDateDetail: "Læg den i kalenderen på en dag, du vælger",
     empty: "Der er intet at vælge her.",
   },
   pick: {

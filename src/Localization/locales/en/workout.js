@@ -246,6 +246,8 @@ export default {
     startDetail: "Copy it to today and open it right away.",
     plan: "Plan",
     planDetail: "Pick a program, block, week and day.",
+    planOnDate: "Plan on a date",
+    planOnDateDetail: "Put it in the calendar on a day of your choice",
     empty: "Nothing to choose from here.",
   },
   pick: {
