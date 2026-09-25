@@ -115,6 +115,15 @@ export default function CenterPostsPage() {
     [likeBusyId, user]
   );
 
+  const openAuthor = useCallback(
+    (post) => {
+      if (post?.author?.id) {
+        navigation.navigate("PublicProfilePage", { userId: post.author.id });
+      }
+    },
+    [navigation]
+  );
+
   const header = (
     <View style={styles.header}>
       <TouchableOpacity
@@ -155,6 +164,7 @@ export default function CenterPostsPage() {
               post={item}
               onToggleLike={toggleLike}
               onOpenOptions={setReportingPost}
+              onOpenAuthor={openAuthor}
               isLikeBusy={likeBusyId === item.id}
             />
           )}

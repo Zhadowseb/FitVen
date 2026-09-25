@@ -118,6 +118,8 @@ export default function WorkoutSummaryCard({
   onShare,
   onPost,
   onManage,
+  // The author's picture and name open their profile when this is given.
+  onOpenAuthor,
   isLikeBusy = false,
   isPostBusy = false,
   showPostedState = false,
@@ -173,6 +175,18 @@ export default function WorkoutSummaryCard({
   const barTrack = withAlpha(titleColor, colorScheme === "dark" ? 0.055 : 0.07);
   const glowColor = prCount > 0 ? gold : accent;
   const likeColor = post?.isLiked ? accent : quietText;
+  // The picture and the lines beside it are one target, so a thumb aimed at
+  // the name does not have to find a 15 pt line of text.
+  const canOpenAuthor = Boolean(onOpenAuthor) && Boolean(post?.author?.id);
+  const AuthorArea = canOpenAuthor ? TouchableOpacity : View;
+  const authorAreaProps = canOpenAuthor
+    ? {
+        activeOpacity: 0.75,
+        accessibilityRole: "button",
+        accessibilityHint: t("publicProfile.opensProfile"),
+        onPress: () => onOpenAuthor(post),
+      }
+    : {};
 
   return (
     <View style={styles.cardWrapper}>
@@ -191,55 +205,57 @@ export default function WorkoutSummaryCard({
 
         <View style={styles.header}>
           <View style={styles.headerRow}>
-            <UserAvatar
-              uri={post.author?.avatarUrl}
-              size={42}
-              iconSize={21}
-              iconColor={accent}
-              borderColor={accent}
-              borderWidth={2}
-            />
+            <AuthorArea style={styles.authorArea} {...authorAreaProps}>
+              <UserAvatar
+                uri={post.author?.avatarUrl}
+                size={42}
+                iconSize={21}
+                iconColor={accent}
+                borderColor={accent}
+                borderWidth={2}
+              />
 
-            <View style={styles.headerCopy}>
-              <ThemedText
-                style={styles.authorName}
-                setColor={titleColor}
-                numberOfLines={1}
-              >
-                {authorName}
-              </ThemedText>
+              <View style={styles.headerCopy}>
+                <ThemedText
+                  style={styles.authorName}
+                  setColor={titleColor}
+                  numberOfLines={1}
+                >
+                  {authorName}
+                </ThemedText>
 
-              <View style={styles.metaRow}>
-                {createdAtLabel ? (
-                  <ThemedText style={styles.metaText} setColor={quietText}>
-                    {createdAtLabel}
-                  </ThemedText>
-                ) : null}
-
-                {workoutType ? (
-                  <>
-                    {createdAtLabel ? (
-                      <View
-                        style={[styles.metaDot, { backgroundColor: quietText }]}
-                      />
-                    ) : null}
-                    <ThemedText style={styles.workoutType} setColor={accent}>
-                      {workoutType}
+                <View style={styles.metaRow}>
+                  {createdAtLabel ? (
+                    <ThemedText style={styles.metaText} setColor={quietText}>
+                      {createdAtLabel}
                     </ThemedText>
-                  </>
+                  ) : null}
+
+                  {workoutType ? (
+                    <>
+                      {createdAtLabel ? (
+                        <View
+                          style={[styles.metaDot, { backgroundColor: quietText }]}
+                        />
+                      ) : null}
+                      <ThemedText style={styles.workoutType} setColor={accent}>
+                        {workoutType}
+                      </ThemedText>
+                    </>
+                  ) : null}
+                </View>
+
+                {/* Where the workout was done, when it was matched to a centre. */}
+                {post?.gym?.shortName ? (
+                  <View style={styles.gymRow}>
+                    <MapPin width={11} height={11} color={quietText} thickness={2.4} />
+                    <ThemedText style={styles.gymText} setColor={quietText} numberOfLines={1}>
+                      {post.gym.shortName}
+                    </ThemedText>
+                  </View>
                 ) : null}
               </View>
-
-              {/* Where the workout was done, when it was matched to a centre. */}
-              {post?.gym?.shortName ? (
-                <View style={styles.gymRow}>
-                  <MapPin width={11} height={11} color={quietText} thickness={2.4} />
-                  <ThemedText style={styles.gymText} setColor={quietText} numberOfLines={1}>
-                    {post.gym.shortName}
-                  </ThemedText>
-                </View>
-              ) : null}
-            </View>
+            </AuthorArea>
 
             {onOpenOptions ? (
               <TouchableOpacity

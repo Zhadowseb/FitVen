@@ -58,8 +58,9 @@ export const Colors = {
         spider: "#07080B",
 
         // Music is purple on purpose: it must not be mistaken for a status
-        // (orange live, green done, yellow planned). Used only by the band on
-        // the Friends activity tiles, and it does not follow the accent.
+        // (orange live, green done, yellow planned). The band on the Friends
+        // activity tiles, and the colour exercises wear on Train and Explore;
+        // it does not follow the accent.
         music: "#B48CFF",
         musicText: "#F2EBFF",
         musicBandFrom: "rgba(180, 140, 255, 0.45)",

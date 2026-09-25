@@ -6,6 +6,7 @@ import {
   View,
   useColorScheme,
 } from "react-native";
+import { useRoute } from "@react-navigation/native";
 import { useTranslation } from "@localization";
 
 import styles from "./OneRepMaxCalculatorPageStyle";
@@ -35,13 +36,51 @@ function parseDecimal(value) {
   return Number.isFinite(parsedValue) ? parsedValue : null;
 }
 
+/**
+ * A set to open on, from the route: `weight`, `reps` and, optionally,
+ * `exerciseName` - the Train tab's 1RM tool passes its best set of the last
+ * thirty days. The form starts filled in and already worked out, so the
+ * number on the tile is the number on this screen. A set the form itself
+ * would refuse is ignored, and the calculator starts empty as it always has.
+ */
+function readPrefilledSet(params) {
+  const weight = Number(params?.weight);
+  const reps = Number(params?.reps);
+
+  if (
+    !Number.isFinite(weight) ||
+    weight <= 0 ||
+    !Number.isInteger(reps) ||
+    reps < 1 ||
+    reps > MAX_ESTIMATE_REPS
+  ) {
+    return null;
+  }
+
+  const exerciseName =
+    typeof params?.exerciseName === "string" ? params.exerciseName.trim() : "";
+
+  return {
+    weight: String(weight),
+    reps: String(reps),
+    exerciseName: exerciseName || null,
+    estimate: roundToNearestWeightIncrement(calculateBrzyckiOneRepMax(weight, reps)),
+  };
+}
+
 export default function OneRepMaxCalculatorPage() {
   const { t } = useTranslation();
+  const route = useRoute();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
-  const [weight, setWeight] = useState("");
-  const [reps, setReps] = useState("");
-  const [estimatedOneRepMax, setEstimatedOneRepMax] = useState(null);
+  // Read once, when the screen opens: after that the form is the user's.
+  const [prefilledSet] = useState(() => readPrefilledSet(route.params));
+  const [weight, setWeight] = useState(prefilledSet?.weight ?? "");
+  const [reps, setReps] = useState(prefilledSet?.reps ?? "");
+  const [exerciseName, setExerciseName] = useState(prefilledSet?.exerciseName ?? null);
+  const [estimatedOneRepMax, setEstimatedOneRepMax] = useState(
+    prefilledSet?.estimate ?? null
+  );
   const [errors, setErrors] = useState({});
 
   const primaryColor = theme.primary;
@@ -91,6 +130,7 @@ export default function OneRepMaxCalculatorPage() {
   const reset = () => {
     setWeight("");
     setReps("");
+    setExerciseName(null);
     setEstimatedOneRepMax(null);
     setErrors({});
   };
@@ -131,6 +171,16 @@ export default function OneRepMaxCalculatorPage() {
             },
           ]}
         >
+          {exerciseName ? (
+            <ThemedText
+              style={styles.exerciseName}
+              setColor={titleColor}
+              numberOfLines={1}
+            >
+              {exerciseName}
+            </ThemedText>
+          ) : null}
+
           <View style={styles.inputRow}>
             <View style={styles.inputColumn}>
               <ThemedText style={styles.inputLabel} setColor={quietText}>
@@ -295,7 +345,7 @@ export default function OneRepMaxCalculatorPage() {
           </ThemedText>
         </View>
 
-        {(weight || reps || estimatedOneRepMax !== null) && (
+        {(weight || reps || exerciseName || estimatedOneRepMax !== null) && (
           <TouchableOpacity
             activeOpacity={0.82}
             onPress={reset}

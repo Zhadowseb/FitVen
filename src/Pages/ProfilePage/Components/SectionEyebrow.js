@@ -3,14 +3,18 @@ import { StyleSheet, useColorScheme } from "react-native";
 import { Colors } from "../../../Resources/GlobalStyling/colors";
 import ThemedText from "../../../Resources/ThemedComponents/ThemedText";
 
-// Shared-pattern section eyebrow (12px/800/ls1.4/uppercase/text) sitting above
-// each card. Kept local to ProfilePage per file-ownership scope.
+// The small uppercase heading over each section on Profile (10/800, ls 1.8,
+// quietText). The gap to the card under it belongs to the section.
 export default function SectionEyebrow({ children }) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
 
   return (
-    <ThemedText size={12} style={styles.eyebrow} setColor={theme.text}>
+    <ThemedText
+      style={styles.eyebrow}
+      setColor={theme.quietText}
+      accessibilityRole="header"
+    >
       {children}
     </ThemedText>
   );
@@ -18,8 +22,10 @@ export default function SectionEyebrow({ children }) {
 
 const styles = StyleSheet.create({
   eyebrow: {
+    fontSize: 10,
+    lineHeight: 13,
     fontWeight: "800",
-    letterSpacing: 1.4,
+    letterSpacing: 1.8,
     textTransform: "uppercase",
   },
 });

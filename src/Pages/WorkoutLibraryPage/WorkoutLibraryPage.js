@@ -659,37 +659,12 @@ const WorkoutLibraryPage = () => {
     setIsRepeating(true);
 
     try {
-      const today = getTodaysDate();
-      const programTargets = await programService.getWorkoutCopyProgramTargets(
-        db,
-        { date: today }
-      );
-      const target = programTargets[0] ?? null;
-      let copiedWorkout = null;
-
-      if (target?.day_id) {
-        const copiedWorkoutId = await programService.copyWorkoutToProgramDay(db, {
-          workoutId: repeatWorkout.workout_id,
-          dayId: target.day_id,
-          date: target.date,
-        });
-
-        copiedWorkout = copiedWorkoutId
-          ? {
-              workout_id: copiedWorkoutId,
-              workout_label: repeatWorkout.label,
-              workout_type: repeatWorkout.workout_type,
-              day: target.weekday,
-              date: target.date,
-              program_id: target.program_id,
-            }
-          : null;
-      } else {
-        copiedWorkout = await programService.copyWorkoutToStandaloneDate(db, {
-          workoutId: repeatWorkout.workout_id,
-          date: today,
-        });
-      }
+      const copiedWorkout = await programService.repeatWorkoutToday(db, {
+        workoutId: repeatWorkout.workout_id,
+        label: repeatWorkout.label,
+        workoutType: repeatWorkout.workout_type,
+        date: getTodaysDate(),
+      });
 
       if (!copiedWorkout) {
         throw new Error("The workout could not be copied.");

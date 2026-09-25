@@ -3,8 +3,6 @@
 export default {
   title: "Udforsk",
   searchPlaceholder: "Søg centre og personer",
-  openSocial: "Følgere og venner",
-  openSocialNew: { one: "Følgere og venner, {count} ny følger", other: "Følgere og venner, {count} nye følgere" },
   tiles: {
     gyms: "Centre",
     gymsSub: "Find dit center",
@@ -47,7 +45,21 @@ export default {
     pickDetail: "Se dets rekorder, og hvem der træner der",
   },
   search: {
-    hint: "Skriv mindst to bogstaver for at søge i centre og personer.",
+    hint: {
+      all: "Skriv mindst to bogstaver for at søge i centre og personer.",
+      gyms: "Skriv mindst to bogstaver for at søge i centre.",
+      people: "Skriv mindst to bogstaver for at søge efter personer.",
+    },
+    placeholder: {
+      all: "Søg centre og personer",
+      gyms: "Søg centre",
+      people: "Søg personer",
+    },
+    scope: {
+      all: "Begge",
+      gyms: "Centre",
+      people: "Personer",
+    },
     failed: "Søgningen gik ikke igennem. Prøv igen om lidt.",
     nothing: "Intet fundet for “{query}”.",
     clear: "Ryd søgningen",

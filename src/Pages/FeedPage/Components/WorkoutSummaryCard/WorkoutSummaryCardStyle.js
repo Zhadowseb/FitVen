@@ -30,6 +30,15 @@ export default StyleSheet.create({
     gap: 11,
   },
 
+  // The avatar and the lines beside it, which open the author's profile.
+  authorArea: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 11,
+  },
+
   headerCopy: {
     flex: 1,
     minWidth: 0,

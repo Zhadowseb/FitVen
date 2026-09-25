@@ -47,7 +47,9 @@ This file applies to everything inside `src/`.
 - `public.profiles` no longer answers for strangers. Finding someone you have
   no relationship with goes through `public.search_profiles`, and the list of
   people you blocked through `public.list_blocked_profiles` — both `security
-  definer`, both filtering blocks in either direction.
+  definer`, both filtering blocks in either direction. Somebody's profile page
+  reads through `public.public_profile` the same way: a fixed set of fields,
+  nothing from `profile_private`, and null for a block either way.
 
 ## Conventions The Code Depends On
 
@@ -98,7 +100,7 @@ Five names, and they are not interchangeable:
 | table `Exercise` | the catalog of exercise names. Was called `Exercise_storage`; `db.js` still handles the rename for old installs, which is why `getExerciseStorage` has that name. |
 | table `Exercise_Instance` | one exercise inside one concrete workout. Unrelated to the catalog. |
 | `ExerciseCatalogPage` | the screen that shows and picks from the catalog |
-| `ExerciseLibraryPage` | the hub screen with shortcuts to calendar, sickness, personal records and statistics |
+| `ExerciseLibraryPage` | the Train tab: the active program or your split, then your library - calendar, workouts, records, exercises, programs, the 1RM calculator and sick days |
 | `ExerciseLibraryList` | the list itself. It lives under `ExerciseLibraryPage` but **both** screens use it. |
 
 ## Surprising Placements

@@ -66,6 +66,12 @@ const PROFILE_BIRTH_DATE_SETUP_MESSAGE =
 export const PROFILE_DISPLAY_NAME_MAX_LENGTH = 40;
 export const PROFILE_BIO_MAX_LENGTH = 160;
 export const PROFILE_AVATAR_MAX_BYTES = 3 * 1024 * 1024;
+// What profile_private.sex may hold. Null, the default, is "not given".
+export const PROFILE_SEXES = Object.freeze({
+  MALE: "male",
+  FEMALE: "female",
+});
+const PROFILE_SEX_VALUES = Object.values(PROFILE_SEXES);
 export const USER_SEARCH_MIN_LENGTH = 2;
 const USERNAME_INSERT_RETRY_LIMIT = 3;
 
@@ -413,6 +419,30 @@ function isMissingPrivateMaxHeartRateSourceError(error) {
   );
 }
 
+// A read names the column in "column profile_private.sex does not exist"
+// (42703); a write in "Could not find the 'sex' column of 'profile_private' in
+// the schema cache" (PGRST204). A word match, so "sex" inside another name
+// does not count.
+function isMissingPrivateSexColumnError(error) {
+  const message = `${error?.message ?? ""} ${error?.details ?? ""}`.toLowerCase();
+
+  return (
+    message.includes(PROFILE_PRIVATE_TABLE) &&
+    /\bsex\b/.test(message) &&
+    (error?.code === "42703" ||
+      error?.code === "PGRST204" ||
+      message.includes("does not exist") ||
+      message.includes("schema cache"))
+  );
+}
+
+// The sex is only stored once 20260927090000_a-lifter-can-give-their-sex.sql
+// has run. Until then the first read or write that names the column fails,
+// the profile goes on without it, and it is not asked for again this session -
+// otherwise every ensureOwnProfile, which half the social features call, would
+// cost a failed request and a retry.
+let privateSexUnavailable = false;
+
 // The result is interpolated into a PostgREST `or=(...)` string, where a comma
 // or a bracket would end the value and start a new filter, and % and * are
 // wildcards. This used to strip a list of known-bad characters; a positive list
@@ -441,12 +471,45 @@ export function buildSearchFilter(query) {
     .trim();
 }
 
-function normalizeProfileValues({ displayName, bio, birthDate }) {
+// The birth date and the sex live in profile_private, and `undefined` for
+// either means "not part of this save" rather than "clear it": the form leaves
+// both out when they could not be loaded, so a failed read is never written
+// back over what is stored.
+function normalizeProfileValues({ displayName, bio, birthDate, sex }) {
   return {
     displayName: (displayName ?? "").trim(),
     bio: (bio ?? "").trim(),
-    birthDate: normalizeBirthDateValue(birthDate),
+    birthDate:
+      birthDate === undefined ? undefined : normalizeBirthDateValue(birthDate),
+    sex: normalizeSexValue(sex),
   };
+}
+
+// "male", "female" or null (not given). Anything else comes out as null, and
+// validateSex refuses it when it was a real value rather than an empty one.
+function normalizeSexValue(sex) {
+  if (sex === undefined) {
+    return undefined;
+  }
+
+  if (sex === null) {
+    return null;
+  }
+
+  const normalized = String(sex).trim().toLowerCase();
+
+  return PROFILE_SEX_VALUES.includes(normalized) ? normalized : null;
+}
+
+function validateSex(sex, normalizedSex) {
+  if (
+    sex !== undefined &&
+    sex !== null &&
+    String(sex).trim() !== "" &&
+    normalizedSex === null
+  ) {
+    throw new Error(t("profile.sex.invalid"));
+  }
 }
 
 // The birth date is only ever used to work out an age for heart rate zones, so
@@ -479,29 +542,125 @@ function validateBirthDate(birthDate, normalizedBirthDate) {
   }
 }
 
-async function saveOwnBirthDate(userId, birthDate) {
+// The birth year and the sex, the two private fields the profile form edits,
+// in one write. A field left undefined is not sent at all, so an upsert that
+// only carries the birth year - the heart rate settings save it on its own -
+// leaves the sex as it is. Resolves with whether the sex went in: before the
+// sex migration has run, the birth year is saved without it.
+async function saveOwnPrivateProfile(userId, { birthDate, sex }) {
+  const row = {
+    user_id: userId,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (birthDate !== undefined) {
+    row.birth_date = birthDate;
+  }
+
+  const includesSex = sex !== undefined && !privateSexUnavailable;
+
+  if (includesSex) {
+    row.sex = sex;
+  }
+
+  if (row.birth_date === undefined && !includesSex) {
+    return { sexSaved: false };
+  }
+
   const { error } = await supabase
     .from(PROFILE_PRIVATE_TABLE)
-    .upsert(
-      {
-        user_id: userId,
-        birth_date: birthDate,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "user_id" }
-    );
+    .upsert(row, { onConflict: "user_id" });
 
-  if (error) {
+  if (!error) {
+    return { sexSaved: includesSex };
+  }
+
+  if (!includesSex || !isMissingPrivateSexColumnError(error)) {
     throw normalizeSocialError(error);
   }
+
+  privateSexUnavailable = true;
+  delete row.sex;
+
+  if (row.birth_date !== undefined) {
+    const { error: retryError } = await supabase
+      .from(PROFILE_PRIVATE_TABLE)
+      .upsert(row, { onConflict: "user_id" });
+
+    if (retryError) {
+      throw normalizeSocialError(retryError);
+    }
+  }
+
+  return { sexSaved: false };
 }
 
+const PRIVATE_SETTINGS_SELECT_FIELDS =
+  "birth_date, manual_max_heart_rate, measured_max_heart_rate, max_heart_rate_source";
+
+function mapPrivateSettingsRow(data) {
+  return {
+    birthDate: normalizeIsoDateString(data?.birth_date),
+    manualMaxHeartRate: normalizeMaxHeartRate(data?.manual_max_heart_rate),
+    measuredMaxHeartRate: normalizeMaxHeartRate(data?.measured_max_heart_rate),
+    preferredMaxHeartRateSource: normalizeMaxHeartRateSource(
+      data?.max_heart_rate_source
+    ),
+  };
+}
+
+// `sexAvailable` says whether the column exists, so the form knows whether to
+// offer the field at all; `sex` is null both when it was never given and when
+// it cannot be stored yet.
 async function getOwnPrivateSettings(userId) {
+  if (privateSexUnavailable) {
+    return {
+      ...(await getOwnPrivateSettingsWithoutSex(userId)),
+      sex: null,
+      sexAvailable: false,
+    };
+  }
+
   const { data, error } = await supabase
     .from(PROFILE_PRIVATE_TABLE)
-    .select(
-      "birth_date, manual_max_heart_rate, measured_max_heart_rate, max_heart_rate_source"
-    )
+    .select(`${PRIVATE_SETTINGS_SELECT_FIELDS}, sex`)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (!error) {
+    return {
+      ...mapPrivateSettingsRow(data),
+      sex: normalizeSexValue(data?.sex ?? null),
+      sexAvailable: true,
+    };
+  }
+
+  const sexIsMissing = isMissingPrivateSexColumnError(error);
+
+  if (
+    !sexIsMissing &&
+    !isMissingPrivateMaxHeartRateSourceError(error) &&
+    !isMissingPrivateMaxHeartRateColumnsError(error)
+  ) {
+    throw normalizeSocialError(error);
+  }
+
+  if (sexIsMissing) {
+    privateSexUnavailable = true;
+  }
+
+  // An older project: read what it has, the way it always has.
+  return {
+    ...(await getOwnPrivateSettingsWithoutSex(userId)),
+    sex: null,
+    sexAvailable: false,
+  };
+}
+
+async function getOwnPrivateSettingsWithoutSex(userId) {
+  const { data, error } = await supabase
+    .from(PROFILE_PRIVATE_TABLE)
+    .select(PRIVATE_SETTINGS_SELECT_FIELDS)
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -570,16 +729,12 @@ async function getOwnPrivateSettings(userId) {
     throw normalizeSocialError(error);
   }
 
-  return {
-    birthDate: normalizeIsoDateString(data?.birth_date),
-    manualMaxHeartRate: normalizeMaxHeartRate(data?.manual_max_heart_rate),
-    measuredMaxHeartRate: normalizeMaxHeartRate(data?.measured_max_heart_rate),
-    preferredMaxHeartRateSource: normalizeMaxHeartRateSource(
-      data?.max_heart_rate_source
-    ),
-  };
+  return mapPrivateSettingsRow(data);
 }
 
+// The sex is added here and not in mapProfileRow, which also maps other
+// people's rows: it is the owner's own business, so it is only ever a field on
+// the owner's own profile. profile_private answers nobody else anyway.
 async function mapOwnProfileRow(row, userId) {
   try {
     const privateSettings = await getOwnPrivateSettings(userId);
@@ -588,6 +743,8 @@ async function mapOwnProfileRow(row, userId) {
 
     return {
       ...profile,
+      sex: privateSettings.sex ?? null,
+      sexAvailable: privateSettings.sexAvailable === true,
       privateSettingsAvailable: true,
       privateSettingsError: null,
     };
@@ -598,6 +755,10 @@ async function mapOwnProfileRow(row, userId) {
 
     return {
       ...profile,
+      sex: null,
+      // Not known to be missing - the read failed, not the column - so the
+      // form still shows the field, locked like the birth year beside it.
+      sexAvailable: !privateSexUnavailable,
       privateSettingsAvailable: false,
       privateSettingsError:
         error instanceof Error
@@ -781,7 +942,19 @@ export async function ensureOwnProfile(user) {
   throw new Error(t("social.errors.usernameTagUnavailable"));
 }
 
-export async function updateOwnProfile({ user, displayName, bio, birthDate }) {
+/**
+ * Saves the profile form: the public half on `profiles`, then the birth year
+ * and the sex together on `profile_private`. Leave `birthDate` and `sex` out
+ * (undefined) to save the public half only. A private write that fails does
+ * not undo the public one; the result says so in `privateSettingsError`.
+ */
+export async function updateOwnProfile({
+  user,
+  displayName,
+  bio,
+  birthDate,
+  sex,
+}) {
   if (!user?.id) {
     throw new Error(t("social.errors.signInToUpdateProfile"));
   }
@@ -790,9 +963,11 @@ export async function updateOwnProfile({ user, displayName, bio, birthDate }) {
     displayName,
     bio,
     birthDate,
+    sex,
   });
 
   validateBirthDate(birthDate, normalizedProfile.birthDate);
+  validateSex(sex, normalizedProfile.sex);
 
   if (!normalizedProfile.displayName) {
     throw new Error(t("social.errors.displayNameEmpty"));
@@ -833,14 +1008,22 @@ export async function updateOwnProfile({ user, displayName, bio, birthDate }) {
 
   let privateSettingsError = null;
 
-  try {
-    await saveOwnBirthDate(user.id, normalizedProfile.birthDate);
-  } catch (error) {
-    privateSettingsError = error;
-    console.warn(
-      "Public profile saved without private profile settings:",
-      error
-    );
+  if (
+    normalizedProfile.birthDate !== undefined ||
+    normalizedProfile.sex !== undefined
+  ) {
+    try {
+      await saveOwnPrivateProfile(user.id, {
+        birthDate: normalizedProfile.birthDate,
+        sex: normalizedProfile.sex,
+      });
+    } catch (error) {
+      privateSettingsError = error;
+      console.warn(
+        "Public profile saved without private profile settings:",
+        error
+      );
+    }
   }
 
   const existingMetadata = user.user_metadata ?? {};
@@ -884,7 +1067,8 @@ export async function updateOwnBirthDate({ user, birthDate }) {
   const normalizedBirthDate = normalizeBirthDateValue(birthDate);
   validateBirthDate(birthDate, normalizedBirthDate);
   await ensureOwnProfile(user);
-  await saveOwnBirthDate(user.id, normalizedBirthDate);
+  // The birth year alone: no sex in the row, so the one stored stays.
+  await saveOwnPrivateProfile(user.id, { birthDate: normalizedBirthDate });
 
   return getOwnRunProfileSettings(user);
 }
@@ -1099,28 +1283,6 @@ export async function getFollowCounts({ userId }) {
     followers: followersCount ?? 0,
     following: followingCount ?? 0,
   };
-}
-
-/**
- * How many people started following `userId` after `since` (a timestamp in
- * ms) - the badge on Explore's social button. Zero without a user or a time.
- */
-export async function countFollowersSince({ userId, since }) {
-  if (!userId || !Number.isFinite(since)) {
-    return 0;
-  }
-
-  const { count, error } = await supabase
-    .from(USER_FOLLOWS_TABLE)
-    .select("*", { count: "exact", head: true })
-    .eq("following_id", userId)
-    .gt("created_at", new Date(since).toISOString());
-
-  if (error) {
-    throw normalizeSocialError(error);
-  }
-
-  return count ?? 0;
 }
 
 export async function getFollowers({

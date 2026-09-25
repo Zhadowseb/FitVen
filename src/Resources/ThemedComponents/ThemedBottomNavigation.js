@@ -91,22 +91,21 @@ function getPlannedShortcut(snapshots, date) {
 
 const PROFILE_ROUTES = new Set([
   "ProfilePage",
+  "EditProfilePage",
   "SocialPostSettingsPage",
   "ExerciseSocialPostSettingsPage",
   "WorkoutTypesSettingsPage",
   "MusicSettingsPage",
 ]);
 // Explore is where things are found, and everything found from it stays under
-// it however deep you go: the search, your followers, centres - the list, one
-// centre, one exercise there - and the whole country.
+// it however deep you go: the search, centres - the list, one centre, one
+// exercise there - and the whole country.
 const EXPLORE_ROUTES = new Set([
   "ExplorePage",
   "ExploreSearchPage",
   "ProgramsBrowsePage",
   "CustomExercisesPage",
   "CenterPostsPage",
-  "SocialPage",
-  "SocialUserListPage",
   "GymsPage",
   "GymLeaderboardPage",
   "GymExerciseLeaderboardPage",
@@ -131,9 +130,17 @@ const LIBRARY_ROUTES = new Set([
   "SicknessPage",
   "OneRepMaxCalculatorPage",
 ]);
+// Somebody's profile and their posts are opened from a name anywhere - the
+// feed, a leaderboard, Explore - and stay under the tab they were opened from.
 const INHERIT_TAB_ROUTES = new Set([
   "NotificationHistoryPage",
   "NotificationSettingsPage",
+  "PublicProfilePage",
+  "UserPostsPage",
+  // Your followers and the people search: from Explore's Social button, from
+  // the counts on your profile, from Home's friends strip.
+  "SocialPage",
+  "SocialUserListPage",
 ]);
 
 function ThemedBottomNavigation({ currentRouteName, navigationRef }) {

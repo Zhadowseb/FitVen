@@ -1,221 +1,240 @@
 import { StatusBar } from "expo-status-bar";
-import {
-  Image,
-  ScrollView,
-  TouchableOpacity,
-  View,
-  useColorScheme,
-} from "react-native";
-import { useState, useCallback } from "react";
+import { Alert, ScrollView, View, useColorScheme } from "react-native";
+import { useCallback, useRef, useState } from "react";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
-import { useTranslation } from "@localization";
+import { formatDate, useTranslation } from "@localization";
 
 import styles from "./ExerciseLibraryPageStyle";
-import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
-import CoverGradient from "../../Resources/Components/CoverGradient";
-import PageSummary from "../../Resources/Components/PageSummary/PageSummary";
-import ChevronRight from "../../Resources/Icons/UI-icons/ChevronRight";
-import Layers from "../../Resources/Icons/UI-icons/Layers";
-import Star from "../../Resources/Icons/UI-icons/Star";
-import Dumbbell from "../../Resources/Icons/UI-icons/Dumbbell";
-import Calender from "../../Resources/Icons/UI-icons/Calender";
-import Thermostat from "../../Resources/Icons/UI-icons/Thermostat";
-import TradeUp from "../../Resources/Icons/UI-icons/TradeUp";
-import UpwardGraf from "../../Resources/Icons/UI-icons/UpwardGraf";
-import { programService, weightliftingService } from "../../Services";
+import { useAuth } from "../../Contexts/AuthContext";
+import { Colors } from "../../Resources/GlobalStyling/colors";
+import RepeatWorkoutSheet from "../../Resources/Components/RepeatWorkoutSheet";
 import {
-  addDays,
-  formatDate,
-  getCurrentWeekRange,
-  normalizeIsoDateString,
-  parseCustomDate,
-} from "../../Utils/dateUtils";
-import { ThemedText, ThemedView } from "../../Resources/ThemedComponents";
+  ThemedDateWheelPicker,
+  ThemedStateBlock,
+  ThemedText,
+  ThemedTitle,
+  ThemedView,
+} from "../../Resources/ThemedComponents";
+import { programService, splitService } from "../../Services";
+import { getTodaysDate } from "../../Utils/dateUtils";
+import ActiveProgramCard from "./Components/ActiveProgramCard/ActiveProgramCard";
+import SplitCard from "./Components/SplitCard/SplitCard";
+import RepeatAlso from "./Components/SplitCard/RepeatAlso";
+import SplitEditorSheet from "./Components/SplitCard/SplitEditorSheet";
+import TrainCalendarBlock from "./Components/TrainCalendarBlock/TrainCalendarBlock";
+import TrainLibraryGrid from "./Components/TrainLibrary/TrainLibraryGrid";
+import TrainTools from "./Components/TrainTools/TrainTools";
 
-const programsCoverImage = require("../../Resources/Images/WorkoutTypes/ResistanceTraining/52c5c0a6-e32a-48a8-a731-95ca73deeabd.jpg");
-const workoutsCoverImage = require("../../Resources/Images/WorkoutTypes/Default/download.jpg");
-const calendarCoverImage = require("../../Resources/Images/Tools/calendar-cover.jpg");
+const FALLBACK_WORKOUT_TYPE = "Resistance";
 
-const emptyWeekSummary = {
-  planned: null,
-  completed: null,
-  nextLabel: null,
-};
-
-const ExerciseLibraryPage = () => {
+/**
+ * Train: what to do next, then your library.
+ *
+ * With an active program the top is that program - its block, its week and
+ * today's workout to start (2a). Without one it is your split - the sessions
+ * you rotate through, the next one to repeat, and what else to repeat (3a).
+ * Which of the two is decided again on every visit, so starting or finishing
+ * a program shows on the next one without a restart.
+ */
+export default function ExerciseLibraryPage() {
   const { t } = useTranslation();
   const db = useSQLiteContext();
   const navigation = useNavigation();
   const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
   const theme = Colors[colorScheme] ?? Colors.light;
-  const primaryTextColor = theme.primaryText ?? theme.primary;
+  const { user } = useAuth();
+  const [programCard, setProgramCard] = useState(null);
+  const [split, setSplit] = useState(null);
+  const [loaded, setLoaded] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
+  const [isRepeating, setIsRepeating] = useState(false);
+  const [repeatTarget, setRepeatTarget] = useState(null);
+  const [datePickerFor, setDatePickerFor] = useState(null);
+  const [isPlanning, setIsPlanning] = useState(false);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [isSavingSplit, setIsSavingSplit] = useState(false);
+  const loadIdRef = useRef(0);
 
-  const [quickAccessStats, setQuickAccessStats] = useState({
-    programCount: 0,
-    activeProgramCount: 0,
-    exerciseCount: 0,
-    recordExerciseCount: 0,
-    recordSlotCount: 0,
-    workoutCount: 0,
-    completedWorkoutCount: 0,
-  });
-  // Absent until the query answers, so the summary shows dashes rather than a
-  // confident "0 of 0 this week" that is replaced a moment later.
-  const [weekSummary, setWeekSummary] = useState(emptyWeekSummary);
-
-  const loadQuickAccessStats = useCallback(async () => {
-    const today = parseCustomDate(formatDate(new Date()));
-    const { monday, sunday } = getCurrentWeekRange(today);
+  const load = useCallback(async () => {
+    const loadId = ++loadIdRef.current;
+    let card = null;
 
     try {
-      const [
-        programs,
-        exerciseRows,
-        personalRecordRows,
-        workoutCounts,
-        weekWorkouts,
-        nextWorkout,
-      ] = await Promise.all([
-        programService.getProgramsOverview(db),
-        weightliftingService.getExerciseStorage(db),
-        weightliftingService.getPersonalRecordExerciseSummaries(db),
-        programService.getWorkoutLibraryCounts(db),
-        programService.getWorkoutCalendarWorkouts(db, {
-          startIsoDate: normalizeIsoDateString(formatDate(monday)),
-          endIsoDate: normalizeIsoDateString(formatDate(sunday)),
-        }),
-        programService.getNextUnfinishedCalendarWorkout(db, {
-          startIsoDate: normalizeIsoDateString(formatDate(addDays(today, 1))),
-          endIsoDate: normalizeIsoDateString(formatDate(addDays(today, 180))),
-        }),
-      ]);
-
-      setQuickAccessStats({
-        programCount: programs.length,
-        // Still read by the "N active" chip on the programs card further down.
-        // It came off the summary at the top, not out of the page.
-        activeProgramCount: programs.filter(
-          (program) => program.status === "ACTIVE"
-        ).length,
-        exerciseCount: exerciseRows.length,
-        recordExerciseCount: personalRecordRows.length,
-        recordSlotCount: personalRecordRows.reduce(
-          (total, exercise) => total + exercise.completedRecordCount,
-          0
-        ),
-        workoutCount: workoutCounts.totalCount,
-        completedWorkoutCount: workoutCounts.completedCount,
-      });
-
-      setWeekSummary({
-        planned: weekWorkouts.length,
-        completed: weekWorkouts.filter((workout) => Number(workout.done) === 1)
-          .length,
-        nextLabel:
-          nextWorkout?.label ?? nextWorkout?.workout_type ?? null,
-      });
+      card = await programService.getActiveProgramCard(db, { date: getTodaysDate() });
     } catch (error) {
-      console.error(error);
-      setQuickAccessStats({
-        programCount: 0,
-        activeProgramCount: 0,
-        exerciseCount: 0,
-        recordExerciseCount: 0,
-        recordSlotCount: 0,
-        workoutCount: 0,
-        completedWorkoutCount: 0,
-      });
-      setWeekSummary(emptyWeekSummary);
+      console.error("Could not load the active program:", error);
     }
-  }, [db]);
+
+    let nextSplit = null;
+
+    if (!card) {
+      try {
+        nextSplit = await splitService.getSplitCard(db, { userId: user?.id ?? null });
+      } catch (error) {
+        console.error("Could not load the split:", error);
+        nextSplit = { source: "guess", sessions: [], chosenNames: null, candidates: [], repeatAlso: [] };
+      }
+    }
+
+    if (loadId === loadIdRef.current) {
+      setProgramCard(card);
+      setSplit(nextSplit);
+      setLoaded(true);
+    }
+  }, [db, user?.id]);
 
   useFocusEffect(
     useCallback(() => {
-      loadQuickAccessStats();
-    }, [loadQuickAccessStats])
+      load();
+
+      return () => {
+        loadIdRef.current += 1;
+      };
+    }, [load])
   );
 
-  // Programs, Your workouts and Calendar are large cards; everything else is a
-  // compact row, so the daily entries are not competing with the rest.
-  const toolRows = [
-    {
-      key: "records",
-      label: t("exercises.train.recordsTool"),
-      detail: t("exercises.train.recordsDetail", {
-        exercises: quickAccessStats.recordExerciseCount,
-        records: quickAccessStats.recordSlotCount,
-      }),
-      icon: <Star width={18} height={18} color={theme.planned} filled />,
-      iconBackground: "rgba(242, 193, 78, 0.12)",
-      onPress: () => navigation.navigate("PersonalRecordsPage"),
-    },
-    {
-      key: "statistics",
-      label: t("exercises.train.statisticsTool"),
-      detail: t("exercises.train.statisticsDetail"),
-      icon: <UpwardGraf width={18} height={18} color={primaryTextColor} thickness={1.8} />,
-      iconBackground: withAlpha(theme.primary, 0.12),
-      onPress: () => navigation.navigate("StatisticsPage"),
-    },
-    {
-      key: "library",
-      label: t("exercises.train.libraryTool"),
-      detail: t("exercises.train.libraryDetail", {
-        count: quickAccessStats.exerciseCount,
-      }),
-      icon: (
-        <Dumbbell width={18} height={18} color={primaryTextColor} thickness={1.6} />
-      ),
-      iconBackground: withAlpha(theme.primary, 0.12),
-      onPress: () => navigation.navigate("ExerciseCatalogPage"),
-    },
-    {
-      key: "calculator",
-      label: t("exercises.train.calculatorTool"),
-      detail: t("exercises.train.calculatorDetail"),
-      icon: <TradeUp width={18} height={18} color={theme.secondary} />,
-      iconBackground: withAlpha(theme.secondary, 0.12),
-      onPress: () => navigation.navigate("OneRepMaxCalculatorPage"),
-    },
-    {
-      key: "sickness",
-      label: t("exercises.train.sicknessTool"),
-      detail: t("exercises.train.sicknessDetail"),
-      icon: (
-        <Thermostat width={18} height={18} stroke={theme.danger} color={theme.danger} />
-      ),
-      iconBackground: withAlpha(theme.danger, 0.12),
-      onPress: () => navigation.navigate("SicknessPage"),
-    },
-  ];
+  const mode = programCard ? "program" : "split";
 
-  const neutralChipBackground = theme.chipBackground;
-  const orangeChipBackground = withAlpha(theme.primary, 0.12);
-  const programsPillBackground = isDark
-    ? "rgba(10, 11, 15, 0.72)"
-    : "rgba(255, 255, 255, 0.88)";
-  const programsPillBorder = isDark
-    ? "rgba(255, 255, 255, 0.14)"
-    : "rgba(15, 17, 22, 0.14)";
+  const startToday = () => {
+    const today = programCard?.today;
 
-  const weekCaption =
-    weekSummary.planned === null
-      ? null
-      : weekSummary.planned === 0
-        ? weekSummary.nextLabel
-          ? t("exercises.train.nothingPlannedNext", {
-              name: weekSummary.nextLabel,
-            })
-          : t("exercises.train.nothingPlanned")
-        // Nothing when the week is finished. The line said so and said
-        // nothing else - the stats above it already carry the same number.
-        : weekSummary.completed >= weekSummary.planned
-          ? null
-          : weekSummary.nextLabel
-            ? t("exercises.train.nextUp", { name: weekSummary.nextLabel })
-            : null;
+    if (!today || isStarting) {
+      return;
+    }
+
+    setIsStarting(true);
+    navigation.navigate("WorkoutPage", {
+      workout_id: today.workoutId,
+      workout_label: today.label,
+      workout_type: today.workoutType,
+      day: today.weekday,
+      date: today.date,
+      program_id: today.programId,
+    });
+    setIsStarting(false);
+  };
+
+  const repeatToday = async ({ workoutId, label, workoutType }) => {
+    if (!workoutId || isRepeating) {
+      return;
+    }
+
+    setIsRepeating(true);
+
+    try {
+      const params = await programService.repeatWorkoutToday(db, {
+        workoutId,
+        label,
+        workoutType: workoutType ?? FALLBACK_WORKOUT_TYPE,
+        date: getTodaysDate(),
+      });
+
+      if (!params) {
+        throw new Error("Nothing was copied");
+      }
+
+      setRepeatTarget(null);
+      navigation.navigate("WorkoutPage", params);
+    } catch (error) {
+      console.error("Could not repeat the workout:", error);
+      Alert.alert(t("calendar.library.startFailedTitle"), t("calendar.library.startFailedMessage"));
+    } finally {
+      setIsRepeating(false);
+    }
+  };
+
+  const planInProgram = async (target) => {
+    if (!repeatTarget || isRepeating) {
+      return;
+    }
+
+    setIsRepeating(true);
+
+    try {
+      const copiedWorkoutId = await programService.copyWorkoutToProgramDay(db, {
+        workoutId: repeatTarget.workout_id,
+        dayId: target.dayId,
+        date: target.date,
+      });
+
+      if (!copiedWorkoutId) {
+        throw new Error("Nothing was planned");
+      }
+
+      const name = repeatTarget.label;
+
+      setRepeatTarget(null);
+      Alert.alert(
+        t("calendar.library.plannedTitle"),
+        t("calendar.library.plannedMessage", {
+          name,
+          day: target.weekday ? programService.getWeekdayName(target.weekday, t) : t("calendar.library.theDay"),
+        })
+      );
+      load();
+    } catch (error) {
+      console.error("Could not plan the workout:", error);
+      Alert.alert(t("train.plan.failedTitle"), t("train.plan.failedMessage"));
+    } finally {
+      setIsRepeating(false);
+    }
+  };
+
+  const planOnDate = async (date) => {
+    const workout = datePickerFor;
+
+    if (!workout || isPlanning) {
+      return;
+    }
+
+    setIsPlanning(true);
+
+    try {
+      const copied = await programService.copyWorkoutToStandaloneDate(db, {
+        workoutId: workout.workout_id,
+        date,
+      });
+
+      if (!copied) {
+        throw new Error("Nothing was planned");
+      }
+
+      setDatePickerFor(null);
+      Alert.alert(
+        t("train.plan.plannedTitle"),
+        t("train.plan.plannedMessage", {
+          name: workout.label,
+          date: formatDate(date, { weekday: "long", day: "numeric", month: "long" }),
+        })
+      );
+      load();
+    } catch (error) {
+      console.error("Could not plan the workout on a date:", error);
+      Alert.alert(t("train.plan.failedTitle"), t("train.plan.failedMessage"));
+    } finally {
+      setIsPlanning(false);
+    }
+  };
+
+  const saveSplit = async (names) => {
+    if (!user?.id || isSavingSplit) {
+      return;
+    }
+
+    setIsSavingSplit(true);
+
+    try {
+      await splitService.saveChosenSplitNames({ userId: user.id, names });
+      setIsEditorOpen(false);
+      load();
+    } catch (error) {
+      console.error("Could not save the split:", error);
+      Alert.alert(t("train.editor.title"), t("train.editor.saveFailed"));
+    } finally {
+      setIsSavingSplit(false);
+    }
+  };
 
   return (
     <ThemedView safe={["top", "left", "right"]} style={styles.container}>
@@ -224,364 +243,102 @@ const ExerciseLibraryPage = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <PageSummary
-          eyebrow={t("exercises.train.eyebrow")}
-          title={t("exercises.train.title")}
-          stats={[
-            {
-              key: "programs",
-              value: quickAccessStats.programCount,
-              label: t("exercises.train.statPrograms"),
-              tone: "primary",
-            },
-            {
-              key: "completed",
-              value: quickAccessStats.completedWorkoutCount,
-              label: t("exercises.train.statCompleted"),
-            },
-            {
-              key: "records",
-              value: quickAccessStats.recordSlotCount,
-              label: t("exercises.train.statRecords"),
-              tone: "record",
-            },
-          ]}
-          caption={weekCaption}
-        />
+        <ThemedTitle type="pageTitle" style={styles.title}>
+          {t("train.title")}
+        </ThemedTitle>
 
-        <TouchableOpacity
-          activeOpacity={0.92}
-          accessibilityRole="button"
-          accessibilityLabel={t("exercises.train.calendarA11y")}
-          onPress={() => navigation.navigate("WorkoutCalendarPage")}
-          style={[
-            styles.programsCard,
-            {
-              backgroundColor: theme.cardBackground,
-              borderColor: theme.cardBorder,
-            },
-          ]}
-        >
-          <View style={styles.programsImageArea}>
-            <Image
-              source={calendarCoverImage}
-              resizeMode="cover"
-              style={styles.coverImage}
-              // A local JPEG decodes before the first paint, so the cross-fade
-              // only shows as a flash of card background behind it.
-              fadeDuration={0}
+        {!loaded ? (
+          <ThemedStateBlock style={styles.loading} />
+        ) : programCard ? (
+          <ActiveProgramCard
+            card={programCard}
+            isStarting={isStarting}
+            onOpen={() =>
+              navigation.navigate("ProgramOverviewPage", {
+                program_id: programCard.programId,
+                program_name: programCard.programName,
+                start_date: programCard.programStartDate,
+              })
+            }
+            onStart={startToday}
+          />
+        ) : (
+          <View>
+            <SplitCard
+              split={split}
+              isRepeating={isRepeating}
+              onEdit={() => setIsEditorOpen(true)}
+              onRepeat={(session) =>
+                repeatToday({
+                  workoutId: session.lastWorkoutId,
+                  label: session.name,
+                  workoutType: session.workoutType,
+                })
+              }
             />
-            <CoverGradient
-              color={theme.cardBackground}
-              stops={[
-                { offset: "20%", opacity: 0.15 },
-                { offset: "100%", opacity: 1 },
-              ]}
+            <RepeatAlso
+              items={split?.repeatAlso ?? []}
+              onPress={(item) =>
+                setRepeatTarget({
+                  workout_id: item.workoutId,
+                  label: item.name,
+                  workout_type: item.workoutType ?? FALLBACK_WORKOUT_TYPE,
+                })
+              }
             />
-
-            <View
-              style={[
-                styles.programsPill,
-                {
-                  backgroundColor: programsPillBackground,
-                  borderColor: programsPillBorder,
-                },
-              ]}
-            >
-              <Calender
-                width={12}
-                height={12}
-                stroke={primaryTextColor}
-                color={primaryTextColor}
-              />
-              <ThemedText style={styles.programsPillText} setColor={theme.title}>
-                {t("exercises.train.calendarPill")}
-              </ThemedText>
-            </View>
           </View>
+        )}
 
-          <View style={styles.programsBody}>
-            <View style={styles.cardTitleRow}>
-              <View style={styles.cardTitleColumn}>
-                <ThemedText style={styles.cardTitle} setColor={theme.title}>
-                  {t("exercises.train.calendarTitle")}
-                </ThemedText>
-                <ThemedText style={styles.cardSubtitle} setColor={theme.text}>
-                  {t("exercises.train.calendarSubtitle")}
-                </ThemedText>
-              </View>
-              <ChevronRight
-                width={18}
-                height={18}
-                color={theme.quietText}
-                thickness={2}
-              />
-            </View>
-
-            <View style={styles.chipsRow}>
-              <View
-                style={[styles.chip, { backgroundColor: neutralChipBackground }]}
-              >
-                <ThemedText style={styles.chipText} setColor={theme.text}>
-                  <ThemedText style={styles.chipText} setColor={theme.title}>
-                    {weekSummary.planned === null ? "–" : weekSummary.planned}
-                  </ThemedText>{" "}
-                  {t("exercises.train.thisWeek")}
-                </ThemedText>
-              </View>
-
-              {weekSummary.completed ? (
-                <View
-                  style={[styles.chip, { backgroundColor: orangeChipBackground }]}
-                >
-                  <ThemedText style={styles.chipText} setColor={primaryTextColor}>
-                    {t("exercises.train.done", { count: weekSummary.completed })}
-                  </ThemedText>
-                </View>
-              ) : null}
-            </View>
-          </View>
-        </TouchableOpacity>
-
-        <View style={styles.section}>
-          <ThemedText style={styles.sectionEyebrow} setColor={theme.text}>
-            {t("exercises.train.tools")}
+        <View style={styles.library}>
+          <ThemedText style={styles.sectionEyebrow} setColor={theme.quietText}>
+            {t("train.yourLibrary")}
           </ThemedText>
-
-          {toolRows.map((tool) => (
-            <TouchableOpacity
-              key={tool.key}
-              activeOpacity={0.9}
-              accessibilityRole="button"
-              onPress={tool.onPress}
-              style={[
-                styles.toolRow,
-                {
-                  backgroundColor: theme.cardBackground,
-                  borderColor: theme.cardBorder,
-                },
-              ]}
-            >
-              <View
-                style={[
-                  styles.toolRowIcon,
-                  { backgroundColor: tool.iconBackground },
-                ]}
-              >
-                {tool.icon}
-              </View>
-
-              <View style={styles.toolRowCopy}>
-                <ThemedText style={styles.toolRowTitle} setColor={theme.title}>
-                  {tool.label}
-                </ThemedText>
-                <ThemedText
-                  style={styles.toolRowDetail}
-                  setColor={theme.quietText}
-                  numberOfLines={1}
-                >
-                  {tool.detail}
-                </ThemedText>
-              </View>
-
-              <ChevronRight
-                width={17}
-                height={17}
-                color={theme.quietText}
-                thickness={2}
-              />
-            </TouchableOpacity>
-          ))}
-        </View>
-        <View style={styles.section}>
-          <ThemedText style={styles.sectionEyebrow} setColor={theme.text}>
-            {t("exercises.train.yourTraining")}
-          </ThemedText>
-
-          <TouchableOpacity
-            activeOpacity={0.92}
-            onPress={() => navigation.navigate("ProgramPage")}
-            style={[
-              styles.programsCard,
-              {
-                backgroundColor: theme.cardBackground,
-                borderColor: theme.cardBorder,
-              },
-            ]}
-          >
-            <View style={styles.programsImageArea}>
-              <Image
-                source={programsCoverImage}
-                resizeMode="cover"
-                style={styles.coverImage}
-                fadeDuration={0}
-              />
-              <CoverGradient
-                color={theme.cardBackground}
-                stops={[
-                  { offset: "20%", opacity: 0.15 },
-                  { offset: "100%", opacity: 1 },
-                ]}
-              />
-
-              <View
-                style={[
-                  styles.programsPill,
-                  {
-                    backgroundColor: programsPillBackground,
-                    borderColor: programsPillBorder,
-                  },
-                ]}
-              >
-                <Layers width={12} height={12} color={primaryTextColor} thickness={1.8} />
-                <ThemedText style={styles.programsPillText} setColor={theme.title}>
-                  {t("exercises.train.programsPill")}
-                </ThemedText>
-              </View>
-            </View>
-
-            <View style={styles.programsBody}>
-              <View style={styles.cardTitleRow}>
-                <View style={styles.cardTitleColumn}>
-                  <ThemedText style={styles.cardTitle} setColor={theme.title}>
-                    {t("exercises.train.programsTitle")}
-                  </ThemedText>
-                  <ThemedText style={styles.cardSubtitle} setColor={theme.text}>
-                    {t("exercises.train.programsSubtitle")}
-                  </ThemedText>
-                </View>
-                <ChevronRight
-                  width={18}
-                  height={18}
-                  color={theme.quietText}
-                  thickness={2}
-                />
-              </View>
-
-              <View style={styles.chipsRow}>
-                <View
-                  style={[styles.chip, { backgroundColor: neutralChipBackground }]}
-                >
-                  <ThemedText style={styles.chipText} setColor={theme.text}>
-                    <ThemedText style={styles.chipText} setColor={theme.title}>
-                      {quickAccessStats.programCount}
-                    </ThemedText>{" "}
-                    {t("exercises.train.total")}
-                  </ThemedText>
-                </View>
-
-                {quickAccessStats.activeProgramCount > 0 ? (
-                  <View
-                    style={[styles.chip, { backgroundColor: orangeChipBackground }]}
-                  >
-                    <ThemedText style={styles.chipText} setColor={primaryTextColor}>
-                      {t("exercises.train.active", {
-                        count: quickAccessStats.activeProgramCount,
-                      })}
-                    </ThemedText>
-                  </View>
-                ) : null}
-              </View>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            activeOpacity={0.92}
-            onPress={() => navigation.navigate("WorkoutLibraryPage")}
-            style={[
-              styles.programsCard,
-              {
-                backgroundColor: theme.cardBackground,
-                borderColor: theme.cardBorder,
-              },
-            ]}
-          >
-            <View style={styles.programsImageArea}>
-              <Image
-                source={workoutsCoverImage}
-                resizeMode="cover"
-                style={styles.coverImage}
-                fadeDuration={0}
-              />
-              <CoverGradient
-                color={theme.cardBackground}
-                stops={[
-                  { offset: "20%", opacity: 0.15 },
-                  { offset: "100%", opacity: 1 },
-                ]}
-              />
-
-              <View
-                style={[
-                  styles.programsPill,
-                  {
-                    backgroundColor: programsPillBackground,
-                    borderColor: programsPillBorder,
-                  },
-                ]}
-              >
-                <Dumbbell
-                  width={12}
-                  height={12}
-                  color={primaryTextColor}
-                  thickness={1.8}
-                />
-                <ThemedText style={styles.programsPillText} setColor={theme.title}>
-                  {t("exercises.train.workoutsPill")}
-                </ThemedText>
-              </View>
-            </View>
-
-            <View style={styles.programsBody}>
-              <View style={styles.cardTitleRow}>
-                <View style={styles.cardTitleColumn}>
-                  <ThemedText style={styles.cardTitle} setColor={theme.title}>
-                    {t("exercises.train.workoutsTitle")}
-                  </ThemedText>
-                  <ThemedText style={styles.cardSubtitle} setColor={theme.text}>
-                    {t("exercises.train.workoutsSubtitle")}
-                  </ThemedText>
-                </View>
-                <ChevronRight
-                  width={18}
-                  height={18}
-                  color={theme.quietText}
-                  thickness={2}
-                />
-              </View>
-
-              <View style={styles.chipsRow}>
-                <View
-                  style={[styles.chip, { backgroundColor: neutralChipBackground }]}
-                >
-                  <ThemedText style={styles.chipText} setColor={theme.text}>
-                    <ThemedText style={styles.chipText} setColor={theme.title}>
-                      {quickAccessStats.workoutCount}
-                    </ThemedText>{" "}
-                    {t("exercises.train.total")}
-                  </ThemedText>
-                </View>
-
-                {quickAccessStats.completedWorkoutCount > 0 ? (
-                  <View
-                    style={[styles.chip, { backgroundColor: orangeChipBackground }]}
-                  >
-                    <ThemedText style={styles.chipText} setColor={primaryTextColor}>
-                      {t("exercises.train.completed", {
-                        count: quickAccessStats.completedWorkoutCount,
-                      })}
-                    </ThemedText>
-                  </View>
-                ) : null}
-              </View>
-            </View>
-          </TouchableOpacity>
+          <TrainCalendarBlock mode={mode} />
+          <TrainLibraryGrid />
+          <TrainTools />
         </View>
       </ScrollView>
 
-      <StatusBar style={isDark ? "light" : "dark"} />
+      <RepeatWorkoutSheet
+        visible={Boolean(repeatTarget)}
+        workout={repeatTarget}
+        isWorking={isRepeating}
+        onClose={() => setRepeatTarget(null)}
+        onStart={() =>
+          repeatToday({
+            workoutId: repeatTarget?.workout_id,
+            label: repeatTarget?.label,
+            workoutType: repeatTarget?.workout_type,
+          })
+        }
+        onPlan={planInProgram}
+        onPlanOnDate={() => {
+          const workout = repeatTarget;
+
+          setRepeatTarget(null);
+          setDatePickerFor(workout);
+        }}
+      />
+
+      <ThemedDateWheelPicker
+        visible={Boolean(datePickerFor)}
+        value={new Date()}
+        title={t("train.plan.pickDate")}
+        isConfirming={isPlanning}
+        onClose={() => setDatePickerFor(null)}
+        onConfirm={planOnDate}
+      />
+
+      <SplitEditorSheet
+        visible={isEditorOpen}
+        candidates={split?.candidates ?? []}
+        chosenNames={split?.chosenNames ?? null}
+        isSaving={isSavingSplit}
+        onClose={() => setIsEditorOpen(false)}
+        onSave={saveSplit}
+      />
+
+      <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
     </ThemedView>
   );
-};
-
-export default ExerciseLibraryPage;
+}
