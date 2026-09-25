@@ -11,6 +11,11 @@
 - **Home knows the moment a set is ticked off.** `updateStrengthSetDone` tells `Utils/workoutSetEvents` which set changed and whether it set a record, and Home, waiting under the workout screen, reads the running workout's sets again (`getLiveWorkoutProgress` → `getLiveWorkoutSets`), so the panel is right by the time you are back. Today's open workout now carries its timer, for the elapsed time. `npm run test:live-quick-start` checks the views, the bars, the countdown, the records and the wiring.
 
 ---
+## [2.9.1] - Unreleased
+### Changed
+- The migrations ledger records the six migrations from 2.5 to 2.8 as run: centre records on Explore, a post's centre, the split, sex, public profiles and blocks hiding public posts.
+
+---
 ## [2.9.0] - Unreleased
 ### Changed
 - **The days-since card on Home is alive.** It is the first thing on the screen, so it now looks it. Its size and shape are as they were - the same width, corners, padding, icon slot, number and label - and everything new is drawn inside it, from edge to edge:
