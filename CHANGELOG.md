@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.10.0] - Unreleased
+### Changed
+- **Quick start is live while you train.** With a workout running, the block beside the days-since card is one panel that opens it, and "Empty workout" is not offered next to it. On top: a live dot, "I GANG" / "IN PROGRESS", and how long the workout has been going - the same sum as the clock in the middle of the bottom navigation. Under it, only the set that is next: its exercise, one bar per set of that exercise (done filled, the next one glowing), and "8 × 80 kg" large. Every other time the block is exactly as it was. What it shows follows the workout (`LivePanel`, `Utils/liveQuickStart`):
+  - **First**: the first set, before any is done. **Next**: "NÆSTE" / "NEXT" over it, between sets.
+  - **Rest**: while the rest timer runs, the countdown on the left - the number pops each second of the last ten - and the rest drains out of the panel's background. **Ready**: when it runs out, "Klar" / "Ready" breathes, "PAUSE SLUT" / "REST OVER" under it and the panel flashes once, until the next set is done.
+  - **Record**: a set that just beat a personal record turns the panel gold for 3.2 seconds, with confetti, a shine across the exercise's name, the set and "Stærkt!" / "Strong!" - then back to the rest. It waits until Home is on screen, so a record set on the workout screen is celebrated when you come back, once.
+  - **Finished**: every set done turns it green - "ALLE SÆT KLARET", "13 af 13 sæt", "Godt gået" and "Afslut" / "Finish". A workout filled as you go - never more than one set waiting at a time - is not told it is finished between two sets: it shows its last exercise and latest set instead, and so does a workout with nothing to show as next.
+  - Colours are the fire, the record star's gold and the day's green, all from the theme. Views change with a 360 ms fade and rise, and nothing moves while Home is out of sight, the app is in the background or reduce motion is on.
+- **Home knows the moment a set is ticked off.** `updateStrengthSetDone` tells `Utils/workoutSetEvents` which set changed and whether it set a record, and Home, waiting under the workout screen, reads the running workout's sets again (`getLiveWorkoutProgress` → `getLiveWorkoutSets`), so the panel is right by the time you are back. Today's open workout now carries its timer, for the elapsed time. `npm run test:live-quick-start` checks the views, the bars, the countdown, the records and the wiring.
+
+---
 ## [2.9.0] - Unreleased
 ### Changed
 - **The days-since card on Home is alive.** It is the first thing on the screen, so it now looks it. Its size and shape are as they were - the same width, corners, padding, icon slot, number and label - and everything new is drawn inside it, from edge to edge:

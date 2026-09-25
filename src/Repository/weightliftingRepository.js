@@ -1086,6 +1086,37 @@ export async function getSetsByWorkout(db, workoutId) {
   );
 }
 
+/**
+ * The running workout as the Quick start panel on Home reads it: every
+ * exercise in the workout screen's order with each of its sets, one row per
+ * set - and one with no set for an exercise that has none, so its name is
+ * still there. Only what the panel shows or decides with.
+ */
+export async function getLiveWorkoutSets(db, workoutId) {
+  await ensureExerciseOrderColumn(db);
+
+  return db.getAllAsync(
+    `SELECT
+        e.exercise_instance_id,
+        e.exercise_name,
+        s.sets_id,
+        s.set_number,
+        s.reps,
+        s.weight,
+        s.done,
+        s.failed,
+        s.personal_record,
+        s.set_type,
+        s.amrap,
+        s.amrap_target
+     FROM Exercise_Instance e
+     LEFT JOIN "Set" s ON s.exercise_instance_id = e.exercise_instance_id
+     WHERE e.workout_type_instance_id = ?
+     ORDER BY e.exercise_order ASC, e.exercise_instance_id ASC, s.set_number ASC, s.sets_id ASC;`,
+    [workoutId]
+  );
+}
+
 // Every completed, non-failed set with a weight and reps, joined to the shared
 // catalog so the centre leaderboard gets the cloud exercise id. Which set is
 // "best" is decided in Utils/gymUtils.js, where it can be tested.

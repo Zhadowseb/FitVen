@@ -488,7 +488,8 @@ function startOfLocalDay(isoDate) {
  *
  * The first entry is the one to open - a running timer first, then the most
  * recently made - and `count` is how many are open in total, so the screen can
- * say whether there is more than one.
+ * say whether there is more than one. A running one carries its timer, so
+ * Home can show how long it has been going.
  */
 export async function getOpenWorkoutsToday(db, { now = Date.now() } = {}) {
   const rows = await workoutRepository.getOpenWorkoutsForDate(db, {
@@ -503,6 +504,8 @@ export async function getOpenWorkoutsToday(db, { now = Date.now() } = {}) {
           name: rows[0].label ?? rows[0].workout_type ?? null,
           workoutType: rows[0].workout_type ?? null,
           isRunning: rows[0].timer_start !== null,
+          timerStart: rows[0].timer_start ?? null,
+          elapsedTime: rows[0].elapsed_time ?? 0,
         }
       : null,
   };

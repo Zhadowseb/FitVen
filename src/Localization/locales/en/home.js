@@ -51,6 +51,23 @@ export default {
     startEmpty: "Start an empty workout",
     startFailedTitle: "Could not start the workout",
     startFailedBody: "Please try again.",
+    // The panel the block becomes while a workout is running.
+    live: {
+      inProgress: "In progress",
+      next: "Next",
+      rest: "Rest",
+      ready: "Ready",
+      restOver: "Rest over",
+      newRecord: "New record",
+      strong: "Strong!",
+      allSetsDone: "All sets done",
+      setsOfTotal: "{done} of {total} sets",
+      wellDone: "Well done",
+      finish: "Finish",
+      // After the number on a set with no weight: "8 reps".
+      repsUnit: { one: "rep", other: "reps" },
+      continueResting: "Continue {name}, rest {time}",
+    },
   },
   split: {
     unnamed: "Session {number}",

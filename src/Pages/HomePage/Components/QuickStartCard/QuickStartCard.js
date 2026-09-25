@@ -1,6 +1,7 @@
 import { TouchableOpacity, View, useColorScheme } from "react-native";
 import { useTranslation } from "@localization";
 
+import LivePanel from "./LivePanel";
 import styles from "./QuickStartCardStyle";
 import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
 import Plus from "@resources/Icons/UI-icons/Plus";
@@ -24,10 +25,16 @@ import { ThemedText } from "@resources/ThemedComponents";
  * session this morning, or left one half-done at lunch, wants that one back;
  * offering to start a second one beside it is almost never what was meant.
  * The empty workout is always there, because sometimes it is.
+ *
+ * Except while today's workout is running. Then the whole block is one live
+ * panel that opens it - the set that is next, the rest counting down - and
+ * starting a second, empty one is not offered (LivePanel). `live` is what
+ * Home has read of that workout's sets.
  */
 export default function QuickStartCard({
   openToday = null,
   upNext = null,
+  live = null,
   onContinueToday,
   onStartSplit,
   onStartEmpty,
@@ -36,6 +43,19 @@ export default function QuickStartCard({
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const isLight = colorScheme === "light";
+  const runningWorkout = openToday?.first?.isRunning ? openToday.first : null;
+
+  if (runningWorkout) {
+    return (
+      <View style={styles.card}>
+        <LivePanel
+          workout={runningWorkout}
+          live={live}
+          onOpen={() => onContinueToday?.(runningWorkout)}
+        />
+      </View>
+    );
+  }
 
   // The same fallback SplitCards uses. pickGroupName returns null when nobody
   // named the session - which is what a session started from this button ends

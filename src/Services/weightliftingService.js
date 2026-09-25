@@ -34,7 +34,9 @@ import {
   calculateBrzyckiOneRepMax,
   MAX_ESTIMATE_REPS,
 } from "../Utils/oneRepMaxUtils";
+import { buildLiveWorkoutProgress } from "@utils/liveQuickStart";
 import { buildMuscleGroupDeltas } from "@utils/muscleGlance";
+import { notifyWorkoutSetChanged } from "@utils/workoutSetEvents";
 import { normalizeRecordRows } from "@utils/recordsInsights";
 import {
   clampSetValue,
@@ -4110,7 +4112,39 @@ export async function updateStrengthSetDone(
   syncExerciseInstancesInBackground(db);
   syncSetsInBackground(db);
 
+  // Home's Quick start panel is waiting under the workout screen: it moves on
+  // to the next set, and celebrates if this one was a record.
+  const isDone = Boolean(done);
+  const isFailed = isDone && Boolean(failed);
+
+  notifyWorkoutSetChanged({
+    workoutId,
+    setId,
+    done: isDone,
+    failed: isFailed,
+    personalRecord:
+      isDone &&
+      !isFailed &&
+      personalRecordSetIds.some((recordSetId) => Number(recordSetId) === Number(setId)),
+  });
+
   return { personalRecordSetIds };
+}
+
+/**
+ * The running workout, for the Quick start panel on Home: its next set, the
+ * set finished last and whether that was a record, the latest set for a
+ * workout filled as you go, and how many sets are done of how many. The
+ * reasoning is in Utils/liveQuickStart, where it is tested.
+ *
+ * `recentSetId` is the set the workout screen reported last, so "finished
+ * last" means finished last even when sets are done out of order.
+ */
+export async function getLiveWorkoutProgress(db, { workoutId, recentSetId = null }) {
+  const resolvedWorkoutId = normalizeRequiredId(workoutId, "workoutId");
+  const rows = await weightliftingRepository.getLiveWorkoutSets(db, resolvedWorkoutId);
+
+  return buildLiveWorkoutProgress(rows, { recentSetId });
 }
 
 export async function deleteSet(db, setId) {
