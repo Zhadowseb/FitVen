@@ -212,6 +212,9 @@ export const Colors = {
 // palettes: primary (per scheme, so dark uses the on-dark variant and light a
 // readable on-light variant), ink on primary, secondary (per scheme), derived
 // tints and the status/accent aliases that track primary/secondary.
+// The ink - `ink` and `textInverted`, the label on every primary button - has
+// to clear 4.5:1 on that scheme's primary, so it is dark or light per scheme,
+// whichever the primary needs. `npm run test:accent-contrast` measures them.
 export const AccentThemes = {
     ember: {
         name: "Ember",
@@ -287,8 +290,10 @@ export const AccentThemes = {
             primaryText: "#8B7CF5",
             primaryLight: "rgb(168, 157, 246)",
             primaryDark: "rgb(77, 64, 168)",
-            ink: "#F5F4FF",
-            textInverted: "#F5F4FF",
+            // Dark ink, as in the other themes' dark schemes: this purple is
+            // too light for a white label - #F5F4FF read 3.06:1 on it.
+            ink: "#110D26",
+            textInverted: "#110D26",
             inkOnSecondary: "#2A1F04",
             secondary: "#FFC24B",
             secondaryLight: "rgb(255, 218, 147)",
@@ -301,8 +306,9 @@ export const AccentThemes = {
             primaryText: "#5A48D6",
             primaryLight: "rgb(168, 157, 246)",
             primaryDark: "rgb(77, 64, 168)",
-            ink: "#F5F4FF",
-            textInverted: "#F5F4FF",
+            // Pure white: #F5F4FF read 4.33:1 on this purple.
+            ink: "#FFFFFF",
+            textInverted: "#FFFFFF",
             inkOnSecondary: "#2A1F04",
             secondary: "#D99A16",
             secondaryLight: "rgb(255, 218, 147)",
@@ -334,8 +340,10 @@ export const AccentThemes = {
             primaryText: "#C22C2C",
             primaryLight: "rgb(255, 158, 158)",
             primaryDark: "rgb(179, 65, 65)",
-            ink: "#2A0C0C",
-            textInverted: "#2A0C0C",
+            // Darker than the dark scheme's ink, because this red is darker
+            // than the dark scheme's: #2A0C0C read 4.26:1 on it.
+            ink: "#120404",
+            textInverted: "#120404",
             inkOnSecondary: "#062C28",
             secondary: "#12A697",
             secondaryLight: "rgb(122, 229, 217)",
