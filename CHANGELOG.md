@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.10.1] - Unreleased
+### Changed
+- **The label on a primary button reads in every accent theme.** Three of the eight theme and scheme pairs drew it under the 4.5:1 WCAG AA asks of text. Only the ink changed (`ink` and `textInverted` in `AccentThemes`), never a primary, so the fills, `primaryText` and the tints look exactly as they did:
+  - **Ultraviolet dark**: 3.06:1 → 5.68:1. Its purple is too light for a white label, so the ink is a deep violet, `#110D26` - dark, as it is in the other themes' dark schemes.
+  - **Ultraviolet light**: 4.33:1 → 4.72:1. White instead of the lavender-tinted `#F5F4FF`.
+  - **Coral light**: 4.26:1 → 4.71:1. `#120404` instead of `#2A0C0C`; Coral dark keeps its ink, at 7.19:1.
+- `npm run test:accent-contrast` measures every accent theme in both schemes, as `applyAccentTheme` leaves the palette: the ink on `primary`, and `primaryText` on the card and the background, all at 4.5:1 or more.
+
+---
 ## [2.10.0] - Unreleased
 ### Changed
 - **Quick start is live while you train.** With a workout running, the block beside the days-since card is one panel that opens it, and "Empty workout" is not offered next to it. On top: a live dot, "I GANG" / "IN PROGRESS", and how long the workout has been going - the same sum as the clock in the middle of the bottom navigation. Under it, only the set that is next: its exercise, one bar per set of that exercise (done filled, the next one glowing), and "8 × 80 kg" large. Every other time the block is exactly as it was. What it shows follows the workout (`LivePanel`, `Utils/liveQuickStart`):
