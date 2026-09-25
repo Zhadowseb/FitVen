@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.4.1] - Unreleased
+### Fixed
+- **"Your posts" says when again.** Every card read "Just now", whatever day it was from: the cards are built from the phone's own workouts, and nothing put a time on them - so the time-ago label got nothing, and said "Just now" for nothing. A posted card now says when it was posted (`created_at`, read with the post), and a workout not posted yet says the day it was done. `npm run test:social-posts` checks that a card carries both.
+
+---
 ## [2.4.0] - Unreleased
 ### Changed
 - **The whole app speaks Danish.** Only some screens used to follow the language setting; the rest were written into the code in English, and a few in Danish. About 850 texts in 75 files now go through `t()`: the run and strength workouts, the exercise library and catalog, programs, blocks and weeks, the calendar and library, sickness, the settings pages, the 1RM calculator, Records and the errors the services show. Six new locale areas: `calendar`, `errors`, `exercises`, `programs`, `run` and `settings`. The privacy policy and the terms of use stay in English until a Danish version has been read by a person.

@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "2.4.0-feature-danish-everywhere.1",
+  "version": "2.4.1-fix-own-posts-show-when.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",

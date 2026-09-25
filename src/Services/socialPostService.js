@@ -898,7 +898,7 @@ export async function getOwnPostedWorkoutSummaries({ user }) {
 
   const { data, error } = await supabase
     .from(SOCIAL_POST_TABLE)
-    .select("id, source_workout_type_instance_id, body, visibility")
+    .select("id, source_workout_type_instance_id, body, visibility, created_at")
     .eq("author_id", user.id)
     .eq("post_type", WORKOUT_SUMMARY_POST_TYPE)
     .is("deleted_at", null);
@@ -920,15 +920,36 @@ export async function getOwnPostedWorkoutSummaries({ user }) {
       postId: row.id,
       body: row.body ?? "",
       visibility: normalizeWorkoutSummaryPostVisibility(row.visibility),
+      createdAt: row.created_at ?? null,
     });
   }
 
   return postsByCloudWorkoutId;
 }
 
+// A workout's day as a timestamp at local midnight, from either spelling the
+// day column holds ("2026-09-20" or "20.09.2026"). Null when it is neither.
+function workoutDayTimestamp(value) {
+  const text = String(value ?? "").trim();
+  const iso = text.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  const dotted = text.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+  const [year, month, day] = iso
+    ? [Number(iso[1]), Number(iso[2]), Number(iso[3])]
+    : dotted
+      ? [Number(dotted[3]), Number(dotted[2]), Number(dotted[1])]
+      : [NaN, NaN, NaN];
+  const at = new Date(year, month - 1, day).getTime();
+
+  return Number.isFinite(at) ? at : null;
+}
+
 /**
  * A post object built entirely from the local database, so a workout can be
  * shown as a card before it has ever been published.
+ *
+ * It has to say when: every card on "Your posts" used to read "Just now",
+ * because this object had no time on it at all. A published post carries the
+ * moment it went out; an unpublished workout carries the day it was done.
  */
 export async function buildLocalWorkoutSummaryPost(
   db,
@@ -968,6 +989,8 @@ export async function buildLocalWorkoutSummaryPost(
     body: publishedPost?.body ?? "",
     payload,
     performedDate: workout.date ?? null,
+    performedAt: workoutDayTimestamp(workout.performed_date_sort ?? workout.date),
+    createdAt: publishedPost?.createdAt ?? null,
     visibility: publishedPost?.visibility ?? null,
     // This view shows the workout, not its engagement.
     likeCount: 0,
