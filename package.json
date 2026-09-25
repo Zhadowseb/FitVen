@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "2.5.0-feature-explore-tab.1",
+  "version": "2.6.0-feature-explore-tab.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",
