@@ -8,6 +8,7 @@ import ProgressionBar from "./ProgressionBar";
 import Checkmark from "../../../../Resources/Icons/UI-icons/Checkmark";
 import Star from "../../../../Resources/Icons/UI-icons/Star";
 import ThreeDots from "../../../../Resources/Icons/UI-icons/ThreeDots";
+import MapPin from "../../../../Resources/Icons/UI-icons/MapPin";
 import { Colors, withAlpha } from "../../../../Resources/GlobalStyling/colors";
 import { formatRelativeDay, formatTimeAgo } from "../../../../Utils/dateUtils";
 import { ThemedText, UserAvatar } from "../../../../Resources/ThemedComponents";
@@ -228,6 +229,16 @@ export default function WorkoutSummaryCard({
                   </>
                 ) : null}
               </View>
+
+              {/* Where the workout was done, when it was matched to a centre. */}
+              {post?.gym?.shortName ? (
+                <View style={styles.gymRow}>
+                  <MapPin width={11} height={11} color={quietText} thickness={2.4} />
+                  <ThemedText style={styles.gymText} setColor={quietText} numberOfLines={1}>
+                    {post.gym.shortName}
+                  </ThemedText>
+                </View>
+              ) : null}
             </View>
 
             {onOpenOptions ? (

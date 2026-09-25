@@ -625,6 +625,37 @@ export async function getGymOverview({ gymId, scope = GYM_SCOPE_GYM, moreLimit =
 }
 
 /**
+ * Explore's "Your centre" card: how many of the centre's records - rank 1 on
+ * its leaderboard, by the leaderboard's rules - were set after `since` (ms,
+ * or null for all of them), and the newest record. Null for a centre the
+ * viewer may not see.
+ */
+export async function getRecentGymRecords({ gymId, since = null }) {
+  const { data, error } = await supabase.rpc("gym_recent_records", {
+    target_gym_id: gymId,
+    since: Number.isFinite(since) ? new Date(since).toISOString() : null,
+  });
+
+  if (error) {
+    throw normalizeGymError(error);
+  }
+
+  if (!data?.gym) {
+    return null;
+  }
+
+  const latest = mapLiftRow(data.latest);
+
+  await attachLiftAvatars([latest]);
+
+  return {
+    gym: mapGym(data.gym),
+    newCount: toNumber(data.new_count) ?? 0,
+    latest,
+  };
+}
+
+/**
  * One page of one exercise's ranking. `gymId` null means the whole country,
  * verified lifts only. Pass `nextCursor` from the previous page to continue.
  */

@@ -979,7 +979,7 @@ export default function FeedPage() {
           accessibilityRole="button"
           onPress={() =>
             followsNobody
-              ? navigation.navigate("SearchPage")
+              ? navigation.navigate("SocialUserListPage")
               : requestOpenQuickWorkoutMenu()
           }
           style={[

@@ -1239,28 +1239,9 @@ export async function deleteWorkoutSummaryPostForWorkout(db, { workoutId }) {
   return { skipped: false };
 }
 
-export async function getWorkoutSummaryFeed({ user, limit = 10, offset = 0 }) {
-  if (!user?.id) {
-    return [];
-  }
-
-  await ensureOwnProfile(user);
-  const normalizedLimit = Math.max(1, normalizeInteger(limit, 10));
-  const normalizedOffset = Math.max(0, normalizeInteger(offset, 0));
-
-  const { data: posts, error: postsError } = await supabase
-    .from(SOCIAL_POST_TABLE)
-    .select(SOCIAL_POST_SELECT_FIELDS)
-    .eq("post_type", WORKOUT_SUMMARY_POST_TYPE)
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false })
-    .order("id", { ascending: false })
-    .range(normalizedOffset, normalizedOffset + normalizedLimit - 1);
-
-  if (postsError) {
-    throw normalizeSocialPostError(postsError);
-  }
-
+// Rows as cards: each post with its likes, whether the viewer has liked it,
+// and its author's avatar. The feed and the centre posts read it the same way.
+async function mapPostsWithLikes(posts, user) {
   const postIds = (posts ?? []).map((post) => post.id).filter(Boolean);
 
   if (!postIds.length) {
@@ -1294,6 +1275,112 @@ export async function getWorkoutSummaryFeed({ user, limit = 10, offset = 0 }) {
   return withAuthorAvatars(
     posts.map((post) => mapSocialPostRow(post, likesByPostId, likedPostIds))
   );
+}
+
+// Posts only know their centre once 20260925110000_a-post-knows-its-centre.sql
+// has run. Until then the question fails, the cards simply go without, and it
+// is not asked again this session.
+let postCentresUnavailable = false;
+
+const POST_GYM_SELECT = "id, gym:gym!social_post_gym_id_fkey(id, short_name, city)";
+
+function mapPostGym(row) {
+  const gym = row?.gym;
+
+  if (!gym || gym.id === null || gym.id === undefined) {
+    return null;
+  }
+
+  return {
+    id: Number(gym.id),
+    shortName: gym.short_name ?? null,
+    city: gym.city ?? null,
+  };
+}
+
+/** The centre each post's workout was done in, as `post.gym`, or null. */
+async function attachPostGyms(posts) {
+  const ids = posts.map((post) => post.id).filter(Boolean);
+
+  if (postCentresUnavailable || ids.length === 0) {
+    return posts;
+  }
+
+  const { data, error } = await supabase.from(SOCIAL_POST_TABLE).select(POST_GYM_SELECT).in("id", ids);
+
+  if (error) {
+    if (isMissingSocialPostSchemaError(error)) {
+      postCentresUnavailable = true;
+    } else {
+      console.warn("Could not read the posts' centres:", error);
+    }
+
+    return posts;
+  }
+
+  const gymByPostId = new Map((data ?? []).map((row) => [row.id, mapPostGym(row)]));
+
+  return posts.map((post) => ({ ...post, gym: gymByPostId.get(post.id) ?? post.gym ?? null }));
+}
+
+/**
+ * Posts from the centres in `gymIds` - your centre and the ones you train in -
+ * newest first, others' only, and only those the viewer may see: the post
+ * policies decide, exactly as in the feed. Empty until posts know their centre.
+ */
+export async function getCentrePosts({ user, gymIds = [], limit = 12 }) {
+  const ids = [...new Set(gymIds.map(Number).filter(Number.isFinite))];
+
+  if (!user?.id || ids.length === 0 || postCentresUnavailable) {
+    return [];
+  }
+
+  const { data: posts, error } = await supabase
+    .from(SOCIAL_POST_TABLE)
+    .select(SOCIAL_POST_SELECT_FIELDS)
+    .eq("post_type", WORKOUT_SUMMARY_POST_TYPE)
+    .in("gym_id", ids)
+    .neq("author_id", user.id)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(Math.max(1, normalizeInteger(limit, 12)));
+
+  if (error) {
+    if (isMissingSocialPostSchemaError(error)) {
+      postCentresUnavailable = true;
+      return [];
+    }
+
+    throw normalizeSocialPostError(error);
+  }
+
+  return attachPostGyms(await mapPostsWithLikes(posts ?? [], user));
+}
+
+export async function getWorkoutSummaryFeed({ user, limit = 10, offset = 0 }) {
+  if (!user?.id) {
+    return [];
+  }
+
+  await ensureOwnProfile(user);
+  const normalizedLimit = Math.max(1, normalizeInteger(limit, 10));
+  const normalizedOffset = Math.max(0, normalizeInteger(offset, 0));
+
+  const { data: posts, error: postsError } = await supabase
+    .from(SOCIAL_POST_TABLE)
+    .select(SOCIAL_POST_SELECT_FIELDS)
+    .eq("post_type", WORKOUT_SUMMARY_POST_TYPE)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
+    .range(normalizedOffset, normalizedOffset + normalizedLimit - 1);
+
+  if (postsError) {
+    throw normalizeSocialPostError(postsError);
+  }
+
+  return attachPostGyms(await mapPostsWithLikes(posts ?? [], user));
 }
 
 export async function getWorkoutSummaryPostById({ user, postId }) {

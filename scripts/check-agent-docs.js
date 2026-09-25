@@ -160,7 +160,7 @@ for (const file of allFiles.filter((f) => /^src\/Sync\/.*Sync\.js$/.test(f))) {
 // "Colours must never sit in a *Style.js" - src/Pages/AGENTS.md.
 // Shadows and text over photographs are the documented exceptions.
 const COLOUR_IN_STYLE = /^\s*(?!shadowColor)[A-Za-z]+:\s*"(#[0-9a-fA-F]{3,8}|rgba?\()/m;
-const ALLOWED = new Set(["src/Pages/SearchPage/SearchPageStyle.js"]);
+const ALLOWED = new Set(["src/Pages/SocialPage/SocialPageStyle.js"]);
 const colouredStyles = allFiles
   .filter((f) => f.endsWith("Style.js") && !ALLOWED.has(f))
   .filter((f) => COLOUR_IN_STYLE.test(fs.readFileSync(path.join(root, f), "utf8")));

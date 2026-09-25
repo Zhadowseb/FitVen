@@ -63,6 +63,19 @@ export default StyleSheet.create({
     fontWeight: "800",
   },
 
+  gymRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 2,
+  },
+
+  gymText: {
+    flexShrink: 1,
+    fontSize: 12,
+    fontWeight: "700",
+  },
+
   optionsButton: {
     width: 44,
     height: 44,

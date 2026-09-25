@@ -1101,6 +1101,28 @@ export async function getFollowCounts({ userId }) {
   };
 }
 
+/**
+ * How many people started following `userId` after `since` (a timestamp in
+ * ms) - the badge on Explore's social button. Zero without a user or a time.
+ */
+export async function countFollowersSince({ userId, since }) {
+  if (!userId || !Number.isFinite(since)) {
+    return 0;
+  }
+
+  const { count, error } = await supabase
+    .from(USER_FOLLOWS_TABLE)
+    .select("*", { count: "exact", head: true })
+    .eq("following_id", userId)
+    .gt("created_at", new Date(since).toISOString());
+
+  if (error) {
+    throw normalizeSocialError(error);
+  }
+
+  return count ?? 0;
+}
+
 export async function getFollowers({
   userId,
   currentUserId,

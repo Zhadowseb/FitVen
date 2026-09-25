@@ -9,21 +9,18 @@ import {
 } from "react-native";
 import { useCallback, useState } from "react";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import { useSQLiteContext } from "expo-sqlite";
 import { useTranslation } from "@localization";
 
-import styles from "./SearchPageStyle";
-import FriendsActivity from "../../Resources/Components/FriendsActivity/FriendsActivity";
-import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
-import ChevronRight from "../../Resources/Icons/UI-icons/ChevronRight";
-import MapPin from "../../Resources/Icons/UI-icons/MapPin";
+import styles from "./SocialPageStyle";
+import { Colors } from "../../Resources/GlobalStyling/colors";
 import TailArrowUpRight from "../../Resources/Icons/UI-icons/TailArrowUpRight";
 import { useAuth } from "../../Contexts/AuthContext";
-import { programService, socialService } from "../../Services";
-import { getTodaysDate } from "../../Utils/dateUtils";
+import { socialService } from "../../Services";
+import { markSeen, socialSeenKey } from "../../Utils/lastSeen";
 import {
   ThemedButton,
   ThemedConfirmModal,
+  ThemedHeader,
   ThemedModal,
   ThemedText,
   ThemedTextInput,
@@ -33,7 +30,6 @@ import {
 } from "../../Resources/ThemedComponents";
 
 const findFriendsImage = require("../../Resources/Images/DarkVersion/Find_friends.jpg");
-const ownPostsImage = require("../../Resources/Images/DarkVersion/Social_posts_edit.jpg");
 
 // The three lists the relationship modal can show, with the keys for each of
 // their states. A map of literal keys rather than keys built from the type,
@@ -59,19 +55,18 @@ const RELATIONSHIP_COPY = {
   },
 };
 
-const SearchPage = () => {
+/**
+ * Social: who follows you and whom you follow, the lists behind both with
+ * block and report, and the way to find people. Reached from the button on
+ * Explore, which counts the followers that are new since the last visit
+ * here - so opening this page is what marks them seen.
+ */
+const SocialPage = () => {
   const { t } = useTranslation();
-  const db = useSQLiteContext();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const navigation = useNavigation();
   const { user } = useAuth();
-  const todayDate = getTodaysDate();
-  const [circlePreview, setCirclePreview] = useState({
-    currentUser: null,
-    people: [],
-  });
-  const [circlePreviewError, setCirclePreviewError] = useState("");
   const [followCounts, setFollowCounts] = useState({
     followers: 0,
     following: 0,
@@ -97,81 +92,34 @@ const SearchPage = () => {
     RELATIONSHIP_COPY[activeRelationshipType] ?? RELATIONSHIP_COPY.followers;
   const relationshipTitle = t(relationshipCopy.title);
 
-  const loadCirclePreview = useCallback(async () => {
+  const loadFollowCounts = useCallback(async () => {
     if (!user?.id) {
-      setCirclePreview({
-        currentUser: null,
-        people: [],
-      });
-      setFollowCounts({
-        followers: 0,
-        following: 0,
-      });
+      setFollowCounts({ followers: 0, following: 0 });
       setIsLoadingFollowCounts(false);
-      setCirclePreviewError("");
       return;
     }
 
-    setCirclePreviewError("");
     setIsLoadingFollowCounts(true);
 
     try {
-      const [nextCirclePreview, todayActivitySummary, nextFollowCounts] =
-        await Promise.all([
-          socialService.getCirclePreview({
-            user,
-            limit: 12,
-            date: todayDate,
-          }),
-          programService.getTodayActivitySummary(db, {
-            date: todayDate,
-          }),
-          socialService.getFollowCounts({
-            userId: user.id,
-          }),
-        ]);
-
-      const homeGym = nextCirclePreview.currentUser?.homeGym ?? null;
-
-      setCirclePreview({
-        ...nextCirclePreview,
-        currentUser: nextCirclePreview.currentUser
-          ? {
-              ...nextCirclePreview.currentUser,
-              activityState: todayActivitySummary.activityState,
-              activityDetail: todayActivitySummary.detail,
-              workoutType: todayActivitySummary.workoutType,
-              workoutLabel: todayActivitySummary.workoutLabel,
-              gym: homeGym
-                ? { id: homeGym.id, shortName: homeGym.shortName, isHomeGym: true }
-                : null,
-            }
-          : null,
-      });
-      setFollowCounts(nextFollowCounts);
+      setFollowCounts(await socialService.getFollowCounts({ userId: user.id }));
     } catch (error) {
-      setCirclePreview({
-        currentUser: null,
-        people: [],
-      });
-      setFollowCounts({
-        followers: 0,
-        following: 0,
-      });
-      setCirclePreviewError(
-        error instanceof Error
-          ? error.message
-          : t("social.errors.loadActivityFailed"),
-      );
+      console.error("Failed to load follow counts:", error);
+      setFollowCounts({ followers: 0, following: 0 });
     } finally {
       setIsLoadingFollowCounts(false);
     }
-  }, [db, t, todayDate, user]);
+  }, [user]);
 
   useFocusEffect(
     useCallback(() => {
-      loadCirclePreview();
-    }, [loadCirclePreview]),
+      loadFollowCounts();
+
+      // Explore's badge counts followers since this moment.
+      if (user?.id) {
+        markSeen(socialSeenKey(user.id));
+      }
+    }, [loadFollowCounts, user?.id]),
   );
 
   const handleOpenUserList = () => {
@@ -250,7 +198,7 @@ const SearchPage = () => {
 
     try {
       await action();
-      await loadCirclePreview();
+      await loadFollowCounts();
       setRelationshipProfiles(
         await loadRelationshipProfiles(activeRelationshipType),
       );
@@ -363,111 +311,32 @@ const SearchPage = () => {
 
   return (
     <ThemedView safe={["top", "left", "right"]} style={styles.container}>
+      <ThemedHeader>
+        <ThemedTitle type="pageTitle" style={styles.pageTitle} numberOfLines={1}>
+          {t("social.pageTitle")}
+        </ThemedTitle>
+      </ThemedHeader>
+
       <ScrollView
         style={styles.content}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.storiesSection}>
-          <ThemedTitle type="h3" style={styles.sectionTitle}>
-            {t("social.todaysActivity")}
-          </ThemedTitle>
-
-          <View style={styles.storiesRail}>
-            <FriendsActivity
-              currentUser={circlePreview.currentUser}
-              people={circlePreview.people}
-              errorMessage={circlePreviewError}
-              isLoading={isLoadingFollowCounts}
-              onSeeAll={handleOpenUserList}
-              onOpenProfile={() => navigation.navigate("ProfilePage")}
-              onOpenGym={(gymId) => navigation.navigate("GymLeaderboardPage", { gym_id: gymId })}
-            />
-          </View>
-
-          <View style={styles.relationshipStats}>
-            {renderRelationshipButton(
-              "followers",
-              followCounts.followers,
-              "social.followersLabel",
-              "social.followersCount",
-            )}
-            {renderRelationshipButton(
-              "following",
-              followCounts.following,
-              "social.followingLabel",
-              "social.followingCount",
-            )}
-          </View>
+        <View style={styles.relationshipStats}>
+          {renderRelationshipButton(
+            "followers",
+            followCounts.followers,
+            "social.followersLabel",
+            "social.followersCount",
+          )}
+          {renderRelationshipButton(
+            "following",
+            followCounts.following,
+            "social.followingLabel",
+            "social.followingCount",
+          )}
         </View>
-
-        <TouchableOpacity
-          activeOpacity={0.88}
-          accessibilityRole="button"
-          accessibilityLabel={t("social.centresAndLeaderboards")}
-          onPress={() => navigation.navigate("GymsPage")}
-          style={[styles.centresCard, { backgroundColor: cardSurface, borderColor: cardBorder }]}
-        >
-          <View style={[styles.centresIcon, { backgroundColor: withAlpha(theme.primary, 0.14) }]}>
-            <MapPin width={20} height={20} color={theme.primaryText ?? theme.primary} thickness={2.2} />
-          </View>
-          <View style={styles.centresCopy}>
-            <ThemedText style={styles.centresEyebrow} setColor={quietText}>
-              {t("social.centres")}
-            </ThemedText>
-            <ThemedTitle type="h3" style={styles.centresTitle} numberOfLines={1}>
-              {circlePreview.currentUser?.homeGym?.shortName
-                ? t("social.leaderboardsAt", {
-                    gym: circlePreview.currentUser.homeGym.shortName,
-                  })
-                : t("social.leaderboardsWhereYouTrain")}
-            </ThemedTitle>
-          </View>
-          <ChevronRight width={20} height={20} color={quietText} />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          activeOpacity={0.92}
-          accessibilityRole="button"
-          accessibilityLabel={t("social.yourWorkoutPosts")}
-          onPress={() => navigation.navigate("WorkoutPostsPage")}
-          style={[styles.heroCard, styles.heroCardPosts]}
-        >
-          <ImageBackground
-            source={ownPostsImage}
-            resizeMode="cover"
-            style={styles.heroImage}
-          >
-            <View style={styles.heroScrim} />
-
-            <View style={styles.heroContent}>
-              <View style={styles.heroActionRow}>
-                <View style={styles.heroActionIcon}>
-                  <TailArrowUpRight
-                    width={15}
-                    height={15}
-                    stroke="#ffffff"
-                    color="#ffffff"
-                  />
-                </View>
-              </View>
-
-              <View style={styles.heroCopy}>
-                <ThemedText style={styles.heroEyebrow} setColor="#ffffff">
-                  {t("social.heroPosts.eyebrow")}
-                </ThemedText>
-                <ThemedTitle
-                  type="h3"
-                  style={styles.heroTitle}
-                  numberOfLines={1}
-                >
-                  {t("social.heroPosts.title")}
-                </ThemedTitle>
-              </View>
-            </View>
-          </ImageBackground>
-        </TouchableOpacity>
 
         <TouchableOpacity
           activeOpacity={0.92}
@@ -815,4 +684,4 @@ const SearchPage = () => {
   );
 };
 
-export default SearchPage;
+export default SocialPage;

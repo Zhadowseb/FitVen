@@ -1,18 +1,9 @@
 // Keep in step with ../en/social.js.
 export default {
-  todaysActivity: "Dagens aktivitet",
+  pageTitle: "Social",
   discover: "Opdag",
   findFriends: "Find venner",
   searchForFriends: "Søg efter venner",
-  centres: "Centre",
-  centresAndLeaderboards: "Centre og ranglister",
-  leaderboardsAt: "Ranglister · {gym}",
-  leaderboardsWhereYouTrain: "Ranglister hvor du træner",
-  yourWorkoutPosts: "Dine træningsopslag",
-  heroPosts: {
-    eyebrow: "Din træning",
-    title: "Opslag",
-  },
 
   followersLabel: { one: "følger", other: "følgere" },
   followingLabel: "følger",

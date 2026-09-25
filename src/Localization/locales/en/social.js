@@ -1,19 +1,10 @@
 // Search, follows, blocks, reports and the workout posts list. Keep in step
 // with ../da/social.js.
 export default {
-  todaysActivity: "Today's activity",
+  pageTitle: "Social",
   discover: "Discover",
   findFriends: "Find Friends",
   searchForFriends: "Search for friends",
-  centres: "Centres",
-  centresAndLeaderboards: "Centres and leaderboards",
-  leaderboardsAt: "Leaderboards · {gym}",
-  leaderboardsWhereYouTrain: "Leaderboards where you train",
-  yourWorkoutPosts: "Your workout posts",
-  heroPosts: {
-    eyebrow: "Your Workout",
-    title: "Posts",
-  },
 
   // The count is rendered bold on its own, so the word stands alone here; the
   // accessibility label reads the two together.

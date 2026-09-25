@@ -402,7 +402,7 @@ export default function HomePage() {
           people={circlePreview.people}
           errorMessage={circlePreviewError}
           isLoading={isLoadingCirclePreview}
-          onSeeAll={() => navigation.navigate("SearchPage")}
+          onSeeAll={() => navigation.navigate("SocialPage")}
           onOpenProfile={() => navigation.navigate("ProfilePage")}
           onOpenGym={(gymId) =>
             navigation.navigate("GymLeaderboardPage", { gym_id: gymId })

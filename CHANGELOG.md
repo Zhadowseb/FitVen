@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.6.0] - Unreleased
+### Changed
+- **Social is Explore.** The tab is the place to find things now - UDFORSK / EXPLORE, with the search icon - and its first page is new (`ExplorePage`):
+  - **A search field** that opens a full-screen search with the keyboard up (`ExploreSearchPage`): centres and people as you type. A centre opens its page; a person opens the people list on the same search, where the follow buttons are.
+  - **Centres** ("{n} in Denmark") and **Records** ("Denmark's top 100") as the ways in.
+  - **Your centre**: its picture and name, how many of its records were set since you last opened it, and the newest one - who, what and how heavy - opening that exercise's ranking. A record is the top of an exercise's ranking by the centre leaderboard's own rules (`gym_recent_records`, `supabase/migrations/20260925100000_explore-counts-your-centres-new-records.sql` - not run yet; until it is, the card shows the centre without its records). Without a centre, a row to choose one.
+  - **The Social button** in the corner, with a badge for the followers who are new since you last opened Social.
+  - **Programs and Exercises** tiles beside Centres and Records, two by two. Neither can be shared yet, so they say 0 and open pages that say so (`ProgramsBrowsePage`, `CustomExercisesPage`).
+  - **Your centre, set by hand**: "Change" opens the Change centre sheet from the centre's page - your centres, a search over all of them, or back to automatic - and so does the row to choose one. The sheet moved to `Resources/Components/ChangeGymSheet` so both screens use it.
+  - **Posts from centres**: workouts posted from your centre and the centres you train in, by people whose posts you can see, newest first, and a page for one centre's posts with likes and a report on every post (`CenterPostsPage`, `ReportPostModal`). Your own posts are left out.
+- **A post knows its centre.** The feed card says where the workout was done, under the author, and so does a card on Your posts. The centre was on the workout already; a reader can see a post without seeing the workout under it, so the post now carries a copy (`social_post.gym_id`), kept in step by two triggers - `supabase/migrations/20260925110000_a-post-knows-its-centre.sql`, not run yet. Until it runs, cards show no centre and Explore shows no centre posts; the feed works as before.
+- **Social is a page of its own** (`SocialPage`, the old `SearchPage`): your followers and whom you follow, the lists with block and report, and Find friends. The friends strip left it - it is on Home - and so did the posts card (Feed has them) and the centres row (Explore does). Home's "see all", the empty feed and a follower notification lead where they now belong.
+- Knowledge comes to Explore when it exists. `npm run test:explore-tab` checks that every route Explore links to is registered and keeps the tab lit, and that the centre posts can be reported.
+
+---
 ## [2.5.0] - Unreleased
 ### Changed
 - **Records is a trophy room.** It was a statistics page with a period selector on top, so it read like a report and never felt like a room full of what you have done. It now shows the whole history and nothing to compare it with:
