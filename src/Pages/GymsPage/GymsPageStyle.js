@@ -260,6 +260,14 @@ export default StyleSheet.create({
     fontSize: 12,
     fontWeight: "800",
   },
+  // The lifter's picture and name, which open their profile.
+  strongestLifter: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
   strongestCopy: {
     flex: 1,
     minWidth: 0,

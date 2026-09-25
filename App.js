@@ -30,6 +30,9 @@ import ProgramsBrowsePage from "./src/Pages/ProgramsBrowsePage/ProgramsBrowsePag
 import CustomExercisesPage from "./src/Pages/CustomExercisesPage/CustomExercisesPage";
 import CenterPostsPage from "./src/Pages/CenterPostsPage/CenterPostsPage";
 import SocialPage from "./src/Pages/SocialPage/SocialPage";
+import PublicProfilePage from "./src/Pages/PublicProfilePage/PublicProfilePage";
+import UserPostsPage from "./src/Pages/UserPostsPage/UserPostsPage";
+import EditProfilePage from "./src/Pages/EditProfilePage/EditProfilePage";
 import PrivacyPolicyPage from "./src/Pages/PrivacyPolicyPage/PrivacyPolicyPage";
 import TermsOfUsePage from "./src/Pages/TermsOfUsePage/TermsOfUsePage";
 import SocialUserListPage from "./src/Pages/SocialUserListPage/SocialUserListPage";
@@ -294,6 +297,9 @@ function RootNavigator() {
                 <Stack.Screen name="CustomExercisesPage" component={CustomExercisesPage} options={{ headerShown: false }} />
                 <Stack.Screen name="CenterPostsPage" component={CenterPostsPage} options={{ headerShown: false }} />
                 <Stack.Screen name="SocialPage" component={SocialPage} options={{ headerShown: false }} />
+                <Stack.Screen name="PublicProfilePage" component={PublicProfilePage} options={{ headerShown: false }} />
+                <Stack.Screen name="UserPostsPage" component={UserPostsPage} options={{ headerShown: false }} />
+                <Stack.Screen name="EditProfilePage" component={EditProfilePage} options={{ headerShown: false, presentation: "modal" }} />
                 <Stack.Screen name="SocialUserListPage" component={SocialUserListPage} options={{ headerShown: false }} />
                 <Stack.Screen name="ProfilePage" component={ProfilePage} options={{ headerShown: false }} />
                 <Stack.Screen name="ProgramPage" component={ProgramPage} options={{headerShown: false}} />

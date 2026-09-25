@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.7.0] - Unreleased
+### Changed
+- **Your profile starts with you.** It used to open on the public-profile form. Now it opens on your photo - tap it to change it - your name, @username and code, your centre and bio, then Edit profile and View as others, your followers and following (each opening that list), the settings as four tiles with their current value (workout types, notifications, social posts, music), one appearance card - the accent as four large swatches, then theme and language - a single Send feedback row, the account card, and "FitVen · version" as a footnote.
+- **Edit profile is its own sheet** (`EditProfilePage`): photo, display name, bio, the username (locked), birth year and - new - **sex**, male or female, kept private beside the birth year and never on your profile, so records can be split by sex later (`profile_private.sex`, `supabase/migrations/20260927090000_a-lifter-can-give-their-sex.sql` - not run yet; until it runs the field is hidden). Save stays off until something changed; Cancel asks before throwing changes away; a draft survives closing the sheet. A birth year that could not be read is no longer wiped by the next save.
+- **Everybody has a public profile** (`PublicProfilePage`): name, @username, the centre they train at - orange with "· your centre" when it is yours too - bio, Follow (unfollowing asks first) and Share, followers, following and workouts, their best lift in each of the big three (gold and a rank only when it is video-verified, as on the leaderboards), twelve weeks of activity as bars, and their latest posts, opening the full list (`UserPostsPage`). The menu shares, blocks and reports. It is read through one function that hands out a fixed set of fields, nothing private, and nothing at all across a block (`public_profile`, `supabase/migrations/20260927100000_public-profiles.sql` - not run yet; until it runs a profile says it is not available). Other people's follower lists stay closed: only the counts show.
+- **A name opens its profile**: a post's author in the feed, the centre posts and a person's posts, a friend's tile on Home, the lifters on the centre and national leaderboards and Strongest in Denmark, people in Explore's search, and the rows of your followers and the people search. Your own opens your profile.
+- **View as others** shows your public profile exactly as a stranger gets it - the same function - with Follow off and your centre always plain.
+- **A block hides public posts too.** A block removed the follows both ways, which hid followers-only posts, but a post shared with everyone still crossed it, both ways, in the feed and the centre posts (`supabase/migrations/20260927110000_a-block-hides-public-posts-too.sql` - not run yet).
+- Social and the people search keep the tab they were opened from, instead of switching to Explore when opened from your profile.
+
+---
 ## [2.6.0] - Unreleased
 ### Changed
 - **Social is Explore.** The tab is the place to find things now - UDFORSK / EXPLORE, with the search icon - and its first page is new (`ExplorePage`):

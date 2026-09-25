@@ -923,16 +923,27 @@ export default function FeedPage() {
     [t, theme]
   );
 
+  // Your own post goes to the same page, which sends you on to your profile.
+  const handleOpenPostAuthor = useCallback(
+    (post) => {
+      if (post?.author?.id) {
+        navigation.navigate("PublicProfilePage", { userId: post.author.id });
+      }
+    },
+    [navigation]
+  );
+
   const renderWorkoutSummaryPost = useCallback(
     ({ item: post }) => (
       <WorkoutSummaryCard
         post={post}
         onToggleLike={handleToggleWorkoutPostLike}
         onOpenOptions={handleOpenWorkoutSummaryOptions}
+        onOpenAuthor={handleOpenPostAuthor}
         isLikeBusy={updatingLikePostId === post.id}
       />
     ),
-    [handleOpenWorkoutSummaryOptions, handleToggleWorkoutPostLike, updatingLikePostId]
+    [handleOpenPostAuthor, handleOpenWorkoutSummaryOptions, handleToggleWorkoutPostLike, updatingLikePostId]
   );
 
   const renderWorkoutSummaryFooter = useCallback(() => {

@@ -31,9 +31,10 @@ const PEOPLE_LIMIT = 5;
 
 /**
  * Explore's search, full screen with the keyboard already up: centres and
- * people, as you type. A centre opens its page; a person opens the people
- * list on the same search, where the follow buttons are. Programs and
- * exercises join the search when they can be found.
+ * people, as you type. A centre opens its page; a person opens their profile,
+ * and "See everyone and follow" the people list on the same search, where the
+ * follow buttons are. Programs and exercises join the search when they can be
+ * found.
  */
 export default function ExploreSearchPage() {
   const { t } = useTranslation();
@@ -210,7 +211,8 @@ export default function ExploreSearchPage() {
                   key={person.id}
                   activeOpacity={0.85}
                   accessibilityRole="button"
-                  onPress={openPeople}
+                  accessibilityHint={t("publicProfile.opensProfile")}
+                  onPress={() => navigation.navigate("PublicProfilePage", { userId: person.id })}
                   style={[styles.row, index > 0 ? { borderTopWidth: 1, borderTopColor: theme.hairline } : null]}
                 >
                   <UserAvatar uri={person.avatarUrl} size={36} iconSize={16} />

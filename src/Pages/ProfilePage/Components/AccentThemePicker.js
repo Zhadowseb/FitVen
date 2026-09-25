@@ -18,15 +18,19 @@ const ACCENT_NAME_KEYS = {
   coral: "profile.appearance.accent.coral",
 };
 
-// 2x2 grid of accent-theme options (Ember/Volt/Ultraviolet/Coral). Each shows
-// the combo's brand primary+secondary as overlapping swatch dots.
+// One column per accent theme (Ember, Volt, Ultraviolet, Coral), four across.
+// Each shows the theme's primary as a large dot with its secondary tucked in
+// at the bottom right, and the name under it.
 export default function AccentThemePicker({ value, onChange }) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const { t } = useTranslation();
 
   return (
-    <View style={styles.grid}>
+    <View
+      style={styles.row}
+      accessibilityLabel={t("profile.appearance.colour")}
+    >
       {Object.entries(AccentThemes).map(([accentKey, accent]) => {
         const isSelected = value === accentKey;
         const nameKey = ACCENT_NAME_KEYS[accentKey];
@@ -35,21 +39,28 @@ export default function AccentThemePicker({ value, onChange }) {
           <TouchableOpacity
             key={accentKey}
             activeOpacity={0.85}
+            accessibilityRole="button"
+            accessibilityState={{ selected: isSelected }}
             onPress={() => onChange(accentKey)}
             style={[
               styles.option,
-              {
-                backgroundColor: isSelected
-                  ? withAlpha(theme.primary, 0.1)
-                  : theme.uiBackground,
-                borderColor: isSelected ? theme.primary : theme.border,
-              },
+              isSelected
+                ? {
+                    backgroundColor: withAlpha(theme.primary, 0.1),
+                    borderColor: theme.primary,
+                    borderWidth: 1.5,
+                  }
+                : {
+                    backgroundColor: theme.uiBackground,
+                    borderColor: theme.cardBorder,
+                    borderWidth: 1,
+                  },
             ]}
           >
-            <View style={styles.swatchPair}>
+            <View style={styles.swatch}>
               <View
                 style={[
-                  styles.swatchDot,
+                  styles.swatchPrimary,
                   {
                     backgroundColor: accent.swatch.primary,
                     borderColor: theme.cardBackground,
@@ -58,8 +69,7 @@ export default function AccentThemePicker({ value, onChange }) {
               />
               <View
                 style={[
-                  styles.swatchDot,
-                  styles.swatchDotOverlap,
+                  styles.swatchSecondary,
                   {
                     backgroundColor: accent.swatch.secondary,
                     borderColor: theme.cardBackground,
@@ -68,7 +78,7 @@ export default function AccentThemePicker({ value, onChange }) {
               />
             </View>
             <ThemedText
-              style={[styles.optionLabel, isSelected && styles.optionLabelSelected]}
+              style={styles.optionLabel}
               setColor={isSelected ? theme.title : theme.text}
               numberOfLines={1}
             >
@@ -82,41 +92,47 @@ export default function AccentThemePicker({ value, onChange }) {
 }
 
 const styles = StyleSheet.create({
-  grid: {
+  row: {
     flexDirection: "row",
-    flexWrap: "wrap",
     gap: 8,
   },
   option: {
-    flexBasis: "47%",
-    flexGrow: 1,
-    flexDirection: "row",
+    flex: 1,
+    minWidth: 0,
     alignItems: "center",
-    gap: 9,
-    borderRadius: 10,
-    borderWidth: 1,
-    paddingVertical: 9,
-    paddingHorizontal: 12,
+    gap: 7,
+    borderRadius: 14,
+    paddingTop: 10,
+    paddingHorizontal: 4,
+    paddingBottom: 9,
   },
-  swatchPair: {
-    flexDirection: "row",
-    alignItems: "center",
+  swatch: {
+    width: 40,
+    height: 40,
   },
-  swatchDot: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+  swatchPrimary: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     borderWidth: 2,
   },
-  swatchDotOverlap: {
-    marginLeft: -7,
+  swatchSecondary: {
+    position: "absolute",
+    right: 0,
+    bottom: 0,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
   },
   optionLabel: {
-    flexShrink: 1,
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  optionLabelSelected: {
+    maxWidth: "100%",
+    fontSize: 10.5,
+    lineHeight: 13,
     fontWeight: "800",
+    textAlign: "center",
   },
 });

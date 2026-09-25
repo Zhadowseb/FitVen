@@ -1,11 +1,12 @@
 import { StatusBar } from "expo-status-bar";
 import {
+  Pressable,
   ScrollView,
   View,
   useColorScheme,
 } from "react-native";
 import { useCallback, useEffect, useState } from "react";
-import { useFocusEffect, useRoute } from "@react-navigation/native";
+import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { useTranslation } from "@localization";
 
 import styles from "./SocialUserListPageStyle";
@@ -30,6 +31,7 @@ const SocialUserListPage = () => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const { user } = useAuth();
+  const navigation = useNavigation();
   const route = useRoute();
   // Explore's search hands over what was typed there, so "see everyone" lands
   // on the same people with the follow buttons.
@@ -255,32 +257,46 @@ const SocialUserListPage = () => {
                   },
                 ]}
               >
-                <UserAvatar
-                  uri={profile.avatarUrl}
-                  size={48}
-                  iconSize={24}
-                  iconColor={theme.primary ?? titleColor}
-                  backgroundColor={
-                    theme.fields ?? theme.uiBackground ?? theme.background
+                {/* The picture and the name open their profile; the button
+                    beside them still follows. */}
+                <Pressable
+                  onPress={() =>
+                    navigation.navigate("PublicProfilePage", { userId: profile.id })
                   }
-                  borderColor={cardBorder}
-                  borderWidth={1}
-                />
+                  accessibilityRole="button"
+                  accessibilityHint={t("publicProfile.opensProfile")}
+                  style={({ pressed }) => [
+                    styles.resultPerson,
+                    pressed ? styles.resultPersonPressed : null,
+                  ]}
+                >
+                  <UserAvatar
+                    uri={profile.avatarUrl}
+                    size={48}
+                    iconSize={24}
+                    iconColor={theme.primary ?? titleColor}
+                    backgroundColor={
+                      theme.fields ?? theme.uiBackground ?? theme.background
+                    }
+                    borderColor={cardBorder}
+                    borderWidth={1}
+                  />
 
-                <View style={styles.resultCopy}>
-                  <ThemedText
-                    style={styles.resultDisplayName}
-                    setColor={titleColor}
-                  >
-                    {profile.displayName}
-                  </ThemedText>
-                  <ThemedText
-                    style={styles.resultUsername}
-                    setColor={secondaryDark}
-                  >
-                    {profile.username}
-                  </ThemedText>
-                </View>
+                  <View style={styles.resultCopy}>
+                    <ThemedText
+                      style={styles.resultDisplayName}
+                      setColor={titleColor}
+                    >
+                      {profile.displayName}
+                    </ThemedText>
+                    <ThemedText
+                      style={styles.resultUsername}
+                      setColor={secondaryDark}
+                    >
+                      {profile.username}
+                    </ThemedText>
+                  </View>
+                </Pressable>
 
                 <ThemedButton
                   title={

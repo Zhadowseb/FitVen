@@ -15,6 +15,7 @@ import nav from "./nav";
 import notifications from "./notifications";
 import profile from "./profile";
 import programs from "./programs";
+import publicProfile from "./publicProfile";
 import records from "./records";
 import run from "./run";
 import settings from "./settings";
@@ -39,6 +40,7 @@ export default {
   notifications,
   profile,
   programs,
+  publicProfile,
   records,
   run,
   settings,

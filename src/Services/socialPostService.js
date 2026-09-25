@@ -1358,6 +1358,60 @@ export async function getCentrePosts({ user, gymIds = [], limit = 12 }) {
   return attachPostGyms(await mapPostsWithLikes(posts ?? [], user));
 }
 
+/**
+ * One person's posts, newest first, for their profile: the grid and the list
+ * behind "See all". Read under the post policies exactly as the feed is, so
+ * the viewer gets the posts they may see and nothing else, and `total` counts
+ * those - not everything the person has posted.
+ *
+ * `everyoneOnly` is for the author looking at their own profile the way a
+ * stranger does. The policies show you all of your own posts, including the
+ * private and the hidden ones; a stranger sees only public posts that are not
+ * hidden, so that is what this narrows it to.
+ */
+export async function getWorkoutSummaryPostsByAuthor({
+  user,
+  authorId,
+  limit = 9,
+  offset = 0,
+  everyoneOnly = false,
+}) {
+  if (!user?.id || !authorId) {
+    return { posts: [], total: 0 };
+  }
+
+  const normalizedLimit = Math.max(1, normalizeInteger(limit, 9));
+  const normalizedOffset = Math.max(0, normalizeInteger(offset, 0));
+  let query = supabase
+    .from(SOCIAL_POST_TABLE)
+    .select(SOCIAL_POST_SELECT_FIELDS, { count: "exact" })
+    .eq("post_type", WORKOUT_SUMMARY_POST_TYPE)
+    .eq("author_id", authorId)
+    .is("deleted_at", null);
+
+  if (everyoneOnly) {
+    query = query
+      .eq("visibility", WORKOUT_SUMMARY_POST_VISIBILITIES.EVERYONE)
+      .is("hidden_at", null);
+  }
+
+  const { data, error, count } = await query
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
+    .range(normalizedOffset, normalizedOffset + normalizedLimit - 1);
+
+  if (error) {
+    throw normalizeSocialPostError(error);
+  }
+
+  const posts = await attachPostGyms(await mapPostsWithLikes(data ?? [], user));
+
+  return {
+    posts,
+    total: Number.isFinite(count) ? count : normalizedOffset + posts.length,
+  };
+}
+
 export async function getWorkoutSummaryFeed({ user, limit = 10, offset = 0 }) {
   if (!user?.id) {
     return [];

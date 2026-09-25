@@ -933,6 +933,9 @@ export default function FriendsActivity({
   isLoading = false,
   onSeeAll,
   onOpenProfile,
+  // A friend's tile opens their profile with this; without it, as before, the
+  // tile opens whatever "See all" does.
+  onOpenPerson,
   showHeader = false,
   onAddFriend,
   onOpenGym,
@@ -1058,7 +1061,7 @@ export default function FriendsActivity({
                 music={person.music ?? null}
                 iconColor={iconColor}
                 animate={animate}
-                onPress={onSeeAll}
+                onPress={onOpenPerson ? () => onOpenPerson(person) : onSeeAll}
                 onOpenGym={onOpenGym}
                 wallpaper={buildRestWallpaper(person)}
                 mood={buildTileMood(person)}

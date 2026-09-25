@@ -56,6 +56,17 @@ export default StyleSheet.create({
   resultsList: {
     marginTop: 2,
   },
+  // The picture and the name, which open the person's profile.
+  resultPerson: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  resultPersonPressed: {
+    opacity: 0.7,
+  },
   resultCopy: {
     flex: 1,
     gap: 2,

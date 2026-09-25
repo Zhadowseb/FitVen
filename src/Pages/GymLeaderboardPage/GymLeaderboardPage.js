@@ -33,10 +33,22 @@ import {
 import { formatWeightKg, getChainInitials } from "@utils/gymUtils";
 import { gymSeenKey, markSeen } from "@utils/lastSeen";
 
-function FeaturedCard({ entry, theme, colorScheme, onPress }) {
+function FeaturedCard({ entry, theme, colorScheme, onPress, onOpenLifter }) {
   const { t } = useTranslation();
   const top = entry.top;
   const me = entry.me;
+  // The card opens the exercise's list; the record holder's picture and name
+  // open their profile. Never your own - that is not a stranger's page.
+  const canOpenTop = Boolean(onOpenLifter) && Boolean(top?.userId) && !top?.isMe;
+  const TopLifter = canOpenTop ? TouchableOpacity : View;
+  const topLifterProps = canOpenTop
+    ? {
+        activeOpacity: 0.75,
+        accessibilityRole: "button",
+        accessibilityHint: t("publicProfile.opensProfile"),
+        onPress: () => onOpenLifter(top),
+      }
+    : {};
   const quietText = theme.quietText;
   const isLight = colorScheme === "light";
   const mutedStrong = theme.mutedStrong;
@@ -70,20 +82,22 @@ function FeaturedCard({ entry, theme, colorScheme, onPress }) {
 
       {top ? (
         <View style={styles.topRow}>
-          <View style={[styles.topAvatarRing, { borderColor: ringColor }]}>
-            <UserAvatar uri={top.avatarUrl} size={40} iconSize={18} />
-          </View>
-          <View style={styles.topCopy}>
-            <ThemedText style={styles.topName} setColor={theme.title} numberOfLines={1}>
-              {top.isMe ? t("common.you") : top.displayName}
-            </ThemedText>
-            <View style={styles.topMetaRow}>
-              <ThemedText style={styles.topRank} setColor={quietText}>
-                #1
-              </ThemedText>
-              <LiftStatusPill status={top.videoStatus} approvals={top.approvals} />
+          <TopLifter style={styles.topLifter} {...topLifterProps}>
+            <View style={[styles.topAvatarRing, { borderColor: ringColor }]}>
+              <UserAvatar uri={top.avatarUrl} size={40} iconSize={18} />
             </View>
-          </View>
+            <View style={styles.topCopy}>
+              <ThemedText style={styles.topName} setColor={theme.title} numberOfLines={1}>
+                {top.isMe ? t("common.you") : top.displayName}
+              </ThemedText>
+              <View style={styles.topMetaRow}>
+                <ThemedText style={styles.topRank} setColor={quietText}>
+                  #1
+                </ThemedText>
+                <LiftStatusPill status={top.videoStatus} approvals={top.approvals} />
+              </View>
+            </View>
+          </TopLifter>
           <View style={styles.topWeightGroup}>
             <ThemedText style={styles.topWeight} setColor={isVerified ? theme.record : theme.title}>
               {formatWeightKg(top.weightKg)}
@@ -249,6 +263,10 @@ export default function GymLeaderboardPage() {
     navigation.navigate("GymExerciseLeaderboardPage", { gym_id: gymId, exercise_id: exerciseId, scope });
   };
 
+  const openLifter = (lift) => {
+    navigation.navigate("PublicProfilePage", { userId: lift.userId });
+  };
+
   return (
     <ThemedView safe={["left", "right"]} style={styles.container}>
       <ScrollView
@@ -379,6 +397,7 @@ export default function GymLeaderboardPage() {
                 theme={theme}
                 colorScheme={colorScheme}
                 onPress={() => openExercise(entry.exerciseId)}
+                onOpenLifter={openLifter}
               />
             ))}
 

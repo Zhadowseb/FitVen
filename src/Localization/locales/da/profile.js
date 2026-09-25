@@ -1,4 +1,5 @@
 export default {
+  title: "Profil",
   language: {
     label: "Sprog",
     system: "System",
@@ -6,19 +7,26 @@ export default {
     da: "Dansk",
   },
   sections: {
-    publicProfile: "Offentlig profil",
     settings: "Indstillinger",
     appearance: "Udseende",
     feedback: "Feedback",
     account: "Konto",
   },
+  actions: {
+    edit: "Rediger profil",
+    viewAsOthers: "Se som andre",
+  },
   avatar: {
     uploading: "Uploader...",
     changePhoto: "Skift billede",
     uploadPhoto: "Upload billede",
+    changeAccessibility: "Skift profilbillede",
     hint: "Kvadratiske billeder fungerer bedst · op til {maxMb} MB",
   },
-  username: "Brugernavn",
+  username: {
+    label: "Brugernavn",
+    locked: "Kan ikke ændres",
+  },
   birthYear: {
     label: "Fødselsår",
     select: "Vælg fødselsår",
@@ -37,15 +45,29 @@ export default {
     label: "Bio",
     placeholder: "Fortæl lidt om din træning.",
   },
+  sex: {
+    label: "Køn",
+    male: "Mand",
+    female: "Kvinde",
+    hint: "Vises ikke på din profil",
+    clear: "Ryd",
+    clearAccessibility: "Ryd køn",
+    invalid: "Køn skal være mand, kvinde eller ikke angivet.",
+  },
   loadingProfile: "Indlæser profil...",
-  saveProfile: "Gem profil",
   saving: "Gemmer...",
+  edit: {
+    title: "Rediger profil",
+    discardTitle: "Kassér ændringer?",
+    discardMessage: "Det, du har ændret her, bliver ikke gemt.",
+    discard: "Kassér",
+    keepEditing: "Rediger videre",
+  },
   feedback: {
     signInToView: "Log ind for at se din profil.",
     couldNotLoad: "Kunne ikke indlæse din profil.",
     signInToUpdate: "Log ind for at opdatere din profil.",
     publicProfileUpdatedWithWarning: "Offentlig profil opdateret. {warning}",
-    profileUpdated: "Profil opdateret.",
     couldNotUpdate: "Kunne ikke opdatere din profil.",
     signInToUpdatePhoto: "Log ind for at opdatere dit profilbillede.",
     photoPermissionRequired:
@@ -62,6 +84,7 @@ export default {
     notifications: "Notifikationer",
     socialPosts: "Opslag",
     music: "Musik",
+    activeCount: { one: "{count} aktiv", other: "{count} aktive" },
   },
   appearance: {
     theme: "Tema",
@@ -78,25 +101,18 @@ export default {
   },
   feedbackCard: {
     title: "Send feedback",
-    subtitle: "Rapportér fejl, mærkelig opførsel eller idéer.",
-    bugs: "Fejl",
-    ideas: "Idéer",
-    missing: "Mangler",
+    subtitle: "Fejl, idéer eller noget der mangler",
   },
   account: {
     loggedInAs: "Logget ind som",
     unknownAccount: "Ukendt konto",
     logOut: "Log ud",
     loggingOut: "Logger ud...",
-    app: "App",
-    version: "Version",
     unknownVersion: "Ukendt",
     privacy: "Privatliv",
-    privacyHint: "Hvad FitVen gemmer om dig, og hvad du har accepteret.",
     deleteAccount: "Slet konto",
-    deleteAccountHint:
-      "Fjerner dine programmer, træninger og profil overalt. Det kan ikke fortrydes.",
   },
+  footer: "FitVen · version {version}",
   logoutConfirm: {
     title: "Log ud af FitVen?",
     message:

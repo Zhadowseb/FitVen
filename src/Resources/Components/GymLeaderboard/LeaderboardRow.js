@@ -18,6 +18,10 @@ function formatLiftDate(value) {
  * gets an attach button when it has no video; a pending row gets a play button
  * that opens the review sheet; a rejected row (only ever the viewer's own)
  * strikes the weight through and says so.
+ *
+ * With `onPressLifter` somebody else's row opens their profile. The review
+ * button stays a button of its own beside that, rather than inside it, so a
+ * screen reader can still reach it. Your own row never opens anything.
  */
 function LeaderboardRow({
   lift,
@@ -25,12 +29,23 @@ function LeaderboardRow({
   showGym = false,
   onPressReview,
   onPressAttach,
+  onPressLifter,
   style,
 }) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const { t } = useTranslation();
   const isMe = Boolean(lift?.isMe);
+  const canOpenLifter = Boolean(onPressLifter) && Boolean(lift?.userId) && !isMe;
+  const Lifter = canOpenLifter ? TouchableOpacity : View;
+  const lifterProps = canOpenLifter
+    ? {
+        activeOpacity: 0.75,
+        accessibilityRole: "button",
+        accessibilityHint: t("publicProfile.opensProfile"),
+        onPress: () => onPressLifter(lift),
+      }
+    : {};
   const isRejected = lift?.videoStatus === "rejected";
   const isPending = lift?.videoStatus === "pending";
   const rankLabel = lift?.rank ? `#${lift.rank}` : "—";
@@ -56,50 +71,52 @@ function LeaderboardRow({
         style,
       ]}
     >
-      <ThemedText
-        style={styles.rank}
-        setColor={isMe ? theme.primary : theme.quietText}
-        numberOfLines={1}
-      >
-        {rankLabel}
-      </ThemedText>
-
-      <UserAvatar
-        uri={lift?.avatarUrl}
-        size={34}
-        iconSize={16}
-        borderWidth={isMe ? 2 : 0}
-        borderColor={isMe ? theme.primary : "transparent"}
-      />
-
-      <View style={styles.copy}>
-        <ThemedText style={styles.name} setColor={theme.text} numberOfLines={1}>
-          {isMe ? t("common.you") : lift?.displayName ?? t("common.member")}
+      <Lifter style={styles.lifter} {...lifterProps}>
+        <ThemedText
+          style={styles.rank}
+          setColor={isMe ? theme.primary : theme.quietText}
+          numberOfLines={1}
+        >
+          {rankLabel}
         </ThemedText>
-        <View style={styles.metaRow}>
-          {isRejected ? (
-            <RejectedBadge rejections={lift.rejections} />
-          ) : (
-            <LiftStatusPill status={lift?.videoStatus} approvals={lift?.approvals} />
-          )}
-          <ThemedText style={styles.meta} setColor={theme.quietText} numberOfLines={1}>
-            {gymLine ?? formatLiftDate(lift?.performedAt)}
-          </ThemedText>
-          {gymLine && lift?.isHomeGym ? (
-            <ThemedText style={styles.meta} setColor={theme.primaryText} numberOfLines={1}>
-              {t("gyms.row.yourCentre")}
-            </ThemedText>
-          ) : null}
-        </View>
-      </View>
 
-      <ThemedText
-        style={[styles.value, isRejected ? styles.valueRejected : null]}
-        setColor={isRejected ? theme.quietText : theme.title}
-        numberOfLines={1}
-      >
-        {value}
-      </ThemedText>
+        <UserAvatar
+          uri={lift?.avatarUrl}
+          size={34}
+          iconSize={16}
+          borderWidth={isMe ? 2 : 0}
+          borderColor={isMe ? theme.primary : "transparent"}
+        />
+
+        <View style={styles.copy}>
+          <ThemedText style={styles.name} setColor={theme.text} numberOfLines={1}>
+            {isMe ? t("common.you") : lift?.displayName ?? t("common.member")}
+          </ThemedText>
+          <View style={styles.metaRow}>
+            {isRejected ? (
+              <RejectedBadge rejections={lift.rejections} />
+            ) : (
+              <LiftStatusPill status={lift?.videoStatus} approvals={lift?.approvals} />
+            )}
+            <ThemedText style={styles.meta} setColor={theme.quietText} numberOfLines={1}>
+              {gymLine ?? formatLiftDate(lift?.performedAt)}
+            </ThemedText>
+            {gymLine && lift?.isHomeGym ? (
+              <ThemedText style={styles.meta} setColor={theme.primaryText} numberOfLines={1}>
+                {t("gyms.row.yourCentre")}
+              </ThemedText>
+            ) : null}
+          </View>
+        </View>
+
+        <ThemedText
+          style={[styles.value, isRejected ? styles.valueRejected : null]}
+          setColor={isRejected ? theme.quietText : theme.title}
+          numberOfLines={1}
+        >
+          {value}
+        </ThemedText>
+      </Lifter>
 
       {isPending && onPressReview && !isMe ? (
         <TouchableOpacity
@@ -144,6 +161,15 @@ const styles = StyleSheet.create({
     gap: 11,
     paddingVertical: 12,
     paddingHorizontal: 16,
+  },
+  // Rank to weight: the part that opens the lifter's profile. The buttons
+  // after it stay outside it.
+  lifter: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 11,
   },
   rank: {
     width: 22,
