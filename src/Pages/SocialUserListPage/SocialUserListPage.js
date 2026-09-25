@@ -5,7 +5,7 @@ import {
   useColorScheme,
 } from "react-native";
 import { useCallback, useEffect, useState } from "react";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect, useRoute } from "@react-navigation/native";
 import { useTranslation } from "@localization";
 
 import styles from "./SocialUserListPageStyle";
@@ -30,7 +30,12 @@ const SocialUserListPage = () => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const { user } = useAuth();
-  const [query, setQuery] = useState("");
+  const route = useRoute();
+  // Explore's search hands over what was typed there, so "see everyone" lands
+  // on the same people with the follow buttons.
+  const [query, setQuery] = useState(
+    typeof route.params?.query === "string" ? route.params.query : ""
+  );
   const [results, setResults] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);

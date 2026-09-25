@@ -135,7 +135,7 @@ export default function NotificationHistoryPage() {
       return;
     }
 
-    navigation.navigate("SearchPage");
+    navigation.navigate("SocialPage");
   };
 
   const renderNotification = ({ item }) => (

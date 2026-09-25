@@ -66,6 +66,7 @@ behind by accident.
 | `20260922100000_the-note-column-leaves-the-old-exercises.sql` | yes |
 | `20260923100000_a-set-has-a-type.sql` | yes |
 | `20260924090000_a-friend-can-see-a-record-was-set-today.sql` | yes |
+| `20260925100000_explore-counts-your-centres-new-records.sql` | no |
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
 centre match, per-centre lift leaderboards with video verification, and what
@@ -315,6 +316,13 @@ strip how many personal records a workout it can already see holds - the
 count only, never the sets - so a tile can wear a crown. Nothing depends on
 it: on a project without it the app gets "function does not exist" and shows
 no crowns.
+
+`20260925100000_explore-counts-your-centres-new-records.sql` has not been run
+yet. It adds `gym_recent_records`, which tells Explore's "Your centre" card
+how many of the centre's records - rank 1 on its leaderboard, by the
+leaderboard's own rules - were set since the viewer last opened the centre,
+and which one is newest. Nothing depends on it: without it the app gets
+"function does not exist" and the card shows the centre without its records.
 
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to

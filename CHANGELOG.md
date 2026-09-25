@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.5.0] - Unreleased
+### Changed
+- **Social is Explore.** The tab is the place to find things now - UDFORSK / EXPLORE, with the search icon - and its first page is new (`ExplorePage`):
+  - **A search field** that opens a full-screen search with the keyboard up (`ExploreSearchPage`): centres and people as you type. A centre opens its page; a person opens the people list on the same search, where the follow buttons are.
+  - **Centres** ("{n} in Denmark") and **Records** ("Denmark's top 100") as the ways in.
+  - **Your centre**: its picture and name, how many of its records were set since you last opened it, and the newest one - who, what and how heavy - opening that exercise's ranking. A record is the top of an exercise's ranking by the centre leaderboard's own rules (`gym_recent_records`, `supabase/migrations/20260925100000_explore-counts-your-centres-new-records.sql` - not run yet; until it is, the card shows the centre without its records). Without a centre, a row to choose one.
+  - **The Social button** in the corner, with a badge for the followers who are new since you last opened Social.
+- **Social is a page of its own** (`SocialPage`, the old `SearchPage`): your followers and whom you follow, the lists with block and report, and Find friends. The friends strip left it - it is on Home - and so did the posts card (Feed has them) and the centres row (Explore does). Home's "see all", the empty feed and a follower notification lead where they now belong.
+- Programs, exercises made by others, knowledge and centre posts come to Explore when they exist; until then the page does not show them. `npm run test:explore-tab` checks that every route Explore links to is registered and keeps the tab lit.
+
+---
 ## [2.4.0] - Unreleased
 ### Changed
 - **The whole app speaks Danish.** Only some screens used to follow the language setting; the rest were written into the code in English, and a few in Danish. About 850 texts in 75 files now go through `t()`: the run and strength workouts, the exercise library and catalog, programs, blocks and weeks, the calendar and library, sickness, the settings pages, the 1RM calculator, Records and the errors the services show. Six new locale areas: `calendar`, `errors`, `exercises`, `programs`, `run` and `settings`. The privacy policy and the terms of use stay in English until a Danish version has been read by a person.

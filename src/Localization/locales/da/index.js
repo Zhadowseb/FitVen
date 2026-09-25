@@ -5,6 +5,7 @@ import calendar from "./calendar";
 import common from "./common";
 import errors from "./errors";
 import exercises from "./exercises";
+import explore from "./explore";
 import friends from "./friends";
 import gyms from "./gyms";
 import home from "./home";
@@ -27,6 +28,7 @@ export default {
   common,
   errors,
   exercises,
+  explore,
   friends,
   gyms,
   home,

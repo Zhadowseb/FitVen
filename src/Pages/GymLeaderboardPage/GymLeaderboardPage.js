@@ -31,6 +31,7 @@ import {
   UserAvatar,
 } from "@resources/ThemedComponents";
 import { formatWeightKg, getChainInitials } from "@utils/gymUtils";
+import { gymSeenKey, markSeen } from "@utils/lastSeen";
 
 function FeaturedCard({ entry, theme, colorScheme, onPress }) {
   const { t } = useTranslation();
@@ -220,7 +221,12 @@ export default function GymLeaderboardPage() {
   useFocusEffect(
     useCallback(() => {
       load();
-    }, [load])
+
+      // Explore's "Your centre" card counts this centre's records from here.
+      if (user?.id && Number.isFinite(gymId)) {
+        markSeen(gymSeenKey(user.id, gymId));
+      }
+    }, [load, user?.id, gymId])
   );
 
   useEffect(() => {

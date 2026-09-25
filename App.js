@@ -24,7 +24,9 @@ import ProgramOverviewPage from './src/Pages/ProgramOverviewPage/ProgramOverview
 import ProgramSettingsPage from './src/Pages/ProgramSettingsPage/ProgramSettingsPage';
 import WorkoutPostsPage from './src/Pages/WorkoutPostsPage/WorkoutPostsPage';
 import MicrocyclePage from './src/Pages/MicrocyclePage/MicrocyclePage';
-import SearchPage from "./src/Pages/SearchPage/SearchPage";
+import ExplorePage from "./src/Pages/ExplorePage/ExplorePage";
+import ExploreSearchPage from "./src/Pages/ExploreSearchPage/ExploreSearchPage";
+import SocialPage from "./src/Pages/SocialPage/SocialPage";
 import PrivacyPolicyPage from "./src/Pages/PrivacyPolicyPage/PrivacyPolicyPage";
 import TermsOfUsePage from "./src/Pages/TermsOfUsePage/TermsOfUsePage";
 import SocialUserListPage from "./src/Pages/SocialUserListPage/SocialUserListPage";
@@ -280,7 +282,9 @@ function RootNavigator() {
               <>
                 <Stack.Screen name="HomePage" component={HomePage} options={{ headerShown: false }} />
                 <Stack.Screen name="FeedPage" component={FeedPage} options={{ headerShown: false }} />
-                <Stack.Screen name="SearchPage" component={SearchPage} options={{ headerShown: false }} />
+                <Stack.Screen name="ExplorePage" component={ExplorePage} options={{ headerShown: false }} />
+                <Stack.Screen name="ExploreSearchPage" component={ExploreSearchPage} options={{ headerShown: false }} />
+                <Stack.Screen name="SocialPage" component={SocialPage} options={{ headerShown: false }} />
                 <Stack.Screen name="SocialUserListPage" component={SocialUserListPage} options={{ headerShown: false }} />
                 <Stack.Screen name="ProfilePage" component={ProfilePage} options={{ headerShown: false }} />
                 <Stack.Screen name="ProgramPage" component={ProgramPage} options={{headerShown: false}} />

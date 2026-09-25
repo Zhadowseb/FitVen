@@ -25,7 +25,7 @@ import { usePulseAnimation } from "../Components/animationHooks";
 import Home from "../Icons/UI-icons/Home";
 import Note from "../Icons/UI-icons/Note";
 import Plus from "../Icons/UI-icons/Plus";
-import Social from "../Icons/UI-icons/Social";
+import Search from "../Icons/UI-icons/Search";
 import UpwardGraf from "../Icons/UI-icons/UpwardGraf";
 import { notificationService, programService, workoutService } from "../../Services";
 import { useAuth } from "../../Contexts/AuthContext";
@@ -96,10 +96,13 @@ const PROFILE_ROUTES = new Set([
   "WorkoutTypesSettingsPage",
   "MusicSettingsPage",
 ]);
-// Centres are reached from Social and stay under it, however deep you go:
-// the list, one centre, one exercise there, and the whole country.
-const SOCIAL_ROUTES = new Set([
-  "SearchPage",
+// Explore is where things are found, and everything found from it stays under
+// it however deep you go: the search, your followers, centres - the list, one
+// centre, one exercise there - and the whole country.
+const EXPLORE_ROUTES = new Set([
+  "ExplorePage",
+  "ExploreSearchPage",
+  "SocialPage",
   "SocialUserListPage",
   "GymsPage",
   "GymLeaderboardPage",
@@ -170,9 +173,9 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
   const isProfileActive =
     inheritedTab === "profile" ||
     (!inheritedTab && PROFILE_ROUTES.has(currentRouteName));
-  const isSocialActive =
-    inheritedTab === "social" ||
-    (!inheritedTab && SOCIAL_ROUTES.has(currentRouteName));
+  const isExploreActive =
+    inheritedTab === "explore" ||
+    (!inheritedTab && EXPLORE_ROUTES.has(currentRouteName));
   const isLibraryActive =
     inheritedTab === "library" ||
     (!inheritedTab && LIBRARY_ROUTES.has(currentRouteName));
@@ -180,13 +183,13 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     inheritedTab === "feed" ||
     (!inheritedTab && FEED_ROUTES.has(currentRouteName));
   const isHomeActive =
-    !isProfileActive && !isSocialActive && !isLibraryActive && !isFeedActive;
+    !isProfileActive && !isExploreActive && !isLibraryActive && !isFeedActive;
   const resolvedTab = isProfileActive
     ? "profile"
     : isFeedActive
       ? "feed"
-      : isSocialActive
-        ? "social"
+      : isExploreActive
+        ? "explore"
         : isLibraryActive
           ? "library"
           : "home";
@@ -359,12 +362,12 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     goToTab("FeedPage");
   };
 
-  const handleSocialPress = () => {
-    if (!navigationRef?.isReady?.() || currentRouteName === "SearchPage") {
+  const handleExplorePress = () => {
+    if (!navigationRef?.isReady?.() || currentRouteName === "ExplorePage") {
       return;
     }
 
-    goToTab("SearchPage");
+    goToTab("ExplorePage");
   };
 
   const handleLibraryPress = () => {
@@ -1140,34 +1143,33 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
 
           <TouchableOpacity
             activeOpacity={0.82}
-            onPress={handleSocialPress}
+            onPress={handleExplorePress}
             style={styles.tab}
           >
             <View
               style={[
                 styles.tabIndicator,
                 {
-                  backgroundColor: isSocialActive ? indicatorColor : "transparent",
+                  backgroundColor: isExploreActive ? indicatorColor : "transparent",
                 },
               ]}
             />
             <View style={styles.tabIcon}>
-              <Social
+              <Search
                 width={23}
                 height={23}
-                color={isSocialActive ? activeColor : inactiveColor}
-
-                thickness={1.6}
+                color={isExploreActive ? activeColor : inactiveColor}
+                thickness={1.8}
               />
             </View>
             <Text
               style={[
                 styles.tabLabel,
                 styles.tabLabelSpacing,
-                { color: isSocialActive ? activeColor : inactiveColor },
+                { color: isExploreActive ? activeColor : inactiveColor },
               ]}
             >
-              {t("nav.tabs.social")}
+              {t("nav.tabs.explore")}
             </Text>
           </TouchableOpacity>
 

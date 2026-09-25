@@ -5,7 +5,7 @@ export default {
     home: "HOME",
     train: "TRAIN",
     feed: "Feed",
-    social: "SOCIAL",
+    explore: "EXPLORE",
     profile: "PROFILE",
   },
   centerButton: {

@@ -5,7 +5,7 @@ export default {
     home: "HJEM",
     train: "TRÆN",
     feed: "Feed",
-    social: "SOCIAL",
+    explore: "UDFORSK",
     profile: "PROFIL",
   },
   centerButton: {

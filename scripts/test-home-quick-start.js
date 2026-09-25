@@ -455,7 +455,7 @@ assert.ok(
 // In React Navigation 7, navigate() to a screen that is not on top pushes a
 // new copy of it. Tabs that use it stack up duplicates, each mounted from
 // nothing: Train -> Feed -> Train was two Trains.
-for (const route of ["FeedPage", "SearchPage", "ExerciseLibraryPage"]) {
+for (const route of ["FeedPage", "ExplorePage", "ExerciseLibraryPage"]) {
   assert.ok(
     navSource.includes(`goToTab("${route}")`) &&
       !navSource.includes(`navigationRef.navigate("${route}")`),
