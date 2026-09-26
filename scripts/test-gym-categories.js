@@ -965,7 +965,11 @@ function testFormat() {
   // The colour as text. 4.5:1 on everything it is written on, for every
   // category in every accent theme, light and dark - and left as it is where
   // it already reads.
+  // The rule below is checked with the file's own contrastRatio, so the
+  // formula itself is held to WCAG's: black on white, and the lightest grey
+  // that still reads on white.
   assert.strictEqual(format.contrastRatio("#000000", "#ffffff").toFixed(2), "21.00");
+  assert.strictEqual(format.contrastRatio("#767676", "#ffffff").toFixed(2), "4.54");
   assert.strictEqual(format.contrastRatio("#fff", "#FFFFFF"), 1);
   assert.strictEqual(format.contrastRatio("rgba(0, 0, 0, 1)", "#ffffff"), null, "what cannot be read is not guessed at");
   assert.strictEqual(format.readableTone("#16191f", ["#ffffff"], "#000000"), "#16191f", "a colour that reads stays");
