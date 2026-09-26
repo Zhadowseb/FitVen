@@ -1,8 +1,7 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   RefreshControl,
-  ScrollView,
   TouchableOpacity,
   View,
   useColorScheme,
@@ -11,22 +10,45 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
 
 import styles from "./DevDashboardPageStyle";
+import BugReportsTile from "./Components/BugReportsTile";
+import CollapsibleSection, { useOpenSections } from "./Components/CollapsibleSection";
 import DownloadsCard from "./Components/DownloadsCard";
+import FeatureUsageTable from "./Components/FeatureUsageTable";
+import FeedbackHeader from "./Components/FeedbackHeader";
 import FeedbackRow from "./Components/FeedbackRow";
+import KpiTile, { KpiTileRow } from "./Components/KpiTile";
+import ReleaseLagCard from "./Components/ReleaseLagCard";
+import SecondaryRow from "./Components/SecondaryRow";
+import SectionHeader from "./Components/SectionHeader";
+import StartedFromTile from "./Components/StartedFromTile";
+import SupabaseUsageForm from "./Components/SupabaseUsageForm";
+import UsersCard from "./Components/UsersCard";
+import {
+  DEFAULT_OPEN_SECTIONS,
+  LOADING,
+  buildBugReportsTile,
+  buildComesBackTile,
+  buildFeatureUsage,
+  buildFeedbackTiming,
+  buildPlanTile,
+  buildReleaseLag,
+  buildSecondarySections,
+  buildStartedFromTile,
+  buildStoreHealthTile,
+  buildTrainersTile,
+  buildUsersTable,
+  formatClock,
+  fromSettled,
+  getReleaseContext,
+  newestComputedAt,
+} from "./devDashboardView";
 import { useAuth } from "@contexts/AuthContext";
 import { adminService } from "@services";
-import {
-  CRASH_FREE_FLOOR,
-  DEFAULT_DEV_DASHBOARD_PERIOD,
-  EMPTY_STORE_STATS,
-  formatCount,
-  formatPercent,
-  formatRating,
-} from "@utils/devDashboard";
-import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
+import { EMPTY_STORE_STATS } from "@utils/devDashboard";
+import { Colors } from "@resources/GlobalStyling/colors";
 import ArrowLeft from "@resources/Icons/UI-icons/ArrowLeft";
 import {
-  ThemedSegmentedControl,
+  ThemedKeyboardProtection,
   ThemedText,
   ThemedView,
 } from "@resources/ThemedComponents";
@@ -36,43 +58,48 @@ import {
 // key put in `locales/` has to be kept in two languages by everybody who edits
 // it afterwards. The rest of the app goes through `t()`; the row that opens
 // this screen does too.
-const PERIOD_OPTIONS = [
-  { value: "7d", label: "7 dage" },
-  { value: "90d", label: "90 dage" },
-  { value: "all", label: "Alt" },
-];
 
 const FEEDBACK_PAGE_SIZE = 20;
 
-function OpsBox({ value, valueColor, label, theme }) {
-  return (
-    <View
-      style={[
-        styles.opsBox,
-        {
-          backgroundColor: withAlpha(theme.title, 0.05),
-          borderColor: withAlpha(theme.title, 0.08),
-        },
-      ]}
-    >
-      <ThemedText style={styles.opsValue} setColor={valueColor}>
-        {value}
-      </ThemedText>
-      <ThemedText style={styles.opsLabel} setColor={theme.quietText} numberOfLines={1}>
-        {label}
-      </ThemedText>
-    </View>
-  );
+// S7 always shows the last 90 days. Every other number has its own fixed
+// window, which is why the page no longer has a period picker.
+const DOWNLOADS_PERIOD = "90d";
+
+// Every read the page makes, in one `Promise.allSettled`. A read that fails
+// greys out what it feeds - "Kunne ikke hentes" - and nothing else.
+const SOURCES = [
+  ["userTotals", () => adminService.getUserTotals()],
+  ["trainingKpis", () => adminService.getTrainingKpis()],
+  ["startedFrom", () => adminService.getStartedFrom()],
+  ["featureUsage", () => adminService.getFeatureUsage()],
+  ["bugReports", () => adminService.getBugReports()],
+  ["storeHealth", () => adminService.getStoreHealth()],
+  ["releaseLag", () => adminService.getReleaseLag()],
+  ["secondary", () => adminService.getSecondaryKpis()],
+  ["storeStats", () => adminService.getStoreStats(DOWNLOADS_PERIOD)],
+  ["feedback", () => adminService.getFeedback({ limit: FEEDBACK_PAGE_SIZE })],
+  ["unreadCount", () => adminService.getUnreadFeedbackCount()],
+];
+
+const INITIAL_SOURCES = Object.fromEntries(SOURCES.map(([key]) => [key, LOADING]));
+
+// A read that throws before it has a promise to return - or that is not there
+// at all - is a rejection like any other, not an exception out of `load`.
+function attempt(read) {
+  return new Promise((resolve) => resolve(read()));
 }
 
 /**
- * Profile -> Dev. Downloads, whether the app is running, and the feedback
- * people have sent from inside it.
+ * Profile -> Dev. The overview: who uses the app, whether it works, whether it
+ * is used, whether development is moving the right way, which features are
+ * used, the feedback inbox, and the secondary numbers that only matter once
+ * they move.
  *
- * A read screen: nothing here writes anything except marking a message read.
- * Access is the `is_admin` flag, and the flag is checked on the server by the
- * policies behind every one of these reads - the check in this component only
- * decides which of two screens to draw.
+ * A read screen: nothing here writes anything except marking a message read,
+ * deciding about it, and typing in the Supabase reading (S10). Access is the
+ * `is_admin` flag, checked on the server by the policies and RPCs behind every
+ * one of these reads - the check in this component only decides which of two
+ * screens to draw.
  */
 export default function DevDashboardPage() {
   const colorScheme = useColorScheme();
@@ -80,79 +107,62 @@ export default function DevDashboardPage() {
   const navigation = useNavigation();
   const { user } = useAuth();
 
-  const [period, setPeriod] = useState(DEFAULT_DEV_DASHBOARD_PERIOD);
   const [isAdmin, setIsAdmin] = useState(null);
-  const [stats, setStats] = useState(EMPTY_STORE_STATS);
-  const [ops, setOps] = useState({
-    activeToday: null,
-    crashFreePercent: null,
-    rating: null,
-  });
+  const [sources, setSources] = useState(INITIAL_SOURCES);
   const [feedback, setFeedback] = useState({ rows: [], total: 0, nextCursor: null });
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [openSections, toggleSection] = useOpenSections(DEFAULT_OPEN_SECTIONS);
+  const [isDownloadsOpen, setIsDownloadsOpen] = useState(false);
 
-  const load = useCallback(
-    async (periodKey) => {
-      const admin = await adminService.getIsAdmin({ user });
+  const load = useCallback(async () => {
+    const admin = await adminService.getIsAdmin({ user });
 
-      setIsAdmin(admin);
+    setIsAdmin(admin);
 
-      if (!admin) {
-        setIsLoading(false);
-        return;
-      }
+    if (!admin) {
+      setIsLoading(false);
+      return;
+    }
 
-      try {
-        const [nextStats, nextOps, nextFeedback, nextUnread] = await Promise.all([
-          adminService.getStoreStats(periodKey),
-          adminService.getOpsStats(periodKey),
-          adminService.getFeedback({ limit: FEEDBACK_PAGE_SIZE }),
-          adminService.getUnreadFeedbackCount(),
-        ]);
+    const settled = await Promise.allSettled(SOURCES.map(([, read]) => attempt(read)));
+    const next = Object.fromEntries(
+      SOURCES.map(([key], index) => [key, fromSettled(settled[index])])
+    );
 
-        setStats(nextStats);
-        setOps(nextOps);
-        setFeedback(nextFeedback);
-        setUnreadCount(nextUnread);
-        setErrorMessage("");
-      } catch (error) {
-        setErrorMessage(
-          error instanceof Error ? error.message : "Kunne ikke hente tallene."
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [user]
-  );
+    setSources(next);
+    setErrorMessage("");
+
+    // The list keeps state of its own, because paging and the status chips
+    // change it in place. A read that failed leaves what was already there.
+    if (next.feedback.state === "ok" && next.feedback.value) {
+      setFeedback(next.feedback.value);
+    }
+
+    if (next.unreadCount.state === "ok" && typeof next.unreadCount.value === "number") {
+      setUnreadCount(next.unreadCount.value);
+    }
+
+    setIsLoading(false);
+  }, [user]);
 
   useFocusEffect(
     useCallback(() => {
-      load(period);
-    }, [load, period])
-  );
-
-  const changePeriod = useCallback(
-    (nextPeriod) => {
-      setPeriod(nextPeriod);
-      setIsLoading(true);
-      load(nextPeriod);
-    },
-    [load]
+      load();
+    }, [load])
   );
 
   const refresh = useCallback(async () => {
     setIsRefreshing(true);
 
     try {
-      await load(period);
+      await load();
     } finally {
       setIsRefreshing(false);
     }
-  }, [load, period]);
+  }, [load]);
 
   // Marking read is the one write on the screen, and it happens against the
   // row already on it: the list is not reloaded, or the message would move
@@ -232,7 +242,47 @@ export default function DevDashboardPage() {
     }
   }, [feedback.nextCursor]);
 
-  const crashFree = formatPercent(ops.crashFreePercent);
+  // S10. After a save the S rows are read back from the server rather than
+  // patched here, so the row shows what was stored - and its status and
+  // "Aflæst" with it. A failure throws on to the form, which shows it.
+  const saveSupabaseUsage = useCallback(async (reading) => {
+    const saved = await adminService.setSupabaseUsage(reading);
+
+    if (saved?.unavailable) {
+      throw new Error("dev_metrics findes ikke endnu. Kør migrationen først.");
+    }
+
+    const [secondary] = await Promise.allSettled([
+      attempt(() => adminService.getSecondaryKpis()),
+    ]);
+
+    setSources((current) => ({ ...current, secondary: fromSettled(secondary) }));
+  }, []);
+
+  const view = useMemo(() => {
+    const releaseContext = getReleaseContext(sources.releaseLag);
+
+    return {
+      users: buildUsersTable(sources.userTotals),
+      storeHealth: buildStoreHealthTile(sources.storeHealth),
+      bugs: buildBugReportsTile(sources.bugReports),
+      trainers: buildTrainersTile(sources.trainingKpis, releaseContext),
+      comesBack: buildComesBackTile(sources.trainingKpis),
+      plan: buildPlanTile(sources.trainingKpis, releaseContext),
+      startedFrom: buildStartedFromTile(sources.startedFrom),
+      releaseLag: buildReleaseLag(sources.releaseLag),
+      featureUsage: buildFeatureUsage(sources.featureUsage),
+      feedbackTiming: buildFeedbackTiming(sources.secondary),
+      sections: buildSecondarySections(sources.secondary, sources.storeStats),
+      updatedAt: newestComputedAt(Object.values(sources)),
+    };
+  }, [sources]);
+
+  const downloadStats =
+    sources.storeStats.state === "ok" && sources.storeStats.value
+      ? sources.storeStats.value
+      : EMPTY_STORE_STATS;
+  const feedbackFailed = sources.feedback.state === "failed";
 
   return (
     <ThemedView style={styles.container}>
@@ -261,6 +311,13 @@ export default function DevDashboardPage() {
             Overblik
           </ThemedText>
         </View>
+
+        {/* When the numbers were worked out, not when the page was opened. */}
+        {isAdmin && view.updatedAt ? (
+          <ThemedText style={styles.updated} setColor={theme.quietText} numberOfLines={1}>
+            opdateret {formatClock(view.updatedAt)}
+          </ThemedText>
+        ) : null}
       </View>
 
       {isAdmin === false ? (
@@ -270,20 +327,17 @@ export default function DevDashboardPage() {
           </ThemedText>
         </View>
       ) : (
-        <ScrollView
+        <ThemedKeyboardProtection
+          scroll
+          bottomOffset={40}
           contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl refreshing={isRefreshing} onRefresh={refresh} />
-          }
+          scrollViewProps={{
+            showsVerticalScrollIndicator: false,
+            refreshControl: (
+              <RefreshControl refreshing={isRefreshing} onRefresh={refresh} />
+            ),
+          }}
         >
-          <ThemedSegmentedControl
-            options={PERIOD_OPTIONS}
-            value={period}
-            onChange={changePeriod}
-            style={styles.periodPicker}
-          />
-
           {errorMessage ? (
             <ThemedText style={styles.error} setColor={theme.danger}>
               {errorMessage}
@@ -294,63 +348,50 @@ export default function DevDashboardPage() {
             <ActivityIndicator style={styles.loading} color={theme.primary} />
           ) : (
             <>
-              <DownloadsCard stats={stats} />
+              <SectionHeader title="Brugere" detail={view.users.eyebrow} spacing="first" />
+              <UsersCard table={view.users} />
 
-              <View style={styles.opsRow}>
-                <OpsBox
-                  value={formatCount(ops.activeToday)}
-                  valueColor={theme.title}
-                  label="AKTIVE I DAG"
-                  theme={theme}
-                />
-                <OpsBox
-                  value={crashFree}
-                  valueColor={
-                    ops.crashFreePercent !== null && ops.crashFreePercent < CRASH_FREE_FLOOR
-                      ? theme.danger
-                      : theme.secondary
-                  }
-                  label="UDEN CRASH"
-                  theme={theme}
-                />
-                <OpsBox
-                  value={formatRating(ops.rating)}
-                  valueColor={theme.planned}
-                  label="BEDØMMELSE"
-                  theme={theme}
-                />
-              </View>
+              <SectionHeader title="Virker den?" detail="KPI-5" />
+              <KpiTileRow>
+                <KpiTile label="Crash · ANR" {...view.storeHealth} />
+                <BugReportsTile tile={view.bugs} />
+              </KpiTileRow>
 
-              <View style={styles.feedbackHeader}>
-                <ThemedText style={styles.sectionTitle} setColor={theme.quietText}>
-                  FEEDBACK
+              <SectionHeader title="Bruges den?" detail="KPI-1 · 2 · 3" />
+              <KpiTileRow>
+                <KpiTile label="Trænende · 7 dage" {...view.trainers} />
+                <KpiTile label="Kommer igen" {...view.comesBack} />
+              </KpiTileRow>
+              <KpiTileRow spaced>
+                <KpiTile label="Plan gennemført" {...view.plan} />
+                <StartedFromTile tile={view.startedFrom} />
+              </KpiTileRow>
+
+              <SectionHeader title="Bevæger udviklingen sig rigtigt?" detail="KPI-6" />
+              <ReleaseLagCard lag={view.releaseLag} />
+
+              <SectionHeader title="Hvad bruges · 28 dage" detail="KPI-4" spacing="wide" />
+              <FeatureUsageTable usage={view.featureUsage} />
+
+              <FeedbackHeader
+                unreadCount={unreadCount}
+                total={feedback.total}
+                timing={view.feedbackTiming}
+              />
+
+              {feedbackFailed ? (
+                <ThemedText style={styles.feedbackError} setColor={theme.danger}>
+                  Kunne ikke hente beskederne.
+                  {sources.feedback.message ? ` ${sources.feedback.message}` : ""}
                 </ThemedText>
-
-                {unreadCount > 0 ? (
-                  <View style={[styles.unreadBadge, { backgroundColor: theme.primary }]}>
-                    <ThemedText
-                      style={styles.unreadBadgeText}
-                      setColor={theme.textInverted}
-                    >
-                      {unreadCount > 99 ? "99+" : String(unreadCount)}
-                    </ThemedText>
-                  </View>
-                ) : null}
-
-                <View style={styles.spacer} />
-
-                <ThemedText
-                  style={styles.seeAll}
-                  setColor={theme.primaryText ?? theme.primary}
-                >
-                  {feedback.total} i alt
-                </ThemedText>
-              </View>
+              ) : null}
 
               {feedback.rows.length === 0 ? (
-                <ThemedText style={styles.emptyFeedback} setColor={theme.quietText}>
-                  Ingen beskeder endnu.
-                </ThemedText>
+                feedbackFailed ? null : (
+                  <ThemedText style={styles.emptyFeedback} setColor={theme.quietText}>
+                    Ingen beskeder endnu.
+                  </ThemedText>
+                )
               ) : (
                 <View style={styles.feedbackList}>
                   {feedback.rows.map((message) => (
@@ -385,9 +426,51 @@ export default function DevDashboardPage() {
                   </ThemedText>
                 </TouchableOpacity>
               ) : null}
+
+              <SectionHeader title="Når et tal bevæger sig" detail="S1–S10" spacing="wide" />
+              {view.sections.map((section, sectionIndex) => (
+                <CollapsibleSection
+                  key={section.key}
+                  title={section.title}
+                  ids={section.ids}
+                  summary={section.summary}
+                  status={section.status}
+                  isOpen={openSections.includes(section.key)}
+                  onToggle={() => toggleSection(section.key)}
+                  isFirst={sectionIndex === 0}
+                >
+                  {section.rows.map((row, rowIndex) => {
+                    let extra = null;
+
+                    if (row.expands === "downloads" && isDownloadsOpen) {
+                      extra = <DownloadsCard stats={downloadStats} />;
+                    } else if (row.form === "supabaseUsage") {
+                      extra = (
+                        <SupabaseUsageForm reading={row.reading} onSave={saveSupabaseUsage} />
+                      );
+                    }
+
+                    return (
+                      <SecondaryRow
+                        key={row.id}
+                        row={row}
+                        isFirst={rowIndex === 0}
+                        onPress={
+                          row.expands === "downloads"
+                            ? () => setIsDownloadsOpen((open) => !open)
+                            : null
+                        }
+                        isExpanded={row.expands === "downloads" && isDownloadsOpen}
+                      >
+                        {extra}
+                      </SecondaryRow>
+                    );
+                  })}
+                </CollapsibleSection>
+              ))}
             </>
           )}
-        </ScrollView>
+        </ThemedKeyboardProtection>
       )}
 
       <StatusBar style="auto" />

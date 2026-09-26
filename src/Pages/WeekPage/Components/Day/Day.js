@@ -26,6 +26,7 @@ import { ThemedCard,
         ThemedBouncyCheckbox } from "../../../../Resources/ThemedComponents";
 import { formatDate } from '../../../../Utils/dateUtils';
 import { requestOpenQuickWorkoutMenu } from "../../../../Utils/quickWorkoutMenuEvents";
+import { STARTED_FROM } from "@utils/startedFrom";
 import { programService } from "../../../../Services";
 import { useTranslation } from "@localization";
 
@@ -118,6 +119,7 @@ const Day = ( {day, program_id, microcycle_id, refreshKey = 0} ) => {
                 workoutId,
                 programId: program_id,
                 date,
+                startedFrom: STARTED_FROM.PROGRAM,
             });
 
             if (!copiedWorkoutId) {
@@ -338,6 +340,8 @@ const Day = ( {day, program_id, microcycle_id, refreshKey = 0} ) => {
                             day,
                             dayId: day_id,
                             programId: program_id,
+                            // For whatever the start sheet creates from here.
+                            startedFrom: STARTED_FROM.PROGRAM,
                         });
 
                     }}>

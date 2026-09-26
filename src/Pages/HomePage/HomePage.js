@@ -33,6 +33,7 @@ import {
   workoutService,
 } from "@services";
 import { getTodaysDate } from "@utils/dateUtils";
+import { STARTED_FROM } from "@utils/startedFrom";
 import { subscribeWorkoutSetChanges } from "@utils/workoutSetEvents";
 import { useAuth } from "../../Contexts/AuthContext";
 
@@ -336,6 +337,7 @@ export default function HomePage() {
         programService.copyWorkoutToStandaloneDate(db, {
           workoutId: group.lastWorkoutId,
           date: new Date(),
+          startedFrom: STARTED_FROM.RECENT,
         })
       );
     },
@@ -348,6 +350,7 @@ export default function HomePage() {
         date: getTodaysDate(),
         workoutType: EMPTY_WORKOUT_TYPE,
         label: null,
+        startedFrom: STARTED_FROM.EMPTY,
       })
     );
   }, [db, startWorkout]);

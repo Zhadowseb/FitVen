@@ -19,7 +19,7 @@
 // counted by scripts/check-privacy-policy.js, which fails the build while the
 // policy claims to be published and is not finished.
 
-export const PRIVACY_POLICY_VERSION = "2026-09-26";
+export const PRIVACY_POLICY_VERSION = "2026-09-26.3";
 
 /** The public copy. Required by Google Play, and the address in its listing. */
 export const PRIVACY_POLICY_URL = "https://fitven.dk/privacy/";
@@ -44,7 +44,7 @@ Anything about your data — a copy of it, a correction, having it deleted, or a
 
 Your profile: display name, username, an optional short bio, an optional photo, your birth year, and — if you choose to give it — your sex. Your sex is only used so that records and leaderboards can be split by sex; it is never shown to anyone, and you can clear it at any time in Edit profile.
 
-Your training: programs, workouts, exercises, sets, weights, repetitions, personal records and the notes you write on them, and the split of workouts you choose to rotate through.
+Your training: programs, workouts, exercises, sets, weights, repetitions, personal records and the notes you write on them, the split of workouts you choose to rotate through, and how each workout was started — from a program, from a recent workout or your split, in the calendar, as an empty workout, or copied from another workout.
 
 Exercises you make yourself: the name, the muscles, the equipment, the weight mode, a short description, the steps and — if you add one — a video and a still frame taken from it. They are kept with your account, so they come back on a new phone. The shared exercises you save, the ones you add a copy of, and the ones you report are stored too.
 
@@ -57,6 +57,8 @@ Social: who you follow, who follows you, who you have blocked, the people and po
 Music: if you connect Spotify and turn on sharing, the name of the track and the artist playing during a workout is saved with that workout.
 
 Feedback: what you write when you send us feedback, and the version of the app it was sent from.
+
+App use: when you last opened the app, whether that was on an iPhone or an Android phone, and which version of the app it was. It is saved at most once an hour, and it is how the developer counts how many people use the app and which versions are still in use.
 
 Notifications: the notifications you have been sent, and a push token identifying this device so they can reach it.`,
   },
@@ -107,6 +109,8 @@ An exercise you make is private until you choose to share it. A shared exercise 
 A shared exercise shows figures drawn from everyone who uses it: how many use it, how many of them train at the viewer's centre, and the typical sets, repetitions and weights. If you use an exercise somebody shared, your sets with it count towards those figures. They are only ever shown as totals, never with a name, and the spread of weights only once at least 20 sets have been logged.
 
 Blocking someone removes the follow in both directions, takes you out of each other's search results and leaderboards, and hides your profiles, your posts and your shared exercises from each other.
+
+The developer's own overview of the app counts things only as totals — how many trained this week, how many came back, how many use each feature, which versions are in use — and never lists who.
 
 The person responsible for FitVen can read the database directly through the Supabase dashboard. That access exists so the app can be run and repaired, and it is not used to look at individual training data without a reason such as a fault you have reported.`,
   },

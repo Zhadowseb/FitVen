@@ -1794,6 +1794,9 @@ export async function initializeDatabase(db) {
     ["gym_id", "INTEGER"],
     ["start_latitude", "REAL"],
     ["start_longitude", "REAL"],
+    // Null for every workout that already exists: where those were started
+    // from is not known, and the overview does not count them.
+    ["started_from", "TEXT"],
   ]);
   await restoreLocalWorkoutTypeCatalogSchema(db);
   await ensureTableColumns(db, "Workout_Type", [

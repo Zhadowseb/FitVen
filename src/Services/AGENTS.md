@@ -60,6 +60,14 @@ Using `Set` as the example:
 
 Steps 5 to 8 are the ones that get skipped. They are the cloud half.
 
+Step 11 can land after the app does, and until it has, a cloud select or
+payload that names the column fails the whole request - every row of that
+entity stops syncing, not just the field. For a column the app may reach
+first, follow `started_from` on `Workout_Type_Instance`: the handle from
+`createStartedFromCloudColumn` in `src/Utils/startedFrom.js` names the column
+until the cloud says it is missing, and `workoutTypeInstanceSync.js` routes its
+reads and uploads through it.
+
 For another entity, swap `Set` for its name. `SYNCED_FIELDS` has a table per
 entity, and `getComparableXSnapshot`, `areComparableXsEqual` and
 `buildCloudXPayload` are all derived from it. `reconcileXsFromCloud` lives in

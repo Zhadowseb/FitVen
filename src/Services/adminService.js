@@ -1,27 +1,50 @@
 // Everything the dev dashboard reads. Nothing else uses this file.
 //
 // Every function here is guarded on the server as well as here: `is_admin` on
-// `profile_private`, the policies on `Feedback` and `store_stats`, and the
-// admin check inside `admin_active_users`. The checks in this file exist so the
-// screen can say "you are not an admin" instead of showing five empty boxes -
-// they are not what stops a non-admin reading the data. A hidden button is not
-// access control.
+// `profile_private`, the policies on `Feedback`, `store_stats` and
+// `dev_metrics`, and the admin check inside every `admin_*` function. The
+// checks in this file exist so the screen can say "you are not an admin"
+// instead of showing five empty boxes - they are not what stops a non-admin
+// reading the data. A hidden button is not access control.
 //
-// The sums live in `@utils/devDashboard`, which a test can load; this file
-// imports the Supabase client and therefore react-native, and nothing that
-// does can be driven by `npm test`.
+// The sums and the shapes live in `@utils/devDashboard`, which a test can
+// load; this file imports the Supabase client and therefore react-native, and
+// nothing that does can be driven by `npm test`.
+//
+// The overview's reads (getUserTotals to getSecondaryKpis) each stand alone:
+// the page loads them with Promise.allSettled, so one that fails greys out its
+// own tiles and nothing else. Each throws the server's error when it fails,
+// and answers { unavailable: true } instead when what it reads has not been
+// migrated yet (supabase/migrations/20261001090000_dev-kpis.sql).
 import { t } from "@localization";
 import { supabase } from "@database/supaBaseClient";
 import {
   DEFAULT_DEV_DASHBOARD_PERIOD,
   FEEDBACK_STATUSES,
   buildStoreStats,
+  buildSupabaseUsageValue,
   getPeriodDays,
+  isMissingMigrationError,
+  shapeBugReports,
+  shapeFeatureUsage,
+  shapeReleaseLag,
+  shapeSecondaryKpis,
+  shapeStartedFrom,
+  shapeStoreHealth,
+  shapeTrainingKpis,
+  shapeUserTotals,
 } from "@utils/devDashboard";
 
 const FEEDBACK_TABLE = "Feedback";
 const PROFILE_PRIVATE_TABLE = "profile_private";
 const STORE_STATS_TABLE = "store_stats";
+const DEV_METRICS_TABLE = "dev_metrics";
+
+// The fixed windows the overview shows. Each number has its own; there is no
+// period picker any more.
+const STARTED_FROM_DAYS = 28;
+const FEATURE_USAGE_DAYS = 28;
+const BUG_REPORT_DAYS = 7;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -89,38 +112,167 @@ export async function getStoreStats(periodKey = DEFAULT_DEV_DASHBOARD_PERIOD) {
   return buildStoreStats(data ?? [], { days, now });
 }
 
+/* ---------------------------------------------------------- the overview -- */
+
+const unavailable = () => ({ unavailable: true });
+
 /**
- * The three numbers under the chart.
- *
- * `crashFreePercent` is always null. The privacy policy says in as many words
- * that FitVen carries no crash reporting, so there is no number to read - and
- * the design document asks for an em dash rather than a guess in exactly this
- * case. It stays in the shape so the box does not have to change when that
- * decision does.
+ * One admin function's answer, shaped. A function that is not there yet, and
+ * an answer that is not an object, are both "not connected"; anything else
+ * that goes wrong - a non-admin, a timeout - is thrown with the server's own
+ * message.
  */
-export async function getOpsStats(periodKey = DEFAULT_DEV_DASHBOARD_PERIOD) {
-  const [activeUsers, storeStats] = await Promise.all([
-    getActiveUsers(),
-    getStoreStats(periodKey),
-  ]);
-
-  return {
-    activeToday: activeUsers,
-    crashFreePercent: null,
-    rating: storeStats.rating,
-  };
-}
-
-async function getActiveUsers() {
-  const { data, error } = await supabase.rpc("admin_active_users", {
-    window_days: 1,
-  });
+async function readOverviewRpc(name, args, shape) {
+  const { data, error } = args
+    ? await supabase.rpc(name, args)
+    : await supabase.rpc(name);
 
   if (error) {
-    return null;
+    if (isMissingMigrationError(error)) {
+      return unavailable();
+    }
+
+    throw error;
   }
 
-  return typeof data === "number" ? data : null;
+  return data && typeof data === "object" && !Array.isArray(data)
+    ? shape(data)
+    : unavailable();
+}
+
+/** §3: downloads and active users, Apple | Android | Total. */
+export function getUserTotals() {
+  return readOverviewRpc("admin_user_totals", null, shapeUserTotals);
+}
+
+/** KPI-1, 2 and 3 with their series, oldest point first. */
+export function getTrainingKpis() {
+  return readOverviewRpc("admin_training_kpis", null, shapeTrainingKpis);
+}
+
+/** "Startet fra": finished workouts in the last 28 days by where they began. */
+export function getStartedFrom() {
+  return readOverviewRpc(
+    "admin_started_from",
+    { days: STARTED_FROM_DAYS },
+    shapeStartedFrom
+  );
+}
+
+/** KPI-4: each feature's share of the active users, with its commits. */
+export function getFeatureUsage() {
+  return readOverviewRpc(
+    "admin_feature_usage",
+    { days: FEATURE_USAGE_DAYS },
+    (data) => shapeFeatureUsage(data, Date.now())
+  );
+}
+
+/** KPI-5b: bug reports this week per app version. */
+export function getBugReports() {
+  return readOverviewRpc(
+    "admin_bug_reports",
+    { days: BUG_REPORT_DAYS },
+    shapeBugReports
+  );
+}
+
+/** S1 to S10. S3 is always null: nothing reports it yet. */
+export function getSecondaryKpis() {
+  return readOverviewRpc("admin_secondary_kpis", null, shapeSecondaryKpis);
+}
+
+const MISSING = Symbol("missing");
+
+// The newest row that carries a rate, which need not be the newest row: the
+// downloads are written every day, the rates only when something measures
+// them.
+async function readLatestHealthRow(platform) {
+  const { data, error } = await supabase
+    .from(STORE_STATS_TABLE)
+    .select("day, crash_rate, anr_rate, measured_at")
+    .eq("platform", platform)
+    .or("crash_rate.not.is.null,anr_rate.not.is.null")
+    .order("day", { ascending: false })
+    .limit(1);
+
+  if (error) {
+    if (isMissingMigrationError(error)) {
+      return MISSING;
+    }
+
+    throw error;
+  }
+
+  return data?.[0] ?? null;
+}
+
+/**
+ * KPI-5a, read straight from store_stats under its admin-only policy. A
+ * platform with no measured rate is null, and so is every platform today:
+ * nothing writes the rates yet.
+ */
+export async function getStoreHealth() {
+  const [ios, android] = await Promise.all([
+    readLatestHealthRow("ios"),
+    readLatestHealthRow("android"),
+  ]);
+
+  if (ios === MISSING || android === MISSING) {
+    return unavailable();
+  }
+
+  return shapeStoreHealth({ ios, android });
+}
+
+/**
+ * KPI-6, read straight from dev_metrics under its admin-only policy. A
+ * platform is null until the Action has written it; its `days` is null until
+ * that platform has a store tag.
+ */
+export async function getReleaseLag() {
+  const { data, error } = await supabase
+    .from(DEV_METRICS_TABLE)
+    .select("platform, value, measured_at")
+    .eq("key", "release_lag");
+
+  if (error) {
+    if (isMissingMigrationError(error)) {
+      return unavailable();
+    }
+
+    throw error;
+  }
+
+  return shapeReleaseLag(data ?? []);
+}
+
+/**
+ * S10: the Supabase usage the admin read off the dashboard, as percentages of
+ * the plan. One row, overwritten each time. Answers what was stored, or
+ * { unavailable: true } when dev_metrics has not been migrated.
+ */
+export async function setSupabaseUsage({ db, storage, egress, mau, readAt } = {}) {
+  const value = buildSupabaseUsageValue({ db, storage, egress, mau, readAt });
+  const { error } = await supabase.from(DEV_METRICS_TABLE).upsert(
+    {
+      key: "supabase_usage",
+      platform: "all",
+      value,
+      measured_at: new Date().toISOString(),
+    },
+    { onConflict: "key,platform" }
+  );
+
+  if (error) {
+    if (isMissingMigrationError(error)) {
+      return unavailable();
+    }
+
+    throw error;
+  }
+
+  return value;
 }
 
 /**

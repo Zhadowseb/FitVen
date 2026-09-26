@@ -2668,6 +2668,7 @@ export async function getWorkoutsForCloudSync(db, { dirtyOnly = false } = {}) {
         gym_id,
         start_latitude,
         start_longitude,
+        started_from,
         needs_sync
      FROM Workout_Type_Instance
      ${dirtyOnly ? "WHERE needs_sync = 1" : ""}
@@ -2695,6 +2696,7 @@ export async function createWorkoutFromCloud(
     gymId = null,
     startLatitude = null,
     startLongitude = null,
+    startedFrom = null,
   }
 ) {
   return db.runAsync(
@@ -2716,8 +2718,9 @@ export async function createWorkoutFromCloud(
       elapsed_time,
       gym_id,
       start_latitude,
-      start_longitude
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?);`,
+      start_longitude,
+      started_from
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?);`,
     sqliteParams([
       cloudWorkoutTypeInstanceId,
       remoteLocalWorkoutTypeInstanceId,
@@ -2736,6 +2739,7 @@ export async function createWorkoutFromCloud(
       gymId,
       startLatitude,
       startLongitude,
+      startedFrom,
     ])
   );
 }
@@ -2761,8 +2765,11 @@ export async function updateWorkoutFromCloud(
     gymId = null,
     startLatitude = null,
     startLongitude = null,
+    startedFrom = null,
   }
 ) {
+  // started_from is kept when the cloud's is null: the cloud not knowing where
+  // a workout was started from is no reason for this phone to forget it.
   await db.runAsync(
     `UPDATE Workout_Type_Instance
      SET cloud_workout_type_instance_id = ?,
@@ -2782,6 +2789,7 @@ export async function updateWorkoutFromCloud(
          gym_id = ?,
          start_latitude = ?,
          start_longitude = ?,
+         started_from = COALESCE(?, started_from),
          needs_sync = 0
      WHERE workout_id = ?;`,
     sqliteParams([
@@ -2802,6 +2810,7 @@ export async function updateWorkoutFromCloud(
       gymId,
       startLatitude,
       startLongitude,
+      startedFrom,
       workoutId,
     ])
   );
@@ -3097,9 +3106,14 @@ export async function getWorkoutsByDayIds(db, dayIds) {
   );
 }
 
+/**
+ * `startedFrom` is one of STARTED_FROM (@utils/startedFrom), from the caller
+ * that knows. Stored as given: every caller passes one of the five, and the
+ * upload normalises it again before the cloud's check constraint sees it.
+ */
 export async function createWorkout(
   db,
-  { date, dayId, workoutType = null, label = workoutType }
+  { date, dayId, workoutType = null, label = workoutType, startedFrom = null }
 ) {
   const syncVersion = createNextSyncVersion();
   return db.runAsync(
@@ -3108,18 +3122,30 @@ export async function createWorkout(
       day_id,
       workout_type,
       label,
+      started_from,
       needs_sync,
       sync_id,
       sync_version
     )
-     VALUES (?, ?, ?, ?, 1, ${SQLITE_UUID_SQL}, ?);`,
-    [date, dayId, workoutType ?? label, label ?? workoutType, syncVersion]
+     VALUES (?, ?, ?, ?, ?, 1, ${SQLITE_UUID_SQL}, ?);`,
+    [
+      date,
+      dayId,
+      workoutType ?? label,
+      label ?? workoutType,
+      startedFrom,
+      syncVersion,
+    ]
   );
 }
 
+/**
+ * The copy is a new workout, so it gets its own `startedFrom` - how it was
+ * copied - rather than the one the original was started with.
+ */
 export async function copyWorkoutIntoDay(
   db,
-  { date, dayId, workoutId }
+  { date, dayId, workoutId, startedFrom = null }
 ) {
   const syncVersion = createNextSyncVersion();
   return db.runAsync(
@@ -3128,6 +3154,7 @@ export async function copyWorkoutIntoDay(
        day_id,
        workout_type,
        label,
+       started_from,
        needs_sync,
        sync_id,
        sync_version
@@ -3137,12 +3164,13 @@ export async function copyWorkoutIntoDay(
        ?,
        COALESCE(workout_type, label),
        NULLIF(label, workout_type),
+       ?,
        1,
        ${SQLITE_UUID_SQL},
        ?
      FROM Workout_Type_Instance
      WHERE workout_id = ?;`,
-    [date, dayId, syncVersion, workoutId]
+    [date, dayId, startedFrom, syncVersion, workoutId]
   );
 }
 
