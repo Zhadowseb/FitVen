@@ -35,6 +35,7 @@ import {
   startActiveRestTimer,
   subscribeRestTimer,
 } from "../../../../Utils/restTimerEvents";
+import { subscribeWorkoutSetChanges } from "@utils/workoutSetEvents";
 import {
   socialPostService,
   weightliftingService,
@@ -140,6 +141,19 @@ const Resistance = ({
       setActiveRestTimer(
         Number(timer?.workoutId) === Number(workout_id) ? timer : null
       );
+    });
+  }, [workout_id]);
+
+  // A set ticked off on the lock screen was written without this screen: it
+  // reads its sets and counts again, so the tick is there when you look.
+  useEffect(() => {
+    return subscribeWorkoutSetChanges((change) => {
+      if (
+        change?.source === "lockScreen" &&
+        Number(change.workoutId) === Number(workout_id)
+      ) {
+        set_refreshing((prev) => prev + 1);
+      }
     });
   }, [workout_id]);
 

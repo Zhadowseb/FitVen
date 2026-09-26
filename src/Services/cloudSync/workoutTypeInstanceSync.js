@@ -5,6 +5,7 @@ import { supabase } from "@database/supaBaseClient";
 import { programRepository } from "@repository";
 import { withTransaction } from "@services/shared";
 import { startBackgroundSync } from "@services/syncScheduler";
+import { notifyWorkoutDataChanged } from "@utils/workoutDataEvents";
 import { createStartedFromCloudColumn } from "@utils/startedFrom";
 import {
   normalizeDeletedAt,
@@ -622,6 +623,7 @@ async function syncWorkoutTypeInstancesWithCloudInternal(db) {
 }
 
 export function syncWorkoutTypeInstancesInBackground(db) {
+  notifyWorkoutDataChanged("workouts");
   startBackgroundSync(
     async () => {
       await syncWorkoutTypeInstancesWithCloud(db);

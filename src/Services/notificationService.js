@@ -57,13 +57,29 @@ const IOS_GRANTED_STATUSES = new Set(
   ].filter((status) => status !== undefined && status !== null)
 );
 
+// The rest-is-over reminder is scheduled for a phone that is away: with the
+// app in front, the workout screen already shows the rest running out.
+export const REST_FINISHED_NOTIFICATION_KIND = "restFinished";
+const REST_NOTIFICATION_CHANNEL_ID = "rest_timer";
+
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
+  handleNotification: async (notification) => {
+    if (notification?.request?.content?.data?.kind === REST_FINISHED_NOTIFICATION_KIND) {
+      return {
+        shouldPlaySound: false,
+        shouldSetBadge: false,
+        shouldShowBanner: false,
+        shouldShowList: false,
+      };
+    }
+
+    return {
+      shouldPlaySound: false,
+      shouldSetBadge: false,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    };
+  },
 });
 
 function getProjectId() {
@@ -204,6 +220,60 @@ async function ensureAndroidNotificationChannel() {
       lightColor: "#36D399",
     }
   );
+}
+
+let restChannelReady = false;
+
+async function ensureRestNotificationChannel() {
+  if (Platform.OS !== "android" || restChannelReady) {
+    return;
+  }
+
+  await Notifications.setNotificationChannelAsync(REST_NOTIFICATION_CHANNEL_ID, {
+    name: t("liveWorkout.restChannelName"),
+    importance: Notifications.AndroidImportance.HIGH,
+    vibrationPattern: [0, 300, 150, 300],
+    lightColor: "#F7742E",
+  });
+  restChannelReady = true;
+}
+
+/**
+ * A sound and a buzz when the rest is over, at `endsAt` (Unix seconds) - so a
+ * phone face down on a bench still says so. Delivered by the system even if
+ * the app has been suspended by then. Never asks for permission: without it,
+ * there is simply no reminder. Returns the id to cancel it by, or null.
+ */
+export async function scheduleRestFinishedNotification({ endsAt, workoutId = null }) {
+  const existingPermission = await Notifications.getPermissionsAsync();
+
+  if (!isPermissionGranted(existingPermission)) {
+    return null;
+  }
+
+  await ensureRestNotificationChannel();
+
+  return Notifications.scheduleNotificationAsync({
+    content: {
+      title: t("liveWorkout.restFinishedTitle"),
+      body: t("liveWorkout.restFinishedBody"),
+      sound: "default",
+      data: { kind: REST_FINISHED_NOTIFICATION_KIND, workoutId },
+    },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.DATE,
+      date: new Date(endsAt * 1000),
+      channelId: REST_NOTIFICATION_CHANNEL_ID,
+    },
+  });
+}
+
+export async function cancelScheduledNotification(notificationId) {
+  if (!notificationId) {
+    return;
+  }
+
+  await Notifications.cancelScheduledNotificationAsync(notificationId);
 }
 
 async function requestNotificationPermission() {

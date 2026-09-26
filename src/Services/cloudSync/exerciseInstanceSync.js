@@ -8,6 +8,7 @@ import {
 } from "@repository";
 import { withTransaction } from "@services/shared";
 import { startBackgroundSync } from "@services/syncScheduler";
+import { notifyWorkoutDataChanged } from "@utils/workoutDataEvents";
 import {
   normalizeDeletedAt,
   normalizeSyncId,
@@ -603,6 +604,7 @@ async function syncExerciseInstancesWithCloudInternal(db) {
 }
 
 export function syncExerciseInstancesInBackground(db) {
+  notifyWorkoutDataChanged("exercises");
   startBackgroundSync(
     async () => {
       await syncExerciseInstancesWithCloud(db);

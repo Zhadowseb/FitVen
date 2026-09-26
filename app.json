@@ -2,7 +2,7 @@
   "expo": {
     "name": "FitVen",
     "slug": "programapp",
-    "version": "2.14.4",
+    "version": "2.15.0",
     "scheme": "fitven",
     "orientation": "default",
     "icon": "./assets/icon_v1.0.png",
@@ -19,7 +19,11 @@
       "requireFullScreen": true,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "We use your location to track workout distance and to match a workout to the fitness centre you are in.",
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSSupportsLiveActivities": true
+      },
+      "entitlements": {
+        "com.apple.security.application-groups": ["group.com.fitven.app"]
       },
       "buildNumber": "18"
     },
@@ -89,7 +93,8 @@
       ],
       "expo-secure-store",
       "expo-video",
-      "expo-web-browser"
+      "expo-web-browser",
+      "@bacons/apple-targets"
     ],
     "extra": {
       "spotifyClientId": "42e6c32ad3b84a8ebe667da6bdeb2fb0",

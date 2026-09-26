@@ -1,5 +1,32 @@
 # Changelog
 
+## [2.15.0] - Unreleased
+### Added
+- **The running strength workout is on the lock screen.** On iOS 16.2+ it is a Live Activity and in the Dynamic Island; on Android it is an ongoing notification. Both show the set to do, the rest counting down and the workout time, and all three count by themselves without the app.
+  - **The buttons** (iOS 17+, and every Android version) are Sæt færdigt, Spring over, ±15 s and Forrige/Næste. They change the card at once, and are queued.
+    - When the app is running, the tap is done straight away, through the same service call a tap on the workout screen makes.
+    - Otherwise it is done the next time the app comes to the front. A set is ticked off once, and a rest that would already be over is not started.
+    - Forrige/Næste only move what the card shows. They are dropped when they are handled more than a minute late.
+  - **Starting a strength workout shows the card.** It goes the moment the workout is finished, reset or deleted, and a card left behind by a killed app goes on the next launch.
+    - The card follows the database, not the screens. It is rebuilt from the database after every local write to a set, an exercise or a workout, raised where those writes already queue their upload (`Utils/workoutDataEvents`).
+    - A paused workout older than eight hours gets no card.
+  - **A sound and a buzz when the rest is over,** from a local notification scheduled for the rest's end. It is moved with ±15, cancelled with the rest, and not shown while the app is in front. This did not exist before.
+  - **Settings:** Profile → Notifications → "Vis træning på låseskærmen", on by default, per phone.
+  - **Runs get no card** until one is designed for them. They keep the location notification they have.
+- **Native code:**
+  - `modules/live-workout` is a local Expo module: an iOS pod that starts and ends the Live Activity, and the Android notification.
+  - `targets/widgets` is the iOS widget extension, through `@bacons/apple-targets`, with the App Group `group.com.fitven.app`.
+  - What the card shows and what a tap does to it before JavaScript knows are defined once, in `src/Utils/liveWorkout.js`, and mirrored rule by rule in Swift and Kotlin.
+  - It needs a new native build. The next iOS build asks EAS for credentials for the extension's bundle id and the App Group.
+- **`.github/workflows/ios-native-check.yml`** builds the app for the iOS simulator on macOS for every PR that touches native code, because Swift cannot be compiled on Windows.
+- **Tests:** `npm run test:live-workout` covers:
+  - the state, and that it stays under ActivityKit's 4 KB;
+  - the view and the taps, as both native sides mirror them;
+  - the words in both languages;
+  - that the two Swift copies of the state are identical;
+  - the card's whole life, from launch to sign-out.
+
+---
 ## [2.14.4] - Unreleased
 ### Fixed
 - **The store-stats cron migration no longer switches its extensions on itself.** Run in the SQL editor, `create extension pg_cron` set off Supabase's own `extensions.grant_pg_cron_access`. On this project that stopped with "dependent privileges exist", and the whole file rolled back.
