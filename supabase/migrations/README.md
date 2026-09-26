@@ -76,7 +76,7 @@ behind by accident.
 | `20260929090000_gym-scope-and-categories.sql` | yes |
 | `20260930090000_store-stats-ios-daily.sql` | no |
 | `20261001080000_the-admin-guard-runs-as-its-caller.sql` | yes |
-| `20261001090000_dev-kpis.sql` | no |
+| `20261001090000_dev-kpis.sql` | yes |
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
 centre match, per-centre lift leaderboards with video verification, and what
@@ -401,6 +401,14 @@ definer `current_user` was the function's owner, so the guard on
 the whole table: any signed-in account could make itself admin. Who holds
 the flag is worth checking now and then:
 `select user_id from public.profile_private where is_admin;`.
+
+`20261001090000_dev-kpis.sql` was run on 2026-09-26. It gives
+`workout_type_instance` its `started_from`, `profile_private` the app-open
+columns, `store_stats` the crash and ANR columns, adds the admin-only
+`dev_metrics` and the nine admin functions behind Dev · Overblik - each checks
+`is_admin` in its own body and returns only aggregates. Until it had run the
+page said its numbers were not available yet, and the app left the new
+columns out of what it wrote.
 
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to
