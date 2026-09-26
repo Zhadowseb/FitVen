@@ -40,6 +40,7 @@ import {
   muscleGroupLabel,
   toggleExerciseMuscleFilterKey,
 } from "../../../../Utils/exerciseMuscleGroups";
+import { pickerNameKey } from "../../../../Utils/exercisePickerSession";
 import {
   ThemedCard,
   ThemedModal,
@@ -388,10 +389,17 @@ const ExerciseMuscleBadges = ({
 const ExerciseLibraryList = ({
   refreshKey,
   mode = "catalog",
-  onSelectExercise,
+  // The picker's +: adds, and pressed again takes out (ExerciseCatalogPage
+  // decides whether that has to be asked first).
+  onToggleExercise,
   onAddCustomExercise,
   selectingExerciseName = null,
+  // Added on this visit to the picker, and in the workout from before it
+  // opened - both as pickerNameKey keys.
   addedExerciseNames = EMPTY_ADDED_NAMES,
+  existingExerciseNames = EMPTY_ADDED_NAMES,
+  // False until the picker knows what the workout already holds.
+  isPickerReady = true,
   workoutPicker = null,
   initialFilter = null,
 }) => {
@@ -586,6 +594,15 @@ const ExerciseLibraryList = ({
     () => new Set(addedExerciseNames),
     [addedExerciseNames]
   );
+  const existingNameSet = useMemo(
+    () => new Set(existingExerciseNames),
+    [existingExerciseNames]
+  );
+  const wasAddedHere = (exercise) => addedNameSet.has(pickerNameKey(exercise?.exercise_name));
+  const wasThereBefore = (exercise) => existingNameSet.has(pickerNameKey(exercise?.exercise_name));
+  // An exercise waiting for the muscle modal to be gone before its + is
+  // acted on - see the modal's button.
+  const pendingToggleRef = useRef(null);
   const activeFilterCount =
     (selectedGroupKey === "all" ? 0 : 1) +
     (isAllMusclesSelected ? 0 : selectedMuscleKeys.length) +
@@ -719,7 +736,7 @@ const ExerciseLibraryList = ({
   const handleRowPress = useCallback(
     (exercise) => {
       if (isWorkoutPicker) {
-        onSelectExercise?.(exercise);
+        onToggleExercise?.(exercise);
         return;
       }
 
@@ -734,7 +751,7 @@ const ExerciseLibraryList = ({
 
       setSelectedExercise(exercise);
     },
-    [isWorkoutPicker, navigation, onSelectExercise]
+    [isWorkoutPicker, navigation, onToggleExercise]
   );
 
   const lastCatalogIndex = filteredExercises.length - 1;
@@ -744,7 +761,7 @@ const ExerciseLibraryList = ({
         exercise={item}
         isLast={index === lastCatalogIndex}
         isSelecting={selectingExerciseName === item.exercise_name}
-        isAdded={addedNameSet.has(item.exercise_name)}
+        isAdded={addedNameSet.has(pickerNameKey(item.exercise_name))}
         isFavourite={favouriteNames.has(
           (item.exercise_name ?? "").toLocaleLowerCase()
         )}
@@ -1051,18 +1068,20 @@ const ExerciseLibraryList = ({
               const isCurrentSelection =
                 selectingExerciseName === exercise.exercise_name;
               const isLast = index === filteredExercises.length - 1;
+              const addedHere = wasAddedHere(exercise);
+              const thereBefore = wasThereBefore(exercise);
+              const isIn = addedHere || thereBefore;
 
+              // Only the + adds. A tap anywhere else on the row used to add
+              // as well, so scrolling past with a thumb put exercises in the
+              // workout; now it shows the muscles, as the figure always did.
               return (
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel={t(
-                    addedNameSet.has(exercise.exercise_name)
-                      ? "exercises.library.addAnotherToWorkoutA11y"
-                      : "exercises.library.addToWorkoutA11y",
-                    { name: exercise.exercise_name }
-                  )}
-                  disabled={isSelectionBusy}
-                  onPress={() => onSelectExercise?.(exercise)}
+                  accessibilityLabel={t("exercises.library.showMusclesA11y", {
+                    name: exercise.exercise_name,
+                  })}
+                  onPress={() => setSelectedExercise(exercise)}
                   style={[
                     styles.pickerExerciseRow,
                     isCurrentSelection && {
@@ -1131,16 +1150,19 @@ const ExerciseLibraryList = ({
                     {/* The sheet stays open now, so this has to survive the
                         moment the add finishes - otherwise a row that has
                         already gone in looks the same as one that has not. */}
-                    {isCurrentSelection ||
-                    addedNameSet.has(exercise.exercise_name) ? (
+                    {isIn ? (
                       <ThemedText
                         style={styles.pickerAddedText}
-                        setColor={secondaryColor}
+                        setColor={addedHere ? secondaryColor : quietText}
                         numberOfLines={1}
                       >
-                        {t("exercises.library.addedTo", {
-                          name: workoutTargetLabel,
-                        })}
+                        {addedHere
+                          ? t("exercises.library.addedTo", {
+                              name: workoutTargetLabel,
+                            })
+                          : t("exercises.library.alreadyIn", {
+                              name: workoutTargetLabel,
+                            })}
                       </ThemedText>
                     ) : (
                       // The muscles are on the row's own figure. Naming them
@@ -1181,40 +1203,47 @@ const ExerciseLibraryList = ({
                     />
                   </TouchableOpacity>
 
+                  {/* In the workout it is ticked, and pressed takes it back
+                      out: at once if it went in on this visit, after a
+                      question if it was there before. */}
                   <TouchableOpacity
                     activeOpacity={0.86}
                     accessibilityRole="button"
-                    accessibilityLabel={t("exercises.library.addToWorkoutA11y", {
-                      name: exercise.exercise_name,
-                    })}
-                    disabled={isSelectionBusy}
+                    accessibilityState={{ selected: isIn, busy: isCurrentSelection }}
+                    accessibilityLabel={t(
+                      isIn
+                        ? "exercises.library.removeFromWorkoutA11y"
+                        : "exercises.library.addToWorkoutA11y",
+                      { name: exercise.exercise_name }
+                    )}
+                    disabled={isSelectionBusy || !isPickerReady}
+                    hitSlop={6}
                     onPress={(event) => {
                       event.stopPropagation?.();
-                      onSelectExercise?.(exercise);
+                      onToggleExercise?.(exercise);
                     }}
                     style={[
                       styles.pickerAddButton,
                       {
-                        backgroundColor: isCurrentSelection
+                        backgroundColor: isIn
                           ? secondaryColor
                           : withAlpha(theme.primary, 0.14),
+                        opacity: isPickerReady ? 1 : 0.5,
                       },
                     ]}
                   >
                     {isCurrentSelection ? (
-                      isSelectionBusy ? (
-                        <ActivityIndicator
-                          size="small"
-                          color={theme.inkOnSecondary ?? theme.textInverted}
-                        />
-                      ) : (
-                        <Checkmark
-                          width={17}
-                          height={17}
-                          color={theme.inkOnSecondary ?? theme.textInverted}
-                          thickness={2.1}
-                        />
-                      )
+                      <ActivityIndicator
+                        size="small"
+                        color={isIn ? theme.inkOnSecondary ?? theme.textInverted : primaryTextColor}
+                      />
+                    ) : isIn ? (
+                      <Checkmark
+                        width={17}
+                        height={17}
+                        color={theme.inkOnSecondary ?? theme.textInverted}
+                        thickness={2.1}
+                      />
                     ) : (
                       <Plus
                         width={17}
@@ -1272,6 +1301,15 @@ const ExerciseLibraryList = ({
       <ThemedModal
         visible={Boolean(selectedExercise)}
         onClose={() => setSelectedExercise(null)}
+        onDismiss={() => {
+          const pending = pendingToggleRef.current;
+
+          pendingToggleRef.current = null;
+
+          if (pending) {
+            onToggleExercise?.(pending);
+          }
+        }}
         title={selectedExercise?.exercise_name}
         style={styles.exerciseBodyMapModal}
         contentStyle={styles.exerciseBodyMapModalBody}
@@ -1443,18 +1481,35 @@ const ExerciseLibraryList = ({
             <TouchableOpacity
               activeOpacity={0.88}
               accessibilityRole="button"
-              accessibilityLabel={t("exercises.library.addToWorkoutA11y", {
-                name: selectedExercise.exercise_name,
-              })}
-              disabled={isSelectionBusy}
-              onPress={() => onSelectExercise?.(selectedExercise)}
+              accessibilityLabel={t(
+                wasAddedHere(selectedExercise) || wasThereBefore(selectedExercise)
+                  ? "exercises.library.removeFromWorkoutA11y"
+                  : "exercises.library.addToWorkoutA11y",
+                { name: selectedExercise.exercise_name }
+              )}
+              disabled={isSelectionBusy || !isPickerReady}
+              onPress={() => {
+                // Taking out one that was there before asks first, and iOS
+                // drops a question put up over this modal - so the modal goes
+                // first and the question follows (onDismiss above).
+                if (wasThereBefore(selectedExercise)) {
+                  pendingToggleRef.current = selectedExercise;
+                  setSelectedExercise(null);
+                  return;
+                }
+
+                onToggleExercise?.(selectedExercise);
+              }}
               style={[
                 styles.pickerModalAddButton,
                 {
-                  backgroundColor: isSelectionBusy
-                    ? secondaryColor
-                    : primaryColor,
-                  opacity: isSelectionBusy ? 0.78 : 1,
+                  backgroundColor:
+                    isSelectionBusy ||
+                    wasAddedHere(selectedExercise) ||
+                    wasThereBefore(selectedExercise)
+                      ? secondaryColor
+                      : primaryColor,
+                  opacity: isSelectionBusy || !isPickerReady ? 0.78 : 1,
                 },
               ]}
             >
@@ -1462,6 +1517,13 @@ const ExerciseLibraryList = ({
                 <ActivityIndicator
                   size="small"
                   color={theme.textInverted}
+                />
+              ) : wasAddedHere(selectedExercise) || wasThereBefore(selectedExercise) ? (
+                <Checkmark
+                  width={18}
+                  height={18}
+                  color={theme.inkOnSecondary ?? theme.textInverted}
+                  thickness={2.2}
                 />
               ) : (
                 <Plus
@@ -1477,7 +1539,9 @@ const ExerciseLibraryList = ({
               >
                 {selectingExerciseName === selectedExercise.exercise_name
                   ? t("exercises.library.adding")
-                  : t("exercises.addTo", { name: workoutTargetLabel })}
+                  : wasAddedHere(selectedExercise) || wasThereBefore(selectedExercise)
+                    ? t("exercises.library.removeFrom", { name: workoutTargetLabel })
+                    : t("exercises.addTo", { name: workoutTargetLabel })}
               </ThemedText>
             </TouchableOpacity>
           </>

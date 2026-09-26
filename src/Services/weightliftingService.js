@@ -3814,11 +3814,17 @@ export async function reclassifyWorkoutLabel(db, workoutId, options = {}) {
   };
 }
 
+/**
+ * Adds one exercise, with its first set, to the end of a workout. Returns the
+ * new exercise's id, so the "Add exercise" picker can take it out again when
+ * its + is pressed a second time.
+ */
 export async function addExerciseToWorkout(db, { workoutId, exerciseName }) {
   const visibleColumns = await resolveExerciseVisibleColumnsForNewExercise(
     db,
     exerciseName
   );
+  let exerciseId = null;
 
   await withTransaction(db, async () => {
     const nextExerciseOrder =
@@ -3857,6 +3863,8 @@ export async function addExerciseToWorkout(db, { workoutId, exerciseName }) {
       ...carriedSetValues(previousSet),
     });
 
+    exerciseId = created.lastInsertRowId ?? null;
+
     await workoutRepository.updateWorkoutDone(db, {
       workoutId,
       done: false,
@@ -3870,6 +3878,20 @@ export async function addExerciseToWorkout(db, { workoutId, exerciseName }) {
   // Adding an exercise now creates a row in "Set" as well, so that table has to
   // be pushed too. Without this the set exists on this phone only.
   syncSetsInBackground(db);
+
+  return { exerciseId };
+}
+
+/**
+ * The exercises in a workout right now, as `{ exerciseId, exerciseName }` in
+ * their order - what the "Add exercise" picker snapshots when it opens.
+ */
+export async function getWorkoutExerciseEntries(db, workoutId) {
+  const rows = await weightliftingRepository.getExercisesByWorkoutId(db, workoutId);
+
+  return (rows ?? [])
+    .filter((row) => row?.exercise_id !== null && row?.exercise_id !== undefined && row?.exercise_name)
+    .map((row) => ({ exerciseId: Number(row.exercise_id), exerciseName: row.exercise_name }));
 }
 
 async function resequenceWorkoutExerciseOrder(db, workoutId) {

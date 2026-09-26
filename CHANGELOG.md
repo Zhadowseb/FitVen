@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.11.1] - Unreleased
+### Fixed
+- **Deleting an exercise from its settings did nothing on Android.** The panel closed and the confirmation never came, so the exercise stayed.
+  - The cause was `ThemedModal`, which waited for React Native's `Modal.onDismiss` before opening the next modal. React Native only fires that on iOS (`Libraries/Modal/Modal.js`: "OnDismiss is implemented on iOS only").
+  - It is now fired on Android when `visible` turns false, the way `ThemedBottomSheet` already did.
+  - The same fix makes two other things work on Android: "Discard" leaving Edit profile, and "Discard" leaving your own exercise's page.
+- **"Add exercise": the + adds, and pressed again takes it back out.**
+  - A second press used to add another copy of the same exercise while the row already said "added". The press meant to undo seemed to do nothing, and put a duplicate in the workout.
+  - An exercise added on this visit now comes out at once, without a question. One that was in the workout before the picker opened may have sets, so taking it out asks first, and takes every copy of it.
+  - The picker snapshots the workout when it opens (`getWorkoutExerciseEntries`, `Utils/exercisePickerSession`). A new visit starts from what the workout holds by then, so last visit's add counts as already there.
+  - `addExerciseToWorkout` now returns the new exercise's id.
+- **In the picker, only the + adds.** A tap anywhere else on a row used to add it too; now it shows the exercise's muscles. Rows already in the workout are ticked, with "Allerede i {workout}" or "Tilføjet til {workout}" under the name.
+- The muscle view's button follows the same rules. For an exercise that was there before, it closes first and then asks.
+- `npm run test:exercise-picker` checks the visit, the question, the snapshot and Android's onDismiss.
+
+---
 ## [2.11.0] - Unreleased
 ### Changed
 - **Custom made exercises: the exercises people make can be shared and found.** Explore's Exercises tile opens a real library (`CustomExercisesPage`, headed "Custom made exercises" in both languages) instead of an empty page:

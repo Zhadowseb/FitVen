@@ -1,6 +1,8 @@
 // src/Resources/Components/ThemedModal.js
+import { useEffect, useRef } from "react";
 import {
   Modal,
+  Platform,
   View,
   StyleSheet,
   Pressable,
@@ -30,11 +32,17 @@ const ThemedModal = ({
   scroll = true,
   bottomOffset = 24,
   onShow,
-  // Fires after iOS has finished dismissing this modal. It exists because
-  // presenting a second modal while the first is still on screen is dropped
-  // by UIKit without an error - so anything that opens another modal has to
-  // wait for this rather than setting both flags in the same render.
-  // Android calls it too, right after the view is removed.
+  // Fires once this modal has gone. It exists because presenting a second
+  // modal while the first is still on screen is dropped by UIKit without an
+  // error - so anything that opens another modal has to wait for this rather
+  // than setting both flags in the same render.
+  //
+  // On both platforms. React Native's Modal fires its own onDismiss on iOS
+  // only (Libraries/Modal/Modal.js: "OnDismiss is implemented on iOS only"),
+  // and everything waiting on it never happened on Android: the delete
+  // confirm opened from an exercise's settings, "Discard" leaving Edit
+  // profile. So on Android it is fired from `visible` turning false, the same
+  // way ThemedBottomSheet does it.
   onDismiss,
   showCloseButton = false,
 }) => {
@@ -45,6 +53,27 @@ const ThemedModal = ({
   const availableHeight = useAvailableSheetHeight();
   const keyboardHeight = useSheetKeyboardHeight();
   const isKeyboardOpen = keyboardHeight > 0;
+  const wasVisibleRef = useRef(visible);
+  const onDismissRef = useRef(onDismiss);
+
+  onDismissRef.current = onDismiss;
+
+  useEffect(() => {
+    const wasVisible = wasVisibleRef.current;
+
+    wasVisibleRef.current = visible;
+
+    // iOS says so itself, once the modal is really gone.
+    if (Platform.OS === "ios" || !wasVisible || visible) {
+      return undefined;
+    }
+
+    // Android has removed the dialog by the time `visible` is false, and it
+    // stacks a second one without complaint; a tick is enough.
+    const timer = setTimeout(() => onDismissRef.current?.(), 0);
+
+    return () => clearTimeout(timer);
+  }, [visible]);
 
   return (
     <Modal
@@ -53,7 +82,7 @@ const ThemedModal = ({
       animationType="fade"
       onRequestClose={onClose}
       onShow={onShow}
-      onDismiss={onDismiss}
+      onDismiss={Platform.OS === "ios" ? onDismiss : undefined}
     >
       <View
         style={[
