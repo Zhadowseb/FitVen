@@ -3,16 +3,17 @@ import { TouchableOpacity, View, useColorScheme, useWindowDimensions } from "rea
 import { useTranslation } from "@localization";
 
 import styles from "./CategoryPodiumStyle";
-import RingAvatar from "./RingAvatar";
-import { formatValue, readableTone, unitLabel } from "../categoryLeaderboardFormat";
 import { Colors } from "@resources/GlobalStyling/colors";
 import RadialGlow from "@resources/Components/GymLeaderboard/RadialGlow";
+import MedalAvatar, { medalColor } from "@resources/Components/MedalAvatar";
 import { ThemedText } from "@resources/ThemedComponents";
+import { formatValue, readableTone, unitLabel } from "@utils/categoryFormat";
 import { mixHexColors } from "@utils/colorMix";
 import { podiumName } from "@utils/gymCategories";
 
 // Second, first, third: the winner in the middle and highest.
 const PODIUM_ORDER = [1, 0, 2];
+const MEDALS = ["gold", "silver", "bronze"];
 const AVATAR_SIZE = [56, 46, 46];
 const PLINTH_HEIGHT = [58, 42, 32];
 const GLOW_WIDTH = 300;
@@ -34,7 +35,6 @@ export default function CategoryPodium({ rows = [], kind, tone, valueColor, onOp
   // out, and until then taken from the window, so it does not start at the edge.
   const [measuredWidth, setMeasuredWidth] = useState(null);
   const cardWidth = measuredWidth ?? windowWidth - PAGE_GUTTERS;
-  const medals = [theme.record, theme.medalSilver, theme.medalBronze];
 
   return (
     <View
@@ -63,16 +63,13 @@ export default function CategoryPodium({ rows = [], kind, tone, valueColor, onOp
           // The contract puts isMe on the person; the RPC's row carries is_me too.
           const isMe = Boolean(person.isMe || row.isMe);
           const isFirst = position === 0;
-          const medal = medals[position];
+          const medal = MEDALS[position];
           // Only #1's plinth is tinted gold. The place is written in its
           // medal's colour, darkened where the tint would take it under 4.5:1.
           const plinthSurface = isFirst
             ? mixHexColors(theme.cardBackground, theme.record, colorScheme === "light" ? 0.16 : 0.14)
             : mixHexColors(theme.cardBackground, theme.title, 0.05);
-          const plinthText = readableTone(medal, [plinthSurface], theme.title);
-          // Metal: the medal colour pulled toward the page at one end and
-          // toward the ink at the other, so it catches light in both themes.
-          const ring = [mixHexColors(medal, theme.background, 0.28), mixHexColors(medal, theme.title, 0.22)];
+          const plinthText = readableTone(medalColor(theme, medal), [plinthSurface], theme.title);
           const canOpen = Boolean(onOpenPerson) && Boolean(person.id) && !isMe;
           const Person = canOpen ? TouchableOpacity : View;
           const personProps = canOpen
@@ -87,7 +84,7 @@ export default function CategoryPodium({ rows = [], kind, tone, valueColor, onOp
           return (
             <View key={String(person.id ?? `rank-${position}`)} style={styles.column}>
               <Person style={styles.person} {...personProps}>
-                <RingAvatar uri={person.avatarUrl} size={AVATAR_SIZE[position]} colors={ring} />
+                <MedalAvatar uri={person.avatarUrl} size={AVATAR_SIZE[position]} medal={medal} />
                 <ThemedText style={styles.name} setColor={theme.title} numberOfLines={1}>
                   {isMe ? t("common.you") : podiumName(person.displayName) || t("common.member")}
                 </ThemedText>

@@ -12,24 +12,23 @@ import LiftLinks, { POWERLIFTING_LIFTS } from "./Components/LiftLinks";
 import MyRankCard from "./Components/MyRankCard";
 import PersonalCard from "./Components/PersonalCard";
 import RankRow, { ListGapRow } from "./Components/RankRow";
-import {
-  RULE_PARAMS,
-  activeFilterLabel,
-  emptyBodyKey,
-  explanationKey,
-  meSubtitle,
-  readableTone,
-  rowSubtitle,
-  valueKind,
-} from "./categoryLeaderboardFormat";
 import { categoryLeaderboardService, gymService } from "@services";
 import { Colors } from "@resources/GlobalStyling/colors";
 import GenderSegment, { getSessionGender } from "@resources/Components/GenderSegment/GenderSegment";
 import { ThemedStateBlock, ThemedText, ThemedView } from "@resources/ThemedComponents";
 import {
+  RULE_PARAMS,
+  activeFilterLabel,
+  categoryTone,
+  emptyBodyKey,
+  explanationKey,
+  meSubtitle,
+  rowSubtitle,
+  valueKind,
+} from "@utils/categoryFormat";
+import {
   CATEGORY_KEYS,
   categoryNameKey,
-  categoryToneToken,
   countryNameKey,
   normalizeCategory,
   normalizeCategoryFilters,
@@ -293,20 +292,9 @@ export default function CategoryLeaderboardPage() {
 
   /* -------------------------------------------------------- what to show -- */
 
-  const tone = theme[categoryToneToken(category)] ?? theme.primary;
-  // As text the category's colour has to hold 4.5:1 on every surface it is
-  // written on - the page, the cards, the personal card's fields. Progress is
-  // the accent, whose text form is primaryText; the others are darkened only
-  // where the light theme needs it.
-  const toneText = useMemo(
-    () =>
-      readableTone(
-        category === "fremgang" ? theme.primaryText : tone,
-        [theme.cardBackground, theme.background, theme.uiBackground],
-        theme.title
-      ),
-    [category, theme.background, theme.cardBackground, theme.primaryText, theme.title, theme.uiBackground, tone]
-  );
+  // The category's colour as the card that opened the page has it: `tone`
+  // for the glows and tints, `toneText` for the title and the values.
+  const { tone, toneText } = categoryTone(theme, category);
   const kind = valueKind(category, filters.tab);
 
   const place = (() => {

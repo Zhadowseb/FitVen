@@ -115,7 +115,7 @@ export default {
     notOnListBody: "It counts people who trained at a centre here in the last {activeDays} days.",
     notOnListBodyGym: "It counts people who trained here in the last {activeDays} days.",
   },
-  // The line under a name on the list.
+  // The line under a name: on the list, and under #1 on a centre's card.
   rows: {
     streak: { one: "{count} week in a row", other: "{count} weeks in a row" },
     last: "trained {when}",

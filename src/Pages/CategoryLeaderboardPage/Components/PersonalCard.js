@@ -2,17 +2,11 @@ import { Animated, View, useColorScheme } from "react-native";
 import { useTranslation } from "@localization";
 
 import styles from "./PersonalCardStyle";
-import {
-  NO_VALUE,
-  formatEstimateKg,
-  formatPercent,
-  formatValue,
-  unitLabel,
-} from "../categoryLeaderboardFormat";
 import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
 import { useAnimationsEnabled, useBreathAnimation } from "@resources/Components/animationHooks";
 import RadialGlow from "@resources/Components/GymLeaderboard/RadialGlow";
 import { ThemedText } from "@resources/ThemedComponents";
+import { NO_VALUE, formatEstimateKg, formatPercent, formatValue, unitLabel } from "@utils/categoryFormat";
 import { CALISTHENICS_FACTORS, fremgangTabLabelKey } from "@utils/gymCategories";
 
 const PROGRESS_LIFTS = ["bench", "squat", "deadlift"];
@@ -33,8 +27,11 @@ function progressField(breakdown, lift, t) {
     key: lift,
     name: t(fremgangTabLabelKey(lift)),
     number: hasBoth ? formatEstimateKg(entry.now) : NO_VALUE,
-    unit: hasBoth ? t("category.units.kg") : null,
-    foot: hasBoth && toNumber(entry.percent) !== null ? `${formatPercent(entry.percent)} ${t("category.units.percent")}` : null,
+    unit: hasBoth ? unitLabel("kg", entry.now, t) : null,
+    foot:
+      hasBoth && toNumber(entry.percent) !== null
+        ? `${formatPercent(entry.percent)} ${unitLabel("percent", entry.percent, t)}`
+        : null,
   };
 }
 

@@ -1,11 +1,18 @@
-// How the category page writes what it shows: a value and its unit, a row's
-// line under the name, your own line, the filter you are left out by, and a
-// tone that stays readable as text. Pure - every word comes in through the
-// `t` the component hands over, so a language change re-renders it.
+// How a category is written: its number and unit, the line under a name, your
+// own line, the filter you are left out by, and its colour as text. A centre's
+// category card (Resources/Components/CategoryCard) and the page the card
+// opens (Pages/CategoryLeaderboardPage) both write through this file, so the
+// number you tap is the number you land on - the language's decimal comma,
+// estimates to the half kilo, the same unit and the same readable colour.
+//
+// Pure - every word comes in through the `t` the component hands over, so a
+// language change re-renders it - and scripts/test-gym-categories.js loads it
+// on its own.
 
 import { formatNumber } from "@localization";
-import { mixHexColors } from "@utils/colorMix";
-import { formatRelativeDay } from "@utils/dateUtils";
+
+import { mixHexColors, parseHex } from "./colorMix";
+import { formatRelativeDay } from "./dateUtils";
 import {
   CALISTHENICS_FACTORS,
   PROGRESS_MAX_REPS,
@@ -14,10 +21,11 @@ import {
   SCOPE_ACTIVE_DAYS,
   STREAK_MIN_WORKOUTS,
   ageGroupLabelKey,
+  categoryToneToken,
   fremgangTabLabelKey,
   genderLabelKey,
-} from "@utils/gymCategories";
-import { roundToNearestWeightIncrement } from "@utils/oneRepMaxUtils";
+} from "./gymCategories";
+import { roundToNearestWeightIncrement } from "./oneRepMaxUtils";
 
 // What a missing number is shown as: a lift without both windows, a field
 // before the list has loaded.
@@ -46,6 +54,8 @@ function toNumber(value) {
   return Number.isFinite(numeric) ? numeric : null;
 }
 
+/* ------------------------------------------------------------- the values -- */
+
 /** What a category's number counts - and so its unit and how it is written. */
 export function valueKind(category, tab) {
   switch (category) {
@@ -62,6 +72,7 @@ export function valueKind(category, tab) {
   }
 }
 
+/** Kilos as they were lifted: "142,5". */
 export function formatKg(value) {
   const numeric = toNumber(value);
 
@@ -75,7 +86,7 @@ export function formatEstimateKg(value) {
   return numeric === null ? NO_VALUE : formatKg(roundToNearestWeightIncrement(numeric, 0.5));
 }
 
-/** "+9", "+2.5": one decimal under ten, where a tenth still means something. */
+/** "+9", "+2,5": one decimal under ten, where a tenth still means something. */
 export function formatPercent(value, { signed = true } = {}) {
   const numeric = toNumber(value);
 
@@ -88,6 +99,7 @@ export function formatPercent(value, { signed = true } = {}) {
   return signed && numeric > 0 ? `+${text}` : text;
 }
 
+/** A category's value in its kind: kilos, a rise in per cent, or a count. */
 export function formatValue(kind, value, { signed = true } = {}) {
   const numeric = toNumber(value);
 
@@ -123,7 +135,7 @@ function formatCount(value) {
   return formatNumber(Math.round(toNumber(value) ?? 0));
 }
 
-/* ------------------------------------------------------------- the rows -- */
+/* -------------------------------------------------------------- the lines -- */
 
 function flidSubtitle(tab, detail, t, now) {
   const parts = [];
@@ -144,12 +156,17 @@ function flidSubtitle(tab, detail, t, now) {
 }
 
 /**
- * The line under a name: the streak and the last workout, the three lifts
- * (and the centre, above centre level), the lift and its two estimates, or
- * the three movements' reps.
+ * The line under a name, on the category page's rows and under #1 on a
+ * centre's card: the streak and the last workout, the three lifts (and the
+ * centre, above centre level), the lift and its two estimates, or the three
+ * movements' reps. Empty when there is nothing to say.
  */
 export function rowSubtitle({ category, tab, row, scopeLevel, t, now = Date.now() }) {
-  const detail = row?.detail ?? {};
+  const detail = row?.detail;
+
+  if (!detail) {
+    return "";
+  }
 
   switch (category) {
     case "flid":
@@ -164,12 +181,20 @@ export function rowSubtitle({ category, tab, row, scopeLevel, t, now = Date.now(
 
       return scopeLevel !== "gym" && row?.gymName ? `${lifts} · ${row.gymName}` : lifts;
     }
-    case "fremgang":
-      return t("category.rows.fremgang", {
-        lift: detail.lift ? t(fremgangTabLabelKey(detail.lift)) : "",
-        before: formatEstimateKg(detail.before),
-        now: formatEstimateKg(detail.now),
-      }).trim();
+    case "fremgang": {
+      const before = toNumber(detail.before);
+      const after = toNumber(detail.now);
+
+      // The lift and both estimates, or nothing: "– → 62 kg" says no more
+      // than the value beside it.
+      return detail.lift && before !== null && after !== null
+        ? t("category.rows.fremgang", {
+            lift: t(fremgangTabLabelKey(detail.lift)),
+            before: formatEstimateKg(before),
+            now: formatEstimateKg(after),
+          })
+        : "";
+    }
     case "calisthenics":
       return t("category.rows.calisthenics", {
         pullups: formatCount(detail.pullups),
@@ -234,7 +259,7 @@ export function activeFilterLabel({ gender, filters, t }) {
   return names.length ? names.join(" · ") : t(genderLabelKey(gender));
 }
 
-/* ---------------------------------------------------------------- texts -- */
+/* -------------------------------------------------------------- the texts -- */
 
 /** How the category is counted, under the title - true to the tab and the video filter. */
 export function explanationKey(category, filters) {
@@ -268,32 +293,7 @@ export function emptyBodyKey(category, filters) {
   }
 }
 
-/* ---------------------------------------------------------------- tones -- */
-
-function parseHex(color) {
-  if (typeof color !== "string" || !color.startsWith("#")) {
-    return null;
-  }
-
-  let hex = color.slice(1);
-
-  if (hex.length === 3) {
-    hex = hex
-      .split("")
-      .map((char) => char + char)
-      .join("");
-  }
-
-  if (hex.length === 8) {
-    hex = hex.slice(0, 6);
-  }
-
-  if (!/^[0-9a-f]{6}$/i.test(hex)) {
-    return null;
-  }
-
-  return [0, 2, 4].map((offset) => parseInt(hex.slice(offset, offset + 2), 16));
-}
+/* ------------------------------------------------------------- the colour -- */
 
 function luminance(color) {
   const channels = parseHex(color);
@@ -324,10 +324,9 @@ export function contrastRatio(first, second) {
 }
 
 /**
- * The category's colour as text. Dark mode keeps it as it is; on the light
- * surfaces some tones - the green, a light accent's secondary - fall under
- * 4.5:1, so they are drawn toward the ink a tenth at a time until they hold
- * on every surface given. Fills and tints keep the tone itself.
+ * `color` as text that holds `minimum` on every one of `surfaces`: itself
+ * when it does, otherwise drawn toward `ink` - the theme's title colour,
+ * which always does - a tenth at a time until it does.
  */
 export function readableTone(color, surfaces, ink, minimum = 4.5) {
   const worstContrast = (candidate) =>
@@ -342,4 +341,31 @@ export function readableTone(color, surfaces, ink, minimum = 4.5) {
   }
 
   return ink;
+}
+
+// Everything a category's colour is written on as text: the cards, the page
+// behind them, and the fields inside the personal card.
+const TEXT_SURFACES = ["cardBackground", "background", "uiBackground"];
+
+/**
+ * A category's colour twice over: `tone` for what is filled - the glow, the
+ * bar, a tint - and `toneText` for its title and its values, the same on the
+ * card and on the page. As text it holds 4.5:1 on every surface it is written
+ * on, in every accent theme, light and dark. Progress is the accent, whose
+ * text form is primaryText; the other tones are drawn toward the title colour
+ * only where they would read under that, which so far is only in light mode.
+ */
+export function categoryTone(theme, category) {
+  const token = categoryToneToken(category);
+  const tone = theme[token] ?? theme.primary;
+  const text = token === "primary" ? theme.primaryText : tone;
+
+  return {
+    tone,
+    toneText: readableTone(
+      text,
+      TEXT_SURFACES.map((surface) => theme[surface]),
+      theme.title
+    ),
+  };
 }

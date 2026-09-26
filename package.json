@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "2.14.0-feature-global-centres.1",
+  "version": "2.14.1-fix-one-category-format.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",

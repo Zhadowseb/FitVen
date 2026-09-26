@@ -2,9 +2,9 @@ import { TouchableOpacity, View, useColorScheme } from "react-native";
 
 import styles from "./FilterPillStyle";
 import Caret from "./Caret";
-import { readableTone } from "../categoryLeaderboardFormat";
 import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
 import { ThemedText } from "@resources/ThemedComponents";
+import { readableTone } from "@utils/categoryFormat";
 import { mixHexColors } from "@utils/colorMix";
 
 /**
