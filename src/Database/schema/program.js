@@ -154,7 +154,10 @@ export const programSchemaSql = `
       /*======Centre match=======*/
       gym_id INTEGER,
       start_latitude REAL,
-      start_longitude REAL
+      start_longitude REAL,
+
+      /*======Where it was started from (@utils/startedFrom)=======*/
+      started_from TEXT
   );
 
   CREATE TABLE IF NOT EXISTS Workout_Type_Instance_Sync_Delete (

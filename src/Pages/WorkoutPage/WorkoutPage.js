@@ -26,6 +26,7 @@ import Social from "../../Resources/Icons/UI-icons/Social";
 import WorkoutCopyTargetModal from "../../Resources/Components/WorkoutCopyTargetModal";
 import { programService, workoutService } from "../../Services";
 import { formatDate } from "../../Utils/dateUtils";
+import { STARTED_FROM } from "@utils/startedFrom";
 import { useTranslation } from "@localization";
 
 import Run from "./WorkoutTypes/Run/Run";
@@ -203,10 +204,13 @@ const WorkoutPage = ({ route }) => {
 
     setIsCopyingWorkout(true);
     try {
+      // A copy made from the workout's own page is none of the four
+      // the overview names, so it is counted as other.
       const copiedWorkoutId = await programService.copyWorkoutToProgramDay(db, {
         workoutId: workout_id,
         dayId: target.day_id,
         date: target.date ?? selectedDate,
+        startedFrom: STARTED_FROM.OTHER,
       });
 
       if (!copiedWorkoutId) {
@@ -232,6 +236,7 @@ const WorkoutPage = ({ route }) => {
       await programService.copyWorkoutToStandaloneDate(db, {
         workoutId: workout_id,
         date: selectedDate,
+        startedFrom: STARTED_FROM.OTHER,
       });
       setPendingCopyTarget(null);
     } catch (error) {

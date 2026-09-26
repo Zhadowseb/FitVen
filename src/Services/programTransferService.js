@@ -1,4 +1,5 @@
 import { amrapFlagFor, resolveSetType } from "@utils/setTypes";
+import { STARTED_FROM } from "@utils/startedFrom";
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
@@ -672,6 +673,8 @@ async function insertImportedProgram(db, payload) {
       dayIdMap.set(getRowId(day), result.lastInsertRowId);
     }
 
+    // Every workout of an imported program is a program workout, whatever the
+    // exported one was started from - the file does not carry that anyway.
     for (const workout of workouts) {
       const result = await db.runAsync(
         `INSERT INTO Workout_Type_Instance (
@@ -689,8 +692,9 @@ async function insertImportedProgram(db, payload) {
           is_active,
           original_start_time,
           timer_start,
-          elapsed_time
-        ) VALUES (NULL, NULL, ?, ?, NULL, ?, ?, ?, ?, ?, 1, 0, ?, NULL, ?);`,
+          elapsed_time,
+          started_from
+        ) VALUES (NULL, NULL, ?, ?, NULL, ?, ?, ?, ?, ?, 1, 0, ?, NULL, ?, ?);`,
         sqliteParams([
           createLocalUuid(),
           createNextSyncVersion(),
@@ -701,6 +705,7 @@ async function insertImportedProgram(db, payload) {
           toBooleanInt(workout.done),
           toIntegerOrNull(workout.original_start_time),
           toIntegerOrNull(workout.elapsed_time) ?? 0,
+          STARTED_FROM.PROGRAM,
         ])
       );
 

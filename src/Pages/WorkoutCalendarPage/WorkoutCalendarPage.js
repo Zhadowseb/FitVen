@@ -43,6 +43,7 @@ import {
 import { addDays, parseCustomDate } from "../../Utils/dateUtils";
 import { isWorkoutComingSoon } from "../../Utils/workoutTypeAvailability";
 import { requestOpenQuickWorkoutMenu } from "../../Utils/quickWorkoutMenuEvents";
+import { STARTED_FROM } from "@utils/startedFrom";
 import {
   WEEKDAY_LABELS,
   buildCalendarLookups,
@@ -834,6 +835,8 @@ const WorkoutCalendarPage = () => {
       dayId: programDay?.day_id ?? null,
       programId: programDay?.program_id ?? null,
       programName: programDay?.program_name ?? null,
+      // For whatever the start sheet creates from here.
+      startedFrom: STARTED_FROM.CALENDAR,
     });
     setSelectedCalendarDay(null);
   };
@@ -898,6 +901,7 @@ const WorkoutCalendarPage = () => {
         workoutId: workout.workout_id,
         dayId: target.day_id,
         date: target.date ?? pendingCopyTarget.date,
+        startedFrom: STARTED_FROM.CALENDAR,
       });
 
       if (!copiedWorkoutId) {
@@ -924,6 +928,7 @@ const WorkoutCalendarPage = () => {
       await programService.copyWorkoutToStandaloneDate(db, {
         workoutId: workout.workout_id,
         date: selectedDate,
+        startedFrom: STARTED_FROM.CALENDAR,
       });
       await completeWorkoutCopy();
     } catch (error) {
@@ -946,6 +951,7 @@ const WorkoutCalendarPage = () => {
         workoutId: workout.workout_id,
         programId: workout.program_id,
         date: selectedDate,
+        startedFrom: STARTED_FROM.CALENDAR,
       });
 
       if (!copiedWorkoutId) {

@@ -42,6 +42,7 @@ import {
   normalizeStoredTimestampSeconds,
 } from "../../Utils/timeUtils";
 import { subscribeQuickWorkoutMenu } from "../../Utils/quickWorkoutMenuEvents";
+import { STARTED_FROM } from "../../Utils/startedFrom";
 import {
   clearActiveRestTimer,
   getActiveRestTimer,
@@ -541,6 +542,9 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
           dayId: target.dayId ?? null,
           programId: target.programId ?? null,
           programName: target.programName ?? null,
+          // Set by the screen that opened the sheet: the calendar, or a
+          // program's week. From the centre button there is none.
+          startedFrom: target.startedFrom ?? null,
         }
       : null;
     setPlannedTodayShortcut(null);
@@ -756,6 +760,8 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     try {
       const workoutLabel = workoutType.displayName ?? workoutType.id;
       const target = await resolveQuickWorkoutTarget();
+      // A new, empty workout - unless the calendar or a program opened the sheet.
+      const startedFrom = target?.startedFrom ?? STARTED_FROM.EMPTY;
       let workout;
 
       if (target?.dayId) {
@@ -764,6 +770,7 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
           dayId: target.dayId,
           workoutType: workoutType.id,
           label: null,
+          startedFrom,
         });
 
         workout = {
@@ -780,6 +787,7 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
           date: quickWorkoutDateRef.current,
           workoutType: workoutType.id,
           label: null,
+          startedFrom,
         });
       }
 
@@ -837,6 +845,8 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
 
     try {
       const target = await resolveQuickWorkoutTarget();
+      // Repeated from the sheet's list - unless the calendar or a program opened it.
+      const startedFrom = target?.startedFrom ?? STARTED_FROM.RECENT;
       let copiedWorkout;
 
       if (target?.dayId && target?.programId) {
@@ -844,6 +854,7 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
           workoutId: workout.workout_id,
           programId: target.programId,
           date: parseCustomDate(target.date),
+          startedFrom,
         });
 
         copiedWorkout = copiedWorkoutId
@@ -860,6 +871,7 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
         copiedWorkout = await programService.copyWorkoutToStandaloneDate(db, {
           workoutId: workout.workout_id,
           date: quickWorkoutDateRef.current,
+          startedFrom,
         });
       }
 

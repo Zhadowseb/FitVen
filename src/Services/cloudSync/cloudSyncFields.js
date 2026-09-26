@@ -6,6 +6,7 @@
 // exactly that, which is the only automated coverage the sync engine has.
 // One copy of the wall-clock parser, in the pure module a test can load.
 import { normalizeSetType } from "@utils/setTypes";
+import { normalizeStartedFrom } from "@utils/startedFrom";
 import { normalizeCloudTimeString } from "@utils/cloudActivityUtils";
 import {
   formatDate,
@@ -186,6 +187,17 @@ export const SYNCED_FIELDS = {
     // The retry that needs the raw fix reads it from the device's own SQLite,
     // where it stays.
     field("gym_id", int()),
+    // Where the workout was started from (@utils/startedFrom): one of five,
+    // or null for a row from before the column. Set once, when the row is
+    // created, and never changed.
+    //
+    // Uploaded, but not compared. Since it never changes, the two sides only
+    // differ when one of them does not know it - a row that reached the cloud
+    // before the column did - and as a compared field every such row would
+    // count as changed on every pull, forever. The reconcile keeps the local
+    // value when the cloud's is null, and a null is never sent (see
+    // workoutTypeInstanceSync.js, which also copes with the column missing).
+    field("started_from", normalizeStartedFrom, { compare: false }),
   ],
   ExerciseInstance: [
     field("local_exercise_instance_id", int(), {

@@ -19,12 +19,14 @@ below never executes — no matter how complete it looks.
 | `PushNotificationRegistrationSync` | yes | the device's push token |
 | `WorkoutMusicSync` | yes | what is playing during a live workout, to `workout_music`, every 30 s while sharing is on |
 | `GymMatchSync` | yes | the centre match and the leaderboard lifts a finished workout could not complete, retried on launch and on return to the foreground |
+| `AppOpenSync` | yes | when the app was last opened, on which platform and in which version, to your own `profile_private` - at most once an hour, and only once the privacy policy this build carries has been accepted |
 
-`syncQueue.js` is not a component. It is the entry point every one of them goes
-through, and it serialises everything onto a single promise chain. The one that
-does not use it is `WorkoutMusicSync`: it reconciles nothing local, it only
-polls a music provider and writes a cloud row, so there is no parent-first
-order for it to break.
+`syncQueue.js` is not a component. It is the entry point the others go
+through, and it serialises everything onto a single promise chain. Three do
+not use it - `WorkoutMusicSync`, which polls a music provider,
+`PushNotificationRegistrationSync` and `AppOpenSync` - because they reconcile
+nothing local and only write cloud rows of their own, so there is no
+parent-first order for them to break.
 
 ## Rules
 

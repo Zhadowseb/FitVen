@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.13.0] - Unreleased
+### Changed
+- **Dev · Overblik is a KPI page now** (`src/Pages/DevDashboardPage/`, admin only).
+  - The period selector and the three ops boxes are gone. Every number has its own fixed window, and a status from one rule set (`getKpiStatus` in `Utils/devDashboard`): good, watch, alarm, baseline or unmeasured.
+  - **The order:** Brugere (downloads and active, per store) → Virker den? (crash · ANR, new bugs per version) → Bruges den? (training this week, coming back, plan completed, where workouts are started from) → release lag → what is used over 28 days → Feedback, with the median answer time → four folding sections (S1–S10). The downloads chart now sits under S7.
+  - With fewer than 30 in a denominator, a tile shows the count and no colour. A number with no source says "Ikke koblet på", and a read that fails says "Kunne ikke hentes"; neither shows 0, and the rest of the page keeps working.
+- **Two things the app now records:**
+  - **Where a workout was started from** (`started_from`: program, recent, calendar, empty or other), set by each path that creates a workout and synced with it. Older rows stay empty and are not counted.
+  - **When the app was last opened,** on which platform and in which version (`AppOpenSync`). It is written at most once an hour, and only after the new privacy policy has been accepted. Both degrade silently until the migration has run.
+- **Cloud:** `supabase/migrations/20261001090000_dev-kpis.sql`, not run yet.
+  - It adds the columns and `dev_metrics` (admin-only).
+  - It adds nine admin functions. Each checks `is_admin` itself and returns only aggregates, never a row per user.
+  - It runs after the admin-guard fix in 2.12.3, which it depends on.
+- **A daily GitHub Action** (`.github/workflows/dev-metrics.yml`, `scripts/dev-metrics/`) measures what only the repository knows and writes it to `dev_metrics`: release lag per store, rework within 14 days, open bug debt and commits per feature.
+  - It needs the repo secrets `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`, and a tag per store submission (`android/<version>`, `ios/<version>`; see `docs/VERSIONING.md`). Without them it does nothing and says so.
+  - `npm run test:dev-metrics-action` and `npm run test:dev-kpi-sources` check it and the app side.
+- **The privacy policy** says what is recorded about app use and how a workout was started, and that the developer only ever sees totals. It is raised to 2026-09-26.3, so everyone is asked again.
+
+---
 ## [2.12.2] - Unreleased
 ### Added
 - **The dev dashboard's App Store box gets a fetcher.** A new Edge Function, `supabase/functions/store-stats`, reads App Store Connect's daily sales report and writes first-time iOS downloads to `store_stats`. A cron calls it at 06:15 UTC every day.
