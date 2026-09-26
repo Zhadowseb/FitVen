@@ -52,10 +52,6 @@ export default StyleSheet.create({
     justifyContent: "center",
     gap: 8,
   },
-  secondaryButtonAlone: {
-    flex: 1,
-    height: undefined,
-  },
   secondaryLabel: {
     fontSize: 14,
     fontWeight: "800",

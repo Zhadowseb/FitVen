@@ -6,9 +6,11 @@ import { ScrollView, TouchableOpacity, View, useColorScheme } from "react-native
 // device this was tried on before release had too little data to reach it.
 import { formatDate, useTranslation } from "@localization";
 
+import SplitForming from "./SplitForming";
 import styles from "./SplitCardsStyle";
 import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
 import { ThemedText } from "@resources/ThemedComponents";
+import { splitFormingState } from "@utils/splitForming";
 
 // Two or three fit the width; four start to crowd, so from three the row
 // scrolls and the cards take a fixed width instead of sharing what is there.
@@ -91,49 +93,8 @@ function SplitCard({ group, theme, width, onPress, t, formatDate }) {
   );
 }
 
-/**
- * The sessions the person actually runs, one card each.
- *
- * The card with the orange left edge is the one that has waited longest, and
- * it is the same session the quick-start button opens. Tapping any of them
- * opens that session directly.
- *
- * With no split yet the block says what it will become rather than vanishing.
- * A row that appears weeks later cannot be looked forward to, and somebody who
- * has just installed the app should not meet a Home with a hole in it. It only
- * names the section here: a card carries its own name once there is one.
- */
-export default function SplitCards({ groups = [], onOpenGroup, onOpenAll }) {
-  const { t } = useTranslation();
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme] ?? Colors.light;
-
-  if (!groups.length) {
-    return (
-      <View style={styles.row}>
-        <View
-          style={[
-            styles.card,
-            styles.cardFlex,
-            styles.emptyCard,
-            {
-              backgroundColor: withAlpha(theme.title, 0.05),
-              borderColor: withAlpha(theme.title, 0.08),
-            },
-          ]}
-        >
-          <ThemedText style={styles.emptyTitle} setColor={theme.quietText}>
-            {t("home.split.title")}
-          </ThemedText>
-
-          <ThemedText style={styles.emptyMessage} setColor={theme.title}>
-            {t("home.split.empty")}
-          </ThemedText>
-        </View>
-      </View>
-    );
-  }
-
+// The cards themselves, once there is a split to show.
+function SplitRow({ groups, theme, onOpenGroup, onOpenAll, t }) {
   if (groups.length < SCROLL_FROM_GROUPS) {
     return (
       <View style={styles.row}>
@@ -194,5 +155,57 @@ export default function SplitCards({ groups = [], onOpenGroup, onOpenAll }) {
         </TouchableOpacity>
       ) : null}
     </ScrollView>
+  );
+}
+
+/**
+ * The sessions the person actually runs, one card each, under "Your split".
+ *
+ * The card with the orange left edge is the one that has waited longest, and
+ * it is the same session the quick-start button opens. Tapping any of them
+ * opens that session directly.
+ *
+ * The cards wait a week from the first finished workout (`firstWorkoutAt`,
+ * see Utils/splitForming.js), even when the guess could already make groups:
+ * somebody who trains one muscle group a day has no split to recognise before
+ * the week has gone round once. Until then, and whenever there is no split,
+ * the block says what it will become rather than vanishing - seven dots that
+ * fill a day at a time (SplitForming). A row that appears weeks later cannot
+ * be looked forward to, and somebody who has just installed the app should
+ * not meet a Home with a hole in it.
+ */
+export default function SplitCards({
+  groups = [],
+  firstWorkoutAt = null,
+  onOpenGroup,
+  onOpenAll,
+}) {
+  const { t } = useTranslation();
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme] ?? Colors.light;
+  const { filledDots, showSplit, weekIsOver } = splitFormingState({
+    firstWorkoutAt,
+    now: Date.now(),
+    groupCount: groups.length,
+  });
+
+  return (
+    <View>
+      <ThemedText accessibilityRole="header" style={styles.eyebrow} setColor={theme.quietText}>
+        {t("home.split.eyebrow")}
+      </ThemedText>
+
+      {showSplit ? (
+        <SplitRow
+          groups={groups}
+          theme={theme}
+          onOpenGroup={onOpenGroup}
+          onOpenAll={onOpenAll}
+          t={t}
+        />
+      ) : (
+        <SplitForming filledDots={filledDots} weekIsOver={weekIsOver} />
+      )}
+    </View>
   );
 }
