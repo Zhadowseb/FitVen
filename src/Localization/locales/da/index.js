@@ -12,6 +12,7 @@ import explore from "./explore";
 import friends from "./friends";
 import gyms from "./gyms";
 import home from "./home";
+import homeExplore from "./homeExplore";
 import music from "./music";
 import myExercise from "./myExercise";
 import nav from "./nav";
@@ -44,6 +45,7 @@ export default {
   friends,
   gyms,
   home,
+  homeExplore,
   music,
   myExercise,
   nav,

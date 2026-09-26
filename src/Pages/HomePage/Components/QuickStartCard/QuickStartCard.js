@@ -1,6 +1,7 @@
 import { TouchableOpacity, View, useColorScheme } from "react-native";
 import { useTranslation } from "@localization";
 
+import FirstWorkoutButton from "./FirstWorkoutButton";
 import LivePanel from "./LivePanel";
 import styles from "./QuickStartCardStyle";
 import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
@@ -19,7 +20,9 @@ import { ThemedText } from "@resources/ThemedComponents";
  *
  *   1. Something unfinished is already on today. Continue that.
  *   2. The split says whose turn it is. Start that.
- *   3. Neither, and the empty workout is the only button, filling the block.
+ *   3. Neither. Then the empty workout is all there is, and it stops being
+ *      the quiet button under a primary one: it is the first workout, in the
+ *      accent, filling the block (FirstWorkoutButton).
  *
  * Today's workout wins over the split deliberately. Somebody who planned a
  * session this morning, or left one half-done at lunch, wants that one back;
@@ -38,6 +41,7 @@ export default function QuickStartCard({
   onContinueToday,
   onStartSplit,
   onStartEmpty,
+  hasTrained = false,
 }) {
   const { t } = useTranslation();
   const colorScheme = useColorScheme();
@@ -80,48 +84,60 @@ export default function QuickStartCard({
         }
       : null;
 
+  // The eyebrow names the block, not the button under it. It stays QUICK
+  // START whether that button continues today's workout, starts the one the
+  // split is due or starts the first - what changed is which workout, and the
+  // button already says which.
+  const eyebrow = (
+    <ThemedText style={styles.eyebrow} setColor={theme.primaryText}>
+      {t("home.quickStart.eyebrow")}
+    </ThemedText>
+  );
+
+  // Nothing on today and nothing due: the empty workout is the only choice.
+  if (!primary) {
+    return (
+      <View style={styles.card}>
+        {eyebrow}
+        <FirstWorkoutButton onPress={onStartEmpty} isFirst={!hasTrained} />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.card}>
-      {/* The eyebrow names the block, not the button under it. It stays
-          QUICK START whether that button continues today's workout or starts
-          the one the split is due - what changed is which workout, and the
-          button already says which. */}
-      <ThemedText style={styles.eyebrow} setColor={theme.primaryText}>
-        {t("home.quickStart.eyebrow")}
-      </ThemedText>
+      {eyebrow}
 
-      {primary ? (
-        <TouchableOpacity
-          accessibilityRole="button"
-          accessibilityLabel={primary.accessibilityLabel}
-          activeOpacity={0.85}
-          onPress={primary.onPress}
-          style={[
-            styles.primaryButton,
-            {
-              backgroundColor: isLight ? theme.background : "#0F1116",
-              borderColor: theme.primaryText,
-            },
-          ]}
+      <TouchableOpacity
+        accessibilityRole="button"
+        accessibilityLabel={primary.accessibilityLabel}
+        activeOpacity={0.85}
+        onPress={primary.onPress}
+        style={[
+          styles.primaryButton,
+          {
+            backgroundColor: isLight ? theme.background : "#0F1116",
+            borderColor: theme.primaryText,
+          },
+        ]}
+      >
+        <Resistance width={19} height={19} color={theme.primaryText} />
+
+        <ThemedText
+          style={styles.primaryLabel}
+          setColor={theme.primaryText}
+          numberOfLines={1}
         >
-          <Resistance width={19} height={19} color={theme.primaryText} />
+          {primary.label}
+        </ThemedText>
 
-          <ThemedText
-            style={styles.primaryLabel}
-            setColor={theme.primaryText}
-            numberOfLines={1}
-          >
-            {primary.label}
-          </ThemedText>
-
-          <View
-            style={[
-              styles.chevron,
-              { borderLeftColor: withAlpha(theme.primaryText, 0.6) },
-            ]}
-          />
-        </TouchableOpacity>
-      ) : null}
+        <View
+          style={[
+            styles.chevron,
+            { borderLeftColor: withAlpha(theme.primaryText, 0.6) },
+          ]}
+        />
+      </TouchableOpacity>
 
       <TouchableOpacity
         accessibilityRole="button"
@@ -130,9 +146,6 @@ export default function QuickStartCard({
         onPress={onStartEmpty}
         style={[
           styles.secondaryButton,
-          // With nothing above it, the empty workout fills the block rather
-          // than sitting at the bottom of an oddly tall one.
-          primary ? null : styles.secondaryButtonAlone,
           {
             backgroundColor: withAlpha(theme.title, isLight ? 0.04 : 0.05),
             borderColor: withAlpha(theme.title, isLight ? 0.08 : 0.1),

@@ -473,13 +473,6 @@ function startOfLocalDay(isoDate) {
 }
 
 /**
- * Whole days since the last finished workout of any type, or null when there
- * has never been one.
- *
- * Calendar days, not elapsed milliseconds: a workout finished yesterday
- * evening is one day ago at nine this morning, not zero.
- */
-/**
  * What is already on today, unfinished.
  *
  * Home leads with this rather than with a suggestion from the split: somebody
@@ -511,6 +504,13 @@ export async function getOpenWorkoutsToday(db, { now = Date.now() } = {}) {
   };
 }
 
+/**
+ * Whole days since the last finished workout of any type, or null when there
+ * has never been one.
+ *
+ * Calendar days, not elapsed milliseconds: a workout finished yesterday
+ * evening is one day ago at nine this morning, not zero.
+ */
 export async function getDaysSinceLastWorkout(db, { now = Date.now() } = {}) {
   const lastDate = await weightliftingRepository.getLastCompletedWorkoutDate(db);
   const lastAt = startOfLocalDay(lastDate);
@@ -527,10 +527,19 @@ export async function getDaysSinceLastWorkout(db, { now = Date.now() } = {}) {
 }
 
 /**
+ * The local start of the day the first workout of any type was finished, in
+ * ms, or null when none has been. Home's split waits a week from it
+ * (splitFormingState in Utils/splitForming.js).
+ */
+export async function getFirstWorkoutAt(db) {
+  return startOfLocalDay(await weightliftingRepository.getFirstCompletedWorkoutDate(db));
+}
+
+/**
  * The split the person is actually running, as far as their history shows one.
  *
- * Empty when there is no recognisable split - Home then offers an empty
- * workout and leaves the row out rather than filling it with a guess.
+ * Empty when there is no recognisable split - Home then offers the empty
+ * workout, and shows the split still taking shape rather than a guess.
  */
 export async function getSplitGroups(db, { now = Date.now() } = {}) {
   const rows = await weightliftingRepository.getCompletedStrengthWorkoutsWithExercises(

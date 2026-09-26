@@ -2494,7 +2494,6 @@ export async function getCompletedStrengthWorkoutsWithExercises(
   );
 }
 
-/** The most recent day any workout was finished, as an ISO date, or null. */
 /**
  * How many personal records were set on one day (`isoDate`, yyyy-mm-dd), in
  * sets that were done and not failed. The day is read in both spellings the
@@ -2528,6 +2527,7 @@ export async function countPersonalRecordsOnDate(db, isoDate) {
   return Number(row?.records) || 0;
 }
 
+/** The most recent day any workout was finished, as an ISO date, or null. */
 export async function getLastCompletedWorkoutDate(db) {
   const row = await db.getFirstAsync(
     `SELECT MAX(
@@ -2543,6 +2543,33 @@ export async function getLastCompletedWorkoutDate(db) {
   );
 
   return row?.last_date ?? null;
+}
+
+/**
+ * The first day any workout was finished, as an ISO date, or null. The same
+ * rows and both date spellings as getLastCompletedWorkoutDate, with one guard
+ * a MAX does not need: a date in neither spelling - an empty one, say - can
+ * sort before every real one, and as the first day it would read as no
+ * finished workout at all, on an account with months of them.
+ */
+export async function getFirstCompletedWorkoutDate(db) {
+  const row = await db.getFirstAsync(
+    `SELECT MIN(performed_date) AS first_date
+     FROM (
+       SELECT
+         CASE
+           WHEN w.date LIKE '__.__.____'
+           THEN substr(w.date, 7, 4) || '-' || substr(w.date, 4, 2) || '-' || substr(w.date, 1, 2)
+           ELSE w.date
+         END AS performed_date
+       FROM Workout_Type_Instance w
+       WHERE COALESCE(w.done, 0) = 1
+         AND COALESCE(w.deleted_at, '') = ''
+     )
+     WHERE performed_date LIKE '____-__-__';`
+  );
+
+  return row?.first_date ?? null;
 }
 
 /**

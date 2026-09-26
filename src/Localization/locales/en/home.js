@@ -49,6 +49,12 @@ export default {
     emptyWorkout: "Empty workout",
     startNamed: "Start {name}",
     startEmpty: "Start an empty workout",
+    // The empty workout when it is the only thing to start: nothing open
+    // today, nothing due in the split.
+    firstWorkout: "First workout",
+    firstWorkoutSub: "Empty · add exercises as you go",
+    startFirst: "Start your first workout",
+    emptyWorkoutSub: "Add exercises as you go",
     startFailedTitle: "Could not start the workout",
     startFailedBody: "Please try again.",
     // The panel the block becomes while a workout is running.
@@ -70,20 +76,16 @@ export default {
     },
   },
   split: {
+    eyebrow: "Your split",
     unnamed: "Session {number}",
-    title: "Workout split",
-    empty: "Start training to have your split shown here.",
+    // The first week, before the split is shown: seven dots, one a day.
+    forming: "Takes shape after your first week",
+    formingA11y: "Your split is taking shape, day {count} of 7",
+    waiting: "Shows up as you repeat your workouts",
     meta: "{exercises} exercises · {sets} sets",
     allCount: "All {count}",
     openAll: "Open all your workouts",
     upNext: "{name}, next in your split",
-  },
-  muscleGlance: {
-    title: "Last month",
-    gaining: "{group} gaining",
-    noGain: "No gains yet",
-    noData: "—",
-    open: "Open personal records",
   },
   workoutType: {
     resistance: "Resistance",
