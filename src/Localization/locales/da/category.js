@@ -113,7 +113,7 @@ export default {
     notOnListBody: "Listen tæller dem, der har trænet i et center her de sidste {activeDays} dage.",
     notOnListBodyGym: "Listen tæller dem, der har trænet her de sidste {activeDays} dage.",
   },
-  // Linjen under et navn på listen.
+  // Linjen under et navn: på listen, og under #1 på et centers kort.
   rows: {
     streak: { one: "{count} uge i træk", other: "{count} uger i træk" },
     last: "sidst {when}",

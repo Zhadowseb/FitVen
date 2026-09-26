@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "2.14.2-fix-remove-centres-map-leftovers.1",
+  "version": "2.14.3-fix-one-category-format.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",

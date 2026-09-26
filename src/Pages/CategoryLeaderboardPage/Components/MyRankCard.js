@@ -2,9 +2,9 @@ import { View, useColorScheme } from "react-native";
 import { useTranslation } from "@localization";
 
 import styles from "./MyRankCardStyle";
-import { NO_VALUE, formatValue, unitBesideValue, unitLabel } from "../categoryLeaderboardFormat";
 import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
 import { ThemedText, UserAvatar } from "@resources/ThemedComponents";
+import { NO_VALUE, formatValue, unitBesideValue, unitLabel } from "@utils/categoryFormat";
 
 /**
  * Your own place, pinned under the list so it is always in sight - also when

@@ -1,6 +1,6 @@
 // Centres worldwide and the four categories they are ranked in.
 //
-// Four parts:
+// Five parts:
 //   1. the vocabulary the screens and the service share (Utils/gymCategories.js);
 //   2. the importer's region helper, held against the migration's own
 //      postal-code ranges for every four-digit code there is;
@@ -10,7 +10,11 @@
 //   4. the migration read as text: the rules it promises, and who may call
 //      what. Nothing here talks to a database, so these are a floor, not a
 //      proof - the migration was also run twice against Postgres 17 with a
-//      stub of the project and checked row by row (see its header).
+//      stub of the project and checked row by row (see its header);
+//   5. how a category is written (Utils/categoryFormat.js), which a centre's
+//      card and the page it opens share: the numbers, units and lines in both
+//      languages, the colour as text in every accent theme, and that both
+//      screens go through it.
 const assert = require("assert");
 const fs = require("fs");
 const path = require("path");
@@ -113,6 +117,8 @@ loadAppModule.stubModule("@react-native-async-storage/async-storage", { __esModu
 loadAppModule.stubModule("expo-location", fakeLocation);
 
 const categories = loadAppModule("src/Utils/gymCategories.js");
+const format = loadAppModule("src/Utils/categoryFormat.js");
+const colors = loadAppModule("src/Resources/GlobalStyling/colors.js");
 const i18n = loadAppModule("src/Localization/i18n.js");
 const service = loadAppModule("src/Services/categoryLeaderboardService.js");
 const { MAX_ESTIMATE_REPS } = loadAppModule("src/Utils/oneRepMaxUtils.js");
@@ -893,6 +899,142 @@ function testMigration() {
   }
 }
 
+/* ---------------------------------------- 5. how a category is written -- */
+
+function testFormat() {
+  const { t } = i18n;
+  // Local noon, so no time zone moves a workout to another day.
+  const noon = (day) => new Date(2026, 8, day, 12);
+  const line = (category, detail, extra = {}) =>
+    format.rowSubtitle({ category, row: { detail, gymName: "Lyngby" }, scopeLevel: "gym", t, now: noon(25), ...extra });
+  const lifts = { bench: 120, squat: 142.5, deadlift: 0 };
+
+  // What a card counts is what the page opens on: its first tab.
+  assert.deepStrictEqual(categories.CATEGORY_KEYS.map((category) => format.valueKind(category)), ["workouts", "kg", "percent", "points"]);
+  assert.strictEqual(format.valueKind("flid", "streak"), "weeks");
+  assert.deepStrictEqual(["kg", "percent", "workouts", "weeks", "points"].map(format.unitBesideValue), [true, true, false, false, false]);
+
+  i18n.setLanguage("da");
+  assert.strictEqual(format.formatValue("kg", 412.5), "412,5", "kilos with the language's decimal comma");
+  assert.strictEqual(format.formatValue("kg", "530.00"), "530", "a total as the server sends it");
+  assert.strictEqual(format.formatValue("kg", 1002.5), "1.002,5");
+  assert.strictEqual(format.formatKg(142.25), "142,25", "a single is written as it was lifted");
+  assert.strictEqual(format.formatEstimateKg(62.3), "62,5", "an estimate goes to the half kilo a bar is loaded in");
+  assert.strictEqual(format.formatEstimateKg(62.2), "62");
+  assert.strictEqual(format.formatValue("percent", 2.54), "+2,5", "one decimal on a rise under ten per cent");
+  assert.strictEqual(format.formatValue("percent", 12.4), "+12", "none from ten up");
+  assert.strictEqual(format.formatValue("percent", 5, { signed: false }), "5", "a gap has no sign");
+  assert.strictEqual(format.formatValue("workouts", 17.6), "18");
+
+  for (const missing of [null, undefined, "", "abc"]) {
+    assert.strictEqual(format.formatValue("kg", missing), format.NO_VALUE, `${JSON.stringify(missing)} is no value`);
+  }
+
+  assert.deepStrictEqual(
+    [["workouts", 1], ["workouts", 18], ["weeks", 2], ["points", 1], ["points", 90], ["kg", 3], ["percent", 3]].map(([kind, value]) =>
+      format.unitLabel(kind, value, t)
+    ),
+    ["træning", "træninger", "uger", "point", "point", "kg", "%"]
+  );
+
+  // The line under a name - on the page's rows, and under #1 on a centre's card.
+  assert.strictEqual(line("flid", { workouts: 11, weeks: 3, lastWorkoutAt: noon(24) }), "3 uger i træk · sidst i går");
+  assert.strictEqual(line("flid", { weeks: 3, lastWorkoutAt: noon(24) }, { tab: "streak" }), "sidst i går", "on the streak tab the weeks are the value");
+  assert.strictEqual(line("flid", { workouts: 1, weeks: 0, lastWorkoutAt: null }), "");
+  assert.strictEqual(line("powerlifting", lifts), "B 120 · S 142,5 · D 0", "a lift not done counts 0, and says so");
+  assert.strictEqual(line("powerlifting", lifts, { scopeLevel: "country" }), "B 120 · S 142,5 · D 0 · Lyngby", "above centre level, the centre too");
+  assert.strictEqual(line("fremgang", { lift: "bench", before: 56.4, now: 62.2, percent: 10 }), "Bænk 56,5 → 62 kg", "both estimates to the half kilo");
+  assert.strictEqual(line("fremgang", { lift: "bench", before: null, now: 62 }), "", "one estimate is no line");
+  assert.strictEqual(line("fremgang", null), "", "nor is a lift that is not one of the three");
+  assert.strictEqual(line("calisthenics", { pullups: 10, dips: 15, pushups: 30 }), "Pull 10 · Dip 15 · Arm 30");
+
+  assert.strictEqual(format.meSubtitle({ category: "fremgang", me: { rank: 3, gapToNext: 2.25 }, t }), "2,3 % til #2");
+  assert.strictEqual(
+    format.meSubtitle({ category: "powerlifting", me: { rank: 2, gapToNext: 370, detail: { homeGymRank: 2 } }, t }),
+    "370 kg til #1 · #2 i dit center"
+  );
+  assert.strictEqual(format.meSubtitle({ category: "flid", me: { rank: 4, gapToNext: 0 }, t }), "Lige med #3");
+
+  i18n.setLanguage("en");
+  assert.strictEqual(format.formatValue("kg", 1002.5), "1,002.5", "and English's decimal point");
+  assert.strictEqual(format.formatEstimateKg(62.3), "62.5");
+  assert.strictEqual(format.unitLabel("workouts", 1, t), "workout");
+  assert.strictEqual(line("fremgang", { lift: "squat", before: 100, now: 112.4 }), "Squat 100 → 112.5 kg");
+  assert.strictEqual(line("calisthenics", { pullups: 10, dips: 15, pushups: 30 }), "Pull 10 · Dip 15 · Push 30");
+
+  // The colour as text. 4.5:1 on everything it is written on, for every
+  // category in every accent theme, light and dark - and left as it is where
+  // it already reads.
+  // The rule below is checked with the file's own contrastRatio, so the
+  // formula itself is held to WCAG's: black on white, and the lightest grey
+  // that still reads on white.
+  assert.strictEqual(format.contrastRatio("#000000", "#ffffff").toFixed(2), "21.00");
+  assert.strictEqual(format.contrastRatio("#767676", "#ffffff").toFixed(2), "4.54");
+  assert.strictEqual(format.contrastRatio("#fff", "#FFFFFF"), 1);
+  assert.strictEqual(format.contrastRatio("rgba(0, 0, 0, 1)", "#ffffff"), null, "what cannot be read is not guessed at");
+  assert.strictEqual(format.readableTone("#16191f", ["#ffffff"], "#000000"), "#16191f", "a colour that reads stays");
+  assert.ok(format.contrastRatio(format.readableTone("#ffffff", ["#ffffff"], "#16191f"), "#ffffff") >= 4.5, "one that does not is drawn toward the ink");
+  assert.strictEqual(format.readableTone("#ffffff", ["#ffffff"], "#fefefe"), "#fefefe", "and when nothing reads, it is the ink");
+
+  const surfaces = ["cardBackground", "background", "uiBackground"];
+
+  for (const accent of Object.keys(colors.AccentThemes)) {
+    colors.applyAccentTheme(accent);
+
+    for (const scheme of ["light", "dark"]) {
+      const theme = colors.Colors[scheme];
+
+      for (const category of categories.CATEGORY_KEYS) {
+        const token = categories.categoryToneToken(category);
+        const text = token === "primary" ? theme.primaryText : theme[token];
+        const { tone, toneText } = format.categoryTone(theme, category);
+        const where = `${category} in ${accent}, ${scheme}`;
+
+        assert.strictEqual(tone, theme[token], `${where}: a fill keeps the tone itself`);
+
+        for (const surface of surfaces) {
+          const ratio = format.contrastRatio(toneText, theme[surface]);
+
+          assert.ok(ratio >= 4.5, `${where}: ${toneText} on ${surface} ${theme[surface]} is ${ratio?.toFixed(2)}:1`);
+        }
+
+        if (surfaces.every((surface) => format.contrastRatio(text, theme[surface]) >= 4.5)) {
+          assert.strictEqual(toneText, text, `${where}: a colour that reads is not darkened`);
+        }
+      }
+    }
+  }
+
+  colors.applyAccentTheme(colors.DEFAULT_ACCENT_THEME);
+
+  // The card and the page write through the file, and nothing else turns a
+  // category into a colour or works out a contrast of its own.
+  const card = read("src/Resources/Components/CategoryCard/CategoryCard.js");
+  const page = read("src/Pages/CategoryLeaderboardPage/CategoryLeaderboardPage.js");
+
+  for (const [name, source] of [["the card", card], ["the page", page]]) {
+    assert.ok(source.includes('from "@utils/categoryFormat"'), `${name} writes through Utils/categoryFormat.js`);
+    assert.ok(source.includes("categoryTone(theme, category)"), `${name} takes its colour from categoryTone`);
+  }
+
+  assert.ok(["formatValue(", "unitLabel(", "rowSubtitle("].every((call) => card.includes(call)), "the card's value, unit and #1's line are the page's");
+
+  const sourceFiles = (dir) =>
+    fs.readdirSync(path.join(root, dir), { withFileTypes: true }).flatMap((entry) => {
+      const file = `${dir}/${entry.name}`;
+
+      if (entry.isDirectory()) return sourceFiles(file);
+      return file.endsWith(".js") ? [file] : [];
+    });
+  const ownRules = sourceFiles("src").filter(
+    (file) =>
+      !["src/Utils/categoryFormat.js", "src/Utils/gymCategories.js"].includes(file) &&
+      /categoryToneToken\(|function (luminance|contrastRatio|readableTone)\b/.test(read(file))
+  );
+
+  assert.deepStrictEqual(ownRules, [], "a category's colour and the contrast rule live in Utils/categoryFormat.js only");
+}
+
 async function run() {
   await testSummary();
   await testCards();
@@ -900,8 +1042,9 @@ async function run() {
   await testSearch();
   await testStartCountry();
   testMigration();
+  testFormat();
 
-  console.log("Gym categories: vocabulary, importer regions, service mapping and migration checks passed.");
+  console.log("Gym categories: vocabulary, importer regions, service mapping, migration checks and how a category is written passed.");
 }
 
 run()

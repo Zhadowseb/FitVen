@@ -31,10 +31,11 @@ export default StyleSheet.create({
     alignItems: "center",
     gap: 11,
   },
+  // The card's MedalAvatar: a 40 picture with its gap and ring around it.
   avatar: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
+    width: 49,
+    height: 49,
+    borderRadius: 24.5,
   },
   topCopy: {
     flex: 1,

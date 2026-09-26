@@ -2,18 +2,13 @@ import { TouchableOpacity, View, useColorScheme } from "react-native";
 import { formatDate, useTranslation } from "@localization";
 
 import styles from "./CategoryCardStyle";
-import MedalAvatar from "./MedalAvatar";
-import {
-  categoryUnit,
-  formatCategoryDetail,
-  formatCategoryValue,
-  getCategoryTone,
-} from "./categoryDisplay";
 import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
 import ChevronRight from "@resources/Icons/UI-icons/ChevronRight";
 import MapPin from "@resources/Icons/UI-icons/MapPin";
 import RadialGlow from "@resources/Components/GymLeaderboard/RadialGlow";
+import MedalAvatar from "@resources/Components/MedalAvatar";
 import { ThemedText } from "@resources/ThemedComponents";
+import { categoryTone, formatValue, rowSubtitle, unitLabel, valueKind } from "@utils/categoryFormat";
 import { categoryDescriptionKey, categoryNameKey } from "@utils/gymCategories";
 
 // Where "you" stand on a card: ranked, outside the level ("not on Zealand"),
@@ -40,16 +35,21 @@ function meStateOf(me) {
  * `where` is the level with its preposition - "in Denmark", "on Zealand", "at
  * PureGym Kildeskovshallen" - for "#4 on Zealand" and "not on Zealand".
  * `levelLabel` is the level's plain name, for the screen reader.
- * `variant` "level" puts #1's centre under the name; "gym" puts the detail
- * behind the value there instead, counts your place out of everyone, and
- * draws how far you are from #1.
+ * `variant` "level" puts #1's centre under the name; "gym" puts #1's line
+ * from the category page there instead, counts your place out of everyone,
+ * and draws how far you are from #1.
+ *
+ * Every number, unit, line and colour comes from Utils/categoryFormat.js,
+ * the same as on the page the card opens.
  */
 export default function CategoryCard({ card, levelLabel, where, variant = "level", onPress, style }) {
   const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const category = card?.category;
-  const { tone, ink } = getCategoryTone(theme, category);
+  const { tone, toneText } = categoryTone(theme, category);
+  // The page opens on its first tab, which is what a card counts.
+  const kind = valueKind(category);
   const isGym = variant === "gym";
   const top = card?.top ?? null;
   const me = card?.me ?? null;
@@ -65,9 +65,9 @@ export default function CategoryCard({ card, levelLabel, where, variant = "level
       ? t("common.you")
       : top.person?.displayName || top.person?.username || t("common.member")
     : null;
-  const topValue = top ? formatCategoryValue(category, top.value) : null;
-  const topUnit = top ? categoryUnit(t, category, top.value) : null;
-  const topDetail = top && isGym ? formatCategoryDetail(t, category, top.detail) : null;
+  const topValue = top ? formatValue(kind, top.value) : null;
+  const topUnit = top ? unitLabel(kind, top.value, t) : null;
+  const topDetail = top && isGym ? rowSubtitle({ category, row: top, scopeLevel: "gym", t }) : null;
   const topMeta = top
     ? isGym
       ? topDetail
@@ -118,7 +118,7 @@ export default function CategoryCard({ card, levelLabel, where, variant = "level
 
       <View style={styles.header}>
         <View style={styles.headerCopy}>
-          <ThemedText style={styles.title} setColor={ink} numberOfLines={1}>
+          <ThemedText style={styles.title} setColor={toneText} numberOfLines={1}>
             {title}
           </ThemedText>
           <ThemedText style={styles.description} setColor={theme.quietText} numberOfLines={1}>
@@ -147,7 +147,7 @@ export default function CategoryCard({ card, levelLabel, where, variant = "level
             </View>
           </View>
           <View style={styles.valueGroup}>
-            <ThemedText style={styles.topValue} setColor={ink} numberOfLines={1}>
+            <ThemedText style={styles.topValue} setColor={toneText} numberOfLines={1}>
               {topValue}
             </ThemedText>
             <ThemedText style={styles.topUnit} setColor={theme.quietText} numberOfLines={1}>
@@ -178,10 +178,10 @@ export default function CategoryCard({ card, levelLabel, where, variant = "level
               {meState === "ranked" ? (
                 <View style={styles.meValueGroup}>
                   <ThemedText style={styles.meValue} setColor={theme.title} numberOfLines={1}>
-                    {formatCategoryValue(category, me.value)}
+                    {formatValue(kind, me.value)}
                   </ThemedText>
                   <ThemedText style={styles.meUnit} setColor={theme.quietText} numberOfLines={1}>
-                    {categoryUnit(t, category, me.value)}
+                    {unitLabel(kind, me.value, t)}
                   </ThemedText>
                 </View>
               ) : null}

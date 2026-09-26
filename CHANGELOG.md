@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.14.3] - Unreleased
+### Changed
+- **A category card and the page it opens write a category the same way.** Each had its own helper; now `src/Utils/categoryFormat.js` does it for both:
+  - the value and its unit, with the language's decimal comma and an e1RM to the half kilo;
+  - the line under a name;
+  - the category's colour as text. It holds 4.5:1 on the card, the page and the personal card's fields, in every accent theme, light and dark.
+- **Under #1 inside a centre**, the card now shows #1's line from the page. Powerlifting names its lifts ("B 120 · S 142,5 · D 0"), and Consistency adds when #1 last trained. The card's own texts for it (`gyms.card.flidDetail`, `fremgangDetail`, `calisthenicsDetail`) are gone, so `category.rows` is the only set.
+- **One medal ring**, `src/Resources/Components/MedalAvatar.js`, for #1 on a card and the podium's three. The card's gold ring is now the podium's: 2.5 dp, a 2 dp gap, shaded like metal.
+- A Progress row without both estimates shows no line, instead of "– → – kg".
+- `npm run test:gym-categories` checks the numbers and lines in both languages, and the contrast in every accent theme. It also fails if anything else works out a category's colour or a contrast of its own.
+
+---
 ## [2.14.2] - Unreleased
 ### Removed
 - **What the Centres map left behind.** 2.14.0 took the map, "Stærkeste i Danmark", "Hvor du har trænet" and "Nærmeste" off the Centres screen, and these had nothing left calling them:
