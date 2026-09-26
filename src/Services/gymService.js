@@ -50,11 +50,10 @@ export const REJECTION_REASONS = [
 const GYM_SETUP_MESSAGE =
   "Centres are not set up in Supabase yet. Run supabase/migrations/20260917120000_gyms-and-lift-verification.sql in the Supabase SQL editor first.";
 const POSITION_TIMEOUT_MS = 12000;
-// A map can show a fix from ten minutes ago without lying about much.
-export const MAP_LAST_KNOWN_MAX_AGE_MS = 10 * 60 * 1000;
-// Matching cannot: the answer is a place, and the radius is 120 m. Two
-// minutes is short enough that you are still inside the centre you were in,
-// and long enough to rescue a workout whose fresh fix never arrived.
+// Matching a workout to a centre needs a recent fix: the answer is a place,
+// and the radius is 120 m. Two minutes is short enough that you are still
+// inside the centre you were in, and long enough to rescue a workout whose
+// fresh fix never arrived.
 const MATCH_LAST_KNOWN_MAX_AGE_MS = 2 * 60 * 1000;
 // How far back the retry looks, and how many workouts it will touch in one
 // pass, so a long-dormant install does not open into a hundred requests.
@@ -136,7 +135,6 @@ export function mapGym(row) {
     memberCount: toNumber(row.member_count) ?? 0,
     followedMemberCount: toNumber(row.followed_member_count) ?? 0,
     isHomeGym: Boolean(row.is_home_gym),
-    distanceM: toNumber(row.distance_m),
     workoutCount: toNumber(row.workout_count) ?? 0,
   };
 }
@@ -251,9 +249,9 @@ export async function getGymById(gymId) {
  * `lastKnownMaxAgeMs` falls back to the phone's last remembered fix when a
  * fresh one does not arrive in time - indoors, which is where a gym is, that
  * is common. How old a fix may be is the caller's call, because it means two
- * different things: a map can live with one from ten minutes ago, while
- * matching a workout to a centre cannot, since the answer is a place. Zero,
- * the default, never falls back.
+ * different things: telling which country you are in can live with one from
+ * the last day, while matching a workout to a centre cannot, since the answer
+ * is a place. Zero, the default, never falls back.
  */
 export async function getCurrentPosition({
   requestPermission = true,
@@ -733,44 +731,6 @@ export async function getNationalStrongest() {
 }
 
 /* ---------------------------------------------------------------- gyms -- */
-
-export async function getNearbyGyms({ latitude, longitude, limit = 20 }) {
-  const { data, error } = await supabase.rpc("gyms_nearby", {
-    lat: latitude,
-    lng: longitude,
-    result_limit: limit,
-  });
-
-  if (error) {
-    throw normalizeGymError(error);
-  }
-
-  return (data ?? []).map(mapGym).filter(Boolean);
-}
-
-/** Every public centre inside a map viewport, capped so a zoomed-out map stays sane. */
-export async function getGymsInBounds({
-  minLatitude,
-  maxLatitude,
-  minLongitude,
-  maxLongitude,
-  limit = 300,
-}) {
-  const { data, error } = await supabase
-    .from(GYM_TABLE)
-    .select(GYM_SELECT_FIELDS)
-    .gte("latitude", minLatitude)
-    .lte("latitude", maxLatitude)
-    .gte("longitude", minLongitude)
-    .lte("longitude", maxLongitude)
-    .limit(limit);
-
-  if (error) {
-    throw normalizeGymError(error);
-  }
-
-  return (data ?? []).map(mapGym).filter(Boolean);
-}
 
 export async function getGymCount() {
   const { count, error } = await supabase

@@ -94,31 +94,28 @@ assert.strictEqual(gymUtils.matchGymLocally({ latitude: 56.1600, longitude: 10.2
 
 /* ------------------------------------------------------- formatting -- */
 
-// Pin colours: every chain in the data gets one, no two chains share one, and
+// Chain colours: every chain in the data gets one, no two chains share one, and
 // none of them is the accent, the green "you are here" or the record gold -
-// those three already mean something else on this map.
+// the three CHAIN_COLORS was picked to stay clear of.
 const chainsInData = ["PureGym", "SATS", "LOOP Fitness", "FitnessX", "Fit&Sund"];
 const chainColors = chainsInData.map((chain) => gymUtils.getChainColor(chain).toLowerCase());
 
 assert.strictEqual(
   new Set(chainColors).size,
   chainsInData.length,
-  "two chains must not share a pin colour"
+  "two chains must not share a colour"
 );
 assert.strictEqual(gymUtils.getChainColor("Some New Chain"), "#C4C7CF", "an unknown chain stays neutral");
 assert.strictEqual(gymUtils.getChainColor("puregym"), gymUtils.getChainColor("PureGym"), "the lookup ignores case");
 
 for (const reserved of ["#f7742e", "#4ed39a", "#e8b44a"]) {
-  assert.ok(!chainColors.includes(reserved), `${reserved} already means something else on the map`);
+  assert.ok(!chainColors.includes(reserved), `${reserved} is one of the three the chain colours stay clear of`);
 }
 
 assert.strictEqual(gymUtils.getChainInitials("PureGym"), "PG");
 assert.strictEqual(gymUtils.getChainInitials("LOOP Fitness"), "LO");
 assert.strictEqual(gymUtils.getChainInitials("Fit&Sund"), "FS");
 assert.strictEqual(gymUtils.getChainInitials("Some New Chain"), "SN");
-assert.strictEqual(gymUtils.formatDistance(850), "850 m");
-assert.strictEqual(gymUtils.formatDistance(2340), "2.3 km");
-assert.strictEqual(gymUtils.formatDistance(12400), "12 km");
 assert.strictEqual(gymUtils.formatWeightKg("102.50"), "102.5");
 assert.strictEqual(gymUtils.shortenDisplayName("Mikkel Rasmussen"), "Mikkel R.");
 
