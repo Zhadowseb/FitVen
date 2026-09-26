@@ -35,6 +35,11 @@ Two tags rather than one, because the platforms are not on the same version.
 Android trails iOS by three versions today, and a single `v1.1.2` would be a
 claim about Play that is not true.
 
+The daily `dev-metrics` Action (`.github/workflows/dev-metrics.yml`) reads
+these tags for the developer overview: how long master has waited since the
+newest tag per store, and which features are in a store build. A submission
+without its tag reads as unreleased there.
+
 **This is the branch point for a hotfix**, and it is the whole reason the tags
 exist. `master` is where work is integrated, not what users have: it is
 routinely several versions ahead, and none of that has been through review.

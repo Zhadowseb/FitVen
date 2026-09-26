@@ -18,6 +18,7 @@ import {
 } from "../../Resources/ThemedComponents";
 import { programService, splitService } from "../../Services";
 import { getTodaysDate } from "../../Utils/dateUtils";
+import { STARTED_FROM } from "@utils/startedFrom";
 import ActiveProgramCard from "./Components/ActiveProgramCard/ActiveProgramCard";
 import SplitCard from "./Components/SplitCard/SplitCard";
 import RepeatAlso from "./Components/SplitCard/RepeatAlso";
@@ -128,6 +129,7 @@ export default function ExerciseLibraryPage() {
         label,
         workoutType: workoutType ?? FALLBACK_WORKOUT_TYPE,
         date: getTodaysDate(),
+        startedFrom: STARTED_FROM.RECENT,
       });
 
       if (!params) {
@@ -156,6 +158,7 @@ export default function ExerciseLibraryPage() {
         workoutId: repeatTarget.workout_id,
         dayId: target.dayId,
         date: target.date,
+        startedFrom: STARTED_FROM.RECENT,
       });
 
       if (!copiedWorkoutId) {
@@ -194,6 +197,7 @@ export default function ExerciseLibraryPage() {
       const copied = await programService.copyWorkoutToStandaloneDate(db, {
         workoutId: workout.workout_id,
         date,
+        startedFrom: STARTED_FROM.RECENT,
       });
 
       if (!copied) {

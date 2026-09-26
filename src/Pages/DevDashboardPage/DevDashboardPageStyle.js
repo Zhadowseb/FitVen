@@ -35,13 +35,18 @@ export default StyleSheet.create({
     letterSpacing: -0.5,
     lineHeight: 30,
   },
+  // On the title's baseline, at the right.
+  updated: {
+    alignSelf: "flex-end",
+    marginBottom: 5,
+    fontSize: 11,
+    fontWeight: "700",
+    fontVariant: ["tabular-nums"],
+  },
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: 32,
-  },
-  periodPicker: {
-    marginBottom: 16,
   },
   error: {
     fontSize: 12.5,
@@ -51,65 +56,14 @@ export default StyleSheet.create({
   loading: {
     marginTop: 40,
   },
-  opsRow: {
-    flexDirection: "row",
-    alignItems: "stretch",
-    gap: 8,
-    marginTop: 10,
-  },
-  opsBox: {
-    flex: 1,
-    minWidth: 0,
-    paddingVertical: 11,
-    paddingHorizontal: 10,
-    borderRadius: 16,
-    borderWidth: 1,
-    gap: 3,
-  },
-  opsValue: {
-    fontSize: 17,
-    fontWeight: "800",
-    letterSpacing: -0.4,
-    fontVariant: ["tabular-nums"],
-  },
-  opsLabel: {
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 0.3,
-  },
-  feedbackHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginTop: 22,
-    marginBottom: 10,
-  },
-  sectionTitle: {
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 1.8,
-  },
-  unreadBadge: {
-    height: 18,
-    minWidth: 18,
-    borderRadius: 999,
-    paddingHorizontal: 6,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  unreadBadgeText: {
-    fontSize: 10,
-    fontWeight: "800",
-  },
-  spacer: {
-    flex: 1,
-  },
-  seeAll: {
-    fontSize: 11.5,
-    fontWeight: "800",
-  },
   feedbackList: {
     gap: 8,
+  },
+  feedbackError: {
+    fontSize: 12,
+    fontWeight: "700",
+    lineHeight: 17,
+    marginBottom: 8,
   },
   emptyFeedback: {
     fontSize: 12.5,

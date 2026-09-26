@@ -31,6 +31,7 @@ import {
 } from "../../Resources/ThemedComponents";
 import { programService } from "../../Services";
 import { getTodaysDate } from "../../Utils/dateUtils";
+import { STARTED_FROM } from "@utils/startedFrom";
 import {
   filterReleasedWorkoutTypes,
   isWorkoutComingSoon,
@@ -664,6 +665,7 @@ const WorkoutLibraryPage = () => {
         label: repeatWorkout.label,
         workoutType: repeatWorkout.workout_type,
         date: getTodaysDate(),
+        startedFrom: STARTED_FROM.RECENT,
       });
 
       if (!copiedWorkout) {
@@ -703,6 +705,7 @@ const WorkoutLibraryPage = () => {
           workoutId: repeatWorkout.workout_id,
           dayId: target.dayId,
           date: target.date,
+          startedFrom: STARTED_FROM.RECENT,
         });
 
         if (!copiedWorkoutId) {

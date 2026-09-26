@@ -75,6 +75,8 @@ behind by accident.
 | `20260928090000_custom-exercises-can-be-shared.sql` | yes |
 | `20260929090000_gym-scope-and-categories.sql` | yes |
 | `20260930090000_store-stats-ios-daily.sql` | no |
+| `20261001080000_the-admin-guard-runs-as-its-caller.sql` | yes |
+| `20261001090000_dev-kpis.sql` | no |
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
 centre match, per-centre lift leaderboards with video verification, and what
@@ -390,6 +392,15 @@ function's reply with what each day came to - pg_net keeps it for six hours.
 select jobname, schedule, active from cron.job where jobname = 'store-stats-ios-daily';
 select status_code, content from net._http_response order by created desc limit 1;
 ```
+
+`20261001080000_the-admin-guard-runs-as-its-caller.sql` was run on 2026-09-26.
+It makes `private.reject_self_appointed_admin` security invoker. Under security
+definer `current_user` was the function's owner, so the guard on
+`profile_private.is_admin` never fired, and the column revokes from
+20260921220000 did not stand in for it while `authenticated` held update on
+the whole table: any signed-in account could make itself admin. Who holds
+the flag is worth checking now and then:
+`select user_id from public.profile_private where is_admin;`.
 
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to

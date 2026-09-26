@@ -101,6 +101,9 @@ async function scopedUpload() {
     createParentCloudIdCache: (resolve) => resolve,
     ensureDayCloudIdentity: async () => parentReady ? 55 : null,
     syncDaysWithCloud: async () => { parentRepairs++; parentReady = true; },
+    // The real one: it only retries a missing started_from column, so the
+    // failures below still reach the test as they are.
+    createStartedFromCloudColumn: load("src/Utils/startedFrom.js").createStartedFromCloudColumn,
     buildCloudWorkoutTypeInstancePayload: (row) => ({ local_workout_type_instance_id: row.workout_id, workout_type: row.workout_type, date: "2026-09-15" }),
     WORKOUT_TYPE_INSTANCE_CLOUD_TABLE: "workout_type_instance",
     WORKOUT_TYPE_INSTANCE_CLOUD_SYNC_SELECT: "id",

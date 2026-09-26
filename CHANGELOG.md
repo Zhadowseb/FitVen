@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.13.0] - Unreleased
+## [2.14.0] - Unreleased
 ### Changed
 - **Centres go worldwide, a level at a time** (`GymsPage` with `{ scope }`).
   - Explore → Centres opens on the country your phone is in: reverse geocoded from one position fix, else your centre's country, else Denmark. The countries (4b) list only those with registered lifts.
@@ -38,7 +38,37 @@
   - Until it runs, Centres keeps its search and your centre, and says the categories are not available yet.
   - The importer keeps the country and derives the region (`scripts/import-gyms/regions.js`), so it now needs the migration first.
   - `npm run test:gym-categories` checks the vocabulary, the regions, the service mapping and the migration's rules.
-- **The privacy policy** says what the categories show, and that anybody who filters by sex or age group can see which group you are in; your sex and age themselves are never shown. It is raised to 2026-09-26.2, so everyone is asked again.
+- **The privacy policy** says what the categories show, and that anybody who filters by sex or age group can see which group you are in; your sex and age themselves are never shown. With the KPI page's change in 2.13.0 it is raised to 2026-09-26.4, so everyone is asked again once, for both.
+
+---
+## [2.13.0] - Unreleased
+### Changed
+- **Dev · Overblik is a KPI page now** (`src/Pages/DevDashboardPage/`, admin only).
+  - The period selector and the three ops boxes are gone. Every number has its own fixed window, and a status from one rule set (`getKpiStatus` in `Utils/devDashboard`): good, watch, alarm, baseline or unmeasured.
+  - **The order:** Brugere (downloads and active, per store) → Virker den? (crash · ANR, new bugs per version) → Bruges den? (training this week, coming back, plan completed, where workouts are started from) → release lag → what is used over 28 days → Feedback, with the median answer time → four folding sections (S1–S10). The downloads chart now sits under S7.
+  - With fewer than 30 in a denominator, a tile shows the count and no colour. A number with no source says "Ikke koblet på", and a read that fails says "Kunne ikke hentes"; neither shows 0, and the rest of the page keeps working.
+- **Two things the app now records:**
+  - **Where a workout was started from** (`started_from`: program, recent, calendar, empty or other), set by each path that creates a workout and synced with it. Older rows stay empty and are not counted.
+  - **When the app was last opened,** on which platform and in which version (`AppOpenSync`). It is written at most once an hour, and only after the new privacy policy has been accepted. Both degrade silently until the migration has run.
+- **Cloud:** `supabase/migrations/20261001090000_dev-kpis.sql`, not run yet.
+  - It adds the columns and `dev_metrics` (admin-only).
+  - It adds nine admin functions. Each checks `is_admin` itself and returns only aggregates, never a row per user.
+  - It runs after the admin-guard fix in 2.12.3, which it depends on.
+- **A daily GitHub Action** (`.github/workflows/dev-metrics.yml`, `scripts/dev-metrics/`) measures what only the repository knows and writes it to `dev_metrics`: release lag per store, rework within 14 days, open bug debt and commits per feature.
+  - It needs the repo secrets `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`, and a tag per store submission (`android/<version>`, `ios/<version>`; see `docs/VERSIONING.md`). Without them it does nothing and says so.
+  - `npm run test:dev-metrics-action` and `npm run test:dev-kpi-sources` check it and the app side.
+- **The privacy policy** says what is recorded about app use and how a workout was started, and that the developer only ever sees totals. It is raised to 2026-09-26.3, so everyone is asked again.
+
+---
+## [2.12.3] - Unreleased
+### Fixed
+- **Any signed-in account could make itself admin.** `private.reject_self_appointed_admin` refuses a change to `profile_private.is_admin` from the app by asking whether `current_user` is `authenticated` or `anon`.
+  - It was `security definer`, and inside one `current_user` is the function's owner, so the guard never fired.
+  - The column revokes that were meant to back it up do nothing either, because `authenticated` holds update on the whole table, and Postgres ignores a column revoke while the table grant stands.
+  - One PATCH set the flag, and from then on the admin functions answered: Feedback messages with their senders, store numbers, active users.
+- **The fix** is `security invoker` (`supabase/migrations/20261001080000_the-admin-guard-runs-as-its-caller.sql`). Checked on a local Postgres before and after: the same update is now refused, and the SQL editor still sets the flag.
+- `npm run test:admin-guard` fails if the latest definition of the guard is `security definer` again.
+- The migration was run on 2026-09-26. Who holds the flag: `select user_id, updated_at from public.profile_private where is_admin;` - only the developer's account should.
 
 ---
 ## [2.12.2] - Unreleased
