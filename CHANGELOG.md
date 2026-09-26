@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.14.1] - Unreleased
+### Changed
+- The migrations ledger records `20261001090000_dev-kpis.sql` as run, so Dev · Overblik has its numbers.
+
+---
 ## [2.14.0] - Unreleased
 ### Changed
 - **Centres go worldwide, a level at a time** (`GymsPage` with `{ scope }`).
