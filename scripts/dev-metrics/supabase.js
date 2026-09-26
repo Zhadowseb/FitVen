@@ -11,6 +11,13 @@ function readCredentials(env) {
   return url && key ? { url, key } : null;
 }
 
+// The legacy service_role key is a JWT and goes in both headers. The newer
+// secret keys (sb_secret_...) are not JWTs: Supabase takes them in `apikey`
+// only, and one in Authorization is refused as an invalid JWT.
+function isJwt(key) {
+  return /^eyJ[\w-]*\.[\w-]*\.[\w-]*$/.test(key);
+}
+
 function upsertRequest({ url, key }, row) {
   return {
     endpoint: `${url}/rest/v1/${TABLE}?on_conflict=key,platform`,
@@ -18,7 +25,7 @@ function upsertRequest({ url, key }, row) {
       method: "POST",
       headers: {
         apikey: key,
-        Authorization: `Bearer ${key}`,
+        ...(isJwt(key) ? { Authorization: `Bearer ${key}` } : {}),
         "Content-Type": "application/json",
         Prefer: "resolution=merge-duplicates,return=minimal",
       },

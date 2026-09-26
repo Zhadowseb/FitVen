@@ -650,7 +650,17 @@ const BRIEF_SHAPES = {
 };
 const FEATURE_KEYS = ["run", "posts", "likes", "follows", "gymLifts", "music", "sickness", "customExercises", "push"];
 const FAKE_URL = "https://example.supabase.co/";
-const FAKE_KEY = "made-up-service-key-for-the-test";
+// Shaped like the legacy service_role JWT, which goes in both headers.
+const FAKE_KEY = "eyJmYWtl.eyJmb3ItdGhlLXRlc3Q.bWFkZS11cA";
+
+// A newer secret key (sb_secret_...) is not a JWT: Supabase takes it in
+// `apikey` only, and refuses one in Authorization.
+{
+  const { upsertRequest } = require("./dev-metrics/supabase");
+  const { headers } = upsertRequest({ url: "https://example.supabase.co", key: "sb_secret_made-up" }, { key: "k" }).init;
+  assert.strictEqual(headers.apikey, "sb_secret_made-up");
+  assert.strictEqual(headers.Authorization, undefined, "a secret key that is not a JWT is sent as a bearer token");
+}
 
 const E2E_TAGS = [
   ["android/1.0.2", sha("tag-a102"), sha("A102"), "", seconds("2026-09-13T01:29:46+02:00")],
