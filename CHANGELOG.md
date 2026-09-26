@@ -19,6 +19,17 @@
 - **The privacy policy** says what is recorded about app use and how a workout was started, and that the developer only ever sees totals. It is raised to 2026-09-26.3, so everyone is asked again.
 
 ---
+## [2.12.3] - Unreleased
+### Fixed
+- **Any signed-in account could make itself admin.** `private.reject_self_appointed_admin` refuses a change to `profile_private.is_admin` from the app by asking whether `current_user` is `authenticated` or `anon`.
+  - It was `security definer`, and inside one `current_user` is the function's owner, so the guard never fired.
+  - The column revokes that were meant to back it up do nothing either, because `authenticated` holds update on the whole table, and Postgres ignores a column revoke while the table grant stands.
+  - One PATCH set the flag, and from then on the admin functions answered: Feedback messages with their senders, store numbers, active users.
+- **The fix** is `security invoker` (`supabase/migrations/20261001080000_the-admin-guard-runs-as-its-caller.sql`). Checked on a local Postgres before and after: the same update is now refused, and the SQL editor still sets the flag.
+- `npm run test:admin-guard` fails if the latest definition of the guard is `security definer` again.
+- The migration was run on 2026-09-26. Who holds the flag: `select user_id, updated_at from public.profile_private where is_admin;` - only the developer's account should.
+
+---
 ## [2.12.2] - Unreleased
 ### Added
 - **The dev dashboard's App Store box gets a fetcher.** A new Edge Function, `supabase/functions/store-stats`, reads App Store Connect's daily sales report and writes first-time iOS downloads to `store_stats`. A cron calls it at 06:15 UTC every day.
