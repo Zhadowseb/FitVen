@@ -30,7 +30,7 @@
   - You are on a level's lists when you have finished a workout at one of its centres in the last 90 days. Powerlifting and calisthenics lifts count at the centre the workout was matched to.
   - A block hides people from each other everywhere.
   - Weight classes wait for body weight, which is not asked for yet, so the pill reads "Alle vægte".
-- **Cloud:** `supabase/migrations/20260929090000_gym-scope-and-categories.sql`, not run yet.
+- **Cloud:** `supabase/migrations/20260929090000_gym-scope-and-categories.sql`, run on 2026-09-26 and checked.
   - It gives `gym` a `country_code` and a `region_key`. Denmark's four landsdele are derived from the postal code: Zealand 186, Jutland 153, Funen 26, Bornholm 0 of today's centres.
   - It adds `gym_region`, with names and "på Sjælland / i Jylland" phrases, and `private.calisthenics_event`.
   - It adds three security definer functions: `gym_scope_summary`, `gym_category_cards` and `gym_category_leaderboard`.
@@ -39,6 +39,27 @@
   - The importer keeps the country and derives the region (`scripts/import-gyms/regions.js`), so it now needs the migration first.
   - `npm run test:gym-categories` checks the vocabulary, the regions, the service mapping and the migration's rules.
 - **The privacy policy** says what the categories show, and that anybody who filters by sex or age group can see which group you are in; your sex and age themselves are never shown. It is raised to 2026-09-26.2, so everyone is asked again.
+
+---
+## [2.12.2] - Unreleased
+### Added
+- **The dev dashboard's App Store box gets a fetcher.** A new Edge Function, `supabase/functions/store-stats`, reads App Store Connect's daily sales report and writes first-time iOS downloads to `store_stats`. A cron calls it at 06:15 UTC every day.
+  - It asks for yesterday, and for every day of the 29 before it that has no row yet, one request at a time. So a failed run's gap closes itself the next morning. "Yesterday" is Apple's yesterday: its reports run midnight to midnight, Pacific Time.
+  - Only first downloads count: product types `1`, `1F` and `1T`, from [Apple's list](https://developer.apple.com/help/app-store-connect/reference/reporting/product-type-identifiers/). The same report carries updates (`7`, `7F`, `7T`) and re-downloads (`3`, `3F`), and summing its whole Units column gives a number that is too high without looking wrong. Also left out: in-app purchases, and any other app on the same developer account (rows are matched on FitVen's Apple ID, the `ascAppId` in `eas.json`).
+  - When Apple has no report for a day (404, "There were no sales for the date specified."), no row is written, never a zero. Until the app is released that is every day, so the box stays an em dash, which is correct. The next run asks for that day again.
+  - A refused key (401 or 403) stops the run, answers 502 and says why in the function log. A 5xx or a dropped connection skips that day for the next run. A report that cannot be read leaves its day empty rather than counting it as nothing.
+  - `rating` and `rating_count` are never written. Google Play is not built.
+- **What is tested, and what is not.** `npm run test:store-stats` runs the function's own module in Node. It covers the token (ES256, raw r||s, no `sub`), the 404, 401, 403, 429 and 5xx answers against a fake fetch, the gzipped report parsed by column name, the allowlist, the days already stored being skipped, and the upsert. **The sum itself cannot be checked until the app has real downloads.** Do not trust the first number blindly. Compare it with App Store Connect -> Sales and Trends -> Units with the time zone set to Pacific Time; the page shows UTC by default, which is a different day.
+- **To turn it on**, in this order. Nothing is fetched until all four are done:
+  1. Set the function secrets: `ASC_PRIVATE_KEY` (the whole .p8 file), `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_VENDOR_NUMBER`, and `STORE_STATS_CRON_SECRET` (a long random string).
+  2. Create the Vault secrets: `project_url` (`https://<project-ref>.supabase.co`) and `store_stats_cron_secret` (the same string as `STORE_STATS_CRON_SECRET`).
+  3. Deploy the function: `npx supabase functions deploy store-stats --no-verify-jwt --project-ref <project-ref>`. No JWT check, because the cron has no user's JWT to send; the function checks its own secret before anything else.
+  4. Run `supabase/migrations/20260930090000_store-stats-ios-daily.sql` in the SQL editor. The ledger has it as not run.
+  - To check it without waiting for the morning: `curl -X POST https://<project-ref>.supabase.co/functions/v1/store-stats -H "x-store-stats-secret: <the secret>"`. The reply lists every day. Before the release, all 30 under `noSales` is the right answer; a 502 names what Apple refused.
+
+### Changed
+- **Google Play stays an em dash while only the App Store has rows.** The dashboard used to treat "the table has rows" as "both stores answered". With an iOS fetcher alone, that would have drawn Play as 0 downloads for an app that is live there. Unknown is now decided per store (`Utils/devDashboard`), and `npm run test:dev-dashboard` checks it both ways.
+- The empty chart says "Ingen tal fra butikkerne endnu." instead of "Butiksnøglerne er ikke sat på serveren endnu.". With the keys set and the app not yet released, the old line would have been wrong.
 
 ---
 ## [2.12.1] - Unreleased
