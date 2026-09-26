@@ -1,18 +1,21 @@
 // The two pieces of reasoning behind the new Home, and the wiring that would
 // otherwise only fail on a phone.
 //
-// The split guess and the muscle deltas are pure functions over rows, which is
-// why they were written as utils rather than inside the service - everything
-// here drives the real code, not a copy of it.
+// The split guess and the week the split waits for are pure functions, which
+// is why they were written as utils rather than inside the service or the
+// screen - everything here drives the real code, not a copy of it. The date
+// that week counts from is read by the real query, against an in-memory
+// SQLite built from the real schema.
 
 const assert = require("assert");
 const fs = require("fs");
 const path = require("path");
+const { DatabaseSync } = require("node:sqlite");
 const loadAppModule = require("./lib/loadAppModule");
 
 const root = path.resolve(__dirname, "..");
 const splitGuess = loadAppModule("src/Utils/splitGuess.js");
-const muscleGlance = loadAppModule("src/Utils/muscleGlance.js");
+const splitForming = loadAppModule("src/Utils/splitForming.js");
 
 const DAY_MS = 86400000;
 
@@ -255,130 +258,86 @@ assert.strictEqual(
 assert.strictEqual(splitGuess.exerciseOverlap(["a", "b", "c", "d"], ["a", "b", "c", "e"]), 0.6);
 assert.strictEqual(splitGuess.exerciseOverlap([], ["a"]), 0, "nothing overlaps with nothing");
 
-/* ------------------------------------------------------- last month -- */
+/* ---------------------------------------------- the split's first week -- */
 
-const set = (name, weight, reps, daysAgo) => ({
-  name,
-  weight,
-  reps,
-  at: now - daysAgo * DAY_MS,
-});
+// The split waits a week from the first finished workout. Somebody who trains
+// one muscle group a day, six days a week, has nothing to recognise before the
+// week has gone round once, so until then the row fills a dot a day - even
+// when the guess could already make groups.
+{
+  const at = (day, hour = 0, minute = 0) => new Date(2026, 8, day, hour, minute).getTime();
+  // What getFirstWorkoutAt hands over: the start of that day, local time.
+  const firstDay = at(14);
+  const state = (now, groupCount = 2, firstWorkoutAt = firstDay) =>
+    splitForming.splitFormingState({ firstWorkoutAt, now, groupCount });
 
-const groupsByExercise = new Map([
-  ["bench press", ["Chest"]],
-  ["row", ["Back"]],
-  ["curl", ["Biceps"]],
-]);
+  assert.deepStrictEqual(
+    splitForming.splitFormingState({ firstWorkoutAt: null, now: at(22, 12), groupCount: 3 }),
+    { daysIn: null, filledDots: 0, showSplit: false, weekIsOver: false },
+    "an account with no finished workout fills a dot, or is shown a split"
+  );
 
-const deltas = muscleGlance.buildMuscleGroupDeltas(
-  [
-    set("bench press", 100, 5, 5),
-    set("bench press", 100, 5, 6),
-    set("bench press", 100, 5, 7),
-    set("bench press", 90, 5, 40),
-    set("bench press", 90, 5, 41),
-    set("bench press", 90, 5, 42),
-    set("row", 80, 5, 5),
-    set("row", 80, 5, 6),
-    set("row", 80, 5, 7),
-    set("row", 85, 5, 40),
-    set("row", 85, 5, 41),
-    set("row", 85, 5, 42),
-    set("curl", 20, 10, 5),
-  ],
-  { groupsByExercise, now }
-);
+  // The day of the first workout is the first dot, from its first minute to
+  // its last.
+  assert.deepStrictEqual(
+    [state(at(14, 0, 1)).filledDots, state(at(14, 23, 59)).filledDots],
+    [1, 1],
+    "the day of the first workout is not the first dot"
+  );
 
-const chest = deltas.find((entry) => entry.label === "Chest");
-const back = deltas.find((entry) => entry.label === "Back");
-const biceps = deltas.find((entry) => entry.label === "Biceps");
+  // Calendar days, not 24-hour blocks: a workout late last night and a look
+  // this morning is day two, though only hours have passed.
+  assert.deepStrictEqual(
+    state(at(15, 7), 0, at(14, 23, 30)),
+    { daysIn: 1, filledDots: 2, showSplit: false, weekIsOver: false },
+    "the first week is counted in 24-hour blocks, not calendar days"
+  );
 
-assert.ok(chest.deltaPercent > 0, "a heavier month is a gain");
-assert.strictEqual(chest.fill, 1, "the best group fills its track");
-assert.strictEqual(chest.isGain, true);
+  // The seventh dot fills on the seventh day. The split shows seven days on,
+  // and not before, whatever the guess had made by then.
+  assert.deepStrictEqual(
+    state(at(20, 23, 59), 3),
+    { daysIn: 6, filledDots: 7, showSplit: false, weekIsOver: false },
+    "the split shows before the first week is over"
+  );
+  assert.deepStrictEqual(
+    state(at(21, 0, 1), 3),
+    { daysIn: 7, filledDots: 7, showSplit: true, weekIsOver: true },
+    "the split still waits once the first week is over"
+  );
 
-// Going backwards reads as flat. Home is not where somebody is told they have
-// lost ground - that needs a screen with room to explain why.
-assert.strictEqual(back.deltaPercent, 0, "a lighter month is zero, never negative");
-assert.strictEqual(back.isGain, false);
+  assert.strictEqual(state(at(30, 12)).filledDots, 7, "more than seven dots are filled");
+  assert.strictEqual(
+    state(at(30, 12), 0).showSplit,
+    false,
+    "a split with no groups is shown in place of the row"
+  );
+  // Past the week with nothing to show, the row stops promising "after your
+  // first week" - that week is over - and says what it waits for.
+  assert.strictEqual(
+    state(at(30, 12), 0).weekIsOver,
+    true,
+    "the row still promises the first week after it is over"
+  );
 
-assert.strictEqual(biceps.deltaPercent, null, "too few sets is no answer, not zero");
-assert.strictEqual(
-  biceps.fill,
-  muscleGlance.MUSCLE_GLANCE_EMPTY_FILL,
-  "a column with no answer is still drawn, or the row looks broken"
-);
+  // A first workout dated ahead - a planned one ticked off early - is the
+  // first day, not a negative one.
+  assert.strictEqual(state(at(12, 9)).filledDots, 1, "a first workout dated ahead fills no dot");
 
-assert.strictEqual(muscleGlance.pickMuscleGlanceHeadline(deltas), "Chest");
-assert.strictEqual(
-  muscleGlance.pickMuscleGlanceHeadline([back, biceps]),
-  null,
-  "no gain anywhere has no headline"
-);
-
-// The mapping lives in the synced exercise catalog. Without it the block says
-// nothing rather than implying nobody trained.
-assert.deepStrictEqual(
-  muscleGlance.buildMuscleGroupDeltas([set("bench press", 100, 5, 5)], {
-    groupsByExercise: new Map(),
-    now,
-  }),
-  [],
-  "no muscle mapping, no block"
-);
-
-assert.ok(
-  muscleGlance.buildMuscleGroupDeltas(
-    [...Array(40)].map((_, index) =>
-      set(`exercise ${index}`, 100, 5, index % 2 ? 5 : 40)
-    ),
-    {
-      groupsByExercise: new Map(
-        [...Array(40)].map((_, index) => [`exercise ${index}`, [`Group ${index}`]])
-      ),
-      now,
-    }
-  ).length <= muscleGlance.MUSCLE_GLANCE_MAX_GROUPS,
-  "five groups is what fits across the screen"
-);
+  // The week the clocks go forward is an hour short - 29 March 2026, in
+  // Denmark - and dividing by a day and rounding down makes it six days.
+  assert.strictEqual(
+    splitForming.splitFormingState({
+      firstWorkoutAt: new Date(2026, 2, 26).getTime(),
+      now: new Date(2026, 3, 2, 9).getTime(),
+      groupCount: 2,
+    }).showSplit,
+    true,
+    "the week across the spring clock change is counted as six days"
+  );
+}
 
 /* ------------------------------------------------------------- wiring -- */
-
-// Home reads the sets through the same function Records does. Two screens
-// disagreeing about whether somebody's chest went up is worse than one of them
-// staying quiet.
-const weightliftingSource = fs.readFileSync(
-  path.join(root, "src", "Services", "weightliftingService.js"),
-  "utf8"
-);
-
-assert.ok(
-  /export async function getMuscleGroupDeltas[\s\S]*?getRecordsSourceData\(db[,)]/.test(
-    weightliftingSource
-  ),
-  "Home stopped reading the muscle groups through the same source as Records"
-);
-
-// Same source, but not the whole of it. The glance compares two thirty-day
-// windows, and it used to pull every set ever logged on every return to Home
-// to throw nine tenths of it away - on a phone with three months of history
-// that was most of the two seconds before anything showed.
-assert.ok(
-  /export async function getMuscleGroupDeltas[\s\S]*?getRecordsSourceData\(db, \{ sinceIsoDate \}\)/.test(
-    weightliftingSource
-  ),
-  "Home's muscle glance reads the whole training history again instead of its two windows"
-);
-
-// One formula in the app. The design document asked for Epley "the same as
-// Records"; Records is Brzycki, and recordsInsights.js already carries a
-// comment about a design that made this mistake once before.
-const glanceSource = fs.readFileSync(path.join(root, "src", "Utils", "muscleGlance.js"), "utf8");
-
-assert.ok(
-  /calculateBrzyckiOneRepMax/.test(glanceSource) && !/Epley\(/.test(glanceSource),
-  "Home is estimating one-rep maxes with a second formula"
-);
 
 // Profile is not a tab any more, so the avatar is the only way in from Home.
 const headerSource = fs.readFileSync(
@@ -532,7 +491,7 @@ assert.ok(
 // account gets, which is the one thing this page must not get wrong.
 assert.ok(
   /Promise\.allSettled/.test(homeSource),
-  "the three reads are back in one Promise.all, so one failure blanks all three"
+  "the reads are back in one Promise.all, so one failure blanks them all"
 );
 
 assert.ok(
@@ -548,87 +507,214 @@ assert.ok(
 /* ------------------------------------------------- the first day ------- */
 
 // Somebody who has just installed the app has no split and no sets, and used
-// to meet a Home with two holes in it. Both blocks now say what they will
-// become. A block that only appears weeks later cannot be looked forward to.
-
-const firstDay = muscleGlance.buildMuscleGroupDeltas([], { groupsByExercise, now });
-
-assert.strictEqual(
-  firstDay.length,
-  muscleGlance.MUSCLE_GLANCE_PLACEHOLDER_KEYS.length,
-  "an account with nothing logged draws no bars at all"
-);
-
-assert.ok(
-  firstDay.every(
-    (entry) =>
-      entry.deltaPercent === 0 &&
-      entry.isGain === false &&
-      entry.fill === muscleGlance.MUSCLE_GLANCE_EMPTY_FILL &&
-      entry.isPlaceholder === true
-  ),
-  "the first-day row is not a flat row of zeroes"
-);
-
-// The labels have to be the ones a trained account sees, or the block changes
-// its vocabulary the moment somebody starts training.
-const realGroupLabels = new Set(
-  loadAppModule("src/Utils/exerciseMuscleGroups.js").EXERCISE_MUSCLE_GROUPS.map(
-    (group) => group.label
-  )
-);
-
-assert.ok(
-  firstDay.every((entry) => realGroupLabels.has(entry.label)),
-  "the first-day row names muscle groups the rest of the app does not have"
-);
-
-assert.strictEqual(
-  muscleGlance.pickMuscleGlanceHeadline(firstDay),
-  null,
-  "the first day claims a muscle group is gaining"
-);
-
-// The one case that must NOT get zeroes: sets exist but the exercise catalog
-// has not arrived. Telling somebody who has been training that they gained
-// nothing is worse than telling them nothing.
-assert.deepStrictEqual(
-  muscleGlance.buildMuscleGroupDeltas([set("bench press", 100, 5, 5)], {
-    groupsByExercise: new Map(),
-    now,
-  }),
-  [],
-  "a missing catalog now reads as a month of no progress"
-);
-
-// A plus in front of a zero is a claim. The block would open on a row of
-// "+0%" for somebody who has never trained.
-const glanceComponentSource = fs.readFileSync(
-  path.join(root, "src", "Pages", "HomePage", "Components", "MuscleGlance", "MuscleGlance.js"),
-  "utf8"
-);
-
-assert.ok(
-  !/`\+\$\{group\.deltaPercent\}%`/.test(glanceComponentSource) &&
-    /deltaPercent > 0 \? `\+\$\{deltaPercent\}%`/.test(glanceComponentSource),
-  "the glance puts a plus in front of every number again, including zero"
-);
+// to meet a Home with holes in it. Every block now says what it will become,
+// or has something to show without a history. A block that only appears weeks
+// later cannot be looked forward to.
 
 const splitSource = fs.readFileSync(
   path.join(root, "src", "Pages", "HomePage", "Components", "SplitCards", "SplitCards.js"),
   "utf8"
 );
+const formingSource = fs.readFileSync(
+  path.join(root, "src", "Pages", "HomePage", "Components", "SplitCards", "SplitForming.js"),
+  "utf8"
+);
 
+const splitBlock = splitSource.slice(splitSource.indexOf("export default function SplitCards("));
+
+// Until the split shows, the forming row stands in for it. It does not vanish,
+// and it does not wait for groups to exist.
 assert.ok(
-  !/if \(!groups\.length\) \{\s*return null;/.test(splitSource),
+  !/return null/.test(splitBlock) &&
+    /splitFormingState\(/.test(splitBlock) &&
+    /showSplit \?[\s\S]*?:\s*\(?\s*<SplitForming /.test(splitBlock),
   "the split block vanishes again for somebody who has not trained yet"
 );
 
+// Named in both states, so the block says what it is for before there is a
+// card to carry a name.
 assert.ok(
-  /home\.split\.empty/.test(splitSource) && /home\.split\.title/.test(splitSource),
-  "the empty split says nothing about what the block is for"
+  /home\.split\.eyebrow/.test(splitBlock) &&
+    splitBlock.indexOf("home.split.eyebrow") < splitBlock.indexOf("showSplit ?"),
+  "the split block is only named once there is a split"
+);
+assert.ok(
+  /t\("home\.split\.forming"\)/.test(formingSource) &&
+    /home\.split\.formingA11y/.test(formingSource),
+  "the forming row says nothing about what the block will become"
+);
+assert.ok(
+  !/TouchableOpacity|Pressable|onPress|accessibilityRole="button"/.test(formingSource),
+  "the forming row can be pressed, with nothing to open"
 );
 
-console.log(
-  "Home quick start: the split guess, the weekday rule, last month, and the wiring passed."
+/* ----------------------------------------------------- the first workout */
+
+// Only when the empty workout is the only choice: nothing open today and
+// nothing due in the split. With either, and while a workout runs, Quick start
+// is what it was.
+const firstWorkoutSource = fs.readFileSync(
+  path.join(root, "src", "Pages", "HomePage", "Components", "QuickStartCard", "FirstWorkoutButton.js"),
+  "utf8"
 );
+const firstWorkoutStyle = fs.readFileSync(
+  path.join(root, "src", "Pages", "HomePage", "Components", "QuickStartCard", "FirstWorkoutButtonStyle.js"),
+  "utf8"
+);
+const onlyEmptyAt = quickStartSource.indexOf("if (!primary) {");
+const onlyEmptyBranch =
+  quickStartSource.slice(onlyEmptyAt).match(/^[\s\S]*?\r?\n {2}\}\r?\n/)?.[0] ?? "";
+
+assert.ok(
+  onlyEmptyAt > quickStartSource.indexOf("if (runningWorkout) {") &&
+    /<FirstWorkoutButton onPress=\{onStartEmpty\} isFirst=\{!hasTrained\} \/>/.test(onlyEmptyBranch),
+  "the first workout is not what Quick start offers when the empty workout is the only choice"
+);
+assert.strictEqual(
+  (quickStartSource.match(/<FirstWorkoutButton\b/g) ?? []).length,
+  1,
+  "the first workout is drawn beside a primary button, or in place of the live panel"
+);
+assert.ok(
+  !/secondaryButtonAlone/.test(quickStartSource),
+  "the quiet empty workout fills the block on its own again"
+);
+
+// The light is drawn only while it may move. With animations off - off
+// screen, in the background, reduce motion - there is no stripe at all, not
+// one standing still.
+assert.ok(
+  /const \{ animate \} = useAnimationsEnabled\(\)/.test(firstWorkoutSource) &&
+    /\{animate && size \? <Shine /.test(firstWorkoutSource) &&
+    (firstWorkoutSource.match(/<Shine\b/g) ?? []).length === 1,
+  "the light on the first workout is drawn with animations off"
+);
+
+const shineSource = firstWorkoutSource.slice(
+  firstWorkoutSource.indexOf("function Shine("),
+  firstWorkoutSource.indexOf("export default function FirstWorkoutButton")
+);
+
+assert.ok(
+  /pointerEvents="none"/.test(shineSource) &&
+    /accessibilityElementsHidden/.test(shineSource) &&
+    /importantForAccessibility="no-hide-descendants"/.test(shineSource),
+  "the light takes touches, or is read out"
+);
+assert.ok(
+  /accessibilityLabel=\{t\(isFirst \? "home\.quickStart\.startFirst" : "home\.quickStart\.startEmpty"\)\}/.test(
+    firstWorkoutSource
+  ),
+  "the first workout reads out as something else"
+);
+
+// The same block comes up for somebody with months of history - today's
+// session done, or nothing repeating yet - and "First workout" would be a
+// lie to them. Home says which it is, from the history it already loads.
+assert.ok(
+  /t\(isFirst \? "home\.quickStart\.firstWorkout" : "home\.quickStart\.emptyWorkout"\)/.test(firstWorkoutSource) &&
+    /t\(isFirst \? "home\.quickStart\.firstWorkoutSub" : "home\.quickStart\.emptyWorkoutSub"\)/.test(firstWorkoutSource),
+  "the first workout is called that for somebody who has trained"
+);
+assert.ok(
+  /hasTrained=\{daysSinceLastWorkout !== null \|\| firstWorkoutAt !== null\}/.test(homeSource),
+  "Home no longer tells Quick start whether somebody has ever trained"
+);
+
+// iOS draws no shadow outside a view that hides its overflow, and the light
+// has to be clipped - so the two sit on different views.
+const buttonStyle = firstWorkoutStyle.slice(
+  firstWorkoutStyle.indexOf("button: {"),
+  firstWorkoutStyle.indexOf("surface: {")
+);
+
+assert.ok(
+  /shadowRadius/.test(buttonStyle) &&
+    !/overflow/.test(buttonStyle) &&
+    /overflow: "hidden"/.test(firstWorkoutStyle),
+  "the first workout's shadow is on the view that clips, where iOS does not draw it"
+);
+
+/* ------------------------------------------------------- from Explore --- */
+
+// "Last month" showed somebody new five times 0 %. Explore has something from
+// the first day, so it takes that place for everybody, after the friends.
+assert.ok(
+  !/MuscleGlance|muscleGlance|getMuscleGroupDeltas/.test(homeSource),
+  "Last month is back on Home"
+);
+assert.ok(
+  /<ExploreCarousel refreshKey=\{exploreRefreshKey\} \/>/.test(homeSource) &&
+    homeSource.indexOf("<ExploreCarousel") > homeSource.indexOf("<FriendsActivity"),
+  "Home does not show Explore where Last month was"
+);
+
+const handleRefresh = homeSource.slice(
+  homeSource.indexOf("const handleRefresh = useCallback("),
+  homeSource.indexOf("}, [loadCirclePreview, loadHome, refreshUnreadNotificationCount]);")
+);
+
+assert.ok(
+  /setExploreRefreshKey\(/.test(handleRefresh),
+  "pull-to-refresh does not reach the Explore rail"
+);
+assert.ok(
+  /workoutService\.getFirstWorkoutAt\(db\)/.test(homeSource) &&
+    /firstWorkoutAt=\{firstWorkoutAt\}/.test(homeSource),
+  "the split is not told when the first workout was, so it never stops waiting"
+);
+
+/* ------------------------------------------ the first finished workout -- */
+
+// The date the first week counts from, through the real query. A MIN over
+// dates sees what a MAX never does: a date in neither spelling sorts before
+// every real one, and read as the first day it would make months of history
+// look like none.
+async function checkFirstWorkoutQuery() {
+  const repository = loadAppModule("src/Repository/weightliftingRepository.js");
+  const { programSchemaSql } = loadAppModule("src/Database/schema/program.js");
+  const raw = new DatabaseSync(":memory:");
+
+  raw.exec(programSchemaSql);
+
+  const db = {
+    getFirstAsync: async (sql, params = []) => raw.prepare(sql).get(...params) ?? null,
+  };
+
+  assert.strictEqual(
+    await repository.getFirstCompletedWorkoutDate(db),
+    null,
+    "an account with no workouts has a first one"
+  );
+
+  [
+    { date: "2026-09-20", done: 1 },
+    { date: "05.09.2026", done: 1 }, // the first, in the other spelling
+    { date: "2026-09-01", done: 0 }, // planned, never finished
+    { date: "2026-08-15", done: 1, deletedAt: "2026-08-16T10:00:00Z" },
+    { date: "", done: 1 }, // neither spelling
+  ].forEach((row, index) => {
+    raw
+      .prepare(
+        "INSERT INTO Workout_Type_Instance (workout_id, day_id, date, done, deleted_at) VALUES (?, ?, ?, ?, ?)"
+      )
+      .run(index + 1, index + 1, row.date, row.done, row.deletedAt ?? null);
+  });
+
+  assert.strictEqual(
+    await repository.getFirstCompletedWorkoutDate(db),
+    "2026-09-05",
+    "the first finished workout is not the earliest one finished, in either spelling"
+  );
+}
+
+checkFirstWorkoutQuery()
+  .then(() => {
+    console.log(
+      "Home quick start: the split guess, the weekday rule, the split's first week and the query it counts from, the first workout, Explore in place of last month, and the wiring passed."
+    );
+  })
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });

@@ -1,9 +1,12 @@
-// Home's muscle glance reads two thirty-day windows and nothing earlier.
+// The strength-set query can be bounded to a window, and nothing earlier is
+// read. Home's muscle glance was the first to need it and is gone; the muscle
+// groups on Train's Exercises tile and its 1RM tool read their windows through
+// it now (trainService.getLibraryMuscleGroups and getToolsOverview).
 //
-// It used to pull every completed set ever logged, a five-table join with no
-// date bound, on every return to Home - and throw nine tenths of it away in
-// JavaScript. On a phone with three months of history that was most of the
-// two seconds before anything showed on the screen.
+// The glance used to pull every completed set ever logged, a five-table join
+// with no date bound, on every return to Home - and throw nine tenths of it
+// away in JavaScript. On a phone with three months of history that was most
+// of the two seconds before anything showed on the screen.
 //
 // This runs the real repository query against an in-memory SQLite rather than
 // reading its text, because the one thing that can quietly go wrong here is
@@ -113,7 +116,7 @@ const db = {
   }
 
   console.log(
-    `Muscle glance window: ${everything.length} sets unbounded, ${bounded.length} inside the window, both date spellings respected.`
+    `Strength set window: ${everything.length} sets unbounded, ${bounded.length} inside the window, both date spellings respected.`
   );
 })().catch((error) => {
   console.error(error);

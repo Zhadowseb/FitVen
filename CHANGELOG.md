@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.11.1] - Unreleased
+## [2.12.1] - Unreleased
 ### Fixed
 - **Deleting an exercise from its settings did nothing on Android.** The panel closed and the confirmation never came, so the exercise stayed.
   - The cause was `ThemedModal`, which waited for React Native's `Modal.onDismiss` before opening the next modal. React Native only fires that on iOS (`Libraries/Modal/Modal.js`: "OnDismiss is implemented on iOS only").
@@ -14,6 +14,29 @@
 - **In the picker, only the + adds.** A tap anywhere else on a row used to add it too; now it shows the exercise's muscles. Rows already in the workout are ticked, with "Allerede i {workout}" or "Tilføjet til {workout}" under the name.
 - The muscle view's button follows the same rules. For an exercise that was there before, it closes first and then asks.
 - `npm run test:exercise-picker` checks the visit, the question, the snapshot and Android's onDismiss.
+
+---
+## [2.12.0] - Unreleased
+### Changed
+- **Home for somebody new.**
+  - **First workout:** when nothing is open today and nothing in the split is due, Quick start's empty workout is no longer a quiet button stretched over the block. It is one full button in the accent (`FirstWorkoutButton`), as tall as the days-since card beside it, with a light that crosses it every 3.2 seconds. The light only moves while Home is on screen, the app is in front and reduce motion is off; otherwise there is none.
+    - It says "Første træning" / "First workout" only to somebody who has never finished a workout. Everybody else who gets the same block - today's session done, or nothing repeating yet - reads "Tom træning" / "Empty workout".
+    - With a workout open or due, Quick start is exactly as it was.
+  - **Your split takes a week:** the row is headed "Dit split" / "Your split". Until seven calendar days after the first finished workout, it shows seven dots, filled a day at a time from that day, and "Tager form efter din første uge", even when the split guess could already make groups. Somebody training one muscle group a day has nothing to recognise before the week has gone round once.
+    - After the week with still no split, the dots are full and the row says it shows up as workouts repeat.
+    - Accounts older than a week see the cards as before.
+    - The rule is `Utils/splitForming`, counting from `workoutService.getFirstWorkoutAt`.
+- **"Fra Udforsk" / "From Explore" replaces "Last month" on Home, for everybody** (`ExploreCarousel`). It is a rail of up to six cards:
+  - **Your centre:** its new records first, when there are any.
+  - **The newest shared exercises**, never your own.
+  - **Posts from the centres you train in.**
+  - **One of Denmark's strongest lifts,** a different one each day.
+  - **Without a centre:** "Find dit center" and the Custom made exercises library, so a new account has cards from the first day.
+  - The order turns daily and is stable within a day (`Utils/homeExploreCards`).
+  - It reads through `homeExploreService` and never marks anything as seen.
+  - It paints what it showed last at once, and asks again at most once a minute or on a pull.
+  - "Last month" is gone with its code: `MuscleGlance`, `Utils/muscleGlance` and `getMuscleGroupDeltas`. Nothing else used them.
+  - `npm run test:home-explore` checks the cards. `npm run test:home-quick-start` checks the first week, the first workout and the wiring.
 
 ---
 ## [2.11.0] - Unreleased
