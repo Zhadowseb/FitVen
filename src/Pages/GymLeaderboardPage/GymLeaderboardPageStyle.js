@@ -98,203 +98,89 @@ export default StyleSheet.create({
     paddingTop: 16,
     gap: 14,
   },
-  featuredCard: {
-    borderRadius: 20,
-    borderWidth: 1,
-    overflow: "hidden",
-  },
-  featuredHeader: {
-    paddingTop: 14,
-    paddingHorizontal: 16,
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    gap: 12,
-  },
-  featuredHeaderCopy: {
-    flex: 1,
-    minWidth: 0,
-    gap: 2,
-  },
-  featuredExercise: {
-    fontSize: 20,
-    fontWeight: "800",
-    letterSpacing: -0.4,
-  },
-  featuredCount: {
-    fontSize: 11.5,
-    fontWeight: "700",
-  },
-  topRow: {
-    paddingTop: 12,
-    paddingHorizontal: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 11,
-  },
-  // The record holder's picture and name: one target that opens their profile.
-  topLifter: {
-    flex: 1,
-    minWidth: 0,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 11,
-  },
-  topAvatarRing: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    borderWidth: 2,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  topCopy: {
-    flex: 1,
-    minWidth: 0,
-    gap: 4,
-  },
-  topName: {
-    fontSize: 15,
-    fontWeight: "800",
-  },
-  topMetaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  topRank: {
-    fontSize: 11.5,
-    fontWeight: "700",
-  },
-  topWeightGroup: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    gap: 3,
-  },
-  topWeight: {
-    fontSize: 26,
-    fontWeight: "800",
-    letterSpacing: -0.6,
-    fontVariant: ["tabular-nums"],
-  },
-  topUnit: {
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  emptyTop: {
-    paddingTop: 12,
-    paddingHorizontal: 16,
-  },
-  emptyTopText: {
-    fontSize: 12.5,
-    fontWeight: "700",
-    lineHeight: 17,
-  },
-  divider: {
-    height: 1,
-    marginTop: 12,
-    marginHorizontal: 16,
-  },
-  meRow: {
-    paddingTop: 10,
-    paddingHorizontal: 16,
-    paddingBottom: 14,
-    gap: 8,
-  },
-  meLine: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  meLabel: {
-    fontSize: 12.5,
-    fontWeight: "800",
-  },
-  meRank: {
-    fontSize: 12.5,
-    fontWeight: "700",
-  },
-  meSpacer: {
-    flex: 1,
-  },
-  meWeight: {
-    fontSize: 14,
-    fontWeight: "800",
-    fontVariant: ["tabular-nums"],
-  },
-  meGap: {
-    fontSize: 11.5,
-    fontWeight: "700",
-  },
-  meBarTrack: {
-    height: 4,
-    borderRadius: 2,
-    overflow: "hidden",
-  },
-  meBarFill: {
-    height: 4,
-    borderRadius: 2,
+  // The path sits close under Centre / Friends, as a caption to it.
+  crumbs: {
+    marginTop: -2,
+    paddingHorizontal: 2,
   },
   sectionLabelRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    gap: 12,
     paddingHorizontal: 2,
     marginTop: 4,
   },
   sectionLabel: {
+    flexShrink: 0,
     fontSize: 9.5,
     fontWeight: "800",
     letterSpacing: 1.8,
     textTransform: "uppercase",
   },
   sectionHint: {
-    fontSize: 9.5,
+    flexShrink: 1,
+    fontSize: 11,
     fontWeight: "700",
+    textAlign: "right",
   },
-  listCard: {
+  cards: {
+    gap: 12,
+  },
+  // The cards of the gender or scope before, while the new ones load.
+  refreshing: {
+    opacity: 0.55,
+  },
+  notice: {
     borderRadius: 20,
     borderWidth: 1,
-    overflow: "hidden",
-  },
-  moreRow: {
-    paddingVertical: 13,
     paddingHorizontal: 16,
+    paddingVertical: 16,
+    gap: 4,
+  },
+  noticeTitle: {
+    fontSize: 14.5,
+    fontWeight: "800",
+  },
+  noticeBody: {
+    fontSize: 12,
+    fontWeight: "600",
+    lineHeight: 17,
+  },
+  noticeAction: {
+    alignSelf: "flex-start",
+    minHeight: 32,
+    justifyContent: "center",
+    marginTop: 4,
+  },
+  noticeActionText: {
+    fontSize: 13,
+    fontWeight: "800",
+  },
+  // "All exercises": one line to every exercise's own ranking.
+  allRow: {
+    minHeight: 48,
+    borderRadius: 16,
+    borderWidth: 1,
+    paddingVertical: 7,
+    paddingHorizontal: 14,
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
   },
-  moreCopy: {
+  allCopy: {
     flex: 1,
     minWidth: 0,
-    gap: 2,
   },
-  moreExercise: {
-    fontSize: 14,
+  allTitle: {
+    fontSize: 13.5,
     fontWeight: "800",
+    lineHeight: 18,
   },
-  moreTop: {
-    fontSize: 11.5,
+  allDetail: {
+    fontSize: 11,
     fontWeight: "700",
-  },
-  moreRank: {
-    fontSize: 13,
-    fontWeight: "800",
-    minWidth: 28,
-    textAlign: "right",
-  },
-  rowDivider: {
-    height: 1,
-    marginHorizontal: 16,
-  },
-  footerRow: {
-    paddingVertical: 13,
-    alignItems: "center",
-    borderTopWidth: 1,
-  },
-  footerText: {
-    fontSize: 13,
-    fontWeight: "800",
+    lineHeight: 15,
   },
   reviewRow: {
     borderRadius: 16,

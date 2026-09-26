@@ -19,7 +19,7 @@
 // counted by scripts/check-privacy-policy.js, which fails the build while the
 // policy claims to be published and is not finished.
 
-export const PRIVACY_POLICY_VERSION = "2026-09-26";
+export const PRIVACY_POLICY_VERSION = "2026-09-26.2";
 
 /** The public copy. Required by Google Play, and the address in its listing. */
 export const PRIVACY_POLICY_URL = "https://fitven.dk/privacy/";
@@ -42,7 +42,7 @@ Anything about your data — a copy of it, a correction, having it deleted, or a
     title: "What FitVen stores about you",
     body: `Your email address and password, used to sign in.
 
-Your profile: display name, username, an optional short bio, an optional photo, your birth year, and — if you choose to give it — your sex. Your sex is only used so that records and leaderboards can be split by sex; it is never shown to anyone, and you can clear it at any time in Edit profile.
+Your profile: display name, username, an optional short bio, an optional photo, your birth year, and — if you choose to give it — your sex. Your sex and birth year are only used so that leaderboards can be split into men and women and into age groups. Neither is ever shown on your profile, but somebody who picks Men, Women or an age group on a leaderboard can see whether you are in it. You can clear your sex at any time in Edit profile.
 
 Your training: programs, workouts, exercises, sets, weights, repetitions, personal records and the notes you write on them, and the split of workouts you choose to rotate through.
 
@@ -101,6 +101,8 @@ The workout posts you publish are shown to the audience you choose for each of t
 People who follow you can also see whether you are training today, how many records you set in today's workout, and — if you share music — what you are listening to during a workout.
 
 When a workout is matched to a centre, your best lifts from it go on that centre's leaderboard, where anyone signed in can see them with your name and photo. A lift that has been verified can also appear on the national leaderboard. A verification video can be watched by the people who train at that centre, so that they can vote on it.
+
+If you have finished a workout at a centre in the last 90 days, you also appear in its categories, and in those of its region and country. Anyone signed in can see there, with your name and photo, how many workouts you have finished this week, month or year, how many weeks in a row you have trained and when you last did; your heaviest single in bench press, squat and deadlift and their total; how much your best lift has risen over the last 30 days; and your most pull-ups, dips and push-ups in one set.
 
 An exercise you make is private until you choose to share it. A shared exercise — its name, description, steps, muscles, equipment, video, and your name and photo as the person who made it — can be seen by anyone signed in, and they can add a copy of it to their own exercises. A copy never includes your sets, and you can stop sharing at any time; copies already taken stay with the people who took them. Three reports from different people hide a shared exercise until it has been looked at.
 

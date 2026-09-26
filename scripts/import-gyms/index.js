@@ -11,9 +11,15 @@
 //
 //   node --env-file=.env scripts/import-gyms/index.js --dry-run
 //
-// --dry-run prints every derived short name and writes nothing. Do that first:
-// short_name is what users see on the tiles, and the rule in normalizeGym.js
-// is a guess about five chains' naming habits, not a fact about them.
+// --dry-run prints every derived short name and region and writes nothing. Do
+// that first: short_name is what users see on the tiles, and the rule in
+// normalizeGym.js is a guess about five chains' naming habits, not a fact
+// about them.
+//
+// Every row carries country_code (address.country) and region_key (for a
+// Danish centre, its landsdel from the postal code - regions.js), so the
+// import needs supabase/migrations/20260929090000_gym-scope-and-categories.sql
+// to have run first.
 //
 // Re-running is safe. Rows are upserted, images are uploaded with upsert, and
 // a centre whose folder has no image keeps whatever image_url it already had.
@@ -84,7 +90,7 @@ function readCentres(rootDir, onlyChain) {
       const row = normalizeGym(info, { folderName: entry.name, chainFolder: chainFolder.name });
 
       if (!row) {
-        console.warn(`Skipping ${infoPath}: no name, chain or coordinates`);
+        console.warn(`Skipping ${infoPath}: no name, chain or coordinates, or a country that is not an ISO code`);
         continue;
       }
 
@@ -102,17 +108,24 @@ function readCentres(rootDir, onlyChain) {
 
 function printDryRun(centres) {
   const width = Math.max(...centres.map((centre) => centre.row.name.length), 4);
+  const place = (row) => `${row.country_code} ${row.region_key ?? "-"}`;
 
-  console.log(`\n${"chain".padEnd(14)} ${"name".padEnd(width)}  short_name`);
-  console.log(`${"".padEnd(14, "-")} ${"".padEnd(width, "-")}  ${"".padEnd(24, "-")}`);
+  console.log(`\n${"chain".padEnd(14)} ${"name".padEnd(width)}  ${"region".padEnd(12)}  short_name`);
+  console.log(`${"".padEnd(14, "-")} ${"".padEnd(width, "-")}  ${"".padEnd(12, "-")}  ${"".padEnd(24, "-")}`);
 
   for (const centre of centres) {
-    console.log(`${centre.row.chain.padEnd(14)} ${centre.row.name.padEnd(width)}  ${centre.row.short_name}${centre.imagePath ? "" : "   (no image)"}`);
+    console.log(`${centre.row.chain.padEnd(14)} ${centre.row.name.padEnd(width)}  ${place(centre.row).padEnd(12)}  ${centre.row.short_name}${centre.imagePath ? "" : "   (no image)"}`);
   }
 
   const withImages = centres.filter((centre) => centre.imagePath).length;
+  const byPlace = new Map();
 
-  console.log(`\n${centres.length} centres, ${withImages} with a hero image. Nothing was written.`);
+  for (const centre of centres) {
+    byPlace.set(place(centre.row), (byPlace.get(place(centre.row)) ?? 0) + 1);
+  }
+
+  console.log(`\n${[...byPlace].map(([key, count]) => `${key}: ${count}`).join(", ")}`);
+  console.log(`${centres.length} centres, ${withImages} with a hero image. Nothing was written.`);
 }
 
 async function uploadImage(supabase, centre) {
@@ -190,7 +203,13 @@ async function run() {
       const { error } = await supabase.from("gym").upsert(rows, { onConflict: "chain,name" });
 
       if (error) {
-        throw new Error(`Upsert failed: ${error.message}`);
+        const missingColumns = ["PGRST204", "42703"].includes(String(error.code ?? ""));
+
+        throw new Error(
+          missingColumns
+            ? `Upsert failed: ${error.message}. The rows carry country_code and region_key - run supabase/migrations/20260929090000_gym-scope-and-categories.sql first.`
+            : `Upsert failed: ${error.message}`
+        );
       }
 
       written += rows.length;

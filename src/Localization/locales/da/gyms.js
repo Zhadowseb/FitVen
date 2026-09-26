@@ -6,7 +6,82 @@ export default {
   noLiftsYet: "Ingen løft endnu",
   searchFailed: "Søgningen mislykkedes.",
   searchCentresA11y: "Søg centre",
-  gymLineYourCentre: "{gym} · dit center",
+
+  // Centre-skærmene: alle lande, et land, et område.
+  global: "Globalt",
+  title: "Centre",
+  chooseCountry: "Vælg land",
+  search: "Søg efter et center",
+  // {where} har forholdsordet med: "på Sjælland".
+  searchIn: "Søg efter et center {where}",
+  myGym: "Dit center",
+  members: {
+    one: "{count} træner her · du følger {following} af dem",
+    other: "{count} træner her · du følger {following} af dem",
+  },
+  allCountries: "Alle lande",
+  fromLocation: "valgt ud fra din lokation",
+  countriesWithLifts: "Lande med løft",
+  onlyWithLifts: "Kun lande, hvor der er registreret løft, er med.",
+  regionsIn: "Områder {where}",
+  gymsIn: "Centre {where}",
+  categories: "Kategorier",
+  sortedByActivity: "efter hvad der trænes mest her",
+  atGym: "i {gym}",
+  inPlace: "i {place}",
+  // Danmarks fire landsdele med forholdsord, til når serveren sender et
+  // område uden. Nøglerne er gym.region_key.
+  regionsWhere: {
+    sjaelland: "på Sjælland",
+    jylland: "i Jylland",
+    fyn: "på Fyn",
+    bornholm: "på Bornholm",
+  },
+
+  counts: {
+    centres: { one: "{value} center", other: "{value} centre" },
+    lifters: { one: "{value} løfter", other: "{value} løftere" },
+  },
+
+  location: {
+    title: "Din lokation",
+    noLifts: "Ingen løft registreret her endnu",
+  },
+
+  levels: {
+    loadFailed: "Centrene kunne ikke hentes.",
+    unavailableTitle: "Centrene er ikke tilgængelige",
+    notYetTitle: "På vej",
+    notYetBody:
+      "Kategorier og områder er ikke sat op endnu. Du kan stadig søge efter et center og åbne dit eget.",
+    cardsNotYet: "Kategorierne er ikke sat op endnu.",
+    cardsFailed: "Kategorierne kunne ikke hentes.",
+    noCountries: "Intet land har registreret løft endnu.",
+    noRegions: "Centrene her er ikke delt op i områder endnu.",
+    noGyms: "Ingen centre {where} endnu.",
+  },
+
+  results: {
+    title: "Resultater",
+    count: "{count} fundet",
+    noMatchTitle: "Ingen centre matcher",
+    noMatchBody: "Prøv kæden, byen eller en del af centerets navn.",
+  },
+
+  card: {
+    topRank: "#1",
+    topAt: "#1 · {gym}",
+    topDetail: "#1 · {detail}",
+    rankWhere: "#{rank} {where}",
+    rankOf: "#{rank} af {total}",
+    notRanked: "ikke på listen endnu",
+    empty: "Ingen er på listen endnu.",
+    flidDetail: { one: "{count} uge i træk", other: "{count} uger i træk" },
+    fremgangDetail: "{lift} {before} → {now} kg",
+    calisthenicsDetail: "Pull {pullups} · Dip {dips} · Arm {pushups}",
+    a11yTop: "Nummer 1: {name}, {value}",
+    a11yHint: "Åbner hele listen",
+  },
 
   scope: {
     centre: "Center",
@@ -31,44 +106,6 @@ export default {
     reviewA11y: "Se videoen af dette løft",
   },
 
-  // The card that opens over a pin on the map.
-  callout: {
-    openCentre: "Se centeret",
-    memberCount: { one: "{count} træner her", other: "{count} træner her" },
-  },
-
-  list: {
-    eyebrow: "Socialt",
-    title: "Centre",
-    centreCount: { one: "{count} center", other: "{count} centre" },
-    searchPlaceholder: "Søg center, kæde eller by",
-    nearbyCount: { one: "{count} center i nærheden", other: "{count} centre i nærheden" },
-    expandMap: "Udvid kortet",
-    shrinkMap: "Formindsk kortet",
-    locateMe: "Centrér kortet om din position",
-    locationUnavailable: "Din position kunne ikke findes. Tjek at placering er slået til for FitVen.",
-    yoursBadge: "DIT",
-    unavailableTitle: "Centrene er ikke tilgængelige",
-    signInToSee: "Log ind for at se centre.",
-    loadFailed: "Centrene kunne ikke hentes.",
-    results: "Resultater",
-    nearest: "Nærmeste",
-    foundCount: "{count} fundet",
-    membersEyebrow: "medlemmer · 90 dage",
-    trainedEyebrow: "træninger · 90 dage",
-    noMatchTitle: "Ingen centre matcher",
-    noMatchBody: "Prøv kæden, byen eller en del af centerets navn.",
-    noCentresTitle: "Ingen centre endnu",
-    noCentresBody: "Centre vises her, når de er importeret.",
-    showAllNearby: "Vis alle i nærheden",
-  },
-
-  strongest: {
-    title: "Stærkeste i Danmark",
-    verifiedOnly: "Kun bekræftede",
-    seeAll: "Se hele Danmark",
-  },
-
   overview: {
     notFound: "Centeret blev ikke fundet.",
     loadFailed: "Centeret kunne ikke hentes.",
@@ -82,21 +119,12 @@ export default {
       other: "{count} løft venter på gennemsyn",
     },
     reviewHint: "Se videoen, og godkend eller afvis den.",
-    exerciseLeaderboardA11y: "Rangliste for {exercise}",
-    recordHolders: {
-      one: "{count} har en rekord her",
-      other: "{count} har en rekord her",
+    allExercises: "Alle øvelser",
+    allExercisesDetail: {
+      zero: "Bænk, squat og dødløft",
+      one: "Bænk, squat, dødløft og {count} mere",
+      other: "Bænk, squat, dødløft og {count} mere",
     },
-    noRecordYet:
-      "Ingen har en rekord her endnu. Gennemfør en træning med denne øvelse i centeret, så bliver din den første.",
-    myRank: "· #{rank} af {total}",
-    notRanked: "· ikke rangeret",
-    gapToTop: "{gap} til #1",
-    notOnList: "Dig · ikke på listen",
-    moreExercises: "Flere øvelser",
-    moreHint: "#1 i centeret · din plads",
-    topLine: "{name} · {weight} kg",
-    showAllExercises: "Vis alle {count} øvelser",
   },
 
   change: {

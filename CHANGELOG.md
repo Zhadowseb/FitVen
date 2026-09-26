@@ -1,5 +1,46 @@
 # Changelog
 
+## [2.13.0] - Unreleased
+### Changed
+- **Centres go worldwide, a level at a time** (`GymsPage` with `{ scope }`).
+  - Explore → Centres opens on the country your phone is in: reverse geocoded from one position fix, else your centre's country, else Denmark. The countries (4b) list only those with registered lifts.
+  - A country (4a) shows its four categories and its regions. A region (4c) shows its categories and its centres, most lifters first.
+  - Every level has:
+    - a "Globalt" eyebrow;
+    - a search inside the level;
+    - your centre as a photo card, with no numbers of its own;
+    - breadcrumbs ("Alle lande › Danmark › Sjælland");
+    - All / Men / Women (`GenderSegment`): All split blue and pink, remembered for the session and carried into a category and a centre.
+  - The map, "Stærkeste i Danmark", "Hvor du har trænet" and "Nærmeste" have left the page. The national exercise board stays, reached from Powerlifting.
+- **One centre (4d)** keeps its photo hero and "Skift center". Under Centre/Friends come its breadcrumbs and the gender choice.
+  - Four category cards replace the three exercise cards and "Flere øvelser". Friends narrows the cards to the people you follow.
+  - "Alle øvelser" opens the exercise board, which now has chips for every exercise at a centre too.
+- **Four categories, each its own page** (`CategoryLeaderboardPage`, 5a–5d). Each has:
+  - a colour of its own;
+  - a podium (not for Progress);
+  - the list;
+  - your own row, pinned and always shown, or a line saying why you are not on it.
+- **The categories:**
+  - **Consistency (Flid):** workouts this week, month or year, or weeks in a row with at least 3. The server counts the streak, so a sick week breaks it on the list, though not on your Train tab.
+  - **Powerlifting:** the total of your best **single** in bench press, squat and deadlift. There is no estimate, and a missing lift counts 0. "Kun video" counts only verified singles, and a rejected single never counts.
+  - **Progress (Fremgang):** the biggest rise in best e1RM (Brzycki, up to 12 reps, as the rest of the app) over the last 30 days against the 30 before. Each window needs 3 sets.
+  - **Calisthenics:** the most reps in one unweighted set, times 3 for pull-ups, 2 for dips and 1 for push-ups. The factors sit in a table, so they can change without a release.
+  - The filters are gender, age group (U23, 23–39, 40+), Consistency's period and the tabs.
+- **Who is on the lists:**
+  - You are on a level's lists when you have finished a workout at one of its centres in the last 90 days. Powerlifting and calisthenics lifts count at the centre the workout was matched to.
+  - A block hides people from each other everywhere.
+  - Weight classes wait for body weight, which is not asked for yet, so the pill reads "Alle vægte".
+- **Cloud:** `supabase/migrations/20260929090000_gym-scope-and-categories.sql`, not run yet.
+  - It gives `gym` a `country_code` and a `region_key`. Denmark's four landsdele are derived from the postal code: Zealand 186, Jutland 153, Funen 26, Bornholm 0 of today's centres.
+  - It adds `gym_region`, with names and "på Sjælland / i Jylland" phrases, and `private.calisthenics_event`.
+  - It adds three security definer functions: `gym_scope_summary`, `gym_category_cards` and `gym_category_leaderboard`.
+  - It was run twice on a local Postgres against a Supabase stand-in, then checked by hand. Load tested at 2,000 lifters and 1.9M sets: a country's cards take about 7 s, the next thing to cache when the app gets there.
+  - Until it runs, Centres keeps its search and your centre, and says the categories are not available yet.
+  - The importer keeps the country and derives the region (`scripts/import-gyms/regions.js`), so it now needs the migration first.
+  - `npm run test:gym-categories` checks the vocabulary, the regions, the service mapping and the migration's rules.
+- **The privacy policy** says what the categories show, and that anybody who filters by sex or age group can see which group you are in; your sex and age themselves are never shown. It is raised to 2026-09-26.2, so everyone is asked again.
+
+---
 ## [2.12.1] - Unreleased
 ### Fixed
 - **Deleting an exercise from its settings did nothing on Android.** The panel closed and the confirmation never came, so the exercise stayed.

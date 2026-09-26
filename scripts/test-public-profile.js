@@ -360,19 +360,26 @@ assert.ok(page.includes("Share.share("), "Share opens the share sheet");
 const pageStyle = read("src/Pages/PublicProfilePage/PublicProfilePageStyle.js");
 assert.ok(/previewDisabled: \{ opacity: 0\.45 \}/.test(pageStyle), "the disabled Follow is at 0.45");
 
-// Every name that is somebody else's opens their profile.
+// Every name that is somebody else's opens their profile. The Centres screens
+// (GymsPage) and a centre's page (GymLeaderboardPage) show names only on
+// category cards now, and a card is one target that opens the category, where
+// the names are links - so neither is on this list, and the card must not
+// grow a second target of its own.
 const links = [
   "src/Pages/FeedPage/FeedPage.js",
   "src/Pages/CenterPostsPage/CenterPostsPage.js",
   "src/Pages/UserPostsPage/UserPostsPage.js",
   "src/Pages/HomePage/HomePage.js",
-  "src/Pages/GymLeaderboardPage/GymLeaderboardPage.js",
   "src/Pages/GymExerciseLeaderboardPage/GymExerciseLeaderboardPage.js",
-  "src/Pages/GymsPage/GymsPage.js",
   "src/Pages/ExploreSearchPage/ExploreSearchPage.js",
   "src/Pages/SocialPage/SocialPage.js",
   "src/Pages/SocialUserListPage/SocialUserListPage.js",
 ];
+
+assert.ok(
+  !read("src/Resources/Components/CategoryCard/CategoryCard.js").includes("PublicProfilePage"),
+  "a category card is one target; its names open on the category page"
+);
 
 for (const file of links) {
   assert.ok(
