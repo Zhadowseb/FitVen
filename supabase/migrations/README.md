@@ -73,6 +73,7 @@ behind by accident.
 | `20260927100000_public-profiles.sql` | yes |
 | `20260927110000_a-block-hides-public-posts-too.sql` | yes |
 | `20260928090000_custom-exercises-can-be-shared.sql` | yes |
+| `20260930090000_store-stats-ios-daily.sql` | no |
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
 centre match, per-centre lift leaderboards with video verification, and what
@@ -361,6 +362,23 @@ cache of each exercise's numbers beside it, five security definer functions
 that are the only way to read somebody else's exercise, and the
 `exercise-videos` bucket. Without it the library and an exercise page say they
 are not available yet, and custom exercises stay on the phone.
+
+`20260930090000_store-stats-ios-daily.sql` has **not** been run. It schedules
+`store-stats-ios-daily`, a pg_cron job that POSTs to the `store-stats` Edge
+Function at 06:15 UTC every day, with the project's address and the shared
+secret read from Vault by name - the file holds neither. Its header lists what
+has to exist first: five function secrets (`ASC_PRIVATE_KEY`, `ASC_KEY_ID`,
+`ASC_ISSUER_ID`, `ASC_VENDOR_NUMBER`, `STORE_STATS_CRON_SECRET`), two Vault
+secrets (`project_url`, `store_stats_cron_secret`) and the deployed function.
+Without them the job sends nothing, or sends something that is refused, and
+`store_stats` stays empty. Create those, then run this from the SQL editor.
+The first query below shows the job; the second, after a run, shows the
+function's reply with what each day came to - pg_net keeps it for six hours.
+
+```sql
+select jobname, schedule, active from cron.job where jobname = 'store-stats-ios-daily';
+select status_code, content from net._http_response order by created desc limit 1;
+```
 
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to

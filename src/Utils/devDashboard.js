@@ -69,8 +69,8 @@ function startOfBucket(date, grouping) {
   return bucket;
 }
 
-function buildPlatformBox(hasAnyRow, downloads, previousDownloads) {
-  if (!hasAnyRow) {
+function buildPlatformBox(hasRows, downloads, previousDownloads) {
+  if (!hasRows) {
     return { downloads: null, changePercent: null };
   }
 
@@ -107,7 +107,7 @@ function buildRating({ ios, android }) {
   );
 }
 
-/** The shape the screen draws when the store keys have never been set. */
+/** The shape the screen draws when no store has written a row yet. */
 export const EMPTY_STORE_STATS = {
   hasData: false,
   grouping: "week",
@@ -126,6 +126,10 @@ export const EMPTY_STORE_STATS = {
  * With no rows at all every number is `null`, never 0. The two mean different
  * things - nobody has told us, against nobody downloaded it - and a dashboard
  * that cannot tell them apart is worse than one that says nothing.
+ *
+ * That holds per store, not per table. Only the App Store has a fetcher
+ * (`supabase/functions/store-stats`), so rows for iOS say nothing about Google
+ * Play, and drawing its box as 0 would be a number nobody measured.
  */
 export function buildStoreStats(rows = [], { days, now = Date.now() } = {}) {
   const grouping = pickGrouping(days);
@@ -134,6 +138,7 @@ export function buildStoreStats(rows = [], { days, now = Date.now() } = {}) {
   const totals = { ios: 0, android: 0 };
   const previousTotals = { ios: 0, android: 0 };
   const ratings = { ios: null, android: null };
+  const hasRows = { ios: false, android: false };
   const buckets = new Map();
   let hasAnyRow = false;
 
@@ -149,6 +154,7 @@ export function buildStoreStats(rows = [], { days, now = Date.now() } = {}) {
     }
 
     hasAnyRow = true;
+    hasRows[platform] = true;
 
     const rating = Number(row?.rating);
 
@@ -188,8 +194,8 @@ export function buildStoreStats(rows = [], { days, now = Date.now() } = {}) {
     hasData: hasAnyRow,
     grouping,
     platforms: {
-      ios: buildPlatformBox(hasAnyRow, totals.ios, previousTotals.ios),
-      android: buildPlatformBox(hasAnyRow, totals.android, previousTotals.android),
+      ios: buildPlatformBox(hasRows.ios, totals.ios, previousTotals.ios),
+      android: buildPlatformBox(hasRows.android, totals.android, previousTotals.android),
     },
     total: hasAnyRow ? totals.ios + totals.android : null,
     buckets: orderedBuckets.map((bucket) => ({
