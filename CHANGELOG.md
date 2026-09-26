@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.14.1] - Unreleased
+## [2.14.3] - Unreleased
 ### Changed
 - **A category card and the page it opens write a category the same way.** Each had its own helper; now `src/Utils/categoryFormat.js` does it for both:
   - the value and its unit, with the language's decimal comma and an e1RM to the half kilo;
@@ -10,6 +10,24 @@
 - **One medal ring**, `src/Resources/Components/MedalAvatar.js`, for #1 on a card and the podium's three. The card's gold ring is now the podium's: 2.5 dp, a 2 dp gap, shaded like metal.
 - A Progress row without both estimates shows no line, instead of "– → – kg".
 - `npm run test:gym-categories` checks the numbers and lines in both languages, and the contrast in every accent theme. It also fails if anything else works out a category's colour or a contrast of its own.
+
+---
+## [2.14.2] - Unreleased
+### Removed
+- **What the Centres map left behind.** 2.14.0 took the map, "Stærkeste i Danmark", "Hvor du har trænet" and "Nærmeste" off the Centres screen, and these had nothing left calling them:
+  - `gymService.getNearbyGyms`, `getGymsInBounds` and `MAP_LAST_KNOWN_MAX_AGE_MS`.
+  - `distanceM` on the centres `mapGym` returns. Only `gyms_nearby` ever sent a distance, and nothing reads it now.
+  - `formatDistance` in `gymUtils`, with its three checks in `test-gym-leaderboard.js`.
+  - The `Crosshair` icon.
+- **Kept:**
+  - The `gyms_nearby` function in the database. It is harmless, and dropping it would take a migration.
+  - `react-native-maps`, which the run screen draws its route with.
+  - The chain colours, which the centre tiles still use. Their comments and checks now talk about tiles, not pins.
+
+---
+## [2.14.1] - Unreleased
+### Changed
+- The migrations ledger records `20261001090000_dev-kpis.sql` as run, so Dev · Overblik has its numbers.
 
 ---
 ## [2.14.0] - Unreleased
