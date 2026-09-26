@@ -3,6 +3,9 @@
 --
 -- Run after 20260921220000_dev-dashboard.sql, which creates store_stats.
 --
+-- pg_cron and pg_net have to be switched on in the dashboard first; the file
+-- checks, and stops with a message naming the one that is missing.
+--
 -- This file holds no secret, and it does nothing on its own. The job reads
 -- the project's address and the shared secret from Vault by name every time
 -- it runs, so they have to be created there - not here - along with the
@@ -41,11 +44,23 @@
 
 begin;
 
-create extension if not exists pg_cron with schema pg_catalog;
-create extension if not exists pg_net with schema extensions;
+-- pg_cron and pg_net are switched on in the dashboard (Database ->
+-- Extensions, or Integrations -> Cron), not here. Creating pg_cron from SQL
+-- runs Supabase's own extensions.grant_pg_cron_access, and on this project
+-- that failed with "dependent privileges exist" and took the whole file with
+-- it. Switched on from the dashboard, the same routine sets the grants the
+-- postgres role needs for cron.schedule, so nothing is granted here either.
+do $$
+begin
+  if not exists (select 1 from pg_catalog.pg_extension where extname = 'pg_cron') then
+    raise exception 'Switch on pg_cron first: Dashboard -> Database -> Extensions -> pg_cron (or Integrations -> Cron).';
+  end if;
 
-grant usage on schema cron to postgres;
-grant all privileges on all tables in schema cron to postgres;
+  if not exists (select 1 from pg_catalog.pg_extension where extname = 'pg_net') then
+    raise exception 'Switch on pg_net first: Dashboard -> Database -> Extensions -> pg_net.';
+  end if;
+end;
+$$;
 
 -- Unscheduled first, so running this twice leaves one job rather than two,
 -- and a changed hour or command replaces the old one instead of joining it.

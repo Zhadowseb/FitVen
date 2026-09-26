@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.14.4] - Unreleased
+### Fixed
+- **The store-stats cron migration no longer switches its extensions on itself.** Run in the SQL editor, `create extension pg_cron` set off Supabase's own `extensions.grant_pg_cron_access`. On this project that stopped with "dependent privileges exist", and the whole file rolled back.
+  - `20260930090000_store-stats-ios-daily.sql` now expects pg_cron and pg_net to be switched on in the dashboard (Database → Extensions, or Integrations → Cron). It checks that they are, and stops naming the one that is missing.
+  - It no longer grants anything on the `cron` schema, because the dashboard's own routine does.
+  - The migration had not been run, so changing it in place is safe.
+
+
+---
 ## [2.14.3] - Unreleased
 ### Changed
 - **A category card and the page it opens write a category the same way.** Each had its own helper; now `src/Utils/categoryFormat.js` does it for both:
