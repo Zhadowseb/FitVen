@@ -3,3 +3,8 @@ verify_jwt = false
 
 [functions.manage-push-token]
 verify_jwt = true
+
+# Called by a cron job, which has no user's JWT to send. The function checks
+# STORE_STATS_CRON_SECRET itself before it does anything else.
+[functions.store-stats]
+verify_jwt = false

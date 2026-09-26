@@ -60,9 +60,11 @@ export async function getIsAdmin({ user }) {
 /**
  * Downloads per platform over the period, with the buckets the chart draws.
  *
- * `null` totals mean the store keys have never been set and the table is empty,
- * which the screen draws as an em dash. Zero means the stores answered and the
- * answer was zero. Those are different things and the dashboard says so.
+ * A `null` total means that store has no rows in the period - no fetcher yet
+ * (Google Play), keys not set, or no sale to report (the App Store, until the
+ * app is released) - which the screen draws as an em dash. Zero means the
+ * store answered and the answer was zero. Those are different things and the
+ * dashboard says so.
  */
 export async function getStoreStats(periodKey = DEFAULT_DEV_DASHBOARD_PERIOD) {
   const days = getPeriodDays(periodKey);

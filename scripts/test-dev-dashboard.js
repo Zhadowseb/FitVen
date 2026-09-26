@@ -87,10 +87,21 @@ assert.strictEqual(ninetyDays.buckets[1].fill, 0.5);
 const firstEver = dashboard.buildStoreStats([row(1, "ios", 10)], { days: 90, now });
 
 assert.strictEqual(firstEver.platforms.ios.changePercent, null, "nothing to compare");
+
+// Unknown per store, not per table. Only the App Store has a fetcher, so its
+// rows say nothing about Google Play - and a 0 there would be a number nobody
+// measured, next to an app that is live on Play.
 assert.strictEqual(
   firstEver.platforms.android.downloads,
-  0,
-  "a platform with rows elsewhere in the table is zero, not unknown"
+  null,
+  "a store with no rows of its own is drawn as zero because the other store has some"
+);
+assert.strictEqual(firstEver.platforms.android.changePercent, null);
+assert.strictEqual(firstEver.total, 10, "the total is what the stores that answered said");
+assert.strictEqual(
+  dashboard.buildStoreStats([row(1, "android", 4)], { days: 90, now }).platforms.ios.downloads,
+  null,
+  "the same holds the other way round"
 );
 
 /* ------------------------------------------------- nothing is not zero --- */
