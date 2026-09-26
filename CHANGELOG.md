@@ -6,6 +6,7 @@
   - `20260930090000_store-stats-ios-daily.sql` now expects pg_cron and pg_net to be switched on in the dashboard (Database → Extensions, or Integrations → Cron). It checks that they are, and stops naming the one that is missing.
   - It no longer grants anything on the `cron` schema, because the dashboard's own routine does.
   - The migration had not been run, so changing it in place is safe.
+- The migrations ledger records it as run: the extensions were switched on in the dashboard, and the job `store-stats-ios-daily` was scheduled on 2026-09-26.
 
 
 ---
