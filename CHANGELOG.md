@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.14.1] - Unreleased
+## [2.14.2] - Unreleased
 ### Removed
 - **What the Centres map left behind.** 2.14.0 took the map, "Stærkeste i Danmark", "Hvor du har trænet" and "Nærmeste" off the Centres screen, and these had nothing left calling them:
   - `gymService.getNearbyGyms`, `getGymsInBounds` and `MAP_LAST_KNOWN_MAX_AGE_MS`.
@@ -11,6 +11,11 @@
   - The `gyms_nearby` function in the database. It is harmless, and dropping it would take a migration.
   - `react-native-maps`, which the run screen draws its route with.
   - The chain colours, which the centre tiles still use. Their comments and checks now talk about tiles, not pins.
+
+---
+## [2.14.1] - Unreleased
+### Changed
+- The migrations ledger records `20261001090000_dev-kpis.sql` as run, so Dev · Overblik has its numbers.
 
 ---
 ## [2.14.0] - Unreleased
