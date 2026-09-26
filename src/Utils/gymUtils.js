@@ -13,23 +13,22 @@ const CHAIN_INITIALS = {
   independent: "IN",
 };
 
-// One colour per chain, so a map full of pins can be read at a glance.
+// One colour per chain, behind the initials of a centre without a photo, so a
+// list of centres says which chain is which at a glance.
 //
-// These are not the chains' brand colours. Three of the app's own colours
-// already mean something on this map - the accent is your centre, green is
-// where you are standing, gold is a record - so a chain that happens to be
-// orange or green would say the wrong thing. These are picked to be told
-// apart from each other and from those three, in both light and dark mode,
-// leaning towards each chain's brand only where that was free.
+// These are not the chains' brand colours. They were picked for the centres
+// map, since removed, where three of the app's own colours already meant
+// something - the accent was your centre, green where you were standing, gold
+// a record. They are told apart from each other and from those three, in both
+// light and dark mode, leaning towards each chain's brand only where that was
+// free.
 const CHAIN_COLORS = {
-  // Cyan rather than a true green: green already marks where you are
-  // standing, and two greens on one map is one green too many.
+  // Cyan rather than a true green, which marked where you were standing.
   puregym: "#22D3EE",
   sats: "#E4362F",
   "loop fitness": "#A855F7",
   loop: "#A855F7",
-  // Brighter and more saturated than the gold a record is drawn in, which
-  // never appears on the map anyway.
+  // Brighter and more saturated than the gold a record is drawn in.
   fitnessx: "#FACC15",
   "fit&sund": "#EC4899",
   // No centres of this chain are imported; the colour is here so a future
@@ -38,7 +37,7 @@ const CHAIN_COLORS = {
 };
 const UNKNOWN_CHAIN_COLOR = "#C4C7CF";
 
-/** The pin colour for a chain. An unknown chain stays neutral grey. */
+/** The tile colour for a chain. An unknown chain stays neutral grey. */
 export function getChainColor(chain) {
   const key = String(chain ?? "").trim().toLowerCase();
 
@@ -69,25 +68,6 @@ export function getChainInitials(chain) {
   }
 
   return normalized.slice(0, 2).toUpperCase();
-}
-
-/** "850 m" under a kilometre, "2.3 km" above, "12 km" once it is far. */
-export function formatDistance(meters) {
-  const value = Number(meters);
-
-  if (!Number.isFinite(value) || value < 0) {
-    return "";
-  }
-
-  if (value < 1000) {
-    return `${Math.round(value / 10) * 10} m`;
-  }
-
-  if (value < 10000) {
-    return `${(value / 1000).toFixed(1).replace(/\.0$/, "")} km`;
-  }
-
-  return `${Math.round(value / 1000)} km`;
 }
 
 /** "100", "102.5" - a weight without a trailing ".0" or float noise. */
