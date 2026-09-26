@@ -74,7 +74,7 @@ behind by accident.
 | `20260927110000_a-block-hides-public-posts-too.sql` | yes |
 | `20260928090000_custom-exercises-can-be-shared.sql` | yes |
 | `20260929090000_gym-scope-and-categories.sql` | yes |
-| `20260930090000_store-stats-ios-daily.sql` | no |
+| `20260930090000_store-stats-ios-daily.sql` | yes |
 | `20261001080000_the-admin-guard-runs-as-its-caller.sql` | yes |
 | `20261001090000_dev-kpis.sql` | yes |
 `20260917120000_gyms-and-lift-verification.sql` and
@@ -376,17 +376,12 @@ Denmark's four landsdele, from the postal code - adds `gym_region` and
 Centres' levels and the four category pages. The gym importer now writes the
 two new columns, so it needs this to have run.
 
-`20260930090000_store-stats-ios-daily.sql` has **not** been run. It schedules
-`store-stats-ios-daily`, a pg_cron job that POSTs to the `store-stats` Edge
-Function at 06:15 UTC every day, with the project's address and the shared
-secret read from Vault by name - the file holds neither. Its header lists what
-has to exist first: five function secrets (`ASC_PRIVATE_KEY`, `ASC_KEY_ID`,
-`ASC_ISSUER_ID`, `ASC_VENDOR_NUMBER`, `STORE_STATS_CRON_SECRET`), two Vault
-secrets (`project_url`, `store_stats_cron_secret`) and the deployed function.
-Without them the job sends nothing, or sends something that is refused, and
-`store_stats` stays empty. Create those, then run this from the SQL editor.
-The first query below shows the job; the second, after a run, shows the
-function's reply with what each day came to - pg_net keeps it for six hours.
+`20260930090000_store-stats-ios-daily.sql` was run on 2026-09-26: pg_cron and
+pg_net were switched on in the dashboard - creating pg_cron from the SQL
+editor had failed inside Supabase's own grant routine - and the job
+`store-stats-ios-daily` was scheduled for 06:15 UTC every day. It POSTs to the
+`store-stats` Edge Function with the address and the shared secret read from
+Vault by name. What each run answered is in `net._http_response`.
 
 ```sql
 select jobname, schedule, active from cron.job where jobname = 'store-stats-ios-daily';

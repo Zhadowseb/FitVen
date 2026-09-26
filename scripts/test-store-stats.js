@@ -869,9 +869,10 @@ const CRON_MORNING = Date.UTC(2026, 8, 27, 6, 15);
 
   const ledger = read("supabase/migrations/README.md");
 
+  // It was run on 2026-09-26, once pg_cron and pg_net were switched on.
   assert.ok(
-    ledger.includes(`| \`${migrationName}\` | no |`),
-    "the ledger has to record the cron migration as not run until it has been"
+    ledger.includes(`| \`${migrationName}\` | yes |`),
+    "the ledger has to record the cron migration as run"
   );
 
   console.log(
