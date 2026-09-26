@@ -423,20 +423,24 @@ for (const file of [
   }
 }
 
+// Whichever setter a screen hands useGymSearch - ChangeGymSheet's error
+// state, the Centres screen's search error - has to be declared above the call.
 for (const file of [
   "src/Pages/GymsPage/GymsPage.js",
   "src/Resources/Components/ChangeGymSheet/ChangeGymSheet.js",
 ]) {
   const lines = fs.readFileSync(path.join(root, file), "utf8").split(/\r?\n/);
-  const declared = lines.findIndex((line) =>
-    line.includes("const [errorMessage, setErrorMessage]")
-  );
   const used = lines.findIndex((line) => line.includes("useGymSearch("));
+  const setter = used >= 0 ? lines[used].match(/useGymSearch\(\s*\w+\s*,\s*(\w+)/)?.[1] : null;
+  const declared = setter
+    ? lines.findIndex((line) => new RegExp(`const \\[\\w+, ${setter}\\]`).test(line))
+    : -1;
 
-  assert.ok(declared >= 0 && used >= 0, `${file} no longer has both lines`);
+  assert.ok(used >= 0 && setter, `${file} no longer hands useGymSearch a setter`);
+  assert.ok(declared >= 0, `${file} passes ${setter} to useGymSearch without declaring it`);
   assert.ok(
     declared < used,
-    `${file} passes setErrorMessage to useGymSearch before declaring it`
+    `${file} passes ${setter} to useGymSearch before declaring it`
   );
 }
 

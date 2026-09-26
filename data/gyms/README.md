@@ -31,7 +31,14 @@ node scripts/import-gyms/index.js --dry-run
 prints the `short_name` derived for every centre. That is the name on the
 tiles, so read the list before the first real import; the rule that derives it
 is in `scripts/import-gyms/normalizeGym.js`, and a centre it gets wrong wants
-an explicit `short_name` in its `info.json`.
+an explicit `short_name` in its `info.json`. It also prints each centre's
+country and region: the region comes from the postal code
+(`scripts/import-gyms/regions.js`, the same ranges as the migration), and a
+Danish centre without one is only shown at country level.
+
+A real import writes `country_code` and `region_key`, so
+`supabase/migrations/20260929090000_gym-scope-and-categories.sql` has to have
+run first; without it the import stops and says so.
 
 ```
 SUPABASE_URL=https://<ref>.supabase.co SUPABASE_SERVICE_ROLE_KEY=<key> node scripts/import-gyms/index.js

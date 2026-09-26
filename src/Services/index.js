@@ -1,6 +1,7 @@
 export * as adminService from "./adminService";
 export * as appOpenService from "./appOpenService";
 export * as authService from "./authService";
+export * as categoryLeaderboardService from "./categoryLeaderboardService";
 export * as exerciseService from "./exerciseService";
 export * as locationService from "./locationService";
 export * as feedbackService from "./feedbackService";

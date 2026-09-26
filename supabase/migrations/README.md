@@ -73,6 +73,7 @@ behind by accident.
 | `20260927100000_public-profiles.sql` | yes |
 | `20260927110000_a-block-hides-public-posts-too.sql` | yes |
 | `20260928090000_custom-exercises-can-be-shared.sql` | yes |
+| `20260929090000_gym-scope-and-categories.sql` | yes |
 | `20260930090000_store-stats-ios-daily.sql` | no |
 | `20261001080000_the-admin-guard-runs-as-its-caller.sql` | yes |
 | `20261001090000_dev-kpis.sql` | no |
@@ -364,6 +365,16 @@ cache of each exercise's numbers beside it, five security definer functions
 that are the only way to read somebody else's exercise, and the
 `exercise-videos` bucket. Without it the library and an exercise page say they
 are not available yet, and custom exercises stay on the phone.
+
+`20260929090000_gym-scope-and-categories.sql` was run on 2026-09-26 and checked
+afterwards: every Danish centre has a region, the four regions are there, all
+three calisthenics movements matched the catalogue, and only signed-in users
+may call the three new functions. It gives `gym` a country and a region -
+Denmark's four landsdele, from the postal code - adds `gym_region` and
+`private.calisthenics_event`, and the security definer functions
+`gym_scope_summary`, `gym_category_cards` and `gym_category_leaderboard` behind
+Centres' levels and the four category pages. The gym importer now writes the
+two new columns, so it needs this to have run.
 
 `20260930090000_store-stats-ios-daily.sql` has **not** been run. It schedules
 `store-stats-ios-daily`, a pg_cron job that POSTs to the `store-stats` Edge

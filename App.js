@@ -59,6 +59,7 @@ import RunHeartRateChartPage from "./src/Pages/WorkoutPage/WorkoutTypes/Run/RunH
 import GymsPage from "./src/Pages/GymsPage/GymsPage";
 import GymLeaderboardPage from "./src/Pages/GymLeaderboardPage/GymLeaderboardPage";
 import GymExerciseLeaderboardPage from "./src/Pages/GymExerciseLeaderboardPage/GymExerciseLeaderboardPage";
+import CategoryLeaderboardPage from "./src/Pages/CategoryLeaderboardPage/CategoryLeaderboardPage";
 import NationalExerciseLeaderboardPage from "./src/Pages/NationalExerciseLeaderboardPage/NationalExerciseLeaderboardPage";
 import MusicSettingsPage from "./src/Pages/MusicSettingsPage/MusicSettingsPage";
 import DevDashboardPage from "./src/Pages/DevDashboardPage/DevDashboardPage";
@@ -334,6 +335,7 @@ function RootNavigator() {
                 <Stack.Screen name="GymsPage" component={GymsPage} options={{ headerShown: false }} />
                 <Stack.Screen name="GymLeaderboardPage" component={GymLeaderboardPage} options={{ headerShown: false }} />
                 <Stack.Screen name="GymExerciseLeaderboardPage" component={GymExerciseLeaderboardPage} options={{ headerShown: false }} />
+                <Stack.Screen name="CategoryLeaderboardPage" component={CategoryLeaderboardPage} options={{ headerShown: false }} />
                 <Stack.Screen name="NationalExerciseLeaderboardPage" component={NationalExerciseLeaderboardPage} options={{ headerShown: false }} />
                 <Stack.Screen name="PrivacyPolicyPage" component={PrivacyPolicyPage} options={{ headerShown: false }} />
                 <Stack.Screen name="TermsOfUsePage" component={TermsOfUsePage} options={{ headerShown: false }} />

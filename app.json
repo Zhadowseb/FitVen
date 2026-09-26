@@ -2,7 +2,7 @@
   "expo": {
     "name": "FitVen",
     "slug": "programapp",
-    "version": "2.13.0",
+    "version": "2.14.0",
     "scheme": "fitven",
     "orientation": "default",
     "icon": "./assets/icon_v1.0.png",
@@ -92,6 +92,7 @@
       "expo-web-browser"
     ],
     "extra": {
+      "spotifyClientId": "42e6c32ad3b84a8ebe667da6bdeb2fb0",
       "eas": {
         "projectId": "95d3eed5-2581-4091-8c7c-56bed74353ec"
       }

@@ -3,6 +3,8 @@
 // scripts/test-localization.js fails on a key present in one and not the other.
 import auth from "./auth";
 import calendar from "./calendar";
+import category from "./category";
+import categoryService from "./categoryService";
 import common from "./common";
 import customExerciseDetail from "./customExerciseDetail";
 import customExercises from "./customExercises";
@@ -36,6 +38,8 @@ import workoutStart from "./workoutStart";
 export default {
   auth,
   calendar,
+  category,
+  categoryService,
   common,
   customExerciseDetail,
   customExercises,

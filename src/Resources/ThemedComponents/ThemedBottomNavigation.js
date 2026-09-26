@@ -111,6 +111,9 @@ const EXPLORE_ROUTES = new Set([
   "GymLeaderboardPage",
   "GymExerciseLeaderboardPage",
   "NationalExerciseLeaderboardPage",
+  // One category - Consistency, Powerlifting, Progress, Calisthenics - at the
+  // level it was opened from.
+  "CategoryLeaderboardPage",
 ]);
 const FEED_ROUTES = new Set([
   "FeedPage",

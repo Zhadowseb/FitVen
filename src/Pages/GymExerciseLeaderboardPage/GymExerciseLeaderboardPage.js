@@ -164,6 +164,10 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
   const [board, setBoard] = useState(null);
   const [otherScopeTotal, setOtherScopeTotal] = useState(null);
   const [chips, setChips] = useState([]);
+  // In a centre: every exercise ranked there, so "All exercises" on the
+  // centre's page reaches each one. Its own state, apart from the national
+  // chips, because load() does not need it and should not rerun for it.
+  const [gymChips, setGymChips] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -269,6 +273,35 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
   useEffect(() => {
     setNotice("");
   }, [exerciseId, scope, unit]);
+
+  // The centre's exercises: the featured three, then every other one ranked
+  // there - by everyone, whichever scope is showing, so Friends does not hide
+  // an exercise only strangers have lifted. A chip row is a convenience; if
+  // it cannot load, the page is still the one exercise it was opened on.
+  useEffect(() => {
+    if (national || !Number.isFinite(gymId)) {
+      return undefined;
+    }
+
+    let isCancelled = false;
+
+    gymService
+      .getGymOverview({ gymId, scope: gymService.GYM_SCOPE_GYM, moreLimit: null })
+      .then((overview) => {
+        if (!isCancelled && overview) {
+          setGymChips(
+            [...overview.featured, ...overview.more]
+              .filter((entry) => entry.exerciseId)
+              .map((entry) => ({ id: entry.exerciseId, name: entry.exerciseName }))
+          );
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [gymId, national]);
 
   const loadMore = async () => {
     if (!board?.nextCursor || isLoadingMore) {
@@ -480,6 +513,44 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
     }
   };
 
+  // The exercise on screen always has its chip, even one nobody at the
+  // centre has lifted yet.
+  const centreChips = useMemo(() => {
+    const current = board?.exercise;
+
+    return current && gymChips.length > 0 && !gymChips.some((chip) => chip.id === current.id)
+      ? [...gymChips, { id: current.id, name: current.name }]
+      : gymChips;
+  }, [board?.exercise, gymChips]);
+
+  const renderChips = (list) => (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
+      {list.map((chip) => {
+        const isActive = chip.id === exerciseId;
+
+        return (
+          <TouchableOpacity
+            key={chip.id}
+            accessibilityRole="button"
+            accessibilityState={{ selected: isActive }}
+            activeOpacity={0.85}
+            onPress={() => setExerciseId(chip.id)}
+            style={[
+              styles.chip,
+              isActive
+                ? { backgroundColor: theme.primary, borderColor: theme.primary }
+                : { backgroundColor: theme.cardBackground, borderColor: isLight ? "rgba(15, 17, 22, 0.09)" : "rgba(255, 255, 255, 0.09)" },
+            ]}
+          >
+            <ThemedText style={styles.chipText} setColor={isActive ? theme.textInverted : theme.title}>
+              {chip.name}
+            </ThemedText>
+          </TouchableOpacity>
+        );
+      })}
+    </ScrollView>
+  );
+
   const eyebrow = national ? t("gyms.exercise.nationalEyebrow") : board?.gym?.shortName ?? " ";
   const title = board?.exercise?.name ?? (isLoading ? t("common.loading") : t("gyms.exercise.titleFallback"));
   const pendingSeconds = pendingAsset?.duration ? Math.round(pendingAsset.duration / 1000) : null;
@@ -513,31 +584,7 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
           <View style={[styles.listHeader, listRows.length > 0 ? styles.listHeaderSpaced : null]}>
             {national ? (
               <>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
-                  {chips.map((chip) => {
-                    const isActive = chip.id === exerciseId;
-
-                    return (
-                      <TouchableOpacity
-                        key={chip.id}
-                        accessibilityRole="button"
-                        accessibilityState={{ selected: isActive }}
-                        activeOpacity={0.85}
-                        onPress={() => setExerciseId(chip.id)}
-                        style={[
-                          styles.chip,
-                          isActive
-                            ? { backgroundColor: theme.primary, borderColor: theme.primary }
-                            : { backgroundColor: theme.cardBackground, borderColor: isLight ? "rgba(15, 17, 22, 0.09)" : "rgba(255, 255, 255, 0.09)" },
-                        ]}
-                      >
-                        <ThemedText style={styles.chipText} setColor={isActive ? theme.textInverted : theme.title}>
-                          {chip.name}
-                        </ThemedText>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </ScrollView>
+                {renderChips(chips)}
                 <View style={styles.infoRow}>
                   <LiftStatusPill status="verified" approvals={3} compact />
                   <ThemedText style={styles.infoText} setColor={quietText}>
@@ -546,7 +593,10 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
                 </View>
               </>
             ) : (
-              <ScopeToggle options={scopeOptions} value={scope} onChange={setScope} />
+              <>
+                {centreChips.length > 1 ? renderChips(centreChips) : null}
+                <ScopeToggle options={scopeOptions} value={scope} onChange={setScope} />
+              </>
             )}
 
             {errorMessage ? (
