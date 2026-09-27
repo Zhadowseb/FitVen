@@ -31,7 +31,8 @@
 //                                                       // inFilter false = the gender leaves you out
 //   }
 //   Each card is its category under the default filters: Consistency by
-//   workouts this month, Powerlifting and Progress over all lifts, all ages.
+//   workouts this month, Powerlifting over all three lifts, Progress over
+//   every exercise, all ages.
 //
 // getCategoryLeaderboard({ category, scope, gender, filters, friendsOnly, limit = 50 }) ->
 //   { podium: Row[],                                    // up to 3; always empty for fremgang
@@ -54,10 +55,14 @@
 //     fremgang       Rise[], biggest first; only rises with both windows
 //     calisthenics   { pullups, dips, pushups }: each { reps, factor, points }
 //   Rise = { lift, exerciseName, before, now, percent }
-//     Today the server counts bench press, squat and deadlift: lift is
-//     "bench" | "squat" | "deadlift" and exerciseName null. A rise may name
-//     any exercise instead (exercise_name), with lift null; the screens write
-//     either through categoryFormat.progressExerciseName.
+//     The server counts every catalogue exercise
+//     (20261004090000_progress-counts-every-exercise.sql): exerciseName is
+//     the catalogue's name, lift "bench" | "squat" | "deadlift" for those
+//     three and null for the rest, and the breakdown a list of your five
+//     biggest. Before that migration it counted the three lifts only: lift
+//     and no exerciseName, and the breakdown keyed by lift. Both read the
+//     same here, and the screens write either through
+//     categoryFormat.progressExerciseName.
 //
 // searchGyms({ query, scope }) -> [{ id, name, shortName, chain, city, imageUrl }]
 //   inside the scope's level; the world level, or no scope, searches

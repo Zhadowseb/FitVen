@@ -1,7 +1,9 @@
 // The four categories centres are ranked in - Consistency, Powerlifting,
 // Progress and Calisthenics - and the levels and filters they are shown on.
 // The rules each category counts by are the server's
-// (supabase/migrations/20260929090000_gym-scope-and-categories.sql); this is
+// (supabase/migrations/20260929090000_gym-scope-and-categories.sql, with
+// Consistency's streak and Progress as
+// 20261004090000_progress-counts-every-exercise.sql restates them); this is
 // the vocabulary the screens and the service share, so a filter value spelled
 // one way in the sheet and another in the request cannot happen.
 //
@@ -82,7 +84,7 @@ export function normalizeCategory(value) {
 }
 
 // Flid ranks by one of two things. Fremgang has no tabs: it is everybody's
-// biggest rise, whichever lift it was in, the biggest first.
+// biggest rise, whichever exercise it was in, the biggest first.
 export const FLID_TABS = ["workouts", "streak"];
 
 /* ------------------------------------------------------------- filters -- */
@@ -144,8 +146,10 @@ export function normalizeCategoryFilters(category, filters = {}) {
 /* --------------------------------------------------------------- rules -- */
 
 // These have to agree with the migration; scripts/test-gym-categories.js
-// holds the two against each other.
-export const STREAK_MIN_WORKOUTS = 3;
+// holds the two against each other. A streak week has two workouts, as on
+// the Train tab (STREAK_MIN_WORKOUTS in Utils/trainLibrary.js), since
+// 20261002090000; three before it.
+export const STREAK_MIN_WORKOUTS = 2;
 export const PROGRESS_WINDOW_DAYS = 30;
 export const PROGRESS_MIN_SETS = 3;
 export const SCOPE_ACTIVE_DAYS = 90;

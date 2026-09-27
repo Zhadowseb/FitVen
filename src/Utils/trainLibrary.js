@@ -28,7 +28,9 @@ const WEEK_MS = 7 * DAY_MS;
  *
  * Only "Your form" on the Train tab. The Flid category on a centre's
  * leaderboards has its own STREAK_MIN_WORKOUTS in gymCategories.js, held to
- * the server's gym_category_leaderboard, and that one is still three.
+ * the server's gym_category_leaderboard. It is two as well; the two streaks
+ * differ only over a sick week, which the server cannot see and so counts
+ * as a break.
  */
 export const STREAK_MIN_WORKOUTS = 2;
 

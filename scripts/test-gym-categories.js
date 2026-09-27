@@ -7,10 +7,13 @@
 //   3. the service, run for real against a fake Supabase and a fake
 //      expo-location: what it sends, and what it makes of every shape that
 //      comes back - and of the answers a database without the migration gives;
-//   4. the migration read as text: the rules it promises, and who may call
-//      what. Nothing here talks to a database, so these are a floor, not a
-//      proof - the migration was also run twice against Postgres 17 with a
-//      stub of the project and checked row by row (see its header);
+//   4. the migrations read as text: the rules they promise, and who may call
+//      what - 20260929090000, and 20261002090000, which restates
+//      category_rows with every exercise in Progress and two workouts a
+//      streak week. The rules are held against the latest category_rows in
+//      the folder. Nothing here talks to a database, so these are a floor,
+//      not a proof - both were also run twice against Postgres 17 with a
+//      stub of the project and checked row by row (see their headers);
 //   5. how a category is written (Utils/categoryFormat.js), which a centre's
 //      card and the page it opens share: the numbers, units and lines in both
 //      languages, the colour as text in every accent theme, and that both
@@ -25,6 +28,8 @@ const root = path.resolve(__dirname, "..");
 const read = (file) => fs.readFileSync(path.join(root, file), "utf8").replace(/\r\n/g, "\n");
 const MIGRATION_FILE = "supabase/migrations/20260929090000_gym-scope-and-categories.sql";
 const migration = read(MIGRATION_FILE);
+const PROGRESS_MIGRATION_FILE = "supabase/migrations/20261004090000_progress-counts-every-exercise.sql";
+const progressMigration = read(PROGRESS_MIGRATION_FILE);
 
 /* ------------------------------------------------------ the test doubles -- */
 
@@ -626,7 +631,9 @@ async function testLeaderboards() {
   const workouts = await service.getCategoryLeaderboard({ category: "flid", scope: { level: "gym", gymId: 1 } });
   assert.deepStrictEqual(workouts.podium[0].detail, { workouts: 99, weeks: 3, lastWorkoutAt: "2026-09-23" });
 
-  // Progress: never a podium, no filters, and the personal card.
+  // Progress: never a podium, no filters, and the personal card. First the
+  // three-lift answer a database without 20261002090000 gives: a lift and no
+  // name, and the card keyed by lift.
   fake.rpcs.gym_category_leaderboard = () => ({
     data: {
       total: 3,
@@ -695,6 +702,50 @@ async function testLeaderboards() {
     [["Hip thrust", 20], ["Military press", 10]],
     "sorted by the rise; half a rise, or one in nothing named, is left out"
   );
+
+  // Every exercise, as 20261002090000 answers: the catalogue's name on every
+  // rise, the lift beside it for the three, and your five biggest as a list.
+  fake.rpcs.gym_category_leaderboard = () => ({
+    data: {
+      total: 2,
+      podium: [],
+      rows: [
+        { rank: 1, user: annaUser, value: 20, detail: { lift: null, exercise_name: "Hip Thrust", before: 100.0, now: 120.0, percent: 20 }, is_me: true },
+        { rank: 2, user: boUser, value: 15, detail: { lift: "squat", exercise_name: "Squat", before: "100.0", now: "115.0", percent: 15 } },
+      ],
+      me: {
+        rank: 1,
+        user: annaUser,
+        value: 20,
+        detail: { lift: null, exercise_name: "Hip Thrust", before: 100.0, now: 120.0, percent: 20 },
+        is_me: true,
+        gap_to_next: null,
+        in_filter: true,
+        breakdown: [
+          { lift: null, exercise_name: "Hip Thrust", before: 100.0, now: 120.0, percent: 20 },
+          { lift: "bench", exercise_name: "Bench Press", before: 50.0, now: 55.0, percent: 10 },
+          { lift: null, exercise_name: "Overhead Press", before: 40.0, now: 42.0, percent: 5 },
+          { lift: null, exercise_name: "Pull-Up", before: 100.0, now: 103.0, percent: 3 },
+          { lift: "deadlift", exercise_name: "Deadlift", before: 150.0, now: 153.0, percent: 2 },
+        ],
+      },
+    },
+    error: null,
+  });
+  const everyExercise = await service.getCategoryLeaderboard({ category: "fremgang", scope: { level: "gym", gymId: 1 } });
+  assert.deepStrictEqual(everyExercise.rows[0].detail, { lift: null, exerciseName: "Hip Thrust", before: 100, now: 120, percent: 20 });
+  assert.deepStrictEqual(everyExercise.rows[1].detail, { lift: "squat", exerciseName: "Squat", before: 100, now: 115, percent: 15 }, "one of the three keeps its lift");
+  assert.deepStrictEqual(
+    everyExercise.me.breakdown.map((rise) => [rise.lift, rise.exerciseName, rise.percent]),
+    [[null, "Hip Thrust", 20], ["bench", "Bench Press", 10], [null, "Overhead Press", 5], [null, "Pull-Up", 3], ["deadlift", "Deadlift", 2]],
+    "the list as it comes, biggest first"
+  );
+
+  // A member with no rise gets an empty list, not the three empty lifts.
+  fake.rpcs.gym_category_leaderboard = () => listAnswer({
+    me: { rank: null, user: annaUser, value: null, detail: null, is_me: true, gap_to_next: null, in_filter: true, breakdown: [] },
+  });
+  assert.deepStrictEqual((await service.getCategoryLeaderboard({ category: "fremgang", scope: { level: "gym", gymId: 1 } })).me.breakdown, []);
 
   // Calisthenics: points, reps, and the factor an empty event still has.
   fake.rpcs.gym_category_leaderboard = () => ({
@@ -933,19 +984,69 @@ async function testStartCountry() {
   assert.strictEqual(location.positionCalls, before + 1, "the answer is remembered");
 }
 
-/* ------------------------------------------------------- 4. the migration -- */
+/* ------------------------------------------------------ 4. the migrations -- */
+
+/** Every `create or replace function` in a migration: name, parameters, header and body. */
+function parseFunctions(text) {
+  return [...text.matchAll(/create or replace function ([\w.]+)\(([\s\S]*?)\)\s*returns([\s\S]*?)\nas \$\$([\s\S]*?)\n\$\$;/g)].map((match) => ({
+    name: match[1],
+    paramText: match[2],
+    params: [...match[2].matchAll(/\b(p_\w+)\b/g)].map((param) => param[1]),
+    header: match[3],
+    body: match[4],
+  }));
+}
+
+/**
+ * A function as a database that has run every migration has it: its last
+ * definition in the folder, in the order the file names give.
+ */
+function latestDefinition(name) {
+  const dir = "supabase/migrations";
+  let latest = null;
+
+  for (const file of fs.readdirSync(path.join(root, dir)).filter((entry) => entry.endsWith(".sql")).sort()) {
+    const found = parseFunctions(read(`${dir}/${file}`)).find((fn) => fn.name === name);
+
+    if (found) {
+      latest = { ...found, file };
+    }
+  }
+
+  return latest;
+}
+
+// category_rows split where each category starts, so a restatement can be
+// held against the one before it part by part.
+const CATEGORY_BRANCHES = [
+  ["flid", "  if p_category = 'flid' then\n"],
+  ["powerlifting", "  elsif p_category = 'powerlifting' then\n"],
+  ["fremgang", "  elsif p_category = 'fremgang' then\n"],
+  ["calisthenics", "  elsif p_category = 'calisthenics' then\n"],
+];
+
+function categoryParts(body) {
+  const starts = CATEGORY_BRANCHES.map(([category, mark]) => {
+    const at = body.indexOf(mark);
+
+    assert.ok(at > 0 && body.indexOf(mark, at + 1) === -1, `category_rows has one ${category} branch`);
+    return at;
+  });
+
+  return {
+    head: body.slice(0, starts[0]),
+    ...Object.fromEntries(
+      CATEGORY_BRANCHES.map(([category], index) => [category, body.slice(starts[index], starts[index + 1] ?? body.length)])
+    ),
+  };
+}
 
 function testMigration() {
   assert.ok(migration.includes("Run after 20260928090000_custom-exercises-can-be-shared.sql"), "the run-after header");
   assert.ok(/\nbegin;\n/.test(migration) && /\ncommit;\n\nnotify pgrst, 'reload schema';\n/.test(migration), "one transaction, then the schema reload");
   assert.ok(read("supabase/migrations/README.md").includes("`20260929090000_gym-scope-and-categories.sql` |"), "the ledger names the migration");
 
-  const functions = [...migration.matchAll(/create or replace function ([\w.]+)\(([\s\S]*?)\)\s*returns([\s\S]*?)\nas \$\$([\s\S]*?)\n\$\$;/g)].map((match) => ({
-    name: match[1],
-    params: [...match[2].matchAll(/\b(p_\w+)\b/g)].map((param) => param[1]),
-    header: match[3],
-    body: match[4],
-  }));
+  const functions = parseFunctions(migration);
   const byName = Object.fromEntries(functions.map((fn) => [fn.name, fn]));
   const publicRpcs = ["public.gym_scope_summary", "public.gym_category_cards", "public.gym_category_leaderboard"];
 
@@ -989,9 +1090,20 @@ function testMigration() {
   assert.ok(members.includes("follow.follower_id = p_viewer"), "friends are the people the viewer follows");
   assert.ok(members.includes("workout.done::text in ('true', '1', 't')"), "flags compare as text, as 20260924090000 does");
 
-  const rows = byName["private.category_rows"];
-  assert.ok(rows.header.includes("set enable_nestloop = off") && rows.header.includes("set plan_cache_mode = force_custom_plan"), "the planner settings the lists were measured with");
-  assert.strictEqual((rows.body.match(new RegExp(`weekly\\.workouts >= ${categories.STREAK_MIN_WORKOUTS}\\n`, "g")) ?? []).length, 2, "a streak week has three workouts, last week and this");
+  // The rules as a database that ran every migration counts them: the last
+  // category_rows in the folder, whichever file restated it.
+  const rows = latestDefinition("private.category_rows");
+  assert.ok(byName["private.category_rows"].header.includes("set enable_nestloop = off"), "the planner settings the lists were measured with");
+  assert.ok(rows.header.includes("set enable_nestloop = off") && rows.header.includes("set plan_cache_mode = force_custom_plan"), "and they are still there");
+  assert.strictEqual(
+    (rows.body.match(new RegExp(`weekly\\.workouts >= ${categories.STREAK_MIN_WORKOUTS}\\n`, "g")) ?? []).length,
+    2,
+    `a streak week has ${categories.STREAK_MIN_WORKOUTS} workouts, last week and this (${rows.file})`
+  );
+  assert.ok(
+    rows.body.includes(`(array_agg(finished.day order by finished.day))[${categories.STREAK_MIN_WORKOUTS}]`),
+    "and a streak is reached on the workout that makes the week count"
+  );
   assert.ok(rows.body.includes("weekly.week_start < v_week_start"), "the streak counts back from last week");
 
   const powerlifting = rows.body.slice(rows.body.indexOf("elsif p_category = 'powerlifting'"), rows.body.indexOf("elsif p_category = 'fremgang'"));
@@ -1030,6 +1142,108 @@ function testMigration() {
     assert.ok(sent, `the service calls ${name}`);
     assert.deepStrictEqual(Object.keys(sent.params).sort(), [...byName[name].params].sort(), `${name}: the service's parameters are the function's`);
   }
+}
+
+// 20261002090000: category_rows again, with every exercise in Progress and
+// two workouts a streak week - and nothing else of it changed.
+function testProgressMigration() {
+  const text = progressMigration;
+  const code = text.replace(/--.*$/gm, "");
+
+  assert.ok(text.includes("Run after 20261001090000_dev-kpis.sql"), "the run-after header");
+  assert.ok(/\nbegin;\n/.test(text) && /\ncommit;\n\nnotify pgrst, 'reload schema';\n/.test(text), "one transaction, then the schema reload");
+  assert.ok(
+    read("supabase/migrations/README.md").includes("`20261004090000_progress-counts-every-exercise.sql` |"),
+    "the ledger names the migration"
+  );
+
+  const functions = parseFunctions(text);
+  assert.deepStrictEqual(functions.map((fn) => fn.name), ["private.category_rows"], "one function, restated");
+
+  const [now] = functions;
+  const was = parseFunctions(migration).find((fn) => fn.name === "private.category_rows");
+
+  // Everything around the body as it was: the parameters, what it returns,
+  // security definer, the empty search_path and the planner settings; the
+  // revoke restated, nothing granted, no owner changed.
+  assert.strictEqual(now.paramText, was.paramText, "the same parameters");
+  assert.strictEqual(now.header, was.header, "the same return type, definer and settings");
+  assert.ok(
+    /revoke all on function private\.category_rows\(uuid, text, text, text, text, bigint, text, jsonb, boolean\)\s+from public, anon, authenticated;/.test(text),
+    "callable by nobody in the app"
+  );
+  assert.deepStrictEqual(code.match(/^\s*grant\b/gim), null, "it grants nothing");
+  assert.ok(!/\bowner\s+to\b|\balter\s+function\b|security\s+invoker/i.test(code), "and changes no owner");
+
+  // The body is 20260929090000's but for the two rules. The declarations,
+  // Powerlifting and Calisthenics are character for character the same, and
+  // the streak differs in its threshold and the names that carry it only.
+  const before = categoryParts(was.body);
+  const after = categoryParts(now.body);
+
+  assert.strictEqual(after.head, before.head, "the declarations and the members are unchanged");
+  assert.strictEqual(after.powerlifting, before.powerlifting, "Powerlifting is unchanged");
+  assert.strictEqual(after.calisthenics, before.calisthenics, "Calisthenics is unchanged");
+  assert.strictEqual(
+    after.flid
+      .replace(/weekly\.workouts >= 2\n/g, "weekly.workouts >= 3\n")
+      .replace("(array_agg(finished.day order by finished.day))[2]", "(array_agg(finished.day order by finished.day))[3]")
+      .replace(/last_week_second/g, "last_week_third")
+      .replace(/second_day/g, "third_day")
+      .replace("newest week got its second\n", "newest week got its third\n"),
+    before.flid,
+    "Consistency changed its streak threshold and nothing else"
+  );
+  assert.strictEqual(categories.STREAK_MIN_WORKOUTS, 2, "two workouts make a streak week, the owner's call after the first test round");
+  assert.strictEqual(
+    Number(read("src/Utils/trainLibrary.js").match(/export const STREAK_MIN_WORKOUTS = (\d+);/)?.[1]),
+    categories.STREAK_MIN_WORKOUTS,
+    "as on the Train tab"
+  );
+
+  // Progress: every catalogue exercise, by its normalised name.
+  const progress = after.fremgang;
+  assert.ok(progress.includes('from public."Exercise" exercise'), "what counts is the catalogue");
+  assert.ok(progress.includes("select distinct on (lower(btrim(exercise.name)))"), "one exercise a normalised name");
+  assert.ok(
+    progress.includes("join catalogue on catalogue.name_key = lower(btrim(instance.exercise_name))"),
+    "a workout's exercise matched by lower(btrim(name))"
+  );
+  assert.ok(
+    progress.includes("left join private.featured_exercises() fe on fe.exercise_id = exercise.id") &&
+      !progress.includes("from private.featured_exercises()"),
+    "the three lifts only name their rows; they no longer decide what counts"
+  );
+  assert.ok(!/custom_exercise/.test(progress.replace(/--.*$/gm, "")), "custom exercises do not count");
+  assert.ok(progress.includes("and workouts.user_id = instance.user_id") && progress.includes("and lifts.user_id = logged_set.user_id"), "every row the member's own, all the way down");
+  assert.ok(progress.includes("logged_set.cloud_exercise_instance_id = any(v_lift_ids)"), "the sets found by their exercise");
+  assert.ok(progress.includes("max(array[logged.e1rm, v_today - logged.day])"), "a rise reached on the first day of its best");
+
+  // The row: the exercise's name, and the lift for the three; your card a
+  // list of your five biggest, [] without one; an older app's tab still one lift.
+  for (const field of ["'lift', chosen.lift", "'exercise_name', chosen.exercise_name", "'before', chosen.before_kg", "'now', chosen.now_kg", "'percent', chosen.percent"]) {
+    assert.ok(progress.includes(field), `the detail has ${field}`);
+  }
+  assert.ok(progress.includes("'exercise_name', own.exercise_name") && progress.includes("select jsonb_agg("), "the card is a list of rises shaped like the detail");
+  const cardLimit = Number(progress.match(/order by rises\.percent desc, rises\.reached_day asc, rises\.name_key asc\n\s+limit (\d+)\n/)?.[1]);
+  assert.strictEqual(cardLimit, 5, "your five biggest, biggest first");
+  const shown = Number(read("src/Pages/CategoryLeaderboardPage/Components/PersonalCard.js").match(/const PROGRESS_FIELDS = (\d+);/)?.[1]);
+  assert.ok(shown > 0 && shown <= cardLimit, "the personal card shows no more than the server sends");
+  assert.ok(progress.includes("coalesce((select mine.parts from mine), '[]'::jsonb)"), "an empty list without a rise");
+  assert.ok(
+    progress.includes("order by rises.user_id, rises.percent desc, rises.reached_day asc, rises.name_key asc"),
+    "a person's largest rise; two the same, the one reached first"
+  );
+  assert.ok(progress.includes("where v_tab = 'all' or rises.lift = v_tab"), "the bench, squat and deadlift tabs of older apps still work");
+
+  // The index the sets are found through, built inside the transaction
+  // behind a lock timeout.
+  assert.ok(text.includes("set local lock_timeout = '5s';"), "gives up rather than queue in front of the app");
+  assert.ok(
+    code.includes('create index if not exists set_cloud_exercise_instance_idx\n  on public."set" (cloud_exercise_instance_id)\n  where is_deleting = false;'),
+    "set_cloud_exercise_instance_idx, partial like the sync indexes"
+  );
+  assert.ok(!/create\s+index\s+concurrently/i.test(code), "not concurrently, which cannot run inside the transaction");
 }
 
 /* ---------------------------------------- 5. how a category is written -- */
@@ -1082,6 +1296,15 @@ function testFormat() {
   assert.strictEqual(line("fremgang", { lift: "curl", before: 1, now: 2 }), "", "nor is a rise in nothing named");
   assert.strictEqual(line("fremgang", null), "", "nor no rise");
   assert.strictEqual(format.progressExerciseName({ lift: "deadlift", exerciseName: " " }, t), "Dødløft");
+  assert.strictEqual(
+    line("fremgang", { lift: "bench", exerciseName: "Bench Press", before: 56.4, now: 62.2, percent: 10 }),
+    "Bænkpres 56,5 → 62 kg",
+    "one of the three in the app's own words, beside the catalogue's name"
+  );
+  assert.strictEqual(format.progressExerciseName({ lift: null, exerciseName: " Hip Thrust " }, t), "Hip Thrust", "any other as the catalogue writes it");
+  assert.strictEqual(t(format.explanationKey("flid", { tab: "streak" }), format.RULE_PARAMS).includes("mindst 2 gennemførte"), true, "the page says two a week");
+  assert.strictEqual(t(format.emptyBodyKey("flid", { tab: "streak" }), format.RULE_PARAMS), "En uge tæller, når den har mindst 2 gennemførte træninger.");
+  assert.strictEqual(t(format.emptyBodyKey("fremgang"), format.RULE_PARAMS), "Det kræver mindst 3 sæt i samme øvelse i begge perioder på 30 dage.");
   assert.strictEqual(line("calisthenics", { pullups: 10, dips: 15, pushups: 30 }), "Pull 10 · Dip 15 · Arm 30");
 
   assert.strictEqual(format.meSubtitle({ category: "fremgang", me: { rank: 3, gapToNext: 2.25 }, t }), "2,3 % til #2");
@@ -1096,6 +1319,8 @@ function testFormat() {
   assert.strictEqual(format.formatEstimateKg(62.3), "62.5");
   assert.strictEqual(format.unitLabel("workouts", 1, t), "workout");
   assert.strictEqual(line("fremgang", { lift: "squat", before: 100, now: 112.4 }), "Squat 100 → 112.5 kg");
+  assert.strictEqual(line("fremgang", { lift: "bench", exerciseName: "Bench Press", before: 56.4, now: 62.2 }), "Bench press 56.5 → 62 kg");
+  assert.strictEqual(t(format.emptyBodyKey("flid", { tab: "streak" }), format.RULE_PARAMS), "A week counts once it has at least 2 finished workouts.");
   assert.strictEqual(line("calisthenics", { pullups: 10, dips: 15, pushups: 30 }), "Pull 10 · Dip 15 · Push 30");
 
   // The colour as text. 4.5:1 on everything it is written on, for every
@@ -1179,6 +1404,7 @@ async function run() {
   await testSuggestions();
   await testStartCountry();
   testMigration();
+  testProgressMigration();
   testFormat();
 
   console.log("Gym categories: vocabulary, importer regions, service mapping, centre suggestions, migration checks and how a category is written passed.");

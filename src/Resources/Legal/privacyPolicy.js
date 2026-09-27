@@ -19,7 +19,7 @@
 // counted by scripts/check-privacy-policy.js, which fails the build while the
 // policy claims to be published and is not finished.
 
-export const PRIVACY_POLICY_VERSION = "2026-09-26.4";
+export const PRIVACY_POLICY_VERSION = "2026-09-27.1";
 
 /** The public copy. Required by Google Play, and the address in its listing. */
 export const PRIVACY_POLICY_URL = "https://fitven.dk/privacy/";
@@ -104,7 +104,7 @@ People who follow you can also see whether you are training today, how many reco
 
 When a workout is matched to a centre, your best lifts from it go on that centre's leaderboard, where anyone signed in can see them with your name and photo. A lift that has been verified can also appear on the national leaderboard. A verification video can be watched by the people who train at that centre, so that they can vote on it.
 
-If you have finished a workout at a centre in the last 90 days, you also appear in its categories, and in those of its region and country. Anyone signed in can see there, with your name and photo, how many workouts you have finished this week, month or year, how many weeks in a row you have trained and when you last did; your heaviest single in bench press, squat and deadlift and their total; how much your best lift has risen over the last 30 days; and your most pull-ups, dips and push-ups in one set.
+If you have finished a workout at a centre in the last 90 days, you also appear in its categories, and in those of its region and country. Anyone signed in can see there, with your name and photo, how many workouts you have finished this week, month or year, how many weeks in a row you have trained and when you last did; your heaviest single in bench press, squat and deadlift and their total; which exercise your estimated best has risen most in over the last 30 days, with that estimate before and now; and your most pull-ups, dips and push-ups in one set.
 
 An exercise you make is private until you choose to share it. A shared exercise — its name, description, steps, muscles, equipment, video, and your name and photo as the person who made it — can be seen by anyone signed in, and they can add a copy of it to their own exercises. A copy never includes your sets, and you can stop sharing at any time; copies already taken stay with the people who took them. Three reports from different people hide a shared exercise until it has been looked at.
 
