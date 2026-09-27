@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Forrige, Næste, −15 s, +15 s: a faint pill. -->
+<!-- −15 s and +15 s: a faint pill. -->
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
   android:color="@color/live_workout_ripple">
   <item>

@@ -159,8 +159,9 @@ console.warn = (...args) => warnings.push(args.map(String).join(" "));
     "flid keeps only its own filters"
   );
   assert.deepStrictEqual(normalizeCategoryFilters("powerlifting", { onlyVideo: "yes", ageGroup: "u23" }), { ageGroup: "u23", onlyVideo: false }, "only video is true or nothing");
-  assert.deepStrictEqual(normalizeCategoryFilters("fremgang", { tab: "squat", ageGroup: "u23" }), { tab: "squat" }, "progress has no age filter");
-  assert.deepStrictEqual(normalizeCategoryFilters("fremgang", { tab: "curl" }), { tab: "all" });
+  assert.deepStrictEqual(normalizeCategoryFilters("fremgang", { tab: "squat", ageGroup: "u23" }), {}, "progress has no lift to pick and no age filter");
+  assert.deepStrictEqual(normalizeCategoryFilters("fremgang"), {}, "so it is everybody's biggest rise");
+  assert.strictEqual(categories.FREMGANG_TABS, undefined, "and there are no tabs to put three lifts in focus");
   assert.deepStrictEqual(normalizeCategoryFilters("calisthenics", { ageGroup: "65+" }), { ageGroup: "all" });
   assert.deepStrictEqual(normalizeCategoryFilters("running"), {});
 
@@ -188,7 +189,9 @@ console.warn = (...args) => warnings.push(args.map(String).join(" "));
     ...categories.AGE_GROUPS.map(categories.ageGroupLabelKey),
     ...categories.FLID_PERIODS.map(categories.periodLabelKey),
     ...categories.FLID_TABS.map(categories.flidTabLabelKey),
-    ...categories.FREMGANG_TABS.map(categories.fremgangTabLabelKey),
+    "category.lifts.bench",
+    "category.lifts.squat",
+    "category.lifts.deadlift",
     categories.countryNameKey("dk"),
     categories.countryWhereKey("DK"),
     "category.weightClasses.all",
@@ -623,14 +626,15 @@ async function testLeaderboards() {
   const workouts = await service.getCategoryLeaderboard({ category: "flid", scope: { level: "gym", gymId: 1 } });
   assert.deepStrictEqual(workouts.podium[0].detail, { workouts: 99, weeks: 3, lastWorkoutAt: "2026-09-23" });
 
-  // Progress: never a podium, and the personal card.
+  // Progress: never a podium, no filters, and the personal card.
   fake.rpcs.gym_category_leaderboard = () => ({
     data: {
-      total: 2,
+      total: 3,
       podium: [{ rank: 1, user: boUser, value: 15, detail: { lift: "deadlift", before: 200, now: 230, percent: 15 } }],
       rows: [
         { rank: 1, user: boUser, value: 15, detail: { lift: "deadlift", before: "200.0", now: "230.0", percent: 15 } },
         { rank: 2, user: annaUser, value: 10, detail: { lift: "curl", before: 1, now: 2, percent: 100 }, is_me: true },
+        { rank: 3, user: boUser, value: 8, detail: { exercise_name: " Hip thrust ", before: 100, now: 108, percent: 8 } },
       ],
       me: {
         rank: 2,
@@ -640,17 +644,57 @@ async function testLeaderboards() {
         is_me: true,
         gap_to_next: 5,
         in_filter: true,
-        breakdown: { bench: { before: 56.5, now: 62, percent: 10 }, squat: null },
+        breakdown: {
+          bench: { before: 56.5, now: 62, percent: 10 },
+          squat: null,
+          deadlift: { before: 100, now: 112, percent: 12 },
+        },
       },
     },
     error: null,
   });
   const progress = await service.getCategoryLeaderboard({ category: "fremgang", scope: { level: "country", country: "DK" }, filters: { tab: "bench", ageGroup: "u23" } });
-  assert.deepStrictEqual(lastRpc("gym_category_leaderboard").params.p_filters, { tab: "bench" }, "progress sends no age");
+  assert.deepStrictEqual(lastRpc("gym_category_leaderboard").params.p_filters, {}, "progress sends no lift and no age: the server's all");
   assert.deepStrictEqual(progress.podium, [], "progress has no podium, whatever arrives");
-  assert.deepStrictEqual(progress.rows[0].detail, { lift: "deadlift", before: 200, now: 230, percent: 15 });
-  assert.strictEqual(progress.rows[1].detail, null, "a lift that is not one of the three is no detail");
-  assert.deepStrictEqual(progress.me.breakdown, { bench: { before: 56.5, now: 62, percent: 10 }, squat: null, deadlift: null });
+  assert.deepStrictEqual(progress.rows[0].detail, { lift: "deadlift", exerciseName: null, before: 200, now: 230, percent: 15 });
+  assert.strictEqual(progress.rows[1].detail, null, "a lift that is not one of the three, without a name, is no detail");
+  assert.deepStrictEqual(progress.rows[2].detail, { lift: null, exerciseName: "Hip thrust", before: 100, now: 108, percent: 8 }, "a rise may name any exercise");
+  assert.deepStrictEqual(
+    progress.me.breakdown,
+    [
+      { lift: "deadlift", exerciseName: null, before: 100, now: 112, percent: 12 },
+      { lift: "bench", exerciseName: null, before: 56.5, now: 62, percent: 10 },
+    ],
+    "your rises, the biggest first, and only those with both windows"
+  );
+
+  // The same card from a list of exercises, as a wider server would send it.
+  fake.rpcs.gym_category_leaderboard = () => ({
+    data: {
+      total: 1,
+      rows: [],
+      me: {
+        rank: 1,
+        user: annaUser,
+        value: 20,
+        is_me: true,
+        in_filter: true,
+        breakdown: [
+          { exercise_name: "Military press", before: 40, now: 44, percent: 10 },
+          { exercise_name: "Hip thrust", before: 100, now: 120, percent: 20 },
+          { exercise_name: "Curl", before: 20, now: null, percent: null },
+          { before: 1, now: 2, percent: 100 },
+        ],
+      },
+    },
+    error: null,
+  });
+  const wider = await service.getCategoryLeaderboard({ category: "fremgang", scope: { level: "gym", gymId: 1 } });
+  assert.deepStrictEqual(
+    wider.me.breakdown.map((rise) => [rise.exerciseName, rise.percent]),
+    [["Hip thrust", 20], ["Military press", 10]],
+    "sorted by the rise; half a rise, or one in nothing named, is left out"
+  );
 
   // Calisthenics: points, reps, and the factor an empty event still has.
   fake.rpcs.gym_category_leaderboard = () => ({
@@ -743,6 +787,95 @@ async function testSearch() {
 
   fake.onQuery = () => ({ data: null, error: { code: "500", message: "boom" } });
   await assert.rejects(service.searchGyms({ query: "odense", scope: { level: "country", country: "DK" } }), (error) => error.message === i18n.t("categoryService.errors.searchFailed"));
+}
+
+async function testSuggestions() {
+  reset();
+  i18n.setLanguage("da");
+  const gymRow = (id, extra = {}) => ({ id, name: `Centre ${id}`, short_name: `C${id}`, chain: "PureGym", city: "Kbh", image_url: null, ...extra });
+  const summaries = [];
+  let regionGyms = [];
+  let countryRegions = [];
+  let gymPlace = { country: { code: "DK" }, region: { key: "sjaelland", name_da: "Sjælland", where_da: "på Sjælland" } };
+
+  fake.rpcs.gym_scope_summary = (params) => {
+    summaries.push(params);
+
+    switch (params.p_level) {
+      case "gym":
+        return { data: { level: "gym", ...gymPlace, gym: { id: params.p_gym_id, name: "x" } }, error: null };
+      case "country":
+        return { data: { level: "country", country: { code: params.p_country }, regions: countryRegions }, error: null };
+      default:
+        return {
+          data: {
+            level: "region",
+            country: { code: params.p_country },
+            region: { key: params.p_region, name_da: "Sjælland", where_da: "på Sjælland", gym_count: 9 },
+            gyms: regionGyms,
+          },
+          error: null,
+        };
+    }
+  };
+
+  // Your centre, the others you train in, then the region's busiest - each once.
+  fake.rpcs.my_home_gym = () => ({ data: gymRow(1, { is_home_gym: true }), error: null });
+  fake.rpcs.my_gyms = () => ({ data: [gymRow(1, { workout_count: 9, is_home_gym: true }), gymRow(2, { workout_count: 4 })], error: null });
+  regionGyms = [1, 3, 2, 4, 5].map((id) => gymRow(id, { lifter_count: 10 - id }));
+
+  const fixesBefore = location.positionCalls;
+  const found = await service.getGymSuggestions({ limit: 2 });
+  assert.strictEqual(found.yours.id, 1);
+  assert.deepStrictEqual(found.trainedIn.map((gym) => [gym.id, gym.workoutCount]), [[2, 4]], "your centre is not listed twice");
+  assert.deepStrictEqual(found.popular.map((gym) => [gym.id, gym.lifterCount]), [[3, 7], [4, 6]], "the busiest you are not already shown, up to the limit");
+  assert.deepStrictEqual(found.region, { key: "sjaelland", name: "Sjælland", where: "på Sjælland", gymCount: 9 });
+  assert.deepStrictEqual(
+    summaries.map((call) => [call.p_level, call.p_gym_id ?? call.p_region ?? call.p_country]),
+    [["gym", 1], ["region", "sjaelland"]],
+    "your centre's region, found through its level"
+  );
+  assert.strictEqual(location.positionCalls, fixesBefore, "nobody is asked for their position");
+
+  // No centre at all: Denmark's region with the most lifters.
+  summaries.length = 0;
+  fake.rpcs.my_home_gym = () => ({ data: null, error: null });
+  fake.rpcs.my_gyms = () => ({ data: [], error: null });
+  countryRegions = [
+    { key: "jylland", name_da: "Jylland", gym_count: 153, lifter_count: 12 },
+    { key: "sjaelland", name_da: "Sjælland", gym_count: 186, lifter_count: 30 },
+  ];
+  regionGyms = [gymRow(7, { lifter_count: 3 })];
+  const newcomer = await service.getGymSuggestions();
+  assert.strictEqual(newcomer.yours, null);
+  assert.deepStrictEqual(newcomer.trainedIn, []);
+  assert.deepStrictEqual(newcomer.popular.map((gym) => gym.id), [7]);
+  assert.deepStrictEqual(
+    summaries.map((call) => [call.p_level, call.p_region ?? call.p_country]),
+    [["country", "DK"], ["region", "sjaelland"]]
+  );
+
+  // A centre without a region: its country's busiest region instead.
+  summaries.length = 0;
+  fake.rpcs.my_gyms = () => ({ data: [gymRow(8, { workout_count: 2 })], error: null });
+  gymPlace = { country: { code: "SE" }, region: null };
+  await service.getGymSuggestions();
+  assert.deepStrictEqual(summaries.map((call) => [call.p_level, call.p_gym_id ?? call.p_region ?? call.p_country]), [["gym", 8], ["country", "SE"], ["region", "sjaelland"]]);
+
+  // Before the migration, and when your centres cannot be read: what can be
+  // read is there, and it never throws.
+  fake.rpcs.gym_scope_summary = () => ({ data: null, error: { code: "PGRST202", message: "missing" } });
+  fake.rpcs.my_home_gym = () => ({ data: gymRow(1), error: null });
+  fake.rpcs.my_gyms = () => ({ data: null, error: { code: "500", message: "boom" } });
+  const partial = await service.getGymSuggestions();
+  assert.strictEqual(partial.yours.id, 1);
+  assert.deepStrictEqual([partial.trainedIn, partial.popular, partial.region], [[], [], null]);
+
+  fake.rpcs.gym_scope_summary = () => ({ data: null, error: { code: "57014", message: "timeout" } });
+  fake.rpcs.my_home_gym = () => ({ data: null, error: { code: "500", message: "boom" } });
+  const nothing = await service.getGymSuggestions();
+  assert.deepStrictEqual(nothing, { yours: null, trainedIn: [], popular: [], region: null });
+  i18n.setLanguage("en");
 }
 
 async function testStartCountry() {
@@ -943,9 +1076,12 @@ function testFormat() {
   assert.strictEqual(line("flid", { workouts: 1, weeks: 0, lastWorkoutAt: null }), "");
   assert.strictEqual(line("powerlifting", lifts), "B 120 · S 142,5 · D 0", "a lift not done counts 0, and says so");
   assert.strictEqual(line("powerlifting", lifts, { scopeLevel: "country" }), "B 120 · S 142,5 · D 0 · Lyngby", "above centre level, the centre too");
-  assert.strictEqual(line("fremgang", { lift: "bench", before: 56.4, now: 62.2, percent: 10 }), "Bænk 56,5 → 62 kg", "both estimates to the half kilo");
+  assert.strictEqual(line("fremgang", { lift: "bench", before: 56.4, now: 62.2, percent: 10 }), "Bænkpres 56,5 → 62 kg", "the lift's full name, both estimates to the half kilo");
+  assert.strictEqual(line("fremgang", { lift: null, exerciseName: "Hip thrust", before: 100, now: 108 }), "Hip thrust 100 → 108 kg", "an exercise the server names is named");
   assert.strictEqual(line("fremgang", { lift: "bench", before: null, now: 62 }), "", "one estimate is no line");
-  assert.strictEqual(line("fremgang", null), "", "nor is a lift that is not one of the three");
+  assert.strictEqual(line("fremgang", { lift: "curl", before: 1, now: 2 }), "", "nor is a rise in nothing named");
+  assert.strictEqual(line("fremgang", null), "", "nor no rise");
+  assert.strictEqual(format.progressExerciseName({ lift: "deadlift", exerciseName: " " }, t), "Dødløft");
   assert.strictEqual(line("calisthenics", { pullups: 10, dips: 15, pushups: 30 }), "Pull 10 · Dip 15 · Arm 30");
 
   assert.strictEqual(format.meSubtitle({ category: "fremgang", me: { rank: 3, gapToNext: 2.25 }, t }), "2,3 % til #2");
@@ -1040,11 +1176,12 @@ async function run() {
   await testCards();
   await testLeaderboards();
   await testSearch();
+  await testSuggestions();
   await testStartCountry();
   testMigration();
   testFormat();
 
-  console.log("Gym categories: vocabulary, importer regions, service mapping, migration checks and how a category is written passed.");
+  console.log("Gym categories: vocabulary, importer regions, service mapping, centre suggestions, migration checks and how a category is written passed.");
 }
 
 run()

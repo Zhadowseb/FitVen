@@ -18,17 +18,35 @@ internal enum class ChipState { DONE, NOW, TODO }
 
 internal data class LiveChip(val text: String, val state: ChipState, val more: Boolean = false)
 
-internal data class LiveRing(val fraction: Float, val text: String, val label: String)
+internal data class LiveRing(
+  val fraction: Float,
+  /** Done / all ("2/4"), as iOS shows it. */
+  val text: String,
+  val label: String,
+  /** The sets ring on Android: the set being done / all ("3/4"). */
+  val currentText: String? = null
+)
 
 internal data class LiveRestView(
   val endsAt: Double,
-  /** What is left of the rest, 0..1: the collapsed ring and the bar. */
+  /** What is left of the rest, 0..1: the collapsed fill and the open bar. */
   val fraction: Float,
   /** "af 3:00". */
   val of: String
 )
 
 internal data class LiveNextRow(val label: String, val chips: List<LiveChip>)
+
+/** −step · Sæt færdigt · +step on the open card, between sets. */
+internal data class LiveWeightButtons(
+  val step: Double,
+  /** "2,5 kg", on both buttons; the − and + are drawn beside it. */
+  val label: String,
+  val a11yMinus: String,
+  val a11yPlus: String,
+  /** False at 0: nothing lighter than an empty bar. */
+  val minusEnabled: Boolean
+)
 
 internal data class LiveWorkoutView(
   val mode: LiveMode,
@@ -42,7 +60,10 @@ internal data class LiveWorkoutView(
   val nowSetId: String? = null,
   /** The now set's own text, "100 kg × 5". */
   val nowText: String = "",
-  /** The exercise the card is about, after a finished one has made way. */
+  /**
+   * The exercise the card is about, after a finished one has made way: the
+   * open card's subtitle, in both modes.
+   */
   val exerciseName: String = "",
   val setsRing: LiveRing? = null,
   val exerciseRing: LiveRing? = null,
@@ -50,11 +71,18 @@ internal data class LiveWorkoutView(
   val canPrev: Boolean = false,
   val canNext: Boolean = false,
   val chips: List<LiveChip> = emptyList(),
-  val nextRow: LiveNextRow? = null
+  val nextRow: LiveNextRow? = null,
+  /** Null while resting, and for a set without a weight (body weight, time). */
+  val weightButtons: LiveWeightButtons? = null,
+  /** allDone: "Afslut", the one button. */
+  val finishLabel: String = "",
+  /** allDone: where it takes you. Without one there is no button. */
+  val finishUrl: String? = null
 )
 
 internal object LiveWorkoutDerive {
   const val MAX_CHIPS = 6
+  const val WEIGHT_STEP_DEFAULT = 2.5
 
   fun derive(state: LiveWorkoutState, now: Double): LiveWorkoutView {
     var exercise = state.exercise
@@ -72,13 +100,19 @@ internal object LiveWorkoutDerive {
     }
 
     if (exercise == null) {
-      val allDone = state.totals.all > 0
-
-      return LiveWorkoutView(
-        mode = if (allDone) LiveMode.ALL_DONE else LiveMode.EMPTY,
-        title = state.string(if (allDone) "allDone" else "noSets"),
-        subtitle = ""
-      )
+      // Every set done: the card asks to finish, and its one button opens
+      // the app on the workout to do it.
+      return if (state.totals.all > 0) {
+        LiveWorkoutView(
+          mode = LiveMode.ALL_DONE,
+          title = state.string("allDone"),
+          subtitle = state.string("allDoneQuestion"),
+          finishLabel = state.string("finish"),
+          finishUrl = state.finishUrl
+        )
+      } else {
+        LiveWorkoutView(mode = LiveMode.EMPTY, title = state.string("noSets"), subtitle = "")
+      }
     }
 
     val rest = state.rest?.takeIf { it.endsAt > now }
@@ -102,7 +136,8 @@ internal object LiveWorkoutDerive {
       setsRing = LiveRing(
         fraction = if (sets.isNotEmpty()) done.toFloat() / sets.size else 0f,
         text = "$done/${sets.size}",
-        label = state.string("sets")
+        label = state.string("sets"),
+        currentText = "${min(done + 1, sets.size)}/${sets.size}"
       ),
       exerciseRing = LiveRing(
         fraction = if (total > 0) min(1.0, state.totals.exercisesDone / total).toFloat() else 0f,
@@ -119,6 +154,7 @@ internal object LiveWorkoutDerive {
       canPrev = canPrev,
       canNext = canNext,
       chips = chipsFor(sets, nowIndex),
+      weightButtons = if (resting) null else weightButtonsFor(state, exercise, nowSet),
       nextRow = next?.let { upcoming ->
         LiveNextRow(
           label = fill(state.string("nextExercise"), "name" to upcoming.name),
@@ -126,6 +162,27 @@ internal object LiveWorkoutDerive {
             .map { if (it.more) it else it.copy(state = ChipState.TODO) }
         )
       }
+    )
+  }
+
+  private fun weightButtonsFor(
+    state: LiveWorkoutState,
+    exercise: LiveExercise,
+    nowSet: LiveSet
+  ): LiveWeightButtons? {
+    val weight = nowSet.weight ?: return null
+    val step = exercise.weightStep?.takeIf { it != 0.0 } ?: WEIGHT_STEP_DEFAULT
+    val values = listOf(
+      "step" to (exercise.weightStepText ?: weightText(step, state.decimal ?: ".")),
+      "unit" to (state.unit ?: "kg")
+    )
+
+    return LiveWeightButtons(
+      step = step,
+      label = fill(state.string("weightStep"), values),
+      a11yMinus = fill(state.string("a11yWeightMinus"), values),
+      a11yPlus = fill(state.string("a11yWeightPlus"), values),
+      minusEnabled = weight > 0
     )
   }
 
@@ -158,6 +215,37 @@ internal object LiveWorkoutDerive {
 
   private fun fill(template: String, values: List<Pair<String, String>>): String =
     values.fold(template) { text, (key, value) -> text.replace("{$key}", value) }
+
+  /**
+   * A weight as the card writes it, as formatLiveWeight does: at most two
+   * decimals, no trailing zeros, no grouping, and the language's decimal
+   * sign - "102,5", "100". Written from whole hundredths, so no Double ever
+   * turns into "102.49999".
+   */
+  fun weightText(weight: Double, decimal: String): String {
+    // java.lang.Math.round rounds a half up, as JS Math.round does;
+    // kotlin.math.round would round it to even.
+    val hundredths = Math.round(weight * 100)
+    val magnitude = kotlin.math.abs(hundredths)
+    val whole = (magnitude / 100).toString()
+    val fraction = (magnitude % 100).toString().padStart(2, '0').trimEnd('0')
+    val sign = if (hundredths < 0) "-" else ""
+
+    return if (fraction.isEmpty()) "$sign$whole" else "$sign$whole$decimal$fraction"
+  }
+
+  /** A set's text and chip text from its weight and reps, as composeLiveSetText does. */
+  fun setText(weight: Double?, repsText: String?, decimal: String, unit: String): Pair<String, String> {
+    val kilos = weight?.let { weightText(it, decimal) }
+    val reps = repsText?.takeIf { it.isNotEmpty() }
+
+    return when {
+      kilos != null && reps != null -> "$kilos $unit × $reps" to "$kilos×$reps"
+      reps != null -> "× $reps" to "×$reps"
+      kilos != null -> "$kilos $unit" to kilos
+      else -> "–" to "–"
+    }
+  }
 
   /** "1:24", and "1:02:05" from an hour, as formatLiveClock does. */
   fun clock(totalSeconds: Double): String {

@@ -200,6 +200,130 @@ export function shortenDisplayName(displayName) {
   return `${parts[0]} ${parts[parts.length - 1][0].toUpperCase()}.`;
 }
 
+/* ------------------------------------------------ a centre's exercises -- */
+
+function exerciseNameKey(name) {
+  return String(name ?? "").trim().toLocaleLowerCase();
+}
+
+// toFiniteNumber reads null as 0; a missing #1 or rank has to stay missing.
+function toNullableNumber(value) {
+  return value === null || value === undefined || value === "" ? null : toFiniteNumber(value);
+}
+
+/**
+ * Every exercise ranked at a centre, from gymService.getGymOverview: the
+ * featured three and the rest in one list, most lifters first, then by name.
+ * The featured three are there even when nobody has lifted them, with 0.
+ */
+export function listCentreExercises(overview) {
+  const byId = new Map();
+  const add = (entry) => {
+    const id = toFiniteNumber(entry?.id);
+    const name = String(entry?.name ?? "").trim();
+
+    if (id === null || id <= 0 || !name || byId.has(id)) {
+      return;
+    }
+
+    byId.set(id, { ...entry, id, name, lifterCount: toFiniteNumber(entry.lifterCount) ?? 0 });
+  };
+
+  for (const entry of overview?.featured ?? []) {
+    add({
+      id: entry?.exerciseId,
+      name: entry?.exerciseName,
+      lifterCount: entry?.lifterCount,
+      topName: entry?.top?.displayName ?? null,
+      topWeightKg: toNullableNumber(entry?.top?.weightKg),
+      myRank: toNullableNumber(entry?.me?.rank),
+    });
+  }
+
+  for (const entry of overview?.more ?? []) {
+    add({
+      id: entry?.exerciseId,
+      name: entry?.exerciseName,
+      lifterCount: entry?.lifterCount,
+      topName: entry?.topName ?? null,
+      topWeightKg: toNullableNumber(entry?.topWeightKg),
+      myRank: toNullableNumber(entry?.myRank),
+    });
+  }
+
+  return [...byId.values()].sort(
+    (left, right) => right.lifterCount - left.lifterCount || left.name.localeCompare(right.name)
+  );
+}
+
+/**
+ * The exercises whose name holds what was typed, best match first: the name
+ * starting with it, then a word in it, then anywhere - and within each, the
+ * list's own order (most lifters first). Empty for an empty query.
+ */
+export function searchCentreExercises(exercises, query) {
+  const needle = exerciseNameKey(query).replace(/\s+/g, " ");
+
+  if (!needle) {
+    return [];
+  }
+
+  const scored = [];
+
+  (exercises ?? []).forEach((exercise, index) => {
+    const name = exerciseNameKey(exercise?.name).replace(/\s+/g, " ");
+    const at = name.indexOf(needle);
+
+    if (at === -1) {
+      return;
+    }
+
+    let score = at === 0 ? 0 : 2;
+
+    // A word in the name starting with it: after a space, a bracket, a
+    // slash or a dash - "press" in "Bench Press", "dumb" in "(Dumbbell)".
+    for (let from = at; score === 2 && from !== -1; from = name.indexOf(needle, from + 1)) {
+      if (/[\s(/-]/.test(name[from - 1] ?? "")) {
+        score = 1;
+      }
+    }
+
+    scored.push({ exercise, score, index });
+  });
+
+  return scored
+    .sort((left, right) => left.score - right.score || left.index - right.index)
+    .map((entry) => entry.exercise);
+}
+
+/* ------------------------------------------------ centres before a search -- */
+
+/**
+ * The centres Explore's search shows before anything is typed, in its three
+ * groups: your centre, the others you have trained in (most often first, as
+ * my_gyms gives them) and the busiest centres of a region, `limit` of them.
+ * A centre is shown once, in the first group it is in.
+ */
+export function mergeGymSuggestions({ home = null, trainedIn = [], popular = [], limit = 10 } = {}) {
+  const seen = new Set();
+  const isNew = (gym) => {
+    const id = toNullableNumber(gym?.id);
+
+    if (id === null || id <= 0 || seen.has(id)) {
+      return false;
+    }
+
+    seen.add(id);
+    return true;
+  };
+
+  const yours = home && isNew(home) ? home : null;
+  const trained = (trainedIn ?? []).filter(isNew);
+  const others = (popular ?? []).filter(isNew).slice(0, Math.max(0, limit));
+
+  return { yours, trainedIn: trained, popular: others };
+}
+
 /**
  * Nearest centre by haversine within its own radius, or null. The database
  * does this in match_gym; this is the same rule for a list already in hand,

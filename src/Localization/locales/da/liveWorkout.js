@@ -24,7 +24,13 @@ export default {
   restClock: "Pause · {time}",
   restSub: "pause",
   allDone: "Alle sæt er færdige",
+  allDoneQuestion: "Afslut træningen?",
+  finish: "Afslut",
   noSets: "Ingen sæt endnu",
+  // The weight buttons on Android's open card: "2,5 kg" beside a − and a +.
+  weightStep: "{step} {unit}",
+  a11yWeightMinus: "Træk {step} {unit} fra sættet",
+  a11yWeightPlus: "Læg {step} {unit} til sættet",
   // The Android notification channels, as the phone's settings list them.
   channelName: "Træning i gang",
   restChannelName: "Pause slut",

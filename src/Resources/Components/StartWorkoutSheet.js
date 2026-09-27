@@ -27,6 +27,7 @@ import {
   filterReleasedWorkoutTypes,
   isWorkoutTypeComingSoon,
 } from "../../Utils/workoutTypeAvailability";
+import { workoutDisplayName, workoutTypeLabel } from "@utils/workoutTypeLabel";
 
 const noop = () => {};
 
@@ -77,7 +78,7 @@ function getWorkoutTypeLabel(workout, t) {
     return t(labelKey);
   }
 
-  return workoutType ?? t("workoutStart.types.workout");
+  return workoutTypeLabel(workoutType, t) ?? t("workoutStart.types.workout");
 }
 
 function getWorkoutIconType(workout) {
@@ -94,8 +95,10 @@ function getWorkoutIconType(workout) {
   return "resistance";
 }
 
+// An unnamed workout's label is its type id ("Resistance"), which is drawn
+// as the type's name; a name the user gave it stays as typed.
 function getWorkoutTitle(workout, t) {
-  return workout?.label ?? getWorkoutTypeLabel(workout, t);
+  return workoutDisplayName(workout?.label, t) ?? getWorkoutTypeLabel(workout, t);
 }
 
 function getWorkoutDetail(plannedWorkout, t) {

@@ -157,30 +157,44 @@ export default StyleSheet.create({
     fontSize: 13,
     fontWeight: "800",
   },
-  // "All exercises": one line to every exercise's own ranking.
-  allRow: {
-    minHeight: 48,
-    borderRadius: 16,
+  // The search through the centre's exercises: the Centres screens' field.
+  searchField: {
+    height: 44,
+    borderRadius: 14,
     borderWidth: 1,
-    paddingVertical: 7,
-    paddingHorizontal: 14,
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 9,
+    paddingHorizontal: 13,
   },
-  allCopy: {
+  searchInput: {
     flex: 1,
-    minWidth: 0,
+    fontSize: 14,
+    fontWeight: "600",
+    paddingVertical: 0,
   },
-  allTitle: {
-    fontSize: 13.5,
+  // Its matches, in place of the page under it.
+  section: {
+    gap: 8,
+  },
+  listCard: {
+    borderRadius: 20,
+    borderWidth: 1,
+    overflow: "hidden",
+  },
+  emptyLine: {
+    paddingHorizontal: 16,
+    paddingVertical: 18,
+    gap: 4,
+  },
+  emptyTitle: {
+    fontSize: 14,
     fontWeight: "800",
-    lineHeight: 18,
   },
-  allDetail: {
-    fontSize: 11,
-    fontWeight: "700",
-    lineHeight: 15,
+  emptyBody: {
+    fontSize: 12,
+    fontWeight: "600",
+    lineHeight: 17,
   },
   reviewRow: {
     borderRadius: 16,

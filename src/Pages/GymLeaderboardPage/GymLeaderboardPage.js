@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Image,
   ScrollView,
+  TextInput,
   TouchableOpacity,
   View,
   useColorScheme,
@@ -11,14 +12,18 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "@localization";
 
 import styles, { HERO_HEIGHT } from "./GymLeaderboardPageStyle";
+import CentreExercises from "./Components/CentreExercises";
+import ExerciseRow from "./Components/ExerciseRow";
 import ChangeGymSheet from "@resources/Components/ChangeGymSheet/ChangeGymSheet";
 import { useAuth } from "@contexts/AuthContext";
 import { categoryLeaderboardService, gymService } from "@services";
 import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
 import ArrowLeft from "@resources/Icons/UI-icons/ArrowLeft";
 import ChevronRight from "@resources/Icons/UI-icons/ChevronRight";
+import Cross from "@resources/Icons/UI-icons/Cross";
 import MapPin from "@resources/Icons/UI-icons/MapPin";
 import Play from "@resources/Icons/UI-icons/Play";
+import Search from "@resources/Icons/UI-icons/Search";
 import CategoryCard from "@resources/Components/CategoryCard/CategoryCard";
 import CategoryCardSkeleton from "@resources/Components/CategoryCard/CategoryCardSkeleton";
 import CoverGradient from "@resources/Components/CoverGradient";
@@ -33,7 +38,7 @@ import {
   ThemedText,
   ThemedView,
 } from "@resources/ThemedComponents";
-import { getChainInitials } from "@utils/gymUtils";
+import { getChainInitials, listCentreExercises, searchCentreExercises } from "@utils/gymUtils";
 import { gymSeenKey, markSeen } from "@utils/lastSeen";
 
 const IDLE = { status: "idle", data: null, error: "" };
@@ -44,9 +49,12 @@ function errorText(error, fallback) {
 
 /**
  * Screen 4d: one centre. The hero, Centre / Friends, where the centre is
- * (country › region › centre), All / Men / Women, then the four categories
- * ranked here - most trained first - and a way on to every exercise's own
- * ranking. Friends narrows the categories to the people you follow.
+ * (country › region › centre), a search through the exercises ranked here,
+ * All / Men / Women, then the four categories ranked here - most trained
+ * first - and the centre's exercises, most lifters first, with "All
+ * exercises". Friends narrows the categories to the people you follow, and
+ * an exercise's list opens on the same choice. While something is typed in
+ * the search, its matches stand in for everything under it.
  */
 export default function GymLeaderboardPage() {
   const navigation = useNavigation();
@@ -65,6 +73,7 @@ export default function GymLeaderboardPage() {
   const [cards, setCards] = useState(IDLE);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [exerciseQuery, setExerciseQuery] = useState("");
   const [isChangeSheetOpen, setIsChangeSheetOpen] = useState(false);
   const [reviewLiftId, setReviewLiftId] = useState(null);
   const [isReviewOpen, setIsReviewOpen] = useState(
@@ -94,10 +103,13 @@ export default function GymLeaderboardPage() {
       setErrorMessage("");
 
       try {
-        // Only the three featured lifts and how many more there are: the
-        // exercises themselves are one tap further, on "All exercises".
+        // Every exercise ranked here, for the exercises section and its
+        // search - by everyone, whichever of Centre / Friends is chosen, as
+        // the exercise page's chips are, so Friends does not hide an exercise
+        // only strangers have lifted. Nothing else on the page depends on
+        // the choice, so changing it does not load this again.
         const [overviewResult, queueResult] = await Promise.allSettled([
-          gymService.getGymOverview({ gymId, scope, moreLimit: 0 }),
+          gymService.getGymOverview({ gymId, scope: gymService.GYM_SCOPE_GYM, moreLimit: null }),
           gymService.getVerificationQueue({ gymId }),
         ]);
 
@@ -117,7 +129,7 @@ export default function GymLeaderboardPage() {
         setIsLoading(false);
       }
     },
-    [gymId, scope, t]
+    [gymId, t]
   );
 
   // Only the newest answer may write: a slow one for the gender or the scope
@@ -229,6 +241,12 @@ export default function GymLeaderboardPage() {
     }
   }, [route.params?.lift_id]);
 
+  // "Change centre" can put another centre on this screen; what was typed
+  // was a search of the one before.
+  useEffect(() => {
+    setExerciseQuery("");
+  }, [gymId]);
+
   const gym = overview?.gym ?? null;
   const gymLabel = gym?.shortName ?? gym?.name ?? place?.gym?.shortName ?? place?.gym?.name ?? null;
   const memberLine = gym
@@ -239,9 +257,13 @@ export default function GymLeaderboardPage() {
           : null,
       ].filter(Boolean)
     : [];
-  const firstExerciseId =
-    overview?.featured?.[0]?.exerciseId ?? overview?.more?.[0]?.exerciseId ?? null;
-  const moreCount = Number(overview?.moreTotal) || 0;
+  const exercises = useMemo(() => listCentreExercises(overview), [overview]);
+  const trimmedQuery = exerciseQuery.trim();
+  const isSearchingExercises = trimmedQuery.length > 0;
+  const exerciseMatches = useMemo(
+    () => searchCentreExercises(exercises, trimmedQuery),
+    [exercises, trimmedQuery]
+  );
   const crumbs = place
     ? [
         {
@@ -268,6 +290,48 @@ export default function GymLeaderboardPage() {
   const openExercise = (exerciseId) => {
     navigation.navigate("GymExerciseLeaderboardPage", { gym_id: gymId, exercise_id: exerciseId, scope });
   };
+
+  // "All exercises" opens on the one most people lift here; its chips reach
+  // the rest.
+  const openAllExercises = () => {
+    if (exercises[0]?.id) {
+      openExercise(exercises[0].id);
+    }
+  };
+
+  const renderExerciseMatches = () => (
+    <View style={styles.section}>
+      <View style={styles.sectionLabelRow}>
+        <ThemedText style={styles.sectionLabel} setColor={quietText} numberOfLines={1}>
+          {t("gyms.centreExercises.resultsTitle")}
+        </ThemedText>
+        <ThemedText style={styles.sectionHint} setColor={quietText} numberOfLines={1}>
+          {t("gyms.results.count", { count: exerciseMatches.length })}
+        </ThemedText>
+      </View>
+      <View style={[styles.listCard, { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder }]}>
+        {exerciseMatches.length === 0 ? (
+          <View style={styles.emptyLine}>
+            <ThemedText style={styles.emptyTitle} setColor={theme.title}>
+              {t("gyms.centreExercises.noMatchTitle")}
+            </ThemedText>
+            <ThemedText style={styles.emptyBody} setColor={quietText}>
+              {t("gyms.centreExercises.noMatchBody")}
+            </ThemedText>
+          </View>
+        ) : (
+          exerciseMatches.map((exercise, index) => (
+            <ExerciseRow
+              key={exercise.id}
+              exercise={exercise}
+              onPress={() => openExercise(exercise.id)}
+              divider={index < exerciseMatches.length - 1}
+            />
+          ))
+        )}
+      </View>
+    </View>
+  );
 
   // Friends and the centre's name go along: the category page shows the same
   // people the card did, under the centre's name.
@@ -346,12 +410,65 @@ export default function GymLeaderboardPage() {
     ) : null;
   };
 
+  // The page itself: the categories and the exercises. The search's matches
+  // stand in for all of it while something is typed.
+  const renderCentre = () => (
+    <>
+      {/* All / Men / Women only splits the categories; with none to
+          split yet it would be a control that does nothing. */}
+      {cards.data?.unavailable ? null : <GenderSegment value={gender} onChange={setGender} />}
+
+      {queue.length > 0 ? (
+        <TouchableOpacity
+          accessibilityRole="button"
+          activeOpacity={0.85}
+          onPress={() => {
+            setReviewLiftId(null);
+            setIsReviewOpen(true);
+          }}
+          style={[
+            styles.reviewRow,
+            { backgroundColor: theme.cardBackground, borderColor: withAlpha(theme.planned, 0.4) },
+          ]}
+        >
+          <View style={[styles.reviewIcon, { backgroundColor: withAlpha(theme.planned, 0.16) }]}>
+            <Play width={14} height={14} color={theme.planned} />
+          </View>
+          <View style={styles.reviewCopy}>
+            <ThemedText style={styles.reviewTitle} setColor={theme.title}>
+              {t("gyms.overview.reviewQueue", { count: queue.length })}
+            </ThemedText>
+            <ThemedText style={styles.reviewBody} setColor={quietText}>
+              {t("gyms.overview.reviewHint")}
+            </ThemedText>
+          </View>
+          <ChevronRight width={18} height={18} color={theme.chevron} />
+        </TouchableOpacity>
+      ) : null}
+
+      <View style={styles.sectionLabelRow}>
+        <ThemedText style={styles.sectionLabel} setColor={quietText} numberOfLines={1}>
+          {t("gyms.categories")}
+        </ThemedText>
+        <ThemedText style={styles.sectionHint} setColor={quietText} numberOfLines={1}>
+          {t("gyms.sortedByActivity")}
+        </ThemedText>
+      </View>
+
+      {renderCards()}
+
+      <CentreExercises exercises={exercises} onOpen={openExercise} onOpenAll={openAllExercises} />
+    </>
+  );
+
   return (
     <ThemedView safe={["left", "right"]} style={styles.container}>
       <ScrollView
         style={styles.content}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
       >
         <View style={[styles.hero, { backgroundColor: theme.cardBackground }]}>
           {gym?.imageUrl ? (
@@ -443,67 +560,33 @@ export default function GymLeaderboardPage() {
 
             {crumbs.length ? <ScopeBreadcrumbs items={crumbs} style={styles.crumbs} /> : null}
 
-            {/* All / Men / Women only splits the categories; with none to
-                split yet it would be a control that does nothing. */}
-            {cards.data?.unavailable ? null : <GenderSegment value={gender} onChange={setGender} />}
-
-            {queue.length > 0 ? (
-              <TouchableOpacity
-                accessibilityRole="button"
-                activeOpacity={0.85}
-                onPress={() => {
-                  setReviewLiftId(null);
-                  setIsReviewOpen(true);
-                }}
-                style={[
-                  styles.reviewRow,
-                  { backgroundColor: theme.cardBackground, borderColor: withAlpha(theme.planned, 0.4) },
-                ]}
-              >
-                <View style={[styles.reviewIcon, { backgroundColor: withAlpha(theme.planned, 0.16) }]}>
-                  <Play width={14} height={14} color={theme.planned} />
-                </View>
-                <View style={styles.reviewCopy}>
-                  <ThemedText style={styles.reviewTitle} setColor={theme.title}>
-                    {t("gyms.overview.reviewQueue", { count: queue.length })}
-                  </ThemedText>
-                  <ThemedText style={styles.reviewBody} setColor={quietText}>
-                    {t("gyms.overview.reviewHint")}
-                  </ThemedText>
-                </View>
-                <ChevronRight width={18} height={18} color={theme.chevron} />
-              </TouchableOpacity>
+            {exercises.length > 0 ? (
+              <View style={[styles.searchField, { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder }]}>
+                <Search width={17} height={17} color={quietText} />
+                <TextInput
+                  value={exerciseQuery}
+                  onChangeText={setExerciseQuery}
+                  placeholder={t("gyms.centreExercises.searchPlaceholder")}
+                  placeholderTextColor={quietText}
+                  style={[styles.searchInput, { color: theme.title }]}
+                  autoCorrect={false}
+                  returnKeyType="search"
+                  accessibilityLabel={t("gyms.centreExercises.searchPlaceholder")}
+                />
+                {exerciseQuery.length > 0 ? (
+                  <TouchableOpacity
+                    accessibilityRole="button"
+                    accessibilityLabel={t("gyms.centreExercises.clearSearch")}
+                    hitSlop={10}
+                    onPress={() => setExerciseQuery("")}
+                  >
+                    <Cross width={14} height={14} color={quietText} />
+                  </TouchableOpacity>
+                ) : null}
+              </View>
             ) : null}
 
-            <View style={styles.sectionLabelRow}>
-              <ThemedText style={styles.sectionLabel} setColor={quietText} numberOfLines={1}>
-                {t("gyms.categories")}
-              </ThemedText>
-              <ThemedText style={styles.sectionHint} setColor={quietText} numberOfLines={1}>
-                {t("gyms.sortedByActivity")}
-              </ThemedText>
-            </View>
-
-            {renderCards()}
-
-            {firstExerciseId ? (
-              <TouchableOpacity
-                accessibilityRole="button"
-                activeOpacity={0.85}
-                onPress={() => openExercise(firstExerciseId)}
-                style={[styles.allRow, { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder }]}
-              >
-                <View style={styles.allCopy}>
-                  <ThemedText style={styles.allTitle} setColor={theme.title} numberOfLines={1}>
-                    {t("gyms.overview.allExercises")}
-                  </ThemedText>
-                  <ThemedText style={styles.allDetail} setColor={quietText} numberOfLines={1}>
-                    {t("gyms.overview.allExercisesDetail", { count: moreCount })}
-                  </ThemedText>
-                </View>
-                <ChevronRight width={18} height={18} color={theme.chevron} />
-              </TouchableOpacity>
-            ) : null}
+            {isSearchingExercises ? renderExerciseMatches() : renderCentre()}
           </View>
         )}
       </ScrollView>

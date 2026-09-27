@@ -81,9 +81,9 @@ export function normalizeCategory(value) {
   return CATEGORY_KEYS.includes(value) ? value : null;
 }
 
-// Flid ranks by one of two things; Fremgang by all three lifts or one.
+// Flid ranks by one of two things. Fremgang has no tabs: it is everybody's
+// biggest rise, whichever lift it was in, the biggest first.
 export const FLID_TABS = ["workouts", "streak"];
-export const FREMGANG_TABS = ["all", "bench", "squat", "deadlift"];
 
 /* ------------------------------------------------------------- filters -- */
 
@@ -116,7 +116,9 @@ export function normalizeFlidPeriod(value) {
 
 /**
  * The filters a category's list is asked for with, reduced to what that
- * category has: { tab, period, ageGroup, onlyVideo }.
+ * category has: { tab, period, ageGroup, onlyVideo }. Fremgang has none - no
+ * age, and no lift to pick - so the server ranks everybody by their biggest
+ * rise (its "all").
  */
 export function normalizeCategoryFilters(category, filters = {}) {
   const ageGroup = normalizeAgeGroup(filters?.ageGroup);
@@ -131,7 +133,7 @@ export function normalizeCategoryFilters(category, filters = {}) {
     case "powerlifting":
       return { ageGroup, onlyVideo: filters?.onlyVideo === true };
     case "fremgang":
-      return { tab: FREMGANG_TABS.includes(filters?.tab) ? filters.tab : "all" };
+      return {};
     case "calisthenics":
       return { ageGroup };
     default:
@@ -169,7 +171,6 @@ export const genderLabelKey = (gender) => `category.gender.${normalizeGender(gen
 export const ageGroupLabelKey = (ageGroup) => `category.ageGroups.${AGE_GROUP_KEYS[normalizeAgeGroup(ageGroup)]}`;
 export const periodLabelKey = (period) => `category.periods.${normalizeFlidPeriod(period)}`;
 export const flidTabLabelKey = (tab) => `category.flidTabs.${FLID_TABS.includes(tab) ? tab : "workouts"}`;
-export const fremgangTabLabelKey = (tab) => `category.fremgangTabs.${FREMGANG_TABS.includes(tab) ? tab : "all"}`;
 
 /** A country's name and "in {country}" phrase keys; unknown codes show the code. */
 export function countryNameKey(code) {

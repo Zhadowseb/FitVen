@@ -7,7 +7,9 @@
 // it reads from (src/Repository/trainRepository.js) run against an in-memory
 // SQLite built from the real schema, because what goes wrong in them is the
 // kind of thing only a database shows: a date in the other spelling, a
-// deleted row, a warm-up counted as a record.
+// deleted row, a warm-up counted as a record. So does the check behind the
+// exercise library's "See statistics" button
+// (weightliftingRepository.hasCompletedStrengthSetForExercise).
 const assert = require("assert/strict");
 const { DatabaseSync } = require("node:sqlite");
 const loadAppModule = require("./lib/loadAppModule");
@@ -97,22 +99,22 @@ assert.deepEqual(
 /* ------------------------------------------------------------- streak -- */
 
 {
-  // Four full weeks back from last week, then a short one. This week has two.
+  // Four full weeks back from last week, then a short one. This week has one.
   const history = [
-    ...workoutsIn(-5, 2),
+    ...workoutsIn(-5, 1),
     ...workoutsIn(-4, 3),
     ...workoutsIn(-3, 3),
     ...workoutsIn(-2, 4),
     ...workoutsIn(-1, 3),
   ];
-  const inProgress = form([...history, ...workoutsIn(0, 2)]);
+  const inProgress = form([...history, ...workoutsIn(0, 1)]);
 
   assert.equal(inProgress.streak, 4, "counted back from last week; the short week ends it");
-  assert.equal(inProgress.includesThisWeek, false, "two workouts this week do not add it yet");
+  assert.equal(inProgress.includesThisWeek, false, "one workout this week does not add it yet");
 
-  const reached = form([...history, ...workoutsIn(0, 3)]);
+  const reached = form([...history, ...workoutsIn(0, 2)]);
 
-  assert.equal(reached.streak, 5, "this week is added once it has three");
+  assert.equal(reached.streak, 5, "this week is added once it has two");
   assert.equal(reached.includesThisWeek, true);
   assert.equal(reached.bars[11].inStreak, true);
 
@@ -203,11 +205,21 @@ assert.deepEqual(
 
 {
   // Last week short, this week done: a streak of one.
-  const fresh = form([...workoutsIn(-1, 2), ...workoutsIn(0, 3)]);
+  const fresh = form([...workoutsIn(-1, 1), ...workoutsIn(0, 2)]);
 
   assert.equal(fresh.streak, 1);
   assert.equal(fresh.includesThisWeek, true);
-  assert.equal(lib.STREAK_MIN_WORKOUTS, 3, "the threshold is the constant the spec names");
+  assert.equal(lib.STREAK_MIN_WORKOUTS, 2, "two a week, the threshold the owner set after the test round");
+  assert.equal(
+    form([...workoutsIn(-2, 2), ...workoutsIn(-1, 2)]).streak,
+    2,
+    "two workouts are enough for a week to count"
+  );
+  assert.equal(
+    form([...workoutsIn(-2, 2), ...workoutsIn(-1, 1)]).streak,
+    0,
+    "one is not: the week before last is behind a short one"
+  );
   assert.equal(fresh.minWorkouts, lib.STREAK_MIN_WORKOUTS);
 }
 
@@ -266,7 +278,11 @@ assert.deepEqual(
     1.1,
     "13 workouts in the twelve weeks shown, this one included, is 1.1 a week"
   );
-  assert.equal(library.form.streak, 2, "last week, across the new year, and the one before");
+  assert.equal(
+    library.form.streak,
+    3,
+    "last week, across the new year, the one before, and this week, which has its two"
+  );
   assert.equal(lib.weeklyAverage([]), 0, "no bars, no average");
 }
 
@@ -677,6 +693,11 @@ function database() {
     db: {
       getAllAsync: async (sql, params = []) =>
         raw.prepare(sql).all(...params).map((row) => ({ ...row })),
+      getFirstAsync: async (sql, params = []) => {
+        const row = raw.prepare(sql).get(...params);
+
+        return row ? { ...row } : null;
+      },
     },
   };
 }
@@ -764,6 +785,53 @@ async function recordsQuery() {
 
   assert.equal(tile.total, trophyRoomCount, "the tile's total is the trophy room's record count");
   assert.equal(tile.total, 5);
+
+  // "See statistics" in the exercise library: shown for an exercise with a
+  // set its statistics page would show, and for no other.
+  const hasSets = (name) => weightliftingRepository.hasCompletedStrengthSetForExercise(db, name);
+  const onlyExercise = (workoutId, name) => {
+    raw
+      .prepare("INSERT INTO Day (day_id, Weekday, date) VALUES (?, 'Monday', '2026-09-22')")
+      .run(workoutId);
+    raw
+      .prepare(
+        "INSERT INTO Workout_Type_Instance (workout_id, day_id, date, label, done) VALUES (?, ?, '2026-09-22', 'W', 1)"
+      )
+      .run(workoutId, workoutId);
+    raw
+      .prepare(
+        "INSERT INTO Exercise_Instance (exercise_instance_id, workout_type_instance_id, exercise_name) VALUES (?, ?, ?)"
+      )
+      .run(workoutId, workoutId, name);
+  };
+
+  onlyExercise(10, "Deadlift");
+  addSet(10, { set_type: "warmup" });
+  addSet(10, { done: 0 });
+  addSet(10, { failed: 1 });
+  onlyExercise(11, "Row");
+  addSet(11, { personal_record: 0 });
+  onlyExercise(12, "Curl");
+  addSet(12, { deleted_at: "2026-09-23T10:00:00Z" });
+
+  assert.equal(await hasSets("Squat"), true, "an exercise with finished sets has statistics");
+  assert.equal(await hasSets("Row"), true, "a set needs to be finished, not a record");
+  assert.equal(
+    await hasSets("Deadlift"),
+    false,
+    "a warm-up, a set not ticked off and a failed one are not on the statistics page"
+  );
+  assert.equal(await hasSets("Curl"), false, "nor is a deleted set");
+  assert.equal(await hasSets("Lunge"), false, "an exercise never done has none");
+  assert.equal(
+    await hasSets("Deadlift"),
+    normalizeRecordRows(
+      await weightliftingRepository.getCompletedStrengthSetsForPersonalRecords(db, {
+        exerciseName: "Deadlift",
+      })
+    ).length > 0,
+    "the check agrees with the rows the statistics page is drawn from"
+  );
 }
 
 async function programsQuery() {

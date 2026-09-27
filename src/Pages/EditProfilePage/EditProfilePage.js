@@ -18,7 +18,7 @@ import { socialService } from "@services";
 import Lock from "@resources/Icons/UI-icons/Lock";
 import {
   calculateAgeFromBirthDate,
-  dateToIsoDate,
+  dateToBirthYearIsoDate,
   isoDateToLocalDate,
 } from "@utils/dateUtils";
 import {
@@ -416,17 +416,17 @@ export default function EditProfilePage() {
   };
 
   const handleBirthDateConfirm = (selectedDate) => {
-    const pickedDate = dateToIsoDate(selectedDate);
+    // Stored as the 1st of January, so it is kept that way here too: picking
+    // the year that is already saved is not a change, and another year is.
+    const pickedBirthYear = dateToBirthYearIsoDate(selectedDate);
 
     setBirthDatePickerVisible(false);
 
-    if (!pickedDate) {
+    if (!pickedBirthYear) {
       return;
     }
 
-    // Stored as the 1st of January, so it is kept that way here too: picking
-    // the year that is already saved is not a change.
-    updateField("birthDate", `${pickedDate.slice(0, 4)}-01-01`);
+    updateField("birthDate", pickedBirthYear);
   };
 
   const inputBoxStyle = (fieldKey) => ({
@@ -803,7 +803,11 @@ export default function EditProfilePage() {
         </View>
       </ThemedKeyboardProtection>
 
+      {/* The year alone: it is all that is kept. With a day and a month on
+          the wheel too, changing them changed nothing that is saved, and Save
+          never came on. */}
       <ThemedDateWheelPicker
+        yearOnly
         visible={birthDatePickerVisible}
         value={getBirthDatePickerValue()}
         minYear={1900}

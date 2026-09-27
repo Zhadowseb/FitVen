@@ -21,6 +21,7 @@ import Star from "@resources/Icons/UI-icons/Star";
 import { ThemedText, ThemedView, UserAvatar } from "@resources/ThemedComponents";
 import { formatTimeAgo } from "@utils/dateUtils";
 import { getWorkoutCoverImage } from "@utils/workoutCoverImages";
+import { workoutDisplayName } from "@utils/workoutTypeLabel";
 import { formatWeightKg } from "@utils/gymUtils";
 import { getLastSeenOrStart, gymSeenKey } from "@utils/lastSeen";
 
@@ -550,7 +551,7 @@ export default function ExplorePage() {
                   accessibilityRole="button"
                   accessibilityLabel={t("explore.centerPostLabel", {
                     name: post.author?.displayName ?? "",
-                    title: post.title ?? "",
+                    title: workoutDisplayName(post.title, t) ?? "",
                     gym: post.gym?.shortName ?? "",
                   })}
                   onPress={() =>
@@ -574,7 +575,7 @@ export default function ExplorePage() {
                       ) : null}
                     </View>
                     <ThemedText style={styles.postTitle} setColor={title} numberOfLines={2}>
-                      {post.title}
+                      {workoutDisplayName(post.title, t)}
                     </ThemedText>
                     <ThemedText style={styles.postMeta} setColor={quiet} numberOfLines={1}>
                       {[post.author?.displayName, post.createdAt ? formatTimeAgo(post.createdAt) : null]

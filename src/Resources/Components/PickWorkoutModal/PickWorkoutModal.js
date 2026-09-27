@@ -4,6 +4,7 @@ import styles from "./PickWorkoutModalStyle";
 import { Colors } from "../../GlobalStyling/colors";
 import { ThemedModal, ThemedText } from "../../ThemedComponents";
 import { useTranslation } from "@localization";
+import { workoutDisplayName } from "@utils/workoutTypeLabel";
 
 const PickWorkoutModal = ({ workouts = [], visible, onClose, onSubmit }) => {
   const colorScheme = useColorScheme();
@@ -28,7 +29,7 @@ const PickWorkoutModal = ({ workouts = [], visible, onClose, onSubmit }) => {
               {t("workout.pick.workoutNumber", { id: item.workout_id })}
             </ThemedText>
 
-            <ThemedText>{item.label}</ThemedText>
+            <ThemedText>{workoutDisplayName(item.label, t, item.workout_type)}</ThemedText>
           </TouchableOpacity>
         ))}
       </ScrollView>

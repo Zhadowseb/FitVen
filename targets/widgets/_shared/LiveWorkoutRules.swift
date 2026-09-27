@@ -71,10 +71,34 @@ struct LiveWorkoutDisplay {
   var restOf: String = ""
   var canPrev: Bool = false
   var canNext: Bool = false
+  /// All done: the link the one button opens the app with to finish the
+  /// workout. Nil in every other mode, and when the state has no valid one.
+  var finishUrl: URL? = nil
   var strings: [String: String] = [:]
 
-  var hasButtons: Bool {
+  /// The set and rest buttons: App Intents, so iOS 17 and later only.
+  var hasIntentButtons: Bool {
     return mode == .set || mode == .rest
+  }
+
+  /// The all-done card's finish button: a plain link, so any iOS.
+  var hasFinishLink: Bool {
+    return mode == .allDone && finishUrl != nil
+  }
+
+  /// `state.finishUrl` when it is a URL with a scheme, otherwise nil.
+  static func finishLink(_ text: String?) -> URL? {
+    guard
+      let text: String = text,
+      !text.isEmpty,
+      let url: URL = URL(string: text),
+      let scheme: String = url.scheme,
+      !scheme.isEmpty
+    else {
+      return nil
+    }
+
+    return url
   }
 
   func string(_ key: String) -> String {
@@ -127,14 +151,24 @@ struct LiveWorkoutDisplay {
       display.clockStopped = LiveWorkoutText.clock(paused)
     }
 
-    // Rule 1 and 8: no exercise is `allDone` or `empty`, without buttons.
+    // Rule 1 and 8: no exercise is `allDone` or `empty`. Empty has no
+    // buttons; all done asks to finish, with one button that opens the app
+    // on `finishUrl` - a link, not a queued tap.
     guard
       let shown: LiveWorkoutState.Exercise = exercise,
       let nowIndex: Int = firstToDo(shown)
     else {
-      display.mode = state.totals.all > 0 ? .allDone : .empty
-      display.title = display.mode == .allDone ? (strings["allDone"] ?? "") : (strings["noSets"] ?? "")
-      display.subtitle = ""
+      if state.totals.all > 0 {
+        display.mode = .allDone
+        display.title = strings["allDone"] ?? ""
+        display.subtitle = strings["allDoneQuestion"] ?? ""
+        display.finishUrl = finishLink(state.finishUrl)
+      } else {
+        display.mode = .empty
+        display.title = strings["noSets"] ?? ""
+        display.subtitle = ""
+      }
+
       return display
     }
 
