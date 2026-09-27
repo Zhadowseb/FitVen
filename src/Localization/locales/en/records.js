@@ -8,6 +8,7 @@ export default {
     recordCount: { one: "record set", other: "records set" },
     heaviest: "Heaviest lift",
     heaviestValue: "{weight} kg × {reps} · {name}",
+    heaviestValuePerSide: "{weight} kg per side × {reps} · {name}",
     since: "Since {date}",
     emptyTitle: "Your first record is waiting",
     emptyBody: "Finish a strength workout and your collection starts here.",
@@ -15,6 +16,7 @@ export default {
       title: "Your strongest lifts",
       meta: "× {reps} · {date}",
       label: "Place {rank}: {name}, {weight} kg × {reps}",
+      labelPerSide: "Place {rank}: {name}, {weight} kg per side × {reps}",
       nextGoal: "Next goal: {goal} kg in {name}",
       toGo: "{value} kg to go",
     },
@@ -22,6 +24,7 @@ export default {
       title: "New records",
       new: "New",
       label: "{name}, {weight} kg × {reps}, {when}",
+      labelPerSide: "{name}, {weight} kg per side × {reps}, {when}",
     },
     milestones: {
       title: "Milestones",

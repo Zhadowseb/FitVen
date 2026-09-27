@@ -19,4 +19,8 @@ export default StyleSheet.create({
   classicWeight: { lineHeight: 16, fontWeight: "900", fontVariant: ["tabular-nums"] },
   classicUnit: { lineHeight: 12, marginTop: 2, marginLeft: 3, fontWeight: "700" },
   classicConnector: { width: 10, height: 1 },
+  // "pr. side" after the last chip (4d). The cells keep the rest of the width.
+  withNote: { width: "100%", flexDirection: "row", alignItems: "center" },
+  withNoteCells: { flex: 1, minWidth: 0 },
+  perSide: { fontWeight: "600", marginLeft: 6, marginTop: 4, flexShrink: 0 },
 });

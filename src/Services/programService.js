@@ -28,6 +28,7 @@ import {
 import { calculateBrzyckiOneRepMax } from "@utils/oneRepMaxUtils";
 import { formatDisplayNumber } from "@utils/numberUtils";
 import { STARTED_FROM } from "@utils/startedFrom";
+import { isPerSide, resolveWeightMode, toggleWeight } from "@utils/weightMode";
 import { filterReleasedWorkoutTypes } from "@utils/workoutTypeAvailability";
 import {
   WEEK_DAYS,
@@ -86,13 +87,15 @@ export async function countActiveWorkoutTypes(db) {
   ).length;
 }
 
-function formatProgramBestDisplay({ weight, reps, estimatedOneRepMax }) {
-  const setText = `${reps} x ${formatDisplayNumber(weight)} kg`;
+function formatProgramBestDisplay({ weight, reps, estimatedOneRepMax, weightMode = null }) {
+  // "pr. side" after the unit when the exercise is written per side (4d).
+  const unit = isPerSide(weightMode) ? `kg ${t("workout.weightMode.suffix")}` : "kg";
+  const setText = `${reps} x ${formatDisplayNumber(weight)} ${unit}`;
 
   if (reps === 1) {
     return {
       setDisplayValue: setText,
-      rmDisplayValue: `${formatDisplayNumber(weight)} kg`,
+      rmDisplayValue: `${formatDisplayNumber(weight)} ${unit}`,
       isEstimated: false,
       estimatedLabel: null,
     };
@@ -100,7 +103,7 @@ function formatProgramBestDisplay({ weight, reps, estimatedOneRepMax }) {
 
   return {
     setDisplayValue: setText,
-    rmDisplayValue: `${formatDisplayNumber(Math.round(estimatedOneRepMax))} kg`,
+    rmDisplayValue: `${formatDisplayNumber(Math.round(estimatedOneRepMax))} ${unit}`,
     isEstimated: true,
     estimatedLabel: "estimated",
   };
@@ -116,6 +119,15 @@ async function cloneWorkoutContents(
   );
 
   for (const exercise of exercises) {
+    // A copy is written the way the exercise is written now (4d): somebody
+    // who has since switched it to per side gets the copied weights per
+    // side, converted like a switch converts them. Same mode, no change.
+    const catalogEntry = await weightliftingRepository.getExerciseCatalogEntryByName(
+      db,
+      exercise.exercise_name
+    );
+    const sourceMode = resolveWeightMode(exercise.weight_mode, null);
+    const targetMode = resolveWeightMode(catalogEntry?.weight_mode, sourceMode);
     const exerciseResult = await weightliftingRepository.createExercise(db, {
       workoutId: targetWorkoutId,
       exerciseName: exercise.exercise_name,
@@ -124,6 +136,7 @@ async function cloneWorkoutContents(
       note: exercise.note,
       done: 0,
       exerciseOrder: normalizeExerciseOrder(exercise.exercise_order),
+      weightMode: targetMode,
     });
 
     const sets = await weightliftingRepository.getSetsByExercise(
@@ -138,7 +151,7 @@ async function cloneWorkoutContents(
         personalRecord: resetPersonalRecords ? 0 : set.personal_record,
         pause: set.pause,
         rpe: set.rpe,
-        weight: set.weight,
+        weight: toggleWeight(set.weight, sourceMode, targetMode),
         rmPercentage: set.rm_percentage,
         reps: set.reps,
         done: 0,
@@ -1160,10 +1173,12 @@ export async function getProgramExerciseBests(db, programId) {
         reps,
         performedDate: set.performed_date ?? null,
         estimatedOneRepMax,
+        weightMode: set.weight_mode ?? null,
         ...formatProgramBestDisplay({
           weight,
           reps,
           estimatedOneRepMax,
+          weightMode: set.weight_mode ?? null,
         }),
       };
     }

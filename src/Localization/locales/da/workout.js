@@ -19,6 +19,24 @@ export default {
     records: "Rekorder og udvikling",
     openRecords: "Åbn rekorder for {name}",
     heaviestLift: "{weight} kg × {reps}",
+    heaviestLiftPerSide: "{weight} kg pr. side × {reps}",
+  },
+  // Vægt pr. side eller for begge sider, på øvelseskortet (4d).
+  weightMode: {
+    perSide: "Pr. side",
+    bothSides: "Begge sider",
+    tabValue: "{label} · {weight}",
+    doubled: "Vægten er fordoblet: {from} → {to} {unit}",
+    halved: "Vægten er halveret: {from} → {to} {unit}",
+    // Når ingen af sættene har en vægt endnu, er der ingen tal at nævne.
+    switchedPerSide: "Vægten skrives nu pr. side",
+    switchedBothSides: "Vægten skrives nu for begge sider",
+    undo: "Fortryd",
+    // Står efter tallet, med lille grå skrift.
+    suffix: "pr. side",
+    a11y: "Vægt skrives {mode}. Tryk for at skifte, alle sæt omregnes",
+    // {mode} i a11y for begge sider; for pr. side bruges suffix.
+    a11yBothSides: "for begge sider",
   },
   note: {
     title: "Note",
@@ -166,6 +184,11 @@ export default {
   setList: {
     setDone: "Sæt {number} færdigt",
     repsUnit: "reps",
+    // + og − på vægten (1e). {step} er trinnet i kg.
+    weightMinus: "Træk {step} kg fra sæt {label}",
+    weightPlus: "Læg {step} kg til sæt {label}",
+    weightMinusAll: "Træk {step} kg fra alle ufærdige sæt",
+    weightPlusAll: "Læg {step} kg til alle ufærdige sæt",
     headers: {
       note: "NOTE",
       rest: "PAUSE",

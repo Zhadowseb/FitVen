@@ -15,6 +15,7 @@ import UpwardGraf from "@resources/Icons/UI-icons/UpwardGraf";
 import RecordStar from "@resources/Components/RecordStar/RecordStar";
 import { ThemedText } from "@resources/ThemedComponents";
 import { formatRelativeDay } from "@utils/dateUtils";
+import { isPerSide } from "@utils/weightMode";
 
 const COUNT_UP_MS = 900;
 const REVEAL_STEP_MS = 90;
@@ -183,11 +184,16 @@ export default function TrophyRoom({ room, now, animate, reduceMotion, onOpenExe
                   {t("records.trophy.heaviest")}
                 </ThemedText>
                 <ThemedText style={styles.heroLiftValue} setColor={title} numberOfLines={1}>
-                  {t("records.trophy.heaviestValue", {
-                    weight: formatKg(hero.heaviest.weight),
-                    reps: hero.heaviest.reps,
-                    name: hero.heaviest.name,
-                  })}
+                  {t(
+                    isPerSide(hero.heaviest.weightMode)
+                      ? "records.trophy.heaviestValuePerSide"
+                      : "records.trophy.heaviestValue",
+                    {
+                      weight: formatKg(hero.heaviest.weight),
+                      reps: hero.heaviest.reps,
+                      name: hero.heaviest.name,
+                    }
+                  )}
                 </ThemedText>
                 <ThemedText style={styles.caption} setColor={quiet}>
                   {t("records.trophy.since", {
@@ -224,12 +230,17 @@ export default function TrophyRoom({ room, now, animate, reduceMotion, onOpenExe
                     key={entry.name}
                     activeOpacity={0.8}
                     accessibilityRole="button"
-                    accessibilityLabel={t("records.trophy.podium.label", {
-                      rank: index + 1,
-                      name: entry.name,
-                      weight: formatKg(entry.weight),
-                      reps: entry.reps,
-                    })}
+                    accessibilityLabel={t(
+                      isPerSide(entry.weightMode)
+                        ? "records.trophy.podium.labelPerSide"
+                        : "records.trophy.podium.label",
+                      {
+                        rank: index + 1,
+                        name: entry.name,
+                        weight: formatKg(entry.weight),
+                        reps: entry.reps,
+                      }
+                    )}
                     onPress={() => onOpenExercise?.(entry.name)}
                     style={[
                       styles.podiumRow,
@@ -264,7 +275,9 @@ export default function TrophyRoom({ room, now, animate, reduceMotion, onOpenExe
                         {formatKg(entry.weight)}
                       </ThemedText>
                       <ThemedText style={styles.podiumUnit} setColor={quiet}>
-                        {t("common.kg")}
+                        {isPerSide(entry.weightMode)
+                          ? `${t("common.kg")} ${t("workout.weightMode.suffix")}`
+                          : t("common.kg")}
                       </ThemedText>
                     </View>
                   </TouchableOpacity>
@@ -317,12 +330,17 @@ export default function TrophyRoom({ room, now, animate, reduceMotion, onOpenExe
                   key={`${record.name}-${record.at}`}
                   activeOpacity={0.85}
                   accessibilityRole="button"
-                  accessibilityLabel={t("records.trophy.recent.label", {
-                    name: record.name,
-                    weight: formatKg(record.weight),
-                    reps: record.reps,
-                    when: formatRelativeDay(record.at, now),
-                  })}
+                  accessibilityLabel={t(
+                    isPerSide(record.weightMode)
+                      ? "records.trophy.recent.labelPerSide"
+                      : "records.trophy.recent.label",
+                    {
+                      name: record.name,
+                      weight: formatKg(record.weight),
+                      reps: record.reps,
+                      when: formatRelativeDay(record.at, now),
+                    }
+                  )}
                   onPress={() => onOpenExercise?.(record.name)}
                   style={[
                     styles.recordCard,
@@ -338,7 +356,9 @@ export default function TrophyRoom({ room, now, animate, reduceMotion, onOpenExe
                       {formatKg(record.weight)}
                     </ThemedText>
                     <ThemedText style={styles.recordWeightMeta} setColor={quiet}>
-                      {`${t("common.kg")} × ${record.reps}`}
+                      {isPerSide(record.weightMode)
+                        ? `${t("common.kg")} ${t("workout.weightMode.suffix")} × ${record.reps}`
+                        : `${t("common.kg")} × ${record.reps}`}
                     </ThemedText>
                   </View>
                   <View style={styles.recordFoot}>
