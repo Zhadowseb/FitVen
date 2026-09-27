@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The card's type (spec §4.2-4.4). Weight 800 is bold and 600 is medium
+     before Android 9, which has no textFontWeight (see values-v28). Colours are
+     @color references, so they follow the notification's light or dark theme
+     (values / values-night). -->
+<resources>
+  <style name="LiveWorkout.Text" parent="">
+    <item name="android:includeFontPadding">false</item>
+    <item name="android:maxLines">1</item>
+    <item name="android:ellipsize">end</item>
+    <item name="android:textColor">@color/live_workout_text_primary</item>
+  </style>
+
+  <!-- values-v28 gives both their exact weight. -->
+  <style name="LiveWorkout.Text.Heavy">
+    <item name="android:textStyle">bold</item>
+  </style>
+
+  <style name="LiveWorkout.Text.Semibold">
+    <item name="android:fontFamily">sans-serif-medium</item>
+    <item name="android:textColor">@color/live_workout_text_secondary</item>
+  </style>
+
+  <!-- "NUVÆRENDE SÆT" 10/800, letter spacing 1.4 -->
+  <style name="LiveWorkout.Text.Heavy.Eyebrow">
+    <item name="android:textSize">10sp</item>
+    <item name="android:letterSpacing">0.14</item>
+    <item name="android:textColor">@color/live_workout_orange</item>
+  </style>
+
+  <!-- "100 kg × 5" 17/800 -->
+  <style name="LiveWorkout.Text.Heavy.Title">
+    <item name="android:textSize">17sp</item>
+  </style>
+
+  <!-- "Bænkpres · sæt 3 af 4" 13/600 -->
+  <style name="LiveWorkout.Text.Semibold.Subtitle">
+    <item name="android:textSize">13sp</item>
+  </style>
+
+  <!-- Collapsed: "100 kg × 5" 15/800 and "Bænkpres · sæt 3/4" 12.5/600 -->
+  <style name="LiveWorkout.Text.Heavy.CollapsedTitle">
+    <item name="android:textSize">15sp</item>
+  </style>
+
+  <style name="LiveWorkout.Text.Semibold.CollapsedSubtitle">
+    <item name="android:textSize">12.5sp</item>
+  </style>
+
+  <!-- In a ring: "3/4" 14/800 and "SÆT" 8/800, letter spacing 0.6 -->
+  <style name="LiveWorkout.Text.Heavy.RingText">
+    <item name="android:textSize">14sp</item>
+    <item name="android:fontFeatureSettings">tnum</item>
+  </style>
+
+  <style name="LiveWorkout.Text.Heavy.RingLabel">
+    <item name="android:textSize">8sp</item>
+    <item name="android:letterSpacing">0.075</item>
+    <item name="android:textColor">@color/live_workout_text_secondary</item>
+  </style>
+
+  <!-- A set row's label 11/800 -->
+  <style name="LiveWorkout.Text.Heavy.RowLabel">
+    <item name="android:textSize">11sp</item>
+    <item name="android:textColor">@color/live_workout_text_label</item>
+  </style>
+
+  <style name="LiveWorkout.Text.Heavy.RowLabel.Next">
+    <item name="android:textColor">@color/live_workout_text_secondary</item>
+  </style>
+
+  <!-- "PAUSE" 11/800 orange, and "af 3:00" beside it -->
+  <style name="LiveWorkout.Text.Heavy.RowLabel.Rest">
+    <item name="android:textColor">@color/live_workout_orange</item>
+  </style>
+
+  <style name="LiveWorkout.Text.Heavy.RowLabel.RestOf">
+    <item name="android:textColor">@color/live_workout_text_secondary</item>
+    <item name="android:fontFeatureSettings">tnum</item>
+  </style>
+
+  <!-- The rest countdown 22/800 orange -->
+  <style name="LiveWorkout.Text.Heavy.RestClock">
+    <item name="android:textSize">22sp</item>
+    <item name="android:textColor">@color/live_workout_orange</item>
+    <item name="android:fontFeatureSettings">tnum</item>
+  </style>
+
+  <!-- A chip: "100×5" 12/800 tabular -->
+  <style name="LiveWorkout.Text.Heavy.Chip">
+    <item name="android:textSize">12sp</item>
+    <item name="android:fontFeatureSettings">tnum</item>
+    <item name="android:textColor">@color/live_workout_text_secondary</item>
+  </style>
+
+  <style name="LiveWorkout.Text.Heavy.Chip.Now">
+    <item name="android:textColor">@color/live_workout_text_primary</item>
+  </style>
+
+  <!-- Buttons 13/800 -->
+  <style name="LiveWorkout.Text.Heavy.Button">
+    <item name="android:textSize">13sp</item>
+  </style>
+
+  <style name="LiveWorkout.Text.Heavy.Button.Primary">
+    <item name="android:textColor">@color/live_workout_ink</item>
+  </style>
+
+  <!-- A 40 dp button: icon and text centred. -->
+  <style name="LiveWorkout.Button" parent="">
+    <item name="android:gravity">center</item>
+    <item name="android:orientation">horizontal</item>
+    <item name="android:paddingStart">8dp</item>
+    <item name="android:paddingEnd">8dp</item>
+  </style>
+
+  <!-- Forrige / Næste when the card cannot move that way: 40 %, and it takes
+       the tap so the card body does not open the app instead. -->
+  <style name="LiveWorkout.Button.Off">
+    <item name="android:alpha">0.4</item>
+    <item name="android:background">@drawable/live_workout_button_secondary_off</item>
+    <item name="android:clickable">true</item>
+    <item name="android:visibility">gone</item>
+  </style>
+</resources>

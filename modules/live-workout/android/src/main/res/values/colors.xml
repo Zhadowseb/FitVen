@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The card's colours on a light notification shade (e.g. One UI in light
+     mode): dark text, and the tints laid over black. values-night holds the
+     dark shade the design is drawn for. The orange and the ink on it are the
+     same in both. -->
+<resources>
+  <color name="live_workout_orange">#F7742E</color>
+  <color name="live_workout_ink">#14100C</color>
+
+  <color name="live_workout_text_primary">#14161C</color>
+  <color name="live_workout_text_secondary">#5A5F6B</color>
+  <!-- The current exercise's row label, between the two. -->
+  <color name="live_workout_text_label">#3A3E48</color>
+
+  <!-- black @ 0.14: the rings' and the rest bar's track -->
+  <color name="live_workout_track">#24000000</color>
+  <!-- black @ 0.08: Forrige, Næste, −15 s, +15 s -->
+  <color name="live_workout_button">#14000000</color>
+  <!-- black @ 0.06: a set still to do -->
+  <color name="live_workout_chip_todo">#0F000000</color>
+  <!-- black @ 0.12: the touch ripple -->
+  <color name="live_workout_ripple">#1F000000</color>
+
+  <!-- orange @ 0.12: a done set; orange @ 0.16: the set being done -->
+  <color name="live_workout_chip_done">#1FF7742E</color>
+  <color name="live_workout_chip_now">#29F7742E</color>
+  <!-- black @ 0.16 on the orange buttons -->
+  <color name="live_workout_ripple_on_orange">#29000000</color>
+</resources>

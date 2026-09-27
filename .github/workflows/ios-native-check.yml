@@ -73,6 +73,18 @@ jobs:
             build 2>&1 | tee build/xcodebuild.log | grep -E "error:|warning: .*(LiveWorkout|widgets)|\*\* BUILD" || true
           grep -q "\*\* BUILD SUCCEEDED \*\*" build/xcodebuild.log
 
+      # Et groent byg beviser ikke, at widget-extensionen kom med. Den ligger
+      # som en .appex i appens PlugIns, og Live Activities skal vaere slaaet
+      # til i appens Info.plist.
+      - name: The widget is in the app
+        run: |
+          APP=$(ls -d build/derived/Build/Products/Debug-iphonesimulator/*.app | head -1)
+          ls "$APP/PlugIns"
+          test -n "$(ls -d "$APP"/PlugIns/*.appex 2>/dev/null)"
+          test "$(/usr/libexec/PlistBuddy -c "Print :NSSupportsLiveActivities" "$APP/Info.plist")" = "true"
+          grep -q "LiveWorkoutLiveActivity.swift" build/xcodebuild.log
+          grep -q "LiveWorkoutModule.swift" build/xcodebuild.log
+
       # Fejlene samlet et sted, saa de kan laeses uden at hente hele loggen.
       - name: Errors
         if: failure()

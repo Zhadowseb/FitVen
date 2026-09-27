@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A set still to do, and the "+n" chip: a faint tint. -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+  android:id="@+id/live_workout_chip_text"
+  style="@style/LiveWorkout.Text.Heavy.Chip"
+  android:layout_width="0dp"
+  android:layout_height="match_parent"
+  android:layout_weight="1"
+  android:background="@drawable/live_workout_chip_todo_bg"
+  android:gravity="center"
+  android:paddingStart="3dp"
+  android:paddingEnd="3dp" />

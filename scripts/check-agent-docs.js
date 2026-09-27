@@ -27,6 +27,7 @@ const DOCS = [
   "src/Database/AGENTS.md",
   "src/Services/AGENTS.md",
   "src/Sync/AGENTS.md",
+  "modules/live-workout/AGENTS.md",
 ];
 
 function read(rel) {

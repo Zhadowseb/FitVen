@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The card's colours on a dark notification shade, as designed (spec §4.6):
+     light text, and the tints laid over white. -->
+<resources>
+  <color name="live_workout_text_primary">#F2F3F5</color>
+  <color name="live_workout_text_secondary">#9CA0AB</color>
+  <color name="live_workout_text_label">#C4C7CF</color>
+
+  <!-- white @ 0.14 -->
+  <color name="live_workout_track">#24FFFFFF</color>
+  <!-- white @ 0.08 -->
+  <color name="live_workout_button">#14FFFFFF</color>
+  <!-- white @ 0.06 -->
+  <color name="live_workout_chip_todo">#0FFFFFFF</color>
+  <!-- white @ 0.16 -->
+  <color name="live_workout_ripple">#29FFFFFF</color>
+</resources>

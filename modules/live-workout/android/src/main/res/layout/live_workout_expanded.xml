@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 1e expanded (about 218 dp, under the 252 limit): the content row, the set
+     rows, and Forrige · Sæt færdigt · Næste. For "no sets yet" / "all sets
+     done" only the title is shown. Forrige and Næste each have a dimmed twin
+     (40 %) that is shown instead when the card cannot move that way; it
+     swallows the tap, so a tap on it does nothing. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="wrap_content"
+  android:orientation="vertical">
+
+  <include layout="@layout/live_workout_part_header" />
+
+  <LinearLayout
+    android:id="@+id/live_workout_row_current"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="14dp"
+    android:orientation="vertical">
+
+    <TextView
+      android:id="@+id/live_workout_row_current_label"
+      style="@style/LiveWorkout.Text.Heavy.RowLabel"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content" />
+
+    <LinearLayout
+      android:id="@+id/live_workout_chips_current"
+      android:layout_width="match_parent"
+      android:layout_height="26dp"
+      android:layout_marginTop="5dp"
+      android:divider="@drawable/live_workout_chip_gap"
+      android:orientation="horizontal"
+      android:showDividers="middle" />
+  </LinearLayout>
+
+  <include layout="@layout/live_workout_part_next_row" />
+
+  <LinearLayout
+    android:id="@+id/live_workout_buttons"
+    android:layout_width="match_parent"
+    android:layout_height="40dp"
+    android:layout_marginTop="14dp"
+    android:baselineAligned="false"
+    android:orientation="horizontal">
+
+    <LinearLayout
+      android:id="@+id/live_workout_prev"
+      style="@style/LiveWorkout.Button"
+      android:layout_width="0dp"
+      android:layout_height="match_parent"
+      android:layout_weight="1"
+      android:background="@drawable/live_workout_button_secondary">
+
+      <ImageView
+        android:layout_width="14dp"
+        android:layout_height="14dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/live_workout_ic_chevron_left"
+        android:tint="@color/live_workout_text_primary" />
+
+      <TextView
+        android:id="@+id/live_workout_prev_text"
+        style="@style/LiveWorkout.Text.Heavy.Button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp" />
+    </LinearLayout>
+
+    <LinearLayout
+      android:id="@+id/live_workout_prev_off"
+      style="@style/LiveWorkout.Button.Off"
+      android:layout_width="0dp"
+      android:layout_height="match_parent"
+      android:layout_weight="1">
+
+      <ImageView
+        android:layout_width="14dp"
+        android:layout_height="14dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/live_workout_ic_chevron_left"
+        android:tint="@color/live_workout_text_primary" />
+
+      <TextView
+        android:id="@+id/live_workout_prev_off_text"
+        style="@style/LiveWorkout.Text.Heavy.Button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp" />
+    </LinearLayout>
+
+    <LinearLayout
+      android:id="@+id/live_workout_complete"
+      style="@style/LiveWorkout.Button"
+      android:layout_width="0dp"
+      android:layout_height="match_parent"
+      android:layout_marginStart="8dp"
+      android:layout_marginEnd="8dp"
+      android:layout_weight="1.4"
+      android:background="@drawable/live_workout_button_primary">
+
+      <ImageView
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/live_workout_ic_check"
+        android:tint="@color/live_workout_ink" />
+
+      <TextView
+        android:id="@+id/live_workout_complete_text"
+        style="@style/LiveWorkout.Text.Heavy.Button.Primary"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp" />
+    </LinearLayout>
+
+    <LinearLayout
+      android:id="@+id/live_workout_next"
+      style="@style/LiveWorkout.Button"
+      android:layout_width="0dp"
+      android:layout_height="match_parent"
+      android:layout_weight="1"
+      android:background="@drawable/live_workout_button_secondary">
+
+      <TextView
+        android:id="@+id/live_workout_next_text"
+        style="@style/LiveWorkout.Text.Heavy.Button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="4dp" />
+
+      <ImageView
+        android:layout_width="14dp"
+        android:layout_height="14dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/live_workout_ic_chevron_right"
+        android:tint="@color/live_workout_text_primary" />
+    </LinearLayout>
+
+    <LinearLayout
+      android:id="@+id/live_workout_next_off"
+      style="@style/LiveWorkout.Button.Off"
+      android:layout_width="0dp"
+      android:layout_height="match_parent"
+      android:layout_weight="1">
+
+      <TextView
+        android:id="@+id/live_workout_next_off_text"
+        style="@style/LiveWorkout.Text.Heavy.Button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="4dp" />
+
+      <ImageView
+        android:layout_width="14dp"
+        android:layout_height="14dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/live_workout_ic_chevron_right"
+        android:tint="@color/live_workout_text_primary" />
+    </LinearLayout>
+  </LinearLayout>
+</LinearLayout>

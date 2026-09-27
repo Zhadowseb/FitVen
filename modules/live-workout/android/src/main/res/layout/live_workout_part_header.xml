@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The expanded card's content row (52 dp), in 1e and 1f: eyebrow, title and
+     subtitle on the left, and the two rings, "3/4 SÆT" and "2/6 ØVELSE". -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="wrap_content"
+  android:baselineAligned="false"
+  android:minHeight="52dp"
+  android:gravity="center_vertical"
+  android:orientation="horizontal">
+
+  <LinearLayout
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:layout_weight="1"
+    android:orientation="vertical">
+
+    <TextView
+      android:id="@+id/live_workout_eyebrow"
+      style="@style/LiveWorkout.Text.Heavy.Eyebrow"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content" />
+
+    <TextView
+      android:id="@+id/live_workout_title"
+      style="@style/LiveWorkout.Text.Heavy.Title"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginTop="3dp" />
+
+    <TextView
+      android:id="@+id/live_workout_subtitle"
+      style="@style/LiveWorkout.Text.Semibold.Subtitle"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginTop="2dp" />
+  </LinearLayout>
+
+  <LinearLayout
+    android:id="@+id/live_workout_rings"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="12dp"
+    android:orientation="horizontal">
+
+    <FrameLayout
+      android:layout_width="52dp"
+      android:layout_height="52dp"
+      android:background="@drawable/live_workout_ring_track_large">
+
+      <ImageView
+        android:id="@+id/live_workout_ring_sets_fill"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="fitXY" />
+
+      <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+        <TextView
+          android:id="@+id/live_workout_ring_sets_text"
+          style="@style/LiveWorkout.Text.Heavy.RingText"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content" />
+
+        <TextView
+          android:id="@+id/live_workout_ring_sets_label"
+          style="@style/LiveWorkout.Text.Heavy.RingLabel"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_marginTop="1dp" />
+      </LinearLayout>
+    </FrameLayout>
+
+    <FrameLayout
+      android:layout_width="52dp"
+      android:layout_height="52dp"
+      android:layout_marginStart="8dp"
+      android:background="@drawable/live_workout_ring_track_large">
+
+      <ImageView
+        android:id="@+id/live_workout_ring_exercise_fill"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="fitXY" />
+
+      <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+        <TextView
+          android:id="@+id/live_workout_ring_exercise_text"
+          style="@style/LiveWorkout.Text.Heavy.RingText"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content" />
+
+        <TextView
+          android:id="@+id/live_workout_ring_exercise_label"
+          style="@style/LiveWorkout.Text.Heavy.RingLabel"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_marginTop="1dp" />
+      </LinearLayout>
+    </FrameLayout>
+  </LinearLayout>
+</LinearLayout>
