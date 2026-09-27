@@ -27,6 +27,7 @@ import WorkoutCopyTargetModal from "../../Resources/Components/WorkoutCopyTarget
 import { programService, workoutService } from "../../Services";
 import { formatDate } from "../../Utils/dateUtils";
 import { STARTED_FROM } from "@utils/startedFrom";
+import { isWorkoutTypeId, workoutDisplayName } from "@utils/workoutTypeLabel";
 import { useTranslation } from "@localization";
 
 import Run from "./WorkoutTypes/Run/Run";
@@ -141,7 +142,12 @@ const WorkoutPage = ({ route }) => {
   const canRepostWorkoutSummary = workoutType === "Resistance";
 
   const openLabelModal = () => {
-    setNextWorkoutLabel(workoutInstanceLabel ?? "");
+    // A workout nobody named is labelled with its type id ("Resistance").
+    // That is not a name to edit - saved unchanged it would turn the
+    // translated type into a name of its own - so the field starts empty.
+    setNextWorkoutLabel(
+      isWorkoutTypeId(workoutInstanceLabel) ? "" : workoutInstanceLabel ?? ""
+    );
     setOptionsBottomsheetVisible(false);
     setLabelModalVisible(true);
   };
@@ -341,7 +347,7 @@ const WorkoutPage = ({ route }) => {
     onClose={() => setOptionsBottomsheetVisible(false)}
   >
     <View style={[styles.bottomsheetTitle, { borderBottomColor: theme.hairline }]}>
-      <ThemedText>{workoutLabel}</ThemedText>
+      <ThemedText>{workoutDisplayName(workoutLabel, t)}</ThemedText>
       <ThemedText>{workoutSubtitle}</ThemedText>
     </View>
 
@@ -482,8 +488,8 @@ const WorkoutPage = ({ route }) => {
         <Resistance
           workout_id={workout_id}
           date={workoutDate}
-          workoutLabel={workoutLabel}
-          autoNamedLabel={autoNamedLabel}
+          workoutLabel={workoutDisplayName(workoutLabel, t)}
+          autoNamedLabel={workoutDisplayName(autoNamedLabel, t)}
           workoutInstanceLabel={workoutInstanceLabel}
           restartRequestKey={restartRequestKey}
           finishRequestKey={finishRequestKey}
@@ -527,7 +533,7 @@ const WorkoutPage = ({ route }) => {
           >
             {isRunWorkout && runHeaderTitle
               ? runHeaderTitle
-              : workoutLabel}
+              : workoutDisplayName(workoutLabel, t)}
           </ThemedTitle>
 
           {!!workoutSubtitle && (

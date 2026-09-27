@@ -37,6 +37,7 @@ import {
 } from "../../../../Utils/dateUtils";
 import StartProgramModal from "../../../ProgramOverviewPage/Components/StartProgramModal";
 import { useTranslation } from "@localization";
+import { workoutTypeLabel } from "@utils/workoutTypeLabel";
 
 // "Dark glass" type pill — alpha-tinted one-offs with no shared token.
 const TYPE_PILL_GLASS = {
@@ -71,7 +72,8 @@ const STATUS_FILTERS = [
   },
 ];
 
-// Stored workout types to their display keys; anything else shows as stored.
+// Stored workout types to their display keys; anything else goes through
+// workoutTypeLabel (Utils/workoutTypeLabel.js).
 const WORKOUT_TYPE_LABEL_KEYS = {
   Resistance: "workoutStart.types.resistance",
   Run: "workoutStart.types.run",
@@ -546,7 +548,7 @@ const ProgramList = ({ refreshKey, onCreateProgram }) => {
                     >
                       {WORKOUT_TYPE_LABEL_KEYS[primaryWorkoutType]
                         ? t(WORKOUT_TYPE_LABEL_KEYS[primaryWorkoutType])
-                        : primaryWorkoutType}
+                        : workoutTypeLabel(primaryWorkoutType, t)}
                     </ThemedText>
                   </View>
                 ) : null}

@@ -77,5 +77,15 @@ export default {
     people: "People",
     following: "You follow them",
     allPeople: "See everyone and follow",
+    // Centres chosen, nothing typed yet: your centre, the ones you have
+    // trained in, and the busiest in your centre's region ({where} brings
+    // its preposition).
+    suggestions: {
+      yours: "Your centre",
+      trainedIn: "Where you have trained",
+      workouts: { one: "{count} workout", other: "{count} workouts" },
+      busiestIn: "Busiest {where}",
+      busiest: "Busiest centres",
+    },
   },
 };

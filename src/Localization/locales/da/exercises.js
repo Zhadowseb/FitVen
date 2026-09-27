@@ -75,6 +75,9 @@ export default {
     noPrimaryMuscles: "Ingen primære muskelgrupper angivet",
     noSecondaryMuscles: "Ingen sekundære muskelgrupper angivet",
     adding: "Tilføjer...",
+    // I muskelvisningen, når øvelsen har gennemførte sæt: åbner dens statistik.
+    seeStatistics: "Se statistik",
+    seeStatisticsA11y: "Se statistik for {name}",
     eyebrowWorkout: "Træning",
     eyebrowTrain: "Træn",
     title: "Øvelsesbibliotek",

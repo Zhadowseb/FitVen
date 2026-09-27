@@ -3,6 +3,7 @@
 import { formatDate, t } from "@localization";
 import { mixHexColors } from "./colorMix";
 import { calendarDaysBetween, formatRelativeDay } from "./dateUtils";
+import { workoutDisplayName } from "./workoutTypeLabel";
 
 const ACTIVITY_TILE_ORDER = {
   live: 0,
@@ -109,7 +110,9 @@ export function formatHoursAgo(value, now = Date.now()) {
  */
 export function buildActivityStatusLabel(person, { isCurrentUser = false, now = Date.now() } = {}) {
   const state = person?.activityState ?? "rest";
-  const label = person?.workoutLabel ?? null;
+  // The cloud's label, or its catalog display name, is the English type id
+  // for a workout nobody named; that is drawn in the app's language.
+  const label = workoutDisplayName(person?.workoutLabel, t);
 
   switch (state) {
     case "live":

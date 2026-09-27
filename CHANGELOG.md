@@ -1,5 +1,37 @@
 # Changelog
 
+## [2.15.2] - Unreleased
+### Fixed
+From the owner's test on an Android phone.
+- **Edit profile: changing your birth year turns Save on.** The wheel offered a day and a month that are never kept, so changing them changed nothing. It now offers the year alone, and the heart-rate settings' birth date does the same.
+- **Restart workout sets every set back to not done** (`weightliftingService.resetStrengthWorkoutSets`).
+  - Records, exercise done flags and the day, week and block completion are recomputed and uploaded.
+  - The rest timer and any open prompts are cleared.
+  - Starting again counts from zero.
+- **The lock-screen card now follows the workout clock.** The workout service's own timer writes (start, pause, resume, finish, restart, a label) went through a local `syncWorkoutTypeInstancesInBackground` that never raised the event the card rebuilds on, so the card kept an old clock and old ticks.
+  - The card's query no longer asks for `is_active`, which a pause clears, so a paused workout keeps its card instead of losing it.
+- **A paused workout keeps its time in the square in the bottom navigation** (`workoutService.getWorkoutInProgress`, `Utils/workoutClock`).
+  - The time stands still while paused and counts on when resumed.
+  - A workout paused for more than eight hours gives the square back to the plus.
+  - Only a running workout or a rest polls every second.
+- **One centre:**
+  - Search the exercises ranked at the centre by name.
+  - A real "Øvelser" section with the five most-lifted exercises and "Alle øvelser".
+  - The exercise page scrolls to the chip you opened.
+- **Fremgang:**
+  - The Bænk/Squat/Dødløft tabs and the fixed three-lift card are gone. The page lists everybody's biggest rise, most first, and "Din fremgang" shows your rises biggest first.
+  - The server still counts only the three lifts, and changing that takes a migration.
+- **Explore search:** choosing Centres with nothing typed lists three groups: your centre, the centres you have trained in, and the busiest centres in your centre's region.
+- **Home, your split in the first week:** "Beregner…" sits beside the seven dots, and the explanation has its own line under them instead of being cut off. The state after the week is the same.
+- **Train, Din form:** a week counts towards the streak at 2 workouts, not 3. The Flid category on the centre leaderboards still counts 3.
+- **Exercise library:** the muscle view of an exercise you have trained has "Se statistik", which opens its statistics page. Back returns to the library.
+- **Workout types in Danish.** Types, and workouts named after them (Resistance, Upperbody, Legs, Run, Walk…), now read Styrketræning, Overkrop, Ben, Løb and Gåtur (`Utils/workoutTypeLabel`, locale area `workoutTypes`).
+  - This covers the workout screen, the calendar, the start sheet, Home, Train, programs, the library, posts and friends' activity.
+  - Names you typed yourself, and everything that is stored, are unchanged.
+  - "Skift navn" starts empty for a workout named only after its type.
+- `npm run test:workout-restart` runs the restart, the second start and the paused square against the app's schema in an in-memory SQLite.
+
+---
 ## [2.15.1] - Unreleased
 ### Changed
 - **The open Android notification during a set (1e) has weight buttons:** −step · Sæt færdigt · +step, in place of Forrige · Sæt færdigt · Næste.
