@@ -1,4 +1,4 @@
-import { TouchableOpacity, View } from "react-native";
+import { TouchableOpacity, Vibration, View } from "react-native";
 import { useColorScheme } from "react-native";
 import { useEffect, useRef, useState } from "react";
 import { useSQLiteContext } from "expo-sqlite";
@@ -26,6 +26,7 @@ import Note from "@resources/Icons/UI-icons/Note";
 import Amrap from "@resources/Icons/UI-icons/Amrap";
 import Expand from "@resources/Icons/UI-icons/Expand";
 import Plus from "@resources/Icons/UI-icons/Plus";
+import Minus from "@resources/Icons/UI-icons/Minus";
 import Cogwheel from "@resources/Icons/UI-icons/Cogwheel";
 import Star from "@resources/Icons/UI-icons/Star";
 import { weightliftingService } from "@services";
@@ -48,7 +49,15 @@ import {
   orderSetsForDisplay,
   resolveSetType,
 } from "@utils/setTypes";
+import {
+  DEFAULT_WEIGHT_STEP,
+  isSteppableSet,
+  showsWeightStepper,
+  stepAllWeights,
+  stepWeight,
+} from "@utils/weightStep";
 import SetTypeSheet from "./SetTypeSheet";
+import UndoToast from "./UndoToast";
 import { isToneRow, setTypeColor } from "./setTypeColors";
 
 const SET_LIST_COLUMN_KEYS = [
@@ -83,6 +92,15 @@ const WARMUP_FOLD_EASING = Easing.bezier(0.2, 0.8, 0.2, 1);
 
 // How long a deleted set can still be brought back.
 const UNDO_DELETE_MS = 4000;
+
+// The weight steppers (1e): a press is saved this long after the last one, so
+// five quick taps are one write. Held, a button repeats after the first
+// delay at the second, and the write waits for the release.
+const WEIGHT_STEP_SAVE_DELAY_MS = 400;
+const WEIGHT_STEP_REPEAT_DELAY_MS = 500;
+const WEIGHT_STEP_REPEAT_INTERVAL_MS = 150;
+const WEIGHT_STEP_HAPTIC_MS = 8;
+const WEIGHT_STEP_HIT_SLOP = { top: 9, bottom: 9, left: 6, right: 6 };
 
 // What the person last did by hand to an exercise's warm-ups, "open" or
 // "folded", kept for the session. Opened by hand, they no longer fold by
@@ -179,6 +197,13 @@ const SetList = ({
   recordControlFillColor,
   recordControlTextColor,
   onWorkoutMetadataChange,
+  // The weight steppers (1e): one step for this exercise, the exercise's own
+  // weight mode (a bodyweight exercise has none), and the last weight from
+  // the history panel when it has been read - where + starts on an empty set
+  // with nothing above it.
+  weightStep = DEFAULT_WEIGHT_STEP,
+  exerciseWeightMode = null,
+  historyWeight = null,
 }) => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -234,10 +259,20 @@ const SetList = ({
   const deletedSetIdsRef = useRef(new Set());
   const updateUIRef = useRef(updateUI);
   const onWorkoutMetadataChangeRef = useRef(onWorkoutMetadataChange);
+  // Weights the steppers changed and the database does not have yet, by set.
+  const pendingWeightsRef = useRef(new Map());
+  const weightSaveTimerRef = useRef(null);
+  const weightRepeatTimerRef = useRef(null);
+  const flushWeightStepsRef = useRef(null);
+  const localSetsRef = useRef(sets);
+  const mountedRef = useRef(true);
 
   updateUIRef.current = updateUI;
   onWorkoutMetadataChangeRef.current = onWorkoutMetadataChange;
   const resolvedVisibleColumns = resolveSetListVisibleColumns(visibleColumns);
+  const showWeightStepper = showsWeightStepper(resolvedVisibleColumns, {
+    weightMode: exerciseWeightMode,
+  });
 
   const [setOptionsVisible, setSetOptionsVisible] = useState(false);
   const [selectedSet, set_selectedSet] = useState(null);
@@ -268,8 +303,17 @@ const SetList = ({
   );
   const activeRestTimerRef = useRef(null);
 
+  // A step not saved yet stays on screen when the list is read again.
   useEffect(() => {
-    setLocalSets(sets);
+    const pending = pendingWeightsRef.current;
+
+    setLocalSets(
+      pending.size > 0
+        ? (sets ?? []).map((set) =>
+            pending.has(set.sets_id) ? { ...set, weight: pending.get(set.sets_id) } : set
+          )
+        : sets
+    );
   }, [sets]);
 
   useEffect(() => {
@@ -498,7 +542,11 @@ const SetList = ({
     { key: "reps", style: styles.reps, flexValue: 13 },
     { key: "rpe", style: styles.rpe, flexValue: 9 },
     { key: "rm_percentage", style: styles.rm_percentage, flexValue: 14 },
-    { key: "weight", style: styles.weight, flexValue: 20 },
+    // Wider with the steppers, and the header and the add-set row with it,
+    // so the columns still line up.
+    showWeightStepper
+      ? { key: "weight", style: styles.weightWithStepper, flexValue: 30 }
+      : { key: "weight", style: styles.weight, flexValue: 20 },
     { key: "done", style: styles.done, flexValue: 14 },
   ];
 
@@ -851,6 +899,9 @@ const SetList = ({
       return;
     }
 
+    // A number typed in wins over a step still waiting to be saved.
+    pendingWeightsRef.current.delete(setId);
+
     const result = await weightliftingService.updateSetWeight(db, {
       setId,
       weight: value,
@@ -881,6 +932,233 @@ const SetList = ({
     applyPersonalRecordSetIds(result.personalRecordSetIds);
     updateUI();
   };
+
+  /* ------------------------------------------------ the weight steppers -- */
+
+  localSetsRef.current = localSets;
+
+  const weightOf = (set) => {
+    const pending = pendingWeightsRef.current;
+
+    return pending.has(set?.sets_id) ? pending.get(set.sets_id) : parseWeight(set?.weight);
+  };
+
+  // Where + starts on an empty set: the nearest set above it with a weight,
+  // then last time, then nothing (and so 0 + a step).
+  const startingWeightFor = (setId) => {
+    const ordered = orderSetsForDisplay(localSetsRef.current ?? []);
+    const index = ordered.findIndex((set) => set.sets_id === setId);
+
+    for (let position = index - 1; position >= 0; position -= 1) {
+      const weight = weightOf(ordered[position]);
+
+      if (weight !== null) {
+        return weight;
+      }
+    }
+
+    return parseWeight(historyWeight);
+  };
+
+  // Shown at once and saved a little later, all of it in one write.
+  const applyWeightSteps = (changes) => {
+    if (!changes.length) {
+      return false;
+    }
+
+    const nextBySetId = new Map(changes.map((change) => [change.setId, change.weight]));
+
+    for (const change of changes) {
+      pendingWeightsRef.current.set(change.setId, change.weight);
+    }
+
+    setLocalSets((prev) =>
+      prev.map((set) =>
+        nextBySetId.has(set.sets_id) ? { ...set, weight: nextBySetId.get(set.sets_id) } : set
+      )
+    );
+    Vibration.vibrate(WEIGHT_STEP_HAPTIC_MS);
+
+    clearTimeout(weightSaveTimerRef.current);
+    weightSaveTimerRef.current = setTimeout(
+      () => flushWeightStepsRef.current?.(),
+      WEIGHT_STEP_SAVE_DELAY_MS
+    );
+
+    return true;
+  };
+
+  const stepSetWeight = (setId, direction) => {
+    const set = (localSetsRef.current ?? []).find((candidate) => candidate.sets_id === setId);
+
+    if (!set || !isPersistedSet(setId) || !isSteppableSet(set)) {
+      return false;
+    }
+
+    const current = weightOf(set);
+    const next = stepWeight(current, direction, weightStep, {
+      startFrom: current === null ? startingWeightFor(setId) : null,
+    });
+
+    return next === null ? false : applyWeightSteps([{ setId, weight: next }]);
+  };
+
+  const steppableSets = () =>
+    orderSetsForDisplay(localSetsRef.current ?? [])
+      .filter(
+        (set) =>
+          isPersistedSet(set.sets_id) &&
+          set.sets_id !== pendingDeleteRef.current?.setId &&
+          !deletedSetIdsRef.current.has(set.sets_id)
+      )
+      .map((set) => ({ ...set, weight: weightOf(set) }));
+
+  const stepAllSetWeights = (direction) =>
+    applyWeightSteps(stepAllWeights(steppableSets(), direction, weightStep));
+
+  const stopWeightRepeat = () => {
+    clearInterval(weightRepeatTimerRef.current);
+    weightRepeatTimerRef.current = null;
+  };
+
+  // Held: one step now, then one every 150 ms until the finger lifts or the
+  // weight cannot move further. Each step pushes the save back, so the write
+  // happens once, after the release.
+  const startWeightRepeat = (step) => {
+    stopWeightRepeat();
+
+    if (!step()) {
+      return;
+    }
+
+    weightRepeatTimerRef.current = setInterval(() => {
+      if (!step()) {
+        stopWeightRepeat();
+      }
+    }, WEIGHT_STEP_REPEAT_INTERVAL_MS);
+  };
+
+  flushWeightStepsRef.current = async () => {
+    clearTimeout(weightSaveTimerRef.current);
+    weightSaveTimerRef.current = null;
+
+    const changes = [...pendingWeightsRef.current.entries()].map(([setId, weight]) => ({
+      setId,
+      weight,
+    }));
+
+    if (changes.length === 0) {
+      return;
+    }
+
+    pendingWeightsRef.current = new Map();
+
+    try {
+      let saved;
+      let personalRecordSetIds;
+
+      if (changes.length === 1) {
+        const result = await weightliftingService.updateSetWeight(db, changes[0]);
+
+        saved = [{ setId: changes[0].setId, weight: result.weight, rmPercentage: result.rmPercentage }];
+        personalRecordSetIds = result.personalRecordSetIds;
+      } else {
+        const result = await weightliftingService.updateSetWeights(db, changes);
+
+        saved = result.sets;
+        personalRecordSetIds = result.personalRecordSetIds;
+      }
+
+      if (mountedRef.current) {
+        const savedBySetId = new Map(saved.map((set) => [set.setId, set]));
+
+        // The 1RM % follows the weight; a set pressed again meanwhile keeps
+        // the newer weight on screen.
+        setLocalSets((prev) =>
+          prev.map((set) => {
+            const result = savedBySetId.get(set.sets_id);
+
+            if (!result) {
+              return set;
+            }
+
+            return pendingWeightsRef.current.has(set.sets_id)
+              ? { ...set, rm_percentage: result.rmPercentage }
+              : { ...set, weight: result.weight, rm_percentage: result.rmPercentage };
+          })
+        );
+        applyPersonalRecordSetIds(personalRecordSetIds);
+      }
+
+      updateUIRef.current?.();
+    } catch (error) {
+      console.error("Error saving the weight steps", error);
+    }
+  };
+
+  // Leaving with a step not saved yet saves it now.
+  useEffect(
+    () => () => {
+      mountedRef.current = false;
+      stopWeightRepeat();
+      flushWeightStepsRef.current?.();
+    },
+    []
+  );
+
+  const renderWeightStepButton = ({
+    direction,
+    onStep,
+    disabled,
+    accessibilityLabel,
+    color,
+    iconSize,
+  }) => {
+    const Icon = direction > 0 ? Plus : Minus;
+
+    return (
+      <TouchableOpacity
+        activeOpacity={0.6}
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel}
+        accessibilityState={{ disabled }}
+        disabled={disabled}
+        hitSlop={WEIGHT_STEP_HIT_SLOP}
+        delayLongPress={WEIGHT_STEP_REPEAT_DELAY_MS}
+        onPress={() => onStep()}
+        onLongPress={() => startWeightRepeat(onStep)}
+        onPressOut={stopWeightRepeat}
+        style={[styles.weightStepButton, disabled && styles.weightStepButtonDimmed]}
+      >
+        <Icon width={iconSize} height={iconSize} color={color} thickness={2.6} />
+      </TouchableOpacity>
+    );
+  };
+
+  const weightStepLabel = formatNumber(weightStep, { maximumFractionDigits: 2 });
+  const headerSteppable = showWeightStepper
+    ? steppableSets().filter((set) => isSteppableSet(set) && set.weight !== null)
+    : [];
+  // In the header: every unfinished set at once. Dimmed with nothing to move.
+  const weightStepper = showWeightStepper
+    ? {
+        renderButton: (direction, { color, iconSize }) =>
+          renderWeightStepButton({
+            direction,
+            onStep: () => stepAllSetWeights(direction),
+            disabled:
+              direction > 0
+                ? headerSteppable.length === 0
+                : !headerSteppable.some((set) => set.weight > 0),
+            accessibilityLabel: t(
+              direction > 0 ? "workout.setList.weightPlusAll" : "workout.setList.weightMinusAll",
+              { step: weightStepLabel }
+            ),
+            color,
+            iconSize,
+          }),
+      }
+    : null;
 
   const handleOpenSetOptions = (set) => {
     set_selectedSet(set);
@@ -1078,9 +1356,11 @@ const SetList = ({
         const weight = parseWeight(set.weight);
         const drop =
           parentWeight !== null && weight !== null ? parentWeight - weight : null;
-
-        return renderEditableValue({
+        const hasSteppers =
+          showWeightStepper && isSteppableSet(set) && isPersistedSet(set.sets_id);
+        const value = renderEditableValue({
           cellKey: `${set.sets_id}:weight`,
+          containerStyle: hasSteppers ? styles.weightStepperValue : undefined,
           value: set.weight?.toString() ?? "",
           suffix: "kg",
           // How far it dropped from the set above: "70 kg -17,5".
@@ -1096,6 +1376,44 @@ const SetList = ({
             ) : null,
           onCommit: (value) => updateWeight(value, set.sets_id),
         });
+
+        // Ticked off, the set is what was lifted: no buttons. Untick it and
+        // they are back, without an animation, so the row does not jump.
+        if (!hasSteppers) {
+          return value;
+        }
+
+        const label = labelBySetId.get(set.sets_id)?.label ?? String(set.set_number ?? "");
+        const stepColor = theme.quietText;
+
+        return (
+          <View style={styles.weightStepperCell}>
+            {renderWeightStepButton({
+              direction: -1,
+              onStep: () => stepSetWeight(set.sets_id, -1),
+              // Nothing to take from an empty weight or from 0.
+              disabled: weight === null || weight <= 0,
+              accessibilityLabel: t("workout.setList.weightMinus", {
+                step: weightStepLabel,
+                label,
+              }),
+              color: stepColor,
+              iconSize: 14,
+            })}
+            {value}
+            {renderWeightStepButton({
+              direction: 1,
+              onStep: () => stepSetWeight(set.sets_id, 1),
+              disabled: false,
+              accessibilityLabel: t("workout.setList.weightPlus", {
+                step: weightStepLabel,
+                label,
+              }),
+              color: stepColor,
+              iconSize: 14,
+            })}
+          </View>
+        );
       }
 
       case "done": {
@@ -1535,6 +1853,7 @@ const SetList = ({
         {hasSets && (
           <Title
             visibleColumns={renderedVisibleColumns}
+            weightStepper={weightStepper}
           />
         )}
 
@@ -1602,33 +1921,11 @@ const SetList = ({
       </ThemedCard>
 
       {pendingDelete ? (
-        <View
-          style={[
-            styles.undoToast,
-            {
-              backgroundColor: theme.cardBackground ?? cellSurface,
-              borderColor: tableBorder,
-            },
-          ]}
-        >
-          <ThemedText
-            style={styles.undoToastText}
-            setColor={theme.title}
-            numberOfLines={1}
-          >
-            {t("workout.setType.deleted", { label: pendingDelete.label })}
-          </ThemedText>
-          <TouchableOpacity
-            activeOpacity={0.8}
-            accessibilityRole="button"
-            hitSlop={10}
-            onPress={undoPendingDelete}
-          >
-            <ThemedText style={styles.undoToastAction} setColor={primaryTextColor}>
-              {t("workout.setType.undo")}
-            </ThemedText>
-          </TouchableOpacity>
-        </View>
+        <UndoToast
+          message={t("workout.setType.deleted", { label: pendingDelete.label })}
+          actionLabel={t("workout.setType.undo")}
+          onUndo={undoPendingDelete}
+        />
       ) : null}
 
       <SetTypeSheet

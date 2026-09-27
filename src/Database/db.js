@@ -447,6 +447,8 @@ async function ensureExerciseColumnPreferenceSchema(db) {
     ["cloud_exercise_id", "INTEGER"],
     ["exercise_name", "TEXT NOT NULL DEFAULT ''"],
     ["visible_columns", "TEXT NOT NULL DEFAULT '{}'"],
+    // 'total' | 'per_side' for a catalog exercise (4d); NULL when never chosen.
+    ["weight_mode", "TEXT"],
     ["needs_sync", "INTEGER NOT NULL DEFAULT 1"],
     ["updated_at", "TEXT NOT NULL DEFAULT (datetime('now'))"],
   ]);
@@ -1851,8 +1853,22 @@ export async function initializeDatabase(db) {
     ["visible_columns", "TEXT"],
     ["note", "TEXT"],
     ["done", "INTEGER NOT NULL DEFAULT 0"],
+    // How the workout's weights for the exercise are written (4d). No rebuild
+    // above has to carry it: the rebuild is for tables older than the column.
+    ["weight_mode", "TEXT"],
     ["needs_sync", "INTEGER NOT NULL DEFAULT 1"],
   ]);
+  // NULL means total - a row from before the column, or one an older app put
+  // in the cloud - and is written down as total, so every instance on the
+  // phone says how its weights are written and a later switch of the
+  // exercise's choice cannot change what an old workout meant. Not marked
+  // for upload: the cloud reads a null the same way. Idempotent; after the
+  // first start it only meets rows an older app sent.
+  await db.execAsync(`
+    UPDATE Exercise_Instance
+    SET weight_mode = 'total'
+    WHERE weight_mode IS NULL;
+  `);
   await migrateExerciseInstanceDeleteQueueSchema(db);
   await ensureTableColumns(db, "Exercise_Instance_Sync_Delete", [
     ["sync_id", "TEXT"],

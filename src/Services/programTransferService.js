@@ -1,5 +1,6 @@
 import { amrapFlagFor, resolveSetType } from "@utils/setTypes";
 import { STARTED_FROM } from "@utils/startedFrom";
+import { normalizeInstanceWeightMode } from "@utils/weightMode";
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
@@ -324,7 +325,8 @@ async function getProgramExportTables(db, programId) {
           e.sets,
           e.visible_columns,
           e.note,
-          e.done
+          e.done,
+          e.weight_mode
        FROM Exercise_Instance e
        JOIN Workout_Type_Instance w ON w.workout_id = e.workout_type_instance_id
        JOIN Day d ON d.day_id = w.day_id
@@ -727,8 +729,9 @@ async function insertImportedProgram(db, payload) {
           visible_columns,
           note,
           done,
+          weight_mode,
           needs_sync
-        ) VALUES (NULL, NULL, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, 1);`,
+        ) VALUES (NULL, NULL, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, 'total'), 1);`,
         sqliteParams([
           createLocalUuid(),
           createNextSyncVersion(),
@@ -743,6 +746,8 @@ async function insertImportedProgram(db, payload) {
           normalizeVisibleColumns(exercise.visible_columns),
           normalizeText(exercise.note),
           toBooleanInt(exercise.done),
+          // A file from before 4d has none: its weights were totals.
+          normalizeInstanceWeightMode(exercise.weight_mode),
         ])
       );
 

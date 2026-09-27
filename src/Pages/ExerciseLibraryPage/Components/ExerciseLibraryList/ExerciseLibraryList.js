@@ -32,6 +32,7 @@ import Library from "../../../../Resources/Icons/UI-icons/Library";
 import Plus from "../../../../Resources/Icons/UI-icons/Plus";
 import Search from "../../../../Resources/Icons/UI-icons/Search";
 import Star from "../../../../Resources/Icons/UI-icons/Star";
+import UpwardGraf from "@resources/Icons/UI-icons/UpwardGraf";
 import ExerciseMapBody from "../../../ExerciseMapPage/ExerciseMapBody";
 import ReplayHistory from "../../../../Resources/Icons/UI-icons/ReplayHistory";
 import {
@@ -603,6 +604,11 @@ const ExerciseLibraryList = ({
   // An exercise waiting for the muscle modal to be gone before its + is
   // acted on - see the modal's button.
   const pendingToggleRef = useRef(null);
+  // The catalog's muscle view: the exercise it is showing, once it is known
+  // to have finished sets - which is when "See statistics" appears - and the
+  // exercise whose statistics wait for the modal to be gone.
+  const [statisticsExerciseName, setStatisticsExerciseName] = useState(null);
+  const pendingStatisticsRef = useRef(null);
   const activeFilterCount =
     (selectedGroupKey === "all" ? 0 : 1) +
     (isAllMusclesSelected ? 0 : selectedMuscleKeys.length) +
@@ -753,6 +759,39 @@ const ExerciseLibraryList = ({
     },
     [isWorkoutPicker, navigation, onToggleExercise]
   );
+
+  // Whether the exercise in the catalog's muscle view has finished sets, and
+  // so a statistics page with something on it. Asked each time the view
+  // opens - one row at most - so a set ticked off since the list loaded
+  // counts. Until the answer is in, the button stays away rather than
+  // appearing and vanishing. The picker has no such button.
+  const selectedExerciseName = selectedExercise?.exercise_name ?? null;
+
+  useEffect(() => {
+    if (isWorkoutPicker || !selectedExerciseName) {
+      // Closed: forget the answer, so the next time the view opens it asks
+      // again instead of showing the last one.
+      setStatisticsExerciseName(null);
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    weightliftingService
+      .hasCompletedSetsForExercise(db, selectedExerciseName)
+      .then((hasSets) => {
+        if (!cancelled) {
+          setStatisticsExerciseName(hasSets ? selectedExerciseName : null);
+        }
+      })
+      .catch((error) => {
+        console.error("Could not check the exercise's finished sets:", error);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [db, isWorkoutPicker, selectedExerciseName]);
 
   const lastCatalogIndex = filteredExercises.length - 1;
   const renderCatalogRow = useCallback(
@@ -1888,6 +1927,17 @@ const ExerciseLibraryList = ({
       <ThemedModal
         visible={Boolean(selectedExercise)}
         onClose={() => setSelectedExercise(null)}
+        onDismiss={() => {
+          const exerciseName = pendingStatisticsRef.current;
+
+          pendingStatisticsRef.current = null;
+
+          // Pushed, like Records and a workout's exercise card do, so the
+          // back arrow on the statistics page comes back to this list.
+          if (exerciseName) {
+            navigation.push("RecordsExercisePage", { exerciseName });
+          }
+        }}
         title={selectedExercise?.exercise_name}
         style={styles.exerciseBodyMapModal}
         contentStyle={styles.exerciseBodyMapModalBody}
@@ -1950,6 +2000,39 @@ const ExerciseLibraryList = ({
                 />
               </View>
             </View>
+
+            {/* Only once the exercise has finished sets: before that its
+                statistics page would be empty. */}
+            {statisticsExerciseName === selectedExercise.exercise_name ? (
+              <TouchableOpacity
+                activeOpacity={0.88}
+                accessibilityRole="button"
+                accessibilityLabel={t("exercises.library.seeStatisticsA11y", {
+                  name: selectedExercise.exercise_name,
+                })}
+                onPress={() => {
+                  // The modal goes first and onDismiss above opens the page:
+                  // on iOS a screen pushed under an open Modal stays behind it.
+                  pendingStatisticsRef.current = selectedExercise.exercise_name;
+                  setSelectedExercise(null);
+                }}
+                style={[styles.exerciseBodyMapModalStatsButton, { backgroundColor: primaryColor }]}
+              >
+                <UpwardGraf
+                  width={18}
+                  height={18}
+                  color={theme.textInverted}
+                  thickness={2}
+                />
+                <ThemedText
+                  style={styles.exerciseBodyMapModalStatsButtonText}
+                  setColor={theme.textInverted}
+                  numberOfLines={1}
+                >
+                  {t("exercises.library.seeStatistics")}
+                </ThemedText>
+              </TouchableOpacity>
+            ) : null}
           </>
         ) : null}
       </ThemedModal>

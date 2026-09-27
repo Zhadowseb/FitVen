@@ -33,12 +33,6 @@ export default {
     workouts: "Træninger",
     streak: "Uger i træk",
   },
-  fremgangTabs: {
-    all: "Alle løft",
-    bench: "Bænk",
-    squat: "Squat",
-    deadlift: "Dødløft",
-  },
   units: {
     workouts: { one: "træning", other: "træninger" },
     weeks: { one: "uge", other: "uger" },
@@ -139,7 +133,7 @@ export default {
     weightClassStatic: "Kropsvægt kan ikke angives endnu, så alle er med under Alle vægte.",
     onlyVideoHint: "Viser kun løft med bekræftet video",
   },
-  // Powerliftings tre knapper nederst.
+  // Powerliftings tre knapper nederst - og løftet, en stigning på Fremgang var i.
   lifts: {
     title: "Hvert løft for sig",
     bench: "Bænkpres",

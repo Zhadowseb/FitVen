@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 1f collapsed: the orange that draws back to the left as the rest runs
+     out. No track: what it leaves is the card's own grey. The corners are
+     12 dp all round, because Android's margins keep the fill off the card's
+     edge (spec runde 2, §5.2). -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+  <item android:id="@android:id/background">
+    <shape android:shape="rectangle">
+      <solid android:color="@android:color/transparent" />
+    </shape>
+  </item>
+  <item android:id="@android:id/progress">
+    <clip
+      android:clipOrientation="horizontal"
+      android:gravity="left">
+      <shape android:shape="rectangle">
+        <corners android:radius="12dp" />
+        <solid android:color="@color/live_workout_rest_fill" />
+      </shape>
+    </clip>
+  </item>
+</layer-list>

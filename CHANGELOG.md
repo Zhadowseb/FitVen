@@ -1,15 +1,40 @@
 # Changelog
 
-## [2.15.2] - Unreleased
+## [2.16.2] - Unreleased
 ### Fixed
-- **A program, block, week or day edited while it was uploading keeps the edit.** 2.15.1 guarded workouts, exercise instances and sets, but the four levels above them still cleared `needs_sync` by id alone when the cloud answered. A program renamed, a focus changed or a day marked sick while that row was uploading lost its flag, and the download straight after the upload put the old value back.
+- **A program, block, week or day edited while it was uploading keeps the edit.** 2.15.3 guarded workouts, exercise instances and sets, but the four levels above them still cleared `needs_sync` by id alone when the cloud answered. A program renamed, a focus changed or a day marked sick while that row was uploading lost its flag, and the download straight after the upload put the old value back.
   - `markProgramSynced`, `markMesocycleSynced`, `markMicrocycleSynced` and `markDaySynced` now take `expectedSyncVersion` and clear the flag only if the row still has that `sync_version`, like the other three. A row that changed keeps its flag and its own version, records the cloud id it got back, and goes up with the next pass.
   - Every call in `programSync.js`, `mesocycleSync.js`, `microcycleSync.js` and `daySync.js`, upload and reconcile alike, passes the version of the row it read.
 - **Tests:** `npm run test:sync-lost-update` now lands an edit mid-upload at program, block, week and day too, checks the four functions directly, and checks that every call site passes the version.
 - **Docs:** `src/Services/AGENTS.md` names all seven functions, and the Known Gap for the four is gone.
 
 ---
-## [2.15.1] - Unreleased
+## [2.16.0] - Unreleased
+### Added
+- **Weight per side or for both sides.** Dumbbell, kettlebell and cable exercises get two tabs under the name on the exercise card: "Pr. side · 22,5" and "Begge sider · 45".
+  - A switch converts every set of the exercise in that workout: ×2 or ÷2, to the nearest 0.25 kg. Reps are unchanged, and empty weights stay empty.
+  - The choice is kept for the exercise and synced to a new phone, and Undo is offered for five seconds.
+  - Earlier workouts are not touched. Copied or repeated workouts follow the exercise's choice.
+- **Volume counts a weight per side twice** wherever it is summed: statistics, the trophy room's tonnes and the program overview.
+- **Records, e1RM and bests** compare older sets converted into the exercise's current way of writing it, so a switch never creates or removes a record.
+- **"pr. side"** is shown on the folded card, in the history panel, on the Records pages, in program bests and in friends' workout posts.
+- **+ and − on the weight in the set list.** With only rest, #, reps, weight and done shown:
+  - each unfinished set has − and + around its weight;
+  - the header's "− VÆGT +" moves every unfinished set at once;
+  - the step follows the exercise (`Utils/weightStep`): 2 for dumbbells; 5 for machines, cables, squats and deadlifts; otherwise 2.5;
+  - hold to repeat. It is saved once, just after the last press.
+### Changed
+- A set's weight keeps two decimals (6,25 kg) instead of one.
+### Fixed
+- `npm test` runs `test:sync-lost-update` again. Merging 2.15.3 kept the script but dropped it from the chain.
+### Cloud
+- **`20261002090000_weight-mode-per-instance.sql`** adds `weight_mode` to `exercise_instance` and `exercise_column_preferences`.
+  - It has not been run.
+  - Until it runs, the app syncs without the column and keeps the choice on the phone.
+- **Known, not new:** the cloud keeps a set's weight in whole kilos (`field("weight", int())`), so 102,5 kg or 11,25 kg per side is uploaded as 102 and 11. The phone keeps the right number.
+
+---
+## [2.15.3] - Unreleased
 ### Fixed
 - **A workout started while its restart was uploading stays started.** When the cloud answered, the upload cleared the workout's `needs_sync` by id alone. Start had written `timer_start` and `original_start_time` with a new `sync_version` in the meantime, so the start was never sent, and the download straight after the upload put the workout back to not started.
   - `markWorkoutSynced`, `markExerciseSynced` and `markSetSynced` now take `expectedSyncVersion`, the `sync_version` the row was read at, and clear the flag only if the row still has it (`WHERE … AND sync_version IS ?`). A row that changed keeps its flag and its own version, records the cloud id it got back, and goes up with the next pass.
@@ -17,6 +42,78 @@
   - The reconcile marks rows synced through the same three functions, so it has the guard too.
   - Program, block, week and day rows still clear the flag the old way.
 - **Tests:** `npm run test:sync-lost-update` runs the real sync modules against the app's schema in `node:sqlite` and an in-memory cloud, with the user's write landing while the upload is out, for all three.
+
+---
+## [2.15.2] - Unreleased
+### Fixed
+From the owner's test on an Android phone.
+- **Edit profile: changing your birth year turns Save on.** The wheel offered a day and a month that are never kept, so changing them changed nothing. It now offers the year alone, and the heart-rate settings' birth date does the same.
+- **Restart workout sets every set back to not done** (`weightliftingService.resetStrengthWorkoutSets`).
+  - Records, exercise done flags and the day, week and block completion are recomputed and uploaded.
+  - The rest timer and any open prompts are cleared.
+  - Starting again counts from zero.
+- **The lock-screen card now follows the workout clock.** The workout service's own timer writes (start, pause, resume, finish, restart, a label) went through a local `syncWorkoutTypeInstancesInBackground` that never raised the event the card rebuilds on, so the card kept an old clock and old ticks.
+  - The card's query no longer asks for `is_active`, which a pause clears, so a paused workout keeps its card instead of losing it.
+- **A paused workout keeps its time in the square in the bottom navigation** (`workoutService.getWorkoutInProgress`, `Utils/workoutClock`).
+  - The time stands still while paused and counts on when resumed.
+  - A workout paused for more than eight hours gives the square back to the plus.
+  - Only a running workout or a rest polls every second.
+- **One centre:**
+  - Search the exercises ranked at the centre by name.
+  - A real "Øvelser" section with the five most-lifted exercises and "Alle øvelser".
+  - The exercise page scrolls to the chip you opened.
+- **Fremgang:**
+  - The Bænk/Squat/Dødløft tabs and the fixed three-lift card are gone. The page lists everybody's biggest rise, most first, and "Din fremgang" shows your rises biggest first.
+  - The server still counts only the three lifts, and changing that takes a migration.
+- **Explore search:** choosing Centres with nothing typed lists three groups: your centre, the centres you have trained in, and the busiest centres in your centre's region.
+- **Home, your split in the first week:** "Beregner…" sits beside the seven dots, and the explanation has its own line under them instead of being cut off. The state after the week is the same.
+- **Train, Din form:** a week counts towards the streak at 2 workouts, not 3. The Flid category on the centre leaderboards still counts 3.
+- **Exercise library:** the muscle view of an exercise you have trained has "Se statistik", which opens its statistics page. Back returns to the library.
+- **Workout types in Danish.** Types, and workouts named after them (Resistance, Upperbody, Legs, Run, Walk…), now read Styrketræning, Overkrop, Ben, Løb and Gåtur (`Utils/workoutTypeLabel`, locale area `workoutTypes`).
+  - This covers the workout screen, the calendar, the start sheet, Home, Train, programs, the library, posts and friends' activity.
+  - Names you typed yourself, and everything that is stored, are unchanged.
+  - "Skift navn" starts empty for a workout named only after its type.
+- `npm run test:workout-restart` runs the restart, the second start and the paused square against the app's schema in an in-memory SQLite.
+
+---
+## [2.15.1] - Unreleased
+### Changed
+- **The open Android notification during a set (1e) has weight buttons:** −step · Sæt færdigt · +step, in place of Forrige · Sæt færdigt · Næste.
+  - Collapsed, the rest (1f) and iOS are unchanged.
+  - **A press moves only the set that is now,** to the nearest quarter kilo and never below 0.
+    - The title and the set's chip change at once.
+    - Presses add up.
+    - At 0, minus is faded and does nothing.
+    - A set without a weight (body weight) gets no buttons, and Sæt færdigt takes the row.
+  - **The step follows the exercise** (`liveWeightStepFor` in `Utils/liveWorkout`), from its name or its equipment in the catalog: 2 kg for dumbbells, 5 kg for machines, cables, squats and deadlifts, and 2.5 kg for the rest.
+  - **The queue carries the final weight, not the presses,** merged into one entry per set, so handling it twice gives the same set.
+    - It is written through `updateSetWeight`, as the weight field on the workout screen writes it.
+    - Sæt færdigt pressed after it saves the set with the new weight.
+    - An edit made to the set in the app after the press wins.
+  - **The workout screen reads its sets again after any write from the lock screen** (`subscribeLockScreenEdits` in `Utils/workoutDataEvents`), a moved weight included.
+- **The Android notification, round 2** (1e and 1f):
+  - **Open, set (1e):** NUVÆRENDE SÆT over the set, only the exercise under it, and two rings.
+    - SÆT counts the set being done ("3/4" with two done) and fills with the done ones.
+    - ØVELSE shows the exercise's place and fills with the finished exercises.
+  - **Collapsed, set:** no ring; the text and the round Sæt færdigt.
+  - **Open, rest (1f):** the same card as 1e, with NÆSTE SÆT and the next set.
+    - The pause row (PAUSE, "af 3:00", the countdown and a thin bar) takes the current exercise's place, and the next exercise stays.
+    - There is no coloured background.
+  - **Collapsed, rest:** no ring. The content area is orange at the start of the rest and drains to the left until it is grey.
+    - It redraws at most every 5 s, and at once on ±15 and Spring over.
+    - With animations switched off it stays full.
+- **Every set done: the card asks to finish.** "Alle sæt er færdige · Afslut træningen?" has one button, Afslut.
+  - The button opens the app on a link (`fitven://live-workout/finish`). App.js opens that workout, and the workout screen finishes it without asking again. Then it asks about the post, as a finish there does.
+  - On iOS it is a `Link`, so it needs no iOS 17. On Android it opens the app with the link.
+- **Android: the card keeps to the top of the notification list,** as far as Android allows without a foreground service.
+  - It uses a new silent channel at high importance (`workout_live_top`, replacing `workout_live`) and the highest priority.
+  - The notification time is the time of each post, not the workout's start, which sorted the card as old.
+  - One UI can still reorder it. Conversations, calls and media always come first.
+- **Android: the workout time is in the card itself,** next to the title when collapsed and on the eyebrow line when open. It stands still while the workout is paused and runs again when it is resumed.
+  - It used to be in the system header, where One UI dropped it on a pause and did not bring it back.
+- **Tapping the rest-is-over reminder** no longer opens the notification history. It only brings the app back.
+- **The card's state carries at most 10 sets an exercise,** so it stays under ActivityKit's 4 KB with the new fields.
+- `npm run test:live-workout` now also runs the lock screen's writes against the real schema in an in-memory SQLite. A weight moved and Sæt færdigt save the set once. The same taps handled twice change nothing. An edit made after the tap wins.
 
 ---
 ## [2.15.0] - Unreleased

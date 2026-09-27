@@ -54,6 +54,7 @@ db.exec(`
     exercise_instance_id INTEGER PRIMARY KEY AUTOINCREMENT,
     workout_type_instance_id INTEGER NOT NULL,
     exercise_name TEXT NOT NULL,
+    weight_mode TEXT,
     deleted_at TEXT
   );
   CREATE TABLE Workout_Type_Instance (

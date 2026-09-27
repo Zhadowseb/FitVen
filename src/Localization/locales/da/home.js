@@ -71,6 +71,8 @@ export default {
   split: {
     eyebrow: "Dit split",
     unnamed: "Træning {number}",
+    // Right after the seven dots; the line under them says why.
+    calculating: "Beregner…",
     forming: "Tager form efter din første uge",
     formingA11y: "Dit split tager form, dag {count} af 7",
     waiting: "Viser sig, når du gentager dine træninger",
@@ -80,7 +82,6 @@ export default {
     upNext: "{name}, næste i dit split",
   },
   workoutType: {
-    resistance: "Styrke",
     workout: "Træning",
   },
   hero: {

@@ -8,6 +8,7 @@ import {
 import { normalizeElapsedDurationSeconds } from "../Utils/timeUtils";
 import { ensureOwnProfile } from "./socialService";
 import { formatOptionalNumber } from "../Utils/numberUtils";
+import { TOTAL, convertWeight, totalLoadSql, weightModeOf } from "@utils/weightMode";
 import { attachAvatarUrls } from "./avatarUrls";
 
 const SOCIAL_POST_TABLE = "social_post";
@@ -432,6 +433,10 @@ function filterVisibleExerciseRecords(records, hiddenExerciseIdSet) {
 // Heaviest completed set per exercise from every workout performed on an
 // earlier date. The post card measures the day's top set against this, so a
 // first-ever session has no baseline and counts as a record by definition.
+//
+// As what was lifted (4d): a set written per side counts twice here, and the
+// payload converts it into the top set's own mode, so a switch between per
+// side and both sides never draws a record on the card by itself.
 async function getExercisePersonalBestsBeforeWorkout(db, workoutId) {
   const rows = await db.getAllAsync(
     `WITH target AS (
@@ -448,7 +453,7 @@ async function getExercisePersonalBestsBeforeWorkout(db, workoutId) {
      )
      SELECT
        e.exercise_name,
-       MAX(CAST(s.weight AS REAL)) AS best_weight
+       MAX(${totalLoadSql("s.weight", "e.weight_mode")}) AS best_weight
      FROM "Set" s
      JOIN Exercise_Instance e ON e.exercise_instance_id = s.exercise_instance_id
      JOIN Workout_Type_Instance w ON w.workout_id = e.workout_type_instance_id
@@ -519,6 +524,7 @@ async function getWorkoutTopSets(
          e.exercise_instance_id,
          e.exercise_name,
          e.exercise_order,
+         COALESCE(e.weight_mode, 'total') AS weight_mode,
          catalog.cloud_exercise_id,
          ROW_NUMBER() OVER (
            PARTITION BY e.exercise_instance_id
@@ -548,6 +554,7 @@ async function getWorkoutTopSets(
        cloud_exercise_id,
        exercise_name,
        weight,
+       weight_mode,
        reps,
        personal_record
      FROM completed_sets
@@ -569,6 +576,9 @@ async function getWorkoutTopSets(
       reps,
       unit: "kg",
       weightDisplay: formatWeightDisplay(weight),
+      // 'per_side' or 'total' (4d). The card adds "pr. side" in the reader's
+      // own language; an older app shows the number as before.
+      weightMode: weightModeOf(row.weight_mode),
       personalRecord: Number(row.personal_record) === 1,
     };
   });
@@ -658,7 +668,12 @@ async function buildWorkoutSummaryPayload(
   ]);
   const topSetsWithBaseline = topSets.map((topSet) => {
     const key = String(topSet.exerciseName ?? "").trim().toLowerCase();
-    const previousBest = personalBestsBefore.get(key) ?? null;
+    const previousBestLifted = personalBestsBefore.get(key) ?? null;
+    // In the top set's own mode, so the two are the same kind of number.
+    const previousBest =
+      previousBestLifted === null
+        ? null
+        : convertWeight(previousBestLifted, TOTAL, topSet.weightMode);
 
     return {
       ...topSet,

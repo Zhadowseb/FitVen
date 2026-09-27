@@ -350,17 +350,56 @@ struct LiveWorkoutIslandButton: View {
   }
 }
 
-/// Shows the iOS 17 buttons when there are any, and nothing before iOS 17.
+/// All done: the orange pill "Afslut" that opens the app on `finishUrl`,
+/// where JavaScript finishes the workout and asks about the post. A plain
+/// link, not an intent, so it works before iOS 17 too, and nothing is queued.
+struct LiveWorkoutFinishLink: View {
+  let url: URL
+  let label: String
+  let island: Bool
+
+  var body: some View {
+    Link(destination: url) {
+      LiveWorkoutPillFace(
+        systemImage: "flag.checkered",
+        text: label,
+        height: island ? 40 : 44,
+        iconSize: island ? 16 : 18,
+        textSize: island ? 13.5 : 14,
+        expands: !island
+      )
+    }
+  }
+}
+
+/// The card's buttons: the finish link when every set is done, otherwise the
+/// set and rest buttons from iOS 17, and nothing before that.
 struct LiveWorkoutButtonsGate: View {
   let display: LiveWorkoutDisplay
   let island: Bool
 
   var body: some View {
-    if #available(iOS 17.0, *) {
-      if island {
-        LiveWorkoutIslandButton(display: display)
-      } else {
-        LiveWorkoutButtonRow(display: display)
+    if let url: URL = display.finishUrl {
+      LiveWorkoutFinishLink(url: url, label: display.string("finish"), island: island)
+    } else {
+      LiveWorkoutIntentButtonsGate(display: display, island: island)
+    }
+  }
+}
+
+/// The set and rest buttons (App Intents): iOS 17 and later only.
+struct LiveWorkoutIntentButtonsGate: View {
+  let display: LiveWorkoutDisplay
+  let island: Bool
+
+  var body: some View {
+    if display.hasIntentButtons {
+      if #available(iOS 17.0, *) {
+        if island {
+          LiveWorkoutIslandButton(display: display)
+        } else {
+          LiveWorkoutButtonRow(display: display)
+        }
       }
     }
   }
@@ -422,8 +461,9 @@ struct LiveWorkoutTitles: View {
 }
 
 /// 1a / 1b: the card on the lock screen. 132 pt with buttons: padding 14,
-/// the content row (48), a gap and the buttons (44). Without buttons (iOS 16,
-/// or nothing to do) it is only the content row. No progress bar.
+/// the content row (48), a gap and the buttons (44). Without buttons (set or
+/// rest before iOS 17, no sets, or all done without a finish link) it is only
+/// the content row. No progress bar.
 struct LiveWorkoutLockScreenView: View {
   let state: LiveWorkoutState
   let isStale: Bool
@@ -434,7 +474,7 @@ struct LiveWorkoutLockScreenView: View {
       now: Date().timeIntervalSince1970,
       isStale: isStale
     )
-    let showsButtons: Bool = LiveWorkoutButtons.available && display.hasButtons
+    let showsButtons: Bool = display.hasFinishLink || (LiveWorkoutButtons.available && display.hasIntentButtons)
     let height: CGFloat? = showsButtons ? 132 : nil
 
     VStack(alignment: .leading, spacing: 0) {

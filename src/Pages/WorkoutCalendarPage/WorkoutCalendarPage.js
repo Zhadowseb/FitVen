@@ -44,6 +44,7 @@ import { addDays, parseCustomDate } from "../../Utils/dateUtils";
 import { isWorkoutComingSoon } from "../../Utils/workoutTypeAvailability";
 import { requestOpenQuickWorkoutMenu } from "../../Utils/quickWorkoutMenuEvents";
 import { STARTED_FROM } from "@utils/startedFrom";
+import { workoutDisplayName } from "@utils/workoutTypeLabel";
 import {
   WEEKDAY_LABELS,
   buildCalendarLookups,
@@ -379,6 +380,7 @@ const WorkoutCalendarPage = () => {
       pageKey,
       todayLabel,
       iconFor: getWorkoutTypeIcon,
+      t,
     });
 
   const buildMonthWeeks = (monthPage) =>
@@ -1265,7 +1267,7 @@ const WorkoutCalendarPage = () => {
                             key: workout.workout_id,
                             workout,
                             icon: iconConfig?.Icon,
-                            iconLabel: getWorkoutIconShortLabel(iconConfig) ?? getWorkoutIconLabel(workout),
+                            iconLabel: getWorkoutIconShortLabel(iconConfig) ?? getWorkoutIconLabel(workout, t),
                             completed: isCompleted,
                             hasPersonalRecord: Number(workout.has_personal_record) === 1,
                             sickCompleted: dayIsSick && isCompleted,
@@ -1507,7 +1509,7 @@ const WorkoutCalendarPage = () => {
                           style={styles.dayWorkoutIconLabel}
                           setColor={cardSurface}
                         >
-                          {getWorkoutIconShortLabel(iconConfig) ?? getWorkoutIconLabel(workout)}
+                          {getWorkoutIconShortLabel(iconConfig) ?? getWorkoutIconLabel(workout, t)}
                         </ThemedText>
                       )}
                     </View>
@@ -1518,7 +1520,7 @@ const WorkoutCalendarPage = () => {
                         setColor={titleColor}
                         numberOfLines={1}
                       >
-                        {workout.label ?? getWorkoutType(workout)}
+                        {workoutDisplayName(workout.label, t, getWorkoutType(workout))}
                       </ThemedText>
                       <ThemedText
                         style={styles.dayWorkoutStatus}

@@ -76,7 +76,13 @@ export function buildTrophyHero(sets = []) {
 
   return {
     recordCount: sets.filter((set) => set.isRecord).length,
-    heaviest: { name: heaviest.name, weight: heaviest.weight, reps: heaviest.reps, at: heaviest.at },
+    heaviest: {
+      name: heaviest.name,
+      weight: heaviest.weight,
+      reps: heaviest.reps,
+      at: heaviest.at,
+      weightMode: heaviest.weightMode,
+    },
     since: sets.reduce((earliest, set) => Math.min(earliest, set.at), Infinity),
   };
 }
@@ -128,6 +134,7 @@ export function buildPodium(sets = [], { limit = PODIUM_SIZE } = {}) {
         weight: set.weight,
         reps: set.reps,
         at: set.at,
+        weightMode: set.weightMode,
         goal,
         toGo: goal - set.weight,
       };
@@ -163,6 +170,7 @@ export function buildRecentRecords(sets = [], { now, limit = RECENT_RECORD_LIMIT
       weight: set.weight,
       reps: set.reps,
       at: set.at,
+      weightMode: set.weightMode,
       isNew: now - set.at < NEW_RECORD_DAYS * DAY_MS,
     }));
 }

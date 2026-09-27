@@ -3,7 +3,8 @@
 // Everything it draws is derived from the state by LiveWorkoutDisplay.derive,
 // the same rules Android and src/Utils/liveWorkout.js follow.
 //
-// A tap on the card itself opens the app; there is no deep link.
+// A tap on the card itself opens the app, without a deep link. The one link
+// is the all-done card's "Afslut" button, which opens `state.finishUrl`.
 
 import ActivityKit
 import SwiftUI
@@ -41,11 +42,15 @@ enum LiveWorkoutIsland {
           .padding(.trailing, 4)
       }
 
+      // All done: "Alle sæt er færdige" over "Afslut træningen?".
       DynamicIslandExpandedRegion(.center) {
-        LiveWorkoutTitles(title: display.title, subtitle: display.exerciseName)
+        LiveWorkoutTitles(
+          title: display.title,
+          subtitle: display.mode == .allDone ? display.subtitle : display.exerciseName
+        )
       }
 
-      // Row 2: "Sæt 3 af 4" and the orange pill.
+      // Row 2: "Sæt 3 af 4" and the orange pill; all done, only "Afslut".
       DynamicIslandExpandedRegion(.bottom) {
         LiveWorkoutIslandBottom(display: display)
       }
@@ -65,14 +70,16 @@ struct LiveWorkoutIslandBottom: View {
   let display: LiveWorkoutDisplay
 
   var body: some View {
-    if display.hasButtons {
+    if display.hasIntentButtons || display.hasFinishLink {
       HStack(alignment: .center, spacing: 12) {
-        Text(display.setOfTitle)
-          .font(.system(size: 17, weight: .heavy))
-          .tracking(-0.3)
-          .foregroundColor(LiveWorkoutColors.textPrimary)
-          .lineLimit(1)
-          .minimumScaleFactor(0.8)
+        if !display.setOfTitle.isEmpty {
+          Text(display.setOfTitle)
+            .font(.system(size: 17, weight: .heavy))
+            .tracking(-0.3)
+            .foregroundColor(LiveWorkoutColors.textPrimary)
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+        }
 
         Spacer(minLength: 0)
 

@@ -11,7 +11,9 @@ const DAYS = Array.from({ length: SPLIT_FORMING_DAYS }, (_, index) => index);
 /**
  * The split before there is one to show: a dot for each day of the first
  * week, filled from the day of the first finished workout on
- * (splitFormingState), and a line saying when it will be ready.
+ * (splitFormingState), "Calculating..." right after them, and under them a
+ * line saying when it will be ready. The line has the card's whole width and
+ * wraps; on the dots' line it was cut off on a phone.
  *
  * It says what the block will become rather than leaving a hole, and there is
  * nothing to open yet, so it is not a button and has no chevron. A screen
@@ -44,21 +46,27 @@ export default function SplitForming({ filledDots = 0, weekIsOver = false }) {
         },
       ]}
     >
-      <View style={styles.formingDots}>
-        {DAYS.map((day) => (
-          <View
-            key={day}
-            style={[
-              styles.formingDot,
-              day < filledDots
-                ? { backgroundColor: theme.primary }
-                : [styles.formingDotEmpty, { borderColor: withAlpha(theme.title, 0.22) }],
-            ]}
-          />
-        ))}
+      <View style={styles.formingTop}>
+        <View style={styles.formingDots}>
+          {DAYS.map((day) => (
+            <View
+              key={day}
+              style={[
+                styles.formingDot,
+                day < filledDots
+                  ? { backgroundColor: theme.primary }
+                  : [styles.formingDotEmpty, { borderColor: withAlpha(theme.title, 0.22) }],
+              ]}
+            />
+          ))}
+        </View>
+
+        <ThemedText style={styles.formingStatus} setColor={theme.title} numberOfLines={1}>
+          {t("home.split.calculating")}
+        </ThemedText>
       </View>
 
-      <ThemedText style={styles.formingText} setColor={theme.text} numberOfLines={1}>
+      <ThemedText style={styles.formingText} setColor={theme.text}>
         {message}
       </ThemedText>
     </View>

@@ -117,11 +117,24 @@ export default {
     },
     reviewHint: "Se videoen, og godkend eller afvis den.",
     allExercises: "Alle øvelser",
-    allExercisesDetail: {
-      zero: "Bænk, squat og dødløft",
-      one: "Bænk, squat, dødløft og {count} mere",
-      other: "Bænk, squat, dødløft og {count} mere",
-    },
+  },
+
+  // Centrets øvelser på centrets side: søgningen, sektionen og "Alle øvelser".
+  centreExercises: {
+    title: "Øvelser",
+    sortedByLifters: "flest løftere først",
+    searchPlaceholder: "Søg efter en øvelse i centret",
+    clearSearch: "Ryd søgningen",
+    resultsTitle: "Øvelser her",
+    noMatchTitle: "Ingen øvelser matcher",
+    noMatchBody: "Her er de øvelser, der er løftet i centret. Prøv en del af navnet.",
+    topLine: "#1 {name} {weight} kg",
+    yourRank: "#{rank}",
+    yourRankA11y: "du er nummer {rank}",
+    openHint: "Åbner øvelsens rangliste i centret",
+    emptyBody: "Gennemfør en træning her, så kommer dine løft på listerne.",
+    allDetail: { one: "{count} øvelse med rangliste her", other: "{count} øvelser med rangliste her" },
+    allHint: "Åbner ranglisterne, med en knap for hver øvelse",
   },
 
   change: {

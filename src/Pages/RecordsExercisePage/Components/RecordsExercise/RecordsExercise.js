@@ -23,6 +23,7 @@ import {
   buildRepLadder,
 } from "../../../../Utils/recordsInsights";
 import { formatRelativeDay } from "../../../../Utils/dateUtils";
+import { isPerSide } from "@utils/weightMode";
 import { formatDate, useTranslation } from "@localization";
 
 const W = 340;
@@ -115,6 +116,21 @@ export default function RecordsExercise({
     () => buildRecentSessions(sets, { name, limit: 3 }),
     [sets, name]
   );
+  // Every number here is in the exercise's current mode (4d) - the sets
+  // arrive converted - so one look at the exercise says which it is.
+  const perSide = useMemo(() => {
+    const wanted = String(name ?? "").trim().toLocaleLowerCase();
+
+    return sets.some(
+      (set) => set.name.toLocaleLowerCase() === wanted && isPerSide(set.weightMode)
+    );
+  }, [sets, name]);
+  const unit = perSide
+    ? `${t("common.kg")} ${t("workout.weightMode.suffix")}`
+    : t("common.kg");
+  // "22,5 kg pr. side × 10" per side; "45 × 10" as it has always read.
+  const lift = (weight, reps) =>
+    perSide ? `${kg(weight)} ${unit} × ${reps}` : `${kg(weight)} × ${reps}`;
 
   const chart = useMemo(() => {
     const points = series.points;
@@ -234,7 +250,7 @@ export default function RecordsExercise({
             {kg(series.best)}
           </ThemedText>
           <ThemedText style={styles.chartUnit} setColor={quiet}>
-            {t("common.kg")}
+            {unit}
           </ThemedText>
           {change !== null ? (
             <View
@@ -414,7 +430,7 @@ export default function RecordsExercise({
           <ThemedText style={styles.caption} setColor={quiet}>
             {t("records.exercise.bestSet", {
               when: formatRelativeDay(last.at, now).toLowerCase(),
-              lift: `${kg(last.weight)} × ${last.reps}`,
+              lift: lift(last.weight, last.reps),
             })}
           </ThemedText>
         ) : null}
@@ -432,8 +448,8 @@ export default function RecordsExercise({
           </ThemedText>
           <ThemedText style={styles.caption} setColor={quiet}>
             {t("records.exercise.tryNext", {
-              target: `${kg(nextStep.target)} × ${nextStep.reps}`,
-              current: `${kg(nextStep.current)} × ${nextStep.reps}`,
+              target: lift(nextStep.target, nextStep.reps),
+              current: lift(nextStep.current, nextStep.reps),
             })}
           </ThemedText>
         </View>
@@ -442,7 +458,9 @@ export default function RecordsExercise({
       <View style={{ gap: 12 }}>
         <View style={styles.sectionHead}>
           <ThemedText style={styles.overline} setColor={quiet}>
-            {t("records.exercise.repLadder")}
+            {perSide
+              ? `${t("records.exercise.repLadder")} · ${t("workout.weightMode.suffix")}`
+              : t("records.exercise.repLadder")}
           </ThemedText>
           <View style={[styles.sectionRule, { backgroundColor: hairline }]} />
         </View>
@@ -512,7 +530,7 @@ export default function RecordsExercise({
                   numberOfLines={2}
                 >
                   {session.sets
-                    .map((set) => `${kg(set.weight)} × ${set.reps}`)
+                    .map((set) => lift(set.weight, set.reps))
                     .join(" · ")}
                 </ThemedText>
                 {session.hasRecord ? (

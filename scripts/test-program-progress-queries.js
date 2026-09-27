@@ -1,14 +1,5 @@
 const assert = require("assert");
-const fs = require("fs");
-const path = require("path");
-
-const rootDir = path.resolve(__dirname, "..");
-const repositoryPath = path.join(
-  rootDir,
-  "src",
-  "Repository",
-  "programRepository.js"
-);
+const loadAppModule = require("./lib/loadAppModule");
 
 run().catch((error) => {
   console.error(error);
@@ -16,18 +7,9 @@ run().catch((error) => {
 });
 
 async function run() {
-  const source = fs
-    .readFileSync(repositoryPath, "utf8")
-    .replace(
-      'import { createNextSyncVersion, SQLITE_UUID_SQL } from "../Utils/syncUtils";',
-      'const createNextSyncVersion = () => 0; const SQLITE_UUID_SQL = "NULL";'
-    )
-    .replace(
-      'import { normalizeIsoDateString } from "../Utils/dateUtils";',
-      'const normalizeIsoDateString = (value) => value;'
-    );
-  const moduleUrl = `data:text/javascript;base64,${Buffer.from(source).toString("base64")}`;
-  const repository = await import(moduleUrl);
+  // Through the app's own module loader, so the repository's imports - the
+  // weight-mode SQL (@utils/weightMode) among them - resolve as in the app.
+  const repository = loadAppModule("src/Repository/programRepository.js");
   const queries = [];
   const db = {
     getAllAsync: async (query) => {

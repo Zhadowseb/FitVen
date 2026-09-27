@@ -1,4 +1,10 @@
 import { amrapFlagFor, normalizeSetType, resolveSetType } from "@utils/setTypes";
+import {
+  CURRENT_WEIGHT_MODES_SQL,
+  convertWeightSql,
+  currentWeightModeSql,
+  totalLoadSql,
+} from "@utils/weightMode";
 import { withTransaction } from "../Database/transaction";
 import { createNextSyncVersion, SQLITE_UUID_SQL } from "../Utils/syncUtils";
 
@@ -82,13 +88,34 @@ export async function getExerciseCatalogEntryByName(db, exerciseName) {
         default_visible_columns,
         official,
         is_custom,
-        custom_muscle_group_keys
+        custom_muscle_group_keys,
+        equipment,
+        weight_mode
      FROM Exercise
      WHERE name = ? COLLATE NOCASE
      LIMIT 1;`,
     [exerciseName]
   );
 }
+
+// The sets Records and an exercise's statistics page are made of: ticked off,
+// not failed, with a weight and reps, nothing deleted on the way up, and no
+// warm-ups. One string for both queries below, so the "See statistics"
+// button in the exercise library cannot promise a page that turns out empty.
+const COMPLETED_STRENGTH_SET_CONDITIONS = `s.done = 1
+       AND COALESCE(s.failed, 0) = 0
+       AND s.weight IS NOT NULL
+       AND s.reps IS NOT NULL
+       AND CAST(s.weight AS REAL) > 0
+       AND CAST(s.reps AS INTEGER) > 0
+       AND COALESCE(s.deleted_at, '') = ''
+       AND COALESCE(e.deleted_at, '') = ''
+       AND COALESCE(w.deleted_at, '') = ''
+       AND COALESCE(d.deleted_at, '') = ''
+       -- A warm-up is preparation: it is in no record, no volume, no trend.
+       -- Drop sets stay - they count toward volume - and are held back from
+       -- the record calculations by the service instead.
+       AND COALESCE(s.set_type, 'working') <> 'warmup'`;
 
 export async function getCompletedStrengthSetsForPersonalRecords(
   db,
@@ -120,10 +147,24 @@ export async function getCompletedStrengthSetsForPersonalRecords(
     params.push(sinceIsoDate);
   }
 
+  // Weight per side or for both (4d). `weight` is in the exercise's current
+  // mode - every older set converted, exactly, before anything compares it -
+  // so a record, an e1RM and a best never move because somebody switched.
+  // `total_weight` is what was lifted, for volume. `logged_weight` and
+  // `logged_weight_mode` are the set as it was written.
+  const loggedMode = "COALESCE(e.weight_mode, 'total')";
+  const currentMode = currentWeightModeSql("current_mode");
+  const weightInCurrentMode = convertWeightSql("s.weight", loggedMode, currentMode);
+
   return db.getAllAsync(
-    `SELECT
+    `WITH current_modes AS (${CURRENT_WEIGHT_MODES_SQL})
+     SELECT
         s.sets_id,
-        s.weight,
+        ${weightInCurrentMode} AS weight,
+        ${currentMode} AS weight_mode,
+        s.weight AS logged_weight,
+        ${loggedMode} AS logged_weight_mode,
+        ${totalLoadSql("s.weight", loggedMode)} AS total_weight,
         s.reps,
         s.personal_record,
         s.set_type,
@@ -144,30 +185,41 @@ export async function getCompletedStrengthSetsForPersonalRecords(
      JOIN Workout_Type_Instance w ON w.workout_id = e.workout_type_instance_id
      JOIN Day d ON d.day_id = w.day_id
      LEFT JOIN Program p ON p.program_id = d.program_id
-     WHERE s.done = 1
-       AND COALESCE(s.failed, 0) = 0
-       AND s.weight IS NOT NULL
-       AND s.reps IS NOT NULL
-       AND CAST(s.weight AS REAL) > 0
-       AND CAST(s.reps AS INTEGER) > 0
-       AND COALESCE(s.deleted_at, '') = ''
-       AND COALESCE(e.deleted_at, '') = ''
-       AND COALESCE(w.deleted_at, '') = ''
-       AND COALESCE(d.deleted_at, '') = ''
-       -- A warm-up is preparation: it is in no record, no volume, no trend.
-       -- Drop sets stay - they count toward volume - and are held back from
-       -- the record calculations by the service instead.
-       AND COALESCE(s.set_type, 'working') <> 'warmup'
+     LEFT JOIN current_modes current_mode
+       ON current_mode.name_key = lower(e.exercise_name)
+     WHERE ${COMPLETED_STRENGTH_SET_CONDITIONS}
        ${exerciseFilter}
        ${sinceFilter}
      ORDER BY
        e.exercise_name COLLATE NOCASE ASC,
        CAST(s.reps AS INTEGER) ASC,
-       CAST(s.weight AS REAL) DESC,
+       ${weightInCurrentMode} DESC,
        performed_date_sort DESC,
        s.sets_id DESC;`,
     params
   );
+}
+
+/**
+ * Whether there is at least one set of this exercise that its statistics page
+ * would show - the same sets as the query above. One row at most, found
+ * through exercise_instance_name_idx, so the exercise library can ask each
+ * time a muscle view opens.
+ */
+export async function hasCompletedStrengthSetForExercise(db, exerciseName) {
+  const row = await db.getFirstAsync(
+    `SELECT 1 AS found
+     FROM Exercise_Instance e
+     JOIN "Set" s ON s.exercise_instance_id = e.exercise_instance_id
+     JOIN Workout_Type_Instance w ON w.workout_id = e.workout_type_instance_id
+     JOIN Day d ON d.day_id = w.day_id
+     WHERE e.exercise_name = ?
+       AND ${COMPLETED_STRENGTH_SET_CONDITIONS}
+     LIMIT 1;`,
+    [exerciseName]
+  );
+
+  return Boolean(row);
 }
 
 /**
@@ -227,7 +279,9 @@ export async function getCompletedExerciseHistorySets(
                  substr(COALESCE(d.date, w.date), 1, 2)
             ELSE COALESCE(d.date, w.date)
           END AS performed_date_sort,
-          MAX(CAST(s.weight AS REAL)) AS top_weight
+          MAX(CAST(s.weight AS REAL)) AS top_weight,
+          -- As the session was written (4d): the panel shows it that way.
+          COALESCE(e.weight_mode, 'total') AS weight_mode
         FROM Exercise_Instance e
         JOIN Workout_Type_Instance w
           ON w.workout_id = e.workout_type_instance_id
@@ -264,6 +318,7 @@ export async function getCompletedExerciseHistorySets(
         he.performed_date,
         he.performed_date_sort,
         he.top_weight,
+        he.weight_mode,
         s.sets_id,
         s.set_number,
         s.reps,
@@ -349,14 +404,24 @@ export async function getPreviousExerciseSession(
  *
  * Only what may hold a record: working and AMRAP sets. On a tie in weight the
  * one with more reps, which is the better lift of the two.
+ *
+ * In the exercise's current mode (4d), `weight_mode`: a set written the other
+ * way is converted first, so a switch never changes which set it is.
  */
 export async function getHeaviestLiftForExercise(db, exerciseName) {
+  const loggedMode = "COALESCE(e.weight_mode, 'total')";
+  const currentMode = currentWeightModeSql("current_mode");
+
   return db.getFirstAsync(
-    `SELECT
-        CAST(s.weight AS REAL) AS weight,
+    `WITH current_modes AS (${CURRENT_WEIGHT_MODES_SQL})
+     SELECT
+        ${convertWeightSql("s.weight", loggedMode, currentMode)} AS weight,
+        ${currentMode} AS weight_mode,
         CAST(s.reps AS INTEGER) AS reps
      FROM "Set" s
      JOIN Exercise_Instance e ON e.exercise_instance_id = s.exercise_instance_id
+     LEFT JOIN current_modes current_mode
+       ON current_mode.name_key = lower(e.exercise_name)
      WHERE e.exercise_name = ? COLLATE NOCASE
        AND s.done = 1
        AND COALESCE(s.failed, 0) = 0
@@ -365,7 +430,7 @@ export async function getHeaviestLiftForExercise(db, exerciseName) {
        AND COALESCE(s.set_type, 'working') IN ('working', 'amrap')
        AND COALESCE(s.deleted_at, '') = ''
        AND COALESCE(e.deleted_at, '') = ''
-     ORDER BY CAST(s.weight AS REAL) DESC, CAST(s.reps AS INTEGER) DESC
+     ORDER BY ${totalLoadSql("s.weight", loggedMode)} DESC, CAST(s.reps AS INTEGER) DESC
      LIMIT 1;`,
     [exerciseName]
   );
@@ -408,6 +473,9 @@ export async function getLastSetValuesForExerciseName(
         s.pause,
         s.reps,
         s.weight,
+        -- How that weight was written (4d), so the new exercise can carry it
+        -- over in its own mode.
+        COALESCE(e.weight_mode, 'total') AS weight_mode,
         CASE
           WHEN COALESCE(d.date, w.date) LIKE '__.__.____'
           THEN substr(COALESCE(d.date, w.date), 7, 4) || '-' ||
@@ -493,6 +561,28 @@ export async function replaceExerciseCatalog(db, exercises) {
         values
       );
     }
+
+    // The rows just went and came back as total. A catalog exercise's weight
+    // mode (4d) is kept in the column preference - the part that syncs - so
+    // it is put back from there.
+    await db.runAsync(
+      `UPDATE Exercise
+       SET weight_mode = (
+         SELECT p.weight_mode
+         FROM Exercise_Column_Preference p
+         WHERE p.exercise_name = Exercise.name COLLATE NOCASE
+           AND p.weight_mode IN ('total', 'per_side')
+         ORDER BY p.updated_at DESC
+         LIMIT 1
+       )
+       WHERE COALESCE(is_custom, 0) = 0
+         AND EXISTS (
+           SELECT 1
+           FROM Exercise_Column_Preference p
+           WHERE p.exercise_name = Exercise.name COLLATE NOCASE
+             AND p.weight_mode IN ('total', 'per_side')
+         );`
+    );
   });
 }
 
@@ -507,6 +597,7 @@ export async function getExerciseColumnPreference(
         cloud_exercise_id,
         exercise_name,
         visible_columns,
+        weight_mode,
         needs_sync,
         updated_at
      FROM Exercise_Column_Preference
@@ -525,6 +616,7 @@ export async function getExerciseColumnPreferencesForUser(db, userId) {
         cloud_exercise_id,
         exercise_name,
         visible_columns,
+        weight_mode,
         needs_sync,
         updated_at
      FROM Exercise_Column_Preference
@@ -542,6 +634,7 @@ export async function getDirtyExerciseColumnPreferences(db, userId) {
         COALESCE(p.cloud_exercise_id, e.cloud_exercise_id) AS cloud_exercise_id,
         p.exercise_name,
         p.visible_columns,
+        p.weight_mode,
         p.updated_at
      FROM Exercise_Column_Preference p
      LEFT JOIN Exercise e
@@ -553,6 +646,11 @@ export async function getDirtyExerciseColumnPreferences(db, userId) {
   );
 }
 
+/**
+ * `weightMode` (4d) is optional: left out or null, the stored one stays - a
+ * column change says nothing about it, and a cloud row from an older app
+ * does not know it.
+ */
 export async function upsertExerciseColumnPreference(
   db,
   {
@@ -560,6 +658,7 @@ export async function upsertExerciseColumnPreference(
     cloudExerciseId = null,
     exerciseName,
     visibleColumns,
+    weightMode = null,
     needsSync = 1,
     updatedAt = new Date().toISOString(),
   }
@@ -570,23 +669,93 @@ export async function upsertExerciseColumnPreference(
         cloud_exercise_id,
         exercise_name,
         visible_columns,
+        weight_mode,
         needs_sync,
         updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(user_id, exercise_name)
       DO UPDATE SET
         cloud_exercise_id = excluded.cloud_exercise_id,
         visible_columns = excluded.visible_columns,
+        weight_mode = COALESCE(
+          excluded.weight_mode,
+          Exercise_Column_Preference.weight_mode
+        ),
         needs_sync = excluded.needs_sync,
         updated_at = excluded.updated_at;`,
-    [
+    sqliteParams([
       userId,
       cloudExerciseId,
       exerciseName,
       visibleColumns,
+      weightMode,
       needsSync ? 1 : 0,
       updatedAt,
-    ]
+    ])
+  );
+}
+
+/**
+ * A catalog exercise's weight mode, chosen on the card (4d), marked for
+ * upload. The columns stay as they are; `visibleColumns` is only what a new
+ * row starts with, since the column is required.
+ */
+export async function upsertExerciseWeightModePreference(
+  db,
+  {
+    userId,
+    cloudExerciseId = null,
+    exerciseName,
+    weightMode,
+    visibleColumns,
+    updatedAt = new Date().toISOString(),
+  }
+) {
+  await db.runAsync(
+    `INSERT INTO Exercise_Column_Preference (
+        user_id,
+        cloud_exercise_id,
+        exercise_name,
+        visible_columns,
+        weight_mode,
+        needs_sync,
+        updated_at
+      ) VALUES (?, ?, ?, ?, ?, 1, ?)
+      ON CONFLICT(user_id, exercise_name)
+      DO UPDATE SET
+        cloud_exercise_id = COALESCE(
+          excluded.cloud_exercise_id,
+          Exercise_Column_Preference.cloud_exercise_id
+        ),
+        weight_mode = excluded.weight_mode,
+        needs_sync = 1,
+        updated_at = excluded.updated_at;`,
+    sqliteParams([
+      userId,
+      cloudExerciseId,
+      exerciseName,
+      visibleColumns,
+      weightMode,
+      updatedAt,
+    ])
+  );
+}
+
+/**
+ * The exercise's own current mode, which the next workout copies (4d). A
+ * custom exercise's is its owner's setting and syncs through
+ * public.custom_exercise, so it is marked for that upload too.
+ */
+export async function updateExerciseWeightMode(db, { exerciseName, weightMode }) {
+  await db.runAsync(
+    `UPDATE Exercise
+     SET weight_mode = ?,
+         custom_needs_upload = CASE
+           WHEN COALESCE(is_custom, 0) = 1 AND weight_mode IS NOT ? THEN 1
+           ELSE custom_needs_upload
+         END
+     WHERE name = ? COLLATE NOCASE;`,
+    sqliteParams([weightMode, weightMode, exerciseName])
   );
 }
 
@@ -892,8 +1061,12 @@ export async function getExercisesByWorkout(db, workoutId) {
         ei.done,
         ei.visible_columns,
         ei.note,
+        ei.weight_mode,
         e.cloud_exercise_id,
-        e.default_visible_columns
+        e.default_visible_columns,
+        -- What decides whether the card offers per side (4d).
+        e.weight_mode AS exercise_weight_mode,
+        e.equipment AS exercise_equipment
      FROM Exercise_Instance ei
      LEFT JOIN Exercise e
        ON e.name = ei.exercise_name COLLATE NOCASE
@@ -1087,10 +1260,12 @@ export async function getSetsByWorkout(db, workoutId) {
 }
 
 /**
- * The running workout as the Quick start panel on Home reads it: every
- * exercise in the workout screen's order with each of its sets, one row per
- * set - and one with no set for an exercise that has none, so its name is
- * still there. Only what the panel shows or decides with.
+ * The running workout as the Quick start panel on Home and the lock-screen
+ * card read it: every exercise in the workout screen's order with each of its
+ * sets, one row per set - and one with no set for an exercise that has none,
+ * so its name is still there. Only what the two show or decide with: the
+ * catalog's equipment picks the card's weight step, and the set's sync
+ * version tells a tap on the card from an edit made after it.
  */
 export async function getLiveWorkoutSets(db, workoutId) {
   await ensureExerciseOrderColumn(db);
@@ -1099,6 +1274,8 @@ export async function getLiveWorkoutSets(db, workoutId) {
     `SELECT
         e.exercise_instance_id,
         e.exercise_name,
+        -- 'total' | 'per_side' (4d), for the lock-screen card's "pr. side".
+        COALESCE(e.weight_mode, 'total') AS weight_mode,
         s.sets_id,
         s.set_number,
         s.reps,
@@ -1109,9 +1286,12 @@ export async function getLiveWorkoutSets(db, workoutId) {
         s.set_type,
         s.amrap,
         s.amrap_target,
-        s.pause
+        s.pause,
+        s.sync_version,
+        catalog.equipment AS exercise_equipment
      FROM Exercise_Instance e
      LEFT JOIN "Set" s ON s.exercise_instance_id = e.exercise_instance_id
+     LEFT JOIN Exercise catalog ON catalog.name = e.exercise_name
      WHERE e.workout_type_instance_id = ?
      ORDER BY e.exercise_order ASC, e.exercise_instance_id ASC, s.set_number ASC, s.sets_id ASC;`,
     [workoutId]
@@ -1165,7 +1345,8 @@ export async function getExercisesByWorkoutId(db, workoutId) {
         sets,
         visible_columns,
         note,
-        done
+        done,
+        weight_mode
      FROM Exercise_Instance
      WHERE workout_type_instance_id = ?
      ORDER BY exercise_order ASC, exercise_instance_id ASC;`,
@@ -1199,6 +1380,7 @@ export async function getExercisesForCloudSync(db, { dirtyOnly = false } = {}) {
         visible_columns,
         note,
         done,
+        weight_mode,
         needs_sync
      FROM Exercise_Instance
      ${dirtyOnly ? "WHERE needs_sync = 1" : ""}
@@ -1243,6 +1425,9 @@ export async function createExercise(
     note = null,
     done = 0,
     exerciseOrder = 0,
+    // 'total' | 'per_side' (4d): the exercise's mode, or the copied
+    // workout's. Total when the caller does not say.
+    weightMode = null,
   }
 ) {
   await ensureExerciseOrderColumn(db);
@@ -1257,11 +1442,12 @@ export async function createExercise(
       visible_columns,
       note,
       done,
+      weight_mode,
       needs_sync,
       sync_id,
       sync_version
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ${SQLITE_UUID_SQL}, ?);`,
-    [
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, COALESCE(?, 'total'), 1, ${SQLITE_UUID_SQL}, ?);`,
+    sqliteParams([
       workoutId,
       exerciseName,
       exerciseOrder,
@@ -1269,8 +1455,9 @@ export async function createExercise(
       visibleColumns,
       note,
       done,
+      weightMode,
       syncVersion,
-    ]
+    ])
   );
 }
 
@@ -1289,6 +1476,8 @@ export async function createExerciseFromCloud(
     visibleColumns,
     note,
     done,
+    // Null from the cloud - an older app wrote the row - is total (4d).
+    weightMode = null,
   }
 ) {
   await ensureExerciseOrderColumn(db);
@@ -1307,8 +1496,9 @@ export async function createExerciseFromCloud(
       visible_columns,
       note,
       done,
+      weight_mode,
       needs_sync
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0);`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, 'total'), 0);`,
     sqliteParams([
       cloudExerciseInstanceId,
       remoteLocalExerciseInstanceId,
@@ -1322,6 +1512,7 @@ export async function createExerciseFromCloud(
       visibleColumns,
       note,
       done ? 1 : 0,
+      weightMode,
     ])
   );
 }
@@ -1342,6 +1533,9 @@ export async function updateExerciseFromCloud(
     visibleColumns,
     note,
     done,
+    // A null keeps what the phone has (4d): the cloud has no column yet, or
+    // an older app wrote the row and never knew it.
+    weightMode = null,
   }
 ) {
   await ensureExerciseOrderColumn(db);
@@ -1360,6 +1554,7 @@ export async function updateExerciseFromCloud(
          visible_columns = ?,
          note = ?,
          done = ?,
+         weight_mode = COALESCE(?, weight_mode, 'total'),
          needs_sync = 0
      WHERE exercise_instance_id = ?;`,
     sqliteParams([
@@ -1375,6 +1570,7 @@ export async function updateExerciseFromCloud(
       visibleColumns,
       note,
       done ? 1 : 0,
+      weightMode,
       exerciseId,
     ])
   );
@@ -1571,6 +1767,60 @@ export async function getExerciseInstanceById(db, exerciseId) {
      FROM Exercise_Instance
      WHERE exercise_instance_id = ?;`,
     [exerciseId]
+  );
+}
+
+/**
+ * Everything a switch between per side and both sides (4d) starts from: the
+ * workout's exercise and its mode, the exercise's own mode, and the user's
+ * preference row for it, if there is one. `preferenceUserId` is the one the
+ * column preferences are kept under.
+ */
+export async function getExerciseWeightModeContext(db, { exerciseId, preferenceUserId }) {
+  return db.getFirstAsync(
+    `SELECT
+        ei.exercise_instance_id,
+        ei.workout_type_instance_id AS workout_id,
+        ei.exercise_name,
+        ei.visible_columns,
+        ei.weight_mode,
+        e.weight_mode AS exercise_weight_mode,
+        e.is_custom,
+        e.cloud_exercise_id,
+        e.default_visible_columns,
+        p.exercise_column_preference_id AS preference_id,
+        p.visible_columns AS preference_visible_columns,
+        p.weight_mode AS preference_weight_mode
+     FROM Exercise_Instance ei
+     LEFT JOIN Exercise e
+       ON e.exercise_id = (
+         SELECT candidate.exercise_id
+         FROM Exercise candidate
+         WHERE candidate.name = ei.exercise_name COLLATE NOCASE
+         ORDER BY candidate.exercise_id ASC
+         LIMIT 1
+       )
+     LEFT JOIN Exercise_Column_Preference p
+       ON p.user_id = ?
+      AND p.exercise_name = ei.exercise_name COLLATE NOCASE
+     WHERE ei.exercise_instance_id = ?
+     LIMIT 1;`,
+    sqliteParams([preferenceUserId, exerciseId])
+  );
+}
+
+/** How one workout's exercise is written, marked for upload (4d). */
+export async function updateExerciseInstanceWeightMode(db, { exerciseId, weightMode }) {
+  const syncVersion = createNextSyncVersion();
+  await db.runAsync(
+    `UPDATE Exercise_Instance
+     SET weight_mode = ?,
+         sync_id = COALESCE(sync_id, ${SQLITE_UUID_SQL}),
+         sync_version = ?,
+         deleted_at = NULL,
+         needs_sync = 1
+     WHERE exercise_instance_id = ?;`,
+    sqliteParams([weightMode, syncVersion, exerciseId])
   );
 }
 
