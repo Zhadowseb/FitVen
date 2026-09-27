@@ -14,7 +14,11 @@ import {
   progressExerciseName,
   unitLabel,
 } from "@utils/categoryFormat";
-import { CALISTHENICS_FACTORS } from "@utils/gymCategories";
+import {
+  CALISTHENICS_FACTORS,
+  PROGRESS_MIN_SETS,
+  PROGRESS_WINDOW_DAYS,
+} from "@utils/gymCategories";
 
 // "Din fremgang" shows up to this many of your rises, the biggest first.
 const PROGRESS_FIELDS = 3;
@@ -172,6 +176,15 @@ export default function PersonalCard({ variant, me, tone, valueColor, loading = 
             );
           })}
         </View>
+      ) : isProgress && !loading ? (
+        // No rise yet - somebody new, or nobody who has done an exercise in
+        // both windows. The card says what it takes, rather than a lone "-".
+        <ThemedText style={styles.emptyNote} setColor={theme.quietText}>
+          {t("category.personal.progressEmpty", {
+            sets: PROGRESS_MIN_SETS,
+            days: PROGRESS_WINDOW_DAYS,
+          })}
+        </ThemedText>
       ) : null}
     </View>
   );

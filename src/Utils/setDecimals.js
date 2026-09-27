@@ -70,8 +70,12 @@ export function truncateSetDecimals(payload) {
 
 /**
  * The integer column refused a value with decimals: "invalid input syntax for
- * type integer: "102.5"" (22P02). The only numbers with decimals in a set
- * payload are the weight and RPE, so on a set upload this can only be them.
+ * type integer: "102.5"" (22P02). Postgres does not name the column. The other
+ * numbers in a set payload (reps, 1RM %, the pause, the set number, an AMRAP
+ * target) are integers too, but the payload builder rounds them to whole ones,
+ * so on a set upload this is the weight or RPE - as long as nobody knows
+ * better. Once the columns are known to keep decimals, the handle below does
+ * not take this for them.
  */
 export function isSetDecimalsRefusedError(error) {
   return (
@@ -169,17 +173,20 @@ export function resolveCloudSetDecimals({
  * again. Same shape as createStartedFromCloudColumn in Utils/startedFrom.js.
  *
  * It also learns the other way: a cloud row with decimals, or a probe the
- * column answers without complaint, means the column keeps them.
+ * column answers without complaint, means the column keeps them. That answer
+ * is final for the session: a 22P02 after it is some other integer field's,
+ * and is thrown as it is, rather than cutting every weight to whole kilos
+ * for the rest of the session.
  *
  * `request` must be safe to run twice. The sync's are: a refused value fails
  * the statement that carries it, before anything is written.
  */
 export function createSetDecimalsCloudColumns({ onRefused } = {}) {
-  // null: not known yet. Never goes back to null once it is known.
+  // null: not known yet. Once known it stays as it is for the session.
   let keepsDecimals = null;
 
   function refuse(error) {
-    if (keepsDecimals !== false) {
+    if (keepsDecimals === null) {
       keepsDecimals = false;
       onRefused?.(error);
     }
@@ -229,7 +236,9 @@ export function createSetDecimalsCloudColumns({ onRefused } = {}) {
       try {
         return await request();
       } catch (error) {
-        if (keepsDecimals === false || !isSetDecimalsRefusedError(error)) {
+        // Only while nobody knows: refused when already cut off is something
+        // else, and a column known to keep decimals did not refuse them.
+        if (keepsDecimals !== null || !isSetDecimalsRefusedError(error)) {
           throw error;
         }
 

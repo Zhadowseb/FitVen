@@ -158,7 +158,7 @@ export default function ActiveProgramCard({ card, onOpen, onStart, isStarting = 
               {t("train.program.today")}
             </ThemedText>
             <ThemedText style={styles.todayName} setColor={theme.title} numberOfLines={1}>
-              {workoutDisplayName(today.label, t) ?? today.label}
+              {workoutDisplayName(today.label, t, today.workoutType) ?? today.label}
             </ThemedText>
             <ThemedText style={styles.todayMeta} setColor={quiet} numberOfLines={1}>
               {[

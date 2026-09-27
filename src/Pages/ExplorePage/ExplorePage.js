@@ -551,7 +551,7 @@ export default function ExplorePage() {
                   accessibilityRole="button"
                   accessibilityLabel={t("explore.centerPostLabel", {
                     name: post.author?.displayName ?? "",
-                    title: workoutDisplayName(post.title, t) ?? "",
+                    title: workoutDisplayName(post.title, t, post.workoutType) ?? "",
                     gym: post.gym?.shortName ?? "",
                   })}
                   onPress={() =>
@@ -575,7 +575,7 @@ export default function ExplorePage() {
                       ) : null}
                     </View>
                     <ThemedText style={styles.postTitle} setColor={title} numberOfLines={2}>
-                      {workoutDisplayName(post.title, t)}
+                      {workoutDisplayName(post.title, t, post.workoutType)}
                     </ThemedText>
                     <ThemedText style={styles.postMeta} setColor={quiet} numberOfLines={1}>
                       {[post.author?.displayName, post.createdAt ? formatTimeAgo(post.createdAt) : null]

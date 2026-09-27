@@ -117,7 +117,7 @@ function describeCard(card, { t, theme, navigation }) {
       return {
         kicker: t("homeExplore.kickers.centrePost"),
         title:
-          workoutDisplayName(post.title, t) ||
+          workoutDisplayName(post.title, t, post.workoutType) ||
           post.author?.displayName ||
           t("homeExplore.kickers.centrePost"),
         metaParts: [post.gym.shortName, post.createdAt ? formatTimeAgo(post.createdAt) : null],

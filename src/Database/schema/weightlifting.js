@@ -29,6 +29,15 @@ export const weightliftingSchemaSql = `
       cloud_updated_at TEXT
   );
 
+  -- An exercise is looked up in the catalog by name without regard to case
+  -- (name = ? COLLATE NOCASE), in the repository and in every join from an
+  -- exercise instance. The UNIQUE index on name compares exactly, and SQLite
+  -- cannot use it for such a lookup, so each one read the whole catalog. With
+  -- this one it is a search. db.js runs this file on every start, after it
+  -- has rebuilt an old Exercise table, so an existing install gets it too.
+  CREATE INDEX IF NOT EXISTS exercise_name_nocase_idx
+  ON Exercise(name COLLATE NOCASE);
+
   CREATE TABLE IF NOT EXISTS Exercise_Column_Preference (
       exercise_column_preference_id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id TEXT NOT NULL,

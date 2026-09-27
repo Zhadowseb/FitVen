@@ -93,4 +93,9 @@ export default StyleSheet.create({
     lineHeight: 13,
     fontVariant: ["tabular-nums"],
   },
+  emptyNote: {
+    fontSize: 12.5,
+    fontWeight: "600",
+    lineHeight: 17,
+  },
 });

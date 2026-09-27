@@ -275,6 +275,33 @@ async function handleChecks() {
     assert.deepStrictEqual(columns.sendablePayload({ weight: 102.5 }), { weight: 102.5 });
   }
 
+  // Known to keep decimals - from a row, or from the probe: a 22P02 after that
+  // is some other integer field's (Postgres does not say which column). It is
+  // thrown as it is, not retried cut off, and the answer does not flip, or
+  // every weight would go up cut to whole kilos for the rest of the session.
+  for (const learn of [
+    (columns) => columns.learnFrom([{ weight: 102.5 }]),
+    (columns) => columns.resolve(async () => {}),
+  ]) {
+    let notices = 0;
+    const columns = createSetDecimalsCloudColumns({ onRefused: () => (notices += 1) });
+    await learn(columns);
+    assert.strictEqual(columns.cloudKeepsDecimals(), true);
+
+    let runs = 0;
+    await assert.rejects(
+      columns.withFallback(async () => {
+        runs += 1;
+        throw REFUSED;
+      }),
+      (thrown) => thrown === REFUSED
+    );
+    assert.strictEqual(runs, 1, "not retried with the weight cut off");
+    assert.strictEqual(columns.cloudKeepsDecimals(), true, "a known answer is not overturned");
+    assert.strictEqual(notices, 0);
+    assert.deepStrictEqual(columns.sendablePayload({ weight: 102.5, rpe: 8.5 }), { weight: 102.5, rpe: 8.5 });
+  }
+
   // The probe.
   {
     const refused = createSetDecimalsCloudColumns();
@@ -697,22 +724,221 @@ async function syncChecks() {
   assert.deepStrictEqual(await syncPass(setSync, phone), { downloaded: 0, uploaded: 0 }, "and it is not sent back as 102.5");
 }
 
+/* ================================= part three: the workout hydration == */
+//
+// Opening a workout with sets missing, or copying a recent one, reads its
+// exercises and sets from the cloud on a path of its own:
+// hydrateWorkoutStrengthDataFromCloud in weightliftingService.js. It used to
+// resolve the decimals and then throw the answer's `reupload` away, so a set
+// the cloud held cut off was marked clean and stayed 102 in the cloud - and
+// the upload-only background push never looked at it again. It also wrote the
+// cloud's copy over an edit still waiting to upload, and read the set without
+// set_type and amrap_target, so a warm-up came back a working set.
+//
+// Run here the way copying a recent workout reaches it, against the real
+// schema and a cloud of its own.
+
+const HYDRATION_WORKOUT_CLOUD_ID = 50;
+const V = 1759000100;
+
+/** A phone with one synced workout and its exercise, as createPhone makes it. */
+async function createHydrationPhone({ exerciseNote = null, exerciseDirty = false } = {}) {
+  const phone = await createPhone();
+  await createSyncMetadataTriggers(
+    { execAsync: async (sql) => phone.raw.exec(sql) },
+    "Exercise_Instance",
+    "exercise_instance_id",
+    "cloud_exercise_instance_id"
+  );
+  phone.raw
+    .prepare(
+      `INSERT INTO Workout_Type_Instance (workout_id, cloud_id, cloud_workout_type_instance_id, sync_id, sync_version, day_id, workout_type, date, needs_sync)
+       VALUES (1, ?, ?, 'workout-sync', 1759000000, 1, 'Resistance', '27.09.2026', 0)`
+    )
+    .run(HYDRATION_WORKOUT_CLOUD_ID, HYDRATION_WORKOUT_CLOUD_ID);
+  phone.raw
+    .prepare("UPDATE Exercise_Instance SET sets = 3, note = ?, needs_sync = ?, sync_version = ?, exercise_order = 1 WHERE exercise_instance_id = 1")
+    .run(exerciseNote, exerciseDirty ? 1 : 0, exerciseDirty ? V + 500 : 1759000000);
+  phone.syncedSet = ({ setId, setNumber, weight, rpe = null, reps, needsSync = 0, version = V }) => {
+    phone.raw
+      .prepare(
+        `INSERT INTO "Set" (sets_id, cloud_set_id, remote_local_set_id, sync_id, sync_version, set_number, exercise_instance_id, weight, rpe, reps, done, needs_sync)
+         VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, ?, 1, ?)`
+      )
+      .run(setId, 1000 + setId, setId, `set-sync-${setId}`, version, setNumber, weight, rpe, reps, needsSync);
+  };
+  phone.row = (setId) =>
+    ({ ...phone.raw.prepare('SELECT weight, rpe, reps, set_type, amrap, amrap_target, needs_sync, sync_version FROM "Set" WHERE sets_id = ?').get(setId) });
+
+  return phone;
+}
+
+function createHydrationCloud(setColumns, { exerciseNote = "Cloud note" } = {}) {
+  const hydrationCloud = createCloud();
+  hydrationCloud.setColumns = setColumns;
+  hydrationCloud.rows("exercise_instance").push({
+    id: CLOUD_EXERCISE_ID,
+    user_id: USER,
+    local_exercise_instance_id: 1,
+    sync_id: "exercise-sync",
+    sync_version: 1759000000,
+    last_updated: new Date(1759000000 * 1000).toISOString(),
+    deleted_at: null,
+    is_deleting: false,
+    cloud_workout_type_instance_id: HYDRATION_WORKOUT_CLOUD_ID,
+    exercise_name: "Bench Press",
+    exercise_order: 1,
+    sets: 3,
+    visible_columns: null,
+    note: exerciseNote,
+    done: true,
+    weight_mode: null,
+  });
+  hydrationCloud.set = (setId, fields) =>
+    hydrationCloud.rows("set").push({
+      id: 1000 + setId,
+      user_id: USER,
+      local_set_id: setId,
+      sync_id: `set-sync-${setId}`,
+      sync_version: V,
+      last_updated: new Date(V * 1000).toISOString(),
+      deleted_at: null,
+      is_deleting: false,
+      cloud_exercise_instance_id: CLOUD_EXERCISE_ID,
+      personal_record: false,
+      pause: null,
+      rpe: null,
+      rm_percentage: null,
+      done: true,
+      failed: false,
+      amrap: false,
+      set_type: "working",
+      amrap_target: null,
+      note: null,
+      ...fields,
+    });
+  hydrationCloud.byLocalId = (setId) => hydrationCloud.rows("set").find((row) => row.local_set_id === setId);
+
+  return hydrationCloud;
+}
+
+/** A new app session against `hydrationCloud`: the service and the set sync share one answer about the column. */
+function startHydrationSession(hydrationCloud) {
+  // What weightliftingService pulls in besides the sync; never reached here.
+  loadAppModule.stubModule("expo-location", {
+    getForegroundPermissionsAsync: async () => ({ granted: false, canAskAgain: false }),
+  });
+  loadAppModule.stubModule("expo-notifications", {
+    setNotificationHandler() {},
+    getPermissionsAsync: async () => ({ status: "denied" }),
+  });
+  loadAppModule.stubModule("expo-constants", { default: {} });
+  loadAppModule.stubModule("@supabase/supabase-js", { createClient: () => hydrationCloud.client, processLock: () => {} });
+
+  return {
+    service: loadAppModule("src/Services/weightliftingService.js"),
+    setSync: loadAppModule("src/Services/cloudSync/setSync.js"),
+  };
+}
+
+async function hydrationChecks() {
+  /* ----------------------------------- after the migration: numeric -- */
+  {
+    const hydrationCloud = createHydrationCloud("numeric");
+    const phone = await createHydrationPhone();
+    const { service, setSync } = startHydrationSession(hydrationCloud);
+    const probed = () =>
+      hydrationCloud.count((entry) => entry.table === "set" && entry.filters.some(([, column]) => column === "weight"));
+
+    // Logged here as 102.5 / RPE 8.5 and uploaded before the column kept
+    // decimals: the cloud holds the same edit cut off.
+    phone.syncedSet({ setId: 1, setNumber: 1, weight: 102.5, rpe: 8.5, reps: 3 });
+    hydrationCloud.set(1, { set_number: 1, weight: 102, rpe: 8, reps: 3 });
+    // Changed here to 90 while offline, not uploaded yet; the cloud has the 85 from before.
+    phone.syncedSet({ setId: 2, setNumber: 2, weight: 90, reps: 5, needsSync: 1, version: V + 200 });
+    hydrationCloud.set(2, { set_number: 2, weight: 85, reps: 5 });
+    // Changed on another phone since: an AMRAP set with a target, 9 reps.
+    phone.syncedSet({ setId: 4, setNumber: 4, weight: 60, reps: 5 });
+    hydrationCloud.set(4, {
+      set_number: 4,
+      weight: 60,
+      reps: 9,
+      amrap: true,
+      set_type: "amrap",
+      amrap_target: 8,
+      sync_version: V + 300,
+      last_updated: new Date((V + 300) * 1000).toISOString(),
+    });
+    // A warm-up this phone has never seen.
+    hydrationCloud.set(3, { set_number: 0, weight: 40, reps: 10, set_type: "warmup" });
+
+    await service.hydrateStrengthWorkoutDataForWorkout(phone, 1, { forceTargetedHydration: true });
+
+    assert.strictEqual(probed(), 1, "the hydration asks the column once, as the set sync does, when it has decimals to lose");
+    assert.deepStrictEqual(
+      pick(phone.row(1), ["weight", "rpe", "needs_sync"]),
+      { weight: 102.5, rpe: 8.5, needs_sync: 1 },
+      "a set the cloud holds cut off keeps 102.5 here and is marked to go up again, not marked clean"
+    );
+    assert.deepStrictEqual(
+      pick(phone.row(2), ["weight", "needs_sync", "sync_version"]),
+      { weight: 90, needs_sync: 1, sync_version: V + 200 },
+      "an edit still waiting to upload is not overwritten by the cloud's older copy"
+    );
+    assert.deepStrictEqual(
+      pick(phone.row(4), ["reps", "set_type", "amrap", "amrap_target", "needs_sync"]),
+      { reps: 9, set_type: "amrap", amrap: 1, amrap_target: 8, needs_sync: 0 },
+      "a newer cloud copy wins, with its type and AMRAP target"
+    );
+    const warmUp = phone.raw.prepare('SELECT set_type, weight, reps, needs_sync FROM "Set" WHERE remote_local_set_id = 3').get();
+    assert.deepStrictEqual({ ...warmUp }, { set_type: "warmup", weight: 40, reps: 10, needs_sync: 0 }, "a warm-up from the cloud arrives a warm-up");
+    assert.strictEqual(
+      phone.raw.prepare("SELECT note FROM Exercise_Instance WHERE exercise_instance_id = 1").get().note,
+      "Cloud note",
+      "an exercise with nothing to upload takes the cloud's copy"
+    );
+
+    // The next push sends the two sets, and the cloud has what the phone has.
+    assert.strictEqual(await setSync.uploadDirtySets(phone, USER), 2);
+    assert.deepStrictEqual(pick(hydrationCloud.byLocalId(1), ["weight", "rpe"]), { weight: 102.5, rpe: 8.5 });
+    assert.strictEqual(hydrationCloud.byLocalId(2).weight, 90);
+    assert.deepStrictEqual(pick(phone.row(1), ["weight", "needs_sync"]), { weight: 102.5, needs_sync: 0 });
+    assert.deepStrictEqual(await syncPass(setSync, phone), { downloaded: 0, uploaded: 0 }, "and then it is settled");
+
+    // Opened again: nothing is marked to go up a second time.
+    await service.hydrateStrengthWorkoutDataForWorkout(phone, 1, { forceTargetedHydration: true });
+    assert.strictEqual(phone.row(1).needs_sync, 0, "the set went up once and is not sent again");
+    assert.strictEqual(probed(), 1, "and the column is not asked again that session");
+  }
+
+  /* ----------------------------------- before the migration: integer -- */
+  {
+    const hydrationCloud = createHydrationCloud("integer");
+    const phone = await createHydrationPhone({ exerciseNote: "Typed offline", exerciseDirty: true });
+    const { service } = startHydrationSession(hydrationCloud);
+
+    phone.syncedSet({ setId: 1, setNumber: 1, weight: 102.5, rpe: 8.5, reps: 3 });
+    hydrationCloud.set(1, { set_number: 1, weight: 102, rpe: 8, reps: 3 });
+
+    await service.hydrateStrengthWorkoutDataForWorkout(phone, 1, { forceTargetedHydration: true });
+
+    assert.deepStrictEqual(
+      pick(phone.row(1), ["weight", "rpe", "needs_sync"]),
+      { weight: 102.5, rpe: 8.5, needs_sync: 0 },
+      "a whole-number column cannot hold more: 102 is agreement, and nothing is queued to go up"
+    );
+    const exercise = phone.raw.prepare("SELECT note, needs_sync FROM Exercise_Instance WHERE exercise_instance_id = 1").get();
+    assert.deepStrictEqual(
+      { ...exercise },
+      { note: "Typed offline", needs_sync: 1 },
+      "an exercise edit still waiting to upload is not overwritten by the cloud's older copy"
+    );
+  }
+}
+
 /* ============================ the other paths that read a set from the cloud == */
 
 {
-  // The workout hydration reads sets from the cloud on its own path.
-  const service = read("src/Services/weightliftingService.js");
-  const hydrate = service.slice(
-    service.indexOf("async function hydrateWorkoutStrengthDataFromCloud("),
-    service.indexOf("export async function syncStrengthWorkoutDataFromCloud(")
-  );
-
-  assert.ok(hydrate.length > 0, "hydrateWorkoutStrengthDataFromCloud is gone");
-  assert.ok(!/normalizeOptionalInteger\(cloudSet\?\.(weight|rpe)/.test(hydrate), "the hydration truncates a set's weight or RPE again");
-  assert.ok(/normalizeSetDecimal\(cloudSet\?\.weight\)/.test(hydrate) && /normalizeSetDecimal\(cloudSet\?\.rpe\)/.test(hydrate));
-  assert.ok(/resolveCloudSetDecimals\(/.test(hydrate), "the hydration lets a cut-off copy overwrite the phone's decimals");
-  assert.ok(/setDecimalColumns\.learnFrom\(cloudSets\)/.test(hydrate));
-
   // Importing a program file.
   const transfer = read("src/Services/programTransferService.js");
   assert.ok(!/toIntegerOrNull\(set\.(weight|rpe)\)/.test(transfer), "a program import truncates a set's weight or RPE");
@@ -732,10 +958,12 @@ async function syncChecks() {
 
 handleChecks()
   .then(syncChecks)
+  .then(hydrationChecks)
   .then(() => {
     console.log(
       "Set decimals: weight and RPE keep two decimals both ways; before the migration an upload falls back to whole numbers " +
-        "once a session and the phone keeps its own; afterwards the cut-off sets go up once and everything settles."
+        "once a session and the phone keeps its own; afterwards the cut-off sets go up once and everything settles, " +
+        "from the set sync and from the workout hydration alike."
     );
   })
   .catch((error) => {

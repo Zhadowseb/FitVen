@@ -106,11 +106,11 @@
 
   <!-- The weight buttons' "2,5 kg" 13/800, in red and in green -->
   <style name="LiveWorkout.Text.Heavy.Button.WeightMinus">
-    <item name="android:textColor">@color/live_workout_weight_minus</item>
+    <item name="android:textColor">@color/live_workout_weight_minus_text</item>
   </style>
 
   <style name="LiveWorkout.Text.Heavy.Button.WeightPlus">
-    <item name="android:textColor">@color/live_workout_weight_plus</item>
+    <item name="android:textColor">@color/live_workout_weight_plus_text</item>
   </style>
 
   <!-- 700: the weight buttons' "−" and "+", and "af 3:00". Weight 700 is
@@ -143,11 +143,11 @@
   </style>
 
   <style name="LiveWorkout.Text.Bold.WeightSign.Minus">
-    <item name="android:textColor">@color/live_workout_weight_minus</item>
+    <item name="android:textColor">@color/live_workout_weight_minus_text</item>
   </style>
 
   <style name="LiveWorkout.Text.Bold.WeightSign.Plus">
-    <item name="android:textColor">@color/live_workout_weight_plus</item>
+    <item name="android:textColor">@color/live_workout_weight_plus_text</item>
   </style>
 
   <!-- A 40 dp button: icon and text centred. -->
@@ -158,12 +158,15 @@
     <item name="android:paddingEnd">8dp</item>
   </style>
 
-  <!-- A button that cannot be used right now (minus at 0): 40 %, and it takes
-       the tap so the card body does not open the app instead. Its layout
-       gives it a background without a touch ripple. -->
+  <!-- A button that cannot be used right now (minus at 0): 40 %, and
+       disabled. Being clickable, it still takes the tap, so the card body
+       does not open the app instead; being disabled, it does nothing, and
+       TalkBack says it cannot be used. Its layout gives it a background
+       without a touch ripple. -->
   <style name="LiveWorkout.Button.Off">
     <item name="android:alpha">0.4</item>
     <item name="android:clickable">true</item>
+    <item name="android:enabled">false</item>
     <item name="android:visibility">gone</item>
   </style>
 </resources>

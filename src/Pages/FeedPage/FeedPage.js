@@ -78,7 +78,7 @@ function getWorkoutSummaryDisplayTitle(post, t) {
   }
 
   // An auto-named workout's title can be another type id ("Upperbody").
-  return workoutDisplayName(title, t) ?? title;
+  return workoutDisplayName(title, t, workoutType) ?? title;
 }
 
 function getWorkoutTypeLabel(workoutType, t) {

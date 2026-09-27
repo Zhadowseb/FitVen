@@ -211,6 +211,74 @@ assert.strictEqual(i18n.getLocaleTag("da"), "da-DK");
     "no label: the type's name"
   );
   assert.strictEqual(types.workoutDisplayName(null, inDanish, null), null, "neither: the caller's fallback");
+
+  // A label that spells a type id is only translated when the app wrote it:
+  // the workout's own type (the fallback), or on a strength workout the name
+  // the app gives it after its exercises. PR #288's review: "Legs" typed on a
+  // program day read "Ben", "Run" read "Løb".
+  const draw = (label, workoutType) => types.workoutDisplayName(label, inDanish, workoutType);
+
+  assert.strictEqual(draw("Run", "Resistance"), "Run", "a strength workout named Run keeps its name");
+  assert.strictEqual(draw("Walk", "Resistance"), "Walk");
+  assert.strictEqual(draw("Legs", "Run"), "Legs", "a run named Legs keeps its name");
+  assert.strictEqual(draw("Resistance", "Upperbody"), "Resistance", "another type's id, typed, stays");
+  assert.strictEqual(draw("legs", "Resistance"), "legs", "not the app's spelling: typed");
+  assert.strictEqual(draw("Run", "Run"), "Løb", "a run nobody named");
+  assert.strictEqual(draw("walk", "Walk"), "Gåtur", "its own type, in any case");
+  assert.strictEqual(draw("Styrke", "Resistance"), "Styrke", "a catalog display name is shown as the catalog has it");
+  assert.strictEqual(draw("Upperbody", "Resistance"), "Overkrop", "named by the app after its exercises");
+  assert.strictEqual(
+    draw("Legs", "Resistance"),
+    "Ben",
+    "the case the label cannot settle: the app's own spelling of an auto-name on a strength workout"
+  );
+  assert.strictEqual(types.workoutDisplayName("Upperbody", inEnglish, "Resistance"), "Upper body");
+
+  // Without the type only the exact spelling the app stores counts.
+  assert.strictEqual(draw("Resistance", null), "Styrketræning");
+  assert.strictEqual(draw("Legs", undefined), "Ben");
+  assert.strictEqual(draw("run", null), "run");
+  assert.strictEqual(draw("Ben dag", null), "Ben dag");
+
+  // Every name the auto-namer writes is one the display translates, on each
+  // type it names - and on no other.
+  const { WORKOUT_CLASSIFICATION_LABELS, classifyWorkoutFromMuscleGroups } = loadAppModule(
+    "src/Utils/workoutClassification.js"
+  );
+
+  for (const autoName of WORKOUT_CLASSIFICATION_LABELS) {
+    for (const strengthType of ["Resistance", "StrengthTraining", "Upperbody", "Legs"]) {
+      assert.ok(types.isAppWorkoutName(autoName, strengthType), `${autoName} on ${strengthType} is the app's`);
+    }
+
+    assert.ok(!types.isAppWorkoutName(autoName, "Run"), `${autoName} on a run was typed`);
+    assert.ok(!types.isAppWorkoutName(autoName, "Walk"), `${autoName} on a walk was typed`);
+
+    for (const t of [inDanish, inEnglish]) {
+      const name = types.workoutDisplayName(autoName, t, "Resistance");
+
+      assert.ok(name && !name.startsWith("workoutTypes."), `${autoName} has a name in both languages`);
+    }
+  }
+
+  const legDay = classifyWorkoutFromMuscleGroups([{ primaryGroupKeys: ["quads", "hamstrings"] }]);
+
+  assert.strictEqual(legDay.label, "Legs");
+  assert.strictEqual(draw(legDay.label, "Resistance"), "Ben", "what the auto-namer writes is drawn translated");
+
+  // The weightliftingService set it names by, and the one the display mirrors.
+  const service = read("src/Services/weightliftingService.js").match(
+    /const CLASSIFIABLE_WORKOUT_TYPES = new Set\(\[([\s\S]*?)\]\);/
+  );
+
+  assert.ok(service, "CLASSIFIABLE_WORKOUT_TYPES could not be read");
+
+  for (const [, strengthType] of service[1].matchAll(/"(\w+)"/g)) {
+    assert.ok(types.isAppWorkoutName("Push", strengthType), `the display knows ${strengthType} is auto-named`);
+  }
+
+  assert.strictEqual(types.isAppWorkoutName("", "Resistance"), false);
+  assert.strictEqual(types.isAppWorkoutName("Push A", "Resistance"), false);
 }
 
 let notified = null;

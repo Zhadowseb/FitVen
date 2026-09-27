@@ -39,8 +39,8 @@ export default function RepeatAlso({ items = [], onPress }) {
         contentContainerStyle={styles.alsoRail}
       >
         {items.map((item) => {
-          // A name that is only a stored type id, in the app's language.
-          const name = workoutDisplayName(item.name, t) ?? item.name;
+          // A name the app wrote, in the app's language; a typed one as typed.
+          const name = workoutDisplayName(item.name, t, item.workoutType) ?? item.name;
 
           return (
             <TouchableOpacity

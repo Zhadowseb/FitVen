@@ -32,6 +32,8 @@ export default {
     switchedPerSide: "Weight is now logged per side",
     switchedBothSides: "Weight is now logged for both sides",
     undo: "Undo",
+    switchFailed: "Could not switch how the weight is logged",
+    undoFailed: "Could not undo the switch",
     // Follows the number, in small grey type.
     suffix: "per side",
     a11y: "Weight is logged {mode}. Tap to switch, all sets are converted",
@@ -101,6 +103,8 @@ export default {
     restartMessage:
       "This clears the timer, completion state, and workout progress for this workout.",
     restartConfirm: "Restart workout",
+    restartFailedTitle: "Could not restart workout",
+    restartFailedMessage: "Nothing was changed. Please try again.",
     options: {
       changeName: "Change name",
       restart: "Restart Workout",
@@ -189,6 +193,11 @@ export default {
     weightPlus: "Add {step} kg to set {label}",
     weightMinusAll: "Take {step} kg off every unfinished set",
     weightPlusAll: "Add {step} kg to every unfinished set",
+    // When a weight could not be saved.
+    weightSaveFailedTitle: "The weight was not saved",
+    weightStepsKept:
+      "It is still on screen, and is saved the next time you change a weight or close the exercise.",
+    weightTypedReverted: "The set shows the saved weight again. Please try again.",
     headers: {
       note: "NOTE",
       rest: "REST",

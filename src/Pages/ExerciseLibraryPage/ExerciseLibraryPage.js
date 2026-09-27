@@ -166,7 +166,9 @@ export default function ExerciseLibraryPage() {
         throw new Error("Nothing was planned");
       }
 
-      const name = workoutDisplayName(repeatTarget.label, t) ?? repeatTarget.label;
+      const name =
+        workoutDisplayName(repeatTarget.label, t, repeatTarget.workout_type) ??
+        repeatTarget.label;
 
       setRepeatTarget(null);
       Alert.alert(
@@ -209,7 +211,7 @@ export default function ExerciseLibraryPage() {
       Alert.alert(
         t("train.plan.plannedTitle"),
         t("train.plan.plannedMessage", {
-          name: workoutDisplayName(workout.label, t) ?? workout.label,
+          name: workoutDisplayName(workout.label, t, workout.workout_type) ?? workout.label,
           date: formatDate(date, { weekday: "long", day: "numeric", month: "long" }),
         })
       );

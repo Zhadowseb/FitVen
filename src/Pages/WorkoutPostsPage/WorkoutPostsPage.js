@@ -377,7 +377,8 @@ export default function WorkoutPostsPage() {
           style={[styles.sheetTitle, { borderBottomColor: theme.cardBorder }]}
         >
           <ThemedText style={styles.sheetTitleText} setColor={titleColor}>
-            {workoutDisplayName(managedPost?.title, t) ?? t("social.posts.workoutFallback")}
+            {workoutDisplayName(managedPost?.title, t, managedPost?.workoutType) ??
+              t("social.posts.workoutFallback")}
           </ThemedText>
           <ThemedText style={styles.sheetSubtitleText} setColor={quietText}>
             {managedPost?.isPosted == null

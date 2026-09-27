@@ -262,6 +262,36 @@ assert.deepEqual(
   "with no iconFor, every card falls back to the workout's initials"
 );
 
+{
+  // `t` reaches the initials through enrichCalendarDay, which is how both
+  // screens call it (PR #288's review: only getWorkoutIconLabel was tested).
+  // An unnamed walk is read in Danish; "Run" typed on a strength workout is
+  // a name, and stays one.
+  const { translate } = loadAppModule("src/Localization/i18n.js");
+  const inDanish = (key, params) => translate(key, params, "da");
+  const oneDay = {
+    workoutsByDate: new Map([
+      [
+        "22.09.2026",
+        [
+          { workout_id: 21, workout_type: "Walk", label: "Walk", done: 0 },
+          { workout_id: 22, workout_type: "Resistance", label: "Run", done: 0 },
+        ],
+      ],
+    ]),
+    programsByDate: new Map(),
+    programDates: new Set(),
+    sickDates: new Set(),
+  };
+  const initials = (options) =>
+    days
+      .enrichCalendarDay({ dateLabel: "22.09.2026" }, oneDay, { pageKey: "2026-09-21", todayLabel: TODAY_LABEL, ...options })
+      .workoutCards.map((card) => card.iconLabel);
+
+  assert.deepEqual(initials({ t: inDanish }), ["GÅ", "RU"], "enrichCalendarDay does not pass t on");
+  assert.deepEqual(initials({}), ["WA", "RU"], "without t, as before");
+}
+
 /* ------------------------------------------------------------- wiring -- */
 
 // The point of the util is one set of rules for both screens.

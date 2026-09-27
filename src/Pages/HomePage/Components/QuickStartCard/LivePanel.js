@@ -238,7 +238,9 @@ export default function LivePanel({ workout, live, onOpen }) {
   });
 
   // An unnamed workout's name is its stored type id; draw the type's name.
-  const name = workoutDisplayName(workout?.name, t) ?? t("home.quickStart.todaysWorkout");
+  const name =
+    workoutDisplayName(workout?.name, t, workout?.workoutType) ??
+    t("home.quickStart.todaysWorkout");
   const viewKey = `${view}|${focus.set?.setId ?? focus.set?.exerciseId ?? "-"}|${record?.setId ?? ""}`;
 
   return (

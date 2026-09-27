@@ -100,7 +100,7 @@ export default function SplitEditorSheet({
                     ) : null}
                   </View>
                   {/* The name is also the key the split stores; only what is
-                      drawn is translated, when it is a type id. */}
+                      drawn is translated, when the app wrote it. */}
                   <ThemedText style={styles.sheetRowName} setColor={theme.title} numberOfLines={1}>
                     {workoutDisplayName(name, t) ?? name}
                   </ThemedText>

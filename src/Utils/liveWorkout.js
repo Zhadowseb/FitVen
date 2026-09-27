@@ -14,6 +14,7 @@
 // passes in what it read and `t`.
 import { orderSetsForDisplay, resolveSetType } from "./setTypes";
 import { normalizeElapsedDurationSeconds, normalizeStoredTimestampSeconds } from "./timeUtils";
+import { DEFAULT_WEIGHT_STEP, getWeightStep } from "./weightStep";
 
 export const LIVE_WORKOUT_STATE_VERSION = 1;
 
@@ -58,36 +59,18 @@ export const LIVE_WORKOUT_ACTION_TYPES = [
 
 // The weight buttons on Android's open card move a set by one step of plates.
 // The step follows the exercise: what is on the bar decides how finely it can
-// move. A setting per exercise can come later; until then, this.
-export const LIVE_WEIGHT_STEP_DEFAULT = 2.5;
-const HEAVY_STEP = 5;
-const DUMBBELL_STEP = 2;
+// move. It is the set list's steppers' rule, getWeightStep, so a press moves a
+// set by the same amount on the card and in the list; the card is handed the
+// number, and the native sides never work it out themselves.
+export const LIVE_WEIGHT_STEP_DEFAULT = DEFAULT_WEIGHT_STEP;
 
 /**
  * One step on the weight buttons for an exercise, in kg: 2 for dumbbells, 5
  * for machines and cables and for squats and deadlifts on the bar, and 2.5
- * for everything else - the bench press among them.
+ * for everything else - the bench press among them (getWeightStep).
  */
 export function liveWeightStepFor({ name = "", equipment = null } = {}) {
-  const lowered = String(name ?? "").toLowerCase();
-
-  if (equipment === "dumbbell" || /dumbbell|håndvægt/.test(lowered)) {
-    return DUMBBELL_STEP;
-  }
-
-  if (
-    equipment === "machine" ||
-    equipment === "cable" ||
-    /machine|maskine|cable|kabel|leg press|benpres/.test(lowered)
-  ) {
-    return HEAVY_STEP;
-  }
-
-  if (/squat|deadlift|dødløft/.test(lowered)) {
-    return HEAVY_STEP;
-  }
-
-  return LIVE_WEIGHT_STEP_DEFAULT;
+  return getWeightStep({ name, equipment });
 }
 
 /** To the nearest quarter kilo, so 0.1 + 0.2 never shows as 102.49999. */

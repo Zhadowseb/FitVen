@@ -12,7 +12,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "@localization";
 
 import styles, { HERO_HEIGHT } from "./GymLeaderboardPageStyle";
-import CentreExercises from "./Components/CentreExercises";
+import CentreExercises, { EXERCISE_PREVIEW_COUNT } from "./Components/CentreExercises";
 import ExerciseRow from "./Components/ExerciseRow";
 import ChangeGymSheet from "@resources/Components/ChangeGymSheet/ChangeGymSheet";
 import { useAuth } from "@contexts/AuthContext";
@@ -38,7 +38,12 @@ import {
   ThemedText,
   ThemedView,
 } from "@resources/ThemedComponents";
-import { getChainInitials, listCentreExercises, searchCentreExercises } from "@utils/gymUtils";
+import {
+  countCentreExercises,
+  getChainInitials,
+  listCentreExercises,
+  searchCentreExercises,
+} from "@utils/gymUtils";
 import { gymSeenKey, markSeen } from "@utils/lastSeen";
 
 const IDLE = { status: "idle", data: null, error: "" };
@@ -103,13 +108,20 @@ export default function GymLeaderboardPage() {
       setErrorMessage("");
 
       try {
-        // Every exercise ranked here, for the exercises section and its
-        // search - by everyone, whichever of Centre / Friends is chosen, as
-        // the exercise page's chips are, so Friends does not hide an exercise
-        // only strangers have lifted. Nothing else on the page depends on
-        // the choice, so changing it does not load this again.
+        // The exercises section's few - the featured ones and the most
+        // lifted of the rest, enough for its preview - and how many there
+        // are in all, by everyone, whichever of Centre / Friends is chosen,
+        // as the exercise page's chips are, so Friends does not hide an
+        // exercise only strangers have lifted. Nothing else on the page
+        // depends on the choice, so changing it does not load this again.
+        // This runs on every visit to the page; every exercise, for the
+        // search, is asked for when somebody searches (loadSearchableExercises).
         const [overviewResult, queueResult] = await Promise.allSettled([
-          gymService.getGymOverview({ gymId, scope: gymService.GYM_SCOPE_GYM, moreLimit: null }),
+          gymService.getGymOverview({
+            gymId,
+            scope: gymService.GYM_SCOPE_GYM,
+            moreLimit: EXERCISE_PREVIEW_COUNT,
+          }),
           gymService.getVerificationQueue({ gymId }),
         ]);
 
@@ -241,10 +253,40 @@ export default function GymLeaderboardPage() {
     }
   }, [route.params?.lift_id]);
 
+  // Every exercise ranked here, for the search: asked for once per centre,
+  // when the search is first used. Until it has come, and if it fails, the
+  // search looks through the exercises the page already has.
+  const [searchOverview, setSearchOverview] = useState(null);
+  const searchRequestGymRef = useRef(null);
+
+  const loadSearchableExercises = useCallback(() => {
+    if (!Number.isFinite(gymId) || searchRequestGymRef.current === gymId) {
+      return;
+    }
+
+    searchRequestGymRef.current = gymId;
+    gymService
+      .getGymOverview({ gymId, scope: gymService.GYM_SCOPE_GYM, moreLimit: null })
+      .then((result) => {
+        if (searchRequestGymRef.current === gymId && result) {
+          setSearchOverview(result);
+        }
+      })
+      .catch((error) => {
+        // Asked again the next time the search is used.
+        if (searchRequestGymRef.current === gymId) {
+          searchRequestGymRef.current = null;
+        }
+        console.warn("Could not load every exercise at this centre for the search:", error);
+      });
+  }, [gymId]);
+
   // "Change centre" can put another centre on this screen; what was typed
-  // was a search of the one before.
+  // was a search of the one before, and so was the list it searched.
   useEffect(() => {
     setExerciseQuery("");
+    setSearchOverview(null);
+    searchRequestGymRef.current = null;
   }, [gymId]);
 
   const gym = overview?.gym ?? null;
@@ -258,12 +300,24 @@ export default function GymLeaderboardPage() {
       ].filter(Boolean)
     : [];
   const exercises = useMemo(() => listCentreExercises(overview), [overview]);
+  const exerciseTotal = useMemo(() => countCentreExercises(overview), [overview]);
+  const searchableExercises = useMemo(
+    () => (searchOverview ? listCentreExercises(searchOverview) : exercises),
+    [searchOverview, exercises]
+  );
   const trimmedQuery = exerciseQuery.trim();
   const isSearchingExercises = trimmedQuery.length > 0;
   const exerciseMatches = useMemo(
-    () => searchCentreExercises(exercises, trimmedQuery),
-    [exercises, trimmedQuery]
+    () => searchCentreExercises(searchableExercises, trimmedQuery),
+    [searchableExercises, trimmedQuery]
   );
+
+  // Typed without the field reporting its focus first - a paste, say.
+  useEffect(() => {
+    if (isSearchingExercises) {
+      loadSearchableExercises();
+    }
+  }, [isSearchingExercises, loadSearchableExercises]);
   const crumbs = place
     ? [
         {
@@ -457,7 +511,12 @@ export default function GymLeaderboardPage() {
 
       {renderCards()}
 
-      <CentreExercises exercises={exercises} onOpen={openExercise} onOpenAll={openAllExercises} />
+      <CentreExercises
+        exercises={exercises}
+        total={exerciseTotal}
+        onOpen={openExercise}
+        onOpenAll={openAllExercises}
+      />
     </>
   );
 
@@ -566,6 +625,7 @@ export default function GymLeaderboardPage() {
                 <TextInput
                   value={exerciseQuery}
                   onChangeText={setExerciseQuery}
+                  onFocus={loadSearchableExercises}
                   placeholder={t("gyms.centreExercises.searchPlaceholder")}
                   placeholderTextColor={quietText}
                   style={[styles.searchInput, { color: theme.title }]}

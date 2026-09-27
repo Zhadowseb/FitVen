@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The open card (about 220 dp, under the 252 limit), for a set (1e) and a
+<!-- The open card (about 224 dp, under the 252 limit), for a set (1e) and a
      rest (1f) alike. The two share the skeleton; what differs is shown or
      hidden from Kotlin on every post:
 
@@ -11,14 +11,19 @@
        buttons      1e: −step · Sæt færdigt · +step
                     1f: −15 s · Spring over · +15 s
 
+     The heights: the content row 52, row 1 and row 2 about 45 each with 10
+     between them, and the buttons 48 - Android's touch target, since the
+     weight buttons are tapped again and again with one hand - with 12 above
+     row 1 and above the buttons.
+
      For a set without a weight the weight buttons are hidden and Sæt færdigt
      takes the row, which is why the 8 dp gaps sit on the weight buttons and
      not on it. At 0 the minus button's dimmed twin (40 %) is shown instead; it
-     swallows the tap, so a tap on it does nothing. With every set done the
-     card is the title, "finish the workout?" and that same pill, alone and
-     full width, as "Afslut"; with no sets yet it is only the title. The
-     workout clock ends the eyebrow's line in every mode. No background: the
-     rest does not colour the open card. -->
+     is disabled, so a tap on it does nothing and TalkBack says it cannot be
+     used. With every set done the card is the title, "finish the workout?"
+     and that same pill, alone and full width, as "Afslut"; with no sets yet
+     it is only the title. The workout clock ends the eyebrow's line in every
+     mode. No background: the rest does not colour the open card. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
   android:layout_width="match_parent"
   android:layout_height="wrap_content"
@@ -167,7 +172,7 @@
     android:id="@+id/live_workout_row_current"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="14dp"
+    android:layout_marginTop="12dp"
     android:orientation="vertical">
 
     <TextView
@@ -191,7 +196,7 @@
     android:id="@+id/live_workout_row_rest"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="14dp"
+    android:layout_marginTop="12dp"
     android:orientation="vertical"
     android:visibility="gone">
 
@@ -274,8 +279,8 @@
   <LinearLayout
     android:id="@+id/live_workout_buttons"
     android:layout_width="match_parent"
-    android:layout_height="40dp"
-    android:layout_marginTop="14dp"
+    android:layout_height="48dp"
+    android:layout_marginTop="12dp"
     android:baselineAligned="false"
     android:orientation="horizontal">
 
@@ -376,8 +381,8 @@
   <LinearLayout
     android:id="@+id/live_workout_rest_buttons"
     android:layout_width="match_parent"
-    android:layout_height="40dp"
-    android:layout_marginTop="14dp"
+    android:layout_height="48dp"
+    android:layout_marginTop="12dp"
     android:baselineAligned="false"
     android:orientation="horizontal"
     android:visibility="gone">
