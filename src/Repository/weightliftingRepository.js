@@ -1558,10 +1558,13 @@ export async function createExerciseFromCloud(
   );
 }
 
+// Writes only while the row is still at `expectedSyncVersion`, and says whether
+// it did. See updateWorkoutFromCloud in programRepository, which this mirrors.
 export async function updateExerciseFromCloud(
   db,
   {
     exerciseId,
+    expectedSyncVersion,
     cloudExerciseInstanceId,
     remoteLocalExerciseInstanceId,
     syncId,
@@ -1579,9 +1582,13 @@ export async function updateExerciseFromCloud(
     weightMode = null,
   }
 ) {
+  if (expectedSyncVersion === undefined) {
+    throw new Error("updateExerciseFromCloud needs the expectedSyncVersion it read.");
+  }
+
   await ensureExerciseOrderColumn(db);
 
-  await db.runAsync(
+  const result = await db.runAsync(
     `UPDATE Exercise_Instance
      SET cloud_exercise_instance_id = ?,
          remote_local_exercise_instance_id = ?,
@@ -1597,7 +1604,8 @@ export async function updateExerciseFromCloud(
          done = ?,
          weight_mode = COALESCE(?, weight_mode, 'total'),
          needs_sync = 0
-     WHERE exercise_instance_id = ?;`,
+     WHERE exercise_instance_id = ?
+       AND sync_version IS ?;`,
     sqliteParams([
       cloudExerciseInstanceId,
       remoteLocalExerciseInstanceId,
@@ -1613,8 +1621,11 @@ export async function updateExerciseFromCloud(
       done ? 1 : 0,
       weightMode,
       exerciseId,
+      expectedSyncVersion,
     ])
   );
+
+  return result.changes > 0;
 }
 
 // Clears needs_sync only while the row is still at `expectedSyncVersion`. See
@@ -2066,10 +2077,13 @@ export async function createSetFromCloud(
   );
 }
 
+// Writes only while the row is still at `expectedSyncVersion`, and says whether
+// it did. See updateWorkoutFromCloud in programRepository, which this mirrors.
 export async function updateSetFromCloud(
   db,
   {
     setId,
+    expectedSyncVersion,
     cloudSetId,
     remoteLocalSetId,
     syncId,
@@ -2091,8 +2105,12 @@ export async function updateSetFromCloud(
     note,
   }
 ) {
+  if (expectedSyncVersion === undefined) {
+    throw new Error("updateSetFromCloud needs the expectedSyncVersion it read.");
+  }
+
   const resolvedType = resolveSetType({ set_type: setType, amrap });
-  await db.runAsync(
+  const result = await db.runAsync(
     `UPDATE "Set"
      SET cloud_set_id = ?,
          remote_local_set_id = ?,
@@ -2114,7 +2132,8 @@ export async function updateSetFromCloud(
          amrap_target = ?,
          note = ?,
          needs_sync = 0
-     WHERE sets_id = ?;`,
+     WHERE sets_id = ?
+       AND sync_version IS ?;`,
     sqliteParams([
       cloudSetId,
       remoteLocalSetId,
@@ -2136,8 +2155,11 @@ export async function updateSetFromCloud(
       resolvedType === "amrap" ? amrapTarget ?? null : null,
       note,
       setId,
+      expectedSyncVersion,
     ])
   );
+
+  return result.changes > 0;
 }
 
 // Clears needs_sync only while the row is still at `expectedSyncVersion`. See

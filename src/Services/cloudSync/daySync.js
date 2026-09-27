@@ -381,8 +381,9 @@ async function reconcileDaysFromCloud(db, userId) {
 
       if (Number(localDay.needs_sync) === 1) {
         if (compareEntitySyncVersions(localDay, cloudDay) < 0) {
-          await programRepository.updateDayFromCloud(db, {
+          const applied = await programRepository.updateDayFromCloud(db, {
             dayId: localDay.day_id,
+            expectedSyncVersion: localDay.sync_version,
             cloudDayId,
             remoteLocalDayId: localDayId,
             syncId: cloudSyncId,
@@ -395,7 +396,7 @@ async function reconcileDaysFromCloud(db, userId) {
             done: normalizedCloudDay.done,
             isSick: normalizedCloudDay.is_sick,
           });
-          downloadedCount += 1;
+          downloadedCount += applied ? 1 : 0;
         } else if (areComparableDaysEqual(comparableLocalDay, normalizedCloudDay)) {
           await programRepository.markDaySynced(db, {
             dayId: localDay.day_id,
@@ -446,8 +447,9 @@ async function reconcileDaysFromCloud(db, userId) {
         continue;
       }
 
-      await programRepository.updateDayFromCloud(db, {
+      const applied = await programRepository.updateDayFromCloud(db, {
         dayId: localDay.day_id,
+        expectedSyncVersion: localDay.sync_version,
         cloudDayId,
         remoteLocalDayId: localDayId,
         syncId: cloudSyncId,
@@ -460,6 +462,11 @@ async function reconcileDaysFromCloud(db, userId) {
         done: normalizedCloudDay.done,
         isSick: normalizedCloudDay.is_sick,
       });
+
+      if (!applied) {
+        // The user wrote to it since it was read, and that write goes up.
+        continue;
+      }
 
       const updatedDay = {
         ...localDay,

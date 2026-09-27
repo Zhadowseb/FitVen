@@ -15,6 +15,11 @@
 // made from; otherwise it keeps its flag and its version, records the cloud
 // identity it was given, and goes up with the next pass.
 //
+// The pull had the same race the other way round. It reads its rows before its
+// transaction and wrote the cloud's copy over one by id alone, flag cleared, so
+// an edit made here in between was lost here and never sent. Its writes carry
+// the same guard now.
+//
 // The real sync modules run here against a real SQLite database built from
 // the app's own schema, and a small in-memory cloud stands in for Supabase.
 // The cloud lets the user act while a request is in flight, which is where the
@@ -251,6 +256,9 @@ const weightliftingRepository = loadAppModule(
   "src/Repository/weightliftingRepository.js"
 );
 const workoutRepository = loadAppModule("src/Repository/workoutRepository.js");
+// The repositories' own instance: one clock, so an edit made after another one
+// is always the newer.
+const { createNextSyncVersion } = loadAppModule("src/Utils/syncUtils.js");
 const { timestampToCloudTimeString } = loadAppModule(
   "src/Services/cloudSync/cloudSyncFields.js"
 );
@@ -315,6 +323,39 @@ function createDatabase() {
     },
     async isInTransactionAsync() {
       return Boolean(sqlite.isTransaction);
+    },
+  };
+}
+
+/**
+ * The phone's database, with one of the user's writes landing just before the
+ * pull's first write over a `table` row that clears its flag. That is the
+ * moment the race needs: the pull has read the row and decided, and has not
+ * written yet.
+ */
+function writeJustBeforeThePull(db, table, write) {
+  const pullsOver = new RegExp(
+    String.raw`^\s*UPDATE\s+"?${table}"?\s[\s\S]*\bneeds_sync = 0\b`
+  );
+  let pending = true;
+
+  return {
+    db: {
+      ...db,
+      async runAsync(sql, params) {
+        if (pending && pullsOver.test(sql)) {
+          pending = false;
+          await write();
+        }
+
+        return db.runAsync(sql, params);
+      },
+    },
+    assertItHappened() {
+      assert.ok(
+        !pending,
+        `the pull never wrote over a ${table} row, so it tested nothing`
+      );
     },
   };
 }
@@ -741,6 +782,227 @@ async function hierarchyRowEditedDuringItsOwnUpload(db, ids) {
   }
 }
 
+// The same race on the way down. Every reconcile reads its local rows before
+// its transaction, some after a request, and every await in its loop lets the
+// user write. So: the row is edited on another phone, this phone's pull reads
+// it and decides to take the cloud's copy, and the user edits it here just
+// before the pull writes. The pull wrote by id alone and cleared the flag, so
+// the edit was gone here and never sent. Now it only writes over the version
+// it read; the edit keeps its flag and goes up.
+//
+// Each level twice, once per branch the pull takes the cloud's copy in: a
+// synced row the cloud differs from, and a row with an older edit still
+// waiting, which the other phone's newer one beats.
+async function writeDuringThePullKeepsItsFlag(db, ids) {
+  const EDITS = [
+    {
+      table: "Program",
+      idColumn: "program_id",
+      cloudIdColumn: "cloud_program_id",
+      cloudTable: "Program",
+      id: ids.programId,
+      sync: syncProgramsWithCloud,
+      // Program, block and week upload before they pull, so the edit waits
+      // for the next pass. The rest pull, upload and pull again.
+      uploadsBeforeItPulls: true,
+      field: "program_name",
+      waiting: "Strength block - offline",
+      theirs: "Strength block - from the tablet",
+      mine: "Strength block - from the phone",
+      write: (programName) =>
+        programRepository.updateProgramName(db, {
+          programId: ids.programId,
+          programName,
+        }),
+    },
+    {
+      table: "Mesocycle",
+      idColumn: "mesocycle_id",
+      cloudIdColumn: "cloud_mesocycle_id",
+      cloudTable: "Mesocycle",
+      id: ids.mesocycleId,
+      sync: syncMesocyclesWithCloud,
+      uploadsBeforeItPulls: true,
+      field: "focus",
+      waiting: "Volume",
+      theirs: "Power",
+      mine: "Peaking",
+      write: (focus) =>
+        programRepository.updateMesocycleFocus(db, {
+          mesocycleId: ids.mesocycleId,
+          focus,
+        }),
+    },
+    {
+      table: "Microcycle",
+      idColumn: "microcycle_id",
+      cloudIdColumn: "cloud_microcycle_id",
+      cloudTable: "Microcycle",
+      id: ids.microcycleId,
+      sync: syncMicrocyclesWithCloud,
+      uploadsBeforeItPulls: true,
+      field: "focus",
+      waiting: "Accumulation",
+      theirs: "Intensity",
+      mine: "Taper",
+      write: (focus) =>
+        programRepository.updateMicrocycleFocus(db, {
+          microcycleId: ids.microcycleId,
+          focus,
+        }),
+    },
+    {
+      // Sick on the other phone, not sick on this one.
+      table: "Day",
+      idColumn: "day_id",
+      cloudIdColumn: "cloud_day_id",
+      cloudTable: "Day",
+      id: ids.dayId,
+      sync: syncDaysWithCloud,
+      field: "is_sick",
+      waiting: 1,
+      theirs: 1,
+      mine: 0,
+      cloudValue: Boolean,
+      write: (isSick) =>
+        programRepository.updateDaySick(db, {
+          dayId: ids.dayId,
+          isSick: isSick === 1,
+        }),
+    },
+    {
+      table: "Workout_Type_Instance",
+      idColumn: "workout_id",
+      cloudIdColumn: "cloud_workout_type_instance_id",
+      cloudTable: "workout_type_instance",
+      id: ids.workoutId,
+      sync: syncWorkoutTypeInstancesWithCloud,
+      field: "label",
+      waiting: "Lower body",
+      theirs: "Legs",
+      mine: "Legs and core",
+      write: (label) =>
+        workoutRepository.updateWorkoutLabel(db, {
+          workoutId: ids.workoutId,
+          label,
+        }),
+    },
+    {
+      table: "Exercise_Instance",
+      idColumn: "exercise_instance_id",
+      cloudIdColumn: "cloud_exercise_instance_id",
+      cloudTable: "exercise_instance",
+      id: ids.exerciseId,
+      sync: syncExerciseInstancesWithCloud,
+      field: "note",
+      waiting: "Belt",
+      theirs: "Belt from the second set",
+      mine: "No belt today",
+      write: (note) =>
+        weightliftingRepository.updateExerciseNote(db, {
+          exerciseId: ids.exerciseId,
+          note,
+        }),
+    },
+    {
+      table: "Set",
+      idColumn: "sets_id",
+      cloudIdColumn: "cloud_set_id",
+      cloudTable: "set",
+      id: ids.setId,
+      sync: syncSetsWithCloud,
+      field: "reps",
+      waiting: 7,
+      theirs: 8,
+      mine: 6,
+      write: (reps) =>
+        weightliftingRepository.updateSetField(db, {
+          field: "reps",
+          value: reps,
+          setId: ids.setId,
+        }),
+    },
+  ];
+
+  const ROUNDS = [
+    { name: "synced", waiting: false },
+    { name: "with an older edit waiting", waiting: true },
+  ];
+  const CASES = EDITS.flatMap((edit) => ROUNDS.map((round) => ({ edit, round })));
+
+  for (const { edit, round } of CASES) {
+    const { idColumn, cloudIdColumn, cloudTable, id, sync, field } = edit;
+    const { theirs, mine, write } = edit;
+    const label = `${edit.table}, ${round.name}`;
+    const cloudValue = edit.cloudValue ?? ((value) => value);
+    const row = () => localRow(db, edit.table, idColumn, id);
+    const cloudId = row()[cloudIdColumn];
+    let mineVersion = null;
+
+    assert.strictEqual(row().needs_sync, 0, `${label}: not synced before the pull`);
+
+    if (round.waiting) {
+      // Edited here and not sent, before the other phone's edit.
+      await write(edit.waiting);
+      assert.strictEqual(row().needs_sync, 1);
+    } else {
+      assert.notStrictEqual(row()[field], theirs, `${label}: nothing to pull`);
+    }
+
+    // The other phone's edit, already in the cloud when this one pulls.
+    const theirsVersion = createNextSyncVersion();
+    await cloud
+      .from(cloudTable)
+      .update({
+        [field]: cloudValue(theirs),
+        sync_version: theirsVersion,
+        last_updated: new Date(theirsVersion * 1000).toISOString(),
+      })
+      .eq("id", cloudId);
+
+    const phone = writeJustBeforeThePull(db, edit.table, async () => {
+      await write(mine);
+      mineVersion = row().sync_version;
+    });
+
+    await sync(phone.db);
+    phone.assertItHappened();
+
+    assert.ok(mineVersion > theirsVersion, `${label}: the edit here is not the newer`);
+    assert.strictEqual(
+      row()[field],
+      mine,
+      `${label}: the pull wrote the other phone's edit over the one made here`
+    );
+    assert.strictEqual(
+      row().sync_version,
+      mineVersion,
+      `${label}: the pull wrote the cloud's version over the edit's`
+    );
+
+    if (edit.uploadsBeforeItPulls) {
+      assert.strictEqual(row().needs_sync, 1, `${label}: the pull cleared the edit's flag`);
+      assert.strictEqual(
+        cloudRow(cloudTable, cloudId)[field],
+        cloudValue(theirs),
+        `${label}: the edit reached the cloud before its pass`
+      );
+
+      // The pass the edit queued behind it sends it.
+      await sync(db);
+    }
+
+    assert.strictEqual(row().needs_sync, 0, `${label}: the edit never came clean`);
+    assert.strictEqual(row()[field], mine);
+    assert.strictEqual(
+      cloudRow(cloudTable, cloudId)[field],
+      cloudValue(mine),
+      `${label}: the edit never reached the cloud`
+    );
+    assert.strictEqual(cloudRow(cloudTable, cloudId).sync_version, mineVersion);
+  }
+}
+
 // The push SetSync runs is upload-only. When another phone has edited an
 // exercise since this one did, the exercise's own upload leaves it to the
 // cloud and it stays waiting. The set under it then looks the exercise up
@@ -1074,20 +1336,47 @@ async function markSyncedBindsWhatSqliteCanTake(db, ids) {
   }
 }
 
-// Every call site hands over the version its decision was made from.
+// Every call site hands over the version its decision was made from: the
+// uploads' marks, and the pulls' writes.
 function everyCallSitePassesTheVersion() {
   const CALLERS = [
-    ["programSync.js", "programRepository.markProgramSynced", 2],
-    ["mesocycleSync.js", "programRepository.markMesocycleSynced", 3],
-    ["microcycleSync.js", "programRepository.markMicrocycleSynced", 3],
-    ["daySync.js", "programRepository.markDaySynced", 3],
-    ["workoutTypeInstanceSync.js", "programRepository.markWorkoutSynced", 3],
-    ["exerciseInstanceSync.js", "weightliftingRepository.markExerciseSynced", 2],
-    ["setSync.js", "weightliftingRepository.markSetSynced", 3],
+    ["cloudSync/programSync.js", "programRepository.markProgramSynced", 2],
+    ["cloudSync/mesocycleSync.js", "programRepository.markMesocycleSynced", 3],
+    ["cloudSync/microcycleSync.js", "programRepository.markMicrocycleSynced", 3],
+    ["cloudSync/daySync.js", "programRepository.markDaySynced", 3],
+    ["cloudSync/workoutTypeInstanceSync.js", "programRepository.markWorkoutSynced", 3],
+    [
+      "cloudSync/exerciseInstanceSync.js",
+      "weightliftingRepository.markExerciseSynced",
+      2,
+    ],
+    ["cloudSync/setSync.js", "weightliftingRepository.markSetSynced", 3],
+    ["cloudSync/programSync.js", "programRepository.updateProgramFromCloud", 2],
+    ["cloudSync/mesocycleSync.js", "programRepository.updateMesocycleFromCloud", 2],
+    [
+      "cloudSync/microcycleSync.js",
+      "programRepository.updateMicrocycleFromCloud",
+      2,
+    ],
+    ["cloudSync/daySync.js", "programRepository.updateDayFromCloud", 2],
+    [
+      "cloudSync/workoutTypeInstanceSync.js",
+      "programRepository.updateWorkoutFromCloud",
+      2,
+    ],
+    [
+      "cloudSync/exerciseInstanceSync.js",
+      "weightliftingRepository.updateExerciseFromCloud",
+      2,
+    ],
+    ["cloudSync/setSync.js", "weightliftingRepository.updateSetFromCloud", 2],
+    // Opening a workout pulls its exercises and sets on a path of its own.
+    ["weightliftingService.js", "weightliftingRepository.updateExerciseFromCloud", 1],
+    ["weightliftingService.js", "weightliftingRepository.updateSetFromCloud", 1],
   ];
 
   for (const [file, callee, expectedCalls] of CALLERS) {
-    const source = read("src", "Services", "cloudSync", file);
+    const source = read("src", "Services", ...file.split("/"));
     const calls = source.split(`${callee}(`).slice(1);
 
     assert.strictEqual(
@@ -1116,6 +1405,8 @@ async function run() {
   await noteEditedDuringItsOwnUpload(db, ids);
   await setTickedOffDuringTheWeightUpload(db, ids);
   await hierarchyRowEditedDuringItsOwnUpload(db, ids);
+  // Before the markers: they leave cloud ids behind that the cloud never gave.
+  await writeDuringThePullKeepsItsFlag(db, ids);
   await parentBeatenByTheCloudKeepsItsVersion(db, ids);
   await markSyncedOnlyClearsTheVersionItWasGiven(db, ids);
   await cloudIdentityKeepsAWaitingRowsVersion(db, ids);
@@ -1123,8 +1414,8 @@ async function run() {
   everyCallSitePassesTheVersion();
 
   console.log(
-    "Sync lost update: a write during its row's upload keeps its flag and " +
-      "goes up next pass, at every level from program to set; looking a " +
+    "Sync lost update: a write during its row's upload or pull keeps its " +
+      "flag and goes up, at every level from program to set; looking a " +
       "row up in the cloud never takes the version of an edit still waiting."
   );
 }

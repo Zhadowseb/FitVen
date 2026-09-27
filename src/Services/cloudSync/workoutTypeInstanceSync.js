@@ -433,8 +433,9 @@ async function reconcileWorkoutTypeInstancesFromCloud(db, userId) {
 
       if (Number(localWorkout.needs_sync) === 1) {
         if (compareEntitySyncVersions(localWorkout, cloudWorkout) < 0) {
-          await programRepository.updateWorkoutFromCloud(db, {
+          const applied = await programRepository.updateWorkoutFromCloud(db, {
             workoutId: localWorkout.workout_id,
+            expectedSyncVersion: localWorkout.sync_version,
             cloudWorkoutTypeInstanceId,
             remoteLocalWorkoutTypeInstanceId: localWorkoutTypeInstanceId,
             syncId: cloudSyncId,
@@ -458,7 +459,7 @@ async function reconcileWorkoutTypeInstancesFromCloud(db, userId) {
             gymId: comparableCloudWorkout.gym_id,
             startedFrom: comparableCloudWorkout.started_from,
           });
-          downloadedCount += 1;
+          downloadedCount += applied ? 1 : 0;
         } else if (
           areComparableWorkoutTypeInstancesEqual(
             comparableLocalWorkout,
@@ -527,8 +528,9 @@ async function reconcileWorkoutTypeInstancesFromCloud(db, userId) {
         continue;
       }
 
-      await programRepository.updateWorkoutFromCloud(db, {
+      const applied = await programRepository.updateWorkoutFromCloud(db, {
         workoutId: localWorkout.workout_id,
+        expectedSyncVersion: localWorkout.sync_version,
         cloudWorkoutTypeInstanceId,
         remoteLocalWorkoutTypeInstanceId: localWorkoutTypeInstanceId,
         syncId: cloudSyncId,
@@ -552,6 +554,11 @@ async function reconcileWorkoutTypeInstancesFromCloud(db, userId) {
         gymId: comparableCloudWorkout.gym_id,
         startedFrom: comparableCloudWorkout.started_from,
       });
+
+      if (!applied) {
+        // The user wrote to it since it was read, and that write goes up.
+        continue;
+      }
 
       const updatedWorkout = {
         ...localWorkout,

@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.16.5] - Unreleased
+### Fixed
+- **An edit made while the pull is writing keeps the edit.** This is the download side of 2.15.3 and 2.16.2. Every reconcile reads its local rows before its transaction, some after a request, and then wrote the cloud's copy by id alone with `needs_sync = 0`. The user can write at every `await` in the loop. So if a row was edited on another phone and the pull took that copy, an edit made here just before the write was overwritten, lost its flag and was never sent. The window is narrow, since the same row has to change on two phones.
+  - `updateProgramFromCloud`, `updateMesocycleFromCloud`, `updateMicrocycleFromCloud`, `updateDayFromCloud`, `updateWorkoutFromCloud`, `updateExerciseFromCloud` and `updateSetFromCloud` take `expectedSyncVersion` and write only while the row still has that `sync_version`. They return whether they wrote.
+  - A row that changed is left as it is: its edit, its flag and its version. It is not counted as downloaded, and the reconcile's maps keep the row as it was read. The edit goes up in the same pass (day, workout, exercise, set) or the next one (program, block, week).
+  - All 14 calls in `cloudSync/` pass the version of the row they read. So do the two in `hydrateWorkoutStrengthDataFromCloud`, which opening a workout runs. An exercise created there carries its version too, so a second cloud row matched to it does not fail.
+- **Tests:** `npm run test:sync-lost-update` lands an edit just before the pull's first write at every level. It runs each level twice: on a synced row and on a row with an older edit waiting, one run per branch that takes the cloud's copy. Without the fix, all 14 cases fail. It also checks that the 16 call sites pass the version. `test-dev-kpi-sources.js` and `test-set-types.js` pass the version when they call the functions directly.
+- **Docs:** `src/Services/AGENTS.md` states the rule for the pull.
+
+---
 ## [2.16.4] - Unreleased
 ### Fixed
 From the review agents' reports on #287–#292.

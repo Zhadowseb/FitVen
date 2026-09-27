@@ -457,8 +457,9 @@ async function reconcileExerciseInstancesFromCloud(db, userId) {
 
       if (Number(localExercise.needs_sync) === 1) {
         if (compareEntitySyncVersions(localExercise, cloudExercise) < 0) {
-          await weightliftingRepository.updateExerciseFromCloud(db, {
+          const applied = await weightliftingRepository.updateExerciseFromCloud(db, {
             exerciseId: localExercise.exercise_instance_id,
+            expectedSyncVersion: localExercise.sync_version,
             cloudExerciseInstanceId,
             remoteLocalExerciseInstanceId: localExerciseInstanceId,
             syncId: cloudSyncId,
@@ -475,7 +476,7 @@ async function reconcileExerciseInstancesFromCloud(db, userId) {
             done: comparableCloudExercise.done,
             weightMode: comparableCloudExercise.weight_mode,
           });
-          downloadedCount += 1;
+          downloadedCount += applied ? 1 : 0;
         }
 
         continue;
@@ -519,8 +520,9 @@ async function reconcileExerciseInstancesFromCloud(db, userId) {
         continue;
       }
 
-      await weightliftingRepository.updateExerciseFromCloud(db, {
+      const applied = await weightliftingRepository.updateExerciseFromCloud(db, {
         exerciseId: localExercise.exercise_instance_id,
+        expectedSyncVersion: localExercise.sync_version,
         cloudExerciseInstanceId,
         remoteLocalExerciseInstanceId: localExerciseInstanceId,
         syncId: cloudSyncId,
@@ -537,6 +539,11 @@ async function reconcileExerciseInstancesFromCloud(db, userId) {
         done: comparableCloudExercise.done,
         weightMode: comparableCloudExercise.weight_mode,
       });
+
+      if (!applied) {
+        // The user wrote to it since it was read, and that write goes up.
+        continue;
+      }
 
       const updatedExercise = {
         ...localExercise,

@@ -523,9 +523,10 @@ async function repositoryChecks() {
   const pulledId = pulled.lastInsertRowId;
   assert.strictEqual(storedStartedFrom(pulledId), "calendar", "a pulled workout keeps where it was started from");
 
-  const pullUpdate = (startedFromValue) =>
+  const pullUpdate = (startedFromValue, expectedSyncVersion) =>
     repository.updateWorkoutFromCloud(db, {
       workoutId: pulledId,
+      expectedSyncVersion,
       cloudWorkoutTypeInstanceId: 40,
       remoteLocalWorkoutTypeInstanceId: 400,
       syncId: "1f2e3d4c-0000-0000-0000-000000000000",
@@ -544,14 +545,15 @@ async function repositoryChecks() {
       startedFrom: startedFromValue,
     });
 
-  await pullUpdate(null);
+  // Pulled at 3; each pull leaves it at the cloud's 4.
+  await pullUpdate(null, 3);
   assert.strictEqual(
     storedStartedFrom(pulledId),
     "calendar",
     "a pull that does not know it must not wipe it"
   );
 
-  await pullUpdate("program");
+  await pullUpdate("program", 4);
   assert.strictEqual(storedStartedFrom(pulledId), "program", "a pull that does know it wins, as any field does");
 
   const forSync = await repository.getWorkoutsForCloudSync(db);
