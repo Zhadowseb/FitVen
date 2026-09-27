@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The +step button's pill: its colour @ 0.16, and a 1 dp edge @ 0.45
+     inside it (a shape's stroke is drawn within its bounds). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+  android:shape="rectangle">
+  <corners android:radius="999dp" />
+  <solid android:color="@color/live_workout_weight_plus_fill" />
+  <stroke
+    android:width="1dp"
+    android:color="@color/live_workout_weight_plus_edge" />
+</shape>

@@ -8,7 +8,7 @@ import {
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SQLiteProvider } from 'expo-sqlite';
 import { initializeDatabase } from './src/Database/db';
-import { View, useColorScheme } from "react-native"
+import { Linking, View, useColorScheme } from "react-native"
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { KeyboardProvider, KeyboardToolbar } from "react-native-keyboard-controller";
 import * as ScreenOrientation from "expo-screen-orientation";
@@ -92,11 +92,16 @@ import WorkoutTypeInstanceSync from "./src/Sync/WorkoutTypeInstanceSync";
 import WorkoutMusicSync from "./src/Sync/WorkoutMusicSync";
 import GymMatchSync from "./src/Sync/GymMatchSync";
 import AppOpenSync from "./src/Sync/AppOpenSync";
+import { parseLiveWorkoutFinishUrl } from "./src/Utils/liveWorkout";
 import LiveWorkoutSync from "./src/Sync/LiveWorkoutSync";
 
 const Stack = createNativeStackNavigator();
 const navigationRef = createNavigationContainerRef();
 const NOTIFICATION_HISTORY_ROUTE = "NotificationHistoryPage";
+// "Afslut" on the lock-screen card opens the app with a link; each one is
+// acted on once, even when the navigator is rebuilt and asks for the link
+// the app was opened with again.
+const handledLiveWorkoutLinks = new Set();
 const RUN_HEART_RATE_CHART_ROUTE = "RunHeartRateChartPage";
 
 // Changing the accent theme remounts RootNavigator (fresh mounts re-read the
@@ -136,6 +141,7 @@ function RootNavigator() {
   const { isAuthenticated, isAuthLoading } = useAuth();
   const handledNotificationResponsesRef = useRef(new Set());
   const notificationResponseRetryRef = useRef(null);
+  const liveWorkoutLinkRetryRef = useRef(null);
   const [currentRouteName, setCurrentRouteName] = useState(null);
 
   const navTheme =
@@ -181,6 +187,15 @@ function RootNavigator() {
 
   const openNotificationHistoryFromResponse = useCallback((response) => {
     if (!response) {
+      return;
+    }
+
+    // The rest-is-over reminder only brings the app back to where it was:
+    // the workout, not the notification history.
+    if (
+      response?.notification?.request?.content?.data?.kind ===
+      notificationService.REST_FINISHED_NOTIFICATION_KIND
+    ) {
       return;
     }
 
@@ -248,6 +263,65 @@ function RootNavigator() {
     isAuthLoading,
     openNotificationHistoryFromResponse,
   ]);
+
+  // "Afslut" on a lock-screen card with every set done: open that workout and
+  // let it finish itself, then ask about the post.
+  const openLiveWorkoutFinish = useCallback((url, { initial = false } = {}) => {
+    const target = parseLiveWorkoutFinishUrl(url);
+    // The link the app was opened with is asked for again on every rebuild;
+    // one that arrives while running is new every time.
+    const linkKey = initial ? `initial:${url}` : null;
+
+    if (!target || (linkKey && handledLiveWorkoutLinks.has(linkKey))) {
+      return;
+    }
+
+    if (linkKey) {
+      handledLiveWorkoutLinks.add(linkKey);
+    }
+
+    let attempts = 0;
+    const openWorkout = () => {
+      if (!navigationRef.isReady()) {
+        attempts += 1;
+
+        if (attempts <= 20) {
+          liveWorkoutLinkRetryRef.current = setTimeout(openWorkout, 250);
+        }
+
+        return;
+      }
+
+      navigationRef.navigate("WorkoutPage", {
+        workout_id: target.workoutId,
+        workout_type: target.workoutType,
+        workout_label: target.workoutType,
+        finishRequestKey: Date.now(),
+      });
+    };
+
+    clearTimeout(liveWorkoutLinkRetryRef.current);
+    openWorkout();
+  }, []);
+
+  useEffect(() => {
+    if (isAuthLoading || !isAuthenticated) {
+      return undefined;
+    }
+
+    Linking.getInitialURL()
+      .then((url) => openLiveWorkoutFinish(url, { initial: true }))
+      .catch(() => {});
+
+    const subscription = Linking.addEventListener("url", ({ url }) =>
+      openLiveWorkoutFinish(url)
+    );
+
+    return () => {
+      subscription?.remove?.();
+      clearTimeout(liveWorkoutLinkRetryRef.current);
+    };
+  }, [isAuthenticated, isAuthLoading, openLiveWorkoutFinish]);
 
   useEffect(() => {
     const orientationLock =

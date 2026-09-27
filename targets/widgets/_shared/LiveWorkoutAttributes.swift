@@ -72,9 +72,12 @@ struct LiveWorkoutState: Codable, Hashable {
   var canPrev: Bool
   var canNext: Bool
   var strings: [String: String]
+  /// The link the all-done card's button opens the app with, to finish the
+  /// workout there: `fitven://live-workout/finish?workoutId=7&type=Resistance`.
+  var finishUrl: String?
 
   enum CodingKeys: String, CodingKey {
-    case v, workoutId, workoutType, startedAt, pausedElapsed, exercise, next, rest, totals, canPrev, canNext, strings
+    case v, workoutId, workoutType, startedAt, pausedElapsed, exercise, next, rest, totals, canPrev, canNext, strings, finishUrl
   }
 
   /// The state in `json`, or nil when it is not a JSON object.
@@ -110,6 +113,8 @@ extension LiveWorkoutState {
     } else {
       strings = [:]
     }
+
+    finishUrl = container.liveWorkoutString(.finishUrl)
   }
 }
 

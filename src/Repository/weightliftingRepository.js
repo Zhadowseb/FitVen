@@ -1115,10 +1115,12 @@ export async function getSetsByWorkout(db, workoutId) {
 }
 
 /**
- * The running workout as the Quick start panel on Home reads it: every
- * exercise in the workout screen's order with each of its sets, one row per
- * set - and one with no set for an exercise that has none, so its name is
- * still there. Only what the panel shows or decides with.
+ * The running workout as the Quick start panel on Home and the lock-screen
+ * card read it: every exercise in the workout screen's order with each of its
+ * sets, one row per set - and one with no set for an exercise that has none,
+ * so its name is still there. Only what the two show or decide with: the
+ * catalog's equipment picks the card's weight step, and the set's sync
+ * version tells a tap on the card from an edit made after it.
  */
 export async function getLiveWorkoutSets(db, workoutId) {
   await ensureExerciseOrderColumn(db);
@@ -1137,9 +1139,12 @@ export async function getLiveWorkoutSets(db, workoutId) {
         s.set_type,
         s.amrap,
         s.amrap_target,
-        s.pause
+        s.pause,
+        s.sync_version,
+        catalog.equipment AS exercise_equipment
      FROM Exercise_Instance e
      LEFT JOIN "Set" s ON s.exercise_instance_id = e.exercise_instance_id
+     LEFT JOIN Exercise catalog ON catalog.name = e.exercise_name
      WHERE e.workout_type_instance_id = ?
      ORDER BY e.exercise_order ASC, e.exercise_instance_id ASC, s.set_number ASC, s.sets_id ASC;`,
     [workoutId]

@@ -48,6 +48,9 @@ const WorkoutPage = ({ route }) => {
     day: initialDay,
     date: initialDate,
     program_id: initialProgramId,
+    // "Afslut" on the lock-screen card, once every set is done: the workout
+    // finishes as it opens.
+    finishRequestKey = 0,
   } = route.params;
 
   const [optionsBottomsheetVisible, setOptionsBottomsheetVisible] = useState(false);
@@ -489,6 +492,7 @@ const WorkoutPage = ({ route }) => {
           autoNamedLabel={workoutDisplayName(autoNamedLabel, t)}
           workoutInstanceLabel={workoutInstanceLabel}
           restartRequestKey={restartRequestKey}
+          finishRequestKey={finishRequestKey}
           onWorkoutMetadataChange={loadMetadata}
           onOpenOptions={() => setOptionsBottomsheetVisible(true)}
         />
