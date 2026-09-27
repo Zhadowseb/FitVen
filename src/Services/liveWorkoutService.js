@@ -36,7 +36,7 @@ import {
   subscribeRestTimer,
 } from "@utils/restTimerEvents";
 import { getCurrentStoredTimestampSeconds, normalizeStoredTimestampSeconds } from "@utils/timeUtils";
-import { subscribeWorkoutDataChanges } from "@utils/workoutDataEvents";
+import { notifyLockScreenEdit, subscribeWorkoutDataChanges } from "@utils/workoutDataEvents";
 import { subscribeWorkoutSetChanges } from "@utils/workoutSetEvents";
 import LiveWorkout from "../../modules/live-workout";
 import * as notificationService from "./notificationService";
@@ -52,6 +52,11 @@ const STARTED_FOR_STORAGE_KEY = "fitven.liveWorkout.startedFor";
 // Every change a set makes arrives as several signals - the set, its
 // exercise, the workout, the rest timer - within a few milliseconds.
 const UPDATE_DEBOUNCE_MS = 300;
+// A weight moved on the lock screen gives way to an edit made to the same set
+// in the app after the tap. The set's sync version is its last write in Unix
+// seconds, and it can run a second or two ahead of the clock when several
+// writes land in one second.
+const EDITED_AFTER_TAP_SLACK_SECONDS = 2;
 
 let controller = null;
 let enabledCache = null;
@@ -284,7 +289,7 @@ function createController(db) {
     // Gone, or already done - by an earlier drain, or on the workout screen
     // in the meantime. Doing it again would start a second rest.
     if (!row || Number(row.done) === 1) {
-      return;
+      return false;
     }
 
     await weightliftingService.updateStrengthSetDone(db, {
@@ -321,6 +326,42 @@ function createController(db) {
         },
       });
     }
+
+    return true;
+  }
+
+  // The weight buttons on Android's open card: the card already shows the new
+  // weight, and the queue carries it - the final number, not the steps, so
+  // handling it twice gives the same set. Written the way the weight field on
+  // the workout screen writes it.
+  async function adjustWeight(action, workout) {
+    const setId = Number(action.setId);
+    const weight = Number(action.weight);
+
+    if (!Number.isFinite(weight) || weight < 0) {
+      return false;
+    }
+
+    const rows = await weightliftingRepository.getLiveWorkoutSets(db, workout.workout_id);
+    const row = rows.find((candidate) => Number(candidate.sets_id) === setId);
+
+    if (!row || Number(row.done) === 1 || row.weight === null || row.weight === undefined) {
+      return false;
+    }
+
+    // Changed in the app after the tap: what was done in the app wins.
+    const tappedAt = Math.ceil(Number(action.at) || 0);
+
+    if (Number(row.sync_version) > tappedAt + EDITED_AFTER_TAP_SLACK_SECONDS) {
+      return false;
+    }
+
+    if (Number(row.weight) === weight) {
+      return false;
+    }
+
+    await weightliftingService.updateSetWeight(db, { setId, weight });
+    return true;
   }
 
   async function handle(action, workout, now) {
@@ -332,8 +373,10 @@ function createController(db) {
 
     switch (action?.type) {
       case "completeSet":
-        await completeSet(action, workout, now);
-        return;
+        return completeSet(action, workout, now);
+
+      case "adjustWeight":
+        return adjustWeight(action, workout);
 
       case "skipRest": {
         const timer = ownRest();
@@ -342,7 +385,7 @@ function createController(db) {
           clearActiveRestTimer(timer.id);
         }
 
-        return;
+        return false;
       }
 
       case "adjustRest": {
@@ -352,7 +395,7 @@ function createController(db) {
           adjustActiveRestTimer(action.seconds, timer.id);
         }
 
-        return;
+        return false;
       }
 
       case "prev":
@@ -363,11 +406,11 @@ function createController(db) {
           viewOffset += action.type === "next" ? 1 : -1;
         }
 
-        return;
+        return false;
       }
 
       default:
-        return;
+        return false;
     }
   }
 
@@ -391,12 +434,20 @@ function createController(db) {
       return;
     }
 
+    let wroteSets = false;
+
+    // In the order they were tapped: a weight moved and then Sæt færdigt
+    // saves the set with the new weight.
     for (const action of actions) {
       try {
-        await handle(action, workout, now);
+        wroteSets = (await handle(action, workout, now)) || wroteSets;
       } catch (error) {
         console.error(`Could not handle "${action?.type}" from the lock screen:`, error);
       }
+    }
+
+    if (wroteSets) {
+      notifyLockScreenEdit({ workoutId: workout.workout_id });
     }
 
     await rebuild();

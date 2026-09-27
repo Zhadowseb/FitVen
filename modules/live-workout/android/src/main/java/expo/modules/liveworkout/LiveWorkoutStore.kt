@@ -37,14 +37,49 @@ internal object LiveWorkoutStore {
     }
   }
 
-  /** Adds a tap to the queue, dropping the oldest past 50. */
-  fun enqueue(context: Context, action: LiveAction) {
+  /** Adds a tap to the queue; see [withAction]. */
+  fun enqueue(context: Context, action: LiveAction, weight: Double? = null) {
+    synchronized(lock) {
+      val preferences = preferences(context)
+      val queue = withAction(
+        queueOf(preferences.getString(KEY_ACTIONS, null)),
+        action,
+        weight,
+        UUID.randomUUID().toString()
+      )
+
+      preferences.edit().putString(KEY_ACTIONS, queue.toString()).commit()
+    }
+  }
+
+  /**
+   * The queue with a tap added, dropping the oldest past 50. An adjustWeight
+   * carries `weight`, the weight the set now has, not the step: when the
+   * queue already holds one for the same set, that entry takes the new
+   * weight and time where it stands, so taps in a row are one entry and
+   * handling the queue twice gives the same set.
+   */
+  fun withAction(queue: JSONArray, action: LiveAction, weight: Double?, id: String): JSONArray {
+    val weighing = action.type == LiveAction.ADJUST_WEIGHT
+    val earlier = if (weighing && weight != null) {
+      (0 until queue.length())
+        .mapNotNull { queue.optJSONObject(it) }
+        .firstOrNull { it.optString("type") == LiveAction.ADJUST_WEIGHT && it.optString("setId") == action.setId }
+    } else {
+      null
+    }
+
+    if (earlier != null && weight != null) {
+      earlier.put("weight", weight).put("at", action.at)
+      return queue
+    }
+
     val entry = JSONObject()
-      .put("id", UUID.randomUUID().toString())
+      .put("id", id)
       .put("type", action.type)
       .put("at", action.at)
 
-    if (action.type == LiveAction.COMPLETE_SET && action.setId != null) {
+    if ((action.type == LiveAction.COMPLETE_SET || weighing) && action.setId != null) {
       entry.put("setId", action.setId)
     }
 
@@ -52,20 +87,19 @@ internal object LiveWorkoutStore {
       entry.put("seconds", action.seconds.toLong())
     }
 
-    synchronized(lock) {
-      val preferences = preferences(context)
-      val queue = queueOf(preferences.getString(KEY_ACTIONS, null))
-      queue.put(entry)
-
-      val kept = JSONArray()
-      val from = maxOf(0, queue.length() - MAX_ACTIONS)
-
-      for (index in from until queue.length()) {
-        kept.put(queue.get(index))
-      }
-
-      preferences.edit().putString(KEY_ACTIONS, kept.toString()).commit()
+    if (weighing && weight != null) {
+      entry.put("weight", weight)
     }
+
+    queue.put(entry)
+
+    val kept = JSONArray()
+
+    for (index in maxOf(0, queue.length() - MAX_ACTIONS) until queue.length()) {
+      kept.put(queue.get(index))
+    }
+
+    return kept
   }
 
   /** The queue as a JSON array, oldest first, emptied in the same step. */

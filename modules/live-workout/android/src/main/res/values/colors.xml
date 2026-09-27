@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- The card's colours on a light notification shade (e.g. One UI in light
      mode): dark text, and the tints laid over black. values-night holds the
-     dark shade the design is drawn for. The orange and the ink on it are the
-     same in both. -->
+     dark shade the design is drawn for. The orange and the ink on it, and the
+     weight buttons' red and green, are the same in both. -->
 <resources>
   <color name="live_workout_orange">#F7742E</color>
   <color name="live_workout_ink">#14100C</color>
@@ -14,7 +14,7 @@
 
   <!-- black @ 0.14: the rings' and the rest bar's track -->
   <color name="live_workout_track">#24000000</color>
-  <!-- black @ 0.08: Forrige, Næste, −15 s, +15 s -->
+  <!-- black @ 0.08: −15 s, +15 s -->
   <color name="live_workout_button">#14000000</color>
   <!-- black @ 0.06: a set still to do -->
   <color name="live_workout_chip_todo">#0F000000</color>
@@ -26,4 +26,16 @@
   <color name="live_workout_chip_now">#29F7742E</color>
   <!-- black @ 0.16 on the orange buttons -->
   <color name="live_workout_ripple_on_orange">#29000000</color>
+  <!-- orange @ 0.34: what is left of the rest, behind the collapsed card -->
+  <color name="live_workout_rest_fill">#57F7742E</color>
+
+  <!-- The weight buttons (1e): −step in danger #F0605A, +step in secondary
+       #4ED39A, each on its colour @ 0.16 with a 1 dp edge @ 0.45. Red and
+       green read on a light and a dark shade alike. -->
+  <color name="live_workout_weight_minus">#F0605A</color>
+  <color name="live_workout_weight_minus_fill">#29F0605A</color>
+  <color name="live_workout_weight_minus_edge">#73F0605A</color>
+  <color name="live_workout_weight_plus">#4ED39A</color>
+  <color name="live_workout_weight_plus_fill">#294ED39A</color>
+  <color name="live_workout_weight_plus_edge">#734ED39A</color>
 </resources>

@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- The expanded rings' track (52 dp, stroke 4). RingBitmap draws the fill on
-     top with the same stroke and inset. -->
-<shape xmlns:android="http://schemas.android.com/apk/res/android"
-  android:shape="oval">
-  <stroke
-    android:width="4dp"
-    android:color="@color/live_workout_track" />
-</shape>

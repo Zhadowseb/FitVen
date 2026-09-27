@@ -28,12 +28,13 @@
     <item name="android:textColor">@color/live_workout_orange</item>
   </style>
 
-  <!-- "100 kg × 5" 17/800 -->
+  <!-- "100 kg × 5" 17/800, letter spacing −0.3 -->
   <style name="LiveWorkout.Text.Heavy.Title">
     <item name="android:textSize">17sp</item>
+    <item name="android:letterSpacing">-0.018</item>
   </style>
 
-  <!-- "Bænkpres · sæt 3 af 4" 13/600 -->
+  <!-- "Bænkpres" 13/600 -->
   <style name="LiveWorkout.Text.Semibold.Subtitle">
     <item name="android:textSize">13sp</item>
   </style>
@@ -69,19 +70,16 @@
     <item name="android:textColor">@color/live_workout_text_secondary</item>
   </style>
 
-  <!-- "PAUSE" 11/800 orange, and "af 3:00" beside it -->
+  <!-- "PAUSE" 11/800 orange, letter spacing 0.3 -->
   <style name="LiveWorkout.Text.Heavy.RowLabel.Rest">
+    <item name="android:letterSpacing">0.027</item>
     <item name="android:textColor">@color/live_workout_orange</item>
   </style>
 
-  <style name="LiveWorkout.Text.Heavy.RowLabel.RestOf">
-    <item name="android:textColor">@color/live_workout_text_secondary</item>
-    <item name="android:fontFeatureSettings">tnum</item>
-  </style>
-
-  <!-- The rest countdown 22/800 orange -->
+  <!-- The rest countdown 22/800 orange, letter spacing −0.4 -->
   <style name="LiveWorkout.Text.Heavy.RestClock">
     <item name="android:textSize">22sp</item>
+    <item name="android:letterSpacing">-0.018</item>
     <item name="android:textColor">@color/live_workout_orange</item>
     <item name="android:fontFeatureSettings">tnum</item>
   </style>
@@ -106,6 +104,52 @@
     <item name="android:textColor">@color/live_workout_ink</item>
   </style>
 
+  <!-- The weight buttons' "2,5 kg" 13/800, in red and in green -->
+  <style name="LiveWorkout.Text.Heavy.Button.WeightMinus">
+    <item name="android:textColor">@color/live_workout_weight_minus</item>
+  </style>
+
+  <style name="LiveWorkout.Text.Heavy.Button.WeightPlus">
+    <item name="android:textColor">@color/live_workout_weight_plus</item>
+  </style>
+
+  <!-- 700: the weight buttons' "−" and "+", and "af 3:00". Weight 700 is
+       bold on every Android. -->
+  <style name="LiveWorkout.Text.Bold">
+    <item name="android:textStyle">bold</item>
+  </style>
+
+  <!-- The workout clock: 11/700 at the end of the open card's eyebrow, 13/700
+       beside the collapsed card's title. -->
+  <style name="LiveWorkout.Text.Bold.Clock">
+    <item name="android:textSize">11sp</item>
+    <item name="android:textColor">@color/live_workout_text_secondary</item>
+    <item name="android:fontFeatureSettings">tnum</item>
+  </style>
+
+  <style name="LiveWorkout.Text.Bold.Clock.Collapsed">
+    <item name="android:textSize">13sp</item>
+  </style>
+
+  <!-- "af 3:00" 11/700, beside PAUSE -->
+  <style name="LiveWorkout.Text.Bold.RestOf">
+    <item name="android:textSize">11sp</item>
+    <item name="android:textColor">@color/live_workout_text_secondary</item>
+    <item name="android:fontFeatureSettings">tnum</item>
+  </style>
+
+  <style name="LiveWorkout.Text.Bold.WeightSign">
+    <item name="android:textSize">17sp</item>
+  </style>
+
+  <style name="LiveWorkout.Text.Bold.WeightSign.Minus">
+    <item name="android:textColor">@color/live_workout_weight_minus</item>
+  </style>
+
+  <style name="LiveWorkout.Text.Bold.WeightSign.Plus">
+    <item name="android:textColor">@color/live_workout_weight_plus</item>
+  </style>
+
   <!-- A 40 dp button: icon and text centred. -->
   <style name="LiveWorkout.Button" parent="">
     <item name="android:gravity">center</item>
@@ -114,11 +158,11 @@
     <item name="android:paddingEnd">8dp</item>
   </style>
 
-  <!-- Forrige / Næste when the card cannot move that way: 40 %, and it takes
-       the tap so the card body does not open the app instead. -->
+  <!-- A button that cannot be used right now (minus at 0): 40 %, and it takes
+       the tap so the card body does not open the app instead. Its layout
+       gives it a background without a touch ripple. -->
   <style name="LiveWorkout.Button.Off">
     <item name="android:alpha">0.4</item>
-    <item name="android:background">@drawable/live_workout_button_secondary_off</item>
     <item name="android:clickable">true</item>
     <item name="android:visibility">gone</item>
   </style>

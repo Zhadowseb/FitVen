@@ -35,7 +35,7 @@ import {
   startActiveRestTimer,
   subscribeRestTimer,
 } from "../../../../Utils/restTimerEvents";
-import { subscribeWorkoutSetChanges } from "@utils/workoutSetEvents";
+import { subscribeLockScreenEdits } from "@utils/workoutDataEvents";
 import {
   socialPostService,
   weightliftingService,
@@ -60,6 +60,7 @@ const Resistance = ({
   autoNamedLabel = null,
   workoutInstanceLabel,
   restartRequestKey,
+  finishRequestKey = 0,
   onWorkoutMetadataChange,
   onOpenOptions,
 }) =>  {
@@ -119,6 +120,12 @@ const Resistance = ({
   );
   const timerStartRef = useRef(null);
   const elapsedTimeRef = useRef(0);
+  // Whether the timer and the set counts have been read since the screen
+  // opened - a finish asked for from the lock screen waits for both, or it
+  // would finish with no time and never ask about the post.
+  const [timerLoaded, setTimerLoaded] = useState(false);
+  const [setSummaryLoaded, setSetSummaryLoaded] = useState(false);
+  const handledFinishRequestRef = useRef(0);
   const wasAllSetsDoneRef = useRef(false);
 
   const normalizeTimerStartValue = (value) =>
@@ -144,14 +151,12 @@ const Resistance = ({
     });
   }, [workout_id]);
 
-  // A set ticked off on the lock screen was written without this screen: it
-  // reads its sets and counts again, so the tick is there when you look.
+  // A set ticked off, or its weight moved, on the lock screen was written
+  // without this screen: it reads its sets and counts again, so the change
+  // is there when you look.
   useEffect(() => {
-    return subscribeWorkoutSetChanges((change) => {
-      if (
-        change?.source === "lockScreen" &&
-        Number(change.workoutId) === Number(workout_id)
-      ) {
+    return subscribeLockScreenEdits((edit) => {
+      if (Number(edit?.workoutId) === Number(workout_id)) {
         set_refreshing((prev) => prev + 1);
       }
     });
@@ -178,6 +183,7 @@ const Resistance = ({
 
       set_totalSets(result.totalSets);
       set_doneSets(result.doneSets);
+      setSetSummaryLoaded(true);
     } catch (err) {
       console.error("Failed to load the set counts for this workout:", err);
     }
@@ -219,6 +225,7 @@ const Resistance = ({
           set_original_start_time(resolvedOriginalStartTime);
           set_timer_start(resolvedTimerStart);
           set_elapsed_time(resolvedElapsedTime);
+          setTimerLoaded(true);
       }
       void reload();
 
@@ -511,6 +518,31 @@ const Resistance = ({
 
     restartWorkout();
   }, [restartRequestKey]);
+
+  // "Afslut" on the lock-screen card: tapping it there was the question, so
+  // the workout finishes without asking again - and then asks about the post,
+  // as finishing here does.
+  useEffect(() => {
+    if (
+      !finishRequestKey ||
+      !timerLoaded ||
+      !setSummaryLoaded ||
+      handledFinishRequestRef.current === finishRequestKey
+    ) {
+      return;
+    }
+
+    handledFinishRequestRef.current = finishRequestKey;
+
+    if (isDone || original_start_time === null) {
+      return;
+    }
+
+    // And "all sets done - finish?" is not asked on top of it.
+    wasAllSetsDoneRef.current = true;
+    setAllSetsDoneConfirmVisible(false);
+    void endWorkout();
+  }, [finishRequestKey, timerLoaded, setSummaryLoaded]);
 
   const primaryColor = theme.primary ?? theme.iconColor ?? theme.text;
 
