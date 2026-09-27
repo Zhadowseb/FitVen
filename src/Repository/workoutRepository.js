@@ -170,6 +170,38 @@ export async function getActiveWorkoutTimer(db) {
   );
 }
 
+// The started, unfinished workouts of the given types, newest start first -
+// running or paused. The lock-screen card picks the one it shows from these;
+// how old a paused one may be is decided in the service, because a start time
+// can still be stored in milliseconds on an old install.
+export async function getOpenStartedWorkoutsOfTypes(db, { types, limit = 5 }) {
+  const typeList = [...(types ?? [])];
+
+  if (!typeList.length) {
+    return [];
+  }
+
+  return db.getAllAsync(
+    `SELECT
+        w.workout_id,
+        w.workout_type,
+        w.label,
+        w.date,
+        w.original_start_time,
+        w.timer_start,
+        w.elapsed_time
+     FROM Workout_Type_Instance w
+     WHERE w.done = 0
+       AND w.is_active = 1
+       AND w.original_start_time IS NOT NULL
+       AND w.deleted_at IS NULL
+       AND w.workout_type IN (${typeList.map(() => "?").join(", ")})
+     ORDER BY w.original_start_time DESC, w.workout_id DESC
+     LIMIT ?;`,
+    [...typeList, limit]
+  );
+}
+
 // A workout for the given day that exists but has not been started yet, so the
 // nav button can offer to start it instead of creating a new one.
 export async function getStartableWorkout(db, { date }) {

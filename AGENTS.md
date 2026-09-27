@@ -150,3 +150,4 @@ looks for, edit its brief, not the workflow. See
 - `src/Database/AGENTS.md`: schema and data safety
 - `src/Services/AGENTS.md`: the cloud sync field checklist
 - `src/Sync/AGENTS.md`: which sync components actually run
+- `modules/live-workout/AGENTS.md`: the lock-screen card during a workout - native code in `modules/` and `targets/`, and the rules JS, Swift and Kotlin share

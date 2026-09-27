@@ -1,0 +1,12 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- Not a new permission for the app: expo-notifications already declares
+       and asks for it. Declared here too because this module posts. -->
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+  <application>
+    <!-- The card's buttons. Only this app's own PendingIntents reach it. -->
+    <receiver
+      android:name="expo.modules.liveworkout.LiveWorkoutActionReceiver"
+      android:exported="false" />
+  </application>
+</manifest>

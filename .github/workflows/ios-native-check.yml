@@ -1,0 +1,99 @@
+name: iOS native check
+
+# Bygger appen til iOS-simulatoren, naar en aendring roerer den native kode:
+# det lokale Expo-modul i modules/, widget-extensionen i targets/ (Live
+# Activity og Dynamic Island) eller det, der styrer prebuild.
+#
+# Appen udvikles paa Windows, hvor Swift ikke kan compiles. Uden den her
+# ville en Swift-fejl foerst vise sig i en EAS-build - eller i App Store
+# Connect. Den signerer ikke, uploader ikke og bygger ikke til en enhed, og
+# repoet er offentligt, saa macOS-minutterne koster ikke noget.
+#
+# Den er ikke en port som ci.yml. Den er en compiler, man kan spoerge.
+
+on:
+  pull_request:
+    branches: [master, "release/**"]
+    paths:
+      - "modules/**"
+      - "targets/**"
+      - "plugins/**"
+      - "app.json"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/ios-native-check.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ios-native-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: iOS simulator build
+    runs-on: macos-15
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci --no-audit --no-fund
+
+      # Den samme prebuild, som EAS koerer: app.json, config-plugins og
+      # apple-targets' widget-target fra targets/widgets.
+      - name: Prebuild
+        run: npx expo prebuild --platform ios --no-install
+
+      - name: Pods
+        working-directory: ios
+        run: pod install
+
+      - name: Build
+        run: |
+          set -o pipefail
+          mkdir -p build
+          WORKSPACE=$(ls -d ios/*.xcworkspace | head -1)
+          SCHEME=$(basename "$WORKSPACE" .xcworkspace)
+          echo "Workspace $WORKSPACE, scheme $SCHEME"
+          xcodebuild \
+            -workspace "$WORKSPACE" \
+            -scheme "$SCHEME" \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination "generic/platform=iOS Simulator" \
+            -derivedDataPath build/derived \
+            CODE_SIGNING_ALLOWED=NO \
+            build 2>&1 | tee build/xcodebuild.log | grep -E "error:|warning: .*(LiveWorkout|widgets)|\*\* BUILD" || true
+          grep -q "\*\* BUILD SUCCEEDED \*\*" build/xcodebuild.log
+
+      # Et groent byg beviser ikke, at widget-extensionen kom med. Den ligger
+      # som en .appex i appens PlugIns, og Live Activities skal vaere slaaet
+      # til i appens Info.plist.
+      - name: The widget is in the app
+        run: |
+          APP=$(ls -d build/derived/Build/Products/Debug-iphonesimulator/*.app | head -1)
+          ls "$APP/PlugIns"
+          test -n "$(ls -d "$APP"/PlugIns/*.appex 2>/dev/null)"
+          test "$(/usr/libexec/PlistBuddy -c "Print :NSSupportsLiveActivities" "$APP/Info.plist")" = "true"
+          grep -q "LiveWorkoutLiveActivity.swift" build/xcodebuild.log
+          grep -q "LiveWorkoutModule.swift" build/xcodebuild.log
+
+      # Fejlene samlet et sted, saa de kan laeses uden at hente hele loggen.
+      - name: Errors
+        if: failure()
+        run: |
+          grep -E "error:" build/xcodebuild.log | sort -u | head -80 || true
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: xcodebuild-log
+          path: build/xcodebuild.log
+          retention-days: 7

@@ -26,6 +26,11 @@ export default {
 
   settings: {
     eyebrow: "Settings",
+    lockScreenTitle: "Show the workout on the lock screen",
+    lockScreenBody:
+      "While you train strength, the set, the rest and the time are on the lock screen and in the Dynamic Island, with buttons to tick the set off and skip the rest. A sound tells you when the rest is over.",
+    lockScreenUnavailable:
+      "Your phone is not showing the card right now. On iPhone it needs iOS 16.2 or later, with Live Activities switched on for FitVen in Settings.",
     signInToManage: "Sign in to manage notification settings.",
     loadFailed: "Could not load notification settings.",
     saveFailed: "Could not save notification settings.",

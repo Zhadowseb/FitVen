@@ -4124,7 +4124,7 @@ export async function updateExerciseNote(db, { exerciseId, note }) {
 
 export async function updateStrengthSetDone(
   db,
-  { workoutId, setId, done, failed = 0 }
+  { workoutId, setId, done, failed = 0, source = null }
 ) {
   let personalRecordSetIds = [];
 
@@ -4152,6 +4152,7 @@ export async function updateStrengthSetDone(
       isDone &&
       !isFailed &&
       personalRecordSetIds.some((recordSetId) => Number(recordSetId) === Number(setId)),
+    source,
   });
 
   return { personalRecordSetIds };

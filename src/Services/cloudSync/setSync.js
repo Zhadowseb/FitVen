@@ -5,6 +5,7 @@ import { supabase } from "@database/supaBaseClient";
 import { weightliftingRepository } from "@repository";
 import { withTransaction } from "@services/shared";
 import { startBackgroundSync } from "@services/syncScheduler";
+import { notifyWorkoutDataChanged } from "@utils/workoutDataEvents";
 import {
   normalizeDeletedAt,
   normalizeSyncId,
@@ -536,6 +537,7 @@ async function syncSetsWithCloudInternal(db) {
 }
 
 export function syncSetsInBackground(db) {
+  notifyWorkoutDataChanged("sets");
   startBackgroundSync(
     async () => {
       await syncSetsWithCloud(db);

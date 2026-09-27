@@ -47,6 +47,35 @@ export function startActiveRestTimer(timer) {
   return activeRestTimer;
 }
 
+/**
+ * Moves the end of the running rest by `deltaSeconds` - the ±15 on the lock
+ * screen. A rest pushed back to or past now is over, and is cleared.
+ */
+export function adjustActiveRestTimer(deltaSeconds, timerId = null) {
+  const timer = getActiveRestTimer();
+  const delta = Math.trunc(Number(deltaSeconds) || 0);
+
+  if (!timer || delta === 0 || (timerId && timer.id !== timerId)) {
+    return timer;
+  }
+
+  const endsAt = timer.endsAt + delta;
+
+  if (endsAt <= getCurrentStoredTimestampSeconds()) {
+    clearActiveRestTimer(timer.id);
+    return null;
+  }
+
+  activeRestTimer = {
+    ...timer,
+    endsAt,
+    durationSeconds: Math.max(1, timer.durationSeconds + delta),
+  };
+
+  emitRestTimer();
+  return activeRestTimer;
+}
+
 export function clearActiveRestTimer(timerId = null) {
   if (!activeRestTimer) {
     return;

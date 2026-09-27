@@ -23,6 +23,11 @@ export default {
 
   settings: {
     eyebrow: "Indstillinger",
+    lockScreenTitle: "Vis træning på låseskærmen",
+    lockScreenBody:
+      "Mens du træner styrke, står sættet, pausen og tiden på låseskærmen og i Dynamic Island, med knapper til at krydse sættet af og springe pausen over. En lyd siger til, når pausen er slut.",
+    lockScreenUnavailable:
+      "Din telefon viser ikke kortet lige nu. På iPhone kræver det iOS 16.2 eller nyere, og at Live Activities er slået til for FitVen i Indstillinger.",
     signInToManage: "Log ind for at administrere notifikationsindstillinger.",
     loadFailed: "Kunne ikke indlæse notifikationsindstillinger.",
     saveFailed: "Kunne ikke gemme notifikationsindstillinger.",

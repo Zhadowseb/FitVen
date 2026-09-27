@@ -1108,7 +1108,8 @@ export async function getLiveWorkoutSets(db, workoutId) {
         s.personal_record,
         s.set_type,
         s.amrap,
-        s.amrap_target
+        s.amrap_target,
+        s.pause
      FROM Exercise_Instance e
      LEFT JOIN "Set" s ON s.exercise_instance_id = e.exercise_instance_id
      WHERE e.workout_type_instance_id = ?

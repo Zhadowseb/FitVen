@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 9 and later: the design's exact weights, 800 and 600. Otherwise
+     the same as values/styles.xml. -->
+<resources>
+  <style name="LiveWorkout.Text.Heavy">
+    <item name="android:textStyle">bold</item>
+    <item name="android:textFontWeight">800</item>
+  </style>
+
+  <style name="LiveWorkout.Text.Semibold">
+    <item name="android:fontFamily">sans-serif-medium</item>
+    <item name="android:textFontWeight">600</item>
+    <item name="android:textColor">@color/live_workout_text_secondary</item>
+  </style>
+</resources>

@@ -115,6 +115,10 @@ Five names, and they are not interchangeable:
   `runDisplayUtils.js` (sections, route, charts), `runFormatUtils.js` (pace,
   clock, distance), `runEnduranceStats.js` and `runFlowOptions.js`, and is the
   only part with tests. Put new run maths there, not back in the screen.
+- The lock-screen card during a strength workout is native, outside `src/`:
+  `modules/live-workout` and `targets/widgets`. What it shows is decided in
+  `Utils/liveWorkout.js` and mirrored in Swift and Kotlin; see
+  `modules/live-workout/AGENTS.md` before changing either.
 - `src/Pages/WeekPage/` is outside the active user flow, but it is still a
   registered route.
 

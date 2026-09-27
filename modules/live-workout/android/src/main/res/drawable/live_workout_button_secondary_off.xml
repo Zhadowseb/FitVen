@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Forrige / Næste when they cannot be used: the same pill, without the
+     touch ripple. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+  android:shape="rectangle">
+  <corners android:radius="20dp" />
+  <solid android:color="@color/live_workout_button" />
+</shape>

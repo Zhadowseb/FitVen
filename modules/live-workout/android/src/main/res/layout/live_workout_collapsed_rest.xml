@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 1f collapsed (48 dp): the rest ring, "Pause · 1:24" counting down by
+     itself, the next set, and Spring over. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="wrap_content"
+  android:baselineAligned="false"
+  android:minHeight="40dp"
+  android:gravity="center_vertical"
+  android:orientation="horizontal">
+
+  <FrameLayout
+    android:id="@+id/live_workout_ring"
+    android:layout_width="36dp"
+    android:layout_height="36dp"
+    android:layout_marginEnd="12dp"
+    android:background="@drawable/live_workout_ring_track_small">
+
+    <ImageView
+      android:id="@+id/live_workout_ring_fill"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:importantForAccessibility="no"
+      android:scaleType="fitXY" />
+  </FrameLayout>
+
+  <LinearLayout
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:layout_weight="1"
+    android:orientation="vertical">
+
+    <Chronometer
+      android:id="@+id/live_workout_rest_clock"
+      style="@style/LiveWorkout.Text.Heavy.CollapsedTitle"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:fontFeatureSettings="tnum" />
+
+    <TextView
+      android:id="@+id/live_workout_subtitle"
+      style="@style/LiveWorkout.Text.Semibold.CollapsedSubtitle"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginTop="3dp" />
+  </LinearLayout>
+
+  <FrameLayout
+    android:id="@+id/live_workout_primary"
+    android:layout_width="40dp"
+    android:layout_height="40dp"
+    android:layout_marginStart="12dp"
+    android:background="@drawable/live_workout_button_circle_primary">
+
+    <ImageView
+      android:layout_width="20dp"
+      android:layout_height="20dp"
+      android:layout_gravity="center"
+      android:importantForAccessibility="no"
+      android:src="@drawable/live_workout_ic_skip"
+      android:tint="@color/live_workout_ink" />
+  </FrameLayout>
+</LinearLayout>

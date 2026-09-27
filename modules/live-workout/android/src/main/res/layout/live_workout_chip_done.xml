@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A done set's chip: orange @ 0.12, a check and the set. Added to a chip row
+     with RemoteViews.addView, so its layout params are for that LinearLayout. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="0dp"
+  android:layout_height="match_parent"
+  android:layout_weight="1"
+  android:background="@drawable/live_workout_chip_done_bg"
+  android:gravity="center"
+  android:orientation="horizontal"
+  android:paddingStart="3dp"
+  android:paddingEnd="3dp">
+
+  <ImageView
+    android:layout_width="11dp"
+    android:layout_height="11dp"
+    android:importantForAccessibility="no"
+    android:src="@drawable/live_workout_ic_check"
+    android:tint="@color/live_workout_orange" />
+
+  <TextView
+    android:id="@+id/live_workout_chip_text"
+    style="@style/LiveWorkout.Text.Heavy.Chip"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="2dp" />
+</LinearLayout>
