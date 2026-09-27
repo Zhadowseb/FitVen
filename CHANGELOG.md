@@ -8,6 +8,11 @@ From the review agents' reports on #294 and #295.
   - If it could not be fetched, the search says that too, with "Prøv igen".
   - "No match" is shown only once every exercise has been searched (`centreSearchView` in `Utils/gymUtils`).
 - **A per side / both sides switch, and its undo,** look the 1RM estimate up once per exercise instead of once per set. The estimate comes from the exercise and the program, never from the set.
+- **From #293's review:**
+  - The privacy policy says it was last updated on 27 September 2026, the day of its version, and `web/privacy/index.html` is rebuilt.
+  - The comments point at `20261004090000` for the Progress and Flid rules, not at the weight-mode migration.
+  - The ledger no longer says to run that migration, which has run.
+  - The English "same exercise" text has a test.
 - **Tests:**
   - The workout hydration's rule "an edit waiting to upload wins unless the cloud's copy is newer" is now tested in both directions.
   - So are a write that lands while the hydration writes, and two cloud rows for an exercise it has just created.

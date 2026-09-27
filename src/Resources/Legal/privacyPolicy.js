@@ -24,7 +24,7 @@ export const PRIVACY_POLICY_VERSION = "2026-09-27.1";
 /** The public copy. Required by Google Play, and the address in its listing. */
 export const PRIVACY_POLICY_URL = "https://fitven.dk/privacy/";
 
-export const PRIVACY_POLICY_LAST_UPDATED = "26 September 2026";
+export const PRIVACY_POLICY_LAST_UPDATED = "27 September 2026";
 
 export const PRIVACY_POLICY_SECTIONS = [
   {

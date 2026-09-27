@@ -148,7 +148,7 @@ export function normalizeCategoryFilters(category, filters = {}) {
 // These have to agree with the migration; scripts/test-gym-categories.js
 // holds the two against each other. A streak week has two workouts, as on
 // the Train tab (STREAK_MIN_WORKOUTS in Utils/trainLibrary.js), since
-// 20261002090000; three before it.
+// 20261004090000; three before it.
 export const STREAK_MIN_WORKOUTS = 2;
 export const PROGRESS_WINDOW_DAYS = 30;
 export const PROGRESS_MIN_SETS = 3;
