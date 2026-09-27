@@ -802,6 +802,7 @@ const ExerciseList = ({
         onWorkoutMetadataChange={onWorkoutMetadataChange}
         collapsedSetsVisible={collapsedSetsVisible}
         collapsedCardLayout={collapsedCardLayout}
+        isWorkoutDone={isWorkoutDone}
       />
     </Animated.View>
   );

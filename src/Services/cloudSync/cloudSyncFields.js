@@ -7,6 +7,7 @@
 // One copy of the wall-clock parser, in the pure module a test can load.
 import { normalizeSetType } from "@utils/setTypes";
 import { normalizeStartedFrom } from "@utils/startedFrom";
+import { normalizeInstanceWeightMode } from "@utils/weightMode";
 import { normalizeCloudTimeString } from "@utils/cloudActivityUtils";
 import {
   formatDate,
@@ -211,6 +212,13 @@ export const SYNCED_FIELDS = {
     field("visible_columns", normalizeExerciseVisibleColumns),
     field("note", text()),
     field("done", flag()),
+    // Per side or both sides (@utils/weightMode): 'total' | 'per_side', or
+    // null for "not known". Compared, unlike started_from, because a switch
+    // changes it and another phone has to see that. A null from the cloud -
+    // no column yet, or an older app wrote the row - is not a change: the
+    // reconcile keeps the local value, and a null is never sent (see
+    // exerciseInstanceSync.js, which also copes with the column missing).
+    field("weight_mode", normalizeInstanceWeightMode),
   ],
   Set: [
     field("local_set_id", int(), { compare: false, payload: "head" }),
