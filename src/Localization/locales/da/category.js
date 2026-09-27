@@ -84,7 +84,7 @@ export default {
     flidStreak: "En uge tæller, når den har mindst {count} gennemførte træninger.",
     powerlifting: "Ét løft med 1 gentagelse i bænkpres, squat eller dødløft giver en total.",
     powerliftingVideo: "Her tæller kun løft med bekræftet video.",
-    fremgang: "Det kræver mindst {sets} sæt i samme løft i begge perioder på {days} dage.",
+    fremgang: "Det kræver mindst {sets} sæt i samme øvelse i begge perioder på {days} dage.",
     calisthenics: "Et sæt pull-ups, dips eller armstrækninger uden ekstra vægt giver point.",
   },
   errors: {

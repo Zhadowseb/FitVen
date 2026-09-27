@@ -86,7 +86,7 @@ export default {
     flidStreak: "A week counts once it has at least {count} finished workouts.",
     powerlifting: "One single-rep bench press, squat or deadlift gives you a total.",
     powerliftingVideo: "Only lifts with a verified video count here.",
-    fremgang: "It takes at least {sets} sets of the same lift in both {days}-day periods.",
+    fremgang: "It takes at least {sets} sets of the same exercise in both {days}-day periods.",
     calisthenics: "A set of pull-ups, dips or push-ups without added weight earns points.",
   },
   errors: {

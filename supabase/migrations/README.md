@@ -79,6 +79,7 @@ behind by accident.
 | `20261001090000_dev-kpis.sql` | yes |
 | `20261002090000_weight-mode-per-instance.sql` | yes |
 | `20261003090000_a-set-keeps-its-decimals.sql` | yes |
+| `20261004090000_progress-counts-every-exercise.sql` | yes |
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
 centre match, per-centre lift leaderboards with video verification, and what
@@ -422,6 +423,15 @@ or after the app that sends decimals: until it has run, that app sends them cut
 off, as before, and keeps its own. It rewrites the table, so every set request
 waits while it runs. Check the table's size first (the query is in its
 header), and run it when the app is quiet.
+
+`20261004090000_progress-counts-every-exercise.sql` was run on 2026-09-27. It
+restates `private.category_rows` with two rules changed: Progress counts
+every catalogue exercise, not only bench press, squat and deadlift, and a
+week counts towards Consistency's weeks in a row at two workouts, not three.
+It also adds `set_cloud_exercise_instance_idx`, the index Progress finds the
+sets through. Run it before or with the app that says two a week: until then
+the list still counts three while the page says two. The checks are at the
+bottom of the file.
 
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to

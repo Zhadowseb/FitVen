@@ -142,20 +142,20 @@ const LIFT_NAME_KEYS = {
 };
 
 /**
- * What a rise on Progress was in: the exercise's own name when the server
- * sends one (`exerciseName`), else the lift's ("Bænkpres"). Empty when it is
- * neither.
+ * What a rise on Progress was in. Bench press, squat and deadlift by the
+ * app's own name for them ("Bænkpres"), which the server marks with `lift`
+ * beside the catalogue's English name; any other exercise by the name the
+ * server sends (`exerciseName`), as the catalogue writes it everywhere else
+ * in the app. Empty when it is neither.
  */
 export function progressExerciseName(entry, t) {
-  const name = typeof entry?.exerciseName === "string" ? entry.exerciseName.trim() : "";
-
-  if (name) {
-    return name;
-  }
-
   const key = LIFT_NAME_KEYS[entry?.lift];
 
-  return key ? t(key) : "";
+  if (key) {
+    return t(key);
+  }
+
+  return typeof entry?.exerciseName === "string" ? entry.exerciseName.trim() : "";
 }
 
 /* -------------------------------------------------------------- the lines -- */

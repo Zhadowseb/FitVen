@@ -1,5 +1,26 @@
 # Changelog
 
+## [2.16.3] - Unreleased
+### Changed
+- **Fremgang counts every exercise.** The list ranks each person by their biggest rise in best e1RM in any catalogue exercise, by the same rules as before: Brzycki up to 12 reps, the last 30 days against the 30 before, and 3 sets in each window.
+  - A row names the exercise, e.g. "Hip Thrust 100 → 120 kg". Bench press, squat and deadlift keep the app's own names ("Bænkpres 56,5 → 62 kg").
+  - "Din fremgang" gets your five biggest rises from the server, biggest first, and the card shows three.
+  - Exercises are matched to the catalogue by name, trimmed and lower-cased. Custom exercises do not count. When two rises are the same size, the one reached first ranks higher.
+  - Rises are in per cent, so a light exercise can top the list: a dumbbell going from 2 to 4 kg is +100 %.
+- **Flid: a week counts towards weeks in a row at 2 workouts, not 3,** on the list as on the Train tab. The texts say 2 in both languages.
+- **Cloud:** `20261004090000_progress-counts-every-exercise.sql` (not run) restates `private.category_rows` with only those two parts changed. `npm run test:gym-categories` checks that part by part.
+  - It adds the index `set_cloud_exercise_instance_idx`.
+  - Load tested on Postgres 17 at 2,000 lifters and 1.9M sets:
+    - a country's Progress list: 2.1 → 2.3 s;
+    - a region's: 1.1 → 1.2 s;
+    - a centre's: 91 → 67 ms;
+    - a country's four cards: about 6.3 s either way.
+  - Before it had run, the list counted the three lifts and three workouts a week, and the app read that as before.
+- **The privacy policy** says that the categories show which exercise your estimated best rose most in, with the estimate before and now. It is raised to 2026-09-27.1, so everyone is asked again.
+- The Progress empty text says "same exercise", not "same lift".
+- The migrations ledger records `20261004090000_progress-counts-every-exercise.sql` as run on 2026-09-27.
+
+---
 ## [2.16.2] - Unreleased
 ### Fixed
 - **A program, block, week or day edited while it was uploading keeps the edit.** 2.15.3 guarded workouts, exercise instances and sets, but the four levels above them still cleared `needs_sync` by id alone when the cloud answered. A program renamed, a focus changed or a day marked sick while that row was uploading lost its flag, and the download straight after the upload put the old value back.
