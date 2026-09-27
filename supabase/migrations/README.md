@@ -427,9 +427,8 @@ restates `private.category_rows` with two rules changed: Progress counts
 every catalogue exercise, not only bench press, squat and deadlift, and a
 week counts towards Consistency's weeks in a row at two workouts, not three.
 It also adds `set_cloud_exercise_instance_idx`, the index Progress finds the
-sets through. Run it before or with the app that says two a week: until then
-the list still counts three while the page says two. The checks are at the
-bottom of the file.
+sets through. Before it had run, the list still counted three a week while the
+app said two. The checks are at the bottom of the file.
 
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to

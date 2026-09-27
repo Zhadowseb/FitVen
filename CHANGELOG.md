@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.16.6] - Unreleased
+### Fixed
+From the review agents' reports on #294 and #295.
+- **The centre page's exercise search** no longer says "Ingen øvelser matcher" about an exercise lifted there. The page starts with a preview and fetches every exercise when somebody searches.
+  - While the full list is coming, the search says so.
+  - If it could not be fetched, the search says that too, with "Prøv igen".
+  - "No match" is shown only once every exercise has been searched (`centreSearchView` in `Utils/gymUtils`).
+- **A per side / both sides switch, and its undo,** look the 1RM estimate up once per exercise instead of once per set. The estimate comes from the exercise and the program, never from the set.
+- **From #293's review:**
+  - The privacy policy says it was last updated on 27 September 2026, the day of its version, and `web/privacy/index.html` is rebuilt.
+  - The comments point at `20261004090000` for the Progress and Flid rules, not at the weight-mode migration.
+  - The ledger no longer says to run that migration, which has run.
+  - The English "same exercise" text has a test.
+- **Tests:**
+  - The workout hydration's rule "an edit waiting to upload wins unless the cloud's copy is newer" is now tested in both directions.
+  - So are a write that lands while the hydration writes, and two cloud rows for an exercise it has just created.
+  - A restart with no sets ticked off still announces the reset timer.
+  - A switch looks the estimate up once.
+
+---
 ## [2.16.5] - Unreleased
 ### Fixed
 - **An edit made while the pull is writing keeps the edit.** This is the download side of 2.15.3 and 2.16.2. Every reconcile reads its local rows before its transaction, some after a request, and then wrote the cloud's copy by id alone with `needs_sync = 0`. The user can write at every `await` in the loop. So if a row was edited on another phone and the pull took that copy, an edit made here just before the write was overwritten, lost its flag and was never sent. The window is narrow, since the same row has to change on two phones.

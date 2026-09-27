@@ -191,6 +191,17 @@ export default StyleSheet.create({
     fontSize: 14,
     fontWeight: "800",
   },
+  searchStatusLine: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  searchRetry: {
+    alignSelf: "flex-start",
+    marginTop: 6,
+  },
   emptyBody: {
     fontSize: 12,
     fontWeight: "600",

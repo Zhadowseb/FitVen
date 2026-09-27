@@ -8,7 +8,7 @@
 //      expo-location: what it sends, and what it makes of every shape that
 //      comes back - and of the answers a database without the migration gives;
 //   4. the migrations read as text: the rules they promise, and who may call
-//      what - 20260929090000, and 20261002090000, which restates
+//      what - 20260929090000, and 20261004090000, which restates
 //      category_rows with every exercise in Progress and two workouts a
 //      streak week. The rules are held against the latest category_rows in
 //      the folder. Nothing here talks to a database, so these are a floor,
@@ -632,7 +632,7 @@ async function testLeaderboards() {
   assert.deepStrictEqual(workouts.podium[0].detail, { workouts: 99, weeks: 3, lastWorkoutAt: "2026-09-23" });
 
   // Progress: never a podium, no filters, and the personal card. First the
-  // three-lift answer a database without 20261002090000 gives: a lift and no
+  // three-lift answer a database without 20261004090000 gives: a lift and no
   // name, and the card keyed by lift.
   fake.rpcs.gym_category_leaderboard = () => ({
     data: {
@@ -703,7 +703,7 @@ async function testLeaderboards() {
     "sorted by the rise; half a rise, or one in nothing named, is left out"
   );
 
-  // Every exercise, as 20261002090000 answers: the catalogue's name on every
+  // Every exercise, as 20261004090000 answers: the catalogue's name on every
   // rise, the lift beside it for the three, and your five biggest as a list.
   fake.rpcs.gym_category_leaderboard = () => ({
     data: {
@@ -1144,7 +1144,7 @@ function testMigration() {
   }
 }
 
-// 20261002090000: category_rows again, with every exercise in Progress and
+// 20261004090000: category_rows again, with every exercise in Progress and
 // two workouts a streak week - and nothing else of it changed.
 function testProgressMigration() {
   const text = progressMigration;
@@ -1321,6 +1321,7 @@ function testFormat() {
   assert.strictEqual(line("fremgang", { lift: "squat", before: 100, now: 112.4 }), "Squat 100 → 112.5 kg");
   assert.strictEqual(line("fremgang", { lift: "bench", exerciseName: "Bench Press", before: 56.4, now: 62.2 }), "Bench press 56.5 → 62 kg");
   assert.strictEqual(t(format.emptyBodyKey("flid", { tab: "streak" }), format.RULE_PARAMS), "A week counts once it has at least 2 finished workouts.");
+  assert.strictEqual(t(format.emptyBodyKey("fremgang"), format.RULE_PARAMS), "It takes at least 3 sets of the same exercise in both 30-day periods.");
   assert.strictEqual(line("calisthenics", { pullups: 10, dips: 15, pushups: 30 }), "Pull 10 · Dip 15 · Push 30");
 
   // The colour as text. 4.5:1 on everything it is written on, for every
