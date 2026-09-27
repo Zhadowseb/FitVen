@@ -32,11 +32,11 @@ export const LIVE_STRENGTH_WORKOUT_TYPES = new Set([
 // not trained.
 export const LIVE_WORKOUT_MAX_SECONDS = 8 * 60 * 60;
 
-// ActivityKit refuses a content state over 4 KB. Twelve sets an exercise and
+// ActivityKit refuses a content state over 4 KB. Ten sets an exercise and
 // two exercises keep it under, with room for the strings and long names. An
-// exercise with more - rare - is shown as the twelve around the set to do,
-// and the card's counts are then of those twelve.
-export const LIVE_WORKOUT_MAX_SETS = 12;
+// exercise with more - rare - is shown as the ten around the set to do, and
+// the card's counts are then of those ten.
+export const LIVE_WORKOUT_MAX_SETS = 10;
 export const LIVE_WORKOUT_MAX_BYTES = 4096;
 
 // The card's chips: at most six in a row; with more sets, five around the one
@@ -221,6 +221,8 @@ export function liveWorkoutStrings(t) {
     restClock: t("liveWorkout.restClock"),
     restSub: t("liveWorkout.restSub"),
     allDone: t("liveWorkout.allDone"),
+    allDoneQuestion: t("liveWorkout.allDoneQuestion"),
+    finish: t("liveWorkout.finish"),
     noSets: t("liveWorkout.noSets"),
     channelName: t("liveWorkout.channelName"),
     weightStep: t("liveWorkout.weightStep"),
@@ -424,8 +426,51 @@ export function buildLiveWorkoutState(
     },
     canPrev,
     canNext,
+    // Where "Afslut" on a card with every set done takes you: the app opens
+    // on the workout and finishes it, then asks about the post.
+    finishUrl: liveWorkoutFinishUrl(workout),
     strings: typeof t === "function" ? liveWorkoutStrings(t) : {},
   };
+}
+
+export const LIVE_WORKOUT_FINISH_URL_PATH = "live-workout/finish";
+
+/** `fitven://live-workout/finish?workoutId=7&type=Resistance` */
+export function liveWorkoutFinishUrl(workout) {
+  const workoutId = encodeURIComponent(String(workout?.workoutId ?? ""));
+  const type = encodeURIComponent(String(workout?.workoutType ?? "Resistance"));
+
+  return `fitven://${LIVE_WORKOUT_FINISH_URL_PATH}?workoutId=${workoutId}&type=${type}`;
+}
+
+/**
+ * The finish link, read back: `{ workoutId, workoutType }`, or null for any
+ * other address.
+ */
+export function parseLiveWorkoutFinishUrl(url) {
+  const match = String(url ?? "").match(/^fitven:\/\/+live-workout\/finish\/?\?(.*)$/);
+
+  if (!match) {
+    return null;
+  }
+
+  const params = {};
+
+  for (const pair of match[1].split("&")) {
+    const [key, value = ""] = pair.split("=");
+
+    try {
+      params[decodeURIComponent(key)] = decodeURIComponent(value);
+    } catch {
+      return null;
+    }
+  }
+
+  const workoutId = Number(params.workoutId);
+
+  return Number.isFinite(workoutId) && workoutId > 0
+    ? { workoutId, workoutType: params.type || "Resistance" }
+    : null;
 }
 
 /** The size ActivityKit measures, near enough: the JSON in UTF-8. */
@@ -468,12 +513,19 @@ export function deriveLiveWorkoutView(state, now) {
   if (!exercise) {
     const mode = (Number(totals.all) || 0) > 0 ? "allDone" : "empty";
 
-    return {
-      mode,
-      title: mode === "allDone" ? strings.allDone : strings.noSets,
-      subtitle: "",
-      buttons: [],
-    };
+    // Every set done: the card asks to finish, and its one button opens the
+    // app on the workout to do it - a link, not a queued tap, because the
+    // post question after it needs the app.
+    return mode === "allDone"
+      ? {
+          mode,
+          title: strings.allDone,
+          subtitle: strings.allDoneQuestion ?? "",
+          buttons: [
+            { type: "finish", primary: true, label: strings.finish, url: state?.finishUrl ?? null },
+          ],
+        }
+      : { mode, title: strings.noSets, subtitle: "", buttons: [] };
   }
 
   const rest = state?.rest ?? null;

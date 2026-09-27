@@ -24,6 +24,8 @@ export default {
   restClock: "Rest · {time}",
   restSub: "rest",
   allDone: "Every set is done",
+  allDoneQuestion: "Finish the workout?",
+  finish: "Finish",
   noSets: "No sets yet",
   // The weight buttons on Android's open card: "2.5 kg" beside a − and a +.
   weightStep: "{step} {unit}",

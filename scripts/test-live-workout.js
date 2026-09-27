@@ -195,10 +195,25 @@ const build = (rows, extra = {}) =>
     0
   );
 
-  // Every set done: no exercise, and the card says so.
+  // Every set done: no exercise, and the card asks to finish - with a link
+  // that opens the app on the workout, not a queued tap.
   const finished = build(exercise(1, "A", [{ id: 1, kg: 1, reps: 1, done: true }]));
   assert.strictEqual(finished.exercise, null);
-  assert.strictEqual(live.deriveLiveWorkoutView(finished, NOW).mode, "allDone");
+  const finishedView = live.deriveLiveWorkoutView(finished, NOW);
+  assert.strictEqual(finishedView.mode, "allDone");
+  assert.strictEqual(finishedView.title, "Alle sæt er færdige");
+  assert.strictEqual(finishedView.subtitle, "Afslut træningen?");
+  assert.deepStrictEqual(finishedView.buttons, [
+    { type: "finish", primary: true, label: "Afslut", url: "fitven://live-workout/finish?workoutId=7&type=Resistance" },
+  ]);
+  assert.deepStrictEqual(live.parseLiveWorkoutFinishUrl(finished.finishUrl), { workoutId: 7, workoutType: "Resistance" });
+  assert.deepStrictEqual(
+    live.parseLiveWorkoutFinishUrl("fitven:///live-workout/finish/?workoutId=12&type=Upperbody"),
+    { workoutId: 12, workoutType: "Upperbody" }
+  );
+  assert.strictEqual(live.parseLiveWorkoutFinishUrl("fitven://live-workout/finish?workoutId=abc"), null);
+  assert.strictEqual(live.parseLiveWorkoutFinishUrl("fitven://somewhere-else?workoutId=7"), null);
+  assert.strictEqual(live.parseLiveWorkoutFinishUrl(null), null);
   assert.strictEqual(live.deriveLiveWorkoutView(build([]), NOW).mode, "empty");
 }
 
@@ -525,6 +540,21 @@ const build = (rows, extra = {}) =>
     read("src/Services/notificationService.js"),
     /data\?\.kind === REST_FINISHED_NOTIFICATION_KIND\) \{\s*return \{\s*shouldPlaySound: false,\s*shouldSetBadge: false,\s*shouldShowBanner: false,\s*shouldShowList: false/,
     "with the app in front, the rest reminder is shown anyway"
+  );
+
+  // "Afslut" on the card opens the workout and finishes it; the rest reminder
+  // does not open the notification history.
+  const app = read("App.js");
+  assert.match(app, /parseLiveWorkoutFinishUrl\(url\)/);
+  assert.match(app, /Linking\.getInitialURL\(\)/);
+  assert.match(app, /finishRequestKey: Date\.now\(\)/);
+  assert.match(
+    app,
+    /data\?\.kind ===\s*notificationService\.REST_FINISHED_NOTIFICATION_KIND\s*\) \{\s*return;/
+  );
+  assert.match(
+    read("src/Pages/WorkoutPage/WorkoutTypes/Resistance/Resistance.js"),
+    /handledFinishRequestRef\.current = finishRequestKey;[\s\S]*void endWorkout\(\);/
   );
 
   // A set ticked off, or its weight moved, on the lock screen reaches the

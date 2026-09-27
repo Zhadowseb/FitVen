@@ -43,7 +43,7 @@ card on the lock screen during a strength workout.
 - **JS only processes what `drainActions()` returns.** The event is a
   wake-up. A tap for a set that is already done is a no-op.
 - **The state stays under 4 KB,** because ActivityKit refuses anything larger.
-  That is why it carries two exercises of at most 12 sets.
+  That is why it carries two exercises of at most 10 sets.
 - **Swift cannot be compiled on Windows.**
   `.github/workflows/ios-native-check.yml` builds the app for the iOS
   simulator on every PR that touches `modules/`, `targets/` or the prebuild
