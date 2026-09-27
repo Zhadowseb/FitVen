@@ -144,6 +144,15 @@ export function dateToIsoDate(date) {
   return `${year}-${month}-${day}`;
 }
 
+// A birth date as it is kept: the year, on the 1st of January. The same value
+// socialService stores, so the profile form compares like with like - the
+// year it shows against the year that was saved.
+export function dateToBirthYearIsoDate(date) {
+  const isoDate = dateToIsoDate(date);
+
+  return isoDate ? `${isoDate.slice(0, 4)}-01-01` : null;
+}
+
 export function calculateAgeFromBirthDate(value, referenceDate = new Date()) {
   const birthDate = isoDateToLocalDate(value);
 

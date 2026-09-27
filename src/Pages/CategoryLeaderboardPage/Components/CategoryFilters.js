@@ -11,11 +11,9 @@ import {
   DEFAULT_FLID_PERIOD,
   FLID_PERIODS,
   FLID_TABS,
-  FREMGANG_TABS,
   ageGroupLabelKey,
   categoryNameKey,
   flidTabLabelKey,
-  fremgangTabLabelKey,
   periodLabelKey,
 } from "@utils/gymCategories";
 
@@ -24,7 +22,8 @@ import {
  *  - Flid: Workouts / Weeks in a row, then Period and Age. A streak is not
  *    counted over a period, so Period leaves while that tab is chosen.
  *  - Powerlifting: weight class, Age and Video only.
- *  - Progress: All lifts / Bench / Squat / Deadlift.
+ *  - Progress: none. It is everybody's biggest rise, whatever it was in, so
+ *    there is no lift to pick, and no age filter; nothing is drawn.
  *  - Calisthenics: weight and Age.
  * The weight pill is only there once a gender is chosen, and says "Alle
  * vægte" without a sheet: there is no body weight to put anybody in a class
@@ -40,12 +39,14 @@ export default function CategoryFilters({ category, gender, filters, tone, onCha
   const hasAgePill = category !== "fremgang";
   const hasPeriodPill = category === "flid" && filters.tab !== "streak";
 
-  let tabs = null;
+  const tabs =
+    category === "flid" ? FLID_TABS.map((tab) => ({ value: tab, label: t(flidTabLabelKey(tab)) })) : null;
+  const hasPills = hasPeriodPill || hasWeightPill || hasAgePill;
 
-  if (category === "flid") {
-    tabs = FLID_TABS.map((tab) => ({ value: tab, label: t(flidTabLabelKey(tab)) }));
-  } else if (category === "fremgang") {
-    tabs = FREMGANG_TABS.map((tab) => ({ value: tab, label: t(fremgangTabLabelKey(tab)) }));
+  // Nothing to choose - Progress - is no row at all, not an empty one taking
+  // its gap in the header.
+  if (!tabs && !hasPills) {
+    return null;
   }
 
   const choose = (patch) => {
@@ -59,7 +60,7 @@ export default function CategoryFilters({ category, gender, filters, tone, onCha
     <View style={styles.filters}>
       {tabs ? <CategoryTabs options={tabs} value={filters.tab} tone={tone} onChange={(tab) => onChange?.({ tab })} /> : null}
 
-      {hasPeriodPill || hasWeightPill || hasAgePill ? (
+      {hasPills ? (
         <View style={styles.pills}>
           {hasPeriodPill ? (
             <FilterPill

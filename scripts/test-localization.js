@@ -143,6 +143,76 @@ assert.ok(i18n.SUPPORTED_LANGUAGES.includes(i18n.resolveLanguage("system")), "sy
 assert.ok(i18n.SUPPORTED_LANGUAGES.includes(i18n.resolveLanguage("xx")), "an unknown code falls back to a supported language");
 assert.strictEqual(i18n.getLocaleTag("da"), "da-DK");
 
+/* ------------------------------------------------ workout type names -- */
+
+// The types are stored in English; Danish users read them through
+// workoutTypeLabel. A type id reaching the screen as itself is the bug this
+// guards, and a name the user typed being "translated" is the opposite one.
+{
+  const types = loadAppModule("src/Utils/workoutTypeLabel.js");
+  const inDanish = (key, params) => i18n.translate(key, params, "da");
+  const inEnglish = (key, params) => i18n.translate(key, params, "en");
+  // Every id the app itself knows: the icons' list and the catalog db.js
+  // seeds. Read as text - the icon file imports SVG components.
+  const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
+  const iconIds = [
+    ...read("src/Resources/Icons/WorkoutLabels/index.js").matchAll(/\bid:\s*"(\w+)"/g),
+  ].map((match) => match[1]);
+  const seeded = read("src/Database/db.js").match(/const DEFAULT_WORKOUT_TYPES = \[([\s\S]*?)\];/);
+
+  assert.ok(iconIds.length >= 10 && seeded, "the workout type ids could not be read");
+
+  const seededIds = [...seeded[1].matchAll(/\[\s*"(\w+)"/g)].map((match) => match[1]);
+  const storedIds = [...new Set([...iconIds, ...seededIds])];
+
+  assert.ok(storedIds.includes("Walk") && storedIds.includes("StrengthTraining"));
+
+  for (const id of storedIds) {
+    assert.ok(types.isWorkoutTypeId(id), `${id} is a type id`);
+
+    for (const t of [inDanish, inEnglish]) {
+      const name = types.workoutTypeLabel(id, t);
+
+      assert.ok(name && !name.startsWith("workoutTypes."), `${id} has a name in both languages`);
+    }
+  }
+
+  assert.strictEqual(types.workoutTypeLabel("Resistance", inDanish), "Styrketræning");
+  assert.strictEqual(types.workoutTypeLabel("StrengthTraining", inDanish), "Styrketræning");
+  assert.strictEqual(types.workoutTypeLabel("Upperbody", inDanish), "Overkrop");
+  assert.strictEqual(types.workoutTypeLabel("Legs", inDanish), "Ben");
+  assert.strictEqual(types.workoutTypeLabel("Run", inDanish), "Løb");
+  assert.strictEqual(types.workoutTypeLabel("resistance", inDanish), "Styrketræning", "in any case");
+  assert.strictEqual(types.workoutTypeLabel("Resistance", inEnglish), "Strength training");
+  assert.strictEqual(types.workoutTypeLabel("Upperbody", inEnglish), "Upper body");
+  assert.strictEqual(types.workoutTypeLabel("Yoga", inDanish), "Yoga", "a type the app does not know is shown as stored");
+  assert.strictEqual(types.workoutTypeLabel(null, inDanish), null);
+  assert.strictEqual(types.workoutTypeLabel("  ", inDanish), null);
+
+  assert.strictEqual(
+    types.workoutDisplayName("Resistance", inDanish, "Resistance"),
+    "Styrketræning",
+    "a workout labelled with its type id is shown by the type's name"
+  );
+  assert.strictEqual(
+    types.workoutDisplayName("Ben dag", inDanish, "Resistance"),
+    "Ben dag",
+    "a name the user typed stays as typed"
+  );
+  assert.strictEqual(types.workoutDisplayName("Push", inDanish, "Resistance"), "Push");
+  assert.strictEqual(
+    types.workoutDisplayName("Upper body day", inDanish, "Upperbody"),
+    "Upper body day",
+    "only a label that is exactly an id is translated"
+  );
+  assert.strictEqual(
+    types.workoutDisplayName("", inDanish, "Upperbody"),
+    "Overkrop",
+    "no label: the type's name"
+  );
+  assert.strictEqual(types.workoutDisplayName(null, inDanish, null), null, "neither: the caller's fallback");
+}
+
 let notified = null;
 const unsubscribe = i18n.subscribeToLanguage((language) => {
   notified = language;

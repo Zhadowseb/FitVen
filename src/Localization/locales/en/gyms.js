@@ -131,12 +131,24 @@ export default {
     },
     reviewHint: "Watch the video and approve or reject it.",
     allExercises: "All exercises",
-    // The three featured lifts, and how many more the centre ranks.
-    allExercisesDetail: {
-      zero: "Bench, squat and deadlift",
-      one: "Bench, squat, deadlift and {count} more",
-      other: "Bench, squat, deadlift and {count} more",
-    },
+  },
+
+  // The centre's exercises on its page: the search, the section and "All exercises".
+  centreExercises: {
+    title: "Exercises",
+    sortedByLifters: "most lifters first",
+    searchPlaceholder: "Search this centre's exercises",
+    clearSearch: "Clear the search",
+    resultsTitle: "Exercises here",
+    noMatchTitle: "No exercises match",
+    noMatchBody: "These are the exercises lifted at this centre. Try part of the name.",
+    topLine: "#1 {name} {weight} kg",
+    yourRank: "#{rank}",
+    yourRankA11y: "you are number {rank}",
+    openHint: "Opens the exercise's ranking at this centre",
+    emptyBody: "Finish a workout here and your lifts go on the lists.",
+    allDetail: { one: "{count} exercise ranked here", other: "{count} exercises ranked here" },
+    allHint: "Opens the rankings, with a button for each exercise",
   },
 
   // The Change centre sheet.

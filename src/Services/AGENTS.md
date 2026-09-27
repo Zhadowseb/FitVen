@@ -110,6 +110,11 @@ under a second normalisation.
   `sync_version` and fill `sync_id` with `COALESCE(sync_id, <uuid>)`. The
   pattern is `updateSetField` in `src/Repository/weightliftingRepository.js`.
   Forget it and the change is saved locally and lost on the next pull.
+- The user keeps writing while an upload is out. So `markWorkoutSynced`,
+  `markExerciseSynced` and `markSetSynced` take `expectedSyncVersion`, the
+  `sync_version` the row was read at, and clear `needs_sync` only if the row
+  still has it. Pass the version of the row object the decision was made
+  from, never the cloud's. `npm run test:sync-lost-update` covers this.
 - Cloud sync is never triggered directly. Always `syncXInBackground(db)` or
   `enqueueSync()`, which serialise everything through one promise chain in
   `Services/syncScheduler.js`. Parallel calls break parent-before-child upload.
@@ -120,3 +125,6 @@ under a second normalisation.
 
 - `Sickness` appears in the sync metadata list in `src/Database/db.js` but has
   no sync implementation. It is local-only today. Do not assume it syncs.
+- `markProgramSynced`, `markMesocycleSynced`, `markMicrocycleSynced` and
+  `markDaySynced` still clear `needs_sync` by id alone, so a write to one of
+  those rows that lands during its own upload can be lost.

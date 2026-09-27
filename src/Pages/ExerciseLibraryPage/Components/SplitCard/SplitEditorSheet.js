@@ -5,6 +5,7 @@ import { useTranslation } from "@localization";
 import styles from "./SplitCardStyle";
 import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
 import { ThemedBottomSheet, ThemedText } from "@resources/ThemedComponents";
+import { workoutDisplayName } from "@utils/workoutTypeLabel";
 
 const MIN = 2;
 const MAX = 6;
@@ -98,8 +99,10 @@ export default function SplitEditorSheet({
                       </ThemedText>
                     ) : null}
                   </View>
+                  {/* The name is also the key the split stores; only what is
+                      drawn is translated, when it is a type id. */}
                   <ThemedText style={styles.sheetRowName} setColor={theme.title} numberOfLines={1}>
-                    {name}
+                    {workoutDisplayName(name, t) ?? name}
                   </ThemedText>
                 </TouchableOpacity>
               );

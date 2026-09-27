@@ -7,6 +7,7 @@
 // `iconFor` - so scripts/test-calendar-days.js runs it in Node.
 
 import { addDays, parseCustomDate } from "./dateUtils";
+import { workoutDisplayName } from "./workoutTypeLabel";
 
 // Weekday codes: passed on as the day of a new workout, so they stay English.
 // What is shown goes through calendar.weekdays / home.weekdays.
@@ -72,9 +73,17 @@ export function getWorkoutType(workout) {
   return workout?.workout_type ?? workout?.label ?? "Resistance";
 }
 
-/** Two letters for a workout with no icon: "Push day" -> "PD", "Legs" -> "LE". */
-export function getWorkoutIconLabel(workout) {
-  const label = workout?.label ?? workout?.workout_type ?? "WO";
+/**
+ * Two letters for a workout with no icon: "Push day" -> "PD", "Legs" -> "LE".
+ * With `t`, a label that is only a stored type id is read in the app's
+ * language first, so a walk is "GÅ" in Danish rather than "WA".
+ */
+export function getWorkoutIconLabel(workout, t = null) {
+  const label =
+    (t ? workoutDisplayName(workout?.label, t, workout?.workout_type) : null) ??
+    workout?.label ??
+    workout?.workout_type ??
+    "WO";
   const words = String(label)
     .trim()
     .split(/\s+/)
@@ -194,7 +203,7 @@ export function buildCalendarLookups({
 export function enrichCalendarDay(
   day,
   lookups,
-  { pageKey, todayLabel, iconFor } = {}
+  { pageKey, todayLabel, iconFor, t = null } = {}
 ) {
   const dayWorkouts = lookups.workoutsByDate.get(day.dateLabel) ?? [];
   const dayProgramRows = lookups.programsByDate.get(day.dateLabel) ?? [];
@@ -215,7 +224,7 @@ export function enrichCalendarDay(
         key: workout.workout_id,
         workout,
         icon: typeIcon?.icon,
-        iconLabel: typeIcon?.iconLabel ?? getWorkoutIconLabel(workout),
+        iconLabel: typeIcon?.iconLabel ?? getWorkoutIconLabel(workout, t),
         completed: Number(workout.done) === 1,
       };
     }),

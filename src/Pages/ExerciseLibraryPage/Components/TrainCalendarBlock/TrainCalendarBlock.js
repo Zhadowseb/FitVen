@@ -69,7 +69,7 @@ function createEmptyCalendar() {
   };
 }
 
-function buildWeekRows(calendar) {
+function buildWeekRows(calendar, t) {
   const { weeks, startIsoDate, endIsoDate } = getBlockWeeks(calendar.today);
   const lookups = buildCalendarLookups({
     workouts: calendar.workouts,
@@ -87,6 +87,7 @@ function buildWeekRows(calendar) {
         pageKey: week.key,
         todayLabel,
         iconFor: getWorkoutTypeIcon,
+        t,
       })
     ),
   }));
@@ -153,7 +154,7 @@ const TrainCalendarBlock = ({ mode }) => {
     }, [db])
   );
 
-  const weekRows = useMemo(() => buildWeekRows(calendar), [calendar]);
+  const weekRows = useMemo(() => buildWeekRows(calendar, t), [calendar, t]);
   const thisWeekWorkouts = weekRows[1].days.flatMap((day) => day.workouts);
   const doneCount = thisWeekWorkouts.filter(
     (workout) => Number(workout.done) === 1

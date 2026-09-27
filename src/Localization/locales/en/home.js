@@ -79,6 +79,8 @@ export default {
     eyebrow: "Your split",
     unnamed: "Session {number}",
     // The first week, before the split is shown: seven dots, one a day.
+    // Right after the seven dots; the line under them says why.
+    calculating: "Calculating…",
     forming: "Takes shape after your first week",
     formingA11y: "Your split is taking shape, day {count} of 7",
     waiting: "Shows up as you repeat your workouts",
@@ -88,7 +90,6 @@ export default {
     upNext: "{name}, next in your split",
   },
   workoutType: {
-    resistance: "Resistance",
     workout: "Workout",
   },
   hero: {

@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.15.2] - Unreleased
+## [2.15.4] - Unreleased
 ### Fixed
 - **A set keeps its decimals in the cloud.** A set's weight (102,5 kg, 11,25 kg a side) and RPE (8,5) were cut to whole numbers on upload. A new phone, the category lists and a custom exercise's typical weight therefore got 102 instead of 102,5.
   - Both now go up and come down with up to two decimals (`Utils/setDecimals`).
@@ -13,6 +13,48 @@
 - **Checked against a local Postgres:** the category lists, the custom exercise stats and `workout_record_counts` give the same results on whole-number data.
   - The one visible change: a pull-up with 0,5 kg added no longer counts as bodyweight in Calisthenics.
 - `npm run test:set-decimals` runs the real set sync against the schema in `node:sqlite` and a cloud that is first integer, then numeric.
+
+---
+## [2.15.3] - Unreleased
+### Fixed
+- **A workout started while its restart was uploading stays started.** When the cloud answered, the upload cleared the workout's `needs_sync` by id alone. Start had written `timer_start` and `original_start_time` with a new `sync_version` in the meantime, so the start was never sent, and the download straight after the upload put the workout back to not started.
+  - `markWorkoutSynced`, `markExerciseSynced` and `markSetSynced` now take `expectedSyncVersion`, the `sync_version` the row was read at, and clear the flag only if the row still has it (`WHERE … AND sync_version IS ?`). A row that changed keeps its flag and its own version, records the cloud id it got back, and goes up with the next pass.
+  - Exercise instances and sets had the same race. A note typed, or a set ticked off, while that row was uploading was lost the same way.
+  - The reconcile marks rows synced through the same three functions, so it has the guard too.
+  - Program, block, week and day rows still clear the flag the old way.
+- **Tests:** `npm run test:sync-lost-update` runs the real sync modules against the app's schema in `node:sqlite` and an in-memory cloud, with the user's write landing while the upload is out, for all three.
+
+---
+## [2.15.2] - Unreleased
+### Fixed
+From the owner's test on an Android phone.
+- **Edit profile: changing your birth year turns Save on.** The wheel offered a day and a month that are never kept, so changing them changed nothing. It now offers the year alone, and the heart-rate settings' birth date does the same.
+- **Restart workout sets every set back to not done** (`weightliftingService.resetStrengthWorkoutSets`).
+  - Records, exercise done flags and the day, week and block completion are recomputed and uploaded.
+  - The rest timer and any open prompts are cleared.
+  - Starting again counts from zero.
+- **The lock-screen card now follows the workout clock.** The workout service's own timer writes (start, pause, resume, finish, restart, a label) went through a local `syncWorkoutTypeInstancesInBackground` that never raised the event the card rebuilds on, so the card kept an old clock and old ticks.
+  - The card's query no longer asks for `is_active`, which a pause clears, so a paused workout keeps its card instead of losing it.
+- **A paused workout keeps its time in the square in the bottom navigation** (`workoutService.getWorkoutInProgress`, `Utils/workoutClock`).
+  - The time stands still while paused and counts on when resumed.
+  - A workout paused for more than eight hours gives the square back to the plus.
+  - Only a running workout or a rest polls every second.
+- **One centre:**
+  - Search the exercises ranked at the centre by name.
+  - A real "Øvelser" section with the five most-lifted exercises and "Alle øvelser".
+  - The exercise page scrolls to the chip you opened.
+- **Fremgang:**
+  - The Bænk/Squat/Dødløft tabs and the fixed three-lift card are gone. The page lists everybody's biggest rise, most first, and "Din fremgang" shows your rises biggest first.
+  - The server still counts only the three lifts, and changing that takes a migration.
+- **Explore search:** choosing Centres with nothing typed lists three groups: your centre, the centres you have trained in, and the busiest centres in your centre's region.
+- **Home, your split in the first week:** "Beregner…" sits beside the seven dots, and the explanation has its own line under them instead of being cut off. The state after the week is the same.
+- **Train, Din form:** a week counts towards the streak at 2 workouts, not 3. The Flid category on the centre leaderboards still counts 3.
+- **Exercise library:** the muscle view of an exercise you have trained has "Se statistik", which opens its statistics page. Back returns to the library.
+- **Workout types in Danish.** Types, and workouts named after them (Resistance, Upperbody, Legs, Run, Walk…), now read Styrketræning, Overkrop, Ben, Løb and Gåtur (`Utils/workoutTypeLabel`, locale area `workoutTypes`).
+  - This covers the workout screen, the calendar, the start sheet, Home, Train, programs, the library, posts and friends' activity.
+  - Names you typed yourself, and everything that is stored, are unchanged.
+  - "Skift navn" starts empty for a workout named only after its type.
+- `npm run test:workout-restart` runs the restart, the second start and the paused square against the app's schema in an in-memory SQLite.
 
 ---
 ## [2.15.1] - Unreleased

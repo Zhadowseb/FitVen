@@ -77,5 +77,14 @@ export default {
     people: "Personer",
     following: "Du følger dem",
     allPeople: "Se alle og følg",
+    // Centre valgt, intet skrevet endnu: dit center, dem du har trænet i, og
+    // de mest aktive i dit centers område ({where} har forholdsordet med).
+    suggestions: {
+      yours: "Dit center",
+      trainedIn: "Hvor du har trænet",
+      workouts: { one: "{count} træning", other: "{count} træninger" },
+      busiestIn: "Mest aktive {where}",
+      busiest: "Mest aktive centre",
+    },
   },
 };

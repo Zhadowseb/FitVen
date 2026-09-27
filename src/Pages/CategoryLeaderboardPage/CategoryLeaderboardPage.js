@@ -402,7 +402,7 @@ export default function CategoryLeaderboardPage() {
     body =
       category === "fremgang" ? (
         <View style={styles.stack}>
-          <PersonalCard variant="progress" tab={filters.tab} tone={tone} valueColor={toneText} loading />
+          <PersonalCard variant="progress" tone={tone} valueColor={toneText} loading />
           <CategorySkeleton podium={false} />
         </View>
       ) : (
@@ -424,7 +424,6 @@ export default function CategoryLeaderboardPage() {
         <PersonalCard
           variant="progress"
           me={me}
-          tab={filters.tab}
           tone={tone}
           valueColor={toneText}
           style={isUpdating ? styles.dimmed : null}

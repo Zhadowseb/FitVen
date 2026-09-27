@@ -34,12 +34,6 @@ export default {
     workouts: "Workouts",
     streak: "Weeks in a row",
   },
-  fremgangTabs: {
-    all: "All lifts",
-    bench: "Bench",
-    squat: "Squat",
-    deadlift: "Deadlift",
-  },
   units: {
     workouts: { one: "workout", other: "workouts" },
     weeks: { one: "week", other: "weeks" },
@@ -141,7 +135,7 @@ export default {
     weightClassStatic: "Body weight can't be set yet, so everyone is under All weights.",
     onlyVideoHint: "Shows only lifts with a verified video",
   },
-  // Powerlifting's three buttons at the bottom.
+  // Powerlifting's three buttons at the bottom - and the lift a rise on Progress was in.
   lifts: {
     title: "Each lift on its own",
     bench: "Bench press",

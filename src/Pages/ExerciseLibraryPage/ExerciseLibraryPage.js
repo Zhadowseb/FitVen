@@ -19,6 +19,7 @@ import {
 import { programService, splitService } from "../../Services";
 import { getTodaysDate } from "../../Utils/dateUtils";
 import { STARTED_FROM } from "@utils/startedFrom";
+import { workoutDisplayName } from "@utils/workoutTypeLabel";
 import ActiveProgramCard from "./Components/ActiveProgramCard/ActiveProgramCard";
 import SplitCard from "./Components/SplitCard/SplitCard";
 import RepeatAlso from "./Components/SplitCard/RepeatAlso";
@@ -165,7 +166,7 @@ export default function ExerciseLibraryPage() {
         throw new Error("Nothing was planned");
       }
 
-      const name = repeatTarget.label;
+      const name = workoutDisplayName(repeatTarget.label, t) ?? repeatTarget.label;
 
       setRepeatTarget(null);
       Alert.alert(
@@ -208,7 +209,7 @@ export default function ExerciseLibraryPage() {
       Alert.alert(
         t("train.plan.plannedTitle"),
         t("train.plan.plannedMessage", {
-          name: workout.label,
+          name: workoutDisplayName(workout.label, t) ?? workout.label,
           date: formatDate(date, { weekday: "long", day: "numeric", month: "long" }),
         })
       );

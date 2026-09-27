@@ -75,6 +75,9 @@ export default {
     noPrimaryMuscles: "No primary muscle groups listed",
     noSecondaryMuscles: "No secondary muscle groups listed",
     adding: "Adding...",
+    // In the muscle view, once the exercise has finished sets: opens its statistics.
+    seeStatistics: "See statistics",
+    seeStatisticsA11y: "See statistics for {name}",
     eyebrowWorkout: "Workout",
     eyebrowTrain: "Train",
     title: "Exercise library",

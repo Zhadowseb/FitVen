@@ -4,6 +4,9 @@ import * as gymService from "./gymService";
 import * as notificationService from "./notificationService";
 import { withTransaction } from "./shared";
 import { enqueueSync, startBackgroundSync } from "./syncScheduler";
+import { getCurrentStoredTimestampSeconds } from "@utils/timeUtils";
+import { findPausedWorkoutInProgress } from "@utils/workoutClock";
+import { notifyWorkoutDataChanged } from "@utils/workoutDataEvents";
 import {
   clearWorkoutPostStatus,
   getWorkoutPostStatus,
@@ -89,6 +92,14 @@ async function createCompletedWorkoutPostBestEffort(
 }
 
 async function syncWorkoutTypeInstancesInBackground(db) {
+  // Every workout-level write here ends in this - the timer started, paused,
+  // resumed, finished or restarted, a label - and it did not go through the
+  // cloudSync function of the same name that raises this. So the lock-screen
+  // card kept the clock and the sets of a workout that had been restarted,
+  // and never took up the new start; the square in the bottom navigation
+  // waited for its next poll.
+  notifyWorkoutDataChanged("workouts");
+
   try {
     pushDirtyWorkoutHierarchyInBackground(db);
   } catch (error) {
@@ -179,6 +190,28 @@ export async function updateWorkoutRunFocusType(
 
 export async function getActiveWorkoutTimer(db) {
   return workoutRepository.getActiveWorkoutTimer(db);
+}
+
+/**
+ * The workout the square in the bottom navigation is about: the one whose
+ * timer is running, or else the newest paused one - started, not finished,
+ * its time banked - started less than eight hours ago (Utils/workoutClock).
+ * Null when neither, and the square is the plus or the start button again.
+ */
+export async function getWorkoutInProgress(
+  db,
+  { now = getCurrentStoredTimestampSeconds() } = {}
+) {
+  const runningWorkout = await workoutRepository.getActiveWorkoutTimer(db);
+
+  if (runningWorkout) {
+    return runningWorkout;
+  }
+
+  return findPausedWorkoutInProgress(
+    await workoutRepository.getPausedWorkouts(db),
+    now
+  );
 }
 
 export async function getStartableWorkout(db, { date }) {

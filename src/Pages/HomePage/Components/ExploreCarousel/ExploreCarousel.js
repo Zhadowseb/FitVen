@@ -18,6 +18,7 @@ import { formatTimeAgo } from "@utils/dateUtils";
 import { formatWeightKg } from "@utils/gymUtils";
 import { buildHomeExploreCards, localDayNumber } from "@utils/homeExploreCards";
 import { getWorkoutCoverImage } from "@utils/workoutCoverImages";
+import { workoutDisplayName } from "@utils/workoutTypeLabel";
 
 // Home is opened all the time; the rail asks Explore again at most once a
 // minute, unless Home is pulled to refresh.
@@ -115,7 +116,10 @@ function describeCard(card, { t, theme, navigation }) {
 
       return {
         kicker: t("homeExplore.kickers.centrePost"),
-        title: post.title || post.author?.displayName || t("homeExplore.kickers.centrePost"),
+        title:
+          workoutDisplayName(post.title, t) ||
+          post.author?.displayName ||
+          t("homeExplore.kickers.centrePost"),
         metaParts: [post.gym.shortName, post.createdAt ? formatTimeAgo(post.createdAt) : null],
         tone: theme.primary,
         toneText: theme.primaryText,
