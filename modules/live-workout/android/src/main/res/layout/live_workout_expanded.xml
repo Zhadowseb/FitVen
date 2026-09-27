@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 1e expanded (about 218 dp, under the 252 limit): the content row, the set
-     rows, and Forrige · Sæt færdigt · Næste. For "no sets yet" / "all sets
-     done" only the title is shown. Forrige and Næste each have a dimmed twin
-     (40 %) that is shown instead when the card cannot move that way; it
-     swallows the tap, so a tap on it does nothing. -->
+     rows, and −step · Sæt færdigt · +step (spec "Låseskærm vægtknapper").
+     For a set without a weight the weight buttons are hidden and Sæt færdigt
+     takes the row, which is why the 8 dp gaps sit on the weight buttons and
+     not on it. At 0 the minus button's dimmed twin (40 %) is shown instead; it
+     swallows the tap, so a tap on it does nothing. For "no sets yet" / "all
+     sets done" only the title is shown. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
   android:layout_width="match_parent"
   android:layout_height="wrap_content"
@@ -45,48 +47,49 @@
     android:orientation="horizontal">
 
     <LinearLayout
-      android:id="@+id/live_workout_prev"
+      android:id="@+id/live_workout_weight_minus"
       style="@style/LiveWorkout.Button"
       android:layout_width="0dp"
       android:layout_height="match_parent"
+      android:layout_marginEnd="8dp"
       android:layout_weight="1"
-      android:background="@drawable/live_workout_button_secondary">
-
-      <ImageView
-        android:layout_width="14dp"
-        android:layout_height="14dp"
-        android:importantForAccessibility="no"
-        android:src="@drawable/live_workout_ic_chevron_left"
-        android:tint="@color/live_workout_text_primary" />
+      android:background="@drawable/live_workout_button_weight_minus">
 
       <TextView
-        android:id="@+id/live_workout_prev_text"
-        style="@style/LiveWorkout.Text.Heavy.Button"
+        android:id="@+id/live_workout_weight_minus_sign"
+        style="@style/LiveWorkout.Text.Bold.WeightSign.Minus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+      <TextView
+        android:id="@+id/live_workout_weight_minus_text"
+        style="@style/LiveWorkout.Text.Heavy.Button.WeightMinus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="4dp" />
+        android:layout_marginStart="3dp" />
     </LinearLayout>
 
     <LinearLayout
-      android:id="@+id/live_workout_prev_off"
+      android:id="@+id/live_workout_weight_minus_off"
       style="@style/LiveWorkout.Button.Off"
       android:layout_width="0dp"
       android:layout_height="match_parent"
-      android:layout_weight="1">
-
-      <ImageView
-        android:layout_width="14dp"
-        android:layout_height="14dp"
-        android:importantForAccessibility="no"
-        android:src="@drawable/live_workout_ic_chevron_left"
-        android:tint="@color/live_workout_text_primary" />
+      android:layout_marginEnd="8dp"
+      android:layout_weight="1"
+      android:background="@drawable/live_workout_bg_weight_minus">
 
       <TextView
-        android:id="@+id/live_workout_prev_off_text"
-        style="@style/LiveWorkout.Text.Heavy.Button"
+        android:id="@+id/live_workout_weight_minus_off_sign"
+        style="@style/LiveWorkout.Text.Bold.WeightSign.Minus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+      <TextView
+        android:id="@+id/live_workout_weight_minus_off_text"
+        style="@style/LiveWorkout.Text.Heavy.Button.WeightMinus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="4dp" />
+        android:layout_marginStart="3dp" />
     </LinearLayout>
 
     <LinearLayout
@@ -94,8 +97,6 @@
       style="@style/LiveWorkout.Button"
       android:layout_width="0dp"
       android:layout_height="match_parent"
-      android:layout_marginStart="8dp"
-      android:layout_marginEnd="8dp"
       android:layout_weight="1.4"
       android:background="@drawable/live_workout_button_primary">
 
@@ -115,48 +116,26 @@
     </LinearLayout>
 
     <LinearLayout
-      android:id="@+id/live_workout_next"
+      android:id="@+id/live_workout_weight_plus"
       style="@style/LiveWorkout.Button"
       android:layout_width="0dp"
       android:layout_height="match_parent"
+      android:layout_marginStart="8dp"
       android:layout_weight="1"
-      android:background="@drawable/live_workout_button_secondary">
+      android:background="@drawable/live_workout_button_weight_plus">
 
       <TextView
-        android:id="@+id/live_workout_next_text"
-        style="@style/LiveWorkout.Text.Heavy.Button"
+        android:id="@+id/live_workout_weight_plus_sign"
+        style="@style/LiveWorkout.Text.Bold.WeightSign.Plus"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="4dp" />
-
-      <ImageView
-        android:layout_width="14dp"
-        android:layout_height="14dp"
-        android:importantForAccessibility="no"
-        android:src="@drawable/live_workout_ic_chevron_right"
-        android:tint="@color/live_workout_text_primary" />
-    </LinearLayout>
-
-    <LinearLayout
-      android:id="@+id/live_workout_next_off"
-      style="@style/LiveWorkout.Button.Off"
-      android:layout_width="0dp"
-      android:layout_height="match_parent"
-      android:layout_weight="1">
+        android:layout_height="wrap_content" />
 
       <TextView
-        android:id="@+id/live_workout_next_off_text"
-        style="@style/LiveWorkout.Text.Heavy.Button"
+        android:id="@+id/live_workout_weight_plus_text"
+        style="@style/LiveWorkout.Text.Heavy.Button.WeightPlus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="4dp" />
-
-      <ImageView
-        android:layout_width="14dp"
-        android:layout_height="14dp"
-        android:importantForAccessibility="no"
-        android:src="@drawable/live_workout_ic_chevron_right"
-        android:tint="@color/live_workout_text_primary" />
+        android:layout_marginStart="3dp" />
     </LinearLayout>
   </LinearLayout>
 </LinearLayout>

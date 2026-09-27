@@ -106,6 +106,32 @@
     <item name="android:textColor">@color/live_workout_ink</item>
   </style>
 
+  <!-- The weight buttons' "2,5 kg" 13/800, in red and in green -->
+  <style name="LiveWorkout.Text.Heavy.Button.WeightMinus">
+    <item name="android:textColor">@color/live_workout_weight_minus</item>
+  </style>
+
+  <style name="LiveWorkout.Text.Heavy.Button.WeightPlus">
+    <item name="android:textColor">@color/live_workout_weight_plus</item>
+  </style>
+
+  <!-- Their "−" and "+" 17/700. Weight 700 is bold on every Android. -->
+  <style name="LiveWorkout.Text.Bold">
+    <item name="android:textStyle">bold</item>
+  </style>
+
+  <style name="LiveWorkout.Text.Bold.WeightSign">
+    <item name="android:textSize">17sp</item>
+  </style>
+
+  <style name="LiveWorkout.Text.Bold.WeightSign.Minus">
+    <item name="android:textColor">@color/live_workout_weight_minus</item>
+  </style>
+
+  <style name="LiveWorkout.Text.Bold.WeightSign.Plus">
+    <item name="android:textColor">@color/live_workout_weight_plus</item>
+  </style>
+
   <!-- A 40 dp button: icon and text centred. -->
   <style name="LiveWorkout.Button" parent="">
     <item name="android:gravity">center</item>
@@ -114,11 +140,11 @@
     <item name="android:paddingEnd">8dp</item>
   </style>
 
-  <!-- Forrige / Næste when the card cannot move that way: 40 %, and it takes
-       the tap so the card body does not open the app instead. -->
+  <!-- A button that cannot be used right now (minus at 0): 40 %, and it takes
+       the tap so the card body does not open the app instead. Its layout
+       gives it a background without a touch ripple. -->
   <style name="LiveWorkout.Button.Off">
     <item name="android:alpha">0.4</item>
-    <item name="android:background">@drawable/live_workout_button_secondary_off</item>
     <item name="android:clickable">true</item>
     <item name="android:visibility">gone</item>
   </style>

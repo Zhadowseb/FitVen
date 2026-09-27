@@ -3,8 +3,7 @@
 // a personal record. Module state with listeners - the same shape as
 // restTimerEvents and workoutPostEvents - so Home, waiting under the workout
 // screen, can refresh the moment a set is finished, and knows which set just
-// earned a record. The lock-screen card listens too, and so does the workout
-// screen, for a set ticked off on the lock screen.
+// earned a record. The lock-screen card listens too.
 
 const listeners = new Set();
 let last = null;
@@ -32,7 +31,7 @@ export function notifyWorkoutSetChanged(change) {
     failed: Boolean(change.failed),
     personalRecord: Boolean(change.personalRecord),
     // Who ticked it: null for the workout screen, "lockScreen" for the card
-    // on the lock screen - which the workout screen did not see happen.
+    // on the lock screen.
     source: change.source ?? null,
     at: Date.now(),
   };

@@ -37,11 +37,16 @@ internal object LiveWorkoutNotification {
   // A distinct request code per PendingIntent, so no two share extras.
   private const val REQUEST_OPEN = 0x4C50
   private const val REQUEST_COMPLETE = REQUEST_OPEN + 1
-  private const val REQUEST_PREV = REQUEST_OPEN + 2
-  private const val REQUEST_NEXT = REQUEST_OPEN + 3
   private const val REQUEST_MINUS = REQUEST_OPEN + 4
   private const val REQUEST_PLUS = REQUEST_OPEN + 5
   private const val REQUEST_SKIP = REQUEST_OPEN + 6
+  // Not the 2 and 3 Forrige / Næste had: a card posted by an older build
+  // still carries those.
+  private const val REQUEST_WEIGHT_MINUS = REQUEST_OPEN + 7
+  private const val REQUEST_WEIGHT_PLUS = REQUEST_OPEN + 8
+
+  // U+2212, the typographic minus, not a hyphen.
+  private const val MINUS_SIGN = "−"
 
   private const val COLLAPSED_RING_DP = 36f
   private const val COLLAPSED_RING_STROKE_DP = 3.5f
@@ -258,7 +263,7 @@ internal object LiveWorkoutNotification {
       views.setChronometerCountDown(R.id.live_workout_rest_clock, true)
       views.setProgressBar(R.id.live_workout_rest_bar, BAR_MAX, (rest.fraction * BAR_MAX).roundToInt(), false)
 
-      views.setTextViewText(R.id.live_workout_minus_text, "−15 s")
+      views.setTextViewText(R.id.live_workout_minus_text, "${MINUS_SIGN}15 s")
       views.setTextViewText(R.id.live_workout_skip_text, state.string("skip"))
       views.setTextViewText(R.id.live_workout_plus_text, "+15 s")
       views.setOnClickPendingIntent(
@@ -273,29 +278,55 @@ internal object LiveWorkoutNotification {
       return views
     }
 
-    // 1e: the current exercise's row and the three buttons.
+    // 1e: the current exercise's row, and −step · Sæt færdigt · +step. A set
+    // without a weight has no weight buttons, and Sæt færdigt takes the row.
     views.setViewVisibility(R.id.live_workout_row_current, visibleIf(active))
     views.setTextViewText(R.id.live_workout_row_current_label, view.exerciseName)
     bindChips(context, views, R.id.live_workout_chips_current, if (active) view.chips else emptyList())
 
+    val weight = view.weightButtons?.takeIf { active }
+
     views.setViewVisibility(R.id.live_workout_buttons, visibleIf(active))
-    views.setViewVisibility(R.id.live_workout_prev, visibleIf(active && view.canPrev))
-    views.setViewVisibility(R.id.live_workout_prev_off, visibleIf(active && !view.canPrev))
-    views.setViewVisibility(R.id.live_workout_next, visibleIf(active && view.canNext))
-    views.setViewVisibility(R.id.live_workout_next_off, visibleIf(active && !view.canNext))
-    views.setTextViewText(R.id.live_workout_prev_text, state.string("prev"))
-    views.setTextViewText(R.id.live_workout_prev_off_text, state.string("prev"))
+    views.setViewVisibility(R.id.live_workout_weight_minus, visibleIf(weight != null && weight.minusEnabled))
+    views.setViewVisibility(R.id.live_workout_weight_minus_off, visibleIf(weight != null && !weight.minusEnabled))
+    views.setViewVisibility(R.id.live_workout_weight_plus, visibleIf(weight != null))
     views.setTextViewText(R.id.live_workout_complete_text, state.string("complete"))
-    views.setTextViewText(R.id.live_workout_next_text, state.string("next"))
-    views.setTextViewText(R.id.live_workout_next_off_text, state.string("next"))
+
+    for (id in intArrayOf(R.id.live_workout_weight_minus_sign, R.id.live_workout_weight_minus_off_sign)) {
+      views.setTextViewText(id, MINUS_SIGN)
+    }
+    views.setTextViewText(R.id.live_workout_weight_plus_sign, "+")
+
+    for (id in intArrayOf(
+      R.id.live_workout_weight_minus_text,
+      R.id.live_workout_weight_minus_off_text,
+      R.id.live_workout_weight_plus_text
+    )) {
+      views.setTextViewText(id, weight?.label ?: "")
+    }
+
+    views.setContentDescription(R.id.live_workout_weight_minus, weight?.a11yMinus ?: "")
+    views.setContentDescription(R.id.live_workout_weight_minus_off, weight?.a11yMinus ?: "")
+    views.setContentDescription(R.id.live_workout_weight_plus, weight?.a11yPlus ?: "")
 
     if (active) {
-      views.setOnClickPendingIntent(R.id.live_workout_prev, action(context, state, REQUEST_PREV, LiveAction.PREV))
       views.setOnClickPendingIntent(
         R.id.live_workout_complete,
         action(context, state, REQUEST_COMPLETE, LiveAction.COMPLETE_SET, setId = view.nowSetId)
       )
-      views.setOnClickPendingIntent(R.id.live_workout_next, action(context, state, REQUEST_NEXT, LiveAction.NEXT))
+    }
+
+    if (weight != null) {
+      // Each its own request code: with one, Android would hand minus the
+      // plus intent's extras.
+      views.setOnClickPendingIntent(
+        R.id.live_workout_weight_minus,
+        action(context, state, REQUEST_WEIGHT_MINUS, LiveAction.ADJUST_WEIGHT, setId = view.nowSetId, delta = -weight.step)
+      )
+      views.setOnClickPendingIntent(
+        R.id.live_workout_weight_plus,
+        action(context, state, REQUEST_WEIGHT_PLUS, LiveAction.ADJUST_WEIGHT, setId = view.nowSetId, delta = weight.step)
+      )
     }
 
     return views
@@ -340,7 +371,8 @@ internal object LiveWorkoutNotification {
     requestCode: Int,
     type: String,
     setId: String? = null,
-    seconds: Int? = null
+    seconds: Int? = null,
+    delta: Double? = null
   ): PendingIntent {
     val intent = Intent(context, LiveWorkoutActionReceiver::class.java)
       .setAction(LiveWorkoutActionReceiver.ACTION)
@@ -349,6 +381,7 @@ internal object LiveWorkoutNotification {
 
     setId?.let { intent.putExtra(LiveWorkoutActionReceiver.EXTRA_SET_ID, it) }
     seconds?.let { intent.putExtra(LiveWorkoutActionReceiver.EXTRA_SECONDS, it) }
+    delta?.let { intent.putExtra(LiveWorkoutActionReceiver.EXTRA_DELTA, it) }
 
     return PendingIntent.getBroadcast(
       context,

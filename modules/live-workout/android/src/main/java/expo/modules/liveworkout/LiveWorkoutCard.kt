@@ -61,7 +61,8 @@ internal object LiveWorkoutCard {
   /**
    * A tap: the reducer changes the stored state, the card is posted again and
    * the tap is queued. False, and nothing is queued, when the tap belongs to
-   * no card that is still there (the workout ended, or another one started).
+   * no card that is still there (the workout ended, or another one started),
+   * and for a weight button that would not move the weight.
    */
   fun handleAction(context: Context, action: LiveAction, workoutId: String?): Boolean {
     synchronized(LiveWorkoutStore.lock) {
@@ -77,6 +78,11 @@ internal object LiveWorkoutCard {
       }
 
       val reduced = LiveWorkoutReducer.apply(stored, action, nowSeconds())
+      val weighing = action.type == LiveAction.ADJUST_WEIGHT
+
+      if (weighing && reduced === stored) {
+        return false
+      }
 
       if (reduced !== stored) {
         LiveWorkoutStore.writeState(context, reduced.toJson())
@@ -84,10 +90,17 @@ internal object LiveWorkoutCard {
 
       LiveWorkoutNotification.ensureChannel(context, reduced, rename = false)
       post(context, reduced)
-      LiveWorkoutStore.enqueue(context, action)
+      LiveWorkoutStore.enqueue(context, action, weight = if (weighing) weightOf(reduced, action.setId) else null)
       return true
     }
   }
+
+  /** The weight the set now has, wherever it is on the card. */
+  private fun weightOf(state: LiveWorkoutState, setId: String?): Double? =
+    listOfNotNull(state.exercise, state.next)
+      .flatMap { it.sets }
+      .firstOrNull { it.id == setId }
+      ?.weight
 
   private fun post(context: Context, state: LiveWorkoutState): Boolean {
     val now = nowSeconds()

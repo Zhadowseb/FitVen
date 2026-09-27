@@ -47,7 +47,94 @@ export const LIVE_WORKOUT_MAX_CHIPS = 6;
 // running and handled when it opens, they would move it for no reason.
 export const LIVE_WORKOUT_VIEW_ACTION_MAX_AGE_SECONDS = 60;
 
-export const LIVE_WORKOUT_ACTION_TYPES = ["completeSet", "prev", "next", "adjustRest", "skipRest"];
+export const LIVE_WORKOUT_ACTION_TYPES = [
+  "completeSet",
+  "prev",
+  "next",
+  "adjustRest",
+  "skipRest",
+  "adjustWeight",
+];
+
+// The weight buttons on Android's open card move a set by one step of plates.
+// The step follows the exercise: what is on the bar decides how finely it can
+// move. A setting per exercise can come later; until then, this.
+export const LIVE_WEIGHT_STEP_DEFAULT = 2.5;
+const HEAVY_STEP = 5;
+const DUMBBELL_STEP = 2;
+
+/**
+ * One step on the weight buttons for an exercise, in kg: 2 for dumbbells, 5
+ * for machines and cables and for squats and deadlifts on the bar, and 2.5
+ * for everything else - the bench press among them.
+ */
+export function liveWeightStepFor({ name = "", equipment = null } = {}) {
+  const lowered = String(name ?? "").toLowerCase();
+
+  if (equipment === "dumbbell" || /dumbbell|håndvægt/.test(lowered)) {
+    return DUMBBELL_STEP;
+  }
+
+  if (
+    equipment === "machine" ||
+    equipment === "cable" ||
+    /machine|maskine|cable|kabel|leg press|benpres/.test(lowered)
+  ) {
+    return HEAVY_STEP;
+  }
+
+  if (/squat|deadlift|dødløft/.test(lowered)) {
+    return HEAVY_STEP;
+  }
+
+  return LIVE_WEIGHT_STEP_DEFAULT;
+}
+
+/** To the nearest quarter kilo, so 0.1 + 0.2 never shows as 102.49999. */
+export function roundToQuarter(value) {
+  return Math.round(Number(value) * 4) / 4;
+}
+
+/**
+ * A weight as the card writes it: at most two decimals, no trailing zeros, no
+ * thousands separator, and the language's decimal sign - "102,5", "100". The
+ * native sides write a weight their buttons changed with exactly this rule.
+ */
+export function formatLiveWeight(weight, decimal = ".") {
+  const rounded = Math.round(Number(weight) * 100) / 100;
+
+  return String(Object.is(rounded, -0) ? 0 : rounded).replace(".", decimal);
+}
+
+/** "," or ".", as `formatNumber` writes one and a half in the chosen language. */
+export function decimalSignOf(formatNumber) {
+  if (typeof formatNumber !== "function") {
+    return ".";
+  }
+
+  const sample = String(formatNumber(1.5, { minimumFractionDigits: 1, useGrouping: false }));
+
+  return sample.includes(",") ? "," : ".";
+}
+
+/** A set's words, from its weight and the reps part - what a weight button redraws. */
+export function composeLiveSetText(weight, repsText, { decimal = ".", unit = "kg" } = {}) {
+  const kilos = weight === null || weight === undefined ? null : formatLiveWeight(weight, decimal);
+
+  if (kilos !== null && repsText) {
+    return { text: `${kilos} ${unit} × ${repsText}`, short: `${kilos}×${repsText}` };
+  }
+
+  if (repsText) {
+    return { text: `× ${repsText}`, short: `×${repsText}` };
+  }
+
+  if (kilos !== null) {
+    return { text: `${kilos} ${unit}`, short: kilos };
+  }
+
+  return { text: "–", short: "–" };
+}
 
 const flag = (value) => Number(value) === 1 || value === true;
 
@@ -90,9 +177,10 @@ export function formatLiveClock(totalSeconds) {
 /**
  * What a set says on the card: "100 kg × 5" and, on a chip, "100×5". Without
  * a weight it is body weight - "× 12". An AMRAP set without reps yet shows its
- * target with a plus.
+ * target with a plus. Also the parts the weight buttons redraw it from: the
+ * weight, and the reps as written.
  */
-export function formatLiveSet(row, formatNumber = (value) => String(value)) {
+export function formatLiveSet(row, { decimal = ".", unit = "kg" } = {}) {
   const weight = numberOrNull(row?.weight);
   let reps = numberOrNull(row?.reps);
   let plus = "";
@@ -102,22 +190,13 @@ export function formatLiveSet(row, formatNumber = (value) => String(value)) {
     plus = reps === null ? "" : "+";
   }
 
-  const kilos = weight === null ? null : formatNumber(weight, { maximumFractionDigits: 2 });
-  const count = reps === null ? null : `${formatNumber(reps, { maximumFractionDigits: 0 })}${plus}`;
+  const repsText = reps === null ? null : `${Math.round(reps)}${plus}`;
 
-  if (kilos !== null && count !== null) {
-    return { text: `${kilos} kg × ${count}`, short: `${kilos}×${count}` };
-  }
-
-  if (count !== null) {
-    return { text: `× ${count}`, short: `×${count}` };
-  }
-
-  if (kilos !== null) {
-    return { text: `${kilos} kg`, short: kilos };
-  }
-
-  return { text: "–", short: "–" };
+  return {
+    ...composeLiveSetText(weight, repsText, { decimal, unit }),
+    weight,
+    repsText,
+  };
 }
 
 /** Every word the card shows, translated here because native never does. */
@@ -144,6 +223,9 @@ export function liveWorkoutStrings(t) {
     allDone: t("liveWorkout.allDone"),
     noSets: t("liveWorkout.noSets"),
     channelName: t("liveWorkout.channelName"),
+    weightStep: t("liveWorkout.weightStep"),
+    a11yWeightMinus: t("liveWorkout.a11yWeightMinus"),
+    a11yWeightPlus: t("liveWorkout.a11yWeightPlus"),
   };
 }
 
@@ -166,7 +248,12 @@ export function groupLiveWorkoutRows(rows = []) {
     let exercise = byId.get(exerciseId);
 
     if (!exercise) {
-      exercise = { exerciseId, name: String(row.exercise_name ?? "").trim(), rows: [] };
+      exercise = {
+        exerciseId,
+        name: String(row.exercise_name ?? "").trim(),
+        equipment: row.exercise_equipment ?? null,
+        rows: [],
+      };
       byId.set(exerciseId, exercise);
       exercises.push(exercise);
     }
@@ -179,6 +266,7 @@ export function groupLiveWorkoutRows(rows = []) {
   return exercises.map((exercise, position) => ({
     exerciseId: exercise.exerciseId,
     name: exercise.name,
+    equipment: exercise.equipment,
     position,
     sets: orderSetsForDisplay(exercise.rows).map((row) => ({
       row,
@@ -256,14 +344,18 @@ function windowOfSets(sets) {
   return sets.slice(start, start + LIVE_WORKOUT_MAX_SETS);
 }
 
-function exerciseForState(exercise, total, formatNumber) {
+function exerciseForState(exercise, total, format) {
+  const weightStep = liveWeightStepFor(exercise);
+
   return {
     name: exercise.name,
     index: exercise.position + 1,
     total,
+    weightStep,
+    weightStepText: formatLiveWeight(weightStep, format.decimal),
     sets: windowOfSets(exercise.sets).map((set) => ({
       id: String(set.setId),
-      ...formatLiveSet(set.row, formatNumber),
+      ...formatLiveSet(set.row, format),
       done: set.done,
       rest: set.rest,
     })),
@@ -296,6 +388,7 @@ export function buildLiveWorkoutState(
   const nowSeconds = Math.trunc(Number(now) || 0);
   const running = timerStart !== null;
   const allSets = exercises.flatMap((exercise) => exercise.sets);
+  const format = { decimal: decimalSignOf(formatNumber), unit: "kg" };
   const ownRest =
     restTimer &&
     Number(restTimer.workoutId) === Number(workout?.workoutId) &&
@@ -311,8 +404,10 @@ export function buildLiveWorkoutState(
     // it can count up from there by itself.
     startedAt: running ? timerStart - banked : nowSeconds - banked,
     pausedElapsed: running ? null : banked,
-    exercise: shown ? exerciseForState(shown, exercises.length, formatNumber) : null,
-    next: next ? exerciseForState(next, exercises.length, formatNumber) : null,
+    unit: format.unit,
+    decimal: format.decimal,
+    exercise: shown ? exerciseForState(shown, exercises.length, format) : null,
+    next: next ? exerciseForState(next, exercises.length, format) : null,
     rest: ownRest
       ? {
           startedAt: Math.trunc(Number(ownRest.startedAt)),
@@ -433,6 +528,10 @@ export function deriveLiveWorkoutView(state, now) {
           { type: "completeSet", primary: true, label: strings.complete, setId: nowSet.id },
           { type: "next", label: strings.next, enabled: canNext },
         ],
+    // Android's open card, between sets: −step · Sæt færdigt · +step. None
+    // for a set without a weight - body weight or time - where Sæt færdigt
+    // takes the whole row, and none while resting.
+    weightButtons: resting ? null : weightButtonsFor(state, exercise, nowSet),
     chips: chipsFor(sets, nowIndex),
     nextRow: next
       ? {
@@ -446,6 +545,28 @@ export function deriveLiveWorkoutView(state, now) {
   };
 
   return view;
+}
+
+function weightButtonsFor(state, exercise, nowSet) {
+  if (nowSet?.weight === null || nowSet?.weight === undefined) {
+    return null;
+  }
+
+  const strings = state?.strings ?? {};
+  const step = Number(exercise.weightStep) || LIVE_WEIGHT_STEP_DEFAULT;
+  const values = {
+    step: exercise.weightStepText ?? formatLiveWeight(step, state?.decimal ?? "."),
+    unit: state?.unit ?? "kg",
+  };
+
+  return {
+    step,
+    label: fillTemplate(strings.weightStep, values),
+    a11yMinus: fillTemplate(strings.a11yWeightMinus, values),
+    a11yPlus: fillTemplate(strings.a11yWeightPlus, values),
+    // Nothing lighter than an empty bar.
+    minusEnabled: Number(nowSet.weight) > 0,
+  };
 }
 
 /**
@@ -542,6 +663,46 @@ export function applyLiveWorkoutAction(state, action, now) {
           exercisesDone: (Number(state.totals?.exercisesDone) || 0) + (finishedExercise ? 1 : 0),
         },
       };
+    }
+
+    case "adjustWeight": {
+      // Only the set that is "now", only between sets, and only one with a
+      // weight to move.
+      if (view.mode !== "set" || String(action.setId) !== String(view.nowSetId)) {
+        return state;
+      }
+
+      const exercise = firstToDo(state.exercise) >= 0 ? state.exercise : state.next;
+      const nowIndex = firstToDo(exercise);
+      const nowSet = exercise.sets[nowIndex];
+
+      if (nowSet.weight === null || nowSet.weight === undefined) {
+        return state;
+      }
+
+      const weight = roundToQuarter(Math.max(0, Number(nowSet.weight) + (Number(action.delta) || 0)));
+
+      if (weight === Number(nowSet.weight)) {
+        return state;
+      }
+
+      const changed = {
+        ...exercise,
+        sets: exercise.sets.map((set, index) =>
+          index === nowIndex
+            ? {
+                ...set,
+                weight,
+                ...composeLiveSetText(weight, set.repsText, {
+                  decimal: state.decimal ?? ".",
+                  unit: state.unit ?? "kg",
+                }),
+              }
+            : set
+        ),
+      };
+
+      return exercise === state.exercise ? { ...state, exercise: changed } : { ...state, next: changed };
     }
 
     case "skipRest":

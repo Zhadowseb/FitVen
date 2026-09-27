@@ -30,6 +30,17 @@ internal data class LiveRestView(
 
 internal data class LiveNextRow(val label: String, val chips: List<LiveChip>)
 
+/** −step · Sæt færdigt · +step on the open card, between sets. */
+internal data class LiveWeightButtons(
+  val step: Double,
+  /** "2,5 kg", on both buttons; the − and + are drawn beside it. */
+  val label: String,
+  val a11yMinus: String,
+  val a11yPlus: String,
+  /** False at 0: nothing lighter than an empty bar. */
+  val minusEnabled: Boolean
+)
+
 internal data class LiveWorkoutView(
   val mode: LiveMode,
   /** `set`: the now set; `rest`: "Næste: {set}"; `empty` / `allDone`: the one line. */
@@ -50,11 +61,14 @@ internal data class LiveWorkoutView(
   val canPrev: Boolean = false,
   val canNext: Boolean = false,
   val chips: List<LiveChip> = emptyList(),
-  val nextRow: LiveNextRow? = null
+  val nextRow: LiveNextRow? = null,
+  /** Null while resting, and for a set without a weight (body weight, time). */
+  val weightButtons: LiveWeightButtons? = null
 )
 
 internal object LiveWorkoutDerive {
   const val MAX_CHIPS = 6
+  const val WEIGHT_STEP_DEFAULT = 2.5
 
   fun derive(state: LiveWorkoutState, now: Double): LiveWorkoutView {
     var exercise = state.exercise
@@ -119,6 +133,7 @@ internal object LiveWorkoutDerive {
       canPrev = canPrev,
       canNext = canNext,
       chips = chipsFor(sets, nowIndex),
+      weightButtons = if (resting) null else weightButtonsFor(state, exercise, nowSet),
       nextRow = next?.let { upcoming ->
         LiveNextRow(
           label = fill(state.string("nextExercise"), "name" to upcoming.name),
@@ -126,6 +141,27 @@ internal object LiveWorkoutDerive {
             .map { if (it.more) it else it.copy(state = ChipState.TODO) }
         )
       }
+    )
+  }
+
+  private fun weightButtonsFor(
+    state: LiveWorkoutState,
+    exercise: LiveExercise,
+    nowSet: LiveSet
+  ): LiveWeightButtons? {
+    val weight = nowSet.weight ?: return null
+    val step = exercise.weightStep?.takeIf { it != 0.0 } ?: WEIGHT_STEP_DEFAULT
+    val values = listOf(
+      "step" to (exercise.weightStepText ?: weightText(step, state.decimal ?: ".")),
+      "unit" to (state.unit ?: "kg")
+    )
+
+    return LiveWeightButtons(
+      step = step,
+      label = fill(state.string("weightStep"), values),
+      a11yMinus = fill(state.string("a11yWeightMinus"), values),
+      a11yPlus = fill(state.string("a11yWeightPlus"), values),
+      minusEnabled = weight > 0
     )
   }
 
@@ -158,6 +194,37 @@ internal object LiveWorkoutDerive {
 
   private fun fill(template: String, values: List<Pair<String, String>>): String =
     values.fold(template) { text, (key, value) -> text.replace("{$key}", value) }
+
+  /**
+   * A weight as the card writes it, as formatLiveWeight does: at most two
+   * decimals, no trailing zeros, no grouping, and the language's decimal
+   * sign - "102,5", "100". Written from whole hundredths, so no Double ever
+   * turns into "102.49999".
+   */
+  fun weightText(weight: Double, decimal: String): String {
+    // java.lang.Math.round rounds a half up, as JS Math.round does;
+    // kotlin.math.round would round it to even.
+    val hundredths = Math.round(weight * 100)
+    val magnitude = kotlin.math.abs(hundredths)
+    val whole = (magnitude / 100).toString()
+    val fraction = (magnitude % 100).toString().padStart(2, '0').trimEnd('0')
+    val sign = if (hundredths < 0) "-" else ""
+
+    return if (fraction.isEmpty()) "$sign$whole" else "$sign$whole$decimal$fraction"
+  }
+
+  /** A set's text and chip text from its weight and reps, as composeLiveSetText does. */
+  fun setText(weight: Double?, repsText: String?, decimal: String, unit: String): Pair<String, String> {
+    val kilos = weight?.let { weightText(it, decimal) }
+    val reps = repsText?.takeIf { it.isNotEmpty() }
+
+    return when {
+      kilos != null && reps != null -> "$kilos $unit × $reps" to "$kilos×$reps"
+      reps != null -> "× $reps" to "×$reps"
+      kilos != null -> "$kilos $unit" to kilos
+      else -> "–" to "–"
+    }
+  }
 
   /** "1:24", and "1:02:05" from an hour, as formatLiveClock does. */
   fun clock(totalSeconds: Double): String {

@@ -106,12 +106,44 @@ const build = (rows, extra = {}) =>
   assert.strictEqual(state.strings.complete, "Sæt færdigt");
 
   // Body weight, and an AMRAP set without reps yet.
-  assert.deepStrictEqual(live.formatLiveSet({ reps: 12 }), { text: "× 12", short: "×12" });
+  assert.deepStrictEqual(live.formatLiveSet({ reps: 12 }), {
+    text: "× 12",
+    short: "×12",
+    weight: null,
+    repsText: "12",
+  });
   assert.deepStrictEqual(
-    live.formatLiveSet({ weight: 60, set_type: "amrap", amrap_target: 8 }),
-    { text: "60 kg × 8+", short: "60×8+" }
+    live.formatLiveSet({ weight: 60, set_type: "amrap", amrap_target: 8 }, { decimal: "," }),
+    { text: "60 kg × 8+", short: "60×8+", weight: 60, repsText: "8+" }
   );
-  assert.deepStrictEqual(live.formatLiveSet({}), { text: "–", short: "–" });
+  assert.deepStrictEqual(live.formatLiveSet({}), { text: "–", short: "–", weight: null, repsText: null });
+
+  // What the weight buttons need: the language's decimal sign, and a step
+  // that follows what is on the bar.
+  assert.strictEqual(state.decimal, ",");
+  assert.strictEqual(state.unit, "kg");
+  assert.strictEqual(state.exercise.weightStep, 2.5);
+  assert.strictEqual(state.exercise.weightStepText, "2,5");
+  assert.strictEqual(state.exercise.sets[3].weight, 102.5);
+  assert.strictEqual(state.exercise.sets[3].repsText, "5");
+  assert.strictEqual(live.formatLiveWeight(102.5, ","), "102,5");
+  assert.strictEqual(live.formatLiveWeight(102.25, ","), "102,25");
+  assert.strictEqual(live.formatLiveWeight(100, ","), "100");
+  assert.strictEqual(live.formatLiveWeight(1002.5, ","), "1002,5", "no thousands separator");
+  assert.strictEqual(live.formatLiveWeight(0.1 + 0.2, "."), "0.3");
+  assert.strictEqual(live.roundToQuarter(102.49999), 102.5);
+  assert.strictEqual(live.roundToQuarter(0.1 + 0.2), 0.25);
+  assert.strictEqual(live.decimalSignOf((value) => value.toLocaleString("en-GB")), ".");
+  assert.strictEqual(live.decimalSignOf((value) => value.toLocaleString("da-DK")), ",");
+  assert.strictEqual(live.liveWeightStepFor({ name: "Bench Press" }), 2.5);
+  assert.strictEqual(live.liveWeightStepFor({ name: "Squat" }), 5);
+  assert.strictEqual(live.liveWeightStepFor({ name: "Deadlift" }), 5);
+  assert.strictEqual(live.liveWeightStepFor({ name: "Dumbbell Shoulder Press" }), 2);
+  assert.strictEqual(live.liveWeightStepFor({ name: "Min øvelse", equipment: "dumbbell" }), 2);
+  assert.strictEqual(live.liveWeightStepFor({ name: "Leg Press" }), 5);
+  assert.strictEqual(live.liveWeightStepFor({ name: "Min øvelse", equipment: "machine" }), 5);
+  assert.strictEqual(live.liveWeightStepFor({ name: "Min øvelse", equipment: "cable" }), 5);
+  assert.strictEqual(live.liveWeightStepFor({ name: "Pull-up" }), 2.5);
 
   // Paused: the clock stands still at what was banked.
   const paused = live.buildLiveWorkoutState(
@@ -239,6 +271,13 @@ const build = (rows, extra = {}) =>
     view.chips.map((chip) => chip.state),
     ["done", "done", "now", "todo"]
   );
+  assert.deepStrictEqual(view.weightButtons, {
+    step: 2.5,
+    label: "2,5 kg",
+    a11yMinus: "Træk 2,5 kg fra sættet",
+    a11yPlus: "Læg 2,5 kg til sættet",
+    minusEnabled: true,
+  });
   assert.strictEqual(view.nextRow.label, "Næste: Skrå håndvægtspres");
   assert.deepStrictEqual(view.nextRow.chips, [{ text: "30×8", state: "todo" }]);
 
@@ -251,6 +290,7 @@ const build = (rows, extra = {}) =>
   assert.strictEqual(resting.title, "Næste: 100 kg × 5");
   assert.strictEqual(resting.subtitle, "Bænkpres · sæt 3 af 4");
   assert.strictEqual(resting.eyebrow, "NÆSTE SÆT");
+  assert.strictEqual(resting.weightButtons, null, "no weight buttons while resting");
   assert.deepStrictEqual(resting.rest, { endsAt: NOW + 144, remaining: 144, fraction: 0.8, of: "af 3:00" });
   assert.deepStrictEqual(
     resting.buttons.map((button) => [button.type, button.seconds ?? null, Boolean(button.primary)]),
@@ -353,6 +393,52 @@ const build = (rows, extra = {}) =>
     live.applyLiveWorkoutAction(resting, { type: "completeSet", setId: "12", at }, NOW),
     resting
   );
+  // The weight buttons: the set that is "now", a step at a time, to the
+  // nearest quarter, never below zero - and its words follow.
+  const plus = (current, delta = 2.5) =>
+    live.applyLiveWorkoutAction(current, { type: "adjustWeight", setId: "12", delta, at }, NOW);
+  const heavier = plus(state);
+  assert.strictEqual(heavier.exercise.sets[1].weight, 102.5);
+  assert.strictEqual(heavier.exercise.sets[1].text, "102,5 kg × 5");
+  assert.strictEqual(heavier.exercise.sets[1].short, "102,5×5");
+  assert.strictEqual(live.deriveLiveWorkoutView(heavier, NOW).title, "102,5 kg × 5");
+  assert.strictEqual(heavier.exercise.sets[0].weight, 100, "only the set that is now");
+  assert.strictEqual(plus(heavier).exercise.sets[1].weight, 105, "presses add up");
+  assert.strictEqual(plus(state, 0.1 + 0.2).exercise.sets[1].weight, 100.25);
+  assert.strictEqual(
+    live.applyLiveWorkoutAction(state, { type: "adjustWeight", setId: "11", delta: 2.5, at }, NOW),
+    state,
+    "a set that is not now is left alone"
+  );
+  const light = { ...state, exercise: { ...state.exercise, sets: state.exercise.sets.map((set, index) => (index === 1 ? { ...set, weight: 1, text: "1 kg × 5", short: "1×5" } : set)) } };
+  const empty = plus(light, -2.5);
+  assert.strictEqual(empty.exercise.sets[1].weight, 0, "never below an empty bar");
+  assert.strictEqual(empty.exercise.sets[1].text, "0 kg × 5");
+  assert.strictEqual(live.deriveLiveWorkoutView(empty, NOW).weightButtons.minusEnabled, false);
+  assert.strictEqual(plus(empty, -2.5), empty, "at zero, minus does nothing");
+  assert.strictEqual(
+    live.applyLiveWorkoutAction(resting, { type: "adjustWeight", setId: "12", delta: 2.5, at }, NOW),
+    resting,
+    "not while resting"
+  );
+  // Sæt færdigt after a weight button keeps the new weight.
+  const doneHeavier = live.applyLiveWorkoutAction(heavier, { type: "completeSet", setId: "12", at }, NOW);
+  assert.strictEqual(doneHeavier.exercise.name, "Dips");
+  assert.strictEqual(doneHeavier.totals.done, 2);
+  // Body weight: no buttons, and nothing to move.
+  const onDips = live.deriveLiveWorkoutView(afterBench, NOW + 200);
+  assert.strictEqual(onDips.nowSetId, "21");
+  assert.strictEqual(onDips.weightButtons, null, "no weight buttons for body weight");
+  assert.strictEqual(
+    live.applyLiveWorkoutAction(skipped, { type: "adjustWeight", setId: "21", delta: 2.5, at }, NOW + 1),
+    skipped
+  );
+  // An AMRAP target keeps its plus.
+  assert.deepStrictEqual(
+    live.composeLiveSetText(62.5, "8+", { decimal: ",", unit: "kg" }),
+    { text: "62,5 kg × 8+", short: "62,5×8+" }
+  );
+
   // Forrige / Næste are JavaScript's; the card does not move by itself.
   assert.strictEqual(live.applyLiveWorkoutAction(state, { type: "next", at }, NOW), state);
   assert.strictEqual(live.applyLiveWorkoutAction(state, { type: "prev", at }, NOW), state);
@@ -440,10 +526,11 @@ const build = (rows, extra = {}) =>
     "with the app in front, the rest reminder is shown anyway"
   );
 
-  // A set ticked off on the lock screen reaches the workout screen.
+  // A set ticked off, or its weight moved, on the lock screen reaches the
+  // workout screen.
   assert.match(
     read("src/Pages/WorkoutPage/WorkoutTypes/Resistance/Resistance.js"),
-    /change\?\.source === "lockScreen"/
+    /subscribeLockScreenEdits\(\(edit\) => \{\s*if \(Number\(edit\?\.workoutId\) === Number\(workout_id\)\)/
   );
 }
 
@@ -692,6 +779,119 @@ const build = (rows, extra = {}) =>
   stop();
   await settle();
   assert.deepStrictEqual(nativeCalls, [["end"]]);
+
+  // --- The writes, against the real schema --------------------------------
+  //
+  // What a tap on the card finally does to the sets, through the same
+  // service calls the workout screen makes: a weight moved and then Sæt
+  // færdigt saves the set once, with the new weight; a tap handled twice
+  // changes nothing; an edit made in the app after the tap wins.
+  const { DatabaseSync } = require("node:sqlite");
+  const { programSchemaSql } = loadAppModule("src/Database/schema/program.js");
+  const { weightliftingSchemaSql } = loadAppModule("src/Database/schema/weightlifting.js");
+  const raw = new DatabaseSync(":memory:");
+
+  raw.exec(programSchemaSql);
+  raw.exec(weightliftingSchemaSql);
+
+  const realDb = {
+    databasePath: ":memory:live-workout",
+    getAllAsync: async (sql, params = []) => raw.prepare(sql).all(...params),
+    getFirstAsync: async (sql, params = []) => raw.prepare(sql).get(...params) ?? null,
+    runAsync: async (sql, params = []) => {
+      const result = raw.prepare(sql).run(...params);
+
+      return { lastInsertRowId: Number(result.lastInsertRowid), changes: Number(result.changes) };
+    },
+    execAsync: async (sql) => raw.exec(sql),
+  };
+  const started = now() - 600;
+
+  raw
+    .prepare(
+      `INSERT INTO Workout_Type_Instance
+         (workout_id, day_id, date, workout_type, label, done, is_active, original_start_time, timer_start, elapsed_time)
+       VALUES (70, 1, '2026-09-27', 'Resistance', 'Push', 0, 1, ?, ?, 0)`
+    )
+    .run(started, started);
+  raw
+    .prepare(
+      `INSERT INTO Exercise_Instance (exercise_instance_id, workout_type_instance_id, exercise_name, exercise_order, sets)
+       VALUES (1, 70, 'Bench Press', 1, 2), (2, 70, 'Dumbbell Row', 2, 1)`
+    )
+    .run();
+  raw
+    .prepare(
+      `INSERT INTO "Set" (sets_id, exercise_instance_id, set_number, weight, reps, pause, done, sync_version)
+       VALUES (901, 1, 1, 100, 5, 120, 0, 0), (902, 1, 2, 100, 5, 120, 0, 0), (903, 2, 1, 30, 8, 90, 0, 0)`
+    )
+    .run();
+
+  const setRow = (setId) => raw.prepare('SELECT weight, done, sync_version FROM "Set" WHERE sets_id = ?').get(setId);
+  const edits = [];
+  const stopEdits = dataEvents.subscribeLockScreenEdits((edit) => edits.push(edit));
+
+  nativeCalls.length = 0;
+  storage.clear();
+  const stopReal = service.startLiveWorkoutController(realDb);
+  await settle();
+
+  const startedState = nativeCalls.find(([call]) => call === "start")?.[1];
+  assert.ok(startedState, "the real database's running workout got no card");
+  assert.strictEqual(startedState.exercise.name, "Bench Press");
+  assert.strictEqual(startedState.exercise.weightStep, 2.5);
+  assert.strictEqual(startedState.next.weightStep, 2, "dumbbells move by 2");
+
+  // +2,5 twice on the card (merged into one entry with the final weight),
+  // then Sæt færdigt.
+  const tappedAt = now();
+  queued = [
+    { id: "w1", type: "adjustWeight", setId: "901", weight: 105, at: tappedAt },
+    { id: "c1", type: "completeSet", setId: "901", at: tappedAt },
+  ];
+  actionListener({ type: "completeSet" });
+  await settle();
+  assert.strictEqual(setRow(901).weight, 105, "the set was not saved with the new weight");
+  assert.strictEqual(setRow(901).done, 1);
+  assert.strictEqual(setRow(902).weight, 100, "another set's weight moved");
+  assert.deepStrictEqual(edits, [{ workoutId: 70 }], "the workout screen was not told");
+  const timerAfterComplete = loadAppModule("src/Utils/restTimerEvents.js").getActiveRestTimer();
+  assert.ok(timerAfterComplete, "Sæt færdigt started no rest");
+  assert.strictEqual(timerAfterComplete.startedAt, tappedAt, "the rest starts when the button was tapped");
+  assert.strictEqual(timerAfterComplete.durationSeconds, 120);
+
+  // The same taps handled again: nothing changes, and no second rest.
+  const versionBefore = setRow(901).sync_version;
+  queued = [
+    { id: "w1", type: "adjustWeight", setId: "901", weight: 105, at: tappedAt },
+    { id: "c1", type: "completeSet", setId: "901", at: tappedAt },
+  ];
+  actionListener({ type: "completeSet" });
+  await settle();
+  assert.strictEqual(setRow(901).sync_version, versionBefore, "a tap handled twice wrote the set again");
+  assert.strictEqual(
+    loadAppModule("src/Utils/restTimerEvents.js").getActiveRestTimer().id,
+    timerAfterComplete.id,
+    "a tap handled twice started a second rest"
+  );
+  assert.strictEqual(edits.length, 1);
+
+  // Edited in the app after the tap: the app wins.
+  raw.prepare('UPDATE "Set" SET weight = 97.5, sync_version = ? WHERE sets_id = 902').run(now() + 60);
+  queued = [{ id: "w2", type: "adjustWeight", setId: "902", weight: 102.5, at: now() }];
+  actionListener({ type: "adjustWeight" });
+  await settle();
+  assert.strictEqual(setRow(902).weight, 97.5, "a tap overwrote an edit made after it");
+
+  // A weight that is not a weight is ignored.
+  queued = [{ id: "w3", type: "adjustWeight", setId: "903", weight: -5, at: now() + 120 }];
+  actionListener({ type: "adjustWeight" });
+  await settle();
+  assert.strictEqual(setRow(903).weight, 30);
+
+  stopEdits();
+  stopReal();
+  await settle();
 
   console.log(
     "Live workout: the state, its size, the view and the taps both native sides mirror, ±15 on the rest, the words in both languages, the Swift copies, the wiring, and the card's life from start to sign-out passed."

@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.15.1] - Unreleased
+### Changed
+- **The open Android notification during a set (1e) has weight buttons:** −step · Sæt færdigt · +step, in place of Forrige · Sæt færdigt · Næste.
+  - Collapsed, the rest (1f) and iOS are unchanged.
+  - **A press moves only the set that is now,** to the nearest quarter kilo and never below 0.
+    - The title and the set's chip change at once.
+    - Presses add up.
+    - At 0, minus is faded and does nothing.
+    - A set without a weight (body weight) gets no buttons, and Sæt færdigt takes the row.
+  - **The step follows the exercise** (`liveWeightStepFor` in `Utils/liveWorkout`), from its name or its equipment in the catalog: 2 kg for dumbbells, 5 kg for machines, cables, squats and deadlifts, and 2.5 kg for the rest.
+  - **The queue carries the final weight, not the presses,** merged into one entry per set, so handling it twice gives the same set.
+    - It is written through `updateSetWeight`, as the weight field on the workout screen writes it.
+    - Sæt færdigt pressed after it saves the set with the new weight.
+    - An edit made to the set in the app after the press wins.
+  - **The workout screen reads its sets again after any write from the lock screen** (`subscribeLockScreenEdits` in `Utils/workoutDataEvents`), a moved weight included.
+- `npm run test:live-workout` now also runs the lock screen's writes against the real schema in an in-memory SQLite. A weight moved and Sæt færdigt save the set once. The same taps handled twice change nothing. An edit made after the tap wins.
+
+---
 ## [2.15.0] - Unreleased
 ### Added
 - **The running strength workout is on the lock screen.** On iOS 16.2+ it is a Live Activity and in the Dynamic Island; on Android it is an ongoing notification. Both show the set to do, the rest counting down and the workout time, and all three count by themselves without the app.
