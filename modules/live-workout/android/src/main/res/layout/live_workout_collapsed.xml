@@ -1,29 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 1e collapsed (48 dp): the set ring, the set and where it is, and
+<!-- 1e collapsed (48 dp): the set and where it is, from the left edge, and
      Sæt færdigt. Also the one line for "no sets yet" / "all sets done", with
-     the ring and the button hidden. -->
+     the button hidden. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
   android:layout_width="match_parent"
   android:layout_height="wrap_content"
   android:baselineAligned="false"
-  android:minHeight="40dp"
   android:gravity="center_vertical"
+  android:minHeight="40dp"
   android:orientation="horizontal">
-
-  <FrameLayout
-    android:id="@+id/live_workout_ring"
-    android:layout_width="36dp"
-    android:layout_height="36dp"
-    android:layout_marginEnd="12dp"
-    android:background="@drawable/live_workout_ring_track_small">
-
-    <ImageView
-      android:id="@+id/live_workout_ring_fill"
-      android:layout_width="match_parent"
-      android:layout_height="match_parent"
-      android:importantForAccessibility="no"
-      android:scaleType="fitXY" />
-  </FrameLayout>
 
   <LinearLayout
     android:layout_width="0dp"
@@ -53,8 +38,8 @@
     android:background="@drawable/live_workout_button_circle_primary">
 
     <ImageView
-      android:layout_width="20dp"
-      android:layout_height="20dp"
+      android:layout_width="18dp"
+      android:layout_height="18dp"
       android:layout_gravity="center"
       android:importantForAccessibility="no"
       android:src="@drawable/live_workout_ic_check"

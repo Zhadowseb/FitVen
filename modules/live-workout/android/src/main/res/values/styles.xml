@@ -28,12 +28,13 @@
     <item name="android:textColor">@color/live_workout_orange</item>
   </style>
 
-  <!-- "100 kg × 5" 17/800 -->
+  <!-- "100 kg × 5" 17/800, letter spacing −0.3 -->
   <style name="LiveWorkout.Text.Heavy.Title">
     <item name="android:textSize">17sp</item>
+    <item name="android:letterSpacing">-0.018</item>
   </style>
 
-  <!-- "Bænkpres · sæt 3 af 4" 13/600 -->
+  <!-- "Bænkpres" 13/600 -->
   <style name="LiveWorkout.Text.Semibold.Subtitle">
     <item name="android:textSize">13sp</item>
   </style>
@@ -69,19 +70,16 @@
     <item name="android:textColor">@color/live_workout_text_secondary</item>
   </style>
 
-  <!-- "PAUSE" 11/800 orange, and "af 3:00" beside it -->
+  <!-- "PAUSE" 11/800 orange, letter spacing 0.3 -->
   <style name="LiveWorkout.Text.Heavy.RowLabel.Rest">
+    <item name="android:letterSpacing">0.027</item>
     <item name="android:textColor">@color/live_workout_orange</item>
   </style>
 
-  <style name="LiveWorkout.Text.Heavy.RowLabel.RestOf">
-    <item name="android:textColor">@color/live_workout_text_secondary</item>
-    <item name="android:fontFeatureSettings">tnum</item>
-  </style>
-
-  <!-- The rest countdown 22/800 orange -->
+  <!-- The rest countdown 22/800 orange, letter spacing −0.4 -->
   <style name="LiveWorkout.Text.Heavy.RestClock">
     <item name="android:textSize">22sp</item>
+    <item name="android:letterSpacing">-0.018</item>
     <item name="android:textColor">@color/live_workout_orange</item>
     <item name="android:fontFeatureSettings">tnum</item>
   </style>
@@ -115,9 +113,17 @@
     <item name="android:textColor">@color/live_workout_weight_plus</item>
   </style>
 
-  <!-- Their "−" and "+" 17/700. Weight 700 is bold on every Android. -->
+  <!-- 700: the weight buttons' "−" and "+", and "af 3:00". Weight 700 is
+       bold on every Android. -->
   <style name="LiveWorkout.Text.Bold">
     <item name="android:textStyle">bold</item>
+  </style>
+
+  <!-- "af 3:00" 11/700, beside PAUSE -->
+  <style name="LiveWorkout.Text.Bold.RestOf">
+    <item name="android:textSize">11sp</item>
+    <item name="android:textColor">@color/live_workout_text_secondary</item>
+    <item name="android:fontFeatureSettings">tnum</item>
   </style>
 
   <style name="LiveWorkout.Text.Bold.WeightSign">

@@ -10,6 +10,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.SystemClock
+import android.provider.Settings
 import android.view.View
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
@@ -18,9 +19,9 @@ import androidx.core.content.ContextCompat
 import kotlin.math.max
 import kotlin.math.roundToInt
 
-// The card as an ongoing notification (spec §4, 1e and 1f): the system draws
-// the header, and these RemoteViews draw the rest. Every word comes from
-// `state.strings`.
+// The card as an ongoing notification (spec §4, 1e and 1f, as changed by
+// "Låseskærm Android runde 2"): the system draws the header, and these
+// RemoteViews draw the rest. Every word comes from `state.strings`.
 //
 // SystemUI can reapply a new RemoteViews onto the views it already inflated
 // for the same layout, so every post sets every view's text, visibility and
@@ -46,12 +47,10 @@ internal object LiveWorkoutNotification {
   private const val REQUEST_WEIGHT_PLUS = REQUEST_OPEN + 8
 
   // U+2212, the typographic minus, not a hyphen.
-  private const val MINUS_SIGN = "−"
+  private const val MINUS_SIGN = "\u2212"
 
-  private const val COLLAPSED_RING_DP = 36f
-  private const val COLLAPSED_RING_STROKE_DP = 3.5f
-  private const val EXPANDED_RING_DP = 52f
-  private const val EXPANDED_RING_STROKE_DP = 4f
+  private const val RING_DP = 52f
+  private const val RING_STROKE_DP = 4f
   private const val BAR_MAX = 1000
 
   /**
@@ -174,13 +173,16 @@ internal object LiveWorkoutNotification {
   // ---- Collapsed (48 dp): ring, two lines, one round button ----
 
   private fun collapsed(context: Context, state: LiveWorkoutState, view: LiveWorkoutView): RemoteViews {
-    val rest = view.rest
+    val rest = view.rest?.takeIf { view.mode == LiveMode.REST }
 
-    if (view.mode == LiveMode.REST && rest != null) {
+    if (rest != null) {
+      // 1f: the content area is orange for what is left of the rest.
       val views = RemoteViews(context.packageName, R.layout.live_workout_collapsed_rest)
-      views.setImageViewBitmap(
-        R.id.live_workout_ring_fill,
-        RingBitmap.draw(context, COLLAPSED_RING_DP, COLLAPSED_RING_STROKE_DP, rest.fraction, ORANGE)
+      views.setProgressBar(
+        R.id.live_workout_rest_fill,
+        BAR_MAX,
+        if (animationsOff(context)) BAR_MAX else (rest.fraction * BAR_MAX).roundToInt(),
+        false
       )
       views.setChronometer(
         R.id.live_workout_rest_clock,
@@ -195,22 +197,14 @@ internal object LiveWorkoutNotification {
       return views
     }
 
+    // 1e: no ring; the set, where it is, and Sæt færdigt.
     val views = RemoteViews(context.packageName, R.layout.live_workout_collapsed)
     val active = view.mode == LiveMode.SET
-    val ring = view.setsRing
 
-    views.setViewVisibility(R.id.live_workout_ring, visibleIf(active && ring != null))
     views.setViewVisibility(R.id.live_workout_subtitle, visibleIf(active))
     views.setViewVisibility(R.id.live_workout_primary, visibleIf(active))
     views.setTextViewText(R.id.live_workout_title, if (active) view.nowText else view.title)
     views.setTextViewText(R.id.live_workout_subtitle, view.subtitleShort)
-
-    if (active && ring != null) {
-      views.setImageViewBitmap(
-        R.id.live_workout_ring_fill,
-        RingBitmap.draw(context, COLLAPSED_RING_DP, COLLAPSED_RING_STROKE_DP, ring.fraction, ORANGE)
-      )
-    }
 
     if (active) {
       views.setOnClickPendingIntent(
@@ -223,70 +217,101 @@ internal object LiveWorkoutNotification {
     return views
   }
 
-  // ---- Expanded (under 252 dp): content row, set rows, buttons ----
+  // ---- Expanded (under 252 dp): content row, two rows, buttons ----
 
+  /**
+   * One layout for 1e and 1f. A post of one can be reapplied onto the views
+   * inflated for the other, so every part of both modes is shown, hidden or
+   * stopped here.
+   */
   private fun expanded(context: Context, state: LiveWorkoutState, view: LiveWorkoutView): RemoteViews {
     val rest = view.rest?.takeIf { view.mode == LiveMode.REST }
     val resting = rest != null
-    val active = view.mode == LiveMode.SET || resting
-    val views = RemoteViews(
-      context.packageName,
-      if (resting) R.layout.live_workout_expanded_rest else R.layout.live_workout_expanded
-    )
+    val setting = view.mode == LiveMode.SET
+    val active = setting || resting
+    val views = RemoteViews(context.packageName, R.layout.live_workout_expanded)
 
-    // Content row: eyebrow, title, subtitle, and the two rings.
+    // Content row: the eyebrow, the set (in 1f the one after the rest), its
+    // exercise, and the rings SÆT and ØVELSE.
     views.setViewVisibility(R.id.live_workout_eyebrow, visibleIf(active))
     views.setViewVisibility(R.id.live_workout_subtitle, visibleIf(active))
     views.setViewVisibility(R.id.live_workout_rings, visibleIf(active))
     views.setTextViewText(R.id.live_workout_eyebrow, view.eyebrow)
     views.setTextViewText(R.id.live_workout_title, if (active) view.nowText else view.title)
-    views.setTextViewText(R.id.live_workout_subtitle, view.subtitle)
+    views.setTextViewText(R.id.live_workout_subtitle, view.exerciseName)
 
     view.setsRing?.let {
-      bindRing(context, views, R.id.live_workout_ring_sets_fill, R.id.live_workout_ring_sets_text, R.id.live_workout_ring_sets_label, it)
+      bindRing(
+        context,
+        views,
+        R.id.live_workout_ring_sets_fill,
+        R.id.live_workout_ring_sets_text,
+        R.id.live_workout_ring_sets_label,
+        it,
+        it.currentText ?: it.text
+      )
     }
     view.exerciseRing?.let {
-      bindRing(context, views, R.id.live_workout_ring_exercise_fill, R.id.live_workout_ring_exercise_text, R.id.live_workout_ring_exercise_label, it)
+      bindRing(
+        context,
+        views,
+        R.id.live_workout_ring_exercise_fill,
+        R.id.live_workout_ring_exercise_text,
+        R.id.live_workout_ring_exercise_label,
+        it,
+        it.text
+      )
     }
 
-    // The next exercise's row, in both layouts.
+    // Row 1, 1e: the current exercise's sets.
+    views.setViewVisibility(R.id.live_workout_row_current, visibleIf(setting))
+    views.setTextViewText(R.id.live_workout_row_current_label, view.exerciseName)
+    bindChips(context, views, R.id.live_workout_chips_current, if (setting) view.chips else emptyList())
+
+    // Row 1, 1f: the rest. Its countdown is stopped while it is hidden.
+    views.setViewVisibility(R.id.live_workout_row_rest, visibleIf(resting))
+    views.setTextViewText(R.id.live_workout_rest_label, state.string("pause"))
+    views.setTextViewText(R.id.live_workout_rest_of, rest?.of ?: "")
+    views.setChronometer(
+      R.id.live_workout_rest_clock,
+      rest?.let { elapsedRealtimeOf(it.endsAt) } ?: SystemClock.elapsedRealtime(),
+      null,
+      resting
+    )
+    views.setChronometerCountDown(R.id.live_workout_rest_clock, true)
+    views.setProgressBar(
+      R.id.live_workout_rest_bar,
+      BAR_MAX,
+      rest?.let { (it.fraction * BAR_MAX).roundToInt() } ?: 0,
+      false
+    )
+
+    // Row 2: the next exercise, in both modes.
     val nextRow = view.nextRow
     views.setViewVisibility(R.id.live_workout_row_next, visibleIf(active && nextRow != null))
     views.setTextViewText(R.id.live_workout_row_next_label, nextRow?.label ?: "")
     bindChips(context, views, R.id.live_workout_chips_next, if (active) nextRow?.chips.orEmpty() else emptyList())
 
-    if (rest != null) {
-      // 1f: the rest takes the current exercise's row.
-      views.setTextViewText(R.id.live_workout_rest_label, state.string("pause"))
-      views.setTextViewText(R.id.live_workout_rest_of, rest.of)
-      views.setChronometer(R.id.live_workout_rest_clock, elapsedRealtimeOf(rest.endsAt), null, true)
-      views.setChronometerCountDown(R.id.live_workout_rest_clock, true)
-      views.setProgressBar(R.id.live_workout_rest_bar, BAR_MAX, (rest.fraction * BAR_MAX).roundToInt(), false)
+    bindSetButtons(context, state, view, views, setting)
+    bindRestButtons(context, state, views, resting)
 
-      views.setTextViewText(R.id.live_workout_minus_text, "${MINUS_SIGN}15 s")
-      views.setTextViewText(R.id.live_workout_skip_text, state.string("skip"))
-      views.setTextViewText(R.id.live_workout_plus_text, "+15 s")
-      views.setOnClickPendingIntent(
-        R.id.live_workout_minus,
-        action(context, state, REQUEST_MINUS, LiveAction.ADJUST_REST, seconds = -ADJUST_SECONDS)
-      )
-      views.setOnClickPendingIntent(R.id.live_workout_skip, action(context, state, REQUEST_SKIP, LiveAction.SKIP_REST))
-      views.setOnClickPendingIntent(
-        R.id.live_workout_plus,
-        action(context, state, REQUEST_PLUS, LiveAction.ADJUST_REST, seconds = ADJUST_SECONDS)
-      )
-      return views
-    }
+    return views
+  }
 
-    // 1e: the current exercise's row, and −step · Sæt færdigt · +step. A set
-    // without a weight has no weight buttons, and Sæt færdigt takes the row.
-    views.setViewVisibility(R.id.live_workout_row_current, visibleIf(active))
-    views.setTextViewText(R.id.live_workout_row_current_label, view.exerciseName)
-    bindChips(context, views, R.id.live_workout_chips_current, if (active) view.chips else emptyList())
+  /**
+   * 1e: −step · Sæt færdigt · +step. A set without a weight has no weight
+   * buttons, and Sæt færdigt takes the row.
+   */
+  private fun bindSetButtons(
+    context: Context,
+    state: LiveWorkoutState,
+    view: LiveWorkoutView,
+    views: RemoteViews,
+    shown: Boolean
+  ) {
+    val weight = view.weightButtons?.takeIf { shown }
 
-    val weight = view.weightButtons?.takeIf { active }
-
-    views.setViewVisibility(R.id.live_workout_buttons, visibleIf(active))
+    views.setViewVisibility(R.id.live_workout_buttons, visibleIf(shown))
     views.setViewVisibility(R.id.live_workout_weight_minus, visibleIf(weight != null && weight.minusEnabled))
     views.setViewVisibility(R.id.live_workout_weight_minus_off, visibleIf(weight != null && !weight.minusEnabled))
     views.setViewVisibility(R.id.live_workout_weight_plus, visibleIf(weight != null))
@@ -309,7 +334,7 @@ internal object LiveWorkoutNotification {
     views.setContentDescription(R.id.live_workout_weight_minus_off, weight?.a11yMinus ?: "")
     views.setContentDescription(R.id.live_workout_weight_plus, weight?.a11yPlus ?: "")
 
-    if (active) {
+    if (shown) {
       views.setOnClickPendingIntent(
         R.id.live_workout_complete,
         action(context, state, REQUEST_COMPLETE, LiveAction.COMPLETE_SET, setId = view.nowSetId)
@@ -328,8 +353,26 @@ internal object LiveWorkoutNotification {
         action(context, state, REQUEST_WEIGHT_PLUS, LiveAction.ADJUST_WEIGHT, setId = view.nowSetId, delta = weight.step)
       )
     }
+  }
 
-    return views
+  /** 1f: −15 s · Spring over · +15 s. */
+  private fun bindRestButtons(context: Context, state: LiveWorkoutState, views: RemoteViews, shown: Boolean) {
+    views.setViewVisibility(R.id.live_workout_rest_buttons, visibleIf(shown))
+    views.setTextViewText(R.id.live_workout_minus_text, "${MINUS_SIGN}15 s")
+    views.setTextViewText(R.id.live_workout_skip_text, state.string("skip"))
+    views.setTextViewText(R.id.live_workout_plus_text, "+15 s")
+
+    if (shown) {
+      views.setOnClickPendingIntent(
+        R.id.live_workout_minus,
+        action(context, state, REQUEST_MINUS, LiveAction.ADJUST_REST, seconds = -ADJUST_SECONDS)
+      )
+      views.setOnClickPendingIntent(R.id.live_workout_skip, action(context, state, REQUEST_SKIP, LiveAction.SKIP_REST))
+      views.setOnClickPendingIntent(
+        R.id.live_workout_plus,
+        action(context, state, REQUEST_PLUS, LiveAction.ADJUST_REST, seconds = ADJUST_SECONDS)
+      )
+    }
   }
 
   private fun bindRing(
@@ -338,13 +381,11 @@ internal object LiveWorkoutNotification {
     fillId: Int,
     textId: Int,
     labelId: Int,
-    ring: LiveRing
+    ring: LiveRing,
+    text: String
   ) {
-    views.setImageViewBitmap(
-      fillId,
-      RingBitmap.draw(context, EXPANDED_RING_DP, EXPANDED_RING_STROKE_DP, ring.fraction, ORANGE)
-    )
-    views.setTextViewText(textId, ring.text)
+    views.setImageViewBitmap(fillId, RingBitmap.draw(context, RING_DP, RING_STROKE_DP, ring.fraction, ORANGE))
+    views.setTextViewText(textId, text)
     views.setTextViewText(labelId, ring.label)
   }
 
@@ -415,6 +456,13 @@ internal object LiveWorkoutNotification {
   /** A Chronometer's base is on the elapsedRealtime clock, not the wall clock. */
   private fun elapsedRealtimeOf(unixSeconds: Double): Long =
     SystemClock.elapsedRealtime() + (millis(unixSeconds) - System.currentTimeMillis())
+
+  /**
+   * Whether the phone asks for no animation: then the collapsed rest stays
+   * full orange instead of drawing back.
+   */
+  private fun animationsOff(context: Context): Boolean =
+    Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
 
   /** "Pause · {time}" as a Chronometer format, "Pause · %s". */
   private fun chronometerFormat(template: String): String? =

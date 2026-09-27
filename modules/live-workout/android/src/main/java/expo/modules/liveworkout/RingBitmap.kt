@@ -10,7 +10,7 @@ import kotlin.math.roundToInt
 
 // The filled part of a ring, as a bitmap for RemoteViews: an arc with round
 // caps from 12 o'clock, clockwise. The track under it is the ImageView's XML
-// background (live_workout_ring_track_*), because its colour follows the
+// background (live_workout_ring_track), because its colour follows the
 // notification's light or dark theme, which this process cannot know. Both
 // use the same stroke, inset by half of it, so they line up exactly.
 internal object RingBitmap {

@@ -18,11 +18,18 @@ internal enum class ChipState { DONE, NOW, TODO }
 
 internal data class LiveChip(val text: String, val state: ChipState, val more: Boolean = false)
 
-internal data class LiveRing(val fraction: Float, val text: String, val label: String)
+internal data class LiveRing(
+  val fraction: Float,
+  /** Done / all ("2/4"), as iOS shows it. */
+  val text: String,
+  val label: String,
+  /** The sets ring on Android: the set being done / all ("3/4"). */
+  val currentText: String? = null
+)
 
 internal data class LiveRestView(
   val endsAt: Double,
-  /** What is left of the rest, 0..1: the collapsed ring and the bar. */
+  /** What is left of the rest, 0..1: the collapsed fill and the open bar. */
   val fraction: Float,
   /** "af 3:00". */
   val of: String
@@ -53,7 +60,10 @@ internal data class LiveWorkoutView(
   val nowSetId: String? = null,
   /** The now set's own text, "100 kg × 5". */
   val nowText: String = "",
-  /** The exercise the card is about, after a finished one has made way. */
+  /**
+   * The exercise the card is about, after a finished one has made way: the
+   * open card's subtitle, in both modes.
+   */
   val exerciseName: String = "",
   val setsRing: LiveRing? = null,
   val exerciseRing: LiveRing? = null,
@@ -116,7 +126,8 @@ internal object LiveWorkoutDerive {
       setsRing = LiveRing(
         fraction = if (sets.isNotEmpty()) done.toFloat() / sets.size else 0f,
         text = "$done/${sets.size}",
-        label = state.string("sets")
+        label = state.string("sets"),
+        currentText = "${min(done + 1, sets.size)}/${sets.size}"
       ),
       exerciseRing = LiveRing(
         fraction = if (total > 0) min(1.0, state.totals.exercisesDone / total).toFloat() else 0f,

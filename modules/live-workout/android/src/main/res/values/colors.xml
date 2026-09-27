@@ -26,6 +26,8 @@
   <color name="live_workout_chip_now">#29F7742E</color>
   <!-- black @ 0.16 on the orange buttons -->
   <color name="live_workout_ripple_on_orange">#29000000</color>
+  <!-- orange @ 0.34: what is left of the rest, behind the collapsed card -->
+  <color name="live_workout_rest_fill">#57F7742E</color>
 
   <!-- The weight buttons (1e): −step in danger #F0605A, +step in secondary
        #4ED39A, each on its colour @ 0.16 with a 1 dp edge @ 0.45. Red and

@@ -489,11 +489,17 @@ export function deriveLiveWorkoutView(state, now) {
     title: resting ? fillTemplate(strings.nextSet, { set: nowSet.text }) : nowSet.text,
     subtitle: `${exercise.name} · ${fillTemplate(strings.setOf, position)}`,
     subtitleShort: `${exercise.name} · ${fillTemplate(strings.setShort, position)}`,
+    // Android's open card says only the exercise under the title; which set
+    // it is stands in the ring.
+    exerciseName: exercise.name,
     setOfTitle: fillTemplate(strings.setOfTitle, position),
     eyebrow: resting ? strings.nextEyebrow : strings.nowEyebrow,
     setsRing: {
       fraction: sets.length > 0 ? done / sets.length : 0,
       text: `${done}/${sets.length}`,
+      // Android's ring counts the set being done - "3/4" with two done - and
+      // fills with the ones that are.
+      currentText: `${Math.min(done + 1, sets.length)}/${sets.length}`,
       label: strings.sets,
     },
     exerciseRing: {

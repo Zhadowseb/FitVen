@@ -255,7 +255,8 @@ const build = (rows, extra = {}) =>
   assert.strictEqual(view.setOfTitle, "Sæt 3 af 4");
   assert.strictEqual(view.eyebrow, "NUVÆRENDE SÆT");
   // The ring counts sets done, and fills with them.
-  assert.deepStrictEqual(view.setsRing, { fraction: 0.5, text: "2/4", label: "SÆT" });
+  assert.deepStrictEqual(view.setsRing, { fraction: 0.5, text: "2/4", currentText: "3/4", label: "SÆT" });
+  assert.strictEqual(view.exerciseName, "Bænkpres");
   assert.deepStrictEqual(view.exerciseRing, { fraction: 0, text: "1/2", label: "ØVELSE" });
   assert.strictEqual(view.setsCount, "2/5 sæt");
   assert.deepStrictEqual(view.clock, { countsFrom: state.startedAt });

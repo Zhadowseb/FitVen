@@ -15,6 +15,17 @@
     - Sæt færdigt pressed after it saves the set with the new weight.
     - An edit made to the set in the app after the press wins.
   - **The workout screen reads its sets again after any write from the lock screen** (`subscribeLockScreenEdits` in `Utils/workoutDataEvents`), a moved weight included.
+- **The Android notification, round 2** (1e and 1f):
+  - **Open, set (1e):** NUVÆRENDE SÆT over the set, only the exercise under it, and two rings.
+    - SÆT counts the set being done ("3/4" with two done) and fills with the done ones.
+    - ØVELSE shows the exercise's place and fills with the finished exercises.
+  - **Collapsed, set:** no ring; the text and the round Sæt færdigt.
+  - **Open, rest (1f):** the same card as 1e, with NÆSTE SÆT and the next set.
+    - The pause row (PAUSE, "af 3:00", the countdown and a thin bar) takes the current exercise's place, and the next exercise stays.
+    - There is no coloured background.
+  - **Collapsed, rest:** no ring. The content area is orange at the start of the rest and drains to the left until it is grey.
+    - It redraws at most every 5 s, and at once on ±15 and Spring over.
+    - With animations switched off it stays full.
 - `npm run test:live-workout` now also runs the lock screen's writes against the real schema in an in-memory SQLite. A weight moved and Sæt færdigt save the set once. The same taps handled twice change nothing. An edit made after the tap wins.
 
 ---
