@@ -90,6 +90,25 @@ export async function getExerciseCatalogEntryByName(db, exerciseName) {
   );
 }
 
+// The sets Records and an exercise's statistics page are made of: ticked off,
+// not failed, with a weight and reps, nothing deleted on the way up, and no
+// warm-ups. One string for both queries below, so the "See statistics"
+// button in the exercise library cannot promise a page that turns out empty.
+const COMPLETED_STRENGTH_SET_CONDITIONS = `s.done = 1
+       AND COALESCE(s.failed, 0) = 0
+       AND s.weight IS NOT NULL
+       AND s.reps IS NOT NULL
+       AND CAST(s.weight AS REAL) > 0
+       AND CAST(s.reps AS INTEGER) > 0
+       AND COALESCE(s.deleted_at, '') = ''
+       AND COALESCE(e.deleted_at, '') = ''
+       AND COALESCE(w.deleted_at, '') = ''
+       AND COALESCE(d.deleted_at, '') = ''
+       -- A warm-up is preparation: it is in no record, no volume, no trend.
+       -- Drop sets stay - they count toward volume - and are held back from
+       -- the record calculations by the service instead.
+       AND COALESCE(s.set_type, 'working') <> 'warmup'`;
+
 export async function getCompletedStrengthSetsForPersonalRecords(
   db,
   { exerciseName = null, sinceIsoDate = null } = {}
@@ -144,20 +163,7 @@ export async function getCompletedStrengthSetsForPersonalRecords(
      JOIN Workout_Type_Instance w ON w.workout_id = e.workout_type_instance_id
      JOIN Day d ON d.day_id = w.day_id
      LEFT JOIN Program p ON p.program_id = d.program_id
-     WHERE s.done = 1
-       AND COALESCE(s.failed, 0) = 0
-       AND s.weight IS NOT NULL
-       AND s.reps IS NOT NULL
-       AND CAST(s.weight AS REAL) > 0
-       AND CAST(s.reps AS INTEGER) > 0
-       AND COALESCE(s.deleted_at, '') = ''
-       AND COALESCE(e.deleted_at, '') = ''
-       AND COALESCE(w.deleted_at, '') = ''
-       AND COALESCE(d.deleted_at, '') = ''
-       -- A warm-up is preparation: it is in no record, no volume, no trend.
-       -- Drop sets stay - they count toward volume - and are held back from
-       -- the record calculations by the service instead.
-       AND COALESCE(s.set_type, 'working') <> 'warmup'
+     WHERE ${COMPLETED_STRENGTH_SET_CONDITIONS}
        ${exerciseFilter}
        ${sinceFilter}
      ORDER BY
@@ -168,6 +174,28 @@ export async function getCompletedStrengthSetsForPersonalRecords(
        s.sets_id DESC;`,
     params
   );
+}
+
+/**
+ * Whether there is at least one set of this exercise that its statistics page
+ * would show - the same sets as the query above. One row at most, found
+ * through exercise_instance_name_idx, so the exercise library can ask each
+ * time a muscle view opens.
+ */
+export async function hasCompletedStrengthSetForExercise(db, exerciseName) {
+  const row = await db.getFirstAsync(
+    `SELECT 1 AS found
+     FROM Exercise_Instance e
+     JOIN "Set" s ON s.exercise_instance_id = e.exercise_instance_id
+     JOIN Workout_Type_Instance w ON w.workout_id = e.workout_type_instance_id
+     JOIN Day d ON d.day_id = w.day_id
+     WHERE e.exercise_name = ?
+       AND ${COMPLETED_STRENGTH_SET_CONDITIONS}
+     LIMIT 1;`,
+    [exerciseName]
+  );
+
+  return Boolean(row);
 }
 
 /**

@@ -1,8 +1,10 @@
 // Guards the rules behind centres and the Friends activity tiles that have no
 // other coverage: which set of a workout becomes the lift, when a lift is
 // written, how a vote count becomes a status, how a centre gets its short name
-// from the scraped data, the tile order, and the two SQL invariants the app
-// depends on (own-rows-only reads of gym_lift, verified-only across centres).
+// from the scraped data, the tile order, a centre's exercises and the search
+// through them, the centres Explore's search lists before anything is typed,
+// and the two SQL invariants the app depends on (own-rows-only reads of
+// gym_lift, verified-only across centres).
 
 const assert = require("assert");
 const fs = require("fs");
@@ -674,5 +676,65 @@ assert.ok(
   ),
   "request_lift_verification can be called in a loop again"
 );
+
+/* ------------------------------------------------ a centre's exercises -- */
+
+const overview = {
+  featured: [
+    { exerciseId: 1, exerciseName: "Bench Press", lifterCount: 4, top: { displayName: "Anna Holm", weightKg: 100 }, me: { rank: 2 } },
+    { exerciseId: 2, exerciseName: "Squat", lifterCount: 0, top: null, me: null },
+    { exerciseId: 3, exerciseName: "Deadlift", lifterCount: 4, top: null, me: null },
+  ],
+  more: [
+    { exerciseId: 9, exerciseName: "Incline Bench Press (Dumbbell)", lifterCount: 6, topName: "Bo", topWeightKg: 40, myRank: null },
+    { exerciseId: 7, exerciseName: "Hip Thrust", lifterCount: 1, topName: "Bo", topWeightKg: 120, myRank: 1 },
+    { exerciseId: 1, exerciseName: "Bench Press", lifterCount: 99 },
+    { exerciseId: null, exerciseName: "No id" },
+    { exerciseId: 8, exerciseName: "  ", lifterCount: 3 },
+  ],
+};
+const centreExercises = gymUtils.listCentreExercises(overview);
+
+assert.deepStrictEqual(
+  centreExercises.map((exercise) => [exercise.id, exercise.lifterCount]),
+  [[9, 6], [1, 4], [3, 4], [7, 1], [2, 0]],
+  "every exercise once, most lifters first, then by name; the featured three stay at 0; no id or name drops"
+);
+assert.deepStrictEqual(
+  [centreExercises[1].topName, centreExercises[1].topWeightKg, centreExercises[1].myRank],
+  ["Anna Holm", 100, 2],
+  "a featured lift's #1 and your place come from its rows"
+);
+assert.deepStrictEqual(
+  [centreExercises[2].topName, centreExercises[2].topWeightKg, centreExercises[2].myRank],
+  [null, null, null],
+  "a missing #1 or place stays missing, not 0"
+);
+assert.deepStrictEqual(gymUtils.listCentreExercises(null), [], "no overview, no exercises");
+
+const searchNames = (query) =>
+  gymUtils.searchCentreExercises(centreExercises, query).map((exercise) => exercise.name);
+
+assert.deepStrictEqual(searchNames("bench"), ["Bench Press", "Incline Bench Press (Dumbbell)"], "the name starting with it first, then a word in it");
+assert.deepStrictEqual(searchNames("  BENCH   press "), ["Bench Press", "Incline Bench Press (Dumbbell)"], "case and spaces do not matter");
+assert.deepStrictEqual(searchNames("dumb"), ["Incline Bench Press (Dumbbell)"], "a word in brackets is a word");
+assert.deepStrictEqual(searchNames("ift"), ["Deadlift"], "and anywhere in the name last");
+assert.deepStrictEqual(searchNames("t"), ["Hip Thrust", "Deadlift", "Squat"], "a word start beats anywhere; within each, the list's order");
+assert.deepStrictEqual(searchNames(""), [], "nothing typed is no search");
+assert.deepStrictEqual(searchNames("row"), [], "and a name nobody here lifts is not found");
+
+/* ---------------------------------------- centres before a search -- */
+
+const suggestions = gymUtils.mergeGymSuggestions({
+  home: { id: 1, shortName: "Home" },
+  trainedIn: [{ id: 1 }, { id: 2 }, { id: "3" }, { id: null }],
+  popular: [{ id: 2 }, { id: 4 }, { id: 3 }, { id: 5 }, { id: 6 }],
+  limit: 2,
+});
+
+assert.strictEqual(suggestions.yours.id, 1);
+assert.deepStrictEqual(suggestions.trainedIn.map((gym) => gym.id), [2, "3"], "your centre is not listed again, nor a row without an id");
+assert.deepStrictEqual(suggestions.popular.map((gym) => gym.id), [4, 5], "a centre already shown is skipped, then the limit");
+assert.deepStrictEqual(gymUtils.mergeGymSuggestions(), { yours: null, trainedIn: [], popular: [] });
 
 console.log("Gym leaderboard checks passed.");

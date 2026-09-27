@@ -5,9 +5,9 @@ import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
 import { ThemedText } from "@resources/ThemedComponents";
 
 /**
- * Flid's Workouts / Weeks in a row and Progress's four lifts. Built like the
- * gender control above it, so the two read as one family, but the chosen tab
- * is tinted in the category's colour rather than blue or pink.
+ * Flid's Workouts / Weeks in a row. Built like the gender control above it,
+ * so the two read as one family, but the chosen tab is tinted in the
+ * category's colour rather than blue or pink.
  */
 export default function CategoryTabs({ options = [], value, onChange, tone }) {
   const colorScheme = useColorScheme();

@@ -8,6 +8,7 @@ import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
 import Plus from "@resources/Icons/UI-icons/Plus";
 import Resistance from "@resources/Icons/WorkoutLabels/Resistance";
 import { ThemedText } from "@resources/ThemedComponents";
+import { workoutDisplayName } from "@utils/workoutTypeLabel";
 
 /**
  * The one thing to press on Home.
@@ -65,11 +66,15 @@ export default function QuickStartCard({
   // named the session - which is what a session started from this button ends
   // up as - and without it the button draws no text at all, while the screen
   // reader reads the placeholder out literally.
+  // A name that is only a stored type id ("Resistance") is drawn as the
+  // type's name in the app's language (Utils/workoutTypeLabel).
   const upNextName =
-    upNext?.name ?? t("home.split.unnamed", { number: (upNext?.historyOrder ?? 0) + 1 });
+    workoutDisplayName(upNext?.name, t) ??
+    t("home.split.unnamed", { number: (upNext?.historyOrder ?? 0) + 1 });
 
   const todayWorkout = openToday?.first ?? null;
-  const todayName = todayWorkout?.name ?? t("home.quickStart.todaysWorkout");
+  const todayName =
+    workoutDisplayName(todayWorkout?.name, t) ?? t("home.quickStart.todaysWorkout");
   const primary = todayWorkout
     ? {
         label: todayName,

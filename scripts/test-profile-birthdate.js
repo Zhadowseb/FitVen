@@ -56,11 +56,73 @@ async function run() {
   assert.strictEqual(localDate.getMonth(), 10);
   assert.strictEqual(localDate.getDate(), 7);
 
+  checkBirthYearPicker(dateUtils);
   await checkSex(dateUtils);
   checkSexMigration();
 
   console.log(
-    "Profile birth date and sex checks passed: normalising, one write with the birth year, and the fallback before the migration."
+    "Profile birth date and sex checks passed: a year-only picker, normalising, one write with the birth year, and the fallback before the migration."
+  );
+}
+
+/* ------------------------------------------ the form: a year, and no more -- */
+
+// "Hvis jeg ændre datoen for min fødselsdag, kan jeg ikke trykke save." The
+// wheel offered a day and a month as well as the year, and opened on the 1st
+// of January, because that is what is stored. Changing the day or the month
+// changed nothing the form keeps, so it saw no change and Save stayed off.
+// The wheel now offers the year alone, and the year it hands back is the
+// value the service stores - so another year is a change, and a saved year
+// reads back equal.
+function checkBirthYearPicker(dateUtils) {
+  const { dateToBirthYearIsoDate } = dateUtils;
+  const page = read("src/Pages/EditProfilePage/EditProfilePage.js");
+  const picker = read("src/Resources/ThemedComponents/ThemedDateWheelPicker.js");
+
+  assert.match(
+    page,
+    /<ThemedDateWheelPicker\s+yearOnly\b/,
+    "Edit profile offers a day and a month again, and only the year is kept"
+  );
+  assert.match(
+    page,
+    /updateField\("birthDate", pickedBirthYear\)/,
+    "the picked year goes into the form through dateToBirthYearIsoDate"
+  );
+  assert.match(
+    picker,
+    /yearOnly\s*\?\s*new Date\(dateParts\.year, 0, 1\)/,
+    "the year-only wheel confirms the 1st of January of the chosen year"
+  );
+
+  assert.strictEqual(dateToBirthYearIsoDate(new Date(1991, 0, 1)), "1991-01-01");
+  assert.strictEqual(
+    dateToBirthYearIsoDate(new Date(1991, 5, 15)),
+    "1991-01-01",
+    "a day and a month are never part of it"
+  );
+  assert.strictEqual(dateToBirthYearIsoDate(new Date("not a date")), null);
+  assert.strictEqual(dateToBirthYearIsoDate(null), null);
+
+  const normalizeBirthDateValue = new Function(
+    "normalizeIsoDateString",
+    `${declarationFrom("normalizeBirthDateValue")}\nreturn normalizeBirthDateValue;`
+  )(dateUtils.normalizeIsoDateString);
+
+  for (const year of [1900, 1991, new Date().getFullYear()]) {
+    const formValue = dateToBirthYearIsoDate(new Date(year, 6, 20));
+
+    assert.strictEqual(
+      normalizeBirthDateValue(formValue),
+      formValue,
+      `the form's ${year} is not what gets stored, so a saved year would not read back equal`
+    );
+  }
+
+  assert.notStrictEqual(
+    dateToBirthYearIsoDate(new Date(1991, 0, 1)),
+    dateToBirthYearIsoDate(new Date(1990, 11, 31)),
+    "another year is a change Save has to offer"
   );
 }
 

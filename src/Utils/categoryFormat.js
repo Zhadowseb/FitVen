@@ -22,7 +22,6 @@ import {
   STREAK_MIN_WORKOUTS,
   ageGroupLabelKey,
   categoryToneToken,
-  fremgangTabLabelKey,
   genderLabelKey,
 } from "./gymCategories";
 import { roundToNearestWeightIncrement } from "./oneRepMaxUtils";
@@ -135,6 +134,30 @@ function formatCount(value) {
   return formatNumber(Math.round(toNumber(value) ?? 0));
 }
 
+// The three lifts' full names - Progress's rows name what the rise was in.
+const LIFT_NAME_KEYS = {
+  bench: "category.lifts.bench",
+  squat: "category.lifts.squat",
+  deadlift: "category.lifts.deadlift",
+};
+
+/**
+ * What a rise on Progress was in: the exercise's own name when the server
+ * sends one (`exerciseName`), else the lift's ("Bænkpres"). Empty when it is
+ * neither.
+ */
+export function progressExerciseName(entry, t) {
+  const name = typeof entry?.exerciseName === "string" ? entry.exerciseName.trim() : "";
+
+  if (name) {
+    return name;
+  }
+
+  const key = LIFT_NAME_KEYS[entry?.lift];
+
+  return key ? t(key) : "";
+}
+
 /* -------------------------------------------------------------- the lines -- */
 
 function flidSubtitle(tab, detail, t, now) {
@@ -158,8 +181,8 @@ function flidSubtitle(tab, detail, t, now) {
 /**
  * The line under a name, on the category page's rows and under #1 on a
  * centre's card: the streak and the last workout, the three lifts (and the
- * centre, above centre level), the lift and its two estimates, or the three
- * movements' reps. Empty when there is nothing to say.
+ * centre, above centre level), the exercise the rise was in and its two
+ * estimates, or the three movements' reps. Empty when there is nothing to say.
  */
 export function rowSubtitle({ category, tab, row, scopeLevel, t, now = Date.now() }) {
   const detail = row?.detail;
@@ -184,12 +207,13 @@ export function rowSubtitle({ category, tab, row, scopeLevel, t, now = Date.now(
     case "fremgang": {
       const before = toNumber(detail.before);
       const after = toNumber(detail.now);
+      const name = progressExerciseName(detail, t);
 
-      // The lift and both estimates, or nothing: "– → 62 kg" says no more
-      // than the value beside it.
-      return detail.lift && before !== null && after !== null
+      // The exercise and both estimates, or nothing: "– → 62 kg" says no
+      // more than the value beside it.
+      return name && before !== null && after !== null
         ? t("category.rows.fremgang", {
-            lift: t(fremgangTabLabelKey(detail.lift)),
+            lift: name,
             before: formatEstimateKg(before),
             now: formatEstimateKg(after),
           })

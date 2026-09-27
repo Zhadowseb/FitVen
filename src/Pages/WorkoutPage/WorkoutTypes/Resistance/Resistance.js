@@ -491,11 +491,35 @@ const Resistance = ({
     goHome(navigation);
   };
 
+  // Restart puts the workout back to before it was started: every set not
+  // done, and the timer at nothing. Only the timer used to go - the sets stayed
+  // ticked, so a second start was a started workout with its sets already
+  // done, and one whose sets were all ticked asked "stop the timer and finish?"
+  // the moment it was started again.
   const restartWorkout = async () => {
-    await workoutService.resetWorkoutState(db, workout_id);
+    // The rest stops at once, not after the writes.
     if (activeRestTimer) {
       clearActiveRestTimer(activeRestTimer.id);
     }
+
+    try {
+      await weightliftingService.resetStrengthWorkoutSets(db, workout_id);
+      await workoutService.resetWorkoutState(db, workout_id);
+    } catch (error) {
+      console.error("Failed to restart the workout:", error);
+      // Whatever did get written is what the list shows.
+      refresh();
+      return;
+    }
+
+    // Before the render: a trip to the background in between persists the
+    // clock from these, and must not write the old start back over the reset.
+    timerStartRef.current = null;
+    elapsedTimeRef.current = 0;
+    wasAllSetsDoneRef.current = false;
+    setAllSetsDoneConfirmVisible(false);
+    setStartTimerConfirmVisible(false);
+    setFinishConfirmVisible(false);
     set_original_start_time(null);
     set_timer_start(null);
     set_elapsed_time(0);

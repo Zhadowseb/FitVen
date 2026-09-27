@@ -11,6 +11,7 @@ export default {
   centerButton: {
     activeRestTimer: "Active rest timer {time}",
     activeWorkoutTimer: "Active workout timer {time}",
+    pausedWorkoutTimer: "Workout paused {time}",
     startWorkout: "Start workout {workout}",
     createWorkout: "Create workout",
   },

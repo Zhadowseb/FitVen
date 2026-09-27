@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -39,6 +39,8 @@ const PODIUM_ORDER = [1, 0, 2];
 const PODIUM_AVATAR = [58, 48, 48];
 const PODIUM_PLINTH = [64, 44, 30];
 const PAGE_SIZE = 50;
+// Room left of the chosen chip when the row scrolls it into view.
+const CHIP_SCROLL_INSET = 24;
 
 function formatValue(lift, unit) {
   if (unit === gymService.LIFT_UNIT_BODYWEIGHT) {
@@ -181,6 +183,7 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
   // fails, and the notice is drawn behind its overlay.
   const [uploadError, setUploadError] = useState("");
   const [notice, setNotice] = useState("");
+  const chipRowRef = useRef(null);
   const quietText = theme.quietText ?? theme.text;
   const isLight = colorScheme === "light";
   const unitOptions = [
@@ -523,14 +526,32 @@ export default function GymExerciseLeaderboardPage({ national: nationalProp = fa
       : gymChips;
   }, [board?.exercise, gymChips]);
 
+  // A centre can rank dozens of exercises, and the one the page was opened
+  // on - from the centre's search, say - may be far along the row. When its
+  // chip is laid out, the row scrolls it into view; a tap on a chip already
+  // in view does not move the row.
   const renderChips = (list) => (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
+    <ScrollView
+      ref={chipRowRef}
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.chipRow}
+    >
       {list.map((chip) => {
         const isActive = chip.id === exerciseId;
 
         return (
           <TouchableOpacity
             key={chip.id}
+            onLayout={
+              isActive
+                ? (event) =>
+                    chipRowRef.current?.scrollTo({
+                      x: Math.max(0, event.nativeEvent.layout.x - CHIP_SCROLL_INSET),
+                      animated: false,
+                    })
+                : undefined
+            }
             accessibilityRole="button"
             accessibilityState={{ selected: isActive }}
             activeOpacity={0.85}
