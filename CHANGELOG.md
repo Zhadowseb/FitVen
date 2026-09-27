@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.15.2] - Unreleased
+### Fixed
+- **A program, block, week or day edited while it was uploading keeps the edit.** 2.15.1 guarded workouts, exercise instances and sets, but the four levels above them still cleared `needs_sync` by id alone when the cloud answered. A program renamed, a focus changed or a day marked sick while that row was uploading lost its flag, and the download straight after the upload put the old value back.
+  - `markProgramSynced`, `markMesocycleSynced`, `markMicrocycleSynced` and `markDaySynced` now take `expectedSyncVersion` and clear the flag only if the row still has that `sync_version`, like the other three. A row that changed keeps its flag and its own version, records the cloud id it got back, and goes up with the next pass.
+  - Every call in `programSync.js`, `mesocycleSync.js`, `microcycleSync.js` and `daySync.js`, upload and reconcile alike, passes the version of the row it read.
+- **Tests:** `npm run test:sync-lost-update` now lands an edit mid-upload at program, block, week and day too, checks the four functions directly, and checks that every call site passes the version.
+- **Docs:** `src/Services/AGENTS.md` names all seven functions, and the Known Gap for the four is gone.
+
+---
 ## [2.15.1] - Unreleased
 ### Fixed
 - **A workout started while its restart was uploading stays started.** When the cloud answered, the upload cleared the workout's `needs_sync` by id alone. Start had written `timer_start` and `original_start_time` with a new `sync_version` in the meantime, so the start was never sent, and the download straight after the upload put the workout back to not started.

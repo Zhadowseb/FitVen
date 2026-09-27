@@ -104,6 +104,7 @@ export async function uploadDirtyPrograms(db, userId) {
 
     await programRepository.markProgramSynced(db, {
       programId: localProgram.program_id,
+      expectedSyncVersion: localProgram.sync_version,
       cloudProgramId,
       remoteLocalProgramId,
       syncId: normalizeSyncId(syncResult.cloudRecord?.sync_id),
@@ -290,6 +291,7 @@ async function reconcileProgramsFromCloud(db, userId) {
         ) {
           await programRepository.markProgramSynced(db, {
             programId: localProgram.program_id,
+            expectedSyncVersion: localProgram.sync_version,
             cloudProgramId,
             remoteLocalProgramId: comparableCloudProgram.local_program_id,
             syncId: cloudSyncId,
