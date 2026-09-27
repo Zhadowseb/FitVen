@@ -9,6 +9,22 @@
 - **Docs:** `src/Services/AGENTS.md` names all seven functions, and the Known Gap for the four is gone.
 
 ---
+## [2.16.1] - Unreleased
+### Fixed
+- **A set keeps its decimals in the cloud.** A set's weight (102,5 kg, 11,25 kg a side) and RPE (8,5) were cut to whole numbers on upload. A new phone, the category lists and a custom exercise's typical weight therefore got 102 instead of 102,5.
+  - Both now go up and come down with up to two decimals (`Utils/setDecimals`).
+  - Importing a program file no longer cuts them either.
+- **Cloud:** `20261003090000_a-set-keeps-its-decimals.sql` changes `set.weight` and `set.rpe` to `numeric`. It has not been run.
+  - It checks the catalogue first, and stops without changing anything if a view or policy would block it. A second run does nothing.
+  - It rewrites the table once, which took 13 s for 2 million sets locally. Run it when the app is quiet.
+- **Until it has run:** the upload falls back to whole numbers for the rest of the session, the phone keeps its own value, and nothing loops.
+- **After it has run:** the sets the cloud holds cut off are sent again once.
+- **Checked against a local Postgres:** the category lists, the custom exercise stats and `workout_record_counts` give the same results on whole-number data.
+  - The one visible change: a pull-up with 0,5 kg added no longer counts as bodyweight in Calisthenics.
+- The migrations ledger records `20261002090000_weight-mode-per-instance.sql` and `20261003090000_a-set-keeps-its-decimals.sql` as run, both on 2026-09-27.
+- `npm run test:set-decimals` runs the real set sync against the schema in `node:sqlite` and a cloud that is first integer, then numeric.
+
+---
 ## [2.16.0] - Unreleased
 ### Added
 - **Weight per side or for both sides.** Dumbbell, kettlebell and cable exercises get two tabs under the name on the exercise card: "Pr. side · 22,5" and "Begge sider · 45".

@@ -77,7 +77,8 @@ behind by accident.
 | `20260930090000_store-stats-ios-daily.sql` | yes |
 | `20261001080000_the-admin-guard-runs-as-its-caller.sql` | yes |
 | `20261001090000_dev-kpis.sql` | yes |
-| `20261002090000_weight-mode-per-instance.sql` | no |
+| `20261002090000_weight-mode-per-instance.sql` | yes |
+| `20261003090000_a-set-keeps-its-decimals.sql` | yes |
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
 centre match, per-centre lift leaderboards with video verification, and what
@@ -406,13 +407,21 @@ columns, `store_stats` the crash and ANR columns, adds the admin-only
 page said its numbers were not available yet, and the app left the new
 columns out of what it wrote.
 
-`20261002090000_weight-mode-per-instance.sql` has **not** been run. It adds
+`20261002090000_weight-mode-per-instance.sql` was run on 2026-09-27. It adds
 `weight_mode` ('total' | 'per_side') to `exercise_instance` and to
 `exercise_column_preferences`, for weight per side or for both sides (4d, app
 2.16). It can run before or after the app ships: until it has, a 2.16 phone
 finds the column missing, syncs both tables without it for that session and
 keeps the choice on the phone - nothing else stops syncing. One table per
 transaction, the checks added `not valid` and validated after.
+
+`20261003090000_a-set-keeps-its-decimals.sql` was run on 2026-09-27. It turns
+`set.weight` and `set.rpe` from whole numbers into `numeric`, so 102.5 kg and
+RPE 8.5 reach the cloud as they are instead of as 102 and 8. It can run before
+or after the app that sends decimals: until it has run, that app sends them cut
+off, as before, and keeps its own. It rewrites the table, so every set request
+waits while it runs. Check the table's size first (the query is in its
+header), and run it when the app is quiet.
 
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to
