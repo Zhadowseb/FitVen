@@ -4487,7 +4487,7 @@ export async function switchExerciseWeightMode(db, { exerciseId, weightMode }) {
 // The 1RM estimate for the sets of one exercise in one workout. It comes from
 // the exercise's name and the program the workout is in, never from the set,
 // so a switch or its undo asks for it once instead of once per set - a join
-// over six tables each time (PR #294's review).
+// over eight tables each time (PR #294's review).
 function createExerciseEstimateLookup(db) {
   let estimate;
 

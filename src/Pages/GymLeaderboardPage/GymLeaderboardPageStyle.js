@@ -198,10 +198,6 @@ export default StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
-  searchRetry: {
-    alignSelf: "flex-start",
-    marginTop: 6,
-  },
   emptyBody: {
     fontSize: 12,
     fontWeight: "600",

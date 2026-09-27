@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.16.7] - Unreleased
+### Fixed
+From the review agents' report on #296.
+- **The centre's exercise search:**
+  - Its "Prøv igen" is the page's own retry button, the one under "the categories could not be fetched": the same size, tap area and press feedback. It was a smaller one of its own.
+  - The "{count} fundet" count is shown only once every exercise has been searched. While the rest was coming it counted the preview's matches alone, under a spinner saying it was still looking.
+  - The search's status uses the page's words for its cards: `"ready"` and `"error"`, not `"loaded"` and `"failed"`. `centreSearchView` no longer takes `fullListLoaded`, which only repeated `status`.
+- **Tests:** the undo of a per side / both sides switch is now checked to look the 1RM estimate up once, like the switch. It fails with the undo looking it up per set.
+- A comment said the estimate's join is over six tables; it is eight.
+
+---
 ## [2.16.6] - Unreleased
 ### Fixed
 From the review agents' reports on #294 and #295.

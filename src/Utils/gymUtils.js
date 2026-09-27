@@ -279,20 +279,19 @@ export function countCentreExercises(overview) {
  * could not get the rest (PR #294's review: it said "no match" about an
  * exercise lifted there).
  *
- *   previewCount   exercises the page already has
- *   totalCount     exercises ranked at the centre (countCentreExercises)
- *   fullListLoaded the full list has come
- *   status         "idle" | "loading" | "loaded" | "failed", for the full list
+ *   previewCount exercises the page already has
+ *   totalCount   exercises ranked at the centre (countCentreExercises)
+ *   status       "idle" | "loading" | "ready" | "error", for the full list -
+ *                the page's words for its cards' status too
  */
 export function centreSearchView({
   matchCount = 0,
   previewCount = 0,
   totalCount = 0,
-  fullListLoaded = false,
   status = "idle",
 } = {}) {
-  const complete = Boolean(fullListLoaded) || previewCount >= totalCount;
-  const failed = !complete && status === "failed";
+  const complete = status === "ready" || previewCount >= totalCount;
+  const failed = !complete && status === "error";
 
   return {
     complete,
