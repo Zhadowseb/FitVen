@@ -1,5 +1,35 @@
 # Changelog
 
+## [2.15.4] - Unreleased
+### Changed
+- **Fremgang counts every exercise.** The list ranks each person by their biggest rise in best e1RM in any catalogue exercise, by the same rules as before: Brzycki up to 12 reps, the last 30 days against the 30 before, and 3 sets in each window.
+  - A row names the exercise, e.g. "Hip Thrust 100 → 120 kg". Bench press, squat and deadlift keep the app's own names ("Bænkpres 56,5 → 62 kg").
+  - "Din fremgang" gets your five biggest rises from the server, biggest first, and the card shows three.
+  - Exercises are matched to the catalogue by name, trimmed and lower-cased. Custom exercises do not count. When two rises are the same size, the one reached first ranks higher.
+  - Rises are in per cent, so a light exercise can top the list: a dumbbell going from 2 to 4 kg is +100 %.
+- **Flid: a week counts towards weeks in a row at 2 workouts, not 3,** on the list as on the Train tab. The texts say 2 in both languages.
+- **Cloud:** `20261004090000_progress-counts-every-exercise.sql` (not run) restates `private.category_rows` with only those two parts changed. `npm run test:gym-categories` checks that part by part.
+  - It adds the index `set_cloud_exercise_instance_idx`.
+  - Load tested on Postgres 17 at 2,000 lifters and 1.9M sets:
+    - a country's Progress list: 2.1 → 2.3 s;
+    - a region's: 1.1 → 1.2 s;
+    - a centre's: 91 → 67 ms;
+    - a country's four cards: about 6.3 s either way.
+  - Until it has run, the list counts the three lifts and three workouts a week, and the app reads that as before. So the page says 2 a week while the list still counts 3.
+- **The privacy policy** says that the categories show which exercise your estimated best rose most in, with the estimate before and now. It is raised to 2026-09-27.1, so everyone is asked again.
+- The Progress empty text says "same exercise", not "same lift".
+
+---
+## [2.15.3] - Unreleased
+### Fixed
+- **A workout started while its restart was uploading stays started.** When the cloud answered, the upload cleared the workout's `needs_sync` by id alone. Start had written `timer_start` and `original_start_time` with a new `sync_version` in the meantime, so the start was never sent, and the download straight after the upload put the workout back to not started.
+  - `markWorkoutSynced`, `markExerciseSynced` and `markSetSynced` now take `expectedSyncVersion`, the `sync_version` the row was read at, and clear the flag only if the row still has it (`WHERE … AND sync_version IS ?`). A row that changed keeps its flag and its own version, records the cloud id it got back, and goes up with the next pass.
+  - Exercise instances and sets had the same race. A note typed, or a set ticked off, while that row was uploading was lost the same way.
+  - The reconcile marks rows synced through the same three functions, so it has the guard too.
+  - Program, block, week and day rows still clear the flag the old way.
+- **Tests:** `npm run test:sync-lost-update` runs the real sync modules against the app's schema in `node:sqlite` and an in-memory cloud, with the user's write landing while the upload is out, for all three.
+
+---
 ## [2.15.2] - Unreleased
 ### Fixed
 From the owner's test on an Android phone.

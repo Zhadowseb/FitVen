@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "2.15.2-fix-category-progress-all-exercises.1",
+  "version": "2.15.4-fix-category-progress-all-exercises.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",
@@ -41,6 +41,7 @@
     "test:next-workout": "node scripts/test-next-unfinished-workout.js",
     "test:sync-upload": "node scripts/test-cloud-sync-upload-batching.js",
     "test:sync-watchers": "node scripts/test-cloud-watcher-claims.js",
+    "test:sync-lost-update": "node scripts/test-sync-lost-update.js",
     "test:delete-sticks": "node scripts/test-delete-stays-deleted.js",
     "test:db-repairs": "node scripts/test-database-repairs.js",
     "test:dev-dashboard": "node scripts/test-dev-dashboard.js",
