@@ -418,11 +418,9 @@ transaction, the checks added `not valid` and validated after.
 
 `20261003090000_a-set-keeps-its-decimals.sql` was run on 2026-09-27. It turns
 `set.weight` and `set.rpe` from whole numbers into `numeric`, so 102.5 kg and
-RPE 8.5 reach the cloud as they are instead of as 102 and 8. It can run before
-or after the app that sends decimals: until it has run, that app sends them cut
-off, as before, and keeps its own. It rewrites the table, so every set request
-waits while it runs. Check the table's size first (the query is in its
-header), and run it when the app is quiet.
+RPE 8.5 reach the cloud as they are instead of as 102 and 8. A phone that
+synced before it had run sent them cut off and kept its own; afterwards those
+sets go up again once, with their decimals (`src/Utils/setDecimals.js`).
 
 `20261004090000_progress-counts-every-exercise.sql` was run on 2026-09-27. It
 restates `private.category_rows` with two rules changed: Progress counts

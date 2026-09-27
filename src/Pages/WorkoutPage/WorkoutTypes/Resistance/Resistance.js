@@ -13,7 +13,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
 
 import ExerciseList from "./Components/ExerciseList/ExerciseList";
-import { useColorScheme } from "react-native";
+import { Alert, useColorScheme } from "react-native";
 import { Colors, withAlpha } from "../../../../Resources/GlobalStyling/colors";
 
 import styles from "./ResistanceStyle.js";
@@ -509,12 +509,17 @@ const Resistance = ({
       clearActiveRestTimer(activeRestTimer.id);
     }
 
+    // Sets and timer in one transaction: it restarts all of it or none.
     try {
-      await weightliftingService.resetStrengthWorkoutSets(db, workout_id);
-      await workoutService.resetWorkoutState(db, workout_id);
+      await weightliftingService.restartStrengthWorkout(db, workout_id);
     } catch (error) {
       console.error("Failed to restart the workout:", error);
-      // Whatever did get written is what the list shows.
+      // Nothing was written, so the screen stays as it is - the person
+      // confirmed a restart, and has to hear that it did not happen.
+      Alert.alert(
+        t("workout.page.restartFailedTitle"),
+        t("workout.page.restartFailedMessage")
+      );
       refresh();
       return;
     }

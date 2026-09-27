@@ -324,9 +324,24 @@ async function reconcileExerciseInstancesFromCloud(db, userId) {
       if (
         cloudExerciseInstanceId === null ||
         cloudWorkoutTypeInstanceId === null ||
-        !parentWorkout ||
-        !getComparableExerciseInstanceSnapshot(cloudRow).exercise_name
+        !parentWorkout
       ) {
+        continue;
+      }
+
+      const localExercise =
+        localExercisesByCloudId.get(cloudExerciseInstanceId) ??
+        localExercisesBySyncId.get(cloudSyncId) ??
+        localExercisesByRemoteLocalId.get(localExerciseInstanceId) ??
+        localExercisesByLocalId.get(localExerciseInstanceId) ??
+        null;
+      // Built once per row, and used for the name check below as well:
+      // withKnownWeightMode changes only weight_mode, never the name.
+      const cloudExercise = withKnownWeightMode(cloudRow, localExercise);
+      const comparableCloudExercise =
+        getComparableExerciseInstanceSnapshot(cloudExercise);
+
+      if (!comparableCloudExercise.exercise_name) {
         continue;
       }
 
@@ -339,16 +354,6 @@ async function reconcileExerciseInstancesFromCloud(db, userId) {
       ) {
         continue;
       }
-
-      const localExercise =
-        localExercisesByCloudId.get(cloudExerciseInstanceId) ??
-        localExercisesBySyncId.get(cloudSyncId) ??
-        localExercisesByRemoteLocalId.get(localExerciseInstanceId) ??
-        localExercisesByLocalId.get(localExerciseInstanceId) ??
-        null;
-      const cloudExercise = withKnownWeightMode(cloudRow, localExercise);
-      const comparableCloudExercise =
-        getComparableExerciseInstanceSnapshot(cloudExercise);
 
       if (isCloudSnapshotDeleted(cloudExercise)) {
         pendingDeletionAcks.push({

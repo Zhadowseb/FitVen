@@ -1,5 +1,46 @@
 # Changelog
 
+## [2.16.4] - Unreleased
+### Fixed
+From the review agents' reports on #287–#292.
+- **Workout names:**
+  - A name someone typed is no longer translated. "Run", "Walk", "Resistance" or "legs" on another type stay as typed. Unnamed and auto-named workouts are still drawn in the app's language (`isAppWorkoutName`).
+  - A name typed exactly like one of the app's own auto-names on a strength workout is still translated, because the two are stored the same way.
+- **Restart workout** is one transaction (`restartStrengthWorkout`). If it fails, nothing changes and the app says so.
+- **The weight steppers:**
+  - A + or − right after typing a weight starts from the typed weight.
+  - A step's save is only forgotten once it has succeeded, and a failed save keeps the weight and says so, with "Prøv igen".
+- **Undoing a per side / both sides switch** keeps the sets changed or added since, converted back.
+- **%1RM is of the weight as written:** 22,5 kg per side is 22,5 against the estimate. A switch moves it with the number.
+- **A workout opened or copied from the cloud keeps what the phone has not sent yet.**
+  - An offline edit is no longer overwritten by the cloud's older copy.
+  - A set the cloud held cut to whole kilos is sent up again with its decimals.
+  - Warm-ups, drop sets and AMRAP targets arrive as they are, instead of as working sets.
+- **Sync:**
+  - Looking a row up in the cloud no longer gives an edit still waiting to upload the cloud's version. An older edit can therefore no longer go up over a newer one from another phone.
+  - Once the cloud is known to keep decimals, a later refusal from another field no longer cuts every weight to whole kilos for the session.
+- **The catalog by name:**
+  - The lock-screen card finds the equipment whatever the case of the name, and shows each set once.
+  - A new index, `exercise_name_nocase_idx`, lets every lookup by name search instead of reading the whole catalog.
+  - Copying a week looks the catalog up once per workout.
+- **The centre page** loads its first exercises on every visit, and every exercise only when you search.
+- **"Din fremgang"** explains what it takes when there is no rise yet.
+- **Contrast:**
+  - The per side / both sides tabs pass in dark mode, and their underline in every accent.
+  - The Android weight buttons' red and green text is readable on a light notification shade, and the red on a dark one.
+- **Android:**
+  - A tap on the card, and its redraws during a rest, no longer run on the main thread. Taps are still handled one at a time and in order.
+  - The button rows are 48 dp.
+  - TalkBack says the dimmed minus at 0 kg cannot be used.
+- **A failed weight-mode switch or undo** shows a message.
+- **The review workflow** reads a merged PR from its merge commit, against master just before it. It used to diff the PR's head against a master that already held it, so the agents got an empty diff and read the finished code instead of the change.
+- **Tests:**
+  - `test:set-decimals` runs the workout hydration for real.
+  - `test:sync-lost-update` covers the identity helpers.
+  - `test:weight-mode` runs the switch, its undo and the header's write through the service.
+  - There are two new tests, `test:catalog-name-match` and `test:live-workout-android`.
+
+---
 ## [2.16.3] - Unreleased
 ### Changed
 - **Fremgang counts every exercise.** The list ranks each person by their biggest rise in best e1RM in any catalogue exercise, by the same rules as before: Brzycki up to 12 reps, the last 30 days against the 30 before, and 3 sets in each window.

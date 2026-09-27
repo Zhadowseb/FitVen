@@ -97,6 +97,7 @@ const { weightliftingSchemaSql } = loadAppModule(
 const workoutService = loadAppModule("src/Services/workoutService.js");
 const weightliftingService = loadAppModule("src/Services/weightliftingService.js");
 const workoutRepository = loadAppModule("src/Repository/workoutRepository.js");
+const weightliftingRepository = loadAppModule("src/Repository/weightliftingRepository.js");
 const dataEvents = loadAppModule("src/Utils/workoutDataEvents.js");
 const setEvents = loadAppModule("src/Utils/workoutSetEvents.js");
 const clock = loadAppModule("src/Utils/workoutClock.js");
@@ -265,9 +266,34 @@ set(300, 30, 1, 95, 5, { done: 1 });
   });
   setChanges.length = 0;
 
-  // What Resistance's restartWorkout does, in its order.
-  assert.strictEqual(await weightliftingService.resetStrengthWorkoutSets(db, 2), 3);
-  await workoutService.resetWorkoutState(db, 2);
+  // A restart that fails half-way changes nothing. It used to be two
+  // transactions, sets first: a failure writing the timer left the sets
+  // unticked - and queued for upload - under a workout still finished and
+  // timed (PR #288's review). Here the workout row refuses the reset.
+  const snapshot = () => ({
+    sets: all(`SELECT sets_id, done, failed, personal_record, needs_sync FROM "Set" ORDER BY sets_id`),
+    exercises: all(`SELECT exercise_instance_id, done, needs_sync FROM Exercise_Instance ORDER BY exercise_instance_id`),
+    workouts: all(`SELECT workout_id, done, timer_start, elapsed_time, original_start_time, needs_sync FROM Workout_Type_Instance ORDER BY workout_id`),
+    days: all(`SELECT day_id, done, needs_sync FROM Day ORDER BY day_id`),
+  });
+  const before = snapshot();
+
+  run(`CREATE TRIGGER refuse_restart BEFORE UPDATE OF elapsed_time ON Workout_Type_Instance
+       WHEN NEW.workout_id = 2 AND NEW.elapsed_time = 0
+       BEGIN SELECT RAISE(ABORT, 'disk I/O error'); END`);
+  await assert.rejects(
+    weightliftingService.restartStrengthWorkout(db, 2),
+    /disk I\/O error/,
+    "a failed restart has to reach the screen, which tells the person"
+  );
+  run(`DROP TRIGGER refuse_restart`);
+
+  assert.deepStrictEqual(snapshot(), before, "a failed restart left part of the workout reset");
+  assert.strictEqual(setChanges.length, 0, "a failed restart announced a reset");
+  assert.strictEqual(db.sqlite.isTransaction, false, "the failed restart left its transaction open");
+
+  // What Resistance's restartWorkout does: sets and timer, one transaction.
+  assert.strictEqual(await weightliftingService.restartStrengthWorkout(db, 2), 3);
   await settle();
 
   for (const row of all(`SELECT * FROM "Set" s JOIN Exercise_Instance e USING (exercise_instance_id) WHERE e.workout_type_instance_id = 2`)) {
@@ -321,9 +347,9 @@ set(300, 30, 1, 95, 5, { done: 1 });
     "the reset timer never told the lock-screen card or the square"
   );
 
-  // Nothing ticked off: nothing written, nothing said.
+  // Nothing ticked off: no set written, nothing said about sets.
   setChanges.length = 0;
-  assert.strictEqual(await weightliftingService.resetStrengthWorkoutSets(db, 2), 0);
+  assert.strictEqual(await weightliftingService.restartStrengthWorkout(db, 2), 0);
   assert.strictEqual(setChanges.length, 0);
 
   /* ---------------------------------------------- started again, paused -- */
@@ -473,6 +499,32 @@ set(300, 30, 1, 95, 5, { done: 1 });
   stopData();
   stopSets();
 
+  /* ------------------------------ "See statistics", through the service -- */
+
+  // The exercise library asks the service, which trims the name first; the
+  // repository alone does not (PR #288's review: only the repository was
+  // tested). The bench press has finished sets on the days either side.
+  assert.strictEqual(await weightliftingService.hasCompletedSetsForExercise(db, "Bench Press"), true);
+  assert.strictEqual(
+    await weightliftingService.hasCompletedSetsForExercise(db, "  Bench Press  "),
+    true,
+    "a name with spaces around it has no statistics"
+  );
+  assert.strictEqual(
+    await weightliftingRepository.hasCompletedStrengthSetForExercise(db, "  Bench Press  "),
+    false,
+    "fixture: the repository takes the name as it is given"
+  );
+  assert.strictEqual(await weightliftingService.hasCompletedSetsForExercise(db, "Barbell Row"), false, "never finished");
+
+  for (const nothing of ["", "   ", null, undefined, 42]) {
+    assert.strictEqual(
+      await weightliftingService.hasCompletedSetsForExercise(db, nothing),
+      false,
+      `${JSON.stringify(nothing)} asked the database`
+    );
+  }
+
   /* --------------------------------------------------- the screen's half -- */
 
   const resistance = read("src/Pages/WorkoutPage/WorkoutTypes/Resistance/Resistance.js");
@@ -482,8 +534,18 @@ set(300, 30, 1, 95, 5, { done: 1 });
   assert.ok(restartStart !== -1, "Resistance no longer has restartWorkout");
   assert.match(
     restartBody,
-    /weightliftingService\.resetStrengthWorkoutSets\(db, workout_id\)[\s\S]*workoutService\.resetWorkoutState\(db, workout_id\)/,
+    /weightliftingService\.restartStrengthWorkout\(db, workout_id\)/,
     "Restart on the workout screen resets the timer and leaves the sets ticked off"
+  );
+  assert.doesNotMatch(
+    restartBody,
+    /workoutService\.resetWorkoutState\(/,
+    "the timer is reset in a second transaction again, and can fail on its own"
+  );
+  assert.match(
+    restartBody,
+    /catch \(error\) \{[\s\S]*Alert\.alert\(\s*t\("workout\.page\.restartFailedTitle"\)/,
+    "a failed restart is only written to the console"
   );
   assert.match(restartBody, /timerStartRef\.current = null/);
   assert.match(restartBody, /elapsedTimeRef\.current = 0/);

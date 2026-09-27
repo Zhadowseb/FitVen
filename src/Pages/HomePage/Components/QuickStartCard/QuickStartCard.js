@@ -74,7 +74,8 @@ export default function QuickStartCard({
 
   const todayWorkout = openToday?.first ?? null;
   const todayName =
-    workoutDisplayName(todayWorkout?.name, t) ?? t("home.quickStart.todaysWorkout");
+    workoutDisplayName(todayWorkout?.name, t, todayWorkout?.workoutType) ??
+    t("home.quickStart.todaysWorkout");
   const primary = todayWorkout
     ? {
         label: todayName,

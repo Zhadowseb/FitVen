@@ -723,6 +723,30 @@ assert.deepStrictEqual(searchNames("t"), ["Hip Thrust", "Deadlift", "Squat"], "a
 assert.deepStrictEqual(searchNames(""), [], "nothing typed is no search");
 assert.deepStrictEqual(searchNames("row"), [], "and a name nobody here lifts is not found");
 
+// The centre page is sent the featured exercises and the few most lifted of
+// the rest on every visit, and every exercise only when somebody searches.
+// "All exercises" still counts them all: more_total is every one of the rest.
+{
+  const firstFew = { featured: overview.featured, more: overview.more.slice(0, 2), moreTotal: 12 };
+
+  assert.strictEqual(gymUtils.listCentreExercises(firstFew).length, 5);
+  assert.strictEqual(gymUtils.countCentreExercises(firstFew), 5 + 10, "the ten not sent are counted");
+  assert.strictEqual(
+    gymUtils.countCentreExercises({ ...overview, moreTotal: overview.more.length }),
+    centreExercises.length,
+    "with every one sent, the count is the list's"
+  );
+  assert.strictEqual(gymUtils.countCentreExercises(null), 0);
+
+  const centrePage = fs.readFileSync(path.join(root, "src/Pages/GymLeaderboardPage/GymLeaderboardPage.js"), "utf8");
+  const load = centrePage.slice(centrePage.indexOf("const load = useCallback("), centrePage.indexOf("const loadCards = useCallback("));
+
+  assert.ok(load.length > 0, "the centre page's load is gone; update this test");
+  assert.ok(!/moreLimit:\s*null/.test(load), "the centre page asks for every exercise on every visit again");
+  assert.ok(/onFocus=\{loadSearchableExercises\}/.test(centrePage), "the search no longer asks for every exercise when it is used");
+  assert.ok(/total=\{exerciseTotal\}/.test(centrePage), "\"All exercises\" counts only the exercises the page was sent");
+}
+
 /* ---------------------------------------- centres before a search -- */
 
 const suggestions = gymUtils.mergeGymSuggestions({

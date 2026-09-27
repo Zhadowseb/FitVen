@@ -132,7 +132,7 @@ function DayRow({ day, index, isLast, contentWidth, onMeasure, palette, onOpenWo
               setColor={single?.completed ? palette.title : palette.bodyText}
               numberOfLines={1}
             >
-              {workoutDisplayName(single?.workout?.label, t) ??
+              {workoutDisplayName(single?.workout?.label, t, single?.workout?.workout_type) ??
                 single?.iconLabel ??
                 t("calendar.weekView.workout")}
             </ThemedText>

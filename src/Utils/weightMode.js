@@ -143,6 +143,40 @@ export function totalLoad(weight, mode) {
   return weightModeOf(mode) === PER_SIDE ? numeric * 2 : numeric;
 }
 
+/**
+ * A set's %1RM: the weight as it is written over the 1RM estimate, in whole
+ * percent - 22,5 kg per side is 22,5 against the estimate, not 45. The owner
+ * decided it: the %1RM column reads the number in the form the set is
+ * written in, as the 1RM calculator does, so a switch between per side and
+ * both sides moves it with the number. Null without a weight or an estimate.
+ */
+export function rmPercentageOf(weight, estimatedWeight) {
+  const written = toNumber(weight);
+  const estimate = toNumber(estimatedWeight);
+
+  if (written === null || estimate === null || !(estimate > 0)) {
+    return null;
+  }
+
+  return Math.round((written / estimate) * 100);
+}
+
+/**
+ * The weight at a %1RM, in whole kilos, written as it stands - the other half
+ * of rmPercentageOf, so per side it is the number for one side. Null without
+ * both.
+ */
+export function weightAtRmPercentage(rmPercentage, estimatedWeight) {
+  const percentage = toNumber(rmPercentage);
+  const estimate = toNumber(estimatedWeight);
+
+  if (percentage === null || estimate === null || !(estimate > 0)) {
+    return null;
+  }
+
+  return Math.round(estimate * (percentage / 100));
+}
+
 /** A weight for reading, "22,5". Empty for none. */
 export function formatWeightNumber(weight) {
   const numeric = toNumber(weight);

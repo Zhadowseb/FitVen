@@ -22,9 +22,9 @@ export default function SplitCard({ split, onRepeat, onEdit, isRepeating = false
   const primaryText = theme.primaryText ?? theme.primary;
   const sessions = split?.sessions ?? [];
   const next = sessions.find((session) => session.isUpNext && session.lastWorkoutId) ?? null;
-  // A name that is only a stored type id is drawn as the type's name.
+  // A name the app wrote is drawn in the app's language; a typed one as typed.
   const nameOf = (session, index) =>
-    workoutDisplayName(session.name, t) ?? t("train.split.unnamed", { number: index + 1 });
+    workoutDisplayName(session.name, t, session.workoutType) ?? t("train.split.unnamed", { number: index + 1 });
 
   return (
     <View

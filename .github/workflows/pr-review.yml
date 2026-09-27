@@ -113,8 +113,22 @@ jobs:
             echo "Laeser master paa $SHA${PR:+, svarer paa #$PR}"
           else
             echo "pr=$PR_NUMBER" >> "$GITHUB_OUTPUT"
-            echo "ref=refs/pull/$PR_NUMBER/head" >> "$GITHUB_OUTPUT"
-            echo "Laeser PR #$PR_NUMBER"
+
+            # Et merget PR laeses i sin merge-commit og holdes op mod master
+            # lige foer merget. Dets head ligger allerede i master, saa
+            # merge-base(master, head) er head selv, og diffet blev tomt: saa
+            # laeste agenterne den faerdige kode og ikke aendringen.
+            MERGE_SHA=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json state,mergeCommit               --jq 'if .state == "MERGED" then (.mergeCommit.oid // "") else "" end')
+
+            if [ -n "$MERGE_SHA" ]; then
+              echo "ref=$MERGE_SHA" >> "$GITHUB_OUTPUT"
+              echo "merged=$MERGE_SHA" >> "$GITHUB_OUTPUT"
+              echo "Laeser PR #$PR_NUMBER, merget i $MERGE_SHA"
+            else
+              echo "ref=refs/pull/$PR_NUMBER/head" >> "$GITHUB_OUTPUT"
+              echo "merged=" >> "$GITHUB_OUTPUT"
+              echo "Laeser PR #$PR_NUMBER"
+            fi
           fi
 
       - uses: actions/checkout@v4
@@ -129,6 +143,7 @@ jobs:
           REPO: ${{ github.repository }}
           EVENT: ${{ github.event_name }}
           BEFORE: ${{ github.event.before }}
+          MERGED: ${{ steps.target.outputs.merged }}
         run: |
           set -euo pipefail
           mkdir -p pr-context
@@ -144,6 +159,11 @@ jobs:
               BASE_SHA="$BEFORE"
             fi
             echo "Base: $BASE_SHA (forrige master)"
+          elif [ -n "$MERGED" ]; then
+            # Merge-committens foerste foraelder er master, som den stod
+            # foer PR'et kom ind.
+            BASE_SHA=$(git rev-parse "$MERGED^1")
+            echo "Base: $BASE_SHA (master foer merget)"
           else
             BASE_BRANCH=$(gh pr view "$PR" --repo "$REPO" --json baseRefName --jq .baseRefName)
             git fetch --no-tags origin "$BASE_BRANCH"

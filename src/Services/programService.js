@@ -117,17 +117,26 @@ async function cloneWorkoutContents(
     db,
     sourceWorkoutId
   );
+  // A copy is written the way each exercise is written now (4d): somebody
+  // who has since switched it to per side gets the copied weights per side,
+  // converted like a switch converts them. Same mode, no change. Looked up
+  // for the whole workout at once: copying a week of four days with six
+  // exercises each asked the catalog 24 times, one after the other.
+  const catalogWeightModes = new Map(
+    (
+      await weightliftingRepository.getExerciseCatalogWeightModes(
+        db,
+        exercises.map((exercise) => exercise.exercise_name)
+      )
+    ).map((row) => [row.exercise_name, row.weight_mode])
+  );
 
   for (const exercise of exercises) {
-    // A copy is written the way the exercise is written now (4d): somebody
-    // who has since switched it to per side gets the copied weights per
-    // side, converted like a switch converts them. Same mode, no change.
-    const catalogEntry = await weightliftingRepository.getExerciseCatalogEntryByName(
-      db,
-      exercise.exercise_name
-    );
     const sourceMode = resolveWeightMode(exercise.weight_mode, null);
-    const targetMode = resolveWeightMode(catalogEntry?.weight_mode, sourceMode);
+    const targetMode = resolveWeightMode(
+      catalogWeightModes.get(exercise.exercise_name) ?? null,
+      sourceMode
+    );
     const exerciseResult = await weightliftingRepository.createExercise(db, {
       workoutId: targetWorkoutId,
       exerciseName: exercise.exercise_name,

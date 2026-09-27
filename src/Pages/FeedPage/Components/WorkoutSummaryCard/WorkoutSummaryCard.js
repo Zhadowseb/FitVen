@@ -287,7 +287,7 @@ export default function WorkoutSummaryCard({
                   setColor={titleColor}
                   numberOfLines={1}
                 >
-                  {workoutDisplayName(postTitle, t) ?? postTitle}
+                  {workoutDisplayName(postTitle, t, workoutType) ?? postTitle}
                 </ThemedText>
               ) : null}
 

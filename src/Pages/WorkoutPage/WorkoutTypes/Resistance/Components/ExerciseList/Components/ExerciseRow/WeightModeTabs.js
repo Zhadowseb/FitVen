@@ -32,7 +32,11 @@ export default function WeightModeTabs({ weightMode, weight, onSwitch, disabled 
   const theme = Colors[colorScheme] ?? Colors.light;
   const isDark = colorScheme === "dark";
   const rule = isDark ? "rgba(255, 255, 255, 0.06)" : "rgba(32, 30, 43, 0.1)";
-  const idleColor = isDark ? "#6E727D" : theme.quietText;
+  // The theme's own tokens, which scripts/test-weight-mode.js holds to 4.5:1
+  // (the text) and 3:1 (the line) on the card, done and record tints
+  // included, in every accent. The grey dark used to have here read 3.7:1.
+  const idleColor = theme.quietText;
+  const underlineColor = theme.primaryText ?? theme.primary;
   const selectedMode = weightMode === PER_SIDE ? PER_SIDE : TOTAL;
   const values = tabWeights(weight, selectedMode);
   const modeWord =
@@ -91,7 +95,7 @@ export default function WeightModeTabs({ weightMode, weight, onSwitch, disabled 
             {selected ? (
               <View
                 pointerEvents="none"
-                style={[styles.underline, { backgroundColor: theme.primary }]}
+                style={[styles.underline, { backgroundColor: underlineColor }]}
               />
             ) : null}
           </TouchableOpacity>

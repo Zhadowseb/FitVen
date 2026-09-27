@@ -1,4 +1,4 @@
-import { TouchableOpacity, Vibration, View } from "react-native";
+import { Alert, TouchableOpacity, Vibration, View } from "react-native";
 import { useColorScheme } from "react-native";
 import { useEffect, useRef, useState } from "react";
 import { useSQLiteContext } from "expo-sqlite";
@@ -51,6 +51,7 @@ import {
 } from "@utils/setTypes";
 import {
   DEFAULT_WEIGHT_STEP,
+  createWeightDrafts,
   isSteppableSet,
   showsWeightStepper,
   stepAllWeights,
@@ -259,8 +260,19 @@ const SetList = ({
   const deletedSetIdsRef = useRef(new Set());
   const updateUIRef = useRef(updateUI);
   const onWorkoutMetadataChangeRef = useRef(onWorkoutMetadataChange);
-  // Weights the steppers changed and the database does not have yet, by set.
-  const pendingWeightsRef = useRef(new Map());
+  // Weights on screen the database does not have yet, by set: steps waiting
+  // for the steppers' write, and a typed weight while its own write is out.
+  const weightDraftsRef = useRef(null);
+
+  if (weightDraftsRef.current === null) {
+    weightDraftsRef.current = createWeightDrafts();
+  }
+
+  const weightDrafts = weightDraftsRef.current;
+  // The sets as last read, for putting a weight back when its write fails.
+  const storedSetsRef = useRef(sets);
+
+  storedSetsRef.current = sets;
   const weightSaveTimerRef = useRef(null);
   const weightRepeatTimerRef = useRef(null);
   const flushWeightStepsRef = useRef(null);
@@ -303,16 +315,16 @@ const SetList = ({
   );
   const activeRestTimerRef = useRef(null);
 
-  // A step not saved yet stays on screen when the list is read again.
+  // A weight not saved yet stays on screen when the list is read again.
   useEffect(() => {
-    const pending = pendingWeightsRef.current;
-
     setLocalSets(
-      pending.size > 0
-        ? (sets ?? []).map((set) =>
-            pending.has(set.sets_id) ? { ...set, weight: pending.get(set.sets_id) } : set
+      weightDrafts.isEmpty()
+        ? sets
+        : (sets ?? []).map((set) =>
+            weightDrafts.has(set.sets_id)
+              ? { ...set, weight: weightDrafts.weightOf(set.sets_id) }
+              : set
           )
-        : sets
     );
   }, [sets]);
 
@@ -899,35 +911,56 @@ const SetList = ({
       return;
     }
 
-    // A number typed in wins over a step still waiting to be saved.
-    pendingWeightsRef.current.delete(setId);
+    // What was typed is on screen at once, and is where + and − start from
+    // while it is saved - a press in that moment used to start from the
+    // weight before it, and its write then undid what was typed. It also
+    // wins over a step still waiting to be saved.
+    const typedWeight = clampSetValue("weight", value);
+    const token = weightDrafts.typed(setId, typedWeight);
+    const showWeight = (weight) => (prev) =>
+      (prev ?? []).map((set) => (set.sets_id === setId ? { ...set, weight } : set));
 
-    const result = await weightliftingService.updateSetWeight(db, {
-      setId,
-      weight: value,
-    });
+    localSetsRef.current = showWeight(typedWeight)(localSetsRef.current);
+    setLocalSets(showWeight(typedWeight));
+
+    let result;
+
+    try {
+      result = await weightliftingService.updateSetWeight(db, {
+        setId,
+        weight: value,
+      });
+    } catch (error) {
+      console.error("Error saving the weight", error);
+
+      // Not saved: the set shows what is stored again, unless something
+      // newer was put on it meanwhile.
+      if (weightDrafts.discard(setId, token) && mountedRef.current) {
+        const stored = (storedSetsRef.current ?? []).find((set) => set.sets_id === setId);
+
+        setLocalSets(showWeight(stored?.weight ?? null));
+      }
+
+      Alert.alert(
+        t("workout.setList.weightSaveFailedTitle"),
+        t("workout.setList.weightTypedReverted")
+      );
+      return;
+    }
+
+    // A step pressed while this was saved is newer: it stays on screen, and
+    // its own write follows.
+    const isNewest = weightDrafts.settle([{ setId, token }]).has(Number(setId));
+    const withResult = (set) =>
+      isNewest
+        ? { ...set, weight: result.weight, rm_percentage: result.rmPercentage }
+        : { ...set, rm_percentage: result.rmPercentage };
 
     setLocalSets((prev) =>
-      prev.map((set) =>
-        set.sets_id === setId
-          ? {
-              ...set,
-              weight: result.weight,
-              rm_percentage: result.rmPercentage,
-            }
-          : set
-      )
+      prev.map((set) => (set.sets_id === setId ? withResult(set) : set))
     );
 
-    set_selectedSet((prev) =>
-      prev?.sets_id === setId
-        ? {
-            ...prev,
-            weight: result.weight,
-            rm_percentage: result.rmPercentage,
-          }
-        : prev
-    );
+    set_selectedSet((prev) => (prev?.sets_id === setId ? withResult(prev) : prev));
 
     applyPersonalRecordSetIds(result.personalRecordSetIds);
     updateUI();
@@ -937,11 +970,7 @@ const SetList = ({
 
   localSetsRef.current = localSets;
 
-  const weightOf = (set) => {
-    const pending = pendingWeightsRef.current;
-
-    return pending.has(set?.sets_id) ? pending.get(set.sets_id) : parseWeight(set?.weight);
-  };
+  const weightOf = (set) => weightDrafts.weightOf(set?.sets_id, parseWeight(set?.weight));
 
   // Where + starts on an empty set: the nearest set above it with a weight,
   // then last time, then nothing (and so 0 + a step).
@@ -969,7 +998,7 @@ const SetList = ({
     const nextBySetId = new Map(changes.map((change) => [change.setId, change.weight]));
 
     for (const change of changes) {
-      pendingWeightsRef.current.set(change.setId, change.weight);
+      weightDrafts.step(change.setId, change.weight);
     }
 
     setLocalSets((prev) =>
@@ -1042,16 +1071,14 @@ const SetList = ({
     clearTimeout(weightSaveTimerRef.current);
     weightSaveTimerRef.current = null;
 
-    const changes = [...pendingWeightsRef.current.entries()].map(([setId, weight]) => ({
-      setId,
-      weight,
-    }));
+    // The steps stay drafts until the write has gone through: a failed one
+    // keeps them on screen and in the next write.
+    const drafts = weightDrafts.stepsToSave();
+    const changes = drafts.map(({ setId, weight }) => ({ setId, weight }));
 
     if (changes.length === 0) {
       return;
     }
-
-    pendingWeightsRef.current = new Map();
 
     try {
       let saved;
@@ -1069,22 +1096,21 @@ const SetList = ({
         personalRecordSetIds = result.personalRecordSetIds;
       }
 
-      if (mountedRef.current) {
-        const savedBySetId = new Map(saved.map((set) => [set.setId, set]));
+      const current = weightDrafts.settle(drafts);
 
-        // The 1RM % follows the weight; a set pressed again meanwhile keeps
-        // the newer weight on screen.
+      if (mountedRef.current) {
+        const savedBySetId = new Map(saved.map((set) => [Number(set.setId), set]));
+
+        // The weight as stored, and the 1RM % that follows it - except on a
+        // set with something newer on screen, whose own write follows.
         setLocalSets((prev) =>
           prev.map((set) => {
-            const result = savedBySetId.get(set.sets_id);
+            const key = Number(set.sets_id);
+            const result = savedBySetId.get(key);
 
-            if (!result) {
-              return set;
-            }
-
-            return pendingWeightsRef.current.has(set.sets_id)
-              ? { ...set, rm_percentage: result.rmPercentage }
-              : { ...set, weight: result.weight, rm_percentage: result.rmPercentage };
+            return result && current.has(key)
+              ? { ...set, weight: result.weight, rm_percentage: result.rmPercentage }
+              : set;
           })
         );
         applyPersonalRecordSetIds(personalRecordSetIds);
@@ -1093,6 +1119,14 @@ const SetList = ({
       updateUIRef.current?.();
     } catch (error) {
       console.error("Error saving the weight steps", error);
+      Alert.alert(
+        t("workout.setList.weightSaveFailedTitle"),
+        t("workout.setList.weightStepsKept"),
+        [
+          { text: t("common.ok"), style: "cancel" },
+          { text: t("common.retry"), onPress: () => flushWeightStepsRef.current?.() },
+        ]
+      );
     }
   };
 

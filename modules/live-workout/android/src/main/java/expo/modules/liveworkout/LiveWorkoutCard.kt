@@ -2,7 +2,7 @@ package expo.modules.liveworkout
 
 import android.content.Context
 import android.os.Handler
-import android.os.Looper
+import android.os.HandlerThread
 import androidx.core.app.NotificationManagerCompat
 import kotlin.math.max
 
@@ -11,19 +11,33 @@ import kotlin.math.max
 // JS update can never interleave.
 //
 // While resting, and while this process is alive, the card is posted again
-// every 5 s so the ring and the bar move, and once when the rest ends so it
-// leaves rest mode. The countdowns themselves are Chronometers and count
-// without any of this.
+// every 5 s so the collapsed fill and the open bar move, and once when the
+// rest ends so it leaves rest mode. The countdowns themselves are
+// Chronometers and count without any of this.
+//
+// What the card does by itself - a tap, and those re-posts - runs on its own
+// thread, never the main one: each is a parse, the reducer, two synchronous
+// disk writes and the RemoteViews with their ring bitmaps, and the weight
+// buttons are made to be tapped five times in a row. One thread, so taps are
+// handled in the order they came in. start / update / end come on the Expo
+// module's own background queue.
 internal object LiveWorkoutCard {
   private const val TICK_MS = 5_000L
   private const val REST_END_SLACK_MS = 100L
 
-  private val handler = Handler(Looper.getMainLooper())
+  private val worker: Handler by lazy {
+    Handler(HandlerThread("LiveWorkoutCard").apply { start() }.looper)
+  }
   private val tick = Runnable { onTick() }
 
   // The application context, only while a rest is being ticked.
   @Volatile
   private var tickContext: Context? = null
+
+  /** Runs [block] on the card's own thread, after whatever is already waiting there. */
+  fun inBackground(block: () -> Unit) {
+    worker.post(block)
+  }
 
   /** Replaces any card with a new one. True if it is shown. */
   fun start(context: Context, stateJson: String): Boolean {
@@ -125,7 +139,7 @@ internal object LiveWorkoutCard {
   }
 
   private fun scheduleTick(context: Context, view: LiveWorkoutView, now: Double) {
-    handler.removeCallbacks(tick)
+    worker.removeCallbacks(tick)
 
     val rest = view.rest
 
@@ -136,11 +150,11 @@ internal object LiveWorkoutCard {
 
     val untilEnd = ((rest.endsAt - now) * 1000).toLong()
     tickContext = context.applicationContext
-    handler.postDelayed(tick, if (untilEnd > TICK_MS) TICK_MS else max(0L, untilEnd) + REST_END_SLACK_MS)
+    worker.postDelayed(tick, if (untilEnd > TICK_MS) TICK_MS else max(0L, untilEnd) + REST_END_SLACK_MS)
   }
 
   private fun stopTicking() {
-    handler.removeCallbacks(tick)
+    worker.removeCallbacks(tick)
     tickContext = null
   }
 

@@ -271,6 +271,9 @@ const { syncExerciseInstancesWithCloud } = loadAppModule(
   "src/Services/cloudSync/exerciseInstanceSync.js"
 );
 const { syncSetsWithCloud } = loadAppModule("src/Services/cloudSync/setSync.js");
+const { pushDirtyStrengthHierarchyWithCloud } = loadAppModule(
+  "src/Services/cloudSync/hierarchy.js"
+);
 
 /* ------------------------------------------------------------ the phone -- */
 
@@ -738,6 +741,71 @@ async function hierarchyRowEditedDuringItsOwnUpload(db, ids) {
   }
 }
 
+// The push SetSync runs is upload-only. When another phone has edited an
+// exercise since this one did, the exercise's own upload leaves it to the
+// cloud and it stays waiting. The set under it then looks the exercise up
+// (ensureExerciseInstanceCloudIdentity), and that used to write the cloud's
+// sync_version onto the waiting row: the next push found the two versions
+// equal and sent this phone's older note over the other phone's newer one,
+// and no download ever put it back.
+async function parentBeatenByTheCloudKeepsItsVersion(db, { exerciseId, setId }) {
+  const exercise = () =>
+    localRow(db, "Exercise_Instance", "exercise_instance_id", exerciseId);
+  const set = () => localRow(db, "Set", "sets_id", setId);
+
+  await weightliftingRepository.updateExerciseNote(db, {
+    exerciseId,
+    note: "Written on this phone",
+  });
+  await weightliftingRepository.updateSetField(db, {
+    field: "reps",
+    value: 7,
+    setId,
+  });
+
+  const phoneVersion = exercise().sync_version;
+  const otherVersion = phoneVersion + 60;
+  const cloudId = exercise().cloud_exercise_instance_id;
+
+  // The other phone, a minute later.
+  await cloud
+    .from("exercise_instance")
+    .update({
+      note: "Written on the other phone",
+      sync_version: otherVersion,
+      last_updated: new Date(otherVersion * 1000).toISOString(),
+    })
+    .eq("id", cloudId);
+
+  await pushDirtyStrengthHierarchyWithCloud(db);
+
+  assert.strictEqual(cloudRow("set", set().cloud_set_id).reps, 7, "the set did not go up");
+  assert.strictEqual(
+    cloudRow("exercise_instance", cloudId).note,
+    "Written on the other phone",
+    "the older edit went up over the newer one"
+  );
+  assert.strictEqual(exercise().needs_sync, 1);
+  assert.strictEqual(
+    exercise().sync_version,
+    phoneVersion,
+    "looking the parent up gave the waiting exercise the cloud's version"
+  );
+
+  await pushDirtyStrengthHierarchyWithCloud(db);
+  assert.strictEqual(
+    cloudRow("exercise_instance", cloudId).note,
+    "Written on the other phone",
+    "the next push sent the older edit over the newer one"
+  );
+
+  // The next full sync brings the newer edit down, and it is settled.
+  await syncExerciseInstancesWithCloud(db);
+  assert.strictEqual(exercise().note, "Written on the other phone");
+  assert.strictEqual(exercise().needs_sync, 0);
+  assert.strictEqual(exercise().sync_version, otherVersion);
+}
+
 // The reconcile marks rows synced through the same functions, from a snapshot
 // it read before its own writes, so the rule is checked on them directly as
 // well.
@@ -909,6 +977,103 @@ async function markSyncedOnlyClearsTheVersionItWasGiven(db, ids) {
   }
 }
 
+// The identity helpers are called for a row the cloud already has: by a
+// child's upload for its parent, by a mark*Synced whose version no longer
+// matches, and by a reconcile for a row with an edit waiting. A row with
+// nothing to upload takes the cloud's version; a waiting one keeps its own
+// version and deletion, which belong to its edit.
+async function cloudIdentityKeepsAWaitingRowsVersion(db, ids) {
+  const HELPERS = [
+    ["Program", "program_id", "cloud_program_id", ids.programId,
+      (args) => programRepository.updateProgramCloudIdentity(db, { programId: ids.programId, cloudProgramId: args.cloudId, ...args.rest })],
+    ["Mesocycle", "mesocycle_id", "cloud_mesocycle_id", ids.mesocycleId,
+      (args) => programRepository.updateMesocycleCloudIdentity(db, { mesocycleId: ids.mesocycleId, cloudMesocycleId: args.cloudId, ...args.rest })],
+    ["Microcycle", "microcycle_id", "cloud_microcycle_id", ids.microcycleId,
+      (args) => programRepository.updateMicrocycleCloudIdentity(db, { microcycleId: ids.microcycleId, cloudMicrocycleId: args.cloudId, ...args.rest })],
+    ["Day", "day_id", "cloud_day_id", ids.dayId,
+      (args) => programRepository.updateDayCloudIdentity(db, { dayId: ids.dayId, cloudDayId: args.cloudId, ...args.rest })],
+    ["Workout_Type_Instance", "workout_id", "cloud_workout_type_instance_id", ids.workoutId,
+      (args) => programRepository.updateWorkoutCloudIdentity(db, { workoutId: ids.workoutId, cloudWorkoutTypeInstanceId: args.cloudId, ...args.rest })],
+    ["Exercise_Instance", "exercise_instance_id", "cloud_exercise_instance_id", ids.exerciseId,
+      (args) => weightliftingRepository.updateExerciseCloudIdentity(db, { exerciseId: ids.exerciseId, cloudExerciseInstanceId: args.cloudId, ...args.rest })],
+    ["Set", "sets_id", "cloud_set_id", ids.setId,
+      (args) => weightliftingRepository.updateSetCloudIdentity(db, { setId: ids.setId, cloudSetId: args.cloudId, ...args.rest })],
+  ];
+
+  for (const [table, idColumn, cloudIdColumn, id, identify] of HELPERS) {
+    const row = () => localRow(db, table, idColumn, id);
+    const cloudId = row()[cloudIdColumn] + 2000;
+    const setRow = (needsSync) =>
+      db.sqlite
+        .prepare(`UPDATE "${table}" SET needs_sync = ?, sync_version = 500, deleted_at = NULL WHERE ${idColumn} = ?;`)
+        .run(needsSync, id);
+    const fromTheCloud = {
+      syncId: `${table}-cloud-sync-id`,
+      syncVersion: 400,
+      deletedAt: "2026-09-27T10:00:00.000Z",
+    };
+
+    setRow(1);
+    await identify({ cloudId, rest: fromTheCloud });
+    assert.strictEqual(row()[cloudIdColumn], cloudId, `${table}: the cloud identity was not recorded`);
+    assert.strictEqual(row().sync_id, fromTheCloud.syncId, `${table}: the cloud's sync_id was not recorded`);
+    assert.strictEqual(row().sync_version, 500, `${table}: a waiting row was given the cloud's version`);
+    assert.strictEqual(row().deleted_at, null, `${table}: a waiting row was given the cloud's deletion`);
+    assert.strictEqual(row().needs_sync, 1);
+
+    setRow(0);
+    await identify({ cloudId, rest: fromTheCloud });
+    assert.strictEqual(row().sync_version, 400, `${table}: a row with nothing to upload keeps an old version`);
+    assert.strictEqual(row().deleted_at, fromTheCloud.deletedAt);
+  }
+}
+
+// All seven bind through sqliteParams: an undefined cloud id reaches the
+// database as a null, where a raw array hands expo-sqlite a value it may not
+// bind. Run against node:sqlite with nothing in between, which refuses one.
+async function markSyncedBindsWhatSqliteCanTake(db, ids) {
+  const strict = {
+    ...db,
+    async runAsync(sql, params = []) {
+      const result = db.sqlite.prepare(sql).run(...params);
+
+      return {
+        lastInsertRowId: Number(result.lastInsertRowid),
+        changes: Number(result.changes),
+      };
+    },
+  };
+  const MARKERS = [
+    ["Program", "program_id", ids.programId,
+      (expectedSyncVersion) => programRepository.markProgramSynced(strict, { programId: ids.programId, expectedSyncVersion, cloudProgramId: undefined })],
+    ["Mesocycle", "mesocycle_id", ids.mesocycleId,
+      (expectedSyncVersion) => programRepository.markMesocycleSynced(strict, { mesocycleId: ids.mesocycleId, expectedSyncVersion, cloudMesocycleId: undefined })],
+    ["Microcycle", "microcycle_id", ids.microcycleId,
+      (expectedSyncVersion) => programRepository.markMicrocycleSynced(strict, { microcycleId: ids.microcycleId, expectedSyncVersion, cloudMicrocycleId: undefined })],
+    ["Day", "day_id", ids.dayId,
+      (expectedSyncVersion) => programRepository.markDaySynced(strict, { dayId: ids.dayId, expectedSyncVersion, cloudDayId: undefined })],
+    ["Workout_Type_Instance", "workout_id", ids.workoutId,
+      (expectedSyncVersion) => programRepository.markWorkoutSynced(strict, { workoutId: ids.workoutId, expectedSyncVersion, cloudWorkoutTypeInstanceId: undefined })],
+    ["Exercise_Instance", "exercise_instance_id", ids.exerciseId,
+      (expectedSyncVersion) => weightliftingRepository.markExerciseSynced(strict, { exerciseId: ids.exerciseId, expectedSyncVersion, cloudExerciseInstanceId: undefined })],
+    ["Set", "sets_id", ids.setId,
+      (expectedSyncVersion) => weightliftingRepository.markSetSynced(strict, { setId: ids.setId, expectedSyncVersion, cloudSetId: undefined })],
+  ];
+
+  for (const [table, idColumn, id, mark] of MARKERS) {
+    const row = () => localRow(db, table, idColumn, id);
+
+    db.sqlite.prepare(`UPDATE "${table}" SET needs_sync = 1 WHERE ${idColumn} = ?;`).run(id);
+    await mark(row().sync_version);
+    assert.strictEqual(row().needs_sync, 0, `${table}: not marked synced`);
+
+    // And the fallback, for a version that no longer matches.
+    db.sqlite.prepare(`UPDATE "${table}" SET needs_sync = 1 WHERE ${idColumn} = ?;`).run(id);
+    await mark(row().sync_version - 1);
+    assert.strictEqual(row().needs_sync, 1, `${table}: a newer write lost its flag`);
+  }
+}
+
 // Every call site hands over the version its decision was made from.
 function everyCallSitePassesTheVersion() {
   const CALLERS = [
@@ -951,12 +1116,16 @@ async function run() {
   await noteEditedDuringItsOwnUpload(db, ids);
   await setTickedOffDuringTheWeightUpload(db, ids);
   await hierarchyRowEditedDuringItsOwnUpload(db, ids);
+  await parentBeatenByTheCloudKeepsItsVersion(db, ids);
   await markSyncedOnlyClearsTheVersionItWasGiven(db, ids);
+  await cloudIdentityKeepsAWaitingRowsVersion(db, ids);
+  await markSyncedBindsWhatSqliteCanTake(db, ids);
   everyCallSitePassesTheVersion();
 
   console.log(
     "Sync lost update: a write during its row's upload keeps its flag and " +
-      "goes up next pass, at every level from program to set."
+      "goes up next pass, at every level from program to set; looking a " +
+      "row up in the cloud never takes the version of an edit still waiting."
   );
 }
 
