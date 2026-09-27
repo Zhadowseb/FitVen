@@ -1413,10 +1413,13 @@ export async function updateExerciseFromCloud(
   );
 }
 
+// Clears needs_sync only while the row is still at `expectedSyncVersion`. See
+// markWorkoutSynced in programRepository, which this mirrors.
 export async function markExerciseSynced(
   db,
   {
     exerciseId,
+    expectedSyncVersion,
     cloudExerciseInstanceId,
     remoteLocalExerciseInstanceId = null,
     syncId = null,
@@ -1424,7 +1427,11 @@ export async function markExerciseSynced(
     deletedAt = null,
   }
 ) {
-  await db.runAsync(
+  if (expectedSyncVersion === undefined) {
+    throw new Error("markExerciseSynced needs the expectedSyncVersion it read.");
+  }
+
+  const result = await db.runAsync(
     `UPDATE Exercise_Instance
      SET cloud_exercise_instance_id = ?,
          remote_local_exercise_instance_id = COALESCE(
@@ -1436,7 +1443,8 @@ export async function markExerciseSynced(
          sync_version = COALESCE(?, sync_version),
          deleted_at = ?,
          needs_sync = 0
-     WHERE exercise_instance_id = ?;`,
+     WHERE exercise_instance_id = ?
+       AND sync_version IS ?;`,
     sqliteParams([
       cloudExerciseInstanceId,
       remoteLocalExerciseInstanceId,
@@ -1444,8 +1452,20 @@ export async function markExerciseSynced(
       syncVersion,
       deletedAt,
       exerciseId,
+      expectedSyncVersion,
     ])
   );
+
+  if (result.changes > 0) {
+    return;
+  }
+
+  await updateExerciseCloudIdentity(db, {
+    exerciseId,
+    cloudExerciseInstanceId,
+    remoteLocalExerciseInstanceId,
+    syncId,
+  });
 }
 
 export async function updateExerciseCloudIdentity(
@@ -1859,10 +1879,13 @@ export async function updateSetFromCloud(
   );
 }
 
+// Clears needs_sync only while the row is still at `expectedSyncVersion`. See
+// markWorkoutSynced in programRepository, which this mirrors.
 export async function markSetSynced(
   db,
   {
     setId,
+    expectedSyncVersion,
     cloudSetId,
     remoteLocalSetId = null,
     syncId = null,
@@ -1870,7 +1893,11 @@ export async function markSetSynced(
     deletedAt = null,
   }
 ) {
-  await db.runAsync(
+  if (expectedSyncVersion === undefined) {
+    throw new Error("markSetSynced needs the expectedSyncVersion it read.");
+  }
+
+  const result = await db.runAsync(
     `UPDATE "Set"
      SET cloud_set_id = ?,
          remote_local_set_id = COALESCE(
@@ -1882,7 +1909,8 @@ export async function markSetSynced(
          sync_version = COALESCE(?, sync_version),
          deleted_at = ?,
          needs_sync = 0
-     WHERE sets_id = ?;`,
+     WHERE sets_id = ?
+       AND sync_version IS ?;`,
     sqliteParams([
       cloudSetId,
       remoteLocalSetId,
@@ -1890,8 +1918,20 @@ export async function markSetSynced(
       syncVersion,
       deletedAt,
       setId,
+      expectedSyncVersion,
     ])
   );
+
+  if (result.changes > 0) {
+    return;
+  }
+
+  await updateSetCloudIdentity(db, {
+    setId,
+    cloudSetId,
+    remoteLocalSetId,
+    syncId,
+  });
 }
 
 export async function updateSetCloudIdentity(

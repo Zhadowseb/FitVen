@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.15.3] - Unreleased
+### Fixed
+- **A workout started while its restart was uploading stays started.** When the cloud answered, the upload cleared the workout's `needs_sync` by id alone. Start had written `timer_start` and `original_start_time` with a new `sync_version` in the meantime, so the start was never sent, and the download straight after the upload put the workout back to not started.
+  - `markWorkoutSynced`, `markExerciseSynced` and `markSetSynced` now take `expectedSyncVersion`, the `sync_version` the row was read at, and clear the flag only if the row still has it (`WHERE … AND sync_version IS ?`). A row that changed keeps its flag and its own version, records the cloud id it got back, and goes up with the next pass.
+  - Exercise instances and sets had the same race. A note typed, or a set ticked off, while that row was uploading was lost the same way.
+  - The reconcile marks rows synced through the same three functions, so it has the guard too.
+  - Program, block, week and day rows still clear the flag the old way.
+- **Tests:** `npm run test:sync-lost-update` runs the real sync modules against the app's schema in `node:sqlite` and an in-memory cloud, with the user's write landing while the upload is out, for all three.
+
+---
 ## [2.15.2] - Unreleased
 ### Fixed
 From the owner's test on an Android phone.
