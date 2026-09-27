@@ -9,7 +9,8 @@
 // differed from the cloud, and put the workout back to not started. The start
 // was never sent.
 //
-// Exercise instances and sets were marked synced the same way. So a row is now
+// Every other level of the strength hierarchy - program, block, week, day,
+// exercise instance and set - was marked synced the same way. So a row is now
 // only marked synced if its sync_version is still the one the decision was
 // made from; otherwise it keeps its flag and its version, records the cloud
 // identity it was given, and goes up with the next pass.
@@ -253,6 +254,16 @@ const workoutRepository = loadAppModule("src/Repository/workoutRepository.js");
 const { timestampToCloudTimeString } = loadAppModule(
   "src/Services/cloudSync/cloudSyncFields.js"
 );
+const { syncProgramsWithCloud } = loadAppModule(
+  "src/Services/cloudSync/programSync.js"
+);
+const { syncMesocyclesWithCloud } = loadAppModule(
+  "src/Services/cloudSync/mesocycleSync.js"
+);
+const { syncMicrocyclesWithCloud } = loadAppModule(
+  "src/Services/cloudSync/microcycleSync.js"
+);
+const { syncDaysWithCloud } = loadAppModule("src/Services/cloudSync/daySync.js");
 const { syncWorkoutTypeInstancesWithCloud } = loadAppModule(
   "src/Services/cloudSync/workoutTypeInstanceSync.js"
 );
@@ -388,7 +399,15 @@ function seed(db) {
     exerciseId
   );
 
-  return { workoutId, exerciseId, setId };
+  return {
+    programId,
+    mesocycleId,
+    microcycleId,
+    dayId,
+    workoutId,
+    exerciseId,
+    setId,
+  };
 }
 
 const localRow = (db, table, idColumn, id) =>
@@ -599,11 +618,196 @@ async function setTickedOffDuringTheWeightUpload(db, { setId }) {
   assert.strictEqual(cloudRow("set", cloudId).sync_version, doneVersion);
 }
 
-// The reconcile marks rows synced through the same three functions, from a
-// snapshot it read before its own writes, so the rule is checked on them
-// directly as well.
+// Program, block, week and day each upload through a module of their own, and
+// each had the same race. One edit per level, the second landing while the
+// first is uploading.
+async function hierarchyRowEditedDuringItsOwnUpload(db, ids) {
+  const EDITS = [
+    {
+      // Renamed, and the name corrected while the first rename was out.
+      table: "Program",
+      idColumn: "program_id",
+      cloudIdColumn: "cloud_program_id",
+      cloudTable: "Program",
+      id: ids.programId,
+      sync: syncProgramsWithCloud,
+      field: "program_name",
+      first: "Strength block",
+      second: "Strength block - spring",
+      write: (programName) =>
+        programRepository.updateProgramName(db, {
+          programId: ids.programId,
+          programName,
+        }),
+    },
+    {
+      table: "Mesocycle",
+      idColumn: "mesocycle_id",
+      cloudIdColumn: "cloud_mesocycle_id",
+      cloudTable: "Mesocycle",
+      id: ids.mesocycleId,
+      sync: syncMesocyclesWithCloud,
+      field: "focus",
+      first: "Hypertrophy",
+      second: "Strength",
+      write: (focus) =>
+        programRepository.updateMesocycleFocus(db, {
+          mesocycleId: ids.mesocycleId,
+          focus,
+        }),
+    },
+    {
+      table: "Microcycle",
+      idColumn: "microcycle_id",
+      cloudIdColumn: "cloud_microcycle_id",
+      cloudTable: "Microcycle",
+      id: ids.microcycleId,
+      sync: syncMicrocyclesWithCloud,
+      field: "focus",
+      first: "Volume",
+      second: "Deload",
+      write: (focus) =>
+        programRepository.updateMicrocycleFocus(db, {
+          microcycleId: ids.microcycleId,
+          focus,
+        }),
+    },
+    {
+      // Marked sick by mistake, and taken back while that was uploading.
+      table: "Day",
+      idColumn: "day_id",
+      cloudIdColumn: "cloud_day_id",
+      cloudTable: "Day",
+      id: ids.dayId,
+      sync: syncDaysWithCloud,
+      field: "is_sick",
+      first: 1,
+      second: 0,
+      cloudValue: Boolean,
+      write: (isSick) =>
+        programRepository.updateDaySick(db, {
+          dayId: ids.dayId,
+          isSick: isSick === 1,
+        }),
+    },
+  ];
+
+  for (const edit of EDITS) {
+    const { table, idColumn, cloudIdColumn, cloudTable, id, sync, field } = edit;
+    const { first, second, write } = edit;
+    const cloudValue = edit.cloudValue ?? ((value) => value);
+    const row = () => localRow(db, table, idColumn, id);
+    let secondVersion = null;
+
+    await write(first);
+
+    cloud.duringNextWrite(cloudTable, async () => {
+      await write(second);
+      secondVersion = row().sync_version;
+    });
+
+    await sync(db);
+    cloud.assertEveryWriteHappened();
+
+    const cloudId = row()[cloudIdColumn];
+
+    assert.strictEqual(
+      row()[field],
+      second,
+      `${table}: the download after the upload put the first edit back`
+    );
+    assert.strictEqual(row().needs_sync, 1, `${table}: the second edit lost its flag`);
+    assert.strictEqual(
+      row().sync_version,
+      secondVersion,
+      `${table}: the upload wrote its version over the second edit's`
+    );
+    assert.strictEqual(
+      cloudRow(cloudTable, cloudId)[field],
+      cloudValue(first),
+      `${table}: the cloud should still hold the first edit`
+    );
+
+    // The pass the second edit queued behind it sends it.
+    await sync(db);
+
+    assert.strictEqual(row().needs_sync, 0, `${table}: the second edit never came clean`);
+    assert.strictEqual(row()[field], second);
+    assert.strictEqual(cloudRow(cloudTable, cloudId)[field], cloudValue(second));
+    assert.strictEqual(cloudRow(cloudTable, cloudId).sync_version, secondVersion);
+  }
+}
+
+// The reconcile marks rows synced through the same functions, from a snapshot
+// it read before its own writes, so the rule is checked on them directly as
+// well.
 async function markSyncedOnlyClearsTheVersionItWasGiven(db, ids) {
   const MARKERS = [
+    {
+      table: "Program",
+      idColumn: "program_id",
+      cloudIdColumn: "cloud_program_id",
+      mark: (args) =>
+        programRepository.markProgramSynced(db, {
+          programId: ids.programId,
+          cloudProgramId: args.cloudId,
+          ...args.rest,
+        }),
+      dirty: () =>
+        programRepository.updateProgramName(db, {
+          programId: ids.programId,
+          programName: "again",
+        }),
+      id: ids.programId,
+    },
+    {
+      table: "Mesocycle",
+      idColumn: "mesocycle_id",
+      cloudIdColumn: "cloud_mesocycle_id",
+      mark: (args) =>
+        programRepository.markMesocycleSynced(db, {
+          mesocycleId: ids.mesocycleId,
+          cloudMesocycleId: args.cloudId,
+          ...args.rest,
+        }),
+      dirty: () =>
+        programRepository.updateMesocycleFocus(db, {
+          mesocycleId: ids.mesocycleId,
+          focus: "again",
+        }),
+      id: ids.mesocycleId,
+    },
+    {
+      table: "Microcycle",
+      idColumn: "microcycle_id",
+      cloudIdColumn: "cloud_microcycle_id",
+      mark: (args) =>
+        programRepository.markMicrocycleSynced(db, {
+          microcycleId: ids.microcycleId,
+          cloudMicrocycleId: args.cloudId,
+          ...args.rest,
+        }),
+      dirty: () =>
+        programRepository.updateMicrocycleFocus(db, {
+          microcycleId: ids.microcycleId,
+          focus: "again",
+        }),
+      id: ids.microcycleId,
+    },
+    {
+      table: "Day",
+      idColumn: "day_id",
+      cloudIdColumn: "cloud_day_id",
+      mark: (args) =>
+        programRepository.markDaySynced(db, {
+          dayId: ids.dayId,
+          cloudDayId: args.cloudId,
+          ...args.rest,
+        }),
+      dirty: () =>
+        programRepository.updateDaySick(db, { dayId: ids.dayId, isSick: true }),
+      id: ids.dayId,
+    },
     {
       table: "Workout_Type_Instance",
       idColumn: "workout_id",
@@ -708,6 +912,10 @@ async function markSyncedOnlyClearsTheVersionItWasGiven(db, ids) {
 // Every call site hands over the version its decision was made from.
 function everyCallSitePassesTheVersion() {
   const CALLERS = [
+    ["programSync.js", "programRepository.markProgramSynced", 2],
+    ["mesocycleSync.js", "programRepository.markMesocycleSynced", 3],
+    ["microcycleSync.js", "programRepository.markMicrocycleSynced", 3],
+    ["daySync.js", "programRepository.markDaySynced", 3],
     ["workoutTypeInstanceSync.js", "programRepository.markWorkoutSynced", 3],
     ["exerciseInstanceSync.js", "weightliftingRepository.markExerciseSynced", 2],
     ["setSync.js", "weightliftingRepository.markSetSynced", 3],
@@ -742,12 +950,13 @@ async function run() {
   await startDuringTheRestartUpload(db, ids);
   await noteEditedDuringItsOwnUpload(db, ids);
   await setTickedOffDuringTheWeightUpload(db, ids);
+  await hierarchyRowEditedDuringItsOwnUpload(db, ids);
   await markSyncedOnlyClearsTheVersionItWasGiven(db, ids);
   everyCallSitePassesTheVersion();
 
   console.log(
     "Sync lost update: a write during its row's upload keeps its flag and " +
-      "goes up next pass, for workouts, exercise instances and sets."
+      "goes up next pass, at every level from program to set."
   );
 }
 

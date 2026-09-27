@@ -137,6 +137,7 @@ export async function uploadDirtyMesocycles(
 
     await programRepository.markMesocycleSynced(db, {
       mesocycleId: localMesocycle.mesocycle_id,
+      expectedSyncVersion: localMesocycle.sync_version,
       cloudMesocycleId,
       remoteLocalMesocycleId,
       syncId: normalizeSyncId(syncResult.cloudRecord?.sync_id),
@@ -355,6 +356,7 @@ async function reconcileMesocyclesFromCloud(db, userId) {
         ) {
           await programRepository.markMesocycleSynced(db, {
             mesocycleId: localMesocycle.mesocycle_id,
+            expectedSyncVersion: localMesocycle.sync_version,
             cloudMesocycleId,
             remoteLocalMesocycleId: localMesocycleId,
             syncId: cloudSyncId,
@@ -396,6 +398,7 @@ async function reconcileMesocyclesFromCloud(db, userId) {
         ) {
           await programRepository.markMesocycleSynced(db, {
             mesocycleId: localMesocycle.mesocycle_id,
+            expectedSyncVersion: localMesocycle.sync_version,
             cloudMesocycleId,
             remoteLocalMesocycleId: localMesocycleId,
             syncId: cloudSyncId,
