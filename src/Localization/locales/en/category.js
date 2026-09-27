@@ -120,6 +120,8 @@ export default {
   // "Your progress" and "Your points".
   personal: {
     progress: "Your progress",
+    progressEmpty:
+      "Do at least {sets} sets of the same exercise in the last {days} days and in the {days} days before, and your progress shows here.",
     points: "Your points",
     pullups: "Pull",
     dips: "Dip",

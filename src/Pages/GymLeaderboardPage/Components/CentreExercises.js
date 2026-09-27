@@ -15,9 +15,12 @@ export const EXERCISE_PREVIEW_COUNT = 5;
  * The centre's exercises as a section of their own, under the categories:
  * the ones most people lift here, each a tap from its list, and "All
  * exercises" - every exercise ranked here, a chip each on the exercise page.
- * `exercises` is gymUtils.listCentreExercises, most lifters first.
+ * `exercises` is gymUtils.listCentreExercises, most lifters first: at least
+ * the featured ones and the EXERCISE_PREVIEW_COUNT most lifted of the rest.
+ * `total` is how many there are in all (gymUtils.countCentreExercises), for
+ * a page that was not sent every one.
  */
-export default function CentreExercises({ exercises = [], onOpen, onOpenAll }) {
+export default function CentreExercises({ exercises = [], total = null, onOpen, onOpenAll }) {
   const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -70,7 +73,7 @@ export default function CentreExercises({ exercises = [], onOpen, onOpenAll }) {
               {t("gyms.overview.allExercises")}
             </ThemedText>
             <ThemedText style={styles.allDetail} setColor={theme.quietText} numberOfLines={1}>
-              {t("gyms.centreExercises.allDetail", { count: exercises.length })}
+              {t("gyms.centreExercises.allDetail", { count: total ?? exercises.length })}
             </ThemedText>
           </View>
           <ChevronRight width={18} height={18} color={theme.primaryText} />

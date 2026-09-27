@@ -60,6 +60,14 @@ Using `Set` as the example:
 
 Steps 5 to 8 are the ones that get skipped. They are the cloud half.
 
+Sets and exercise instances have a second cloud reader: opening a workout
+with sets missing, or copying a recent one, runs
+`hydrateWorkoutStrengthDataFromCloud` in `weightliftingService.js`. For `Set`
+it selects `SET_CLOUD_SYNC_SELECT` and reads through `getComparableSetSnapshot`,
+so a set field follows the field table there by itself. For `Exercise_Instance`
+it has its own column list and payload: add the field there by hand, or the
+hydration writes the row without it.
+
 Step 11 can land after the app does, and until it has, a cloud select or
 payload that names the column fails the whole request - every row of that
 entity stops syncing, not just the field. For a column the app may reach
@@ -127,6 +135,12 @@ under a second normalisation.
   return whether they wrote. On `false` the caller leaves its count and maps
   alone: the user's edit keeps its flag and goes up.
   `npm run test:sync-lost-update` covers both.
+- `update*CloudIdentity` records which cloud row a row is. It takes the
+  cloud's `sync_version` and `deleted_at` only for a row with nothing to
+  upload; a row with `needs_sync = 1` keeps its own, because its upload
+  compares that version with the cloud's to decide which edit wins. A child's
+  upload looks its parent up through these (`ensureXCloudIdentity` in
+  `cloudSyncShared.js`), so do not route a version through them.
 - Cloud sync is never triggered directly. Always `syncXInBackground(db)` or
   `enqueueSync()`, which serialise everything through one promise chain in
   `Services/syncScheduler.js`. Parallel calls break parent-before-child upload.

@@ -118,6 +118,8 @@ export default {
   // "Din fremgang" og "Dine point".
   personal: {
     progress: "Din fremgang",
+    progressEmpty:
+      "Lav mindst {sets} sæt af den samme øvelse både de sidste {days} dage og de {days} dage før, så ser du din fremgang her.",
     points: "Dine point",
     pullups: "Pull",
     dips: "Dip",

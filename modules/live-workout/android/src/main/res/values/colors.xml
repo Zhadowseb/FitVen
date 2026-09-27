@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- The card's colours on a light notification shade (e.g. One UI in light
      mode): dark text, and the tints laid over black. values-night holds the
-     dark shade the design is drawn for. The orange and the ink on it, and the
-     weight buttons' red and green, are the same in both. -->
+     dark shade the design is drawn for. The orange and the ink on it are the
+     same in both, and so are the weight buttons' fills and edges; their text
+     is darker here and lighter there, so it reads at 4.5:1 or more. -->
 <resources>
   <color name="live_workout_orange">#F7742E</color>
   <color name="live_workout_ink">#14100C</color>
@@ -29,13 +30,21 @@
   <!-- orange @ 0.34: what is left of the rest, behind the collapsed card -->
   <color name="live_workout_rest_fill">#57F7742E</color>
 
-  <!-- The weight buttons (1e): −step in danger #F0605A, +step in secondary
-       #4ED39A, each on its colour @ 0.16 with a 1 dp edge @ 0.45. Red and
-       green read on a light and a dark shade alike. -->
-  <color name="live_workout_weight_minus">#F0605A</color>
+  <!-- The weight buttons (1e): −step on danger #F0605A, +step on secondary
+       #4ED39A, each its colour @ 0.16 with a 1 dp edge @ 0.45, the same on
+       both shades.
+
+       Their text ("−", "2,5 kg": 17/700 and 13/800, so not large text) needs
+       4.5:1, and the design's own red and green give 2.4-3.2:1 and 1.5-1.9:1
+       on a light shade. So the text here is the same hue, darker. Against the
+       button's fill laid over the shade - white, #F7F7F7 (One UI), #F3EDF7
+       (Material 3 surface), #EEF0F3 - and against the bare shade:
+         red   #BA1811  4.80-6.51:1
+         green #1C6F4B  4.89-6.13:1 -->
+  <color name="live_workout_weight_minus_text">#BA1811</color>
   <color name="live_workout_weight_minus_fill">#29F0605A</color>
   <color name="live_workout_weight_minus_edge">#73F0605A</color>
-  <color name="live_workout_weight_plus">#4ED39A</color>
+  <color name="live_workout_weight_plus_text">#1C6F4B</color>
   <color name="live_workout_weight_plus_fill">#294ED39A</color>
   <color name="live_workout_weight_plus_edge">#734ED39A</color>
 </resources>

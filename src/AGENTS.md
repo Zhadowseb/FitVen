@@ -92,10 +92,14 @@ This file applies to everything inside `src/`.
   locale rather than the device's.
 - Workout types are stored in English (`Resistance`, `Upperbody`, `Run`,
   `Walk`...), and a workout nobody named has its type as its `label`. Draw a
-  type with `workoutTypeLabel` and a workout's name with `workoutDisplayName`
-  from `src/Utils/workoutTypeLabel.js`; never render `label` or
-  `workout_type` as it is. Only what is drawn changes - a name the user
-  typed stays as typed, and nothing stored is translated.
+  type with `workoutTypeLabel` and a workout's name with
+  `workoutDisplayName(label, t, workoutType)` from
+  `src/Utils/workoutTypeLabel.js`; never render `label` or `workout_type` as
+  it is, and pass the row's type - it is what tells the type fallback from a
+  typed "Run". Only what is drawn changes - a name the user typed stays as
+  typed, and nothing stored is translated. The one case it cannot see: the
+  names the app gives a strength workout after its exercises ("Push",
+  "Legs") are stored like typed ones, so "Legs" typed on one reads "Ben".
 
 ## What "Exercise" Means
 

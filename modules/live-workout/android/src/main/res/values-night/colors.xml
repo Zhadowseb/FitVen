@@ -14,4 +14,13 @@
   <color name="live_workout_chip_todo">#0FFFFFFF</color>
   <!-- white @ 0.16 -->
   <color name="live_workout_ripple">#29FFFFFF</color>
+
+  <!-- The weight buttons' text on a dark shade (see values/colors.xml).
+       Against the button's fill laid over #1D2027 (the design), #202124
+       (AOSP), #171717 (One UI) and black, and against the bare shade: the
+       design's green #4ED39A gives 6.09-11.11:1 and stays; its red #F0605A
+       gives only 4.05-4.53:1 on the fill, so the text is a lighter red,
+         #F27974  4.81-7.76:1 -->
+  <color name="live_workout_weight_minus_text">#F27974</color>
+  <color name="live_workout_weight_plus_text">#4ED39A</color>
 </resources>

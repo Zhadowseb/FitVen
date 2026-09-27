@@ -257,6 +257,21 @@ export function listCentreExercises(overview) {
 }
 
 /**
+ * How many exercises are ranked at the centre, for "All exercises": the ones
+ * listCentreExercises finds in the overview, and the ones the overview left
+ * out because it was asked for fewer (more_limit). `moreTotal` counts every
+ * one of the rest, sent or not.
+ */
+export function countCentreExercises(overview) {
+  const notSent = Math.max(
+    0,
+    (toFiniteNumber(overview?.moreTotal) ?? 0) - (overview?.more?.length ?? 0)
+  );
+
+  return listCentreExercises(overview).length + notSent;
+}
+
+/**
  * The exercises whose name holds what was typed, best match first: the name
  * starting with it, then a word in it, then anywhere - and within each, the
  * list's own order (most lifters first). Empty for an empty query.

@@ -14,7 +14,9 @@ import {
   pickTabWeight,
   planWeightModeSwitch,
   resolveWeightMode,
+  rmPercentageOf,
   toggleWeight,
+  weightAtRmPercentage,
   weightModeOf,
 } from "@utils/weightMode";
 import { notifyWorkoutDataChanged } from "@utils/workoutDataEvents";
@@ -29,13 +31,17 @@ import {
 } from "../Database/supaBaseClient";
 import * as workoutService from "./workoutService";
 import {
+  SET_CLOUD_SYNC_SELECT,
+  SET_CLOUD_TABLE,
   compareEntitySyncVersions,
   createPendingDeleteIndex,
+  getComparableSetSnapshot,
+  probeSetDecimalColumns,
   queueCloudDeletesForExerciseSets,
   setDecimalColumns,
 } from "./cloudSync/cloudSyncShared";
 import {
-  normalizeSetDecimal,
+  hasSetDecimals,
   resolveCloudSetDecimals,
 } from "@utils/setDecimals";
 import { withTransaction } from "./shared";
@@ -155,9 +161,6 @@ const SECONDARY_ACTIVATION_LEVEL = "secondary";
 const EXERCISE_INSTANCE_CLOUD_TABLE = "exercise_instance";
 const EXERCISE_INSTANCE_CLOUD_SELECT =
   "id, local_exercise_instance_id, sync_id, sync_version, deleted_at, last_updated, is_deleting, delete_requested_at, local_watchers, cloud_workout_type_instance_id, exercise_name, exercise_order, sets, visible_columns, note, done";
-const SET_CLOUD_TABLE = "set";
-const SET_CLOUD_SELECT =
-  "id, local_set_id, sync_id, sync_version, deleted_at, last_updated, is_deleting, delete_requested_at, local_watchers, cloud_exercise_instance_id, set_number, personal_record, pause, rpe, weight, rm_percentage, reps, done, failed, amrap, note";
 const CLASSIFIABLE_WORKOUT_TYPES = new Set([
   "Resistance",
   "StrengthTraining",
@@ -3565,6 +3568,17 @@ async function hydrateWorkoutStrengthDataFromCloud(db, workoutId) {
         continue;
       }
 
+      // An edit still waiting to upload is kept unless the cloud's copy is
+      // newer - the exercise sync's rule (reconcileExerciseInstancesFromCloud).
+      // Opening or copying a workout must not put the cloud's older note or
+      // weight mode over one changed offline.
+      if (
+        Number(localExercise.needs_sync) === 1 &&
+        compareEntitySyncVersions(localExercise, cloudExercise) >= 0
+      ) {
+        continue;
+      }
+
       // A write since the read above keeps its flag, and goes up.
       const applied = await weightliftingRepository.updateExerciseFromCloud(db, {
         exerciseId: localExercise.exercise_instance_id,
@@ -3602,9 +3616,13 @@ async function hydrateWorkoutStrengthDataFromCloud(db, workoutId) {
     return didHydrate;
   }
 
+  // The set sync's own column list, so a field added to the set (the
+  // checklist in Services/AGENTS.md) is read here too. The hydration once had
+  // a list of its own without set_type and amrap_target, and every warm-up it
+  // wrote came back as a working set.
   const { data: cloudSets, error: cloudSetsError } = await supabase
     .from(SET_CLOUD_TABLE)
-    .select(SET_CLOUD_SELECT)
+    .select(SET_CLOUD_SYNC_SELECT)
     .eq("user_id", userId)
     .in("cloud_exercise_instance_id", cloudExerciseIds)
     .order("cloud_exercise_instance_id", { ascending: true })
@@ -3619,6 +3637,19 @@ async function hydrateWorkoutStrengthDataFromCloud(db, workoutId) {
   const localSets = (await weightliftingRepository.getSetsForCloudSync(db)).filter(
     (set) => localExerciseIds.has(set.exercise_instance_id)
   );
+
+  // Whether a cloud 102 against this phone's 102.5 is the old integer
+  // column's cut, or a copy to send up again, depends on what the column is
+  // now. Asked as the set sync asks it (reconcileSetsFromCloud): once a
+  // session, only with decimals to lose, and outside the transaction below,
+  // because it is a request.
+  if (
+    setDecimalColumns.cloudKeepsDecimals() === null &&
+    localSets.some(hasSetDecimals)
+  ) {
+    await setDecimalColumns.resolve(() => probeSetDecimalColumns(userId));
+  }
+
   const localSetsByCloudId = new Map();
   const localSetsByRemoteLocalId = new Map();
   const localSetsByLocalId = new Map();
@@ -3698,21 +3729,31 @@ async function hydrateWorkoutStrengthDataFromCloud(db, workoutId) {
         continue;
       }
 
+      const versionOrder = localSet
+        ? compareEntitySyncVersions(localSet, cloudSet)
+        : 0;
+
+      // An edit still waiting to upload is kept unless the cloud's copy is
+      // newer - the set sync's rule. Opening or copying a workout must not
+      // put the cloud's older weight over one typed offline.
+      if (localSet && Number(localSet.needs_sync) === 1 && versionOrder >= 0) {
+        continue;
+      }
+
+      // Every field read the way the set sync reads it (SYNCED_FIELDS.Set).
       // Weight and RPE keep their decimals, and a cut-off copy in the cloud
       // (102 for this phone's 102.5, from before the column kept them) does
-      // not overwrite the phone's - the set sync's own rule.
-      const cloudDecimals = {
-        rpe: normalizeSetDecimal(cloudSet?.rpe),
-        weight: normalizeSetDecimal(cloudSet?.weight),
-      };
-      const { rpe, weight } = localSet
+      // not overwrite the phone's. Once the column keeps decimals, such a set
+      // is sent up again (reupload), as reconcileSetsFromCloud does it.
+      const decimals = localSet
         ? resolveCloudSetDecimals({
-            localSnapshot: localSet,
-            cloudSnapshot: cloudDecimals,
+            localSnapshot: getComparableSetSnapshot(localSet),
+            cloudSnapshot: getComparableSetSnapshot(cloudSet),
             cloudKeepsDecimals: setDecimalColumns.cloudKeepsDecimals(),
-            versionOrder: compareEntitySyncVersions(localSet, cloudSet),
-          }).cloudSnapshot
-        : cloudDecimals;
+            versionOrder,
+          })
+        : { cloudSnapshot: getComparableSetSnapshot(cloudSet), reupload: false };
+      const cloudValues = decimals.cloudSnapshot;
 
       const setPayload = {
         cloudSetId,
@@ -3721,17 +3762,19 @@ async function hydrateWorkoutStrengthDataFromCloud(db, workoutId) {
         syncVersion: normalizeOptionalInteger(cloudSet?.sync_version, 0),
         deletedAt: normalizeOptionalText(cloudSet?.deleted_at),
         exerciseId: parentExercise.exercise_instance_id,
-        setNumber: normalizeOptionalInteger(cloudSet?.set_number, 1),
-        personalRecord: normalizeBooleanFlag(cloudSet?.personal_record),
-        pause: normalizeOptionalInteger(cloudSet?.pause, null),
-        rpe,
-        weight,
-        rmPercentage: normalizeOptionalInteger(cloudSet?.rm_percentage, null),
-        reps: normalizeOptionalInteger(cloudSet?.reps, null),
-        done: normalizeBooleanFlag(cloudSet?.done),
-        failed: normalizeBooleanFlag(cloudSet?.failed),
-        amrap: normalizeBooleanFlag(cloudSet?.amrap),
-        note: normalizeOptionalText(cloudSet?.note),
+        setNumber: cloudValues.set_number ?? 1,
+        personalRecord: cloudValues.personal_record,
+        pause: cloudValues.pause,
+        rpe: cloudValues.rpe,
+        weight: cloudValues.weight,
+        rmPercentage: cloudValues.rm_percentage,
+        reps: cloudValues.reps,
+        done: cloudValues.done,
+        failed: cloudValues.failed,
+        amrap: cloudValues.amrap,
+        setType: cloudValues.set_type,
+        amrapTarget: cloudValues.amrap_target,
+        note: cloudValues.note,
       };
 
       if (!localSet) {
@@ -3746,6 +3789,15 @@ async function hydrateWorkoutStrengthDataFromCloud(db, workoutId) {
         ...setPayload,
       });
       didHydrate = didHydrate || applied;
+
+      if (applied && decimals.reupload) {
+        // updateSetFromCloud marks the set clean, and the cloud still holds
+        // it cut off: without this it stays 102 there, and the next phone
+        // restores 102. The same edit goes up once more, with its decimals.
+        await weightliftingRepository.markSetForUpload(db, {
+          setId: localSet.sets_id,
+        });
+      }
     }
 
     await weightliftingRepository.refreshExerciseDerivedFieldsFromSets(db);
@@ -4288,6 +4340,10 @@ function visibleColumnsForNewPreference(context) {
  * is kept in the column preference so it follows the person to a new phone,
  * for a custom one in its own row. Earlier workouts are not touched, and
  * neither are the record flags: a switch changes the unit, not the lift.
+ * The %1RM is of the weight as written (rmPercentageOf), so it is worked out
+ * again from the converted weight, as writeSetWeight would: per side it
+ * halves with the number, both sides it doubles. A %1RM typed with no
+ * estimate to work from is left as it was.
  *
  * Returns what `undoExerciseWeightModeSwitch` needs to put everything back
  * exactly - the weights as they were, not converted back through the
@@ -4325,6 +4381,10 @@ export async function switchExerciseWeightMode(db, { exerciseId, weightMode }) {
       resolvedExerciseId
     );
     const changes = planWeightModeSwitch(sets, previousMode, nextMode);
+    const rmPercentageBySetId = new Map(
+      sets.map((set) => [Number(set.sets_id), set.rm_percentage ?? null])
+    );
+    const undoSets = [];
 
     for (const change of changes) {
       if (change.next === change.previous) {
@@ -4335,6 +4395,21 @@ export async function switchExerciseWeightMode(db, { exerciseId, weightMode }) {
         field: "weight",
         value: change.next,
         setId: change.setId,
+      });
+
+      const rmPercentageRewritten = await rewriteSetRmPercentage(db, {
+        setId: change.setId,
+        weight: change.next,
+        mode: nextMode,
+      });
+
+      undoSets.push({
+        setId: change.setId,
+        weight: change.previous,
+        // What the switch wrote: the undo only puts back a set still at it.
+        switchedWeight: change.next,
+        rmPercentage: rmPercentageBySetId.get(Number(change.setId)) ?? null,
+        rmPercentageRewritten,
       });
     }
 
@@ -4381,9 +4456,7 @@ export async function switchExerciseWeightMode(db, { exerciseId, weightMode }) {
         normalizeInstanceWeightMode(context.preference_weight_mode) ??
         weightModeOf(context.exercise_weight_mode),
       isCatalogExercise,
-      sets: changes
-        .filter((change) => change.next !== change.previous)
-        .map((change) => ({ setId: change.setId, weight: change.previous })),
+      sets: undoSets,
       shown: {
         from: shownWeight,
         to: toggleWeight(shownWeight, previousMode, nextMode),
@@ -4410,10 +4483,42 @@ export async function switchExerciseWeightMode(db, { exerciseId, weightMode }) {
   return undo;
 }
 
+// A set's %1RM worked out again for a weight a switch or its undo wrote, when
+// there is an estimate to work it out from. True when it was written.
+async function rewriteSetRmPercentage(db, { setId, weight }) {
+  const estimatedWeight =
+    weight === null ? null : await getEstimatedWeightForSet(db, setId);
+
+  if (estimatedWeight === null) {
+    return false;
+  }
+
+  await weightliftingRepository.updateSetField(db, {
+    field: "rm_percentage",
+    value: rmPercentageOf(weight, estimatedWeight),
+    setId,
+  });
+
+  return true;
+}
+
+function isSameWeight(left, right) {
+  const a = normalizeOptionalNumber(left);
+  const b = normalizeOptionalNumber(right);
+
+  return a === null || b === null ? a === b : Math.abs(a - b) < 1e-9;
+}
+
 /**
- * Puts a switch back, from what `switchExerciseWeightMode` returned: the
- * weights exactly as they were, and both modes and the preference as they
- * were. A set deleted in the meantime is simply not there to put back.
+ * Puts a switch back, from what `switchExerciseWeightMode` returned, and
+ * both modes and the preference as they were.
+ *
+ * Every set goes back to the mode it was in. One still at the weight the
+ * switch gave it gets its old weight exactly (and its old %1RM). One changed
+ * since - the undo waits five seconds, long enough to fix a set - or added
+ * since keeps what the person wrote, converted back like the switch converts;
+ * putting the old weight over it lost the change. A set deleted in the
+ * meantime is simply not there to put back.
  */
 export async function undoExerciseWeightModeSwitch(db, undo) {
   const exerciseId = normalizeOptionalInteger(undo?.exerciseId, null);
@@ -4423,13 +4528,48 @@ export async function undoExerciseWeightModeSwitch(db, undo) {
   }
 
   const preferenceUserId = await getCurrentExerciseColumnPreferenceUserId();
+  const restoreMode = weightModeOf(undo.from);
 
   await withTransaction(db, async () => {
-    for (const set of undo.sets ?? []) {
+    const switchedBySetId = new Map(
+      (undo.sets ?? []).map((set) => [Number(set.setId), set])
+    );
+    const current = await weightliftingRepository.getSetsByExercise(db, exerciseId);
+
+    for (const change of planWeightModeSwitch(current, undo.to, restoreMode)) {
+      const switched = switchedBySetId.get(Number(change.setId));
+
+      if (switched && isSameWeight(change.previous, switched.switchedWeight)) {
+        await weightliftingRepository.updateSetField(db, {
+          field: "weight",
+          value: switched.weight,
+          setId: change.setId,
+        });
+
+        if (switched.rmPercentageRewritten) {
+          await weightliftingRepository.updateSetField(db, {
+            field: "rm_percentage",
+            value: switched.rmPercentage,
+            setId: change.setId,
+          });
+        }
+
+        continue;
+      }
+
+      if (change.next === change.previous) {
+        continue;
+      }
+
       await weightliftingRepository.updateSetField(db, {
         field: "weight",
-        value: set.weight,
-        setId: set.setId,
+        value: change.next,
+        setId: change.setId,
+      });
+      await rewriteSetRmPercentage(db, {
+        setId: change.setId,
+        weight: change.next,
+        mode: restoreMode,
       });
     }
 
@@ -4512,17 +4652,22 @@ export async function updateStrengthSetDone(
 }
 
 /**
- * Restart, for a strength workout's sets: every set ticked off - done or
- * failed - back to not done, written the way unticking it on the workout
- * screen writes it (updateStrengthSetDone), so the records go back to the sets
- * that held them before, the exercises are no longer done, and the day, week
- * and block above the workout follow. One transaction, one upload and one
- * notice for Home and the lock-screen card, rather than one of each per set.
+ * Restart, for a strength workout: back to before it was started.
  *
- * The workout's own timer and completion are workoutService.resetWorkoutState.
- * Resolves with how many sets were ticked off.
+ * Every set ticked off - done or failed - goes back to not done, written the
+ * way unticking it on the workout screen writes it (updateStrengthSetDone), so
+ * the records go back to the sets that held them before and the exercises are
+ * no longer done; and the workout's timer and completion go to nothing, as
+ * workoutService.resetWorkoutState writes them. Then the day, week and block
+ * above it follow.
+ *
+ * All of it is one transaction. Two used to commit one after the other, so a
+ * failure in the second left sets unticked - and uploaded - under a workout
+ * still finished and timed. Now a failure changes nothing, and throws.
+ * One upload and one notice for Home and the lock-screen card, rather than
+ * one of each per set. Resolves with how many sets were ticked off.
  */
-export async function resetStrengthWorkoutSets(db, workoutId) {
+export async function restartStrengthWorkout(db, workoutId) {
   const resolvedWorkoutId = normalizeRequiredId(workoutId, "workoutId");
   let resetSetCount = 0;
 
@@ -4557,23 +4702,25 @@ export async function resetStrengthWorkoutSets(db, workoutId) {
       await refreshPersonalRecordsForExerciseName(db, exerciseName);
     }
 
+    await workoutRepository.resetWorkoutStateFields(db, resolvedWorkoutId);
     await workoutService.refreshWorkoutHierarchyCompletion(db, resolvedWorkoutId);
     resetSetCount = tickedSets.length;
   });
 
-  if (resetSetCount === 0) {
-    return 0;
-  }
+  // The workout row changed either way: the lock-screen card and the square
+  // in the bottom navigation are rebuilt on this, as after resetWorkoutState.
+  notifyWorkoutDataChanged("workouts");
+  pushDirtyStrengthHierarchyInBackground(db);
 
-  syncExerciseInstancesInBackground(db);
-  syncSetsInBackground(db);
-  notifyWorkoutSetChanged({
-    workoutId: resolvedWorkoutId,
-    setId: null,
-    done: false,
-    failed: false,
-    personalRecord: false,
-  });
+  if (resetSetCount > 0) {
+    notifyWorkoutSetChanged({
+      workoutId: resolvedWorkoutId,
+      setId: null,
+      done: false,
+      failed: false,
+      personalRecord: false,
+    });
+  }
 
   return resetSetCount;
 }
@@ -4752,9 +4899,10 @@ export async function updateSetRmPercentage(db, { setId, rmPercentage }) {
       };
     }
 
+    // Written as it stands: per side, the number for one side.
     const calculatedWeight = clampSetValue(
       "weight",
-      Math.round(estimatedWeight * (nextRmPercentage / 100))
+      weightAtRmPercentage(nextRmPercentage, estimatedWeight)
     );
 
     await weightliftingRepository.updateSetField(db, {
@@ -4776,7 +4924,8 @@ export async function updateSetRmPercentage(db, { setId, rmPercentage }) {
 }
 
 // A set's weight and the 1RM % that follows from it - the records are the
-// caller's, once for everything it wrote.
+// caller's, once for everything it wrote. The % is of the weight as written
+// (rmPercentageOf): 22,5 kg per side is 22,5 against the estimate.
 async function writeSetWeight(db, setId, weight) {
   const nextWeight = clampSetValue("weight", weight);
 
@@ -4791,7 +4940,7 @@ async function writeSetWeight(db, setId, weight) {
   const nextRmPercentage =
     nextWeight === null || estimatedWeight === null
       ? null
-      : Math.round((nextWeight / estimatedWeight) * 100);
+      : rmPercentageOf(nextWeight, estimatedWeight);
 
   await weightliftingRepository.updateSetField(db, {
     field: "rm_percentage",

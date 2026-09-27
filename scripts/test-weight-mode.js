@@ -8,8 +8,9 @@
 //
 // The rules are pure and tested directly. The queries run against the real
 // schema in an in-memory SQLite, the same way scripts/test-exercise-card-data.js
-// does, and the switch is played through the same repository calls the
-// service makes (the service itself pulls in the whole app to load).
+// does. The switch is played through the repository calls the service makes,
+// and then - at the end, behind stubs for what the app loads - the service's
+// own switch, undo and header write run against another one.
 
 const assert = require("assert");
 const fs = require("fs");
@@ -262,6 +263,213 @@ for (const key of ["weightMinus", "weightPlus", "weightMinusAll", "weightPlusAll
   assert.ok(da.setList[key] && en.setList[key], `workout.setList.${key} is not in both languages`);
 }
 assert.strictEqual(da.setList.weightPlus, "Læg {step} kg til sæt {label}");
+
+// One rule for the step, on the card and in the list: the lock screen's is
+// getWeightStep's, not a copy of it (PR #291's review).
+{
+  const live = loadAppModule("src/Utils/liveWorkout.js");
+
+  for (const exercise of [
+    { name: "Bench Press" },
+    { name: "Incline Dumbbell Press" },
+    { name: "Row", equipment: "cable" },
+    { name: "Row", equipment: "Machine" },
+    { name: "Rumænsk dødløft" },
+    { name: "Pull-up" },
+    {},
+  ]) {
+    assert.strictEqual(live.liveWeightStepFor(exercise), steps.getWeightStep(exercise), JSON.stringify(exercise));
+  }
+
+  assert.strictEqual(live.LIVE_WEIGHT_STEP_DEFAULT, steps.DEFAULT_WEIGHT_STEP);
+  assert.ok(
+    !/\/dumbbell\|håndvægt\//.test(read("src/Utils/liveWorkout.js")),
+    "liveWorkout.js has its own copy of the equipment rule again"
+  );
+  assert.ok(
+    /roundToStep\(value, STEP_ROUNDING\)/.test(read("src/Utils/weightStep.js")),
+    "weightStep.js rounds a quarter kilo its own way again, beside weightMode's roundToStep"
+  );
+}
+
+/* ------------------------------------------- weights not saved yet (1e) -- */
+
+// What a set list shows before the database has it. PR #291's review found
+// two ways a weight on screen never reached the database.
+{
+  // 1. Typed 20 over a stored 15, then + at once: the press starts from 20,
+  // not 15, and the steppers' write carries 22.5 - never a weight worked out
+  // from the one before what was typed.
+  const drafts = steps.createWeightDrafts();
+  const stored = 15;
+  const typedToken = drafts.typed(7, 20);
+
+  assert.strictEqual(drafts.weightOf(7, stored), 20, "the press starts from the weight before the one typed");
+
+  const pressed = steps.stepWeight(drafts.weightOf(7, stored), 1, 2.5);
+
+  drafts.step(7, pressed);
+  assert.strictEqual(pressed, 22.5);
+  assert.deepStrictEqual(
+    drafts.stepsToSave().map(({ setId, weight }) => ({ setId, weight })),
+    [{ setId: 7, weight: 22.5 }]
+  );
+  // The typed weight's own write comes back after the press: it is not the
+  // newest, so the screen keeps 22.5.
+  assert.strictEqual(drafts.settle([{ setId: 7, token: typedToken }]).has(7), false);
+  assert.strictEqual(drafts.weightOf(7, 20), 22.5);
+
+  const written = drafts.stepsToSave();
+
+  assert.strictEqual(drafts.settle(written).has(7), true);
+  assert.ok(drafts.isEmpty(), "a saved step is still a draft");
+}
+
+{
+  // 2. The steppers' write fails: the steps are kept - on screen and in the
+  // next write - rather than dropped before it was tried.
+  const drafts = steps.createWeightDrafts();
+
+  drafts.step(1, 102.5);
+  drafts.step(2, 62.5);
+
+  const failed = drafts.stepsToSave();
+
+  assert.strictEqual(failed.length, 2);
+  // (the write throws; nothing is settled)
+  assert.strictEqual(drafts.weightOf(1, 100), 102.5, "a failed write lost the weight on screen");
+  assert.deepStrictEqual(
+    drafts.stepsToSave().map(({ setId, weight }) => [setId, weight]),
+    [[1, 102.5], [2, 62.5]],
+    "the next write does not carry what the failed one did"
+  );
+}
+
+{
+  // 3. Pressed again while a write is out: the newer weight is not
+  // forgotten when the older write comes back.
+  const drafts = steps.createWeightDrafts();
+
+  drafts.step(1, 102.5);
+  const first = drafts.stepsToSave();
+
+  drafts.step(1, 105);
+  assert.deepStrictEqual([...drafts.settle(first)], [], "the older write's result would replace 105");
+  assert.deepStrictEqual(drafts.stepsToSave().map(({ weight }) => weight), [105]);
+
+  // Typed over a step: the step is out of the next write.
+  drafts.typed(1, 80);
+  assert.deepStrictEqual(drafts.stepsToSave(), []);
+
+  // A typed weight whose write failed goes, unless something newer came.
+  const token = drafts.typed(2, 50);
+
+  assert.strictEqual(drafts.discard(2, token), true);
+  assert.strictEqual(drafts.has(2), false);
+
+  const stale = drafts.typed(3, 50);
+
+  drafts.step(3, 52.5);
+  assert.strictEqual(drafts.discard(3, stale), false, "a failed typed write dropped the step pressed after it");
+  assert.strictEqual(drafts.weightOf(3, 40), 52.5);
+}
+
+// The set list keeps them there, and says so when a write fails.
+{
+  const setList = read(
+    "src/Pages/WorkoutPage/WorkoutTypes/Resistance/Components/ExerciseList/Components/ExerciseRow/SetList/SetList.js"
+  );
+  const flush = setList.slice(
+    setList.indexOf("flushWeightStepsRef.current = async"),
+    setList.indexOf("// Leaving with a step not saved yet")
+  );
+  const typed = setList.slice(
+    setList.indexOf("const updateWeight = async"),
+    setList.indexOf("/* ------------------------------------------------ the weight steppers")
+  );
+
+  assert.ok(!/pendingWeightsRef/.test(setList), "the set list keeps its own map of unsaved weights again");
+  assert.ok(/weightDrafts\.stepsToSave\(\)/.test(flush) && /weightDrafts\.settle\(drafts\)/.test(flush));
+  assert.ok(
+    flush.indexOf("weightDrafts.settle(drafts)") > flush.indexOf("await weightliftingService.updateSetWeight"),
+    "the steps are forgotten before their write went through"
+  );
+  assert.ok(/catch \(error\) \{[\s\S]*Alert\.alert\(/.test(flush), "a failed step write is only written to the console");
+  assert.ok(
+    typed.indexOf("weightDrafts.typed(setId") < typed.indexOf("await weightliftingService.updateSetWeight"),
+    "a typed weight is only where + starts once its write is back"
+  );
+  assert.ok(/catch \(error\) \{[\s\S]*Alert\.alert\(/.test(typed), "a failed typed weight is only written to the console");
+
+  for (const key of ["weightSaveFailedTitle", "weightStepsKept", "weightTypedReverted"]) {
+    assert.ok(da.setList[key] && en.setList[key], `workout.setList.${key} is not in both languages`);
+  }
+}
+
+/* ----------------------------------------------------------- the %1RM -- */
+
+// Of the weight as written - the owner's rule: 22,5 kg per side is 22,5
+// against the estimate, not 45. A switch moves it with the number (PR #291's
+// review: the switch left the % behind the weight).
+assert.strictEqual(mode.rmPercentageOf(40, 100), 40);
+assert.strictEqual(mode.rmPercentageOf(22.5, 100), 23, "per side is the number for one side");
+assert.strictEqual(mode.rmPercentageOf(22.75, 50), 46);
+assert.strictEqual(mode.rmPercentageOf(null, 100), null);
+assert.strictEqual(mode.rmPercentageOf(40, null), null);
+assert.strictEqual(mode.rmPercentageOf(40, 0), null);
+assert.strictEqual(mode.weightAtRmPercentage(45, 100), 45);
+assert.strictEqual(mode.weightAtRmPercentage(81, 50), 41, "whole kilos, as before there were modes");
+assert.strictEqual(mode.weightAtRmPercentage(null, 100), null);
+
+/* ------------------------------------------------------------ the tabs -- */
+
+// "Pr. side | Begge sider": the text 4.5:1 and the line under the selected
+// tab 3:1, on the card as it is and as a done or record exercise tints it,
+// in every accent, light and dark. PR #291's review: an idle tab in dark
+// read 3.7:1.
+{
+  const colors = loadAppModule("src/Resources/GlobalStyling/colors.js");
+  const { contrastRatio } = loadAppModule("src/Utils/categoryFormat.js");
+  const { mixHexColors } = loadAppModule("src/Utils/colorMix.js");
+  const tabsSource = read(
+    "src/Pages/WorkoutPage/WorkoutTypes/Resistance/Components/ExerciseList/Components/ExerciseRow/WeightModeTabs.js"
+  );
+  const rowSource = read(
+    "src/Pages/WorkoutPage/WorkoutTypes/Resistance/Components/ExerciseList/Components/ExerciseRow/ExerciseRow.js"
+  );
+
+  assert.ok(!/#[0-9a-f]{6}/i.test(tabsSource), "the tabs have a colour of their own again, beside the theme");
+  assert.ok(/const idleColor = theme\.quietText;/.test(tabsSource));
+  assert.ok(/const underlineColor = theme\.primaryText/.test(tabsSource), "the line is the accent's fill, 2.8:1 on white");
+  // The tints the card takes, as ExerciseRow writes them.
+  assert.ok(/rgba\(242,193,78,0\.05\)/.test(rowSource) && /rgba\(192,138,18,0\.05\)/.test(rowSource));
+  assert.ok(/withAlpha\(secondaryColor, 0\.07\)/.test(rowSource));
+
+  for (const accent of Object.keys(colors.AccentThemes)) {
+    colors.applyAccentTheme(accent);
+
+    for (const scheme of ["light", "dark"]) {
+      const theme = colors.Colors[scheme];
+      const surfaces = {
+        card: theme.cardBackground,
+        done: mixHexColors(theme.cardBackground, theme.secondary, 0.07),
+        record: mixHexColors(theme.cardBackground, scheme === "dark" ? "#F2C14E" : "#C08A12", 0.05),
+      };
+
+      for (const [surface, background] of Object.entries(surfaces)) {
+        const where = `${accent}, ${scheme}, ${surface} ${background}`;
+
+        for (const [token, minimum] of [["title", 4.5], ["quietText", 4.5], ["primaryText", 3]]) {
+          const ratio = contrastRatio(theme[token], background);
+
+          assert.ok(ratio >= minimum, `${where}: ${token} ${theme[token]} is ${ratio?.toFixed(2)}:1`);
+        }
+      }
+    }
+  }
+
+  colors.applyAccentTheme(colors.DEFAULT_ACCENT_THEME);
+}
 
 /* -------------------------------------------------------- the cloud column -- */
 
@@ -619,10 +827,190 @@ assert.ok(!mode.isMissingWeightModeColumnError({ code: "42703", message: "column
     assert.strictEqual(row.total, mode.totalLoad(weight, from), `totalLoadSql(${weight}, ${from})`);
   }
 
+  await serviceChecks();
+
   console.log(
-    "Weight mode and steppers: rounding, empty weights, the undo, the conversion rules, records, volume, the cloud column and the weight step passed."
+    "Weight mode and steppers: rounding, empty weights, the undo, the conversion rules, records, volume, the cloud column, the weight step, weights not saved yet, the %1RM, the tabs' contrast, and the switch, its undo and the header's write run through the service passed."
   );
 })().catch((error) => {
   console.error(error);
   process.exit(1);
 });
+
+/* ------------------------------------------- the service, run for real -- */
+
+// switchExerciseWeightMode, undoExerciseWeightModeSwitch and updateSetWeights
+// themselves, not the repository calls they are believed to make (PR #291's
+// review: a wrong order or a lost await still passed). Signed out, so every
+// upload they start stops at "no user" and nothing reaches the network.
+async function serviceChecks() {
+  const fakeSupabase = {
+    auth: {
+      getSession: async () => ({ data: { session: null }, error: null }),
+      getUser: async () => ({ data: { user: null }, error: null }),
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }),
+    },
+    from() {
+      throw new Error("the weight mode service reached for the cloud while signed out");
+    },
+    rpc: async () => ({ data: null, error: null }),
+    functions: { invoke: async () => ({ data: null, error: null }) },
+  };
+
+  loadAppModule.stubModule("@supabase/supabase-js", { createClient: () => fakeSupabase, processLock: () => {} });
+  loadAppModule.stubModule("react-native", {
+    Platform: { OS: "android" },
+    AppState: { addEventListener: () => ({ remove() {} }) },
+    I18nManager: {},
+    NativeModules: {},
+  });
+  loadAppModule.stubModule("@react-native-async-storage/async-storage", {
+    __esModule: true,
+    default: {
+      getItem: async () => null,
+      setItem: async () => {},
+      removeItem: async () => {},
+      getAllKeys: async () => [],
+      multiRemove: async () => {},
+    },
+  });
+  loadAppModule.stubModule("expo-location", {
+    getForegroundPermissionsAsync: async () => ({ granted: false, canAskAgain: false }),
+  });
+  loadAppModule.stubModule("expo-notifications", {
+    setNotificationHandler() {},
+    getPermissionsAsync: async () => ({ status: "denied" }),
+  });
+  loadAppModule.stubModule("expo-constants", { default: {} });
+  loadAppModule.stubModule("react-native-url-polyfill/auto", {});
+  loadAppModule.stubModule("expo-sqlite/localStorage/install", {});
+  loadAppModule.stubModule("expo-secure-store", {});
+
+  // The uploads reach programService through a dynamic import this loader
+  // leaves to Node; what they say about it is not what is tested here.
+  const consoleError = console.error;
+  console.error = (...args) => {
+    if (typeof args[0] === "string" && /cloud push failed/.test(args[0])) {
+      return;
+    }
+
+    consoleError(...args);
+  };
+
+  const service = loadAppModule("src/Services/weightliftingService.js");
+  const raw = new DatabaseSync(":memory:");
+
+  raw.exec(programSchemaSql);
+  raw.exec(weightliftingSchemaSql);
+
+  const bind = (params) =>
+    (Array.isArray(params) ? params : params === undefined ? [] : [params]).map((value) =>
+      value === undefined ? null : typeof value === "boolean" ? Number(value) : value
+    );
+  const db = {
+    databasePath: "test-weight-mode-service",
+    execAsync: async (sql) => raw.exec(sql),
+    runAsync: async (sql, params) => {
+      const result = raw.prepare(sql).run(...bind(params));
+
+      return { lastInsertRowId: Number(result.lastInsertRowid), changes: Number(result.changes) };
+    },
+    getAllAsync: async (sql, params) => raw.prepare(sql).all(...bind(params)),
+    getFirstAsync: async (sql, params) => raw.prepare(sql).get(...bind(params)) ?? null,
+    isInTransactionAsync: async () => Boolean(raw.isTransaction),
+  };
+  const run = (sql, ...params) => raw.prepare(sql).run(...params);
+  const setsOf = (exerciseId) =>
+    raw
+      .prepare('SELECT sets_id, weight, rm_percentage FROM "Set" WHERE exercise_instance_id = ? ORDER BY set_number')
+      .all(exerciseId)
+      .map((row) => [row.sets_id, row.weight, row.rm_percentage]);
+  const settle = () => new Promise((resolve) => setTimeout(resolve, 50));
+
+  // A program with a 1RM estimate of 100 kg for the dumbbell press, so the
+  // %1RM has something to be worked out from.
+  run("INSERT INTO Program (program_id, program_name, start_date) VALUES (1, 'Plan', '2026-09-01')");
+  run("INSERT INTO Mesocycle (mesocycle_id, program_id, mesocycle_number) VALUES (1, 1, 1)");
+  run("INSERT INTO Microcycle (microcycle_id, mesocycle_id, microcycle_number) VALUES (1, 1, 1)");
+  run("INSERT INTO Day (day_id, microcycle_id, program_id, Weekday, date) VALUES (1, 1, 1, 'Monday', '2026-09-28')");
+  run("INSERT INTO Workout_Type_Instance (workout_id, day_id, workout_type, label, date) VALUES (1, 1, 'Resistance', 'Push', '2026-09-28')");
+  run("INSERT INTO Exercise (name, weight_mode) VALUES ('Dumbbell Press', 'total')");
+  run("INSERT INTO Estimated_Set (program_id, exercise_name, estimated_weight) VALUES (1, 'Dumbbell Press', 100)");
+  run(
+    `INSERT INTO Exercise_Instance (exercise_instance_id, workout_type_instance_id, exercise_name, exercise_order, weight_mode)
+     VALUES (10, 1, 'Dumbbell Press', 1, 'total')`
+  );
+  for (const [id, number, weight, rm] of [[100, 1, 50, 50], [101, 2, 45, 45], [102, 3, null, null]]) {
+    run(
+      `INSERT INTO "Set" (sets_id, exercise_instance_id, set_number, weight, reps, rm_percentage, done)
+       VALUES (?, 10, ?, ?, 8, ?, 0)`,
+      id,
+      number,
+      weight,
+      rm
+    );
+  }
+
+  // Both sides: the %1RM of what is typed is of the weight, as it always was.
+  let written = await service.updateSetWeight(db, { setId: 101, weight: 40 });
+
+  assert.deepStrictEqual([written.weight, written.rmPercentage], [40, 40]);
+
+  // The switch: every weight halved, and the %1RM with it - it is of the
+  // number as written.
+  const undo = await service.switchExerciseWeightMode(db, { exerciseId: 10, weightMode: PER_SIDE });
+
+  assert.ok(undo, "the switch changed nothing");
+  assert.deepStrictEqual(
+    setsOf(10),
+    [[100, 25, 25], [101, 20, 20], [102, null, null]],
+    "the switch left the %1RM behind the weight"
+  );
+  assert.strictEqual(raw.prepare("SELECT weight_mode FROM Exercise_Instance WHERE exercise_instance_id = 10").get().weight_mode, PER_SIDE);
+
+  // Per side the %1RM is of the one side's number, typed or worked out.
+  written = await service.updateSetWeight(db, { setId: 101, weight: 30 });
+  assert.deepStrictEqual([written.weight, written.rmPercentage], [30, 30], "30 per side is 30% of a 100 kg estimate");
+  written = await service.updateSetRmPercentage(db, { setId: 100, rmPercentage: 45 });
+  assert.deepStrictEqual([written.weight, written.rmPercentage], [45, 45], "45% of 100 kg is 45 as written");
+
+  // The header's write, through the service: both sets, one transaction.
+  const header = await service.updateSetWeights(db, [
+    { setId: 100, weight: 25 },
+    { setId: 102, weight: 10 },
+  ]);
+
+  assert.deepStrictEqual(
+    header.sets.map((set) => [set.setId, set.weight, set.rmPercentage]),
+    [[100, 25, 25], [102, 10, 10]]
+  );
+
+  // Then the Undo: set 100 went back to 25 - where the switch left it - so it
+  // gets its old weight and %1RM exactly. Set 101 was changed to 30 a side
+  // after the switch, and 102 filled in: both are kept, written for both
+  // sides again, instead of the weight from before the switch over them.
+  assert.strictEqual(await service.undoExerciseWeightModeSwitch(db, undo), true);
+  await settle();
+
+  assert.deepStrictEqual(
+    setsOf(10),
+    [[100, 50, 50], [101, 60, 60], [102, 20, 20]],
+    "the undo put the weight from before the switch over a set changed since"
+  );
+  assert.strictEqual(raw.prepare("SELECT weight_mode FROM Exercise_Instance WHERE exercise_instance_id = 10").get().weight_mode, TOTAL);
+
+  // Without an estimate - a workout outside a program - the %1RM typed by
+  // hand is the person's own, and a switch leaves it.
+  run("INSERT INTO Day (day_id, Weekday, date) VALUES (2, 'Tuesday', '2026-09-29')");
+  run("INSERT INTO Workout_Type_Instance (workout_id, day_id, workout_type, date) VALUES (2, 2, 'Resistance', '2026-09-29')");
+  run(
+    `INSERT INTO Exercise_Instance (exercise_instance_id, workout_type_instance_id, exercise_name, exercise_order, weight_mode)
+     VALUES (20, 2, 'Dumbbell Press', 1, 'total')`
+  );
+  run(`INSERT INTO "Set" (sets_id, exercise_instance_id, set_number, weight, reps, rm_percentage, done) VALUES (200, 20, 1, 40, 8, 70, 0)`);
+  await service.switchExerciseWeightMode(db, { exerciseId: 20, weightMode: PER_SIDE });
+  assert.deepStrictEqual(setsOf(20), [[200, 20, 70]]);
+  await settle();
+
+  console.error = consoleError;
+}

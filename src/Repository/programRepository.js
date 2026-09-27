@@ -257,7 +257,7 @@ export async function markProgramSynced(
          needs_sync = 0
      WHERE program_id = ?
        AND sync_version IS ?;`,
-    [
+    sqliteParams([
       cloudProgramId,
       remoteLocalProgramId,
       syncId,
@@ -265,7 +265,7 @@ export async function markProgramSynced(
       deletedAt,
       programId,
       expectedSyncVersion,
-    ]
+    ])
   );
 
   if (result.changes > 0) {
@@ -280,6 +280,16 @@ export async function markProgramSynced(
   });
 }
 
+// Records which cloud row this is. The cloud's sync_version and deleted_at are
+// taken only by a row with nothing to upload: a row with needs_sync = 1 keeps
+// its own, because they belong to its edit, and its upload compares its
+// version with the cloud's to decide which of the two wins. A child's upload
+// looks its parent up through here (ensureProgramCloudIdentity and the six
+// like it), so without this a parent the cloud had just beaten took the
+// cloud's version and went up over the newer edit on the next pass, and a
+// parent edited mid-pass was set back to the version before its edit.
+// Every update*CloudIdentity in this file and in weightliftingRepository
+// follows the same rule.
 export async function updateProgramCloudIdentity(
   db,
   {
@@ -296,17 +306,17 @@ export async function updateProgramCloudIdentity(
      SET cloud_program_id = ?,
          remote_local_program_id = COALESCE(?, remote_local_program_id, program_id),
          sync_id = COALESCE(?, sync_id),
-         sync_version = COALESCE(?, sync_version),
-         deleted_at = COALESCE(?, deleted_at)
+         sync_version = CASE WHEN needs_sync = 1 THEN sync_version ELSE COALESCE(?, sync_version) END,
+         deleted_at = CASE WHEN needs_sync = 1 THEN deleted_at ELSE COALESCE(?, deleted_at) END
      WHERE program_id = ?;`,
-    [
+    sqliteParams([
       cloudProgramId,
       remoteLocalProgramId,
       syncId,
       syncVersion,
       deletedAt,
       programId,
-    ]
+    ])
   );
 }
 
@@ -500,7 +510,7 @@ export async function markMesocycleSynced(
          needs_sync = 0
      WHERE mesocycle_id = ?
        AND sync_version IS ?;`,
-    [
+    sqliteParams([
       cloudMesocycleId,
       remoteLocalMesocycleId,
       syncId,
@@ -508,7 +518,7 @@ export async function markMesocycleSynced(
       deletedAt,
       mesocycleId,
       expectedSyncVersion,
-    ]
+    ])
   );
 
   if (result.changes > 0) {
@@ -523,6 +533,7 @@ export async function markMesocycleSynced(
   });
 }
 
+// A row waiting to upload keeps its own version. See updateProgramCloudIdentity.
 export async function updateMesocycleCloudIdentity(
   db,
   {
@@ -539,17 +550,17 @@ export async function updateMesocycleCloudIdentity(
      SET cloud_mesocycle_id = ?,
          remote_local_mesocycle_id = COALESCE(?, remote_local_mesocycle_id, mesocycle_id),
          sync_id = COALESCE(?, sync_id),
-         sync_version = COALESCE(?, sync_version),
-         deleted_at = COALESCE(?, deleted_at)
+         sync_version = CASE WHEN needs_sync = 1 THEN sync_version ELSE COALESCE(?, sync_version) END,
+         deleted_at = CASE WHEN needs_sync = 1 THEN deleted_at ELSE COALESCE(?, deleted_at) END
      WHERE mesocycle_id = ?;`,
-    [
+    sqliteParams([
       cloudMesocycleId,
       remoteLocalMesocycleId,
       syncId,
       syncVersion,
       deletedAt,
       mesocycleId,
-    ]
+    ])
   );
 }
 
@@ -727,14 +738,14 @@ export async function markMicrocycleSynced(
          needs_sync = 0
      WHERE microcycle_id = ?
        AND sync_version IS ?;`,
-    [
+    sqliteParams([
       cloudMicrocycleId,
       syncId,
       syncVersion,
       deletedAt,
       microcycleId,
       expectedSyncVersion,
-    ]
+    ])
   );
 
   if (result.changes > 0) {
@@ -748,6 +759,7 @@ export async function markMicrocycleSynced(
   });
 }
 
+// A row waiting to upload keeps its own version. See updateProgramCloudIdentity.
 export async function updateMicrocycleCloudIdentity(
   db,
   { microcycleId, cloudMicrocycleId, syncId = null, syncVersion = null, deletedAt = null }
@@ -756,10 +768,10 @@ export async function updateMicrocycleCloudIdentity(
     `UPDATE Microcycle
      SET cloud_microcycle_id = ?,
          sync_id = COALESCE(?, sync_id),
-         sync_version = COALESCE(?, sync_version),
-         deleted_at = COALESCE(?, deleted_at)
+         sync_version = CASE WHEN needs_sync = 1 THEN sync_version ELSE COALESCE(?, sync_version) END,
+         deleted_at = CASE WHEN needs_sync = 1 THEN deleted_at ELSE COALESCE(?, deleted_at) END
      WHERE microcycle_id = ?;`,
-    [cloudMicrocycleId, syncId, syncVersion, deletedAt, microcycleId]
+    sqliteParams([cloudMicrocycleId, syncId, syncVersion, deletedAt, microcycleId])
   );
 }
 
@@ -2457,7 +2469,7 @@ export async function markDaySynced(
          needs_sync = 0
      WHERE day_id = ?
        AND sync_version IS ?;`,
-    [
+    sqliteParams([
       cloudDayId,
       remoteLocalDayId,
       syncId,
@@ -2465,7 +2477,7 @@ export async function markDaySynced(
       deletedAt,
       dayId,
       expectedSyncVersion,
-    ]
+    ])
   );
 
   if (result.changes > 0) {
@@ -2480,6 +2492,7 @@ export async function markDaySynced(
   });
 }
 
+// A row waiting to upload keeps its own version. See updateProgramCloudIdentity.
 export async function updateDayCloudIdentity(
   db,
   {
@@ -2496,10 +2509,10 @@ export async function updateDayCloudIdentity(
      SET cloud_day_id = ?,
          remote_local_day_id = COALESCE(?, remote_local_day_id, day_id),
          sync_id = COALESCE(?, sync_id),
-         sync_version = COALESCE(?, sync_version),
-         deleted_at = COALESCE(?, deleted_at)
+         sync_version = CASE WHEN needs_sync = 1 THEN sync_version ELSE COALESCE(?, sync_version) END,
+         deleted_at = CASE WHEN needs_sync = 1 THEN deleted_at ELSE COALESCE(?, deleted_at) END
      WHERE day_id = ?;`,
-    [cloudDayId, remoteLocalDayId, syncId, syncVersion, deletedAt, dayId]
+    sqliteParams([cloudDayId, remoteLocalDayId, syncId, syncVersion, deletedAt, dayId])
   );
 }
 
@@ -3046,6 +3059,7 @@ export async function markWorkoutSynced(
   });
 }
 
+// A row waiting to upload keeps its own version. See updateProgramCloudIdentity.
 export async function updateWorkoutCloudIdentity(
   db,
   {
@@ -3066,8 +3080,8 @@ export async function updateWorkoutCloudIdentity(
            workout_id
          ),
          sync_id = COALESCE(?, sync_id),
-         sync_version = COALESCE(?, sync_version),
-         deleted_at = COALESCE(?, deleted_at)
+         sync_version = CASE WHEN needs_sync = 1 THEN sync_version ELSE COALESCE(?, sync_version) END,
+         deleted_at = CASE WHEN needs_sync = 1 THEN deleted_at ELSE COALESCE(?, deleted_at) END
      WHERE workout_id = ?;`,
     sqliteParams([
       cloudWorkoutTypeInstanceId,

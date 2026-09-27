@@ -112,7 +112,7 @@ export function buildActivityStatusLabel(person, { isCurrentUser = false, now = 
   const state = person?.activityState ?? "rest";
   // The cloud's label, or its catalog display name, is the English type id
   // for a workout nobody named; that is drawn in the app's language.
-  const label = workoutDisplayName(person?.workoutLabel, t);
+  const label = workoutDisplayName(person?.workoutLabel, t, person?.workoutType);
 
   switch (state) {
     case "live":

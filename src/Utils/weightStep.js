@@ -1,14 +1,16 @@
 // One step of the weight steppers (1e): how far + and − move a weight, and
 // what a press does to one.
 //
-// The same rule as the lock screen's weight buttons (liveWeightStepFor on the
-// Android card), so a press moves a set by the same amount wherever it is
-// made. What is on the bar decides how finely it can move: a pair of
-// dumbbells goes up 2, a machine or a cable stack 5, a squat or a deadlift 5,
-// everything else - the bench press among them - 2.5. A step set on the
-// exercise itself wins over all of it, for the day there is a setting.
+// The lock screen's weight buttons use this same rule (liveWeightStepFor in
+// liveWorkout.js hands the card getWeightStep's answer), so a press moves a
+// set by the same amount wherever it is made. What is on the bar decides how
+// finely it can move: a pair of dumbbells goes up 2, a machine or a cable
+// stack 5, a squat or a deadlift 5, everything else - the bench press among
+// them - 2.5. A step set on the exercise itself wins over all of it, for the
+// day there is a setting.
 //
 // kg only: the app has no lb. Pure, so scripts/test-weight-mode.js loads it.
+import { roundToStep } from "./weightMode";
 
 export const DEFAULT_WEIGHT_STEP = 2.5;
 const DUMBBELL_STEP = 2;
@@ -17,13 +19,7 @@ const STEP_ROUNDING = 0.25;
 
 /** To the nearest quarter kilo, so 0.1 + 0.2 never reads 102.49999. */
 export function roundWeightToQuarter(value) {
-  const numeric = Number(value);
-
-  if (!Number.isFinite(numeric)) {
-    return null;
-  }
-
-  return Number((Math.round(numeric / STEP_ROUNDING) * STEP_ROUNDING).toFixed(2));
+  return roundToStep(value, STEP_ROUNDING);
 }
 
 /**
@@ -129,4 +125,94 @@ export function showsWeightStepper(visibleColumns, { weightMode = null } = {}) {
   return Object.keys(visibleColumns).every(
     (key) => !visibleColumns[key] || WEIGHT_STEPPER_COLUMNS.includes(key)
   );
+}
+
+/**
+ * The weights a set list shows before the database has them, by set (1e).
+ *
+ * Two kinds, and the newest for a set wins:
+ *
+ * - a step, + or − pressed: saved by the steppers' one write, 400 ms after
+ *   the last press (stepsToSave, then settle);
+ * - a typed weight: saved at once by its own write (typed, then settle, or
+ *   discard when the write failed).
+ *
+ * Either is on screen and is where the next press starts (weightOf). Before
+ * this, a press made while a typed weight was being saved started from the
+ * weight before it, and the steppers' write then put that over what was
+ * typed. A draft is forgotten only when the write that carried it went
+ * through, and only if nothing newer came for its set meanwhile - a failed
+ * write used to drop the steps it carried, and the screen kept showing a
+ * weight that was never saved.
+ */
+export function createWeightDrafts() {
+  const drafts = new Map();
+  let lastToken = 0;
+  const keyOf = (setId) => Number(setId);
+  const put = (setId, kind, weight) => {
+    lastToken += 1;
+    drafts.set(keyOf(setId), { kind, weight, token: lastToken });
+
+    return lastToken;
+  };
+
+  return {
+    /** A press: the set's weight is now `weight`, to be saved with the next write. */
+    step(setId, weight) {
+      return put(setId, "step", weight);
+    },
+    /** A weight typed in, being saved by its own write. Returns its token. */
+    typed(setId, weight) {
+      return put(setId, "typed", weight);
+    },
+    isEmpty() {
+      return drafts.size === 0;
+    },
+    has(setId) {
+      return drafts.has(keyOf(setId));
+    },
+    /** The weight on screen: the newest draft, else what is stored. */
+    weightOf(setId, storedWeight = null) {
+      const draft = drafts.get(keyOf(setId));
+
+      return draft ? draft.weight : storedWeight;
+    },
+    /** The steps the next write carries, as [{ setId, weight, token }]. Kept until settled. */
+    stepsToSave() {
+      return [...drafts.entries()]
+        .filter(([, draft]) => draft.kind === "step")
+        .map(([setId, draft]) => ({ setId, weight: draft.weight, token: draft.token }));
+    },
+    /**
+     * A write went through: each of its drafts still the newest for its set
+     * is forgotten. Returns those sets' ids - the ones whose saved result the
+     * screen can take; the others have something newer on screen.
+     */
+    settle(written = []) {
+      const current = new Set();
+
+      for (const entry of written) {
+        const key = keyOf(entry?.setId);
+
+        if (drafts.get(key)?.token === entry?.token) {
+          drafts.delete(key);
+          current.add(key);
+        }
+      }
+
+      return current;
+    },
+    /** A typed weight's write failed: forgotten if still the newest. True when it was. */
+    discard(setId, token) {
+      const key = keyOf(setId);
+
+      if (drafts.get(key)?.token !== token) {
+        return false;
+      }
+
+      drafts.delete(key);
+
+      return true;
+    },
+  };
 }

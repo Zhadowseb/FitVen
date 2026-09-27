@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.16.4] - Unreleased
+## [2.16.5] - Unreleased
 ### Fixed
 - **An edit made while the pull is writing keeps the edit.** This is the download side of 2.15.3 and 2.16.2. Every reconcile reads its local rows before its transaction, some after a request, and then wrote the cloud's copy by id alone with `needs_sync = 0`. The user can write at every `await` in the loop. So if a row was edited on another phone and the pull took that copy, an edit made here just before the write was overwritten, lost its flag and was never sent. The window is narrow, since the same row has to change on two phones.
   - `updateProgramFromCloud`, `updateMesocycleFromCloud`, `updateMicrocycleFromCloud`, `updateDayFromCloud`, `updateWorkoutFromCloud`, `updateExerciseFromCloud` and `updateSetFromCloud` take `expectedSyncVersion` and write only while the row still has that `sync_version`. They return whether they wrote.
@@ -8,6 +8,47 @@
   - All 14 calls in `cloudSync/` pass the version of the row they read. So do the two in `hydrateWorkoutStrengthDataFromCloud`, which opening a workout runs. An exercise created there carries its version too, so a second cloud row matched to it does not fail.
 - **Tests:** `npm run test:sync-lost-update` lands an edit just before the pull's first write at every level. It runs each level twice: on a synced row and on a row with an older edit waiting, one run per branch that takes the cloud's copy. Without the fix, all 14 cases fail. It also checks that the 16 call sites pass the version. `test-dev-kpi-sources.js` and `test-set-types.js` pass the version when they call the functions directly.
 - **Docs:** `src/Services/AGENTS.md` states the rule for the pull.
+
+---
+## [2.16.4] - Unreleased
+### Fixed
+From the review agents' reports on #287–#292.
+- **Workout names:**
+  - A name someone typed is no longer translated. "Run", "Walk", "Resistance" or "legs" on another type stay as typed. Unnamed and auto-named workouts are still drawn in the app's language (`isAppWorkoutName`).
+  - A name typed exactly like one of the app's own auto-names on a strength workout is still translated, because the two are stored the same way.
+- **Restart workout** is one transaction (`restartStrengthWorkout`). If it fails, nothing changes and the app says so.
+- **The weight steppers:**
+  - A + or − right after typing a weight starts from the typed weight.
+  - A step's save is only forgotten once it has succeeded, and a failed save keeps the weight and says so, with "Prøv igen".
+- **Undoing a per side / both sides switch** keeps the sets changed or added since, converted back.
+- **%1RM is of the weight as written:** 22,5 kg per side is 22,5 against the estimate. A switch moves it with the number.
+- **A workout opened or copied from the cloud keeps what the phone has not sent yet.**
+  - An offline edit is no longer overwritten by the cloud's older copy.
+  - A set the cloud held cut to whole kilos is sent up again with its decimals.
+  - Warm-ups, drop sets and AMRAP targets arrive as they are, instead of as working sets.
+- **Sync:**
+  - Looking a row up in the cloud no longer gives an edit still waiting to upload the cloud's version. An older edit can therefore no longer go up over a newer one from another phone.
+  - Once the cloud is known to keep decimals, a later refusal from another field no longer cuts every weight to whole kilos for the session.
+- **The catalog by name:**
+  - The lock-screen card finds the equipment whatever the case of the name, and shows each set once.
+  - A new index, `exercise_name_nocase_idx`, lets every lookup by name search instead of reading the whole catalog.
+  - Copying a week looks the catalog up once per workout.
+- **The centre page** loads its first exercises on every visit, and every exercise only when you search.
+- **"Din fremgang"** explains what it takes when there is no rise yet.
+- **Contrast:**
+  - The per side / both sides tabs pass in dark mode, and their underline in every accent.
+  - The Android weight buttons' red and green text is readable on a light notification shade, and the red on a dark one.
+- **Android:**
+  - A tap on the card, and its redraws during a rest, no longer run on the main thread. Taps are still handled one at a time and in order.
+  - The button rows are 48 dp.
+  - TalkBack says the dimmed minus at 0 kg cannot be used.
+- **A failed weight-mode switch or undo** shows a message.
+- **The review workflow** reads a merged PR from its merge commit, against master just before it. It used to diff the PR's head against a master that already held it, so the agents got an empty diff and read the finished code instead of the change.
+- **Tests:**
+  - `test:set-decimals` runs the workout hydration for real.
+  - `test:sync-lost-update` covers the identity helpers.
+  - `test:weight-mode` runs the switch, its undo and the header's write through the service.
+  - There are two new tests, `test:catalog-name-match` and `test:live-workout-android`.
 
 ---
 ## [2.16.3] - Unreleased

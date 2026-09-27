@@ -27,7 +27,7 @@ import WorkoutCopyTargetModal from "../../Resources/Components/WorkoutCopyTarget
 import { programService, workoutService } from "../../Services";
 import { formatDate } from "../../Utils/dateUtils";
 import { STARTED_FROM } from "@utils/startedFrom";
-import { isWorkoutTypeId, workoutDisplayName } from "@utils/workoutTypeLabel";
+import { isAppWorkoutName, workoutDisplayName } from "@utils/workoutTypeLabel";
 import { useTranslation } from "@localization";
 
 import Run from "./WorkoutTypes/Run/Run";
@@ -142,11 +142,14 @@ const WorkoutPage = ({ route }) => {
   const canRepostWorkoutSummary = workoutType === "Resistance";
 
   const openLabelModal = () => {
-    // A workout nobody named is labelled with its type id ("Resistance").
-    // That is not a name to edit - saved unchanged it would turn the
-    // translated type into a name of its own - so the field starts empty.
+    // A workout nobody named is labelled with its type id ("Resistance"),
+    // or with the name the app gave it ("Push"). That is not a name to edit -
+    // saved unchanged it would turn the translated name into one of its own -
+    // so the field starts empty. A name somebody typed is there to edit.
     setNextWorkoutLabel(
-      isWorkoutTypeId(workoutInstanceLabel) ? "" : workoutInstanceLabel ?? ""
+      isAppWorkoutName(workoutInstanceLabel, workoutType)
+        ? ""
+        : workoutInstanceLabel ?? ""
     );
     setOptionsBottomsheetVisible(false);
     setLabelModalVisible(true);
@@ -347,7 +350,7 @@ const WorkoutPage = ({ route }) => {
     onClose={() => setOptionsBottomsheetVisible(false)}
   >
     <View style={[styles.bottomsheetTitle, { borderBottomColor: theme.hairline }]}>
-      <ThemedText>{workoutDisplayName(workoutLabel, t)}</ThemedText>
+      <ThemedText>{workoutDisplayName(workoutLabel, t, workoutType)}</ThemedText>
       <ThemedText>{workoutSubtitle}</ThemedText>
     </View>
 
@@ -488,8 +491,8 @@ const WorkoutPage = ({ route }) => {
         <Resistance
           workout_id={workout_id}
           date={workoutDate}
-          workoutLabel={workoutDisplayName(workoutLabel, t)}
-          autoNamedLabel={workoutDisplayName(autoNamedLabel, t)}
+          workoutLabel={workoutDisplayName(workoutLabel, t, workoutType)}
+          autoNamedLabel={workoutDisplayName(autoNamedLabel, t, workoutType)}
           workoutInstanceLabel={workoutInstanceLabel}
           restartRequestKey={restartRequestKey}
           finishRequestKey={finishRequestKey}
@@ -533,7 +536,7 @@ const WorkoutPage = ({ route }) => {
           >
             {isRunWorkout && runHeaderTitle
               ? runHeaderTitle
-              : workoutDisplayName(workoutLabel, t)}
+              : workoutDisplayName(workoutLabel, t, workoutType)}
           </ThemedTitle>
 
           {!!workoutSubtitle && (

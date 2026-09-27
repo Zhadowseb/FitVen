@@ -143,7 +143,8 @@ export default function EditPostNoteSheet({ post, onClose, onSaved }) {
       </ThemedText>
 
       <ThemedTitle type="h3" style={styles.postTitle} numberOfLines={2}>
-        {workoutDisplayName(post?.title, t) ?? t("home.summary.workoutSummary")}
+        {workoutDisplayName(post?.title, t, post?.workoutType) ??
+          t("home.summary.workoutSummary")}
       </ThemedTitle>
 
       {loading ? (

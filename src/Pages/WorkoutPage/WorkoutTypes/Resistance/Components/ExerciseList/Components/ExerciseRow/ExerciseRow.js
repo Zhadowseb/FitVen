@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   PanResponder,
   TouchableOpacity,
   View,
@@ -521,7 +522,9 @@ const ExerciseRow = ({
         refreshHistoryForWeightMode();
       }
     } catch (error) {
+      // One transaction: nothing changed, and the tabs still say so.
       console.error("Error switching the weight mode", error);
+      Alert.alert(t("workout.weightMode.switchFailed"), t("workout.page.tryAgain"));
     } finally {
       setSwitchingWeightMode(false);
     }
@@ -542,6 +545,7 @@ const ExerciseRow = ({
       refreshHistoryForWeightMode();
     } catch (error) {
       console.error("Error undoing the weight mode switch", error);
+      Alert.alert(t("workout.weightMode.undoFailed"), t("workout.page.tryAgain"));
     }
   };
 

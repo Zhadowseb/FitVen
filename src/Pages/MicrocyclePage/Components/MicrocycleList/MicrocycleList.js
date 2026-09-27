@@ -1048,7 +1048,8 @@ const MicrocycleList = ({
                       setColor={palette.title}
                       numberOfLines={1}
                     >
-                      {workoutDisplayName(card.workout?.label, t) ?? card.iconLabel}
+                      {workoutDisplayName(card.workout?.label, t, card.workout?.workout_type) ??
+                        card.iconLabel}
                     </ThemedText>
                     <ThemedText
                       style={gridStyles.dropdownRowMeta}

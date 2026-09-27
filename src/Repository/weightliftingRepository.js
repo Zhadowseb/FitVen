@@ -98,6 +98,39 @@ export async function getExerciseCatalogEntryByName(db, exerciseName) {
   );
 }
 
+/**
+ * The catalog's weight mode for each of `exerciseNames`, in one query: a row
+ * per distinct name, `{ exercise_name, weight_mode }`, with the name as it
+ * was asked for and a null weight_mode for one the catalog does not have.
+ * Matched as getExerciseCatalogEntryByName matches one name - without regard
+ * to case, the first catalog row - for a caller that would otherwise ask once
+ * per exercise, like copying a week.
+ */
+export async function getExerciseCatalogWeightModes(db, exerciseNames) {
+  const names = [
+    ...new Set((exerciseNames ?? []).filter((name) => typeof name === "string")),
+  ];
+
+  if (names.length === 0) {
+    return [];
+  }
+
+  return db.getAllAsync(
+    `WITH requested(name) AS (VALUES ${names.map(() => "(?)").join(", ")})
+     SELECT
+        requested.name AS exercise_name,
+        (
+          SELECT catalog.weight_mode
+          FROM Exercise catalog
+          WHERE catalog.name = requested.name COLLATE NOCASE
+          ORDER BY catalog.exercise_id ASC
+          LIMIT 1
+        ) AS weight_mode
+     FROM requested;`,
+    names
+  );
+}
+
 // The sets Records and an exercise's statistics page are made of: ticked off,
 // not failed, with a weight and reps, nothing deleted on the way up, and no
 // warm-ups. One string for both queries below, so the "See statistics"
@@ -1288,10 +1321,18 @@ export async function getLiveWorkoutSets(db, workoutId) {
         s.amrap_target,
         s.pause,
         s.sync_version,
-        catalog.equipment AS exercise_equipment
+        -- Matched without regard to case, like every other lookup of the
+        -- catalog by name, and one row at most: a join would repeat every set
+        -- for two catalog names that differ only in case.
+        (
+          SELECT catalog.equipment
+          FROM Exercise catalog
+          WHERE catalog.name = e.exercise_name COLLATE NOCASE
+          ORDER BY catalog.exercise_id ASC
+          LIMIT 1
+        ) AS exercise_equipment
      FROM Exercise_Instance e
      LEFT JOIN "Set" s ON s.exercise_instance_id = e.exercise_instance_id
-     LEFT JOIN Exercise catalog ON catalog.name = e.exercise_name
      WHERE e.workout_type_instance_id = ?
      ORDER BY e.exercise_order ASC, e.exercise_instance_id ASC, s.set_number ASC, s.sets_id ASC;`,
     [workoutId]
@@ -1642,6 +1683,9 @@ export async function markExerciseSynced(
   });
 }
 
+// A row waiting to upload keeps its own version and deletion: they are its
+// edit's, and its upload compares them with the cloud's. See
+// updateProgramCloudIdentity in programRepository.
 export async function updateExerciseCloudIdentity(
   db,
   {
@@ -1662,8 +1706,8 @@ export async function updateExerciseCloudIdentity(
            exercise_instance_id
          ),
          sync_id = COALESCE(?, sync_id),
-         sync_version = COALESCE(?, sync_version),
-         deleted_at = COALESCE(?, deleted_at)
+         sync_version = CASE WHEN needs_sync = 1 THEN sync_version ELSE COALESCE(?, sync_version) END,
+         deleted_at = CASE WHEN needs_sync = 1 THEN deleted_at ELSE COALESCE(?, deleted_at) END
      WHERE exercise_instance_id = ?;`,
     sqliteParams([
       cloudExerciseInstanceId,
@@ -2173,6 +2217,8 @@ export async function markSetSynced(
   });
 }
 
+// A row waiting to upload keeps its own version and deletion. See
+// updateProgramCloudIdentity in programRepository.
 export async function updateSetCloudIdentity(
   db,
   {
@@ -2193,8 +2239,8 @@ export async function updateSetCloudIdentity(
            sets_id
          ),
          sync_id = COALESCE(?, sync_id),
-         sync_version = COALESCE(?, sync_version),
-         deleted_at = COALESCE(?, deleted_at)
+         sync_version = CASE WHEN needs_sync = 1 THEN sync_version ELSE COALESCE(?, sync_version) END,
+         deleted_at = CASE WHEN needs_sync = 1 THEN deleted_at ELSE COALESCE(?, deleted_at) END
      WHERE sets_id = ?;`,
     sqliteParams([
       cloudSetId,
