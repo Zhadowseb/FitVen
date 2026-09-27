@@ -29,9 +29,15 @@ import {
 } from "../Database/supaBaseClient";
 import * as workoutService from "./workoutService";
 import {
+  compareEntitySyncVersions,
   createPendingDeleteIndex,
   queueCloudDeletesForExerciseSets,
+  setDecimalColumns,
 } from "./cloudSync/cloudSyncShared";
+import {
+  normalizeSetDecimal,
+  resolveCloudSetDecimals,
+} from "@utils/setDecimals";
 import { withTransaction } from "./shared";
 import { createNextSyncVersion, normalizeSyncId } from "../Utils/syncUtils";
 import { enqueueSync, startBackgroundSync } from "./syncScheduler";
@@ -3605,6 +3611,8 @@ async function hydrateWorkoutStrengthDataFromCloud(db, workoutId) {
     throw cloudSetsError;
   }
 
+  setDecimalColumns.learnFrom(cloudSets);
+
   const localSets = (await weightliftingRepository.getSetsForCloudSync(db)).filter(
     (set) => localExerciseIds.has(set.exercise_instance_id)
   );
@@ -3687,6 +3695,22 @@ async function hydrateWorkoutStrengthDataFromCloud(db, workoutId) {
         continue;
       }
 
+      // Weight and RPE keep their decimals, and a cut-off copy in the cloud
+      // (102 for this phone's 102.5, from before the column kept them) does
+      // not overwrite the phone's - the set sync's own rule.
+      const cloudDecimals = {
+        rpe: normalizeSetDecimal(cloudSet?.rpe),
+        weight: normalizeSetDecimal(cloudSet?.weight),
+      };
+      const { rpe, weight } = localSet
+        ? resolveCloudSetDecimals({
+            localSnapshot: localSet,
+            cloudSnapshot: cloudDecimals,
+            cloudKeepsDecimals: setDecimalColumns.cloudKeepsDecimals(),
+            versionOrder: compareEntitySyncVersions(localSet, cloudSet),
+          }).cloudSnapshot
+        : cloudDecimals;
+
       const setPayload = {
         cloudSetId,
         remoteLocalSetId,
@@ -3697,8 +3721,8 @@ async function hydrateWorkoutStrengthDataFromCloud(db, workoutId) {
         setNumber: normalizeOptionalInteger(cloudSet?.set_number, 1),
         personalRecord: normalizeBooleanFlag(cloudSet?.personal_record),
         pause: normalizeOptionalInteger(cloudSet?.pause, null),
-        rpe: normalizeOptionalInteger(cloudSet?.rpe, null),
-        weight: normalizeOptionalInteger(cloudSet?.weight, null),
+        rpe,
+        weight,
         rmPercentage: normalizeOptionalInteger(cloudSet?.rm_percentage, null),
         reps: normalizeOptionalInteger(cloudSet?.reps, null),
         done: normalizeBooleanFlag(cloudSet?.done),

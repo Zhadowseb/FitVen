@@ -338,12 +338,12 @@ assert.ok(!mode.isMissingWeightModeColumnError({ code: "42703", message: "column
   );
   assert.ok(switchBody.length > 0 && !/refreshPersonalRecords/.test(switchBody), "a switch recomputes the records");
 
-  // The migration is in the ledger, and not as run.
+  // The migration is in the ledger, as run on 2026-09-27.
   const migration = "20261002090000_weight-mode-per-instance.sql";
   assert.ok(fs.existsSync(path.join(root, "supabase", "migrations", migration)));
   assert.ok(
-    read("supabase/migrations/README.md").includes(`| \`${migration}\` | no |`),
-    "the weight mode migration is not in the ledger as not run"
+    read("supabase/migrations/README.md").includes(`| \`${migration}\` | yes |`),
+    "the weight mode migration is not in the ledger as run"
   );
 
   /* ------------------------------------------------------ the database -- */
