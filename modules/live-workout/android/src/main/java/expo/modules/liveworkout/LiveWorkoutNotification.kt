@@ -11,11 +11,14 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.SystemClock
 import android.provider.Settings
+import android.text.format.DateUtils
 import android.view.View
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
+import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -23,11 +26,25 @@ import kotlin.math.roundToInt
 // "Låseskærm Android runde 2"): the system draws the header, and these
 // RemoteViews draw the rest. Every word comes from `state.strings`.
 //
+// Where it sits in the shade. Without a foreground service, AOSP's
+// NotificationComparator ranks an ordinary notification by its channel's
+// importance, then its priority, then its `when` - the newest first. So the
+// card has a HIGH channel, PRIORITY_MAX and `when` = the moment of each post;
+// the workout clock and the rest countdown are Chronometers in our own
+// content instead of the header's, which would need `when` in the past (the
+// start) or the future (the rest's end) and so would sort the card as old.
+// HIGH would peek on the first post; setSilent puts the card in a group whose
+// alerts go to a summary that does not exist, and SystemUI does not peek a
+// notification whose alert is suppressed by its group.
+//
 // SystemUI can reapply a new RemoteViews onto the views it already inflated
 // for the same layout, so every post sets every view's text, visibility and
 // children again rather than relying on the layout's defaults.
 internal object LiveWorkoutNotification {
-  const val CHANNEL_ID = "workout_live"
+  // HIGH, silent. A new id, because an app cannot raise the importance of a
+  // channel it has created: the first one, DEFAULT, is deleted.
+  const val CHANNEL_ID = "workout_live_top"
+  private const val OLD_CHANNEL_ID = "workout_live"
   const val NOTIFICATION_ID = 0x4C57
 
   private const val ORANGE = 0xFFF7742E.toInt()
@@ -45,6 +62,7 @@ internal object LiveWorkoutNotification {
   // still carries those.
   private const val REQUEST_WEIGHT_MINUS = REQUEST_OPEN + 7
   private const val REQUEST_WEIGHT_PLUS = REQUEST_OPEN + 8
+  private const val REQUEST_FINISH = REQUEST_OPEN + 9
 
   // U+2212, the typographic minus, not a hyphen.
   private const val MINUS_SIGN = "\u2212"
@@ -55,7 +73,9 @@ internal object LiveWorkoutNotification {
 
   /**
    * Creates the channel, or renames it to `strings.channelName`. `rename`
-   * false only creates it when it is missing.
+   * false only creates it when it is missing. Also deletes the first,
+   * DEFAULT channel, so settings do not list two - which takes away a card
+   * still posted on it, just before this posts the new one.
    */
   fun ensureChannel(context: Context, state: LiveWorkoutState, rename: Boolean) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
@@ -64,6 +84,10 @@ internal object LiveWorkoutNotification {
 
     val manager = context.getSystemService(NotificationManager::class.java) ?: return
 
+    if (manager.getNotificationChannel(OLD_CHANNEL_ID) != null) {
+      manager.deleteNotificationChannel(OLD_CHANNEL_ID)
+    }
+
     if (!rename && manager.getNotificationChannel(CHANNEL_ID) != null) {
       return
     }
@@ -71,9 +95,10 @@ internal object LiveWorkoutNotification {
     val name = state.string("channelName").ifBlank {
       context.applicationInfo.loadLabel(context.packageManager).toString()
     }
-    val channel = NotificationChannel(CHANNEL_ID, name, NotificationManager.IMPORTANCE_DEFAULT).apply {
+    val channel = NotificationChannel(CHANNEL_ID, name, NotificationManager.IMPORTANCE_HIGH).apply {
       setSound(null, null)
       enableVibration(false)
+      vibrationPattern = null
       enableLights(false)
       setShowBadge(false)
       lockscreenVisibility = Notification.VISIBILITY_PUBLIC
@@ -125,12 +150,19 @@ internal object LiveWorkoutNotification {
       .setSmallIcon(smallIcon(context))
       .setColor(ORANGE)
       .setOngoing(true)
+      // Neither alerts: once is none, and silent is none at all - no sound,
+      // no vibration, and no peek on the HIGH channel (see the top).
       .setOnlyAlertOnce(true)
       .setSilent(true)
       .setAutoCancel(false)
       .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
       .setCategory(NotificationCompat.CATEGORY_WORKOUT)
-      .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+      .setPriority(NotificationCompat.PRIORITY_MAX)
+      // The newest in the shade on every post, and no time in the header:
+      // the clocks are in our content.
+      .setWhen(System.currentTimeMillis())
+      .setShowWhen(false)
+      .setUsesChronometer(false)
       // What a screen reader, a watch or a phone without custom views gets.
       .setContentTitle(view.title)
       .setContentText(view.subtitle)
@@ -143,28 +175,8 @@ internal object LiveWorkoutNotification {
 
     openApp(context)?.let(builder::setContentIntent)
 
-    val rest = view.rest
-
-    when {
-      view.mode == LiveMode.REST && rest != null -> builder
-        .setSubText(state.string("restSub"))
-        .setShowWhen(true)
-        .setUsesChronometer(true)
-        .setChronometerCountDown(true)
-        .setWhen(millis(rest.endsAt))
-
-      state.pausedElapsed == null -> builder
-        .setShowWhen(true)
-        .setUsesChronometer(true)
-        .setChronometerCountDown(false)
-        .setWhen(millis(state.startedAt))
-
-      // A paused workout clock stands still: no chronometer and no time of
-      // day, only the time it stopped at.
-      else -> builder
-        .setShowWhen(false)
-        .setUsesChronometer(false)
-        .setSubText(LiveWorkoutDerive.clock(state.pausedElapsed))
+    if (view.mode == LiveMode.REST) {
+      builder.setSubText(state.string("restSub"))
     }
 
     return builder.build()
@@ -197,21 +209,29 @@ internal object LiveWorkoutNotification {
       return views
     }
 
-    // 1e: no ring; the set, where it is, and Sæt færdigt.
+    // 1e: no ring; the set and the workout clock, where it is, and Sæt
+    // færdigt. With every set done: "finish?", and the button opens the app to
+    // do it. With no sets yet: only the title.
     val views = RemoteViews(context.packageName, R.layout.live_workout_collapsed)
-    val active = view.mode == LiveMode.SET
+    val setting = view.mode == LiveMode.SET
+    val finish = finishApp(context, view)
+    val subtitle = if (setting) view.subtitleShort else view.subtitle
 
-    views.setViewVisibility(R.id.live_workout_subtitle, visibleIf(active))
-    views.setViewVisibility(R.id.live_workout_primary, visibleIf(active))
-    views.setTextViewText(R.id.live_workout_title, if (active) view.nowText else view.title)
-    views.setTextViewText(R.id.live_workout_subtitle, view.subtitleShort)
+    views.setTextViewText(R.id.live_workout_title, if (setting) view.nowText else view.title)
+    views.setTextViewText(R.id.live_workout_subtitle, subtitle)
+    views.setViewVisibility(R.id.live_workout_subtitle, visibleIf(subtitle.isNotEmpty()))
+    views.setViewVisibility(R.id.live_workout_primary, visibleIf(setting || finish != null))
+    bindClock(views, state)
 
-    if (active) {
+    if (setting) {
       views.setOnClickPendingIntent(
         R.id.live_workout_primary,
         action(context, state, REQUEST_COMPLETE, LiveAction.COMPLETE_SET, setId = view.nowSetId)
       )
       views.setContentDescription(R.id.live_workout_primary, state.string("complete"))
+    } else if (finish != null) {
+      views.setOnClickPendingIntent(R.id.live_workout_primary, finish)
+      views.setContentDescription(R.id.live_workout_primary, view.finishLabel)
     }
 
     return views
@@ -231,14 +251,18 @@ internal object LiveWorkoutNotification {
     val active = setting || resting
     val views = RemoteViews(context.packageName, R.layout.live_workout_expanded)
 
-    // Content row: the eyebrow, the set (in 1f the one after the rest), its
-    // exercise, and the rings SÆT and ØVELSE.
+    // Content row: the eyebrow and the workout clock, the set (in 1f the one
+    // after the rest), its exercise, and the rings SÆT and ØVELSE. With every
+    // set done: the title and "finish?"; with no sets yet, only the title.
+    val subtitle = if (active) view.exerciseName else view.subtitle
+
     views.setViewVisibility(R.id.live_workout_eyebrow, visibleIf(active))
-    views.setViewVisibility(R.id.live_workout_subtitle, visibleIf(active))
+    views.setViewVisibility(R.id.live_workout_subtitle, visibleIf(subtitle.isNotEmpty()))
     views.setViewVisibility(R.id.live_workout_rings, visibleIf(active))
     views.setTextViewText(R.id.live_workout_eyebrow, view.eyebrow)
     views.setTextViewText(R.id.live_workout_title, if (active) view.nowText else view.title)
-    views.setTextViewText(R.id.live_workout_subtitle, view.exerciseName)
+    views.setTextViewText(R.id.live_workout_subtitle, subtitle)
+    bindClock(views, state)
 
     view.setsRing?.let {
       bindRing(
@@ -292,7 +316,7 @@ internal object LiveWorkoutNotification {
     views.setTextViewText(R.id.live_workout_row_next_label, nextRow?.label ?: "")
     bindChips(context, views, R.id.live_workout_chips_next, if (active) nextRow?.chips.orEmpty() else emptyList())
 
-    bindSetButtons(context, state, view, views, setting)
+    bindSetButtons(context, state, view, views, setting, finishApp(context, view))
     bindRestButtons(context, state, views, resting)
 
     return views
@@ -300,22 +324,27 @@ internal object LiveWorkoutNotification {
 
   /**
    * 1e: −step · Sæt færdigt · +step. A set without a weight has no weight
-   * buttons, and Sæt færdigt takes the row.
+   * buttons, and Sæt færdigt takes the row. With every set done, the same
+   * pill alone is "Afslut" and opens the app to finish (`finish`).
    */
   private fun bindSetButtons(
     context: Context,
     state: LiveWorkoutState,
     view: LiveWorkoutView,
     views: RemoteViews,
-    shown: Boolean
+    shown: Boolean,
+    finish: PendingIntent?
   ) {
     val weight = view.weightButtons?.takeIf { shown }
 
-    views.setViewVisibility(R.id.live_workout_buttons, visibleIf(shown))
+    views.setViewVisibility(R.id.live_workout_buttons, visibleIf(shown || finish != null))
     views.setViewVisibility(R.id.live_workout_weight_minus, visibleIf(weight != null && weight.minusEnabled))
     views.setViewVisibility(R.id.live_workout_weight_minus_off, visibleIf(weight != null && !weight.minusEnabled))
     views.setViewVisibility(R.id.live_workout_weight_plus, visibleIf(weight != null))
-    views.setTextViewText(R.id.live_workout_complete_text, state.string("complete"))
+    views.setTextViewText(
+      R.id.live_workout_complete_text,
+      if (shown || finish == null) state.string("complete") else view.finishLabel
+    )
 
     for (id in intArrayOf(R.id.live_workout_weight_minus_sign, R.id.live_workout_weight_minus_off_sign)) {
       views.setTextViewText(id, MINUS_SIGN)
@@ -339,6 +368,8 @@ internal object LiveWorkoutNotification {
         R.id.live_workout_complete,
         action(context, state, REQUEST_COMPLETE, LiveAction.COMPLETE_SET, setId = view.nowSetId)
       )
+    } else if (finish != null) {
+      views.setOnClickPendingIntent(R.id.live_workout_complete, finish)
     }
 
     if (weight != null) {
@@ -404,7 +435,53 @@ internal object LiveWorkoutNotification {
     }
   }
 
+  /**
+   * The workout clock: counting up from `startedAt` by itself, or, while
+   * the workout is paused, the time it stopped at - written as the running
+   * clock writes it, so pausing does not change how it looks. Both views are
+   * set on every post, so resuming always brings the running clock back.
+   */
+  private fun bindClock(views: RemoteViews, state: LiveWorkoutState) {
+    val stopped = state.pausedElapsed
+
+    views.setViewVisibility(R.id.live_workout_clock, visibleIf(stopped == null))
+    views.setViewVisibility(R.id.live_workout_clock_stopped, visibleIf(stopped != null))
+    views.setChronometer(R.id.live_workout_clock, elapsedRealtimeOf(state.startedAt), null, stopped == null)
+    views.setChronometerCountDown(R.id.live_workout_clock, false)
+    views.setTextViewText(
+      R.id.live_workout_clock_stopped,
+      stopped?.let { DateUtils.formatElapsedTime(max(0L, floor(it).toLong())) } ?: ""
+    )
+  }
+
   // ---- Intents ----
+
+  /**
+   * "Afslut", once every set is done: opens the app on `state.finishUrl`,
+   * which finishes the workout and asks about the post. Nothing is queued.
+   * Null - no button - without a link, or when nothing in the app opens it.
+   */
+  private fun finishApp(context: Context, view: LiveWorkoutView): PendingIntent? {
+    val url = view.finishUrl?.takeIf { view.mode == LiveMode.ALL_DONE && it.isNotBlank() } ?: return null
+    val intent = Intent(Intent.ACTION_VIEW, url.toUri())
+      .setPackage(context.packageName)
+      .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+
+    // Our own package, which an app can always see: no <queries> needed.
+    @Suppress("QueryPermissionsNeeded")
+    val opens = intent.resolveActivity(context.packageManager) != null
+
+    if (!opens) {
+      return null
+    }
+
+    return PendingIntent.getActivity(
+      context,
+      REQUEST_FINISH,
+      intent,
+      PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+    )
+  }
 
   private fun action(
     context: Context,

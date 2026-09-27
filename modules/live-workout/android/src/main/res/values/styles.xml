@@ -119,6 +119,18 @@
     <item name="android:textStyle">bold</item>
   </style>
 
+  <!-- The workout clock: 11/700 at the end of the open card's eyebrow, 13/700
+       beside the collapsed card's title. -->
+  <style name="LiveWorkout.Text.Bold.Clock">
+    <item name="android:textSize">11sp</item>
+    <item name="android:textColor">@color/live_workout_text_secondary</item>
+    <item name="android:fontFeatureSettings">tnum</item>
+  </style>
+
+  <style name="LiveWorkout.Text.Bold.Clock.Collapsed">
+    <item name="android:textSize">13sp</item>
+  </style>
+
   <!-- "af 3:00" 11/700, beside PAUSE -->
   <style name="LiveWorkout.Text.Bold.RestOf">
     <item name="android:textSize">11sp</item>

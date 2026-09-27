@@ -64,7 +64,9 @@ internal data class LiveWorkoutState(
   /** "kg". */
   val unit: String? = null,
   /** The language's decimal separator, "," or ".". */
-  val decimal: String? = null
+  val decimal: String? = null,
+  /** Where "Afslut" takes you once every set is done: `fitven://live-workout/finish?…`. */
+  val finishUrl: String? = null
 ) {
   /** A translated string or template from JS; empty when it is missing. */
   fun string(key: String): String = strings[key] ?: ""
@@ -99,6 +101,7 @@ internal data class LiveWorkoutState(
     json.put("strings", JSONObject(strings as Map<*, *>))
     json.put("unit", unit ?: JSONObject.NULL)
     json.put("decimal", decimal ?: JSONObject.NULL)
+    json.put("finishUrl", finishUrl ?: JSONObject.NULL)
     return json.toString()
   }
 
@@ -144,7 +147,8 @@ internal data class LiveWorkoutState(
         canNext = json.optBoolean("canNext", false),
         strings = stringsOf(json.optJSONObject("strings")),
         unit = json.textOrNull("unit"),
-        decimal = json.textOrNull("decimal")
+        decimal = json.textOrNull("decimal"),
+        finishUrl = json.textOrNull("finishUrl")
       )
     }
 

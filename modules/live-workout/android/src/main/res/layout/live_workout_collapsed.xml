@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 1e collapsed (48 dp): the set and where it is, from the left edge, and
-     Sæt færdigt. Also the one line for "no sets yet" / "all sets done", with
-     the button hidden. -->
+<!-- 1e collapsed (48 dp): the set and the workout clock, where it is, and
+     Sæt færdigt, from the left edge. The same layout says "all sets done -
+     finish?" with the button opening the app to finish, and "no sets yet"
+     with no button.
+
+     The workout clock is ours, not the system header's: a running Chronometer,
+     or the time it stopped at while the workout is paused. The header shows
+     no time at all, so that `when` can be the time of the post (see
+     LiveWorkoutNotification). -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
   android:layout_width="match_parent"
   android:layout_height="wrap_content"
@@ -16,11 +22,33 @@
     android:layout_weight="1"
     android:orientation="vertical">
 
-    <TextView
-      android:id="@+id/live_workout_title"
-      style="@style/LiveWorkout.Text.Heavy.CollapsedTitle"
+    <LinearLayout
       android:layout_width="match_parent"
-      android:layout_height="wrap_content" />
+      android:layout_height="wrap_content"
+      android:orientation="horizontal">
+
+      <TextView
+        android:id="@+id/live_workout_title"
+        style="@style/LiveWorkout.Text.Heavy.CollapsedTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1" />
+
+      <Chronometer
+        android:id="@+id/live_workout_clock"
+        style="@style/LiveWorkout.Text.Bold.Clock.Collapsed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp" />
+
+      <TextView
+        android:id="@+id/live_workout_clock_stopped"
+        style="@style/LiveWorkout.Text.Bold.Clock.Collapsed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:visibility="gone" />
+    </LinearLayout>
 
     <TextView
       android:id="@+id/live_workout_subtitle"

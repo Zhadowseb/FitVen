@@ -26,6 +26,17 @@
   - **Collapsed, rest:** no ring. The content area is orange at the start of the rest and drains to the left until it is grey.
     - It redraws at most every 5 s, and at once on ±15 and Spring over.
     - With animations switched off it stays full.
+- **Every set done: the card asks to finish.** "Alle sæt er færdige · Afslut træningen?" has one button, Afslut.
+  - The button opens the app on a link (`fitven://live-workout/finish`). App.js opens that workout, and the workout screen finishes it without asking again. Then it asks about the post, as a finish there does.
+  - On iOS it is a `Link`, so it needs no iOS 17. On Android it opens the app with the link.
+- **Android: the card keeps to the top of the notification list,** as far as Android allows without a foreground service.
+  - It uses a new silent channel at high importance (`workout_live_top`, replacing `workout_live`) and the highest priority.
+  - The notification time is the time of each post, not the workout's start, which sorted the card as old.
+  - One UI can still reorder it. Conversations, calls and media always come first.
+- **Android: the workout time is in the card itself,** next to the title when collapsed and on the eyebrow line when open. It stands still while the workout is paused and runs again when it is resumed.
+  - It used to be in the system header, where One UI dropped it on a pause and did not bring it back.
+- **Tapping the rest-is-over reminder** no longer opens the notification history. It only brings the app back.
+- **The card's state carries at most 10 sets an exercise,** so it stays under ActivityKit's 4 KB with the new fields.
 - `npm run test:live-workout` now also runs the lock screen's writes against the real schema in an in-memory SQLite. A weight moved and Sæt færdigt save the set once. The same taps handled twice change nothing. An edit made after the tap wins.
 
 ---

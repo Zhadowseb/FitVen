@@ -73,7 +73,11 @@ internal data class LiveWorkoutView(
   val chips: List<LiveChip> = emptyList(),
   val nextRow: LiveNextRow? = null,
   /** Null while resting, and for a set without a weight (body weight, time). */
-  val weightButtons: LiveWeightButtons? = null
+  val weightButtons: LiveWeightButtons? = null,
+  /** allDone: "Afslut", the one button. */
+  val finishLabel: String = "",
+  /** allDone: where it takes you. Without one there is no button. */
+  val finishUrl: String? = null
 )
 
 internal object LiveWorkoutDerive {
@@ -96,13 +100,19 @@ internal object LiveWorkoutDerive {
     }
 
     if (exercise == null) {
-      val allDone = state.totals.all > 0
-
-      return LiveWorkoutView(
-        mode = if (allDone) LiveMode.ALL_DONE else LiveMode.EMPTY,
-        title = state.string(if (allDone) "allDone" else "noSets"),
-        subtitle = ""
-      )
+      // Every set done: the card asks to finish, and its one button opens
+      // the app on the workout to do it.
+      return if (state.totals.all > 0) {
+        LiveWorkoutView(
+          mode = LiveMode.ALL_DONE,
+          title = state.string("allDone"),
+          subtitle = state.string("allDoneQuestion"),
+          finishLabel = state.string("finish"),
+          finishUrl = state.finishUrl
+        )
+      } else {
+        LiveWorkoutView(mode = LiveMode.EMPTY, title = state.string("noSets"), subtitle = "")
+      }
     }
 
     val rest = state.rest?.takeIf { it.endsAt > now }

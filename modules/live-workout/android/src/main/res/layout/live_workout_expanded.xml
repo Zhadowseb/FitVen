@@ -14,9 +14,11 @@
      For a set without a weight the weight buttons are hidden and Sæt færdigt
      takes the row, which is why the 8 dp gaps sit on the weight buttons and
      not on it. At 0 the minus button's dimmed twin (40 %) is shown instead; it
-     swallows the tap, so a tap on it does nothing. For "no sets yet" / "all
-     sets done" only the title is shown. No background: the rest does not
-     colour the open card. -->
+     swallows the tap, so a tap on it does nothing. With every set done the
+     card is the title, "finish the workout?" and that same pill, alone and
+     full width, as "Afslut"; with no sets yet it is only the title. The
+     workout clock ends the eyebrow's line in every mode. No background: the
+     rest does not colour the open card. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
   android:layout_width="match_parent"
   android:layout_height="wrap_content"
@@ -37,11 +39,35 @@
       android:layout_weight="1"
       android:orientation="vertical">
 
-      <TextView
-        android:id="@+id/live_workout_eyebrow"
-        style="@style/LiveWorkout.Text.Heavy.Eyebrow"
+      <!-- The eyebrow, and the workout clock at its end: a running
+           Chronometer, or the time it stopped at while paused. -->
+      <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+          android:id="@+id/live_workout_eyebrow"
+          style="@style/LiveWorkout.Text.Heavy.Eyebrow"
+          android:layout_width="0dp"
+          android:layout_height="wrap_content"
+          android:layout_weight="1" />
+
+        <Chronometer
+          android:id="@+id/live_workout_clock"
+          style="@style/LiveWorkout.Text.Bold.Clock"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_marginStart="8dp" />
+
+        <TextView
+          android:id="@+id/live_workout_clock_stopped"
+          style="@style/LiveWorkout.Text.Bold.Clock"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_marginStart="8dp"
+          android:visibility="gone" />
+      </LinearLayout>
 
       <TextView
         android:id="@+id/live_workout_title"
