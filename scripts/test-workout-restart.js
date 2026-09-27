@@ -347,10 +347,14 @@ set(300, 30, 1, 95, 5, { done: 1 });
     "the reset timer never told the lock-screen card or the square"
   );
 
-  // Nothing ticked off: no set written, nothing said about sets.
+  // Nothing ticked off: no set written, nothing said about sets - but the
+  // timer was still reset, and Home and the lock-screen card hear that
+  // (PR #294's review).
   setChanges.length = 0;
+  dataChanges.length = 0;
   assert.strictEqual(await weightliftingService.restartStrengthWorkout(db, 2), 0);
   assert.strictEqual(setChanges.length, 0);
+  assert.ok(dataChanges.includes("workouts"), "a restart with no sets ticked off said nothing about its timer");
 
   /* ---------------------------------------------- started again, paused -- */
 

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   ScrollView,
   TextInput,
@@ -39,6 +40,7 @@ import {
   ThemedView,
 } from "@resources/ThemedComponents";
 import {
+  centreSearchView,
   countCentreExercises,
   getChainInitials,
   listCentreExercises,
@@ -254,9 +256,12 @@ export default function GymLeaderboardPage() {
   }, [route.params?.lift_id]);
 
   // Every exercise ranked here, for the search: asked for once per centre,
-  // when the search is first used. Until it has come, and if it fails, the
-  // search looks through the exercises the page already has.
+  // when the search is first used. Until it has come the search looks
+  // through the exercises the page already has - and says it is still
+  // looking, or that it could not get the rest, rather than "no match" about
+  // an exercise that is lifted here (PR #294's review).
   const [searchOverview, setSearchOverview] = useState(null);
+  const [searchListStatus, setSearchListStatus] = useState("idle");
   const searchRequestGymRef = useRef(null);
 
   const loadSearchableExercises = useCallback(() => {
@@ -265,17 +270,27 @@ export default function GymLeaderboardPage() {
     }
 
     searchRequestGymRef.current = gymId;
+    setSearchListStatus("loading");
     gymService
       .getGymOverview({ gymId, scope: gymService.GYM_SCOPE_GYM, moreLimit: null })
       .then((result) => {
-        if (searchRequestGymRef.current === gymId && result) {
+        if (searchRequestGymRef.current !== gymId) {
+          return;
+        }
+
+        if (result) {
           setSearchOverview(result);
+          setSearchListStatus("loaded");
+        } else {
+          searchRequestGymRef.current = null;
+          setSearchListStatus("failed");
         }
       })
       .catch((error) => {
-        // Asked again the next time the search is used.
+        // Asked again on "Prøv igen", or the next time the search is used.
         if (searchRequestGymRef.current === gymId) {
           searchRequestGymRef.current = null;
+          setSearchListStatus("failed");
         }
         console.warn("Could not load every exercise at this centre for the search:", error);
       });
@@ -286,6 +301,7 @@ export default function GymLeaderboardPage() {
   useEffect(() => {
     setExerciseQuery("");
     setSearchOverview(null);
+    setSearchListStatus("idle");
     searchRequestGymRef.current = null;
   }, [gymId]);
 
@@ -311,6 +327,13 @@ export default function GymLeaderboardPage() {
     () => searchCentreExercises(searchableExercises, trimmedQuery),
     [searchableExercises, trimmedQuery]
   );
+  const searchView = centreSearchView({
+    matchCount: exerciseMatches.length,
+    previewCount: exercises.length,
+    totalCount: exerciseTotal,
+    fullListLoaded: searchOverview !== null,
+    status: searchListStatus,
+  });
 
   // Typed without the field reporting its focus first - a paste, say.
   useEffect(() => {
@@ -364,7 +387,46 @@ export default function GymLeaderboardPage() {
         </ThemedText>
       </View>
       <View style={[styles.listCard, { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder }]}>
-        {exerciseMatches.length === 0 ? (
+        {exerciseMatches.map((exercise, index) => (
+          <ExerciseRow
+            key={exercise.id}
+            exercise={exercise}
+            onPress={() => openExercise(exercise.id)}
+            divider={index < exerciseMatches.length - 1 || !searchView.complete}
+          />
+        ))}
+
+        {searchView.loading ? (
+          <View style={styles.searchStatusLine} accessibilityLiveRegion="polite">
+            <ActivityIndicator size="small" color={quietText} />
+            <ThemedText style={styles.emptyBody} setColor={quietText}>
+              {t("gyms.centreExercises.searchLoading")}
+            </ThemedText>
+          </View>
+        ) : null}
+
+        {searchView.failed ? (
+          <View style={styles.emptyLine} accessibilityLiveRegion="polite">
+            <ThemedText style={styles.emptyTitle} setColor={theme.title}>
+              {t("gyms.centreExercises.searchFailedTitle")}
+            </ThemedText>
+            <ThemedText style={styles.emptyBody} setColor={quietText}>
+              {t("gyms.centreExercises.searchFailedBody")}
+            </ThemedText>
+            <TouchableOpacity
+              accessibilityRole="button"
+              onPress={loadSearchableExercises}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              style={styles.searchRetry}
+            >
+              <ThemedText style={styles.emptyTitle} setColor={theme.primaryText ?? theme.primary}>
+                {t("common.retry")}
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
+        {searchView.noMatch ? (
           <View style={styles.emptyLine}>
             <ThemedText style={styles.emptyTitle} setColor={theme.title}>
               {t("gyms.centreExercises.noMatchTitle")}
@@ -373,16 +435,7 @@ export default function GymLeaderboardPage() {
               {t("gyms.centreExercises.noMatchBody")}
             </ThemedText>
           </View>
-        ) : (
-          exerciseMatches.map((exercise, index) => (
-            <ExerciseRow
-              key={exercise.id}
-              exercise={exercise}
-              onPress={() => openExercise(exercise.id)}
-              divider={index < exerciseMatches.length - 1}
-            />
-          ))
-        )}
+        ) : null}
       </View>
     </View>
   );

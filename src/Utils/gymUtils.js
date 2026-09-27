@@ -272,6 +272,37 @@ export function countCentreExercises(overview) {
 }
 
 /**
+ * What the centre's exercise search says under its matches, from how far it
+ * has got. The page starts with a preview of the exercises and fetches the
+ * rest when somebody searches, so "no match" is only true once every exercise
+ * has been looked through - before that the search is still looking, or
+ * could not get the rest (PR #294's review: it said "no match" about an
+ * exercise lifted there).
+ *
+ *   previewCount   exercises the page already has
+ *   totalCount     exercises ranked at the centre (countCentreExercises)
+ *   fullListLoaded the full list has come
+ *   status         "idle" | "loading" | "loaded" | "failed", for the full list
+ */
+export function centreSearchView({
+  matchCount = 0,
+  previewCount = 0,
+  totalCount = 0,
+  fullListLoaded = false,
+  status = "idle",
+} = {}) {
+  const complete = Boolean(fullListLoaded) || previewCount >= totalCount;
+  const failed = !complete && status === "failed";
+
+  return {
+    complete,
+    loading: !complete && !failed,
+    failed,
+    noMatch: complete && matchCount === 0,
+  };
+}
+
+/**
  * The exercises whose name holds what was typed, best match first: the name
  * starting with it, then a word in it, then anywhere - and within each, the
  * list's own order (most lifters first). Empty for an empty query.

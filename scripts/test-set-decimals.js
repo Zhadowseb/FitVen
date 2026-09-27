@@ -934,6 +934,117 @@ async function hydrationChecks() {
       "an exercise edit still waiting to upload is not overwritten by the cloud's older copy"
     );
   }
+
+  /* ------------------- a waiting edit older than the cloud's copy -- */
+  // The other half of the same rule (PR #294's review): an edit waiting to
+  // upload is kept only when it is not older than the cloud's. Changed on
+  // another phone since, the cloud's copy wins, and the row is clean.
+  {
+    const hydrationCloud = createHydrationCloud("numeric", { exerciseNote: "Newer on the other phone" });
+    const cloudExercise = hydrationCloud.rows("exercise_instance")[0];
+    cloudExercise.sync_version = V + 900;
+    cloudExercise.last_updated = new Date((V + 900) * 1000).toISOString();
+    // Typed here at V + 500, before the other phone's V + 900.
+    const phone = await createHydrationPhone({ exerciseNote: "Typed offline", exerciseDirty: true });
+    const { service } = startHydrationSession(hydrationCloud);
+
+    phone.syncedSet({ setId: 5, setNumber: 1, weight: 70, reps: 5, needsSync: 1, version: V + 10 });
+    hydrationCloud.set(5, {
+      set_number: 1,
+      weight: 75,
+      reps: 5,
+      sync_version: V + 400,
+      last_updated: new Date((V + 400) * 1000).toISOString(),
+    });
+
+    await service.hydrateStrengthWorkoutDataForWorkout(phone, 1, { forceTargetedHydration: true });
+
+    assert.deepStrictEqual(
+      pick(phone.row(5), ["weight", "needs_sync"]),
+      { weight: 75, needs_sync: 0 },
+      "a waiting set older than the cloud's copy kept its value over the newer one"
+    );
+    // Only the note: the sets under it changed, so the exercise's derived
+    // fields are worked out again afterwards and it goes up for those.
+    assert.strictEqual(
+      phone.raw.prepare("SELECT note FROM Exercise_Instance WHERE exercise_instance_id = 1").get().note,
+      "Newer on the other phone",
+      "a waiting exercise older than the cloud's copy kept its note over the newer one"
+    );
+  }
+
+  /* -------------------- a write landing while the hydration writes -- */
+  // PR #295's review: the hydration's own writes are guarded by the version
+  // they read, and a skipped write must leave the user's edit and its flag
+  // alone. Somebody changes set 6 here just before the hydration writes the
+  // cloud's newer copy over it.
+  {
+    const hydrationCloud = createHydrationCloud("numeric");
+    const phone = await createHydrationPhone();
+    const { service } = startHydrationSession(hydrationCloud);
+
+    phone.syncedSet({ setId: 6, setNumber: 1, weight: 70, reps: 5 });
+    hydrationCloud.set(6, {
+      set_number: 1,
+      weight: 75,
+      reps: 5,
+      sync_version: V + 400,
+      last_updated: new Date((V + 400) * 1000).toISOString(),
+    });
+
+    const pullsOverASet = /^\s*UPDATE\s+"?Set"?\s[\s\S]*\bneeds_sync = 0\b/;
+    let pending = true;
+    const racing = {
+      ...phone,
+      async runAsync(sql, params) {
+        if (pending && pullsOverASet.test(sql)) {
+          pending = false;
+          phone.raw
+            .prepare('UPDATE "Set" SET weight = 99, sync_version = sync_version + 1, needs_sync = 1 WHERE sets_id = 6')
+            .run();
+        }
+
+        return phone.runAsync(sql, params);
+      },
+    };
+
+    await service.hydrateStrengthWorkoutDataForWorkout(racing, 1, { forceTargetedHydration: true });
+
+    assert.ok(!pending, "the hydration never wrote over a set, so this tested nothing");
+    assert.deepStrictEqual(
+      pick(phone.row(6), ["weight", "needs_sync"]),
+      { weight: 99, needs_sync: 1 },
+      "a set edited while the hydration wrote lost the edit, or its flag"
+    );
+  }
+
+  /* ----------------- two cloud rows for one exercise made just now -- */
+  // PR #295's review: the exercise the hydration creates carries the version
+  // it was written at, so a second cloud row matched to it is written over it
+  // by that version instead of throwing "needs the expectedSyncVersion".
+  {
+    const hydrationCloud = createHydrationCloud("numeric", { exerciseNote: "First copy" });
+    const first = hydrationCloud.rows("exercise_instance")[0];
+    hydrationCloud.rows("exercise_instance").push({
+      ...first,
+      id: CLOUD_EXERCISE_ID + 1,
+      sync_id: "exercise-sync-second",
+      note: "Second copy",
+      sync_version: first.sync_version + 10,
+      last_updated: new Date((first.sync_version + 10) * 1000).toISOString(),
+    });
+    const phone = await createHydrationPhone();
+    phone.raw.prepare("DELETE FROM Exercise_Instance WHERE exercise_instance_id = 1").run();
+    const { service } = startHydrationSession(hydrationCloud);
+
+    await service.hydrateStrengthWorkoutDataForWorkout(phone, 1, { forceTargetedHydration: true });
+
+    const exercises = phone.raw
+      .prepare("SELECT note FROM Exercise_Instance WHERE workout_type_instance_id = 1")
+      .all()
+      .map((row) => row.note);
+    assert.strictEqual(exercises.length, 1, "two cloud rows for one exercise became two exercises");
+  }
 }
 
 /* ============================ the other paths that read a set from the cloud == */

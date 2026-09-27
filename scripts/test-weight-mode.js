@@ -907,6 +907,8 @@ async function serviceChecks() {
     (Array.isArray(params) ? params : params === undefined ? [] : [params]).map((value) =>
       value === undefined ? null : typeof value === "boolean" ? Number(value) : value
     );
+  // How often the 1RM estimate is looked up: once per switch, not per set.
+  let estimateLookups = 0;
   const db = {
     databasePath: "test-weight-mode-service",
     execAsync: async (sql) => raw.exec(sql),
@@ -916,7 +918,13 @@ async function serviceChecks() {
       return { lastInsertRowId: Number(result.lastInsertRowid), changes: Number(result.changes) };
     },
     getAllAsync: async (sql, params) => raw.prepare(sql).all(...bind(params)),
-    getFirstAsync: async (sql, params) => raw.prepare(sql).get(...bind(params)) ?? null,
+    getFirstAsync: async (sql, params) => {
+      if (/LEFT JOIN Estimated_Set/.test(sql)) {
+        estimateLookups += 1;
+      }
+
+      return raw.prepare(sql).get(...bind(params)) ?? null;
+    },
     isInTransactionAsync: async () => Boolean(raw.isTransaction),
   };
   const run = (sql, ...params) => raw.prepare(sql).run(...params);
@@ -958,9 +966,11 @@ async function serviceChecks() {
 
   // The switch: every weight halved, and the %1RM with it - it is of the
   // number as written.
+  estimateLookups = 0;
   const undo = await service.switchExerciseWeightMode(db, { exerciseId: 10, weightMode: PER_SIDE });
 
   assert.ok(undo, "the switch changed nothing");
+  assert.strictEqual(estimateLookups, 1, "the switch looked the 1RM estimate up once per set");
   assert.deepStrictEqual(
     setsOf(10),
     [[100, 25, 25], [101, 20, 20], [102, null, null]],

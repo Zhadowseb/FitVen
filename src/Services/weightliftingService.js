@@ -4381,6 +4381,7 @@ export async function switchExerciseWeightMode(db, { exerciseId, weightMode }) {
       resolvedExerciseId
     );
     const changes = planWeightModeSwitch(sets, previousMode, nextMode);
+    const estimateFor = createExerciseEstimateLookup(db);
     const rmPercentageBySetId = new Map(
       sets.map((set) => [Number(set.sets_id), set.rm_percentage ?? null])
     );
@@ -4400,7 +4401,7 @@ export async function switchExerciseWeightMode(db, { exerciseId, weightMode }) {
       const rmPercentageRewritten = await rewriteSetRmPercentage(db, {
         setId: change.setId,
         weight: change.next,
-        mode: nextMode,
+        estimatedWeight: await estimateFor(change.setId),
       });
 
       undoSets.push({
@@ -4483,13 +4484,26 @@ export async function switchExerciseWeightMode(db, { exerciseId, weightMode }) {
   return undo;
 }
 
+// The 1RM estimate for the sets of one exercise in one workout. It comes from
+// the exercise's name and the program the workout is in, never from the set,
+// so a switch or its undo asks for it once instead of once per set - a join
+// over six tables each time (PR #294's review).
+function createExerciseEstimateLookup(db) {
+  let estimate;
+
+  return async (setId) => {
+    if (estimate === undefined) {
+      estimate = await getEstimatedWeightForSet(db, setId);
+    }
+
+    return estimate;
+  };
+}
+
 // A set's %1RM worked out again for a weight a switch or its undo wrote, when
 // there is an estimate to work it out from. True when it was written.
-async function rewriteSetRmPercentage(db, { setId, weight }) {
-  const estimatedWeight =
-    weight === null ? null : await getEstimatedWeightForSet(db, setId);
-
-  if (estimatedWeight === null) {
+async function rewriteSetRmPercentage(db, { setId, weight, estimatedWeight }) {
+  if (weight === null || estimatedWeight === null || estimatedWeight === undefined) {
     return false;
   }
 
@@ -4535,6 +4549,7 @@ export async function undoExerciseWeightModeSwitch(db, undo) {
       (undo.sets ?? []).map((set) => [Number(set.setId), set])
     );
     const current = await weightliftingRepository.getSetsByExercise(db, exerciseId);
+    const estimateFor = createExerciseEstimateLookup(db);
 
     for (const change of planWeightModeSwitch(current, undo.to, restoreMode)) {
       const switched = switchedBySetId.get(Number(change.setId));
@@ -4569,7 +4584,7 @@ export async function undoExerciseWeightModeSwitch(db, undo) {
       await rewriteSetRmPercentage(db, {
         setId: change.setId,
         weight: change.next,
-        mode: restoreMode,
+        estimatedWeight: await estimateFor(change.setId),
       });
     }
 
