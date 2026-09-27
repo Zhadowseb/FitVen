@@ -5,8 +5,10 @@
 // can be loaded and tested on its own. scripts/test-cloud-sync-fields.js does
 // exactly that, which is the only automated coverage the sync engine has.
 // One copy of the wall-clock parser, in the pure module a test can load.
+import { normalizeSetDecimal } from "@utils/setDecimals";
 import { normalizeSetType } from "@utils/setTypes";
 import { normalizeStartedFrom } from "@utils/startedFrom";
+import { normalizeInstanceWeightMode } from "@utils/weightMode";
 import { normalizeCloudTimeString } from "@utils/cloudActivityUtils";
 import {
   formatDate,
@@ -100,6 +102,11 @@ const text = () => normalizeOptionalText;
 // A set's kind. The rules live in @utils/setTypes, where the repository reads
 // them too - a value this client does not recognise becomes a working set.
 const setType = () => normalizeSetType;
+
+// A set's weight and RPE, to two decimals (@utils/setDecimals). The cloud
+// columns were integers until 20261003090000_a-set-keeps-its-decimals.sql;
+// setSync.js copes with either, so these must not truncate.
+const setDecimal = () => normalizeSetDecimal;
 
 function field(key, local, options = {}) {
   const read = options.read ?? ((row) => row?.[key]);
@@ -211,6 +218,13 @@ export const SYNCED_FIELDS = {
     field("visible_columns", normalizeExerciseVisibleColumns),
     field("note", text()),
     field("done", flag()),
+    // Per side or both sides (@utils/weightMode): 'total' | 'per_side', or
+    // null for "not known". Compared, unlike started_from, because a switch
+    // changes it and another phone has to see that. A null from the cloud -
+    // no column yet, or an older app wrote the row - is not a change: the
+    // reconcile keeps the local value, and a null is never sent (see
+    // exerciseInstanceSync.js, which also copes with the column missing).
+    field("weight_mode", normalizeInstanceWeightMode),
   ],
   Set: [
     field("local_set_id", int(), { compare: false, payload: "head" }),
@@ -218,8 +232,8 @@ export const SYNCED_FIELDS = {
     field("set_number", int()),
     field("personal_record", flag()),
     field("pause", int()),
-    field("rpe", int()),
-    field("weight", int()),
+    field("rpe", setDecimal()),
+    field("weight", setDecimal()),
     field("rm_percentage", int()),
     field("reps", int()),
     field("done", flag()),

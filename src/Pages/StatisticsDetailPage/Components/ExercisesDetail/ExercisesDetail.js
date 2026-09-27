@@ -9,6 +9,7 @@ import ChevronRight from "@resources/Icons/UI-icons/ChevronRight";
 import { ThemedText } from "@resources/ThemedComponents";
 import { formatRelativeDay } from "@utils/dateUtils";
 import { buildPeriodExercises } from "@utils/statisticsInsights";
+import { weightModeSuffix } from "@utils/weightMode";
 
 function formatKg(value) {
   return formatNumber(Math.round(value * 2) / 2, { maximumFractionDigits: 1 });
@@ -76,7 +77,12 @@ export default function ExercisesDetail({ sets, period, now, onSelectExercise, e
                 </ThemedText>
                 <ThemedText style={localStyles.caption} setColor={quiet} numberOfLines={1}>
                   {t("statistics.exercises.heaviest", {
-                    lift: `${formatKg(exercise.heaviest.weight)} ${t("common.kg")} × ${exercise.heaviest.reps}`,
+                    lift: `${formatKg(exercise.heaviest.weight)} ${[
+                      t("common.kg"),
+                      weightModeSuffix(exercise.weightMode, t),
+                    ]
+                      .filter(Boolean)
+                      .join(" ")} × ${exercise.heaviest.reps}`,
                   })}
                   {` · ${formatRelativeDay(exercise.lastAt, now)}`}
                 </ThemedText>

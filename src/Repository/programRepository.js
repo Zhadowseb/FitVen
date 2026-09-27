@@ -1,5 +1,11 @@
 import { createNextSyncVersion, SQLITE_UUID_SQL } from "../Utils/syncUtils";
 import { normalizeIsoDateString } from "../Utils/dateUtils";
+import {
+  CURRENT_WEIGHT_MODES_SQL,
+  convertWeightSql,
+  currentWeightModeSql,
+  totalLoadSql,
+} from "@utils/weightMode";
 
 function normalizeSqliteParam(value) {
   if (value === undefined) {
@@ -1516,17 +1522,27 @@ export async function getSetDoneStatesByDayId(db, dayId) {
   );
 }
 
+// `weight` is in the exercise's current mode (4d): a set written per side and
+// one written for both sides are converted to one form before the best is
+// picked. `weight_mode` is that form.
 export async function getCompletedStrengthSetsByProgram(db, programId) {
+  const loggedMode = "COALESCE(e.weight_mode, 'total')";
+  const currentMode = currentWeightModeSql("current_mode");
+
   return db.getAllAsync(
-    `SELECT
+    `WITH current_modes AS (${CURRENT_WEIGHT_MODES_SQL})
+     SELECT
         e.exercise_name,
-        s.weight,
+        ${convertWeightSql("s.weight", loggedMode, currentMode)} AS weight,
+        ${currentMode} AS weight_mode,
         s.reps,
         d.date AS performed_date
      FROM "Set" s
      JOIN Exercise_Instance e ON e.exercise_instance_id = s.exercise_instance_id
      JOIN Workout_Type_Instance w ON w.workout_id = e.workout_type_instance_id
      JOIN Day d ON d.day_id = w.day_id
+     LEFT JOIN current_modes current_mode
+       ON current_mode.name_key = lower(e.exercise_name)
      WHERE d.program_id = ?
        AND s.done = 1
        AND s.weight IS NOT NULL
@@ -1766,7 +1782,8 @@ export async function getProgramOverviewStats(db, programId) {
           ELSE NULL
         END), 0) AS avg_session_seconds,
         COALESCE((
-          SELECT SUM(COALESCE(s.weight, 0) * COALESCE(s.reps, 0))
+          -- What was lifted: a weight written per side counts twice (4d).
+          SELECT SUM(COALESCE(${totalLoadSql("s.weight", "e.weight_mode")}, 0) * COALESCE(s.reps, 0))
           FROM "Set" s
           JOIN Exercise_Instance e
             ON e.exercise_instance_id = s.exercise_instance_id

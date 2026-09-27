@@ -6,6 +6,7 @@
 // without a device. The screen only draws what this hands it.
 
 import { resolveSetType } from "./setTypes";
+import { weightModeOf } from "./weightMode";
 
 /**
  * Sessions newest first, each with its sets numbered after the warm-ups are
@@ -38,6 +39,9 @@ export function buildExerciseHistoryTable(rows = []) {
         workoutId: row?.workout_id ?? null,
         performedDate: row?.performed_date ?? null,
         performedDateSort: row?.performed_date_sort ?? null,
+        // How that session's weights were written (4d): shown as written,
+        // with "pr. side" when they were per side.
+        weightMode: weightModeOf(row?.weight_mode),
         sets: [],
       };
       byId.set(id, session);

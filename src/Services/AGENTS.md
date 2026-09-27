@@ -66,7 +66,18 @@ entity stops syncing, not just the field. For a column the app may reach
 first, follow `started_from` on `Workout_Type_Instance`: the handle from
 `createStartedFromCloudColumn` in `src/Utils/startedFrom.js` names the column
 until the cloud says it is missing, and `workoutTypeInstanceSync.js` routes its
-reads and uploads through it.
+reads and uploads through it. `weight_mode` on `Exercise_Instance` and on the
+column preferences does the same with `createWeightModeCloudColumn` in
+`src/Utils/weightMode.js`, and a null from the cloud keeps the local value.
+
+The same goes for a column whose type the cloud changes after the app does.
+`set.weight` and `set.rpe` keep decimals only once
+`20261003090000_a-set-keeps-its-decimals.sql` has run; until then the integer
+column refuses 102.5. `setDecimalColumns` in `cloudSyncShared.js` (built by
+`createSetDecimalsCloudColumns` in `src/Utils/setDecimals.js`) retries such an
+upload cut to whole numbers, and `resolveCloudSetDecimals` keeps the cloud's
+cut-off 102 from overwriting the phone's 102.5 - a normaliser that stops
+truncating is only half of such a change.
 
 For another entity, swap `Set` for its name. `SYNCED_FIELDS` has a table per
 entity, and `getComparableXSnapshot`, `areComparableXsEqual` and
@@ -76,7 +87,7 @@ that entity's own module and still has to be updated by hand.
 A row looks like this:
 
 ```js
-field("weight", int())                       // read, normalise, compare, upload
+field("reps", int())                         // read, normalise, compare, upload
 field("date", normalizeDayDate, {            // different normaliser for the cloud
   cloud: normalizeDayDateForCloud,
 })

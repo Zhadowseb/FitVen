@@ -9,7 +9,9 @@ import {ThemedText}
 import styles from "./SetListStyle.js";
 import { useTranslation } from "@localization";
 
-const Title = ({ visibleColumns }) => {
+// `weightStepper` (1e): with the weight steppers the weight header is
+// "[−] VÆGT [+]" and moves every unfinished set, and "#" and the tick make way.
+const Title = ({ visibleColumns, weightStepper = null }) => {
 
     const colorScheme = useColorScheme();
     const { t } = useTranslation();
@@ -39,7 +41,9 @@ const Title = ({ visibleColumns }) => {
 
         {visibleColumns.set && (
             <View style={[styles.set, styles.titleCell, titleCellStyle]}>
-            <ThemedText style={[styles.titleText, {color: headerTextColor}]}>#</ThemedText>
+            {weightStepper ? null : (
+              <ThemedText style={[styles.titleText, {color: headerTextColor}]}>#</ThemedText>
+            )}
             </View>
         )}
 
@@ -62,14 +66,32 @@ const Title = ({ visibleColumns }) => {
         )}
 
         {visibleColumns.weight && (
-            <View style={[styles.weight, styles.titleCell, titleCellStyle]}>
-            <ThemedText style={[styles.titleText, {color: headerTextColor}]}>{t("workout.setList.headers.weight")}</ThemedText>
+            <View
+              style={[
+                weightStepper ? styles.weightWithStepper : styles.weight,
+                styles.titleCell,
+                titleCellStyle,
+              ]}
+            >
+            {weightStepper ? (
+              <View style={styles.weightStepHeader}>
+                {weightStepper.renderButton(-1, { color: headerTextColor, iconSize: 13 })}
+                <ThemedText style={[styles.titleText, {color: headerTextColor}]} numberOfLines={1}>
+                  {t("workout.setList.headers.weight")}
+                </ThemedText>
+                {weightStepper.renderButton(1, { color: headerTextColor, iconSize: 13 })}
+              </View>
+            ) : (
+              <ThemedText style={[styles.titleText, {color: headerTextColor}]}>{t("workout.setList.headers.weight")}</ThemedText>
+            )}
             </View>
         )}
 
         {visibleColumns.done && (
             <View style={[styles.done, styles.titleCell, titleCellStyle]}>
-            <Checkmark width={12} height={12} color={headerTextColor} thickness={2.2} />
+            {weightStepper ? null : (
+              <Checkmark width={12} height={12} color={headerTextColor} thickness={2.2} />
+            )}
             </View>
         )}
     </View>

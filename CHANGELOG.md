@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.15.4] - Unreleased
+## [2.16.2] - Unreleased
 ### Changed
 - **Fremgang counts every exercise.** The list ranks each person by their biggest rise in best e1RM in any catalogue exercise, by the same rules as before: Brzycki up to 12 reps, the last 30 days against the 30 before, and 3 sets in each window.
   - A row names the exercise, e.g. "Hip Thrust 100 → 120 kg". Bench press, squat and deadlift keep the app's own names ("Bænkpres 56,5 → 62 kg").
@@ -15,9 +15,51 @@
     - a region's: 1.1 → 1.2 s;
     - a centre's: 91 → 67 ms;
     - a country's four cards: about 6.3 s either way.
-  - Until it has run, the list counts the three lifts and three workouts a week, and the app reads that as before. So the page says 2 a week while the list still counts 3.
+  - Before it had run, the list counted the three lifts and three workouts a week, and the app read that as before.
 - **The privacy policy** says that the categories show which exercise your estimated best rose most in, with the estimate before and now. It is raised to 2026-09-27.1, so everyone is asked again.
 - The Progress empty text says "same exercise", not "same lift".
+- The migrations ledger records `20261004090000_progress-counts-every-exercise.sql` as run on 2026-09-27.
+
+---
+## [2.16.1] - Unreleased
+### Fixed
+- **A set keeps its decimals in the cloud.** A set's weight (102,5 kg, 11,25 kg a side) and RPE (8,5) were cut to whole numbers on upload. A new phone, the category lists and a custom exercise's typical weight therefore got 102 instead of 102,5.
+  - Both now go up and come down with up to two decimals (`Utils/setDecimals`).
+  - Importing a program file no longer cuts them either.
+- **Cloud:** `20261003090000_a-set-keeps-its-decimals.sql` changes `set.weight` and `set.rpe` to `numeric`. It has not been run.
+  - It checks the catalogue first, and stops without changing anything if a view or policy would block it. A second run does nothing.
+  - It rewrites the table once, which took 13 s for 2 million sets locally. Run it when the app is quiet.
+- **Until it has run:** the upload falls back to whole numbers for the rest of the session, the phone keeps its own value, and nothing loops.
+- **After it has run:** the sets the cloud holds cut off are sent again once.
+- **Checked against a local Postgres:** the category lists, the custom exercise stats and `workout_record_counts` give the same results on whole-number data.
+  - The one visible change: a pull-up with 0,5 kg added no longer counts as bodyweight in Calisthenics.
+- The migrations ledger records `20261002090000_weight-mode-per-instance.sql` and `20261003090000_a-set-keeps-its-decimals.sql` as run, both on 2026-09-27.
+- `npm run test:set-decimals` runs the real set sync against the schema in `node:sqlite` and a cloud that is first integer, then numeric.
+
+---
+## [2.16.0] - Unreleased
+### Added
+- **Weight per side or for both sides.** Dumbbell, kettlebell and cable exercises get two tabs under the name on the exercise card: "Pr. side · 22,5" and "Begge sider · 45".
+  - A switch converts every set of the exercise in that workout: ×2 or ÷2, to the nearest 0.25 kg. Reps are unchanged, and empty weights stay empty.
+  - The choice is kept for the exercise and synced to a new phone, and Undo is offered for five seconds.
+  - Earlier workouts are not touched. Copied or repeated workouts follow the exercise's choice.
+- **Volume counts a weight per side twice** wherever it is summed: statistics, the trophy room's tonnes and the program overview.
+- **Records, e1RM and bests** compare older sets converted into the exercise's current way of writing it, so a switch never creates or removes a record.
+- **"pr. side"** is shown on the folded card, in the history panel, on the Records pages, in program bests and in friends' workout posts.
+- **+ and − on the weight in the set list.** With only rest, #, reps, weight and done shown:
+  - each unfinished set has − and + around its weight;
+  - the header's "− VÆGT +" moves every unfinished set at once;
+  - the step follows the exercise (`Utils/weightStep`): 2 for dumbbells; 5 for machines, cables, squats and deadlifts; otherwise 2.5;
+  - hold to repeat. It is saved once, just after the last press.
+### Changed
+- A set's weight keeps two decimals (6,25 kg) instead of one.
+### Fixed
+- `npm test` runs `test:sync-lost-update` again. Merging 2.15.3 kept the script but dropped it from the chain.
+### Cloud
+- **`20261002090000_weight-mode-per-instance.sql`** adds `weight_mode` to `exercise_instance` and `exercise_column_preferences`.
+  - It has not been run.
+  - Until it runs, the app syncs without the column and keeps the choice on the phone.
+- **Known, not new:** the cloud keeps a set's weight in whole kilos (`field("weight", int())`), so 102,5 kg or 11,25 kg per side is uploaded as 102 and 11. The phone keeps the right number.
 
 ---
 ## [2.15.3] - Unreleased

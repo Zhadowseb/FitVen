@@ -86,6 +86,12 @@ export default StyleSheet.create({
     fontSize: 10,
     fontWeight: "700",
   },
+  // "pr. side" under the date of a session written per side (4d).
+  datePerSide: {
+    marginTop: 1,
+    fontSize: 11,
+    fontWeight: "600",
+  },
   scrollArea: {
     flex: 1,
     minWidth: 0,

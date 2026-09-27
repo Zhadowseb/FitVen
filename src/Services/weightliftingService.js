@@ -1,7 +1,23 @@
 import { buildExerciseHistoryTable } from "@utils/exerciseHistoryTable";
 import { formatRelativeDay, getTodaysDate, normalizeIsoDateString } from "@utils/dateUtils";
 import { formatDate, t } from "@localization";
-import { canBePersonalRecord, resolveSetType } from "@utils/setTypes";
+import {
+  canBePersonalRecord,
+  orderSetsForDisplay,
+  resolveSetType,
+} from "@utils/setTypes";
+import { canLogWeightPerSide } from "@utils/customExercises";
+import {
+  PER_SIDE,
+  createWeightModeCloudColumn,
+  normalizeInstanceWeightMode,
+  pickTabWeight,
+  planWeightModeSwitch,
+  resolveWeightMode,
+  toggleWeight,
+  weightModeOf,
+} from "@utils/weightMode";
+import { notifyWorkoutDataChanged } from "@utils/workoutDataEvents";
 import {
   programRepository,
   weightliftingRepository,
@@ -13,9 +29,15 @@ import {
 } from "../Database/supaBaseClient";
 import * as workoutService from "./workoutService";
 import {
+  compareEntitySyncVersions,
   createPendingDeleteIndex,
   queueCloudDeletesForExerciseSets,
+  setDecimalColumns,
 } from "./cloudSync/cloudSyncShared";
+import {
+  normalizeSetDecimal,
+  resolveCloudSetDecimals,
+} from "@utils/setDecimals";
 import { withTransaction } from "./shared";
 import { createNextSyncVersion, normalizeSyncId } from "../Utils/syncUtils";
 import { enqueueSync, startBackgroundSync } from "./syncScheduler";
@@ -100,6 +122,24 @@ const EXERCISE_COLUMN_PREFERENCE_CLOUD_TABLE =
   "exercise_column_preferences";
 const EXERCISE_COLUMN_PREFERENCE_CLOUD_SELECT =
   "user_id, exercise_id, visible_columns, updated_at";
+// `weight_mode` on both of these (4d) comes with
+// 20261002090000_weight-mode-per-instance.sql, and the app may reach a phone
+// before it has run. A select or a write that names a missing column fails
+// the whole request, so both go through a handle that names it until the
+// cloud says it is missing, and then syncs without it until the app restarts
+// (the pattern of started_from on workouts; see @utils/weightMode).
+const preferenceWeightModeColumn = createWeightModeCloudColumn({
+  onMissing: () =>
+    console.info(
+      "exercise_column_preferences.weight_mode is missing in the cloud; the choice stays on this phone until the app restarts."
+    ),
+});
+const hydrateWeightModeColumn = createWeightModeCloudColumn({
+  onMissing: () =>
+    console.info(
+      "exercise_instance.weight_mode is missing in the cloud; a workout opened from the cloud is read without it."
+    ),
+});
 const LOCAL_EXERCISE_COLUMN_PREFERENCE_USER_ID = "__local__";
 const MUSCLE_ACTIVATION_TABLE = "Muscle_Activation";
 const MUSCLE_GROUP_TABLE = "muscle_group";
@@ -2473,8 +2513,9 @@ export async function getHeaviestLift(db, exerciseName) {
   const weight = Number(row?.weight);
   const reps = Number(row?.reps);
 
+  // In the exercise's current mode (4d), which `weightMode` names.
   return Number.isFinite(weight) && weight > 0 && Number.isFinite(reps)
-    ? { weight, reps }
+    ? { weight, reps, weightMode: weightModeOf(row?.weight_mode) }
     : null;
 }
 
@@ -3160,21 +3201,24 @@ export async function syncExerciseColumnPreferencesWithCloud(db) {
       continue;
     }
 
-    const { error } = await supabase
-      .from(EXERCISE_COLUMN_PREFERENCE_CLOUD_TABLE)
-      .upsert(
-        {
-          user_id: userId,
-          exercise_id: cloudExerciseId,
-          visible_columns: visibleColumns,
-          updated_at: preference.updated_at ?? new Date().toISOString(),
-        },
-        { onConflict: "user_id,exercise_id" }
-      );
+    await preferenceWeightModeColumn.withFallback(async () => {
+      const { error } = await supabase
+        .from(EXERCISE_COLUMN_PREFERENCE_CLOUD_TABLE)
+        .upsert(
+          preferenceWeightModeColumn.sendablePayload({
+            user_id: userId,
+            exercise_id: cloudExerciseId,
+            visible_columns: visibleColumns,
+            weight_mode: normalizeInstanceWeightMode(preference.weight_mode),
+            updated_at: preference.updated_at ?? new Date().toISOString(),
+          }),
+          { onConflict: "user_id,exercise_id" }
+        );
 
-    if (error) {
-      throw error;
-    }
+      if (error) {
+        throw error;
+      }
+    });
 
     await weightliftingRepository.markExerciseColumnPreferenceSynced(db, {
       userId: preferenceUserId,
@@ -3194,16 +3238,25 @@ export async function syncExerciseColumnPreferencesWithCloud(db) {
     };
   }
 
-  const { data: cloudPreferences, error: cloudPreferencesError } =
-    await supabase
-      .from(EXERCISE_COLUMN_PREFERENCE_CLOUD_TABLE)
-      .select(EXERCISE_COLUMN_PREFERENCE_CLOUD_SELECT)
-      .eq("user_id", userId)
-      .in("exercise_id", cloudExerciseIds);
+  const cloudPreferences = await preferenceWeightModeColumn.withFallback(
+    async () => {
+      const { data, error } = await supabase
+        .from(EXERCISE_COLUMN_PREFERENCE_CLOUD_TABLE)
+        .select(
+          preferenceWeightModeColumn.selectColumns(
+            EXERCISE_COLUMN_PREFERENCE_CLOUD_SELECT
+          )
+        )
+        .eq("user_id", userId)
+        .in("exercise_id", cloudExerciseIds);
 
-  if (cloudPreferencesError) {
-    throw cloudPreferencesError;
-  }
+      if (error) {
+        throw error;
+      }
+
+      return data;
+    }
+  );
 
   for (const cloudPreference of cloudPreferences ?? []) {
     const cloudExerciseId = normalizeOptionalInteger(
@@ -3219,16 +3272,29 @@ export async function syncExerciseColumnPreferencesWithCloud(db) {
       continue;
     }
 
+    // Null - no column yet, or a row an older app wrote - keeps ours.
+    const weightMode = normalizeInstanceWeightMode(cloudPreference?.weight_mode);
+
     await weightliftingRepository.upsertExerciseColumnPreference(db, {
       userId: preferenceUserId,
       cloudExerciseId,
       exerciseName: localExercise.name,
       visibleColumns,
+      weightMode,
       needsSync: 0,
       updatedAt:
         normalizeOptionalText(cloudPreference?.updated_at) ??
         new Date().toISOString(),
     });
+
+    // The exercise's own mode is what the next workout copies, so the choice
+    // made on another phone is the one this phone uses from now on.
+    if (weightMode !== null) {
+      await weightliftingRepository.updateExerciseWeightMode(db, {
+        exerciseName: localExercise.name,
+        weightMode,
+      });
+    }
     downloadedCount += 1;
   }
 
@@ -3279,6 +3345,12 @@ async function loadWorkoutExercisesFromLocal(db, workoutId) {
       ? null
       : exercise.visible_columns;
     const plannedSetCount = Number(exercise.sets) || 0;
+    // How this workout's weights are written (4d), and whether the card
+    // offers the switch: always once it is per side, so there is a way back.
+    const weightMode = resolveWeightMode(
+      exercise.weight_mode,
+      exercise.exercise_weight_mode
+    );
     const hasPersonalRecord = exerciseSets.some(
       (set) =>
         normalizeBooleanFlag(set?.personal_record) &&
@@ -3292,6 +3364,13 @@ async function loadWorkoutExercisesFromLocal(db, workoutId) {
       plannedSetCount,
       sets: exerciseSets,
       setCount: exerciseSets.length,
+      weightMode,
+      canSwitchWeightMode: canLogWeightPerSide({
+        name: exercise.exercise_name,
+        equipment: exercise.exercise_equipment,
+        weightMode:
+          weightMode === PER_SIDE ? PER_SIDE : exercise.exercise_weight_mode,
+      }),
       visibleColumns: resolveVisibleColumns(
         preference?.visible_columns,
         instanceVisibleColumns,
@@ -3330,17 +3409,21 @@ async function hydrateWorkoutStrengthDataFromCloud(db, workoutId) {
     return false;
   }
 
-  const { data: cloudExercises, error: cloudExercisesError } = await supabase
-    .from(EXERCISE_INSTANCE_CLOUD_TABLE)
-    .select(EXERCISE_INSTANCE_CLOUD_SELECT)
-    .eq("user_id", userId)
-    .eq("cloud_workout_type_instance_id", cloudWorkoutTypeInstanceId)
-    .order("exercise_order", { ascending: true })
-    .order("id", { ascending: true });
+  const cloudExercises = await hydrateWeightModeColumn.withFallback(async () => {
+    const { data, error } = await supabase
+      .from(EXERCISE_INSTANCE_CLOUD_TABLE)
+      .select(hydrateWeightModeColumn.selectColumns(EXERCISE_INSTANCE_CLOUD_SELECT))
+      .eq("user_id", userId)
+      .eq("cloud_workout_type_instance_id", cloudWorkoutTypeInstanceId)
+      .order("exercise_order", { ascending: true })
+      .order("id", { ascending: true });
 
-  if (cloudExercisesError) {
-    throw cloudExercisesError;
-  }
+    if (error) {
+      throw error;
+    }
+
+    return data;
+  });
 
   const localExercisesForWorkout = localExercises.filter(
     (exercise) => Number(exercise.workout_type_instance_id) === Number(workoutId)
@@ -3445,6 +3528,8 @@ async function hydrateWorkoutStrengthDataFromCloud(db, workoutId) {
         visibleColumns: serializeVisibleColumns(cloudExercise?.visible_columns),
         note: normalizeOptionalText(cloudExercise?.note),
         done: normalizeBooleanFlag(cloudExercise?.done),
+        // Null - no column yet, or an older app - keeps what the phone has.
+        weightMode: normalizeInstanceWeightMode(cloudExercise?.weight_mode),
       };
 
       if (!localExercise) {
@@ -3525,6 +3610,8 @@ async function hydrateWorkoutStrengthDataFromCloud(db, workoutId) {
   if (cloudSetsError) {
     throw cloudSetsError;
   }
+
+  setDecimalColumns.learnFrom(cloudSets);
 
   const localSets = (await weightliftingRepository.getSetsForCloudSync(db)).filter(
     (set) => localExerciseIds.has(set.exercise_instance_id)
@@ -3608,6 +3695,22 @@ async function hydrateWorkoutStrengthDataFromCloud(db, workoutId) {
         continue;
       }
 
+      // Weight and RPE keep their decimals, and a cut-off copy in the cloud
+      // (102 for this phone's 102.5, from before the column kept them) does
+      // not overwrite the phone's - the set sync's own rule.
+      const cloudDecimals = {
+        rpe: normalizeSetDecimal(cloudSet?.rpe),
+        weight: normalizeSetDecimal(cloudSet?.weight),
+      };
+      const { rpe, weight } = localSet
+        ? resolveCloudSetDecimals({
+            localSnapshot: localSet,
+            cloudSnapshot: cloudDecimals,
+            cloudKeepsDecimals: setDecimalColumns.cloudKeepsDecimals(),
+            versionOrder: compareEntitySyncVersions(localSet, cloudSet),
+          }).cloudSnapshot
+        : cloudDecimals;
+
       const setPayload = {
         cloudSetId,
         remoteLocalSetId,
@@ -3618,8 +3721,8 @@ async function hydrateWorkoutStrengthDataFromCloud(db, workoutId) {
         setNumber: normalizeOptionalInteger(cloudSet?.set_number, 1),
         personalRecord: normalizeBooleanFlag(cloudSet?.personal_record),
         pause: normalizeOptionalInteger(cloudSet?.pause, null),
-        rpe: normalizeOptionalInteger(cloudSet?.rpe, null),
-        weight: normalizeOptionalInteger(cloudSet?.weight, null),
+        rpe,
+        weight,
         rmPercentage: normalizeOptionalInteger(cloudSet?.rm_percentage, null),
         reps: normalizeOptionalInteger(cloudSet?.reps, null),
         done: normalizeBooleanFlag(cloudSet?.done),
@@ -3837,10 +3940,14 @@ export async function reclassifyWorkoutLabel(db, workoutId, options = {}) {
  * its + is pressed a second time.
  */
 export async function addExerciseToWorkout(db, { workoutId, exerciseName }) {
-  const visibleColumns = await resolveExerciseVisibleColumnsForNewExercise(
-    db,
-    exerciseName
-  );
+  const [visibleColumns, catalogEntry] = await Promise.all([
+    resolveExerciseVisibleColumnsForNewExercise(db, exerciseName),
+    weightliftingRepository.getExerciseCatalogEntryByName(db, exerciseName),
+  ]);
+  // The exercise's current choice (4d): per side if that is how the person
+  // writes it now, for this workout too. A custom exercise's is its own
+  // setting; a catalog exercise's is kept in sync by the column preference.
+  const weightMode = resolveWeightMode(null, catalogEntry?.weight_mode);
   let exerciseId = null;
 
   await withTransaction(db, async () => {
@@ -3859,6 +3966,7 @@ export async function addExerciseToWorkout(db, { workoutId, exerciseName }) {
         nextExerciseOrder?.exercise_order,
         1
       ),
+      weightMode,
     });
 
     // The exercise arrives with its first set already there. Adding an exercise
@@ -3877,7 +3985,7 @@ export async function addExerciseToWorkout(db, { workoutId, exerciseName }) {
     await weightliftingRepository.createSet(db, {
       setNumber: 1,
       exerciseId: created.lastInsertRowId,
-      ...carriedSetValues(previousSet),
+      ...carriedSetValues(previousSet, weightMode),
     });
 
     exerciseId = created.lastInsertRowId ?? null;
@@ -4059,11 +4167,19 @@ export async function deleteExercise(db, exerciseId) {
  * particular set, and carrying them forward would put a claim in the row that
  * nobody made.
  */
-function carriedSetValues(previousSet) {
+function carriedSetValues(previousSet, weightMode = null) {
+  // From another workout written the other way (4d), the weight comes over
+  // converted, the way a switch converts it: 45 for both sides is 22,5 per
+  // side. Within one exercise the mode is the same and nothing changes.
+  const weight =
+    weightMode && previousSet?.weight_mode
+      ? toggleWeight(previousSet?.weight, previousSet.weight_mode, weightMode)
+      : previousSet?.weight ?? null;
+
   return {
     pause: previousSet?.pause ?? null,
     reps: previousSet?.reps ?? null,
-    weight: previousSet?.weight ?? null,
+    weight,
   };
 }
 
@@ -4139,6 +4255,220 @@ export async function updateExerciseNote(db, { exerciseId, note }) {
     note,
   });
   syncExerciseInstancesInBackground(db);
+}
+
+// The columns a preference row starts with when the first thing it records
+// is a weight mode: the ones this card shows now, so writing the row changes
+// nothing about the columns.
+function visibleColumnsForNewPreference(context) {
+  const instanceColumns = isAppDefaultVisibleColumns(context?.visible_columns)
+    ? null
+    : context?.visible_columns;
+
+  return JSON.stringify(
+    resolveVisibleColumns(
+      context?.preference_visible_columns,
+      instanceColumns,
+      context?.default_visible_columns
+    )
+  );
+}
+
+/**
+ * Switches one workout's exercise between per side and both sides (4d).
+ *
+ * Every set of the exercise in this workout is converted - ticked off or
+ * not, reps untouched, an empty weight left empty - and rounded to 0.25 kg.
+ * The workout's exercise and the exercise itself both take the new mode, so
+ * the next workout is written the same way; for a catalog exercise the choice
+ * is kept in the column preference so it follows the person to a new phone,
+ * for a custom one in its own row. Earlier workouts are not touched, and
+ * neither are the record flags: a switch changes the unit, not the lift.
+ *
+ * Returns what `undoExerciseWeightModeSwitch` needs to put everything back
+ * exactly - the weights as they were, not converted back through the
+ * rounding - and the numbers for the message. Null when nothing changed.
+ */
+export async function switchExerciseWeightMode(db, { exerciseId, weightMode }) {
+  const resolvedExerciseId = normalizeRequiredId(exerciseId, "exerciseId");
+  const nextMode = weightModeOf(weightMode);
+  const preferenceUserId = await getCurrentExerciseColumnPreferenceUserId();
+  let undo = null;
+
+  await withTransaction(db, async () => {
+    const context = await weightliftingRepository.getExerciseWeightModeContext(db, {
+      exerciseId: resolvedExerciseId,
+      preferenceUserId,
+    });
+
+    // A bodyweight exercise has no switch: its owner said the weight is the
+    // body's, and writing per side over that would lose it.
+    if (!context?.exercise_name || context.exercise_weight_mode === "bodyweight") {
+      return;
+    }
+
+    const previousMode = resolveWeightMode(
+      context.weight_mode,
+      context.exercise_weight_mode
+    );
+
+    if (previousMode === nextMode) {
+      return;
+    }
+
+    const sets = await weightliftingRepository.getSetsByExercise(
+      db,
+      resolvedExerciseId
+    );
+    const changes = planWeightModeSwitch(sets, previousMode, nextMode);
+
+    for (const change of changes) {
+      if (change.next === change.previous) {
+        continue;
+      }
+
+      await weightliftingRepository.updateSetField(db, {
+        field: "weight",
+        value: change.next,
+        setId: change.setId,
+      });
+    }
+
+    await weightliftingRepository.updateExerciseInstanceWeightMode(db, {
+      exerciseId: resolvedExerciseId,
+      weightMode: nextMode,
+    });
+
+    const hasExerciseRow = context.exercise_weight_mode !== null &&
+      context.exercise_weight_mode !== undefined;
+    const isCatalogExercise = Number(context.is_custom) !== 1;
+
+    if (hasExerciseRow) {
+      await weightliftingRepository.updateExerciseWeightMode(db, {
+        exerciseName: context.exercise_name,
+        weightMode: nextMode,
+      });
+    }
+
+    if (isCatalogExercise) {
+      await weightliftingRepository.upsertExerciseWeightModePreference(db, {
+        userId: preferenceUserId,
+        cloudExerciseId: normalizeOptionalInteger(context.cloud_exercise_id, null),
+        exerciseName: context.exercise_name,
+        weightMode: nextMode,
+        visibleColumns: visibleColumnsForNewPreference(context),
+      });
+    }
+
+    // The number the tabs showed, before and after: the message quotes it.
+    const shownWeight = pickTabWeight(orderSetsForDisplay(sets));
+
+    undo = {
+      exerciseId: resolvedExerciseId,
+      exerciseName: context.exercise_name,
+      workoutId: context.workout_id ?? null,
+      from: previousMode,
+      to: nextMode,
+      // Written back exactly. Never null: a null is not sent to the cloud,
+      // so the undo of a switch that already went up would not follow it.
+      previousInstanceMode: normalizeInstanceWeightMode(context.weight_mode) ?? previousMode,
+      previousExerciseMode: hasExerciseRow ? context.exercise_weight_mode : null,
+      previousPreferenceMode:
+        normalizeInstanceWeightMode(context.preference_weight_mode) ??
+        weightModeOf(context.exercise_weight_mode),
+      isCatalogExercise,
+      sets: changes
+        .filter((change) => change.next !== change.previous)
+        .map((change) => ({ setId: change.setId, weight: change.previous })),
+      shown: {
+        from: shownWeight,
+        to: toggleWeight(shownWeight, previousMode, nextMode),
+      },
+    };
+  });
+
+  if (!undo) {
+    return null;
+  }
+
+  syncExerciseInstancesInBackground(db);
+  syncSetsInBackground(db);
+
+  if (undo.isCatalogExercise) {
+    syncExerciseColumnPreferencesInBackground(db);
+  } else {
+    syncCustomExercisesInBackground(db);
+  }
+
+  // The lock-screen card and Home read the workout's weights.
+  notifyWorkoutDataChanged("sets");
+
+  return undo;
+}
+
+/**
+ * Puts a switch back, from what `switchExerciseWeightMode` returned: the
+ * weights exactly as they were, and both modes and the preference as they
+ * were. A set deleted in the meantime is simply not there to put back.
+ */
+export async function undoExerciseWeightModeSwitch(db, undo) {
+  const exerciseId = normalizeOptionalInteger(undo?.exerciseId, null);
+
+  if (exerciseId === null) {
+    return false;
+  }
+
+  const preferenceUserId = await getCurrentExerciseColumnPreferenceUserId();
+
+  await withTransaction(db, async () => {
+    for (const set of undo.sets ?? []) {
+      await weightliftingRepository.updateSetField(db, {
+        field: "weight",
+        value: set.weight,
+        setId: set.setId,
+      });
+    }
+
+    await weightliftingRepository.updateExerciseInstanceWeightMode(db, {
+      exerciseId,
+      weightMode: weightModeOf(undo.previousInstanceMode),
+    });
+
+    if (undo.previousExerciseMode) {
+      await weightliftingRepository.updateExerciseWeightMode(db, {
+        exerciseName: undo.exerciseName,
+        weightMode: undo.previousExerciseMode,
+      });
+    }
+
+    if (undo.isCatalogExercise) {
+      const context = await weightliftingRepository.getExerciseWeightModeContext(db, {
+        exerciseId,
+        preferenceUserId,
+      });
+
+      await weightliftingRepository.upsertExerciseWeightModePreference(db, {
+        userId: preferenceUserId,
+        cloudExerciseId: normalizeOptionalInteger(context?.cloud_exercise_id, null),
+        exerciseName: undo.exerciseName,
+        weightMode: weightModeOf(undo.previousPreferenceMode),
+        visibleColumns: visibleColumnsForNewPreference(context),
+      });
+    }
+  });
+
+  syncExerciseInstancesInBackground(db);
+  syncSetsInBackground(db);
+
+  if (undo.isCatalogExercise) {
+    syncExerciseColumnPreferencesInBackground(db);
+  } else {
+    syncCustomExercisesInBackground(db);
+  }
+
+  notifyWorkoutDataChanged("sets");
+
+  return true;
 }
 
 export async function updateStrengthSetDone(
@@ -4441,59 +4771,86 @@ export async function updateSetRmPercentage(db, { setId, rmPercentage }) {
   return result;
 }
 
-export async function updateSetWeight(db, { setId, weight }) {
+// A set's weight and the 1RM % that follows from it - the records are the
+// caller's, once for everything it wrote.
+async function writeSetWeight(db, setId, weight) {
   const nextWeight = clampSetValue("weight", weight);
 
+  await weightliftingRepository.updateSetField(db, {
+    field: "weight",
+    value: nextWeight,
+    setId,
+  });
+
+  const estimatedWeight =
+    nextWeight === null ? null : await getEstimatedWeightForSet(db, setId);
+  const nextRmPercentage =
+    nextWeight === null || estimatedWeight === null
+      ? null
+      : Math.round((nextWeight / estimatedWeight) * 100);
+
+  await weightliftingRepository.updateSetField(db, {
+    field: "rm_percentage",
+    value: nextRmPercentage,
+    setId,
+  });
+
+  return { weight: nextWeight, rmPercentage: nextRmPercentage };
+}
+
+export async function updateSetWeight(db, { setId, weight }) {
+  const result = await withTransaction(db, async () => ({
+    ...(await writeSetWeight(db, setId, weight)),
+    personalRecordSetIds: await refreshPersonalRecordsForSet(db, setId),
+  }));
+
+  syncSetsInBackground(db);
+  return result;
+}
+
+/**
+ * Several sets' weights in one transaction - the header steppers move every
+ * unfinished set at once (1e). Each gets its 1RM % as updateSetWeight gives
+ * it, and the records are worked out once per exercise afterwards rather
+ * than once per set. -> { sets: [{ setId, weight, rmPercentage }],
+ * personalRecordSetIds }
+ */
+export async function updateSetWeights(db, changes = []) {
+  const list = (Array.isArray(changes) ? changes : []).filter(
+    (change) => change && Number.isFinite(Number(change.setId))
+  );
+
+  if (list.length === 0) {
+    return { sets: [], personalRecordSetIds: [] };
+  }
+
   const result = await withTransaction(db, async () => {
-    await weightliftingRepository.updateSetField(db, {
-      field: "weight",
-      value: nextWeight,
-      setId,
-    });
+    const sets = [];
+    const exerciseNames = new Map();
 
-    if (nextWeight === null) {
-      await weightliftingRepository.updateSetField(db, {
-        field: "rm_percentage",
-        value: null,
-        setId,
-      });
+    for (const change of list) {
+      const setId = Number(change.setId);
 
-      return {
-        weight: null,
-        rmPercentage: null,
-        personalRecordSetIds: await refreshPersonalRecordsForSet(db, setId),
-      };
+      sets.push({ setId, ...(await writeSetWeight(db, setId, change.weight)) });
+
+      const exercise = await weightliftingRepository.getExerciseNameBySetId(db, setId);
+      const name =
+        typeof exercise?.exercise_name === "string" ? exercise.exercise_name.trim() : "";
+
+      if (name) {
+        exerciseNames.set(name.toLocaleLowerCase(), name);
+      }
     }
 
-    const estimatedWeight = await getEstimatedWeightForSet(db, setId);
+    const personalRecordSetIds = new Set();
 
-    if (estimatedWeight === null) {
-      await weightliftingRepository.updateSetField(db, {
-        field: "rm_percentage",
-        value: null,
-        setId,
-      });
-
-      return {
-        weight: nextWeight,
-        rmPercentage: null,
-        personalRecordSetIds: await refreshPersonalRecordsForSet(db, setId),
-      };
+    for (const name of exerciseNames.values()) {
+      for (const recordSetId of await refreshPersonalRecordsForExerciseName(db, name)) {
+        personalRecordSetIds.add(recordSetId);
+      }
     }
 
-    const nextRmPercentage = Math.round((nextWeight / estimatedWeight) * 100);
-
-    await weightliftingRepository.updateSetField(db, {
-      field: "rm_percentage",
-      value: nextRmPercentage,
-      setId,
-    });
-
-    return {
-      weight: nextWeight,
-      rmPercentage: nextRmPercentage,
-      personalRecordSetIds: await refreshPersonalRecordsForSet(db, setId),
-    };
+    return { sets, personalRecordSetIds: [...personalRecordSetIds] };
   });
 
   syncSetsInBackground(db);

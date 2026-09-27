@@ -35,6 +35,10 @@ export const weightliftingSchemaSql = `
       cloud_exercise_id INTEGER,
       exercise_name TEXT NOT NULL,
       visible_columns TEXT NOT NULL,
+      -- 'total' | 'per_side': how this user writes a catalog exercise's
+      -- weight, so the choice follows them to a new phone. NULL when never
+      -- chosen. A custom exercise keeps it in Exercise.weight_mode instead.
+      weight_mode TEXT,
       needs_sync INTEGER NOT NULL DEFAULT 1,
       updated_at TEXT NOT NULL DEFAULT (datetime('now')),
       UNIQUE(user_id, exercise_name)
@@ -56,6 +60,10 @@ export const weightliftingSchemaSql = `
       visible_columns TEXT,
       note TEXT,
       done INTEGER NOT NULL DEFAULT 0,
+      -- 'total' | 'per_side': how this workout's weights for the exercise are
+      -- written (@utils/weightMode). Copied from Exercise.weight_mode when the
+      -- exercise is added; NULL, from before the column, means total.
+      weight_mode TEXT,
       needs_sync INTEGER NOT NULL DEFAULT 1
   );
 
