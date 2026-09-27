@@ -10,6 +10,13 @@ import {
   MAX_ESTIMATE_REPS,
 } from "./oneRepMaxUtils";
 
+// 'per_side' or 'total', the rule of weightModeOf in ./weightMode.js. Written
+// out rather than imported: scripts/test-records-insights.js loads this file
+// with its one import inlined.
+function weightModeOf(value) {
+  return value === "per_side" ? "per_side" : "total";
+}
+
 // The one period the overview is read in. Everything on it follows the
 // choice - the numbers, the gains, the volume chart and the muscle groups -
 // because a selector that moves half a page reads as broken. Labels live in
@@ -67,7 +74,11 @@ export function startOfWeek(timestampMs) {
 }
 
 function normalizeRow(row) {
+  // In the exercise's current mode (4d): the query converts a set written the
+  // other way, so a best is compared like with like. `total_weight` is what
+  // was lifted - per side counts twice - and is what volume adds up.
   const weight = Number(row?.weight);
+  const totalWeight = Number(row?.total_weight ?? row?.weight);
   const reps = Number(row?.reps);
   const at = parseRecordDate(row?.performed_date_sort ?? row?.performed_date);
   const name =
@@ -86,7 +97,8 @@ function normalizeRow(row) {
     weight,
     reps,
     at,
-    volume: weight * reps,
+    weightMode: weightModeOf(row?.weight_mode),
+    volume: (Number.isFinite(totalWeight) ? totalWeight : weight) * reps,
     // The app has one 1RM formula and it is Brzycki. The design assumed Epley;
     // using it here would have put two formulas in one app, which is the thing
     // the design was trying to avoid.
@@ -464,6 +476,9 @@ export function buildExerciseList(sets, { now }) {
       entry.heaviest = { weight: set.weight, reps: set.reps };
     }
 
+    // The exercise's current mode: every one of its sets arrives in it.
+    entry.weightMode = set.weightMode;
+
     entry.lastAt = entry.lastAt === null ? set.at : Math.max(entry.lastAt, set.at);
     entry.sessions.add(set.sessionKey);
     byExercise.set(set.name, entry);
@@ -473,6 +488,7 @@ export function buildExerciseList(sets, { now }) {
     .map((entry) => ({
       name: entry.name,
       heaviest: entry.heaviest,
+      weightMode: entry.weightMode ?? "total",
       lastAt: entry.lastAt,
       sessionCount: entry.sessions.size,
       direction: directions.get(entry.name) ?? null,
@@ -522,6 +538,7 @@ export function buildLatestRecords(sets, { limit = 8 } = {}) {
       weight: set.weight,
       reps: set.reps,
       at: set.at,
+      weightMode: set.weightMode,
     }));
 }
 

@@ -68,6 +68,44 @@ export function normalizeReportReason(value) {
   return REPORT_REASONS.includes(value) ? value : null;
 }
 
+// Which exercises the card offers "per side / both sides" on (4d): the ones
+// done with one weight in each hand or on each side. A stand-in until the
+// catalog carries equipment on every exercise - only custom exercises have it
+// today - so a catalog exercise is recognised by its name instead. The design
+// asked for a list of catalog ids; there is none to hand, and a name rule
+// also covers exercises added to the catalog later.
+export const UNILATERAL_CAPABLE = Object.freeze({
+  equipment: Object.freeze(["dumbbell", "kettlebell", "cable"]),
+  // English catalog names, and the Danish ones people give their own.
+  namePattern: /dumbbell|kettlebell|cable|håndvægt|haandvaegt|kabel/i,
+});
+
+/**
+ * Whether the card shows the switch for this exercise: its equipment or its
+ * name says dumbbell, kettlebell or cable - or it is already written per
+ * side, so the way back is always there. A bodyweight exercise never, since
+ * its owner said the weight is the body's.
+ */
+export function canLogWeightPerSide({ name, equipment, weightMode } = {}) {
+  const mode = typeof weightMode === "string" ? weightMode.trim().toLowerCase() : "";
+
+  if (mode === "per_side") {
+    return true;
+  }
+
+  if (mode === "bodyweight") {
+    return false;
+  }
+
+  const key = normalizeEquipment(equipment);
+
+  if (key && UNILATERAL_CAPABLE.equipment.includes(key)) {
+    return true;
+  }
+
+  return typeof name === "string" && UNILATERAL_CAPABLE.namePattern.test(name);
+}
+
 // Whitespace runs collapse to one space, so a pasted line break does not
 // survive into a one-line description.
 function collapse(value) {

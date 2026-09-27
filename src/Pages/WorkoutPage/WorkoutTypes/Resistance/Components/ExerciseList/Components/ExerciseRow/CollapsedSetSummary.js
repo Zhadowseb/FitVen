@@ -3,7 +3,24 @@ import { ThemedText } from "@resources/ThemedComponents";
 import { withAlpha } from "@resources/GlobalStyling/colors";
 import Star from "@resources/Icons/UI-icons/Star";
 import { useTranslation } from "@localization";
+import { isPerSide } from "@utils/weightMode";
 import styles from "./CollapsedSetSummaryStyle";
+
+// A grey "pr. side" after the last chip when the weights are per side (4d).
+// Nothing for both sides: that is how every card has always read.
+function PerSideNote({ weightMode, theme }) {
+  const { t } = useTranslation();
+
+  if (!isPerSide(weightMode)) {
+    return null;
+  }
+
+  return (
+    <ThemedText size={11} style={styles.perSide} setColor={theme.quietText} numberOfLines={1}>
+      {t("workout.weightMode.suffix")}
+    </ThemedText>
+  );
+}
 
 function value(value) {
   return value === null || value === undefined || value === "" ? "-" : String(value);
@@ -37,7 +54,7 @@ export function SetProgressDots({ sets = [], theme, style }) {
   );
 }
 
-export function ClassicSetSummary({ sets = [], theme }) {
+export function ClassicSetSummary({ sets = [], theme, weightMode = null }) {
   const { t } = useTranslation();
   if (!sets.length) return null;
 
@@ -88,6 +105,7 @@ export function ClassicSetSummary({ sets = [], theme }) {
           </View>
         );
       })}
+      <PerSideNote weightMode={weightMode} theme={theme} />
     </View>
   );
 }
@@ -104,8 +122,19 @@ function SetCell({ set, theme, compact = false, multiple }) {
   return <View style={[compact ? styles.compactCell : styles.cell, { backgroundColor }, compact ? { borderRightColor: theme.tableGridline } : null]}>{compact ? <View style={styles.inline}>{weight}{reps}</View> : <>{weight}{reps}</>}</View>;
 }
 
-export default function CollapsedSetSummary({ sets = [], view = "cells", theme }) {
+export default function CollapsedSetSummary({ sets = [], view = "cells", theme, weightMode = null }) {
   if (!sets.length || view === "progressOnly") return null;
   const compact = view === "compact" && sets.length <= 3;
-  return <View style={[compact ? styles.compactRow : styles.cellsRow, compact ? { backgroundColor: theme.tableRowAltSurface } : null]}>{sets.map((set, index) => <SetCell key={`${set?.sets_id ?? "set"}-${index}`} set={set} theme={theme} compact={compact} multiple={!compact && sets.length >= 5} />)}</View>;
+  const row = <View style={[compact ? styles.compactRow : styles.cellsRow, compact ? { backgroundColor: theme.tableRowAltSurface } : null]}>{sets.map((set, index) => <SetCell key={`${set?.sets_id ?? "set"}-${index}`} set={set} theme={theme} compact={compact} multiple={!compact && sets.length >= 5} />)}</View>;
+
+  if (!isPerSide(weightMode)) {
+    return row;
+  }
+
+  return (
+    <View style={styles.withNote}>
+      <View style={styles.withNoteCells}>{row}</View>
+      <PerSideNote weightMode={weightMode} theme={theme} />
+    </View>
+  );
 }

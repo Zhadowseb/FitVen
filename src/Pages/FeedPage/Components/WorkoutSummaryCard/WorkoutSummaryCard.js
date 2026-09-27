@@ -94,11 +94,18 @@ function normalizeTopSet(record, personalRecordExerciseNames, t) {
       ? weight / previousBest
       : null;
 
+  const weightDisplay =
+    record?.weightDisplay ??
+    (weight !== null ? `${weight} ${record?.unit ?? t("common.kg")}` : "");
+
   return {
     exercise,
+    // "pr. side" in the reader's language when the lift was written per side
+    // (4d). A post from before that says nothing, and reads as it always did.
     weightDisplay:
-      record?.weightDisplay ??
-      (weight !== null ? `${weight} ${record?.unit ?? t("common.kg")}` : ""),
+      weightDisplay && record?.weightMode === "per_side"
+        ? `${weightDisplay} ${t("workout.weightMode.suffix")}`
+        : weightDisplay,
     reps: normalizeNumber(record?.reps),
     weight,
     hasBaseline,

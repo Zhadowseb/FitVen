@@ -66,7 +66,9 @@ entity stops syncing, not just the field. For a column the app may reach
 first, follow `started_from` on `Workout_Type_Instance`: the handle from
 `createStartedFromCloudColumn` in `src/Utils/startedFrom.js` names the column
 until the cloud says it is missing, and `workoutTypeInstanceSync.js` routes its
-reads and uploads through it.
+reads and uploads through it. `weight_mode` on `Exercise_Instance` and on the
+column preferences does the same with `createWeightModeCloudColumn` in
+`src/Utils/weightMode.js`, and a null from the cloud keeps the local value.
 
 For another entity, swap `Set` for its name. `SYNCED_FIELDS` has a table per
 entity, and `getComparableXSnapshot`, `areComparableXsEqual` and

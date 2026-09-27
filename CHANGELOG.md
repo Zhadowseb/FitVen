@@ -1,5 +1,28 @@
 # Changelog
 
+## [2.16.0] - Unreleased
+### Added
+- **Weight per side or for both sides.** Dumbbell, kettlebell and cable exercises get two tabs under the name on the exercise card: "Pr. side · 22,5" and "Begge sider · 45".
+  - A switch converts every set of the exercise in that workout: ×2 or ÷2, to the nearest 0.25 kg. Reps are unchanged, and empty weights stay empty.
+  - The choice is kept for the exercise and synced to a new phone, and Undo is offered for five seconds.
+  - Earlier workouts are not touched. Copied or repeated workouts follow the exercise's choice.
+- **Volume counts a weight per side twice** wherever it is summed: statistics, the trophy room's tonnes and the program overview.
+- **Records, e1RM and bests** compare older sets converted into the exercise's current way of writing it, so a switch never creates or removes a record.
+- **"pr. side"** is shown on the folded card, in the history panel, on the Records pages, in program bests and in friends' workout posts.
+- **+ and − on the weight in the set list.** With only rest, #, reps, weight and done shown:
+  - each unfinished set has − and + around its weight;
+  - the header's "− VÆGT +" moves every unfinished set at once;
+  - the step follows the exercise (`Utils/weightStep`): 2 for dumbbells; 5 for machines, cables, squats and deadlifts; otherwise 2.5;
+  - hold to repeat. It is saved once, just after the last press.
+### Changed
+- A set's weight keeps two decimals (6,25 kg) instead of one.
+### Cloud
+- **`20261002090000_weight-mode-per-instance.sql`** adds `weight_mode` to `exercise_instance` and `exercise_column_preferences`.
+  - It has not been run.
+  - Until it runs, the app syncs without the column and keeps the choice on the phone.
+- **Known, not new:** the cloud keeps a set's weight in whole kilos (`field("weight", int())`), so 102,5 kg or 11,25 kg per side is uploaded as 102 and 11. The phone keeps the right number.
+
+---
 ## [2.15.0] - Unreleased
 ### Added
 - **The running strength workout is on the lock screen.** On iOS 16.2+ it is a Live Activity and in the Dynamic Island; on Android it is an ongoing notification. Both show the set to do, the rest counting down and the workout time, and all three count by themselves without the app.

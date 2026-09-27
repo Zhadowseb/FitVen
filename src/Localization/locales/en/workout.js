@@ -19,6 +19,24 @@ export default {
     records: "Records and progress",
     openRecords: "Open records for {name}",
     heaviestLift: "{weight} kg × {reps}",
+    heaviestLiftPerSide: "{weight} kg per side × {reps}",
+  },
+  // Weight per side or for both sides, on the exercise card (4d).
+  weightMode: {
+    perSide: "Per side",
+    bothSides: "Both sides",
+    tabValue: "{label} · {weight}",
+    doubled: "Weight doubled: {from} → {to} {unit}",
+    halved: "Weight halved: {from} → {to} {unit}",
+    // When none of the sets has a weight yet there are no numbers to quote.
+    switchedPerSide: "Weight is now logged per side",
+    switchedBothSides: "Weight is now logged for both sides",
+    undo: "Undo",
+    // Follows the number, in small grey type.
+    suffix: "per side",
+    a11y: "Weight is logged {mode}. Tap to switch, all sets are converted",
+    // {mode} in a11y for both sides; per side uses suffix.
+    a11yBothSides: "for both sides",
   },
   note: {
     title: "Note",
@@ -166,6 +184,11 @@ export default {
   setList: {
     setDone: "Set {number} done",
     repsUnit: "reps",
+    // + and − on the weight (1e). {step} is the step in kg.
+    weightMinus: "Take {step} kg off set {label}",
+    weightPlus: "Add {step} kg to set {label}",
+    weightMinusAll: "Take {step} kg off every unfinished set",
+    weightPlusAll: "Add {step} kg to every unfinished set",
     headers: {
       note: "NOTE",
       rest: "REST",

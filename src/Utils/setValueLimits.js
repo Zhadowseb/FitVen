@@ -27,7 +27,10 @@ export const MIN_SET_PAUSE_SECONDS = 0;
 export const MAX_SET_PAUSE_SECONDS = 3600;
 
 const SET_FIELD_LIMITS = {
-  weight: { min: MIN_SET_WEIGHT, max: MAX_SET_WEIGHT, decimals: 1 },
+  // Two decimals: a weight per side is often a quarter kilo - 12,5 kg is
+  // 6,25 per side (4d) - and the weight steppers round to 0.25. With one, an
+  // edit or a step would round 6,25 to 6,3.
+  weight: { min: MIN_SET_WEIGHT, max: MAX_SET_WEIGHT, decimals: 2 },
   reps: { min: MIN_SET_REPS, max: MAX_SET_REPS, decimals: 0 },
   rpe: { min: MIN_SET_RPE, max: MAX_SET_RPE, decimals: 1 },
   rm_percentage: {
