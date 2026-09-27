@@ -131,6 +131,7 @@ export async function uploadDirtyMicrocycles(
 
     await programRepository.markMicrocycleSynced(db, {
       microcycleId: localMicrocycle.microcycle_id,
+      expectedSyncVersion: localMicrocycle.sync_version,
       cloudMicrocycleId,
       syncId: normalizeSyncId(syncResult.cloudRecord?.sync_id),
       syncVersion: normalizeSyncVersion(syncResult.cloudRecord?.sync_version, 0),
@@ -353,6 +354,7 @@ async function reconcileMicrocyclesFromCloud(db, userId) {
         ) {
           await programRepository.markMicrocycleSynced(db, {
             microcycleId: localMicrocycle.microcycle_id,
+            expectedSyncVersion: localMicrocycle.sync_version,
             cloudMicrocycleId,
             syncId: cloudSyncId,
             syncVersion: normalizeSyncVersion(cloudMicrocycle.sync_version, 0),
@@ -390,6 +392,7 @@ async function reconcileMicrocyclesFromCloud(db, userId) {
         ) {
           await programRepository.markMicrocycleSynced(db, {
             microcycleId: localMicrocycle.microcycle_id,
+            expectedSyncVersion: localMicrocycle.sync_version,
             cloudMicrocycleId,
             syncId: cloudSyncId,
             syncVersion: normalizeSyncVersion(cloudMicrocycle.sync_version, 0),

@@ -218,10 +218,13 @@ export async function updateProgramFromCloud(
   );
 }
 
+// Clears needs_sync only while the row is still at `expectedSyncVersion`. See
+// markWorkoutSynced below, which this mirrors.
 export async function markProgramSynced(
   db,
   {
     programId,
+    expectedSyncVersion,
     cloudProgramId,
     remoteLocalProgramId = null,
     syncId = null,
@@ -229,7 +232,11 @@ export async function markProgramSynced(
     deletedAt = null,
   }
 ) {
-  await db.runAsync(
+  if (expectedSyncVersion === undefined) {
+    throw new Error("markProgramSynced needs the expectedSyncVersion it read.");
+  }
+
+  const result = await db.runAsync(
     `UPDATE Program
      SET cloud_program_id = ?,
          remote_local_program_id = COALESCE(?, remote_local_program_id, program_id),
@@ -237,7 +244,8 @@ export async function markProgramSynced(
          sync_version = COALESCE(?, sync_version),
          deleted_at = ?,
          needs_sync = 0
-     WHERE program_id = ?;`,
+     WHERE program_id = ?
+       AND sync_version IS ?;`,
     [
       cloudProgramId,
       remoteLocalProgramId,
@@ -245,8 +253,20 @@ export async function markProgramSynced(
       syncVersion,
       deletedAt,
       programId,
+      expectedSyncVersion,
     ]
   );
+
+  if (result.changes > 0) {
+    return;
+  }
+
+  await updateProgramCloudIdentity(db, {
+    programId,
+    cloudProgramId,
+    remoteLocalProgramId,
+    syncId,
+  });
 }
 
 export async function updateProgramCloudIdentity(
@@ -430,10 +450,13 @@ export async function updateMesocycleFromCloud(
   );
 }
 
+// Clears needs_sync only while the row is still at `expectedSyncVersion`. See
+// markWorkoutSynced below, which this mirrors.
 export async function markMesocycleSynced(
   db,
   {
     mesocycleId,
+    expectedSyncVersion,
     cloudMesocycleId,
     remoteLocalMesocycleId = null,
     syncId = null,
@@ -441,7 +464,11 @@ export async function markMesocycleSynced(
     deletedAt = null,
   }
 ) {
-  await db.runAsync(
+  if (expectedSyncVersion === undefined) {
+    throw new Error("markMesocycleSynced needs the expectedSyncVersion it read.");
+  }
+
+  const result = await db.runAsync(
     `UPDATE Mesocycle
      SET cloud_mesocycle_id = ?,
          remote_local_mesocycle_id = COALESCE(?, remote_local_mesocycle_id, mesocycle_id),
@@ -449,7 +476,8 @@ export async function markMesocycleSynced(
          sync_version = COALESCE(?, sync_version),
          deleted_at = ?,
          needs_sync = 0
-     WHERE mesocycle_id = ?;`,
+     WHERE mesocycle_id = ?
+       AND sync_version IS ?;`,
     [
       cloudMesocycleId,
       remoteLocalMesocycleId,
@@ -457,8 +485,20 @@ export async function markMesocycleSynced(
       syncVersion,
       deletedAt,
       mesocycleId,
+      expectedSyncVersion,
     ]
   );
+
+  if (result.changes > 0) {
+    return;
+  }
+
+  await updateMesocycleCloudIdentity(db, {
+    mesocycleId,
+    cloudMesocycleId,
+    remoteLocalMesocycleId,
+    syncId,
+  });
 }
 
 export async function updateMesocycleCloudIdentity(
@@ -628,20 +668,51 @@ export async function updateMicrocycleFromCloud(
   );
 }
 
+// Clears needs_sync only while the row is still at `expectedSyncVersion`. See
+// markWorkoutSynced below, which this mirrors.
 export async function markMicrocycleSynced(
   db,
-  { microcycleId, cloudMicrocycleId, syncId = null, syncVersion = null, deletedAt = null }
+  {
+    microcycleId,
+    expectedSyncVersion,
+    cloudMicrocycleId,
+    syncId = null,
+    syncVersion = null,
+    deletedAt = null,
+  }
 ) {
-  await db.runAsync(
+  if (expectedSyncVersion === undefined) {
+    throw new Error("markMicrocycleSynced needs the expectedSyncVersion it read.");
+  }
+
+  const result = await db.runAsync(
     `UPDATE Microcycle
      SET cloud_microcycle_id = ?,
          sync_id = COALESCE(?, sync_id),
          sync_version = COALESCE(?, sync_version),
          deleted_at = ?,
          needs_sync = 0
-     WHERE microcycle_id = ?;`,
-    [cloudMicrocycleId, syncId, syncVersion, deletedAt, microcycleId]
+     WHERE microcycle_id = ?
+       AND sync_version IS ?;`,
+    [
+      cloudMicrocycleId,
+      syncId,
+      syncVersion,
+      deletedAt,
+      microcycleId,
+      expectedSyncVersion,
+    ]
   );
+
+  if (result.changes > 0) {
+    return;
+  }
+
+  await updateMicrocycleCloudIdentity(db, {
+    microcycleId,
+    cloudMicrocycleId,
+    syncId,
+  });
 }
 
 export async function updateMicrocycleCloudIdentity(
@@ -2314,10 +2385,13 @@ export async function updateDayFromCloud(
   );
 }
 
+// Clears needs_sync only while the row is still at `expectedSyncVersion`. See
+// markWorkoutSynced below, which this mirrors.
 export async function markDaySynced(
   db,
   {
     dayId,
+    expectedSyncVersion,
     cloudDayId,
     remoteLocalDayId = null,
     syncId = null,
@@ -2325,7 +2399,11 @@ export async function markDaySynced(
     deletedAt = null,
   }
 ) {
-  await db.runAsync(
+  if (expectedSyncVersion === undefined) {
+    throw new Error("markDaySynced needs the expectedSyncVersion it read.");
+  }
+
+  const result = await db.runAsync(
     `UPDATE Day
      SET cloud_day_id = ?,
          remote_local_day_id = COALESCE(?, remote_local_day_id, day_id),
@@ -2333,9 +2411,29 @@ export async function markDaySynced(
          sync_version = COALESCE(?, sync_version),
          deleted_at = ?,
          needs_sync = 0
-     WHERE day_id = ?;`,
-    [cloudDayId, remoteLocalDayId, syncId, syncVersion, deletedAt, dayId]
+     WHERE day_id = ?
+       AND sync_version IS ?;`,
+    [
+      cloudDayId,
+      remoteLocalDayId,
+      syncId,
+      syncVersion,
+      deletedAt,
+      dayId,
+      expectedSyncVersion,
+    ]
   );
+
+  if (result.changes > 0) {
+    return;
+  }
+
+  await updateDayCloudIdentity(db, {
+    dayId,
+    cloudDayId,
+    remoteLocalDayId,
+    syncId,
+  });
 }
 
 export async function updateDayCloudIdentity(

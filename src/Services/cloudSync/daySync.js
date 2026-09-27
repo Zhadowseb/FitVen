@@ -146,6 +146,7 @@ export async function uploadDirtyDays(
 
     await programRepository.markDaySynced(db, {
       dayId: localDay.day_id,
+      expectedSyncVersion: localDay.sync_version,
       cloudDayId,
       remoteLocalDayId,
       syncId: normalizeSyncId(syncResult.cloudRecord?.sync_id),
@@ -398,6 +399,7 @@ async function reconcileDaysFromCloud(db, userId) {
         } else if (areComparableDaysEqual(comparableLocalDay, normalizedCloudDay)) {
           await programRepository.markDaySynced(db, {
             dayId: localDay.day_id,
+            expectedSyncVersion: localDay.sync_version,
             cloudDayId,
             remoteLocalDayId: localDayId,
             syncId: cloudSyncId,
@@ -433,6 +435,7 @@ async function reconcileDaysFromCloud(db, userId) {
         ) {
           await programRepository.markDaySynced(db, {
             dayId: localDay.day_id,
+            expectedSyncVersion: localDay.sync_version,
             cloudDayId,
             remoteLocalDayId: localDayId,
             syncId: cloudSyncId,
