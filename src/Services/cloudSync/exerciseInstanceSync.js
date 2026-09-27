@@ -197,6 +197,7 @@ export async function uploadDirtyExerciseInstances(
 
     await weightliftingRepository.markExerciseSynced(db, {
       exerciseId: localExercise.exercise_instance_id,
+      expectedSyncVersion: localExercise.sync_version,
       cloudExerciseInstanceId,
       remoteLocalExerciseInstanceId,
       syncId: normalizeSyncId(syncResult.cloudRecord?.sync_id),
@@ -496,6 +497,7 @@ async function reconcileExerciseInstancesFromCloud(db, userId) {
         ) {
           await weightliftingRepository.markExerciseSynced(db, {
             exerciseId: localExercise.exercise_instance_id,
+            expectedSyncVersion: localExercise.sync_version,
             cloudExerciseInstanceId,
             remoteLocalExerciseInstanceId: localExerciseInstanceId,
             syncId: cloudSyncId,

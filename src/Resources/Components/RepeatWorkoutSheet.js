@@ -22,6 +22,7 @@ import ReplayHistory from "../Icons/UI-icons/ReplayHistory";
 import Calender from "../Icons/UI-icons/Calender";
 import { programService } from "../../Services";
 import { useTranslation } from "@localization";
+import { workoutDisplayName } from "@utils/workoutTypeLabel";
 
 const noop = () => {};
 
@@ -261,7 +262,8 @@ export default function RepeatWorkoutSheet({
 
             <View style={styles.headerCopy}>
               <ThemedText style={styles.eyebrow} numberOfLines={1}>
-                {workout?.label ?? t("workout.page.fallbackTitle")}
+                {workoutDisplayName(workout?.label, t, workout?.workout_type) ??
+                  t("workout.page.fallbackTitle")}
               </ThemedText>
               <ThemedText style={styles.title} numberOfLines={1}>
                 {mode === "choice"

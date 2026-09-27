@@ -98,6 +98,25 @@ export async function getExerciseCatalogEntryByName(db, exerciseName) {
   );
 }
 
+// The sets Records and an exercise's statistics page are made of: ticked off,
+// not failed, with a weight and reps, nothing deleted on the way up, and no
+// warm-ups. One string for both queries below, so the "See statistics"
+// button in the exercise library cannot promise a page that turns out empty.
+const COMPLETED_STRENGTH_SET_CONDITIONS = `s.done = 1
+       AND COALESCE(s.failed, 0) = 0
+       AND s.weight IS NOT NULL
+       AND s.reps IS NOT NULL
+       AND CAST(s.weight AS REAL) > 0
+       AND CAST(s.reps AS INTEGER) > 0
+       AND COALESCE(s.deleted_at, '') = ''
+       AND COALESCE(e.deleted_at, '') = ''
+       AND COALESCE(w.deleted_at, '') = ''
+       AND COALESCE(d.deleted_at, '') = ''
+       -- A warm-up is preparation: it is in no record, no volume, no trend.
+       -- Drop sets stay - they count toward volume - and are held back from
+       -- the record calculations by the service instead.
+       AND COALESCE(s.set_type, 'working') <> 'warmup'`;
+
 export async function getCompletedStrengthSetsForPersonalRecords(
   db,
   { exerciseName = null, sinceIsoDate = null } = {}
@@ -168,20 +187,7 @@ export async function getCompletedStrengthSetsForPersonalRecords(
      LEFT JOIN Program p ON p.program_id = d.program_id
      LEFT JOIN current_modes current_mode
        ON current_mode.name_key = lower(e.exercise_name)
-     WHERE s.done = 1
-       AND COALESCE(s.failed, 0) = 0
-       AND s.weight IS NOT NULL
-       AND s.reps IS NOT NULL
-       AND CAST(s.weight AS REAL) > 0
-       AND CAST(s.reps AS INTEGER) > 0
-       AND COALESCE(s.deleted_at, '') = ''
-       AND COALESCE(e.deleted_at, '') = ''
-       AND COALESCE(w.deleted_at, '') = ''
-       AND COALESCE(d.deleted_at, '') = ''
-       -- A warm-up is preparation: it is in no record, no volume, no trend.
-       -- Drop sets stay - they count toward volume - and are held back from
-       -- the record calculations by the service instead.
-       AND COALESCE(s.set_type, 'working') <> 'warmup'
+     WHERE ${COMPLETED_STRENGTH_SET_CONDITIONS}
        ${exerciseFilter}
        ${sinceFilter}
      ORDER BY
@@ -192,6 +198,28 @@ export async function getCompletedStrengthSetsForPersonalRecords(
        s.sets_id DESC;`,
     params
   );
+}
+
+/**
+ * Whether there is at least one set of this exercise that its statistics page
+ * would show - the same sets as the query above. One row at most, found
+ * through exercise_instance_name_idx, so the exercise library can ask each
+ * time a muscle view opens.
+ */
+export async function hasCompletedStrengthSetForExercise(db, exerciseName) {
+  const row = await db.getFirstAsync(
+    `SELECT 1 AS found
+     FROM Exercise_Instance e
+     JOIN "Set" s ON s.exercise_instance_id = e.exercise_instance_id
+     JOIN Workout_Type_Instance w ON w.workout_id = e.workout_type_instance_id
+     JOIN Day d ON d.day_id = w.day_id
+     WHERE e.exercise_name = ?
+       AND ${COMPLETED_STRENGTH_SET_CONDITIONS}
+     LIMIT 1;`,
+    [exerciseName]
+  );
+
+  return Boolean(row);
 }
 
 /**
@@ -1232,10 +1260,12 @@ export async function getSetsByWorkout(db, workoutId) {
 }
 
 /**
- * The running workout as the Quick start panel on Home reads it: every
- * exercise in the workout screen's order with each of its sets, one row per
- * set - and one with no set for an exercise that has none, so its name is
- * still there. Only what the panel shows or decides with.
+ * The running workout as the Quick start panel on Home and the lock-screen
+ * card read it: every exercise in the workout screen's order with each of its
+ * sets, one row per set - and one with no set for an exercise that has none,
+ * so its name is still there. Only what the two show or decide with: the
+ * catalog's equipment picks the card's weight step, and the set's sync
+ * version tells a tap on the card from an edit made after it.
  */
 export async function getLiveWorkoutSets(db, workoutId) {
   await ensureExerciseOrderColumn(db);
@@ -1256,9 +1286,12 @@ export async function getLiveWorkoutSets(db, workoutId) {
         s.set_type,
         s.amrap,
         s.amrap_target,
-        s.pause
+        s.pause,
+        s.sync_version,
+        catalog.equipment AS exercise_equipment
      FROM Exercise_Instance e
      LEFT JOIN "Set" s ON s.exercise_instance_id = e.exercise_instance_id
+     LEFT JOIN Exercise catalog ON catalog.name = e.exercise_name
      WHERE e.workout_type_instance_id = ?
      ORDER BY e.exercise_order ASC, e.exercise_instance_id ASC, s.set_number ASC, s.sets_id ASC;`,
     [workoutId]
@@ -1543,10 +1576,13 @@ export async function updateExerciseFromCloud(
   );
 }
 
+// Clears needs_sync only while the row is still at `expectedSyncVersion`. See
+// markWorkoutSynced in programRepository, which this mirrors.
 export async function markExerciseSynced(
   db,
   {
     exerciseId,
+    expectedSyncVersion,
     cloudExerciseInstanceId,
     remoteLocalExerciseInstanceId = null,
     syncId = null,
@@ -1554,7 +1590,11 @@ export async function markExerciseSynced(
     deletedAt = null,
   }
 ) {
-  await db.runAsync(
+  if (expectedSyncVersion === undefined) {
+    throw new Error("markExerciseSynced needs the expectedSyncVersion it read.");
+  }
+
+  const result = await db.runAsync(
     `UPDATE Exercise_Instance
      SET cloud_exercise_instance_id = ?,
          remote_local_exercise_instance_id = COALESCE(
@@ -1566,7 +1606,8 @@ export async function markExerciseSynced(
          sync_version = COALESCE(?, sync_version),
          deleted_at = ?,
          needs_sync = 0
-     WHERE exercise_instance_id = ?;`,
+     WHERE exercise_instance_id = ?
+       AND sync_version IS ?;`,
     sqliteParams([
       cloudExerciseInstanceId,
       remoteLocalExerciseInstanceId,
@@ -1574,8 +1615,20 @@ export async function markExerciseSynced(
       syncVersion,
       deletedAt,
       exerciseId,
+      expectedSyncVersion,
     ])
   );
+
+  if (result.changes > 0) {
+    return;
+  }
+
+  await updateExerciseCloudIdentity(db, {
+    exerciseId,
+    cloudExerciseInstanceId,
+    remoteLocalExerciseInstanceId,
+    syncId,
+  });
 }
 
 export async function updateExerciseCloudIdentity(
@@ -2043,10 +2096,13 @@ export async function updateSetFromCloud(
   );
 }
 
+// Clears needs_sync only while the row is still at `expectedSyncVersion`. See
+// markWorkoutSynced in programRepository, which this mirrors.
 export async function markSetSynced(
   db,
   {
     setId,
+    expectedSyncVersion,
     cloudSetId,
     remoteLocalSetId = null,
     syncId = null,
@@ -2054,7 +2110,11 @@ export async function markSetSynced(
     deletedAt = null,
   }
 ) {
-  await db.runAsync(
+  if (expectedSyncVersion === undefined) {
+    throw new Error("markSetSynced needs the expectedSyncVersion it read.");
+  }
+
+  const result = await db.runAsync(
     `UPDATE "Set"
      SET cloud_set_id = ?,
          remote_local_set_id = COALESCE(
@@ -2066,7 +2126,8 @@ export async function markSetSynced(
          sync_version = COALESCE(?, sync_version),
          deleted_at = ?,
          needs_sync = 0
-     WHERE sets_id = ?;`,
+     WHERE sets_id = ?
+       AND sync_version IS ?;`,
     sqliteParams([
       cloudSetId,
       remoteLocalSetId,
@@ -2074,8 +2135,20 @@ export async function markSetSynced(
       syncVersion,
       deletedAt,
       setId,
+      expectedSyncVersion,
     ])
   );
+
+  if (result.changes > 0) {
+    return;
+  }
+
+  await updateSetCloudIdentity(db, {
+    setId,
+    cloudSetId,
+    remoteLocalSetId,
+    syncId,
+  });
 }
 
 export async function updateSetCloudIdentity(

@@ -2356,6 +2356,25 @@ export async function getPersonalRecordExerciseSummaries(db) {
     );
 }
 
+/**
+ * Whether an exercise has anything on its statistics page (RecordsExercisePage)
+ * yet: at least one finished set. The exercise library asks before it offers
+ * the way there. One row at most, never the history.
+ */
+export async function hasCompletedSetsForExercise(db, exerciseName) {
+  const normalizedExerciseName =
+    typeof exerciseName === "string" ? exerciseName.trim() : "";
+
+  if (!normalizedExerciseName) {
+    return false;
+  }
+
+  return weightliftingRepository.hasCompletedStrengthSetForExercise(
+    db,
+    normalizedExerciseName
+  );
+}
+
 export async function getPersonalRecordExerciseDetail(db, exerciseName) {
   const normalizedExerciseName =
     typeof exerciseName === "string" ? exerciseName.trim() : "";
@@ -4462,6 +4481,73 @@ export async function updateStrengthSetDone(
   });
 
   return { personalRecordSetIds };
+}
+
+/**
+ * Restart, for a strength workout's sets: every set ticked off - done or
+ * failed - back to not done, written the way unticking it on the workout
+ * screen writes it (updateStrengthSetDone), so the records go back to the sets
+ * that held them before, the exercises are no longer done, and the day, week
+ * and block above the workout follow. One transaction, one upload and one
+ * notice for Home and the lock-screen card, rather than one of each per set.
+ *
+ * The workout's own timer and completion are workoutService.resetWorkoutState.
+ * Resolves with how many sets were ticked off.
+ */
+export async function resetStrengthWorkoutSets(db, workoutId) {
+  const resolvedWorkoutId = normalizeRequiredId(workoutId, "workoutId");
+  let resetSetCount = 0;
+
+  await withTransaction(db, async () => {
+    const rows = await weightliftingRepository.getLiveWorkoutSets(
+      db,
+      resolvedWorkoutId
+    );
+    const tickedSets = rows.filter(
+      (row) =>
+        row.sets_id !== null &&
+        row.sets_id !== undefined &&
+        (Number(row.done) === 1 || Number(row.failed) === 1)
+    );
+
+    for (const set of tickedSets) {
+      await weightliftingRepository.updateSetDone(db, {
+        setId: set.sets_id,
+        done: 0,
+      });
+    }
+
+    for (const exerciseId of new Set(
+      tickedSets.map((set) => set.exercise_instance_id)
+    )) {
+      await weightliftingRepository.updateExerciseDoneFromSets(db, exerciseId);
+    }
+
+    for (const exerciseName of new Set(
+      tickedSets.map((set) => set.exercise_name)
+    )) {
+      await refreshPersonalRecordsForExerciseName(db, exerciseName);
+    }
+
+    await workoutService.refreshWorkoutHierarchyCompletion(db, resolvedWorkoutId);
+    resetSetCount = tickedSets.length;
+  });
+
+  if (resetSetCount === 0) {
+    return 0;
+  }
+
+  syncExerciseInstancesInBackground(db);
+  syncSetsInBackground(db);
+  notifyWorkoutSetChanged({
+    workoutId: resolvedWorkoutId,
+    setId: null,
+    done: false,
+    failed: false,
+    personalRecord: false,
+  });
+
+  return resetSetCount;
 }
 
 /**

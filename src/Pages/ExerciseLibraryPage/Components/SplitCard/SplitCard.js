@@ -6,6 +6,7 @@ import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
 import Checkmark from "@resources/Icons/UI-icons/Checkmark";
 import ReplayHistory from "@resources/Icons/UI-icons/ReplayHistory";
 import { ThemedText } from "@resources/ThemedComponents";
+import { workoutDisplayName } from "@utils/workoutTypeLabel";
 
 /**
  * The split, for somebody without an active program: the sessions they
@@ -21,7 +22,9 @@ export default function SplitCard({ split, onRepeat, onEdit, isRepeating = false
   const primaryText = theme.primaryText ?? theme.primary;
   const sessions = split?.sessions ?? [];
   const next = sessions.find((session) => session.isUpNext && session.lastWorkoutId) ?? null;
-  const nameOf = (session, index) => session.name ?? t("train.split.unnamed", { number: index + 1 });
+  // A name that is only a stored type id is drawn as the type's name.
+  const nameOf = (session, index) =>
+    workoutDisplayName(session.name, t) ?? t("train.split.unnamed", { number: index + 1 });
 
   return (
     <View

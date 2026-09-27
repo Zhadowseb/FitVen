@@ -755,6 +755,9 @@ export default function WorkoutTypesSettingsPage() {
         visible={birthDatePickerVisible}
         value={getBirthDatePickerValue()}
         minYear={1900}
+        // Only the year is kept, as on Edit profile: a day or a month here
+        // would be thrown away on save.
+        yearOnly
         title={t("settings.workoutTypes.birthDatePickerTitle")}
         isConfirming={isSavingBirthDate}
         onClose={() => {

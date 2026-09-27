@@ -2833,10 +2833,15 @@ export async function updateWorkoutFromCloud(
   );
 }
 
+// Clears needs_sync only while the row is still at `expectedSyncVersion`, the
+// sync_version the caller read it at. A write that landed while the upload was
+// out keeps its flag and its own version, so the next pass sends it; the cloud
+// identity is recorded either way.
 export async function markWorkoutSynced(
   db,
   {
     workoutId,
+    expectedSyncVersion,
     cloudWorkoutTypeInstanceId,
     remoteLocalWorkoutTypeInstanceId = null,
     syncId = null,
@@ -2844,7 +2849,11 @@ export async function markWorkoutSynced(
     deletedAt = null,
   }
 ) {
-  await db.runAsync(
+  if (expectedSyncVersion === undefined) {
+    throw new Error("markWorkoutSynced needs the expectedSyncVersion it read.");
+  }
+
+  const result = await db.runAsync(
     `UPDATE Workout_Type_Instance
      SET cloud_workout_type_instance_id = ?,
          remote_local_workout_type_instance_id = COALESCE(
@@ -2856,7 +2865,8 @@ export async function markWorkoutSynced(
          sync_version = COALESCE(?, sync_version),
          deleted_at = ?,
          needs_sync = 0
-     WHERE workout_id = ?;`,
+     WHERE workout_id = ?
+       AND sync_version IS ?;`,
     sqliteParams([
       cloudWorkoutTypeInstanceId,
       remoteLocalWorkoutTypeInstanceId,
@@ -2864,8 +2874,20 @@ export async function markWorkoutSynced(
       syncVersion,
       deletedAt,
       workoutId,
+      expectedSyncVersion,
     ])
   );
+
+  if (result.changes > 0) {
+    return;
+  }
+
+  await updateWorkoutCloudIdentity(db, {
+    workoutId,
+    cloudWorkoutTypeInstanceId,
+    remoteLocalWorkoutTypeInstanceId,
+    syncId,
+  });
 }
 
 export async function updateWorkoutCloudIdentity(

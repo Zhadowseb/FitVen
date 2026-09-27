@@ -6,6 +6,7 @@ import CoverGradient from "@resources/Components/CoverGradient";
 import { ThemedText } from "@resources/ThemedComponents";
 import { PROFILE_POST_GRID_SIZE } from "@utils/publicProfileUtils";
 import { getWorkoutCoverImage } from "@utils/workoutCoverImages";
+import { workoutDisplayName } from "@utils/workoutTypeLabel";
 
 const COLUMNS = 3;
 // The fixed pair the other cover images use: a dark fade under white type,
@@ -39,9 +40,9 @@ export default function PostsGrid({ posts, onOpenPost }) {
       {rows.map((row, rowIndex) => (
         <View key={rowIndex} style={styles.row}>
           {row.map((post) => {
+            // A title or type that is a stored type id, in the app's language.
             const title =
-              String(post?.title ?? "").trim() ||
-              String(post?.workoutType ?? "").trim() ||
+              workoutDisplayName(post?.title, t, post?.workoutType) ??
               t("publicProfile.posts.untitled");
 
             return (

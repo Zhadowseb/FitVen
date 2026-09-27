@@ -179,6 +179,7 @@ export async function uploadDirtyWorkoutTypeInstances(
 
     await programRepository.markWorkoutSynced(db, {
       workoutId: localWorkout.workout_id,
+      expectedSyncVersion: localWorkout.sync_version,
       cloudWorkoutTypeInstanceId,
       remoteLocalWorkoutTypeInstanceId,
       syncId: normalizeSyncId(syncResult.cloudRecord?.sync_id),
@@ -466,6 +467,7 @@ async function reconcileWorkoutTypeInstancesFromCloud(db, userId) {
         ) {
           await programRepository.markWorkoutSynced(db, {
             workoutId: localWorkout.workout_id,
+            expectedSyncVersion: localWorkout.sync_version,
             cloudWorkoutTypeInstanceId,
             remoteLocalWorkoutTypeInstanceId: localWorkoutTypeInstanceId,
             syncId: cloudSyncId,
@@ -514,6 +516,7 @@ async function reconcileWorkoutTypeInstancesFromCloud(db, userId) {
         ) {
           await programRepository.markWorkoutSynced(db, {
             workoutId: localWorkout.workout_id,
+            expectedSyncVersion: localWorkout.sync_version,
             cloudWorkoutTypeInstanceId,
             remoteLocalWorkoutTypeInstanceId: localWorkoutTypeInstanceId,
             syncId: cloudSyncId,

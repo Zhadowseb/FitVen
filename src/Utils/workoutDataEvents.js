@@ -32,3 +32,31 @@ export function subscribeWorkoutDataChanges(listener) {
     listeners.delete(listener);
   };
 }
+
+// A set changed from the lock screen - ticked off, or its weight moved - and
+// written without the workout screen, which reads its sets again when it
+// hears this.
+const lockScreenListeners = new Set();
+
+/** `{ workoutId }` - the workout whose sets the lock screen just wrote. */
+export function notifyLockScreenEdit(edit) {
+  lockScreenListeners.forEach((listener) => {
+    try {
+      listener(edit);
+    } catch (error) {
+      console.error("A lock-screen edit listener failed:", error);
+    }
+  });
+}
+
+export function subscribeLockScreenEdits(listener) {
+  if (typeof listener !== "function") {
+    return () => {};
+  }
+
+  lockScreenListeners.add(listener);
+
+  return () => {
+    lockScreenListeners.delete(listener);
+  };
+}

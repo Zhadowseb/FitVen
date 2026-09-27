@@ -24,7 +24,13 @@ export default {
   restClock: "Rest · {time}",
   restSub: "rest",
   allDone: "Every set is done",
+  allDoneQuestion: "Finish the workout?",
+  finish: "Finish",
   noSets: "No sets yet",
+  // The weight buttons on Android's open card: "2.5 kg" beside a − and a +.
+  weightStep: "{step} {unit}",
+  a11yWeightMinus: "Remove {step} {unit} from set",
+  a11yWeightPlus: "Add {step} {unit} to set",
   // The Android notification channels, as the phone's settings list them.
   channelName: "Workout in progress",
   restChannelName: "Rest over",

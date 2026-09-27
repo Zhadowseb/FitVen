@@ -90,6 +90,12 @@ This file applies to everything inside `src/`.
 - Dates and numbers go through `formatDate`, `formatTime` and
   `formatNumber` from `@localization`, which use the chosen language's
   locale rather than the device's.
+- Workout types are stored in English (`Resistance`, `Upperbody`, `Run`,
+  `Walk`...), and a workout nobody named has its type as its `label`. Draw a
+  type with `workoutTypeLabel` and a workout's name with `workoutDisplayName`
+  from `src/Utils/workoutTypeLabel.js`; never render `label` or
+  `workout_type` as it is. Only what is drawn changes - a name the user
+  typed stays as typed, and nothing stored is translated.
 
 ## What "Exercise" Means
 

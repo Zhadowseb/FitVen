@@ -27,6 +27,8 @@ async function postingFlow() {
   const service = load("src/Services/workoutService.js", {
     enqueueSync: scheduler.enqueueSync,
     startBackgroundSync: () => { calls.push(["background"]); },
+    // A workout-level write tells the lock-screen card; nobody listens here.
+    notifyWorkoutDataChanged: () => {},
     postMock: { createWorkoutSummaryPostForCompletedWorkout: async (db, options) => {
       calls.push(["post", options.workoutId, options.note]);
       if (failure) throw failure;

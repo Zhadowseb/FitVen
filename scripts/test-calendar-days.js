@@ -91,6 +91,17 @@ assert.equal(days.getWorkoutIconLabel({ label: "Push day" }), "PD", "two words: 
 assert.equal(days.getWorkoutIconLabel({ label: "legs" }), "LE", "one word: its first two letters");
 assert.equal(days.getWorkoutIconLabel({ workout_type: "Mobility" }), "MO");
 assert.equal(days.getWorkoutIconLabel({}), "WO");
+{
+  // With the app's language: a label that is a stored type id is read in it
+  // first; one the user typed is not.
+  const { translate } = loadAppModule("src/Localization/i18n.js");
+  const inDanish = (key, params) => translate(key, params, "da");
+
+  assert.equal(days.getWorkoutIconLabel({ label: "Walk", workout_type: "Walk" }, inDanish), "GÅ");
+  assert.equal(days.getWorkoutIconLabel({ workout_type: "Walk" }, inDanish), "GÅ", "no label: the type's name");
+  assert.equal(days.getWorkoutIconLabel({ label: "Push day" }, inDanish), "PD", "a typed name stays as typed");
+  assert.equal(days.getWorkoutIconLabel({ label: "Walk" }), "WA", "without t, as before");
+}
 
 for (const sick of [true, "true", 1, "1"]) {
   assert.equal(days.isProgramDaySick({ is_sick: sick }), true, `is_sick ${JSON.stringify(sick)} is sick`);

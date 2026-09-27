@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The +step button: its pill with a touch ripple. -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+  android:color="@color/live_workout_ripple">
+  <item android:drawable="@drawable/live_workout_bg_weight_plus" />
+</ripple>

@@ -11,6 +11,7 @@ import styles from "./SplitCardsStyle";
 import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
 import { ThemedText } from "@resources/ThemedComponents";
 import { splitFormingState } from "@utils/splitForming";
+import { workoutDisplayName } from "@utils/workoutTypeLabel";
 
 // Two or three fit the width; four start to crowd, so from three the row
 // scrolls and the cards take a fixed width instead of sharing what is there.
@@ -50,8 +51,10 @@ function SplitCard({ group, theme, width, onPress, t, formatDate }) {
   // guess has no name to show. Numbered by where it sits in the history
   // rather than by the row order, which sorts by who has waited longest and
   // would renumber the cards under the finger.
+  // A name that is a stored type id is drawn as the type's name.
   const name =
-    group.name ?? t("home.split.unnamed", { number: (group.historyOrder ?? 0) + 1 });
+    workoutDisplayName(group.name, t) ??
+    t("home.split.unnamed", { number: (group.historyOrder ?? 0) + 1 });
 
   return (
     <TouchableOpacity

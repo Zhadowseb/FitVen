@@ -48,15 +48,31 @@
 //     flid workouts  detail = { workouts, weeks, lastWorkoutAt }             // lastWorkoutAt "YYYY-MM-DD"
 //     flid streak    detail = { weeks, lastWorkoutAt }
 //     powerlifting   detail = { bench, squat, deadlift, homeGymRank }     // homeGymRank only on your own row
-//     fremgang       detail = { lift, before, now, percent }             // lift: "bench" | "squat" | "deadlift"
+//     fremgang       detail = Rise                                       // the person's biggest
 //     calisthenics   detail = { pullups, dips, pushups }                 // reps; points are value
 //   me.breakdown (fremgang, calisthenics - the personal card; null otherwise):
-//     fremgang       { bench, squat, deadlift }: each { before, now, percent } | null
+//     fremgang       Rise[], biggest first; only rises with both windows
 //     calisthenics   { pullups, dips, pushups }: each { reps, factor, points }
+//   Rise = { lift, exerciseName, before, now, percent }
+//     Today the server counts bench press, squat and deadlift: lift is
+//     "bench" | "squat" | "deadlift" and exerciseName null. A rise may name
+//     any exercise instead (exercise_name), with lift null; the screens write
+//     either through categoryFormat.progressExerciseName.
 //
 // searchGyms({ query, scope }) -> [{ id, name, shortName, chain, city, imageUrl }]
 //   inside the scope's level; the world level, or no scope, searches
 //   everything. Before the migration it searches everything too.
+//
+// getGymSuggestions({ limit = 10 }) ->
+//   { yours: Gym | null, trainedIn: Gym[], popular: Gym[], region: Region | null }
+//   the centres Explore's search lists before anything is typed: your centre
+//   (gymService.getMyHomeGym), the others you have trained in over 90 days,
+//   most often first (getMyGyms, with workoutCount), then the `limit` centres
+//   with the most lifters in your centre's region - or, without a centre, in
+//   Denmark's busiest region - as the region level lists them (lifterCount).
+//   A centre is in the first group it belongs to only. Never throws: a part
+//   that cannot be read is left out, and before the migration there is no
+//   region, so no popular centres.
 //
 // resolveStartCountry() -> { country, fromLocation }
 //   the country Centres opens on: from the phone's position (reverse
@@ -79,13 +95,15 @@ import {
   normalizeGender,
   normalizeScope,
 } from "@utils/gymCategories";
+import { mergeGymSuggestions } from "@utils/gymUtils";
 
 import { attachAvatarUrls } from "./avatarUrls";
-import { buildGymSearchFilter, getCurrentPosition, getMyHomeGym } from "./gymService";
+import { buildGymSearchFilter, getCurrentPosition, getMyGyms, getMyHomeGym } from "./gymService";
 
 const GYM_TABLE = "gym";
 const SEARCH_FIELDS = "id, chain, name, short_name, city, image_url";
 const SEARCH_LIMIT = 40;
+const SUGGESTION_LIMIT = 10;
 const MAX_LIMIT = 100;
 const LIFTS = ["bench", "squat", "deadlift"];
 const EVENTS = ["pullups", "dips", "pushups"];
@@ -244,14 +262,7 @@ function mapDetail(category, tab, detail) {
         homeGymRank: toNumber(detail.home_gym_rank),
       };
     case "fremgang":
-      return LIFTS.includes(detail.lift)
-        ? {
-            lift: detail.lift,
-            before: toNumber(detail.before),
-            now: toNumber(detail.now),
-            percent: toNumber(detail.percent),
-          }
-        : null;
+      return mapRise(detail);
     case "calisthenics":
       return {
         pullups: toNumber(detail.pullups) ?? 0,
@@ -263,24 +274,44 @@ function mapDetail(category, tab, detail) {
   }
 }
 
+/** One rise on Progress, or null when it names neither a lift nor an exercise. */
+function mapRise(entry, liftKey = null) {
+  if (!entry || typeof entry !== "object") {
+    return null;
+  }
+
+  const lift = LIFTS.includes(entry.lift) ? entry.lift : LIFTS.includes(liftKey) ? liftKey : null;
+  const exerciseName = cleanText(entry.exercise_name);
+
+  if (!lift && !exerciseName) {
+    return null;
+  }
+
+  return {
+    lift,
+    exerciseName,
+    before: toNumber(entry.before),
+    now: toNumber(entry.now),
+    percent: toNumber(entry.percent),
+  };
+}
+
 function mapBreakdown(category, breakdown) {
   if (!breakdown || typeof breakdown !== "object") {
     return null;
   }
 
+  // Your rises, the biggest first: the server sends one per lift, keyed by
+  // it ({ bench, squat, deadlift }), or a list naming each exercise. Only a
+  // rise with both windows is one.
   if (category === "fremgang") {
-    return Object.fromEntries(
-      LIFTS.map((lift) => {
-        const part = breakdown[lift];
+    const entries = Array.isArray(breakdown)
+      ? breakdown.map((entry) => mapRise(entry))
+      : LIFTS.map((lift) => mapRise(breakdown[lift], lift));
 
-        return [
-          lift,
-          part && typeof part === "object"
-            ? { before: toNumber(part.before), now: toNumber(part.now), percent: toNumber(part.percent) }
-            : null,
-        ];
-      })
-    );
+    return entries
+      .filter((rise) => rise && rise.before !== null && rise.now !== null && rise.percent !== null)
+      .sort((left, right) => right.percent - left.percent);
   }
 
   if (category === "calisthenics") {
@@ -681,6 +712,77 @@ export async function searchGyms({ query = "", scope } = {}) {
   }
 
   return (data ?? []).map(mapSearchResult).filter(Boolean);
+}
+
+/* --------------------------------------------- centres before a search -- */
+
+/**
+ * The region whose busiest centres to suggest: the one `anchor` - your
+ * centre, or the one you train in most - is in, else the one with the most
+ * lifters in its country (Denmark without a centre). Null before the
+ * migration, and for a country with no regions yet.
+ */
+async function suggestionRegion(anchor) {
+  let country = null;
+
+  if (anchor?.id) {
+    const place = await getScopeSummary({ scope: { level: "gym", gymId: anchor.id } });
+
+    if (place.unavailable) {
+      return null;
+    }
+
+    if (place.country?.code && place.region?.key) {
+      return { country: place.country.code, region: place.region.key };
+    }
+
+    country = place.country?.code ?? null;
+  }
+
+  const summary = await getScopeSummary({ scope: { level: "country", country: country ?? DEFAULT_COUNTRY } });
+
+  if (summary.unavailable) {
+    return null;
+  }
+
+  const busiest = [...(summary.regions ?? [])].sort(
+    (left, right) => right.lifterCount - left.lifterCount || right.gymCount - left.gymCount
+  )[0];
+
+  return busiest ? { country: summary.country.code, region: busiest.key } : null;
+}
+
+/** Your centre, the others you train in, then a region's busiest (see the top of the file). */
+export async function getGymSuggestions({ limit = SUGGESTION_LIMIT } = {}) {
+  const [homeResult, mineResult] = await Promise.allSettled([getMyHomeGym(), getMyGyms()]);
+  const home = homeResult.status === "fulfilled" ? homeResult.value ?? null : null;
+  const mine = mineResult.status === "fulfilled" && Array.isArray(mineResult.value) ? mineResult.value : [];
+
+  for (const result of [homeResult, mineResult]) {
+    if (result.status === "rejected") {
+      console.warn("Your centres could not be read for the suggestions:", result.reason);
+    }
+  }
+
+  let region = null;
+  let popular = [];
+
+  try {
+    const where = await suggestionRegion(home ?? mine[0] ?? null);
+
+    if (where) {
+      const summary = await getScopeSummary({ scope: { level: "region", ...where } });
+
+      if (!summary.unavailable) {
+        region = summary.region ?? null;
+        popular = summary.gyms ?? [];
+      }
+    }
+  } catch (error) {
+    console.warn("The busiest centres could not be read for the suggestions:", error);
+  }
+
+  return { ...mergeGymSuggestions({ home, trainedIn: mine, popular, limit }), region };
 }
 
 /* ------------------------------------------------------ the start country -- */

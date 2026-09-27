@@ -15,14 +15,22 @@ internal data class LiveSet(
   val text: String,
   val short: String,
   val done: Boolean,
-  val rest: Double
+  val rest: Double,
+  /** Kilos (or the user's unit); null for a body-weight or timed set. */
+  val weight: Double? = null,
+  /** "5", or "8+" for an AMRAP target; null when the set has no reps. */
+  val repsText: String? = null
 )
 
 internal data class LiveExercise(
   val name: String,
   val index: Int,
   val total: Int,
-  val sets: List<LiveSet>
+  val sets: List<LiveSet>,
+  /** What one tap on −/+ changes the weight by, e.g. 2.5. */
+  val weightStep: Double? = null,
+  /** The step as JS formatted it, e.g. "2,5". */
+  val weightStepText: String? = null
 ) {
   /** The index of the first set to do, or -1. */
   fun firstToDo(): Int = sets.indexOfFirst { !it.done }
@@ -52,7 +60,13 @@ internal data class LiveWorkoutState(
   val totals: LiveTotals,
   val canPrev: Boolean,
   val canNext: Boolean,
-  val strings: Map<String, String>
+  val strings: Map<String, String>,
+  /** "kg". */
+  val unit: String? = null,
+  /** The language's decimal separator, "," or ".". */
+  val decimal: String? = null,
+  /** Where "Afslut" takes you once every set is done: `fitven://live-workout/finish?…`. */
+  val finishUrl: String? = null
 ) {
   /** A translated string or template from JS; empty when it is missing. */
   fun string(key: String): String = strings[key] ?: ""
@@ -85,6 +99,9 @@ internal data class LiveWorkoutState(
     json.put("canPrev", canPrev)
     json.put("canNext", canNext)
     json.put("strings", JSONObject(strings as Map<*, *>))
+    json.put("unit", unit ?: JSONObject.NULL)
+    json.put("decimal", decimal ?: JSONObject.NULL)
+    json.put("finishUrl", finishUrl ?: JSONObject.NULL)
     return json.toString()
   }
 
@@ -128,7 +145,10 @@ internal data class LiveWorkoutState(
         ),
         canPrev = json.optBoolean("canPrev", false),
         canNext = json.optBoolean("canNext", false),
-        strings = stringsOf(json.optJSONObject("strings"))
+        strings = stringsOf(json.optJSONObject("strings")),
+        unit = json.textOrNull("unit"),
+        decimal = json.textOrNull("decimal"),
+        finishUrl = json.textOrNull("finishUrl")
       )
     }
 
@@ -146,10 +166,14 @@ internal data class LiveWorkoutState(
               text = set.text("text"),
               short = set.text("short"),
               done = set.optBoolean("done", false),
-              rest = set.number("rest") ?: 0.0
+              rest = set.number("rest") ?: 0.0,
+              weight = set.number("weight"),
+              repsText = set.textOrNull("repsText")
             )
           }
-        }
+        },
+        weightStep = json.number("weightStep"),
+        weightStepText = json.textOrNull("weightStepText")
       )
     }
 
@@ -164,6 +188,8 @@ internal data class LiveWorkoutState(
             .put("short", set.short)
             .put("done", set.done)
             .put("rest", set.rest)
+            .put("weight", set.weight ?: JSONObject.NULL)
+            .put("repsText", set.repsText ?: JSONObject.NULL)
         )
       }
 
@@ -172,6 +198,8 @@ internal data class LiveWorkoutState(
         .put("index", exercise.index)
         .put("total", exercise.total)
         .put("sets", sets)
+        .put("weightStep", exercise.weightStep ?: JSONObject.NULL)
+        .put("weightStepText", exercise.weightStepText ?: JSONObject.NULL)
     }
 
     private fun stringsOf(json: JSONObject?): Map<String, String> {
@@ -193,6 +221,9 @@ internal data class LiveWorkoutState(
     // org.json's optString turns a JSON null into the text "null".
     private fun JSONObject.text(key: String): String =
       if (isNull(key)) "" else optString(key, "")
+
+    private fun JSONObject.textOrNull(key: String): String? =
+      if (isNull(key)) null else optString(key, "")
 
     private fun JSONObject.number(key: String): Double? {
       if (isNull(key)) {

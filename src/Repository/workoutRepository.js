@@ -170,10 +170,42 @@ export async function getActiveWorkoutTimer(db) {
   );
 }
 
+// The started, unfinished workouts whose clock is stopped - paused, the time
+// they ran banked in elapsed_time - newest start first, in the shape
+// getActiveWorkoutTimer has. Not by is_active: a pause clears it together
+// with timer_start (persistWorkoutTimerState). How old one may be is decided
+// in the service, since a start can still be in milliseconds on an old install.
+export async function getPausedWorkouts(db, { limit = 5 } = {}) {
+  return db.getAllAsync(
+    `SELECT
+        w.workout_id,
+        w.workout_type,
+        w.label,
+        w.date,
+        w.done,
+        w.original_start_time,
+        w.timer_start,
+        w.elapsed_time,
+        d.program_id,
+        d.Weekday AS day
+     FROM Workout_Type_Instance w
+     LEFT JOIN Day d ON d.day_id = w.day_id
+     WHERE w.done = 0
+       AND w.timer_start IS NULL
+       AND w.original_start_time IS NOT NULL
+       AND w.deleted_at IS NULL
+     ORDER BY w.original_start_time DESC, w.workout_id DESC
+     LIMIT ?;`,
+    [limit]
+  );
+}
+
 // The started, unfinished workouts of the given types, newest start first -
 // running or paused. The lock-screen card picks the one it shows from these;
 // how old a paused one may be is decided in the service, because a start time
-// can still be stored in milliseconds on an old install.
+// can still be stored in milliseconds on an old install. Not by is_active: a
+// pause clears it along with timer_start, and a paused workout went missing
+// here the same way it went missing from the square in the bottom navigation.
 export async function getOpenStartedWorkoutsOfTypes(db, { types, limit = 5 }) {
   const typeList = [...(types ?? [])];
 
@@ -192,7 +224,6 @@ export async function getOpenStartedWorkoutsOfTypes(db, { types, limit = 5 }) {
         w.elapsed_time
      FROM Workout_Type_Instance w
      WHERE w.done = 0
-       AND w.is_active = 1
        AND w.original_start_time IS NOT NULL
        AND w.deleted_at IS NULL
        AND w.workout_type IN (${typeList.map(() => "?").join(", ")})

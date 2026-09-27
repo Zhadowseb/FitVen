@@ -12,6 +12,7 @@ import MapPin from "../../../../Resources/Icons/UI-icons/MapPin";
 import { Colors, withAlpha } from "../../../../Resources/GlobalStyling/colors";
 import { formatRelativeDay, formatTimeAgo } from "../../../../Utils/dateUtils";
 import { ThemedText, UserAvatar } from "../../../../Resources/ThemedComponents";
+import { workoutDisplayName, workoutTypeLabel } from "@utils/workoutTypeLabel";
 
 // No tokens for these two: the gold bar gradient is specific to this card.
 const GOLD_BAR_FROM = "#C98F2C";
@@ -245,8 +246,9 @@ export default function WorkoutSummaryCard({
                           style={[styles.metaDot, { backgroundColor: quietText }]}
                         />
                       ) : null}
+                      {/* Stored, and posted, as the English id. */}
                       <ThemedText style={styles.workoutType} setColor={accent}>
-                        {workoutType}
+                        {workoutTypeLabel(workoutType, t)}
                       </ThemedText>
                     </>
                   ) : null}
@@ -285,7 +287,7 @@ export default function WorkoutSummaryCard({
                   setColor={titleColor}
                   numberOfLines={1}
                 >
-                  {postTitle}
+                  {workoutDisplayName(postTitle, t) ?? postTitle}
                 </ThemedText>
               ) : null}
 

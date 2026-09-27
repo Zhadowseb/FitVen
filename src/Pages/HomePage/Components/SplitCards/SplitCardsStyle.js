@@ -25,16 +25,22 @@ export default StyleSheet.create({
     gap: 8,
     paddingHorizontal: 20,
   },
-  // The first week: seven dots and a line. Not a card - nothing opens yet.
+  // The first week: seven dots and a word on one line, the explanation on
+  // its own line under them. Not a card - nothing opens yet. The explanation
+  // used to share the dots' line and was cut off on a phone; under them it
+  // has the whole width and wraps.
   forming: {
-    minHeight: 44,
     marginHorizontal: 20,
     paddingHorizontal: 14,
+    paddingVertical: 11,
     borderRadius: 14,
     borderWidth: 1,
+    gap: 6,
+  },
+  formingTop: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 10,
   },
   formingDots: {
     flexDirection: "row",
@@ -49,11 +55,15 @@ export default StyleSheet.create({
   formingDotEmpty: {
     borderWidth: 1.5,
   },
-  formingText: {
-    flex: 1,
-    minWidth: 0,
+  formingStatus: {
+    flexShrink: 1,
     fontSize: 12.5,
-    fontWeight: "700",
+    fontWeight: "800",
+  },
+  formingText: {
+    fontSize: 12.5,
+    lineHeight: 17,
+    fontWeight: "600",
   },
   card: {
     // stretch on the row keeps every card as tall as the tallest, so a group

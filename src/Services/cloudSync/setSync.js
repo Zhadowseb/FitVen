@@ -138,6 +138,7 @@ export async function uploadDirtySets(
 
     await weightliftingRepository.markSetSynced(db, {
       setId: localSet.sets_id,
+      expectedSyncVersion: localSet.sync_version,
       cloudSetId,
       remoteLocalSetId,
       syncId: normalizeSyncId(syncResult.cloudRecord?.sync_id),
@@ -367,6 +368,7 @@ async function reconcileSetsFromCloud(db, userId) {
         } else if (areComparableSetsEqual(comparableLocalSet, comparableCloudSet)) {
           await weightliftingRepository.markSetSynced(db, {
             setId: localSet.sets_id,
+            expectedSyncVersion: localSet.sync_version,
             cloudSetId,
             remoteLocalSetId: localSetId,
             syncId: cloudSyncId,
@@ -402,6 +404,7 @@ async function reconcileSetsFromCloud(db, userId) {
         ) {
           await weightliftingRepository.markSetSynced(db, {
             setId: localSet.sets_id,
+            expectedSyncVersion: localSet.sync_version,
             cloudSetId,
             remoteLocalSetId: localSetId,
             syncId: cloudSyncId,

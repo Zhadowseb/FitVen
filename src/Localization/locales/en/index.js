@@ -35,6 +35,7 @@ import trainCalendar from "./trainCalendar";
 import trainLibrary from "./trainLibrary";
 import workout from "./workout";
 import workoutStart from "./workoutStart";
+import workoutTypes from "./workoutTypes";
 
 export default {
   auth,
@@ -71,4 +72,5 @@ export default {
   trainLibrary,
   workout,
   workoutStart,
+  workoutTypes,
 };

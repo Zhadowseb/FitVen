@@ -23,6 +23,7 @@ class LiveWorkoutActionReceiver : BroadcastReceiver() {
       type = type,
       setId = intent.getStringExtra(EXTRA_SET_ID),
       seconds = if (intent.hasExtra(EXTRA_SECONDS)) intent.getIntExtra(EXTRA_SECONDS, 0).toDouble() else null,
+      delta = if (intent.hasExtra(EXTRA_DELTA)) intent.getDoubleExtra(EXTRA_DELTA, 0.0) else null,
       at = System.currentTimeMillis() / 1000.0
     )
 
@@ -36,6 +37,7 @@ class LiveWorkoutActionReceiver : BroadcastReceiver() {
     const val EXTRA_TYPE = "type"
     const val EXTRA_SET_ID = "setId"
     const val EXTRA_SECONDS = "seconds"
+    const val EXTRA_DELTA = "delta"
     const val EXTRA_WORKOUT_ID = "workoutId"
   }
 }
