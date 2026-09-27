@@ -280,17 +280,17 @@ export default function GymLeaderboardPage() {
 
         if (result) {
           setSearchOverview(result);
-          setSearchListStatus("loaded");
+          setSearchListStatus("ready");
         } else {
           searchRequestGymRef.current = null;
-          setSearchListStatus("failed");
+          setSearchListStatus("error");
         }
       })
       .catch((error) => {
         // Asked again on "Prøv igen", or the next time the search is used.
         if (searchRequestGymRef.current === gymId) {
           searchRequestGymRef.current = null;
-          setSearchListStatus("failed");
+          setSearchListStatus("error");
         }
         console.warn("Could not load every exercise at this centre for the search:", error);
       });
@@ -331,7 +331,6 @@ export default function GymLeaderboardPage() {
     matchCount: exerciseMatches.length,
     previewCount: exercises.length,
     totalCount: exerciseTotal,
-    fullListLoaded: searchOverview !== null,
     status: searchListStatus,
   });
 
@@ -382,9 +381,13 @@ export default function GymLeaderboardPage() {
         <ThemedText style={styles.sectionLabel} setColor={quietText} numberOfLines={1}>
           {t("gyms.centreExercises.resultsTitle")}
         </ThemedText>
-        <ThemedText style={styles.sectionHint} setColor={quietText} numberOfLines={1}>
-          {t("gyms.results.count", { count: exerciseMatches.length })}
-        </ThemedText>
+        {/* A count of the preview's matches only would change once the rest has
+            come - and says nothing while the rest could not be got. */}
+        {searchView.complete ? (
+          <ThemedText style={styles.sectionHint} setColor={quietText} numberOfLines={1}>
+            {t("gyms.results.count", { count: exerciseMatches.length })}
+          </ThemedText>
+        ) : null}
       </View>
       <View style={[styles.listCard, { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder }]}>
         {exerciseMatches.map((exercise, index) => (
@@ -415,11 +418,12 @@ export default function GymLeaderboardPage() {
             </ThemedText>
             <TouchableOpacity
               accessibilityRole="button"
+              activeOpacity={0.8}
+              hitSlop={8}
               onPress={loadSearchableExercises}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              style={styles.searchRetry}
+              style={styles.noticeAction}
             >
-              <ThemedText style={styles.emptyTitle} setColor={theme.primaryText ?? theme.primary}>
+              <ThemedText style={styles.noticeActionText} setColor={theme.primaryText}>
                 {t("common.retry")}
               </ThemedText>
             </TouchableOpacity>

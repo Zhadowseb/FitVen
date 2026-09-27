@@ -741,26 +741,26 @@ assert.deepStrictEqual(searchNames("row"), [], "and a name nobody here lifts is 
   // "No match" only once every exercise has been looked through.
   const view = (args) => gymUtils.centreSearchView(args);
   assert.deepStrictEqual(
-    view({ matchCount: 0, previewCount: 5, totalCount: 15, fullListLoaded: false, status: "loading" }),
+    view({ matchCount: 0, previewCount: 5, totalCount: 15, status: "loading" }),
     { complete: false, loading: true, failed: false, noMatch: false },
     "the search said no match while the rest was still coming"
   );
   assert.deepStrictEqual(
-    view({ matchCount: 0, previewCount: 5, totalCount: 15, fullListLoaded: false, status: "failed" }),
+    view({ matchCount: 0, previewCount: 5, totalCount: 15, status: "error" }),
     { complete: false, loading: false, failed: true, noMatch: false },
     "a failed fetch read as no match"
   );
   assert.deepStrictEqual(
-    view({ matchCount: 0, previewCount: 5, totalCount: 15, fullListLoaded: true, status: "loaded" }),
+    view({ matchCount: 0, previewCount: 5, totalCount: 15, status: "ready" }),
     { complete: true, loading: false, failed: false, noMatch: true }
   );
   assert.deepStrictEqual(
-    view({ matchCount: 0, previewCount: 5, totalCount: 5, fullListLoaded: false, status: "idle" }),
+    view({ matchCount: 0, previewCount: 5, totalCount: 5, status: "idle" }),
     { complete: true, loading: false, failed: false, noMatch: true },
     "a centre with no more than the preview is searched in full at once"
   );
   assert.strictEqual(
-    view({ matchCount: 2, previewCount: 5, totalCount: 15, fullListLoaded: false, status: "loading" }).loading,
+    view({ matchCount: 2, previewCount: 5, totalCount: 15, status: "loading" }).loading,
     true,
     "matches from the preview still say the rest is coming"
   );

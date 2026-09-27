@@ -999,8 +999,10 @@ async function serviceChecks() {
   // gets its old weight and %1RM exactly. Set 101 was changed to 30 a side
   // after the switch, and 102 filled in: both are kept, written for both
   // sides again, instead of the weight from before the switch over them.
+  estimateLookups = 0;
   assert.strictEqual(await service.undoExerciseWeightModeSwitch(db, undo), true);
   await settle();
+  assert.strictEqual(estimateLookups, 1, "the undo looked the 1RM estimate up once per set");
 
   assert.deepStrictEqual(
     setsOf(10),
