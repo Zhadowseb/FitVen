@@ -3542,6 +3542,7 @@ async function hydrateWorkoutStrengthDataFromCloud(db, workoutId) {
           exercise_instance_id: createdExerciseResult.lastInsertRowId,
           cloud_exercise_instance_id: cloudExerciseInstanceId,
           remote_local_exercise_instance_id: remoteLocalExerciseInstanceId,
+          sync_version: exercisePayload.syncVersion,
           workout_type_instance_id: workoutId,
         };
 
@@ -3564,11 +3565,13 @@ async function hydrateWorkoutStrengthDataFromCloud(db, workoutId) {
         continue;
       }
 
-      await weightliftingRepository.updateExerciseFromCloud(db, {
+      // A write since the read above keeps its flag, and goes up.
+      const applied = await weightliftingRepository.updateExerciseFromCloud(db, {
         exerciseId: localExercise.exercise_instance_id,
+        expectedSyncVersion: localExercise.sync_version,
         ...exercisePayload,
       });
-      didHydrate = true;
+      didHydrate = didHydrate || applied;
     }
   });
 
@@ -3737,11 +3740,12 @@ async function hydrateWorkoutStrengthDataFromCloud(db, workoutId) {
         continue;
       }
 
-      await weightliftingRepository.updateSetFromCloud(db, {
+      const applied = await weightliftingRepository.updateSetFromCloud(db, {
         setId: localSet.sets_id,
+        expectedSyncVersion: localSet.sync_version,
         ...setPayload,
       });
-      didHydrate = true;
+      didHydrate = didHydrate || applied;
     }
 
     await weightliftingRepository.refreshExerciseDerivedFieldsFromSets(db);

@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "2.16.3-fix-category-progress-all-exercises.1",
+  "version": "2.16.4-fix-sync-lost-update-download.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",

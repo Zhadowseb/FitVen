@@ -216,6 +216,7 @@ function assertConsistent(id, expectedType, label) {
   // updateSetFromCloud.
   await repository.updateSetFromCloud(db, {
     setId: fromCloud.lastInsertRowId,
+    expectedSyncVersion: 1,
     cloudSetId: 10,
     remoteLocalSetId: 10,
     syncId: "s-10",

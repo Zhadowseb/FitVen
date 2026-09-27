@@ -178,10 +178,13 @@ export async function createProgramFromCloud(
   );
 }
 
+// Writes only while the row is still at `expectedSyncVersion`, and says whether
+// it did. See updateWorkoutFromCloud below, which this mirrors.
 export async function updateProgramFromCloud(
   db,
   {
     programId,
+    expectedSyncVersion,
     cloudProgramId,
     remoteLocalProgramId,
     syncId,
@@ -192,7 +195,11 @@ export async function updateProgramFromCloud(
     status,
   }
 ) {
-  await db.runAsync(
+  if (expectedSyncVersion === undefined) {
+    throw new Error("updateProgramFromCloud needs the expectedSyncVersion it read.");
+  }
+
+  const result = await db.runAsync(
     `UPDATE Program
      SET cloud_program_id = ?,
          remote_local_program_id = ?,
@@ -203,7 +210,8 @@ export async function updateProgramFromCloud(
          start_date = ?,
          status = ?,
          needs_sync = 0
-     WHERE program_id = ?;`,
+     WHERE program_id = ?
+       AND sync_version IS ?;`,
     [
       cloudProgramId,
       remoteLocalProgramId,
@@ -214,8 +222,11 @@ export async function updateProgramFromCloud(
       startDate,
       status,
       programId,
+      expectedSyncVersion,
     ]
   );
+
+  return result.changes > 0;
 }
 
 // Clears needs_sync only while the row is still at `expectedSyncVersion`. See
@@ -404,10 +415,13 @@ export async function createMesocycleFromCloud(
   );
 }
 
+// Writes only while the row is still at `expectedSyncVersion`, and says whether
+// it did. See updateWorkoutFromCloud below, which this mirrors.
 export async function updateMesocycleFromCloud(
   db,
   {
     mesocycleId,
+    expectedSyncVersion,
     cloudMesocycleId,
     remoteLocalMesocycleId,
     syncId,
@@ -420,7 +434,11 @@ export async function updateMesocycleFromCloud(
     done,
   }
 ) {
-  await db.runAsync(
+  if (expectedSyncVersion === undefined) {
+    throw new Error("updateMesocycleFromCloud needs the expectedSyncVersion it read.");
+  }
+
+  const result = await db.runAsync(
     `UPDATE Mesocycle
      SET cloud_mesocycle_id = ?,
          remote_local_mesocycle_id = ?,
@@ -433,7 +451,8 @@ export async function updateMesocycleFromCloud(
          focus = ?,
          done = ?,
          needs_sync = 0
-     WHERE mesocycle_id = ?;`,
+     WHERE mesocycle_id = ?
+       AND sync_version IS ?;`,
     [
       cloudMesocycleId,
       remoteLocalMesocycleId,
@@ -446,8 +465,11 @@ export async function updateMesocycleFromCloud(
       focus,
       done ? 1 : 0,
       mesocycleId,
+      expectedSyncVersion,
     ]
   );
+
+  return result.changes > 0;
 }
 
 // Clears needs_sync only while the row is still at `expectedSyncVersion`. See
@@ -628,10 +650,13 @@ export async function createMicrocycleFromCloud(
   );
 }
 
+// Writes only while the row is still at `expectedSyncVersion`, and says whether
+// it did. See updateWorkoutFromCloud below, which this mirrors.
 export async function updateMicrocycleFromCloud(
   db,
   {
     microcycleId,
+    expectedSyncVersion,
     cloudMicrocycleId,
     syncId,
     syncVersion,
@@ -642,7 +667,11 @@ export async function updateMicrocycleFromCloud(
     done,
   }
 ) {
-  await db.runAsync(
+  if (expectedSyncVersion === undefined) {
+    throw new Error("updateMicrocycleFromCloud needs the expectedSyncVersion it read.");
+  }
+
+  const result = await db.runAsync(
     `UPDATE Microcycle
      SET cloud_microcycle_id = ?,
          sync_id = ?,
@@ -653,7 +682,8 @@ export async function updateMicrocycleFromCloud(
          focus = ?,
          done = ?,
          needs_sync = 0
-     WHERE microcycle_id = ?;`,
+     WHERE microcycle_id = ?
+       AND sync_version IS ?;`,
     [
       cloudMicrocycleId,
       syncId,
@@ -664,8 +694,11 @@ export async function updateMicrocycleFromCloud(
       focus,
       done ? 1 : 0,
       microcycleId,
+      expectedSyncVersion,
     ]
   );
+
+  return result.changes > 0;
 }
 
 // Clears needs_sync only while the row is still at `expectedSyncVersion`. See
@@ -2336,10 +2369,13 @@ export async function createDayFromCloud(
   );
 }
 
+// Writes only while the row is still at `expectedSyncVersion`, and says whether
+// it did. See updateWorkoutFromCloud below, which this mirrors.
 export async function updateDayFromCloud(
   db,
   {
     dayId,
+    expectedSyncVersion,
     cloudDayId,
     remoteLocalDayId,
     syncId,
@@ -2353,7 +2389,11 @@ export async function updateDayFromCloud(
     isSick = false,
   }
 ) {
-  await db.runAsync(
+  if (expectedSyncVersion === undefined) {
+    throw new Error("updateDayFromCloud needs the expectedSyncVersion it read.");
+  }
+
+  const result = await db.runAsync(
     `UPDATE Day
      SET cloud_day_id = ?,
          remote_local_day_id = ?,
@@ -2367,7 +2407,8 @@ export async function updateDayFromCloud(
          done = ?,
          is_sick = ?,
          needs_sync = 0
-     WHERE day_id = ?;`,
+     WHERE day_id = ?
+       AND sync_version IS ?;`,
     [
       cloudDayId,
       remoteLocalDayId,
@@ -2381,8 +2422,11 @@ export async function updateDayFromCloud(
       done ? 1 : 0,
       isSick ? 1 : 0,
       dayId,
+      expectedSyncVersion,
     ]
   );
+
+  return result.changes > 0;
 }
 
 // Clears needs_sync only while the row is still at `expectedSyncVersion`. See
@@ -2859,10 +2903,16 @@ export async function createWorkoutFromCloud(
   );
 }
 
+// Writes the cloud's row over this one only while it is still at
+// `expectedSyncVersion`, the sync_version the reconcile read it at. Reconciles
+// read before their transaction, and every await in the loop lets the user
+// write, so a row can have moved on since. Such a write keeps its flag and its
+// own version, and the next pass sends it. Returns whether the row was written.
 export async function updateWorkoutFromCloud(
   db,
   {
     workoutId,
+    expectedSyncVersion,
     cloudWorkoutTypeInstanceId,
     remoteLocalWorkoutTypeInstanceId,
     syncId,
@@ -2883,9 +2933,13 @@ export async function updateWorkoutFromCloud(
     startedFrom = null,
   }
 ) {
+  if (expectedSyncVersion === undefined) {
+    throw new Error("updateWorkoutFromCloud needs the expectedSyncVersion it read.");
+  }
+
   // started_from is kept when the cloud's is null: the cloud not knowing where
   // a workout was started from is no reason for this phone to forget it.
-  await db.runAsync(
+  const result = await db.runAsync(
     `UPDATE Workout_Type_Instance
      SET cloud_workout_type_instance_id = ?,
          remote_local_workout_type_instance_id = ?,
@@ -2906,7 +2960,8 @@ export async function updateWorkoutFromCloud(
          start_longitude = ?,
          started_from = COALESCE(?, started_from),
          needs_sync = 0
-     WHERE workout_id = ?;`,
+     WHERE workout_id = ?
+       AND sync_version IS ?;`,
     sqliteParams([
       cloudWorkoutTypeInstanceId,
       remoteLocalWorkoutTypeInstanceId,
@@ -2927,8 +2982,11 @@ export async function updateWorkoutFromCloud(
       startLongitude,
       startedFrom,
       workoutId,
+      expectedSyncVersion,
     ])
   );
+
+  return result.changes > 0;
 }
 
 // Clears needs_sync only while the row is still at `expectedSyncVersion`, the

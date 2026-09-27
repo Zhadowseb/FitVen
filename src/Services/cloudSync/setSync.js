@@ -384,8 +384,9 @@ export async function reconcileSetsFromCloud(db, userId) {
 
       if (Number(localSet.needs_sync) === 1) {
         if (versionOrder < 0) {
-          await weightliftingRepository.updateSetFromCloud(db, {
+          const applied = await weightliftingRepository.updateSetFromCloud(db, {
             setId: localSet.sets_id,
+            expectedSyncVersion: localSet.sync_version,
             cloudSetId,
             remoteLocalSetId: localSetId,
             syncId: cloudSyncId,
@@ -406,7 +407,7 @@ export async function reconcileSetsFromCloud(db, userId) {
             amrapTarget: comparableCloudSet.amrap_target,
             note: comparableCloudSet.note,
           });
-          downloadedCount += 1;
+          downloadedCount += applied ? 1 : 0;
         } else if (
           // Not when the two are equal only because the cloud's cut-off copy
           // was read with our decimals: this edit still has to go up.
@@ -471,8 +472,9 @@ export async function reconcileSetsFromCloud(db, userId) {
         continue;
       }
 
-      await weightliftingRepository.updateSetFromCloud(db, {
+      const applied = await weightliftingRepository.updateSetFromCloud(db, {
         setId: localSet.sets_id,
+        expectedSyncVersion: localSet.sync_version,
         cloudSetId,
         remoteLocalSetId: localSetId,
         syncId: cloudSyncId,
@@ -493,6 +495,11 @@ export async function reconcileSetsFromCloud(db, userId) {
         amrapTarget: comparableCloudSet.amrap_target,
         note: comparableCloudSet.note,
       });
+
+      if (!applied) {
+        // The user wrote to it since it was read, and that write goes up.
+        continue;
+      }
 
       const updatedSet = {
         ...localSet,

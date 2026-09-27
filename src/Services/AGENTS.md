@@ -118,7 +118,15 @@ under a second normalisation.
   `expectedSyncVersion`, the `sync_version` the row was read at, and clear
   `needs_sync` only if the row still has it. Pass the version of the row
   object the decision was made from, never the cloud's.
-  `npm run test:sync-lost-update` covers this.
+- The same goes for the pull. A reconcile reads its rows before its
+  transaction, and the user can write at every `await` in its loop. So
+  `updateProgramFromCloud`, `updateMesocycleFromCloud`,
+  `updateMicrocycleFromCloud`, `updateDayFromCloud`, `updateWorkoutFromCloud`,
+  `updateExerciseFromCloud` and `updateSetFromCloud` take `expectedSyncVersion`
+  too, and write the cloud's copy only over the version they were given. They
+  return whether they wrote. On `false` the caller leaves its count and maps
+  alone: the user's edit keeps its flag and goes up.
+  `npm run test:sync-lost-update` covers both.
 - Cloud sync is never triggered directly. Always `syncXInBackground(db)` or
   `enqueueSync()`, which serialise everything through one promise chain in
   `Services/syncScheduler.js`. Parallel calls break parent-before-child upload.
