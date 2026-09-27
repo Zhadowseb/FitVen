@@ -1,3 +1,4 @@
+import { normalizeSetDecimal } from "@utils/setDecimals";
 import { amrapFlagFor, resolveSetType } from "@utils/setTypes";
 import { STARTED_FROM } from "@utils/startedFrom";
 import * as DocumentPicker from "expo-document-picker";
@@ -784,8 +785,9 @@ async function insertImportedProgram(db, payload) {
           ),
           toBooleanInt(set.personal_record),
           toIntegerOrNull(set.pause),
-          toIntegerOrNull(set.rpe),
-          toIntegerOrNull(set.weight),
+          // Weight and RPE have decimals (102.5 kg, RPE 8.5); the rest are whole.
+          normalizeSetDecimal(set.rpe),
+          normalizeSetDecimal(set.weight),
           toIntegerOrNull(set.rm_percentage),
           toIntegerOrNull(set.reps),
           toBooleanInt(set.done),

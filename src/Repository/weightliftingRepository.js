@@ -1911,6 +1911,22 @@ export async function markSetForCloudResync(db, { setId }) {
   );
 }
 
+/**
+ * Queues a set to be uploaded again, unchanged. Sync bookkeeping, not an edit:
+ * no new sync_version, so it is the same edit sent once more, and the cloud
+ * ids stay so it updates its own row. The set sync uses it when the cloud
+ * holds a set's weight or RPE cut off from before the column kept decimals
+ * (resolveCloudSetDecimals in Utils/setDecimals.js).
+ */
+export async function markSetForUpload(db, { setId }) {
+  await db.runAsync(
+    `UPDATE "Set"
+     SET needs_sync = 1
+     WHERE sets_id = ?;`,
+    [setId]
+  );
+}
+
 export async function getSetSyncMetadata(db, setId) {
   return db.getFirstAsync(
     `SELECT
