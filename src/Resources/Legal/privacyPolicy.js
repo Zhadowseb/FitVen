@@ -19,12 +19,12 @@
 // counted by scripts/check-privacy-policy.js, which fails the build while the
 // policy claims to be published and is not finished.
 
-export const PRIVACY_POLICY_VERSION = "2026-09-27.1";
+export const PRIVACY_POLICY_VERSION = "2026-09-30.1";
 
 /** The public copy. Required by Google Play, and the address in its listing. */
 export const PRIVACY_POLICY_URL = "https://fitven.dk/privacy/";
 
-export const PRIVACY_POLICY_LAST_UPDATED = "27 September 2026";
+export const PRIVACY_POLICY_LAST_UPDATED = "30 September 2026";
 
 export const PRIVACY_POLICY_SECTIONS = [
   {
@@ -48,7 +48,7 @@ Your training: programs, workouts, exercises, sets, weights, repetitions, person
 
 Exercises you make yourself: the name, the muscles, the equipment, the weight mode, a short description, the steps and — if you add one — a video and a still frame taken from it. They are kept with your account, so they come back on a new phone. The shared exercises you save, the ones you add a copy of, and the ones you report are stored too.
 
-Centres: the centre you choose as yours, or else the one you have trained in most over the last 90 days; the centre each workout was done in; the lifts from those workouts that go on a centre's leaderboard; and a verification video, if you add one to a lift.
+Centres: the centre you choose as yours, or else the one you have trained in most over the last 90 days; the centre each workout was done in; and the lifts from those workouts that go on a centre's leaderboard.
 
 Health data: sickness and injury entries you record, heart rate measured from a chest strap or watch, and — if you use the run screen — your location while a run is being tracked, along with the route it produces.
 
@@ -76,7 +76,7 @@ Push notifications are delivered through Expo's notification service, which mean
 
 Location is only read while a run is actively being tracked, and once when you start a workout to find the centre you are in — both only if you allow it. A run's route is stored with the run. For a centre, your position is sent to FitVen's server to look the centre up and is not kept there: only the centre is stored with the workout. Your phone keeps the position with the workout, so the lookup can be tried again if it failed.
 
-Verification videos and exercise videos are stored on Supabase with the rest of your data.
+Exercise videos are stored on Supabase with the rest of your data.
 
 The map that draws your route is Google Maps. Drawing a route means asking Google for the map of that area, so Google can see roughly where you ran, even though the route itself is never sent to them.
 
@@ -102,7 +102,7 @@ The workout posts you publish are shown to the audience you choose for each of t
 
 People who follow you can also see whether you are training today, how many records you set in today's workout, and — if you share music — what you are listening to during a workout.
 
-When a workout is matched to a centre, your best lifts from it go on that centre's leaderboard, where anyone signed in can see them with your name and photo. A lift that has been verified can also appear on the national leaderboard. A verification video can be watched by the people who train at that centre, so that they can vote on it.
+When a workout is matched to a centre, your best lifts from it go on that centre's leaderboard, where anyone signed in can see them with your name and photo. Your best lift of an exercise at any centre also appears on the national leaderboard.
 
 If you have finished a workout at a centre in the last 90 days, you also appear in its categories, and in those of its region and country. Anyone signed in can see there, with your name and photo, how many workouts you have finished this week, month or year, how many weeks in a row you have trained and when you last did; your heaviest single in bench press, squat and deadlift and their total; which exercise your estimated best has risen most in over the last 30 days, with that estimate before and now; and your most pull-ups, dips and push-ups in one set.
 

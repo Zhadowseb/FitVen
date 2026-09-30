@@ -1107,8 +1107,9 @@ function testMigration() {
 
   const powerlifting = rows.body.slice(rows.body.indexOf("elsif p_category = 'powerlifting'"), rows.body.indexOf("elsif p_category = 'fremgang'"));
   assert.ok(powerlifting.includes("and logged_set.reps = 1\n"), "powerlifting counts singles only");
-  assert.ok(powerlifting.includes("judged.video_status = 'rejected'") && powerlifting.includes("judged.reps = 1") && powerlifting.includes("trunc(judged.weight_kg) <= logged_set.weight"), "a rejected single stays out");
-  assert.ok(powerlifting.includes("lift.video_status = 'verified'") && powerlifting.includes("and lift.reps = 1\n"), "only video is verified singles");
+  // 20261007090000 took video verification out: no "Kun video", and a
+  // single a video was voted down for counts like any other.
+  assert.ok(!/video_status|only_video|judged/.test(powerlifting), `no verification in powerlifting (${rows.file})`);
   assert.ok(powerlifting.includes("private.featured_exercises()"), "the three lifts are the catalogue's");
 
   const progress = rows.body.slice(rows.body.indexOf("elsif p_category = 'fremgang'"), rows.body.indexOf("elsif p_category = 'calisthenics'"));
