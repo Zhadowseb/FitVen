@@ -80,7 +80,7 @@ behind by accident.
 | `20261002090000_weight-mode-per-instance.sql` | yes |
 | `20261003090000_a-set-keeps-its-decimals.sql` | yes |
 | `20261004090000_progress-counts-every-exercise.sql` | yes |
-| `20261007090000_remove-lift-verification.sql` | no |
+| `20261007090000_remove-lift-verification.sql` | yes |
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
 centre match, per-centre lift leaderboards with video verification, and what
