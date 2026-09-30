@@ -218,9 +218,11 @@ export default function RecordsExercise({
       : null;
 
   // Section 5.3, phrased forward. Comparing across rep counts reads as a
-  // judgement on the set that was done, which is not the point.
+  // judgement on the set that was done, which is not the point. Only a slot
+  // held at its own rep count: 90 × 3 fills the 1 and the 2 on the same day,
+  // and "next step at 1 rep" would be about a single nobody lifted.
   const nextStep = useMemo(() => {
-    const done = ladder.filter((slot) => slot.weight !== null);
+    const done = ladder.filter((slot) => slot.weight !== null && !slot.isDerived);
 
     if (done.length === 0) {
       return null;
@@ -503,6 +505,12 @@ export default function RecordsExercise({
                 <ThemedText style={styles.caption} setColor={quiet}>
                   {empty ? t("records.exercise.noSet") : shortDate(slot.at)}
                 </ThemedText>
+                {slot.isDerived ? (
+                  // Held by a longer set: said so, and never gold.
+                  <ThemedText style={styles.caption} setColor={quiet}>
+                    {t("records.exercise.fromReps", { reps: slot.fromReps })}
+                  </ThemedText>
+                ) : null}
               </View>
             );
           })}

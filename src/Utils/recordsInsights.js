@@ -629,33 +629,60 @@ export function buildExerciseSeries(sets, { name, now, days }) {
  * Section 5.4. Best weight per rep count, and whether that best was set inside
  * the period. A slot with nothing in it stays in the grid: the hole is the
  * information.
+ *
+ * A set counts for every rep count below it, the owner's rule: 90 kg × 3 is
+ * also 90 kg for 2 and for 1, so slot n holds the heaviest weight of any set
+ * of at least n reps - a set of 15 fills all twelve. On a tie the earlier set
+ * holds it, and on the same day the one at the slot's own rep count.
+ * `fromReps` is how many reps the holding set had.
+ *
+ * A slot filled from a longer set is never a new record (`isNewInPeriod`
+ * stays false): the set was not that, and a first set of ten must not light
+ * ten tiles. Only the personal_record flag says what is new, and it is still
+ * worked out per exact rep count by the service.
+ *
+ * A drop set holds no record, as keepRecordEligible in weightliftingService
+ * has it; warm-ups and failed sets never reach this far.
  */
 export function buildRepLadder(sets, { name, now, days }) {
   const from = days === null || days === undefined ? null : now - days * DAY_MS;
-  const mine = forExercise(sets, name);
+  const mine = forExercise(sets, name).filter((set) => set.setType !== "drop");
   const bestByRep = new Map();
 
   for (const set of mine) {
-    if (set.reps < 1 || set.reps > REP_LADDER_SLOTS) {
+    if (set.reps < 1) {
       continue;
     }
 
-    const existing = bestByRep.get(set.reps);
+    for (let reps = 1; reps <= Math.min(set.reps, REP_LADDER_SLOTS); reps += 1) {
+      const existing = bestByRep.get(reps);
+      const better =
+        !existing ||
+        set.weight > existing.weight ||
+        (set.weight === existing.weight && set.at < existing.at) ||
+        (set.weight === existing.weight &&
+          set.at === existing.at &&
+          set.reps === reps &&
+          existing.fromReps !== reps);
 
-    if (!existing || set.weight > existing.weight) {
-      bestByRep.set(set.reps, { weight: set.weight, at: set.at });
+      if (better) {
+        bestByRep.set(reps, { weight: set.weight, at: set.at, fromReps: set.reps });
+      }
     }
   }
 
   return Array.from({ length: REP_LADDER_SLOTS }, (_, index) => {
     const reps = index + 1;
     const best = bestByRep.get(reps) ?? null;
+    const isDerived = best !== null && best.fromReps !== reps;
 
     return {
       reps,
       weight: best?.weight ?? null,
       at: best?.at ?? null,
-      isNewInPeriod: best !== null && from !== null && best.at >= from,
+      fromReps: best?.fromReps ?? null,
+      isDerived,
+      isNewInPeriod: best !== null && !isDerived && from !== null && best.at >= from,
     };
   });
 }
