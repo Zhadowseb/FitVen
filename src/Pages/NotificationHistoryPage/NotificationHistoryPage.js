@@ -13,6 +13,11 @@ import { useAuth } from "../../Contexts/AuthContext";
 import { notificationService } from "../../Services";
 import { Colors } from "../../Resources/GlobalStyling/colors";
 import { formatTimeAgo } from "../../Utils/dateUtils";
+import {
+  describeNotification,
+  notificationHintKey,
+  notificationTarget,
+} from "@utils/notificationHistory";
 import Bell from "../../Resources/Icons/UI-icons/Bell";
 import Cogwheel from "../../Resources/Icons/UI-icons/Cogwheel";
 import {
@@ -23,34 +28,6 @@ import {
   ThemedView,
   UserAvatar,
 } from "../../Resources/ThemedComponents";
-
-const LIFT_VERIFICATION_REQUESTED = "lift_verification_requested";
-// Written by the server when three people have reported one of your shared
-// exercises (supabase/migrations/20260928090000_custom-exercises-can-be-shared.sql).
-const CUSTOM_EXERCISE_HIDDEN = "custom_exercise_hidden";
-
-function hiddenExerciseName(item) {
-  const name = item?.data?.exercise_name;
-
-  return item?.eventType === CUSTOM_EXERCISE_HIDDEN && typeof name === "string" && name
-    ? name
-    : null;
-}
-
-// What a row says. The server writes every title and body in English; the one
-// kind this page has its own words for is shown in the reader's language.
-function describeNotification(item, t) {
-  const exerciseName = hiddenExerciseName(item);
-
-  if (exerciseName) {
-    return {
-      title: t("notifications.customExerciseHidden.title"),
-      body: t("notifications.customExerciseHidden.body", { name: exerciseName }),
-    };
-  }
-
-  return { title: item?.title ?? "", body: item?.body ?? "" };
-}
 
 export default function NotificationHistoryPage() {
   const { t } = useTranslation();
@@ -147,40 +124,12 @@ export default function NotificationHistoryPage() {
   };
 
   // A card with an avatar and an unread dot reads as something you can open,
-  // and nothing happened when you did. There is no screen for another user's
-  // profile in this app, but most notifications here are someone starting a
-  // workout, and that is what Social shows - so that is where a row goes. A
-  // request to verify a lift goes to that centre, with the review sheet open,
-  // and one of your exercises being hidden goes to that exercise.
+  // and nothing happened when you did. Where each kind goes is in
+  // Utils/notificationHistory.js.
   const openNotification = (item) => {
-    const gymId = Number(item?.data?.gym_id);
-    const exerciseName = hiddenExerciseName(item);
+    const { route: routeName, params } = notificationTarget(item);
 
-    if (item?.eventType === LIFT_VERIFICATION_REQUESTED && Number.isFinite(gymId)) {
-      navigation.navigate("GymLeaderboardPage", {
-        gym_id: gymId,
-        open_verification: true,
-        lift_id: item?.data?.lift_id ?? null,
-      });
-      return;
-    }
-
-    if (exerciseName) {
-      navigation.navigate("MyExercisePage", { exerciseName });
-      return;
-    }
-
-    navigation.navigate("SocialPage");
-  };
-
-  const hintFor = (item) => {
-    if (item.eventType === LIFT_VERIFICATION_REQUESTED) {
-      return t("notifications.hints.openVerification");
-    }
-
-    return hiddenExerciseName(item)
-      ? t("notifications.hints.openExercise")
-      : t("notifications.hints.openActivity");
+    navigation.navigate(routeName, params);
   };
 
   const renderNotification = ({ item }) => {
@@ -191,7 +140,7 @@ export default function NotificationHistoryPage() {
         activeOpacity={0.85}
         accessibilityRole="button"
         accessibilityLabel={t("notifications.itemLabel", { title, body })}
-        accessibilityHint={hintFor(item)}
+        accessibilityHint={t(notificationHintKey(item))}
         onPress={() => openNotification(item)}
         style={[
           styles.notificationCard,
