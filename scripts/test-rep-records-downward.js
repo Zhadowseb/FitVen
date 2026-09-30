@@ -4,7 +4,9 @@
 // The owner: 90 kg × 3 is also 90 kg for 1 and for 2, and the Records page's
 // "Rekord pr. reps" should say so, for the statistics. But a first set of ten
 // is one new record, not ten - nothing that says "new record" may count a
-// rep count the set was not.
+// rep count the set was not. And a set is a new record only when it beats
+// every earlier set with at least as many reps: after 90 × 3, a 90 single is
+// no record, because 90 for 1 was already done (the owner, 2026-10-01).
 //
 // Run for real: the app's schema in an in-memory SQLite (node:sqlite), sets
 // ticked off through weightliftingService.updateStrengthSetDone, and every
@@ -272,36 +274,68 @@ async function main() {
     "every other slot says which set it came from"
   );
 
-  // 3. A true single at 85 afterwards. It is the first single, so it is a
-  //    record at one rep, as it always was - the flag is worked out per exact
-  //    rep count and the ladder does not change that. The ladder keeps 90 at
-  //    one: 90 × 3 is heavier.
-  const later = workout(TODAY, "Bench Press", [{ weight: 85, reps: 1 }]);
-  const [eightyFiveSingle] = later.setIds;
-  result = await tick(later.workoutId, eightyFiveSingle);
-  assert.strictEqual(result.announced, true, "the first single is a record at one rep, as before");
+  // 3. The owner's answer: "så tager 90x3 stadig prioritet, fordi det også
+  //    er 90x1". A set is a new record only when it is heavier than every
+  //    earlier set with at least as many reps. After 90 × 3 an 85 single is
+  //    no record, nor is a 90 single (equal is not a record), a 92 × 2 is -
+  //    at 2 - and a 95 single is.
+  const tickOne = async (weight, reps) => {
+    const { workoutId, setIds } = workout(TODAY, "Bench Press", [{ weight, reps }]);
+    const outcome = await tick(workoutId, setIds[0]);
+
+    return { setId: setIds[0], ...outcome };
+  };
+
+  const eightyFive = await tickOne(85, 1);
+  assert.strictEqual(eightyFive.announced, false, "after 90 × 3, an 85 single is no record: 90 for 1 was already done");
+  assert.ok(!eightyFive.ids.includes(eightyFive.setId));
+  const ninetySingle = await tickOne(90, 1);
+  assert.strictEqual(ninetySingle.announced, false, "a 90 single equals 90 × 3: no record");
   sets = await recordRows();
   ladder = insights.buildRepLadder(sets, { name: "Bench Press", now: Date.now(), days: 30 });
   assert.deepStrictEqual([ladder[0].weight, ladder[0].fromReps, ladder[0].isNewInPeriod], [90, 3, false], "the 1 stays 90, from 90 × 3");
 
-  //    A heavier single takes the one back, at its own rep count.
-  const heavier = workout(TODAY, "Bench Press", [{ weight: 95, reps: 1 }]);
-  result = await tick(heavier.workoutId, heavier.setIds[0]);
-  assert.strictEqual(result.announced, true);
+  const ninetyTwoTwo = await tickOne(92, 2);
+  assert.strictEqual(ninetyTwoTwo.announced, true, "92 × 2 beats 90 × 3 at two: a record, at two");
+  const ninetyFive = await tickOne(95, 1);
+  assert.strictEqual(ninetyFive.announced, true, "a 95 single beats 92 × 2 and 90 × 3: a record");
+  assert.deepStrictEqual(
+    flagged(),
+    [ninetyThree, sixtyTen, amrapSix, ninetyTwoTwo.setId, ninetyFive.setId],
+    "the flags, recomputed on every tick: the 85 and the 90 single hold none"
+  );
+  assert.strictEqual(await service.getPersonalRecordsToday(db), 4, "today: 60 × 10, 70 × 6, 92 × 2 and 95 × 1");
   sets = await recordRows();
   ladder = insights.buildRepLadder(sets, { name: "Bench Press", now: Date.now(), days: 30 });
-  assert.deepStrictEqual([ladder[0].weight, ladder[0].fromReps, ladder[0].isNewInPeriod], [95, 1, true], "the 95 single holds the 1");
-  assert.deepStrictEqual([ladder[1].weight, ladder[1].fromReps], [90, 3], "the 2 still from 90 × 3");
+  assert.deepStrictEqual(
+    ladder.slice(0, 3).map((slot) => [slot.weight, slot.fromReps, slot.isNewInPeriod]),
+    [[95, 1, true], [92, 2, true], [90, 3, true]],
+    "the ladder and the flags agree: each slot held at its own reps by a record"
+  );
 
-  // 4. Per side. The ladder is in the exercise's current mode: 30 kg a side
-  //    × 5, and an older 50 kg in all × 8 is 25 a side. 30 fills 1 to 5, 25
-  //    fills 6 to 8.
+  // 4. Per side. The ladder and the records are in the exercise's current
+  //    mode: 30 kg a side × 5, and an older 50 kg in all × 8 is 25 a side.
+  //    30 fills 1 to 5, 25 fills 6 to 8.
   const older = workout(daysAgo(10), "Dumbbell Press", [{ weight: 50, reps: 8 }], { weightMode: "total" });
   await tick(older.workoutId, older.setIds[0]);
   const perSide = workout(daysAgo(3), "Dumbbell Press", [{ weight: 30, reps: 5 }], { weightMode: "per_side" });
   result = await tick(perSide.workoutId, perSide.setIds[0]);
   assert.strictEqual(result.announced, true, "the first five is a record");
-  sets = await recordRows();
+  //    24 a side × 6 is lighter than the 25-a-side eight: no record. A total
+  //    of 60 × 4 is 30 a side, equal to the five: no record. 26 a side × 6
+  //    beats the eight, and the five does not count at six: a record.
+  const lighterSix = workout(daysAgo(2), "Dumbbell Press", [{ weight: 24, reps: 6 }], { weightMode: "per_side" });
+  result = await tick(lighterSix.workoutId, lighterSix.setIds[0]);
+  assert.strictEqual(result.announced, false, "24 a side × 6: 25 a side × 8 was already done");
+  const totalFour = workout(daysAgo(2), "Dumbbell Press", [{ weight: 60, reps: 4 }], { weightMode: "total" });
+  result = await tick(totalFour.workoutId, totalFour.setIds[0]);
+  assert.strictEqual(result.announced, false, "60 in all × 4 is 30 a side, equal to 30 a side × 5");
+  const heavierSix = workout(daysAgo(1), "Dumbbell Press", [{ weight: 26, reps: 6 }], { weightMode: "per_side" });
+  result = await tick(heavierSix.workoutId, heavierSix.setIds[0]);
+  assert.strictEqual(result.announced, true, "26 a side × 6 is a record at six");
+  sets = (await recordRows()).filter(
+    (set) => !(set.name === "Dumbbell Press" && set.at >= Date.parse(`${daysAgo(2)}T00:00:00Z`))
+  );
   ladder = insights.buildRepLadder(sets, { name: "Dumbbell Press", now: Date.now(), days: 30 });
   assert.ok(
     sets.filter((set) => set.name === "Dumbbell Press").every((set) => set.weightMode === "per_side"),
@@ -319,7 +353,7 @@ async function main() {
   );
 
   console.log(
-    "Rep records downward: a set fills every rep count below it on the Records page, and is announced, flagged, counted today, per day and in the trophy room only at its own; warm-ups, drop sets and failed sets count nowhere; per side stays per side."
+    "Rep records downward: a set fills every rep count below it on the Records page, and is announced, flagged, counted today, per day and in the trophy room only at its own; a set is a record only when it beats every earlier set of at least its reps; warm-ups, drop sets and failed sets count nowhere; per side stays per side."
   );
 }
 
