@@ -1,96 +1,93 @@
-// The split somebody chose on the Train tab - the two to six sessions they
-// rotate through without a program - and the card built from it.
+// The split somebody chose - the two to six sessions they rotate through
+// without a program - and what the Train tab and Home build from it.
 //
-// The choice lives on profile_private.split_names, so it follows them to a new
-// phone, and on the phone too, so the card shows it offline and at once. A
-// choice made offline is marked as not yet sent and goes up the next time the
-// card loads, rather than being overwritten by the older one in the cloud.
+// A session is an entry (Utils/splitEntries.js): a name, and the workout it
+// was picked as when it was picked in the calendar. The choice lives on
+// profile_private - split_entries with the pins, split_names beside it for
+// builds from before pins - so it follows them to a new phone, and on the
+// phone too, so the cards show it offline and at once. A choice made offline
+// is marked as not yet sent and goes up the next time the Train tab loads,
+// rather than being overwritten by the older one in the cloud.
+//
 // Until 20260926090000_your-split-follows-you.sql has run there is no cloud
-// column, and the choice simply stays on the phone.
+// column at all, and the choice stays on the phone. Until
+// 20261006090000_a-split-pins-its-workouts.sql has run there is no
+// split_entries: the names go up alone, and the pins stay on the phone.
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { supabase } from "../Database/supaBaseClient";
 import * as programService from "./programService";
 import * as workoutService from "./workoutService";
 import {
-  SPLIT_MAX_SESSIONS,
-  SPLIT_MIN_SESSIONS,
+  homeGroupsFromSplit,
   namedHistory,
+  pinnedWorkouts,
   repeatAlsoItems,
   resolveChosenSplit,
   sessionsFromGuess,
   splitCandidates,
   splitTemplates,
 } from "@utils/splitCard";
-import { normalizeSplitName } from "@utils/splitGuess";
+import {
+  buildSplitCloudPayload,
+  cleanSplitEntries,
+  isMissingSplitEntriesColumnError,
+  isMissingSplitNamesColumnError,
+  readSplitCache,
+  splitEntriesFromCloud,
+  withLastCopy,
+} from "@utils/splitEntries";
 
 const PROFILE_PRIVATE_TABLE = "profile_private";
 const CACHE_PREFIX = "fitven.split.";
 const LIBRARY_LIMIT = 500;
 
+// No split_names: nothing of the split reaches the cloud.
 let cloudColumnMissing = false;
-
-function isMissingColumn(error) {
-  return error?.code === "42703" || error?.code === "PGRST204";
-}
-
-/** Trimmed, one per session, at most six - or null for fewer than two. */
-export function cleanSplitNames(names) {
-  if (!Array.isArray(names)) {
-    return null;
-  }
-
-  const seen = new Set();
-  const clean = [];
-
-  for (const name of names) {
-    const text = String(name ?? "").trim().slice(0, 60);
-    const key = normalizeSplitName(text);
-
-    if (key && !seen.has(key)) {
-      seen.add(key);
-      clean.push(text);
-    }
-  }
-
-  const limited = clean.slice(0, SPLIT_MAX_SESSIONS);
-
-  return limited.length >= SPLIT_MIN_SESSIONS ? limited : null;
-}
+// No split_entries: the names do, the pins do not.
+let entriesColumnMissing = false;
 
 async function readCache(userId) {
   try {
     const raw = await AsyncStorage.getItem(CACHE_PREFIX + userId);
-    const parsed = raw ? JSON.parse(raw) : null;
 
-    return parsed && typeof parsed === "object"
-      ? { names: cleanSplitNames(parsed.names), pending: Boolean(parsed.pending) }
-      : null;
+    return readSplitCache(raw ? JSON.parse(raw) : null);
   } catch {
     return null;
   }
 }
 
-async function writeCache(userId, names, pending) {
+async function writeCache(userId, entries, pending) {
   try {
-    await AsyncStorage.setItem(CACHE_PREFIX + userId, JSON.stringify({ names, pending }));
+    await AsyncStorage.setItem(CACHE_PREFIX + userId, JSON.stringify({ entries, pending }));
   } catch {
     // The cloud still has it, or will.
   }
 }
 
-async function pushToCloud(userId, names) {
+async function upsertSplit(userId, entries) {
   const { error } = await supabase.from(PROFILE_PRIVATE_TABLE).upsert(
     {
       user_id: userId,
-      split_names: names,
+      ...buildSplitCloudPayload(entries, { withEntries: !entriesColumnMissing }),
       updated_at: new Date().toISOString(),
     },
     { onConflict: "user_id" }
   );
 
+  return error ?? null;
+}
+
+async function pushToCloud(userId, entries) {
+  let error = await upsertSplit(userId, entries);
+
+  if (error && !entriesColumnMissing && isMissingSplitEntriesColumnError(error)) {
+    entriesColumnMissing = true;
+    error = await upsertSplit(userId, entries);
+  }
+
   if (error) {
-    if (isMissingColumn(error)) {
+    if (isMissingSplitNamesColumnError(error)) {
       cloudColumnMissing = true;
     }
 
@@ -98,8 +95,25 @@ async function pushToCloud(userId, names) {
   }
 }
 
-/** The chosen split's names, or null for none chosen. */
-export async function getChosenSplitNames({ userId }) {
+async function selectSplit(userId) {
+  const read = (columns) =>
+    supabase.from(PROFILE_PRIVATE_TABLE).select(columns).eq("user_id", userId).maybeSingle();
+
+  if (!entriesColumnMissing) {
+    const result = await read("split_names, split_entries");
+
+    if (!result.error || !isMissingSplitEntriesColumnError(result.error)) {
+      return result;
+    }
+
+    entriesColumnMissing = true;
+  }
+
+  return read("split_names");
+}
+
+/** The chosen split's entries, or null for none chosen. */
+export async function getChosenSplitEntries({ userId }) {
   if (!userId) {
     return null;
   }
@@ -107,60 +121,61 @@ export async function getChosenSplitNames({ userId }) {
   const cached = await readCache(userId);
 
   if (cloudColumnMissing) {
-    return cached?.names ?? null;
+    return cached?.entries ?? null;
   }
 
   // A choice made offline goes up first; the cloud's is older.
   if (cached?.pending) {
     try {
-      await pushToCloud(userId, cached.names);
-      await writeCache(userId, cached.names, false);
+      await pushToCloud(userId, cached.entries);
+      await writeCache(userId, cached.entries, false);
     } catch (error) {
       if (!cloudColumnMissing) {
         console.warn("The chosen split could not be sent yet:", error);
       }
     }
 
-    return cached.names;
+    return cached.entries;
   }
 
   try {
-    const { data, error } = await supabase
-      .from(PROFILE_PRIVATE_TABLE)
-      .select("split_names")
-      .eq("user_id", userId)
-      .maybeSingle();
+    const { data, error } = await selectSplit(userId);
 
     if (error) {
-      if (isMissingColumn(error)) {
+      if (isMissingSplitNamesColumnError(error)) {
         cloudColumnMissing = true;
       } else {
         console.warn("Could not read the chosen split:", error);
       }
 
-      return cached?.names ?? null;
+      return cached?.entries ?? null;
     }
 
-    const names = cleanSplitNames(data?.split_names);
+    const entries = splitEntriesFromCloud({
+      names: data?.split_names ?? null,
+      // Undefined while the column is missing: the pins come from the phone.
+      entries: entriesColumnMissing ? undefined : data?.split_entries ?? null,
+      cachedEntries: cached?.entries ?? null,
+    });
 
-    await writeCache(userId, names, false);
-    return names;
+    await writeCache(userId, entries, false);
+    return entries;
   } catch (error) {
     console.warn("Could not read the chosen split:", error);
-    return cached?.names ?? null;
+    return cached?.entries ?? null;
   }
 }
 
 /**
- * Saves the chosen split, or clears it with null so the card goes back to
- * the guess. Kept on the phone at once; sent to the cloud when it can be.
+ * Saves the chosen split, or clears it with null so the cards go back to the
+ * guess. Kept on the phone at once; sent to the cloud when it can be.
  */
-export async function saveChosenSplitNames({ userId, names }) {
+export async function saveChosenSplit({ userId, entries }) {
   if (!userId) {
     return null;
   }
 
-  const clean = cleanSplitNames(names);
+  const clean = cleanSplitEntries(entries);
 
   await writeCache(userId, clean, true);
 
@@ -181,24 +196,50 @@ export async function saveChosenSplitNames({ userId, names }) {
 }
 
 /**
- * Everything the split card shows: the sessions (chosen, or guessed until
- * something is chosen), what the editor offers, and "Repeat also".
+ * The chosen split's sessions, resolved against what is on the phone: the
+ * library for names, and the pinned workouts (and their last copies) by
+ * sync_id. Returns the library too, for what else the Train tab shows.
  */
-export async function getSplitCard(db, { userId, now = Date.now() }) {
-  const [library, guess, chosenNames] = await Promise.all([
-    programService.getWorkoutLibrary(db, { limit: LIBRARY_LIMIT }),
-    workoutService.getSplitGroups(db, { now }),
-    getChosenSplitNames({ userId }),
-  ]);
-  const history = namedHistory(library);
-  const sessions = chosenNames
-    ? resolveChosenSplit(chosenNames, history, { now, templates: splitTemplates(library) })
-    : sessionsFromGuess(guess, { now });
+async function resolveEntries(db, entries, { now, library = null }) {
+  const rows = library ?? (await programService.getWorkoutLibrary(db, { limit: LIBRARY_LIMIT }));
+  const syncIds = (entries ?? []).flatMap((entry) => [entry.workout, entry.last]).filter(Boolean);
+  const pinnedRows = syncIds.length > 0 ? await programService.getWorkoutsBySyncIds(db, syncIds) : [];
+  const history = namedHistory(rows);
 
   return {
-    source: chosenNames ? "chosen" : "guess",
+    library: rows,
+    history,
+    sessions: entries
+      ? resolveChosenSplit(entries, history, {
+          now,
+          templates: splitTemplates(rows),
+          pinned: pinnedWorkouts(pinnedRows),
+        })
+      : [],
+  };
+}
+
+/**
+ * Everything the Train tab's split card shows: the sessions (chosen, or
+ * guessed until something is chosen), what the editor offers, and "Repeat
+ * also". `chosenEntries` carry `pinnedAt`, the pinned workout's day, so the
+ * editor can tell two sessions of the same name apart.
+ */
+export async function getSplitCard(db, { userId, now = Date.now() }) {
+  const [library, guess, chosenEntries] = await Promise.all([
+    programService.getWorkoutLibrary(db, { limit: LIBRARY_LIMIT }),
+    workoutService.getSplitGroups(db, { now }),
+    getChosenSplitEntries({ userId }),
+  ]);
+  const { history, sessions: chosenSessions } = await resolveEntries(db, chosenEntries, { now, library });
+  const sessions = chosenEntries ? chosenSessions : sessionsFromGuess(guess, { now });
+
+  return {
+    source: chosenEntries ? "chosen" : "guess",
     sessions,
-    chosenNames,
+    chosenEntries: chosenEntries
+      ? chosenSessions.map((session) => ({ ...session.entry, pinnedAt: session.pinnedAt }))
+      : null,
     candidates: splitCandidates({ guess, history, now }),
     repeatAlso: repeatAlsoItems({
       history,
@@ -206,4 +247,51 @@ export async function getSplitCard(db, { userId, now = Date.now() }) {
       now,
     }),
   };
+}
+
+/**
+ * Home's split cards: the chosen split whenever there is one, resolved the
+ * way the Train tab resolves it, and the guess only when none is chosen.
+ *
+ * Home does not wait on the network: the choice is read from the phone, and
+ * the cloud's is fetched behind it, for the next time Home loads.
+ */
+export async function getHomeSplitGroups(db, { userId, now = Date.now() }) {
+  const cached = userId ? await readCache(userId) : null;
+
+  if (userId && !cached?.pending) {
+    getChosenSplitEntries({ userId }).catch(() => {});
+  }
+
+  if (!cached?.entries) {
+    return workoutService.getSplitGroups(db, { now });
+  }
+
+  const { sessions } = await resolveEntries(db, cached.entries, { now });
+
+  return homeGroupsFromSplit(sessions);
+}
+
+/**
+ * A pinned session was just started from the split, as `workoutId` (the
+ * copy). Kept on its entry, so the split knows when that session - not just
+ * any workout of its name - was last done. Never throws: the workout is
+ * already open, and this is bookkeeping.
+ */
+export async function noteSplitSessionStarted(db, { userId, entry, workoutId }) {
+  if (!userId || !entry?.workout || !workoutId) {
+    return;
+  }
+
+  try {
+    const last = await workoutService.ensureWorkoutSyncId(db, workoutId);
+    const cached = await readCache(userId);
+    const entries = withLastCopy(cached?.entries ?? null, { workout: entry.workout, last });
+
+    if (entries && entries !== cached?.entries) {
+      await saveChosenSplit({ userId, entries });
+    }
+  } catch (error) {
+    console.warn("Could not note which split session was started:", error);
+  }
 }

@@ -274,6 +274,42 @@ export async function updateWorkoutLabel(db, { workoutId, label }) {
   );
 }
 
+/**
+ * The workout's sync_id, giving it one first if it has none - an older row
+ * can lack it, and the split pins a workout by it. Giving it one is a change
+ * the cloud has to hear, so it is marked for sync like any other write.
+ */
+export async function ensureWorkoutSyncId(db, workoutId) {
+  const existing = await db.getFirstAsync(
+    `SELECT sync_id FROM Workout_Type_Instance WHERE workout_id = ?;`,
+    [workoutId]
+  );
+
+  if (!existing) {
+    return null;
+  }
+
+  if (existing.sync_id) {
+    return existing.sync_id;
+  }
+
+  await db.runAsync(
+    `UPDATE Workout_Type_Instance
+     SET sync_id = COALESCE(sync_id, ${SQLITE_UUID_SQL}),
+         sync_version = ?,
+         needs_sync = 1
+     WHERE workout_id = ?;`,
+    [createNextSyncVersion(), workoutId]
+  );
+
+  const updated = await db.getFirstAsync(
+    `SELECT sync_id FROM Workout_Type_Instance WHERE workout_id = ?;`,
+    [workoutId]
+  );
+
+  return updated?.sync_id ?? null;
+}
+
 export async function clearActiveWorkoutFlags(db) {
   const syncVersion = createNextSyncVersion();
   await db.runAsync(

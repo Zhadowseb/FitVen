@@ -100,6 +100,7 @@ export default StyleSheet.create({
   },
   sheetOrderText: { fontSize: 11, fontWeight: "900" },
   sheetRowName: { flex: 1, minWidth: 0, fontSize: 14, fontWeight: "700" },
+  sheetRowMeta: { flexShrink: 0, maxWidth: "45%", fontSize: 11.5, fontWeight: "700" },
   sheetEmpty: { fontSize: 13, fontWeight: "600", lineHeight: 18, marginTop: 12 },
   sheetCalendar: {
     minHeight: 46,

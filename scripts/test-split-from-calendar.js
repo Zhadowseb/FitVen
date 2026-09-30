@@ -16,6 +16,7 @@ const programRepository = loadAppModule("src/Repository/programRepository.js");
 const workoutRepository = loadAppModule("src/Repository/workoutRepository.js");
 const weightliftingRepository = loadAppModule("src/Repository/weightliftingRepository.js");
 const split = loadAppModule("src/Utils/splitCard.js");
+const entries = loadAppModule("src/Utils/splitEntries.js");
 const days = loadAppModule("src/Utils/calendarDays.js");
 const { programSchemaSql } = loadAppModule("src/Database/schema/program.js");
 const { weightliftingSchemaSql } = loadAppModule("src/Database/schema/weightlifting.js");
@@ -99,7 +100,7 @@ async function main() {
   const planned = monthRows.find((row) => row.workout_id === 4);
 
   assert.equal(split.splitNameOf(planned), null, "an unnamed workout has to be named before it joins");
-  assert.equal(split.addSplitName(["Push"], split.splitNameOf(planned)).status, "unnamed");
+  assert.equal(entries.addSplitEntry([], { name: split.splitNameOf(planned), workout: "x" }).status, "unnamed");
 
   // What was in it, as the detail view reads it.
   const exercises = await weightliftingRepository.getExercisesByWorkout(db, 4);
@@ -138,23 +139,35 @@ async function main() {
 
   assert.equal(name, "Chest day");
 
-  let picked = ["Push", "Pull"];
+  // Picking pins the workout by its sync_id, given one if it has none.
+  const chestSyncId = await workoutRepository.ensureWorkoutSyncId(db, 4);
+  const runSyncId = await workoutRepository.ensureWorkoutSyncId(db, 5);
 
-  ({ names: picked } = split.addSplitName(picked, name));
-  assert.deepEqual(picked, ["Push", "Pull", "Chest day"]);
-  assert.equal(split.addSplitName(picked, name).status, "alreadyIn", "picking it again adds nothing");
+  assert.ok(chestSyncId && runSyncId);
+  assert.equal(await workoutRepository.ensureWorkoutSyncId(db, 4), chestSyncId, "asked again, the same one");
 
-  ({ names: picked } = split.addSplitName(picked, split.splitNameOf(monthRows.find((row) => row.workout_id === 5))));
-  assert.deepEqual(picked, ["Push", "Pull", "Chest day", "Long run"], "a run joins too");
+  let picked = ["Push", "Pull"].map((entry) => entries.normalizeSplitEntry(entry));
 
-  // Removing is the editor's untick, then Save: the names without it.
-  const saved = picked.filter((entry) => entry !== "Pull");
+  ({ entries: picked } = entries.addSplitEntry(picked, { name, workout: chestSyncId }));
+  assert.deepEqual(picked.map((entry) => entry.name), ["Push", "Pull", "Chest day"]);
+  assert.equal(entries.addSplitEntry(picked, { name, workout: chestSyncId }).status, "alreadyIn", "picking it again adds nothing");
+
+  ({ entries: picked } = entries.addSplitEntry(picked, {
+    name: split.splitNameOf(monthRows.find((row) => row.workout_id === 5)),
+    workout: runSyncId,
+  }));
+  assert.deepEqual(picked.map((entry) => entry.name), ["Push", "Pull", "Chest day", "Long run"], "a run joins too");
+
+  // Removing is the editor's untick, then Save: the entries without it.
+  const saved = entries.cleanSplitEntries(picked.filter((entry) => entry.name !== "Pull"));
 
   // The split card, the way splitService.getSplitCard builds it.
   const library = await programRepository.getWorkoutLibrary(db, { limit: 500 });
+  const pinned = split.pinnedWorkouts(await programRepository.getWorkoutsBySyncIds(db, [chestSyncId, runSyncId]));
   const sessions = split.resolveChosenSplit(saved, split.namedHistory(library), {
     now,
     templates: split.splitTemplates(library),
+    pinned,
   });
   const byName = Object.fromEntries(sessions.map((session) => [session.name, session]));
 

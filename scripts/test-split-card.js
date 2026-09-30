@@ -5,6 +5,7 @@ const assert = require("assert");
 const loadAppModule = require("./lib/loadAppModule");
 
 const split = loadAppModule("src/Utils/splitCard.js");
+const entries = loadAppModule("src/Utils/splitEntries.js");
 
 // Thursday 24 September 2026, noon. This week began on Monday the 21st.
 const now = new Date(2026, 8, 24, 12).getTime();
@@ -111,11 +112,37 @@ assert.strictEqual(split.splitNameOf({ label: "Legs", workout_type: "Resistance"
 assert.strictEqual(split.splitNameOf({ label: "Long run", workout_type: "Run" }), "Long run", "a run can be a session too");
 assert.strictEqual(split.splitNameOf({ label: "", workout_type: "Resistance" }), null);
 
-assert.deepStrictEqual(split.addSplitName(["Push"], "Pull"), { names: ["Push", "Pull"], status: "added" });
-assert.deepStrictEqual(split.addSplitName(["Push"], "push 2").status, "alreadyIn", "\"push 2\" is the Push already in it");
-assert.deepStrictEqual(split.addSplitName(["A", "B", "C", "D", "E", "F"], "G").status, "full");
-assert.deepStrictEqual(split.addSplitName(["Push"], "  ").status, "unnamed");
-assert.deepStrictEqual(split.addSplitName(["Push"], "Pull").names.length, 2);
+// Adding to the split being edited. A name without a pin is the one session
+// of that name; a pinned workout is itself, so two of one name are two.
+const nameOnly = (name) => ({ name, workout: null, last: null });
+
+assert.deepStrictEqual(entries.addSplitEntry([nameOnly("Push")], "Pull"), {
+  entries: [nameOnly("Push"), nameOnly("Pull")],
+  status: "added",
+});
+assert.strictEqual(entries.addSplitEntry([nameOnly("Push")], "push 2").status, "alreadyIn", "\"push 2\" is the Push already in it");
+assert.strictEqual(
+  entries.addSplitEntry([nameOnly("Push")], { name: "Push", workout: "heavy" }).status,
+  "added",
+  "a picked Push beside the Push by name"
+);
+assert.strictEqual(
+  entries.addSplitEntry([{ name: "Push", workout: "heavy" }], { name: "Push", workout: "light" }).status,
+  "added",
+  "two different Push workouts are two sessions"
+);
+assert.strictEqual(
+  entries.addSplitEntry([{ name: "Push", workout: "heavy" }], { name: "Push A", workout: "heavy" }).status,
+  "alreadyIn",
+  "the same workout twice is not"
+);
+assert.strictEqual(entries.addSplitEntry(["A", "B", "C", "D", "E", "F"].map(nameOnly), "G").status, "full");
+assert.strictEqual(entries.addSplitEntry([nameOnly("Push")], "  ").status, "unnamed");
+assert.strictEqual(
+  entries.addSplitEntry([], { name: "Push", workout: "heavy", pinnedAt: 5 }).entries[0].pinnedAt,
+  5,
+  "what the editor draws beside a picked workout rides along"
+);
 
 // The templates behind a session with no finished strength workout of its
 // name: a planned one, or a run.
@@ -154,6 +181,71 @@ assert.deepStrictEqual(
   [null],
   "without templates nothing changes"
 );
+
+// Pinned sessions: each repeats its own workout, and two of one name are
+// told apart by what each has done itself.
+{
+  const pinnedRow = (syncId, workoutId, date, extra = {}) => ({
+    sync_id: syncId,
+    workout_id: workoutId,
+    workout_type: "Resistance",
+    date_iso: date,
+    done: extra.done ?? 1,
+    exercise_count: extra.exercises ?? 5,
+    set_count: extra.sets ?? 15,
+  });
+  const pinned = split.pinnedWorkouts([
+    pinnedRow("heavy", 101, iso(9, 7), { sets: 20 }),
+    pinnedRow("light", 102, iso(9, 9), { sets: 12 }),
+    pinnedRow("heavy-copy", 103, iso(9, 21)),
+    pinnedRow("light-copy", 104, iso(9, 23), { done: 0 }),
+  ]);
+  const chosen = [
+    { name: "Push", workout: "heavy", last: "heavy-copy" },
+    "Pull",
+    { name: "Push", workout: "light", last: "light-copy" },
+  ];
+  const sessions = split.resolveChosenSplit(chosen, history, { now, pinned, templates: split.splitTemplates(library) });
+
+  assert.deepStrictEqual(sessions.map((session) => session.lastWorkoutId), [101, library[1].workout_id, 102], "each Push repeats its own workout");
+  assert.deepStrictEqual(sessions.map((session) => session.setCount), [20, 0, 12]);
+  assert.strictEqual(sessions[0].lastTrainedAt, new Date(2026, 8, 21).getTime(), "the heavy Push was last done as its copy on Monday");
+  assert.strictEqual(sessions[0].doneThisWeek, true);
+  assert.strictEqual(
+    sessions[2].lastTrainedAt,
+    new Date(2026, 8, 9).getTime(),
+    "the light Push's copy is not finished, so it counts its own workout - not the heavy Push's Monday"
+  );
+  assert.deepStrictEqual(sessions.map((session) => session.isUpNext), [false, false, true], "the light Push has waited longest");
+  assert.strictEqual(sessions[0].pinnedAt, new Date(2026, 8, 7).getTime(), "the editor is told the pinned workout's day");
+
+  // A pinned workout deleted, or not on this phone yet: the session falls
+  // back to its name.
+  const gone = split.resolveChosenSplit([{ name: "Push", workout: "deleted" }, "Pull"], history, { now, pinned });
+
+  assert.strictEqual(gone[0].lastWorkoutId, library[0].workout_id, "the latest Push, as a session by name");
+  assert.strictEqual(gone[0].isPinned, false);
+
+  // Only one pinned Push: its name counts every Push, as before.
+  const single = split.resolveChosenSplit([{ name: "Push", workout: "light" }, "Pull"], history, { now, pinned });
+
+  assert.strictEqual(single[0].lastWorkoutId, 102, "still its own workout to repeat");
+  assert.strictEqual(single[0].daysSince, 2, "but trained whenever a Push was");
+
+  // Home's cards: the same sessions, the same next, and only what can be opened.
+  const groups = split.homeGroupsFromSplit(split.resolveChosenSplit([...chosen, "Chest day"], history, { now, pinned }));
+
+  assert.deepStrictEqual(groups.map((group) => group.lastWorkoutId), [101, library[1].workout_id, 102], "a session with nothing to copy has no card");
+  assert.ok(groups.every((group) => group.isChosen && Number.isFinite(group.daysSince)));
+  assert.deepStrictEqual(groups.map((group) => group.isUpNext), [false, false, false], "Chest day is next and has no card, so no card is next - as Train then offers no Repeat");
+  assert.deepStrictEqual(groups.map((group) => group.entry?.workout ?? null), ["heavy", null, "light"]);
+  const planned = split.homeGroupsFromSplit(
+    split.resolveChosenSplit(["Chest day", "Pull"], history, { now, templates: split.splitTemplates(calendarLibrary) })
+  );
+
+  assert.strictEqual(planned[0].daysSince, Number.MAX_SAFE_INTEGER, "never trained sorts as waiting longest");
+  assert.strictEqual(planned[0].isUpNext, true, "and a planned session can be next on Home too");
+}
 
 // Nothing at all.
 assert.deepStrictEqual(split.namedHistory([]), []);

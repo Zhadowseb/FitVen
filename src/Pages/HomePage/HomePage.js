@@ -29,6 +29,7 @@ import {
   notificationService,
   programService,
   socialService,
+  splitService,
   weightliftingService,
   workoutService,
 } from "@services";
@@ -173,7 +174,8 @@ export default function HomePage() {
     try {
       const [days, groups, firstWorkout, today, records] = await Promise.allSettled([
         workoutService.getDaysSinceLastWorkout(db),
-        workoutService.getSplitGroups(db),
+        // The split you chose, and the app's guess only without one.
+        splitService.getHomeSplitGroups(db, { userId: user?.id ?? null }),
         workoutService.getFirstWorkoutAt(db),
         workoutService.getOpenWorkoutsToday(db),
         weightliftingService.getPersonalRecordsToday(db),
@@ -214,7 +216,7 @@ export default function HomePage() {
     } finally {
       setHasLoadedHome(true);
     }
-  }, [db, loadLiveWorkout, t]);
+  }, [db, loadLiveWorkout, t, user?.id]);
 
   const loadCirclePreview = useCallback(async () => {
     if (!user?.id) {
@@ -333,15 +335,24 @@ export default function HomePage() {
         return;
       }
 
-      startWorkout(() =>
-        programService.copyWorkoutToStandaloneDate(db, {
+      startWorkout(async () => {
+        const copied = await programService.copyWorkoutToStandaloneDate(db, {
           workoutId: group.lastWorkoutId,
           date: new Date(),
           startedFrom: STARTED_FROM.RECENT,
-        })
-      );
+        });
+
+        // Which chosen session this was; not awaited, it is bookkeeping.
+        splitService.noteSplitSessionStarted(db, {
+          userId: user?.id ?? null,
+          entry: group.entry ?? null,
+          workoutId: copied?.workout_id ?? null,
+        });
+
+        return copied;
+      });
     },
-    [db, startWorkout]
+    [db, startWorkout, user?.id]
   );
 
   const openEmptyWorkout = useCallback(() => {

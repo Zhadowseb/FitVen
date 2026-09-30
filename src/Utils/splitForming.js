@@ -33,9 +33,18 @@ function startOfLocalDay(at) {
  * at seven; it is 0 when there has been no workout. `weekIsOver` is true from
  * day seven on, split or not.
  */
-export function splitFormingState({ firstWorkoutAt = null, now = Date.now(), groupCount = 0 } = {}) {
+export function splitFormingState({
+  firstWorkoutAt = null,
+  now = Date.now(),
+  groupCount = 0,
+  isChosen = false,
+} = {}) {
+  // A split somebody chose (splitService.getHomeSplitGroups) is not a guess
+  // waiting for the history to settle: it shows at once, week or no week.
+  const chosenShows = Boolean(isChosen) && Number(groupCount) > 0;
+
   if (typeof firstWorkoutAt !== "number" || !Number.isFinite(firstWorkoutAt)) {
-    return { daysIn: null, filledDots: 0, showSplit: false, weekIsOver: false };
+    return { daysIn: null, filledDots: 0, showSplit: chosenShows, weekIsOver: false };
   }
 
   // A first workout dated after today - a planned one ticked off early - is
@@ -50,7 +59,7 @@ export function splitFormingState({ firstWorkoutAt = null, now = Date.now(), gro
   return {
     daysIn,
     filledDots: Math.min(SPLIT_FORMING_DAYS, daysIn + 1),
-    showSplit: weekIsOver && Number(groupCount) > 0,
+    showSplit: chosenShows || (weekIsOver && Number(groupCount) > 0),
     // The week is behind them and the guess still has nothing: somebody who
     // has not repeated a session yet. "After your first week" would be a
     // promise already broken, so the row says what it is waiting for instead.

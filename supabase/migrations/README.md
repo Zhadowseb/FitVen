@@ -80,6 +80,7 @@ behind by accident.
 | `20261002090000_weight-mode-per-instance.sql` | yes |
 | `20261003090000_a-set-keeps-its-decimals.sql` | yes |
 | `20261004090000_progress-counts-every-exercise.sql` | yes |
+| `20261006090000_a-split-pins-its-workouts.sql` | no |
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
 centre match, per-centre lift leaderboards with video verification, and what
@@ -429,6 +430,16 @@ week counts towards Consistency's weeks in a row at two workouts, not three.
 It also adds `set_cloud_exercise_instance_idx`, the index Progress finds the
 sets through. Before it had run, the list still counted three a week while the
 app said two. The checks are at the bottom of the file.
+
+`20261006090000_a-split-pins-its-workouts.sql` has **not** been run. It gives
+`profile_private` a `split_entries` column: the chosen split as one entry per
+session, each a name and, for a workout picked in the calendar, that
+workout's `sync_id` - so two sessions can both be "Push" and each repeats its
+own workout. It answers what `20260926090000_your-split-follows-you.sql` gave
+as its reason for names only: a local workout id is one phone's, a `sync_id`
+is every phone's. `split_names` stays and is still written. It can run before
+or after the app ships: until it has, the app finds the column missing, sends
+the names alone and keeps the pins on the phone (`src/Utils/splitEntries.js`).
 
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to

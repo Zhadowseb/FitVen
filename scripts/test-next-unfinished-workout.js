@@ -93,6 +93,7 @@ db.exec(`
   );
   CREATE TABLE Workout_Type_Instance (
     workout_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    sync_id TEXT,
     day_id INTEGER,
     workout_type TEXT,
     label TEXT,

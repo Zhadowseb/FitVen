@@ -48,6 +48,8 @@ export default {
     empty: "Ingen navngivne træninger endnu. Vælg i stedet en træning fra kalenderen.",
     saveFailed: "Dit split kunne ikke gemmes. Prøv igen om lidt.",
     fromCalendar: "Vælg fra kalender",
+    pinned: "Valgt træning",
+    pinnedOn: "Fra {date}",
   },
   pick: {
     title: "Vælg en træning",
@@ -69,7 +71,7 @@ export default {
     alreadyIn: "Allerede i dit split",
     full: "Dit split har allerede 6 træninger. Fjern en først.",
     needsName: "Giv den et navn først. Dit split finder den på navnet.",
-    sameName: "Dit split gentager den seneste træning med dette navn.",
+    pinned: "Dit split gentager præcis denne træning, med dens øvelser og sæt.",
   },
   plan: {
     pickDate: "Hvilken dag?",

@@ -24,7 +24,8 @@ import {
   getMonthTitle,
   startOfDay,
 } from "@utils/calendarDays";
-import { addSplitName, splitNameOf } from "@utils/splitCard";
+import { splitNameOf } from "@utils/splitCard";
+import { addSplitEntry } from "@utils/splitEntries";
 import { workoutDisplayName } from "@utils/workoutTypeLabel";
 import { useGridPalette } from "../../../MicrocyclePage/Components/BlockWeekGrid/BlockWeekGrid";
 import CalendarWeekRows, {
@@ -98,8 +99,13 @@ function WorkoutDetail({ workout, picked, todayIso, onBack, onAdd, onRenamed }) 
   const savedName = splitNameOf(current);
   const typed = draft.trim();
   const isDirty = typed !== (savedName ?? "");
-  // What the button would do with the name as it will be once saved.
-  const outcome = addSplitName(picked, isDirty ? typed : savedName);
+  // What the button would do with the name as it will be once saved. A
+  // workout with no sync_id yet gets one on Add; until then it is still this
+  // workout, not any workout of its name.
+  const outcome = addSplitEntry(picked, {
+    name: isDirty ? typed : savedName,
+    workout: workout.sync_id ?? `local:${workout.workout_id}`,
+  });
   const date = workoutDate(workout);
 
   // Through workoutService, which marks the workout for sync.
@@ -148,9 +154,12 @@ function WorkoutDetail({ workout, picked, todayIso, onBack, onAdd, onRenamed }) 
     try {
       const stored = isDirty ? await rename() : label;
       const name = splitNameOf({ ...workout, label: stored });
+      // The session is this workout: pinned by the identity it has on every
+      // phone, given one first if it is an older row without.
+      const syncId = name ? await workoutService.ensureWorkoutSyncId(db, workout.workout_id) : null;
 
-      if (name) {
-        onAdd?.(name);
+      if (name && syncId) {
+        onAdd?.({ name, workout: syncId, pinnedAt: date ? date.getTime() : null });
       }
     } catch (error) {
       console.error("Could not rename the workout:", error);
@@ -166,7 +175,7 @@ function WorkoutDetail({ workout, picked, todayIso, onBack, onAdd, onRenamed }) 
       : outcome.status === "unnamed"
         ? t("train.pick.needsName")
         : outcome.status === "added"
-          ? t("train.pick.sameName")
+          ? t("train.pick.pinned")
           : null;
   const canAdd = outcome.status === "added" && !isSaving;
 
@@ -285,11 +294,11 @@ function WorkoutDetail({ workout, picked, todayIso, onBack, onAdd, onRenamed }) 
 }
 
 /**
- * `picked` is the split being edited. `onAdd(name)` hands back the name the
- * workout joins it under; `onRenamed()` says a workout's name changed, so the
- * Train tab reloads once the sheet closes. A rename does not rename the
- * session in the split: the split is a list of names, and the others of the
- * old name still answer to it.
+ * `picked` is the split being edited (entries). `onAdd(entry)` hands back the
+ * session the workout becomes - its name and the workout itself, pinned by
+ * sync_id - and `onRenamed()` says a workout's name changed, so the Train tab
+ * reloads once the sheet closes. A rename does not rename a session already
+ * in the split.
  */
 export default function SplitWorkoutPicker({ picked = [], onBack, onAdd, onRenamed }) {
   const { t } = useTranslation();

@@ -1,12 +1,14 @@
-// The Train tab's split card, for somebody without an active program: the
-// sessions they rotate through, which one is next, and what else they might
-// repeat. Worked out from the workout library (programService.getWorkoutLibrary
-// rows) and either the split they chose or, until they choose one, the guess
-// Home already makes (workoutService.getSplitGroups).
+// The split, for somebody without an active program: the sessions they
+// rotate through, which one is next, and what else they might repeat. Worked
+// out from the workout library (programService.getWorkoutLibrary rows) and
+// either the split they chose or, until they choose one, the guess Home makes
+// (workoutService.getSplitGroups). The Train tab's split card draws it, and
+// Home's split cards draw a chosen one (homeGroupsFromSplit).
 //
 // Pure, so scripts/test-split-card.js runs it in Node.
 
 import { normalizeSplitName, splitWorkoutName } from "./splitGuess";
+import { normalizeSplitEntry } from "./splitEntries";
 import { isWorkoutTypeId, workoutTypeLabel } from "./workoutTypeLabel";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -59,6 +61,7 @@ export function namedHistory(library = []) {
       key: splitWorkoutName({ name: row.label, workoutType: row.workout_type }),
       at: localDayStart(row.date_iso),
       exerciseCount: Number(row.exercise_count ?? row.exerciseCount) || 0,
+      setCount: Number(row.set_count ?? row.setCount) || 0,
       isFavorite: Number(row.is_favorite) === 1 || row.isFavorite === true,
     }))
     .filter((entry) => entry.key && entry.at !== null)
@@ -124,6 +127,7 @@ export function splitTemplates(library = []) {
             at: localDayStart(row.date_iso),
             done: Number(row.done) === 1,
             exerciseCount: Number(row.exercise_count ?? row.exerciseCount) || 0,
+            setCount: Number(row.set_count ?? row.setCount) || 0,
           }
         : null;
     })
@@ -132,61 +136,125 @@ export function splitTemplates(library = []) {
 }
 
 /**
- * Adds a name to the split being edited: at the end, once, and only while
- * there is room. `status` says which of those it was.
+ * The pinned workouts (and the copies made from them) by sync_id, from
+ * workoutService.getWorkoutsBySyncIds rows. A deleted or not yet downloaded
+ * workout is simply not in it.
  */
-export function addSplitName(names = [], name) {
-  const text = String(name ?? "").trim().slice(0, 60);
-  const key = normalizeSplitName(text);
+export function pinnedWorkouts(rows = []) {
+  const bySyncId = new Map();
 
-  if (!key) {
-    return { names, status: "unnamed" };
+  for (const row of rows) {
+    const at = localDayStart(row?.date_iso);
+
+    if (row?.sync_id && at !== null) {
+      bySyncId.set(row.sync_id, {
+        workoutId: row.workout_id,
+        workoutType: row.workout_type ?? null,
+        at,
+        done: Number(row.done) === 1,
+        exerciseCount: Number(row.exercise_count) || 0,
+        setCount: Number(row.set_count) || 0,
+      });
+    }
   }
 
-  if (names.some((entry) => normalizeSplitName(entry) === key)) {
-    return { names, status: "alreadyIn" };
-  }
-
-  if (names.length >= SPLIT_MAX_SESSIONS) {
-    return { names, status: "full" };
-  }
-
-  return { names: [...names, text], status: "added" };
+  return bySyncId;
 }
 
 /**
- * The sessions of a chosen split, in the order chosen, each with its latest
- * finished workout (the one "Repeat" copies), when that was, and whether it
- * was this week. A session with no finished strength workout of its name
- * falls back to `templates` (splitTemplates): the latest finished workout of
- * that name of any type, else the latest planned one - which gives "Repeat"
- * something to copy without claiming it was trained.
+ * The sessions of a chosen split, in the order chosen - entries
+ * (Utils/splitEntries.js) or, as saved before pins, names.
+ *
+ * What "Repeat" copies (`lastWorkoutId`): a pinned session's own workout,
+ * exactly, while it is on the phone. Otherwise - no pin, or the pinned
+ * workout deleted or not downloaded yet - the latest finished strength
+ * workout of its name, then `templates` (splitTemplates): the latest finished
+ * workout of that name of any type, else the latest planned one, which gives
+ * "Repeat" something to copy without claiming it was trained.
+ *
+ * When it was last trained: the latest finished workout of its name - unless
+ * another pinned session in the split has the same name. Those share every
+ * workout of the name, so a pinned one counts only its own: the pinned
+ * workout if it was done, and the copy last started from it (`entry.last`)
+ * once that is finished.
  */
-export function resolveChosenSplit(names = [], history = [], { now, templates = [] }) {
+export function resolveChosenSplit(entries = [], history = [], { now, templates = [], pinned = new Map() }) {
   const weekStart = startOfThisWeek(now);
-  const sessions = names.map((name) => {
-    const key = normalizeSplitName(name);
-    const trained = history.find((entry) => entry.key === key) ?? null;
-    const template = trained
+  const normalized = entries.map((value) => normalizeSplitEntry(value)).filter(Boolean);
+  const nameCounts = new Map();
+
+  normalized.forEach((entry) => {
+    const key = normalizeSplitName(entry.name);
+
+    nameCounts.set(key, (nameCounts.get(key) ?? 0) + 1);
+  });
+
+  const sessions = normalized.map((entry) => {
+    const key = normalizeSplitName(entry.name);
+    const own = entry.workout ? pinned.get(entry.workout) ?? null : null;
+    const trained = history.find((candidate) => candidate.key === key) ?? null;
+    const fallback = trained
       ? null
-      : templates.find((entry) => entry.key === key && entry.done) ??
-        templates.find((entry) => entry.key === key) ??
+      : templates.find((candidate) => candidate.key === key && candidate.done) ??
+        templates.find((candidate) => candidate.key === key) ??
         null;
-    const latest = trained ?? template;
-    const trainedAt = trained ? trained.at : template?.done ? template.at : null;
+    const byName = trained ?? fallback;
+    const template = own ?? byName;
+    let trainedAt;
+
+    if (entry.workout && nameCounts.get(key) > 1) {
+      const lastCopy = entry.last ? pinned.get(entry.last) ?? null : null;
+      const dates = [own, lastCopy].filter((row) => row?.done).map((row) => row.at);
+
+      trainedAt = dates.length > 0 ? Math.max(...dates) : null;
+    } else {
+      trainedAt = trained ? trained.at : fallback?.done ? fallback.at : null;
+    }
 
     return {
-      name,
-      lastWorkoutId: latest?.workoutId ?? null,
-      workoutType: latest?.workoutType ?? null,
+      name: entry.name,
+      entry,
+      isPinned: Boolean(own),
+      pinnedAt: own?.at ?? null,
+      lastWorkoutId: template?.workoutId ?? null,
+      workoutType: template?.workoutType ?? null,
       lastTrainedAt: trainedAt,
       daysSince: trainedAt !== null ? daysBetween(trainedAt, now) : null,
-      exerciseCount: latest?.exerciseCount ?? 0,
+      exerciseCount: template?.exerciseCount ?? 0,
+      setCount: template?.setCount ?? 0,
       doneThisWeek: trainedAt !== null ? trainedAt >= weekStart : false,
     };
   });
 
   return markNext(sessions);
+}
+
+/**
+ * A chosen split as Home's split cards and Quick start draw it
+ * (workoutService.getSplitGroups' shape). A session with nothing to copy has
+ * no card - Home opens a session on a tap - and when that is the one up next,
+ * nothing is marked next, just as the Train tab then offers no Repeat.
+ */
+export function homeGroupsFromSplit(sessions = []) {
+  return sessions
+    .map((session, index) => ({ session, index }))
+    .filter(({ session }) => session.lastWorkoutId)
+    .map(({ session, index }) => ({
+      name: session.name,
+      entry: session.entry ?? null,
+      isChosen: true,
+      lastWorkoutId: session.lastWorkoutId,
+      workoutType: session.workoutType ?? null,
+      lastTrainedAt: session.lastTrainedAt,
+      // Never trained has waited longest, as the Train tab counts it; the
+      // cards sort by this, so it has to be a number.
+      daysSince: session.daysSince ?? Number.MAX_SAFE_INTEGER,
+      exerciseCount: session.exerciseCount ?? 0,
+      setCount: session.setCount ?? 0,
+      weekdays: [],
+      historyOrder: index,
+      isUpNext: Boolean(session.isUpNext),
+    }));
 }
 
 /** The guessed split in the card's shape. Its "next" is the guess's own. */

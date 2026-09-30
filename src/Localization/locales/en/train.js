@@ -48,6 +48,8 @@ export default {
     empty: "No named workouts yet. Choose any workout from the calendar instead.",
     saveFailed: "Your split could not be saved. Try again in a moment.",
     fromCalendar: "Choose from calendar",
+    pinned: "Picked workout",
+    pinnedOn: "From {date}",
   },
   pick: {
     title: "Choose a workout",
@@ -69,7 +71,7 @@ export default {
     alreadyIn: "Already in your split",
     full: "Your split already has 6 workouts. Remove one first.",
     needsName: "Give it a name first. Your split finds it by its name.",
-    sameName: "Your split repeats the latest workout with this name.",
+    pinned: "Your split repeats exactly this workout, its exercises and sets.",
   },
   plan: {
     pickDate: "Which day?",

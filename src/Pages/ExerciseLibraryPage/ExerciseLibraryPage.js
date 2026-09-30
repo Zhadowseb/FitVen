@@ -76,7 +76,7 @@ export default function ExerciseLibraryPage() {
         nextSplit = await splitService.getSplitCard(db, { userId: user?.id ?? null });
       } catch (error) {
         console.error("Could not load the split:", error);
-        nextSplit = { source: "guess", sessions: [], chosenNames: null, candidates: [], repeatAlso: [] };
+        nextSplit = { source: "guess", sessions: [], chosenEntries: null, candidates: [], repeatAlso: [] };
       }
     }
 
@@ -118,7 +118,8 @@ export default function ExerciseLibraryPage() {
     setIsStarting(false);
   };
 
-  const repeatToday = async ({ workoutId, label, workoutType }) => {
+  // `entry` is the split session it was started from, if any.
+  const repeatToday = async ({ workoutId, label, workoutType, entry = null }) => {
     if (!workoutId || isRepeating) {
       return;
     }
@@ -140,6 +141,12 @@ export default function ExerciseLibraryPage() {
 
       setRepeatTarget(null);
       navigation.navigate("WorkoutPage", params);
+      // Not awaited: it only records which session this was.
+      splitService.noteSplitSessionStarted(db, {
+        userId: user?.id ?? null,
+        entry,
+        workoutId: params.workout_id,
+      });
     } catch (error) {
       console.error("Could not repeat the workout:", error);
       Alert.alert(t("calendar.library.startFailedTitle"), t("calendar.library.startFailedMessage"));
@@ -225,7 +232,7 @@ export default function ExerciseLibraryPage() {
     }
   };
 
-  const saveSplit = async (names) => {
+  const saveSplit = async (entries) => {
     if (!user?.id || isSavingSplit) {
       return;
     }
@@ -233,7 +240,7 @@ export default function ExerciseLibraryPage() {
     setIsSavingSplit(true);
 
     try {
-      await splitService.saveChosenSplitNames({ userId: user.id, names });
+      await splitService.saveChosenSplit({ userId: user.id, entries });
       renamedInEditorRef.current = false;
       setIsEditorOpen(false);
       load();
@@ -282,6 +289,7 @@ export default function ExerciseLibraryPage() {
                   workoutId: session.lastWorkoutId,
                   label: session.name,
                   workoutType: session.workoutType,
+                  entry: session.entry ?? null,
                 })
               }
             />
@@ -341,7 +349,7 @@ export default function ExerciseLibraryPage() {
       <SplitEditorSheet
         visible={isEditorOpen}
         candidates={split?.candidates ?? []}
-        chosenNames={split?.chosenNames ?? null}
+        chosenEntries={split?.chosenEntries ?? null}
         isSaving={isSavingSplit}
         onClose={() => {
           setIsEditorOpen(false);
