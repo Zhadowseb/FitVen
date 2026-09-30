@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.17.0] - Unreleased
+### Added
+- **Build your split from your own workouts.** The split editor on Train has "Vælg fra kalender". It shows the month page's lower calendar, and you can page through the months. Any workout can be picked: done or planned, of any type. Its view lists the exercises and sets, renames it (`updateWorkoutLabel`, synced), and has "Føj til split". The editor used to offer only the app's guess, the last 90 days' names and favourites.
+  - A workout without a name is named before it can be added. Add is blocked when the name is already in the split or the split has 6.
+  - A session with no finished strength workout of its name now repeats the latest workout of that name of any type, a finished one first and otherwise a planned one (`resolveChosenSplit`).
+  - The split is still a list of names (`profile_private.split_names`), so there is no schema change and no migration.
+- **One calendar component:** the month page's week rows are `CalendarWeekRows`, which both the calendar page and the picker draw. `getMonthPage`, `getMonthTitle` and `MONTH_KEYS` moved to `Utils/calendarDays.js`.
+- **Tests:** `npm run test:split-from-calendar`, plus `test-calendar-days.js` and `test-split-card.js`.
+
+---
 ## [2.16.7] - Unreleased
 ### Fixed
 From the review agents' report on #296.
