@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.16.8] - Unreleased
+### Fixed
+- **The ⋯ button is back in a strength workout's header,** with Restart and Change name. Since #294 an empty name became the type's name, so "Named Styrketræning after your exercises" showed all the time. It could not shrink, and pushed ⋯ off the right edge. The header's buttons no longer shrink.
+- **"Named … after your exercises" is gone.** The workout's type ("Styrketræning", "Overkrop") is a small line above the title, unless it would repeat the title. An unknown type reads Styrketræning (`strengthWorkoutTypeTag` in `Utils/workoutTypeLabel.js`).
+
+### Added
+- **Keep the screen on during a workout.** A sun button next to ⋯ keeps the phone from locking while the workout clock runs and the workout is on screen. It lets go on pause, finish, restart or leaving the page. The choice is remembered and is off by default (`keepAwakeService`, `useWorkoutKeepAwake`).
+  - **New dependency:** `expo-keep-awake ~15.0.8`. It needs a new native build. A build without it only loses the button.
+- **Tests:** `npm run test:workout-header`.
+
+---
 ## [2.16.7] - Unreleased
 ### Fixed
 From the review agents' report on #296.
