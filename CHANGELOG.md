@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.17.0] - Unreleased
+### Changed
+- **A set counts for every rep count below it.** 90 kg × 3 is also a 90 kg lift for 1 and 2 reps.
+  - **Records, "Rekord pr. reps":** a slot holds the heaviest set with at least that many reps (`buildRepLadder`). A slot filled by a longer set reads "fra 3 reps" and is never gold. "Next step" leaves those slots out. Drop sets no longer fill a slot, which they did against the rule that a drop set is never a record.
+  - **Never announced as new:** the new-record flag is still worked out at the set's own rep count, so a first set of ten is one record, not ten. The toast, records today, the crown, the trophy room and posts are unchanged.
+  - **Powerlifting** takes the heaviest weight in any working or AMRAP set of 1 or more reps, not only singles. The other leaderboards rank `gym_lift`, the heaviest set whatever its reps, and needed no change.
+  - **Cloud:** `20261008090000_a-set-counts-for-fewer-reps.sql` (not run) restates `category_rows` from 20261007090000 with only that rule changed. Checked on a throwaway Postgres 17.
+  - The Powerlifting texts and the privacy policy say "heaviest lift", not "single". The policy stays at 2026-09-30.1, which is not released yet.
+- **Tests:** `npm run test:rep-records-downward`, plus `test-records-insights.js` and `test-gym-categories.js`.
+
+---
 ## [2.16.8] - Unreleased
 ### Removed
 - **Video verification of lifts, all the way through.** The owner decided it is too early for it, and that it can be built again later.
