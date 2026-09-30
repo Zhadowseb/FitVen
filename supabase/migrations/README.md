@@ -80,7 +80,7 @@ behind by accident.
 | `20261002090000_weight-mode-per-instance.sql` | yes |
 | `20261003090000_a-set-keeps-its-decimals.sql` | yes |
 | `20261004090000_progress-counts-every-exercise.sql` | yes |
-| `20261006090000_a-split-pins-its-workouts.sql` | no |
+| `20261006090000_a-split-pins-its-workouts.sql` | yes |
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
 centre match, per-centre lift leaderboards with video verification, and what
@@ -431,7 +431,7 @@ It also adds `set_cloud_exercise_instance_idx`, the index Progress finds the
 sets through. Before it had run, the list still counted three a week while the
 app said two. The checks are at the bottom of the file.
 
-`20261006090000_a-split-pins-its-workouts.sql` has **not** been run. It gives
+`20261006090000_a-split-pins-its-workouts.sql` was run on 2026-10-01. It gives
 `profile_private` a `split_entries` column: the chosen split as one entry per
 session, each a name and, for a workout picked in the calendar, that
 workout's `sync_id` - so two sessions can both be "Push" and each repeats its

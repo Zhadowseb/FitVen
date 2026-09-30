@@ -6,7 +6,7 @@
   - A workout without a name is named before it can be added. Add is blocked when the name is already in the split or the split has 6.
   - A session with no finished strength workout of its name now repeats the latest workout of that name of any type, a finished one first and otherwise a planned one (`resolveChosenSplit`).
 - **A split session can be one specific workout.** A workout picked in the calendar is pinned: two "Push" sessions with different weights are two sessions, and each repeats its own workout with its exercises and sets. Suggestions and favourites stay by name, so they repeat your latest. If a pinned workout is deleted, or has not come down to this phone yet, the session repeats the latest of its name. Old splits of names only work as before.
-  - **Cloud:** `20261006090000_a-split-pins-its-workouts.sql` adds `profile_private.split_entries` (not run). `split_names` is still written for older builds. Until the migration has run, the pins stay on the phone.
+  - **Cloud:** `20261006090000_a-split-pins-its-workouts.sql` adds `profile_private.split_entries` (run on 2026-10-01). `split_names` is still written for older builds. Until the migration has run, the pins stay on the phone.
 - **Home shows the split you chose** on Train, with the same NÆSTE (`splitService.getHomeSplitGroups`). Without a chosen split it shows the app's guess, as before.
 - **One calendar component:** the month page's week rows are `CalendarWeekRows`, which both the calendar page and the picker draw. `getMonthPage`, `getMonthTitle` and `MONTH_KEYS` moved to `Utils/calendarDays.js`.
 - **Tests:** `npm run test:split-from-calendar` and `npm run test:split-pins`, plus `test-calendar-days.js`, `test-split-card.js` and `test-home-quick-start.js`.
