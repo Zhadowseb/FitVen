@@ -636,26 +636,40 @@ export async function getPushNotificationSettings({ user } = {}) {
 /**
  * On or off, for the Notifications tile on Profile. The same `enabled` the
  * settings screen works from - permission granted, this device registered, a
- * mode other than none - without the list of chosen people behind it, which
- * the tile does not show.
+ * mode other than none or likes switched on - without the list of chosen
+ * people behind it, which the tile does not show.
  */
 export async function getPushNotificationsEnabled({ user } = {}) {
   if (!user?.id) {
     return false;
   }
 
-  const [permission, pushTokens, preference] = await Promise.all([
+  const [permission, pushTokens, preference, postLikes] = await Promise.all([
     getNotificationPermission(),
     fetchUserPushTokens(user.id),
     fetchNotificationPreference(user.id),
+    getPostLikeNotificationSetting({ user }).catch(() => ({
+      enabled: false,
+      available: false,
+    })),
   ]);
-
-  return mapPushNotificationSettings({
+  const settings = mapPushNotificationSettings({
     permission,
     pushTokens,
     preference,
     sourceUserIds: [],
-  }).enabled;
+  });
+
+  // Workout starts switched off, likes still on: the tile reads on, because
+  // a like still reaches this device.
+  return (
+    settings.enabled ||
+    (settings.supported &&
+      settings.permissionGranted &&
+      settings.enabledDeviceCount > 0 &&
+      postLikes.available &&
+      postLikes.enabled)
+  );
 }
 
 export async function setPushNotificationsEnabled({

@@ -434,7 +434,7 @@ app said two. The checks are at the bottom of the file.
 `20261009090000_a-like-notifies-the-poster.sql` has not been run. It makes
 a like tell the post's author - a row in their notification history, "Bo
 liked your post" - through an after insert trigger on `social_post_like`,
-once per person per post, never for your own like, never across a block, and
+once per person per post (for as long as the event row is kept), never for your own like, never across a block, and
 not when the author has switched likes off
 (`notification_preferences.post_like_notifications`, new). The push is the
 `send-post-liked-notification` Edge Function behind a Database Webhook on

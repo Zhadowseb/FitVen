@@ -31,6 +31,10 @@ import {
 import type { ExpoTicket, PushTokenRow } from "./message.ts";
 
 const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
+// The webhook calls within seconds of the like. An older unclaimed event is a
+// like from before the webhook existed; liking that post again must not push
+// a like that is days old.
+const MAX_EVENT_AGE_MS = 10 * 60 * 1000;
 
 type JsonRecord = Record<string, unknown>;
 
@@ -136,6 +140,7 @@ Deno.serve(async (req) => {
     .eq("event_type", POST_LIKED_EVENT_TYPE)
     .eq("status", "sent")
     .is("expo_response", null)
+    .gte("created_at", new Date(Date.now() - MAX_EVENT_AGE_MS).toISOString())
     .select("id, payload")
     .maybeSingle<{ id: string; payload: JsonRecord }>();
 

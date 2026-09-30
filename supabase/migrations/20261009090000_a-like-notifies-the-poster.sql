@@ -27,7 +27,8 @@
 --   * the post is deleted or hidden;
 --   * the author has switched likes off.
 --
--- One notification per person per post, ever. The event key is
+-- One notification per person per post, for as long as the event is kept.
+-- The event key is
 -- post-liked:<post_id>:<liker_id> and the insert is on conflict do nothing, so
 -- an unlike and a like again, or an upsert that lands twice, finds the key
 -- taken and writes nothing. The event outlives the inbox row: deleting the

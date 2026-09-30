@@ -253,6 +253,15 @@ assert.ok(
   "the event is claimed once, so a retry or a re-like sends nothing"
 );
 assert.ok(/FITVEN_NOTIFICATION_WEBHOOK_SECRET/.test(pushFunction) && /secretsMatch\(/.test(pushFunction));
+assert.ok(
+  /\.is\("expo_response", null\)\s*\.gte\("created_at", new Date\(Date\.now\(\) - MAX_EVENT_AGE_MS\)/.test(pushFunction),
+  "a like from before the webhook existed is not pushed days late when liked again"
+);
+const tileRead = service.match(/export async function getPushNotificationsEnabled[\s\S]*?\n}\n/)[0];
+assert.ok(
+  /getPostLikeNotificationSetting\(\{ user \}\)\.catch/.test(tileRead) && /postLikes\.available &&\s*postLikes\.enabled/.test(tileRead),
+  "the Profile tile reads on while likes still reach the device"
+);
 
 (async () => {
   const message = await import(
