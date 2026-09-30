@@ -22,8 +22,8 @@ export { NO_VIDEO_HERO_HEIGHT, VIDEO_HERO_HEIGHT };
 const FIRST_FRAME_FALLBACK_MS = 700;
 
 // expo-video throws at import time on a client built before it was added.
-// Loaded on demand: an old build then shows the poster instead of taking the
-// whole app down at startup.
+// Loaded on demand, as in LiftVerificationSheet: an old build then shows the
+// poster instead of taking the whole app down at startup.
 let videoModule;
 
 function getVideoModule() {
