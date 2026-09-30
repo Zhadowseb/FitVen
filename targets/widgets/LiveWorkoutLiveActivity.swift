@@ -50,7 +50,8 @@ enum LiveWorkoutIsland {
         )
       }
 
-      // Row 2: "Sæt 3 af 4" and the orange pill; all done, only "Afslut".
+      // Row 2: the exercise's set dots and the orange pill ("Sæt 3 af 4
+      // færdigt", "Spring over", "Afslut pause"); all done, only "Afslut".
       DynamicIslandExpandedRegion(.bottom) {
         LiveWorkoutIslandBottom(display: display)
       }
@@ -66,13 +67,17 @@ enum LiveWorkoutIsland {
 }
 
 /// The expanded island's bottom row. Nothing when there is nothing to do.
+/// Which set is being done is the dots (the pill says it in words), or
+/// "Sæt 3 af 4" without them.
 struct LiveWorkoutIslandBottom: View {
   let display: LiveWorkoutDisplay
 
   var body: some View {
     if display.hasIntentButtons || display.hasFinishLink {
       HStack(alignment: .center, spacing: 12) {
-        if !display.setOfTitle.isEmpty {
+        if display.hasIntentButtons && !display.setDots.isEmpty {
+          LiveWorkoutSetDots(dots: display.setDots, size: 7, nowSize: 11, spacing: 4)
+        } else if !display.setOfTitle.isEmpty {
           Text(display.setOfTitle)
             .font(.system(size: 17, weight: .heavy))
             .tracking(-0.3)
@@ -90,14 +95,16 @@ struct LiveWorkoutIslandBottom: View {
   }
 }
 
-/// Compact trailing: the workout clock (14/700), or the rest countdown in
-/// orange while resting.
+/// Compact trailing: the workout clock (14/700), or the rest in orange -
+/// counting down while resting, up while it is counted.
 struct LiveWorkoutIslandCompactTime: View {
   let display: LiveWorkoutDisplay
 
   var body: some View {
     if display.mode == .rest {
       LiveWorkoutRestCountdown(display: display, fontSize: 14, weight: .bold, width: 44)
+    } else if display.mode == .countUp {
+      LiveWorkoutRestCountUp(display: display, fontSize: 14, weight: .bold, width: 44)
     } else {
       LiveWorkoutClock(display: display, fontSize: 14, weight: .bold, width: 52)
     }

@@ -2,7 +2,9 @@
 <!-- 1f collapsed (48 dp): the whole content area is orange @ 0.34 from the
      left for what is left of the rest - full when it starts, empty when it
      ends - with "Pause · 1:24" counting down by itself, the next set, and
-     Spring over on top.
+     Spring over on top. The rest counted up after a set with none written
+     (from 15 s after the tap) uses it too: no fill, "Pause · 1:24" counting
+     up, and the button is Afslut pause.
 
      The fill is a horizontal ProgressBar behind the text. Android draws the
      header and the card's frame, and on Android 12+ it keeps its own margins

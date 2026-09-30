@@ -79,7 +79,10 @@ internal object LiveWorkoutStore {
       .put("type", action.type)
       .put("at", action.at)
 
-    if ((action.type == LiveAction.COMPLETE_SET || weighing) && action.setId != null) {
+    if (
+      (action.type == LiveAction.COMPLETE_SET || action.type == LiveAction.END_COUNT_UP || weighing) &&
+      action.setId != null
+    ) {
       entry.put("setId", action.setId)
     }
 

@@ -50,6 +50,17 @@ struct LiveWorkoutState: Codable, Hashable {
     }
   }
 
+  /// The rest counted up after a set with none written: from `startedAt`,
+  /// shown from 15 s after it.
+  struct CountUp: Codable, Hashable {
+    var setId: String
+    var startedAt: Double
+
+    enum CodingKeys: String, CodingKey {
+      case setId, startedAt
+    }
+  }
+
   struct Totals: Codable, Hashable {
     var done: Double
     var all: Double
@@ -68,6 +79,7 @@ struct LiveWorkoutState: Codable, Hashable {
   var exercise: Exercise?
   var next: Exercise?
   var rest: Rest?
+  var countUp: CountUp?
   var totals: Totals
   var canPrev: Bool
   var canNext: Bool
@@ -77,7 +89,7 @@ struct LiveWorkoutState: Codable, Hashable {
   var finishUrl: String?
 
   enum CodingKeys: String, CodingKey {
-    case v, workoutId, workoutType, startedAt, pausedElapsed, exercise, next, rest, totals, canPrev, canNext, strings, finishUrl
+    case v, workoutId, workoutType, startedAt, pausedElapsed, exercise, next, rest, countUp, totals, canPrev, canNext, strings, finishUrl
   }
 
   /// The state in `json`, or nil when it is not a JSON object.
@@ -102,6 +114,7 @@ extension LiveWorkoutState {
     exercise = (try? container.decodeIfPresent(Exercise.self, forKey: .exercise)) ?? nil
     next = (try? container.decodeIfPresent(Exercise.self, forKey: .next)) ?? nil
     rest = (try? container.decodeIfPresent(Rest.self, forKey: .rest)) ?? nil
+    countUp = (try? container.decodeIfPresent(CountUp.self, forKey: .countUp)) ?? nil
     totals = (try? container.decodeIfPresent(Totals.self, forKey: .totals)) ?? Totals(done: 0, all: 0, exercisesDone: 0)
     canPrev = container.liveWorkoutBool(.canPrev) ?? false
     canNext = container.liveWorkoutBool(.canNext) ?? false
@@ -148,6 +161,15 @@ extension LiveWorkoutState.Rest {
     startedAt = container.liveWorkoutDouble(.startedAt) ?? 0
     endsAt = container.liveWorkoutDouble(.endsAt) ?? 0
     duration = container.liveWorkoutDouble(.duration) ?? 0
+  }
+}
+
+extension LiveWorkoutState.CountUp {
+  init(from decoder: Decoder) throws {
+    let container: KeyedDecodingContainer<CodingKeys> = try decoder.container(keyedBy: CodingKeys.self)
+
+    setId = container.liveWorkoutString(.setId) ?? ""
+    startedAt = container.liveWorkoutDouble(.startedAt) ?? 0
   }
 }
 

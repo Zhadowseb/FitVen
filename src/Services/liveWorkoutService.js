@@ -38,8 +38,10 @@ import {
 import { getCurrentStoredTimestampSeconds, normalizeStoredTimestampSeconds } from "@utils/timeUtils";
 import { notifyLockScreenEdit, subscribeWorkoutDataChanges } from "@utils/workoutDataEvents";
 import { subscribeWorkoutSetChanges } from "@utils/workoutSetEvents";
+import { plannedRestSeconds } from "@utils/restCountUp";
 import LiveWorkout from "../../modules/live-workout";
 import * as notificationService from "./notificationService";
+import * as restCountUpService from "./restCountUpService";
 import * as weightliftingService from "./weightliftingService";
 
 // Profile → Notifications → "Show the workout on the lock screen". On this
@@ -147,11 +149,6 @@ async function findLiveWorkout(db, nowSeconds) {
   );
 }
 
-function restSecondsOf(value) {
-  const seconds = Math.round(Number(value));
-
-  return Number.isFinite(seconds) && seconds > 0 ? seconds : 0;
-}
 
 // --- The controller ---------------------------------------------------------
 
@@ -236,6 +233,7 @@ function createController(db) {
         },
         rows,
         restTimer: getActiveRestTimer(),
+        restCountUp: restCountUpService.getActiveRestCountUp(),
         focus: { recentSetId, viewOffset },
         now,
       },
@@ -292,19 +290,24 @@ function createController(db) {
       return false;
     }
 
+    const at = Math.trunc(Number(action.at) || now);
+
+    // `at`, the tap: the rest counted up after the set before ends there, and
+    // one after this set starts there (restCountUpService).
     await weightliftingService.updateStrengthSetDone(db, {
       workoutId: workout.workout_id,
       setId,
       done: 1,
       failed: 0,
       source: "lockScreen",
+      at,
     });
 
     recentSetId = setId;
     viewOffset = 0;
 
-    const at = Math.trunc(Number(action.at) || now);
-    const restSeconds = restSecondsOf(row.pause);
+    // A rest the app counted after this set once is no rest to count down.
+    const restSeconds = plannedRestSeconds(row);
     const running = normalizeStoredTimestampSeconds(workout.timer_start) !== null;
 
     // A rest that would already be over - the tap was handled late, when the
@@ -388,6 +391,17 @@ function createController(db) {
         return false;
       }
 
+      // "Afslut pause" on a rest being counted up: it ends at the tap and is
+      // written into its set. The write tells the workout screen itself.
+      case "endCountUp":
+        await restCountUpService.finishRestCountUp(db, {
+          at: Math.trunc(Number(action.at) || now),
+          workoutId: workout.workout_id,
+          setId: action.setId ?? null,
+        });
+
+        return false;
+
       case "adjustRest": {
         const timer = ownRest();
 
@@ -418,6 +432,10 @@ function createController(db) {
     if (stopped) {
       return;
     }
+
+    // A rest counted up from before the app was closed, so a drained tick or
+    // "Afslut pause" can end it and write it.
+    await restCountUpService.restoreRestCountUp();
 
     const actions = await LiveWorkout.drainActions();
 
@@ -520,6 +538,11 @@ function createController(db) {
     }),
     subscribeRestTimer((timer) => {
       syncRestNotification(timer);
+      rebuildSoon();
+    }),
+    // A rest counted up is on the card too, but it is no rest timer: it never
+    // schedules the rest-is-over reminder.
+    restCountUpService.subscribeRestCountUp(() => {
       rebuildSoon();
     }),
     // The card's words are translated when it is built.

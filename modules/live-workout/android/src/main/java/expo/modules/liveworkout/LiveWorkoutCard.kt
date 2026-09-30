@@ -12,8 +12,10 @@ import kotlin.math.max
 //
 // While resting, and while this process is alive, the card is posted again
 // every 5 s so the collapsed fill and the open bar move, and once when the
-// rest ends so it leaves rest mode. The countdowns themselves are
-// Chronometers and count without any of this.
+// rest ends so it leaves rest mode. A rest counted up (after a set with none
+// written) is posted once more 15 s after the tap, when it starts to show.
+// The countdowns and the count-up themselves are Chronometers and count
+// without any of this.
 //
 // What the card does by itself - a tap, and those re-posts - runs on its own
 // thread, never the main one: each is a parse, the reducer, two synchronous
@@ -134,14 +136,25 @@ internal object LiveWorkoutCard {
       return false
     }
 
-    scheduleTick(context, view, now)
+    scheduleTick(context, state, view, now)
     return true
   }
 
-  private fun scheduleTick(context: Context, view: LiveWorkoutView, now: Double) {
+  private fun scheduleTick(context: Context, state: LiveWorkoutState, view: LiveWorkoutView, now: Double) {
     worker.removeCallbacks(tick)
 
     val rest = view.rest
+    // A count-up that is not showing yet shows 15 s after the tap.
+    val countUpShowsAt = state.countUp
+      ?.takeIf { view.mode == LiveMode.SET }
+      ?.let { it.startedAt + LiveWorkoutDerive.COUNT_UP_GRACE_SECONDS }
+      ?.takeIf { it > now }
+
+    if (countUpShowsAt != null) {
+      tickContext = context.applicationContext
+      worker.postDelayed(tick, ((countUpShowsAt - now) * 1000).toLong() + REST_END_SLACK_MS)
+      return
+    }
 
     if (view.mode != LiveMode.REST || rest == null) {
       tickContext = null
