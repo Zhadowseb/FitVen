@@ -15,6 +15,7 @@ export * as ownWorkoutPostService from "./ownWorkoutPostService";
 export * as programService from "./programService";
 export * as programTransferService from "./programTransferService";
 export * as publicProfileService from "./publicProfileService";
+export * as restCountUpService from "./restCountUpService";
 export * as runningService from "./runningService";
 export * as socialPostService from "./socialPostService";
 export * as socialService from "./socialService";

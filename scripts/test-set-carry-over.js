@@ -48,6 +48,7 @@ db.exec(`
     exercise_instance_id INTEGER NOT NULL,
     pause INTEGER, reps INTEGER, weight INTEGER,
     set_type TEXT NOT NULL DEFAULT 'working',
+    rest_counted INTEGER NOT NULL DEFAULT 0,
     deleted_at TEXT
   );
   CREATE TABLE Exercise_Instance (
@@ -95,8 +96,8 @@ function session({ date, name, sets, dayDate = null, deleted = null }) {
 
   sets.forEach((set, index) => {
     db.prepare(
-      `INSERT INTO "Set" (set_number, exercise_instance_id, pause, reps, weight, set_type, deleted_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO "Set" (set_number, exercise_instance_id, pause, reps, weight, set_type, rest_counted, deleted_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
     ).run(
       index + 1,
       exerciseId,
@@ -104,6 +105,7 @@ function session({ date, name, sets, dayDate = null, deleted = null }) {
       set.reps ?? null,
       set.weight ?? null,
       set.set_type ?? "working",
+      set.counted ? 1 : 0,
       set.deleted_at ?? null
     );
   });
@@ -337,6 +339,67 @@ assert.strictEqual(
     lastForName("Deadlift").weight,
     140,
     "a new exercise was seeded from last time's warm-up"
+  );
+}
+
+// A rest the app counted (Utils/restCountUp.js) is what was taken after that
+// set, not a plan. A new set - the next one, or the first of the exercise
+// next time - never inherits it, or it would be counted down as if planned.
+// Its reps and weight still carry over.
+{
+  const counted = session({
+    date: "01.08.2026",
+    name: "Overhead Press",
+    sets: [
+      { pause: 120, reps: 5, weight: 50 },
+      { pause: 97, reps: 5, weight: 50, counted: true },
+    ],
+  });
+  const next = lastForExercise(counted);
+
+  assert.strictEqual(next.pause, null, "a new set inherited a rest the app counted");
+  assert.strictEqual(next.weight, 50, "a counted rest must not cost the weight");
+  assert.strictEqual(next.reps, 5);
+
+  const nextTime = lastForName("Overhead Press");
+  assert.strictEqual(nextTime.pause, null, "next week's first set inherited a counted rest");
+  assert.strictEqual(nextTime.weight, 50);
+
+  // A set that holds nothing but a counted rest is as empty as one that holds
+  // nothing, for the next time's first set.
+  session({
+    date: "01.09.2026",
+    name: "Overhead Press",
+    sets: [{ pause: 75, reps: null, weight: null, counted: true }],
+  });
+  assert.strictEqual(
+    lastForName("Overhead Press").weight,
+    50,
+    "a set with only a counted rest in it seeded next time's first set"
+  );
+
+  // The same rule for the helpers the service and the workout screen use.
+  const loadAppModule = require("./lib/loadAppModule");
+  const restCountUp = loadAppModule("src/Utils/restCountUp.js");
+  assert.strictEqual(restCountUp.carriedRestOf({ pause: 97, rest_counted: 1 }), null);
+  assert.strictEqual(restCountUp.carriedRestOf({ pause: 120, rest_counted: 0 }), 120);
+  assert.strictEqual(restCountUp.carriedRestOf(null), null);
+  assert.strictEqual(restCountUp.plannedRestSeconds({ pause: 97, rest_counted: 1 }), 0);
+  assert.strictEqual(restCountUp.plannedRestSeconds({ pause: 120 }), 120);
+
+  // Every path that copies sets goes through the rule: the service's
+  // carry-over, the optimistic row on the workout screen, a copied workout
+  // and a program file.
+  const source = (file) => fs.readFileSync(path.join(root, file), "utf8");
+  assert.match(source("src/Services/weightliftingService.js"), /pause: carriedRestOf\(previousSet\)/);
+  assert.match(
+    source("src/Pages/WorkoutPage/WorkoutTypes/Resistance/Components/ExerciseList/ExerciseList.js"),
+    /pause: carriedRestOf\(previousSet\)/
+  );
+  assert.match(source("src/Services/programService.js"), /pause: carriedRestOf\(set\)/);
+  assert.match(
+    source("src/Services/programTransferService.js"),
+    /CASE WHEN COALESCE\(s\.rest_counted, 0\) = 1 THEN NULL ELSE s\.pause END AS pause/
   );
 }
 

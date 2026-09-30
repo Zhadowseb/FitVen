@@ -29,7 +29,11 @@ import Plus from "@resources/Icons/UI-icons/Plus";
 import Minus from "@resources/Icons/UI-icons/Minus";
 import Cogwheel from "@resources/Icons/UI-icons/Cogwheel";
 import Star from "@resources/Icons/UI-icons/Star";
-import { weightliftingService } from "@services";
+import { restCountUpService, weightliftingService } from "@services";
+import {
+  isRestCountUpVisible,
+  restCountUpElapsed,
+} from "@utils/restCountUp";
 import { formatNumber, useTranslation } from "@localization";
 import ReanimatedAnimated, {
   Easing,
@@ -314,6 +318,34 @@ const SetList = ({
     getCurrentStoredTimestampSeconds()
   );
   const activeRestTimerRef = useRef(null);
+  // The rest counted up after a set without one (Utils/restCountUp.js): shown
+  // in that set's rest field from 15 s after the tick, counting up, with no
+  // button - the next tick, a pause or the finish ends it.
+  const [activeCountUp, setActiveCountUp] = useState(() =>
+    restCountUpService.getActiveRestCountUp()
+  );
+  const [countUpTick, setCountUpTick] = useState(() =>
+    getCurrentStoredTimestampSeconds()
+  );
+  const countsUpHere =
+    Boolean(activeCountUp) &&
+    (sets ?? []).some((set) => Number(set?.sets_id) === Number(activeCountUp.setId));
+
+  useEffect(() => restCountUpService.subscribeRestCountUp(setActiveCountUp), []);
+
+  useEffect(() => {
+    if (!countsUpHere) {
+      return undefined;
+    }
+
+    setCountUpTick(getCurrentStoredTimestampSeconds());
+
+    const interval = setInterval(() => {
+      setCountUpTick(getCurrentStoredTimestampSeconds());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [countsUpHere, activeCountUp?.id]);
 
   // A weight not saved yet stays on screen when the list is read again.
   useEffect(() => {
@@ -812,14 +844,20 @@ const SetList = ({
           ? clampSetValue(field, value)
           : value === "" ? null : Number(value);
 
+    // A rest typed by hand is planned, whatever the app counted there.
+    const patch =
+      field === "pause"
+        ? { pause: nextValue, rest_counted: 0 }
+        : { [field]: nextValue };
+
     setLocalSets((prev) =>
       prev.map((set) =>
-        set.sets_id === setId ? { ...set, [field]: nextValue } : set
+        set.sets_id === setId ? { ...set, ...patch } : set
       )
     );
 
     set_selectedSet((prev) =>
-      prev?.sets_id === setId ? { ...prev, [field]: nextValue } : prev
+      prev?.sets_id === setId ? { ...prev, ...patch } : prev
     );
 
     const result = await weightliftingService.updateSetField(db, {
@@ -848,11 +886,11 @@ const SetList = ({
       .filter((id) => id !== null && id !== undefined);
 
     setLocalSets((prev) =>
-      prev.map((set) => ({ ...set, pause: nextValue }))
+      prev.map((set) => ({ ...set, pause: nextValue, rest_counted: 0 }))
     );
 
     set_selectedSet((prev) =>
-      prev ? { ...prev, pause: nextValue } : prev
+      prev ? { ...prev, pause: nextValue, rest_counted: 0 } : prev
     );
 
     await Promise.all(
@@ -1545,11 +1583,21 @@ const SetList = ({
     const isComplete =
       !isActive && Number(completedRestTimer?.setId) === Number(setId);
 
+    // Counting up: never over a countdown, and not in the first 15 s.
+    const isCountingUp =
+      !isActive &&
+      Number(activeCountUp?.setId) === Number(setId) &&
+      isRestCountUpVisible(activeCountUp, countUpTick);
+
     return {
       isActive,
       isComplete,
+      isCountingUp,
       remainingSeconds: isActive
         ? Math.max(0, activeRestTimer.endsAt - restTimerTick)
+        : 0,
+      countedSeconds: isCountingUp
+        ? restCountUpElapsed(activeCountUp, countUpTick)
         : 0,
     };
   };
@@ -1602,7 +1650,8 @@ const SetList = ({
         {renderedColumns.map((col, colIndex) => {
           const isLast = colIndex === renderedColumns.length - 1;
           const restTimerState = getRestTimerState(set.sets_id);
-          const restBorderColor = restTimerState.isActive
+          const restBorderColor =
+            restTimerState.isActive || restTimerState.isCountingUp
             ? primaryColor
             : restTimerState.isComplete
               ? secondaryColor
@@ -1630,18 +1679,29 @@ const SetList = ({
                     },
                   ]}
                 >
-                  {restTimerState.isActive ? (
+                  {restTimerState.isActive || restTimerState.isCountingUp ? (
                     <View
                       style={[
                         styles.restDividerValuePill,
                         styles.restCountdownPill,
                       ]}
+                      accessibilityLabel={
+                        restTimerState.isCountingUp
+                          ? t("workout.setList.restCountingUp", {
+                              time: formatTime(restTimerState.countedSeconds),
+                            })
+                          : undefined
+                      }
                     >
                       <ThemedText
                         style={styles.restCountdownText}
                         setColor={setChipTextColor}
                       >
-                        {formatTime(restTimerState.remainingSeconds)}
+                        {formatTime(
+                          restTimerState.isCountingUp
+                            ? restTimerState.countedSeconds
+                            : restTimerState.remainingSeconds
+                        )}
                       </ThemedText>
                     </View>
                   ) : (

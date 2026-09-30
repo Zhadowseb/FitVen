@@ -2,6 +2,7 @@ import { weightliftingRepository, workoutRepository } from "../Repository";
 import { guessSplitGroups } from "@utils/splitGuess";
 import * as gymService from "./gymService";
 import * as notificationService from "./notificationService";
+import * as restCountUpService from "./restCountUpService";
 import { withTransaction } from "./shared";
 import { enqueueSync, startBackgroundSync } from "./syncScheduler";
 import { getCurrentStoredTimestampSeconds } from "@utils/timeUtils";
@@ -326,6 +327,10 @@ export async function finishWorkout(
   db,
   { workoutId, elapsedTime, createPost = true }
 ) {
+  // A rest being counted up after the last set ends with the workout, and is
+  // written (Utils/restCountUp.js).
+  await restCountUpService.finishRestCountUp(db, { workoutId });
+
   await withTransaction(db, async () => {
     await workoutRepository.persistWorkoutTimerState(db, {
       workoutId,

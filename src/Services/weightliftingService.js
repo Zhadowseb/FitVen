@@ -38,13 +38,16 @@ import {
   getComparableSetSnapshot,
   probeSetDecimalColumns,
   queueCloudDeletesForExerciseSets,
+  restCountedColumn,
   setDecimalColumns,
 } from "./cloudSync/cloudSyncShared";
 import {
   hasSetDecimals,
   resolveCloudSetDecimals,
 } from "@utils/setDecimals";
+import { carriedRestOf, withKnownRestCounted } from "@utils/restCountUp";
 import { withTransaction } from "./shared";
+import * as restCountUpService from "./restCountUpService";
 import { createNextSyncVersion, normalizeSyncId } from "../Utils/syncUtils";
 import { enqueueSync, startBackgroundSync } from "./syncScheduler";
 import { syncCustomExercisesInBackground } from "./exerciseService";
@@ -3620,17 +3623,21 @@ async function hydrateWorkoutStrengthDataFromCloud(db, workoutId) {
   // checklist in Services/AGENTS.md) is read here too. The hydration once had
   // a list of its own without set_type and amrap_target, and every warm-up it
   // wrote came back as a working set.
-  const { data: cloudSets, error: cloudSetsError } = await supabase
-    .from(SET_CLOUD_TABLE)
-    .select(SET_CLOUD_SYNC_SELECT)
-    .eq("user_id", userId)
-    .in("cloud_exercise_instance_id", cloudExerciseIds)
-    .order("cloud_exercise_instance_id", { ascending: true })
-    .order("id", { ascending: true });
+  const cloudSets = await restCountedColumn.withFallback(async () => {
+    const { data, error: cloudSetsError } = await supabase
+      .from(SET_CLOUD_TABLE)
+      .select(restCountedColumn.selectColumns(SET_CLOUD_SYNC_SELECT))
+      .eq("user_id", userId)
+      .in("cloud_exercise_instance_id", cloudExerciseIds)
+      .order("cloud_exercise_instance_id", { ascending: true })
+      .order("id", { ascending: true });
 
-  if (cloudSetsError) {
-    throw cloudSetsError;
-  }
+    if (cloudSetsError) {
+      throw cloudSetsError;
+    }
+
+    return data;
+  });
 
   setDecimalColumns.learnFrom(cloudSets);
 
@@ -3745,14 +3752,17 @@ async function hydrateWorkoutStrengthDataFromCloud(db, workoutId) {
       // (102 for this phone's 102.5, from before the column kept them) does
       // not overwrite the phone's. Once the column keeps decimals, such a set
       // is sent up again (reupload), as reconcileSetsFromCloud does it.
+      // A cloud row that does not say whether its rest was counted keeps the
+      // phone's flag, as the set sync reads it.
+      const knownCloudSet = withKnownRestCounted(cloudSet, localSet);
       const decimals = localSet
         ? resolveCloudSetDecimals({
             localSnapshot: getComparableSetSnapshot(localSet),
-            cloudSnapshot: getComparableSetSnapshot(cloudSet),
+            cloudSnapshot: getComparableSetSnapshot(knownCloudSet),
             cloudKeepsDecimals: setDecimalColumns.cloudKeepsDecimals(),
             versionOrder,
           })
-        : { cloudSnapshot: getComparableSetSnapshot(cloudSet), reupload: false };
+        : { cloudSnapshot: getComparableSetSnapshot(knownCloudSet), reupload: false };
       const cloudValues = decimals.cloudSnapshot;
 
       const setPayload = {
@@ -3775,6 +3785,7 @@ async function hydrateWorkoutStrengthDataFromCloud(db, workoutId) {
         setType: cloudValues.set_type,
         amrapTarget: cloudValues.amrap_target,
         note: cloudValues.note,
+        restCounted: cloudValues.rest_counted,
       };
 
       if (!localSet) {
@@ -4233,7 +4244,9 @@ function carriedSetValues(previousSet, weightMode = null) {
       : previousSet?.weight ?? null;
 
   return {
-    pause: previousSet?.pause ?? null,
+    // Never a rest the app counted: the queries already leave one out, and
+    // this says so for any caller handing in a whole row.
+    pause: carriedRestOf(previousSet),
     reps: previousSet?.reps ?? null,
     weight,
   };
@@ -4632,7 +4645,7 @@ export async function undoExerciseWeightModeSwitch(db, undo) {
 
 export async function updateStrengthSetDone(
   db,
-  { workoutId, setId, done, failed = 0, source = null }
+  { workoutId, setId, done, failed = 0, source = null, at = null }
 ) {
   let personalRecordSetIds = [];
 
@@ -4650,6 +4663,21 @@ export async function updateStrengthSetDone(
   // to the next set, and celebrates if this one was a record.
   const isDone = Boolean(done);
   const isFailed = isDone && Boolean(failed);
+
+  // The rest counted up after the set before ends here and is written; this
+  // set gets one if it has no rest of its own (Utils/restCountUp.js). `at` is
+  // the tap, for one on the lock screen handled later. Never fails the tick.
+  try {
+    await restCountUpService.handleSetCompletion(db, {
+      workoutId,
+      setId,
+      done: isDone,
+      failed: isFailed,
+      ...(at !== null && Number.isFinite(Number(at)) ? { at: Number(at) } : {}),
+    });
+  } catch (error) {
+    console.error("Could not count the rest after the set:", error);
+  }
 
   notifyWorkoutSetChanged({
     workoutId,
@@ -4685,6 +4713,9 @@ export async function updateStrengthSetDone(
 export async function restartStrengthWorkout(db, workoutId) {
   const resolvedWorkoutId = normalizeRequiredId(workoutId, "workoutId");
   let resetSetCount = 0;
+
+  // Every set goes back to not done, so there is no rest to keep.
+  restCountUpService.cancelRestCountUp({ workoutId: resolvedWorkoutId });
 
   await withTransaction(db, async () => {
     const rows = await weightliftingRepository.getLiveWorkoutSets(
@@ -4867,6 +4898,15 @@ export async function updateSetField(db, { field, value, setId }) {
     : value;
 
   const result = await withTransaction(db, async () => {
+    // A rest typed by hand is planned, whatever the app counted there before.
+    if (field === "pause") {
+      await weightliftingRepository.updateSetRest(db, {
+        setId,
+        pause: storedValue,
+      });
+      return null;
+    }
+
     await weightliftingRepository.updateSetField(db, {
       field,
       value: storedValue,

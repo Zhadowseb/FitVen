@@ -28,6 +28,7 @@ import {
 import { calculateBrzyckiOneRepMax } from "@utils/oneRepMaxUtils";
 import { formatDisplayNumber } from "@utils/numberUtils";
 import { STARTED_FROM } from "@utils/startedFrom";
+import { carriedRestOf } from "@utils/restCountUp";
 import { isPerSide, resolveWeightMode, toggleWeight } from "@utils/weightMode";
 import { filterReleasedWorkoutTypes } from "@utils/workoutTypeAvailability";
 import {
@@ -158,7 +159,9 @@ async function cloneWorkoutContents(
         setNumber: set.set_number,
         exerciseId: exerciseResult.lastInsertRowId,
         personalRecord: resetPersonalRecords ? 0 : set.personal_record,
-        pause: set.pause,
+        // A rest the app counted is a record of that workout, not a plan for
+        // this one: the copy starts without it (@utils/restCountUp).
+        pause: carriedRestOf(set),
         rpe: set.rpe,
         weight: toggleWeight(set.weight, sourceMode, targetMode),
         rmPercentage: set.rm_percentage,

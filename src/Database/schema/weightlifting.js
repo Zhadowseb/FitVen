@@ -113,6 +113,10 @@ export const weightliftingSchemaSql = `
       set_type TEXT NOT NULL DEFAULT 'working',
       amrap_target INTEGER,
       note TEXT,
+      -- 1 when pause is the rest the app counted after the set was ticked off
+      -- (none was written), not a rest somebody planned. It is a record only:
+      -- never counted down, never carried to a new set (Utils/restCountUp.js).
+      rest_counted INTEGER NOT NULL DEFAULT 0,
       needs_sync INTEGER NOT NULL DEFAULT 1
   );
 

@@ -20,6 +20,7 @@ import ThemedText from "../../../../../../Resources/ThemedComponents/ThemedText"
 import { Colors } from "../../../../../../Resources/GlobalStyling/colors";
 import { EXERCISE_COLLAPSE_DURATION_MS } from "./exerciseCollapseAnimation";
 import { useTranslation } from "@localization";
+import { carriedRestOf, plannedRestSeconds } from "@utils/restCountUp";
 
 const ExerciseList = ({
   workout_id,
@@ -190,13 +191,6 @@ const ExerciseList = ({
     };
   };
 
-  const normalizeRestDurationSeconds = (value) => {
-    const durationSeconds = Math.round(Number(value));
-
-    return Number.isFinite(durationSeconds) && durationSeconds > 0
-      ? durationSeconds
-      : 0;
-  };
 
   const getSetRestTimerPayload = (setsId, sourceSet = null) => {
     for (const exercise of exercises) {
@@ -210,11 +204,11 @@ const ExerciseList = ({
       }
 
       const storedSet = sets[setIndex];
-      const sourcePause =
-        sourceSet && Object.prototype.hasOwnProperty.call(sourceSet, "pause")
-          ? sourceSet.pause
-          : storedSet.pause;
-      const restSeconds = normalizeRestDurationSeconds(sourcePause);
+      const fromSource =
+        sourceSet && Object.prototype.hasOwnProperty.call(sourceSet, "pause");
+      // A rest the app counted after this set last time is no rest to count
+      // down: ticked off again, it counts up again (@utils/restCountUp).
+      const restSeconds = plannedRestSeconds(fromSource ? sourceSet : storedSet);
 
       if (restSeconds <= 0) {
         return null;
@@ -336,7 +330,8 @@ const ExerciseList = ({
                 reps: previousSet?.reps ?? null,
                 weight: previousSet?.weight ?? null,
                 rpe: null,
-                pause: previousSet?.pause ?? null,
+                // Not a rest the app counted: the service does not copy one.
+                pause: carriedRestOf(previousSet),
                 rm_percentage: null,
                 personal_record: 0,
                 done: 0,

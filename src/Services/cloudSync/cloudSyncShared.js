@@ -28,6 +28,7 @@ import {
 } from "@utils/syncUtils";
 import { getStableSyncDeviceId } from "@utils/deviceIdentity";
 import { createSetDecimalsCloudColumns } from "@utils/setDecimals";
+import { createRestCountedCloudColumn } from "@utils/restCountUp";
 import {
   normalizeBooleanFlag,
   normalizeCloudTimeString,
@@ -134,6 +135,18 @@ export const setDecimalColumns = createSetDecimalsCloudColumns({
   onRefused: () =>
     console.info(
       "set.weight and set.rpe are whole numbers in the cloud; sets upload with their decimals cut off until the app restarts, and keep them on the phone."
+    ),
+});
+
+// `set.rest_counted` - a rest the app counted, not one that was planned -
+// comes with 20261005090000_a-set-knows-a-counted-rest.sql, and the app may
+// reach users first. The set sync's and the workout hydration's reads and the
+// upload go through this handle, which names the column until the cloud says
+// it is missing (see @utils/restCountUp). The queued deletes never name it.
+export const restCountedColumn = createRestCountedCloudColumn({
+  onMissing: () =>
+    console.info(
+      "set.rest_counted is missing in the cloud; sets sync without it until the app restarts, and the flag stays on the phone."
     ),
 });
 

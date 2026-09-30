@@ -475,9 +475,14 @@ export async function getHeaviestLiftForExercise(db, exerciseName) {
  */
 // A warm-up is not where the work left off, so neither of these copies one:
 // a set added after two warm-ups starts empty rather than at warm-up weight.
+// Nor a rest the app counted (rest_counted): it records the rest that was
+// taken, and a new set carrying it would count it down as if it were planned.
 export async function getLastSetValuesForExercise(db, exerciseId) {
   return db.getFirstAsync(
-    `SELECT pause, reps, weight
+    `SELECT
+        CASE WHEN COALESCE(rest_counted, 0) = 1 THEN NULL ELSE pause END AS pause,
+        reps,
+        weight
      FROM "Set"
      WHERE exercise_instance_id = ?
        AND COALESCE(deleted_at, '') = ''
@@ -503,7 +508,7 @@ export async function getLastSetValuesForExerciseName(
 ) {
   return db.getFirstAsync(
     `SELECT
-        s.pause,
+        CASE WHEN COALESCE(s.rest_counted, 0) = 1 THEN NULL ELSE s.pause END AS pause,
         s.reps,
         s.weight,
         -- How that weight was written (4d), so the new exercise can carry it
@@ -530,7 +535,11 @@ export async function getLastSetValuesForExerciseName(
        AND COALESCE(w.deleted_at, '') = ''
        AND COALESCE(d.deleted_at, '') = ''
        AND COALESCE(s.set_type, 'working') <> 'warmup'
-       AND (s.pause IS NOT NULL OR s.reps IS NOT NULL OR s.weight IS NOT NULL)
+       AND (
+         (s.pause IS NOT NULL AND COALESCE(s.rest_counted, 0) <> 1)
+         OR s.reps IS NOT NULL
+         OR s.weight IS NOT NULL
+       )
      ORDER BY
        performed_date_sort DESC,
        e.exercise_instance_id DESC,
@@ -1320,6 +1329,8 @@ export async function getLiveWorkoutSets(db, workoutId) {
         s.amrap,
         s.amrap_target,
         s.pause,
+        -- A rest the app counted is no rest to count down (Utils/restCountUp).
+        s.rest_counted,
         s.sync_version,
         -- Matched without regard to case, like every other lookup of the
         -- catalog by name, and one row at most: a join would repeat every set
@@ -1921,6 +1932,7 @@ export async function createSet(
     setType = null,
     amrapTarget = null,
     note = null,
+    restCounted = 0,
   }
 ) {
   // set_type is the truth and amrap its mirror. A caller that only knows the
@@ -1945,8 +1957,9 @@ export async function createSet(
       set_type,
       amrap_target,
       note,
+      rest_counted,
       needs_sync
-    ) VALUES (?, ?, ${SQLITE_UUID_SQL}, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1);`,
+    ) VALUES (?, ?, ${SQLITE_UUID_SQL}, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1);`,
     [
       setNumber,
       exerciseId,
@@ -1963,6 +1976,7 @@ export async function createSet(
       resolvedType,
       resolvedType === "amrap" ? amrapTarget : null,
       note,
+      restCounted ? 1 : 0,
     ]
   );
 }
@@ -1998,6 +2012,7 @@ export async function getSetsForCloudSync(db, { dirtyOnly = false } = {}) {
         set_type,
         amrap_target,
         note,
+        rest_counted,
         needs_sync
      FROM "Set"
      ${dirtyOnly ? "WHERE needs_sync = 1" : ""}
@@ -2027,6 +2042,7 @@ export async function createSetFromCloud(
     setType,
     amrapTarget,
     note,
+    restCounted = false,
   }
 ) {
   const resolvedType = resolveSetType({ set_type: setType, amrap });
@@ -2051,8 +2067,9 @@ export async function createSetFromCloud(
       set_type,
       amrap_target,
       note,
+      rest_counted,
       needs_sync
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0);`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0);`,
     sqliteParams([
       cloudSetId,
       remoteLocalSetId,
@@ -2073,6 +2090,7 @@ export async function createSetFromCloud(
       resolvedType,
       resolvedType === "amrap" ? amrapTarget ?? null : null,
       note,
+      restCounted ? 1 : 0,
     ])
   );
 }
@@ -2103,6 +2121,7 @@ export async function updateSetFromCloud(
     setType,
     amrapTarget,
     note,
+    restCounted = false,
   }
 ) {
   if (expectedSyncVersion === undefined) {
@@ -2131,6 +2150,7 @@ export async function updateSetFromCloud(
          set_type = ?,
          amrap_target = ?,
          note = ?,
+         rest_counted = ?,
          needs_sync = 0
      WHERE sets_id = ?
        AND sync_version IS ?;`,
@@ -2154,6 +2174,7 @@ export async function updateSetFromCloud(
       resolvedType,
       resolvedType === "amrap" ? amrapTarget ?? null : null,
       note,
+      restCounted ? 1 : 0,
       setId,
       expectedSyncVersion,
     ])
@@ -2606,6 +2627,72 @@ export async function updateSetNumber(db, { setId, setNumber }) {
          needs_sync = 1
      WHERE sets_id = ?;`,
     [setNumber, syncVersion, setId]
+  );
+}
+
+/**
+ * A rest typed by hand: planned, whatever the app counted there before
+ * (Utils/restCountUp.js), so `rest_counted` goes back to 0 with it.
+ */
+export async function updateSetRest(db, { setId, pause }) {
+  const syncVersion = createNextSyncVersion();
+
+  await db.runAsync(
+    `UPDATE "Set"
+     SET pause = ?,
+         rest_counted = 0,
+         sync_id = COALESCE(sync_id, ${SQLITE_UUID_SQL}),
+         sync_version = ?,
+         deleted_at = NULL,
+         needs_sync = 1
+     WHERE sets_id = ?;`,
+    [pause, syncVersion, setId]
+  );
+}
+
+/**
+ * The rest the app counted after a set (Utils/restCountUp.js), written like
+ * every other set edit so it syncs, with `rest_counted` = 1. Only into a set
+ * that is still there, still ticked off, and has no planned rest - one typed
+ * in the meantime wins. Resolves with whether it wrote.
+ */
+export async function updateCountedRest(db, { setId, pause }) {
+  const syncVersion = createNextSyncVersion();
+  const result = await db.runAsync(
+    `UPDATE "Set"
+     SET pause = ?,
+         rest_counted = 1,
+         sync_id = COALESCE(sync_id, ${SQLITE_UUID_SQL}),
+         sync_version = ?,
+         needs_sync = 1
+     WHERE sets_id = ?
+       AND COALESCE(deleted_at, '') = ''
+       AND done = 1
+       AND (COALESCE(pause, 0) <= 0 OR COALESCE(rest_counted, 0) = 1);`,
+    [pause, syncVersion, setId]
+  );
+
+  return Number(result?.changes ?? 0) > 0;
+}
+
+/**
+ * What decides whether a set just ticked off gets a count-up: its rest, and
+ * its workout's clock.
+ */
+export async function getSetRestContext(db, setId) {
+  return db.getFirstAsync(
+    `SELECT
+        s.sets_id,
+        s.pause,
+        s.rest_counted,
+        w.workout_id,
+        w.timer_start,
+        w.done AS workout_done
+     FROM "Set" s
+     JOIN Exercise_Instance e ON e.exercise_instance_id = s.exercise_instance_id
+     JOIN Workout_Type_Instance w ON w.workout_id = e.workout_type_instance_id
+     WHERE s.sets_id = ?;`,
+    [setId]
   );
 }
 
