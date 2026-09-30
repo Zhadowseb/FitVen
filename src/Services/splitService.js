@@ -20,6 +20,7 @@ import {
   resolveChosenSplit,
   sessionsFromGuess,
   splitCandidates,
+  splitTemplates,
 } from "@utils/splitCard";
 import { normalizeSplitName } from "@utils/splitGuess";
 
@@ -191,7 +192,7 @@ export async function getSplitCard(db, { userId, now = Date.now() }) {
   ]);
   const history = namedHistory(library);
   const sessions = chosenNames
-    ? resolveChosenSplit(chosenNames, history, { now })
+    ? resolveChosenSplit(chosenNames, history, { now, templates: splitTemplates(library) })
     : sessionsFromGuess(guess, { now });
 
   return {

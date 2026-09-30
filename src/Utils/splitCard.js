@@ -7,6 +7,7 @@
 // Pure, so scripts/test-split-card.js runs it in Node.
 
 import { normalizeSplitName, splitWorkoutName } from "./splitGuess";
+import { isWorkoutTypeId, workoutTypeLabel } from "./workoutTypeLabel";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -82,24 +83,106 @@ function markNext(sessions) {
 }
 
 /**
+ * The name a workout joins the split under, or null when nobody named it.
+ * A workout nobody named carries its type as its label ("Resistance"), or
+ * the type's catalog name from the display queries; neither is a session.
+ */
+export function splitNameOf(workout) {
+  const label = String(workout?.label ?? workout?.name ?? "").trim();
+  const workoutType = workout?.workout_type ?? workout?.workoutType ?? "";
+
+  if (!splitWorkoutName({ name: label, workoutType })) {
+    return null;
+  }
+
+  // "StrengthTraining" on a Resistance workout is the same fallback spelled
+  // the other way round.
+  if (isWorkoutTypeId(label) && workoutTypeLabel(label, (key) => key) === workoutTypeLabel(workoutType, (key) => key)) {
+    return null;
+  }
+
+  return label.slice(0, 60);
+}
+
+/**
+ * Every named workout in the library, of any type and done or not, newest
+ * first. A chosen session with no finished strength workout of its name -
+ * picked from the calendar as a planned workout, or a run - still has one of
+ * these to repeat.
+ */
+export function splitTemplates(library = []) {
+  return library
+    .map((row) => {
+      const name = splitNameOf(row);
+
+      return name
+        ? {
+            workoutId: row.workout_id,
+            name,
+            workoutType: row.workout_type ?? null,
+            key: normalizeSplitName(name),
+            at: localDayStart(row.date_iso),
+            done: Number(row.done) === 1,
+            exerciseCount: Number(row.exercise_count ?? row.exerciseCount) || 0,
+          }
+        : null;
+    })
+    .filter((entry) => entry && entry.key && entry.at !== null)
+    .sort((left, right) => right.at - left.at || right.workoutId - left.workoutId);
+}
+
+/**
+ * Adds a name to the split being edited: at the end, once, and only while
+ * there is room. `status` says which of those it was.
+ */
+export function addSplitName(names = [], name) {
+  const text = String(name ?? "").trim().slice(0, 60);
+  const key = normalizeSplitName(text);
+
+  if (!key) {
+    return { names, status: "unnamed" };
+  }
+
+  if (names.some((entry) => normalizeSplitName(entry) === key)) {
+    return { names, status: "alreadyIn" };
+  }
+
+  if (names.length >= SPLIT_MAX_SESSIONS) {
+    return { names, status: "full" };
+  }
+
+  return { names: [...names, text], status: "added" };
+}
+
+/**
  * The sessions of a chosen split, in the order chosen, each with its latest
  * finished workout (the one "Repeat" copies), when that was, and whether it
- * was this week.
+ * was this week. A session with no finished strength workout of its name
+ * falls back to `templates` (splitTemplates): the latest finished workout of
+ * that name of any type, else the latest planned one - which gives "Repeat"
+ * something to copy without claiming it was trained.
  */
-export function resolveChosenSplit(names = [], history = [], { now }) {
+export function resolveChosenSplit(names = [], history = [], { now, templates = [] }) {
   const weekStart = startOfThisWeek(now);
   const sessions = names.map((name) => {
     const key = normalizeSplitName(name);
-    const latest = history.find((entry) => entry.key === key) ?? null;
+    const trained = history.find((entry) => entry.key === key) ?? null;
+    const template = trained
+      ? null
+      : templates.find((entry) => entry.key === key && entry.done) ??
+        templates.find((entry) => entry.key === key) ??
+        null;
+    const latest = trained ?? template;
+    const trainedAt = trained ? trained.at : template?.done ? template.at : null;
 
     return {
       name,
       lastWorkoutId: latest?.workoutId ?? null,
       workoutType: latest?.workoutType ?? null,
-      lastTrainedAt: latest?.at ?? null,
-      daysSince: latest ? daysBetween(latest.at, now) : null,
+      lastTrainedAt: trainedAt,
+      daysSince: trainedAt !== null ? daysBetween(trainedAt, now) : null,
       exerciseCount: latest?.exerciseCount ?? 0,
-      doneThisWeek: latest ? latest.at >= weekStart : false,
+      doneThisWeek: trainedAt !== null ? trainedAt >= weekStart : false,
     };
   });
 

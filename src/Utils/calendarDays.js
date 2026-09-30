@@ -1,7 +1,7 @@
-// The calendar's days: the week pages, the lookups a day is read from, and the
-// day shape the Workouts cells (DayCell) and the week rows draw. Shared by
-// WorkoutCalendarPage and the Train tab's calendar block, so the two can never
-// disagree about what a day shows.
+// The calendar's days: the week and month pages, the lookups a day is read
+// from, and the day shape the Workouts cells (DayCell) and the week rows draw.
+// Shared by WorkoutCalendarPage, the Train tab's calendar block and the split
+// editor's calendar, so they can never disagree about what a day shows.
 //
 // Pure: no React, no database and no icons - a workout's icon comes in through
 // `iconFor` - so scripts/test-calendar-days.js runs it in Node.
@@ -66,6 +66,74 @@ export function getWeekPage(baseDate, weekOffset) {
         label: WEEKDAY_LABELS[index],
       };
     }),
+  };
+}
+
+// Translation keys under calendar.months / calendar.monthsShort, by month index.
+export const MONTH_KEYS = [
+  "jan",
+  "feb",
+  "mar",
+  "apr",
+  "may",
+  "jun",
+  "jul",
+  "aug",
+  "sep",
+  "oct",
+  "nov",
+  "dec",
+];
+
+/** "September 2026", in the app's language. */
+export function getMonthTitle(date, t) {
+  return t("calendar.monthTitle", {
+    month: t(`calendar.months.${MONTH_KEYS[date.getMonth()]}`),
+    year: date.getFullYear(),
+  });
+}
+
+/**
+ * One month, `monthOffset` months from the one holding `baseDate`, as the
+ * Monday-first weeks that cover it. Days outside the month fill the first and
+ * last week and carry `inMonth: false`.
+ */
+export function getMonthPage(baseDate, monthOffset) {
+  const monthStart = new Date(
+    baseDate.getFullYear(),
+    baseDate.getMonth() + monthOffset,
+    1
+  );
+  const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
+  const gridStart = addDays(monthStart, -getMondayWeekdayIndex(monthStart));
+  const gridEnd = addDays(monthEnd, 6 - getMondayWeekdayIndex(monthEnd));
+  const weeks = [];
+  let cursor = gridStart;
+
+  while (cursor <= gridEnd) {
+    const week = [];
+
+    for (let index = 0; index < WEEKDAY_LABELS.length; index += 1) {
+      const dayDate = new Date(cursor);
+      week.push({
+        date: dayDate,
+        dateLabel: formatLocalDate(dayDate),
+        isoDate: formatIsoDate(dayDate),
+        inMonth: dayDate.getMonth() === monthStart.getMonth(),
+        label: WEEKDAY_LABELS[index],
+      });
+      cursor = addDays(cursor, 1);
+    }
+
+    weeks.push(week);
+  }
+
+  return {
+    key: formatIsoDate(monthStart).slice(0, 7),
+    monthDate: monthStart,
+    startIsoDate: formatIsoDate(gridStart),
+    endIsoDate: formatIsoDate(gridEnd),
+    weeks,
   };
 }
 

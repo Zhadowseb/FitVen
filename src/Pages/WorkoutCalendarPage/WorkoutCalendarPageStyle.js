@@ -114,10 +114,6 @@ export default StyleSheet.create({
     fontWeight: "800",
   },
 
-  weekListRow: {
-    paddingTop: 5,
-  },
-
   weekListSection: {
     paddingTop: 2,
   },

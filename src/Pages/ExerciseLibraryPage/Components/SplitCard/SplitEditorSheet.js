@@ -3,8 +3,11 @@ import { ActivityIndicator, ScrollView, TouchableOpacity, View, useColorScheme }
 import { useTranslation } from "@localization";
 
 import styles from "./SplitCardStyle";
+import SplitWorkoutPicker from "./SplitWorkoutPicker";
 import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
+import Calender from "@resources/Icons/UI-icons/Calender";
 import { ThemedBottomSheet, ThemedText } from "@resources/ThemedComponents";
+import { addSplitName } from "@utils/splitCard";
 import { workoutDisplayName } from "@utils/workoutTypeLabel";
 
 const MIN = 2;
@@ -12,8 +15,10 @@ const MAX = 6;
 
 /**
  * Choosing the split: the names from the last workouts, tapped in the order
- * they are done - two to six of them. "Use the suggestion" clears the choice,
- * and the card goes back to the guess.
+ * they are done - two to six of them. "Choose from calendar" adds any workout
+ * at all, done or planned, by its name (SplitWorkoutPicker); it joins the list
+ * ticked, and untapping it takes it out again. Nothing is kept until Save.
+ * "Use the suggestion" clears the choice, and the card goes back to the guess.
  */
 export default function SplitEditorSheet({
   visible,
@@ -22,15 +27,18 @@ export default function SplitEditorSheet({
   isSaving = false,
   onClose,
   onSave,
+  onRenamed,
 }) {
   const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const [picked, setPicked] = useState([]);
+  const [isPicking, setIsPicking] = useState(false);
 
   useEffect(() => {
     if (visible) {
       setPicked(Array.isArray(chosenNames) ? chosenNames : []);
+      setIsPicking(false);
     }
   }, [chosenNames, visible]);
 
@@ -48,6 +56,36 @@ export default function SplitEditorSheet({
 
   const canSave = picked.length >= MIN && picked.length <= MAX && !isSaving;
 
+  const fromCalendar = (
+    <TouchableOpacity
+      activeOpacity={0.85}
+      accessibilityRole="button"
+      onPress={() => setIsPicking(true)}
+      style={[styles.sheetCalendar, { borderColor: withAlpha(theme.primary, 0.45) }]}
+    >
+      <Calender width={18} height={18} color={theme.primaryText ?? theme.primary} />
+      <ThemedText style={styles.sheetCalendarText} setColor={theme.primaryText ?? theme.primary}>
+        {t("train.editor.fromCalendar")}
+      </ThemedText>
+    </TouchableOpacity>
+  );
+
+  if (isPicking) {
+    return (
+      <ThemedBottomSheet visible={visible} onClose={onClose}>
+        <SplitWorkoutPicker
+          picked={picked}
+          onBack={() => setIsPicking(false)}
+          onRenamed={onRenamed}
+          onAdd={(name) => {
+            setPicked((current) => addSplitName(current, name).names);
+            setIsPicking(false);
+          }}
+        />
+      </ThemedBottomSheet>
+    );
+  }
+
   return (
     <ThemedBottomSheet visible={visible} onClose={onClose}>
       <ThemedText style={styles.sheetTitle} setColor={theme.title}>
@@ -58,9 +96,12 @@ export default function SplitEditorSheet({
       </ThemedText>
 
       {names.length === 0 ? (
-        <ThemedText style={styles.sheetEmpty} setColor={theme.quietText}>
-          {t("train.editor.empty")}
-        </ThemedText>
+        <>
+          <ThemedText style={styles.sheetEmpty} setColor={theme.quietText}>
+            {t("train.editor.empty")}
+          </ThemedText>
+          {fromCalendar}
+        </>
       ) : (
         <>
           <ThemedText style={styles.sheetCount} setColor={theme.primaryText ?? theme.primary}>
@@ -108,6 +149,7 @@ export default function SplitEditorSheet({
               );
             })}
           </ScrollView>
+          {fromCalendar}
         </>
       )}
 

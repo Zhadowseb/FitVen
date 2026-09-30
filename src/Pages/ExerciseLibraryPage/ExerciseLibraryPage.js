@@ -57,6 +57,7 @@ export default function ExerciseLibraryPage() {
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [isSavingSplit, setIsSavingSplit] = useState(false);
   const loadIdRef = useRef(0);
+  const renamedInEditorRef = useRef(false);
 
   const load = useCallback(async () => {
     const loadId = ++loadIdRef.current;
@@ -233,6 +234,7 @@ export default function ExerciseLibraryPage() {
 
     try {
       await splitService.saveChosenSplitNames({ userId: user.id, names });
+      renamedInEditorRef.current = false;
       setIsEditorOpen(false);
       load();
     } catch (error) {
@@ -341,7 +343,20 @@ export default function ExerciseLibraryPage() {
         candidates={split?.candidates ?? []}
         chosenNames={split?.chosenNames ?? null}
         isSaving={isSavingSplit}
-        onClose={() => setIsEditorOpen(false)}
+        onClose={() => {
+          setIsEditorOpen(false);
+
+          // A workout renamed in the editor's calendar changes what the card
+          // and "Repeat also" show. Not reloaded while the sheet is open: a
+          // new split would reset what is being picked.
+          if (renamedInEditorRef.current) {
+            renamedInEditorRef.current = false;
+            load();
+          }
+        }}
+        onRenamed={() => {
+          renamedInEditorRef.current = true;
+        }}
         onSave={saveSplit}
       />
 

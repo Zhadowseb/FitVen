@@ -292,6 +292,32 @@ assert.deepEqual(
   assert.deepEqual(initials({}), ["WA", "RU"], "without t, as before");
 }
 
+/* --------------------------------------------------------- month pages -- */
+
+{
+  // September 2026 starts on a Tuesday and ends on a Wednesday.
+  const september = days.getMonthPage(new Date(2026, 8, 30), 0);
+
+  assert.equal(september.key, "2026-09");
+  assert.equal(september.startIsoDate, "2026-08-31", "the first week starts on the Monday before the 1st");
+  assert.equal(september.endIsoDate, "2026-10-04", "the last week runs to the Sunday after the 30th");
+  assert.equal(september.weeks.length, 5);
+  assert.ok(september.weeks.every((week) => week.length === 7 && week[0].label === "MON"));
+  assert.equal(september.weeks[0][0].inMonth, false, "the 31st of August is outside the month");
+  assert.equal(september.weeks[0][1].dateLabel, "01.09.2026");
+  assert.equal(september.weeks[0][1].inMonth, true);
+
+  // Paging across the year, both ways.
+  assert.equal(days.getMonthPage(new Date(2026, 11, 15), 1).key, "2027-01");
+  assert.equal(days.getMonthPage(new Date(2026, 0, 31), -1).key, "2025-12");
+  // The 31st plus one month is not the 3rd of the month after.
+  assert.equal(days.getMonthPage(new Date(2026, 0, 31), 1).key, "2026-02");
+
+  const t = (key, params) => (params ? `${key}:${params.month}:${params.year}` : key);
+
+  assert.equal(days.getMonthTitle(september.monthDate, t), "calendar.monthTitle:calendar.months.sep:2026");
+}
+
 /* ------------------------------------------------------------- wiring -- */
 
 // The point of the util is one set of rules for both screens.
@@ -312,7 +338,27 @@ for (const [name, source] of [
   assert.ok(source.includes("enrichCalendarDay("), `${name} builds its days with enrichCalendarDay`);
 }
 
-for (const helper of ["getWeekPage", "getWorkoutType", "getWorkoutIconLabel", "isProgramDaySick", "startOfDay"]) {
+// The Workouts rows under the month are one component, drawn by the calendar
+// and by the split editor's calendar - not a copy in each.
+const weekRows = fs.readFileSync(
+  path.join(root, "src/Pages/WorkoutCalendarPage/Components/CalendarWeekRows/CalendarWeekRows.js"),
+  "utf8"
+);
+const splitPicker = fs.readFileSync(
+  path.join(root, "src/Pages/ExerciseLibraryPage/Components/SplitCard/SplitWorkoutPicker.js"),
+  "utf8"
+);
+
+assert.ok(weekRows.includes("enrichCalendarDay("), "CalendarWeekRows builds its days with enrichCalendarDay");
+for (const [name, source] of [
+  ["WorkoutCalendarPage", calendarPage],
+  ["SplitWorkoutPicker", splitPicker],
+]) {
+  assert.ok(/<CalendarWeekRows\b/.test(source), `${name} draws the Workouts rows with CalendarWeekRows`);
+  assert.ok(!/<DayCell\b/.test(source), `${name} draws day cells of its own again`);
+}
+
+for (const helper of ["getWeekPage", "getMonthPage", "getMonthTitle", "getWorkoutType", "getWorkoutIconLabel", "isProgramDaySick", "startOfDay"]) {
   assert.ok(
     !new RegExp(`function ${helper}\\b`).test(calendarPage),
     `WorkoutCalendarPage has its own ${helper} again`

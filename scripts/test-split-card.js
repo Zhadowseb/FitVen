@@ -101,6 +101,60 @@ assert.strictEqual(split.repeatAlsoItems({ history, splitNames: [], now, limit: 
 assert.strictEqual(split.startOfThisWeek(new Date(2026, 8, 27, 23).getTime()), new Date(2026, 8, 21).getTime(), "Sunday belongs to the week of the Monday before");
 assert.strictEqual(split.startOfThisWeek(new Date(2026, 8, 21, 0, 5).getTime()), new Date(2026, 8, 21).getTime());
 
+// Picked from the calendar: any workout joins the split by its name, and
+// only a name somebody gave counts as one.
+assert.strictEqual(split.splitNameOf({ label: " Push A ", workout_type: "Resistance" }), "Push A");
+assert.strictEqual(split.splitNameOf({ label: "Resistance", workout_type: "Resistance" }), null, "an unnamed quick start has no name to join under");
+assert.strictEqual(split.splitNameOf({ label: "StrengthTraining", workout_type: "Resistance" }), null, "the same fallback in its older spelling");
+assert.strictEqual(split.splitNameOf({ label: "Run", workout_type: "Run" }), null);
+assert.strictEqual(split.splitNameOf({ label: "Legs", workout_type: "Resistance" }), "Legs", "a name the app gave from the exercises is still a session");
+assert.strictEqual(split.splitNameOf({ label: "Long run", workout_type: "Run" }), "Long run", "a run can be a session too");
+assert.strictEqual(split.splitNameOf({ label: "", workout_type: "Resistance" }), null);
+
+assert.deepStrictEqual(split.addSplitName(["Push"], "Pull"), { names: ["Push", "Pull"], status: "added" });
+assert.deepStrictEqual(split.addSplitName(["Push"], "push 2").status, "alreadyIn", "\"push 2\" is the Push already in it");
+assert.deepStrictEqual(split.addSplitName(["A", "B", "C", "D", "E", "F"], "G").status, "full");
+assert.deepStrictEqual(split.addSplitName(["Push"], "  ").status, "unnamed");
+assert.deepStrictEqual(split.addSplitName(["Push"], "Pull").names.length, 2);
+
+// The templates behind a session with no finished strength workout of its
+// name: a planned one, or a run.
+const calendarLibrary = [
+  ...library,
+  row("Chest day", iso(9, 28), { done: 0, exercises: 4 }),
+  row("Chest day", iso(9, 26), { done: 0, exercises: 3 }),
+  row("Long run", iso(9, 13), { type: "Run", exercises: 0 }),
+];
+const templates = split.splitTemplates(calendarLibrary);
+
+assert.ok(templates.some((entry) => entry.name === "Mobility" && !entry.done), "a planned workout is a template");
+assert.ok(!templates.some((entry) => entry.name === "Resistance"), "an unnamed workout is not");
+
+const picked = split.resolveChosenSplit(["Push", "Chest day", "Long run", "Nothing yet"], history, { now, templates });
+const byName = Object.fromEntries(picked.map((session) => [session.name, session]));
+const chestDay = calendarLibrary.find((entry) => entry.label === "Chest day" && entry.date_iso === iso(9, 28));
+const longRun = calendarLibrary.find((entry) => entry.label === "Long run");
+
+assert.strictEqual(byName.Push.lastWorkoutId, library[0].workout_id, "a finished strength workout still wins");
+assert.strictEqual(byName["Chest day"].lastWorkoutId, chestDay.workout_id, "a planned-only session repeats its latest planned workout");
+assert.strictEqual(byName["Chest day"].lastTrainedAt, null, "planned is not trained");
+assert.strictEqual(byName["Chest day"].doneThisWeek, false);
+assert.strictEqual(byName["Chest day"].exerciseCount, 4);
+assert.strictEqual(byName["Long run"].lastWorkoutId, longRun.workout_id, "a finished run can be repeated");
+assert.strictEqual(byName["Long run"].workoutType, "Run");
+assert.strictEqual(byName["Long run"].daysSince, 11);
+assert.strictEqual(byName["Nothing yet"].lastWorkoutId, null);
+assert.strictEqual(
+  picked.find((session) => session.isUpNext).name,
+  "Chest day",
+  "never trained is next, and the first of those in the split"
+);
+assert.deepStrictEqual(
+  split.resolveChosenSplit(["Chest day"], history, { now }).map((session) => session.lastWorkoutId),
+  [null],
+  "without templates nothing changes"
+);
+
 // Nothing at all.
 assert.deepStrictEqual(split.namedHistory([]), []);
 assert.deepStrictEqual(split.resolveChosenSplit([], [], { now }), []);
