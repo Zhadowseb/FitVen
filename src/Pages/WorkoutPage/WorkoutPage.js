@@ -27,7 +27,11 @@ import WorkoutCopyTargetModal from "../../Resources/Components/WorkoutCopyTarget
 import { programService, workoutService } from "../../Services";
 import { formatDate } from "../../Utils/dateUtils";
 import { STARTED_FROM } from "@utils/startedFrom";
-import { isAppWorkoutName, workoutDisplayName } from "@utils/workoutTypeLabel";
+import {
+  isAppWorkoutName,
+  strengthWorkoutTypeTag,
+  workoutDisplayName,
+} from "@utils/workoutTypeLabel";
 import { useTranslation } from "@localization";
 
 import Run from "./WorkoutTypes/Run/Run";
@@ -107,29 +111,6 @@ const WorkoutPage = ({ route }) => {
     .filter(Boolean)
     .join(" · ");
   const headerEyebrowColor = theme.quietText ?? theme.iconColor;
-  const [autoNamedLabel, setAutoNamedLabel] = useState(null);
-  const previousWorkoutLabelRef = useRef(workoutLabel);
-
-  useEffect(() => {
-    const previousLabel = previousWorkoutLabelRef.current;
-    previousWorkoutLabelRef.current = workoutLabel;
-
-    // Only the rename the app did itself: the title was the workout type, and
-    // is now something else. A rename through Change name is the user's own.
-    if (
-      previousLabel === workoutLabel ||
-      previousLabel !== workoutType ||
-      !workoutLabel ||
-      workoutLabel === workoutType
-    ) {
-      return;
-    }
-
-    setAutoNamedLabel(workoutLabel);
-    const timeoutId = setTimeout(() => setAutoNamedLabel(null), 6000);
-
-    return () => clearTimeout(timeoutId);
-  }, [workoutLabel, workoutType]);
   const isRunWorkout = workoutType === "Run";
   const isWalkWorkout = workoutType === "Walk";
   const isStrengthWorkout =
@@ -486,13 +467,15 @@ const WorkoutPage = ({ route }) => {
   // Strength workouts paint their own top area, status bar included, so the
   // page must not reserve the top inset or draw the shared header.
   if (isStrengthWorkout) {
+    const strengthTitle = workoutDisplayName(workoutLabel, t, workoutType);
+
     return (
       <ThemedView safe={["left", "right"]}>
         <Resistance
           workout_id={workout_id}
           date={workoutDate}
-          workoutLabel={workoutDisplayName(workoutLabel, t, workoutType)}
-          autoNamedLabel={workoutDisplayName(autoNamedLabel, t, workoutType)}
+          workoutLabel={strengthTitle}
+          workoutTypeTag={strengthWorkoutTypeTag(workoutType, t, strengthTitle)}
           workoutInstanceLabel={workoutInstanceLabel}
           restartRequestKey={restartRequestKey}
           finishRequestKey={finishRequestKey}

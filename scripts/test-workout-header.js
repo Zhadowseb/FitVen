@@ -1,0 +1,192 @@
+// The header a strength workout draws: its options button, the type beside
+// its title, and the keep-the-screen-on toggle.
+//
+// "Restart workout knappen er forsvundet." The three dots top right were
+// still in the code. What had changed was the slot beside the title: it
+// announced an auto-rename ("Named Push after your exercises") for six
+// seconds, and when #294 started passing the workout type to
+// workoutDisplayName, a missing name came back as the type's name instead of
+// null. So the sentence stood there on every strength workout - "Named
+// Strength training after your exercises" - and the slot did not shrink, so
+// on a phone it pushed the options button, and with it Restart and Change
+// name, off the right edge.
+//
+// "Der skal bare stå hvad for en type det er": the slot now names the type,
+// and the strength type when it cannot tell.
+
+const assert = require("assert");
+const fs = require("fs");
+const path = require("path");
+const loadAppModule = require("./lib/loadAppModule");
+
+const root = path.resolve(__dirname, "..");
+const read = (relativePath) =>
+  fs.readFileSync(path.join(root, relativePath), "utf8").replace(/\r\n/g, "\n");
+
+/* ------------------------------------------------ the type beside the title -- */
+{
+  const i18n = loadAppModule("src/Localization/i18n.js");
+  const { strengthWorkoutTypeTag, workoutDisplayName } = loadAppModule(
+    "src/Utils/workoutTypeLabel.js"
+  );
+  const inDanish = (key, params) => i18n.translate(key, params, "da");
+  const inEnglish = (key, params) => i18n.translate(key, params, "en");
+
+  // A fresh workout is called after its type: the tag would only repeat it.
+  const freshTitle = workoutDisplayName("Resistance", inDanish, "Resistance");
+  assert.strictEqual(freshTitle, "Styrketræning");
+  assert.strictEqual(strengthWorkoutTypeTag("Resistance", inDanish, freshTitle), null);
+  assert.strictEqual(
+    strengthWorkoutTypeTag("Upperbody", inDanish, workoutDisplayName("Upperbody", inDanish, "Upperbody")),
+    null
+  );
+
+  // Named after its exercises, or by somebody: the tag says what it is.
+  assert.strictEqual(
+    strengthWorkoutTypeTag("Resistance", inDanish, workoutDisplayName("Push", inDanish, "Resistance")),
+    "Styrketræning"
+  );
+  assert.strictEqual(strengthWorkoutTypeTag("Resistance", inEnglish, "Monday heavy"), "Strength training");
+  assert.strictEqual(strengthWorkoutTypeTag("StrengthTraining", inDanish, "Mandag"), "Styrketræning");
+  assert.strictEqual(strengthWorkoutTypeTag("Upperbody", inDanish, "Mandag"), "Overkrop");
+
+  // No type, or one it does not know: strength training, never a raw id and
+  // never a key.
+  assert.strictEqual(strengthWorkoutTypeTag(null, inDanish, "Mandag"), "Styrketræning");
+  assert.strictEqual(strengthWorkoutTypeTag("", inEnglish, "Monday"), "Strength training");
+  assert.strictEqual(strengthWorkoutTypeTag("SomethingNew", inDanish, "Mandag"), "Styrketræning");
+  assert.strictEqual(strengthWorkoutTypeTag("Resistance", null, "Mandag"), null);
+
+  // The sentence is gone, in both languages.
+  for (const language of ["en", "da"]) {
+    const table = i18n.getLocaleTable(language);
+    assert.strictEqual(table.workout.session.autoNamed, undefined, `${language}: autoNamed is gone`);
+    assert.ok(table.workout.session.keepAwake, `${language}: the keep-awake label`);
+  }
+}
+
+/* ------------------------------------------------------ the options button -- */
+{
+  const page = read("src/Pages/WorkoutPage/WorkoutPage.js");
+  const resistance = read("src/Pages/WorkoutPage/WorkoutTypes/Resistance/Resistance.js");
+  const style = read("src/Pages/WorkoutPage/WorkoutTypes/Resistance/ResistanceStyle.js");
+
+  assert.ok(!/autoNamed/.test(page + resistance), "the auto-rename sentence is not drawn");
+
+  // The strength branch hands the sheet's opener to the header it draws.
+  const strengthBranch = page.slice(page.indexOf("if (isStrengthWorkout) {"));
+  assert.ok(
+    /<Resistance[\s\S]*?onOpenOptions=\{\(\) => setOptionsBottomsheetVisible\(true\)\}/.test(strengthBranch),
+    "WorkoutPage opens the options sheet from the strength header"
+  );
+  assert.ok(
+    /workoutTypeTag=\{strengthWorkoutTypeTag\(workoutType, t, strengthTitle\)\}/.test(strengthBranch),
+    "the slot gets the type, not a sentence"
+  );
+
+  // The sheet: Change name and Restart, and Restart is offered on strength.
+  assert.ok(/onPress=\{openLabelModal\}/.test(page), "Change name is in the sheet");
+  assert.ok(/workoutService\.updateWorkoutLabel\(db,/.test(page), "the name is saved through the service");
+  assert.ok(
+    /\{supportsTimerRestart && \([\s\S]*?onPress=\{confirmRestartWorkout\}/.test(page),
+    "Restart is in the sheet"
+  );
+  assert.ok(
+    /const supportsTimerRestart =\s*isRunWorkout \|\| isWalkWorkout \|\| isStrengthWorkout;/.test(page),
+    "Restart is offered on a strength workout"
+  );
+  assert.ok(
+    /setRestartRequestKey\(Date\.now\(\)\)/.test(page) &&
+      /if \(!restartRequestKey\) \{\s*return;\s*\}\s*restartWorkout\(\);/.test(resistance),
+    "the confirmed restart reaches the strength screen"
+  );
+
+  // The header draws the button, wired to the sheet.
+  assert.ok(
+    /<TouchableOpacity[^>]*?onPress=\{onOpenOptions\}[\s\S]*?<ThreeDots /.test(resistance),
+    "the strength header draws the three dots"
+  );
+
+  // And nothing beside the title can push it out of the row.
+  const block = (name) => style.match(new RegExp(`\\n  ${name}: \\{([\\s\\S]*?)\\n  \\}`))?.[1] ?? "";
+  assert.ok(/flexShrink: 0/.test(block("navButton")), "the header buttons do not shrink");
+  assert.ok(!/flexShrink: 0/.test(block("navDate")), "the type tag shrinks");
+  assert.ok(/flexShrink: 1/.test(block("navDate")) && /maxWidth:/.test(block("navDate")));
+  assert.ok(/minWidth: 0/.test(block("navTitle")), "the title gives way");
+}
+
+/* ----------------------------------------------- the renamed workout syncs -- */
+{
+  const repository = read("src/Repository/workoutRepository.js");
+  const update = repository.match(/export async function updateWorkoutLabel[\s\S]*?\n\}/)?.[0] ?? "";
+  assert.ok(/SET label = \?/.test(update) && /needs_sync = 1/.test(update), "a rename is queued for the cloud");
+  assert.ok(/sync_version = \?/.test(update), "with a new version");
+}
+
+/* --------------------------------------------------- keep the screen on -- */
+(async () => {
+  const stored = new Map();
+  loadAppModule.stubModule("@react-native-async-storage/async-storage", {
+    __esModule: true,
+    default: {
+      getItem: async (key) => (stored.has(key) ? stored.get(key) : null),
+      setItem: async (key, value) => {
+        stored.set(key, value);
+      },
+      removeItem: async (key) => {
+        stored.delete(key);
+      },
+    },
+  });
+
+  const service = loadAppModule("src/Services/keepAwakeService.js");
+
+  assert.strictEqual(await service.getKeepAwakeEnabled(), false, "off until somebody turns it on");
+  await service.setKeepAwakeEnabled(true);
+  assert.strictEqual(stored.get("fitven.workout.keepAwake"), "1", "the choice is remembered");
+  assert.strictEqual(await service.getKeepAwakeEnabled(), true);
+  await service.setKeepAwakeEnabled(false);
+  assert.strictEqual(stored.get("fitven.workout.keepAwake"), "0");
+  assert.strictEqual(await service.getKeepAwakeEnabled(), false);
+
+  // The hold itself is the screen's: it depends on the clock and on focus.
+  const hook = read("src/Pages/WorkoutPage/WorkoutTypes/Resistance/useWorkoutKeepAwake.js");
+  assert.ok(
+    /const shouldKeepAwake = enabled && isRunning && !isDone && isFocused;/.test(hook),
+    "only while on, running, not finished, and in front"
+  );
+  assert.ok(/useIsFocused\(\)/.test(hook), "leaving the screen lets go, not only unmounting");
+  assert.ok(
+    /activateKeepAwakeAsync\(KEEP_AWAKE_TAG\)/.test(hook) &&
+      /return \(\) => \{[\s\S]*?deactivateKeepAwake\(KEEP_AWAKE_TAG\)/.test(hook),
+    "every hold is let go under its own tag"
+  );
+  assert.ok(
+    /try \{\s*keepAwake = require\("expo-keep-awake"\);\s*\} catch/.test(hook),
+    "a build without the module keeps the workout screen"
+  );
+
+  const services = read("src/Services/index.js");
+  assert.ok(/keepAwakeService/.test(services));
+  assert.ok(
+    !/(from|require\()\s*"expo-keep-awake"/.test(read("src/Services/keepAwakeService.js")),
+    "no native module in a service"
+  );
+
+  const resistance = read("src/Pages/WorkoutPage/WorkoutTypes/Resistance/Resistance.js");
+  assert.ok(/useWorkoutKeepAwake\(\{\s*isRunning,\s*isDone,\s*\}\)/.test(resistance));
+  assert.ok(
+    /accessibilityLabel=\{t\("workout.session.keepAwake"\)\}\s*accessibilityState=\{\{ selected: keepAwakeEnabled \}\}/.test(
+      resistance
+    ),
+    "the toggle says what it is and whether it is on"
+  );
+
+  const packageJson = JSON.parse(read("package.json"));
+  assert.ok(packageJson.dependencies["expo-keep-awake"], "expo-keep-awake is declared");
+
+  console.log("workout header: ok");
+})().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

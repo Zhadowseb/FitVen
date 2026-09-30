@@ -55,7 +55,10 @@ export default StyleSheet.create({
     paddingTop: 14,
   },
 
+  // The buttons never shrink: a title or a type tag too long for the row
+  // gives way instead, so the options button cannot be pushed off it again.
   navButton: {
+    flexShrink: 0,
     width: 40,
     height: 40,
     borderRadius: 17,
@@ -71,7 +74,9 @@ export default StyleSheet.create({
   },
 
   navDate: {
-    flexShrink: 0,
+    flexShrink: 1,
+    minWidth: 0,
+    maxWidth: "40%",
     fontSize: 11,
     fontWeight: "800",
     letterSpacing: 1.6,

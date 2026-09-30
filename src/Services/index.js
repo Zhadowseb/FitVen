@@ -8,6 +8,7 @@ export * as feedbackService from "./feedbackService";
 export * as gymService from "./gymService";
 export * as heartRateService from "./heartRateService";
 export * as homeExploreService from "./homeExploreService";
+export * as keepAwakeService from "./keepAwakeService";
 export * as liveWorkoutService from "./liveWorkoutService";
 export * as musicService from "./musicService";
 export * as notificationService from "./notificationService";

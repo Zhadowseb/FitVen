@@ -52,12 +52,14 @@ import ArrowDoubleUp from "../../../../Resources/Icons/UI-icons/ArrowDoubleUp";
 import Eye from "../../../../Resources/Icons/UI-icons/Eye";
 import ChevronLeft from "../../../../Resources/Icons/UI-icons/ChevronLeft";
 import ThreeDots from "../../../../Resources/Icons/UI-icons/ThreeDots";
+import Sun from "../../../../Resources/Icons/UI-icons/Sun";
+import { useWorkoutKeepAwake } from "./useWorkoutKeepAwake";
 
 const Resistance = ({
   workout_id,
   date,
   workoutLabel,
-  autoNamedLabel = null,
+  workoutTypeTag = null,
   workoutInstanceLabel,
   restartRequestKey,
   finishRequestKey = 0,
@@ -120,6 +122,10 @@ const Resistance = ({
   );
   const timerStartRef = useRef(null);
   const elapsedTimeRef = useRef(0);
+  const { keepAwakeEnabled, toggleKeepAwake } = useWorkoutKeepAwake({
+    isRunning,
+    isDone,
+  });
   // Whether the timer and the set counts have been read since the screen
   // opened - a finish asked for from the lock screen waits for both, or it
   // would finish with no time and never ask about the post.
@@ -725,18 +731,41 @@ const Resistance = ({
             {workoutLabel ?? t("workout.page.fallbackTitle")}
           </ThemedText>
 
-          {/* SPM-1: a strength workout names itself after the exercises put
-              into it, so a session started as "Resistance" turns into "Push"
-              while the user is looking at it. That is intended, and says so
-              here, because this is the header a resistance workout draws.
-              The weekday and date used to sit in this slot when there was
-              nothing to announce. They are gone: you know what day you are
-              training, and the workout's name is the thing worth the space. */}
-          {autoNamedLabel ? (
+          {/* The workout's type, when the title is something else - a name the
+              app gave it after its exercises ("Push"), or one somebody typed.
+              This slot used to read "Named Push after your exercises", and
+              since #294 that sentence stood here on every strength workout
+              and, too wide to shrink, pushed the options button off the
+              screen. The tag shrinks now, and the buttons do not. */}
+          {workoutTypeTag ? (
             <ThemedText style={styles.navDate} setColor={primaryTextColor} numberOfLines={1}>
-              {t("workout.session.autoNamed", { name: autoNamedLabel })}
+              {workoutTypeTag}
             </ThemedText>
           ) : null}
+
+          {!isDone && (
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={t("workout.session.keepAwake")}
+              accessibilityState={{ selected: keepAwakeEnabled }}
+              hitSlop={{ top: 10, bottom: 10, left: 5, right: 5 }}
+              onPress={toggleKeepAwake}
+              style={[
+                styles.navButton,
+                {
+                  backgroundColor: keepAwakeEnabled
+                    ? withAlpha(primaryColor, 0.16)
+                    : navButtonBackground,
+                },
+              ]}
+            >
+              <Sun
+                width={18}
+                height={18}
+                color={keepAwakeEnabled ? primaryTextColor : quietText}
+              />
+            </TouchableOpacity>
+          )}
 
           <TouchableOpacity
             accessibilityRole="button"

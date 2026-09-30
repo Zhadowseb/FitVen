@@ -120,8 +120,8 @@ export default {
     },
   },
   session: {
-    autoNamed: "Named {name} after your exercises",
     options: "Workout options",
+    keepAwake: "Keep the screen on while the workout runs",
     pause: "Pause",
     continue: "Continue",
     start: "Start",
