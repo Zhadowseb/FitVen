@@ -107,12 +107,29 @@ const read = (relativePath) =>
     "the strength header draws the three dots"
   );
 
-  // And nothing beside the title can push it out of the row.
+  // And nothing beside the title can push it out of the row: the type sits
+  // in the title's own column, which is the one thing in the row that gives.
   const block = (name) => style.match(new RegExp(`\\n  ${name}: \\{([\\s\\S]*?)\\n  \\}`))?.[1] ?? "";
   assert.ok(/flexShrink: 0/.test(block("navButton")), "the header buttons do not shrink");
-  assert.ok(!/flexShrink: 0/.test(block("navDate")), "the type tag shrinks");
-  assert.ok(/flexShrink: 1/.test(block("navDate")) && /maxWidth:/.test(block("navDate")));
-  assert.ok(/minWidth: 0/.test(block("navTitle")), "the title gives way");
+  assert.ok(
+    /flex: 1/.test(block("navTitleGroup")) && /minWidth: 0/.test(block("navTitleGroup")),
+    "the title column gives way"
+  );
+  const navRow = resistance.slice(
+    resistance.indexOf("<View style={styles.navRow}>"),
+    resistance.indexOf("<View style={styles.timerRow}>")
+  );
+  const group = navRow.slice(navRow.indexOf("<View style={styles.navTitleGroup}>"));
+  const groupEnd = group.indexOf("</View>");
+  assert.ok(groupEnd > 0, "the title column is in the header");
+  assert.ok(
+    group.indexOf("{workoutTypeTag}") > 0 && group.indexOf("{workoutTypeTag}") < groupEnd,
+    "the type is inside the title's column, not beside it"
+  );
+  assert.ok(
+    group.indexOf("styles.navTitle}") > 0 && group.indexOf("styles.navTitle}") < groupEnd,
+    "and so is the title"
+  );
 }
 
 /* ----------------------------------------------- the renamed workout syncs -- */

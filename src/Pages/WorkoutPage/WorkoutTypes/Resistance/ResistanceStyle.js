@@ -55,8 +55,8 @@ export default StyleSheet.create({
     paddingTop: 14,
   },
 
-  // The buttons never shrink: a title or a type tag too long for the row
-  // gives way instead, so the options button cannot be pushed off it again.
+  // The buttons never shrink: a title too long for the row gives way
+  // instead, so the options button cannot be pushed off it again.
   navButton: {
     flexShrink: 0,
     width: 40,
@@ -66,21 +66,26 @@ export default StyleSheet.create({
     justifyContent: "center",
   },
 
-  navTitle: {
+  // The type above the title, in one column: two lines fit in the
+  // buttons' 40, so the row does not grow.
+  navTitleGroup: {
     flex: 1,
     minWidth: 0,
-    fontSize: 15,
-    fontWeight: "800",
+    justifyContent: "center",
   },
 
-  navDate: {
-    flexShrink: 1,
-    minWidth: 0,
-    maxWidth: "40%",
-    fontSize: 11,
+  navTypeTag: {
+    fontSize: 10,
+    lineHeight: 14,
     fontWeight: "800",
-    letterSpacing: 1.6,
+    letterSpacing: 1.2,
     textTransform: "uppercase",
+  },
+
+  navTitle: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "800",
   },
 
   timerRow: {

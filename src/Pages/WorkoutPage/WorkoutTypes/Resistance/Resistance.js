@@ -723,25 +723,32 @@ const Resistance = ({
             <ChevronLeft width={18} height={18} color={titleColor} thickness={2} />
           </TouchableOpacity>
 
-          <ThemedText
-            style={styles.navTitle}
-            setColor={titleColor}
-            numberOfLines={1}
-          >
-            {workoutLabel ?? t("workout.page.fallbackTitle")}
-          </ThemedText>
-
           {/* The workout's type, when the title is something else - a name the
               app gave it after its exercises ("Push"), or one somebody typed.
-              This slot used to read "Named Push after your exercises", and
-              since #294 that sentence stood here on every strength workout
-              and, too wide to shrink, pushed the options button off the
-              screen. The tag shrinks now, and the buttons do not. */}
-          {workoutTypeTag ? (
-            <ThemedText style={styles.navDate} setColor={primaryTextColor} numberOfLines={1}>
-              {workoutTypeTag}
+              This slot used to sit beside the title and read "Named Push after
+              your exercises"; since #294 that sentence stood there on every
+              strength workout and, too wide to shrink, pushed the options
+              button off the screen. The type is a line above the title now,
+              in the title's own column, and the buttons never shrink. */}
+          <View style={styles.navTitleGroup}>
+            {workoutTypeTag ? (
+              <ThemedText
+                style={styles.navTypeTag}
+                setColor={primaryTextColor}
+                numberOfLines={1}
+              >
+                {workoutTypeTag}
+              </ThemedText>
+            ) : null}
+
+            <ThemedText
+              style={styles.navTitle}
+              setColor={titleColor}
+              numberOfLines={1}
+            >
+              {workoutLabel ?? t("workout.page.fallbackTitle")}
             </ThemedText>
-          ) : null}
+          </View>
 
           {!isDone && (
             <TouchableOpacity
