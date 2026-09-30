@@ -5,7 +5,7 @@
 - **The rest counts up after a set with no rest written.** Ticking such a set starts a count. After 15 s the set's rest bubble counts up, so ticking a whole exercise at once records nothing. The count is saved in the ticked set's rest field when the next set is ticked in any exercise, or when the workout is paused or finished. Unticking the set or restarting the workout drops it. It never reaches the bottom-nav square or the rest-finished notification (`restCountUpService`, `Utils/restCountUp.js`).
   - **Carry-over:** a counted rest is marked (`Set.rest_counted`), and no copy passes it on. That covers the next set, the last values of an exercise, a copied workout and a program export, so it never becomes a countdown. A rest typed by hand clears the mark.
   - **Lock screen:** without a planned rest, the card counts up from 15 s, with "Afslut pause". The button is only on the lock screen; after it the set can be ticked (`endCountUp`, iOS `EndCountUpIntent`, Android `END_COUNT_UP`).
-  - **Cloud:** `20261005090000_a-set-knows-a-counted-rest.sql` adds `set.rest_counted` (not run). Until it has run, the upload leaves the column out, and other phones see a counted rest as a plain rest.
+  - **Cloud:** `20261005090000_a-set-knows-a-counted-rest.sql` adds `set.rest_counted` (run on 2026-09-30). Where it has not run, the upload leaves the column out.
 
 ### Changed
 - **The lock screen shows which set you are on.** The button reads "Sæt 2 af 3 færdigt". A row of dots shows the exercise's sets: done ones filled, the current one orange and larger, the rest hollow. On iOS the dots are on the lock screen card, which grows from 132 to 148 pt, and in the expanded Dynamic Island. On Android they are on the collapsed and the expanded card.
