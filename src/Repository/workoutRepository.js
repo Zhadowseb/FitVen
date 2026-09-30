@@ -567,8 +567,8 @@ export async function updateMesocycleDoneFromMicrocycles(db, mesocycleId) {
  * is empty: `w.date` is NOT NULL, so a row written without one holds ''.
  * The day, the program and the counts are what Home's planned card draws.
  * A deleted day, and a program that is deleted or not started yet, hide
- * their workouts here the way they do in the calendar
- * (programRepository.getWorkoutsBetweenDates).
+ * their planned workouts here the way they do in the calendar
+ * (programRepository.getWorkoutsBetweenDates) - but not one already started.
  */
 export async function getOpenWorkoutsForDate(db, { isoDate, limit = 5 }) {
   const isoDateSql = (column) => `
@@ -611,11 +611,20 @@ export async function getOpenWorkoutsForDate(db, { isoDate, limit = 5 }) {
      LEFT JOIN Program p ON p.program_id = d.program_id
      WHERE COALESCE(w.done, 0) = 0
        AND COALESCE(w.deleted_at, '') = ''
-       AND COALESCE(d.deleted_at, '') = ''
        AND (
-         p.program_id IS NULL OR (
-           COALESCE(p.deleted_at, '') = ''
-           AND p.status != 'NOT_STARTED'
+         -- Started - running or paused - it is shown whatever its day and
+         -- program say: the bottom bar shows it too, and hiding it would take
+         -- the live panel away mid-workout.
+         w.original_start_time IS NOT NULL
+         OR w.timer_start IS NOT NULL
+         OR (
+           COALESCE(d.deleted_at, '') = ''
+           AND (
+             p.program_id IS NULL OR (
+               COALESCE(p.deleted_at, '') = ''
+               AND p.status != 'NOT_STARTED'
+             )
+           )
          )
        )
        AND COALESCE(NULLIF(${isoDateSql("w.date")}, ''), ${isoDateSql("d.date")}) = ?

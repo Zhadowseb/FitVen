@@ -287,6 +287,20 @@ async function checkTheQuery() {
     assert.strictEqual(today.count, 0, `a workout ${what} is offered as planned today`);
   }
 
+  // Already running, it stays whatever its day and program say: the live
+  // panel does not vanish mid-workout while the bottom bar still shows it.
+  for (const [world, what] of hidden.slice(0, 3)) {
+    const today = await openToday(
+      worldWith({ ...world, workout: { originalStartTime: 1790000000, timerStart: 1790000000 } })
+    );
+
+    assert.strictEqual(
+      today.first?.isRunning,
+      true,
+      `a running workout ${what} loses its live panel`
+    );
+  }
+
   // No program: the card says it comes from the calendar.
   {
     const today = await openToday(worldWith());
