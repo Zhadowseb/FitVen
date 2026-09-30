@@ -88,9 +88,9 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "FitVen uses your photos so you can upload a profile picture or a video of a lift.",
-          "cameraPermission": "FitVen uses the camera so you can record a video of a lift for verification.",
-          "microphonePermission": "FitVen uses the microphone when you record a video of a lift."
+          "photosPermission": "FitVen uses your photos so you can upload a profile picture or a video of an exercise.",
+          "cameraPermission": "FitVen uses the camera so you can record a video of an exercise.",
+          "microphonePermission": "FitVen uses the microphone when you record a video of an exercise."
         }
       ],
       "expo-secure-store",

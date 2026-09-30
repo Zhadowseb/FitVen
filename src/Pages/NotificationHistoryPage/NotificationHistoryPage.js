@@ -24,7 +24,6 @@ import {
   UserAvatar,
 } from "../../Resources/ThemedComponents";
 
-const LIFT_VERIFICATION_REQUESTED = "lift_verification_requested";
 // Written by the server when three people have reported one of your shared
 // exercises (supabase/migrations/20260928090000_custom-exercises-can-be-shared.sql).
 const CUSTOM_EXERCISE_HIDDEN = "custom_exercise_hidden";
@@ -149,21 +148,10 @@ export default function NotificationHistoryPage() {
   // A card with an avatar and an unread dot reads as something you can open,
   // and nothing happened when you did. There is no screen for another user's
   // profile in this app, but most notifications here are someone starting a
-  // workout, and that is what Social shows - so that is where a row goes. A
-  // request to verify a lift goes to that centre, with the review sheet open,
-  // and one of your exercises being hidden goes to that exercise.
+  // workout, and that is what Social shows - so that is where a row goes.
+  // One of your exercises being hidden goes to that exercise.
   const openNotification = (item) => {
-    const gymId = Number(item?.data?.gym_id);
     const exerciseName = hiddenExerciseName(item);
-
-    if (item?.eventType === LIFT_VERIFICATION_REQUESTED && Number.isFinite(gymId)) {
-      navigation.navigate("GymLeaderboardPage", {
-        gym_id: gymId,
-        open_verification: true,
-        lift_id: item?.data?.lift_id ?? null,
-      });
-      return;
-    }
 
     if (exerciseName) {
       navigation.navigate("MyExercisePage", { exerciseName });
@@ -174,10 +162,6 @@ export default function NotificationHistoryPage() {
   };
 
   const hintFor = (item) => {
-    if (item.eventType === LIFT_VERIFICATION_REQUESTED) {
-      return t("notifications.hints.openVerification");
-    }
-
     return hiddenExerciseName(item)
       ? t("notifications.hints.openExercise")
       : t("notifications.hints.openActivity");

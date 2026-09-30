@@ -163,7 +163,7 @@ console.warn = (...args) => warnings.push(args.map(String).join(" "));
     { tab: "streak", period: "year", ageGroup: "40+" },
     "flid keeps only its own filters"
   );
-  assert.deepStrictEqual(normalizeCategoryFilters("powerlifting", { onlyVideo: "yes", ageGroup: "u23" }), { ageGroup: "u23", onlyVideo: false }, "only video is true or nothing");
+  assert.deepStrictEqual(normalizeCategoryFilters("powerlifting", { onlyVideo: true, ageGroup: "u23" }), { ageGroup: "u23" }, "powerlifting has only the age filter; there is no video filter any more");
   assert.deepStrictEqual(normalizeCategoryFilters("fremgang", { tab: "squat", ageGroup: "u23" }), {}, "progress has no lift to pick and no age filter");
   assert.deepStrictEqual(normalizeCategoryFilters("fremgang"), {}, "so it is everybody's biggest rise");
   assert.strictEqual(categories.FREMGANG_TABS, undefined, "and there are no tabs to put three lifts in focus");
@@ -200,7 +200,6 @@ console.warn = (...args) => warnings.push(args.map(String).join(" "));
     categories.countryNameKey("dk"),
     categories.countryWhereKey("DK"),
     "category.weightClasses.all",
-    "category.onlyVideo",
     "category.notIn",
     "category.notInFilter",
     "categoryService.errors.offline",
@@ -589,10 +588,10 @@ async function testLeaderboards() {
     p_region: null,
     p_gym_id: null,
     p_gender: "men",
-    p_filters: { age_group: "u23", only_video: true },
+    p_filters: { age_group: "u23" },
     p_friends_only: false,
     p_limit: 100,
-  }, "the filters go as the server reads them, and the limit is capped");
+  }, "the filters go as the server reads them, no video-only flag goes along, and the limit is capped");
   assert.strictEqual(board.total, 4);
   assert.deepStrictEqual(board.podium.map((row) => [row.rank, row.person.displayName, row.value, row.gymName]), [[1, "bo", 530, "Lyngby"], [2, "Anna Holm", 160, "Nørrebro"]]);
   assert.strictEqual(board.podium[1].person.isMe, true);

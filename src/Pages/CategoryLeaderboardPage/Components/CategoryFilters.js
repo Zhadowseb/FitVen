@@ -21,7 +21,7 @@ import {
  * Each category's own filters, under the gender control (spec 7.2):
  *  - Flid: Workouts / Weeks in a row, then Period and Age. A streak is not
  *    counted over a period, so Period leaves while that tab is chosen.
- *  - Powerlifting: weight class, Age and Video only.
+ *  - Powerlifting: weight class and Age.
  *  - Progress: none. It is everybody's biggest rise, whatever it was in, so
  *    there is no lift to pick, and no age filter; nothing is drawn.
  *  - Calisthenics: weight and Age.
@@ -86,16 +86,6 @@ export default function CategoryFilters({ category, gender, filters, tone, onCha
               active={filters.ageGroup !== "all"}
               accessibilityLabel={`${t("category.filters.age")}: ${ageLabel}`}
               onPress={() => setOpenSheet("age")}
-            />
-          ) : null}
-
-          {category === "powerlifting" ? (
-            <FilterPill
-              kind="toggle"
-              label={t("category.onlyVideo")}
-              active={filters.onlyVideo === true}
-              accessibilityHint={t("category.filters.onlyVideoHint")}
-              onPress={() => onChange?.({ onlyVideo: !filters.onlyVideo })}
             />
           ) : null}
         </View>

@@ -18,19 +18,16 @@ import ExerciseRow from "./Components/ExerciseRow";
 import ChangeGymSheet from "@resources/Components/ChangeGymSheet/ChangeGymSheet";
 import { useAuth } from "@contexts/AuthContext";
 import { categoryLeaderboardService, gymService } from "@services";
-import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
+import { Colors } from "@resources/GlobalStyling/colors";
 import ArrowLeft from "@resources/Icons/UI-icons/ArrowLeft";
-import ChevronRight from "@resources/Icons/UI-icons/ChevronRight";
 import Cross from "@resources/Icons/UI-icons/Cross";
 import MapPin from "@resources/Icons/UI-icons/MapPin";
-import Play from "@resources/Icons/UI-icons/Play";
 import Search from "@resources/Icons/UI-icons/Search";
 import CategoryCard from "@resources/Components/CategoryCard/CategoryCard";
 import CategoryCardSkeleton from "@resources/Components/CategoryCard/CategoryCardSkeleton";
 import CoverGradient from "@resources/Components/CoverGradient";
 import GenderSegment, { getSessionGender } from "@resources/Components/GenderSegment/GenderSegment";
 import ScopeToggle from "@resources/Components/GymLeaderboard/ScopeToggle";
-import LiftVerificationSheet from "@resources/Components/LiftVerificationSheet/LiftVerificationSheet";
 import ScopeBreadcrumbs from "@resources/Components/ScopeBreadcrumbs/ScopeBreadcrumbs";
 import { countryName, gymWhere } from "@resources/Components/ScopeBreadcrumbs/scopeNames";
 import { openScopeLevel } from "@resources/Components/ScopeBreadcrumbs/scopeNavigation";
@@ -75,17 +72,12 @@ export default function GymLeaderboardPage() {
   const [scope, setScope] = useState(route.params?.scope ?? gymService.GYM_SCOPE_GYM);
   const [gender, setGender] = useState(getSessionGender);
   const [overview, setOverview] = useState(null);
-  const [queue, setQueue] = useState([]);
   const [place, setPlace] = useState(null);
   const [cards, setCards] = useState(IDLE);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [exerciseQuery, setExerciseQuery] = useState("");
   const [isChangeSheetOpen, setIsChangeSheetOpen] = useState(false);
-  const [reviewLiftId, setReviewLiftId] = useState(null);
-  const [isReviewOpen, setIsReviewOpen] = useState(
-    Boolean(route.params?.open_verification)
-  );
   const quietText = theme.quietText ?? theme.text;
   const isLight = colorScheme === "light";
   const scrimColor = isLight ? "rgba(8, 9, 12, 0.65)" : "rgba(8, 9, 12, 0.55)";
@@ -118,25 +110,17 @@ export default function GymLeaderboardPage() {
         // depends on the choice, so changing it does not load this again.
         // This runs on every visit to the page; every exercise, for the
         // search, is asked for when somebody searches (loadSearchableExercises).
-        const [overviewResult, queueResult] = await Promise.allSettled([
-          gymService.getGymOverview({
-            gymId,
-            scope: gymService.GYM_SCOPE_GYM,
-            moreLimit: EXERCISE_PREVIEW_COUNT,
-          }),
-          gymService.getVerificationQueue({ gymId }),
-        ]);
+        const nextOverview = await gymService.getGymOverview({
+          gymId,
+          scope: gymService.GYM_SCOPE_GYM,
+          moreLimit: EXERCISE_PREVIEW_COUNT,
+        });
 
-        if (overviewResult.status === "rejected") {
-          throw overviewResult.reason;
-        }
-
-        if (!overviewResult.value) {
+        if (!nextOverview) {
           throw new Error(t("gyms.overview.notFound"));
         }
 
-        setOverview(overviewResult.value);
-        setQueue(queueResult.status === "fulfilled" ? queueResult.value : []);
+        setOverview(nextOverview);
       } catch (error) {
         setErrorMessage(error instanceof Error ? error.message : t("gyms.overview.loadFailed"));
       } finally {
@@ -248,12 +232,6 @@ export default function GymLeaderboardPage() {
       isCancelled = true;
     };
   }, [gymId]);
-
-  useEffect(() => {
-    if (route.params?.lift_id) {
-      setReviewLiftId(Number(route.params.lift_id));
-    }
-  }, [route.params?.lift_id]);
 
   // Every exercise ranked here, for the search: asked for once per centre,
   // when the search is first used. Until it has come the search looks
@@ -488,8 +466,7 @@ export default function GymLeaderboardPage() {
     }
 
     // Before the migration the categories have nothing to rank by. The rest
-    // of the page - the hero, verification, every exercise - is older and
-    // works without it.
+    // of the page - the hero, every exercise - is older and works without it.
     if (cards.data.unavailable) {
       return (
         <View style={[styles.notice, { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder }]}>
@@ -528,34 +505,6 @@ export default function GymLeaderboardPage() {
       {/* All / Men / Women only splits the categories; with none to
           split yet it would be a control that does nothing. */}
       {cards.data?.unavailable ? null : <GenderSegment value={gender} onChange={setGender} />}
-
-      {queue.length > 0 ? (
-        <TouchableOpacity
-          accessibilityRole="button"
-          activeOpacity={0.85}
-          onPress={() => {
-            setReviewLiftId(null);
-            setIsReviewOpen(true);
-          }}
-          style={[
-            styles.reviewRow,
-            { backgroundColor: theme.cardBackground, borderColor: withAlpha(theme.planned, 0.4) },
-          ]}
-        >
-          <View style={[styles.reviewIcon, { backgroundColor: withAlpha(theme.planned, 0.16) }]}>
-            <Play width={14} height={14} color={theme.planned} />
-          </View>
-          <View style={styles.reviewCopy}>
-            <ThemedText style={styles.reviewTitle} setColor={theme.title}>
-              {t("gyms.overview.reviewQueue", { count: queue.length })}
-            </ThemedText>
-            <ThemedText style={styles.reviewBody} setColor={quietText}>
-              {t("gyms.overview.reviewHint")}
-            </ThemedText>
-          </View>
-          <ChevronRight width={18} height={18} color={theme.chevron} />
-        </TouchableOpacity>
-      ) : null}
 
       <View style={styles.sectionLabelRow}>
         <ThemedText style={styles.sectionLabel} setColor={quietText} numberOfLines={1}>
@@ -720,14 +669,6 @@ export default function GymLeaderboardPage() {
             load({ silent: true });
           }
         }}
-      />
-
-      <LiftVerificationSheet
-        visible={isReviewOpen}
-        onClose={() => setIsReviewOpen(false)}
-        gymId={gymId}
-        initialLiftId={reviewLiftId}
-        onVoted={() => load({ silent: true })}
       />
     </ThemedView>
   );

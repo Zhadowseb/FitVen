@@ -43,7 +43,6 @@ export default {
   weightClasses: {
     all: "Alle vægte",
   },
-  onlyVideo: "Kun video",
   notIn: "ikke {where}",
   notInFilter: "Du er ikke med under {filter}. Vælg Alle for at se din placering.",
   countries: {
@@ -67,9 +66,7 @@ export default {
     flidStreak:
       "Uger i træk med mindst {count} gennemførte træninger, mandag til søndag. Denne uge tæller med, når den når {count}. En sygeuge bryder rækken her.",
     powerlifting:
-      "Bedste løft med 1 gentagelse i bænkpres, squat og dødløft, lagt sammen. Et løft, du mangler, tæller 0. Afviste løft tæller ikke.",
-    powerliftingVideo:
-      "Kun løft med bekræftet video: bedste løft med 1 gentagelse i bænkpres, squat og dødløft, lagt sammen. Et løft, du mangler, tæller 0.",
+      "Bedste løft med 1 gentagelse i bænkpres, squat og dødløft, lagt sammen. Et løft, du mangler, tæller 0.",
     fremgang:
       "Største stigning i estimeret 1RM de sidste {days} dage mod de {days} før, ud fra sæt med 1–{reps} gentagelser. Mindst {sets} sæt i begge perioder.",
     calisthenics:
@@ -83,7 +80,6 @@ export default {
     flidWorkouts: "Hver gennemført træning i perioden tæller.",
     flidStreak: "En uge tæller, når den har mindst {count} gennemførte træninger.",
     powerlifting: "Ét løft med 1 gentagelse i bænkpres, squat eller dødløft giver en total.",
-    powerliftingVideo: "Her tæller kun løft med bekræftet video.",
     fremgang: "Det kræver mindst {sets} sæt i samme øvelse i begge perioder på {days} dage.",
     calisthenics: "Et sæt pull-ups, dips eller armstrækninger uden ekstra vægt giver point.",
   },
@@ -133,7 +129,6 @@ export default {
     ageHint: "Ud fra fødselsåret i din profil. Uden fødselsår er du kun med under Alle aldre.",
     weightClass: "Vægtklasse",
     weightClassStatic: "Kropsvægt kan ikke angives endnu, så alle er med under Alle vægte.",
-    onlyVideoHint: "Viser kun løft med bekræftet video",
   },
   // Powerliftings tre knapper nederst - og løftet, en stigning på Fremgang var i.
   lifts: {

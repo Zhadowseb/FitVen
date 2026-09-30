@@ -1,6 +1,6 @@
 // Guards the rules behind centres and the Friends activity tiles that have no
 // other coverage: which set of a workout becomes the lift, when a lift is
-// written, how a vote count becomes a status, how a centre gets its short name
+// written, how a centre gets its short name
 // from the scraped data, the tile order, a centre's exercises and the search
 // through them, the centres Explore's search lists before anything is typed,
 // and the two SQL invariants the app depends on (own-rows-only reads of
@@ -65,23 +65,6 @@ assert.deepStrictEqual(
   gymUtils.selectLiftsToUpsert(best, []).map((lift) => lift.exerciseId),
   [1, 2],
   "everything is written the first time"
-);
-
-/* ------------------------------------------------------- vote status -- */
-
-// Driven from the constants, not from the numbers they happen to hold today.
-// Hardcoded 3s and 2s here are what let the function drift away from them
-// without the test noticing.
-const { APPROVALS_REQUIRED, REJECTIONS_TO_REMOVE } = gymUtils;
-
-assert.strictEqual(gymUtils.deriveVideoStatus({ hasVideo: false, approvals: APPROVALS_REQUIRED + 2 }), "none");
-assert.strictEqual(gymUtils.deriveVideoStatus({ hasVideo: true, approvals: 0 }), "pending");
-assert.strictEqual(gymUtils.deriveVideoStatus({ hasVideo: true, approvals: APPROVALS_REQUIRED - 1 }), "pending", "one short is still pending");
-assert.strictEqual(gymUtils.deriveVideoStatus({ hasVideo: true, approvals: APPROVALS_REQUIRED }), "verified");
-assert.strictEqual(
-  gymUtils.deriveVideoStatus({ hasVideo: true, approvals: APPROVALS_REQUIRED, rejections: REJECTIONS_TO_REMOVE }),
-  "rejected",
-  "enough rejections beat enough approvals"
 );
 
 /* ---------------------------------------------------------- matching -- */
@@ -313,12 +296,6 @@ assert.ok(
   "workout music is read through user_follows, so a block cuts it off like everything else"
 );
 
-// The reasons the reject step offers have to be the ones the column accepts.
-const offeredReasons = [...gymServiceSource.matchAll(/\{ value: "([a-z]+)", labelKey:/g)].map((match) => match[1]);
-const acceptedReasons = migration.match(/reason in \(([^)]+)\)/)[1].match(/'([a-z]+)'/g).map((value) => value.replace(/'/g, ""));
-
-assert.deepStrictEqual(offeredReasons.sort(), acceptedReasons.sort(), "rejection reasons in the app and the column check must match");
-
 /* ------------------------------------ the music band, and the fallback -- */
 
 // The two negative branches were covered and the positive one was not, which
@@ -371,9 +348,9 @@ assert.ok(
 // A file can hold more than one component, and the second does not inherit the
 // first one's hooks. Babel compiles a missing `theme` happily and it throws at
 // render - the same shape as the dead-zone crashes below, and just as invisible
-// to a suite that renders nothing. RejectedBadge was exactly this.
+// to a suite that renders nothing. A second badge component in the old
+// lift-status pill file was exactly this.
 for (const file of [
-  "src/Resources/Components/GymLeaderboard/LiftStatusPill.js",
   "src/Resources/Components/GymLeaderboard/LeaderboardRow.js",
 ]) {
   // Top-level function declarations, whether the export sits on them or at the
@@ -406,7 +383,7 @@ for (const file of [
 // is cheap to read for.
 {
   const declaredAfterUse = [
-    ["src/Pages/GymExerciseLeaderboardPage/GymExerciseLeaderboardPage.js", "openReview"],
+    ["src/Pages/GymExerciseLeaderboardPage/GymExerciseLeaderboardPage.js", "openLifter"],
   ];
 
   for (const [file, name] of declaredAfterUse) {

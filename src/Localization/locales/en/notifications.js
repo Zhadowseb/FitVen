@@ -9,7 +9,6 @@ export default {
   unread: "Unread",
   itemLabel: "{title}. {body}",
   hints: {
-    openVerification: "Opens the centre's lifts waiting for review",
     openActivity: "Opens today's activity",
     openExercise: "Opens your exercise",
   },

@@ -118,7 +118,7 @@ export function normalizeFlidPeriod(value) {
 
 /**
  * The filters a category's list is asked for with, reduced to what that
- * category has: { tab, period, ageGroup, onlyVideo }. Fremgang has none - no
+ * category has: { tab, period, ageGroup }. Fremgang has none - no
  * age, and no lift to pick - so the server ranks everybody by their biggest
  * rise (its "all").
  */
@@ -133,7 +133,7 @@ export function normalizeCategoryFilters(category, filters = {}) {
         ageGroup,
       };
     case "powerlifting":
-      return { ageGroup, onlyVideo: filters?.onlyVideo === true };
+      return { ageGroup };
     case "fremgang":
       return {};
     case "calisthenics":
