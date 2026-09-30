@@ -4,16 +4,19 @@ A lookup table, so you open the right file instead of searching for it. Read it
 after the root `AGENTS.md` and before you grep. Rules and layering live in the
 `AGENTS.md` files; this file only says *where*.
 
-Every name below is checked by `npm test` (`scripts/check-agent-docs.js`): a
-path that does not exist, or a `function()` that no source file mentions, fails
-the build. There are no line numbers on purpose - they rot. To jump into a big
+`npm test` (`scripts/check-agent-docs.js`) fails when a path under `src/`,
+`docs/`, `scripts/`, `supabase/`, `assets/` or `plugins/` named here does not
+exist, or when a `function()` named here appears in no source file. Paths
+outside those folders (`modules/`, `targets/`, `data/`) are not checked. There are no line numbers on purpose - they rot. To jump into a big
 file, grep for the function (`grep -n "function name" <file>`) and read a slice
 with offset and limit. Do not read a 3,000-line file from the top.
 
 ## Skip Unless The Task Is About Them
 
 - `.claude/worktrees/` - other agents' checkouts. Full copies of this repo, so
-  every search finds every file six times. Never search or edit there.
+  every search finds every file six times. Never search or edit there. Git
+  ignores the folder but the Glob tool does not, so an unscoped Glob returns
+  every copy: always pass a `path` (for example `src/`) to Glob and Grep.
 - `data/` - gym catalog data, ~30 MB. Not app code.
 - `docs/*.html`, `docs/PERFORMANCE-AUDIT-2026-08-31.md`,
   `docs/STRUKTUR-AUDIT-2026-09-05.md`, `docs/TESTPLAN-2026-09-04.md`,
@@ -28,30 +31,33 @@ A feature is usually one service, one repository and one page folder, named
 alike. The service and repository share function names on purpose (see the
 aliasing rule in the root guide).
 
-| Feature | Service | Repository | Screens / UI |
+| Feature | Services it calls | Repository | Screens / UI |
 |---|---|---|---|
-| Programs, mesocycles, weeks, days | `src/Services/programService.js` | `src/Repository/programRepository.js` | `src/Pages/ProgramPage/`, `src/Pages/ProgramOverviewPage/`, `src/Pages/ProgramSettingsPage/`, `src/Pages/ProgramsBrowsePage/`, `src/Pages/MicrocyclePage/` |
+| Programs, mesocycles, weeks, days | `src/Services/programService.js` (+ `src/Services/programTransferService.js` for share/import) | `src/Repository/programRepository.js` | `src/Pages/ProgramPage/`, `src/Pages/ProgramOverviewPage/`, `src/Pages/ProgramSettingsPage/`, `src/Pages/MicrocyclePage/` |
 | Sickness periods | `src/Services/programService.js` | `src/Repository/programRepository.js` | `src/Pages/SicknessPage/` |
-| Strength workouts (exercises, sets) | `src/Services/weightliftingService.js` | `src/Repository/weightliftingRepository.js` | `src/Pages/WorkoutPage/WorkoutTypes/Resistance/` |
-| Running | `src/Services/runningService.js` | `src/Repository/runningRepository.js` | `src/Pages/WorkoutPage/WorkoutTypes/Run/` |
-| Walking | `src/Services/workoutService.js` | `src/Repository/workoutRepository.js` | `src/Pages/WorkoutPage/WorkoutTypes/Walk/` |
-| Workout page shell, start-a-workout | `src/Services/workoutService.js` | `src/Repository/workoutRepository.js` | `src/Pages/WorkoutPage/WorkoutPage.js`, `src/Resources/Components/StartWorkoutSheet.js` |
-| Workout library, calendar | `src/Services/programService.js` | `src/Repository/programRepository.js` | `src/Pages/WorkoutLibraryPage/`, `src/Pages/WorkoutCalendarPage/` |
-| Exercise library, favourites, custom exercises | `src/Services/weightliftingService.js`, `src/Services/exerciseService.js` | `src/Repository/weightliftingRepository.js`, `src/Repository/customExerciseRepository.js` | `src/Pages/ExerciseLibraryPage/`, `src/Pages/ExerciseCatalogPage/`, `src/Pages/CustomExercisesPage/`, `src/Pages/MyExercisePage/` |
-| Personal records | `src/Services/weightliftingService.js` | `src/Repository/weightliftingRepository.js` | `src/Pages/PersonalRecordsPage/`, `src/Pages/RecordsExercisePage/` |
-| Statistics | `src/Services/statisticsService.js` | - | `src/Pages/StatisticsPage/`, `src/Pages/StatisticsDetailPage/` |
-| Train tab (library, splits) | `src/Services/trainService.js`, `src/Services/splitService.js` | `src/Repository/trainRepository.js` | `src/Utils/trainLibrary.js`, `src/Utils/splitCard.js` |
-| Home | `src/Services/homeExploreService.js` | - | `src/Pages/HomePage/` |
-| Social: feed, posts, friends | `src/Services/socialService.js`, `src/Services/socialPostService.js`, `src/Services/ownWorkoutPostService.js` | - | `src/Pages/FeedPage/`, `src/Pages/SocialPage/`, `src/Pages/UserPostsPage/`, `src/Pages/WorkoutPostsPage/`, `src/Pages/CenterPostsPage/` |
-| Public profiles | `src/Services/publicProfileService.js` | - | `src/Pages/PublicProfilePage/`, `src/Pages/SocialUserListPage/` |
-| Explore, gyms, leaderboards | `src/Services/gymService.js`, `src/Services/categoryLeaderboardService.js` | - | `src/Pages/ExplorePage/`, `src/Pages/GymsPage/`, `src/Pages/GymLeaderboardPage/`, `src/Pages/CategoryLeaderboardPage/`, `src/Pages/NationalExerciseLeaderboardPage/` |
-| Login, register, profile | `src/Services/authService.js` | - | `src/Pages/LoginPage/`, `src/Pages/RegisterPage/`, `src/Pages/ProfilePage/`, `src/Pages/EditProfilePage/` |
-| Notifications | `src/Services/notificationService.js` | - | `src/Pages/NotificationSettingsPage/`, `src/Pages/NotificationHistoryPage/` |
-| Heart rate (Bluetooth) | `src/Services/heartRateService.js` | - | `src/Utils/bleHeartRateUtils.js`, `src/Pages/WorkoutPage/WorkoutTypes/Run/HeartRateDeviceModal.js` |
+| Browse programs | none directly (see `src/Pages/ProgramsBrowsePage/`) | - | `src/Pages/ProgramsBrowsePage/` |
+| Workout page shell (timer, finish, post) | `src/Services/workoutService.js`, `src/Services/weightliftingService.js`, `src/Services/runningService.js` | `src/Repository/workoutRepository.js` | `src/Pages/WorkoutPage/WorkoutPage.js`, `src/Resources/Components/StartWorkoutSheet.js` |
+| Strength workout (exercises, sets) | `src/Services/weightliftingService.js`, `src/Services/workoutService.js` | `src/Repository/weightliftingRepository.js` | `src/Pages/WorkoutPage/WorkoutTypes/Resistance/` |
+| Running (GPS, Bluetooth heart rate) | `src/Services/runningService.js`, `src/Services/locationService.js`, `src/Services/heartRateService.js`, `src/Services/workoutService.js` | `src/Repository/runningRepository.js`, `src/Repository/locationRepository.js` | `src/Pages/WorkoutPage/WorkoutTypes/Run/` |
+| Walking | none; the screen is self-contained | - | `src/Pages/WorkoutPage/WorkoutTypes/Walk/Walk.js` |
+| Workout library, calendar, week view | `src/Services/programService.js` | `src/Repository/programRepository.js` | `src/Pages/WorkoutLibraryPage/`, `src/Pages/WorkoutCalendarPage/`, `src/Pages/WeekPage/` |
+| Workout types settings | `src/Services/socialService.js` | - | `src/Pages/WorkoutTypesSettingsPage/` |
+| Exercise library | `src/Services/programService.js`, `src/Services/weightliftingService.js`, `src/Services/trainService.js`, `src/Services/splitService.js` | `src/Repository/weightliftingRepository.js`, `src/Repository/trainRepository.js` | `src/Pages/ExerciseLibraryPage/`, `src/Pages/ExerciseCatalogPage/` |
+| Custom and shared exercises | `src/Services/exerciseService.js` | `src/Repository/customExerciseRepository.js` | `src/Pages/CustomExercisesPage/`, `src/Pages/MyExercisePage/` |
+| Personal records | `src/Services/weightliftingService.js`, `src/Services/statisticsService.js` | `src/Repository/weightliftingRepository.js` | `src/Pages/PersonalRecordsPage/`, `src/Pages/RecordsExercisePage/` |
+| Statistics | `src/Services/statisticsService.js`, `src/Services/weightliftingService.js` | - | `src/Pages/StatisticsPage/`, `src/Pages/StatisticsDetailPage/` |
+| Train tab, splits | `src/Services/trainService.js`, `src/Services/splitService.js` | `src/Repository/trainRepository.js` | `src/Utils/trainLibrary.js`, `src/Utils/splitCard.js` |
+| Home | `src/Services/workoutService.js`, `src/Services/homeExploreService.js`, `src/Services/programService.js`, `src/Services/musicService.js`, `src/Services/weightliftingService.js` | - | `src/Pages/HomePage/` |
+| Feed and posts | `src/Services/socialPostService.js`, `src/Services/socialService.js`, `src/Services/ownWorkoutPostService.js` | - | `src/Pages/FeedPage/`, `src/Pages/CenterPostsPage/`, `src/Pages/WorkoutPostsPage/`, `src/Pages/UserPostsPage/`, `src/Pages/SocialPostSettingsPage/`, `src/Pages/ExerciseSocialPostSettingsPage/` |
+| Friends, social | `src/Services/socialService.js` | - | `src/Pages/SocialPage/`, `src/Pages/SocialUserListPage/` |
+| Profiles | `src/Services/socialService.js`, `src/Services/publicProfileService.js`, `src/Services/authService.js` | - | `src/Pages/ProfilePage/`, `src/Pages/EditProfilePage/`, `src/Pages/PublicProfilePage/` |
+| Explore, gyms, leaderboards | `src/Services/gymService.js`, `src/Services/categoryLeaderboardService.js`, `src/Services/exerciseService.js` | - | `src/Pages/ExplorePage/`, `src/Pages/ExploreSearchPage/`, `src/Pages/GymsPage/`, `src/Pages/GymLeaderboardPage/`, `src/Pages/GymExerciseLeaderboardPage/`, `src/Pages/CategoryLeaderboardPage/`, `src/Pages/NationalExerciseLeaderboardPage/` |
+| Login, register | `src/Services/authService.js` | - | `src/Pages/LoginPage/`, `src/Pages/RegisterPage/` |
+| Notifications | `src/Services/notificationService.js`, `src/Services/liveWorkoutService.js` | - | `src/Pages/NotificationSettingsPage/`, `src/Pages/NotificationHistoryPage/` |
 | Music | `src/Services/musicService.js` | - | `src/Pages/MusicSettingsPage/` |
 | Lock-screen workout card | `src/Services/liveWorkoutService.js` | - | `src/Utils/liveWorkout.js`, `modules/live-workout/`, `targets/` |
-| Privacy, terms | - | - | `src/Pages/PrivacyPolicyPage/`, `src/Pages/TermsOfUsePage/` |
 | Dev dashboard, admin | `src/Services/adminService.js` | - | `src/Pages/DevDashboardPage/` |
+| Static pages | none | - | `src/Pages/PrivacyPolicyPage/`, `src/Pages/TermsOfUsePage/`, `src/Pages/OneRepMaxCalculatorPage/`, `src/Pages/ExerciseMapPage/` |
 
 Shared UI is in `src/Resources/` (`Components/`, `ThemedComponents/`,
 `GlobalStyling/`, `Icons/`, `BodyMap/`). Translations are in
