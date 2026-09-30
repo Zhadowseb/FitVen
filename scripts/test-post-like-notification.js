@@ -122,9 +122,11 @@ assert.deepStrictEqual(
   { route: "SocialPage", params: undefined },
   "a like without a post goes where the rest go"
 );
+// Lift verification is gone (20261007090000 deleted its notifications): an
+// old row, if one were left, goes where the rest go.
 assert.deepStrictEqual(history.notificationTarget({ eventType: "lift_verification_requested", data: { gym_id: 7, lift_id: 9 } }), {
-  route: "GymLeaderboardPage",
-  params: { gym_id: 7, open_verification: true, lift_id: 9 },
+  route: "SocialPage",
+  params: undefined,
 });
 assert.deepStrictEqual(history.notificationTarget({ eventType: "custom_exercise_hidden", data: { exercise_name: "Zercher" } }), {
   route: "MyExercisePage",

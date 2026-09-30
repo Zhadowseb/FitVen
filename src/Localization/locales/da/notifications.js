@@ -8,7 +8,6 @@ export default {
   unread: "Ulæst",
   itemLabel: "{title}. {body}",
   hints: {
-    openVerification: "Åbner centrets løft, der venter på gennemsyn",
     openActivity: "Åbner dagens aktivitet",
     openExercise: "Åbner din øvelse",
     openPost: "Åbner dit opslag",

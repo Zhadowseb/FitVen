@@ -19,12 +19,12 @@
 // counted by scripts/check-privacy-policy.js, which fails the build while the
 // policy claims to be published and is not finished.
 
-export const PRIVACY_POLICY_VERSION = "2026-09-27.1";
+export const PRIVACY_POLICY_VERSION = "2026-09-30.1";
 
 /** The public copy. Required by Google Play, and the address in its listing. */
 export const PRIVACY_POLICY_URL = "https://fitven.dk/privacy/";
 
-export const PRIVACY_POLICY_LAST_UPDATED = "27 September 2026";
+export const PRIVACY_POLICY_LAST_UPDATED = "30 September 2026";
 
 export const PRIVACY_POLICY_SECTIONS = [
   {
@@ -99,6 +99,8 @@ There are no database backups today, so nothing survives a deletion anywhere. If
     body: `Anyone signed in to FitVen can see your profile: your display name, username, photo and bio, the centre you train at, how many people follow you and how many you follow, how many workouts you have finished and how many you did in each of the last twelve weeks, and your best lift in bench press, squat and deadlift. Your email address, your birth year and your sex are never shown to anyone.
 
 The workout posts you publish are shown to the audience you choose for each of them, together with the centre the workout was done in.
+
+When you like a post, its author is told that you liked it, with your name and photo, in their notifications, and as a push notification if they have notifications on.
 
 People who follow you can also see whether you are training today, how many records you set in today's workout, and — if you share music — what you are listening to during a workout.
 

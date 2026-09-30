@@ -8,7 +8,6 @@
 
 import { workoutDisplayName } from "./workoutTypeLabel";
 
-export const LIFT_VERIFICATION_REQUESTED = "lift_verification_requested";
 // Written by the server when three people have reported one of your shared
 // exercises (supabase/migrations/20260928090000_custom-exercises-can-be-shared.sql).
 export const CUSTOM_EXERCISE_HIDDEN = "custom_exercise_hidden";
@@ -82,20 +81,10 @@ export function describeNotification(item, t) {
 }
 
 // There is no screen for one post. A like opens your own posts with the liked
-// one first - UserPostsPage, the list behind "See all" on a profile. A
-// request to verify a lift goes to that centre with the review sheet open,
-// one of your exercises being hidden goes to that exercise, and the rest -
+// one first - UserPostsPage, the list behind "See all" on a profile. One of
+// your exercises being hidden goes to that exercise, and the rest -
 // mostly somebody starting a workout - to Social, which shows that.
 export function notificationTarget(item) {
-  const gymId = Number(dataOf(item).gym_id);
-
-  if (item?.eventType === LIFT_VERIFICATION_REQUESTED && Number.isFinite(gymId)) {
-    return {
-      route: "GymLeaderboardPage",
-      params: { gym_id: gymId, open_verification: true, lift_id: dataOf(item).lift_id ?? null },
-    };
-  }
-
   const exerciseName = hiddenExerciseName(item);
 
   if (exerciseName) {
@@ -112,10 +101,6 @@ export function notificationTarget(item) {
 }
 
 export function notificationHintKey(item) {
-  if (item?.eventType === LIFT_VERIFICATION_REQUESTED) {
-    return "notifications.hints.openVerification";
-  }
-
   if (hiddenExerciseName(item)) {
     return "notifications.hints.openExercise";
   }
