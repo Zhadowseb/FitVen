@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.16.8] - Unreleased
+### Changed
+- **Agent guides:** new `docs/MAP.md` says which files each feature lives in, what the four largest files contain section by section, and what agents should not read (`.claude/worktrees/`, `data/`, the dated audits in `docs/`). The root `AGENTS.md` points at it. `npm test` fails if the map names a path or a function that no longer exists.
+
+---
 ## [2.16.7] - Unreleased
 ### Fixed
 From the review agents' report on #296.
