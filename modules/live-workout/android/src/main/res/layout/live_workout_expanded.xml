@@ -216,6 +216,17 @@
         android:layout_height="wrap_content"
         android:layout_weight="1" />
 
+      <!-- The exercise's sets as dots while its chips are hidden: the one
+           just ticked filled, the next one ringed. Filled from Kotlin. -->
+      <LinearLayout
+        android:id="@+id/live_workout_rest_dots"
+        android:layout_width="wrap_content"
+        android:layout_height="12dp"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="8dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal" />
+
       <TextView
         android:id="@+id/live_workout_rest_of"
         style="@style/LiveWorkout.Text.Bold.RestOf"

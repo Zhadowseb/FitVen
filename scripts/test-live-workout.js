@@ -644,6 +644,22 @@ const build = (rows, extra = {}) =>
   assert.match(kotlin("LiveWorkoutNotification"), /setChronometerCountDown\(R\.id\.live_workout_rest_clock, false\)/);
   assert.match(kotlin("LiveWorkoutNotification"), /view\.completeLabel\.ifEmpty/);
   assert.match(kotlin("LiveWorkoutNotification"), /bindDots\(context, views, R\.id\.live_workout_dots/);
+  // The dots while resting and counting up too, when a tick has just landed:
+  // both collapsed paths on the rest layout, and the open card's rest row.
+  assert.strictEqual(
+    (kotlin("LiveWorkoutNotification").match(/bindDots\(context, views, R\.id\.live_workout_dots, view\.setDots\)/g) ?? []).length,
+    2,
+    "the collapsed rest and count-up card lost their dots"
+  );
+  assert.match(kotlin("LiveWorkoutNotification"), /bindDots\(context, views, R\.id\.live_workout_rest_dots, restDots\)/);
+  for (const layout of ["live_workout_collapsed", "live_workout_collapsed_rest"]) {
+    assert.match(
+      read(`modules/live-workout/android/src/main/res/layout/${layout}.xml`),
+      /android:id="@\+id\/live_workout_dots"/,
+      `${layout} has no dots`
+    );
+  }
+  assert.match(read("modules/live-workout/android/src/main/res/layout/live_workout_expanded.xml"), /@\+id\/live_workout_rest_dots/);
 }
 
 // --- The rest timer's ±15 -----------------------------------------------------

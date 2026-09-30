@@ -202,6 +202,8 @@ internal object LiveWorkoutNotification {
         true
       )
       views.setTextViewText(R.id.live_workout_subtitle, view.title)
+      bindDots(context, views, R.id.live_workout_dots, view.setDots)
+      views.setViewVisibility(R.id.live_workout_dots, visibleIf(view.setDots.isNotEmpty()))
       views.setOnClickPendingIntent(
         R.id.live_workout_primary,
         action(context, state, REQUEST_END_COUNT_UP, LiveAction.END_COUNT_UP, setId = countUp.setId)
@@ -227,6 +229,9 @@ internal object LiveWorkoutNotification {
       )
       views.setChronometerCountDown(R.id.live_workout_rest_clock, true)
       views.setTextViewText(R.id.live_workout_subtitle, view.title)
+      // The set just ticked is filled: the tick is seen landing, as on iOS.
+      bindDots(context, views, R.id.live_workout_dots, view.setDots)
+      views.setViewVisibility(R.id.live_workout_dots, visibleIf(view.setDots.isNotEmpty()))
       views.setOnClickPendingIntent(R.id.live_workout_primary, action(context, state, REQUEST_SKIP, LiveAction.SKIP_REST))
       views.setContentDescription(R.id.live_workout_primary, state.string("skip"))
       return views
@@ -329,6 +334,9 @@ internal object LiveWorkoutNotification {
     // The clock is stopped while the row is hidden.
     views.setViewVisibility(R.id.live_workout_row_rest, visibleIf(resting || countingUp))
     views.setTextViewText(R.id.live_workout_rest_label, state.string("pause"))
+    val restDots = if (resting || countingUp) view.setDots else emptyList()
+    bindDots(context, views, R.id.live_workout_rest_dots, restDots)
+    views.setViewVisibility(R.id.live_workout_rest_dots, visibleIf(restDots.isNotEmpty()))
     views.setTextViewText(R.id.live_workout_rest_of, rest?.of ?: "")
     views.setViewVisibility(R.id.live_workout_rest_of, visibleIf(resting))
     views.setChronometerCountDown(R.id.live_workout_rest_clock, !countingUp)
