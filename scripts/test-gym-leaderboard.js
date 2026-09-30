@@ -389,7 +389,7 @@ for (const file of [
   for (const [file, name] of declaredAfterUse) {
     const lines = fs.readFileSync(path.join(root, file), "utf8").split(/\r?\n/);
     const declared = lines.findIndex((line) => line.includes(`const ${name} = `));
-    const inDeps = lines.findIndex((line) => /^s*[.*]$/.test(line) && line.includes(name));
+    const inDeps = lines.findIndex((line) => /^\s*\[.*\]\s*$/.test(line) && line.includes(name));
 
     assert.ok(declared >= 0, `${file} no longer declares ${name}`);
     assert.ok(
