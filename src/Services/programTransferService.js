@@ -344,7 +344,9 @@ async function getProgramExportTables(db, programId) {
           s.exercise_instance_id,
           s.set_number,
           s.personal_record,
-          s.pause,
+          -- A rest the app counted is a record, not part of the program
+          -- (@utils/restCountUp): the file carries planned rests only.
+          CASE WHEN COALESCE(s.rest_counted, 0) = 1 THEN NULL ELSE s.pause END AS pause,
           s.rpe,
           s.weight,
           s.rm_percentage,

@@ -203,35 +203,6 @@ export default StyleSheet.create({
     fontWeight: "600",
     lineHeight: 17,
   },
-  reviewRow: {
-    borderRadius: 16,
-    borderWidth: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  reviewIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  reviewCopy: {
-    flex: 1,
-    minWidth: 0,
-    gap: 2,
-  },
-  reviewTitle: {
-    fontSize: 13.5,
-    fontWeight: "800",
-  },
-  reviewBody: {
-    fontSize: 11.5,
-    fontWeight: "700",
-  },
   stateBlock: {
     paddingHorizontal: 20,
     paddingTop: 40,

@@ -6,6 +6,10 @@
 // {duration}, {done} and {time} are replaced on the phone, as they stand.
 export default {
   complete: "Sæt færdigt",
+  // Knappen, med det sæt den sætter flueben ved.
+  completeSetOf: "Sæt {n} af {total} færdigt",
+  // Pausen efter et sæt uden pause skrevet tælles op; kun på låseskærmen.
+  endRest: "Afslut pause",
   skip: "Spring over",
   prev: "Forrige",
   next: "Næste",

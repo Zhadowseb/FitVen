@@ -218,9 +218,11 @@ export default function RecordsExercise({
       : null;
 
   // Section 5.3, phrased forward. Comparing across rep counts reads as a
-  // judgement on the set that was done, which is not the point.
+  // judgement on the set that was done, which is not the point. Only a slot
+  // held at its own rep count: 90 × 3 fills the 1 and the 2 on the same day,
+  // and "next step at 1 rep" would be about a single nobody lifted.
   const nextStep = useMemo(() => {
-    const done = ladder.filter((slot) => slot.weight !== null);
+    const done = ladder.filter((slot) => slot.weight !== null && !slot.isDerived);
 
     if (done.length === 0) {
       return null;
@@ -350,9 +352,10 @@ export default function RecordsExercise({
 
             {/* One tick per session under the baseline, so you can see when you
                 trained and not only what the number was. */}
-            {chart.placed.map((point) => (
+            {/* Two sessions can share a day, so the day alone is no key. */}
+            {chart.placed.map((point, index) => (
               <Rect
-                key={`tick-${point.at}`}
+                key={`tick-${point.at}-${index}`}
                 x={point.x - 0.6}
                 y={chart.baseline + 2}
                 width={1.2}
@@ -361,9 +364,9 @@ export default function RecordsExercise({
               />
             ))}
 
-            {chart.placed.map((point) => (
+            {chart.placed.map((point, index) => (
               <Circle
-                key={`dot-${point.at}`}
+                key={`dot-${point.at}-${index}`}
                 cx={point.x}
                 cy={point.y}
                 r={2.6}
@@ -503,6 +506,12 @@ export default function RecordsExercise({
                 <ThemedText style={styles.caption} setColor={quiet}>
                   {empty ? t("records.exercise.noSet") : shortDate(slot.at)}
                 </ThemedText>
+                {slot.isDerived ? (
+                  // Held by a longer set: said so, and never gold.
+                  <ThemedText style={styles.caption} setColor={quiet}>
+                    {t("records.exercise.fromReps", { reps: slot.fromReps })}
+                  </ThemedText>
+                ) : null}
               </View>
             );
           })}
@@ -519,8 +528,8 @@ export default function RecordsExercise({
           </View>
 
           <View style={[styles.card, { backgroundColor: card, borderColor: border, gap: 10 }]}>
-            {sessions.map((session) => (
-              <View key={session.at} style={styles.sessionRow}>
+            {sessions.map((session, index) => (
+              <View key={`${session.at}-${index}`} style={styles.sessionRow}>
                 <ThemedText style={styles.sessionDate} setColor={quiet}>
                   {formatRelativeDay(session.at, now)}
                 </ThemedText>

@@ -274,6 +274,42 @@ export async function updateWorkoutLabel(db, { workoutId, label }) {
   );
 }
 
+/**
+ * The workout's sync_id, giving it one first if it has none - an older row
+ * can lack it, and the split pins a workout by it. Giving it one is a change
+ * the cloud has to hear, so it is marked for sync like any other write.
+ */
+export async function ensureWorkoutSyncId(db, workoutId) {
+  const existing = await db.getFirstAsync(
+    `SELECT sync_id FROM Workout_Type_Instance WHERE workout_id = ?;`,
+    [workoutId]
+  );
+
+  if (!existing) {
+    return null;
+  }
+
+  if (existing.sync_id) {
+    return existing.sync_id;
+  }
+
+  await db.runAsync(
+    `UPDATE Workout_Type_Instance
+     SET sync_id = COALESCE(sync_id, ${SQLITE_UUID_SQL}),
+         sync_version = ?,
+         needs_sync = 1
+     WHERE workout_id = ?;`,
+    [createNextSyncVersion(), workoutId]
+  );
+
+  const updated = await db.getFirstAsync(
+    `SELECT sync_id FROM Workout_Type_Instance WHERE workout_id = ?;`,
+    [workoutId]
+  );
+
+  return updated?.sync_id ?? null;
+}
+
 export async function clearActiveWorkoutFlags(db) {
   const syncVersion = createNextSyncVersion();
   await db.runAsync(
@@ -559,15 +595,23 @@ export async function updateMesocycleDoneFromMicrocycles(db, mesocycleId) {
  * one back, not a second one beside it.
  *
  * Ordered so the first row is the one to open - a running timer first, then
- * the most recently made. The date is matched on its ISO form because the
- * column holds both spellings, the same way the split guess reads it.
+ * one that was started and paused, then the most recently made. The date is
+ * matched on its ISO form because the columns hold both spellings, the same
+ * way the split guess reads it.
+ *
+ * The workout's own date decides, and the day's stands in when the workout's
+ * is empty: `w.date` is NOT NULL, so a row written without one holds ''.
+ * The day, the program and the counts are what Home's planned card draws.
+ * A deleted day, and a program that is deleted or not started yet, hide
+ * their planned workouts here the way they do in the calendar
+ * (programRepository.getWorkoutsBetweenDates) - but not one already started.
  */
 export async function getOpenWorkoutsForDate(db, { isoDate, limit = 5 }) {
-  const workoutIsoDateSql = `
+  const isoDateSql = (column) => `
     CASE
-      WHEN w.date LIKE '__.__.____'
-      THEN substr(w.date, 7, 4) || '-' || substr(w.date, 4, 2) || '-' || substr(w.date, 1, 2)
-      ELSE w.date
+      WHEN ${column} LIKE '__.__.____'
+      THEN substr(${column}, 7, 4) || '-' || substr(${column}, 4, 2) || '-' || substr(${column}, 1, 2)
+      ELSE ${column}
     END`;
 
   return db.getAllAsync(
@@ -578,12 +622,51 @@ export async function getOpenWorkoutsForDate(db, { isoDate, limit = 5 }) {
         w.date,
         w.timer_start,
         w.elapsed_time,
-        w.is_active
+        w.is_active,
+        w.original_start_time,
+        d.program_id,
+        d.Weekday AS day,
+        d.date AS day_date,
+        p.program_name,
+        (
+          SELECT COUNT(*)
+          FROM Exercise_Instance e
+          WHERE e.workout_type_instance_id = w.workout_id
+            AND e.deleted_at IS NULL
+        ) AS exercise_count,
+        (
+          SELECT COUNT(*)
+          FROM "Set" s
+          JOIN Exercise_Instance e ON e.exercise_instance_id = s.exercise_instance_id
+          WHERE e.workout_type_instance_id = w.workout_id
+            AND e.deleted_at IS NULL
+            AND s.deleted_at IS NULL
+        ) AS set_count
      FROM Workout_Type_Instance w
+     LEFT JOIN Day d ON d.day_id = w.day_id
+     LEFT JOIN Program p ON p.program_id = d.program_id
      WHERE COALESCE(w.done, 0) = 0
        AND COALESCE(w.deleted_at, '') = ''
-       AND ${workoutIsoDateSql} = ?
-     ORDER BY (w.timer_start IS NOT NULL) DESC, w.workout_id DESC
+       AND (
+         -- Started - running or paused - it is shown whatever its day and
+         -- program say: the bottom bar shows it too, and hiding it would take
+         -- the live panel away mid-workout.
+         w.original_start_time IS NOT NULL
+         OR w.timer_start IS NOT NULL
+         OR (
+           COALESCE(d.deleted_at, '') = ''
+           AND (
+             p.program_id IS NULL OR (
+               COALESCE(p.deleted_at, '') = ''
+               AND p.status != 'NOT_STARTED'
+             )
+           )
+         )
+       )
+       AND COALESCE(NULLIF(${isoDateSql("w.date")}, ''), ${isoDateSql("d.date")}) = ?
+     ORDER BY (w.timer_start IS NOT NULL) DESC,
+              (w.original_start_time IS NOT NULL) DESC,
+              w.workout_id DESC
      LIMIT ?;`,
     [isoDate, Math.max(1, Math.trunc(Number(limit) || 5))]
   );

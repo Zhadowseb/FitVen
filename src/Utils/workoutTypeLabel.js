@@ -142,3 +142,25 @@ export function workoutDisplayName(label, t, workoutType = null) {
 
   return isAppWorkoutName(text, workoutType) ? workoutTypeLabel(text, t) : text;
 }
+
+/**
+ * The type a strength workout's header names beside its title: "Styrketræning",
+ * "Overkrop". A type the app does not know, or none, reads as strength
+ * training - the header only draws for strength workouts, and a raw id is
+ * never shown. Null when it would only repeat the title, which is what a
+ * workout nobody named, or renamed, is called.
+ */
+export function strengthWorkoutTypeTag(workoutType, t, title = null) {
+  if (typeof t !== "function") {
+    return null;
+  }
+
+  const typeName = t(keyFor(workoutType) ?? WORKOUT_TYPE_KEYS.resistance);
+  const titleText = cleanText(title);
+
+  if (titleText && titleText.toLowerCase() === typeName.toLowerCase()) {
+    return null;
+  }
+
+  return typeName;
+}

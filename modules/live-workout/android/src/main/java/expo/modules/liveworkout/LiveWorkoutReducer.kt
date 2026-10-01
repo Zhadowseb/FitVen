@@ -19,8 +19,10 @@ internal data class LiveAction(
     const val ADJUST_REST = "adjustRest"
     const val SKIP_REST = "skipRest"
     const val ADJUST_WEIGHT = "adjustWeight"
+    /** "Afslut pause" on a rest being counted up. */
+    const val END_COUNT_UP = "endCountUp"
 
-    val TYPES = setOf(COMPLETE_SET, PREV, NEXT, ADJUST_REST, SKIP_REST, ADJUST_WEIGHT)
+    val TYPES = setOf(COMPLETE_SET, PREV, NEXT, ADJUST_REST, SKIP_REST, ADJUST_WEIGHT, END_COUNT_UP)
   }
 }
 
@@ -40,6 +42,9 @@ internal object LiveWorkoutReducer {
       LiveAction.ADJUST_WEIGHT -> adjustWeight(state, action, now)
 
       LiveAction.SKIP_REST -> if (state.rest != null) state.copy(rest = null) else state
+
+      // The count-up ends, and the next set can be ticked off.
+      LiveAction.END_COUNT_UP -> if (state.countUp != null) state.copy(countUp = null) else state
 
       LiveAction.ADJUST_REST -> {
         val rest = state.rest ?: return state
@@ -146,6 +151,8 @@ internal object LiveWorkoutReducer {
     } else {
       null
     }
+    // No rest written: it is counted up from the tap instead.
+    val countUp = if (running && nowSet.rest <= 0) LiveCountUp(setId = nowSet.id, startedAt = at) else null
     var shown: LiveExercise? = exercise.copy(sets = sets)
 
     if (finishedExercise) {
@@ -162,6 +169,7 @@ internal object LiveWorkoutReducer {
       canPrev = canPrev,
       canNext = canNext,
       rest = rest,
+      countUp = countUp,
       totals = state.totals.copy(
         done = state.totals.done + 1,
         exercisesDone = state.totals.exercisesDone + (if (finishedExercise) 1 else 0)

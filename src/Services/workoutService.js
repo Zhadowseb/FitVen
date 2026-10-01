@@ -2,6 +2,7 @@ import { weightliftingRepository, workoutRepository } from "../Repository";
 import { guessSplitGroups } from "@utils/splitGuess";
 import * as gymService from "./gymService";
 import * as notificationService from "./notificationService";
+import * as restCountUpService from "./restCountUpService";
 import { withTransaction } from "./shared";
 import { enqueueSync, startBackgroundSync } from "./syncScheduler";
 import { getCurrentStoredTimestampSeconds } from "@utils/timeUtils";
@@ -227,6 +228,18 @@ export async function updateWorkoutLabel(db, { workoutId, label }) {
   syncWorkoutTypeInstancesInBackground(db);
 }
 
+/**
+ * The workout's sync_id - what the split pins it by - given one first if it
+ * has none, which is then uploaded like any change.
+ */
+export async function ensureWorkoutSyncId(db, workoutId) {
+  const syncId = await workoutRepository.ensureWorkoutSyncId(db, workoutId);
+
+  syncWorkoutTypeInstancesInBackground(db);
+
+  return syncId;
+}
+
 export async function persistWorkoutTimerState(
   db,
   { workoutId, timerStart, elapsedTime }
@@ -326,6 +339,10 @@ export async function finishWorkout(
   db,
   { workoutId, elapsedTime, createPost = true }
 ) {
+  // A rest being counted up after the last set ends with the workout, and is
+  // written (Utils/restCountUp.js).
+  await restCountUpService.finishRestCountUp(db, { workoutId });
+
   await withTransaction(db, async () => {
     await workoutRepository.persistWorkoutTimerState(db, {
       workoutId,
@@ -516,6 +533,10 @@ function startOfLocalDay(isoDate) {
  * recently made - and `count` is how many are open in total, so the screen can
  * say whether there is more than one. A running one carries its timer, so
  * Home can show how long it has been going.
+ *
+ * `isStarted` is true once it has ever been started - running, or paused -
+ * and the counts, the program and the day are what the planned card on Home
+ * draws and opens the workout with.
  */
 export async function getOpenWorkoutsToday(db, { now = Date.now() } = {}) {
   const rows = await workoutRepository.getOpenWorkoutsForDate(db, {
@@ -530,8 +551,15 @@ export async function getOpenWorkoutsToday(db, { now = Date.now() } = {}) {
           name: rows[0].label ?? rows[0].workout_type ?? null,
           workoutType: rows[0].workout_type ?? null,
           isRunning: rows[0].timer_start !== null,
+          isStarted: rows[0].original_start_time !== null && rows[0].original_start_time !== undefined,
           timerStart: rows[0].timer_start ?? null,
           elapsedTime: rows[0].elapsed_time ?? 0,
+          exerciseCount: Number(rows[0].exercise_count) || 0,
+          setCount: Number(rows[0].set_count) || 0,
+          programId: rows[0].program_id ?? null,
+          programName: rows[0].program_name ?? null,
+          date: rows[0].date || rows[0].day_date || null,
+          day: rows[0].day ?? null,
         }
       : null,
   };

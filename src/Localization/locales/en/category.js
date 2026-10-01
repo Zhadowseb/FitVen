@@ -10,7 +10,7 @@ export default {
   },
   descriptions: {
     flid: "Most workouts · {period}",
-    powerlifting: "Bench + squat + deadlift · 1 rep only",
+    powerlifting: "Bench + squat + deadlift · heaviest lift",
     fremgang: "Biggest rise over the last 30 days",
     calisthenics: "Pull-ups × 3 + dips × 2 + push-ups",
   },
@@ -44,7 +44,6 @@ export default {
   weightClasses: {
     all: "All weights",
   },
-  onlyVideo: "Video only",
   notIn: "not {where}",
   notInFilter: "You're not in {filter}. Choose All to see your rank.",
   countries: {
@@ -69,9 +68,7 @@ export default {
     flidStreak:
       "Weeks in a row with at least {count} finished workouts, Monday to Sunday. This week counts once it reaches {count}. A sick week breaks the run here.",
     powerlifting:
-      "Best single-rep bench press, squat and deadlift, added up. A missing lift counts as 0, and rejected lifts don't count.",
-    powerliftingVideo:
-      "Only lifts with a verified video: best single-rep bench press, squat and deadlift, added up. A missing lift counts as 0.",
+      "The heaviest weight you have lifted in bench press, squat and deadlift, added up. A set counts for every lower rep count: 90 kg × 3 is 90 kg for 1 too. A missing lift counts as 0.",
     fremgang:
       "Biggest rise in estimated 1RM over the last {days} days against the {days} before, from sets of 1–{reps} reps. At least {sets} sets in both.",
     calisthenics:
@@ -84,8 +81,7 @@ export default {
     membersGym: "Everyone who trained here in the last {activeDays} days takes part.",
     flidWorkouts: "Every finished workout in the period counts.",
     flidStreak: "A week counts once it has at least {count} finished workouts.",
-    powerlifting: "One single-rep bench press, squat or deadlift gives you a total.",
-    powerliftingVideo: "Only lifts with a verified video count here.",
+    powerlifting: "One set of bench press, squat or deadlift gives you a total.",
     fremgang: "It takes at least {sets} sets of the same exercise in both {days}-day periods.",
     calisthenics: "A set of pull-ups, dips or push-ups without added weight earns points.",
   },
@@ -135,7 +131,6 @@ export default {
     ageHint: "From the birth year in your profile. Without one you're only under All ages.",
     weightClass: "Weight class",
     weightClassStatic: "Body weight can't be set yet, so everyone is under All weights.",
-    onlyVideoHint: "Shows only lifts with a verified video",
   },
   // Powerlifting's three buttons at the bottom - and the lift a rise on Progress was in.
   lifts: {

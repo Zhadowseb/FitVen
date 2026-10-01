@@ -1307,6 +1307,7 @@ export async function getWorkoutsBetweenDates(db, { startIsoDate, endIsoDate }) 
   return db.getAllAsync(
     `SELECT
         w.workout_id,
+        w.sync_id,
         w.workout_type,
         ${workoutDisplayLabelSql("w", "wt")} AS label,
         w.date,
@@ -1492,6 +1493,48 @@ export async function getWorkoutLibrary(db, { limit = 500, offset = 0 } = {}) {
      ORDER BY date_iso DESC, w.workout_id DESC
      LIMIT ? OFFSET ?;`,
     [normalizedLimit, normalizedOffset]
+  );
+}
+
+/**
+ * The workouts with these sync_ids that are still there - the split's pinned
+ * workouts and the copies made from them - with what the split card shows.
+ * The same deleted rules as the library: a workout, its day or its program
+ * deleted is not returned.
+ */
+export async function getWorkoutsBySyncIds(db, syncIds = []) {
+  const ids = [...new Set((syncIds ?? []).filter((id) => typeof id === "string" && id))];
+
+  if (ids.length === 0) {
+    return [];
+  }
+
+  const workoutIsoDateSql = localDateToIsoSql("w.date");
+
+  return db.getAllAsync(
+    `SELECT
+        w.workout_id,
+        w.sync_id,
+        w.workout_type,
+        w.date,
+        ${workoutIsoDateSql} AS date_iso,
+        w.done,
+        (SELECT COUNT(*)
+           FROM Exercise_Instance ei
+          WHERE ei.workout_type_instance_id = w.workout_id) AS exercise_count,
+        (SELECT COUNT(*)
+           FROM "Set" s
+           JOIN Exercise_Instance ei ON ei.exercise_instance_id = s.exercise_instance_id
+          WHERE ei.workout_type_instance_id = w.workout_id
+            AND s.deleted_at IS NULL) AS set_count
+     FROM Workout_Type_Instance w
+     JOIN Day d ON d.day_id = w.day_id
+     LEFT JOIN Program p ON p.program_id = d.program_id
+     WHERE w.sync_id IN (${ids.map(() => "?").join(", ")})
+       AND w.deleted_at IS NULL
+       AND d.deleted_at IS NULL
+       AND (p.program_id IS NULL OR p.deleted_at IS NULL);`,
+    ids
   );
 }
 

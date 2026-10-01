@@ -120,8 +120,8 @@ export default {
     },
   },
   session: {
-    autoNamed: "Navngivet {name} efter dine øvelser",
     options: "Træningsmuligheder",
+    keepAwake: "Hold skærmen vågen, mens træningen kører",
     pause: "Pause",
     continue: "Fortsæt",
     start: "Start",
@@ -188,6 +188,8 @@ export default {
   setList: {
     setDone: "Sæt {number} færdigt",
     repsUnit: "reps",
+    // Pausen efter et sæt uden pause skrevet, talt op (skærmlæseren).
+    restCountingUp: "Pause i {time}",
     // + og − på vægten (1e). {step} er trinnet i kg.
     weightMinus: "Træk {step} kg fra sæt {label}",
     weightPlus: "Læg {step} kg til sæt {label}",

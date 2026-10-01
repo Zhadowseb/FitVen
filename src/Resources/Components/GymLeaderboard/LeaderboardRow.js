@@ -3,10 +3,7 @@ import { StyleSheet, TouchableOpacity, View, useColorScheme } from "react-native
 import { formatDate, useTranslation } from "@localization";
 
 import { Colors, withAlpha } from "../../GlobalStyling/colors";
-import CameraPlus from "../../Icons/UI-icons/CameraPlus";
-import Play from "../../Icons/UI-icons/Play";
 import { ThemedText, UserAvatar } from "../../ThemedComponents";
-import LiftStatusPill, { RejectedBadge } from "./LiftStatusPill";
 import { formatWeightKg } from "@utils/gymUtils";
 
 function formatLiftDate(value) {
@@ -14,21 +11,15 @@ function formatLiftDate(value) {
 }
 
 /**
- * One line of a ranked list, from #4 down. The viewer's own row is tinted and
- * gets an attach button when it has no video; a pending row gets a play button
- * that opens the review sheet; a rejected row (only ever the viewer's own)
- * strikes the weight through and says so.
+ * One line of a ranked list, from #4 down. The viewer's own row is tinted.
  *
- * With `onPressLifter` somebody else's row opens their profile. The review
- * button stays a button of its own beside that, rather than inside it, so a
- * screen reader can still reach it. Your own row never opens anything.
+ * With `onPressLifter` somebody else's row opens their profile. Your own row
+ * never opens anything.
  */
 function LeaderboardRow({
   lift,
   unit = "kg",
   showGym = false,
-  onPressReview,
-  onPressAttach,
   onPressLifter,
   style,
 }) {
@@ -46,8 +37,6 @@ function LeaderboardRow({
         onPress: () => onPressLifter(lift),
       }
     : {};
-  const isRejected = lift?.videoStatus === "rejected";
-  const isPending = lift?.videoStatus === "pending";
   const rankLabel = lift?.rank ? `#${lift.rank}` : "—";
   const value =
     unit === "bw" && lift?.ratio !== null && lift?.ratio !== undefined
@@ -93,11 +82,6 @@ function LeaderboardRow({
             {isMe ? t("common.you") : lift?.displayName ?? t("common.member")}
           </ThemedText>
           <View style={styles.metaRow}>
-            {isRejected ? (
-              <RejectedBadge rejections={lift.rejections} />
-            ) : (
-              <LiftStatusPill status={lift?.videoStatus} approvals={lift?.approvals} />
-            )}
             <ThemedText style={styles.meta} setColor={theme.quietText} numberOfLines={1}>
               {gymLine ?? formatLiftDate(lift?.performedAt)}
             </ThemedText>
@@ -109,47 +93,10 @@ function LeaderboardRow({
           </View>
         </View>
 
-        <ThemedText
-          style={[styles.value, isRejected ? styles.valueRejected : null]}
-          setColor={isRejected ? theme.quietText : theme.title}
-          numberOfLines={1}
-        >
+        <ThemedText style={styles.value} setColor={theme.title} numberOfLines={1}>
           {value}
         </ThemedText>
       </Lifter>
-
-      {isPending && onPressReview && !isMe ? (
-        <TouchableOpacity
-          accessibilityRole="button"
-          accessibilityLabel={t("gyms.row.reviewA11y")}
-          activeOpacity={0.8}
-          hitSlop={6}
-          onPress={() => onPressReview(lift)}
-          style={[
-            styles.iconButton,
-            {
-              backgroundColor: withAlpha(theme.planned, 0.16),
-              borderColor: withAlpha(theme.planned, 0.4),
-              borderWidth: 1,
-            },
-          ]}
-        >
-          <Play width={14} height={14} color={theme.planned} />
-        </TouchableOpacity>
-      ) : null}
-
-      {isMe && lift?.videoStatus === "none" && onPressAttach ? (
-        <TouchableOpacity
-          accessibilityRole="button"
-          accessibilityLabel={t("gyms.video.attachA11y")}
-          activeOpacity={0.8}
-          hitSlop={6}
-          onPress={() => onPressAttach(lift)}
-          style={[styles.iconButton, { backgroundColor: theme.primary }]}
-        >
-          <CameraPlus width={16} height={16} color={theme.textInverted} thickness={2.2} />
-        </TouchableOpacity>
-      ) : null}
     </View>
   );
 }
@@ -162,8 +109,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
   },
-  // Rank to weight: the part that opens the lifter's profile. The buttons
-  // after it stay outside it.
+  // Rank to weight: the part that opens the lifter's profile.
   lifter: {
     flex: 1,
     minWidth: 0,
@@ -203,16 +149,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "800",
     fontVariant: ["tabular-nums"],
-  },
-  valueRejected: {
-    textDecorationLine: "line-through",
-  },
-  iconButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
   },
 });
 

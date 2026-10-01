@@ -107,6 +107,10 @@ export default function NotificationSettingsPage() {
   // in, and never waits for the push settings.
   const [lockScreenEnabled, setLockScreenEnabled] = useState(null);
   const [lockScreenSupported, setLockScreenSupported] = useState(true);
+  // { enabled, available } once read. Read apart from the push settings, so a
+  // database without the column only greys this switch out.
+  const [postLikes, setPostLikes] = useState(null);
+  const [savingPostLikes, setSavingPostLikes] = useState(false);
   const titleColor = theme.title ?? theme.text;
   const quietText = theme.iconColor ?? theme.quietText ?? theme.text;
   const cardSurface = theme.cardBackground ?? theme.background;
@@ -146,6 +150,14 @@ export default function NotificationSettingsPage() {
 
     setIsLoading(true);
     showFeedback("");
+
+    notificationService
+      .getPostLikeNotificationSetting({ user })
+      .then(setPostLikes)
+      .catch((error) => {
+        console.warn("Could not load the setting for likes:", error);
+        setPostLikes({ enabled: true, available: false });
+      });
 
     try {
       const [nextSettings, nextFollowingProfiles] = await Promise.all([
@@ -199,6 +211,29 @@ export default function NotificationSettingsPage() {
   const toggleLockScreen = async (enabled) => {
     setLockScreenEnabled(enabled);
     setLockScreenEnabled(await liveWorkoutService.setLockScreenCardEnabled(enabled));
+  };
+
+  const togglePostLikes = async (enabled) => {
+    if (!user?.id || savingPostLikes || !postLikes?.available) {
+      return;
+    }
+
+    const previous = postLikes;
+    setPostLikes({ ...postLikes, enabled });
+    setSavingPostLikes(true);
+    showFeedback("");
+
+    try {
+      setPostLikes(
+        await notificationService.setPostLikeNotificationsEnabled({ user, enabled })
+      );
+    } catch (error) {
+      console.warn("Could not save the setting for likes:", error);
+      setPostLikes(previous);
+      showFeedback(t("notifications.settings.postLikesSaveFailed"));
+    } finally {
+      setSavingPostLikes(false);
+    }
   };
 
   const selectMode = async (mode) => {
@@ -566,6 +601,41 @@ export default function NotificationSettingsPage() {
                 )}
               </View>
             </View>
+          ) : null}
+        </ThemedCard>
+
+        <ThemedCard
+          style={[
+            styles.card,
+            styles.cardSpacing,
+            {
+              backgroundColor: cardSurface,
+              borderColor: cardBorder,
+            },
+          ]}
+        >
+          <View style={styles.toggleRow}>
+            <View style={styles.toggleCopy}>
+              <ThemedText style={styles.cardTitleText} setColor={titleColor}>
+                {t("notifications.settings.postLikesTitle")}
+              </ThemedText>
+              <ThemedText style={styles.cardBodyText} setColor={quietText}>
+                {t("notifications.settings.postLikesBody")}
+              </ThemedText>
+            </View>
+
+            <ThemedSwitch
+              accessibilityLabel={t("notifications.settings.postLikesTitle")}
+              value={postLikes?.enabled !== false}
+              disabled={!postLikes?.available || savingPostLikes}
+              onValueChange={togglePostLikes}
+            />
+          </View>
+
+          {postLikes && !postLikes.available ? (
+            <ThemedText style={styles.toggleNote} setColor={quietText}>
+              {t("notifications.settings.postLikesUnavailable")}
+            </ThemedText>
           ) : null}
         </ThemedCard>
 

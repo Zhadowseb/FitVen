@@ -5,8 +5,8 @@ import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
 let glowInstanceCounter = 0;
 
 /**
- * A coloured haze behind a card corner. Gold for a verified record, the
- * accent for an unverified one. Purely decorative; the parent card clips it,
+ * A coloured haze behind a card corner, in the colour the caller passes.
+ * Purely decorative; the parent card clips it,
  * so the parent needs overflow hidden.
  */
 export default function RadialGlow({

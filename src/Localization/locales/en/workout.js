@@ -120,8 +120,8 @@ export default {
     },
   },
   session: {
-    autoNamed: "Named {name} after your exercises",
     options: "Workout options",
+    keepAwake: "Keep the screen on while the workout runs",
     pause: "Pause",
     continue: "Continue",
     start: "Start",
@@ -188,6 +188,8 @@ export default {
   setList: {
     setDone: "Set {number} done",
     repsUnit: "reps",
+    // The rest after a set with none written, counted up (screen reader).
+    restCountingUp: "Resting for {time}",
     // + and − on the weight (1e). {step} is the step in kg.
     weightMinus: "Take {step} kg off set {label}",
     weightPlus: "Add {step} kg to set {label}",

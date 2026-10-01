@@ -57,6 +57,14 @@ The one deliberate exception is auth: Login, Register and Profile reach
    file. `npm test` fails if one reappears.
 5. **`src/Sync/` only runs what `App.js` mounts.** See `src/Sync/AGENTS.md`.
 
+## Finding Code Without Reading Everything
+
+Read `docs/MAP.md` before you grep. It maps each feature to its service,
+repository and screens, lists the sections of the four files too large to read
+whole, and names what to skip: `.claude/worktrees/` (copies of this repo, never
+search it), `data/`, and the dated audit and review files in `docs/`. Open big
+files by slice, not from the top.
+
 ## Global Working Rules
 
 - Prefer small, focused changes over large refactors.

@@ -45,7 +45,10 @@ function formatWeekdays(weekdays, formatDate) {
     .join(" · ");
 }
 
-function SplitCard({ group, theme, width, onPress, t, formatDate }) {
+function SplitCard({ group, theme, width, onPress, t, formatDate, suppressUpNext = false }) {
+  // With a workout planned today, that one is what is next - the split does
+  // not get to say otherwise, so no card is marked.
+  const isUpNext = Boolean(group.isUpNext) && !suppressUpNext;
   const weekdayLine = formatWeekdays(group.weekdays, formatDate);
   // A session started from the quick-start button was never named, so the
   // guess has no name to show. Numbered by where it sits in the history
@@ -60,7 +63,7 @@ function SplitCard({ group, theme, width, onPress, t, formatDate }) {
     <TouchableOpacity
       accessibilityRole="button"
       accessibilityLabel={
-        group.isUpNext ? t("home.split.upNext", { name }) : name
+        isUpNext ? t("home.split.upNext", { name }) : name
       }
       activeOpacity={0.85}
       onPress={() => onPress?.(group)}
@@ -71,7 +74,7 @@ function SplitCard({ group, theme, width, onPress, t, formatDate }) {
           backgroundColor: withAlpha(theme.title, 0.05),
           borderColor: withAlpha(theme.title, 0.08),
         },
-        group.isUpNext
+        isUpNext
           ? { borderLeftWidth: 3, borderLeftColor: theme.primary }
           : null,
       ]}
@@ -97,7 +100,7 @@ function SplitCard({ group, theme, width, onPress, t, formatDate }) {
 }
 
 // The cards themselves, once there is a split to show.
-function SplitRow({ groups, theme, onOpenGroup, onOpenAll, t }) {
+function SplitRow({ groups, theme, onOpenGroup, onOpenAll, t, suppressUpNext }) {
   if (groups.length < SCROLL_FROM_GROUPS) {
     return (
       <View style={styles.row}>
@@ -109,6 +112,7 @@ function SplitRow({ groups, theme, onOpenGroup, onOpenAll, t }) {
             onPress={onOpenGroup}
             t={t}
             formatDate={formatDate}
+            suppressUpNext={suppressUpNext}
           />
         ))}
       </View>
@@ -137,6 +141,7 @@ function SplitRow({ groups, theme, onOpenGroup, onOpenAll, t }) {
           onPress={onOpenGroup}
           t={t}
           formatDate={formatDate}
+          suppressUpNext={suppressUpNext}
         />
       ))}
 
@@ -176,10 +181,15 @@ function SplitRow({ groups, theme, onOpenGroup, onOpenAll, t }) {
  * fill a day at a time (SplitForming). A row that appears weeks later cannot
  * be looked forward to, and somebody who has just installed the app should
  * not meet a Home with a hole in it.
+ *
+ * `suppressUpNext` is set while a workout is planned for today: Quick start
+ * shows that one, so no card here is marked as next. The cards still open
+ * their session - the deliberate way to train something other than the plan.
  */
 export default function SplitCards({
   groups = [],
   firstWorkoutAt = null,
+  suppressUpNext = false,
   onOpenGroup,
   onOpenAll,
 }) {
@@ -190,6 +200,8 @@ export default function SplitCards({
     firstWorkoutAt,
     now: Date.now(),
     groupCount: groups.length,
+    // A split somebody chose needs no week to take shape.
+    isChosen: groups.some((group) => group.isChosen),
   });
 
   return (
@@ -205,6 +217,7 @@ export default function SplitCards({
           onOpenGroup={onOpenGroup}
           onOpenAll={onOpenAll}
           t={t}
+          suppressUpNext={suppressUpNext}
         />
       ) : (
         <SplitForming filledDots={filledDots} weekIsOver={weekIsOver} />

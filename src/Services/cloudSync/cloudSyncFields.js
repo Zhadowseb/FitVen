@@ -242,6 +242,12 @@ export const SYNCED_FIELDS = {
     field("set_type", setType()),
     field("amrap_target", int()),
     field("note", text()),
+    // Whether `pause` is a rest the app counted rather than one that was
+    // planned (@utils/restCountUp). Compared: it changes when a rest is typed
+    // by hand. A null from the cloud - no column yet, or an older app created
+    // the row - is not a change: the reconcile keeps the local flag
+    // (withKnownRestCounted), and setSync.js copes with the column missing.
+    field("rest_counted", flag()),
   ],
 };
 

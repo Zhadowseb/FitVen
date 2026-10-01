@@ -12,6 +12,7 @@
 //
 // Pure: no database, no clock of its own, no native module. The service
 // passes in what it read and `t`.
+import { REST_COUNT_UP_GRACE_SECONDS, plannedRestSeconds } from "./restCountUp";
 import { orderSetsForDisplay, resolveSetType } from "./setTypes";
 import { normalizeElapsedDurationSeconds, normalizeStoredTimestampSeconds } from "./timeUtils";
 import { DEFAULT_WEIGHT_STEP, getWeightStep } from "./weightStep";
@@ -55,7 +56,14 @@ export const LIVE_WORKOUT_ACTION_TYPES = [
   "adjustRest",
   "skipRest",
   "adjustWeight",
+  "endCountUp",
 ];
+
+// A set ticked off without a rest written gets its rest counted up
+// (Utils/restCountUp.js). The card shows it from 15 s after the tap - the
+// native sides flip to it by themselves then - with one button, "Afslut
+// pause", that ends it; until then it is the next set as usual.
+export const LIVE_REST_COUNT_UP_GRACE_SECONDS = REST_COUNT_UP_GRACE_SECONDS;
 
 // The weight buttons on Android's open card move a set by one step of plates.
 // The step follows the exercise: what is on the bar decides how finely it can
@@ -131,11 +139,6 @@ function numberOrNull(value) {
   return Number.isFinite(numeric) ? numeric : null;
 }
 
-function restSecondsOf(value) {
-  const seconds = Math.round(Number(value));
-
-  return Number.isFinite(seconds) && seconds > 0 ? seconds : 0;
-}
 
 /** Plain `{name}` substitution, the same the native sides do. */
 export function fillTemplate(template, values = {}) {
@@ -186,6 +189,8 @@ export function formatLiveSet(row, { decimal = ".", unit = "kg" } = {}) {
 export function liveWorkoutStrings(t) {
   return {
     complete: t("liveWorkout.complete"),
+    completeSetOf: t("liveWorkout.completeSetOf"),
+    endRest: t("liveWorkout.endRest"),
     skip: t("liveWorkout.skip"),
     prev: t("liveWorkout.prev"),
     next: t("liveWorkout.next"),
@@ -257,7 +262,9 @@ export function groupLiveWorkoutRows(rows = []) {
       row,
       setId: Number(row.sets_id),
       done: flag(row.done),
-      rest: restSecondsOf(row.pause),
+      // What to count down after it: nothing for a rest the app counted,
+      // which is a record of the last time, not a plan.
+      rest: plannedRestSeconds(row),
     })),
   }));
 }
@@ -358,12 +365,16 @@ function exerciseForState(exercise, total, format) {
  *              them (getLiveWorkoutSets)
  *   restTimer  the active rest timer, or null; one for another workout, or
  *              one that has run out, is ignored
+ *   restCountUp the rest being counted up after a set without one
+ *              (restCountUpService), or null; one for another workout is
+ *              ignored, and so is one while a rest counts down or the clock
+ *              is paused
  *   focus      { recentSetId, viewOffset } - the set ticked off last, and how
  *              far Forrige / Næste have moved the card
  *   now        Unix seconds
  */
 export function buildLiveWorkoutState(
-  { workout, rows = [], restTimer = null, focus = {}, now },
+  { workout, rows = [], restTimer = null, restCountUp = null, focus = {}, now },
   { t, formatNumber } = {}
 ) {
   const exercises = groupLiveWorkoutRows(rows);
@@ -379,6 +390,14 @@ export function buildLiveWorkoutState(
     Number(restTimer.workoutId) === Number(workout?.workoutId) &&
     Number(restTimer.endsAt) > nowSeconds
       ? restTimer
+      : null;
+  const ownCountUp =
+    !ownRest &&
+    running &&
+    restCountUp &&
+    Number(restCountUp.workoutId) === Number(workout?.workoutId) &&
+    Number.isFinite(Number(restCountUp.startedAt))
+      ? restCountUp
       : null;
 
   return {
@@ -398,6 +417,13 @@ export function buildLiveWorkoutState(
           startedAt: Math.trunc(Number(ownRest.startedAt)),
           endsAt: Math.trunc(Number(ownRest.endsAt)),
           duration: Math.max(1, Math.round(Number(ownRest.durationSeconds) || 0)),
+        }
+      : null,
+    // Sent from the tap, so the card can flip to it at 15 s by itself.
+    countUp: ownCountUp
+      ? {
+          setId: String(ownCountUp.setId),
+          startedAt: Math.trunc(Number(ownCountUp.startedAt)),
         }
       : null,
     totals: {
@@ -513,22 +539,36 @@ export function deriveLiveWorkoutView(state, now) {
 
   const rest = state?.rest ?? null;
   const resting = Boolean(rest) && Number(rest.endsAt) > now;
+  const countUp = state?.countUp ?? null;
+  // The rest counted up, once 15 s have passed since the tap; never over a
+  // rest counting down.
+  const countingUp =
+    !resting &&
+    Boolean(countUp) &&
+    now - Number(countUp.startedAt) >= LIVE_REST_COUNT_UP_GRACE_SECONDS;
+  const between = resting || countingUp;
   const sets = exercise.sets;
   const nowIndex = firstToDo(exercise);
   const nowSet = sets[nowIndex];
   const done = sets.filter((set) => set.done).length;
   const position = { n: nowIndex + 1, total: sets.length };
+  const completeLabel = fillTemplate(strings.completeSetOf ?? strings.complete, position);
   const view = {
-    mode: resting ? "rest" : "set",
+    mode: resting ? "rest" : countingUp ? "countUp" : "set",
     nowSetId: nowSet.id,
-    title: resting ? fillTemplate(strings.nextSet, { set: nowSet.text }) : nowSet.text,
+    title: between ? fillTemplate(strings.nextSet, { set: nowSet.text }) : nowSet.text,
     subtitle: `${exercise.name} · ${fillTemplate(strings.setOf, position)}`,
     subtitleShort: `${exercise.name} · ${fillTemplate(strings.setShort, position)}`,
     // Android's open card says only the exercise under the title; which set
     // it is stands in the ring.
     exerciseName: exercise.name,
     setOfTitle: fillTemplate(strings.setOfTitle, position),
-    eyebrow: resting ? strings.nextEyebrow : strings.nowEyebrow,
+    // What Sæt færdigt says: which set it ticks off - "Sæt 3 af 4 færdigt".
+    completeLabel,
+    // A dot a set of the exercise on the card: done, the one to do now, and
+    // the ones after it. The card's own sets, so at most ten.
+    setDots: sets.map((set, index) => (set.done ? "done" : index === nowIndex ? "now" : "todo")),
+    eyebrow: between ? strings.nextEyebrow : strings.nowEyebrow,
     setsRing: {
       fraction: sets.length > 0 ? done / sets.length : 0,
       text: `${done}/${sets.length}`,
@@ -558,21 +598,30 @@ export function deriveLiveWorkoutView(state, now) {
           of: fillTemplate(strings.of, { duration: formatLiveClock(rest.duration) }),
         }
       : null,
+    // Counting up from the tap, by itself on both sides.
+    countUp: countingUp
+      ? {
+          startedAt: Number(countUp.startedAt),
+          elapsed: Math.max(0, Math.floor(now - Number(countUp.startedAt))),
+        }
+      : null,
     buttons: resting
       ? [
           { type: "adjustRest", seconds: -15 },
           { type: "skipRest", primary: true, label: strings.skip },
           { type: "adjustRest", seconds: 15 },
         ]
-      : [
-          { type: "prev", label: strings.prev, enabled: canPrev },
-          { type: "completeSet", primary: true, label: strings.complete, setId: nowSet.id },
-          { type: "next", label: strings.next, enabled: canNext },
-        ],
+      : countingUp
+        ? [{ type: "endCountUp", primary: true, label: strings.endRest, setId: String(countUp.setId) }]
+        : [
+            { type: "prev", label: strings.prev, enabled: canPrev },
+            { type: "completeSet", primary: true, label: completeLabel, setId: nowSet.id },
+            { type: "next", label: strings.next, enabled: canNext },
+          ],
     // Android's open card, between sets: −step · Sæt færdigt · +step. None
     // for a set without a weight - body weight or time - where Sæt færdigt
-    // takes the whole row, and none while resting.
-    weightButtons: resting ? null : weightButtonsFor(state, exercise, nowSet),
+    // takes the whole row, and none while resting or counting up.
+    weightButtons: between ? null : weightButtonsFor(state, exercise, nowSet),
     chips: chipsFor(sets, nowIndex),
     nextRow: next
       ? {
@@ -677,6 +726,10 @@ export function applyLiveWorkoutAction(state, action, now) {
         running && nowSet.rest > 0
           ? { startedAt: at, endsAt: at + nowSet.rest, duration: nowSet.rest }
           : null;
+      // No rest written: it is counted up from the tap instead, and shown
+      // from 15 s after it.
+      const countUp =
+        running && !(nowSet.rest > 0) ? { setId: String(nowSet.id), startedAt: at } : null;
       let shown = { ...exercise, sets };
 
       if (finishedExercise) {
@@ -698,6 +751,7 @@ export function applyLiveWorkoutAction(state, action, now) {
         canPrev,
         canNext,
         rest,
+        countUp,
         totals: {
           ...state.totals,
           done: (Number(state.totals?.done) || 0) + 1,
@@ -748,6 +802,10 @@ export function applyLiveWorkoutAction(state, action, now) {
 
     case "skipRest":
       return state.rest ? { ...state, rest: null } : state;
+
+    // "Afslut pause": the count-up ends, and the next set can be ticked off.
+    case "endCountUp":
+      return state.countUp ? { ...state, countUp: null } : state;
 
     case "adjustRest": {
       if (!state.rest) {

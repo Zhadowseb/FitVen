@@ -460,6 +460,208 @@ const build = (rows, extra = {}) =>
   assert.strictEqual(live.applyLiveWorkoutAction(state, { type: "prev", at }, NOW), state);
 }
 
+// --- The rest counted up, and which set it is ---------------------------------
+//
+// A set ticked off without a rest written counts its rest up (Utils/
+// restCountUp.js): nothing on the card for 15 s, then the rest counting up
+// with one button, Afslut pause. And the button says which set it ticks off,
+// with a dot a set of the exercise.
+
+{
+  const rows = [
+    ...exercise(1, "Pull-up", [
+      { id: 41, reps: 8, done: true },
+      { id: 42, reps: 8 },
+      { id: 43, reps: 8 },
+    ]),
+    ...exercise(2, "Dips", [{ id: 51, reps: 12, rest: 90 }]),
+  ];
+  const state = build(rows);
+  const at = NOW + 0.4;
+  const view = live.deriveLiveWorkoutView(state, NOW);
+
+  // Task 2: "Sæt 2 af 3 færdigt", and the dots.
+  assert.strictEqual(view.completeLabel, "Sæt 2 af 3 færdigt");
+  assert.strictEqual(view.buttons.find((button) => button.type === "completeSet").label, "Sæt 2 af 3 færdigt");
+  assert.deepStrictEqual(view.setDots, ["done", "now", "todo"]);
+  assert.strictEqual(state.countUp, null, "no count-up before a set is ticked off");
+
+  // Ticked off on the card: no rest written, so it counts up from the tap.
+  const ticked = live.applyLiveWorkoutAction(state, { type: "completeSet", setId: "42", at }, NOW);
+  assert.deepStrictEqual(ticked.countUp, { setId: "42", startedAt: at });
+  assert.strictEqual(ticked.rest, null, "a count-up is no rest to count down");
+
+  // The first 15 s: the next set, as usual, and the dot has moved on.
+  const early = live.deriveLiveWorkoutView(ticked, at + 14.9);
+  assert.strictEqual(early.mode, "set", "the count-up showed before 15 s");
+  assert.strictEqual(early.countUp, null);
+  assert.strictEqual(early.completeLabel, "Sæt 3 af 3 færdigt");
+  assert.deepStrictEqual(early.setDots, ["done", "done", "now"]);
+
+  // From 15 s: counting up, with Afslut pause alone and no weight buttons.
+  const shown = live.deriveLiveWorkoutView(ticked, at + 15);
+  assert.strictEqual(shown.mode, "countUp");
+  assert.strictEqual(shown.title, "Næste: × 8");
+  assert.strictEqual(shown.eyebrow, "NÆSTE SÆT");
+  assert.deepStrictEqual(shown.countUp, { startedAt: at, elapsed: 15 });
+  assert.deepStrictEqual(shown.buttons, [
+    { type: "endCountUp", primary: true, label: "Afslut pause", setId: "42" },
+  ]);
+  assert.strictEqual(shown.weightButtons, null);
+  assert.strictEqual(shown.rest, null);
+
+  // Sæt færdigt is not on the card while it counts: Afslut pause first.
+  assert.strictEqual(
+    live.applyLiveWorkoutAction(ticked, { type: "completeSet", setId: "43", at: at + 20 }, at + 20),
+    ticked
+  );
+  // Within the 15 s it is, and the next tap starts the next count-up.
+  const quick = live.applyLiveWorkoutAction(ticked, { type: "completeSet", setId: "43", at: at + 3 }, at + 3);
+  assert.deepStrictEqual(quick.countUp, { setId: "43", startedAt: at + 3 }, "a new tap starts its own count-up");
+  assert.strictEqual(quick.exercise.name, "Dips", "the last set of the exercise leads to the next one");
+
+  // Afslut pause: the count-up ends, and the set can be ticked off.
+  const ended = live.applyLiveWorkoutAction(ticked, { type: "endCountUp", setId: "42", at: at + 30 }, at + 30);
+  assert.strictEqual(ended.countUp, null);
+  assert.strictEqual(live.deriveLiveWorkoutView(ended, at + 30).mode, "set");
+  assert.strictEqual(live.applyLiveWorkoutAction(ended, { type: "endCountUp", at: at + 31 }, at + 31), ended);
+
+  // A set with a rest written counts it down, as before; a paused workout
+  // counts neither.
+  const onDips = live.applyLiveWorkoutAction(quick, { type: "completeSet", setId: "51", at: at + 4 }, at + 4);
+  assert.strictEqual(onDips.countUp, null);
+  assert.deepStrictEqual(onDips.rest, { startedAt: at + 4, endsAt: at + 94, duration: 90 });
+  const paused = { ...state, pausedElapsed: 300 };
+  assert.strictEqual(
+    live.applyLiveWorkoutAction(paused, { type: "completeSet", setId: "42", at }, NOW).countUp,
+    null
+  );
+
+  // From JavaScript: the running count-up of this workout, and none while a
+  // rest counts down, for another workout, or with the clock paused.
+  const countUp = { workoutId: 7, setId: 41, startedAt: NOW - 40 };
+  assert.deepStrictEqual(build(rows, { restCountUp: countUp }).countUp, { setId: "41", startedAt: NOW - 40 });
+  assert.strictEqual(live.deriveLiveWorkoutView(build(rows, { restCountUp: countUp }), NOW).mode, "countUp");
+  assert.strictEqual(build(rows, { restCountUp: { ...countUp, workoutId: 8 } }).countUp, null);
+  assert.strictEqual(
+    build(rows, {
+      restCountUp: countUp,
+      restTimer: { id: "r", workoutId: 7, startedAt: NOW - 10, endsAt: NOW + 50, durationSeconds: 60 },
+    }).countUp,
+    null
+  );
+  assert.strictEqual(
+    live.buildLiveWorkoutState(
+      { workout: { ...running, timerStart: null }, rows, restCountUp: countUp, now: NOW },
+      { t, formatNumber }
+    ).countUp,
+    null
+  );
+
+  // A rest the app counted after a set once is no rest to count down on the
+  // card: ticked off again, it counts up again.
+  const counted = build([
+    ...exercise(1, "Pull-up", [{ id: 61, reps: 8, rest: 95 }]),
+  ].map((row) => ({ ...row, rest_counted: 1 })));
+  assert.strictEqual(counted.exercise.sets[0].rest, 0);
+
+  // Every word the card needs for it is sent.
+  assert.strictEqual(state.strings.endRest, "Afslut pause");
+  assert.strictEqual(state.strings.completeSetOf, "Sæt {n} af {total} færdigt");
+  assert.strictEqual(en.completeSetOf, "Set {n} of {total} done");
+  assert.ok(live.LIVE_WORKOUT_ACTION_TYPES.includes("endCountUp"));
+}
+
+// The biggest state still fits with a count-up in it and the new words.
+{
+  const many = (exerciseId, name) =>
+    exercise(
+      exerciseId,
+      name,
+      Array.from({ length: 30 }, (_, index) => ({ kg: 1002.5, reps: 100, done: index < 8 }))
+    );
+  const state = live.buildLiveWorkoutState(
+    {
+      workout: running,
+      rows: [...many(1, "Bulgarian split squat with a very long name, left leg"), ...many(2, "X".repeat(80))],
+      restCountUp: { workoutId: 7, setId: 99999999, startedAt: NOW - 3000 },
+      now: NOW,
+    },
+    { t: (key) => en[key.split(".")[1]], formatNumber }
+  );
+
+  assert.ok(state.countUp, "the worst case has no count-up in it");
+  assert.ok(
+    live.liveWorkoutStateBytes(state) < live.LIVE_WORKOUT_MAX_BYTES,
+    `the state with a count-up is ${live.liveWorkoutStateBytes(state)} bytes`
+  );
+}
+
+// The native sides mirror it. Swift cannot be compiled here, so these are the
+// places a drop would be silent: a key the Codable copy or the Kotlin JSON
+// leaves out is gone after the first tap, an action type the receiver does
+// not know is thrown away, and a card with no stale date never turns to the
+// count-up by itself.
+{
+  const rules = read("targets/widgets/_shared/LiveWorkoutRules.swift");
+  const attributes = read("targets/widgets/_shared/LiveWorkoutAttributes.swift");
+  const intents = read("targets/widgets/_shared/LiveWorkoutIntents.swift");
+  const views = read("targets/widgets/LiveWorkoutViews.swift");
+  const islandSwift = read("targets/widgets/LiveWorkoutLiveActivity.swift");
+  const podModule = read("modules/live-workout/ios/LiveWorkoutModule.swift");
+  const kotlin = (name) => read(`modules/live-workout/android/src/main/java/expo/modules/liveworkout/${name}.kt`);
+
+  assert.match(rules, /static let countUpGraceSeconds: Double = 15\b/);
+  assert.match(podModule, /static let countUpGraceSeconds: Double = 15\b/);
+  assert.match(kotlin("LiveWorkoutView"), /COUNT_UP_GRACE_SECONDS = 15\.0/);
+  assert.strictEqual(live.LIVE_REST_COUNT_UP_GRACE_SECONDS, 15);
+
+  assert.match(attributes, /case v, workoutId, workoutType, startedAt, pausedElapsed, exercise, next, rest, countUp,/);
+  assert.match(attributes, /countUp = \(try\? container\.decodeIfPresent\(CountUp\.self, forKey: \.countUp\)\)/);
+  assert.match(rules, /case "endCountUp":/);
+  assert.match(rules, /changed\.countUp = countUp/);
+  assert.match(rules, /strings\["completeSetOf"\]/);
+  assert.match(intents, /struct EndCountUpIntent: LiveActivityIntent/);
+  assert.match(intents, /handle\(type: "endCountUp", setId: setId/);
+  // Both stale dates: the intents' redraw and the pod's start and update.
+  for (const source of [intents, podModule]) {
+    assert.match(source, /if let countUp: LiveWorkoutState\.CountUp = state\.countUp \{[\s\S]*?countUpGraceSeconds/);
+  }
+  assert.match(views, /EndCountUpIntent\(setId: display\.countUpSetId/);
+  assert.match(views, /text: display\.completeLabel\.isEmpty \? display\.string\("complete"\) : display\.completeLabel/);
+  assert.match(views, /LiveWorkoutSetDots\(dots: display\.setDots/);
+  assert.match(islandSwift, /LiveWorkoutSetDots\(dots: display\.setDots/);
+  assert.match(islandSwift, /LiveWorkoutRestCountUp\(display: display/);
+
+  assert.match(kotlin("LiveWorkoutReducer"), /END_COUNT_UP = "endCountUp"/);
+  assert.match(kotlin("LiveWorkoutReducer"), /val TYPES = setOf\([^)]*END_COUNT_UP/);
+  assert.match(kotlin("LiveWorkoutReducer"), /countUp = countUp,/);
+  assert.match(kotlin("LiveWorkoutState"), /json\.optJSONObject\("countUp"\)/);
+  assert.match(kotlin("LiveWorkoutState"), /"countUp",\s*countUp\?\.let/);
+  assert.match(kotlin("LiveWorkoutStore"), /LiveAction\.END_COUNT_UP/);
+  assert.match(kotlin("LiveWorkoutCard"), /COUNT_UP_GRACE_SECONDS/);
+  assert.match(kotlin("LiveWorkoutNotification"), /LiveAction\.END_COUNT_UP, setId = countUp\.setId/);
+  assert.match(kotlin("LiveWorkoutNotification"), /setChronometerCountDown\(R\.id\.live_workout_rest_clock, false\)/);
+  assert.match(kotlin("LiveWorkoutNotification"), /view\.completeLabel\.ifEmpty/);
+  assert.match(kotlin("LiveWorkoutNotification"), /bindDots\(context, views, R\.id\.live_workout_dots/);
+  // The dots while resting and counting up too, when a tick has just landed:
+  // both collapsed paths on the rest layout, and the open card's rest row.
+  assert.strictEqual(
+    (kotlin("LiveWorkoutNotification").match(/bindDots\(context, views, R\.id\.live_workout_dots, view\.setDots\)/g) ?? []).length,
+    2,
+    "the collapsed rest and count-up card lost their dots"
+  );
+  assert.match(kotlin("LiveWorkoutNotification"), /bindDots\(context, views, R\.id\.live_workout_rest_dots, restDots\)/);
+  for (const layout of ["live_workout_collapsed", "live_workout_collapsed_rest"]) {
+    assert.match(
+      read(`modules/live-workout/android/src/main/res/layout/${layout}.xml`),
+      /android:id="@\+id\/live_workout_dots"/,
+      `${layout} has no dots`
+    );
+  }
+  assert.match(read("modules/live-workout/android/src/main/res/layout/live_workout_expanded.xml"), /@\+id\/live_workout_rest_dots/);
+}
+
 // --- The rest timer's ±15 -----------------------------------------------------
 
 {
@@ -919,6 +1121,37 @@ const build = (rows, extra = {}) =>
   actionListener({ type: "adjustWeight" });
   await settle();
   assert.strictEqual(setRow(903).weight, 30);
+
+  // A set with no rest written, ticked off on the card: its rest counts up
+  // from the tap, the card is told so it can show it at 15 s, and Afslut
+  // pause writes what was counted into the set - with no reminder scheduled.
+  raw
+    .prepare(
+      `INSERT INTO "Set" (sets_id, exercise_instance_id, set_number, weight, reps, pause, done, sync_version)
+       VALUES (904, 2, 2, 30, 8, NULL, 0, 0)`
+    )
+    .run();
+  // Not under a rest counting down: that one is shown first.
+  rest.clearActiveRestTimer();
+  await settle();
+  const remindersBefore = scheduled.length;
+  const countedFrom = now() - 60;
+  queued = [{ id: "c2", type: "completeSet", setId: "904", at: countedFrom }];
+  actionListener({ type: "completeSet" });
+  await settle();
+  const countUpState = nativeCalls.filter(([call]) => call === "update").at(-1)?.[1];
+  assert.deepStrictEqual(countUpState?.countUp, { setId: "904", startedAt: countedFrom }, "the card was not told about the count-up");
+  assert.strictEqual(countUpState.rest, null);
+  assert.strictEqual(live.deriveLiveWorkoutView(countUpState, now()).mode, "countUp");
+  queued = [{ id: "e1", type: "endCountUp", setId: "904", at: countedFrom + 42 }];
+  actionListener({ type: "endCountUp" });
+  await settle();
+  const countedSet = raw.prepare('SELECT pause, rest_counted, needs_sync FROM "Set" WHERE sets_id = 904').get();
+  assert.strictEqual(countedSet.pause, 42, "Afslut pause did not write the counted rest");
+  assert.strictEqual(countedSet.rest_counted, 1);
+  assert.strictEqual(countedSet.needs_sync, 1);
+  assert.strictEqual(nativeCalls.filter(([call]) => call === "update").at(-1)[1].countUp, null);
+  assert.strictEqual(scheduled.length, remindersBefore, "a count-up scheduled the rest-is-over reminder");
 
   stopEdits();
   stopReal();

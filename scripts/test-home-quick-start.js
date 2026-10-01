@@ -335,6 +335,24 @@ assert.strictEqual(splitGuess.exerciseOverlap([], ["a"]), 0, "nothing overlaps w
     true,
     "the week across the spring clock change is counted as six days"
   );
+
+  // A split somebody chose is not a guess waiting for the history: it shows
+  // at once - in the first week, and before any workout is finished.
+  assert.strictEqual(
+    splitForming.splitFormingState({ firstWorkoutAt: firstDay, now: at(16, 12), groupCount: 2, isChosen: true }).showSplit,
+    true,
+    "a chosen split waits out the first week like the guess"
+  );
+  assert.strictEqual(
+    splitForming.splitFormingState({ firstWorkoutAt: null, now: at(16, 12), groupCount: 2, isChosen: true }).showSplit,
+    true,
+    "a chosen split of planned workouts waits for a first finished one"
+  );
+  assert.strictEqual(
+    splitForming.splitFormingState({ firstWorkoutAt: null, now: at(16, 12), groupCount: 0, isChosen: true }).showSplit,
+    false,
+    "a chosen split with nothing to open shows an empty row"
+  );
 }
 
 /* ------------------------------------------------------------- wiring -- */
@@ -444,21 +462,26 @@ assert.ok(
 // Somebody who planned a session this morning, or left one half-done at lunch,
 // wants that one back. Offering to start a second one beside it is almost
 // never what was meant, so an unfinished workout on today outranks the split's
-// suggestion. The empty workout stays either way.
+// suggestion - and is shown alone, as the planned card: beside the split's
+// name and an empty workout it read as "nothing planned". The empty workout
+// stays with the split's suggestion. scripts/test-home-planned-today.js has
+// the rest.
 const quickStartSource = fs.readFileSync(
   path.join(root, "src", "Pages", "HomePage", "Components", "QuickStartCard", "QuickStartCard.js"),
   "utf8"
 );
 
 assert.ok(
-  /const primary = todayWorkout[\s\S]*?: upNext/.test(quickStartSource),
+  quickStartSource.indexOf("if (todayWorkout) {") > -1 &&
+    quickStartSource.indexOf("if (todayWorkout) {") < quickStartSource.indexOf("const primary = upNext"),
   "the split's suggestion is offered before an unfinished workout already on today"
 );
 
+const splitBranch = quickStartSource.slice(quickStartSource.indexOf("const primary = upNext"));
+
 assert.ok(
-  /home\.quickStart\.emptyWorkout/.test(quickStartSource) &&
-    !/primary \? null : null/.test(quickStartSource),
-  "the empty workout is no longer always there"
+  /home\.quickStart\.emptyWorkout/.test(splitBranch) && /onPress=\{onStartEmpty\}/.test(splitBranch),
+  "the empty workout is no longer offered beside the split's suggestion"
 );
 
 // The outline went: every button inside already draws one, and the block is
@@ -530,6 +553,23 @@ assert.ok(
     /showSplit \?[\s\S]*?:\s*\(?\s*<SplitForming /.test(splitBlock),
   "the split block vanishes again for somebody who has not trained yet"
 );
+
+// A chosen split is told apart from the guess by its groups.
+assert.ok(
+  /isChosen: groups\.some\(\(group\) => group\.isChosen\)/.test(splitBlock),
+  "the split cards stopped telling a chosen split from the guess"
+);
+
+// Home reads the chosen split, the way the Train tab resolves it, and the
+// guess only through it - not the guess straight from workoutService.
+{
+  const homeSource = fs.readFileSync(path.join(root, "src", "Pages", "HomePage", "HomePage.js"), "utf8");
+
+  assert.ok(
+    /splitService\.getHomeSplitGroups\(db/.test(homeSource) && !/workoutService\.getSplitGroups\(/.test(homeSource),
+    "Home shows the guess even when a split is chosen"
+  );
+}
 
 // Named in both states, so the block says what it is for before there is a
 // card to carry a name.

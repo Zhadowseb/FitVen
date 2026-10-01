@@ -115,6 +115,74 @@ struct LiveWorkoutRestCountdown: View {
   }
 }
 
+/// The rest counted up from the tap by itself, in orange, with no end.
+struct LiveWorkoutRestCountUp: View {
+  let display: LiveWorkoutDisplay
+  let fontSize: CGFloat
+  let weight: Font.Weight
+  let width: CGFloat
+
+  var body: some View {
+    Text(timerInterval: LiveWorkoutClock.countingRange(from: display.countUpStartedAt), countsDown: false)
+      .font(.system(size: fontSize, weight: weight).monospacedDigit())
+      .foregroundColor(LiveWorkoutColors.orange)
+      .multilineTextAlignment(.trailing)
+      .lineLimit(1)
+      .frame(width: width, alignment: .trailing)
+  }
+}
+
+/// A dot a set of the exercise on the card: done filled orange, the one to do
+/// now larger and orange with a ring around it, the ones after it hollow. A
+/// tick fills its dot and moves the ring on.
+struct LiveWorkoutSetDots: View {
+  let dots: [LiveWorkoutDisplay.Dot]
+  let size: CGFloat
+  let nowSize: CGFloat
+  let spacing: CGFloat
+
+  var body: some View {
+    HStack(alignment: .center, spacing: spacing) {
+      ForEach(0..<dots.count, id: \.self) { (index: Int) in
+        LiveWorkoutSetDot(dot: dots[index], size: size, nowSize: nowSize)
+      }
+    }
+    .accessibilityHidden(true)
+  }
+}
+
+struct LiveWorkoutSetDot: View {
+  let dot: LiveWorkoutDisplay.Dot
+  let size: CGFloat
+  let nowSize: CGFloat
+
+  var body: some View {
+    switch dot {
+    case .done:
+      Circle()
+        .fill(LiveWorkoutColors.orange)
+        .frame(width: size, height: size)
+
+    case .now:
+      ZStack {
+        Circle()
+          .stroke(LiveWorkoutColors.orange.opacity(0.45), lineWidth: 2)
+          .frame(width: nowSize + 4, height: nowSize + 4)
+
+        Circle()
+          .fill(LiveWorkoutColors.orange)
+          .frame(width: nowSize, height: nowSize)
+      }
+      .frame(width: nowSize + 4, height: nowSize + 4)
+
+    case .todo:
+      Circle()
+        .stroke(LiveWorkoutColors.textSecondary, lineWidth: 1.5)
+        .frame(width: size, height: size)
+    }
+  }
+}
+
 /// The ring on the left: done sets over all sets in the exercise, with "3/4"
 /// and "SÆT" in it; the rest counting down while resting; full with a tick
 /// when every set is done; empty with the workout icon when there are none.
@@ -138,7 +206,7 @@ struct LiveWorkoutRing: View {
         .progressViewStyle(.circular)
         .tint(LiveWorkoutColors.orange)
 
-      case .set:
+      case .set, .countUp:
         Circle()
           .stroke(LiveWorkoutColors.ringTrack, lineWidth: lineWidth)
 
@@ -244,15 +312,28 @@ struct LiveWorkoutPillFace: View {
   }
 }
 
-/// The lock screen card's bottom row (44): prev · complete · next while a set
-/// is going, −15 · skip · +15 while resting.
+/// The lock screen card's bottom row (44): prev · "Sæt 3 af 4 færdigt" ·
+/// next while a set is going, −15 · skip · +15 while resting, and "Afslut
+/// pause" alone while the rest is counted up.
 @available(iOS 17.0, *)
 struct LiveWorkoutButtonRow: View {
   let display: LiveWorkoutDisplay
 
   var body: some View {
     HStack(spacing: 10) {
-      if display.mode == .rest {
+      if display.mode == .countUp {
+        Button(intent: EndCountUpIntent(setId: display.countUpSetId ?? "")) {
+          LiveWorkoutPillFace(
+            systemImage: "stop.fill",
+            text: display.string("endRest"),
+            height: 44,
+            iconSize: 18,
+            textSize: 14,
+            expands: true
+          )
+        }
+        .buttonStyle(.plain)
+      } else if display.mode == .rest {
         Button(intent: AdjustRestIntent(seconds: -15)) {
           LiveWorkoutCircleFace(systemImage: nil, text: "\u{2212}15", size: 44)
         }
@@ -290,7 +371,7 @@ struct LiveWorkoutButtonRow: View {
         Button(intent: CompleteSetIntent(setId: display.nowSetId ?? "")) {
           LiveWorkoutPillFace(
             systemImage: "checkmark",
-            text: display.string("complete"),
+            text: display.completeLabel.isEmpty ? display.string("complete") : display.completeLabel,
             height: 44,
             iconSize: 18,
             textSize: 14,
@@ -316,13 +397,25 @@ struct LiveWorkoutButtonRow: View {
 }
 
 /// The Dynamic Island's expanded pill (40): complete while a set is going,
-/// skip while resting.
+/// skip while resting, "Afslut pause" while the rest is counted up.
 @available(iOS 17.0, *)
 struct LiveWorkoutIslandButton: View {
   let display: LiveWorkoutDisplay
 
   var body: some View {
-    if display.mode == .rest {
+    if display.mode == .countUp {
+      Button(intent: EndCountUpIntent(setId: display.countUpSetId ?? "")) {
+        LiveWorkoutPillFace(
+          systemImage: "stop.fill",
+          text: display.string("endRest"),
+          height: 40,
+          iconSize: 16,
+          textSize: 13.5,
+          expands: false
+        )
+      }
+      .buttonStyle(.plain)
+    } else if display.mode == .rest {
       Button(intent: SkipRestIntent()) {
         LiveWorkoutPillFace(
           systemImage: "forward.end.fill",
@@ -338,7 +431,7 @@ struct LiveWorkoutIslandButton: View {
       Button(intent: CompleteSetIntent(setId: display.nowSetId ?? "")) {
         LiveWorkoutPillFace(
           systemImage: "checkmark",
-          text: display.string("complete"),
+          text: display.completeLabel.isEmpty ? display.string("complete") : display.completeLabel,
           height: 40,
           iconSize: 16,
           textSize: 13.5,
@@ -405,8 +498,8 @@ struct LiveWorkoutIntentButtonsGate: View {
   }
 }
 
-/// The right side: the workout clock and "11/18 sæt", or the rest countdown
-/// and "af 3:00".
+/// The right side: the workout clock and "11/18 sæt", the rest countdown and
+/// "af 3:00", or the rest counted up and "pause".
 struct LiveWorkoutTrailingColumn: View {
   let display: LiveWorkoutDisplay
   let width: CGFloat
@@ -417,6 +510,13 @@ struct LiveWorkoutTrailingColumn: View {
         LiveWorkoutRestCountdown(display: display, fontSize: 17, weight: .heavy, width: width)
 
         Text(display.restOf)
+          .font(.system(size: 11.5, weight: .bold))
+          .foregroundColor(LiveWorkoutColors.textSecondary)
+          .lineLimit(1)
+      } else if display.mode == .countUp {
+        LiveWorkoutRestCountUp(display: display, fontSize: 17, weight: .heavy, width: width)
+
+        Text(display.string("restSub"))
           .font(.system(size: 11.5, weight: .bold))
           .foregroundColor(LiveWorkoutColors.textSecondary)
           .lineLimit(1)
@@ -460,10 +560,11 @@ struct LiveWorkoutTitles: View {
   }
 }
 
-/// 1a / 1b: the card on the lock screen. 132 pt with buttons: padding 14,
-/// the content row (48), a gap and the buttons (44). Without buttons (set or
-/// rest before iOS 17, no sets, or all done without a finish link) it is only
-/// the content row. No progress bar.
+/// 1a / 1b: the card on the lock screen. 148 pt with buttons: padding 14,
+/// the content row (48), the exercise's set dots (16) under the titles, and
+/// the buttons (44), 8 apart. Without buttons (set or rest before iOS 17, no
+/// sets, or all done without a finish link) it is the content row and the
+/// dots. No progress bar. ActivityKit allows up to 160.
 struct LiveWorkoutLockScreenView: View {
   let state: LiveWorkoutState
   let isStale: Bool
@@ -475,7 +576,8 @@ struct LiveWorkoutLockScreenView: View {
       isStale: isStale
     )
     let showsButtons: Bool = display.hasFinishLink || (LiveWorkoutButtons.available && display.hasIntentButtons)
-    let height: CGFloat? = showsButtons ? 132 : nil
+    let showsDots: Bool = display.hasIntentButtons && !display.setDots.isEmpty
+    let height: CGFloat? = showsButtons ? (showsDots ? 148 : 132) : nil
 
     VStack(alignment: .leading, spacing: 0) {
       HStack(alignment: .center, spacing: 12) {
@@ -484,6 +586,14 @@ struct LiveWorkoutLockScreenView: View {
         LiveWorkoutTrailingColumn(display: display, width: 76)
       }
       .frame(height: 48)
+
+      if showsDots {
+        // Under the titles, where the eye already is: which set this is.
+        LiveWorkoutSetDots(dots: display.setDots, size: 8, nowSize: 12, spacing: 6)
+          .frame(height: 16)
+          .padding(.leading, 60)
+          .padding(.top, 8)
+      }
 
       if showsButtons {
         Spacer(minLength: 0)

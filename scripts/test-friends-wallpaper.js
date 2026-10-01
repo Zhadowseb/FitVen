@@ -371,4 +371,53 @@ assert.ok(
   "the avatar's web spills out of its box"
 );
 
+/* -------------------------------------------- your own tile, from Home -- */
+
+// "Den viser ikke i friends activity når jeg selv træner." Splitting Home in
+// two (a62aacb4) moved the part that told your own tile what today looks like
+// on the phone - training now, planned, done, and where - into FeedPage, which
+// never draws this strip. Home was left handing over the cloud's profile row,
+// which carries no activity, so your own tile rested through every workout.
+// That the phone's summary says "live" for a running workout is checked
+// against a real database in scripts/test-home-planned-today.js.
+{
+  const homeSource = require("fs").readFileSync(
+    require("path").join(__dirname, "..", "src", "Pages", "HomePage", "HomePage.js"),
+    "utf8"
+  );
+  const loadCirclePreview = homeSource.slice(
+    homeSource.indexOf("const loadCirclePreview = useCallback("),
+    homeSource.indexOf("const refreshUnreadNotificationCount")
+  );
+
+  assert.ok(
+    /programService\.getTodayActivitySummary\(db,/.test(loadCirclePreview) &&
+      /setOwnActivity\(/.test(loadCirclePreview) &&
+      /activityState: summary\.activityState/.test(loadCirclePreview),
+    "Home no longer reads today's activity from the phone for your own tile"
+  );
+  // It fails on its own: a resting own tile is no reason to replace the
+  // friends with an error.
+  assert.ok(
+    /getTodayActivitySummary\(db, \{ date \}\)\.catch\(/.test(loadCirclePreview),
+    "a failure reading your own activity replaces the friends with an error"
+  );
+
+  const currentUserProp = homeSource.slice(
+    homeSource.indexOf("<FriendsActivity"),
+    homeSource.indexOf("people={circlePreview.people}")
+  );
+
+  assert.ok(
+    /\.\.\.circlePreview\.currentUser,[\s\S]*?\.\.\.ownActivity,/.test(currentUserProp),
+    "your own tile is handed the cloud's profile without what the phone knows about today"
+  );
+
+  // And what the strip makes of it.
+  const ownTile = { displayName: "Seb", activityState: "live", daysSinceLastWorkout: 2 };
+
+  assert.strictEqual(buildTileMood(ownTile, now), "embers", "your own tile does not burn while you train");
+  assert.strictEqual(buildRestWallpaper(ownTile, now), null, "your own tile rests while you train");
+}
+
 console.log("Friends tile wallpaper checks passed.");

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One dot in the collapsed card's row of the exercise's sets. Added to it
+     with RemoteViews.addView, so its layout params are for that LinearLayout. -->
+<ImageView xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="7dp"
+  android:layout_height="7dp"
+  android:layout_marginStart="4dp"
+  android:importantForAccessibility="no"
+  android:src="@drawable/live_workout_dot_done" />

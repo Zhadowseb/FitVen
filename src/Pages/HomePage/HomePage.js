@@ -25,10 +25,12 @@ import FriendsActivity from "@resources/Components/FriendsActivity/FriendsActivi
 import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
 import { ThemedText, ThemedView } from "@resources/ThemedComponents";
 import {
+  gymService,
   musicService,
   notificationService,
   programService,
   socialService,
+  splitService,
   weightliftingService,
   workoutService,
 } from "@services";
@@ -70,6 +72,10 @@ export default function HomePage() {
   });
   const [isLoadingCirclePreview, setIsLoadingCirclePreview] = useState(true);
   const [circlePreviewError, setCirclePreviewError] = useState("");
+  // What today looks like on this phone - training now, planned, done - for
+  // your own tile. The cloud only knows it once a sync has run, and its
+  // profile row carries none of it.
+  const [ownActivity, setOwnActivity] = useState(null);
   // What the viewer's own music poller last saw, for their own tile. Module
   // state in musicService, mirrored here so a change re-renders the strip.
   const [ownNowPlaying, setOwnNowPlaying] = useState(() =>
@@ -173,7 +179,8 @@ export default function HomePage() {
     try {
       const [days, groups, firstWorkout, today, records] = await Promise.allSettled([
         workoutService.getDaysSinceLastWorkout(db),
-        workoutService.getSplitGroups(db),
+        // The split you chose, and the app's guess only without one.
+        splitService.getHomeSplitGroups(db, { userId: user?.id ?? null }),
         workoutService.getFirstWorkoutAt(db),
         workoutService.getOpenWorkoutsToday(db),
         weightliftingService.getPersonalRecordsToday(db),
@@ -214,7 +221,7 @@ export default function HomePage() {
     } finally {
       setHasLoadedHome(true);
     }
-  }, [db, loadLiveWorkout, t]);
+  }, [db, loadLiveWorkout, t, user?.id]);
 
   const loadCirclePreview = useCallback(async () => {
     if (!user?.id) {
@@ -224,13 +231,44 @@ export default function HomePage() {
     }
 
     try {
-      const preview = await socialService.getCirclePreview({
-        user,
-        limit: 12,
-        date: getTodaysDate(),
-      });
+      const date = getTodaysDate();
+      // Your own tile's state is read from the phone, beside the cloud. It is
+      // allowed to fail on its own: without it the tile is the resting one,
+      // which is no reason to replace the friends with an error.
+      const [preview, summary] = await Promise.all([
+        socialService.getCirclePreview({ user, limit: 12, date }),
+        programService.getTodayActivitySummary(db, { date }).catch((error) => {
+          console.error("Failed to read today's activity for your own tile:", error);
+          return null;
+        }),
+      ]);
+
+      // The centre line: the centre of the workout the summary points at, or
+      // for a planned one with no position yet, your own centre.
+      const homeGym = preview.currentUser?.homeGym ?? null;
+      let ownGym = summary
+        ? await gymService
+            .getGymForActivityTile(summary.gymId, homeGym?.id ?? null)
+            .catch(() => null)
+        : null;
+
+      if (!ownGym && summary?.activityState === "planned" && homeGym) {
+        ownGym = { id: homeGym.id, shortName: homeGym.shortName, isHomeGym: true };
+      }
 
       setCirclePreview(preview);
+      setOwnActivity(
+        summary
+          ? {
+              activityState: summary.activityState,
+              activityDetail: summary.detail,
+              workoutType: summary.workoutType,
+              workoutLabel: summary.workoutLabel,
+              workoutId: summary.workoutId,
+              gym: ownGym,
+            }
+          : null
+      );
       setCirclePreviewError("");
     } catch (error) {
       setCirclePreviewError(
@@ -239,7 +277,7 @@ export default function HomePage() {
     } finally {
       setIsLoadingCirclePreview(false);
     }
-  }, [t, user]);
+  }, [db, t, user]);
 
   const refreshUnreadNotificationCount = useCallback(async () => {
     try {
@@ -333,15 +371,24 @@ export default function HomePage() {
         return;
       }
 
-      startWorkout(() =>
-        programService.copyWorkoutToStandaloneDate(db, {
+      startWorkout(async () => {
+        const copied = await programService.copyWorkoutToStandaloneDate(db, {
           workoutId: group.lastWorkoutId,
           date: new Date(),
           startedFrom: STARTED_FROM.RECENT,
-        })
-      );
+        });
+
+        // Which chosen session this was; not awaited, it is bookkeeping.
+        splitService.noteSplitSessionStarted(db, {
+          userId: user?.id ?? null,
+          entry: group.entry ?? null,
+          workoutId: copied?.workout_id ?? null,
+        });
+
+        return copied;
+      });
     },
-    [db, startWorkout]
+    [db, startWorkout, user?.id]
   );
 
   const openEmptyWorkout = useCallback(() => {
@@ -367,6 +414,9 @@ export default function HomePage() {
         workout_id: workout.workoutId,
         workout_label: workout.name ?? null,
         workout_type: workout.workoutType ?? null,
+        day: workout.day ?? undefined,
+        date: workout.date ?? undefined,
+        program_id: workout.programId ?? undefined,
       });
     },
     [navigation]
@@ -461,6 +511,9 @@ export default function HomePage() {
 
             <SplitCards
               groups={splitGroups}
+              // Planned today: Quick start shows that one, so the split marks
+              // no card as next. A running workout is the live panel instead.
+              suppressUpNext={Boolean(openToday?.first && !openToday.first.isRunning)}
               firstWorkoutAt={firstWorkoutAt}
               onOpenGroup={openWorkoutFromSplit}
               onOpenAll={() => navigation.navigate("WorkoutLibraryPage")}
@@ -475,7 +528,9 @@ export default function HomePage() {
             circlePreview.currentUser
               ? {
                   ...circlePreview.currentUser,
-                  // From the phone, so your own tile is right before a sync.
+                  // From the phone, so your own tile is right before a sync:
+                  // training now, planned or done today, and where.
+                  ...ownActivity,
                   daysSinceLastWorkout,
                   recordsToday: ownRecordsToday,
                   music: ownNowPlaying?.track

@@ -63,6 +63,7 @@ internal object LiveWorkoutNotification {
   private const val REQUEST_WEIGHT_MINUS = REQUEST_OPEN + 7
   private const val REQUEST_WEIGHT_PLUS = REQUEST_OPEN + 8
   private const val REQUEST_FINISH = REQUEST_OPEN + 9
+  private const val REQUEST_END_COUNT_UP = REQUEST_OPEN + 10
 
   // U+2212, the typographic minus, not a hyphen.
   private const val MINUS_SIGN = "\u2212"
@@ -175,7 +176,7 @@ internal object LiveWorkoutNotification {
 
     openApp(context)?.let(builder::setContentIntent)
 
-    if (view.mode == LiveMode.REST) {
+    if (view.mode == LiveMode.REST || view.mode == LiveMode.COUNT_UP) {
       builder.setSubText(state.string("restSub"))
     }
 
@@ -186,6 +187,30 @@ internal object LiveWorkoutNotification {
 
   private fun collapsed(context: Context, state: LiveWorkoutState, view: LiveWorkoutView): RemoteViews {
     val rest = view.rest?.takeIf { view.mode == LiveMode.REST }
+    val countUp = view.countUp?.takeIf { view.mode == LiveMode.COUNT_UP }
+
+    if (countUp != null) {
+      // The rest counted up: 1f's layout without the fill, "Pause · 1:24"
+      // counting up by itself, and Afslut pause.
+      val views = RemoteViews(context.packageName, R.layout.live_workout_collapsed_rest)
+      views.setProgressBar(R.id.live_workout_rest_fill, BAR_MAX, 0, false)
+      views.setChronometerCountDown(R.id.live_workout_rest_clock, false)
+      views.setChronometer(
+        R.id.live_workout_rest_clock,
+        elapsedRealtimeOf(countUp.startedAt),
+        chronometerFormat(state.string("restClock")),
+        true
+      )
+      views.setTextViewText(R.id.live_workout_subtitle, view.title)
+      bindDots(context, views, R.id.live_workout_dots, view.setDots)
+      views.setViewVisibility(R.id.live_workout_dots, visibleIf(view.setDots.isNotEmpty()))
+      views.setOnClickPendingIntent(
+        R.id.live_workout_primary,
+        action(context, state, REQUEST_END_COUNT_UP, LiveAction.END_COUNT_UP, setId = countUp.setId)
+      )
+      views.setContentDescription(R.id.live_workout_primary, state.string("endRest"))
+      return views
+    }
 
     if (rest != null) {
       // 1f: the content area is orange for what is left of the rest.
@@ -204,6 +229,9 @@ internal object LiveWorkoutNotification {
       )
       views.setChronometerCountDown(R.id.live_workout_rest_clock, true)
       views.setTextViewText(R.id.live_workout_subtitle, view.title)
+      // The set just ticked is filled: the tick is seen landing, as on iOS.
+      bindDots(context, views, R.id.live_workout_dots, view.setDots)
+      views.setViewVisibility(R.id.live_workout_dots, visibleIf(view.setDots.isNotEmpty()))
       views.setOnClickPendingIntent(R.id.live_workout_primary, action(context, state, REQUEST_SKIP, LiveAction.SKIP_REST))
       views.setContentDescription(R.id.live_workout_primary, state.string("skip"))
       return views
@@ -223,12 +251,19 @@ internal object LiveWorkoutNotification {
     views.setViewVisibility(R.id.live_workout_primary, visibleIf(setting || finish != null))
     bindClock(views, state)
 
+    // Which set this is, as dots after the exercise: a tick fills one and
+    // moves the ring on.
+    val dots = if (setting) view.setDots else emptyList()
+    bindDots(context, views, R.id.live_workout_dots, dots)
+    views.setViewVisibility(R.id.live_workout_dots, visibleIf(dots.isNotEmpty()))
+
     if (setting) {
       views.setOnClickPendingIntent(
         R.id.live_workout_primary,
         action(context, state, REQUEST_COMPLETE, LiveAction.COMPLETE_SET, setId = view.nowSetId)
       )
-      views.setContentDescription(R.id.live_workout_primary, state.string("complete"))
+      // The round button has no words: TalkBack says which set it ticks off.
+      views.setContentDescription(R.id.live_workout_primary, view.completeLabel.ifEmpty { state.string("complete") })
     } else if (finish != null) {
       views.setOnClickPendingIntent(R.id.live_workout_primary, finish)
       views.setContentDescription(R.id.live_workout_primary, view.finishLabel)
@@ -247,8 +282,10 @@ internal object LiveWorkoutNotification {
   private fun expanded(context: Context, state: LiveWorkoutState, view: LiveWorkoutView): RemoteViews {
     val rest = view.rest?.takeIf { view.mode == LiveMode.REST }
     val resting = rest != null
+    val countUp = view.countUp?.takeIf { view.mode == LiveMode.COUNT_UP }
+    val countingUp = countUp != null
     val setting = view.mode == LiveMode.SET
-    val active = setting || resting
+    val active = setting || resting || countingUp
     val views = RemoteViews(context.packageName, R.layout.live_workout_expanded)
 
     // Content row: the eyebrow and the workout clock, the set (in 1f the one
@@ -292,17 +329,26 @@ internal object LiveWorkoutNotification {
     views.setTextViewText(R.id.live_workout_row_current_label, view.exerciseName)
     bindChips(context, views, R.id.live_workout_chips_current, if (setting) view.chips else emptyList())
 
-    // Row 1, 1f: the rest. Its countdown is stopped while it is hidden.
-    views.setViewVisibility(R.id.live_workout_row_rest, visibleIf(resting))
+    // Row 1, 1f: the rest, counting down to its end, or - counted up after a
+    // set with none written - up from the tap, with no "af 3:00" and no bar.
+    // The clock is stopped while the row is hidden.
+    views.setViewVisibility(R.id.live_workout_row_rest, visibleIf(resting || countingUp))
     views.setTextViewText(R.id.live_workout_rest_label, state.string("pause"))
+    val restDots = if (resting || countingUp) view.setDots else emptyList()
+    bindDots(context, views, R.id.live_workout_rest_dots, restDots)
+    views.setViewVisibility(R.id.live_workout_rest_dots, visibleIf(restDots.isNotEmpty()))
     views.setTextViewText(R.id.live_workout_rest_of, rest?.of ?: "")
+    views.setViewVisibility(R.id.live_workout_rest_of, visibleIf(resting))
+    views.setChronometerCountDown(R.id.live_workout_rest_clock, !countingUp)
     views.setChronometer(
       R.id.live_workout_rest_clock,
-      rest?.let { elapsedRealtimeOf(it.endsAt) } ?: SystemClock.elapsedRealtime(),
+      rest?.let { elapsedRealtimeOf(it.endsAt) }
+        ?: countUp?.let { elapsedRealtimeOf(it.startedAt) }
+        ?: SystemClock.elapsedRealtime(),
       null,
-      resting
+      resting || countingUp
     )
-    views.setChronometerCountDown(R.id.live_workout_rest_clock, true)
+    views.setViewVisibility(R.id.live_workout_rest_bar, visibleIf(resting))
     views.setProgressBar(
       R.id.live_workout_rest_bar,
       BAR_MAX,
@@ -322,10 +368,25 @@ internal object LiveWorkoutNotification {
     return views
   }
 
+  /** The collapsed card's dots, one a set of the exercise (at most ten). */
+  private fun bindDots(context: Context, views: RemoteViews, containerId: Int, dots: List<ChipState>) {
+    views.removeAllViews(containerId)
+
+    for (dot in dots) {
+      val layout = when (dot) {
+        ChipState.DONE -> R.layout.live_workout_dot_done
+        ChipState.NOW -> R.layout.live_workout_dot_now
+        ChipState.TODO -> R.layout.live_workout_dot_todo
+      }
+      views.addView(containerId, RemoteViews(context.packageName, layout))
+    }
+  }
+
   /**
-   * 1e: −step · Sæt færdigt · +step. A set without a weight has no weight
-   * buttons, and Sæt færdigt takes the row. With every set done, the same
-   * pill alone is "Afslut" and opens the app to finish (`finish`).
+   * 1e: −step · Sæt 3 af 4 færdigt · +step. A set without a weight has no
+   * weight buttons, and Sæt færdigt takes the row. With every set done, the
+   * same pill alone is "Afslut" and opens the app to finish (`finish`); while
+   * the rest is counted up it is "Afslut pause", alone.
    */
   private fun bindSetButtons(
     context: Context,
@@ -336,14 +397,23 @@ internal object LiveWorkoutNotification {
     finish: PendingIntent?
   ) {
     val weight = view.weightButtons?.takeIf { shown }
+    val countUp = view.countUp?.takeIf { view.mode == LiveMode.COUNT_UP }
 
-    views.setViewVisibility(R.id.live_workout_buttons, visibleIf(shown || finish != null))
+    views.setViewVisibility(R.id.live_workout_buttons, visibleIf(shown || countUp != null || finish != null))
     views.setViewVisibility(R.id.live_workout_weight_minus, visibleIf(weight != null && weight.minusEnabled))
     views.setViewVisibility(R.id.live_workout_weight_minus_off, visibleIf(weight != null && !weight.minusEnabled))
     views.setViewVisibility(R.id.live_workout_weight_plus, visibleIf(weight != null))
+    views.setImageViewResource(
+      R.id.live_workout_complete_icon,
+      if (countUp != null) R.drawable.live_workout_ic_skip else R.drawable.live_workout_ic_check
+    )
     views.setTextViewText(
       R.id.live_workout_complete_text,
-      if (shown || finish == null) state.string("complete") else view.finishLabel
+      when {
+        countUp != null -> state.string("endRest")
+        shown || finish == null -> view.completeLabel.ifEmpty { state.string("complete") }
+        else -> view.finishLabel
+      }
     )
 
     for (id in intArrayOf(R.id.live_workout_weight_minus_sign, R.id.live_workout_weight_minus_off_sign)) {
@@ -363,7 +433,12 @@ internal object LiveWorkoutNotification {
     views.setContentDescription(R.id.live_workout_weight_minus_off, weight?.a11yMinus ?: "")
     views.setContentDescription(R.id.live_workout_weight_plus, weight?.a11yPlus ?: "")
 
-    if (shown) {
+    if (countUp != null) {
+      views.setOnClickPendingIntent(
+        R.id.live_workout_complete,
+        action(context, state, REQUEST_END_COUNT_UP, LiveAction.END_COUNT_UP, setId = countUp.setId)
+      )
+    } else if (shown) {
       views.setOnClickPendingIntent(
         R.id.live_workout_complete,
         action(context, state, REQUEST_COMPLETE, LiveAction.COMPLETE_SET, setId = view.nowSetId)

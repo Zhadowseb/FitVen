@@ -668,6 +668,7 @@ async function migrateSetSchema(db) {
         set_type TEXT NOT NULL DEFAULT 'working',
         amrap_target INTEGER,
         note TEXT,
+        rest_counted INTEGER NOT NULL DEFAULT 0,
         needs_sync INTEGER NOT NULL DEFAULT 1
       );
 
@@ -692,6 +693,7 @@ async function migrateSetSchema(db) {
         set_type,
         amrap_target,
         note,
+        rest_counted,
         needs_sync
       )
       SELECT
@@ -715,6 +717,7 @@ async function migrateSetSchema(db) {
         ${hasColumn(sourceColumns, "set_type") ? "COALESCE(set_type, 'working')" : "'working'"},
         ${hasColumn(sourceColumns, "amrap_target") ? "amrap_target" : "NULL"},
         ${hasColumn(sourceColumns, "note") ? "note" : "NULL"},
+        ${hasColumn(sourceColumns, "rest_counted") ? "COALESCE(rest_counted, 0)" : "0"},
         ${hasColumn(sourceColumns, "needs_sync") ? "COALESCE(needs_sync, 1)" : "1"}
       FROM ${quoteIdentifier(sourceTable)};
 
@@ -1905,6 +1908,8 @@ export async function initializeDatabase(db) {
     ["set_type", "TEXT NOT NULL DEFAULT 'working'"],
     ["amrap_target", "INTEGER"],
     ["note", "TEXT"],
+    // A rest the app counted, not one that was planned (Utils/restCountUp.js).
+    ["rest_counted", "INTEGER NOT NULL DEFAULT 0"],
     ["needs_sync", "INTEGER NOT NULL DEFAULT 1"],
   ]);
   // A set marked AMRAP before set_type existed carries only the flag. Same rule
