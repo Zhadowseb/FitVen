@@ -43,6 +43,9 @@ From the owner's bug list of 2026-09-30, merged together (#299–#306).
 - **The ⋯ button is back in a strength workout's header,** with Restart and Change name. Since #294 an empty name became the type's name, so "Named Styrketræning after your exercises" showed all the time. It could not shrink, and pushed ⋯ off the right edge. The header's buttons no longer shrink.
 - **"Named … after your exercises" is gone.** The workout's type ("Styrketræning", "Overkrop") is a small line above the title, unless it would repeat the title. An unknown type reads Styrketræning (`strengthWorkoutTypeTag` in `Utils/workoutTypeLabel.js`).
 - **Your own tile in friends activity shows that you are training again.** "Split Home in two" (`a62aacb4`) moved the read of today's activity to `FeedPage`, which has no friends strip, so your tile always rested. Home reads it again (`getTodayActivitySummary`).
+- **From the phone test of this round:**
+  - The workout's options sheet names the day in the reader's language ("Torsdag · 01.10.2026"). It showed the stored English "Thursday".
+  - The records page's chart and its latest sessions no longer use the day alone as a key. Two sessions on one day gave React "two children with the same key".
 
 ### Removed
 - **Video verification of lifts, all the way through.** The owner decided it is too early for it, and that it can be built again later.

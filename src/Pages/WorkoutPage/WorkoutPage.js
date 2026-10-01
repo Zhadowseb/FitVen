@@ -107,7 +107,13 @@ const WorkoutPage = ({ route }) => {
   const workoutDate = metadata?.date ?? initialDate ?? "";
   const programId = metadata?.program_id ?? initialProgramId;
   // BUG-20: the home screen writes this same pairing as "FRIDAY · 11.09.2026".
-  const workoutSubtitle = [workoutDay, workoutDate]
+  // The day is stored in English ("Thursday"); it is shown in the reader's
+  // language when it is one of the seven.
+  const weekdayKey = String(workoutDay).trim().toLowerCase();
+  const shownWorkoutDay = /^(mon|tues|wednes|thurs|fri|satur|sun)day$/.test(weekdayKey)
+    ? t(`programs.weekdays.${weekdayKey}`)
+    : workoutDay;
+  const workoutSubtitle = [shownWorkoutDay, workoutDate]
     .filter(Boolean)
     .join(" · ");
   const headerEyebrowColor = theme.quietText ?? theme.iconColor;

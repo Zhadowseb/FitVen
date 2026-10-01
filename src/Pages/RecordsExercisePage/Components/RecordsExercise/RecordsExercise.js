@@ -352,9 +352,10 @@ export default function RecordsExercise({
 
             {/* One tick per session under the baseline, so you can see when you
                 trained and not only what the number was. */}
-            {chart.placed.map((point) => (
+            {/* Two sessions can share a day, so the day alone is no key. */}
+            {chart.placed.map((point, index) => (
               <Rect
-                key={`tick-${point.at}`}
+                key={`tick-${point.at}-${index}`}
                 x={point.x - 0.6}
                 y={chart.baseline + 2}
                 width={1.2}
@@ -363,9 +364,9 @@ export default function RecordsExercise({
               />
             ))}
 
-            {chart.placed.map((point) => (
+            {chart.placed.map((point, index) => (
               <Circle
-                key={`dot-${point.at}`}
+                key={`dot-${point.at}-${index}`}
                 cx={point.x}
                 cy={point.y}
                 r={2.6}
@@ -527,8 +528,8 @@ export default function RecordsExercise({
           </View>
 
           <View style={[styles.card, { backgroundColor: card, borderColor: border, gap: 10 }]}>
-            {sessions.map((session) => (
-              <View key={session.at} style={styles.sessionRow}>
+            {sessions.map((session, index) => (
+              <View key={`${session.at}-${index}`} style={styles.sessionRow}>
                 <ThemedText style={styles.sessionDate} setColor={quiet}>
                   {formatRelativeDay(session.at, now)}
                 </ThemedText>
