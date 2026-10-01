@@ -67,6 +67,9 @@
   - `Utils/notificationHistory.js` holds every notification kind's text, route and hint, taken out of `NotificationHistoryPage`. Lift verification is not among them; it is removed in #303.
 - **The privacy policy** says that a post's author is told who liked it. It is raised to 2026-09-30.1, the same version as #303, so everyone is asked once for both.
 - **Tests:** `npm run test:post-like-notification`.
+## [2.16.8] - Unreleased
+### Changed
+- **Agent guides:** new `docs/MAP.md` says which files each feature lives in, what the four largest files contain section by section, and what agents should not read (`.claude/worktrees/`, `data/`, the dated audits in `docs/`). The root `AGENTS.md` points at it. `npm test` fails if the map names a path or a function that no longer exists.
 
 ---
 ## [2.16.7] - Unreleased
