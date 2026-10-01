@@ -613,9 +613,10 @@ assert.ok(!mode.isMissingWeightModeColumnError({ code: "42703", message: "column
   session({ date: "2026-09-22", exercise: "Bench Press", weightMode: "total", sets: [{ weight: 100, reps: 5 }] });
 
   // The records' own rule, as the service applies it: a set holds a record
-  // at its rep count when it beats every earlier one.
+  // at its rep count when it beats every earlier set with at least as many
+  // reps (a set counts for every rep count below it).
   const recordIds = (rows) => {
-    const best = new Map();
+    const earlier = [];
     const ids = [];
 
     for (const row of [...rows].sort((a, b) =>
@@ -623,12 +624,14 @@ assert.ok(!mode.isMissingWeightModeColumnError({ code: "42703", message: "column
         ? a.sets_id - b.sets_id
         : a.performed_date_sort.localeCompare(b.performed_date_sort)
     )) {
-      const key = `${row.exercise_name}::${row.reps}`;
+      const beaten = earlier.every(
+        (other) => other.exercise_name !== row.exercise_name || other.reps < row.reps || row.weight > other.weight
+      );
 
-      if (!best.has(key) || row.weight > best.get(key)) {
-        best.set(key, row.weight);
+      if (beaten && row.reps <= 12) {
         ids.push(row.sets_id);
       }
+      earlier.push(row);
     }
 
     return ids.sort((a, b) => a - b);

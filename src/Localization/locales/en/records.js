@@ -53,6 +53,9 @@ export default {
     tryNext: "try {target} · you did {current}",
     repLadder: "Record per reps",
     noSet: "no set",
+    // Under a slot a longer set fills: 90 kg × 3 is 90 kg for 1 and 2 reps too.
+    // Never a new record.
+    fromReps: "from {reps} reps",
     latestSets: "Latest sets",
     pr: "PR",
     periods: {

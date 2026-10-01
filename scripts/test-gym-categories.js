@@ -10,7 +10,9 @@
 //   4. the migrations read as text: the rules they promise, and who may call
 //      what - 20260929090000, and 20261004090000, which restates
 //      category_rows with every exercise in Progress and two workouts a
-//      streak week. The rules are held against the latest category_rows in
+//      streak week, and 20261008090000, which restates it again so that a
+//      set counts in Powerlifting for every rep count below it (90 x 3 is a
+//      90 kg single). The rules are held against the latest category_rows in
 //      the folder. Nothing here talks to a database, so these are a floor,
 //      not a proof - both were also run twice against Postgres 17 with a
 //      stub of the project and checked row by row (see their headers);
@@ -30,6 +32,8 @@ const MIGRATION_FILE = "supabase/migrations/20260929090000_gym-scope-and-categor
 const migration = read(MIGRATION_FILE);
 const PROGRESS_MIGRATION_FILE = "supabase/migrations/20261004090000_progress-counts-every-exercise.sql";
 const progressMigration = read(PROGRESS_MIGRATION_FILE);
+const VERIFICATION_MIGRATION_FILE = "supabase/migrations/20261007090000_remove-lift-verification.sql";
+const REPS_MIGRATION_FILE = "supabase/migrations/20261008090000_a-set-counts-for-fewer-reps.sql";
 
 /* ------------------------------------------------------ the test doubles -- */
 
@@ -1106,7 +1110,15 @@ function testMigration() {
   assert.ok(rows.body.includes("weekly.week_start < v_week_start"), "the streak counts back from last week");
 
   const powerlifting = rows.body.slice(rows.body.indexOf("elsif p_category = 'powerlifting'"), rows.body.indexOf("elsif p_category = 'fremgang'"));
-  assert.ok(powerlifting.includes("and logged_set.reps = 1\n"), "powerlifting counts singles only");
+  // 20261008090000: a set counts for every rep count below it, so 90 x 3 is
+  // a 90 kg single. The rest of the rule is unchanged: done, not failed, a
+  // working or AMRAP set, a weight above 0.
+  assert.ok(powerlifting.includes("and logged_set.reps >= 1\n"), `powerlifting counts every set of one rep or more (${rows.file})`);
+  assert.ok(!powerlifting.includes("and logged_set.reps = 1\n"), "and not singles only");
+  assert.ok(powerlifting.includes("and logged_set.weight > 0\n"), "a weight above 0");
+  assert.ok(powerlifting.includes("and logged_set.done::text in ('true', '1', 't')\n"), "done sets");
+  assert.ok(powerlifting.includes("and coalesce(logged_set.failed::text, 'false') not in ('true', '1', 't')\n"), "never a failed set");
+  assert.ok(powerlifting.includes("and (logged_set.set_type is null or logged_set.set_type in ('working', 'amrap'))\n"), "never a warm-up or a drop set");
   // 20261007090000 took video verification out: no "Kun video", and a
   // single a video was voted down for counts like any other.
   assert.ok(!/video_status|only_video|judged/.test(powerlifting), `no verification in powerlifting (${rows.file})`);
@@ -1244,6 +1256,81 @@ function testProgressMigration() {
     "set_cloud_exercise_instance_idx, partial like the sync indexes"
   );
   assert.ok(!/create\s+index\s+concurrently/i.test(code), "not concurrently, which cannot run inside the transaction");
+}
+
+// 20261008090000: category_rows as 20261007090000 left it, with one rule
+// changed - Powerlifting counts any set of one rep or more at its weight -
+// and nothing else of it.
+function testRepsMigration() {
+  const text = read(REPS_MIGRATION_FILE);
+  const code = text.replace(/--.*$/gm, "");
+
+  assert.ok(text.includes("Run after 20261007090000_remove-lift-verification.sql"), "the run-after header");
+  assert.ok(text.includes("Safe to run twice."), "says it can run twice");
+  assert.ok(/\nbegin;\n/.test(text) && /\ncommit;\n\nnotify pgrst, 'reload schema';\n/.test(text), "one transaction, then the schema reload");
+  assert.ok(
+    read("supabase/migrations/README.md").includes("| `20261008090000_a-set-counts-for-fewer-reps.sql` | yes |"),
+    "the ledger names the migration, run on 2026-10-01"
+  );
+
+  const functions = parseFunctions(text);
+  assert.deepStrictEqual(functions.map((fn) => fn.name), ["private.category_rows"], "one function, restated");
+  // Outside the function body: nothing dropped, altered, written or created.
+  const outside = code.replace(/create or replace function private\.category_rows\([\s\S]*?\n\$\$;/, "");
+  assert.deepStrictEqual(
+    outside.match(/^\s*(drop|alter|delete|insert|update|truncate|create)\b/gim),
+    null,
+    "and nothing but it"
+  );
+
+  const [now] = functions;
+  const was = parseFunctions(read(VERIFICATION_MIGRATION_FILE)).find((fn) => fn.name === "private.category_rows");
+
+  assert.strictEqual(now.paramText, was.paramText, "the same parameters");
+  assert.strictEqual(now.header, was.header, "the same return type, definer and settings");
+  assert.ok(
+    /revoke all on function private\.category_rows\(uuid, text, text, text, text, bigint, text, jsonb, boolean\)\s+from public, anon, authenticated;/.test(text),
+    "callable by nobody in the app"
+  );
+  assert.deepStrictEqual(code.match(/^\s*grant\b/gim), null, "it grants nothing");
+  assert.ok(!/\bowner\s+to\b|\balter\s+function\b|security\s+invoker/i.test(code), "and changes no owner");
+
+  // Consistency, Progress and Calisthenics character for character, and
+  // Powerlifting but for its one rule once the comments are gone.
+  const before = categoryParts(was.body);
+  const after = categoryParts(now.body);
+  const uncommented = (part) => part.replace(/^\s*--.*\n/gm, "");
+
+  assert.strictEqual(after.head, before.head, "the declarations and the members are unchanged");
+  assert.strictEqual(after.flid, before.flid, "Consistency is unchanged");
+  assert.strictEqual(after.fremgang, before.fremgang, "Progress is unchanged");
+  assert.strictEqual(after.calisthenics, before.calisthenics, "Calisthenics is unchanged");
+  assert.strictEqual(
+    uncommented(after.powerlifting).replace("and logged_set.reps >= 1\n", "and logged_set.reps = 1\n"),
+    uncommented(before.powerlifting),
+    "Powerlifting changed its rep rule and nothing else"
+  );
+
+  // The latest category_rows in the folder is this one.
+  assert.strictEqual(
+    latestDefinition("private.category_rows").file,
+    path.basename(REPS_MIGRATION_FILE),
+    "the rule a database that ran every migration counts by"
+  );
+
+  // What the app says about it is true: no "1 rep only" or single-rep rule.
+  for (const language of ["da", "en"]) {
+    const texts = loadAppModule(`src/Localization/locales/${language}/category.js`).default;
+    for (const line of [texts.descriptions.powerlifting, texts.explanations.powerlifting, texts.empty.powerlifting]) {
+      assert.ok(!/1 rep\b|single-rep|kun 1|med 1 gentagelse/i.test(line), `${language}: "${line}" still says singles only`);
+    }
+  }
+  const policy = read("src/Resources/Legal/privacyPolicy.js");
+  assert.ok(!policy.includes("heaviest single"), "the privacy policy no longer says singles");
+  assert.ok(
+    policy.includes("the heaviest weight you have lifted in bench press, squat and deadlift, and their total"),
+    "it says what the list shows"
+  );
 }
 
 /* ---------------------------------------- 5. how a category is written -- */
@@ -1406,6 +1493,7 @@ async function run() {
   await testStartCountry();
   testMigration();
   testProgressMigration();
+  testRepsMigration();
   testFormat();
 
   console.log("Gym categories: vocabulary, importer regions, service mapping, centre suggestions, migration checks and how a category is written passed.");

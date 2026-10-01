@@ -9,7 +9,7 @@ export default {
   },
   descriptions: {
     flid: "Flest træninger · {period}",
-    powerlifting: "Bænk + squat + dødløft · kun 1 rep",
+    powerlifting: "Bænk + squat + dødløft · tungeste løft",
     fremgang: "Største stigning de sidste 30 dage",
     calisthenics: "Pull-ups × 3 + dips × 2 + armstrækninger",
   },
@@ -66,7 +66,7 @@ export default {
     flidStreak:
       "Uger i træk med mindst {count} gennemførte træninger, mandag til søndag. Denne uge tæller med, når den når {count}. En sygeuge bryder rækken her.",
     powerlifting:
-      "Bedste løft med 1 gentagelse i bænkpres, squat og dødløft, lagt sammen. Et løft, du mangler, tæller 0.",
+      "Den tungeste vægt, du har løftet i bænkpres, squat og dødløft, lagt sammen. Et sæt tæller for alle færre gentagelser: 90 kg × 3 er også 90 kg for 1. Et løft, du mangler, tæller 0.",
     fremgang:
       "Største stigning i estimeret 1RM de sidste {days} dage mod de {days} før, ud fra sæt med 1–{reps} gentagelser. Mindst {sets} sæt i begge perioder.",
     calisthenics:
@@ -79,7 +79,7 @@ export default {
     membersGym: "Med er alle, der har trænet her de sidste {activeDays} dage.",
     flidWorkouts: "Hver gennemført træning i perioden tæller.",
     flidStreak: "En uge tæller, når den har mindst {count} gennemførte træninger.",
-    powerlifting: "Ét løft med 1 gentagelse i bænkpres, squat eller dødløft giver en total.",
+    powerlifting: "Ét sæt bænkpres, squat eller dødløft giver en total.",
     fremgang: "Det kræver mindst {sets} sæt i samme øvelse i begge perioder på {days} dage.",
     calisthenics: "Et sæt pull-ups, dips eller armstrækninger uden ekstra vægt giver point.",
   },

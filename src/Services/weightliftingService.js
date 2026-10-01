@@ -790,6 +790,21 @@ function buildPersonalRecordExerciseDetail(
   };
 }
 
+/**
+ * Which sets are personal records: the set ids that go into `personal_record`.
+ *
+ * A set is a record at its own rep count, and only there, when it is heavier
+ * than every earlier set of the exercise with at least as many reps. A set
+ * counts for every rep count below it (the owner's rule, as the Records
+ * page's rep ladder has it): after 90 kg × 3, a 90 or an 85 single is no
+ * record - 90 for 1 was already done - and a 95 single is. A first set of ten
+ * is one record, at ten, not ten records. Equal weight is not a record.
+ *
+ * Only a set of 1 to 12 reps can hold a record, but a longer set still counts
+ * for the twelve below it. "Earlier" is the workout's day, then the set's id.
+ * The rows are in the exercise's current weight mode and already record
+ * eligible (keepRecordEligible).
+ */
 function getPersonalRecordSetIds(rows) {
   const sets = rows
     .map(normalizePersonalRecordSet)
@@ -798,34 +813,43 @@ function getPersonalRecordSetIds(rows) {
         set.exercise_name &&
         Number.isFinite(set.weight) &&
         Number.isFinite(set.reps) &&
-        set.reps >= 1 &&
-        set.reps <= PERSONAL_RECORD_REPS.length
+        set.reps >= 1
     );
-  const setsByRep = new Map();
+  const setsByExercise = new Map();
 
   for (const set of sets) {
-    const groupKey = `${set.exercise_name.trim().toLowerCase()}::${set.reps}`;
-    const groupSets = setsByRep.get(groupKey) ?? [];
+    const groupKey = set.exercise_name.trim().toLowerCase();
+    const groupSets = setsByExercise.get(groupKey) ?? [];
 
     groupSets.push(set);
-    setsByRep.set(groupKey, groupSets);
+    setsByExercise.set(groupKey, groupSets);
   }
 
   const recordSetIds = new Set();
+  const maxRecordReps = PERSONAL_RECORD_REPS.length;
 
-  for (const groupSets of setsByRep.values()) {
+  for (const groupSets of setsByExercise.values()) {
     const sortedSets = [...groupSets].sort(comparePersonalRecordDate);
-    let bestWeight = null;
+    // bestAtLeast[n]: the heaviest weight so far in a set of at least n reps.
+    const bestAtLeast = new Array(maxRecordReps + 1).fill(null);
 
     for (const set of sortedSets) {
-      if (bestWeight === null || set.weight > bestWeight) {
-        const setId = Number(set.sets_id);
+      if (set.reps <= maxRecordReps) {
+        const bestBefore = bestAtLeast[set.reps];
 
-        if (Number.isFinite(setId)) {
-          recordSetIds.add(setId);
+        if (bestBefore === null || set.weight > bestBefore) {
+          const setId = Number(set.sets_id);
+
+          if (Number.isFinite(setId)) {
+            recordSetIds.add(setId);
+          }
         }
+      }
 
-        bestWeight = set.weight;
+      for (let reps = 1; reps <= Math.min(set.reps, maxRecordReps); reps += 1) {
+        if (bestAtLeast[reps] === null || set.weight > bestAtLeast[reps]) {
+          bestAtLeast[reps] = set.weight;
+        }
       }
     }
   }

@@ -237,13 +237,60 @@ async function run() {
   assert.equal(ladder[4].reps, 5);
   assert.equal(ladder[4].weight, 112.5, 'The five-rep slot carries the heaviest five');
   assert.equal(ladder[4].isNewInPeriod, true, 'Set 13 days ago falls inside a 30 day period');
-  assert.equal(ladder[0].weight, null, 'A rep count never trained stays empty rather than borrowing');
+  // A set counts for every rep count below it: the heaviest five is also
+  // the heaviest four, three, two and one. Above five nothing was lifted.
+  for (const reps of [1, 2, 3, 4]) {
+    assert.equal(ladder[reps - 1].weight, 112.5, `${reps} reps borrows the 112.5 kg five`);
+    assert.equal(ladder[reps - 1].fromReps, 5, 'and says it came from a set of five');
+    assert.equal(ladder[reps - 1].isDerived, true);
+    assert.equal(ladder[reps - 1].isNewInPeriod, false, 'a slot a longer set fills is never a new record');
+  }
+  assert.equal(ladder[4].isDerived, false, 'The five is held at its own rep count');
+  assert.equal(ladder[5].weight, null, 'A rep count above anything lifted stays empty');
+
+  // The owner's case: 90 x 3 fills 1, 2 and 3 unless something heavier is
+  // there. A heavier true single keeps the 1; a drop set holds nothing.
+  const owner = insights.normalizeRecordRows([
+    row('Bench', 90, 3, 10, { workout: 'o1', record: true }),
+    { ...row('Bench', 120, 2, 9, { workout: 'o2' }), set_type: 'drop' },
+    row('Bench', 95, 1, 8, { workout: 'o3', record: true }),
+  ]);
+  const ownerLadder = insights.buildRepLadder(owner, { name: 'Bench', now, days: 30 });
+  assert.deepEqual(
+    ownerLadder.slice(0, 4).map((slot) => [slot.weight, slot.fromReps, slot.isNewInPeriod]),
+    [[95, 1, true], [90, 3, false], [90, 3, true], [null, null, false]],
+    'The 95 single keeps the 1, 90 x 3 fills the 2 and the 3, the 120 drop set counts nowhere'
+  );
+
+  // A first set of ten is one new record, not ten.
+  const ten = insights.buildRepLadder(
+    insights.normalizeRecordRows([row('Row', 60, 10, 1, { workout: 't1', record: true })]),
+    { name: 'Row', now, days: 30 }
+  );
+  assert.equal(ten.filter((slot) => slot.weight === 60).length, 10, 'The ten fills one to ten, for the statistics');
+  assert.deepEqual(ten.filter((slot) => slot.isNewInPeriod).map((slot) => slot.reps), [10], 'and only the ten is new');
+
+  // A set above the ladder fills all of it, and a tie goes to the set reached
+  // first; on the same day, to the one at the slot's own rep count.
+  const long = insights.buildRepLadder(
+    insights.normalizeRecordRows([
+      row('Curl', 20, 15, 40, { workout: 'l1' }),
+      row('Curl', 20, 1, 30, { workout: 'l2' }),
+      row('Curl', 22, 6, 5, { workout: 'l3' }),
+      row('Curl', 22, 2, 5, { workout: 'l3' }),
+    ]),
+    { name: 'Curl', now, days: 30 }
+  );
+  assert.equal(long.length, insights.REP_LADDER_SLOTS);
+  assert.deepEqual(long.map((slot) => slot.weight), [22, 22, 22, 22, 22, 22, 20, 20, 20, 20, 20, 20], 'Fifteen reps fill all twelve');
+  assert.deepEqual([long[1].fromReps, long[0].fromReps, long[11].fromReps], [2, 6, 15], 'Same day, same weight: the own rep count holds it');
+  assert.equal(long[1].isNewInPeriod, true, 'and is the new one');
 
   const sessions = insights.buildRecentSessions(gapped, { name: 'Bench', limit: 2 });
   assert.equal(sessions.length, 2);
   assert.ok(sessions[0].at > sessions[1].at, 'Newest session first');
 
-  console.log('Records exercise page: session points, gap splitting, same-day sessions, rep ladder holes and recent sessions passed.');
+  console.log('Records exercise page: session points, gap splitting, same-day sessions, the rep ladder counting downward and recent sessions passed.');
 
   console.log('Records insights: junk rows, gains and declines, qualification, empty-week averages, the three numbers, strength, volume buckets, the exercise list and muscle grouping passed.');
 }
