@@ -100,6 +100,8 @@ There are no database backups today, so nothing survives a deletion anywhere. If
 
 The workout posts you publish are shown to the audience you choose for each of them, together with the centre the workout was done in.
 
+When you like a post, its author is told that you liked it, with your name and photo, in their notifications, and as a push notification if they have notifications on.
+
 People who follow you can also see whether you are training today, how many records you set in today's workout, and — if you share music — what you are listening to during a workout.
 
 When a workout is matched to a centre, your best lifts from it go on that centre's leaderboard, where anyone signed in can see them with your name and photo. Your best lift of an exercise at any centre also appears on the national leaderboard.

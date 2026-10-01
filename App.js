@@ -93,6 +93,7 @@ import WorkoutMusicSync from "./src/Sync/WorkoutMusicSync";
 import GymMatchSync from "./src/Sync/GymMatchSync";
 import AppOpenSync from "./src/Sync/AppOpenSync";
 import { parseLiveWorkoutFinishUrl } from "./src/Utils/liveWorkout";
+import { pushNotificationTarget } from "./src/Utils/notificationHistory";
 import LiveWorkoutSync from "./src/Sync/LiveWorkoutSync";
 
 const Stack = createNativeStackNavigator();
@@ -208,6 +209,12 @@ function RootNavigator() {
       return;
     }
 
+    // A like opens the post, on top of the notification page, so back goes
+    // to the page. Every other push stops at the page.
+    const target = pushNotificationTarget(
+      response?.notification?.request?.content?.data
+    );
+
     const navigateToHistory = () => {
       if (!navigationRef.isReady()) {
         return false;
@@ -222,6 +229,11 @@ function RootNavigator() {
         openedFromNotification: true,
         notificationHistoryOpenId: Date.now(),
       });
+
+      if (target) {
+        navigationRef.navigate(target.route, target.params);
+      }
+
       notificationService.clearLastNotificationResponse();
       return true;
     };

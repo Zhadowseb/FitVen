@@ -11,6 +11,7 @@ const NOTIFICATION_PREFERENCES_TABLE = "notification_preferences";
 const WORKOUT_START_NOTIFICATION_SOURCES_TABLE =
   "workout_start_notification_sources";
 const NOTIFICATION_INBOX_TABLE = "notification_inbox";
+const POST_LIKE_NOTIFICATIONS_COLUMN = "post_like_notifications";
 const ACTIVITY_NOTIFICATION_CHANNEL_ID = "activity";
 const MANAGE_PUSH_TOKEN_FUNCTION = "manage-push-token";
 const SEND_WORKOUT_STARTED_NOTIFICATION_FUNCTION =
@@ -635,26 +636,40 @@ export async function getPushNotificationSettings({ user } = {}) {
 /**
  * On or off, for the Notifications tile on Profile. The same `enabled` the
  * settings screen works from - permission granted, this device registered, a
- * mode other than none - without the list of chosen people behind it, which
- * the tile does not show.
+ * mode other than none or likes switched on - without the list of chosen
+ * people behind it, which the tile does not show.
  */
 export async function getPushNotificationsEnabled({ user } = {}) {
   if (!user?.id) {
     return false;
   }
 
-  const [permission, pushTokens, preference] = await Promise.all([
+  const [permission, pushTokens, preference, postLikes] = await Promise.all([
     getNotificationPermission(),
     fetchUserPushTokens(user.id),
     fetchNotificationPreference(user.id),
+    getPostLikeNotificationSetting({ user }).catch(() => ({
+      enabled: false,
+      available: false,
+    })),
   ]);
-
-  return mapPushNotificationSettings({
+  const settings = mapPushNotificationSettings({
     permission,
     pushTokens,
     preference,
     sourceUserIds: [],
-  }).enabled;
+  });
+
+  // Workout starts switched off, likes still on: the tile reads on, because
+  // a like still reaches this device.
+  return (
+    settings.enabled ||
+    (settings.supported &&
+      settings.permissionGranted &&
+      settings.enabledDeviceCount > 0 &&
+      postLikes.available &&
+      postLikes.enabled)
+  );
 }
 
 export async function setPushNotificationsEnabled({
@@ -731,6 +746,77 @@ export async function setWorkoutStartNotificationMode({
   }
 
   return getPushNotificationSettings({ user });
+}
+
+// A column a read names that the database does not have yet: 42703 from
+// Postgres, PGRST204 from PostgREST.
+const MISSING_COLUMN_CODES = new Set(["42703", "PGRST204"]);
+
+function isMissingPostLikeColumn(error) {
+  const message = String(error?.message ?? "").toLowerCase();
+
+  return (
+    MISSING_COLUMN_CODES.has(String(error?.code ?? "")) ||
+    (message.includes(POST_LIKE_NOTIFICATIONS_COLUMN) && message.includes("column"))
+  );
+}
+
+/**
+ * Whether a like on one of your posts tells you, in the history and as a
+ * push. On unless you switch it off. Read on its own, never in
+ * fetchNotificationPreference's select: before
+ * supabase/migrations/20261009090000_a-like-notifies-the-poster.sql has run
+ * the column does not exist, and PostgREST refuses a select that names it -
+ * which would take the whole settings screen down with it. Then the switch
+ * reads on and `available` false, and no like tells anybody anyway.
+ */
+export async function getPostLikeNotificationSetting({ user } = {}) {
+  if (!user?.id) {
+    return { enabled: true, available: false };
+  }
+
+  const { data, error } = await supabase
+    .from(NOTIFICATION_PREFERENCES_TABLE)
+    .select(POST_LIKE_NOTIFICATIONS_COLUMN)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (error) {
+    if (isMissingPostLikeColumn(error)) {
+      return { enabled: true, available: false };
+    }
+
+    throw normalizeNotificationError(error);
+  }
+
+  return { enabled: data?.[POST_LIKE_NOTIFICATIONS_COLUMN] !== false, available: true };
+}
+
+export async function setPostLikeNotificationsEnabled({ user, enabled } = {}) {
+  if (!user?.id) {
+    throw new Error(t("notifications.errors.signInToUpdateSettings"));
+  }
+
+  // Only this column: a row that exists keeps its workout-start mode, and a
+  // new one gets the table's default for it.
+  const { error } = await supabase.from(NOTIFICATION_PREFERENCES_TABLE).upsert(
+    {
+      user_id: user.id,
+      [POST_LIKE_NOTIFICATIONS_COLUMN]: enabled === true,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id" }
+  );
+
+  if (error) {
+    if (isMissingPostLikeColumn(error)) {
+      return { enabled: true, available: false };
+    }
+
+    throw normalizeNotificationError(error);
+  }
+
+  return getPostLikeNotificationSetting({ user });
 }
 
 export async function setWorkoutStartNotificationSources({

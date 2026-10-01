@@ -58,6 +58,15 @@
 ### Changed
 - **The lock screen shows which set you are on.** The button reads "Sæt 2 af 3 færdigt". A row of dots shows the exercise's sets: done ones filled, the current one orange and larger, the rest hollow. On iOS the dots are on the lock screen card, which grows from 132 to 148 pt, and in the expanded Dynamic Island. On Android they are on the collapsed and the expanded card.
 - **Tests:** `npm run test:rest-count-up`, plus `test-live-workout.js` and `test-set-carry-over.js`. The worst-case lock-screen state is 3891 bytes of 4096.
+### Added
+- **A like tells the post's author.** When somebody likes your workout post, you get a row in your notification history ("{name} synes godt om dit opslag"), and a push once the new Edge Function is deployed. Tapping it opens your posts with that one first (`UserPostsPage`), as there is no page for a single post. There is no notification for your own like, across a block, on a hidden or deleted post, or when you have switched likes off. Liking the same post again never sends a second.
+  - **Settings:** a new switch, "Når nogen synes godt om dit opslag" (`notification_preferences.post_like_notifications`, on by default). Before the migration has run it shows greyed out.
+  - **Cloud:** `20261009090000_a-like-notifies-the-poster.sql` (run on 2026-10-01) adds the column and an after-insert trigger on `social_post_like` that writes one event and one inbox row per liker and post. Checked on a throwaway Postgres 17.
+  - **Edge Functions:** the new `send-post-liked-notification`, called by a Database Webhook on `social_post_like` inserts, sends the push. `send-workout-started-notification` counts only workout starts towards its 12-an-hour limit, so likes cannot use it up.
+  - **By hand, in this order:** deploy `send-workout-started-notification`, run the migration, deploy `send-post-liked-notification`, then create the webhook (INSERT on `public.social_post_like`, header `x-fitven-webhook-secret`).
+  - `Utils/notificationHistory.js` holds every notification kind's text, route and hint, taken out of `NotificationHistoryPage`. Lift verification is not among them; it is removed in #303.
+- **The privacy policy** says that a post's author is told who liked it. It is raised to 2026-09-30.1, the same version as #303, so everyone is asked once for both.
+- **Tests:** `npm run test:post-like-notification`.
 
 ---
 ## [2.16.7] - Unreleased

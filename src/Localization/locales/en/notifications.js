@@ -11,6 +11,7 @@ export default {
   hints: {
     openActivity: "Opens today's activity",
     openExercise: "Opens your exercise",
+    openPost: "Opens your post",
   },
   // The inbox row the server writes when three people have reported one of
   // your shared exercises. The server's title and body are English; these are
@@ -19,8 +20,15 @@ export default {
     title: "Your exercise was hidden",
     body: "{name} was reported by several people and no longer shows in the library. Copies people already added stay.",
   },
+  // The inbox row the server writes when somebody likes one of your posts.
+  // {name} is the person who liked it; the body is the post's workout.
+  postLiked: {
+    title: "{name} liked your post",
+    bodyFallback: "Your workout post",
+    someone: "Someone",
+  },
   emptyTitle: "You're all caught up",
-  emptyBody: "Workout starts and future activity updates will appear here.",
+  emptyBody: "When somebody starts a workout or likes one of your posts, you will see it here.",
   openSettings: "Open notification settings",
 
   settings: {
@@ -42,6 +50,12 @@ export default {
       "Saved. Another account is still signed in to notifications on this device, so this one will not receive them yet. Sign out of the other account, or wait a week for it to be released.",
     savedRegistrationFailed:
       "Saved. This device could not register for push notifications, so it may not receive them yet.",
+    postLikesTitle: "When someone likes your post",
+    postLikesBody:
+      "Get a notification when somebody likes one of your workout posts. Once per person per post.",
+    postLikesUnavailable:
+      "This setting is not available yet. Likes are not announced until it is.",
+    postLikesSaveFailed: "Could not save the setting for likes.",
     workoutStartTitle: "When a workout starts",
     workoutStartBody:
       "Choose who triggers a notification when they start training.",

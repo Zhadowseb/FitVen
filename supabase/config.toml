@@ -8,3 +8,8 @@ verify_jwt = true
 # STORE_STATS_CRON_SECRET itself before it does anything else.
 [functions.store-stats]
 verify_jwt = false
+
+# Called by a Database Webhook on social_post_like, which has no user's JWT to
+# send. The function checks FITVEN_NOTIFICATION_WEBHOOK_SECRET itself first.
+[functions.send-post-liked-notification]
+verify_jwt = false

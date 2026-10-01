@@ -84,6 +84,7 @@ behind by accident.
 | `20261006090000_a-split-pins-its-workouts.sql` | yes |
 | `20261007090000_remove-lift-verification.sql` | yes |
 | `20261008090000_a-set-counts-for-fewer-reps.sql` | yes |
+| `20261009090000_a-like-notifies-the-poster.sql` | yes |
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
 centre match, per-centre lift leaderboards with video verification, and what
@@ -451,6 +452,19 @@ as its reason for names only: a local workout id is one phone's, a `sync_id`
 is every phone's. `split_names` stays and is still written. It can run before
 or after the app ships: until it has, the app finds the column missing, sends
 the names alone and keeps the pins on the phone (`src/Utils/splitEntries.js`).
+
+`20261009090000_a-like-notifies-the-poster.sql` was run on 2026-10-01. It makes
+a like tell the post's author - a row in their notification history, "Bo
+liked your post" - through an after insert trigger on `social_post_like`,
+once per person per post (for as long as the event row is kept), never for your own like, never across a block, and
+not when the author has switched likes off
+(`notification_preferences.post_like_notifications`, new). The push is the
+`send-post-liked-notification` Edge Function behind a Database Webhook on
+`social_post_like` INSERT. Before running it, redeploy
+`send-workout-started-notification`, whose rate limit used to count every
+notification event and would have counted likes; then deploy the new
+function and create the webhook - the steps are at the bottom of the file.
+Until it has run, a like tells nobody and the switch in the app is greyed out.
 
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to
