@@ -15,7 +15,7 @@ import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
 import ArrowLeft from "@resources/Icons/UI-icons/ArrowLeft";
 import ChevronLeft from "@resources/Icons/UI-icons/ChevronLeft";
 import ChevronRight from "@resources/Icons/UI-icons/ChevronRight";
-import { ThemedText, ThemedTextInput } from "@resources/ThemedComponents";
+import { ThemedStateBlock, ThemedText, ThemedTextInput } from "@resources/ThemedComponents";
 import {
   buildCalendarLookups,
   formatIsoDate,
@@ -456,9 +456,13 @@ export default function SplitWorkoutPicker({ picked = [], onBack, onAdd, onRenam
       {isLoading ? (
         <ActivityIndicator color={theme.primary} style={styles.loading} />
       ) : loadFailed ? (
-        <ThemedText style={styles.quiet} setColor={theme.quietText}>
-          {t("train.pick.loadFailed")}
-        </ThemedText>
+        <ThemedStateBlock
+          variant="error"
+          message={t("train.pick.loadFailed")}
+          actionLabel={t("common.retry")}
+          onAction={() => setReloadKey((key) => key + 1)}
+          style={styles.loadFailed}
+        />
       ) : !monthHasWorkouts ? (
         <ThemedText style={styles.quiet} setColor={theme.quietText}>
           {t("train.pick.emptyMonth")}

@@ -196,18 +196,17 @@ export async function saveChosenSplit({ userId, entries }) {
 }
 
 /**
- * The chosen split's sessions, resolved against what is on the phone: the
- * library for names, and the pinned workouts (and their last copies) by
- * sync_id. Returns the library too, for what else the Train tab shows.
+ * The chosen split's sessions, resolved against what is on the phone:
+ * `rows` for names, and the pinned workouts (and their last copies) by
+ * sync_id. `rows` is the library on the Train tab, and on Home only the
+ * newest workout of each name in it, which resolves every session the same.
  */
-async function resolveEntries(db, entries, { now, library = null }) {
-  const rows = library ?? (await programService.getWorkoutLibrary(db, { limit: LIBRARY_LIMIT }));
+async function resolveEntries(db, entries, { now, rows }) {
   const syncIds = (entries ?? []).flatMap((entry) => [entry.workout, entry.last]).filter(Boolean);
   const pinnedRows = syncIds.length > 0 ? await programService.getWorkoutsBySyncIds(db, syncIds) : [];
   const history = namedHistory(rows);
 
   return {
-    library: rows,
     history,
     sessions: entries
       ? resolveChosenSplit(entries, history, {
@@ -231,7 +230,7 @@ export async function getSplitCard(db, { userId, now = Date.now() }) {
     workoutService.getSplitGroups(db, { now }),
     getChosenSplitEntries({ userId }),
   ]);
-  const { history, sessions: chosenSessions } = await resolveEntries(db, chosenEntries, { now, library });
+  const { history, sessions: chosenSessions } = await resolveEntries(db, chosenEntries, { now, rows: library });
   const sessions = chosenEntries ? chosenSessions : sessionsFromGuess(guess, { now });
 
   return {
@@ -254,7 +253,10 @@ export async function getSplitCard(db, { userId, now = Date.now() }) {
  * way the Train tab resolves it, and the guess only when none is chosen.
  *
  * Home does not wait on the network: the choice is read from the phone, and
- * the cloud's is fetched behind it, for the next time Home loads.
+ * the cloud's is fetched behind it, for the next time Home loads. Nor does it
+ * read the library, as it loads on every focus: a session finds its workout
+ * among the newest workout of each name, which is the one the library would
+ * have given it (programService.getNewestWorkoutOfEachName).
  */
 export async function getHomeSplitGroups(db, { userId, now = Date.now() }) {
   const cached = userId ? await readCache(userId) : null;
@@ -267,7 +269,8 @@ export async function getHomeSplitGroups(db, { userId, now = Date.now() }) {
     return workoutService.getSplitGroups(db, { now });
   }
 
-  const { sessions } = await resolveEntries(db, cached.entries, { now });
+  const rows = await programService.getNewestWorkoutOfEachName(db, { limit: LIBRARY_LIMIT });
+  const { sessions } = await resolveEntries(db, cached.entries, { now, rows });
 
   return homeGroupsFromSplit(sessions);
 }

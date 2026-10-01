@@ -20,8 +20,8 @@ function positiveNumber(value) {
 
 /**
  * One clip of the exercise, from the camera or the library, checked against
- * the limits before anything is uploaded. The picker options are the gym
- * leaderboard's, with this exercise's limit: 720p on iOS, no editing.
+ * the limits before anything is uploaded. The picker is held to the
+ * exercise video's length, 720p on iOS, and no editing.
  *
  * Resolves with what uploadExerciseVideo takes - { uri, durationMs, fileSize,
  * mimeType } - or null when the user backed out. Anything else is thrown with
@@ -58,9 +58,9 @@ export default async function pickExerciseVideo({ fromCamera = false } = {}) {
     return null;
   }
 
-  // expo-image-picker reports the duration in milliseconds on both platforms
-  // (see gymService.attachLiftVideo). Either can be missing; then the service
-  // is the one that checks.
+  // expo-image-picker reports the duration in milliseconds on both platforms.
+  // Either can be missing, and is then not checked here;
+  // exerciseService.uploadExerciseVideo checks the same limits again.
   const durationMs = positiveNumber(asset.duration);
   const fileSize = positiveNumber(asset.fileSize);
 

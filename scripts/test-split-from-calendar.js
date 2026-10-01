@@ -52,6 +52,15 @@ function database() {
   );
   assert.ok(picker.includes('useState(() => shownNameOf(workout) ?? "")'), "the field starts on the shown name");
   assert.ok(picker.includes('typed !== (shownNameOf(current) ?? "")'), "an untouched field is no rename");
+
+  // A month that failed to load offers to load it again.
+  assert.ok(
+    /loadFailed \? \(\s*<ThemedStateBlock\s+variant="error"\s+message=\{t\("train\.pick\.loadFailed"\)\}\s+actionLabel=\{t\("common\.retry"\)\}\s+onAction=\{\(\) => setReloadKey\(\(key\) => key \+ 1\)\}/.test(
+      picker
+    ),
+    "a failed month has no retry"
+  );
+  assert.ok(/\}, \[db, monthPage, reloadKey\]\);/.test(picker), "the month's load does not rerun on reloadKey");
 }
 
 async function main() {

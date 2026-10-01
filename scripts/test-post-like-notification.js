@@ -1,10 +1,13 @@
 // A like tells the post's author: what the notification page and the push
 // say, where tapping either goes, what the push function sends and to whom,
-// and what the migration promises, read as text.
+// what the settings switch reads before and after the migration, and what the
+// migration promises, read as text.
 //
-// The app mapping (src/Utils/notificationHistory.js) and the push function's
-// decisions (supabase/functions/send-post-liked-notification/message.ts,
-// through Node's own TypeScript stripping) are run for real. The SQL is read
+// The app mapping (src/Utils/notificationHistory.js), the switch and the
+// Profile tile (src/Services/notificationService.js, against a fake Supabase)
+// and the push function's decisions
+// (supabase/functions/send-post-liked-notification/message.ts, through Node's
+// own TypeScript stripping) are run for real. The SQL is read
 // the way the other migration checks read theirs: nothing here talks to a
 // database, so those checks are a floor, not a proof - the migration itself
 // was run twice against Postgres 17 with every scenario (a like, a self-like,
@@ -186,8 +189,6 @@ assert.ok(
 );
 assert.ok(/export async function getPostLikeNotificationSetting/.test(service));
 assert.ok(/export async function setPostLikeNotificationsEnabled/.test(service));
-assert.ok(/MISSING_COLUMN_CODES = new Set\(\["42703", "PGRST204"\]\)/.test(service));
-assert.ok(/return \{ enabled: true, available: false \};/.test(service), "a missing column reads as on and not available");
 
 const settings = read("src/Pages/NotificationSettingsPage/NotificationSettingsPage.js");
 assert.ok(/getPostLikeNotificationSetting/.test(settings) && /setPostLikeNotificationsEnabled/.test(settings));
@@ -334,8 +335,213 @@ assert.ok(
   assert.strictEqual(message.secretsMatch("secret", "secreT"), false);
   assert.strictEqual(message.secretsMatch("", ""), false, "no secret set refuses everybody");
 
-  console.log("Post like notification: text, routes, push, wiring and the migration's promises passed.");
+  await switchAndTile();
+
+  console.log("Post like notification: text, routes, the switch, the tile, push, wiring and the migration's promises passed.");
 })().catch((error) => {
   console.error(error);
   process.exit(1);
 });
+
+/* ------------------------------------------ the switch and the tile -- */
+
+// notificationService against a fake Supabase that answers the way the
+// project does before and after 20261009090000: a select or an upsert naming
+// post_like_notifications fails with 42703 / PGRST204 until it has run.
+async function switchAndTile() {
+  const cloud = {
+    hasColumn: true,
+    // An error for any request that names the column, in place of the column
+    // simply being missing - a different fault the app must not swallow.
+    columnError: null,
+    preference: { workout_start_mode: "none", post_like_notifications: true },
+    tokens: [],
+    upserts: [],
+  };
+  const namesColumn = (value) => /\bpost_like_notifications\b/.test(value);
+  const missingOnRead = {
+    code: "42703",
+    message: "column notification_preferences.post_like_notifications does not exist",
+  };
+  const missingOnWrite = {
+    code: "PGRST204",
+    message: "Could not find the 'post_like_notifications' column of 'notification_preferences' in the schema cache",
+  };
+  const fakeSupabase = {
+    auth: {
+      getSession: async () => ({ data: { session: null }, error: null }),
+      getUser: async () => ({ data: { user: null }, error: null }),
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }),
+    },
+    from(table) {
+      if (table === "push_tokens") {
+        return {
+          select: () => ({
+            eq: async () => ({ data: cloud.tokens, error: null }),
+          }),
+        };
+      }
+
+      if (table !== "notification_preferences") {
+        throw new Error(`the like switch reached for ${table}`);
+      }
+
+      return {
+        select: (columns) => ({
+          eq: () => ({
+            async maybeSingle() {
+              if (namesColumn(columns) && cloud.columnError) {
+                return { data: null, error: cloud.columnError };
+              }
+
+              if (namesColumn(columns) && !cloud.hasColumn) {
+                return { data: null, error: missingOnRead };
+              }
+
+              const data = {};
+
+              for (const column of columns.split(",").map((part) => part.trim())) {
+                data[column] = cloud.preference[column];
+              }
+
+              return { data, error: null };
+            },
+          }),
+        }),
+        async upsert(row) {
+          const columns = Object.keys(row).join(",");
+
+          if (namesColumn(columns) && cloud.columnError) {
+            return { error: cloud.columnError };
+          }
+
+          if (namesColumn(columns) && !cloud.hasColumn) {
+            return { error: missingOnWrite };
+          }
+
+          cloud.upserts.push(row);
+          cloud.preference = { ...cloud.preference, ...row };
+          return { error: null };
+        },
+      };
+    },
+    rpc: async () => ({ data: null, error: null }),
+    functions: { invoke: async () => ({ data: null, error: null }) },
+  };
+
+  loadAppModule.stubModule("@supabase/supabase-js", { createClient: () => fakeSupabase, processLock: () => {} });
+  loadAppModule.stubModule("react-native", {
+    Platform: { OS: "android" },
+    AppState: { addEventListener: () => ({ remove() {} }) },
+    I18nManager: {},
+    NativeModules: {},
+  });
+  loadAppModule.stubModule("@react-native-async-storage/async-storage", {
+    __esModule: true,
+    default: {
+      getItem: async () => null,
+      setItem: async () => {},
+      removeItem: async () => {},
+      getAllKeys: async () => [],
+      multiRemove: async () => {},
+    },
+  });
+  loadAppModule.stubModule("expo-notifications", {
+    setNotificationHandler() {},
+    getPermissionsAsync: async () => ({ status: "granted" }),
+    setNotificationChannelAsync: async () => {},
+    AndroidImportance: { HIGH: 4 },
+  });
+  loadAppModule.stubModule("expo-constants", { default: {} });
+  loadAppModule.stubModule("react-native-url-polyfill/auto", {});
+  loadAppModule.stubModule("expo-sqlite/localStorage/install", {});
+  loadAppModule.stubModule("expo-secure-store", {});
+
+  const notifications = loadAppModule("src/Services/notificationService.js");
+  const user = { id: AUTHOR };
+  const device = { id: "t1", enabled: true, platform: "android" };
+
+  // Signed out: nothing to read, and the switch is greyed out.
+  assert.deepStrictEqual(await notifications.getPostLikeNotificationSetting({}), { enabled: true, available: false });
+
+  /* ---- before the migration: on, and not available -- */
+  cloud.hasColumn = false;
+  assert.deepStrictEqual(
+    await notifications.getPostLikeNotificationSetting({ user }),
+    { enabled: true, available: false },
+    "the read of a missing column takes the settings screen down"
+  );
+  assert.deepStrictEqual(
+    await notifications.setPostLikeNotificationsEnabled({ user, enabled: false }),
+    { enabled: true, available: false },
+    "switching likes off before the migration throws instead of greying out"
+  );
+  assert.strictEqual(cloud.upserts.length, 0);
+
+  cloud.tokens = [device];
+  assert.strictEqual(
+    await notifications.getPushNotificationsEnabled({ user }),
+    false,
+    "workout starts off and no like column: nothing reaches the device"
+  );
+
+  /* ---- a different fault is not "not run yet" -- */
+  cloud.hasColumn = true;
+  cloud.columnError = { code: "42703", message: 'column "workout_start_mode_v2" does not exist' };
+  await assert.rejects(
+    notifications.getPostLikeNotificationSetting({ user }),
+    "another missing column read as the like column missing"
+  );
+  await assert.rejects(notifications.setPostLikeNotificationsEnabled({ user, enabled: true }));
+  cloud.columnError = {
+    code: "PGRST204",
+    message: "Could not find the 'post_like_notifications_v2' column of 'notification_preferences' in the schema cache",
+  };
+  await assert.rejects(
+    notifications.getPostLikeNotificationSetting({ user }),
+    "a column whose name only starts the same is another column"
+  );
+  cloud.columnError = { code: "42501", message: "permission denied for column post_like_notifications" };
+  await assert.rejects(
+    notifications.getPostLikeNotificationSetting({ user }),
+    "naming the column is not enough: the code has to say it is missing"
+  );
+  assert.strictEqual(
+    await notifications.getPushNotificationsEnabled({ user }),
+    false,
+    "the tile reads off when the like setting cannot be read, rather than failing"
+  );
+  cloud.columnError = null;
+
+  /* ---- after the migration -- */
+  cloud.preference = { workout_start_mode: "none", post_like_notifications: false };
+  assert.deepStrictEqual(await notifications.getPostLikeNotificationSetting({ user }), { enabled: false, available: true });
+  assert.strictEqual(await notifications.getPushNotificationsEnabled({ user }), false, "likes off and workout starts off");
+
+  assert.deepStrictEqual(
+    await notifications.setPostLikeNotificationsEnabled({ user, enabled: true }),
+    { enabled: true, available: true }
+  );
+  assert.strictEqual(cloud.upserts.length, 1);
+  assert.deepStrictEqual(
+    Object.keys(cloud.upserts[0]).sort(),
+    ["post_like_notifications", "updated_at", "user_id"],
+    "the switch writes its own column only, so the workout-start mode stands"
+  );
+  assert.strictEqual(cloud.preference.workout_start_mode, "none");
+
+  assert.strictEqual(
+    await notifications.getPushNotificationsEnabled({ user }),
+    true,
+    "workout starts off, likes on and a device registered: a like still reaches it"
+  );
+  cloud.tokens = [];
+  assert.strictEqual(await notifications.getPushNotificationsEnabled({ user }), false, "no device registered");
+  cloud.tokens = [{ ...device, enabled: false }];
+  assert.strictEqual(await notifications.getPushNotificationsEnabled({ user }), false, "a device with push switched off");
+
+  cloud.tokens = [device];
+  cloud.preference = { workout_start_mode: "following", post_like_notifications: false };
+  assert.strictEqual(await notifications.getPushNotificationsEnabled({ user }), true, "workout starts on");
+  assert.strictEqual(await notifications.getPushNotificationsEnabled({}), false, "signed out");
+}

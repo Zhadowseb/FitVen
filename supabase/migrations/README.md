@@ -435,6 +435,25 @@ It also adds `set_cloud_exercise_instance_idx`, the index Progress finds the
 sets through. Before it had run, the list still counted three a week while the
 app said two. The checks are at the bottom of the file.
 
+`20261005090000_a-set-knows-a-counted-rest.sql` was run on 2026-09-30. It adds
+`set.rest_counted`: whether a set's rest was counted up by the app after it was
+ticked, rather than planned. Null means not known - every older row, and every
+row an older app writes - and the app keeps its own flag over a null. It can
+run before or after the app ships: until it has, the app finds the column
+missing, syncs sets without it for that session and keeps the flag on the
+phone; a counted rest travels as a plain rest meanwhile
+(`src/Utils/restCountUp.js`).
+
+`20261007090000_remove-lift-verification.sql` was run on 2026-10-01. It takes
+video verification of lifts out of the cloud: the votes, the video columns on
+`gym_lift`, the review queue and the request, the storage policies of the
+`lift-videos` bucket, and every `lift_verification_requested` notification.
+Every list now counts every lift. **One step is left, by hand:** SQL cannot
+delete from `storage.objects` or `storage.buckets` in Supabase, so the files
+are still in the bucket. Empty `lift-videos` and delete it in the dashboard,
+under Storage. Until then the files sit there with no policy that lets anybody
+read, upload or delete them. It is also in `docs/SIKKERHED-DINE-OPGAVER.md`.
+
 `20261008090000_a-set-counts-for-fewer-reps.sql` was run on 2026-10-01. It
 restates `private.category_rows` from `20261007090000` with one rule changed:
 Powerlifting counts the heaviest weight of any set of one rep or more, so

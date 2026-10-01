@@ -53,7 +53,7 @@ import ArrowDoubleUp from "../../../../Resources/Icons/UI-icons/ArrowDoubleUp";
 import Eye from "../../../../Resources/Icons/UI-icons/Eye";
 import ChevronLeft from "../../../../Resources/Icons/UI-icons/ChevronLeft";
 import ThreeDots from "../../../../Resources/Icons/UI-icons/ThreeDots";
-import Sun from "../../../../Resources/Icons/UI-icons/Sun";
+import ScreenOn from "@resources/Icons/UI-icons/ScreenOn";
 import { useWorkoutKeepAwake } from "./useWorkoutKeepAwake";
 
 const Resistance = ({
@@ -770,9 +770,10 @@ const Resistance = ({
                 },
               ]}
             >
-              <Sun
+              <ScreenOn
                 width={18}
                 height={18}
+                on={keepAwakeEnabled}
                 color={keepAwakeEnabled ? primaryTextColor : quietText}
               />
             </TouchableOpacity>

@@ -951,6 +951,15 @@ export async function getDaysByMicrocycle(db, microcycleId) {
   return programRepository.getDaysByMicrocycle(db, microcycleId);
 }
 
+/**
+ * The newest workout of each name in the library's window, without the rest
+ * of it - what Home resolves a chosen split by name from
+ * (programRepository.getNewestWorkoutOfEachName).
+ */
+export async function getNewestWorkoutOfEachName(db, { limit = 500 } = {}) {
+  return programRepository.getNewestWorkoutOfEachName(db, { limit });
+}
+
 /** The split's pinned workouts and their copies, by sync_id (programRepository.getWorkoutsBySyncIds). */
 export async function getWorkoutsBySyncIds(db, syncIds) {
   return programRepository.getWorkoutsBySyncIds(db, syncIds);

@@ -57,7 +57,7 @@ export default {
     back: "Back",
     backToSplit: "Back to your split",
     backToCalendar: "Back to the calendar",
-    loadFailed: "The workouts could not be loaded. Try again in a moment.",
+    loadFailed: "The workouts could not be loaded.",
     emptyMonth: "No workouts this month.",
     dayTitle: "Workouts on {date}",
     exercises: "What was in it",

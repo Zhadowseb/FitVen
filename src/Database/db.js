@@ -78,6 +78,12 @@ async function ensureCalendarPerformanceIndexes(db) {
          has to go back to the table. */
       CREATE INDEX IF NOT EXISTS exercise_instance_name_idx
       ON Exercise_Instance(exercise_name, exercise_instance_id);
+
+      /* The split's pinned workouts are looked up by sync_id every time Home
+         or the Train tab loads (programRepository.getWorkoutsBySyncIds).
+         Without this each lookup scans every workout the user has. */
+      CREATE INDEX IF NOT EXISTS workout_type_instance_sync_id_idx
+      ON Workout_Type_Instance(sync_id);
     `);
   } catch (error) {
     console.warn("Could not create calendar performance indexes:", error);

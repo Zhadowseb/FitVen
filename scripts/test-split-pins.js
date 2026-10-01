@@ -130,6 +130,10 @@ console.warn = (...args) => {
 
 const splitService = loadAppModule("src/Services/splitService.js");
 const entriesUtil = loadAppModule("src/Utils/splitEntries.js");
+const splitUtil = loadAppModule("src/Utils/splitCard.js");
+const programRepository = loadAppModule("src/Repository/programRepository.js");
+const fs = require("fs");
+const path = require("path");
 const { programSchemaSql } = loadAppModule("src/Database/schema/program.js");
 const { weightliftingSchemaSql } = loadAppModule("src/Database/schema/weightlifting.js");
 const { runningSchemaSql } = loadAppModule("src/Database/schema/running.js");
@@ -183,16 +187,20 @@ const daysAgo = (days) => {
 
 let nextSetId = 1;
 
-function workout(db, id, { label, days, done = 1, syncId = `sync-${id}`, weight = 60, exercises = ["Bench press", "Dips"] }) {
+function workout(
+  db,
+  id,
+  { label, days, done = 1, syncId = `sync-${id}`, weight = 60, exercises = ["Bench press", "Dips"], type = "Resistance" }
+) {
   const date = localDate(daysAgo(days));
 
   db.sqlite.prepare("INSERT INTO Day (day_id, Weekday, date) VALUES (?, 'Monday', ?)").run(id, date);
   db.sqlite
     .prepare(
       `INSERT INTO Workout_Type_Instance (workout_id, day_id, date, label, workout_type, done, sync_id, sync_version, needs_sync)
-       VALUES (?, ?, ?, ?, 'Resistance', ?, ?, 1, 0)`
+       VALUES (?, ?, ?, ?, ?, ?, ?, 1, 0)`
     )
-    .run(id, id, date, label, done, syncId);
+    .run(id, id, date, label, type, done, syncId);
   exercises.forEach((name, index) => {
     const exerciseId = id * 10 + index;
 
@@ -402,6 +410,136 @@ async function main() {
     entriesUtil.readSplitCache({ names: ["Push", "Pull"] }).entries.map((entry) => entry.workout),
     [null, null]
   );
+
+  /* ------------------------------- Home without the workout library -- */
+
+  // Home loads on every focus, so it must not read the library (500 rows,
+  // each with its counts and record check) to resolve six sessions. It reads
+  // the newest workout of each name instead, and has to land on exactly what
+  // the Train tab lands on: names compared normalised ("Push 2" is Push), a
+  // planned or run session's fallback, a pin, and the library's 500-workout
+  // window.
+  const library = database();
+  const OTHER_USER = "user-2";
+
+  workout(library, 1, { label: "Ancient", days: 400 });
+  // 500 newer workouts push Ancient out of the library's window.
+  for (let id = 2; id <= 501; id += 1) {
+    workout(library, id, { label: "Filler", days: 30, exercises: [] });
+  }
+  workout(library, 600, { label: "Push", days: 12, weight: 70 });
+  workout(library, 601, { label: "Push 2", days: 3, exercises: ["Bench press", "Dips", "Flyes"] });
+  workout(library, 602, { label: "Mobility", days: -2, done: 0, exercises: ["Hip opener"] });
+  workout(library, 603, { label: "Easy run", days: 5, type: "Run", exercises: [] });
+  workout(library, 604, { label: "Øvre krop", days: 8, type: "Upperbody" });
+  workout(library, 605, { label: "Legs", days: 15, syncId: "legs-old", exercises: ["Squat", "Lunge", "Calf raise"] });
+  workout(library, 606, { label: "Legs (2026-01-04)", days: 2, exercises: ["Squat"] });
+  workout(library, 607, { label: "Resistance", days: 1 }); // an unnamed quick start
+
+  // One exercise of the old Legs deleted with its set left as it was, and one
+  // set of a live exercise deleted: neither is counted.
+  library.sqlite.prepare("UPDATE Exercise_Instance SET deleted_at = '2026-09-30T10:00:00Z' WHERE exercise_instance_id = 6051").run();
+  library.sqlite.prepare(`UPDATE "Set" SET deleted_at = '2026-09-30T10:00:00Z' WHERE exercise_instance_id = 6052`).run();
+
+  await afterMigration.saveChosenSplit({
+    userId: OTHER_USER,
+    entries: [
+      { name: "Push", workout: null },
+      { name: "Mobility", workout: null },
+      { name: "Easy run", workout: null },
+      { name: "Øvre krop", workout: null },
+      { name: "Ancient", workout: null },
+      { name: "Legs", workout: "legs-old" },
+    ],
+  });
+
+  const queries = [];
+  const getAllAsync = library.getAllAsync;
+  const execAsync = library.execAsync;
+
+  library.getAllAsync = async (sql, params) => {
+    const rows = await getAllAsync.call(library, sql, params);
+    queries.push({ sql, params, rows: rows.length });
+    return rows;
+  };
+  library.execAsync = async (sql) => {
+    queries.push({ sql, params: [], rows: 0 });
+    return execAsync.call(library, sql);
+  };
+
+  const homeGroups = await afterMigration.getHomeSplitGroups(library, { userId: OTHER_USER });
+  const homeQueries = queries.splice(0);
+
+  library.getAllAsync = getAllAsync;
+  library.execAsync = execAsync;
+
+  assert.ok(homeGroups.every((group) => group.isChosen), "Home drew the guess, not the chosen split");
+  assert.ok(
+    homeQueries.every(({ sql }) => !/Workout_Favorite|completed_set_count|has_personal_record/.test(sql)),
+    "Home read the workout library to resolve its split"
+  );
+  assert.ok(
+    homeQueries.reduce((sum, query) => sum + query.rows, 0) < 20,
+    `Home read ${homeQueries.reduce((sum, query) => sum + query.rows, 0)} rows for six sessions`
+  );
+
+  const trainCard = await afterMigration.getSplitCard(library, { userId: OTHER_USER });
+
+  assert.equal(trainCard.source, "chosen");
+  assert.deepEqual(homeGroups, splitUtil.homeGroupsFromSplit(trainCard.sessions), "Home and the Train tab resolve the split differently");
+  assert.deepEqual(
+    trainCard.sessions.map((session) => [session.name, session.lastWorkoutId]),
+    [
+      ["Push", 601],
+      ["Mobility", 602],
+      ["Easy run", 603],
+      ["Øvre krop", 604],
+      ["Ancient", null],
+      ["Legs", 605],
+    ],
+    "Push 2 is the newest Push, a planned and a run session repeat their own, Ancient is past the window, the pin is kept"
+  );
+  assert.equal(trainCard.sessions[1].lastTrainedAt, null, "a planned workout was never trained");
+  assert.equal(trainCard.sessions[5].daysSince, 2, "the pinned Legs was last trained with the newest Legs");
+  assert.deepEqual(
+    [trainCard.sessions[5].exerciseCount, trainCard.sessions[5].setCount],
+    [2, 1],
+    "the pinned Legs counts a deleted exercise, or the set of one, or a deleted set"
+  );
+  assert.ok(!homeGroups.some((group) => group.name === "Ancient"), "a session with nothing to copy has no card");
+
+  // The pinned workout is found through its sync_id, and that has an index.
+  const indexSql = fs
+    .readFileSync(path.join(__dirname, "..", "src", "Database", "db.js"), "utf8")
+    .match(/CREATE INDEX IF NOT EXISTS workout_type_instance_sync_id_idx[\s\S]*?;/)?.[0];
+
+  assert.ok(indexSql, "db.js has no index on Workout_Type_Instance(sync_id)");
+  library.sqlite.exec(indexSql);
+
+  const bySyncId = homeQueries.find(({ sql }) => /w\.sync_id IN/.test(sql));
+  const plan = library.sqlite.prepare(`EXPLAIN QUERY PLAN ${bySyncId.sql}`).all(...bySyncId.params);
+
+  assert.ok(
+    plan.some((line) => /workout_type_instance_sync_id_idx/.test(line.detail)),
+    "the pinned workouts are looked up by scanning every workout"
+  );
+
+  // The counts the library and the pinned lookup give the old Legs: its two
+  // live exercises, and the one live set left between them.
+  const libraryLegs = (await programRepository.getWorkoutLibrary(library, { limit: 1000 })).find((row) => row.workout_id === 605);
+  const pinnedLegs = (await programRepository.getWorkoutsBySyncIds(library, ["legs-old"]))[0];
+  const newestLegs = (await programRepository.getNewestWorkoutOfEachName(library, { limit: 1000 })).find(
+    (row) => row.workout_id === 605
+  );
+
+  for (const [where, row] of [
+    ["the library", libraryLegs],
+    ["the pinned lookup", pinnedLegs],
+    ["the newest of each name", newestLegs],
+  ]) {
+    assert.deepEqual([row.exercise_count, row.set_count], [2, 1], `${where} counts deleted exercises or sets`);
+  }
+  assert.equal(libraryLegs.completed_set_count, 1, "the library counts a deleted exercise's done set");
 
   /* --------------------------------------------------- the pure parts -- */
 
