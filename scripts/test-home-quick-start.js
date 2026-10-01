@@ -335,6 +335,24 @@ assert.strictEqual(splitGuess.exerciseOverlap([], ["a"]), 0, "nothing overlaps w
     true,
     "the week across the spring clock change is counted as six days"
   );
+
+  // A split somebody chose is not a guess waiting for the history: it shows
+  // at once - in the first week, and before any workout is finished.
+  assert.strictEqual(
+    splitForming.splitFormingState({ firstWorkoutAt: firstDay, now: at(16, 12), groupCount: 2, isChosen: true }).showSplit,
+    true,
+    "a chosen split waits out the first week like the guess"
+  );
+  assert.strictEqual(
+    splitForming.splitFormingState({ firstWorkoutAt: null, now: at(16, 12), groupCount: 2, isChosen: true }).showSplit,
+    true,
+    "a chosen split of planned workouts waits for a first finished one"
+  );
+  assert.strictEqual(
+    splitForming.splitFormingState({ firstWorkoutAt: null, now: at(16, 12), groupCount: 0, isChosen: true }).showSplit,
+    false,
+    "a chosen split with nothing to open shows an empty row"
+  );
 }
 
 /* ------------------------------------------------------------- wiring -- */
@@ -535,6 +553,23 @@ assert.ok(
     /showSplit \?[\s\S]*?:\s*\(?\s*<SplitForming /.test(splitBlock),
   "the split block vanishes again for somebody who has not trained yet"
 );
+
+// A chosen split is told apart from the guess by its groups.
+assert.ok(
+  /isChosen: groups\.some\(\(group\) => group\.isChosen\)/.test(splitBlock),
+  "the split cards stopped telling a chosen split from the guess"
+);
+
+// Home reads the chosen split, the way the Train tab resolves it, and the
+// guess only through it - not the guess straight from workoutService.
+{
+  const homeSource = fs.readFileSync(path.join(root, "src", "Pages", "HomePage", "HomePage.js"), "utf8");
+
+  assert.ok(
+    /splitService\.getHomeSplitGroups\(db/.test(homeSource) && !/workoutService\.getSplitGroups\(/.test(homeSource),
+    "Home shows the guess even when a split is chosen"
+  );
+}
 
 // Named in both states, so the block says what it is for before there is a
 // card to carry a name.

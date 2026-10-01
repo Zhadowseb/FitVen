@@ -948,6 +948,11 @@ export async function getDaysByMicrocycle(db, microcycleId) {
   return programRepository.getDaysByMicrocycle(db, microcycleId);
 }
 
+/** The split's pinned workouts and their copies, by sync_id (programRepository.getWorkoutsBySyncIds). */
+export async function getWorkoutsBySyncIds(db, syncIds) {
+  return programRepository.getWorkoutsBySyncIds(db, syncIds);
+}
+
 export async function getWorkoutLibraryCounts(db) {
   return programRepository.getWorkoutLibraryCounts(db);
 }

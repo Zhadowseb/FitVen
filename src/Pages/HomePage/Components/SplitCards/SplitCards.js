@@ -200,6 +200,8 @@ export default function SplitCards({
     firstWorkoutAt,
     now: Date.now(),
     groupCount: groups.length,
+    // A split somebody chose needs no week to take shape.
+    isChosen: groups.some((group) => group.isChosen),
   });
 
   return (

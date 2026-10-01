@@ -227,6 +227,18 @@ export async function updateWorkoutLabel(db, { workoutId, label }) {
   syncWorkoutTypeInstancesInBackground(db);
 }
 
+/**
+ * The workout's sync_id - what the split pins it by - given one first if it
+ * has none, which is then uploaded like any change.
+ */
+export async function ensureWorkoutSyncId(db, workoutId) {
+  const syncId = await workoutRepository.ensureWorkoutSyncId(db, workoutId);
+
+  syncWorkoutTypeInstancesInBackground(db);
+
+  return syncId;
+}
+
 export async function persistWorkoutTimerState(
   db,
   { workoutId, timerStart, elapsedTime }
