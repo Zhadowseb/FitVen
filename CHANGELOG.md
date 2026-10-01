@@ -1,6 +1,29 @@
 # Changelog
 
 ## [2.17.0] - Unreleased
+From the owner's bug list of 2026-09-30, merged together (#299–#306).
+
+### Added
+- **Build your split from your own workouts.** The split editor on Train has "Vælg fra kalender". It shows the month page's lower calendar, and you can page through the months. Any workout can be picked: done or planned, of any type. Its view lists the exercises and sets, renames it (`updateWorkoutLabel`, synced), and has "Føj til split". The editor used to offer only the app's guess, the last 90 days' names and favourites.
+  - A workout without a name is named before it can be added. Add is blocked when that workout is already in the split or the split has 6.
+  - A session with no finished strength workout of its name now repeats the latest workout of that name of any type, a finished one first and otherwise a planned one (`resolveChosenSplit`).
+- **A split session can be one specific workout.** A workout picked in the calendar is pinned: two "Push" sessions with different weights are two sessions, and each repeats its own workout with its exercises and sets. Suggestions and favourites stay by name, so they repeat your latest. If a pinned workout is deleted, or has not come down to this phone yet, the session repeats the latest of its name. Old splits of names only work as before.
+  - **Cloud:** `20261006090000_a-split-pins-its-workouts.sql` adds `profile_private.split_entries` (run on 2026-10-01). `split_names` is still written for older builds. Until the migration has run, the pins stay on the phone.
+- **Home shows the split you chose** on Train, with the same NÆSTE (`splitService.getHomeSplitGroups`). Without a chosen split it shows the app's guess, as before.
+- **One calendar component:** the month page's week rows are `CalendarWeekRows`, which both the calendar page and the picker draw. `getMonthPage`, `getMonthTitle` and `MONTH_KEYS` moved to `Utils/calendarDays.js`.
+- **The rest counts up after a set with no rest written.** Ticking such a set starts a count. After 15 s the set's rest bubble counts up, so ticking a whole exercise at once records nothing. The count is saved in the ticked set's rest field when the next set is ticked in any exercise, or when the workout is paused or finished. Unticking the set or restarting the workout drops it. It never reaches the bottom-nav square or the rest-finished notification (`restCountUpService`, `Utils/restCountUp.js`).
+  - **Carry-over:** a counted rest is marked (`Set.rest_counted`), and no copy passes it on. That covers the next set, the last values of an exercise, a copied workout and a program export, so it never becomes a countdown. A rest typed by hand clears the mark.
+  - **Lock screen:** without a planned rest, the card counts up from 15 s, with "Afslut pause". The button is only on the lock screen; after it the set can be ticked (`endCountUp`, iOS `EndCountUpIntent`, Android `END_COUNT_UP`).
+  - **Cloud:** `20261005090000_a-set-knows-a-counted-rest.sql` adds `set.rest_counted` (run on 2026-09-30). Where it has not run, the upload leaves the column out.
+- **A like tells the post's author.** When somebody likes your workout post, you get a row in your notification history ("{name} synes godt om dit opslag"), and a push once the new Edge Function is deployed. Tapping it opens your posts with that one first (`UserPostsPage`), as there is no page for a single post. There is no notification for your own like, across a block, on a hidden or deleted post, or when you have switched likes off. Liking the same post again never sends a second.
+  - **Settings:** a new switch, "Når nogen synes godt om dit opslag" (`notification_preferences.post_like_notifications`, on by default). Before the migration has run it shows greyed out.
+  - **Cloud:** `20261009090000_a-like-notifies-the-poster.sql` (run on 2026-10-01) adds the column and an after-insert trigger on `social_post_like` that writes one event and one inbox row per liker and post. Checked on a throwaway Postgres 17.
+  - **Edge Functions:** the new `send-post-liked-notification`, called by a Database Webhook on `social_post_like` inserts, sends the push. `send-workout-started-notification` counts only workout starts towards its 12-an-hour limit, so likes cannot use it up.
+  - **By hand, in this order:** deploy `send-workout-started-notification`, run the migration, deploy `send-post-liked-notification`, then create the webhook (INSERT on `public.social_post_like`, header `x-fitven-webhook-secret`).
+  - `Utils/notificationHistory.js` holds every notification kind's text, route and hint, taken out of `NotificationHistoryPage`. Lift verification is not among them; it is removed in #303.
+- **Keep the screen on during a workout.** A sun button next to ⋯ keeps the phone from locking while the workout clock runs and the workout is on screen. It lets go on pause, finish, restart or leaving the page. The choice is remembered and is off by default (`keepAwakeService`, `useWorkoutKeepAwake`).
+  - **New dependency:** `expo-keep-awake ~15.0.8`. It needs a new native build. A build without it only loses the button.
+
 ### Changed
 - **A set counts for every rep count below it.** 90 kg × 3 is also a 90 kg lift for 1 and 2 reps.
   - **Records, "Rekord pr. reps":** a slot holds the heaviest set with at least that many reps (`buildRepLadder`). A slot filled by a longer set reads "fra 3 reps" and is never gold. "Next step" leaves those slots out. Drop sets no longer fill a slot, which they did against the rule that a drop set is never a record.
@@ -8,10 +31,19 @@
   - **Powerlifting** takes the heaviest weight in any working or AMRAP set of 1 or more reps, not only singles. The other leaderboards rank `gym_lift`, the heaviest set whatever its reps, and needed no change.
   - **Cloud:** `20261008090000_a-set-counts-for-fewer-reps.sql` (run on 2026-10-01) restates `category_rows` from 20261007090000 with only that rule changed. Checked on a throwaway Postgres 17.
   - The Powerlifting texts and the privacy policy say "heaviest lift", not "single". The policy stays at 2026-09-30.1, which is not released yet.
-- **Tests:** `npm run test:rep-records-downward`, plus `test-records-insights.js` and `test-gym-categories.js`.
+- **Home 4b: a workout planned for today is the Quick start.** It is one orange card (`PlannedWorkoutCard`) that reads "Planlagt i dag", where it comes from ("Fra {program}" or "Fra kalenderen"), its name, and its exercises and sets. There is no split button and no Tom træning; a fresh workout starts from the + in the bottom bar. A started workout that is paused reads "Fortsæt" and its minutes. Tapping the card opens the planned workout and creates nothing.
+  - It used to be drawn as the same outlined button as the split's suggestion, with Tom træning under it, so it read as a suggestion.
+  - `getOpenWorkoutsForDate` also matches the day's date, in both spellings, and leaves out a workout on a deleted day or in a deleted or not-started program. A started workout always shows.
+  - "Dit split" has no NÆSTE while a plan is shown (`suppressUpNext`). Its cards still start a copy.
+- **The lock screen shows which set you are on.** The button reads "Sæt 2 af 3 færdigt". A row of dots shows the exercise's sets: done ones filled, the current one orange and larger, the rest hollow. On iOS the dots are on the lock screen card, which grows from 132 to 148 pt, and in the expanded Dynamic Island. On Android they are on the collapsed and the expanded card.
+- **Agent guides:** new `docs/MAP.md` says which files each feature lives in, what the four largest files contain section by section, and what agents should not read (`.claude/worktrees/`, `data/`, the dated audits in `docs/`). The root `AGENTS.md` points at it. `npm test` fails if the map names a path or a function that no longer exists.
+- **The privacy policy** is raised to 2026-09-30.1, so everyone is asked again, once for all of this: it no longer mentions verification videos, says your best lift of an exercise appears on the national leaderboard, says "the heaviest weight you have lifted" where it said "your heaviest single", and says that a post's author is told who liked it.
 
----
-## [2.16.8] - Unreleased
+### Fixed
+- **The ⋯ button is back in a strength workout's header,** with Restart and Change name. Since #294 an empty name became the type's name, so "Named Styrketræning after your exercises" showed all the time. It could not shrink, and pushed ⋯ off the right edge. The header's buttons no longer shrink.
+- **"Named … after your exercises" is gone.** The workout's type ("Styrketræning", "Overkrop") is a small line above the title, unless it would repeat the title. An unknown type reads Styrketræning (`strengthWorkoutTypeTag` in `Utils/workoutTypeLabel.js`).
+- **Your own tile in friends activity shows that you are training again.** "Split Home in two" (`a62aacb4`) moved the read of today's activity to `FeedPage`, which has no friends strip, so your tile always rested. Home reads it again (`getTodayActivitySummary`).
+
 ### Removed
 - **Video verification of lifts, all the way through.** The owner decided it is too early for it, and that it can be built again later.
   - **App:** the review sheet (`LiftVerificationSheet`), the status pill and the verified icon are gone. So are attaching a video to a lift, the vote, the "N lifts waiting for a verdict" row, "Kun video" on Powerlifting, the verified gold and pills on the leaderboards and public profiles, and the verification notification. The iOS camera and library texts speak of "a video of an exercise", since custom exercises use the same permissions.
@@ -19,57 +51,8 @@
   - **Every list counts every lift, a rejected one included.** The country's list was verified lifts only; it is now each person's best lift of the exercise, once. Every record on a profile has its rank.
   - **By hand:** empty and delete the `lift-videos` bucket in the dashboard, under Storage. Supabase does not allow deleting files with SQL.
   - Checked on a throwaway Postgres 17 after the real gym migrations. The migration runs twice without error, and a rejected, a verified and an unjudged lift then all rank at the centre, in the country and in Powerlifting.
-- **The privacy policy** no longer mentions verification videos, and says your best lift of an exercise appears on the national leaderboard. It is raised to 2026-09-30.1, so everyone is asked again.
-- **Tests:** `npm run test:remove-lift-verification`, plus `test-gym-leaderboard.js`, `test-gym-categories.js` and `test-public-profile.js` updated. The declared-before-use check in `test-gym-leaderboard.js` had lost the escapes in its regex and matched nothing; it works again.
-## [2.16.8] - Unreleased
-### Fixed
-- **The ⋯ button is back in a strength workout's header,** with Restart and Change name. Since #294 an empty name became the type's name, so "Named Styrketræning after your exercises" showed all the time. It could not shrink, and pushed ⋯ off the right edge. The header's buttons no longer shrink.
-- **"Named … after your exercises" is gone.** The workout's type ("Styrketræning", "Overkrop") is a small line above the title, unless it would repeat the title. An unknown type reads Styrketræning (`strengthWorkoutTypeTag` in `Utils/workoutTypeLabel.js`).
 
-### Added
-- **Keep the screen on during a workout.** A sun button next to ⋯ keeps the phone from locking while the workout clock runs and the workout is on screen. It lets go on pause, finish, restart or leaving the page. The choice is remembered and is off by default (`keepAwakeService`, `useWorkoutKeepAwake`).
-  - **New dependency:** `expo-keep-awake ~15.0.8`. It needs a new native build. A build without it only loses the button.
-- **Tests:** `npm run test:workout-header`.
-## [2.16.8] - Unreleased
-### Changed
-- **Home 4b: a workout planned for today is the Quick start.** It is one orange card (`PlannedWorkoutCard`) that reads "Planlagt i dag", where it comes from ("Fra {program}" or "Fra kalenderen"), its name, and its exercises and sets. There is no split button and no Tom træning; a fresh workout starts from the + in the bottom bar. A started workout that is paused reads "Fortsæt" and its minutes. Tapping the card opens the planned workout and creates nothing.
-  - It used to be drawn as the same outlined button as the split's suggestion, with Tom træning under it, so it read as a suggestion.
-  - `getOpenWorkoutsForDate` also matches the day's date, in both spellings, and leaves out a workout on a deleted day or in a deleted or not-started program. A started workout always shows.
-  - "Dit split" has no NÆSTE while a plan is shown (`suppressUpNext`). Its cards still start a copy.
-
-### Fixed
-- **Your own tile in friends activity shows that you are training again.** "Split Home in two" (`a62aacb4`) moved the read of today's activity to `FeedPage`, which has no friends strip, so your tile always rested. Home reads it again (`getTodayActivitySummary`).
-- **Tests:** `npm run test:home-planned-today`, and a regression check in `test-friends-wallpaper.js`.
-### Added
-- **Build your split from your own workouts.** The split editor on Train has "Vælg fra kalender". It shows the month page's lower calendar, and you can page through the months. Any workout can be picked: done or planned, of any type. Its view lists the exercises and sets, renames it (`updateWorkoutLabel`, synced), and has "Føj til split". The editor used to offer only the app's guess, the last 90 days' names and favourites.
-  - A workout without a name is named before it can be added. Add is blocked when the name is already in the split or the split has 6.
-  - A session with no finished strength workout of its name now repeats the latest workout of that name of any type, a finished one first and otherwise a planned one (`resolveChosenSplit`).
-- **A split session can be one specific workout.** A workout picked in the calendar is pinned: two "Push" sessions with different weights are two sessions, and each repeats its own workout with its exercises and sets. Suggestions and favourites stay by name, so they repeat your latest. If a pinned workout is deleted, or has not come down to this phone yet, the session repeats the latest of its name. Old splits of names only work as before.
-  - **Cloud:** `20261006090000_a-split-pins-its-workouts.sql` adds `profile_private.split_entries` (run on 2026-10-01). `split_names` is still written for older builds. Until the migration has run, the pins stay on the phone.
-- **Home shows the split you chose** on Train, with the same NÆSTE (`splitService.getHomeSplitGroups`). Without a chosen split it shows the app's guess, as before.
-- **One calendar component:** the month page's week rows are `CalendarWeekRows`, which both the calendar page and the picker draw. `getMonthPage`, `getMonthTitle` and `MONTH_KEYS` moved to `Utils/calendarDays.js`.
-- **Tests:** `npm run test:split-from-calendar` and `npm run test:split-pins`, plus `test-calendar-days.js`, `test-split-card.js` and `test-home-quick-start.js`.
-### Added
-- **The rest counts up after a set with no rest written.** Ticking such a set starts a count. After 15 s the set's rest bubble counts up, so ticking a whole exercise at once records nothing. The count is saved in the ticked set's rest field when the next set is ticked in any exercise, or when the workout is paused or finished. Unticking the set or restarting the workout drops it. It never reaches the bottom-nav square or the rest-finished notification (`restCountUpService`, `Utils/restCountUp.js`).
-  - **Carry-over:** a counted rest is marked (`Set.rest_counted`), and no copy passes it on. That covers the next set, the last values of an exercise, a copied workout and a program export, so it never becomes a countdown. A rest typed by hand clears the mark.
-  - **Lock screen:** without a planned rest, the card counts up from 15 s, with "Afslut pause". The button is only on the lock screen; after it the set can be ticked (`endCountUp`, iOS `EndCountUpIntent`, Android `END_COUNT_UP`).
-  - **Cloud:** `20261005090000_a-set-knows-a-counted-rest.sql` adds `set.rest_counted` (run on 2026-09-30). Where it has not run, the upload leaves the column out.
-
-### Changed
-- **The lock screen shows which set you are on.** The button reads "Sæt 2 af 3 færdigt". A row of dots shows the exercise's sets: done ones filled, the current one orange and larger, the rest hollow. On iOS the dots are on the lock screen card, which grows from 132 to 148 pt, and in the expanded Dynamic Island. On Android they are on the collapsed and the expanded card.
-- **Tests:** `npm run test:rest-count-up`, plus `test-live-workout.js` and `test-set-carry-over.js`. The worst-case lock-screen state is 3891 bytes of 4096.
-### Added
-- **A like tells the post's author.** When somebody likes your workout post, you get a row in your notification history ("{name} synes godt om dit opslag"), and a push once the new Edge Function is deployed. Tapping it opens your posts with that one first (`UserPostsPage`), as there is no page for a single post. There is no notification for your own like, across a block, on a hidden or deleted post, or when you have switched likes off. Liking the same post again never sends a second.
-  - **Settings:** a new switch, "Når nogen synes godt om dit opslag" (`notification_preferences.post_like_notifications`, on by default). Before the migration has run it shows greyed out.
-  - **Cloud:** `20261009090000_a-like-notifies-the-poster.sql` (run on 2026-10-01) adds the column and an after-insert trigger on `social_post_like` that writes one event and one inbox row per liker and post. Checked on a throwaway Postgres 17.
-  - **Edge Functions:** the new `send-post-liked-notification`, called by a Database Webhook on `social_post_like` inserts, sends the push. `send-workout-started-notification` counts only workout starts towards its 12-an-hour limit, so likes cannot use it up.
-  - **By hand, in this order:** deploy `send-workout-started-notification`, run the migration, deploy `send-post-liked-notification`, then create the webhook (INSERT on `public.social_post_like`, header `x-fitven-webhook-secret`).
-  - `Utils/notificationHistory.js` holds every notification kind's text, route and hint, taken out of `NotificationHistoryPage`. Lift verification is not among them; it is removed in #303.
-- **The privacy policy** says that a post's author is told who liked it. It is raised to 2026-09-30.1, the same version as #303, so everyone is asked once for both.
-- **Tests:** `npm run test:post-like-notification`.
-## [2.16.8] - Unreleased
-### Changed
-- **Agent guides:** new `docs/MAP.md` says which files each feature lives in, what the four largest files contain section by section, and what agents should not read (`.claude/worktrees/`, `data/`, the dated audits in `docs/`). The root `AGENTS.md` points at it. `npm test` fails if the map names a path or a function that no longer exists.
+- **Tests:** new `npm run test:workout-header`, `test:home-planned-today`, `test:split-from-calendar`, `test:split-pins`, `test:rest-count-up`, `test:remove-lift-verification`, `test:rep-records-downward` and `test:post-like-notification`; `test-friends-wallpaper.js`, `test-home-quick-start.js`, `test-calendar-days.js`, `test-split-card.js`, `test-live-workout.js`, `test-set-carry-over.js`, `test-records-insights.js`, `test-gym-categories.js`, `test-gym-leaderboard.js` and `test-public-profile.js` extended. The declared-before-use check in `test-gym-leaderboard.js` had lost the escapes in its regex and matched nothing; it works again.
 
 ---
 ## [2.16.7] - Unreleased
