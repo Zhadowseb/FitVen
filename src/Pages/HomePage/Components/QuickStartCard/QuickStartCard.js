@@ -3,6 +3,7 @@ import { useTranslation } from "@localization";
 
 import FirstWorkoutButton from "./FirstWorkoutButton";
 import LivePanel from "./LivePanel";
+import PlannedWorkoutCard from "./PlannedWorkoutCard";
 import styles from "./QuickStartCardStyle";
 import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
 import Plus from "@resources/Icons/UI-icons/Plus";
@@ -17,23 +18,25 @@ import { workoutDisplayName } from "@utils/workoutTypeLabel";
  * inside it already has one - and it made the block read as a widget rather
  * than as the screen's main action.
  *
- * The top button is whichever of these is true first:
+ * The block is whichever of these is true first:
  *
- *   1. Something unfinished is already on today. Continue that.
- *   2. The split says whose turn it is. Start that.
- *   3. Neither. Then the empty workout is all there is, and it stops being
+ *   1. Today's workout is running. The whole block is one live panel that
+ *      opens it - the set that is next, the rest counting down (LivePanel).
+ *      `live` is what Home has read of that workout's sets.
+ *   2. Something unfinished is already on today - planned in the calendar or
+ *      a program, or started and paused. The whole block is that workout, in
+ *      the accent, under "Planned today" or "Continue" (PlannedWorkoutCard).
+ *   3. The split says whose turn it is. Start that, with the empty workout
+ *      under it.
+ *   4. Neither. Then the empty workout is all there is, and it stops being
  *      the quiet button under a primary one: it is the first workout, in the
  *      accent, filling the block (FirstWorkoutButton).
  *
- * Today's workout wins over the split deliberately. Somebody who planned a
- * session this morning, or left one half-done at lunch, wants that one back;
- * offering to start a second one beside it is almost never what was meant.
- * The empty workout is always there, because sometimes it is.
- *
- * Except while today's workout is running. Then the whole block is one live
- * panel that opens it - the set that is next, the rest counting down - and
- * starting a second, empty one is not offered (LivePanel). `live` is what
- * Home has read of that workout's sets.
+ * Today's workout wins over the split deliberately, and it is shown alone.
+ * Somebody who planned her week wants Home to say so; the split's name and an
+ * empty workout beside it read as "nothing is planned". A fresh workout is
+ * still the plus in the bottom bar, and any split card below still starts
+ * that session - the deliberate way to train something other than the plan.
  */
 export default function QuickStartCard({
   openToday = null,
@@ -62,6 +65,30 @@ export default function QuickStartCard({
     );
   }
 
+  // Planned, or started and paused: that workout is the block, and nothing
+  // else is offered beside it. The eyebrow says which of the two it is.
+  const todayWorkout = openToday?.first ?? null;
+
+  if (todayWorkout) {
+    return (
+      <View style={styles.card}>
+        <ThemedText style={styles.eyebrow} setColor={theme.primaryText}>
+          {t(
+            todayWorkout.isStarted
+              ? "home.quickStart.continueEyebrow"
+              : "home.quickStart.plannedEyebrow"
+          )}
+        </ThemedText>
+
+        <PlannedWorkoutCard
+          workout={todayWorkout}
+          count={openToday?.count ?? 1}
+          onPress={() => onContinueToday?.(todayWorkout)}
+        />
+      </View>
+    );
+  }
+
   // The same fallback SplitCards uses. pickGroupName returns null when nobody
   // named the session - which is what a session started from this button ends
   // up as - and without it the button draws no text at all, while the screen
@@ -72,28 +99,17 @@ export default function QuickStartCard({
     workoutDisplayName(upNext?.name, t) ??
     t("home.split.unnamed", { number: (upNext?.historyOrder ?? 0) + 1 });
 
-  const todayWorkout = openToday?.first ?? null;
-  const todayName =
-    workoutDisplayName(todayWorkout?.name, t, todayWorkout?.workoutType) ??
-    t("home.quickStart.todaysWorkout");
-  const primary = todayWorkout
+  const primary = upNext
     ? {
-        label: todayName,
-        accessibilityLabel: t("home.quickStart.continueNamed", { name: todayName }),
-        onPress: () => onContinueToday?.(todayWorkout),
+        label: upNextName,
+        accessibilityLabel: t("home.quickStart.startNamed", { name: upNextName }),
+        onPress: () => onStartSplit?.(upNext),
       }
-    : upNext
-      ? {
-          label: upNextName,
-          accessibilityLabel: t("home.quickStart.startNamed", { name: upNextName }),
-          onPress: () => onStartSplit?.(upNext),
-        }
-      : null;
+    : null;
 
   // The eyebrow names the block, not the button under it. It stays QUICK
-  // START whether that button continues today's workout, starts the one the
-  // split is due or starts the first - what changed is which workout, and the
-  // button already says which.
+  // START whether that button starts the one the split is due or starts the
+  // first - what changed is which workout, and the button already says which.
   const eyebrow = (
     <ThemedText style={styles.eyebrow} setColor={theme.primaryText}>
       {t("home.quickStart.eyebrow")}

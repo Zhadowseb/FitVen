@@ -30,6 +30,16 @@
 - **Keep the screen on during a workout.** A sun button next to ⋯ keeps the phone from locking while the workout clock runs and the workout is on screen. It lets go on pause, finish, restart or leaving the page. The choice is remembered and is off by default (`keepAwakeService`, `useWorkoutKeepAwake`).
   - **New dependency:** `expo-keep-awake ~15.0.8`. It needs a new native build. A build without it only loses the button.
 - **Tests:** `npm run test:workout-header`.
+## [2.16.8] - Unreleased
+### Changed
+- **Home 4b: a workout planned for today is the Quick start.** It is one orange card (`PlannedWorkoutCard`) that reads "Planlagt i dag", where it comes from ("Fra {program}" or "Fra kalenderen"), its name, and its exercises and sets. There is no split button and no Tom træning; a fresh workout starts from the + in the bottom bar. A started workout that is paused reads "Fortsæt" and its minutes. Tapping the card opens the planned workout and creates nothing.
+  - It used to be drawn as the same outlined button as the split's suggestion, with Tom træning under it, so it read as a suggestion.
+  - `getOpenWorkoutsForDate` also matches the day's date, in both spellings, and leaves out a workout on a deleted day or in a deleted or not-started program. A started workout always shows.
+  - "Dit split" has no NÆSTE while a plan is shown (`suppressUpNext`). Its cards still start a copy.
+
+### Fixed
+- **Your own tile in friends activity shows that you are training again.** "Split Home in two" (`a62aacb4`) moved the read of today's activity to `FeedPage`, which has no friends strip, so your tile always rested. Home reads it again (`getTodayActivitySummary`).
+- **Tests:** `npm run test:home-planned-today`, and a regression check in `test-friends-wallpaper.js`.
 
 ---
 ## [2.16.7] - Unreleased

@@ -444,21 +444,26 @@ assert.ok(
 // Somebody who planned a session this morning, or left one half-done at lunch,
 // wants that one back. Offering to start a second one beside it is almost
 // never what was meant, so an unfinished workout on today outranks the split's
-// suggestion. The empty workout stays either way.
+// suggestion - and is shown alone, as the planned card: beside the split's
+// name and an empty workout it read as "nothing planned". The empty workout
+// stays with the split's suggestion. scripts/test-home-planned-today.js has
+// the rest.
 const quickStartSource = fs.readFileSync(
   path.join(root, "src", "Pages", "HomePage", "Components", "QuickStartCard", "QuickStartCard.js"),
   "utf8"
 );
 
 assert.ok(
-  /const primary = todayWorkout[\s\S]*?: upNext/.test(quickStartSource),
+  quickStartSource.indexOf("if (todayWorkout) {") > -1 &&
+    quickStartSource.indexOf("if (todayWorkout) {") < quickStartSource.indexOf("const primary = upNext"),
   "the split's suggestion is offered before an unfinished workout already on today"
 );
 
+const splitBranch = quickStartSource.slice(quickStartSource.indexOf("const primary = upNext"));
+
 assert.ok(
-  /home\.quickStart\.emptyWorkout/.test(quickStartSource) &&
-    !/primary \? null : null/.test(quickStartSource),
-  "the empty workout is no longer always there"
+  /home\.quickStart\.emptyWorkout/.test(splitBranch) && /onPress=\{onStartEmpty\}/.test(splitBranch),
+  "the empty workout is no longer offered beside the split's suggestion"
 );
 
 // The outline went: every button inside already draws one, and the block is
