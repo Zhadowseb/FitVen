@@ -39,8 +39,12 @@ permissions:
   checks: write
 
 env:
-  REVIEW_MODEL: claude-sonnet-5
-  SUMMARY_MODEL: claude-opus-5
+  # The eight reviewers run on Sonnet 5.5 and consult Opus 5.5 as their
+  # advisor at decision points (https://code.claude.com/docs/en/advisor).
+  # The aggregating agent runs on Opus 5.5 alone.
+  REVIEW_MODEL: claude-sonnet-5-5
+  REVIEW_ADVISOR_MODEL: claude-opus-5-5
+  SUMMARY_MODEL: claude-opus-5-5
   COMMENT_MARKER: "<!-- fitven-ai-review -->"
 
 jobs:
@@ -370,6 +374,7 @@ jobs:
             Skriv kun den ene fil. Ret ikke i kildekoden, og opret ikke commits.
           claude_args: |
             --model ${{ env.REVIEW_MODEL }}
+            --advisor ${{ env.REVIEW_ADVISOR_MODEL }}
             --max-turns 120
             --allowedTools "Read,Glob,Grep,Write,Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(ls:*),Bash(wc:*),Bash(mkdir:*)"
 

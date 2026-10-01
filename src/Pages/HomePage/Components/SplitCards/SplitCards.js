@@ -91,8 +91,8 @@ function SplitCard({ group, theme, width, onPress, t, formatDate, suppressUpNext
 
       <ThemedText style={styles.meta} setColor={theme.quietText} numberOfLines={1}>
         {t("home.split.meta", {
-          exercises: group.exerciseCount,
-          sets: group.setCount,
+          exercises: t("common.exercises", { count: group.exerciseCount }),
+          sets: t("common.sets", { count: group.setCount }),
         })}
       </ThemedText>
     </TouchableOpacity>

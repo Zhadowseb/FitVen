@@ -71,7 +71,15 @@ function WorkoutDetail({ workout, picked, todayIso, onBack, onAdd, onRenamed }) 
   const [items, setItems] = useState(null);
   const [itemsFailed, setItemsFailed] = useState(false);
   const [label, setLabel] = useState(workout.label);
-  const [draft, setDraft] = useState(() => splitNameOf(workout) ?? "");
+  // The field starts on the name as the title shows it: a workout named after
+  // its type is stored in English ("Upperbody") and read in the reader's
+  // language ("Overkrop"). Left as it is, nothing is renamed.
+  const shownNameOf = (entry) => {
+    const name = splitNameOf(entry);
+
+    return name ? workoutDisplayName(name, t, entry.workout_type) ?? name : null;
+  };
+  const [draft, setDraft] = useState(() => shownNameOf(workout) ?? "");
   const [isSaving, setIsSaving] = useState(false);
   const [renameFailed, setRenameFailed] = useState(false);
 
@@ -98,7 +106,7 @@ function WorkoutDetail({ workout, picked, todayIso, onBack, onAdd, onRenamed }) 
   const current = { ...workout, label };
   const savedName = splitNameOf(current);
   const typed = draft.trim();
-  const isDirty = typed !== (savedName ?? "");
+  const isDirty = typed !== (shownNameOf(current) ?? "");
   // What the button would do with the name as it will be once saved. A
   // workout with no sync_id yet gets one on Add; until then it is still this
   // workout, not any workout of its name.

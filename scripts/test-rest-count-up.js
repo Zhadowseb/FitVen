@@ -167,6 +167,19 @@ assert.deepStrictEqual(
 );
 assert.deepStrictEqual(rules.withSendableRestCounted({ a: 1, rest_counted: false }), { a: 1, rest_counted: false });
 
+// A saved counted rest reads as it did while it counted ("4.49"), not as
+// minutes with decimals ("4.82 min") - the phone test of 2.17.0.
+{
+  const setList = require("fs").readFileSync(
+    require("path").join(__dirname, "../src/Pages/WorkoutPage/WorkoutTypes/Resistance/Components/ExerciseList/Components/ExerciseRow/SetList/SetList.js"),
+    "utf8"
+  );
+  assert.ok(
+    /isCountedRest\(set\)\s*\?\s*\{\s*displayFormatter: \(\) => formatTime\(Number\(set\.pause\)\)/.test(setList),
+    "a saved counted rest is shown in minutes and seconds"
+  );
+}
+
 (async () => {
   // The handle: the column is named until the cloud says it is missing, then
   // the request runs once more without it, and so does every later one.

@@ -55,9 +55,10 @@ export default {
     fromCalendar: "Fra kalenderen",
     fromProgram: "Fra {program}",
     noExercises: "Ingen øvelser endnu",
-    moreToday: "{n} øvelser · +{count} mere",
+    // {n} er common.exercises, så 1 øvelse og 2 øvelser bøjes rigtigt.
+    moreToday: "{n} · +{count} mere",
     elapsed: "{minutes} min i gang",
-    startPlanned: "Start planlagt træning {name}, {n} øvelser",
+    startPlanned: "Start planlagt træning {name}, {n}",
     startFailedTitle: "Kunne ikke starte træningen",
     startFailedBody: "Prøv igen.",
     live: {
@@ -84,7 +85,8 @@ export default {
     forming: "Tager form efter din første uge",
     formingA11y: "Dit split tager form, dag {count} af 7",
     waiting: "Viser sig, når du gentager dine træninger",
-    meta: "{exercises} øvelser · {sets} sæt",
+    // {exercises} og {sets} er common.exercises og common.sets.
+    meta: "{exercises} · {sets}",
     allCount: "Alle {count}",
     openAll: "Åbn alle dine træninger",
     upNext: "{name}, næste i dit split",

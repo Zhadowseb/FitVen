@@ -42,6 +42,18 @@ function database() {
   };
 }
 
+// The name field starts on the name the title shows ("Overkrop" for a
+// workout stored as "Upperbody"), and leaving it so renames nothing - the
+// phone test of 2.17.0.
+{
+  const picker = require("fs").readFileSync(
+    require("path").join(__dirname, "../src/Pages/ExerciseLibraryPage/Components/SplitCard/SplitWorkoutPicker.js"),
+    "utf8"
+  );
+  assert.ok(picker.includes('useState(() => shownNameOf(workout) ?? "")'), "the field starts on the shown name");
+  assert.ok(picker.includes('typed !== (shownNameOf(current) ?? "")'), "an untouched field is no rename");
+}
+
 async function main() {
   const { raw, db } = database();
   const workout = (id, date, { label, type = "Resistance", done = 1, exercises = [] } = {}) => {

@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.17.1] - Unreleased
+### Fixed
+The three small things the phone test of 2.17.0 found.
+- **A saved counted rest reads "4.49", as it did while it counted,** not "4.82 min" (minutes with decimals). Editing it still edits the rest in the chosen unit.
+- **The split picker's name field starts on the name the title shows:** "Overkrop" for a workout stored as "Upperbody". Left as it is, nothing is renamed.
+- **"1 øvelse", not "1 øvelser",** on the planned card, the split cards and the planned card's screen-reader label. The counts go through `common.exercises` and `common.sets`.
+
+### Changed
+- **The review agents run on Sonnet 5.5 with Opus 5.5 as their advisor; the aggregating agent runs on Opus 5.5** (`REVIEW_MODEL`, `REVIEW_ADVISOR_MODEL`, `SUMMARY_MODEL` in `pr-review.yml`). Before, they ran on Sonnet 5 and Opus 5.
+- **Tests:** `test-home-planned-today.js`, `test-rest-count-up.js` and `test-split-from-calendar.js` check the three fixes.
+
+---
 ## [2.17.0] - Unreleased
 From the owner's bug list of 2026-09-30, merged together (#299–#306).
 
