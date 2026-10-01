@@ -1269,8 +1269,8 @@ function testRepsMigration() {
   assert.ok(text.includes("Safe to run twice."), "says it can run twice");
   assert.ok(/\nbegin;\n/.test(text) && /\ncommit;\n\nnotify pgrst, 'reload schema';\n/.test(text), "one transaction, then the schema reload");
   assert.ok(
-    read("supabase/migrations/README.md").includes("| `20261008090000_a-set-counts-for-fewer-reps.sql` | no |"),
-    "the ledger names the migration, not run"
+    read("supabase/migrations/README.md").includes("| `20261008090000_a-set-counts-for-fewer-reps.sql` | yes |"),
+    "the ledger names the migration, run on 2026-10-01"
   );
 
   const functions = parseFunctions(text);
