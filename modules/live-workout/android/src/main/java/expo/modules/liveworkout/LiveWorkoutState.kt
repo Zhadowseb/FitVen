@@ -42,6 +42,12 @@ internal data class LiveRest(
   val duration: Double
 )
 
+/** The rest counted up after a set with none written: from `startedAt`, shown from 15 s after it. */
+internal data class LiveCountUp(
+  val setId: String,
+  val startedAt: Double
+)
+
 internal data class LiveTotals(
   val done: Double,
   val all: Double,
@@ -58,6 +64,8 @@ internal data class LiveWorkoutState(
   val next: LiveExercise?,
   val rest: LiveRest?,
   val totals: LiveTotals,
+  /** The rest counted up after the set just ticked off, or null. */
+  val countUp: LiveCountUp? = null,
   val canPrev: Boolean,
   val canNext: Boolean,
   val strings: Map<String, String>,
@@ -87,6 +95,14 @@ internal data class LiveWorkoutState(
           .put("startedAt", it.startedAt)
           .put("endsAt", it.endsAt)
           .put("duration", it.duration)
+      } ?: JSONObject.NULL
+    )
+    json.put(
+      "countUp",
+      countUp?.let {
+        JSONObject()
+          .put("setId", it.setId)
+          .put("startedAt", it.startedAt)
       } ?: JSONObject.NULL
     )
     json.put(
@@ -122,6 +138,7 @@ internal data class LiveWorkoutState(
     private fun fromJson(json: JSONObject): LiveWorkoutState {
       val totals = json.optJSONObject("totals")
       val rest = json.optJSONObject("rest")
+      val countUp = json.optJSONObject("countUp")
 
       return LiveWorkoutState(
         v = json.optInt("v", 1),
@@ -143,6 +160,11 @@ internal data class LiveWorkoutState(
           all = totals?.number("all") ?: 0.0,
           exercisesDone = totals?.number("exercisesDone") ?: 0.0
         ),
+        countUp = countUp?.let {
+          val startedAt = it.number("startedAt")
+
+          if (startedAt == null) null else LiveCountUp(setId = it.text("setId"), startedAt = startedAt)
+        },
         canPrev = json.optBoolean("canPrev", false),
         canNext = json.optBoolean("canNext", false),
         strings = stringsOf(json.optJSONObject("strings")),

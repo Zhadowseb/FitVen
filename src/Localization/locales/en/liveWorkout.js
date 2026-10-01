@@ -6,6 +6,10 @@
 // {duration}, {done} and {time} are replaced on the phone, as they stand.
 export default {
   complete: "Set done",
+  // The button, with the set it ticks off.
+  completeSetOf: "Set {n} of {total} done",
+  // The rest after a set with none written counts up; lock screen only.
+  endRest: "End rest",
   skip: "Skip",
   prev: "Previous",
   next: "Next",

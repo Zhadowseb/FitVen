@@ -7,6 +7,7 @@ import { withTransaction } from "@services/shared";
 import { startBackgroundSync } from "@services/syncScheduler";
 import { notifyWorkoutDataChanged } from "@utils/workoutDataEvents";
 import { hasSetDecimals, resolveCloudSetDecimals } from "@utils/setDecimals";
+import { withKnownRestCounted } from "@utils/restCountUp";
 import {
   normalizeDeletedAt,
   normalizeSyncId,
@@ -34,6 +35,7 @@ import {
   resolveCloudDeleteRequestedAt,
   resolveSetCloudLocalId,
   resolveSideBySideCloudId,
+  restCountedColumn,
   setDecimalColumns,
   shouldKeepLocalEntityForCloudTombstone,
   syncDirtyLocalRowToCloud,
@@ -115,21 +117,27 @@ export async function uploadDirtySets(
     // Built inside the request, so a retry against an integer column (before
     // 20261003090000_a-set-keeps-its-decimals.sql) sends the weight and RPE
     // cut to whole numbers, as every upload did before - and so does every
-    // upload after it this session. The phone keeps its own 102.5.
-    const syncResult = await setDecimalColumns.withFallback(() =>
-      syncDirtyLocalRowToCloud({
-        tableName: SET_CLOUD_TABLE,
-        selectColumns: SET_CLOUD_SYNC_SELECT,
-        userId,
-        localEntity: localSet,
-        payload: setDecimalColumns.sendablePayload(payload),
-        cloudId: parseCloudSetId(
-          resolveSideBySideCloudId(localSet, "cloud_set_id")
-        ),
-        syncId: normalizeSyncId(localSet.sync_id),
-        legacyLocalId: payload.local_set_id,
-        legacyLocalIdColumn: "local_set_id",
-      })
+    // upload after it this session. The phone keeps its own 102.5. The outer
+    // handle does the same for a cloud without `rest_counted`; each only
+    // answers to its own error (22P02, and 42703/PGRST204 naming the column).
+    const syncResult = await restCountedColumn.withFallback(() =>
+      setDecimalColumns.withFallback(() =>
+        syncDirtyLocalRowToCloud({
+          tableName: SET_CLOUD_TABLE,
+          selectColumns: restCountedColumn.selectColumns(SET_CLOUD_SYNC_SELECT),
+          userId,
+          localEntity: localSet,
+          payload: restCountedColumn.sendablePayload(
+            setDecimalColumns.sendablePayload(payload)
+          ),
+          cloudId: parseCloudSetId(
+            resolveSideBySideCloudId(localSet, "cloud_set_id")
+          ),
+          syncId: normalizeSyncId(localSet.sync_id),
+          legacyLocalId: payload.local_set_id,
+          legacyLocalIdColumn: "local_set_id",
+        })
+      )
     );
 
     setDecimalColumns.learnFrom([syncResult.cloudRecord]);
@@ -172,16 +180,20 @@ export async function uploadDirtySets(
 // Exported for scripts/test-set-decimals.js, which runs it against an
 // in-memory cloud; the app reaches it through syncSetsWithCloud.
 export async function reconcileSetsFromCloud(db, userId) {
-  const { data: cloudSets, error } = await supabase
-    .from(SET_CLOUD_TABLE)
-    .select(SET_CLOUD_SYNC_SELECT)
-    .eq("user_id", userId)
-    .order("cloud_exercise_instance_id", { ascending: true })
-    .order("id", { ascending: true });
+  const cloudSets = await restCountedColumn.withFallback(async () => {
+    const { data, error } = await supabase
+      .from(SET_CLOUD_TABLE)
+      .select(restCountedColumn.selectColumns(SET_CLOUD_SYNC_SELECT))
+      .eq("user_id", userId)
+      .order("cloud_exercise_instance_id", { ascending: true })
+      .order("id", { ascending: true });
 
-  if (error) {
-    throw error;
-  }
+    if (error) {
+      throw error;
+    }
+
+    return data;
+  });
 
   await claimCloudWatchers({
     userId,
@@ -294,6 +306,12 @@ export async function reconcileSetsFromCloud(db, userId) {
         localSetsByLocalId.get(localSetId) ??
         null;
 
+      // A cloud row that does not say whether its rest was counted keeps the
+      // phone's flag (withKnownRestCounted).
+      comparableCloudSet = getComparableSetSnapshot(
+        withKnownRestCounted(cloudSet, localSet)
+      );
+
       if (isCloudSnapshotDeleted(cloudSet)) {
         pendingDeletionAcks.push({
           userId,
@@ -335,6 +353,7 @@ export async function reconcileSetsFromCloud(db, userId) {
           setType: comparableCloudSet.set_type,
           amrapTarget: comparableCloudSet.amrap_target,
           note: comparableCloudSet.note,
+          restCounted: comparableCloudSet.rest_counted,
         });
 
         const createdSet = {
@@ -406,6 +425,7 @@ export async function reconcileSetsFromCloud(db, userId) {
             setType: comparableCloudSet.set_type,
             amrapTarget: comparableCloudSet.amrap_target,
             note: comparableCloudSet.note,
+            restCounted: comparableCloudSet.rest_counted,
           });
           downloadedCount += applied ? 1 : 0;
         } else if (
@@ -494,6 +514,7 @@ export async function reconcileSetsFromCloud(db, userId) {
         setType: comparableCloudSet.set_type,
         amrapTarget: comparableCloudSet.amrap_target,
         note: comparableCloudSet.note,
+        restCounted: comparableCloudSet.rest_counted,
       });
 
       if (!applied) {

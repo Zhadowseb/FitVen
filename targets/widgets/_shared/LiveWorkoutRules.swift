@@ -48,7 +48,20 @@ struct LiveWorkoutDisplay {
     case allDone
     case set
     case rest
+    /// The rest counted up after a set with none written, from 15 s after
+    /// the tap (LIVE_REST_COUNT_UP_GRACE_SECONDS).
+    case countUp
   }
+
+  /// One dot a set of the exercise on the card (`setDots`).
+  enum Dot {
+    case done
+    case now
+    case todo
+  }
+
+  /// As LIVE_REST_COUNT_UP_GRACE_SECONDS in src/Utils/liveWorkout.js.
+  static let countUpGraceSeconds: Double = 15
 
   var mode: Mode = .empty
   var title: String = ""
@@ -69,6 +82,14 @@ struct LiveWorkoutDisplay {
   var restEndsAt: Double = 0
   var restDuration: Double = 1
   var restOf: String = ""
+  /// Counting up: from here, by itself.
+  var countUpStartedAt: Double = 0
+  /// Counting up: the set it is the rest after, for "Afslut pause".
+  var countUpSetId: String? = nil
+  /// "Sæt 3 af 4 færdigt": the button, with the set it ticks off.
+  var completeLabel: String = ""
+  /// The exercise's sets: done, the one to do now, the ones after it.
+  var setDots: [Dot] = []
   var canPrev: Bool = false
   var canNext: Bool = false
   /// All done: the link the one button opens the app with to finish the
@@ -78,7 +99,12 @@ struct LiveWorkoutDisplay {
 
   /// The set and rest buttons: App Intents, so iOS 17 and later only.
   var hasIntentButtons: Bool {
-    return mode == .set || mode == .rest
+    return mode == .set || mode == .rest || mode == .countUp
+  }
+
+  /// Between sets: resting or counting up.
+  var isBetweenSets: Bool {
+    return mode == .rest || mode == .countUp
   }
 
   /// The all-done card's finish button: a plain link, so any iOS.
@@ -184,12 +210,38 @@ struct LiveWorkoutDisplay {
       display.restOf = LiveWorkoutText.fill(strings["of"], [("duration", LiveWorkoutText.clock(rest.duration))])
     }
 
+    // The rest counted up: from 15 s after the tap, never over a rest. The
+    // card's stale date is that moment while it waits for it, so a stale card
+    // with a count-up is past it.
+    var countingUp: Bool = false
+
+    if !resting, let countUp: LiveWorkoutState.CountUp = state.countUp,
+      now - countUp.startedAt >= countUpGraceSeconds || isStale
+    {
+      countingUp = true
+      display.countUpStartedAt = countUp.startedAt
+      display.countUpSetId = countUp.setId
+    }
+
+    let between: Bool = resting || countingUp
+    let completeTemplate: String? = strings["completeSetOf"].flatMap { (text: String) -> String? in
+      text.isEmpty ? nil : text
+    } ?? strings["complete"]
+
     // Rules 1, 3 and 5.
-    display.mode = resting ? .rest : .set
+    display.mode = resting ? .rest : (countingUp ? .countUp : .set)
     display.nowSetId = nowSet.id
-    display.title = resting ? LiveWorkoutText.fill(strings["nextSet"], [("set", nowSet.text)]) : nowSet.text
+    display.title = between ? LiveWorkoutText.fill(strings["nextSet"], [("set", nowSet.text)]) : nowSet.text
     display.subtitle = shown.name + " · " + LiveWorkoutText.fill(strings["setOf"], position)
     display.setOfTitle = LiveWorkoutText.fill(strings["setOfTitle"], position)
+    display.completeLabel = LiveWorkoutText.fill(completeTemplate, position)
+    display.setDots = shown.sets.enumerated().map { (entry: (offset: Int, element: LiveWorkoutState.SetEntry)) -> Dot in
+      if entry.element.done {
+        return .done
+      }
+
+      return entry.offset == nowIndex ? .now : .todo
+    }
     display.exerciseName = shown.name
     display.ringFraction = shown.sets.isEmpty ? 0 : Double(doneCount) / Double(shown.sets.count)
     display.ringText = String(doneCount) + "/" + String(shown.sets.count)
@@ -247,9 +299,13 @@ enum LiveWorkoutReducer {
       let finishedExercise: Bool = shown.sets.allSatisfy { (entry: LiveWorkoutState.SetEntry) -> Bool in entry.done }
       let running: Bool = state.pausedElapsed == nil
       var rest: LiveWorkoutState.Rest? = nil
+      var countUp: LiveWorkoutState.CountUp? = nil
 
       if running && nowSet.rest > 0 {
         rest = LiveWorkoutState.Rest(startedAt: at, endsAt: at + nowSet.rest, duration: nowSet.rest)
+      } else if running {
+        // No rest written: it is counted up from the tap instead.
+        countUp = LiveWorkoutState.CountUp(setId: nowSet.id, startedAt: at)
       }
 
       var result: LiveWorkoutState.Exercise? = shown
@@ -272,6 +328,7 @@ enum LiveWorkoutReducer {
       changed.canPrev = canPrev
       changed.canNext = canNext
       changed.rest = rest
+      changed.countUp = countUp
       changed.totals.done = state.totals.done + 1
       changed.totals.exercisesDone = state.totals.exercisesDone + (finishedExercise ? 1 : 0)
       return changed
@@ -283,6 +340,16 @@ enum LiveWorkoutReducer {
 
       var changed: LiveWorkoutState = state
       changed.rest = nil
+      return changed
+
+    case "endCountUp":
+      // "Afslut pause": the count-up ends, and the next set can be ticked off.
+      guard state.countUp != nil else {
+        return state
+      }
+
+      var changed: LiveWorkoutState = state
+      changed.countUp = nil
       return changed
 
     case "adjustRest":

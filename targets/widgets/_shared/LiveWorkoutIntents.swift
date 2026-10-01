@@ -93,6 +93,27 @@ struct SkipRestIntent: LiveActivityIntent {
   }
 }
 
+/// "Afslut pause" on a rest being counted up, on the lock screen only.
+@available(iOS 17.0, *)
+struct EndCountUpIntent: LiveActivityIntent {
+  static let title: LocalizedStringResource = "End rest"
+  static let isDiscoverable: Bool = false
+
+  @Parameter(title: "Set")
+  var setId: String
+
+  init() {}
+
+  init(setId: String) {
+    self.setId = setId
+  }
+
+  func perform() async throws -> some IntentResult {
+    await LiveWorkoutActionHandler.handle(type: "endCountUp", setId: setId, seconds: nil)
+    return .result()
+  }
+}
+
 @available(iOS 17.0, *)
 enum LiveWorkoutActionHandler {
   /// After any tap: store the new state, redraw the card, queue the tap and
@@ -137,13 +158,22 @@ enum LiveWorkoutActionHandler {
 @available(iOS 16.2, *)
 enum LiveWorkoutActivitySync {
   /// The end of the rest while resting, so the card leaves rest mode by
-  /// itself; otherwise none.
+  /// itself; 15 s after the tap while a count-up waits to show, so the card
+  /// turns to it by itself; otherwise none.
   static func staleDate(for state: LiveWorkoutState, now: Double) -> Date? {
-    guard let rest: LiveWorkoutState.Rest = state.rest, rest.endsAt > now else {
-      return nil
+    if let rest: LiveWorkoutState.Rest = state.rest, rest.endsAt > now {
+      return Date(timeIntervalSince1970: rest.endsAt)
     }
 
-    return Date(timeIntervalSince1970: rest.endsAt)
+    if let countUp: LiveWorkoutState.CountUp = state.countUp {
+      let showsAt: Double = countUp.startedAt + LiveWorkoutDisplay.countUpGraceSeconds
+
+      if showsAt > now {
+        return Date(timeIntervalSince1970: showsAt)
+      }
+    }
+
+    return nil
   }
 
   /// Redraws the card for `state.workoutId`, if it is still there. One the

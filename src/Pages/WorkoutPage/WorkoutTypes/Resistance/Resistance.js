@@ -37,6 +37,7 @@ import {
 } from "../../../../Utils/restTimerEvents";
 import { subscribeLockScreenEdits } from "@utils/workoutDataEvents";
 import {
+  restCountUpService,
   socialPostService,
   weightliftingService,
   workoutService,
@@ -398,6 +399,9 @@ const Resistance = ({
       if (activeRestTimer) {
         clearActiveRestTimer(activeRestTimer.id);
       }
+      // A rest being counted up stops with the clock, and is written: the
+      // pause is not rest between sets (Utils/restCountUp.js).
+      void restCountUpService.finishRestCountUp(db, { workoutId: workout_id });
       set_isRunning(false);
       const newElapsed = await updateElapsed();
       set_timer_start(null);

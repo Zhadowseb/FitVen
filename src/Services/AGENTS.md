@@ -77,6 +77,11 @@ until the cloud says it is missing, and `workoutTypeInstanceSync.js` routes its
 reads and uploads through it. `weight_mode` on `Exercise_Instance` and on the
 column preferences does the same with `createWeightModeCloudColumn` in
 `src/Utils/weightMode.js`, and a null from the cloud keeps the local value.
+`rest_counted` on `Set` (a rest the app counted, not one that was planned)
+does the same through `restCountedColumn` in `cloudSyncShared.js`, built by
+`createRestCountedCloudColumn` in `src/Utils/restCountUp.js`: the set upload,
+the reconcile and the workout hydration name it through the handle, and
+`withKnownRestCounted` keeps the phone's flag when the cloud's is null.
 
 The same goes for a column whose type the cloud changes after the app does.
 `set.weight` and `set.rpe` keep decimals only once

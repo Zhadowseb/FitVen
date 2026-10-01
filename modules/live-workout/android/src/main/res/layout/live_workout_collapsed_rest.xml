@@ -2,7 +2,10 @@
 <!-- 1f collapsed (48 dp): the whole content area is orange @ 0.34 from the
      left for what is left of the rest - full when it starts, empty when it
      ends - with "Pause · 1:24" counting down by itself, the next set, and
-     Spring over on top.
+     Spring over on top. The rest counted up after a set with none written
+     (from 15 s after the tap) uses it too: no fill, "Pause · 1:24" counting
+     up, and the button is Afslut pause. After the next set, the exercise's
+     sets as dots, as on the set's own card - the one just ticked filled.
 
      The fill is a horizontal ProgressBar behind the text. Android draws the
      header and the card's frame, and on Android 12+ it keeps its own margins
@@ -49,12 +52,30 @@
         android:layout_height="wrap_content"
         android:fontFeatureSettings="tnum" />
 
-      <TextView
-        android:id="@+id/live_workout_subtitle"
-        style="@style/LiveWorkout.Text.Semibold.CollapsedSubtitle"
+      <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="3dp" />
+        android:layout_marginTop="3dp"
+        android:baselineAligned="false"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+          android:id="@+id/live_workout_subtitle"
+          style="@style/LiveWorkout.Text.Semibold.CollapsedSubtitle"
+          android:layout_width="0dp"
+          android:layout_height="wrap_content"
+          android:layout_weight="1" />
+
+        <!-- The dots, filled from Kotlin (live_workout_dot_*). -->
+        <LinearLayout
+          android:id="@+id/live_workout_dots"
+          android:layout_width="wrap_content"
+          android:layout_height="12dp"
+          android:layout_marginStart="4dp"
+          android:gravity="center_vertical"
+          android:orientation="horizontal" />
+      </LinearLayout>
     </LinearLayout>
 
     <FrameLayout

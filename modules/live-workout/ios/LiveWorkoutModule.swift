@@ -152,14 +152,30 @@ enum LiveWorkoutActivities {
     LiveWorkoutSharedStore.clear()
   }
 
+  /// As many seconds after the tap as a count-up waits before it shows
+  /// (LiveWorkoutDisplay.countUpGraceSeconds in the widget, which this pod
+  /// cannot see; LIVE_REST_COUNT_UP_GRACE_SECONDS in JS).
+  static let countUpGraceSeconds: Double = 15
+
   /// The end of the rest while resting, so the card leaves rest mode by
-  /// itself if the app is not there to say so; otherwise none.
+  /// itself if the app is not there to say so; 15 s after the tap while a
+  /// count-up waits to show, so the card turns to it by itself; otherwise none.
   static func staleDate(for state: LiveWorkoutState) -> Date? {
-    guard let rest: LiveWorkoutState.Rest = state.rest, rest.endsAt > Date().timeIntervalSince1970 else {
-      return nil
+    let now: Double = Date().timeIntervalSince1970
+
+    if let rest: LiveWorkoutState.Rest = state.rest, rest.endsAt > now {
+      return Date(timeIntervalSince1970: rest.endsAt)
     }
 
-    return Date(timeIntervalSince1970: rest.endsAt)
+    if let countUp: LiveWorkoutState.CountUp = state.countUp {
+      let showsAt: Double = countUp.startedAt + countUpGraceSeconds
+
+      if showsAt > now {
+        return Date(timeIntervalSince1970: showsAt)
+      }
+    }
+
+    return nil
   }
 }
 

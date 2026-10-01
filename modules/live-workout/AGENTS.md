@@ -40,6 +40,16 @@ card on the lock screen during a strength workout.
 - **Adding, renaming or removing a file in `_shared` needs a new
   `npx expo prebuild`.** Its membership in the two targets is set there.
 - **The weight buttons (`adjustWeight`) are Android only,** on the open card between sets. iOS neither draws nor reduces them. Their queue entry carries the final weight, merged per set, so handling it twice is harmless.
+- **A set without a rest written counts its rest up (`countUp`).** The
+  rules are `src/Utils/restCountUp.js`, the one running count-up is
+  `src/Services/restCountUpService.js`, and it is not the rest timer: it
+  never reaches the bottom menu's square or the rest-is-over reminder. The
+  card shows it from 15 s after the tap and turns to it by itself - iOS by
+  the stale date (in the intents' redraw and in the pod), Android by a
+  re-post from `LiveWorkoutCard` - counting up natively
+  (`Text(timerInterval:)`, a Chronometer). Its one button, `endCountUp`
+  ("Afslut pause"), is on the lock screen only. The 15 is written in JS,
+  Swift (twice) and Kotlin; `npm test` checks all of them.
 - **JS only processes what `drainActions()` returns.** The event is a
   wake-up. A tap for a set that is already done is a no-op.
 - **The state stays under 4 KB,** because ActivityKit refuses anything larger.

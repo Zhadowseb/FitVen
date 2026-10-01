@@ -80,6 +80,7 @@ behind by accident.
 | `20261002090000_weight-mode-per-instance.sql` | yes |
 | `20261003090000_a-set-keeps-its-decimals.sql` | yes |
 | `20261004090000_progress-counts-every-exercise.sql` | yes |
+| `20261005090000_a-set-knows-a-counted-rest.sql` | yes |
 | `20261006090000_a-split-pins-its-workouts.sql` | yes |
 | `20261007090000_remove-lift-verification.sql` | yes |
 | `20261008090000_a-set-counts-for-fewer-reps.sql` | yes |

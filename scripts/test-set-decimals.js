@@ -1057,7 +1057,7 @@ async function hydrationChecks() {
   // The upload builds its payload inside the fallback, so the retry rebuilds it.
   const setSyncSource = read("src/Services/cloudSync/setSync.js");
   assert.ok(
-    /setDecimalColumns\.withFallback\(\(\) =>\s*syncDirtyLocalRowToCloud\(\{[\s\S]*?payload: setDecimalColumns\.sendablePayload\(payload\)/.test(setSyncSource),
+    /setDecimalColumns\.withFallback\(\(\) =>\s*syncDirtyLocalRowToCloud\(\{[\s\S]*?payload: (restCountedColumn\.sendablePayload\(\s*)?setDecimalColumns\.sendablePayload\(payload\)/.test(setSyncSource),
     "the set upload must build its payload inside setDecimalColumns.withFallback"
   );
 

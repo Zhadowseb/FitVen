@@ -12,7 +12,8 @@ import kotlin.math.min
 // notification's layout has no place for the first, and a Chronometer counts
 // the second by itself.
 
-internal enum class LiveMode { EMPTY, ALL_DONE, SET, REST }
+/** COUNT_UP: the rest counted up after a set with none written, from 15 s after the tap. */
+internal enum class LiveMode { EMPTY, ALL_DONE, SET, REST, COUNT_UP }
 
 internal enum class ChipState { DONE, NOW, TODO }
 
@@ -36,6 +37,9 @@ internal data class LiveRestView(
 )
 
 internal data class LiveNextRow(val label: String, val chips: List<LiveChip>)
+
+/** The rest counted up, by a Chronometer from `startedAt`, and the set it is after. */
+internal data class LiveCountUpView(val startedAt: Double, val setId: String)
 
 /** −step · Sæt færdigt · +step on the open card, between sets. */
 internal data class LiveWeightButtons(
@@ -68,6 +72,12 @@ internal data class LiveWorkoutView(
   val setsRing: LiveRing? = null,
   val exerciseRing: LiveRing? = null,
   val rest: LiveRestView? = null,
+  /** COUNT_UP: the rest counting up. */
+  val countUp: LiveCountUpView? = null,
+  /** "Sæt 3 af 4 færdigt": the button, with the set it ticks off. */
+  val completeLabel: String = "",
+  /** The exercise's sets as dots: done, the one to do now, the ones after it. */
+  val setDots: List<ChipState> = emptyList(),
   val canPrev: Boolean = false,
   val canNext: Boolean = false,
   val chips: List<LiveChip> = emptyList(),
@@ -83,6 +93,8 @@ internal data class LiveWorkoutView(
 internal object LiveWorkoutDerive {
   const val MAX_CHIPS = 6
   const val WEIGHT_STEP_DEFAULT = 2.5
+  /** As LIVE_REST_COUNT_UP_GRACE_SECONDS in src/Utils/liveWorkout.js. */
+  const val COUNT_UP_GRACE_SECONDS = 15.0
 
   fun derive(state: LiveWorkoutState, now: Double): LiveWorkoutView {
     var exercise = state.exercise
@@ -117,19 +129,28 @@ internal object LiveWorkoutDerive {
 
     val rest = state.rest?.takeIf { it.endsAt > now }
     val resting = rest != null
+    // The rest counted up, once 15 s have passed since the tap; never over a
+    // rest counting down.
+    val countUp = state.countUp?.takeIf { !resting && now - it.startedAt >= COUNT_UP_GRACE_SECONDS }
+    val between = resting || countUp != null
     val sets = exercise.sets
     val nowIndex = exercise.firstToDo()
     val nowSet = sets[nowIndex]
     val done = sets.count { it.done }
     val position = listOf("n" to (nowIndex + 1).toString(), "total" to sets.size.toString())
     val total = exercise.total
+    val completeTemplate = state.strings["completeSetOf"]?.takeIf { it.isNotEmpty() } ?: state.string("complete")
 
     return LiveWorkoutView(
-      mode = if (resting) LiveMode.REST else LiveMode.SET,
-      title = if (resting) fill(state.string("nextSet"), "set" to nowSet.text) else nowSet.text,
+      mode = when {
+        resting -> LiveMode.REST
+        countUp != null -> LiveMode.COUNT_UP
+        else -> LiveMode.SET
+      },
+      title = if (between) fill(state.string("nextSet"), "set" to nowSet.text) else nowSet.text,
       subtitle = "${exercise.name} · ${fill(state.string("setOf"), position)}",
       subtitleShort = "${exercise.name} · ${fill(state.string("setShort"), position)}",
-      eyebrow = state.string(if (resting) "nextEyebrow" else "nowEyebrow"),
+      eyebrow = state.string(if (between) "nextEyebrow" else "nowEyebrow"),
       nowSetId = nowSet.id,
       nowText = nowSet.text,
       exerciseName = exercise.name,
@@ -151,10 +172,19 @@ internal object LiveWorkoutDerive {
           of = fill(state.string("of"), "duration" to clock(it.duration))
         )
       },
+      countUp = countUp?.let { LiveCountUpView(startedAt = it.startedAt, setId = it.setId) },
+      completeLabel = fill(completeTemplate, position),
+      setDots = sets.mapIndexed { index, set ->
+        when {
+          set.done -> ChipState.DONE
+          index == nowIndex -> ChipState.NOW
+          else -> ChipState.TODO
+        }
+      },
       canPrev = canPrev,
       canNext = canNext,
       chips = chipsFor(sets, nowIndex),
-      weightButtons = if (resting) null else weightButtonsFor(state, exercise, nowSet),
+      weightButtons = if (between) null else weightButtonsFor(state, exercise, nowSet),
       nextRow = next?.let { upcoming ->
         LiveNextRow(
           label = fill(state.string("nextExercise"), "name" to upcoming.name),
