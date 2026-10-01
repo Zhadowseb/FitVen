@@ -57,7 +57,7 @@ pull_request (opened, synchronize, reopened, ready_for_review)
   `strategy.matrix.agent` i workflowet.
 - **Fjern en agent:** tag navnet ud af matrixen. Mandatfilen kan blive
   liggende.
-- **Skift model:** `REVIEW_MODEL` og `SUMMARY_MODEL` i workflowets `env`.
+- **Skift model:** `REVIEW_MODEL` (de otte agenter, i dag Sonnet 5.5), `REVIEW_ADVISOR_MODEL` (deres rådgiver, i dag Opus 5.5) og `SUMMARY_MODEL` (den samlende agent, i dag Opus 5.5) i workflowets `env`.
 - **Kør manuelt på en eksisterende PR:** Actions → *PR Review Agents* → *Run
   workflow* → indtast PR-nummeret.
 

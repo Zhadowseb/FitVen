@@ -1448,6 +1448,43 @@ export async function setWorkoutFavorite(db, { workoutId, isFavorite }) {
   ]);
 }
 
+// How many exercises a workout has, and sets in them: only the exercises
+// that are still there, and their sets that are still there - as Home's
+// planned card counts them (workoutRepository.getOpenWorkoutsForDate). A
+// deleted exercise keeps its sets' rows, so counting sets without it would
+// count the sets of an exercise that is gone.
+function workoutExerciseCountSql(workoutAlias = "w") {
+  return `(SELECT COUNT(*)
+           FROM Exercise_Instance ei
+          WHERE ei.workout_type_instance_id = ${workoutAlias}.workout_id
+            AND ei.deleted_at IS NULL)`;
+}
+
+function workoutSetCountSql(workoutAlias = "w", { doneOnly = false } = {}) {
+  return `(SELECT COUNT(*)
+           FROM "Set" s
+           JOIN Exercise_Instance ei ON ei.exercise_instance_id = s.exercise_instance_id
+          WHERE ei.workout_type_instance_id = ${workoutAlias}.workout_id
+            AND ei.deleted_at IS NULL
+            AND s.deleted_at IS NULL${doneOnly ? `
+            AND COALESCE(s.done, 0) = 1` : ""})`;
+}
+
+// The workouts the library lists, as `w` with its day, program and type: a
+// workout whose day and program are still there. The split's name lookup
+// reads the same rows in the same order, so Home and the Train tab resolve a
+// split from the same workouts.
+const LIBRARY_ROWS_SQL = `
+     FROM Workout_Type_Instance w
+     JOIN Day d ON d.day_id = w.day_id
+     LEFT JOIN Program p ON p.program_id = d.program_id
+     LEFT JOIN Workout_Type wt ON wt.name = w.workout_type`;
+const LIBRARY_ROWS_WHERE_SQL = `
+     WHERE w.deleted_at IS NULL
+       AND d.deleted_at IS NULL
+       AND (p.program_id IS NULL OR p.deleted_at IS NULL)`;
+const LIBRARY_ORDER_SQL = "ORDER BY date_iso DESC, w.workout_id DESC";
+
 export async function getWorkoutLibrary(db, { limit = 500, offset = 0 } = {}) {
   await ensureWorkoutFavoriteTable(db);
   const workoutIsoDateSql = localDateToIsoSql("w.date");
@@ -1467,32 +1504,73 @@ export async function getWorkoutLibrary(db, { limit = 500, offset = 0 } = {}) {
         d.program_id,
         p.program_name,
         ${workoutHasPersonalRecordSql("w")} AS has_personal_record,
-        (SELECT COUNT(*)
-           FROM Exercise_Instance ei
-          WHERE ei.workout_type_instance_id = w.workout_id) AS exercise_count,
-        (SELECT COUNT(*)
-           FROM "Set" s
-           JOIN Exercise_Instance ei ON ei.exercise_instance_id = s.exercise_instance_id
-          WHERE ei.workout_type_instance_id = w.workout_id
-            AND s.deleted_at IS NULL) AS set_count,
-        (SELECT COUNT(*)
-           FROM "Set" s
-           JOIN Exercise_Instance ei ON ei.exercise_instance_id = s.exercise_instance_id
-          WHERE ei.workout_type_instance_id = w.workout_id
-            AND s.deleted_at IS NULL
-            AND COALESCE(s.done, 0) = 1) AS completed_set_count,
+        ${workoutExerciseCountSql("w")} AS exercise_count,
+        ${workoutSetCountSql("w")} AS set_count,
+        ${workoutSetCountSql("w", { doneOnly: true })} AS completed_set_count,
         CASE WHEN f.workout_id IS NULL THEN 0 ELSE 1 END AS is_favorite
-     FROM Workout_Type_Instance w
-     JOIN Day d ON d.day_id = w.day_id
-     LEFT JOIN Program p ON p.program_id = d.program_id
-     LEFT JOIN Workout_Type wt ON wt.name = w.workout_type
+     ${LIBRARY_ROWS_SQL}
      LEFT JOIN Workout_Favorite f ON f.workout_id = w.workout_id
-     WHERE w.deleted_at IS NULL
-       AND d.deleted_at IS NULL
-       AND (p.program_id IS NULL OR p.deleted_at IS NULL)
-     ORDER BY date_iso DESC, w.workout_id DESC
+     ${LIBRARY_ROWS_WHERE_SQL}
+     ${LIBRARY_ORDER_SQL}
      LIMIT ? OFFSET ?;`,
     [normalizedLimit, normalizedOffset]
+  );
+}
+
+/**
+ * The newest workout of each name among the library's newest `limit`
+ * workouts, a done one and a not done one apart: what a chosen split
+ * resolves its sessions by name from (Utils/splitCard.js), without the rest
+ * of the library. Home loads it on every focus.
+ *
+ * "Name" here is the label as the library shows it, with the workout's type.
+ * The split compares names normalised in JS - "Push 2" is Push - which SQL
+ * cannot do, but a normalised name is a function of those two, so the newest
+ * workout of every normalised name is always one of these rows. The window
+ * is the library's own, so a name last used further back resolves to
+ * nothing here, as it does on the Train tab.
+ */
+export async function getNewestWorkoutOfEachName(db, { limit = 500 } = {}) {
+  const workoutIsoDateSql = localDateToIsoSql("w.date");
+  const normalizedLimit = Math.max(1, Math.trunc(Number(limit) || 500));
+
+  return db.getAllAsync(
+    `WITH library AS (
+       SELECT
+          w.workout_id,
+          w.workout_type,
+          ${workoutDisplayLabelSql("w", "wt")} AS label,
+          ${workoutIsoDateSql} AS date_iso,
+          w.done
+       ${LIBRARY_ROWS_SQL}
+       ${LIBRARY_ROWS_WHERE_SQL}
+       ${LIBRARY_ORDER_SQL}
+       LIMIT ?
+     ),
+     ranked AS (
+       SELECT
+          library.*,
+          ROW_NUMBER() OVER (
+            PARTITION BY label, workout_type, done
+            ORDER BY substr(date_iso, 1, 10) DESC, workout_id DESC
+          ) AS name_rank
+       FROM library
+       -- The split skips a row it cannot date (splitCard's localDayStart);
+       -- such a row must not stand in front of an older one it can.
+       WHERE date_iso GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*'
+     )
+     SELECT
+        ranked.workout_id,
+        ranked.workout_type,
+        ranked.label,
+        ranked.date_iso,
+        ranked.done,
+        ${workoutExerciseCountSql("ranked")} AS exercise_count,
+        ${workoutSetCountSql("ranked")} AS set_count
+     FROM ranked
+     WHERE ranked.name_rank = 1
+     ORDER BY ranked.date_iso DESC, ranked.workout_id DESC;`,
+    [normalizedLimit]
   );
 }
 
@@ -1519,14 +1597,8 @@ export async function getWorkoutsBySyncIds(db, syncIds = []) {
         w.date,
         ${workoutIsoDateSql} AS date_iso,
         w.done,
-        (SELECT COUNT(*)
-           FROM Exercise_Instance ei
-          WHERE ei.workout_type_instance_id = w.workout_id) AS exercise_count,
-        (SELECT COUNT(*)
-           FROM "Set" s
-           JOIN Exercise_Instance ei ON ei.exercise_instance_id = s.exercise_instance_id
-          WHERE ei.workout_type_instance_id = w.workout_id
-            AND s.deleted_at IS NULL) AS set_count
+        ${workoutExerciseCountSql("w")} AS exercise_count,
+        ${workoutSetCountSql("w")} AS set_count
      FROM Workout_Type_Instance w
      JOIN Day d ON d.day_id = w.day_id
      LEFT JOIN Program p ON p.program_id = d.program_id

@@ -752,12 +752,16 @@ export async function setWorkoutStartNotificationMode({
 // Postgres, PGRST204 from PostgREST.
 const MISSING_COLUMN_CODES = new Set(["42703", "PGRST204"]);
 
+// That column, and only that one: another missing column is a real fault and
+// must not read as "the migration has not run". A word match, the way
+// isMissingRestCountedColumnError and isMissingSplitEntriesColumnError read
+// theirs.
 function isMissingPostLikeColumn(error) {
-  const message = String(error?.message ?? "").toLowerCase();
+  const message = `${error?.message ?? ""} ${error?.details ?? ""} ${error?.hint ?? ""}`;
 
   return (
-    MISSING_COLUMN_CODES.has(String(error?.code ?? "")) ||
-    (message.includes(POST_LIKE_NOTIFICATIONS_COLUMN) && message.includes("column"))
+    MISSING_COLUMN_CODES.has(String(error?.code ?? "")) &&
+    new RegExp(`\\b${POST_LIKE_NOTIFICATIONS_COLUMN}\\b`).test(message)
   );
 }
 

@@ -35,6 +35,8 @@ export default StyleSheet.create({
 
   loading: { marginTop: 12 },
   quiet: { fontSize: 13, fontWeight: "600", lineHeight: 18, marginTop: 12 },
+  // The month failed to load: the state block, sized for a sheet, not a screen.
+  loadFailed: { paddingHorizontal: 0, paddingVertical: 16 },
 
   dayList: { marginTop: 6 },
   dayRow: {

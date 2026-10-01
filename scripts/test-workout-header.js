@@ -199,6 +199,36 @@ const read = (relativePath) =>
     "the toggle says what it is and whether it is on"
   );
 
+  // The button is a phone whose screen stays on, not a sun - a sun beside
+  // the header reads as the light/dark switch - and it shows its state by
+  // shape as well as colour: the screen lit and light coming off it.
+  assert.ok(!/UI-icons\/Sun"/.test(resistance), "the keep-awake button is still a sun");
+  assert.ok(
+    /<ScreenOn\s+width=\{18\}\s+height=\{18\}\s+on=\{keepAwakeEnabled\}/.test(resistance),
+    "the icon is not told whether the screen is kept on"
+  );
+
+  loadAppModule.stubModule("react-native", { useColorScheme: () => "light" });
+  loadAppModule.stubModule("react-native-svg", {
+    __esModule: true,
+    default: "Svg",
+    Path: "Path",
+    Rect: "Rect",
+  });
+  const ScreenOn = loadAppModule("src/Resources/Icons/UI-icons/ScreenOn.js").default;
+  const parts = (on) =>
+    [ScreenOn({ on, color: "#123456" }).props.children]
+      .flat(Infinity)
+      .filter(Boolean)
+      .map((part) => ({ type: part.type, ...part.props }));
+  const off = parts(false);
+  const on = parts(true);
+  const screen = (drawn) => drawn.filter((part) => part.type === "Rect")[1];
+
+  assert.strictEqual(screen(off).fill, "none", "off, the screen is an outline");
+  assert.strictEqual(screen(on).fill, "#123456", "on, the screen is lit");
+  assert.ok(on.filter((part) => part.type === "Path").length > off.filter((part) => part.type === "Path").length, "on, light comes off it");
+
   const packageJson = JSON.parse(read("package.json"));
   assert.ok(packageJson.dependencies["expo-keep-awake"], "expo-keep-awake is declared");
 

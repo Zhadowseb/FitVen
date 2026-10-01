@@ -61,10 +61,11 @@ export default {
     fromCalendar: "From your calendar",
     fromProgram: "From {program}",
     noExercises: "No exercises yet",
-    moreToday: "{n} exercises · +{count} more",
+    // {n} is common.exercises, so 1 exercise and 2 exercises read right.
+    moreToday: "{n} · +{count} more",
     // A started, paused workout: how long it has run.
     elapsed: "{minutes} min in",
-    startPlanned: "Start planned workout {name}, {n} exercises",
+    startPlanned: "Start planned workout {name}, {n}",
     startFailedTitle: "Could not start the workout",
     startFailedBody: "Please try again.",
     // The panel the block becomes while a workout is running.
@@ -94,7 +95,8 @@ export default {
     forming: "Takes shape after your first week",
     formingA11y: "Your split is taking shape, day {count} of 7",
     waiting: "Shows up as you repeat your workouts",
-    meta: "{exercises} exercises · {sets} sets",
+    // {exercises} and {sets} are common.exercises and common.sets.
+    meta: "{exercises} · {sets}",
     allCount: "All {count}",
     openAll: "Open all your workouts",
     upNext: "{name}, next in your split",

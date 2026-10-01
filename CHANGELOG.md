@@ -1,5 +1,28 @@
 # Changelog
 
+## [2.17.1] - Unreleased
+### Fixed
+The three small things the phone test of 2.17.0 found.
+- **A saved counted rest reads "4.49", as it did while it counted,** not "4.82 min" (minutes with decimals). Editing it still edits the rest in the chosen unit.
+- **The split picker's name field starts on the name the title shows:** "Overkrop" for a workout stored as "Upperbody". Left as it is, nothing is renamed.
+- **"1 øvelse", not "1 øvelser",** on the planned card, the split cards and the planned card's screen-reader label. The counts go through `common.exercises` and `common.sets`.
+
+What the review of #307 found.
+- **Home no longer reads the whole workout library to draw your split.** It loads on every focus, and resolving six sessions read 500 workouts with their counts and record checks. It now reads the pinned workouts by `sync_id` and the newest workout of each name among the same 500 (`getNewestWorkoutOfEachName`), which gives the same sessions, the same NÆSTE and the same fallbacks as Train. A name cannot be matched in SQL, because the split compares it normalised ("Push 2" is Push), so the query keeps one row per name as stored.
+- **A workout is found by its `sync_id` through an index** (`workout_type_instance_sync_id_idx`). Home and Train look the split's pinned workouts up that way on every load.
+- **The split cards and the workout library no longer count a deleted exercise,** or its sets. They count like Home's planned card: the exercises still there, and their sets still there.
+- **"Kunne ikke hentes" in the split picker has a "Prøv igen" button.** The text no longer says to try again in a moment.
+- **The keep-awake button is a phone with its screen on, not a sun.** A sun beside the header read as the light/dark switch. Off, the screen is an outline; on, it is lit with light coming off it, so the state no longer shows by colour only.
+- **Only a missing `post_like_notifications` greys the like switch out.** Any other missing column (42703, PGRST204) used to read as "the migration has not run" too; now the error has to name that column.
+
+### Changed
+- **The review agents get a list of what the diff left out.** A diff over 400 KB is now cut at whole files, a file that does not fit is skipped so the smaller ones after it still come along, and the note at the end lists every file that was left out (also in `pr-context/omitted-files.txt`). Before, a 151-file PR showed 89 files, and nothing said which 62 to read.
+- **The video picker's comments no longer point at `gymService.attachLiftVideo` or the gym leaderboard's picker,** which went with lift verification.
+- **The `lift-videos` bucket has to be emptied and deleted by hand,** in the dashboard under Storage: SQL cannot delete storage files. It is in `supabase/migrations/README.md`, with `20261005090000` and `20261007090000`, and in `docs/SIKKERHED-DINE-OPGAVER.md`.
+- **The review agents run on Sonnet 5.5 with Opus 5.5 as their advisor; the aggregating agent runs on Opus 5.5** (`REVIEW_MODEL`, `REVIEW_ADVISOR_MODEL`, `SUMMARY_MODEL` in `pr-review.yml`). Before, they ran on Sonnet 5 and Opus 5.
+- **Tests:** `test-home-planned-today.js`, `test-rest-count-up.js` and `test-split-from-calendar.js` check the three fixes. `test-split-pins.js` checks that Home resolves a split exactly as Train does without reading the library, that the pinned lookup uses the index, and the counts without deleted exercises. `test-post-like-notification.js` runs the like switch and the Profile tile against a fake Supabase, `test-workout-header.js` the new icon's two states, and `test-split-from-calendar.js` the picker's retry.
+
+---
 ## [2.17.0] - Unreleased
 From the owner's bug list of 2026-09-30, merged together (#299–#306).
 

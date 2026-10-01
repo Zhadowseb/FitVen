@@ -31,6 +31,7 @@ import Cogwheel from "@resources/Icons/UI-icons/Cogwheel";
 import Star from "@resources/Icons/UI-icons/Star";
 import { restCountUpService, weightliftingService } from "@services";
 import {
+  isCountedRest,
   isRestCountUpVisible,
   restCountUpElapsed,
 } from "@utils/restCountUp";
@@ -1709,7 +1710,15 @@ const SetList = ({
                       cellKey: `${set.sets_id}:rest-divider`,
                       containerStyle: styles.restDividerValuePill,
                       value: formatRestUnitValue(set.pause),
-                      suffixFormatter: getPauseSuffix,
+                      // A counted rest reads as it did while it counted
+                      // ("4.49"), not as minutes with decimals ("4.82 min").
+                      // Editing it still edits the rest in the chosen unit.
+                      ...(isCountedRest(set)
+                        ? {
+                            displayFormatter: () => formatTime(Number(set.pause)),
+                            suffixFormatter: () => "",
+                          }
+                        : { suffixFormatter: getPauseSuffix }),
                       onCommit: (value) =>
                         updateRestPause(getStoredPauseValue(value), set.sets_id),
                     })

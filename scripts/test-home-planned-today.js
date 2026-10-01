@@ -496,6 +496,29 @@ async function checkYourOwnTile() {
 // That Home hands this to your own tile is pinned in
 // scripts/test-friends-wallpaper.js, beside the tile's other checks.
 
+// The counts on the planned card and the split cards say "1 øvelse", not
+// "1 øvelser" (the phone test of 2.17.0).
+{
+  const i18n = loadAppModule("src/Localization/i18n.js");
+  const meta = (exercises, sets, language) =>
+    i18n.translate("home.split.meta", {
+      exercises: i18n.translate("common.exercises", { count: exercises }, language),
+      sets: i18n.translate("common.sets", { count: sets }, language),
+    }, language);
+
+  assert.strictEqual(meta(1, 2, "da"), "1 øvelse · 2 sæt");
+  assert.strictEqual(meta(3, 1, "da"), "3 øvelser · 1 sæt");
+  assert.strictEqual(meta(1, 1, "en"), "1 exercise · 1 set");
+  assert.strictEqual(meta(2, 5, "en"), "2 exercises · 5 sets");
+  for (const file of [
+    "src/Pages/HomePage/Components/QuickStartCard/PlannedWorkoutCard.js",
+    "src/Pages/HomePage/Components/SplitCards/SplitCards.js",
+  ]) {
+    const source = require("fs").readFileSync(require("path").join(__dirname, "..", file), "utf8");
+    assert.ok(source.includes('t("common.exercises", { count:'), `${file} counts its exercises through common.exercises`);
+  }
+}
+
 (async () => {
   await checkTheQuery();
   checkTheCard();

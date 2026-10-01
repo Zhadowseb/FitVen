@@ -42,6 +42,27 @@ function database() {
   };
 }
 
+// The name field starts on the name the title shows ("Overkrop" for a
+// workout stored as "Upperbody"), and leaving it so renames nothing - the
+// phone test of 2.17.0.
+{
+  const picker = require("fs").readFileSync(
+    require("path").join(__dirname, "../src/Pages/ExerciseLibraryPage/Components/SplitCard/SplitWorkoutPicker.js"),
+    "utf8"
+  );
+  assert.ok(picker.includes('useState(() => shownNameOf(workout) ?? "")'), "the field starts on the shown name");
+  assert.ok(picker.includes('typed !== (shownNameOf(current) ?? "")'), "an untouched field is no rename");
+
+  // A month that failed to load offers to load it again.
+  assert.ok(
+    /loadFailed \? \(\s*<ThemedStateBlock\s+variant="error"\s+message=\{t\("train\.pick\.loadFailed"\)\}\s+actionLabel=\{t\("common\.retry"\)\}\s+onAction=\{\(\) => setReloadKey\(\(key\) => key \+ 1\)\}/.test(
+      picker
+    ),
+    "a failed month has no retry"
+  );
+  assert.ok(/\}, \[db, monthPage, reloadKey\]\);/.test(picker), "the month's load does not rerun on reloadKey");
+}
+
 async function main() {
   const { raw, db } = database();
   const workout = (id, date, { label, type = "Resistance", done = 1, exercises = [] } = {}) => {

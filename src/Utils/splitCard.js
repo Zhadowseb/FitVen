@@ -1,6 +1,7 @@
 // The split, for somebody without an active program: the sessions they
 // rotate through, which one is next, and what else they might repeat. Worked
-// out from the workout library (programService.getWorkoutLibrary rows) and
+// out from the workout library (programService.getWorkoutLibrary rows; on
+// Home only the newest of each name, programService.getNewestWorkoutOfEachName) and
 // either the split they chose or, until they choose one, the guess Home makes
 // (workoutService.getSplitGroups). The Train tab's split card draws it, and
 // Home's split cards draw a chosen one (homeGroupsFromSplit).

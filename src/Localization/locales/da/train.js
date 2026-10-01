@@ -57,7 +57,7 @@ export default {
     back: "Tilbage",
     backToSplit: "Tilbage til dit split",
     backToCalendar: "Tilbage til kalenderen",
-    loadFailed: "Træningerne kunne ikke hentes. Prøv igen om lidt.",
+    loadFailed: "Træningerne kunne ikke hentes.",
     emptyMonth: "Ingen træninger denne måned.",
     dayTitle: "Træninger {date}",
     exercises: "Hvad der var i den",

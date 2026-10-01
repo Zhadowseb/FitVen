@@ -51,14 +51,20 @@ export default function PlannedWorkoutCard({ workout, count = 1, onPress }) {
   } else if (exerciseCount === 0) {
     meta = t("home.quickStart.noExercises");
   } else if (count > 1) {
-    meta = t("home.quickStart.moreToday", { n: exerciseCount, count: count - 1 });
+    meta = t("home.quickStart.moreToday", {
+      n: t("common.exercises", { count: exerciseCount }),
+      count: count - 1,
+    });
   } else {
-    meta = t("home.split.meta", { exercises: exerciseCount, sets: setCount });
+    meta = t("home.split.meta", {
+      exercises: t("common.exercises", { count: exerciseCount }),
+      sets: t("common.sets", { count: setCount }),
+    });
   }
 
   const accessibilityLabel = isStarted
     ? t("home.quickStart.continueNamed", { name })
-    : t("home.quickStart.startPlanned", { name, n: exerciseCount });
+    : t("home.quickStart.startPlanned", { name, n: t("common.exercises", { count: exerciseCount }) });
 
   return (
     <TouchableOpacity
