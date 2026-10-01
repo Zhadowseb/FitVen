@@ -120,8 +120,8 @@ export default {
     },
   },
   session: {
-    autoNamed: "Navngivet {name} efter dine øvelser",
     options: "Træningsmuligheder",
+    keepAwake: "Hold skærmen vågen, mens træningen kører",
     pause: "Pause",
     continue: "Fortsæt",
     start: "Start",

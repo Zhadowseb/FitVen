@@ -21,6 +21,15 @@
   - Checked on a throwaway Postgres 17 after the real gym migrations. The migration runs twice without error, and a rejected, a verified and an unjudged lift then all rank at the centre, in the country and in Powerlifting.
 - **The privacy policy** no longer mentions verification videos, and says your best lift of an exercise appears on the national leaderboard. It is raised to 2026-09-30.1, so everyone is asked again.
 - **Tests:** `npm run test:remove-lift-verification`, plus `test-gym-leaderboard.js`, `test-gym-categories.js` and `test-public-profile.js` updated. The declared-before-use check in `test-gym-leaderboard.js` had lost the escapes in its regex and matched nothing; it works again.
+## [2.16.8] - Unreleased
+### Fixed
+- **The ⋯ button is back in a strength workout's header,** with Restart and Change name. Since #294 an empty name became the type's name, so "Named Styrketræning after your exercises" showed all the time. It could not shrink, and pushed ⋯ off the right edge. The header's buttons no longer shrink.
+- **"Named … after your exercises" is gone.** The workout's type ("Styrketræning", "Overkrop") is a small line above the title, unless it would repeat the title. An unknown type reads Styrketræning (`strengthWorkoutTypeTag` in `Utils/workoutTypeLabel.js`).
+
+### Added
+- **Keep the screen on during a workout.** A sun button next to ⋯ keeps the phone from locking while the workout clock runs and the workout is on screen. It lets go on pause, finish, restart or leaving the page. The choice is remembered and is off by default (`keepAwakeService`, `useWorkoutKeepAwake`).
+  - **New dependency:** `expo-keep-awake ~15.0.8`. It needs a new native build. A build without it only loses the button.
+- **Tests:** `npm run test:workout-header`.
 
 ---
 ## [2.16.7] - Unreleased
