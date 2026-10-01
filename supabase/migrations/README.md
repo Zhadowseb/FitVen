@@ -81,7 +81,7 @@ behind by accident.
 | `20261003090000_a-set-keeps-its-decimals.sql` | yes |
 | `20261004090000_progress-counts-every-exercise.sql` | yes |
 | `20261007090000_remove-lift-verification.sql` | no |
-| `20261008090000_a-set-counts-for-fewer-reps.sql` | no |
+| `20261008090000_a-set-counts-for-fewer-reps.sql` | yes |
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
 centre match, per-centre lift leaderboards with video verification, and what
@@ -432,7 +432,7 @@ It also adds `set_cloud_exercise_instance_idx`, the index Progress finds the
 sets through. Before it had run, the list still counted three a week while the
 app said two. The checks are at the bottom of the file.
 
-`20261008090000_a-set-counts-for-fewer-reps.sql` has not been run. It
+`20261008090000_a-set-counts-for-fewer-reps.sql` was run on 2026-10-01. It
 restates `private.category_rows` from `20261007090000` with one rule changed:
 Powerlifting counts the heaviest weight of any set of one rep or more, so
 90 kg x 3 is a 90 kg single. Run it after `20261007090000`, never before it,
