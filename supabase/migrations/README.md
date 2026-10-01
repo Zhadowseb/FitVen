@@ -80,7 +80,7 @@ behind by accident.
 | `20261002090000_weight-mode-per-instance.sql` | yes |
 | `20261003090000_a-set-keeps-its-decimals.sql` | yes |
 | `20261004090000_progress-counts-every-exercise.sql` | yes |
-| `20261009090000_a-like-notifies-the-poster.sql` | no |
+| `20261009090000_a-like-notifies-the-poster.sql` | yes |
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
 centre match, per-centre lift leaderboards with video verification, and what
@@ -431,7 +431,7 @@ It also adds `set_cloud_exercise_instance_idx`, the index Progress finds the
 sets through. Before it had run, the list still counted three a week while the
 app said two. The checks are at the bottom of the file.
 
-`20261009090000_a-like-notifies-the-poster.sql` has not been run. It makes
+`20261009090000_a-like-notifies-the-poster.sql` was run on 2026-10-01. It makes
 a like tell the post's author - a row in their notification history, "Bo
 liked your post" - through an after insert trigger on `social_post_like`,
 once per person per post (for as long as the event row is kept), never for your own like, never across a block, and
