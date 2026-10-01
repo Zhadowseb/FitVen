@@ -236,8 +236,8 @@ assert.ok(!/private\.blocked_between[\s\S]*create policy/.test(sql) && !/create 
 
 const ledger = read("supabase/migrations/README.md");
 assert.ok(
-  ledger.includes("| `20261009090000_a-like-notifies-the-poster.sql` | no |"),
-  "the ledger lists it as not run"
+  ledger.includes("| `20261009090000_a-like-notifies-the-poster.sql` | yes |"),
+  "the ledger lists it as run (2026-10-01)"
 );
 
 /* ---------------------------------------------------------- the push -- */
