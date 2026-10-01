@@ -2,23 +2,18 @@ import { StyleSheet, View, useColorScheme } from "react-native";
 import { useTranslation } from "@localization";
 
 import { Colors } from "@resources/GlobalStyling/colors";
-import LiftStatusPill from "@resources/Components/GymLeaderboard/LiftStatusPill";
 import { ThemedText } from "@resources/ThemedComponents";
 import { formatWeightKg } from "@utils/gymUtils";
 
 /**
- * One of the big three on somebody's profile: the exercise and its video
- * pill on the left, the weight and where it ranks at its centre on the right.
- *
- * The leaderboard's rule, and nothing looser: the weight is gold and has a
- * place only when the video is verified. Anything else is the ordinary title
- * colour and "Not ranked" - `mapPublicRecord` has already dropped the rank.
+ * One of the big three on somebody's profile: the exercise on the left, the
+ * weight and where it ranks at its centre on the right, or "Not ranked" when
+ * the server sent no rank.
  */
 export default function RecordRow({ record }) {
   const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
-  const isGold = record.isVerified;
   let placeLine = t("publicProfile.records.notRanked");
 
   if (record.rank) {
@@ -33,12 +28,11 @@ export default function RecordRow({ record }) {
         <ThemedText style={styles.exercise} setColor={theme.title} numberOfLines={1}>
           {record.exerciseName}
         </ThemedText>
-        <LiftStatusPill status={record.videoStatus} approvals={record.approvals} />
       </View>
 
       <View style={styles.right}>
         <View style={styles.weightRow}>
-          <ThemedText style={styles.weight} setColor={isGold ? theme.record : theme.title}>
+          <ThemedText style={styles.weight} setColor={theme.title}>
             {formatWeightKg(record.weightKg)}
           </ThemedText>
           <ThemedText style={styles.unit} setColor={theme.quietText}>

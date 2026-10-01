@@ -44,22 +44,16 @@ export function normalizeWeeklyWorkouts(values) {
 
 /**
  * One record: the heaviest lift in one of the big three. Null for a row that
- * has nothing to show, and for a rejected lift, which is never a record.
- *
- * Gold and a place need a verified video - the leaderboard's own rule - so a
- * lift without one keeps its weight and loses its rank, whatever rank came
- * with it, and the page says "Not ranked".
+ * has nothing to show. The rank is the one the server sent, or none.
  */
 export function mapPublicRecord(row) {
   const weightKg = toNumberOrNull(row?.weight_kg);
-  const videoStatus = toText(row?.video_status) || "none";
 
-  if (!row || weightKg === null || weightKg <= 0 || videoStatus === "rejected") {
+  if (!row || weightKg === null || weightKg <= 0) {
     return null;
   }
 
-  const isVerified = videoStatus === "verified";
-  const rank = isVerified ? toNumberOrNull(row.rank) : null;
+  const rank = toNumberOrNull(row.rank);
   const gymId = toNumberOrNull(row.gym?.id);
 
   return {
@@ -68,9 +62,6 @@ export function mapPublicRecord(row) {
     liftId: toNumberOrNull(row.lift_id),
     weightKg,
     reps: toNumberOrNull(row.reps),
-    videoStatus,
-    approvals: toCount(row.approvals),
-    isVerified,
     rank: rank !== null && rank > 0 ? Math.trunc(rank) : null,
     gym:
       gymId === null

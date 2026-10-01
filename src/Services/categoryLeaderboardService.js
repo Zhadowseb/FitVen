@@ -580,7 +580,6 @@ function toServerFilters(filters) {
   if (filters.tab !== undefined) server.tab = filters.tab;
   if (filters.period !== undefined) server.period = filters.period;
   if (filters.ageGroup !== undefined) server.age_group = filters.ageGroup;
-  if (filters.onlyVideo !== undefined) server.only_video = filters.onlyVideo;
 
   return server;
 }

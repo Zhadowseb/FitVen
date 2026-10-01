@@ -37,17 +37,6 @@ export default StyleSheet.create({
     fontSize: 12.5,
     fontWeight: "800",
   },
-  infoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  infoText: {
-    flex: 1,
-    fontSize: 11.5,
-    fontWeight: "600",
-    lineHeight: 16,
-  },
   podiumCard: {
     borderRadius: 20,
     borderWidth: 1,
@@ -104,10 +93,6 @@ export default StyleSheet.create({
     fontSize: 11,
     fontWeight: "700",
   },
-  podiumNoVideo: {
-    fontSize: 10,
-    fontWeight: "800",
-  },
   plinth: {
     width: "100%",
     borderTopLeftRadius: 10,
@@ -140,10 +125,6 @@ export default StyleSheet.create({
   listHeaderSpaced: {
     marginBottom: 14,
   },
-  listFootnotes: {
-    marginTop: 14,
-    gap: 14,
-  },
   listRowCard: {
     borderLeftWidth: 1,
     borderRightWidth: 1,
@@ -173,11 +154,6 @@ export default StyleSheet.create({
     fontSize: 13,
     fontWeight: "800",
   },
-  footnote: {
-    fontSize: 11.5,
-    fontWeight: "600",
-    lineHeight: 16,
-  },
   emptyRow: {
     paddingHorizontal: 16,
     paddingVertical: 18,
@@ -198,72 +174,5 @@ export default StyleSheet.create({
     borderRadius: 18,
     borderWidth: 1,
     overflow: "hidden",
-  },
-  pinnedNote: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  pinnedNoteCopy: {
-    flex: 1,
-    minWidth: 0,
-    gap: 2,
-  },
-  pinnedNoteTitle: {
-    fontSize: 13.5,
-    fontWeight: "800",
-  },
-  pinnedNoteBody: {
-    fontSize: 11.5,
-    fontWeight: "700",
-  },
-  attachButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  sheetHeader: {
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    gap: 2,
-  },
-  sheetTitle: {
-    fontSize: 20,
-    fontWeight: "800",
-    letterSpacing: -0.4,
-  },
-  sheetBody: {
-    fontSize: 12.5,
-    fontWeight: "600",
-    lineHeight: 17,
-  },
-  sheetOption: {
-    marginHorizontal: 16,
-    marginBottom: 10,
-    borderRadius: 16,
-    borderWidth: 1,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  sheetOptionCopy: {
-    flex: 1,
-    minWidth: 0,
-    gap: 2,
-  },
-  sheetOptionTitle: {
-    fontSize: 14,
-    fontWeight: "800",
-  },
-  sheetOptionBody: {
-    fontSize: 11.5,
-    fontWeight: "600",
-    lineHeight: 15,
   },
 });

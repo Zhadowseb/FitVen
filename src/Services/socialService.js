@@ -1452,8 +1452,7 @@ export async function blockUser({ userId, targetUserId }) {
  * insert rather than storing something nobody will recognise later.
  */
 // `labelKey` is what a translated screen shows. `label` translates the same
-// key when it is read, for screens that print option.label - the same reason
-// REJECTION_REASONS in gymService carries both.
+// key when it is read, for screens that print option.label.
 export const REPORT_REASONS = [
   { value: "spam", labelKey: "social.report.reasons.spam", get label() { return t(this.labelKey); } },
   { value: "harassment", labelKey: "social.report.reasons.harassment", get label() { return t(this.labelKey); } },

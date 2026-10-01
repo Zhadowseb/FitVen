@@ -8,18 +8,16 @@ import { readableTone } from "@utils/categoryFormat";
 import { mixHexColors } from "@utils/colorMix";
 
 /**
- * One filter under the tabs. Three kinds:
+ * One filter under the tabs. Two kinds:
  *  - a value that opens a sheet ("Alle aldre", with a caret);
- *  - a toggle ("Kun video": no caret, on or off);
  *  - a fixed label (`isStatic`: "Alle vægte" while there is no body weight to
  *    sort anybody by - it cannot be pressed, and says why to a screen reader).
- * `active` is a filter that narrows the list: an age group, video only.
+ * `active` is a filter that narrows the list: an age group, say.
  */
 export default function FilterPill({
   label,
   active = false,
   onPress,
-  kind = "sheet",
   isStatic = false,
   accessibilityLabel,
   accessibilityHint,
@@ -39,7 +37,7 @@ export default function FilterPill({
       <ThemedText style={styles.label} setColor={textColor} numberOfLines={1}>
         {label}
       </ThemedText>
-      {kind === "sheet" && !isStatic ? <Caret color={textColor} size={12} /> : null}
+      {!isStatic ? <Caret color={textColor} size={12} /> : null}
     </>
   );
 
@@ -58,8 +56,7 @@ export default function FilterPill({
 
   return (
     <TouchableOpacity
-      accessibilityRole={kind === "toggle" ? "switch" : "button"}
-      accessibilityState={kind === "toggle" ? { checked: active } : undefined}
+      accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label}
       accessibilityHint={accessibilityHint}
       activeOpacity={0.82}

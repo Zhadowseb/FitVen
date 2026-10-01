@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.16.8] - Unreleased
+### Removed
+- **Video verification of lifts, all the way through.** The owner decided it is too early for it, and that it can be built again later.
+  - **App:** the review sheet (`LiftVerificationSheet`), the status pill and the verified icon are gone. So are attaching a video to a lift, the vote, the "N lifts waiting for a verdict" row, "Kun video" on Powerlifting, the verified gold and pills on the leaderboards and public profiles, and the verification notification. The iOS camera and library texts speak of "a video of an exercise", since custom exercises use the same permissions.
+  - **Cloud:** `20261007090000_remove-lift-verification.sql` (run on 2026-10-01) drops `gym_lift_vote`, the video columns on `gym_lift`, the queue and request functions, the video policy's check, the lift-videos storage policies and the old verification notifications. `ranked_lifts`, `public_profile`, `gym_scope_summary` and `category_rows` are restated without them.
+  - **Every list counts every lift, a rejected one included.** The country's list was verified lifts only; it is now each person's best lift of the exercise, once. Every record on a profile has its rank.
+  - **By hand:** empty and delete the `lift-videos` bucket in the dashboard, under Storage. Supabase does not allow deleting files with SQL.
+  - Checked on a throwaway Postgres 17 after the real gym migrations. The migration runs twice without error, and a rejected, a verified and an unjudged lift then all rank at the centre, in the country and in Powerlifting.
+- **The privacy policy** no longer mentions verification videos, and says your best lift of an exercise appears on the national leaderboard. It is raised to 2026-09-30.1, so everyone is asked again.
+- **Tests:** `npm run test:remove-lift-verification`, plus `test-gym-leaderboard.js`, `test-gym-categories.js` and `test-public-profile.js` updated. The declared-before-use check in `test-gym-leaderboard.js` had lost the escapes in its regex and matched nothing; it works again.
+
+---
 ## [2.16.7] - Unreleased
 ### Fixed
 From the review agents' report on #296.

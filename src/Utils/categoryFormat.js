@@ -265,9 +265,7 @@ export function meSubtitle({ category, tab, me, t }) {
 /**
  * The filter that leaves you out, named. The server's in_filter is about who
  * you are - the gender and the age group - so those are the two named, both
- * when both are set: the list cannot say which one did it. Video only is not
- * one of them; without a verified single you are simply not on that list
- * yet, and the page says so as it does for any missing value.
+ * when both are set: the list cannot say which one did it.
  */
 export function activeFilterLabel({ gender, filters, t }) {
   const names = [];
@@ -285,7 +283,7 @@ export function activeFilterLabel({ gender, filters, t }) {
 
 /* -------------------------------------------------------------- the texts -- */
 
-/** How the category is counted, under the title - true to the tab and the video filter. */
+/** How the category is counted, under the title - true to the tab. */
 export function explanationKey(category, filters) {
   switch (category) {
     case "flid":
@@ -293,9 +291,7 @@ export function explanationKey(category, filters) {
         ? "category.explanations.flidStreak"
         : "category.explanations.flidWorkouts";
     case "powerlifting":
-      return filters?.onlyVideo
-        ? "category.explanations.powerliftingVideo"
-        : "category.explanations.powerlifting";
+      return "category.explanations.powerlifting";
     case "fremgang":
       return "category.explanations.fremgang";
     default:
@@ -309,7 +305,7 @@ export function emptyBodyKey(category, filters) {
     case "flid":
       return filters?.tab === "streak" ? "category.empty.flidStreak" : "category.empty.flidWorkouts";
     case "powerlifting":
-      return filters?.onlyVideo ? "category.empty.powerliftingVideo" : "category.empty.powerlifting";
+      return "category.empty.powerlifting";
     case "fremgang":
       return "category.empty.fremgang";
     default:
