@@ -58,6 +58,7 @@
     },
     "plugins": [
       "./plugins/withDevAppVariant",
+      "./plugins/withoutLocationForegroundService",
       "expo-sqlite",
       [
         "react-native-ble-plx",

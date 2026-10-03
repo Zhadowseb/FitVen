@@ -15,6 +15,29 @@ const loadAppModule = require("./lib/loadAppModule");
 
 const root = path.resolve(__dirname, "..");
 
+// expo-location's own manifest declares LocationTaskService with
+// foregroundServiceType="location"; plugins/withoutLocationForegroundService
+// removes it from the merged manifest, so Play finds no location foreground
+// service. Checked against a real merged release manifest on 2026-10-04.
+{
+  const plugin = require(path.join(root, "plugins/withoutLocationForegroundService.js"));
+  const manifest = {
+    $: { "xmlns:android": "http://schemas.android.com/apk/res/android" },
+    application: [{ service: [{ $: { "android:name": plugin.LOCATION_TASK_SERVICE } }, { $: { "android:name": "other.Service" } }] }],
+  };
+  const result = plugin.removeLocationTaskService(manifest);
+  const services = result.application[0].service;
+  assert.strictEqual(result.$["xmlns:tools"], "http://schemas.android.com/tools", "the tools namespace is declared");
+  assert.deepStrictEqual(
+    services.filter((service) => service.$["android:name"] === plugin.LOCATION_TASK_SERVICE).map((service) => service.$["tools:node"]),
+    ["remove"],
+    "LocationTaskService is removed from the merged manifest, once"
+  );
+  assert.ok(services.some((service) => service.$["android:name"] === "other.Service"), "other services stay");
+  const plugins = JSON.parse(fs.readFileSync(path.join(root, "app.json"), "utf8")).expo.plugins;
+  assert.ok(plugins.includes("./plugins/withoutLocationForegroundService"), "app.json runs the plugin");
+}
+
 /* ------------------------------------------------------------- app.json -- */
 
 const appJson = JSON.parse(fs.readFileSync(path.join(root, "app.json"), "utf8"));
