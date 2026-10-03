@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Keyboard,
   PanResponder,
   TouchableOpacity,
   View,
@@ -177,6 +178,15 @@ const ExerciseRow = ({
 
   const handleCardPress = (handler) => {
     if (shouldIgnorePressAfterDrag()) {
+      return;
+    }
+
+    // With a field open, a tap on the card only puts the keyboard away, and
+    // the field saves what was typed as it closes (ThemedEditableCell). The
+    // tap used to fold the card too, which took the field away before it
+    // could save, so the number typed was lost.
+    if (Keyboard.isVisible()) {
+      Keyboard.dismiss();
       return;
     }
 

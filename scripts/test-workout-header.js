@@ -232,6 +232,21 @@ const read = (relativePath) =>
   const packageJson = JSON.parse(read("package.json"));
   assert.ok(packageJson.dependencies["expo-keep-awake"], "expo-keep-awake is declared");
 
+  // Tapping the exercise's name with a field open only puts the keyboard
+  // away, and the field saves what was typed (the owner's video of 2026-10-03:
+  // the card folded and the new weight was lost).
+  {
+    const row = read("src/Pages/WorkoutPage/WorkoutTypes/Resistance/Components/ExerciseList/Components/ExerciseRow/ExerciseRow.js");
+    const press = row.slice(row.indexOf("const handleCardPress"), row.indexOf("const updateCardDragPosition"));
+    assert.ok(/if \(Keyboard\.isVisible\(\)\) \{\s*Keyboard\.dismiss\(\);\s*return;\s*\}\s*handler\?\.\(\);/.test(press),
+      "a card tap with the keyboard up must only dismiss it, before the handler");
+    const cell = read("src/Resources/ThemedComponents/ThemedEditableCell.js");
+    assert.ok(cell.includes("useEffect(() => () => commitRef.current?.(), []);"),
+      "a field taken away while edited must still save what was typed");
+    assert.ok(/addListener\("keyboardDidHide",[\s\S]*?commitRef\.current\?\.\(\)/.test(cell),
+      "putting the keyboard away saves the field");
+  }
+
   console.log("workout header: ok");
 })().catch((error) => {
   console.error(error);
