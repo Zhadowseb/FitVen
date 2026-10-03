@@ -19,12 +19,12 @@
 // counted by scripts/check-privacy-policy.js, which fails the build while the
 // policy claims to be published and is not finished.
 
-export const PRIVACY_POLICY_VERSION = "2026-09-30.1";
+export const PRIVACY_POLICY_VERSION = "2026-10-04.1";
 
 /** The public copy. Required by Google Play, and the address in its listing. */
 export const PRIVACY_POLICY_URL = "https://fitven.dk/privacy/";
 
-export const PRIVACY_POLICY_LAST_UPDATED = "30 September 2026";
+export const PRIVACY_POLICY_LAST_UPDATED = "4 October 2026";
 
 export const PRIVACY_POLICY_SECTIONS = [
   {
@@ -50,7 +50,7 @@ Exercises you make yourself: the name, the muscles, the equipment, the weight mo
 
 Centres: the centre you choose as yours, or else the one you have trained in most over the last 90 days; the centre each workout was done in; and the lifts from those workouts that go on a centre's leaderboard.
 
-Health data: sickness and injury entries you record, heart rate measured from a chest strap or watch, and — if you use the run screen — your location while a run is being tracked, along with the route it produces.
+Health data: sickness and injury entries you record, heart rate measured from a chest strap or watch, and the location and route of runs you tracked with an earlier version of FitVen.
 
 Social: who you follow, who follows you, who you have blocked, the people and posts you report, the workout posts you publish and the posts you like.
 
@@ -74,7 +74,7 @@ You can withdraw that consent at any time by deleting your account, which remove
 
 Push notifications are delivered through Expo's notification service, which means a notification's title and text pass through Expo's servers on the way to your phone.
 
-Location is only read while a run is actively being tracked, and once when you start a workout to find the centre you are in — both only if you allow it. A run's route is stored with the run. For a centre, your position is sent to FitVen's server to look the centre up and is not kept there: only the centre is stored with the workout. Your phone keeps the position with the workout, so the lookup can be tried again if it failed.
+Location is only read once when you start a workout, to find the centre you are in, and only if you allow it. FitVen no longer tracks runs; the routes of runs tracked with an earlier version stay stored with those runs. For a centre, your position is sent to FitVen's server to look the centre up and is not kept there: only the centre is stored with the workout. Your phone keeps the position with the workout, so the lookup can be tried again if it failed.
 
 Exercise videos are stored on Supabase with the rest of your data.
 

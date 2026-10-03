@@ -75,9 +75,7 @@ import {
   migrateLegacySharedDatabaseToUserDatabase,
   setActiveDatabaseName,
 } from "./src/Database/localDatabase";
-import { notificationService } from "./src/Services";
-// Side effect only: registers the background location task.
-import "./src/Services/locationBackgroundTask";
+import { locationService, notificationService } from "./src/Services";
 import { AuthProvider, useAuth } from './src/Contexts/AuthContext';
 import { ThemeModeProvider, useThemeMode } from './src/Contexts/ThemeContext';
 import { LocalizationProvider, useTranslation } from './src/Localization';
@@ -95,6 +93,12 @@ import AppOpenSync from "./src/Sync/AppOpenSync";
 import { parseLiveWorkoutFinishUrl } from "./src/Utils/liveWorkout";
 import { pushNotificationTarget } from "./src/Utils/notificationHistory";
 import LiveWorkoutSync from "./src/Sync/LiveWorkoutSync";
+
+// Older builds tracked runs with a background location task, and Android
+// restores a registered task on launch. Stop any such leftover once, so
+// nothing can start the location foreground service this app no longer
+// declares a permission for.
+void locationService.stopLegacyRunLocationTask();
 
 const Stack = createNativeStackNavigator();
 const navigationRef = createNavigationContainerRef();

@@ -258,21 +258,12 @@ export default {
     planned: "PLANNED",
   },
   location: {
-    notificationTitle: "FitVen is tracking your run",
-    notificationBody: "Distance and pace update while your workout is running.",
     errors: {
-      permissionDenied: "Location permission was not granted.",
-      precisePermissionRequired:
-        "Precise location permission is required for run tracking.",
-      backgroundUnavailable: "Background location is not available on this device.",
-      backgroundPermissionDenied: "Background location permission was not granted.",
-      servicesDisabled: "Location services are turned off.",
+      trackingUnavailable: "Run tracking is not available.",
     },
     startMessages: {
-      precisePermission:
-        "FitVen needs Precise/Fine location permission to track {activity} distance accurately. Enable precise location for FitVen and try again.",
-      backgroundPermission:
-        "FitVen needs background location permission so distance continues tracking while the app is not in front.",
+      trackingUnavailable:
+        "Tracking a {activity} is not available in this version of FitVen. Your earlier ones are still here.",
       generic: "Check that location is allowed and turned on, then try again.",
     },
   },

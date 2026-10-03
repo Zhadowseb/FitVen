@@ -120,8 +120,11 @@ Five names, and they are not interchangeable:
   `src/Resources/Components/StartWorkoutSheet.js` — not in `src/Pages/`. The
   navigation is mounted in `App.js` outside the navigator.
 - The run screen is split, but only its pure parts. `Run.js` is still ~4,500
-  lines because the GPS and Bluetooth hooks are wired into its state and cannot
-  move without a device to test on. The maths that could move lives beside it in
+  lines because the Bluetooth hooks and the run-tracking calls are wired into
+  its state and cannot move without a device to test on. GPS tracking itself is
+  switched off: `locationService.startRunTracking` always fails, and the app
+  declares no foreground service (`scripts/test-no-foreground-service.js`
+  fails if one, or background location, comes back). The maths that could move lives beside it in
   `runDisplayUtils.js` (sections, route, charts), `runFormatUtils.js` (pace,
   clock, distance), `runEnduranceStats.js` and `runFlowOptions.js`, and is the
   only part with tests. Put new run maths there, not back in the screen.
