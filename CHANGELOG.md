@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.17.4] - 2026-10-04
+### Removed
+- **The location foreground service, and run tracking with it.** Google Play would not take the production release without a declaration and a video for `FOREGROUND_SERVICE_LOCATION`. It was only used to keep GPS running for a run with the screen off, and runs are no longer used.
+  - `app.json` asks only for `ACCESS_FINE_LOCATION` and `ACCESS_COARSE_LOCATION`, to match a workout to its centre. `FOREGROUND_SERVICE` and `FOREGROUND_SERVICE_LOCATION` are blocked, and `expo-location` has `isAndroidForegroundServiceEnabled: false`.
+  - `plugins/withoutLocationForegroundService` removes expo-location's own `LocationTaskService` from the merged manifest. The merged release manifest then has no foreground service permission or type at all, as checked on 2026-10-04.
+  - `locationService` starts no location updates and asks for no background location. `locationBackgroundTask.js` and its task are gone, and a task an older build left registered is stopped at startup. Run and Walk can't be picked as a workout type. An old run still opens and shows its route, distance and history, but Start there says tracking is not available in this version.
+  - The location permission text speaks only of matching a workout to the centre.
+- **The privacy policy** says that location is only read to find the centre when a workout starts, and that FitVen no longer tracks runs; the routes of earlier runs stay stored with them. It is raised to 2026-10-04.1 (4 October 2026), so everyone is asked again.
+- **Tests:** `npm run test:no-foreground-service`.
+
+---
 ## [2.17.3] - 2026-10-03
 ### Fixed
 From the review agents' reports on #308 and #311.
