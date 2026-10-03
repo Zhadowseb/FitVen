@@ -41,6 +41,7 @@ import {
   weightModeOf,
 } from "@utils/weightMode";
 import { getWeightStep } from "@utils/weightStep";
+import { cardPressAction } from "@utils/cardPress";
 import { useExerciseViewSettings } from "@contexts/ExerciseViewSettingsContext";
 import ReanimatedAnimated, {
   runOnJS,
@@ -176,16 +177,17 @@ const ExerciseRow = ({
     return true;
   };
 
-  const handleCardPress = (handler) => {
+  // `folds`: the press folds or unfolds the card. With a keyboard up, such a
+  // tap only puts the keyboard away, and the field saves what was typed as it
+  // closes (ThemedEditableCell); folding used to take the field away before
+  // it could save, so the number typed was lost. Every other button works on
+  // the first tap (Utils/cardPress.js).
+  const handleCardPress = (handler, { folds = false } = {}) => {
     if (shouldIgnorePressAfterDrag()) {
       return;
     }
 
-    // With a field open, a tap on the card only puts the keyboard away, and
-    // the field saves what was typed as it closes (ThemedEditableCell). The
-    // tap used to fold the card too, which took the field away before it
-    // could save, so the number typed was lost.
-    if (Keyboard.isVisible()) {
+    if (cardPressAction({ keyboardVisible: Keyboard.isVisible(), folds }) === "dismiss") {
       Keyboard.dismiss();
       return;
     }
@@ -780,7 +782,7 @@ const ExerciseRow = ({
             // With no sets there is nothing to expand into: the plus is the
             // only way in, and it adds the first set as it opens the card.
             disabled={!isExpanded && exercise.sets.length === 0}
-            onPress={() => handleCardPress(onToggleExpanded)}
+            onPress={() => handleCardPress(onToggleExpanded, { folds: true })}
             style={[
               styles.headerMain,
               isExpanded && styles.headerMainExpanded,
@@ -885,7 +887,7 @@ const ExerciseRow = ({
                     activeOpacity={0.88}
                     accessibilityRole="button"
                     accessibilityLabel={t("workout.exercise.expand")}
-                    onPress={() => handleCardPress(onToggleExpanded)}
+                    onPress={() => handleCardPress(onToggleExpanded, { folds: true })}
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     style={styles.collapsedExpandButton}
                   >
@@ -929,7 +931,7 @@ const ExerciseRow = ({
 
         {!isExpanded && collapsedSetsVisible && exercise.sets.length > 0 && (
           <View style={styles.summaryCollapsedRow}>
-            <TouchableOpacity activeOpacity={0.88} onPress={() => handleCardPress(onToggleExpanded)} style={styles.summaryRow}>
+            <TouchableOpacity activeOpacity={0.88} onPress={() => handleCardPress(onToggleExpanded, { folds: true })} style={styles.summaryRow}>
               <View style={styles.summaryTextBlock}>
                 {usesClassicCollapsedCard ? (
                   <ClassicSetSummary
@@ -988,7 +990,7 @@ const ExerciseRow = ({
             ) : (
               <TouchableOpacity
                 activeOpacity={0.88}
-                onPress={() => handleCardPress(onToggleExpanded)}
+                onPress={() => handleCardPress(onToggleExpanded, { folds: true })}
                 style={styles.summaryRow}
               >
                 <View style={styles.summaryTextBlock}>
@@ -1048,7 +1050,7 @@ const ExerciseRow = ({
 
             <TouchableOpacity
               activeOpacity={0.88}
-              onPress={() => handleCardPress(onToggleExpanded)}
+              onPress={() => handleCardPress(onToggleExpanded, { folds: true })}
               style={[
                 styles.summaryExpandButton,
                 {

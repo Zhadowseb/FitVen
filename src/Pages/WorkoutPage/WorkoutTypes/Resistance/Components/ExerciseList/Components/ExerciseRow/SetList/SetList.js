@@ -31,9 +31,12 @@ import Cogwheel from "@resources/Icons/UI-icons/Cogwheel";
 import Star from "@resources/Icons/UI-icons/Star";
 import { restCountUpService, weightliftingService } from "@services";
 import {
-  isCountedRest,
+  REST_UNIT_MINUTES,
+  REST_UNIT_SECONDS,
   isRestCountUpVisible,
+  parsePauseValue,
   restCountUpElapsed,
+  restDisplayFor,
 } from "@utils/restCountUp";
 import { formatNumber, useTranslation } from "@localization";
 import ReanimatedAnimated, {
@@ -84,8 +87,6 @@ const SET_LIST_DEFAULT_VISIBLE_COLUMNS = SET_LIST_COLUMN_KEYS.reduce(
   }),
   {}
 );
-const REST_UNIT_MINUTES = "minutes";
-const REST_UNIT_SECONDS = "seconds";
 const REST_DIVIDER_BUBBLE_SIZE = 32;
 
 // Two or more warm-ups can be folded into one row at any time, by hand. They
@@ -642,36 +643,6 @@ const SetList = ({
 
     return renderedColumns;
   };
-
-  const parsePauseValue = (value) => {
-    if (value === null || value === undefined || value === "") {
-      return null;
-    }
-
-    const parsedValue = Number(String(value).replace(",", "."));
-
-    return Number.isFinite(parsedValue) ? parsedValue : null;
-  };
-
-  const formatRestUnitValue = (value) => {
-    const pauseValue = parsePauseValue(value);
-
-    if (pauseValue === null) {
-      return "";
-    }
-
-    const unitValue =
-      restUnit === REST_UNIT_MINUTES ? pauseValue / 60 : pauseValue;
-
-    if (Number.isInteger(unitValue)) {
-      return unitValue.toString();
-    }
-
-    return Number(unitValue.toFixed(2)).toString();
-  };
-
-  const getPauseSuffix = () =>
-    restUnit === REST_UNIT_MINUTES ? "min" : "sec";
 
   const getStoredPauseValue = (value) => {
     const pauseValue = parsePauseValue(value);
@@ -1603,6 +1574,14 @@ const SetList = ({
     };
   };
 
+  // The cell's props for a rest: shown as `display` when there is one, and
+  // edited as `value` either way.
+  const restDividerProps = (rest) => ({
+    value: rest.value,
+    suffix: rest.suffix,
+    ...(rest.display !== null ? { displayFormatter: () => rest.display } : null),
+  });
+
   const renderRestDivider = (set, renderedColumns, rowIndex) => {
     const rowLayout = setRowLayouts[set.sets_id];
 
@@ -1709,16 +1688,11 @@ const SetList = ({
                     renderEditableValue({
                       cellKey: `${set.sets_id}:rest-divider`,
                       containerStyle: styles.restDividerValuePill,
-                      value: formatRestUnitValue(set.pause),
                       // A counted rest reads as it did while it counted
                       // ("4.49"), not as minutes with decimals ("4.82 min").
-                      // Editing it still edits the rest in the chosen unit.
-                      ...(isCountedRest(set)
-                        ? {
-                            displayFormatter: () => formatTime(Number(set.pause)),
-                            suffixFormatter: () => "",
-                          }
-                        : { suffixFormatter: getPauseSuffix }),
+                      // Editing it still edits the rest in the chosen unit
+                      // (Utils/restCountUp.js, restDisplayFor).
+                      ...restDividerProps(restDisplayFor(set, restUnit)),
                       onCommit: (value) =>
                         updateRestPause(getStoredPauseValue(value), set.sets_id),
                     })

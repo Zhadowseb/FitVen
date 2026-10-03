@@ -234,17 +234,68 @@ const read = (relativePath) =>
 
   // Tapping the exercise's name with a field open only puts the keyboard
   // away, and the field saves what was typed (the owner's video of 2026-10-03:
-  // the card folded and the new weight was lost).
+  // the card folded and the new weight was lost). Only a press that folds or
+  // unfolds the card is held back; the note, the history and the first set
+  // work on the first tap, whoever's keyboard is up.
   {
+    const { cardPressAction } = loadAppModule("src/Utils/cardPress.js");
+
+    assert.strictEqual(cardPressAction({ keyboardVisible: true, folds: true }), "dismiss", "a fold with a keyboard up only puts it away");
+    assert.strictEqual(cardPressAction({ keyboardVisible: false, folds: true }), "run", "without a keyboard the card folds");
+    assert.strictEqual(cardPressAction({ keyboardVisible: true, folds: false }), "run", "the note, history or first set waited for a second tap");
+    assert.strictEqual(cardPressAction({ keyboardVisible: false, folds: false }), "run");
+    assert.strictEqual(cardPressAction(), "run", "no keyboard and no fold said: the press runs");
+
+    // The cell's commit, as ThemedEditableCell runs it from blur, submit,
+    // keyboardDidHide and unmount: against what was last committed.
+    const { shouldCommitEdit } = loadAppModule("src/Utils/editCommit.js");
+    const cell = (value) => {
+      const writes = [];
+      let committed = value;
+      let local = value;
+
+      return {
+        writes,
+        type: (next) => {
+          local = next;
+        },
+        commit: () => {
+          if (!shouldCommitEdit(local, committed)) return;
+          committed = local;
+          writes.push(local);
+        },
+      };
+    };
+
+    const untouched = cell("60");
+    untouched.commit(); // unmount
+    assert.deepStrictEqual(untouched.writes, [], "a cell nobody changed wrote on unmount");
+
+    const edited = cell("60");
+    edited.type("62.5");
+    edited.commit(); // blur
+    edited.commit(); // keyboardDidHide
+    edited.commit(); // unmount
+    assert.deepStrictEqual(edited.writes, ["62.5"], "one change, one write - not one per way of leaving the field");
+
+    edited.type("60");
+    edited.commit();
+    assert.deepStrictEqual(edited.writes, ["62.5", "60"], "changing it back is a change too");
+
+    const empty = cell(null);
+    empty.type("");
+    empty.commit();
+    assert.deepStrictEqual(empty.writes, [""], "clearing a field is saved");
+
+    // The wiring nothing above can see.
     const row = read("src/Pages/WorkoutPage/WorkoutTypes/Resistance/Components/ExerciseList/Components/ExerciseRow/ExerciseRow.js");
-    const press = row.slice(row.indexOf("const handleCardPress"), row.indexOf("const updateCardDragPosition"));
-    assert.ok(/if \(Keyboard\.isVisible\(\)\) \{\s*Keyboard\.dismiss\(\);\s*return;\s*\}\s*handler\?\.\(\);/.test(press),
-      "a card tap with the keyboard up must only dismiss it, before the handler");
-    const cell = read("src/Resources/ThemedComponents/ThemedEditableCell.js");
-    assert.ok(cell.includes("useEffect(() => () => commitRef.current?.(), []);"),
-      "a field taken away while edited must still save what was typed");
-    assert.ok(/addListener\("keyboardDidHide",[\s\S]*?commitRef\.current\?\.\(\)/.test(cell),
-      "putting the keyboard away saves the field");
+    assert.ok(row.includes("cardPressAction({ keyboardVisible: Keyboard.isVisible(), folds })"), "the card asks cardPressAction");
+    assert.ok(row.includes("handleCardPress(onToggleExpanded, { folds: true })"), "folding the card is marked as a fold");
+    assert.ok(!row.includes("handleCardPress(onToggleExpanded)"), "a fold of the card is not marked as one");
+    const editable = read("src/Resources/ThemedComponents/ThemedEditableCell.js");
+    assert.ok(editable.includes("shouldCommitEdit(nextValue, committedValueRef.current)"), "the cell asks shouldCommitEdit");
+    assert.ok(editable.includes("useEffect(() => () => commitRef.current?.(), []);"), "a field taken away while edited saves");
+    assert.ok(editable.includes('Keyboard.addListener("keyboardDidHide"'), "putting the keyboard away saves the field");
   }
 
   console.log("workout header: ok");

@@ -168,16 +168,39 @@ assert.deepStrictEqual(
 assert.deepStrictEqual(rules.withSendableRestCounted({ a: 1, rest_counted: false }), { a: 1, rest_counted: false });
 
 // A saved counted rest reads as it did while it counted ("4.49"), not as
-// minutes with decimals ("4.82 min") - the phone test of 2.17.0.
+// minutes with decimals ("4.82 min") - the phone test of 2.17.0. Editing it
+// still edits the rest in the chosen unit.
+assert.deepStrictEqual(
+  rules.restDisplayFor({ pause: 289, rest_counted: 1 }, rules.REST_UNIT_MINUTES),
+  { value: "4.82", suffix: "", display: "4.49" },
+  "a saved counted rest is shown in minutes and seconds, with no unit"
+);
+assert.deepStrictEqual(
+  rules.restDisplayFor({ pause: 289, rest_counted: 1 }, rules.REST_UNIT_SECONDS),
+  { value: "289", suffix: "", display: "4.49" },
+  "and so in seconds too"
+);
+assert.deepStrictEqual(
+  rules.restDisplayFor({ pause: 180, rest_counted: 0 }, rules.REST_UNIT_MINUTES),
+  { value: "3", suffix: "min", display: null },
+  "a planned rest reads in the chosen unit"
+);
+assert.deepStrictEqual(
+  rules.restDisplayFor({ pause: 90 }, rules.REST_UNIT_MINUTES),
+  { value: "1.5", suffix: "min", display: null }
+);
+assert.deepStrictEqual(
+  rules.restDisplayFor({ pause: 180, rest_counted: 0 }, rules.REST_UNIT_SECONDS),
+  { value: "180", suffix: "sec", display: null }
+);
+assert.strictEqual(rules.restDisplayFor({ pause: null }, rules.REST_UNIT_MINUTES).value, "", "no rest is an empty field");
+assert.strictEqual(rules.parsePauseValue("1,5"), 1.5, "a comma is a decimal point");
+assert.strictEqual(rules.parsePauseValue("abc"), null);
 {
-  const setList = require("fs").readFileSync(
-    require("path").join(__dirname, "../src/Pages/WorkoutPage/WorkoutTypes/Resistance/Components/ExerciseList/Components/ExerciseRow/SetList/SetList.js"),
-    "utf8"
+  const setList = read(
+    "src/Pages/WorkoutPage/WorkoutTypes/Resistance/Components/ExerciseList/Components/ExerciseRow/SetList/SetList.js"
   );
-  assert.ok(
-    /isCountedRest\(set\)\s*\?\s*\{\s*displayFormatter: \(\) => formatTime\(Number\(set\.pause\)\)/.test(setList),
-    "a saved counted rest is shown in minutes and seconds"
-  );
+  assert.ok(setList.includes("restDisplayFor(set, restUnit)"), "the rest under a set is drawn by restDisplayFor");
 }
 
 (async () => {

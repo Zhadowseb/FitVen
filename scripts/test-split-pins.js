@@ -190,9 +190,9 @@ let nextSetId = 1;
 function workout(
   db,
   id,
-  { label, days, done = 1, syncId = `sync-${id}`, weight = 60, exercises = ["Bench press", "Dips"], type = "Resistance" }
+  { label, days, date: storedDate, done = 1, syncId = `sync-${id}`, weight = 60, exercises = ["Bench press", "Dips"], type = "Resistance" }
 ) {
-  const date = localDate(daysAgo(days));
+  const date = storedDate ?? localDate(daysAgo(days));
 
   db.sqlite.prepare("INSERT INTO Day (day_id, Weekday, date) VALUES (?, 'Monday', ?)").run(id, date);
   db.sqlite
@@ -540,6 +540,65 @@ async function main() {
     assert.deepEqual([row.exercise_count, row.set_count], [2, 1], `${where} counts deleted exercises or sets`);
   }
   assert.equal(libraryLegs.completed_set_count, 1, "the library counts a deleted exercise's done set");
+
+  /* ------------------------------------- the newest of each name, edges -- */
+
+  // Rows the SQL and the split could read differently: a date nobody can
+  // read, one name both done and planned, and two of a name on one day.
+  // Home (getNewestWorkoutOfEachName) and the Train tab (the library) must
+  // land on the same workout for each, and on the right one.
+  const edges = database();
+  const EDGE_USER = "user-3";
+
+  workout(edges, 800, { label: "Arms", days: 10 });
+  // Sorted as text, "not a date" comes before every real date - so it would
+  // stand in front of the Arms the split can date, if the SQL kept it.
+  workout(edges, 801, { label: "Arms", date: "not a date" });
+  workout(edges, 802, { label: "Back", days: 7 });
+  workout(edges, 803, { label: "Back", days: -1, done: 0 });
+  workout(edges, 804, { label: "Core", days: 4, exercises: ["Plank"] });
+  workout(edges, 805, { label: "Core", days: 4, exercises: ["Plank", "Crunch"] });
+
+  await afterMigration.saveChosenSplit({
+    userId: EDGE_USER,
+    entries: [
+      { name: "Arms", workout: null },
+      { name: "Back", workout: null },
+      { name: "Core", workout: null },
+    ],
+  });
+
+  const newestRows = await programRepository.getNewestWorkoutOfEachName(edges, { limit: 1000 });
+
+  assert.ok(!newestRows.some((row) => row.workout_id === 801), "a workout with no readable date was kept as the newest of its name");
+  assert.deepEqual(
+    newestRows.filter((row) => row.label === "Back").map((row) => [row.workout_id, row.done]).sort(),
+    [
+      [802, 1],
+      [803, 0],
+    ],
+    "a name both done and planned keeps one row of each"
+  );
+  assert.deepEqual(
+    newestRows.filter((row) => row.label === "Core").map((row) => row.workout_id),
+    [805],
+    "two of a name on one day: the later one, as the library orders them"
+  );
+
+  const edgeHome = await afterMigration.getHomeSplitGroups(edges, { userId: EDGE_USER });
+  const edgeTrain = await afterMigration.getSplitCard(edges, { userId: EDGE_USER });
+
+  assert.ok(edgeHome.every((group) => group.isChosen), "Home drew the guess, not the chosen split");
+  assert.deepEqual(edgeHome, splitUtil.homeGroupsFromSplit(edgeTrain.sessions), "Home and the Train tab disagree on the edge cases");
+  assert.deepEqual(
+    edgeTrain.sessions.map((session) => [session.name, session.lastWorkoutId]),
+    [
+      ["Arms", 800],
+      ["Back", 802],
+      ["Core", 805],
+    ],
+    "the undatable Arms, the planned Back or the earlier Core was repeated"
+  );
 
   /* --------------------------------------------------- the pure parts -- */
 

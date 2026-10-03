@@ -392,6 +392,26 @@ function checkTheCard() {
   ]) {
     assert.ok(card.includes(`"${key}"`), `the planned card no longer uses ${key}`);
   }
+
+  // The exercise count goes in as text ("3 øvelser"), under its own name.
+  {
+    const i18n = loadAppModule("src/Localization/i18n.js");
+
+    for (const [language, moreToday, startPlanned] of [
+      ["da", "3 øvelser · +2 mere", "Start planlagt træning Push, 3 øvelser"],
+      ["en", "3 exercises · +2 more", "Start planned workout Push, 3 exercises"],
+    ]) {
+      const exercises = i18n.translate("common.exercises", { count: 3 }, language);
+
+      assert.equal(i18n.translate("home.quickStart.moreToday", { exercises, count: 2 }, language), moreToday);
+      assert.equal(i18n.translate("home.quickStart.startPlanned", { name: "Push", exercises }, language), startPlanned);
+    }
+    assert.ok(
+      /t\("home\.quickStart\.moreToday", \{\s*exercises: /.test(card) &&
+        card.includes('t("home.quickStart.startPlanned", { name, exercises: '),
+      "the planned card fills {exercises}"
+    );
+  }
   assert.ok(
     /workoutDisplayName\(workout\?\.name, t, workout\?\.workoutType\)/.test(card),
     "the planned card draws the stored label instead of the workout's name"

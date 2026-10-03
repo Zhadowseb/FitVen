@@ -24,7 +24,7 @@ import {
   getMonthTitle,
   startOfDay,
 } from "@utils/calendarDays";
-import { splitNameOf } from "@utils/splitCard";
+import { isSplitNameChanged, splitNameDraft, splitNameOf } from "@utils/splitCard";
 import { addSplitEntry } from "@utils/splitEntries";
 import { workoutDisplayName } from "@utils/workoutTypeLabel";
 import { useGridPalette } from "../../../MicrocyclePage/Components/BlockWeekGrid/BlockWeekGrid";
@@ -74,12 +74,7 @@ function WorkoutDetail({ workout, picked, todayIso, onBack, onAdd, onRenamed }) 
   // The field starts on the name as the title shows it: a workout named after
   // its type is stored in English ("Upperbody") and read in the reader's
   // language ("Overkrop"). Left as it is, nothing is renamed.
-  const shownNameOf = (entry) => {
-    const name = splitNameOf(entry);
-
-    return name ? workoutDisplayName(name, t, entry.workout_type) ?? name : null;
-  };
-  const [draft, setDraft] = useState(() => shownNameOf(workout) ?? "");
+  const [draft, setDraft] = useState(() => splitNameDraft(workout, t));
   const [isSaving, setIsSaving] = useState(false);
   const [renameFailed, setRenameFailed] = useState(false);
 
@@ -106,7 +101,7 @@ function WorkoutDetail({ workout, picked, todayIso, onBack, onAdd, onRenamed }) 
   const current = { ...workout, label };
   const savedName = splitNameOf(current);
   const typed = draft.trim();
-  const isDirty = typed !== (shownNameOf(current) ?? "");
+  const isDirty = isSplitNameChanged(typed, current, t);
   // What the button would do with the name as it will be once saved. A
   // workout with no sync_id yet gets one on Add; until then it is still this
   // workout, not any workout of its name.

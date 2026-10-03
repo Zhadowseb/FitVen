@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.17.3] - 2026-10-03
+### Fixed
+From the review agents' reports on #308 and #311.
+- **Only folding the card waits for the keyboard.** In 2.17.2 every button on an exercise card - the note, the history, "add the first set" - only put the keyboard away on the first tap. Now that applies only to a tap that would fold or unfold the card, which is the one that took the set fields away (`cardPressAction` in `Utils/cardPress.js`).
+- **The planned card and the split cards count exercises and sets with the same SQL** (`workoutExerciseCountSql`, `workoutSetCountSql`); `getOpenWorkoutsForDate` had its own copy.
+- `{n}` in `home.quickStart.moreToday` and `startPlanned` is `{exercises}` now, since it holds "3 øvelser", not a number.
+
+### Changed
+- **Tests run the logic instead of reading the source:** `cardPressAction`, `shouldCommitEdit` (`Utils/editCommit.js`; an untouched field writes nothing when it goes away), `restDisplayFor` ("4.49" for a counted rest, "3 min" for a planned one), and `splitNameDraft` / `isSplitNameChanged` ("Overkrop" left as it is renames nothing). `getNewestWorkoutOfEachName` is tested with an invalid date, one name both done and planned, and two of one name on a day.
+- **The review workflow's diff trimming is `scripts/trim-diff.js`,** with a test (`npm run test:trim-diff`), instead of untested awk inside the workflow. The workflow reads it from the commit it runs for.
+
+---
 ## [2.17.2] - 2026-10-03
 ### Fixed
 - **A weight or reps typed in a set is no longer lost when you tap the exercise's name to close the keyboard.** The tap folded the card, which took the field away before it saved, so the set kept its old number (the owner's video of 2026-10-03). With the keyboard up, a tap on the exercise card now only puts the keyboard away, and the field saves as it closes. A field taken away while being edited also saves what was typed (`ThemedEditableCell`).

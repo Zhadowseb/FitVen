@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Colors } from "../GlobalStyling/colors";
 import ThemedText from "./ThemedText";
 import { useThemedKeyboardProtection } from "./ThemedKeyboardProtection";
+import { shouldCommitEdit } from "@utils/editCommit";
 
 const ThemedEditableCell = ({
   value,
@@ -32,9 +33,10 @@ const ThemedEditableCell = ({
   const [localValue, setLocalValue] = useState(value);
   const [focused, setFocused] = useState(false);
 
-  // What the parent has already been told. The value is committed from three
-  // places now, so this keeps it to one write per distinct value rather than
-  // one per way of leaving the field.
+  // What the parent has already been told. The value is committed from four
+  // places - blur, submit, the keyboard going away and unmount - so this keeps
+  // it to one write per distinct value rather than one per way of leaving the
+  // field (Utils/editCommit.js).
   const committedValueRef = useRef(value);
   const localValueRef = useRef(localValue);
 
@@ -48,7 +50,7 @@ const ThemedEditableCell = ({
   commitRef.current = () => {
     const nextValue = localValueRef.current;
 
-    if (nextValue === committedValueRef.current) {
+    if (!shouldCommitEdit(nextValue, committedValueRef.current)) {
       return;
     }
 

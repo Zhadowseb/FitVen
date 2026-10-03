@@ -52,7 +52,7 @@ export default function PlannedWorkoutCard({ workout, count = 1, onPress }) {
     meta = t("home.quickStart.noExercises");
   } else if (count > 1) {
     meta = t("home.quickStart.moreToday", {
-      n: t("common.exercises", { count: exerciseCount }),
+      exercises: t("common.exercises", { count: exerciseCount }),
       count: count - 1,
     });
   } else {
@@ -64,7 +64,7 @@ export default function PlannedWorkoutCard({ workout, count = 1, onPress }) {
 
   const accessibilityLabel = isStarted
     ? t("home.quickStart.continueNamed", { name })
-    : t("home.quickStart.startPlanned", { name, n: t("common.exercises", { count: exerciseCount }) });
+    : t("home.quickStart.startPlanned", { name, exercises: t("common.exercises", { count: exerciseCount }) });
 
   return (
     <TouchableOpacity

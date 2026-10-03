@@ -55,10 +55,10 @@ export default {
     fromCalendar: "Fra kalenderen",
     fromProgram: "Fra {program}",
     noExercises: "Ingen øvelser endnu",
-    // {n} er common.exercises, så 1 øvelse og 2 øvelser bøjes rigtigt.
-    moreToday: "{n} · +{count} mere",
+    // {exercises} er common.exercises, så 1 øvelse og 2 øvelser bøjes rigtigt.
+    moreToday: "{exercises} · +{count} mere",
     elapsed: "{minutes} min i gang",
-    startPlanned: "Start planlagt træning {name}, {n}",
+    startPlanned: "Start planlagt træning {name}, {exercises}",
     startFailedTitle: "Kunne ikke starte træningen",
     startFailedBody: "Prøv igen.",
     live: {

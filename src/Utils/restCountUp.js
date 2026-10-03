@@ -23,14 +23,71 @@
 // Pure: no clock, no database. The service that runs it is
 // Services/restCountUpService.js.
 import { MAX_SET_PAUSE_SECONDS } from "./setValueLimits";
+import { formatTime } from "./timeUtils";
 
 export const REST_COUNT_UP_GRACE_SECONDS = 15;
+
+// The unit the workout screen writes rests in; stored rests are seconds.
+export const REST_UNIT_MINUTES = "minutes";
+export const REST_UNIT_SECONDS = "seconds";
 
 const flag = (value) => Number(value) === 1 || value === true;
 
 /** Whether a set's rest is one the app counted, rather than one that was planned. */
 export function isCountedRest(set) {
   return flag(set?.rest_counted);
+}
+
+/** A rest as typed or stored ("90", "1,5", 90), as a number - null for none. */
+export function parsePauseValue(value) {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+
+  const parsedValue = Number(String(value).replace(",", "."));
+
+  return Number.isFinite(parsedValue) ? parsedValue : null;
+}
+
+/** Stored seconds in the chosen unit, as the field edits them: "1.5", "90", "" for none. */
+export function restValueInUnit(pause, restUnit) {
+  const pauseValue = parsePauseValue(pause);
+
+  if (pauseValue === null) {
+    return "";
+  }
+
+  const unitValue = restUnit === REST_UNIT_MINUTES ? pauseValue / 60 : pauseValue;
+
+  if (Number.isInteger(unitValue)) {
+    return unitValue.toString();
+  }
+
+  return Number(unitValue.toFixed(2)).toString();
+}
+
+/**
+ * How the rest under a set reads while it is not being edited.
+ *
+ * - `value`: the rest in the chosen unit, which is also what editing it
+ *   edits - a counted rest too, so typing over it works as for any rest.
+ * - `suffix`: the unit after it, "min" or "sec"; none for a counted rest.
+ * - `display`: what is shown in place of `value`, or null to show `value`.
+ *   A counted rest reads as it did while it counted ("4.49"), not as
+ *   minutes with decimals ("4.82 min") - the phone test of 2.17.0.
+ */
+export function restDisplayFor(set, restUnit) {
+  const value = restValueInUnit(set?.pause, restUnit);
+
+  if (isCountedRest(set)) {
+    return { value, suffix: "", display: formatTime(Number(set?.pause)) };
+  }
+
+  return {
+    value,
+    suffix: restUnit === REST_UNIT_MINUTES ? "min" : "sec",
+    display: null,
+  };
 }
 
 /**

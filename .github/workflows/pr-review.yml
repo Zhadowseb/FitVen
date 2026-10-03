@@ -209,44 +209,16 @@ jobs:
           # Afkortet tages hele filer ad gangen, i diffets egen raekkefoelge, og
           # en fil der ikke kan vaere der springes over, saa de mindre efter
           # den stadig kommer med. De udeladte staar i noten til sidst og i
-          # pr-context/omitted-files.txt. Foer stod der blot "resten ligger i
-          # repoet": et PR paa 151 filer fik 89 med, og agenterne vidste ikke
-          # hvilke 62 de skulle laese selv.
+          # pr-context/omitted-files.txt. Det goer scripts/trim-diff.js, som
+          # scripts/test-trim-diff.js tester.
+          #
+          # Scriptet tages fra workflowets egen commit, ikke fra PR'ets: et PR
+          # der blev lavet foer scriptet fandtes, har det ikke, og kode fra
+          # PR'et skal ikke koere i dette job.
           DIFF_LIMIT=400000
-          SIZE=$(wc -c < pr-context/pr.diff)
-          if [ "$SIZE" -gt "$DIFF_LIMIT" ]; then
-            LC_ALL=C awk -v limit="$DIFF_LIMIT" -v omitted=pr-context/omitted-files.txt '
-              # Linjerne i et array, ikke en voksende streng: en fil paa
-              # flere MB ville ellers blive kopieret om for hver linje.
-              function flush(   i) {
-                if (count == 0) return
-                if (written + bytes <= limit) {
-                  for (i = 0; i < count; i++) print lines[i]
-                  written += bytes
-                } else {
-                  print path > omitted
-                }
-                split("", lines)
-                count = 0
-                bytes = 0
-              }
-              /^diff --git / {
-                flush()
-                path = $0
-                if (sub(/^diff --git "a\/.*" "b\//, "", path)) sub(/"$/, "", path)
-                else sub(/^diff --git a\/.* b\//, "", path)
-              }
-              { lines[count++] = $0; bytes += length($0) + 1 }
-              END { flush() }
-            ' pr-context/pr.diff > pr-context/pr.diff.trimmed
-            touch pr-context/omitted-files.txt
-            {
-              printf '\n\n[AFKORTET: diffet fylder %s bytes, og kun hele filer op til %s bytes staar ovenfor. Diffet for disse %s filer er udeladt - laes dem i repoet, og se i pr-context/changed-files.txt hvad der er sket med dem:]\n' \
-                "$SIZE" "$DIFF_LIMIT" "$(wc -l < pr-context/omitted-files.txt | tr -d ' ')"
-              sed 's/^/- /' pr-context/omitted-files.txt
-            } >> pr-context/pr.diff.trimmed
-            mv pr-context/pr.diff.trimmed pr-context/pr.diff
-          fi
+          git cat-file -e "$GITHUB_SHA" 2>/dev/null || git fetch --no-tags origin "$GITHUB_SHA"
+          git show "$GITHUB_SHA:scripts/trim-diff.js" > "$RUNNER_TEMP/trim-diff.js"
+          node "$RUNNER_TEMP/trim-diff.js" pr-context/pr.diff "$DIFF_LIMIT" pr-context/omitted-files.txt
 
       - uses: actions/upload-artifact@v4
         with:
