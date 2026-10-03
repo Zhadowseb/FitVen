@@ -10,7 +10,7 @@
 
 import { normalizeSplitName, splitWorkoutName } from "./splitGuess";
 import { normalizeSplitEntry } from "./splitEntries";
-import { isWorkoutTypeId, workoutTypeLabel } from "./workoutTypeLabel";
+import { isWorkoutTypeId, workoutDisplayName, workoutTypeLabel } from "./workoutTypeLabel";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -23,6 +23,10 @@ export const CANDIDATE_LIMIT = 12;
 
 const STRENGTH_TYPES = new Set(["Resistance", "StrengthTraining", "Upperbody", "Legs"]);
 
+// The SQL that picks the newest workout of each name for Home
+// (programRepository.getNewestWorkoutOfEachName) skips the rows this cannot
+// date with a GLOB of the same shape: '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*'.
+// Change one and change the other, or Home and the Train tab stop agreeing.
 function localDayStart(isoDate) {
   const match = String(isoDate ?? "").match(/^(\d{4})-(\d{2})-(\d{2})/);
 
@@ -106,6 +110,27 @@ export function splitNameOf(workout) {
   }
 
   return label.slice(0, 60);
+}
+
+/**
+ * What the split picker's name field starts on: the name as the title shows
+ * it. A workout named after a type is stored in English ("Upperbody") and
+ * read in the reader's language ("Overkrop"). "" for a workout with no name
+ * of its own.
+ */
+export function splitNameDraft(entry, t) {
+  const name = splitNameOf(entry);
+
+  return name ? workoutDisplayName(name, t, entry?.workout_type) ?? name : "";
+}
+
+/**
+ * Whether what is typed in the picker's name field renames the workout. A
+ * field left on the name as it is shown - "Overkrop" for a stored
+ * "Upperbody" - renames nothing. Compared trimmed.
+ */
+export function isSplitNameChanged(typed, entry, t) {
+  return String(typed ?? "").trim() !== splitNameDraft(entry, t);
 }
 
 /**

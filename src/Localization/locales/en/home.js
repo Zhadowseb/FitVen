@@ -61,11 +61,11 @@ export default {
     fromCalendar: "From your calendar",
     fromProgram: "From {program}",
     noExercises: "No exercises yet",
-    // {n} is common.exercises, so 1 exercise and 2 exercises read right.
-    moreToday: "{n} · +{count} more",
+    // {exercises} is common.exercises, so 1 exercise and 2 exercises read right.
+    moreToday: "{exercises} · +{count} more",
     // A started, paused workout: how long it has run.
     elapsed: "{minutes} min in",
-    startPlanned: "Start planned workout {name}, {n}",
+    startPlanned: "Start planned workout {name}, {exercises}",
     startFailedTitle: "Could not start the workout",
     startFailedBody: "Please try again.",
     // The panel the block becomes while a workout is running.

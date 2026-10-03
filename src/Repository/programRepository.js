@@ -1449,18 +1449,19 @@ export async function setWorkoutFavorite(db, { workoutId, isFavorite }) {
 }
 
 // How many exercises a workout has, and sets in them: only the exercises
-// that are still there, and their sets that are still there - as Home's
-// planned card counts them (workoutRepository.getOpenWorkoutsForDate). A
-// deleted exercise keeps its sets' rows, so counting sets without it would
-// count the sets of an exercise that is gone.
-function workoutExerciseCountSql(workoutAlias = "w") {
+// that are still there, and their sets that are still there. The library,
+// the split and Home's planned card (workoutRepository.getOpenWorkoutsForDate)
+// all count with these two, so they cannot drift apart. A deleted exercise
+// keeps its sets' rows, so counting sets without it would count the sets of
+// an exercise that is gone.
+export function workoutExerciseCountSql(workoutAlias = "w") {
   return `(SELECT COUNT(*)
            FROM Exercise_Instance ei
           WHERE ei.workout_type_instance_id = ${workoutAlias}.workout_id
             AND ei.deleted_at IS NULL)`;
 }
 
-function workoutSetCountSql(workoutAlias = "w", { doneOnly = false } = {}) {
+export function workoutSetCountSql(workoutAlias = "w", { doneOnly = false } = {}) {
   return `(SELECT COUNT(*)
            FROM "Set" s
            JOIN Exercise_Instance ei ON ei.exercise_instance_id = s.exercise_instance_id

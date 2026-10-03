@@ -50,8 +50,31 @@ function database() {
     require("path").join(__dirname, "../src/Pages/ExerciseLibraryPage/Components/SplitCard/SplitWorkoutPicker.js"),
     "utf8"
   );
-  assert.ok(picker.includes('useState(() => shownNameOf(workout) ?? "")'), "the field starts on the shown name");
-  assert.ok(picker.includes('typed !== (shownNameOf(current) ?? "")'), "an untouched field is no rename");
+  const i18n = loadAppModule("src/Localization/i18n.js");
+  const inDanish = (key, params) => i18n.translate(key, params, "da");
+  const inEnglish = (key, params) => i18n.translate(key, params, "en");
+  const upperbody = { label: "Upperbody", workout_type: "Resistance" };
+
+  assert.equal(split.splitNameDraft(upperbody, inDanish), "Overkrop", "the field starts on the shown name");
+  assert.equal(split.splitNameDraft(upperbody, inEnglish), "Upper body");
+  assert.equal(split.isSplitNameChanged("Overkrop", upperbody, inDanish), false, "an untouched field is no rename");
+  assert.equal(split.isSplitNameChanged("  Overkrop ", upperbody, inDanish), false, "nor is one with spaces around it");
+  assert.equal(split.isSplitNameChanged("Upperbody", upperbody, inDanish), true, "the stored English name typed back is a rename");
+  assert.equal(split.isSplitNameChanged("Overkrop tung", upperbody, inDanish), true, "a changed name is a rename");
+  assert.equal(split.isSplitNameChanged("", upperbody, inDanish), true, "an emptied name is a rename");
+
+  const push = { label: "Push", workout_type: "Resistance" };
+  assert.equal(split.splitNameDraft(push, inDanish), "Push", "a typed name is shown as typed");
+  assert.equal(split.isSplitNameChanged("Push", push, inDanish), false);
+
+  // A workout nobody named: an empty field, and leaving it empty renames nothing.
+  const unnamed = { label: "Resistance", workout_type: "Resistance" };
+  assert.equal(split.splitNameDraft(unnamed, inDanish), "", "a workout called after its type starts empty");
+  assert.equal(split.isSplitNameChanged("", unnamed, inDanish), false, "an empty field on an unnamed workout is no rename");
+  assert.equal(split.isSplitNameChanged("Ben", unnamed, inDanish), true, "naming it is");
+
+  assert.ok(picker.includes("useState(() => splitNameDraft(workout, t))"), "the picker's field starts on splitNameDraft");
+  assert.ok(picker.includes("isSplitNameChanged(typed, current, t)"), "the picker asks isSplitNameChanged");
 
   // A month that failed to load offers to load it again.
   assert.ok(

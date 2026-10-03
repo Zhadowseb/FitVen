@@ -3,6 +3,7 @@ import {
   normalizeElapsedDurationSeconds,
   normalizeStoredTimestampSeconds,
 } from "../Utils/timeUtils";
+import { workoutExerciseCountSql, workoutSetCountSql } from "./programRepository";
 
 function workoutDisplayLabelSql(workoutAlias = "w", workoutTypeAlias = "wt") {
   return `COALESCE(
@@ -628,20 +629,8 @@ export async function getOpenWorkoutsForDate(db, { isoDate, limit = 5 }) {
         d.Weekday AS day,
         d.date AS day_date,
         p.program_name,
-        (
-          SELECT COUNT(*)
-          FROM Exercise_Instance e
-          WHERE e.workout_type_instance_id = w.workout_id
-            AND e.deleted_at IS NULL
-        ) AS exercise_count,
-        (
-          SELECT COUNT(*)
-          FROM "Set" s
-          JOIN Exercise_Instance e ON e.exercise_instance_id = s.exercise_instance_id
-          WHERE e.workout_type_instance_id = w.workout_id
-            AND e.deleted_at IS NULL
-            AND s.deleted_at IS NULL
-        ) AS set_count
+        ${workoutExerciseCountSql("w")} AS exercise_count,
+        ${workoutSetCountSql("w")} AS set_count
      FROM Workout_Type_Instance w
      LEFT JOIN Day d ON d.day_id = w.day_id
      LEFT JOIN Program p ON p.program_id = d.program_id
