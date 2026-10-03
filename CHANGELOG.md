@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.17.2] - Unreleased
+## [2.17.2] - 2026-10-03
 ### Fixed
 - **A weight or reps typed in a set is no longer lost when you tap the exercise's name to close the keyboard.** The tap folded the card, which took the field away before it saved, so the set kept its old number (the owner's video of 2026-10-03). With the keyboard up, a tap on the exercise card now only puts the keyboard away, and the field saves as it closes. A field taken away while being edited also saves what was typed (`ThemedEditableCell`).
 - **Tests:** `test-workout-header.js` checks both.
