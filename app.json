@@ -18,7 +18,7 @@
       "supportsTablet": false,
       "requireFullScreen": true,
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "We use your location to track workout distance and to match a workout to the fitness centre you are in.",
+        "NSLocationWhenInUseUsageDescription": "FitVen uses your location to match a workout to the fitness centre you are in.",
         "ITSAppUsesNonExemptEncryption": false,
         "NSSupportsLiveActivities": true
       },
@@ -46,11 +46,9 @@
       "package": "com.anonymous.programapp",
       "permissions": [
         "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.FOREGROUND_SERVICE",
-        "android.permission.FOREGROUND_SERVICE_LOCATION",
-        "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION"
+      ],
+      "blockedPermissions": [
         "android.permission.FOREGROUND_SERVICE",
         "android.permission.FOREGROUND_SERVICE_LOCATION"
       ]
@@ -79,10 +77,10 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "FitVen uses your precise location to track run distance and to match a workout to the fitness centre you are in.",
+          "locationWhenInUsePermission": "FitVen uses your location to match a workout to the fitness centre you are in.",
           "isIosBackgroundLocationEnabled": false,
           "isAndroidBackgroundLocationEnabled": false,
-          "isAndroidForegroundServiceEnabled": true
+          "isAndroidForegroundServiceEnabled": false
         }
       ],
       [

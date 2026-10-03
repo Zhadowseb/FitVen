@@ -1,151 +1,31 @@
 import * as Location from "expo-location";
-import { Platform } from "react-native";
 import { t } from "@localization";
 
 import { locationRepository, workoutRepository } from "../Repository";
-import {
-  calculateTrackedDistanceSummary,
-  isSameLocationPoint,
-  normalizeLocationPoint,
-} from "../Utils/locationUtils";
-import { withTransaction } from "./shared";
+import { calculateTrackedDistanceSummary } from "../Utils/locationUtils";
 
-export const RUN_LOCATION_TASK = "background-location-task";
+// Run and Walk used to track GPS through a background location task with an
+// Android foreground service. Neither type can be started any more (see
+// Utils/workoutTypeAvailability.js), and the app no longer declares the
+// FOREGROUND_SERVICE_LOCATION permission, so starting that service would
+// crash on Android 14+. Nothing here starts location updates: a run that is
+// already recorded keeps its route and distance, and starting a new one fails
+// with RUN_TRACKING_UNAVAILABLE.
+//
+// The task name stays only so a task an older build left registered can be
+// found and stopped (see stopLegacyRunLocationTask).
+const LEGACY_RUN_LOCATION_TASK = "background-location-task";
 
 // The message is shown to the person, so it is translated; the code is what
 // callers compare (see getRunTrackingStartMessage in the run screen).
 export const LOCATION_ERROR_CODES = {
-  PERMISSION_DENIED: "location-permission-denied",
-  PRECISE_PERMISSION_REQUIRED: "location-precise-permission-required",
-  BACKGROUND_UNAVAILABLE: "location-background-unavailable",
-  BACKGROUND_PERMISSION_DENIED: "location-background-permission-denied",
-  SERVICES_DISABLED: "location-services-disabled",
+  RUN_TRACKING_UNAVAILABLE: "location-run-tracking-unavailable",
 };
 
 function createLocationError(code, messageKey) {
   const error = new Error(t(messageKey));
   error.code = code;
   return error;
-}
-
-function normalizeExpoLocationObject(location) {
-  return normalizeLocationPoint({
-    latitude: location?.coords?.latitude,
-    longitude: location?.coords?.longitude,
-    accuracy: location?.coords?.accuracy,
-    timestamp: location?.timestamp,
-  });
-}
-
-function getLocationTrackingOptions() {
-  return {
-    accuracy: Location.Accuracy.BestForNavigation,
-    timeInterval: 1000,
-    distanceInterval: 3,
-    mayShowUserSettingsDialog: true,
-    deferredUpdatesDistance: 0,
-    deferredUpdatesInterval: 0,
-    pausesUpdatesAutomatically: false,
-    activityType: Location.ActivityType.Fitness,
-    showsBackgroundLocationIndicator: true,
-    foregroundService: {
-      notificationTitle: t("run.location.notificationTitle"),
-      notificationBody: t("run.location.notificationBody"),
-      notificationColor: "#d97706",
-      killServiceOnDestroy: false,
-    },
-  };
-}
-
-function hasPreciseForegroundPermission(permission) {
-  if (!permission?.granted) {
-    return false;
-  }
-
-  if (Platform.OS !== "android") {
-    return true;
-  }
-
-  const androidAccuracy = permission?.android?.accuracy;
-  return androidAccuracy === undefined || androidAccuracy === "fine";
-}
-
-async function ensureForegroundLocationPermission() {
-  let foregroundPermission = await Location.getForegroundPermissionsAsync();
-
-  if (!foregroundPermission.granted || !hasPreciseForegroundPermission(foregroundPermission)) {
-    foregroundPermission = await Location.requestForegroundPermissionsAsync();
-  }
-
-  if (!foregroundPermission.granted) {
-    throw createLocationError(
-      LOCATION_ERROR_CODES.PERMISSION_DENIED,
-      "run.location.errors.permissionDenied"
-    );
-  }
-
-  if (!hasPreciseForegroundPermission(foregroundPermission)) {
-    throw createLocationError(
-      LOCATION_ERROR_CODES.PRECISE_PERMISSION_REQUIRED,
-      "run.location.errors.precisePermissionRequired"
-    );
-  }
-}
-
-async function ensureBackgroundLocationPermission({ requestIfMissing = true } = {}) {
-  const backgroundLocationAvailable =
-    await Location.isBackgroundLocationAvailableAsync();
-
-  if (!backgroundLocationAvailable) {
-    throw createLocationError(
-      LOCATION_ERROR_CODES.BACKGROUND_UNAVAILABLE,
-      "run.location.errors.backgroundUnavailable"
-    );
-  }
-
-  let backgroundPermission = await Location.getBackgroundPermissionsAsync();
-
-  if (!backgroundPermission.granted && requestIfMissing) {
-    backgroundPermission = await Location.requestBackgroundPermissionsAsync();
-  }
-
-  if (!backgroundPermission.granted) {
-    throw createLocationError(
-      LOCATION_ERROR_CODES.BACKGROUND_PERMISSION_DENIED,
-      "run.location.errors.backgroundPermissionDenied"
-    );
-  }
-}
-
-async function ensureLocationServicesEnabled() {
-  let servicesEnabled = await Location.hasServicesEnabledAsync();
-
-  if (!servicesEnabled && Platform.OS === "android") {
-    try {
-      await Location.enableNetworkProviderAsync();
-    } catch {
-      // If the user dismisses the dialog we fall through to the final check.
-    }
-
-    servicesEnabled = await Location.hasServicesEnabledAsync();
-  }
-
-  if (!servicesEnabled) {
-    throw createLocationError(
-      LOCATION_ERROR_CODES.SERVICES_DISABLED,
-      "run.location.errors.servicesDisabled"
-    );
-  }
-}
-
-async function setActiveWorkout(db, workoutId) {
-  await withTransaction(db, async () => {
-    await workoutRepository.clearActiveWorkoutFlags(db);
-    await workoutRepository.setWorkoutActiveFlag(db, {
-      workoutId,
-      isActive: true,
-    });
-  });
 }
 
 export async function clearTrackedRunData(db, workoutId) {
@@ -161,150 +41,37 @@ export async function getTrackedRunSummary(db, workoutId) {
   return calculateTrackedDistanceSummary(logs);
 }
 
-export async function recordTrackedLocations(db, locations) {
-  const workout = await workoutRepository.getActiveWorkoutForTracking(db);
-
-  if (!workout?.workout_id) {
-    return;
-  }
-
-  const normalizedLocations = locations
-    .map(normalizeExpoLocationObject)
-    .filter(Boolean)
-    .sort((left, right) => left.timestamp - right.timestamp);
-
-  if (!normalizedLocations.length) {
-    return;
-  }
-
-  // One transaction per GPS batch: the writes become atomic, take the write
-  // lock once instead of once per point, and reuse the retry-on-lock queue
-  // shared with the rest of the app so points are not silently dropped.
-  await withTransaction(db, async () => {
-    let previousStoredPoint = normalizeLocationPoint(
-      await locationRepository.getLatestLocationLogByWorkout(db, workout.workout_id)
-    );
-
-    for (const location of normalizedLocations) {
-      if (isSameLocationPoint(previousStoredPoint, location)) {
-        continue;
-      }
-
-      await locationRepository.createLocationLog(db, {
-        workoutId: workout.workout_id,
-        latitude: location.latitude,
-        longitude: location.longitude,
-        accuracy: location.accuracy,
-        timestamp: location.timestamp,
-      });
-
-      previousStoredPoint = location;
-    }
-  });
-}
-
-export async function startRunTracking(db, workoutId, { resetLogs = false } = {}) {
-  await ensureLocationServicesEnabled();
-  await ensureForegroundLocationPermission();
-  await ensureBackgroundLocationPermission();
-
-  if (resetLogs) {
-    await clearTrackedRunData(db, workoutId);
-  }
-
-  await locationRepository.createLocationTrackingBreak(db, { workoutId });
-  await setActiveWorkout(db, workoutId);
-
-  const hasStarted = await Location.hasStartedLocationUpdatesAsync(RUN_LOCATION_TASK);
-
-  if (!hasStarted) {
-    await Location.startLocationUpdatesAsync(
-      RUN_LOCATION_TASK,
-      getLocationTrackingOptions()
-    );
-  }
-}
-
-// Some devices silently stop delivering background locations when the phone
-// is locked for a while (aggressive battery managers, provider restarts).
-// hasStartedLocationUpdatesAsync still reports true in that state, so the run
-// looks alive while no new points arrive. When the app comes back to the
-// foreground with a live timer but stale location data, restart the provider.
-const STALE_TRACKED_LOCATION_THRESHOLD_MS = 60000;
-const TRACKING_RESTART_COOLDOWN_MS = 45000;
-let lastTrackingRestartTimestampMs = 0;
-
-async function hasStaleTrackedLocation(db, workoutId) {
-  const latestLog = await locationRepository.getLatestLocationLogByWorkout(
-    db,
-    workoutId
-  );
-  const latestTimestamp = Number(latestLog?.timestamp);
-
-  if (!Number.isFinite(latestTimestamp)) {
-    return false;
-  }
-
-  return Date.now() - latestTimestamp > STALE_TRACKED_LOCATION_THRESHOLD_MS;
-}
-
-export async function ensureRunTracking(db, workoutId) {
-  await ensureLocationServicesEnabled();
-  await ensureForegroundLocationPermission();
-  await ensureBackgroundLocationPermission({ requestIfMissing: false });
-  await setActiveWorkout(db, workoutId);
-
-  const hasStarted = await Location.hasStartedLocationUpdatesAsync(RUN_LOCATION_TASK);
-
-  if (!hasStarted) {
-    await locationRepository.createLocationTrackingBreak(db, { workoutId });
-    await Location.startLocationUpdatesAsync(
-      RUN_LOCATION_TASK,
-      getLocationTrackingOptions()
-    );
-    return;
-  }
-
-  const now = Date.now();
-
-  if (now - lastTrackingRestartTimestampMs < TRACKING_RESTART_COOLDOWN_MS) {
-    return;
-  }
-
-  if (!(await hasStaleTrackedLocation(db, workoutId))) {
-    return;
-  }
-
-  // No tracking break is inserted here: this is a recovery of a run that was
-  // supposed to keep tracking, so short gaps may still be bridged by the
-  // distance filter, while gaps above maxSegmentGapSeconds stay excluded.
-  lastTrackingRestartTimestampMs = now;
-  await Location.stopLocationUpdatesAsync(RUN_LOCATION_TASK);
-  await Location.startLocationUpdatesAsync(
-    RUN_LOCATION_TASK,
-    getLocationTrackingOptions()
+// Throws before any Location API is touched, so the run screen's existing
+// catch rolls the timer back and shows the message.
+export async function startRunTracking() {
+  throw createLocationError(
+    LOCATION_ERROR_CODES.RUN_TRACKING_UNAVAILABLE,
+    "run.location.errors.trackingUnavailable"
   );
 }
 
 export async function syncRunTrackingState(db) {
   await workoutRepository.normalizeActiveWorkoutFlags(db);
-
-  const activeWorkout = await workoutRepository.getActiveWorkoutForTracking(db);
-  const hasStarted = await Location.hasStartedLocationUpdatesAsync(RUN_LOCATION_TASK);
-
-  if (activeWorkout?.workout_id || !hasStarted) {
-    return;
-  }
-
-  await Location.stopLocationUpdatesAsync(RUN_LOCATION_TASK);
 }
 
 export async function stopRunTracking(db) {
-  const hasStarted = await Location.hasStartedLocationUpdatesAsync(RUN_LOCATION_TASK);
-
-  if (hasStarted) {
-    await Location.stopLocationUpdatesAsync(RUN_LOCATION_TASK);
-  }
-
   await workoutRepository.clearActiveWorkoutFlags(db);
+}
+
+// expo-task-manager persists registered tasks and re-registers them natively
+// on launch. A run task an older build left running carries the
+// foregroundService option, and restarting it without the permission is a
+// SecurityException on Android 14+. Called once at startup; it only ever stops.
+export async function stopLegacyRunLocationTask() {
+  try {
+    const hasStarted = await Location.hasStartedLocationUpdatesAsync(
+      LEGACY_RUN_LOCATION_TASK
+    );
+
+    if (hasStarted) {
+      await Location.stopLocationUpdatesAsync(LEGACY_RUN_LOCATION_TASK);
+    }
+  } catch (error) {
+    console.warn("Unable to stop the legacy run location task:", error);
+  }
 }

@@ -104,29 +104,15 @@ export const formatRunDistance = (distanceKm) => {
   return safeDistance.toFixed(2);
 };
 
-// The codes match LOCATION_ERROR_CODES in Services/locationService.js; the
-// English message check stays as a fallback for errors without a code.
+// The code matches LOCATION_ERROR_CODES in Services/locationService.js.
 export const getRunTrackingStartMessage = (
   error,
   activityLabel = t("run.activity.run.lower")
 ) => {
-  const code = error?.code;
-  const message = String(error?.message ?? "");
-
-  if (
-    code === "location-precise-permission-required" ||
-    message.includes("Precise location permission")
-  ) {
-    return t("run.location.startMessages.precisePermission", {
+  if (error?.code === "location-run-tracking-unavailable") {
+    return t("run.location.startMessages.trackingUnavailable", {
       activity: activityLabel,
     });
-  }
-
-  if (
-    code === "location-background-permission-denied" ||
-    message.includes("Background location permission")
-  ) {
-    return t("run.location.startMessages.backgroundPermission");
   }
 
   return t("run.location.startMessages.generic");
