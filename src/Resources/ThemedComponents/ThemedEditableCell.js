@@ -61,6 +61,11 @@ const ThemedEditableCell = ({
     committedValueRef.current = value;
   }, [value]);
 
+  // A field taken away while it is being edited - its card folded, its row
+  // removed - still saves what was typed in it. commit is a no-op when
+  // nothing changed.
+  useEffect(() => () => commitRef.current?.(), []);
+
   // Android's hide-keyboard button puts the keyboard away without moving
   // focus, so onBlur never fired and what had just been typed was dropped.
   // The keyboard going away is the same intent as tapping off the field.
