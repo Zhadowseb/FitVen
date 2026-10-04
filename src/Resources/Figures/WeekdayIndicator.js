@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, TouchableOpacity, View } from "react-native";
 import { useColorScheme } from "react-native";
-import Svg, { Path, Polygon } from "react-native-svg";
+import { Path, Polygon } from "react-native-svg";
+import PassThroughSvg from "@resources/Components/PassThroughSvg";
 
 import { Colors, withAlpha } from "../GlobalStyling/colors";
 import ThemedText from "../ThemedComponents/ThemedText";
@@ -279,8 +280,7 @@ const WeekdayIndicator = ({
                 ]}
               >
                 {isSickCompletedWorkout && (
-                  <Svg
-                    pointerEvents="none"
+                  <PassThroughSvg
                     style={styles.splitWorkoutBackground}
                     viewBox="0 0 40 40"
                   >
@@ -309,7 +309,7 @@ const WeekdayIndicator = ({
                       strokeLinejoin="round"
                       strokeWidth={4}
                     />
-                  </Svg>
+                  </PassThroughSvg>
                 )}
 
                 <View pointerEvents="none" style={styles.workoutContent}>

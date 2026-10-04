@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.17.5] - 2026-10-04
+### Fixed
+- **On iPhone, the timer square in the bottom bar opens the workout again.** The ring drawn over it is an `Svg` with `pointerEvents="none"`, but react-native-svg 15 on iOS with the new architecture ignores that on the Svg root (`RNSVGSvgView` does its own hit test), so the ring took the tap and nothing happened. Android honours it, which is why it worked there.
+  - The new `PassThroughSvg` (`Resources/Components`) puts such an Svg in a plain `View` with `pointerEvents="none"`, which iOS honours. All 13 places that drew an Svg over or beside something tappable use it: the two rings in the bottom bar, the workout header, the friends activity tiles, the medal avatar, the cover gradient, the body map overlays, the weekday indicator, the exercise video hero and the exercise history panel.
+  - The timer square sits fully inside its slot now; the lift moved from the square to the slot, with the same look.
+- **Tests:** `npm run test:pass-through-svg` fails if an Svg is given `pointerEvents` directly anywhere in `src/`.
+
+---
 ## [2.17.4] - 2026-10-04
 ### Removed
 - **The location foreground service, and run tracking with it.** Google Play would not take the production release without a declaration and a video for `FOREGROUND_SERVICE_LOCATION`. It was only used to keep GPS running for a run with the screen off, and runs are no longer used.

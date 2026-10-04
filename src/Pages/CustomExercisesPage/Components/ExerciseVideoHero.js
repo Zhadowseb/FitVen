@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Image, Pressable, StyleSheet, View, useColorScheme } from "react-native";
 import { useEvent } from "expo";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
+import { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
+import PassThroughSvg from "@resources/Components/PassThroughSvg";
 import { useTranslation } from "@localization";
 
 import styles, { NO_VIDEO_HERO_HEIGHT, VIDEO_HERO_HEIGHT } from "./ExerciseVideoHeroStyle";
@@ -60,8 +61,7 @@ function HeroGradient({ pageColor }) {
   const veil = Colors.dark.background;
 
   return (
-    <Svg
-      pointerEvents="none"
+    <PassThroughSvg
       style={StyleSheet.absoluteFill}
       preserveAspectRatio="none"
       viewBox="0 0 1 1"
@@ -75,7 +75,7 @@ function HeroGradient({ pageColor }) {
         </LinearGradient>
       </Defs>
       <Rect x="0" y="0" width="1" height="1" fill={`url(#${gradientId})`} />
-    </Svg>
+    </PassThroughSvg>
   );
 }
 

@@ -10,7 +10,8 @@ import {
   View,
   useColorScheme,
 } from "react-native";
-import Svg, { Rect } from "react-native-svg";
+import { Rect } from "react-native-svg";
+import PassThroughSvg from "@resources/Components/PassThroughSvg";
 import { useSQLiteContext } from "expo-sqlite";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "@localization";
@@ -1011,7 +1012,12 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
             </Text>
           </TouchableOpacity>
 
-          <View style={styles.plusSlot}>
+          <View
+            style={[
+              styles.plusSlot,
+              shouldShowCenterTimer && styles.plusSlotLiveTimer,
+            ]}
+          >
             {shouldShowCenterTimer ? (
               <View style={styles.liveTimerWrap}>
                 <Animated.View
@@ -1062,8 +1068,7 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
                   </Text>
                 </TouchableOpacity>
                 {isRestTimerActive ? (
-                  <Svg
-                    pointerEvents="none"
+                  <PassThroughSvg
                     width={LIVE_TIMER_SIZE}
                     height={LIVE_TIMER_SIZE}
                     viewBox={`0 0 ${LIVE_TIMER_SIZE} ${LIVE_TIMER_SIZE}`}
@@ -1092,10 +1097,9 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
                       strokeDasharray={`${LIVE_RING_CIRCUMFERENCE}`}
                       strokeDashoffset={restRingOffset}
                     />
-                  </Svg>
+                  </PassThroughSvg>
                 ) : (
-                  <Svg
-                    pointerEvents="none"
+                  <PassThroughSvg
                     width={LIVE_TIMER_SIZE}
                     height={LIVE_TIMER_SIZE}
                     viewBox={`0 0 ${LIVE_TIMER_SIZE} ${LIVE_TIMER_SIZE}`}
@@ -1118,7 +1122,7 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
                       }
                       strokeWidth={LIVE_RING_STROKE}
                     />
-                  </Svg>
+                  </PassThroughSvg>
                 )}
               </View>
             ) : startableWorkout ? (
@@ -1355,10 +1359,17 @@ const styles = StyleSheet.create({
     borderBottomColor: "transparent",
     marginLeft: 5,
   },
+  // The timer stands 13 dp taller than the plus. The lift is on the slot, not
+  // on the wrap inside it: with the margin on the wrap, the top 10 dp of the
+  // button stuck out of the slot, and on iOS a touch outside a parent's bounds
+  // reaches the child only while nothing up the tree clips. Inside the slot it
+  // does not depend on that. Same place on screen either way.
+  plusSlotLiveTimer: {
+    marginTop: -13,
+  },
   liveTimerWrap: {
     width: LIVE_TIMER_SIZE,
     height: LIVE_TIMER_SIZE,
-    marginTop: -13,
   },
   liveTimerPulse: {
     position: "absolute",
