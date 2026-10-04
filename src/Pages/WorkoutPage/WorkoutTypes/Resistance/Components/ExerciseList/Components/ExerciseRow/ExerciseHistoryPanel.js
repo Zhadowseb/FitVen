@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { ScrollView, TouchableOpacity, View, useColorScheme } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
+import { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
+import PassThroughSvg from "@resources/Components/PassThroughSvg";
 import { formatNumber, useTranslation } from "@localization";
 
 import styles, {
@@ -234,8 +235,7 @@ export default function ExerciseHistoryPanel({
             </ScrollView>
 
             {showFade ? (
-              <Svg
-                pointerEvents="none"
+              <PassThroughSvg
                 width={HISTORY_FADE_WIDTH}
                 height="100%"
                 style={styles.fade}
@@ -247,7 +247,7 @@ export default function ExerciseHistoryPanel({
                   </LinearGradient>
                 </Defs>
                 <Rect width="100%" height="100%" fill="url(#historyFade)" />
-              </Svg>
+              </PassThroughSvg>
             ) : null}
           </View>
         </View>

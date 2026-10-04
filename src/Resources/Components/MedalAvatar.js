@@ -1,6 +1,7 @@
 import { useId } from "react";
 import { StyleSheet, View, useColorScheme } from "react-native";
-import Svg, { Circle, Defs, LinearGradient, Stop } from "react-native-svg";
+import { Circle, Defs, LinearGradient, Stop } from "react-native-svg";
+import PassThroughSvg from "./PassThroughSvg";
 
 import { Colors } from "@resources/GlobalStyling/colors";
 import { UserAvatar } from "@resources/ThemedComponents";
@@ -40,7 +41,7 @@ export default function MedalAvatar({ uri, size = 40, medal = "gold" }) {
 
   return (
     <View style={[styles.frame, { width: outer, height: outer }]}>
-      <Svg width={outer} height={outer} style={StyleSheet.absoluteFill} pointerEvents="none">
+      <PassThroughSvg width={outer} height={outer} style={StyleSheet.absoluteFill}>
         <Defs>
           <LinearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
             <Stop offset="0" stopColor={mixHexColors(color, theme.background, 0.28)} />
@@ -55,7 +56,7 @@ export default function MedalAvatar({ uri, size = 40, medal = "gold" }) {
           strokeWidth={RING_WIDTH}
           fill="none"
         />
-      </Svg>
+      </PassThroughSvg>
       <UserAvatar uri={uri} size={size} iconSize={Math.round(size * 0.4)} />
     </View>
   );

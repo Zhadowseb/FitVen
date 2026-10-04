@@ -1,4 +1,5 @@
-import Svg, { Path } from "react-native-svg";
+import { Path } from "react-native-svg";
+import PassThroughSvg from "@resources/Components/PassThroughSvg";
 
 const BODY_WIDTH = 489;
 const BODY_HEIGHT = 1263;
@@ -232,9 +233,8 @@ export default function BackBodyMapRegionOverlay({
   }
 
   return (
-    <Svg
+    <PassThroughSvg
       height={height}
-      pointerEvents="none"
       preserveAspectRatio="none"
       style={style}
       viewBox={`0 0 ${BODY_WIDTH} ${BODY_HEIGHT}`}
@@ -250,6 +250,6 @@ export default function BackBodyMapRegionOverlay({
         layer: "primary",
         opacity: primaryOpacity,
       })}
-    </Svg>
+    </PassThroughSvg>
   );
 }

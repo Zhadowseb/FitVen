@@ -71,6 +71,11 @@ This file applies to everything inside `src/`.
   files are camelCase.
 - `Utils/` is for helpers with minimal side effects. A helper that opens the
   database belongs in a service.
+- An Svg drawn over or beside something tappable is a
+  `Resources/Components/PassThroughSvg.js`, never `<Svg pointerEvents="none">`.
+  On iOS the Svg root ignores the prop and takes the tap - that is how the
+  workout timer in the bottom bar went dead on iPhone. `npm test` fails if an
+  Svg is handed `pointerEvents` again.
 
 ## Text The User Reads
 

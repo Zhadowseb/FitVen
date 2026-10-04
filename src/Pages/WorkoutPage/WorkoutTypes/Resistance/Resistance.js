@@ -10,7 +10,8 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { useSQLiteContext } from "expo-sqlite";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
+import { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
+import PassThroughSvg from "@resources/Components/PassThroughSvg";
 
 import ExerciseList from "./Components/ExerciseList/ExerciseList";
 import { Alert, useColorScheme } from "react-native";
@@ -701,8 +702,7 @@ const Resistance = ({
       />
 
       <View style={[styles.topArea, { backgroundColor: cardSurface }]}>
-        <Svg
-          pointerEvents="none"
+        <PassThroughSvg
           style={styles.topGlow}
           width={280}
           height={230}
@@ -714,7 +714,7 @@ const Resistance = ({
             </RadialGradient>
           </Defs>
           <Rect width={280} height={230} fill="url(#workoutGlow)" />
-        </Svg>
+        </PassThroughSvg>
 
         <View style={styles.navRow}>
           <TouchableOpacity

@@ -16,6 +16,7 @@ import Svg, {
   Rect,
   Stop,
 } from "react-native-svg";
+import PassThroughSvg from "@resources/Components/PassThroughSvg";
 import { useTranslation } from "@localization";
 
 import ChargeFrame from "./ChargeFrame";
@@ -190,9 +191,8 @@ function BandGradient({ from, to }) {
   const gradientId = useRef(`music-band-${++gradientInstanceCounter}`).current;
 
   return (
-    <Svg
+    <PassThroughSvg
       style={StyleSheet.absoluteFill}
-      pointerEvents="none"
       preserveAspectRatio="none"
       viewBox="0 0 1 1"
     >
@@ -203,7 +203,7 @@ function BandGradient({ from, to }) {
         </LinearGradient>
       </Defs>
       <Rect x="0" y="0" width="1" height="1" fill={`url(#${gradientId})`} />
-    </Svg>
+    </PassThroughSvg>
   );
 }
 
@@ -215,9 +215,8 @@ function EdgeFade({ side, color, style }) {
   const isLeft = side === "left";
 
   return (
-    <Svg
+    <PassThroughSvg
       style={style}
-      pointerEvents="none"
       preserveAspectRatio="none"
       viewBox="0 0 1 1"
     >
@@ -228,7 +227,7 @@ function EdgeFade({ side, color, style }) {
         </LinearGradient>
       </Defs>
       <Rect x="0" y="0" width="1" height="1" fill={`url(#${gradientId})`} />
-    </Svg>
+    </PassThroughSvg>
   );
 }
 
@@ -388,9 +387,8 @@ function WallpaperGradient({ color, strength }) {
   const gradientId = useRef(`tile-wallpaper-${++gradientInstanceCounter}`).current;
 
   return (
-    <Svg
+    <PassThroughSvg
       style={StyleSheet.absoluteFill}
-      pointerEvents="none"
       preserveAspectRatio="none"
       viewBox="0 0 1 1"
     >
@@ -402,7 +400,7 @@ function WallpaperGradient({ color, strength }) {
         </LinearGradient>
       </Defs>
       <Rect x="0" y="0" width="1" height="1" fill={`url(#${gradientId})`} />
-    </Svg>
+    </PassThroughSvg>
   );
 }
 

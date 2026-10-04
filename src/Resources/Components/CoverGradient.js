@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { StyleSheet } from "react-native";
-import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
+import { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
+import PassThroughSvg from "./PassThroughSvg";
 
 let gradientInstanceCounter = 0;
 
@@ -22,9 +23,8 @@ function CoverGradient({
   ).current;
 
   return (
-    <Svg
+    <PassThroughSvg
       style={[StyleSheet.absoluteFill, style]}
-      pointerEvents="none"
       preserveAspectRatio="none"
       viewBox="0 0 1 1"
     >
@@ -41,7 +41,7 @@ function CoverGradient({
         </LinearGradient>
       </Defs>
       <Rect x="0" y="0" width="1" height="1" fill={`url(#${gradientId})`} />
-    </Svg>
+    </PassThroughSvg>
   );
 }
 
