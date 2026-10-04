@@ -74,7 +74,7 @@ export default {
   consent: {
     title: "Before you continue",
     body:
-      "Two things to agree to. The terms of use set out what is and is not allowed on FitVen — there is no tolerance for objectionable content or abusive behaviour. The privacy policy covers your data: FitVen stores your training, and through sickness entries, heart rate and tracked runs, health data about you, which European law needs your explicit permission for. Read both and tap Accept to carry on, or close the app if you would rather not.",
+      "Two things to agree to. The terms of use set out what is and is not allowed on FitVen — there is no tolerance for objectionable content or abusive behaviour. The privacy policy covers your data: FitVen stores your training, and through sickness entries, heart rate and runs tracked with an earlier version of FitVen, health data about you, which European law needs your explicit permission for. Read both and tap Accept to carry on, or close the app if you would rather not.",
     termsHeading: "Terms of use",
     privacyHeading: "Privacy policy",
     accept: "Accept both and continue",

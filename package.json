@@ -1,6 +1,6 @@
 {
   "name": "programapp",
-  "version": "2.17.5",
+  "version": "2.17.6-fix-screenshot-findings.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client --scheme exp+programapp-dev",
