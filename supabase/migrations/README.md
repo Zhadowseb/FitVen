@@ -85,6 +85,7 @@ behind by accident.
 | `20261007090000_remove-lift-verification.sql` | yes |
 | `20261008090000_a-set-counts-for-fewer-reps.sql` | yes |
 | `20261009090000_a-like-notifies-the-poster.sql` | yes |
+| `20261010090000_more-catalog-exercises.sql` | no |
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
 centre match, per-centre lift leaderboards with video verification, and what
@@ -484,6 +485,12 @@ not when the author has switched likes off
 notification event and would have counted likes; then deploy the new
 function and create the webhook - the steps are at the bottom of the file.
 Until it has run, a like tells nobody and the switch in the app is greyed out.
+
+`20261010090000_more-catalog-exercises.sql` adds 402 exercises to the catalog,
+next to the 89 there were. Each takes its muscles from the one of ours it is
+closest to (a second column names it), copied once; the hip abduction ones get
+Gluteus Medius and Maximus directly. Phones pick them up on their next catalog
+sync, so it needs no release and can run whenever.
 
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to

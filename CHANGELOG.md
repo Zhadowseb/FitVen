@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.17.6] - Unreleased
+### Added
+- **402 more exercises in the catalog,** next to the 89 there were: more variants by bar, dumbbell, kettlebell, cable, machine, band and bodyweight, olympic lifts and a few cardio machines. No stretches or yoga. `supabase/migrations/20261010090000_more-catalog-exercises.sql` adds them as official catalog rows with the usual default columns, so phones get them on their next catalog sync without a release.
+  - **Each new exercise takes its muscles from the one of ours it is closest to,** named in the migration: "Front Squat" gets what "Squat" has, "Cable Lateral Raise" what "Lateral Raise" has, so the body map shows it the same way. The hip abduction ones have no such exercise of ours and get Gluteus Medius (primary) and Gluteus Maximus (secondary).
+  - Names that only differ from ours in case, hyphens or a plural were left out, and so were variants of ones we have under another name ("Barbell Bench Press" is our "Bench Press"), so one lift's history and records are not split over two names. A phone with a custom exercise of a new name keeps the custom one (`INSERT OR IGNORE`).
+- **Tests:** `npm run test:more-catalog-exercises` - one transaction, idempotent, no name twice, every template one of our 89, apostrophes escaped.
+
+---
 ## [2.17.5] - 2026-10-04
 ### Fixed
 - **On iPhone, the timer square in the bottom bar opens the workout again.** The ring drawn over it is an `Svg` with `pointerEvents="none"`, but react-native-svg 15 on iOS with the new architecture ignores that on the Svg root (`RNSVGSvgView` does its own hit test), so the ring took the tap and nothing happened. Android honours it, which is why it worked there.
