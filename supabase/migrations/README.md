@@ -85,7 +85,7 @@ behind by accident.
 | `20261007090000_remove-lift-verification.sql` | yes |
 | `20261008090000_a-set-counts-for-fewer-reps.sql` | yes |
 | `20261009090000_a-like-notifies-the-poster.sql` | yes |
-| `20261010090000_more-catalog-exercises.sql` | no |
+| `20261010090000_more-catalog-exercises.sql` | yes |
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
 centre match, per-centre lift leaderboards with video verification, and what
@@ -486,11 +486,15 @@ notification event and would have counted likes; then deploy the new
 function and create the webhook - the steps are at the bottom of the file.
 Until it has run, a like tells nobody and the switch in the app is greyed out.
 
-`20261010090000_more-catalog-exercises.sql` adds 402 exercises to the catalog,
+`20261010090000_more-catalog-exercises.sql` was run on 2026-10-06. It adds 402 exercises to the catalog,
 next to the 89 there were. Each takes its muscles from the one of ours it is
 closest to (a second column names it), copied once; the hip abduction ones get
 Gluteus Medius and Maximus directly. Phones pick them up on their next catalog
-sync, so it needs no release and can run whenever.
+sync. The first try stopped on "Key (id)=(24) already exists": the id
+sequences were behind the ids written by hand, so the file now moves both
+past the highest id first. With it the catalog has 2101 muscle rows, past
+PostgREST's 1000-row cap; apps before 2.17.6 read only the first 1000, so
+the new exercises show no muscles there until the API's max rows is raised.
 
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to

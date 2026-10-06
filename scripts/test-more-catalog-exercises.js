@@ -53,6 +53,22 @@ assert.ok(sql.includes("raise exception 'A template is missing"), "a missing tem
 assert.ok(sql.includes("'Captain''s Chair Knee Raise'"), "an apostrophe is escaped");
 assert.ok(!/stretch|\bpose\b|pilates/i.test(rows.map((row) => row.name).join("\n")), "no stretches or yoga");
 
+// With them the catalog has 2101 muscle rows, past PostgREST's 1000-row cap,
+// so the app reads them a page at a time - and only through that one reader.
+const service = fs.readFileSync(path.join(__dirname, "../src/Services/weightliftingService.js"), "utf8");
+assert.strictEqual(
+  (service.match(/\.from\(MUSCLE_ACTIVATION_TABLE\)/g) ?? []).length,
+  1,
+  "Muscle_Activation is read in one place"
+);
+const reader = service.slice(service.indexOf("async function fetchMuscleActivations"));
+assert.ok(
+  /\.order\("id", \{ ascending: true \}\)[\s\S]*\.limit\(MUSCLE_ACTIVATION_PAGE_SIZE\)[\s\S]*\.gt\("id", lastId\)/.test(
+    reader.slice(0, 1200)
+  ),
+  "that place pages by id, so no exercise past the first 1000 rows comes back without muscles"
+);
+
 console.log(
   "More catalog exercises: 402 new names, none ours under another spelling, each copying one of our 89, in one idempotent transaction."
 );

@@ -1147,16 +1147,9 @@ async function getOfficialClassificationGroupSignals(exercises) {
     return new Map();
   }
 
-  const { data: activationRows, error: activationError } = await supabase
-    .from(MUSCLE_ACTIVATION_TABLE)
-    .select("exercise_id, muscle_id, activation_level")
-    .in("exercise_id", cloudExerciseIds);
+  const activationRows = await fetchMuscleActivations(cloudExerciseIds);
 
-  if (activationError) {
-    throw activationError;
-  }
-
-  if ((activationRows ?? []).length === 0) {
+  if (activationRows.length === 0) {
     return new Map();
   }
 
@@ -1611,6 +1604,46 @@ function areExerciseCatalogEntriesEqual(left, right) {
   }
 
   return true;
+}
+
+// PostgREST hands out at most 1000 rows per response and says nothing when it
+// stops there. The catalog's muscle rows passed that on 2026-10-06 (2101 rows
+// for 491 exercises), and every exercise past the first 1000 rows came back
+// with no muscles. So they are read a page at a time, by id.
+const MUSCLE_ACTIVATION_PAGE_SIZE = 1000;
+
+/** Every Muscle_Activation row of these catalog exercises, however many. */
+async function fetchMuscleActivations(exerciseIds) {
+  const rows = [];
+  let lastId = null;
+
+  for (;;) {
+    let query = supabase
+      .from(MUSCLE_ACTIVATION_TABLE)
+      .select("id, exercise_id, muscle_id, activation_level")
+      .in("exercise_id", exerciseIds)
+      .order("id", { ascending: true })
+      .limit(MUSCLE_ACTIVATION_PAGE_SIZE);
+
+    if (lastId !== null) {
+      query = query.gt("id", lastId);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      throw error;
+    }
+
+    const page = data ?? [];
+    rows.push(...page);
+
+    if (page.length < MUSCLE_ACTIVATION_PAGE_SIZE) {
+      return rows;
+    }
+
+    lastId = page[page.length - 1].id;
+  }
 }
 
 function normalizeActivationLevel(activationLevel) {
@@ -2594,16 +2627,7 @@ export async function getExerciseLibraryEntries(db) {
     let activationRows = [];
 
     if (exerciseIds.length > 0) {
-      const { data, error } = await supabase
-        .from(MUSCLE_ACTIVATION_TABLE)
-        .select("exercise_id, muscle_id, activation_level")
-        .in("exercise_id", exerciseIds);
-
-      if (error) {
-        throw error;
-      }
-
-      activationRows = data ?? [];
+      activationRows = await fetchMuscleActivations(exerciseIds);
     }
 
     const [groupMetadata, bodyMapRegionMetadata] = await Promise.all([
