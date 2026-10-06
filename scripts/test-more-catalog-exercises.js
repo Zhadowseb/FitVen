@@ -44,6 +44,11 @@ assert.ok(
   sql.includes("where m.exercise_id = a.exercise_id and m.muscle_id = a.muscle_id"),
   "a muscle row an exercise already has is not added twice"
 );
+assert.ok(
+  sql.includes("pg_get_serial_sequence('public.\"Exercise\"', 'id')") &&
+    sql.includes("pg_get_serial_sequence('public.\"Muscle_Activation\"', 'id')"),
+  "both id sequences are moved past the highest id first - they were behind on 2026-10-06"
+);
 assert.ok(sql.includes("raise exception 'A template is missing"), "a missing template stops it");
 assert.ok(sql.includes("'Captain''s Chair Knee Raise'"), "an apostrophe is escaped");
 assert.ok(!/stretch|\bpose\b|pilates/i.test(rows.map((row) => row.name).join("\n")), "no stretches or yoga");

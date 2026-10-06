@@ -442,6 +442,22 @@ begin
   from information_schema.columns
   where table_schema = 'public' and table_name = 'Muscle_Activation' and column_name = 'id';
 
+  -- The id sequences are behind: the first rows went in with ids written by
+  -- hand, so the next id handed out was one already taken ("Key (id)=(24)
+  -- already exists" on 2026-10-06). Moved past the highest id before adding.
+  -- Not a sequence (or none) gives null here, and setval(null, ...) does
+  -- nothing.
+  perform setval(
+    pg_get_serial_sequence('public."Exercise"', 'id'),
+    (select coalesce(max(id), 0) + 1 from public."Exercise"),
+    false
+  );
+  perform setval(
+    pg_get_serial_sequence('public."Muscle_Activation"', 'id'),
+    (select coalesce(max(id), 0) + 1 from public."Muscle_Activation"),
+    false
+  );
+
   -- Every template has to be one of ours, or its exercises would get nothing.
   if exists (
     select 1 from new_catalog_exercise n
