@@ -513,6 +513,25 @@ to point a tool at.
 5. If the change adds a column to a synced table, `src/Services/AGENTS.md` has
    the rest of the checklist — the cloud column is only step 11 of 11.
 
+## The RepDB exercise import
+
+Most of the exercise catalog - the rows in `public."Exercise"` and their
+`public."Muscle_Activation"` rows - comes from RepDB's free tier
+(https://github.com/RepDB/exercise-dataset). Its licence allows the data in
+the app, with the credit "Exercise data by RepDB (repdb.co)", but not
+republished as a dataset, and this repository is public. So the import is not
+a file here: `npm run repdb:import` downloads the dataset and writes
+`supabase/generated/repdb-import.sql`, which git ignores, and that is run by
+hand in the SQL editor.
+
+What is committed is our own part, in `scripts/generate-repdb-import.js`:
+which RepDB exercises are ones we already had, and which of our muscles each
+of theirs is. Running it again adds only what is missing.
+
+| Import | Applied |
+|---|---|
+| RepDB free tier, 523 exercises (2026-10-06) | no |
+
 ## Not migrations
 
 `docs/export-user-programs.sql` is a read-only query for pulling one user's

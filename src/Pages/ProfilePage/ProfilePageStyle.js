@@ -320,6 +320,14 @@ export default StyleSheet.create({
     lineHeight: 15,
     fontWeight: "700",
   },
+  credit: {
+    marginTop: 4,
+    textAlign: "center",
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "500",
+    textDecorationLine: "underline",
+  },
 
   // Delete account
   errorText: {

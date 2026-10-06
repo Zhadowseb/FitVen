@@ -115,6 +115,10 @@ export default {
     deleteAccount: "Delete account",
   },
   footer: "FitVen · version {version}",
+  // RepDB's licence asks for this wording and a link to repdb.co; it stays in
+  // English in every language.
+  exerciseDataCredit: "Exercise data by RepDB (repdb.co)",
+  openExerciseDataCredit: "Open repdb.co",
   logoutConfirm: {
     title: "Log out of FitVen?",
     message:

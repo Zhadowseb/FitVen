@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { ScrollView, TouchableOpacity, View, useColorScheme } from "react-native";
+import { Linking, ScrollView, TouchableOpacity, View, useColorScheme } from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
 
@@ -51,6 +51,8 @@ import pickAndUploadAvatar from "./pickAndUploadAvatar";
 
 // Not localised on purpose: the word the user types has to match exactly, and
 // a translated one is a different word on a phone in a different language.
+// Where the exercise data credit leads; RepDB's licence names this address.
+const REPDB_URL = "https://repdb.co";
 const DELETE_CONFIRMATION_WORD = "DELETE";
 
 // Keys rather than text, translated when the tile is drawn.
@@ -881,6 +883,22 @@ export default function ProfilePage() {
         <ThemedText style={styles.footer} setColor={theme.quietText}>
           {t("profile.footer", { version: appVersion })}
         </ThemedText>
+
+        {/* RepDB's free tier asks for a visible credit with a link wherever
+            its exercises are used; most of the catalog is theirs. */}
+        <TouchableOpacity
+          accessibilityRole="link"
+          accessibilityLabel={t("profile.openExerciseDataCredit")}
+          activeOpacity={0.7}
+          hitSlop={8}
+          onPress={() => {
+            Linking.openURL(REPDB_URL).catch(() => {});
+          }}
+        >
+          <ThemedText style={styles.credit} setColor={theme.quietText}>
+            {t("profile.exerciseDataCredit")}
+          </ThemedText>
+        </TouchableOpacity>
       </ScrollView>
 
       <FeedbackModal

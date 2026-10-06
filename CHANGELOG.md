@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.17.6] - Unreleased
+### Added
+- **523 exercises from RepDB in the catalog,** next to our 89: 416 strength, 79 stretches and yoga poses, 14 olympic lifts, 10 cardio and 4 plyometric. They are catalog rows like the rest (`public."Exercise"` with `official` true and the usual default columns), with their muscles in `public."Muscle_Activation"`, so every app gets them on its next catalog sync - no release needed.
+  - RepDB's free tier allows the data in an app with a credit, but not republished as a dataset, and this repository is public. So the import is not committed: `npm run repdb:import` downloads the dataset, reads our catalog with the app's public key, and writes `supabase/generated/repdb-import.sql` (ignored by git), which is run by hand in the SQL editor. It is one transaction, and a name already in the catalog, in any case, is left alone.
+  - What is committed is our part, in `scripts/generate-repdb-import.js`: the 48 RepDB exercises that are one of ours under another name ("Barbell Bench Press" is our "Bench Press"), on top of names that only differ in case, hyphens or a plural; and which of our 25 muscles each of theirs is. The quadriceps and hamstrings become each of our three; the forearms, adductors and supraspinatus have no muscle of ours, so 19 of the new exercises, mostly wrist curls and adductor stretches, have no muscles and do not show in a muscle filter.
+  - A user with a custom exercise of the same name keeps it: the phone's catalog insert is `INSERT OR IGNORE`.
+- **"Exercise data by RepDB (repdb.co)"** on the profile screen under the version, linking to repdb.co, and in README.md, as the licence asks. It is RepDB's own wording, so it stays in English in Danish too.
+- **Tests:** `npm run test:repdb-import` - the equivalents and spellings are skipped, muscles map to ours with primary winning, the SQL is idempotent and escapes apostrophes, the generated file is ignored by git, and the credit is in place.
+
+---
 ## [2.17.5] - 2026-10-04
 ### Fixed
 - **On iPhone, the timer square in the bottom bar opens the workout again.** The ring drawn over it is an `Svg` with `pointerEvents="none"`, but react-native-svg 15 on iOS with the new architecture ignores that on the Svg root (`RNSVGSvgView` does its own hit test), so the ring took the tap and nothing happened. Android honours it, which is why it worked there.

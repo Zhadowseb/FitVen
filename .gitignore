@@ -26,6 +26,11 @@ service-account*.json
 # Supabase CLI local project metadata
 supabase/.temp/
 
+# The RepDB catalog import: RepDB's licence does not allow the data to be
+# republished as a dataset, and this repository is public. Regenerate it with
+# npm run repdb:import.
+supabase/generated/
+
 # Native
 .kotlin/
 *.orig.*
