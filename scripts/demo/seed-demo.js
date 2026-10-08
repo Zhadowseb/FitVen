@@ -317,10 +317,24 @@ function check(label, { error }) {
   }
 }
 
+/** Random, and with a lower case letter, an upper case letter and a digit: the cloud insists on all three. */
+function strongPassword(bytes = 18) {
+  return `${crypto.randomBytes(bytes).toString("base64url")}aA1`;
+}
+
 async function ensureUsers(client, env) {
   const existing = new Map((await listDemoUsers(client)).map((user) => [user.email.toLowerCase(), user]));
   const ids = new Map();
-  let generatedPassword = null;
+  let passwordMadeUp = false;
+
+  // Shown the moment it exists, not at the end: a later failure must not lose it.
+  const announce = (email, password) => {
+    passwordMadeUp = true;
+    console.log(
+      `\n  Password for ${email}: ${password}\n` +
+        "  (made up just now and shown only here - put it in .env as DEMO_PASSWORD so a rerun keeps it)\n"
+    );
+  };
 
   for (const member of cast.CAST) {
     const email = cast.demoEmail(member);
@@ -329,12 +343,13 @@ async function ensureUsers(client, env) {
       username_base: member.usernameBase,
       display_name: member.displayName,
     };
-    let password = member.login ? env.DEMO_PASSWORD : crypto.randomBytes(24).toString("hex");
+    let password = member.login ? env.DEMO_PASSWORD : strongPassword(24);
     let user = existing.get(email.toLowerCase());
 
     if (!user) {
       if (member.login && !password) {
-        password = generatedPassword = crypto.randomBytes(12).toString("base64url");
+        password = strongPassword();
+        announce(email, password);
       }
 
       const { data, error } = await client.auth.admin.createUser({
@@ -347,10 +362,16 @@ async function ensureUsers(client, env) {
       check(`Creating ${email}`, { error });
       user = data.user;
       console.log(`  created ${member.key}`);
-    } else if (member.login && password) {
-      // Setting DEMO_PASSWORD again is how the login password is changed.
+    } else if (member.login) {
+      // The login account always ends up with a password that is known: the one
+      // in .env, or a new one made up and shown here.
+      if (!password) {
+        password = strongPassword();
+        announce(email, password);
+      }
+
       check(`Updating ${email}`, await client.auth.admin.updateUserById(user.id, { password, user_metadata: metadata }));
-      console.log(`  kept ${member.key} (password set from DEMO_PASSWORD)`);
+      console.log(`  kept ${member.key} (password set)`);
     } else {
       console.log(`  kept ${member.key}`);
     }
@@ -358,7 +379,7 @@ async function ensureUsers(client, env) {
     ids.set(member.key, user.id);
   }
 
-  return { ids, generatedPassword };
+  return { ids, passwordMadeUp };
 }
 
 async function ensureProfiles(client, ids) {
@@ -519,7 +540,7 @@ async function apply(options, env) {
   }
 
   console.log("\nAccounts:");
-  const { ids, generatedPassword } = await ensureUsers(connection.client, env);
+  const { ids, passwordMadeUp } = await ensureUsers(connection.client, env);
 
   console.log("Profiles, photos and consent...");
   await ensureProfiles(connection.client, ids);
@@ -534,11 +555,10 @@ async function apply(options, env) {
 
   console.log("\nDone.");
 
-  if (generatedPassword) {
+  if (passwordMadeUp) {
     console.log(
-      `\nThe login account is ${cast.demoEmail(cast.CAST.find((member) => member.login))}.\n` +
-        `Its password was made up just now and is shown only here: ${generatedPassword}\n` +
-        "Put it in .env as DEMO_PASSWORD (so a rerun keeps it), and in the GitHub secrets as DEMO_PASSWORD."
+      `\nSign in as ${cast.demoEmail(cast.CAST.find((member) => member.login))} with the password shown above.\n` +
+        "Put it in .env as DEMO_PASSWORD, and in the GitHub secrets as DEMO_PASSWORD (and DEMO_EMAIL)."
     );
   }
 }
@@ -636,7 +656,7 @@ async function main() {
   process.exitCode = 1;
 }
 
-module.exports = { assertProjectUrl, checkRow, parseArgs, pruneOptional };
+module.exports = { assertProjectUrl, checkRow, parseArgs, pruneOptional, strongPassword };
 
 if (require.main === module) {
   main().catch((error) => {

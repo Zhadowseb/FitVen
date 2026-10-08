@@ -153,6 +153,15 @@ assert.ok(
 );
 assert.ok("rest_counted" in seed.pruneOptional(definitions, "set", { user_id: 1, rest_counted: false }), "and kept when it has it");
 
+// A password the cloud accepts: lower case, upper case and a digit, and never the same twice.
+for (const bytes of [18, 24]) {
+  const password = seed.strongPassword(bytes);
+
+  assert.ok(/[a-z]/.test(password) && /[A-Z]/.test(password) && /[0-9]/.test(password), "all three kinds of character");
+  assert.ok(password.length >= 20, "long enough");
+}
+assert.notStrictEqual(seed.strongPassword(), seed.strongPassword(), "random");
+
 // --- plan and an unconfirmed apply touch nothing and need no key -------------
 const noKey = { ...process.env, SUPABASE_URL: "", SUPABASE_SERVICE_ROLE_KEY: "" };
 const run = (...args) => execFileSync(process.execPath, [SCRIPT, ...args], { env: noKey, encoding: "utf8" });
