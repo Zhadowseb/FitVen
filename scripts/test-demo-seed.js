@@ -134,6 +134,18 @@ assert.deepStrictEqual(
   [],
   "an optional column the cloud may lack is not an error"
 );
+// What the database fills in itself is not a gap: the id it counts up, and any column with a default.
+const withDefaults = {
+  social_post_like: {
+    required: ["id", "post_id", "created_at", "stamped_at"],
+    properties: { id: {}, post_id: {}, created_at: { default: "timezone('utc'::text, now())" }, stamped_at: {} },
+  },
+};
+assert.deepStrictEqual(
+  seed.checkRow(withDefaults, "social_post_like", { post_id: 1 }).missingRequired,
+  ["stamped_at"],
+  "id and a column with a default are not reported; a required one without a default is"
+);
 assert.ok(seed.checkRow(definitions, "social_post", {}).missingTable);
 assert.ok(
   !("rest_counted" in seed.pruneOptional({ set: { properties: { user_id: {} } } }, "set", { user_id: 1, rest_counted: false })),

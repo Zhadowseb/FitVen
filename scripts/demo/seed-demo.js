@@ -239,8 +239,12 @@ function checkRow(definitions, table, row) {
   const known = new Set(Object.keys(definition.properties ?? {}));
   const optional = new Set(OPTIONAL_COLUMNS[table] ?? []);
   const unknown = Object.keys(row).filter((column) => !known.has(column) && !optional.has(column));
+  const properties = definition.properties ?? {};
+  // PostgREST lists every NOT NULL column as required, also the ones the
+  // database fills in itself: the id it counts up (an identity column shows no
+  // default) and any column with a default, like created_at.
   const missingRequired = (definition.required ?? []).filter(
-    (column) => !(column in row)
+    (column) => column !== "id" && !(column in row) && !("default" in (properties[column] ?? {}))
   );
 
   return { table, missingTable: false, unknown, missingRequired };
@@ -258,7 +262,11 @@ function sampleRows() {
     },
     set: { ...exercises[0].sets[0], cloud_exercise_instance_id: 1 },
     social_post: { ...post, source_workout_type_instance_id: 1 },
-    social_post_like: { post_id: 1, user_id: "00000000-0000-0000-0000-000000000000" },
+    social_post_like: {
+      post_id: 1,
+      user_id: "00000000-0000-0000-0000-000000000000",
+      created_at: post.created_at,
+    },
   };
 }
 
@@ -473,10 +481,17 @@ async function seedActivity(client, definitions, ids) {
     check(`Post ${activity.id}`, insertedPost);
 
     if (activity.likes.length) {
+      const posted = new Date(rows.post.created_at).getTime();
+
       check(
         `Likes ${activity.id}`,
         await client.from("social_post_like").insert(
-          activity.likes.map((liker) => ({ post_id: insertedPost.data.id, user_id: ids.get(liker) }))
+          activity.likes.map((liker, index) => ({
+            post_id: insertedPost.data.id,
+            user_id: ids.get(liker),
+            // Some time after the post, one like after another, never later than now.
+            created_at: new Date(Math.min(now.getTime(), posted + (index + 1) * 40 * 60000)).toISOString(),
+          }))
         )
       );
     }
