@@ -3,3 +3,4 @@
   - They run when asked, as they already did in practice: `gh workflow run pr-review.yml --ref master -f pr=<number>` (a merged PR is read in its merge commit, against master as it stood just before) or `/qa` as a comment on a PR from someone with write access. Nothing starts by itself, so nothing is spent by itself.
   - `AGENTS.md` and `.github/review-agents/README.md` said every PR is reviewed and showed a `pull_request` trigger; they now say what happens.
 - **`npm run pr:check` named an uncommitted file without its first letter** (`HANGELOG.md`): the first line of `git status --porcelain` starts with a space and the output was trimmed. `scripts/test-git-flow.js` checks it.
+- **`scripts/test-more-catalog-exercises.js` failed in a Windows checkout,** where git turns the migration's line feeds into carriage returns and the text it looked for no longer matched; it passed in CI. It reads the file with its line endings normalised.
