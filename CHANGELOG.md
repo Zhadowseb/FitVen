@@ -1,11 +1,5 @@
 # Changelog
 
-## [2.17.6] - Unreleased
-### Added
-- **First step of automatic content for Instagram: the real app, recorded in an Android emulator in CI.** `.github/workflows/content-capture.yml` builds a release APK (x86_64 only, via `expo prebuild`) and starts it in a GitHub-hosted emulator with KVM, where `scripts/content/capture.sh` takes a screenshot and an 8-second screen recording and fails if the app has crashed or the files are empty. No phone is connected, the repository is public so the minutes are free, and nothing is posted anywhere. It runs on `workflow_dispatch` and on a PR that touches the workflow or `scripts/content/`; it blocks nothing.
-  - It stops at the login screen for now, as there is no demo account. `docs/CONTENT-AUTOMATION.md` describes the whole plan and what has to exist before it can go on: a demo account whose friends are demo accounts too (the test account follows real people, and a workout on it sent them a notification), some history on it, and `DEMO_EMAIL` and `DEMO_PASSWORD` as GitHub secrets.
-
----
 ## [2.17.5] - 2026-10-04
 ### Fixed
 - **On iPhone, the timer square in the bottom bar opens the workout again.** The ring drawn over it is an `Svg` with `pointerEvents="none"`, but react-native-svg 15 on iOS with the new architecture ignores that on the Svg root (`RNSVGSvgView` does its own hit test), so the ring took the tap and nothing happened. Android honours it, which is why it worked there.
