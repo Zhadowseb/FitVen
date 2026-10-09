@@ -95,7 +95,15 @@
       "expo-secure-store",
       "expo-video",
       "expo-web-browser",
-      "@bacons/apple-targets"
+      "@bacons/apple-targets",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableMinifyInReleaseBuilds": true
+          }
+        }
+      ]
     ],
     "extra": {
       "spotifyClientId": "42e6c32ad3b84a8ebe667da6bdeb2fb0",
