@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "@localization";
 
 import { Colors, withAlpha } from "../GlobalStyling/colors";
+import { useThemeMode } from "@contexts/ThemeContext";
 import ThemedSheetHandle from "../ThemedComponents/ThemedSheetHandle";
 import ThemedText from "../ThemedComponents/ThemedText";
 import ArrowDoubleDown from "../Icons/UI-icons/ArrowDoubleDown";
@@ -559,16 +560,16 @@ function RecentWorkoutRow({ workout, disabled, onPress, theme, styles }) {
             badge="repeat"
           />
           <View style={styles.recentCopy}>
-            <View style={styles.repeatTitleRow}>
-              <ThemedText style={styles.cardTitle} numberOfLines={1}>
-                {getWorkoutTitle(workout, t)}
-              </ThemedText>
-              {isSuggested ? (
-                <View style={styles.suggestedBadge}>
-                  <ThemedText style={styles.suggestedText}>{t("workoutStart.suggested")}</ThemedText>
-                </View>
-              ) : null}
-            </View>
+            {/* Its own line: beside the title it ran into the date column,
+                which leaves the copy about 134 dp on a 360 dp phone. */}
+            {isSuggested ? (
+              <View style={[styles.suggestedBadge, styles.suggestedBadgeStacked]}>
+                <ThemedText style={styles.suggestedText}>{t("workoutStart.suggested")}</ThemedText>
+              </View>
+            ) : null}
+            <ThemedText style={styles.cardTitle} numberOfLines={1}>
+              {getWorkoutTitle(workout, t)}
+            </ThemedText>
             <ThemedText style={styles.cardDetails} numberOfLines={1}>
               {detail}
             </ThemedText>
@@ -795,7 +796,11 @@ export default function StartWorkoutSheet({
   const theme = Colors[colorScheme] ?? Colors.light;
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  // `theme` is the same object whatever the accent - applyAccentTheme()
+  // mutates it in place - so the accent itself has to be a dependency, or
+  // the sheet keeps the accent it was first opened with.
+  const { accentTheme } = useThemeMode();
+  const styles = useMemo(() => createStyles(theme), [theme, accentTheme]);
   const freshStarts = useMemo(() => buildFreshStarts(t), [t]);
   const isToday = !targetDate || targetDate === getTodaysDate();
   const targetDateLabel = targetDate?.slice(0, 5);
@@ -1226,11 +1231,9 @@ function createStyles(theme) {
     lineHeight: 16,
     fontWeight: "500",
   },
-  repeatTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    minWidth: 0,
-    gap: 8,
+  suggestedBadgeStacked: {
+    alignSelf: "flex-start",
+    marginBottom: 2,
   },
   repeatMetaColumn: {
     alignItems: "flex-end",

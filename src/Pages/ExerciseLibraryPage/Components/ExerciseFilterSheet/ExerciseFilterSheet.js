@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "@localization";
 
 import { Colors, withAlpha } from "../../../../Resources/GlobalStyling/colors";
+import { useThemeMode } from "@contexts/ThemeContext";
 import {
   ThemedSheetHandle,
   ThemedText,
@@ -88,7 +89,11 @@ export default function ExerciseFilterSheet({
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const insets = useSafeAreaInsets();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  // `theme` is the same object whatever the accent - applyAccentTheme()
+  // mutates it in place - so the accent itself has to be a dependency, or
+  // the sheet keeps the accent it was first opened with.
+  const { accentTheme } = useThemeMode();
+  const styles = useMemo(() => createStyles(theme), [theme, accentTheme]);
   const selectedMuscleSet = useMemo(
     () => new Set(Array.isArray(selectedMuscleKeys) ? selectedMuscleKeys : []),
     [selectedMuscleKeys]

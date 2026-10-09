@@ -72,7 +72,7 @@ export default {
   consent: {
     title: "Før du fortsætter",
     body:
-      "To ting at acceptere. Brugsbetingelserne fastlægger, hvad der er og ikke er tilladt på FitVen — der er nultolerance over for anstødeligt indhold og krænkende adfærd. Privatlivspolitikken handler om dine data: FitVen gemmer din træning og, gennem sygdomsregistreringer, puls og registrerede løb, helbredsoplysninger om dig, som europæisk lov kræver din udtrykkelige tilladelse til. Læs begge og tryk på Accepter for at fortsætte, eller luk appen, hvis du hellere vil lade være.",
+      "To ting at acceptere. Brugsbetingelserne fastlægger, hvad der er og ikke er tilladt på FitVen — der er nultolerance over for anstødeligt indhold og krænkende adfærd. Privatlivspolitikken handler om dine data: FitVen gemmer din træning og, gennem sygdomsregistreringer, puls og løb registreret med en tidligere version af FitVen, helbredsoplysninger om dig, som europæisk lov kræver din udtrykkelige tilladelse til. Læs begge og tryk på Accepter for at fortsætte, eller luk appen, hvis du hellere vil lade være.",
     termsHeading: "Brugsbetingelser",
     privacyHeading: "Privatlivspolitik",
     accept: "Accepter begge og fortsæt",
