@@ -2,14 +2,22 @@
 // scripts/test-localization.js fejler, hvis de to driver fra hinanden.
 import auth from "./auth";
 import calendar from "./calendar";
+import category from "./category";
+import categoryService from "./categoryService";
 import common from "./common";
+import customExerciseDetail from "./customExerciseDetail";
+import customExercises from "./customExercises";
 import errors from "./errors";
+import exerciseSharing from "./exerciseSharing";
 import exercises from "./exercises";
 import explore from "./explore";
 import friends from "./friends";
 import gyms from "./gyms";
 import home from "./home";
+import homeExplore from "./homeExplore";
+import liveWorkout from "./liveWorkout";
 import music from "./music";
+import myExercise from "./myExercise";
 import nav from "./nav";
 import notifications from "./notifications";
 import profile from "./profile";
@@ -26,18 +34,27 @@ import trainCalendar from "./trainCalendar";
 import trainLibrary from "./trainLibrary";
 import workout from "./workout";
 import workoutStart from "./workoutStart";
+import workoutTypes from "./workoutTypes";
 
 export default {
   auth,
   calendar,
+  category,
+  categoryService,
   common,
+  customExerciseDetail,
+  customExercises,
   errors,
+  exerciseSharing,
   exercises,
   explore,
   friends,
   gyms,
   home,
+  homeExplore,
+  liveWorkout,
   music,
+  myExercise,
   nav,
   notifications,
   profile,
@@ -54,4 +71,5 @@ export default {
   trainLibrary,
   workout,
   workoutStart,
+  workoutTypes,
 };

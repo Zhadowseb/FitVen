@@ -216,6 +216,26 @@ export default StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
   },
+  cardSpacing: {
+    marginTop: 14,
+  },
+  toggleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 10,
+    paddingTop: 16,
+    paddingBottom: 16,
+  },
+  toggleCopy: {
+    flex: 1,
+  },
+  toggleNote: {
+    fontSize: 12,
+    lineHeight: 17,
+    paddingHorizontal: 10,
+    paddingBottom: 16,
+  },
   feedbackText: {
     marginTop: 14,
     fontSize: 13,

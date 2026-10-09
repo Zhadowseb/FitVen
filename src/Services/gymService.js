@@ -20,47 +20,27 @@ import {
 
 const GYM_TABLE = "gym";
 const GYM_LIFT_TABLE = "gym_lift";
-const GYM_LIFT_VOTE_TABLE = "gym_lift_vote";
 const PROFILE_PRIVATE_TABLE = "profile_private";
 const GYM_SELECT_FIELDS =
   "id, chain, name, short_name, address, postal_code, city, latitude, longitude, match_radius_m, image_url";
 
-export const LIFT_VIDEO_BUCKET = "lift-videos";
-export const LIFT_VIDEO_MAX_BYTES = 50 * 1024 * 1024;
-export const LIFT_VIDEO_MAX_DURATION_SECONDS = 30;
 export const GYM_SCOPE_GYM = "gym";
 export const GYM_SCOPE_FRIENDS = "friends";
 export const LIFT_UNIT_KG = "kg";
 export const LIFT_UNIT_BODYWEIGHT = "bw";
 
-/**
- * The reasons the reject step offers. The values are what the column check
- * accepts, so a new one here without one there fails the insert. The sheet
- * shows t(labelKey); `label` translates the same key when it is read, for
- * anything reading the list outside a component.
- */
-export const REJECTION_REASONS = [
-  { value: "depth", labelKey: "gyms.rejectReasons.depth", get label() { return t(this.labelKey); } },
-  { value: "lockout", labelKey: "gyms.rejectReasons.lockout", get label() { return t(this.labelKey); } },
-  { value: "assist", labelKey: "gyms.rejectReasons.assist", get label() { return t(this.labelKey); } },
-  { value: "weight", labelKey: "gyms.rejectReasons.weight", get label() { return t(this.labelKey); } },
-  { value: "other", labelKey: "gyms.rejectReasons.other", get label() { return t(this.labelKey); } },
-];
-
 const GYM_SETUP_MESSAGE =
   "Centres are not set up in Supabase yet. Run supabase/migrations/20260917120000_gyms-and-lift-verification.sql in the Supabase SQL editor first.";
 const POSITION_TIMEOUT_MS = 12000;
-// A map can show a fix from ten minutes ago without lying about much.
-export const MAP_LAST_KNOWN_MAX_AGE_MS = 10 * 60 * 1000;
-// Matching cannot: the answer is a place, and the radius is 120 m. Two
-// minutes is short enough that you are still inside the centre you were in,
-// and long enough to rescue a workout whose fresh fix never arrived.
+// Matching a workout to a centre needs a recent fix: the answer is a place,
+// and the radius is 120 m. Two minutes is short enough that you are still
+// inside the centre you were in, and long enough to rescue a workout whose
+// fresh fix never arrived.
 const MATCH_LAST_KNOWN_MAX_AGE_MS = 2 * 60 * 1000;
 // How far back the retry looks, and how many workouts it will touch in one
 // pass, so a long-dormant install does not open into a hundred requests.
 const MATCH_RETRY_DAYS = 7;
 const MATCH_RETRY_LIMIT = 20;
-const SIGNED_VIDEO_TTL_SECONDS = 60 * 60;
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -136,7 +116,6 @@ export function mapGym(row) {
     memberCount: toNumber(row.member_count) ?? 0,
     followedMemberCount: toNumber(row.followed_member_count) ?? 0,
     isHomeGym: Boolean(row.is_home_gym),
-    distanceM: toNumber(row.distance_m),
     workoutCount: toNumber(row.workout_count) ?? 0,
   };
 }
@@ -167,18 +146,10 @@ function mapLiftRow(row) {
     reps: toNumber(row.reps),
     bodyweightKg: toNumber(row.bodyweight_kg),
     ratio: toNumber(row.ratio),
-    videoStatus: row.video_status ?? "none",
-    approvals: toNumber(row.approvals) ?? 0,
-    rejections: toNumber(row.rejections) ?? 0,
     performedAt: row.performed_at ?? null,
     previousWeightKg: toNumber(row.previous_weight_kg),
     isMe: Boolean(row.is_me),
     gapToTop: toNumber(row.gap_to_top),
-    videoPath: row.video_path ?? null,
-    videoUrl: null,
-    videoUploadedAt: row.video_uploaded_at ?? null,
-    rankIfVerified: toNumber(row.rank_if_verified),
-    canVote: row.can_vote === undefined ? true : Boolean(row.can_vote),
     isHomeGym: Boolean(row.is_home_gym),
   };
 }
@@ -251,9 +222,9 @@ export async function getGymById(gymId) {
  * `lastKnownMaxAgeMs` falls back to the phone's last remembered fix when a
  * fresh one does not arrive in time - indoors, which is where a gym is, that
  * is common. How old a fix may be is the caller's call, because it means two
- * different things: a map can live with one from ten minutes ago, while
- * matching a workout to a centre cannot, since the answer is a place. Zero,
- * the default, never falls back.
+ * different things: telling which country you are in can live with one from
+ * the last day, while matching a workout to a centre cannot, since the answer
+ * is a place. Zero, the default, never falls back.
  */
 export async function getCurrentPosition({
   requestPermission = true,
@@ -391,7 +362,6 @@ export async function matchWorkoutToGym(
 /**
  * Pushes the best set per exercise of a finished strength workout to the
  * centre leaderboard. Runs, walks and workouts without a centre are skipped.
- * The database trigger decides what a heavier lift does to an attached video.
  */
 export async function syncWorkoutLifts(db, workoutId) {
   const userId = await getAuthenticatedUserId();
@@ -656,8 +626,8 @@ export async function getRecentGymRecords({ gymId, since = null }) {
 }
 
 /**
- * One page of one exercise's ranking. `gymId` null means the whole country,
- * verified lifts only. Pass `nextCursor` from the previous page to continue.
+ * One page of one exercise's ranking. `gymId` null means the whole country.
+ * Pass `nextCursor` from the previous page to continue.
  */
 export async function getExerciseLeaderboard({
   gymId = null,
@@ -733,44 +703,6 @@ export async function getNationalStrongest() {
 }
 
 /* ---------------------------------------------------------------- gyms -- */
-
-export async function getNearbyGyms({ latitude, longitude, limit = 20 }) {
-  const { data, error } = await supabase.rpc("gyms_nearby", {
-    lat: latitude,
-    lng: longitude,
-    result_limit: limit,
-  });
-
-  if (error) {
-    throw normalizeGymError(error);
-  }
-
-  return (data ?? []).map(mapGym).filter(Boolean);
-}
-
-/** Every public centre inside a map viewport, capped so a zoomed-out map stays sane. */
-export async function getGymsInBounds({
-  minLatitude,
-  maxLatitude,
-  minLongitude,
-  maxLongitude,
-  limit = 300,
-}) {
-  const { data, error } = await supabase
-    .from(GYM_TABLE)
-    .select(GYM_SELECT_FIELDS)
-    .gte("latitude", minLatitude)
-    .lte("latitude", maxLatitude)
-    .gte("longitude", minLongitude)
-    .lte("longitude", maxLongitude)
-    .limit(limit);
-
-  if (error) {
-    throw normalizeGymError(error);
-  }
-
-  return (data ?? []).map(mapGym).filter(Boolean);
-}
 
 export async function getGymCount() {
   const { count, error } = await supabase
@@ -870,162 +802,6 @@ export async function setHomeGym({ userId, gymId }) {
   if (error) {
     throw normalizeGymError(error);
   }
-}
-
-/* --------------------------------------------------------- verification -- */
-
-async function signVideoUrls(lifts) {
-  const paths = [...new Set(lifts.map((lift) => lift?.videoPath).filter(Boolean))];
-
-  if (!paths.length) {
-    return lifts;
-  }
-
-  const { data, error } = await supabase.storage
-    .from(LIFT_VIDEO_BUCKET)
-    .createSignedUrls(paths, SIGNED_VIDEO_TTL_SECONDS);
-
-  if (error) {
-    console.warn("Could not sign lift video URLs:", error);
-    return lifts;
-  }
-
-  const urlByPath = new Map(
-    (data ?? [])
-      .filter((entry) => entry?.signedUrl && !entry.error)
-      .map((entry) => [entry.path, entry.signedUrl])
-  );
-
-  for (const lift of lifts) {
-    if (lift?.videoPath) {
-      lift.videoUrl = urlByPath.get(lift.videoPath) ?? null;
-    }
-  }
-
-  return lifts;
-}
-
-/** Lifts in a centre waiting for the viewer's verdict, with playable URLs. */
-export async function getVerificationQueue({ gymId }) {
-  const { data, error } = await supabase.rpc("gym_lift_verification_queue", {
-    target_gym_id: gymId,
-  });
-
-  if (error) {
-    throw normalizeGymError(error);
-  }
-
-  const lifts = (data ?? []).map(mapLiftRow).filter(Boolean);
-
-  await Promise.all([attachLiftAvatars(lifts), signVideoUrls(lifts)]);
-
-  return lifts;
-}
-
-/**
- * One vote. A reason is only kept on a rejection. Voting twice on the same
- * lift is the row already being there, which the trigger's recount already
- * covered, so 23505 is not an error here.
- */
-export async function voteOnLift({ userId, liftId, approve, reason = null }) {
-  if (!userId) {
-    throw new Error(t("gyms.errors.signInToVote"));
-  }
-
-  const { error } = await supabase.from(GYM_LIFT_VOTE_TABLE).insert({
-    lift_id: liftId,
-    voter_id: userId,
-    approve: Boolean(approve),
-    reason: approve ? null : reason ?? "other",
-  });
-
-  if (error && error.code !== "23505") {
-    throw normalizeGymError(error);
-  }
-}
-
-/**
- * Attaches a video to one of the viewer's own lifts: upload to the private
- * bucket under their own folder, point the row at it (the trigger sets the
- * status to pending and clears old votes), then ask the centre to look. The
- * request for verification is best effort - the video is attached either way.
- */
-export async function attachLiftVideo({ userId, liftId, asset }) {
-  if (!userId) {
-    throw new Error(t("gyms.errors.signInToAttach"));
-  }
-
-  if (!asset?.uri) {
-    throw new Error(t("gyms.errors.pickVideoFirst"));
-  }
-
-  const durationSeconds = toNumber(asset.duration);
-
-  // expo-image-picker reports duration in milliseconds on both platforms.
-  if (durationSeconds !== null && durationSeconds / 1000 > LIFT_VIDEO_MAX_DURATION_SECONDS + 1) {
-    throw new Error(t("gyms.errors.videoTooLong", { seconds: LIFT_VIDEO_MAX_DURATION_SECONDS }));
-  }
-
-  if (asset.fileSize && asset.fileSize > LIFT_VIDEO_MAX_BYTES) {
-    throw new Error(t("gyms.errors.videoTooLarge"));
-  }
-
-  const response = await fetch(asset.uri);
-
-  if (!response.ok) {
-    throw new Error(t("gyms.errors.videoUnreadable"));
-  }
-
-  const buffer = await response.arrayBuffer();
-
-  if (!buffer.byteLength) {
-    throw new Error(t("gyms.errors.videoEmpty"));
-  }
-
-  if (buffer.byteLength > LIFT_VIDEO_MAX_BYTES) {
-    throw new Error(t("gyms.errors.videoTooLarge"));
-  }
-
-  const isQuickTime = /\.mov$/i.test(asset.fileName ?? asset.uri ?? "");
-  const contentType = asset.mimeType ?? (isQuickTime ? "video/quicktime" : "video/mp4");
-  const extension = contentType === "video/quicktime" ? "mov" : "mp4";
-  const videoPath = `${userId}/${liftId}.${extension}`;
-
-  const { error: uploadError } = await supabase.storage
-    .from(LIFT_VIDEO_BUCKET)
-    .upload(videoPath, buffer, { contentType, upsert: true });
-
-  if (uploadError) {
-    throw normalizeGymError(uploadError);
-  }
-
-  const { error: updateError } = await supabase
-    .from(GYM_LIFT_TABLE)
-    .update({ video_path: videoPath, updated_at: new Date().toISOString() })
-    .eq("id", liftId)
-    .eq("user_id", userId);
-
-  if (updateError) {
-    throw normalizeGymError(updateError);
-  }
-
-  let notified = 0;
-
-  try {
-    const { data, error } = await supabase.rpc("request_lift_verification", {
-      target_lift_id: liftId,
-    });
-
-    if (error) {
-      throw error;
-    }
-
-    notified = toNumber(data) ?? 0;
-  } catch (error) {
-    console.warn("Could not ask the centre to verify the lift:", error);
-  }
-
-  return { videoPath, notified };
 }
 
 /* -------------------------------------------------------- activity tiles -- */

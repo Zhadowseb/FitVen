@@ -8,8 +8,35 @@ export const weightliftingSchemaSql = `
       default_visible_columns TEXT,
       official INTEGER NOT NULL DEFAULT 0,
       is_custom INTEGER NOT NULL DEFAULT 0,
-      custom_muscle_group_keys TEXT
+      custom_muscle_group_keys TEXT,
+      -- A custom exercise's cloud half is public.custom_exercise, not the
+      -- catalog: cloud_exercise_id above is the catalog's id and stays null on
+      -- a custom row. No owner column - this database belongs to one user, so
+      -- every custom row in it is theirs; a copy of somebody else's is marked
+      -- by source_exercise_id. The list in db.js (EXERCISE_EXTRA_COLUMNS) is
+      -- the same columns for an existing install.
+      cloud_custom_exercise_id INTEGER,
+      is_public INTEGER NOT NULL DEFAULT 0,
+      source_exercise_id INTEGER,
+      description TEXT,
+      steps TEXT,
+      equipment TEXT,
+      weight_mode TEXT NOT NULL DEFAULT 'total',
+      video_path TEXT,
+      poster_path TEXT,
+      video_duration_ms INTEGER,
+      custom_needs_upload INTEGER NOT NULL DEFAULT 0,
+      cloud_updated_at TEXT
   );
+
+  -- An exercise is looked up in the catalog by name without regard to case
+  -- (name = ? COLLATE NOCASE), in the repository and in every join from an
+  -- exercise instance. The UNIQUE index on name compares exactly, and SQLite
+  -- cannot use it for such a lookup, so each one read the whole catalog. With
+  -- this one it is a search. db.js runs this file on every start, after it
+  -- has rebuilt an old Exercise table, so an existing install gets it too.
+  CREATE INDEX IF NOT EXISTS exercise_name_nocase_idx
+  ON Exercise(name COLLATE NOCASE);
 
   CREATE TABLE IF NOT EXISTS Exercise_Column_Preference (
       exercise_column_preference_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -17,6 +44,10 @@ export const weightliftingSchemaSql = `
       cloud_exercise_id INTEGER,
       exercise_name TEXT NOT NULL,
       visible_columns TEXT NOT NULL,
+      -- 'total' | 'per_side': how this user writes a catalog exercise's
+      -- weight, so the choice follows them to a new phone. NULL when never
+      -- chosen. A custom exercise keeps it in Exercise.weight_mode instead.
+      weight_mode TEXT,
       needs_sync INTEGER NOT NULL DEFAULT 1,
       updated_at TEXT NOT NULL DEFAULT (datetime('now')),
       UNIQUE(user_id, exercise_name)
@@ -38,6 +69,10 @@ export const weightliftingSchemaSql = `
       visible_columns TEXT,
       note TEXT,
       done INTEGER NOT NULL DEFAULT 0,
+      -- 'total' | 'per_side': how this workout's weights for the exercise are
+      -- written (@utils/weightMode). Copied from Exercise.weight_mode when the
+      -- exercise is added; NULL, from before the column, means total.
+      weight_mode TEXT,
       needs_sync INTEGER NOT NULL DEFAULT 1
   );
 
@@ -78,6 +113,10 @@ export const weightliftingSchemaSql = `
       set_type TEXT NOT NULL DEFAULT 'working',
       amrap_target INTEGER,
       note TEXT,
+      -- 1 when pause is the rest the app counted after the set was ticked off
+      -- (none was written), not a rest somebody planned. It is a record only:
+      -- never counted down, never carried to a new set (Utils/restCountUp.js).
+      rest_counted INTEGER NOT NULL DEFAULT 0,
       needs_sync INTEGER NOT NULL DEFAULT 1
   );
 

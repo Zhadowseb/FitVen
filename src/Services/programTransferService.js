@@ -1,4 +1,7 @@
+import { normalizeSetDecimal } from "@utils/setDecimals";
 import { amrapFlagFor, resolveSetType } from "@utils/setTypes";
+import { STARTED_FROM } from "@utils/startedFrom";
+import { normalizeInstanceWeightMode } from "@utils/weightMode";
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
@@ -323,7 +326,8 @@ async function getProgramExportTables(db, programId) {
           e.sets,
           e.visible_columns,
           e.note,
-          e.done
+          e.done,
+          e.weight_mode
        FROM Exercise_Instance e
        JOIN Workout_Type_Instance w ON w.workout_id = e.workout_type_instance_id
        JOIN Day d ON d.day_id = w.day_id
@@ -340,7 +344,9 @@ async function getProgramExportTables(db, programId) {
           s.exercise_instance_id,
           s.set_number,
           s.personal_record,
-          s.pause,
+          -- A rest the app counted is a record, not part of the program
+          -- (@utils/restCountUp): the file carries planned rests only.
+          CASE WHEN COALESCE(s.rest_counted, 0) = 1 THEN NULL ELSE s.pause END AS pause,
           s.rpe,
           s.weight,
           s.rm_percentage,
@@ -672,6 +678,8 @@ async function insertImportedProgram(db, payload) {
       dayIdMap.set(getRowId(day), result.lastInsertRowId);
     }
 
+    // Every workout of an imported program is a program workout, whatever the
+    // exported one was started from - the file does not carry that anyway.
     for (const workout of workouts) {
       const result = await db.runAsync(
         `INSERT INTO Workout_Type_Instance (
@@ -689,8 +697,9 @@ async function insertImportedProgram(db, payload) {
           is_active,
           original_start_time,
           timer_start,
-          elapsed_time
-        ) VALUES (NULL, NULL, ?, ?, NULL, ?, ?, ?, ?, ?, 1, 0, ?, NULL, ?);`,
+          elapsed_time,
+          started_from
+        ) VALUES (NULL, NULL, ?, ?, NULL, ?, ?, ?, ?, ?, 1, 0, ?, NULL, ?, ?);`,
         sqliteParams([
           createLocalUuid(),
           createNextSyncVersion(),
@@ -701,6 +710,7 @@ async function insertImportedProgram(db, payload) {
           toBooleanInt(workout.done),
           toIntegerOrNull(workout.original_start_time),
           toIntegerOrNull(workout.elapsed_time) ?? 0,
+          STARTED_FROM.PROGRAM,
         ])
       );
 
@@ -722,8 +732,9 @@ async function insertImportedProgram(db, payload) {
           visible_columns,
           note,
           done,
+          weight_mode,
           needs_sync
-        ) VALUES (NULL, NULL, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, 1);`,
+        ) VALUES (NULL, NULL, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, 'total'), 1);`,
         sqliteParams([
           createLocalUuid(),
           createNextSyncVersion(),
@@ -738,6 +749,8 @@ async function insertImportedProgram(db, payload) {
           normalizeVisibleColumns(exercise.visible_columns),
           normalizeText(exercise.note),
           toBooleanInt(exercise.done),
+          // A file from before 4d has none: its weights were totals.
+          normalizeInstanceWeightMode(exercise.weight_mode),
         ])
       );
 
@@ -779,8 +792,9 @@ async function insertImportedProgram(db, payload) {
           ),
           toBooleanInt(set.personal_record),
           toIntegerOrNull(set.pause),
-          toIntegerOrNull(set.rpe),
-          toIntegerOrNull(set.weight),
+          // Weight and RPE have decimals (102.5 kg, RPE 8.5); the rest are whole.
+          normalizeSetDecimal(set.rpe),
+          normalizeSetDecimal(set.weight),
           toIntegerOrNull(set.rm_percentage),
           toIntegerOrNull(set.reps),
           toBooleanInt(set.done),

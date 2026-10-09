@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The dot of the set being done: larger, and ringed. Added to the row with
+     RemoteViews.addView, so its layout params are for that LinearLayout. -->
+<ImageView xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="12dp"
+  android:layout_height="12dp"
+  android:layout_marginStart="4dp"
+  android:importantForAccessibility="no"
+  android:src="@drawable/live_workout_dot_now" />

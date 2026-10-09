@@ -6,6 +6,7 @@ import styles, { TILE_GAP, TILE_SIZE } from "./CalendarWeekViewStyle";
 import ChevronLeft from "../../../../Resources/Icons/UI-icons/ChevronLeft";
 import ChevronRight from "../../../../Resources/Icons/UI-icons/ChevronRight";
 import { ThemedText } from "../../../../Resources/ThemedComponents";
+import { workoutDisplayName } from "@utils/workoutTypeLabel";
 
 // Keys under home.weekdays, Monday first.
 const WEEKDAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
@@ -131,7 +132,7 @@ function DayRow({ day, index, isLast, contentWidth, onMeasure, palette, onOpenWo
               setColor={single?.completed ? palette.title : palette.bodyText}
               numberOfLines={1}
             >
-              {single?.workout?.label ??
+              {workoutDisplayName(single?.workout?.label, t, single?.workout?.workout_type) ??
                 single?.iconLabel ??
                 t("calendar.weekView.workout")}
             </ThemedText>

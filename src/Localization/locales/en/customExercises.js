@@ -1,0 +1,118 @@
+// Exercises people have made and shared: Explore's library and its row, plus
+// the words every screen about a shared exercise uses - the tags, the sorts,
+// "{n} users". Keep in step with ../da/customExercises.js.
+export default {
+  users: { one: "{value} user", other: "{value} users" },
+  you: "You",
+  yourGym: "your centre",
+  noVideo: "No video",
+  equipment: {
+    barbell: "Barbell",
+    dumbbell: "Dumbbells",
+    machine: "Machine",
+    cable: "Cable",
+    kettlebell: "Kettlebell",
+    band: "Band",
+    none: "No equipment",
+    other: "Other equipment",
+  },
+  weightMode: {
+    total: "Total weight",
+    perSide: "Per side",
+    bodyweight: "Bodyweight",
+  },
+  sorts: {
+    popular: "Most used",
+    newest: "Newest",
+    gym: "In your centre",
+    following: "People you follow",
+    video: "Has video",
+    saved: "Saved",
+  },
+  // The line under each sort in the sort sheet.
+  sortHints: {
+    popular: "Added by the most people",
+    newest: "Most recently shared first",
+    gym: "What people in your centre use, first",
+    following: "Only ones made by people you follow",
+    video: "Only exercises with a video",
+    saved: "The ones you saved for later",
+  },
+  someone: "A FitVen user",
+  // Read out after the name, so they start in lower case.
+  madeBy: "made by {name}",
+  madeByYou: "made by you",
+  withVideo: "with a video",
+  videoSeconds: { one: "{value}-second video", other: "{value}-second video" },
+  inYourExercises: "added to your exercises",
+  // "Add" on a card: a copy in your own exercises.
+  add: "Add",
+  added: "Added",
+  addA11y: "Add {name} to your exercises",
+  addedA11y: "{name} is in your exercises",
+  addedToast: "{name} was added to your exercises",
+  nameTaken: "You already have an exercise called “{name}”",
+  addFailed: "The exercise couldn't be added. Try again.",
+  // Explore's library, screen 1a.
+  library: {
+    searchPlaceholder: { one: "Search {value} exercise", other: "Search {value} exercises" },
+    searchFallback: "Search exercises",
+    clearSearch: "Clear the search",
+    sortEyebrow: "Sort",
+    sortTitle: "Show exercises by",
+    sortA11y: "Sort by: {sort}",
+    filter: "Filter",
+    filterTitle: "Muscle group",
+    filterA11y: "Muscle group: {group}",
+    filterNoneA11y: "Filter by muscle group",
+    reset: "Reset",
+    resetFilter: "Reset filter",
+    resultCount: { one: "{value} exercise", other: "{value} exercises" },
+    resultCountInGroup: {
+      one: "{value} exercise in {group}",
+      other: "{value} exercises in {group}",
+    },
+    rowHint: "Opens the exercise",
+    chooseGym: {
+      title: "Choose your centre",
+      body: "Then what people in your centre use comes first.",
+    },
+    empty: {
+      title: "Be the first to share an exercise",
+      body: "This is where you'll find exercises people have made themselves, with a video and the steps. Share one of yours so others can start using it.",
+      cta: "Share one of your exercises",
+      note: "You choose what you share. Your sets are never shared.",
+    },
+    noResults: {
+      query: "No exercises match “{query}”",
+      group: "No exercises for {group} yet",
+      queryInGroup: "No {group} exercises match “{query}”",
+      body: "Try another word or muscle group, or reset the filter.",
+    },
+    saved: {
+      title: "You haven't saved any exercises yet",
+      body: "Tap Save on an exercise and it waits here until you're ready to try it.",
+    },
+    following: {
+      title: "Nobody you follow has shared an exercise yet",
+      body: "When they do, you'll find them here.",
+    },
+    video: {
+      title: "No exercises have a video yet",
+      body: "Exercises with a clip that shows how they're done gather here.",
+    },
+    nothing: {
+      title: "No exercises here yet",
+      body: "Try another sort, or look again in a moment.",
+    },
+    showPopular: "See the most used",
+    loadFailed: "The exercises couldn't be loaded",
+    loadFailedBody: "Check your connection and try again.",
+    loadMoreFailed: "Couldn't load more",
+    refreshFailed: "The list couldn't be refreshed",
+    invite: {
+      title: "Made an exercise yourself?",
+      action: "Share it so others can find it",
+    },
+  },
+};

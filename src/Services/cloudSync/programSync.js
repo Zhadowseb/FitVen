@@ -104,6 +104,7 @@ export async function uploadDirtyPrograms(db, userId) {
 
     await programRepository.markProgramSynced(db, {
       programId: localProgram.program_id,
+      expectedSyncVersion: localProgram.sync_version,
       cloudProgramId,
       remoteLocalProgramId,
       syncId: normalizeSyncId(syncResult.cloudRecord?.sync_id),
@@ -260,8 +261,9 @@ async function reconcileProgramsFromCloud(db, userId) {
 
       if (Number(localProgram.needs_sync) === 1) {
         if (compareEntitySyncVersions(localProgram, cloudProgram) < 0) {
-          await programRepository.updateProgramFromCloud(db, {
+          const applied = await programRepository.updateProgramFromCloud(db, {
             programId: localProgram.program_id,
+            expectedSyncVersion: localProgram.sync_version,
             cloudProgramId,
             remoteLocalProgramId: comparableCloudProgram.local_program_id,
             syncId: cloudSyncId,
@@ -271,7 +273,7 @@ async function reconcileProgramsFromCloud(db, userId) {
             startDate: comparableCloudProgram.start_date,
             status: comparableCloudProgram.status,
           });
-          downloadedCount += 1;
+          downloadedCount += applied ? 1 : 0;
         }
 
         continue;
@@ -290,6 +292,7 @@ async function reconcileProgramsFromCloud(db, userId) {
         ) {
           await programRepository.markProgramSynced(db, {
             programId: localProgram.program_id,
+            expectedSyncVersion: localProgram.sync_version,
             cloudProgramId,
             remoteLocalProgramId: comparableCloudProgram.local_program_id,
             syncId: cloudSyncId,
@@ -300,8 +303,9 @@ async function reconcileProgramsFromCloud(db, userId) {
         continue;
       }
 
-      await programRepository.updateProgramFromCloud(db, {
+      const applied = await programRepository.updateProgramFromCloud(db, {
         programId: localProgram.program_id,
+        expectedSyncVersion: localProgram.sync_version,
         cloudProgramId,
         remoteLocalProgramId: comparableCloudProgram.local_program_id,
         syncId: cloudSyncId,
@@ -311,6 +315,11 @@ async function reconcileProgramsFromCloud(db, userId) {
         startDate: comparableCloudProgram.start_date,
         status: comparableCloudProgram.status,
       });
+
+      if (!applied) {
+        // The user wrote to it since it was read, and that write goes up.
+        continue;
+      }
 
       localProgramsByCloudId.set(cloudProgramId, {
         ...localProgram,

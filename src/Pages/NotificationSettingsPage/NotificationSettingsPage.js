@@ -11,7 +11,11 @@ import { useTranslation } from "@localization";
 
 import styles from "./NotificationSettingsPageStyle";
 import { useAuth } from "../../Contexts/AuthContext";
-import { notificationService, socialService } from "../../Services";
+import {
+  liveWorkoutService,
+  notificationService,
+  socialService,
+} from "../../Services";
 import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
 import Checkmark from "../../Resources/Icons/UI-icons/Checkmark";
 import Cross from "../../Resources/Icons/UI-icons/Cross";
@@ -23,6 +27,7 @@ import {
   ThemedTitle,
   ThemedView,
 ThemedCard,
+  ThemedSwitch,
 } from "../../Resources/ThemedComponents";
 
 // Keys rather than text: a constant built at module load would be frozen in
@@ -98,6 +103,14 @@ export default function NotificationSettingsPage() {
   const [savingSourceId, setSavingSourceId] = useState(null);
   const [feedback, setFeedback] = useState("");
   const [feedbackTone, setFeedbackTone] = useState("error");
+  // This phone's own setting, so it is read whether or not anybody is signed
+  // in, and never waits for the push settings.
+  const [lockScreenEnabled, setLockScreenEnabled] = useState(null);
+  const [lockScreenSupported, setLockScreenSupported] = useState(true);
+  // { enabled, available } once read. Read apart from the push settings, so a
+  // database without the column only greys this switch out.
+  const [postLikes, setPostLikes] = useState(null);
+  const [savingPostLikes, setSavingPostLikes] = useState(false);
   const titleColor = theme.title ?? theme.text;
   const quietText = theme.iconColor ?? theme.quietText ?? theme.text;
   const cardSurface = theme.cardBackground ?? theme.background;
@@ -138,6 +151,14 @@ export default function NotificationSettingsPage() {
     setIsLoading(true);
     showFeedback("");
 
+    notificationService
+      .getPostLikeNotificationSetting({ user })
+      .then(setPostLikes)
+      .catch((error) => {
+        console.warn("Could not load the setting for likes:", error);
+        setPostLikes({ enabled: true, available: false });
+      });
+
     try {
       const [nextSettings, nextFollowingProfiles] = await Promise.all([
         notificationService.getPushNotificationSettings({ user }),
@@ -167,6 +188,53 @@ export default function NotificationSettingsPage() {
       loadSettings();
     }, [loadSettings])
   );
+
+  // Read on every visit: Live Activities can be switched off in the iPhone's
+  // own settings while this screen is away.
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
+
+      setLockScreenSupported(liveWorkoutService.isLockScreenCardSupported());
+      liveWorkoutService.getLockScreenCardEnabled().then((enabled) => {
+        if (isActive) {
+          setLockScreenEnabled(enabled);
+        }
+      });
+
+      return () => {
+        isActive = false;
+      };
+    }, [])
+  );
+
+  const toggleLockScreen = async (enabled) => {
+    setLockScreenEnabled(enabled);
+    setLockScreenEnabled(await liveWorkoutService.setLockScreenCardEnabled(enabled));
+  };
+
+  const togglePostLikes = async (enabled) => {
+    if (!user?.id || savingPostLikes || !postLikes?.available) {
+      return;
+    }
+
+    const previous = postLikes;
+    setPostLikes({ ...postLikes, enabled });
+    setSavingPostLikes(true);
+    showFeedback("");
+
+    try {
+      setPostLikes(
+        await notificationService.setPostLikeNotificationsEnabled({ user, enabled })
+      );
+    } catch (error) {
+      console.warn("Could not save the setting for likes:", error);
+      setPostLikes(previous);
+      showFeedback(t("notifications.settings.postLikesSaveFailed"));
+    } finally {
+      setSavingPostLikes(false);
+    }
+  };
 
   const selectMode = async (mode) => {
     if (!user?.id || savingMode || mode === selectedMode) {
@@ -533,6 +601,76 @@ export default function NotificationSettingsPage() {
                 )}
               </View>
             </View>
+          ) : null}
+        </ThemedCard>
+
+        <ThemedCard
+          style={[
+            styles.card,
+            styles.cardSpacing,
+            {
+              backgroundColor: cardSurface,
+              borderColor: cardBorder,
+            },
+          ]}
+        >
+          <View style={styles.toggleRow}>
+            <View style={styles.toggleCopy}>
+              <ThemedText style={styles.cardTitleText} setColor={titleColor}>
+                {t("notifications.settings.postLikesTitle")}
+              </ThemedText>
+              <ThemedText style={styles.cardBodyText} setColor={quietText}>
+                {t("notifications.settings.postLikesBody")}
+              </ThemedText>
+            </View>
+
+            <ThemedSwitch
+              accessibilityLabel={t("notifications.settings.postLikesTitle")}
+              value={postLikes?.enabled !== false}
+              disabled={!postLikes?.available || savingPostLikes}
+              onValueChange={togglePostLikes}
+            />
+          </View>
+
+          {postLikes && !postLikes.available ? (
+            <ThemedText style={styles.toggleNote} setColor={quietText}>
+              {t("notifications.settings.postLikesUnavailable")}
+            </ThemedText>
+          ) : null}
+        </ThemedCard>
+
+        <ThemedCard
+          style={[
+            styles.card,
+            styles.cardSpacing,
+            {
+              backgroundColor: cardSurface,
+              borderColor: cardBorder,
+            },
+          ]}
+        >
+          <View style={styles.toggleRow}>
+            <View style={styles.toggleCopy}>
+              <ThemedText style={styles.cardTitleText} setColor={titleColor}>
+                {t("notifications.settings.lockScreenTitle")}
+              </ThemedText>
+              <ThemedText style={styles.cardBodyText} setColor={quietText}>
+                {t("notifications.settings.lockScreenBody")}
+              </ThemedText>
+            </View>
+
+            <ThemedSwitch
+              accessibilityLabel={t("notifications.settings.lockScreenTitle")}
+              value={lockScreenEnabled === true}
+              disabled={lockScreenEnabled === null}
+              onValueChange={toggleLockScreen}
+            />
+          </View>
+
+          {lockScreenEnabled && !lockScreenSupported ? (
+            <ThemedText style={styles.toggleNote} setColor={quietText}>
+              {t("notifications.settings.lockScreenUnavailable")}
+            </ThemedText>
           ) : null}
         </ThemedCard>
 

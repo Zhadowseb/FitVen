@@ -1,499 +1,668 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Animated,
-  Platform,
   ScrollView,
   TextInput,
   TouchableOpacity,
   View,
   useColorScheme,
 } from "react-native";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import MapView, { Callout, Marker } from "react-native-maps";
-import { useTranslation } from "@localization";
+import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
+import { formatNumber, useTranslation } from "@localization";
 
 import styles from "./GymsPageStyle";
-import { useAuth } from "@contexts/AuthContext";
-import { gymService } from "@services";
+import { HeaderSkeleton, RowsSkeleton } from "./Components/GymsSkeleton";
+import LevelRow, { CountryTile, GymTile, RegionTile } from "./Components/LevelRow";
+import YourCentreCard from "./Components/YourCentreCard";
+import { categoryLeaderboardService, gymService } from "@services";
+import CategoryCard from "@resources/Components/CategoryCard/CategoryCard";
+import CategoryCardSkeleton from "@resources/Components/CategoryCard/CategoryCardSkeleton";
+import GenderSegment, { getSessionGender } from "@resources/Components/GenderSegment/GenderSegment";
+import ScopeBreadcrumbs from "@resources/Components/ScopeBreadcrumbs/ScopeBreadcrumbs";
+import {
+  countryName,
+  countryWhere,
+  regionWhere,
+} from "@resources/Components/ScopeBreadcrumbs/scopeNames";
+import { openScopeLevel } from "@resources/Components/ScopeBreadcrumbs/scopeNavigation";
 import { useGymSearch } from "@resources/Components/useGymSearch";
-import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
-import ChevronRight from "@resources/Icons/UI-icons/ChevronRight";
-import Crosshair from "@resources/Icons/UI-icons/Crosshair";
-import Expand from "@resources/Icons/UI-icons/Expand";
+import { Colors } from "@resources/GlobalStyling/colors";
+import ArrowLeft from "@resources/Icons/UI-icons/ArrowLeft";
+import Globe from "@resources/Icons/UI-icons/Globe";
 import Search from "@resources/Icons/UI-icons/Search";
-import LiftStatusPill from "@resources/Components/GymLeaderboard/LiftStatusPill";
-import RadialGlow from "@resources/Components/GymLeaderboard/RadialGlow";
-import { usePulseAnimation } from "@resources/Components/animationHooks";
-import {
-  ThemedHeader,
-  ThemedText,
-  ThemedTitle,
-  ThemedView,
-  UserAvatar,
-} from "@resources/ThemedComponents";
-import {
-  formatDistance,
-  formatWeightKg,
-  getChainColor,
-  getChainInitials,
-} from "@utils/gymUtils";
+import { ThemedStateBlock, ThemedText, ThemedView } from "@resources/ThemedComponents";
+import { DEFAULT_COUNTRY, normalizeScope, scopeKey } from "@utils/gymCategories";
 
-// Denmark, when the phone will not say where it is.
-const FALLBACK_REGION = {
-  latitude: 56.0,
-  longitude: 10.6,
-  latitudeDelta: 3.6,
-  longitudeDelta: 4.2,
-};
-const NEARBY_REGION_DELTA = 0.08;
-// A pan is a series of small movements, and onRegionChangeComplete reports
-// every one of them. Long enough to collapse a drag, short enough that the
-// pins follow the map rather than trailing it.
-const MAP_REGION_DEBOUNCE_MS = 320;
+const WORLD = { level: "world" };
+const IDLE = { status: "idle", data: null, error: "" };
+// A 36 dp button, 44 dp to the finger.
+const BACK_HIT_SLOP = { top: 4, bottom: 4, left: 4, right: 4 };
 
-// Google Maps (Android) style: inverted and desaturated, so the pins carry
-// the colour. iOS uses Apple Maps and follows userInterfaceStyle instead.
-const DARK_MAP_STYLE = [
-  { elementType: "geometry", stylers: [{ color: "#14161c" }] },
-  { elementType: "labels.text.fill", stylers: [{ color: "#868c99" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#0a0b0f" }] },
-  { featureType: "poi", stylers: [{ visibility: "off" }] },
-  { featureType: "transit", stylers: [{ visibility: "off" }] },
-  { featureType: "road", elementType: "geometry", stylers: [{ color: "#242830" }] },
-  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#0f1116" }] },
-  { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#6e7480" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#0a0b0f" }] },
-  { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#121419" }] },
-  { featureType: "administrative", elementType: "geometry.stroke", stylers: [{ color: "#2b2f38" }] },
-];
-
-// Your own centre pulses in the accent and keeps its chain colour in the
-// middle, so the pin says both "yours" and which chain it is.
-function HomeGymPin({ theme, chainColor }) {
-  const { scale, opacity } = usePulseAnimation(true);
-
-  return (
-    <View style={styles.pinShell}>
-      <Animated.View
-        style={[
-          styles.pinPulse,
-          { backgroundColor: withAlpha(theme.primary, 0.45), opacity, transform: [{ scale }] },
-        ]}
-      />
-      <View style={[styles.pin, styles.pinHome, { backgroundColor: chainColor, borderColor: theme.primary }]} />
-    </View>
-  );
+function errorText(error, fallback) {
+  return error instanceof Error && error.message ? error.message : fallback;
 }
 
 /**
- * Where you are standing: a green dot in a white ring, inside a soft halo,
- * drawn above the centre pins.
+ * Screens 4b, 4a and 4c: centres by all countries, one country and one
+ * region - one screen, the level in its `scope` param, and every level below
+ * pushed on top so back goes one level up.
  *
- * react-native-maps takes one snapshot of a marker's custom child and then
- * stops watching it. With tracksViewChanges false from the very first render
- * that snapshot can be taken before the dot has laid out, and the marker then
- * stays invisible for good - which is what happened here. It tracks for a
- * moment, stops (tracking every frame for one marker forever is what the flag
- * exists to prevent), and starts again when the position moves.
- */
-function MyLocationMarker({ position, theme }) {
-  const [tracksViewChanges, setTracksViewChanges] = useState(true);
-
-  useEffect(() => {
-    setTracksViewChanges(true);
-    const timeout = setTimeout(() => setTracksViewChanges(false), 1200);
-
-    return () => clearTimeout(timeout);
-  }, [position.latitude, position.longitude]);
-
-  return (
-    <Marker
-      coordinate={{ latitude: position.latitude, longitude: position.longitude }}
-      anchor={{ x: 0.5, y: 0.5 }}
-      tracksViewChanges={tracksViewChanges}
-      zIndex={20}
-    >
-      <View style={styles.mePinShell}>
-        <View style={[styles.mePinHalo, { backgroundColor: withAlpha(theme.secondary, 0.24) }]} />
-        <View style={[styles.pin, styles.pinMe, { backgroundColor: theme.secondary, borderColor: "#FFFFFF" }]} />
-      </View>
-    </Marker>
-  );
-}
-
-/**
- * The card that opens over a pin: quick facts about the centre and a way on
- * to the centre itself.
+ * Without a scope, which is how Explore and Home open it, it first finds the
+ * country to show: the one the phone is in, else the one your centre is in,
+ * else Denmark - or all countries, when that country has no lifts on the list.
+ * The level it lands on goes into its own params, so from there it is a level
+ * like any other.
  *
- * Android does not deliver touches to a callout's children, only to the
- * callout, so the last row is a button to look at and the whole card is what
- * you press. That is also why it is a callout rather than a sheet: it points
- * at the pin it belongs to.
+ * Every level: search inside it, your centre, where you are, and All / Men /
+ * Women over the four categories. Then the regions of a country, or the
+ * centres of a region, most lifters first. All countries is only the list.
  */
-function GymCallout({ gym, onOpen }) {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme] ?? Colors.light;
-  const { t } = useTranslation();
-  const quietText = theme.quietText ?? theme.text;
-  const isLight = colorScheme === "light";
-  const chainColor = getChainColor(gym.chain);
-  const meta = [
-    gym.city,
-    gym.distanceM !== null && gym.distanceM !== undefined ? formatDistance(gym.distanceM) : null,
-    gym.memberCount ? t("gyms.callout.memberCount", { count: gym.memberCount }) : null,
-  ]
-    .filter(Boolean)
-    .join(" · ");
-
-  return (
-    <Callout tooltip onPress={onOpen}>
-      <View style={styles.calloutWrap}>
-        <View
-          style={[
-            styles.calloutCard,
-            { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder },
-          ]}
-        >
-          <ThemedText style={styles.calloutEyebrow} setColor={chainColor} numberOfLines={1}>
-            {gym.chain}
-          </ThemedText>
-          <ThemedText style={styles.calloutTitle} setColor={theme.title} numberOfLines={2}>
-            {gym.shortName}
-          </ThemedText>
-          {meta ? (
-            <ThemedText style={styles.calloutMeta} setColor={quietText} numberOfLines={2}>
-              {meta}
-            </ThemedText>
-          ) : null}
-
-          <View style={[styles.calloutDivider, { backgroundColor: theme.hairline }]} />
-
-          <View style={styles.calloutAction}>
-            <ThemedText style={styles.calloutActionText} setColor={theme.primaryText}>
-              {t("gyms.callout.openCentre")}
-            </ThemedText>
-            <ChevronRight width={15} height={15} color={theme.primaryText} />
-          </View>
-        </View>
-
-        <View
-          style={[
-            styles.calloutArrow,
-            { borderTopColor: isLight ? theme.cardBackground : theme.cardBorder },
-          ]}
-        />
-      </View>
-    </Callout>
-  );
-}
-
 export default function GymsPage() {
   const navigation = useNavigation();
+  const route = useRoute();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const { t } = useTranslation();
-  const { user } = useAuth();
-  const mapRef = useRef(null);
-  const [position, setPosition] = useState(null);
-  const [nearby, setNearby] = useState([]);
-  const [visibleGyms, setVisibleGyms] = useState([]);
-  const [strongest, setStrongest] = useState([]);
-  const [gymCount, setGymCount] = useState(null);
-  const [homeGym, setHomeGym] = useState(null);
-  // The centres the viewer has actually trained in, most often first. Empty
-  // until a workout has been matched to one, and then the card is hidden.
-  const [myGyms, setMyGyms] = useState([]);
-  const [query, setQuery] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
-  const { results: searchResults, isSearching } = useGymSearch(query, setErrorMessage);
-  const [showAllNearby, setShowAllNearby] = useState(false);
-  const [isMapExpanded, setIsMapExpanded] = useState(false);
-  const [isLocating, setIsLocating] = useState(false);
-  const [locationNotice, setLocationNotice] = useState("");
-  const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
-  const cardSurface = theme.cardBackground ?? theme.background;
-  const cardBorder = theme.cardBorder ?? theme.border ?? theme.iconColor;
-  const isLight = colorScheme === "light";
-  const mutedStrong = theme.mutedStrong;
-  const goldRingColor = theme.record;
+  const params = route.params ?? {};
+  const scopeParam = params.scope ?? null;
+  // One string per level, so a new params object naming the same level is not
+  // a new level and does not load it again.
+  const levelKey = scopeParam ? scopeKey(scopeParam) : null;
+  const scope = useMemo(() => (scopeParam ? normalizeScope(scopeParam) : null), [levelKey]);
+  const level = scope?.level ?? null;
+  const isWorld = level === "world";
+  const hasCategories = level === "country" || level === "region";
+  const fromLocation = Boolean(params.fromLocation);
+  const locationCountry = typeof params.locationCountry === "string" ? params.locationCountry : null;
 
-  const load = useCallback(async () => {
-    if (!user?.id) {
-      setIsLoading(false);
-      setErrorMessage(t("gyms.list.signInToSee"));
+  const [gender, setGender] = useState(getSessionGender);
+  const [summary, setSummary] = useState(IDLE);
+  const [cards, setCards] = useState(IDLE);
+  const [homeGym, setHomeGym] = useState(null);
+  const [query, setQuery] = useState("");
+  const [searchError, setSearchError] = useState("");
+  const searchInLevel = useCallback(
+    (text) => categoryLeaderboardService.searchGyms({ query: text, scope: scope ?? WORLD }),
+    [scope]
+  );
+  const { results: searchResults, isSearching } = useGymSearch(query, setSearchError, {
+    search: searchInLevel,
+    searchKey: levelKey ?? "start",
+  });
+  const surface = { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder };
+
+  /* ------------------------------------------------------ where to open -- */
+
+  // All countries fetched to decide where to open is handed to the level
+  // when that is where it opens, rather than asked for twice.
+  const primedSummaryRef = useRef(null);
+
+  useEffect(() => {
+    if (scopeParam) {
+      return undefined;
+    }
+
+    let isCancelled = false;
+
+    (async () => {
+      const [start, world] = await Promise.all([
+        categoryLeaderboardService.resolveStartCountry().catch(() => null),
+        categoryLeaderboardService.getScopeSummary({ scope: WORLD }).catch(() => null),
+      ]);
+
+      if (isCancelled) {
+        return;
+      }
+
+      const country = start?.country ?? DEFAULT_COUNTRY;
+      const fromPhone = Boolean(start?.fromLocation);
+      const isListed = (world?.countries ?? []).some((entry) => entry.code === country);
+
+      // Without the list - not set up yet, or it failed - the country is the
+      // better guess: it says so itself, and search still works there.
+      if (!world || world.unavailable || isListed) {
+        navigation.setParams({
+          scope: { level: "country", country },
+          fromLocation: fromPhone,
+          locationCountry: fromPhone ? country : null,
+        });
+      } else {
+        primedSummaryRef.current = { key: scopeKey(WORLD), data: world };
+        navigation.setParams({
+          scope: WORLD,
+          fromLocation: false,
+          locationCountry: fromPhone ? country : null,
+        });
+      }
+    })();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [navigation, scopeParam]);
+
+  /* -------------------------------------------------------------- loads -- */
+
+  // Only the newest answer may write: a slow one for the gender before must
+  // not land over the one for the gender chosen now.
+  const summaryRequestRef = useRef(0);
+  const cardsRequestRef = useRef(0);
+
+  const loadSummary = useCallback(async () => {
+    if (!scope) {
       return;
     }
 
-    setIsLoading(true);
-    setErrorMessage("");
+    summaryRequestRef.current += 1;
+
+    const request = summaryRequestRef.current;
+    const primed = primedSummaryRef.current;
+
+    if (primed && primed.key === levelKey) {
+      primedSummaryRef.current = null;
+      setSummary({ status: "ready", data: primed.data, error: "" });
+      return;
+    }
+
+    setSummary({ status: "loading", data: null, error: "" });
 
     try {
-      // A map may show a slightly old fix; matching a workout to a centre may
-      // not, which is why only this screen asks for the fallback.
-      const currentPosition = await gymService.getCurrentPosition({
-        requestPermission: true,
-        lastKnownMaxAgeMs: gymService.MAP_LAST_KNOWN_MAX_AGE_MS,
-      });
-      const origin = currentPosition ?? { latitude: FALLBACK_REGION.latitude, longitude: FALLBACK_REGION.longitude };
+      const data = await categoryLeaderboardService.getScopeSummary({ scope });
 
-      setPosition(currentPosition);
+      if (request === summaryRequestRef.current) {
+        setSummary({ status: "ready", data: data ?? null, error: "" });
+      }
+    } catch (error) {
+      if (request === summaryRequestRef.current) {
+        setSummary({ status: "error", data: null, error: errorText(error, t("gyms.levels.loadFailed")) });
+      }
+    }
+  }, [levelKey, scope, t]);
 
-      const [nearbyResult, strongestResult, countResult, homeResult, myGymsResult] =
-        await Promise.allSettled([
-          gymService.getNearbyGyms({ latitude: origin.latitude, longitude: origin.longitude, limit: 30 }),
-          gymService.getNationalStrongest(),
-          gymService.getGymCount(),
-          gymService.getMyHomeGym(),
-          gymService.getMyGyms(),
-        ]);
-
-      if (nearbyResult.status === "rejected") {
-        throw nearbyResult.reason;
+  const loadCards = useCallback(
+    async ({ silent = false } = {}) => {
+      if (!scope || !hasCategories) {
+        return;
       }
 
-      setNearby(nearbyResult.value);
-      setVisibleGyms(nearbyResult.value);
-      setStrongest(strongestResult.status === "fulfilled" ? strongestResult.value : []);
-      setGymCount(countResult.status === "fulfilled" ? countResult.value : null);
-      setHomeGym(homeResult.status === "fulfilled" ? homeResult.value : null);
-      setMyGyms(myGymsResult.status === "fulfilled" ? myGymsResult.value : []);
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : t("gyms.list.loadFailed"));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [t, user]);
+      cardsRequestRef.current += 1;
+
+      const request = cardsRequestRef.current;
+
+      // The cards already up stay up, dimmed, until the new ones are in, so a
+      // gender change does not make the page jump.
+      if (!silent) {
+        setCards((current) => ({ status: "loading", data: current.data, error: "" }));
+      }
+
+      try {
+        const data = await categoryLeaderboardService.getCategoryCards({ scope, gender });
+
+        if (request === cardsRequestRef.current) {
+          setCards({ status: "ready", data: data ?? null, error: "" });
+        }
+      } catch (error) {
+        if (request === cardsRequestRef.current) {
+          setCards((current) =>
+            silent && current.data
+              ? current
+              : { status: "error", data: null, error: errorText(error, t("gyms.levels.cardsFailed")) }
+          );
+        }
+      }
+    },
+    [gender, hasCategories, scope, t]
+  );
+
+  useEffect(() => {
+    loadSummary();
+  }, [loadSummary]);
+
+  useEffect(() => {
+    loadCards();
+  }, [loadCards]);
+
+  // Back on this screen: the gender may have been changed on a category page,
+  // and your centre in its sheet. The first focus is the loads above.
+  const hasFocusedRef = useRef(false);
+  const latestRef = useRef({});
+
+  latestRef.current = { gender, loadCards };
 
   useFocusEffect(
     useCallback(() => {
-      load();
-    }, [load])
-  );
-
-  const initialRegion = useMemo(() => {
-    if (position) {
-      return {
-        latitude: position.latitude,
-        longitude: position.longitude,
-        latitudeDelta: NEARBY_REGION_DELTA,
-        longitudeDelta: NEARBY_REGION_DELTA,
-      };
-    }
-
-    if (homeGym?.latitude && homeGym?.longitude) {
-      return {
-        latitude: homeGym.latitude,
-        longitude: homeGym.longitude,
-        latitudeDelta: NEARBY_REGION_DELTA,
-        longitudeDelta: NEARBY_REGION_DELTA,
-      };
-    }
-
-    return FALLBACK_REGION;
-  }, [homeGym, position]);
-
-  // The chains actually on screen, so the legend explains the pins in front
-  // of the user rather than every chain in the country. One chain alone needs
-  // no legend, and the row hides itself.
-  const visibleChains = useMemo(() => {
-    const colorByChain = new Map();
-
-    for (const gym of visibleGyms) {
-      if (gym.chain && !colorByChain.has(gym.chain)) {
-        colorByChain.set(gym.chain, getChainColor(gym.chain));
-      }
-    }
-
-    return [...colorByChain.entries()]
-      .map(([chain, color]) => ({ chain, color }))
-      .sort((left, right) => left.chain.localeCompare(right.chain));
-  }, [visibleGyms]);
-
-  // onRegionChangeComplete fires for every nudge, and each one was a request.
-  // A short wait collapses a series of small pans into one, and only the last
-  // answer is allowed to write - the same rule the centre search follows, for
-  // the same reason.
-  const regionRequestRef = useRef(0);
-  const regionTimeoutRef = useRef(null);
-
-  const handleRegionChange = (region) => {
-    if (regionTimeoutRef.current) {
-      clearTimeout(regionTimeoutRef.current);
-    }
-
-    regionTimeoutRef.current = setTimeout(async () => {
-      regionRequestRef.current += 1;
-
-      const request = regionRequestRef.current;
-
-      try {
-        const gyms = await gymService.getGymsInBounds({
-          minLatitude: region.latitude - region.latitudeDelta / 2,
-          maxLatitude: region.latitude + region.latitudeDelta / 2,
-          minLongitude: region.longitude - region.longitudeDelta / 2,
-          maxLongitude: region.longitude + region.longitudeDelta / 2,
+      gymService
+        .getMyHomeGym()
+        .then(setHomeGym)
+        .catch(() => {
+          // A shortcut; the level is whole without it.
         });
 
-        if (request === regionRequestRef.current) {
-          setVisibleGyms(gyms);
+      if (hasFocusedRef.current) {
+        const sessionGender = getSessionGender();
+
+        if (sessionGender !== latestRef.current.gender) {
+          setGender(sessionGender);
+        } else {
+          latestRef.current.loadCards({ silent: true });
         }
-      } catch {
-        // The pins already on the map are still right; nothing to tell the user.
       }
-    }, MAP_REGION_DEBOUNCE_MS);
+
+      hasFocusedRef.current = true;
+    }, [])
+  );
+
+  /* -------------------------------------------------------------- names -- */
+
+  const data = summary.data;
+  const countryCode = scope?.country ?? null;
+  const countryLabel = countryCode ? countryName(t, countryCode) : null;
+  const region =
+    level === "region"
+      ? {
+          key: scope.region,
+          name: data?.region?.name ?? params.regionName ?? null,
+          where: data?.region?.where ?? null,
+        }
+      : null;
+  const where =
+    level === "region" ? regionWhere(t, region) : countryCode ? countryWhere(t, countryCode) : null;
+  const levelTitle = level === "region" ? region.name : countryLabel;
+  const levelGymCount = level === "region" ? data?.region?.gymCount : data?.country?.gymCount;
+  const centreCount = (count) =>
+    t("gyms.counts.centres", { count: Number(count) || 0, value: formatNumber(Number(count) || 0) });
+  const countsLine = (gymCount, lifterCount) =>
+    [
+      gymCount === null || gymCount === undefined ? null : centreCount(gymCount),
+      lifterCount === null || lifterCount === undefined
+        ? null
+        : t("gyms.counts.lifters", { count: Number(lifterCount) || 0, value: formatNumber(Number(lifterCount) || 0) }),
+    ]
+      .filter(Boolean)
+      .join(" · ");
+  const subtitle =
+    level === "country" && fromLocation
+      ? t("gyms.fromLocation")
+      : levelGymCount === null || levelGymCount === undefined
+        ? null
+        : centreCount(levelGymCount);
+  const isUnavailable = Boolean(data?.unavailable) || Boolean(cards.data?.unavailable);
+  const searchPlaceholder =
+    level === "region" && where ? t("gyms.searchIn", { where }) : t("gyms.search");
+
+  /* --------------------------------------------------------- navigation -- */
+
+  const openGym = (gym) => navigation.navigate("GymLeaderboardPage", { gym_id: gym.id });
+
+  const openCountry = (code) =>
+    navigation.push("GymsPage", { scope: { level: "country", country: code }, locationCountry });
+
+  const openRegion = (entry) =>
+    navigation.push("GymsPage", {
+      scope: { level: "region", country: countryCode, region: entry.key },
+      regionName: entry.name ?? null,
+      locationCountry,
+    });
+
+  // The level's name goes along, so the category page can say where it is
+  // before it has asked anything.
+  const openCategory = (category) =>
+    navigation.navigate("CategoryLeaderboardPage", { category, scope, gender, scopeName: levelTitle });
+
+  const crumbs = hasCategories
+    ? [
+        {
+          key: "world",
+          label: t("gyms.allCountries"),
+          onPress: () => openScopeLevel(navigation, WORLD, { locationCountry }),
+        },
+        {
+          key: "country",
+          label: countryLabel,
+          onPress:
+            level === "region"
+              ? () => openScopeLevel(navigation, { level: "country", country: countryCode }, { locationCountry })
+              : undefined,
+        },
+        ...(level === "region" ? [{ key: "region", label: region.name }] : []),
+      ]
+    : [];
+
+  /* ------------------------------------------------------------ pieces -- */
+
+  const sectionHead = (label, hint = null) => (
+    <View style={styles.sectionRow}>
+      <ThemedText style={styles.sectionLabel} setColor={theme.quietText} numberOfLines={1}>
+        {label}
+      </ThemedText>
+      {hint ? (
+        <ThemedText style={styles.sectionHint} setColor={theme.quietText} numberOfLines={1}>
+          {hint}
+        </ThemedText>
+      ) : null}
+    </View>
+  );
+
+  const emptyLine = (title, body = null) => (
+    <View style={styles.emptyLine}>
+      <ThemedText style={styles.emptyTitle} setColor={theme.title}>
+        {title}
+      </ThemedText>
+      {body ? (
+        <ThemedText style={styles.emptyBody} setColor={theme.quietText}>
+          {body}
+        </ThemedText>
+      ) : null}
+    </View>
+  );
+
+  const loadError = (message, onRetry) => (
+    <ThemedStateBlock
+      variant="error"
+      style={styles.stateBlock}
+      title={t("gyms.levels.unavailableTitle")}
+      message={message}
+      actionLabel={t("common.retry")}
+      onAction={onRetry}
+    />
+  );
+
+  // Before the migration: nothing to rank by and no regions yet. Search and
+  // your centre above still work, so the page says only what is missing.
+  const notYet = (
+    <View style={[styles.notice, surface]}>
+      <ThemedText style={styles.noticeTitle} setColor={theme.title}>
+        {t("gyms.levels.notYetTitle")}
+      </ThemedText>
+      <ThemedText style={styles.noticeBody} setColor={theme.quietText}>
+        {t("gyms.levels.notYetBody")}
+      </ThemedText>
+    </View>
+  );
+
+  const renderResults = () => (
+    <View style={styles.section}>
+      {sectionHead(t("gyms.results.title"), t("gyms.results.count", { count: searchResults.length }))}
+      <View style={[styles.listCard, surface]}>
+        {searchError
+          ? emptyLine(t("gyms.searchFailed"), searchError === t("gyms.searchFailed") ? null : searchError)
+          : searchResults.length === 0
+            ? emptyLine(t("gyms.results.noMatchTitle"), t("gyms.results.noMatchBody"))
+            : searchResults.map((gym, index) => (
+                <LevelRow
+                  key={gym.id}
+                  tile={<GymTile imageUrl={gym.imageUrl} chain={gym.chain} />}
+                  title={gym.shortName ?? gym.name}
+                  meta={[gym.chain, gym.city].filter(Boolean).join(" · ")}
+                  onPress={() => openGym(gym)}
+                  divider={index < searchResults.length - 1}
+                />
+              ))}
+      </View>
+    </View>
+  );
+
+  const renderCards = () => {
+    if (cards.status === "error") {
+      return (
+        <View style={[styles.notice, surface]}>
+          <ThemedText style={styles.noticeTitle} setColor={theme.title}>
+            {t("gyms.levels.cardsFailed")}
+          </ThemedText>
+          {cards.error && cards.error !== t("gyms.levels.cardsFailed") ? (
+            <ThemedText style={styles.noticeBody} setColor={theme.quietText}>
+              {cards.error}
+            </ThemedText>
+          ) : null}
+          <TouchableOpacity
+            accessibilityRole="button"
+            activeOpacity={0.8}
+            hitSlop={8}
+            onPress={() => loadCards()}
+            style={styles.retry}
+          >
+            <ThemedText style={styles.retryText} setColor={theme.primaryText}>
+              {t("common.retry")}
+            </ThemedText>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    if (!cards.data) {
+      return <CategoryCardSkeleton />;
+    }
+
+    const list = cards.data.cards ?? [];
+
+    return list.length ? (
+      <View style={[styles.cards, cards.status === "loading" ? styles.refreshing : null]}>
+        {list.map((card) => (
+          <CategoryCard
+            key={card.category}
+            card={card}
+            levelLabel={levelTitle}
+            where={where}
+            variant="level"
+            onPress={() => openCategory(card.category)}
+          />
+        ))}
+      </View>
+    ) : null;
   };
 
-  useEffect(() => () => clearTimeout(regionTimeoutRef.current), []);
-
-  // Centre the map on the phone. A fresh fix every time, because the one
-  // taken when the screen opened can be minutes old by now; the position
-  // already in hand moves the map first so the button never feels dead while
-  // the fix is being taken.
-  const goToMyLocation = async () => {
-    if (isLocating) {
-      return;
+  const renderRegions = () => {
+    if (summary.status === "error") {
+      return loadError(summary.error, loadSummary);
     }
 
-    setIsLocating(true);
-    setLocationNotice("");
-
-    if (position) {
-      centreMapOn(position);
+    if (summary.status !== "ready") {
+      return <RowsSkeleton count={4} />;
     }
 
-    try {
-      const currentPosition = await gymService.getCurrentPosition({
-        requestPermission: true,
-        lastKnownMaxAgeMs: gymService.MAP_LAST_KNOWN_MAX_AGE_MS,
-      });
+    const regions = data?.regions ?? [];
 
-      if (currentPosition) {
-        setPosition(currentPosition);
-        centreMapOn(currentPosition);
-      } else if (!position) {
-        setLocationNotice(t("gyms.list.locationUnavailable"));
-      }
-    } catch {
-      if (!position) {
-        setLocationNotice(t("gyms.list.locationUnavailable"));
-      }
-    } finally {
-      setIsLocating(false);
-    }
-  };
-
-  const centreMapOn = ({ latitude, longitude }) => {
-    mapRef.current?.animateToRegion(
-      {
-        latitude,
-        longitude,
-        latitudeDelta: NEARBY_REGION_DELTA,
-        longitudeDelta: NEARBY_REGION_DELTA,
-      },
-      450
+    return (
+      <View style={styles.section}>
+        {sectionHead(
+          t("gyms.regionsIn", { where }),
+          data?.country?.gymCount === null || data?.country?.gymCount === undefined
+            ? null
+            : centreCount(data.country.gymCount)
+        )}
+        <View style={[styles.listCard, surface]}>
+          {regions.length === 0
+            ? emptyLine(t("gyms.levels.noRegions"))
+            : regions.map((entry, index) => (
+                <LevelRow
+                  key={entry.key}
+                  tile={<RegionTile name={entry.name ?? entry.key} />}
+                  title={entry.name ?? entry.key}
+                  meta={countsLine(entry.gymCount, entry.lifterCount)}
+                  onPress={() => openRegion(entry)}
+                  divider={index < regions.length - 1}
+                  regionDivider
+                />
+              ))}
+        </View>
+      </View>
     );
   };
 
-  const openGym = (gym) => {
-    navigation.navigate("GymLeaderboardPage", { gym_id: gym.id });
-  };
+  const renderGyms = () => {
+    if (summary.status === "error") {
+      return loadError(summary.error, loadSummary);
+    }
 
-  const homeGymId = homeGym?.id ?? null;
-  const listSource = searchResults ?? nearby;
-  const orderedNearby = useMemo(() => {
-    const list = [...listSource];
+    if (summary.status !== "ready") {
+      return <RowsSkeleton count={5} />;
+    }
 
-    list.sort((left, right) => {
-      if (left.id === homeGymId) return -1;
-      if (right.id === homeGymId) return 1;
-      return (left.distanceM ?? 0) - (right.distanceM ?? 0);
-    });
-
-    return searchResults ? list : list.slice(0, showAllNearby ? list.length : 6);
-  }, [homeGymId, listSource, searchResults, showAllNearby]);
-  const featuredStrongest = strongest.filter((entry) => entry.top);
-
-  // One row, used by both lists. The nearest list shows how far away a centre
-  // is and how many people train there; the viewer's own centres show the
-  // chain and how many workouts they have done there, so those two come in
-  // as overrides rather than as a second copy of the row.
-  const renderGymRow = (gym, index, total, { meta: metaOverride = null, trailing = null } = {}) => {
-    const isHome = gym.id === homeGymId;
-    const meta =
-      metaOverride ??
-      [gym.chain, gym.distanceM !== null && gym.distanceM !== undefined ? formatDistance(gym.distanceM) : gym.city]
-        .filter(Boolean)
-        .join(" · ");
+    const gyms = data?.gyms ?? [];
 
     return (
-      <View key={gym.id}>
-        <TouchableOpacity
-          activeOpacity={0.85}
-          accessibilityRole="button"
-          accessibilityLabel={`${gym.shortName}, ${meta}`}
-          onPress={() => openGym(gym)}
-          style={[styles.gymRow, isHome ? [styles.gymRowHome, { borderLeftColor: theme.primary }] : null]}
-        >
-          {/* Tinted with the chain's map colour, so a row and its pin are
-              recognisably the same chain. The initials keep the neutral ink:
-              the colours are picked to be told apart, not to be read on. */}
-          <View
-            style={[styles.chainTile, { backgroundColor: withAlpha(getChainColor(gym.chain), 0.16) }]}
-          >
-            <ThemedText style={styles.chainTileText} setColor={mutedStrong}>
-              {getChainInitials(gym.chain)}
-            </ThemedText>
-          </View>
-          <View style={styles.gymCopy}>
-            <View style={styles.gymNameRow}>
-              <ThemedText style={styles.gymName} setColor={theme.title} numberOfLines={1}>
-                {gym.shortName}
-              </ThemedText>
-              {isHome ? (
-                <View style={[styles.gymBadge, { backgroundColor: withAlpha(theme.primary, 0.16) }]}>
-                  <ThemedText style={styles.gymBadgeText} setColor={theme.primaryText}>
-                    {t("gyms.list.yoursBadge")}
-                  </ThemedText>
-                </View>
-              ) : null}
-            </View>
-            <ThemedText style={styles.gymMeta} setColor={quietText} numberOfLines={1}>
-              {meta}
-            </ThemedText>
-          </View>
-          <ThemedText style={styles.gymCount} setColor={mutedStrong}>
-            {trailing ?? (gym.memberCount ? String(gym.memberCount) : "")}
-          </ThemedText>
-          <ChevronRight width={18} height={18} color={theme.chevron} />
-        </TouchableOpacity>
-        {index < total - 1 ? <View style={[styles.divider, { backgroundColor: theme.hairline }]} /> : null}
+      <View style={styles.section}>
+        {sectionHead(t("gyms.gymsIn", { where }))}
+        <View style={[styles.listCard, surface]}>
+          {gyms.length === 0
+            ? emptyLine(t("gyms.levels.noGyms", { where }))
+            : gyms.map((gym, index) => (
+                <LevelRow
+                  key={gym.id}
+                  tile={<GymTile imageUrl={gym.imageUrl} chain={gym.chain} />}
+                  title={gym.shortName ?? gym.name}
+                  meta={[gym.city, countsLine(null, gym.lifterCount)].filter(Boolean).join(" · ")}
+                  onPress={() => openGym(gym)}
+                  divider={index < gyms.length - 1}
+                />
+              ))}
+        </View>
       </View>
+    );
+  };
+
+  const renderWorld = () => {
+    if (summary.status === "error") {
+      return loadError(summary.error, loadSummary);
+    }
+
+    if (summary.status !== "ready") {
+      return <RowsSkeleton count={5} />;
+    }
+
+    if (data?.unavailable) {
+      return notYet;
+    }
+
+    const countries = data?.countries ?? [];
+    // Where the phone is, else the country the server calls yours. A country
+    // with no lifts is not on the list, and says so rather than opening empty.
+    const located = locationCountry
+      ? countries.find((entry) => entry.code === locationCountry) ?? { code: locationCountry, isUnlisted: true }
+      : null;
+    const yours = located ?? countries.find((entry) => entry.isYours) ?? null;
+
+    return (
+      <>
+        {yours ? (
+          <View style={styles.section}>
+            {sectionHead(t("gyms.location.title"))}
+            <View style={[styles.listCard, surface]}>
+              <LevelRow
+                tile={<CountryTile code={yours.code} isYours />}
+                title={countryName(t, yours.code)}
+                meta={yours.isUnlisted ? t("gyms.location.noLifts") : countsLine(yours.gymCount, yours.lifterCount)}
+                onPress={yours.isUnlisted ? undefined : () => openCountry(yours.code)}
+              />
+            </View>
+          </View>
+        ) : null}
+
+        <View style={styles.section}>
+          {sectionHead(t("gyms.countriesWithLifts"))}
+          <View style={[styles.listCard, surface]}>
+            {countries.length === 0
+              ? emptyLine(t("gyms.levels.noCountries"))
+              : countries.map((entry, index) => (
+                  <LevelRow
+                    key={entry.code}
+                    tile={<CountryTile code={entry.code} isYours={Boolean(entry.isYours) || entry.code === yours?.code} />}
+                    title={countryName(t, entry.code)}
+                    meta={countsLine(entry.gymCount, entry.lifterCount)}
+                    onPress={() => openCountry(entry.code)}
+                    divider={index < countries.length - 1}
+                  />
+                ))}
+          </View>
+          <ThemedText style={styles.footnote} setColor={theme.quietText}>
+            {t("gyms.onlyWithLifts")}
+          </ThemedText>
+        </View>
+      </>
+    );
+  };
+
+  const renderLevel = () => {
+    if (!scope) {
+      // Finding the country to open on.
+      return (
+        <>
+          <HeaderSkeleton />
+          <CategoryCardSkeleton count={2} />
+        </>
+      );
+    }
+
+    if (isWorld) {
+      return renderWorld();
+    }
+
+    return (
+      <>
+        {homeGym ? <YourCentreCard gym={homeGym} onPress={() => openGym(homeGym)} /> : null}
+
+        {levelTitle ? (
+          <View style={styles.levelHeader}>
+            <ScopeBreadcrumbs items={crumbs} />
+            <ThemedText style={styles.levelTitle} setColor={theme.title} numberOfLines={2} accessibilityRole="header">
+              {levelTitle}
+            </ThemedText>
+            {subtitle ? (
+              <ThemedText style={styles.levelSubtitle} setColor={theme.quietText} numberOfLines={1}>
+                {subtitle}
+              </ThemedText>
+            ) : null}
+          </View>
+        ) : (
+          <HeaderSkeleton />
+        )}
+
+        {isUnavailable ? (
+          notYet
+        ) : summary.status === "error" && cards.status === "error" ? (
+          // Nothing came back at all: one message and one retry, not two.
+          loadError(summary.error, () => {
+            loadSummary();
+            loadCards();
+          })
+        ) : (
+          <>
+            <GenderSegment value={gender} onChange={setGender} />
+            {renderCards()}
+            {level === "country" ? renderRegions() : renderGyms()}
+          </>
+        )}
+      </>
     );
   };
 
   return (
     <ThemedView safe={["top", "left", "right"]} style={styles.container}>
-      <ThemedHeader
-        rightWidth={84}
-        right={
-          gymCount !== null ? (
-            <ThemedText style={styles.headerCount} setColor={quietText}>
-              {t("gyms.list.centreCount", { count: gymCount })}
+      <View style={styles.topBar}>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel={t("common.goBack")}
+          activeOpacity={0.8}
+          hitSlop={BACK_HIT_SLOP}
+          onPress={() => navigation.goBack()}
+          style={[styles.backButton, surface]}
+        >
+          <ArrowLeft width={20} height={20} color={theme.title} />
+        </TouchableOpacity>
+        <View style={styles.topCopy}>
+          {/* Global in the cool blue, so it is plain that this is not your
+              centre's page - a centre's own page has no eyebrow. */}
+          <View style={styles.eyebrowRow}>
+            <Globe width={11} height={11} color={theme.heatCool} thickness={2.4} />
+            <ThemedText style={styles.eyebrow} setColor={theme.heatCool} numberOfLines={1}>
+              {t("gyms.global")}
             </ThemedText>
-          ) : null
-        }
-      >
-        <View style={styles.pageHeaderTitleGroup}>
-          <ThemedText size={12} style={[styles.pageHeaderTitleEyebrow, { color: quietText }]}>
-            {t("gyms.list.eyebrow")}
+          </View>
+          <ThemedText style={styles.topTitle} setColor={theme.title} numberOfLines={1} accessibilityRole="header">
+            {isWorld ? t("gyms.chooseCountry") : t("gyms.title")}
           </ThemedText>
-          <ThemedTitle type="pageTitle" style={styles.pageHeaderTitleMain} numberOfLines={1}>
-            {t("gyms.list.title")}
-          </ThemedTitle>
         </View>
-      </ThemedHeader>
+      </View>
 
       <ScrollView
         style={styles.content}
@@ -501,260 +670,25 @@ export default function GymsPage() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={[styles.searchField, { backgroundColor: cardSurface, borderColor: cardBorder }]}>
-          <Search width={16} height={16} color={quietText} />
+        <View style={[styles.searchField, surface]}>
+          <Search width={17} height={17} color={theme.quietText} />
           <TextInput
             value={query}
-            onChangeText={setQuery}
-            placeholder={t("gyms.list.searchPlaceholder")}
-            placeholderTextColor={isLight ? "#8C909B" : "#6E7480"}
+            onChangeText={(text) => {
+              setQuery(text);
+              setSearchError("");
+            }}
+            placeholder={searchPlaceholder}
+            placeholderTextColor={theme.quietText}
             style={[styles.searchInput, { color: theme.title }]}
             autoCorrect={false}
             returnKeyType="search"
             accessibilityLabel={t("gyms.searchCentresA11y")}
           />
-          {isSearching ? <ActivityIndicator size="small" color={theme.primaryText ?? theme.primary} /> : null}
+          {isSearching ? <ActivityIndicator size="small" color={theme.primaryText} /> : null}
         </View>
 
-        <View style={[styles.mapCard, isMapExpanded ? styles.mapCardExpanded : null, { borderColor: cardBorder }]}>
-          <MapView
-            ref={mapRef}
-            style={styles.map}
-            initialRegion={initialRegion}
-            customMapStyle={!isLight && Platform.OS === "android" ? DARK_MAP_STYLE : undefined}
-            userInterfaceStyle={isLight ? "light" : "dark"}
-            showsCompass={false}
-            showsMyLocationButton={false}
-            toolbarEnabled={false}
-            pitchEnabled={false}
-            rotateEnabled={false}
-            onRegionChangeComplete={handleRegionChange}
-          >
-            {visibleGyms.map((gym) => {
-              const isHome = gym.id === homeGymId;
-              const chainColor = getChainColor(gym.chain);
-
-              return (
-                <Marker
-                  key={gym.id}
-                  coordinate={{ latitude: gym.latitude, longitude: gym.longitude }}
-                  anchor={{ x: 0.5, y: 0.5 }}
-                  calloutAnchor={{ x: 0.5, y: 0 }}
-                  tracksViewChanges={isHome}
-                >
-                  {isHome ? (
-                    <HomeGymPin theme={theme} chainColor={chainColor} />
-                  ) : (
-                    <View
-                      style={[
-                        styles.pin,
-                        styles.pinOther,
-                        { backgroundColor: chainColor, borderColor: theme.uiBackground },
-                      ]}
-                    />
-                  )}
-                  <GymCallout gym={gym} onOpen={() => openGym(gym)} />
-                </Marker>
-              );
-            })}
-            {position ? <MyLocationMarker position={position} theme={theme} /> : null}
-          </MapView>
-
-          <View style={[styles.mapPill, { backgroundColor: "rgba(8, 9, 12, 0.62)" }]}>
-            <ThemedText style={styles.mapPillText} setColor="#FFFFFF">
-              {t("gyms.list.nearbyCount", { count: visibleGyms.length })}
-            </ThemedText>
-          </View>
-          <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityLabel={isMapExpanded ? t("gyms.list.shrinkMap") : t("gyms.list.expandMap")}
-            onPress={() => setIsMapExpanded((value) => !value)}
-            hitSlop={8}
-            style={[styles.mapExpandButton, { backgroundColor: "rgba(8, 9, 12, 0.62)" }]}
-          >
-            <Expand width={16} height={16} color="#FFFFFF" />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityLabel={t("gyms.list.locateMe")}
-            onPress={goToMyLocation}
-            disabled={isLocating}
-            hitSlop={8}
-            style={[styles.mapLocateButton, { backgroundColor: "rgba(8, 9, 12, 0.62)" }]}
-          >
-            {isLocating ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
-            ) : (
-              <Crosshair width={17} height={17} color="#FFFFFF" thickness={2} />
-            )}
-          </TouchableOpacity>
-        </View>
-
-        {locationNotice ? (
-          <ThemedText style={styles.mapNotice} setColor={quietText}>
-            {locationNotice}
-          </ThemedText>
-        ) : null}
-
-        {visibleChains.length > 1 ? (
-          <View style={styles.legendRow}>
-            {visibleChains.map((entry) => (
-              <View key={entry.chain} style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: entry.color }]} />
-                <ThemedText style={styles.legendText} setColor={quietText}>
-                  {entry.chain}
-                </ThemedText>
-              </View>
-            ))}
-          </View>
-        ) : null}
-
-        {errorMessage ? (
-          <View style={[styles.card, { backgroundColor: cardSurface, borderColor: cardBorder }]}>
-            <View style={styles.emptyRow}>
-              <ThemedText style={styles.emptyTitle} setColor={theme.title}>
-                {t("gyms.list.unavailableTitle")}
-              </ThemedText>
-              <ThemedText style={styles.emptyBody} setColor={quietText}>
-                {errorMessage}
-              </ThemedText>
-            </View>
-          </View>
-        ) : null}
-
-        {!searchResults && featuredStrongest.length ? (
-          <View style={[styles.card, { backgroundColor: cardSurface, borderColor: cardBorder }]}>
-            <RadialGlow color={theme.record} />
-            <View style={styles.cardHeader}>
-              <ThemedText style={styles.cardTitle} setColor={theme.title}>
-                {t("gyms.strongest.title")}
-              </ThemedText>
-              <ThemedText style={styles.cardEyebrow} setColor={quietText}>
-                {t("gyms.strongest.verifiedOnly")}
-              </ThemedText>
-            </View>
-            {featuredStrongest.map((entry) => {
-              const top = entry.top;
-              const gymLine = [top.gym?.shortName, top.gym?.city].filter(Boolean).join(" · ");
-              // The row opens the exercise's ranking; the lifter's picture and
-              // name open their profile - unless the lifter is you.
-              const canOpenLifter = Boolean(top.userId) && !top.isMe;
-              const Lifter = canOpenLifter ? TouchableOpacity : View;
-              const lifterProps = canOpenLifter
-                ? {
-                    activeOpacity: 0.75,
-                    accessibilityRole: "button",
-                    accessibilityHint: t("publicProfile.opensProfile"),
-                    onPress: () => navigation.navigate("PublicProfilePage", { userId: top.userId }),
-                  }
-                : {};
-
-              return (
-                <TouchableOpacity
-                  key={entry.exerciseId}
-                  activeOpacity={0.85}
-                  accessibilityRole="button"
-                  onPress={() => navigation.navigate("NationalExerciseLeaderboardPage", { exercise_id: entry.exerciseId })}
-                  style={styles.strongestRow}
-                >
-                  <ThemedText style={styles.strongestExercise} setColor={quietText} numberOfLines={1}>
-                    {entry.exerciseName}
-                  </ThemedText>
-                  <Lifter style={styles.strongestLifter} {...lifterProps}>
-                    <View style={[styles.avatarRing, { borderColor: goldRingColor }]}>
-                      <UserAvatar uri={top.avatarUrl} size={34} iconSize={16} />
-                    </View>
-                    <View style={styles.strongestCopy}>
-                      <ThemedText style={styles.strongestName} setColor={theme.title} numberOfLines={1}>
-                        {top.isMe ? t("common.you") : top.displayName}
-                      </ThemedText>
-                      <ThemedText style={styles.strongestMeta} setColor={top.isHomeGym ? theme.primary : quietText} numberOfLines={1}>
-                        {top.isHomeGym ? t("gyms.gymLineYourCentre", { gym: gymLine }) : gymLine}
-                      </ThemedText>
-                    </View>
-                  </Lifter>
-                  <LiftStatusPill status="verified" approvals={top.approvals} compact />
-                  <ThemedText style={styles.strongestWeight} setColor={theme.record}>
-                    {formatWeightKg(top.weightKg)}
-                  </ThemedText>
-                </TouchableOpacity>
-              );
-            })}
-            <TouchableOpacity
-              accessibilityRole="button"
-              activeOpacity={0.8}
-              onPress={() => navigation.navigate("NationalExerciseLeaderboardPage", { exercise_id: featuredStrongest[0].exerciseId })}
-              style={[styles.cardFooter, { borderTopColor: theme.hairline }]}
-            >
-              <ThemedText style={styles.cardFooterText} setColor={theme.primaryText}>
-                {t("gyms.strongest.seeAll")}
-              </ThemedText>
-            </TouchableOpacity>
-          </View>
-        ) : null}
-
-        {!searchResults && myGyms.length > 0 ? (
-          <View style={[styles.card, { backgroundColor: cardSurface, borderColor: cardBorder }]}>
-            <View style={styles.cardHeader}>
-              <ThemedText style={styles.cardTitle} setColor={theme.title}>
-                {t("gyms.change.trainedHere")}
-              </ThemedText>
-              <ThemedText style={styles.cardEyebrow} setColor={quietText}>
-                {t("gyms.list.trainedEyebrow")}
-              </ThemedText>
-            </View>
-            {myGyms.map((gym, index) =>
-              renderGymRow(gym, index, myGyms.length, {
-                meta: t("gyms.change.gymMeta", { chain: gym.chain, count: gym.workoutCount }),
-                trailing: String(gym.workoutCount),
-              })
-            )}
-          </View>
-        ) : null}
-
-        <View style={[styles.card, { backgroundColor: cardSurface, borderColor: cardBorder }]}>
-          <View style={styles.cardHeader}>
-            <ThemedText style={styles.cardTitle} setColor={theme.title}>
-              {searchResults ? t("gyms.list.results") : t("gyms.list.nearest")}
-            </ThemedText>
-            <ThemedText style={styles.cardEyebrow} setColor={quietText}>
-              {searchResults
-                ? t("gyms.list.foundCount", { count: searchResults.length })
-                : t("gyms.list.membersEyebrow")}
-            </ThemedText>
-          </View>
-
-          {isLoading ? (
-            <View style={styles.emptyRow}>
-              <ActivityIndicator color={theme.primaryText ?? theme.primary} />
-            </View>
-          ) : orderedNearby.length === 0 ? (
-            <View style={styles.emptyRow}>
-              <ThemedText style={styles.emptyTitle} setColor={theme.title}>
-                {searchResults ? t("gyms.list.noMatchTitle") : t("gyms.list.noCentresTitle")}
-              </ThemedText>
-              <ThemedText style={styles.emptyBody} setColor={quietText}>
-                {searchResults ? t("gyms.list.noMatchBody") : t("gyms.list.noCentresBody")}
-              </ThemedText>
-            </View>
-          ) : (
-            orderedNearby.map((gym, index) => renderGymRow(gym, index, orderedNearby.length))
-          )}
-
-          {!searchResults && !isLoading && nearby.length > 6 ? (
-            <TouchableOpacity
-              accessibilityRole="button"
-              activeOpacity={0.8}
-              onPress={() => setShowAllNearby((value) => !value)}
-              style={[styles.cardFooter, { borderTopColor: theme.hairline }]}
-            >
-              <ThemedText style={styles.cardFooterText} setColor={theme.primaryText}>
-                {showAllNearby ? t("common.showFewer") : t("gyms.list.showAllNearby")}
-              </ThemedText>
-            </TouchableOpacity>
-          ) : null}
-        </View>
+        {searchResults ? renderResults() : renderLevel()}
       </ScrollView>
     </ThemedView>
   );

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 1f collapsed (48 dp): the whole content area is orange @ 0.34 from the
+     left for what is left of the rest - full when it starts, empty when it
+     ends - with "Pause · 1:24" counting down by itself, the next set, and
+     Spring over on top. The rest counted up after a set with none written
+     (from 15 s after the tap) uses it too: no fill, "Pause · 1:24" counting
+     up, and the button is Afslut pause. After the next set, the exercise's
+     sets as dots, as on the set's own card - the one just ticked filled.
+
+     The fill is a horizontal ProgressBar behind the text. Android draws the
+     header and the card's frame, and on Android 12+ it keeps its own margins
+     around a custom view, so the fill cannot reach the card's edge: it has
+     12 dp rounded corners inside the margin instead (spec runde 2, §5.2). -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  android:minHeight="48dp">
+
+  <!-- Widget.ProgressBar.Horizontal caps the height at 20 dp; maxHeight lifts
+       it so the fill is as tall as the content area. -->
+  <ProgressBar
+    android:id="@+id/live_workout_rest_fill"
+    style="@android:style/Widget.ProgressBar.Horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:importantForAccessibility="no"
+    android:indeterminate="false"
+    android:max="1000"
+    android:maxHeight="96dp"
+    android:minHeight="0dp"
+    android:progressDrawable="@drawable/live_workout_rest_fill" />
+
+  <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:baselineAligned="false"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="12dp"
+    android:paddingEnd="4dp">
+
+    <LinearLayout
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:layout_weight="1"
+      android:orientation="vertical">
+
+      <Chronometer
+        android:id="@+id/live_workout_rest_clock"
+        style="@style/LiveWorkout.Text.Heavy.CollapsedTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fontFeatureSettings="tnum" />
+
+      <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="3dp"
+        android:baselineAligned="false"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+          android:id="@+id/live_workout_subtitle"
+          style="@style/LiveWorkout.Text.Semibold.CollapsedSubtitle"
+          android:layout_width="0dp"
+          android:layout_height="wrap_content"
+          android:layout_weight="1" />
+
+        <!-- The dots, filled from Kotlin (live_workout_dot_*). -->
+        <LinearLayout
+          android:id="@+id/live_workout_dots"
+          android:layout_width="wrap_content"
+          android:layout_height="12dp"
+          android:layout_marginStart="4dp"
+          android:gravity="center_vertical"
+          android:orientation="horizontal" />
+      </LinearLayout>
+    </LinearLayout>
+
+    <FrameLayout
+      android:id="@+id/live_workout_primary"
+      android:layout_width="40dp"
+      android:layout_height="40dp"
+      android:layout_marginStart="12dp"
+      android:background="@drawable/live_workout_button_circle_primary">
+
+      <ImageView
+        android:layout_width="17dp"
+        android:layout_height="17dp"
+        android:layout_gravity="center"
+        android:importantForAccessibility="no"
+        android:src="@drawable/live_workout_ic_skip"
+        android:tint="@color/live_workout_ink" />
+    </FrameLayout>
+  </LinearLayout>
+</FrameLayout>

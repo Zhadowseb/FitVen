@@ -37,13 +37,13 @@ const answer = {
   weekly_workouts: [1, 2, 3],
   is_following: true,
   records: [
-    // Heavier, no video: shown, never ranked, whatever rank came with it.
+    // The rank is the one the server sent; the video fields it still sends
+    // are not read.
     { exercise_id: 2, exercise_name: "Squat", lift_id: 11, weight_kg: "140.00", reps: 3, video_status: "none", approvals: 0, rank: 2, gym: { id: 12, short_name: "Kildeskovshallen", city: "Gentofte" } },
-    { exercise_id: 1, exercise_name: "Bench Press", lift_id: 10, weight_kg: 100, reps: 1, video_status: "verified", approvals: 3, rank: 1, gym: { id: 12, short_name: "Kildeskovshallen", city: "Gentofte" } },
-    { exercise_id: 3, exercise_name: "Deadlift", lift_id: 12, weight_kg: 180, reps: 1, video_status: "pending", approvals: 1, rank: 4, gym: null },
-    // Never a record, and nothing to show.
-    { exercise_id: 3, exercise_name: "Deadlift", lift_id: 13, weight_kg: 200, video_status: "rejected", rank: null },
-    { exercise_id: 1, exercise_name: "Bench Press", lift_id: 14, weight_kg: 0, video_status: "verified", rank: 1 },
+    { exercise_id: 1, exercise_name: "Bench Press", lift_id: 10, weight_kg: 100, reps: 1, rank: 1, gym: { id: 12, short_name: "Kildeskovshallen", city: "Gentofte" } },
+    { exercise_id: 3, exercise_name: "Deadlift", lift_id: 12, weight_kg: 180, reps: 1, rank: null, gym: null },
+    // Nothing to show.
+    { exercise_id: 1, exercise_name: "Bench Press", lift_id: 14, weight_kg: 0, rank: 1 },
   ],
 };
 const profile = utils.mapPublicProfile(answer);
@@ -99,18 +99,16 @@ assert.strictEqual(
 
 const [squat, bench, deadlift] = profile.records;
 
-assert.strictEqual(profile.records.length, 3, "a rejected lift and an empty one are not records");
+assert.strictEqual(profile.records.length, 3, "an empty lift is not a record");
 assert.strictEqual(squat.weightKg, 140);
-assert.strictEqual(squat.isVerified, false);
-assert.strictEqual(squat.rank, null, "no video, no place - gold and a rank need a verified lift");
-assert.strictEqual(bench.isVerified, true);
-assert.strictEqual(bench.rank, 1, "a verified lift keeps its place at the centre");
+assert.strictEqual(squat.rank, 2, "the place is the one the server sent, with or without a video");
+assert.strictEqual(bench.rank, 1);
 assert.deepStrictEqual(bench.gym, { id: 12, shortName: "Kildeskovshallen", city: "Gentofte" });
-assert.strictEqual(deadlift.videoStatus, "pending");
-assert.strictEqual(deadlift.rank, null, "a pending video is not a verified one");
+assert.strictEqual(deadlift.rank, null, "no rank from the server is no place");
 assert.strictEqual(deadlift.gym, null);
-assert.strictEqual(utils.mapPublicRecord({ weight_kg: 50, video_status: "rejected" }), null);
-assert.strictEqual(utils.mapPublicRecord({ weight_kg: 50 }).videoStatus, "none", "no status is no video");
+for (const field of ["videoStatus", "approvals", "isVerified"]) {
+  assert.ok(!(field in squat), `a record no longer carries ${field}`);
+}
 
 /* -------------------------------------------------------- same centre -- */
 
@@ -360,19 +358,26 @@ assert.ok(page.includes("Share.share("), "Share opens the share sheet");
 const pageStyle = read("src/Pages/PublicProfilePage/PublicProfilePageStyle.js");
 assert.ok(/previewDisabled: \{ opacity: 0\.45 \}/.test(pageStyle), "the disabled Follow is at 0.45");
 
-// Every name that is somebody else's opens their profile.
+// Every name that is somebody else's opens their profile. The Centres screens
+// (GymsPage) and a centre's page (GymLeaderboardPage) show names only on
+// category cards now, and a card is one target that opens the category, where
+// the names are links - so neither is on this list, and the card must not
+// grow a second target of its own.
 const links = [
   "src/Pages/FeedPage/FeedPage.js",
   "src/Pages/CenterPostsPage/CenterPostsPage.js",
   "src/Pages/UserPostsPage/UserPostsPage.js",
   "src/Pages/HomePage/HomePage.js",
-  "src/Pages/GymLeaderboardPage/GymLeaderboardPage.js",
   "src/Pages/GymExerciseLeaderboardPage/GymExerciseLeaderboardPage.js",
-  "src/Pages/GymsPage/GymsPage.js",
   "src/Pages/ExploreSearchPage/ExploreSearchPage.js",
   "src/Pages/SocialPage/SocialPage.js",
   "src/Pages/SocialUserListPage/SocialUserListPage.js",
 ];
+
+assert.ok(
+  !read("src/Resources/Components/CategoryCard/CategoryCard.js").includes("PublicProfilePage"),
+  "a category card is one target; its names open on the category page"
+);
 
 for (const file of links) {
   assert.ok(

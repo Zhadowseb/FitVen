@@ -8,13 +8,14 @@ import {
   View,
   useColorScheme,
 } from "react-native";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
-import { useTranslation } from "@localization";
+import { formatNumber, useTranslation } from "@localization";
 
 import styles from "./ExploreSearchPageStyle";
 import { useAuth } from "@contexts/AuthContext";
-import { gymService, socialService } from "@services";
+import { categoryLeaderboardService, gymService, socialService } from "@services";
+import { regionWhere } from "@resources/Components/ScopeBreadcrumbs/scopeNames";
 import { Colors } from "@resources/GlobalStyling/colors";
 import ArrowLeft from "@resources/Icons/UI-icons/ArrowLeft";
 import ChevronRight from "@resources/Icons/UI-icons/ChevronRight";
@@ -45,6 +46,8 @@ const HINT_KEYS = {
 // The last choice, for the next time the search opens - within the session.
 let lastScope = "all";
 
+const NO_SUGGESTIONS = { status: "idle", yours: null, trainedIn: [], popular: [], region: null };
+
 /**
  * Explore's search, full screen with the keyboard already up: centres and
  * people as you type - both, or only one of them, by the filter under the
@@ -52,6 +55,12 @@ let lastScope = "all";
  * and "See everyone and follow" the people list on the same search, where the
  * follow buttons are. Programs and exercises join the search when they can be
  * found.
+ *
+ * Centres alone lists centres before anything is typed: yours, the others
+ * you have trained in, then the busiest of your centre's region
+ * (categoryLeaderboardService.getGymSuggestions). They are read the first time
+ * Centres is chosen, not when the search opens: Both and People are for
+ * finding somebody, and stay a hint until something is typed.
  */
 export default function ExploreSearchPage() {
   const { t } = useTranslation();
@@ -67,8 +76,44 @@ export default function ExploreSearchPage() {
   const [people, setPeople] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [suggestions, setSuggestions] = useState(NO_SUGGESTIONS);
   const trimmed = query.trim();
   const canSearch = trimmed.length >= MIN_QUERY_LENGTH;
+  const showsSuggestions = scope === "gyms" && !canSearch;
+  // Once per visit: going to People and back, or typing and clearing, shows
+  // the same centres again rather than asking for them again.
+  const suggestionsAskedRef = useRef(false);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!showsSuggestions || suggestionsAskedRef.current) {
+      return;
+    }
+
+    suggestionsAskedRef.current = true;
+    setSuggestions((current) => ({ ...current, status: "loading" }));
+    categoryLeaderboardService
+      .getGymSuggestions()
+      .then((found) => {
+        if (isMountedRef.current) {
+          setSuggestions({ status: "ready", ...found });
+        }
+      })
+      .catch(() => {
+        // It does not throw; should it, the hint is shown as before.
+        if (isMountedRef.current) {
+          setSuggestions({ ...NO_SUGGESTIONS, status: "ready" });
+        }
+      });
+  }, [showsSuggestions]);
 
   useEffect(() => {
     if (!canSearch) {
@@ -132,6 +177,99 @@ export default function ExploreSearchPage() {
     </ThemedText>
   );
 
+  const openGym = (gym) => navigation.navigate("GymLeaderboardPage", { gym_id: gym.id });
+
+  const renderGymRow = (gym, index, meta) => (
+    <TouchableOpacity
+      key={gym.id}
+      activeOpacity={0.85}
+      accessibilityRole="button"
+      accessibilityLabel={meta ? `${gym.shortName ?? gym.name}, ${meta}` : gym.shortName ?? gym.name}
+      onPress={() => openGym(gym)}
+      style={[styles.row, index > 0 ? { borderTopWidth: 1, borderTopColor: theme.hairline } : null]}
+    >
+      {gym.imageUrl ? (
+        <Image source={{ uri: gym.imageUrl }} style={styles.thumb} />
+      ) : (
+        <View style={[styles.thumb, styles.thumbFallback, { backgroundColor: theme.raisedSurface }]}>
+          <MapPin width={16} height={16} color={quiet} thickness={2} />
+        </View>
+      )}
+      <View style={styles.rowCopy}>
+        <ThemedText style={styles.rowTitle} setColor={title} numberOfLines={1}>
+          {gym.shortName ?? gym.name}
+        </ThemedText>
+        {meta ? (
+          <ThemedText style={styles.rowMeta} setColor={quiet} numberOfLines={1}>
+            {meta}
+          </ThemedText>
+        ) : null}
+      </View>
+      <ChevronRight width={16} height={16} color={theme.chevron} thickness={2} />
+    </TouchableOpacity>
+  );
+
+  const gymSection = (key, label, list, metaFor) =>
+    list.length > 0 ? (
+      <View key={key} style={styles.section}>
+        {sectionHead(label)}
+        <View style={[styles.list, { backgroundColor: card, borderColor: cardBorder }]}>
+          {list.map((gym, index) => renderGymRow(gym, index, metaFor(gym)))}
+        </View>
+      </View>
+    ) : null;
+
+  const placeLine = (gym) => [gym.chain, gym.city].filter(Boolean).join(" · ");
+  const suggested = [
+    ...(suggestions.yours ? [suggestions.yours] : []),
+    ...suggestions.trainedIn,
+    ...suggestions.popular,
+  ];
+  const busiestWhere = regionWhere(t, suggestions.region);
+
+  // Centres, nothing typed: the suggestions, or the hint while there are none.
+  const renderSuggestions = () => {
+    if (suggestions.status !== "ready") {
+      return <ActivityIndicator style={styles.spinner} color={theme.primaryText} />;
+    }
+
+    if (suggested.length === 0) {
+      return (
+        <ThemedText style={styles.hint} setColor={quiet}>
+          {t(HINT_KEYS.gyms)}
+        </ThemedText>
+      );
+    }
+
+    return (
+      <>
+        {gymSection("yours", t("explore.search.suggestions.yours"), suggestions.yours ? [suggestions.yours] : [], placeLine)}
+        {gymSection("trainedIn", t("explore.search.suggestions.trainedIn"), suggestions.trainedIn, (gym) =>
+          [gym.chain, t("explore.search.suggestions.workouts", { count: Number(gym.workoutCount) || 0 })]
+            .filter(Boolean)
+            .join(" · ")
+        )}
+        {gymSection(
+          "popular",
+          busiestWhere
+            ? t("explore.search.suggestions.busiestIn", { where: busiestWhere })
+            : t("explore.search.suggestions.busiest"),
+          suggestions.popular,
+          (gym) =>
+            [
+              gym.city,
+              t("gyms.counts.lifters", {
+                count: Number(gym.lifterCount) || 0,
+                value: formatNumber(Number(gym.lifterCount) || 0),
+              }),
+            ]
+              .filter(Boolean)
+              .join(" · ")
+        )}
+      </>
+    );
+  };
+
   return (
     <ThemedView safe={["top", "left", "right"]} style={styles.container}>
       <View style={styles.bar}>
@@ -187,7 +325,9 @@ export default function ExploreSearchPage() {
         keyboardDismissMode="on-drag"
         showsVerticalScrollIndicator={false}
       >
-        {!canSearch ? (
+        {showsSuggestions ? (
+          renderSuggestions()
+        ) : !canSearch ? (
           <ThemedText style={styles.hint} setColor={quiet}>
             {t(HINT_KEYS[scope])}
           </ThemedText>
@@ -207,41 +347,7 @@ export default function ExploreSearchPage() {
           </ThemedText>
         ) : null}
 
-        {gyms.length > 0 ? (
-          <View style={styles.section}>
-            {sectionHead(t("explore.search.gyms"))}
-            <View style={[styles.list, { backgroundColor: card, borderColor: cardBorder }]}>
-              {gyms.map((gym, index) => (
-                <TouchableOpacity
-                  key={gym.id}
-                  activeOpacity={0.85}
-                  accessibilityRole="button"
-                  onPress={() => navigation.navigate("GymLeaderboardPage", { gym_id: gym.id })}
-                  style={[styles.row, index > 0 ? { borderTopWidth: 1, borderTopColor: theme.hairline } : null]}
-                >
-                  {gym.imageUrl ? (
-                    <Image source={{ uri: gym.imageUrl }} style={styles.thumb} />
-                  ) : (
-                    <View style={[styles.thumb, styles.thumbFallback, { backgroundColor: theme.raisedSurface }]}>
-                      <MapPin width={16} height={16} color={quiet} thickness={2} />
-                    </View>
-                  )}
-                  <View style={styles.rowCopy}>
-                    <ThemedText style={styles.rowTitle} setColor={title} numberOfLines={1}>
-                      {gym.shortName ?? gym.name}
-                    </ThemedText>
-                    {gym.city ? (
-                      <ThemedText style={styles.rowMeta} setColor={quiet} numberOfLines={1}>
-                        {[gym.chain, gym.city].filter(Boolean).join(" · ")}
-                      </ThemedText>
-                    ) : null}
-                  </View>
-                  <ChevronRight width={16} height={16} color={theme.chevron} thickness={2} />
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        ) : null}
+        {gymSection("results", t("explore.search.gyms"), gyms, (gym) => (gym.city ? placeLine(gym) : ""))}
 
         {people.length > 0 ? (
           <View style={styles.section}>

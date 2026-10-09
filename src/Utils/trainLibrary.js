@@ -23,9 +23,16 @@ const WEEK_MS = 7 * DAY_MS;
 
 /**
  * Section 6.1: a week counts toward the streak from this many finished
- * workouts. A constant for now; it can become a setting later.
+ * workouts. A constant for now; it can become a setting later. The spec said
+ * three; the owner lowered it to two after the first test round.
+ *
+ * Only "Your form" on the Train tab. The Flid category on a centre's
+ * leaderboards has its own STREAK_MIN_WORKOUTS in gymCategories.js, held to
+ * the server's gym_category_leaderboard. It is two as well; the two streaks
+ * differ only over a sick week, which the server cannot see and so counts
+ * as a break.
  */
-export const STREAK_MIN_WORKOUTS = 3;
+export const STREAK_MIN_WORKOUTS = 2;
 
 /** How many weeks each chart covers, this week included. */
 export const WORKOUT_TILE_WEEKS = 8;

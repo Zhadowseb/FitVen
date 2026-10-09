@@ -258,21 +258,12 @@ export default {
     planned: "PLANLAGT",
   },
   location: {
-    notificationTitle: "FitVen sporer dit løb",
-    notificationBody: "Distance og tempo opdateres, mens din træning kører.",
     errors: {
-      permissionDenied: "Adgang til placering blev ikke givet.",
-      precisePermissionRequired:
-        "Præcis placering er påkrævet for at spore løb.",
-      backgroundUnavailable: "Placering i baggrunden er ikke tilgængelig på denne enhed.",
-      backgroundPermissionDenied: "Adgang til placering i baggrunden blev ikke givet.",
-      servicesDisabled: "Placeringstjenester er slået fra.",
+      trackingUnavailable: "Sporing af løb er ikke tilgængelig.",
     },
     startMessages: {
-      precisePermission:
-        "FitVen skal have adgang til præcis placering for at måle distancen nøjagtigt under {activity}. Slå præcis placering til for FitVen, og prøv igen.",
-      backgroundPermission:
-        "FitVen skal have adgang til placering i baggrunden, så distancen bliver ved med at blive målt, når appen ikke er åben.",
+      trackingUnavailable:
+        "Sporing af {activity} er ikke tilgængelig i denne version af FitVen. Dine tidligere ture er her stadig.",
       generic: "Tjek, at placering er tilladt og slået til, og prøv igen.",
     },
   },

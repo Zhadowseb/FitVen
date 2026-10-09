@@ -335,7 +335,7 @@ for (const name of ["first", "rest", "ready", "next", "latest"]) {
   assert.strictEqual(heard.length, 2, "a subscriber hears the last change at once, then every new one");
   assert.deepStrictEqual(
     { ...heard[1], at: undefined },
-    { workoutId: 5, setId: 30, done: true, failed: false, personalRecord: true, at: undefined }
+    { workoutId: 5, setId: 30, done: true, failed: false, personalRecord: true, source: null, at: undefined }
   );
   assert.strictEqual(events.getLastWorkoutSetChange().setId, 31, "an unsubscribed listener kept hearing");
 }

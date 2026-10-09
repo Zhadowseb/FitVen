@@ -5,6 +5,7 @@ import styles from "./SplitCardStyle";
 import { Colors } from "@resources/GlobalStyling/colors";
 import ReplayHistory from "@resources/Icons/UI-icons/ReplayHistory";
 import { ThemedText } from "@resources/ThemedComponents";
+import { workoutDisplayName } from "@utils/workoutTypeLabel";
 
 /**
  * "Repeat also": favourites outside the split, then the latest workouts, as
@@ -37,26 +38,31 @@ export default function RepeatAlso({ items = [], onPress }) {
         style={styles.alsoScroll}
         contentContainerStyle={styles.alsoRail}
       >
-        {items.map((item) => (
-          <TouchableOpacity
-            key={item.key}
-            activeOpacity={0.85}
-            accessibilityRole="button"
-            accessibilityLabel={`${item.name}, ${when(item.daysSince)}`}
-            onPress={() => onPress?.(item)}
-            style={[styles.chip, { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder }]}
-          >
-            <ReplayHistory width={14} height={14} color={theme.primaryText ?? theme.primary} />
-            <View style={styles.chipCopy}>
-              <ThemedText style={styles.chipName} setColor={theme.title} numberOfLines={1}>
-                {item.name}
-              </ThemedText>
-              <ThemedText style={styles.chipMeta} setColor={theme.quietText} numberOfLines={1}>
-                {when(item.daysSince)}
-              </ThemedText>
-            </View>
-          </TouchableOpacity>
-        ))}
+        {items.map((item) => {
+          // A name the app wrote, in the app's language; a typed one as typed.
+          const name = workoutDisplayName(item.name, t, item.workoutType) ?? item.name;
+
+          return (
+            <TouchableOpacity
+              key={item.key}
+              activeOpacity={0.85}
+              accessibilityRole="button"
+              accessibilityLabel={`${name}, ${when(item.daysSince)}`}
+              onPress={() => onPress?.(item)}
+              style={[styles.chip, { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder }]}
+            >
+              <ReplayHistory width={14} height={14} color={theme.primaryText ?? theme.primary} />
+              <View style={styles.chipCopy}>
+                <ThemedText style={styles.chipName} setColor={theme.title} numberOfLines={1}>
+                  {name}
+                </ThemedText>
+                <ThemedText style={styles.chipMeta} setColor={theme.quietText} numberOfLines={1}>
+                  {when(item.daysSince)}
+                </ThemedText>
+              </View>
+            </TouchableOpacity>
+          );
+        })}
       </ScrollView>
     </View>
   );

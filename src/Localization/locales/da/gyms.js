@@ -6,7 +6,79 @@ export default {
   noLiftsYet: "Ingen løft endnu",
   searchFailed: "Søgningen mislykkedes.",
   searchCentresA11y: "Søg centre",
-  gymLineYourCentre: "{gym} · dit center",
+
+  // Centre-skærmene: alle lande, et land, et område.
+  global: "Globalt",
+  title: "Centre",
+  chooseCountry: "Vælg land",
+  search: "Søg efter et center",
+  // {where} har forholdsordet med: "på Sjælland".
+  searchIn: "Søg efter et center {where}",
+  myGym: "Dit center",
+  members: {
+    one: "{count} træner her · du følger {following} af dem",
+    other: "{count} træner her · du følger {following} af dem",
+  },
+  allCountries: "Alle lande",
+  fromLocation: "valgt ud fra din lokation",
+  countriesWithLifts: "Lande med løft",
+  onlyWithLifts: "Kun lande, hvor der er registreret løft, er med.",
+  regionsIn: "Områder {where}",
+  gymsIn: "Centre {where}",
+  categories: "Kategorier",
+  sortedByActivity: "efter hvad der trænes mest her",
+  atGym: "i {gym}",
+  inPlace: "i {place}",
+  // Danmarks fire landsdele med forholdsord, til når serveren sender et
+  // område uden. Nøglerne er gym.region_key.
+  regionsWhere: {
+    sjaelland: "på Sjælland",
+    jylland: "i Jylland",
+    fyn: "på Fyn",
+    bornholm: "på Bornholm",
+  },
+
+  counts: {
+    centres: { one: "{value} center", other: "{value} centre" },
+    lifters: { one: "{value} løfter", other: "{value} løftere" },
+  },
+
+  location: {
+    title: "Din lokation",
+    noLifts: "Ingen løft registreret her endnu",
+  },
+
+  levels: {
+    loadFailed: "Centrene kunne ikke hentes.",
+    unavailableTitle: "Centrene er ikke tilgængelige",
+    notYetTitle: "På vej",
+    notYetBody:
+      "Kategorier og områder er ikke sat op endnu. Du kan stadig søge efter et center og åbne dit eget.",
+    cardsNotYet: "Kategorierne er ikke sat op endnu.",
+    cardsFailed: "Kategorierne kunne ikke hentes.",
+    noCountries: "Intet land har registreret løft endnu.",
+    noRegions: "Centrene her er ikke delt op i områder endnu.",
+    noGyms: "Ingen centre {where} endnu.",
+  },
+
+  results: {
+    title: "Resultater",
+    count: "{count} fundet",
+    noMatchTitle: "Ingen centre matcher",
+    noMatchBody: "Prøv kæden, byen eller en del af centerets navn.",
+  },
+
+  card: {
+    topRank: "#1",
+    topAt: "#1 · {gym}",
+    topDetail: "#1 · {detail}",
+    rankWhere: "#{rank} {where}",
+    rankOf: "#{rank} af {total}",
+    notRanked: "ikke på listen endnu",
+    empty: "Ingen er på listen endnu.",
+    a11yTop: "Nummer 1: {name}, {value}",
+    a11yHint: "Åbner hele listen",
+  },
 
   scope: {
     centre: "Center",
@@ -19,54 +91,8 @@ export default {
     bodyweight: "×KV",
   },
 
-  status: {
-    verified: "Video bekræftet · {count}",
-    pending: "Video venter · {count}/{required}",
-    noVideo: "Ingen video",
-    rejected: "Afvist {count}",
-  },
-
   row: {
     yourCentre: "· dit center",
-    reviewA11y: "Se videoen af dette løft",
-  },
-
-  // The card that opens over a pin on the map.
-  callout: {
-    openCentre: "Se centeret",
-    memberCount: { one: "{count} træner her", other: "{count} træner her" },
-  },
-
-  list: {
-    eyebrow: "Socialt",
-    title: "Centre",
-    centreCount: { one: "{count} center", other: "{count} centre" },
-    searchPlaceholder: "Søg center, kæde eller by",
-    nearbyCount: { one: "{count} center i nærheden", other: "{count} centre i nærheden" },
-    expandMap: "Udvid kortet",
-    shrinkMap: "Formindsk kortet",
-    locateMe: "Centrér kortet om din position",
-    locationUnavailable: "Din position kunne ikke findes. Tjek at placering er slået til for FitVen.",
-    yoursBadge: "DIT",
-    unavailableTitle: "Centrene er ikke tilgængelige",
-    signInToSee: "Log ind for at se centre.",
-    loadFailed: "Centrene kunne ikke hentes.",
-    results: "Resultater",
-    nearest: "Nærmeste",
-    foundCount: "{count} fundet",
-    membersEyebrow: "medlemmer · 90 dage",
-    trainedEyebrow: "træninger · 90 dage",
-    noMatchTitle: "Ingen centre matcher",
-    noMatchBody: "Prøv kæden, byen eller en del af centerets navn.",
-    noCentresTitle: "Ingen centre endnu",
-    noCentresBody: "Centre vises her, når de er importeret.",
-    showAllNearby: "Vis alle i nærheden",
-  },
-
-  strongest: {
-    title: "Stærkeste i Danmark",
-    verifiedOnly: "Kun bekræftede",
-    seeAll: "Se hele Danmark",
   },
 
   overview: {
@@ -77,26 +103,28 @@ export default {
     yourCentre: "Dit center",
     membersTrainHere: { one: "{count} træner her", other: "{count} træner her" },
     youFollow: "du følger {count} af dem",
-    reviewQueue: {
-      one: "{count} løft venter på gennemsyn",
-      other: "{count} løft venter på gennemsyn",
-    },
-    reviewHint: "Se videoen, og godkend eller afvis den.",
-    exerciseLeaderboardA11y: "Rangliste for {exercise}",
-    recordHolders: {
-      one: "{count} har en rekord her",
-      other: "{count} har en rekord her",
-    },
-    noRecordYet:
-      "Ingen har en rekord her endnu. Gennemfør en træning med denne øvelse i centeret, så bliver din den første.",
-    myRank: "· #{rank} af {total}",
-    notRanked: "· ikke rangeret",
-    gapToTop: "{gap} til #1",
-    notOnList: "Dig · ikke på listen",
-    moreExercises: "Flere øvelser",
-    moreHint: "#1 i centeret · din plads",
-    topLine: "{name} · {weight} kg",
-    showAllExercises: "Vis alle {count} øvelser",
+    allExercises: "Alle øvelser",
+  },
+
+  // Centrets øvelser på centrets side: søgningen, sektionen og "Alle øvelser".
+  centreExercises: {
+    title: "Øvelser",
+    sortedByLifters: "flest løftere først",
+    searchPlaceholder: "Søg efter en øvelse i centret",
+    clearSearch: "Ryd søgningen",
+    resultsTitle: "Øvelser her",
+    noMatchTitle: "Ingen øvelser matcher",
+    noMatchBody: "Her er de øvelser, der er løftet i centret. Prøv en del af navnet.",
+    searchLoading: "Henter alle centrets øvelser…",
+    searchFailedTitle: "Kunne ikke hente alle øvelser",
+    searchFailedBody: "Søgningen dækker kun de mest løftede lige nu.",
+    topLine: "#1 {name} {weight} kg",
+    yourRank: "#{rank}",
+    yourRankA11y: "du er nummer {rank}",
+    openHint: "Åbner øvelsens rangliste i centret",
+    emptyBody: "Gennemfør en træning her, så kommer dine løft på listerne.",
+    allDetail: { one: "{count} øvelse med rangliste her", other: "{count} øvelser med rangliste her" },
+    allHint: "Åbner ranglisterne, med en knap for hver øvelse",
   },
 
   change: {
@@ -115,104 +143,21 @@ export default {
   exercise: {
     titleFallback: "Øvelse",
     nationalEyebrow: "Alle centre · Danmark",
-    nationalNote: "På tværs af centre kræver løftet en godkendt video.",
     unavailableTitle: "Ranglisten er ikke tilgængelig",
     loadFailed: "Ranglisten kunne ikke hentes.",
     loadMoreFailed: "Kunne ikke hente flere.",
     pickExercise: "Vælg en øvelse.",
-    legend:
-      "Video bekræftet: tre medlemmer af centeret har godkendt videoen. Video venter: en video er vedhæftet og venter på stemmer. Ingen video: løftet tæller i centeret, men ikke på tværs af Danmark.",
     empty: {
       noBodyweightTitle: "Ingen kropsvægt registreret",
       noBodyweightBody:
         "Rangering efter kropsvægt kræver en kropsvægt på løftet, og det har ingen her registreret.",
       noFriendsTitle: "Ingen af dine venner løfter her endnu",
-      noVerifiedTitle: "Ingen bekræftede løft endnu",
-      noVerifiedBody: "Vedhæft en video til et løft, og få tre medlemmer af dit center til at godkende det.",
       noLiftsBody: "Gennemfør en træning med denne øvelse i centeret, så er det første løft dit.",
     },
-    pinned: {
-      pendingTitle: "Ikke rangeret · din video venter på stemmer",
-      noVideoTitle: "Ikke rangeret · dit løft mangler video",
-      body: "{weight} kg i {gym}",
-    },
-  },
-
-  video: {
-    attachTitle: "Vedhæft video",
-    attachBody:
-      "Højst {seconds} sekunder. Centerets medlemmer ser den og stemmer; tre godkendelser bekræfter løftet.",
-    attachA11y: "Vedhæft en video til dit løft",
-    recordNow: "Optag nu",
-    recordNowBody: "Åbn kameraet.",
-    chooseLibrary: "Vælg fra biblioteket",
-    chooseLibraryBody: "En video, du allerede har.",
-    confirmTitle: "Brug denne video?",
-    confirmBody: "Den erstatter en eventuel video på løftet og nulstiller stemmerne.",
-    confirmBodyWithDuration: {
-      one: "{count} sekund. Den erstatter en eventuel video på løftet og nulstiller stemmerne.",
-      other: "{count} sekunder. Den erstatter en eventuel video på løftet og nulstiller stemmerne.",
-    },
-    use: "Brug",
-    cameraPermission: "Der skal gives adgang til kameraet for at optage en video.",
-    libraryPermission: "Der skal gives adgang til fotobiblioteket for at vælge en video.",
-    pickerFailed: "Videovælgeren kunne ikke åbnes.",
-    attached: "Video vedhæftet. Centerets medlemmer kan nu bekræfte den.",
-    attachedNotified: {
-      one: "Video vedhæftet. {count} medlem er blevet bedt om at bekræfte den.",
-      other: "Video vedhæftet. {count} medlemmer er blevet bedt om at bekræfte den.",
-    },
-    attachFailed: "Videoen kunne ikke vedhæftes.",
-  },
-
-  review: {
-    eyebrow: "BEKRÆFT REKORD",
-    queueTitle: "Løft til gennemsyn",
-    title: "{exercise} · {weight} kg",
-    counter: "{index} af {total}",
-    loadFailed: "Løftene til gennemsyn kunne ikke hentes.",
-    voteFailed: "Din stemme kunne ikke registreres.",
-    allSeen: "Tak, du har set alle",
-    emptyTitle: "Intet venter på gennemsyn",
-    emptyBody: "Når nogen i centeret vedhæfter en video til et løft, vises det her.",
-    playVideo: "Afspil video",
-    pauseVideo: "Sæt videoen på pause",
-    videoUnavailable: "Videoen er ikke tilgængelig",
-    videoNeedsBuild: "Afspilning af video kræver 2.0-udviklingsbuildet",
-    fromPrevious: "Fra {previous} kg · +{gain} kg",
-    becomesRank: "bliver #{rank} i centeret",
-    approvedCount: "{count} godkendt",
-    rejectedCount: "· {count} afvist",
-    toGo: "mangler {count}",
-    ownLiftWaiting: {
-      one: "Dit løft venter på {count} godkendelse mere.",
-      other: "Dit løft venter på {count} godkendelser mere.",
-    },
-    cannotVote: "Kun folk der har trænet i centeret de sidste 90 dage kan stemme.",
-    whyReject: "Hvorfor afvise?",
-    reject: "Afvis",
-    approve: "Godkend løftet",
-    rules:
-      "{approvals} godkendelser fra andre medlemmer bekræfter et løft. {rejections} afvisninger fjerner det fra ranglisten. Du kan ikke stemme på dine egne løft.",
-  },
-
-  rejectReasons: {
-    depth: "Ikke dybt nok",
-    lockout: "Ingen lockout",
-    assist: "Hjulpet eller spottet",
-    weight: "Vægten passer ikke",
-    other: "Andet",
   },
 
   errors: {
     generic: "Noget gik galt med centrene.",
     signInToChoose: "Du skal være logget ind for at vælge et center.",
-    signInToVote: "Du skal være logget ind for at stemme.",
-    signInToAttach: "Du skal være logget ind for at vedhæfte en video.",
-    pickVideoFirst: "Vælg en video først.",
-    videoTooLong: "Hold videoen under {seconds} sekunder.",
-    videoTooLarge: "Videoen må højst være 50 MB.",
-    videoUnreadable: "Den valgte video kunne ikke læses.",
-    videoEmpty: "Den valgte video var tom.",
   },
 };

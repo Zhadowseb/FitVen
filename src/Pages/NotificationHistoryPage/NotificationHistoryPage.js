@@ -13,6 +13,11 @@ import { useAuth } from "../../Contexts/AuthContext";
 import { notificationService } from "../../Services";
 import { Colors } from "../../Resources/GlobalStyling/colors";
 import { formatTimeAgo } from "../../Utils/dateUtils";
+import {
+  describeNotification,
+  notificationHintKey,
+  notificationTarget,
+} from "@utils/notificationHistory";
 import Bell from "../../Resources/Icons/UI-icons/Bell";
 import Cogwheel from "../../Resources/Icons/UI-icons/Cogwheel";
 import {
@@ -119,97 +124,83 @@ export default function NotificationHistoryPage() {
   };
 
   // A card with an avatar and an unread dot reads as something you can open,
-  // and nothing happened when you did. There is no screen for another user's
-  // profile in this app, but most notifications here are someone starting a
-  // workout, and that is what Social shows - so that is where a row goes. A
-  // request to verify a lift goes to that centre, with the review sheet open.
+  // and nothing happened when you did. Where each kind goes is in
+  // Utils/notificationHistory.js.
   const openNotification = (item) => {
-    const gymId = Number(item?.data?.gym_id);
+    const { route: routeName, params } = notificationTarget(item);
 
-    if (item?.eventType === "lift_verification_requested" && Number.isFinite(gymId)) {
-      navigation.navigate("GymLeaderboardPage", {
-        gym_id: gymId,
-        open_verification: true,
-        lift_id: item?.data?.lift_id ?? null,
-      });
-      return;
-    }
-
-    navigation.navigate("SocialPage");
+    navigation.navigate(routeName, params);
   };
 
-  const renderNotification = ({ item }) => (
-    <TouchableOpacity
-      activeOpacity={0.85}
-      accessibilityRole="button"
-      accessibilityLabel={t("notifications.itemLabel", {
-        title: item.title,
-        body: item.body,
-      })}
-      accessibilityHint={
-        item.eventType === "lift_verification_requested"
-          ? t("notifications.hints.openVerification")
-          : t("notifications.hints.openActivity")
-      }
-      onPress={() => openNotification(item)}
-      style={[
-        styles.notificationCard,
-        {
-          backgroundColor: cardSurface,
-          borderColor: item.readAt ? cardBorder : secondaryColor,
-        },
-      ]}
-    >
-      <View style={styles.avatarSlot}>
-        <UserAvatar
-          uri={item.actor?.avatarUrl}
-          size={46}
-          backgroundColor={avatarSurface}
-          borderColor={cardBorder}
-          borderWidth={1}
-        />
-        <View
-          style={[
-            styles.avatarBadge,
-            {
-              backgroundColor: primaryColor,
-              borderColor: cardSurface,
-            },
-          ]}
-        >
-          <Bell width={11} height={11} color={theme.textInverted} />
-        </View>
-      </View>
+  const renderNotification = ({ item }) => {
+    const { title, body } = describeNotification(item, t);
 
-      <View style={styles.notificationCopy}>
-        <View style={styles.notificationTitleRow}>
-          <ThemedText
-            numberOfLines={1}
-            style={styles.notificationTitle}
-            setColor={titleColor}
+    return (
+      <TouchableOpacity
+        activeOpacity={0.85}
+        accessibilityRole="button"
+        accessibilityLabel={t("notifications.itemLabel", { title, body })}
+        accessibilityHint={t(notificationHintKey(item))}
+        onPress={() => openNotification(item)}
+        style={[
+          styles.notificationCard,
+          {
+            backgroundColor: cardSurface,
+            borderColor: item.readAt ? cardBorder : secondaryColor,
+          },
+        ]}
+      >
+        <View style={styles.avatarSlot}>
+          <UserAvatar
+            uri={item.actor?.avatarUrl}
+            size={46}
+            backgroundColor={avatarSurface}
+            borderColor={cardBorder}
+            borderWidth={1}
+          />
+          <View
+            style={[
+              styles.avatarBadge,
+              {
+                backgroundColor: primaryColor,
+                borderColor: cardSurface,
+              },
+            ]}
           >
-            {item.title}
-          </ThemedText>
-          {!item.readAt ? (
-            <View
-              accessibilityLabel={t("notifications.unread")}
-              style={[
-                styles.unreadDot,
-                { backgroundColor: secondaryColor },
-              ]}
-            />
-          ) : null}
+            <Bell width={11} height={11} color={theme.textInverted} />
+          </View>
         </View>
 
-        <ThemedText style={styles.notificationBody} setColor={quietText}>
-          {item.body}
-        </ThemedText>
-        <ThemedText style={styles.notificationTime} setColor={quietText}>
-          {formatTimeAgo(item.createdAt)}
-        </ThemedText>
-      </View>
-    </TouchableOpacity>
-  );
+        <View style={styles.notificationCopy}>
+          <View style={styles.notificationTitleRow}>
+            <ThemedText
+              numberOfLines={1}
+              style={styles.notificationTitle}
+              setColor={titleColor}
+            >
+              {title}
+            </ThemedText>
+            {!item.readAt ? (
+              <View
+                accessibilityLabel={t("notifications.unread")}
+                style={[
+                  styles.unreadDot,
+                  { backgroundColor: secondaryColor },
+                ]}
+              />
+            ) : null}
+          </View>
+
+          <ThemedText style={styles.notificationBody} setColor={quietText}>
+            {body}
+          </ThemedText>
+          <ThemedText style={styles.notificationTime} setColor={quietText}>
+            {formatTimeAgo(item.createdAt)}
+          </ThemedText>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   const emptyState = (
     <ThemedStateBlock

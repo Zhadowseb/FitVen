@@ -8,7 +8,7 @@ import {
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SQLiteProvider } from 'expo-sqlite';
 import { initializeDatabase } from './src/Database/db';
-import { View, useColorScheme } from "react-native"
+import { Linking, View, useColorScheme } from "react-native"
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { KeyboardProvider, KeyboardToolbar } from "react-native-keyboard-controller";
 import * as ScreenOrientation from "expo-screen-orientation";
@@ -28,6 +28,8 @@ import ExplorePage from "./src/Pages/ExplorePage/ExplorePage";
 import ExploreSearchPage from "./src/Pages/ExploreSearchPage/ExploreSearchPage";
 import ProgramsBrowsePage from "./src/Pages/ProgramsBrowsePage/ProgramsBrowsePage";
 import CustomExercisesPage from "./src/Pages/CustomExercisesPage/CustomExercisesPage";
+import CustomExerciseDetailPage from "./src/Pages/CustomExercisesPage/CustomExerciseDetailPage";
+import MyExercisePage from "./src/Pages/MyExercisePage/MyExercisePage";
 import CenterPostsPage from "./src/Pages/CenterPostsPage/CenterPostsPage";
 import SocialPage from "./src/Pages/SocialPage/SocialPage";
 import PublicProfilePage from "./src/Pages/PublicProfilePage/PublicProfilePage";
@@ -57,6 +59,7 @@ import RunHeartRateChartPage from "./src/Pages/WorkoutPage/WorkoutTypes/Run/RunH
 import GymsPage from "./src/Pages/GymsPage/GymsPage";
 import GymLeaderboardPage from "./src/Pages/GymLeaderboardPage/GymLeaderboardPage";
 import GymExerciseLeaderboardPage from "./src/Pages/GymExerciseLeaderboardPage/GymExerciseLeaderboardPage";
+import CategoryLeaderboardPage from "./src/Pages/CategoryLeaderboardPage/CategoryLeaderboardPage";
 import NationalExerciseLeaderboardPage from "./src/Pages/NationalExerciseLeaderboardPage/NationalExerciseLeaderboardPage";
 import MusicSettingsPage from "./src/Pages/MusicSettingsPage/MusicSettingsPage";
 import DevDashboardPage from "./src/Pages/DevDashboardPage/DevDashboardPage";
@@ -72,14 +75,13 @@ import {
   migrateLegacySharedDatabaseToUserDatabase,
   setActiveDatabaseName,
 } from "./src/Database/localDatabase";
-import { notificationService } from "./src/Services";
-// Side effect only: registers the background location task.
-import "./src/Services/locationBackgroundTask";
+import { locationService, notificationService } from "./src/Services";
 import { AuthProvider, useAuth } from './src/Contexts/AuthContext';
 import { ThemeModeProvider, useThemeMode } from './src/Contexts/ThemeContext';
 import { LocalizationProvider, useTranslation } from './src/Localization';
 import { ExerciseViewSettingsProvider } from './src/Contexts/ExerciseViewSettingsContext';
 import PrivacyConsentGate from "./src/Resources/Components/PrivacyConsentGate/PrivacyConsentGate";
+import ToastHost from "./src/Resources/Components/Toast/Toast";
 import ExerciseLibrarySync from "./src/Sync/ExerciseLibrarySync";
 import PushNotificationRegistrationSync from "./src/Sync/PushNotificationRegistrationSync";
 import SetSync from "./src/Sync/SetSync";
@@ -87,10 +89,24 @@ import WorkoutTypeCatalogSync from "./src/Sync/WorkoutTypeCatalogSync";
 import WorkoutTypeInstanceSync from "./src/Sync/WorkoutTypeInstanceSync";
 import WorkoutMusicSync from "./src/Sync/WorkoutMusicSync";
 import GymMatchSync from "./src/Sync/GymMatchSync";
+import AppOpenSync from "./src/Sync/AppOpenSync";
+import { parseLiveWorkoutFinishUrl } from "./src/Utils/liveWorkout";
+import { pushNotificationTarget } from "./src/Utils/notificationHistory";
+import LiveWorkoutSync from "./src/Sync/LiveWorkoutSync";
+
+// Older builds tracked runs with a background location task, and Android
+// restores a registered task on launch. Stop any such leftover once, so
+// nothing can start the location foreground service this app no longer
+// declares a permission for.
+void locationService.stopLegacyRunLocationTask();
 
 const Stack = createNativeStackNavigator();
 const navigationRef = createNavigationContainerRef();
 const NOTIFICATION_HISTORY_ROUTE = "NotificationHistoryPage";
+// "Afslut" on the lock-screen card opens the app with a link; each one is
+// acted on once, even when the navigator is rebuilt and asks for the link
+// the app was opened with again.
+const handledLiveWorkoutLinks = new Set();
 const RUN_HEART_RATE_CHART_ROUTE = "RunHeartRateChartPage";
 
 // Changing the accent theme remounts RootNavigator (fresh mounts re-read the
@@ -130,6 +146,7 @@ function RootNavigator() {
   const { isAuthenticated, isAuthLoading } = useAuth();
   const handledNotificationResponsesRef = useRef(new Set());
   const notificationResponseRetryRef = useRef(null);
+  const liveWorkoutLinkRetryRef = useRef(null);
   const [currentRouteName, setCurrentRouteName] = useState(null);
 
   const navTheme =
@@ -178,6 +195,15 @@ function RootNavigator() {
       return;
     }
 
+    // The rest-is-over reminder only brings the app back to where it was:
+    // the workout, not the notification history.
+    if (
+      response?.notification?.request?.content?.data?.kind ===
+      notificationService.REST_FINISHED_NOTIFICATION_KIND
+    ) {
+      return;
+    }
+
     const responseKey = getNotificationResponseKey(response);
 
     if (
@@ -186,6 +212,12 @@ function RootNavigator() {
     ) {
       return;
     }
+
+    // A like opens the post, on top of the notification page, so back goes
+    // to the page. Every other push stops at the page.
+    const target = pushNotificationTarget(
+      response?.notification?.request?.content?.data
+    );
 
     const navigateToHistory = () => {
       if (!navigationRef.isReady()) {
@@ -201,6 +233,11 @@ function RootNavigator() {
         openedFromNotification: true,
         notificationHistoryOpenId: Date.now(),
       });
+
+      if (target) {
+        navigationRef.navigate(target.route, target.params);
+      }
+
       notificationService.clearLastNotificationResponse();
       return true;
     };
@@ -242,6 +279,65 @@ function RootNavigator() {
     isAuthLoading,
     openNotificationHistoryFromResponse,
   ]);
+
+  // "Afslut" on a lock-screen card with every set done: open that workout and
+  // let it finish itself, then ask about the post.
+  const openLiveWorkoutFinish = useCallback((url, { initial = false } = {}) => {
+    const target = parseLiveWorkoutFinishUrl(url);
+    // The link the app was opened with is asked for again on every rebuild;
+    // one that arrives while running is new every time.
+    const linkKey = initial ? `initial:${url}` : null;
+
+    if (!target || (linkKey && handledLiveWorkoutLinks.has(linkKey))) {
+      return;
+    }
+
+    if (linkKey) {
+      handledLiveWorkoutLinks.add(linkKey);
+    }
+
+    let attempts = 0;
+    const openWorkout = () => {
+      if (!navigationRef.isReady()) {
+        attempts += 1;
+
+        if (attempts <= 20) {
+          liveWorkoutLinkRetryRef.current = setTimeout(openWorkout, 250);
+        }
+
+        return;
+      }
+
+      navigationRef.navigate("WorkoutPage", {
+        workout_id: target.workoutId,
+        workout_type: target.workoutType,
+        workout_label: target.workoutType,
+        finishRequestKey: Date.now(),
+      });
+    };
+
+    clearTimeout(liveWorkoutLinkRetryRef.current);
+    openWorkout();
+  }, []);
+
+  useEffect(() => {
+    if (isAuthLoading || !isAuthenticated) {
+      return undefined;
+    }
+
+    Linking.getInitialURL()
+      .then((url) => openLiveWorkoutFinish(url, { initial: true }))
+      .catch(() => {});
+
+    const subscription = Linking.addEventListener("url", ({ url }) =>
+      openLiveWorkoutFinish(url)
+    );
+
+    return () => {
+      subscription?.remove?.();
+      clearTimeout(liveWorkoutLinkRetryRef.current);
+    };
+  }, [isAuthenticated, isAuthLoading, openLiveWorkoutFinish]);
 
   useEffect(() => {
     const orientationLock =
@@ -295,6 +391,7 @@ function RootNavigator() {
                 <Stack.Screen name="ExploreSearchPage" component={ExploreSearchPage} options={{ headerShown: false }} />
                 <Stack.Screen name="ProgramsBrowsePage" component={ProgramsBrowsePage} options={{ headerShown: false }} />
                 <Stack.Screen name="CustomExercisesPage" component={CustomExercisesPage} options={{ headerShown: false }} />
+                <Stack.Screen name="CustomExerciseDetailPage" component={CustomExerciseDetailPage} options={{ headerShown: false }} />
                 <Stack.Screen name="CenterPostsPage" component={CenterPostsPage} options={{ headerShown: false }} />
                 <Stack.Screen name="SocialPage" component={SocialPage} options={{ headerShown: false }} />
                 <Stack.Screen name="PublicProfilePage" component={PublicProfilePage} options={{ headerShown: false }} />
@@ -309,6 +406,7 @@ function RootNavigator() {
                 <Stack.Screen name="WeekPage" component={WeekPage} options={{headerShown: false}} />
                 <Stack.Screen name="WorkoutPage" component={WorkoutPage} options={{headerShown: false}} />
                 <Stack.Screen name="ExerciseCatalogPage" component={ExerciseCatalogPage} options={{ headerShown: false }} />
+                <Stack.Screen name="MyExercisePage" component={MyExercisePage} options={{ headerShown: false }} />
                 <Stack.Screen name="ExerciseLibraryPage" component={ExerciseLibraryPage} options={{ headerShown: false }} />
                 <Stack.Screen name="PersonalRecordsPage" component={PersonalRecordsPage} options={{ headerShown: false }} />
                 <Stack.Screen name="RecordsExercisePage" component={RecordsExercisePage} options={{ headerShown: false }} />
@@ -328,6 +426,7 @@ function RootNavigator() {
                 <Stack.Screen name="GymsPage" component={GymsPage} options={{ headerShown: false }} />
                 <Stack.Screen name="GymLeaderboardPage" component={GymLeaderboardPage} options={{ headerShown: false }} />
                 <Stack.Screen name="GymExerciseLeaderboardPage" component={GymExerciseLeaderboardPage} options={{ headerShown: false }} />
+                <Stack.Screen name="CategoryLeaderboardPage" component={CategoryLeaderboardPage} options={{ headerShown: false }} />
                 <Stack.Screen name="NationalExerciseLeaderboardPage" component={NationalExerciseLeaderboardPage} options={{ headerShown: false }} />
                 <Stack.Screen name="PrivacyPolicyPage" component={PrivacyPolicyPage} options={{ headerShown: false }} />
                 <Stack.Screen name="TermsOfUsePage" component={TermsOfUsePage} options={{ headerShown: false }} />
@@ -366,6 +465,10 @@ function RootNavigator() {
             navigationRef={navigationRef}
           />
         ) : null}
+
+        {/* Over every screen, the navigation included: "Added to your
+            exercises" on the screen you went back to. */}
+        {isAuthenticated ? <ToastHost /> : null}
       </View>
 
       {/* Gives every field - numeric ones included - a Done button. */}
@@ -424,6 +527,8 @@ function UserScopedDatabaseApp() {
       <PushNotificationRegistrationSync />
       <WorkoutMusicSync />
       <GymMatchSync />
+      <AppOpenSync />
+      <LiveWorkoutSync />
       <PrivacyConsentGate>
         {/* Keyed on the language too: a screen's header options and anything
             else the navigator captured at mount are rebuilt in the new one. */}

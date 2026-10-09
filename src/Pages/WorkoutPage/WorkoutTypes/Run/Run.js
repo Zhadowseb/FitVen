@@ -849,18 +849,6 @@ const Run = ({
       return;
     }
 
-    if (resolvedTimerStart !== null && !nextIsDone) {
-      try {
-        await locationService.ensureRunTracking(db, workout_id);
-      } catch (error) {
-        console.warn("Unable to ensure location tracking:", error);
-      }
-    }
-
-    if (requestId !== workoutStateLoadRequestRef.current) {
-      return;
-    }
-
     await loadTrackedRunSummary();
     set_workoutStateLoaded(true);
   }, [
@@ -1028,9 +1016,8 @@ const Run = ({
       });
 
       try {
-        await locationService.startRunTracking(db, workout_id, {
-          resetLogs: isFreshStart,
-        });
+        // Always throws now: run tracking is switched off (see locationService).
+        await locationService.startRunTracking();
       } catch (trackingError) {
         await workoutService.persistWorkoutTimerState(db, {
           workoutId: workout_id,

@@ -7,6 +7,7 @@ import Checkmark from "@resources/Icons/UI-icons/Checkmark";
 import ChevronRight from "@resources/Icons/UI-icons/ChevronRight";
 import { ThemedText } from "@resources/ThemedComponents";
 import { programService } from "@services";
+import { workoutDisplayName } from "@utils/workoutTypeLabel";
 
 const WEEKDAY_KEYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
@@ -157,7 +158,7 @@ export default function ActiveProgramCard({ card, onOpen, onStart, isStarting = 
               {t("train.program.today")}
             </ThemedText>
             <ThemedText style={styles.todayName} setColor={theme.title} numberOfLines={1}>
-              {today.label}
+              {workoutDisplayName(today.label, t, today.workoutType) ?? today.label}
             </ThemedText>
             <ThemedText style={styles.todayMeta} setColor={quiet} numberOfLines={1}>
               {[

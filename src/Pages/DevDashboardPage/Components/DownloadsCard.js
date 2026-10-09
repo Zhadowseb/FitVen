@@ -89,8 +89,10 @@ const CHART_TITLES = {
  * Downloads: one box per store and a stacked bar per bucket.
  *
  * With no rows at all the boxes show an em dash and the chart says so in
- * words. That is the state the screen is in until somebody sets the store keys
- * on the server, and it must not look like a month of zero downloads.
+ * words. That is the state the screen is in until a store has sent a report
+ * for a day - for the App Store, not before the app is released, however
+ * correctly the keys are set - and it must not look like a month of zero
+ * downloads.
  */
 export default function DownloadsCard({ stats }) {
   const colorScheme = useColorScheme();
@@ -192,7 +194,7 @@ export default function DownloadsCard({ stats }) {
             <ThemedText style={styles.emptyText} setColor={theme.quietText}>
               {stats.hasData
                 ? "Ingen downloads i perioden."
-                : "Butiksnøglerne er ikke sat på serveren endnu."}
+                : "Ingen tal fra butikkerne endnu."}
             </ThemedText>
           </View>
         )}

@@ -2,7 +2,7 @@
   "expo": {
     "name": "FitVen",
     "slug": "programapp",
-    "version": "2.10.1",
+    "version": "2.17.5",
     "scheme": "fitven",
     "orientation": "default",
     "icon": "./assets/icon_v1.0.png",
@@ -18,8 +18,14 @@
       "supportsTablet": false,
       "requireFullScreen": true,
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "We use your location to track workout distance and to match a workout to the fitness centre you are in.",
-        "ITSAppUsesNonExemptEncryption": false
+        "NSLocationWhenInUseUsageDescription": "FitVen uses your location to match a workout to the fitness centre you are in.",
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSSupportsLiveActivities": true
+      },
+      "entitlements": {
+        "com.apple.security.application-groups": [
+          "group.com.fitven.app"
+        ]
       },
       "buildNumber": "18"
     },
@@ -40,11 +46,9 @@
       "package": "com.anonymous.programapp",
       "permissions": [
         "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.FOREGROUND_SERVICE",
-        "android.permission.FOREGROUND_SERVICE_LOCATION",
-        "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION"
+      ],
+      "blockedPermissions": [
         "android.permission.FOREGROUND_SERVICE",
         "android.permission.FOREGROUND_SERVICE_LOCATION"
       ]
@@ -54,6 +58,7 @@
     },
     "plugins": [
       "./plugins/withDevAppVariant",
+      "./plugins/withoutLocationForegroundService",
       "expo-sqlite",
       [
         "react-native-ble-plx",
@@ -73,25 +78,27 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "FitVen uses your precise location to track run distance and to match a workout to the fitness centre you are in.",
+          "locationWhenInUsePermission": "FitVen uses your location to match a workout to the fitness centre you are in.",
           "isIosBackgroundLocationEnabled": false,
           "isAndroidBackgroundLocationEnabled": false,
-          "isAndroidForegroundServiceEnabled": true
+          "isAndroidForegroundServiceEnabled": false
         }
       ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "FitVen uses your photos so you can upload a profile picture or a video of a lift.",
-          "cameraPermission": "FitVen uses the camera so you can record a video of a lift for verification.",
-          "microphonePermission": "FitVen uses the microphone when you record a video of a lift."
+          "photosPermission": "FitVen uses your photos so you can upload a profile picture or a video of an exercise.",
+          "cameraPermission": "FitVen uses the camera so you can record a video of an exercise.",
+          "microphonePermission": "FitVen uses the microphone when you record a video of an exercise."
         }
       ],
       "expo-secure-store",
       "expo-video",
-      "expo-web-browser"
+      "expo-web-browser",
+      "@bacons/apple-targets"
     ],
     "extra": {
+      "spotifyClientId": "42e6c32ad3b84a8ebe667da6bdeb2fb0",
       "eas": {
         "projectId": "95d3eed5-2581-4091-8c7c-56bed74353ec"
       }

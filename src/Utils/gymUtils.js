@@ -13,23 +13,22 @@ const CHAIN_INITIALS = {
   independent: "IN",
 };
 
-// One colour per chain, so a map full of pins can be read at a glance.
+// One colour per chain, behind the initials of a centre without a photo, so a
+// list of centres says which chain is which at a glance.
 //
-// These are not the chains' brand colours. Three of the app's own colours
-// already mean something on this map - the accent is your centre, green is
-// where you are standing, gold is a record - so a chain that happens to be
-// orange or green would say the wrong thing. These are picked to be told
-// apart from each other and from those three, in both light and dark mode,
-// leaning towards each chain's brand only where that was free.
+// These are not the chains' brand colours. They were picked for the centres
+// map, since removed, where three of the app's own colours already meant
+// something - the accent was your centre, green where you were standing, gold
+// a record. They are told apart from each other and from those three, in both
+// light and dark mode, leaning towards each chain's brand only where that was
+// free.
 const CHAIN_COLORS = {
-  // Cyan rather than a true green: green already marks where you are
-  // standing, and two greens on one map is one green too many.
+  // Cyan rather than a true green, which marked where you were standing.
   puregym: "#22D3EE",
   sats: "#E4362F",
   "loop fitness": "#A855F7",
   loop: "#A855F7",
-  // Brighter and more saturated than the gold a record is drawn in, which
-  // never appears on the map anyway.
+  // Brighter and more saturated than the gold a record is drawn in.
   fitnessx: "#FACC15",
   "fit&sund": "#EC4899",
   // No centres of this chain are imported; the colour is here so a future
@@ -38,7 +37,7 @@ const CHAIN_COLORS = {
 };
 const UNKNOWN_CHAIN_COLOR = "#C4C7CF";
 
-/** The pin colour for a chain. An unknown chain stays neutral grey. */
+/** The tile colour for a chain. An unknown chain stays neutral grey. */
 export function getChainColor(chain) {
   const key = String(chain ?? "").trim().toLowerCase();
 
@@ -69,25 +68,6 @@ export function getChainInitials(chain) {
   }
 
   return normalized.slice(0, 2).toUpperCase();
-}
-
-/** "850 m" under a kilometre, "2.3 km" above, "12 km" once it is far. */
-export function formatDistance(meters) {
-  const value = Number(meters);
-
-  if (!Number.isFinite(value) || value < 0) {
-    return "";
-  }
-
-  if (value < 1000) {
-    return `${Math.round(value / 10) * 10} m`;
-  }
-
-  if (value < 10000) {
-    return `${(value / 1000).toFixed(1).replace(/\.0$/, "")} km`;
-  }
-
-  return `${Math.round(value / 1000)} km`;
 }
 
 /** "100", "102.5" - a weight without a trailing ".0" or float noise. */
@@ -151,8 +131,7 @@ export function selectBestLiftsPerExercise(sets) {
 /**
  * Which of today's best sets should go up. A lift is written when it is at
  * least as heavy as the row already there - equal weight still writes, so a
- * rep improvement lands and a re-done set keeps its performed_at fresh. The
- * database trigger keeps the video when the weight is unchanged.
+ * rep improvement lands and a re-done set keeps its performed_at fresh.
  */
 export function selectLiftsToUpsert(bestLifts, existingLifts) {
   const existingByExercise = new Map(
@@ -174,34 +153,6 @@ export function selectLiftsToUpsert(bestLifts, existingLifts) {
   });
 }
 
-export const APPROVALS_REQUIRED = 3;
-export const REJECTIONS_TO_REMOVE = 2;
-
-/**
- * The same rule the vote trigger applies, for showing the pill before the
- * server answers: two rejections beat everything, then three approvals.
- *
- * It reads the two constants above rather than repeating their values. It
- * used to hardcode them, two lines apart, so changing the rule in one place
- * moved the pill and the review sheet and left this behind - and the test
- * asserted the old numbers, so it kept passing.
- */
-export function deriveVideoStatus({ hasVideo, approvals = 0, rejections = 0 }) {
-  if (!hasVideo) {
-    return "none";
-  }
-
-  if (Number(rejections) >= REJECTIONS_TO_REMOVE) {
-    return "rejected";
-  }
-
-  if (Number(approvals) >= APPROVALS_REQUIRED) {
-    return "verified";
-  }
-
-  return "pending";
-}
-
 /** "Mikkel R." - first name and the initial of the last, for the podium. */
 export function shortenDisplayName(displayName) {
   const parts = String(displayName ?? "")
@@ -218,6 +169,175 @@ export function shortenDisplayName(displayName) {
   }
 
   return `${parts[0]} ${parts[parts.length - 1][0].toUpperCase()}.`;
+}
+
+/* ------------------------------------------------ a centre's exercises -- */
+
+function exerciseNameKey(name) {
+  return String(name ?? "").trim().toLocaleLowerCase();
+}
+
+// toFiniteNumber reads null as 0; a missing #1 or rank has to stay missing.
+function toNullableNumber(value) {
+  return value === null || value === undefined || value === "" ? null : toFiniteNumber(value);
+}
+
+/**
+ * Every exercise ranked at a centre, from gymService.getGymOverview: the
+ * featured three and the rest in one list, most lifters first, then by name.
+ * The featured three are there even when nobody has lifted them, with 0.
+ */
+export function listCentreExercises(overview) {
+  const byId = new Map();
+  const add = (entry) => {
+    const id = toFiniteNumber(entry?.id);
+    const name = String(entry?.name ?? "").trim();
+
+    if (id === null || id <= 0 || !name || byId.has(id)) {
+      return;
+    }
+
+    byId.set(id, { ...entry, id, name, lifterCount: toFiniteNumber(entry.lifterCount) ?? 0 });
+  };
+
+  for (const entry of overview?.featured ?? []) {
+    add({
+      id: entry?.exerciseId,
+      name: entry?.exerciseName,
+      lifterCount: entry?.lifterCount,
+      topName: entry?.top?.displayName ?? null,
+      topWeightKg: toNullableNumber(entry?.top?.weightKg),
+      myRank: toNullableNumber(entry?.me?.rank),
+    });
+  }
+
+  for (const entry of overview?.more ?? []) {
+    add({
+      id: entry?.exerciseId,
+      name: entry?.exerciseName,
+      lifterCount: entry?.lifterCount,
+      topName: entry?.topName ?? null,
+      topWeightKg: toNullableNumber(entry?.topWeightKg),
+      myRank: toNullableNumber(entry?.myRank),
+    });
+  }
+
+  return [...byId.values()].sort(
+    (left, right) => right.lifterCount - left.lifterCount || left.name.localeCompare(right.name)
+  );
+}
+
+/**
+ * How many exercises are ranked at the centre, for "All exercises": the ones
+ * listCentreExercises finds in the overview, and the ones the overview left
+ * out because it was asked for fewer (more_limit). `moreTotal` counts every
+ * one of the rest, sent or not.
+ */
+export function countCentreExercises(overview) {
+  const notSent = Math.max(
+    0,
+    (toFiniteNumber(overview?.moreTotal) ?? 0) - (overview?.more?.length ?? 0)
+  );
+
+  return listCentreExercises(overview).length + notSent;
+}
+
+/**
+ * What the centre's exercise search says under its matches, from how far it
+ * has got. The page starts with a preview of the exercises and fetches the
+ * rest when somebody searches, so "no match" is only true once every exercise
+ * has been looked through - before that the search is still looking, or
+ * could not get the rest (PR #294's review: it said "no match" about an
+ * exercise lifted there).
+ *
+ *   previewCount exercises the page already has
+ *   totalCount   exercises ranked at the centre (countCentreExercises)
+ *   status       "idle" | "loading" | "ready" | "error", for the full list -
+ *                the page's words for its cards' status too
+ */
+export function centreSearchView({
+  matchCount = 0,
+  previewCount = 0,
+  totalCount = 0,
+  status = "idle",
+} = {}) {
+  const complete = status === "ready" || previewCount >= totalCount;
+  const failed = !complete && status === "error";
+
+  return {
+    complete,
+    loading: !complete && !failed,
+    failed,
+    noMatch: complete && matchCount === 0,
+  };
+}
+
+/**
+ * The exercises whose name holds what was typed, best match first: the name
+ * starting with it, then a word in it, then anywhere - and within each, the
+ * list's own order (most lifters first). Empty for an empty query.
+ */
+export function searchCentreExercises(exercises, query) {
+  const needle = exerciseNameKey(query).replace(/\s+/g, " ");
+
+  if (!needle) {
+    return [];
+  }
+
+  const scored = [];
+
+  (exercises ?? []).forEach((exercise, index) => {
+    const name = exerciseNameKey(exercise?.name).replace(/\s+/g, " ");
+    const at = name.indexOf(needle);
+
+    if (at === -1) {
+      return;
+    }
+
+    let score = at === 0 ? 0 : 2;
+
+    // A word in the name starting with it: after a space, a bracket, a
+    // slash or a dash - "press" in "Bench Press", "dumb" in "(Dumbbell)".
+    for (let from = at; score === 2 && from !== -1; from = name.indexOf(needle, from + 1)) {
+      if (/[\s(/-]/.test(name[from - 1] ?? "")) {
+        score = 1;
+      }
+    }
+
+    scored.push({ exercise, score, index });
+  });
+
+  return scored
+    .sort((left, right) => left.score - right.score || left.index - right.index)
+    .map((entry) => entry.exercise);
+}
+
+/* ------------------------------------------------ centres before a search -- */
+
+/**
+ * The centres Explore's search shows before anything is typed, in its three
+ * groups: your centre, the others you have trained in (most often first, as
+ * my_gyms gives them) and the busiest centres of a region, `limit` of them.
+ * A centre is shown once, in the first group it is in.
+ */
+export function mergeGymSuggestions({ home = null, trainedIn = [], popular = [], limit = 10 } = {}) {
+  const seen = new Set();
+  const isNew = (gym) => {
+    const id = toNullableNumber(gym?.id);
+
+    if (id === null || id <= 0 || seen.has(id)) {
+      return false;
+    }
+
+    seen.add(id);
+    return true;
+  };
+
+  const yours = home && isNew(home) ? home : null;
+  const trained = (trainedIn ?? []).filter(isNew);
+  const others = (popular ?? []).filter(isNew).slice(0, Math.max(0, limit));
+
+  return { yours, trainedIn: trained, popular: others };
 }
 
 /**

@@ -8,6 +8,11 @@ import {
 } from "@repository";
 import { withTransaction } from "@services/shared";
 import { startBackgroundSync } from "@services/syncScheduler";
+import { notifyWorkoutDataChanged } from "@utils/workoutDataEvents";
+import {
+  createWeightModeCloudColumn,
+  normalizeInstanceWeightMode,
+} from "@utils/weightMode";
 import {
   normalizeDeletedAt,
   normalizeSyncId,
@@ -39,6 +44,35 @@ import {
   syncDirtyLocalRowToCloud,
 } from "./cloudSyncShared";
 import { syncWorkoutTypeInstancesWithCloud } from "./workoutTypeInstanceSync";
+
+// `weight_mode` (4d) is the one column here the app may reach before the cloud
+// has it: it comes with 20261002090000_weight-mode-per-instance.sql, and a
+// select or payload naming a missing column fails the request - every
+// exercise would stop syncing, not just the mode. So the reconcile's read and
+// the upload go through this handle, which names the column until the cloud
+// says it is missing and then syncs without it for the rest of the session.
+// The same pattern as started_from on workouts. The queued deletes never name
+// it and do not need to.
+const weightModeColumn = createWeightModeCloudColumn({
+  onMissing: () =>
+    console.info(
+      "exercise_instance.weight_mode is missing in the cloud; exercises sync without it until the app restarts."
+    ),
+});
+
+// A cloud row that does not say how its weights are written - no column yet,
+// or an older app wrote it - says nothing about it: the phone's own value
+// stands, so that alone is never a difference to download.
+function withKnownWeightMode(cloudExercise, localExercise) {
+  if (normalizeInstanceWeightMode(cloudExercise?.weight_mode) !== null) {
+    return cloudExercise;
+  }
+
+  return {
+    ...cloudExercise,
+    weight_mode: normalizeInstanceWeightMode(localExercise?.weight_mode),
+  };
+}
 
 export async function processQueuedExerciseInstanceDeletes(db, userId) {
   const queuedDeletes =
@@ -124,19 +158,24 @@ export async function uploadDirtyExerciseInstances(
       continue;
     }
 
-    const syncResult = await syncDirtyLocalRowToCloud({
-      tableName: EXERCISE_INSTANCE_CLOUD_TABLE,
-      selectColumns: EXERCISE_INSTANCE_CLOUD_SYNC_SELECT,
-      userId,
-      localEntity: localExercise,
-      payload,
-      cloudId: parseCloudExerciseInstanceId(
-        resolveSideBySideCloudId(localExercise, "cloud_exercise_instance_id")
-      ),
-      syncId: normalizeSyncId(localExercise.sync_id),
-      legacyLocalId: payload.local_exercise_instance_id,
-      legacyLocalIdColumn: "local_exercise_instance_id",
-    });
+    // Built inside the request so a retry without weight_mode rebuilds both.
+    const syncResult = await weightModeColumn.withFallback(() =>
+      syncDirtyLocalRowToCloud({
+        tableName: EXERCISE_INSTANCE_CLOUD_TABLE,
+        selectColumns: weightModeColumn.selectColumns(
+          EXERCISE_INSTANCE_CLOUD_SYNC_SELECT
+        ),
+        userId,
+        localEntity: localExercise,
+        payload: weightModeColumn.sendablePayload(payload),
+        cloudId: parseCloudExerciseInstanceId(
+          resolveSideBySideCloudId(localExercise, "cloud_exercise_instance_id")
+        ),
+        syncId: normalizeSyncId(localExercise.sync_id),
+        legacyLocalId: payload.local_exercise_instance_id,
+        legacyLocalIdColumn: "local_exercise_instance_id",
+      })
+    );
 
     if (!syncResult.uploaded) {
       continue;
@@ -158,6 +197,7 @@ export async function uploadDirtyExerciseInstances(
 
     await weightliftingRepository.markExerciseSynced(db, {
       exerciseId: localExercise.exercise_instance_id,
+      expectedSyncVersion: localExercise.sync_version,
       cloudExerciseInstanceId,
       remoteLocalExerciseInstanceId,
       syncId: normalizeSyncId(syncResult.cloudRecord?.sync_id),
@@ -178,17 +218,21 @@ export async function uploadDirtyExerciseInstances(
 }
 
 async function reconcileExerciseInstancesFromCloud(db, userId) {
-  const { data: cloudExercises, error } = await supabase
-    .from(EXERCISE_INSTANCE_CLOUD_TABLE)
-    .select(EXERCISE_INSTANCE_CLOUD_SYNC_SELECT)
-    .eq("user_id", userId)
-    .order("cloud_workout_type_instance_id", { ascending: true })
-    .order("exercise_order", { ascending: true })
-    .order("id", { ascending: true });
+  const cloudExercises = await weightModeColumn.withFallback(async () => {
+    const { data, error } = await supabase
+      .from(EXERCISE_INSTANCE_CLOUD_TABLE)
+      .select(weightModeColumn.selectColumns(EXERCISE_INSTANCE_CLOUD_SYNC_SELECT))
+      .eq("user_id", userId)
+      .order("cloud_workout_type_instance_id", { ascending: true })
+      .order("exercise_order", { ascending: true })
+      .order("id", { ascending: true });
 
-  if (error) {
-    throw error;
-  }
+    if (error) {
+      throw error;
+    }
+
+    return data;
+  });
 
   await claimCloudWatchers({
     userId,
@@ -262,29 +306,42 @@ async function reconcileExerciseInstancesFromCloud(db, userId) {
       }
     );
 
-    for (const cloudExercise of cloudExercises ?? []) {
+    for (const cloudRow of cloudExercises ?? []) {
       const cloudExerciseInstanceId = parseCloudExerciseInstanceId(
-        cloudExercise.id
+        cloudRow.id
       );
-      const cloudSyncId = normalizeSyncId(cloudExercise.sync_id);
+      const cloudSyncId = normalizeSyncId(cloudRow.sync_id);
       const localExerciseInstanceId = normalizeOptionalInteger(
-        cloudExercise.local_exercise_instance_id,
+        cloudRow.local_exercise_instance_id,
         null
       );
       const cloudWorkoutTypeInstanceId = normalizeOptionalInteger(
-        cloudExercise.cloud_workout_type_instance_id,
+        cloudRow.cloud_workout_type_instance_id,
         null
       );
       const parentWorkout = localWorkoutsByCloudId.get(cloudWorkoutTypeInstanceId);
-      const comparableCloudExercise =
-        getComparableExerciseInstanceSnapshot(cloudExercise);
 
       if (
         cloudExerciseInstanceId === null ||
         cloudWorkoutTypeInstanceId === null ||
-        !parentWorkout ||
-        !comparableCloudExercise.exercise_name
+        !parentWorkout
       ) {
+        continue;
+      }
+
+      const localExercise =
+        localExercisesByCloudId.get(cloudExerciseInstanceId) ??
+        localExercisesBySyncId.get(cloudSyncId) ??
+        localExercisesByRemoteLocalId.get(localExerciseInstanceId) ??
+        localExercisesByLocalId.get(localExerciseInstanceId) ??
+        null;
+      // Built once per row, and used for the name check below as well:
+      // withKnownWeightMode changes only weight_mode, never the name.
+      const cloudExercise = withKnownWeightMode(cloudRow, localExercise);
+      const comparableCloudExercise =
+        getComparableExerciseInstanceSnapshot(cloudExercise);
+
+      if (!comparableCloudExercise.exercise_name) {
         continue;
       }
 
@@ -297,13 +354,6 @@ async function reconcileExerciseInstancesFromCloud(db, userId) {
       ) {
         continue;
       }
-
-      const localExercise =
-        localExercisesByCloudId.get(cloudExerciseInstanceId) ??
-        localExercisesBySyncId.get(cloudSyncId) ??
-        localExercisesByRemoteLocalId.get(localExerciseInstanceId) ??
-        localExercisesByLocalId.get(localExerciseInstanceId) ??
-        null;
 
       if (isCloudSnapshotDeleted(cloudExercise)) {
         pendingDeletionAcks.push({
@@ -353,6 +403,7 @@ async function reconcileExerciseInstancesFromCloud(db, userId) {
           ),
           note: comparableCloudExercise.note,
           done: comparableCloudExercise.done,
+          weightMode: comparableCloudExercise.weight_mode,
         });
 
         const createdExercise = {
@@ -371,6 +422,7 @@ async function reconcileExerciseInstancesFromCloud(db, userId) {
           ),
           note: comparableCloudExercise.note,
           done: comparableCloudExercise.done ? 1 : 0,
+          weight_mode: comparableCloudExercise.weight_mode ?? "total",
           needs_sync: 0,
         };
 
@@ -405,8 +457,9 @@ async function reconcileExerciseInstancesFromCloud(db, userId) {
 
       if (Number(localExercise.needs_sync) === 1) {
         if (compareEntitySyncVersions(localExercise, cloudExercise) < 0) {
-          await weightliftingRepository.updateExerciseFromCloud(db, {
+          const applied = await weightliftingRepository.updateExerciseFromCloud(db, {
             exerciseId: localExercise.exercise_instance_id,
+            expectedSyncVersion: localExercise.sync_version,
             cloudExerciseInstanceId,
             remoteLocalExerciseInstanceId: localExerciseInstanceId,
             syncId: cloudSyncId,
@@ -421,8 +474,9 @@ async function reconcileExerciseInstancesFromCloud(db, userId) {
             ),
             note: comparableCloudExercise.note,
             done: comparableCloudExercise.done,
+            weightMode: comparableCloudExercise.weight_mode,
           });
-          downloadedCount += 1;
+          downloadedCount += applied ? 1 : 0;
         }
 
         continue;
@@ -449,6 +503,7 @@ async function reconcileExerciseInstancesFromCloud(db, userId) {
         ) {
           await weightliftingRepository.markExerciseSynced(db, {
             exerciseId: localExercise.exercise_instance_id,
+            expectedSyncVersion: localExercise.sync_version,
             cloudExerciseInstanceId,
             remoteLocalExerciseInstanceId: localExerciseInstanceId,
             syncId: cloudSyncId,
@@ -465,8 +520,9 @@ async function reconcileExerciseInstancesFromCloud(db, userId) {
         continue;
       }
 
-      await weightliftingRepository.updateExerciseFromCloud(db, {
+      const applied = await weightliftingRepository.updateExerciseFromCloud(db, {
         exerciseId: localExercise.exercise_instance_id,
+        expectedSyncVersion: localExercise.sync_version,
         cloudExerciseInstanceId,
         remoteLocalExerciseInstanceId: localExerciseInstanceId,
         syncId: cloudSyncId,
@@ -481,7 +537,13 @@ async function reconcileExerciseInstancesFromCloud(db, userId) {
         ),
         note: comparableCloudExercise.note,
         done: comparableCloudExercise.done,
+        weightMode: comparableCloudExercise.weight_mode,
       });
+
+      if (!applied) {
+        // The user wrote to it since it was read, and that write goes up.
+        continue;
+      }
 
       const updatedExercise = {
         ...localExercise,
@@ -499,6 +561,9 @@ async function reconcileExerciseInstancesFromCloud(db, userId) {
         ),
         note: comparableCloudExercise.note,
         done: comparableCloudExercise.done ? 1 : 0,
+        // As the update just stored it: a null from the cloud keeps ours.
+        weight_mode:
+          comparableCloudExercise.weight_mode ?? localExercise.weight_mode ?? "total",
         needs_sync: 0,
       };
 
@@ -603,6 +668,7 @@ async function syncExerciseInstancesWithCloudInternal(db) {
 }
 
 export function syncExerciseInstancesInBackground(db) {
+  notifyWorkoutDataChanged("exercises");
   startBackgroundSync(
     async () => {
       await syncExerciseInstancesWithCloud(db);

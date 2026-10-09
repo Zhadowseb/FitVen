@@ -10,7 +10,8 @@ import {
   View,
   useColorScheme,
 } from "react-native";
-import Svg, { Rect } from "react-native-svg";
+import { Rect } from "react-native-svg";
+import PassThroughSvg from "@resources/Components/PassThroughSvg";
 import { useSQLiteContext } from "expo-sqlite";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "@localization";
@@ -39,14 +40,20 @@ import {
   formatElapsedTime,
   getCurrentStoredTimestampSeconds,
   normalizeElapsedDurationSeconds,
-  normalizeStoredTimestampSeconds,
 } from "../../Utils/timeUtils";
+import {
+  getWorkoutClockSeconds,
+  isWorkoutClockRunning,
+} from "@utils/workoutClock";
+import { subscribeWorkoutDataChanges } from "@utils/workoutDataEvents";
 import { subscribeQuickWorkoutMenu } from "../../Utils/quickWorkoutMenuEvents";
+import { STARTED_FROM } from "../../Utils/startedFrom";
 import {
   clearActiveRestTimer,
   getActiveRestTimer,
   subscribeRestTimer,
 } from "../../Utils/restTimerEvents";
+import { workoutDisplayName } from "@utils/workoutTypeLabel";
 
 const RECENT_WORKOUT_PREVIEW_LIMIT = 2;
 const RECENT_WORKOUT_PAGE_SIZE = 10;
@@ -110,6 +117,9 @@ const EXPLORE_ROUTES = new Set([
   "GymLeaderboardPage",
   "GymExerciseLeaderboardPage",
   "NationalExerciseLeaderboardPage",
+  // One category - Consistency, Powerlifting, Progress, Calisthenics - at the
+  // level it was opened from.
+  "CategoryLeaderboardPage",
 ]);
 const FEED_ROUTES = new Set([
   "FeedPage",
@@ -129,6 +139,9 @@ const LIBRARY_ROUTES = new Set([
   "WorkoutCalendarPage",
   "SicknessPage",
   "OneRepMaxCalculatorPage",
+  // Your own exercise - what it is, and whether others can find it - is
+  // opened from your exercise library.
+  "MyExercisePage",
 ]);
 // Somebody's profile and their posts are opened from a name anywhere - the
 // feed, a leaderboard, Explore - and stay under the tab they were opened from.
@@ -141,6 +154,9 @@ const INHERIT_TAB_ROUTES = new Set([
   // the counts on your profile, from Home's friends strip.
   "SocialPage",
   "SocialUserListPage",
+  // One shared exercise: from Explore's library, and from your own exercise
+  // as "see it as others do".
+  "CustomExerciseDetailPage",
 ]);
 
 function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
@@ -172,6 +188,7 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
   const quickWorkoutDateRef = useRef(getTodaysDate());
   const quickWorkoutTargetRef = useRef(null);
   const activeWorkoutLoadRef = useRef(false);
+  const activeWorkoutReloadRef = useRef(false);
   const recentWorkoutLoadRequestRef = useRef(0);
   const recentWorkoutAppendLoadRef = useRef(false);
   const lastResolvedTabRef = useRef("home");
@@ -226,16 +243,16 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
   const plusBackground = theme.primary;
   const plusIconColor = theme.textInverted ?? theme.cardBackground;
   const fabBorderColor = theme.background ?? barBackground;
-  const activeWorkoutElapsed = activeWorkoutTimer
-    ? normalizeElapsedDurationSeconds(activeWorkoutTimer.elapsed_time, 0) +
-      Math.max(
-        0,
-        normalizeStoredTimestampSeconds(activeWorkoutTimer.timer_start) === null
-          ? 0
-          : timerTick -
-              normalizeStoredTimestampSeconds(activeWorkoutTimer.timer_start)
-      )
-    : 0;
+  // The workout in progress is running or paused. Paused, its clock stands
+  // still at what it had banked - it used to vanish, and the square went back
+  // to the plus - and counts on from there once it is resumed.
+  const isActiveWorkoutRunning = isWorkoutClockRunning(activeWorkoutTimer);
+  const isActiveWorkoutPaused =
+    Boolean(activeWorkoutTimer) && !isActiveWorkoutRunning;
+  const activeWorkoutElapsed = getWorkoutClockSeconds(
+    activeWorkoutTimer,
+    timerTick
+  );
   const restTimerRemaining = activeRestTimer
     ? Math.max(0, activeRestTimer.endsAt - timerTick)
     : 0;
@@ -254,7 +271,8 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     ? Math.max(0, Math.min(1, restTimerRemaining / restDurationSeconds))
     : 0;
 
-  const fabPulse = usePulseAnimation(shouldShowCenterTimer);
+  // A paused clock does not pulse: nothing is counting.
+  const fabPulse = usePulseAnimation(isActiveWorkoutRunning || isRestTimerActive);
   const restRingOffset = useRef(new Animated.Value(0)).current;
   const restRingTimerIdRef = useRef(null);
 
@@ -535,6 +553,9 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
           dayId: target.dayId ?? null,
           programId: target.programId ?? null,
           programName: target.programName ?? null,
+          // Set by the screen that opened the sheet: the calendar, or a
+          // program's week. From the centre button there is none.
+          startedFrom: target.startedFrom ?? null,
         }
       : null;
     setPlannedTodayShortcut(null);
@@ -636,22 +657,29 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
 
   const loadActiveWorkoutTimer = useCallback(async () => {
     if (activeWorkoutLoadRef.current) {
+      // A change heard while a read is out is read again after it: a start
+      // is two writes in a row, and the second one must not be dropped.
+      activeWorkoutReloadRef.current = true;
       return;
     }
 
     activeWorkoutLoadRef.current = true;
 
     try {
-      const workout = await workoutService.getActiveWorkoutTimer(db);
-      setActiveWorkoutTimer(workout ?? null);
-      setStartableWorkout(
-        workout
-          ? null
-          : await workoutService.getStartableWorkout(db, {
-              date: getTodaysDate(),
-            })
-      );
-      setTimerTick(getCurrentStoredTimestampSeconds());
+      do {
+        activeWorkoutReloadRef.current = false;
+
+        const workout = await workoutService.getWorkoutInProgress(db);
+        setActiveWorkoutTimer(workout ?? null);
+        setStartableWorkout(
+          workout
+            ? null
+            : await workoutService.getStartableWorkout(db, {
+                date: getTodaysDate(),
+              })
+        );
+        setTimerTick(getCurrentStoredTimestampSeconds());
+      } while (activeWorkoutReloadRef.current);
     } catch (error) {
       console.error("Failed to load active workout timer:", error);
       setActiveWorkoutTimer(null);
@@ -666,8 +694,9 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
   // re-renders this component and everything under it - sixty times a minute
   // with no workout anywhere in sight. The app never went idle.
   //
-  // A second is what a running clock needs. Nothing else here does.
-  const hasRunningTimer = Boolean(activeWorkoutTimer) || Boolean(activeRestTimer);
+  // A second is what a running clock needs. Nothing else here does - a paused
+  // workout's clock stands still, and its resume is heard, below.
+  const hasRunningTimer = isActiveWorkoutRunning || Boolean(activeRestTimer);
   const pollIntervalMs = hasRunningTimer ? 1000 : 10000;
 
   useEffect(() => {
@@ -702,6 +731,20 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
   useEffect(() => {
     loadActiveWorkoutTimer();
   }, [currentRouteName, loadActiveWorkoutTimer]);
+
+  // Nor does the poll hear a workout started, paused, resumed, finished or
+  // restarted on the workout screen, which stays on one route. Every such
+  // write says so here, so the square follows it at once - with the 10 s
+  // poll a paused one gets, a resume would otherwise stand still that long.
+  useEffect(
+    () =>
+      subscribeWorkoutDataChanges((scope) => {
+        if (scope === "workouts") {
+          loadActiveWorkoutTimer();
+        }
+      }),
+    [loadActiveWorkoutTimer]
+  );
 
   useEffect(() => {
     if (activeRestTimer && activeRestTimer.endsAt <= timerTick) {
@@ -750,6 +793,8 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
     try {
       const workoutLabel = workoutType.displayName ?? workoutType.id;
       const target = await resolveQuickWorkoutTarget();
+      // A new, empty workout - unless the calendar or a program opened the sheet.
+      const startedFrom = target?.startedFrom ?? STARTED_FROM.EMPTY;
       let workout;
 
       if (target?.dayId) {
@@ -758,6 +803,7 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
           dayId: target.dayId,
           workoutType: workoutType.id,
           label: null,
+          startedFrom,
         });
 
         workout = {
@@ -774,6 +820,7 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
           date: quickWorkoutDateRef.current,
           workoutType: workoutType.id,
           label: null,
+          startedFrom,
         });
       }
 
@@ -831,6 +878,8 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
 
     try {
       const target = await resolveQuickWorkoutTarget();
+      // Repeated from the sheet's list - unless the calendar or a program opened it.
+      const startedFrom = target?.startedFrom ?? STARTED_FROM.RECENT;
       let copiedWorkout;
 
       if (target?.dayId && target?.programId) {
@@ -838,6 +887,7 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
           workoutId: workout.workout_id,
           programId: target.programId,
           date: parseCustomDate(target.date),
+          startedFrom,
         });
 
         copiedWorkout = copiedWorkoutId
@@ -854,6 +904,7 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
         copiedWorkout = await programService.copyWorkoutToStandaloneDate(db, {
           workoutId: workout.workout_id,
           date: quickWorkoutDateRef.current,
+          startedFrom,
         });
       }
 
@@ -961,7 +1012,12 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
             </Text>
           </TouchableOpacity>
 
-          <View style={styles.plusSlot}>
+          <View
+            style={[
+              styles.plusSlot,
+              shouldShowCenterTimer && styles.plusSlotLiveTimer,
+            ]}
+          >
             {shouldShowCenterTimer ? (
               <View style={styles.liveTimerWrap}>
                 <Animated.View
@@ -982,9 +1038,13 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
                       ? t("nav.centerButton.activeRestTimer", {
                           time: centerTimerText,
                         })
-                      : t("nav.centerButton.activeWorkoutTimer", {
-                          time: centerTimerText,
-                        })
+                      : isActiveWorkoutPaused
+                        ? t("nav.centerButton.pausedWorkoutTimer", {
+                            time: centerTimerText,
+                          })
+                        : t("nav.centerButton.activeWorkoutTimer", {
+                            time: centerTimerText,
+                          })
                   }
                   accessibilityRole="button"
                   disabled={isCreatingQuickWorkout}
@@ -1008,8 +1068,7 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
                   </Text>
                 </TouchableOpacity>
                 {isRestTimerActive ? (
-                  <Svg
-                    pointerEvents="none"
+                  <PassThroughSvg
                     width={LIVE_TIMER_SIZE}
                     height={LIVE_TIMER_SIZE}
                     viewBox={`0 0 ${LIVE_TIMER_SIZE} ${LIVE_TIMER_SIZE}`}
@@ -1038,17 +1097,17 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
                       strokeDasharray={`${LIVE_RING_CIRCUMFERENCE}`}
                       strokeDashoffset={restRingOffset}
                     />
-                  </Svg>
+                  </PassThroughSvg>
                 ) : (
-                  <Svg
-                    pointerEvents="none"
+                  <PassThroughSvg
                     width={LIVE_TIMER_SIZE}
                     height={LIVE_TIMER_SIZE}
                     viewBox={`0 0 ${LIVE_TIMER_SIZE} ${LIVE_TIMER_SIZE}`}
                     style={styles.liveTimerRing}
                   >
-                    {/* Workout running: the whole outline. Rest counts down
-                        as a depleting one in the branch above. */}
+                    {/* Workout running: the whole outline. Paused: only the
+                        faint track, as the clock inside stands still. Rest
+                        counts down as a depleting one in the branch above. */}
                     <Rect
                       x={LIVE_RING_INSET}
                       y={LIVE_RING_INSET}
@@ -1056,18 +1115,25 @@ function ThemedBottomNavigation({ currentRouteName, navigationRef }) {
                       height={LIVE_RING_SIDE}
                       rx={LIVE_RING_CORNER}
                       fill="none"
-                      stroke={plusBackground}
+                      stroke={
+                        isActiveWorkoutPaused
+                          ? withAlpha(plusBackground, 0.25)
+                          : plusBackground
+                      }
                       strokeWidth={LIVE_RING_STROKE}
                     />
-                  </Svg>
+                  </PassThroughSvg>
                 )}
               </View>
             ) : startableWorkout ? (
               <TouchableOpacity
                 activeOpacity={0.86}
                 accessibilityLabel={t("nav.centerButton.startWorkout", {
-                  workout:
-                    startableWorkout.label ?? startableWorkout.workout_type,
+                  workout: workoutDisplayName(
+                    startableWorkout.label,
+                    t,
+                    startableWorkout.workout_type
+                  ),
                 })}
                 accessibilityRole="button"
                 disabled={isStartingWorkoutTimer}
@@ -1293,10 +1359,17 @@ const styles = StyleSheet.create({
     borderBottomColor: "transparent",
     marginLeft: 5,
   },
+  // The timer stands 13 dp taller than the plus. The lift is on the slot, not
+  // on the wrap inside it: with the margin on the wrap, the top 10 dp of the
+  // button stuck out of the slot, and on iOS a touch outside a parent's bounds
+  // reaches the child only while nothing up the tree clips. Inside the slot it
+  // does not depend on that. Same place on screen either way.
+  plusSlotLiveTimer: {
+    marginTop: -13,
+  },
   liveTimerWrap: {
     width: LIVE_TIMER_SIZE,
     height: LIVE_TIMER_SIZE,
-    marginTop: -13,
   },
   liveTimerPulse: {
     position: "absolute",

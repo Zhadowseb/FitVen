@@ -2,6 +2,8 @@
 // write it) into a row for public.gym. Pure, so scripts/test-gym-leaderboard.js
 // can run the naming rules over the real data without touching Supabase.
 
+const { placeOf } = require("./regions");
+
 const CHAIN_FOLDERS = {
   Puregym: "PureGym",
   Sats: "SATS",
@@ -172,7 +174,9 @@ function imageObjectPath(chain, folderName, extension) {
 
 /**
  * The gym row, minus image_url (the importer fills that in after the upload).
- * Returns null when the file cannot be placed on a map.
+ * Returns null when the file cannot be placed on a map, or in a country: its
+ * address.country is kept as country_code, and a Danish centre gets its
+ * region_key from the postal code (scripts/import-gyms/regions.js).
  */
 function normalizeGym(info, { folderName = null, chainFolder = null } = {}) {
   const latitude = toCoordinate(info?.location?.latitude ?? info?.latitude);
@@ -185,6 +189,15 @@ function normalizeGym(info, { folderName = null, chainFolder = null } = {}) {
   }
 
   const address = info?.address ?? {};
+  const place = placeOf({
+    country: address.country,
+    postalCode: address.postal_code,
+    regionKey: info?.region_key,
+  });
+
+  if (!place) {
+    return null;
+  }
 
   return {
     chain,
@@ -193,6 +206,8 @@ function normalizeGym(info, { folderName = null, chainFolder = null } = {}) {
     address: clean(address.full) ?? clean(address.street) ?? clean(folderName),
     postal_code: clean(address.postal_code),
     city: clean(address.city),
+    country_code: place.country_code,
+    region_key: place.region_key,
     latitude,
     longitude,
     source_url: clean(info?.url),

@@ -5,7 +5,7 @@ FitApp is an Expo / React Native training app for planning and tracking workouts
 The app started as a replacement for spreadsheet-based training programs and is currently centered around:
 - Program planning with `Program -> Mesocycle -> Microcycle -> Day -> Workout`
 - Strength training workouts with exercises, sets, reps, weight, notes, failed sets, and workout timer
-- Running workouts with structured run sets, timer, and background location logging
+- Running workouts with structured run sets and timer (switched off for now: earlier runs still show, new ones cannot be tracked)
 - Program-specific "Program bests" and estimated 1RM tracking
 
 ---
@@ -30,7 +30,7 @@ The app started as a replacement for spreadsheet-based training programs and is 
 - Database: `expo-sqlite`
 
 Main entry points:
-- `App.js`: navigation, SQLite provider, background location task
+- `App.js`: navigation, SQLite provider
 - `src/Database/db.js`: database initialization
 
 ---
@@ -261,5 +261,5 @@ For the detailed rules, see `docs/VERSIONING.md`.
 
 - The completed-workout route map uses `react-native-maps`, which on Android requires a Google Maps API key. The key is configured in `app.json` under `android.config.googleMaps.apiKey` and is baked into the native manifest, so **a new native build (dev client and release) is required** after changing it. Without the key, mounting the map crashes the app on Android; the app now falls back to a "Map unavailable" card instead of mounting the map in that case.
 - The configured key belongs to the same Google Cloud project as `google-services.json`. "Maps SDK for Android" must be enabled for that project in the Google Cloud console, otherwise the map renders blank tiles. Consider restricting the key to the Android package name and the Maps SDK.
-- Background GPS tracking runs through a foreground service on Android. On devices with aggressive battery managers (Samsung, Xiaomi, etc.), users should exclude FitVen from battery optimization ("Unrestricted" battery usage) so tracking is not throttled while the phone is locked. On Android 13+ the foreground-service notification also requires the notification permission to be visible.
-- If the OS still interrupts location delivery, the app detects stale tracking when it returns to the foreground during a live run and restarts the location provider automatically. Gaps longer than the distance filter's `maxSegmentGapSeconds` are never counted as distance.
+- GPS tracking for Run and Walk is switched off. It used a background location task with an Android foreground service, and Google Play will not take a release that declares `FOREGROUND_SERVICE_LOCATION` without a demo of the feature. `app.json` now blocks `FOREGROUND_SERVICE` and `FOREGROUND_SERVICE_LOCATION`, `locationService.startRunTracking` always fails with a message, and `npm test` (`scripts/test-no-foreground-service.js`) fails if a foreground service or background location comes back. Recorded runs keep their route and distance. Bringing tracking back means foreground-only tracking (`watchPositionAsync`) or a Play declaration first.
+- Gaps longer than the distance filter's `maxSegmentGapSeconds` are never counted as distance.

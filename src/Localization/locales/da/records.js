@@ -8,6 +8,7 @@ export default {
     recordCount: { one: "rekord sat", other: "rekorder sat" },
     heaviest: "Tungeste løft",
     heaviestValue: "{weight} kg × {reps} · {name}",
+    heaviestValuePerSide: "{weight} kg pr. side × {reps} · {name}",
     since: "Siden {date}",
     emptyTitle: "Din første rekord venter",
     emptyBody: "Afslut en styrketræning, så begynder din samling her.",
@@ -15,6 +16,7 @@ export default {
       title: "Dine stærkeste løft",
       meta: "× {reps} · {date}",
       label: "Nummer {rank}: {name}, {weight} kg × {reps}",
+      labelPerSide: "Nummer {rank}: {name}, {weight} kg pr. side × {reps}",
       nextGoal: "Næste mål: {goal} kg i {name}",
       toGo: "{value} kg tilbage",
     },
@@ -22,6 +24,7 @@ export default {
       title: "Nye rekorder",
       new: "Ny",
       label: "{name}, {weight} kg × {reps}, {when}",
+      labelPerSide: "{name}, {weight} kg pr. side × {reps}, {when}",
     },
     milestones: {
       title: "Milepæle",
@@ -50,6 +53,9 @@ export default {
     tryNext: "prøv {target} · du løftede {current}",
     repLadder: "Rekord pr. reps",
     noSet: "intet sæt",
+    // Under en rubrik, der er fyldt af et længere sæt: 90 kg × 3 er også 90 kg
+    // for 1 og 2 reps. Aldrig en ny rekord.
+    fromReps: "fra {reps} reps",
     latestSets: "Seneste sæt",
     pr: "PR",
     periods: {

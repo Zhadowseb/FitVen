@@ -6,9 +6,12 @@ import { ScrollView, TouchableOpacity, View, useColorScheme } from "react-native
 // device this was tried on before release had too little data to reach it.
 import { formatDate, useTranslation } from "@localization";
 
+import SplitForming from "./SplitForming";
 import styles from "./SplitCardsStyle";
 import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
 import { ThemedText } from "@resources/ThemedComponents";
+import { splitFormingState } from "@utils/splitForming";
+import { workoutDisplayName } from "@utils/workoutTypeLabel";
 
 // Two or three fit the width; four start to crowd, so from three the row
 // scrolls and the cards take a fixed width instead of sharing what is there.
@@ -42,20 +45,25 @@ function formatWeekdays(weekdays, formatDate) {
     .join(" · ");
 }
 
-function SplitCard({ group, theme, width, onPress, t, formatDate }) {
+function SplitCard({ group, theme, width, onPress, t, formatDate, suppressUpNext = false }) {
+  // With a workout planned today, that one is what is next - the split does
+  // not get to say otherwise, so no card is marked.
+  const isUpNext = Boolean(group.isUpNext) && !suppressUpNext;
   const weekdayLine = formatWeekdays(group.weekdays, formatDate);
   // A session started from the quick-start button was never named, so the
   // guess has no name to show. Numbered by where it sits in the history
   // rather than by the row order, which sorts by who has waited longest and
   // would renumber the cards under the finger.
+  // A name that is a stored type id is drawn as the type's name.
   const name =
-    group.name ?? t("home.split.unnamed", { number: (group.historyOrder ?? 0) + 1 });
+    workoutDisplayName(group.name, t) ??
+    t("home.split.unnamed", { number: (group.historyOrder ?? 0) + 1 });
 
   return (
     <TouchableOpacity
       accessibilityRole="button"
       accessibilityLabel={
-        group.isUpNext ? t("home.split.upNext", { name }) : name
+        isUpNext ? t("home.split.upNext", { name }) : name
       }
       activeOpacity={0.85}
       onPress={() => onPress?.(group)}
@@ -66,7 +74,7 @@ function SplitCard({ group, theme, width, onPress, t, formatDate }) {
           backgroundColor: withAlpha(theme.title, 0.05),
           borderColor: withAlpha(theme.title, 0.08),
         },
-        group.isUpNext
+        isUpNext
           ? { borderLeftWidth: 3, borderLeftColor: theme.primary }
           : null,
       ]}
@@ -83,57 +91,16 @@ function SplitCard({ group, theme, width, onPress, t, formatDate }) {
 
       <ThemedText style={styles.meta} setColor={theme.quietText} numberOfLines={1}>
         {t("home.split.meta", {
-          exercises: group.exerciseCount,
-          sets: group.setCount,
+          exercises: t("common.exercises", { count: group.exerciseCount }),
+          sets: t("common.sets", { count: group.setCount }),
         })}
       </ThemedText>
     </TouchableOpacity>
   );
 }
 
-/**
- * The sessions the person actually runs, one card each.
- *
- * The card with the orange left edge is the one that has waited longest, and
- * it is the same session the quick-start button opens. Tapping any of them
- * opens that session directly.
- *
- * With no split yet the block says what it will become rather than vanishing.
- * A row that appears weeks later cannot be looked forward to, and somebody who
- * has just installed the app should not meet a Home with a hole in it. It only
- * names the section here: a card carries its own name once there is one.
- */
-export default function SplitCards({ groups = [], onOpenGroup, onOpenAll }) {
-  const { t } = useTranslation();
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme] ?? Colors.light;
-
-  if (!groups.length) {
-    return (
-      <View style={styles.row}>
-        <View
-          style={[
-            styles.card,
-            styles.cardFlex,
-            styles.emptyCard,
-            {
-              backgroundColor: withAlpha(theme.title, 0.05),
-              borderColor: withAlpha(theme.title, 0.08),
-            },
-          ]}
-        >
-          <ThemedText style={styles.emptyTitle} setColor={theme.quietText}>
-            {t("home.split.title")}
-          </ThemedText>
-
-          <ThemedText style={styles.emptyMessage} setColor={theme.title}>
-            {t("home.split.empty")}
-          </ThemedText>
-        </View>
-      </View>
-    );
-  }
-
+// The cards themselves, once there is a split to show.
+function SplitRow({ groups, theme, onOpenGroup, onOpenAll, t, suppressUpNext }) {
   if (groups.length < SCROLL_FROM_GROUPS) {
     return (
       <View style={styles.row}>
@@ -145,6 +112,7 @@ export default function SplitCards({ groups = [], onOpenGroup, onOpenAll }) {
             onPress={onOpenGroup}
             t={t}
             formatDate={formatDate}
+            suppressUpNext={suppressUpNext}
           />
         ))}
       </View>
@@ -173,6 +141,7 @@ export default function SplitCards({ groups = [], onOpenGroup, onOpenAll }) {
           onPress={onOpenGroup}
           t={t}
           formatDate={formatDate}
+          suppressUpNext={suppressUpNext}
         />
       ))}
 
@@ -194,5 +163,65 @@ export default function SplitCards({ groups = [], onOpenGroup, onOpenAll }) {
         </TouchableOpacity>
       ) : null}
     </ScrollView>
+  );
+}
+
+/**
+ * The sessions the person actually runs, one card each, under "Your split".
+ *
+ * The card with the orange left edge is the one that has waited longest, and
+ * it is the same session the quick-start button opens. Tapping any of them
+ * opens that session directly.
+ *
+ * The cards wait a week from the first finished workout (`firstWorkoutAt`,
+ * see Utils/splitForming.js), even when the guess could already make groups:
+ * somebody who trains one muscle group a day has no split to recognise before
+ * the week has gone round once. Until then, and whenever there is no split,
+ * the block says what it will become rather than vanishing - seven dots that
+ * fill a day at a time (SplitForming). A row that appears weeks later cannot
+ * be looked forward to, and somebody who has just installed the app should
+ * not meet a Home with a hole in it.
+ *
+ * `suppressUpNext` is set while a workout is planned for today: Quick start
+ * shows that one, so no card here is marked as next. The cards still open
+ * their session - the deliberate way to train something other than the plan.
+ */
+export default function SplitCards({
+  groups = [],
+  firstWorkoutAt = null,
+  suppressUpNext = false,
+  onOpenGroup,
+  onOpenAll,
+}) {
+  const { t } = useTranslation();
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme] ?? Colors.light;
+  const { filledDots, showSplit, weekIsOver } = splitFormingState({
+    firstWorkoutAt,
+    now: Date.now(),
+    groupCount: groups.length,
+    // A split somebody chose needs no week to take shape.
+    isChosen: groups.some((group) => group.isChosen),
+  });
+
+  return (
+    <View>
+      <ThemedText accessibilityRole="header" style={styles.eyebrow} setColor={theme.quietText}>
+        {t("home.split.eyebrow")}
+      </ThemedText>
+
+      {showSplit ? (
+        <SplitRow
+          groups={groups}
+          theme={theme}
+          onOpenGroup={onOpenGroup}
+          onOpenAll={onOpenAll}
+          t={t}
+          suppressUpNext={suppressUpNext}
+        />
+      ) : (
+        <SplitForming filledDots={filledDots} weekIsOver={weekIsOver} />
+      )}
+    </View>
   );
 }

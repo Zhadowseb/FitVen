@@ -27,6 +27,8 @@ async function postingFlow() {
   const service = load("src/Services/workoutService.js", {
     enqueueSync: scheduler.enqueueSync,
     startBackgroundSync: () => { calls.push(["background"]); },
+    // A workout-level write tells the lock-screen card; nobody listens here.
+    notifyWorkoutDataChanged: () => {},
     postMock: { createWorkoutSummaryPostForCompletedWorkout: async (db, options) => {
       calls.push(["post", options.workoutId, options.note]);
       if (failure) throw failure;
@@ -101,6 +103,9 @@ async function scopedUpload() {
     createParentCloudIdCache: (resolve) => resolve,
     ensureDayCloudIdentity: async () => parentReady ? 55 : null,
     syncDaysWithCloud: async () => { parentRepairs++; parentReady = true; },
+    // The real one: it only retries a missing started_from column, so the
+    // failures below still reach the test as they are.
+    createStartedFromCloudColumn: load("src/Utils/startedFrom.js").createStartedFromCloudColumn,
     buildCloudWorkoutTypeInstancePayload: (row) => ({ local_workout_type_instance_id: row.workout_id, workout_type: row.workout_type, date: "2026-09-15" }),
     WORKOUT_TYPE_INSTANCE_CLOUD_TABLE: "workout_type_instance",
     WORKOUT_TYPE_INSTANCE_CLOUD_SYNC_SELECT: "id",
@@ -130,8 +135,16 @@ async function scopedUpload() {
 }
 
 async function statusAndErrors() {
+  // The weight-mode rules (4d) are pure, so the real ones are handed in.
+  const { TOTAL, convertWeight, totalLoadSql, weightModeOf } = require("./lib/loadAppModule")(
+    "src/Utils/weightMode.js"
+  );
   const social = load("src/Services/socialPostService.js", {
     normalizeElapsedDurationSeconds: (value) => value ?? 0,
+    TOTAL,
+    convertWeight,
+    totalLoadSql,
+    weightModeOf,
   });
   const db = {
     getFirstAsync: async () => ({ exercise_count: 1, done_set_count: 1 }),

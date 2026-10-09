@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- −15 s and +15 s: a faint pill. -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+  android:color="@color/live_workout_ripple">
+  <item>
+    <shape android:shape="rectangle">
+      <corners android:radius="999dp" />
+      <solid android:color="@color/live_workout_button" />
+    </shape>
+  </item>
+</ripple>

@@ -78,6 +78,12 @@ async function ensureCalendarPerformanceIndexes(db) {
          has to go back to the table. */
       CREATE INDEX IF NOT EXISTS exercise_instance_name_idx
       ON Exercise_Instance(exercise_name, exercise_instance_id);
+
+      /* The split's pinned workouts are looked up by sync_id every time Home
+         or the Train tab loads (programRepository.getWorkoutsBySyncIds).
+         Without this each lookup scans every workout the user has. */
+      CREATE INDEX IF NOT EXISTS workout_type_instance_sync_id_idx
+      ON Workout_Type_Instance(sync_id);
     `);
   } catch (error) {
     console.warn("Could not create calendar performance indexes:", error);
@@ -310,6 +316,36 @@ async function migrateWorkoutTableName(db) {
   });
 }
 
+// Every column Exercise has beyond the five the rebuild below was first
+// written for: [name, how it is declared, its value when an old table does not
+// have it]. The rebuild carries each one across, and ensureTableColumns adds
+// any that are missing on every start - one list, so a new column cannot be
+// remembered in one of the two and lost in the other. The same columns are in
+// CREATE TABLE Exercise in schema/weightlifting.js for a fresh install, and
+// scripts/test-shared-exercises.js fails if the two part ways.
+//
+// There is no owner column. The database belongs to one user, so every custom
+// row in it is theirs - a copy of somebody else's is marked by
+// source_exercise_id, and the cloud row (public.custom_exercise) carries the
+// owner.
+const EXERCISE_EXTRA_COLUMNS = [
+  ["official", "INTEGER NOT NULL DEFAULT 0", "0"],
+  ["is_custom", "INTEGER NOT NULL DEFAULT 0", "0"],
+  ["custom_muscle_group_keys", "TEXT", "NULL"],
+  ["cloud_custom_exercise_id", "INTEGER", "NULL"],
+  ["is_public", "INTEGER NOT NULL DEFAULT 0", "0"],
+  ["source_exercise_id", "INTEGER", "NULL"],
+  ["description", "TEXT", "NULL"],
+  ["steps", "TEXT", "NULL"],
+  ["equipment", "TEXT", "NULL"],
+  ["weight_mode", "TEXT NOT NULL DEFAULT 'total'", "'total'"],
+  ["video_path", "TEXT", "NULL"],
+  ["poster_path", "TEXT", "NULL"],
+  ["video_duration_ms", "INTEGER", "NULL"],
+  ["custom_needs_upload", "INTEGER NOT NULL DEFAULT 0", "0"],
+  ["cloud_updated_at", "TEXT", "NULL"],
+];
+
 async function migrateExerciseCatalogSchema(db) {
   const exerciseColumns = await getTableColumns(db, "Exercise");
 
@@ -344,6 +380,20 @@ async function migrateExerciseCatalogSchema(db) {
     return;
   }
 
+  // Until 2.11 this copied the five columns above and nothing else, so a
+  // rebuild would have dropped is_custom with the rest: every custom exercise
+  // would have come out of it as an ordinary catalog row, for the next catalog
+  // sync to delete.
+  const extraColumns = EXERCISE_EXTRA_COLUMNS.map(
+    ([columnName, definition, missingValue]) => ({
+      columnName,
+      definition,
+      value: hasColumn(exerciseColumns, columnName)
+        ? `COALESCE(${columnName}, ${missingValue})`
+        : missingValue,
+    })
+  );
+
   await withTransaction(db, async () => {
     await db.execAsync(`
       DROP TABLE IF EXISTS Exercise_next;
@@ -353,7 +403,10 @@ async function migrateExerciseCatalogSchema(db) {
         cloud_exercise_id INTEGER UNIQUE,
         name TEXT NOT NULL UNIQUE,
         nickname TEXT,
-        default_visible_columns TEXT
+        default_visible_columns TEXT,
+        ${extraColumns
+          .map(({ columnName, definition }) => `${columnName} ${definition}`)
+          .join(",\n        ")}
       );
 
       INSERT OR IGNORE INTO Exercise_next (
@@ -361,14 +414,16 @@ async function migrateExerciseCatalogSchema(db) {
         cloud_exercise_id,
         name,
         nickname,
-        default_visible_columns
+        default_visible_columns,
+        ${extraColumns.map(({ columnName }) => columnName).join(",\n        ")}
       )
       SELECT
         exercise_id,
         ${hasCloudExerciseIdColumn ? "cloud_exercise_id" : "NULL"},
         ${nameColumn},
         ${hasNicknameColumn ? "nickname" : "NULL"},
-        ${hasDefaultVisibleColumnsColumn ? "default_visible_columns" : "NULL"}
+        ${hasDefaultVisibleColumnsColumn ? "default_visible_columns" : "NULL"},
+        ${extraColumns.map(({ value }) => value).join(",\n        ")}
       FROM Exercise
       WHERE TRIM(COALESCE(${nameColumn}, '')) <> ''
       ORDER BY exercise_id ASC;
@@ -398,6 +453,8 @@ async function ensureExerciseColumnPreferenceSchema(db) {
     ["cloud_exercise_id", "INTEGER"],
     ["exercise_name", "TEXT NOT NULL DEFAULT ''"],
     ["visible_columns", "TEXT NOT NULL DEFAULT '{}'"],
+    // 'total' | 'per_side' for a catalog exercise (4d); NULL when never chosen.
+    ["weight_mode", "TEXT"],
     ["needs_sync", "INTEGER NOT NULL DEFAULT 1"],
     ["updated_at", "TEXT NOT NULL DEFAULT (datetime('now'))"],
   ]);
@@ -617,6 +674,7 @@ async function migrateSetSchema(db) {
         set_type TEXT NOT NULL DEFAULT 'working',
         amrap_target INTEGER,
         note TEXT,
+        rest_counted INTEGER NOT NULL DEFAULT 0,
         needs_sync INTEGER NOT NULL DEFAULT 1
       );
 
@@ -641,6 +699,7 @@ async function migrateSetSchema(db) {
         set_type,
         amrap_target,
         note,
+        rest_counted,
         needs_sync
       )
       SELECT
@@ -664,6 +723,7 @@ async function migrateSetSchema(db) {
         ${hasColumn(sourceColumns, "set_type") ? "COALESCE(set_type, 'working')" : "'working'"},
         ${hasColumn(sourceColumns, "amrap_target") ? "amrap_target" : "NULL"},
         ${hasColumn(sourceColumns, "note") ? "note" : "NULL"},
+        ${hasColumn(sourceColumns, "rest_counted") ? "COALESCE(rest_counted, 0)" : "0"},
         ${hasColumn(sourceColumns, "needs_sync") ? "COALESCE(needs_sync, 1)" : "1"}
       FROM ${quoteIdentifier(sourceTable)};
 
@@ -1745,6 +1805,9 @@ export async function initializeDatabase(db) {
     ["gym_id", "INTEGER"],
     ["start_latitude", "REAL"],
     ["start_longitude", "REAL"],
+    // Null for every workout that already exists: where those were started
+    // from is not known, and the overview does not count them.
+    ["started_from", "TEXT"],
   ]);
   await restoreLocalWorkoutTypeCatalogSchema(db);
   await ensureTableColumns(db, "Workout_Type", [
@@ -1768,14 +1831,21 @@ export async function initializeDatabase(db) {
     ["cloud_exercise_id", "INTEGER"],
     ["nickname", "TEXT"],
     ["default_visible_columns", "TEXT"],
-    ["official", "INTEGER NOT NULL DEFAULT 0"],
-    ["is_custom", "INTEGER NOT NULL DEFAULT 0"],
-    ["custom_muscle_group_keys", "TEXT"],
+    ...EXERCISE_EXTRA_COLUMNS.map(([columnName, definition]) => [
+      columnName,
+      definition,
+    ]),
   ]);
+  // One local row per cloud custom exercise: the sync links by this id, and
+  // two rows sharing it would each take the other's edits.
   await db.execAsync(`
     CREATE UNIQUE INDEX IF NOT EXISTS exercise_cloud_exercise_id_idx
     ON Exercise(cloud_exercise_id)
     WHERE cloud_exercise_id IS NOT NULL;
+
+    CREATE UNIQUE INDEX IF NOT EXISTS exercise_cloud_custom_exercise_id_idx
+    ON Exercise(cloud_custom_exercise_id)
+    WHERE cloud_custom_exercise_id IS NOT NULL;
   `);
   await ensureExerciseColumnPreferenceSchema(db);
   await ensureExerciseFavouriteSchema(db);
@@ -1792,8 +1862,22 @@ export async function initializeDatabase(db) {
     ["visible_columns", "TEXT"],
     ["note", "TEXT"],
     ["done", "INTEGER NOT NULL DEFAULT 0"],
+    // How the workout's weights for the exercise are written (4d). No rebuild
+    // above has to carry it: the rebuild is for tables older than the column.
+    ["weight_mode", "TEXT"],
     ["needs_sync", "INTEGER NOT NULL DEFAULT 1"],
   ]);
+  // NULL means total - a row from before the column, or one an older app put
+  // in the cloud - and is written down as total, so every instance on the
+  // phone says how its weights are written and a later switch of the
+  // exercise's choice cannot change what an old workout meant. Not marked
+  // for upload: the cloud reads a null the same way. Idempotent; after the
+  // first start it only meets rows an older app sent.
+  await db.execAsync(`
+    UPDATE Exercise_Instance
+    SET weight_mode = 'total'
+    WHERE weight_mode IS NULL;
+  `);
   await migrateExerciseInstanceDeleteQueueSchema(db);
   await ensureTableColumns(db, "Exercise_Instance_Sync_Delete", [
     ["sync_id", "TEXT"],
@@ -1830,6 +1914,8 @@ export async function initializeDatabase(db) {
     ["set_type", "TEXT NOT NULL DEFAULT 'working'"],
     ["amrap_target", "INTEGER"],
     ["note", "TEXT"],
+    // A rest the app counted, not one that was planned (Utils/restCountUp.js).
+    ["rest_counted", "INTEGER NOT NULL DEFAULT 0"],
     ["needs_sync", "INTEGER NOT NULL DEFAULT 1"],
   ]);
   // A set marked AMRAP before set_type existed carries only the flag. Same rule

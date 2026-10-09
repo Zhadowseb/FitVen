@@ -10,10 +10,11 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { useSQLiteContext } from "expo-sqlite";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
+import { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
+import PassThroughSvg from "@resources/Components/PassThroughSvg";
 
 import ExerciseList from "./Components/ExerciseList/ExerciseList";
-import { useColorScheme } from "react-native";
+import { Alert, useColorScheme } from "react-native";
 import { Colors, withAlpha } from "../../../../Resources/GlobalStyling/colors";
 
 import styles from "./ResistanceStyle.js";
@@ -35,7 +36,9 @@ import {
   startActiveRestTimer,
   subscribeRestTimer,
 } from "../../../../Utils/restTimerEvents";
+import { subscribeLockScreenEdits } from "@utils/workoutDataEvents";
 import {
+  restCountUpService,
   socialPostService,
   weightliftingService,
   workoutService,
@@ -51,14 +54,17 @@ import ArrowDoubleUp from "../../../../Resources/Icons/UI-icons/ArrowDoubleUp";
 import Eye from "../../../../Resources/Icons/UI-icons/Eye";
 import ChevronLeft from "../../../../Resources/Icons/UI-icons/ChevronLeft";
 import ThreeDots from "../../../../Resources/Icons/UI-icons/ThreeDots";
+import ScreenOn from "@resources/Icons/UI-icons/ScreenOn";
+import { useWorkoutKeepAwake } from "./useWorkoutKeepAwake";
 
 const Resistance = ({
   workout_id,
   date,
   workoutLabel,
-  autoNamedLabel = null,
+  workoutTypeTag = null,
   workoutInstanceLabel,
   restartRequestKey,
+  finishRequestKey = 0,
   onWorkoutMetadataChange,
   onOpenOptions,
 }) =>  {
@@ -118,6 +124,16 @@ const Resistance = ({
   );
   const timerStartRef = useRef(null);
   const elapsedTimeRef = useRef(0);
+  const { keepAwakeEnabled, toggleKeepAwake } = useWorkoutKeepAwake({
+    isRunning,
+    isDone,
+  });
+  // Whether the timer and the set counts have been read since the screen
+  // opened - a finish asked for from the lock screen waits for both, or it
+  // would finish with no time and never ask about the post.
+  const [timerLoaded, setTimerLoaded] = useState(false);
+  const [setSummaryLoaded, setSetSummaryLoaded] = useState(false);
+  const handledFinishRequestRef = useRef(0);
   const wasAllSetsDoneRef = useRef(false);
 
   const normalizeTimerStartValue = (value) =>
@@ -143,6 +159,17 @@ const Resistance = ({
     });
   }, [workout_id]);
 
+  // A set ticked off, or its weight moved, on the lock screen was written
+  // without this screen: it reads its sets and counts again, so the change
+  // is there when you look.
+  useEffect(() => {
+    return subscribeLockScreenEdits((edit) => {
+      if (Number(edit?.workoutId) === Number(workout_id)) {
+        set_refreshing((prev) => prev + 1);
+      }
+    });
+  }, [workout_id]);
+
   const persistCurrentTimerState = useCallback(async () => {
     await workoutService.persistWorkoutTimerState(db, {
       workoutId: workout_id,
@@ -164,6 +191,7 @@ const Resistance = ({
 
       set_totalSets(result.totalSets);
       set_doneSets(result.doneSets);
+      setSetSummaryLoaded(true);
     } catch (err) {
       console.error("Failed to load the set counts for this workout:", err);
     }
@@ -205,6 +233,7 @@ const Resistance = ({
           set_original_start_time(resolvedOriginalStartTime);
           set_timer_start(resolvedTimerStart);
           set_elapsed_time(resolvedElapsedTime);
+          setTimerLoaded(true);
       }
       void reload();
 
@@ -371,6 +400,9 @@ const Resistance = ({
       if (activeRestTimer) {
         clearActiveRestTimer(activeRestTimer.id);
       }
+      // A rest being counted up stops with the clock, and is written: the
+      // pause is not rest between sets (Utils/restCountUp.js).
+      void restCountUpService.finishRestCountUp(db, { workoutId: workout_id });
       set_isRunning(false);
       const newElapsed = await updateElapsed();
       set_timer_start(null);
@@ -477,11 +509,40 @@ const Resistance = ({
     goHome(navigation);
   };
 
+  // Restart puts the workout back to before it was started: every set not
+  // done, and the timer at nothing. Only the timer used to go - the sets stayed
+  // ticked, so a second start was a started workout with its sets already
+  // done, and one whose sets were all ticked asked "stop the timer and finish?"
+  // the moment it was started again.
   const restartWorkout = async () => {
-    await workoutService.resetWorkoutState(db, workout_id);
+    // The rest stops at once, not after the writes.
     if (activeRestTimer) {
       clearActiveRestTimer(activeRestTimer.id);
     }
+
+    // Sets and timer in one transaction: it restarts all of it or none.
+    try {
+      await weightliftingService.restartStrengthWorkout(db, workout_id);
+    } catch (error) {
+      console.error("Failed to restart the workout:", error);
+      // Nothing was written, so the screen stays as it is - the person
+      // confirmed a restart, and has to hear that it did not happen.
+      Alert.alert(
+        t("workout.page.restartFailedTitle"),
+        t("workout.page.restartFailedMessage")
+      );
+      refresh();
+      return;
+    }
+
+    // Before the render: a trip to the background in between persists the
+    // clock from these, and must not write the old start back over the reset.
+    timerStartRef.current = null;
+    elapsedTimeRef.current = 0;
+    wasAllSetsDoneRef.current = false;
+    setAllSetsDoneConfirmVisible(false);
+    setStartTimerConfirmVisible(false);
+    setFinishConfirmVisible(false);
     set_original_start_time(null);
     set_timer_start(null);
     set_elapsed_time(0);
@@ -497,6 +558,31 @@ const Resistance = ({
 
     restartWorkout();
   }, [restartRequestKey]);
+
+  // "Afslut" on the lock-screen card: tapping it there was the question, so
+  // the workout finishes without asking again - and then asks about the post,
+  // as finishing here does.
+  useEffect(() => {
+    if (
+      !finishRequestKey ||
+      !timerLoaded ||
+      !setSummaryLoaded ||
+      handledFinishRequestRef.current === finishRequestKey
+    ) {
+      return;
+    }
+
+    handledFinishRequestRef.current = finishRequestKey;
+
+    if (isDone || original_start_time === null) {
+      return;
+    }
+
+    // And "all sets done - finish?" is not asked on top of it.
+    wasAllSetsDoneRef.current = true;
+    setAllSetsDoneConfirmVisible(false);
+    void endWorkout();
+  }, [finishRequestKey, timerLoaded, setSummaryLoaded]);
 
   const primaryColor = theme.primary ?? theme.iconColor ?? theme.text;
 
@@ -616,8 +702,7 @@ const Resistance = ({
       />
 
       <View style={[styles.topArea, { backgroundColor: cardSurface }]}>
-        <Svg
-          pointerEvents="none"
+        <PassThroughSvg
           style={styles.topGlow}
           width={280}
           height={230}
@@ -629,7 +714,7 @@ const Resistance = ({
             </RadialGradient>
           </Defs>
           <Rect width={280} height={230} fill="url(#workoutGlow)" />
-        </Svg>
+        </PassThroughSvg>
 
         <View style={styles.navRow}>
           <TouchableOpacity
@@ -642,26 +727,57 @@ const Resistance = ({
             <ChevronLeft width={18} height={18} color={titleColor} thickness={2} />
           </TouchableOpacity>
 
-          <ThemedText
-            style={styles.navTitle}
-            setColor={titleColor}
-            numberOfLines={1}
-          >
-            {workoutLabel ?? t("workout.page.fallbackTitle")}
-          </ThemedText>
+          {/* The workout's type, when the title is something else - a name the
+              app gave it after its exercises ("Push"), or one somebody typed.
+              This slot used to sit beside the title and read "Named Push after
+              your exercises"; since #294 that sentence stood there on every
+              strength workout and, too wide to shrink, pushed the options
+              button off the screen. The type is a line above the title now,
+              in the title's own column, and the buttons never shrink. */}
+          <View style={styles.navTitleGroup}>
+            {workoutTypeTag ? (
+              <ThemedText
+                style={styles.navTypeTag}
+                setColor={primaryTextColor}
+                numberOfLines={1}
+              >
+                {workoutTypeTag}
+              </ThemedText>
+            ) : null}
 
-          {/* SPM-1: a strength workout names itself after the exercises put
-              into it, so a session started as "Resistance" turns into "Push"
-              while the user is looking at it. That is intended, and says so
-              here, because this is the header a resistance workout draws.
-              The weekday and date used to sit in this slot when there was
-              nothing to announce. They are gone: you know what day you are
-              training, and the workout's name is the thing worth the space. */}
-          {autoNamedLabel ? (
-            <ThemedText style={styles.navDate} setColor={primaryTextColor} numberOfLines={1}>
-              {t("workout.session.autoNamed", { name: autoNamedLabel })}
+            <ThemedText
+              style={styles.navTitle}
+              setColor={titleColor}
+              numberOfLines={1}
+            >
+              {workoutLabel ?? t("workout.page.fallbackTitle")}
             </ThemedText>
-          ) : null}
+          </View>
+
+          {!isDone && (
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={t("workout.session.keepAwake")}
+              accessibilityState={{ selected: keepAwakeEnabled }}
+              hitSlop={{ top: 10, bottom: 10, left: 5, right: 5 }}
+              onPress={toggleKeepAwake}
+              style={[
+                styles.navButton,
+                {
+                  backgroundColor: keepAwakeEnabled
+                    ? withAlpha(primaryColor, 0.16)
+                    : navButtonBackground,
+                },
+              ]}
+            >
+              <ScreenOn
+                width={18}
+                height={18}
+                on={keepAwakeEnabled}
+                color={keepAwakeEnabled ? primaryTextColor : quietText}
+              />
+            </TouchableOpacity>
+          )}
 
           <TouchableOpacity
             accessibilityRole="button"

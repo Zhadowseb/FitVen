@@ -1,0 +1,465 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The open card (about 224 dp, under the 252 limit), for a set (1e) and a
+     rest (1f) alike. The two share the skeleton; what differs is shown or
+     hidden from Kotlin on every post:
+
+       content row  eyebrow NUVÆRENDE SÆT / NÆSTE SÆT, the set, its exercise,
+                    and the rings SÆT and ØVELSE
+       row 1        1e: the current exercise's sets as chips - done, the one
+                        being done ringed in orange, the rest
+                    1f: the rest - PAUSE, "af 3:00", the countdown and a bar
+                    counted up: PAUSE and the rest counting up, no bar
+       row 2        "Næste: {name}" and its sets, hidden without one
+       buttons      1e: −step · Sæt 3 af 4 færdigt · +step
+                    1f: −15 s · Spring over · +15 s
+                    counted up: Afslut pause, alone
+
+     The heights: the content row 52, row 1 and row 2 about 45 each with 10
+     between them, and the buttons 48 - Android's touch target, since the
+     weight buttons are tapped again and again with one hand - with 12 above
+     row 1 and above the buttons.
+
+     For a set without a weight the weight buttons are hidden and Sæt færdigt
+     takes the row, which is why the 8 dp gaps sit on the weight buttons and
+     not on it. At 0 the minus button's dimmed twin (40 %) is shown instead; it
+     is disabled, so a tap on it does nothing and TalkBack says it cannot be
+     used. With every set done the card is the title, "finish the workout?"
+     and that same pill, alone and full width, as "Afslut"; with no sets yet
+     it is only the title. The workout clock ends the eyebrow's line in every
+     mode. No background: the rest does not colour the open card. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="wrap_content"
+  android:orientation="vertical">
+
+  <!-- Content row (52 dp) -->
+  <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:baselineAligned="false"
+    android:gravity="center_vertical"
+    android:minHeight="52dp"
+    android:orientation="horizontal">
+
+    <LinearLayout
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:layout_weight="1"
+      android:orientation="vertical">
+
+      <!-- The eyebrow, and the workout clock at its end: a running
+           Chronometer, or the time it stopped at while paused. -->
+      <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+          android:id="@+id/live_workout_eyebrow"
+          style="@style/LiveWorkout.Text.Heavy.Eyebrow"
+          android:layout_width="0dp"
+          android:layout_height="wrap_content"
+          android:layout_weight="1" />
+
+        <Chronometer
+          android:id="@+id/live_workout_clock"
+          style="@style/LiveWorkout.Text.Bold.Clock"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_marginStart="8dp" />
+
+        <TextView
+          android:id="@+id/live_workout_clock_stopped"
+          style="@style/LiveWorkout.Text.Bold.Clock"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_marginStart="8dp"
+          android:visibility="gone" />
+      </LinearLayout>
+
+      <TextView
+        android:id="@+id/live_workout_title"
+        style="@style/LiveWorkout.Text.Heavy.Title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="1dp" />
+
+      <TextView
+        android:id="@+id/live_workout_subtitle"
+        style="@style/LiveWorkout.Text.Semibold.Subtitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="1dp" />
+    </LinearLayout>
+
+    <LinearLayout
+      android:id="@+id/live_workout_rings"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginStart="12dp"
+      android:orientation="horizontal">
+
+      <FrameLayout
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:background="@drawable/live_workout_ring_track">
+
+        <ImageView
+          android:id="@+id/live_workout_ring_sets_fill"
+          android:layout_width="match_parent"
+          android:layout_height="match_parent"
+          android:importantForAccessibility="no"
+          android:scaleType="fitXY" />
+
+        <LinearLayout
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_gravity="center"
+          android:gravity="center_horizontal"
+          android:orientation="vertical">
+
+          <TextView
+            android:id="@+id/live_workout_ring_sets_text"
+            style="@style/LiveWorkout.Text.Heavy.RingText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+          <TextView
+            android:id="@+id/live_workout_ring_sets_label"
+            style="@style/LiveWorkout.Text.Heavy.RingLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="1dp" />
+        </LinearLayout>
+      </FrameLayout>
+
+      <FrameLayout
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:layout_marginStart="8dp"
+        android:background="@drawable/live_workout_ring_track">
+
+        <ImageView
+          android:id="@+id/live_workout_ring_exercise_fill"
+          android:layout_width="match_parent"
+          android:layout_height="match_parent"
+          android:importantForAccessibility="no"
+          android:scaleType="fitXY" />
+
+        <LinearLayout
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_gravity="center"
+          android:gravity="center_horizontal"
+          android:orientation="vertical">
+
+          <TextView
+            android:id="@+id/live_workout_ring_exercise_text"
+            style="@style/LiveWorkout.Text.Heavy.RingText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+          <TextView
+            android:id="@+id/live_workout_ring_exercise_label"
+            style="@style/LiveWorkout.Text.Heavy.RingLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="1dp" />
+        </LinearLayout>
+      </FrameLayout>
+    </LinearLayout>
+  </LinearLayout>
+
+  <!-- Row 1, 1e: the current exercise's sets -->
+  <LinearLayout
+    android:id="@+id/live_workout_row_current"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="12dp"
+    android:orientation="vertical">
+
+    <TextView
+      android:id="@+id/live_workout_row_current_label"
+      style="@style/LiveWorkout.Text.Heavy.RowLabel"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content" />
+
+    <LinearLayout
+      android:id="@+id/live_workout_chips_current"
+      android:layout_width="match_parent"
+      android:layout_height="26dp"
+      android:layout_marginTop="5dp"
+      android:divider="@drawable/live_workout_chip_gap"
+      android:orientation="horizontal"
+      android:showDividers="middle" />
+  </LinearLayout>
+
+  <!-- Row 1, 1f: the rest -->
+  <LinearLayout
+    android:id="@+id/live_workout_row_rest"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="12dp"
+    android:orientation="vertical"
+    android:visibility="gone">
+
+    <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:baselineAligned="false"
+      android:orientation="horizontal">
+
+      <TextView
+        android:id="@+id/live_workout_rest_label"
+        style="@style/LiveWorkout.Text.Heavy.RowLabel.Rest"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1" />
+
+      <!-- The exercise's sets as dots while its chips are hidden: the one
+           just ticked filled, the next one ringed. Filled from Kotlin. -->
+      <LinearLayout
+        android:id="@+id/live_workout_rest_dots"
+        android:layout_width="wrap_content"
+        android:layout_height="12dp"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="8dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal" />
+
+      <TextView
+        android:id="@+id/live_workout_rest_of"
+        style="@style/LiveWorkout.Text.Bold.RestOf"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp" />
+    </LinearLayout>
+
+    <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="26dp"
+      android:layout_marginTop="5dp"
+      android:baselineAligned="false"
+      android:gravity="center_vertical"
+      android:orientation="horizontal">
+
+      <Chronometer
+        android:id="@+id/live_workout_rest_clock"
+        style="@style/LiveWorkout.Text.Heavy.RestClock"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+      <ProgressBar
+        android:id="@+id/live_workout_rest_bar"
+        style="@android:style/Widget.ProgressBar.Horizontal"
+        android:layout_width="0dp"
+        android:layout_height="6dp"
+        android:layout_marginStart="10dp"
+        android:layout_weight="1"
+        android:importantForAccessibility="no"
+        android:indeterminate="false"
+        android:max="1000"
+        android:maxHeight="6dp"
+        android:minHeight="6dp"
+        android:progressDrawable="@drawable/live_workout_rest_bar" />
+    </LinearLayout>
+  </LinearLayout>
+
+  <!-- Row 2: the next exercise -->
+  <LinearLayout
+    android:id="@+id/live_workout_row_next"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="10dp"
+    android:orientation="vertical">
+
+    <TextView
+      android:id="@+id/live_workout_row_next_label"
+      style="@style/LiveWorkout.Text.Heavy.RowLabel.Next"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content" />
+
+    <LinearLayout
+      android:id="@+id/live_workout_chips_next"
+      android:layout_width="match_parent"
+      android:layout_height="26dp"
+      android:layout_marginTop="5dp"
+      android:divider="@drawable/live_workout_chip_gap"
+      android:orientation="horizontal"
+      android:showDividers="middle" />
+  </LinearLayout>
+
+  <!-- Buttons, 1e: −step · Sæt færdigt · +step -->
+  <LinearLayout
+    android:id="@+id/live_workout_buttons"
+    android:layout_width="match_parent"
+    android:layout_height="48dp"
+    android:layout_marginTop="12dp"
+    android:baselineAligned="false"
+    android:orientation="horizontal">
+
+    <LinearLayout
+      android:id="@+id/live_workout_weight_minus"
+      style="@style/LiveWorkout.Button"
+      android:layout_width="0dp"
+      android:layout_height="match_parent"
+      android:layout_marginEnd="8dp"
+      android:layout_weight="1"
+      android:background="@drawable/live_workout_button_weight_minus">
+
+      <TextView
+        android:id="@+id/live_workout_weight_minus_sign"
+        style="@style/LiveWorkout.Text.Bold.WeightSign.Minus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+      <TextView
+        android:id="@+id/live_workout_weight_minus_text"
+        style="@style/LiveWorkout.Text.Heavy.Button.WeightMinus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="3dp" />
+    </LinearLayout>
+
+    <LinearLayout
+      android:id="@+id/live_workout_weight_minus_off"
+      style="@style/LiveWorkout.Button.Off"
+      android:layout_width="0dp"
+      android:layout_height="match_parent"
+      android:layout_marginEnd="8dp"
+      android:layout_weight="1"
+      android:background="@drawable/live_workout_bg_weight_minus">
+
+      <TextView
+        android:id="@+id/live_workout_weight_minus_off_sign"
+        style="@style/LiveWorkout.Text.Bold.WeightSign.Minus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+      <TextView
+        android:id="@+id/live_workout_weight_minus_off_text"
+        style="@style/LiveWorkout.Text.Heavy.Button.WeightMinus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="3dp" />
+    </LinearLayout>
+
+    <LinearLayout
+      android:id="@+id/live_workout_complete"
+      style="@style/LiveWorkout.Button"
+      android:layout_width="0dp"
+      android:layout_height="match_parent"
+      android:layout_weight="1.4"
+      android:background="@drawable/live_workout_button_primary">
+
+      <ImageView
+        android:id="@+id/live_workout_complete_icon"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/live_workout_ic_check"
+        android:tint="@color/live_workout_ink" />
+
+      <!-- "Sæt 3 af 4 færdigt" can be two lines between the weight buttons. -->
+      <TextView
+        android:id="@+id/live_workout_complete_text"
+        style="@style/LiveWorkout.Text.Heavy.Button.Primary"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:gravity="center"
+        android:maxLines="2" />
+    </LinearLayout>
+
+    <LinearLayout
+      android:id="@+id/live_workout_weight_plus"
+      style="@style/LiveWorkout.Button"
+      android:layout_width="0dp"
+      android:layout_height="match_parent"
+      android:layout_marginStart="8dp"
+      android:layout_weight="1"
+      android:background="@drawable/live_workout_button_weight_plus">
+
+      <TextView
+        android:id="@+id/live_workout_weight_plus_sign"
+        style="@style/LiveWorkout.Text.Bold.WeightSign.Plus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+      <TextView
+        android:id="@+id/live_workout_weight_plus_text"
+        style="@style/LiveWorkout.Text.Heavy.Button.WeightPlus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="3dp" />
+    </LinearLayout>
+  </LinearLayout>
+
+  <!-- Buttons, 1f: −15 s · Spring over · +15 s -->
+  <LinearLayout
+    android:id="@+id/live_workout_rest_buttons"
+    android:layout_width="match_parent"
+    android:layout_height="48dp"
+    android:layout_marginTop="12dp"
+    android:baselineAligned="false"
+    android:orientation="horizontal"
+    android:visibility="gone">
+
+    <LinearLayout
+      android:id="@+id/live_workout_minus"
+      style="@style/LiveWorkout.Button"
+      android:layout_width="0dp"
+      android:layout_height="match_parent"
+      android:layout_weight="1"
+      android:background="@drawable/live_workout_button_secondary">
+
+      <TextView
+        android:id="@+id/live_workout_minus_text"
+        style="@style/LiveWorkout.Text.Heavy.Button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFeatureSettings="tnum" />
+    </LinearLayout>
+
+    <LinearLayout
+      android:id="@+id/live_workout_skip"
+      style="@style/LiveWorkout.Button"
+      android:layout_width="0dp"
+      android:layout_height="match_parent"
+      android:layout_marginStart="8dp"
+      android:layout_marginEnd="8dp"
+      android:layout_weight="1.4"
+      android:background="@drawable/live_workout_button_primary">
+
+      <ImageView
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/live_workout_ic_skip"
+        android:tint="@color/live_workout_ink" />
+
+      <TextView
+        android:id="@+id/live_workout_skip_text"
+        style="@style/LiveWorkout.Text.Heavy.Button.Primary"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp" />
+    </LinearLayout>
+
+    <LinearLayout
+      android:id="@+id/live_workout_plus"
+      style="@style/LiveWorkout.Button"
+      android:layout_width="0dp"
+      android:layout_height="match_parent"
+      android:layout_weight="1"
+      android:background="@drawable/live_workout_button_secondary">
+
+      <TextView
+        android:id="@+id/live_workout_plus_text"
+        style="@style/LiveWorkout.Text.Heavy.Button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFeatureSettings="tnum" />
+    </LinearLayout>
+  </LinearLayout>
+</LinearLayout>

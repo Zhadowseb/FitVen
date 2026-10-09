@@ -354,6 +354,23 @@ export default StyleSheet.create({
     width: undefined,
     maxWidth: undefined,
   },
+  // "See statistics" under the figures, for an exercise with finished sets.
+  exerciseBodyMapModalStatsButton: {
+    minHeight: 48,
+    marginTop: 4,
+    borderRadius: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingHorizontal: 16,
+  },
+  exerciseBodyMapModalStatsButtonText: {
+    flexShrink: 1,
+    fontSize: 13,
+    fontWeight: "900",
+    lineHeight: 17,
+  },
   // Was minHeight: LIST_VIEWPORT_HEIGHT with the text centred in it, which
   // put the message below the fold and left the screen looking blank.
   emptyState: {

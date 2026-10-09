@@ -31,6 +31,8 @@ import {
 } from "../../Resources/ThemedComponents";
 import { programService } from "../../Services";
 import { getTodaysDate } from "../../Utils/dateUtils";
+import { STARTED_FROM } from "@utils/startedFrom";
+import { workoutDisplayName } from "@utils/workoutTypeLabel";
 import {
   filterReleasedWorkoutTypes,
   isWorkoutComingSoon,
@@ -275,6 +277,10 @@ function WorkoutRow({
       }
     : getIconColors(iconType, theme);
   const programLabel = workout.program_name ?? t("calendar.library.noProgram");
+  // The name as drawn: a label that is only a stored type id ("Resistance")
+  // in the app's language, one the user typed as typed.
+  const workoutName =
+    workoutDisplayName(workout.label, t, workout.workout_type) ?? workout.label;
 
   return (
     <View
@@ -289,8 +295,8 @@ function WorkoutRow({
           accessibilityRole="button"
           accessibilityLabel={
             isComingSoon
-              ? t("calendar.library.comingSoonLabel", { name: workout.label })
-              : t("calendar.library.openWorkout", { name: workout.label })
+              ? t("calendar.library.comingSoonLabel", { name: workoutName })
+              : t("calendar.library.openWorkout", { name: workoutName })
           }
           disabled={isComingSoon}
           accessibilityState={{ disabled: isComingSoon }}
@@ -312,7 +318,7 @@ function WorkoutRow({
               setColor={theme.title}
               numberOfLines={1}
             >
-              {workout.label}
+              {workoutName}
             </ThemedText>
 
             <ThemedText
@@ -389,8 +395,8 @@ function WorkoutRow({
           accessibilityState={{ selected: workout.isFavorite }}
           accessibilityLabel={
             workout.isFavorite
-              ? t("calendar.library.removeFavorite", { name: workout.label })
-              : t("calendar.library.saveFavorite", { name: workout.label })
+              ? t("calendar.library.removeFavorite", { name: workoutName })
+              : t("calendar.library.saveFavorite", { name: workoutName })
           }
           onPress={() => onToggleFavorite(workout)}
           style={styles.favoriteButton}
@@ -410,8 +416,8 @@ function WorkoutRow({
           accessibilityRole="button"
           accessibilityLabel={
             isExpanded
-              ? t("calendar.library.hideExercises", { name: workout.label })
-              : t("calendar.library.showExercises", { name: workout.label })
+              ? t("calendar.library.hideExercises", { name: workoutName })
+              : t("calendar.library.showExercises", { name: workoutName })
           }
           onPress={() => onToggleExercises(workout)}
           style={[
@@ -441,7 +447,7 @@ function WorkoutRow({
           activeOpacity={0.8}
           accessibilityRole="button"
           accessibilityLabel={t("calendar.library.repeatNamed", {
-            name: workout.label,
+            name: workoutName,
           })}
           disabled={isComingSoon}
           accessibilityState={{ disabled: isComingSoon }}
@@ -664,6 +670,7 @@ const WorkoutLibraryPage = () => {
         label: repeatWorkout.label,
         workoutType: repeatWorkout.workout_type,
         date: getTodaysDate(),
+        startedFrom: STARTED_FROM.RECENT,
       });
 
       if (!copiedWorkout) {
@@ -703,6 +710,7 @@ const WorkoutLibraryPage = () => {
           workoutId: repeatWorkout.workout_id,
           dayId: target.dayId,
           date: target.date,
+          startedFrom: STARTED_FROM.RECENT,
         });
 
         if (!copiedWorkoutId) {
@@ -714,7 +722,9 @@ const WorkoutLibraryPage = () => {
         Alert.alert(
           t("calendar.library.plannedTitle"),
           t("calendar.library.plannedMessage", {
-            name: repeatWorkout.label,
+            name:
+              workoutDisplayName(repeatWorkout.label, t, repeatWorkout.workout_type) ??
+              repeatWorkout.label,
             day: target.weekday
               ? getWeekdayName(target.weekday, t)
               : t("calendar.library.theDay"),

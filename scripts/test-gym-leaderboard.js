@@ -1,8 +1,10 @@
 // Guards the rules behind centres and the Friends activity tiles that have no
 // other coverage: which set of a workout becomes the lift, when a lift is
-// written, how a vote count becomes a status, how a centre gets its short name
-// from the scraped data, the tile order, and the two SQL invariants the app
-// depends on (own-rows-only reads of gym_lift, verified-only across centres).
+// written, how a centre gets its short name
+// from the scraped data, the tile order, a centre's exercises and the search
+// through them, the centres Explore's search lists before anything is typed,
+// and the two SQL invariants the app depends on (own-rows-only reads of
+// gym_lift, verified-only across centres).
 
 const assert = require("assert");
 const fs = require("fs");
@@ -65,23 +67,6 @@ assert.deepStrictEqual(
   "everything is written the first time"
 );
 
-/* ------------------------------------------------------- vote status -- */
-
-// Driven from the constants, not from the numbers they happen to hold today.
-// Hardcoded 3s and 2s here are what let the function drift away from them
-// without the test noticing.
-const { APPROVALS_REQUIRED, REJECTIONS_TO_REMOVE } = gymUtils;
-
-assert.strictEqual(gymUtils.deriveVideoStatus({ hasVideo: false, approvals: APPROVALS_REQUIRED + 2 }), "none");
-assert.strictEqual(gymUtils.deriveVideoStatus({ hasVideo: true, approvals: 0 }), "pending");
-assert.strictEqual(gymUtils.deriveVideoStatus({ hasVideo: true, approvals: APPROVALS_REQUIRED - 1 }), "pending", "one short is still pending");
-assert.strictEqual(gymUtils.deriveVideoStatus({ hasVideo: true, approvals: APPROVALS_REQUIRED }), "verified");
-assert.strictEqual(
-  gymUtils.deriveVideoStatus({ hasVideo: true, approvals: APPROVALS_REQUIRED, rejections: REJECTIONS_TO_REMOVE }),
-  "rejected",
-  "enough rejections beat enough approvals"
-);
-
 /* ---------------------------------------------------------- matching -- */
 
 const gyms = [
@@ -94,31 +79,28 @@ assert.strictEqual(gymUtils.matchGymLocally({ latitude: 56.1600, longitude: 10.2
 
 /* ------------------------------------------------------- formatting -- */
 
-// Pin colours: every chain in the data gets one, no two chains share one, and
+// Chain colours: every chain in the data gets one, no two chains share one, and
 // none of them is the accent, the green "you are here" or the record gold -
-// those three already mean something else on this map.
+// the three CHAIN_COLORS was picked to stay clear of.
 const chainsInData = ["PureGym", "SATS", "LOOP Fitness", "FitnessX", "Fit&Sund"];
 const chainColors = chainsInData.map((chain) => gymUtils.getChainColor(chain).toLowerCase());
 
 assert.strictEqual(
   new Set(chainColors).size,
   chainsInData.length,
-  "two chains must not share a pin colour"
+  "two chains must not share a colour"
 );
 assert.strictEqual(gymUtils.getChainColor("Some New Chain"), "#C4C7CF", "an unknown chain stays neutral");
 assert.strictEqual(gymUtils.getChainColor("puregym"), gymUtils.getChainColor("PureGym"), "the lookup ignores case");
 
 for (const reserved of ["#f7742e", "#4ed39a", "#e8b44a"]) {
-  assert.ok(!chainColors.includes(reserved), `${reserved} already means something else on the map`);
+  assert.ok(!chainColors.includes(reserved), `${reserved} is one of the three the chain colours stay clear of`);
 }
 
 assert.strictEqual(gymUtils.getChainInitials("PureGym"), "PG");
 assert.strictEqual(gymUtils.getChainInitials("LOOP Fitness"), "LO");
 assert.strictEqual(gymUtils.getChainInitials("Fit&Sund"), "FS");
 assert.strictEqual(gymUtils.getChainInitials("Some New Chain"), "SN");
-assert.strictEqual(gymUtils.formatDistance(850), "850 m");
-assert.strictEqual(gymUtils.formatDistance(2340), "2.3 km");
-assert.strictEqual(gymUtils.formatDistance(12400), "12 km");
 assert.strictEqual(gymUtils.formatWeightKg("102.50"), "102.5");
 assert.strictEqual(gymUtils.shortenDisplayName("Mikkel Rasmussen"), "Mikkel R.");
 
@@ -314,12 +296,6 @@ assert.ok(
   "workout music is read through user_follows, so a block cuts it off like everything else"
 );
 
-// The reasons the reject step offers have to be the ones the column accepts.
-const offeredReasons = [...gymServiceSource.matchAll(/\{ value: "([a-z]+)", labelKey:/g)].map((match) => match[1]);
-const acceptedReasons = migration.match(/reason in \(([^)]+)\)/)[1].match(/'([a-z]+)'/g).map((value) => value.replace(/'/g, ""));
-
-assert.deepStrictEqual(offeredReasons.sort(), acceptedReasons.sort(), "rejection reasons in the app and the column check must match");
-
 /* ------------------------------------ the music band, and the fallback -- */
 
 // The two negative branches were covered and the positive one was not, which
@@ -372,9 +348,9 @@ assert.ok(
 // A file can hold more than one component, and the second does not inherit the
 // first one's hooks. Babel compiles a missing `theme` happily and it throws at
 // render - the same shape as the dead-zone crashes below, and just as invisible
-// to a suite that renders nothing. RejectedBadge was exactly this.
+// to a suite that renders nothing. A second badge component in the old
+// lift-status pill file was exactly this.
 for (const file of [
-  "src/Resources/Components/GymLeaderboard/LiftStatusPill.js",
   "src/Resources/Components/GymLeaderboard/LeaderboardRow.js",
 ]) {
   // Top-level function declarations, whether the export sits on them or at the
@@ -407,13 +383,13 @@ for (const file of [
 // is cheap to read for.
 {
   const declaredAfterUse = [
-    ["src/Pages/GymExerciseLeaderboardPage/GymExerciseLeaderboardPage.js", "openReview"],
+    ["src/Pages/GymExerciseLeaderboardPage/GymExerciseLeaderboardPage.js", "openLifter"],
   ];
 
   for (const [file, name] of declaredAfterUse) {
     const lines = fs.readFileSync(path.join(root, file), "utf8").split(/\r?\n/);
     const declared = lines.findIndex((line) => line.includes(`const ${name} = `));
-    const inDeps = lines.findIndex((line) => /^s*[.*]$/.test(line) && line.includes(name));
+    const inDeps = lines.findIndex((line) => /^\s*\[.*\]\s*$/.test(line) && line.includes(name));
 
     assert.ok(declared >= 0, `${file} no longer declares ${name}`);
     assert.ok(
@@ -423,20 +399,24 @@ for (const file of [
   }
 }
 
+// Whichever setter a screen hands useGymSearch - ChangeGymSheet's error
+// state, the Centres screen's search error - has to be declared above the call.
 for (const file of [
   "src/Pages/GymsPage/GymsPage.js",
   "src/Resources/Components/ChangeGymSheet/ChangeGymSheet.js",
 ]) {
   const lines = fs.readFileSync(path.join(root, file), "utf8").split(/\r?\n/);
-  const declared = lines.findIndex((line) =>
-    line.includes("const [errorMessage, setErrorMessage]")
-  );
   const used = lines.findIndex((line) => line.includes("useGymSearch("));
+  const setter = used >= 0 ? lines[used].match(/useGymSearch\(\s*\w+\s*,\s*(\w+)/)?.[1] : null;
+  const declared = setter
+    ? lines.findIndex((line) => new RegExp(`const \\[\\w+, ${setter}\\]`).test(line))
+    : -1;
 
-  assert.ok(declared >= 0 && used >= 0, `${file} no longer has both lines`);
+  assert.ok(used >= 0 && setter, `${file} no longer hands useGymSearch a setter`);
+  assert.ok(declared >= 0, `${file} passes ${setter} to useGymSearch without declaring it`);
   assert.ok(
     declared < used,
-    `${file} passes setErrorMessage to useGymSearch before declaring it`
+    `${file} passes ${setter} to useGymSearch before declaring it`
   );
 }
 
@@ -673,5 +653,116 @@ assert.ok(
   ),
   "request_lift_verification can be called in a loop again"
 );
+
+/* ------------------------------------------------ a centre's exercises -- */
+
+const overview = {
+  featured: [
+    { exerciseId: 1, exerciseName: "Bench Press", lifterCount: 4, top: { displayName: "Anna Holm", weightKg: 100 }, me: { rank: 2 } },
+    { exerciseId: 2, exerciseName: "Squat", lifterCount: 0, top: null, me: null },
+    { exerciseId: 3, exerciseName: "Deadlift", lifterCount: 4, top: null, me: null },
+  ],
+  more: [
+    { exerciseId: 9, exerciseName: "Incline Bench Press (Dumbbell)", lifterCount: 6, topName: "Bo", topWeightKg: 40, myRank: null },
+    { exerciseId: 7, exerciseName: "Hip Thrust", lifterCount: 1, topName: "Bo", topWeightKg: 120, myRank: 1 },
+    { exerciseId: 1, exerciseName: "Bench Press", lifterCount: 99 },
+    { exerciseId: null, exerciseName: "No id" },
+    { exerciseId: 8, exerciseName: "  ", lifterCount: 3 },
+  ],
+};
+const centreExercises = gymUtils.listCentreExercises(overview);
+
+assert.deepStrictEqual(
+  centreExercises.map((exercise) => [exercise.id, exercise.lifterCount]),
+  [[9, 6], [1, 4], [3, 4], [7, 1], [2, 0]],
+  "every exercise once, most lifters first, then by name; the featured three stay at 0; no id or name drops"
+);
+assert.deepStrictEqual(
+  [centreExercises[1].topName, centreExercises[1].topWeightKg, centreExercises[1].myRank],
+  ["Anna Holm", 100, 2],
+  "a featured lift's #1 and your place come from its rows"
+);
+assert.deepStrictEqual(
+  [centreExercises[2].topName, centreExercises[2].topWeightKg, centreExercises[2].myRank],
+  [null, null, null],
+  "a missing #1 or place stays missing, not 0"
+);
+assert.deepStrictEqual(gymUtils.listCentreExercises(null), [], "no overview, no exercises");
+
+const searchNames = (query) =>
+  gymUtils.searchCentreExercises(centreExercises, query).map((exercise) => exercise.name);
+
+assert.deepStrictEqual(searchNames("bench"), ["Bench Press", "Incline Bench Press (Dumbbell)"], "the name starting with it first, then a word in it");
+assert.deepStrictEqual(searchNames("  BENCH   press "), ["Bench Press", "Incline Bench Press (Dumbbell)"], "case and spaces do not matter");
+assert.deepStrictEqual(searchNames("dumb"), ["Incline Bench Press (Dumbbell)"], "a word in brackets is a word");
+assert.deepStrictEqual(searchNames("ift"), ["Deadlift"], "and anywhere in the name last");
+assert.deepStrictEqual(searchNames("t"), ["Hip Thrust", "Deadlift", "Squat"], "a word start beats anywhere; within each, the list's order");
+assert.deepStrictEqual(searchNames(""), [], "nothing typed is no search");
+assert.deepStrictEqual(searchNames("row"), [], "and a name nobody here lifts is not found");
+
+// The centre page is sent the featured exercises and the few most lifted of
+// the rest on every visit, and every exercise only when somebody searches.
+// "All exercises" still counts them all: more_total is every one of the rest.
+{
+  const firstFew = { featured: overview.featured, more: overview.more.slice(0, 2), moreTotal: 12 };
+
+  assert.strictEqual(gymUtils.listCentreExercises(firstFew).length, 5);
+  assert.strictEqual(gymUtils.countCentreExercises(firstFew), 5 + 10, "the ten not sent are counted");
+  assert.strictEqual(
+    gymUtils.countCentreExercises({ ...overview, moreTotal: overview.more.length }),
+    centreExercises.length,
+    "with every one sent, the count is the list's"
+  );
+  assert.strictEqual(gymUtils.countCentreExercises(null), 0);
+
+  // "No match" only once every exercise has been looked through.
+  const view = (args) => gymUtils.centreSearchView(args);
+  assert.deepStrictEqual(
+    view({ matchCount: 0, previewCount: 5, totalCount: 15, status: "loading" }),
+    { complete: false, loading: true, failed: false, noMatch: false },
+    "the search said no match while the rest was still coming"
+  );
+  assert.deepStrictEqual(
+    view({ matchCount: 0, previewCount: 5, totalCount: 15, status: "error" }),
+    { complete: false, loading: false, failed: true, noMatch: false },
+    "a failed fetch read as no match"
+  );
+  assert.deepStrictEqual(
+    view({ matchCount: 0, previewCount: 5, totalCount: 15, status: "ready" }),
+    { complete: true, loading: false, failed: false, noMatch: true }
+  );
+  assert.deepStrictEqual(
+    view({ matchCount: 0, previewCount: 5, totalCount: 5, status: "idle" }),
+    { complete: true, loading: false, failed: false, noMatch: true },
+    "a centre with no more than the preview is searched in full at once"
+  );
+  assert.strictEqual(
+    view({ matchCount: 2, previewCount: 5, totalCount: 15, status: "loading" }).loading,
+    true,
+    "matches from the preview still say the rest is coming"
+  );
+
+  const centrePage = fs.readFileSync(path.join(root, "src/Pages/GymLeaderboardPage/GymLeaderboardPage.js"), "utf8");
+  const load = centrePage.slice(centrePage.indexOf("const load = useCallback("), centrePage.indexOf("const loadCards = useCallback("));
+
+  assert.ok(load.length > 0, "the centre page's load is gone; update this test");
+  assert.ok(!/moreLimit:\s*null/.test(load), "the centre page asks for every exercise on every visit again");
+  assert.ok(/onFocus=\{loadSearchableExercises\}/.test(centrePage), "the search no longer asks for every exercise when it is used");
+  assert.ok(/total=\{exerciseTotal\}/.test(centrePage), "\"All exercises\" counts only the exercises the page was sent");
+}
+
+/* ---------------------------------------- centres before a search -- */
+
+const suggestions = gymUtils.mergeGymSuggestions({
+  home: { id: 1, shortName: "Home" },
+  trainedIn: [{ id: 1 }, { id: 2 }, { id: "3" }, { id: null }],
+  popular: [{ id: 2 }, { id: 4 }, { id: 3 }, { id: 5 }, { id: 6 }],
+  limit: 2,
+});
+
+assert.strictEqual(suggestions.yours.id, 1);
+assert.deepStrictEqual(suggestions.trainedIn.map((gym) => gym.id), [2, "3"], "your centre is not listed again, nor a row without an id");
+assert.deepStrictEqual(suggestions.popular.map((gym) => gym.id), [4, 5], "a centre already shown is skipped, then the limit");
+assert.deepStrictEqual(gymUtils.mergeGymSuggestions(), { yours: null, trainedIn: [], popular: [] });
 
 console.log("Gym leaderboard checks passed.");

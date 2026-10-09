@@ -27,7 +27,10 @@ function getNormalizedString(value) {
 // build 24 sagde "build 18". nativeBuildVersion er det tal, der faktisk staar
 // i den installerede app. I en dev-klient uden native build er de to null, og
 // saa er app.json's version stadig bedre end ingenting.
-function getAppVersion() {
+//
+// Eksporteret, fordi AppOpenSync sender samme streng som last_app_version:
+// saa kan versionerne i brug og fejlrapporterne laegges ved siden af hinanden.
+export function getAppVersion() {
   const appVersion = getNormalizedString(
     Constants.nativeApplicationVersion ?? appConfig?.expo?.version
   );

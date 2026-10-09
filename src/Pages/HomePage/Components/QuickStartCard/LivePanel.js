@@ -18,6 +18,7 @@ import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
 import { useAnimationsEnabled } from "@resources/Components/animationHooks";
 import { ThemedText } from "@resources/ThemedComponents";
 import { EASE_IN_OUT, sampleTrack } from "@utils/keyframeTimeline";
+import { workoutDisplayName } from "@utils/workoutTypeLabel";
 import { livePanelTone, newlyFilledBars } from "@utils/liveQuickStart";
 import { formatCountdownTime, formatElapsedTime } from "@utils/timeUtils";
 
@@ -236,7 +237,10 @@ export default function LivePanel({ workout, live, onOpen }) {
     }
   });
 
-  const name = workout?.name ?? t("home.quickStart.todaysWorkout");
+  // An unnamed workout's name is its stored type id; draw the type's name.
+  const name =
+    workoutDisplayName(workout?.name, t, workout?.workoutType) ??
+    t("home.quickStart.todaysWorkout");
   const viewKey = `${view}|${focus.set?.setId ?? focus.set?.exerciseId ?? "-"}|${record?.setId ?? ""}`;
 
   return (

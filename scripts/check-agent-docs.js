@@ -22,11 +22,13 @@ const DOCS = [
   "AGENTS.md",
   "CLAUDE.md",
   "README.md",
+  "docs/MAP.md",
   "src/AGENTS.md",
   "src/Pages/AGENTS.md",
   "src/Database/AGENTS.md",
   "src/Services/AGENTS.md",
   "src/Sync/AGENTS.md",
+  "modules/live-workout/AGENTS.md",
 ];
 
 function read(rel) {
@@ -129,6 +131,18 @@ const sourceFiles = allFiles.filter(
 
 function sourcesMatching(pattern) {
   return sourceFiles.filter((f) => pattern.test(fs.readFileSync(path.join(root, f), "utf8")));
+}
+
+// Every `function()` that docs/MAP.md names has to still be mentioned somewhere
+// in the source, so the map cannot point at a function that was renamed away.
+const sourceText = sourceFiles.map((f) => fs.readFileSync(path.join(root, f), "utf8")).join("\n");
+
+for (const match of new Set((read("docs/MAP.md") ?? "").match(/`[A-Za-z_][A-Za-z0-9_]*\(\)`/g) ?? [])) {
+  const name = match.slice(1, -3);
+
+  if (!new RegExp(`\\b${name}\\b`).test(sourceText)) {
+    problems.push(`docs/MAP.md names \`${name}()\`, which no source file mentions`);
+  }
 }
 
 // "Never alias one layer to another layer's name" - root and src AGENTS.md

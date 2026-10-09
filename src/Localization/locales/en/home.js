@@ -49,6 +49,23 @@ export default {
     emptyWorkout: "Empty workout",
     startNamed: "Start {name}",
     startEmpty: "Start an empty workout",
+    // The empty workout when it is the only thing to start: nothing open
+    // today, nothing due in the split.
+    firstWorkout: "First workout",
+    firstWorkoutSub: "Empty · add exercises as you go",
+    startFirst: "Start your first workout",
+    emptyWorkoutSub: "Add exercises as you go",
+    // The planned workout that is the whole block when one is on today.
+    plannedEyebrow: "Planned today",
+    continueEyebrow: "Continue",
+    fromCalendar: "From your calendar",
+    fromProgram: "From {program}",
+    noExercises: "No exercises yet",
+    // {exercises} is common.exercises, so 1 exercise and 2 exercises read right.
+    moreToday: "{exercises} · +{count} more",
+    // A started, paused workout: how long it has run.
+    elapsed: "{minutes} min in",
+    startPlanned: "Start planned workout {name}, {exercises}",
     startFailedTitle: "Could not start the workout",
     startFailedBody: "Please try again.",
     // The panel the block becomes while a workout is running.
@@ -70,23 +87,21 @@ export default {
     },
   },
   split: {
+    eyebrow: "Your split",
     unnamed: "Session {number}",
-    title: "Workout split",
-    empty: "Start training to have your split shown here.",
-    meta: "{exercises} exercises · {sets} sets",
+    // The first week, before the split is shown: seven dots, one a day.
+    // Right after the seven dots; the line under them says why.
+    calculating: "Calculating…",
+    forming: "Takes shape after your first week",
+    formingA11y: "Your split is taking shape, day {count} of 7",
+    waiting: "Shows up as you repeat your workouts",
+    // {exercises} and {sets} are common.exercises and common.sets.
+    meta: "{exercises} · {sets}",
     allCount: "All {count}",
     openAll: "Open all your workouts",
     upNext: "{name}, next in your split",
   },
-  muscleGlance: {
-    title: "Last month",
-    gaining: "{group} gaining",
-    noGain: "No gains yet",
-    noData: "—",
-    open: "Open personal records",
-  },
   workoutType: {
-    resistance: "Resistance",
     workout: "Workout",
   },
   hero: {

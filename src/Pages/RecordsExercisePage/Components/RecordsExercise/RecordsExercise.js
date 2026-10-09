@@ -23,6 +23,7 @@ import {
   buildRepLadder,
 } from "../../../../Utils/recordsInsights";
 import { formatRelativeDay } from "../../../../Utils/dateUtils";
+import { isPerSide } from "@utils/weightMode";
 import { formatDate, useTranslation } from "@localization";
 
 const W = 340;
@@ -115,6 +116,21 @@ export default function RecordsExercise({
     () => buildRecentSessions(sets, { name, limit: 3 }),
     [sets, name]
   );
+  // Every number here is in the exercise's current mode (4d) - the sets
+  // arrive converted - so one look at the exercise says which it is.
+  const perSide = useMemo(() => {
+    const wanted = String(name ?? "").trim().toLocaleLowerCase();
+
+    return sets.some(
+      (set) => set.name.toLocaleLowerCase() === wanted && isPerSide(set.weightMode)
+    );
+  }, [sets, name]);
+  const unit = perSide
+    ? `${t("common.kg")} ${t("workout.weightMode.suffix")}`
+    : t("common.kg");
+  // "22,5 kg pr. side × 10" per side; "45 × 10" as it has always read.
+  const lift = (weight, reps) =>
+    perSide ? `${kg(weight)} ${unit} × ${reps}` : `${kg(weight)} × ${reps}`;
 
   const chart = useMemo(() => {
     const points = series.points;
@@ -202,9 +218,11 @@ export default function RecordsExercise({
       : null;
 
   // Section 5.3, phrased forward. Comparing across rep counts reads as a
-  // judgement on the set that was done, which is not the point.
+  // judgement on the set that was done, which is not the point. Only a slot
+  // held at its own rep count: 90 × 3 fills the 1 and the 2 on the same day,
+  // and "next step at 1 rep" would be about a single nobody lifted.
   const nextStep = useMemo(() => {
-    const done = ladder.filter((slot) => slot.weight !== null);
+    const done = ladder.filter((slot) => slot.weight !== null && !slot.isDerived);
 
     if (done.length === 0) {
       return null;
@@ -234,7 +252,7 @@ export default function RecordsExercise({
             {kg(series.best)}
           </ThemedText>
           <ThemedText style={styles.chartUnit} setColor={quiet}>
-            {t("common.kg")}
+            {unit}
           </ThemedText>
           {change !== null ? (
             <View
@@ -334,9 +352,10 @@ export default function RecordsExercise({
 
             {/* One tick per session under the baseline, so you can see when you
                 trained and not only what the number was. */}
-            {chart.placed.map((point) => (
+            {/* Two sessions can share a day, so the day alone is no key. */}
+            {chart.placed.map((point, index) => (
               <Rect
-                key={`tick-${point.at}`}
+                key={`tick-${point.at}-${index}`}
                 x={point.x - 0.6}
                 y={chart.baseline + 2}
                 width={1.2}
@@ -345,9 +364,9 @@ export default function RecordsExercise({
               />
             ))}
 
-            {chart.placed.map((point) => (
+            {chart.placed.map((point, index) => (
               <Circle
-                key={`dot-${point.at}`}
+                key={`dot-${point.at}-${index}`}
                 cx={point.x}
                 cy={point.y}
                 r={2.6}
@@ -414,7 +433,7 @@ export default function RecordsExercise({
           <ThemedText style={styles.caption} setColor={quiet}>
             {t("records.exercise.bestSet", {
               when: formatRelativeDay(last.at, now).toLowerCase(),
-              lift: `${kg(last.weight)} × ${last.reps}`,
+              lift: lift(last.weight, last.reps),
             })}
           </ThemedText>
         ) : null}
@@ -432,8 +451,8 @@ export default function RecordsExercise({
           </ThemedText>
           <ThemedText style={styles.caption} setColor={quiet}>
             {t("records.exercise.tryNext", {
-              target: `${kg(nextStep.target)} × ${nextStep.reps}`,
-              current: `${kg(nextStep.current)} × ${nextStep.reps}`,
+              target: lift(nextStep.target, nextStep.reps),
+              current: lift(nextStep.current, nextStep.reps),
             })}
           </ThemedText>
         </View>
@@ -442,7 +461,9 @@ export default function RecordsExercise({
       <View style={{ gap: 12 }}>
         <View style={styles.sectionHead}>
           <ThemedText style={styles.overline} setColor={quiet}>
-            {t("records.exercise.repLadder")}
+            {perSide
+              ? `${t("records.exercise.repLadder")} · ${t("workout.weightMode.suffix")}`
+              : t("records.exercise.repLadder")}
           </ThemedText>
           <View style={[styles.sectionRule, { backgroundColor: hairline }]} />
         </View>
@@ -485,6 +506,12 @@ export default function RecordsExercise({
                 <ThemedText style={styles.caption} setColor={quiet}>
                   {empty ? t("records.exercise.noSet") : shortDate(slot.at)}
                 </ThemedText>
+                {slot.isDerived ? (
+                  // Held by a longer set: said so, and never gold.
+                  <ThemedText style={styles.caption} setColor={quiet}>
+                    {t("records.exercise.fromReps", { reps: slot.fromReps })}
+                  </ThemedText>
+                ) : null}
               </View>
             );
           })}
@@ -501,8 +528,8 @@ export default function RecordsExercise({
           </View>
 
           <View style={[styles.card, { backgroundColor: card, borderColor: border, gap: 10 }]}>
-            {sessions.map((session) => (
-              <View key={session.at} style={styles.sessionRow}>
+            {sessions.map((session, index) => (
+              <View key={`${session.at}-${index}`} style={styles.sessionRow}>
                 <ThemedText style={styles.sessionDate} setColor={quiet}>
                   {formatRelativeDay(session.at, now)}
                 </ThemedText>
@@ -512,7 +539,7 @@ export default function RecordsExercise({
                   numberOfLines={2}
                 >
                   {session.sets
-                    .map((set) => `${kg(set.weight)} × ${set.reps}`)
+                    .map((set) => lift(set.weight, set.reps))
                     .join(" · ")}
                 </ThemedText>
                 {session.hasRecord ? (

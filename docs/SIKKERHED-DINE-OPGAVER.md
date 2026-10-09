@@ -333,6 +333,29 @@ Du må også godt lave en issue på at downloade databehandleraftalerne.
 
 ---
 
+## 6. Tøm og slet `lift-videos`-bucketen
+
+Tilføjet 2. oktober 2026, efter at videoverificering af løft er fjernet.
+
+**Hvorfor:** `supabase/migrations/20261007090000_remove-lift-verification.sql`
+er kørt (1. oktober 2026). Den fjernede bucketens policies, men ikke filerne:
+Supabase tillader ikke at slette fra `storage.objects` eller `storage.buckets`
+med SQL. Videoerne af folks løft ligger der altså stadig. Ingen policy lader
+nogen læse, uploade eller slette dem længere, men det er persondata, appen ikke
+bruger til noget, og så skal de ikke gemmes.
+
+**Sådan gør du:**
+
+1. Supabase → **Storage** → **Buckets**.
+2. Åbn `lift-videos` og tøm den (markér alle filer og mapper → **Delete**, eller
+   **Empty bucket** i bucketens menu).
+3. Slet derefter selve bucketen i samme menu (**Delete bucket**).
+
+Lad de andre buckets være. Især `exercise-videos` ligner, men det er videoerne
+til egne øvelser, og dem bruger appen stadig.
+
+---
+
 ## Sådan ligger resten
 
 Alt andet fra rapporten er kode, og det tager jeg:

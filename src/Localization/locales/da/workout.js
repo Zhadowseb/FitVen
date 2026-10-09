@@ -19,6 +19,26 @@ export default {
     records: "Rekorder og udvikling",
     openRecords: "Åbn rekorder for {name}",
     heaviestLift: "{weight} kg × {reps}",
+    heaviestLiftPerSide: "{weight} kg pr. side × {reps}",
+  },
+  // Vægt pr. side eller for begge sider, på øvelseskortet (4d).
+  weightMode: {
+    perSide: "Pr. side",
+    bothSides: "Begge sider",
+    tabValue: "{label} · {weight}",
+    doubled: "Vægten er fordoblet: {from} → {to} {unit}",
+    halved: "Vægten er halveret: {from} → {to} {unit}",
+    // Når ingen af sættene har en vægt endnu, er der ingen tal at nævne.
+    switchedPerSide: "Vægten skrives nu pr. side",
+    switchedBothSides: "Vægten skrives nu for begge sider",
+    undo: "Fortryd",
+    switchFailed: "Kunne ikke skifte, hvordan vægten skrives",
+    undoFailed: "Kunne ikke fortryde skiftet",
+    // Står efter tallet, med lille grå skrift.
+    suffix: "pr. side",
+    a11y: "Vægt skrives {mode}. Tryk for at skifte, alle sæt omregnes",
+    // {mode} i a11y for begge sider; for pr. side bruges suffix.
+    a11yBothSides: "for begge sider",
   },
   note: {
     title: "Note",
@@ -83,6 +103,8 @@ export default {
     restartMessage:
       "Timeren, afkrydsningerne og fremskridtet for denne træning nulstilles.",
     restartConfirm: "Start forfra",
+    restartFailedTitle: "Kunne ikke starte træningen forfra",
+    restartFailedMessage: "Intet er ændret. Prøv igen.",
     options: {
       changeName: "Skift navn",
       restart: "Start træningen forfra",
@@ -98,8 +120,8 @@ export default {
     },
   },
   session: {
-    autoNamed: "Navngivet {name} efter dine øvelser",
     options: "Træningsmuligheder",
+    keepAwake: "Hold skærmen vågen, mens træningen kører",
     pause: "Pause",
     continue: "Fortsæt",
     start: "Start",
@@ -166,6 +188,18 @@ export default {
   setList: {
     setDone: "Sæt {number} færdigt",
     repsUnit: "reps",
+    // Pausen efter et sæt uden pause skrevet, talt op (skærmlæseren).
+    restCountingUp: "Pause i {time}",
+    // + og − på vægten (1e). {step} er trinnet i kg.
+    weightMinus: "Træk {step} kg fra sæt {label}",
+    weightPlus: "Læg {step} kg til sæt {label}",
+    weightMinusAll: "Træk {step} kg fra alle ufærdige sæt",
+    weightPlusAll: "Læg {step} kg til alle ufærdige sæt",
+    // Når en vægt ikke kunne gemmes.
+    weightSaveFailedTitle: "Vægten blev ikke gemt",
+    weightStepsKept:
+      "Den står stadig på skærmen og gemmes, næste gang du ændrer en vægt eller lukker øvelsen.",
+    weightTypedReverted: "Sættet viser igen den gemte vægt. Prøv igen.",
     headers: {
       note: "NOTE",
       rest: "PAUSE",

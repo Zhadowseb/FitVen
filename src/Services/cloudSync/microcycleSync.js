@@ -131,6 +131,7 @@ export async function uploadDirtyMicrocycles(
 
     await programRepository.markMicrocycleSynced(db, {
       microcycleId: localMicrocycle.microcycle_id,
+      expectedSyncVersion: localMicrocycle.sync_version,
       cloudMicrocycleId,
       syncId: normalizeSyncId(syncResult.cloudRecord?.sync_id),
       syncVersion: normalizeSyncVersion(syncResult.cloudRecord?.sync_version, 0),
@@ -333,8 +334,9 @@ async function reconcileMicrocyclesFromCloud(db, userId) {
 
       if (Number(localMicrocycle.needs_sync) === 1) {
         if (compareEntitySyncVersions(localMicrocycle, cloudMicrocycle) < 0) {
-          await programRepository.updateMicrocycleFromCloud(db, {
+          const applied = await programRepository.updateMicrocycleFromCloud(db, {
             microcycleId: localMicrocycle.microcycle_id,
+            expectedSyncVersion: localMicrocycle.sync_version,
             cloudMicrocycleId,
             syncId: cloudSyncId,
             syncVersion: normalizeSyncVersion(cloudMicrocycle.sync_version, 0),
@@ -344,7 +346,7 @@ async function reconcileMicrocyclesFromCloud(db, userId) {
             focus: comparableCloudMicrocycle.focus,
             done: comparableCloudMicrocycle.done,
           });
-          downloadedCount += 1;
+          downloadedCount += applied ? 1 : 0;
         } else if (
           areComparableMicrocyclesEqual(
             comparableLocalMicrocycle,
@@ -353,6 +355,7 @@ async function reconcileMicrocyclesFromCloud(db, userId) {
         ) {
           await programRepository.markMicrocycleSynced(db, {
             microcycleId: localMicrocycle.microcycle_id,
+            expectedSyncVersion: localMicrocycle.sync_version,
             cloudMicrocycleId,
             syncId: cloudSyncId,
             syncVersion: normalizeSyncVersion(cloudMicrocycle.sync_version, 0),
@@ -390,6 +393,7 @@ async function reconcileMicrocyclesFromCloud(db, userId) {
         ) {
           await programRepository.markMicrocycleSynced(db, {
             microcycleId: localMicrocycle.microcycle_id,
+            expectedSyncVersion: localMicrocycle.sync_version,
             cloudMicrocycleId,
             syncId: cloudSyncId,
             syncVersion: normalizeSyncVersion(cloudMicrocycle.sync_version, 0),
@@ -399,8 +403,9 @@ async function reconcileMicrocyclesFromCloud(db, userId) {
         continue;
       }
 
-      await programRepository.updateMicrocycleFromCloud(db, {
+      const applied = await programRepository.updateMicrocycleFromCloud(db, {
         microcycleId: localMicrocycle.microcycle_id,
+        expectedSyncVersion: localMicrocycle.sync_version,
         cloudMicrocycleId,
         syncId: cloudSyncId,
         syncVersion: normalizeSyncVersion(cloudMicrocycle.sync_version, 0),
@@ -410,6 +415,11 @@ async function reconcileMicrocyclesFromCloud(db, userId) {
         focus: comparableCloudMicrocycle.focus,
         done: comparableCloudMicrocycle.done,
       });
+
+      if (!applied) {
+        // The user wrote to it since it was read, and that write goes up.
+        continue;
+      }
 
       const updatedMicrocycle = {
         ...localMicrocycle,

@@ -5,6 +5,8 @@ import { supabase } from "@database/supaBaseClient";
 import { programRepository } from "@repository";
 import { withTransaction } from "@services/shared";
 import { startBackgroundSync } from "@services/syncScheduler";
+import { notifyWorkoutDataChanged } from "@utils/workoutDataEvents";
+import { createStartedFromCloudColumn } from "@utils/startedFrom";
 import {
   normalizeDeletedAt,
   normalizeSyncId,
@@ -37,6 +39,19 @@ import {
   syncDirtyLocalRowToCloud,
 } from "./cloudSyncShared";
 import { syncDaysWithCloud } from "./daySync";
+
+// `started_from` is the one column here the app may reach before the cloud
+// has it: it comes with 20261001090000_dev-kpis.sql, and a select or payload
+// naming a missing column fails the request. So the reconcile's read and the
+// upload go through this handle, which names the column until the cloud says
+// it is missing and then syncs without it for the rest of the session. The
+// queued deletes never name it and do not need to.
+const startedFromColumn = createStartedFromCloudColumn({
+  onMissing: () =>
+    console.info(
+      "workout_type_instance.started_from is missing in the cloud; workouts sync without it until the app restarts."
+    ),
+});
 
 export async function processQueuedWorkoutTypeInstanceDeletes(db, userId) {
   const queuedDeletes =
@@ -124,22 +139,27 @@ export async function uploadDirtyWorkoutTypeInstances(
       continue;
     }
 
-    const syncResult = await syncDirtyLocalRowToCloud({
-      tableName: WORKOUT_TYPE_INSTANCE_CLOUD_TABLE,
-      selectColumns: WORKOUT_TYPE_INSTANCE_CLOUD_SYNC_SELECT,
-      userId,
-      localEntity: localWorkout,
-      payload,
-      cloudId: parseCloudWorkoutTypeInstanceId(
-        resolveSideBySideCloudId(
-          localWorkout,
-          "cloud_workout_type_instance_id"
-        )
-      ),
-      syncId: normalizeSyncId(localWorkout.sync_id),
-      legacyLocalId: payload.local_workout_type_instance_id,
-      legacyLocalIdColumn: "local_workout_type_instance_id",
-    });
+    // Built inside the request so a retry without started_from rebuilds both.
+    const syncResult = await startedFromColumn.withFallback(() =>
+      syncDirtyLocalRowToCloud({
+        tableName: WORKOUT_TYPE_INSTANCE_CLOUD_TABLE,
+        selectColumns: startedFromColumn.selectColumns(
+          WORKOUT_TYPE_INSTANCE_CLOUD_SYNC_SELECT
+        ),
+        userId,
+        localEntity: localWorkout,
+        payload: startedFromColumn.sendablePayload(payload),
+        cloudId: parseCloudWorkoutTypeInstanceId(
+          resolveSideBySideCloudId(
+            localWorkout,
+            "cloud_workout_type_instance_id"
+          )
+        ),
+        syncId: normalizeSyncId(localWorkout.sync_id),
+        legacyLocalId: payload.local_workout_type_instance_id,
+        legacyLocalIdColumn: "local_workout_type_instance_id",
+      })
+    );
 
     if (!syncResult.uploaded) {
       continue;
@@ -159,6 +179,7 @@ export async function uploadDirtyWorkoutTypeInstances(
 
     await programRepository.markWorkoutSynced(db, {
       workoutId: localWorkout.workout_id,
+      expectedSyncVersion: localWorkout.sync_version,
       cloudWorkoutTypeInstanceId,
       remoteLocalWorkoutTypeInstanceId,
       syncId: normalizeSyncId(syncResult.cloudRecord?.sync_id),
@@ -204,16 +225,22 @@ export async function prepareWorkoutForSummaryPost(db, workoutId) {
 }
 
 async function reconcileWorkoutTypeInstancesFromCloud(db, userId) {
-  const { data: cloudWorkouts, error } = await supabase
-    .from(WORKOUT_TYPE_INSTANCE_CLOUD_TABLE)
-    .select(WORKOUT_TYPE_INSTANCE_CLOUD_SYNC_SELECT)
-    .eq("user_id", userId)
-    .order("cloud_day_id", { ascending: true })
-    .order("id", { ascending: true });
+  const cloudWorkouts = await startedFromColumn.withFallback(async () => {
+    const { data, error } = await supabase
+      .from(WORKOUT_TYPE_INSTANCE_CLOUD_TABLE)
+      .select(
+        startedFromColumn.selectColumns(WORKOUT_TYPE_INSTANCE_CLOUD_SYNC_SELECT)
+      )
+      .eq("user_id", userId)
+      .order("cloud_day_id", { ascending: true })
+      .order("id", { ascending: true });
 
-  if (error) {
-    throw error;
-  }
+    if (error) {
+      throw error;
+    }
+
+    return data;
+  });
 
   await claimCloudWatchers({
     userId,
@@ -366,6 +393,7 @@ async function reconcileWorkoutTypeInstancesFromCloud(db, userId) {
           ),
           elapsedTime: comparableCloudWorkout.elapsed_time,
           gymId: comparableCloudWorkout.gym_id,
+          startedFrom: comparableCloudWorkout.started_from,
         });
 
         const createdWorkout = {
@@ -405,8 +433,9 @@ async function reconcileWorkoutTypeInstancesFromCloud(db, userId) {
 
       if (Number(localWorkout.needs_sync) === 1) {
         if (compareEntitySyncVersions(localWorkout, cloudWorkout) < 0) {
-          await programRepository.updateWorkoutFromCloud(db, {
+          const applied = await programRepository.updateWorkoutFromCloud(db, {
             workoutId: localWorkout.workout_id,
+            expectedSyncVersion: localWorkout.sync_version,
             cloudWorkoutTypeInstanceId,
             remoteLocalWorkoutTypeInstanceId: localWorkoutTypeInstanceId,
             syncId: cloudSyncId,
@@ -428,8 +457,9 @@ async function reconcileWorkoutTypeInstancesFromCloud(db, userId) {
             ),
             elapsedTime: comparableCloudWorkout.elapsed_time,
             gymId: comparableCloudWorkout.gym_id,
+            startedFrom: comparableCloudWorkout.started_from,
           });
-          downloadedCount += 1;
+          downloadedCount += applied ? 1 : 0;
         } else if (
           areComparableWorkoutTypeInstancesEqual(
             comparableLocalWorkout,
@@ -438,6 +468,7 @@ async function reconcileWorkoutTypeInstancesFromCloud(db, userId) {
         ) {
           await programRepository.markWorkoutSynced(db, {
             workoutId: localWorkout.workout_id,
+            expectedSyncVersion: localWorkout.sync_version,
             cloudWorkoutTypeInstanceId,
             remoteLocalWorkoutTypeInstanceId: localWorkoutTypeInstanceId,
             syncId: cloudSyncId,
@@ -486,6 +517,7 @@ async function reconcileWorkoutTypeInstancesFromCloud(db, userId) {
         ) {
           await programRepository.markWorkoutSynced(db, {
             workoutId: localWorkout.workout_id,
+            expectedSyncVersion: localWorkout.sync_version,
             cloudWorkoutTypeInstanceId,
             remoteLocalWorkoutTypeInstanceId: localWorkoutTypeInstanceId,
             syncId: cloudSyncId,
@@ -496,8 +528,9 @@ async function reconcileWorkoutTypeInstancesFromCloud(db, userId) {
         continue;
       }
 
-      await programRepository.updateWorkoutFromCloud(db, {
+      const applied = await programRepository.updateWorkoutFromCloud(db, {
         workoutId: localWorkout.workout_id,
+        expectedSyncVersion: localWorkout.sync_version,
         cloudWorkoutTypeInstanceId,
         remoteLocalWorkoutTypeInstanceId: localWorkoutTypeInstanceId,
         syncId: cloudSyncId,
@@ -519,7 +552,13 @@ async function reconcileWorkoutTypeInstancesFromCloud(db, userId) {
         ),
         elapsedTime: comparableCloudWorkout.elapsed_time,
         gymId: comparableCloudWorkout.gym_id,
+        startedFrom: comparableCloudWorkout.started_from,
       });
+
+      if (!applied) {
+        // The user wrote to it since it was read, and that write goes up.
+        continue;
+      }
 
       const updatedWorkout = {
         ...localWorkout,
@@ -530,6 +569,9 @@ async function reconcileWorkoutTypeInstancesFromCloud(db, userId) {
         deleted_at: normalizeDeletedAt(cloudWorkout.deleted_at),
         day_id: parentDay.day_id,
         ...comparableCloudWorkout,
+        // As the update just stored it: a null from the cloud keeps ours.
+        started_from:
+          comparableCloudWorkout.started_from ?? localWorkout.started_from ?? null,
         needs_sync: 0,
       };
 
@@ -591,6 +633,7 @@ async function syncWorkoutTypeInstancesWithCloudInternal(db) {
 }
 
 export function syncWorkoutTypeInstancesInBackground(db) {
+  notifyWorkoutDataChanged("workouts");
   startBackgroundSync(
     async () => {
       await syncWorkoutTypeInstancesWithCloud(db);

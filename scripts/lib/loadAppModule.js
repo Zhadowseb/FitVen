@@ -53,6 +53,11 @@ function compile(file) {
     configFile: false,
     plugins: [
       moduleResolver,
+      // The barrels (Services/index.js, Repository/index.js) are
+      // `export * as x from`, which the app's preset transforms and the
+      // CommonJS plugin alone refuses. Without it nothing that imports a
+      // barrel - any service - could be loaded here.
+      projectRequire.resolve("@babel/plugin-transform-export-namespace-from"),
       projectRequire.resolve("@babel/plugin-transform-modules-commonjs"),
       // A pure module may sit behind a barrel that also exports a component -
       // Utils/dateUtils.js imports from @localization, whose index re-exports

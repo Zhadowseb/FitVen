@@ -20,20 +20,22 @@ import BackgroundPostBar from "./Components/BackgroundPostBar/BackgroundPostBar"
 import DaysSinceCard from "./Components/DaysSinceCard/DaysSinceCard";
 import QuickStartCard from "./Components/QuickStartCard/QuickStartCard";
 import SplitCards from "./Components/SplitCards/SplitCards";
-import MuscleGlance from "./Components/MuscleGlance/MuscleGlance";
+import ExploreCarousel from "./Components/ExploreCarousel/ExploreCarousel";
 import FriendsActivity from "@resources/Components/FriendsActivity/FriendsActivity";
 import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
 import { ThemedText, ThemedView } from "@resources/ThemedComponents";
 import {
+  gymService,
   musicService,
   notificationService,
   programService,
   socialService,
+  splitService,
   weightliftingService,
   workoutService,
 } from "@services";
 import { getTodaysDate } from "@utils/dateUtils";
-import { pickMuscleGlanceHeadline } from "@utils/muscleGlance";
+import { STARTED_FROM } from "@utils/startedFrom";
 import { subscribeWorkoutSetChanges } from "@utils/workoutSetEvents";
 import { useAuth } from "../../Contexts/AuthContext";
 
@@ -42,10 +44,14 @@ import { useAuth } from "../../Contexts/AuthContext";
  *
  * She runs the same two or three sessions on a loop and wants the next one
  * open. So: how long since she trained, the session that is due, the rest of
- * her split, what her friends are doing, and whether last month moved
- * anything. No posts - those are the Feed tab now - and no calendar strip,
- * because a week of empty squares is not what somebody without a programme
- * needs to look at.
+ * her split, what her friends are doing, and a few things from Explore. No
+ * posts - those are the Feed tab now - and no calendar strip, because a week
+ * of empty squares is not what somebody without a programme needs to look
+ * at.
+ *
+ * Every block has something to say without a history. Somebody who installed
+ * the app this morning gets her first workout to press, the week her split
+ * waits for, and Explore - not a row of zeroes.
  */
 
 // An empty workout has to be some type, and Resistance is the only strength
@@ -66,6 +72,10 @@ export default function HomePage() {
   });
   const [isLoadingCirclePreview, setIsLoadingCirclePreview] = useState(true);
   const [circlePreviewError, setCirclePreviewError] = useState("");
+  // What today looks like on this phone - training now, planned, done - for
+  // your own tile. The cloud only knows it once a sync has run, and its
+  // profile row carries none of it.
+  const [ownActivity, setOwnActivity] = useState(null);
   // What the viewer's own music poller last saw, for their own tile. Module
   // state in musicService, mirrored here so a change re-renders the strip.
   const [ownNowPlaying, setOwnNowPlaying] = useState(() =>
@@ -75,7 +85,11 @@ export default function HomePage() {
   const [daysSinceLastWorkout, setDaysSinceLastWorkout] = useState(null);
   const [ownRecordsToday, setOwnRecordsToday] = useState(0);
   const [splitGroups, setSplitGroups] = useState([]);
-  const [muscleGroups, setMuscleGroups] = useState([]);
+  // When the first workout was finished; the split waits a week from it.
+  const [firstWorkoutAt, setFirstWorkoutAt] = useState(null);
+  // The Explore rail loads its own cards. A new key is pull-to-refresh
+  // reaching it.
+  const [exploreRefreshKey, setExploreRefreshKey] = useState(0);
   const [hasLoadedHome, setHasLoadedHome] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
@@ -154,17 +168,20 @@ export default function HomePage() {
     [refreshLiveWorkout]
   );
 
-  // Settled, not all: the three questions are independent, and one of them
-  // failing is no reason to blank the other two. A rejection used to empty all
-  // three at once and say nothing, so a person with months of history was told
-  // she had never trained - which is the same sentence a real empty account
-  // gets. That is the one thing this screen must not get wrong.
+  // Settled, not all: the questions are independent, and one of them failing
+  // is no reason to blank the others. A rejection used to empty all of them at
+  // once and say nothing, so a person with months of history was told she had
+  // never trained - which is the same sentence a real empty account gets.
+  // That is the one thing this screen must not get wrong, and it is why the
+  // first workout's date is reported like the rest: lost, it would hide a
+  // real split behind "takes shape after your first week".
   const loadHome = useCallback(async () => {
     try {
-      const [days, groups, muscles, today, records] = await Promise.allSettled([
+      const [days, groups, firstWorkout, today, records] = await Promise.allSettled([
         workoutService.getDaysSinceLastWorkout(db),
-        workoutService.getSplitGroups(db),
-        weightliftingService.getMuscleGroupDeltas(db),
+        // The split you chose, and the app's guess only without one.
+        splitService.getHomeSplitGroups(db, { userId: user?.id ?? null }),
+        workoutService.getFirstWorkoutAt(db),
         workoutService.getOpenWorkoutsToday(db),
         weightliftingService.getPersonalRecordsToday(db),
       ]);
@@ -172,7 +189,7 @@ export default function HomePage() {
       // Only a crown on your own tile rides on this; it is not one of the
       // loads the screen reports failing.
       setOwnRecordsToday(records.status === "fulfilled" ? records.value : 0);
-      const failures = [days, groups, muscles, today].filter(
+      const failures = [days, groups, firstWorkout, today].filter(
         (result) => result.status === "rejected"
       );
 
@@ -184,8 +201,8 @@ export default function HomePage() {
         setSplitGroups(groups.value);
       }
 
-      if (muscles.status === "fulfilled") {
-        setMuscleGroups(muscles.value);
+      if (firstWorkout.status === "fulfilled") {
+        setFirstWorkoutAt(firstWorkout.value);
       }
 
       if (today.status === "fulfilled") {
@@ -204,7 +221,7 @@ export default function HomePage() {
     } finally {
       setHasLoadedHome(true);
     }
-  }, [db, loadLiveWorkout, t]);
+  }, [db, loadLiveWorkout, t, user?.id]);
 
   const loadCirclePreview = useCallback(async () => {
     if (!user?.id) {
@@ -214,13 +231,44 @@ export default function HomePage() {
     }
 
     try {
-      const preview = await socialService.getCirclePreview({
-        user,
-        limit: 12,
-        date: getTodaysDate(),
-      });
+      const date = getTodaysDate();
+      // Your own tile's state is read from the phone, beside the cloud. It is
+      // allowed to fail on its own: without it the tile is the resting one,
+      // which is no reason to replace the friends with an error.
+      const [preview, summary] = await Promise.all([
+        socialService.getCirclePreview({ user, limit: 12, date }),
+        programService.getTodayActivitySummary(db, { date }).catch((error) => {
+          console.error("Failed to read today's activity for your own tile:", error);
+          return null;
+        }),
+      ]);
+
+      // The centre line: the centre of the workout the summary points at, or
+      // for a planned one with no position yet, your own centre.
+      const homeGym = preview.currentUser?.homeGym ?? null;
+      let ownGym = summary
+        ? await gymService
+            .getGymForActivityTile(summary.gymId, homeGym?.id ?? null)
+            .catch(() => null)
+        : null;
+
+      if (!ownGym && summary?.activityState === "planned" && homeGym) {
+        ownGym = { id: homeGym.id, shortName: homeGym.shortName, isHomeGym: true };
+      }
 
       setCirclePreview(preview);
+      setOwnActivity(
+        summary
+          ? {
+              activityState: summary.activityState,
+              activityDetail: summary.detail,
+              workoutType: summary.workoutType,
+              workoutLabel: summary.workoutLabel,
+              workoutId: summary.workoutId,
+              gym: ownGym,
+            }
+          : null
+      );
       setCirclePreviewError("");
     } catch (error) {
       setCirclePreviewError(
@@ -229,7 +277,7 @@ export default function HomePage() {
     } finally {
       setIsLoadingCirclePreview(false);
     }
-  }, [t, user]);
+  }, [db, t, user]);
 
   const refreshUnreadNotificationCount = useCallback(async () => {
     try {
@@ -265,6 +313,7 @@ export default function HomePage() {
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
+    setExploreRefreshKey((key) => key + 1);
 
     try {
       await Promise.all([loadHome(), loadCirclePreview(), refreshUnreadNotificationCount()]);
@@ -322,14 +371,24 @@ export default function HomePage() {
         return;
       }
 
-      startWorkout(() =>
-        programService.copyWorkoutToStandaloneDate(db, {
+      startWorkout(async () => {
+        const copied = await programService.copyWorkoutToStandaloneDate(db, {
           workoutId: group.lastWorkoutId,
           date: new Date(),
-        })
-      );
+          startedFrom: STARTED_FROM.RECENT,
+        });
+
+        // Which chosen session this was; not awaited, it is bookkeeping.
+        splitService.noteSplitSessionStarted(db, {
+          userId: user?.id ?? null,
+          entry: group.entry ?? null,
+          workoutId: copied?.workout_id ?? null,
+        });
+
+        return copied;
+      });
     },
-    [db, startWorkout]
+    [db, startWorkout, user?.id]
   );
 
   const openEmptyWorkout = useCallback(() => {
@@ -338,6 +397,7 @@ export default function HomePage() {
         date: getTodaysDate(),
         workoutType: EMPTY_WORKOUT_TYPE,
         label: null,
+        startedFrom: STARTED_FROM.EMPTY,
       })
     );
   }, [db, startWorkout]);
@@ -354,6 +414,9 @@ export default function HomePage() {
         workout_id: workout.workoutId,
         workout_label: workout.name ?? null,
         workout_type: workout.workoutType ?? null,
+        day: workout.day ?? undefined,
+        date: workout.date ?? undefined,
+        program_id: workout.programId ?? undefined,
       });
     },
     [navigation]
@@ -441,11 +504,17 @@ export default function HomePage() {
                 onContinueToday={continueToday}
                 onStartSplit={openWorkoutFromSplit}
                 onStartEmpty={openEmptyWorkout}
+                // "First workout" is only for somebody who has never finished one.
+                hasTrained={daysSinceLastWorkout !== null || firstWorkoutAt !== null}
               />
             </View>
 
             <SplitCards
               groups={splitGroups}
+              // Planned today: Quick start shows that one, so the split marks
+              // no card as next. A running workout is the live panel instead.
+              suppressUpNext={Boolean(openToday?.first && !openToday.first.isRunning)}
+              firstWorkoutAt={firstWorkoutAt}
               onOpenGroup={openWorkoutFromSplit}
               onOpenAll={() => navigation.navigate("WorkoutLibraryPage")}
             />
@@ -459,7 +528,9 @@ export default function HomePage() {
             circlePreview.currentUser
               ? {
                   ...circlePreview.currentUser,
-                  // From the phone, so your own tile is right before a sync.
+                  // From the phone, so your own tile is right before a sync:
+                  // training now, planned or done today, and where.
+                  ...ownActivity,
                   daysSinceLastWorkout,
                   recordsToday: ownRecordsToday,
                   music: ownNowPlaying?.track
@@ -486,11 +557,9 @@ export default function HomePage() {
           showHeader
         />
 
-        <MuscleGlance
-          groups={muscleGroups}
-          headline={pickMuscleGlanceHeadline(muscleGroups)}
-          onOpen={() => navigation.navigate("StatisticsPage")}
-        />
+        {/* In place of "Last month", for everybody: for somebody new that was
+            five times 0 %, and Explore has something to show from day one. */}
+        <ExploreCarousel refreshKey={exploreRefreshKey} />
       </ScrollView>
 
       <StatusBar style="auto" />

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The chip of the set being done: orange @ 0.16 with a 1.5 dp orange border
+     inside it. -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+  android:id="@+id/live_workout_chip_text"
+  style="@style/LiveWorkout.Text.Heavy.Chip.Now"
+  android:layout_width="0dp"
+  android:layout_height="match_parent"
+  android:layout_weight="1"
+  android:background="@drawable/live_workout_chip_now_bg"
+  android:gravity="center"
+  android:paddingStart="3dp"
+  android:paddingEnd="3dp" />

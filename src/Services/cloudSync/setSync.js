@@ -5,6 +5,9 @@ import { supabase } from "@database/supaBaseClient";
 import { weightliftingRepository } from "@repository";
 import { withTransaction } from "@services/shared";
 import { startBackgroundSync } from "@services/syncScheduler";
+import { notifyWorkoutDataChanged } from "@utils/workoutDataEvents";
+import { hasSetDecimals, resolveCloudSetDecimals } from "@utils/setDecimals";
+import { withKnownRestCounted } from "@utils/restCountUp";
 import {
   normalizeDeletedAt,
   normalizeSyncId,
@@ -28,9 +31,12 @@ import {
   normalizeOptionalInteger,
   parseCloudExerciseInstanceId,
   parseCloudSetId,
+  probeSetDecimalColumns,
   resolveCloudDeleteRequestedAt,
   resolveSetCloudLocalId,
   resolveSideBySideCloudId,
+  restCountedColumn,
+  setDecimalColumns,
   shouldKeepLocalEntityForCloudTombstone,
   syncDirtyLocalRowToCloud,
 } from "./cloudSyncShared";
@@ -108,19 +114,33 @@ export async function uploadDirtySets(
       continue;
     }
 
-    const syncResult = await syncDirtyLocalRowToCloud({
-      tableName: SET_CLOUD_TABLE,
-      selectColumns: SET_CLOUD_SYNC_SELECT,
-      userId,
-      localEntity: localSet,
-      payload,
-      cloudId: parseCloudSetId(
-        resolveSideBySideCloudId(localSet, "cloud_set_id")
-      ),
-      syncId: normalizeSyncId(localSet.sync_id),
-      legacyLocalId: payload.local_set_id,
-      legacyLocalIdColumn: "local_set_id",
-    });
+    // Built inside the request, so a retry against an integer column (before
+    // 20261003090000_a-set-keeps-its-decimals.sql) sends the weight and RPE
+    // cut to whole numbers, as every upload did before - and so does every
+    // upload after it this session. The phone keeps its own 102.5. The outer
+    // handle does the same for a cloud without `rest_counted`; each only
+    // answers to its own error (22P02, and 42703/PGRST204 naming the column).
+    const syncResult = await restCountedColumn.withFallback(() =>
+      setDecimalColumns.withFallback(() =>
+        syncDirtyLocalRowToCloud({
+          tableName: SET_CLOUD_TABLE,
+          selectColumns: restCountedColumn.selectColumns(SET_CLOUD_SYNC_SELECT),
+          userId,
+          localEntity: localSet,
+          payload: restCountedColumn.sendablePayload(
+            setDecimalColumns.sendablePayload(payload)
+          ),
+          cloudId: parseCloudSetId(
+            resolveSideBySideCloudId(localSet, "cloud_set_id")
+          ),
+          syncId: normalizeSyncId(localSet.sync_id),
+          legacyLocalId: payload.local_set_id,
+          legacyLocalIdColumn: "local_set_id",
+        })
+      )
+    );
+
+    setDecimalColumns.learnFrom([syncResult.cloudRecord]);
 
     if (!syncResult.uploaded) {
       continue;
@@ -137,6 +157,7 @@ export async function uploadDirtySets(
 
     await weightliftingRepository.markSetSynced(db, {
       setId: localSet.sets_id,
+      expectedSyncVersion: localSet.sync_version,
       cloudSetId,
       remoteLocalSetId,
       syncId: normalizeSyncId(syncResult.cloudRecord?.sync_id),
@@ -156,17 +177,23 @@ export async function uploadDirtySets(
   return uploadedCount;
 }
 
-async function reconcileSetsFromCloud(db, userId) {
-  const { data: cloudSets, error } = await supabase
-    .from(SET_CLOUD_TABLE)
-    .select(SET_CLOUD_SYNC_SELECT)
-    .eq("user_id", userId)
-    .order("cloud_exercise_instance_id", { ascending: true })
-    .order("id", { ascending: true });
+// Exported for scripts/test-set-decimals.js, which runs it against an
+// in-memory cloud; the app reaches it through syncSetsWithCloud.
+export async function reconcileSetsFromCloud(db, userId) {
+  const cloudSets = await restCountedColumn.withFallback(async () => {
+    const { data, error } = await supabase
+      .from(SET_CLOUD_TABLE)
+      .select(restCountedColumn.selectColumns(SET_CLOUD_SYNC_SELECT))
+      .eq("user_id", userId)
+      .order("cloud_exercise_instance_id", { ascending: true })
+      .order("id", { ascending: true });
 
-  if (error) {
-    throw error;
-  }
+    if (error) {
+      throw error;
+    }
+
+    return data;
+  });
 
   await claimCloudWatchers({
     userId,
@@ -174,10 +201,24 @@ async function reconcileSetsFromCloud(db, userId) {
     cloudRecords: cloudSets,
   });
 
+  setDecimalColumns.learnFrom(cloudSets);
+
   const [localSets, localExercises] = await Promise.all([
     weightliftingRepository.getSetsForCloudSync(db),
     weightliftingRepository.getExercisesForCloudSync(db),
   ]);
+
+  // What a cloud 102 against the phone's 102.5 means depends on whether the
+  // column can hold 102.5 (resolveCloudSetDecimals). Asked once a session, and
+  // only by a phone that has decimals to lose; outside the transaction below,
+  // because it is a request.
+  if (
+    setDecimalColumns.cloudKeepsDecimals() === null &&
+    localSets.some(hasSetDecimals)
+  ) {
+    await setDecimalColumns.resolve(() => probeSetDecimalColumns(userId));
+  }
+
   const localExercisesByCloudId = new Map();
   const localSetsByCloudId = new Map();
   const localSetsBySyncId = new Map();
@@ -236,7 +277,9 @@ async function reconcileSetsFromCloud(db, userId) {
         null
       );
       const parentExercise = localExercisesByCloudId.get(cloudExerciseInstanceId);
-      const comparableCloudSet = getComparableSetSnapshot(cloudSet);
+      // Reassigned below for a set the phone already has, when the cloud only
+      // holds its weight or RPE cut off.
+      let comparableCloudSet = getComparableSetSnapshot(cloudSet);
 
       if (
         cloudSetId === null ||
@@ -262,6 +305,12 @@ async function reconcileSetsFromCloud(db, userId) {
         localSetsByRemoteLocalId.get(localSetId) ??
         localSetsByLocalId.get(localSetId) ??
         null;
+
+      // A cloud row that does not say whether its rest was counted keeps the
+      // phone's flag (withKnownRestCounted).
+      comparableCloudSet = getComparableSetSnapshot(
+        withKnownRestCounted(cloudSet, localSet)
+      );
 
       if (isCloudSnapshotDeleted(cloudSet)) {
         pendingDeletionAcks.push({
@@ -304,6 +353,7 @@ async function reconcileSetsFromCloud(db, userId) {
           setType: comparableCloudSet.set_type,
           amrapTarget: comparableCloudSet.amrap_target,
           note: comparableCloudSet.note,
+          restCounted: comparableCloudSet.rest_counted,
         });
 
         const createdSet = {
@@ -337,11 +387,25 @@ async function reconcileSetsFromCloud(db, userId) {
           )
         ),
       });
+      const versionOrder = compareEntitySyncVersions(localSet, cloudSet);
+
+      // 102 in the cloud against 102.5 here is the integer column's cut, not
+      // a change: compared and written with the phone's decimals, or the pull
+      // would overwrite 102.5 with 102 on every sync. Once the column keeps
+      // decimals, such a set is sent up again (reupload), once.
+      const decimals = resolveCloudSetDecimals({
+        localSnapshot: comparableLocalSet,
+        cloudSnapshot: comparableCloudSet,
+        cloudKeepsDecimals: setDecimalColumns.cloudKeepsDecimals(),
+        versionOrder,
+      });
+      comparableCloudSet = decimals.cloudSnapshot;
 
       if (Number(localSet.needs_sync) === 1) {
-        if (compareEntitySyncVersions(localSet, cloudSet) < 0) {
-          await weightliftingRepository.updateSetFromCloud(db, {
+        if (versionOrder < 0) {
+          const applied = await weightliftingRepository.updateSetFromCloud(db, {
             setId: localSet.sets_id,
+            expectedSyncVersion: localSet.sync_version,
             cloudSetId,
             remoteLocalSetId: localSetId,
             syncId: cloudSyncId,
@@ -361,11 +425,18 @@ async function reconcileSetsFromCloud(db, userId) {
             setType: comparableCloudSet.set_type,
             amrapTarget: comparableCloudSet.amrap_target,
             note: comparableCloudSet.note,
+            restCounted: comparableCloudSet.rest_counted,
           });
-          downloadedCount += 1;
-        } else if (areComparableSetsEqual(comparableLocalSet, comparableCloudSet)) {
+          downloadedCount += applied ? 1 : 0;
+        } else if (
+          // Not when the two are equal only because the cloud's cut-off copy
+          // was read with our decimals: this edit still has to go up.
+          !decimals.reupload &&
+          areComparableSetsEqual(comparableLocalSet, comparableCloudSet)
+        ) {
           await weightliftingRepository.markSetSynced(db, {
             setId: localSet.sets_id,
+            expectedSyncVersion: localSet.sync_version,
             cloudSetId,
             remoteLocalSetId: localSetId,
             syncId: cloudSyncId,
@@ -401,6 +472,7 @@ async function reconcileSetsFromCloud(db, userId) {
         ) {
           await weightliftingRepository.markSetSynced(db, {
             setId: localSet.sets_id,
+            expectedSyncVersion: localSet.sync_version,
             cloudSetId,
             remoteLocalSetId: localSetId,
             syncId: cloudSyncId,
@@ -408,11 +480,21 @@ async function reconcileSetsFromCloud(db, userId) {
             deletedAt: normalizeDeletedAt(cloudSet.deleted_at),
           });
         }
+
+        if (decimals.reupload) {
+          // The column keeps decimals now, and holds this set cut off from an
+          // upload before it did. The same edit goes up again, with them; once
+          // it is there the two sides are equal and this does not come back.
+          await weightliftingRepository.markSetForUpload(db, {
+            setId: localSet.sets_id,
+          });
+        }
         continue;
       }
 
-      await weightliftingRepository.updateSetFromCloud(db, {
+      const applied = await weightliftingRepository.updateSetFromCloud(db, {
         setId: localSet.sets_id,
+        expectedSyncVersion: localSet.sync_version,
         cloudSetId,
         remoteLocalSetId: localSetId,
         syncId: cloudSyncId,
@@ -432,7 +514,13 @@ async function reconcileSetsFromCloud(db, userId) {
         setType: comparableCloudSet.set_type,
         amrapTarget: comparableCloudSet.amrap_target,
         note: comparableCloudSet.note,
+        restCounted: comparableCloudSet.rest_counted,
       });
+
+      if (!applied) {
+        // The user wrote to it since it was read, and that write goes up.
+        continue;
+      }
 
       const updatedSet = {
         ...localSet,
@@ -536,6 +624,7 @@ async function syncSetsWithCloudInternal(db) {
 }
 
 export function syncSetsInBackground(db) {
+  notifyWorkoutDataChanged("sets");
   startBackgroundSync(
     async () => {
       await syncSetsWithCloud(db);

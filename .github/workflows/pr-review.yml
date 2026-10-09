@@ -39,8 +39,12 @@ permissions:
   checks: write
 
 env:
-  REVIEW_MODEL: claude-sonnet-5
-  SUMMARY_MODEL: claude-opus-5
+  # The eight reviewers run on Sonnet 5.5 and consult Opus 5.5 as their
+  # advisor at decision points (https://code.claude.com/docs/en/advisor).
+  # The aggregating agent runs on Opus 5.5 alone.
+  REVIEW_MODEL: claude-sonnet-5-5
+  REVIEW_ADVISOR_MODEL: claude-opus-5-5
+  SUMMARY_MODEL: claude-opus-5-5
   COMMENT_MARKER: "<!-- fitven-ai-review -->"
 
 jobs:
@@ -113,8 +117,22 @@ jobs:
             echo "Laeser master paa $SHA${PR:+, svarer paa #$PR}"
           else
             echo "pr=$PR_NUMBER" >> "$GITHUB_OUTPUT"
-            echo "ref=refs/pull/$PR_NUMBER/head" >> "$GITHUB_OUTPUT"
-            echo "Laeser PR #$PR_NUMBER"
+
+            # Et merget PR laeses i sin merge-commit og holdes op mod master
+            # lige foer merget. Dets head ligger allerede i master, saa
+            # merge-base(master, head) er head selv, og diffet blev tomt: saa
+            # laeste agenterne den faerdige kode og ikke aendringen.
+            MERGE_SHA=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json state,mergeCommit               --jq 'if .state == "MERGED" then (.mergeCommit.oid // "") else "" end')
+
+            if [ -n "$MERGE_SHA" ]; then
+              echo "ref=$MERGE_SHA" >> "$GITHUB_OUTPUT"
+              echo "merged=$MERGE_SHA" >> "$GITHUB_OUTPUT"
+              echo "Laeser PR #$PR_NUMBER, merget i $MERGE_SHA"
+            else
+              echo "ref=refs/pull/$PR_NUMBER/head" >> "$GITHUB_OUTPUT"
+              echo "merged=" >> "$GITHUB_OUTPUT"
+              echo "Laeser PR #$PR_NUMBER"
+            fi
           fi
 
       - uses: actions/checkout@v4
@@ -129,6 +147,7 @@ jobs:
           REPO: ${{ github.repository }}
           EVENT: ${{ github.event_name }}
           BEFORE: ${{ github.event.before }}
+          MERGED: ${{ steps.target.outputs.merged }}
         run: |
           set -euo pipefail
           mkdir -p pr-context
@@ -144,6 +163,11 @@ jobs:
               BASE_SHA="$BEFORE"
             fi
             echo "Base: $BASE_SHA (forrige master)"
+          elif [ -n "$MERGED" ]; then
+            # Merge-committens foerste foraelder er master, som den stod
+            # foer PR'et kom ind.
+            BASE_SHA=$(git rev-parse "$MERGED^1")
+            echo "Base: $BASE_SHA (master foer merget)"
           else
             BASE_BRANCH=$(gh pr view "$PR" --repo "$REPO" --json baseRefName --jq .baseRefName)
             git fetch --no-tags origin "$BASE_BRANCH"
@@ -181,12 +205,20 @@ jobs:
           # 400 KB frem for 700: en agent der loeber toer for ture midtvejs
           # afleverer ingenting, og et afkortet diff plus filerne i repoet er
           # mere vaerd end et helt diff ingen naar igennem.
-          SIZE=$(wc -c < pr-context/pr.diff)
-          if [ "$SIZE" -gt 400000 ]; then
-            head -c 400000 pr-context/pr.diff > pr-context/pr.diff.trimmed
-            printf '\n\n[AFKORTET: diffet fylder %s bytes, og kun de foerste 400000 staar ovenfor. Resten ligger i repoet, og pr-context/changed-files.txt siger hvilke filer det er.]\n' "$SIZE" >> pr-context/pr.diff.trimmed
-            mv pr-context/pr.diff.trimmed pr-context/pr.diff
-          fi
+          #
+          # Afkortet tages hele filer ad gangen, i diffets egen raekkefoelge, og
+          # en fil der ikke kan vaere der springes over, saa de mindre efter
+          # den stadig kommer med. De udeladte staar i noten til sidst og i
+          # pr-context/omitted-files.txt. Det goer scripts/trim-diff.js, som
+          # scripts/test-trim-diff.js tester.
+          #
+          # Scriptet tages fra workflowets egen commit, ikke fra PR'ets: et PR
+          # der blev lavet foer scriptet fandtes, har det ikke, og kode fra
+          # PR'et skal ikke koere i dette job.
+          DIFF_LIMIT=400000
+          git cat-file -e "$GITHUB_SHA" 2>/dev/null || git fetch --no-tags origin "$GITHUB_SHA"
+          git show "$GITHUB_SHA:scripts/trim-diff.js" > "$RUNNER_TEMP/trim-diff.js"
+          node "$RUNNER_TEMP/trim-diff.js" pr-context/pr.diff "$DIFF_LIMIT" pr-context/omitted-files.txt
 
       - uses: actions/upload-artifact@v4
         with:
@@ -350,6 +382,7 @@ jobs:
             Skriv kun den ene fil. Ret ikke i kildekoden, og opret ikke commits.
           claude_args: |
             --model ${{ env.REVIEW_MODEL }}
+            --advisor ${{ env.REVIEW_ADVISOR_MODEL }}
             --max-turns 120
             --allowedTools "Read,Glob,Grep,Write,Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(ls:*),Bash(wc:*),Bash(mkdir:*)"
 

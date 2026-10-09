@@ -45,6 +45,7 @@ import {
   normalizeStoredTimestampSeconds,
 } from "../../Utils/timeUtils";
 import { requestOpenQuickWorkoutMenu } from "../../Utils/quickWorkoutMenuEvents";
+import { workoutDisplayName, workoutTypeLabel } from "@utils/workoutTypeLabel";
 
 import {
   ThemedBottomSheet,
@@ -76,15 +77,12 @@ function getWorkoutSummaryDisplayTitle(post, t) {
     return t("home.summary.workoutSummary");
   }
 
-  return title;
+  // An auto-named workout's title can be another type id ("Upperbody").
+  return workoutDisplayName(title, t, workoutType) ?? title;
 }
 
 function getWorkoutTypeLabel(workoutType, t) {
-  if (workoutType === "StrengthTraining") {
-    return t("home.workoutType.resistance");
-  }
-
-  return workoutType ?? t("home.workoutType.workout");
+  return workoutTypeLabel(workoutType, t) ?? t("home.workoutType.workout");
 }
 
 // Monday-based index into the translated weekday labels, so the label is

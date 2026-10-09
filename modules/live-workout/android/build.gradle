@@ -1,0 +1,21 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'expo.modules.liveworkout'
+version = '1.0.0'
+
+android {
+  namespace "expo.modules.liveworkout"
+  defaultConfig {
+    versionCode 1
+    versionName "1.0.0"
+  }
+}
+
+dependencies {
+  // NotificationCompat and its DecoratedCustomViewStyle. The same version
+  // expo-modules-core already brings in, so nothing new is downloaded.
+  implementation 'androidx.core:core-ktx:1.13.1'
+}

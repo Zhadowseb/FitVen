@@ -27,6 +27,7 @@ import {
   filterReleasedWorkoutTypes,
   isWorkoutTypeComingSoon,
 } from "../../Utils/workoutTypeAvailability";
+import { workoutDisplayName } from "@utils/workoutTypeLabel";
 
 const noop = () => {};
 
@@ -56,28 +57,8 @@ function buildFreshStarts(t) {
   );
 }
 
-// Stored type ids to their translation keys. A type not listed here is shown
-// as stored, as it was before.
-const WORKOUT_TYPE_LABEL_KEYS = {
-  Resistance: "workoutStart.types.resistance",
-  StrengthTraining: "workoutStart.types.resistance",
-  Run: "workoutStart.types.run",
-  Walk: "workoutStart.types.walk",
-};
-
 function getWorkoutType(workout) {
   return workout?.workout_type ?? workout?.label ?? null;
-}
-
-function getWorkoutTypeLabel(workout, t) {
-  const workoutType = getWorkoutType(workout);
-  const labelKey = WORKOUT_TYPE_LABEL_KEYS[workoutType];
-
-  if (labelKey) {
-    return t(labelKey);
-  }
-
-  return workoutType ?? t("workoutStart.types.workout");
 }
 
 function getWorkoutIconType(workout) {
@@ -94,8 +75,14 @@ function getWorkoutIconType(workout) {
   return "resistance";
 }
 
+// An unnamed workout's label is its type id ("Resistance"), which is drawn
+// as the type's name (Utils/workoutTypeLabel, like every other screen); a
+// name the user gave it stays as typed.
 function getWorkoutTitle(workout, t) {
-  return workout?.label ?? getWorkoutTypeLabel(workout, t);
+  return (
+    workoutDisplayName(workout?.label, t, workout?.workout_type) ??
+    t("workoutStart.types.workout")
+  );
 }
 
 function getWorkoutDetail(plannedWorkout, t) {

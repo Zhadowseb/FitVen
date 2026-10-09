@@ -11,6 +11,7 @@ const NOTIFICATION_PREFERENCES_TABLE = "notification_preferences";
 const WORKOUT_START_NOTIFICATION_SOURCES_TABLE =
   "workout_start_notification_sources";
 const NOTIFICATION_INBOX_TABLE = "notification_inbox";
+const POST_LIKE_NOTIFICATIONS_COLUMN = "post_like_notifications";
 const ACTIVITY_NOTIFICATION_CHANNEL_ID = "activity";
 const MANAGE_PUSH_TOKEN_FUNCTION = "manage-push-token";
 const SEND_WORKOUT_STARTED_NOTIFICATION_FUNCTION =
@@ -57,13 +58,29 @@ const IOS_GRANTED_STATUSES = new Set(
   ].filter((status) => status !== undefined && status !== null)
 );
 
+// The rest-is-over reminder is scheduled for a phone that is away: with the
+// app in front, the workout screen already shows the rest running out.
+export const REST_FINISHED_NOTIFICATION_KIND = "restFinished";
+const REST_NOTIFICATION_CHANNEL_ID = "rest_timer";
+
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
+  handleNotification: async (notification) => {
+    if (notification?.request?.content?.data?.kind === REST_FINISHED_NOTIFICATION_KIND) {
+      return {
+        shouldPlaySound: false,
+        shouldSetBadge: false,
+        shouldShowBanner: false,
+        shouldShowList: false,
+      };
+    }
+
+    return {
+      shouldPlaySound: false,
+      shouldSetBadge: false,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    };
+  },
 });
 
 function getProjectId() {
@@ -204,6 +221,60 @@ async function ensureAndroidNotificationChannel() {
       lightColor: "#36D399",
     }
   );
+}
+
+let restChannelReady = false;
+
+async function ensureRestNotificationChannel() {
+  if (Platform.OS !== "android" || restChannelReady) {
+    return;
+  }
+
+  await Notifications.setNotificationChannelAsync(REST_NOTIFICATION_CHANNEL_ID, {
+    name: t("liveWorkout.restChannelName"),
+    importance: Notifications.AndroidImportance.HIGH,
+    vibrationPattern: [0, 300, 150, 300],
+    lightColor: "#F7742E",
+  });
+  restChannelReady = true;
+}
+
+/**
+ * A sound and a buzz when the rest is over, at `endsAt` (Unix seconds) - so a
+ * phone face down on a bench still says so. Delivered by the system even if
+ * the app has been suspended by then. Never asks for permission: without it,
+ * there is simply no reminder. Returns the id to cancel it by, or null.
+ */
+export async function scheduleRestFinishedNotification({ endsAt, workoutId = null }) {
+  const existingPermission = await Notifications.getPermissionsAsync();
+
+  if (!isPermissionGranted(existingPermission)) {
+    return null;
+  }
+
+  await ensureRestNotificationChannel();
+
+  return Notifications.scheduleNotificationAsync({
+    content: {
+      title: t("liveWorkout.restFinishedTitle"),
+      body: t("liveWorkout.restFinishedBody"),
+      sound: "default",
+      data: { kind: REST_FINISHED_NOTIFICATION_KIND, workoutId },
+    },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.DATE,
+      date: new Date(endsAt * 1000),
+      channelId: REST_NOTIFICATION_CHANNEL_ID,
+    },
+  });
+}
+
+export async function cancelScheduledNotification(notificationId) {
+  if (!notificationId) {
+    return;
+  }
+
+  await Notifications.cancelScheduledNotificationAsync(notificationId);
 }
 
 async function requestNotificationPermission() {
@@ -565,26 +636,40 @@ export async function getPushNotificationSettings({ user } = {}) {
 /**
  * On or off, for the Notifications tile on Profile. The same `enabled` the
  * settings screen works from - permission granted, this device registered, a
- * mode other than none - without the list of chosen people behind it, which
- * the tile does not show.
+ * mode other than none or likes switched on - without the list of chosen
+ * people behind it, which the tile does not show.
  */
 export async function getPushNotificationsEnabled({ user } = {}) {
   if (!user?.id) {
     return false;
   }
 
-  const [permission, pushTokens, preference] = await Promise.all([
+  const [permission, pushTokens, preference, postLikes] = await Promise.all([
     getNotificationPermission(),
     fetchUserPushTokens(user.id),
     fetchNotificationPreference(user.id),
+    getPostLikeNotificationSetting({ user }).catch(() => ({
+      enabled: false,
+      available: false,
+    })),
   ]);
-
-  return mapPushNotificationSettings({
+  const settings = mapPushNotificationSettings({
     permission,
     pushTokens,
     preference,
     sourceUserIds: [],
-  }).enabled;
+  });
+
+  // Workout starts switched off, likes still on: the tile reads on, because
+  // a like still reaches this device.
+  return (
+    settings.enabled ||
+    (settings.supported &&
+      settings.permissionGranted &&
+      settings.enabledDeviceCount > 0 &&
+      postLikes.available &&
+      postLikes.enabled)
+  );
 }
 
 export async function setPushNotificationsEnabled({
@@ -661,6 +746,81 @@ export async function setWorkoutStartNotificationMode({
   }
 
   return getPushNotificationSettings({ user });
+}
+
+// A column a read names that the database does not have yet: 42703 from
+// Postgres, PGRST204 from PostgREST.
+const MISSING_COLUMN_CODES = new Set(["42703", "PGRST204"]);
+
+// That column, and only that one: another missing column is a real fault and
+// must not read as "the migration has not run". A word match, the way
+// isMissingRestCountedColumnError and isMissingSplitEntriesColumnError read
+// theirs.
+function isMissingPostLikeColumn(error) {
+  const message = `${error?.message ?? ""} ${error?.details ?? ""} ${error?.hint ?? ""}`;
+
+  return (
+    MISSING_COLUMN_CODES.has(String(error?.code ?? "")) &&
+    new RegExp(`\\b${POST_LIKE_NOTIFICATIONS_COLUMN}\\b`).test(message)
+  );
+}
+
+/**
+ * Whether a like on one of your posts tells you, in the history and as a
+ * push. On unless you switch it off. Read on its own, never in
+ * fetchNotificationPreference's select: before
+ * supabase/migrations/20261009090000_a-like-notifies-the-poster.sql has run
+ * the column does not exist, and PostgREST refuses a select that names it -
+ * which would take the whole settings screen down with it. Then the switch
+ * reads on and `available` false, and no like tells anybody anyway.
+ */
+export async function getPostLikeNotificationSetting({ user } = {}) {
+  if (!user?.id) {
+    return { enabled: true, available: false };
+  }
+
+  const { data, error } = await supabase
+    .from(NOTIFICATION_PREFERENCES_TABLE)
+    .select(POST_LIKE_NOTIFICATIONS_COLUMN)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (error) {
+    if (isMissingPostLikeColumn(error)) {
+      return { enabled: true, available: false };
+    }
+
+    throw normalizeNotificationError(error);
+  }
+
+  return { enabled: data?.[POST_LIKE_NOTIFICATIONS_COLUMN] !== false, available: true };
+}
+
+export async function setPostLikeNotificationsEnabled({ user, enabled } = {}) {
+  if (!user?.id) {
+    throw new Error(t("notifications.errors.signInToUpdateSettings"));
+  }
+
+  // Only this column: a row that exists keeps its workout-start mode, and a
+  // new one gets the table's default for it.
+  const { error } = await supabase.from(NOTIFICATION_PREFERENCES_TABLE).upsert(
+    {
+      user_id: user.id,
+      [POST_LIKE_NOTIFICATIONS_COLUMN]: enabled === true,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id" }
+  );
+
+  if (error) {
+    if (isMissingPostLikeColumn(error)) {
+      return { enabled: true, available: false };
+    }
+
+    throw normalizeNotificationError(error);
+  }
+
+  return getPostLikeNotificationSetting({ user });
 }
 
 export async function setWorkoutStartNotificationSources({

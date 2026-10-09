@@ -26,6 +26,12 @@ import Social from "../../Resources/Icons/UI-icons/Social";
 import WorkoutCopyTargetModal from "../../Resources/Components/WorkoutCopyTargetModal";
 import { programService, workoutService } from "../../Services";
 import { formatDate } from "../../Utils/dateUtils";
+import { STARTED_FROM } from "@utils/startedFrom";
+import {
+  isAppWorkoutName,
+  strengthWorkoutTypeTag,
+  workoutDisplayName,
+} from "@utils/workoutTypeLabel";
 import { useTranslation } from "@localization";
 
 import Run from "./WorkoutTypes/Run/Run";
@@ -46,6 +52,9 @@ const WorkoutPage = ({ route }) => {
     day: initialDay,
     date: initialDate,
     program_id: initialProgramId,
+    // "Afslut" on the lock-screen card, once every set is done: the workout
+    // finishes as it opens.
+    finishRequestKey = 0,
   } = route.params;
 
   const [optionsBottomsheetVisible, setOptionsBottomsheetVisible] = useState(false);
@@ -98,33 +107,16 @@ const WorkoutPage = ({ route }) => {
   const workoutDate = metadata?.date ?? initialDate ?? "";
   const programId = metadata?.program_id ?? initialProgramId;
   // BUG-20: the home screen writes this same pairing as "FRIDAY · 11.09.2026".
-  const workoutSubtitle = [workoutDay, workoutDate]
+  // The day is stored in English ("Thursday"); it is shown in the reader's
+  // language when it is one of the seven.
+  const weekdayKey = String(workoutDay).trim().toLowerCase();
+  const shownWorkoutDay = /^(mon|tues|wednes|thurs|fri|satur|sun)day$/.test(weekdayKey)
+    ? t(`programs.weekdays.${weekdayKey}`)
+    : workoutDay;
+  const workoutSubtitle = [shownWorkoutDay, workoutDate]
     .filter(Boolean)
     .join(" · ");
   const headerEyebrowColor = theme.quietText ?? theme.iconColor;
-  const [autoNamedLabel, setAutoNamedLabel] = useState(null);
-  const previousWorkoutLabelRef = useRef(workoutLabel);
-
-  useEffect(() => {
-    const previousLabel = previousWorkoutLabelRef.current;
-    previousWorkoutLabelRef.current = workoutLabel;
-
-    // Only the rename the app did itself: the title was the workout type, and
-    // is now something else. A rename through Change name is the user's own.
-    if (
-      previousLabel === workoutLabel ||
-      previousLabel !== workoutType ||
-      !workoutLabel ||
-      workoutLabel === workoutType
-    ) {
-      return;
-    }
-
-    setAutoNamedLabel(workoutLabel);
-    const timeoutId = setTimeout(() => setAutoNamedLabel(null), 6000);
-
-    return () => clearTimeout(timeoutId);
-  }, [workoutLabel, workoutType]);
   const isRunWorkout = workoutType === "Run";
   const isWalkWorkout = workoutType === "Walk";
   const isStrengthWorkout =
@@ -137,7 +129,15 @@ const WorkoutPage = ({ route }) => {
   const canRepostWorkoutSummary = workoutType === "Resistance";
 
   const openLabelModal = () => {
-    setNextWorkoutLabel(workoutInstanceLabel ?? "");
+    // A workout nobody named is labelled with its type id ("Resistance"),
+    // or with the name the app gave it ("Push"). That is not a name to edit -
+    // saved unchanged it would turn the translated name into one of its own -
+    // so the field starts empty. A name somebody typed is there to edit.
+    setNextWorkoutLabel(
+      isAppWorkoutName(workoutInstanceLabel, workoutType)
+        ? ""
+        : workoutInstanceLabel ?? ""
+    );
     setOptionsBottomsheetVisible(false);
     setLabelModalVisible(true);
   };
@@ -203,10 +203,13 @@ const WorkoutPage = ({ route }) => {
 
     setIsCopyingWorkout(true);
     try {
+      // A copy made from the workout's own page is none of the four
+      // the overview names, so it is counted as other.
       const copiedWorkoutId = await programService.copyWorkoutToProgramDay(db, {
         workoutId: workout_id,
         dayId: target.day_id,
         date: target.date ?? selectedDate,
+        startedFrom: STARTED_FROM.OTHER,
       });
 
       if (!copiedWorkoutId) {
@@ -232,6 +235,7 @@ const WorkoutPage = ({ route }) => {
       await programService.copyWorkoutToStandaloneDate(db, {
         workoutId: workout_id,
         date: selectedDate,
+        startedFrom: STARTED_FROM.OTHER,
       });
       setPendingCopyTarget(null);
     } catch (error) {
@@ -333,7 +337,7 @@ const WorkoutPage = ({ route }) => {
     onClose={() => setOptionsBottomsheetVisible(false)}
   >
     <View style={[styles.bottomsheetTitle, { borderBottomColor: theme.hairline }]}>
-      <ThemedText>{workoutLabel}</ThemedText>
+      <ThemedText>{workoutDisplayName(workoutLabel, t, workoutType)}</ThemedText>
       <ThemedText>{workoutSubtitle}</ThemedText>
     </View>
 
@@ -469,15 +473,18 @@ const WorkoutPage = ({ route }) => {
   // Strength workouts paint their own top area, status bar included, so the
   // page must not reserve the top inset or draw the shared header.
   if (isStrengthWorkout) {
+    const strengthTitle = workoutDisplayName(workoutLabel, t, workoutType);
+
     return (
       <ThemedView safe={["left", "right"]}>
         <Resistance
           workout_id={workout_id}
           date={workoutDate}
-          workoutLabel={workoutLabel}
-          autoNamedLabel={autoNamedLabel}
+          workoutLabel={strengthTitle}
+          workoutTypeTag={strengthWorkoutTypeTag(workoutType, t, strengthTitle)}
           workoutInstanceLabel={workoutInstanceLabel}
           restartRequestKey={restartRequestKey}
+          finishRequestKey={finishRequestKey}
           onWorkoutMetadataChange={loadMetadata}
           onOpenOptions={() => setOptionsBottomsheetVisible(true)}
         />
@@ -518,7 +525,7 @@ const WorkoutPage = ({ route }) => {
           >
             {isRunWorkout && runHeaderTitle
               ? runHeaderTitle
-              : workoutLabel}
+              : workoutDisplayName(workoutLabel, t, workoutType)}
           </ThemedTitle>
 
           {!!workoutSubtitle && (

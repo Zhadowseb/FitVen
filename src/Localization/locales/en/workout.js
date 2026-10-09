@@ -19,6 +19,26 @@ export default {
     records: "Records and progress",
     openRecords: "Open records for {name}",
     heaviestLift: "{weight} kg × {reps}",
+    heaviestLiftPerSide: "{weight} kg per side × {reps}",
+  },
+  // Weight per side or for both sides, on the exercise card (4d).
+  weightMode: {
+    perSide: "Per side",
+    bothSides: "Both sides",
+    tabValue: "{label} · {weight}",
+    doubled: "Weight doubled: {from} → {to} {unit}",
+    halved: "Weight halved: {from} → {to} {unit}",
+    // When none of the sets has a weight yet there are no numbers to quote.
+    switchedPerSide: "Weight is now logged per side",
+    switchedBothSides: "Weight is now logged for both sides",
+    undo: "Undo",
+    switchFailed: "Could not switch how the weight is logged",
+    undoFailed: "Could not undo the switch",
+    // Follows the number, in small grey type.
+    suffix: "per side",
+    a11y: "Weight is logged {mode}. Tap to switch, all sets are converted",
+    // {mode} in a11y for both sides; per side uses suffix.
+    a11yBothSides: "for both sides",
   },
   note: {
     title: "Note",
@@ -83,6 +103,8 @@ export default {
     restartMessage:
       "This clears the timer, completion state, and workout progress for this workout.",
     restartConfirm: "Restart workout",
+    restartFailedTitle: "Could not restart workout",
+    restartFailedMessage: "Nothing was changed. Please try again.",
     options: {
       changeName: "Change name",
       restart: "Restart Workout",
@@ -98,8 +120,8 @@ export default {
     },
   },
   session: {
-    autoNamed: "Named {name} after your exercises",
     options: "Workout options",
+    keepAwake: "Keep the screen on while the workout runs",
     pause: "Pause",
     continue: "Continue",
     start: "Start",
@@ -166,6 +188,18 @@ export default {
   setList: {
     setDone: "Set {number} done",
     repsUnit: "reps",
+    // The rest after a set with none written, counted up (screen reader).
+    restCountingUp: "Resting for {time}",
+    // + and − on the weight (1e). {step} is the step in kg.
+    weightMinus: "Take {step} kg off set {label}",
+    weightPlus: "Add {step} kg to set {label}",
+    weightMinusAll: "Take {step} kg off every unfinished set",
+    weightPlusAll: "Add {step} kg to every unfinished set",
+    // When a weight could not be saved.
+    weightSaveFailedTitle: "The weight was not saved",
+    weightStepsKept:
+      "It is still on screen, and is saved the next time you change a weight or close the exercise.",
+    weightTypedReverted: "The set shows the saved weight again. Please try again.",
     headers: {
       note: "NOTE",
       rest: "REST",

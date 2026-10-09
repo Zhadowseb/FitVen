@@ -490,7 +490,10 @@ async function normalizeClientPayload(
 }
 
 // Stops one account from turning the function into a push cannon aimed at its
-// own followers.
+// own followers. Workout starts only: the table also holds the events other
+// things write in the same person's name - a like, a lift sent for
+// verification - and counting those refused a workout-start push to somebody
+// who had liked a dozen posts in the hour.
 async function isOverEventRateLimit(
   supabase: ReturnType<typeof createClient>,
   actorId: string
@@ -500,6 +503,7 @@ async function isOverEventRateLimit(
     .from("notification_events")
     .select("id", { count: "exact", head: true })
     .eq("actor_id", actorId)
+    .eq("event_type", "workout_started")
     .gte("created_at", since);
 
   if (error) {

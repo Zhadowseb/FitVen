@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { ScrollView, TouchableOpacity, View, useColorScheme } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
+import { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
+import PassThroughSvg from "@resources/Components/PassThroughSvg";
 import { formatNumber, useTranslation } from "@localization";
 
 import styles, {
@@ -15,6 +16,7 @@ import Expand from "@resources/Icons/UI-icons/Expand";
 import Star from "@resources/Icons/UI-icons/Star";
 import { ThemedText } from "@resources/ThemedComponents";
 import { historyCellTone } from "@utils/exerciseHistoryTable";
+import { isPerSide } from "@utils/weightMode";
 
 // Beyond three columns the table scrolls, and snaps a cell at a time so a
 // swipe never leaves one cut in half.
@@ -182,6 +184,12 @@ export default function ExerciseHistoryPanel({
                 <ThemedText style={styles.dateRelative} setColor={theme.quietText} numberOfLines={1}>
                   {session.relativeLabel}
                 </ThemedText>
+                {/* The session's weights as written (4d): per side says so. */}
+                {isPerSide(session.weightMode) ? (
+                  <ThemedText style={styles.datePerSide} setColor={theme.quietText} numberOfLines={1}>
+                    {t("workout.weightMode.suffix")}
+                  </ThemedText>
+                ) : null}
               </View>
             ))}
           </View>
@@ -227,8 +235,7 @@ export default function ExerciseHistoryPanel({
             </ScrollView>
 
             {showFade ? (
-              <Svg
-                pointerEvents="none"
+              <PassThroughSvg
                 width={HISTORY_FADE_WIDTH}
                 height="100%"
                 style={styles.fade}
@@ -240,7 +247,7 @@ export default function ExerciseHistoryPanel({
                   </LinearGradient>
                 </Defs>
                 <Rect width="100%" height="100%" fill="url(#historyFade)" />
-              </Svg>
+              </PassThroughSvg>
             ) : null}
           </View>
         </View>
@@ -261,10 +268,15 @@ export default function ExerciseHistoryPanel({
         </ThemedText>
         {heaviestLift ? (
           <ThemedText style={styles.recordsValue} setColor={theme.quietText} numberOfLines={1}>
-            {t("workout.history.heaviestLift", {
-              weight: formatWeight(heaviestLift.weight),
-              reps: heaviestLift.reps,
-            })}
+            {t(
+              isPerSide(heaviestLift.weightMode)
+                ? "workout.history.heaviestLiftPerSide"
+                : "workout.history.heaviestLift",
+              {
+                weight: formatWeight(heaviestLift.weight),
+                reps: heaviestLift.reps,
+              }
+            )}
           </ThemedText>
         ) : null}
         <ChevronRight width={16} height={16} color={theme.quietText} />

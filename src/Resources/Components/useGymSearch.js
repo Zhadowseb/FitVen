@@ -10,6 +10,8 @@ import { gymService } from "@services";
 export const GYM_SEARCH_MIN_LENGTH = 2;
 export const GYM_SEARCH_DEBOUNCE_MS = 250;
 
+const searchEveryCentre = (query) => gymService.searchGyms({ query });
+
 /**
  * Debounced centre search.
  *
@@ -20,8 +22,14 @@ export const GYM_SEARCH_DEBOUNCE_MS = 250;
  * @param {string} query what the person has typed
  * @param {(message: string) => void} [onError] called with a message when the
  *   search fails; the screens put it in their own error state
+ * @param {object} [options]
+ * @param {(query: string) => Promise<object[]>} [options.search] what to
+ *   search with; every centre by default. The Centres screen searches inside
+ *   the level it shows.
+ * @param {string} [options.searchKey] changes when `search` starts looking
+ *   somewhere else, so the search runs again
  */
-export function useGymSearch(query, onError) {
+export function useGymSearch(query, onError, { search = searchEveryCentre, searchKey = "" } = {}) {
   const [results, setResults] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
   const timeoutRef = useRef(null);
@@ -36,8 +44,10 @@ export function useGymSearch(query, onError) {
   // Held in a ref so a screen passing an inline arrow - all of them do - does
   // not restart the debounce on every render.
   const onErrorRef = useRef(onError);
+  const searchRef = useRef(search);
 
   onErrorRef.current = onError;
+  searchRef.current = search;
 
   useEffect(() => {
     if (timeoutRef.current) {
@@ -60,7 +70,7 @@ export function useGymSearch(query, onError) {
       const request = requestRef.current;
 
       try {
-        const found = await gymService.searchGyms({ query: trimmed });
+        const found = await searchRef.current(trimmed);
 
         if (request === requestRef.current) {
           setResults(found);
@@ -80,7 +90,7 @@ export function useGymSearch(query, onError) {
     }, GYM_SEARCH_DEBOUNCE_MS);
 
     return () => clearTimeout(timeoutRef.current);
-  }, [query]);
+  }, [query, searchKey]);
 
   return { results, isSearching };
 }

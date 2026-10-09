@@ -1,51 +1,106 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, TouchableOpacity, View, useColorScheme } from "react-native";
-import { useTranslation } from "@localization";
+import { formatDate, useTranslation } from "@localization";
 
 import styles from "./SplitCardStyle";
+import SplitWorkoutPicker from "./SplitWorkoutPicker";
 import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
+import Calender from "@resources/Icons/UI-icons/Calender";
 import { ThemedBottomSheet, ThemedText } from "@resources/ThemedComponents";
+import {
+  SPLIT_MAX_ENTRIES,
+  SPLIT_MIN_ENTRIES,
+  addSplitEntry,
+  splitEntryKey,
+} from "@utils/splitEntries";
+import { workoutDisplayName } from "@utils/workoutTypeLabel";
 
-const MIN = 2;
-const MAX = 6;
+function nameOnlyKey(name) {
+  return splitEntryKey({ name, workout: null });
+}
 
 /**
- * Choosing the split: the names from the last workouts, tapped in the order
- * they are done - two to six of them. "Use the suggestion" clears the choice,
- * and the card goes back to the guess.
+ * Choosing the split, two to six sessions in the order they are done.
+ *
+ * The names from the last workouts are tapped on and off; each is a session
+ * by name, which repeats the latest workout of that name - so it carries the
+ * weights last used forward. "Choose from calendar" adds one particular
+ * workout (SplitWorkoutPicker): that session repeats exactly that workout,
+ * and two of them can share a name. A picked one is listed with its date, and
+ * tapping it takes it out again. Nothing is kept until Save. "Use the
+ * suggestion" clears the choice, and the cards go back to the guess.
  */
 export default function SplitEditorSheet({
   visible,
   candidates = [],
-  chosenNames = null,
+  chosenEntries = null,
   isSaving = false,
   onClose,
   onSave,
+  onRenamed,
 }) {
   const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
   const [picked, setPicked] = useState([]);
+  const [isPicking, setIsPicking] = useState(false);
 
   useEffect(() => {
     if (visible) {
-      setPicked(Array.isArray(chosenNames) ? chosenNames : []);
+      setPicked(Array.isArray(chosenEntries) ? chosenEntries : []);
+      setIsPicking(false);
     }
-  }, [chosenNames, visible]);
+  }, [chosenEntries, visible]);
 
-  // A chosen name no longer in the history still shows, so it can be removed.
-  const names = [...picked.filter((name) => !candidates.includes(name)), ...candidates];
+  // The pinned sessions first, then each name - a chosen name no longer in
+  // the history still shows, so it can be removed.
+  const candidateKeys = new Set(candidates.map(nameOnlyKey));
+  const rows = [
+    ...picked.filter((entry) => entry.workout || !candidateKeys.has(splitEntryKey(entry))),
+    ...candidates.map((name) => ({ name, workout: null, last: null })),
+  ];
 
-  const toggle = (name) =>
+  const toggle = (row) => {
+    const key = splitEntryKey(row);
+
     setPicked((current) =>
-      current.includes(name)
-        ? current.filter((entry) => entry !== name)
-        : current.length < MAX
-          ? [...current, name]
-          : current
+      current.some((entry) => splitEntryKey(entry) === key)
+        ? current.filter((entry) => splitEntryKey(entry) !== key)
+        : addSplitEntry(current, row).entries
     );
+  };
 
-  const canSave = picked.length >= MIN && picked.length <= MAX && !isSaving;
+  const canSave = picked.length >= SPLIT_MIN_ENTRIES && picked.length <= SPLIT_MAX_ENTRIES && !isSaving;
+
+  const fromCalendar = (
+    <TouchableOpacity
+      activeOpacity={0.85}
+      accessibilityRole="button"
+      onPress={() => setIsPicking(true)}
+      style={[styles.sheetCalendar, { borderColor: withAlpha(theme.primary, 0.45) }]}
+    >
+      <Calender width={18} height={18} color={theme.primaryText ?? theme.primary} />
+      <ThemedText style={styles.sheetCalendarText} setColor={theme.primaryText ?? theme.primary}>
+        {t("train.editor.fromCalendar")}
+      </ThemedText>
+    </TouchableOpacity>
+  );
+
+  if (isPicking) {
+    return (
+      <ThemedBottomSheet visible={visible} onClose={onClose}>
+        <SplitWorkoutPicker
+          picked={picked}
+          onBack={() => setIsPicking(false)}
+          onRenamed={onRenamed}
+          onAdd={(entry) => {
+            setPicked((current) => addSplitEntry(current, entry).entries);
+            setIsPicking(false);
+          }}
+        />
+      </ThemedBottomSheet>
+    );
+  }
 
   return (
     <ThemedBottomSheet visible={visible} onClose={onClose}>
@@ -56,27 +111,34 @@ export default function SplitEditorSheet({
         {t("train.editor.body")}
       </ThemedText>
 
-      {names.length === 0 ? (
-        <ThemedText style={styles.sheetEmpty} setColor={theme.quietText}>
-          {t("train.editor.empty")}
-        </ThemedText>
+      {rows.length === 0 ? (
+        <>
+          <ThemedText style={styles.sheetEmpty} setColor={theme.quietText}>
+            {t("train.editor.empty")}
+          </ThemedText>
+          {fromCalendar}
+        </>
       ) : (
         <>
           <ThemedText style={styles.sheetCount} setColor={theme.primaryText ?? theme.primary}>
             {t("train.editor.count", { count: picked.length })}
           </ThemedText>
           <ScrollView style={styles.sheetList} showsVerticalScrollIndicator={false}>
-            {names.map((name) => {
-              const order = picked.indexOf(name);
+            {rows.map((row) => {
+              const key = splitEntryKey(row);
+              const order = picked.findIndex((entry) => splitEntryKey(entry) === key);
               const selected = order >= 0;
+              // A picked workout shows its day: it is what tells two
+              // sessions of the same name apart.
+              const pinnedAt = row.pinnedAt ?? null;
 
               return (
                 <TouchableOpacity
-                  key={name}
+                  key={key}
                   activeOpacity={0.85}
                   accessibilityRole="checkbox"
                   accessibilityState={{ checked: selected }}
-                  onPress={() => toggle(name)}
+                  onPress={() => toggle(row)}
                   style={[
                     styles.sheetRow,
                     selected
@@ -98,13 +160,25 @@ export default function SplitEditorSheet({
                       </ThemedText>
                     ) : null}
                   </View>
+                  {/* The name is also the key the split stores; only what is
+                      drawn is translated, when the app wrote it. */}
                   <ThemedText style={styles.sheetRowName} setColor={theme.title} numberOfLines={1}>
-                    {name}
+                    {workoutDisplayName(row.name, t) ?? row.name}
                   </ThemedText>
+                  {row.workout ? (
+                    <ThemedText style={styles.sheetRowMeta} setColor={theme.quietText} numberOfLines={1}>
+                      {pinnedAt
+                        ? t("train.editor.pinnedOn", {
+                            date: formatDate(pinnedAt, { day: "numeric", month: "short" }),
+                          })
+                        : t("train.editor.pinned")}
+                    </ThemedText>
+                  ) : null}
                 </TouchableOpacity>
               );
             })}
           </ScrollView>
+          {fromCalendar}
         </>
       )}
 
@@ -129,7 +203,7 @@ export default function SplitEditorSheet({
           )}
         </TouchableOpacity>
 
-        {Array.isArray(chosenNames) && chosenNames.length > 0 ? (
+        {Array.isArray(chosenEntries) && chosenEntries.length > 0 ? (
           <TouchableOpacity
             accessibilityRole="button"
             disabled={isSaving}

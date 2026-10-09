@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
-  Pressable,
   ScrollView,
   TouchableOpacity,
   View,
@@ -25,12 +24,12 @@ import Delete from "../../Resources/Icons/UI-icons/Delete";
 import PlusCircled from "../../Resources/Icons/UI-icons/PlusCircled";
 import { getWorkoutIconConfig, getWorkoutIconShortLabel } from "../../Resources/Icons/WorkoutLabels";
 import WeekdayIndicator from "../../Resources/Figures/WeekdayIndicator";
-import {
-  DayCell,
-  useGridPalette,
-} from "../MicrocyclePage/Components/BlockWeekGrid/BlockWeekGrid";
-import gridStyles from "../MicrocyclePage/Components/BlockWeekGrid/BlockWeekGridStyle";
+import { useGridPalette } from "../MicrocyclePage/Components/BlockWeekGrid/BlockWeekGrid";
 import CalendarWeekView from "./Components/CalendarWeekView/CalendarWeekView";
+import CalendarWeekRows, {
+  buildCalendarWeekRows,
+  getWorkoutTypeIcon,
+} from "./Components/CalendarWeekRows/CalendarWeekRows";
 import {
   ThemedBottomSheet,
   ThemedHeader,
@@ -43,13 +42,18 @@ import {
 import { addDays, parseCustomDate } from "../../Utils/dateUtils";
 import { isWorkoutComingSoon } from "../../Utils/workoutTypeAvailability";
 import { requestOpenQuickWorkoutMenu } from "../../Utils/quickWorkoutMenuEvents";
+import { STARTED_FROM } from "@utils/startedFrom";
+import { workoutDisplayName } from "@utils/workoutTypeLabel";
 import {
+  MONTH_KEYS,
   WEEKDAY_LABELS,
   buildCalendarLookups,
   enrichCalendarDay,
   formatIsoDate,
   formatLocalDate,
   getMondayWeekdayIndex,
+  getMonthPage,
+  getMonthTitle,
   getWeekPage,
   getWorkoutIconLabel,
   getWorkoutType,
@@ -60,21 +64,6 @@ import {
 const ADJACENT_MONTH_COUNT = 1;
 const INITIAL_VISIBLE_MONTH_OFFSET = 0;
 const INITIAL_VISIBLE_MONTH_INDEX = ADJACENT_MONTH_COUNT;
-// Translation keys under calendar.months / calendar.monthsShort, by month index.
-const MONTH_KEYS = [
-  "jan",
-  "feb",
-  "mar",
-  "apr",
-  "may",
-  "jun",
-  "jul",
-  "aug",
-  "sep",
-  "oct",
-  "nov",
-  "dec",
-];
 const CALENDAR_VIEWS = [
   { value: "block", labelKey: "calendar.views.block" },
   { value: "week", labelKey: "calendar.views.week" },
@@ -91,64 +80,8 @@ function getWeekdayName(weekday, t) {
   return key ? t(`calendar.weekdays.${key}`) : weekday ?? "";
 }
 
-function getMonthName(monthIndex, t) {
-  return t(`calendar.months.${MONTH_KEYS[monthIndex]}`);
-}
-
 function getShortMonthName(monthIndex, t) {
   return t(`calendar.monthsShort.${MONTH_KEYS[monthIndex]}`);
-}
-
-// "2026-09".
-function getMonthKey(date) {
-  return formatIsoDate(date).slice(0, 7);
-}
-
-function getMonthTitle(date, t) {
-  return t("calendar.monthTitle", {
-    month: getMonthName(date.getMonth(), t),
-    year: date.getFullYear(),
-  });
-}
-
-function getMonthPage(baseDate, monthOffset) {
-  const monthDate = new Date(
-    baseDate.getFullYear(),
-    baseDate.getMonth() + monthOffset,
-    1
-  );
-  const monthStart = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
-  const monthEnd = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
-  const gridStart = addDays(monthStart, -getMondayWeekdayIndex(monthStart));
-  const gridEnd = addDays(monthEnd, 6 - getMondayWeekdayIndex(monthEnd));
-  const weeks = [];
-  let cursor = gridStart;
-
-  while (cursor <= gridEnd) {
-    const week = [];
-
-    for (let index = 0; index < WEEKDAY_LABELS.length; index += 1) {
-      const dayDate = new Date(cursor);
-      week.push({
-        date: dayDate,
-        dateLabel: formatLocalDate(dayDate),
-        isoDate: formatIsoDate(dayDate),
-        inMonth: dayDate.getMonth() === monthStart.getMonth(),
-        label: WEEKDAY_LABELS[index],
-      });
-      cursor = addDays(cursor, 1);
-    }
-
-    weeks.push(week);
-  }
-
-  return {
-    key: getMonthKey(monthStart),
-    monthDate: monthStart,
-    startIsoDate: formatIsoDate(gridStart),
-    endIsoDate: formatIsoDate(gridEnd),
-    weeks,
-  };
 }
 
 /**
@@ -182,17 +115,6 @@ function getMonthOffsetRange(monthOffset) {
 
 function hasCalendarRange(range) {
   return Boolean(range?.startIsoDate && range?.endIsoDate);
-}
-
-// A workout card's icon and short name, for enrichCalendarDay. Passed in so
-// Utils/calendarDays.js never imports the SVG icons and can run in plain Node.
-function getWorkoutTypeIcon(workoutType) {
-  const iconConfig = getWorkoutIconConfig(workoutType);
-
-  return {
-    icon: iconConfig?.Icon,
-    iconLabel: getWorkoutIconShortLabel(iconConfig),
-  };
 }
 
 function getProgramDayLocation(programDay, t) {
@@ -378,14 +300,8 @@ const WorkoutCalendarPage = () => {
       pageKey,
       todayLabel,
       iconFor: getWorkoutTypeIcon,
+      t,
     });
-
-  const buildMonthWeeks = (monthPage) =>
-    (monthPage?.weeks ?? []).map((week) => ({
-      key: `${monthPage?.key}-${week[0].isoDate}`,
-      days: week.map((day) => enrichDay(day, monthPage?.key)),
-      isCurrentWeek: week.some((day) => day.dateLabel === todayLabel),
-    }));
 
   const getWeekDateRange = (weekPage) => {
     const firstDate = weekPage.days[0].date;
@@ -834,6 +750,8 @@ const WorkoutCalendarPage = () => {
       dayId: programDay?.day_id ?? null,
       programId: programDay?.program_id ?? null,
       programName: programDay?.program_name ?? null,
+      // For whatever the start sheet creates from here.
+      startedFrom: STARTED_FROM.CALENDAR,
     });
     setSelectedCalendarDay(null);
   };
@@ -898,6 +816,7 @@ const WorkoutCalendarPage = () => {
         workoutId: workout.workout_id,
         dayId: target.day_id,
         date: target.date ?? pendingCopyTarget.date,
+        startedFrom: STARTED_FROM.CALENDAR,
       });
 
       if (!copiedWorkoutId) {
@@ -924,6 +843,7 @@ const WorkoutCalendarPage = () => {
       await programService.copyWorkoutToStandaloneDate(db, {
         workoutId: workout.workout_id,
         date: selectedDate,
+        startedFrom: STARTED_FROM.CALENDAR,
       });
       await completeWorkoutCopy();
     } catch (error) {
@@ -946,6 +866,7 @@ const WorkoutCalendarPage = () => {
         workoutId: workout.workout_id,
         programId: workout.program_id,
         date: selectedDate,
+        startedFrom: STARTED_FROM.CALENDAR,
       });
 
       if (!copiedWorkoutId) {
@@ -1259,7 +1180,7 @@ const WorkoutCalendarPage = () => {
                             key: workout.workout_id,
                             workout,
                             icon: iconConfig?.Icon,
-                            iconLabel: getWorkoutIconShortLabel(iconConfig) ?? getWorkoutIconLabel(workout),
+                            iconLabel: getWorkoutIconShortLabel(iconConfig) ?? getWorkoutIconLabel(workout, t),
                             completed: isCompleted,
                             hasPersonalRecord: Number(workout.has_personal_record) === 1,
                             sickCompleted: dayIsSick && isCompleted,
@@ -1314,31 +1235,14 @@ const WorkoutCalendarPage = () => {
                     </ThemedText>
                   </View>
 
-                  {buildMonthWeeks(monthPage).map((week) => (
-                    <View key={week.key} style={styles.weekListRow}>
-                      <View style={gridStyles.weekGrid}>
-                        {week.days.map((day) => (
-                          <Pressable
-                            key={`${week.key}-${day.dateLabel}`}
-                            accessibilityRole="button"
-                            accessibilityLabel={`${getWeekdayName(day.label, t)} ${day.dateLabel}`}
-                            style={[
-                              gridStyles.cellSlot,
-                              !day.inMonth && styles.daySlotOutsideMonth,
-                            ]}
-                            onPress={() => openDaySheet(day)}
-                            onLongPress={() => openDaySheet(day)}
-                          >
-                            <DayCell
-                              day={day}
-                              showRestDate
-                              palette={gridPalette}
-                            />
-                          </Pressable>
-                        ))}
-                      </View>
-                    </View>
-                  ))}
+                  <CalendarWeekRows
+                    weeks={buildCalendarWeekRows(monthPage, calendarLookups, {
+                      todayLabel,
+                      t,
+                    })}
+                    palette={gridPalette}
+                    onPressDay={openDaySheet}
+                  />
                 </View>
             </ScrollView>
           ))}
@@ -1501,7 +1405,7 @@ const WorkoutCalendarPage = () => {
                           style={styles.dayWorkoutIconLabel}
                           setColor={cardSurface}
                         >
-                          {getWorkoutIconShortLabel(iconConfig) ?? getWorkoutIconLabel(workout)}
+                          {getWorkoutIconShortLabel(iconConfig) ?? getWorkoutIconLabel(workout, t)}
                         </ThemedText>
                       )}
                     </View>
@@ -1512,7 +1416,7 @@ const WorkoutCalendarPage = () => {
                         setColor={titleColor}
                         numberOfLines={1}
                       >
-                        {workout.label ?? getWorkoutType(workout)}
+                        {workoutDisplayName(workout.label, t, getWorkoutType(workout))}
                       </ThemedText>
                       <ThemedText
                         style={styles.dayWorkoutStatus}

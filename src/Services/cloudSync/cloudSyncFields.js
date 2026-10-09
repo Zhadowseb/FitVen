@@ -5,7 +5,10 @@
 // can be loaded and tested on its own. scripts/test-cloud-sync-fields.js does
 // exactly that, which is the only automated coverage the sync engine has.
 // One copy of the wall-clock parser, in the pure module a test can load.
+import { normalizeSetDecimal } from "@utils/setDecimals";
 import { normalizeSetType } from "@utils/setTypes";
+import { normalizeStartedFrom } from "@utils/startedFrom";
+import { normalizeInstanceWeightMode } from "@utils/weightMode";
 import { normalizeCloudTimeString } from "@utils/cloudActivityUtils";
 import {
   formatDate,
@@ -100,6 +103,11 @@ const text = () => normalizeOptionalText;
 // them too - a value this client does not recognise becomes a working set.
 const setType = () => normalizeSetType;
 
+// A set's weight and RPE, to two decimals (@utils/setDecimals). The cloud
+// columns were integers until 20261003090000_a-set-keeps-its-decimals.sql;
+// setSync.js copes with either, so these must not truncate.
+const setDecimal = () => normalizeSetDecimal;
+
 function field(key, local, options = {}) {
   const read = options.read ?? ((row) => row?.[key]);
 
@@ -186,6 +194,17 @@ export const SYNCED_FIELDS = {
     // The retry that needs the raw fix reads it from the device's own SQLite,
     // where it stays.
     field("gym_id", int()),
+    // Where the workout was started from (@utils/startedFrom): one of five,
+    // or null for a row from before the column. Set once, when the row is
+    // created, and never changed.
+    //
+    // Uploaded, but not compared. Since it never changes, the two sides only
+    // differ when one of them does not know it - a row that reached the cloud
+    // before the column did - and as a compared field every such row would
+    // count as changed on every pull, forever. The reconcile keeps the local
+    // value when the cloud's is null, and a null is never sent (see
+    // workoutTypeInstanceSync.js, which also copes with the column missing).
+    field("started_from", normalizeStartedFrom, { compare: false }),
   ],
   ExerciseInstance: [
     field("local_exercise_instance_id", int(), {
@@ -199,6 +218,13 @@ export const SYNCED_FIELDS = {
     field("visible_columns", normalizeExerciseVisibleColumns),
     field("note", text()),
     field("done", flag()),
+    // Per side or both sides (@utils/weightMode): 'total' | 'per_side', or
+    // null for "not known". Compared, unlike started_from, because a switch
+    // changes it and another phone has to see that. A null from the cloud -
+    // no column yet, or an older app wrote the row - is not a change: the
+    // reconcile keeps the local value, and a null is never sent (see
+    // exerciseInstanceSync.js, which also copes with the column missing).
+    field("weight_mode", normalizeInstanceWeightMode),
   ],
   Set: [
     field("local_set_id", int(), { compare: false, payload: "head" }),
@@ -206,8 +232,8 @@ export const SYNCED_FIELDS = {
     field("set_number", int()),
     field("personal_record", flag()),
     field("pause", int()),
-    field("rpe", int()),
-    field("weight", int()),
+    field("rpe", setDecimal()),
+    field("weight", setDecimal()),
     field("rm_percentage", int()),
     field("reps", int()),
     field("done", flag()),
@@ -216,6 +242,12 @@ export const SYNCED_FIELDS = {
     field("set_type", setType()),
     field("amrap_target", int()),
     field("note", text()),
+    // Whether `pause` is a rest the app counted rather than one that was
+    // planned (@utils/restCountUp). Compared: it changes when a rest is typed
+    // by hand. A null from the cloud - no column yet, or an older app created
+    // the row - is not a change: the reconcile keeps the local flag
+    // (withKnownRestCounted), and setSync.js copes with the column missing.
+    field("rest_counted", flag()),
   ],
 };
 

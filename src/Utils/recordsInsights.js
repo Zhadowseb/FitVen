@@ -10,6 +10,13 @@ import {
   MAX_ESTIMATE_REPS,
 } from "./oneRepMaxUtils";
 
+// 'per_side' or 'total', the rule of weightModeOf in ./weightMode.js. Written
+// out rather than imported: scripts/test-records-insights.js loads this file
+// with its one import inlined.
+function weightModeOf(value) {
+  return value === "per_side" ? "per_side" : "total";
+}
+
 // The one period the overview is read in. Everything on it follows the
 // choice - the numbers, the gains, the volume chart and the muscle groups -
 // because a selector that moves half a page reads as broken. Labels live in
@@ -67,7 +74,11 @@ export function startOfWeek(timestampMs) {
 }
 
 function normalizeRow(row) {
+  // In the exercise's current mode (4d): the query converts a set written the
+  // other way, so a best is compared like with like. `total_weight` is what
+  // was lifted - per side counts twice - and is what volume adds up.
   const weight = Number(row?.weight);
+  const totalWeight = Number(row?.total_weight ?? row?.weight);
   const reps = Number(row?.reps);
   const at = parseRecordDate(row?.performed_date_sort ?? row?.performed_date);
   const name =
@@ -86,7 +97,8 @@ function normalizeRow(row) {
     weight,
     reps,
     at,
-    volume: weight * reps,
+    weightMode: weightModeOf(row?.weight_mode),
+    volume: (Number.isFinite(totalWeight) ? totalWeight : weight) * reps,
     // The app has one 1RM formula and it is Brzycki. The design assumed Epley;
     // using it here would have put two formulas in one app, which is the thing
     // the design was trying to avoid.
@@ -464,6 +476,9 @@ export function buildExerciseList(sets, { now }) {
       entry.heaviest = { weight: set.weight, reps: set.reps };
     }
 
+    // The exercise's current mode: every one of its sets arrives in it.
+    entry.weightMode = set.weightMode;
+
     entry.lastAt = entry.lastAt === null ? set.at : Math.max(entry.lastAt, set.at);
     entry.sessions.add(set.sessionKey);
     byExercise.set(set.name, entry);
@@ -473,6 +488,7 @@ export function buildExerciseList(sets, { now }) {
     .map((entry) => ({
       name: entry.name,
       heaviest: entry.heaviest,
+      weightMode: entry.weightMode ?? "total",
       lastAt: entry.lastAt,
       sessionCount: entry.sessions.size,
       direction: directions.get(entry.name) ?? null,
@@ -522,6 +538,7 @@ export function buildLatestRecords(sets, { limit = 8 } = {}) {
       weight: set.weight,
       reps: set.reps,
       at: set.at,
+      weightMode: set.weightMode,
     }));
 }
 
@@ -612,33 +629,60 @@ export function buildExerciseSeries(sets, { name, now, days }) {
  * Section 5.4. Best weight per rep count, and whether that best was set inside
  * the period. A slot with nothing in it stays in the grid: the hole is the
  * information.
+ *
+ * A set counts for every rep count below it, the owner's rule: 90 kg × 3 is
+ * also 90 kg for 2 and for 1, so slot n holds the heaviest weight of any set
+ * of at least n reps - a set of 15 fills all twelve. On a tie the earlier set
+ * holds it, and on the same day the one at the slot's own rep count.
+ * `fromReps` is how many reps the holding set had.
+ *
+ * A slot filled from a longer set is never a new record (`isNewInPeriod`
+ * stays false): the set was not that, and a first set of ten must not light
+ * ten tiles. Only the personal_record flag says what is new, and it is still
+ * worked out per exact rep count by the service.
+ *
+ * A drop set holds no record, as keepRecordEligible in weightliftingService
+ * has it; warm-ups and failed sets never reach this far.
  */
 export function buildRepLadder(sets, { name, now, days }) {
   const from = days === null || days === undefined ? null : now - days * DAY_MS;
-  const mine = forExercise(sets, name);
+  const mine = forExercise(sets, name).filter((set) => set.setType !== "drop");
   const bestByRep = new Map();
 
   for (const set of mine) {
-    if (set.reps < 1 || set.reps > REP_LADDER_SLOTS) {
+    if (set.reps < 1) {
       continue;
     }
 
-    const existing = bestByRep.get(set.reps);
+    for (let reps = 1; reps <= Math.min(set.reps, REP_LADDER_SLOTS); reps += 1) {
+      const existing = bestByRep.get(reps);
+      const better =
+        !existing ||
+        set.weight > existing.weight ||
+        (set.weight === existing.weight && set.at < existing.at) ||
+        (set.weight === existing.weight &&
+          set.at === existing.at &&
+          set.reps === reps &&
+          existing.fromReps !== reps);
 
-    if (!existing || set.weight > existing.weight) {
-      bestByRep.set(set.reps, { weight: set.weight, at: set.at });
+      if (better) {
+        bestByRep.set(reps, { weight: set.weight, at: set.at, fromReps: set.reps });
+      }
     }
   }
 
   return Array.from({ length: REP_LADDER_SLOTS }, (_, index) => {
     const reps = index + 1;
     const best = bestByRep.get(reps) ?? null;
+    const isDerived = best !== null && best.fromReps !== reps;
 
     return {
       reps,
       weight: best?.weight ?? null,
       at: best?.at ?? null,
-      isNewInPeriod: best !== null && from !== null && best.at >= from,
+      fromReps: best?.fromReps ?? null,
+      isDerived,
+      isNewInPeriod: best !== null && !isDerived && from !== null && best.at >= from,
     };
   });
 }

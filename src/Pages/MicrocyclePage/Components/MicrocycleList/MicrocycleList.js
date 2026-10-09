@@ -46,6 +46,8 @@ import {
         ThemedTitle } from "../../../../Resources/ThemedComponents";
 import { formatDate, parseCustomDate } from "../../../../Utils/dateUtils";
 import { requestOpenQuickWorkoutMenu } from "../../../../Utils/quickWorkoutMenuEvents";
+import { STARTED_FROM } from "@utils/startedFrom";
+import { workoutDisplayName } from "@utils/workoutTypeLabel";
 import Delete from "../../../../Resources/Icons/UI-icons/Delete";
 import {
   DEFAULT_SICKNESS_TYPE,
@@ -297,7 +299,8 @@ const MicrocycleList = ({
           return {
             key: workout.workout_id,
             icon: found?.Icon ?? null,
-            iconLabel: getWorkoutIconShortLabel(found) ?? workout.label ?? workoutType,
+            iconLabel:
+              getWorkoutIconShortLabel(found) ?? workoutDisplayName(workout.label, t, workoutType),
             completed: workoutCompleted,
             hasPersonalRecord: Number(workout.has_personal_record) === 1,
             sickCompleted: sick && workoutCompleted,
@@ -563,6 +566,8 @@ const MicrocycleList = ({
       day: selectedDay.day,
       dayId: selectedDay.dayId,
       programId: program_id,
+      // For whatever the start sheet creates from here.
+      startedFrom: STARTED_FROM.PROGRAM,
     });
     setSelectedDay(null);
   };
@@ -861,6 +866,7 @@ const MicrocycleList = ({
         workoutId,
         programId: program_id,
         date,
+        startedFrom: STARTED_FROM.PROGRAM,
       });
 
       if (!copiedWorkoutId) {
@@ -1042,7 +1048,8 @@ const MicrocycleList = ({
                       setColor={palette.title}
                       numberOfLines={1}
                     >
-                      {card.workout?.label ?? card.iconLabel}
+                      {workoutDisplayName(card.workout?.label, t, card.workout?.workout_type) ??
+                        card.iconLabel}
                     </ThemedText>
                     <ThemedText
                       style={gridStyles.dropdownRowMeta}

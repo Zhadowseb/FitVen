@@ -46,6 +46,19 @@ export default {
     emptyWorkout: "Tom træning",
     startNamed: "Start {name}",
     startEmpty: "Start en tom træning",
+    firstWorkout: "Første træning",
+    firstWorkoutSub: "Tom · vælg øvelser undervejs",
+    startFirst: "Start din første træning",
+    emptyWorkoutSub: "Vælg øvelser undervejs",
+    plannedEyebrow: "Planlagt i dag",
+    continueEyebrow: "Fortsæt",
+    fromCalendar: "Fra kalenderen",
+    fromProgram: "Fra {program}",
+    noExercises: "Ingen øvelser endnu",
+    // {exercises} er common.exercises, så 1 øvelse og 2 øvelser bøjes rigtigt.
+    moreToday: "{exercises} · +{count} mere",
+    elapsed: "{minutes} min i gang",
+    startPlanned: "Start planlagt træning {name}, {exercises}",
     startFailedTitle: "Kunne ikke starte træningen",
     startFailedBody: "Prøv igen.",
     live: {
@@ -65,23 +78,20 @@ export default {
     },
   },
   split: {
+    eyebrow: "Dit split",
     unnamed: "Træning {number}",
-    title: "Træningssplit",
-    empty: "Kom i gang med at træne, så viser vi dit split her.",
-    meta: "{exercises} øvelser · {sets} sæt",
+    // Right after the seven dots; the line under them says why.
+    calculating: "Beregner…",
+    forming: "Tager form efter din første uge",
+    formingA11y: "Dit split tager form, dag {count} af 7",
+    waiting: "Viser sig, når du gentager dine træninger",
+    // {exercises} og {sets} er common.exercises og common.sets.
+    meta: "{exercises} · {sets}",
     allCount: "Alle {count}",
     openAll: "Åbn alle dine træninger",
     upNext: "{name}, næste i dit split",
   },
-  muscleGlance: {
-    title: "Sidste måned",
-    gaining: "{group} i fremgang",
-    noGain: "Ingen fremgang endnu",
-    noData: "—",
-    open: "Åbn personlige rekorder",
-  },
   workoutType: {
-    resistance: "Styrke",
     workout: "Træning",
   },
   hero: {

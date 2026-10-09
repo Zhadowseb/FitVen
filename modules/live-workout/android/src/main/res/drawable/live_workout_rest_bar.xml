@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The rest bar (6 dp): the track, and the orange part that is left. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+  <item android:id="@android:id/background">
+    <shape android:shape="rectangle">
+      <corners android:radius="3dp" />
+      <solid android:color="@color/live_workout_track" />
+    </shape>
+  </item>
+  <item android:id="@android:id/progress">
+    <scale
+      android:scaleGravity="left|center_vertical"
+      android:scaleWidth="100%">
+      <shape android:shape="rectangle">
+        <corners android:radius="3dp" />
+        <solid android:color="@color/live_workout_orange" />
+      </shape>
+    </scale>
+  </item>
+</layer-list>

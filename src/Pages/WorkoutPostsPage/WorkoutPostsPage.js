@@ -10,6 +10,7 @@ import {
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
 import { useTranslation } from "@localization";
+import { workoutDisplayName } from "@utils/workoutTypeLabel";
 
 import styles from "./WorkoutPostsPageStyle";
 import { Colors } from "../../Resources/GlobalStyling/colors";
@@ -376,7 +377,8 @@ export default function WorkoutPostsPage() {
           style={[styles.sheetTitle, { borderBottomColor: theme.cardBorder }]}
         >
           <ThemedText style={styles.sheetTitleText} setColor={titleColor}>
-            {managedPost?.title ?? t("social.posts.workoutFallback")}
+            {workoutDisplayName(managedPost?.title, t, managedPost?.workoutType) ??
+              t("social.posts.workoutFallback")}
           </ThemedText>
           <ThemedText style={styles.sheetSubtitleText} setColor={quietText}>
             {managedPost?.isPosted == null

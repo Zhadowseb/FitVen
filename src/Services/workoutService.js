@@ -2,8 +2,12 @@ import { weightliftingRepository, workoutRepository } from "../Repository";
 import { guessSplitGroups } from "@utils/splitGuess";
 import * as gymService from "./gymService";
 import * as notificationService from "./notificationService";
+import * as restCountUpService from "./restCountUpService";
 import { withTransaction } from "./shared";
 import { enqueueSync, startBackgroundSync } from "./syncScheduler";
+import { getCurrentStoredTimestampSeconds } from "@utils/timeUtils";
+import { findPausedWorkoutInProgress } from "@utils/workoutClock";
+import { notifyWorkoutDataChanged } from "@utils/workoutDataEvents";
 import {
   clearWorkoutPostStatus,
   getWorkoutPostStatus,
@@ -89,6 +93,14 @@ async function createCompletedWorkoutPostBestEffort(
 }
 
 async function syncWorkoutTypeInstancesInBackground(db) {
+  // Every workout-level write here ends in this - the timer started, paused,
+  // resumed, finished or restarted, a label - and it did not go through the
+  // cloudSync function of the same name that raises this. So the lock-screen
+  // card kept the clock and the sets of a workout that had been restarted,
+  // and never took up the new start; the square in the bottom navigation
+  // waited for its next poll.
+  notifyWorkoutDataChanged("workouts");
+
   try {
     pushDirtyWorkoutHierarchyInBackground(db);
   } catch (error) {
@@ -181,6 +193,28 @@ export async function getActiveWorkoutTimer(db) {
   return workoutRepository.getActiveWorkoutTimer(db);
 }
 
+/**
+ * The workout the square in the bottom navigation is about: the one whose
+ * timer is running, or else the newest paused one - started, not finished,
+ * its time banked - started less than eight hours ago (Utils/workoutClock).
+ * Null when neither, and the square is the plus or the start button again.
+ */
+export async function getWorkoutInProgress(
+  db,
+  { now = getCurrentStoredTimestampSeconds() } = {}
+) {
+  const runningWorkout = await workoutRepository.getActiveWorkoutTimer(db);
+
+  if (runningWorkout) {
+    return runningWorkout;
+  }
+
+  return findPausedWorkoutInProgress(
+    await workoutRepository.getPausedWorkouts(db),
+    now
+  );
+}
+
 export async function getStartableWorkout(db, { date }) {
   return workoutRepository.getStartableWorkout(db, { date });
 }
@@ -192,6 +226,18 @@ export async function updateWorkoutLabel(db, { workoutId, label }) {
   });
 
   syncWorkoutTypeInstancesInBackground(db);
+}
+
+/**
+ * The workout's sync_id - what the split pins it by - given one first if it
+ * has none, which is then uploaded like any change.
+ */
+export async function ensureWorkoutSyncId(db, workoutId) {
+  const syncId = await workoutRepository.ensureWorkoutSyncId(db, workoutId);
+
+  syncWorkoutTypeInstancesInBackground(db);
+
+  return syncId;
 }
 
 export async function persistWorkoutTimerState(
@@ -293,6 +339,10 @@ export async function finishWorkout(
   db,
   { workoutId, elapsedTime, createPost = true }
 ) {
+  // A rest being counted up after the last set ends with the workout, and is
+  // written (Utils/restCountUp.js).
+  await restCountUpService.finishRestCountUp(db, { workoutId });
+
   await withTransaction(db, async () => {
     await workoutRepository.persistWorkoutTimerState(db, {
       workoutId,
@@ -473,13 +523,6 @@ function startOfLocalDay(isoDate) {
 }
 
 /**
- * Whole days since the last finished workout of any type, or null when there
- * has never been one.
- *
- * Calendar days, not elapsed milliseconds: a workout finished yesterday
- * evening is one day ago at nine this morning, not zero.
- */
-/**
  * What is already on today, unfinished.
  *
  * Home leads with this rather than with a suggestion from the split: somebody
@@ -490,6 +533,10 @@ function startOfLocalDay(isoDate) {
  * recently made - and `count` is how many are open in total, so the screen can
  * say whether there is more than one. A running one carries its timer, so
  * Home can show how long it has been going.
+ *
+ * `isStarted` is true once it has ever been started - running, or paused -
+ * and the counts, the program and the day are what the planned card on Home
+ * draws and opens the workout with.
  */
 export async function getOpenWorkoutsToday(db, { now = Date.now() } = {}) {
   const rows = await workoutRepository.getOpenWorkoutsForDate(db, {
@@ -504,13 +551,27 @@ export async function getOpenWorkoutsToday(db, { now = Date.now() } = {}) {
           name: rows[0].label ?? rows[0].workout_type ?? null,
           workoutType: rows[0].workout_type ?? null,
           isRunning: rows[0].timer_start !== null,
+          isStarted: rows[0].original_start_time !== null && rows[0].original_start_time !== undefined,
           timerStart: rows[0].timer_start ?? null,
           elapsedTime: rows[0].elapsed_time ?? 0,
+          exerciseCount: Number(rows[0].exercise_count) || 0,
+          setCount: Number(rows[0].set_count) || 0,
+          programId: rows[0].program_id ?? null,
+          programName: rows[0].program_name ?? null,
+          date: rows[0].date || rows[0].day_date || null,
+          day: rows[0].day ?? null,
         }
       : null,
   };
 }
 
+/**
+ * Whole days since the last finished workout of any type, or null when there
+ * has never been one.
+ *
+ * Calendar days, not elapsed milliseconds: a workout finished yesterday
+ * evening is one day ago at nine this morning, not zero.
+ */
 export async function getDaysSinceLastWorkout(db, { now = Date.now() } = {}) {
   const lastDate = await weightliftingRepository.getLastCompletedWorkoutDate(db);
   const lastAt = startOfLocalDay(lastDate);
@@ -527,10 +588,19 @@ export async function getDaysSinceLastWorkout(db, { now = Date.now() } = {}) {
 }
 
 /**
+ * The local start of the day the first workout of any type was finished, in
+ * ms, or null when none has been. Home's split waits a week from it
+ * (splitFormingState in Utils/splitForming.js).
+ */
+export async function getFirstWorkoutAt(db) {
+  return startOfLocalDay(await weightliftingRepository.getFirstCompletedWorkoutDate(db));
+}
+
+/**
  * The split the person is actually running, as far as their history shows one.
  *
- * Empty when there is no recognisable split - Home then offers an empty
- * workout and leaves the row out rather than filling it with a guess.
+ * Empty when there is no recognisable split - Home then offers the empty
+ * workout, and shows the split still taking shape rather than a guess.
  */
 export async function getSplitGroups(db, { now = Date.now() } = {}) {
   const rows = await weightliftingRepository.getCompletedStrengthWorkoutsWithExercises(

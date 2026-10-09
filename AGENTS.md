@@ -19,8 +19,10 @@ Keep the root guide short and place domain-specific rules in closer `AGENTS.md` 
 npm run start          # Expo dev client
 npm run android        # native run
 npm test               # every check, including the doc drift check
-npm run version:auto   # right after creating a work branch
-npm run version:status # verify the branch/version state
+npm run version:auto   # right after creating a work branch: makes its changelog fragment
+npm run pr:check       # is this branch ready to merge? Run it before opening a PR
+npm run flow:state     # branch, worktrees, open PRs: what the session-start hook prints
+npm run release:plan   # what a release would hold, and what it is called
 ```
 
 There is no linter and no type checking. `npm test` covers a handful of
@@ -57,6 +59,14 @@ The one deliberate exception is auth: Login, Register and Profile reach
    file. `npm test` fails if one reappears.
 5. **`src/Sync/` only runs what `App.js` mounts.** See `src/Sync/AGENTS.md`.
 
+## Finding Code Without Reading Everything
+
+Read `docs/MAP.md` before you grep. It maps each feature to its service,
+repository and screens, lists the sections of the four files too large to read
+whole, and names what to skip: `.claude/worktrees/` (copies of this repo, never
+search it), `data/`, and the dated audit and review files in `docs/`. Open big
+files by slice, not from the top.
+
 ## Global Working Rules
 
 - Prefer small, focused changes over large refactors.
@@ -73,13 +83,14 @@ Before editing any file:
 1. Run `git branch --show-current` and `git status --short`.
 2. Confirm the current branch clearly matches the requested work. If it does not, stop and propose a concrete branch name before editing.
 3. Review existing local changes before switching branches.
-4. After creating or switching to a work branch, run `npm run version:auto` before making further version edits.
+4. After creating a work branch, run `npm run version:auto`. It makes `changelog.d/<branch>.md`; it does not
+   touch any version. A work branch never edits `package.json`'s version, `app.json`'s version or `CHANGELOG.md`.
 
 Before handoff:
 
-1. Run `npm run version:status`.
-2. Verify that the changelog contains the current branch version and describes the actual changes. Read only the top: `sed -n '1,60p' CHANGELOG.md`. The current version is always first, and the rest is history you do not need.
-3. Run `npm test` and inspect `git diff --check`.
+1. Run `npm run pr:check`. It must say Ready to merge: a valid changelog fragment, the versions and `CHANGELOG.md` left alone, no conflict markers.
+2. Read your fragment in `changelog.d/`. It has to describe what the branch actually changed, not a plan.
+3. Run `npm test`.
 4. Report the current branch, validation results, and any uncommitted or unpushed changes explicitly.
 
 ## GitHub Issue Fixes
@@ -103,14 +114,23 @@ Before handoff:
 - If the current branch name no longer matches the requested work, suggest creating a new branch before editing files.
 - When suggesting a branch, propose a concrete branch name instead of asking an open-ended question.
 
+## Several Chats At Once
+
+Work happens in several chats at the same time, so the flow is built to let PRs be merged in any order.
+
+- **Each chat works in its own git worktree**, not in the shared checkout: `git worktree add ../FitVen-<name> -b <type>/<name> origin/master`. Switching branches in a checkout another chat is using pulls the files out from under it.
+- **A branch touches only its own files for the bookkeeping.** Its changelog entry is its own fragment in `changelog.d/`. It does not edit `CHANGELOG.md` or any version. The release commit folds the fragments in and sets the versions.
+- **`npm run flow:state`** shows the branch, the worktrees and every open PR with its merge state; the session-start hook prints it. **`npm run pr:check`** says whether a branch is ready to merge, and CI runs the same check on every PR.
+- **Ask the `git-steward` agent** (`.claude/agents/git-steward.md`) where to start a branch, whether two PRs will conflict and which goes first, whether a PR is ready, and what a release holds. It reads the real state and answers with commands; it advises and does not push or merge.
+- Only the user says a PR may be merged, and CI must be green. Never `gh pr merge --admin`, never auto-merge, never merge on another chat's say-so. Stage files by explicit path.
+
 ## Versioning And Changelog
 
-- After creating or switching to a work branch, use `npm run version:auto` before making further version edits so the branch version is derived from its base commit.
-- Use `npm run version:status` whenever you need to verify the current branch/version state.
-- Prefer branch names like `major/...`, `minor/...`, `fix/...`, or `release/x.y.z`.
-- Use `npm run release:prepare -- <version>` for stable releases.
-- If a release closes one version line and the next work should start the next minor line, use `npm run version:sync -- <nextMinor>.0` on the first follow-up branch before continuing normal branch versioning.
-- See `docs/VERSIONING.md` for the full workflow and branch rules.
+- Branch names are `major/...`, `minor/...`, `fix/...`, `breaking/...` (or `feat/...`), in lower case. The prefix decides what the branch counts as in the next release.
+- A work branch has a changelog fragment, `changelog.d/<branch>.md`, and leaves `CHANGELOG.md` and every version alone. `changelog.d/README.md` explains the format.
+- A release is its own small PR on a branch named `minor/release-<version>` (`release/...` is blocked by the ruleset): `npm run release:plan` says what it holds and what to call it, `npm run release:prepare -- <version>` folds the fragments into a dated entry, sets both versions and removes the fragments.
+- If a release closes one version line and the next work should start the next minor line, use `npm run version:sync -- <nextMinor>.0`.
+- See `docs/VERSIONING.md` for the full workflow, the order to merge in, and store tags.
 
 ## Keeping These Guides True
 
@@ -150,3 +170,4 @@ looks for, edit its brief, not the workflow. See
 - `src/Database/AGENTS.md`: schema and data safety
 - `src/Services/AGENTS.md`: the cloud sync field checklist
 - `src/Sync/AGENTS.md`: which sync components actually run
+- `modules/live-workout/AGENTS.md`: the lock-screen card during a workout - native code in `modules/` and `targets/`, and the rules JS, Swift and Kotlin share

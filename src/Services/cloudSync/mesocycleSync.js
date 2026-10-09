@@ -137,6 +137,7 @@ export async function uploadDirtyMesocycles(
 
     await programRepository.markMesocycleSynced(db, {
       mesocycleId: localMesocycle.mesocycle_id,
+      expectedSyncVersion: localMesocycle.sync_version,
       cloudMesocycleId,
       remoteLocalMesocycleId,
       syncId: normalizeSyncId(syncResult.cloudRecord?.sync_id),
@@ -333,8 +334,9 @@ async function reconcileMesocyclesFromCloud(db, userId) {
 
       if (Number(localMesocycle.needs_sync) === 1) {
         if (compareEntitySyncVersions(localMesocycle, cloudMesocycle) < 0) {
-          await programRepository.updateMesocycleFromCloud(db, {
+          const applied = await programRepository.updateMesocycleFromCloud(db, {
             mesocycleId: localMesocycle.mesocycle_id,
+            expectedSyncVersion: localMesocycle.sync_version,
             cloudMesocycleId,
             remoteLocalMesocycleId: localMesocycleId,
             syncId: cloudSyncId,
@@ -346,7 +348,7 @@ async function reconcileMesocyclesFromCloud(db, userId) {
             focus: comparableCloudMesocycle.focus,
             done: comparableCloudMesocycle.done,
           });
-          downloadedCount += 1;
+          downloadedCount += applied ? 1 : 0;
         } else if (
           areComparableMesocyclesEqual(
             comparableLocalMesocycle,
@@ -355,6 +357,7 @@ async function reconcileMesocyclesFromCloud(db, userId) {
         ) {
           await programRepository.markMesocycleSynced(db, {
             mesocycleId: localMesocycle.mesocycle_id,
+            expectedSyncVersion: localMesocycle.sync_version,
             cloudMesocycleId,
             remoteLocalMesocycleId: localMesocycleId,
             syncId: cloudSyncId,
@@ -396,6 +399,7 @@ async function reconcileMesocyclesFromCloud(db, userId) {
         ) {
           await programRepository.markMesocycleSynced(db, {
             mesocycleId: localMesocycle.mesocycle_id,
+            expectedSyncVersion: localMesocycle.sync_version,
             cloudMesocycleId,
             remoteLocalMesocycleId: localMesocycleId,
             syncId: cloudSyncId,
@@ -406,8 +410,9 @@ async function reconcileMesocyclesFromCloud(db, userId) {
         continue;
       }
 
-      await programRepository.updateMesocycleFromCloud(db, {
+      const applied = await programRepository.updateMesocycleFromCloud(db, {
         mesocycleId: localMesocycle.mesocycle_id,
+        expectedSyncVersion: localMesocycle.sync_version,
         cloudMesocycleId,
         remoteLocalMesocycleId: localMesocycleId,
         syncId: cloudSyncId,
@@ -419,6 +424,11 @@ async function reconcileMesocyclesFromCloud(db, userId) {
         focus: comparableCloudMesocycle.focus,
         done: comparableCloudMesocycle.done,
       });
+
+      if (!applied) {
+        // The user wrote to it since it was read, and that write goes up.
+        continue;
+      }
 
       const updatedMesocycle = {
         ...localMesocycle,

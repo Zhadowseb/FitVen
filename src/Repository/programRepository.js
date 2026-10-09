@@ -1,5 +1,11 @@
 import { createNextSyncVersion, SQLITE_UUID_SQL } from "../Utils/syncUtils";
 import { normalizeIsoDateString } from "../Utils/dateUtils";
+import {
+  CURRENT_WEIGHT_MODES_SQL,
+  convertWeightSql,
+  currentWeightModeSql,
+  totalLoadSql,
+} from "@utils/weightMode";
 
 function normalizeSqliteParam(value) {
   if (value === undefined) {
@@ -172,10 +178,13 @@ export async function createProgramFromCloud(
   );
 }
 
+// Writes only while the row is still at `expectedSyncVersion`, and says whether
+// it did. See updateWorkoutFromCloud below, which this mirrors.
 export async function updateProgramFromCloud(
   db,
   {
     programId,
+    expectedSyncVersion,
     cloudProgramId,
     remoteLocalProgramId,
     syncId,
@@ -186,7 +195,11 @@ export async function updateProgramFromCloud(
     status,
   }
 ) {
-  await db.runAsync(
+  if (expectedSyncVersion === undefined) {
+    throw new Error("updateProgramFromCloud needs the expectedSyncVersion it read.");
+  }
+
+  const result = await db.runAsync(
     `UPDATE Program
      SET cloud_program_id = ?,
          remote_local_program_id = ?,
@@ -197,7 +210,8 @@ export async function updateProgramFromCloud(
          start_date = ?,
          status = ?,
          needs_sync = 0
-     WHERE program_id = ?;`,
+     WHERE program_id = ?
+       AND sync_version IS ?;`,
     [
       cloudProgramId,
       remoteLocalProgramId,
@@ -208,14 +222,20 @@ export async function updateProgramFromCloud(
       startDate,
       status,
       programId,
+      expectedSyncVersion,
     ]
   );
+
+  return result.changes > 0;
 }
 
+// Clears needs_sync only while the row is still at `expectedSyncVersion`. See
+// markWorkoutSynced below, which this mirrors.
 export async function markProgramSynced(
   db,
   {
     programId,
+    expectedSyncVersion,
     cloudProgramId,
     remoteLocalProgramId = null,
     syncId = null,
@@ -223,7 +243,11 @@ export async function markProgramSynced(
     deletedAt = null,
   }
 ) {
-  await db.runAsync(
+  if (expectedSyncVersion === undefined) {
+    throw new Error("markProgramSynced needs the expectedSyncVersion it read.");
+  }
+
+  const result = await db.runAsync(
     `UPDATE Program
      SET cloud_program_id = ?,
          remote_local_program_id = COALESCE(?, remote_local_program_id, program_id),
@@ -231,18 +255,41 @@ export async function markProgramSynced(
          sync_version = COALESCE(?, sync_version),
          deleted_at = ?,
          needs_sync = 0
-     WHERE program_id = ?;`,
-    [
+     WHERE program_id = ?
+       AND sync_version IS ?;`,
+    sqliteParams([
       cloudProgramId,
       remoteLocalProgramId,
       syncId,
       syncVersion,
       deletedAt,
       programId,
-    ]
+      expectedSyncVersion,
+    ])
   );
+
+  if (result.changes > 0) {
+    return;
+  }
+
+  await updateProgramCloudIdentity(db, {
+    programId,
+    cloudProgramId,
+    remoteLocalProgramId,
+    syncId,
+  });
 }
 
+// Records which cloud row this is. The cloud's sync_version and deleted_at are
+// taken only by a row with nothing to upload: a row with needs_sync = 1 keeps
+// its own, because they belong to its edit, and its upload compares its
+// version with the cloud's to decide which of the two wins. A child's upload
+// looks its parent up through here (ensureProgramCloudIdentity and the six
+// like it), so without this a parent the cloud had just beaten took the
+// cloud's version and went up over the newer edit on the next pass, and a
+// parent edited mid-pass was set back to the version before its edit.
+// Every update*CloudIdentity in this file and in weightliftingRepository
+// follows the same rule.
 export async function updateProgramCloudIdentity(
   db,
   {
@@ -259,17 +306,17 @@ export async function updateProgramCloudIdentity(
      SET cloud_program_id = ?,
          remote_local_program_id = COALESCE(?, remote_local_program_id, program_id),
          sync_id = COALESCE(?, sync_id),
-         sync_version = COALESCE(?, sync_version),
-         deleted_at = COALESCE(?, deleted_at)
+         sync_version = CASE WHEN needs_sync = 1 THEN sync_version ELSE COALESCE(?, sync_version) END,
+         deleted_at = CASE WHEN needs_sync = 1 THEN deleted_at ELSE COALESCE(?, deleted_at) END
      WHERE program_id = ?;`,
-    [
+    sqliteParams([
       cloudProgramId,
       remoteLocalProgramId,
       syncId,
       syncVersion,
       deletedAt,
       programId,
-    ]
+    ])
   );
 }
 
@@ -378,10 +425,13 @@ export async function createMesocycleFromCloud(
   );
 }
 
+// Writes only while the row is still at `expectedSyncVersion`, and says whether
+// it did. See updateWorkoutFromCloud below, which this mirrors.
 export async function updateMesocycleFromCloud(
   db,
   {
     mesocycleId,
+    expectedSyncVersion,
     cloudMesocycleId,
     remoteLocalMesocycleId,
     syncId,
@@ -394,7 +444,11 @@ export async function updateMesocycleFromCloud(
     done,
   }
 ) {
-  await db.runAsync(
+  if (expectedSyncVersion === undefined) {
+    throw new Error("updateMesocycleFromCloud needs the expectedSyncVersion it read.");
+  }
+
+  const result = await db.runAsync(
     `UPDATE Mesocycle
      SET cloud_mesocycle_id = ?,
          remote_local_mesocycle_id = ?,
@@ -407,7 +461,8 @@ export async function updateMesocycleFromCloud(
          focus = ?,
          done = ?,
          needs_sync = 0
-     WHERE mesocycle_id = ?;`,
+     WHERE mesocycle_id = ?
+       AND sync_version IS ?;`,
     [
       cloudMesocycleId,
       remoteLocalMesocycleId,
@@ -420,14 +475,20 @@ export async function updateMesocycleFromCloud(
       focus,
       done ? 1 : 0,
       mesocycleId,
+      expectedSyncVersion,
     ]
   );
+
+  return result.changes > 0;
 }
 
+// Clears needs_sync only while the row is still at `expectedSyncVersion`. See
+// markWorkoutSynced below, which this mirrors.
 export async function markMesocycleSynced(
   db,
   {
     mesocycleId,
+    expectedSyncVersion,
     cloudMesocycleId,
     remoteLocalMesocycleId = null,
     syncId = null,
@@ -435,7 +496,11 @@ export async function markMesocycleSynced(
     deletedAt = null,
   }
 ) {
-  await db.runAsync(
+  if (expectedSyncVersion === undefined) {
+    throw new Error("markMesocycleSynced needs the expectedSyncVersion it read.");
+  }
+
+  const result = await db.runAsync(
     `UPDATE Mesocycle
      SET cloud_mesocycle_id = ?,
          remote_local_mesocycle_id = COALESCE(?, remote_local_mesocycle_id, mesocycle_id),
@@ -443,18 +508,32 @@ export async function markMesocycleSynced(
          sync_version = COALESCE(?, sync_version),
          deleted_at = ?,
          needs_sync = 0
-     WHERE mesocycle_id = ?;`,
-    [
+     WHERE mesocycle_id = ?
+       AND sync_version IS ?;`,
+    sqliteParams([
       cloudMesocycleId,
       remoteLocalMesocycleId,
       syncId,
       syncVersion,
       deletedAt,
       mesocycleId,
-    ]
+      expectedSyncVersion,
+    ])
   );
+
+  if (result.changes > 0) {
+    return;
+  }
+
+  await updateMesocycleCloudIdentity(db, {
+    mesocycleId,
+    cloudMesocycleId,
+    remoteLocalMesocycleId,
+    syncId,
+  });
 }
 
+// A row waiting to upload keeps its own version. See updateProgramCloudIdentity.
 export async function updateMesocycleCloudIdentity(
   db,
   {
@@ -471,17 +550,17 @@ export async function updateMesocycleCloudIdentity(
      SET cloud_mesocycle_id = ?,
          remote_local_mesocycle_id = COALESCE(?, remote_local_mesocycle_id, mesocycle_id),
          sync_id = COALESCE(?, sync_id),
-         sync_version = COALESCE(?, sync_version),
-         deleted_at = COALESCE(?, deleted_at)
+         sync_version = CASE WHEN needs_sync = 1 THEN sync_version ELSE COALESCE(?, sync_version) END,
+         deleted_at = CASE WHEN needs_sync = 1 THEN deleted_at ELSE COALESCE(?, deleted_at) END
      WHERE mesocycle_id = ?;`,
-    [
+    sqliteParams([
       cloudMesocycleId,
       remoteLocalMesocycleId,
       syncId,
       syncVersion,
       deletedAt,
       mesocycleId,
-    ]
+    ])
   );
 }
 
@@ -582,10 +661,13 @@ export async function createMicrocycleFromCloud(
   );
 }
 
+// Writes only while the row is still at `expectedSyncVersion`, and says whether
+// it did. See updateWorkoutFromCloud below, which this mirrors.
 export async function updateMicrocycleFromCloud(
   db,
   {
     microcycleId,
+    expectedSyncVersion,
     cloudMicrocycleId,
     syncId,
     syncVersion,
@@ -596,7 +678,11 @@ export async function updateMicrocycleFromCloud(
     done,
   }
 ) {
-  await db.runAsync(
+  if (expectedSyncVersion === undefined) {
+    throw new Error("updateMicrocycleFromCloud needs the expectedSyncVersion it read.");
+  }
+
+  const result = await db.runAsync(
     `UPDATE Microcycle
      SET cloud_microcycle_id = ?,
          sync_id = ?,
@@ -607,7 +693,8 @@ export async function updateMicrocycleFromCloud(
          focus = ?,
          done = ?,
          needs_sync = 0
-     WHERE microcycle_id = ?;`,
+     WHERE microcycle_id = ?
+       AND sync_version IS ?;`,
     [
       cloudMicrocycleId,
       syncId,
@@ -618,26 +705,61 @@ export async function updateMicrocycleFromCloud(
       focus,
       done ? 1 : 0,
       microcycleId,
+      expectedSyncVersion,
     ]
   );
+
+  return result.changes > 0;
 }
 
+// Clears needs_sync only while the row is still at `expectedSyncVersion`. See
+// markWorkoutSynced below, which this mirrors.
 export async function markMicrocycleSynced(
   db,
-  { microcycleId, cloudMicrocycleId, syncId = null, syncVersion = null, deletedAt = null }
+  {
+    microcycleId,
+    expectedSyncVersion,
+    cloudMicrocycleId,
+    syncId = null,
+    syncVersion = null,
+    deletedAt = null,
+  }
 ) {
-  await db.runAsync(
+  if (expectedSyncVersion === undefined) {
+    throw new Error("markMicrocycleSynced needs the expectedSyncVersion it read.");
+  }
+
+  const result = await db.runAsync(
     `UPDATE Microcycle
      SET cloud_microcycle_id = ?,
          sync_id = COALESCE(?, sync_id),
          sync_version = COALESCE(?, sync_version),
          deleted_at = ?,
          needs_sync = 0
-     WHERE microcycle_id = ?;`,
-    [cloudMicrocycleId, syncId, syncVersion, deletedAt, microcycleId]
+     WHERE microcycle_id = ?
+       AND sync_version IS ?;`,
+    sqliteParams([
+      cloudMicrocycleId,
+      syncId,
+      syncVersion,
+      deletedAt,
+      microcycleId,
+      expectedSyncVersion,
+    ])
   );
+
+  if (result.changes > 0) {
+    return;
+  }
+
+  await updateMicrocycleCloudIdentity(db, {
+    microcycleId,
+    cloudMicrocycleId,
+    syncId,
+  });
 }
 
+// A row waiting to upload keeps its own version. See updateProgramCloudIdentity.
 export async function updateMicrocycleCloudIdentity(
   db,
   { microcycleId, cloudMicrocycleId, syncId = null, syncVersion = null, deletedAt = null }
@@ -646,10 +768,10 @@ export async function updateMicrocycleCloudIdentity(
     `UPDATE Microcycle
      SET cloud_microcycle_id = ?,
          sync_id = COALESCE(?, sync_id),
-         sync_version = COALESCE(?, sync_version),
-         deleted_at = COALESCE(?, deleted_at)
+         sync_version = CASE WHEN needs_sync = 1 THEN sync_version ELSE COALESCE(?, sync_version) END,
+         deleted_at = CASE WHEN needs_sync = 1 THEN deleted_at ELSE COALESCE(?, deleted_at) END
      WHERE microcycle_id = ?;`,
-    [cloudMicrocycleId, syncId, syncVersion, deletedAt, microcycleId]
+    sqliteParams([cloudMicrocycleId, syncId, syncVersion, deletedAt, microcycleId])
   );
 }
 
@@ -1185,6 +1307,7 @@ export async function getWorkoutsBetweenDates(db, { startIsoDate, endIsoDate }) 
   return db.getAllAsync(
     `SELECT
         w.workout_id,
+        w.sync_id,
         w.workout_type,
         ${workoutDisplayLabelSql("w", "wt")} AS label,
         w.date,
@@ -1325,6 +1448,44 @@ export async function setWorkoutFavorite(db, { workoutId, isFavorite }) {
   ]);
 }
 
+// How many exercises a workout has, and sets in them: only the exercises
+// that are still there, and their sets that are still there. The library,
+// the split and Home's planned card (workoutRepository.getOpenWorkoutsForDate)
+// all count with these two, so they cannot drift apart. A deleted exercise
+// keeps its sets' rows, so counting sets without it would count the sets of
+// an exercise that is gone.
+export function workoutExerciseCountSql(workoutAlias = "w") {
+  return `(SELECT COUNT(*)
+           FROM Exercise_Instance ei
+          WHERE ei.workout_type_instance_id = ${workoutAlias}.workout_id
+            AND ei.deleted_at IS NULL)`;
+}
+
+export function workoutSetCountSql(workoutAlias = "w", { doneOnly = false } = {}) {
+  return `(SELECT COUNT(*)
+           FROM "Set" s
+           JOIN Exercise_Instance ei ON ei.exercise_instance_id = s.exercise_instance_id
+          WHERE ei.workout_type_instance_id = ${workoutAlias}.workout_id
+            AND ei.deleted_at IS NULL
+            AND s.deleted_at IS NULL${doneOnly ? `
+            AND COALESCE(s.done, 0) = 1` : ""})`;
+}
+
+// The workouts the library lists, as `w` with its day, program and type: a
+// workout whose day and program are still there. The split's name lookup
+// reads the same rows in the same order, so Home and the Train tab resolve a
+// split from the same workouts.
+const LIBRARY_ROWS_SQL = `
+     FROM Workout_Type_Instance w
+     JOIN Day d ON d.day_id = w.day_id
+     LEFT JOIN Program p ON p.program_id = d.program_id
+     LEFT JOIN Workout_Type wt ON wt.name = w.workout_type`;
+const LIBRARY_ROWS_WHERE_SQL = `
+     WHERE w.deleted_at IS NULL
+       AND d.deleted_at IS NULL
+       AND (p.program_id IS NULL OR p.deleted_at IS NULL)`;
+const LIBRARY_ORDER_SQL = "ORDER BY date_iso DESC, w.workout_id DESC";
+
 export async function getWorkoutLibrary(db, { limit = 500, offset = 0 } = {}) {
   await ensureWorkoutFavoriteTable(db);
   const workoutIsoDateSql = localDateToIsoSql("w.date");
@@ -1344,32 +1505,109 @@ export async function getWorkoutLibrary(db, { limit = 500, offset = 0 } = {}) {
         d.program_id,
         p.program_name,
         ${workoutHasPersonalRecordSql("w")} AS has_personal_record,
-        (SELECT COUNT(*)
-           FROM Exercise_Instance ei
-          WHERE ei.workout_type_instance_id = w.workout_id) AS exercise_count,
-        (SELECT COUNT(*)
-           FROM "Set" s
-           JOIN Exercise_Instance ei ON ei.exercise_instance_id = s.exercise_instance_id
-          WHERE ei.workout_type_instance_id = w.workout_id
-            AND s.deleted_at IS NULL) AS set_count,
-        (SELECT COUNT(*)
-           FROM "Set" s
-           JOIN Exercise_Instance ei ON ei.exercise_instance_id = s.exercise_instance_id
-          WHERE ei.workout_type_instance_id = w.workout_id
-            AND s.deleted_at IS NULL
-            AND COALESCE(s.done, 0) = 1) AS completed_set_count,
+        ${workoutExerciseCountSql("w")} AS exercise_count,
+        ${workoutSetCountSql("w")} AS set_count,
+        ${workoutSetCountSql("w", { doneOnly: true })} AS completed_set_count,
         CASE WHEN f.workout_id IS NULL THEN 0 ELSE 1 END AS is_favorite
+     ${LIBRARY_ROWS_SQL}
+     LEFT JOIN Workout_Favorite f ON f.workout_id = w.workout_id
+     ${LIBRARY_ROWS_WHERE_SQL}
+     ${LIBRARY_ORDER_SQL}
+     LIMIT ? OFFSET ?;`,
+    [normalizedLimit, normalizedOffset]
+  );
+}
+
+/**
+ * The newest workout of each name among the library's newest `limit`
+ * workouts, a done one and a not done one apart: what a chosen split
+ * resolves its sessions by name from (Utils/splitCard.js), without the rest
+ * of the library. Home loads it on every focus.
+ *
+ * "Name" here is the label as the library shows it, with the workout's type.
+ * The split compares names normalised in JS - "Push 2" is Push - which SQL
+ * cannot do, but a normalised name is a function of those two, so the newest
+ * workout of every normalised name is always one of these rows. The window
+ * is the library's own, so a name last used further back resolves to
+ * nothing here, as it does on the Train tab.
+ */
+export async function getNewestWorkoutOfEachName(db, { limit = 500 } = {}) {
+  const workoutIsoDateSql = localDateToIsoSql("w.date");
+  const normalizedLimit = Math.max(1, Math.trunc(Number(limit) || 500));
+
+  return db.getAllAsync(
+    `WITH library AS (
+       SELECT
+          w.workout_id,
+          w.workout_type,
+          ${workoutDisplayLabelSql("w", "wt")} AS label,
+          ${workoutIsoDateSql} AS date_iso,
+          w.done
+       ${LIBRARY_ROWS_SQL}
+       ${LIBRARY_ROWS_WHERE_SQL}
+       ${LIBRARY_ORDER_SQL}
+       LIMIT ?
+     ),
+     ranked AS (
+       SELECT
+          library.*,
+          ROW_NUMBER() OVER (
+            PARTITION BY label, workout_type, done
+            ORDER BY substr(date_iso, 1, 10) DESC, workout_id DESC
+          ) AS name_rank
+       FROM library
+       -- The split skips a row it cannot date (splitCard's localDayStart);
+       -- such a row must not stand in front of an older one it can.
+       WHERE date_iso GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*'
+     )
+     SELECT
+        ranked.workout_id,
+        ranked.workout_type,
+        ranked.label,
+        ranked.date_iso,
+        ranked.done,
+        ${workoutExerciseCountSql("ranked")} AS exercise_count,
+        ${workoutSetCountSql("ranked")} AS set_count
+     FROM ranked
+     WHERE ranked.name_rank = 1
+     ORDER BY ranked.date_iso DESC, ranked.workout_id DESC;`,
+    [normalizedLimit]
+  );
+}
+
+/**
+ * The workouts with these sync_ids that are still there - the split's pinned
+ * workouts and the copies made from them - with what the split card shows.
+ * The same deleted rules as the library: a workout, its day or its program
+ * deleted is not returned.
+ */
+export async function getWorkoutsBySyncIds(db, syncIds = []) {
+  const ids = [...new Set((syncIds ?? []).filter((id) => typeof id === "string" && id))];
+
+  if (ids.length === 0) {
+    return [];
+  }
+
+  const workoutIsoDateSql = localDateToIsoSql("w.date");
+
+  return db.getAllAsync(
+    `SELECT
+        w.workout_id,
+        w.sync_id,
+        w.workout_type,
+        w.date,
+        ${workoutIsoDateSql} AS date_iso,
+        w.done,
+        ${workoutExerciseCountSql("w")} AS exercise_count,
+        ${workoutSetCountSql("w")} AS set_count
      FROM Workout_Type_Instance w
      JOIN Day d ON d.day_id = w.day_id
      LEFT JOIN Program p ON p.program_id = d.program_id
-     LEFT JOIN Workout_Type wt ON wt.name = w.workout_type
-     LEFT JOIN Workout_Favorite f ON f.workout_id = w.workout_id
-     WHERE w.deleted_at IS NULL
+     WHERE w.sync_id IN (${ids.map(() => "?").join(", ")})
+       AND w.deleted_at IS NULL
        AND d.deleted_at IS NULL
-       AND (p.program_id IS NULL OR p.deleted_at IS NULL)
-     ORDER BY date_iso DESC, w.workout_id DESC
-     LIMIT ? OFFSET ?;`,
-    [normalizedLimit, normalizedOffset]
+       AND (p.program_id IS NULL OR p.deleted_at IS NULL);`,
+    ids
   );
 }
 
@@ -1516,17 +1754,27 @@ export async function getSetDoneStatesByDayId(db, dayId) {
   );
 }
 
+// `weight` is in the exercise's current mode (4d): a set written per side and
+// one written for both sides are converted to one form before the best is
+// picked. `weight_mode` is that form.
 export async function getCompletedStrengthSetsByProgram(db, programId) {
+  const loggedMode = "COALESCE(e.weight_mode, 'total')";
+  const currentMode = currentWeightModeSql("current_mode");
+
   return db.getAllAsync(
-    `SELECT
+    `WITH current_modes AS (${CURRENT_WEIGHT_MODES_SQL})
+     SELECT
         e.exercise_name,
-        s.weight,
+        ${convertWeightSql("s.weight", loggedMode, currentMode)} AS weight,
+        ${currentMode} AS weight_mode,
         s.reps,
         d.date AS performed_date
      FROM "Set" s
      JOIN Exercise_Instance e ON e.exercise_instance_id = s.exercise_instance_id
      JOIN Workout_Type_Instance w ON w.workout_id = e.workout_type_instance_id
      JOIN Day d ON d.day_id = w.day_id
+     LEFT JOIN current_modes current_mode
+       ON current_mode.name_key = lower(e.exercise_name)
      WHERE d.program_id = ?
        AND s.done = 1
        AND s.weight IS NOT NULL
@@ -1766,7 +2014,8 @@ export async function getProgramOverviewStats(db, programId) {
           ELSE NULL
         END), 0) AS avg_session_seconds,
         COALESCE((
-          SELECT SUM(COALESCE(s.weight, 0) * COALESCE(s.reps, 0))
+          -- What was lifted: a weight written per side counts twice (4d).
+          SELECT SUM(COALESCE(${totalLoadSql("s.weight", "e.weight_mode")}, 0) * COALESCE(s.reps, 0))
           FROM "Set" s
           JOIN Exercise_Instance e
             ON e.exercise_instance_id = s.exercise_instance_id
@@ -2248,10 +2497,13 @@ export async function createDayFromCloud(
   );
 }
 
+// Writes only while the row is still at `expectedSyncVersion`, and says whether
+// it did. See updateWorkoutFromCloud below, which this mirrors.
 export async function updateDayFromCloud(
   db,
   {
     dayId,
+    expectedSyncVersion,
     cloudDayId,
     remoteLocalDayId,
     syncId,
@@ -2265,7 +2517,11 @@ export async function updateDayFromCloud(
     isSick = false,
   }
 ) {
-  await db.runAsync(
+  if (expectedSyncVersion === undefined) {
+    throw new Error("updateDayFromCloud needs the expectedSyncVersion it read.");
+  }
+
+  const result = await db.runAsync(
     `UPDATE Day
      SET cloud_day_id = ?,
          remote_local_day_id = ?,
@@ -2279,7 +2535,8 @@ export async function updateDayFromCloud(
          done = ?,
          is_sick = ?,
          needs_sync = 0
-     WHERE day_id = ?;`,
+     WHERE day_id = ?
+       AND sync_version IS ?;`,
     [
       cloudDayId,
       remoteLocalDayId,
@@ -2293,14 +2550,20 @@ export async function updateDayFromCloud(
       done ? 1 : 0,
       isSick ? 1 : 0,
       dayId,
+      expectedSyncVersion,
     ]
   );
+
+  return result.changes > 0;
 }
 
+// Clears needs_sync only while the row is still at `expectedSyncVersion`. See
+// markWorkoutSynced below, which this mirrors.
 export async function markDaySynced(
   db,
   {
     dayId,
+    expectedSyncVersion,
     cloudDayId,
     remoteLocalDayId = null,
     syncId = null,
@@ -2308,7 +2571,11 @@ export async function markDaySynced(
     deletedAt = null,
   }
 ) {
-  await db.runAsync(
+  if (expectedSyncVersion === undefined) {
+    throw new Error("markDaySynced needs the expectedSyncVersion it read.");
+  }
+
+  const result = await db.runAsync(
     `UPDATE Day
      SET cloud_day_id = ?,
          remote_local_day_id = COALESCE(?, remote_local_day_id, day_id),
@@ -2316,11 +2583,32 @@ export async function markDaySynced(
          sync_version = COALESCE(?, sync_version),
          deleted_at = ?,
          needs_sync = 0
-     WHERE day_id = ?;`,
-    [cloudDayId, remoteLocalDayId, syncId, syncVersion, deletedAt, dayId]
+     WHERE day_id = ?
+       AND sync_version IS ?;`,
+    sqliteParams([
+      cloudDayId,
+      remoteLocalDayId,
+      syncId,
+      syncVersion,
+      deletedAt,
+      dayId,
+      expectedSyncVersion,
+    ])
   );
+
+  if (result.changes > 0) {
+    return;
+  }
+
+  await updateDayCloudIdentity(db, {
+    dayId,
+    cloudDayId,
+    remoteLocalDayId,
+    syncId,
+  });
 }
 
+// A row waiting to upload keeps its own version. See updateProgramCloudIdentity.
 export async function updateDayCloudIdentity(
   db,
   {
@@ -2337,10 +2625,10 @@ export async function updateDayCloudIdentity(
      SET cloud_day_id = ?,
          remote_local_day_id = COALESCE(?, remote_local_day_id, day_id),
          sync_id = COALESCE(?, sync_id),
-         sync_version = COALESCE(?, sync_version),
-         deleted_at = COALESCE(?, deleted_at)
+         sync_version = CASE WHEN needs_sync = 1 THEN sync_version ELSE COALESCE(?, sync_version) END,
+         deleted_at = CASE WHEN needs_sync = 1 THEN deleted_at ELSE COALESCE(?, deleted_at) END
      WHERE day_id = ?;`,
-    [cloudDayId, remoteLocalDayId, syncId, syncVersion, deletedAt, dayId]
+    sqliteParams([cloudDayId, remoteLocalDayId, syncId, syncVersion, deletedAt, dayId])
   );
 }
 
@@ -2668,6 +2956,7 @@ export async function getWorkoutsForCloudSync(db, { dirtyOnly = false } = {}) {
         gym_id,
         start_latitude,
         start_longitude,
+        started_from,
         needs_sync
      FROM Workout_Type_Instance
      ${dirtyOnly ? "WHERE needs_sync = 1" : ""}
@@ -2695,6 +2984,7 @@ export async function createWorkoutFromCloud(
     gymId = null,
     startLatitude = null,
     startLongitude = null,
+    startedFrom = null,
   }
 ) {
   return db.runAsync(
@@ -2716,8 +3006,9 @@ export async function createWorkoutFromCloud(
       elapsed_time,
       gym_id,
       start_latitude,
-      start_longitude
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?);`,
+      start_longitude,
+      started_from
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?);`,
     sqliteParams([
       cloudWorkoutTypeInstanceId,
       remoteLocalWorkoutTypeInstanceId,
@@ -2736,14 +3027,21 @@ export async function createWorkoutFromCloud(
       gymId,
       startLatitude,
       startLongitude,
+      startedFrom,
     ])
   );
 }
 
+// Writes the cloud's row over this one only while it is still at
+// `expectedSyncVersion`, the sync_version the reconcile read it at. Reconciles
+// read before their transaction, and every await in the loop lets the user
+// write, so a row can have moved on since. Such a write keeps its flag and its
+// own version, and the next pass sends it. Returns whether the row was written.
 export async function updateWorkoutFromCloud(
   db,
   {
     workoutId,
+    expectedSyncVersion,
     cloudWorkoutTypeInstanceId,
     remoteLocalWorkoutTypeInstanceId,
     syncId,
@@ -2761,9 +3059,16 @@ export async function updateWorkoutFromCloud(
     gymId = null,
     startLatitude = null,
     startLongitude = null,
+    startedFrom = null,
   }
 ) {
-  await db.runAsync(
+  if (expectedSyncVersion === undefined) {
+    throw new Error("updateWorkoutFromCloud needs the expectedSyncVersion it read.");
+  }
+
+  // started_from is kept when the cloud's is null: the cloud not knowing where
+  // a workout was started from is no reason for this phone to forget it.
+  const result = await db.runAsync(
     `UPDATE Workout_Type_Instance
      SET cloud_workout_type_instance_id = ?,
          remote_local_workout_type_instance_id = ?,
@@ -2782,8 +3087,10 @@ export async function updateWorkoutFromCloud(
          gym_id = ?,
          start_latitude = ?,
          start_longitude = ?,
+         started_from = COALESCE(?, started_from),
          needs_sync = 0
-     WHERE workout_id = ?;`,
+     WHERE workout_id = ?
+       AND sync_version IS ?;`,
     sqliteParams([
       cloudWorkoutTypeInstanceId,
       remoteLocalWorkoutTypeInstanceId,
@@ -2802,15 +3109,24 @@ export async function updateWorkoutFromCloud(
       gymId,
       startLatitude,
       startLongitude,
+      startedFrom,
       workoutId,
+      expectedSyncVersion,
     ])
   );
+
+  return result.changes > 0;
 }
 
+// Clears needs_sync only while the row is still at `expectedSyncVersion`, the
+// sync_version the caller read it at. A write that landed while the upload was
+// out keeps its flag and its own version, so the next pass sends it; the cloud
+// identity is recorded either way.
 export async function markWorkoutSynced(
   db,
   {
     workoutId,
+    expectedSyncVersion,
     cloudWorkoutTypeInstanceId,
     remoteLocalWorkoutTypeInstanceId = null,
     syncId = null,
@@ -2818,7 +3134,11 @@ export async function markWorkoutSynced(
     deletedAt = null,
   }
 ) {
-  await db.runAsync(
+  if (expectedSyncVersion === undefined) {
+    throw new Error("markWorkoutSynced needs the expectedSyncVersion it read.");
+  }
+
+  const result = await db.runAsync(
     `UPDATE Workout_Type_Instance
      SET cloud_workout_type_instance_id = ?,
          remote_local_workout_type_instance_id = COALESCE(
@@ -2830,7 +3150,8 @@ export async function markWorkoutSynced(
          sync_version = COALESCE(?, sync_version),
          deleted_at = ?,
          needs_sync = 0
-     WHERE workout_id = ?;`,
+     WHERE workout_id = ?
+       AND sync_version IS ?;`,
     sqliteParams([
       cloudWorkoutTypeInstanceId,
       remoteLocalWorkoutTypeInstanceId,
@@ -2838,10 +3159,23 @@ export async function markWorkoutSynced(
       syncVersion,
       deletedAt,
       workoutId,
+      expectedSyncVersion,
     ])
   );
+
+  if (result.changes > 0) {
+    return;
+  }
+
+  await updateWorkoutCloudIdentity(db, {
+    workoutId,
+    cloudWorkoutTypeInstanceId,
+    remoteLocalWorkoutTypeInstanceId,
+    syncId,
+  });
 }
 
+// A row waiting to upload keeps its own version. See updateProgramCloudIdentity.
 export async function updateWorkoutCloudIdentity(
   db,
   {
@@ -2862,8 +3196,8 @@ export async function updateWorkoutCloudIdentity(
            workout_id
          ),
          sync_id = COALESCE(?, sync_id),
-         sync_version = COALESCE(?, sync_version),
-         deleted_at = COALESCE(?, deleted_at)
+         sync_version = CASE WHEN needs_sync = 1 THEN sync_version ELSE COALESCE(?, sync_version) END,
+         deleted_at = CASE WHEN needs_sync = 1 THEN deleted_at ELSE COALESCE(?, deleted_at) END
      WHERE workout_id = ?;`,
     sqliteParams([
       cloudWorkoutTypeInstanceId,
@@ -3097,9 +3431,14 @@ export async function getWorkoutsByDayIds(db, dayIds) {
   );
 }
 
+/**
+ * `startedFrom` is one of STARTED_FROM (@utils/startedFrom), from the caller
+ * that knows. Stored as given: every caller passes one of the five, and the
+ * upload normalises it again before the cloud's check constraint sees it.
+ */
 export async function createWorkout(
   db,
-  { date, dayId, workoutType = null, label = workoutType }
+  { date, dayId, workoutType = null, label = workoutType, startedFrom = null }
 ) {
   const syncVersion = createNextSyncVersion();
   return db.runAsync(
@@ -3108,18 +3447,30 @@ export async function createWorkout(
       day_id,
       workout_type,
       label,
+      started_from,
       needs_sync,
       sync_id,
       sync_version
     )
-     VALUES (?, ?, ?, ?, 1, ${SQLITE_UUID_SQL}, ?);`,
-    [date, dayId, workoutType ?? label, label ?? workoutType, syncVersion]
+     VALUES (?, ?, ?, ?, ?, 1, ${SQLITE_UUID_SQL}, ?);`,
+    [
+      date,
+      dayId,
+      workoutType ?? label,
+      label ?? workoutType,
+      startedFrom,
+      syncVersion,
+    ]
   );
 }
 
+/**
+ * The copy is a new workout, so it gets its own `startedFrom` - how it was
+ * copied - rather than the one the original was started with.
+ */
 export async function copyWorkoutIntoDay(
   db,
-  { date, dayId, workoutId }
+  { date, dayId, workoutId, startedFrom = null }
 ) {
   const syncVersion = createNextSyncVersion();
   return db.runAsync(
@@ -3128,6 +3479,7 @@ export async function copyWorkoutIntoDay(
        day_id,
        workout_type,
        label,
+       started_from,
        needs_sync,
        sync_id,
        sync_version
@@ -3137,12 +3489,13 @@ export async function copyWorkoutIntoDay(
        ?,
        COALESCE(workout_type, label),
        NULLIF(label, workout_type),
+       ?,
        1,
        ${SQLITE_UUID_SQL},
        ?
      FROM Workout_Type_Instance
      WHERE workout_id = ?;`,
-    [date, dayId, syncVersion, workoutId]
+    [date, dayId, startedFrom, syncVersion, workoutId]
   );
 }
 

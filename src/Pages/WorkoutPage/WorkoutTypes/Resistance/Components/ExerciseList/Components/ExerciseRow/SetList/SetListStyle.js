@@ -49,6 +49,8 @@ export default StyleSheet.create({
     },
     reps:   {flex: 13},
     weight: {flex: 20},
+    // With the weight steppers (1e): room for [−] 100 kg [+].
+    weightWithStepper: {flex: 30},
     rpe:    {flex: 9},
     rm_percentage: {flex: 14},
     done:   {flex: 10, maxWidth: 33},
@@ -219,6 +221,37 @@ export default StyleSheet.create({
         fontSize: 11,
         fontWeight: "600",
     },
+    // [−] 100 kg [+] in one weight cell.
+    weightStepperCell: {
+        width: "100%",
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 2,
+    },
+    weightStepperValue: {
+        flex: 1,
+        width: undefined,
+        minWidth: 0,
+    },
+    // 26 x 30, no surface and no border; the hit slop makes it 44 high.
+    weightStepButton: {
+        width: 26,
+        height: 30,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    weightStepButtonDimmed: {
+        opacity: 0.35,
+    },
+    weightStepHeader: {
+        width: "100%",
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 2,
+    },
+
     undoToast: {
         marginTop: 8,
         minHeight: 42,

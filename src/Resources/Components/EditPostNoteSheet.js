@@ -11,6 +11,7 @@ import { useTranslation } from "@localization";
 import { Colors } from "../GlobalStyling/colors";
 import { useAuth } from "../../Contexts/AuthContext";
 import { socialPostService } from "../../Services";
+import { workoutDisplayName } from "@utils/workoutTypeLabel";
 import {
   ThemedBottomSheet,
   ThemedButton,
@@ -142,7 +143,8 @@ export default function EditPostNoteSheet({ post, onClose, onSaved }) {
       </ThemedText>
 
       <ThemedTitle type="h3" style={styles.postTitle} numberOfLines={2}>
-        {post?.title ?? t("home.summary.workoutSummary")}
+        {workoutDisplayName(post?.title, t, post?.workoutType) ??
+          t("home.summary.workoutSummary")}
       </ThemedTitle>
 
       {loading ? (

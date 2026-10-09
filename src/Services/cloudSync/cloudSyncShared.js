@@ -27,6 +27,8 @@ import {
   normalizeSyncVersion,
 } from "@utils/syncUtils";
 import { getStableSyncDeviceId } from "@utils/deviceIdentity";
+import { createSetDecimalsCloudColumns } from "@utils/setDecimals";
+import { createRestCountedCloudColumn } from "@utils/restCountUp";
 import {
   normalizeBooleanFlag,
   normalizeCloudTimeString,
@@ -123,6 +125,48 @@ export const SET_CLOUD_TABLE = "set";
 
 export const SET_CLOUD_SYNC_SELECT =
   "id, user_id, local_set_id, sync_id, sync_version, deleted_at, last_updated, is_deleting, delete_requested_at, local_watchers, cloud_exercise_instance_id, set_number, personal_record, pause, rpe, weight, rm_percentage, reps, done, failed, amrap, set_type, amrap_target, note";
+
+// Whether `set.weight` and `set.rpe` keep decimals in the cloud: they do once
+// 20261003090000_a-set-keeps-its-decimals.sql has run, and the app may reach
+// users first. One answer per app session, shared by everything that reads or
+// writes cloud sets - the set sync, and the workout hydration in
+// weightliftingService.js. See @utils/setDecimals.
+export const setDecimalColumns = createSetDecimalsCloudColumns({
+  onRefused: () =>
+    console.info(
+      "set.weight and set.rpe are whole numbers in the cloud; sets upload with their decimals cut off until the app restarts, and keep them on the phone."
+    ),
+});
+
+// `set.rest_counted` - a rest the app counted, not one that was planned -
+// comes with 20261005090000_a-set-knows-a-counted-rest.sql, and the app may
+// reach users first. The set sync's and the workout hydration's reads and the
+// upload go through this handle, which names the column until the cloud says
+// it is missing (see @utils/restCountUp). The queued deletes never name it.
+export const restCountedColumn = createRestCountedCloudColumn({
+  onMissing: () =>
+    console.info(
+      "set.rest_counted is missing in the cloud; sets sync without it until the app restarts, and the flag stays on the phone."
+    ),
+});
+
+/**
+ * Asks the cloud whether the set columns keep decimals, without writing
+ * anything: a filter on 0.5 kg is an empty answer from a numeric column and
+ * 22P02 from an integer one. Throws whatever comes back as an error.
+ */
+export async function probeSetDecimalColumns(userId) {
+  const { error } = await supabase
+    .from(SET_CLOUD_TABLE)
+    .select("id")
+    .eq("user_id", userId)
+    .eq("weight", 0.5)
+    .limit(1);
+
+  if (error) {
+    throw error;
+  }
+}
 
 const SYNC_WATCHERS_CLOUD_TABLE = "sync_local_watchers";
 

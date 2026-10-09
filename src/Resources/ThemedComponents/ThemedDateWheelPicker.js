@@ -232,6 +232,11 @@ export default function ThemedDateWheelPicker({
   locale: localeProp,
   title: titleProp,
   isConfirming = false,
+  // The year wheel alone, for a value of which only the year is kept - the
+  // birth year. Offered a day and a month too, a change to them went nowhere:
+  // the form kept the year, saw nothing new, and Save stayed off. Confirms
+  // the 1st of January of the chosen year.
+  yearOnly = false,
 }) {
   const { t, locale: appLocale } = useTranslation();
   const locale = localeProp ?? appLocale;
@@ -310,16 +315,15 @@ export default function ThemedDateWheelPicker({
     });
   };
 
-  const selectedDate = new Date(
-    dateParts.year,
-    dateParts.month,
-    dateParts.day
+  const selectedDate = yearOnly
+    ? new Date(dateParts.year, 0, 1)
+    : new Date(dateParts.year, dateParts.month, dateParts.day);
+  const selectedDateLabel = selectedDate.toLocaleDateString(
+    locale,
+    yearOnly
+      ? { year: "numeric" }
+      : { day: "numeric", month: "long", year: "numeric" }
   );
-  const selectedDateLabel = selectedDate.toLocaleDateString(locale, {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
 
   return (
     <Modal
@@ -350,7 +354,9 @@ export default function ThemedDateWheelPicker({
           <View style={styles.header}>
             <View>
               <ThemedText style={styles.eyebrow} setColor={primaryTextColor}>
-                {t("calendar.datePicker.eyebrow")}
+                {yearOnly
+                  ? t("calendar.datePicker.year")
+                  : t("calendar.datePicker.eyebrow")}
               </ThemedText>
               <ThemedText style={styles.title} setColor={titleColor}>
                 {title}
@@ -361,19 +367,22 @@ export default function ThemedDateWheelPicker({
             </ThemedText>
           </View>
 
-          <View style={styles.columnLabels}>
-            <ThemedText style={styles.dayLabel} setColor={quietText}>
-              {t("calendar.datePicker.day")}
-            </ThemedText>
-            <ThemedText style={styles.monthLabel} setColor={quietText}>
-              {t("calendar.datePicker.month")}
-            </ThemedText>
-            <ThemedText style={styles.yearLabel} setColor={quietText}>
-              {t("calendar.datePicker.year")}
-            </ThemedText>
-          </View>
+          {/* The year alone needs no column label: the eyebrow says it. */}
+          {yearOnly ? null : (
+            <View style={styles.columnLabels}>
+              <ThemedText style={styles.dayLabel} setColor={quietText}>
+                {t("calendar.datePicker.day")}
+              </ThemedText>
+              <ThemedText style={styles.monthLabel} setColor={quietText}>
+                {t("calendar.datePicker.month")}
+              </ThemedText>
+              <ThemedText style={styles.yearLabel} setColor={quietText}>
+                {t("calendar.datePicker.year")}
+              </ThemedText>
+            </View>
+          )}
 
-          <View style={styles.wheels}>
+          <View style={[styles.wheels, yearOnly ? styles.wheelsYearOnly : null]}>
             <View
               pointerEvents="none"
               style={[
@@ -384,28 +393,32 @@ export default function ThemedDateWheelPicker({
                 },
               ]}
             />
-            <WheelColumn
-              accessibilityLabel={t("calendar.datePicker.dayWheel")}
-              items={days}
-              selectedIndex={dateParts.day - 1}
-              onChange={(index) =>
-                updateDateParts({ ...dateParts, day: index + 1 })
-              }
-              width="24%"
-              titleColor={titleColor}
-              quietText={quietText}
-            />
-            <WheelColumn
-              accessibilityLabel={t("calendar.datePicker.monthWheel")}
-              items={availableMonths}
-              selectedIndex={dateParts.month}
-              onChange={(index) =>
-                updateDateParts({ ...dateParts, month: index })
-              }
-              width="44%"
-              titleColor={titleColor}
-              quietText={quietText}
-            />
+            {yearOnly ? null : (
+              <>
+                <WheelColumn
+                  accessibilityLabel={t("calendar.datePicker.dayWheel")}
+                  items={days}
+                  selectedIndex={dateParts.day - 1}
+                  onChange={(index) =>
+                    updateDateParts({ ...dateParts, day: index + 1 })
+                  }
+                  width="24%"
+                  titleColor={titleColor}
+                  quietText={quietText}
+                />
+                <WheelColumn
+                  accessibilityLabel={t("calendar.datePicker.monthWheel")}
+                  items={availableMonths}
+                  selectedIndex={dateParts.month}
+                  onChange={(index) =>
+                    updateDateParts({ ...dateParts, month: index })
+                  }
+                  width="44%"
+                  titleColor={titleColor}
+                  quietText={quietText}
+                />
+              </>
+            )}
             <WheelColumn
               accessibilityLabel={t("calendar.datePicker.yearWheel")}
               items={years}
@@ -416,7 +429,7 @@ export default function ThemedDateWheelPicker({
                   year: years[index] ?? dateParts.year,
                 })
               }
-              width="28%"
+              width={yearOnly ? "44%" : "28%"}
               titleColor={titleColor}
               quietText={quietText}
             />
@@ -526,6 +539,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+  },
+  // One wheel, in the middle, where the three shared the width.
+  wheelsYearOnly: {
+    marginTop: 12,
+    justifyContent: "center",
   },
   selectionBand: {
     position: "absolute",

@@ -13,18 +13,24 @@ below never executes — no matter how complete it looks.
 | Component | Mounted | What it pushes |
 |---|---|---|
 | `WorkoutTypeCatalogSync` | yes | the workout type catalog, cloud to local |
-| `ExerciseLibrarySync` | yes | the shared exercise catalog, cloud to local |
+| `ExerciseLibrarySync` | yes | the shared exercise catalog, cloud to local; then your own custom exercises both ways (`exerciseService.syncCustomExercisesWithCloud`) |
 | `SetSync` | yes | **the whole strength hierarchy**, parent first: program, block, week, day, workout type instance, exercise instance, set |
 | `WorkoutTypeInstanceSync` | yes | workout-level fields |
 | `PushNotificationRegistrationSync` | yes | the device's push token |
 | `WorkoutMusicSync` | yes | what is playing during a live workout, to `workout_music`, every 30 s while sharing is on |
 | `GymMatchSync` | yes | the centre match and the leaderboard lifts a finished workout could not complete, retried on launch and on return to the foreground |
+| `AppOpenSync` | yes | when the app was last opened, on which platform and in which version, to your own `profile_private` - at most once an hour, and only once the privacy policy this build carries has been accepted |
+| `LiveWorkoutSync` | yes | nothing to the cloud: the running strength workout to the lock screen (iOS Live Activity, Android notification) through `liveWorkoutService`, and the taps on the card's buttons back into the workout |
 
-`syncQueue.js` is not a component. It is the entry point every one of them goes
-through, and it serialises everything onto a single promise chain. The one that
-does not use it is `WorkoutMusicSync`: it reconciles nothing local, it only
-polls a music provider and writes a cloud row, so there is no parent-first
-order for it to break.
+`syncQueue.js` is not a component. It is the entry point the others go
+through, and it serialises everything onto a single promise chain. Three do
+not use it - `WorkoutMusicSync`, which polls a music provider,
+`PushNotificationRegistrationSync` and `AppOpenSync` - because they reconcile
+nothing local and only write cloud rows of their own, so there is no
+parent-first order for them to break. `LiveWorkoutSync` does not either: it
+writes nothing to the cloud, and the set it ticks off from the lock screen goes
+through `weightliftingService.updateStrengthSetDone` like a tap on the workout
+screen, which queues its own upload.
 
 ## Rules
 

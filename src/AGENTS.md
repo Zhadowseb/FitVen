@@ -71,6 +71,11 @@ This file applies to everything inside `src/`.
   files are camelCase.
 - `Utils/` is for helpers with minimal side effects. A helper that opens the
   database belongs in a service.
+- An Svg drawn over or beside something tappable is a
+  `Resources/Components/PassThroughSvg.js`, never `<Svg pointerEvents="none">`.
+  On iOS the Svg root ignores the prop and takes the tap - that is how the
+  workout timer in the bottom bar went dead on iPhone. `npm test` fails if an
+  Svg is handed `pointerEvents` again.
 
 ## Text The User Reads
 
@@ -90,6 +95,16 @@ This file applies to everything inside `src/`.
 - Dates and numbers go through `formatDate`, `formatTime` and
   `formatNumber` from `@localization`, which use the chosen language's
   locale rather than the device's.
+- Workout types are stored in English (`Resistance`, `Upperbody`, `Run`,
+  `Walk`...), and a workout nobody named has its type as its `label`. Draw a
+  type with `workoutTypeLabel` and a workout's name with
+  `workoutDisplayName(label, t, workoutType)` from
+  `src/Utils/workoutTypeLabel.js`; never render `label` or `workout_type` as
+  it is, and pass the row's type - it is what tells the type fallback from a
+  typed "Run". Only what is drawn changes - a name the user typed stays as
+  typed, and nothing stored is translated. The one case it cannot see: the
+  names the app gives a strength workout after its exercises ("Push",
+  "Legs") are stored like typed ones, so "Legs" typed on one reads "Ben".
 
 ## What "Exercise" Means
 
@@ -110,11 +125,18 @@ Five names, and they are not interchangeable:
   `src/Resources/Components/StartWorkoutSheet.js` — not in `src/Pages/`. The
   navigation is mounted in `App.js` outside the navigator.
 - The run screen is split, but only its pure parts. `Run.js` is still ~4,500
-  lines because the GPS and Bluetooth hooks are wired into its state and cannot
-  move without a device to test on. The maths that could move lives beside it in
+  lines because the Bluetooth hooks and the run-tracking calls are wired into
+  its state and cannot move without a device to test on. GPS tracking itself is
+  switched off: `locationService.startRunTracking` always fails, and the app
+  declares no foreground service (`scripts/test-no-foreground-service.js`
+  fails if one, or background location, comes back). The maths that could move lives beside it in
   `runDisplayUtils.js` (sections, route, charts), `runFormatUtils.js` (pace,
   clock, distance), `runEnduranceStats.js` and `runFlowOptions.js`, and is the
   only part with tests. Put new run maths there, not back in the screen.
+- The lock-screen card during a strength workout is native, outside `src/`:
+  `modules/live-workout` and `targets/widgets`. What it shows is decided in
+  `Utils/liveWorkout.js` and mirrored in Swift and Kotlin; see
+  `modules/live-workout/AGENTS.md` before changing either.
 - `src/Pages/WeekPage/` is outside the active user flow, but it is still a
   registered route.
 

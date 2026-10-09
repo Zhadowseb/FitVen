@@ -12,6 +12,7 @@ import MapPin from "../../../../Resources/Icons/UI-icons/MapPin";
 import { Colors, withAlpha } from "../../../../Resources/GlobalStyling/colors";
 import { formatRelativeDay, formatTimeAgo } from "../../../../Utils/dateUtils";
 import { ThemedText, UserAvatar } from "../../../../Resources/ThemedComponents";
+import { workoutDisplayName, workoutTypeLabel } from "@utils/workoutTypeLabel";
 
 // No tokens for these two: the gold bar gradient is specific to this card.
 const GOLD_BAR_FROM = "#C98F2C";
@@ -94,11 +95,18 @@ function normalizeTopSet(record, personalRecordExerciseNames, t) {
       ? weight / previousBest
       : null;
 
+  const weightDisplay =
+    record?.weightDisplay ??
+    (weight !== null ? `${weight} ${record?.unit ?? t("common.kg")}` : "");
+
   return {
     exercise,
+    // "pr. side" in the reader's language when the lift was written per side
+    // (4d). A post from before that says nothing, and reads as it always did.
     weightDisplay:
-      record?.weightDisplay ??
-      (weight !== null ? `${weight} ${record?.unit ?? t("common.kg")}` : ""),
+      weightDisplay && record?.weightMode === "per_side"
+        ? `${weightDisplay} ${t("workout.weightMode.suffix")}`
+        : weightDisplay,
     reps: normalizeNumber(record?.reps),
     weight,
     hasBaseline,
@@ -238,8 +246,9 @@ export default function WorkoutSummaryCard({
                           style={[styles.metaDot, { backgroundColor: quietText }]}
                         />
                       ) : null}
+                      {/* Stored, and posted, as the English id. */}
                       <ThemedText style={styles.workoutType} setColor={accent}>
-                        {workoutType}
+                        {workoutTypeLabel(workoutType, t)}
                       </ThemedText>
                     </>
                   ) : null}
@@ -278,7 +287,7 @@ export default function WorkoutSummaryCard({
                   setColor={titleColor}
                   numberOfLines={1}
                 >
-                  {postTitle}
+                  {workoutDisplayName(postTitle, t, workoutType) ?? postTitle}
                 </ThemedText>
               ) : null}
 

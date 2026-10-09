@@ -1,0 +1,81 @@
+name: Dev metrics
+
+# De tal paa Dev · Overblik, som kun git og GitHub kender. Maalt en gang i
+# doegnet og skrevet i public.dev_metrics, hvor siden laeser dem:
+#   release_lag      KPI-6, pr. platform, ud fra android/*- og ios/*-tags
+#   rework           S1, omarbejde inden for 14 dage (git blame, 4 uger)
+#   bug_debt         S8, aabne issues med bug, Fix eller codex-fix
+#   feature_commits  KPI-4's commit-kolonne, siden 1/9
+#
+# Arbejdet ligger i scripts/dev-metrics/. Lokalt printer
+#   node scripts/dev-metrics/index.js --dry-run
+# raekkerne og skriver ingenting.
+
+on:
+  schedule:
+    # 04:00 i Koebenhavn om sommeren (CEST, UTC+2). GitHubs cron er altid UTC,
+    # saa om vinteren (CET, UTC+1) koerer den kl. 03:00 - en time for tidligt.
+    # Det goer ikke noget for tal, der flytter sig pr. doegn.
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: dev-metrics
+  cancel-in-progress: false
+
+# Kun laeseadgang til GitHub. Skrivningen gaar til Supabase med
+# service-noeglen, og gh skal kun kunne se issues.
+permissions:
+  contents: read
+  issues: read
+
+jobs:
+  measure:
+    name: Maal og skriv dev_metrics
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # Uden de to secrets goer den ingenting, og siger det. Laengden, ikke
+      # vaerdien, som i pr-review.yml: en secret med en tom vaerdi ser
+      # praecis ud som en, der ikke findes.
+      - name: Tjek Supabase-secrets
+        id: secrets
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          echo "SUPABASE_URL: ${#SUPABASE_URL} tegn"
+          echo "SUPABASE_SERVICE_ROLE_KEY: ${#SUPABASE_SERVICE_ROLE_KEY} tegn"
+
+          if [ -n "$SUPABASE_URL" ] && [ -n "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::warning title=dev-metrics::SUPABASE_URL og SUPABASE_SERVICE_ROLE_KEY skal begge vaere sat som repository secrets. Intet er maalt eller skrevet."
+          fi
+
+      # Hele historikken og alle tags: release_lag leder efter det nyeste
+      # android/*- og ios/*-tag, og rework blamer paa foraeldre-commits.
+      # Tokenet bliver ikke liggende i .git/config; her skubbes ingenting.
+      - uses: actions/checkout@v4
+        if: steps.secrets.outputs.configured == 'true'
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
+
+      # .nvmrc, som i ci.yml. En version, et sted.
+      - uses: actions/setup-node@v4
+        if: steps.secrets.outputs.configured == 'true'
+        with:
+          node-version-file: .nvmrc
+
+      # Ingen npm ci: scriptet bruger kun det, Node selv har. Service-noeglen
+      # staar kun paa de to trin, der bruger den, og aldrig paa en action.
+      - name: Maal og skriv
+        if: steps.secrets.outputs.configured == 'true'
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/dev-metrics/index.js

@@ -11,6 +11,9 @@ export default {
     programsCount: { one: "{value} at vælge imellem", other: "{value} at vælge imellem" },
     exercises: "Øvelser",
     exercisesCount: { one: "{value} fra brugere", other: "{value} fra brugere" },
+    // Mens antallet er ukendt, og mens intet er delt endnu.
+    exercisesSub: "Lavet af brugere",
+    exercisesFirst: "Del den første",
     records: "Rekorder",
     recordsSub: "Danmarks top 100",
   },
@@ -20,13 +23,20 @@ export default {
     emptyBody: "Udvalgte programmer kommer her, så du kan følge dem, som de er.",
   },
   customExercises: {
-    title: "Øvelser andre har lavet",
+    title: "Custom made exercises",
     emptyTitle: "Ingen delte øvelser endnu",
     emptyBody: "Når folk deler de øvelser, de selv har lavet, kan du finde dem her og tilføje dem til dine egne.",
   },
   sections: {
     yourGym: "Dit center",
     change: "Skift",
+    customExercises: "Nye øvelser fra andre",
+    all: "Alle",
+    allCount: { one: "Åbn biblioteket", other: "Alle {value}" },
+    allExercisesA11y: {
+      one: "Åbn biblioteket med {value} øvelse",
+      other: "Se alle {value} øvelser",
+    },
     centerPosts: "Opslag fra centre",
   },
   centerPostLabel: "{name}: {title}, i {gym}",
@@ -67,5 +77,14 @@ export default {
     people: "Personer",
     following: "Du følger dem",
     allPeople: "Se alle og følg",
+    // Centre valgt, intet skrevet endnu: dit center, dem du har trænet i, og
+    // de mest aktive i dit centers område ({where} har forholdsordet med).
+    suggestions: {
+      yours: "Dit center",
+      trainedIn: "Hvor du har trænet",
+      workouts: { one: "{count} træning", other: "{count} træninger" },
+      busiestIn: "Mest aktive {where}",
+      busiest: "Mest aktive centre",
+    },
   },
 };

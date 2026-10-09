@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
+  Keyboard,
   PanResponder,
   TouchableOpacity,
   View,
@@ -26,8 +28,20 @@ import { useTranslation } from "@localization";
 import PanelSettingsModal from "./PanelSettingsModal";
 import ExerciseHistoryPanel from "./ExerciseHistoryPanel";
 import ExerciseNotePanel from "./ExerciseNotePanel";
+import WeightModeTabs from "./WeightModeTabs";
+import UndoToast from "./SetList/UndoToast";
 import { shouldStoreExpandedHeight } from "./expandedHeightRule";
 import { weightliftingService } from "@services";
+import { orderSetsForDisplay } from "@utils/setTypes";
+import {
+  PER_SIDE,
+  formatWeightNumber,
+  pickTabWeight,
+  toggleWeight,
+  weightModeOf,
+} from "@utils/weightMode";
+import { getWeightStep } from "@utils/weightStep";
+import { cardPressAction } from "@utils/cardPress";
 import { useExerciseViewSettings } from "@contexts/ExerciseViewSettingsContext";
 import ReanimatedAnimated, {
   runOnJS,
@@ -45,6 +59,8 @@ import CollapsedSetSummary, {
 const REORDER_LONG_PRESS_DELAY_MS = 320;
 const REORDER_MOVE_CANCEL_DISTANCE = 10;
 const PRESS_SUPPRESSION_MS = 250;
+// How long a switch between per side and both sides can be taken back (4d).
+const WEIGHT_MODE_UNDO_MS = 5000;
 
 const ExerciseRow = ({
   exercise,
@@ -63,6 +79,9 @@ const ExerciseRow = ({
   onWorkoutMetadataChange,
   collapsedSetsVisible = true,
   collapsedCardLayout = "compact",
+  // A finished workout shows how its weights were written, but is not
+  // converted from here.
+  isWorkoutDone = false,
 }) => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -83,6 +102,10 @@ const ExerciseRow = ({
   const [addingSet, setAddingSet] = useState(false);
   const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
   const [restUnitRequestKey, setRestUnitRequestKey] = useState(0);
+  // The switch just made, while it can still be taken back (4d).
+  const [weightModeUndo, setWeightModeUndo] = useState(null);
+  const [switchingWeightMode, setSwitchingWeightMode] = useState(false);
+  const weightModeUndoTimerRef = useRef(null);
   // The expanded section stays mounted until the collapse has played out, and
   // its height is animated directly instead of relying on layout animations.
   const [isSectionMounted, setIsSectionMounted] = useState(isExpanded);
@@ -154,8 +177,18 @@ const ExerciseRow = ({
     return true;
   };
 
-  const handleCardPress = (handler) => {
+  // `folds`: the press folds or unfolds the card. With a keyboard up, such a
+  // tap only puts the keyboard away, and the field saves what was typed as it
+  // closes (ThemedEditableCell); folding used to take the field away before
+  // it could save, so the number typed was lost. Every other button works on
+  // the first tap (Utils/cardPress.js).
+  const handleCardPress = (handler, { folds = false } = {}) => {
     if (shouldIgnorePressAfterDrag()) {
+      return;
+    }
+
+    if (cardPressAction({ keyboardVisible: Keyboard.isVisible(), folds }) === "dismiss") {
+      Keyboard.dismiss();
       return;
     }
 
@@ -273,6 +306,8 @@ const ExerciseRow = ({
     () => () => {
       clearLongPressTimeout();
       clearPressSuppressionTimeout();
+      // The switch is saved already; only the chance to take it back ends.
+      clearTimeout(weightModeUndoTimerRef.current);
     },
     []
   );
@@ -433,6 +468,120 @@ const ExerciseRow = ({
       console.error("Error saving exercise note", error);
     }
   };
+
+  const weightMode = weightModeOf(exercise.weightMode);
+  const tabWeight = pickTabWeight(orderSetsForDisplay(exercise.sets ?? []));
+  // The weight steppers' step (1e), the lock screen's rule.
+  const weightStep = getWeightStep({
+    name: exercise.exercise_name,
+    equipment: exercise.exercise_equipment,
+  });
+  // Last time's last weight, when the history panel has read it - converted
+  // into this workout's mode - for + on an empty set with nothing above it.
+  // Only what is already loaded: a press never waits for a query.
+  const historyWeight = (() => {
+    const session = exerciseHistory?.sessions?.[0];
+    const last = session?.sets?.[session.sets.length - 1];
+
+    return last ? toggleWeight(last.weight, session.weightMode, weightMode) : null;
+  })();
+
+  const dismissWeightModeUndo = () => {
+    clearTimeout(weightModeUndoTimerRef.current);
+    weightModeUndoTimerRef.current = null;
+    setWeightModeUndo(null);
+  };
+
+  // The heaviest lift in the history panel is in the exercise's mode, which
+  // a switch changes: read again now if the panel is open, else next time.
+  const refreshHistoryForWeightMode = () => {
+    if (openPanel === "history") {
+      loadExerciseHistory();
+      return;
+    }
+
+    setExerciseHistory(null);
+    setHeaviestLift(null);
+  };
+
+  // Every set in this workout converted, both modes set, and a line with
+  // Undo for five seconds.
+  const switchWeightMode = async (nextMode) => {
+    if (switchingWeightMode) {
+      return;
+    }
+
+    setSwitchingWeightMode(true);
+
+    try {
+      const undo = await weightliftingService.switchExerciseWeightMode(db, {
+        exerciseId: exercise.exercise_id,
+        weightMode: nextMode,
+      });
+
+      if (undo) {
+        clearTimeout(weightModeUndoTimerRef.current);
+        weightModeUndoTimerRef.current = setTimeout(() => {
+          weightModeUndoTimerRef.current = null;
+          setWeightModeUndo(null);
+        }, WEIGHT_MODE_UNDO_MS);
+        setWeightModeUndo(undo);
+      }
+
+      await updateUI?.();
+
+      if (undo) {
+        refreshHistoryForWeightMode();
+      }
+    } catch (error) {
+      // One transaction: nothing changed, and the tabs still say so.
+      console.error("Error switching the weight mode", error);
+      Alert.alert(t("workout.weightMode.switchFailed"), t("workout.page.tryAgain"));
+    } finally {
+      setSwitchingWeightMode(false);
+    }
+  };
+
+  const undoWeightModeSwitch = async () => {
+    const undo = weightModeUndo;
+
+    if (!undo) {
+      return;
+    }
+
+    dismissWeightModeUndo();
+
+    try {
+      await weightliftingService.undoExerciseWeightModeSwitch(db, undo);
+      await updateUI?.();
+      refreshHistoryForWeightMode();
+    } catch (error) {
+      console.error("Error undoing the weight mode switch", error);
+      Alert.alert(t("workout.weightMode.undoFailed"), t("workout.page.tryAgain"));
+    }
+  };
+
+  const weightModeUndoMessage = (() => {
+    if (!weightModeUndo) {
+      return "";
+    }
+
+    const toPerSide = weightModeUndo.to === PER_SIDE;
+    const from = formatWeightNumber(weightModeUndo.shown?.from);
+    const to = formatWeightNumber(weightModeUndo.shown?.to);
+
+    if (!from || !to) {
+      return toPerSide
+        ? t("workout.weightMode.switchedPerSide")
+        : t("workout.weightMode.switchedBothSides");
+    }
+
+    return t(toPerSide ? "workout.weightMode.halved" : "workout.weightMode.doubled", {
+      from,
+      to,
+      unit: t("common.kg"),
+    });
+  })();
 
   const loadExerciseHistory = async () => {
     if (historyLoading) {
@@ -633,7 +782,7 @@ const ExerciseRow = ({
             // With no sets there is nothing to expand into: the plus is the
             // only way in, and it adds the first set as it opens the card.
             disabled={!isExpanded && exercise.sets.length === 0}
-            onPress={() => handleCardPress(onToggleExpanded)}
+            onPress={() => handleCardPress(onToggleExpanded, { folds: true })}
             style={[
               styles.headerMain,
               isExpanded && styles.headerMainExpanded,
@@ -738,7 +887,7 @@ const ExerciseRow = ({
                     activeOpacity={0.88}
                     accessibilityRole="button"
                     accessibilityLabel={t("workout.exercise.expand")}
-                    onPress={() => handleCardPress(onToggleExpanded)}
+                    onPress={() => handleCardPress(onToggleExpanded, { folds: true })}
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     style={styles.collapsedExpandButton}
                   >
@@ -782,15 +931,20 @@ const ExerciseRow = ({
 
         {!isExpanded && collapsedSetsVisible && exercise.sets.length > 0 && (
           <View style={styles.summaryCollapsedRow}>
-            <TouchableOpacity activeOpacity={0.88} onPress={() => handleCardPress(onToggleExpanded)} style={styles.summaryRow}>
+            <TouchableOpacity activeOpacity={0.88} onPress={() => handleCardPress(onToggleExpanded, { folds: true })} style={styles.summaryRow}>
               <View style={styles.summaryTextBlock}>
                 {usesClassicCollapsedCard ? (
-                  <ClassicSetSummary sets={exercise.sets} theme={theme} />
+                  <ClassicSetSummary
+                    sets={exercise.sets}
+                    theme={theme}
+                    weightMode={weightMode}
+                  />
                 ) : (
                   <CollapsedSetSummary
                     sets={exercise.sets}
                     view={collapsedExerciseView}
                     theme={theme}
+                    weightMode={weightMode}
                   />
                 )}
               </View>
@@ -836,7 +990,7 @@ const ExerciseRow = ({
             ) : (
               <TouchableOpacity
                 activeOpacity={0.88}
-                onPress={() => handleCardPress(onToggleExpanded)}
+                onPress={() => handleCardPress(onToggleExpanded, { folds: true })}
                 style={styles.summaryRow}
               >
                 <View style={styles.summaryTextBlock}>
@@ -896,7 +1050,7 @@ const ExerciseRow = ({
 
             <TouchableOpacity
               activeOpacity={0.88}
-              onPress={() => handleCardPress(onToggleExpanded)}
+              onPress={() => handleCardPress(onToggleExpanded, { folds: true })}
               style={[
                 styles.summaryExpandButton,
                 {
@@ -931,6 +1085,15 @@ const ExerciseRow = ({
                 }
               }}
             >
+            {exercise.canSwitchWeightMode ? (
+              <WeightModeTabs
+                weightMode={weightMode}
+                weight={tabWeight}
+                onSwitch={switchWeightMode}
+                disabled={isWorkoutDone || switchingWeightMode}
+              />
+            ) : null}
+
             <SetList
               sets={exercise.sets}
               exerciseId={exercise.exercise_id}
@@ -948,7 +1111,18 @@ const ExerciseRow = ({
               recordDarkColor={recordDarkColor}
               recordControlFillColor={exerciseCheckboxFillColor}
               recordControlTextColor={exerciseCheckboxCheckmarkColor}
+              weightStep={weightStep}
+              exerciseWeightMode={exercise.exercise_weight_mode ?? null}
+              historyWeight={historyWeight}
             />
+
+            {weightModeUndo ? (
+              <UndoToast
+                message={weightModeUndoMessage}
+                actionLabel={t("workout.weightMode.undo")}
+                onUndo={undoWeightModeSwitch}
+              />
+            ) : null}
             </View>
           </ReanimatedAnimated.View>
         )}

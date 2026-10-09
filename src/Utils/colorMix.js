@@ -2,7 +2,8 @@
 // handful of steps. Hex only: every colour in the theme that is mixed is one,
 // and withAlpha - which the result is usually handed to next - reads only hex.
 
-function parseHex(color) {
+/** "#rgb", "#rrggbb" or "#rrggbbaa" as [r, g, b] from 0 to 255; null for anything else. */
+export function parseHex(color) {
   if (typeof color !== "string" || !color.startsWith("#")) {
     return null;
   }

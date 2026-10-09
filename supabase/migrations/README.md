@@ -72,6 +72,19 @@ behind by accident.
 | `20260927090000_a-lifter-can-give-their-sex.sql` | yes |
 | `20260927100000_public-profiles.sql` | yes |
 | `20260927110000_a-block-hides-public-posts-too.sql` | yes |
+| `20260928090000_custom-exercises-can-be-shared.sql` | yes |
+| `20260929090000_gym-scope-and-categories.sql` | yes |
+| `20260930090000_store-stats-ios-daily.sql` | yes |
+| `20261001080000_the-admin-guard-runs-as-its-caller.sql` | yes |
+| `20261001090000_dev-kpis.sql` | yes |
+| `20261002090000_weight-mode-per-instance.sql` | yes |
+| `20261003090000_a-set-keeps-its-decimals.sql` | yes |
+| `20261004090000_progress-counts-every-exercise.sql` | yes |
+| `20261005090000_a-set-knows-a-counted-rest.sql` | yes |
+| `20261006090000_a-split-pins-its-workouts.sql` | yes |
+| `20261007090000_remove-lift-verification.sql` | yes |
+| `20261008090000_a-set-counts-for-fewer-reps.sql` | yes |
+| `20261009090000_a-like-notifies-the-poster.sql` | yes |
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
 centre match, per-centre lift leaderboards with video verification, and what
@@ -352,6 +365,125 @@ the one way to read a stranger's profile: security definer, a fixed set of
 fields, nothing from `profile_private`, null across a block either way; until it
 runs, a profile opened from a name says it is not available. The third makes a
 block hide public posts as well as followers-only ones.
+
+`20260928090000_custom-exercises-can-be-shared.sql` was run on 2026-09-26. It
+gives custom exercises a cloud half, `custom_exercise` - readable only by its
+owner, private until shared - with the saved list, the reports and a daily
+cache of each exercise's numbers beside it, five security definer functions
+that are the only way to read somebody else's exercise, and the
+`exercise-videos` bucket. Without it the library and an exercise page say they
+are not available yet, and custom exercises stay on the phone.
+
+`20260929090000_gym-scope-and-categories.sql` was run on 2026-09-26 and checked
+afterwards: every Danish centre has a region, the four regions are there, all
+three calisthenics movements matched the catalogue, and only signed-in users
+may call the three new functions. It gives `gym` a country and a region -
+Denmark's four landsdele, from the postal code - adds `gym_region` and
+`private.calisthenics_event`, and the security definer functions
+`gym_scope_summary`, `gym_category_cards` and `gym_category_leaderboard` behind
+Centres' levels and the four category pages. The gym importer now writes the
+two new columns, so it needs this to have run.
+
+`20260930090000_store-stats-ios-daily.sql` was run on 2026-09-26: pg_cron and
+pg_net were switched on in the dashboard - creating pg_cron from the SQL
+editor had failed inside Supabase's own grant routine - and the job
+`store-stats-ios-daily` was scheduled for 06:15 UTC every day. It POSTs to the
+`store-stats` Edge Function with the address and the shared secret read from
+Vault by name. What each run answered is in `net._http_response`.
+
+```sql
+select jobname, schedule, active from cron.job where jobname = 'store-stats-ios-daily';
+select status_code, content from net._http_response order by created desc limit 1;
+```
+
+`20261001080000_the-admin-guard-runs-as-its-caller.sql` was run on 2026-09-26.
+It makes `private.reject_self_appointed_admin` security invoker. Under security
+definer `current_user` was the function's owner, so the guard on
+`profile_private.is_admin` never fired, and the column revokes from
+20260921220000 did not stand in for it while `authenticated` held update on
+the whole table: any signed-in account could make itself admin. Who holds
+the flag is worth checking now and then:
+`select user_id from public.profile_private where is_admin;`.
+
+`20261001090000_dev-kpis.sql` was run on 2026-09-26. It gives
+`workout_type_instance` its `started_from`, `profile_private` the app-open
+columns, `store_stats` the crash and ANR columns, adds the admin-only
+`dev_metrics` and the nine admin functions behind Dev · Overblik - each checks
+`is_admin` in its own body and returns only aggregates. Until it had run the
+page said its numbers were not available yet, and the app left the new
+columns out of what it wrote.
+
+`20261002090000_weight-mode-per-instance.sql` was run on 2026-09-27. It adds
+`weight_mode` ('total' | 'per_side') to `exercise_instance` and to
+`exercise_column_preferences`, for weight per side or for both sides (4d, app
+2.16). It can run before or after the app ships: until it has, a 2.16 phone
+finds the column missing, syncs both tables without it for that session and
+keeps the choice on the phone - nothing else stops syncing. One table per
+transaction, the checks added `not valid` and validated after.
+
+`20261003090000_a-set-keeps-its-decimals.sql` was run on 2026-09-27. It turns
+`set.weight` and `set.rpe` from whole numbers into `numeric`, so 102.5 kg and
+RPE 8.5 reach the cloud as they are instead of as 102 and 8. A phone that
+synced before it had run sent them cut off and kept its own; afterwards those
+sets go up again once, with their decimals (`src/Utils/setDecimals.js`).
+
+`20261004090000_progress-counts-every-exercise.sql` was run on 2026-09-27. It
+restates `private.category_rows` with two rules changed: Progress counts
+every catalogue exercise, not only bench press, squat and deadlift, and a
+week counts towards Consistency's weeks in a row at two workouts, not three.
+It also adds `set_cloud_exercise_instance_idx`, the index Progress finds the
+sets through. Before it had run, the list still counted three a week while the
+app said two. The checks are at the bottom of the file.
+
+`20261005090000_a-set-knows-a-counted-rest.sql` was run on 2026-09-30. It adds
+`set.rest_counted`: whether a set's rest was counted up by the app after it was
+ticked, rather than planned. Null means not known - every older row, and every
+row an older app writes - and the app keeps its own flag over a null. It can
+run before or after the app ships: until it has, the app finds the column
+missing, syncs sets without it for that session and keeps the flag on the
+phone; a counted rest travels as a plain rest meanwhile
+(`src/Utils/restCountUp.js`).
+
+`20261007090000_remove-lift-verification.sql` was run on 2026-10-01. It takes
+video verification of lifts out of the cloud: the votes, the video columns on
+`gym_lift`, the review queue and the request, the storage policies of the
+`lift-videos` bucket, and every `lift_verification_requested` notification.
+Every list now counts every lift. **One step is left, by hand:** SQL cannot
+delete from `storage.objects` or `storage.buckets` in Supabase, so the files
+are still in the bucket. Empty `lift-videos` and delete it in the dashboard,
+under Storage. Until then the files sit there with no policy that lets anybody
+read, upload or delete them. It is also in `docs/SIKKERHED-DINE-OPGAVER.md`.
+
+`20261008090000_a-set-counts-for-fewer-reps.sql` was run on 2026-10-01. It
+restates `private.category_rows` from `20261007090000` with one rule changed:
+Powerlifting counts the heaviest weight of any set of one rep or more, so
+90 kg x 3 is a 90 kg single. Run it after `20261007090000`, never before it,
+or that one puts the singles-only rule back. Until it has run, the app's texts
+already say "heaviest lift" while the list still counts singles only. The
+checks are at the bottom of the file.
+
+`20261006090000_a-split-pins-its-workouts.sql` was run on 2026-10-01. It gives
+`profile_private` a `split_entries` column: the chosen split as one entry per
+session, each a name and, for a workout picked in the calendar, that
+workout's `sync_id` - so two sessions can both be "Push" and each repeats its
+own workout. It answers what `20260926090000_your-split-follows-you.sql` gave
+as its reason for names only: a local workout id is one phone's, a `sync_id`
+is every phone's. `split_names` stays and is still written. It can run before
+or after the app ships: until it has, the app finds the column missing, sends
+the names alone and keeps the pins on the phone (`src/Utils/splitEntries.js`).
+
+`20261009090000_a-like-notifies-the-poster.sql` was run on 2026-10-01. It makes
+a like tell the post's author - a row in their notification history, "Bo
+liked your post" - through an after insert trigger on `social_post_like`,
+once per person per post (for as long as the event row is kept), never for your own like, never across a block, and
+not when the author has switched likes off
+(`notification_preferences.post_like_notifications`, new). The push is the
+`send-post-liked-notification` Edge Function behind a Database Webhook on
+`social_post_like` INSERT. Before running it, redeploy
+`send-workout-started-notification`, whose rate limit used to count every
+notification event and would have counted likes; then deploy the new
+function and create the webhook - the steps are at the bottom of the file.
+Until it has run, a like tells nobody and the switch in the app is greyed out.
 
 This has not been reconciled with Supabase's own migration tracking
 (`supabase_migrations.schema_migrations`), so `supabase db push` would try to

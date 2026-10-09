@@ -27,6 +27,9 @@ import {
 } from "@utils/syncUtils";
 import { calculateBrzyckiOneRepMax } from "@utils/oneRepMaxUtils";
 import { formatDisplayNumber } from "@utils/numberUtils";
+import { STARTED_FROM } from "@utils/startedFrom";
+import { carriedRestOf } from "@utils/restCountUp";
+import { isPerSide, resolveWeightMode, toggleWeight } from "@utils/weightMode";
 import { filterReleasedWorkoutTypes } from "@utils/workoutTypeAvailability";
 import {
   WEEK_DAYS,
@@ -85,13 +88,15 @@ export async function countActiveWorkoutTypes(db) {
   ).length;
 }
 
-function formatProgramBestDisplay({ weight, reps, estimatedOneRepMax }) {
-  const setText = `${reps} x ${formatDisplayNumber(weight)} kg`;
+function formatProgramBestDisplay({ weight, reps, estimatedOneRepMax, weightMode = null }) {
+  // "pr. side" after the unit when the exercise is written per side (4d).
+  const unit = isPerSide(weightMode) ? `kg ${t("workout.weightMode.suffix")}` : "kg";
+  const setText = `${reps} x ${formatDisplayNumber(weight)} ${unit}`;
 
   if (reps === 1) {
     return {
       setDisplayValue: setText,
-      rmDisplayValue: `${formatDisplayNumber(weight)} kg`,
+      rmDisplayValue: `${formatDisplayNumber(weight)} ${unit}`,
       isEstimated: false,
       estimatedLabel: null,
     };
@@ -99,7 +104,7 @@ function formatProgramBestDisplay({ weight, reps, estimatedOneRepMax }) {
 
   return {
     setDisplayValue: setText,
-    rmDisplayValue: `${formatDisplayNumber(Math.round(estimatedOneRepMax))} kg`,
+    rmDisplayValue: `${formatDisplayNumber(Math.round(estimatedOneRepMax))} ${unit}`,
     isEstimated: true,
     estimatedLabel: "estimated",
   };
@@ -113,8 +118,26 @@ async function cloneWorkoutContents(
     db,
     sourceWorkoutId
   );
+  // A copy is written the way each exercise is written now (4d): somebody
+  // who has since switched it to per side gets the copied weights per side,
+  // converted like a switch converts them. Same mode, no change. Looked up
+  // for the whole workout at once: copying a week of four days with six
+  // exercises each asked the catalog 24 times, one after the other.
+  const catalogWeightModes = new Map(
+    (
+      await weightliftingRepository.getExerciseCatalogWeightModes(
+        db,
+        exercises.map((exercise) => exercise.exercise_name)
+      )
+    ).map((row) => [row.exercise_name, row.weight_mode])
+  );
 
   for (const exercise of exercises) {
+    const sourceMode = resolveWeightMode(exercise.weight_mode, null);
+    const targetMode = resolveWeightMode(
+      catalogWeightModes.get(exercise.exercise_name) ?? null,
+      sourceMode
+    );
     const exerciseResult = await weightliftingRepository.createExercise(db, {
       workoutId: targetWorkoutId,
       exerciseName: exercise.exercise_name,
@@ -123,6 +146,7 @@ async function cloneWorkoutContents(
       note: exercise.note,
       done: 0,
       exerciseOrder: normalizeExerciseOrder(exercise.exercise_order),
+      weightMode: targetMode,
     });
 
     const sets = await weightliftingRepository.getSetsByExercise(
@@ -135,9 +159,11 @@ async function cloneWorkoutContents(
         setNumber: set.set_number,
         exerciseId: exerciseResult.lastInsertRowId,
         personalRecord: resetPersonalRecords ? 0 : set.personal_record,
-        pause: set.pause,
+        // A rest the app counted is a record of that workout, not a plan for
+        // this one: the copy starts without it (@utils/restCountUp).
+        pause: carriedRestOf(set),
         rpe: set.rpe,
-        weight: set.weight,
+        weight: toggleWeight(set.weight, sourceMode, targetMode),
         rmPercentage: set.rm_percentage,
         reps: set.reps,
         done: 0,
@@ -925,6 +951,20 @@ export async function getDaysByMicrocycle(db, microcycleId) {
   return programRepository.getDaysByMicrocycle(db, microcycleId);
 }
 
+/**
+ * The newest workout of each name in the library's window, without the rest
+ * of it - what Home resolves a chosen split by name from
+ * (programRepository.getNewestWorkoutOfEachName).
+ */
+export async function getNewestWorkoutOfEachName(db, { limit = 500 } = {}) {
+  return programRepository.getNewestWorkoutOfEachName(db, { limit });
+}
+
+/** The split's pinned workouts and their copies, by sync_id (programRepository.getWorkoutsBySyncIds). */
+export async function getWorkoutsBySyncIds(db, syncIds) {
+  return programRepository.getWorkoutsBySyncIds(db, syncIds);
+}
+
 export async function getWorkoutLibraryCounts(db) {
   return programRepository.getWorkoutLibraryCounts(db);
 }
@@ -1159,10 +1199,12 @@ export async function getProgramExerciseBests(db, programId) {
         reps,
         performedDate: set.performed_date ?? null,
         estimatedOneRepMax,
+        weightMode: set.weight_mode ?? null,
         ...formatProgramBestDisplay({
           weight,
           reps,
           estimatedOneRepMax,
+          weightMode: set.weight_mode ?? null,
         }),
       };
     }
@@ -1593,11 +1635,14 @@ export async function copyMicrocycleWorkouts(
       );
 
       for (const workout of workouts) {
+        // Copying a week is building the program, whatever the week's
+        // workouts were started from.
         const workoutResult = await programRepository.createWorkout(db, {
           date: targetDay.date,
           dayId: targetDay.day_id,
           workoutType: workout.workout_type,
           label: workout.label,
+          startedFrom: STARTED_FROM.PROGRAM,
         });
 
         await cloneWorkoutContents(db, {
@@ -2193,9 +2238,15 @@ export async function getWorkoutCopyProgramTargets(db, { date }) {
   });
 }
 
+/*
+ * Every function below that creates a workout takes `startedFrom`, one of
+ * STARTED_FROM (@utils/startedFrom), from the screen that knows how the
+ * workout was started. A caller that does not say gets OTHER.
+ */
+
 export async function createWorkoutForDay(
   db,
-  { date, dayId, workoutType, label }
+  { date, dayId, workoutType, label, startedFrom = STARTED_FROM.OTHER }
 ) {
   const workout = await withTransaction(db, async () => {
     const workout = await programRepository.createWorkout(db, {
@@ -2203,6 +2254,7 @@ export async function createWorkoutForDay(
       dayId,
       workoutType,
       label,
+      startedFrom,
     });
 
     const hierarchy = await workoutRepository.getDayHierarchyIds(db, dayId);
@@ -2221,7 +2273,7 @@ export async function createWorkoutForDay(
 
 export async function createQuickWorkout(
   db,
-  { date = new Date(), workoutType, label }
+  { date = new Date(), workoutType, label, startedFrom = STARTED_FROM.OTHER }
 ) {
   const workoutDate = date instanceof Date ? date : parseCustomDate(date);
   const normalizedDate = formatDate(workoutDate);
@@ -2249,6 +2301,7 @@ export async function createQuickWorkout(
       dayId,
       workoutType,
       label,
+      startedFrom,
     });
 
     const hierarchy = await workoutRepository.getDayHierarchyIds(db, dayId);
@@ -2281,7 +2334,10 @@ export async function createQuickWorkout(
  * null when nothing could be copied. The Train tab and the workout library
  * both repeat through here.
  */
-export async function repeatWorkoutToday(db, { workoutId, label = null, workoutType = null, date }) {
+export async function repeatWorkoutToday(
+  db,
+  { workoutId, label = null, workoutType = null, date, startedFrom = STARTED_FROM.OTHER }
+) {
   const programTargets = await getWorkoutCopyProgramTargets(db, { date });
   const target = programTargets[0] ?? null;
 
@@ -2290,6 +2346,7 @@ export async function repeatWorkoutToday(db, { workoutId, label = null, workoutT
       workoutId,
       dayId: target.day_id,
       date: target.date,
+      startedFrom,
     });
 
     return copiedWorkoutId
@@ -2304,7 +2361,11 @@ export async function repeatWorkoutToday(db, { workoutId, label = null, workoutT
       : null;
   }
 
-  const copied = await copyWorkoutToStandaloneDate(db, { workoutId, date });
+  const copied = await copyWorkoutToStandaloneDate(db, {
+    workoutId,
+    date,
+    startedFrom,
+  });
 
   return copied
     ? {
@@ -2318,7 +2379,10 @@ export async function repeatWorkoutToday(db, { workoutId, label = null, workoutT
     : null;
 }
 
-export async function copyWorkoutToProgramDay(db, { workoutId, dayId, date }) {
+export async function copyWorkoutToProgramDay(
+  db,
+  { workoutId, dayId, date, startedFrom = STARTED_FROM.OTHER }
+) {
   const normalizedDate =
     date instanceof Date ? formatDate(date) : normalizeLocalDateString(date);
 
@@ -2335,6 +2399,7 @@ export async function copyWorkoutToProgramDay(db, { workoutId, dayId, date }) {
       date: normalizedDate,
       dayId,
       workoutId,
+      startedFrom,
     });
 
     await cloneWorkoutContents(db, {
@@ -2363,7 +2428,7 @@ export async function copyWorkoutToProgramDay(db, { workoutId, dayId, date }) {
 
 export async function copyWorkoutToDate(
   db,
-  { workoutId, programId, date }
+  { workoutId, programId, date, startedFrom = STARTED_FROM.OTHER }
 ) {
   const normalizedDate =
     date instanceof Date ? formatDate(date) : normalizeLocalDateString(date);
@@ -2389,12 +2454,13 @@ export async function copyWorkoutToDate(
     workoutId,
     dayId: targetDay.day_id,
     date: normalizedDate,
+    startedFrom,
   });
 }
 
 export async function copyProgramWorkoutToDate(
   db,
-  { workoutId, programId, date }
+  { workoutId, programId, date, startedFrom = STARTED_FROM.OTHER }
 ) {
   const programTargets = await getWorkoutCopyProgramTargets(db, { date });
   const preferredProgramTarget =
@@ -2407,12 +2473,14 @@ export async function copyProgramWorkoutToDate(
       workoutId,
       dayId: preferredProgramTarget.day_id,
       date: preferredProgramTarget.date ?? date,
+      startedFrom,
     });
   }
 
   const copiedWorkout = await copyWorkoutToStandaloneDate(db, {
     workoutId,
     date,
+    startedFrom,
   });
 
   return copiedWorkout?.workout_id ?? null;
@@ -2420,7 +2488,7 @@ export async function copyProgramWorkoutToDate(
 
 export async function copyWorkoutToStandaloneDate(
   db,
-  { workoutId, date = new Date() }
+  { workoutId, date = new Date(), startedFrom = STARTED_FROM.OTHER }
 ) {
   const normalizedDate =
     date instanceof Date ? formatDate(date) : normalizeLocalDateString(date);
@@ -2495,6 +2563,7 @@ export async function copyWorkoutToStandaloneDate(
       date: normalizedDate,
       dayId,
       workoutId,
+      startedFrom,
     });
 
     if (!workoutResult.changes) {

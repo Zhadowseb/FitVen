@@ -1,4 +1,5 @@
-﻿import Svg, { Path } from "react-native-svg";
+﻿import { Path } from "react-native-svg";
+import PassThroughSvg from "@resources/Components/PassThroughSvg";
 
 const FRONT_REGION_PATHS = {
   pecs: [
@@ -120,9 +121,8 @@ export default function FrontBodyMapRegionOverlay({
   }
 
   return (
-    <Svg
+    <PassThroughSvg
       preserveAspectRatio="none"
-      pointerEvents="none"
       viewBox="0 0 503 1294"
       width={width}
       height={height}
@@ -138,6 +138,6 @@ export default function FrontBodyMapRegionOverlay({
         opacity: primaryOpacity,
         layer: "primary",
       })}
-    </Svg>
+    </PassThroughSvg>
   );
 }
