@@ -1,0 +1,45 @@
+name: PR check
+
+# Svarer paa et enkelt spoergsmaal: er den her PR lige til at merge? Det er
+# scripts/git/flow.js check, den samme som `npm run pr:check` lokalt -
+# branchnavn, changelog-fragment, at versionen og CHANGELOG.md er lukket i fred
+# paa en arbejdsbranch, og at en release-commit har gjort det modsatte.
+#
+# Den er ikke ci.yml. Den koerer ikke testene, og den maa ikke roeres for at
+# goere en koersel groen. Gaar den roed, er det en af reglerne i
+# docs/VERSIONING.md, den siger noget om.
+#
+# Advarsler - bagud i forhold til master, andre aabne PR'er, der roerer de
+# samme filer - fejler ikke noget; de staar i loggen.
+
+on:
+  pull_request:
+    branches: [master, "release/**"]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: pr-hygiene-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  check:
+    name: Ready to merge
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/git/flow.js check --ci --base origin/${{ github.base_ref }}
