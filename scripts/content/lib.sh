@@ -19,8 +19,37 @@ escape() {
 # Henter skaermens struktur til $WORK/ui.xml. Falder en dump over (appen taegner
 # et oejeblik), er det bare et forsoeg mere.
 dump_ui() {
+  take_dump || return 1
+
+  # Emulatoren er traeg lige efter start, og Android spoerger saa, om en app,
+  # der ikke svarer, skal lukkes ("Pixel Launcher isn't responding"). Dialogen
+  # ligger oven paa appen og er det eneste, en dump ser. Den besvares med
+  # "Wait", og saa tages dumpen igen.
+  # En dialog om, at appen selv stopper, besvares ikke: det er en fejl, og den skal ses.
+  if node "$UI_JS" "$WORK/ui.xml" has --text ".*isn't responding.*"; then
+    echo "Android spoerger, om en app, der ikke svarer, skal lukkes: svarer Wait"
+    tap_dialog_button 'Wait' || tap_dialog_button 'Close app' || true
+    sleep 2
+    take_dump
+  fi
+}
+
+take_dump() {
   adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1 \
     && adb pull /sdcard/ui.xml "$WORK/ui.xml" >/dev/null 2>&1
+}
+
+# Trykker paa en knap i den dump, der er taget. Kun til dialoger: ingen
+# ventetid, og ingen ny dump.
+tap_dialog_button() {
+  local point
+
+  if point=$(node "$UI_JS" "$WORK/ui.xml" point --text "$1"); then
+    # shellcheck disable=SC2086
+    adb shell input tap $point
+  else
+    return 1
+  fi
 }
 
 # Er der noget paa skaermen, der matcher? Samme vaelgere som ui.js.

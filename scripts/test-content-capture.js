@@ -64,6 +64,17 @@ const texts = ui.visibleTexts(nodes);
 assert.ok(texts.includes("you@example.com") && texts.includes("Login"));
 assert.ok(!texts.some((text) => text.includes("•")), "a password field's text is not printed");
 
+// A slow emulator makes Android ask whether to close the launcher; the dialog covers the app and is all a dump sees.
+const ANR = ui.parseNodes(`<hierarchy>
+  <node text="Pixel Launcher isn't responding" class="android.widget.TextView" clickable="false" password="false" bounds="[60,1160][1020,1260]" />
+  <node text="Close app" class="android.widget.TextView" clickable="false" password="false" bounds="[260,1330][700,1400]" />
+  <node text="Wait" class="android.widget.TextView" clickable="false" password="false" bounds="[260,1440][400,1500]" />
+</hierarchy>`);
+
+assert.ok(ui.select(ANR, ui.parseSelector(["--text", ".*isn't responding.*"])), "the dialog is recognised");
+assert.deepStrictEqual(ui.center(ui.select(ANR, ui.parseSelector(["--text", "Wait"]))), { x: 330, y: 1470 }, "Wait, not Close app, is what is tapped");
+assert.ok(!ui.select(ui.parseNodes(LOGIN_SCREEN), ui.parseSelector(["--text", ".*isn't responding.*"])), "an ordinary screen is not mistaken for it");
+
 // As a command: the exit code says whether something matched.
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "fitven-ui-"));
 
@@ -90,6 +101,8 @@ try {
   }
   assert.ok(!/>\s*[^\n]*\$\{?DEMO_PASSWORD/.test(capture.replace(/^\s*#.*$/gm, "")), "and never writes it to a file");
   assert.ok(/adb shell input text "\$\(escape "\$DEMO_PASSWORD"\)"/.test(capture), "it is typed through escape()");
+  assert.ok(/isn't responding/.test(lib) && /tap_dialog_button 'Wait'/.test(lib), "a not-responding dialog is answered with Wait");
+  assert.ok(!/keeps stopping/.test(lib), "but the app's own crash dialog is not dismissed: that is a failure to be seen");
 
   // escape() makes a text safe to send through adb's shell. Skipped where there is no bash.
   const bash = spawnSync("bash", ["-c", "true"]);

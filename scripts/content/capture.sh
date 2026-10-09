@@ -42,6 +42,11 @@ on_exit() {
 }
 trap on_exit EXIT
 
+step "Lader emulatoren falde til ro"
+# Lige efter start er den traeg, og alt, der startes nu, faar Android til at
+# spoerge, om launcheren skal lukkes.
+sleep 25
+
 step "Installer"
 adb install -r "$APK_PATH"
 

@@ -134,6 +134,10 @@ jobs:
           arch: x86_64
           target: google_apis
           profile: pixel_6
+          # Maskinen har fire kerner og 16 GB. Med emulatorens standard var den
+          # saa traeg ved start, at Android spurgte, om launcheren skulle lukkes.
+          cores: 4
+          ram-size: 4096M
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           script: bash scripts/content/capture.sh
