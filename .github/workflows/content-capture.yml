@@ -1,15 +1,20 @@
 name: Content capture
 
 # Foerste led af den automatiske produktion af organisk indhold: bygger den
-# rigtige app til Android, starter den i en emulator og tager skaermbilleder og
-# en skaermoptagelse. Intet bliver postet nogen steder.
+# rigtige app til Android, starter den i en emulator, logger ind paa demokontoen
+# og optager det. Intet bliver postet nogen steder.
 #
 # Der er ingen telefon med i det. Emulatoren koerer paa GitHubs maskine, og
 # repoet er offentligt, saa minutterne koster ikke noget.
 #
-# Lige nu naar den kun til login-skaermen: der er ingen demokonto endnu. Naar
-# der er en (se docs/CONTENT-AUTOMATION.md), logger scripts/content/capture.sh
-# ind og gaar de skaerme igennem, ugens opslag skal bruge.
+# Login bruger hemmelighederne DEMO_EMAIL og DEMO_PASSWORD (se
+# docs/DEMO-ACCOUNTS.md). Mangler de, optages kun login-skaermen. Resultatet er
+# artefaktet `content-capture`: login.mp4 og et skaermbillede af hver fane.
+#
+# Appen bygges kun, naar noget i den har aendret sig: APK'en ligger i en cache,
+# der er noeglet paa alt, der kommer med i den (src, modules, plugins, assets og
+# konfigurationen). Ellers tager en koersel nogle faa minutter i stedet for en
+# halv time.
 #
 # Den er ikke en port som ci.yml og blokerer ingen PR. Den koerer paa
 # workflow_dispatch og paa en PR, der roerer den selv eller scripts/content.
@@ -37,37 +42,53 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Noeglen er hash af det, der bliver til APK'en. "v1" er til at tvinge et
+      # nyt byg, naar byggetrinnene herunder aendres.
+      - id: apk
+        uses: actions/cache@v4
+        with:
+          path: fitven-release.apk
+          key: fitven-apk-v1-${{ hashFiles('src/**', 'modules/**', 'plugins/**', 'targets/**', 'assets/**', 'app.json', 'package.json', 'package-lock.json', 'App.js', 'index.js', 'babel.config.js', 'metro.config.js', 'google-services.json') }}
+
       - uses: actions/setup-node@v4
+        if: steps.apk.outputs.cache-hit != 'true'
         with:
           node-version-file: .nvmrc
           cache: npm
 
       - uses: actions/setup-java@v4
+        if: steps.apk.outputs.cache-hit != 'true'
         with:
           distribution: temurin
           java-version: "17"
 
       - uses: gradle/actions/setup-gradle@v4
+        if: steps.apk.outputs.cache-hit != 'true'
 
       - run: npm ci --no-audit --no-fund
+        if: steps.apk.outputs.cache-hit != 'true'
 
       # Den samme prebuild, som EAS koerer: app.json og config-plugins.
       - name: Prebuild
+        if: steps.apk.outputs.cache-hit != 'true'
         run: npx expo prebuild --platform android --no-install
 
       # Kun x86_64: emulatoren er x86_64, og de andre tre arkitekturer ville
       # gange byggetiden. Release-varianten er signeret med debug-noeglen, som
       # Expo-skabelonen goer, og kan derfor installeres uden videre.
       - name: Build
+        if: steps.apk.outputs.cache-hit != 'true'
         working-directory: android
         run: ./gradlew assembleRelease -PreactNativeArchitectures=x86_64 --no-daemon -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=1g"
 
-      - name: The APK is there
+      - name: The APK
         run: |
-          APK=$(ls android/app/build/outputs/apk/release/*.apk | head -1)
-          echo "$APK"
-          test -s "$APK"
-          cp "$APK" fitven-release.apk
+          if [ ! -s fitven-release.apk ]; then
+            APK=$(ls android/app/build/outputs/apk/release/*.apk | head -1)
+            echo "$APK"
+            cp "$APK" fitven-release.apk
+          fi
+          test -s fitven-release.apk
 
       - uses: actions/upload-artifact@v4
         with:
@@ -83,6 +104,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
       - uses: actions/download-artifact@v4
         with:
           name: fitven-release-apk
@@ -94,16 +119,25 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
+      # DEMO_EMAIL og DEMO_PASSWORD er demokontoens (docs/DEMO-ACCOUNTS.md), ikke
+      # en rigtig brugers. De naar kun capture.sh, som skriver adgangskoden til
+      # skaermen og ingen andre steder. En PR fra en fork faar dem ikke.
       - name: Emulator
         uses: reactivecircus/android-emulator-runner@v2
         env:
           APK_PATH: fitven-release.apk
           OUT_DIR: out
+          DEMO_EMAIL: ${{ secrets.DEMO_EMAIL }}
+          DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD }}
         with:
           api-level: 34
           arch: x86_64
           target: google_apis
           profile: pixel_6
+          # Maskinen har fire kerner og 16 GB. Med emulatorens standard var den
+          # saa traeg ved start, at Android spurgte, om launcheren skulle lukkes.
+          cores: 4
+          ram-size: 4096M
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           script: bash scripts/content/capture.sh
