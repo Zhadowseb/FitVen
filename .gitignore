@@ -62,3 +62,8 @@ yarn-error.*
 # what is versioned. Re-scrape with the Python scripts in the same folders.
 data/gyms/**/hero.jpg
 data/gyms/**/hero.png
+
+# Claude Code: the worktrees it makes and a person's own settings. .claude/settings.json and
+# .claude/agents/ are the repository's and are committed.
+.claude/worktrees/
+.claude/settings.local.json

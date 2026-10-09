@@ -6,6 +6,7 @@ const rootDir = path.resolve(__dirname, "..");
 const packageJsonPath = path.join(rootDir, "package.json");
 const appJsonPath = path.join(rootDir, "app.json");
 const changelogPath = path.join(rootDir, "CHANGELOG.md");
+const changelogFragments = require("./changelog-fragments");
 
 const args = process.argv.slice(2);
 const command = args[0];
@@ -31,6 +32,13 @@ if (!command || !["auto", "branch", "release", "status", "sync"].includes(comman
 run();
 
 function run() {
+  // A work branch does not write a version or touch CHANGELOG.md: those are the
+  // release commit's (docs/VERSIONING.md), so two branches never edit the same
+  // lines. What it gets is its own changelog fragment.
+  if ((command === "auto" || command === "branch") && startWorkBranch(options)) {
+    return;
+  }
+
   if (command === "auto") {
     const summary = prepareAutoVersioning(options);
     applyVersioning(summary, options.dryRun);
@@ -84,6 +92,56 @@ function run() {
     applyVersioning(summary, options.dryRun);
     printSummary(summary, options.dryRun);
   }
+}
+
+/** The branch this command is about: named, or the one checked out. */
+function resolveWorkBranchName(currentOptions) {
+  const named =
+    currentOptions.branchName ||
+    currentOptions.positionals.find((token) => !["major", "minor", "patch"].includes(token));
+
+  return named || safeGetCurrentBranchName();
+}
+
+function isWorkBranch(branchName) {
+  return Boolean(branchName) && !/^(master|main)$/i.test(branchName) && !/^release[/-]\d+\.\d+\.\d+$/i.test(branchName);
+}
+
+/**
+ * Starts a work branch: creates its changelog fragment. Returns false for
+ * master and for a release branch, which keep the old behaviour.
+ */
+function startWorkBranch(currentOptions) {
+  const branchName = resolveWorkBranchName(currentOptions);
+
+  if (!isWorkBranch(branchName)) {
+    return false;
+  }
+
+  const fragmentName = changelogFragments.fragmentNameForBranch(branchName);
+  const fragmentPath = path.join(rootDir, changelogFragments.FRAGMENT_DIR, fragmentName);
+  const exists = fs.existsSync(fragmentPath);
+  const bump = currentOptions.bump || inferBumpFromBranch(branchName);
+  const prefix = currentOptions.dryRun ? "[dry-run] " : "";
+
+  if (!exists && !currentOptions.dryRun) {
+    fs.mkdirSync(path.dirname(fragmentPath), { recursive: true });
+    fs.writeFileSync(fragmentPath, changelogFragments.skeleton());
+  }
+
+  console.log(`${prefix}Branch: ${branchName}`);
+  console.log(
+    `${prefix}Counts as: ${bump ?? "unknown - rename the branch to major/*, minor/*, fix/* or breaking/*"} in the next release`
+  );
+  console.log(
+    `${prefix}Changelog fragment: ${changelogFragments.FRAGMENT_DIR}/${fragmentName} (${exists ? "already there" : "created"})`
+  );
+  console.log(
+    `${prefix}package.json, app.json and CHANGELOG.md are left alone on a work branch; the release commit sets them.`
+  );
+  console.log(`${prefix}Write what changed in the fragment, then \`npm run pr:check\` before opening the PR.`);
+
+  return true;
 }
 
 function prepareAutoVersioning(currentOptions) {
@@ -298,13 +356,24 @@ function buildVersioningSummary({ mode, branchName, targetVersion, changelogMode
   const changelogContent = fs.existsSync(changelogPath)
     ? fs.readFileSync(changelogPath, "utf8")
     : "# Changelog\n";
-  const nextChangelogContent = updateChangelog({
+  const updatedChangelogContent = updateChangelog({
     content: changelogContent,
     changelogMode,
     targetVersion,
   });
+  // A release folds every changelog fragment into its entry and removes them.
+  const fragmentFiles = changelogMode === "release" ? changelogFragments.listFragments(rootDir) : [];
+  const nextChangelogContent = fragmentFiles.length
+    ? changelogFragments.insertFragmentsIntoChangelog(
+        updatedChangelogContent,
+        getChangelogSectionVersion(targetVersion),
+        fragmentFiles.map((fragment) => fragment.text),
+        detectEol(changelogContent)
+      )
+    : updatedChangelogContent;
 
   return {
+    fragmentFiles,
     mode,
     branchName,
     targetVersion,
@@ -332,6 +401,10 @@ function applyVersioning(summary, dryRun) {
       changelogPath,
       ensureTrailingEol(summary.nextChangelogContent, detectEol(summary.changelogContent))
     );
+
+    for (const fragment of summary.fragmentFiles ?? []) {
+      fs.unlinkSync(fragment.path);
+    }
   }
 }
 
@@ -355,6 +428,12 @@ function printSummary(summary, dryRun) {
     );
   } else if (summary.changelogMode === "release") {
     console.log(`${prefix}CHANGELOG.md: prepared release entry ${summary.targetVersion}`);
+    if (summary.fragmentFiles?.length) {
+      console.log(
+        `${prefix}${changelogFragments.FRAGMENT_DIR}/: ${summary.fragmentFiles.length} fragments folded into the entry and removed: ` +
+          summary.fragmentFiles.map((fragment) => fragment.file).join(", ")
+      );
+    }
   } else {
     console.log(`${prefix}CHANGELOG.md: skipped`);
   }
@@ -390,6 +469,11 @@ function printStatus(currentOptions) {
   console.log(
     `CHANGELOG.md has current version section: ${hasCurrentVersionSection ? "yes" : "no"}`
   );
+
+  if (isWorkBranch(branchName)) {
+    printWorkBranchStatus(branchName);
+    return;
+  }
 
   if (!branchName) {
     console.log("Recommended action: create or switch to a work branch, then run npm run version:auto");
@@ -442,6 +526,32 @@ function printStatus(currentOptions) {
         ? "versioning is already aligned for this branch"
         : "run npm run version:auto"
     }`
+  );
+}
+
+function printWorkBranchStatus(branchName) {
+  const fragmentName = changelogFragments.fragmentNameForBranch(branchName);
+  const fragmentPath = path.join(rootDir, changelogFragments.FRAGMENT_DIR, fragmentName);
+  const bump = inferBumpFromBranch(branchName);
+
+  console.log(`Counts as: ${bump ?? "unknown - rename the branch to major/*, minor/*, fix/* or breaking/*"} in the next release`);
+
+  if (!fs.existsSync(fragmentPath)) {
+    console.log(`Changelog fragment ${changelogFragments.FRAGMENT_DIR}/${fragmentName}: missing`);
+    console.log("Recommended action: run npm run version:auto, which creates it");
+    return;
+  }
+
+  const problems = changelogFragments.validateFragment(fs.readFileSync(fragmentPath, "utf8"));
+
+  console.log(
+    `Changelog fragment ${changelogFragments.FRAGMENT_DIR}/${fragmentName}: ${problems.length ? "needs work" : "ok"}`
+  );
+  problems.forEach((problem) => console.log(`  - ${problem}`));
+  console.log(
+    problems.length
+      ? "Recommended action: write what changed in the fragment"
+      : "Recommended action: npm run pr:check, then open the PR"
   );
 }
 
